@@ -45,6 +45,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5EDCF4FD-0291-4FB9-8D96-D58957CA5E3C}</ProjectGuid>
     <RootNamespace>mupdf</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseJava|Win32'" Label="Configuration">
@@ -136,7 +137,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>16.0.29403.142</_ProjectFileVersion>
+    <_ProjectFileVersion>15.0.28307.799</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(Configuration)\</OutDir>
@@ -182,12 +183,13 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;HAVE_FREETYPE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>
+      </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -210,11 +212,12 @@
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;HAVE_FREETYPE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MinimalRebuild />
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -236,12 +239,13 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;HAVE_FREETYPE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>
+      </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'">
@@ -263,12 +267,13 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;HAVE_FREETYPE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>
+      </MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugJava|x64'">
@@ -291,11 +296,12 @@
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;HAVE_FREETYPE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MinimalRebuild />
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseJava|x64'">
@@ -336,6 +342,7 @@
     <ClCompile Include="..\..\thirdparty\freetype\src\truetype\truetype.c" />
     <ClCompile Include="..\..\thirdparty\freetype\src\type1\type1.c" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-aat-layout.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-aat-map.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-blob.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-buffer-serialize.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-buffer.cc" />
@@ -344,12 +351,19 @@
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-fallback-shape.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-font.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ft.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-map.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-number.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-cff1-table.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-cff2-table.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-color.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-face.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-font.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-layout.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-map.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-math.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-meta.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-metrics.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-name.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-arabic.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-default.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-hangul.cc" />
@@ -359,9 +373,9 @@
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-khmer.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-myanmar.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-thai.cc" />
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-tibetan.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-use-table.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-use.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-vowel-constraints.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-fallback.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-normalize.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape.cc" />
@@ -372,9 +386,14 @@
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-shape.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-shaper.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-static.cc" />
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ucdn.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-cff-common.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-cff1.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-cff2.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-input.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset-plan.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-subset.cc" />
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ucd.cc" />
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-unicode.cc" />
-    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-warning.cc" />
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2.c" />
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_arith.c" />
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_arith_iaid.c" />
@@ -561,17 +580,39 @@
     <ClInclude Include="..\..\thirdparty\freetype\include\freetype\tttags.h" />
     <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ttunpat.h" />
     <ClInclude Include="..\..\thirdparty\freetype\include\ft2build.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-aat-layout.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-aat.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-blob.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-buffer.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-common.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-coretext.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-deprecated.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-directwrite.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-face.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-font.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ft.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-gdi.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-glib.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-gobject-structs.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-icu.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-map.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-color.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-deprecated.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-font.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-layout.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-math.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-meta.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-metrics.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-name.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot-var.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ot.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-set.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-shape-plan.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-shape.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-subset.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-unicode.h" />
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-uniscribe.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-version.h" />
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb.h" />
     <ClInclude Include="..\..\thirdparty\lcms2\include\lcms2mt.h" />

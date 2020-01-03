@@ -556,7 +556,7 @@ fz_asprintf(fz_context *ctx, const char *fmt, ...)
 	va_start(ap, fmt);
 	len = fz_vsnprintf(NULL, 0, fmt, ap);
 	va_end(ap);
-	mem = fz_malloc(ctx, len+1);
+	mem = Memento_label(fz_malloc(ctx, len+1), "asprintf");
 	va_start(ap, fmt);
 	fz_vsnprintf(mem, len+1, fmt, ap);
 	va_end(ap);

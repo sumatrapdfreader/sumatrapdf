@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29418.71
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.960
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf", "mupdf.vcxproj", "{E74F29F0-FA43-4ADC-B92C-6AFA08E4A417}"
 EndProject
@@ -13,7 +13,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mudraw", "mudraw.vcxproj", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mutool", "mutool.vcxproj", "{00811970-815B-4F64-BC9D-219078B1F3AA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcurl", "..\..\thirdparty\curl\vs\vc8\lib\vc8libcurl.vcxproj", "{87EE9DA4-DE1E-4448-8324-183C98DCA588}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcurl", "libcurl.vcxproj", "{87EE9DA4-DE1E-4448-8324-183C98DCA588}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf-curl", "mupdf-curl.vcxproj", "{27B53E5C-ACAB-423C-854E-BECE56D73544}"
 EndProject
@@ -21,10 +21,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfreeglut", "libfreeglut.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mupdf-gl", "mupdf-gl.vcxproj", "{CE3A76A8-A28F-4991-8FB9-C9453D922037}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libresources", "libresources.vcproj", "{52DCAB29-C8EE-4422-954C-29AFA6B33E22}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BFE316B3-BD90-433A-A20D-C73975F1CAA7} = {BFE316B3-BD90-433A-A20D-C73975F1CAA7}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libresources", "libresources.vcxproj", "{52DCAB29-C8EE-4422-954C-29AFA6B33E22}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "muraster", "muraster.vcxproj", "{0FDC74D7-D18C-45CE-94D6-EDFCC5A0CDF2}"
 EndProject
@@ -922,6 +919,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {C0C1F25A-503F-450F-89B9-EE02B17B6D54}
+		SolutionGuid = {2E24DFDB-899D-4402-8236-30B1678A086B}
 	EndGlobalSection
 EndGlobal

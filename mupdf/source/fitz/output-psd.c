@@ -163,7 +163,7 @@ psd_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 			len2 = strlen(name);
 			if (len2 > 255)
 				len2 = 255;
-			fz_write_byte(ctx, out, len2);
+			fz_write_byte(ctx, out, (unsigned char)len2);
 			fz_write_data(ctx, out, name, len2);
 		}
 		if (len & 1)
@@ -198,7 +198,7 @@ psd_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 		fz_write_data(ctx, out, ressig, 4);
 		fz_write_int16_be(ctx, out, 0x40f); /* ICC Profile */
 		fz_write_data(ctx, out, "\x07Profile", 8); /* Profile name (must be even!) */
-		fz_write_int32_be(ctx, out, size);
+		fz_write_int32_be(ctx, out, (int)size);
 		fz_write_data(ctx, out, data, size); /* Actual data */
 		if (size & 1)
 			fz_write_byte(ctx, out, 0); /* Pad to even */
@@ -285,8 +285,8 @@ psd_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 				sp += line_skip;
 				ap += line_skip;
 			}
-			sp -= stride * band_height - 1;
-			ap -= stride * band_height;
+			sp -= stride * (ptrdiff_t)band_height - 1;
+			ap -= stride * (ptrdiff_t)band_height;
 			if (b != buffer)
 			{
 				if (k >= num_additive)
@@ -337,7 +337,7 @@ psd_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 				}
 				sp += line_skip;
 			}
-			sp -= stride * band_height - 1;
+			sp -= stride * (ptrdiff_t)band_height - 1;
 			if (b != buffer)
 			{
 				if (k >= num_additive)
@@ -348,7 +348,7 @@ psd_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 			fz_seek_output(ctx, out, plane_inc, SEEK_CUR);
 		}
 	}
-	fz_seek_output(ctx, out, w * (band_height - h * n), SEEK_CUR);
+	fz_seek_output(ctx, out, w * (band_height - h * (int64_t)n), SEEK_CUR);
 }
 
 static void

@@ -805,8 +805,8 @@ fz_open_faxd(fz_context *ctx, fz_stream *chain,
 		fax->dim = fax->k < 0 ? 2 : 1;
 		fax->eolc = 0;
 
-		fax->ref = fz_malloc(ctx, fax->stride);
-		fax->dst = fz_malloc(ctx, fax->stride);
+		fax->ref = Memento_label(fz_malloc(ctx, fax->stride), "fax_ref");
+		fax->dst = Memento_label(fz_malloc(ctx, fax->stride), "fax_dst");
 		fax->rp = fax->dst;
 		fax->wp = fax->dst + fax->stride;
 

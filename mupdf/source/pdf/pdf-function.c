@@ -977,7 +977,7 @@ load_sample_func(fz_context *ctx, pdf_function *func, pdf_obj *dict)
 	if (samplecount > MAX_SAMPLE_FUNCTION_SIZE)
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "sample function too large");
 
-	func->u.sa.samples = fz_malloc_array(ctx, samplecount, float);
+	func->u.sa.samples = Memento_label(fz_malloc_array(ctx, samplecount, float), "function_samples");
 	func->size += samplecount * sizeof(float);
 
 	stream = pdf_open_stream(ctx, dict);
@@ -1224,9 +1224,9 @@ load_stitching_func(fz_context *ctx, pdf_function *func, pdf_obj *dict)
 			fz_throw(ctx, FZ_ERROR_SYNTAX, "recursive function");
 		k = pdf_array_len(ctx, obj);
 
-		func->u.st.funcs = fz_malloc_array(ctx, k, pdf_function*);
-		func->u.st.bounds = fz_malloc_array(ctx, k - 1, float);
-		func->u.st.encode = fz_malloc_array(ctx, k * 2, float);
+		func->u.st.funcs = Memento_label(fz_malloc_array(ctx, k, pdf_function*), "stitch_fns");
+		func->u.st.bounds = Memento_label(fz_malloc_array(ctx, k - 1, float), "stitch_bounds");
+		func->u.st.encode = Memento_label(fz_malloc_array(ctx, k * 2, float), "stitch_encode");
 		funcs = func->u.st.funcs;
 
 		for (i = 0; i < k; i++)

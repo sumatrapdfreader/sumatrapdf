@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="com/artifex/mupdf/fitz">
-      <UniqueIdentifier>{f3ef400d-894d-4151-8a04-9363651bd56d}</UniqueIdentifier>
+      <UniqueIdentifier>{f8c210a2-298d-4611-a36f-205770920fff}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

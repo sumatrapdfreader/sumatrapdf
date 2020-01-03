@@ -217,10 +217,10 @@ fz_pack_path(fz_context *ctx, uint8_t *pack_, size_t max, const fz_path *path)
 			pack->coord_len = path->coord_len;
 			pack->cmd_cap = path->cmd_len;
 			pack->cmd_len = path->cmd_len;
-			pack->coords = fz_malloc_array(ctx, path->coord_len, float);
+			pack->coords = Memento_label(fz_malloc_array(ctx, path->coord_len, float), "path_packed_coords");
 			fz_try(ctx)
 			{
-				pack->cmds = fz_malloc_array(ctx, path->cmd_len, uint8_t);
+				pack->cmds = Memento_label(fz_malloc_array(ctx, path->cmd_len, uint8_t), "path_packed_cmds");
 			}
 			fz_catch(ctx)
 			{

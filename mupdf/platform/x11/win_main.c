@@ -395,7 +395,7 @@ dlogtextproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			SetTextColor((HDC)wParam, RGB(255,0,0));
 			SetBkMode((HDC)wParam, TRANSPARENT);
 
-			return (INT)GetStockObject(NULL_BRUSH);
+			return (INT_PTR)GetStockObject(NULL_BRUSH);
 		}
 		break;
 	}
@@ -817,7 +817,7 @@ static void winblit()
 
 		if (image_n == 2)
 		{
-			int i = image_w * image_h;
+			size_t i = image_w * (size_t)image_h;
 			unsigned char *color = malloc(i*4);
 			unsigned char *s = samples;
 			unsigned char *d = color;

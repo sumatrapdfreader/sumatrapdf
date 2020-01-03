@@ -3786,7 +3786,7 @@ static void ffi_PDFObject_asByteString(js_State *J)
 	js_newarray(J);
 	for (i = 0; i < len; ++i) {
 		js_pushnumber(J, (unsigned char)buf[i]);
-		js_setindex(J, -2, i);
+		js_setindex(J, -2, (int)i);
 	}
 }
 

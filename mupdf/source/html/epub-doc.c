@@ -274,7 +274,7 @@ static void epub_load_accelerator(fz_context *ctx, epub_document *doc, fz_stream
 			}
 
 			acc = fz_malloc_struct(ctx, epub_accelerator);
-			acc->pages_in_chapter = fz_malloc_array(ctx, num_chapters, int);
+			acc->pages_in_chapter = Memento_label(fz_malloc_array(ctx, num_chapters, int), "accel_pages_in_chapter");
 			acc->max_chapters = acc->num_chapters = num_chapters;
 			acc->layout_w = w;
 			acc->layout_h = h;

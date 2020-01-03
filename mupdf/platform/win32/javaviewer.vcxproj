@@ -22,6 +22,7 @@
     <ProjectGuid>{FB8DC595-90A5-44D6-9FFF-2BDFA912FD8C}</ProjectGuid>
     <RootNamespace>javaviewer</RootNamespace>
     <Keyword>MakeFileProj</Keyword>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseJava|Win32'" Label="Configuration">
@@ -57,7 +58,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>16.0.29403.142</_ProjectFileVersion>
+    <_ProjectFileVersion>15.0.28307.799</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugJava|Win32'">
     <OutDir>$(Configuration)\</OutDir>
@@ -108,6 +109,10 @@
     </ProjectReference>
     <ProjectReference Include="libmupdf.vcxproj">
       <Project>{5f615f91-dff8-4f05-bf48-6222b7d86519}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="libresources.vcxproj">
+      <Project>{52dcab29-c8ee-4422-954c-29afa6b33e22}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

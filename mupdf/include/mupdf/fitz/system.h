@@ -132,9 +132,9 @@ static __inline int signbit(double x)
 #define isinf(x) (!_finite(x))
 #endif
 
-// sumatrapdf: in VS 2019 hypotf is already defined
-// TODO: make it conditional on _MSC_VER
-//#define hypotf _hypotf
+#if _MSC_VER <= 1920 /* MSVC 2019 */
+#define hypotf _hypotf
+#endif
 #define atoll _atoi64
 
 #endif

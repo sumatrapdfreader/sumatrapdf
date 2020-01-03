@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Memento|Win32">
+      <Configuration>Memento</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>libcurl</ProjectName>
+    <ProjectGuid>{87EE9DA4-DE1E-4448-8324-183C98DCA588}</ProjectGuid>
+    <RootNamespace>libcurl</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>15.0.28307.799</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">
+    <OutDir>$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\Release/libcurl.tlb</TypeLibraryName>
+      <HeaderFileName />
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>.;..\..\thirdparty\curl\include;..\..\thirdparty\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;BUILDING_LIBCURL;CURL_STATICLIB;CURL_DISABLE_LDAP;USE_SCHANNEL;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>
+      </StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>
+      </MinimalRebuild>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <AdditionalDependencies>crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(OutDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\Debug/libcurl.tlb</TypeLibraryName>
+      <HeaderFileName />
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>.;..\..\thirdparty\curl\include;..\..\thirdparty\curl\lib;..\..\thirdparty\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BUILDING_LIBCURL;CURL_STATICLIB;CURL_DISABLE_LDAP;USE_SCHANNEL;USE_WINDOWS_SSPI;USE_SCHANNEL;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>
+      </MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <AdditionalDependencies>crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(OutDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\Debug/libcurl.tlb</TypeLibraryName>
+      <HeaderFileName />
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>.;..\..\thirdparty\curl\include;..\..\thirdparty\curl\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;BUILDING_LIBCURL;CURL_STATICLIB;CURL_DISABLE_LDAP;USE_SCHANNEL;USE_WINDOWS_SSPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>
+      </MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).pdb</ProgramDataBaseFileName>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <AdditionalDependencies>crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(OutDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\thirdparty\curl\lib\altsvc.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\amigaos.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\asyn-ares.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\asyn-thread.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\base64.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\conncache.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\connect.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\content_encoding.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\cookie.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_addrinfo.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_ctype.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_des.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_endian.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_fnmatch.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_gethostname.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_get_line.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_gssapi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_memrchr.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_multibyte.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_ntlm_core.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_ntlm_wb.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_path.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_range.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_rtmp.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_sasl.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_sspi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\curl_threads.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\dict.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\doh.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\dotdot.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\easy.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\escape.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\file.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\fileinfo.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\formdata.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\ftp.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\ftplistparser.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\getenv.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\getinfo.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\gopher.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\hash.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\hmac.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\hostasyn.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\hostcheck.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\hostip.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\hostip4.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\hostip6.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\hostsyn.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\http.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\http2.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\http_chunks.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\http_digest.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\http_negotiate.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\http_ntlm.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\http_proxy.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\idn_win32.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\if2ip.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\imap.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\inet_ntop.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\inet_pton.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\krb5.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\ldap.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\llist.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\md4.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\md5.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\memdebug.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\mime.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\mprintf.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\multi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\netrc.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\non-ascii.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\nonblock.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\nwlib.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\nwos.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\openldap.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\parsedate.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\pingpong.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\pop3.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\progress.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\psl.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\rand.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\rtsp.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\security.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\select.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\sendf.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\setopt.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\sha256.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\share.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\slist.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\smb.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\smtp.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\socks.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\socks_gssapi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\socks_sspi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\speedcheck.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\splay.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\strcase.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\strdup.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\strerror.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\strtok.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\strtoofft.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\system_win32.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\telnet.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\tftp.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\timeval.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\transfer.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\url.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\urlapi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\cleartext.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\cram.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\digest.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\digest_sspi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\krb5_gssapi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\krb5_sspi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\ntlm.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\ntlm_sspi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\oauth2.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\spnego_gssapi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\spnego_sspi.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vauth\vauth.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\version.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\gskit.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\gtls.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\mbedtls.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\mesalink.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\nss.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\openssl.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\polarssl.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\polarssl_threadlock.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\schannel.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\schannel_verify.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\sectransp.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\vtls.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\vtls\wolfssl.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\warnless.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\wildcard.c" />
+    <ClCompile Include="..\..\thirdparty\curl\lib\x509asn1.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\thirdparty\curl\include\curl\curl.h" />
+    <ClInclude Include="..\..\thirdparty\curl\include\curl\curlver.h" />
+    <ClInclude Include="..\..\thirdparty\curl\include\curl\easy.h" />
+    <ClInclude Include="..\..\thirdparty\curl\include\curl\mprintf.h" />
+    <ClInclude Include="..\..\thirdparty\curl\include\curl\multi.h" />
+    <ClInclude Include="..\..\thirdparty\curl\include\curl\stdcheaders.h" />
+    <ClInclude Include="..\..\thirdparty\curl\include\curl\system.h" />
+    <ClInclude Include="..\..\thirdparty\curl\include\curl\typecheck-gcc.h" />
+    <ClInclude Include="..\..\thirdparty\curl\include\curl\urlapi.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\altsvc.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\amigaos.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\arpa_telnet.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\asyn.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-amigaos.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-dos.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-mac.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-os400.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-plan9.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-riscos.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-symbian.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-tpf.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-vxworks.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-win32.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\config-win32ce.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\conncache.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\connect.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\content_encoding.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\cookie.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curlx.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_addrinfo.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_base64.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_ctype.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_des.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_endian.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_fnmatch.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_gethostname.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_get_line.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_gssapi.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_hmac.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_ldap.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_md4.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_md5.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_memory.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_memrchr.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_multibyte.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_ntlm_core.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_ntlm_wb.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_path.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_printf.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_range.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_rtmp.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_sasl.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_sec.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_setup.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_setup_once.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_sha256.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_sspi.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\curl_threads.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\dict.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\doh.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\dotdot.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\easyif.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\escape.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\file.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\fileinfo.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\formdata.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\ftp.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\ftplistparser.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\getinfo.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\gopher.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\hash.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\hostcheck.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\hostip.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\http.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\http2.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\http_chunks.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\http_digest.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\http_negotiate.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\http_ntlm.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\http_proxy.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\if2ip.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\imap.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\inet_ntop.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\inet_pton.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\llist.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\memdebug.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\mime.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\multihandle.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\multiif.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\netrc.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\non-ascii.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\nonblock.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\parsedate.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\pingpong.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\pop3.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\progress.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\psl.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\quic.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\rand.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\rtsp.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\select.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\sendf.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\setopt.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\setup-os400.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\setup-vms.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\share.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\sigpipe.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\slist.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\smb.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\smtp.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\sockaddr.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\socks.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\speedcheck.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\splay.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\strcase.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\strdup.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\strerror.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\strtok.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\strtoofft.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\system_win32.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\telnet.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\tftp.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\timeval.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\transfer.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\url.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\urlapi-int.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\urldata.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vauth\digest.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vauth\ntlm.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vauth\vauth.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\gskit.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\gtls.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\mbedtls.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\mesalink.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\nssg.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\openssl.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\polarssl.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\polarssl_threadlock.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\schannel.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\sectransp.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\vtls.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\vtls\wolfssl.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\warnless.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\wildcard.h" />
+    <ClInclude Include="..\..\thirdparty\curl\lib\x509asn1.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\thirdparty\curl\lib\firefox-db2pem.sh" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\thirdparty\curl\lib\libcurl.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

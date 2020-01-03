@@ -1,0 +1,307 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <PropertyPageSchema
+      Include="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml" />
+    <AvailableItemName
+      Include="bin2coff__ttf_">
+      <Targets>_bin2coff__ttf_</Targets>
+    </AvailableItemName>
+    <AvailableItemName
+      Include="bin2coff__otf_">
+      <Targets>_bin2coff__otf_</Targets>
+    </AvailableItemName>
+    <AvailableItemName
+      Include="bin2coff__cff_">
+      <Targets>_bin2coff__cff_</Targets>
+    </AvailableItemName>
+    <AvailableItemName
+      Include="bin2coff__ttc_">
+      <Targets>_bin2coff__ttc_</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+  <UsingTask
+    TaskName="bin2coff__ttf_"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <UsingTask
+    TaskName="bin2coff__otf_"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <UsingTask
+    TaskName="bin2coff__cff_"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <UsingTask
+    TaskName="bin2coff__ttc_"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <Target
+    Name="_bin2coff__ttf_"
+    BeforeTargets="$(bin2coff__ttf_BeforeTargets)"
+    AfterTargets="$(bin2coff__ttf_AfterTargets)"
+    Condition="'@(bin2coff__ttf_)' != ''"
+    DependsOnTargets="$(bin2coff__ttf_DependsOn);Computebin2coff__ttf_Output"
+    Outputs="%(bin2coff__ttf_.Outputs)"
+    Inputs="%(bin2coff__ttf_.Identity);%(bin2coff__ttf_.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <bin2coff__ttf_
+        Remove="@(bin2coff__ttf_)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <bin2coff__ttf__tlog
+        Include="%(bin2coff__ttf_.Outputs)"
+        Condition="'%(bin2coff__ttf_.Outputs)' != '' and '%(bin2coff__ttf_.ExcludedFromBuild)' != 'true'">
+        <Source>@(bin2coff__ttf_, '|')</Source>
+      </bin2coff__ttf__tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(bin2coff__ttf_.ExecutionDescription)" />
+    <WriteLinesToFile
+      Condition="'@(bin2coff__ttf__tlog)' != '' and '%(bin2coff__ttf__tlog.ExcludedFromBuild)' != 'true'"
+      File="$(TLogLocation)$(ProjectName).write.1u.tlog"
+      Lines="^%(bin2coff__ttf__tlog.Source);@(bin2coff__ttf__tlog-&gt;'%(Fullpath)')"
+      Encoding="Unicode" />
+    <bin2coff__ttf_
+      Condition="'@(bin2coff__ttf_)' != '' and '%(bin2coff__ttf_.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(bin2coff__ttf_.CommandLineTemplate)"
+      AdditionalOptions="%(bin2coff__ttf_.AdditionalOptions)"
+      Inputs="%(bin2coff__ttf_.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            Computebin2coff__ttf_Output;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            Computebin2coff__ttf_Output;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="Computebin2coff__ttf_Output"
+    Condition="'@(bin2coff__ttf_)' != ''">
+    <ItemGroup>
+      <bin2coff__ttf_DirsToMake
+        Condition="'@(bin2coff__ttf_)' != '' and '%(bin2coff__ttf_.ExcludedFromBuild)' != 'true'"
+        Include="%(bin2coff__ttf_.Outputs)" />
+      <Link
+        Include="%(bin2coff__ttf_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(bin2coff__ttf_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(bin2coff__ttf_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(bin2coff__ttf_DirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+  <Target
+    Name="_bin2coff__otf_"
+    BeforeTargets="$(bin2coff__otf_BeforeTargets)"
+    AfterTargets="$(bin2coff__otf_AfterTargets)"
+    Condition="'@(bin2coff__otf_)' != ''"
+    DependsOnTargets="$(bin2coff__otf_DependsOn);Computebin2coff__otf_Output"
+    Outputs="%(bin2coff__otf_.Outputs)"
+    Inputs="%(bin2coff__otf_.Identity);%(bin2coff__otf_.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <bin2coff__otf_
+        Remove="@(bin2coff__otf_)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <bin2coff__otf__tlog
+        Include="%(bin2coff__otf_.Outputs)"
+        Condition="'%(bin2coff__otf_.Outputs)' != '' and '%(bin2coff__otf_.ExcludedFromBuild)' != 'true'">
+        <Source>@(bin2coff__otf_, '|')</Source>
+      </bin2coff__otf__tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(bin2coff__otf_.ExecutionDescription)" />
+    <WriteLinesToFile
+      Condition="'@(bin2coff__otf__tlog)' != '' and '%(bin2coff__otf__tlog.ExcludedFromBuild)' != 'true'"
+      File="$(TLogLocation)$(ProjectName).write.1u.tlog"
+      Lines="^%(bin2coff__otf__tlog.Source);@(bin2coff__otf__tlog-&gt;'%(Fullpath)')"
+      Encoding="Unicode" />
+    <bin2coff__otf_
+      Condition="'@(bin2coff__otf_)' != '' and '%(bin2coff__otf_.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(bin2coff__otf_.CommandLineTemplate)"
+      AdditionalOptions="%(bin2coff__otf_.AdditionalOptions)"
+      Inputs="%(bin2coff__otf_.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            Computebin2coff__otf_Output;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            Computebin2coff__otf_Output;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="Computebin2coff__otf_Output"
+    Condition="'@(bin2coff__otf_)' != ''">
+    <ItemGroup>
+      <bin2coff__otf_DirsToMake
+        Condition="'@(bin2coff__otf_)' != '' and '%(bin2coff__otf_.ExcludedFromBuild)' != 'true'"
+        Include="%(bin2coff__otf_.Outputs)" />
+      <Link
+        Include="%(bin2coff__otf_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(bin2coff__otf_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(bin2coff__otf_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(bin2coff__otf_DirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+  <Target
+    Name="_bin2coff__cff_"
+    BeforeTargets="$(bin2coff__cff_BeforeTargets)"
+    AfterTargets="$(bin2coff__cff_AfterTargets)"
+    Condition="'@(bin2coff__cff_)' != ''"
+    DependsOnTargets="$(bin2coff__cff_DependsOn);Computebin2coff__cff_Output"
+    Outputs="%(bin2coff__cff_.Outputs)"
+    Inputs="%(bin2coff__cff_.Identity);%(bin2coff__cff_.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <bin2coff__cff_
+        Remove="@(bin2coff__cff_)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <bin2coff__cff__tlog
+        Include="%(bin2coff__cff_.Outputs)"
+        Condition="'%(bin2coff__cff_.Outputs)' != '' and '%(bin2coff__cff_.ExcludedFromBuild)' != 'true'">
+        <Source>@(bin2coff__cff_, '|')</Source>
+      </bin2coff__cff__tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(bin2coff__cff_.ExecutionDescription)" />
+    <WriteLinesToFile
+      Condition="'@(bin2coff__cff__tlog)' != '' and '%(bin2coff__cff__tlog.ExcludedFromBuild)' != 'true'"
+      File="$(TLogLocation)$(ProjectName).write.1u.tlog"
+      Lines="^%(bin2coff__cff__tlog.Source);@(bin2coff__cff__tlog-&gt;'%(Fullpath)')"
+      Encoding="Unicode" />
+    <bin2coff__cff_
+      Condition="'@(bin2coff__cff_)' != '' and '%(bin2coff__cff_.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(bin2coff__cff_.CommandLineTemplate)"
+      AdditionalOptions="%(bin2coff__cff_.AdditionalOptions)"
+      Inputs="%(bin2coff__cff_.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            Computebin2coff__cff_Output;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            Computebin2coff__cff_Output;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="Computebin2coff__cff_Output"
+    Condition="'@(bin2coff__cff_)' != ''">
+    <ItemGroup>
+      <bin2coff__cff_DirsToMake
+        Condition="'@(bin2coff__cff_)' != '' and '%(bin2coff__cff_.ExcludedFromBuild)' != 'true'"
+        Include="%(bin2coff__cff_.Outputs)" />
+      <Link
+        Include="%(bin2coff__cff_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(bin2coff__cff_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(bin2coff__cff_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(bin2coff__cff_DirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+  <Target
+    Name="_bin2coff__ttc_"
+    BeforeTargets="$(bin2coff__ttc_BeforeTargets)"
+    AfterTargets="$(bin2coff__ttc_AfterTargets)"
+    Condition="'@(bin2coff__ttc_)' != ''"
+    DependsOnTargets="$(bin2coff__ttc_DependsOn);Computebin2coff__ttc_Output"
+    Outputs="%(bin2coff__ttc_.Outputs)"
+    Inputs="%(bin2coff__ttc_.Identity);%(bin2coff__ttc_.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <bin2coff__ttc_
+        Remove="@(bin2coff__ttc_)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <bin2coff__ttc__tlog
+        Include="%(bin2coff__ttc_.Outputs)"
+        Condition="'%(bin2coff__ttc_.Outputs)' != '' and '%(bin2coff__ttc_.ExcludedFromBuild)' != 'true'">
+        <Source>@(bin2coff__ttc_, '|')</Source>
+      </bin2coff__ttc__tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(bin2coff__ttc_.ExecutionDescription)" />
+    <WriteLinesToFile
+      Condition="'@(bin2coff__ttc__tlog)' != '' and '%(bin2coff__ttc__tlog.ExcludedFromBuild)' != 'true'"
+      File="$(TLogLocation)$(ProjectName).write.1u.tlog"
+      Lines="^%(bin2coff__ttc__tlog.Source);@(bin2coff__ttc__tlog-&gt;'%(Fullpath)')"
+      Encoding="Unicode" />
+    <bin2coff__ttc_
+      Condition="'@(bin2coff__ttc_)' != '' and '%(bin2coff__ttc_.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(bin2coff__ttc_.CommandLineTemplate)"
+      AdditionalOptions="%(bin2coff__ttc_.AdditionalOptions)"
+      Inputs="%(bin2coff__ttc_.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            Computebin2coff__ttc_Output;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            Computebin2coff__ttc_Output;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="Computebin2coff__ttc_Output"
+    Condition="'@(bin2coff__ttc_)' != ''">
+    <ItemGroup>
+      <bin2coff__ttc_DirsToMake
+        Condition="'@(bin2coff__ttc_)' != '' and '%(bin2coff__ttc_.ExcludedFromBuild)' != 'true'"
+        Include="%(bin2coff__ttc_.Outputs)" />
+      <Link
+        Include="%(bin2coff__ttc_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(bin2coff__ttc_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(bin2coff__ttc_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(bin2coff__ttc_DirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+</Project>

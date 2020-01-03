@@ -1760,7 +1760,7 @@ static inline jobject to_PDFWidget(fz_context *ctx, JNIEnv *env, pdf_widget *wid
 			nopts = pdf_choice_widget_options(ctx, widget, 0, NULL);
 			if (nopts > 0)
 			{
-				opts = fz_malloc(ctx, nopts * sizeof(*opts));
+				opts = Memento_label(fz_malloc(ctx, nopts * sizeof(*opts)), "to_PDFWidget");
 				pdf_choice_widget_options(ctx, widget, 0, opts);
 				jopts = to_StringArray_safe(ctx, env, opts, nopts);
 				if (jopts)
@@ -3568,7 +3568,7 @@ newNativeAndroidDrawDevice(JNIEnv *env, jobject self, fz_context *ctx, jobject o
 	{
 		pixmap = fz_new_pixmap_with_bbox_and_data(ctx, fz_device_rgb(ctx), bbox, NULL, 1, &dummy);
 		pixmap->stride = width * sizeof(int32_t);
-		ninfo = fz_malloc(ctx, sizeof(*ninfo));
+		ninfo = Memento_label(fz_malloc(ctx, sizeof(*ninfo)), "newNativeAndroidDrawDevice");
 		ninfo->pixmap = pixmap;
 		ninfo->lock = lock;
 		ninfo->unlock = unlock;
@@ -5104,7 +5104,7 @@ FUN(Document_openNativeWithStream)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		if (jdoc)
 		{
 			/* No exceptions can occur from here to stream owning docstate, so we must not free docstate. */
-			docstate = fz_malloc(ctx, sizeof(SeekableStreamState));
+			docstate = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_docstate");
 			docstate->stream = jdoc;
 			docstate->array = docarray;
 
@@ -5120,7 +5120,7 @@ FUN(Document_openNativeWithStream)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		if (jacc)
 		{
 			/* No exceptions can occur from here to stream owning accstate, so we must not free accstate. */
-			accstate = fz_malloc(ctx, sizeof(SeekableStreamState));
+			accstate = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_accstate");
 			accstate->stream = jacc;
 			accstate->array = accarray;
 
@@ -5261,7 +5261,7 @@ FUN(Document_openNativeWithPathAndStream)(JNIEnv *env, jclass cls, jstring jfile
 		if (jacc)
 		{
 			/* No exceptions can occur from here to stream owning accstate, so we must not free accstate. */
-			accstate = fz_malloc(ctx, sizeof(SeekableStreamState));
+			accstate = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_accstate2");
 			accstate->stream = jacc;
 			accstate->array = accarray;
 
@@ -5466,7 +5466,7 @@ FUN(Document_outputAccelerator)(JNIEnv *env, jobject self, jobject jstream)
 
 	fz_try(ctx)
 	{
-		state = fz_malloc(ctx, sizeof(SeekableStreamState));
+		state = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_outputAccelerator");
 		state->stream = stream;
 		state->array = array;
 
@@ -7311,7 +7311,7 @@ FUN(PDFDocument_newByteString)(JNIEnv *env, jobject self, jobject jbs)
 	bslen = (*env)->GetArrayLength(env, jbs);
 
 	fz_try(ctx)
-		bs = fz_malloc(ctx, bslen);
+		bs = Memento_label(fz_malloc(ctx, bslen), "PDFDocument_newByteString");
 	fz_catch(ctx)
 	{
 		jni_rethrow(env, ctx);
@@ -7892,7 +7892,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 		if (jstream)
 		{
 			/* No exceptions can occur from here to stream owning state, so we must not free state. */
-			state = fz_malloc(ctx, sizeof(SeekableStreamState));
+			state = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreramState_state");
 			state->stream = stream;
 			state->array = array;
 

@@ -54,7 +54,7 @@ static void * JB2_Callback
 jbig2_alloc(unsigned long size, void *userdata)
 {
 	fz_jbig2d *state = userdata;
-	return fz_malloc(state->ctx, size);
+	return Memento_label(fz_malloc(state->ctx, size), "jbig2_alloc");
 }
 
 static JB2_Error JB2_Callback
@@ -174,7 +174,7 @@ next_jbig2d(fz_context *ctx, fz_stream *stm, size_t len)
 
 			state->stride = (state->width + 7) >> 3;
 			stm->pos = state->stride * state->height;
-			state->output = fz_malloc(state->ctx, stm->pos);
+			state->output = Memento_label(fz_malloc(state->ctx, stm->pos), "jbig2_output");
 			stm->rp = state->output;
 			stm->wp = state->output;
 
@@ -361,7 +361,7 @@ error_callback(void *data, const char *msg, Jbig2Severity severity, int32_t seg_
 static void *fz_jbig2_alloc(Jbig2Allocator *allocator, size_t size)
 {
 	fz_context *ctx = ((struct fz_jbig2_alloc_s *) allocator)->ctx;
-	return fz_malloc_no_throw(ctx, size);
+	return Memento_label(fz_malloc_no_throw(ctx, size), "jbig2_alloc");
 }
 
 static void fz_jbig2_free(Jbig2Allocator *allocator, void *p)
@@ -379,8 +379,8 @@ static void *fz_jbig2_realloc(Jbig2Allocator *allocator, void *p, size_t size)
 		return NULL;
 	}
 	if (p == NULL)
-		return fz_malloc(ctx, size);
-	return fz_realloc_no_throw(ctx, p, size);
+		return Memento_label(fz_malloc(ctx, size), "jbig2_realloc");
+	return Memento_label(fz_realloc_no_throw(ctx, p, size), "jbig2_realloc");
 }
 
 fz_jbig2_globals *

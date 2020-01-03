@@ -524,7 +524,7 @@ ptrdiff_t pdf_lexbuf_grow(fz_context *ctx, pdf_lexbuf *lb)
 	int newsize = lb->size * 2;
 	if (lb->size == lb->base_size)
 	{
-		lb->scratch = fz_malloc(ctx, newsize);
+		lb->scratch = Memento_label(fz_malloc(ctx, newsize), "pdf_lexbuf");
 		memcpy(lb->scratch, lb->buffer, lb->size);
 	}
 	else

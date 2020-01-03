@@ -253,7 +253,7 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 
 	stride = tiff->imagewidth * (tiff->samplesperpixel + 2);
 
-	samples = fz_malloc(ctx, stride * tiff->imagelength);
+	samples = Memento_label(fz_malloc(ctx, stride * tiff->imagelength), "tiff_samples");
 
 	for (y = 0; y < tiff->imagelength; y++)
 	{
@@ -594,7 +594,7 @@ tiff_decode_tiles(fz_context *ctx, struct tiff *tiff)
 		else
 			wlen = tiff->tilestride * tiff->ycbcrsubsamp[1];
 
-		data = tiff->data = fz_malloc(ctx, wlen);
+		data = tiff->data = Memento_label(fz_malloc(ctx, wlen), "tiff_tile_jpg");
 
 		tile = 0;
 		for (x = 0; x < tiff->imagelength; x += tiff->tilelength)
@@ -620,7 +620,7 @@ tiff_decode_tiles(fz_context *ctx, struct tiff *tiff)
 	else
 	{
 		wlen = tiff->tilelength * tiff->tilestride;
-		data = tiff->data = fz_malloc(ctx, wlen);
+		data = tiff->data = Memento_label(fz_malloc(ctx, wlen), "tiff_tile");
 
 		tile = 0;
 		for (x = 0; x < tiff->imagelength; x += tiff->tilelength)
@@ -673,7 +673,7 @@ tiff_decode_strips(fz_context *ctx, struct tiff *tiff)
 			rowsperstrip = tiff->ycbcrsubsamp[1];
 
 		wlen = rowsperstrip * tiff->stride;
-		data = tiff->data = fz_malloc(ctx, wlen);
+		data = tiff->data = Memento_label(fz_malloc(ctx, wlen), "tiff_strip_jpg");
 
 		strip = 0;
 		for (y = 0; y < tiff->imagelength; y += rowsperstrip)
@@ -873,7 +873,7 @@ tiff_read_tag(fz_context *ctx, struct tiff *tiff, unsigned offset)
 	case ICCProfile:
 		if (tiff->profile)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one ICC profile tag allowed");
-		tiff->profile = fz_malloc(ctx, count);
+		tiff->profile = Memento_label(fz_malloc(ctx, count), "tiff_profile");
 		/* ICC profile data type is set to UNDEFINED.
 		 * TBYTE reading not correct in tiff_read_tag_value */
 		tiff_read_bytes(tiff->profile, tiff, value, count);
@@ -891,7 +891,7 @@ tiff_read_tag(fz_context *ctx, struct tiff *tiff, unsigned offset)
 	case StripOffsets:
 		if (tiff->stripoffsets)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one strip offsets tag allowed");
-		tiff->stripoffsets = fz_malloc_array(ctx, count, unsigned);
+		tiff->stripoffsets = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_stripoffsets");
 		tiff_read_tag_value(tiff->stripoffsets, tiff, type, value, count);
 		tiff->stripoffsetslen = count;
 		break;
@@ -899,7 +899,7 @@ tiff_read_tag(fz_context *ctx, struct tiff *tiff, unsigned offset)
 	case StripByteCounts:
 		if (tiff->stripbytecounts)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one strip byte counts tag allowed");
-		tiff->stripbytecounts = fz_malloc_array(ctx, count, unsigned);
+		tiff->stripbytecounts = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_stripbytecounts");
 		tiff_read_tag_value(tiff->stripbytecounts, tiff, type, value, count);
 		tiff->stripbytecountslen = count;
 		break;
@@ -907,7 +907,7 @@ tiff_read_tag(fz_context *ctx, struct tiff *tiff, unsigned offset)
 	case ColorMap:
 		if (tiff->colormap)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one color map allowed");
-		tiff->colormap = fz_malloc_array(ctx, count, unsigned);
+		tiff->colormap = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_colormap");
 		tiff_read_tag_value(tiff->colormap, tiff, type, value, count);
 		tiff->colormaplen = count;
 		break;
@@ -923,7 +923,7 @@ tiff_read_tag(fz_context *ctx, struct tiff *tiff, unsigned offset)
 	case TileOffsets:
 		if (tiff->tileoffsets)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one tile offsets tag allowed");
-		tiff->tileoffsets = fz_malloc_array(ctx, count, unsigned);
+		tiff->tileoffsets = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_tileoffsets");
 		tiff_read_tag_value(tiff->tileoffsets, tiff, type, value, count);
 		tiff->tileoffsetslen = count;
 		break;
@@ -931,7 +931,7 @@ tiff_read_tag(fz_context *ctx, struct tiff *tiff, unsigned offset)
 	case TileByteCounts:
 		if (tiff->tilebytecounts)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "at most one tile byte counts tag allowed");
-		tiff->tilebytecounts = fz_malloc_array(ctx, count, unsigned);
+		tiff->tilebytecounts = Memento_label(fz_malloc_array(ctx, count, unsigned), "tiff_tilebytecounts");
 		tiff_read_tag_value(tiff->tilebytecounts, tiff, type, value, count);
 		tiff->tilebytecountslen = count;
 		break;
@@ -1010,7 +1010,7 @@ tiff_read_header(fz_context *ctx, struct tiff *tiff, const unsigned char *buf, s
 		fz_throw(ctx, FZ_ERROR_GENERIC, "not a TIFF file, wrong version marker");
 
 	/* get offset of IFD */
-	tiff->ifd_offsets = fz_malloc_array(ctx, 1, unsigned);
+	tiff->ifd_offsets = Memento_label(fz_malloc_array(ctx, 1, unsigned), "tiff_ifd_offsets");
 	tiff->ifd_offsets[0] = tiff_readlong(tiff);
 	tiff->ifds = 1;
 }
@@ -1244,7 +1244,7 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 		if (!tiff->tilelength && !tiff->tilewidth && !tiff->stripbytecounts)
 		{
 			tiff->stripbytecountslen = (tiff->imagelength + tiff->rowsperstrip - 1) / tiff->rowsperstrip;
-			tiff->stripbytecounts = fz_malloc_array(ctx, tiff->stripbytecountslen, unsigned);
+			tiff->stripbytecounts = Memento_label(fz_malloc_array(ctx, tiff->stripbytecountslen, unsigned), "tiff_stripbytecounts");
 			for (i = 0; i < tiff->stripbytecountslen; i++)
 				tiff->stripbytecounts[i] = tiff->rowsperstrip * tiff->stride;
 		}
@@ -1253,7 +1253,7 @@ tiff_decode_ifd(fz_context *ctx, struct tiff *tiff)
 			unsigned tilesdown = (tiff->imagelength + tiff->tilelength - 1) / tiff->tilelength;
 			unsigned tilesacross = (tiff->imagewidth + tiff->tilewidth - 1) / tiff->tilewidth;
 			tiff->tilebytecountslen = tilesacross * tilesdown;
-			tiff->tilebytecounts = fz_malloc_array(ctx, tiff->tilebytecountslen, unsigned);
+			tiff->tilebytecounts = Memento_label(fz_malloc_array(ctx, tiff->tilebytecountslen, unsigned), "tiff_tilebytecounts");
 			for (i = 0; i < tiff->tilebytecountslen; i++)
 				tiff->tilebytecounts[i] = tiff->tilelength * tiff->tilestride;
 		}
@@ -1288,7 +1288,7 @@ tiff_decode_samples(fz_context *ctx, struct tiff *tiff)
 
 	if (tiff->imagelength > UINT_MAX / tiff->stride)
 		fz_throw(ctx, FZ_ERROR_MEMORY, "image too large");
-	tiff->samples = fz_malloc(ctx, tiff->imagelength * tiff->stride);
+	tiff->samples = Memento_label(fz_malloc(ctx, tiff->imagelength * tiff->stride), "tiff_samples");
 	memset(tiff->samples, 0x55, tiff->imagelength * tiff->stride);
 
 	if (tiff->tilelength && tiff->tilewidth && tiff->tileoffsets && tiff->tilebytecounts)

@@ -142,7 +142,7 @@ fz_new_output(fz_context *ctx, int bufsiz, void *state, fz_output_write_fn *writ
 		out->drop = drop;
 		if (bufsiz > 0)
 		{
-			out->bp = fz_malloc(ctx, bufsiz);
+			out->bp = Memento_label(fz_malloc(ctx, bufsiz), "output_buf");
 			out->wp = out->bp;
 			out->ep = out->bp + bufsiz;
 		}

@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup
+    Condition="'$(bin2coff__ttf_BeforeTargets)' == '' and '$(bin2coff__ttf_AfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <bin2coff__ttf_BeforeTargets>Midl</bin2coff__ttf_BeforeTargets>
+    <bin2coff__ttf_AfterTargets>CustomBuild</bin2coff__ttf_AfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <bin2coff__ttf_DependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(bin2coff__ttf_DependsOn)</bin2coff__ttf_DependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <bin2coff__ttf_>
+      <CommandLineTemplate>Release\bin2coff.exe "%(FullPath)" "$(IntDir)%(Filename)_ttf.obj" _binary_%(Filename)_ttf $(Platform)</CommandLineTemplate>
+      <Outputs>$(IntDir)%(Filename)_ttf.obj</Outputs>
+      <ExecutionDescription>Embedding TTF</ExecutionDescription>
+    </bin2coff__ttf_>
+  </ItemDefinitionGroup>
+  <PropertyGroup
+    Condition="'$(bin2coff__otf_BeforeTargets)' == '' and '$(bin2coff__otf_AfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <bin2coff__otf_BeforeTargets>Midl</bin2coff__otf_BeforeTargets>
+    <bin2coff__otf_AfterTargets>CustomBuild</bin2coff__otf_AfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <bin2coff__otf_DependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(bin2coff__otf_DependsOn)</bin2coff__otf_DependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <bin2coff__otf_>
+      <CommandLineTemplate>Release\bin2coff.exe "%(FullPath)" "$(IntDir)%(Filename)_otf.obj" _binary_%(Filename)_otf $(Platform)</CommandLineTemplate>
+      <Outputs>$(IntDir)%(Filename)_otf.obj</Outputs>
+      <ExecutionDescription>Embedding OTF</ExecutionDescription>
+    </bin2coff__otf_>
+  </ItemDefinitionGroup>
+  <PropertyGroup
+    Condition="'$(bin2coff__cff_BeforeTargets)' == '' and '$(bin2coff__cff_AfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <bin2coff__cff_BeforeTargets>Midl</bin2coff__cff_BeforeTargets>
+    <bin2coff__cff_AfterTargets>CustomBuild</bin2coff__cff_AfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <bin2coff__cff_DependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(bin2coff__cff_DependsOn)</bin2coff__cff_DependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <bin2coff__cff_>
+      <CommandLineTemplate>Release\bin2coff.exe "%(FullPath)" "$(IntDir)%(Filename)_cff.obj" _binary_%(Filename)_cff $(Platform)</CommandLineTemplate>
+      <Outputs>$(IntDir)%(Filename)_cff.obj</Outputs>
+      <ExecutionDescription>Embedding CFF</ExecutionDescription>
+    </bin2coff__cff_>
+  </ItemDefinitionGroup>
+  <PropertyGroup
+    Condition="'$(bin2coff__ttc_BeforeTargets)' == '' and '$(bin2coff__ttc_AfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <bin2coff__ttc_BeforeTargets>Midl</bin2coff__ttc_BeforeTargets>
+    <bin2coff__ttc_AfterTargets>CustomBuild</bin2coff__ttc_AfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <bin2coff__ttc_DependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(bin2coff__ttc_DependsOn)</bin2coff__ttc_DependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <bin2coff__ttc_>
+      <CommandLineTemplate>Release\bin2coff.exe "%(FullPath)" "$(IntDir)%(Filename)_ttc.obj" _binary_%(Filename)_ttc $(Platform)</CommandLineTemplate>
+      <Outputs>$(IntDir)%(Filename)_ttc.obj</Outputs>
+      <ExecutionDescription>Embedding TTC</ExecutionDescription>
+    </bin2coff__ttc_>
+  </ItemDefinitionGroup>
+</Project>

@@ -693,7 +693,7 @@ static char *get_field_name(fz_context *ctx, pdf_obj *field, int spare)
 	}
 	else
 	{
-		res = fz_malloc(ctx, spare+1);
+		res = Memento_label(fz_malloc(ctx, spare+1), "form_field_name");
 		res[0] = 0;
 	}
 
@@ -1313,7 +1313,7 @@ int pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 
 		if (contents)
 		{
-			copy = fz_malloc(ctx, len);
+			copy = Memento_label(fz_malloc(ctx, len), "sig_contents");
 			memcpy(copy, s, len);
 		}
 	}
@@ -1330,13 +1330,14 @@ int pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 	return len;
 }
 
-void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_pkcs7_signer *signer)
+void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_pkcs7_signer *signer, int64_t stime)
 {
 	pdf_obj *v = NULL;
 	pdf_obj *indv;
 	int vnum;
 	int max_digest_size;
 	char *buf = NULL;
+	char date_string[40];
 
 	vnum = pdf_create_object(ctx, doc);
 	indv = pdf_new_indirect(ctx, doc, vnum, 0);
@@ -1362,6 +1363,8 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 		pdf_dict_put(ctx, v, PDF_NAME(Filter), PDF_NAME(Adobe_PPKLite));
 		pdf_dict_put(ctx, v, PDF_NAME(SubFilter), PDF_NAME(adbe_pkcs7_detached));
 		pdf_dict_put(ctx, v, PDF_NAME(Type), PDF_NAME(Sig));
+		pdf_format_date(ctx, date_string, sizeof date_string, stime);
+		pdf_dict_put_text_string(ctx, v, PDF_NAME(M), date_string);
 
 		/* Record details within the document structure so that contents
 		* and byte_range can be updated with their correct values at

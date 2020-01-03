@@ -791,7 +791,7 @@ color_pcl_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *
 	if (n != 3)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "color PCL must be RGB");
 
-	writer->linebuf = fz_malloc(ctx, w * 3 * 2);
+	writer->linebuf = Memento_label(fz_malloc(ctx, w * 3 * 2), "color_pcl_linebuf");
 
 	guess_paper_size(&writer->options, w, h, xres, yres);
 

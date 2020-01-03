@@ -184,7 +184,7 @@ png_deinterlace(fz_context *ctx, struct info *info, unsigned int *passw, unsigne
 
 	if (info->height > UINT_MAX / stride)
 		fz_throw(ctx, FZ_ERROR_MEMORY, "image too large");
-	output = fz_malloc(ctx, info->height * stride);
+	output = Memento_label(fz_malloc(ctx, info->height * stride), "png_deinterlace");
 
 	for (p = 0; p < 7; p++)
 	{
@@ -450,7 +450,7 @@ png_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 			info->size = passofs[7];
 		}
 
-		info->samples = fz_malloc(ctx, info->size);
+		info->samples = Memento_label(fz_malloc(ctx, info->size), "png_samples");
 
 		stm.zalloc = fz_zlib_alloc;
 		stm.zfree = fz_zlib_free;

@@ -72,45 +72,58 @@ ifeq ($(USE_SYSTEM_HARFBUZZ),yes)
 else
 
 THIRD_SRC += thirdparty/harfbuzz/src/hb-aat-layout.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-aat-map.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-blob.cc
-THIRD_SRC += thirdparty/harfbuzz/src/hb-buffer-serialize.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-buffer.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-buffer-serialize.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-common.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-face.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-fallback-shape.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-font.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ft.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-map.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-number.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-cff1-table.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-cff2-table.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-color.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-face.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-font.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-layout.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-map.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-math.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-meta.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-metrics.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-name.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-arabic.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-default.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-hangul.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-hebrew.cc
-THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-indic-table.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-indic.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-indic-table.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-khmer.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-myanmar.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-thai.cc
-THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-tibetan.cc
-THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-use-table.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-use.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-use-table.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-vowel-constraints.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-fallback.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-normalize.cc
-THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-tag.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-var.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-set.cc
-THIRD_SRC += thirdparty/harfbuzz/src/hb-shape-plan.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-shape.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-shape-plan.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-shaper.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-static.cc
-THIRD_SRC += thirdparty/harfbuzz/src/hb-ucdn.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-subset.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-subset-cff1.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-subset-cff2.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-subset-cff-common.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-subset-input.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-subset-plan.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ucd.cc
 THIRD_SRC += thirdparty/harfbuzz/src/hb-unicode.cc
-THIRD_SRC += thirdparty/harfbuzz/src/hb-warning.cc
 
 THIRD_CFLAGS += -Ithirdparty/harfbuzz/src
 
@@ -125,9 +138,12 @@ $(OUT)/thirdparty/harfbuzz/%.o: thirdparty/harfbuzz/%.cc
 		-Dhb_calloc_impl=fz_hb_calloc \
 		-Dhb_free_impl=fz_hb_free \
 		-Dhb_realloc_impl=fz_hb_realloc \
+		-DHAVE_FREETYPE \
 		-fno-exceptions \
 		-fno-rtti \
-		-fvisibility-inlines-hidden
+		-fno-threadsafe-statics\
+		-fvisibility-inlines-hidden\
+		-std=gnu++11
 
 endif
 

@@ -153,7 +153,7 @@ pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *ssrcptr, size_t srclen
 			}
 		}
 
-		dstptr = dst = fz_malloc(ctx, dstlen + 1);
+		dstptr = dst = Memento_label(fz_malloc(ctx, dstlen + 1), "utf8_from_utf16be");
 
 		i = 2;
 		while (i + 2 <= srclen)
@@ -185,7 +185,7 @@ pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *ssrcptr, size_t srclen
 			}
 		}
 
-		dstptr = dst = fz_malloc(ctx, dstlen + 1);
+		dstptr = dst = Memento_label(fz_malloc(ctx, dstlen + 1), "utf8_from_utf16le");
 
 		i = 2;
 		while (i + 2 <= srclen)
@@ -217,7 +217,7 @@ pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *ssrcptr, size_t srclen
 			}
 		}
 
-		dstptr = dst = fz_malloc(ctx, dstlen + 1);
+		dstptr = dst = Memento_label(fz_malloc(ctx, dstlen + 1), "utf8_from_utf8");
 
 		i = 3;
 		while (i < srclen)
@@ -236,7 +236,7 @@ pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *ssrcptr, size_t srclen
 		for (i = 0; i < srclen; i++)
 			dstlen += fz_runelen(fz_unicode_from_pdf_doc_encoding[srcptr[i]]);
 
-		dstptr = dst = fz_malloc(ctx, dstlen + 1);
+		dstptr = dst = Memento_label(fz_malloc(ctx, dstlen + 1), "utf8_from_pdfdocenc");
 
 		for (i = 0; i < srclen; i++)
 		{

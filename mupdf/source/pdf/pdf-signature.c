@@ -3,6 +3,7 @@
 #include "../fitz/fitz-imp.h"
 
 #include <string.h>
+#include <time.h>
 
 void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, int hexdigest_offset, int hexdigest_length, pdf_pkcs7_signer *signer)
 {
@@ -74,6 +75,14 @@ void pdf_sign_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, 
 		const char *dn_str;
 		pdf_obj *wobj = ((pdf_annot *)widget)->obj;
 		fz_rect rect;
+		time_t now = time(NULL);
+#ifdef _POSIX_SOURCE
+		struct tm tmbuf, *tm = gmtime_r(&now, &tmbuf);
+#else
+		struct tm *tm = gmtime(&now);
+#endif
+		char now_str[40];
+		int len = 0;
 
 		rect = pdf_dict_get_rect(ctx, wobj, PDF_NAME(Rect));
 
@@ -100,10 +109,13 @@ void pdf_sign_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, 
 				fz_append_printf(ctx, fzbuf, ", c=%s", dn->c);
 
 			dn_str = fz_string_from_buffer(ctx, fzbuf);
-			pdf_update_signature_appearance(ctx, (pdf_annot *)widget, dn->cn, dn_str, NULL);
+
+			if (tm)
+				len = strftime(now_str, sizeof now_str, "%Y.%m.%d %H:%M:%SZ", tm);
+			pdf_update_signature_appearance(ctx, (pdf_annot *)widget, dn->cn, dn_str, len?now_str:NULL);
 		}
 
-		pdf_signature_set_value(ctx, doc, wobj, signer);
+		pdf_signature_set_value(ctx, doc, wobj, signer, now);
 	}
 	fz_always(ctx)
 	{

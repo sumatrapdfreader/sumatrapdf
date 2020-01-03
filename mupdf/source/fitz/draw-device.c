@@ -155,7 +155,7 @@ static void grow_stack(fz_context *ctx, fz_draw_device *dev)
 	{
 		stack = fz_realloc_array(ctx, dev->stack, max, fz_draw_state);
 	}
-	dev->stack = stack;
+	dev->stack = Memento_label(stack, "draw_stack");
 	dev->stack_cap = max;
 }
 

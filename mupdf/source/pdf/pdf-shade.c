@@ -71,7 +71,7 @@ pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *sh
 	shade->u.f.matrix = pdf_dict_get_matrix(ctx, dict, PDF_NAME(Matrix));
 	shade->u.f.xdivs = FUNSEGS;
 	shade->u.f.ydivs = FUNSEGS;
-	shade->u.f.fn_vals = fz_malloc(ctx, (FUNSEGS+1)*(FUNSEGS+1)*n*sizeof(float));
+	shade->u.f.fn_vals = Memento_label(fz_malloc(ctx, (FUNSEGS+1)*(FUNSEGS+1)*n*sizeof(float)), "shade_fn_vals");
 	shade->u.f.domain[0][0] = x0;
 	shade->u.f.domain[0][1] = y0;
 	shade->u.f.domain[1][0] = x1;

@@ -108,7 +108,7 @@ fz_new_font(fz_context *ctx, const char *name, int use_glyph_bbox, int glyph_cou
 	if (use_glyph_bbox && glyph_count <= MAX_BBOX_TABLE_SIZE)
 	{
 		fz_try(ctx)
-			font->bbox_table = fz_malloc_array(ctx, glyph_count, fz_rect);
+			font->bbox_table = Memento_label(fz_malloc_array(ctx, glyph_count, fz_rect), "font_bbox_table");
 		fz_catch(ctx)
 		{
 			fz_free(ctx, font);
@@ -1990,7 +1990,7 @@ fz_advance_glyph(fz_context *ctx, fz_font *font, int gid, int wmode)
 			if (!font->advance_cache)
 			{
 				int i;
-				font->advance_cache = fz_malloc_array(ctx, font->glyph_count, float);
+				font->advance_cache = Memento_label(fz_malloc_array(ctx, font->glyph_count, float), "font_advance_cache");
 				for (i = 0; i < font->glyph_count; ++i)
 					font->advance_cache[i] = fz_advance_ft_glyph(ctx, font, i, 0);
 			}

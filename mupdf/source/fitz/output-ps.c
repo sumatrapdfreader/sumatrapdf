@@ -219,7 +219,7 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 	{
 		fz_free(ctx, writer->input);
 		writer->input = NULL;
-		writer->input = fz_malloc(ctx, required_input);
+		writer->input = Memento_label(fz_malloc(ctx, required_input), "pswriter_input");
 		writer->input_size = required_input;
 	}
 
@@ -227,7 +227,7 @@ ps_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_sta
 	{
 		fz_free(ctx, writer->output);
 		writer->output = NULL;
-		writer->output = fz_malloc(ctx, required_output);
+		writer->output = Memento_label(fz_malloc(ctx, required_output), "pswriter_output");
 		writer->output_size = required_output;
 	}
 

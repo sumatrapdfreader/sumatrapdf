@@ -82,7 +82,7 @@ static void * JP2_Callback_Conv
 jpx_alloc(long size, JP2_Callback_Param param)
 {
 	fz_context *ctx = (fz_context *) param;
-	return fz_malloc(ctx, size);
+	return Memento_label(fz_malloc(ctx, size), "jpx_alloc");
 }
 
 static JP2_Error JP2_Callback_Conv
@@ -585,7 +585,7 @@ void *opj_malloc(size_t size)
 
 	assert(ctx != NULL);
 
-	return fz_malloc_no_throw(ctx, size);
+	return Memento_label(fz_malloc_no_throw(ctx, size), "opj_malloc");
 }
 
 void *opj_calloc(size_t n, size_t size)

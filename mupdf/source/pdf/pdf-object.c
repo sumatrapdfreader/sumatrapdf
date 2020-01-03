@@ -573,7 +573,7 @@ pdf_new_array(fz_context *ctx, pdf_document *doc, int initialcap)
 
 	fz_try(ctx)
 	{
-		obj->items = fz_malloc_array(ctx, obj->cap, pdf_obj*);
+		obj->items = Memento_label(fz_malloc_array(ctx, obj->cap, pdf_obj*), "pdf_array_items");
 	}
 	fz_catch(ctx)
 	{
@@ -901,7 +901,7 @@ pdf_new_dict(fz_context *ctx, pdf_document *doc, int initialcap)
 
 	fz_try(ctx)
 	{
-		DICT(obj)->items = fz_malloc_array(ctx, DICT(obj)->cap, struct keyval);
+		DICT(obj)->items = Memento_label(fz_malloc_array(ctx, DICT(obj)->cap, struct keyval), "dict_items");
 	}
 	fz_catch(ctx)
 	{
@@ -1822,7 +1822,7 @@ static inline void fmt_putc(fz_context *ctx, struct fmt *fmt, int c)
 		fmt->cap *= 2;
 		if (fmt->buf == fmt->ptr)
 		{
-			fmt->ptr = fz_malloc(ctx, fmt->cap);
+			fmt->ptr = Memento_label(fz_malloc(ctx, fmt->cap), "fmt_ptr");
 			memcpy(fmt->ptr, fmt->buf, fmt->len);
 		}
 		else
@@ -2122,7 +2122,7 @@ pdf_sprint_encrypted_obj(fz_context *ctx, char *buf, int cap, int *len, pdf_obj 
 	{
 		fmt.cap = 1024;
 		fmt.buf = NULL;
-		fmt.ptr = fz_malloc(ctx, fmt.cap);
+		fmt.ptr = Memento_label(fz_malloc(ctx, fmt.cap), "fmt_buf");
 	}
 	else
 	{

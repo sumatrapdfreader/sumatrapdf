@@ -50,7 +50,7 @@ static void *
 fz_dct_mem_alloc(j_common_ptr cinfo, size_t size)
 {
 	fz_dctd *state = JZ_DCT_STATE_FROM_CINFO(cinfo);
-	return fz_malloc_no_throw(state->ctx, size);
+	return Memento_label(fz_malloc_no_throw(state->ctx, size), "dct_alloc");
 }
 
 static void
@@ -234,7 +234,7 @@ next_dctd(fz_context *ctx, fz_stream *stm, size_t max)
 			jpeg_start_decompress(cinfo);
 
 			state->stride = cinfo->output_width * cinfo->output_components;
-			state->scanline = fz_malloc(ctx, state->stride);
+			state->scanline = Memento_label(fz_malloc(ctx, state->stride), "dct_scanline");
 			state->rp = state->scanline;
 			state->wp = state->scanline;
 		}

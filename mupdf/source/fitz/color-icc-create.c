@@ -361,7 +361,7 @@ fz_new_icc_data_from_cal(fz_context *ctx,
 		TRC_Tags[0] = icSigGrayTRCTag;
 	}
 
-	tag_list = fz_malloc(ctx, sizeof(fz_icc_tag) * num_tags);
+	tag_list = Memento_label(fz_malloc(ctx, sizeof(fz_icc_tag) * num_tags), "icc_tag_list");
 
 	/* precompute sizes and offsets */
 	profile_size += ICC_TAG_SIZE * num_tags;

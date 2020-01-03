@@ -1010,7 +1010,7 @@ static void fz_cached_color_convert(fz_context *ctx, fz_color_converter *cc_, co
 
 	cc->base.convert(ctx, &cc->base, ss, ds);
 
-	val = fz_malloc_array(ctx, cc->base.ds->n, float);
+	val = Memento_label(fz_malloc_array(ctx, cc->base.ds->n, float), "cached_color_convert");
 	memcpy(val, ds, n);
 	fz_try(ctx)
 		fz_hash_insert(ctx, cc->hash, ss, val);

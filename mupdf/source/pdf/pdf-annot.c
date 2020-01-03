@@ -1426,18 +1426,24 @@ pdf_add_annot_ink_list(fz_context *ctx, pdf_annot *annot, int n, fz_point p[])
 	pdf_dirty_annot(ctx, annot);
 }
 
-static void
-pdf_format_date(fz_context *ctx, char *s, int n, time_t secs)
+void
+pdf_format_date(fz_context *ctx, char *s, int n, int64_t isecs)
 {
+	time_t secs = isecs;
 #ifdef _POSIX_SOURCE
 	struct tm tmbuf, *tm = gmtime_r(&secs, &tmbuf);
 #else
 	struct tm *tm = gmtime(&secs);
 #endif
 	if (!tm)
+	{
 		fz_strlcpy(s, "D:19700101000000Z", n);
+	}
 	else
-		strftime(s, n, "D:%Y%m%d%H%M%SZ", tm);
+	{
+		if (!strftime(s, n, "D:%Y%m%d%H%M%SZ", tm) && n > 0)
+			s[0] = '\0';
+	}
 }
 
 static int64_t

@@ -775,11 +775,11 @@ pdf_sort_cmap(fz_context *ctx, pdf_cmap *cmap)
 	counts[2] = 0;
 	walk_splay(cmap->tree, cmap->ttop, count_node_types, &counts);
 
-	cmap->ranges = fz_malloc_array(ctx, counts[0], pdf_range);
+	cmap->ranges = Memento_label(fz_malloc_array(ctx, counts[0], pdf_range), "cmap_range");
 	cmap->rcap = counts[0];
-	cmap->xranges = fz_malloc_array(ctx, counts[1], pdf_xrange);
+	cmap->xranges = Memento_label(fz_malloc_array(ctx, counts[1], pdf_xrange), "cmap_xrange");
 	cmap->xcap = counts[1];
-	cmap->mranges = fz_malloc_array(ctx, counts[2], pdf_mrange);
+	cmap->mranges = Memento_label(fz_malloc_array(ctx, counts[2], pdf_mrange), "cmap_mrange");
 	cmap->mcap = counts[2];
 
 	walk_splay(cmap->tree, cmap->ttop, copy_node_types, cmap);

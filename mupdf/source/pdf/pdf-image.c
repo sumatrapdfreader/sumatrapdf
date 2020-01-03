@@ -425,7 +425,7 @@ raw_or_unknown_compression:
 			size = image->w * n;
 			h = image->h;
 			s = pixmap->samples;
-			d = fz_malloc(ctx, size * h);
+			d = Memento_label(fz_malloc(ctx, size * h), "pdf_image_samples");
 			buffer = fz_new_buffer_from_data(ctx, d, size * h);
 
 			if (n == pixmap->n)

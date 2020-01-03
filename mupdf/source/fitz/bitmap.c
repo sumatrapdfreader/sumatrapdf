@@ -295,7 +295,7 @@ fz_new_bitmap(fz_context *ctx, int w, int h, int n, int xres, int yres)
 		bit->xres = xres;
 		bit->yres = yres;
 		bit->stride = stride;
-		bit->samples = fz_malloc(ctx, h * bit->stride);
+		bit->samples = Memento_label(fz_malloc(ctx, h * bit->stride), "bitmap_samples");
 	}
 	fz_catch(ctx)
 	{

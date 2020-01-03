@@ -199,8 +199,8 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 		 * larger than compressBound outputted in one go, even if you
 		 * take all the data out each time. */
 		writer->csize = compressBound(writer->usize);
-		writer->udata = fz_malloc(ctx, writer->usize);
-		writer->cdata = fz_malloc(ctx, writer->csize);
+		writer->udata = Memento_label(fz_malloc(ctx, writer->usize), "png_write_udata");
+		writer->cdata = Memento_label(fz_malloc(ctx, writer->csize), "png_write_cdata");
 		writer->stream.opaque = ctx;
 		writer->stream.zalloc = fz_zlib_alloc;
 		writer->stream.zfree = fz_zlib_free;

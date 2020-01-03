@@ -423,7 +423,7 @@ create_levels(fz_context *ctx,
 	const uint32_t *ptext;
 	size_t plen, remaining;
 
-	levels = fz_malloc(ctx, len * sizeof(*levels));
+	levels = Memento_label(fz_malloc(ctx, len * sizeof(*levels)), "bidi_levels");
 
 	fz_var(types);
 

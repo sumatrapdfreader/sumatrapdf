@@ -319,7 +319,7 @@ fz_open_sgilog16(fz_context *ctx, fz_stream *chain, int w)
 		state->n = 0;
 		state->c = 0;
 		state->w = w;
-		state->temp = fz_malloc(ctx, w * sizeof(uint16_t));
+		state->temp = Memento_label(fz_malloc(ctx, w * sizeof(uint16_t)), "sgilog16_temp");
 		state->chain = fz_keep_stream(ctx, chain);
 	}
 	fz_catch(ctx)
@@ -484,7 +484,7 @@ fz_open_sgilog24(fz_context *ctx, fz_stream *chain, int w)
 	{
 		state->err = 0;
 		state->w = w;
-		state->temp = fz_malloc(ctx, w * 3);
+		state->temp = Memento_label(fz_malloc(ctx, w * 3), "sgilog24_temp");
 		state->chain = fz_keep_stream(ctx, chain);
 	}
 	fz_catch(ctx)
@@ -654,7 +654,7 @@ fz_open_sgilog32(fz_context *ctx, fz_stream *chain, int w)
 		state->n = 0;
 		state->c = 0;
 		state->w = w;
-		state->temp = fz_malloc(ctx, w * sizeof(uint32_t));
+		state->temp = Memento_label(fz_malloc(ctx, w * sizeof(uint32_t)), "sgilog32_temp");
 		state->chain = fz_keep_stream(ctx, chain);
 	}
 	fz_catch(ctx)

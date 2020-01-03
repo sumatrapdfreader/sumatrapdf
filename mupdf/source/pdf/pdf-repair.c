@@ -664,14 +664,13 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 			pdf_drop_obj(ctx, id);
 			id = NULL;
 		}
-
-		fz_free(ctx, list);
 	}
 	fz_always(ctx)
 	{
 		for (i = 0; i < num_roots; i++)
 			pdf_drop_obj(ctx, roots[i]);
 		fz_free(ctx, roots);
+		fz_free(ctx, list);
 	}
 	fz_catch(ctx)
 	{
@@ -679,7 +678,6 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 		pdf_drop_obj(ctx, id);
 		pdf_drop_obj(ctx, obj);
 		pdf_drop_obj(ctx, info);
-		fz_free(ctx, list);
 		fz_rethrow(ctx);
 	}
 }

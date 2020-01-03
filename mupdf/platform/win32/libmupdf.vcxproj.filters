@@ -2,34 +2,34 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="cbz">
-      <UniqueIdentifier>{9d1619ff-3cc3-4f09-8792-c9f498b6838c}</UniqueIdentifier>
+      <UniqueIdentifier>{a7c02f0c-d06a-4202-ab21-c194bc7cdd25}</UniqueIdentifier>
     </Filter>
     <Filter Include="svg">
-      <UniqueIdentifier>{fb0f90da-47d8-4192-b306-39c2f07d3031}</UniqueIdentifier>
+      <UniqueIdentifier>{c885531e-e66f-484f-8db6-b217e3650021}</UniqueIdentifier>
     </Filter>
     <Filter Include="xps">
-      <UniqueIdentifier>{ae469c7a-e23f-4664-a05a-a11b30755813}</UniqueIdentifier>
+      <UniqueIdentifier>{e81ed656-59ac-46c3-9c60-515c624e3006}</UniqueIdentifier>
     </Filter>
     <Filter Include="fitz">
-      <UniqueIdentifier>{3c9a3f8b-993d-4fce-9e01-d126690a2817}</UniqueIdentifier>
+      <UniqueIdentifier>{d627a496-ac2c-4e9b-8ed4-d7f52b218d9e}</UniqueIdentifier>
     </Filter>
     <Filter Include="pdf">
-      <UniqueIdentifier>{2302376a-fe79-410e-8475-0c9856571506}</UniqueIdentifier>
+      <UniqueIdentifier>{661e20fa-8040-41f6-8e92-d799d822e6ae}</UniqueIdentifier>
     </Filter>
     <Filter Include="!include">
-      <UniqueIdentifier>{03ca2741-5bd7-4986-b42e-24d927fb19a3}</UniqueIdentifier>
+      <UniqueIdentifier>{f6c7a5bd-da58-4ce7-8b2b-333981306d83}</UniqueIdentifier>
     </Filter>
     <Filter Include="!include\pdf">
-      <UniqueIdentifier>{25a3647a-2a8f-4a76-a969-be0f554d333b}</UniqueIdentifier>
+      <UniqueIdentifier>{3f460a26-5211-43ef-8c79-3866ff1b1a64}</UniqueIdentifier>
     </Filter>
     <Filter Include="!include\fitz">
-      <UniqueIdentifier>{257ceff1-81ac-4fa4-bfbc-aaa0e67d1ba3}</UniqueIdentifier>
+      <UniqueIdentifier>{9fc2141c-505d-4cbd-9a28-c9275b9ec71c}</UniqueIdentifier>
     </Filter>
     <Filter Include="html">
-      <UniqueIdentifier>{c0b6d7f4-641b-4433-b1d2-d844da5c7e0f}</UniqueIdentifier>
+      <UniqueIdentifier>{b300fa7c-f9af-4bf2-a30d-1ecef41d3dfc}</UniqueIdentifier>
     </Filter>
     <Filter Include="generated">
-      <UniqueIdentifier>{3d3aa582-c0a0-44b1-9b98-b207e224e89d}</UniqueIdentifier>
+      <UniqueIdentifier>{376c56db-6c04-4f4a-89a8-f63263ea9eb7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -777,6 +777,9 @@
       <Filter>!include\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\output-ps.h">
+      <Filter>!include\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\fitz\output-ps2.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\output-psd.h">

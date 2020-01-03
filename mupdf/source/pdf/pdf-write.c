@@ -911,7 +911,7 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 		}
 
 		/* Create new table for the reordered, compacted xref */
-		newxref = fz_malloc_array(ctx, xref_len + 3, pdf_xref_entry);
+		newxref = Memento_label(fz_malloc_array(ctx, xref_len + 3, pdf_xref_entry), "pdf_xref_entries");
 		newxref[0] = *pdf_get_xref_entry(ctx, doc, 0);
 
 		/* Move used objects into the new compacted xref */
@@ -1578,7 +1578,7 @@ static fz_buffer *hexbuf(fz_context *ctx, const unsigned char *p, size_t n)
 	static const char hex[17] = "0123456789abcdef";
 	int x = 0;
 	size_t len = n * 2 + (n / 32) + 1;
-	unsigned char *data = fz_malloc(ctx, len);
+	unsigned char *data = Memento_label(fz_malloc(ctx, len), "hexbuf");
 	fz_buffer *buf = fz_new_buffer_from_data(ctx, data, len);
 
 	while (n--)
@@ -1660,7 +1660,7 @@ static fz_buffer *deflatebuf(fz_context *ctx, const unsigned char *p, size_t n)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Buffer too large to deflate");
 
 	cap = compressBound(longN);
-	data = fz_malloc(ctx, cap);
+	data = Memento_label(fz_malloc(ctx, cap), "pdf_write_deflate");
 	buf = fz_new_buffer_from_data(ctx, data, cap);
 	csize = (uLongf)cap;
 	t = compress(data, &csize, p, longN);

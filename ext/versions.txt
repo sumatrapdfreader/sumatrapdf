@@ -51,8 +51,7 @@ mujs            1.0.5      2019-06-12
   http://git.ghostscript.com/?p=mujs.git;a=commit;h=14dc9355bd71818cf01c1c690c1c91a0978ea9b8
 
 ../mupdf        trunk
-  http://git.ghostscript.com/?p=mupdf.git
-  c50ac19e412fe7830dfef5d1cbc71e9da3405c96
+  https://github.com/ArtifexSoftware/mupdf/commit/5e5fb5510df4b698456ef6095f7c9b9f22ef59c0
   Fri Dec 6 21:33:32 2019 +0100
   Update thirdparty library version information.
 
