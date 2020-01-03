@@ -15,11 +15,10 @@ for h in header_paths:
 	if h.endswith (".h"):
 		with io.open (h, encoding='utf-8') as f: headers_content.append (f.read ())
 
-result = """EXPORTS
+symbols = "\n".join (sorted (re.findall (r"^hb_\w+(?= \()", "\n".join (headers_content), re.M)))
+
+result = symbols if os.environ.get('PLAIN_LIST', '') else """EXPORTS
 %s
-LIBRARY lib%s-0.dll""" % (
-	"\n".join (sorted (re.findall (r"^hb_\w+(?= \()", "\n".join (headers_content), re.M))),
-	output_file.replace ('.def', '')
-)
+LIBRARY lib%s-0.dll""" % (symbols, output_file.replace ('.def', ''))
 
 with open (output_file, "w") as f: f.write (result)

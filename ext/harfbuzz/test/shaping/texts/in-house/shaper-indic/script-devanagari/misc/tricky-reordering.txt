@@ -1,5 +1,0 @@
-Usage:
-  ./hb-unicode-encode UNICODE_STRING...
-or:
-  ./hb-unicode-encode --stdin
-फि्

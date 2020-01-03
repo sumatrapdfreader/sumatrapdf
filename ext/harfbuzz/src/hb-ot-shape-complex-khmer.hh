@@ -34,42 +34,20 @@
 
 /* buffer var allocations */
 #define khmer_category() indic_category() /* khmer_category_t */
-#define khmer_position() indic_position() /* khmer_position_t */
 
 
-typedef indic_category_t khmer_category_t;
-typedef indic_position_t khmer_position_t;
-
-
-static inline khmer_position_t
-matra_position_khmer (khmer_position_t side)
+/* Note: This enum is duplicated in the -machine.rl source file.
+ * Not sure how to avoid duplication. */
+enum khmer_category_t
 {
-  switch ((int) side)
-  {
-    case POS_PRE_C:
-      return POS_PRE_M;
-
-    case POS_POST_C:
-    case POS_ABOVE_C:
-    case POS_BELOW_C:
-      return POS_AFTER_POST;
-
-    default:
-      return side;
-  };
-}
-
-static inline bool
-is_consonant_or_vowel (const hb_glyph_info_t &info)
-{
-  return is_one_of (info, CONSONANT_FLAGS | FLAG (OT_V));
-}
-
-static inline bool
-is_coeng (const hb_glyph_info_t &info)
-{
-  return is_one_of (info, FLAG (OT_Coeng));
-}
+  OT_Robatic = 20,
+  OT_Xgroup  = 21,
+  OT_Ygroup  = 22,
+  //OT_VAbv = 26,
+  //OT_VBlw = 27,
+  //OT_VPre = 28,
+  //OT_VPst = 29,
+};
 
 static inline void
 set_khmer_properties (hb_glyph_info_t &info)
@@ -77,47 +55,58 @@ set_khmer_properties (hb_glyph_info_t &info)
   hb_codepoint_t u = info.codepoint;
   unsigned int type = hb_indic_get_categories (u);
   khmer_category_t cat = (khmer_category_t) (type & 0x7Fu);
-  khmer_position_t pos = (khmer_position_t) (type >> 8);
+  indic_position_t pos = (indic_position_t) (type >> 8);
 
 
   /*
    * Re-assign category
+   *
+   * These categories are experimentally extracted from what Uniscribe allows.
    */
-
-  if (unlikely (u == 0x17C6u)) cat = OT_N; /* Khmer Bindu doesn't like to be repositioned. */
-  else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x17CDu, 0x17D1u) ||
-		     u == 0x17CBu || u == 0x17D3u || u == 0x17DDu)) /* Khmer Various signs */
+  switch (u)
   {
-    /* These can occur mid-syllable (eg. before matras), even though Unicode marks them as Syllable_Modifier.
-     * https://github.com/roozbehp/unicode-data/issues/5 */
-    cat = OT_M;
-    pos = POS_ABOVE_C;
-  }
-  else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x2010u, 0x2011u))) cat = OT_PLACEHOLDER;
-  else if (unlikely (u == 0x25CCu)) cat = OT_DOTTEDCIRCLE;
+    case 0x179Au:
+      cat = (khmer_category_t) OT_Ra;
+      break;
 
+    case 0x17CCu:
+    case 0x17C9u:
+    case 0x17CAu:
+      cat = OT_Robatic;
+      break;
+
+    case 0x17C6u:
+    case 0x17CBu:
+    case 0x17CDu:
+    case 0x17CEu:
+    case 0x17CFu:
+    case 0x17D0u:
+    case 0x17D1u:
+      cat = OT_Xgroup;
+      break;
+
+    case 0x17C7u:
+    case 0x17C8u:
+    case 0x17DDu:
+    case 0x17D3u: /* Just guessing. Uniscribe doesn't categorize it. */
+      cat = OT_Ygroup;
+      break;
+  }
 
   /*
    * Re-assign position.
    */
-
-  if ((FLAG_UNSAFE (cat) & CONSONANT_FLAGS))
-  {
-    pos = POS_BASE_C;
-    if (u == 0x179Au)
-      cat = OT_Ra;
-  }
-  else if (cat == OT_M)
-  {
-    pos = matra_position_khmer (pos);
-  }
-  else if ((FLAG_UNSAFE (cat) & (FLAG (OT_SM) | FLAG (OT_A) | FLAG (OT_Symbol))))
-  {
-    pos = POS_SMVD;
-  }
+  if (cat == (khmer_category_t) OT_M)
+    switch ((int) pos)
+    {
+      case POS_PRE_C:	cat = (khmer_category_t) OT_VPre; break;
+      case POS_BELOW_C:	cat = (khmer_category_t) OT_VBlw; break;
+      case POS_ABOVE_C:	cat = (khmer_category_t) OT_VAbv; break;
+      case POS_POST_C:	cat = (khmer_category_t) OT_VPst; break;
+      default: assert (0);
+    }
 
   info.khmer_category() = cat;
-  info.khmer_position() = pos;
 }
 
 

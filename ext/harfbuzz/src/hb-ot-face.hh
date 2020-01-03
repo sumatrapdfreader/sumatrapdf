@@ -34,83 +34,41 @@
 #include "hb-machinery.hh"
 
 
-#define hb_ot_face_data(face) ((hb_ot_face_data_t *) face->shaper_data.ot.get_relaxed ())
-
-
 /*
- * hb_ot_face_data_t
+ * hb_ot_face_t
  */
 
-/* Most of these tables are NOT needed for shaping.  But we need to hook them *somewhere*.
- * This is as good as any place. */
-#define HB_OT_LAYOUT_TABLES \
-    /* OpenType shaping. */ \
-    HB_OT_LAYOUT_TABLE(OT, JSTF) \
-    HB_OT_LAYOUT_TABLE(OT, BASE) \
-    /* AAT shaping. */ \
-    HB_OT_LAYOUT_TABLE(AAT, morx) \
-    HB_OT_LAYOUT_TABLE(AAT, kerx) \
-    HB_OT_LAYOUT_TABLE(AAT, ankr) \
-    HB_OT_LAYOUT_TABLE(AAT, trak) \
-    /* OpenType variations. */ \
-    HB_OT_LAYOUT_TABLE(OT, fvar) \
-    HB_OT_LAYOUT_TABLE(OT, avar) \
-    HB_OT_LAYOUT_TABLE(OT, MVAR) \
-    /* OpenType math. */ \
-    HB_OT_LAYOUT_TABLE(OT, MATH) \
-    /* OpenType fundamentals. */ \
-    HB_OT_LAYOUT_ACCELERATOR(OT, GDEF) \
-    HB_OT_LAYOUT_ACCELERATOR(OT, GSUB) \
-    HB_OT_LAYOUT_ACCELERATOR(OT, GPOS) \
-    HB_OT_LAYOUT_ACCELERATOR(OT, cmap) \
-    HB_OT_LAYOUT_ACCELERATOR(OT, hmtx) \
-    HB_OT_LAYOUT_ACCELERATOR(OT, vmtx) \
-    HB_OT_LAYOUT_ACCELERATOR(OT, post) \
-    HB_OT_LAYOUT_ACCELERATOR(OT, kern) \
-    HB_OT_LAYOUT_ACCELERATOR(OT, glyf) \
-    HB_OT_LAYOUT_ACCELERATOR(OT, CBDT) \
-    /* */
-
 /* Declare tables. */
-#define HB_OT_LAYOUT_TABLE(Namespace, Type) namespace Namespace { struct Type; }
-#define HB_OT_LAYOUT_ACCELERATOR(Namespace, Type) HB_OT_LAYOUT_TABLE (Namespace, Type##_accelerator_t)
-HB_OT_LAYOUT_TABLES
-#undef HB_OT_LAYOUT_ACCELERATOR
-#undef HB_OT_LAYOUT_TABLE
+#define HB_OT_TABLE(Namespace, Type) namespace Namespace { struct Type; }
+#define HB_OT_ACCELERATOR(Namespace, Type) HB_OT_TABLE (Namespace, Type##_accelerator_t)
+#include "hb-ot-face-table-list.hh"
+#undef HB_OT_ACCELERATOR
+#undef HB_OT_TABLE
 
-struct hb_ot_face_data_t
+struct hb_ot_face_t
 {
   HB_INTERNAL void init0 (hb_face_t *face);
-  HB_INTERNAL void fini (void);
+  HB_INTERNAL void fini ();
 
-#define HB_OT_LAYOUT_TABLE_ORDER(Namespace, Type) \
+#define HB_OT_TABLE_ORDER(Namespace, Type) \
     HB_PASTE (ORDER_, HB_PASTE (Namespace, HB_PASTE (_, Type)))
   enum order_t
   {
     ORDER_ZERO,
-#define HB_OT_LAYOUT_TABLE(Namespace, Type) HB_OT_LAYOUT_TABLE_ORDER (Namespace, Type),
-#define HB_OT_LAYOUT_ACCELERATOR(Namespace, Type) HB_OT_LAYOUT_TABLE (Namespace, Type)
-    HB_OT_LAYOUT_TABLES
-#undef HB_OT_LAYOUT_ACCELERATOR
-#undef HB_OT_LAYOUT_TABLE
+#define HB_OT_TABLE(Namespace, Type) HB_OT_TABLE_ORDER (Namespace, Type),
+#include "hb-ot-face-table-list.hh"
+#undef HB_OT_TABLE
   };
 
   hb_face_t *face; /* MUST be JUST before the lazy loaders. */
-#define HB_OT_LAYOUT_TABLE(Namespace, Type) \
-  hb_table_lazy_loader_t<Namespace::Type, HB_OT_LAYOUT_TABLE_ORDER (Namespace, Type)> Type;
-#define HB_OT_LAYOUT_ACCELERATOR(Namespace, Type) \
-  hb_face_lazy_loader_t<Namespace::Type##_accelerator_t, HB_OT_LAYOUT_TABLE_ORDER (Namespace, Type)> Type;
-  HB_OT_LAYOUT_TABLES
-#undef HB_OT_LAYOUT_ACCELERATOR
-#undef HB_OT_LAYOUT_TABLE
+#define HB_OT_TABLE(Namespace, Type) \
+  hb_table_lazy_loader_t<Namespace::Type, HB_OT_TABLE_ORDER (Namespace, Type)> Type;
+#define HB_OT_ACCELERATOR(Namespace, Type) \
+  hb_face_lazy_loader_t<Namespace::Type##_accelerator_t, HB_OT_TABLE_ORDER (Namespace, Type)> Type;
+#include "hb-ot-face-table-list.hh"
+#undef HB_OT_ACCELERATOR
+#undef HB_OT_TABLE
 };
-
-
-HB_INTERNAL hb_ot_face_data_t *
-_hb_ot_face_data_create (hb_face_t *face);
-
-HB_INTERNAL void
-_hb_ot_face_data_destroy (hb_ot_face_data_t *data);
 
 
 #endif /* HB_OT_FACE_HH */

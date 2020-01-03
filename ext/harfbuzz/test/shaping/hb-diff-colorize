@@ -1,7 +1,0 @@
-#!/usr/bin/env python
-
-from hb_test_tools import *
-
-formatter = ColorFormatter.Auto (sys.argv)
-colorizer = DiffColorizer (formatter=formatter)
-UtilMains.process_multiple_files (FilterHelpers.filter_printer_function_no_newline (colorizer.colorize_diff))

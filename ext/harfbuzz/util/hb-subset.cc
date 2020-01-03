@@ -40,19 +40,26 @@ struct subset_consumer_t
       : failed (false), options (parser), subset_options (parser), font (nullptr), input (nullptr) {}
 
   void init (hb_buffer_t  *buffer_,
-             const font_options_t *font_opts)
+	     const font_options_t *font_opts)
   {
     font = hb_font_reference (font_opts->get_font ());
-    input = hb_subset_input_create_or_fail ();
+    input = hb_subset_input_reference (subset_options.input);
   }
 
   void consume_line (const char   *text,
-                     unsigned int  text_len,
-                     const char   *text_before,
-                     const char   *text_after)
+		     unsigned int  text_len,
+		     const char   *text_before,
+		     const char   *text_after)
   {
     // TODO(Q1) does this only get called with at least 1 codepoint?
     hb_set_t *codepoints = hb_subset_input_unicode_set (input);
+    if (0 == strcmp (text, "*"))
+    {
+      hb_face_t *face = hb_font_get_face (font);
+      hb_face_collect_unicodes (face, codepoints);
+      return;
+    }
+
     gchar *c = (gchar *)text;
     do {
       gunichar cp = g_utf8_get_char(c);
@@ -81,7 +88,7 @@ struct subset_consumer_t
     }
     if ((unsigned int) bytes_written != data_length) {
       fprintf(stderr, "Expected %u bytes written, got %d\n", data_length,
-              bytes_written);
+	      bytes_written);
       return false;
     }
     return true;
@@ -89,11 +96,9 @@ struct subset_consumer_t
 
   void finish (const font_options_t *font_opts)
   {
-    hb_subset_input_set_drop_hints (input, subset_options.drop_hints);
-
     hb_face_t *face = hb_font_get_face (font);
 
-    hb_face_t *new_face = hb_subset(face, input);
+    hb_face_t *new_face = hb_subset (face, input);
     hb_blob_t *result = hb_face_reference_blob (new_face);
 
     failed = !hb_blob_get_length (result);

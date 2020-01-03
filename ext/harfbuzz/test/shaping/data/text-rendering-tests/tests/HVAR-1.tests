@@ -1,6 +1,0 @@
-../fonts/TestHVAROne.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=0:U+0041,U+0042,U+0043:[A|B@520,0|C@1094,0]
-../fonts/TestHVAROne.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=200:U+0041,U+0042,U+0043:[A|B@533,0|C@1115,0]
-../fonts/TestHVAROne.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=400:U+0041,U+0042,U+0043:[A|B@546,0|C@1135,0]
-../fonts/TestHVAROne.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=600:U+0041,U+0042,U+0043:[A|B@558,0|C@1155,0]
-../fonts/TestHVAROne.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=800:U+0041,U+0042,U+0043:[A|B@571,0|C@1175,0]
-../fonts/TestHVAROne.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=1000:U+0041,U+0042,U+0043:[A|B@584,0|C@1196,0]

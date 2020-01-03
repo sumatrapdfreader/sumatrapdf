@@ -11,6 +11,8 @@ include Makefile.sources
 # Convenience targets:
 lib:
 	@$(MAKE) $(AM_MAKEFLAGS) -C $(top_builddir)/src lib
+libs:
+	@$(MAKE) $(AM_MAKEFLAGS) -C $(top_builddir)/src libs
 
 bin_PROGRAMS =
 
@@ -48,18 +50,16 @@ bin_PROGRAMS += hb-shape
 
 hb_subset_SOURCES = $(HB_SUBSET_CLI_sources)
 hb_subset_LDADD = \
-	$(LDADD) \
-	$(top_builddir)/src/libharfbuzz-subset.la
+	$(top_builddir)/src/libharfbuzz-subset.la \
+	$(LDADD)
+
 bin_PROGRAMS += hb-subset
 
-if HAVE_OT
 hb_ot_shape_closure_SOURCES = $(HB_OT_SHAPE_CLOSURE_sources)
 bin_PROGRAMS += hb-ot-shape-closure
-endif # HAVE_OT
 
 endif # HAVE_GLIB
 
-#if HAVE_OT
 #if HAVE_FONTCONFIG
 #hb_fc_list_SOURCES = \
 #	hb-fc.cc \
@@ -72,6 +72,5 @@ endif # HAVE_GLIB
 #	$(NULL)
 #bin_PROGRAMS += hb-fc-list
 #endif # HAVE_FONTCONFIG
-#endif # HAVE_OT
 
 -include $(top_srcdir)/git.mk

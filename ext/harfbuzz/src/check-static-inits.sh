@@ -7,7 +7,6 @@ test -z "$srcdir" && srcdir=.
 test -z "$libs" && libs=.libs
 stat=0
 
-
 if which objdump 2>/dev/null >/dev/null; then
 	:
 else
@@ -31,7 +30,8 @@ done
 
 echo "Checking that no object file has lazy static C++ constructors/destructors or other such stuff"
 for obj in $OBJS; do
-	if objdump -t "$obj" | grep '__cxa_'; then
+	if objdump -t "$obj" | grep -q '__cxa_' && ! objdump -t "$obj" | grep -q __ubsan_handle; then
+		objdump -t "$obj" | grep '__cxa_'
 		echo "Ouch, $obj has lazy static C++ constructors/destructors or other such stuff"
 		stat=1
 	fi

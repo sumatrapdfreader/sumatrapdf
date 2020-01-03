@@ -36,41 +36,57 @@
 
 namespace AAT {
 
+using namespace OT;
+
 
 struct Anchor
 {
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this));
   }
 
+  public:
   FWORD		xCoordinate;
   FWORD		yCoordinate;
   public:
   DEFINE_SIZE_STATIC (4);
 };
 
+typedef LArrayOf<Anchor> GlyphAnchors;
+
 struct ankr
 {
-  static const hb_tag_t tableTag = HB_AAT_TAG_ankr;
+  static constexpr hb_tag_t tableTag = HB_AAT_TAG_ankr;
 
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  const Anchor &get_anchor (hb_codepoint_t glyph_id,
+			    unsigned int i,
+			    unsigned int num_glyphs) const
+  {
+    const NNOffsetTo<GlyphAnchors> *offset = (this+lookupTable).get_value (glyph_id, num_glyphs);
+    if (!offset)
+      return Null(Anchor);
+    const GlyphAnchors &anchors = &(this+anchorData) + *offset;
+    return anchors[i];
+  }
+
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this) &&
 			  version == 0 &&
-			  lookupTable.sanitize (c, this) &&
-			  anchors.sanitize (c, this)));
+			  c->check_range (this, anchorData) &&
+			  lookupTable.sanitize (c, this, &(this+anchorData))));
   }
 
   protected:
   HBUINT16	version; 	/* Version number (set to zero) */
   HBUINT16	flags;		/* Flags (currently unused; set to zero) */
-  LOffsetTo<Lookup<HBUINT16> >
+  LOffsetTo<Lookup<NNOffsetTo<GlyphAnchors>>>
 		lookupTable;	/* Offset to the table's lookup table */
-  LOffsetTo<LArrayOf<Anchor> >
-		anchors;	/* Offset to the glyph data table */
+  LNNOffsetTo<HBUINT8>
+		anchorData;	/* Offset to the glyph data table */
 
   public:
   DEFINE_SIZE_STATIC (12);

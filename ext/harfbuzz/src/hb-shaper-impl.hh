@@ -30,14 +30,9 @@
 #include "hb.hh"
 
 #include "hb-shaper.hh"
-#include "hb-shape-plan.hh"
+#include "hb-face.hh"
 #include "hb-font.hh"
+#include "hb-shape-plan.hh"
 #include "hb-buffer.hh"
-
-
-#ifdef HB_SHAPER
-#define HB_SHAPER_DATA_GET(object) HB_SHAPER_DATA (HB_SHAPER, object).get ()
-#endif
-
 
 #endif /* HB_SHAPER_IMPL_HH */

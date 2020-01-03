@@ -27,7 +27,7 @@
 #include "hb-ot-shape-complex-indic.hh"
 
 int
-main (void)
+main ()
 {
   for (hb_codepoint_t u = 0; u <= 0x10FFFF; u++)
   {

@@ -27,7 +27,16 @@
 #include "hb-set.hh"
 
 
-/* Public API */
+/**
+ * SECTION:hb-set
+ * @title: hb-set
+ * @short_description: Object representing a set of integers
+ * @include: hb.h
+ *
+ * Set objects represent a mathematical set of integer values.  They are
+ * used in non-shaping API to query certain set of characters or glyphs,
+ * or other integer values.
+ **/
 
 
 /**
@@ -38,7 +47,7 @@
  * Since: 0.9.2
  **/
 hb_set_t *
-hb_set_create (void)
+hb_set_create ()
 {
   hb_set_t *set;
 
@@ -58,7 +67,7 @@ hb_set_create (void)
  * Since: 0.9.2
  **/
 hb_set_t *
-hb_set_get_empty (void)
+hb_set_get_empty ()
 {
   return const_cast<hb_set_t *> (&Null(hb_set_t));
 }
@@ -380,6 +389,7 @@ hb_set_symmetric_difference (hb_set_t       *set,
   set->symmetric_difference (other);
 }
 
+#ifndef HB_DISABLE_DEPRECATED
 /**
  * hb_set_invert:
  * @set: a set.
@@ -391,9 +401,10 @@ hb_set_symmetric_difference (hb_set_t       *set,
  * Deprecated: 1.6.1
  **/
 void
-hb_set_invert (hb_set_t *set)
+hb_set_invert (hb_set_t *set HB_UNUSED)
 {
 }
+#endif
 
 /**
  * hb_set_get_population:
@@ -468,7 +479,7 @@ hb_set_next (const hb_set_t *set,
  * @set: a set.
  * @codepoint: (inout):
  *
- * Gets the previous number in @set that is slower than current value of @codepoint.
+ * Gets the previous number in @set that is lower than current value of @codepoint.
  *
  * Set @codepoint to %HB_SET_VALUE_INVALID to get started.
  *
@@ -513,7 +524,7 @@ hb_set_next_range (const hb_set_t *set,
  * @last: (out): output last codepoint in the range.
  *
  * Gets the previous consecutive range of numbers in @set that
- * are greater than current value of @last.
+ * are less than current value of @first.
  *
  * Set @first to %HB_SET_VALUE_INVALID to get started.
  *

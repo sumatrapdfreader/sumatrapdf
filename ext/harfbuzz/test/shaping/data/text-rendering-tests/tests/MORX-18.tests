@@ -1,4 +1,0 @@
-../fonts/TestMORXEighteen.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0042,U+0043,U+0044,U+0045:[A|B.alt@639,0|C@1639,0|D.alt1@2235,0|E@3235,0]
-../fonts/TestMORXEighteen.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0042,U+0042,U+0042,U+0044,U+0045:[A|B@639,0|B@1265,0|B.alt@1891,0|D.alt1@2891,0|E@3891,0]
-../fonts/TestMORXEighteen.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0042,U+0044,U+0045:[A|B.alt@639,0|D.alt1@1639,0|E@2639,0]
-../fonts/TestMORXEighteen.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0042,U+0045:[A|B@639,0|E@1265,0]

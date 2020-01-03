@@ -69,15 +69,15 @@ k = (Ra As H);			# Kinzi
 
 c = C|Ra;			# is_consonant
 
-medial_group = MY? MR? MW? MH? As?;
+medial_group = MY? As? MR? ((MW MH? | MH) As?)?;
 main_vowel_group = (VPre.VS?)* VAbv* VBlw* A* (DB As?)?;
 post_vowel_group = VPst MH? As* VAbv* A* (DB As?)?;
 pwo_tone_group = PT A* DB? As?;
 
 complex_syllable_tail = As* medial_group main_vowel_group post_vowel_group* pwo_tone_group* V* j?;
-syllable_tail = (H | complex_syllable_tail);
+syllable_tail = (H (c|IV).VS?)* (H | complex_syllable_tail);
 
-consonant_syllable =	(k|CS)? (c|IV|D|GB).VS? (H (c|IV).VS?)* syllable_tail;
+consonant_syllable =	(k|CS)? (c|IV|D|GB).VS? syllable_tail;
 punctuation_cluster = 	P V;
 broken_cluster =	k? VS? syllable_tail;
 other =			any;
@@ -95,18 +95,17 @@ main := |*
 
 #define found_syllable(syllable_type) \
   HB_STMT_START { \
-    if (0) fprintf (stderr, "syllable %d..%d %s\n", last, p+1, #syllable_type); \
-    for (unsigned int i = last; i < p+1; i++) \
-      info[i].syllable() = (syllable_serial << 4) | syllable_type; \
-    last = p+1; \
+    if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
+    for (unsigned int i = ts; i < te; i++) \
+      info[i].syllable() = (syllable_serial << 4) | myanmar_##syllable_type; \
     syllable_serial++; \
     if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
   } HB_STMT_END
 
 static void
-find_syllables (hb_buffer_t *buffer)
+find_syllables_myanmar (hb_buffer_t *buffer)
 {
-  unsigned int p, pe, eof, ts HB_UNUSED, te HB_UNUSED, act HB_UNUSED;
+  unsigned int p, pe, eof, ts, te, act HB_UNUSED;
   int cs;
   hb_glyph_info_t *info = buffer->info;
   %%{
@@ -117,7 +116,6 @@ find_syllables (hb_buffer_t *buffer)
   p = 0;
   pe = eof = buffer->len;
 
-  unsigned int last = 0;
   unsigned int syllable_serial = 1;
   %%{
     write exec;

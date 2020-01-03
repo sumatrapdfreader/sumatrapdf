@@ -30,23 +30,98 @@
 #include "hb.hh"
 
 #include "hb-ot-map.hh"
-#include "hb-ot-layout.hh"
+#include "hb-aat-map.hh"
 
 
+struct hb_ot_shape_plan_key_t
+{
+  unsigned int variations_index[2];
+
+  void init (hb_face_t   *face,
+		    const int   *coords,
+		    unsigned int num_coords)
+  {
+    for (unsigned int table_index = 0; table_index < 2; table_index++)
+      hb_ot_layout_table_find_feature_variations (face,
+						  table_tags[table_index],
+						  coords,
+						  num_coords,
+						  &variations_index[table_index]);
+  }
+
+  bool equal (const hb_ot_shape_plan_key_t *other)
+  {
+    return 0 == memcmp (this, other, sizeof (*this));
+  }
+};
+
+
+struct hb_shape_plan_key_t;
 
 struct hb_ot_shape_plan_t
 {
   hb_segment_properties_t props;
   const struct hb_ot_complex_shaper_t *shaper;
   hb_ot_map_t map;
+  hb_aat_map_t aat_map;
   const void *data;
-  hb_mask_t rtlm_mask, frac_mask, numr_mask, dnom_mask;
+#ifndef HB_NO_OT_SHAPE_FRACTIONS
+  hb_mask_t frac_mask, numr_mask, dnom_mask;
+#else
+  static constexpr hb_mask_t frac_mask = 0;
+  static constexpr hb_mask_t numr_mask = 0;
+  static constexpr hb_mask_t dnom_mask = 0;
+#endif
+  hb_mask_t rtlm_mask;
+#ifndef HB_NO_OT_KERN
   hb_mask_t kern_mask;
-  unsigned int has_frac : 1;
-  unsigned int has_kern : 1;
-  unsigned int has_mark : 1;
+#else
+  static constexpr hb_mask_t kern_mask = 0;
+#endif
+#ifndef HB_NO_AAT_SHAPE
+  hb_mask_t trak_mask;
+#else
+  static constexpr hb_mask_t trak_mask = 0;
+#endif
 
-  inline void collect_lookups (hb_tag_t table_tag, hb_set_t *lookups) const
+#ifndef HB_NO_OT_KERN
+  bool requested_kerning : 1;
+#else
+  static constexpr bool requested_kerning = false;
+#endif
+#ifndef HB_NO_AAT_SHAPE
+  bool requested_tracking : 1;
+#else
+  static constexpr bool requested_tracking = false;
+#endif
+#ifndef HB_NO_OT_SHAPE_FRACTIONS
+  bool has_frac : 1;
+#else
+  static constexpr bool has_frac = false;
+#endif
+  bool has_gpos_mark : 1;
+  bool zero_marks : 1;
+  bool fallback_glyph_classes : 1;
+  bool fallback_mark_positioning : 1;
+  bool adjust_mark_positioning_when_zeroing : 1;
+
+  bool apply_gpos : 1;
+#ifndef HB_NO_OT_KERN
+  bool apply_kern : 1;
+#else
+  static constexpr bool apply_kern = false;
+#endif
+#ifndef HB_NO_AAT_SHAPE
+  bool apply_kerx : 1;
+  bool apply_morx : 1;
+  bool apply_trak : 1;
+#else
+  static constexpr bool apply_kerx = false;
+  static constexpr bool apply_morx = false;
+  static constexpr bool apply_trak = false;
+#endif
+
+  void collect_lookups (hb_tag_t table_tag, hb_set_t *lookups) const
   {
     unsigned int table_index;
     switch (table_tag) {
@@ -56,56 +131,38 @@ struct hb_ot_shape_plan_t
     }
     map.collect_lookups (table_index, lookups);
   }
-  inline void substitute (hb_font_t *font, hb_buffer_t *buffer) const { map.substitute (this, font, buffer); }
-  inline void position (hb_font_t *font, hb_buffer_t *buffer) const { map.position (this, font, buffer); }
 
-  void init (void)
-  {
-    memset (this, 0, sizeof (*this));
-    map.init ();
-  }
-  void fini (void) {
-    map.fini ();
-  }
+  HB_INTERNAL bool init0 (hb_face_t                     *face,
+			  const hb_shape_plan_key_t     *key);
+  HB_INTERNAL void fini ();
+
+  HB_INTERNAL void substitute (hb_font_t *font, hb_buffer_t *buffer) const;
+  HB_INTERNAL void position (hb_font_t *font, hb_buffer_t *buffer) const;
 };
+
+struct hb_shape_plan_t;
 
 struct hb_ot_shape_planner_t
 {
   /* In the order that they are filled in. */
   hb_face_t *face;
   hb_segment_properties_t props;
-  const struct hb_ot_complex_shaper_t *shaper;
   hb_ot_map_builder_t map;
+  hb_aat_map_builder_t aat_map;
+#ifndef HB_NO_AAT_SHAPE
+  bool apply_morx : 1;
+#else
+  static constexpr bool apply_morx = false;
+#endif
+  bool script_zero_marks : 1;
+  bool script_fallback_mark_positioning : 1;
+  const struct hb_ot_complex_shaper_t *shaper;
 
-  hb_ot_shape_planner_t (const hb_shape_plan_t *master_plan) :
-			 face (master_plan->face_unsafe),
-			 props (master_plan->props),
-			 shaper (nullptr),
-			 map (face, &props) {}
+  HB_INTERNAL hb_ot_shape_planner_t (hb_face_t                     *face,
+				     const hb_segment_properties_t *props);
 
-  inline void compile (hb_ot_shape_plan_t &plan,
-		       const int          *coords,
-		       unsigned int        num_coords)
-  {
-    plan.props = props;
-    plan.shaper = shaper;
-    map.compile (plan.map, coords, num_coords);
-
-    plan.rtlm_mask = plan.map.get_1_mask (HB_TAG ('r','t','l','m'));
-    plan.frac_mask = plan.map.get_1_mask (HB_TAG ('f','r','a','c'));
-    plan.numr_mask = plan.map.get_1_mask (HB_TAG ('n','u','m','r'));
-    plan.dnom_mask = plan.map.get_1_mask (HB_TAG ('d','n','o','m'));
-
-    plan.kern_mask = plan.map.get_mask (HB_DIRECTION_IS_HORIZONTAL (plan.props.direction) ?
-					HB_TAG ('k','e','r','n') : HB_TAG ('v','k','r','n'));
-
-    plan.has_frac = plan.frac_mask || (plan.numr_mask && plan.dnom_mask);
-    plan.has_kern = !!plan.kern_mask;
-    plan.has_mark = !!plan.map.get_1_mask (HB_TAG ('m','a','r','k'));
-  }
-
-  private:
-  HB_DISALLOW_COPY_AND_ASSIGN (hb_ot_shape_planner_t);
+  HB_INTERNAL void compile (hb_ot_shape_plan_t           &plan,
+			    const hb_ot_shape_plan_key_t &key);
 };
 
 

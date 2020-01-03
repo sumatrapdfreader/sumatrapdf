@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012  Google, Inc.
+ * Copyright © 2012,2018  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -29,39 +29,48 @@
 
 #include "hb.hh"
 #include "hb-shaper.hh"
+#include "hb-ot-shape.hh"
 
+
+struct hb_shape_plan_key_t
+{
+  hb_segment_properties_t  props;
+
+  const hb_feature_t      *user_features;
+  unsigned int             num_user_features;
+
+#ifndef HB_NO_OT_SHAPE
+  hb_ot_shape_plan_key_t   ot;
+#endif
+
+  hb_shape_func_t         *shaper_func;
+  const char              *shaper_name;
+
+  HB_INTERNAL bool init (bool                           copy,
+			 hb_face_t                     *face,
+			 const hb_segment_properties_t *props,
+			 const hb_feature_t            *user_features,
+			 unsigned int                   num_user_features,
+			 const int                     *coords,
+			 unsigned int                   num_coords,
+			 const char * const            *shaper_list);
+
+  HB_INTERNAL void free () { ::free ((void *) user_features); }
+
+  HB_INTERNAL bool user_features_match (const hb_shape_plan_key_t *other);
+
+  HB_INTERNAL bool equal (const hb_shape_plan_key_t *other);
+};
 
 struct hb_shape_plan_t
 {
   hb_object_header_t header;
-  ASSERT_POD ();
-
-  hb_bool_t default_shaper_list;
   hb_face_t *face_unsafe; /* We don't carry a reference to face. */
-  hb_segment_properties_t props;
-
-  hb_shape_func_t *shaper_func;
-  const char *shaper_name;
-
-  hb_feature_t *user_features;
-  unsigned int num_user_features;
-
-  int *coords;
-  unsigned int num_coords;
-
-  struct hb_shaper_data_t shaper_data;
+  hb_shape_plan_key_t key;
+#ifndef HB_NO_OT_SHAPE
+  hb_ot_shape_plan_t ot;
+#endif
 };
-DECLARE_NULL_INSTANCE (hb_shape_plan_t);
-
-#define HB_SHAPER_DATA_CREATE_FUNC_EXTRA_ARGS \
-	, const hb_feature_t *user_features \
-	, unsigned int        num_user_features \
-	, const int          *coords \
-	, unsigned int        num_coords
-#define HB_SHAPER_IMPLEMENT(shaper) HB_SHAPER_DATA_PROTOTYPE(shaper, shape_plan);
-#include "hb-shaper-list.hh"
-#undef HB_SHAPER_IMPLEMENT
-#undef HB_SHAPER_DATA_CREATE_FUNC_EXTRA_ARGS
 
 
 #endif /* HB_SHAPE_PLAN_HH */

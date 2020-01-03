@@ -38,10 +38,11 @@ struct hb_ot_shape_plan_t;
 enum hb_ot_shape_normalization_mode_t {
   HB_OT_SHAPE_NORMALIZATION_MODE_NONE,
   HB_OT_SHAPE_NORMALIZATION_MODE_DECOMPOSED,
-  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS, /* never composes base-to-base */
-  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT, /* always fully decomposes and then recompose back */
+  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS, /* Never composes base-to-base */
+  HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT, /* Always fully decomposes and then recompose back */
 
-  HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT = HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS
+  HB_OT_SHAPE_NORMALIZATION_MODE_AUTO, /* See hb-ot-shape-normalize.cc for logic. */
+  HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT = HB_OT_SHAPE_NORMALIZATION_MODE_AUTO
 };
 
 HB_INTERNAL void _hb_ot_shape_normalize (const hb_ot_shape_plan_t *shaper,

@@ -27,6 +27,8 @@
 
 #include "hb.hh"
 
+#ifdef HAVE_GOBJECT
+
 /* g++ didn't like older gtype.h gcc-only code path. */
 #include <glib.h>
 #if !GLIB_CHECK_VERSION(2,29,16)
@@ -44,9 +46,14 @@
 /* enumerations from "@filename@" */
 /*** END file-production ***/
 
+/*** BEGIN file-tail ***/
+
+#endif
+/*** END file-tail ***/
+
 /*** BEGIN value-header ***/
 GType
-@enum_name@_get_type (void)
+@enum_name@_get_type ()
 {
   static gsize type_id = 0;
 

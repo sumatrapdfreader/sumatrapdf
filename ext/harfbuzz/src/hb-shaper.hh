@@ -28,6 +28,7 @@
 #define HB_SHAPER_HH
 
 #include "hb.hh"
+#include "hb-machinery.hh"
 
 typedef hb_bool_t hb_shape_func_t (hb_shape_plan_t    *shape_plan,
 				   hb_font_t          *font,
@@ -40,95 +41,94 @@ typedef hb_bool_t hb_shape_func_t (hb_shape_plan_t    *shape_plan,
 #include "hb-shaper-list.hh"
 #undef HB_SHAPER_IMPLEMENT
 
-struct hb_shaper_pair_t {
+struct hb_shaper_entry_t {
   char name[16];
   hb_shape_func_t *func;
 };
 
-HB_INTERNAL const hb_shaper_pair_t *
-_hb_shapers_get (void);
+HB_INTERNAL const hb_shaper_entry_t *
+_hb_shapers_get ();
 
 
-/* Means: succeeded, but don't need to keep any data. */
+template <typename Data, unsigned int WheresData, typename T>
+struct hb_shaper_lazy_loader_t;
+
+#define HB_SHAPER_ORDER(Shaper) \
+  HB_PASTE (HB_SHAPER_ORDER_, Shaper)
+enum hb_shaper_order_t
+{
+  _HB_SHAPER_ORDER_ORDER_ZERO,
+#define HB_SHAPER_IMPLEMENT(Shaper) \
+      HB_SHAPER_ORDER (Shaper),
+#include "hb-shaper-list.hh"
+#undef HB_SHAPER_IMPLEMENT
+  _HB_SHAPERS_COUNT_PLUS_ONE,
+  HB_SHAPERS_COUNT = _HB_SHAPERS_COUNT_PLUS_ONE - 1,
+};
+
+template <enum hb_shaper_order_t order, typename Object> struct hb_shaper_object_data_type_t;
+
 #define HB_SHAPER_DATA_SUCCEEDED ((void *) +1)
-/* Means: tried but failed to create. */
-#define HB_SHAPER_DATA_INVALID ((void *) -1)
-
-#define HB_SHAPER_DATA_TYPE_NAME(shaper, object)	hb_##shaper##_##object##_data_t
-#define HB_SHAPER_DATA_TYPE(shaper, object)		struct HB_SHAPER_DATA_TYPE_NAME(shaper, object)
-#define HB_SHAPER_DATA_INSTANCE(shaper, object, instance)	(* reinterpret_cast<hb_atomic_ptr_t<HB_SHAPER_DATA_TYPE(shaper, object) *> *> (&(instance)->shaper_data.shaper))
-#define HB_SHAPER_DATA(shaper, object)			HB_SHAPER_DATA_INSTANCE(shaper, object, object)
+#define HB_SHAPER_DATA_TYPE(shaper, object)		hb_##shaper##_##object##_data_t
 #define HB_SHAPER_DATA_CREATE_FUNC(shaper, object)	_hb_##shaper##_shaper_##object##_data_create
 #define HB_SHAPER_DATA_DESTROY_FUNC(shaper, object)	_hb_##shaper##_shaper_##object##_data_destroy
-#define HB_SHAPER_DATA_ENSURE_FUNC(shaper, object)	hb_##shaper##_shaper_##object##_data_ensure
 
-#define HB_SHAPER_DATA_PROTOTYPE(shaper, object) \
-	HB_SHAPER_DATA_TYPE (shaper, object); /* Type forward declaration. */ \
+#define HB_SHAPER_DATA_INSTANTIATE_SHAPERS(shaper, object) \
+	\
+	struct HB_SHAPER_DATA_TYPE (shaper, object); /* Type forward declaration. */ \
 	extern "C" HB_INTERNAL HB_SHAPER_DATA_TYPE (shaper, object) * \
-	HB_SHAPER_DATA_CREATE_FUNC (shaper, object) (hb_##object##_t *object HB_SHAPER_DATA_CREATE_FUNC_EXTRA_ARGS); \
+	HB_SHAPER_DATA_CREATE_FUNC (shaper, object) (hb_##object##_t *object); \
 	extern "C" HB_INTERNAL void \
-	HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (HB_SHAPER_DATA_TYPE (shaper, object) *data); \
-	extern "C" HB_INTERNAL bool \
-	HB_SHAPER_DATA_ENSURE_FUNC (shaper, object) (hb_##object##_t *object)
-
-#define HB_SHAPER_DATA_DESTROY(shaper, object) \
-    if (HB_SHAPER_DATA_TYPE (shaper, object) *data = HB_SHAPER_DATA (shaper, object).get ()) \
-      if (data != HB_SHAPER_DATA_INVALID && data != HB_SHAPER_DATA_SUCCEEDED) \
-        HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (data);
-
-#define HB_SHAPER_DATA_ENSURE_DEFINE(shaper, object) \
-	HB_SHAPER_DATA_ENSURE_DEFINE_WITH_CONDITION(shaper, object, true)
-
-#define HB_SHAPER_DATA_ENSURE_DEFINE_WITH_CONDITION(shaper, object, condition) \
-bool \
-HB_SHAPER_DATA_ENSURE_FUNC(shaper, object) (hb_##object##_t *object) \
-{\
-  retry: \
-  HB_SHAPER_DATA_TYPE (shaper, object) *data = HB_SHAPER_DATA (shaper, object).get (); \
-  if (likely (data) && !(condition)) { \
-    /* XXX-MT-bug \
-     * Note that evaluating condition above can be dangerous if another thread \
-     * got here first and destructed data.  That's, as always, bad use pattern. \
-     * If you modify the font (change font size), other threads must not be \
-     * using it at the same time.  However, since this check is delayed to \
-     * when one actually tries to shape something, this is a XXX race condition \
-     * (and the only know we have that I know of) right now.  Ie. you modify the \
-     * font size in one thread, then (supposedly safely) try to use it from two \
-     * or more threads and BOOM!  I'm not sure how to fix this.  We want RCU. \
-     * Maybe when it doesn't matter when we finally implement AAT shaping, as
-     * this (condition) is currently only used by hb-coretext. */ \
-    /* Drop and recreate. */ \
-    /* If someone dropped it in the mean time, throw it away and don't touch it. \
-     * Otherwise, destruct it. */ \
-    if (likely (HB_SHAPER_DATA (shaper, object).cmpexch (data, nullptr))) \
-    { \
-      HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (data); \
-    } \
-    goto retry; \
-  } \
-  if (unlikely (!data)) { \
-    data = HB_SHAPER_DATA_CREATE_FUNC (shaper, object) (object); \
-    if (unlikely (!data)) \
-      data = (HB_SHAPER_DATA_TYPE (shaper, object) *) HB_SHAPER_DATA_INVALID; \
-    if (unlikely (!HB_SHAPER_DATA (shaper, object).cmpexch (nullptr, data))) { \
-      if (data && \
-	  data != HB_SHAPER_DATA_INVALID && \
-	  data != HB_SHAPER_DATA_SUCCEEDED) \
-	HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (data); \
-      goto retry; \
-    } \
-  } \
-  return data != nullptr && (void *) data != HB_SHAPER_DATA_INVALID; \
-}
+	HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (HB_SHAPER_DATA_TYPE (shaper, object) *shaper##_##object); \
+	\
+	template <> \
+	struct hb_shaper_object_data_type_t<HB_SHAPER_ORDER (shaper), hb_##object##_t> \
+	{ \
+	  typedef HB_SHAPER_DATA_TYPE(shaper, object) value; \
+	}; \
+	\
+	template <unsigned int WheresData> \
+	struct hb_shaper_lazy_loader_t<hb_##object##_t, WheresData, HB_SHAPER_DATA_TYPE(shaper, object)> \
+		: hb_lazy_loader_t<HB_SHAPER_DATA_TYPE(shaper, object), \
+				   hb_shaper_lazy_loader_t<hb_##object##_t, \
+							   WheresData, \
+							   HB_SHAPER_DATA_TYPE(shaper, object)>, \
+				   hb_##object##_t, WheresData> \
+	{ \
+	  typedef HB_SHAPER_DATA_TYPE(shaper, object) Type; \
+	  static Type* create (hb_##object##_t *data) \
+	  { return HB_SHAPER_DATA_CREATE_FUNC (shaper, object) (data); } \
+	  static Type *get_null () { return nullptr; } \
+	  static void destroy (Type *p) { HB_SHAPER_DATA_DESTROY_FUNC (shaper, object) (p); } \
+	}; \
+	\
+	static_assert (true, "") /* Require semicolon. */
 
 
-/* For embedding in face / font / ... */
-struct hb_shaper_data_t {
-#define HB_SHAPER_IMPLEMENT(shaper) hb_atomic_ptr_t<void *> shaper;
+template <typename Object>
+struct hb_shaper_object_dataset_t
+{
+  void init0 (Object *parent_data)
+  {
+    this->parent_data = parent_data;
+#define HB_SHAPER_IMPLEMENT(shaper) shaper.init0 ();
+#include "hb-shaper-list.hh"
+#undef HB_SHAPER_IMPLEMENT
+  }
+  void fini ()
+  {
+#define HB_SHAPER_IMPLEMENT(shaper) shaper.fini ();
+#include "hb-shaper-list.hh"
+#undef HB_SHAPER_IMPLEMENT
+  }
+
+  Object *parent_data; /* MUST be JUST before the lazy loaders. */
+#define HB_SHAPER_IMPLEMENT(shaper) \
+	hb_shaper_lazy_loader_t<Object, HB_SHAPER_ORDER(shaper), \
+				typename hb_shaper_object_data_type_t<HB_SHAPER_ORDER(shaper), Object>::value \
+			       > shaper;
 #include "hb-shaper-list.hh"
 #undef HB_SHAPER_IMPLEMENT
 };
-#define HB_SHAPERS_COUNT (sizeof (hb_shaper_data_t) / sizeof (void *))
-
 
 #endif /* HB_SHAPER_HH */

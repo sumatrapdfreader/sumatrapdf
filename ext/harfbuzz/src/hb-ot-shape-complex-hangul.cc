@@ -24,6 +24,10 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "hb.hh"
+
+#ifndef HB_NO_OT_SHAPE
+
 #include "hb-ot-shape-complex.hh"
 
 
@@ -56,7 +60,7 @@ collect_features_hangul (hb_ot_shape_planner_t *plan)
   hb_ot_map_builder_t *map = &plan->map;
 
   for (unsigned int i = FIRST_HANGUL_FEATURE; i < HANGUL_FEATURE_COUNT; i++)
-    map->add_feature (hangul_features[i], 1, F_NONE);
+    map->add_feature (hangul_features[i]);
 }
 
 static void
@@ -65,13 +69,11 @@ override_features_hangul (hb_ot_shape_planner_t *plan)
   /* Uniscribe does not apply 'calt' for Hangul, and certain fonts
    * (Noto Sans CJK, Source Sans Han, etc) apply all of jamo lookups
    * in calt, which is not desirable. */
-  plan->map.add_feature (HB_TAG('c','a','l','t'), 0, F_GLOBAL);
+  plan->map.disable_feature (HB_TAG('c','a','l','t'));
 }
 
 struct hangul_shape_plan_t
 {
-  ASSERT_POD ();
-
   hb_mask_t mask_array[HANGUL_FEATURE_COUNT];
 };
 
@@ -128,7 +130,7 @@ is_zero_width_char (hb_font_t *font,
 }
 
 static void
-preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
+preprocess_text_hangul (const hb_ot_shape_plan_t *plan HB_UNUSED,
 			hb_buffer_t              *buffer,
 			hb_font_t                *font)
 {
@@ -202,7 +204,7 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
       if (start < end && end == buffer->out_len)
       {
 	/* Tone mark follows a valid syllable; move it in front, unless it's zero width. */
-        buffer->unsafe_to_break_from_outbuffer (start, buffer->idx);
+	buffer->unsafe_to_break_from_outbuffer (start, buffer->idx);
 	buffer->next_glyph ();
 	if (!is_zero_width_char (font, u))
 	{
@@ -216,7 +218,8 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
       else
       {
 	/* No valid syllable as base for tone mark; try to insert dotted circle. */
-	if (font->has_glyph (0x25CCu))
+      if (!(buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE) &&
+	  font->has_glyph (0x25CCu))
 	{
 	  hb_codepoint_t chars[2];
 	  if (!is_zero_width_char (font, u)) {
@@ -345,6 +348,16 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
 	{
 	  unsigned int s_len = tindex ? 3 : 2;
 	  buffer->replace_glyphs (1, s_len, decomposed);
+
+	  /* If we decomposed an LV because of a non-combining T following,
+	   * we want to include this T in the syllable.
+	   */
+	  if (has_glyph && !tindex)
+	  {
+	    buffer->next_glyph ();
+	    s_len++;
+	  }
+
 	  if (unlikely (!buffer->successful))
 	    return;
 
@@ -352,22 +365,14 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
 	   * that are now in buffer->out_info.
 	   */
 	  hb_glyph_info_t *info = buffer->out_info;
-
-	  /* If we decomposed an LV because of a non-combining T following,
-	   * we want to include this T in the syllable.
-	   */
-	  if (has_glyph && !tindex)
-	  {
-            buffer->next_glyph ();
-            s_len++;
-          }
-          end = start + s_len;
+	  end = start + s_len;
 
 	  unsigned int i = start;
 	  info[i++].hangul_shaping_feature() = LJMO;
 	  info[i++].hangul_shaping_feature() = VJMO;
 	  if (i < end)
 	    info[i++].hangul_shaping_feature() = TJMO;
+
 	  if (buffer->cluster_level == HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES)
 	    buffer->merge_out_clusters (start, end);
 	  continue;
@@ -378,7 +383,7 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
 
       if (has_glyph)
       {
-        /* We didn't decompose the S, so just advance past it. */
+	/* We didn't decompose the S, so just advance past it. */
 	end = start + 1;
 	buffer->next_glyph ();
 	continue;
@@ -424,8 +429,11 @@ const hb_ot_complex_shaper_t _hb_ot_complex_shaper_hangul =
   nullptr, /* decompose */
   nullptr, /* compose */
   setup_masks_hangul,
-  nullptr, /* disable_otl */
+  HB_TAG_NONE, /* gpos_tag */
   nullptr, /* reorder_marks */
   HB_OT_SHAPE_ZERO_WIDTH_MARKS_NONE,
   false, /* fallback_position */
 };
+
+
+#endif

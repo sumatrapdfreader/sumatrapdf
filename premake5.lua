@@ -302,13 +302,14 @@ workspace "SumatraPDF"
       "HAVE_FALLBACK=1",
       "HAVE_OT",
       "HAVE_UCDN",
+      "HAVE_FREETYPE",
       "HB_NO_MT",
       "hb_malloc_impl=fz_hb_malloc",
       "hb_calloc_impl=fz_hb_calloc",
       "hb_realloc_impl=fz_hb_realloc",
       "hb_free_impl=fz_hb_free"
     }
-    disablewarnings { "4100", "4244", "4245", "4267", "4456", "4701", "4702", "4706" }
+    disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
     harfbuzz_files()
 
   project "mujs"

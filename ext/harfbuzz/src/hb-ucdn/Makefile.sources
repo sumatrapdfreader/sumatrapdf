@@ -1,7 +1,0 @@
-NULL =
-
-LIBHB_UCDN_sources = \
-	ucdn.h \
-	ucdn.c \
-	ucdn_db.h \
-	$(NULL)

@@ -1,70 +1,424 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY version SYSTEM "version.xml">
+]>
 <chapter id="install-harfbuzz">
-  <title>Install HarfBuzz</title>
+  <title>Installing HarfBuzz</title>
+  
   <section id="download">
-    <title id="download.title">Download</title>
+    <title id="download.title">Downloading HarfBuzz</title>
     <para>
-      For tarball releases of HarfBuzz, look
-      <ulink url="http://www.freedesktop.org/software/harfbuzz/release/">here</ulink>.
-      At the same place you will
-      also find Win32 binary bundles that include libharfbuzz DLL, hb-view.exe,
-      hb-shape.exe, and all dependencies.
+      The HarfBuzz source code is hosted at <ulink
+      url="https://github.com/harfbuzz/harfbuzz">github.com/harfbuzz/harfbuzz</ulink>. The
+      same source tree is also available at the
+      <ulink
+	  url="http://cgit.freedesktop.org/harfbuzz/">Freedesktop.org</ulink>
+      site.
     </para>
     <para>
-      The canonical source tree is available
-      <ulink url="http://cgit.freedesktop.org/harfbuzz/">here</ulink>.
-      Also available on <ulink url="https://github.com/harfbuzz/harfbuzz">github</ulink>.
+      Tarball releases and Win32 binary bundles (which include the
+      libharfbuzz DLL, hb-view.exe, hb-shape.exe, and all
+      dependencies) of HarfBuzz can be downloaded from <ulink
+      url="https://github.com/harfbuzz/harfbuzz">github.com/harfbuzz/harfbuzz/releases</ulink>
+      or from 
+      <ulink url="http://www.freedesktop.org/software/harfbuzz/release/">Freedesktop.org</ulink>.
     </para>
     <para>
-      The API that comes with <filename class='headerfile'>hb.h</filename> will
-      not change incompatibly. Other, peripheral, headers are more likely to go
-      through minor modifications, but again, will do our best to never change
-      API in an incompatible way. We will never break the ABI.
+      Release notes are posted with each new release to provide an
+      overview of the changes. The project <ulink url="https://github.com/harfbuzz/harfbuzz/issues">tracks bug
+      reports and other issues</ulink> on GitHub. Discussion and
+      questions are welcome on the <ulink
+      url="http://freedesktop.org/mailman/listinfo/harfbuzz/">HarfBuzz
+      mailing list</ulink>.
     </para>
     <para>
-      If you are not sure whether Pango or HarfBuzz is right for you, read
-      <ulink url="http://mces.blogspot.in/2009/11/pango-vs-harfbuzz.html">this</ulink>.
+      The API included in the <filename
+      class='headerfile'>hb.h</filename> file will not change in a
+      compatibility-breaking way in any release. However, other,
+      peripheral headers are more likely to go through minor
+      modifications. We will do our best to never change APIs in an
+      incompatible way. We will <emphasis>never</emphasis> break the ABI. 
     </para>
   </section>
+  
   <section id="building">
-    <title>Building</title>
+    <title>Building HarfBuzz</title>
+
+    <section id="building.linux">
+      <title>Building on Linux</title>
     <para>
-      On Linux, install the development packages for FreeType, Cairo, and GLib.
-      For example, on Ubuntu / Debian, you would do:
-      <programlisting>
-<command>sudo apt-get install</command> <package>gcc g++ libfreetype6-dev libglib2.0-dev libcairo2-dev</package>
-      </programlisting>
-      whereas on Fedora, RHEL, CentOS, and other Red Hat based systems you would do:
-      <programlisting>
-<command>sudo yum install</command> <package>gcc gcc-c++ freetype-devel glib2-devel cairo-devel</package>
-      </programlisting>
-      or using MacPorts:
-      <programlisting>
-<command>sudo port install</command> <package>freetype glib2 cairo</package>
-      </programlisting>
+      <emphasis>(1)</emphasis> To build HarfBuzz on Linux, you must first install the
+      development packages for FreeType, Cairo, and GLib. The exact
+      commands required for this step will vary depending on
+      the Linux distribution you use.
     </para>
     <para>
-      If you are using a tarball, you can now proceed to running
-      <command>configure</command> and <command>make</command> as with any
-      other standard package. That should leave you with a shared library in
-      <filename>src/</filename>, and a few utility programs including hb-view
-      and hb-shape under <filename>util/</filename>.
+      For example, on an Ubuntu or Debian system, you would run:
+      <programlisting>
+	<command>sudo apt install</command> <package>gcc g++ libfreetype6-dev libglib2.0-dev libcairo2-dev</package>
+      </programlisting>
+      On Fedora, RHEL, CentOS, or other Red-Hat&ndash;based systems, you would run:
+      <programlisting>
+	<command>sudo yum install</command> <package>gcc gcc-c++ freetype-devel glib2-devel cairo-devel</package>
+      </programlisting>
+
+    </para>
+    
+    <para>
+      <emphasis>(2)</emphasis> The next step depends on whether you
+      are building from the source in a downloaded release tarball or
+      from the source directly from the git repository.
     </para>
     <para>
-      If you are bootstrapping from git, you need a few more tools before you
-      can run <filename>autogen.sh</filename> for the first time. Namely,
-      pkg-config and <ulink url="http://www.complang.org/ragel/">ragel</ulink>.
-      Again, on Ubuntu / Debian:
-      <programlisting>
-<command>sudo apt-get install</command> <package>autoconf automake libtool pkg-config ragel gtk-doc-tools</package>
-      </programlisting>
-      and on Fedora, RHEL, CentOS:
-      <programlisting>
-<command>sudo yum install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package>
-      </programlisting>
-      or using MacPorts:
-      <programlisting>
-<command>sudo port install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package>
-      </programlisting>
+      <emphasis>(2)(a)</emphasis> If you downloaded the HarfBuzz
+      source code in a tarball, you can now extract the source.
     </para>
+    <para>
+      From a shell in the top-level directory of the extracted source
+      code, you can run <command>./configure</command> followed by
+      <command>make</command> as with any other standard package.
+    </para>
+    <para>
+      This should leave you with a shared
+      library in the <filename>src/</filename> directory, and a few
+      utility programs including <command>hb-view</command> and
+      <command>hb-shape</command> under the <filename>util/</filename>
+      directory.
+    </para>
+    <para>
+      <emphasis>(2)(b)</emphasis> If you are building from the source in the HarfBuzz git
+      repository, rather than installing from a downloaded tarball
+      release, then you must install two more auxiliary tools before you 
+      can build for the first time: <package>pkg-config</package> and
+      <ulink url="http://www.complang.org/ragel/">ragel</ulink>.
+    </para>
+    <para>
+      On Ubuntu or Debian, run:
+      <programlisting>
+	<command>sudo apt-get install</command> <package>autoconf automake libtool pkg-config ragel gtk-doc-tools</package>
+      </programlisting>
+      On Fedora, RHEL, CentOS, run:
+      <programlisting>
+	<command>sudo yum install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package>
+      </programlisting>
+      
+    </para>
+    <para>
+      With <package>pkg-config</package> and <package>ragel</package>
+      installed, you can now run <command>./autogen.sh</command>,
+      followed by <command>./configure</command> and
+      <command>make</command> to build HarfBuzz.
+    </para>
+    </section>
+
+    
+    <section id="building.windows">
+      <title>Building on Windows</title>
+
+      <para>
+	On Windows, consider using Microsoft's free <ulink
+	url="https://github.com/Microsoft/vcpkg">vcpkg</ulink> utility
+	to build HarfBuzz, its dependencies, and other open-source
+	libraries. 
+      </para>
+      <para>
+	If you need to build HarfBuzz from source, first put the
+	<package>ragel</package> binary on your
+	<literal>PATH</literal>, then follow the appveyor CI cmake
+	<ulink
+	    url="https://github.com/harfbuzz/harfbuzz/blob/master/appveyor.yml">build
+	instructions</ulink>. 
+      </para>
+    </section>
+
+    
+    <section id="building.macos">
+      <title>Building on macOS</title>
+
+      <para>
+	There are two ways to build HarfBuzz on Mac systems: MacPorts
+	and Homebrew. The process is similar to the process used on a
+	Linux system.
+      </para>
+      <para>
+	<emphasis>(1)</emphasis> You must first install the
+	development packages for FreeType, Cairo, and GLib. If you are
+	using MacPorts, you should run:
+      <programlisting>
+	<command>sudo port install</command> <package>freetype glib2 cairo</package>
+      </programlisting>
+      </para>
+      <para>
+	If you are using Homebrew, you should run:
+	<programlisting>	
+	  <command>brew install</command> <package>freetype glib cairo</package>
+	</programlisting>
+      </para>
+      <para>
+	<emphasis>(2)</emphasis> The next step depends on whether you are building from the
+	source in a downloaded release tarball or from the source directly
+	from the git repository.
+      </para>
+      <para>
+	<emphasis>(2)(a)</emphasis> If you are installing HarfBuzz
+	from a downloaded tarball release, extract the tarball and
+	open a Terminal in the extracted source-code directory. Run:
+	<programlisting>
+	  <command>./configure</command>
+	</programlisting>
+	followed by:
+	<programlisting>	
+	  <command>make</command>
+	</programlisting>
+	to build HarfBuzz.
+      </para>
+      <para>
+	<emphasis>(2)(b)</emphasis> Alternatively, if you are building
+	HarfBuzz from the source in the HarfBuzz git repository, then
+	you must install several built-time dependencies before
+	proceeding.
+      </para>
+      <para>If you are
+	using MacPorts, you should run:
+      <programlisting>
+	<command>sudo port install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package> 
+      </programlisting>
+      to install the build dependencies.
+      </para>
+      <para>If you are using Homebrew, you should run:
+	<programlisting>	
+	  <command>brew install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package>
+	</programlisting>
+      	Finally, you can run:
+	<programlisting>
+	  <command>./autogen.sh</command>
+	</programlisting>
+      </para>
+      <para>
+	<emphasis>(3)</emphasis> You can now build HarfBuzz (on either
+	a MacPorts or a Homebrew system) by running:
+	<programlisting>
+	  <command>./configure</command>
+	</programlisting>
+	followed by:
+	<programlisting>
+	  <command>make</command>
+	</programlisting>
+      </para>
+      <para>
+	This should leave you with a shared
+	library in the <filename>src/</filename> directory, and a few
+	utility programs including <command>hb-view</command> and
+	<command>hb-shape</command> under the <filename>util/</filename>
+	directory.
+      </para>      
+	
+    </section>
+
+    <section id="configuration">
+      <title>Configuration options</title>
+
+      <para>
+	The instructions in the "Building HarfBuzz" section will build
+	the source code under its default configuration. If needed,
+	the following additional configuration options are available.
+      </para>
+
+      <variablelist>
+	<?dbfo list-presentation="blocks"?> 
+	<varlistentry>
+	  <term><command>--with-libstdc++</command></term>
+	  <listitem>
+	    <para>
+	      Allow linking with libstdc++. <emphasis>(Default = no)</emphasis>
+	    </para>
+	    <para>
+	      This option enables or disables linking HarfBuzz to the
+	      system's libstdc++ library.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-glib</command></term>
+	  <listitem>
+	    <para>
+	     Use <ulink url="https://developer.gnome.org/glib/">GLib</ulink>. <emphasis>(Default = auto)</emphasis>
+	    </para>
+	    <para>
+	      This option enables or disables usage of the GLib
+	      library.  The default setting is to check for the
+	      presence of GLib and, if it is found, build with
+	      GLib support. GLib is native to GNU/Linux systems but is
+	      available on other operating system as well.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-gobject</command></term>
+	  <listitem>
+	    <para>
+	      Use <ulink url="https://developer.gnome.org/gobject/stable/">GObject</ulink>. <emphasis>(Default = no)</emphasis>
+	    </para>	   
+	    <para>
+	      This option enables or disables usage of the GObject
+	      library. The default setting is to check for the
+	      presence of GObject and, if it is found, build with
+	      GObject support. GObject is native to GNU/Linux systems but is
+	      available on other operating system as well.
+	    </para> 
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-cairo</command></term>
+	  <listitem>
+	    <para>
+	      Use <ulink url="https://cairographics.org/">Cairo</ulink>. <emphasis>(Default = auto)</emphasis>
+	    </para>	   
+	    <para>
+	      This option enables or disables usage of the Cairo
+	      graphics-rendering library. The default setting is to
+	      check for the presence of Cairo and, if it is found,
+	      build with Cairo support.
+	    </para>
+	    <para>
+	      Note: Cairo is used only by the HarfBuzz
+	      command-line utilities, and not by the HarfBuzz library.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-fontconfig</command></term>
+	  <listitem>
+	    <para>
+	      Use <ulink url="https://www.freedesktop.org/wiki/Software/fontconfig/">Fontconfig</ulink>. <emphasis>(Default = auto)</emphasis>
+	    </para>
+	    <para>
+	      This option enables or disables usage of the Fontconfig
+	      library, which provides font-matching functions and
+	      provides access to font properties. The default setting
+	      is to check for the presence of Fontconfig and, if it is
+	      found, build with Fontconfig support.
+	    </para>
+	    <para>
+	      Note: Fontconfig is used only by the HarfBuzz
+	      command-line utilities, and not by the HarfBuzz library.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-icu</command></term>
+	  <listitem>
+	    <para>
+	      Use the <ulink url="http://site.icu-project.org/home">ICU</ulink> library. <emphasis>(Default = auto)</emphasis>
+	    </para>
+	    <para>
+	      This option enables or disables usage of the
+	      <emphasis>International Components for
+	      Unicode</emphasis> (ICU) library, which provides access
+	      to Unicode Character Database (UCD) properties as well
+	      as normalization and conversion functions. The default
+	      setting is to check for the presence of ICU and, if it
+	      is found, build with ICU support.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-graphite2</command></term>
+	  <listitem>
+	    <para>
+	      Use the <ulink url="http://graphite.sil.org/">Graphite2</ulink> library. <emphasis>(Default = no)</emphasis>
+	    </para>
+	    <para>
+	      This option enables or disables usage of the Graphite2
+	      library, which provides support for the Graphite shaping
+	      model. 
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-freetype</command></term>
+	  <listitem>
+	    <para>
+	      Use the <ulink url="https://www.freetype.org/">FreeType</ulink> library. <emphasis>(Default = auto)</emphasis>
+	    </para>
+	    <para>
+	      This option enables or disables usage of the FreeType
+	      font-rendering library. The default setting is to check for the
+	      presence of FreeType and, if it is found, build with
+	      FreeType support.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-uniscribe</command></term>
+	  <listitem>
+	    <para>
+	      Use the <ulink
+	      url="https://docs.microsoft.com/en-us/windows/desktop/intl/uniscribe">Uniscribe</ulink>
+	      library (experimental). <emphasis>(Default = no)</emphasis>
+	    </para>
+	    <para>
+	      This option enables or disables usage of the Uniscribe
+	      font-rendering library. Uniscribe is available on
+	      Windows systems. Uniscribe support is used only for
+	      testing purposes and does not need to be enabled for
+	      HarfBuzz to run on Windows systems.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-directwrite</command></term>
+	  <listitem>
+	    <para>
+	      Use the <ulink url="https://docs.microsoft.com/en-us/windows/desktop/directwrite/direct-write-portal">DirectWrite</ulink> library (experimental). <emphasis>(Default = no)</emphasis>
+	    </para>
+	    <para>
+	      This option enables or disables usage of the DirectWrite
+	      font-rendering library. DirectWrite is available on
+	      Windows systems. DirectWrite support is used only for
+	      testing purposes and does not need to be enabled for
+	      HarfBuzz to run on Windows systems.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term><command>--with-coretext</command></term>
+	  <listitem>
+	    <para>
+	      Use the <ulink url="https://developer.apple.com/documentation/coretext">CoreText</ulink> library. <emphasis>(Default = no)</emphasis>
+	    </para>
+	    <para>
+	      This option enables or disables usage of the CoreText
+	      library. CoreText is available on macOS and iOS systems.
+	    </para>
+	  </listitem>
+	</varlistentry>	
+
+	<varlistentry>
+	  <term><command>--enable-gtk-doc</command></term>
+	  <listitem>
+	    <para>
+	      Use <ulink url="https://www.gtk.org/gtk-doc/">GTK-Doc</ulink>. <emphasis>(Default = no)</emphasis>
+	    </para>
+	    <para>
+	      This option enables the building of the documentation.
+	    </para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+    </section>
+    
   </section>
 </chapter>

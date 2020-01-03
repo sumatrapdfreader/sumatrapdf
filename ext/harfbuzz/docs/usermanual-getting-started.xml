@@ -1,0 +1,307 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY version SYSTEM "version.xml">
+]>
+<chapter id="getting-started">
+  <title>Getting started with HarfBuzz</title>
+  <section>
+    <title>An overview of the HarfBuzz shaping API</title>
+    <para>
+      The core of the HarfBuzz shaping API is the function
+      <function>hb_shape()</function>. This function takes a font, a
+      buffer containing a string of Unicode codepoints and
+      (optionally) a list of font features as its input. It replaces
+      the codepoints in the buffer with the corresponding glyphs from
+      the font, correctly ordered and positioned, and with any of the
+      optional font features applied.
+    </para>
+    <para>
+      In addition to holding the pre-shaping input (the Unicode
+      codepoints that comprise the input string) and the post-shaping
+      output (the glyphs and positions), a HarfBuzz buffer has several
+      properties that affect shaping. The most important are the
+      text-flow direction (e.g., left-to-right, right-to-left,
+      top-to-bottom, or bottom-to-top), the script tag, and the
+      language tag.
+    </para>
+
+    <para>
+      For input string buffers, flags are available to denote when the
+      buffer represents the beginning or end of a paragraph, to
+      indicate whether or not to visibly render Unicode <literal>Default
+      Ignorable</literal> codepoints, and to modify the cluster-merging
+      behavior for the buffer. For shaped output buffers, the
+      individual X and Y offsets and <literal>advances</literal>
+      (the logical dimensions) of each glyph are 
+      accessible. HarfBuzz also flags glyphs as
+      <literal>UNSAFE_TO_BREAK</literal> if breaking the string at
+      that glyph (e.g., in a line-breaking or hyphenation process)
+      would require re-shaping the text.
+    </para>
+    
+    <para>
+      HarfBuzz also provides methods to compare the contents of
+      buffers, join buffers, normalize buffer contents, and handle
+      invalid codepoints, as well as to determine the state of a
+      buffer (e.g., input codepoints or output glyphs). Buffer
+      lifecycles are managed and all buffers are reference-counted.
+    </para>
+
+    <para>
+      Although the default <function>hb_shape()</function> function is
+      sufficient for most use cases, a variant is also provide that
+      lets you specify which of HarfBuzz's shapers to use on a buffer. 
+    </para>
+
+    <para>
+      HarfBuzz can read TrueType fonts, TrueType collections, OpenType
+      fonts, and OpenType collections. Functions are provided to query
+      font objects about metrics, Unicode coverage, available tables and
+      features, and variation selectors. Individual glyphs can also be
+      queried for metrics, variations, and glyph names. OpenType
+      variable fonts are supported, and HarfBuzz allows you to set
+      variation-axis coordinates on font objects.
+    </para>
+    
+    <para>
+      HarfBuzz provides glue code to integrate with various other
+      libraries, including FreeType, GObject, and CoreText. Support
+      for integrating with Uniscribe and DirectWrite is experimental
+      at present.
+    </para>
+  </section>
+
+  <section>
+    <title>Terminology</title>
+    <para>
+      
+    </para>
+      <variablelist>
+	<?dbfo list-presentation="blocks"?> 
+	<varlistentry>
+	  <term>script</term>
+	  <listitem>
+	    <para>
+	      In text shaping, a <emphasis>script</emphasis> is a
+	      writing system: a set of symbols, rules, and conventions
+	      that is used to represent a language or multiple
+	      languages.
+	    </para>
+	    <para>
+	      In general computing lingo, the word "script" can also
+	      be used to mean an executable program (usually one
+	      written in a human-readable programming language). For
+	      the sake of clarity, HarfBuzz documents will always use
+	      more specific terminology when referring to this
+	      meaning, such as "Python script" or "shell script." In
+	      all other instances, "script" refers to a writing system.
+	    </para>
+	    <para>
+	      For developers using HarfBuzz, it is important to note
+	      the distinction between a script and a language. Most
+	      scripts are used to write a variety of different
+	      languages, and many languages may be written in more
+	      than one script.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term>shaper</term>
+	  <listitem>
+	    <para>
+	      In HarfBuzz, a <emphasis>shaper</emphasis> is a
+	      handler for a specific script-shaping model. HarfBuzz
+	      implements separate shapers for Indic, Arabic, Thai and
+	      Lao, Khmer, Myanmar, Tibetan, Hangul, Hebrew, the
+	      Universal Shaping Engine (USE), and a default shaper for
+	      non-complex scripts. 
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term>cluster</term>
+	  <listitem>
+	    <para>
+	      In text shaping, a <emphasis>cluster</emphasis> is a
+	      sequence of codepoints that must be treated as an
+	      indivisible unit. Clusters can include code-point
+	      sequences that form a ligature or base-and-mark
+	      sequences. Tracking and preserving clusters is important
+	      when shaping operations might separate or reorder
+	      code points.
+	    </para>
+	    <para>
+	      HarfBuzz provides three cluster
+	      <emphasis>levels</emphasis> that implement different
+	      approaches to the problem of preserving clusters during
+	      shaping operations.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term>grapheme</term>
+	  <listitem>
+	    <para>
+	      In linguistics, a <emphasis>grapheme</emphasis> is one
+	      of the indivisible units that make up a writing system or
+	      script. Often, graphemes are individual symbols (letters,
+	      numbers, punctuation marks, logograms, etc.) but,
+	      depending on the writing system, a particular grapheme
+	      might correspond to a sequence of several Unicode code
+	      points.
+	    </para>
+	    <para>
+	      In practice, HarfBuzz and other text-shaping engines
+	      are not generally concerned with graphemes. However, it
+	      is important for developers using HarfBuzz to recognize
+	      that there is a difference between graphemes and shaping
+	      clusters (see above). The two concepts may overlap
+	      frequently, but there is no guarantee that they will be
+	      identical.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	
+	<varlistentry>
+	  <term>syllable</term>
+	  <listitem>
+	    <para>
+	      In linguistics, a <emphasis>syllable</emphasis> is an 
+	      a sequence of sounds that makes up a building block of a
+	      particular language. Every language has its own set of
+	      rules describing what constitutes a valid syllable.
+	    </para>
+	    <para>
+	      For text-shaping purposes, the various definitions of
+	      "syllable" are important because script-specific shaping
+	      operations may be applied at the syllable level. For
+	      example, a reordering rule might specify that a vowel
+	      mark be reordered to the beginning of the syllable.
+	    </para>
+	    <para>
+	      Syllables will consist of one or more Unicode code
+	      points. The definition of a syllable for a particular
+	      writing system might correspond to how HarfBuzz
+	      identifies clusters (see above) for the same writing
+	      system. However, it is important for developers using
+	      HarfBuzz to recognize that there is a difference between
+	      syllables and shaping clusters. The two concepts may
+	      overlap frequently, but there is no guarantee that they
+	      will be identical.
+	    </para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+    
+  </section>
+
+
+  <section>
+    <title>A simple shaping example</title>
+
+    <para>
+      Below is the simplest HarfBuzz shaping example possible.
+    </para>
+    <orderedlist numeration="arabic">
+      <listitem>
+	<para>
+          Create a buffer and put your text in it.
+	</para>
+      </listitem>
+    </orderedlist>
+    <programlisting language="C">
+      #include &lt;hb.h&gt;
+      hb_buffer_t *buf;
+      buf = hb_buffer_create();
+      hb_buffer_add_utf8(buf, text, -1, 0, -1);
+    </programlisting>
+    <orderedlist numeration="arabic">
+      <listitem override="2">
+	<para>
+          Set the script, language and direction of the buffer.
+	</para>
+      </listitem>
+    </orderedlist>
+    <programlisting language="C">
+      hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
+      hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
+      hb_buffer_set_language(buf, hb_language_from_string("en", -1));
+    </programlisting>
+    <orderedlist numeration="arabic">
+      <listitem override="3">
+	<para>
+          Create a face and a font, using FreeType for now.
+	</para>
+      </listitem>
+    </orderedlist>
+    <programlisting language="C">
+      #include &lt;hb-ft.h&gt;
+      FT_New_Face(ft_library, font_path, index, &amp;face);
+      FT_Set_Char_Size(face, 0, 1000, 0, 0);
+      hb_font_t *font = hb_ft_font_create(face);
+    </programlisting>
+    <orderedlist numeration="arabic">
+      <listitem override="4">
+	<para>
+          Shape!
+	</para>
+      </listitem>
+    </orderedlist>
+    <programlisting>
+      hb_shape(font, buf, NULL, 0);
+    </programlisting>
+    <orderedlist numeration="arabic">
+      <listitem override="5">
+	<para>
+          Get the glyph and position information.
+	</para>
+      </listitem>
+    </orderedlist>
+    <programlisting language="C">
+      hb_glyph_info_t *glyph_info    = hb_buffer_get_glyph_infos(buf, &amp;glyph_count);
+      hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buf, &amp;glyph_count);
+    </programlisting>
+    <orderedlist numeration="arabic">
+      <listitem override="6">
+	<para>
+          Iterate over each glyph.
+	</para>
+      </listitem>
+    </orderedlist>
+    <programlisting language="C">
+      for (i = 0; i &lt; glyph_count; ++i) {
+          glyphid = glyph_info[i].codepoint;
+          x_offset = glyph_pos[i].x_offset / 64.0;
+          y_offset = glyph_pos[i].y_offset / 64.0;
+          x_advance = glyph_pos[i].x_advance / 64.0;
+          y_advance = glyph_pos[i].y_advance / 64.0;
+          draw_glyph(glyphid, cursor_x + x_offset, cursor_y + y_offset);
+          cursor_x += x_advance;
+          cursor_y += y_advance;
+      }
+    </programlisting>
+    <orderedlist numeration="arabic">
+      <listitem override="7">
+	<para>
+          Tidy up.
+	</para>
+      </listitem>
+    </orderedlist>
+    <programlisting language="C">
+      hb_buffer_destroy(buf);
+      hb_font_destroy(hb_ft_font);
+    </programlisting>
+    
+    <para>
+      This example shows enough to get us started using HarfBuzz. In
+      the sections that follow, we will use the remainder of
+      HarfBuzz's API to refine and extend the example and improve its
+      text-shaping capabilities.
+    </para>
+  </section>
+</chapter>

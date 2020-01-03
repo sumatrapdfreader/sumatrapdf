@@ -1,6 +1,0 @@
-../fonts/TestHVARTwo.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=0:U+0041,U+0042:[uni0041|uni0042@450,0]
-../fonts/TestHVARTwo.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=200:U+0041,U+0042:[uni0041|uni0042@515,0]
-../fonts/TestHVARTwo.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=400:U+0041,U+0042:[uni0041|uni0042@584,0]
-../fonts/TestHVARTwo.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=600:U+0041,U+0042:[uni0041|uni0042@673,0]
-../fonts/TestHVARTwo.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=800:U+0041,U+0042:[uni0041|uni0042@761,0]
-../fonts/TestHVARTwo.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=1000:U+0041,U+0042:[uni0041|uni0042@850,0]

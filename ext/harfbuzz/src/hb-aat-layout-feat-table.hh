@@ -39,7 +39,27 @@ namespace AAT {
 
 struct SettingName
 {
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  friend struct FeatureName;
+
+  int cmp (hb_aat_layout_feature_selector_t key) const
+  { return (int) key - (int) setting; }
+
+  hb_aat_layout_feature_selector_t get_selector () const
+  { return (hb_aat_layout_feature_selector_t) (unsigned) setting; }
+
+  hb_aat_layout_feature_selector_info_t get_info (hb_aat_layout_feature_selector_t default_selector) const
+  {
+    return {
+      nameIndex,
+      (hb_aat_layout_feature_selector_t) (unsigned int) setting,
+      default_selector == HB_AAT_LAYOUT_FEATURE_SELECTOR_INVALID
+	? (hb_aat_layout_feature_selector_t) (setting + 1)
+	: default_selector,
+      0
+    };
+  }
+
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this)));
@@ -51,35 +71,76 @@ struct SettingName
   public:
   DEFINE_SIZE_STATIC (4);
 };
+DECLARE_NULL_NAMESPACE_BYTES (AAT, SettingName);
+
+struct feat;
 
 struct FeatureName
 {
-  inline bool sanitize (hb_sanitize_context_t *c, const void *base) const
-  {
-    TRACE_SANITIZE (this);
-    return_trace (likely (c->check_struct (this) &&
-			  (base+settingTable).sanitize (c, nSettings)));
-  }
+  int cmp (hb_aat_layout_feature_type_t key) const
+  { return (int) key - (int) feature; }
 
   enum {
-    Exclusive = 0x8000,		/* If set, the feature settings are mutually exclusive. */
-    NotDefault = 0x4000,	/* If clear, then the setting with an index of 0 in
+    Exclusive	= 0x8000,	/* If set, the feature settings are mutually exclusive. */
+    NotDefault	= 0x4000,	/* If clear, then the setting with an index of 0 in
 				 * the setting name array for this feature should
 				 * be taken as the default for the feature
 				 * (if one is required). If set, then bits 0-15 of this
 				 * featureFlags field contain the index of the setting
 				 * which is to be taken as the default. */
-    IndexMask = 0x00FF		/* If bits 30 and 31 are set, then these sixteen bits
+    IndexMask	= 0x00FF	/* If bits 30 and 31 are set, then these sixteen bits
 				 * indicate the index of the setting in the setting name
 				 * array for this feature which should be taken
 				 * as the default. */
   };
 
+  unsigned int get_selector_infos (unsigned int                           start_offset,
+				   unsigned int                          *selectors_count, /* IN/OUT.  May be NULL. */
+				   hb_aat_layout_feature_selector_info_t *selectors,       /* OUT.     May be NULL. */
+				   unsigned int                          *pdefault_index,  /* OUT.     May be NULL. */
+				   const void *base) const
+  {
+    hb_array_t< const SettingName> settings_table = (base+settingTableZ).as_array (nSettings);
+
+    static_assert (Index::NOT_FOUND_INDEX == HB_AAT_LAYOUT_NO_SELECTOR_INDEX, "");
+
+    hb_aat_layout_feature_selector_t default_selector = HB_AAT_LAYOUT_FEATURE_SELECTOR_INVALID;
+    unsigned int default_index = Index::NOT_FOUND_INDEX;
+    if (featureFlags & Exclusive)
+    {
+      default_index = (featureFlags & NotDefault) ? featureFlags & IndexMask : 0;
+      default_selector = settings_table[default_index].get_selector ();
+    }
+    if (pdefault_index)
+      *pdefault_index = default_index;
+
+    if (selectors_count)
+    {
+      + settings_table.sub_array (start_offset, selectors_count)
+      | hb_map ([=] (const SettingName& setting) { return setting.get_info (default_selector); })
+      | hb_sink (hb_array (selectors, *selectors_count))
+      ;
+    }
+    return settings_table.length;
+  }
+
+  hb_aat_layout_feature_type_t get_feature_type () const
+  { return (hb_aat_layout_feature_type_t) (unsigned int) feature; }
+
+  hb_ot_name_id_t get_feature_name_id () const { return nameIndex; }
+
+  bool sanitize (hb_sanitize_context_t *c, const void *base) const
+  {
+    TRACE_SANITIZE (this);
+    return_trace (likely (c->check_struct (this) &&
+			  (base+settingTableZ).sanitize (c, nSettings)));
+  }
+
   protected:
   HBUINT16	feature;	/* Feature type. */
   HBUINT16	nSettings;	/* The number of records in the setting name array. */
-  LOffsetTo<UnsizedArrayOf<SettingName> >
-		settingTable;	/* Offset in bytes from the beginning of this table to
+  LOffsetTo<UnsizedArrayOf<SettingName>, false>
+		settingTableZ;	/* Offset in bytes from the beginning of this table to
 				 * this feature's setting name array. The actual type of
 				 * record this offset refers to will depend on the
 				 * exclusivity value, as described below. */
@@ -93,13 +154,46 @@ struct FeatureName
 
 struct feat
 {
-  static const hb_tag_t tableTag = HB_AAT_TAG_feat;
+  static constexpr hb_tag_t tableTag = HB_AAT_TAG_feat;
 
-  inline bool sanitize (hb_sanitize_context_t *c) const
+  bool has_data () const { return version.to_int (); }
+
+  unsigned int get_feature_types (unsigned int                  start_offset,
+				  unsigned int                 *count,
+				  hb_aat_layout_feature_type_t *features) const
+  {
+    if (count)
+    {
+      + namesZ.as_array (featureNameCount).sub_array (start_offset, count)
+      | hb_map (&FeatureName::get_feature_type)
+      | hb_sink (hb_array (features, *count))
+      ;
+    }
+    return featureNameCount;
+  }
+
+  const FeatureName& get_feature (hb_aat_layout_feature_type_t feature_type) const
+  { return namesZ.bsearch (featureNameCount, feature_type); }
+
+  hb_ot_name_id_t get_feature_name_id (hb_aat_layout_feature_type_t feature) const
+  { return get_feature (feature).get_feature_name_id (); }
+
+  unsigned int get_selector_infos (hb_aat_layout_feature_type_t           feature_type,
+				   unsigned int                           start_offset,
+				   unsigned int                          *selectors_count, /* IN/OUT.  May be NULL. */
+				   hb_aat_layout_feature_selector_info_t *selectors,       /* OUT.     May be NULL. */
+				   unsigned int                          *default_index    /* OUT.     May be NULL. */) const
+  {
+    return get_feature (feature_type).get_selector_infos (start_offset, selectors_count, selectors,
+							  default_index, this);
+  }
+
+  bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     return_trace (likely (c->check_struct (this) &&
-			  names.sanitize (c, featureNameCount, this)));
+			  version.major == 1 &&
+			  namesZ.sanitize (c, featureNameCount, this)));
   }
 
   protected:
@@ -109,10 +203,10 @@ struct feat
 				/* The number of entries in the feature name array. */
   HBUINT16	reserved1;	/* Reserved (set to zero). */
   HBUINT32	reserved2;	/* Reserved (set to zero). */
-  UnsizedArrayOf<FeatureName>
-		names;		/* The feature name array. */
+  SortedUnsizedArrayOf<FeatureName>
+		namesZ;		/* The feature name array. */
   public:
-  DEFINE_SIZE_STATIC (24);
+  DEFINE_SIZE_ARRAY (12, namesZ);
 };
 
 } /* namespace AAT */

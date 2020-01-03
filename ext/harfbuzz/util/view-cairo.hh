@@ -39,28 +39,22 @@ struct view_cairo_t
 		 view_options (parser),
 		 direction (HB_DIRECTION_INVALID),
 		 lines (0), scale_bits (0) {}
-  ~view_cairo_t (void) {
+  ~view_cairo_t () {
     cairo_debug_reset_static_data ();
   }
 
   void init (hb_buffer_t *buffer, const font_options_t *font_opts)
   {
     lines = g_array_new (false, false, sizeof (helper_cairo_line_t));
-    scale_bits = -font_opts->subpixel_bits;
+    scale_bits = - (int) font_opts->subpixel_bits;
   }
-  void new_line (void)
-  {
-  }
+  void new_line () {}
   void consume_text (hb_buffer_t  *buffer,
 		     const char   *text,
 		     unsigned int  text_len,
-		     hb_bool_t     utf8_clusters)
-  {
-  }
+		     hb_bool_t     utf8_clusters) {}
   void error (const char *message)
-  {
-    g_printerr ("%s: %s\n", g_get_prgname (), message);
-  }
+  { g_printerr ("%s: %s\n", g_get_prgname (), message); }
   void consume_glyphs (hb_buffer_t  *buffer,
 		       const char   *text,
 		       unsigned int  text_len,

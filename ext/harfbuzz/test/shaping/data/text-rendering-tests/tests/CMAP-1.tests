@@ -1,4 +1,0 @@
-../fonts/TestCMAP14.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+82A6:[uni82A6_uE0100]
-../fonts/TestCMAP14.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+82A6,U+E0100:[uni82A6_uE0100]
-../fonts/TestCMAP14.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+82A6,U+E0101:[uni82A6_uE0101]
-../fonts/TestCMAP14.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+82A6,U+E0102:[uni82A6_uE0100]

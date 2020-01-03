@@ -24,13 +24,9 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#define HB_SHAPER fallback
 #include "hb-shaper-impl.hh"
 
-
-HB_SHAPER_DATA_ENSURE_DEFINE(fallback, face)
-HB_SHAPER_DATA_ENSURE_DEFINE(fallback, font)
-
+#ifndef HB_NO_FALLBACK_SHAPE
 
 /*
  * shaper face data
@@ -64,28 +60,6 @@ _hb_fallback_shaper_font_data_create (hb_font_t *font HB_UNUSED)
 
 void
 _hb_fallback_shaper_font_data_destroy (hb_fallback_font_data_t *data HB_UNUSED)
-{
-}
-
-
-/*
- * shaper shape_plan data
- */
-
-struct hb_fallback_shape_plan_data_t {};
-
-hb_fallback_shape_plan_data_t *
-_hb_fallback_shaper_shape_plan_data_create (hb_shape_plan_t    *shape_plan HB_UNUSED,
-					    const hb_feature_t *user_features HB_UNUSED,
-					    unsigned int        num_user_features HB_UNUSED,
-					    const int          *coords HB_UNUSED,
-					    unsigned int        num_coords HB_UNUSED)
-{
-  return (hb_fallback_shape_plan_data_t *) HB_SHAPER_DATA_SUCCEEDED;
-}
-
-void
-_hb_fallback_shaper_shape_plan_data_destroy (hb_fallback_shape_plan_data_t *data HB_UNUSED)
 {
 }
 
@@ -147,3 +121,5 @@ _hb_fallback_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
 
   return true;
 }
+
+#endif

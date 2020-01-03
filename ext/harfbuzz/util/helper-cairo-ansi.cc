@@ -71,7 +71,7 @@ helper_cairo_surface_write_to_ansi_stream (cairo_surface_t	*surface,
     unsigned int i;
     for (i = 0; i < width; i++)
       if (data[i] != bg_color)
-        break;
+	break;
     if (i < width)
       break;
     data += stride / 4;
@@ -86,7 +86,7 @@ helper_cairo_surface_write_to_ansi_stream (cairo_surface_t	*surface,
     unsigned int i;
     for (i = 0; i < width; i++)
       if (row[i] != bg_color)
-        break;
+	break;
     if (i < width)
       break;
     height--;

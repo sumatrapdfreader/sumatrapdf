@@ -60,7 +60,7 @@ struct helper_cairo_line_t {
   unsigned int num_clusters;
   cairo_text_cluster_flags_t cluster_flags;
 
-  void finish (void) {
+  void finish () {
     if (glyphs)
       cairo_glyph_free (glyphs);
     if (clusters)

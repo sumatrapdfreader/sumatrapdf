@@ -1,0 +1,21 @@
+pool:
+  vmImage: 'VS2017-Win2016'
+
+variables:
+  buildPlatform: 'x86'
+  buildConfiguration: 'Debug'
+  triplet: 'x86-windows'
+
+steps:
+- script: |
+    git clone https://github.com/Microsoft/vcpkg
+    cd vcpkg
+    .\bootstrap-vcpkg.bat
+    .\vcpkg integrate install
+    .\vcpkg install glib:x86-windows freetype:x86-windows cairo:x86-windows
+    cd ..
+    cmake -Bbuild -H. -DHB_HAVE_UNISCRIBE=ON -DHB_HAVE_DIRECTWRITE=ON -DHB_HAVE_GLIB=ON -DHB_HAVE_FREETYPE=ON -DHB_BUILD_UTILS=ON -G "%generator%" -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake ../
+    msbuild harfbuzz.sln /p:Configuration=Debug /p:Platform=Win32
+    cd build
+    ctest --output-on-failure -C Debug
+  displayName: Build and test

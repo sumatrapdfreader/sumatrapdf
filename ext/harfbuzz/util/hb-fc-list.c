@@ -171,7 +171,7 @@ main (int argc, char **argv)
 	os = FcObjectSetBuild (FC_FAMILY, FC_STYLE, FC_FILE, (char *) 0);
     FcObjectSetAdd (os, FC_CHARSET);
     if (!format)
-        format = (const FcChar8 *) "%{=fclist}\n";
+	format = (const FcChar8 *) "%{=fclist}\n";
     fs = FcFontList (0, pat, os);
     if (os)
 	FcObjectSetDestroy (os);

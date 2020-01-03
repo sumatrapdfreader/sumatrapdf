@@ -1,0 +1,258 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY version SYSTEM "version.xml">
+]>
+<chapter id="object-model">
+  <title>The HarfBuzz object model</title>
+  <section id="object-model-intro">
+    <title>An overview of data types in HarfBuzz</title>
+    <para>
+      HarfBuzz features two kinds of data types: non-opaque,
+      pass-by-value types and opaque, heap-allocated types.  This kind
+      of separation is common in C libraries that have to provide
+      API/ABI compatibility (almost) indefinitely. 
+    </para>
+    <para>
+      <emphasis>Value types:</emphasis> The non-opaque, pass-by-value
+      types include integer types, enums, and small structs.  Exposing
+      a struct in the public API makes it impossible to expand the
+      struct in the future. As such, exposing structs is reserved for
+      cases where it’s extremely inefficient to do otherwise.
+    </para>
+    <para>
+      In HarfBuzz, several structs, like <literal>hb_glyph_info_t</literal> and
+      <literal>hb_glyph_position_t</literal>, fall into that efficiency-sensitive
+      category and are non-opaque.
+    </para>
+    <para>
+      For all non-opaque structs where future extensibility may be
+      necessary, reserved members are included to hold space for
+      possible future members.  As such, it’s important to provide
+      <function>equal()</function>, and <function>hash()</function>
+      methods for such structs, allowing users of the API do
+      effectively deal with the type without having to 
+      adapt their code to future changes. 
+    </para>
+    <para>
+      Important value types provided by HarfBuzz include the structs
+      for working with Unicode code points, glyphs, and tags for font
+      tables and features, as well as the enums for many Unicode and
+      OpenType properties.
+    </para>
+  </section>
+  
+  <section id="object-model-object-types">
+    <title>Objects in HarfBuzz</title>
+    <para>
+      <emphasis>Object types:</emphasis> Opaque struct types are used
+      for what HarfBuzz loosely calls "objects."  This doesn’t have
+      much to do with the terminology from object-oriented programming
+      (OOP), although some of the concepts are similar.
+    </para>
+    <para>
+      In HarfBuzz, all object types provide certain
+      lifecycle-management APIs.  Objects are reference-counted, and
+      constructed with various <function>create()</function> methods, referenced via
+      <function>reference()</function> and dereferenced using
+      <function>destroy()</function>.
+    </para>
+    <para>
+      For example,
+      the <literal>hb_buffer_t</literal> object has
+      <function>hb_buffer_create()</function> as its constructor,
+      <function>hb_buffer_reference()</function> to reference, and
+      <function>hb_buffer_destroy()</function> to dereference. 
+    </para>
+    <para>
+      After construction, each object's properties are accessible only
+      through the setter and getter functions described in the API
+      Reference manual.
+    </para>
+    <para>
+      Key object types provided by HarfBuzz include:
+    </para>
+    <itemizedlist spacing="compact">
+      <listitem>
+	<para>
+	  <emphasis>blobs</emphasis>, which act as low-level wrappers around binary
+	  data. Blobs are typically used to hold the contents of a
+	  binary font file.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  <emphasis>faces</emphasis>, which represent typefaces from a
+	  font file, but without specific parameters (such as size) set.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  <emphasis>fonts</emphasis>, which represent instances of a
+	  face with all of their parameters specified.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  <emphasis>buffers</emphasis>, which hold Unicode code points
+	  for characters (before shaping) and the shaped glyph output
+	  (after shaping).
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  <emphasis>shape plans</emphasis>, which store the settings
+	  that HarfBuzz will use when shaping a particular text
+	  segment. Shape plans are not generally used by client
+	  programs directly, but as we will see in a later chapter,
+	  they are still valuable to understand.
+	</para>
+      </listitem>
+    </itemizedlist>
+	
+  </section>
+
+  
+  
+  <section id="object-model-lifecycle">
+    <title>Object lifecycle management</title>
+    <para>
+      Each object type in HarfBuzz provides a
+      <function>create()</function> method. Some object types provide
+      additional variants of <function>create()</function> to handle
+      special cases or to speed up common tasks; those variants are
+      documented in the API reference. For example,
+      <function>hb_blob_create_from_file()</function> constructs a new
+      blob directly from the contents of a file.
+    </para>
+    <para>
+      All objects are created with an initial reference count of
+      <literal>1</literal>. Client programs can increase the reference
+      count on an object by calling its
+      <function>reference()</function> method. Whenever a client
+      program is finished with an object, it should call its 
+      corresponding <function>destroy()</function> method. The destroy
+      method will decrease the reference count on the object and,
+      whenever the reference count reaches zero, it will also destroy
+      the object and free all of the associated memory.
+    </para>
+    <para>
+      All of HarfBuzz's object-lifecycle-management APIs are
+      thread-safe (unless you compiled HarfBuzz from source with the
+      <literal>HB_NO_MT</literal> configuration flag), even when the
+      object as a whole is not thread-safe. 
+      It is also permissible to <function>reference()</function> or to 
+      <function>destroy()</function> the <literal>NULL</literal>
+      value.
+    </para>
+    <para>
+      Some objects are thread-safe after they have been constructed
+      and set up. The general pattern is to
+      <function>create()</function> the object, make a few
+      <function>set_*()</function> calls to set up the
+      object, and then use it without further modification.
+    </para>
+    <para>
+      To ensure that such an object is not modified, client programs
+      can explicitly mark an object as immutable. HarfBuzz provides
+      <function>make_immutable()</function> methods to mark an object
+      as immutable and <function>is_immutable()</function> methods to
+      test whether or not an object is immutable. Attempts to use
+      setter functions on immutable objects will fail silently; see the API
+      Reference manual for specifics. 
+    </para>
+    <para>
+      Note also that there are no "make mutable" methods. If client
+      programs need to alter an object previously marked as immutable,
+      they will need to make a duplicate of the original.
+    </para>
+    <para>
+      Finally, object constructors (and, indeed, as much of the
+      shaping API as possible) will never return
+      <literal>NULL</literal>.  Instead, if there is an allocation
+      error, each constructor will return an “empty” object
+      singleton.
+    </para>
+    <para>
+      These empty-object singletons are inert and safe (although
+      typically useless) to pass around.  This design choice avoids
+      having to check for <literal>NULL</literal> pointers all
+      throughout the code.
+    </para>
+    <para>
+      In addition, this “empty” object singleton can also be accessed
+      using the <function>get_empty()</function> method of the object
+      type in question.
+    </para>
+  </section>
+
+  
+  <section id="object-model-user-data">
+    <title>User data</title>
+    <para>
+      To better integrate with client programs, HarfBuzz's objects
+      offer a "user data" mechanism that can be used to attach
+      arbitrary data to the object.  User-data attachment can be
+      useful for tying the lifecycles of various pieces of data
+      together, or for creating language bindings. 
+    </para>
+    <para>
+      Each object type has a <function>set_user_data()</function>
+      method and a <function>get_user_data()</function> method. The
+      <function>set_user_data()</function> methods take a client-provided
+      <literal>key</literal> and a pointer,
+      <literal>user_data</literal>, pointing to the data itself. Once
+      the key-data pair has been attached to the object, the
+      <function>get_user_data()</function> method can be called with
+      the key, returning the <function>user_data</function> pointer.
+    </para>
+    <para>
+      The <function>set_user_data()</function> methods also support an
+      optional <function>destroy</function> callback. Client programs
+      can set the <function>destroy</function> callback and receive
+      notification from HarfBuzz whenever the object is destructed.
+    </para>
+    <para>
+      Finally, each <function>set_user_data()</function> method allows
+      the client program to set a <literal>replace</literal> Boolean
+      indicating whether or not the function call should replace any
+      existing <literal>user_data</literal>
+      associated with the specified key.
+    </para>
+  </section>  
+
+  
+  
+  <section id="object-model-blobs">
+    <title>Blobs</title>
+    <para>
+      While most of HarfBuzz's object types are specific to the
+      shaping process, <emphasis>blobs</emphasis> are somewhat
+      different.
+    </para>
+    <para>
+      Blobs are an abstraction desgined to negotiate lifecycle and
+      permissions for raw pieces of data.  For example, when you load
+      the raw font data into memory and want to pass it to HarfBuzz,
+      you do so in a <literal>hb_blob_t</literal> wrapper.
+    </para>
+    <para>
+      This allows you to take advantage of HarffBuzz's
+      reference-counting and <function>destroy</function>
+      callbacks. If you allocated the memory for the data using 
+      <function>malloc()</function>, you would create the blob using
+    </para>
+    <programlisting language="C">
+      hb_blob_create (data, length, HB_MEMORY_MODE_WRITABLE, NULL, free)
+    </programlisting>
+    <para>
+      That way, HarfBuzz will call <function>free()</function> on the
+      allocated memory whenever the blob drops its last reference and
+      is deconstructed.  Consequently, the user code can stop worrying
+      about freeing memory and let the reference-counting machinery
+      take care of that. 
+    </para>
+  </section>
+  
+</chapter>

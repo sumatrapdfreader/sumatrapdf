@@ -29,26 +29,29 @@
 #include "hb-machinery.hh"
 
 
-static const hb_shaper_pair_t all_shapers[] = {
+static const hb_shaper_entry_t all_shapers[] = {
 #define HB_SHAPER_IMPLEMENT(name) {#name, _hb_##name##_shape},
 #include "hb-shaper-list.hh"
 #undef HB_SHAPER_IMPLEMENT
 };
-
-#ifdef HB_USE_ATEXIT
-static void free_static_shapers (void);
+#ifndef HB_NO_SHAPER
+static_assert (0 != ARRAY_LENGTH_CONST (all_shapers), "No shaper enabled.");
 #endif
 
-static struct hb_shapers_lazy_loader_t : hb_lazy_loader_t<const hb_shaper_pair_t,
+#if HB_USE_ATEXIT
+static void free_static_shapers ();
+#endif
+
+static struct hb_shapers_lazy_loader_t : hb_lazy_loader_t<const hb_shaper_entry_t,
 							  hb_shapers_lazy_loader_t>
 {
-  static inline hb_shaper_pair_t *create (void)
+  static hb_shaper_entry_t *create ()
   {
     char *env = getenv ("HB_SHAPER_LIST");
     if (!env || !*env)
       return nullptr;
 
-    hb_shaper_pair_t *shapers = (hb_shaper_pair_t *) calloc (1, sizeof (all_shapers));
+    hb_shaper_entry_t *shapers = (hb_shaper_entry_t *) calloc (1, sizeof (all_shapers));
     if (unlikely (!shapers))
       return nullptr;
 
@@ -68,7 +71,7 @@ static struct hb_shapers_lazy_loader_t : hb_lazy_loader_t<const hb_shaper_pair_t
 	    0 == strncmp (shapers[j].name, p, end - p))
 	{
 	  /* Reorder this shaper to position i */
-	 struct hb_shaper_pair_t t = shapers[j];
+	 struct hb_shaper_entry_t t = shapers[j];
 	 memmove (&shapers[i + 1], &shapers[i], sizeof (shapers[i]) * (j - i));
 	 shapers[i] = t;
 	 i++;
@@ -80,32 +83,26 @@ static struct hb_shapers_lazy_loader_t : hb_lazy_loader_t<const hb_shaper_pair_t
 	p = end + 1;
     }
 
-#ifdef HB_USE_ATEXIT
+#if HB_USE_ATEXIT
     atexit (free_static_shapers);
 #endif
 
     return shapers;
   }
-  static inline void destroy (const hb_shaper_pair_t *p)
-  {
-    free ((void *) p);
-  }
-  static inline const hb_shaper_pair_t *get_null (void)
-  {
-    return all_shapers;
-  }
+  static void destroy (const hb_shaper_entry_t *p) { free ((void *) p); }
+  static const hb_shaper_entry_t *get_null ()      { return all_shapers; }
 } static_shapers;
 
-#ifdef HB_USE_ATEXIT
+#if HB_USE_ATEXIT
 static
-void free_static_shapers (void)
+void free_static_shapers ()
 {
   static_shapers.free_instance ();
 }
 #endif
 
-const hb_shaper_pair_t *
-_hb_shapers_get (void)
+const hb_shaper_entry_t *
+_hb_shapers_get ()
 {
   return static_shapers.get_unconst ();
 }

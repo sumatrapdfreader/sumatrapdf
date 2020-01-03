@@ -44,7 +44,6 @@ HB_BEGIN_DECLS
  * hb_glyph_info_t:
  * @codepoint: either a Unicode code point (before shaping) or a glyph index
  *             (after shaping).
- * @mask: 
  * @cluster: the index of the character in the original text that corresponds
  *           to this #hb_glyph_info_t, or whatever the client passes to
  *           hb_buffer_add(). More than one #hb_glyph_info_t can have the same
@@ -59,11 +58,13 @@ HB_BEGIN_DECLS
  *
  * The #hb_glyph_info_t is the structure that holds information about the
  * glyphs and their relation to input text.
- *
  */
-typedef struct hb_glyph_info_t {
+typedef struct hb_glyph_info_t
+{
   hb_codepoint_t codepoint;
-  hb_mask_t      mask; /* Holds hb_glyph_flags_t after hb_shape(), plus other things. */
+  /*< private >*/
+  hb_mask_t      mask;
+  /*< public >*/
   uint32_t       cluster;
 
   /*< private >*/
@@ -88,6 +89,9 @@ typedef struct hb_glyph_info_t {
  * 				   of each line after line-breaking, or limiting
  * 				   the reshaping to a small piece around the
  * 				   breaking point only.
+ * @HB_GLYPH_FLAG_DEFINED: All the currently defined flags.
+ *
+ * Since: 1.5.0
  */
 typedef enum { /*< flags >*/
   HB_GLYPH_FLAG_UNSAFE_TO_BREAK		= 0x00000001,
@@ -280,6 +284,10 @@ hb_buffer_guess_segment_properties (hb_buffer_t *buffer);
  *                      space glyph and zeroing the advance width.)
  *                      @HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES takes
  *                      precedence over this flag. Since: 1.8.0
+ * @HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE:
+ *                      flag indicating that a dotted circle should
+ *                      not be inserted in the rendering of incorrect
+ *                      character sequences (such at <0905 093E>). Since: 2.4
  *
  * Since: 0.9.20
  */
@@ -288,7 +296,8 @@ typedef enum { /*< flags >*/
   HB_BUFFER_FLAG_BOT				= 0x00000001u, /* Beginning-of-text */
   HB_BUFFER_FLAG_EOT				= 0x00000002u, /* End-of-text */
   HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES	= 0x00000004u,
-  HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES	= 0x00000008u
+  HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES	= 0x00000008u,
+  HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE	= 0x00000010u
 } hb_buffer_flags_t;
 
 HB_EXTERN void
@@ -298,7 +307,15 @@ hb_buffer_set_flags (hb_buffer_t       *buffer,
 HB_EXTERN hb_buffer_flags_t
 hb_buffer_get_flags (hb_buffer_t *buffer);
 
-/*
+/**
+ * hb_buffer_cluster_level_t:
+ * @HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES: Return cluster values grouped by graphemes into
+ *   monotone order.
+ * @HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS: Return cluster values grouped into monotone order.
+ * @HB_BUFFER_CLUSTER_LEVEL_CHARACTERS: Don't group cluster values.
+ * @HB_BUFFER_CLUSTER_LEVEL_DEFAULT: Default cluster level,
+ *   equal to @HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES.
+ *
  * Since: 0.9.42
  */
 typedef enum {
@@ -331,6 +348,13 @@ hb_buffer_set_replacement_codepoint (hb_buffer_t    *buffer,
 
 HB_EXTERN hb_codepoint_t
 hb_buffer_get_replacement_codepoint (hb_buffer_t    *buffer);
+
+HB_EXTERN void
+hb_buffer_set_invisible_glyph (hb_buffer_t    *buffer,
+			       hb_codepoint_t  invisible);
+
+HB_EXTERN hb_codepoint_t
+hb_buffer_get_invisible_glyph (hb_buffer_t    *buffer);
 
 
 HB_EXTERN void
@@ -417,11 +441,11 @@ hb_buffer_get_length (hb_buffer_t *buffer);
 
 HB_EXTERN hb_glyph_info_t *
 hb_buffer_get_glyph_infos (hb_buffer_t  *buffer,
-                           unsigned int *length);
+			   unsigned int *length);
 
 HB_EXTERN hb_glyph_position_t *
 hb_buffer_get_glyph_positions (hb_buffer_t  *buffer,
-                               unsigned int *length);
+			       unsigned int *length);
 
 
 HB_EXTERN void

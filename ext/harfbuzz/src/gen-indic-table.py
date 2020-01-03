@@ -79,10 +79,6 @@ data = combined
 del combined
 num = len (data)
 
-for u in [0x17CD, 0x17CE, 0x17CF, 0x17D0, 0x17D3]:
-	if data[u][0] == 'Other':
-		data[u][0] = "Vowel_Dependent"
-
 # Move the outliers NO-BREAK SPACE and DOTTED CIRCLE out
 singles = {}
 for u in ALLOWED_SINGLES:
@@ -101,6 +97,10 @@ for h in headers:
 	for l in h:
 		print (" * %s" % (l.strip()))
 print (" */")
+print ()
+print ('#include "hb.hh"')
+print ()
+print ('#ifndef HB_NO_OT_SHAPE')
 print ()
 print ('#include "hb-ot-shape-complex-indic.hh"')
 print ()
@@ -131,8 +131,10 @@ for i in range (2):
 
 what = ["INDIC_SYLLABIC_CATEGORY", "INDIC_MATRA_CATEGORY"]
 what_short = ["ISC", "IMC"]
+print ('#pragma GCC diagnostic push')
+print ('#pragma GCC diagnostic ignored "-Wunused-macros"')
+cat_defs = []
 for i in range (2):
-	print ()
 	vv = sorted (values[i].keys ())
 	for v in vv:
 		v_no_and = v.replace ('_And_', '_')
@@ -144,10 +146,18 @@ for i in range (2):
 				raise Exception ("Duplicate short value alias", v, all_shorts[i][s])
 			all_shorts[i][s] = v
 			short[i][v] = s
-		print ("#define %s_%s	%s_%s	%s/* %3d chars; %s */" %
-			(what_short[i], s, what[i], v.upper (),
-			'	'* ((48-1 - len (what[i]) - 1 - len (v)) // 8),
-			values[i][v], v))
+		cat_defs.append ((what_short[i] + '_' + s, what[i] + '_' + v.upper (), str (values[i][v]), v))
+
+maxlen_s = max ([len (c[0]) for c in cat_defs])
+maxlen_l = max ([len (c[1]) for c in cat_defs])
+maxlen_n = max ([len (c[2]) for c in cat_defs])
+for s in what_short:
+	print ()
+	for c in [c for c in cat_defs if s in c[0]]:
+		print ("#define %s %s /* %s chars; %s */" %
+			(c[0].ljust (maxlen_s), c[1].ljust (maxlen_l), c[2].rjust (maxlen_n), c[3]))
+print ()
+print ('#pragma GCC diagnostic pop')
 print ()
 print ("#define _(S,M) INDIC_COMBINE_CATEGORIES (ISC_##S, IMC_##M)")
 print ()
@@ -246,11 +256,13 @@ print ("}")
 print ()
 print ("#undef _")
 for i in range (2):
-	print
+	print ()
 	vv = sorted (values[i].keys ())
 	for v in vv:
 		print ("#undef %s_%s" %
 			(what_short[i], short[i][v]))
+print ()
+print ('#endif')
 print ()
 print ("/* == End of generated table == */")
 

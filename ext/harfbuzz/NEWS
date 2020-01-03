@@ -1,3 +1,363 @@
+Overview of changes leading to 2.6.4
+Monday, October 29, 2019
+====================================
+- Small bug fix.
+- Build fixes.
+
+
+Overview of changes leading to 2.6.3
+Monday, October 28, 2019
+====================================
+- Misc small fixes, mostly to build-related issues.
+- New API:
++hb_font_get_nominal_glyphs()
+
+
+Overview of changes leading to 2.6.2
+Monday, September 30, 2019
+====================================
+- Misc small fixes, mostly to build-related issues.
+
+
+Overview of changes leading to 2.6.1
+Thursday, August 22, 2019
+====================================
+- Fix regression with hb_font_create_sub_font scaling introduced in 2.6.0.
+- Change interpretation of font PTEM size / CoreText font size handling.
+  See https://github.com/harfbuzz/harfbuzz/pull/1484
+- hb-ot-font: Prefer symbol cmap subtable if present.
+- Apply 'dist'/'abvm'/'blwm' features to all scripts.
+- Drop experimental DirectWrite API.
+
+
+Overview of changes leading to 2.6.0
+Tuesday, August 13, 2019
+====================================
+- New OpenType metrics, baseline, and metadata table access APIs.
+- New API to set font variations to a named-instance.
+- New hb-gdi.h header and API for creating hb_face_t from HFONT.
+- Amalgam: Provide a single-file harfbuzz.cc file for easier alternate building.
+- More size-reduction configurable options, enabled by HB_TINY.
+- New API:
++hb_font_set_var_named_instance()
++hb_gdi_face_create()
++hb_ot_layout_baseline_tag_t
++hb_ot_layout_get_baseline()
++hb_ot_meta_tag_t
++hb_ot_meta_get_entry_tags()
++hb_ot_meta_reference_entry()
++hb_ot_metrics_tag_t
++hb_ot_metrics_get_position()
++hb_ot_metrics_get_variation()
++hb_ot_metrics_get_x_variation()
++hb_ot_metrics_get_y_variation()
+
+
+Overview of changes leading to 2.5.3
+Wednesday, June 26, 2019
+====================================
+- Fix UCD script data for Unicode 10+ scripts.  This was broken since 2.5.0.
+- More optimizations for HB_TINY.
+
+
+Overview of changes leading to 2.5.2
+Thursday, June 20, 2019
+====================================
+- More hb-config.hh facilities to shrink library size, namely when built as
+  HB_TINY.
+- New documentation of custom configurations in CONFIG.md.
+- Fix build on gcc 4.8.  That's supported again.
+- Universal Shaping Engine improvements thanks to David Corbett.
+- API Changes: Undeprecate some horizontal-kerning API and re-enable in hb-ft,
+  such that Type1 fonts will continue kerning.
+
+
+Overview of changes leading to 2.5.1
+Friday, May 31, 2019
+====================================
+- Fix build with various versions of Visual Studio.
+- Improved documentation, thanks to Nathan Willis.
+- Bugfix in subsetting glyf table.
+- Improved scripts for cross-compiling for Windows using mingw.
+- Rename HB_MATH_GLYPH_PART_FLAG_EXTENDER to HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER.
+  A deprecated macro is added for backwards-compatibility.
+
+
+Overview of changes leading to 2.5.0
+Friday, May 24, 2019
+====================================
+- This release does not include much functional changes, but includes major internal
+  code-base changes.  We now require C++11.  Support for gcc 4.8 and earlier has been
+  dropped.
+- New hb-config.hh facility for compiling smaller library for embedded and web usecases.
+- New Unicode Character Databse implementation that is half the size of previously-used
+  UCDN.
+- Subsetter improvements.
+- Improved documentation, thanks to Nathan Willis.
+- Misc shaping fixes.
+
+
+Overview of changes leading to 2.4.0
+Monday, March 25, 2019
+====================================
+- Unicode 12.
+- Misc fixes.
+- Subsetter improvements.
+- New API:
+HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE
+hb_directwrite_face_create()
+
+
+Overview of changes leading to 2.3.1
+Wednesday, January 30, 2019
+====================================
+- AAT bug fixes.
+- Misc internal housekeeping cleanup.
+
+
+Overview of changes leading to 2.3.0
+Thursday, December 20, 2018
+====================================
+- Fix regression on big-endian architectures.  Ouch!
+- Misc bug and build fixes.
+- Fix subsetting of simple GSUB/GDEF.
+- Merge CFF / CFF2 support contributed by Adobe.  This mostly involves
+  the subsetter, but also get_glyph_extents on CFF fonts.
+
+New API in hb-aat.h:
++hb_aat_layout_has_substitution()
++hb_aat_layout_has_positioning()
++hb_aat_layout_has_tracking()
+
+
+Overview of changes leading to 2.2.0
+Thursday, November 29, 2018
+====================================
+- Misc shaping bug fixes.
+- Add font variations named-instance API.
+- Deprecate font variations axis enumeration API and add replacement.
+- AAT shaping improvements:
+  o Fixed 'kern' table Format 2 implementation.
+  o Implement 'feat' table API for feature detection.
+  o Blacklist 'GSUB' table of fonts from 'MUTF' foundry that also have 'morx'.
+
+New API:
++hb_aat_layout_feature_type_t
++hb_aat_layout_feature_selector_t
++hb_aat_layout_get_feature_types()
++hb_aat_layout_feature_type_get_name_id
++hb_aat_layout_feature_selector_info_t
++HB_AAT_LAYOUT_NO_SELECTOR_INDEX
++hb_aat_layout_feature_type_get_selector_infos()
++hb_ot_var_axis_flags_t
++hb_ot_var_axis_info_t
++hb_ot_var_get_axis_infos()
++hb_ot_var_find_axis_info()
++hb_ot_var_get_named_instance_count()
++hb_ot_var_named_instance_get_subfamily_name_id()
++hb_ot_var_named_instance_get_postscript_name_id()
++hb_ot_var_named_instance_get_design_coords()
+
+Deprecated API:
++HB_OT_VAR_NO_AXIS_INDEX
++hb_ot_var_axis_t
++hb_ot_var_get_axes()
++hb_ot_var_find_axis()
+
+
+Overview of changes leading to 2.1.3
+Friday, November 16, 2018
+====================================
+- Fix AAT 'mort' shaping, which was broken in 2.1.2
+
+
+Overview of changes leading to 2.1.2
+Friday, November 16, 2018
+====================================
+- Various internal changes.
+- AAT shaping improvements:
+  o Implement kern table Format 1 state-machine-based kerning.
+  o Implement cross-stream kerning (cursive positioning, etc).
+  o Ignore emptyish GSUB tables (zero scripts) if morx present.
+  o Don't apply GPOS if morx is being applied.  Matches Apple.
+
+
+-Overview of changes leading to 2.1.1
+Monday, November 5, 2018
+====================================
+- AAT improvements:
+  o Implement 'mort' table.
+  o Implement 'kern' subtables Format 1 and Format 3.
+
+
+Overview of changes leading to 2.1.0
+Tuesday, October 30, 2018
+====================================
+- AAT shaping improvements:
+  o Allow user controlling AAT features, for whole buffer only currently.
+  o Several 'morx' fixes.
+  o Implement tuple-kerns in 'kerx'; Fixes kerning with Apple default
+    San Francisco fonts.
+- Support for color fonts:
+  o COLR/CPAL API to fetch color layers.
+  o SVG table to fetch SVG documents.
+  o CBDT/sbix API to fetch PNG images.
+- New 'name' table API.
+- hb-ot-font now uses 'VORG' table to correctly position CFF glyphs
+  in vertical layout.
+- Various fuzzer-found bug fixes.
+
+Changed API:
+
+A type and a macro added in 2.0.0 were renamed:
+
+hb_name_id_t -> hb_ot_name_id_t
+HB_NAME_ID_INVALID -> HB_OT_NAME_ID_INVALID
+
+New API:
+
++hb_color_t
++HB_COLOR
++hb_color_get_alpha()
++hb_color_get_red()
++hb_color_get_green()
++hb_color_get_blue()
++hb_ot_color_has_palettes()
++hb_ot_color_palette_get_count()
++hb_ot_color_palette_get_name_id()
++hb_ot_color_palette_color_get_name_id()
++hb_ot_color_palette_flags_t
++hb_ot_color_palette_get_flags()
++hb_ot_color_palette_get_colors()
++hb_ot_color_has_layers()
++hb_ot_color_layer_t
++hb_ot_color_glyph_get_layers()
++hb_ot_color_has_svg()
++hb_ot_color_glyph_reference_svg()
++hb_ot_color_has_png()
++hb_ot_color_glyph_reference_png()
+
++hb_ot_name_id_t
++HB_OT_NAME_ID_INVALID
++HB_OT_NAME_ID_COPYRIGHT
++HB_OT_NAME_ID_FONT_FAMILY
++HB_OT_NAME_ID_FONT_SUBFAMILY
++HB_OT_NAME_ID_UNIQUE_ID
++HB_OT_NAME_ID_FULL_NAME
++HB_OT_NAME_ID_VERSION_STRING
++HB_OT_NAME_ID_POSTSCRIPT_NAME
++HB_OT_NAME_ID_TRADEMARK
++HB_OT_NAME_ID_MANUFACTURER
++HB_OT_NAME_ID_DESIGNER
++HB_OT_NAME_ID_DESCRIPTION
++HB_OT_NAME_ID_VENDOR_URL
++HB_OT_NAME_ID_DESIGNER_URL
++HB_OT_NAME_ID_LICENSE
++HB_OT_NAME_ID_LICENSE_URL
++HB_OT_NAME_ID_TYPOGRAPHIC_FAMILY
++HB_OT_NAME_ID_TYPOGRAPHIC_SUBFAMILY
++HB_OT_NAME_ID_MAC_FULL_NAME
++HB_OT_NAME_ID_SAMPLE_TEXT
++HB_OT_NAME_ID_CID_FINDFONT_NAME
++HB_OT_NAME_ID_WWS_FAMILY
++HB_OT_NAME_ID_WWS_SUBFAMILY
++HB_OT_NAME_ID_LIGHT_BACKGROUND
++HB_OT_NAME_ID_DARK_BACKGROUND
++HB_OT_NAME_ID_VARIATIONS_PS_PREFIX
++hb_ot_name_entry_t
++hb_ot_name_list_names()
++hb_ot_name_get_utf8()
++hb_ot_name_get_utf16()
++hb_ot_name_get_utf32()
+
+
+Overview of changes leading to 2.0.2
+Saturday, October 20, 2018
+====================================
+- Fix two minor memory access issues in AAT tables.
+
+
+Overview of changes leading to 2.0.1
+Friday, October 19, 2018
+====================================
+- Fix hb-version.h reported release version that went wrong (1.8.0)
+  with previous release.
+- Fix extrapolation in 'trak' table.
+- Fix hb-font infinite-recursion issue with some font funcs and
+  subclassed fonts.
+- Implement variation-kerning format in kerx table, although without
+  variation.
+- Fix return value of hb_map_is_empty().
+
+
+Overview of changes leading to 2.0.0
+Thursday, October 18, 2018
+====================================
+- Added AAT shaping support (morx/kerx/trak).
+  Automatically used if GSUB/GPOS are not available respectively.
+  Set HB_OPTIONS=aat env var to have morx/kerx preferred over
+  GSUB/GPOS.
+- Apply TrueType kern table internally, instead of relying on
+  hb_font_t callbacks.
+- Khmer shaper significantly rewritten to better match Uniscribe.
+- Indic3 tags ('dev3', etc) are passed to USE shaper.
+- .dfont Mac font containers implemented.
+- Script- and language-mapping revamped to better use BCP 47.
+- Misc USE and Indic fixes.
+- Misc everything fixes.
+- Too many things to list.  Biggest release since 0.9.1, with
+  over 500 commits in just over 5 weeks!  Didn't intend it to
+  be a big release.  Just happened to become.
+- hb-ft now locks underlying FT_Face during use.
+
+API changes:
+
+- Newly-created hb_font_t's now have our internal "hb-ot-font"
+  callbacks set on them, so they should work out of the box
+  without any callbacks set.  If callbacks are set, everything
+  is back to what it was before, the fallback callbacks are
+  null.  If you to get the internal implementation modified,
+  sub_font it.
+
+- New hb_font_funcs_set_nominal_glyphs_func() allows speeding
+  up character to glyph mapping.
+
+New API:
++HB_FEATURE_GLOBAL_START
++HB_FEATURE_GLOBAL_END
++hb_buffer_set_invisible_glyph()
++hb_buffer_get_invisible_glyph()
++hb_font_funcs_set_nominal_glyphs_func()
++hb_ot_layout_table_select_script()
++hb_ot_layout_script_select_language()
++hb_ot_layout_feature_get_name_ids()
++hb_ot_layout_feature_get_characters()
++hb_name_id_t
++HB_NAME_ID_INVALID
++HB_OT_MAX_TAGS_PER_SCRIPT
++hb_ot_tags_from_script_and_language()
++hb_ot_tags_to_script_and_language()
+
+Deprecated API:
+-hb_font_funcs_set_glyph_func()
+-hb_unicode_eastasian_width_func_t
+-hb_unicode_funcs_set_eastasian_width_func()
+-hb_unicode_eastasian_width()
+-hb_unicode_decompose_compatibility_func_t
+-HB_UNICODE_MAX_DECOMPOSITION_LEN
+-hb_unicode_funcs_set_decompose_compatibility_func()
+-hb_unicode_decompose_compatibility()
+-hb_font_funcs_set_glyph_h_kerning_func()
+-hb_font_funcs_set_glyph_v_kerning_func()
+-hb_font_get_glyph_h_kerning()
+-hb_font_get_glyph_v_kerning()
+-hb_font_get_glyph_kerning_for_direction()
+-hb_ot_layout_table_choose_script()
+-hb_ot_layout_script_find_language()
+-hb_ot_tags_from_script()
+-hb_ot_tag_from_language()
+
+
 Overview of changes leading to 1.9.0
 Monday, September 10, 2018
 ====================================

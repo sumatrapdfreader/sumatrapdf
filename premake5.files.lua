@@ -300,6 +300,7 @@ end
 function harfbuzz_files()
   files_in_dir("ext/harfbuzz/src", {
     "hb-aat-layout.cc",
+    "hb-aat-map.cc",
     "hb-blob.cc",
     "hb-buffer.cc",
     "hb-buffer-serialize.cc",
@@ -308,12 +309,19 @@ function harfbuzz_files()
     "hb-fallback-shape.cc",
     "hb-font.cc",
     "hb-ft.cc",
+    "hb-map.cc",
+    "hb-number.cc",
+    "hb-ot-cff1-table.cc",
+    "hb-ot-cff2-table.cc",
     "hb-ot-color.cc",
     "hb-ot-face.cc",
     "hb-ot-font.cc",
     "hb-ot-layout.cc",
     "hb-ot-map.cc",
     "hb-ot-math.cc",
+    "hb-ot-meta.cc",
+    "hb-ot-metrics.cc",
+    "hb-ot-name.cc",
     "hb-ot-shape.cc",
     "hb-ot-shape-complex-arabic.cc",
     "hb-ot-shape-complex-default.cc",
@@ -324,9 +332,9 @@ function harfbuzz_files()
     "hb-ot-shape-complex-khmer.cc",
     "hb-ot-shape-complex-myanmar.cc",
     "hb-ot-shape-complex-thai.cc",
-    "hb-ot-shape-complex-tibetan.cc",
     "hb-ot-shape-complex-use-table.cc",
     "hb-ot-shape-complex-use.cc",
+    "hb-ot-shape-complex-vowel-constraints.cc",
     "hb-ot-shape-fallback.cc",
     "hb-ot-shape-normalize.cc",
     "hb-ot-tag.cc",
@@ -337,10 +345,14 @@ function harfbuzz_files()
     "hb-shaper.cc",
     "hb-static.cc",
     "hb-unicode.cc",
-    "hb-warning.cc"
+    "hb-subset-cff-common.cc",
+    "hb-subset-cff1.cc",
+    "hb-subset-cff2.cc",
+    "hb-subset-input.cc",
+    "hb-subset-plan.cc",
+    "hb-subset.cc",
+    "hb-ucd.cc",
   })
-
-  files { "ext/harfbuzz/src/hb-ucdn.cc" }
 end
 
 function freetype_files()

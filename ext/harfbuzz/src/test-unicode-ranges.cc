@@ -25,24 +25,23 @@
  */
 
 #include "hb.hh"
-
 #include "hb-ot-os2-unicode-ranges.hh"
 
-void
+static void
 test (hb_codepoint_t cp, unsigned int bit)
 {
-  if (OT::hb_get_unicode_range_bit (cp) != bit)
+  if (OT::_hb_ot_os2_get_unicode_range_bit (cp) != bit)
   {
     fprintf (stderr, "got incorrect bit (%d) for cp 0x%X. Should have been %d.",
-             OT::hb_get_unicode_range_bit (cp),
-             cp,
-             bit);
+	     OT::_hb_ot_os2_get_unicode_range_bit (cp),
+	     cp,
+	     bit);
     abort();
   }
 }
 
-void
-test_get_unicode_range_bit (void)
+static void
+test_get_unicode_range_bit ()
 {
   test (0x0000, 0);
   test (0x0042, 0);
@@ -60,7 +59,7 @@ test_get_unicode_range_bit (void)
 }
 
 int
-main (void)
+main ()
 {
   test_get_unicode_range_bit ();
   return 0;

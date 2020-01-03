@@ -64,11 +64,13 @@ _cairo_eps_surface_create_for_stream (cairo_write_func_t  write_func,
 
 static FT_Library ft_library;
 
+#ifdef HAVE_ATEXIT
 static inline
-void free_ft_library (void)
+void free_ft_library ()
 {
   FT_Done_FreeType (ft_library);
 }
+#endif
 
 cairo_scaled_font_t *
 helper_cairo_create_scaled_font (const font_options_t *font_opts)
@@ -95,7 +97,7 @@ helper_cairo_create_scaled_font (const font_options_t *font_opts)
 
     if (FT_New_Memory_Face (ft_library,
 			    (const FT_Byte *) blob_data,
-                            blob_length,
+			    blob_length,
 			    font_opts->face_index,
 			    &ft_face))
       fail (false, "FT_New_Memory_Face fail");
@@ -125,7 +127,7 @@ helper_cairo_create_scaled_font (const font_options_t *font_opts)
     }
 #endif
 
-    cairo_face = cairo_ft_font_face_create_for_ft_face (ft_face, 0);
+    cairo_face = cairo_ft_font_face_create_for_ft_face (ft_face, font_opts->ft_load_flags);
   }
   cairo_matrix_t ctm, font_matrix;
   cairo_font_options_t *font_options;

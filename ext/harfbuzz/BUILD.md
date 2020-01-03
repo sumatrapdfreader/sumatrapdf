@@ -26,7 +26,7 @@ as with any other standard package. That should leave you with a shared
 library in `src/`, and a few utility programs including `hb-view` and `hb-shape`
 under `util/`.
 
-If you are bootstraping from git, you need a few more tools before you can
+If you are bootstrapping from git, you need a few more tools before you can
 run `autogen.sh` for the first time. Namely, `pkg-config` and `ragel`.
 
 Again, on Ubuntu / Debian:

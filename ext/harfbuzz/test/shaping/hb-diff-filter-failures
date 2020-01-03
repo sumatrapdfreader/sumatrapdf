@@ -1,5 +1,0 @@
-#!/usr/bin/env python
-
-from hb_test_tools import *
-
-UtilMains.process_multiple_files (FilterHelpers.filter_printer_function_no_newline (DiffFilters.filter_failures))

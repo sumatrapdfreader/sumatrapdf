@@ -30,7 +30,7 @@
 #include "view-cairo.hh"
 
 #define DEFAULT_FONT_SIZE 256
-#define SUBPIXEL_BITS 8
+#define SUBPIXEL_BITS 6
 
 int
 main (int argc, char **argv)

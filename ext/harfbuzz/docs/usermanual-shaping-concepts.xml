@@ -1,0 +1,375 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY version SYSTEM "version.xml">
+]>
+<chapter id="shaping-concepts">
+  <title>Shaping concepts</title>
+  <section id="text-shaping-concepts">
+    <title>Text shaping</title>
+    <para>
+      Text shaping is the process of transforming a sequence of Unicode
+      codepoints that represent individual characters (letters,
+      diacritics, tone marks, numbers, symbols, etc.) into the
+      orthographically and linguistically correct two-dimensional layout
+      of glyph shapes taken from a specified font.
+    </para>
+    <para>
+      For some writing systems (or <emphasis>scripts</emphasis>) and
+      languages, the process is simple, requiring the shaper to do
+      little more than advance the horizontal position forward by the
+      correct amount for each successive glyph.
+    </para>
+    <para>
+      But, for <emphasis>complex scripts</emphasis>, any combination of
+      several shaping operations may be required, and the rules for how
+      and when they are applied vary from script to script. HarfBuzz and
+      other shaping engines implement these rules.
+    </para>
+    <para>
+      The exact rules and necessary operations for a particular script
+      constitute a shaping <emphasis>model</emphasis>. OpenType
+      specifies a set of shaping models that covers all of
+      Unicode. Other shaping models are available, however, including
+      Graphite and Apple Advanced Typography (AAT). 
+    </para>
+  </section>
+  
+  <section id="complex-scripts">
+    <title>Complex scripts</title>
+    <para>
+      In text-shaping terminology, scripts are generally classified as
+      either <emphasis>complex</emphasis> or <emphasis>non-complex</emphasis>.
+    </para>
+    <para>
+      Complex scripts are those for which transforming the input
+      sequence into the final layout requires some combination of
+      operations&mdash;such as context-dependent substitutions,
+      context-dependent mark positioning, glyph-to-glyph joining,
+      glyph reordering, or glyph stacking.
+    </para>
+    <para>
+      In some complex scripts, the shaping rules require that a text
+      run be divided into syllables before the operations can be
+      applied. Other complex scripts may apply shaping operations over
+      entire words or over the entire text run, with no subdivision
+      required.
+    </para>
+    <para>
+      Non-complex scripts, by definition, do not require these
+      operations. However, correctly shaping a text run in a
+      non-complex script may still involve Unicode normalization,
+      ligature substitutions, mark positioning, kerning, and applying
+      other font features. The key difference is that a text run in a
+      non-complex script can be processed sequentially and in the same
+      order as the input sequence of Unicode codepoints, without
+      requiring an analysis stage.
+    </para>
+  </section>
+  
+  <section id="shaping-operations">
+    <title>Shaping operations</title>
+    <para>
+      Shaping a complex-script text run involves transforming the
+      input sequence of Unicode codepoints with some combination of
+      operations that is specified in the shaping model for the
+      script.
+    </para>
+    <para>
+      The specific conditions that trigger a given operation for a
+      text run varies from script to script, as do the order that the
+      operations are performed in and which codepoints are
+      affected. However, the same general set of shaping operations is
+      common to all of the complex-script shaping models. 
+    </para>
+    
+    <itemizedlist>
+      <listitem>
+	<para>
+	  A <emphasis>reordering</emphasis> operation moves a glyph
+	  from its original ("logical") position in the sequence to
+	  some other ("visual") position.
+	</para>
+	<para>
+	  The shaping model for a given complex script might involve
+	  more than one reordering step.
+	</para>
+      </listitem>
+      
+      <listitem>
+	<para>
+	  A <emphasis>joining</emphasis> operation replaces a glyph
+	  with an alternate form that is designed to connect with one
+	  or more of the adjacent glyphs in the sequence.
+	</para>
+      </listitem>
+      
+      <listitem>
+	<para>
+	  A contextual <emphasis>substitution</emphasis> operation
+	  replaces either a single glyph or a subsequence of several
+	  glyphs with an alternate glyph. This substitution is
+	  performed when the original glyph or subsequence of glyphs
+	  occurs in a specified position with respect to the
+	  surrounding sequence. For example, one substitution might be
+	  performed only when the target glyph is the first glyph in
+	  the sequence, while another substitution is performed only
+	  when a different target glyph occurs immediately after a
+	  particular string pattern.
+	</para>
+	<para>
+	  The shaping model for a given complex script might involve
+	  multiple contextual-substitution operations, each applying
+	  to different target glyphs and patterns, and which are
+	  performed in separate steps.
+	</para>
+      </listitem>
+      
+      <listitem>
+	<para>
+	  A contextual <emphasis>positioning</emphasis> operation
+	  moves the horizontal and/or vertical position of a
+	  glyph. This positioning move is performed when the glyph
+	  occurs in a specified position with respect to the
+	  surrounding sequence.
+	</para>
+	<para>
+	  Many contextual positioning operations are used to place
+	  <emphasis>mark</emphasis> glyphs (such as diacritics, vowel
+	  signs, and tone markers) with respect to
+	  <emphasis>base</emphasis> glyphs. However, some complex
+	  scripts may use contextual positioning operations to
+	  correctly place base glyphs as well, such as
+	  when the script uses <emphasis>stacking</emphasis> characters.
+	</para>
+      </listitem>
+      
+    </itemizedlist>
+  </section>
+  
+  <section id="unicode-character-categories">
+    <title>Unicode character categories</title>
+    <para>
+      Shaping models are typically specified with respect to how
+      scripts are defined in the Unicode standard.
+    </para>
+    <para>
+      Every codepoint in the Unicode Character Database (UCD) is
+      assigned a <emphasis>Unicode General Category</emphasis> (UGC),
+      which provides the most fundamental information about the
+      codepoint: whether the codepoint represents a
+      <emphasis>Letter</emphasis>, a <emphasis>Mark</emphasis>, a
+      <emphasis>Number</emphasis>, <emphasis>Punctuation</emphasis>, a
+      <emphasis>Symbol</emphasis>, a <emphasis>Separator</emphasis>,
+      or something else (<emphasis>Other</emphasis>).
+    </para>
+    <para>
+      These UGC properties are "Major" categories. Each codepoint is
+      further assigned to a "minor" category within its Major
+      category, such as "Letter, uppercase" (<literal>Lu</literal>) or
+      "Letter, modifier" (<literal>Lm</literal>).
+    </para>
+    <para>
+      Shaping models are concerned primarily with Letter and Mark
+      codepoints. The minor categories of Mark codepoints are
+      particularly important for shaping. Marks can be nonspacing
+      (<literal>Mn</literal>), spacing combining
+      (<literal>Mc</literal>), or enclosing (<literal>Me</literal>).
+    </para>
+    <para>
+      In addition to the UGC property, codepoints in the Indic and
+      Southeast Asian scripts are also assigned
+      <emphasis>Unicode Indic Syllabic Category</emphasis> (UISC) and
+      <emphasis>Unicode Indic Positional Category</emphasis> (UIPC)
+      properties that provide more detailed information needed for
+      shaping.
+    </para>
+    <para>
+      The UISC property sub-categorizes Letters and Marks according to
+      common script-shaping behaviors. For example, UISC distinguishes
+      between consonant letters, vowel letters, and vowel marks. The
+      UIPC property sub-categorizes Mark codepoints by the relative visual
+      position that they occupy (above, below, right, left, or in
+      multiple positions).
+    </para>
+    <para>
+      Some complex scripts require that the text run be split into
+      syllables. What constitutes a valid syllable in these
+      scripts is specified in regular expressions, formed from the
+      Letter and Mark codepoints, that take the UISC and UIPC
+      properties into account.
+    </para>
+
+  </section>
+  
+  <section id="text-runs">
+    <title>Text runs</title>
+    <para>
+      Real-world text usually contains codepoints from a mixture of
+      different Unicode scripts (including punctuation, numbers, symbols,
+      white-space characters, and other codepoints that do not belong
+      to any script). Real-world text may also be marked up with
+      formatting that changes font properties (including the font,
+      font style, and font size).
+    </para>
+    <para>
+      For shaping purposes, all real-world text streams must be first
+      segmented into runs that have a uniform set of properties. 
+    </para>
+    <para>
+      In particular, shaping models always assume that every codepoint
+      in a text run has the same <emphasis>direction</emphasis>,
+      <emphasis>script</emphasis> tag, and
+      <emphasis>language</emphasis> tag.
+    </para>
+  </section>
+  
+  <section id="opentype-shaping-models">
+    <title>OpenType shaping models</title>
+    <para>
+      OpenType provides shaping models for the following scripts:
+    </para>
+
+    <itemizedlist>
+      <listitem>
+	<para>
+	  The <emphasis>default</emphasis> shaping model handles all
+	  non-complex scripts, and may also be used as a fallback for
+	  handling unrecognized scripts.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  The <emphasis>Indic</emphasis> shaping model handles the Indic
+	  scripts Bengali, Devanagari, Gujarati, Gurmukhi, Kannada,
+	  Malayalam, Oriya, Tamil, Telugu, and Sinhala.
+	</para>
+	<para>
+	  The Indic shaping model was revised significantly in
+	  2005. To denote the change, a new set of <emphasis>script
+	  tags</emphasis> was assigned for Bengali, Devanagari,
+	  Gujarati, Gurmukhi, Kannada, Malayalam, Oriya, Tamil, and
+	  Telugu. For the sake of clarity, the term "Indic2" is
+	  sometimes used to refer to the current, revised shaping
+	  model.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  The <emphasis>Arabic</emphasis> shaping model supports
+	  Arabic, Mongolian, N'Ko, Syriac, and several other connected
+	  or cursive scripts.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  The <emphasis>Thai/Lao</emphasis> shaping model supports
+	  the Thai and Lao scripts.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  The <emphasis>Khmer</emphasis> shaping model supports the
+	  Khmer script.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  The <emphasis>Myanmar</emphasis> shaping model supports the
+	  Myanmar (or Burmese) script.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  The <emphasis>Tibetan</emphasis> shaping model supports the
+	  Tibetan script.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  The <emphasis>Hangul</emphasis> shaping model supports the
+	  Hangul script.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  The <emphasis>Hebrew</emphasis> shaping model supports the
+	  Hebrew script.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  The <emphasis>Universal Shaping Engine</emphasis> (USE)
+	  shaping model supports complex scripts not covered by one of
+	  the above, script-specific shaping models, including
+	  Javanese, Balinese, Buginese, Batak, Chakma, Lepcha, Modi,
+	  Phags-pa, Tagalog, Siddham, Sundanese, Tai Le, Tai Tham, Tai
+	  Viet, and many others. 
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>
+	  Text runs that do not fall under one of the above shaping
+	  models may still require processing by a shaping engine. Of
+	  particular note is <emphasis>Emoji</emphasis> shaping, which
+	  may involve variation-selector sequences and glyph
+	  substitution. Emoji shaping is handled by the default
+	  shaping model.
+	</para>
+      </listitem>
+
+    </itemizedlist>
+    
+  </section>
+  
+  <section id="graphite-shaping">
+    <title>Graphite shaping</title>
+    <para>
+      In contrast to OpenType shaping, Graphite shaping does not
+      specify a predefined set of shaping models or a set of supported
+      scripts.
+    </para>
+    <para>
+      Instead, each Graphite font contains a complete set of rules that
+      implement the required shaping model for the intended
+      script. These rules include finite-state machines to match
+      sequences of codepoints to the shaping operations to perform.
+    </para>
+    <para>
+      Graphite shaping can perform the same shaping operations used in
+      OpenType shaping, as well as other functions that have not been
+      defined for OpenType shaping.
+    </para>
+  </section>
+  
+  <section id="aat-shaping">
+    <title>AAT shaping</title>
+    <para>
+      In contrast to OpenType shaping, AAT shaping does not specify a 
+      predefined set of shaping models or a set of supported scripts.
+    </para>
+    <para>
+      Instead, each AAT font includes a complete set of rules that
+      implement the desired shaping model for the intended
+      script. These rules include finite-state machines to match glyph
+      sequences and the shaping operations to perform.
+    </para>
+    <para>
+      Notably, AAT shaping rules are expressed for glyphs in the font,
+      not for Unicode codepoints. AAT shaping can perform the same
+      shaping operations used in OpenType shaping, as well as other
+      functions that have not been defined for OpenType shaping.
+    </para>
+  </section>
+</chapter>

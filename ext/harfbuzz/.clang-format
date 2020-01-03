@@ -1,0 +1,38 @@
+# The following tries to match the current code style, is imperfect for now
+# but good for new codes be added
+
+IndentWidth: 2
+TabWidth: 8
+UseTab: Always
+SpaceBeforeParens: Always
+AllowShortLoopsOnASingleLine: true
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: false
+  SplitEmptyFunction: false
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: true
+  BeforeElse: true
+AlwaysBreakTemplateDeclarations: true
+AlignTrailingComments: true
+AlignEscapedNewlines: Left
+AllowShortBlocksOnASingleLine: true
+SpaceAfterCStyleCast: true
+AlwaysBreakAfterDefinitionReturnType: TopLevel
+BinPackParameters: false
+AllowShortFunctionsOnASingleLine: Inline
+AccessModifierOffset: 0
+AlignTrailingComments: true
+AllowShortIfStatementsOnASingleLine: true
+AlignAfterOpenBracket: Align
+AlignOperands: true
+AllowShortCaseLabelsOnASingleLine: true
+
+# We like to have this only for function parameters and structs fields, not always
+# AlignConsecutiveDeclarations: true

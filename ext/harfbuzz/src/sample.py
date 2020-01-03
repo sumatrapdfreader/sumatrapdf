@@ -54,11 +54,11 @@ if False:
 	# buffer:
 	hb.buffer_add_utf8 (buf, text.encode('utf-8'), 0, -1)
 	# Otherwise, then following handles both narrow and wide
-	# Python builds:
+	# Python builds (the first item in the array is BOM, so we skip it):
 elif sys.maxunicode == 0x10FFFF:
-	hb.buffer_add_utf32 (buf, array.array('I', text.encode('utf-32')), 0, -1)
+	hb.buffer_add_utf32 (buf, array.array('I', text.encode('utf-32'))[1:], 0, -1)
 else:
-	hb.buffer_add_utf16 (buf, array.array('H', text.encode('utf-16')), 0, -1)
+	hb.buffer_add_utf16 (buf, array.array('H', text.encode('utf-16'))[1:], 0, -1)
 
 
 hb.buffer_guess_segment_properties (buf)

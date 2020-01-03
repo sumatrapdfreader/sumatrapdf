@@ -39,11 +39,20 @@
 struct hb_subset_context_t :
        hb_dispatch_context_t<hb_subset_context_t, bool, HB_DEBUG_SUBSET>
 {
-  inline const char *get_name (void) { return "SUBSET"; }
-  template <typename T>
-  inline bool dispatch (const T &obj) { return obj.subset (this); }
-  static bool default_return_value (void) { return true; }
-  bool stop_sublookup_iteration (bool r) const { return false; }
+  const char *get_name () { return "SUBSET"; }
+  static return_t default_return_value () { return true; }
+
+  private:
+  template <typename T, typename ...Ts> auto
+  _dispatch (const T &obj, hb_priority<1>, Ts&&... ds) HB_AUTO_RETURN
+  ( obj.subset (this, hb_forward<Ts> (ds)...) )
+  template <typename T, typename ...Ts> auto
+  _dispatch (const T &obj, hb_priority<0>, Ts&&... ds) HB_AUTO_RETURN
+  ( obj.dispatch (this, hb_forward<Ts> (ds)...) )
+  public:
+  template <typename T, typename ...Ts> auto
+  dispatch (const T &obj, Ts&&... ds) HB_AUTO_RETURN
+  ( _dispatch (obj, hb_prioritize, hb_forward<Ts> (ds)...) )
 
   hb_subset_plan_t *plan;
   hb_serialize_context_t *serializer;

@@ -6,10 +6,10 @@
  *
  * on files with these headers:
  *
- * # ArabicShaping-11.0.0.txt
- * # Date: 2018-02-21, 14:50:00 GMT [KW, RP]
- * # Blocks-11.0.0.txt
- * # Date: 2017-10-16, 24:39:00 GMT [KW]
+ * # ArabicShaping-12.0.0.txt
+ * # Date: 2018-09-22, 23:54:00 GMT [KW, RP]
+ * # Blocks-12.0.0.txt
+ * # Date: 2018-07-30, 19:40:00 GMT [KW]
  * UnicodeData.txt does not have a header.
  */
 
@@ -152,9 +152,9 @@ static const uint8_t joining_table[] =
 
   /* 1E900 */ D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,
   /* 1E920 */ D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,
-  /* 1E940 */ D,D,D,D,
+  /* 1E940 */ D,D,D,D,X,X,X,X,X,X,X,T,
 
-}; /* Table items: 1304; occupancy: 56% */
+}; /* Table items: 1312; occupancy: 56% */
 
 
 static unsigned int
@@ -190,7 +190,7 @@ joining_type (hb_codepoint_t u)
       break;
 
     case 0x1Eu:
-      if (hb_in_range<hb_codepoint_t> (u, 0x1E900u, 0x1E943u)) return joining_table[u - 0x1E900u + joining_offset_0x1e900u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x1E900u, 0x1E94Bu)) return joining_table[u - 0x1E900u + joining_offset_0x1e900u];
       break;
 
     default:

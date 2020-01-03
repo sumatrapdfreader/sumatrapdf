@@ -25,9 +25,16 @@
  * Red Hat Author(s): Behdad Esfahbod
  */
 
-/* http://www.oracle.com/technetwork/articles/servers-storage-dev/standardheaderfiles-453865.html */
-#ifndef _POSIX_C_SOURCE
+
+/* https://github.com/harfbuzz/harfbuzz/issues/1308
+ * http://www.gnu.org/software/libc/manual/html_node/Feature-Test-Macros.html
+ * https://www.oracle.com/technetwork/articles/servers-storage-dev/standardheaderfiles-453865.html
+ */
+#if !defined(_POSIX_C_SOURCE) && !defined(_MSC_VER) && !defined(__NetBSD__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-macros"
 #define _POSIX_C_SOURCE 200809L
+#pragma GCC diagnostic pop
 #endif
 
 #include "hb.hh"
@@ -41,23 +48,21 @@
 #endif /* HAVE_SYS_MMAN_H */
 
 #include <stdio.h>
-#include <errno.h>
 #include <stdlib.h>
 
 
-DEFINE_NULL_INSTANCE (hb_blob_t) =
-{
-  HB_OBJECT_HEADER_STATIC,
+/**
+ * SECTION: hb-blob
+ * @title: hb-blob
+ * @short_description: Binary data containers
+ * @include: hb.h
+ *
+ * Blobs wrap a chunk of binary data to handle lifecycle management of data
+ * while it is passed between client and HarfBuzz.  Blobs are primarily used
+ * to create font faces, but also to access font face tables, as well as
+ * pass around other binary data.
+ **/
 
-  true, /* immutable */
-
-  nullptr, /* data */
-  0, /* length */
-  HB_MEMORY_MODE_READONLY, /* mode */
-
-  nullptr, /* user_data */
-  nullptr  /* destroy */
-};
 
 /**
  * hb_blob_create: (skip)
@@ -143,13 +148,13 @@ hb_blob_create_sub_blob (hb_blob_t    *parent,
 {
   hb_blob_t *blob;
 
-  if (!length || offset >= parent->length)
+  if (!length || !parent || offset >= parent->length)
     return hb_blob_get_empty ();
 
   hb_blob_make_immutable (parent);
 
   blob = hb_blob_create (parent->data + offset,
-			 MIN (length, parent->length - offset),
+			 hb_min (length, parent->length - offset),
 			 HB_MEMORY_MODE_READONLY,
 			 hb_blob_reference (parent),
 			 _hb_blob_destroy);
@@ -194,7 +199,7 @@ hb_blob_copy_writable_or_fail (hb_blob_t *blob)
  * Since: 0.9.2
  **/
 hb_blob_t *
-hb_blob_get_empty (void)
+hb_blob_get_empty ()
 {
   return const_cast<hb_blob_t *> (&Null(hb_blob_t));
 }
@@ -291,10 +296,10 @@ hb_blob_get_user_data (hb_blob_t          *blob,
 void
 hb_blob_make_immutable (hb_blob_t *blob)
 {
-  if (hb_object_is_inert (blob))
+  if (hb_object_is_immutable (blob))
     return;
 
-  blob->immutable = true;
+  hb_object_make_immutable (blob);
 }
 
 /**
@@ -310,7 +315,7 @@ hb_blob_make_immutable (hb_blob_t *blob)
 hb_bool_t
 hb_blob_is_immutable (hb_blob_t *blob)
 {
-  return blob->immutable;
+  return hb_object_is_immutable (blob);
 }
 
 
@@ -384,7 +389,7 @@ hb_blob_get_data_writable (hb_blob_t *blob, unsigned int *length)
 
 
 bool
-hb_blob_t::try_make_writable_inplace_unix (void)
+hb_blob_t::try_make_writable_inplace_unix ()
 {
 #if defined(HAVE_SYS_MMAN_H) && defined(HAVE_MPROTECT)
   uintptr_t pagesize = -1, mask, length;
@@ -427,7 +432,7 @@ hb_blob_t::try_make_writable_inplace_unix (void)
 }
 
 bool
-hb_blob_t::try_make_writable_inplace (void)
+hb_blob_t::try_make_writable_inplace ()
 {
   DEBUG_MSG_FUNC (BLOB, this, "making writable inplace\n");
 
@@ -442,9 +447,9 @@ hb_blob_t::try_make_writable_inplace (void)
 }
 
 bool
-hb_blob_t::try_make_writable (void)
+hb_blob_t::try_make_writable ()
 {
-  if (this->immutable)
+  if (hb_object_is_immutable (this))
     return false;
 
   if (this->mode == HB_MEMORY_MODE_WRITABLE)
@@ -481,17 +486,18 @@ hb_blob_t::try_make_writable (void)
  * Mmap
  */
 
+#ifndef HB_NO_OPEN
 #ifdef HAVE_MMAP
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <fcntl.h>
 #endif
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#ifdef _WIN32
 # include <windows.h>
 #else
-# ifndef _O_BINARY
-#  define _O_BINARY 0
+# ifndef O_BINARY
+#  define O_BINARY 0
 # endif
 #endif
 
@@ -503,18 +509,19 @@ struct hb_mapped_file_t
 {
   char *contents;
   unsigned long length;
-#if defined(_WIN32) || defined(__CYGWIN__)
+#ifdef _WIN32
   HANDLE mapping;
 #endif
 };
 
-#if (defined(HAVE_MMAP) || defined(_WIN32) || defined(__CYGWIN__)) && !defined(HB_NO_MMAP)
+#if (defined(HAVE_MMAP) || defined(_WIN32)) && !defined(HB_NO_MMAP)
 static void
-_hb_mapped_file_destroy (hb_mapped_file_t *file)
+_hb_mapped_file_destroy (void *file_)
 {
+  hb_mapped_file_t *file = (hb_mapped_file_t *) file_;
 #ifdef HAVE_MMAP
   munmap (file->contents, file->length);
-#elif defined(_WIN32) || defined(__CYGWIN__)
+#elif defined(_WIN32)
   UnmapViewOfFile (file->contents);
   CloseHandle (file->mapping);
 #else
@@ -542,7 +549,7 @@ hb_blob_create_from_file (const char *file_name)
   hb_mapped_file_t *file = (hb_mapped_file_t *) calloc (1, sizeof (hb_mapped_file_t));
   if (unlikely (!file)) return hb_blob_get_empty ();
 
-  int fd = open (file_name, O_RDONLY | _O_BINARY, 0);
+  int fd = open (file_name, O_RDONLY | O_BINARY, 0);
   if (unlikely (fd == -1)) goto fail_without_close;
 
   struct stat st;
@@ -565,7 +572,7 @@ fail:
 fail_without_close:
   free (file);
 
-#elif (defined(_WIN32) || defined(__CYGWIN__)) && !defined(HB_NO_MMAP)
+#elif defined(_WIN32) && !defined(HB_NO_MMAP)
   hb_mapped_file_t *file = (hb_mapped_file_t *) calloc (1, sizeof (hb_mapped_file_t));
   if (unlikely (!file)) return hb_blob_get_empty ();
 
@@ -574,18 +581,45 @@ fail_without_close:
   wchar_t * wchar_file_name = (wchar_t *) malloc (sizeof (wchar_t) * size);
   if (unlikely (wchar_file_name == nullptr)) goto fail_without_close;
   mbstowcs (wchar_file_name, file_name, size);
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY==WINAPI_FAMILY_PC_APP || WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP)
+  {
+    CREATEFILE2_EXTENDED_PARAMETERS ceparams = { 0 };
+    ceparams.dwSize = sizeof(CREATEFILE2_EXTENDED_PARAMETERS);
+    ceparams.dwFileAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED & 0xFFFF;
+    ceparams.dwFileFlags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED & 0xFFF00000;
+    ceparams.dwSecurityQosFlags = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED & 0x000F0000;
+    ceparams.lpSecurityAttributes = nullptr;
+    ceparams.hTemplateFile = nullptr;
+    fd = CreateFile2 (wchar_file_name, GENERIC_READ, FILE_SHARE_READ,
+		      OPEN_EXISTING, &ceparams);
+  }
+#else
   fd = CreateFileW (wchar_file_name, GENERIC_READ, FILE_SHARE_READ, nullptr,
 		    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL|FILE_FLAG_OVERLAPPED,
 		    nullptr);
+#endif
   free (wchar_file_name);
 
   if (unlikely (fd == INVALID_HANDLE_VALUE)) goto fail_without_close;
 
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY==WINAPI_FAMILY_PC_APP || WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP)
+  {
+    LARGE_INTEGER length;
+    GetFileSizeEx (fd, &length);
+    file->length = length.LowPart;
+    file->mapping = CreateFileMappingFromApp (fd, nullptr, PAGE_READONLY, length.QuadPart, nullptr);
+  }
+#else
   file->length = (unsigned long) GetFileSize (fd, nullptr);
   file->mapping = CreateFileMapping (fd, nullptr, PAGE_READONLY, 0, 0, nullptr);
+#endif
   if (unlikely (file->mapping == nullptr)) goto fail;
 
+#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY==WINAPI_FAMILY_PC_APP || WINAPI_FAMILY==WINAPI_FAMILY_PHONE_APP)
+  file->contents = (char *) MapViewOfFileFromApp (file->mapping, FILE_MAP_READ, 0, 0);
+#else
   file->contents = (char *) MapViewOfFile (file->mapping, FILE_MAP_READ, 0, 0, 0);
+#endif
   if (unlikely (file->contents == nullptr)) goto fail;
 
   CloseHandle (fd);
@@ -634,7 +668,7 @@ fail_without_close:
   }
 
   return hb_blob_create (data, len, HB_MEMORY_MODE_WRITABLE, data,
-                         (hb_destroy_func_t) free);
+			 (hb_destroy_func_t) free);
 
 fread_fail:
   fclose (fp);
@@ -642,3 +676,4 @@ fread_fail_without_close:
   free (data);
   return hb_blob_get_empty ();
 }
+#endif /* !HB_NO_OPEN */

@@ -1,4 +1,0 @@
-../fonts/TestShapeEthi.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+1208:[uni1208]
-../fonts/TestShapeEthi.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+1208,U+135E:[uni1208|uni135E@303,0]
-../fonts/TestShapeEthi.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+1208,U+135F:[uni1208|uni135F@303,0]
-../fonts/TestShapeEthi.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+1208,U+135D:[uni1208|uni135D@303,0]

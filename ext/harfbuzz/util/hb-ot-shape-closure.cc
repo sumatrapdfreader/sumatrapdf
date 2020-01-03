@@ -39,7 +39,7 @@ struct shape_closure_consumer_t : option_group_t
     add_options (parser);
   }
 
-  void add_options (struct option_parser_t *parser)
+  void add_options (struct option_parser_t *parser) override
   {
     GOptionEntry entries[] =
     {

@@ -49,8 +49,8 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUS
 					  hb_font_t *font,
 					  unsigned int feature_index)
 {
-  OT::GlyphID glyphs[SHAPING_TABLE_LAST - SHAPING_TABLE_FIRST + 1];
-  OT::GlyphID substitutes[SHAPING_TABLE_LAST - SHAPING_TABLE_FIRST + 1];
+  OT::HBGlyphID glyphs[SHAPING_TABLE_LAST - SHAPING_TABLE_FIRST + 1];
+  OT::HBGlyphID substitutes[SHAPING_TABLE_LAST - SHAPING_TABLE_FIRST + 1];
   unsigned int num_glyphs = 0;
 
   /* Populate arrays */
@@ -66,8 +66,8 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUS
 	u_glyph > 0xFFFFu || s_glyph > 0xFFFFu)
       continue;
 
-    glyphs[num_glyphs].set (u_glyph);
-    substitutes[num_glyphs].set (s_glyph);
+    glyphs[num_glyphs] = u_glyph;
+    substitutes[num_glyphs] = s_glyph;
 
     num_glyphs++;
   }
@@ -77,10 +77,10 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUS
 
   /* Bubble-sort or something equally good!
    * May not be good-enough for presidential candidate interviews, but good-enough for us... */
-  hb_stable_sort (&glyphs[0], num_glyphs, (int(*)(const OT::GlyphID*, const OT::GlyphID *)) OT::GlyphID::cmp, &substitutes[0]);
+  hb_stable_sort (&glyphs[0], num_glyphs,
+		  (int(*)(const OT::HBUINT16*, const OT::HBUINT16 *)) OT::HBGlyphID::cmp,
+		  &substitutes[0]);
 
-  Supplier<OT::GlyphID> glyphs_supplier      (glyphs, num_glyphs);
-  Supplier<OT::GlyphID> substitutes_supplier (substitutes, num_glyphs);
 
   /* Each glyph takes four bytes max, and there's some overhead. */
   char buf[(SHAPING_TABLE_LAST - SHAPING_TABLE_FIRST + 1) * 4 + 128];
@@ -88,11 +88,9 @@ arabic_fallback_synthesize_lookup_single (const hb_ot_shape_plan_t *plan HB_UNUS
   OT::SubstLookup *lookup = c.start_serialize<OT::SubstLookup> ();
   bool ret = lookup->serialize_single (&c,
 				       OT::LookupFlag::IgnoreMarks,
-				       glyphs_supplier,
-				       substitutes_supplier,
-				       num_glyphs);
+				       hb_sorted_array (glyphs, num_glyphs),
+				       hb_array (substitutes, num_glyphs));
   c.end_serialize ();
-  /* TODO sanitize the results? */
 
   return ret ? c.copy<OT::SubstLookup> () : nullptr;
 }
@@ -101,15 +99,15 @@ static OT::SubstLookup *
 arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UNUSED,
 					    hb_font_t *font)
 {
-  OT::GlyphID first_glyphs[ARRAY_LENGTH_CONST (ligature_table)];
+  OT::HBGlyphID first_glyphs[ARRAY_LENGTH_CONST (ligature_table)];
   unsigned int first_glyphs_indirection[ARRAY_LENGTH_CONST (ligature_table)];
   unsigned int ligature_per_first_glyph_count_list[ARRAY_LENGTH_CONST (first_glyphs)];
   unsigned int num_first_glyphs = 0;
 
   /* We know that all our ligatures are 2-component */
-  OT::GlyphID ligature_list[ARRAY_LENGTH_CONST (first_glyphs) * ARRAY_LENGTH_CONST(ligature_table[0].ligatures)];
+  OT::HBGlyphID ligature_list[ARRAY_LENGTH_CONST (first_glyphs) * ARRAY_LENGTH_CONST(ligature_table[0].ligatures)];
   unsigned int component_count_list[ARRAY_LENGTH_CONST (ligature_list)];
-  OT::GlyphID component_list[ARRAY_LENGTH_CONST (ligature_list) * 1/* One extra component per ligature */];
+  OT::HBGlyphID component_list[ARRAY_LENGTH_CONST (ligature_list) * 1/* One extra component per ligature */];
   unsigned int num_ligatures = 0;
 
   /* Populate arrays */
@@ -121,12 +119,14 @@ arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UN
     hb_codepoint_t first_glyph;
     if (!hb_font_get_glyph (font, first_u, 0, &first_glyph))
       continue;
-    first_glyphs[num_first_glyphs].set (first_glyph);
+    first_glyphs[num_first_glyphs] = first_glyph;
     ligature_per_first_glyph_count_list[num_first_glyphs] = 0;
     first_glyphs_indirection[num_first_glyphs] = first_glyph_idx;
     num_first_glyphs++;
   }
-  hb_stable_sort (&first_glyphs[0], num_first_glyphs, (int(*)(const OT::GlyphID*, const OT::GlyphID *)) OT::GlyphID::cmp, &first_glyphs_indirection[0]);
+  hb_stable_sort (&first_glyphs[0], num_first_glyphs,
+		  (int(*)(const OT::HBUINT16*, const OT::HBUINT16 *)) OT::HBGlyphID::cmp,
+		  &first_glyphs_indirection[0]);
 
   /* Now that the first-glyphs are sorted, walk again, populate ligatures. */
   for (unsigned int i = 0; i < num_first_glyphs; i++)
@@ -145,9 +145,9 @@ arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UN
 
       ligature_per_first_glyph_count_list[i]++;
 
-      ligature_list[num_ligatures].set (ligature_glyph);
+      ligature_list[num_ligatures] = ligature_glyph;
       component_count_list[num_ligatures] = 2;
-      component_list[num_ligatures].set (second_glyph);
+      component_list[num_ligatures] = second_glyph;
       num_ligatures++;
     }
   }
@@ -155,11 +155,6 @@ arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UN
   if (!num_ligatures)
     return nullptr;
 
-  Supplier<OT::GlyphID>   first_glyphs_supplier                      (first_glyphs, num_first_glyphs);
-  Supplier<unsigned int > ligature_per_first_glyph_count_supplier    (ligature_per_first_glyph_count_list, num_first_glyphs);
-  Supplier<OT::GlyphID>   ligatures_supplier                         (ligature_list, num_ligatures);
-  Supplier<unsigned int > component_count_supplier                   (component_count_list, num_ligatures);
-  Supplier<OT::GlyphID>   component_supplier                         (component_list, num_ligatures);
 
   /* 16 bytes per ligature ought to be enough... */
   char buf[ARRAY_LENGTH_CONST (ligature_list) * 16 + 128];
@@ -167,12 +162,11 @@ arabic_fallback_synthesize_lookup_ligature (const hb_ot_shape_plan_t *plan HB_UN
   OT::SubstLookup *lookup = c.start_serialize<OT::SubstLookup> ();
   bool ret = lookup->serialize_ligature (&c,
 					 OT::LookupFlag::IgnoreMarks,
-					 first_glyphs_supplier,
-					 ligature_per_first_glyph_count_supplier,
-					 num_first_glyphs,
-					 ligatures_supplier,
-					 component_count_supplier,
-					 component_supplier);
+					 hb_sorted_array (first_glyphs, num_first_glyphs),
+					 hb_array (ligature_per_first_glyph_count_list, num_first_glyphs),
+					 hb_array (ligature_list, num_ligatures),
+					 hb_array (component_count_list, num_ligatures),
+					 hb_array (component_list, num_ligatures));
   c.end_serialize ();
   /* TODO sanitize the results? */
 
@@ -194,17 +188,15 @@ arabic_fallback_synthesize_lookup (const hb_ot_shape_plan_t *plan,
 
 struct arabic_fallback_plan_t
 {
-  ASSERT_POD ();
-
   unsigned int num_lookups;
   bool free_lookups;
 
   hb_mask_t mask_array[ARABIC_FALLBACK_MAX_LOOKUPS];
   OT::SubstLookup *lookup_array[ARABIC_FALLBACK_MAX_LOOKUPS];
-  hb_ot_layout_lookup_accelerator_t accel_array[ARABIC_FALLBACK_MAX_LOOKUPS];
+  OT::hb_ot_layout_lookup_accelerator_t accel_array[ARABIC_FALLBACK_MAX_LOOKUPS];
 };
 
-#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(HB_NO_WIN1256)
+#if defined(_WIN32) && !defined(HB_NO_WIN1256)
 #define HB_WITH_WIN1256
 #endif
 
@@ -214,15 +206,18 @@ struct arabic_fallback_plan_t
 
 struct ManifestLookup
 {
+  public:
   OT::Tag tag;
   OT::OffsetTo<OT::SubstLookup> lookupOffset;
+  public:
+  DEFINE_SIZE_STATIC (6);
 };
 typedef OT::ArrayOf<ManifestLookup> Manifest;
 
 static bool
-arabic_fallback_plan_init_win1256 (arabic_fallback_plan_t *fallback_plan,
-				   const hb_ot_shape_plan_t *plan,
-				   hb_font_t *font)
+arabic_fallback_plan_init_win1256 (arabic_fallback_plan_t *fallback_plan HB_UNUSED,
+				   const hb_ot_shape_plan_t *plan HB_UNUSED,
+				   hb_font_t *font HB_UNUSED)
 {
 #ifdef HB_WITH_WIN1256
   /* Does this font look like it's Windows-1256-encoded? */
@@ -235,8 +230,8 @@ arabic_fallback_plan_init_win1256 (arabic_fallback_plan_t *fallback_plan,
     return false;
 
   const Manifest &manifest = reinterpret_cast<const Manifest&> (arabic_win1256_gsub_lookups.manifest);
-  static_assert (sizeof (arabic_win1256_gsub_lookups.manifestData) / sizeof (ManifestLookup)
-		 <= ARABIC_FALLBACK_MAX_LOOKUPS, "");
+  static_assert (sizeof (arabic_win1256_gsub_lookups.manifestData) ==
+		 ARABIC_FALLBACK_MAX_LOOKUPS * sizeof (ManifestLookup), "");
   /* TODO sanitize the table? */
 
   unsigned j = 0;

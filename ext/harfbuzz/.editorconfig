@@ -6,10 +6,10 @@ trim_trailing_whitespace = true
 end_of_line = lf
 insert_final_newline = true
 
-[*.{c,cc,h,hh}]
-indent_size = 2
-indent_style = space
+[*.{c,cc,h,hh,rl}]
 tab_width = 8
+indent_size = 2
+indent_style = tab # should be space
 
 [*.{py,sh}]
 indent_style = tab

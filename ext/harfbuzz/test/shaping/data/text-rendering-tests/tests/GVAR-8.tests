@@ -1,6 +1,0 @@
-../fonts/TestGVAREight.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=HV=0.0:U+0048:[H]
-../fonts/TestGVAREight.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=HV=-0.2:U+0048:[H]
-../fonts/TestGVAREight.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=HV=-0.4:U+0048:[H]
-../fonts/TestGVAREight.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=HV=-0.6:U+0048:[H]
-../fonts/TestGVAREight.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=HV=-0.8:U+0048:[H]
-../fonts/TestGVAREight.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=HV=-1.0:U+0048:[H]

@@ -34,24 +34,35 @@
 #include "hb-font.hh"
 #include "hb-buffer.hh"
 #include "hb-open-type.hh"
+#include "hb-ot-shape.hh"
 #include "hb-set-digest.hh"
 
 
-namespace OT
-{
-  struct GDEF;
-  struct GSUB;
-  struct GPOS;
-}
+struct hb_ot_shape_plan_t;
 
-HB_INTERNAL const OT::GDEF& _get_gdef (hb_face_t *face);
-HB_INTERNAL const OT::GSUB& _get_gsub_relaxed (hb_face_t *face);
-HB_INTERNAL const OT::GPOS& _get_gpos_relaxed (hb_face_t *face);
+
+/*
+ * kern
+ */
+
+HB_INTERNAL bool
+hb_ot_layout_has_kerning (hb_face_t *face);
+
+HB_INTERNAL bool
+hb_ot_layout_has_machine_kerning (hb_face_t *face);
+
+HB_INTERNAL bool
+hb_ot_layout_has_cross_kerning (hb_face_t *face);
+
+HB_INTERNAL void
+hb_ot_layout_kern (const hb_ot_shape_plan_t *plan,
+		   hb_font_t *font,
+		   hb_buffer_t  *buffer);
 
 
 /* Private API corresponding to hb-ot-layout.h: */
 
-HB_INTERNAL hb_bool_t
+HB_INTERNAL bool
 hb_ot_layout_table_find_feature (hb_face_t    *face,
 				 hb_tag_t      table_tag,
 				 hb_tag_t      feature_tag,
@@ -85,46 +96,26 @@ HB_MARK_AS_FLAG_T (hb_ot_layout_glyph_props_flags_t);
  * GSUB/GPOS
  */
 
-HB_INTERNAL hb_bool_t
-hb_ot_layout_lookup_would_substitute_fast (hb_face_t            *face,
-					   unsigned int          lookup_index,
-					   const hb_codepoint_t *glyphs,
-					   unsigned int          glyphs_length,
-					   hb_bool_t             zero_context);
-
 
 /* Should be called before all the substitute_lookup's are done. */
 HB_INTERNAL void
 hb_ot_layout_substitute_start (hb_font_t    *font,
 			       hb_buffer_t  *buffer);
 
-
-struct hb_ot_layout_lookup_accelerator_t
-{
-  template <typename TLookup>
-  inline void init (const TLookup &lookup)
-  {
-    digest.init ();
-    lookup.add_coverage (&digest);
-  }
-  inline void fini (void) {}
-
-  inline bool may_have (hb_codepoint_t g) const
-  { return digest.may_have (g); }
-
-  private:
-  hb_set_digest_t digest;
-};
+HB_INTERNAL void
+hb_ot_layout_delete_glyphs_inplace (hb_buffer_t *buffer,
+				    bool (*filter) (const hb_glyph_info_t *info));
 
 namespace OT {
   struct hb_ot_apply_context_t;
   struct SubstLookup;
+  struct hb_ot_layout_lookup_accelerator_t;
 }
 
 HB_INTERNAL void
 hb_ot_layout_substitute_lookup (OT::hb_ot_apply_context_t *c,
 				const OT::SubstLookup &lookup,
-				const hb_ot_layout_lookup_accelerator_t &accel);
+				const OT::hb_ot_layout_lookup_accelerator_t &accel);
 
 
 /* Should be called before all the position_lookup's are done. */
@@ -160,12 +151,12 @@ hb_ot_layout_position_finish_offsets (hb_font_t    *font,
 #define foreach_syllable(buffer, start, end) \
   for (unsigned int \
        _count = buffer->len, \
-       start = 0, end = _count ? _next_syllable (buffer, 0) : 0; \
+       start = 0, end = _count ? _hb_next_syllable (buffer, 0) : 0; \
        start < _count; \
-       start = end, end = _next_syllable (buffer, start))
+       start = end, end = _hb_next_syllable (buffer, start))
 
 static inline unsigned int
-_next_syllable (hb_buffer_t *buffer, unsigned int start)
+_hb_next_syllable (hb_buffer_t *buffer, unsigned int start)
 {
   hb_glyph_info_t *info = buffer->info;
   unsigned int count = buffer->len;
@@ -175,6 +166,17 @@ _next_syllable (hb_buffer_t *buffer, unsigned int start)
     ;
 
   return start;
+}
+
+static inline void
+_hb_clear_syllables (const hb_ot_shape_plan_t *plan HB_UNUSED,
+		     hb_font_t *font HB_UNUSED,
+		     hb_buffer_t *buffer)
+{
+  hb_glyph_info_t *info = buffer->info;
+  unsigned int count = buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    info[i].syllable() = 0;
 }
 
 
@@ -188,7 +190,7 @@ _next_syllable (hb_buffer_t *buffer, unsigned int start)
  *   * Whether it's one of the three Mongolian Free Variation Selectors,
  *     CGJ, or other characters that are hidden but should not be ignored
  *     like most other Default_Ignorable()s do during matching.
- *   * One free bit right now.
+ *   * Whether it's a grapheme continuation.
  *
  * The high-byte has different meanings, switched by the Gen-Cat:
  * - For Mn,Mc,Me: the modified Combining_Class.
@@ -200,8 +202,8 @@ _next_syllable (hb_buffer_t *buffer, unsigned int start)
 enum hb_unicode_props_flags_t {
   UPROPS_MASK_GEN_CAT	= 0x001Fu,
   UPROPS_MASK_IGNORABLE	= 0x0020u,
-  UPROPS_MASK_HIDDEN	= 0x0040u, /* MONGOLIAN FREE VARIATION SELECTOR 1..3,
-                                    * or TAG characters */
+  UPROPS_MASK_HIDDEN	= 0x0040u, /* MONGOLIAN FREE VARIATION SELECTOR 1..3, or TAG characters */
+  UPROPS_MASK_CONTINUATION=0x0080u,
 
   /* If GEN_CAT=FORMAT, top byte masks: */
   UPROPS_MASK_Cf_ZWJ	= 0x0100u,
@@ -217,9 +219,10 @@ _hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_buffer_t *buffer)
   unsigned int gen_cat = (unsigned int) unicode->general_category (u);
   unsigned int props = gen_cat;
 
-  if (u >= 0x80)
+  if (u >= 0x80u)
   {
     buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_NON_ASCII;
+
     if (unlikely (unicode->is_default_ignorable (u)))
     {
       buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_DEFAULT_IGNORABLES;
@@ -233,10 +236,10 @@ _hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_buffer_t *buffer)
        * FVSes are GC=Mn, we have use a separate bit to remember them.
        * Fixes:
        * https://github.com/harfbuzz/harfbuzz/issues/234 */
-      else if (unlikely (hb_in_range (u, 0x180Bu, 0x180Du))) props |= UPROPS_MASK_HIDDEN;
+      else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x180Bu, 0x180Du))) props |= UPROPS_MASK_HIDDEN;
       /* TAG characters need similar treatment. Fixes:
        * https://github.com/harfbuzz/harfbuzz/issues/463 */
-      else if (unlikely (hb_in_range (u, 0xE0020u, 0xE007Fu))) props |= UPROPS_MASK_HIDDEN;
+      else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0xE0020u, 0xE007Fu))) props |= UPROPS_MASK_HIDDEN;
       /* COMBINING GRAPHEME JOINER should not be skipped; at least some times.
        * https://github.com/harfbuzz/harfbuzz/issues/554 */
       else if (unlikely (u == 0x034Fu))
@@ -245,35 +248,11 @@ _hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_buffer_t *buffer)
 	props |= UPROPS_MASK_HIDDEN;
       }
     }
-    else if (unlikely (HB_UNICODE_GENERAL_CATEGORY_IS_NON_ENCLOSING_MARK_OR_MODIFIER_SYMBOL (gen_cat)))
+
+    if (unlikely (HB_UNICODE_GENERAL_CATEGORY_IS_MARK (gen_cat)))
     {
-      /* The above check is just an optimization to let in only things we need further
-       * processing on. */
-
-      /* Only Mn and Mc can have non-zero ccc:
-       * https://unicode.org/policies/stability_policy.html#Property_Value
-       * """
-       * Canonical_Combining_Class, General_Category
-       * All characters other than those with General_Category property values
-       * Spacing_Mark (Mc) and Nonspacing_Mark (Mn) have the Canonical_Combining_Class
-       * property value 0.
-       * 1.1.5+
-       * """
-       *
-       * Also, all Mn's that are Default_Ignorable, have ccc=0, hence
-       * the "else if".
-       */
-      props |= unicode->modified_combining_class (info->codepoint)<<8;
-
-      /* Recategorize emoji skin-tone modifiers as Unicode mark, so they
-       * behave correctly in non-native directionality.  They originally
-       * are MODIFIER_SYMBOL.  Fixes:
-       * https://github.com/harfbuzz/harfbuzz/issues/169
-       */
-      if (unlikely (hb_in_range (u, 0x1F3FBu, 0x1F3FFu)))
-      {
-	props = gen_cat = HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK;
-      }
+      props |= UPROPS_MASK_CONTINUATION;
+      props |= unicode->modified_combining_class (u)<<8;
     }
   }
 
@@ -312,29 +291,6 @@ _hb_glyph_info_get_modified_combining_class (const hb_glyph_info_t *info)
 {
   return _hb_glyph_info_is_unicode_mark (info) ? info->unicode_props()>>8 : 0;
 }
-
-
-/* Loop over grapheme. Based on foreach_cluster(). */
-#define foreach_grapheme(buffer, start, end) \
-  for (unsigned int \
-       _count = buffer->len, \
-       start = 0, end = _count ? _next_grapheme (buffer, 0) : 0; \
-       start < _count; \
-       start = end, end = _next_grapheme (buffer, start))
-
-static inline unsigned int
-_next_grapheme (hb_buffer_t *buffer, unsigned int start)
-{
-  hb_glyph_info_t *info = buffer->info;
-  unsigned int count = buffer->len;
-
-  while (++start < count && _hb_glyph_info_is_unicode_mark (&info[start]))
-    ;
-
-  return start;
-}
-
-
 #define info_cc(info) (_hb_glyph_info_get_modified_combining_class (&(info)))
 
 static inline bool
@@ -360,13 +316,13 @@ _hb_glyph_info_get_unicode_space_fallback_type (const hb_glyph_info_t *info)
 
 static inline bool _hb_glyph_info_ligated (const hb_glyph_info_t *info);
 
-static inline hb_bool_t
+static inline bool
 _hb_glyph_info_is_default_ignorable (const hb_glyph_info_t *info)
 {
   return (info->unicode_props() & UPROPS_MASK_IGNORABLE) &&
 	 !_hb_glyph_info_ligated (info);
 }
-static inline hb_bool_t
+static inline bool
 _hb_glyph_info_is_default_ignorable_and_not_hidden (const hb_glyph_info_t *info)
 {
   return ((info->unicode_props() & (UPROPS_MASK_IGNORABLE|UPROPS_MASK_HIDDEN))
@@ -379,23 +335,58 @@ _hb_glyph_info_unhide (hb_glyph_info_t *info)
   info->unicode_props() &= ~ UPROPS_MASK_HIDDEN;
 }
 
+static inline void
+_hb_glyph_info_set_continuation (hb_glyph_info_t *info)
+{
+  info->unicode_props() |= UPROPS_MASK_CONTINUATION;
+}
+static inline void
+_hb_glyph_info_reset_continuation (hb_glyph_info_t *info)
+{
+  info->unicode_props() &= ~ UPROPS_MASK_CONTINUATION;
+}
+static inline bool
+_hb_glyph_info_is_continuation (const hb_glyph_info_t *info)
+{
+  return info->unicode_props() & UPROPS_MASK_CONTINUATION;
+}
+/* Loop over grapheme. Based on foreach_cluster(). */
+#define foreach_grapheme(buffer, start, end) \
+  for (unsigned int \
+       _count = buffer->len, \
+       start = 0, end = _count ? _hb_next_grapheme (buffer, 0) : 0; \
+       start < _count; \
+       start = end, end = _hb_next_grapheme (buffer, start))
+
+static inline unsigned int
+_hb_next_grapheme (hb_buffer_t *buffer, unsigned int start)
+{
+  hb_glyph_info_t *info = buffer->info;
+  unsigned int count = buffer->len;
+
+  while (++start < count && _hb_glyph_info_is_continuation (&info[start]))
+    ;
+
+  return start;
+}
+
 static inline bool
 _hb_glyph_info_is_unicode_format (const hb_glyph_info_t *info)
 {
   return _hb_glyph_info_get_general_category (info) ==
 	 HB_UNICODE_GENERAL_CATEGORY_FORMAT;
 }
-static inline hb_bool_t
+static inline bool
 _hb_glyph_info_is_zwnj (const hb_glyph_info_t *info)
 {
   return _hb_glyph_info_is_unicode_format (info) && (info->unicode_props() & UPROPS_MASK_Cf_ZWNJ);
 }
-static inline hb_bool_t
+static inline bool
 _hb_glyph_info_is_zwj (const hb_glyph_info_t *info)
 {
   return _hb_glyph_info_is_unicode_format (info) && (info->unicode_props() & UPROPS_MASK_Cf_ZWJ);
 }
-static inline hb_bool_t
+static inline bool
 _hb_glyph_info_is_joiner (const hb_glyph_info_t *info)
 {
   return _hb_glyph_info_is_unicode_format (info) && (info->unicode_props() & (UPROPS_MASK_Cf_ZWNJ|UPROPS_MASK_Cf_ZWJ));
@@ -569,6 +560,17 @@ static inline void
 _hb_glyph_info_clear_substituted (hb_glyph_info_t *info)
 {
   info->glyph_props() &= ~(HB_OT_LAYOUT_GLYPH_PROPS_SUBSTITUTED);
+}
+
+static inline void
+_hb_clear_substitution_flags (const hb_ot_shape_plan_t *plan HB_UNUSED,
+			      hb_font_t *font HB_UNUSED,
+			      hb_buffer_t *buffer)
+{
+  hb_glyph_info_t *info = buffer->info;
+  unsigned int count = buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    _hb_glyph_info_clear_substituted (&info[i]);
 }
 
 

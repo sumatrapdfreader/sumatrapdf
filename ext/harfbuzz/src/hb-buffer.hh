@@ -86,13 +86,13 @@ HB_MARK_AS_FLAG_T (hb_buffer_scratch_flags_t);
 struct hb_buffer_t
 {
   hb_object_header_t header;
-  ASSERT_POD ();
 
   /* Information about how the text in the buffer should be treated */
   hb_unicode_funcs_t *unicode; /* Unicode functions */
   hb_buffer_flags_t flags; /* BOT / EOT / etc. */
   hb_buffer_cluster_level_t cluster_level;
   hb_codepoint_t replacement; /* U+FFFD or something else. */
+  hb_codepoint_t invisible; /* 0 or something else. */
   hb_buffer_scratch_flags_t scratch_flags; /* Have space-fallback, etc. */
   unsigned int max_len; /* Maximum allowed len. */
   int max_ops; /* Maximum allowed operations. */
@@ -119,14 +119,16 @@ struct hb_buffer_t
   /* Text before / after the main buffer contents.
    * Always in Unicode, and ordered outward.
    * Index 0 is for "pre-context", 1 for "post-context". */
-  enum { CONTEXT_LENGTH = 5 };
+  static constexpr unsigned CONTEXT_LENGTH = 5u;
   hb_codepoint_t context[2][CONTEXT_LENGTH];
   unsigned int context_len[2];
 
   /* Debugging API */
+#ifndef HB_NO_BUFFER_MESSAGE
   hb_buffer_message_func_t message_func;
   void *message_data;
   hb_destroy_func_t message_destroy;
+#endif
 
   /* Internal debugging. */
   /* The bits here reflect current allocations of the bytes in glyph_info_t's var1 and var2. */
@@ -137,7 +139,9 @@ struct hb_buffer_t
 
   /* Methods */
 
-  inline void allocate_var (unsigned int start, unsigned int count)
+  bool in_error () const { return !successful; }
+
+  void allocate_var (unsigned int start, unsigned int count)
   {
 #ifndef HB_NDEBUG
     unsigned int end = start + count;
@@ -147,7 +151,7 @@ struct hb_buffer_t
     allocated_var_bits |= bits;
 #endif
   }
-  inline void deallocate_var (unsigned int start, unsigned int count)
+  void deallocate_var (unsigned int start, unsigned int count)
   {
 #ifndef HB_NDEBUG
     unsigned int end = start + count;
@@ -157,7 +161,7 @@ struct hb_buffer_t
     allocated_var_bits &= ~bits;
 #endif
   }
-  inline void assert_var (unsigned int start, unsigned int count)
+  void assert_var (unsigned int start, unsigned int count)
   {
 #ifndef HB_NDEBUG
     unsigned int end = start + count;
@@ -166,67 +170,102 @@ struct hb_buffer_t
     assert (bits == (allocated_var_bits & bits));
 #endif
   }
-  inline void deallocate_var_all (void)
+  void deallocate_var_all ()
   {
 #ifndef HB_NDEBUG
     allocated_var_bits = 0;
 #endif
   }
 
-  inline hb_glyph_info_t &cur (unsigned int i = 0) { return info[idx + i]; }
-  inline hb_glyph_info_t cur (unsigned int i = 0) const { return info[idx + i]; }
+  hb_glyph_info_t &cur (unsigned int i = 0) { return info[idx + i]; }
+  hb_glyph_info_t cur (unsigned int i = 0) const { return info[idx + i]; }
 
-  inline hb_glyph_position_t &cur_pos (unsigned int i = 0) { return pos[idx + i]; }
-  inline hb_glyph_position_t cur_pos (unsigned int i = 0) const { return pos[idx + i]; }
+  hb_glyph_position_t &cur_pos (unsigned int i = 0) { return pos[idx + i]; }
+  hb_glyph_position_t cur_pos (unsigned int i = 0) const { return pos[idx + i]; }
 
-  inline hb_glyph_info_t &prev (void) { return out_info[out_len ? out_len - 1 : 0]; }
-  inline hb_glyph_info_t prev (void) const { return out_info[out_len ? out_len - 1 : 0]; }
+  hb_glyph_info_t &prev ()      { return out_info[out_len ? out_len - 1 : 0]; }
+  hb_glyph_info_t prev () const { return out_info[out_len ? out_len - 1 : 0]; }
 
-  inline bool has_separate_output (void) const { return info != out_info; }
+  bool has_separate_output () const { return info != out_info; }
 
 
-  HB_INTERNAL void reset (void);
-  HB_INTERNAL void clear (void);
+  HB_INTERNAL void reset ();
+  HB_INTERNAL void clear ();
 
-  inline unsigned int backtrack_len (void) const
-  { return have_output? out_len : idx; }
-  inline unsigned int lookahead_len (void) const
-  { return len - idx; }
-  inline unsigned int next_serial (void) { return serial++; }
+  unsigned int backtrack_len () const { return have_output? out_len : idx; }
+  unsigned int lookahead_len () const { return len - idx; }
+  unsigned int next_serial () { return serial++; }
 
   HB_INTERNAL void add (hb_codepoint_t  codepoint,
 			unsigned int    cluster);
   HB_INTERNAL void add_info (const hb_glyph_info_t &glyph_info);
 
   HB_INTERNAL void reverse_range (unsigned int start, unsigned int end);
-  HB_INTERNAL void reverse (void);
-  HB_INTERNAL void reverse_clusters (void);
-  HB_INTERNAL void guess_segment_properties (void);
+  HB_INTERNAL void reverse ();
+  HB_INTERNAL void reverse_clusters ();
+  HB_INTERNAL void guess_segment_properties ();
 
-  HB_INTERNAL void swap_buffers (void);
-  HB_INTERNAL void remove_output (void);
-  HB_INTERNAL void clear_output (void);
-  HB_INTERNAL void clear_positions (void);
+  HB_INTERNAL void swap_buffers ();
+  HB_INTERNAL void remove_output ();
+  HB_INTERNAL void clear_output ();
+  HB_INTERNAL void clear_positions ();
 
   HB_INTERNAL void replace_glyphs (unsigned int num_in,
 				   unsigned int num_out,
 				   const hb_codepoint_t *glyph_data);
 
-  HB_INTERNAL void replace_glyph (hb_codepoint_t glyph_index);
+  void replace_glyph (hb_codepoint_t glyph_index)
+  {
+    if (unlikely (out_info != info || out_len != idx)) {
+      if (unlikely (!make_room_for (1, 1))) return;
+      out_info[out_len] = info[idx];
+    }
+    out_info[out_len].codepoint = glyph_index;
+
+    idx++;
+    out_len++;
+  }
   /* Makes a copy of the glyph at idx to output and replace glyph_index */
-  HB_INTERNAL void output_glyph (hb_codepoint_t glyph_index);
-  HB_INTERNAL void output_info (const hb_glyph_info_t &glyph_info);
+  hb_glyph_info_t & output_glyph (hb_codepoint_t glyph_index)
+  {
+    if (unlikely (!make_room_for (0, 1))) return Crap(hb_glyph_info_t);
+
+    if (unlikely (idx == len && !out_len))
+      return Crap(hb_glyph_info_t);
+
+    out_info[out_len] = idx < len ? info[idx] : out_info[out_len - 1];
+    out_info[out_len].codepoint = glyph_index;
+
+    out_len++;
+
+    return out_info[out_len - 1];
+  }
+  void output_info (const hb_glyph_info_t &glyph_info)
+  {
+    if (unlikely (!make_room_for (0, 1))) return;
+
+    out_info[out_len] = glyph_info;
+
+    out_len++;
+  }
   /* Copies glyph at idx to output but doesn't advance idx */
-  HB_INTERNAL void copy_glyph (void);
-  HB_INTERNAL bool move_to (unsigned int i); /* i is output-buffer index. */
+  void copy_glyph ()
+  {
+    if (unlikely (!make_room_for (0, 1))) return;
+
+    out_info[out_len] = info[idx];
+
+    out_len++;
+  }
   /* Copies glyph at idx to output and advance idx.
    * If there's no output, just advance idx. */
-  inline void
-  next_glyph (void)
+  void
+  next_glyph ()
   {
     if (have_output)
     {
-      if (unlikely (out_info != info || out_len != idx)) {
+      if (out_info != info || out_len != idx)
+      {
 	if (unlikely (!make_room_for (1, 1))) return;
 	out_info[out_len] = info[idx];
       }
@@ -235,16 +274,31 @@ struct hb_buffer_t
 
     idx++;
   }
+  /* Copies n glyphs at idx to output and advance idx.
+   * If there's no output, just advance idx. */
+  void
+  next_glyphs (unsigned int n)
+  {
+    if (have_output)
+    {
+      if (out_info != info || out_len != idx)
+      {
+	if (unlikely (!make_room_for (n, n))) return;
+	memmove (out_info + out_len, info + idx, n * sizeof (out_info[0]));
+      }
+      out_len += n;
+    }
 
+    idx += n;
+  }
   /* Advance idx without copying to output. */
-  inline void skip_glyph (void) { idx++; }
-
-  inline void reset_masks (hb_mask_t mask)
+  void skip_glyph () { idx++; }
+  void reset_masks (hb_mask_t mask)
   {
     for (unsigned int j = 0; j < len; j++)
       info[j].mask = mask;
   }
-  inline void add_masks (hb_mask_t mask)
+  void add_masks (hb_mask_t mask)
   {
     for (unsigned int j = 0; j < len; j++)
       info[j].mask |= mask;
@@ -252,7 +306,7 @@ struct hb_buffer_t
   HB_INTERNAL void set_masks (hb_mask_t value, hb_mask_t mask,
 			      unsigned int cluster_start, unsigned int cluster_end);
 
-  inline void merge_clusters (unsigned int start, unsigned int end)
+  void merge_clusters (unsigned int start, unsigned int end)
   {
     if (end - start < 2)
       return;
@@ -261,9 +315,9 @@ struct hb_buffer_t
   HB_INTERNAL void merge_clusters_impl (unsigned int start, unsigned int end);
   HB_INTERNAL void merge_out_clusters (unsigned int start, unsigned int end);
   /* Merge clusters for deleting current glyph, and skip it. */
-  HB_INTERNAL void delete_glyph (void);
+  HB_INTERNAL void delete_glyph ();
 
-  inline void unsafe_to_break (unsigned int start,
+  void unsafe_to_break (unsigned int start,
 			       unsigned int end)
   {
     if (end - start < 2)
@@ -275,12 +329,14 @@ struct hb_buffer_t
 
 
   /* Internal methods */
+  HB_INTERNAL bool move_to (unsigned int i); /* i is output-buffer index. */
+
   HB_INTERNAL bool enlarge (unsigned int size);
 
-  inline bool ensure (unsigned int size)
+  bool ensure (unsigned int size)
   { return likely (!size || size < allocated) ? true : enlarge (size); }
 
-  inline bool ensure_inplace (unsigned int size)
+  bool ensure_inplace (unsigned int size)
   { return likely (!size || size < allocated); }
 
   HB_INTERNAL bool make_room_for (unsigned int num_in, unsigned int num_out);
@@ -289,13 +345,23 @@ struct hb_buffer_t
   typedef long scratch_buffer_t;
   HB_INTERNAL scratch_buffer_t *get_scratch_buffer (unsigned int *size);
 
-  inline void clear_context (unsigned int side) { context_len[side] = 0; }
+  void clear_context (unsigned int side) { context_len[side] = 0; }
 
   HB_INTERNAL void sort (unsigned int start, unsigned int end, int(*compar)(const hb_glyph_info_t *, const hb_glyph_info_t *));
 
-  inline bool messaging (void) { return unlikely (message_func); }
-  inline bool message (hb_font_t *font, const char *fmt, ...) HB_PRINTF_FUNC(3, 4)
+  bool messaging ()
   {
+#ifdef HB_NO_BUFFER_MESSAGE
+    return false;
+#else
+    return unlikely (message_func);
+#endif
+  }
+  bool message (hb_font_t *font, const char *fmt, ...) HB_PRINTF_FUNC(3, 4)
+  {
+#ifdef HB_NO_BUFFER_MESSAGE
+   return true;
+#else
     if (!messaging ())
       return true;
     va_list ap;
@@ -303,10 +369,11 @@ struct hb_buffer_t
     bool ret = message_impl (font, fmt, ap);
     va_end (ap);
     return ret;
+#endif
   }
   HB_INTERNAL bool message_impl (hb_font_t *font, const char *fmt, va_list ap) HB_PRINTF_FUNC(3, 0);
 
-  static inline void
+  static void
   set_cluster (hb_glyph_info_t &inf, unsigned int cluster, unsigned int mask = 0)
   {
     if (inf.cluster != cluster)
@@ -319,16 +386,16 @@ struct hb_buffer_t
     inf.cluster = cluster;
   }
 
-  inline int
+  int
   _unsafe_to_break_find_min_cluster (const hb_glyph_info_t *infos,
 				     unsigned int start, unsigned int end,
 				     unsigned int cluster) const
   {
     for (unsigned int i = start; i < end; i++)
-      cluster = MIN<unsigned int> (cluster, infos[i].cluster);
+      cluster = hb_min (cluster, infos[i].cluster);
     return cluster;
   }
-  inline void
+  void
   _unsafe_to_break_set_mask (hb_glyph_info_t *infos,
 			     unsigned int start, unsigned int end,
 			     unsigned int cluster)
@@ -341,13 +408,8 @@ struct hb_buffer_t
       }
   }
 
-  inline void
-  unsafe_to_break_all (void)
-  {
-    unsafe_to_break_impl (0, len);
-  }
-  inline void
-  safe_to_break_all (void)
+  void unsafe_to_break_all () { unsafe_to_break_impl (0, len); }
+  void safe_to_break_all ()
   {
     for (unsigned int i = 0; i < len; i++)
       info[i].mask &= ~HB_GLYPH_FLAG_UNSAFE_TO_BREAK;

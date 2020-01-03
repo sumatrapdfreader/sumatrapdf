@@ -28,7 +28,6 @@
 #include "hb-open-type.hh"
 
 #include "hb-subset.hh"
-#include "hb-subset-glyf.hh"
 
 #include "hb-open-file.hh"
 #include "hb-ot-cmap-table.hh"
@@ -40,16 +39,23 @@
 #include "hb-ot-maxp-table.hh"
 #include "hb-ot-os2-table.hh"
 #include "hb-ot-post-table.hh"
+#include "hb-ot-cff1-table.hh"
+#include "hb-ot-cff2-table.hh"
+#include "hb-ot-vorg-table.hh"
+#include "hb-ot-name-table.hh"
 #include "hb-ot-layout-gsub-table.hh"
 #include "hb-ot-layout-gpos-table.hh"
 
 
-static unsigned int
+HB_UNUSED static inline unsigned int
+_plan_estimate_subset_table_size (hb_subset_plan_t *plan,
+				  unsigned int table_len);
+static inline unsigned int
 _plan_estimate_subset_table_size (hb_subset_plan_t *plan,
 				  unsigned int table_len)
 {
   unsigned int src_glyphs = plan->source->get_num_glyphs ();
-  unsigned int dst_glyphs = plan->glyphset->get_population ();
+  unsigned int dst_glyphs = plan->glyphset ()->get_population ();
 
   if (unlikely (!src_glyphs))
     return 512 + table_len;
@@ -61,54 +67,65 @@ template<typename TableType>
 static bool
 _subset2 (hb_subset_plan_t *plan)
 {
+  bool result = false;
   hb_blob_t *source_blob = hb_sanitize_context_t ().reference_table<TableType> (plan->source);
   const TableType *table = source_blob->as<TableType> ();
 
   hb_tag_t tag = TableType::tableTag;
-  hb_bool_t result = false;
   if (source_blob->data)
   {
-    hb_auto_t<hb_vector_t<char> > buf;
+    hb_vector_t<char> buf;
+    /* TODO Not all tables are glyph-related.  'name' table size for example should not be
+     * affected by number of glyphs.  Accommodate that. */
     unsigned int buf_size = _plan_estimate_subset_table_size (plan, source_blob->length);
-    DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c initial estimated table size: %u bytes.", HB_UNTAG(tag), buf_size);
+    DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c initial estimated table size: %u bytes.", HB_UNTAG (tag), buf_size);
     if (unlikely (!buf.alloc (buf_size)))
     {
-      DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c failed to allocate %u bytes.", HB_UNTAG(tag), buf_size);
+      DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c failed to allocate %u bytes.", HB_UNTAG (tag), buf_size);
+      hb_blob_destroy (source_blob);
       return false;
     }
   retry:
-    hb_serialize_context_t serializer (buf.arrayZ, buf_size);
+    hb_serialize_context_t serializer ((void *) buf, buf_size);
+    serializer.start_serialize<TableType> ();
     hb_subset_context_t c (plan, &serializer);
-    result = table->subset (&c);
+    bool needed = table->subset (&c);
     if (serializer.ran_out_of_room)
     {
       buf_size += (buf_size >> 1) + 32;
-      DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c ran out of room; reallocating to %u bytes.", HB_UNTAG(tag), buf_size);
+      DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c ran out of room; reallocating to %u bytes.", HB_UNTAG (tag), buf_size);
       if (unlikely (!buf.alloc (buf_size)))
       {
-	DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c failed to reallocate %u bytes.", HB_UNTAG(tag), buf_size);
+	DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c failed to reallocate %u bytes.", HB_UNTAG (tag), buf_size);
+	hb_blob_destroy (source_blob);
 	return false;
       }
       goto retry;
     }
+    serializer.end_serialize ();
+
+    result = !serializer.in_error ();
+
     if (result)
     {
-      hb_blob_t *dest_blob = serializer.copy_blob ();
-      DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c final subset table size: %u bytes.", HB_UNTAG(tag), dest_blob->length);
-      result = c.plan->add_table (tag, dest_blob);
-      hb_blob_destroy (dest_blob);
-    }
-    else
-    {
-      DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset table subsetted to empty.", HB_UNTAG(tag));
-      result = true;
+      if (needed)
+      {
+	hb_blob_t *dest_blob = serializer.copy_blob ();
+	DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c final subset table size: %u bytes.", HB_UNTAG (tag), dest_blob->length);
+	result = c.plan->add_table (tag, dest_blob);
+	hb_blob_destroy (dest_blob);
+      }
+      else
+      {
+	DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset table subsetted to empty.", HB_UNTAG (tag));
+      }
     }
   }
   else
-    DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset sanitize failed on source table.", HB_UNTAG(tag));
+    DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset sanitize failed on source table.", HB_UNTAG (tag));
 
   hb_blob_destroy (source_blob);
-  DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset %s", HB_UNTAG(tag), result ? "success" : "FAILED!");
+  DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset %s", HB_UNTAG (tag), result ? "success" : "FAILED!");
   return result;
 }
 
@@ -124,26 +141,29 @@ _subset (hb_subset_plan_t *plan)
   if (source_blob->data)
     result = table->subset (plan);
   else
-    DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset sanitize failed on source table.", HB_UNTAG(tag));
+    DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset sanitize failed on source table.", HB_UNTAG (tag));
 
   hb_blob_destroy (source_blob);
-  DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset %s", HB_UNTAG(tag), result ? "success" : "FAILED!");
+  DEBUG_MSG(SUBSET, nullptr, "OT::%c%c%c%c::subset %s", HB_UNTAG (tag), result ? "success" : "FAILED!");
   return result;
 }
 
 
 static bool
 _subset_table (hb_subset_plan_t *plan,
-               hb_tag_t          tag)
+	       hb_tag_t          tag)
 {
-  DEBUG_MSG(SUBSET, nullptr, "begin subset %c%c%c%c", HB_UNTAG(tag));
+  DEBUG_MSG(SUBSET, nullptr, "begin subset %c%c%c%c", HB_UNTAG (tag));
   bool result = true;
   switch (tag) {
     case HB_OT_TAG_glyf:
-      result = _subset<const OT::glyf> (plan);
+      result = _subset2<const OT::glyf> (plan);
       break;
     case HB_OT_TAG_hdmx:
-      result = _subset<const OT::hdmx> (plan);
+      result = _subset2<const OT::hdmx> (plan);
+      break;
+    case HB_OT_TAG_name:
+      result = _subset2<const OT::name> (plan);
       break;
     case HB_OT_TAG_head:
       // TODO that won't work well if there is no glyf
@@ -154,53 +174,73 @@ _subset_table (hb_subset_plan_t *plan,
       DEBUG_MSG(SUBSET, nullptr, "skip hhea handled by hmtx");
       return true;
     case HB_OT_TAG_hmtx:
-      result = _subset<const OT::hmtx> (plan);
+      result = _subset2<const OT::hmtx> (plan);
       break;
     case HB_OT_TAG_vhea:
       DEBUG_MSG(SUBSET, nullptr, "skip vhea handled by vmtx");
       return true;
     case HB_OT_TAG_vmtx:
-      result = _subset<const OT::vmtx> (plan);
+      result = _subset2<const OT::vmtx> (plan);
       break;
     case HB_OT_TAG_maxp:
-      result = _subset<const OT::maxp> (plan);
+      result = _subset2<const OT::maxp> (plan);
       break;
     case HB_OT_TAG_loca:
       DEBUG_MSG(SUBSET, nullptr, "skip loca handled by glyf");
       return true;
     case HB_OT_TAG_cmap:
-      result = _subset<const OT::cmap> (plan);
+      result = _subset2<const OT::cmap> (plan);
       break;
-    case HB_OT_TAG_os2:
-      result = _subset<const OT::os2> (plan);
+    case HB_OT_TAG_OS2:
+      result = _subset2<const OT::OS2> (plan);
       break;
     case HB_OT_TAG_post:
-      result = _subset<const OT::post> (plan);
+      result = _subset2<const OT::post> (plan);
       break;
 
+#ifndef HB_NO_SUBSET_CFF
+    case HB_OT_TAG_cff1:
+      result = _subset<const OT::cff1> (plan);
+      break;
+    case HB_OT_TAG_cff2:
+      result = _subset<const OT::cff2> (plan);
+      break;
+    case HB_OT_TAG_VORG:
+      result = _subset2<const OT::VORG> (plan);
+      break;
+#endif
+
+#ifndef HB_NO_SUBSET_LAYOUT
+    case HB_OT_TAG_GDEF:
+      result = _subset2<const OT::GDEF> (plan);
+      break;
     case HB_OT_TAG_GSUB:
-      //result = _subset2<const OT::GSUB> (plan);
+      result = _subset2<const OT::GSUB> (plan);
       break;
     case HB_OT_TAG_GPOS:
-      //result = _subset2<const OT::GPOS> (plan);
+      result = _subset2<const OT::GPOS> (plan);
       break;
+#endif
 
     default:
-      hb_blob_t *source_table = hb_face_reference_table(plan->source, tag);
+      hb_blob_t *source_table = hb_face_reference_table (plan->source, tag);
       if (likely (source_table))
-        result = plan->add_table(tag, source_table);
+	result = plan->add_table (tag, source_table);
       else
-        result = false;
+	result = false;
       hb_blob_destroy (source_table);
       break;
   }
-  DEBUG_MSG(SUBSET, nullptr, "subset %c%c%c%c %s", HB_UNTAG(tag), result ? "ok" : "FAILED");
+  DEBUG_MSG(SUBSET, nullptr, "subset %c%c%c%c %s", HB_UNTAG (tag), result ? "ok" : "FAILED");
   return result;
 }
 
 static bool
-_should_drop_table(hb_subset_plan_t *plan, hb_tag_t tag)
+_should_drop_table (hb_subset_plan_t *plan, hb_tag_t tag)
 {
+  if (plan->drop_tables->has (tag))
+    return true;
+
   switch (tag) {
     case HB_TAG ('c', 'v', 'a', 'r'): /* hint table, fallthrough */
     case HB_TAG ('c', 'v', 't', ' '): /* hint table, fallthrough */
@@ -209,31 +249,19 @@ _should_drop_table(hb_subset_plan_t *plan, hb_tag_t tag)
     case HB_TAG ('h', 'd', 'm', 'x'): /* hint table, fallthrough */
     case HB_TAG ('V', 'D', 'M', 'X'): /* hint table, fallthrough */
       return plan->drop_hints;
+
+#ifdef HB_NO_SUBSET_LAYOUT
     // Drop Layout Tables if requested.
-    case HB_TAG ('G', 'D', 'E', 'F'): /* temporary */
-    case HB_TAG ('G', 'P', 'O', 'S'): /* temporary */
-    case HB_TAG ('G', 'S', 'U', 'B'): /* temporary */
-      return plan->drop_layout;
-    // Drop these tables below by default, list pulled
-    // from fontTools:
-    case HB_TAG ('B', 'A', 'S', 'E'):
-    case HB_TAG ('J', 'S', 'T', 'F'):
-    case HB_TAG ('D', 'S', 'I', 'G'):
-    case HB_TAG ('E', 'B', 'D', 'T'):
-    case HB_TAG ('E', 'B', 'L', 'C'):
-    case HB_TAG ('E', 'B', 'S', 'C'):
-    case HB_TAG ('S', 'V', 'G', ' '):
-    case HB_TAG ('P', 'C', 'L', 'T'):
-    case HB_TAG ('L', 'T', 'S', 'H'):
-    // Graphite tables:
-    case HB_TAG ('F', 'e', 'a', 't'):
-    case HB_TAG ('G', 'l', 'a', 't'):
-    case HB_TAG ('G', 'l', 'o', 'c'):
-    case HB_TAG ('S', 'i', 'l', 'f'):
-    case HB_TAG ('S', 'i', 'l', 'l'):
-    // Colour
-    case HB_TAG ('s', 'b', 'i', 'x'):
+    case HB_OT_TAG_GDEF:
+    case HB_OT_TAG_GPOS:
+    case HB_OT_TAG_GSUB:
+    case HB_TAG ('m', 'o', 'r', 'x'):
+    case HB_TAG ('m', 'o', 'r', 't'):
+    case HB_TAG ('k', 'e', 'r', 'x'):
+    case HB_TAG ('k', 'e', 'r', 'n'):
       return true;
+#endif
+
     default:
       return false;
   }
@@ -248,32 +276,34 @@ _should_drop_table(hb_subset_plan_t *plan, hb_tag_t tag)
  **/
 hb_face_t *
 hb_subset (hb_face_t *source,
-           hb_subset_input_t *input)
+	   hb_subset_input_t *input)
 {
-  if (unlikely (!input || !source)) return hb_face_get_empty();
+  if (unlikely (!input || !source)) return hb_face_get_empty ();
 
   hb_subset_plan_t *plan = hb_subset_plan_create (source, input);
 
   hb_tag_t table_tags[32];
   unsigned int offset = 0, count;
   bool success = true;
+  hb_set_t tags_set;
   do {
     count = ARRAY_LENGTH (table_tags);
     hb_face_get_table_tags (source, offset, &count, table_tags);
     for (unsigned int i = 0; i < count; i++)
     {
       hb_tag_t tag = table_tags[i];
-      if (_should_drop_table(plan, tag))
+      if (_should_drop_table (plan, tag) && !tags_set.has (tag))
       {
-        DEBUG_MSG(SUBSET, nullptr, "drop %c%c%c%c", HB_UNTAG(tag));
-        continue;
+	DEBUG_MSG(SUBSET, nullptr, "drop %c%c%c%c", HB_UNTAG (tag));
+	continue;
       }
+      tags_set.add (tag);
       success = success && _subset_table (plan, tag);
     }
     offset += count;
   } while (success && count == ARRAY_LENGTH (table_tags));
 
-  hb_face_t *result = success ? hb_face_reference(plan->dest) : hb_face_get_empty();
+  hb_face_t *result = success ? hb_face_reference (plan->dest) : hb_face_get_empty ();
   hb_subset_plan_destroy (plan);
   return result;
 }
