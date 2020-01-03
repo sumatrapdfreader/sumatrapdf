@@ -347,13 +347,13 @@ static void CreateMainLayout(TocEditorWindow* w) {
     tree->withCheckboxes = true;
     bool ok = tree->Create(L"tree");
     CrashIf(!ok);
-    tree->idealSize = {80, 640};
+    tree->idealSize = {80, 320};
 
     gWindow->treeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
 
-    main->addChild(treeLayout, 4);
-    main->addChild(w->layoutButtons, 1);
+    main->addChild(treeLayout, 1);
+    main->addChild(w->layoutButtons, 0);
 
     auto* padding = new Padding();
     padding->insets = DefaultInsets();

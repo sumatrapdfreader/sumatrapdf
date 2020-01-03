@@ -437,7 +437,7 @@ static void OnTocContextMenu(ContextMenuArgs* args) {
     }
 
     HMENU popup = BuildMenuFromMenuDef(contextMenuDef, dimof(contextMenuDef), CreatePopupMenu());
-    if (gWithTocEditor) {
+    if (!gWithTocEditor) {
         win::menu::Remove(popup, IDM_SEPARATOR);
         win::menu::Remove(popup, IDM_EXPORT_BOOKMARKS);
         win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
