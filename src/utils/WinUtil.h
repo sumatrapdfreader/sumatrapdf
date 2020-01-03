@@ -79,6 +79,7 @@ HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize);
 
 RectI ShiftRectToWorkArea(RectI rect, bool bFully = false);
 RectI GetWorkAreaRect(RectI rect);
+void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
 RectI GetFullscreenRect(HWND);
 RectI GetVirtualScreenRect();
 

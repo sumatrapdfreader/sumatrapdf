@@ -416,7 +416,7 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     DocTocTree* tree = (DocTocTree*)win->tocTreeCtrl->treeModel;
     bkms->toc = CloneDocTocTree(tree);
     args->bookmarks.push_back(bkms);
-    args->relatedTo = win->hwndFrame;
+    args->hwndRelatedTo = win->hwndFrame;
     StartTocEditor(args);
 }
 

@@ -668,12 +668,32 @@ RectI ShiftRectToWorkArea(RectI rect, bool bFully) {
     return rect;
 }
 
-RectI GetWorkAreaRect(RectI rect) {
+// Limits size to max available work area (screen size - taskbar)
+void LimitWindowSizeToScreen(HWND hwnd, SIZE& size) {
+    HMONITOR hmon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi = {0};
     mi.cbSize = sizeof mi;
+    BOOL ok = GetMonitorInfo(hmon, &mi);
+    if (!ok) {
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+    }
+    int dx = RectDx(mi.rcWork);
+    if (size.cx > dx) {
+        size.cx = dx;
+    }
+    int dy = RectDy(mi.rcWork);
+    if (size.cy > dy) {
+        size.cy = dy;
+    }
+}
+
+// returns available area of the screen i.e. screen minus taskbar area
+RectI GetWorkAreaRect(RectI rect) {
     RECT tmpRect = rect.ToRECT();
-    HMONITOR monitor = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
-    BOOL ok = GetMonitorInfo(monitor, &mi);
+    HMONITOR hmon = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO mi = {0};
+    mi.cbSize = sizeof mi;
+    BOOL ok = GetMonitorInfo(hmon, &mi);
     if (!ok) {
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
     }
