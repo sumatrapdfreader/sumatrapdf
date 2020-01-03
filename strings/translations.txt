@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0511d510873454bb2c177f07892b76f707c58c2e
+000260429102ca484476cf9d356a13f4d3056ebf
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5471,6 +5471,7 @@ vn:Đóng lại
 cn:全部折叠(&C)
 co:Piegà tuttu
 cz:Sbalit vše
+es:Ocultar Todo
 fr:Tout réduire
 ga:Laghdaigh Gach
 nl:Alle Samenvouwen
@@ -8100,6 +8101,7 @@ vn:Không mở %s được
 cn:全部展开
 co:Spiegà tuttu
 cz:Rozbalit vše
+es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
 nl:Alle Uitvouwen
@@ -10431,6 +10433,9 @@ tw:前往頁
 uk:Перейти на сторінку
 uz:Betga o'tish
 vn:Nhảy đến trang
+:Hide &Favorites
+es:Ocultar &Favoritos
+fr:Masquer les &favoris
 :Hide &Options
 am:Թաքցնել &ընտրանքները
 ar:إخفاء &الخيارات
@@ -15515,6 +15520,9 @@ tw:顯示書籤 (&B)
 uk:Показати закладки
 uz:&Xatcho'plarni ko'rsatish
 vn:Hiện chỉ dấu sách
+:Show &Favorites
+es:Mostrar &Favoritos
+fr:Afficher les &favoris
 :Show &Pages Continuously
 am:Էջերը &ցուցադրել շարունակական
 ar:اظهار الصفحات باستمرار
