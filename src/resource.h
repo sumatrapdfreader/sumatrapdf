@@ -103,6 +103,8 @@
 #define IDM_FAV_ADD                     560
 #define IDM_FAV_DEL                     561
 #define IDM_FAV_TOGGLE                  562
+#define IDM_FAV_SHOW                    563
+#define IDM_FAV_HIDE                    564
 #define IDM_RENAME_FILE                 580
 #define IDM_FIND_NEXT_SEL               581
 #define IDM_FIND_PREV_SEL               582

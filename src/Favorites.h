@@ -37,6 +37,7 @@ class Favorites {
 };
 
 void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const WCHAR* pageLabel, AutoFreeWstr& name);
+void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo);
 void AddFavoriteForCurrentPage(WindowInfo* win);
 void DelFavorite(const WCHAR* filePath, int pageNo);
 void RebuildFavMenu(WindowInfo* win, HMENU menu);

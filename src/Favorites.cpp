@@ -627,14 +627,9 @@ void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const WCHAR* pageL
     prefs::Save();
 }
 
-void AddFavoriteForCurrentPage(WindowInfo* win) {
-    if (!win->IsDocLoaded()) {
-        return;
-    }
-    TabInfo* tab = win->currentTab;
-    CrashIf(!tab);
-    int pageNo = win->currPageNo;
+void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo) {
     AutoFreeWstr name;
+    auto tab = win->currentTab;
     auto* ctrl = tab->ctrl;
     if (ctrl->HasTocTree()) {
         // use the current ToC heading as default name
@@ -647,6 +642,14 @@ void AddFavoriteForCurrentPage(WindowInfo* win) {
     }
     AutoFreeWstr pageLabel = ctrl->GetPageLabel(pageNo);
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
+}
+
+void AddFavoriteForCurrentPage(WindowInfo* win) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    int pageNo = win->currPageNo;
+    AddFavoriteForCurrentPage(win, pageNo);
 }
 
 void DelFavorite(const WCHAR* filePath, int pageNo) {

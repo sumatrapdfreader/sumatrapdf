@@ -217,9 +217,14 @@ static MenuDef menuDefContext[] = {
     { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Image"),                  IDM_COPY_IMAGE,             MF_REQ_ALLOW_COPY },
-    { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
     { _TRN("Select &All"),                  IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
-    { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
+    { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
+    // note: strings cannot be "" or else items are not there
+    {"add",                                 IDM_FAV_ADD,                MF_NO_TRANSLATE   },
+    {"del",                                 IDM_FAV_DEL,                MF_NO_TRANSLATE   },
+    { _TRN("Show &Favorites"),               IDM_FAV_SHOW,               0                 },
+    { _TRN("Hide &Favorites"),               IDM_FAV_HIDE,               0                 },
+{ SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
     { _TRN("Show &Bookmarks"),              IDM_VIEW_BOOKMARKS,         MF_PLUGIN_MODE_ONLY },
@@ -396,7 +401,7 @@ static float ZoomMenuItemToZoom(UINT menuItemId) {
 }
 
 static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom) {
-    AssertCrash((IDM_ZOOM_FIRST <= menuItemId) && (menuItemId <= IDM_ZOOM_LAST));
+    CrashIf((IDM_ZOOM_FIRST > menuItemId) || (menuItemId > IDM_ZOOM_LAST));
 
     for (int i = 0; i < dimof(gZoomMenuIds); i++) {
         win::menu::SetEnabled(m, gZoomMenuIds[i].itemId, canZoom);
@@ -618,7 +623,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
-    PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
+    PageElement* pageEl = dm->GetElementAtPos({x, y});
     WCHAR* value = nullptr;
     if (pageEl) {
         value = pageEl->GetValue();
@@ -641,6 +646,36 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     MenuUpdatePrintItem(win, popup, true);
     win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->ctrl->HasTocTree());
     win::menu::SetChecked(popup, IDM_VIEW_BOOKMARKS, win->tocVisible);
+
+    int pageNo = dm->GetPageNoByPoint({x, y});
+    const WCHAR* filePath = win->ctrl->FilePath();
+    if (pageNo > 0) {
+        AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
+        bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
+        if (isBookmarked) {
+            win::menu::Remove(popup, IDM_FAV_ADD);
+
+            // %s and not %d because re-using translation from RebuildFavMenu()
+            auto tr = _TR("Remove page %s from favorites");
+            AutoFreeWstr s = str::Format(tr, pageLabel.Get());
+            win::menu::SetText(popup, IDM_FAV_DEL, s);
+        } else {
+            win::menu::Remove(popup, IDM_FAV_DEL);
+
+            // %s and not %d because re-using translation from RebuildFavMenu()
+            auto tr = _TR("Add page %s to favorites");
+            AutoFreeWstr s = str::Format(tr, pageLabel.Get());
+            win::menu::SetText(popup, IDM_FAV_ADD, s);
+        }
+    } else {
+        win::menu::Remove(popup, IDM_FAV_ADD);
+        win::menu::Remove(popup, IDM_FAV_DEL);
+    }
+    if (gGlobalPrefs->showFavorites) {
+        win::menu::Remove(popup, IDM_FAV_SHOW);
+    } else {
+        win::menu::Remove(popup, IDM_FAV_HIDE);
+    }
 
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
@@ -673,6 +708,16 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
                 }
                 delete bmp;
             }
+            break;
+        case IDM_FAV_ADD:
+            AddFavoriteForCurrentPage(win);
+            break;
+        case IDM_FAV_DEL:
+            DelFavorite(filePath, pageNo);
+            break;
+        case IDM_FAV_SHOW:
+        case IDM_FAV_HIDE:
+            ToggleFavorites(win);
             break;
     }
 
