@@ -36,6 +36,7 @@ class Favorites {
     void RemoveAllForFile(const WCHAR* filePath);
 };
 
+bool HasFavorites();
 void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const WCHAR* pageLabel, AutoFreeWstr& name);
 void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo);
 void AddFavoriteForCurrentPage(WindowInfo* win);

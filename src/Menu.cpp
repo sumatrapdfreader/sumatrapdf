@@ -222,12 +222,11 @@ static MenuDef menuDefContext[] = {
     // note: strings cannot be "" or else items are not there
     {"add",                                 IDM_FAV_ADD,                MF_NO_TRANSLATE   },
     {"del",                                 IDM_FAV_DEL,                MF_NO_TRANSLATE   },
-    { _TRN("Show &Favorites"),               IDM_FAV_SHOW,               0                 },
-    { _TRN("Hide &Favorites"),               IDM_FAV_HIDE,               0                 },
-{ SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
+    { _TRN("Show &Favorites"),              IDM_FAV_TOGGLE,             0                 },
+    { _TRN("Show &Bookmarks"),              IDM_VIEW_BOOKMARKS,         0                 },
+    { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
-    { _TRN("Show &Bookmarks"),              IDM_VIEW_BOOKMARKS,         MF_PLUGIN_MODE_ONLY },
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
@@ -639,13 +638,15 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (!pageEl || pageEl->kind != kindPageElementImage) {
         win::menu::Remove(popup, IDM_COPY_IMAGE);
     }
-
     if (!win->currentTab->selectionOnPage) {
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
     }
     MenuUpdatePrintItem(win, popup, true);
     win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->ctrl->HasTocTree());
     win::menu::SetChecked(popup, IDM_VIEW_BOOKMARKS, win->tocVisible);
+
+    win::menu::SetEnabled(popup, IDM_FAV_TOGGLE, HasFavorites());
+    win::menu::SetChecked(popup, IDM_FAV_TOGGLE, gGlobalPrefs->showFavorites);
 
     int pageNo = dm->GetPageNoByPoint({x, y});
     const WCHAR* filePath = win->ctrl->FilePath();
@@ -671,11 +672,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         win::menu::Remove(popup, IDM_FAV_ADD);
         win::menu::Remove(popup, IDM_FAV_DEL);
     }
-    if (gGlobalPrefs->showFavorites) {
-        win::menu::Remove(popup, IDM_FAV_SHOW);
-    } else {
-        win::menu::Remove(popup, IDM_FAV_HIDE);
-    }
 
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
@@ -691,6 +687,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case IDM_SAVEAS:
         case IDM_PRINT:
         case IDM_VIEW_BOOKMARKS:
+        case IDM_FAV_TOGGLE:
         case IDM_PROPERTIES:
             SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
             break;
@@ -714,10 +711,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             break;
         case IDM_FAV_DEL:
             DelFavorite(filePath, pageNo);
-            break;
-        case IDM_FAV_SHOW:
-        case IDM_FAV_HIDE:
-            ToggleFavorites(win);
             break;
     }
 

@@ -253,7 +253,7 @@ void Favorites::RemoveAllForFile(const WCHAR* filePath) {
 
 MenuDef menuDefFavContext[] = {{_TRN("Remove from favorites"), IDM_FAV_DEL, 0}};
 
-static bool HasFavorites() {
+bool HasFavorites() {
     DisplayState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
         if (ds->favorites->size() > 0) {
