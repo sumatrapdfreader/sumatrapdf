@@ -39,3 +39,17 @@ bool IsGdiPlusNativeFormat(const char* data, size_t len);
 Gdiplus::Bitmap* BitmapFromData(const char* data, size_t len);
 Gdiplus::Size BitmapSizeFromData(const char* data, size_t len);
 CLSID GetEncoderClsid(const WCHAR* format);
+
+// TODO: for the lack of a better place
+struct ImageData {
+    char* data = nullptr;
+    size_t len = 0;
+};
+
+struct ImageData2 {
+    ImageData base;
+    // path by which content refers to this image
+    char* fileName = nullptr;
+    // document specific id by whcih to find this image
+    size_t fileId = 0;
+};

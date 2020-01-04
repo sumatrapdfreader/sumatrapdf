@@ -4,12 +4,6 @@
 class HtmlPullParser;
 struct HtmlToken;
 
-struct ImageData2 {
-    ImageData base;
-    char* fileName; // path by which content refers to this image
-    size_t fileId;  // document specific id by whcih to find this image
-};
-
 char* NormalizeURL(const char* url, const char* base);
 
 class PropertyMap {

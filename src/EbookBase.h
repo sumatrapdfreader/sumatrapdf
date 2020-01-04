@@ -4,12 +4,6 @@
 // this is a collection of structs and classes that are
 // useful for more than one ebook format
 
-// TODO: replace with std::string_view
-struct ImageData {
-    char* data;
-    size_t len;
-};
-
 class EbookTocVisitor {
   public:
     virtual void Visit(const WCHAR* name, const WCHAR* url, int level) = 0;

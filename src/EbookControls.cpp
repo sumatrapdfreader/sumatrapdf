@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/BitManip.h"
+#include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "mui/Mui.h"
 #include "utils/SerializeTxt.h"

@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/Archive.h"
 #include "utils/FileUtil.h"
+#include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "utils/PalmDbReader.h"
