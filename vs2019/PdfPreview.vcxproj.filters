@@ -25,6 +25,7 @@
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
+    <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\MiniMui.h">
       <Filter>mui</Filter>
     </ClInclude>
@@ -53,6 +54,7 @@
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
+    <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\mui\MiniMui.cpp">
       <Filter>mui</Filter>
     </ClCompile>

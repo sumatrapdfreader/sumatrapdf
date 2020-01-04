@@ -918,6 +918,9 @@ function pdf_preview_files()
 
   filter {"configurations:Debug"}
     files_in_dir("src", {
+      "utils/PalmDbReader.*",
+      "mui/MiniMui.*",
+      "mui/TextRender.*",
       "ChmDoc.*",
       "EbookDoc.*",
       "EngineEbook.*",
@@ -927,9 +930,7 @@ function pdf_preview_files()
       "HtmlFormatter.*",
       "MobiDoc.*",
       "PdfCreator.*",
-      "utils/PalmDbReader.*",
-      "mui/MiniMui.*",
-      "mui/TextRender.*",
+      "SumatraConfig.*",
     })
   filter {}
 end
