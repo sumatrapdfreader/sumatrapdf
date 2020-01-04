@@ -34,7 +34,7 @@ static bool NeedsEscaping(const char* s) {
 static void EscapeStr(str::Str& out, const char* s) {
     CrashIf(!NeedsEscaping(s));
     if (str::IsWs(*s) && *s != '\n' && *s != '\r')
-        out.Append('$');
+        out.AppendChar('$');
     for (const char* c = s; *c; c++) {
         switch (*c) {
             case '$':
@@ -47,11 +47,12 @@ static void EscapeStr(str::Str& out, const char* s) {
                 out.Append("$r");
                 break;
             default:
-                out.Append(*c);
+                out.AppendChar(*c);
         }
     }
-    if (*s && str::IsWs(s[str::Len(s) - 1]))
-        out.Append('$');
+    if (*s && str::IsWs(s[str::Len(s) - 1])) {
+        out.AppendChar('$');
+    }
 }
 
 static char* UnescapeStr(const char* s) {
@@ -64,25 +65,25 @@ static char* UnescapeStr(const char* s) {
         s++; // leading whitespace
     for (const char* c = s; c < end; c++) {
         if (*c != '$') {
-            ret.Append(*c);
+            ret.AppendChar(*c);
             continue;
         }
         switch (*++c) {
             case '$':
-                ret.Append('$');
+                ret.AppendChar('$');
                 break;
             case 'n':
-                ret.Append('\n');
+                ret.AppendChar('\n');
                 break;
             case 'r':
-                ret.Append('\r');
+                ret.AppendChar('\r');
                 break;
             case '\0':
                 break; // trailing whitespace
             default:
                 // keep all other instances of the escape character
-                ret.Append('$');
-                ret.Append(*c);
+                ret.AppendChar('$');
+                ret.AppendChar(*c);
                 break;
         }
     }
@@ -229,7 +230,7 @@ static bool SerializeField(str::Str& out, const uint8_t* base, const FieldInfo& 
             AssertCrash(IsCompactable(GetSubstruct(field)));
             for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
                 if (i > 0)
-                    out.Append(' ');
+                    out.AppendChar(' ');
                 SerializeField(out, fieldPtr, GetSubstruct(field)->fields[i]);
             }
             return true;
@@ -241,7 +242,7 @@ static bool SerializeField(str::Str& out, const uint8_t* base, const FieldInfo& 
                 info.type =
                     Type_IntArray == field.type ? Type_Int : Type_FloatArray == field.type ? Type_Float : Type_Color;
                 if (i > 0)
-                    out.Append(' ');
+                    out.AppendChar(' ');
                 SerializeField(out, (const uint8_t*)&(*(Vec<int>**)fieldPtr)->at(i), info);
             }
             // prevent empty arrays from being replaced with the defaults
@@ -377,7 +378,7 @@ static void DeserializeField(const FieldInfo& field, uint8_t* base, const char* 
 
 static inline void Indent(str::Str& out, int indent) {
     while (indent-- > 0)
-        out.Append('\t');
+        out.AppendChar('\t');
 }
 
 static void MarkFieldKnown(SquareTreeNode* node, const char* fieldName, SettingType type) {

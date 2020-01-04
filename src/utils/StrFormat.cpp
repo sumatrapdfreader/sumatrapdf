@@ -239,7 +239,7 @@ void Fmt::serializeInst(int n) {
     }
     switch (tArg) {
         case Type::Char:
-            res.Append(arg.c);
+            res.AppendChar(arg.c);
             break;
         case Type::Int:
             // TODO: using AppendFmt is cheating

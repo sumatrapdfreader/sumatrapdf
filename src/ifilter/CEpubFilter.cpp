@@ -87,7 +87,7 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
             }
             if (t->sLen > 0) {
                 text.AppendAndFree(ResolveHtmlEntities(t->s, t->sLen));
-                text.Append(' ');
+                text.AppendChar(' ');
             }
         } else if (t->IsStartTag()) {
             // TODO: force-close tags similar to HtmlFormatter.cpp's AutoCloseOnOpen?

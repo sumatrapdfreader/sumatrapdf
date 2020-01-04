@@ -484,7 +484,7 @@ class Str : public Vec<char> {
         return {d, len};
     }
 
-    bool Append(char c) {
+    bool AppendChar(char c) {
         return InsertAt(len, c);
     }
 

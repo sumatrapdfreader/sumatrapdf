@@ -194,7 +194,7 @@ static inline void AppendChar(str::Str& htmlData, char c) {
             htmlData.Append("&quot;");
             break;
         default:
-            htmlData.Append(c);
+            htmlData.AppendChar(c);
             break;
     }
 }
@@ -858,9 +858,9 @@ bool Fb2Doc::Load() {
             if (!--inBody) {
                 if (xmlData.size() > 0)
                     xmlData.Append("<pagebreak />");
-                xmlData.Append('<');
+                xmlData.AppendChar('<');
                 xmlData.Append(bodyStart, tok->s - bodyStart + tok->sLen);
-                xmlData.Append('>');
+                xmlData.AppendChar('>');
             }
         } else if (inBody && tok->IsStartTag() && Tag_Title == tok->tag)
             hasToc = true;
@@ -1161,14 +1161,15 @@ bool PalmDoc::Load() {
     // but gather spans and memcpy them wholesale
     for (const char* curr = start; curr < end; curr++) {
         char c = *curr;
-        if ('&' == c)
+        if ('&' == c) {
             htmlData.Append("&amp;");
-        else if ('<' == c)
+        } else if ('<' == c) {
             curr = HandleTealDocTag(htmlData, tocEntries, curr, end - curr, codePage);
-        else if ('\n' == c || '\r' == c && curr + 1 < end && '\n' != *(curr + 1))
+        } else if ('\n' == c || '\r' == c && curr + 1 < end && '\n' != *(curr + 1)) {
             htmlData.Append("\n<br>");
-        else
-            htmlData.Append(c);
+        } else {
+            htmlData.AppendChar(c);
+        }
     }
 
     delete mobiDoc;

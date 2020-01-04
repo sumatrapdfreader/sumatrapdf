@@ -35,7 +35,7 @@ static const char* ExtractString(str::Str& string, const char* data) {
         if ('"' == *data)
             return data + 1;
         if ('\\' != *data) {
-            string.Append(*data);
+            string.AppendChar(*data);
             continue;
         }
         // parse escape sequence
@@ -44,22 +44,22 @@ static const char* ExtractString(str::Str& string, const char* data) {
             case '"':
             case '\\':
             case '/':
-                string.Append(*data);
+                string.AppendChar(*data);
                 break;
             case 'b':
-                string.Append('\b');
+                string.AppendChar('\b');
                 break;
             case 'f':
-                string.Append('\f');
+                string.AppendChar('\f');
                 break;
             case 'n':
-                string.Append('\n');
+                string.AppendChar('\n');
                 break;
             case 'r':
-                string.Append('\r');
+                string.AppendChar('\r');
                 break;
             case 't':
-                string.Append('\t');
+                string.AppendChar('\t');
                 break;
             case 'u':
                 if (str::Parse(data + 1, "%4x", &i) && 0 < i && i < 0x10000) {
@@ -127,7 +127,7 @@ static const char* ParseObject(ParseArgs& args, const char* data) {
         data = SkipWS(data);
         if ('"' != *data)
             return nullptr;
-        args.path.Append('/');
+        args.path.AppendChar('/');
         data = ExtractString(args.path, data);
         if (!data)
             return nullptr;

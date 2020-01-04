@@ -124,7 +124,7 @@ static str::Str parseLineTitle(std::string_view& sv) {
             return res;
         }
         if (c != '\\') {
-            res.Append(c);
+            res.AppendChar(c);
             s++;
             continue;
         }
@@ -136,10 +136,10 @@ static str::Str parseLineTitle(std::string_view& sv) {
         char c2 = *s;
         bool unEscape = (c2 == '\\') || (c2 == '"');
         if (!unEscape) {
-            res.Append(c);
+            res.AppendChar(c);
             continue;
         }
-        res.Append(c2);
+        res.AppendChar(c2);
         s++;
     }
 
@@ -170,7 +170,6 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
 }
 #endif
 
-
 struct ParsedDest {
     int pageNo;
 };
@@ -182,6 +181,56 @@ std::tuple<ParsedDest*, bool> parseDestination(std::string_view& sv) {
     // TODO: actually parse the info
     auto* res = new ParsedDest{1};
     return {res, true};
+}
+
+struct parsedKV {
+    char* key = nullptr;
+    char* val = nullptr;
+    bool ok = false;
+
+    parsedKV() = default;
+    ~parsedKV();
+};
+
+parsedKV::~parsedKV() {
+    free(key);
+    free(val);
+}
+
+// line could be:
+// "key"
+// "key:unquoted-value"
+// "key:"quoted value"
+// updates str in place to account for parsed data
+parsedKV parseKV(std::string_view& line) {
+    // eat white space
+    sv::SkipChars(line, ' ');
+
+    // find end of key (':', ' ' or end of text)
+    const char* s = line.data();
+    const char* end = s + line.length();
+
+    char c;
+    const char* key = s;
+    const char* keyEnd = nullptr;
+    str::Str val;
+    while (s < end) {
+        c = *s;
+        if (c == ':' || c == ' ') {
+            keyEnd = s - 1;
+            break;
+        }
+        s++;
+    }
+    if (keyEnd == nullptr) {
+        keyEnd = s;
+    } else {
+        if (*s == ':') {
+            s++;
+        }
+    }
+    parsedKV res;
+    return res;
 }
 
 // a single line in .bmk file is:
@@ -207,7 +256,6 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     // parse meta-data and page destination
     std::string_view part;
     while (line.size() > 0) {
-        sv::SkipChars(line, ' ');
         part = sv::ParseUntil(line, ' ');
 
         if (str::Eq(part, "font:bold")) {

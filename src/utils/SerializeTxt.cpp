@@ -555,15 +555,16 @@ static void AppendVal(const char* val, char escapeChar, bool compact, str::Str& 
 
         size_t len = s - start - 1;
         res.Append(start, len);
-        res.Append(escapeChar);
-        res.Append(escaped);
+        res.AppendChar(escapeChar);
+        res.AppendChar(escaped);
         start = s;
         escaped = 0;
     }
     size_t len = s - start;
     res.Append(start, len);
-    if (!compact)
+    if (!compact) {
         res.Append(NL);
+    }
 }
 
 struct EncodeState {

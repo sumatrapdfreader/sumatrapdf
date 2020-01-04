@@ -12,28 +12,28 @@ static void HtmlAddWithNesting(str::Str* out, HtmlToken* tok, size_t nesting) {
     // add a newline before block start tags (unless there already is one)
     bool onNewLine = out->size() == 0 || out->Last() == '\n';
     if (!onNewLine && !isInline && !tok->IsEndTag()) {
-        out->Append('\n');
+        out->AppendChar('\n');
         onNewLine = true;
     }
     // indent the tag if it starts on a new line
     if (onNewLine) {
         for (size_t i = 0; i < nesting; i++)
-            out->Append('\t');
+            out->AppendChar('\t');
         if (tok->IsEndTag() && nesting > 0)
             out->Pop();
     }
     // output the tag and all its attributes
-    out->Append('<');
+    out->AppendChar('<');
     if (tok->IsEndTag())
-        out->Append('/');
+        out->AppendChar('/');
     // TODO: normalize whitespace between attributes?
     out->Append(tok->s, tok->sLen);
     if (tok->IsEmptyElementEndTag())
-        out->Append('/');
-    out->Append('>');
+        out->AppendChar('/');
+    out->AppendChar('>');
     // add a newline after block end tags
     if (!isInline && !tok->IsStartTag())
-        out->Append('\n');
+        out->AppendChar('\n');
 }
 
 static bool IsWsText(const char* s, size_t len) {

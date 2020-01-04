@@ -173,25 +173,124 @@ size_t SkipChars(std::string_view& sv, char c) {
     return SkipTo(sv, s);
 }
 
+bool NeedsQuoting(char c) {
+    switch (c) {
+        case '"':
+        case '\\':
+        case '\n':
+        case '\r':
+        case '\t':
+        case '\b':
+        case '\f':
+            return true;
+    }
+    return false;
+}
+
+static char quoteChar(char c) {
+    switch (c) {
+        case '"':
+        case '\\':
+            return c;
+        case '\n':
+            return 'n';
+        case '\r':
+            return 'r';
+        case '\t':
+            return 't';
+        case '\b':
+            return 'b';
+        case '\f':
+            return 'f';
+    }
+    CrashIf(true);
+    return c;
+}
+
+static std::tuple<char, bool> unquoteChar(char c) {
+    switch (c) {
+        case '"':
+        case '\\':
+            return {c, true};
+        case 'n':
+            return {'\n', true};
+        case 'r':
+            return {'\r', true};
+        case 't':
+            return {'\t', true};
+        case 'b':
+            return {'\b', true};
+        case 'f':
+            return {'\f', true};
+    }
+    return {'\0', false};
+}
+
 void AppendQuotedString(std::string_view sv, str::Str& out) {
-    out.Append('"');
+    out.AppendChar('"');
     const char* s = sv.data();
     const char* end = s + sv.size();
     while (s < end) {
         auto c = *s;
-        switch (c) {
-            case '"':
-            case '\\':
-                out.Append('\\');
-                out.Append(c);
-                out.Append('\\');
-                break;
-            default:
-                out.Append(c);
+        if (NeedsQuoting(c)) {
+            out.AppendChar('\\');
+            c = quoteChar(c);
+        }
+        out.AppendChar(c);
+        s++;
+    }
+    out.AppendChar('"');
+}
+
+// if <line> starts with '"' it's quoted value that should end with '"'
+// otherwise it's unquoted value that ends with ' '
+// returns false if starts with '"' but doesn't end with '"'
+// sets <out> to parsed value
+// updates <line> to consume parsed characters
+bool ParseQuotedString(std::string_view& line, str::Str& out) {
+    if (line.size() == 0) {
+        // empty value is ok
+        return true;
+    }
+    const char* s = line.data();
+    const char* end = s + line.size();
+    char c = *s;
+    if (c != '"') {
+        // unqoted
+        std::string_view v = sv::ParseUntil(line, ' ');
+        out.AppendView(v);
+        return true;
+    }
+    s++;
+    while (s < end) {
+        c = *s;
+        if (c == '"') {
+            s++;
+            SkipTo(line, s);
+            return true;
+        }
+        if (c != '\\') {
+            out.AppendChar(c);
+            s++;
+            continue;
+        }
+        // possibly escaping
+        s++;
+        if (s >= end) {
+            return false;
+        }
+        c = *s;
+        auto [c2, ok] = unquoteChar(c);
+        if (ok) {
+            out.AppendChar(c2);
+        } else {
+            out.AppendChar('\\');
+            out.AppendChar(c);
         }
         s++;
     }
-    out.Append('"');
+    // started with '"' but didn't end with it
+    return false;
 }
 
 } // namespace sv

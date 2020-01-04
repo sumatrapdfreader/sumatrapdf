@@ -133,20 +133,23 @@ static bool PalmdocUncompress(const char* src, size_t srcLen, str::Str& dst) {
             dst.Append(src, c);
             src += c;
         } else if (c < 128) {
-            dst.Append((char)c);
+            dst.AppendChar((char)c);
         } else if ((c >= 128) && (c < 192)) {
-            if (src + 1 > srcEnd)
+            if (src + 1 > srcEnd) {
                 return false;
+            }
             uint16_t c2 = (c << 8) | (uint8_t)*src++;
             uint16_t back = (c2 >> 3) & 0x07ff;
-            if (back > dst.size() || 0 == back)
+            if (back > dst.size() || 0 == back) {
                 return false;
+            }
             for (uint8_t n = (c2 & 7) + 3; n > 0; n--) {
-                dst.Append(dst.at(dst.size() - back));
+                char ctmp = dst.at(dst.size() - back);
+                dst.AppendChar(ctmp);
             }
         } else if (c >= 192) {
-            dst.Append(' ');
-            dst.Append((char)(c ^ 0x80));
+            dst.AppendChar(' ');
+            dst.AppendChar((char)(c ^ 0x80));
         } else {
             CrashIf(true);
             return false;
