@@ -560,3 +560,7 @@ CLSID GetEncoderClsid(const WCHAR* format) {
     }
     return null;
 }
+
+size_t ImageData::size() const {
+    return len;
+}

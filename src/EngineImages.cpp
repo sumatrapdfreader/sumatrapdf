@@ -863,6 +863,9 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
+    // an image for each page
+    Vec<ImageData> images;
+
   protected:
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectD LoadMediabox(int pageNo) override;
@@ -871,13 +874,16 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
-    std::string_view GetImageData(int pageNo);
+    ImageData GetImageData(int pageNo);
     void ParseComicInfoXml(const char* xmlData);
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
     MultiFormatArchive* cbxFile = nullptr;
     Vec<MultiFormatArchive::FileInfo*> files;
     DocTocTree* tocTree = nullptr;
+
+    // not owned
+    const WCHAR* defaultExt = nullptr;
 
     // extracted metadata
     AutoFreeWstr propTitle;
@@ -890,6 +896,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     AutoFreeWstr propAuthorTmp;
 };
 
+// TODO: refactor so that doesn't have to keep <arch>
 CbxEngineImpl::CbxEngineImpl(MultiFormatArchive* arch) {
     cbxFile = arch;
     kind = kindEngineComicBooks;
@@ -897,7 +904,12 @@ CbxEngineImpl::CbxEngineImpl(MultiFormatArchive* arch) {
 
 CbxEngineImpl::~CbxEngineImpl() {
     delete tocTree;
-    delete cbxFile;
+
+    CrashIf(cbxFile);
+
+    for (auto&& img : images) {
+        free(img.data);
+    }
 }
 
 EngineBase* CbxEngineImpl::Clone() {
@@ -939,6 +951,21 @@ static bool cmpArchFileInfoByName(MultiFormatArchive::FileInfo* f1, MultiFormatA
     return res < 0;
 }
 
+static const WCHAR* GetExtFromArchiveType(MultiFormatArchive* cbxFile) {
+    switch (cbxFile->format) {
+        case MultiFormatArchive::Format::Zip:
+            return L".cbz";
+        case MultiFormatArchive::Format::Rar:
+            return L".cbr";
+        case MultiFormatArchive::Format::SevenZip:
+            return L".cb7";
+        case MultiFormatArchive::Format::Tar:
+            return L".cbt";
+    }
+    CrashIf(true);
+    return nullptr;
+}
+
 bool CbxEngineImpl::FinishLoading() {
     CrashIf(!cbxFile);
     if (!cbxFile) {
@@ -950,7 +977,7 @@ bool CbxEngineImpl::FinishLoading() {
     // TODO: return DpiGetForHwnd(HWND_DESKTOP) instead?
     fileDPI = 96.f;
 
-    defaultFileExt = GetDefaultFileExt();
+    defaultFileExt = GetExtFromArchiveType(cbxFile);
 
     Vec<MultiFormatArchive::FileInfo*> pageFiles;
 
@@ -993,6 +1020,11 @@ bool CbxEngineImpl::FinishLoading() {
     mediaboxes.AppendBlanks(nFiles);
     files = std::move(pageFiles);
     pageCount = (int)nFiles;
+    if (pageCount == 0) {
+        delete cbxFile;
+        cbxFile = nullptr;
+        return false;
+    }
 
     DocTocItem* root = nullptr;
     DocTocItem* curr = nullptr;
@@ -1011,6 +1043,19 @@ bool CbxEngineImpl::FinishLoading() {
     }
     tocTree = new DocTocTree(root);
     tocTree->filePath = strconv::WstrToUtf8(FileName());
+
+    for (int i = 0; i < pageCount; i++) {
+        size_t fileId = files[i]->fileId;
+        std::string_view sv = cbxFile->GetFileDataById(fileId);
+        ImageData img;
+        img.data = (char*)sv.data();
+        img.len = sv.size();
+        images.Append(img);
+    }
+
+    delete cbxFile;
+    cbxFile = nullptr;
+
     return true;
 }
 
@@ -1018,11 +1063,9 @@ DocTocTree* CbxEngineImpl::GetTocTree() {
     return tocTree;
 }
 
-std::string_view CbxEngineImpl::GetImageData(int pageNo) {
+ImageData CbxEngineImpl::GetImageData(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > PageCount()));
-    ScopedCritSec scope(&cacheAccess);
-    size_t fileId = files[pageNo - 1]->fileId;
-    return cbxFile->GetFileDataById(fileId);
+    return images[pageNo - 1];
 }
 
 static char* GetTextContent(HtmlPullParser& parser) {
@@ -1040,24 +1083,29 @@ void CbxEngineImpl::ParseComicInfoXml(const char* xmlData) {
     HtmlPullParser parser(xmlData, str::Len(xmlData));
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
-        if (!tok->IsStartTag())
+        if (!tok->IsStartTag()) {
             continue;
+        }
         if (tok->NameIs("Title")) {
             AutoFree value(GetTextContent(parser));
-            if (value)
+            if (value) {
                 Visit("/ComicBookInfo/1.0/title", value, json::Type_String);
+            }
         } else if (tok->NameIs("Year")) {
             AutoFree value(GetTextContent(parser));
-            if (value)
+            if (value) {
                 Visit("/ComicBookInfo/1.0/publicationYear", value, json::Type_Number);
+            }
         } else if (tok->NameIs("Month")) {
             AutoFree value(GetTextContent(parser));
-            if (value)
+            if (value) {
                 Visit("/ComicBookInfo/1.0/publicationMonth", value, json::Type_Number);
+            }
         } else if (tok->NameIs("Summary")) {
             AutoFree value(GetTextContent(parser));
-            if (value)
+            if (value) {
                 Visit("/X-summary", value, json::Type_String);
+            }
         } else if (tok->NameIs("Writer")) {
             AutoFree value(GetTextContent(parser));
             if (value) {
@@ -1112,8 +1160,8 @@ bool CbxEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnot
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        AutoFree data = GetImageData(i);
-        ok = c->AddPageFromImageData(data.data, data.size(), GetFileDPI());
+        ImageData img = GetImageData(i);
+        ok = c->AddPageFromImageData(img.data, img.size(), GetFileDPI());
     }
     if (ok) {
         c->CopyProperties(this);
@@ -1144,26 +1192,14 @@ WCHAR* CbxEngineImpl::GetProperty(DocumentProperty prop) {
 }
 
 const WCHAR* CbxEngineImpl::GetDefaultFileExt() const {
-    switch (cbxFile->format) {
-        case MultiFormatArchive::Format::Zip:
-            return L".cbz";
-        case MultiFormatArchive::Format::Rar:
-            return L".cbr";
-        case MultiFormatArchive::Format::SevenZip:
-            return L".cb7";
-        case MultiFormatArchive::Format::Tar:
-            return L".cbt";
-        default:
-            CrashIf(true);
-            return nullptr;
-    }
+    return defaultExt;
 }
 
 Bitmap* CbxEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
-    AutoFree bmpData(GetImageData(pageNo));
-    if (bmpData.data) {
+    ImageData img = GetImageData(pageNo);
+    if (img.data) {
         deleteAfterUse = true;
-        return BitmapFromData(bmpData.data, bmpData.size());
+        return BitmapFromData(img.data, img.size());
     }
     return nullptr;
 }
@@ -1177,9 +1213,9 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo) {
         return mbox;
     }
 
-    AutoFree bmpData(GetImageData(pageNo));
-    if (bmpData.data) {
-        Size size = BitmapSizeFromData(bmpData.data, bmpData.size());
+    ImageData img = GetImageData(pageNo);
+    if (img.data) {
+        Size size = BitmapSizeFromData(img.data, img.size());
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();

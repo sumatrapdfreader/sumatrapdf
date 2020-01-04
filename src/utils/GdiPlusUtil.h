@@ -44,6 +44,8 @@ CLSID GetEncoderClsid(const WCHAR* format);
 struct ImageData {
     char* data = nullptr;
     size_t len = 0;
+
+    size_t size() const;
 };
 
 struct ImageData2 {
