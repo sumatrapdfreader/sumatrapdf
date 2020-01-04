@@ -107,6 +107,9 @@ class RectT {
     bool IsEmpty() const {
         return dx == 0 || dy == 0;
     }
+    bool empty() const {
+        return dx == 0 || dy == 0;
+    }
 
     bool Contains(PointT<T> pt) const {
         if (pt.x < this->x)

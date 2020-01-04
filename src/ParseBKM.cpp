@@ -25,7 +25,32 @@ Bookmarks::~Bookmarks() {
     delete toc;
 }
 
-// TODO: serialize open state
+static void SerializeKeyVal(char* key, WCHAR* val, str::Str& s) {
+    CrashIf(!key);
+    if (!val) {
+        return;
+    }
+    s.AppendFmt(" %s:", key);
+    AutoFree str = strconv::WstrToUtf8(val);
+    sv::AppendQuotedString(str.as_view(), s);
+}
+
+static void SerializeDest(PageDestination* dest, str::Str& s) {
+    if (!dest) {
+        return;
+    }
+    s.AppendFmt(" destkind:%s", dest->kind);
+    SerializeKeyVal("destname", dest->GetName(), s);
+    SerializeKeyVal("destvalue", dest->GetValue(), s);
+    if (dest->pageNo > 0) {
+        s.AppendFmt(" destpage:%d", dest->pageNo);
+    }
+    RectD r = dest->rect;
+    if (!r.empty()) {
+        s.AppendFmt(" destrect:%f,%f,%f,%f", r.x, r.y, r.dx, r.dy);
+    }
+}
+
 static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
     if (level == 0) {
         s.Append("title: default view\n");
@@ -52,6 +77,15 @@ static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
         if (node->pageNo != 0) {
             s.AppendFmt(" page:%d", node->pageNo);
         }
+        if (node->isOpenDefault) {
+            s.AppendFmt(" open-default");
+        }
+        if (node->isOpenDefault) {
+            s.AppendFmt(" open-toggled");
+        }
+        if (node->isUnchecked) {
+            s.AppendFmt("  unchecked");
+        }
         PageDestination* dest = node->GetPageDestination();
         if (dest) {
             int pageNo = dest->GetPageNo();
@@ -59,12 +93,7 @@ static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
                 logf("pageNo: %d, node->pageNo: %d\n", pageNo, node->pageNo);
             }
             CrashIf(node->pageNo != pageNo);
-            auto ws = dest->GetValue();
-            if (ws != nullptr) {
-                s.Append(" dest:");
-                AutoFree str = strconv::WstrToUtf8(ws);
-                sv::AppendQuotedString(str.as_view(), s);
-            }
+            SerializeDest(dest, s);
         }
         s.Append("\n");
 
@@ -123,6 +152,25 @@ static std::tuple<COLORREF, bool> parseColor(std::string_view sv) {
     return {c, ok};
 }
 
+#if 0
+static void SerializeDest(PageDestination* dest, str::Str& s) {
+    if (!dest) {
+        return;
+    }
+    s.AppendFmt(" destkind:%s", dest->kind);
+    SerializeKeyVal("destname", dest->GetName(), s);
+    SerializeKeyVal("destvalue", dest->GetValue(), s);
+    if (dest->pageNo > 0) {
+        s.AppendFmt(" destpage:%d", dest->pageNo);
+    }
+    RectD r = dest->rect;
+    if (!r.empty()) {
+        s.AppendFmt(" destrect:%f,%f,%f,%f", r.x, r.y, r.dx, r.dy);
+    }
+}
+#endif
+
+
 struct ParsedDest {
     int pageNo;
 };
@@ -154,6 +202,7 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     str::Str title = parseLineTitle(line);
     DocTocItem* res = new DocTocItem();
     res->title = strconv::Utf8ToWstr(title.AsView());
+    PageDestination* dest = nullptr;
 
     // parse meta-data and page destination
     std::string_view part;
@@ -177,14 +226,16 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
             continue;
         }
 
-        auto [dest, ok2] = parseDestination(part);
-        if (ok2) {
-            res->pageNo = dest->pageNo;
-            if (dest->pageNo == 0) {
-                dbglogf("has pageNo of 0\n");
-            }
-            delete dest;
-            // TODO: parse destination and set values
+        if (str::EqI(part, "open-default")) {
+            res->isOpenDefault = true;
+            continue;
+        }
+        if (str::EqI(part, "open-toggled")) {
+            res->isOpenToggled = true;
+            continue;
+        }
+        if (str::Eq(part, "unchecked")) {
+            res->isUnchecked = true;
             continue;
         }
     }
