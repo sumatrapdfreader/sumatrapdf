@@ -69,7 +69,6 @@ Author:
 Automatic
 Automatically check for &updates
 Book View
-Book&marks\tF12
 Bookmark Shortcuts
 Bookmark shortcut to page %s of %s
 Bookmarks
@@ -241,10 +240,11 @@ Select the folder where SumatraPDF should be installed:
 Selection:
 Send by &E-mail...
 Set inverse search command-line
-Show &Bookmarks
+Show &Bookmarks\tF12
 Show &Favorites
 Show &Pages Continuously
 Show &Toolbar\tF8
+Show Book&marks\tF12
 Show Favorites
 Show frequently read
 Show in &folder
