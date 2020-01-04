@@ -161,7 +161,6 @@ Found text at page %s (again)
 Frequently Read
 GB
 Go to page
-Hide &Favorites
 Hide &Options
 Hide frequently read
 Hint: Use the F3 key for finding again
