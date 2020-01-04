@@ -57,6 +57,8 @@ bool EqNIx(const char* s, size_t len, const char* s2);
 char* DupN(const char* s, size_t lenCch);
 char* Dup(const std::string_view sv);
 char* ToLowerInPlace(char* s);
+char* ToLower(const char* s);
+
 void Free(const char* s);
 
 #if OS_WIN
@@ -66,6 +68,7 @@ bool EndsWithI(const WCHAR* txt, const WCHAR* end);
 WCHAR* DupN(const WCHAR* s, size_t lenCch);
 void Free(const WCHAR* s);
 WCHAR* ToLowerInPlace(WCHAR* s);
+WCHAR* ToLower(const WCHAR* s);
 
 void Utf8Encode(char*& dst, int c);
 #endif

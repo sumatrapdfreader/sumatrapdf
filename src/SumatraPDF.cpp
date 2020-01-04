@@ -293,7 +293,7 @@ bool OpenFileExternally(const WCHAR* path) {
         return false;
 
     // check if this file's perceived type is allowed
-    const WCHAR* ext = path::GetExt(path);
+    const WCHAR* ext = path::GetExtNoFree(path);
     AutoFreeWstr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml"))
@@ -1594,7 +1594,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     Controller* ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
     // don't fail if a user tries to load an SMX file instead
     if (!ctrl && IsModificationsFile(fullPath)) {
-        *(WCHAR*)path::GetExt(fullPath) = '\0';
+        *(WCHAR*)path::GetExtNoFree(fullPath) = '\0';
         ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
     }
 

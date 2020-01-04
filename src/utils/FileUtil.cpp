@@ -24,14 +24,15 @@ bool IsSep(char c) {
 const char* GetBaseNameNoFree(const char* path) {
     const char* fileBaseName = path + str::Len(path);
     for (; fileBaseName > path; fileBaseName--) {
-        if (IsSep(fileBaseName[-1]))
+        if (IsSep(fileBaseName[-1])) {
             break;
+        }
     }
     return fileBaseName;
 }
 
 // Note: returns pointer inside <path>, do not free
-const char* GetExt(const char* path) {
+const char* GetExtNoFree(const char* path) {
     const char* ext = nullptr;
     char c = *path;
     while (c) {
@@ -50,11 +51,13 @@ const char* GetExt(const char* path) {
 }
 
 char* JoinUtf(const char* path, const char* fileName, Allocator* allocator) {
-    if (IsSep(*fileName))
+    if (IsSep(*fileName)) {
         fileName++;
+    }
     const char* sepStr = nullptr;
-    if (!IsSep(path[str::Len(path) - 1]))
+    if (!IsSep(path[str::Len(path) - 1])) {
         sepStr = "\\";
+    }
     return str::Join(path, sepStr, fileName, allocator);
 }
 
@@ -76,7 +79,7 @@ const WCHAR* GetBaseNameNoFree(const WCHAR* path) {
 }
 
 // Note: returns pointer inside <path>, do not free
-const WCHAR* GetExt(const WCHAR* path) {
+const WCHAR* GetExtNoFree(const WCHAR* path) {
     const WCHAR* ext = path + str::Len(path);
     while ((ext > path) && !IsSep(*ext)) {
         if (*ext == '.') {
@@ -90,14 +93,22 @@ const WCHAR* GetExt(const WCHAR* path) {
 // Caller has to free()
 WCHAR* GetDir(const WCHAR* path) {
     const WCHAR* baseName = GetBaseNameNoFree(path);
-    if (baseName == path) // relative directory
+    if (baseName == path) {
+        // relative directory
         return str::Dup(L".");
-    if (baseName == path + 1) // relative root
+    }
+    if (baseName == path + 1) {
+        // relative root
         return str::DupN(path, 1);
-    if (baseName == path + 3 && path[1] == ':') // local drive root
+    }
+    if (baseName == path + 3 && path[1] == ':') {
+        // local drive root
         return str::DupN(path, 3);
-    if (baseName == path + 2 && str::StartsWith(path, L"\\\\")) // server root
+    }
+    if (baseName == path + 2 && str::StartsWith(path, L"\\\\")) {
+        // server root
         return str::Dup(path);
+    }
     // any subdirectory
     return str::DupN(path, baseName - path - 1);
 }
@@ -140,18 +151,24 @@ WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
 WCHAR* Normalize(const WCHAR* path) {
     // convert to absolute path, change slashes into backslashes
     DWORD cch = GetFullPathName(path, 0, nullptr, nullptr);
-    if (!cch)
+    if (!cch) {
         return str::Dup(path);
+    }
+
     AutoFreeWstr fullpath(AllocArray<WCHAR>(cch));
     GetFullPathName(path, cch, fullpath, nullptr);
     // convert to long form
     cch = GetLongPathName(fullpath, nullptr, 0);
-    if (!cch)
+    if (!cch) {
         return fullpath.StealData();
+    }
+
     AutoFreeWstr normpath(AllocArray<WCHAR>(cch));
     GetLongPathName(fullpath, normpath, cch);
-    if (cch <= MAX_PATH)
+    if (cch <= MAX_PATH) {
         return normpath.StealData();
+    }
+
     // handle overlong paths: first, try to shorten the path
     cch = GetShortPathName(fullpath, nullptr, 0);
     if (cch && cch <= MAX_PATH) {
@@ -165,8 +182,9 @@ WCHAR* Normalize(const WCHAR* path) {
         return shortpath.StealData();
     }
     // else mark the path as overlong
-    if (str::StartsWith(normpath.Get(), L"\\\\?\\"))
+    if (str::StartsWith(normpath.Get(), L"\\\\?\\")) {
         return normpath.StealData();
+    }
     return str::Join(L"\\\\?\\", normpath);
 }
 
@@ -175,8 +193,9 @@ WCHAR* Normalize(const WCHAR* path) {
 WCHAR* ShortPath(const WCHAR* path) {
     AutoFreeWstr normpath(Normalize(path));
     DWORD cch = GetShortPathName(normpath, nullptr, 0);
-    if (!cch)
+    if (!cch) {
         return normpath.StealData();
+    }
     WCHAR* shortpath = AllocArray<WCHAR>(cch);
     GetShortPathName(normpath, shortpath, cch);
     return shortpath;
@@ -245,8 +264,9 @@ bool IsSame(const WCHAR* path1, const WCHAR* path2) {
     CloseHandle(h1);
     CloseHandle(h2);
 
-    if (!needFallback)
+    if (!needFallback) {
         return isSame;
+    }
 
     AutoFreeWstr npath1(Normalize(path1));
     AutoFreeWstr npath2(Normalize(path2));
@@ -257,23 +277,32 @@ bool IsSame(const WCHAR* path1, const WCHAR* path2) {
 bool HasVariableDriveLetter(const WCHAR* path) {
     WCHAR root[] = L"?:\\";
     root[0] = towupper(path[0]);
-    if (root[0] < 'A' || 'Z' < root[0])
+    if (root[0] < 'A' || 'Z' < root[0]) {
         return false;
+    }
 
     UINT driveType = GetDriveType(root);
-    return DRIVE_REMOVABLE == driveType || DRIVE_CDROM == driveType || DRIVE_NO_ROOT_DIR == driveType;
+    switch (driveType) {
+        case DRIVE_REMOVABLE:
+        case DRIVE_CDROM:
+        case DRIVE_NO_ROOT_DIR:
+            return true;
+    }
+    return false;
 }
 
 bool IsOnFixedDrive(const WCHAR* path) {
-    if (PathIsNetworkPath(path))
+    if (PathIsNetworkPath(path)) {
         return false;
+    }
 
     UINT type;
     WCHAR root[MAX_PATH];
-    if (GetVolumePathName(path, root, dimof(root)))
+    if (GetVolumePathName(path, root, dimof(root))) {
         type = GetDriveType(root);
-    else
+    } else {
         type = GetDriveType(path);
+    }
     return DRIVE_FIXED == type;
 }
 
@@ -557,19 +586,22 @@ FILETIME GetModificationTime(const WCHAR* filePath) {
 
 bool SetModificationTime(const WCHAR* filePath, FILETIME lastMod) {
     AutoCloseHandle h(CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr));
-    if (INVALID_HANDLE_VALUE == h)
+    if (INVALID_HANDLE_VALUE == h) {
         return false;
+    }
     return SetFileTime(h, nullptr, nullptr, &lastMod);
 }
 
 // return true if a file starts with string s of size len
 bool StartsWithN(const WCHAR* filePath, const char* s, size_t len) {
     AutoFree buf(AllocArray<char>(len));
-    if (!buf)
+    if (!buf) {
         return false;
+    }
 
-    if (!ReadN(filePath, buf, len))
+    if (!ReadN(filePath, buf, len)) {
         return false;
+    }
     return memeq(buf, s, len);
 }
 
@@ -596,32 +628,37 @@ namespace dir {
 
 #if OS_WIN
 bool Exists(const WCHAR* dir) {
-    if (nullptr == dir)
+    if (nullptr == dir) {
         return false;
+    }
 
     WIN32_FILE_ATTRIBUTE_DATA fileInfo;
     BOOL res = GetFileAttributesEx(dir, GetFileExInfoStandard, &fileInfo);
-    if (0 == res)
+    if (0 == res) {
         return false;
+    }
 
-    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
         return true;
+    }
     return false;
 }
 
 // Return true if a directory already exists or has been successfully created
 bool Create(const WCHAR* dir) {
     BOOL ok = CreateDirectoryW(dir, nullptr);
-    if (ok)
+    if (ok) {
         return true;
+    }
     return ERROR_ALREADY_EXISTS == GetLastError();
 }
 
 // creates a directory and all its parent directories that don't exist yet
 bool CreateAll(const WCHAR* dir) {
     AutoFreeWstr parent(path::GetDir(dir));
-    if (!str::Eq(parent, dir) && !Exists(parent))
+    if (!str::Eq(parent, dir) && !Exists(parent)) {
         CreateAll(parent);
+    }
     return Create(dir);
 }
 

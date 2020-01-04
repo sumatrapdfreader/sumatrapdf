@@ -1755,7 +1755,7 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
 
     this->fileName.SetCopy(fileName);
 
-    defaultFileExt = path::GetExt(fileName);
+    defaultFileExt = path::GetExtNoFree(fileName);
 
     doc = TxtDoc::CreateFromFile(fileName);
     if (!doc) {

@@ -202,6 +202,11 @@ WCHAR* ToLowerInPlace(WCHAR* s) {
     return res;
 }
 
+WCHAR* ToLower(const WCHAR* s) {
+    WCHAR* s2 = str::Dup(s);
+    return ToLowerInPlace(s2);
+}
+
 bool BufFmtV(WCHAR* buf, size_t bufCchSize, const WCHAR* fmt, va_list args) {
     int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
     buf[bufCchSize - 1] = 0;

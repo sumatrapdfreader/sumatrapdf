@@ -118,12 +118,14 @@ WCHAR* Synchronizer::PrependDir(const WCHAR* filename) const {
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
 int Synchronizer::Create(const WCHAR* pdffilename, EngineBase* engine, Synchronizer** sync) {
-    if (!sync || !engine)
+    if (!sync || !engine) {
         return PDFSYNCERR_INVALID_ARGUMENT;
+    }
 
-    const WCHAR* fileExt = path::GetExt(pdffilename);
-    if (!str::EqI(fileExt, L".pdf"))
+    const WCHAR* fileExt = path::GetExtNoFree(pdffilename);
+    if (!str::EqI(fileExt, L".pdf")) {
         return PDFSYNCERR_INVALID_ARGUMENT;
+    }
 
     AutoFreeWstr baseName(str::DupN(pdffilename, fileExt - pdffilename));
 
@@ -271,16 +273,19 @@ int Pdfsync::RebuildIndex() {
                 AutoFreeWstr filename(strconv::FromAnsi(line + 1));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
-                if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"')
+                if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"') {
                     filename.Set(str::DupN(filename + 1, str::Len(filename) - 2));
+                }
                 // undecorate the filepath: replace * by space and / by \ (backslash)
                 str::TransChars(filename, L"*/", L" \\");
                 // if the file name extension is not specified then add the suffix '.tex'
-                if (str::IsEmpty(path::GetExt(filename)))
+                if (str::IsEmpty(path::GetExtNoFree(filename))) {
                     filename.Set(str::Join(filename, L".tex"));
+                }
                 // ensure that the path is absolute
-                if (PathIsRelative(filename))
+                if (PathIsRelative(filename)) {
                     filename.Set(PrependDir(filename));
+                }
 
                 filestack.Push(srcfiles.size());
                 srcfiles.Append(filename.StealData());

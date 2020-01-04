@@ -780,7 +780,7 @@ static void RandomizeFiles(WStrVec& files, int maxPerType) {
 
     for (size_t i = 0; i < files.size(); i++) {
         const WCHAR* file = files.at(i);
-        const WCHAR* ext = path::GetExt(file);
+        const WCHAR* ext = path::GetExtNoFree(file);
         CrashAlwaysIf(!ext);
         int typeNo = fileExts.FindI(ext);
         if (-1 == typeNo) {

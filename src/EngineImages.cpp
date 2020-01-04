@@ -602,56 +602,18 @@ EngineBase* ImageEngineImpl::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-bool IsImageEngineSupportedFile(const char* fileName) {
-    const char* ext = path::GetExt(fileName);
-    if (str::Len(ext) == 0) {
-        return false;
-    }
-    if (str::EqI(ext, ".png")) {
-        return true;
-    }
-    if (str::EqI(ext, ".jpg")) {
-        return true;
-    }
-    if (str::EqI(ext, ".jpeg")) {
-        return true;
-    }
-    if (str::EqI(ext, ".gif")) {
-        return true;
-    }
-    if (str::EqI(ext, ".tif")) {
-        return true;
-    }
-    if (str::EqI(ext, ".tiff")) {
-        return true;
-    }
-    if (str::EqI(ext, ".bmp")) {
-        return true;
-    }
-    if (str::EqI(ext, ".tga")) {
-        return true;
-    }
-    if (str::EqI(ext, ".jxr")) {
-        return true;
-    }
-    if (str::EqI(ext, ".hdp")) {
-        return true;
-    }
-    if (str::EqI(ext, ".wdp")) {
-        return true;
-    }
-    if (str::EqI(ext, ".webp")) {
-        return true;
-    }
+static const char* imageExtensions =
+    ".png\0.jpg\0.jpeg\0.gif\0.tif\0.tiff\0.bmp\0.tga\0.jxr\0.hdp\0.wdp\0.webp\0.jp2\0";
 
-    if (str::EqI(ext, ".jp2")) {
-        return true;
-    }
-    return false;
+bool IsImageEngineSupportedFile(const char* fileName) {
+    const char* ext = path::GetExtNoFree(fileName);
+    AutoFree extLower = str::ToLower(ext);
+    int idx = seqstrings::StrToIdx(imageExtensions, extLower);
+    return idx >= 0;
 }
 
 bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    const WCHAR* ext = path::GetExt(fileName);
+    const WCHAR* ext = path::GetExtNoFree(fileName);
     if (sniff) {
         char header[32] = {0};
         file::ReadN(fileName, header, sizeof(header));
@@ -741,8 +703,9 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
 
     do {
         if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            if (IsImageEngineSupportedFile(fdata.cFileName))
+            if (IsImageEngineSupportedFile(fdata.cFileName)) {
                 pageFileNames.Append(path::Join(dirName, fdata.cFileName));
+            }
         }
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
@@ -770,13 +733,13 @@ WCHAR* ImageDirEngineImpl::GetPageLabel(int pageNo) const {
     }
 
     const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(pageNo - 1));
-    return str::DupN(fileName, path::GetExt(fileName) - fileName);
+    return str::DupN(fileName, path::GetExtNoFree(fileName) - fileName);
 }
 
 int ImageDirEngineImpl::GetPageByLabel(const WCHAR* label) const {
     for (size_t i = 0; i < pageFileNames.size(); i++) {
         const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(i));
-        const WCHAR* fileExt = path::GetExt(fileName);
+        const WCHAR* fileExt = path::GetExtNoFree(fileName);
         if (str::StartsWithI(fileName, label) &&
             (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0'))
             return (int)i + 1;
@@ -952,10 +915,10 @@ EngineBase* CbxEngineImpl::Clone() {
 }
 
 bool CbxEngineImpl::LoadFromFile(const WCHAR* file) {
-    if (!file)
+    if (!file) {
         return false;
+    }
     SetFileName(file);
-
     return FinishLoading();
 }
 
@@ -1318,6 +1281,8 @@ EngineBase* CbxEngineImpl::CreateFromStream(IStream* stream) {
     return nullptr;
 }
 
+static const char* cbxExts = ".cbz\0.cbr\0.cb7\0.cbt\0.zip\0.rar\0.7z\0.tar\0";
+
 bool IsCbxEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         // we don't also sniff for ZIP files, as these could also
@@ -1327,11 +1292,13 @@ bool IsCbxEngineSupportedFile(const WCHAR* fileName, bool sniff) {
                file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN) ||
                file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C");
     }
-
-    return str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".cbr") ||
-           str::EndsWithI(fileName, L".cb7") || str::EndsWithI(fileName, L".cbt") ||
-           str::EndsWithI(fileName, L".zip") && !str::EndsWithI(fileName, L".fb2.zip") ||
-           str::EndsWithI(fileName, L".rar") || str::EndsWithI(fileName, L".7z") || str::EndsWithI(fileName, L".tar");
+    if (str::EndsWithI(fileName, L".fb2.zip")) {
+        return false;
+    }
+    const WCHAR* ext = path::GetExtNoFree(fileName);
+    AutoFreeWstr extLower = str::ToLower(ext);
+    int idx = seqstrings::StrToIdx(cbxExts, extLower);
+    return idx >= 0;
 }
 
 EngineBase* CreateCbxEngineFromFile(const WCHAR* fileName) {

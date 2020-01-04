@@ -342,7 +342,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
                 continue;
             }
             appName.SetCopy(path::GetBaseNameNoFree(args.at(0)));
-            *(WCHAR*)path::GetExt(appName) = '\0';
+            *(WCHAR*)path::GetExtNoFree(appName) = '\0';
         }
 
         AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.get() : name));
@@ -676,7 +676,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     // if toolbar is not shown, add option to show it
     if (gGlobalPrefs->showToolbar) {
-        win::menu::Remove(popup, IDM_VIEW_SHOW_HIDE_TOOLBAR);        
+        win::menu::Remove(popup, IDM_VIEW_SHOW_HIDE_TOOLBAR);
     }
 
     POINT pt = {x, y};

@@ -358,6 +358,11 @@ char* ToLowerInPlace(char* s) {
     return res;
 }
 
+char* ToLower(const char* s) {
+    char* s2 = str::Dup(s);
+    return ToLowerInPlace(s2);
+}
+
 // Encode unicode character as utf8 to dst buffer and advance dst pointer.
 // The caller must ensure there is enough free space (4 bytes) in dst
 void Utf8Encode(char*& dst, int c) {
