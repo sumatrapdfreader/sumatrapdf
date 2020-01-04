@@ -224,6 +224,7 @@ static MenuDef menuDefContext[] = {
     {"del",                                 IDM_FAV_DEL,                MF_NO_TRANSLATE   },
     { _TRN("Show &Favorites"),              IDM_FAV_TOGGLE,             0                 },
     { _TRN("Show &Bookmarks\tF12"),         IDM_VIEW_BOOKMARKS,         0                 },
+    { _TRN("Show &Toolbar\tF8"),            IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
@@ -673,6 +674,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         win::menu::Remove(popup, IDM_FAV_DEL);
     }
 
+    // if toolbar is not shown, add option to show it
+    if (gGlobalPrefs->showToolbar) {
+        win::menu::Remove(popup, IDM_VIEW_SHOW_HIDE_TOOLBAR);        
+    }
+
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     MarkMenuOwnerDraw(popup);
@@ -689,6 +695,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case IDM_VIEW_BOOKMARKS:
         case IDM_FAV_TOGGLE:
         case IDM_PROPERTIES:
+        case IDM_VIEW_SHOW_HIDE_TOOLBAR:
             SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
             break;
 

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-000260429102ca484476cf9d356a13f4d3056ebf
+9cfc0dbe773c6de1156691d5b8883652b2071448
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4597,76 +4597,6 @@ tw:書本檢視
 uk:Книжна розгортка
 uz:Kitob ko'rinishi
 vn:Xem dạng sách
-:Book&marks\tF12
-af:Boekmerke\tF12
-am:Էջան&իշեր\tF12
-ar:العلامات\tF12
-az:&Əlfəcinlər\tF12
-bg:&Отметки\tF12
-bn:পৃষ্ঠাস্মারকসমূহ\tF12
-br:Marcadores\tF12
-bs:Zabilješke\tF12
-by:Закладкі\tF12
-ca-xv:&Marcadors\tF12
-ca:&Marcadors\tF12
-cn:书签(&M)...\tF12
-co:&Indette\tF12
-cy:Nodau Tudalen\tF12
-cz:Zál&ožky\tF12
-de:Lese&zeichen\tF12
-dk:Bog&mærker\tF12
-el:&Σελιδοδείκτες\tF12
-es:&Marcadores\tF12
-et:Jär&jehoidjad\tF12
-eu:&Gogokoenak\tF12
-fa:ن&شانک‌ها\tF12
-fi:K&irjanmerkit\tF12
-fr:Signets\tF12
-fy-nl:Blêdwizers\tF12
-ga:Ceanáin\tF12
-gl:&Marcadores\tF12
-he:סימניות\tF12
-hi:संभाले हुए चिह्न\tF12
-hr:Straničnik\tF12
-hu:Könyvjelzők\tF12
-id:&Markah\tF12
-it:Segna&libri\tF12
-ja:ブックマーク(&M)\tF12
-jv:Tandha&buku\F12
-ka:&სანიშნები\tF12
-kr:책갈피(&M)\tF12
-ku:نیشانە&کراوەکان\tF12
-kw:Lyververkyow\tF12
-lt:Žymės\tF12
-lv:Grāmat&zīmes\tF12
-mk:Обележувачи\tF12
-mm:စာမျက်နှာ မှတ်သား\tF12
-my:Penanda\tF12
-ne:पुस्तक&चिनोहरू\tF12
-nl:Bladwijzers\tF12
-nn:Bokmerker\tF12
-no:Bokmerker\tF12
-pa:ਸੰਭਾਲੇ ਹੋਏ ਚਿੰਨ\tF12
-pl:&Zakładki\tF12
-pt:M&arcadores\tF12
-ro:Marcaje\tF12
-ru:&Закладки\tF12
-si:පොත්&සලකුණු\tF12
-sk:Záložky\tF12
-sl:Zazna&mki\tF12
-sn:Mabhukumaki\tF12
-sp-rs:Obeleživači\tF12
-sq:Faqet me &shenjë\tF12
-sr-rs:Обележивачи\tF12
-sv:Bokmärken\tF12
-ta:புத்தகக்குறி
-th:ที่คั่น\tF12
-tl:Mga Pananda\tF12
-tr:&Yer imleri\tF12
-tw:書籤(&M)...\tF12
-uk:Закладки\tF12
-uz:&Xatcho'plar\tF12
-vn:Chỉ dấu sách\tF12
 :Bookmark Shortcuts
 am:Էջանշել պիտակները
 ar:اختصارات قائمة العناوين
@@ -10433,9 +10363,6 @@ tw:前往頁
 uk:Перейти на сторінку
 uz:Betga o'tish
 vn:Nhảy đến trang
-:Hide &Favorites
-es:Ocultar &Favoritos
-fr:Masquer les &favoris
 :Hide &Options
 am:Թաքցնել &ընտրանքները
 ar:إخفاء &الخيارات
@@ -15460,66 +15387,6 @@ tw:設定反向搜尋命令行
 uk:Установити зворотній пошук.
 uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
-:Show &Bookmarks
-am:Ցուցադրել &Էջանիշերը
-ar:اظهار &قوائم العناوين
-az:Ə&lfəcinləri göstər
-bg:Покажи отметките
-br:Mostrar Fa&voritos
-bs:Pokaži &oznake
-by:Паказаць &Закладкі
-ca-xv:Mostra els &marcadors
-ca:Mostra els &marcadors
-cn:显示书签(&B)
-co:Affissà l’indette
-cy:Dangos &Nodau Tudalen
-cz:Zobrazit &záložky
-de:Lese&zeichen anzeigen
-dk:Vis &bogmærker
-el:Εμφάνιση &σελιδοδεικτών
-es:Mostrar &marcadores
-et:Näita &järjehoidjaid
-eu:Erakutsi Laster&markak
-fa:ن&شانک‌ها را نشان بده
-fi:Näytä &Kirjanmerkit
-fr:Voir les &Marque-pages
-ga:Lea&bharmharcanna a taispeáint
-gl:Amosar &marcadores
-he:הצג סימניות
-hi:बुकमार्क दिखाएँ (&B)
-hr:Prikaži &oznake
-hu:Könyvjelzők mutatása
-id:Tampilkan &Markah
-it:Visualizza segnali&bri
-ja:ブックマークを表示(&B)
-ka:&სანიშნეების ჩვენება
-kr:책갈피 보이기(&B)
-ku:پیشنادانی &نیشانەکراوەکان
-lt:Rodyti ž&ymas
-lv:Rādīt &grāmatzīmes
-mk:Прикажи &обележувачи
-my:Papar &Bookmark
-ne:&पुस्तकचिनोहरू देखाउनुहोस्
-nl:Bladwijzers tonen
-nn:Vis &bokmerkar
-no:Vis &bokmerker
-pl:Pokaż &Zakładki
-pt:&Mostrar marcadores
-ro:Arata Se&bnele de Carte
-ru:Показать &закладки
-si:පි&ටුසලකුණු පෙන්වන්න
-sk:Zobraziť &Záložky
-sl:Prikaži &zaznamke
-sp-rs:Prikaži Obeleživače
-sq:Tregoj &faqet me shenjë
-sr-rs:Прикажи обележене
-sv:Visa &Bokmärken
-ta:புத்தகக்குறிகளை காட்டுக
-tr:Göster &Sık Kullanılanlar
-tw:顯示書籤 (&B)
-uk:Показати закладки
-uz:&Xatcho'plarni ko'rsatish
-vn:Hiện chỉ dấu sách
 :Show &Favorites
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
