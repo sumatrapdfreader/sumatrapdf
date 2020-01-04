@@ -347,7 +347,7 @@ static void CreateMainLayout(TocEditorWindow* w) {
     tree->withCheckboxes = true;
     bool ok = tree->Create(L"tree");
     CrashIf(!ok);
-    tree->idealSize = {80, 320};
+    tree->idealSize = {80, 120};
 
     gWindow->treeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
