@@ -47,7 +47,7 @@ bool Exists(const WCHAR* path);
 std::string_view ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
 std::string_view ReadFile(const WCHAR* filePath);
 
-bool ReadN(const WCHAR* path, char* buf, size_t toRead);
+int ReadN(const WCHAR* path, char* buf, size_t toRead);
 bool WriteFile(const WCHAR* path, std::string_view);
 int64_t GetSize(const WCHAR* path);
 bool Delete(const WCHAR* path);

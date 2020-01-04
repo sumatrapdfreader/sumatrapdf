@@ -5,6 +5,21 @@
 #define COL_CLOSE_X_HOVER RGB(0xf9, 0xeb, 0xeb)  // white-ish
 #define COL_CLOSE_HOVER_BG RGB(0xC1, 0x35, 0x35) // red-ish
 
+enum class ImgFormat {
+    Unknown,
+    BMP,
+    GIF,
+    JPEG,
+    JXR,
+    PNG,
+    TGA,
+    TIFF,
+    WebP,
+    JP2,
+};
+
+ImgFormat GfxFormatFromData(const char* data, size_t len);
+
 typedef Gdiplus::RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
 
 Gdiplus::RectF MeasureTextAccurate(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);

@@ -268,41 +268,38 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-enum class ImgFormat {
-    Unknown,
-    BMP,
-    GIF,
-    JPEG,
-    JXR,
-    PNG,
-    TGA,
-    TIFF,
-    WebP,
-    JP2,
-};
-
-static ImgFormat GfxFormatFromData(const char* data, size_t len) {
-    if (!data || len < 12)
+ImgFormat GfxFormatFromData(const char* data, size_t len) {
+    if (!data || len < 12) {
         return ImgFormat::Unknown;
+    }
     // check the most common formats first
-    if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A"))
+    if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
         return ImgFormat::PNG;
-    if (str::StartsWith(data, "\xFF\xD8"))
+    }
+    if (str::StartsWith(data, "\xFF\xD8")) {
         return ImgFormat::JPEG;
-    if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a"))
+    }
+    if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a")) {
         return ImgFormat::GIF;
-    if (str::StartsWith(data, "BM"))
+    }
+    if (str::StartsWith(data, "BM")) {
         return ImgFormat::BMP;
-    if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4))
+    }
+    if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4)) {
         return ImgFormat::TIFF;
-    if (tga::HasSignature(data, len))
+    }
+    if (tga::HasSignature(data, len)) {
         return ImgFormat::TGA;
-    if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4))
+    }
+    if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4)) {
         return ImgFormat::JXR;
-    if (webp::HasSignature(data, len))
+    }
+    if (webp::HasSignature(data, len)) {
         return ImgFormat::WebP;
-    if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12))
+    }
+    if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
         return ImgFormat::JP2;
+    }
     return ImgFormat::Unknown;
 }
 

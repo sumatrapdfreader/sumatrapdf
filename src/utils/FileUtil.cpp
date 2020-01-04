@@ -540,15 +540,20 @@ std::string_view ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) 
 }
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)
-bool ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
+// returns -1 for error
+int ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
     AutoCloseHandle h(OpenReadOnly(filePath));
     if (h == INVALID_HANDLE_VALUE) {
         return false;
     }
 
+    ZeroMemory(buf, toRead);
     DWORD nRead = 0;
-    BOOL ok = ReadFile(h, buf, (DWORD)toRead, &nRead, nullptr);
-    return ok && nRead == toRead;
+    BOOL ok = ReadFile(h, (void*)buf, (DWORD)toRead, &nRead, nullptr);
+    if (!ok) {
+        return -1;
+    }
+    return (int)nRead;
 }
 
 bool WriteFile(const WCHAR* filePath, std::string_view d) {
@@ -599,7 +604,7 @@ bool StartsWithN(const WCHAR* filePath, const char* s, size_t len) {
         return false;
     }
 
-    if (!ReadN(filePath, buf, len)) {
+    if (!ReadN(filePath, buf.get(), len)) {
         return false;
     }
     return memeq(buf, s, len);

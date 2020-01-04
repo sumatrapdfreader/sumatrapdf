@@ -99,15 +99,16 @@ class ScopedFile {
 
 static RectI ExtractDSCPageSize(const WCHAR* fileName) {
     char header[1024] = {0};
-    file::ReadN(fileName, header, sizeof(header) - 1);
-    if (!str::StartsWith(header, "%!PS-Adobe-"))
+    int n = file::ReadN(fileName, header, sizeof(header) - 1);
+    if (!str::StartsWith((char*)header, "%!PS-Adobe-")) {
         return RectI();
+    }
 
     // PostScript creators are supposed to set the page size
     // e.g. through a setpagedevice call in PostScript code,
     // some creators however fail to do so and only indicate
     // the page size in a DSC BoundingBox comment.
-    char* nl = header;
+    char* nl = (char*)header;
     geomutil::RectT<float> bbox;
     while ((nl = strchr(nl + 1, '\n')) != nullptr && '%' == nl[1]) {
         if (str::StartsWith(nl + 1, "%%BoundingBox:") &&
@@ -376,7 +377,7 @@ bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     }
 
     if (sniff) {
-        char header[2048] = {0};
+        char header[2048];
         file::ReadN(fileName, header, sizeof(header) - 1);
         if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
             // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
@@ -385,7 +386,7 @@ bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
         }
         return str::StartsWith(header, "%!") ||
                // also sniff PJL (Printer Job Language) files containing Postscript data
-               str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
+               str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find((char*)header, "\n%!PS-Adobe-");
     }
 
     return str::EndsWithI(fileName, L".ps") || str::EndsWithI(fileName, L".ps.gz") || str::EndsWithI(fileName, L".eps");

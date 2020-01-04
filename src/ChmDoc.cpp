@@ -277,8 +277,10 @@ bool ChmDoc::Load(const WCHAR* fileName) {
 
     UINT fileCodepage = codepage;
     char header[24] = {0};
-    if (file::ReadN(fileName, header, sizeof(header))) {
-        DWORD lcid = ByteReader(header, sizeof(header)).DWordLE(20);
+    int n = file::ReadN(fileName, header, sizeof(header));
+    if (n < (int)sizeof(header)) {
+        ByteReader r(header, sizeof(header));
+        DWORD lcid = r.DWordLE(20);
         fileCodepage = LcidToCodepage(lcid);
     }
     if (!codepage) {
