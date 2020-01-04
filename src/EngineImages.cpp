@@ -912,8 +912,9 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     void ParseComicInfoXml(const char* xmlData);
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
-    MultiFormatArchive* cbxFile;
+    MultiFormatArchive* cbxFile = nullptr;
     Vec<MultiFormatArchive::FileInfo*> files;
+    DocTocTree* tocTree = nullptr;
 
     // extracted metadata
     AutoFreeWstr propTitle;
@@ -932,6 +933,7 @@ CbxEngineImpl::CbxEngineImpl(MultiFormatArchive* arch) {
 }
 
 CbxEngineImpl::~CbxEngineImpl() {
+    delete tocTree;
     delete cbxFile;
 }
 
@@ -1028,11 +1030,29 @@ bool CbxEngineImpl::FinishLoading() {
     mediaboxes.AppendBlanks(nFiles);
     files = std::move(pageFiles);
     pageCount = (int)nFiles;
+
+    DocTocItem* root = nullptr;
+    DocTocItem* curr = nullptr;
+    for (int i = 0; i < pageCount; i++) {
+        std::string_view fname = pageFiles[i]->name;
+        AutoFreeWstr name = strconv::Utf8ToWstr(fname);
+        const WCHAR* baseName = path::GetBaseNameNoFree(name.get());
+        DocTocItem* ti = new DocTocItem(nullptr, baseName, i + 1);
+        if (root == nullptr) {
+            root = ti;
+            curr = ti;
+        } else {
+            curr->next = ti;
+            curr = ti;
+        }
+    }
+    tocTree = new DocTocTree(root);
+    tocTree->filePath = strconv::WstrToUtf8(FileName());
     return true;
 }
 
 DocTocTree* CbxEngineImpl::GetTocTree() {
-    return nullptr;
+    return tocTree;
 }
 
 std::string_view CbxEngineImpl::GetImageData(int pageNo) {
@@ -1044,8 +1064,9 @@ std::string_view CbxEngineImpl::GetImageData(int pageNo) {
 
 static char* GetTextContent(HtmlPullParser& parser) {
     HtmlToken* tok = parser.Next();
-    if (!tok || !tok->IsText())
+    if (!tok || !tok->IsText()) {
         return nullptr;
+    }
     return ResolveHtmlEntities(tok->s, tok->sLen);
 }
 

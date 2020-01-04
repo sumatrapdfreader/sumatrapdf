@@ -386,5 +386,3 @@ RenderedBitmap* EngineBase::GetImageForPageElement(PageElement*) {
 void EngineBase::SetFileName(const WCHAR* s) {
     fileName.SetCopy(s);
 }
-
-// EngineBase::

@@ -264,6 +264,16 @@ class AbortCookie {
     virtual void Abort() = 0;
 };
 
+// TODO: use this for RenderBitmap() call
+struct RenderBitmapArgs {
+    int pageNo = 0;
+    float zoom = 0;
+    int rotation = 0;
+    RectD* pageRect = nullptr;
+    RenderTarget target = RenderTarget::View;
+    AbortCookie** cookie = nullptr;
+};
+
 class EngineBase {
   public:
     Kind kind = nullptr;
@@ -323,6 +333,7 @@ class EngineBase {
     virtual WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) = 0;
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
+
     // the layout type this document's author suggests (if the user doesn't care)
     // whether the content should be displayed as images instead of as document pages
     // (e.g. with a black background and less padding in between and without search UI)

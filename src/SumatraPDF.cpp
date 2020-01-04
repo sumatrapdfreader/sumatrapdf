@@ -32,6 +32,7 @@
 #include "EngineBase.h"
 #include "EnginePs.h"
 #include "EngineManager.h"
+#include "EngineImages.h"
 #include "Doc.h"
 #include "FileModifications.h"
 #include "PdfCreator.h"
@@ -836,7 +837,7 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
         return;
     }
 
-    AssertCrash(win->ctrl && win->ctrl->PageCount() > 0);
+    CrashIf(!win->ctrl || win->ctrl->PageCount() <= 0);
     if (!win->ctrl || win->ctrl->PageCount() == 0) {
         return;
     }
@@ -925,8 +926,10 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
 
 static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
     const WCHAR* titlePath = tab->filePath;
-    if (!gGlobalPrefs->fullPathInTitle)
+    if (!gGlobalPrefs->fullPathInTitle) {
         titlePath = path::GetBaseNameNoFree(titlePath);
+    }
+
     AutoFreeWstr docTitle(str::Dup(L""));
     if (tab->ctrl) {
         WCHAR* title = tab->ctrl->GetProperty(DocumentProperty::Title);
@@ -953,8 +956,9 @@ static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
 
 static void UpdateUiForCurrentTab(WindowInfo* win) {
     // hide the scrollbars before any other relayouting (for assertion in WindowInfo::GetViewPortSize)
-    if (!win->AsFixed())
+    if (!win->AsFixed()) {
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+    }
 
     // menu for chm and ebook docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
@@ -978,6 +982,15 @@ static void UpdateUiForCurrentTab(WindowInfo* win) {
     ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, onlyNumbers);
 }
 
+static bool showTocByDefault(const WCHAR* filePath) {
+    if (!gGlobalPrefs->showToc) {
+        return false;
+    }
+    // we don't want to show toc by default for comic book files
+    bool showByDefault = !IsCbxEngineSupportedFile(filePath);
+    return showByDefault;
+}
+
 // meaning of the internal values of LoadArgs:
 // isNewWindow : if true then 'win' refers to a newly created window that needs
 //   to be resized and placed
@@ -994,8 +1007,9 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     if (!state && gGlobalPrefs->rememberStatePerDocument) {
         state = gFileHistory.Find(args.fileName, nullptr);
         if (state) {
-            if (state->windowPos.IsEmpty())
+            if (state->windowPos.IsEmpty()) {
                 state->windowPos = gGlobalPrefs->windowPos;
+            }
             EnsureAreaVisibility(state->windowPos);
         }
     }
@@ -1007,25 +1021,28 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     ScrollState ss(1, -1, -1);
     int rotation = 0;
-    bool showToc = gGlobalPrefs->showToc;
+    bool showToc = showTocByDefault(args.fileName);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState;
     int showType = SW_NORMAL;
-    if (gGlobalPrefs->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
+    if (gGlobalPrefs->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {
         showType = SW_MAXIMIZE;
+    }
 
     if (state) {
         ss.page = state->pageNo;
         displayMode = prefs::conv::ToDisplayMode(state->displayMode, DM_AUTOMATIC);
         showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
-        if (state->windowState == WIN_STATE_NORMAL)
+        if (state->windowState == WIN_STATE_NORMAL) {
             showType = SW_NORMAL;
-        else if (state->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
+        } else if (state->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen) {
             showType = SW_MAXIMIZE;
-        else if (state->windowState == WIN_STATE_MINIMIZED)
+        } else if (state->windowState == WIN_STATE_MINIMIZED) {
             showType = SW_MINIMIZE;
+        }
         showToc = state->showToc;
-        if (win->ctrl && win->presentation)
+        if (win->ctrl && win->presentation) {
             showToc = tab->showTocPresentation;
+        }
     }
 
     AbortFinding(args.win, false);
@@ -1041,7 +1058,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
 
-    AssertCrash(!win->IsAboutWindow() && win->IsDocLoaded() == (win->ctrl != nullptr));
+    CrashIf(win->IsAboutWindow() || win->IsDocLoaded() != (win->ctrl != nullptr));
     // TODO: https://code.google.com/p/sumatrapdf/issues/detail?id=1570
     if (win->ctrl) {
         if (win->AsFixed()) {
@@ -1148,7 +1165,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     // if the window isn't shown and win.canvasRc is still empty, zoom
     // has not been determined yet
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
-    // AssertCrash(!win->IsDocLoaded() || !args.showWin || !win->canvasRc.IsEmpty() || win->AsChm());
+    // CrashIf(win->IsDocLoaded() && args.showWin && win->canvasRc.IsEmpty() && !win->AsChm());
 
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
     // restore scroll state after the canvas size has been restored
@@ -1338,7 +1355,7 @@ static WindowInfo* CreateWindowInfo() {
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
 
-    AssertCrash(!win->menu);
+    CrashIf(win->menu);
     win->menu = BuildMenu(win);
     win->isMenuHidden = !gGlobalPrefs->showMenubar;
     if (!win->isMenuHidden) {
@@ -2930,19 +2947,22 @@ static void OnMenuOpen(WindowInfo* win) {
 }
 
 static void BrowseFolder(WindowInfo* win, bool forward) {
-    AssertCrash(!win->IsAboutWindow());
-    if (win->IsAboutWindow())
+    CrashIf(win->IsAboutWindow());
+    if (win->IsAboutWindow()) {
         return;
-    if (!HasPermission(Perm_DiskAccess) || gPluginMode)
+    }
+    if (!HasPermission(Perm_DiskAccess) || gPluginMode) {
         return;
+    }
 
     TabInfo* tab = win->currentTab;
     WStrVec files;
     AutoFreeWstr pattern(path::GetDir(tab->filePath));
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
     pattern.Set(path::Join(pattern, L"*"));
-    if (!CollectPathsFromDirectory(pattern, files))
+    if (!CollectPathsFromDirectory(pattern, files)) {
         return;
+    }
 
     // remove unsupported files that have never been successfully loaded
     for (size_t i = files.size(); i > 0; i--) {
@@ -2952,15 +2972,17 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
         }
     }
 
-    if (!files.Contains(tab->filePath))
+    if (!files.Contains(tab->filePath)) {
         files.Append(str::Dup(tab->filePath));
+    }
     files.SortNatural();
 
     int index = files.Find(tab->filePath);
-    if (forward)
+    if (forward) {
         index = (index + 1) % files.size();
-    else
+    } else {
         index = (int)(index + files.size() - 1) % files.size();
+    }
 
     // TODO: check for unsaved modifications
     UpdateTabFileDisplayStateForWin(win, tab);
@@ -3130,8 +3152,9 @@ void RelayoutWindow(WindowInfo* win) {
 }
 
 void SetCurrentLanguageAndRefreshUI(const char* langCode) {
-    if (!langCode || str::Eq(langCode, trans::GetCurrentLangCode()))
+    if (!langCode || str::Eq(langCode, trans::GetCurrentLangCode())) {
         return;
+    }
     SetCurrentLang(langCode);
 
     for (WindowInfo* win : gWindows) {
@@ -3236,8 +3259,9 @@ static void OnMenuViewMangaMode(WindowInfo* win) {
 }
 
 static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuously) {
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     float zoom = win->ctrl->GetZoomVirtual();
     DisplayMode mode = win->ctrl->GetDisplayMode();
@@ -3247,17 +3271,17 @@ static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuous
         float prevZoom = win->currentTab->prevZoomVirtual;
         DisplayMode prevMode = win->currentTab->prevDisplayMode;
 
-        if (mode != newMode)
+        if (mode != newMode) {
             SwitchToDisplayMode(win, newMode);
+        }
         OnMenuZoom(win, MenuIdFromVirtualZoom(newZoom));
 
         // remember the previous values for when the toolbar button is unchecked
         if (INVALID_ZOOM == prevZoom) {
             win->currentTab->prevZoomVirtual = zoom;
             win->currentTab->prevDisplayMode = mode;
-        }
-        // keep the rememberd values when toggling between the two toolbar buttons
-        else {
+        } else {
+            // keep the rememberd values when toggling between the two toolbar buttons
             win->currentTab->prevZoomVirtual = prevZoom;
             win->currentTab->prevDisplayMode = prevMode;
         }
@@ -3309,16 +3333,18 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
         return;
     }
 
-    AssertCrash(presentation ? !win->isFullScreen : !win->presentation);
+    CrashIf(presentation ? win->isFullScreen : win->presentation);
     if (presentation) {
-        AssertCrash(win->ctrl);
-        if (!win->IsDocLoaded())
+        CrashIf(!win->ctrl);
+        if (!win->IsDocLoaded()) {
             return;
+        }
 
-        if (IsZoomed(win->hwndFrame))
+        if (IsZoomed(win->hwndFrame)) {
             win->windowStateBeforePresentation = WIN_STATE_MAXIMIZED;
-        else
+        } else {
             win->windowStateBeforePresentation = WIN_STATE_NORMAL;
+        }
         win->presentation = PM_ENABLED;
 
         SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, nullptr);
@@ -3349,8 +3375,8 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
     ShowWindow(win->hwndCaption, SW_HIDE);
 
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
-    SetWindowPos(win->hwndFrame, nullptr, rect.x, rect.y, rect.dx, rect.dy,
-                 SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER);
+    UINT flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
+    SetWindowPos(win->hwndFrame, nullptr, rect.x, rect.y, rect.dx, rect.dy, flags);
 
     if (presentation) {
         win->ctrl->SetPresentationMode(true);
