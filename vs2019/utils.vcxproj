@@ -605,6 +605,7 @@
     <ClInclude Include="..\src\utils\Dict.h" />
     <ClInclude Include="..\src\utils\DirIter.h" />
     <ClInclude Include="..\src\utils\Dpi.h" />
+    <ClInclude Include="..\src\utils\FileTypeSniff.h" />
     <ClInclude Include="..\src\utils\FileUtil.h" />
     <ClInclude Include="..\src\utils\FileWatcher.h" />
     <ClInclude Include="..\src\utils\FzImgReader.h" />
@@ -670,6 +671,7 @@
     <ClCompile Include="..\src\utils\Dict.cpp" />
     <ClCompile Include="..\src\utils\DirIter.cpp" />
     <ClCompile Include="..\src\utils\Dpi.cpp" />
+    <ClCompile Include="..\src\utils\FileTypeSniff.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
     <ClCompile Include="..\src\utils\FileWatcher.cpp" />
     <ClCompile Include="..\src\utils\FzImgReader.cpp" />
