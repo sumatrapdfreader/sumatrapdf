@@ -303,3 +303,88 @@ TreeItem* DocTocTree::RootAt(int n) {
     }
     return node;
 }
+
+EngineBase::~EngineBase() {
+    free(decryptionKey);
+}
+
+int EngineBase::PageCount() const {
+    CrashIf(pageCount < 0);
+    return pageCount;
+}
+
+RectD EngineBase::PageContentBox(int pageNo, RenderTarget target) {
+    UNUSED(target);
+    return PageMediabox(pageNo);
+}
+
+bool EngineBase::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots) {
+    UNUSED(pdfFileName);
+    UNUSED(includeUserAnnots);
+    return false;
+}
+
+bool EngineBase::IsImageCollection() const {
+    return isImageCollection;
+}
+
+bool EngineBase::AllowsPrinting() const {
+    return allowsPrinting;
+}
+
+bool EngineBase::AllowsCopyingText() const {
+    return allowsCopyingText;
+}
+
+float EngineBase::GetFileDPI() const {
+    return fileDPI;
+}
+
+PageDestination* EngineBase::GetNamedDest(const WCHAR* name) {
+    UNUSED(name);
+    return nullptr;
+}
+
+bool EngineBase::HasTocTree() {
+    DocTocTree* tree = GetTocTree();
+    return tree != nullptr;
+}
+
+DocTocTree* EngineBase::GetTocTree() {
+    return nullptr;
+}
+
+bool EngineBase::HasPageLabels() const {
+    return hasPageLabels;
+}
+
+WCHAR* EngineBase::GetPageLabel(int pageNo) const {
+    return str::Format(L"%d", pageNo);
+}
+
+int EngineBase::GetPageByLabel(const WCHAR* label) const {
+    return _wtoi(label);
+}
+
+bool EngineBase::IsPasswordProtected() const {
+    return isPasswordProtected;
+}
+
+char* EngineBase::GetDecryptionKey() const {
+    return str::Dup(decryptionKey);
+}
+
+const WCHAR* EngineBase::FileName() const {
+    return fileName.Get();
+}
+
+RenderedBitmap* EngineBase::GetImageForPageElement(PageElement*) {
+    CrashMe();
+    return nullptr;
+}
+
+void EngineBase::SetFileName(const WCHAR* s) {
+    fileName.SetCopy(s);
+}
+
+// EngineBase::

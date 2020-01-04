@@ -881,32 +881,18 @@ EngineBase* CreateImageDirEngineFromFile(const WCHAR* fileName) {
 
 class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
   public:
-    CbxEngineImpl(MultiFormatArchive* arch) : cbxFile(arch) {
-        kind = kindEngineComicBooks;
-    }
-    virtual ~CbxEngineImpl() {
-        delete cbxFile;
-    }
+    CbxEngineImpl(MultiFormatArchive* arch);
+    ~CbxEngineImpl() override;
 
-    virtual EngineBase* Clone() override {
-        if (fileStream) {
-            ScopedComPtr<IStream> stm;
-            HRESULT res = fileStream->Clone(&stm);
-            if (SUCCEEDED(res)) {
-                return CreateFromStream(stm);
-            }
-        }
-        if (FileName()) {
-            return CreateFromFile(FileName());
-        }
-        return nullptr;
-    }
+    EngineBase* Clone() override;
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
     const WCHAR* GetDefaultFileExt() const;
+
+    DocTocTree* GetTocTree() override;
 
     // json::ValueVisitor
     bool Visit(const char* path, const char* value, json::DataType type) override;
@@ -939,6 +925,29 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     // temporary state needed for extracting metadata
     AutoFreeWstr propAuthorTmp;
 };
+
+CbxEngineImpl::CbxEngineImpl(MultiFormatArchive* arch) {
+    cbxFile = arch;
+    kind = kindEngineComicBooks;
+}
+
+CbxEngineImpl::~CbxEngineImpl() {
+    delete cbxFile;
+}
+
+EngineBase* CbxEngineImpl::Clone() {
+    if (fileStream) {
+        ScopedComPtr<IStream> stm;
+        HRESULT res = fileStream->Clone(&stm);
+        if (SUCCEEDED(res)) {
+            return CreateFromStream(stm);
+        }
+    }
+    if (FileName()) {
+        return CreateFromFile(FileName());
+    }
+    return nullptr;
+}
 
 bool CbxEngineImpl::LoadFromFile(const WCHAR* file) {
     if (!file)
@@ -1020,6 +1029,10 @@ bool CbxEngineImpl::FinishLoading() {
     files = std::move(pageFiles);
     pageCount = (int)nFiles;
     return true;
+}
+
+DocTocTree* CbxEngineImpl::GetTocTree() {
+    return nullptr;
 }
 
 std::string_view CbxEngineImpl::GetImageData(int pageNo) {

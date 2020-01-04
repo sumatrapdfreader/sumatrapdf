@@ -280,26 +280,18 @@ class EngineBase {
     bool hasPageLabels = false;
     int pageCount = -1;
 
-    virtual ~EngineBase() {
-        free(decryptionKey);
-    }
+    virtual ~EngineBase();
     // creates a clone of this engine (e.g. for printing on a different thread)
     virtual EngineBase* Clone() = 0;
 
     // number of pages the loaded document contains
-    int PageCount() const {
-        CrashIf(pageCount < 0);
-        return pageCount;
-    }
+    int PageCount() const;
 
     // the box containing the visible page content (usually RectD(0, 0, pageWidth, pageHeight))
     virtual RectD PageMediabox(int pageNo) = 0;
     // the box inside PageMediabox that actually contains any relevant content
     // (used for auto-cropping in Fit Content mode, can be PageMediabox)
-    virtual RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) {
-        UNUSED(target);
-        return PageMediabox(pageNo);
-    }
+    virtual RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View);
 
     // renders a page into a cacheable RenderedBitmap
     // (*cookie_out must be deleted after the call returns)
@@ -323,11 +315,8 @@ class EngineBase {
     virtual bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) = 0;
     // converts the current file to a PDF file and saves it (overwriting an existing file),
     // (includeUserAnnots should always have an effect)
-    virtual bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) {
-        UNUSED(pdfFileName);
-        UNUSED(includeUserAnnots);
-        return false;
-    }
+    virtual bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false);
+
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
     // caller needs to free() the result and *coordsOut (if coordsOut is non-nullptr)
@@ -337,9 +326,7 @@ class EngineBase {
     // the layout type this document's author suggests (if the user doesn't care)
     // whether the content should be displayed as images instead of as document pages
     // (e.g. with a black background and less padding in between and without search UI)
-    bool IsImageCollection() const {
-        return isImageCollection;
-    }
+    bool IsImageCollection() const;
 
     // access to various document properties (such as Author, Title, etc.)
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
@@ -354,19 +341,14 @@ class EngineBase {
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document
-    bool AllowsPrinting() const {
-        return allowsPrinting;
-    }
+    bool AllowsPrinting() const;
+
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)
-    bool AllowsCopyingText() const {
-        return allowsCopyingText;
-    }
+    bool AllowsCopyingText() const;
 
     // the DPI for a file is needed when converting internal measures to physical ones
-    float GetFileDPI() const {
-        return fileDPI;
-    }
+    float GetFileDPI() const;
 
     // returns a list of all available elements for this page
     // caller must delete the result (including all elements contained in the Vec)
@@ -377,65 +359,45 @@ class EngineBase {
 
     // creates a PageDestination from a name (or nullptr for invalid names)
     // caller must delete the result
-    virtual PageDestination* GetNamedDest(const WCHAR* name) {
-        UNUSED(name);
-        return nullptr;
-    }
+    virtual PageDestination* GetNamedDest(const WCHAR* name);
+
     // checks whether this document has an associated Table of Contents
-    bool HasTocTree() {
-        DocTocTree* tree = GetTocTree();
-        return tree != nullptr;
-    }
+    bool HasTocTree();
+
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
-    virtual DocTocTree* GetTocTree() {
-        return nullptr;
-    }
+    virtual DocTocTree* GetTocTree();
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering
-    bool HasPageLabels() const {
-        return hasPageLabels;
-    }
+    bool HasPageLabels() const;
+
     // returns a label to be displayed instead of the page number
     // caller must free() the result
-    virtual WCHAR* GetPageLabel(int pageNo) const {
-        return str::Format(L"%d", pageNo);
-    }
+    virtual WCHAR* GetPageLabel(int pageNo) const;
+
     // reverts GetPageLabel by returning the first page number having the given label
-    virtual int GetPageByLabel(const WCHAR* label) const {
-        return _wtoi(label);
-    }
+    virtual int GetPageByLabel(const WCHAR* label) const;
 
     // whether this document required a password in order to be loaded
-    bool IsPasswordProtected() const {
-        return isPasswordProtected;
-    }
+    bool IsPasswordProtected() const;
+
     // returns a string to remember when the user wants to save a document's password
     // (don't implement for document types that don't support password protection)
     // caller must free() the result
-    char* GetDecryptionKey() const {
-        return str::Dup(decryptionKey);
-    }
+    char* GetDecryptionKey() const;
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
 
     // the name of the file this engine handles
-    const WCHAR* FileName() const {
-        return fileName.Get();
-    }
+    const WCHAR* FileName() const;
 
-    virtual RenderedBitmap* GetImageForPageElement(PageElement*) {
-        CrashMe();
-        return nullptr;
-    }
+    virtual RenderedBitmap* GetImageForPageElement(PageElement*);
 
   protected:
-    void SetFileName(const WCHAR* s) {
-        fileName.SetCopy(s);
-    }
+    void SetFileName(const WCHAR* s);
 
     AutoFreeWstr fileName;
 };
