@@ -161,7 +161,7 @@ void VecTest() {
         v.RemoveAt(2, 3);
         utassert(v.size() == 3);
         utassert(str::Eq("bop", v.LendData()));
-        v.Append('a');
+        v.AppendChar('a');
         utassert(v.size() == 4);
         utassert(str::Eq("bopa", v.LendData()));
         char* s = v.StealData();
@@ -176,7 +176,7 @@ void VecTest() {
             utassert(v.size() == i * 6);
             v.Append("lambd", 5);
             if (i % 2 == 0)
-                v.Append('a');
+                v.AppendChar('a');
             else
                 v.Push('a');
         }
