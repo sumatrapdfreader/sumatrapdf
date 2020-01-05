@@ -230,6 +230,8 @@ class DocTocItem : public TreeItem {
     TreeItem* ChildAt(int n) override;
     bool IsExpanded() override;
     bool IsChecked() override;
+
+    bool PageNumbersMatch() const;
 };
 
 DocTocItem* CloneDocTocItemRecur(DocTocItem*);

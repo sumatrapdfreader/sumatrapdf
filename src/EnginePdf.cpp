@@ -884,6 +884,8 @@ DocTocItem* PdfEngineImpl::BuildTocTree(DocTocItem* parent, fz_outline* outline,
         item->id = ++idCounter;
         item->fontFlags = outline->flags;
         item->pageNo = pageNo;
+        CrashIf(!item->PageNumbersMatch());
+
         if (outline->has_color) {
             item->color = FromPdfColorRgba(outline->color);
         }

@@ -5,6 +5,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
 
@@ -275,6 +276,17 @@ bool DocTocItem::IsExpanded() {
 
 bool DocTocItem::IsChecked() {
     return !isUnchecked;
+}
+
+bool DocTocItem::PageNumbersMatch() const {
+    if (!dest || dest->pageNo == 0) {
+        return true;
+    }
+    if (pageNo != dest->pageNo) {
+        logf("pageNo: %d, dest->pageNo: %d\n", pageNo, dest->pageNo);
+        return false;
+    }
+    return true;
 }
 
 DocTocTree::DocTocTree(DocTocItem* root) {

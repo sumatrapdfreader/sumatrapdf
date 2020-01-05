@@ -86,15 +86,9 @@ static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
         if (node->isUnchecked) {
             s.AppendFmt("  unchecked");
         }
-        PageDestination* dest = node->GetPageDestination();
-        if (dest) {
-            int pageNo = dest->GetPageNo();
-            if (pageNo != node->pageNo) {
-                logf("pageNo: %d, node->pageNo: %d\n", pageNo, node->pageNo);
-            }
-            CrashIf(node->pageNo != pageNo);
-            SerializeDest(dest, s);
-        }
+
+        CrashIf(!node->PageNumbersMatch());
+        SerializeDest(node->GetPageDestination(), s);
         s.Append("\n");
 
         SerializeBookmarksRec(node->child, level + 1, s);
