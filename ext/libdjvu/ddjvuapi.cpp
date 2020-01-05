@@ -167,7 +167,7 @@ struct DJVUNS ddjvu_job_s : public DjVuPort
   bool released;
   ddjvu_job_s();
   // virtual port functions:
-  virtual bool inherits(const GUTF8String&);
+  virtual bool inherits(const GUTF8String&) const;
   virtual bool notify_error(const DjVuPort*, const GUTF8String&);  
   virtual bool notify_status(const DjVuPort*, const GUTF8String&);
   // default implementation of virtual job functions:
@@ -192,7 +192,7 @@ struct DJVUNS ddjvu_document_s : public ddjvu_job_s
   virtual ddjvu_status_t status();
   virtual void release();
   // virtual port functions:
-  virtual bool inherits(const GUTF8String&);
+  virtual bool inherits(const GUTF8String&) const;
   virtual bool notify_error(const DjVuPort*, const GUTF8String&);  
   virtual bool notify_status(const DjVuPort*, const GUTF8String&);
   virtual void notify_doc_flags_changed(const DjVuDocument*, long, long);
@@ -211,7 +211,7 @@ struct DJVUNS ddjvu_page_s : public ddjvu_job_s
   virtual ddjvu_status_t status();
   virtual void release();
   // virtual port functions:
-  virtual bool inherits(const GUTF8String&);
+  virtual bool inherits(const GUTF8String&) const;
   virtual bool notify_error(const DjVuPort*, const GUTF8String&);  
   virtual bool notify_status(const DjVuPort*, const GUTF8String&);
   virtual void notify_file_flags_changed(const DjVuFile*, long, long);
@@ -580,7 +580,7 @@ ddjvu_job_s::ddjvu_job_s()
 }
 
 bool
-ddjvu_job_s::inherits(const GUTF8String &classname)
+ddjvu_job_s::inherits(const GUTF8String &classname) const
 {
   return (classname == "ddjvu_job_s") 
     || DjVuPort::inherits(classname);
@@ -810,7 +810,7 @@ ddjvu_document_s::status()
 }
 
 bool
-ddjvu_document_s::inherits(const GUTF8String &classname)
+ddjvu_document_s::inherits(const GUTF8String &classname) const
 {
   return (classname == "ddjvu_document_s")
     || ddjvu_job_s::inherits(classname);
@@ -1617,6 +1617,12 @@ ddjvu_page_create(ddjvu_document_t *document, ddjvu_job_t *job,
         p->img = doc->get_page(GNativeString(pageid), false, job);
       else
         p->img = doc->get_page(pageno, false, job);
+      // synthetize msgs for pages found in the cache
+      ddjvu_status_t status = p->status();
+      if (status == DDJVU_JOB_OK)
+        p->notify_redisplay(p->img);
+      if (status >= DDJVU_JOB_OK)
+        p->notify_file_flags_changed(p->img->get_djvu_file(), 0, 0);
     }
   G_CATCH(ex)
     {
@@ -1678,7 +1684,7 @@ ddjvu_page_s::status()
 }
 
 bool
-ddjvu_page_s::inherits(const GUTF8String &classname)
+ddjvu_page_s::inherits(const GUTF8String &classname) const
 {
   return (classname == "ddjvu_page_s")
     || ddjvu_job_s::inherits(classname);
@@ -2167,6 +2173,7 @@ ddjvu_format_create(ddjvu_format_style_t style,
     case DDJVU_FORMAT_MSBTOLSB:
       if (!nargs) 
         break;
+      /* FALLTHRU */
     default:
       return fmt_error(fmt);
     }
@@ -2692,7 +2699,7 @@ struct DJVUNS ddjvu_runnablejob_s : public ddjvu_job_s
   // thread function
   virtual ddjvu_status_t run() = 0;
   // virtual port functions:
-  virtual bool inherits(const GUTF8String&);
+  virtual bool inherits(const GUTF8String&) const;
   virtual ddjvu_status_t status();
   virtual void stop();
 private:
@@ -2773,7 +2780,7 @@ ddjvu_runnablejob_s::cbstart(void *arg)
 }
 
 bool 
-ddjvu_runnablejob_s::inherits(const GUTF8String &classname)
+ddjvu_runnablejob_s::inherits(const GUTF8String &classname) const
 {
   return (classname == "ddjvu_runnablejob_s") 
     || ddjvu_job_s::inherits(classname);
@@ -2802,7 +2809,7 @@ struct DJVUNS ddjvu_printjob_s : public ddjvu_runnablejob_s
   GP<ByteStream> obs;
   virtual ddjvu_status_t run();
   // virtual port functions:
-  virtual bool inherits(const GUTF8String&);
+  virtual bool inherits(const GUTF8String&) const;
   // progress
   static void cbrefresh(void*);
   static void cbprogress(double, void*);
@@ -2812,7 +2819,7 @@ struct DJVUNS ddjvu_printjob_s : public ddjvu_runnablejob_s
 };
 
 bool 
-ddjvu_printjob_s::inherits(const GUTF8String &classname)
+ddjvu_printjob_s::inherits(const GUTF8String &classname) const
 {
   return (classname == "ddjvu_printjob_s") 
     || ddjvu_runnablejob_s::inherits(classname);
@@ -2895,7 +2902,7 @@ complain(GUTF8String opt, const char *msg)
     message = "Parsing \"" + opt + "\": " + msg;
   else
     message = msg;
-  G_EMTHROW(GException((const char*)message));
+  G_RETHROW(GException((const char*)message));
 }
 
 ddjvu_job_t *
@@ -3140,7 +3147,7 @@ struct DJVUNS ddjvu_savejob_s : public ddjvu_runnablejob_s
   // thread routine
   virtual ddjvu_status_t run();
   // virtual port functions:
-  virtual bool inherits(const GUTF8String&);
+  virtual bool inherits(const GUTF8String&) const;
   virtual void notify_file_flags_changed(const DjVuFile*, long, long);
   // helpers
   bool parse_pagespec(const char *s, int npages, bool *flags);
@@ -3148,7 +3155,7 @@ struct DJVUNS ddjvu_savejob_s : public ddjvu_runnablejob_s
 };
 
 bool 
-ddjvu_savejob_s::inherits(const GUTF8String &classname)
+ddjvu_savejob_s::inherits(const GUTF8String &classname) const
 {
   return (classname == "ddjvu_savejob_s") 
     || ddjvu_runnablejob_s::inherits(classname);
@@ -3160,7 +3167,7 @@ ddjvu_savejob_s::notify_file_flags_changed(const DjVuFile *file,
 {
   if (mask & (DjVuFile::ALL_DATA_PRESENT | DjVuFile::DATA_PRESENT |
               DjVuFile::DECODE_FAILED | DjVuFile::DECODE_STOPPED |
-              DjVuFile::STOPPED | DjVuFile::DECODE_STOPPED ))
+              DjVuFile::STOPPED ))
     {
       GMonitorLock lock(&monitor);
       monitor.signal();
@@ -3214,10 +3221,10 @@ ddjvu_savejob_s::parse_pagespec(const char *s, int npages, bool *flags)
         p += 1;
       if (! spec)
         return false;
-      if (end_page < 0)
-        end_page = 0;
-      if (start_page < 0)
-        start_page = 0;
+      if (end_page <= 0)
+        end_page = 1;
+      if (start_page <= 0)
+        start_page = 1;
       if (end_page > npages)
         end_page = npages;
       if (start_page > npages)
@@ -3491,11 +3498,10 @@ miniexp_status(ddjvu_status_t status)
 static void
 miniexp_protect(ddjvu_document_t *document, miniexp_t expr)
 {
-  { // extra nesting for windows
+  GMonitorLock lock(&document->myctx->monitor);
     for(miniexp_t p=document->protect; miniexp_consp(p); p=miniexp_cdr(p))
       if (miniexp_car(p) == expr)
         return;
-  }
   if (miniexp_consp(expr) || miniexp_objectp(expr))
     document->protect = miniexp_cons(expr, document->protect);
 }
@@ -3503,6 +3509,7 @@ miniexp_protect(ddjvu_document_t *document, miniexp_t expr)
 void
 ddjvu_miniexp_release(ddjvu_document_t *document, miniexp_t expr)
 {
+  GMonitorLock lock(&document->myctx->monitor);
   miniexp_t q = miniexp_nil;
   miniexp_t p = document->protect;
   while (miniexp_consp(p))
@@ -4079,10 +4086,8 @@ ddjvu_anno_get_metadata_keys(miniexp_t p)
   miniexp_t *k = (miniexp_t*)malloc((1+i)*sizeof(miniexp_t));
   if (! k) return 0;
   i = 0;
-  { // extra nesting for windows
     for (GPosition p=m; p; ++p)
       k[i++] = m.key(p);
-  }
   k[i] = 0;
   return k;
 }

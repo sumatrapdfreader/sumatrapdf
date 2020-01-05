@@ -737,15 +737,10 @@ GSetBase::rehash(int newbuckets)
   nelems = 0;
   first = 0;
   // Allocate a new empty bucket table
-// delete [] table;
   gtable.resize(0);
   nbuckets = newbuckets;
-  typedef HNode *HNodePtr;
-// table = new HNodePtr[nbuckets];
   gtable.resize(nbuckets);
   gtable.clear();
-//  for (int i=0; i<nbuckets; i++)
-//    table[i] = 0;
   // Insert saved nodes
   while (n)
     {

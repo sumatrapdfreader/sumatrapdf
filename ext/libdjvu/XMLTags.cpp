@@ -89,8 +89,8 @@ static GUTF8String
 getargn(char const tag[], char const *&t)
 {
   char const *s;
-  for(s=tag;isspace(*s);s++);
-  for(t=s;(*t)&&((*t)!='/')&&((*t)!='>')&&((*t)!='=')&&!isspace(*t);++t);
+  for(s=tag;isspace((unsigned char)(*s));s++);
+  for(t=s;(*t)&&((*t)!='/')&&((*t)!='>')&&((*t)!='=')&&!isspace((unsigned char)(*t));++t);
   return GUTF8String(s,t-s);
 }
 
@@ -112,7 +112,7 @@ getargv(char const tag[], char const *&t)
       }
     }else
     {
-      for(t=s;(*t)&&((*t)!='/')&&((*t)!='>')&&!isspace(*t);++t);
+      for(t=s;(*t)&&((*t)!='/')&&((*t)!='>')&&!isspace((unsigned char)(*t));++t);
       retval=GUTF8String(s,t-s);
     }
   }else
@@ -126,8 +126,8 @@ static GUTF8String
 tagtoname(char const tag[],char const *&t)
 {
   char const *s;
-  for(s=tag;isspace(*s);s++);
-  for(t=s;(*t)&&((*t)!='>')&&((*t)!='/')&&!isspace(*t);++t);
+  for(s=tag;isspace((unsigned char)(*s));s++);
+  for(t=s;(*t)&&((*t)!='>')&&((*t)!='/')&&!isspace((unsigned char)(*t));++t);
   return GUTF8String(s,t-s);
 }
 

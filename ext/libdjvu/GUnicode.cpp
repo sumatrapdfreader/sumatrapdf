@@ -307,7 +307,7 @@ GStringRep::Unicode::create(
   {
     retval=create(xbuf,bufsize,XUTF8);
   }else if(!e->cmp("UTF16")|| !e->cmp("UTF-16")
-    || !e->cmp("UCS2") || !e->cmp("UCS2"))
+        || !e->cmp("UCS2") || !e->cmp("UCS-2"))
   {
     retval=create(xbuf,bufsize,XUTF16);
   }else if(!e->cmp("UCS4") || !e->cmp("UCS-4"))

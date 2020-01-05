@@ -235,7 +235,7 @@ _djvu_deleteArray(void *addr)
       (*deleteArray_handler)(addr);
     }else
     {
-#ifdef WIN32
+#ifdef _WIN32
                 delete [] (addr) ;
 #else
         operator delete [] (addr);

@@ -280,6 +280,7 @@ XMLByteStream::init(void)
           break;
         }
       }
+      break;
     }
     case 0x003C:
     {
@@ -350,6 +351,7 @@ XMLByteStream::init(void)
     default:
     {
       buffer=GUTF8String::create(buf,sizeof(buf),GStringRep::XUTF8);
+      break;
     }
   }
   bs=ibs;

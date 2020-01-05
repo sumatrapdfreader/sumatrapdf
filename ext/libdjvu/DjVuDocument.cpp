@@ -805,11 +805,9 @@ DjVuDocument::id_to_url(const GUTF8String & id) const
 	    {
 	      GP<DjVmDir::File> file=djvm_dir->id_to_file(id);
 	      if (!file)
-              {
                 file=djvm_dir->name_to_file(id);
 	        if (!file)
                   file=djvm_dir->title_to_file(id);
-              }
 	      if (file)
 	        return GURL::UTF8(file->get_load_name(),init_url);
 	    }
@@ -819,11 +817,9 @@ DjVuDocument::id_to_url(const GUTF8String & id) const
 	    {
 	       GP<DjVmDir::File> file=djvm_dir->id_to_file(id);
 	       if (!file)
-               {
                  file=djvm_dir->name_to_file(id);
 	         if (!file)
                    file=djvm_dir->title_to_file(id);
-               }
 	       if (file)
 	         return GURL::UTF8(file->get_load_name(),init_url.base());
 	    }
@@ -838,7 +834,12 @@ DjVuDocument::id_to_url(const GUTF8String & id) const
 	    break;
 	 case OLD_INDEXED:
 	 case SINGLE_PAGE:
-	    return GURL::UTF8(id,init_url.base());
+	    {
+	       GURL url = GURL::UTF8(id,init_url.base());
+	       if (url.fname() == "-")
+	          G_THROW("Illegal include chunk (corrupted file?)");
+	       return url;
+	    }
 	    break;
       }
    return GURL();
@@ -1652,7 +1653,7 @@ DjVuDocument::get_url_names(void)
         // Why is this try/catch block here?
         G_TRY { 
           get_portcaster()->notify_error(this, ex.get_cause()); 
-          GUTF8String emsg = ERR_MSG("DjVuDocument.exclude_page") "\t" + (i+1);
+          GUTF8String emsg = ERR_MSG("DjVuDocument.exclude_page") "\t" + GUTF8String(i+1);
           get_portcaster()->notify_error(this, emsg);
         }
         G_CATCH_ALL
@@ -1741,7 +1742,7 @@ DjVuDocument::get_djvm_doc()
                    G_TRY { 
                      get_portcaster()->notify_error(this, ex.get_cause());
                      GUTF8String emsg = ERR_MSG("DjVuDocument.skip_page") "\t" 
-                                      + (page_num+1);
+                                      + GUTF8String(page_num+1);
                      get_portcaster()->notify_error(this, emsg);
                    }
                    G_CATCH_ALL

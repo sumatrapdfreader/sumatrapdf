@@ -65,6 +65,14 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#ifdef MMX
+# ifdef HAVE_CPUID_H
+#  include <cpuid.h>
+# endif
+# if defined(_MSC_VER) && defined(_WIN32)
+#  include <intrin.h>
+# endif
+#endif
 
 #ifdef HAVE_NAMESPACES
 namespace DJVU {
@@ -132,90 +140,25 @@ MMXControl::disable_mmx()
 int 
 MMXControl::enable_mmx()
 {
-  int cpuflags = 0;
   const char *envvar = getenv("LIBDJVU_DISABLE_MMX");
   if (envvar && envvar[0] && envvar[0]!='0')
     return ((mmxflag = 0));
   
-#if defined(MMX) && defined(__GNUC__) && defined(__i386__)
-  // Detection of MMX for GCC
-  __asm__ volatile ("pushl %%ebx\n\t"
-                    "pushfl\n\t"    
-                    "popl %%ecx\n\t"
-                    "xorl %%edx,%%edx\n\t"
-                    // Check that CPUID exists
-                    "movl %%ecx,%%eax\n\t"
-                    "xorl $0x200000,%%eax\n\t"
-                    "pushl %%eax\n\t"
-                    "popfl\n\t"
-                    "pushfl\n\t"
-                    "popl %%eax\n\t"
-                    "xorl %%ecx,%%eax\n\t"
-                    "jz 1f\n\t"
-                    "pushl %%ecx\n\t"
-                    "popfl\n\t"
-                    // Check that CR0:EM is clear
-                    "smsw %%ax\n\t"
-                    "andl $4,%%eax\n\t"
-                    "jnz 1f\n\t"
-                    // Execute CPUID
-                    "movl $1,%%eax\n\t"
-                    "cpuid\n"
-                    // EBX contains magic when -fPIC is on.
-		    "1:\tpopl %%ebx\n\t"
-                    "movl %%edx, %0"
-                    : "=m" (cpuflags) :
-                    : "eax","ecx","edx");
+#if defined(MMX) && defined(__GNUC__) && defined(HAVE_CPUID_H)
+  unsigned int eax,ebx,ecx,edx;
+  if (__get_cpuid(1,&eax,&ebx,&ecx,&edx))
+    if (edx & (1<<23))
+      return ((mmxflag = 1));
 #endif
-#if defined(MMX) && defined(__GNUC__) && defined(__x86_64__)
-  // Detection of MMX for GCC
-  __asm__ volatile (// Check that CR0:EM is clear
-                    "xorl %%edx,%%edx\n\t"
-                    "smsw %%ax\n\t"
-                    "andl $4,%%eax\n\t"
-                    "jnz 1f\n\t"
-                    // Execute CPUID
-                    "movl $1,%%eax\n\t"
-                    "cpuid\n"
-                    // Finish
-		    "1:\tmovl %%edx, %0"
-                    : "=m" (cpuflags) :
-                    : "eax","ebx","ecx","edx");
+  
+#if defined(MMX) && defined(_MSC_VER) && defined(_WIN32)
+  int cpuinfo[4];
+  __cpuid(cpuinfo, 1);
+  if (cpuinfo[3] & (1<<23))
+    return ((mmxflag = 1));
 #endif
-#if defined(MMX) && defined(_MSC_VER) && defined(_M_IX86)
-  // Detection of MMX for MSVC 32 bits
-  __asm {  pushfd
-           pop     ecx
-           xor     edx,edx
-             ;// Check that CPUID exists
-           mov     eax,ecx        
-           xor     eax,0x200000
-           push    eax
-           popfd
-           pushfd
-           pop     eax
-           xor     eax,ecx
-           jz      fini
-           push    ecx
-           popfd
-             ;// Check that CR0:EM is zero
-           smsw    ax
-           and     eax,4
-           jnz     fini
-             ;// Execute CPUID
-           mov     eax,1
-           _emit   0xf
-           _emit   0xa2
-         fini:
-           mov     cpuflags,edx
-             ;// MSVC determines clobbered registers by scanning the assembly code.
-             ;// Since it does not know CPUID, it would not know that EBX is clobbered
-             ;// without the dummy instruction below...
-           xor     ebx,ebx
-         }
-#endif
-  mmxflag = !!(cpuflags & 0x800000);
-  return mmxflag;
+  
+  return ((mmxflag = 0));
 }
 
 

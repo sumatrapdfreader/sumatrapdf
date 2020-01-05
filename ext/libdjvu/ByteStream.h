@@ -267,13 +267,13 @@ public:
   /** Returns the total number of bytes contained in the buffer, file, etc.
       Valid offsets for function #seek# range from 0 to the value returned
       by this function. */
-  virtual int size(void) const;
+  virtual long size(void) const;
   /// Use at your own risk, only guarenteed to work for ByteStream::Memorys.
   TArray<char> get_data(void);
   /** Reads data from a random position. This function reads at most #sz#
       bytes at position #pos# into #buffer# and returns the actual number of
       bytes read.  The current position is unchanged. */
-  virtual size_t readat(void *buffer, size_t sz, int pos);
+  virtual size_t readat(void *buffer, size_t sz, long pos);
   //@}
 protected:
   ByteStream(void) : cp(AUTO) {};
@@ -341,7 +341,7 @@ public:
 };
 
 inline size_t
-ByteStream::readat(void *buffer, size_t sz, int pos)
+ByteStream::readat(void *buffer, size_t sz, long pos)
 {
   size_t retval;
   long tpos=tell();
@@ -351,15 +351,15 @@ ByteStream::readat(void *buffer, size_t sz, int pos)
   return retval;
 }
 
-inline int
+inline long
 ByteStream::size(void) const
 {
   ByteStream *bs=const_cast<ByteStream *>(this);
-  int bsize=(-1);
-  long pos=tell();
+  long bsize = -1;
+  long pos = tell();
   if(bs->seek(0,SEEK_END,true))
   {
-    bsize=(int)tell();
+      bsize = tell();
     (void)(bs->seek(pos,SEEK_SET,false));
   }
   return bsize;
@@ -389,6 +389,10 @@ public:
     { return bs->seek(offset,whence,nothrow); }
   virtual void flush(void)
     { bs->flush(); }
+private:
+  // Cancel C++ default stuff
+  Wrapper(const Wrapper &);
+  Wrapper & operator=(const Wrapper &);
 };
 
 

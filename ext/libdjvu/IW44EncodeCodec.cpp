@@ -125,7 +125,7 @@ static const float iw_norm[16] = {
 };
 
 static const int iw_shift  = 6;
-static const int iw_round  = (1<<(iw_shift-1));
+// static const int iw_round  = (1<<(iw_shift-1));
 
 static const struct { int start; int size; }  
 bandbuckets[] = 
@@ -310,7 +310,7 @@ static const int   d16[] = {16,16};
 static inline void
 mmx_fv_1 ( short* &q, short* e, int s, int s3 )
 {
-  while (q<e && (((long)q)&0x7))
+  while (q<e && (((size_t)q)&0x7))
     {
       int a = (int)q[-s] + (int)q[s];
       int b = (int)q[-s3] + (int)q[s3];
@@ -353,7 +353,7 @@ mmx_fv_1 ( short* &q, short* e, int s, int s3 )
 static inline void
 mmx_fv_2 ( short* &q, short* e, int s, int s3 )
 {
-  while (q<e && (((long)q)&0x7))
+  while (q<e && (((size_t)q)&0x7))
     {
       int a = (int)q[-s] + (int)q[s];
       int b = (int)q[-s3] + (int)q[s3];
@@ -405,7 +405,7 @@ filter_fv(short *p, int w, int h, int rowsize, int scale)
   int y = 0;
   int s = scale*rowsize;
   int s3 = s+s+s;
-  h = ((h-1)/scale)+1;
+  h = (h>0) ? ((h-1)/scale)+1 : 0;
   y += 1;
   p += s;
   while (y-3 < h)

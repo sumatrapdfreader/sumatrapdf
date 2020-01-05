@@ -62,21 +62,25 @@
 
 #ifdef NEED_JPEG_DECODER
 
-#include "JPEGDecoder.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 #undef HAVE_STDLIB_H
 #undef HAVE_STDDEF_H
+#define INT32 jpeg_INT32
+#define INT16 jpeg_INT16
 #include <stdio.h>
 #include <jconfig.h>
 #include <jpeglib.h>
 #include <jerror.h>
+#undef FAR
+#undef INT32
+#undef INT16
 #ifdef __cplusplus
 }
 #endif
 
+#include "JPEGDecoder.h"
 #include "ByteStream.h"
 #include "GPixmap.h"
 #ifdef LIBJPEGNAME
@@ -117,11 +121,6 @@ djvu_error_exit (j_common_ptr cinfo)
 {
   /* cinfo->err really points to a djvu_error_mgr struct, so coerce pointer */
   djvu_error_ptr djvuerr = (djvu_error_ptr) cinfo->err;
-
-  /* Always display the message. */
-  /* We could postpone this until after returning, if we chose. */
-  (*cinfo->err->output_message) (cinfo);
-
   /* Return control to the setjmp point */
   longjmp(djvuerr->setjmp_buffer, 1);
 }
@@ -132,14 +131,7 @@ GP<GPixmap>
 JPEGDecoder::decode(ByteStream & bs )
 {
   GP<GPixmap> retval=GPixmap::create();
-  G_TRY
-  {
     decode(bs,*retval);
-  } G_CATCH_ALL
-  {
-    retval=0;
-  }
-  G_ENDCATCH;
   return retval;
 }
 
@@ -161,9 +153,14 @@ JPEGDecoder::decode(ByteStream & bs,GPixmap &pix)
 
   if (setjmp(jerr.setjmp_buffer))
   {
-
+    /* Prepare error message - untranslated */
+    char msg[JMSG_LENGTH_MAX + 100];
+    strcpy(msg, "LibJpeg error: ");
+    char *emsg = msg + strlen(msg);
+    (*cinfo.err->format_message) ((j_common_ptr)&cinfo, emsg);
+    /* clean and throw */
     jpeg_destroy_decompress(&cinfo);
-    G_THROW( ERR_MSG("GPixmap.unk_PPM") );
+    G_THROW( msg );
   }
 
   jpeg_create_decompress(&cinfo);

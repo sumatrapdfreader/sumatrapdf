@@ -404,7 +404,7 @@ GLObject::get_list(void)
 void
 GLParser::skip_white_space(const char * & start)
 {
-   while(*start && isspace(*start)) start++;
+  while(*start && isspace((unsigned char)(*start))) start++;
    if (!*start) 
        G_THROW( ByteStream::EndOfFile );
 }
@@ -424,12 +424,7 @@ GLParser::get_token(const char * & start)
        start++;
        return GLToken(GLToken::CLOSE_PAR, 0);
      }
-   else if (c=='-' || (c>='0' && c<='9'))
-     {
-       return GLToken(GLToken::OBJECT,
-                      new GLObject(strtol(start, (char **) &start, 10)));
-     }
-   else if (c=='"')
+   else if (c == '"')
      {
        GUTF8String str;
        start++;
@@ -491,23 +486,26 @@ GLParser::get_token(const char * & start)
                G_THROW( ByteStream::EndOfFile );
              }
          }
-       return GLToken(GLToken::OBJECT, 
-                      new GLObject(GLObject::STRING, str));
+       return GLToken(GLToken::OBJECT, new GLObject(GLObject::STRING, str));
      }
-   else
+   else if (c=='-' || (c>='0' && c<='9'))
      {
-       GUTF8String str;
-       while(1)
-	 {
-           char ch=*start++;
-           if (!ch)
-             G_THROW( ByteStream::EndOfFile );
-           if (ch==')') { start--; break; }
-           if (isspace(ch)) break;
-           str+=ch;
-	 }
-       return GLToken(GLToken::OBJECT, new GLObject(GLObject::SYMBOL, str));
+       const char *here = start;
+       long val = strtol(start, (char**) &start, 10);
+       if (start > here)
+         return GLToken(GLToken::OBJECT, new GLObject(val));
      }
+   
+       GUTF8String str;
+   while(c != 0 && c != ')' && c != '(' && c != '"' && !isspace((unsigned char)c))
+	 {
+       str += c;
+       c = *++start;
+	 }
+   if (c == 0)
+     G_THROW(ByteStream::EndOfFile);
+   else
+       return GLToken(GLToken::OBJECT, new GLObject(GLObject::SYMBOL, str));
 } 
 
 void
@@ -522,7 +520,7 @@ GLParser::parse(const char * cur_name, GPList<GLObject> & list,
     GLToken token=get_token(start);
     if (token.type==GLToken::OPEN_PAR)
     {
-      if (isspace(*start))
+      if (isspace((unsigned char)(*start)))
       {
         GUTF8String mesg=GUTF8String( ERR_MSG("DjVuAnno.paren") "\t")+cur_name;
         G_THROW(mesg);
@@ -1368,7 +1366,7 @@ DjVuANT::encode_raw(void) const
        GUTF8String mdatabuffer("(");
        mdatabuffer +=  METADATA_TAG ;
        for (GPosition pos=metadata; pos; ++pos)
-         mdatabuffer +=" (" + metadata.key(pos) + make_c_string(metadata[pos]) + ")";
+         mdatabuffer +=" (" + metadata.key(pos) + " " + make_c_string(metadata[pos]) + ")";
        mdatabuffer += " )";
        parser.parse(mdatabuffer);
      }
@@ -1403,7 +1401,7 @@ DjVuANT::is_empty(void) const
 {
    GUTF8String raw=encode_raw();
    for(int i=raw.length()-1;i>=0;i--)
-      if (isspace(raw[i])) raw.setat(i, 0);
+     if (isspace((unsigned char)raw[i])) raw.setat(i, 0);
       else break;
    return raw.length()==0;
 }

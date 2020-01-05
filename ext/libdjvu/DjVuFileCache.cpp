@@ -78,10 +78,10 @@ namespace DJVU {
 DjVuFileCache::~DjVuFileCache(void) {}
 
 int
-DjVuFileCache::Item::qsort_func(const void * el1, const void * el2)
+DjVuFileCache::Item::qsort_func(const void *el1, const void *el2)
 {
-   const Item * item1=*(Item **) el1;
-   const Item * item2=*(Item **) el2;
+  const Item *item1 = *(Item**)el1;
+  const Item *item2 = *(Item**)el2;
    time_t time1=item1->get_time();
    time_t time2=item2->get_time();
    return time1<time2 ? -1 : time1>time2 ? 1 : 0;
@@ -156,60 +156,51 @@ DjVuFileCache::clear_to_size(int size)
    {
       list.empty();
       cur_size=0;
-   } else
-      if (list.size()>20)
+     } 
+   if (list.size() > 20)
       {
 	    // More than 20 elements in the cache: use qsort to
 	    // sort them before picking up the oldest
-	 GTArray<void *> item_arr(list.size()-1);
+       GPArray<Item> item_arr(list.size()-1);
 	 GPosition pos;
 	 int i;
 	 for(pos=list, i=0;pos;++pos, i++)
+         item_arr[i] = list[pos];
+       list.empty();
+       qsort(&item_arr[0], item_arr.size(), sizeof(item_arr[0]), Item::qsort_func);
+       for(i=0;i<item_arr.size() && cur_size > (int)size;i++)
 	 {
-	    GP<Item> item=list[pos];
-	    item->list_pos=pos;
-	    item_arr[i]=item;
+           Item *item = item_arr[i];
+           cur_size -= item->get_size();
+           file_cleared(item->file);
+           item_arr[i] = 0;
+         }
+       for (; i<item_arr.size(); i++)
+         list.append(item_arr[i]);
+       if (cur_size <= 0) 
+         cur_size = calculate_size();
 	 }
 
-	 qsort(&item_arr[0], item_arr.size(), sizeof(item_arr[0]), Item::qsort_func);
-
-	 for(i=0;i<item_arr.size() && cur_size>(int) size;i++)
-	 {
-	    Item * item=(Item *) item_arr[i];
-	    cur_size-=item->get_size();
-	    GP<DjVuFile> file=item->file;
-	    list.del(item->list_pos);
-	    file_cleared(file);
-	    if (cur_size<=0) cur_size=calculate_size();
-	 }
-      } else
-      {
 	    // Less than 20 elements: no reason to presort
-	 while(cur_size>(int) size)
+   while(cur_size > (int)size && list.size() > 0)
 	 {
-	    if (!list.size())
-	    {
-		  // Oops. Discrepancy due to an item changed its size
-	       cur_size=0;
-	       break;
-	    }
-
 	       // Remove the oldest cache item
 	    GPosition oldest_pos=list;
 	    GPosition pos=list;
 	    for(++pos;pos;++pos)
 	       if (list[pos]->get_time()<list[oldest_pos]->get_time())
 		  oldest_pos=pos;
-	    cur_size-=list[oldest_pos]->get_size();
+       cur_size -= list[oldest_pos]->get_size();
 	    GP<DjVuFile> file=list[oldest_pos]->file;
 	    list.del(oldest_pos);
 	    file_cleared(file);
-
 	       // cur_size *may* become negative because items may change their
 	       // size after they've been added to the cache
-	    if (cur_size<=0) cur_size=calculate_size();
-	 }
+       if (cur_size <= 0) 
+         cur_size = calculate_size();
       }
+   if (cur_size <= 0) 
+     cur_size = calculate_size();
    
    DEBUG_MSG("done: current cache size=" << cur_size << "\n");
 }

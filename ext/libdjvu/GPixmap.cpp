@@ -284,9 +284,11 @@ GPixmap::GPixmap(const GPixmap &ref, const GRect &rect)
 void 
 GPixmap::init(int arows, int acolumns, const GPixel *filler)
 {
+  size_t np = arows * acolumns;
   if (arows != (unsigned short) arows ||
-      acolumns != (unsigned short) acolumns )
-    G_THROW("Illegal arguments");
+      acolumns != (unsigned short) acolumns ||
+      (arows>0 && np/(size_t)arows!=(size_t)acolumns) )
+    G_THROW("GPixmap: image size exceeds maximum (corrupted file?)");
   destroy();
   nrows = arows;
   ncolumns = acolumns;
@@ -480,6 +482,7 @@ GPixmap::init(ByteStream &bs)
       break;
     case ('P'<<8)+'5':
       raw = grey = true;
+      /* FALLTHRU */
     case ('P'<<8)+'6':
       raw = true;
       break;

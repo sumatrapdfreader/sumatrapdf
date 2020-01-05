@@ -660,29 +660,20 @@ DjVuFile::report_error(const GException &ex,bool throw_errors)
   if((!verbose_eof)|| (ex.cmp_cause(ByteStream::EndOfFile)))
   {
     if(throw_errors)
-    {
-      G_EMTHROW(ex);
-    }else
-    {
+        G_RETHROW(ex);
+      else
       get_portcaster()->notify_error(this,ex.get_cause());
     }
-  }else
+  else
   {
     GURL url=get_url();
     GUTF8String url_str=url.get_string();
-//    if (url.is_local_file_url())
-//      url_str=url.filename();
-    
     GUTF8String msg = GUTF8String( ERR_MSG("DjVuFile.EOF") "\t") + url;
     if(throw_errors)
-    {
-      G_EMTHROW(GException(msg, ex.get_file(), ex.get_line(), 
-                           ex.get_function() ));
-    }else
-    {
+        G_RETHROW(GException(msg,ex.get_file(),ex.get_line(),ex.get_function()));
+      else
       get_portcaster()->notify_error(this,msg);
     }
-  }
 }
 
 void
@@ -983,7 +974,7 @@ DjVuFile::decode_chunk( const GUTF8String &id, const GP<ByteStream> &gbs,
   }
   
   // FG44 (foreground wavelets)
-  else if (chkid == "FG44" && (djvu || djvu))
+  else if (chkid == "FG44" && (djvu || djvi))
   {
     if (fgpm || fgbc)
       G_THROW( ERR_MSG("DjVuFile.dupl_foregrnd") );

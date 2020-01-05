@@ -524,7 +524,6 @@ public:
 		   \begin{enumerate}
 		      \item File ID from the \Ref{DjVmDir}
 		      \item File name from the \Ref{DjVmDir}
-		      \item File title from the \Ref{DjVmDir}
 		   \end{enumerate}
 		   Then for #BUNDLED# document the URL is obtained by
 		   appending the #name# of the found file to the document's

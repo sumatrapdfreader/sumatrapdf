@@ -1,6 +1,6 @@
 /* -*- C -*-
 // -------------------------------------------------------------------
-// MiniLock - a quick user space lock 
+// Atomic primitives
 // Copyright (c) 2008  Leon Bottou. All rights reserved
 //
 // Permission is hereby granted, free of charge, to any person obtaining
@@ -27,79 +27,139 @@
 #ifndef ATOMIC_H
 #define ATOMIC_H
 
-/* ------------------------------------------------------------
-//  These are primitives to implement very quick locks.
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+/* This file defines macros or functions performing
+// the following atomic operations with a full memory barrier. 
 //  
-//  Non-blocking usage:
-//    if (atomicAcquire(&lock)) {
-//      ... // do something protected by the lock
-//      atomicRelease(&lock);
-//    }
+//   int atomicIncrement(int volatile *var) 
+//   { *var += 1; return *var; } 
 //
-//  Blocking usage:
-//    atomicAcquireOrSpin(&lock);
-//    // do something protected by the lock
-//    atomicRelease(&lock);
+//   int atomicDecrement(int volatile *var);
+//   { *var -= 1; return *var; } 
 //
-//  Rules of thumb:
-//  - Acquire and release from the same function with 
-//    no intervening function calls.
-//  - Do not use AcquireOrSpin for waiting a long time.
-//    No more than a few microseconds please.
+//   int atomicCompareAndSwap(int volatile *var, int oldval, int newval);
+//   { int val = *var; if (val == oldval) { *var = newval };  returl val; }
 //
-//  Memory ordering:
-//  Viewed from another processor
-//  - load/stores performed by this cpu after the acquire 
-//    cannot appear to have happened before the acquire.
-//  - load/stores performed by this cpu before the release 
-//    cannot appear to have happened after the release.
+//   int atomicExchange(int volatile *var, int val);
+//   { int tmp = *var; *var = val; return tmp; }
 //
-//  Implementation:
-//  All depends on the definitions from the initial include file.
-//  To perform the non blocking operations:
-//  - use intel builtins if available (icc, gcc>=4.1).
-//  - use win32 interlocked operations (win32).
-//  - use inline assembly code for some platforms.
-//  - use pthreads
-//  To perform the waiting when spinning takes to long:
-//  - use win32 critical sections and events.
-//  - use pthreads mutex and conditions.
-//  This is controlled by the preprocessor symbols:
-//    WIN32 
-//    __GNUC__ __GNUC_MAJOR__ __GNUC_MINOR__  
-//    __INTEL_COMPILER
-//  and can be overriden by defining
-//    HAVE_INTEL_ATOMIC_BUILTINS
-//    OBEY_HAVE_INTEL_ATOMIC_BUILTINS
-//  and by tweaking the files include in atomic.h.
-// ------------------------------------------------------------ */
+//   void* atomicExchangePointer(void* volatile *var, int val);
+//   { void* tmp = *var; *var = val; return tmp; }
+*/
 
-
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
   
-/* { int tmp = *lock; *lock = 1; return !tmp; }. */
-int atomicAcquire(int volatile *lock);
+#if !defined(ATOMIC_MACROS) && defined(_WIN64)
+# define ATOMIC_MACROS "WIN64"
+# include <windows.h>
+# define atomicIncrement(var) \
+  (int)(InterlockedIncrement((LONG volatile*)(var)))
+# define atomicDecrement(var) \
+  (int)(InterlockedDecrement((LONG volatile*)(var)))
+# define atomicCompareAndSwap(var,ov,nv) \
+  (InterlockedCompareExchange((LONG volatile*)(var),(LONG)(nv),(LONG)(ov)))
+# define atomicExchange(var,nv) \
+  (int)(InterlockedExchange((LONG volatile*)(var),(LONG)(nv)))
+# define atomicExchangePointer(var,nv) \
+  (void*)(InterlockedExchangePointer((PVOID volatile*)(var),(PVOID)(nv)))
+#endif
   
-/* { while (!atomicAcquire(lock)) { spin/yield/wait } } */
-void atomicAcquireOrSpin(int volatile *lock);
+#if !defined(ATOMIC_MACROS) && defined(_WIN32)
+# define ATOMIC_MACROS "WIN32"
+# include <windows.h>
+# define atomicIncrement(var) \
+  (int)(InterlockedIncrement((LONG volatile*)(var)))
+# define atomicDecrement(var) \
+  (int)(InterlockedDecrement((LONG volatile*)(var)))
+# define atomicCompareAndSwap(var,ov,nv) \
+  (InterlockedCompareExchange((LONG volatile*)(var),(LONG)(nv),(LONG)(ov)))
+# define atomicExchange(var,nv) \
+  (int)(InterlockedExchange((LONG volatile*)(var),(LONG)(nv)))
+# define atomicExchangePointer(var,nv) \
+  (void*)(InterlockedExchange((LONG volatile*)(var),(LONG)(nv)))
+#endif
 
-/* { *lock = 0; } */
-void atomicRelease(int volatile *lock);
+#if !defined(ATOMIC_MACROS) && defined(HAVE_INTEL_ATOMIC_BUILTINS)
+# define ATOMIC_MACROS "INTEL"
+# define atomicIncrement(var) \
+  (__sync_add_and_fetch((int volatile *)(var), 1))
+# define atomicDecrement(var) \
+  (__sync_add_and_fetch((int volatile *)(var), -1))
+# define atomicCompareAndSwap(var,ov,nv) \
+  (__sync_val_compare_and_swap((int volatile*)(var),(int)(ov),(int)(nv)))
+# if defined(__i386__) || defined(__x86_64__) || defined(__amd64__)
+#  define atomicExchange(var,nv) \
+   (__sync_lock_test_and_set((int volatile*)(var),(int)(nv)))
+#  define atomicExchangePointer(var,nv) \
+   (__sync_lock_test_and_set((void* volatile*)(var),(void*)(nv)))
+# else
+  static inline int atomicExchange(int volatile *var, int nv) {
+    int ov; do { ov = *var;  /* overkill */
+    } while (! __sync_bool_compare_and_swap(var, ov, nv));
+    return ov;
+  }
+  static inline void* atomicExchangePointer(void* volatile *var, void* nv) {
+    void *ov; do { ov = *var;  /* overkill */
+    } while (! __sync_bool_compare_and_swap(var, ov, nv));
+    return ov;
+  }
+# endif
+#endif
 
-/* { *var += 1; return *var; } */
-int atomicIncrement(int volatile *var);
+#if !defined(ATOMIC_MACROS) && defined(__GNUC__)
+# if defined(__i386__) || defined(__amd64__) || defined(__x86_64__)
+#  define ATOMIC_MACROS "GNU86"
+  static inline int atomicIncrement(int volatile *var) {
+    int ov; __asm__ __volatile__ ("lock; xaddl %0, %1" 
+          : "=r" (ov), "=m" (*var) : "0" (1), "m" (*var) : "cc" );
+    return ov + 1;
+  }
+  static inline int atomicDecrement(int volatile *var) {
+    int ov; __asm__ __volatile__ ("lock; xaddl %0, %1" 
+         : "=r" (ov), "=m" (*var) : "0" (-1), "m" (*var) : "cc" );
+    return ov - 1;
+  }
+  static inline int atomicExchange(int volatile *var, int nv) {
+    int ov; __asm__ __volatile__ ("xchgl %0, %1"
+        : "=r" (ov), "=m" (*var) : "0" (nv), "m" (*var)); 
+    return ov; 
+  }
+  static inline int atomicCompareAndSwap(int volatile *var, int ov, int nv) {
+    int rv; __asm __volatile ("lock; cmpxchgl %2, %1"
+        : "=a" (rv), "=m" (*var) : "r" (nv), "0" (ov), "m" (*var) : "cc");
+    return rv;
+  }
+  static inline void *atomicExchangePointer(void * volatile *var, void *nv) {
+    void *ov;  __asm__ __volatile__ (
+#  if defined(__x86_64__) || defined(__amd64__)
+         "xchgq %0, %1"
+#  else
+         "xchgl %0, %1"
+#  endif
+         : "=r" (ov), "=m" (*var) : "0" (nv), "m" (*var)); 
+    return ov; 
+  }
+# endif
+#endif
 
-/* { *var -= 1; return *var; } */
-int atomicDecrement(int volatile *var);
 
-/* { if (*var == oldval) { *var = newval; return TRUE; } return FALSE; } */
-int atomicCompareAndSwap(int volatile *var, int oldval, int newval);
+#ifndef ATOMIC_MACROS
+  /* emulation */
+  extern int atomicIncrement(int volatile *var);
+  extern int atomicDecrement(int volatile *var);
+  extern int atomicCompareAndSwap(int volatile *var, int ov, int nv);
+  extern int atomicExchange(int volatile *var, int nv);
+  extern void* atomicExchangePointer(void* volatile *var, void* nv);
+#endif
 
 
 # ifdef __cplusplus
 }
-#endif
+# endif
 
 #endif

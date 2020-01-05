@@ -89,8 +89,8 @@ class ByteStream;
     separator ::= newline |
                   newline | separator
     
-    single_message ::= message_ID |
-                       message_ID parameters
+    single_message ::= CTRLC message_ID |
+                       CTRLC message_ID parameters
     
     parameters ::= tab string |
                    tab string parameters

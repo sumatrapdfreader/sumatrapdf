@@ -2210,7 +2210,7 @@ public:
   double decode_done;
   GURL decode_page_url;
   virtual void notify_file_flags_changed(const DjVuFile*,long,long);
-  virtual void notify_decode_progress(const DjVuPort*,double);
+  virtual void notify_decode_progress(const DjVuPort*,float);
 };
 
 DjVuToPS::DecodePort::
@@ -2247,7 +2247,7 @@ notify_file_flags_changed(const DjVuFile *source,
 
 void 
 DjVuToPS::DecodePort::
-notify_decode_progress(const DjVuPort *source, double done)
+notify_decode_progress(const DjVuPort *source, float done)
 {
   // WARNING! This function is called from another thread
   if (source->inherits("DjVuFile"))

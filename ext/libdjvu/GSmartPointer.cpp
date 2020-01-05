@@ -89,8 +89,10 @@ namespace DJVU {
 
 GPEnabled::~GPEnabled()
 {
+#if DISABLED_BECAUSE_OF_CXX11_DESTRUCTORS_BEING_NOEXCEPT
   if (count > 0)
     G_THROW( ERR_MSG("GSmartPointer.suspicious") );
+#endif
 }
 
 void
@@ -101,7 +103,7 @@ GPEnabled::destroy()
   // If yes, set the counter to -0x7fff to mark 
   // the object as doomed and make sure things
   // will work if the destructor uses a GP...
-  if (atomicCompareAndSwap(&count, 0, -0x7fff))
+  if (! atomicCompareAndSwap(&count, 0, -0x7fff))
     delete this;
 }
 
@@ -109,42 +111,26 @@ GPEnabled::destroy()
 // ------ GPBASE
 
 
-#define LOCKMASK 0x3f
-#define LOCKIDX(addr) ((((size_t)(addr))/sizeof(void*))&LOCKMASK)
-static int volatile locks[LOCKMASK+1];
-
-
 GPBase&
 GPBase::assign (const GPBase &sptr)
 {
-  int volatile *lockb = locks+LOCKIDX(&sptr);
-  atomicAcquireOrSpin(lockb);
   GPEnabled *nptr = sptr.ptr;
-  if (nptr)
-    nptr->ref();
-  atomicRelease(lockb);
-  int volatile *locka = locks+LOCKIDX(this);
-  atomicAcquireOrSpin(locka);
-  GPEnabled *old = ptr;
-  ptr = nptr;
-  atomicRelease(locka);
-  if (old)
-    old->unref();
+  if (nptr && atomicIncrement(&nptr->count) <= 0)
+    nptr = 0;
+  GPEnabled *optr = (GPEnabled*)atomicExchangePointer((void**)&ptr, (void*)nptr);
+  if (optr)
+    optr->unref();
   return *this;
 }
 
 GPBase&
 GPBase::assign (GPEnabled *nptr)
 {
-  if (nptr)
-    nptr->ref();
-  int volatile *locka = locks+LOCKIDX(this);
-  atomicAcquireOrSpin(locka);
-  GPEnabled *old = ptr;
-  ptr = nptr;
-  atomicRelease(locka);
-  if (old)
-    old->unref();
+  if (nptr && atomicIncrement(&nptr->count) <= 0)
+    nptr = 0;
+  GPEnabled *optr = (GPEnabled*)atomicExchangePointer((void**)&ptr, (void*)nptr);
+  if (optr)
+    optr->unref();
   return *this;
 }
 

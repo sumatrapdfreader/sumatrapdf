@@ -223,7 +223,6 @@ DjVmDir::decode(const GP<ByteStream> &gstr)
    page2file.resize(-1);
    name2file.empty();
    id2file.empty();
-   title2file.empty();
 
    int ver=str.read8();
    bool bundled=(ver & 0x80)!=0;
@@ -300,20 +299,25 @@ DjVmDir::decode(const GP<ByteStream> &gstr)
          memcpy((char*) strings+strings_size, buffer, length);
       }
       DEBUG_MSG("size of decompressed names block=" << strings.size() << "\n");
+      int strings_size=strings.size();
+      strings.resize(strings_size+3);
+      memset((char*) strings+strings_size, 0, 4);
    
          // Copy names into the files
       const char * ptr=strings;
       for(pos=files_list;pos;++pos)
       {
          GP<File> file=files_list[pos];
-
+         if (ptr >= (const char*)strings + strings_size)
+           G_THROW( ByteStream::EndOfFile );
          file->id=ptr;
          ptr+=file->id.length()+1;
          if (file->flags & File::HAS_NAME)
          {
             file->name=ptr;
             ptr+=file->name.length()+1;
-         } else
+         }
+         else
          {
             file->name=file->id;
          }
@@ -321,8 +325,11 @@ DjVmDir::decode(const GP<ByteStream> &gstr)
          {
             file->title=ptr;
        ptr+=file->title.length()+1;
-         } else
+         }
+         else
+         {
        file->title=file->id;
+         }
    /* msr debug:  multipage file, file->title is null.  
          DEBUG_MSG(file->name << ", " << file->id << ", " << file->title << ", " <<
                    file->offset << ", " << file->size << ", " <<
@@ -374,18 +381,6 @@ DjVmDir::decode(const GP<ByteStream> &gstr)
 	       if (id2file.contains(file->id))
 	          G_THROW( ERR_MSG("DjVmDir.dupl_id") "\t" + file->id);
 	       id2file[file->id]=file;
-      }
-
-         // Generate title2file map
-      for(pos=files_list;pos;++pos)
-      {
-	       GP<File> file=files_list[pos];
-	       if (file->title.length())
-	       {
-	          if (title2file.contains(file->title))
-	             G_THROW( ERR_MSG("DjVmDir.dupl_title") "\t" + file->title);
-	          title2file[file->title]=file;
-	       }
       }
    }
 }
@@ -556,11 +551,19 @@ DjVmDir::id_to_file(const GUTF8String &id) const
 }
 
 GP<DjVmDir::File>
-DjVmDir::title_to_file(const GUTF8String &title) const
+DjVmDir::title_to_file(const GUTF8String &title, GPosition spos) const
 {
+  if (! title)
+    return 0;
    GCriticalSectionLock lock((GCriticalSection *) &class_lock);
-   GPosition pos;
-   return (title2file.contains(title, pos))?title2file[pos]:(GP<DjVmDir::File>(0));
+  if (! spos)
+    for (GPosition pos = spos; pos; ++pos)
+      if (files_list[pos]->is_page() && files_list[pos]->title == title)
+        return files_list[pos];
+  for (GPosition pos = files_list; pos; ++pos)
+    if (files_list[pos]->is_page() && files_list[pos]->title == title)
+      return files_list[pos];
+  return 0;
 }
 
 GP<DjVmDir::File>
@@ -661,13 +664,6 @@ DjVmDir::insert_file(const GP<File> & file, int pos_num)
      G_THROW( ERR_MSG("DjVmDir.dupl_name2") "\t" + file->name);
    name2file[file->name]=file;
    id2file[file->id]=file;
-   if (file->title.length())
-     {
-       if (title2file.contains(file->title))  
-         // duplicate titles may become ok some day
-         G_THROW( ERR_MSG("DjVmDir.dupl_title2") "\t" + file->title);
-       title2file[file->title]=file;
-     }
 
       // Make sure that there is no more than one file with shared annotations
    if (file->is_shared_anno())
@@ -727,7 +723,6 @@ DjVmDir::delete_file(const GUTF8String &id)
       {
          name2file.del(f->name);
          id2file.del(f->id);
-         title2file.del(f->title);
          if (f->is_page())
          {
             for(int page=0;page<page2file.size();page++)
@@ -788,9 +783,7 @@ DjVmDir::set_file_title(const GUTF8String &id, const GUTF8String &title)
    if (!id2file.contains(id, pos))
       G_THROW( ERR_MSG("DjVmDir.no_info") "\t" + GUTF8String(id));
    GP<File> file=id2file[pos];
-   title2file.del(file->title);
    file->title=title;
-   title2file[title]=file;
 }
 
 GPList<DjVmDir::File>

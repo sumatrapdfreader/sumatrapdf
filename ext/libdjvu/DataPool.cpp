@@ -1272,9 +1272,6 @@ DataPool::wait_for_data(const GP<Reader> & reader)
 	     ", length=" << reader->size << "\n");
    DEBUG_MAKE_INDENT(3);
 
-#if THREADMODEL==NOTHREADS
-   G_THROW( ERR_MSG("DataPool.no_threadless") );
-#else
    for(;;)
    {
       if (stop_flag)
@@ -1292,7 +1289,6 @@ DataPool::wait_for_data(const GP<Reader> & reader)
       DEBUG_MSG("calling event.wait()...\n");
       reader->event.wait();
    }
-#endif
    
    DEBUG_MSG("Got some data to read\n");
 }
@@ -1359,13 +1355,8 @@ DataPool::stop(bool only_blocked)
 	 // to continue issuing this command until we get rid of all
 	 // "active_readers"
       while(*active_readers)
-      {
-#if (THREADMODEL==COTHREADS) || (THREADMODEL==MACTHREADS)
-	 GThread::yield();
-#endif
 	 pool->restart_readers();
       }
-   }
 }
 
 void
@@ -1746,7 +1737,7 @@ PoolByteStream::seek(long offset, int whence, bool nothrow)
   {
     case SEEK_CUR:
       offset+=position;
-      // fallthrough;
+      /* FALLTHRU */
     case SEEK_SET:
       if(offset<position)
       {

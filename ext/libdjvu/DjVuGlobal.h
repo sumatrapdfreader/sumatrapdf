@@ -62,24 +62,27 @@
 # pragma interface
 #endif
 
-#if defined(UNDER_CE)
-# ifndef __WCEALT_H__
-inline void * operator new(size_t, void * ptr) { return ptr; }
-# endif
-#elif defined(AUTOCONF) && defined(HAVE_STDINCLUDES)
+#if defined(HAVE_STDINCLUDES)
 # include <new>
-#else
+#elif defined(HAVE_NEW_H)
 # include <new.h>
+#else
+# include <new> // try standard c++ anyway!
 #endif
 
-// SumatraPDF: allow to build as a static library (built-in)
+// SumatraPDF: allow to build as a static library (built-in)            
 #ifdef WIN32_AND_NOT_STATIC
-# ifdef DLL_EXPORT
+#ifndef DJVUAPI
+# ifdef _WIN32
+# ifdef DJVUAPI_EXPORT
 #  define DJVUAPI __declspec(dllexport)
 # else
 #  define DJVUAPI __declspec(dllimport)
 # endif
+# endif
 #endif
+#endif
+
 #ifndef DJVUAPI
 # define DJVUAPI
 #endif

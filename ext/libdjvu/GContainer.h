@@ -178,7 +178,7 @@ hash(const unsigned long & x)
 static inline unsigned int 
 hash(const void * const & x) 
 { 
-  return (unsigned long) x; 
+  return (unsigned int)(size_t) x; 
 }
 
 /** Hashing function (float). */
@@ -262,7 +262,7 @@ protected:
     static void   init(void* dst, int n) {}
     // Trivial copy constructor
     static void   copy(void* dst, const void* src, int n, int ) 
-      { memcpy(dst, src, SZ*n); }
+      { ::memcpy(dst, src, SZ*n); }
     // Trivial destructor
     static void   fini(void* dst, int n) {}
   };
@@ -550,11 +550,13 @@ public:
 template <class TYPE> void
 GArrayTemplate<TYPE>::sort(int lo, int hi)
 {
+  TYPE *data = (TYPE*)(*this);
+  while(true)
+    {
   if (hi <= lo)
     return;
   if (hi > hibound || lo<lobound)
     G_THROW( ERR_MSG("GContainer.illegal_subscript") );
-  TYPE *data = (TYPE*)(*this);
   // Test for insertion sort
   if (hi <= lo + 50)
     {
@@ -568,7 +570,7 @@ GArrayTemplate<TYPE>::sort(int lo, int hi)
         }
       return;
     }
-  // -- determine suitable quick-sort pivot
+      // -- determine median-of-three pivot
   TYPE tmp = data[lo];
   TYPE pivot = data[(lo+hi)/2];
   if (pivot <= tmp)
@@ -593,9 +595,16 @@ GArrayTemplate<TYPE>::sort(int lo, int hi)
           h = h-1;
       }
     }
-  // -- recursively restart
-  sort(lo, h);
-  sort(l, hi);
+      // -- recurse, small partition first
+      //    tail-recursion elimination
+      if (h - lo <= hi - l) {
+        sort(lo,h);
+        lo = l; // sort(l,hi)
+      } else {
+        sort(l,hi);
+        hi = h; // sort(lo,h)
+      }
+    }
 }
 
 template<class TYPE> inline TYPE&
@@ -829,9 +838,9 @@ public:
 template<class TI>
 class GListImpl : public GListBase
 {
+  typedef GCONT ListNode<TI> LNode;
 protected:
   GListImpl();
-  typedef GCONT ListNode<TI> LNode;
   static Node * newnode(const TI &elt);
   int operator==(const GListImpl<TI> &l2) const;
   int search(const TI &elt, GPosition &pos) const;
@@ -848,7 +857,7 @@ GListImpl<TI>::newnode(const TI &elt)
 {
   LNode  *n = (LNode *) operator new (sizeof(LNode ));
 #if GCONTAINER_ZERO_FILL
-  memset(n, 0, sizeof(LNode ));
+  memset((void*)n, 0, sizeof(LNode ));
 #endif
   new ((void*)&(n->val)) TI(elt);
   return (Node*) n;
@@ -884,6 +893,7 @@ GListImpl<TI>::search(const TI &elt, GPosition &pos) const
 template <class TYPE, class TI>
 class GListTemplate : protected GListImpl<TI>
 {
+  typedef GCONT ListNode<TI> LNode;
 public:
   // -- ACCESS
   /** Returns the number of elements in the list. */
@@ -904,7 +914,7 @@ public:
       segmentation violation. See \Ref{GPosition} for efficient operations on
       positions. */
   TYPE& operator[](GPosition pos)
-    { return (TYPE&) (((typename GListImpl<TI>::LNode *)pos.check((void*)this))->val); }
+    { return (TYPE&) (((LNode *)pos.check((void*)this))->val); }
   /** Returns a constant reference to the list element at position #pos#.
       This reference only be used for reading a list element.  An exception
       \Ref{GException} is thrown if #pos# is not a valid position. This
@@ -912,7 +922,7 @@ public:
       GList<TYPE>#.  See \Ref{GPosition} for efficient operations on
       positions. */
   const TYPE& operator[](GPosition pos) const
-    { return (const TYPE&) (((const typename GListImpl<TI>::LNode *)pos.check((void*)this))->val); }
+    { return (const TYPE&) (((const LNode *)pos.check((void*)this))->val); }
   // -- TEST
   /** Tests whether a list is empty.  
       Returns a non zero value if the list contains no elements. */
@@ -1099,10 +1109,10 @@ public:
 template <class K>
 class GSetImpl : public GSetBase
 {
+  typedef GCONT SetNode<K> SNode;
 protected:
   GSetImpl();
   GSetImpl(const Traits &traits);
-  typedef GCONT SetNode<K> SNode;
   HNode *get(const K &key) const;
   HNode *get_or_throw(const K &key) const;
   HNode *get_or_create(const K &key);
@@ -1171,10 +1181,10 @@ GSetImpl<K>::get_or_create(const K &key)
 template <class K, class TI>
 class GMapImpl : public GSetImpl<K>
 {
+  typedef GCONT MapNode<K,TI> MNode;
 protected:
   GMapImpl();
   GMapImpl(const GCONT Traits &traits);
-  typedef GCONT MapNode<K,TI> MNode;
   GCONT HNode* get_or_create(const K &key);
 };
 
@@ -1217,6 +1227,7 @@ GMapImpl<K,TI>::get_or_create(const K &key)
 template <class KTYPE, class VTYPE, class TI>
 class GMapTemplate : protected GMapImpl<KTYPE,TI>
 {
+  typedef GCONT MapNode<KTYPE,TI> MNode;
 public:
   /** Returns the number of elements in the map. */
   int size() const
@@ -1249,32 +1260,32 @@ public:
       #pos#.  An exception \Ref{GException} is thrown if position #pos# is not
       valid.  There is no direct way to change the key of a map entry. */
   const KTYPE &key(const GPosition &pos) const
-    { return (const KTYPE&)(((typename GMapImpl<KTYPE,TI>::MNode*)(pos.check((void*)this)))->key); }
+    { return (const KTYPE&)(((MNode*)(pos.check((void*)this)))->key); }
   /** Returns a reference to the value of the map entry at position #pos#.
       This reference can be used for both reading (as "#a[n]#") and modifying
       (as "#a[n]=v#").  An exception \Ref{GException} is thrown if position
       #pos# is not valid. */
   VTYPE& operator[](const GPosition &pos)
-    { return (VTYPE&)(((typename GMapImpl<KTYPE,TI>::MNode*)(pos.check((void*)this)))->val); }
+    { return (VTYPE&)(((MNode*)(pos.check((void*)this)))->val); }
   /** Returns a constant reference to the value of the map entry at position
       #pos#.  This reference can only be used for reading (as "#a[n]#") the
       entry value.  An exception \Ref{GException} is thrown if position #pos#
       is not valid. */
   const VTYPE& operator[](const GPosition &pos) const
-    { return (const VTYPE&)(((typename GMapImpl<KTYPE,TI>::MNode*)(pos.check((void*)this)))->val); }
+    { return (const VTYPE&)(((MNode*)(pos.check((void*)this)))->val); }
   /** Returns a constant reference to the value of the map entry for key
       #key#.  This reference can only be used for reading (as "#a[n]#") the
       entry value.  An exception \Ref{GException} is thrown if no entry
       contains key #key#. This variant of #operator[]# is necessary when
       dealing with a #const GMAP<KTYPE,VTYPE>#. */
   const VTYPE& operator[](const KTYPE &key) const
-    { return (const VTYPE&)(((const typename GMapImpl<KTYPE,TI>::MNode*)(this->get_or_throw(key)))->val); }
+    { return (const VTYPE&)(((const MNode*)(this->get_or_throw(key)))->val); }
   /** Returns a reference to the value of the map entry for key #key#.  This
       reference can be used for both reading (as "#a[n]#") and modifying (as
       "#a[n]=v#"). If there is no entry for key #key#, a new entry is created
       for that key with the null constructor #VTYPE::VTYPE()#. */
   VTYPE& operator[](const KTYPE &key)
-    { return (VTYPE&)(((typename GMapImpl<KTYPE,TI>::MNode*)(this->get_or_create(key)))->val); }
+    { return (VTYPE&)(((MNode*)(this->get_or_create(key)))->val); }
   /** Destroys the map entry for position #pos#.  
       Nothing is done if position #pos# is not a valid position. */
   void del(GPosition &pos)

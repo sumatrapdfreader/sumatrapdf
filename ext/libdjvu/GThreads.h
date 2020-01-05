@@ -71,22 +71,6 @@
     provided by class \Ref{GMonitor} which implements a monitor (C.A.R Hoare,
     Communications of the ACM, 17(10), 1974).
 
-    The value of compiler symbol #THREADMODEL# selects an appropriate
-    implementation for these classes. The current implementation supports
-    the following values:
-    \begin{description}
-    \item[-DTHREADMODEL=NOTHREADS] Dummy implementation.  This is a
-          good choice when the multithreading features are not required,
-          because it minimizes the portability problems.  This is currently
-          the default when compiling under Unix.
-    \item[-DTHREADMODEL=WINTHREADS] Windows implementation.
-          This is the default when compiling under Windows.
-    \item[-DTHREADMODEL=POSIXTHREADS] Posix implementation.
-          This implementation also supports DCE threads. The behavior of
-          the code is subject to the quality of the system implementation of
-          Posix threads.
-    \end{description}
-    
     @memo
     Portable threads
     @author
@@ -96,6 +80,7 @@
 // From: Leon Bottou, 1/31/2002
 // Almost unchanged by Lizardtech.
 // GSafeFlags should go because it not as safe as it claims.
+// Reduced to only WINTHREADS and POSIXTHREADS around djvulibre-3.5.25
 
 */
 //@{
@@ -104,45 +89,27 @@
 #include "DjVuGlobal.h"
 #include "GException.h"
 
-#define NOTHREADS     0
-#define POSIXTHREADS  10
-#define WINTHREADS    11
-/* SumatraPDF: prevent these constants from being confused with NOTHREADS */
-#define MACTHREADS    -1
-#define COTHREADS     -1
-
 // Known platforms
-#ifndef THREADMODEL
-#if defined(WIN32)
-#define THREADMODEL WINTHREADS
-#endif
-#endif
+# ifdef _WIN32
+#  define WINTHREADS 1
+# elif HAVE_PTHREAD
+#  define POSIXTHREADS 1
+# else
+#  error "Libdjvu requires thread support"
+# endif
 
-// Exception emulation is not thread safe
-#ifdef USE_EXCEPTION_EMULATION
-#undef  THREADMODEL
-#define THREADMODEL NOTHREADS
-#endif
-// Default is nothreads
-#ifndef THREADMODEL
-#define THREADMODEL NOTHREADS
-#endif
 
 // ----------------------------------------
 // INCLUDES
 
-#if THREADMODEL==WINTHREADS
+#if WINTHREADS
 #ifndef _WINDOWS_
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #endif
 #endif
 
-#if THREADMODEL==MACTHREADS
-#include <threads.h>
-#endif
-
-#if THREADMODEL==POSIXTHREADS
+#if POSIXTHREADS
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -219,11 +186,11 @@ public:
   static int yield();
   /** Returns a value which uniquely identifies the current thread. */
   static void *current();
-#if THREADMODEL==WINTHREADS
+#if WINTHREADS
 private:
   HANDLE hthr;
   DWORD  thrid;
-#elif THREADMODEL==POSIXTHREADS
+#elif POSIXTHREADS
 private:
   pthread_t hthr;
   static void *start(void *arg);
@@ -300,14 +267,14 @@ public:
       function is called by a thread which does not own the monitor. */
   void broadcast();
 private:
-#if THREADMODEL==WINTHREADS
+#if WINTHREADS
   int ok;
   int count;
   DWORD locker;
   CRITICAL_SECTION cs;
   struct thr_waiting *head;
   struct thr_waiting *tail;
-#elif THREADMODEL==POSIXTHREADS
+#elif POSIXTHREADS
   int ok;
   int count;
   pthread_t locker;
@@ -322,25 +289,6 @@ private:
 
 
 
-
-// ----------------------------------------
-// NOTHREADS INLINES
-
-#if THREADMODEL==NOTHREADS
-inline GThread::GThread(int stacksize) {}
-inline GThread::~GThread(void) {}
-inline void GThread::terminate() {}
-inline int GThread::yield() { return 0; }
-inline void* GThread::current() { return 0; }
-inline GMonitor::GMonitor() {}
-inline GMonitor::~GMonitor() {}
-inline void GMonitor::enter() {}
-inline void GMonitor::leave() {}
-inline void GMonitor::wait() {}
-inline void GMonitor::wait(unsigned long timeout) {}
-inline void GMonitor::signal() {}
-inline void GMonitor::broadcast() {}
-#endif // NOTHREADS
 
 
 // ----------------------------------------

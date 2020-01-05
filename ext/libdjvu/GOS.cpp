@@ -76,8 +76,9 @@
 # define UNIX 1
 #endif
 
-#if defined(WIN32) && !defined(UNIX)
+#if defined(_WIN32) && !defined(UNIX)
 # include <windows.h>
+# include <string.h>
 # include <direct.h>
 # define getcwd _getcwd
 #endif
@@ -148,17 +149,10 @@ strerror(int errno)
   extern char *sys_errlist[];
   if (errno>0 && errno<sys_nerr) 
     return sys_errlist[errno];
-  return "unknown stdio error";
+  return (char*) "unknown stdio error";
 }
 #endif
 
-
-static const char slash='/';
-static const char percent='%';
-static const char backslash='\\';
-static const char colon=':';
-static const char dot='.';
-static const char nillchar=0;
 
 
 // -----------------------------------------
@@ -168,7 +162,7 @@ static const char nillchar=0;
 static inline int
 finddirsep(const GUTF8String &fname)
 {
-#if defined(WIN32)
+#if defined(_WIN32)
   return fname.rcontains("\\/",0);
 #elif defined(UNIX)
   return fname.rsearch('/',0);
@@ -190,20 +184,20 @@ GOS::basename(const GUTF8String &gfname, const char *suffix)
     return gfname;
 
   const char *fname=gfname;
-#if defined(WIN32) || defined(OS2)
+#if defined(_WIN32) || defined(OS2)
   // Special cases
-  if (fname[1] == colon)
+  if (fname[1] == ':')
   {
     if(!fname[2])
     {
       return gfname;
     }
-    if (!fname[3] && (fname[2]== slash || fname[2]== backslash))
+    if (!fname[3] && (fname[2]== '/' || fname[2]== '\\'))
     {
       char string_buffer[4];
       string_buffer[0] = fname[0];
-      string_buffer[1] = colon;
-      string_buffer[2] = backslash; 
+      string_buffer[1] = ':';
+      string_buffer[2] = '\\';
       string_buffer[3] = 0; 
       return string_buffer;
     }
@@ -218,7 +212,7 @@ GOS::basename(const GUTF8String &gfname, const char *suffix)
   // Process suffix
   if (suffix)
   {
-    if (suffix[0]== dot )
+    if (suffix[0]== '.' )
       suffix ++;
     if (suffix[0])
     {
@@ -228,7 +222,7 @@ GOS::basename(const GUTF8String &gfname, const char *suffix)
       if (s > fname + sl)
       {
         s = s - (sl + 1);
-        if(*s == dot && (GUTF8String(s+1).downcase() == gsuffix.downcase()))
+        if(*s == '.' && (GUTF8String(s+1).downcase() == gsuffix.downcase()))
         {
           retval.setat((int)((size_t)s-(size_t)fname),0);
         }
@@ -271,7 +265,7 @@ GOS::ticks()
     G_THROW(errmsg());
   return (unsigned long)( ((tv.tv_sec & 0xfffff)*1000) 
                           + (tv.tv_usec/1000) );
-#elif defined(WIN32)
+#elif defined(_WIN32)
   DWORD clk = GetTickCount();
   return (unsigned long)clk;
 #elif defined(OS2)
@@ -294,12 +288,8 @@ GOS::sleep(int milliseconds)
   struct timeval tv;
   tv.tv_sec = milliseconds / 1000;
   tv.tv_usec = (milliseconds - (tv.tv_sec * 1000)) * 1000;
-# if defined(THREADMODEL) && (THREADMODEL==COTHREADS)
-  GThread::select(0, NULL, NULL, NULL, &tv);
-# else
-  select(0, NULL, NULL, NULL, &tv);
-# endif
-#elif defined(WIN32)
+  ::select(0, NULL, NULL, NULL, &tv);
+#elif defined(_WIN32)
   Sleep(milliseconds);
 #elif defined(OS2)
   DosSleep(milliseconds);
@@ -334,11 +324,11 @@ GOS::cwd(const GUTF8String &dirname)
   if (!result)
     G_THROW(errmsg());
   return GNativeString(result).getNative2UTF8();//MBCS cvt
-#elif defined (WIN32)
+#elif defined(_WIN32)
   char drv[2];
   if (dirname.length() && _chdir(dirname.getUTF82Native())==-1)//MBCS cvt
     G_THROW(errmsg());
-  drv[0]= dot ; drv[1]=0;
+  drv[0]= '.' ; drv[1]=0;
   char *string_buffer;
   GPBuffer<char> gstring_buffer(string_buffer,MAXPATHLEN+1);
   char *result = getcwd(string_buffer,MAXPATHLEN);

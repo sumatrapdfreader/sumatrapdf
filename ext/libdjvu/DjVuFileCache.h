@@ -172,18 +172,14 @@ public:
 	public:
 	   virtual ~Item(void);
 	   time_t		get_time(void) const;
-
 	   GP<DjVuFile>	get_file(void) const;
 	   unsigned int	get_size(void) const;
-	   
 	   void		refresh(void);
 
 	public:
 	   GP<DjVuFile>	file;
 	   time_t		time;
-	   GPosition		list_pos;
 	   static int	qsort_func(const void * el1, const void * el2);
-
 	   Item(void);
 	   Item(const GP<DjVuFile> & xfile);
 	};

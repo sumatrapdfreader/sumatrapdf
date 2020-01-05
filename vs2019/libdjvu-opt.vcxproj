@@ -278,8 +278,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -306,8 +306,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4091;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4091;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -335,8 +335,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4731;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4731;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -364,8 +364,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -392,8 +392,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -419,8 +419,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4091;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4091;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -447,8 +447,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4731;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4731;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -475,8 +475,8 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -501,8 +501,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -528,8 +528,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4091;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4091;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -556,8 +556,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4731;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4731;4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -584,8 +584,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;THREADMODEL=0;DDJVUAPI=/**/;MINILISPAPI=/**/;DO_CHANGELOCALE=0;DEBUGLVL=0;DISABLE_MMX;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4127;4324;4458;4522;4800;4100;4189;4244;4267;4302;4311;4312;4505;4456;4457;4459;4530;4611;4701;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;NEED_JPEG_DECODER;WINTHREADS=1;DDJVUAPI=/**/;MINILISPAPI=/**/;DEBUGLVL=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>

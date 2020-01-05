@@ -72,20 +72,12 @@
 
 /** @name GException.h
 
-    Files #"GException.h"# and #"GException.cpp"# define a portable exception
-    scheme used through the DjVu Reference Library. This scheme can use native
-    C++ exceptions or an exception emulation based on #longjmp#/#setjmp#. A
-    particular model can be forced a compile time by defining option
-    #CPP_SUPPORTS_EXCEPTIONS# or #USE_EXCEPTION_EMULATION#.
-    
-    This emulation code was motivated because many compilers did not properly
-    support exceptions as mandated by the C++ standard documents. This
-    emulation is now considered obsolete because (a) it is not able to call
-    the proper destructors when an exception occurs, and (b) it is not thread
-    safe.  Although all modern C++ compiler handle exception decently, the
-    exception handling intrinsics are not always thread safe.  Therefore we
-    urge programmers to {\em only} use exceptions to signal error conditions
-    that force the library to discontinue execution.
+    Files #"GException.h"# and #"GException.cpp"# are left over from a
+    portable exception scheme used through the DjVu Reference Library.  The
+    setjmp/longjmp exception emulation code was motivated because many
+    compilers did not properly support exceptions as mandated by the C++
+    standard documents. This emulation is now considered obsolete. All
+    exception are now based on C++ exception.
     
     There are four macros for handling exceptions.  Macros #G_TRY#, #G_CATCH# and
     #G_ENDCATCH# are used to define an exception catching block.  Exceptions can
@@ -121,29 +113,9 @@
 
 // Check if compiler supports native exceptions
 #ifdef HAVE_CONFIG_H
-# if HAVE_EXCEPTIONS
-#  define CPP_SUPPORTS_EXCEPTIONS
+# ifndef HAVE_EXCEPTIONS
+#  define USE_EXCEPTION_EMULATION 1
 # endif
-#else
-# if defined(_MSC_VER)
-#  define CPP_SUPPORTS_EXCEPTIONS
-# endif
-# if defined(__MWERKS__)
-#  define CPP_SUPPORTS_EXCEPTIONS
-# endif
-# if defined(__EXCEPTIONS)
-#  define CPP_SUPPORTS_EXCEPTIONS
-# endif
-#endif
-// Decide which exception model to use
-#ifndef CPP_SUPPORTS_EXCEPTIONS
-# ifndef USE_EXCEPTION_EMULATION
-#  define USE_EXCEPTION_EMULATION
-# endif
-#endif
-
-#ifdef USE_EXCEPTION_EMULATION
-# include <setjmp.h>
 #endif
 
 #ifdef HAVE_NAMESPACES
@@ -243,109 +215,27 @@ private:
 #undef G_ENDCATCH
 #undef G_RETHROW
 #undef G_THROW
-#undef G_THROW_TYPE
-#undef G_THROW_INTERNAL
-#undef G_THROW_EXTERNAL
-#undef G_THROW_APPLICATION
-#undef G_THROW_OTHER
 
-#ifndef USE_EXCEPTION_EMULATION
+#ifdef USE_EXCEPTION_EMULATION
+# error "Libdjvulibre requires c++ exceptions"
+#else
 
 // Compiler supports ANSI C++ exceptions.
 // Defined exception macros accordingly.
 
-class DJVUAPI GExceptionHandler {
-public:
-#ifndef NO_LIBGCC_HOOKS
-  static void exthrow(const GException &) no_return;
-#else
-  static void exthrow(const GException ) no_return;
-#endif /* NO_LIBGCC_HOOKS */
-  static void rethrow(void) no_return;
-};
+# define G_TRY         try
+# define G_CATCH(n)    catch(const GException &n) { 
+# define G_CATCH_ALL   catch(...) { 
+# define G_ENDCATCH    } 
+# define G_RETHROW     throw
+# ifdef __GNUG__
+#  define G_THROW(msg) throw GException(msg,__FILE__,__LINE__,__PRETTY_FUNCTION__)
+# else
+#  define G_THROW(msg) throw GException(msg,__FILE__,__LINE__)
+# endif
 
-#define G_TRY        try
-#define G_CATCH(n)   catch(const GException &n) { 
-#define G_CATCH_ALL   catch(...) { 
-#define G_ENDCATCH   } 
-#define G_RETHROW    GExceptionHandler::rethrow()
-#define G_EMTHROW(ex)  GExceptionHandler::exthrow(ex)
-#ifdef __GNUG__
-#define G_THROW_TYPE(msg,xtype) GExceptionHandler::exthrow \
-  (GException(msg, __FILE__, __LINE__, __PRETTY_FUNCTION__, xtype))
-#else
-#define G_THROW_TYPE(msg,xtype) GExceptionHandler::exthrow \
-  (GException(msg, __FILE__, __LINE__,0, xtype))
 #endif
 
-#else // USE_EXCEPTION_EMULATION
-
-// Compiler does not support ANSI C++ exceptions.
-// Emulate with setjmp/longjmp.
-
-class DJVUAPI GExceptionHandler {
-public:
-  jmp_buf jump;
-  GExceptionHandler *next;
-  GException current;
-public:
-  static GExceptionHandler *head;
-  static void emthrow(const GException &) no_return;
-public:
-  GExceptionHandler() { next = head; };
-  ~GExceptionHandler() { head = next; };
-};
-
-#define G_TRY    do { GExceptionHandler __exh; \
-                      if (!setjmp(__exh.jump)) \
-                      { GExceptionHandler::head = &__exh;
-
-#define G_CATCH_ALL } else { GExceptionHandler::head = __exh.next; 
-#define G_CATCH(n) G_CATCH_ALL const GException& n = __exh.current;
-
-#define G_ENDCATCH } } while(0)
-
-#define G_RETHROW    GExceptionHandler::emthrow(__exh.current)
-
-#ifdef __GNUG__
-#define G_THROW_TYPE(msg,xtype) GExceptionHandler::emthrow \
-  (GException(msg, __FILE__, __LINE__, __PRETTY_FUNCTION__, xtype)) 
-#define G_EMTHROW(ex) GExceptionHandler::emthrow(ex)
-#else
-// SumatraPDF: don't collect messages, file and line for smaller size
-#define G_THROW_TYPE(m,xtype) GExceptionHandler::emthrow \
-  (GException(0, 0, 0, 0, xtype))
-#define G_EMTHROW(ex) GExceptionHandler::emthrow(ex)
-#endif
-
-#endif // !CPP_SUPPORTS_EXCEPTIONS
-
-
-inline void G_EXTHROW(const GException &ex,
-   const char *msg=0,const char *file=0,int line=0, const char *func=0,
-   const GException::source_type source=GException::GINTERNAL)
-{
-  G_EMTHROW( (msg||file||line||func)?
-      GException(msg?msg:ex.get_cause(),
-        file?file:ex.get_file(),
-        line?line:ex.get_line(),
-        func?func:ex.get_function(),
-        source)
-  :ex);
-}
-
-inline void G_EXTHROW(const char msg[],
-   const char *file=0,int line=0,const char *func=0,
-   const GException::source_type source=GException::GINTERNAL )
-{
-  G_EMTHROW(GException(msg,file,line,func,source));
-}
-
-#define G_THROW(msg) G_THROW_TYPE(msg,GException::GINTERNAL)
-#define G_THROW_INTERNAL(msg) G_THROW_TYPE(msg,GException::GINTERNAL)
-#define G_THROW_EXTERNAL(msg) G_THROW_TYPE(msg,GException::GEXTERNAL)
-#define G_THROW_APPLICATION(msg) G_THROW_TYPE(msg,GException::GAPPLICATION)
-#define G_THROW_OTHER(msg) G_THROW_TYPE(msg,GException::GOTHER)
 
 // -------------- THE END
 

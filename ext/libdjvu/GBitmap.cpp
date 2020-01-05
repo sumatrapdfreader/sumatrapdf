@@ -205,10 +205,12 @@ GBitmap::GBitmap(const GBitmap &ref, const GRect &rect, int border)
 void 
 GBitmap::init(int arows, int acolumns, int aborder)
 {
+  size_t np = arows * (acolumns + aborder) + aborder;
   if (arows != (unsigned short) arows ||
       acolumns != (unsigned short) acolumns ||
-      acolumns + aborder != (unsigned short)(acolumns + aborder))
-    G_THROW("Illegal arguments");
+      acolumns + aborder != (unsigned short)(acolumns + aborder) ||
+      (arows > 0 && (np-aborder)/(size_t)arows!=(size_t)(acolumns+aborder)) )
+    G_THROW("GBitmap: image size exceeds maximum (corrupted file?)");
   GMonitorLock lock(monitor());
   destroy();
   grays = 2;
@@ -469,7 +471,7 @@ GBitmap::share()
 {
   if (!monitorptr)
     {
-      unsigned long x = (unsigned long)this;
+      size_t x = (size_t)this;
       monitorptr = &monitors[(x^(x>>5)) % NMONITORS];
     }
 }
@@ -888,11 +890,13 @@ GBitmap::read_rle_raw(ByteStream &bs)
   int c = 0;
   while (n >= 0)
     {
-      bs.read(&h, 1);
+      if (bs.read(&h, 1) <= 0)
+        G_THROW( ByteStream::EndOfFile );
       int x = h;
       if (x >= (int)RUNOVERFLOWVALUE)
         {
-          bs.read(&h, 1);
+          if (bs.read(&h, 1) <= 0)
+            G_THROW( ByteStream::EndOfFile );
           x = h + ((x - (int)RUNOVERFLOWVALUE) << 8);
         }
       if (c+x > ncolumns)
@@ -1283,7 +1287,7 @@ GBitmap::decode(unsigned char *runs)
   bytes_per_row = ncolumns + border;
   if (runs==0)
     G_THROW( ERR_MSG("GBitmap.null_arg") );
-  int npixels = nrows * bytes_per_row + border;
+  size_t npixels = nrows * bytes_per_row + border;
   if (!bytes_data)
   {
     gbytes_data.resize(npixels);

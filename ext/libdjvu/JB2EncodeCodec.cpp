@@ -174,7 +174,6 @@ JB2Image::encode(const GP<ByteStream> &gbs) const
 static const int BIGPOSITIVE = 262142;
 static const int BIGNEGATIVE = -262143;
 static const int CELLCHUNK = 20000;
-static const int CELLEXTRA =   500;
 
 // CONSTRUCTOR
 

@@ -106,7 +106,7 @@ display_djvu_info(ByteStream & out_str, IFFByteStream &iff,
     out_str.format( ", v%d", info.version);
   if (size >= 8)
     out_str.format( ", %d dpi", info.dpi);
-  if (size >= 8)
+  if (size >= 9)
     out_str.format( ", gamma=%3.1f", info.gamma);
 }
 

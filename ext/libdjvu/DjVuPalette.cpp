@@ -89,6 +89,7 @@ namespace DJVU {
 
 #define MAXPALETTESIZE 65535 // Limit for a 16 bit unsigned read.
 
+#define fmin fltmin // clash with existing fmin
 
 inline unsigned char 
 umax(unsigned char a, unsigned char b) 
@@ -98,12 +99,9 @@ inline unsigned char
 umin(unsigned char a, unsigned char b) 
 { return (a>b) ? b : a; }
 
-/* SumatraPDF: in VS 2013 math.h already defines fmin */
-#if !defined(_MSC_VER) || (_MSC_VER < 1800)
 inline float 
 fmin(float a, float b) 
 { return (a>b) ? b : a; }
-#endif
 
 
 

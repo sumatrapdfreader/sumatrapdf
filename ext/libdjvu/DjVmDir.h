@@ -181,6 +181,7 @@ public:
       /** Translates file IDs to file records. */
    GP<File> id_to_file(const GUTF8String &id) const;
       /** Translates file shortcuts to file records. */
+   GP<File> title_to_file(const GUTF8String &title, GPosition spos) const;
    GP<File> title_to_file(const GUTF8String &title) const;
       /** Access file record by position. */
    GP<File> pos_to_file(int fileno, int *ppageno=0) const;
@@ -216,7 +217,6 @@ private:
    GPArray<File> page2file;
    GPMap<GUTF8String, File> name2file;
    GPMap<GUTF8String, File> id2file;
-   GPMap<GUTF8String, File> title2file;
 private: //dummy stuff
    static void decode(ByteStream *);
    static void encode(ByteStream *);
@@ -438,6 +438,13 @@ DjVmDir::is_indirect(void) const
   GCriticalSectionLock lock((GCriticalSection *) &class_lock);
   return ( files_list.size() && files_list[files_list] != 0 &&
            files_list[files_list]->offset==0 );
+}
+
+inline GP<DjVmDir::File> 
+DjVmDir::title_to_file(const GUTF8String &title) const
+{
+  GPosition pos;
+  return title_to_file(title, pos);
 }
 
 

@@ -125,15 +125,6 @@ static const int iw_quant[16] = {
   0x040000, 0x040000, 0x080000
 };
 
-static const float iw_norm[16] = {
-  2.627989e+03F,
-  1.832893e+02F, 1.832959e+02F, 5.114690e+01F,
-  4.583344e+01F, 4.583462e+01F, 1.279225e+01F,
-  1.149671e+01F, 1.149712e+01F, 3.218888e+00F,
-  2.999281e+00F, 2.999476e+00F, 8.733161e-01F,
-  1.074451e+00F, 1.074511e+00F, 4.289318e-01F
-};
-
 static const int iw_border = 3;
 static const int iw_shift  = 6;
 static const int iw_round  = (1<<(iw_shift-1));
@@ -167,7 +158,7 @@ static const int   d16[] = {16,16};
 static void
 mmx_bv_1 ( short* &q, short* e, int s, int s3 )
 {
-  while (q<e && (((long)q)&0x7))
+  while (q<e && (((size_t)q)&0x7))
     {
       int a = (int)q[-s] + (int)q[s];
       int b = (int)q[-s3] + (int)q[s3];
@@ -211,7 +202,7 @@ mmx_bv_1 ( short* &q, short* e, int s, int s3 )
 static void
 mmx_bv_2 ( short* &q, short* e, int s, int s3 )
 {
-  while (q<e && (((long)q)&0x7))
+  while (q<e && (((size_t)q)&0x7))
     {
       int a = (int)q[-s] + (int)q[s];
       int b = (int)q[-s3] + (int)q[s3];
@@ -604,7 +595,7 @@ IW44Image::Map::Map(int w, int h)
 {
   bw = (w+0x20-1) & ~0x1f;
   bh = (h+0x20-1) & ~0x1f;
-  nb = (bw * bh) / (32 * 32);
+  nb = (unsigned int)(bw*bh) / (32 * 32);
   blocks = new IW44Image::Block[nb];
   top = IWALLOCSIZE;
 }
@@ -649,7 +640,7 @@ IW44Image::Map::allocp(int n)
   // Allocate enough room for pointers plus alignment
   short *p = alloc( (n+1) * sizeof(short*) / sizeof(short) );
   // Align on pointer size
-  while ( ((long)p) & (sizeof(short*)-1) )
+  while ( ((size_t)p) & (sizeof(short*)-1) )
     p += 1;
   // Cast and return
   return (short**)p;
@@ -684,10 +675,10 @@ IW44Image::Map::image(signed char *img8, int rowsize, int pixsep, int fast)
 {
   // Allocate reconstruction buffer
   short *data16;
-  // cf. http://sourceforge.net/p/djvu/djvulibre-git/ci/7993b445f071a15248bd4be788a10643213cb9d2/
-  if (INT_MAX / bw < bh)
+  size_t sz = bw * bh;
+  if (sz / (size_t)bw != (size_t)bh) // multiplication overflow
     G_THROW("IW44Image: image size exceeds maximum (corrupted file?)");
-  GPBuffer<short> gdata16(data16,bw*bh);
+  GPBuffer<short> gdata16(data16,sz);
   // Copy coefficients
   int i;
   short *p = data16;

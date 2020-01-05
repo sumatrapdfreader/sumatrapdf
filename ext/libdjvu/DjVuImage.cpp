@@ -1444,7 +1444,7 @@ DjVuImage::writeXML(ByteStream &str_out,const GURL &doc_url,const int flags) con
   }
   str_out.writestring(page_param);
   const GP<DjVuAnno> anno(DjVuAnno::create());
-  if(!(flags & NOINFO)||!(flags&NOMAP))
+  if(!(flags & NOMAP))
   {
     const GP<ByteStream> anno_str(get_anno());
     if(anno_str)

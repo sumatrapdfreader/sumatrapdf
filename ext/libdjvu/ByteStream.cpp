@@ -75,8 +75,11 @@
 #include "DjVuMessage.h"
 #include <stddef.h>
 #include <fcntl.h>
-#if defined(WIN32) || defined(__CYGWIN32__)
+#if defined(_WIN32) || defined(__CYGWIN32__)
 # include <io.h>
+#endif
+#if defined(__APPLE__)
+# include <CoreFoundation/CFString.h>
 #endif
 
 #ifdef UNIX
@@ -106,12 +109,10 @@ __inline int dup2(int _a, int _b ) { return _dup2(_a, _b);}
 # endif
 #endif
 
-#ifdef WIN32
-# if !defined(__MINGW32__) && !defined(__CYGWIN32__)
+#if defined(_WIN32) && !defined(__CYGWIN32__)
 #  define close _close
 #  define fdopen _fdopen
 #  define dup _dup
-# endif
 #endif
 
 #ifdef HAVE_NAMESPACES
@@ -210,25 +211,26 @@ public:
   /** Returns the total number of bytes contained in the buffer.  Valid
       offsets for function #seek# range from 0 to the value returned by this
       function. */
-  virtual int size(void) const;
+  virtual long size(void) const;
   /** Returns a reference to the byte at offset #n#. This reference can be
       used to read (as in #mbs[n]#) or modify (as in #mbs[n]=c#) the contents
       of the buffer. */
   char &operator[] (int n);
+  char &operator[] (long n);
   /** Copies all internal data into \Ref{TArray} and returns it */
 private:
   // Cancel C++ default stuff
   Memory(const Memory &);
   Memory & operator=(const Memory &);
   // Current position
-  int where;
+  long where;
 protected:
   /** Reads data from a random position. This function reads at most #sz#
       bytes at position #pos# into #buffer# and returns the actual number of
       bytes read.  The current position is unchanged. */
-  virtual size_t readat(void *buffer, size_t sz, int pos);
+  virtual size_t readat(void *buffer, size_t sz, long pos);
   /** Number of bytes in internal buffer. */
-  int bsize;
+  long bsize;
   /** Number of 4096 bytes blocks. */
   int nblocks;
   /** Pointers (possibly null) to 4096 bytes blocks. */
@@ -239,7 +241,7 @@ protected:
 
 
 
-inline int
+inline long
 ByteStream::Memory::size(void) const
 {
   return bsize;
@@ -247,6 +249,12 @@ ByteStream::Memory::size(void) const
 
 inline char &
 ByteStream::Memory::operator[] (int n)
+{
+  return blocks[n>>12][n&0xfff];
+}
+
+inline char &
+ByteStream::Memory::operator[] (long n)
 {
   return blocks[n>>12][n&0xfff];
 }
@@ -274,17 +282,17 @@ public:
   /** Returns the total number of bytes contained in the buffer, file, etc.
       Valid offsets for function #seek# range from 0 to the value returned
       by this function. */
-  virtual int size(void) const;
+  virtual long size(void) const;
 protected:
   const char *data;
-  int bsize;
+  long bsize;
 private:
-  int where;
+  long where;
 };
 
 ByteStream::Static::~Static() {}
 
-inline int
+inline long
 ByteStream::Static::size(void) const
 {
   return bsize;
@@ -343,8 +351,8 @@ ByteStream::flush()
 int
 ByteStream::seek(long offset, int whence, bool nothrow)
 {
-  int nwhere = 0;
-  int ncurrent = tell();
+  long nwhere = 0;
+  long ncurrent = tell();
   switch (whence)
     {
     case SEEK_SET:
@@ -376,17 +384,18 @@ ByteStream::seek(long offset, int whence, bool nothrow)
       return -1;
     G_THROW( ERR_MSG("ByteStream.backward") );
   }
-  while (nwhere>ncurrent)
+  while (nwhere > ncurrent)
   {
     char buffer[1024];
-    const int xbytes=(ncurrent+(int)sizeof(buffer)>nwhere)
-      ?(nwhere - ncurrent):(int)sizeof(buffer);
-    const int bytes = read(buffer, xbytes);
+      long xbytes = nwhere - ncurrent;
+      if (xbytes > (long)sizeof(buffer))
+        xbytes = sizeof(buffer);
+      long bytes = (long)read(buffer, xbytes);
     ncurrent += bytes;
     if (!bytes)
       G_THROW( ByteStream::EndOfFile );
     //  Seeking works funny on this ByteStream (ftell() acts strange)
-    if (ncurrent!=tell())
+      if (ncurrent != tell())
       G_THROW( ERR_MSG("ByteStream.seek") );
   }
   return 0;
@@ -478,8 +487,7 @@ ByteStream::copy(ByteStream &bsfrom, size_t size)
 {
   size_t total = 0;
   const size_t max_buffer_size=200*1024;
-  const size_t buffer_size=(size>0 && size<max_buffer_size)
-    ?size:max_buffer_size;
+  const size_t buffer_size=(size>0 && size<max_buffer_size)?size:max_buffer_size;
   char *buffer;
   GPBuffer<char> gbuf(buffer,buffer_size);
   for(;;)
@@ -624,7 +632,7 @@ ByteStream::Stdio::init(const char mode[])
   if(binary && fp) {
 #if defined(__CYGWIN32__)
     setmode(fileno(fp), O_BINARY);
-#elif defined(WIN32)
+#elif defined(_WIN32)
     _setmode(_fileno(fp), _O_BINARY);
 #endif
   }
@@ -645,37 +653,84 @@ ByteStream::Stdio::init(const char mode[])
   return retval;
 }
 
+#ifdef _WIN32
+static wchar_t *
+utf8_to_wide(const char *cstr)
+{
+  int wlen = strlen(cstr) + 1;
+  wchar_t *wstr = new wchar_t[wlen];
+  if (GUTF8String(cstr).ncopy(wstr, wlen) > 0)
+    return wstr;
+  delete [] wstr;
+  return 0;
+}
+#endif
+
+#ifdef __APPLE__
+static char *
+utf8_to_utf8mac(const char *cstr)
+{
+  int len = strlen(cstr);
+  CFStringRef utf8 = CFStringCreateWithCString(NULL, cstr, kCFStringEncodingUTF8);
+  int buflen = CFStringGetMaximumSizeOfFileSystemRepresentation(utf8);
+  if (buflen < len+1) buflen = len+1;
+  char *nfdstr = new char[buflen];
+  if (! CFStringGetFileSystemRepresentation(utf8, nfdstr, buflen))
+    strcpy(nfdstr, cstr);
+  return nfdstr;
+}
+#endif
+
+
 static FILE *
 urlfopen(const GURL &url,const char mode[])
 {
-#ifdef WIN32
-  FILE *retval=0;
-  const GUTF8String filename(url.UTF8Filename());
-  wchar_t *wfilename;
-  const size_t wfilename_size=filename.length()+1;
-  GPBuffer<wchar_t> gwfilename(wfilename,wfilename_size);
-  if(filename.ncopy(wfilename,wfilename_size) > 0)
-  {
-    const GUTF8String gmode(mode);
-    wchar_t *wmode;
-    const size_t wmode_size=gmode.length()+1;
-    GPBuffer<wchar_t> gwmode(wmode,wmode_size);
-	if(gmode.ncopy(wmode,wmode_size) > 0)
-	{
-	  retval=_wfopen(wfilename,wmode);
-	}
-  }
-  return retval?retval:fopen((const char *)url.NativeFilename(),mode);
+  FILE *retval = 0;
+#if defined(_WIN32)
+  // On Win, try to use _wfopen instead of fopen
+  wchar_t *wstr = utf8_to_wide((const char*)url.UTF8Filename());
+  wchar_t *wmode = utf8_to_wide(mode);
+  if (wstr && wmode)
+    retval = _wfopen(wstr, wmode);
+  delete [] wstr;
+  delete [] wmode;
+  if (! retval)
+    retval = fopen((const char *)url.NativeFilename(),mode);
+#elif defined(__APPLE__)
+  // On Mac, prefer the NFD version of the UTF8 filename
+  const char *cnfd = utf8_to_utf8mac((const char*)url.UTF8Filename());
+  retval = fopen(cnfd, mode);
+  delete [] cnfd;
+  if (! retval) // Otherwise try unnormalized UTF8
+    retval = fopen((const char*)url.UTF8Filename(), mode);
 #else
-  return fopen((const char *)url.NativeFilename(),mode);
+  // Unix filesystems are usually in native encoding
+  retval = fopen((const char *)url.NativeFilename(),mode);
+  if (! retval)
+    retval = fopen((const char *)url.UTF8Filename(),mode);
 #endif
+  return retval;
 }
 
 #ifdef UNIX
 static int
 urlopen(const GURL &url, const int mode, const int perm)
 {
-  return open((const char *)url.NativeFilename(),mode,perm);
+  int retval = -1;
+#if defined(__APPLE__)
+  // see above
+  const char *cnfd = utf8_to_utf8mac((const char*)url.UTF8Filename());
+  retval = open(cnfd, mode, perm);
+  delete [] cnfd;
+  if (retval < 0)
+    retval = open((const char*)url.UTF8Filename(), mode, perm);
+#else
+  // see above
+  retval = open((const char *)url.NativeFilename(),mode,perm);
+  if (retval < 0)
+    retval = open((const char *)url.UTF8Filename(),mode,perm);
+#endif
+  return retval;
 }
 #endif /* UNIX */
 
@@ -829,7 +884,7 @@ ByteStream::Memory::~Memory()
 size_t 
 ByteStream::Memory::write(const void *buffer, size_t sz)
 {
-  int nsz = (int)sz;
+  long nsz = (long)sz;
   if (nsz <= 0)
     return 0;
   // check memory
@@ -838,7 +893,7 @@ ByteStream::Memory::write(const void *buffer, size_t sz)
       // reallocate pointer array
       if ( (where+nsz) > (nblocks<<12) )
         {
-          const int old_nblocks=nblocks;
+          const long old_nblocks=nblocks;
           nblocks = (((where+nsz)+0xffff)&~0xffff) >> 12;
           gblocks.resize(nblocks);
           char const ** eblocks=(char const **)(blocks+old_nblocks);
@@ -849,7 +904,7 @@ ByteStream::Memory::write(const void *buffer, size_t sz)
           }
         }
       // allocate blocks
-      for (int b=(where>>12); (b<<12)<(where+nsz); b++)
+      for (long b=(where>>12); (b<<12)<(where+nsz); b++)
       {
         if (! blocks[b])
           blocks[b] = new char[0x1000];
@@ -858,9 +913,9 @@ ByteStream::Memory::write(const void *buffer, size_t sz)
   // write data to buffer
   while (nsz > 0)
     {
-      int n = (where|0xfff) + 1 - where;
+      long n = (where|0xfff) + 1 - where;
       n = ((nsz < n) ? nsz : n);
-      memcpy( (void*)&blocks[where>>12][where&0xfff], buffer, n);
+      memcpy( (void*)&blocks[where>>12][where&0xfff], buffer, (size_t)n);
       buffer = (void*) ((char*)buffer + n);
       where += n;
       nsz -= n;
@@ -872,19 +927,19 @@ ByteStream::Memory::write(const void *buffer, size_t sz)
 }
 
 size_t 
-ByteStream::Memory::readat(void *buffer, size_t sz, int pos)
+ByteStream::Memory::readat(void *buffer, size_t sz, long pos)
 {
-  if ((int) sz > bsize - pos)
-    sz = bsize - pos;
-  int nsz = (int)sz;
+  if ((long)sz > bsize - pos)
+    sz = (size_t)(bsize - pos);
+  long nsz = (long)sz;
   if (nsz <= 0)
     return 0;
   // read data from buffer
   while (nsz > 0)
     {
-      int n = (pos|0xfff) + 1 - pos;
+      long n = (pos|0xfff) + 1 - pos;
       n = ((nsz < n) ? nsz : n);
-      memcpy(buffer, (void*)&blocks[pos>>12][pos&0xfff], n);
+      memcpy(buffer, (void*)&blocks[pos>>12][pos&0xfff], (size_t)n);
       buffer = (void*) ((char*)buffer + n);
       pos += n;
       nsz -= n;
@@ -909,17 +964,17 @@ ByteStream::Memory::tell(void) const
 int
 ByteStream::Memory::seek(long offset, int whence, bool nothrow)
 {
-  int nwhere = 0;
+  long nwhere = 0;
   switch (whence)
     {
     case SEEK_SET: nwhere = 0; break;
     case SEEK_CUR: nwhere = where; break;
     case SEEK_END: nwhere = bsize; break;
-    default: G_THROW( ERR_MSG("bad_arg") "\tByteStream::Memory::seek()");      // Illegal argument in ByteStream::Memory::seek()
+    default: G_THROW( ERR_MSG("bad_arg") "\tByteStream::Memory::seek()");
     }
   nwhere += offset;
   if (nwhere<0)
-    G_THROW( ERR_MSG("ByteStream.seek_error2") );                          //  Attempt to seek before the beginning of the file
+    G_THROW( ERR_MSG("ByteStream.seek_error2") );
   where = nwhere;
   return 0;
 }
@@ -950,7 +1005,7 @@ ByteStream::Static::Static(const void * const buffer, const size_t sz)
 size_t 
 ByteStream::Static::read(void *buffer, size_t sz)
 {
-  int nsz = (int)sz;
+  long nsz = (long)sz;
   if (nsz > bsize - where)
     nsz = bsize - where;
   if (nsz <= 0)
@@ -963,17 +1018,19 @@ ByteStream::Static::read(void *buffer, size_t sz)
 int
 ByteStream::Static::seek(long offset, int whence, bool nothrow)
 {
-  int nwhere = 0;
+  long nwhere = 0;
   switch (whence)
     {
     case SEEK_SET: nwhere = 0; break;
     case SEEK_CUR: nwhere = where; break;
     case SEEK_END: nwhere = bsize; break;
-    default: G_THROW("bad_arg\tByteStream::Static::seek()");      //  Illegal argument to ByteStream::Static::seek()
+    default: G_THROW("bad_arg\tByteStream::Static::seek()");
+      //  Illegal argument to ByteStream::Static::seek()
     }
   nwhere += offset;
   if (nwhere<0)
-    G_THROW( ERR_MSG("ByteStream.seek_error2") );                          //  Attempt to seek before the beginning of the file
+    G_THROW( ERR_MSG("ByteStream.seek_error2") );
+  //  Attempt to seek before the beginning of the file
   where = nwhere;
   return 0;
 }

@@ -24,11 +24,11 @@
         undefines { "DEBUG" }
         defines { "NDEBUG" }
 
-        -- TODO: try /D USE_EXCEPTION_EMULATION to see if it reduces the size
-        -- and disables the exceptions warnings
-        defines { "NEED_JPEG_DECODER", "THREADMODEL=0", "DDJVUAPI=/**/",  "MINILISPAPI=/**/", "DO_CHANGELOCALE=0", "DEBUGLVL=0" }
-        defines { "DISABLE_MMX" } -- TODO: maybe only for asan
-        disablewarnings { "4100", "4189", "4244", "4267", "4302", "4311", "4312" }
+        defines { "NEED_JPEG_DECODER", "WINTHREADS=1", "DDJVUAPI=/**/", "MINILISPAPI=/**/", "DEBUGLVL=0" }
+        filter {"platforms:x32_asan"}
+          defines { "DISABLE_MMX" }
+        filter{}
+        disablewarnings { "4100", "4189", "4244", "4267", "4302", "4311", "4312", "4505" }
         disablewarnings { "4456", "4457", "4459", "4530", "4611", "4701", "4702", "4703", "4706" }
         includedirs { "ext/libjpeg-turbo" }
         libdjvu_files()

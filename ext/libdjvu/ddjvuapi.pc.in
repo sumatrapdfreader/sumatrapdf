@@ -4,10 +4,10 @@ libdir = @libdir@
 includedir = @includedir@
 
 Name: ddjvuapi
-Description: DjVu decoding api.
+Description: DjVu Decoding API
 Version: @PACKAGE_VERSION@
 Requires:
 Conflicts:
-Libs: -L${libdir} -ldjvulibre 
-Libs.private: @JPEG_LIBS@ @PTHREAD_LIBS@ @LIBS@
-Cflags: -I${includedir} @JPEG_CFLAGS@ @PTHREAD_CFLAGS@
+Libs: @Libs@
+Libs.private: @Libsprivate@
+Cflags: @Cflags@
