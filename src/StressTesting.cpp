@@ -71,7 +71,7 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
     logf(L"pageload   %3d: %.2f ms", pagenum, timeMs);
 
     t.Start();
-    RenderedBitmap* rendered = engine->RenderBitmap(pagenum, 1.0, 0);
+    RenderedBitmap* rendered = engine->RenderPage(pagenum, 1.0, 0);
     t.Stop();
 
     if (!rendered) {

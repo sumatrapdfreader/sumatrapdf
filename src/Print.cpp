@@ -227,8 +227,8 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 short shrink = 1;
                 do {
                     RenderedBitmap* bmp =
-                        engine.RenderBitmap(pd.sel.at(i).pageNo, zoom / shrink, pd.rotation, clipRegion,
-                                            RenderTarget::Print, abortCookie ? &abortCookie->cookie : nullptr);
+                        engine.RenderPage(pd.sel.at(i).pageNo, zoom / shrink, pd.rotation, clipRegion,
+                                          RenderTarget::Print, abortCookie ? &abortCookie->cookie : nullptr);
                     if (abortCookie) {
                         abortCookie->Clear();
                     }
@@ -326,8 +326,8 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             bool ok = false;
             short shrink = 1;
             do {
-                RenderedBitmap* bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, nullptr, RenderTarget::Print,
-                                                          abortCookie ? &abortCookie->cookie : nullptr);
+                RenderedBitmap* bmp = engine.RenderPage(pageNo, zoom / shrink, rotation, nullptr, RenderTarget::Print,
+                                                        abortCookie ? &abortCookie->cookie : nullptr);
                 if (abortCookie) {
                     abortCookie->Clear();
                 }

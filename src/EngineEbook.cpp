@@ -83,9 +83,9 @@ class EbookEngine : public EngineBase {
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
-                                 RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                 RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
+    RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
+                               RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
+                               RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -338,8 +338,8 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
     }
 }
 
-RenderedBitmap* EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
-                                          AbortCookie** cookieOut) {
+RenderedBitmap* EbookEngine::RenderPage(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
+                                        AbortCookie** cookieOut) {
     UNUSED(target);
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();

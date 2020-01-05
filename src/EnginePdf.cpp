@@ -279,9 +279,9 @@ class PdfEngineImpl : public EngineBase {
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
-                                 RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                 RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
+    RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
+                               RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
+                               RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -1119,8 +1119,8 @@ RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     return fz_rect_to_RectD(rect2);
 }
 
-RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
-                                            AbortCookie** cookie_out) {
+RenderedBitmap* PdfEngineImpl::RenderPage(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
+                                          AbortCookie** cookie_out) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_page* page = pageInfo->page;
     pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);

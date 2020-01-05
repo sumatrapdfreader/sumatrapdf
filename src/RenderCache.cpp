@@ -629,8 +629,8 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
 
         CrashIf(req.abortCookie != nullptr);
         EngineBase* engine = req.dm->GetEngine();
-        bmp = engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View,
-                                   &req.abortCookie);
+        bmp =
+            engine->RenderPage(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
         if (req.abort) {
             delete bmp;
             if (req.renderCb) {
@@ -752,7 +752,7 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, Pag
         area.Offset(-pageInfo->pageOnScreen.x, -pageInfo->pageOnScreen.y);
         area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
 
-        RenderedBitmap* bmp = dm->GetEngine()->RenderBitmap(pageNo, zoom, rotation, &area);
+        RenderedBitmap* bmp = dm->GetEngine()->RenderPage(pageNo, zoom, rotation, &area);
         bool success = bmp && bmp->GetBitmap() && bmp->StretchDIBits(hdc, bounds);
         delete bmp;
 

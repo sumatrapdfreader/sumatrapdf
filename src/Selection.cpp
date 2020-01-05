@@ -280,7 +280,7 @@ void CopySelectionToClipboard(WindowInfo* win) {
     float zoom = dm->GetZoomReal(selOnPage->pageNo);
     int rotation = dm->GetRotation();
     RenderedBitmap* bmp =
-        dm->GetEngine()->RenderBitmap(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
+        dm->GetEngine()->RenderPage(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
     if (bmp)
         CopyImageToClipboard(bmp->GetBitmap(), true);
     delete bmp;

@@ -301,7 +301,7 @@ void DumpThumbnail(EngineBase* engine) {
     float zoom = std::min(128 / (float)rect.dx, 128 / (float)rect.dy) - 0.001f;
     RectI thumb = RectD(0, 0, rect.dx * zoom, rect.dy * zoom).Round();
     rect = engine->Transform(thumb.Convert<double>(), 1, zoom, 0, true);
-    RenderedBitmap* bmp = engine->RenderBitmap(1, zoom, 0, &rect);
+    RenderedBitmap* bmp = engine->RenderPage(1, zoom, 0, &rect);
     if (!bmp) {
         Out("\t<Thumbnail />\n");
         return;
@@ -384,7 +384,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
 
     bool success = true;
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
-        RenderedBitmap* bmp = engine->RenderBitmap(pageNo, zoom, 0);
+        RenderedBitmap* bmp = engine->RenderPage(pageNo, zoom, 0);
         success &= bmp != nullptr;
         if (!bmp && !silent)
             ErrOut("Error: Failed to render page %d for %s!", pageNo, engine->FileName());

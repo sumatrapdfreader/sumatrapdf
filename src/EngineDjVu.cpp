@@ -180,9 +180,9 @@ class DjVuEngineImpl : public EngineBase {
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
-                                 RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                 RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
+    RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
+                               RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
+                               RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -559,8 +559,8 @@ RenderedBitmap* DjVuEngineImpl::CreateRenderedBitmap(const char* bmpData, SizeI 
     return new RenderedBitmap(hbmp, size, hMap);
 }
 
-RenderedBitmap* DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
-                                             AbortCookie** cookieOut) {
+RenderedBitmap* DjVuEngineImpl::RenderPage(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
+                                           AbortCookie** cookieOut) {
     UNUSED(cookieOut);
     UNUSED(target);
 

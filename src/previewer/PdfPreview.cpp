@@ -43,7 +43,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_ALPHATYPE*
         return E_OUTOFMEMORY;
 
     page = engine->Transform(thumb.Convert<double>(), 1, zoom, 0, true);
-    RenderedBitmap* bmp = engine->RenderBitmap(1, zoom, 0, &page);
+    RenderedBitmap* bmp = engine->RenderPage(1, zoom, 0, &page);
 
     HDC hdc = GetDC(nullptr);
     if (bmp && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
@@ -149,7 +149,7 @@ class PageRenderer {
 
         PageRenderer* pr = (PageRenderer*)data;
         RenderedBitmap* bmp =
-            pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, nullptr, RenderTarget::View, &pr->abortCookie);
+            pr->engine->RenderPage(pr->reqPage, pr->reqZoom, 0, nullptr, RenderTarget::View, &pr->abortCookie);
 
         ScopedCritSec scope(&pr->currAccess);
 

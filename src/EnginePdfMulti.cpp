@@ -80,9 +80,9 @@ class EnginePdfMultiImpl : public EngineBase {
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
-                                 RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                 RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
+    RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
+                               RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
+                               RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -157,11 +157,11 @@ RectD EnginePdfMultiImpl::PageContentBox(int pageNo, RenderTarget target) {
     return e->PageContentBox(pageNo, target);
 }
 
-RenderedBitmap* EnginePdfMultiImpl::RenderBitmap(int pageNo, float zoom, int rotation,
-                                                 RectD* pageRect, /* if nullptr: defaults to the page's mediabox */
-                                                 RenderTarget target, AbortCookie** cookie_out) {
+RenderedBitmap* EnginePdfMultiImpl::RenderPage(int pageNo, float zoom, int rotation,
+                                               RectD* pageRect, /* if nullptr: defaults to the page's mediabox */
+                                               RenderTarget target, AbortCookie** cookie_out) {
     auto e = findEngineForPage(vbkm, pageNo);
-    return e->RenderBitmap(pageNo, zoom, rotation, pageRect, target, cookie_out);
+    return e->RenderPage(pageNo, zoom, rotation, pageRect, target, cookie_out);
 }
 
 PointD EnginePdfMultiImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
