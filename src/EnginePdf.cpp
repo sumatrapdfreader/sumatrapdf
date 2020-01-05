@@ -294,7 +294,6 @@ class PdfEngineImpl : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
     bool BenchLoadPage(int pageNo) override;
@@ -390,6 +389,8 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
 
 PdfEngineImpl::PdfEngineImpl() {
     kind = kindEnginePdf;
+    supportsAnnotations = true;
+    supportsAnnotationsForSaving = true;
     defaultFileExt = L".pdf";
     fileDPI = 72.0f;
 
@@ -1624,10 +1625,6 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
     }
     return nullptr;
 };
-
-bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
-    return true;
-}
 
 void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread

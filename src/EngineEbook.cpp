@@ -80,16 +80,8 @@ class EbookEngine : public EngineBase {
     EbookEngine();
     virtual ~EbookEngine();
 
-    RectD PageMediabox(int pageNo) override {
-        UNUSED(pageNo);
-        return pageRect;
-    }
-    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
-        UNUSED(target);
-        RectD mbox = PageMediabox(pageNo);
-        mbox.Inflate(-pageBorder, -pageBorder);
-        return mbox;
-    }
+    RectD PageMediabox(int pageNo) override;
+    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
                                  RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
@@ -98,31 +90,13 @@ class EbookEngine : public EngineBase {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::string_view GetFileData() override {
-        if (!fileName) {
-            return {};
-        }
-        return file::ReadFile(fileName.get());
-    }
+    std::string_view GetFileData() override;
 
-    bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override {
-        UNUSED(includeUserAnnots);
-        if (!fileName) {
-            return false;
-        }
-        AutoFreeWstr path = strconv::Utf8ToWstr(copyFileName);
-        return fileName ? CopyFileW(fileName, path, FALSE) : false;
-    }
+    bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
     // make RenderCache request larger tiles than per default
-    bool HasClipOptimizations(int pageNo) override {
-        UNUSED(pageNo);
-        return false;
-    }
+    bool HasClipOptimizations(int pageNo) override;
 
-    bool SupportsAnnotation(bool forSaving = false) const override {
-        return !forSaving;
-    }
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
@@ -131,10 +105,7 @@ class EbookEngine : public EngineBase {
     PageDestination* GetNamedDest(const WCHAR* name) override;
     RenderedBitmap* GetImageForPageElement(PageElement* el) override;
 
-    bool BenchLoadPage(int pageNo) override {
-        UNUSED(pageNo);
-        return true;
-    }
+    bool BenchLoadPage(int pageNo) override;
 
   protected:
     Vec<HtmlPage*>* pages = nullptr;
@@ -152,20 +123,13 @@ class EbookEngine : public EngineBase {
     RectD pageRect;
     float pageBorder;
 
-    void GetTransform(Matrix& m, float zoom, int rotation) {
-        GetBaseTransform(m, pageRect.ToGdipRectF(), zoom, rotation);
-    }
+    void GetTransform(Matrix& m, float zoom, int rotation);
     bool ExtractPageAnchors();
     WCHAR* ExtractFontList();
 
     virtual PageElement* CreatePageLink(DrawInstr* link, RectI rect, int pageNo);
 
-    Vec<DrawInstr>* GetHtmlPage(int pageNo) {
-        CrashIf(pageNo < 1 || PageCount() < pageNo);
-        if (pageNo < 1 || PageCount() < pageNo)
-            return nullptr;
-        return &pages->at(pageNo - 1)->instructions;
-    }
+    Vec<DrawInstr>* GetHtmlPage(int pageNo);
 };
 
 static PageElement* newEbookLink(DrawInstr* link, RectI rect, PageDestination* dest, int pageNo = 0,
@@ -211,6 +175,8 @@ static DocTocItem* newEbookTocItem(DocTocItem* parent, const WCHAR* title, PageD
 }
 
 EbookEngine::EbookEngine() {
+    supportsAnnotations = true;
+    supportsAnnotationsForSaving = false;
     pageCount = 0;
     // "B Format" paperback
     pageRect = RectD(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI());
@@ -229,6 +195,56 @@ EbookEngine::~EbookEngine() {
 
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
+}
+
+RectD EbookEngine::PageMediabox(int pageNo) {
+    UNUSED(pageNo);
+    return pageRect;
+}
+
+RectD EbookEngine::PageContentBox(int pageNo, RenderTarget target) {
+    UNUSED(target);
+    RectD mbox = PageMediabox(pageNo);
+    mbox.Inflate(-pageBorder, -pageBorder);
+    return mbox;
+}
+
+std::string_view EbookEngine::GetFileData() {
+    if (!fileName) {
+        return {};
+    }
+    return file::ReadFile(fileName.get());
+}
+
+bool EbookEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+    UNUSED(includeUserAnnots);
+    if (!fileName) {
+        return false;
+    }
+    AutoFreeWstr path = strconv::Utf8ToWstr(copyFileName);
+    return fileName ? CopyFileW(fileName, path, FALSE) : false;
+}
+
+// make RenderCache request larger tiles than per default
+bool EbookEngine::HasClipOptimizations(int pageNo) {
+    UNUSED(pageNo);
+    return false;
+}
+
+bool EbookEngine::BenchLoadPage(int pageNo) {
+    UNUSED(pageNo);
+    return true;
+}
+
+void EbookEngine::GetTransform(Matrix& m, float zoom, int rotation) {
+    GetBaseTransform(m, pageRect.ToGdipRectF(), zoom, rotation);
+}
+
+Vec<DrawInstr>* EbookEngine::GetHtmlPage(int pageNo) {
+    CrashIf(pageNo < 1 || PageCount() < pageNo);
+    if (pageNo < 1 || PageCount() < pageNo)
+        return nullptr;
+    return &pages->at(pageNo - 1)->instructions;
 }
 
 bool EbookEngine::ExtractPageAnchors() {

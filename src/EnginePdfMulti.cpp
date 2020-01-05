@@ -95,7 +95,6 @@ class EnginePdfMultiImpl : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
     bool BenchLoadPage(int pageNo) override;
@@ -124,6 +123,8 @@ EnginePdfMultiImpl::EnginePdfMultiImpl() {
     kind = kindEnginePdfMulti;
     defaultFileExt = L".vbkm";
     fileDPI = 72.0f;
+    supportsAnnotations = false;
+    supportsAnnotationsForSaving = false;
 }
 
 EnginePdfMultiImpl::~EnginePdfMultiImpl() {
@@ -196,11 +197,6 @@ bool EnginePdfMultiImpl::HasClipOptimizations(int pageNo) {
 
 WCHAR* EnginePdfMultiImpl::GetProperty(DocumentProperty prop) {
     return nullptr;
-}
-
-bool EnginePdfMultiImpl::SupportsAnnotation(bool forSaving) const {
-    // TODO: needs to support annotations
-    return false;
 }
 
 void EnginePdfMultiImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {

@@ -541,8 +541,10 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         }
     }
 
-    if (tab && tab->AsFixed()) {
-        win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !tab->AsFixed()->GetEngine()->IsImageCollection());
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (engine) {
+        win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !engine->IsImageCollection());
     }
 
     if (win->IsDocLoaded() && !fileExists) {
@@ -558,8 +560,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
     win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION,
-                          tab && tab->selectionOnPage && win->showSelection && tab->AsFixed() &&
-                              tab->AsFixed()->GetEngine()->SupportsAnnotation());
+                          tab && tab->selectionOnPage && win->showSelection && engine && engine->supportsAnnotations);
 }
 
 void OnAboutContextMenu(WindowInfo* win, int x, int y) {

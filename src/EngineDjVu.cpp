@@ -175,20 +175,9 @@ class DjVuEngineImpl : public EngineBase {
   public:
     DjVuEngineImpl();
     virtual ~DjVuEngineImpl();
-    EngineBase* Clone() override {
-        if (stream != nullptr) {
-            return CreateFromStream(stream);
-        }
-        if (FileName() != nullptr) {
-            return CreateFromFile(FileName());
-        }
-        return nullptr;
-    }
+    EngineBase* Clone() override;
 
-    RectD PageMediabox(int pageNo) override {
-        CrashIf(pageNo < 1 || pageNo > pageCount);
-        return mediaboxes[pageNo - 1];
-    }
+    RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
@@ -201,26 +190,14 @@ class DjVuEngineImpl : public EngineBase {
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
-    bool HasClipOptimizations(int pageNo) override {
-        UNUSED(pageNo);
-        return false;
-    }
+    bool HasClipOptimizations(int pageNo) override;
 
-    WCHAR* GetProperty(DocumentProperty prop) override {
-        UNUSED(prop);
-        return nullptr;
-    }
+    WCHAR* GetProperty(DocumentProperty prop) override;
 
-    bool SupportsAnnotation(bool forSaving = false) const override {
-        return !forSaving;
-    }
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
     // we currently don't load pages lazily, so there's nothing to do here
-    bool BenchLoadPage(int pageNo) override {
-        UNUSED(pageNo);
-        return true;
-    }
+    bool BenchLoadPage(int pageNo) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
@@ -263,6 +240,8 @@ DjVuEngineImpl::DjVuEngineImpl() {
     defaultFileExt = L".djvu";
     // DPI isn't constant for all pages and thus premultiplied
     fileDPI = 300.0f;
+    supportsAnnotations = true;
+    supportsAnnotationsForSaving = false;
 }
 
 DjVuEngineImpl::~DjVuEngineImpl() {
@@ -288,6 +267,37 @@ DjVuEngineImpl::~DjVuEngineImpl() {
     if (stream) {
         stream->Release();
     }
+}
+
+EngineBase* DjVuEngineImpl::Clone() {
+    if (stream != nullptr) {
+        return CreateFromStream(stream);
+    }
+    if (FileName() != nullptr) {
+        return CreateFromFile(FileName());
+    }
+    return nullptr;
+}
+
+RectD DjVuEngineImpl::PageMediabox(int pageNo) {
+    CrashIf(pageNo < 1 || pageNo > pageCount);
+    return mediaboxes[pageNo - 1];
+}
+
+bool DjVuEngineImpl::HasClipOptimizations(int pageNo) {
+    UNUSED(pageNo);
+    return false;
+}
+
+WCHAR* DjVuEngineImpl::GetProperty(DocumentProperty prop) {
+    UNUSED(prop);
+    return nullptr;
+}
+
+// we currently don't load pages lazily, so there's nothing to do here
+bool DjVuEngineImpl::BenchLoadPage(int pageNo) {
+    UNUSED(pageNo);
+    return true;
 }
 
 // Most functions of the ddjvu API such as ddjvu_document_get_pageinfo

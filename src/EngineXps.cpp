@@ -210,7 +210,6 @@ class XpsEngineImpl : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
@@ -294,6 +293,8 @@ XpsEngineImpl::XpsEngineImpl() {
     kind = kindEngineXps;
     defaultFileExt = L".xps";
     fileDPI = 72.0f;
+    supportsAnnotations = true;
+    supportsAnnotationsForSaving = false;
 
     for (size_t i = 0; i < dimof(mutexes); i++) {
         InitializeCriticalSection(&mutexes[i]);
@@ -777,10 +778,6 @@ WCHAR* XpsEngineImpl::GetProperty(DocumentProperty prop) {
             return nullptr;
     }
 };
-
-bool XpsEngineImpl::SupportsAnnotation(bool forSaving) const {
-    return !forSaving; // for now
-}
 
 void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread

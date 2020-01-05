@@ -66,10 +66,6 @@ class ImagesEngine : public EngineBase {
         return false;
     }
 
-    bool SupportsAnnotation(bool forSaving = false) const override {
-        UNUSED(forSaving);
-        return false;
-    }
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override {
         UNUSED(list);
     }
@@ -105,6 +101,9 @@ class ImagesEngine : public EngineBase {
 
 ImagesEngine::ImagesEngine() {
     kind = kindEngineImage;
+
+    supportsAnnotations = false;
+    supportsAnnotationsForSaving = false;
     preferredLayout = Layout_NonContinuous;
     isImageCollection = true;
 

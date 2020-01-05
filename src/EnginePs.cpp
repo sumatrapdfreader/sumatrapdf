@@ -217,6 +217,8 @@ class PsEngineImpl : public EngineBase {
     PsEngineImpl() {
         kind = kindEnginePostScript;
         defaultFileExt = L".ps";
+        supportsAnnotations = false;
+        supportsAnnotationsForSaving = false;
     }
 
     virtual ~PsEngineImpl() {
@@ -290,10 +292,6 @@ class PsEngineImpl : public EngineBase {
             return nullptr;
         }
         return pdfEngine->GetProperty(prop);
-    }
-
-    bool SupportsAnnotation(bool forSaving = false) const override {
-        return !forSaving && pdfEngine->SupportsAnnotation();
     }
 
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override {

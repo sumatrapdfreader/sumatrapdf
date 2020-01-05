@@ -282,6 +282,11 @@ class EngineBase {
     bool isImageCollection = false;
     bool allowsPrinting = true;
     bool allowsCopyingText = true;
+    // TODO: generalize from PageAnnotation to PageModification
+    // whether this engine supports adding user annotations of all available types
+    // (either for rendering or for saving)
+    bool supportsAnnotations = false;
+    bool supportsAnnotationsForSaving = false;
     bool isPasswordProtected = false;
     char* decryptionKey = nullptr;
     bool hasPageLabels = false;
@@ -339,10 +344,6 @@ class EngineBase {
     // access to various document properties (such as Author, Title, etc.)
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
 
-    // TODO: generalize from PageAnnotation to PageModification
-    // whether this engine supports adding user annotations of all available types
-    // (either for rendering or for saving)
-    virtual bool SupportsAnnotation(bool forSaving = false) const = 0;
     // informs the engine about annotations the user made so that they can be rendered, etc.
     // (this call supercedes any prior call to UpdateUserAnnotations)
     virtual void UpdateUserAnnotations(Vec<PageAnnotation>* list) = 0;

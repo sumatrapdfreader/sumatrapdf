@@ -2575,7 +2575,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
         ok = engine->SaveFileAs(pathUtf8.Get(), saveAnnotsInDoc);
-    } else if (saveAnnotsInDoc && engine && engine->SupportsAnnotation(true)) {
+    } else if (saveAnnotsInDoc && engine && engine->supportsAnnotationsForSaving) {
         // ... as well as files containing annotations ...
         ok = engine->SaveFileAs(pathUtf8.Get(), true);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
@@ -2598,7 +2598,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
     if (ok && win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified && !convertToTXT &&
         !convertToPDF) {
-        if (!saveAnnotsInDoc || !engine || !engine->SupportsAnnotation(true)) {
+        if (!saveAnnotsInDoc || !engine || !engine->supportsAnnotationsForSaving) {
             ok = SaveFileModifications(realDstFileName, win->AsFixed()->userAnnots);
         }
         if (ok && path::IsSame(srcFileName, realDstFileName)) {
@@ -3756,7 +3756,7 @@ static void MakeAnnotationFromSelection(WindowInfo* win) {
         return;
     }
 
-    bool ok = engine->SupportsAnnotation() && win->showSelection && win->currentTab->selectionOnPage;
+    bool ok = engine->supportsAnnotations && win->showSelection && win->currentTab->selectionOnPage;
     if (!ok) {
         return;
     }
