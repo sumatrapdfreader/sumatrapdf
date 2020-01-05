@@ -435,7 +435,7 @@ void StartTocEditor(TocEditorArgs* args) {
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Table of content editor");
-    w->initialSize = {640, 2048};
+    w->initialSize = {640, 800};
     PositionCloseTo(w, args->hwndRelatedTo);
     SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
     LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);

@@ -1085,6 +1085,7 @@ DocTocTree* DjVuEngineImpl::GetTocTree() {
         return nullptr;
     }
     tocTree = new DocTocTree(root);
+    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 

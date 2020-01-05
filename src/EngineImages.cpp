@@ -766,8 +766,7 @@ DocTocTree* ImageDirEngineImpl::GetTocTree() {
         root->AddSibling(item);
     }
     tocTree = new DocTocTree(root);
-    const char* path = strconv::WstrToUtf8(fileName).data();
-    tocTree->filePath = path;
+    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 
@@ -905,7 +904,9 @@ CbxEngineImpl::CbxEngineImpl(MultiFormatArchive* arch) {
 CbxEngineImpl::~CbxEngineImpl() {
     delete tocTree;
 
-    CrashIf(cbxFile);
+    // can be set in error conditions but generally is
+    // deleted in FinishLoading
+    delete cbxFile;
 
     for (auto&& img : images) {
         free(img.data);

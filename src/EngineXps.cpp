@@ -922,8 +922,7 @@ DocTocTree* XpsEngineImpl::GetTocTree() {
         return nullptr;
     }
     tocTree = new DocTocTree(root);
-    const char* path = strconv::WstrToUtf8(fileName).data();
-    tocTree->filePath = path;
+    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 

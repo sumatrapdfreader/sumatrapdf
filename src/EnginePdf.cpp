@@ -924,6 +924,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
     }
     if (!attachments) {
         if (!root) {
+            str::Free(path);
             return nullptr;
         }
         tocTree = new DocTocTree(root);
