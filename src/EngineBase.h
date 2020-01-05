@@ -119,13 +119,8 @@ struct PageAnnotation {
     COLORREF color = 0;
 
     PageAnnotation() = default;
-
-    PageAnnotation(PageAnnotType type, int pageNo, RectD rect, COLORREF color)
-        : type(type), pageNo(pageNo), rect(rect), color(color) {
-    }
-    bool operator==(const PageAnnotation& other) const {
-        return other.type == type && other.pageNo == pageNo && other.rect == rect && other.color == color;
-    }
+    PageAnnotation(PageAnnotType type, int pageNo, RectD rect, COLORREF color);
+    bool operator==(const PageAnnotation& other) const;
 };
 
 // use in PageDestination::GetDestRect for values that don't matter

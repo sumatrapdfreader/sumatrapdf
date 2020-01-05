@@ -81,6 +81,7 @@ static PageAnnotType PageAnnotTypeFromString(const char* s) {
     return PageAnnotType::None;
 }
 
+// TODO: change to str::string_view
 static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
     if (!data) {
         return nullptr;
@@ -140,57 +141,48 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
 }
 
 Vec<PageAnnotation>* LoadFileModifications(const WCHAR* filePath) {
-    AutoFreeWstr modificationsPath(str::Join(filePath, SMX_FILE_EXT));
-    AutoFree data(file::ReadFile(modificationsPath));
-    return ParseFileModifications(data.data);
+    AutoFreeWstr modificationsPath = str::Join(filePath, SMX_FILE_EXT);
+    AutoFree data = file::ReadFile(modificationsPath);
+    if (data.empty()) {
+        return nullptr;
+    }
+    return ParseFileModifications(data.get());
 }
 
-bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* list) {
-    if (!list) {
+bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* newAnnots) {
+    if (!newAnnots) {
         return false;
     }
 
-    AutoFreeWstr modificationsPath(str::Join(filePath, SMX_FILE_EXT));
+    AutoFreeWstr modificationsPath = str::Join(filePath, SMX_FILE_EXT);
     str::Str data;
-    size_t offset = 0;
 
-    AutoFree prevData(file::ReadFile(modificationsPath));
-    Vec<PageAnnotation>* prevList = ParseFileModifications(prevData.data);
-    bool isUpdate = prevList != nullptr;
-    if (isUpdate) {
-        // in the case of an update, append changed annotations to the existing ones
-        // (don't rewrite the existing ones in case they're by a newer version which
-        // added annotation types and properties this version doesn't know anything about)
-        for (; offset < prevList->size() && prevList->at(offset) == list->at(offset); offset++) {
-            // do nothing
-        }
-        CrashIfDebugOnly(offset != prevList->size());
-        data.AppendAndFree(prevData.StealData());
-        delete prevList;
-    } else {
-        const WCHAR* s = path::GetBaseNameNoFree(filePath);
-        data.AppendFmt("# SumatraPDF: modifications to \"%S\"\r\n", s);
-    }
+    const WCHAR* fileName = path::GetBaseNameNoFree(filePath);
+    data.AppendFmt("# SumatraPDF: modifications to \"%S\"\r\n", fileName);
     data.Append("\r\n");
 
-    if (list->size() == offset) {
-        return true; // nothing (new) to save
-    }
-
-    data.AppendFmt("[@%s]\r\n", isUpdate ? "update" : "meta");
+    data.AppendFmt("[@%s]\r\n", "meta");
     data.AppendFmt("version = %s\r\n", SMX_CURR_VERSION);
     int64_t size = file::GetSize(filePath);
     if (0 <= size && size <= UINT_MAX) {
         data.AppendFmt("filesize = %u\r\n", (UINT)size);
     }
-    SYSTEMTIME time;
-    GetSystemTime(&time);
-    data.AppendFmt("timestamp = %04d-%02d-%02dT%02d:%02d:%02dZ\r\n", time.wYear, time.wMonth, time.wDay, time.wHour,
-                   time.wMinute, time.wSecond);
+
+    {
+        SYSTEMTIME time;
+        GetSystemTime(&time);
+        int year = time.wYear;
+        int month = time.wMonth;
+        int day = time.wDay;
+        int hour = time.wHour;
+        int min = time.wMinute;
+        int sec = time.wSecond;
+        data.AppendFmt("timestamp = %04d-%02d-%02dT%02d:%02d:%02dZ\r\n", year, month, day, hour, min, sec);
+    }
     data.Append("\r\n");
 
-    for (size_t i = offset; i < list->size(); i++) {
-        PageAnnotation& annot = list->at(i);
+    for (size_t i = 0; i < newAnnots->size(); i++) {
+        PageAnnotation& annot = newAnnots->at(i);
         char* s = PageAnnotTypeToString(annot.type);
         if (str::IsEmpty(s)) {
             continue;
