@@ -53,6 +53,7 @@ ParsedVbkm::~ParsedVbkm() {
     DeleteVecMembers(files);
 }
 
+// returns engine handling this <pageNo> and updates <pageNo> to point within that engine
 static EngineBase* findEngineForPage(ParsedVbkm* vbkm, int& pageNo) {
     for (auto&& f : vbkm->files) {
         if (!f->engine) {
@@ -101,6 +102,7 @@ class EnginePdfMultiImpl : public EngineBase {
 
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
@@ -218,6 +220,12 @@ Vec<PageElement*>* EnginePdfMultiImpl::GetElements(int pageNo) {
 PageElement* EnginePdfMultiImpl::GetElementAtPos(int pageNo, PointD pt) {
     auto e = findEngineForPage(vbkm, pageNo);
     return e->GetElementAtPos(pageNo, pt);
+}
+
+RenderedBitmap* EnginePdfMultiImpl::GetImageForPageElement(PageElement* el) {
+    int pageNo = el->pageNo;
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->GetImageForPageElement(el);
 }
 
 PageDestination* EnginePdfMultiImpl::GetNamedDest(const WCHAR* name) {
