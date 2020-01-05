@@ -405,6 +405,7 @@ function sumatra_files()
     "Favorites.*",
     "FileHistory.*",
     "FileThumbnails.*",
+    "GetDocumentOutlines.*",
     "GlobalPrefs.*",
     "Menu.*",
     "MuiEbookPageDef.*",
