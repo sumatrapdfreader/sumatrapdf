@@ -505,9 +505,9 @@ static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::strin
 }
 
 // TODO: temporary
-static Vec<Bookmarks*>* LoadAlterenativeBookmarks(const WCHAR* baseFileName) {
+static bool LoadAlterenativeBookmarks(const WCHAR* baseFileName, Vec<Bookmarks*>& bkmsOut) {
     AutoFree tmp = strconv::WstrToUtf8(baseFileName);
-    return LoadAlterenativeBookmarks(tmp.as_view());
+    return LoadAlterenativeBookmarks(tmp.as_view(), bkmsOut);
 }
 
 static bool ShouldCustomDraw(WindowInfo* win) {
@@ -546,8 +546,9 @@ void LoadTocTree(WindowInfo* win) {
     }
 
     // TODO: for now just for testing
-    auto* altTocs = LoadAlterenativeBookmarks(tab->filePath);
-    if (altTocs && altTocs->size() > 0) {
+    Vec<Bookmarks*>* altTocs = new Vec<Bookmarks*>();
+    bool ok = LoadAlterenativeBookmarks(tab->filePath, *altTocs);
+    if (ok && altTocs->size() > 0) {
         tab->altBookmarks = altTocs;
         Vec<std::string_view> items;
         items.Append("Default");

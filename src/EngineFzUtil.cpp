@@ -970,6 +970,19 @@ static RectD CalcDestRect(fz_link* link, fz_outline* outline) {
 #endif
 }
 
+// TODO: clean this up
+PageDestination* newFzDestination(fz_outline* outline) {
+    fz_link* link = nullptr;
+    auto dest = new PageDestination();
+    dest->kind = CalcDestKind(link, outline);
+    CrashIf(!dest->kind);
+    dest->rect = CalcDestRect(link, outline);
+    dest->value = CalcValue(link, outline);
+    dest->name = CalcDestName(link, outline);
+    dest->pageNo = CalcDestPageNo(link, outline);
+    return dest;
+}
+
 PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
     auto res = new PageElement();
     res->kind = kindPageElementDest;
@@ -990,16 +1003,6 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
     res->dest = dest;
 
     return res;
-}
-
-// TODO: this is a hack, newFzLink() should use newFzDestination()
-// but they are co-mingled for historical reasons
-PageDestination* newFzDestination(fz_outline* outline) {
-    auto link = newFzLink(0, nullptr, outline);
-    auto dest = link->dest;
-    link->dest = nullptr;
-    delete link;
-    return dest;
 }
 
 PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx) {

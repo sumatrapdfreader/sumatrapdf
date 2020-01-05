@@ -24,34 +24,8 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "EngineManager.h"
-#include "EnginePdf.h"
-
-struct VbkmFile {
-    char* fileName = nullptr;
-    char* path = nullptr;
-    EngineBase* engine = nullptr;
-
-    ~VbkmFile();
-};
-
-VbkmFile::~VbkmFile() {
-    free(fileName);
-    free(path);
-    delete engine;
-}
-
-// represents .vbkm file
-struct ParsedVbkm {
-    AutoFree fileContent;
-
-    Vec<VbkmFile*> files;
-
-    ~ParsedVbkm();
-};
-
-ParsedVbkm::~ParsedVbkm() {
-    DeleteVecMembers(files);
-}
+#include "ParseBKM.h"
+#include "EnginePdfMulti.h"
 
 // returns engine handling this <pageNo> and updates <pageNo> to point within that engine
 static EngineBase* findEngineForPage(ParsedVbkm* vbkm, int& pageNo) {
@@ -306,81 +280,6 @@ int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
         n += e->PageCount();
     }
     return -1;
-}
-
-// each logical record starts with "file:" line
-// we split s into list of records for each file
-// TODO: should we fail if the first line is not "file:" ?
-// Currently we ignore everything from the beginning
-// until first "file:" line
-static Vec<std::string_view> SplitVbkmIntoRecords(std::string_view s) {
-    Vec<std::string_view> res;
-    auto tmp = s;
-    Vec<const char*> addrs;
-
-    // find indexes of lines that start with "file:"
-    while (!tmp.empty()) {
-        auto line = sv::ParseUntil(tmp, '\n');
-        if (sv::StartsWith(line, "file:")) {
-            addrs.push_back(line.data());
-        }
-    }
-
-    size_t n = addrs.size();
-    if (n == 0) {
-        return res;
-    }
-    addrs.push_back(s.data() + s.size());
-    for (size_t i = 0; i < n; i++) {
-        const char* start = addrs[i];
-        const char* end = addrs[i + 1];
-        size_t size = end - start;
-        auto sv = std::string_view{start, size};
-        res.push_back(sv);
-    }
-    return res;
-}
-
-static std::string_view ParseLineFile(std::string_view s) {
-    auto parts = sv::Split(s, ':', 2);
-    if (parts.size() != 2) {
-        return {};
-    }
-    return parts[1];
-}
-
-// parse a .vbkm record starting with "file:" line
-static VbkmFile* ParseVbkmRecord(std::string_view s) {
-    auto line = sv::ParseUntil(s, '\n');
-    auto fileName = ParseLineFile(line);
-    fileName = sv::TrimSpace(fileName);
-    if (fileName.empty()) {
-        return nullptr;
-    }
-    auto res = new VbkmFile();
-    res->fileName = str::Dup(fileName);
-    // TODO: parse more stuff
-    return res;
-}
-
-static ParsedVbkm* ParseVbkmFile(std::string_view d) {
-    AutoFree s = sv::NormalizeNewlines(d);
-    auto records = SplitVbkmIntoRecords(s.as_view());
-    auto n = records.size();
-    if (n == 0) {
-        return nullptr;
-    }
-    auto res = new ParsedVbkm();
-    for (size_t i = 0; i < n; i++) {
-        auto file = ParseVbkmRecord(records[i]);
-        if (file == nullptr) {
-            delete res;
-            return nullptr;
-        }
-        res->files.push_back(file);
-    }
-
-    return res;
 }
 
 bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
