@@ -342,8 +342,8 @@ TreeItem* DocTocTree::RootAt(int n) {
     return node;
 }
 
-RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectD* pageRect,
-                               RenderTarget target, AbortCookie** cookie_out) {
+RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
+                               AbortCookie** cookie_out) {
     this->pageNo = pageNo;
     this->zoom = zoom;
     this->rotation = rotation;

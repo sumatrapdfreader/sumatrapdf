@@ -42,9 +42,28 @@ TabInfo::~TabInfo() {
     delete ctrl;
 }
 
+DisplayModel* TabInfo::AsFixed() const {
+    return ctrl ? ctrl->AsFixed() : nullptr;
+}
+
+ChmModel* TabInfo::AsChm() const {
+    return ctrl ? ctrl->AsChm() : nullptr;
+}
+
+EbookController* TabInfo::AsEbook() const {
+    return ctrl ? ctrl->AsEbook() : nullptr;
+}
+
 Kind TabInfo::GetEngineType() const {
     if (ctrl && ctrl->AsFixed()) {
         return ctrl->AsFixed()->GetEngine()->kind;
+    }
+    return nullptr;
+}
+
+EngineBase* TabInfo::GetEngine() const {
+    if (ctrl && ctrl->AsFixed()) {
+        return ctrl->AsFixed()->GetEngine();
     }
     return nullptr;
 }

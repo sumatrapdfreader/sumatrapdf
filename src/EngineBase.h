@@ -270,8 +270,7 @@ struct RenderPageArgs {
     RenderTarget target = RenderTarget::View;
     AbortCookie** cookie_out = nullptr;
 
-    RenderPageArgs(int pageNo, float zoom, int rotation,
-                   RectD* pageRect = nullptr,
+    RenderPageArgs(int pageNo, float zoom, int rotation, RectD* pageRect = nullptr,
                    RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr);
 };
 

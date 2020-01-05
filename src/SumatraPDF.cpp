@@ -2423,6 +2423,20 @@ static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
     return true;
 }
 
+static void OnMenuSaveAnnotationsToSmx(WindowInfo* win) {
+    DisplayModel* dm = win->AsFixed();
+    CrashIf(!dm);
+    EngineBase* engine = dm->GetEngine();
+    CrashIf(!engine->supportsAnnotations);
+    CrashIf(!dm->userAnnotsModified);
+
+    const WCHAR* path = engine->FileName();
+    bool ok = SaveFileModifications(path, dm->userAnnots);
+    if (ok) {
+        dm->userAnnotsModified = false;
+    }
+}
+
 static void OnMenuSaveAs(WindowInfo* win) {
     if (!HasPermission(Perm_DiskAccess)) {
         return;
@@ -2445,10 +2459,8 @@ static void OnMenuSaveAs(WindowInfo* win) {
         return;
     }
 
-    EngineBase* engine = nullptr;
-    if (auto* model = win->AsFixed(); model != nullptr) {
-        engine = model->GetEngine();
-    }
+    DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     bool canConvertToTXT = engine && !engine->IsImageCollection() && win->currentTab->GetEngineType() != kindEngineTxt;
     bool canConvertToPDF = engine && win->currentTab->GetEngineType() != kindEnginePdf;
 #ifndef DEBUG
@@ -2559,8 +2571,8 @@ static void OnMenuSaveAs(WindowInfo* win) {
             free(tmp);
         }
 
-        AutoFree textUTF8(strconv::WstrToUtf8(text.LendData()));
-        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
+        AutoFree textUTF8 = strconv::WstrToUtf8(text.LendData());
+        AutoFree textUTF8BOM = str::Join(UTF8_BOM, textUTF8.Get());
         ok = file::WriteFile(realDstFileName, textUTF8BOM.as_view());
     } else if (convertToPDF) {
         // Convert the file into a PDF one
@@ -2596,17 +2608,20 @@ static void OnMenuSaveAs(WindowInfo* win) {
             LocalFree(msgBuf);
         }
     }
-    if (ok && win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified && !convertToTXT &&
-        !convertToPDF) {
+    if (ok && dm && dm->userAnnots && dm->userAnnotsModified && !convertToTXT && !convertToPDF) {
         if (!saveAnnotsInDoc || !engine || !engine->supportsAnnotationsForSaving) {
-            ok = SaveFileModifications(realDstFileName, win->AsFixed()->userAnnots);
+            ok = SaveFileModifications(realDstFileName, dm->userAnnots);
         }
         if (ok && path::IsSame(srcFileName, realDstFileName)) {
-            win->AsFixed()->userAnnotsModified = false;
+            dm->userAnnotsModified = false;
         }
     }
     if (!ok) {
-        MessageBoxWarning(win->hwndFrame, errorMsg ? errorMsg.get() : _TR("Failed to save a file"));
+        const WCHAR* msg = _TR("Failed to save a file");
+        if (errorMsg) {
+            msg = errorMsg.get();
+        }
+        MessageBoxWarning(win->hwndFrame, msg);
     }
 
     if (ok && IsUntrustedFile(win->ctrl->FilePath(), gPluginURL) && !convertToTXT) {
@@ -2718,10 +2733,12 @@ static void OnMenuRenameFile(WindowInfo* win) {
 }
 
 static void OnMenuSaveBookmark(WindowInfo* win) {
-    if (!HasPermission(Perm_DiskAccess) || gPluginMode)
+    if (!HasPermission(Perm_DiskAccess) || gPluginMode) {
         return;
-    if (!win->IsDocLoaded())
+    }
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     auto* ctrl = win->ctrl;
     const WCHAR* defExt = ctrl->DefaultFileExt();
@@ -2773,13 +2790,12 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
         ZoomVirtual.SetCopy(L"fitcontent");
     }
 
-    AutoFreeWstr exePath(GetExePath());
-    AutoFreeWstr args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
-                                  viewMode, ZoomVirtual.get(), (int)ss.x, (int)ss.y));
-    AutoFreeWstr label(ctrl->GetPageLabel(ss.page));
-    AutoFreeWstr desc(
-        str::Format(_TR("Bookmark shortcut to page %s of %s"), label.get(), path::GetBaseNameNoFree(ctrl->FilePath())));
-
+    AutoFreeWstr exePath = GetExePath();
+    AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
+                                    viewMode, ZoomVirtual.get(), (int)ss.x, (int)ss.y);
+    AutoFreeWstr label = ctrl->GetPageLabel(ss.page);
+    const WCHAR* srcFileName = path::GetBaseNameNoFree(ctrl->FilePath());
+    AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), label.get(), srcFileName);
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
 
@@ -4184,6 +4200,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_RENAME_FILE:
             OnMenuRenameFile(win);
             break;
+
         case IDM_SHOW_IN_FOLDER:
             OnMenuShowInFolder(win);
             break;
@@ -4272,6 +4289,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_VIEW_SHOW_HIDE_TOOLBAR:
             OnMenuViewShowHideToolbar();
+            break;
+
+        case IDM_SAVE_ANNOTATIONS_SMX:
+            OnMenuSaveAnnotationsToSmx(win);
             break;
 
         case IDM_VIEW_SHOW_HIDE_MENUBAR:

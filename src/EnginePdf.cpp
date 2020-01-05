@@ -1118,7 +1118,6 @@ RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
 }
 
 RenderedBitmap* PdfEngineImpl::RenderPage(RenderPageArgs& args) {
-
     auto pageNo = args.pageNo;
 
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
