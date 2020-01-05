@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9cfc0dbe773c6de1156691d5b8883652b2071448
+b0ce378b5d0616f3e62377de3b43691608edb52a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3697,7 +3697,7 @@ mk:Додај страница %s во омилени
 mm:စာမျက်နှာ %s ကို စိတ်ကြိုက်မှာသိမ်းပါ
 my:Tambahkan halaman %s pada kegemaran
 ne:पृष्ठ %s लाई मनपर्नेमा थप्नुहोस्
-nl:Voeg pagina %s toe aan favorieten
+nl:Voeg pagina %s toe aan Favorieten
 nn:Legg til side %s i favorittane
 no:Legg til side %s i favoritter
 pa:%s ਪੰਨੇ ਨੂੰ ਪਸੰਦੀਦਾ ਵਿੱਚ ਜੋੜੋ
@@ -3762,7 +3762,7 @@ mk:Додај страница %s во омилени со име по избо�
 mm:စာမျက်နှာ %s ကို စိတ်ကြိုက်(နှစ်သက်ရာ) name: သို့ထည့်ပါ
 my:Tambah halaman %s pada kegemaran dengan nama (pilihan):
 ne:पृष्ठ %s लाई मनपर्नेमा (ऐच्छिक) नाम सहित थप्नुहोस् :
-nl:Voeg pagina %s toe aan favorieten met (optionele) naam:
+nl:Voeg pagina %s toe aan Favorieten met (optionele) naam:
 nn:Legg til side %s i favorittane med (valfritt) namn:
 no:Legg til side %s i favoritter med (valgfritt) navn:
 pl:Dodaj stronę %s do ulubionych pod (opcjonalną) nazwą:
@@ -3827,7 +3827,7 @@ ml:പ്രീയപ്പെട്ടതിലേക്ക് കൂട്ട�
 mm:စိတ်ကြိုက်စာရင်းသို့ထည့်ပါ
 my:Tambah pada kegemaran
 ne:मनपर्नेमा थप्नुहोस्
-nl:Voeg toe aan favorieten
+nl:Voeg toe aan Favorieten
 nn:Legg til i favorittar
 no:Legg til i favoritter
 pa:ਪਸੰਦੀਦਾ ਵਿੱਚ ਜੋੜੋ
@@ -15387,9 +15387,12 @@ tw:設定反向搜尋命令行
 uk:Установити зворотній пошук.
 uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
+:Show &Bookmarks\tF12
+nl:Toon Bladwijzers\tF12
 :Show &Favorites
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
+nl:Toon &Favorieten
 :Show &Pages Continuously
 am:Էջերը &ցուցադրել շարունակական
 ar:اظهار الصفحات باستمرار
@@ -15523,6 +15526,8 @@ tw:顯示工具列(&T)
 uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
+:Show Book&marks\tF12
+nl:Toon Blad&wijzers\tF12
 :Show Favorites
 am:Ցուցադրել ընտրյալները
 ar:إظهار المفضلة
