@@ -197,9 +197,7 @@ class XpsEngineImpl : public EngineBase {
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
-                               RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                               RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
+    RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -618,9 +616,8 @@ RectD XpsEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     return fz_rect_to_RectD(rect2);
 }
 
-RenderedBitmap* XpsEngineImpl::RenderPage(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
-                                          AbortCookie** cookie_out) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
+RenderedBitmap* XpsEngineImpl::RenderPage(RenderPageArgs& args) {
+    FzPageInfo* pageInfo = GetFzPageInfo(args.pageNo);
     fz_page* page = pageInfo->page;
     if (!page) {
         return nullptr;
@@ -628,9 +625,9 @@ RenderedBitmap* XpsEngineImpl::RenderPage(int pageNo, float zoom, int rotation, 
 
     fz_cookie* fzcookie = nullptr;
     FitzAbortCookie* cookie = nullptr;
-    if (cookie_out) {
+    if (args.cookie_out) {
         cookie = new FitzAbortCookie();
-        *cookie_out = cookie;
+        *args.cookie_out = cookie;
         fzcookie = &cookie->cookie;
     }
 
@@ -638,13 +635,13 @@ RenderedBitmap* XpsEngineImpl::RenderPage(int pageNo, float zoom, int rotation, 
     ScopedCritSec cs(ctxAccess);
 
     fz_rect pRect;
-    if (pageRect) {
-        pRect = RectD_to_fz_rect(*pageRect);
+    if (args.pageRect) {
+        pRect = RectD_to_fz_rect(*args.pageRect);
     } else {
         // TODO(port): use pageInfo->mediabox?
         pRect = fz_bound_page(ctx, page);
     }
-    fz_matrix ctm = viewctm(page, zoom, rotation);
+    fz_matrix ctm = viewctm(page, args.zoom, args.rotation);
     fz_irect bbox = fz_round_rect(fz_transform_rect(pRect, ctm));
 
     fz_colorspace* colorspace = fz_device_rgb(ctx);
@@ -659,7 +656,7 @@ RenderedBitmap* XpsEngineImpl::RenderPage(int pageNo, float zoom, int rotation, 
     fz_var(pix);
     fz_var(bitmap);
 
-    Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+    Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, args.pageNo);
 
     fz_try(ctx) {
         pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);

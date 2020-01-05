@@ -47,9 +47,7 @@ class ImagesEngine : public EngineBase {
 
     RectD PageMediabox(int pageNo) override;
 
-    RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
-                               RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                               RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
+    RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -130,10 +128,12 @@ RectD ImagesEngine::PageMediabox(int pageNo) {
     return mediaboxes.at(n);
 }
 
-RenderedBitmap* ImagesEngine::RenderPage(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
-                                         AbortCookie** cookieOut) {
-    UNUSED(target);
-    UNUSED(cookieOut);
+RenderedBitmap* ImagesEngine::RenderPage(RenderPageArgs& args) {
+    auto pageNo = args.pageNo;
+    auto pageRect = args.pageRect;
+    auto zoom = args.zoom;
+    auto rotation = args.rotation;
+
     ImagePage* page = GetPage(pageNo);
     if (!page) {
         return nullptr;

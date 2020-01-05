@@ -258,15 +258,17 @@ void CopySelectionToClipboard(WindowInfo* win) {
             WStrVec selections;
             for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
                 WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
-                if (text)
+                if (text) {
                     selections.Push(text);
+                }
             }
             selText.Set(selections.Join());
         }
 
         // don't copy empty text
-        if (!str::IsEmpty(selText.Get()))
+        if (!str::IsEmpty(selText.Get())) {
             CopyTextToClipboard(selText, true);
+        }
 
         if (isTextSelection) {
             // don't also copy the first line of a text selection as an image
@@ -279,18 +281,20 @@ void CopySelectionToClipboard(WindowInfo* win) {
     SelectionOnPage* selOnPage = &win->currentTab->selectionOnPage->at(0);
     float zoom = dm->GetZoomReal(selOnPage->pageNo);
     int rotation = dm->GetRotation();
-    RenderedBitmap* bmp =
-        dm->GetEngine()->RenderPage(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
-    if (bmp)
+    RenderPageArgs args(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
+    RenderedBitmap* bmp = dm->GetEngine()->RenderPage(args);
+    if (bmp) {
         CopyImageToClipboard(bmp->GetBitmap(), true);
+    }
     delete bmp;
 
     CloseClipboard();
 }
 
 void OnSelectAll(WindowInfo* win, bool textOnly) {
-    if (!HasPermission(Perm_CopySelection))
+    if (!HasPermission(Perm_CopySelection)) {
         return;
+    }
 
     if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
         Edit_SelectAll(GetFocus());

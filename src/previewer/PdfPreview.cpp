@@ -39,21 +39,25 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_ALPHATYPE*
 
     unsigned char* bmpData = nullptr;
     HBITMAP hthumb = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, (void**)&bmpData, nullptr, 0);
-    if (!hthumb)
+    if (!hthumb) {
         return E_OUTOFMEMORY;
+    }
 
     page = engine->Transform(thumb.Convert<double>(), 1, zoom, 0, true);
-    RenderedBitmap* bmp = engine->RenderPage(1, zoom, 0, &page);
+    RenderPageArgs args(1, zoom, 0, &page);
+    RenderedBitmap* bmp = engine->RenderPage(args);
 
     HDC hdc = GetDC(nullptr);
     if (bmp && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         // cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
-        for (int i = 0; i < thumb.dx * thumb.dy; i++)
+        for (int i = 0; i < thumb.dx * thumb.dy; i++) {
             bmpData[4 * i + 3] = 0xFF;
+        }
 
         *phbmp = hthumb;
-        if (pdwAlpha)
+        if (pdwAlpha) {
             *pdwAlpha = WTSAT_RGB;
+        }
     } else {
         DeleteObject(hthumb);
         hthumb = nullptr;
@@ -148,8 +152,8 @@ class PageRenderer {
         ScopedCom comScope; // because the engine reads data from a COM IStream
 
         PageRenderer* pr = (PageRenderer*)data;
-        RenderedBitmap* bmp =
-            pr->engine->RenderPage(pr->reqPage, pr->reqZoom, 0, nullptr, RenderTarget::View, &pr->abortCookie);
+        RenderPageArgs args(pr->reqPage, pr->reqZoom, 0, nullptr, RenderTarget::View, &pr->abortCookie);
+        RenderedBitmap* bmp = pr->engine->RenderPage(args);
 
         ScopedCritSec scope(&pr->currAccess);
 
@@ -158,8 +162,9 @@ class PageRenderer {
             pr->currBmp = bmp;
             pr->currPage = pr->reqPage;
             pr->currSize = pr->reqSize;
-        } else
+        } else {
             delete bmp;
+        }
         delete pr->abortCookie;
         pr->abortCookie = nullptr;
 

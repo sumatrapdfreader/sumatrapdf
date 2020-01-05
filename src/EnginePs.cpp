@@ -244,10 +244,8 @@ class PsEngineImpl : public EngineBase {
         return pdfEngine->PageContentBox(pageNo, target);
     }
 
-    RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
-                               RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                               RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override {
-        return pdfEngine->RenderPage(pageNo, zoom, rotation, pageRect, target, cookie_out);
+    RenderedBitmap* RenderPage(RenderPageArgs& args) override {
+        return pdfEngine->RenderPage(args);
     }
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override {

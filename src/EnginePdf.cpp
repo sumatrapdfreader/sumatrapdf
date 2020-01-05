@@ -279,9 +279,7 @@ class PdfEngineImpl : public EngineBase {
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
-                               RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                               RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
+    RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -1119,8 +1117,10 @@ RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     return fz_rect_to_RectD(rect2);
 }
 
-RenderedBitmap* PdfEngineImpl::RenderPage(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
-                                          AbortCookie** cookie_out) {
+RenderedBitmap* PdfEngineImpl::RenderPage(RenderPageArgs& args) {
+
+    auto pageNo = args.pageNo;
+
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_page* page = pageInfo->page;
     pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);
@@ -1132,15 +1132,18 @@ RenderedBitmap* PdfEngineImpl::RenderPage(int pageNo, float zoom, int rotation, 
 
     fz_cookie* fzcookie = nullptr;
     FitzAbortCookie* cookie = nullptr;
-    if (cookie_out) {
+    if (args.cookie_out) {
         cookie = new FitzAbortCookie();
-        *cookie_out = cookie;
+        *args.cookie_out = cookie;
         fzcookie = &cookie->cookie;
     }
 
     // TODO(port): I don't see why this lock is needed
     ScopedCritSec cs(ctxAccess);
 
+    auto pageRect = args.pageRect;
+    auto zoom = args.zoom;
+    auto rotation = args.rotation;
     fz_rect pRect;
     if (pageRect) {
         pRect = RectD_to_fz_rect(*pageRect);

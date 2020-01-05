@@ -42,7 +42,8 @@ void TestRenderPage(const CommandLineInfo& i) {
             printf("failed to create engine\n");
             continue;
         }
-        auto bmp = engine->RenderPage(i.pageNumber, zoom, 0);
+        RenderPageArgs args(i.pageNumber, zoom, 0);
+        auto bmp = engine->RenderPage(args);
         if (bmp == nullptr) {
             printf("failed to render page\n");
         }

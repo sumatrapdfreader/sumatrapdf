@@ -180,9 +180,7 @@ class DjVuEngineImpl : public EngineBase {
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
-    RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
-                               RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                               RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
+    RenderedBitmap* RenderPage(RenderPageArgs&) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -559,13 +557,12 @@ RenderedBitmap* DjVuEngineImpl::CreateRenderedBitmap(const char* bmpData, SizeI 
     return new RenderedBitmap(hbmp, size, hMap);
 }
 
-RenderedBitmap* DjVuEngineImpl::RenderPage(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
-                                           AbortCookie** cookieOut) {
-    UNUSED(cookieOut);
-    UNUSED(target);
-
+RenderedBitmap* DjVuEngineImpl::RenderPage(RenderPageArgs& args) {
     ScopedCritSec scope(&gDjVuContext.lock);
-
+    auto pageRect = args.pageRect;
+    auto zoom = args.zoom;
+    auto pageNo = args.pageNo;
+    auto rotation = args.rotation;
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     RectI full = Transform(PageMediabox(pageNo), pageNo, zoom, rotation).Round();

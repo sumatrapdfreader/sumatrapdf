@@ -261,14 +261,18 @@ class AbortCookie {
     virtual void Abort() = 0;
 };
 
-// TODO: use this for RenderPage() call
 struct RenderPageArgs {
     int pageNo = 0;
     float zoom = 0;
     int rotation = 0;
+    /* if nullptr: defaults to the page's mediabox */
     RectD* pageRect = nullptr;
     RenderTarget target = RenderTarget::View;
-    AbortCookie** cookie = nullptr;
+    AbortCookie** cookie_out = nullptr;
+
+    RenderPageArgs(int pageNo, float zoom, int rotation,
+                   RectD* pageRect = nullptr,
+                   RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr);
 };
 
 class EngineBase {
@@ -307,10 +311,7 @@ class EngineBase {
 
     // renders a page into a cacheable RenderedBitmap
     // (*cookie_out must be deleted after the call returns)
-    virtual RenderedBitmap* RenderPage(int pageNo, float zoom, int rotation,
-                                       RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                       RenderTarget target = RenderTarget::View,
-                                       AbortCookie** cookie_out = nullptr) = 0;
+    virtual RenderedBitmap* RenderPage(RenderPageArgs& args) = 0;
 
     // applies zoom and rotation to a point in user/page space converting
     // it into device/screen space - or in the inverse direction

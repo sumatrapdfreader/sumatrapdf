@@ -226,9 +226,12 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 bool ok = false;
                 short shrink = 1;
                 do {
-                    RenderedBitmap* bmp =
-                        engine.RenderPage(pd.sel.at(i).pageNo, zoom / shrink, pd.rotation, clipRegion,
-                                          RenderTarget::Print, abortCookie ? &abortCookie->cookie : nullptr);
+                    RenderPageArgs args(pd.sel.at(i).pageNo, zoom / shrink, pd.rotation, clipRegion,
+                                        RenderTarget::Print);
+                    if (abortCookie) {
+                        args.cookie_out = &abortCookie->cookie;
+                    }
+                    RenderedBitmap* bmp = engine.RenderPage(args);
                     if (abortCookie) {
                         abortCookie->Clear();
                     }
@@ -326,13 +329,17 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             bool ok = false;
             short shrink = 1;
             do {
-                RenderedBitmap* bmp = engine.RenderPage(pageNo, zoom / shrink, rotation, nullptr, RenderTarget::Print,
-                                                        abortCookie ? &abortCookie->cookie : nullptr);
+                RenderPageArgs args(pageNo, zoom / shrink, rotation, nullptr, RenderTarget::Print);
+                if (abortCookie) {
+                    args.cookie_out = &abortCookie->cookie;
+                }
+                RenderedBitmap* bmp = engine.RenderPage(args);
                 if (abortCookie) {
                     abortCookie->Clear();
                 }
                 if (bmp && bmp->GetBitmap()) {
-                    RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                    auto size = bmp->Size();
+                    RectI rc(offset.x, offset.y, size.dx * shrink, size.dy * shrink);
                     ok = bmp->StretchDIBits(hdc, rc);
                 }
                 delete bmp;
