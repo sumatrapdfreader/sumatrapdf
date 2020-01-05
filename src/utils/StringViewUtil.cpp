@@ -6,6 +6,32 @@
 // utilities for string view
 namespace sv {
 
+ParsedKV::~ParsedKV() {
+    free(key);
+    free(val);
+}
+
+ParsedKV& ParsedKV::operator=(ParsedKV&& that) {
+    if (this == &that) {
+        return *this;
+    }
+    this->key = that.key;
+    this->val = that.val;
+    that.key = nullptr;
+    that.val = nullptr;
+    return *this;
+}
+
+ParsedKV::ParsedKV(ParsedKV&& that) {
+    if (this == &that) {
+        return;
+    }
+    this->key = that.key;
+    this->val = that.val;
+    that.key = nullptr;
+    that.val = nullptr;
+}
+
 bool StartsWith(std::string_view s, std::string_view prefix) {
     auto plen = prefix.length();
     auto slen = s.length();
@@ -20,6 +46,7 @@ bool StartsWith(std::string_view s, const char* prefix) {
     return StartsWith(s, p);
 }
 
+// returns a copy of <s> where newlines are normalized to LF ('\n')
 std::string_view NormalizeNewlines(std::string_view s) {
     str::Str tmp(s);
     tmp.Replace("\r\n", "\n");
@@ -142,22 +169,6 @@ std::string_view ParseUntilBack(std::string_view& sv, char delim) {
     return el;
 }
 
-// sv is "key: value"
-// returns value if key is <key>
-std::string_view ParseKV(std::string_view sv, const char* key) {
-    auto parts = sv::Split(sv, ':', 2);
-    if (parts.size() == 1) {
-        return {};
-    }
-    auto k = parts[0];
-    if (!str::EqI(k, key)) {
-        return {};
-    }
-    auto v = parts[1];
-    v = sv::TrimSpace(v);
-    return v;
-}
-
 // skips all c chars in the beginning of sv
 // returns number of chars skipped
 // TODO: rename trimLeft?
@@ -247,17 +258,17 @@ void AppendQuotedString(std::string_view sv, str::Str& out) {
 // returns false if starts with '"' but doesn't end with '"'
 // sets <out> to parsed value
 // updates <line> to consume parsed characters
-bool ParseQuotedString(std::string_view& line, str::Str& out) {
-    if (line.size() == 0) {
+bool ParseQuotedString(std::string_view& str, str::Str& out) {
+    if (str.size() == 0) {
         // empty value is ok
         return true;
     }
-    const char* s = line.data();
-    const char* end = s + line.size();
+    const char* s = str.data();
+    const char* end = s + str.size();
     char c = *s;
     if (c != '"') {
         // unqoted
-        std::string_view v = sv::ParseUntil(line, ' ');
+        std::string_view v = sv::ParseUntil(str, ' ');
         out.AppendView(v);
         return true;
     }
@@ -266,7 +277,7 @@ bool ParseQuotedString(std::string_view& line, str::Str& out) {
         c = *s;
         if (c == '"') {
             s++;
-            SkipTo(line, s);
+            SkipTo(str, s);
             return true;
         }
         if (c != '\\') {
@@ -291,6 +302,101 @@ bool ParseQuotedString(std::string_view& line, str::Str& out) {
     }
     // started with '"' but didn't end with it
     return false;
+}
+
+#if 0
+// parses "quoted string"
+static str::Str parseLineTitle(std::string_view& sv) {
+    str::Str res;
+    size_t n = sv.size();
+    // must be at least: ""
+    if (n < 2) {
+        return res;
+    }
+    const char* s = sv.data();
+    const char* e = s + n;
+    if (s[0] != '"') {
+        return res;
+    }
+    s++;
+    while (s < e) {
+        char c = *s;
+        if (c == '"') {
+            // the end
+            sv::SkipTo(sv, s + 1);
+            return res;
+        }
+        if (c != '\\') {
+            res.AppendChar(c);
+            s++;
+            continue;
+        }
+        // potentially un-escape
+        s++;
+        if (s >= e) {
+            break;
+        }
+        char c2 = *s;
+        bool unEscape = (c2 == '\\') || (c2 == '"');
+        if (!unEscape) {
+            res.AppendChar(c);
+            continue;
+        }
+        res.AppendChar(c2);
+        s++;
+    }
+
+    return res;
+}
+#endif
+
+// line could be:
+// "key"
+// "key:unquoted-value"
+// "key:"quoted value"
+// updates str in place to account for parsed data
+ParsedKV ParseKV(std::string_view& str) {
+    // eat white space
+    sv::SkipChars(str, ' ');
+
+    // find end of key (':', ' ' or end of text)
+    const char* s = str.data();
+    const char* end = s + str.length();
+
+    char c;
+    const char* key = s;
+    const char* keyEnd = nullptr;
+    while (s < end) {
+        c = *s;
+        if (c == ':' || c == ' ') {
+            keyEnd = s - 1;
+            break;
+        }
+        s++;
+    }
+    if (keyEnd == nullptr) {
+        keyEnd = s;
+    } else {
+        if (*s == ':') {
+            s++;
+        }
+    }
+    sv::SkipTo(str, s);
+
+    ParsedKV res;
+    str::Str val;
+    res.ok = ParseQuotedString(str, val);
+    res.val = val.StealData();
+    return res;
+}
+
+// parse key/value out of <s>, expecting a given <key>
+ParsedKV ParseValueOfKey(std::string_view& str, std::string_view key) {
+    ParsedKV res = ParseKV(str);
+    if (res.ok) {
+        res.ok = str::Eq(key, res.key);
+    }
+    return res;
 }
 
 } // namespace sv

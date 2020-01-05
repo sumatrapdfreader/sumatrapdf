@@ -21,6 +21,8 @@ Creating and parsing of .bkm files that contain alternative bookmarks view
 for PDF files.
 */
 
+using sv::ParsedKV;
+
 Bookmarks::~Bookmarks() {
     delete toc;
 }
@@ -96,50 +98,6 @@ static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
     }
 }
 
-// parses "quoted string"
-static str::Str parseLineTitle(std::string_view& sv) {
-    str::Str res;
-    size_t n = sv.size();
-    // must be at least: ""
-    if (n < 2) {
-        return res;
-    }
-    const char* s = sv.data();
-    const char* e = s + n;
-    if (s[0] != '"') {
-        return res;
-    }
-    s++;
-    while (s < e) {
-        char c = *s;
-        if (c == '"') {
-            // the end
-            sv::SkipTo(sv, s + 1);
-            return res;
-        }
-        if (c != '\\') {
-            res.AppendChar(c);
-            s++;
-            continue;
-        }
-        // potentially un-escape
-        s++;
-        if (s >= e) {
-            break;
-        }
-        char c2 = *s;
-        bool unEscape = (c2 == '\\') || (c2 == '"');
-        if (!unEscape) {
-            res.AppendChar(c);
-            continue;
-        }
-        res.AppendChar(c2);
-        s++;
-    }
-
-    return res;
-}
-
 static std::tuple<COLORREF, bool> parseColor(std::string_view sv) {
     COLORREF c = 0;
     bool ok = ParseColor(&c, sv);
@@ -164,69 +122,6 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
 }
 #endif
 
-struct ParsedDest {
-    int pageNo;
-};
-
-std::tuple<ParsedDest*, bool> parseDestination(std::string_view& sv) {
-    if (!str::StartsWith(sv, "page:")) {
-        return {nullptr, false};
-    }
-    // TODO: actually parse the info
-    auto* res = new ParsedDest{1};
-    return {res, true};
-}
-
-struct parsedKV {
-    char* key = nullptr;
-    char* val = nullptr;
-    bool ok = false;
-
-    parsedKV() = default;
-    ~parsedKV();
-};
-
-parsedKV::~parsedKV() {
-    free(key);
-    free(val);
-}
-
-// line could be:
-// "key"
-// "key:unquoted-value"
-// "key:"quoted value"
-// updates str in place to account for parsed data
-parsedKV parseKV(std::string_view& line) {
-    // eat white space
-    sv::SkipChars(line, ' ');
-
-    // find end of key (':', ' ' or end of text)
-    const char* s = line.data();
-    const char* end = s + line.length();
-
-    char c;
-    const char* key = s;
-    const char* keyEnd = nullptr;
-    str::Str val;
-    while (s < end) {
-        c = *s;
-        if (c == ':' || c == ' ') {
-            keyEnd = s - 1;
-            break;
-        }
-        s++;
-    }
-    if (keyEnd == nullptr) {
-        keyEnd = s;
-    } else {
-        if (*s == ':') {
-            s++;
-        }
-    }
-    parsedKV res;
-    return res;
-}
-
 // a single line in .bmk file is:
 // indentation "quoted title" additional-metadata* destination
 static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
@@ -241,8 +136,13 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     }
     *indentOut = indent / 2;
     sv::SkipChars(line, ' ');
-    // TODO: no way to indicate an error
-    str::Str title = parseLineTitle(line);
+    str::Str title;
+    {
+        bool ok = sv::ParseQuotedString(line, title);
+        if (!ok) {
+            return nullptr;
+        }
+    }
     DocTocItem* res = new DocTocItem();
     res->title = strconv::Utf8ToWstr(title.AsView());
     PageDestination* dest = nullptr;
@@ -250,34 +150,58 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     // parse meta-data and page destination
     std::string_view part;
     while (line.size() > 0) {
-        part = sv::ParseUntil(line, ' ');
-
-        if (str::Eq(part, "font:bold")) {
-            bit::Set(res->fontFlags, fontBitBold);
-            continue;
+        ParsedKV kv = sv::ParseKV(line);
+        if (!kv.ok) {
+            return nullptr;
+        }
+        char* key = kv.key;
+        char* val = kv.val;
+        CrashIf(!key);
+        if (str::EqI(key, "font")) {
+            if (!val) {
+                logf("parseBookmarksLine: got 'font' without value in line '%s'\n", origLine.data());
+                return nullptr;
+            }
+            if (str::EqI(val, "bold")) {
+                bit::Set(res->fontFlags, fontBitBold);
+                continue;
+            }
+            if (str::EqI(val, "italic")) {
+                bit::Set(res->fontFlags, fontBitItalic);
+                continue;
+            }
         }
 
-        if (str::Eq(part, "font:italic")) {
-            bit::Set(res->fontFlags, fontBitItalic);
-            continue;
-        }
-
-        auto [color, ok] = parseColor(part);
-        if (ok) {
-            res->color = color;
-            continue;
-        }
-
-        if (str::EqI(part, "open-default")) {
+        // TODO: fail if those have values
+        if (str::EqI(key, "open-default")) {
             res->isOpenDefault = true;
             continue;
         }
-        if (str::EqI(part, "open-toggled")) {
+
+        if (str::EqI(key, "open-toggled")) {
             res->isOpenToggled = true;
             continue;
         }
-        if (str::Eq(part, "unchecked")) {
+
+        if (str::Eq(key, "unchecked")) {
             res->isUnchecked = true;
+            continue;
+        }
+
+        if (str::Eq(key, "page")) {
+            if (!val) {
+                return nullptr;
+            }
+            int pageNo = 0;
+            str::Parse(val, "%d", &pageNo);
+            res->pageNo;
+            continue;
+        }
+
+        // TODO: make it a kv "color: #fff" ?
+        auto [color, ok] = parseColor(part);
+        if (ok) {
+            res->color = color;
             continue;
         }
     }
@@ -304,19 +228,21 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
 
     // first line should be "file: $file"
     auto line = sv::ParseUntil(sv, '\n');
-    auto file = sv::ParseKV(line, "file");
-    if (file.empty()) {
+    // TOOD: maybe write a "relaxed" version where if it's unquoted,
+    // it goes to the end of the value
+    auto file = sv::ParseValueOfKey(line, "file");
+    if (!file.ok) {
         return false;
     }
 
     // this line should be "title: $title"
     line = sv::ParseUntil(sv, '\n');
-    auto title = sv::ParseKV(line, "title");
-    if (title.empty()) {
+    auto title = sv::ParseValueOfKey(line, "title");
+    if (!title.ok) {
         return false;
     }
     auto tree = new DocTocTree();
-    tree->name = str::Dup(title);
+    tree->name = str::Dup(title.val);
     size_t indent = 0;
     while (true) {
         line = sv::ParseUntil(sv, '\n');
@@ -391,7 +317,9 @@ bool ParseBookmarksFile(std::string_view path, Vec<Bookmarks*>* bkms) {
     if (!d.data) {
         return false;
     }
-    return parseBookmarks(d.as_view(), bkms);
+    std::string_view sv = d.as_view();
+    AutoFree dataNormalized = sv::NormalizeNewlines(sv);
+    return parseBookmarks(dataNormalized.as_view(), bkms);
 }
 
 Vec<Bookmarks*>* LoadAlterenativeBookmarks(std::string_view baseFileName) {
