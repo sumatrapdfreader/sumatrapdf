@@ -359,13 +359,17 @@ void TreeCtrl::SetTextColor(COLORREF col) {
 }
 
 void TreeCtrl::ExpandAll() {
+    SuspendRedraw();
     auto root = TreeView_GetRoot(this->hwnd);
     TreeViewExpandRecursively(this->hwnd, root, TVE_EXPAND, false);
+    ResumeRedraw();
 }
 
 void TreeCtrl::CollapseAll() {
+    SuspendRedraw();
     auto root = TreeView_GetRoot(this->hwnd);
     TreeViewExpandRecursively(this->hwnd, root, TVE_COLLAPSE, false);
+    ResumeRedraw();
 }
 
 void TreeCtrl::Clear() {
