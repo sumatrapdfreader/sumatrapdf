@@ -290,7 +290,7 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     }
     res->fileContent = sv;
 
-    Vec<Bookmarks*> bkms;
+    Vec<VbkmForFile*> bkms;
     bool ok = ParseVbkmFile(sv, bkms);
     CrashIf(!ok);
     DeleteVecMembers(bkms);

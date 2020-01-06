@@ -33,7 +33,7 @@ ParsedVbkm::~ParsedVbkm() {
     DeleteVecMembers(files);
 }
 
-Bookmarks::~Bookmarks() {
+VbkmForFile::~VbkmForFile() {
     delete toc;
 }
 
@@ -257,7 +257,7 @@ TocItemWithIndent::TocItemWithIndent(TocItem* item, size_t indent) {
 }
 
 // TODO: read more than one
-static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>& bkmsOut) {
+static bool parseBookmarks(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
     Vec<TocItemWithIndent> items;
 
     // first line should be "file: $file"
@@ -339,14 +339,14 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>& bkmsOut) {
         }
     }
 
-    auto* bkm = new Bookmarks();
+    auto* bkm = new VbkmForFile();
     bkm->toc = tree;
     bkmsOut.Append(bkm);
 
     return true;
 }
 
-bool ParseBookmarksFile(std::string_view path, Vec<Bookmarks*>& bkmsOut) {
+bool ParseBookmarksFile(std::string_view path, Vec<VbkmForFile*>& bkmsOut) {
     AutoFree d = file::ReadFile(path);
     if (!d.data) {
         return false;
@@ -356,7 +356,7 @@ bool ParseBookmarksFile(std::string_view path, Vec<Bookmarks*>& bkmsOut) {
     return parseBookmarks(dataNormalized.as_view(), bkmsOut);
 }
 
-bool LoadAlterenativeBookmarks(std::string_view baseFileName, Vec<Bookmarks*>& bkmsOut) {
+bool LoadAlterenativeBookmarks(std::string_view baseFileName, Vec<VbkmForFile*>& bkmsOut) {
     str::Str path = baseFileName;
     path.Append(".bkm");
 
@@ -370,7 +370,7 @@ bool LoadAlterenativeBookmarks(std::string_view baseFileName, Vec<Bookmarks*>& b
     return true;
 }
 
-bool ExportBookmarksToFile(const Vec<Bookmarks*>& bookmarks, const char* bkmPath) {
+bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* bkmPath) {
     str::Str s;
     for (auto&& bkm : bookmarks) {
         TocTree* tocTree = bkm->toc;
@@ -457,7 +457,7 @@ ParsedVbkm* ParseVbkmFile(std::string_view d) {
     return res;
 }
 
-bool ParseVbkmFile(std::string_view d, Vec<Bookmarks*>& bkmsOut) {
+bool ParseVbkmFile(std::string_view d, Vec<VbkmForFile*>& bkmsOut) {
     AutoFree s = sv::NormalizeNewlines(d);
     auto records = SplitVbkmIntoRecords(s.as_view());
     auto n = records.size();

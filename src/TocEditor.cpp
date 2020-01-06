@@ -203,7 +203,7 @@ static void AddPdf() {
     tocTree = CloneTocTree(tocTree);
     int nPages = engine->PageCount();
     delete engine;
-    Bookmarks* bookmarks = new Bookmarks();
+    VbkmForFile* bookmarks = new VbkmForFile();
     bookmarks->toc = tocTree;
     bookmarks->filePath = str::Dup(tocTree->filePath);
     bookmarks->nPages = nPages;
@@ -222,9 +222,9 @@ static void RemovePdf() {
     CrashIf(di->Parent() != nullptr);
     WCHAR* toRemoveTitle = di->title;
     size_t toRemoveIdx = 0;
-    Bookmarks* bkmToRemove = nullptr;
+    VbkmForFile* bkmToRemove = nullptr;
     for (size_t i = 0; i < n; i++) {
-        Bookmarks* bkm = w->tocArgs->bookmarks[i];
+        VbkmForFile* bkm = w->tocArgs->bookmarks[i];
 
         AutoFreeWstr path = strconv::Utf8ToWstr(bkm->filePath.get());
         const WCHAR* name = path::GetBaseNameNoFree(path);

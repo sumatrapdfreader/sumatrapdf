@@ -368,9 +368,9 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetToc();
     str::Str path = strconv::WstrToUtf8(tab->filePath.get());
     path.Append(".bkm");
-    Vec<Bookmarks*> bookmarks;
+    Vec<VbkmForFile*> bookmarks;
 
-    Bookmarks* bkms = new Bookmarks();
+    VbkmForFile* bkms = new VbkmForFile();
     bkms->toc = CloneTocTree(tocTree);
     bookmarks.push_back(bkms);
     bool ok = ExportBookmarksToFile(bookmarks, path.c_str());
@@ -409,7 +409,7 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     auto* tab = win->currentTab;
     TocEditorArgs* args = new TocEditorArgs();
     // args->filePath = str::Dup(tab->filePath);
-    Bookmarks* bkms = new Bookmarks();
+    VbkmForFile* bkms = new VbkmForFile();
     bkms->filePath = (char*)strconv::WstrToUtf8(tab->filePath).data();
     bkms->nPages = tab->ctrl->PageCount();
 
@@ -505,7 +505,7 @@ static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::strin
 }
 
 // TODO: temporary
-static bool LoadAlterenativeBookmarks(const WCHAR* baseFileName, Vec<Bookmarks*>& bkmsOut) {
+static bool LoadAlterenativeBookmarks(const WCHAR* baseFileName, Vec<VbkmForFile*>& bkmsOut) {
     AutoFree tmp = strconv::WstrToUtf8(baseFileName);
     return LoadAlterenativeBookmarks(tmp.as_view(), bkmsOut);
 }
@@ -546,7 +546,7 @@ void LoadTocTree(WindowInfo* win) {
     }
 
     // TODO: for now just for testing
-    Vec<Bookmarks*>* altTocs = new Vec<Bookmarks*>();
+    Vec<VbkmForFile*>* altTocs = new Vec<VbkmForFile*>();
     bool ok = LoadAlterenativeBookmarks(tab->filePath, *altTocs);
     if (ok && altTocs->size() > 0) {
         tab->altBookmarks = altTocs;
