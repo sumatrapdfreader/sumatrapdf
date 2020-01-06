@@ -293,6 +293,7 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     Vec<Bookmarks*> bkms;
     bool ok = ParseVbkmFile(sv, bkms);
     CrashIf(!ok);
+    DeleteVecMembers(bkms);
 
     // resolve file names to full paths
     for (auto&& vbkm : res->files) {

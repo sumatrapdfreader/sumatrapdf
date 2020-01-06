@@ -282,35 +282,33 @@ void Notifications::MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
 }
 
 void Notifications::Remove(NotificationWnd* wnd) {
-    auto b = std::begin(this->wnds);
-    auto e = std::end(this->wnds);
-    auto pos = std::find(b, e, wnd);
-    if (pos == e) {
+    int pos = wnds.Remove(wnd);
+    if (pos < 0) {
         return;
     }
-    bool isFirst = (pos == b);
-    this->wnds.erase(pos);
-
-    // erase() invalidates iterators
-    b = std::begin(this->wnds);
-    e = std::end(this->wnds);
-
-    if (this->wnds.empty()) {
+    int n = wnds.size();
+    if (n == 0) {
         return;
     }
+
+    bool isFirst = (pos == 0);
 
     // TODO: this might be busted but I'm not sure what it's supposed
     // to do and it happens rarely. Would need to add a trigger for
     // visually testing notifications
     if (isFirst) {
-        auto* first = this->wnds[0];
+        auto* first = wnds[0];
         UINT flags = SWP_NOSIZE | SWP_NOZORDER;
         auto x = GetWndX(first);
         SetWindowPos(first->hwnd, nullptr, x, TOP_LEFT_MARGIN, 0, 0, flags);
     }
-    for (auto i = b + 1; i < e; i++) {
-        auto* prev = *(i - 1);
-        this->MoveBelow(prev, *i);
+    for (int i = pos; i < n; i++) {
+        if (i == 0) {
+            continue;
+        }
+        auto curr = wnds[i];
+        auto prev = wnds[i - 1];
+        MoveBelow(prev, curr);
     }
 }
 

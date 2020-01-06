@@ -289,14 +289,14 @@ class Vec {
         return -1 != Find(el);
     }
 
-    // returns true if removed
-    bool Remove(T el) {
+    // returns position of removed element or -1 if not removed
+    int Remove(T el) {
         int i = Find(el);
         if (-1 == i) {
-            return false;
+            return -1;
         }
         RemoveAt(i);
-        return true;
+        return i;
     }
 
     void Sort(int (*cmpFunc)(const void* a, const void* b)) {
@@ -348,14 +348,6 @@ inline void DeleteVecMembers(Vec<T>& v) {
         delete el;
     }
     v.Reset();
-}
-
-template <typename T>
-inline void DeleteVecMembers(std::vector<T>& v) {
-    for (T& el : v) {
-        delete el;
-    }
-    v.clear();
 }
 
 namespace str {
