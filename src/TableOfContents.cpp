@@ -557,6 +557,10 @@ void LoadTocTree(WindowInfo* win) {
         items.Append("Default");
         for (size_t i = 0; i < altTocs->size(); i++) {
             TocTree* toc = altTocs->at(i)->toc;
+            // TODO: prevent a crash
+            if (!toc) {
+                continue;
+            }
             items.Append(toc->name.get());
         }
         win->altBookmarks->SetItems(items);

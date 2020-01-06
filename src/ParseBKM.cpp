@@ -338,7 +338,7 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
 
 bool ParseBookmarksFile(std::string_view path, Vec<VbkmForFile*>& bkmsOut) {
     AutoFree d = file::ReadFile(path);
-    if (!d.data) {
+    if (d.empty()) {
         return false;
     }
     std::string_view sv = d.as_view();
