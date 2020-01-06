@@ -158,8 +158,11 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* newAnnots
     str::Str data;
 
     const WCHAR* fileName = path::GetBaseNameNoFree(filePath);
-    data.AppendFmt("# SumatraPDF: modifications to \"%S\"\r\n", fileName);
-    data.Append("\r\n");
+    // WCHAR* fileName = L"a’a.pdf"
+    std::string_view fileNameA = strconv::WstrToUtf8(fileName);
+    data.Append("# SumatraPDF: modifications to \"");
+    data.AppendView(fileNameA);
+    data.Append("\"\r\n");
 
     data.AppendFmt("[@%s]\r\n", "meta");
     data.AppendFmt("version = %s\r\n", SMX_CURR_VERSION);
