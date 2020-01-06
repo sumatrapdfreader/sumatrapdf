@@ -160,7 +160,7 @@ class PageElement {
 PageElement* clonePageElement(PageElement*);
 
 // those are the same as F font bitmask in PDF docs
-// for DocTocItem::fontFlags
+// for TocItem::fontFlags
 constexpr int fontBitBold = 0;
 constexpr int fontBitItalic = 1;
 
@@ -169,7 +169,7 @@ extern Kind kindTocFzLink;
 extern Kind kindTocDjvu;
 
 // an item in a document's Table of Content
-struct DocTocItem : TreeItem {
+struct TocItem : TreeItem {
 
     // each engine has a raw representation of the toc item which
     // we want to access. Not (yet) supported by all engines
@@ -178,7 +178,7 @@ struct DocTocItem : TreeItem {
     char* rawVal1 = nullptr;
     char* rawVal2 = nullptr;
 
-    DocTocItem* parent = nullptr;
+    TocItem* parent = nullptr;
 
     // the item's visible label
     WCHAR* title = nullptr;
@@ -198,10 +198,10 @@ struct DocTocItem : TreeItem {
     // auto-calculated page number that tells us a span from
     // pageNo => endPageNo
     // only used by TocEditor and EnginePdfMulti
-    // TODO: maybe create a subclass of DocTocItem
+    // TODO: maybe create a subclass of TocItem
     int endPageNo = 0;
 
-    // arbitrary number allowing to distinguish this DocTocItem
+    // arbitrary number allowing to distinguish this TocItem
     // from any other of the same ToC tree (must be constant
     // between runs so that it can be persisted in FileState::tocState)
     int id = 0;
@@ -212,17 +212,17 @@ struct DocTocItem : TreeItem {
     PageDestination* dest = nullptr;
 
     // first child item
-    DocTocItem* child = nullptr;
+    TocItem* child = nullptr;
     // next sibling
-    DocTocItem* next = nullptr;
+    TocItem* next = nullptr;
 
-    DocTocItem() = default;
+    TocItem() = default;
 
-    explicit DocTocItem(DocTocItem* parent, const WCHAR* title, int pageNo);
+    explicit TocItem(TocItem* parent, const WCHAR* title, int pageNo);
 
-    ~DocTocItem() override;
+    ~TocItem() override;
 
-    void AddSibling(DocTocItem* sibling);
+    void AddSibling(TocItem* sibling);
 
     void OpenSingleNode();
 
@@ -240,7 +240,7 @@ struct DocTocItem : TreeItem {
     bool PageNumbersMatch() const;
 };
 
-DocTocItem* CloneDocTocItemRecur(DocTocItem*);
+TocItem* CloneTocItemRecur(TocItem*);
 
 struct DocTocTree : public TreeModel {
     // name of the bookmark view
@@ -249,10 +249,10 @@ struct DocTocTree : public TreeModel {
     // path of the file
     AutoFree filePath;
 
-    DocTocItem* root = nullptr;
+    TocItem* root = nullptr;
 
     DocTocTree() = default;
-    DocTocTree(DocTocItem* root);
+    DocTocTree(TocItem* root);
     ~DocTocTree() override;
 
     // TreeModel

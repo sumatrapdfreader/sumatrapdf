@@ -211,7 +211,7 @@ PageDestination* EnginePdfMultiImpl::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-static void updateTocItemsPageNo(DocTocItem* i, int nPageNoAdd) {
+static void updateTocItemsPageNo(TocItem* i, int nPageNoAdd) {
     if (nPageNoAdd == 0) {
         return;
     }
@@ -242,7 +242,7 @@ DocTocTree* EnginePdfMultiImpl::GetTocTree() {
             continue;
         }
         WCHAR* title = strconv::Utf8ToWstr(f->fileName);
-        auto tocItem = new DocTocItem(nullptr, title, startPageNo + 1);
+        auto tocItem = new TocItem(nullptr, title, startPageNo + 1);
         free(title);
         if (!tree->root) {
             tree->root = tocItem;

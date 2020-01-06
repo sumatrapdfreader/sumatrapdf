@@ -747,8 +747,8 @@ int ImageDirEngineImpl::GetPageByLabel(const WCHAR* label) const {
     return EngineBase::GetPageByLabel(label);
 }
 
-static DocTocItem* newImageDirTocItem(DocTocItem* parent, WCHAR* title, int pageNo) {
-    return new DocTocItem(parent, title, pageNo);
+static TocItem* newImageDirTocItem(TocItem* parent, WCHAR* title, int pageNo) {
+    return new TocItem(parent, title, pageNo);
 };
 
 DocTocTree* ImageDirEngineImpl::GetTocTree() {
@@ -756,11 +756,11 @@ DocTocTree* ImageDirEngineImpl::GetTocTree() {
         return tocTree;
     }
     AutoFreeWstr ws = GetPageLabel(1);
-    DocTocItem* root = newImageDirTocItem(nullptr, ws, 1);
+    TocItem* root = newImageDirTocItem(nullptr, ws, 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
         ws = GetPageLabel(i);
-        DocTocItem* item = newImageDirTocItem(root, ws, i);
+        TocItem* item = newImageDirTocItem(root, ws, i);
         item->id = i;
         root->AddSibling(item);
     }
@@ -1026,13 +1026,13 @@ bool CbxEngineImpl::FinishLoading() {
         return false;
     }
 
-    DocTocItem* root = nullptr;
-    DocTocItem* curr = nullptr;
+    TocItem* root = nullptr;
+    TocItem* curr = nullptr;
     for (int i = 0; i < pageCount; i++) {
         std::string_view fname = pageFiles[i]->name;
         AutoFreeWstr name = strconv::Utf8ToWstr(fname);
         const WCHAR* baseName = path::GetBaseNameNoFree(name.get());
-        DocTocItem* ti = new DocTocItem(nullptr, baseName, i + 1);
+        TocItem* ti = new TocItem(nullptr, baseName, i + 1);
         if (root == nullptr) {
             root = ti;
             curr = ti;

@@ -14,7 +14,7 @@ class CaptionInfo;
 
 class PageElement;
 class PageDestination;
-struct DocTocItem;
+struct TocItem;
 class Controller;
 class ControllerCallback;
 class ChmModel;
@@ -253,7 +253,7 @@ class LinkHandler {
 
     void ScrollTo(PageDestination* dest);
     void LaunchFile(const WCHAR* path, PageDestination* link);
-    PageDestination* FindTocItem(DocTocItem* item, const WCHAR* name, bool partially = false);
+    PageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially = false);
 
   public:
     explicit LinkHandler(WindowInfo* win) : owner(win) {

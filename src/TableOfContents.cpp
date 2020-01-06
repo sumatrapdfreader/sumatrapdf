@@ -58,7 +58,7 @@ static void CustomizeTocTooltip(TreeItmGetTooltipArgs* args) {
     auto* w = args->w;
     auto* ti = args->treeItem;
     auto* nm = args->info;
-    DocTocItem* tocItem = (DocTocItem*)ti;
+    TocItem* tocItem = (TocItem*)ti;
     PageDestination* link = tocItem->GetPageDestination();
     if (!link) {
         return;
@@ -72,8 +72,8 @@ static void CustomizeTocTooltip(TreeItmGetTooltipArgs* args) {
     }
     CrashIf(!link); // /analyze claims that this could happen - it really can't
     auto k = link->Kind();
-    // TODO: DocTocItem from Chm contain other types
-    // we probably shouldn't set DocTocItem::dest there
+    // TODO: TocItem from Chm contain other types
+    // we probably shouldn't set TocItem::dest there
     if (k == kindDestinationScrollTo) {
         return;
     }
@@ -136,7 +136,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 
     // Draw the page number right-aligned (if there is one)
     WindowInfo* win = FindWindowInfoByHwnd(hTV);
-    DocTocItem* tocItem = (DocTocItem*)item.lParam;
+    TocItem* tocItem = (TocItem*)item.lParam;
     AutoFreeWstr label;
     if (tocItem->pageNo && win && win->IsDocLoaded()) {
         label.Set(win->ctrl->GetPageLabel(tocItem->pageNo));
@@ -174,7 +174,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 }
 #endif
 
-static void GoToTocLinkTask(WindowInfo* win, DocTocItem* tocItem, TabInfo* tab, Controller* ctrl) {
+static void GoToTocLinkTask(WindowInfo* win, TocItem* tocItem, TabInfo* tab, Controller* ctrl) {
     // tocItem is invalid if the Controller has been replaced
     if (!WindowInfoStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl)
         return;
@@ -214,7 +214,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExt
     if (!ti) {
         return;
     }
-    DocTocItem* tocItem = (DocTocItem*)ti;
+    TocItem* tocItem = (TocItem*)ti;
     bool validPage = (tocItem->pageNo > 0);
     bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
     if (validPage || (allowExternal || isScroll)) {
@@ -252,7 +252,7 @@ void ToggleTocBox(WindowInfo* win) {
 
 // find the closest item in tree view to a given page number
 static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
-    DocTocItem* bestMatch = nullptr;
+    TocItem* bestMatch = nullptr;
     int bestMatchPageNo = 0;
 
     TreeModel* tm = treeCtrl->treeModel;
@@ -260,7 +260,7 @@ static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
         return nullptr;
     }
     VisitTreeModelItems(tm, [&](TreeItem* ti) {
-        auto* docItem = (DocTocItem*)ti;
+        auto* docItem = (TocItem*)ti;
         if (!docItem) {
             return true;
         }
@@ -294,13 +294,13 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
     }
 }
 
-static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>& tocState, DocTocItem* tocItem) {
+static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>& tocState, TocItem* tocItem) {
     while (tocItem) {
         // items without children cannot be toggled
         if (tocItem->child) {
             // we have to query the state of the tree view item because
             // isOpenToggled is not kept in sync
-            // TODO: keep toggle state on DocTocItem in sync
+            // TODO: keep toggle state on TocItem in sync
             // by subscribing to the right notifications
             bool isExpanded = treeCtrl->IsExpanded(tocItem);
             bool wasToggled = isExpanded != tocItem->isOpenDefault;
@@ -319,7 +319,7 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, DocTocTree*
         return;
     }
     tocState.Reset();
-    DocTocItem* tocItem = docTree->root;
+    TocItem* tocItem = docTree->root;
     UpdateDocTocExpansionState(treeCtrl, tocState, tocItem);
 }
 
@@ -330,7 +330,7 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, DocTocTree*
     ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || \
      (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFE))
 
-static void GetLeftRightCounts(DocTocItem* node, int& l2r, int& r2l) {
+static void GetLeftRightCounts(TocItem* node, int& l2r, int& r2l) {
     if (!node)
         return;
     if (node->title) {
@@ -345,7 +345,7 @@ static void GetLeftRightCounts(DocTocItem* node, int& l2r, int& r2l) {
     GetLeftRightCounts(node->next, l2r, r2l);
 }
 
-static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
+static void SetInitialExpandState(TocItem* item, Vec<int>& tocState) {
     while (item) {
         if (tocState.Contains(item->id)) {
             item->isOpenToggled = true;
@@ -395,7 +395,7 @@ static MenuDef contextMenuDef[] = {
 };
 // clang-format on
 
-static void AddFavoriteFromToc(WindowInfo* win, DocTocItem* dti) {
+static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     int pageNo = 0;
     if (dti->dest) {
         pageNo = dti->dest->GetPageNo();
@@ -431,7 +431,7 @@ static void OnTocContextMenu(ContextMenuArgs* args) {
         pt = {args->mouseGlobal.x, args->mouseGlobal.y};
     }
     int pageNo = 0;
-    DocTocItem* dti = (DocTocItem*)ti;
+    TocItem* dti = (TocItem*)ti;
     if (dti && dti->dest) {
         pageNo = dti->dest->GetPageNo();
     }
@@ -632,7 +632,7 @@ void OnDocTocCustomDraw(TreeItemCustomDrawArgs* args) {
 
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
         // called before drawing each item
-        DocTocItem* tocItem = (DocTocItem*)args->treeItem;
+        TocItem* tocItem = (TocItem*)args->treeItem;
         ;
         if (!tocItem) {
             return;

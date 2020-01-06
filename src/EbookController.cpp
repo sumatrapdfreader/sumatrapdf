@@ -50,16 +50,16 @@ HtmlFormatterArgs* CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator* te
     return args;
 }
 
-static DocTocItem* newEbookTocDest(DocTocItem* parent, const WCHAR* title, int reparseIdx) {
-    auto res = new DocTocItem(parent, title, reparseIdx);
+static TocItem* newEbookTocDest(TocItem* parent, const WCHAR* title, int reparseIdx) {
+    auto res = new TocItem(parent, title, reparseIdx);
     res->dest = new PageDestination();
     res->dest->kind = kindDestinationScrollTo;
     res->dest->pageNo = reparseIdx;
     return res;
 }
 
-static DocTocItem* newEbookTocDest(DocTocItem* parent, const WCHAR* title, const WCHAR* url) {
-    auto res = new DocTocItem(parent, title, 0);
+static TocItem* newEbookTocDest(TocItem* parent, const WCHAR* title, const WCHAR* url) {
+    auto res = new TocItem(parent, title, 0);
     res->dest = new PageDestination();
     res->dest->kind = kindDestinationLaunchURL;
     res->dest->value = str::Dup(url);
@@ -776,7 +776,7 @@ int EbookController::ResolvePageAnchor(const WCHAR* id) {
 
 class EbookTocCollector : public EbookTocVisitor {
     EbookController* ctrl = nullptr;
-    DocTocItem* root = nullptr;
+    TocItem* root = nullptr;
     int idCounter = 0;
 
   public:
@@ -785,7 +785,7 @@ class EbookTocCollector : public EbookTocVisitor {
     }
 
     virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
-        DocTocItem* item = nullptr;
+        TocItem* item = nullptr;
         // TODO: set parent for newEbookTocDest()
         if (!url) {
             item = newEbookTocDest(nullptr, name, 0);
@@ -805,7 +805,7 @@ class EbookTocCollector : public EbookTocVisitor {
         if (!root) {
             root = item;
         } else {
-            DocTocItem* r2 = root;
+            TocItem* r2 = root;
             for (level--; level > 0; level--) {
                 for (; r2->next; r2 = r2->next) {
                     // no-op
@@ -823,7 +823,7 @@ class EbookTocCollector : public EbookTocVisitor {
         }
     }
 
-    DocTocItem* GetRoot() {
+    TocItem* GetRoot() {
         return root;
     }
 };
@@ -834,7 +834,7 @@ DocTocTree* EbookController::GetTocTree() {
     }
     EbookTocCollector visitor(this);
     doc.ParseToc(&visitor);
-    DocTocItem* root = visitor.GetRoot();
+    TocItem* root = visitor.GetRoot();
     if (!root) {
         return nullptr;
     }

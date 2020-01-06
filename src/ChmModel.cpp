@@ -21,8 +21,8 @@ static bool IsExternalUrl(const WCHAR* url) {
     return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
 }
 
-static DocTocItem* newChmTocItem(DocTocItem* parent, const WCHAR* title, int pageNo, const WCHAR* url) {
-    auto res = new DocTocItem(parent, title, pageNo);
+static TocItem* newChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, const WCHAR* url) {
+    auto res = new TocItem(parent, title, pageNo);
     if (!url) {
         return res;
     }
@@ -43,7 +43,7 @@ static DocTocItem* newChmTocItem(DocTocItem* parent, const WCHAR* title, int pag
     return res;
 }
 
-static DocTocItem* newChmNamedDest(const WCHAR* url, int pageNo) {
+static TocItem* newChmNamedDest(const WCHAR* url, int pageNo) {
     auto res = newChmTocItem(nullptr, url, pageNo, nullptr);
     return res;
 }
@@ -510,14 +510,14 @@ DocTocTree* ChmModel::GetTocTree() {
         return nullptr;
     }
 
-    DocTocItem* root = nullptr;
-    DocTocItem** nextChild = &root;
-    Vec<DocTocItem*> levels;
+    TocItem* root = nullptr;
+    TocItem** nextChild = &root;
+    Vec<TocItem*> levels;
     int idCounter = 0;
 
     for (ChmTocTraceItem& ti : *tocTrace) {
         // TODO: set parent
-        DocTocItem* item = newChmTocItem(nullptr, ti.title, ti.pageNo, ti.url);
+        TocItem* item = newChmTocItem(nullptr, ti.title, ti.pageNo, ti.url);
         item->id = ++idCounter;
         // append the item at the correct level
         CrashIf(ti.level < 1);

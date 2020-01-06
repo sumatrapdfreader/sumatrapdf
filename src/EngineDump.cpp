@@ -171,7 +171,7 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
     return nullptr;
 }
 
-void DumpTocItem(EngineBase* engine, DocTocItem* item, int level, int& idCounter) {
+void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
     for (; item; item = item->next) {
         AutoFree title(Escape(item->title));
         for (int i = 0; i < level; i++)

@@ -78,7 +78,7 @@ void ShowErrorMessage(const char* msg) {
     MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
 }
 
-static void AddPageNumbersToTocItem(DocTocItem* ti) {
+static void AddPageNumbersToTocItem(TocItem* ti) {
     int sno = ti->pageNo;
     if (sno <= 0) {
         return;
@@ -94,7 +94,7 @@ static void AddPageNumbersToTocItem(DocTocItem* ti) {
     ti->title = s;
 }
 
-static void AddPageNumbersToTocItemsRecur(DocTocItem* ti) {
+static void AddPageNumbersToTocItemsRecur(TocItem* ti) {
     while (ti) {
         AddPageNumbersToTocItem(ti);
         AddPageNumbersToTocItemsRecur(ti->child);
@@ -102,7 +102,7 @@ static void AddPageNumbersToTocItemsRecur(DocTocItem* ti) {
     }
 }
 
-static void CollectTocItemsRecur(DocTocItem* ti, Vec<DocTocItem*>& v) {
+static void CollectTocItemsRecur(TocItem* ti, Vec<TocItem*>& v) {
     while (ti) {
         v.push_back(ti);
         CollectTocItemsRecur(ti->child, v);
@@ -110,21 +110,21 @@ static void CollectTocItemsRecur(DocTocItem* ti, Vec<DocTocItem*>& v) {
     }
 }
 
-static bool cmpByPageNo(DocTocItem* ti1, DocTocItem* ti2) {
+static bool cmpByPageNo(TocItem* ti1, TocItem* ti2) {
     return ti1->pageNo < ti2->pageNo;
 }
 
-static void CalcEndPageNo(DocTocItem* root, int nPages) {
-    Vec<DocTocItem*> tocItems;
+static void CalcEndPageNo(TocItem* root, int nPages) {
+    Vec<TocItem*> tocItems;
     CollectTocItemsRecur(root, tocItems);
     size_t n = tocItems.size();
     if (n < 1) {
         return;
     }
     std::sort(tocItems.begin(), tocItems.end(), cmpByPageNo);
-    DocTocItem* prev = tocItems[0];
+    TocItem* prev = tocItems[0];
     for (size_t i = 1; i < n; i++) {
-        DocTocItem* next = tocItems[i];
+        TocItem* next = tocItems[i];
         prev->endPageNo = next->pageNo;
         prev = next;
     }
@@ -137,12 +137,12 @@ static void UpdateTreeModel() {
     delete treeCtrl->treeModel;
     treeCtrl->treeModel = nullptr;
 
-    DocTocItem* root = nullptr;
-    DocTocItem* curr = nullptr;
+    TocItem* root = nullptr;
+    TocItem* curr = nullptr;
     for (auto&& bkm : bookmarks) {
-        DocTocItem* i = new DocTocItem();
+        TocItem* i = new TocItem();
         i->isOpenDefault = true;
-        i->child = CloneDocTocItemRecur(bkm->toc->root);
+        i->child = CloneTocItemRecur(bkm->toc->root);
         if (i->child) {
             CalcEndPageNo(i->child, bkm->nPages);
             AddPageNumbersToTocItemsRecur(i->child);
@@ -218,7 +218,7 @@ static void RemovePdf() {
     size_t n = w->tocArgs->bookmarks.size();
     CrashIf(n < 2);
 
-    DocTocItem* di = (DocTocItem*)sel;
+    TocItem* di = (TocItem*)sel;
     CrashIf(di->Parent() != nullptr);
     WCHAR* toRemoveTitle = di->title;
     size_t toRemoveIdx = 0;
@@ -244,7 +244,7 @@ static void UpdateRemovePdfButtonStatus(TocEditorWindow* w) {
     TreeItem* sel = w->treeCtrl->GetSelection();
     bool isEnabled = false;
     if (sel) {
-        DocTocItem* di = (DocTocItem*)sel;
+        TocItem* di = (TocItem*)sel;
         TreeItem* p = di->Parent();
         isEnabled = (p == nullptr); // enabled if top-level
     }

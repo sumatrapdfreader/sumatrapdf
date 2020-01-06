@@ -63,7 +63,7 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
     }
 }
 
-static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
+static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
     if (level == 0) {
         s.Append("title: default view\n");
     }
@@ -134,7 +134,7 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
 
 // a single line in .bmk file is:
 // indentation "quoted title" additional-metadata* destination
-static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
+static TocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
     auto origLine = line; // save for debugging
 
     // lines might start with an indentation, 2 spaces for one level
@@ -153,7 +153,7 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
             return nullptr;
         }
     }
-    DocTocItem* res = new DocTocItem();
+    TocItem* res = new TocItem();
     res->title = strconv::Utf8ToWstr(title.AsView());
     PageDestination* dest = nullptr;
 
@@ -218,23 +218,23 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     return res;
 }
 
-struct DocTocItemWithIndent {
-    DocTocItem* item = nullptr;
+struct TocItemWithIndent {
+    TocItem* item = nullptr;
     size_t indent = 0;
 
-    DocTocItemWithIndent() = default;
-    DocTocItemWithIndent(DocTocItem* item, size_t indent);
-    ~DocTocItemWithIndent() = default;
+    TocItemWithIndent() = default;
+    TocItemWithIndent(TocItem* item, size_t indent);
+    ~TocItemWithIndent() = default;
 };
 
-DocTocItemWithIndent::DocTocItemWithIndent(DocTocItem* item, size_t indent) {
+TocItemWithIndent::TocItemWithIndent(TocItem* item, size_t indent) {
     this->item = item;
     this->indent = indent;
 }
 
 // TODO: read more than one
 static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>& bkmsOut) {
-    Vec<DocTocItemWithIndent> items;
+    Vec<TocItemWithIndent> items;
 
     // first line should be "file: $file"
     auto line = sv::ParseUntil(sv, '\n');
@@ -267,7 +267,7 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>& bkmsOut) {
             delete tree;
             return false;
         }
-        DocTocItemWithIndent iwl = {item, indent};
+        TocItemWithIndent iwl = {item, indent};
         items.Append(iwl);
     }
     size_t nItems = items.size();

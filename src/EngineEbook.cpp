@@ -163,8 +163,8 @@ static PageElement* newImageDataElement(int pageNo, RectI bbox, int imageID) {
     return res;
 }
 
-static DocTocItem* newEbookTocItem(DocTocItem* parent, const WCHAR* title, PageDestination* dest) {
-    auto res = new DocTocItem(parent, title, 0);
+static TocItem* newEbookTocItem(TocItem* parent, const WCHAR* title, PageDestination* dest) {
+    auto res = new TocItem(parent, title, 0);
     res->dest = dest;
     if (dest) {
         res->pageNo = dest->GetPageNo();
@@ -655,13 +655,13 @@ WCHAR* EbookEngine::ExtractFontList() {
     return fonts.Join(L"\n");
 }
 
-static void AppendTocItem(DocTocItem*& root, DocTocItem* item, int level) {
+static void AppendTocItem(TocItem*& root, TocItem* item, int level) {
     if (!root) {
         root = item;
         return;
     }
     // find the last child at each level, until finding the parent of the new item
-    DocTocItem* r2 = root;
+    TocItem* r2 = root;
     while (--level > 0) {
         for (; r2->next; r2 = r2->next)
             ;
@@ -677,7 +677,7 @@ static void AppendTocItem(DocTocItem*& root, DocTocItem* item, int level) {
 
 class EbookTocBuilder : public EbookTocVisitor {
     EngineBase* engine = nullptr;
-    DocTocItem* root = nullptr;
+    TocItem* root = nullptr;
     int idCounter = 0;
     bool isIndex = false;
 
@@ -688,7 +688,7 @@ class EbookTocBuilder : public EbookTocVisitor {
 
     void Visit(const WCHAR* name, const WCHAR* url, int level) override;
 
-    DocTocItem* GetRoot() {
+    TocItem* GetRoot() {
         return root;
     }
     void SetIsIndex(bool value) {
@@ -712,7 +712,7 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
     }
 
     // TODO; send parent to newEbookTocItem
-    DocTocItem* item = newEbookTocItem(nullptr, name, dest);
+    TocItem* item = newEbookTocItem(nullptr, name, dest);
     item->id = ++idCounter;
     if (isIndex) {
         item->pageNo = 0;
@@ -853,7 +853,7 @@ DocTocTree* EpubEngineImpl::GetTocTree() {
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    DocTocItem* root = builder.GetRoot();
+    TocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
@@ -974,7 +974,7 @@ DocTocTree* Fb2EngineImpl::GetTocTree() {
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    DocTocItem* root = builder.GetRoot();
+    TocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
@@ -1127,7 +1127,7 @@ DocTocTree* MobiEngineImpl::GetTocTree() {
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    DocTocItem* root = builder.GetRoot();
+    TocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
@@ -1576,7 +1576,7 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
         builder.SetIsIndex(true);
         doc->ParseIndex(&builder);
     }
-    DocTocItem* root = builder.GetRoot();
+    TocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }

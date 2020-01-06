@@ -581,8 +581,8 @@ void UpdateFavoritesTreeForAllWindows() {
     }
 }
 
-static DocTocItem* TocItemForPageNo(DocTocItem* item, int pageNo) {
-    DocTocItem* currItem = nullptr;
+static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
+    TocItem* currItem = nullptr;
 
     for (; item; item = item->next) {
         if (1 <= item->pageNo && item->pageNo <= pageNo) {
@@ -593,7 +593,7 @@ static DocTocItem* TocItemForPageNo(DocTocItem* item, int pageNo) {
         }
 
         // find any child item closer to the specified page
-        DocTocItem* subItem = TocItemForPageNo(item->child, pageNo);
+        TocItem* subItem = TocItemForPageNo(item->child, pageNo);
         if (subItem) {
             currItem = subItem;
         }
@@ -634,8 +634,8 @@ void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo) {
     if (ctrl->HasTocTree()) {
         // use the current ToC heading as default name
         auto* docTree = ctrl->GetTocTree();
-        DocTocItem* root = docTree->root;
-        DocTocItem* item = TocItemForPageNo(root, pageNo);
+        TocItem* root = docTree->root;
+        TocItem* item = TocItemForPageNo(root, pageNo);
         if (item) {
             name.SetCopy(item->title);
         }

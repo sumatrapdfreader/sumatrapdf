@@ -187,17 +187,17 @@ Kind kindTocFzOutline = "tocFzOutline";
 Kind kindTocFzLink = "tocFzLink";
 Kind kindTocDjvu = "tocDjvu";
 
-DocTocItem::DocTocItem(DocTocItem* parent, const WCHAR* title, int pageNo) {
+TocItem::TocItem(TocItem* parent, const WCHAR* title, int pageNo) {
     this->title = str::Dup(title);
     this->pageNo = pageNo;
     this->parent = parent;
 }
 
-DocTocItem::~DocTocItem() {
+TocItem::~TocItem() {
     delete child;
     delete dest;
     while (next) {
-        DocTocItem* tmp = next->next;
+        TocItem* tmp = next->next;
         next->next = nullptr;
         delete next;
         next = tmp;
@@ -205,15 +205,15 @@ DocTocItem::~DocTocItem() {
     free(title);
 }
 
-void DocTocItem::AddSibling(DocTocItem* sibling) {
-    DocTocItem* item = this;
+void TocItem::AddSibling(TocItem* sibling) {
+    TocItem* item = this;
     while (item->next) {
         item = item->next;
     }
     item->next = sibling;
 }
 
-void DocTocItem::OpenSingleNode() {
+void TocItem::OpenSingleNode() {
     // only open (root level) ToC nodes if there's at most two
     if (next && next->next) {
         return;
@@ -231,17 +231,17 @@ void DocTocItem::OpenSingleNode() {
 }
 
 // returns the destination this ToC item points to or nullptr
-// (the result is owned by the DocTocItem and MUST NOT be deleted)
+// (the result is owned by the TocItem and MUST NOT be deleted)
 // TODO: rename to GetDestination()
-PageDestination* DocTocItem::GetPageDestination() {
+PageDestination* TocItem::GetPageDestination() {
     return dest;
 }
 
-DocTocItem* CloneDocTocItemRecur(DocTocItem* ti) {
+TocItem* CloneTocItemRecur(TocItem* ti) {
     if (ti == nullptr) {
         return nullptr;
     }
-    DocTocItem* res = new DocTocItem();
+    TocItem* res = new TocItem();
     res->parent = ti->parent;
     res->title = str::Dup(ti->title);
     res->isOpenDefault = ti->isOpenDefault;
@@ -252,8 +252,8 @@ DocTocItem* CloneDocTocItemRecur(DocTocItem* ti) {
     res->fontFlags = ti->fontFlags;
     res->color = ti->color;
     res->dest = clonePageDestination(ti->dest);
-    res->child = CloneDocTocItemRecur(ti->child);
-    res->next = CloneDocTocItemRecur(ti->next);
+    res->child = CloneTocItemRecur(ti->child);
+    res->next = CloneTocItemRecur(ti->next);
     return res;
 }
 
@@ -261,19 +261,19 @@ DocTocTree* CloneDocTocTree(DocTocTree* tree) {
     DocTocTree* res = new DocTocTree();
     res->filePath = str::Dup(tree->filePath);
     res->name = str::Dup(tree->name);
-    res->root = CloneDocTocItemRecur(tree->root);
+    res->root = CloneTocItemRecur(tree->root);
     return res;
 }
 
-WCHAR* DocTocItem::Text() {
+WCHAR* TocItem::Text() {
     return title;
 }
 
-TreeItem* DocTocItem::Parent() {
+TreeItem* TocItem::Parent() {
     return parent;
 }
 
-int DocTocItem::ChildCount() {
+int TocItem::ChildCount() {
     int n = 0;
     auto node = child;
     while (node) {
@@ -283,7 +283,7 @@ int DocTocItem::ChildCount() {
     return n;
 }
 
-TreeItem* DocTocItem::ChildAt(int n) {
+TreeItem* TocItem::ChildAt(int n) {
     auto node = child;
     while (n > 0) {
         node = node->next;
@@ -292,7 +292,7 @@ TreeItem* DocTocItem::ChildAt(int n) {
     return node;
 }
 
-bool DocTocItem::IsExpanded() {
+bool TocItem::IsExpanded() {
     // leaf items cannot be expanded
     if (child == nullptr) {
         return false;
@@ -304,11 +304,11 @@ bool DocTocItem::IsExpanded() {
     return isOpenDefault != isOpenToggled;
 }
 
-bool DocTocItem::IsChecked() {
+bool TocItem::IsChecked() {
     return !isUnchecked;
 }
 
-bool DocTocItem::PageNumbersMatch() const {
+bool TocItem::PageNumbersMatch() const {
     if (!dest || dest->pageNo == 0) {
         return true;
     }
@@ -319,7 +319,7 @@ bool DocTocItem::PageNumbersMatch() const {
     return true;
 }
 
-DocTocTree::DocTocTree(DocTocItem* root) {
+DocTocTree::DocTocTree(TocItem* root) {
     this->root = root;
 }
 

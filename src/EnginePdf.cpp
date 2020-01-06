@@ -344,7 +344,7 @@ class PdfEngineImpl : public EngineBase {
     FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy = false);
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation);
-    DocTocItem* BuildTocTree(DocTocItem* parent, fz_outline* entry, int& idCounter, bool isAttachment);
+    TocItem* BuildTocTree(TocItem* parent, fz_outline* entry, int& idCounter, bool isAttachment);
     void MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo);
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
@@ -855,9 +855,9 @@ PageDestination* destFromAttachment(PdfEngineImpl* engine, fz_outline* outline) 
     return dest;
 }
 
-DocTocItem* PdfEngineImpl::BuildTocTree(DocTocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment) {
-    DocTocItem* root = nullptr;
-    DocTocItem* curr = nullptr;
+TocItem* PdfEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment) {
+    TocItem* root = nullptr;
+    TocItem* curr = nullptr;
 
     while (outline) {
         WCHAR* name = nullptr;
@@ -877,7 +877,7 @@ DocTocItem* PdfEngineImpl::BuildTocTree(DocTocItem* parent, fz_outline* outline,
             dest = newFzDestination(outline);
         }
 
-        DocTocItem* item = newDocTocItemWithDestination(parent, name, dest);
+        TocItem* item = newTocItemWithDestination(parent, name, dest);
         free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
@@ -918,7 +918,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
 
     int idCounter = 0;
 
-    DocTocItem* root = nullptr;
+    TocItem* root = nullptr;
     const char* path = strconv::WstrToUtf8(fileName).data();
     if (outline) {
         root = BuildTocTree(nullptr, outline, idCounter, false);
@@ -932,7 +932,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
         tocTree->filePath = path;
         return tocTree;
     }
-    DocTocItem* att = BuildTocTree(nullptr, attachments, idCounter, true);
+    TocItem* att = BuildTocTree(nullptr, attachments, idCounter, true);
     if (!root) {
         tocTree = new DocTocTree(att);
         tocTree->filePath = path;

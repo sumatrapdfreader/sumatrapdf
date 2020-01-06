@@ -94,9 +94,9 @@ static PageElement* newDjVuLink(int pageNo, RectI rect, const char* link, const 
     return res;
 }
 
-static DocTocItem* newDjVuTocItem(DocTocItem* parent, const char* title, const char* link) {
+static TocItem* newDjVuTocItem(TocItem* parent, const char* title, const char* link) {
     AutoFreeWstr s = strconv::Utf8ToWstr(title);
-    auto res = new DocTocItem(parent, s, 0);
+    auto res = new TocItem(parent, s, 0);
     res->dest = newDjVuDestination(link);
     res->pageNo = res->dest->GetPageNo();
     return res;
@@ -226,7 +226,7 @@ class DjVuEngineImpl : public EngineBase {
     void AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen);
     bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI>& coords);
     char* ResolveNamedDest(const char* name);
-    DocTocItem* BuildTocTree(DocTocItem* parent, miniexp_t entry, int& idCounter);
+    TocItem* BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter);
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
     bool FinishLoading();
@@ -1036,8 +1036,8 @@ PageDestination* DjVuEngineImpl::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-DocTocItem* DjVuEngineImpl::BuildTocTree(DocTocItem* parent, miniexp_t entry, int& idCounter) {
-    DocTocItem* node = nullptr;
+TocItem* DjVuEngineImpl::BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter) {
+    TocItem* node = nullptr;
 
     for (miniexp_t rest = entry; miniexp_consp(rest); rest = miniexp_cdr(rest)) {
         miniexp_t item = miniexp_car(rest);
@@ -1051,7 +1051,7 @@ DocTocItem* DjVuEngineImpl::BuildTocTree(DocTocItem* parent, miniexp_t entry, in
             continue;
         }
 
-        DocTocItem* tocItem = nullptr;
+        TocItem* tocItem = nullptr;
         AutoFree linkNo = ResolveNamedDest(link);
         if (!linkNo) {
             tocItem = newDjVuTocItem(parent, name, link);
@@ -1087,7 +1087,7 @@ DocTocTree* DjVuEngineImpl::GetTocTree() {
     }
     ScopedCritSec scope(&gDjVuContext.lock);
     int idCounter = 0;
-    DocTocItem* root = BuildTocTree(nullptr, outline, idCounter);
+    TocItem* root = BuildTocTree(nullptr, outline, idCounter);
     if (!root) {
         return nullptr;
     }
