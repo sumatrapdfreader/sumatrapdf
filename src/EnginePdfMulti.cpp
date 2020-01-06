@@ -27,21 +27,10 @@ extern "C" {
 #include "ParseBKM.h"
 #include "EnginePdfMulti.h"
 
-// returns engine handling this <pageNo> and updates <pageNo> to point within that engine
-static EngineBase* findEngineForPage(ParsedVbkm* vbkm, int& pageNo) {
-    for (auto&& f : vbkm->files) {
-        if (!f->engine) {
-            continue;
-        }
-        int nPages = f->engine->PageCount();
-        if (pageNo <= nPages) {
-            return f->engine;
-        }
-        pageNo -= nPages;
-    }
-    CrashIf(true);
-    return nullptr;
-}
+struct EnginePage {
+    int pageNoInEngine = 0;
+    EngineBase* engine = nullptr;
+};
 
 Kind kindEnginePdfMulti = "enginePdfMulti";
 
@@ -84,11 +73,18 @@ class EnginePdfMultiImpl : public EngineBase {
 
     static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
 
-  protected:
-    ParsedVbkm* vbkm = nullptr;
+    EngineBase* PageToEngine(int& pageNo) const;
+    VbkmFile vbkm;
+    Vec<EnginePage> pageToEngine;
 
     TocTree* tocTree = nullptr;
 };
+
+EngineBase* EnginePdfMultiImpl::PageToEngine(int& pageNo) const {
+    EnginePage& ep = pageToEngine[pageNo - 1];
+    pageNo = ep.pageNoInEngine;
+    return ep.engine;
+}
 
 EnginePdfMultiImpl::EnginePdfMultiImpl() {
     kind = kindEnginePdfMulti;
@@ -99,17 +95,6 @@ EnginePdfMultiImpl::EnginePdfMultiImpl() {
 }
 
 EnginePdfMultiImpl::~EnginePdfMultiImpl() {
-    delete vbkm;
-    if (!tocTree) {
-        return;
-    }
-    // we only own the first level. the rest is owned by their respective
-    // engines, so we detach them before freeing
-    auto curr = tocTree->root;
-    while (curr) {
-        curr->child = nullptr;
-        curr = curr->next;
-    }
     delete tocTree;
 }
 
@@ -119,22 +104,22 @@ EngineBase* EnginePdfMultiImpl::Clone() {
 }
 
 RectD EnginePdfMultiImpl::PageMediabox(int pageNo) {
-    auto e = findEngineForPage(vbkm, pageNo);
+    EngineBase* e = PageToEngine(pageNo);
     return e->PageMediabox(pageNo);
 }
 
 RectD EnginePdfMultiImpl::PageContentBox(int pageNo, RenderTarget target) {
-    auto e = findEngineForPage(vbkm, pageNo);
+    EngineBase* e = PageToEngine(pageNo);
     return e->PageContentBox(pageNo, target);
 }
 
 RenderedBitmap* EnginePdfMultiImpl::RenderPage(RenderPageArgs& args) {
-    auto e = findEngineForPage(vbkm, args.pageNo);
+    EngineBase* e = PageToEngine(args.pageNo);
     return e->RenderPage(args);
 }
 
 RectD EnginePdfMultiImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
-    auto e = findEngineForPage(vbkm, pageNo);
+    EngineBase* e = PageToEngine(pageNo);
     return e->Transform(rect, pageNo, zoom, rotation, inverse);
 }
 
@@ -151,12 +136,12 @@ bool EnginePdfMultiImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUser
 }
 
 WCHAR* EnginePdfMultiImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
-    auto e = findEngineForPage(vbkm, pageNo);
+    EngineBase* e = PageToEngine(pageNo);
     return e->ExtractPageText(pageNo, coordsOut);
 }
 
 bool EnginePdfMultiImpl::HasClipOptimizations(int pageNo) {
-    auto e = findEngineForPage(vbkm, pageNo);
+    EngineBase* e = PageToEngine(pageNo);
     return e->HasClipOptimizations(pageNo);
 }
 
@@ -169,29 +154,28 @@ void EnginePdfMultiImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
 }
 
 bool EnginePdfMultiImpl::BenchLoadPage(int pageNo) {
-    auto e = findEngineForPage(vbkm, pageNo);
+    EngineBase* e = PageToEngine(pageNo);
     return e->BenchLoadPage(pageNo);
 }
 
 Vec<PageElement*>* EnginePdfMultiImpl::GetElements(int pageNo) {
-    auto e = findEngineForPage(vbkm, pageNo);
+    EngineBase* e = PageToEngine(pageNo);
     return e->GetElements(pageNo);
 }
 
 PageElement* EnginePdfMultiImpl::GetElementAtPos(int pageNo, PointD pt) {
-    auto e = findEngineForPage(vbkm, pageNo);
+    EngineBase* e = PageToEngine(pageNo);
     return e->GetElementAtPos(pageNo, pt);
 }
 
-RenderedBitmap* EnginePdfMultiImpl::GetImageForPageElement(PageElement* el) {
-    int pageNo = el->pageNo;
-    auto e = findEngineForPage(vbkm, pageNo);
-    return e->GetImageForPageElement(el);
+RenderedBitmap* EnginePdfMultiImpl::GetImageForPageElement(PageElement* pel) {
+    EngineBase* e = PageToEngine(pel->pageNo);
+    return e->GetImageForPageElement(pel);
 }
 
 PageDestination* EnginePdfMultiImpl::GetNamedDest(const WCHAR* name) {
     int n = 0;
-    for (auto&& f : vbkm->files) {
+    for (auto&& f : vbkm.vbkms) {
         auto e = f->engine;
         if (!e) {
             continue;
@@ -225,45 +209,18 @@ static void updateTocItemsPageNo(TocItem* i, int nPageNoAdd) {
 }
 
 TocTree* EnginePdfMultiImpl::GetToc() {
-    if (tocTree) {
-        return tocTree;
-    }
-    TocTree* tree = new TocTree();
-    tree->name = str::Dup("bookmarks");
-    int startPageNo = 0;
-    for (auto&& f : vbkm->files) {
-        auto e = f->engine;
-        if (!e) {
-            continue;
-        }
-        WCHAR* title = strconv::Utf8ToWstr(f->fileName);
-        auto tocItem = new TocItem(nullptr, title, startPageNo + 1);
-        free(title);
-        if (!tree->root) {
-            tree->root = tocItem;
-        } else {
-            tree->root->AddSibling(tocItem);
-        }
-        auto subTree = e->GetToc();
-        if (subTree) {
-            tocItem->child = subTree->root;
-            tocItem->child->parent = tocItem;
-            updateTocItemsPageNo(subTree->root, startPageNo);
-        }
-        startPageNo += e->PageCount();
-    }
-    tocTree = tree;
+    CrashIf(!tocTree);
     return tocTree;
 }
 
 WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {
-    auto e = findEngineForPage(vbkm, pageNo);
+    EngineBase* e = PageToEngine(pageNo);
     return e->GetPageLabel(pageNo);
 }
 
 int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
     int n = 0;
-    for (auto&& f : vbkm->files) {
+    for (auto&& f : vbkm.vbkms) {
         auto e = f->engine;
         if (!e) {
             continue;
@@ -278,56 +235,45 @@ int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
 }
 
 bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
-    auto sv = file::ReadFile(fileName);
+    std::string_view sv = file::ReadFile(fileName);
     if (sv.empty()) {
         return false;
     }
-    AutoFreeWstr dir = path::GetDir(fileName);
-    AutoFree dirA = strconv::WstrToUtf8(dir);
-    auto res = ParseVbkmFile(sv);
-    if (!res) {
+    AutoFree svFree = sv;
+    bool ok = ParseVbkmFile(sv, vbkm);
+    if (!ok) {
         return false;
     }
-    res->fileContent = sv;
 
-    Vec<VbkmForFile*> bkms;
-    bool ok = ParseVbkmFile(sv, bkms);
-    CrashIf(!ok);
-    DeleteVecMembers(bkms);
-
-    // resolve file names to full paths
-    for (auto&& vbkm : res->files) {
-        char* fileName = vbkm->fileName;
-        if (file::Exists(fileName)) {
-            vbkm->path = str::Dup(vbkm->fileName);
-            continue;
-        }
-        AutoFree path = path::JoinUtf(dirA, fileName, nullptr);
-        if (file::Exists(path.as_view())) {
-            vbkm->path = path.StealData();
-        }
-    }
-
+    // open respective engines
     int nOpened = 0;
-    int nPages = 0;
-    for (auto&& vbkm : res->files) {
-        if (!vbkm->path) {
+    int nTotalPages = 0;
+    for (auto&& vbkm : vbkm.vbkms) {
+        if (vbkm->filePath.empty()) {
             continue;
         }
-        AutoFreeWstr path = strconv::Utf8ToWstr(vbkm->path);
+        AutoFreeWstr path = strconv::Utf8ToWstr(vbkm->filePath.as_view());
         vbkm->engine = EngineManager::CreateEngine(path, pwdUI);
+        if (!vbkm->engine) {
+            return false;
+        }
+        EngineBase* engine = vbkm->engine;
+        int nPages = vbkm->engine->PageCount();
+        for (int i = 0; i < nPages; i++) {
+            EnginePage ep{i + 1, engine};
+            pageToEngine.push_back(ep);
+        }
+
         if (vbkm->engine) {
             nOpened++;
-            nPages += vbkm->engine->PageCount();
+            nTotalPages += nPages;
         }
     }
     if (nOpened == 0) {
-        delete res;
         return false;
     }
 
-    vbkm = res;
-    pageCount = nPages;
+    pageCount = nTotalPages;
     return true;
 }
 

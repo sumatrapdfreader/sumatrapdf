@@ -46,6 +46,7 @@ bool StartsWith(std::string_view s, const char* prefix) {
 }
 
 // returns a copy of <s> where newlines are normalized to LF ('\n')
+// TODO: optimize
 std::string_view NormalizeNewlines(std::string_view s) {
     str::Str tmp(s);
     tmp.Replace("\r\n", "\n");
@@ -201,7 +202,8 @@ static bool NeedsQuoting(std::string_view sv) {
     const char* s = sv.data();
     const char* end = s + sv.size();
     while (s < end) {
-        if (CharNeedsQuoting(*s)) {
+        char c = *s;
+        if (c == ' ' || CharNeedsQuoting(c)) {
             return true;
         }
         s++;
@@ -229,23 +231,28 @@ static char quoteChar(char c) {
     return c;
 }
 
-static std::tuple<char, bool> unquoteChar(char c) {
+static bool unquoteChar(char& c) {
     switch (c) {
         case '"':
         case '\\':
-            return {c, true};
+            return true;
         case 'n':
-            return {'\n', true};
+            c = '\n';
+            return true;
         case 'r':
-            return {'\r', true};
+            c = '\r';
+            return true;
         case 't':
-            return {'\t', true};
+            c = '\t';
+            return true;
         case 'b':
-            return {'\b', true};
+            c = '\b';
+            return true;
         case 'f':
-            return {'\f', true};
+            c = '\f';
+            return true;
     }
-    return {'\0', false};
+    return false;
 }
 
 void AppendQuoted(std::string_view sv, str::Str& out) {
@@ -310,15 +317,16 @@ bool ParseMaybeQuoted(std::string_view& sv, str::Str& out, bool full) {
             s++;
             continue;
         }
-        // possibly escaping
+        // possibly un-quoting
         s++;
         if (s >= end) {
+            // TODO: allow it?
             return false;
         }
         c = *s;
-        auto [c2, ok] = unquoteChar(c);
-        if (ok) {
-            out.AppendChar(c2);
+        bool unquoted = unquoteChar(c);
+        if (unquoted) {
+            out.AppendChar(c);
         } else {
             out.AppendChar('\\');
             out.AppendChar(c);

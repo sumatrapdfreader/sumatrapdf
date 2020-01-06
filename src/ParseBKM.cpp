@@ -23,18 +23,13 @@ for PDF files.
 
 using sv::ParsedKV;
 
-VbkmFile::~VbkmFile() {
-    free(fileName);
-    free(path);
+VbkmForFile::~VbkmForFile() {
+    delete toc;
     delete engine;
 }
 
-ParsedVbkm::~ParsedVbkm() {
-    DeleteVecMembers(files);
-}
-
-VbkmForFile::~VbkmForFile() {
-    delete toc;
+VbkmFile::~VbkmFile() {
+    DeleteVecMembers(vbkms);
 }
 
 static void SerializeKeyVal(char* key, WCHAR* val, str::Str& s) {
@@ -71,10 +66,6 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
 }
 
 static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
-    if (level == 0) {
-        s.Append("title: default view\n");
-    }
-
     while (node) {
         for (int i = 0; i < level; i++) {
             s.Append("  ");
@@ -256,8 +247,7 @@ TocItemWithIndent::TocItemWithIndent(TocItem* item, size_t indent) {
     this->indent = indent;
 }
 
-// TODO: read more than one
-static bool parseBookmarks(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
+static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
     Vec<TocItemWithIndent> items;
 
     // first line should be "file: $file"
@@ -353,16 +343,15 @@ bool ParseBookmarksFile(std::string_view path, Vec<VbkmForFile*>& bkmsOut) {
     }
     std::string_view sv = d.as_view();
     AutoFree dataNormalized = sv::NormalizeNewlines(sv);
-    return parseBookmarks(dataNormalized.as_view(), bkmsOut);
+    return parseVbkmSection(dataNormalized.as_view(), bkmsOut);
 }
 
-bool LoadAlterenativeBookmarks(std::string_view baseFileName, Vec<VbkmForFile*>& bkmsOut) {
+bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm) {
     str::Str path = baseFileName;
     path.Append(".bkm");
 
-    auto ok = ParseBookmarksFile(path.AsView(), bkmsOut);
+    auto ok = ParseBookmarksFile(path.AsView(), vbkm.vbkms);
     if (!ok) {
-        DeleteVecMembers(bkmsOut);
         return false;
     }
 
@@ -370,8 +359,12 @@ bool LoadAlterenativeBookmarks(std::string_view baseFileName, Vec<VbkmForFile*>&
     return true;
 }
 
-bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* bkmPath) {
+bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* name, const char* bkmPath) {
     str::Str s;
+    if (str::IsEmpty(name)) {
+        name = "default view";
+    }
+    s.AppendFmt("name: %s\n", name);
     for (auto&& bkm : bookmarks) {
         TocTree* tocTree = bkm->toc;
         const char* path = tocTree->filePath;
@@ -387,7 +380,7 @@ bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* bkmPa
 // TODO: should we fail if the first line is not "file:" ?
 // Currently we ignore everything from the beginning
 // until first "file:" line
-static Vec<std::string_view> SplitVbkmIntoRecords(std::string_view s) {
+static Vec<std::string_view> SplitVbkmIntoSectons(std::string_view s) {
     Vec<std::string_view> res;
     auto tmp = s;
     Vec<const char*> addrs;
@@ -415,61 +408,28 @@ static Vec<std::string_view> SplitVbkmIntoRecords(std::string_view s) {
     return res;
 }
 
-static std::string_view ParseLineFile(std::string_view s) {
-    auto parts = sv::Split(s, ':', 2);
-    if (parts.size() != 2) {
-        return {};
-    }
-    return parts[1];
-}
-
-// parse a .vbkm record starting with "file:" line
-static VbkmFile* ParseVbkmRecord(std::string_view s) {
-    auto line = sv::ParseUntil(s, '\n');
-    auto fileName = ParseLineFile(line);
-    fileName = sv::TrimSpace(fileName);
-    if (fileName.empty()) {
-        return nullptr;
-    }
-    auto res = new VbkmFile();
-    res->fileName = str::Dup(fileName);
-    // TODO: parse more stuff
-    return res;
-}
-
-ParsedVbkm* ParseVbkmFile(std::string_view d) {
+bool ParseVbkmFile(std::string_view d, VbkmFile& vbkm) {
     AutoFree s = sv::NormalizeNewlines(d);
-    auto records = SplitVbkmIntoRecords(s.as_view());
+
+    std::string_view sv = s;
+
+    ParsedKV name = sv::ParseValueOfKey(sv, "name", true);
+    if (!name.ok) {
+        return false;
+    }
+    vbkm.name = name.val;
+    name.val = nullptr;
+
+    auto records = SplitVbkmIntoSectons(sv);
     auto n = records.size();
     if (n == 0) {
-        return nullptr;
-    }
-    auto res = new ParsedVbkm();
-    for (size_t i = 0; i < n; i++) {
-        auto file = ParseVbkmRecord(records[i]);
-        if (file == nullptr) {
-            delete res;
-            return nullptr;
-        }
-        res->files.push_back(file);
-    }
-
-    return res;
-}
-
-bool ParseVbkmFile(std::string_view d, Vec<VbkmForFile*>& bkmsOut) {
-    AutoFree s = sv::NormalizeNewlines(d);
-    auto records = SplitVbkmIntoRecords(s.as_view());
-    auto n = records.size();
-    if (n == 0) {
-        return nullptr;
+        return false;
     }
 
     for (size_t i = 0; i < n; i++) {
         std::string_view rd = records[i];
-        bool ok = parseBookmarks(rd, bkmsOut);
+        bool ok = parseVbkmSection(rd, vbkm.vbkms);
         if (!ok) {
-            DeleteVecMembers(bkmsOut);
             return false;
         }
     }

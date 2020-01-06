@@ -287,7 +287,7 @@ static void SaveVirtual() {
         return;
     }
     AutoFree patha = strconv::WstrToUtf8(dstFileName);
-    ok = ExportBookmarksToFile(tocArgs->bookmarks, patha);
+    ok = ExportBookmarksToFile(tocArgs->bookmarks, "", patha);
     if (!ok) {
         return;
     }

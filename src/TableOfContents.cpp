@@ -373,7 +373,7 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     VbkmForFile* bkms = new VbkmForFile();
     bkms->toc = CloneTocTree(tocTree);
     bookmarks.push_back(bkms);
-    bool ok = ExportBookmarksToFile(bookmarks, path.c_str());
+    bool ok = ExportBookmarksToFile(bookmarks, "", path.c_str());
     delete bkms;
 
     ShowExportedBookmarksMsg(path.c_str());
@@ -505,9 +505,9 @@ static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::strin
 }
 
 // TODO: temporary
-static bool LoadAlterenativeBookmarks(const WCHAR* baseFileName, Vec<VbkmForFile*>& bkmsOut) {
+static bool LoadAlterenativeBookmarks(const WCHAR* baseFileName, VbkmFile& vbkm) {
     AutoFree tmp = strconv::WstrToUtf8(baseFileName);
-    return LoadAlterenativeBookmarks(tmp.as_view(), bkmsOut);
+    return LoadAlterenativeBookmarks(tmp.as_view(), vbkm);
 }
 
 static bool ShouldCustomDraw(WindowInfo* win) {
@@ -546,8 +546,9 @@ void LoadTocTree(WindowInfo* win) {
     }
 
     // TODO: for now just for testing
-    Vec<VbkmForFile*>* altTocs = new Vec<VbkmForFile*>();
-    bool ok = LoadAlterenativeBookmarks(tab->filePath, *altTocs);
+    VbkmFile* vbkm = new VbkmFile();
+    bool ok = LoadAlterenativeBookmarks(tab->filePath, *vbkm);
+    Vec<VbkmForFile*>* altTocs = &vbkm->vbkms;
     if (ok && altTocs->size() > 0) {
         tab->altBookmarks = altTocs;
         Vec<std::string_view> items;
