@@ -54,13 +54,20 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
     s.AppendFmt(" destkind:%s", dest->kind);
     SerializeKeyVal("destname", dest->GetName(), s);
     SerializeKeyVal("destvalue", dest->GetValue(), s);
-    if (dest->pageNo > 0) {
-        s.AppendFmt(" destpage:%d", dest->pageNo);
-    }
+    // Note: not serializing dest->pageno because it's redundant with
+    // TocItem::pageNo
     RectD r = dest->rect;
-    if (!r.empty()) {
-        s.AppendFmt(" destrect:%f,%f,%f,%f", r.x, r.y, r.dx, r.dy);
+    if (r.empty()) {
+        return;
     }
+    // TODO: using %g is not great, because it's scientific notian 1e6
+    // but this should not happen often.
+    // Unlike %f it doesn't serialize trailing zeros
+    if (r.dx == DEST_USE_DEFAULT || r.dy == DEST_USE_DEFAULT) {
+        s.AppendFmt(" pos:%g,%g", r.x, r.y);
+        return;
+    }
+    s.AppendFmt(" rect:%g,%g,%g,%g", r.x, r.y, r.dx, r.dy);
 }
 
 static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
@@ -76,14 +83,22 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
         AutoFree titleA = strconv::WstrToUtf8(title);
         sv::AppendQuotedString(titleA.as_view(), s);
         auto flags = node->fontFlags;
+        str::Str fontVal;
         if (bit::IsSet(flags, fontBitItalic)) {
-            s.Append(" font:italic");
+            fontVal.Append("italic");
         }
         if (bit::IsSet(flags, fontBitBold)) {
-            s.Append(" font:bold");
+            if (fontVal.size() > 0) {
+                fontVal.Append(",");
+            }
+            fontVal.Append("bold");
+        }
+        if (fontVal.size() > 0) {
+            s.Append(" font:");
+            s.AppendView(fontVal.as_view());
         }
         if (node->color != ColorUnset) {
-            s.Append(" ");
+            s.Append(" color:");
             SerializeColor(node->color, s);
         }
         if (node->pageNo != 0) {
@@ -108,31 +123,6 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
     }
 }
 
-static std::tuple<COLORREF, bool> parseColor(std::string_view sv) {
-    COLORREF c = 0;
-    bool ok = ParseColor(&c, sv);
-    return {c, ok};
-}
-
-#if 0
-static void SerializeDest(PageDestination* dest, str::Str& s) {
-    if (!dest) {
-        return;
-    }
-    s.AppendFmt(" destkind:%s", dest->kind);
-    SerializeKeyVal("destname", dest->GetName(), s);
-    SerializeKeyVal("destvalue", dest->GetValue(), s);
-    if (dest->pageNo > 0) {
-        s.AppendFmt(" destpage:%d", dest->pageNo);
-    }
-    RectD r = dest->rect;
-    if (!r.empty()) {
-        s.AppendFmt(" destrect:%f,%f,%f,%f", r.x, r.y, r.dx, r.dy);
-    }
-}
-#endif
-
-// a single line in .bmk file is:
 // indentation "quoted title" additional-metadata* destination
 static TocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
     auto origLine = line; // save for debugging
@@ -204,16 +194,56 @@ static TocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
             }
             int pageNo = 0;
             str::Parse(val, "%d", &pageNo);
-            res->pageNo;
+            res->pageNo = pageNo;
             continue;
         }
 
-        // TODO: make it a kv "color: #fff" ?
-        auto [color, ok] = parseColor(part);
-        if (ok) {
-            res->color = color;
+        if (str::Eq(key, "color")) {
+            COLORREF c = 0;
+            bool ok = ParseColor(&c, val);
+            if (ok) {
+                res->color = c;
+            }
             continue;
         }
+
+        // the values here are for destination
+        if (!dest) {
+            dest = new PageDestination();
+        }
+
+        if (str::Eq(key, "destkind")) {
+            // TODO: NYI
+            CrashMe();
+            continue;
+        }
+
+        if (str::Eq(key, "destname")) {
+            dest->name = strconv::Utf8ToWstr(val);
+            continue;
+        }
+
+        if (str::Eq(key, "destval")) {
+            dest->value = strconv::Utf8ToWstr(val);
+            continue;
+        }
+
+        if (str::Eq(key, "rect")) {
+            float x, y, dx, dy;
+            str::Parse(val, "%g,%g,%g,%g", &x, &y, &dx, &dy);
+            dest->rect = RectD(x, y, dx, dy);
+            continue;
+        }
+
+        if (str::Eq(key, "pos")) {
+            float x, y;
+            str::Parse(val, "%g,%g", &x, &y);
+            dest->rect = RectD(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+            continue;
+        }
+    }
+    if (dest) {
+        dest->pageNo = res->pageNo;
     }
     return res;
 }

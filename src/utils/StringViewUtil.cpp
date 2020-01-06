@@ -184,7 +184,7 @@ size_t SkipChars(std::string_view& sv, char c) {
     return SkipTo(sv, s);
 }
 
-bool NeedsQuoting(char c) {
+bool CharNeedsQuoting(char c) {
     switch (c) {
         case '"':
         case '\\':
@@ -194,6 +194,18 @@ bool NeedsQuoting(char c) {
         case '\b':
         case '\f':
             return true;
+    }
+    return false;
+}
+
+bool NeedsQuoting(std::string_view sv) {
+    const char* s = sv.data();
+    const char* end = s + sv.size();
+    while (s < end) {
+        if (CharNeedsQuoting(*s)) {
+            return true;
+        }
+        ++s;
     }
     return false;
 }
@@ -243,7 +255,7 @@ void AppendQuotedString(std::string_view sv, str::Str& out) {
     const char* end = s + sv.size();
     while (s < end) {
         auto c = *s;
-        if (NeedsQuoting(c)) {
+        if (CharNeedsQuoting(c)) {
             out.AppendChar('\\');
             c = quoteChar(c);
         }
@@ -251,6 +263,18 @@ void AppendQuotedString(std::string_view sv, str::Str& out) {
         s++;
     }
     out.AppendChar('"');
+}
+
+// appends <sv> to <out>. Quotes <sv> if needed.
+// returns true if quoted the string
+bool AppendMaybeQuotedString(std::string_view sv, str::Str& out) {
+    bool needsQuoting = NeedsQuoting(sv);
+    if (needsQuoting) {
+        AppendQuotedString(sv, out);
+        return true;
+    }
+    out.AppendView(sv);
+    return false;
 }
 
 // if <line> starts with '"' it's quoted value that should end with '"'

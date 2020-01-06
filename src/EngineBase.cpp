@@ -82,6 +82,29 @@ Kind kindDestinationPrintDialog = "printDialog";
 Kind kindDestinationSaveAsDialog = "saveAsDialog";
 Kind kindDestinationZoomToDialog = "zoomToDialog";
 
+static Kind destKinds[] = {
+    kindDestinationNone,           kindDestinationScrollTo,       kindDestinationLaunchURL,
+    kindDestinationLaunchEmbedded, kindDestinationLaunchFile,     kindDestinationNextPage,
+    kindDestinationPrevPage,       kindDestinationFirstPage,      kindDestinationLastPage,
+    kindDestinationFindDialog,     kindDestinationFullScreen,     kindDestinationGoBack,
+    kindDestinationGoForward,      kindDestinationGoToPageDialog, kindDestinationPrintDialog,
+    kindDestinationSaveAsDialog,   kindDestinationZoomToDialog,
+};
+
+Kind resolveDestKind(char* s) {
+    if (str::IsEmpty(s)) {
+        return nullptr;
+    }
+    for (Kind kind : destKinds) {
+        if (str::Eq(s, kind)) {
+            return kind;
+        }
+    }
+    logf("resolveDestKind: unknown kind '%s'\n", s);
+    CrashIf(true);
+    return nullptr;
+}
+
 PageDestination::~PageDestination() {
     free(value);
     free(name);
@@ -184,6 +207,7 @@ PageElement* clonePageElement(PageElement* el) {
 }
 
 Kind kindTocFzOutline = "tocFzOutline";
+Kind kindTocFzOutlineAttachment = "tocFzOutlineAttachment";
 Kind kindTocFzLink = "tocFzLink";
 Kind kindTocDjvu = "tocDjvu";
 
@@ -203,6 +227,8 @@ TocItem::~TocItem() {
         next = tmp;
     }
     free(title);
+    free(rawVal1);
+    free(rawVal2);
 }
 
 void TocItem::AddSibling(TocItem* sibling) {

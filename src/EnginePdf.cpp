@@ -268,8 +268,6 @@ struct PageTreeStackItem {
     }
 };
 
-///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
-
 class PdfEngineImpl : public EngineBase {
   public:
     PdfEngineImpl();
@@ -871,13 +869,20 @@ TocItem* PdfEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& 
         int pageNo = outline->page + 1;
 
         PageDestination* dest = nullptr;
+        Kind kindRaw = nullptr;
         if (isAttachment) {
+            kindRaw = kindTocFzOutlineAttachment;
             dest = destFromAttachment(this, outline);
         } else {
+            kindRaw = kindTocFzOutline;
             dest = newFzDestination(outline);
         }
 
         TocItem* item = newTocItemWithDestination(parent, name, dest);
+        item->kindRaw = kindRaw;
+        item->rawVal1 = str::Dup(outline->title);
+        item->rawVal2 = str::Dup(outline->uri);
+
         free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;

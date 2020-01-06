@@ -84,6 +84,8 @@ extern Kind kindDestinationPrintDialog;
 extern Kind kindDestinationSaveAsDialog;
 extern Kind kindDestinationZoomToDialog;
 
+Kind resolveDestKind(char* s);
+
 // a link destination
 class PageDestination {
   public:
@@ -166,6 +168,7 @@ constexpr int fontBitItalic = 1;
 
 extern Kind kindTocFzOutline;
 extern Kind kindTocFzLink;
+extern Kind kindTocFzOutlineAttachment;
 extern Kind kindTocDjvu;
 
 // an item in a document's Table of Content
