@@ -34,3 +34,5 @@ bool ExportBookmarksToFile(const Vec<Bookmarks*>&, const char* path);
 
 bool LoadAlterenativeBookmarks(std::string_view baseFileName, Vec<Bookmarks*>& bkmOut);
 ParsedVbkm* ParseVbkmFile(std::string_view d);
+
+bool ParseVbkmFile(std::string_view d, Vec<Bookmarks*>& bkmOut);

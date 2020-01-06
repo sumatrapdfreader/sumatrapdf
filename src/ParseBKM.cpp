@@ -44,7 +44,7 @@ static void SerializeKeyVal(char* key, WCHAR* val, str::Str& s) {
     }
     s.AppendFmt(" %s:", key);
     AutoFree str = strconv::WstrToUtf8(val);
-    sv::AppendQuotedString(str.as_view(), s);
+    sv::AppendMaybeQuoted(str.as_view(), s);
 }
 
 static void SerializeDest(PageDestination* dest, str::Str& s) {
@@ -81,7 +81,7 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
         }
         WCHAR* title = node->Text();
         AutoFree titleA = strconv::WstrToUtf8(title);
-        sv::AppendQuotedString(titleA.as_view(), s);
+        sv::AppendMaybeQuoted(titleA.as_view(), s);
         auto flags = node->fontFlags;
         str::Str fontVal;
         if (bit::IsSet(flags, fontBitItalic)) {
@@ -136,21 +136,15 @@ static TocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
     }
     *indentOut = indent / 2;
     sv::SkipChars(line, ' ');
-    str::Str title;
-    {
-        bool ok = sv::ParseQuotedString(line, title);
-        if (!ok) {
-            return nullptr;
-        }
-    }
+    ParsedKV file = sv::ParseValueOfKey(line, "file", true);
     TocItem* res = new TocItem();
-    res->title = strconv::Utf8ToWstr(title.AsView());
+    res->title = strconv::Utf8ToWstr(file.val);
     PageDestination* dest = nullptr;
 
     // parse meta-data and page destination
     std::string_view part;
     while (line.size() > 0) {
-        ParsedKV kv = sv::ParseKV(line);
+        ParsedKV kv = sv::ParseKV(line, false);
         if (!kv.ok) {
             return nullptr;
         }
@@ -268,16 +262,16 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>& bkmsOut) {
 
     // first line should be "file: $file"
     auto line = sv::ParseUntil(sv, '\n');
-    // TOOD: maybe write a "relaxed" version where if it's unquoted,
-    // it goes to the end of the value
-    auto file = sv::ParseValueOfKey(line, "file");
+    // TOOD: maybe write a "relaxed" version where if the value is
+    // unquoted, it can go until the end of line
+    auto file = sv::ParseValueOfKey(line, "file", true);
     if (!file.ok) {
         return false;
     }
 
     // this line should be "title: $title"
     line = sv::ParseUntil(sv, '\n');
-    auto title = sv::ParseValueOfKey(line, "title");
+    auto title = sv::ParseValueOfKey(line, "title", true);
     if (!title.ok) {
         return false;
     }
@@ -461,4 +455,23 @@ ParsedVbkm* ParseVbkmFile(std::string_view d) {
     }
 
     return res;
+}
+
+bool ParseVbkmFile(std::string_view d, Vec<Bookmarks*>& bkmsOut) {
+    AutoFree s = sv::NormalizeNewlines(d);
+    auto records = SplitVbkmIntoRecords(s.as_view());
+    auto n = records.size();
+    if (n == 0) {
+        return nullptr;
+    }
+
+    for (size_t i = 0; i < n; i++) {
+        std::string_view rd = records[i];
+        bool ok = parseBookmarks(rd, bkmsOut);
+        if (!ok) {
+            DeleteVecMembers(bkmsOut);
+            return false;
+        }
+    }
+    return true;
 }

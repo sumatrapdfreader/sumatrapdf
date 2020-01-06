@@ -285,7 +285,14 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     AutoFreeWstr dir = path::GetDir(fileName);
     AutoFree dirA = strconv::WstrToUtf8(dir);
     auto res = ParseVbkmFile(sv);
+    if (!res) {
+        return false;
+    }
     res->fileContent = sv;
+
+    Vec<Bookmarks*> bkms;
+    bool ok = ParseVbkmFile(sv, bkms);
+    CrashIf(!ok);
 
     // resolve file names to full paths
     for (auto&& vbkm : res->files) {

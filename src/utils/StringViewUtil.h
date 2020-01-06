@@ -28,10 +28,10 @@ size_t SkipChars(std::string_view& sv, char c);
 std::string_view ParseUntil(std::string_view& sv, char delim);
 std::string_view ParseUntilBack(std::string_view& sv, char delim);
 
-void AppendQuotedString(std::string_view sv, str::Str& out);
-bool AppendMaybeQuotedString(std::string_view sv, str::Str& out);
-bool ParseQuotedString(std::string_view& line, str::Str& out);
-ParsedKV ParseKV(std::string_view& line);
-ParsedKV ParseValueOfKey(std::string_view& line, std::string_view key);
+void AppendQuoted(std::string_view sv, str::Str& out);
+bool AppendMaybeQuoted(std::string_view sv, str::Str& out);
+bool ParseMaybeQuoted(std::string_view& sv, str::Str& out, bool full);
+ParsedKV ParseKV(std::string_view& sv, bool full);
+ParsedKV ParseValueOfKey(std::string_view& sv, std::string_view key, bool full);
 
 } // namespace sv
