@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b0ce378b5d0616f3e62377de3b43691608edb52a
+230f22abe28648d877ebfe7fe4c00ee3d7a96a34
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -33,7 +33,7 @@ hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
 id:&Tentang
-it:&Informazioni su...
+it:Inform&azioni
 ja:バージョン情報(&A)
 jv:&Babagan
 ka:&პროგრამის შესახებ...
@@ -5404,6 +5404,7 @@ cz:Sbalit vše
 es:Ocultar Todo
 fr:Tout réduire
 ga:Laghdaigh Gach
+it:Comprimi tutto
 nl:Alle Samenvouwen
 tw:全部折叠(&C)
 :Comic books
@@ -8034,6 +8035,7 @@ cz:Rozbalit vše
 es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
+it:Espandi tutto
 nl:Alle Uitvouwen
 tw:全部展開
 :F&avorites
@@ -15388,6 +15390,7 @@ uk:Установити зворотній пошук.
 uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks\tF12
+fr:Afficher les &signets\tF12
 nl:Toon Bladwijzers\tF12
 :Show &Favorites
 es:Mostrar &Favoritos
@@ -15527,6 +15530,7 @@ uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show Book&marks\tF12
+fr:Afficher les &marque-pages\tF12
 nl:Toon Blad&wijzers\tF12
 :Show Favorites
 am:Ցուցադրել ընտրյալները

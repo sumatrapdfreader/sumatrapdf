@@ -6116,11 +6116,11 @@ const char * gTranslations_fr =
   "S\303\251lection :\0"\
   "Envoyer par &courriel...\0"\
   "Configurer la recherche inverse\0"\
-  "\0"\
+  "Afficher les &signets\tF12\0"\
   "Afficher les &favoris\0"\
   "&Vue continue\0"\
   "Afficher la &barre d'outils\0"\
-  "\0"\
+  "Afficher les &marque-pages\tF12\0"\
   "Voir Favoris\0"\
   "Montrer les documents fr\303\251quemment lus\0"\
   "Montrer dans le &dossier\0"\
@@ -8805,7 +8805,7 @@ const char * gTranslations_ga =
   "ag cl\303\263bhualadh an ch\303\241ip\303\251is\0";
 
 const char * gTranslations_it = 
-  "&Informazioni su...\0"\
+  "Inform&azioni\0"\
   "&Dimensioni reali\tCtrl+1\0"\
   "Opzioni &avanzate...\0"\
   "&Tutte le pagine selezionate\0"\
@@ -8887,7 +8887,7 @@ const char * gTranslations_it =
   "Lingua dell'interfaccia (Change Language)\0"\
   "Controlla &aggiornamenti\0"\
   "Chiudi\0"\
-  "\0"\
+  "Comprimi tutto\0"\
   "Fumetti\0"\
   "Compatibilit\303\240\0"\
   "Pagina continua\0"\
@@ -8929,7 +8929,7 @@ const char * gTranslations_it =
   "Inserisci password per %s\0"\
   "Inserire la linea di comando da eseguire quando si fa doppio clic su un documento PDF:\0"\
   "Errore nel caricamento di %s\0"\
-  "\0"\
+  "Espandi tutto\0"\
   "&Preferiti\0"\
   "A&vanti\tAlt+Freccia Destra\0"\
   "S&chermo intero\tF11\0"\
