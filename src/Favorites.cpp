@@ -407,7 +407,7 @@ void RebuildFavMenu(WindowInfo* win, HMENU menu) {
             win::menu::SetText(menu, IDM_FAV_DEL, s);
         } else {
             win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
-            AutoFreeWstr s(str::Format(_TR("Add page %s to favorites"), label.Get()));
+            AutoFreeWstr s(str::Format(_TR("Add page %s to favorites\tCtrl+B"), label.Get()));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
         }
         AppendFavMenus(menu, win->ctrl->FilePath());

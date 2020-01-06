@@ -684,7 +684,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             win::menu::Remove(popup, IDM_FAV_DEL);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
-            auto tr = _TR("Add page %s to favorites");
+            auto tr = _TR("Add page %s to favorites\tCtrl+B");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
             win::menu::SetText(popup, IDM_FAV_ADD, s);
         }
