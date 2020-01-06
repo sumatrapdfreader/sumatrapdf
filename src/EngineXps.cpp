@@ -199,7 +199,6 @@ class XpsEngineImpl : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
@@ -595,15 +594,6 @@ RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
 
     RectD rect2 = fz_rect_to_RectD(rect);
     return rect2.Intersect(mediabox);
-}
-
-PointD XpsEngineImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
-    fz_matrix ctm = viewctm(pageNo, zoom, rotation);
-    if (inverse)
-        ctm = fz_invert_matrix(ctm);
-    fz_point pt2 = {(float)pt.x, (float)pt.y};
-    pt2 = fz_transform_point(pt2, ctm);
-    return PointD(pt2.x, pt2.y);
 }
 
 RectD XpsEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {

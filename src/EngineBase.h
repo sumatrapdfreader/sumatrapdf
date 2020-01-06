@@ -173,7 +173,6 @@ extern Kind kindTocDjvu;
 
 // an item in a document's Table of Content
 struct TocItem : TreeItem {
-
     // each engine has a raw representation of the toc item which
     // we want to access. Not (yet) supported by all engines
     // other values come from parsing this value
@@ -328,7 +327,7 @@ class EngineBase {
 
     // applies zoom and rotation to a point in user/page space converting
     // it into device/screen space - or in the inverse direction
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) = 0;
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) = 0;
 
     // returns the binary data for the current file

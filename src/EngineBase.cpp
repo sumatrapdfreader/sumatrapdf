@@ -464,3 +464,8 @@ RenderedBitmap* EngineBase::GetImageForPageElement(PageElement*) {
 void EngineBase::SetFileName(const WCHAR* s) {
     fileName.SetCopy(s);
 }
+
+PointD EngineBase::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
+    RectD rect = Transform(RectD(pt, SizeD()), pageNo, zoom, rotation, inverse);
+    return PointD(rect.x, rect.y);
+}

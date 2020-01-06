@@ -182,7 +182,7 @@ class DjVuEngineImpl : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs&) override;
 
-    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    PointD TransformPoint(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false);
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
@@ -700,7 +700,7 @@ RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     return pageRc;
 }
 
-PointD DjVuEngineImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
+PointD DjVuEngineImpl::TransformPoint(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
     CrashIf(zoom <= 0);
     if (zoom <= 0) {
         return pt;
@@ -738,8 +738,8 @@ PointD DjVuEngineImpl::Transform(PointD pt, int pageNo, float zoom, int rotation
 }
 
 RectD DjVuEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
-    PointD TL = Transform(rect.TL(), pageNo, zoom, rotation, inverse);
-    PointD BR = Transform(rect.BR(), pageNo, zoom, rotation, inverse);
+    PointD TL = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
+    PointD BR = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
     return RectD::FromXY(TL, BR);
 }
 

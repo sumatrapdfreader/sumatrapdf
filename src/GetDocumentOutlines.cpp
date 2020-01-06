@@ -23,8 +23,8 @@ extern "C" {
 
 /* This is for debugging: gets document outlines for known document types */
 
-bool GetDocumentOutlines(const WCHAR* fileName, Vec<OutlineEntry*>& entries) {
-    UNUSED(fileName);
+bool GetDocumentOutlines(const WCHAR* path, Vec<OutlineEntry*>& entries) {
+    UNUSED(path);
     UNUSED(entries);
     return false;
 }

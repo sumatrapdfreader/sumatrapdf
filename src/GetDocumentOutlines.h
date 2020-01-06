@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct OutlineEntry {
-    Kind *kind = nullptr;
+    Kind* kind = nullptr;
     char* value = nullptr;
     char* value2 = nullptr;
 };

@@ -56,7 +56,6 @@ class EnginePdfMultiImpl : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
@@ -134,10 +133,6 @@ RenderedBitmap* EnginePdfMultiImpl::RenderPage(RenderPageArgs& args) {
     return e->RenderPage(args);
 }
 
-PointD EnginePdfMultiImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
-    auto e = findEngineForPage(vbkm, pageNo);
-    return e->Transform(pt, pageNo, zoom, rotation, inverse);
-}
 RectD EnginePdfMultiImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     auto e = findEngineForPage(vbkm, pageNo);
     return e->Transform(rect, pageNo, zoom, rotation, inverse);

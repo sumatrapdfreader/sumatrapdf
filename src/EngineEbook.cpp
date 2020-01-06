@@ -85,7 +85,6 @@ class EbookEngine : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
@@ -270,11 +269,6 @@ bool EbookEngine::ExtractPageAnchors() {
 
     CrashIf(baseAnchors.size() != pages->size());
     return true;
-}
-
-PointD EbookEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
-    RectD rect = Transform(RectD(pt, SizeD()), pageNo, zoom, rotation, inverse);
-    return PointD(rect.x, rect.y);
 }
 
 RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {

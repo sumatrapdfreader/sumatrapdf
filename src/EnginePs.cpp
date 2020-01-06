@@ -248,10 +248,6 @@ class PsEngineImpl : public EngineBase {
         return pdfEngine->RenderPage(args);
     }
 
-    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override {
-        return pdfEngine->Transform(pt, pageNo, zoom, rotation, inverse);
-    }
-
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
