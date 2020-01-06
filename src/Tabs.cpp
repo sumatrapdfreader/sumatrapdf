@@ -658,7 +658,7 @@ void SaveCurrentTabInfo(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
     CrashIf(!tab);
     if (win->tocLoaded) {
-        DocTocTree* tocTree = tab->ctrl->GetTocTree();
+        TocTree* tocTree = tab->ctrl->GetTocTree();
         UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, tocTree);
     }
     VerifyTabInfo(win, tab);

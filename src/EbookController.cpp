@@ -828,7 +828,7 @@ class EbookTocCollector : public EbookTocVisitor {
     }
 };
 
-DocTocTree* EbookController::GetTocTree() {
+TocTree* EbookController::GetTocTree() {
     if (tocTree) {
         return tocTree;
     }
@@ -838,7 +838,7 @@ DocTocTree* EbookController::GetTocTree() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new DocTocTree(root);
+    tocTree = new TocTree(root);
     tocTree->filePath = strconv::WstrToUtf8(FilePath());
     return tocTree;
 }

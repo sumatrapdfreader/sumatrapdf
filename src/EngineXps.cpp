@@ -220,7 +220,7 @@ class XpsEngineImpl : public EngineBase {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    DocTocTree* GetTocTree() override;
+    TocTree* GetTocTree() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -243,7 +243,7 @@ class XpsEngineImpl : public EngineBase {
 
     Vec<PageAnnotation> userAnnots;
 
-    DocTocTree* tocTree = nullptr;
+    TocTree* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
@@ -905,7 +905,7 @@ TocItem* XpsEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& 
     return root;
 }
 
-DocTocTree* XpsEngineImpl::GetTocTree() {
+TocTree* XpsEngineImpl::GetTocTree() {
     if (tocTree) {
         return tocTree;
     }
@@ -915,7 +915,7 @@ DocTocTree* XpsEngineImpl::GetTocTree() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new DocTocTree(root);
+    tocTree = new TocTree(root);
     tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }

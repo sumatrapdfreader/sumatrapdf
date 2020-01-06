@@ -313,7 +313,7 @@ static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>& tocState, T
     }
 }
 
-void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, DocTocTree* docTree) {
+void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, TocTree* docTree) {
     if (treeCtrl->treeModel != docTree) {
         // CrashMe();
         return;
@@ -371,7 +371,7 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     Vec<Bookmarks*> bookmarks;
 
     Bookmarks* bkms = new Bookmarks();
-    bkms->toc = CloneDocTocTree(tocTree);
+    bkms->toc = CloneTocTree(tocTree);
     bookmarks.push_back(bkms);
     bool ok = ExportBookmarksToFile(bookmarks, path.c_str());
     delete bkms;
@@ -413,8 +413,8 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     bkms->filePath = (char*)strconv::WstrToUtf8(tab->filePath).data();
     bkms->nPages = tab->ctrl->PageCount();
 
-    DocTocTree* tree = (DocTocTree*)win->tocTreeCtrl->treeModel;
-    bkms->toc = CloneDocTocTree(tree);
+    TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
+    bkms->toc = CloneTocTree(tree);
     args->bookmarks.push_back(bkms);
     args->hwndRelatedTo = win->hwndFrame;
     StartTocEditor(args);
@@ -495,7 +495,7 @@ static void OnTocContextMenu(ContextMenuArgs* args) {
 }
 
 static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::string_view s) {
-    DocTocTree* tocTree = nullptr;
+    TocTree* tocTree = nullptr;
     if (n == 0) {
         tocTree = tab->ctrl->GetTocTree();
     } else {
@@ -553,7 +553,7 @@ void LoadTocTree(WindowInfo* win) {
         Vec<std::string_view> items;
         items.Append("Default");
         for (size_t i = 0; i < altTocs->size(); i++) {
-            DocTocTree* toc = altTocs->at(i)->toc;
+            TocTree* toc = altTocs->at(i)->toc;
             items.Append(toc->name.get());
         }
         win->altBookmarks->SetItems(items);

@@ -76,7 +76,7 @@ class EnginePdfMultiImpl : public EngineBase {
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    DocTocTree* GetTocTree() override;
+    TocTree* GetTocTree() override;
 
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
@@ -88,7 +88,7 @@ class EnginePdfMultiImpl : public EngineBase {
   protected:
     ParsedVbkm* vbkm = nullptr;
 
-    DocTocTree* tocTree = nullptr;
+    TocTree* tocTree = nullptr;
 };
 
 EnginePdfMultiImpl::EnginePdfMultiImpl() {
@@ -229,11 +229,11 @@ static void updateTocItemsPageNo(TocItem* i, int nPageNoAdd) {
     }
 }
 
-DocTocTree* EnginePdfMultiImpl::GetTocTree() {
+TocTree* EnginePdfMultiImpl::GetTocTree() {
     if (tocTree) {
         return tocTree;
     }
-    DocTocTree* tree = new DocTocTree();
+    TocTree* tree = new TocTree();
     tree->name = str::Dup("bookmarks");
     int startPageNo = 0;
     for (auto&& f : vbkm->files) {

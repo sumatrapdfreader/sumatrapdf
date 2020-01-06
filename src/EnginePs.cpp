@@ -311,7 +311,7 @@ class PsEngineImpl : public EngineBase {
         return pdfEngine->GetNamedDest(name);
     }
 
-    DocTocTree* GetTocTree() override {
+    TocTree* GetTocTree() override {
         return pdfEngine->GetTocTree();
     }
 

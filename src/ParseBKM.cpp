@@ -251,7 +251,7 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>& bkmsOut) {
     if (!title.ok) {
         return false;
     }
-    auto tree = new DocTocTree();
+    auto tree = new TocTree();
     tree->name = str::Dup(title.val);
     size_t indent = 0;
     while (true) {
@@ -349,7 +349,7 @@ bool LoadAlterenativeBookmarks(std::string_view baseFileName, Vec<Bookmarks*>& b
 bool ExportBookmarksToFile(const Vec<Bookmarks*>& bookmarks, const char* bkmPath) {
     str::Str s;
     for (auto&& bkm : bookmarks) {
-        DocTocTree* tocTree = bkm->toc;
+        TocTree* tocTree = bkm->toc;
         const char* path = tocTree->filePath;
         s.AppendFmt("file: %s\n", path);
         SerializeBookmarksRec(tocTree->root, 0, s);

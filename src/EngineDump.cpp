@@ -207,7 +207,7 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
 }
 
 void DumpToc(EngineBase* engine) {
-    DocTocTree* tree = engine->GetTocTree();
+    TocTree* tree = engine->GetTocTree();
     if (!tree) {
         return;
     }

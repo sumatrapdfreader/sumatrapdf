@@ -301,7 +301,7 @@ class PdfEngineImpl : public EngineBase {
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    DocTocTree* GetTocTree() override;
+    TocTree* GetTocTree() override;
 
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
@@ -331,7 +331,7 @@ class PdfEngineImpl : public EngineBase {
 
     Vec<PageAnnotation> userAnnots; // TODO(port): put in PageInfo
 
-    DocTocTree* tocTree = nullptr;
+    TocTree* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);
@@ -908,7 +908,7 @@ TocItem* PdfEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& 
 }
 
 // TODO: maybe build in FinishDownload
-DocTocTree* PdfEngineImpl::GetTocTree() {
+TocTree* PdfEngineImpl::GetTocTree() {
     if (tocTree) {
         return tocTree;
     }
@@ -928,18 +928,18 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
             str::Free(path);
             return nullptr;
         }
-        tocTree = new DocTocTree(root);
+        tocTree = new TocTree(root);
         tocTree->filePath = path;
         return tocTree;
     }
     TocItem* att = BuildTocTree(nullptr, attachments, idCounter, true);
     if (!root) {
-        tocTree = new DocTocTree(att);
+        tocTree = new TocTree(att);
         tocTree->filePath = path;
         return tocTree;
     }
     root->AddSibling(att);
-    tocTree = new DocTocTree(root);
+    tocTree = new TocTree(root);
     tocTree->filePath = path;
     return tocTree;
 }

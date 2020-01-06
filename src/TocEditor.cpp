@@ -160,7 +160,7 @@ static void UpdateTreeModel() {
             curr = i;
         }
     }
-    DocTocTree* tm = new DocTocTree();
+    TocTree* tm = new TocTree();
     tm->root = root;
     treeCtrl->SetTreeModel(tm);
 }
@@ -193,14 +193,14 @@ static void AddPdf() {
         ShowErrorMessage("Failed to open a file!");
         return;
     }
-    DocTocTree* tocTree = engine->GetTocTree();
+    TocTree* tocTree = engine->GetTocTree();
     if (nullptr == tocTree) {
         // TODO: maybe add a dummy entry for the first page
         // or make top-level act as first page destination
         ShowErrorMessage("File doesn't have Table of content");
         return;
     }
-    tocTree = CloneDocTocTree(tocTree);
+    tocTree = CloneTocTree(tocTree);
     int nPages = engine->PageCount();
     delete engine;
     Bookmarks* bookmarks = new Bookmarks();

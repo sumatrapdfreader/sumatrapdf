@@ -5,7 +5,7 @@ struct Bookmarks {
     // path of the .vbkm file
     AutoFree filePath;
 
-    DocTocTree* toc = nullptr;
+    TocTree* toc = nullptr;
     int nPages = 0;
 
     Bookmarks() = default;

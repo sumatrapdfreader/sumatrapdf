@@ -34,7 +34,7 @@ class ChmModel : public Controller {
     void SetViewPortSize(SizeI size) override;
 
     // table of contents
-    DocTocTree* GetTocTree() override;
+    TocTree* GetTocTree() override;
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 
@@ -70,7 +70,7 @@ class ChmModel : public Controller {
   protected:
     AutoFreeWstr fileName;
     ChmDoc* doc = nullptr;
-    DocTocTree* tocTree = nullptr;
+    TocTree* tocTree = nullptr;
     CRITICAL_SECTION docAccess;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
 

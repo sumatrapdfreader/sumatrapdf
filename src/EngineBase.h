@@ -242,7 +242,7 @@ struct TocItem : TreeItem {
 
 TocItem* CloneTocItemRecur(TocItem*);
 
-struct DocTocTree : public TreeModel {
+struct TocTree : TreeModel {
     // name of the bookmark view
     AutoFree name;
 
@@ -251,16 +251,16 @@ struct DocTocTree : public TreeModel {
 
     TocItem* root = nullptr;
 
-    DocTocTree() = default;
-    DocTocTree(TocItem* root);
-    ~DocTocTree() override;
+    TocTree() = default;
+    TocTree(TocItem* root);
+    ~TocTree() override;
 
     // TreeModel
     int RootCount() override;
     TreeItem* RootAt(int n) override;
 };
 
-DocTocTree* CloneDocTocTree(DocTocTree*);
+TocTree* CloneTocTree(TocTree*);
 
 // a helper that allows for rendering interruptions in an engine-agnostic way
 class AbortCookie {
@@ -386,7 +386,7 @@ class EngineBase {
 
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
-    virtual DocTocTree* GetTocTree();
+    virtual TocTree* GetTocTree();
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering

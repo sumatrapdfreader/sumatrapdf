@@ -257,8 +257,8 @@ TocItem* CloneTocItemRecur(TocItem* ti) {
     return res;
 }
 
-DocTocTree* CloneDocTocTree(DocTocTree* tree) {
-    DocTocTree* res = new DocTocTree();
+TocTree* CloneTocTree(TocTree* tree) {
+    TocTree* res = new TocTree();
     res->filePath = str::Dup(tree->filePath);
     res->name = str::Dup(tree->name);
     res->root = CloneTocItemRecur(tree->root);
@@ -319,15 +319,15 @@ bool TocItem::PageNumbersMatch() const {
     return true;
 }
 
-DocTocTree::DocTocTree(TocItem* root) {
+TocTree::TocTree(TocItem* root) {
     this->root = root;
 }
 
-DocTocTree::~DocTocTree() {
+TocTree::~TocTree() {
     delete root;
 }
 
-int DocTocTree::RootCount() {
+int TocTree::RootCount() {
     int n = 0;
     auto node = root;
     while (node) {
@@ -337,7 +337,7 @@ int DocTocTree::RootCount() {
     return n;
 }
 
-TreeItem* DocTocTree::RootAt(int n) {
+TreeItem* TocTree::RootAt(int n) {
     auto node = root;
     while (n > 0) {
         node = node->next;
@@ -398,11 +398,11 @@ PageDestination* EngineBase::GetNamedDest(const WCHAR* name) {
 }
 
 bool EngineBase::HasTocTree() {
-    DocTocTree* tree = GetTocTree();
+    TocTree* tree = GetTocTree();
     return tree != nullptr;
 }
 
-DocTocTree* EngineBase::GetTocTree() {
+TocTree* EngineBase::GetTocTree() {
     return nullptr;
 }
 

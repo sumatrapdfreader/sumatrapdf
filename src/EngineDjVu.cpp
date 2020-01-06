@@ -201,7 +201,7 @@ class DjVuEngineImpl : public EngineBase {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    DocTocTree* GetTocTree() override;
+    TocTree* GetTocTree() override;
 
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
@@ -217,7 +217,7 @@ class DjVuEngineImpl : public EngineBase {
     ddjvu_document_t* doc = nullptr;
     miniexp_t outline = miniexp_nil;
     miniexp_t* annos = nullptr;
-    DocTocTree* tocTree = nullptr;
+    TocTree* tocTree = nullptr;
     Vec<PageAnnotation> userAnnots;
 
     Vec<ddjvu_fileinfo_t> fileInfos;
@@ -1077,7 +1077,7 @@ TocItem* DjVuEngineImpl::BuildTocTree(TocItem* parent, miniexp_t entry, int& idC
     return node;
 }
 
-DocTocTree* DjVuEngineImpl::GetTocTree() {
+TocTree* DjVuEngineImpl::GetTocTree() {
     if (outline == miniexp_nil) {
         return nullptr;
     }
@@ -1091,7 +1091,7 @@ DocTocTree* DjVuEngineImpl::GetTocTree() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new DocTocTree(root);
+    tocTree = new TocTree(root);
     tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }

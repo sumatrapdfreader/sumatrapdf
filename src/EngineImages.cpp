@@ -673,7 +673,7 @@ class ImageDirEngineImpl : public ImagesEngine {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    DocTocTree* GetTocTree() override;
+    TocTree* GetTocTree() override;
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
@@ -686,7 +686,7 @@ class ImageDirEngineImpl : public ImagesEngine {
     RectD LoadMediabox(int pageNo) override;
 
     WStrVec pageFileNames;
-    DocTocTree* tocTree = nullptr;
+    TocTree* tocTree = nullptr;
 };
 
 bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
@@ -751,7 +751,7 @@ static TocItem* newImageDirTocItem(TocItem* parent, WCHAR* title, int pageNo) {
     return new TocItem(parent, title, pageNo);
 };
 
-DocTocTree* ImageDirEngineImpl::GetTocTree() {
+TocTree* ImageDirEngineImpl::GetTocTree() {
     if (tocTree) {
         return tocTree;
     }
@@ -764,7 +764,7 @@ DocTocTree* ImageDirEngineImpl::GetTocTree() {
         item->id = i;
         root->AddSibling(item);
     }
-    tocTree = new DocTocTree(root);
+    tocTree = new TocTree(root);
     tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
@@ -853,7 +853,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
 
     const WCHAR* GetDefaultFileExt() const;
 
-    DocTocTree* GetTocTree() override;
+    TocTree* GetTocTree() override;
 
     // json::ValueVisitor
     bool Visit(const char* path, const char* value, json::DataType type) override;
@@ -878,7 +878,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     // access to cbxFile must be protected after initialization (with cacheAccess)
     MultiFormatArchive* cbxFile = nullptr;
     Vec<MultiFormatArchive::FileInfo*> files;
-    DocTocTree* tocTree = nullptr;
+    TocTree* tocTree = nullptr;
 
     // not owned
     const WCHAR* defaultExt = nullptr;
@@ -1041,7 +1041,7 @@ bool CbxEngineImpl::FinishLoading() {
             curr = ti;
         }
     }
-    tocTree = new DocTocTree(root);
+    tocTree = new TocTree(root);
     tocTree->filePath = strconv::WstrToUtf8(FileName());
 
     for (int i = 0; i < pageCount; i++) {
@@ -1059,7 +1059,7 @@ bool CbxEngineImpl::FinishLoading() {
     return true;
 }
 
-DocTocTree* CbxEngineImpl::GetTocTree() {
+TocTree* CbxEngineImpl::GetTocTree() {
     return tocTree;
 }
 

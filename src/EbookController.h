@@ -63,7 +63,7 @@ class EbookController : public Controller {
     }
     void SetViewPortSize(SizeI size) override;
 
-    DocTocTree* GetTocTree() override;
+    TocTree* GetTocTree() override;
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 
@@ -104,7 +104,7 @@ class EbookController : public Controller {
   protected:
     EbookControls* ctrls = nullptr;
 
-    DocTocTree* tocTree = nullptr;
+    TocTree* tocTree = nullptr;
     Doc doc;
 
     // TODO: this should be recycled along with pages so that its

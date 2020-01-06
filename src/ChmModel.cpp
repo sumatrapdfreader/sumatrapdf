@@ -502,7 +502,7 @@ PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-DocTocTree* ChmModel::GetTocTree() {
+TocTree* ChmModel::GetTocTree() {
     if (tocTree) {
         return tocTree;
     }
@@ -533,7 +533,7 @@ DocTocTree* ChmModel::GetTocTree() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new DocTocTree(root);
+    tocTree = new TocTree(root);
     tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
