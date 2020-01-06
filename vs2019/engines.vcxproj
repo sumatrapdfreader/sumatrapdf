@@ -604,6 +604,7 @@
     <ClInclude Include="..\src\FileModifications.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
+    <ClInclude Include="..\src\ParseBKM.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>
@@ -625,6 +626,7 @@
     <ClCompile Include="..\src\FileModifications.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
+    <ClCompile Include="..\src\ParseBKM.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
   </ItemGroup>

@@ -387,15 +387,19 @@ function freetype_files()
   })
 end
 
-function sumatra_files()
+files {
+}
+
+function sumatrapdf_files()
   files_in_dir("src", {
+    "AppColors.*",
     "AppPrefs.*",
     "AppTools.*",
     "AppUtil.*",
     "Caption.*",
     "Canvas.*",
     "ChmModel.*",
-    "AppColors.*",
+    "CommandLineInfo.*",
     "CrashHandler.*",
     "DisplayModel.*",
     "Doc.*",
@@ -407,12 +411,15 @@ function sumatra_files()
     "FileThumbnails.*",
     "GetDocumentOutlines.*",
     "GlobalPrefs.*",
+    "Installer.h",
+    "Installer.cpp",
+    "InstUninstCommon.cpp",
+    "Uninstaller.cpp",
     "Menu.*",
     "MuiEbookPageDef.*",
     "Notifications.*",
     "PagesLayoutDef.*",
     "ParseBKM.*",
-    "CommandLineInfo.*",
     "PdfSync.*",
     "Print.*",
     "ProgressUpdateUI.*",
@@ -420,6 +427,10 @@ function sumatra_files()
     "Search.*",
     "Selection.*",
     "SettingsStructs.*",
+    "SumatraPDF.cpp",
+    "SumatraPDF.rc",
+    "SumatraStartup.cpp",
+    "SumatraConfig.cpp",
     "SumatraAbout.*",
     "SumatraAbout2.*",
     "SumatraDialogs.*",
@@ -439,6 +450,7 @@ function sumatra_files()
     "Version.h",
     "WindowInfo.*",
 
+    "Tests.cpp",
     "regress/Regress.*",
   })
 end
@@ -542,6 +554,7 @@ function engines_files()
     "FileModifications.*",
     "HtmlFormatter.*",
     "MobiDoc.*",
+    "ParseBKM.*",
     "PdfCreator.*",
 
     "utils/PalmDbReader.*",
@@ -814,20 +827,6 @@ function mudraw_files()
   files_in_dir("mupdf/source/tools", {
       "mudraw.c",
   })
-end
-
-function sumatrapdf_files()
-  files {
-    "src/SumatraPDF.cpp",
-    "src/SumatraStartup.cpp",
-    "src/SumatraConfig.cpp",
-    "src/Tests.cpp",
-    "src/Installer.h",
-    "src/Installer.cpp",
-    "src/InstUninstCommon.cpp",
-    "src/Uninstaller.cpp",
-    "src/SumatraPDF.rc",
-  }
 end
 
 function synctex_files()

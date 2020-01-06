@@ -600,13 +600,12 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
-    includedirs { "src", "src/wingui" }
+    includedirs { "src", "src/wingui", "mupdf/include" }
 
-    sumatrapdf_files()
     synctex_files()
     mui_files()
     uia_files()
-    sumatra_files()
+    sumatrapdf_files()
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
@@ -648,11 +647,10 @@ workspace "SumatraPDF"
     flags { "NoManifest" }
     includedirs { "src", "src/wingui", "mupdf/include" }
 
-    sumatrapdf_files()
     synctex_files()
     mui_files()
     uia_files()
-    sumatra_files()
+    sumatrapdf_files()
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about

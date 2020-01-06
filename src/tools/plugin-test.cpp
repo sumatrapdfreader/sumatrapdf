@@ -44,7 +44,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
         COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lParam;
         if (cds && 0x4C5255 /* URL */ == cds->dwData && (HWND)wParam == hChild) {
-            AutoFreeWstr url(strconv::FromUtf8((const char*)cds->lpData));
+            AutoFreeWstr url(strconv::Utf8ToWstr((const char*)cds->lpData));
             ShellExecute(hChild, L"open", url, nullptr, nullptr, SW_SHOW);
             return TRUE;
         }
