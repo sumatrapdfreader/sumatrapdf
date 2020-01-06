@@ -57,6 +57,7 @@ About SumatraPDF
 Add Favorite
 Add page %s to favorites
 Add page %s to favorites with (optional) name:
+Add page %s to favorites\tCtrl+B
 Add to favorites
 Advanced
 All files
@@ -230,6 +231,7 @@ Remove page %s from favorites
 Rename To
 Rotate &Left\tCtrl+Shift+-
 Rotate &Right\tCtrl+Shift++
+Save Annotations
 Save As
 Save S&hortcut...\tCtrl+Shift+S
 Searching %d of %d...
