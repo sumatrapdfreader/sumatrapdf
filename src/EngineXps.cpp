@@ -220,7 +220,7 @@ class XpsEngineImpl : public EngineBase {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -905,7 +905,7 @@ TocItem* XpsEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& 
     return root;
 }
 
-TocTree* XpsEngineImpl::GetTocTree() {
+TocTree* XpsEngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }

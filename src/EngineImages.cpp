@@ -673,7 +673,7 @@ class ImageDirEngineImpl : public ImagesEngine {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
@@ -751,7 +751,7 @@ static TocItem* newImageDirTocItem(TocItem* parent, WCHAR* title, int pageNo) {
     return new TocItem(parent, title, pageNo);
 };
 
-TocTree* ImageDirEngineImpl::GetTocTree() {
+TocTree* ImageDirEngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -853,7 +853,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
 
     const WCHAR* GetDefaultFileExt() const;
 
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     // json::ValueVisitor
     bool Visit(const char* path, const char* value, json::DataType type) override;
@@ -1059,7 +1059,7 @@ bool CbxEngineImpl::FinishLoading() {
     return true;
 }
 
-TocTree* CbxEngineImpl::GetTocTree() {
+TocTree* CbxEngineImpl::GetToc() {
     return tocTree;
 }
 

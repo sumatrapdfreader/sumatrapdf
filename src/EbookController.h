@@ -63,7 +63,7 @@ class EbookController : public Controller {
     }
     void SetViewPortSize(SizeI size) override;
 
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 

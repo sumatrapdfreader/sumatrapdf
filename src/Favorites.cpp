@@ -631,9 +631,9 @@ void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo) {
     AutoFreeWstr name;
     auto tab = win->currentTab;
     auto* ctrl = tab->ctrl;
-    if (ctrl->HasTocTree()) {
+    if (ctrl->HacToc()) {
         // use the current ToC heading as default name
-        auto* docTree = ctrl->GetTocTree();
+        auto* docTree = ctrl->GetToc();
         TocItem* root = docTree->root;
         TocItem* item = TocItemForPageNo(root, pageNo);
         if (item) {

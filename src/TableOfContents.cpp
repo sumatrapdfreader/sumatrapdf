@@ -365,7 +365,7 @@ void ShowExportedBookmarksMsg(const char* path) {
 }
 
 static void ExportBookmarksFromTab(TabInfo* tab) {
-    auto* tocTree = tab->ctrl->GetTocTree();
+    auto* tocTree = tab->ctrl->GetToc();
     str::Str path = strconv::WstrToUtf8(tab->filePath.get());
     path.Append(".bkm");
     Vec<Bookmarks*> bookmarks;
@@ -497,7 +497,7 @@ static void OnTocContextMenu(ContextMenuArgs* args) {
 static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::string_view s) {
     TocTree* tocTree = nullptr;
     if (n == 0) {
-        tocTree = tab->ctrl->GetTocTree();
+        tocTree = tab->ctrl->GetToc();
     } else {
         tocTree = tab->altBookmarks->at(n - 1)->toc;
     }
@@ -540,7 +540,7 @@ void LoadTocTree(WindowInfo* win) {
 
     win->tocLoaded = true;
 
-    auto* tocTree = tab->ctrl->GetTocTree();
+    auto* tocTree = tab->ctrl->GetToc();
     if (!tocTree || !tocTree->root) {
         return;
     }

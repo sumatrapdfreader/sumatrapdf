@@ -34,7 +34,7 @@ class ChmModel : public Controller {
     void SetViewPortSize(SizeI size) override;
 
     // table of contents
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 

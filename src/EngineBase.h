@@ -382,11 +382,11 @@ class EngineBase {
     virtual PageDestination* GetNamedDest(const WCHAR* name);
 
     // checks whether this document has an associated Table of Contents
-    bool HasTocTree();
+    bool HacToc();
 
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
-    virtual TocTree* GetTocTree();
+    virtual TocTree* GetToc();
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering

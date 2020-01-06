@@ -736,7 +736,7 @@ class EpubEngineImpl : public EbookEngine {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -847,7 +847,7 @@ bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     return CopyFileW(fileName, dstPath, FALSE);
 }
 
-TocTree* EpubEngineImpl::GetTocTree() {
+TocTree* EpubEngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -916,7 +916,7 @@ class Fb2EngineImpl : public EbookEngine {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -968,7 +968,7 @@ bool Fb2EngineImpl::FinishLoading() {
     return pageCount > 0;
 }
 
-TocTree* Fb2EngineImpl::GetTocTree() {
+TocTree* Fb2EngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1036,7 +1036,7 @@ class MobiEngineImpl : public EbookEngine {
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -1121,7 +1121,7 @@ PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
     return newSimpleDest(pageNo, rect);
 }
 
-TocTree* MobiEngineImpl::GetTocTree() {
+TocTree* MobiEngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1186,7 +1186,7 @@ class PdbEngineImpl : public EbookEngine {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
@@ -1224,7 +1224,7 @@ bool PdbEngineImpl::Load(const WCHAR* fileName) {
     return pageCount > 0;
 }
 
-TocTree* PdbEngineImpl::GetTocTree() {
+TocTree* PdbEngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1401,7 +1401,7 @@ class ChmEngineImpl : public EbookEngine {
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
@@ -1562,7 +1562,7 @@ PageDestination* ChmEngineImpl::GetNamedDest(const WCHAR* name) {
     return dest;
 }
 
-TocTree* ChmEngineImpl::GetTocTree() {
+TocTree* ChmEngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1751,7 +1751,7 @@ class TxtEngineImpl : public EbookEngine {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
@@ -1800,7 +1800,7 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
     return pageCount > 0;
 }
 
-TocTree* TxtEngineImpl::GetTocTree() {
+TocTree* TxtEngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }

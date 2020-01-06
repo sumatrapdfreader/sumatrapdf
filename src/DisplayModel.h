@@ -105,11 +105,11 @@ class DisplayModel : public Controller {
     void SetViewPortSize(SizeI size) override;
 
     // table of contents
-    TocTree* GetTocTree() override {
+    TocTree* GetToc() override {
         if (!engine) {
             return false;
         }
-        return engine->GetTocTree();
+        return engine->GetToc();
     }
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override {

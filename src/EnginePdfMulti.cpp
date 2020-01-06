@@ -76,7 +76,7 @@ class EnginePdfMultiImpl : public EngineBase {
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
@@ -229,7 +229,7 @@ static void updateTocItemsPageNo(TocItem* i, int nPageNoAdd) {
     }
 }
 
-TocTree* EnginePdfMultiImpl::GetTocTree() {
+TocTree* EnginePdfMultiImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -249,7 +249,7 @@ TocTree* EnginePdfMultiImpl::GetTocTree() {
         } else {
             tree->root->AddSibling(tocItem);
         }
-        auto subTree = e->GetTocTree();
+        auto subTree = e->GetToc();
         if (subTree) {
             tocItem->child = subTree->root;
             tocItem->child->parent = tocItem;

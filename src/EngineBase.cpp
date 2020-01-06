@@ -397,12 +397,12 @@ PageDestination* EngineBase::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-bool EngineBase::HasTocTree() {
-    TocTree* tree = GetTocTree();
+bool EngineBase::HacToc() {
+    TocTree* tree = GetToc();
     return tree != nullptr;
 }
 
-TocTree* EngineBase::GetTocTree() {
+TocTree* EngineBase::GetToc() {
     return nullptr;
 }
 

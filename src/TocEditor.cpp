@@ -193,7 +193,7 @@ static void AddPdf() {
         ShowErrorMessage("Failed to open a file!");
         return;
     }
-    TocTree* tocTree = engine->GetTocTree();
+    TocTree* tocTree = engine->GetToc();
     if (nullptr == tocTree) {
         // TODO: maybe add a dummy entry for the first page
         // or make top-level act as first page destination

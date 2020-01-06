@@ -311,8 +311,8 @@ class PsEngineImpl : public EngineBase {
         return pdfEngine->GetNamedDest(name);
     }
 
-    TocTree* GetTocTree() override {
-        return pdfEngine->GetTocTree();
+    TocTree* GetToc() override {
+        return pdfEngine->GetToc();
     }
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);

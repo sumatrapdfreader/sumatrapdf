@@ -502,7 +502,7 @@ PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-TocTree* ChmModel::GetTocTree() {
+TocTree* ChmModel::GetToc() {
     if (tocTree) {
         return tocTree;
     }

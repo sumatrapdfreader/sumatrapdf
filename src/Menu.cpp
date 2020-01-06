@@ -512,7 +512,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
 
     MenuUpdatePrintItem(win, win->menu);
 
-    bool enabled = win->IsDocLoaded() && tab && tab->ctrl->HasTocTree();
+    bool enabled = win->IsDocLoaded() && tab && tab->ctrl->HacToc();
     win::menu::SetEnabled(win->menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
@@ -647,7 +647,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
     }
     MenuUpdatePrintItem(win, popup, true);
-    win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->ctrl->HasTocTree());
+    win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->ctrl->HacToc());
     win::menu::SetChecked(popup, IDM_VIEW_BOOKMARKS, win->tocVisible);
 
     win::menu::SetEnabled(popup, IDM_FAV_TOGGLE, HasFavorites());

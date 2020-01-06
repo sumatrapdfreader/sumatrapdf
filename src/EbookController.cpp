@@ -828,7 +828,7 @@ class EbookTocCollector : public EbookTocVisitor {
     }
 };
 
-TocTree* EbookController::GetTocTree() {
+TocTree* EbookController::GetToc() {
     if (tocTree) {
         return tocTree;
     }

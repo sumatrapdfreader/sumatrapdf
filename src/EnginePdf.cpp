@@ -301,7 +301,7 @@ class PdfEngineImpl : public EngineBase {
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetTocTree() override;
+    TocTree* GetToc() override;
 
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
@@ -908,7 +908,7 @@ TocItem* PdfEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& 
 }
 
 // TODO: maybe build in FinishDownload
-TocTree* PdfEngineImpl::GetTocTree() {
+TocTree* PdfEngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }

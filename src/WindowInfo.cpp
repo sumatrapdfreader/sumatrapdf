@@ -524,8 +524,8 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
     if (dest) {
         ScrollTo(dest);
         delete dest;
-    } else if (ctrl->HasTocTree()) {
-        auto* docTree = ctrl->GetTocTree();
+    } else if (ctrl->HacToc()) {
+        auto* docTree = ctrl->GetToc();
         TocItem* root = docTree->root;
         AutoFreeWstr fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName);

@@ -207,17 +207,17 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
 }
 
 void DumpToc(EngineBase* engine) {
-    TocTree* tree = engine->GetTocTree();
+    TocTree* tree = engine->GetToc();
     if (!tree) {
         return;
     }
     auto* root = tree->root;
     if (root) {
-        Out("\t<TocTree%s>\n", engine->HasTocTree() ? "" : " Expected=\"no\"");
+        Out("\t<TocTree%s>\n", engine->HacToc() ? "" : " Expected=\"no\"");
         int idCounter = 0;
         DumpTocItem(engine, root, 2, idCounter);
         Out("\t</TocTree>\n");
-    } else if (engine->HasTocTree()) {
+    } else if (engine->HacToc()) {
         Out("\t<TocTree />\n");
     }
 }
