@@ -5,9 +5,10 @@
 struct VbkmForFile {
     // path of the original file
     AutoFree filePath;
+    // TODO: serialize nPages after "file:"
+    int nPages = 0;
 
     TocTree* toc = nullptr;
-    int nPages = 0;
 
     EngineBase* engine = nullptr;
 

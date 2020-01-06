@@ -747,42 +747,48 @@ static const char* ParseV(const char* str, const char* format, va_list args) {
         f++;
 
         const char* end = nullptr;
-        if ('u' == *f)
+        if ('u' == *f) {
             *va_arg(args, unsigned int*) = strtoul(str, (char**)&end, 10);
-        else if ('d' == *f)
+        } else if ('d' == *f) {
             *va_arg(args, int*) = strtol(str, (char**)&end, 10);
-        else if ('x' == *f)
+        } else if ('x' == *f) {
             *va_arg(args, unsigned int*) = strtoul(str, (char**)&end, 16);
-        else if ('f' == *f)
+        } else if ('f' == *f) {
             *va_arg(args, float*) = (float)strtod(str, (char**)&end);
-        else if ('c' == *f)
+        } else if ('g' == *f) {
+            *va_arg(args, float*) = (float)strtod(str, (char**)&end);
+        } else if ('c' == *f)
             *va_arg(args, char*) = *str, end = str + 1;
-        else if ('s' == *f)
+        else if ('s' == *f) {
             *va_arg(args, char**) = ExtractUntil(str, *(f + 1), &end);
-        else if ('S' == *f)
+        } else if ('S' == *f) {
             va_arg(args, AutoFree*)->Set(ExtractUntil(str, *(f + 1), &end));
-        else if ('$' == *f && !*str)
+        } else if ('$' == *f && !*str) {
             continue; // don't fail, if we're indeed at the end of the string
-        else if ('%' == *f && *f == *str)
+        } else if ('%' == *f && *f == *str) {
             end = str + 1;
-        else if (' ' == *f && str::IsWs(*str))
+        } else if (' ' == *f && str::IsWs(*str)) {
             end = str + 1;
-        else if ('_' == *f) {
-            if (!str::IsWs(*str))
+        } else if ('_' == *f) {
+            if (!str::IsWs(*str)) {
                 continue; // don't fail, if there's no whitespace at all
+            }
             for (end = str + 1; str::IsWs(*end); end++) {
                 // do nothing
             }
         } else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
-            if (*str != *++f)
+            if (*str != *++f) {
                 continue;
+            }
             end = (char*)str + 1;
-        } else if (str::IsDigit(*f))
+        } else if (str::IsDigit(*f)) {
             f = ParseLimitedNumber(str, f, &end, va_arg(args, void*)) - 1;
-        if (!end || end == str)
+        }
+        if (!end || end == str) {
             return nullptr;
+        }
         str = end;
     }
     return str;

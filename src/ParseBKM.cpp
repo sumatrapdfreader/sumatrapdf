@@ -115,7 +115,7 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
 }
 
 // indentation "quoted title" additional-metadata* destination
-static TocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
+static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
     auto origLine = line; // save for debugging
 
     // lines might start with an indentation, 2 spaces for one level
@@ -126,14 +126,15 @@ static TocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
         return nullptr;
     }
     *indentOut = indent / 2;
-    sv::SkipChars(line, ' ');
-    ParsedKV file = sv::ParseValueOfKey(line, "file", true);
+
+    // first item on the line is a title
+    str::Str title;
+    bool ok = sv::ParseMaybeQuoted(line, title, false);
     TocItem* res = new TocItem();
-    res->title = strconv::Utf8ToWstr(file.val);
+    res->title = strconv::Utf8ToWstr(title.as_view());
     PageDestination* dest = nullptr;
 
     // parse meta-data and page destination
-    std::string_view part;
     while (line.size() > 0) {
         ParsedKV kv = sv::ParseKV(line, false);
         if (!kv.ok) {
@@ -177,15 +178,13 @@ static TocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
             if (!val) {
                 return nullptr;
             }
-            int pageNo = 0;
-            str::Parse(val, "%d", &pageNo);
-            res->pageNo = pageNo;
+            str::Parse(val, "%d", &res->pageNo);
             continue;
         }
 
         if (str::Eq(key, "color")) {
             COLORREF c = 0;
-            bool ok = ParseColor(&c, val);
+            ok = ParseColor(&c, val);
             if (ok) {
                 res->color = c;
             }
@@ -195,11 +194,11 @@ static TocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
         // the values here are for destination
         if (!dest) {
             dest = new PageDestination();
+            dest->value = str::Dup(res->title);
         }
 
         if (str::Eq(key, "destkind")) {
-            // TODO: NYI
-            CrashMe();
+            dest->kind = resolveDestKind(val);
             continue;
         }
 
@@ -251,29 +250,28 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
     Vec<TocItemWithIndent> items;
 
     // first line should be "file: $file"
-    auto line = sv::ParseUntil(sv, '\n');
-    // TOOD: maybe write a "relaxed" version where if the value is
-    // unquoted, it can go until the end of line
-    auto file = sv::ParseValueOfKey(line, "file", true);
+    auto file = sv::ParseValueOfKey(sv, "file", true);
     if (!file.ok) {
         return false;
     }
 
+#if 0
     // this line should be "title: $title"
-    line = sv::ParseUntil(sv, '\n');
-    auto title = sv::ParseValueOfKey(line, "title", true);
+    auto title = sv::ParseValueOfKey(sv, "title", true);
     if (!title.ok) {
         return false;
     }
+#endif
     auto tree = new TocTree();
-    tree->name = str::Dup(title.val);
+    // tree->name = str::Dup(title.val);
     size_t indent = 0;
+    std::string_view line;
     while (true) {
         line = sv::ParseUntil(sv, '\n');
         if (line.empty()) {
             break;
         }
-        auto* item = parseBookmarksLine(line, &indent);
+        auto* item = parseTocLine(line, &indent);
         if (item == nullptr) {
             for (auto& el : items) {
                 delete el.item;
@@ -330,6 +328,8 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
     }
 
     auto* bkm = new VbkmForFile();
+    bkm->filePath = file.val;
+    file.val = nullptr;
     bkm->toc = tree;
     bkmsOut.Append(bkm);
 

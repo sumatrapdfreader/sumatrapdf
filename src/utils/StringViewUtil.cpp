@@ -294,10 +294,10 @@ bool ParseMaybeQuoted(std::string_view& sv, str::Str& out, bool full) {
     const char* end = s + sv.size();
     char c = *s;
     if (c != '"') {
-        // unqoted
+        // unqoted, parse until end of line or end of text
         if (full) {
-            out.AppendView(sv);
-            SkipTo(sv, end);
+            std::string_view v = ParseUntil(sv, '\n');
+            out.AppendView(v);
             return true;
         }
         std::string_view v = ParseUntil(sv, ' ');

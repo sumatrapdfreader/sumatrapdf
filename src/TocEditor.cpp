@@ -125,7 +125,10 @@ static void CalcEndPageNo(TocItem* root, int nPages) {
     TocItem* prev = tocItems[0];
     for (size_t i = 1; i < n; i++) {
         TocItem* next = tocItems[i];
-        prev->endPageNo = next->pageNo;
+        prev->endPageNo = next->pageNo - 1;
+        if (prev->endPageNo < prev->pageNo) {
+            prev->endPageNo = prev->pageNo;
+        }
         prev = next;
     }
     prev->endPageNo = nPages;

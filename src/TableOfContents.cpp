@@ -546,6 +546,8 @@ void LoadTocTree(WindowInfo* win) {
     }
 
     // TODO: for now just for testing
+    // TODO: tab->altBookmarks should be VbkmFiles or even
+    // Vec<VbkmFiles*> 
     VbkmFile* vbkm = new VbkmFile();
     bool ok = LoadAlterenativeBookmarks(tab->filePath, *vbkm);
     Vec<VbkmForFile*>* altTocs = &vbkm->vbkms;

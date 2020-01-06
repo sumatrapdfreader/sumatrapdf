@@ -214,6 +214,10 @@ TocTree* EnginePdfMultiImpl::GetToc() {
 }
 
 WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {
+    if (pageNo < 1 || pageNo >= pageCount) {
+        return nullptr;
+    }
+
     EngineBase* e = PageToEngine(pageNo);
     return e->GetPageLabel(pageNo);
 }
@@ -257,6 +261,7 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         if (!vbkm->engine) {
             return false;
         }
+        tocTree = CloneTocTree(vbkm->toc);
         EngineBase* engine = vbkm->engine;
         int nPages = vbkm->engine->PageCount();
         for (int i = 0; i < nPages; i++) {
