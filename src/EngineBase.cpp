@@ -183,6 +183,10 @@ PageElement* clonePageElement(PageElement* el) {
     return res;
 }
 
+Kind kindTocFzOutline = "tocFzOutline";
+Kind kindTocFzLink = "tocFzLink";
+Kind kindTocDjvu = "tocDjvu";
+
 DocTocItem::DocTocItem(DocTocItem* parent, const WCHAR* title, int pageNo) {
     this->title = str::Dup(title);
     this->pageNo = pageNo;

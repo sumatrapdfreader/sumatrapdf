@@ -14,7 +14,7 @@ class CaptionInfo;
 
 class PageElement;
 class PageDestination;
-class DocTocItem;
+struct DocTocItem;
 class Controller;
 class ControllerCallback;
 class ChmModel;

@@ -164,9 +164,20 @@ PageElement* clonePageElement(PageElement*);
 constexpr int fontBitBold = 0;
 constexpr int fontBitItalic = 1;
 
+extern Kind kindTocFzOutline;
+extern Kind kindTocFzLink;
+extern Kind kindTocDjvu;
+
 // an item in a document's Table of Content
-class DocTocItem : public TreeItem {
-  public:
+struct DocTocItem : TreeItem {
+
+    // each engine has a raw representation of the toc item which
+    // we want to access. Not (yet) supported by all engines
+    // other values come from parsing this value
+    Kind kindRaw = nullptr;
+    char* rawVal1 = nullptr;
+    char* rawVal2 = nullptr;
+
     DocTocItem* parent = nullptr;
 
     // the item's visible label
