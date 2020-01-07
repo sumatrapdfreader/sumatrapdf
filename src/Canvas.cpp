@@ -220,7 +220,7 @@ static bool IsDragY(int y1, int y2) {
 
 static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     UNUSED(flags);
-    AssertCrash(win->AsFixed());
+    CrashIf(!win->AsFixed());
 
     if (win->presentation) {
         if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {

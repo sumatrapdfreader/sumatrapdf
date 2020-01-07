@@ -18,14 +18,20 @@ const nBuildsToRetainPreRel = 16
 const nBuildsToRetainDaily = 64
 
 const (
-	buildTypeDaily  = "daily"
-	buildTypePreRel = "prerel"
-	buildTypeRel    = "rel"
+	buildTypeDaily   = "daily"
+	buildTypePreRel  = "prerel"
+	buildTypeRel     = "rel"
+	buildTypeRaMicro = "ramicro"
+)
+
+var (
+	rel32Dir = filepath.Join("out", "rel32")
+	rel64Dir = filepath.Join("out", "rel64")
 )
 
 func isValidBuildType(buildType string) bool {
 	switch buildType {
-	case buildTypeDaily, buildTypePreRel, buildTypeRel:
+	case buildTypeDaily, buildTypePreRel, buildTypeRel, buildTypeRaMicro:
 		return true
 	}
 	return false
@@ -85,7 +91,57 @@ func minioUploadFiles(c *u.MinioClient, prefix string, dir string, files []strin
 	return nil
 }
 
-// upload as:
+func getFileNamesWithPrefix(prefix string) []string {
+	files := []string{
+		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
+		"SumatraPDF.zip", fmt.Sprintf("%s.zip", prefix),
+		"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix),
+		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
+		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
+	}
+	return files
+}
+
+func getRemotePaths(buildType string) []string {
+	if buildType == buildTypePreRel {
+		return []string{
+			"software/sumatrapdf/sumatralatest.js",
+			"software/sumatrapdf/sumpdf-prerelease-latest.txt",
+			"software/sumatrapdf/sumpdf-prerelease-update.txt",
+		}
+
+	}
+	if buildType == buildTypeDaily {
+		return []string{
+			"software/sumatrapdf/sumadaily.js",
+			"software/sumatrapdf/sumpdf-daily-latest.txt",
+			"software/sumatrapdf/sumpdf-daily-update.txt",
+		}
+	}
+	if buildType == buildTypeRaMicro {
+		return []string{
+			"software/sumatrapdf/ramicrolatest.js",
+			"software/sumatrapdf/ramicro-daily-latest.txt",
+			"software/sumatrapdf/ramicro-daily-update.txt",
+		}
+	}
+
+	if buildType == buildTypeRel {
+		panic("NYI")
+		// TODO: those are not the right paths
+		/*
+			return []string{
+				"software/sumatrapdf/rel.js",
+				"software/sumatrapdf/rel-latest.txt",
+				"software/sumatrapdf/rel.txt",
+			}
+		*/
+	}
+
+	panicIf(true, "Unkonwn buildType='%s'", buildType)
+	return nil
+}
+
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
 func spacesUploadPreReleaseMust(ver string, buildType string) {
 	if shouldSkipUpload() {
@@ -99,26 +155,20 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 
 	c := newMinioClient()
 	timeStart := time.Now()
-	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
-	manifestRemotePath := remoteDir + prefix + "-manifest.txt"
-	files := []string{
-		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
-		"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix),
-		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
-		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
-	}
-	err := minioUploadFiles(c, remoteDir, filepath.Join("out", "rel32"), files)
-	fatalIfErr(err)
 
-	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
-	files = []string{
-		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
-		"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix),
-		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
-		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
+	manifestRemotePath := remoteDir + "SumatraPDF-prerelease-manifest.txt"
+
+	// only 64-bit builds for ra-micro
+	if buildType != buildTypeRaMicro {
+		prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
+		files := getFileNamesWithPrefix(prefix)
+		err := minioUploadFiles(c, remoteDir, rel32Dir, files)
+		fatalIfErr(err)
 	}
 
-	err = minioUploadFiles(c, remoteDir, filepath.Join("out", "rel64"), files)
+	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
+	files := getFileNamesWithPrefix(prefix)
+	err := minioUploadFiles(c, remoteDir, rel64Dir, files)
 	fatalIfErr(err)
 
 	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
@@ -126,18 +176,7 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
 
-	remotePaths := []string{
-		"software/sumatrapdf/sumatralatest.js",
-		"software/sumatrapdf/sumpdf-prerelease-latest.txt",
-		"software/sumatrapdf/sumpdf-prerelease-update.txt",
-	}
-	if buildType == buildTypeDaily {
-		remotePaths = []string{
-			"software/sumatrapdf/sumadaily.js",
-			"software/sumatrapdf/sumpdf-daily-latest.txt",
-			"software/sumatrapdf/sumpdf-daily-update.txt",
-		}
-	}
+	remotePaths := getRemotePaths(buildType)
 
 	s := createSumatraLatestJs(buildType)
 	remotePath := remotePaths[0]

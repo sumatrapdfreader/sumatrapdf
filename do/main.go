@@ -48,6 +48,7 @@ func main() {
 		flgDeleteOldBuilds         bool
 		flgCrashes                 bool
 		flgCheckAccessKeys         bool
+		flgBuildNo                 bool
 	)
 
 	{
@@ -69,6 +70,7 @@ func main() {
 		flag.BoolVar(&flgDeleteOldBuilds, "delete-old-builds", false, "delete old builds")
 		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
+		flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
 		flag.Parse()
 	}
 
@@ -133,6 +135,11 @@ func main() {
 		return
 	}
 
+	if flgBuildNo {
+		detectVersions()
+		return
+	}
+
 	if flgCIBuild {
 		// ci build does the same thing as pre-release
 		if shouldSignAndUpload() {
@@ -158,8 +165,9 @@ func main() {
 		}
 		flgUpload = true
 		detectVersions()
-		s3UploadPreReleaseMust(svnPreReleaseVer, buildTypeDaily)
-		spacesUploadPreReleaseMust(svnPreReleaseVer, buildTypeDaily)
+		s3UploadPreReleaseMust(preReleaseVer, buildTypeDaily)
+		spacesUploadPreReleaseMust(preReleaseVer, buildTypeDaily)
+		spacesUploadPreReleaseMust(preReleaseVer, buildTypeRaMicro)
 		minioDeleteOldBuilds()
 		s3DeleteOldBuilds()
 		return
@@ -172,8 +180,8 @@ func main() {
 		}
 		detectVersions()
 		buildPreRelease(false)
-		s3UploadPreReleaseMust(svnPreReleaseVer, buildTypePreRel)
-		spacesUploadPreReleaseMust(svnPreReleaseVer, buildTypePreRel)
+		s3UploadPreReleaseMust(preReleaseVer, buildTypePreRel)
+		spacesUploadPreReleaseMust(preReleaseVer, buildTypePreRel)
 		return
 	}
 

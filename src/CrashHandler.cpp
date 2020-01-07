@@ -639,7 +639,7 @@ int __cdecl _purecall() {
 extern bool IsDllBuild();
 
 void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath, const WCHAR* symDir) {
-    AssertCrash(!gDumpEvent && !gDumpThread);
+    CrashIf(gDumpEvent || gDumpThread);
 
     if (!crashDumpPath) {
         return;

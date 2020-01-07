@@ -71,12 +71,12 @@ static int ColumnsFromDisplayMode(DisplayMode displayMode) {
 }
 
 int NormalizeRotation(int rotation) {
-    AssertCrash((rotation % 90) == 0);
+    CrashIf((rotation % 90) != 0);
     rotation = rotation % 360;
     if (rotation < 0)
         rotation += 360;
     if (rotation < 0 || rotation >= 360 || (rotation % 90) != 0) {
-        AssertCrash(0);
+        CrashIf(true);
         return 0;
     }
     return rotation;

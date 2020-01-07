@@ -21,6 +21,7 @@
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
+#include "SumatraConfig.h"
 #include "WindowInfo.h"
 #include "resource.h"
 #include "FileThumbnails.h"
@@ -62,6 +63,8 @@
 #ifdef GIT_COMMIT_ID
 #define GIT_COMMIT_ID_STR TEXT(QM(GIT_COMMIT_ID))
 #endif
+
+#define RA_MICRO_NAME L"Ra-Micro PDF Viewer"
 
 // TODO: replace this link with a better one where license information is nicely collected/linked
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
@@ -120,27 +123,37 @@ static Vec<StaticLinkInfo> gLinkInfo;
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
 
-static void DrawSumatraPDF(HDC hdc, PointI pt) {
-    const WCHAR* txt = APP_NAME_STR;
-#ifdef ABOUT_USE_LESS_COLORS
-    // simple black version
-    SetTextColor(hdc, ABOUT_BORDER_COL);
-    TextOut(hdc, pt.x, pt.y, txt, (int)str::Len(txt));
-#else
+
+static const WCHAR* getAppName() {
+    if (gIsRaMicroBuild) {
+        return RA_MICRO_NAME;
+    }
+    return APP_NAME_STR;
+}
+
+static void DrawAppName(HDC hdc, PointI pt) {
+    const WCHAR* txt = getAppName();
+    if (gIsRaMicroBuild) {
+        // simple black-ish version
+        COLORREF col = RGB(0x43, 0x43, 0x43);
+        SetTextColor(hdc, col);
+        TextOutW(hdc, pt.x, pt.y, txt, (int)str::Len(txt));
+        return;
+    }
+
     // colorful version
     COLORREF cols[] = {COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1};
     for (size_t i = 0; i < str::Len(txt); i++) {
         SetTextColor(hdc, cols[i % dimof(cols)]);
-        TextOut(hdc, pt.x, pt.y, txt + i, 1);
+        TextOutW(hdc, pt.x, pt.y, txt + i, 1);
 
         SIZE txtSize;
         GetTextExtentPoint32(hdc, txt + i, 1, &txtSize);
         pt.x += txtSize.cx;
     }
-#endif
 }
 
-static WCHAR* GetSumatraVersion() {
+static WCHAR* GetAppVersion() {
     str::WStr s;
     s.Set(VERSION_TXT);
     if (IsProcess64()) {
@@ -161,14 +174,15 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 
     SIZE txtSize{};
     /* calculate minimal top box size */
-    const WCHAR* txt = APP_NAME_STR;
+    const WCHAR* txt = getAppName();
+
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     result.dy = txtSize.cy + DpiScale(hwnd, ABOUT_BOX_MARGIN_DY * 2);
     result.dx = txtSize.cx;
 
     /* consider version and version-sub strings */
     SelectObject(hdc, fontVersionTxt);
-    AutoFreeWstr ver(GetSumatraVersion());
+    AutoFreeWstr ver = GetAppVersion();
     GetTextExtentPoint32(hdc, ver.Get(), (int)str::Len(ver.Get()), &txtSize);
     LONG minWidth = txtSize.cx + DpiScale(hwnd, 8);
     txt = VERSION_SUB_TXT;
@@ -187,16 +201,16 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
     SetBkMode(hdc, TRANSPARENT);
 
     SIZE txtSize;
-    const WCHAR* txt = APP_NAME_STR;
+    const WCHAR* txt = getAppName();
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
-    DrawSumatraPDF(hdc, mainRect.TL());
+    DrawAppName(hdc, mainRect.TL());
 
     SetTextColor(hdc, WIN_COL_BLACK);
     SelectObject(hdc, fontVersionTxt);
     PointI pt(mainRect.x + mainRect.dx + ABOUT_INNER_PADDING, mainRect.y);
 
-    AutoFreeWstr ver(GetSumatraVersion());
+    AutoFreeWstr ver = GetAppVersion();
     TextOut(hdc, pt.x, pt.y, ver.Get(), (int)str::Len(ver.Get()));
     txt = VERSION_SUB_TXT;
     TextOut(hdc, pt.x, pt.y + DpiScale(hwnd, 13), txt, (int)str::Len(txt));
@@ -417,8 +431,8 @@ static void OnPaintAbout(HWND hwnd) {
 static void CopyAboutInfoToClipboard(HWND hwnd) {
     UNUSED(hwnd);
     str::WStr info(512);
-    AutoFreeWstr ver(GetSumatraVersion());
-    info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, ver.Get());
+    AutoFreeWstr ver = GetAppVersion();
+    info.AppendFmt(L"%s %s\r\n", getAppName(), ver.Get());
     for (size_t i = info.size() - 2; i > 0; i--) {
         info.Append('-');
     }
@@ -430,22 +444,25 @@ static void CopyAboutInfoToClipboard(HWND hwnd) {
         maxLen = std::max(maxLen, str::Len(el->leftTxt));
     }
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        for (size_t i = maxLen - str::Len(el->leftTxt); i > 0; i--)
+        for (size_t i = maxLen - str::Len(el->leftTxt); i > 0; i--) {
             info.Append(' ');
+        }
         info.AppendFmt(L"%s: %s\r\n", el->leftTxt, el->url ? el->url : el->rightTxt);
     }
     CopyTextToClipboard(info.LendData());
 }
 
 const WCHAR* GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo* info) {
-    if (!HasPermission(Perm_DiskAccess))
+    if (!HasPermission(Perm_DiskAccess)) {
         return nullptr;
+    }
 
     PointI pt(x, y);
     for (size_t i = 0; i < linkInfo.size(); i++) {
         if (linkInfo.at(i).rect.Contains(pt)) {
-            if (info)
+            if (info) {
                 *info = linkInfo.at(i);
+            }
             return linkInfo.at(i).target;
         }
     }
@@ -464,12 +481,12 @@ static void CreateInfotipForLink(StaticLinkInfo& linkInfo) {
 }
 
 static void DeleteInfotip() {
-    if (gAboutTooltip != nullptr) {
-        // gAboutTooltip->Hide();
-        delete gAboutTooltip;
-        gAboutTooltip = nullptr;
+    if (gAboutTooltip == nullptr) {
         return;
     }
+    // gAboutTooltip->Hide();
+    delete gAboutTooltip;
+    gAboutTooltip = nullptr;
 }
 
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {

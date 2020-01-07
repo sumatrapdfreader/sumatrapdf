@@ -48,7 +48,7 @@ var sumLatestInstaller = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/Suma
 */
 func createSumatraLatestJs(dir string) string {
 	currDate := time.Now().Format("2006-01-02")
-	v := svnPreReleaseVer
+	v := preReleaseVer
 	tmplText := `
 var sumLatestVer = {{.Ver}};
 var sumBuiltOn = "{{.CurrDate}}";
@@ -166,6 +166,8 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 		return
 	}
 
+	panicIf(buildType == buildTypeRaMicro, "only uploading ramicro to spaces")
+
 	remoteDir := getRemoteDir(buildType)
 
 	c := newS3Client()
@@ -173,26 +175,16 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 
 	timeStart := time.Now()
 
-	verifyPreReleaseNotInS3Must(c, remoteDir, svnPreReleaseVer)
+	verifyPreReleaseNotInS3Must(c, remoteDir, preReleaseVer)
 
 	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
 	manifestRemotePath := remoteDir + prefix + "-manifest.txt"
-	files := []string{
-		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
-		"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix),
-		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
-		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
-	}
+	files := getFileNamesWithPrefix(prefix)
 	err := s3UploadFiles(c, remoteDir, filepath.Join("out", "rel32"), files)
 	fatalIfErr(err)
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
-	files = []string{
-		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
-		"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix),
-		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
-		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
-	}
+	files = getFileNamesWithPrefix(prefix)
 	err = s3UploadFiles(c, remoteDir, filepath.Join("out", "rel64"), files)
 	fatalIfErr(err)
 

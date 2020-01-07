@@ -56,3 +56,5 @@ bool gWithTocEditor = true;
 #else
 bool gWithTocEditor = false;
 #endif
+
+bool gIsRaMicroBuild = false;

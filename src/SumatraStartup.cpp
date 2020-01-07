@@ -401,15 +401,19 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
     AutoFreeWstr mapId = str::Format(L"SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
+    HANDLE hMap = nullptr;
 Retry:
     // use a memory mapping containing a process id as mutex
-    HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
-    if (!hMap)
+    hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
+    if (!hMap) {
         goto Error;
-    bool hasPrevInst = GetLastError() == ERROR_ALREADY_EXISTS;
+    }
+    DWORD lastErr = GetLastError();
+    bool hasPrevInst = (lastErr == ERROR_ALREADY_EXISTS);
     DWORD* procId = (DWORD*)MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(DWORD));
     if (!procId) {
         CloseHandle(hMap);
+        hMap = nullptr;
         goto Error;
     }
     if (!hasPrevInst) {
@@ -580,38 +584,43 @@ static void UpdateGlobalPrefs(const CommandLineInfo& i) {
     }
 }
 
-// we're in installer mode if the name of the executable
-// has "install" string in it e.g. SumatraPDF-installer.exe
-static bool HasNameOfInstaller() {
-    WCHAR* exePath = GetExePath();
+static bool ExeHasNameOfRaMicro() {
+    AutoFreeWstr exePath = GetExePath();
     const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
-    bool isInstaller = str::FindI(exeName, L"install");
-    str::Free(exePath);
-    return isInstaller;
+    return str::FindI(exeName, L"ramicro");
 }
 
-static bool HasInstallerResources() {
+// we're in installer mode if the name of the executable
+// has "install" string in it e.g. SumatraPDF-installer.exe
+static bool ExeHasNameOfInstaller() {
+    AutoFreeWstr exePath = GetExePath();
+    const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
+    return str::FindI(exeName, L"install");
+}
+
+static bool ExeHasInstallerResources() {
     HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
     return resSrc != nullptr;
 }
 
 static bool IsInstallerAndNamedAsSuch() {
-    if (!HasInstallerResources()) {
+    if (!ExeHasInstallerResources()) {
         return false;
     }
-    return HasNameOfInstaller();
+    return ExeHasNameOfInstaller();
 }
 
+// if we can load "libmupdf.dll" this is likely an installed executable
 static bool SeemsInstalled() {
     HMODULE h = LoadLibraryW(L"libmupdf.dll");
     return h != nullptr;
 }
 
 static bool IsInstallerButNotInstalled() {
-    if (!HasInstallerResources()) {
+    if (!ExeHasInstallerResources()) {
         return false;
     }
-    if (HasNameOfInstaller()) {
+    if (ExeHasNameOfInstaller()) {
         return true;
     }
     if (SeemsInstalled()) {
@@ -795,6 +804,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         }
     }
 
+    if (i.ramicro) {
+        gIsRaMicroBuild = true;
+    }
+    if (ExeHasNameOfRaMicro()) {
+        gIsRaMicroBuild = true;
+    }
+
     if (i.showHelp && IsInstallerButNotInstalled()) {
         ShowInstallerHelp();
         return 0;
@@ -806,7 +822,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
 
     if ((i.install || i.justExtractFiles) || IsInstallerAndNamedAsSuch()) {
-        if (!HasInstallerResources()) {
+        if (!ExeHasInstallerResources()) {
             ShowNotValidInstallerError();
             return 1;
         }

@@ -544,9 +544,11 @@ static void FreeStructData(const StructInfo* info, uint8_t* base) {
         } else if (Type_Array == field.type) {
             FreeArray(*(Vec<void*>**)fieldPtr, field);
         } else if (Type_String == field.type || Type_Utf8String == field.type) {
-            free(*(void**)fieldPtr);
+            void* m = *((void**)fieldPtr);
+            free(m);
         } else if (Type_ColorArray == field.type || Type_FloatArray == field.type || Type_IntArray == field.type) {
-            delete *(Vec<int>**)fieldPtr;
+            Vec<int>* v = *((Vec<int>**)fieldPtr);
+            delete v;
         } else if (Type_StringArray == field.type) {
             FreeStringArray(*(Vec<WCHAR*>**)fieldPtr);
         }

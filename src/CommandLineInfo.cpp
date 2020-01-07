@@ -11,6 +11,7 @@
 #include "CommandLineInfo.h"
 #include "StressTesting.h"
 #include "SumatraConfig.h"
+
 // order must match enum
 static const char* argNames =
     "register-for-pdf\0"
@@ -69,6 +70,8 @@ static const char* argNames =
     "with-filter\0"
     "with-preview\0"
     "x\0"
+    "ramicro\0"
+    "ra-micro\0"
     "s\0"
     "silent\0";
 
@@ -129,6 +132,8 @@ enum {
     WithFilter,
     WithPreview,
     ExtractFiles,
+    RaMicro1,
+    RaMicro2,
     Silent2,
     Silent
 };
@@ -356,6 +361,8 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
             handle_int_param(i.pageNumber);
         } else if (Restrict == arg) {
             i.restrictedUse = true;
+        } else if (RaMicro1 == arg || RaMicro2 == arg) {
+            i.ramicro = true;
         } else if (InvertColors1 == arg || InvertColors2 == arg) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency
