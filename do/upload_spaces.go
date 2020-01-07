@@ -16,6 +16,7 @@ import (
 // builds to retain
 const nBuildsToRetainPreRel = 16
 const nBuildsToRetainDaily = 64
+const nBuildsToRetaininMicro = 128
 
 const (
 	buildTypeDaily   = "daily"
@@ -203,6 +204,7 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 // =>
 // 11290
 func extractVersionFromName(s string) int {
+	logf("extractVersionFromName: '%s'\n", s)
 	parts := strings.Split(s, "/")
 	name := parts[len(parts)-1]
 	name = strings.TrimPrefix(name, "SumatraPDF-prerelease-")
@@ -252,6 +254,9 @@ func minioDeleteOldBuildsPrefix(buildType string) {
 	if buildType == buildTypePreRel {
 		nBuildsToRetain = nBuildsToRetainPreRel
 	}
+	if buildType == buildTypeRaMicro {
+		nBuildsToRetain = nBuildsToRetaininMicro
+	}
 	remoteDir := getRemoteDir(buildType)
 
 	c := newMinioClient()
@@ -285,4 +290,5 @@ func minioDeleteOldBuildsPrefix(buildType string) {
 func minioDeleteOldBuilds() {
 	minioDeleteOldBuildsPrefix(buildTypePreRel)
 	minioDeleteOldBuildsPrefix(buildTypeDaily)
+	//minioDeleteOldBuildsPrefix(buildTypeRaMicro)
 }
