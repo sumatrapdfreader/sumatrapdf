@@ -157,17 +157,20 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 	c := newMinioClient()
 	timeStart := time.Now()
 
-	manifestRemotePath := remoteDir + "SumatraPDF-prerelease-manifest.txt"
+	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
+	manifestRemotePath := remoteDir + prefix + "SumatraPDF-prerelease-manifest.txt"
 
 	// only 64-bit builds for ra-micro
 	if buildType != buildTypeRaMicro {
-		prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
 		files := getFileNamesWithPrefix(prefix)
 		err := minioUploadFiles(c, remoteDir, rel32Dir, files)
 		fatalIfErr(err)
 	}
 
-	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
+	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
+	if buildType == buildTypeRaMicro {
+		prefix = fmt.Sprintf("RAMicro-prerelease-%s-64", ver)
+	}
 	files := getFileNamesWithPrefix(prefix)
 	err := minioUploadFiles(c, remoteDir, rel64Dir, files)
 	fatalIfErr(err)
@@ -204,20 +207,25 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 // =>
 // 11290
 func extractVersionFromName(s string) int {
-	logf("extractVersionFromName: '%s'\n", s)
 	parts := strings.Split(s, "/")
 	name := parts[len(parts)-1]
 	name = strings.TrimPrefix(name, "SumatraPDF-prerelease-")
 
+	name = strings.TrimPrefix(name, "RAMicro-prerelease-")
+
 	// TODO: temporary, for old builds in s3
 	name = strings.TrimPrefix(name, "SumatraPDF-prerelase-")
 	name = strings.TrimPrefix(name, "manifest-")
+	name = strings.TrimPrefix(name, "manifest")
+	if name == "" {
+		return 0
+	}
 
 	parts = strings.Split(name, "-")
 	parts = strings.Split(parts[0], ".")
 	verStr := parts[0]
 	ver, err := strconv.Atoi(verStr)
-	must(err)
+	panicIf(err != nil, "extractVersionFromName: '%s'\n", s)
 	return ver
 }
 

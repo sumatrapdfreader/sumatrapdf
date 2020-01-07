@@ -294,6 +294,7 @@ func buildPreRelease(isDaily bool) {
 	runTestUtilMust(rel64Dir)
 	signFilesMust(rel64Dir)
 
+	// TODO: use pigz for release
 	createExeZipWithGoMust(rel32Dir)
 	createExeZipWithGoMust(rel64Dir)
 
