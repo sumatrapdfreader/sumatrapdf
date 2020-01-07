@@ -11,7 +11,7 @@ ParsedKV::~ParsedKV() {
     free(val);
 }
 
-static void parsedKVMove(ParsedKV* t, ParsedKV* that) {
+static void parsedKVMove(ParsedKV* t, ParsedKV* that) noexcept {
     if (t == that) {
         return;
     }
@@ -22,12 +22,12 @@ static void parsedKVMove(ParsedKV* t, ParsedKV* that) {
     that->val = nullptr;
 }
 
-ParsedKV& ParsedKV::operator=(ParsedKV&& that) {
+ParsedKV& ParsedKV::operator=(ParsedKV&& that) noexcept {
     parsedKVMove(this, &that);
     return *this;
 }
 
-ParsedKV::ParsedKV(ParsedKV&& that) {
+ParsedKV::ParsedKV(ParsedKV&& that) noexcept {
     parsedKVMove(this, &that);
 }
 

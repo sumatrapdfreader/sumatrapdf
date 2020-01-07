@@ -9,8 +9,8 @@ struct ParsedKV {
     bool ok = false;
 
     ParsedKV() = default;
-    ParsedKV(ParsedKV&&);
-    ParsedKV& operator=(ParsedKV&& other);
+    ParsedKV(ParsedKV&&) noexcept;
+    ParsedKV& operator=(ParsedKV&& other) noexcept;
     ParsedKV& operator=(ParsedKV& other) = delete;
     ~ParsedKV();
 };

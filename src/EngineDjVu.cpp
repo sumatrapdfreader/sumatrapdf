@@ -169,6 +169,8 @@ class DjVuContext {
     }
 };
 
+// TODO: make it non-static because it accesses other static state
+// in djvu which got deleted first
 static DjVuContext gDjVuContext;
 
 class DjVuEngineImpl : public EngineBase {
