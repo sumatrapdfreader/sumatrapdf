@@ -56,8 +56,10 @@ class CommandLineInfo {
     bool testRenderPage = false;
     bool testExtractPage = false;
     int testPageNo = 0;
+    bool testApp = false;
 
     bool crashOnOpen = false;
+
 
     // deprecated flags
     char* lang = nullptr;

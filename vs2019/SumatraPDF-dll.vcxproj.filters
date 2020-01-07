@@ -19,6 +19,12 @@
     <Filter Include="src\uia">
       <UniqueIdentifier>{1B3F30A9-871E-AF44-9036-3A1BFC9415A6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tools">
+      <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="tools\test-app">
+      <UniqueIdentifier>{933C0C81-7F0A-0087-689E-70AD540BDCEB}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\AppColors.h">
@@ -460,6 +466,18 @@
     </ClCompile>
     <ClCompile Include="..\src\uia\TextRange.cpp">
       <Filter>src\uia</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tools\test-app\TestApp.cpp">
+      <Filter>tools\test-app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp">
+      <Filter>tools\test-app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tools\test-app\TestLayout.cpp">
+      <Filter>tools\test-app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tools\test-app\TestTab.cpp">
+      <Filter>tools\test-app</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

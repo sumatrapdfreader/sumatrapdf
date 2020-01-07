@@ -72,6 +72,7 @@ static const char* argNames =
     "x\0"
     "ramicro\0"
     "ra-micro\0"
+    "testapp\0"
     "s\0"
     "silent\0";
 
@@ -134,6 +135,7 @@ enum {
     ExtractFiles,
     RaMicro1,
     RaMicro2,
+    TestApp,
     Silent2,
     Silent
 };
@@ -444,6 +446,8 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
             }
         } else if (Tester == arg) {
             i.tester = true;
+        } else if (TestApp == arg) {
+            i.testApp = true;
         } else if (is_arg_with_param(Bench)) {
             WCHAR* s = str::Dup(param);
             ++n;

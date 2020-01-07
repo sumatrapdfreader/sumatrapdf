@@ -882,6 +882,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         // TODO(port)
         // fz_redirect_dll_io_to_console();
     }
+
+    if (i.testApp) {
+        // in TestApp.cpp
+        extern void TestApp(HINSTANCE hInstance);
+        TestApp(hInstance);
+        return 0;
+    }
+
     if (i.registerAsDefault) {
         AssociateExeWithPdfExtension();
     }

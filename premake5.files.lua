@@ -453,6 +453,7 @@ function sumatrapdf_files()
     "Tests.cpp",
     "regress/Regress.*",
   })
+  test_app_files_2()
 end
 
 
@@ -961,6 +962,15 @@ function pdf_filter_files()
       "src/utils/PalmDbReader.*",
     }
   filter {}
+end
+
+function test_app_files_2()
+  files_in_dir("tools/test-app", {
+    "TestApp.cpp",
+    "TestDirectDraw.cpp",
+    "TestTab.cpp",
+    "TestLayout.cpp",
+  })
 end
 
 function test_app_files()

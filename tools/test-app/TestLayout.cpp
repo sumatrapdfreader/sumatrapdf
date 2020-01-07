@@ -121,9 +121,9 @@ static ILayout* CreateStaticLayout(HWND parent, std::string_view s) {
     return NewStaticLayout(w);
 }
 
-int maxProgress = 8;
-int currProgress = 0;
-ProgressCtrl* gProgress = nullptr;
+static int maxProgress = 8;
+static int currProgress = 0;
+static ProgressCtrl* gProgress = nullptr;
 
 static std::tuple<ILayout*, ProgressCtrl*> CreateProgressLayout(HWND parent, int maxRange) {
     auto w = new ProgressCtrl(parent, maxRange);

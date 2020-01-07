@@ -857,6 +857,10 @@
     <ClCompile Include="..\src\uia\Provider.cpp" />
     <ClCompile Include="..\src\uia\StartPageProvider.cpp" />
     <ClCompile Include="..\src\uia\TextRange.cpp" />
+    <ClCompile Include="..\tools\test-app\TestApp.cpp" />
+    <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp" />
+    <ClCompile Include="..\tools\test-app\TestLayout.cpp" />
+    <ClCompile Include="..\tools\test-app\TestTab.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc" />
