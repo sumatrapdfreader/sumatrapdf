@@ -23,7 +23,7 @@ layout logic */
 #define TABLE_BORDER_WIDTH 2.f
 
 #define VERSION_TXT L"v" CURR_VERSION_STR
-#ifdef SVN_PRE_RELEASE_VER
+#ifdef PRE_RELEASE_VER
 #define VERSION_SUB_TXT L"Pre-release"
 #else
 #define VERSION_SUB_TXT L""
@@ -106,7 +106,7 @@ struct AboutLayoutInfoEl {
 };
 
 // TODO: replace this link with a better one where license information is nicely collected/linked
-#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+#if defined(PRE_RELEASE_VER) || defined(DEBUG)
 #define URL_LICENSE L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
 #define URL_AUTHORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
 #define URL_TRANSLATORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"
@@ -123,7 +123,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     {L"programming", L"The Programmers", URL_AUTHORS},
     {L"translations", L"The Translators", URL_TRANSLATORS},
     {L"licenses", L"Various Open Source", URL_LICENSE},
-#ifdef SVN_PRE_RELEASE_VER
+#ifdef PRE_RELEASE_VER
     {L"a note", L"Pre-release version, for testing only!", nullptr},
 #endif
 #ifdef DEBUG

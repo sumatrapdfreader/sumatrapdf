@@ -430,7 +430,7 @@ static void SerializeStructRec(str::Str& out, const StructInfo* info, const void
         CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') || str::FindChar(fieldName, '[') ||
                 str::FindChar(fieldName, ']') || NeedsEscaping(fieldName));
         if (Type_Struct == field.type || Type_Prerelease == field.type) {
-#if !(defined(SVN_PRE_RELEASE_VER) || defined(DEBUG))
+#if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
             if (Type_Prerelease == field.type)
                 continue;
 #endif
@@ -490,7 +490,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
         uint8_t* fieldPtr = base + field.offset;
         if (Type_Struct == field.type || Type_Prerelease == field.type) {
             SquareTreeNode* child = node ? node->GetChild(fieldName) : nullptr;
-#if !(defined(SVN_PRE_RELEASE_VER) || defined(DEBUG))
+#if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
             if (Type_Prerelease == field.type)
                 child = nullptr;
 #endif

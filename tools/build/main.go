@@ -164,7 +164,7 @@ func setBuildConfig(sha1, preRelVer string) {
 	fatalIf(sha1 == "", "sha1 must be set")
 	s := fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
 	if preRelVer != "" {
-		s += fmt.Sprintf("#define SVN_PRE_RELEASE_VER %s\n", preRelVer)
+		s += fmt.Sprintf("#define PRE_RELEASE_VER %s\n", preRelVer)
 	}
 	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
 	fatalIfErr(err)

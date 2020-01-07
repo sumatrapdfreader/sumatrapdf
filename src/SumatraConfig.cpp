@@ -25,7 +25,7 @@ bool gIsDailyBuild = true;
 bool gIsDailyBuild = false;
 #endif
 
-#if defined(SVN_PRE_RELEASE_VER)
+#if defined(PRE_RELEASE_VER)
 bool gIsPreReleaseBuild = true;
 #else
 bool gIsPreReleaseBuild = false;
@@ -39,8 +39,8 @@ const char* builtOn = nullptr;
 
 const char* currentVersion = CURR_VERSION_STRA;
 
-#if defined(SVN_PRE_RELEASE_VER)
-const char* preReleaseVersion = QM(SVN_PRE_RELEASE_VER);
+#if defined(PRE_RELEASE_VER)
+const char* preReleaseVersion = QM(PRE_RELEASE_VER);
 #else
 const char* preReleaseVersion = nullptr;
 #endif
@@ -51,7 +51,7 @@ const char* gitSha1 = QM(GIT_COMMIT_ID);
 const char* gitSha1 = nullptr;
 #endif
 
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
+#if defined(DEBUG) || defined(PRE_RELEASE_VER)
 bool gWithTocEditor = true;
 #else
 bool gWithTocEditor = false;

@@ -157,7 +157,7 @@ void SetCurrentLang(const char* langCode) {
 }
 
 #ifndef SUMATRA_UPDATE_INFO_URL
-#if 0 // defined(SVN_PRE_RELEASE_VER)
+#if 0 // defined(PRE_RELEASE_VER)
 #define SUMATRA_UPDATE_INFO_URL \
     L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-latest.txt"
 #else
@@ -167,7 +167,7 @@ void SetCurrentLang(const char* langCode) {
 #endif
 
 #ifndef SVN_UPDATE_LINK
-#ifdef SVN_PRE_RELEASE_VER
+#ifdef PRE_RELEASE_VER
 #define SVN_UPDATE_LINK L"https://www.sumatrapdfreader.org/prerelease.html"
 #else
 #define SVN_UPDATE_LINK L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html"

@@ -223,7 +223,7 @@ inline void CrashMePort() {
 // in some builds, so it shouldn't contain the actual logic of the code
 
 inline void CrashIfFunc(bool cond) {
-#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+#if defined(PRE_RELEASE_VER) || defined(DEBUG)
     if (cond) {
         CrashMe();
     }
@@ -238,7 +238,7 @@ inline void CrashIfFunc(bool cond) {
 extern void SendCrashReport(const char*);
 
 inline void SendCrashIfFunc(bool cond, const char* condStr) {
-#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+#if defined(PRE_RELEASE_VER) || defined(DEBUG)
     if (cond) {
         SendCrashReport(condStr);
     }

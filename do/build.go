@@ -120,7 +120,7 @@ func setBuildConfig(sha1, preRelVer string, isDaily bool) {
 	todayDate := time.Now().Format("2006-01-02")
 	s += fmt.Sprintf("#define BUILT_ON %s\n", todayDate)
 	if preRelVer != "" {
-		s += fmt.Sprintf("#define SVN_PRE_RELEASE_VER %s\n", preRelVer)
+		s += fmt.Sprintf("#define PRE_RELEASE_VER %s\n", preRelVer)
 	}
 	if isDaily {
 		s += "#define IS_DAILY_BUILD 1\n"
