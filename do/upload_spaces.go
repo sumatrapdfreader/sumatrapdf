@@ -158,7 +158,7 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 	timeStart := time.Now()
 
 	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
-	manifestRemotePath := remoteDir + prefix + "SumatraPDF-prerelease-manifest.txt"
+	manifestRemotePath := remoteDir + prefix + "-manifest.txt"
 
 	// only 64-bit builds for ra-micro
 	if buildType != buildTypeRaMicro {
