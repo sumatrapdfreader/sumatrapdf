@@ -102,7 +102,7 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
             s.AppendFmt(" open-toggled");
         }
         if (node->isUnchecked) {
-            s.AppendFmt("  unchecked");
+            s.AppendFmt(" unchecked");
         }
 
         CrashIf(!node->PageNumbersMatch());
@@ -371,6 +371,23 @@ bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* name,
         s.AppendFmt("file: %s\n", path);
         SerializeBookmarksRec(tocTree->root, 0, s);
         // dbglogf("%s\n", s.Get());
+    }
+    return file::WriteFile(bkmPath, s.as_view());
+}
+
+// TODO: a better way without passing bookmars
+bool ExportBookmarksToFile2(const Vec<VbkmForFile*>& bookmarks, TocTree* tocTree, const char* name, const char* bkmPath) {
+    str::Str s;
+    if (str::IsEmpty(name)) {
+        name = "default view";
+    }
+    s.AppendFmt("name: %s\n", name);
+    int n = tocTree->RootCount();
+    for (int i = 0; i < n; i++) {
+        TocItem* root = (TocItem*)tocTree->RootAt(i);
+        const char* path = bookmarks[i]->toc->filePath;
+        s.AppendFmt("file: %s\n", path);
+        SerializeBookmarksRec(root, 0, s);
     }
     return file::WriteFile(bkmPath, s.as_view());
 }

@@ -192,6 +192,9 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
             a.treeItem = w->GetTreeItemByHandle(a.nmic->hItem);
             SetTreeItemState(a.nmic->uStateOld, a.prevState);
             SetTreeItemState(a.nmic->uStateNew, a.newState);
+            a.expandedChanged = (a.prevState.isExpanded != a.newState.isExpanded);
+            a.checkedChanged = (a.prevState.isChecked != a.newState.isChecked);
+            a.selectedChanged = (a.prevState.isSelected != a.newState.isSelected);
             onTreeItemChanged(&a);
             return;
         }

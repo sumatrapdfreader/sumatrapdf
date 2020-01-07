@@ -114,7 +114,7 @@ static bool cmpByPageNo(TocItem* ti1, TocItem* ti2) {
     return ti1->pageNo < ti2->pageNo;
 }
 
-static void CalcEndPageNo(TocItem* root, int nPages) {
+void CalcEndPageNo(TocItem* root, int nPages) {
     Vec<TocItem*> tocItems;
     CollectTocItemsRecur(root, tocItems);
     size_t n = tocItems.size();
@@ -290,7 +290,8 @@ static void SaveVirtual() {
         return;
     }
     AutoFree patha = strconv::WstrToUtf8(dstFileName);
-    ok = ExportBookmarksToFile(tocArgs->bookmarks, "", patha);
+    TocTree* toc = (TocTree*)gWindow->treeCtrl->treeModel;
+    ok = ExportBookmarksToFile2(tocArgs->bookmarks, toc, "", patha);
     if (!ok) {
         return;
     }
@@ -388,8 +389,11 @@ static void OnWindowDestroyed(WindowDestroyedArgs*) {
 }
 
 void TocEditorWindow::OnTreeItemChanged(TreeItemChangedArgs* args) {
-    UNUSED(args);
-    logf("onTreeItemChanged\n");
+    if (!args->checkedChanged) {
+        return;
+    }
+    TocItem* ti = (TocItem*)args->treeItem;
+    ti->isUnchecked = !args->newState.isChecked;
 }
 
 void TocEditorWindow::OnTreeItemSelected(TreeSelectionChangedArgs* args) {

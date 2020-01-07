@@ -51,6 +51,9 @@ struct TreeItemChangedArgs {
     TreeItem* treeItem = nullptr;
     NMTVITEMCHANGE* nmic = nullptr;
 
+    bool checkedChanged = false;
+    bool expandedChanged = false;
+    bool selectedChanged = false;
     // except for nChildren
     TreeItemState prevState{};
     TreeItemState newState{};

@@ -11,3 +11,4 @@ struct TocEditorArgs {
 };
 
 void StartTocEditor(TocEditorArgs*);
+void CalcEndPageNo(TocItem* root, int nPages);

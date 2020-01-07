@@ -277,7 +277,6 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (nOpened == 0) {
         return false;
     }
-
     pageCount = nTotalPages;
     return true;
 }
