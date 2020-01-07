@@ -25,16 +25,16 @@
 			var html, name;
 			$("buildtime").innerHTML = sumBuiltOn;
 
-			name = getName(sumLatestExe);
-			html = "<a href='" + sumLatestExe + "'>" + name + "</a>";
+			name = getName(sumLatestExeZip);
+			html = "<a href='" + sumLatestExeZip + "'>" + name + "</a>";
 			setDlURL("urlexe", html);
 
 			name = getName(sumLatestInstaller);
 			html = "<a href='" + sumLatestInstaller + "'>" + name + "</a>";
 			setDlURL("urlinstaller", html);
 
-			name = getName(sumLatestExe64);
-			html = "<a href='" + sumLatestExe64 + "'>" + name + "</a>";
+			name = getName(sumLatestExeZip64);
+			html = "<a href='" + sumLatestExeZip64 + "'>" + name + "</a>";
 			setDlURL("urlexe64", html);
 
 			name = getName(sumLatestInstaller64);
@@ -98,7 +98,7 @@
 		</tr>
 	</table>
 
-	<div style="font: 80%">
+	<div style="font: 80%; color: #787878">
 		<p><b>Alternative download location:</b></p>
 		<table>
 			<tr>

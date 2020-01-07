@@ -46,7 +46,11 @@ var sumLatestExe = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF
 var sumLatestPdb = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175.pdb.zip";
 var sumLatestInstaller = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175-install.exe";
 */
-func createSumatraLatestJs(dir string) string {
+func createSumatraLatestJs(buildType string) string {
+	appName := "SumatraPDF-prerelease"
+	if buildType == buildTypeRaMicro {
+		appName = "RA-Micro-PDF-Viewer"
+	}
 	currDate := time.Now().Format("2006-01-02")
 	v := preReleaseVer
 	tmplText := `
@@ -54,21 +58,22 @@ var sumLatestVer = {{.Ver}};
 var sumBuiltOn = "{{.CurrDate}}";
 var sumLatestName = "SumatraPDF-prerelease-{{.Ver}}.exe";
 
-var sumLatestExe         = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}.exe";
-var sumLatestExeZip      = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}.zip";
-var sumLatestPdb         = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}.pdb.zip";
-var sumLatestInstaller   = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-install.exe";
+var sumLatestExe         = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}.exe";
+var sumLatestExeZip      = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}.zip";
+var sumLatestPdb         = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}.pdb.zip";
+var sumLatestInstaller   = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-install.exe";
 
-var sumLatestExe64       = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.exe";
-var sumLatestExeZip64    = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.zip";
-var sumLatestPdb64       = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.pdb.zip";
-var sumLatestInstaller64 = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64-install.exe";
+var sumLatestExe64       = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-64.exe";
+var sumLatestExeZip64    = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-64.zip";
+var sumLatestPdb64       = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-64.pdb.zip";
+var sumLatestInstaller64 = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-64-install.exe";
 `
 	d := map[string]interface{}{
 		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/",
 		"Ver":      v,
-		"Dir":      dir,
+		"Dir":      buildType,
 		"CurrDate": currDate,
+		"AppName":  appName,
 	}
 	return execTextTemplate(tmplText, d)
 }
