@@ -238,6 +238,33 @@ int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
     return -1;
 }
 
+extern void CalcEndPageNo(TocItem* root, int nPages);
+
+static void MarkAsInvisibleRec(TocItem* ti, bool markInvisible, Vec<bool>& visible) {
+    while (ti) {
+        if (markInvisible) {
+            for (int i = ti->pageNo; i < ti->endPageNo; i++) {
+                visible[i - 1] = false;
+            }
+        }
+        bool childMarkInvisible = markInvisible;
+        if (!childMarkInvisible) {
+            childMarkInvisible = ti->isUnchecked;
+        }
+        MarkAsInvisibleRec(ti->child, childMarkInvisible, visible);
+        ti = ti->next;
+    }
+}
+
+static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
+    int nPages = (int)visible.size();
+    CalcEndPageNo(root, nPages);
+    // in the first pass we mark the pages under unchecked nodes as invisible
+    MarkAsInvisibleRec(root, root->isUnchecked, visible);
+
+    // in the second pass we mark back pages that are visibles
+}
+
 bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     std::string_view sv = file::ReadFile(fileName);
     if (sv.empty()) {
@@ -263,16 +290,24 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         }
         tocTree = CloneTocTree(vbkm->toc);
         EngineBase* engine = vbkm->engine;
+        if (!vbkm->engine) {
+            return false;
+        }
         int nPages = vbkm->engine->PageCount();
+
+        Vec<bool> visiblePages;
+        for (int i = 0; i < nPages; i++) {
+            visiblePages.Append(true);
+        }
+        CalcRemovedPages(tocTree->root, visiblePages);
+
+        int nPage = 0;
         for (int i = 0; i < nPages; i++) {
             EnginePage ep{i + 1, engine};
             pageToEngine.push_back(ep);
         }
-
-        if (vbkm->engine) {
-            nOpened++;
-            nTotalPages += nPages;
-        }
+        nOpened++;
+        nTotalPages += nPages;
     }
     if (nOpened == 0) {
         return false;
