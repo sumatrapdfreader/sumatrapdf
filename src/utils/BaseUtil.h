@@ -223,12 +223,11 @@ inline void CrashMePort() {
 // in some builds, so it shouldn't contain the actual logic of the code
 
 inline void CrashIfFunc(bool cond) {
+    UNUSED(cond);
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
     if (cond) {
         CrashMe();
     }
-#else
-    UNUSED(cond);
 #endif
 }
 
@@ -238,23 +237,22 @@ inline void CrashIfFunc(bool cond) {
 extern void SendCrashReport(const char*);
 
 inline void SendCrashIfFunc(bool cond, const char* condStr) {
+    UNUSED(cond);
+    UNUSED(condStr);
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
     if (cond) {
         SendCrashReport(condStr);
     }
-#else
-    UNUSED(cond);
 #endif
 }
 
 // Sometimes we want to assert only in debug build (not in pre-release)
 inline void CrashIfDebugOnlyFunc(bool cond) {
+    UNUSED(cond);
 #if defined(DEBUG)
     if (cond) {
         CrashMe();
     }
-#else
-    UNUSED(cond);
 #endif
 }
 
@@ -339,10 +337,12 @@ inline void ZeroArray(T& a) {
 template <typename T>
 inline T limitValue(T val, T min, T max) {
     CrashIf(min > max);
-    if (val < min)
+    if (val < min) {
         return min;
-    if (val > max)
+    }
+    if (val > max) {
         return max;
+    }
     return val;
 }
 
@@ -375,10 +375,12 @@ bool ListRemove(T** root, T* el) {
     T* curr;
     for (;;) {
         curr = *currPtr;
-        if (!curr)
+        if (!curr) {
             return false;
-        if (curr == el)
+        }
+        if (curr == el) {
             break;
+        }
         currPtr = &(curr->next);
     }
     *currPtr = el->next;
@@ -556,8 +558,9 @@ class FixedArray {
     explicit FixedArray(size_t elCount) {
         memBuf = nullptr;
         size_t stackEls = StackBufInBytes / sizeof(T);
-        if (elCount > stackEls)
+        if (elCount > stackEls) {
             memBuf = (T*)malloc(elCount * sizeof(T));
+        }
     }
 
     ~FixedArray() {
@@ -565,8 +568,9 @@ class FixedArray {
     }
 
     T* Get() {
-        if (memBuf)
+        if (memBuf) {
             return memBuf;
+        }
         return &(stackBuf[0]);
     }
 };
