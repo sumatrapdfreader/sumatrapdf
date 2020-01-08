@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-230f22abe28648d877ebfe7fe4c00ee3d7a96a34
+1166cc2d7cb77a921d3a7f550cbfc1ba6003e267
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3783,6 +3783,10 @@ tw:以 (可選) 名稱加入第 %s 頁到最愛:
 uk:Додати %s сторінку до закладок з іменем(необов'язково):
 uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
+:Add page %s to favorites\tCtrl+B
+cn:将第 %s 页添加到收藏夹\tCtrl+B
+nl:Pagina %s toevoegen aan favorieten\tCtrl+B
+tw:將第 %s 頁加入到最愛\tCtrl+B
 :Add to favorites
 am:Ավելացնել ընտրյալներին
 ar:اضافة للمفضلة
@@ -14759,6 +14763,10 @@ tw:頁面右旋(&R)\tCtrl+Shift++
 uk:Повернути праворуч\tCtrl+Shift++
 uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
+:Save Annotations
+cn:保存注释
+nl:Aantekeningen Opslaan
+tw:儲存注釋
 :Save As
 af:Stoor As
 am:Պահպանել որպես
@@ -15390,12 +15398,16 @@ uk:Установити зворотній пошук.
 uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks\tF12
+cn:显示书签(&B)\tF12
 fr:Afficher les &signets\tF12
 nl:Toon Bladwijzers\tF12
+tw:顯示書籤(&B)\tF12
 :Show &Favorites
+cn:显示收藏夹(&F)
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
 nl:Toon &Favorieten
+tw:顯示最愛(&F)
 :Show &Pages Continuously
 am:Էջերը &ցուցադրել շարունակական
 ar:اظهار الصفحات باستمرار
@@ -15530,8 +15542,10 @@ uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show Book&marks\tF12
+cn:显示书签(&M)\tF12
 fr:Afficher les &marque-pages\tF12
 nl:Toon Blad&wijzers\tF12
+tw:顯示書籤(&M)\tF12
 :Show Favorites
 am:Ցուցադրել ընտրյալները
 ar:إظهار المفضلة
