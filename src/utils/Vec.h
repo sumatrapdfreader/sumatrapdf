@@ -129,14 +129,12 @@ class Vec {
         return *this;
     }
 
-    [[nodiscard]]
-    T& operator[](size_t idx) const {
+    [[nodiscard]] T& operator[](size_t idx) const {
         CrashIf(idx >= len);
         return els[idx];
     }
 
-    [[nodiscard]]
-    T& operator[](int idx) const {
+    [[nodiscard]] T& operator[](int idx) const {
         CrashIf(idx < 0);
         CrashIf((size_t)idx >= len);
         return els[idx];
@@ -159,21 +157,18 @@ class Vec {
         return MakeSpaceAt(0, newSize);
     }
 
-    [[nodiscard]]
-    T& at(size_t idx) const {
+    [[nodiscard]] T& at(size_t idx) const {
         CrashIf(idx >= len);
         return els[idx];
     }
 
-    [[nodiscard]]
-    T& at(int idx) const {
+    [[nodiscard]] T& at(int idx) const {
         CrashIf(idx < 0);
         CrashIf((size_t)idx >= len);
         return els[idx];
     }
 
-    [[nodiscard]]
-    size_t size() const {
+    [[nodiscard]] size_t size() const {
         return len;
     }
 
@@ -258,8 +253,7 @@ class Vec {
         return el;
     }
 
-    [[nodiscard]]
-    T& Last() const {
+    [[nodiscard]] T& Last() const {
         CrashIf(0 == len);
         return at(len - 1);
     }
@@ -268,8 +262,7 @@ class Vec {
     // without duplicate allocation. Note: since Vec over-allocates, this
     // is likely to use more memory than strictly necessary, but in most cases
     // it doesn't matter
-    [[nodiscard]]
-    T* StealData() {
+    [[nodiscard]] T* StealData() {
         T* res = els;
         if (els == buf) {
             res = (T*)Allocator::MemDup(allocator, buf, (len + PADDING) * sizeof(T));
@@ -279,13 +272,11 @@ class Vec {
         return res;
     }
 
-    [[nodiscard]]
-    T* LendData() const {
+    [[nodiscard]] T* LendData() const {
         return els;
     }
 
-    [[nodiscard]]
-    int Find(T el, size_t startAt = 0) const {
+    [[nodiscard]] int Find(T el, size_t startAt = 0) const {
         for (size_t i = startAt; i < len; i++) {
             if (els[i] == el) {
                 return (int)i;
@@ -294,8 +285,7 @@ class Vec {
         return -1;
     }
 
-    [[nodiscard]]
-    bool Contains(T el) const {
+    [[nodiscard]] bool Contains(T el) const {
         return -1 != Find(el);
     }
 
@@ -328,8 +318,7 @@ class Vec {
         return els[len]; // nullptr-sentinel
     }
 
-    [[nodiscard]]
-    bool empty() const {
+    [[nodiscard]] bool empty() const {
         return len == 0;
     }
 

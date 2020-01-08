@@ -335,7 +335,6 @@ bool TocItem::IsExpanded() {
     return isOpenDefault != isOpenToggled;
 }
 
-
 bool TocItem::IsHidden() const {
     if (!hideUnchecked) {
         return false;

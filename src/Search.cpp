@@ -52,12 +52,15 @@ NotificationGroupId NG_FIND_PROGRESS = "findProgress";
 // text selection; default to showing it, since most users
 // will never use a format that does not support search
 bool NeedsFindUI(WindowInfo* win) {
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return true;
-    if (!win->AsFixed())
+    }
+    if (!win->AsFixed()) {
         return false;
-    if (win->AsFixed()->GetEngine()->IsImageCollection())
+    }
+    if (win->AsFixed()->GetEngine()->IsImageCollection()) {
         return false;
+    }
     return true;
 }
 
@@ -84,10 +87,11 @@ void OnMenuFind(WindowInfo* win) {
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        if (IsFocused(win->hwndFindBox))
+        if (IsFocused(win->hwndFindBox)) {
             SendMessage(win->hwndFindBox, WM_SETFOCUS, 0, 0);
-        else
+        } else {
             SetFocus(win->hwndFindBox);
+        }
         return;
     }
 
@@ -96,18 +100,20 @@ void OnMenuFind(WindowInfo* win) {
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
     AutoFreeWstr findString(Dialog_Find(win->hwndFrame, previousFind, &matchCase));
-    if (!findString)
+    if (!findString) {
         return;
+    }
 
     win::SetText(win->hwndFindBox, findString);
     Edit_SetModify(win->hwndFindBox, TRUE);
 
     bool matchCaseChanged = matchCase != (0 != (state & TBSTATE_CHECKED));
     if (matchCaseChanged) {
-        if (matchCase)
+        if (matchCase) {
             state |= TBSTATE_CHECKED;
-        else
+        } else {
             state &= ~TBSTATE_CHECKED;
+        }
         SendMessage(win->hwndToolbar, TB_SETSTATE, IDM_FIND_MATCH, state);
         dm->textSearch->SetSensitive(matchCase);
     }
@@ -116,38 +122,46 @@ void OnMenuFind(WindowInfo* win) {
 }
 
 void OnMenuFindNext(WindowInfo* win) {
-    if (!win->IsDocLoaded() || !NeedsFindUI(win))
+    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
-    if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
+    }
+    if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0)) {
         FindTextOnThread(win, TextSearchDirection::Forward, true);
+    }
 }
 
 void OnMenuFindPrev(WindowInfo* win) {
-    if (!win->IsDocLoaded() || !NeedsFindUI(win))
+    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
-    if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
+    }
+    if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0)) {
         FindTextOnThread(win, TextSearchDirection::Backward, true);
+    }
 }
 
 void OnMenuFindMatchCase(WindowInfo* win) {
-    if (!win->IsDocLoaded() || !NeedsFindUI(win))
+    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
+    }
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     win->AsFixed()->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
     Edit_SetModify(win->hwndFindBox, TRUE);
 }
 
 void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
-    if (!win->IsDocLoaded() || !NeedsFindUI(win))
+    if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
+    }
     DisplayModel* dm = win->AsFixed();
-    if (!win->currentTab->selectionOnPage || 0 == dm->textSelection->result.len)
+    if (!win->currentTab->selectionOnPage || 0 == dm->textSelection->result.len) {
         return;
+    }
 
     AutoFreeWstr selection(dm->textSelection->ExtractText(L" "));
     str::NormalizeWS(selection);
-    if (str::IsEmpty(selection.Get()))
+    if (str::IsEmpty(selection.Get())) {
         return;
+    }
 
     win::SetText(win->hwndFindBox, selection);
     AbortFinding(win, false); // cancel "find as you type"
@@ -159,8 +173,9 @@ void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
 
 static void ShowSearchResult(WindowInfo* win, TextSel* result, bool addNavPt) {
     CrashIf(0 == result->len || !result->pages || !result->rects);
-    if (0 == result->len || !result->pages || !result->rects)
+    if (0 == result->len || !result->pages || !result->rects) {
         return;
+    }
 
     DisplayModel* dm = win->AsFixed();
     if (addNavPt || !dm->PageShown(result->pages[0]) ||
@@ -238,13 +253,14 @@ struct FindThreadData : public ProgressUpdateUI {
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
         SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
-        if (!win->notifications->Contains(wnd))
+        if (!win->notifications->Contains(wnd)) {
             /* our notification has been replaced or closed (or never created) */;
-        else if (!success && !loopedAround) // i.e. canceled
+        } else if (!success && !loopedAround) {
+            // i.e. canceled
             win->notifications->RemoveNotification(wnd);
-        else if (!success && loopedAround)
+        } else if (!success && loopedAround) {
             wnd->UpdateMessage(_TR("No matches were found"), 3000);
-        else {
+        } else {
             AutoFreeWstr label(win->ctrl->GetPageLabel(win->AsFixed()->textSearch->GetSearchHitStartPageNo()));
             AutoFreeWstr buf(str::Format(_TR("Found text at page %s"), label.Get()));
             if (loopedAround) {
@@ -303,10 +319,11 @@ static DWORD WINAPI FindThread(LPVOID data) {
     TextSel* rect;
     dm->textSearch->SetDirection(ftd->direction);
     if (ftd->wasModified || !win->ctrl->ValidPageNo(dm->textSearch->GetCurrentPageNo()) ||
-        !dm->GetPageInfo(dm->textSearch->GetCurrentPageNo())->visibleRatio)
+        !dm->GetPageInfo(dm->textSearch->GetCurrentPageNo())->visibleRatio) {
         rect = dm->textSearch->FindFirst(win->ctrl->CurrentPageNo(), ftd->text, ftd);
-    else
+    } else {
         rect = dm->textSearch->FindNext(ftd);
+    }
 
     bool loopedAround = false;
     if (!win->findCanceled && !rect) {
@@ -341,8 +358,9 @@ void AbortFinding(WindowInfo* win, bool hideMessage) {
     }
     win->findCanceled = false;
 
-    if (hideMessage)
+    if (hideMessage) {
         win->notifications->RemoveForGroup(NG_FIND_PROGRESS);
+    }
 }
 
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress) {
@@ -395,11 +413,13 @@ void PaintForwardSearchMark(WindowInfo* win, HDC hdc) {
 
 // returns true if the double-click was handled and false if it wasn't
 bool OnInverseSearch(WindowInfo* win, int x, int y) {
-    if (!HasPermission(Perm_DiskAccess) || gPluginMode)
+    if (!HasPermission(Perm_DiskAccess) || gPluginMode) {
         return false;
+    }
     TabInfo* tab = win->currentTab;
-    if (!tab || tab->GetEngineType() != kindEnginePdf)
+    if (!tab || tab->GetEngineType() != kindEnginePdf) {
         return false;
+    }
     DisplayModel* dm = tab->AsFixed();
 
     // Clear the last forward-search result
@@ -693,8 +713,8 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
 // [<DDECOMMAND_PAGE>("<pdffilepath>", <page number>)]
 static const WCHAR* HandlePageCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile;
-    UINT page;
-    const WCHAR* next = str::Parse(cmd, L"GotoPage(\"%S\",%u)]", &pdfFile, &page);
+    UINT page = 0;
+    const WCHAR* next = str::Parse(cmd, L"[GotoPage(\"%S\",%u)]", &pdfFile, &page);
     if (!next) {
         return nullptr;
     }
@@ -826,7 +846,6 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam) {
         cmd = strconv::FromAnsi((const char*)command);
     }
     HandleDdeCmds(cmd, ack);
-    free(cmd);
     GlobalUnlock((HGLOBAL)hi);
 
     lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, *(WORD*)&ack, hi);
@@ -844,12 +863,14 @@ LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 LRESULT OnCopyData(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     UNUSED(hwnd);
     COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lparam;
-    if (!cds || cds->dwData != 0x44646557 /* DdeW */ || wparam)
+    if (!cds || cds->dwData != 0x44646557 /* DdeW */ || wparam) {
         return FALSE;
+    }
 
     const WCHAR* cmd = (const WCHAR*)cds->lpData;
-    if (cmd[cds->cbData / sizeof(WCHAR) - 1])
+    if (cmd[cds->cbData / sizeof(WCHAR) - 1]) {
         return FALSE;
+    }
 
     DDEACK ack = {0};
     HandleDdeCmds(cmd, ack);

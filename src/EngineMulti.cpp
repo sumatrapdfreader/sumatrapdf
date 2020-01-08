@@ -346,7 +346,7 @@ bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         }
         nOpened++;
         updateTocItemsPageNo(tocTree->root, nTotalPages);
-        //removeUncheckedRecur(tocTree->root);
+        // removeUncheckedRecur(tocTree->root);
         MarkAsHideUncheckedRecur(tocTree->root);
         nTotalPages += nPage;
     }
