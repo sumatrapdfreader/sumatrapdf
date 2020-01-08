@@ -642,7 +642,8 @@ copied objects.
 If you are copying several objects from the same source document using multiple calls, you should
 use a graft map instead.
 <dt>PDFDocument#newGraftMap()
-<dd>Create a graft map for the source document, so that objects that have already been copied can be found again.
+<dd>Create a graft map on the destination document, so that objects that have already been copied can be found again.
+Each graft map should only be used with <i>one</i> source document! Make sure to create a new graft map for each source document used.
 <dt>PDFGraftMap#graftObject(object)
 <dd>Use the graft map to copy objects, with the ability to remember previously copied objects.
 </dl>

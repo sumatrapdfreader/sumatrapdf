@@ -1015,7 +1015,10 @@ html_load_css(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const cha
 		{
 			char *s = concat_text(ctx, node);
 			fz_try(ctx)
+			{
 				fz_parse_css(ctx, css, s, "<style>");
+				fz_add_css_font_faces(ctx, set, zip, base_uri, css);
+			}
 			fz_catch(ctx)
 				fz_warn(ctx, "ignoring inline stylesheet");
 			fz_free(ctx, s);

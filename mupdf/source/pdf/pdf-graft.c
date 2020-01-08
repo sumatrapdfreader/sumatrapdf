@@ -94,10 +94,10 @@ pdf_graft_object(fz_context *ctx, pdf_document *dst, pdf_obj *obj)
 	map: A map targeted at the document in which the returned
 	object is to be used.
 
-	obj: The object deep copy.
+	obj: The object to be copied.
 
 	Note: Copying multiple objects via the same graft map ensures
-	that any shared child are not duplicated more than once.
+	that any shared children are not copied more than once.
 */
 pdf_obj *
 pdf_graft_mapped_object(fz_context *ctx, pdf_graft_map *map, pdf_obj *obj)

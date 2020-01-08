@@ -1407,10 +1407,10 @@ static void do_app(void)
 		case '-': set_zoom(zoom_out(currentzoom), ui.x, ui.y); break;
 		case '[': currentrotate -= 90; break;
 		case ']': currentrotate += 90; break;
-		case 'k': case KEY_UP: scroll_y -= 10; break;
-		case 'j': case KEY_DOWN: scroll_y += 10; break;
-		case 'h': case KEY_LEFT: scroll_x -= 10; break;
-		case 'l': case KEY_RIGHT: scroll_x += 10; break;
+		case 'k': case KEY_UP: scroll_y -= canvas_h/10; break;
+		case 'j': case KEY_DOWN: scroll_y += canvas_h/10; break;
+		case 'h': case KEY_LEFT: scroll_x -= canvas_w/10; break;
+		case 'l': case KEY_RIGHT: scroll_x += canvas_w/10; break;
 
 		case 'b': number = fz_maxi(number, 1); while (number--) smart_move_backward(); break;
 		case ' ': number = fz_maxi(number, 1); while (number--) smart_move_forward(); break;

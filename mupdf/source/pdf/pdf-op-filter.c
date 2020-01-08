@@ -86,6 +86,7 @@ typedef struct pdf_filter_processor_s
 	pdf_text_object_state tos;
 	int Tm_pending;
 	int BT_pending;
+	int in_BT;
 	float Tm_adjust;
 	void *font_name;
 	tag_record *current_tags;
@@ -434,6 +435,7 @@ done_SC:
 			if (p->chain->op_BT)
 				p->chain->op_BT(ctx, p->chain);
 			p->BT_pending = 0;
+			p->in_BT = 1;
 		}
 		if (gstate->pending.text.char_space != gstate->sent.text.char_space)
 		{
@@ -1051,6 +1053,14 @@ static void
 pdf_filter_Q(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_filter_processor *p = (pdf_filter_processor*)proc;
+	filter_flush(ctx, p, FLUSH_TEXT);
+	if (p->in_BT)
+	{
+		if (p->chain->op_ET)
+			p->chain->op_ET(ctx, p->chain);
+		p->in_BT = 0;
+		p->BT_pending = 1;
+	}
 	filter_pop(ctx, p);
 }
 
@@ -1274,6 +1284,7 @@ pdf_filter_ET(fz_context *ctx, pdf_processor *proc)
 		filter_flush(ctx, p, 0);
 		if (p->chain->op_ET)
 			p->chain->op_ET(ctx, p->chain);
+		p->in_BT = 0;
 	}
 	p->BT_pending = 0;
 	if (p->filter->after_text_object)
