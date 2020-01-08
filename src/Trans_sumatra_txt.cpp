@@ -5972,7 +5972,7 @@ const char * gTranslations_fr =
   "\303\200 propos de SumatraPDF\0"\
   "Ajouter aux favoris\0"\
   "Ajouter la page %s aux favoris\0"\
-  "\0"\
+  "Ajouter cette page aux %s favoris\tCtrl+B\0"\
   "Ajouter la page %s aux favoris avec un nom (optionnel):\0"\
   "Ajouter aux favoris\0"\
   "Avanc\303\251\0"\
@@ -6147,7 +6147,7 @@ const char * gTranslations_fr =
   "Renommer En\0"\
   "Rotation &antihoraire\tCtrl+Maj+-\0"\
   "Rotation &horaire\tCtrl+Maj++\0"\
-  "\0"\
+  "Sauvegarder les annotations\0"\
   "Enregistrer sous\0"\
   "Enregistrer un raccourci... \tCtrl+Maj-S\0"\
   "Recherche de %d \303\240 %d...\0"\
@@ -15412,7 +15412,7 @@ const char * gTranslations_es =
   "Acerca de SumatraPDF\0"\
   "A\303\261adir favorito\0"\
   "A\303\261adir p\303\241gina %s a favoritos\0"\
-  "\0"\
+  "A\303\261adir p\303\241gina %s a favoritos\tCtrl+B\0"\
   "A\303\261adir p\303\241gina %s a favoritos con nombre (opcional):\0"\
   "A\303\261adir a favoritos\0"\
   "Avanzado\0"\
@@ -15587,7 +15587,7 @@ const char * gTranslations_es =
   "Renombrando a...\0"\
   "Girar a la izquierda\tCtrl+May\303\272s+-\0"\
   "Girar a la derecha\tCtrl+May\303\272s++\0"\
-  "\0"\
+  "Guardar Notas\0"\
   "Guardar como\0"\
   "Guardar A&cceso directo...\tCtrl+May\303\272s+S\0"\
   "Buscando %d de %d...\0"\
@@ -15598,11 +15598,11 @@ const char * gTranslations_es =
   "Selecci\303\263n:\0"\
   "Enviar por correo &electr\303\263nico\0"\
   "Establecer orden de consola para b\303\272squeda inversa\0"\
-  "\0"\
+  "Mostrar Marcadores\tF12\0"\
   "Mostrar &Favoritos\0"\
   "Mostrar &p\303\241ginas de forma continua\0"\
   "Mostrar barra de &herramientas\0"\
-  "\0"\
+  "Mostrar Mar&cadores\tF12\0"\
   "Mostrar favoritos\0"\
   "Mostrar \302\253lo m\303\241s le\303\255do\302\273\0"\
   "Mostrar en &Carpeta\0"\

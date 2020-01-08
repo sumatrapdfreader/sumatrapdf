@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1166cc2d7cb77a921d3a7f550cbfc1ba6003e267
+0ef2bf29f315b2b9ea180b3b0be5a3de06ebcd64
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3785,6 +3785,8 @@ uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 :Add page %s to favorites\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
+es:Añadir página %s a favoritos\tCtrl+B
+fr:Ajouter cette page aux %s favoris\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
 tw:將第 %s 頁加入到最愛\tCtrl+B
 :Add to favorites
@@ -14765,6 +14767,8 @@ uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
 :Save Annotations
 cn:保存注释
+es:Guardar Notas
+fr:Sauvegarder les annotations
 nl:Aantekeningen Opslaan
 tw:儲存注釋
 :Save As
@@ -15399,6 +15403,7 @@ uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks\tF12
 cn:显示书签(&B)\tF12
+es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
 nl:Toon Bladwijzers\tF12
 tw:顯示書籤(&B)\tF12
@@ -15543,6 +15548,7 @@ uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show Book&marks\tF12
 cn:显示书签(&M)\tF12
+es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
 nl:Toon Blad&wijzers\tF12
 tw:顯示書籤(&M)\tF12
