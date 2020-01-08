@@ -735,6 +735,16 @@ static void LogDpiAwareness() {
 }
 #endif
 
+static void testLogf() {
+    const char* fileName = path::GetBaseNameNoFree(__FILE__);
+    WCHAR* gswin32c = L"this is a path";
+    WCHAR* tmpFile = L"c:\foo\bar.txt";
+    AutoFree gswin = strconv::WstrToUtf8(gswin32c);
+    AutoFree tmpFileName = strconv::WstrToUtf8(path::GetBaseNameNoFree(tmpFile));
+    logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin.get(), tmpFileName.get());
+}
+
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
     UNUSED(hPrevInstance);
@@ -783,6 +793,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // logToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
 
     log("Starting SumatraPDF\n");
+
+    testLogf();
 
     // LogDpiAwareness();
 
