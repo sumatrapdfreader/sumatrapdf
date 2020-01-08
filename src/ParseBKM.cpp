@@ -379,7 +379,8 @@ bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* name,
 }
 
 // TODO: a better way without passing bookmars
-bool ExportBookmarksToFile2(const Vec<VbkmForFile*>& bookmarks, TocTree* tocTree, const char* name, const char* bkmPath) {
+bool ExportBookmarksToFile2(const Vec<VbkmForFile*>& bookmarks, TocTree* tocTree, const char* name,
+                            const char* bkmPath) {
     str::Str s;
     if (str::IsEmpty(name)) {
         name = "default view";

@@ -181,7 +181,7 @@ struct DjVuContext {
 
 // TODO: make it non-static because it accesses other static state
 // in djvu which got deleted first
-static DjVuContext *gDjVuContext;
+static DjVuContext* gDjVuContext;
 
 static DjVuContext* GetDjVuContext() {
     if (!gDjVuContext) {

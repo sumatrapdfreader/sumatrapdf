@@ -60,7 +60,6 @@ class CommandLineInfo {
 
     bool crashOnOpen = false;
 
-
     // deprecated flags
     char* lang = nullptr;
     WStrVec globalPrefArgs;

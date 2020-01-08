@@ -420,6 +420,12 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     StartTocEditor(args);
 }
 
+static bool IsForVbkm(WindowInfo* win) {
+    auto path = win->currentTab->filePath.get();
+    bool isVbkm = str::EndsWithI(path, L".vbkm");
+    return isVbkm;
+}
+
 static void OnTocContextMenu(ContextMenuArgs* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
     CrashIf(!win);
@@ -464,6 +470,10 @@ static void OnTocContextMenu(ContextMenuArgs* args) {
     } else {
         win::menu::Remove(popup, IDM_FAV_ADD);
         win::menu::Remove(popup, IDM_FAV_DEL);
+    }
+
+    if (IsForVbkm(win)) {
+        win::menu::SetText(popup, IDM_NEW_BOOKMARKS, L"Edit Bookmarks");
     }
 
     // MarkMenuOwnerDraw(popup);

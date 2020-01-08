@@ -123,7 +123,6 @@ static Vec<StaticLinkInfo> gLinkInfo;
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
 
-
 static const WCHAR* getAppName() {
     if (gIsRaMicroBuild) {
         return RA_MICRO_NAME;
