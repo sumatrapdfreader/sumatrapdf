@@ -7,6 +7,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
@@ -30,11 +31,13 @@ TryAgain64Bit:
     for (int i = 0; i < dimof(gsProducts); i++) {
         HKEY hkey;
         AutoFreeWstr keyName(str::Join(L"Software\\", gsProducts[i]));
-        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, access, &hkey) != ERROR_SUCCESS)
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, access, &hkey) != ERROR_SUCCESS) {
             continue;
+        }
         WCHAR subkey[32];
-        for (DWORD ix = 0; RegEnumKey(hkey, ix, subkey, dimof(subkey)) == ERROR_SUCCESS; ix++)
+        for (DWORD ix = 0; RegEnumKey(hkey, ix, subkey, dimof(subkey)) == ERROR_SUCCESS; ix++) {
             versions.Append(str::Dup(subkey));
+        }
         RegCloseKey(hkey);
     }
     if ((access & KEY_WOW64_32KEY)) {
@@ -53,35 +56,40 @@ TryAgain64Bit:
         for (int i = 0; i < dimof(gsProducts); i++) {
             AutoFreeWstr keyName(str::Format(L"Software\\%s\\%s", gsProducts[i], versions.at(ix - 1)));
             AutoFreeWstr GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, L"GS_DLL"));
-            if (!GS_DLL)
+            if (!GS_DLL) {
                 continue;
+            }
             AutoFreeWstr dir(path::GetDir(GS_DLL));
             AutoFreeWstr exe(path::Join(dir, L"gswin32c.exe"));
-            if (file::Exists(exe))
+            if (file::Exists(exe)) {
                 return exe.StealData();
+            }
             exe.Set(path::Join(dir, L"gswin64c.exe"));
-            if (file::Exists(exe))
+            if (file::Exists(exe)) {
                 return exe.StealData();
+            }
         }
     }
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariable(L"PATH", nullptr, 0);
     AutoFreeWstr envpath(AllocArray<WCHAR>(size));
-    if (size > 0 && envpath) {
-        GetEnvironmentVariable(L"PATH", envpath, size);
-        WStrVec paths;
-        paths.Split(envpath, L";", true);
-        for (size_t ix = 0; ix < paths.size(); ix++) {
-            AutoFreeWstr exe(path::Join(paths.at(ix), L"gswin32c.exe"));
-            if (file::Exists(exe))
-                return exe.StealData();
-            exe.Set(path::Join(paths.at(ix), L"gswin64c.exe"));
-            if (file::Exists(exe))
-                return exe.StealData();
+    if (size == 0) {
+        return nullptr;
+    }
+    GetEnvironmentVariable(L"PATH", envpath, size);
+    WStrVec paths;
+    paths.Split(envpath, L";", true);
+    for (size_t ix = 0; ix < paths.size(); ix++) {
+        AutoFreeWstr exe(path::Join(paths.at(ix), L"gswin32c.exe"));
+        if (file::Exists(exe)) {
+            return exe.StealData();
+        }
+        exe.Set(path::Join(paths.at(ix), L"gswin64c.exe"));
+        if (file::Exists(exe)) {
+            return exe.StealData();
         }
     }
-
     return nullptr;
 }
 
@@ -92,8 +100,9 @@ class ScopedFile {
     explicit ScopedFile(const WCHAR* path) : path(str::Dup(path)) {
     }
     ~ScopedFile() {
-        if (path)
+        if (path) {
             file::Delete(path);
+        }
     }
 };
 
@@ -137,26 +146,33 @@ static EngineBase* ps2pdf(const WCHAR* fileName) {
         psSetup = str::Format(L" << /PageSize [%i %i] >> setpagedevice", page.dx, page.dy);
     }
 
+    const WCHAR* psSetupStr = psSetup ? psSetup.Get() : L"";
     AutoFreeWstr cmdLine = str::Format(
         L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c "
         L"\".setpdfwrite%s\" -f \"%s\"",
-        gswin32c.Get(), tmpFile.Get(), psSetup ? psSetup.Get() : L"", shortPath.Get());
-    fprintf(stderr, "- %s:%d: using '%ls' for creating '%%TEMP%%\\%ls'\n", path::GetBaseNameNoFree(__FILE__), __LINE__,
-            gswin32c.Get(), path::GetBaseNameNoFree(tmpFile));
+        gswin32c.Get(), tmpFile.Get(), psSetupStr, shortPath.Get());
+
+    {
+        const char* fileName = path::GetBaseNameNoFree(__FILE__);
+        AutoFree gswin = strconv::WstrToUtf8(gswin32c.get());
+        AutoFree tmpFileName = strconv::WstrToUtf8(path::GetBaseNameNoFree(tmpFile));
+        logf("- %s:%d: using '%ls' for creating '%%TEMP%%\\%ls'\n", fileName, __LINE__,
+             gswin.get(), tmpFileName.get());
+    }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
     HANDLE process = LaunchProcess(cmdLine, nullptr, CREATE_NO_WINDOW);
-    if (!process)
+    if (!process) {
         return nullptr;
+    }
 
-    DWORD timeout = 10000;
-#ifdef DEBUG
-    // allow to disable the timeout for debugging purposes
-    if (GetEnvironmentVariable(L"SUMATRAPDF_NO_GHOSTSCRIPT_TIMEOUT", nullptr, 0))
-        timeout = INFINITE;
-#endif
+    DWORD timeoutInMs = 20000;
+    // allow to disable the timeout
+    if (GetEnvironmentVariable(L"SUMATRAPDF_NO_GHOSTSCRIPT_TIMEOUT", nullptr, 0)) {
+        timeoutInMs = INFINITE;
+    }
     DWORD exitCode = EXIT_FAILURE;
-    WaitForSingleObject(process, timeout);
+    WaitForSingleObject(process, timeoutInMs);
     GetExitCodeProcess(process, &exitCode);
     TerminateProcess(process, 1);
     CloseHandle(process);
@@ -227,11 +243,13 @@ class PsEngineImpl : public EngineBase {
 
     EngineBase* Clone() override {
         EngineBase* newEngine = pdfEngine->Clone();
-        if (!newEngine)
+        if (!newEngine) {
             return nullptr;
+        }
         PsEngineImpl* clone = new PsEngineImpl();
-        if (FileName())
+        if (FileName()) {
             clone->SetFileName(FileName());
+        }
         clone->pdfEngine = newEngine;
         return clone;
     }
