@@ -25,19 +25,19 @@ extern "C" {
 #include "EngineFzUtil.h"
 #include "EngineManager.h"
 #include "ParseBKM.h"
-#include "EnginePdfMulti.h"
+#include "EngineMulti.h"
 
 struct EnginePage {
     int pageNoInEngine = 0;
     EngineBase* engine = nullptr;
 };
 
-Kind kindEnginePdfMulti = "enginePdfMulti";
+Kind kindEngineMulti = "enginePdfMulti";
 
-class EnginePdfMultiImpl : public EngineBase {
+class EngineMultiImpl : public EngineBase {
   public:
-    EnginePdfMultiImpl();
-    virtual ~EnginePdfMultiImpl();
+    EngineMultiImpl();
+    virtual ~EngineMultiImpl();
     EngineBase* Clone() override;
 
     RectD PageMediabox(int pageNo) override;
@@ -80,100 +80,100 @@ class EnginePdfMultiImpl : public EngineBase {
     TocTree* tocTree = nullptr;
 };
 
-EngineBase* EnginePdfMultiImpl::PageToEngine(int& pageNo) const {
+EngineBase* EngineMultiImpl::PageToEngine(int& pageNo) const {
     EnginePage& ep = pageToEngine[pageNo - 1];
     pageNo = ep.pageNoInEngine;
     return ep.engine;
 }
 
-EnginePdfMultiImpl::EnginePdfMultiImpl() {
-    kind = kindEnginePdfMulti;
+EngineMultiImpl::EngineMultiImpl() {
+    kind = kindEngineMulti;
     defaultFileExt = L".vbkm";
     fileDPI = 72.0f;
     supportsAnnotations = false;
     supportsAnnotationsForSaving = false;
 }
 
-EnginePdfMultiImpl::~EnginePdfMultiImpl() {
+EngineMultiImpl::~EngineMultiImpl() {
     delete tocTree;
 }
 
-EngineBase* EnginePdfMultiImpl::Clone() {
+EngineBase* EngineMultiImpl::Clone() {
     CrashIf(true);
     return nullptr;
 }
 
-RectD EnginePdfMultiImpl::PageMediabox(int pageNo) {
+RectD EngineMultiImpl::PageMediabox(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->PageMediabox(pageNo);
 }
 
-RectD EnginePdfMultiImpl::PageContentBox(int pageNo, RenderTarget target) {
+RectD EngineMultiImpl::PageContentBox(int pageNo, RenderTarget target) {
     EngineBase* e = PageToEngine(pageNo);
     return e->PageContentBox(pageNo, target);
 }
 
-RenderedBitmap* EnginePdfMultiImpl::RenderPage(RenderPageArgs& args) {
+RenderedBitmap* EngineMultiImpl::RenderPage(RenderPageArgs& args) {
     EngineBase* e = PageToEngine(args.pageNo);
     return e->RenderPage(args);
 }
 
-RectD EnginePdfMultiImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineMultiImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     EngineBase* e = PageToEngine(pageNo);
     return e->Transform(rect, pageNo, zoom, rotation, inverse);
 }
 
-std::string_view EnginePdfMultiImpl::GetFileData() {
+std::string_view EngineMultiImpl::GetFileData() {
     return {};
 }
 
-bool EnginePdfMultiImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EngineMultiImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     return false;
 }
 
-bool EnginePdfMultiImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
+bool EngineMultiImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
     return false;
 }
 
-WCHAR* EnginePdfMultiImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
+WCHAR* EngineMultiImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
     EngineBase* e = PageToEngine(pageNo);
     return e->ExtractPageText(pageNo, coordsOut);
 }
 
-bool EnginePdfMultiImpl::HasClipOptimizations(int pageNo) {
+bool EngineMultiImpl::HasClipOptimizations(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->HasClipOptimizations(pageNo);
 }
 
-WCHAR* EnginePdfMultiImpl::GetProperty(DocumentProperty prop) {
+WCHAR* EngineMultiImpl::GetProperty(DocumentProperty prop) {
     return nullptr;
 }
 
-void EnginePdfMultiImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+void EngineMultiImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: support user annotations
 }
 
-bool EnginePdfMultiImpl::BenchLoadPage(int pageNo) {
+bool EngineMultiImpl::BenchLoadPage(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->BenchLoadPage(pageNo);
 }
 
-Vec<PageElement*>* EnginePdfMultiImpl::GetElements(int pageNo) {
+Vec<PageElement*>* EngineMultiImpl::GetElements(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->GetElements(pageNo);
 }
 
-PageElement* EnginePdfMultiImpl::GetElementAtPos(int pageNo, PointD pt) {
+PageElement* EngineMultiImpl::GetElementAtPos(int pageNo, PointD pt) {
     EngineBase* e = PageToEngine(pageNo);
     return e->GetElementAtPos(pageNo, pt);
 }
 
-RenderedBitmap* EnginePdfMultiImpl::GetImageForPageElement(PageElement* pel) {
+RenderedBitmap* EngineMultiImpl::GetImageForPageElement(PageElement* pel) {
     EngineBase* e = PageToEngine(pel->pageNo);
     return e->GetImageForPageElement(pel);
 }
 
-PageDestination* EnginePdfMultiImpl::GetNamedDest(const WCHAR* name) {
+PageDestination* EngineMultiImpl::GetNamedDest(const WCHAR* name) {
     int n = 0;
     for (auto&& f : vbkm.vbkms) {
         auto e = f->engine;
@@ -208,12 +208,12 @@ static void updateTocItemsPageNo(TocItem* i, int nPageNoAdd) {
     }
 }
 
-TocTree* EnginePdfMultiImpl::GetToc() {
+TocTree* EngineMultiImpl::GetToc() {
     CrashIf(!tocTree);
     return tocTree;
 }
 
-WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {
+WCHAR* EngineMultiImpl::GetPageLabel(int pageNo) const {
     if (pageNo < 1 || pageNo >= pageCount) {
         return nullptr;
     }
@@ -222,7 +222,7 @@ WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {
     return e->GetPageLabel(pageNo);
 }
 
-int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
+int EngineMultiImpl::GetPageByLabel(const WCHAR* label) const {
     int n = 0;
     for (auto&& f : vbkm.vbkms) {
         auto e = f->engine;
@@ -265,7 +265,7 @@ static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
     // in the second pass we mark back pages that are visibles
 }
 
-bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
+bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     std::string_view sv = file::ReadFile(fileName);
     if (sv.empty()) {
         return false;
@@ -316,11 +316,11 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     return true;
 }
 
-EngineBase* EnginePdfMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+EngineBase* EngineMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (str::IsEmpty(fileName)) {
         return nullptr;
     }
-    EnginePdfMultiImpl* engine = new EnginePdfMultiImpl();
+    EngineMultiImpl* engine = new EngineMultiImpl();
     if (!engine->Load(fileName, pwdUI)) {
         delete engine;
         return nullptr;
@@ -329,7 +329,7 @@ EngineBase* EnginePdfMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI
     return engine;
 }
 
-bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         // we don't support sniffing
         return false;
@@ -337,6 +337,6 @@ bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff) {
     return str::EndsWithI(fileName, L".vbkm");
 }
 
-EngineBase* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-    return EnginePdfMultiImpl::CreateFromFile(fileName, pwdUI);
+EngineBase* CreateEngineMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+    return EngineMultiImpl::CreateFromFile(fileName, pwdUI);
 }

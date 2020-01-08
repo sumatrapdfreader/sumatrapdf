@@ -523,7 +523,7 @@ static bool ShouldCustomDraw(WindowInfo* win) {
         return false;
     }
     Kind kind = dm->GetEngineType();
-    if (kind == kindEnginePdf || kind == kindEnginePdfMulti) {
+    if (kind == kindEnginePdf || kind == kindEngineMulti) {
         return true;
     }
     return false;

@@ -14,7 +14,7 @@
 #include "EnginePdf.h"
 #include "EnginePs.h"
 #include "EngineXps.h"
-#include "EnginePdfMulti.h"
+#include "EngineMulti.h"
 #include "EngineManager.h"
 
 namespace EngineManager {
@@ -23,7 +23,7 @@ bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines)
     if (IsEnginePdfSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (IsEnginePdfMultiSupportedFile(filePath, sniff)) {
+    if (IsEngineMultiSupportedFile(filePath, sniff)) {
         return true;
     }
     if (IsXpsEngineSupportedFile(filePath, sniff)) {
@@ -81,8 +81,8 @@ EngineBase* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableCh
 RetrySniffing:
     if (IsEnginePdfSupportedFile(filePath, sniff)) {
         engine = CreateEnginePdfFromFile(filePath, pwdUI);
-    } else if (IsEnginePdfMultiSupportedFile(filePath, sniff)) {
-        engine = CreateEnginePdfMultiFromFile(filePath, pwdUI);
+    } else if (IsEngineMultiSupportedFile(filePath, sniff)) {
+        engine = CreateEngineMultiFromFile(filePath, pwdUI);
     } else if (IsXpsEngineSupportedFile(filePath, sniff)) {
         engine = CreateXpsEngineFromFile(filePath);
     } else if (IsDjVuEngineSupportedFile(filePath, sniff)) {

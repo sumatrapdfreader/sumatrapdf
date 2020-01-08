@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 extern Kind kindEnginePdf;
-extern Kind kindEnginePdfMulti;
+extern Kind kindEngineMulti;
 extern Kind kindEngineXps;
 extern Kind kindEngineDjVu;
 extern Kind kindEngineImage;
@@ -199,7 +199,7 @@ struct TocItem : TreeItem {
 
     // auto-calculated page number that tells us a span from
     // pageNo => endPageNo
-    // only used by TocEditor and EnginePdfMulti
+    // only used by TocEditor and EngineMulti
     // TODO: maybe create a subclass of TocItem
     int endPageNo = 0;
 
