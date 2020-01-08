@@ -1111,6 +1111,9 @@ Exit:
     DeleteObject(GetDefaultGuiFont());
     DeleteBitmap(gBitmapReloadingCue);
 
+    extern void CleanupDjVuEngine(); // in EngineDjVu.cpp
+    CleanupDjVuEngine();
+
     // wait for FileExistenceChecker to terminate
     // (which should be necessary only very rarely)
     while (gFileExistenceChecker) {

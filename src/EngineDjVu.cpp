@@ -102,49 +102,59 @@ static TocItem* newDjVuTocItem(TocItem* parent, const char* title, const char* l
     return res;
 }
 
-class DjVuContext {
-    bool initialized;
-    ddjvu_context_t* ctx;
-
-  public:
+struct DjVuContext {
+    ddjvu_context_t* ctx = nullptr;
+    int refCount = 1;
     CRITICAL_SECTION lock;
 
-    DjVuContext() : ctx(nullptr), initialized(false) {
+    DjVuContext() {
+        InitializeCriticalSection(&lock);
+        ctx = ddjvu_context_create("DjVuEngine");
+        // reset the locale to "C" as most other code expects
+        setlocale(LC_ALL, "C");
+        CrashIf(!ctx);
     }
+
+    int AddRef() {
+        CrashIf(refCount < 1);
+        EnterCriticalSection(&lock);
+        ++refCount;
+        int res = refCount;
+        LeaveCriticalSection(&lock);
+        return res;
+    }
+
+    int Release() {
+        EnterCriticalSection(&lock);
+        CrashIf(refCount <= 0);
+        --refCount;
+        LeaveCriticalSection(&lock);
+        return refCount;
+    }
+
     ~DjVuContext() {
-        if (initialized) {
-            EnterCriticalSection(&lock);
-            if (ctx) {
-                ddjvu_context_release(ctx);
-            }
-            LeaveCriticalSection(&lock);
-            DeleteCriticalSection(&lock);
+        EnterCriticalSection(&lock);
+        if (ctx) {
+            ddjvu_context_release(ctx);
         }
+        LeaveCriticalSection(&lock);
+        DeleteCriticalSection(&lock);
         minilisp_finish();
     }
 
-    bool Initialize() {
-        if (!initialized) {
-            initialized = true;
-            InitializeCriticalSection(&lock);
-            ctx = ddjvu_context_create("DjVuEngine");
-            // reset the locale to "C" as most other code expects
-            setlocale(LC_ALL, "C");
-        }
-
-        return ctx != nullptr;
-    }
-
     void SpinMessageLoop(bool wait = true) {
-        UNUSED(wait);
-        const ddjvu_message_t* msg;
-#if defined(THREADMODEL) && THREADMODEL != NOTHREADS
-        if (wait)
+        const ddjvu_message_t* msg = nullptr;
+        if (wait) {
             ddjvu_message_wait(ctx);
-#endif
+        }
         while ((msg = ddjvu_message_peek(ctx)) != nullptr) {
-            if (DDJVU_NEWSTREAM == msg->m_any.tag && msg->m_newstream.streamid != 0) {
-                ddjvu_stream_close(msg->m_any.document, msg->m_newstream.streamid, /* stop */ FALSE);
+            auto tag = msg->m_any.tag;
+            if (DDJVU_NEWSTREAM == tag) {
+                auto streamId = msg->m_newstream.streamid;
+                if (streamId != 0) {
+                    BOOL stop = FALSE;
+                    ddjvu_stream_close(msg->m_any.document, streamId, stop);
+                }
             }
             ddjvu_message_pop(ctx);
         }
@@ -171,7 +181,33 @@ class DjVuContext {
 
 // TODO: make it non-static because it accesses other static state
 // in djvu which got deleted first
-static DjVuContext gDjVuContext;
+static DjVuContext *gDjVuContext;
+
+static DjVuContext* GetDjVuContext() {
+    if (!gDjVuContext) {
+        gDjVuContext = new DjVuContext();
+    } else {
+        gDjVuContext->AddRef();
+    }
+    return gDjVuContext;
+}
+
+static void ReleaseDjVuContext() {
+    CrashIf(!gDjVuContext);
+    int refCount = gDjVuContext->Release();
+    if (refCount != 0) {
+        return;
+    }
+}
+
+void CleanupDjVuEngine() {
+    if (!gDjVuContext) {
+        return;
+    }
+    CrashIf(gDjVuContext->refCount != 0);
+    delete gDjVuContext;
+    gDjVuContext = nullptr;
+}
 
 class DjVuEngineImpl : public EngineBase {
   public:
@@ -242,10 +278,11 @@ DjVuEngineImpl::DjVuEngineImpl() {
     fileDPI = 300.0f;
     supportsAnnotations = true;
     supportsAnnotationsForSaving = false;
+    GetDjVuContext();
 }
 
 DjVuEngineImpl::~DjVuEngineImpl() {
-    ScopedCritSec scope(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext->lock);
 
     delete tocTree;
     free(mediaboxes);
@@ -267,6 +304,7 @@ DjVuEngineImpl::~DjVuEngineImpl() {
     if (stream) {
         stream->Release();
     }
+    ReleaseDjVuContext();
 }
 
 EngineBase* DjVuEngineImpl::Clone() {
@@ -382,19 +420,13 @@ bool DjVuEngineImpl::LoadMediaboxes() {
 }
 
 bool DjVuEngineImpl::Load(const WCHAR* fileName) {
-    if (!gDjVuContext.Initialize()) {
-        return false;
-    }
     SetFileName(fileName);
-    doc = gDjVuContext.OpenFile(fileName);
+    doc = gDjVuContext->OpenFile(fileName);
     return FinishLoading();
 }
 
 bool DjVuEngineImpl::Load(IStream* stream) {
-    if (!gDjVuContext.Initialize()) {
-        return false;
-    }
-    doc = gDjVuContext.OpenStream(stream);
+    doc = gDjVuContext->OpenStream(stream);
     return FinishLoading();
 }
 
@@ -403,10 +435,10 @@ bool DjVuEngineImpl::FinishLoading() {
         return false;
     }
 
-    ScopedCritSec scope(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext->lock);
 
     while (!ddjvu_document_decoding_done(doc)) {
-        gDjVuContext.SpinMessageLoop();
+        gDjVuContext->SpinMessageLoop();
     }
 
     if (ddjvu_document_decoding_error(doc)) {
@@ -426,7 +458,7 @@ bool DjVuEngineImpl::FinishLoading() {
             ddjvu_status_t status;
             ddjvu_pageinfo_t info;
             while ((status = ddjvu_document_get_pageinfo(doc, i, &info)) < DDJVU_JOB_OK) {
-                gDjVuContext.SpinMessageLoop();
+                gDjVuContext->SpinMessageLoop();
             }
             if (DDJVU_JOB_OK == status) {
                 double dx = info.width * GetFileDPI() / info.dpi;
@@ -441,8 +473,9 @@ bool DjVuEngineImpl::FinishLoading() {
         annos[i] = miniexp_dummy;
     }
 
-    while ((outline = ddjvu_document_get_outline(doc)) == miniexp_dummy)
-        gDjVuContext.SpinMessageLoop();
+    while ((outline = ddjvu_document_get_outline(doc)) == miniexp_dummy) {
+        gDjVuContext->SpinMessageLoop();
+    }
     if (!miniexp_consp(outline) || miniexp_car(outline) != miniexp_symbol("bookmarks")) {
         ddjvu_miniexp_release(doc, outline);
         outline = miniexp_nil;
@@ -453,7 +486,7 @@ bool DjVuEngineImpl::FinishLoading() {
         ddjvu_status_t status;
         ddjvu_fileinfo_s info;
         while ((status = ddjvu_document_get_fileinfo(doc, i, &info)) < DDJVU_JOB_OK) {
-            gDjVuContext.SpinMessageLoop();
+            gDjVuContext->SpinMessageLoop();
         }
         if (DDJVU_JOB_OK == status && info.type == 'P' && info.pageno >= 0) {
             fileInfos.Append(info);
@@ -560,7 +593,7 @@ RenderedBitmap* DjVuEngineImpl::CreateRenderedBitmap(const char* bmpData, SizeI 
 }
 
 RenderedBitmap* DjVuEngineImpl::RenderPage(RenderPageArgs& args) {
-    ScopedCritSec scope(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext->lock);
     auto pageRect = args.pageRect;
     auto zoom = args.zoom;
     auto pageNo = args.pageNo;
@@ -578,7 +611,7 @@ RenderedBitmap* DjVuEngineImpl::RenderPage(RenderPageArgs& args) {
     ddjvu_page_set_rotation(page, (ddjvu_page_rotation_t)rotation4);
 
     while (!ddjvu_page_decoding_done(page)) {
-        gDjVuContext.SpinMessageLoop();
+        gDjVuContext->SpinMessageLoop();
     }
     if (ddjvu_page_decoding_error(page)) {
         return nullptr;
@@ -624,7 +657,7 @@ RenderedBitmap* DjVuEngineImpl::RenderPage(RenderPageArgs& args) {
 
 RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
-    ScopedCritSec scope(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext->lock);
 
     RectD pageRc = PageMediabox(pageNo);
     ddjvu_page_t* page = ddjvu_page_create_by_pageno(doc, pageNo - 1);
@@ -634,7 +667,7 @@ RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     ddjvu_page_set_rotation(page, DDJVU_ROTATE_0);
 
     while (!ddjvu_page_decoding_done(page)) {
-        gDjVuContext.SpinMessageLoop();
+        gDjVuContext->SpinMessageLoop();
     }
     if (ddjvu_page_decoding_error(page)) {
         return pageRc;
@@ -830,11 +863,11 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<R
 
 WCHAR* DjVuEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
     const WCHAR* lineSep = L"\n";
-    ScopedCritSec scope(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext->lock);
 
     miniexp_t pagetext;
     while ((pagetext = ddjvu_document_get_pagetext(doc, pageNo - 1, nullptr)) == miniexp_dummy) {
-        gDjVuContext.SpinMessageLoop();
+        gDjVuContext->SpinMessageLoop();
     }
     if (miniexp_nil == pagetext) {
         return nullptr;
@@ -855,8 +888,9 @@ WCHAR* DjVuEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
     if (coordsOut) {
         ddjvu_status_t status;
         ddjvu_pageinfo_t info;
-        while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK)
-            gDjVuContext.SpinMessageLoop();
+        while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
+            gDjVuContext->SpinMessageLoop();
+        }
         float dpiFactor = 1.0;
         if (DDJVU_JOB_OK == status)
             dpiFactor = GetFileDPI() / info.dpi;
@@ -884,7 +918,7 @@ WCHAR* DjVuEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
 }
 
 void DjVuEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
-    ScopedCritSec scope(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext->lock);
     if (list) {
         userAnnots = *list;
     } else {
@@ -895,16 +929,16 @@ void DjVuEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
 Vec<PageElement*>* DjVuEngineImpl::GetElements(int pageNo) {
     CrashIf(pageNo < 1 || pageNo > PageCount());
     if (annos && miniexp_dummy == annos[pageNo - 1]) {
-        ScopedCritSec scope(&gDjVuContext.lock);
+        ScopedCritSec scope(&gDjVuContext->lock);
         while ((annos[pageNo - 1] = ddjvu_document_get_pageanno(doc, pageNo - 1)) == miniexp_dummy) {
-            gDjVuContext.SpinMessageLoop();
+            gDjVuContext->SpinMessageLoop();
         }
     }
     if (!annos || !annos[pageNo - 1]) {
         return nullptr;
     }
 
-    ScopedCritSec scope(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext->lock);
 
     Vec<PageElement*>* els = new Vec<PageElement*>();
     RectI page = PageMediabox(pageNo).Round();
@@ -912,7 +946,7 @@ Vec<PageElement*>* DjVuEngineImpl::GetElements(int pageNo) {
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
-        gDjVuContext.SpinMessageLoop();
+        gDjVuContext->SpinMessageLoop();
     }
     float dpiFactor = 1.0;
     if (DDJVU_JOB_OK == status) {
@@ -1087,7 +1121,7 @@ TocTree* DjVuEngineImpl::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    ScopedCritSec scope(&gDjVuContext.lock);
+    ScopedCritSec scope(&gDjVuContext->lock);
     int idCounter = 0;
     TocItem* root = BuildTocTree(nullptr, outline, idCounter);
     if (!root) {
