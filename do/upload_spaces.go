@@ -169,6 +169,7 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
 	if buildType == buildTypeRaMicro {
+		// must match createSumatraLatestJs
 		prefix = fmt.Sprintf("RAMicro-prerelease-%s-64", ver)
 	}
 	files := getFileNamesWithPrefix(prefix)

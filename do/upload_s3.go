@@ -49,14 +49,15 @@ var sumLatestInstaller = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/Suma
 func createSumatraLatestJs(buildType string) string {
 	appName := "SumatraPDF-prerelease"
 	if buildType == buildTypeRaMicro {
-		appName = "RA-Micro-PDF-Viewer"
+		// must match name in spacesUploadPreReleaseMust
+		appName = "RAMicro-prerelease"
 	}
 	currDate := time.Now().Format("2006-01-02")
 	v := preReleaseVer
 	tmplText := `
 var sumLatestVer = {{.Ver}};
 var sumBuiltOn = "{{.CurrDate}}";
-var sumLatestName = "SumatraPDF-prerelease-{{.Ver}}.exe";
+var sumLatestName = "{{.AppName}}-{{.Ver}}.exe";
 
 var sumLatestExe         = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}.exe";
 var sumLatestExeZip      = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}.zip";
