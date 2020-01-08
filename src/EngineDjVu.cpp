@@ -116,7 +116,6 @@ struct DjVuContext {
     }
 
     int AddRef() {
-        CrashIf(refCount < 1);
         EnterCriticalSection(&lock);
         ++refCount;
         int res = refCount;
