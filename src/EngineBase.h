@@ -193,6 +193,8 @@ struct TocItem : TreeItem {
 
     bool isUnchecked = false;
 
+    bool hideUnchecked = false;
+
     // page this item points to (0 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
     int pageNo = 0;
@@ -240,6 +242,8 @@ struct TocItem : TreeItem {
     bool IsChecked() override;
 
     bool PageNumbersMatch() const;
+    bool IsHidden() const;
+    bool IsVisible() const;
 };
 
 TocItem* CloneTocItemRecur(TocItem*);

@@ -294,10 +294,10 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
     }
 }
 
-static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>& tocState, TocItem* tocItem) {
+static void UpdateDocTocExpansionStateRecur(TreeCtrl* treeCtrl, Vec<int>& tocState, TocItem* tocItem) {
     while (tocItem) {
         // items without children cannot be toggled
-        if (tocItem->child) {
+        if (tocItem->IsVisible() && tocItem->child) {
             // we have to query the state of the tree view item because
             // isOpenToggled is not kept in sync
             // TODO: keep toggle state on TocItem in sync
@@ -307,7 +307,7 @@ static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>& tocState, T
             if (wasToggled) {
                 tocState.Append(tocItem->id);
             }
-            UpdateDocTocExpansionState(treeCtrl, tocState, tocItem->child);
+            UpdateDocTocExpansionStateRecur(treeCtrl, tocState, tocItem->child);
         }
         tocItem = tocItem->next;
     }
@@ -320,7 +320,7 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, TocTree* do
     }
     tocState.Reset();
     TocItem* tocItem = docTree->root;
-    UpdateDocTocExpansionState(treeCtrl, tocState, tocItem);
+    UpdateDocTocExpansionStateRecur(treeCtrl, tocState, tocItem);
 }
 
 // copied from mupdf/fitz/dev_text.c

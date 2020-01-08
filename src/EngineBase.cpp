@@ -273,6 +273,7 @@ TocItem* CloneTocItemRecur(TocItem* ti) {
     res->isOpenDefault = ti->isOpenDefault;
     res->isOpenToggled = ti->isOpenToggled;
     res->isUnchecked = ti->isUnchecked;
+    res->hideUnchecked = ti->hideUnchecked;
     res->pageNo = ti->pageNo;
     res->id = ti->id;
     res->fontFlags = ti->fontFlags;
@@ -303,7 +304,9 @@ int TocItem::ChildCount() {
     int n = 0;
     auto node = child;
     while (node) {
-        n++;
+        if (node->IsVisible()) {
+            n++;
+        }
         node = node->next;
     }
     return n;
@@ -312,8 +315,10 @@ int TocItem::ChildCount() {
 TreeItem* TocItem::ChildAt(int n) {
     auto node = child;
     while (n > 0) {
+        if (node->IsVisible()) {
+            n--;
+        }
         node = node->next;
-        n--;
     }
     return node;
 }
@@ -328,6 +333,18 @@ bool TocItem::IsExpanded() {
     // - not expanded by default, toggled (false, true)
     // which boils down to:
     return isOpenDefault != isOpenToggled;
+}
+
+
+bool TocItem::IsHidden() const {
+    if (!hideUnchecked) {
+        return false;
+    }
+    return isUnchecked;
+}
+
+bool TocItem::IsVisible() const {
+    return !IsHidden();
 }
 
 bool TocItem::IsChecked() {
@@ -357,7 +374,9 @@ int TocTree::RootCount() {
     int n = 0;
     auto node = root;
     while (node) {
-        n++;
+        if (node->IsVisible()) {
+            n++;
+        }
         node = node->next;
     }
     return n;
@@ -366,8 +385,10 @@ int TocTree::RootCount() {
 TreeItem* TocTree::RootAt(int n) {
     auto node = root;
     while (n > 0) {
+        if (node->IsVisible()) {
+            n--;
+        }
         node = node->next;
-        n--;
     }
     return node;
 }

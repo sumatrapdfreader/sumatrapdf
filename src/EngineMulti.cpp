@@ -240,7 +240,7 @@ int EngineMultiImpl::GetPageByLabel(const WCHAR* label) const {
 
 extern void CalcEndPageNo(TocItem* root, int nPages);
 
-static void MarkAsInvisibleRec(TocItem* ti, bool markInvisible, Vec<bool>& visible) {
+static void MarkAsInvisibleRecur(TocItem* ti, bool markInvisible, Vec<bool>& visible) {
     while (ti) {
         if (markInvisible) {
             for (int i = ti->pageNo; i < ti->endPageNo; i++) {
@@ -251,7 +251,20 @@ static void MarkAsInvisibleRec(TocItem* ti, bool markInvisible, Vec<bool>& visib
         if (!childMarkInvisible) {
             childMarkInvisible = ti->isUnchecked;
         }
-        MarkAsInvisibleRec(ti->child, childMarkInvisible, visible);
+        MarkAsInvisibleRecur(ti->child, childMarkInvisible, visible);
+        ti = ti->next;
+    }
+}
+
+static void MarkAsVisibleRecur(TocItem* ti, bool markVisible, Vec<bool>& visible) {
+    if (!markVisible) {
+        return;
+    }
+    while (ti) {
+        for (int i = ti->pageNo; i < ti->endPageNo; i++) {
+            visible[i - 1] = true;
+        }
+        MarkAsInvisibleRecur(ti->child, ti->isUnchecked, visible);
         ti = ti->next;
     }
 }
@@ -260,9 +273,30 @@ static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
     int nPages = (int)visible.size();
     CalcEndPageNo(root, nPages);
     // in the first pass we mark the pages under unchecked nodes as invisible
-    MarkAsInvisibleRec(root, root->isUnchecked, visible);
+    MarkAsInvisibleRecur(root, root->isUnchecked, visible);
 
-    // in the second pass we mark back pages that are visibles
+    // in the second pass we mark back pages that are visible
+    // from nodes that are not unchecked
+    MarkAsVisibleRecur(root, !root->isUnchecked, visible);
+}
+
+static void MarkAsHideUncheckedRecur(TocItem* ti) {
+    while (ti) {
+        ti->hideUnchecked = true;
+        MarkAsHideUncheckedRecur(ti->child);
+        ti = ti->next;
+    }
+}
+
+static void removeUncheckedRecur(TocItem* ti) {
+    while (ti) {
+        if (ti->child && ti->child->isUnchecked) {
+            ti->child = nullptr;
+        } else {
+            removeUncheckedRecur(ti->child);
+        }
+        ti = ti->next;
+    }
 }
 
 bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
@@ -303,11 +337,18 @@ bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
 
         int nPage = 0;
         for (int i = 0; i < nPages; i++) {
+            if (!visiblePages[i]) {
+                continue;
+            }
             EnginePage ep{i + 1, engine};
             pageToEngine.push_back(ep);
+            nPage++;
         }
         nOpened++;
-        nTotalPages += nPages;
+        updateTocItemsPageNo(tocTree->root, nTotalPages);
+        //removeUncheckedRecur(tocTree->root);
+        MarkAsHideUncheckedRecur(tocTree->root);
+        nTotalPages += nPage;
     }
     if (nOpened == 0) {
         return false;
