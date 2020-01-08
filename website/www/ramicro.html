@@ -11,8 +11,6 @@
 
 		function setDlURL(id, html) {
 			$("s-" + id).innerHTML = html;
-			html = html.replace("kjkpubsf.sfo2.digitaloceanspaces.com/", "kjkpub.s3.amazonaws.com/")
-			$(id).innerHTML = html;
 		}
 
 		function getName(uri) {
@@ -24,14 +22,6 @@
 		function myInit() {
 			var html, name;
 			$("buildtime").innerHTML = sumBuiltOn;
-
-			name = getName(sumLatestExe);
-			html = "<a href='" + sumLatestExe + "'>" + name + "</a>";
-			setDlURL("urlexe", html);
-
-			name = getName(sumLatestInstaller);
-			html = "<a href='" + sumLatestInstaller + "'>" + name + "</a>";
-			setDlURL("urlinstaller", html);
 
 			name = getName(sumLatestExe64);
 			html = "<a href='" + sumLatestExe64 + "'>" + name + "</a>";
