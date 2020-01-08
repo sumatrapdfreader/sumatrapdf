@@ -1116,11 +1116,12 @@ RenderedBitmap* PdfEngineImpl::RenderPage(RenderPageArgs& args) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_page* page = pageInfo->page;
     pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);
-    int transparency = pdfpage->transparency;
 
     if (!page || !pageInfo->list) {
         return nullptr;
     }
+
+    int transparency = pdfpage->transparency;
 
     fz_cookie* fzcookie = nullptr;
     FitzAbortCookie* cookie = nullptr;
