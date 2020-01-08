@@ -499,7 +499,8 @@ static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::strin
     if (n == 0) {
         tocTree = tab->ctrl->GetToc();
     } else {
-        tocTree = tab->altBookmarks->at(n - 1)->toc;
+        auto vbkms = tab->altBookmarks[0]->vbkms;
+        tocTree = vbkms.at(n - 1)->toc;
     }
     win->tocTreeCtrl->SetTreeModel(tocTree);
 }
@@ -546,24 +547,21 @@ void LoadTocTree(WindowInfo* win) {
     }
 
     // TODO: for now just for testing
-    // TODO: tab->altBookmarks should be VbkmFiles or even
-    // Vec<VbkmFiles*> 
+    // TODO: restore showing alternative bookmarks
     VbkmFile* vbkm = new VbkmFile();
     bool ok = LoadAlterenativeBookmarks(tab->filePath, *vbkm);
-    Vec<VbkmForFile*>* altTocs = &vbkm->vbkms;
-    if (ok && altTocs->size() > 0) {
-        tab->altBookmarks = altTocs;
+    if (ok && vbkm->vbkms.size() > 0) {
+        tab->altBookmarks.push_back(vbkm);
         Vec<std::string_view> items;
+        size_t n = vbkm->vbkms.size();
         items.Append("Default");
-        for (size_t i = 0; i < altTocs->size(); i++) {
-            TocTree* toc = altTocs->at(i)->toc;
-            // TODO: prevent a crash
-            if (!toc) {
-                continue;
-            }
-            items.Append(toc->name.get());
+        char* name = vbkm->name.get();
+        if (name) {
+            items.Append(name);
         }
         win->altBookmarks->SetItems(items);
+    } else {
+        delete vbkm;
     }
 
     win->altBookmarks->OnDropDownSelectionChanged = [=](int idx, std::string_view s) {

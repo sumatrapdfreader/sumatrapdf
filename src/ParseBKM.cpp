@@ -249,6 +249,8 @@ TocItemWithIndent::TocItemWithIndent(TocItem* item, size_t indent) {
 static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
     Vec<TocItemWithIndent> items;
 
+    auto* bkm = new VbkmForFile();
+
     // first line should be "file: $file"
     auto file = sv::ParseValueOfKey(sv, "file", true);
     if (!file.ok) {
@@ -327,7 +329,6 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
         }
     }
 
-    auto* bkm = new VbkmForFile();
     bkm->filePath = file.val;
     file.val = nullptr;
     bkm->toc = tree;
@@ -336,27 +337,29 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
     return true;
 }
 
-bool ParseBookmarksFile(std::string_view path, Vec<VbkmForFile*>& bkmsOut) {
-    AutoFree d = file::ReadFile(path);
+// TODO: read more than one VbkmFile by trying multiple .1.bkm, .2.bkm etc.
+bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm) {
+    str::Str path = baseFileName;
+    path.Append(".bkm");
+
+    AutoFree d = file::ReadFile(path.as_view());
     if (d.empty()) {
         return false;
     }
     std::string_view sv = d.as_view();
     AutoFree dataNormalized = sv::NormalizeNewlines(sv);
-    return parseVbkmSection(dataNormalized.as_view(), bkmsOut);
-}
 
-bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm) {
-    str::Str path = baseFileName;
-    path.Append(".bkm");
+    std::string_view svd = dataNormalized.as_view();
 
-    auto ok = ParseBookmarksFile(path.AsView(), vbkm.vbkms);
-    if (!ok) {
-        return false;
+    // first line could be name
+    auto name = sv::ParseValueOfKey(svd, "name", true);
+    if (name.ok) {
+        vbkm.name = name.val;
+        name.val = nullptr;
     }
 
-    // TODO: read more than one
-    return true;
+    bool ok = parseVbkmSection(svd, vbkm.vbkms);
+    return ok;
 }
 
 bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* name, const char* bkmPath) {
