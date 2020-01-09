@@ -265,7 +265,6 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
     }
 #endif
     auto tree = new TocTree();
-    tree->filePath = str::Dup(file.val);
     // tree->name = str::Dup(title.val);
     size_t indent = 0;
     std::string_view line;
@@ -331,7 +330,8 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
     }
 
     bkm->filePath = file.val;
-    file.val = nullptr;
+    file.val = nullptr; // take ownership
+
     bkm->toc = tree;
     bkmsOut.Append(bkm);
 
@@ -369,31 +369,12 @@ bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* name,
         name = "default view";
     }
     s.AppendFmt("name: %s\n", name);
-    for (auto&& bkm : bookmarks) {
-        TocTree* tocTree = bkm->toc;
-        const char* path = tocTree->filePath;
-        s.AppendFmt("file: %s\n", path);
-        SerializeBookmarksRec(tocTree->root, 0, s);
-        // dbglogf("%s\n", s.Get());
-    }
-    return file::WriteFile(bkmPath, s.as_view());
-}
-
-// TODO: a better way without passing bookmars
-bool ExportBookmarksToFile2(const Vec<VbkmForFile*>& bookmarks, TocTree* tocTree, const char* name,
-                            const char* bkmPath) {
-    str::Str s;
-    if (str::IsEmpty(name)) {
-        name = "default view";
-    }
-    s.AppendFmt("name: %s\n", name);
-    int n = tocTree->RootCount();
-    for (int i = 0; i < n; i++) {
-        TocItem* root = (TocItem*)tocTree->RootAt(i);
-        const char* path = bookmarks[i]->toc->filePath;
+    for (auto&& vbkm : bookmarks) {
+        const char* path = vbkm->filePath;
         CrashIf(!path);
         s.AppendFmt("file: %s\n", path);
-        SerializeBookmarksRec(root, 0, s);
+        TocTree* tocTree = vbkm->toc;
+        SerializeBookmarksRec(tocTree->root, 0, s);
     }
     return file::WriteFile(bkmPath, s.as_view());
 }

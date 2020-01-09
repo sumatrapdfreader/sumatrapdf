@@ -47,7 +47,9 @@ struct TocEditorWindow {
 };
 
 TocEditorWindow::~TocEditorWindow() {
-    delete treeModel;
+    // TODO: delete the top but not children, because
+    // they are not owned
+    // delete treeModel;
 
     // deletes all controls owned by layout
     delete mainLayout;
@@ -108,32 +110,32 @@ static void UpdateTreeModel(TocEditorWindow* w) {
     TreeCtrl* treeCtrl = w->treeCtrl;
     treeCtrl->Clear();
 
-    delete w->treeModel;
+    // TODO: only delete the first levels because we keep reference to them
+    // delete w->treeModel;
     w->treeModel = nullptr;
 
     auto& bookmarks = w->tocArgs->bookmarks;
 
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
-    for (auto&& bkm : bookmarks) {
-        TocItem* i = new TocItem();
-        i->isOpenDefault = true;
-        i->child = CloneTocItemRecur(bkm->toc->root, false);
-        if (i->child) {
-            CalcEndPageNo(i->child, bkm->nPages);
-            AddPageNumbersToTocItemsRecur(i->child);
-            i->child->parent = i->child;
-        }
-        const char* filePath = bkm->filePath.get();
-        AutoFreeWstr path = strconv::Utf8ToWstr(filePath);
+    for (auto&& vbkm : bookmarks) {
+        TocItem* ti = new TocItem();
+        ti->isOpenDefault = true;
+        AutoFreeWstr path = strconv::Utf8ToWstr(vbkm->filePath.as_view());
         const WCHAR* name = path::GetBaseNameNoFree(path);
-        i->title = str::Dup(name);
-        if (root == nullptr) {
-            root = i;
+        ti->title = str::Dup(name);
+        ti->child = vbkm->toc->root;
+        ti->child->parent = ti->child;
+
+        CalcEndPageNo(ti->child, vbkm->nPages);
+        AddPageNumbersToTocItemsRecur(ti->child);
+
+        if (!root) {
+            root = ti;
             curr = root;
         } else {
-            curr->next = i;
-            curr = i;
+            curr->next = ti;
+            curr = ti;
         }
     }
     w->treeModel = new TocTree(root);
@@ -182,7 +184,7 @@ static void AddPdf() {
     delete engine;
     VbkmForFile* bookmarks = new VbkmForFile();
     bookmarks->toc = tocTree;
-    bookmarks->filePath = str::Dup(tocTree->filePath);
+    bookmarks->filePath = strconv::WstrToUtf8(filePath).data();
     bookmarks->nPages = nPages;
     w->tocArgs->bookmarks.push_back(bookmarks);
 
@@ -269,12 +271,11 @@ static void SaveVirtual() {
         return;
     }
     AutoFree patha = strconv::WstrToUtf8(dstFileName);
-    TocTree* toc = (TocTree*)gWindow->treeCtrl->treeModel;
-    ok = ExportBookmarksToFile2(tocArgs->bookmarks, toc, "", patha);
+    ok = ExportBookmarksToFile(tocArgs->bookmarks, "", patha);
     if (!ok) {
         return;
     }
-    ShowExportedBookmarksMsg(patha);
+    // ShowExportedBookmarksMsg(patha);
 }
 
 static void Exit() {

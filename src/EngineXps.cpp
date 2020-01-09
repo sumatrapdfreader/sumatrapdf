@@ -906,7 +906,6 @@ TocTree* XpsEngineImpl::GetToc() {
         return nullptr;
     }
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 

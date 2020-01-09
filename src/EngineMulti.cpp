@@ -310,17 +310,6 @@ static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
     MarkAsVisibleRecur(root, !root->isUnchecked, visible);
 }
 
-static void removeUncheckedRecur(TocItem* ti) {
-    while (ti) {
-        if (ti->child && ti->child->isUnchecked) {
-            ti->child = nullptr;
-        } else {
-            removeUncheckedRecur(ti->child);
-        }
-        ti = ti->next;
-    }
-}
-
 bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     AutoFree filePath = strconv::WstrToUtf8(fileName);
     bool ok = LoadVbkmFile(filePath.get(), vbkm);
@@ -330,55 +319,73 @@ bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     // a page in a given engine
     int nOpened = 0;
     int nTotalPages = 0;
-    TocItem* tocCombinedRoot = nullptr;
+
+    // same logic as in UpdateTreeModel
+    TocItem* root = nullptr;
+    TocItem* curr = nullptr;
 
     for (auto&& vbkm : vbkm.vbkms) {
         CrashIf(vbkm->filePath.empty());
+
+        TocItem* child = vbkm->toc->root;
+        if (child->isUnchecked) {
+            continue;
+        }
+
+        TocItem* ti = new TocItem();
+        ti->isOpenDefault = true;
         AutoFreeWstr path = strconv::Utf8ToWstr(vbkm->filePath.as_view());
+
         vbkm->engine = EngineManager::CreateEngine(path, pwdUI);
         if (!vbkm->engine) {
             return false;
         }
-        AutoDelete<TocTree> tree = CloneTocTree(vbkm->toc, false);
-        EngineBase* engine = vbkm->engine;
-        if (!vbkm->engine) {
-            return false;
-        }
+
+        child = CloneTocItemRecur(child, false);
+
+        const WCHAR* name = path::GetBaseNameNoFree(path);
+        ti->title = str::Dup(name);
+        ti->child = child;
+        ti->child->parent = ti->child;
+
         int nPages = vbkm->engine->PageCount();
 
         Vec<bool> visiblePages;
         for (int i = 0; i < nPages; i++) {
             visiblePages.Append(true);
         }
-        CalcRemovedPages(tree->root, visiblePages);
+        CalcRemovedPages(child, visiblePages);
 
         int nPage = 0;
         for (int i = 0; i < nPages; i++) {
             if (!visiblePages[i]) {
                 continue;
             }
-            EnginePage ep{i + 1, engine};
+            EnginePage ep{i + 1, vbkm->engine};
             pageToEngine.push_back(ep);
             nPage++;
         }
         nOpened++;
-        updateTocItemsPageNo(tree->root, nTotalPages);
-        removeUncheckedRecur(tree->root);
+        updateTocItemsPageNo(child, nTotalPages);
         nTotalPages += nPage;
-        TocItem* root = CloneTocItemRecur(tree->root, true);
-        if (root != nullptr) {
-            if (tocCombinedRoot) {
-                tocCombinedRoot->AddSibling(root);
-            } else {
-                tocCombinedRoot = root;
-            }
+
+        if (!root) {
+            root = ti;
+            curr = root;
+        } else {
+            curr->next = ti;
+            curr = ti;
         }
     }
     if (nOpened == 0) {
-        delete tocCombinedRoot;
+        delete root;
         return false;
     }
-    tocTree = new TocTree(tocCombinedRoot);
+
+    TocItem* rootCopy = CloneTocItemRecur(root, true);
+    delete root;
+
+    tocTree = new TocTree(rootCopy);
     pageCount = nTotalPages;
     return true;
 }

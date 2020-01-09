@@ -268,7 +268,11 @@ TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
         return nullptr;
     }
     if (removeUnchecked && ti->isUnchecked) {
-        return nullptr;
+        TocItem* next = ti->next;
+        while (next && next->isUnchecked) {
+            next = next->next;
+        }
+        return CloneTocItemRecur(next, removeUnchecked);
     }
     TocItem* res = new TocItem();
     res->parent = ti->parent;
@@ -283,19 +287,18 @@ TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
     res->dest = clonePageDestination(ti->dest);
     res->child = CloneTocItemRecur(ti->child, removeUnchecked);
 
-    ti = ti->next;
+    TocItem* next = ti->next;
     if (removeUnchecked) {
-        while (ti && ti->isUnchecked) {
-            ti = ti->next;
+        while (next && next->isUnchecked) {
+            next = next->next;
         }
     }
-    res->next = CloneTocItemRecur(ti, removeUnchecked);
+    res->next = CloneTocItemRecur(next, removeUnchecked);
     return res;
 }
 
 TocTree* CloneTocTree(TocTree* tree, bool removeUnchecked) {
     TocTree* res = new TocTree();
-    res->filePath = str::Dup(tree->filePath);
     res->root = CloneTocItemRecur(tree->root, removeUnchecked);
     return res;
 }

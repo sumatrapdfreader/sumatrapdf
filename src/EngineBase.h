@@ -245,10 +245,6 @@ struct TocItem : TreeItem {
 TocItem* CloneTocItemRecur(TocItem*, bool);
 
 struct TocTree : TreeModel {
-    // path of the file
-    // TODO: move this somewhere else because it doesn't belong here
-    AutoFree filePath;
-
     TocItem* root = nullptr;
 
     TocTree() = default;

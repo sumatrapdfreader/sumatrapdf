@@ -28,8 +28,6 @@ struct VbkmFile {
 };
 
 bool ExportBookmarksToFile(const Vec<VbkmForFile*>&, const char* name, const char* path);
-bool ExportBookmarksToFile2(const Vec<VbkmForFile*>& bookmarks, TocTree* tocTree, const char* name,
-                            const char* bkmPath);
 
 bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm);
 

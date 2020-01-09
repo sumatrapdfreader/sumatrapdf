@@ -852,7 +852,6 @@ TocTree* EpubEngineImpl::GetToc() {
         return nullptr;
     }
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 
@@ -973,7 +972,6 @@ TocTree* Fb2EngineImpl::GetToc() {
         return nullptr;
     }
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 
@@ -1126,7 +1124,6 @@ TocTree* MobiEngineImpl::GetToc() {
         return nullptr;
     }
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 
@@ -1226,7 +1223,6 @@ TocTree* PdbEngineImpl::GetToc() {
     doc->ParseToc(&builder);
     auto* root = builder.GetRoot();
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 
@@ -1575,7 +1571,6 @@ TocTree* ChmEngineImpl::GetToc() {
         return nullptr;
     }
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 
@@ -1803,7 +1798,6 @@ TocTree* TxtEngineImpl::GetToc() {
     auto* root = builder.GetRoot();
 
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 

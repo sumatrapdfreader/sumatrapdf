@@ -759,7 +759,6 @@ TocTree* ImageDirEngineImpl::GetToc() {
         root->AddSibling(item);
     }
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(fileName);
     return tocTree;
 }
 
@@ -1036,7 +1035,6 @@ bool CbxEngineImpl::FinishLoading() {
         }
     }
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(FileName());
 
     for (int i = 0; i < pageCount; i++) {
         size_t fileId = files[i]->fileId;

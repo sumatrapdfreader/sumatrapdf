@@ -839,7 +839,6 @@ TocTree* EbookController::GetToc() {
         return nullptr;
     }
     tocTree = new TocTree(root);
-    tocTree->filePath = strconv::WstrToUtf8(FilePath());
     return tocTree;
 }
 

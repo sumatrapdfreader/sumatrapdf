@@ -926,28 +926,23 @@ TocTree* PdfEngineImpl::GetToc() {
     int idCounter = 0;
 
     TocItem* root = nullptr;
-    const char* path = strconv::WstrToUtf8(fileName).data();
     if (outline) {
         root = BuildTocTree(nullptr, outline, idCounter, false);
     }
     if (!attachments) {
         if (!root) {
-            str::Free(path);
             return nullptr;
         }
         tocTree = new TocTree(root);
-        tocTree->filePath = path;
         return tocTree;
     }
     TocItem* att = BuildTocTree(nullptr, attachments, idCounter, true);
     if (!root) {
         tocTree = new TocTree(att);
-        tocTree->filePath = path;
         return tocTree;
     }
     root->AddSibling(att);
     tocTree = new TocTree(root);
-    tocTree->filePath = path;
     return tocTree;
 }
 
