@@ -1265,7 +1265,7 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
             DisplayState* state = gFileHistory.Find(ds->filePath, nullptr);
             if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
                 free(state->decryptionKey);
-                state->decryptionKey = decryptionKey.StealData();
+                state->decryptionKey = decryptionKey.release();
             }
         }
     }

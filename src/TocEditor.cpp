@@ -15,6 +15,7 @@
 #include "wingui/ButtonCtrl.h"
 
 #include "EngineBase.h"
+#include "EngineMulti.h"
 #include "EngineManager.h"
 
 #include "ParseBKM.h"
@@ -101,38 +102,6 @@ static void AddPageNumbersToTocItemsRecur(TocItem* ti) {
         AddPageNumbersToTocItemsRecur(ti->child);
         ti = ti->next;
     }
-}
-
-static void CollectTocItemsRecur(TocItem* ti, Vec<TocItem*>& v) {
-    while (ti) {
-        v.push_back(ti);
-        CollectTocItemsRecur(ti->child, v);
-        ti = ti->next;
-    }
-}
-
-static bool cmpByPageNo(TocItem* ti1, TocItem* ti2) {
-    return ti1->pageNo < ti2->pageNo;
-}
-
-void CalcEndPageNo(TocItem* root, int nPages) {
-    Vec<TocItem*> tocItems;
-    CollectTocItemsRecur(root, tocItems);
-    size_t n = tocItems.size();
-    if (n < 1) {
-        return;
-    }
-    std::sort(tocItems.begin(), tocItems.end(), cmpByPageNo);
-    TocItem* prev = tocItems[0];
-    for (size_t i = 1; i < n; i++) {
-        TocItem* next = tocItems[i];
-        prev->endPageNo = next->pageNo - 1;
-        if (prev->endPageNo < prev->pageNo) {
-            prev->endPageNo = prev->pageNo;
-        }
-        prev = next;
-    }
-    prev->endPageNo = nPages;
 }
 
 static void UpdateTreeModel(TocEditorWindow* w) {

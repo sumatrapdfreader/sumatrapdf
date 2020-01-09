@@ -238,7 +238,37 @@ int EngineMultiImpl::GetPageByLabel(const WCHAR* label) const {
     return -1;
 }
 
-extern void CalcEndPageNo(TocItem* root, int nPages);
+static void CollectTocItemsRecur(TocItem* ti, Vec<TocItem*>& v) {
+    while (ti) {
+        v.push_back(ti);
+        CollectTocItemsRecur(ti->child, v);
+        ti = ti->next;
+    }
+}
+
+static bool cmpByPageNo(TocItem* ti1, TocItem* ti2) {
+    return ti1->pageNo < ti2->pageNo;
+}
+
+void CalcEndPageNo(TocItem* root, int nPages) {
+    Vec<TocItem*> tocItems;
+    CollectTocItemsRecur(root, tocItems);
+    size_t n = tocItems.size();
+    if (n < 1) {
+        return;
+    }
+    std::sort(tocItems.begin(), tocItems.end(), cmpByPageNo);
+    TocItem* prev = tocItems[0];
+    for (size_t i = 1; i < n; i++) {
+        TocItem* next = tocItems[i];
+        prev->endPageNo = next->pageNo - 1;
+        if (prev->endPageNo < prev->pageNo) {
+            prev->endPageNo = prev->pageNo;
+        }
+        prev = next;
+    }
+    prev->endPageNo = nPages;
+}
 
 static void MarkAsInvisibleRecur(TocItem* ti, bool markInvisible, Vec<bool>& visible) {
     while (ti) {

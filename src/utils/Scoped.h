@@ -186,15 +186,7 @@ struct AutoFree {
         len = 0;
     }
 
-    [[nodiscard]] char* StealData() {
-        char* res = data;
-        data = nullptr;
-        len = 0;
-        return res;
-    }
-
-    [[nodiscard]]
-    char* steal() {
+    [[nodiscard]] char* release() {
         char* res = data;
         data = nullptr;
         len = 0;
