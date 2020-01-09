@@ -251,6 +251,13 @@ bool StartsWithI(const char* s, const char* txt) {
     return 0 == _strnicmp(s, txt, str::Len(txt));
 }
 
+bool Contains(std::string_view s, const char* txt) {
+    // TODO: needs to respect s.size()
+    const char* p = str::Find(s.data(), txt);
+    bool contains = p != nullptr;
+    return contains;
+}
+
 bool EndsWith(const char* txt, const char* end) {
     if (!txt || !end)
         return false;

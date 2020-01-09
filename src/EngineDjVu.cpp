@@ -45,7 +45,7 @@ static PageDestination* newDjVuDestination(const char* link) {
     }
 
     // invalid but seen in a crash report
-    if (str::Eq(lnk, "#")) {
+    if (str::Eq(link, "#")) {
         res->kind = kindDestinationNone;
         return res;        
     }
