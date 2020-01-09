@@ -6,14 +6,19 @@ struct WindowBase;
 struct Window;
 
 struct WndProcArgs {
-    WindowBase* w = nullptr;
+    // args sent to WndProc
     HWND hwnd = nullptr;
     UINT msg = 0;
     WPARAM wparam = 0;
     LPARAM lparam = 0;
 
+    // indicate if we handled the message and the result (if handled)
     bool didHandle = false;
     LRESULT result = 0;
+
+    // window that logically received the message
+    // (we reflect messages sent to parent windows back to real window)
+    WindowBase* w = nullptr;
 };
 
 #define SetWndProcArgs(n) \
@@ -27,19 +32,12 @@ struct WndProcArgs {
 
 typedef std::function<void(WndProcArgs*)> MsgFilter;
 
-struct SizeArgs {
-    WindowBase* w = nullptr;
-    HWND hwnd = nullptr;
+struct SizeArgs : WndProcArgs {
     int dx = 0;
     int dy = 0;
-
-    WPARAM wparam = 0; // resize type
-    LPARAM lparam = 0;
-
-    bool didHandle = false;
 };
 
-typedef std::function<void(SizeArgs*)> OnSize;
+typedef std::function<void(SizeArgs*)> SizeHandler;
 
 struct ContextMenuArgs {
     WndProcArgs* procArgs = nullptr;
@@ -150,7 +148,7 @@ extern Kind kindWindow;
 // calling Create()
 struct Window : public WindowBase {
     OnWmCommand onWmCommand = nullptr;
-    OnSize onSize = nullptr;
+    SizeHandler onSize = nullptr;
     OnClose onClose = nullptr;
     OnDestroyed onDestroyed = nullptr;
 
