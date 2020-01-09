@@ -54,11 +54,11 @@ struct WindowCloseArgs : WndProcArgs {
 
 typedef std::function<void(WindowCloseArgs*)> CloseHandler;
 
-struct WindowDestroyedArgs {
+struct WindowDestroyArgs : WndProcArgs {
     Window* window = nullptr;
 };
 
-typedef std::function<void(WindowDestroyedArgs*)> OnDestroyed;
+typedef std::function<void(WindowDestroyArgs*)> DestroyHandler;
 
 extern Kind kindWindowBase;
 
@@ -147,7 +147,7 @@ extern Kind kindWindow;
 struct Window : public WindowBase {
     OnWmCommand onWmCommand = nullptr;
     CloseHandler onClose = nullptr;
-    OnDestroyed onDestroyed = nullptr;
+    DestroyHandler onDestroy = nullptr;
 
     Window();
     ~Window() override;

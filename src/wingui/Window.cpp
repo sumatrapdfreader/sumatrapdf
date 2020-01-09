@@ -113,7 +113,6 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
 
-
     if (msg == WM_CONTEXTMENU && w->onContextMenu) {
         ContextMenuArgs args;
         SetWndProcArgs(args);
@@ -332,14 +331,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     // this is the last message ever received by hwnd
     if (WM_NCDESTROY == msg) {
-        if (w->onDestroyed) {
-            WindowDestroyedArgs args{};
+        if (w->onDestroy) {
+            WindowDestroyArgs args{};
+            SetWndProcArgs(args);
             args.window = w;
-            w->onDestroyed(&args);
-        } else {
-            // TODO: maybe for top-level windows call PostQuitMessage();
+            w->onDestroy(&args);
+            return 0;
         }
-        return 0;
+        return DefWindowProc(hwnd, msg, wp, lp);
     }
 
     if (WM_CLOSE == msg) {
@@ -352,15 +351,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
         } else {
             w->Destroy();
-        }
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    if (WM_NCDESTROY == msg) {
-        if (w->onDestroyed) {
-            WindowDestroyedArgs args;
-            args.window = w;
-            w->onDestroyed(&args);
         }
         return DefWindowProc(hwnd, msg, wp, lp);
     }
@@ -411,10 +401,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     if ((WM_SIZE == msg) && w->onSize) {
         SizeArgs args;
-        args.w = w;
-        args.hwnd = hwnd;
-        args.wparam = wp;
-        args.lparam = lp;
+        SetWndProcArgs(args);
         args.dx = LOWORD(lp);
         args.dy = HIWORD(lp);
         w->onSize(&args);

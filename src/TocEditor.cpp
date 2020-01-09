@@ -363,7 +363,7 @@ void TocEditorWindow::OnWindowSize(SizeArgs* args) {
     args->didHandle = true;
 }
 
-static void OnWindowDestroyed(WindowDestroyedArgs*) {
+static void OnWindowDestroyed(WindowDestroyArgs*) {
     delete gWindow;
     gWindow = nullptr;
 }
@@ -412,7 +412,7 @@ static void PositionCloseTo(WindowBase* w, HWND hwnd) {
 void StartTocEditor(TocEditorArgs* args) {
     if (gWindow != nullptr) {
         // TODO: maybe allow multiple windows
-        gWindow->mainWindow->onDestroyed = nullptr;
+        gWindow->mainWindow->onDestroy = nullptr;
         delete gWindow;
         gWindow = nullptr;
     }
@@ -437,7 +437,7 @@ void StartTocEditor(TocEditorArgs* args) {
 
     using namespace std::placeholders;
     w->onSize = std::bind(&TocEditorWindow::OnWindowSize, gWindow, _1);
-    w->onDestroyed = OnWindowDestroyed;
+    w->onDestroy = OnWindowDestroyed;
 
     gWindow->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::OnTreeItemChanged, gWindow, _1);
     gWindow->treeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
