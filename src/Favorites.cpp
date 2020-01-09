@@ -778,7 +778,7 @@ TreeItem* GetOrSelectTreeItemAtPos(ContextMenuArgs* args, POINT& pt) {
 }
 
 static void OnFavTreeContextMenu(ContextMenuArgs* args) {
-    args->procArgs->didHandle = true;
+    args->didHandle = true;
 
     TreeCtrl* treeCtrl = (TreeCtrl*)args->w;
     CrashIf(!IsTree(treeCtrl->kind));

@@ -113,25 +113,25 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
 
-    WndProcArgs args{};
-    SetWndProcArgs(args);
 
     if (msg == WM_CONTEXTMENU && w->onContextMenu) {
-        ContextMenuArgs a;
-        a.procArgs = &args;
-        a.w = w;
-        a.mouseGlobal.x = GET_X_LPARAM(lp);
-        a.mouseGlobal.y = GET_Y_LPARAM(lp);
-        POINT pt{a.mouseGlobal.x, a.mouseGlobal.y};
+        ContextMenuArgs args;
+        SetWndProcArgs(args);
+        args.w = w;
+        args.mouseGlobal.x = GET_X_LPARAM(lp);
+        args.mouseGlobal.y = GET_Y_LPARAM(lp);
+        POINT pt{args.mouseGlobal.x, args.mouseGlobal.y};
         if (pt.x != -1) {
             MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
         }
-        a.mouseWindow.x = pt.x;
-        a.mouseWindow.y = pt.y;
-        w->onContextMenu(&a);
+        args.mouseWindow.x = pt.x;
+        args.mouseWindow.y = pt.y;
+        w->onContextMenu(&args);
         return 0;
     }
 
+    WndProcArgs args{};
+    SetWndProcArgs(args);
     w->WndProcParent(&args);
     if (args.didHandle) {
         return args.result;
