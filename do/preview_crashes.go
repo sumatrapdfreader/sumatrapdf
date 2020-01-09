@@ -17,7 +17,7 @@ import (
 // we don't want want to show crsahes for outdated builds
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
-const lowestCrashingBuildToShow = 11939
+const lowestCrashingBuildToShow = 11976
 
 const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
 
@@ -65,7 +65,7 @@ func parseCrashVersion(s string) *CrashVersion {
 	}
 	// 3.2.11495
 	parts = strings.Split(v, ".")
-	u.PanicIf(len(parts) < 3, "has %d parts in '%s'", len(parts), v)
+	u.PanicIf(len(parts) < 2, "has %d parts in '%s'", len(parts), v)
 	if len(parts) == 3 {
 		build, err := strconv.Atoi(parts[2])
 		must(err)

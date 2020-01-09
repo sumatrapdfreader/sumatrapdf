@@ -375,6 +375,9 @@ static void fz_unlock_context_cs(void* user, int lock) {
 
 static void fz_print_cb(void* user, const char* msg) {
     log(msg);
+    if (!str::EndsWith(msg, "\n")) {
+        log("\n")
+    }
 }
 
 static void installFitzErrorCallbacks(fz_context* ctx) {

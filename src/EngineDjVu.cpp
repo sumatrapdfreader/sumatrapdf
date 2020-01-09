@@ -44,6 +44,12 @@ static PageDestination* newDjVuDestination(const char* link) {
         return res;
     }
 
+    // invalid but seen in a crash report
+    if (str::Eq(lnk, "#")) {
+        res->kind = kindDestinationNone;
+        return res;        
+    }
+
     if (str::Eq(link, "#+1")) {
         res->kind = kindDestinationNextPage;
         return res;
@@ -66,8 +72,16 @@ static PageDestination* newDjVuDestination(const char* link) {
         return res;
     }
 
+    // very lenient heuristic
+    bool couldBeURL = str::Contains(link, ".");
+    if (couldBeURL) {
+        res->kind = kindDestinationLaunchURL;
+        res->value = strconv::Utf8ToWstr(link);
+        return res;
+    }
+
     if (!res->kind) {
-        logf("link: '%s'\n", link);
+        logf("unsupported djvu link: '%s'\n", link);
         CrashIf(!res->kind);
     }
 
