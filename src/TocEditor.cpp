@@ -35,6 +35,7 @@ struct TocEditorWindow {
     ILayout* layoutButtons = nullptr;
 
     TreeCtrl* treeCtrl = nullptr;
+    TreeModel* treeModel = nullptr;
 
     bool canRemovePdf = false;
 
@@ -45,7 +46,7 @@ struct TocEditorWindow {
 };
 
 TocEditorWindow::~TocEditorWindow() {
-    delete treeCtrl->treeModel;
+    delete treeModel;
 
     // deletes all controls owned by layout
     delete mainLayout;
@@ -134,11 +135,14 @@ void CalcEndPageNo(TocItem* root, int nPages) {
     prev->endPageNo = nPages;
 }
 
-static void UpdateTreeModel() {
-    TreeCtrl* treeCtrl = gWindow->treeCtrl;
-    auto& bookmarks = gWindow->tocArgs->bookmarks;
-    delete treeCtrl->treeModel;
-    treeCtrl->treeModel = nullptr;
+static void UpdateTreeModel(TocEditorWindow* w) {
+    TreeCtrl* treeCtrl = w->treeCtrl;
+    treeCtrl->Clear();
+
+    delete w->treeModel;
+    w->treeModel = nullptr;
+
+    auto& bookmarks = w->tocArgs->bookmarks;
 
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
@@ -163,13 +167,13 @@ static void UpdateTreeModel() {
             curr = i;
         }
     }
-    TocTree* tm = new TocTree();
-    tm->root = root;
-    treeCtrl->SetTreeModel(tm);
+    w->treeModel = new TocTree(root);
+    treeCtrl->SetTreeModel(w->treeModel);
 }
 
 static void AddPdf() {
-    HWND hwnd = gWindow->mainWindow->hwnd;
+    TocEditorWindow* w = gWindow;
+    HWND hwnd = w->mainWindow->hwnd;
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
@@ -191,6 +195,7 @@ static void AddPdf() {
         return;
     }
     WCHAR* filePath = ofn.lpstrFile;
+
     EngineBase* engine = EngineManager::CreateEngine(filePath);
     if (!engine) {
         ShowErrorMessage("Failed to open a file!");
@@ -210,8 +215,9 @@ static void AddPdf() {
     bookmarks->toc = tocTree;
     bookmarks->filePath = str::Dup(tocTree->filePath);
     bookmarks->nPages = nPages;
-    gWindow->tocArgs->bookmarks.push_back(bookmarks);
-    UpdateTreeModel();
+    w->tocArgs->bookmarks.push_back(bookmarks);
+
+    UpdateTreeModel(w);
 }
 
 static void RemovePdf() {
@@ -240,7 +246,7 @@ static void RemovePdf() {
     CrashIf(!bkmToRemove);
     w->tocArgs->bookmarks.RemoveAt(toRemoveIdx);
     delete bkmToRemove;
-    UpdateTreeModel();
+    UpdateTreeModel(w);
 }
 
 static void UpdateRemovePdfButtonStatus(TocEditorWindow* w) {
@@ -467,7 +473,7 @@ void StartTocEditor(TocEditorArgs* args) {
     gWindow->treeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
     gWindow->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::OnTreeItemSelected, gWindow, _1);
 
-    UpdateTreeModel();
+    UpdateTreeModel(gWindow);
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     w->SetIsVisible(true);

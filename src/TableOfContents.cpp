@@ -432,7 +432,7 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
         vbkm.vbkms.clear();
     } else {
         VbkmForFile* bkms = new VbkmForFile();
-        bkms->filePath = filePath.StealData();
+        bkms->filePath = filePath.steal();
         bkms->nPages = tab->ctrl->PageCount();
 
         TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
