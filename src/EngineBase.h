@@ -249,10 +249,8 @@ struct TocItem : TreeItem {
 TocItem* CloneTocItemRecur(TocItem*);
 
 struct TocTree : TreeModel {
-    // name of the bookmark view
-    AutoFree name;
-
     // path of the file
+    // TODO: move this somewhere else because it doesn't belong here
     AutoFree filePath;
 
     TocItem* root = nullptr;

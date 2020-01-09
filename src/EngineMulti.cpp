@@ -288,6 +288,14 @@ static void MarkAsHideUncheckedRecur(TocItem* ti) {
     }
 }
 
+void MarkAsDontHideUncheckedRecur(TocItem* ti) {
+    while (ti) {
+        ti->hideUnchecked = false;
+        MarkAsDontHideUncheckedRecur(ti->child);
+        ti = ti->next;
+    }
+}
+
 static void removeUncheckedRecur(TocItem* ti) {
     while (ti) {
         if (ti->child && ti->child->isUnchecked) {

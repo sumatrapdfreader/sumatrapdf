@@ -683,8 +683,10 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
     return next;
 }
 
-// Jump to named destination DDE command. Command format:
-// [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
+// DDE command: jump to named destination in an already opened document.
+// Format:
+// [GoToNamedDest("<pdffilepath>","<destination name>")], e.g.:
+// [GoToNamedDest("c:\file.pdf", "chapter.1")]
 static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, destName;
     const WCHAR* next = str::Parse(cmd, L"[GotoNamedDest(\"%S\",%? \"%S\")]", &pdfFile, &destName);
@@ -709,8 +711,13 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
     return next;
 }
 
-// Jump to page DDE command. Format:
-// [<DDECOMMAND_PAGE>("<pdffilepath>", <page number>)]
+// DDE command: jump to a page in an already opened document.
+// Format:
+// [GoToPage("<pdffilepath>",<page number>)]
+//  eg:
+// [GoToPage("c:\file.pdf",37)]
+#define DDECOMMAND_PAGE L"GotoPage"
+
 static const WCHAR* HandlePageCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile;
     UINT page = 0;

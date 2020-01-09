@@ -287,7 +287,6 @@ TocItem* CloneTocItemRecur(TocItem* ti) {
 TocTree* CloneTocTree(TocTree* tree) {
     TocTree* res = new TocTree();
     res->filePath = str::Dup(tree->filePath);
-    res->name = str::Dup(tree->name);
     res->root = CloneTocItemRecur(tree->root);
     return res;
 }

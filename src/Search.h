@@ -12,16 +12,6 @@
 //  eg: [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
 #define DDECOMMAND_SYNC L"ForwardSearch"
 
-// jump to named destination command
-//  format: [GoToNamedDest("<pdffilepath>","<destination name>")]
-//  eg: [GoToNamedDest("c:\file.pdf", "chapter.1")]. pdf file must be already opened
-#define DDECOMMAND_GOTO L"GotoNamedDest"
-
-// jump to page command
-//  format: [GoToPage("<pdffilepath>",<page number>)]
-//  eg: [GoToPage("c:\file.pdf", 37)]. pdf file must be already opened
-#define DDECOMMAND_PAGE L"GotoPage"
-
 // set view mode and zoom level
 //  format: [SetView("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
 //  eg: [SetView("c:\file.pdf", "book view", -2)]

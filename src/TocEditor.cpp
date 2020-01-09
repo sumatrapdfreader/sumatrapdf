@@ -266,13 +266,17 @@ static void SaveVirtual() {
     char* path = tocArgs->bookmarks[0]->filePath;
 
     str::WStr pathw = strconv::Utf8ToWstr(path);
-    pathw.Append(L".vbkm");
-    WCHAR dstFileName[MAX_PATH];
+    // if the source was .vbkm file, we over-write it by default
+    // any other format, we add .vbkm extension by default
+    if (!str::EndsWithI(path, ".vbkm")) {
+        pathw.Append(L".vbkm");
+    }
+    WCHAR dstFileName[MAX_PATH]{0};
     str::BufSet(&(dstFileName[0]), dimof(dstFileName), pathw.Get());
 
     HWND hwnd = gWindow->mainWindow->hwnd;
 
-    OPENFILENAME ofn = {0};
+    OPENFILENAME ofn{0};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = dstFileName;

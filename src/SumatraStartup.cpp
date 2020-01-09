@@ -207,9 +207,9 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, CommandLineInfo&
     str::WStr cmd;
     cmd.AppendFmt(L"[Open(\"%s\", 0, 1, 0)]", fullpath);
     if (i.destName && isFirstWin) {
-        cmd.AppendFmt(L"[" DDECOMMAND_GOTO L"(\"%s\", \"%s\")]", fullpath, i.destName);
+        cmd.AppendFmt(L"[GotoNamedDest(\"%s\", \"%s\")]", fullpath, i.destName);
     } else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.AppendFmt(L"[" DDECOMMAND_PAGE L"(\"%s\", %d)]", fullpath, i.pageNumber);
+        cmd.AppendFmt(L"[GotoPage(\"%s\", %d)]", fullpath, i.pageNumber);
     }
     if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
@@ -228,8 +228,9 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, CommandLineInfo&
         // try WM_COPYDATA first, as that allows targetting a specific window
         COPYDATASTRUCT cds = {0x44646557 /* DdeW */, (DWORD)(cmd.size() + 1) * sizeof(WCHAR), cmd.Get()};
         LRESULT res = SendMessage(targetWnd, WM_COPYDATA, 0, (LPARAM)&cds);
-        if (res)
+        if (res) {
             return;
+        }
     }
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
 }

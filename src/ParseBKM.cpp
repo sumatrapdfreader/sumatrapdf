@@ -265,6 +265,7 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
     }
 #endif
     auto tree = new TocTree();
+    tree->filePath = str::Dup(file.val);
     // tree->name = str::Dup(title.val);
     size_t indent = 0;
     std::string_view line;
@@ -390,6 +391,7 @@ bool ExportBookmarksToFile2(const Vec<VbkmForFile*>& bookmarks, TocTree* tocTree
     for (int i = 0; i < n; i++) {
         TocItem* root = (TocItem*)tocTree->RootAt(i);
         const char* path = bookmarks[i]->toc->filePath;
+        CrashIf(!path);
         s.AppendFmt("file: %s\n", path);
         SerializeBookmarksRec(root, 0, s);
     }

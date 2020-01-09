@@ -324,21 +324,25 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, TocTree* do
 }
 
 // copied from mupdf/fitz/dev_text.c
-#define ISLEFTTORIGHTCHAR(c) \
-    ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
-#define ISRIGHTTOLEFTCHAR(c)                                                                                     \
-    ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || \
-     (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFE))
+static bool isLeftToRightChar(WCHAR c) {
+    return ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06));
+}
+
+static bool isRightToLeftChar(WCHAR c) {
+    return ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) ||
+            (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFE));
+}
 
 static void GetLeftRightCounts(TocItem* node, int& l2r, int& r2l) {
     if (!node)
         return;
     if (node->title) {
         for (const WCHAR* c = node->title; *c; c++) {
-            if (ISLEFTTORIGHTCHAR(*c))
+            if (isLeftToRightChar(*c)) {
                 l2r++;
-            else if (ISRIGHTTOLEFTCHAR(*c))
+            } else if (isRightToLeftChar(*c)) {
                 r2l++;
+            }
         }
     }
     GetLeftRightCounts(node->child, l2r, r2l);
@@ -405,6 +409,15 @@ static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
 }
 
+static bool IsForVbkm(WindowInfo* win) {
+    auto path = win->currentTab->filePath.get();
+    bool isVbkm = str::EndsWithI(path, L".vbkm");
+    return isVbkm;
+}
+
+// in EngineMulti.cpp
+extern void MarkAsDontHideUncheckedRecur(TocItem* ti);
+
 static void StartTocEditorForWindowInfo(WindowInfo* win) {
     auto* tab = win->currentTab;
     TocEditorArgs* args = new TocEditorArgs();
@@ -415,15 +428,11 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
 
     TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
     bkms->toc = CloneTocTree(tree);
+    // if this is coming from EngineMuilti, we have to undo "hide unchecked"
+    MarkAsDontHideUncheckedRecur(bkms->toc->root);
     args->bookmarks.push_back(bkms);
     args->hwndRelatedTo = win->hwndFrame;
     StartTocEditor(args);
-}
-
-static bool IsForVbkm(WindowInfo* win) {
-    auto path = win->currentTab->filePath.get();
-    bool isVbkm = str::EndsWithI(path, L".vbkm");
-    return isVbkm;
 }
 
 static void OnTocContextMenu(ContextMenuArgs* args) {
