@@ -263,8 +263,11 @@ PageDestination* TocItem::GetPageDestination() {
     return dest;
 }
 
-TocItem* CloneTocItemRecur(TocItem* ti) {
+TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
     if (ti == nullptr) {
+        return nullptr;
+    }
+    if (removeUnchecked && ti->isUnchecked) {
         return nullptr;
     }
     TocItem* res = new TocItem();
@@ -273,21 +276,27 @@ TocItem* CloneTocItemRecur(TocItem* ti) {
     res->isOpenDefault = ti->isOpenDefault;
     res->isOpenToggled = ti->isOpenToggled;
     res->isUnchecked = ti->isUnchecked;
-    res->hideUnchecked = ti->hideUnchecked;
     res->pageNo = ti->pageNo;
     res->id = ti->id;
     res->fontFlags = ti->fontFlags;
     res->color = ti->color;
     res->dest = clonePageDestination(ti->dest);
-    res->child = CloneTocItemRecur(ti->child);
-    res->next = CloneTocItemRecur(ti->next);
+    res->child = CloneTocItemRecur(ti->child, removeUnchecked);
+
+    ti = ti->next;
+    if (removeUnchecked) {
+        while (ti && ti->isUnchecked) {
+            ti = ti->next;
+        }
+    }
+    res->next = CloneTocItemRecur(ti, removeUnchecked);
     return res;
 }
 
-TocTree* CloneTocTree(TocTree* tree) {
+TocTree* CloneTocTree(TocTree* tree, bool removeUnchecked) {
     TocTree* res = new TocTree();
     res->filePath = str::Dup(tree->filePath);
-    res->root = CloneTocItemRecur(tree->root);
+    res->root = CloneTocItemRecur(tree->root, removeUnchecked);
     return res;
 }
 
@@ -303,9 +312,7 @@ int TocItem::ChildCount() {
     int n = 0;
     auto node = child;
     while (node) {
-        if (node->IsVisible()) {
-            n++;
-        }
+        n++;
         node = node->next;
     }
     return n;
@@ -314,9 +321,7 @@ int TocItem::ChildCount() {
 TreeItem* TocItem::ChildAt(int n) {
     auto node = child;
     while (n > 0) {
-        if (node->IsVisible()) {
-            n--;
-        }
+        n--;
         node = node->next;
     }
     return node;
@@ -332,17 +337,6 @@ bool TocItem::IsExpanded() {
     // - not expanded by default, toggled (false, true)
     // which boils down to:
     return isOpenDefault != isOpenToggled;
-}
-
-bool TocItem::IsHidden() const {
-    if (!hideUnchecked) {
-        return false;
-    }
-    return isUnchecked;
-}
-
-bool TocItem::IsVisible() const {
-    return !IsHidden();
 }
 
 bool TocItem::IsChecked() {
@@ -372,9 +366,7 @@ int TocTree::RootCount() {
     int n = 0;
     auto node = root;
     while (node) {
-        if (node->IsVisible()) {
-            n++;
-        }
+        n++;
         node = node->next;
     }
     return n;
@@ -383,9 +375,7 @@ int TocTree::RootCount() {
 TreeItem* TocTree::RootAt(int n) {
     auto node = root;
     while (n > 0) {
-        if (node->IsVisible()) {
-            n--;
-        }
+        n--;
         node = node->next;
     }
     return node;

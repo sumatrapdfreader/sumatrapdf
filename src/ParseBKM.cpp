@@ -458,3 +458,13 @@ bool ParseVbkmFile(std::string_view d, VbkmFile& vbkm) {
     }
     return true;
 }
+
+bool LoadVbkmFile(const char* filePath, VbkmFile& vbkm) {
+    std::string_view sv = file::ReadFile(filePath);
+    if (sv.empty()) {
+        return false;
+    }
+    AutoFree svFree = sv;
+    bool ok = ParseVbkmFile(sv, vbkm);
+    return ok;
+}

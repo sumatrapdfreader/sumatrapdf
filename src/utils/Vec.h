@@ -171,6 +171,9 @@ class Vec {
     [[nodiscard]] size_t size() const {
         return len;
     }
+    [[nodiscard]] int isize() const {
+        return (int)len;
+    }
 
     bool InsertAt(size_t idx, const T& el) {
         T* p = MakeSpaceAt(idx, 1);

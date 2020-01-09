@@ -297,7 +297,7 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
 static void UpdateDocTocExpansionStateRecur(TreeCtrl* treeCtrl, Vec<int>& tocState, TocItem* tocItem) {
     while (tocItem) {
         // items without children cannot be toggled
-        if (tocItem->IsVisible() && tocItem->child) {
+        if (tocItem->child) {
             // we have to query the state of the tree view item because
             // isOpenToggled is not kept in sync
             // TODO: keep toggle state on TocItem in sync
@@ -375,7 +375,7 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     Vec<VbkmForFile*> bookmarks;
 
     VbkmForFile* bkms = new VbkmForFile();
-    bkms->toc = CloneTocTree(tocTree);
+    bkms->toc = CloneTocTree(tocTree, false);
     bookmarks.push_back(bkms);
     bool ok = ExportBookmarksToFile(bookmarks, "", path.c_str());
     delete bkms;
@@ -415,22 +415,31 @@ static bool IsForVbkm(WindowInfo* win) {
     return isVbkm;
 }
 
-// in EngineMulti.cpp
-extern void MarkAsDontHideUncheckedRecur(TocItem* ti);
-
 static void StartTocEditorForWindowInfo(WindowInfo* win) {
     auto* tab = win->currentTab;
     TocEditorArgs* args = new TocEditorArgs();
     // args->filePath = str::Dup(tab->filePath);
-    VbkmForFile* bkms = new VbkmForFile();
-    bkms->filePath = (char*)strconv::WstrToUtf8(tab->filePath).data();
-    bkms->nPages = tab->ctrl->PageCount();
 
-    TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
-    bkms->toc = CloneTocTree(tree);
-    // if this is coming from EngineMuilti, we have to undo "hide unchecked"
-    MarkAsDontHideUncheckedRecur(bkms->toc->root);
-    args->bookmarks.push_back(bkms);
+    VbkmFile vbkm;
+    AutoFree filePath = strconv::WstrToUtf8(tab->filePath);
+    if (str::EndsWithI(tab->filePath, L".vbkm")) {
+        LoadVbkmFile(filePath, vbkm);
+        int n = vbkm.vbkms.isize();
+        for (int i = 0; i < n; i++) {
+            auto b = vbkm.vbkms[i];
+            args->bookmarks.push_back(b);
+        }
+        vbkm.vbkms.clear();
+    } else {
+        VbkmForFile* bkms = new VbkmForFile();
+        bkms->filePath = filePath.StealData();
+        bkms->nPages = tab->ctrl->PageCount();
+
+        TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
+        bkms->toc = CloneTocTree(tree, false);
+        args->bookmarks.push_back(bkms);
+    }
+
     args->hwndRelatedTo = win->hwndFrame;
     StartTocEditor(args);
 }

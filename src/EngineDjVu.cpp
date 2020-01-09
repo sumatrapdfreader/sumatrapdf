@@ -1061,7 +1061,7 @@ char* DjVuEngineImpl::ResolveNamedDest(const char* name) {
 PageDestination* DjVuEngineImpl::GetNamedDest(const WCHAR* name) {
     AutoFree nameUtf8(strconv::WstrToUtf8(name));
     if (!str::StartsWith(nameUtf8.Get(), "#")) {
-        nameUtf8.TakeOwnership(str::Join("#", nameUtf8.Get()));
+        nameUtf8.TakeOwnershipOf(str::Join("#", nameUtf8.Get()));
     }
 
     AutoFree link = ResolveNamedDest(nameUtf8.Get());

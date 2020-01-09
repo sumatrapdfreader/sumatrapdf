@@ -154,29 +154,29 @@ struct AutoFree {
     // AutoFree& operator=(const AutoFree& other) = delete;
     // AutoFree& operator=(const AutoFree&& other) = delete;
 
-    char* get() const {
+    [[nodiscard]] char* get() const {
         return data;
     }
 
-    char* Get() const {
+    [[nodiscard]] char* Get() const {
         return data;
     }
 
-    operator char*() const {
+    [[nodiscard]] operator char*() const {
         return data;
     }
 
     // for convenince, we calculate the size if wasn't provided
     // by the caller
-    size_t size() const {
+    [[nodiscard]] size_t size() const {
         return len;
     }
 
-    bool empty() {
+    [[nodiscard]] bool empty() {
         return (data == nullptr) || (len == 0);
     }
 
-    std::string_view as_view() {
+    [[nodiscard]] std::string_view as_view() {
         return {data, len};
     }
 
@@ -186,14 +186,22 @@ struct AutoFree {
         len = 0;
     }
 
-    char* StealData() {
+    [[nodiscard]] char* StealData() {
         char* res = data;
         data = nullptr;
         len = 0;
         return res;
     }
 
-    void TakeOwnership(const char* s, size_t size = 0) {
+    [[nodiscard]]
+    char* steal() {
+        char* res = data;
+        data = nullptr;
+        len = 0;
+        return res;
+    }
+
+    void TakeOwnershipOf(const char* s, size_t size = 0) {
         free(data);
         data = (char*)s;
         if (size == 0) {

@@ -280,22 +280,6 @@ static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
     MarkAsVisibleRecur(root, !root->isUnchecked, visible);
 }
 
-static void MarkAsHideUncheckedRecur(TocItem* ti) {
-    while (ti) {
-        ti->hideUnchecked = true;
-        MarkAsHideUncheckedRecur(ti->child);
-        ti = ti->next;
-    }
-}
-
-void MarkAsDontHideUncheckedRecur(TocItem* ti) {
-    while (ti) {
-        ti->hideUnchecked = false;
-        MarkAsDontHideUncheckedRecur(ti->child);
-        ti = ti->next;
-    }
-}
-
 static void removeUncheckedRecur(TocItem* ti) {
     while (ti) {
         if (ti->child && ti->child->isUnchecked) {
@@ -308,29 +292,24 @@ static void removeUncheckedRecur(TocItem* ti) {
 }
 
 bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
-    std::string_view sv = file::ReadFile(fileName);
-    if (sv.empty()) {
-        return false;
-    }
-    AutoFree svFree = sv;
-    bool ok = ParseVbkmFile(sv, vbkm);
-    if (!ok) {
-        return false;
-    }
+    AutoFree filePath = strconv::WstrToUtf8(fileName);
+    bool ok = LoadVbkmFile(filePath.get(), vbkm);
 
-    // open respective engines
+    // create a TocTree combining all the files and hiding nodes that are unchecked
+    // create a mapping between "virtual page" (from combined documents) to
+    // a page in a given engine
     int nOpened = 0;
     int nTotalPages = 0;
+    TocItem* tocCombinedRoot = nullptr;
+
     for (auto&& vbkm : vbkm.vbkms) {
-        if (vbkm->filePath.empty()) {
-            continue;
-        }
+        CrashIf(vbkm->filePath.empty());
         AutoFreeWstr path = strconv::Utf8ToWstr(vbkm->filePath.as_view());
         vbkm->engine = EngineManager::CreateEngine(path, pwdUI);
         if (!vbkm->engine) {
             return false;
         }
-        tocTree = CloneTocTree(vbkm->toc);
+        AutoDelete<TocTree> tree = CloneTocTree(vbkm->toc, false);
         EngineBase* engine = vbkm->engine;
         if (!vbkm->engine) {
             return false;
@@ -341,7 +320,7 @@ bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         for (int i = 0; i < nPages; i++) {
             visiblePages.Append(true);
         }
-        CalcRemovedPages(tocTree->root, visiblePages);
+        CalcRemovedPages(tree->root, visiblePages);
 
         int nPage = 0;
         for (int i = 0; i < nPages; i++) {
@@ -353,14 +332,23 @@ bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
             nPage++;
         }
         nOpened++;
-        updateTocItemsPageNo(tocTree->root, nTotalPages);
-        // removeUncheckedRecur(tocTree->root);
-        MarkAsHideUncheckedRecur(tocTree->root);
+        updateTocItemsPageNo(tree->root, nTotalPages);
+        removeUncheckedRecur(tree->root);
         nTotalPages += nPage;
+        TocItem* root = CloneTocItemRecur(tree->root, true);
+        if (root != nullptr) {
+            if (tocCombinedRoot) {
+                tocCombinedRoot->AddSibling(root);
+            } else {
+                tocCombinedRoot = root;
+            }
+        }
     }
     if (nOpened == 0) {
+        delete tocCombinedRoot;
         return false;
     }
+    tocTree = new TocTree(tocCombinedRoot);
     pageCount = nTotalPages;
     return true;
 }

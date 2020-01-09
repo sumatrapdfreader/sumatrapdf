@@ -145,7 +145,7 @@ static void UpdateTreeModel() {
     for (auto&& bkm : bookmarks) {
         TocItem* i = new TocItem();
         i->isOpenDefault = true;
-        i->child = CloneTocItemRecur(bkm->toc->root);
+        i->child = CloneTocItemRecur(bkm->toc->root, false);
         if (i->child) {
             CalcEndPageNo(i->child, bkm->nPages);
             AddPageNumbersToTocItemsRecur(i->child);
@@ -203,7 +203,7 @@ static void AddPdf() {
         ShowErrorMessage("File doesn't have Table of content");
         return;
     }
-    tocTree = CloneTocTree(tocTree);
+    tocTree = CloneTocTree(tocTree, false);
     int nPages = engine->PageCount();
     delete engine;
     VbkmForFile* bookmarks = new VbkmForFile();

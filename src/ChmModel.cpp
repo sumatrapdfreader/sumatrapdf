@@ -473,7 +473,7 @@ PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     if (!doc->HasData(urlUtf8.Get())) {
         unsigned int topicID;
         if (str::Parse(name, L"%u%$", &topicID)) {
-            urlUtf8.TakeOwnership(doc->ResolveTopicID(topicID));
+            urlUtf8.TakeOwnershipOf(doc->ResolveTopicID(topicID));
             if (urlUtf8.Get() && doc->HasData(urlUtf8.Get())) {
                 plainUrl.Set(strconv::Utf8ToWstr(urlUtf8.Get()));
                 name = plainUrl;

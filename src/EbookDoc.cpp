@@ -432,7 +432,7 @@ bool EpubDoc::Load() {
             continue;
         }
         char* decoded = DecodeTextToUtf8(html.data, true);
-        html.TakeOwnership(decoded);
+        html.TakeOwnershipOf(decoded);
         if (!html.data) {
             continue;
         }
@@ -845,7 +845,7 @@ bool Fb2Doc::Load() {
     if (!tmp) {
         return false;
     }
-    data.TakeOwnership(tmp);
+    data.TakeOwnershipOf(tmp);
 
     HtmlPullParser parser(data.Get(), data.size());
     HtmlToken* tok;
@@ -1477,12 +1477,12 @@ static const char* TextFindRfcEnd(str::Str& htmlData, const char* curr) {
 bool TxtDoc::Load() {
     AutoFree text(file::ReadFile(fileName));
     if (str::EndsWithI(fileName, L".tcr") && str::StartsWith(text.data, TCR_HEADER)) {
-        text.TakeOwnership(DecompressTcrText(text.data, text.size()));
+        text.TakeOwnershipOf(DecompressTcrText(text.data, text.size()));
     }
     if (!text.data) {
         return false;
     }
-    text.TakeOwnership(DecodeTextToUtf8(text.data));
+    text.TakeOwnershipOf(DecodeTextToUtf8(text.data));
     if (!text.data) {
         return false;
     }

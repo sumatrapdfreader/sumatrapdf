@@ -34,3 +34,4 @@ bool ExportBookmarksToFile2(const Vec<VbkmForFile*>& bookmarks, TocTree* tocTree
 bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm);
 
 bool ParseVbkmFile(std::string_view d, VbkmFile& vbkm);
+bool LoadVbkmFile(const char* filePath, VbkmFile& vbkm);
