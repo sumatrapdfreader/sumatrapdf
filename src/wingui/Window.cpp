@@ -345,7 +345,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CLOSE == msg) {
         if (w->onClose) {
             WindowCloseArgs args{};
-            args.window = w;
+            SetWndProcArgs(args);
             w->onClose(&args);
             if (args.cancel) {
                 return 0;

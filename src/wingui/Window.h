@@ -48,12 +48,11 @@ struct ContextMenuArgs : WndProcArgs {
 
 typedef std::function<void(ContextMenuArgs*)> ContextMenuHandler;
 
-struct WindowCloseArgs {
-    Window* window = nullptr;
+struct WindowCloseArgs : WndProcArgs {
     bool cancel = false;
 };
 
-typedef std::function<void(WindowCloseArgs*)> OnClose;
+typedef std::function<void(WindowCloseArgs*)> CloseHandler;
 
 struct WindowDestroyedArgs {
     Window* window = nullptr;
@@ -147,7 +146,7 @@ extern Kind kindWindow;
 // calling Create()
 struct Window : public WindowBase {
     OnWmCommand onWmCommand = nullptr;
-    OnClose onClose = nullptr;
+    CloseHandler onClose = nullptr;
     OnDestroyed onDestroyed = nullptr;
 
     Window();
