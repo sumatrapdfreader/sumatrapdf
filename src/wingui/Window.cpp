@@ -387,11 +387,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     if ((WM_COMMAND == msg) && w->onWmCommand) {
         WmCommandArgs args{};
-        args.hwnd = hwnd;
+        SetWndProcArgs(args);
         args.id = LOWORD(wp);
         args.ev = HIWORD(wp);
-        args.lparam = lp;
-        args.wparam = wp;
         w->onWmCommand(&args);
         if (args.didHandle) {
             return args.result;
@@ -408,6 +406,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         if (args.didHandle) {
             return 0;
         }
+        return DefWindowProc(hwnd, msg, wp, lp);
     }
 
     if (WM_PAINT == msg) {

@@ -11,7 +11,7 @@ struct TreeItmGetTooltipArgs {
     NMTVGETINFOTIPW* info = nullptr;
 };
 
-typedef std::function<void(TreeItmGetTooltipArgs*)> OnTreeItemGetTooltip;
+typedef std::function<void(TreeItmGetTooltipArgs*)> TreeItemGetTooltipHandler;
 
 struct TreeNotifyArgs {
     WndProcArgs* procArgs = nullptr;
@@ -19,7 +19,7 @@ struct TreeNotifyArgs {
     NMTREEVIEWW* treeView = nullptr;
 };
 
-typedef std::function<void(TreeNotifyArgs*)> OnTreeNotify;
+typedef std::function<void(TreeNotifyArgs*)> TreeNotifyHandler;
 
 struct TreeSelectionChangedArgs {
     WndProcArgs* procArgs = nullptr;
@@ -27,7 +27,7 @@ struct TreeSelectionChangedArgs {
     TreeItem* treeItem = nullptr;
 };
 
-typedef std::function<void(TreeSelectionChangedArgs*)> OnTreeSelectionChanged;
+typedef std::function<void(TreeSelectionChangedArgs*)> TreeSelectionChangedHandler;
 
 struct TreeItemExpandedArgs {
     WndProcArgs* procArgs = nullptr;
@@ -36,7 +36,7 @@ struct TreeItemExpandedArgs {
     bool isExpanded = false;
 };
 
-typedef std::function<void(TreeItemExpandedArgs*)> OnTreeItemExpanded;
+typedef std::function<void(TreeItemExpandedArgs*)> TreeItemExpandedHandler;
 
 struct TreeItemState {
     bool isSelected = false;
@@ -59,7 +59,7 @@ struct TreeItemChangedArgs {
     TreeItemState newState{};
 };
 
-typedef std::function<void(TreeItemChangedArgs*)> OnTreeItemChanged;
+typedef std::function<void(TreeItemChangedArgs*)> TreeItemChangedHandler;
 
 struct TreeItemCustomDrawArgs {
     WndProcArgs* procArgs = nullptr;
@@ -68,7 +68,7 @@ struct TreeItemCustomDrawArgs {
     NMTVCUSTOMDRAW* nm = nullptr;
 };
 
-typedef std::function<void(TreeItemCustomDrawArgs*)> OnTreeItemCustomDraw;
+typedef std::function<void(TreeItemCustomDrawArgs*)> TreeItemCustomDrawHandler;
 
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
@@ -123,18 +123,18 @@ struct TreeCtrl : public WindowBase {
     TreeModel* treeModel = nullptr;
 
     // allows the caller to set info tip by updating NMTVGETINFOTIP
-    OnTreeItemGetTooltip onGetTooltip = nullptr;
+    TreeItemGetTooltipHandler onGetTooltip = nullptr;
 
     // called to process all WM_NOTIFY messages
-    OnTreeNotify onTreeNotify = nullptr;
+    TreeNotifyHandler onTreeNotify = nullptr;
 
-    OnTreeSelectionChanged onTreeSelectionChanged = nullptr;
+    TreeSelectionChangedHandler onTreeSelectionChanged = nullptr;
 
-    OnTreeItemExpanded onTreeItemExpanded = nullptr;
+    TreeItemExpandedHandler onTreeItemExpanded = nullptr;
 
-    OnTreeItemChanged onTreeItemChanged = nullptr;
+    TreeItemChangedHandler onTreeItemChanged = nullptr;
 
-    OnTreeItemCustomDraw onTreeItemCustomDraw = nullptr;
+    TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
 
     Size idealSize{};
 

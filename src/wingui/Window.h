@@ -52,13 +52,12 @@ struct WindowCloseArgs : WndProcArgs {
     bool cancel = false;
 };
 
-typedef std::function<void(WindowCloseArgs*)> CloseHandler;
-
-struct WindowDestroyArgs : WndProcArgs {
-    Window* window = nullptr;
+struct WmCommandArgs : WndProcArgs {
+    int id = 0;
+    int ev = 0;
 };
 
-typedef std::function<void(WindowDestroyArgs*)> DestroyHandler;
+typedef std::function<void(WmCommandArgs*)> WmCommandHandler;
 
 extern Kind kindWindowBase;
 
@@ -140,14 +139,26 @@ struct WindowBase {
     void SetRtl(bool);
 };
 
+typedef std::function<void(WindowCloseArgs*)> CloseHandler;
+
+struct WindowDestroyArgs : WndProcArgs {
+    Window* window = nullptr;
+};
+
+typedef std::function<void(WindowDestroyArgs*)> DestroyHandler;
+
 extern Kind kindWindow;
 
 // a top-level window. Must set winClass before
 // calling Create()
 struct Window : public WindowBase {
-    OnWmCommand onWmCommand = nullptr;
-    CloseHandler onClose = nullptr;
+    // TODO: move to WindowBase?
+    // for WM_COMMAND
+    WmCommandHandler onWmCommand = nullptr;
+    // for WM_NCDESTROY
     DestroyHandler onDestroy = nullptr;
+
+    CloseHandler onClose = nullptr;
 
     Window();
     ~Window() override;
@@ -166,8 +177,8 @@ struct WindowBaseLayout : public ILayout {
     ~WindowBaseLayout() override;
 
     Size Layout(const Constraints bc) override;
-    Length MinIntrinsicHeight(Length) override;
-    Length MinIntrinsicWidth(Length) override;
+    i32 MinIntrinsicHeight(i32) override;
+    i32 MinIntrinsicWidth(i32) override;
     void SetBounds(const Rect bounds) override;
 };
 
