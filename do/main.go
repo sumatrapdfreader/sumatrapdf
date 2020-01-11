@@ -167,7 +167,10 @@ func main() {
 		detectVersions()
 		s3UploadPreReleaseMust(preReleaseVer, buildTypeDaily)
 		spacesUploadPreReleaseMust(preReleaseVer, buildTypeDaily)
+
+		// must be called last because changes SumatraPDF.zip
 		spacesUploadPreReleaseMust(preReleaseVer, buildTypeRaMicro)
+
 		minioDeleteOldBuilds()
 		s3DeleteOldBuilds()
 		return

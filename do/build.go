@@ -151,15 +151,20 @@ func addZipFileMust(w *zip.Writer, path string) {
 	// or Close() call on zip.Writer
 }
 
-func createExeZipWithGoMust(dir string) {
+func createExeZipWithGoWithNameMust(dir, nameInZip string) {
 	path := filepath.Join(dir, "SumatraPDF.zip")
+	os.Remove(path) // called multiple times during upload
 	f, err := os.Create(path)
 	fatalIfErr(err)
 	defer f.Close()
 	zw := zip.NewWriter(f)
-	addZipFileMust(zw, filepath.Join(dir, "SumatraPDF.exe"))
+	addZipFileMust(zw, filepath.Join(dir, nameInZip))
 	err = zw.Close()
 	fatalIfErr(err)
+}
+
+func createExeZipWithGoMust(dir string) {
+	createExeZipWithGoWithNameMust(dir, "SumatraPDF.exe")
 }
 
 func createExeZipWithPigz(dir string) {
@@ -191,13 +196,6 @@ func createExeZipWithPigz(dir string) {
 	fatalIf(!u.FileExists(dstPathTmp), "file '%s' doesn't exist\n", dstPathTmp)
 	err = os.Rename(dstPathTmp, dstPath)
 	fatalIfErr(err)
-}
-
-// createExeZipWithGoMust() is faster, createExeZipWithPigz() generates slightly
-// smaller files
-func createExeZipMust(dir string) {
-	createExeZipWithGoMust(dir)
-	//createExeZipWithPigz(dir)
 }
 
 func createPdbZipMust(dir string) {
