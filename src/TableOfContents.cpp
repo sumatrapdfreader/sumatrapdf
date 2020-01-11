@@ -759,13 +759,6 @@ static void TocTreeMsgFilter(WndProcArgs* args) {
     TreeCtrl* tree = (TreeCtrl*)args->w;
     CrashIf(tree->hwnd != hwnd);
 
-    if (msg == WM_CHAR) {
-        if (VK_ESCAPE == wp && gGlobalPrefs->escToExit && MayCloseWindow(win)) {
-            CloseWindow(win, true);
-            args->didHandle = true;
-            return;
-        }
-    }
     if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL) {
         // scroll the canvas if the cursor isn't over the ToC tree
         if (!IsCursorOverWindow(hwnd)) {
@@ -856,6 +849,26 @@ void UnsubclassToc(WindowInfo* win) {
     }
 }
 
+static void TocTreeCharHandler(CharArgs* args) {
+    WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
+    CrashIf(!win);
+    if (!win) {
+        return;
+    }
+    if (VK_ESCAPE != args->keyCode) {
+        return;
+    }
+    if (!gGlobalPrefs->escToExit) {
+        return;
+    }
+    if (!MayCloseWindow(win)) {
+        return;
+    }
+
+    CloseWindow(win, true);
+    args->didHandle = true;
+}
+
 void CreateToc(WindowInfo* win) {
     HMODULE hmod = GetModuleHandle(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
@@ -879,6 +892,7 @@ void CreateToc(WindowInfo* win) {
     tocTreeCtrl->onTreeNotify = OnTocTreeNotify;
     tocTreeCtrl->onGetTooltip = CustomizeTocTooltip;
     tocTreeCtrl->onContextMenu = OnTocContextMenu;
+    tocTreeCtrl->onChar = TocTreeCharHandler;
 
     bool ok = tocTreeCtrl->Create(L"TOC");
     CrashIf(!ok);

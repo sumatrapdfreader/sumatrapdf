@@ -48,8 +48,10 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         WndProcArgs args{};
         SetWndProcArgs(args);
         w->msgFilter(&args);
-        didHandle = args.didHandle;
-        return args.result;
+        if (args.didHandle) {
+            didHandle = true;
+            return args.result;
+        }        
     }
 
     if (WM_CTLCOLORBTN == msg) {
@@ -62,7 +64,10 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         }
     }
 
-    if ((WM_SIZE == msg) && w->onSize) {
+    if (WM_SIZE == msg) {
+        if (!w->onSize) {
+            return 0;
+        }
         SizeArgs args;
         SetWndProcArgs(args);
         args.dx = LOWORD(lp);
@@ -74,12 +79,29 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         }
     }
 
-    if ((WM_COMMAND == msg) && w->onWmCommand) {
+    if (WM_COMMAND == msg) {
+        if (!w->onWmCommand) {
+            return 0;
+        }
         WmCommandArgs args{};
         SetWndProcArgs(args);
         args.id = LOWORD(wp);
         args.ev = HIWORD(wp);
         w->onWmCommand(&args);
+        if (args.didHandle) {
+            didHandle = true;
+            return args.result;
+        }
+    }
+
+    if (WM_CHAR == msg) {
+        if (!w->onChar) {
+            return 0;
+        }
+        CharArgs args{};
+        SetWndProcArgs(args);
+        args.keyCode = (int)wp;
+        w->onChar(&args);
         if (args.didHandle) {
             didHandle = true;
             return args.result;

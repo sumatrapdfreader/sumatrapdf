@@ -67,6 +67,12 @@ struct WindowDestroyArgs : WndProcArgs {
 
 typedef std::function<void(WindowDestroyArgs*)> DestroyHandler;
 
+struct CharArgs : WndProcArgs {
+    int keyCode = 0;
+};
+
+typedef std::function<void(CharArgs*)> CharHandler;
+
 extern Kind kindWindowBase;
 
 struct WindowBase {
@@ -104,6 +110,8 @@ struct WindowBase {
     DestroyHandler onDestroy = nullptr;
     // for WM_CLOSE
     CloseHandler onClose = nullptr;
+    // for WM_CHAR
+    CharHandler onChar = nullptr;
 
     COLORREF textColor = ColorUnset;
     COLORREF backgroundColor = ColorUnset;
