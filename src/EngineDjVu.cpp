@@ -66,6 +66,14 @@ static PageDestination* newDjVuDestination(const char* link) {
         return res;
     }
 
+    // there are links like: "#Here"
+    if (str::StartsWith(link, "#")) {
+        // TODO: don't know how to handle those
+        // Probably need to use ResolveNamedDest()
+        res->kind = kindDestinationNone;
+        return res;
+    }
+
     if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
         res->kind = kindDestinationLaunchURL;
         res->value = strconv::Utf8ToWstr(link);
@@ -526,8 +534,9 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, 
 
         for (size_t i = 0; i < userAnnots.size(); i++) {
             PageAnnotation& annot = userAnnots.at(i);
-            if (annot.pageNo != pageNo)
+            if (annot.pageNo != pageNo) {
                 continue;
+            }
             RectD arect;
             switch (annot.type) {
                 case PageAnnotType::Highlight:
@@ -575,8 +584,9 @@ RenderedBitmap* DjVuEngineImpl::CreateRenderedBitmap(const char* bmpData, SizeI 
     int stride = ((size.dx * (grayscale ? 1 : 3) + 3) / 4) * 4;
 
     BITMAPINFO* bmi = (BITMAPINFO*)calloc(1, sizeof(BITMAPINFOHEADER) + (grayscale ? 256 * sizeof(RGBQUAD) : 0));
-    if (!bmi)
+    if (!bmi) {
         return nullptr;
+    }
 
     if (grayscale) {
         for (int i = 0; i < 256; i++) {
@@ -597,8 +607,9 @@ RenderedBitmap* DjVuEngineImpl::CreateRenderedBitmap(const char* bmpData, SizeI 
     HANDLE hMap =
         CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmi->bmiHeader.biSizeImage, nullptr);
     HBITMAP hbmp = CreateDIBSection(nullptr, bmi, DIB_RGB_COLORS, &data, hMap, 0);
-    if (hbmp)
+    if (hbmp) {
         memcpy(data, bmpData, bmi->bmiHeader.biSizeImage);
+    }
 
     free(bmi);
 
@@ -823,24 +834,29 @@ static void AppendNewline(str::WStr& extracted, Vec<RectI>& coords, const WCHAR*
 bool DjVuEngineImpl::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI>& coords) {
     WCHAR* lineSep = L"\n";
     miniexp_t type = miniexp_car(item);
-    if (!miniexp_symbolp(type))
+    if (!miniexp_symbolp(type)) {
         return false;
+    }
     item = miniexp_cdr(item);
 
-    if (!miniexp_numberp(miniexp_car(item)))
+    if (!miniexp_numberp(miniexp_car(item))) {
         return false;
+    }
     int x0 = miniexp_to_int(miniexp_car(item));
     item = miniexp_cdr(item);
-    if (!miniexp_numberp(miniexp_car(item)))
+    if (!miniexp_numberp(miniexp_car(item))) {
         return false;
+    }
     int y0 = miniexp_to_int(miniexp_car(item));
     item = miniexp_cdr(item);
-    if (!miniexp_numberp(miniexp_car(item)))
+    if (!miniexp_numberp(miniexp_car(item))) {
         return false;
+    }
     int x1 = miniexp_to_int(miniexp_car(item));
     item = miniexp_cdr(item);
-    if (!miniexp_numberp(miniexp_car(item)))
+    if (!miniexp_numberp(miniexp_car(item))) {
         return false;
+    }
     int y1 = miniexp_to_int(miniexp_car(item));
     item = miniexp_cdr(item);
     RectI rect = RectI::FromXY(x0, y0, x1, y1);
@@ -856,8 +872,9 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<R
         if (value) {
             size_t len = str::Len(value);
             // TODO: split the rectangle into individual parts per glyph
-            for (size_t i = 0; i < len; i++)
+            for (size_t i = 0; i < len; i++) {
                 coords.Append(RectI(rect.x, rect.y, rect.dx, rect.dy));
+            }
             extracted.AppendAndFree(value);
         }
         if (miniexp_symbol("word") == type) {
@@ -1021,8 +1038,11 @@ Vec<PageElement*>* DjVuEngineImpl::GetElements(int pageNo) {
         }
         RectI rect(x, page.dy - y - h, w, h);
 
-        AutoFree link(ResolveNamedDest(urlUtf8));
-        const char* tmp = link.get() ? link.get() : urlUtf8;
+        AutoFree link = ResolveNamedDest(urlUtf8);
+        const char* tmp = link.get();
+        if (!tmp) {
+            tmp = urlUtf8;
+        }
         auto el = newDjVuLink(pageNo, rect, tmp, commentUtf8);
         els->Append(el);
     }
@@ -1073,7 +1093,7 @@ char* DjVuEngineImpl::ResolveNamedDest(const char* name) {
 }
 
 PageDestination* DjVuEngineImpl::GetNamedDest(const WCHAR* name) {
-    AutoFree nameUtf8(strconv::WstrToUtf8(name));
+    AutoFree nameUtf8 = strconv::WstrToUtf8(name);
     if (!str::StartsWith(nameUtf8.Get(), "#")) {
         nameUtf8.TakeOwnershipOf(str::Join("#", nameUtf8.Get()));
     }
