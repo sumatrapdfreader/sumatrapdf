@@ -38,19 +38,145 @@ void HwndSetText(HWND hwnd, std::string_view s) {
 
 Kind kindWindowBase = "windowBase";
 
-static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
-                                        DWORD_PTR dwRefData) {
-    CrashIf(dwRefData == 0);
+static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
+    CrashIf(hwnd != w->hwnd);
 
-    WindowBase* w = (WindowBase*)dwRefData;
-    if (uIdSubclass == w->subclassId) {
-        CrashIf(hwnd != w->hwnd);
+    // TODO: maybe more this to WindowBase::WndProc?
+    // or maybe get rid of WindowBase::WndProc and use msgFilterInternal
+    // when per-control custom processing is needed
+    if (w->msgFilter) {
         WndProcArgs args{};
         SetWndProcArgs(args);
-        w->WndProc(&args);
+        w->msgFilter(&args);
+        didHandle = args.didHandle;
+        return args.result;
+    }
+
+    if (WM_CTLCOLORBTN == msg) {
+        if (ColorUnset != w->backgroundColor) {
+            auto bgBrush = w->backgroundColorBrush;
+            if (bgBrush != nullptr) {
+                didHandle = true;
+                return (LRESULT)bgBrush;
+            }
+        }
+    }
+
+    if ((WM_SIZE == msg) && w->onSize) {
+        SizeArgs args;
+        SetWndProcArgs(args);
+        args.dx = LOWORD(lp);
+        args.dy = HIWORD(lp);
+        w->onSize(&args);
         if (args.didHandle) {
+            didHandle = true;
+            return 0;
+        }
+    }
+
+    if ((WM_COMMAND == msg) && w->onWmCommand) {
+        WmCommandArgs args{};
+        SetWndProcArgs(args);
+        args.id = LOWORD(wp);
+        args.ev = HIWORD(wp);
+        w->onWmCommand(&args);
+        if (args.didHandle) {
+            didHandle = true;
             return args.result;
         }
+    }
+
+    // handle the rest in WndProc
+    WndProcArgs args{};
+    SetWndProcArgs(args);
+    w->WndProc(&args);
+    didHandle = args.didHandle;
+    return args.result;
+}
+
+static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (WM_NCCREATE == msg) {
+        CREATESTRUCT* cs = (CREATESTRUCT*)lp;
+        Window* w = (Window*)cs->lpCreateParams;
+        w->hwnd = hwnd;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)w);
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
+    Window* w = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+    // this is the last message ever received by hwnd
+    // TODO: move it to wndBaseProcDispatch? Maybe they don't
+    // need WM_*DESTROY notifications?
+    if (WM_NCDESTROY == msg) {
+        if (w->onDestroy) {
+            WindowDestroyArgs args{};
+            SetWndProcArgs(args);
+            args.window = w;
+            w->onDestroy(&args);
+            return 0;
+        }
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
+    // TODO: should this go into WindowBase?
+    if (WM_CLOSE == msg) {
+        if (w->onClose) {
+            WindowCloseArgs args{};
+            SetWndProcArgs(args);
+            w->onClose(&args);
+            if (args.cancel) {
+                return 0;
+            }
+        }
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
+    // TODDO: a hack, a Window might be deleted when we get here
+    // happens e.g. when we call CloseWindow() inside
+    // wndproc. Maybe instead of calling DestroyWindow()
+    // we should delete WindowInfo, for proper shutdown sequence
+    if (WM_DESTROY == msg) {
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
+    if (!w) {
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
+    if (WM_PAINT == msg) {
+        PAINTSTRUCT ps;
+        BeginPaint(hwnd, &ps);
+        auto bgBrush = w->backgroundColorBrush;
+        if (bgBrush != nullptr) {
+            RECT rc = GetClientRect(hwnd);
+            FillRect(ps.hdc, &ps.rcPaint, bgBrush);
+        }
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+
+    bool didHandle = false;
+    LRESULT res = wndBaseProcDispatch(w, hwnd, msg, wp, lp, didHandle);
+    if (didHandle) {
+        return res;
+    }
+    return DefWindowProc(hwnd, msg, wp, lp);
+}
+
+static LRESULT CALLBACK wndProcSubclassed(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
+                                          DWORD_PTR dwRefData) {
+    CrashIf(dwRefData == 0);
+    WindowBase* w = (WindowBase*)dwRefData;
+
+    if (uIdSubclass != w->subclassId) {
+        return DefSubclassProc(hwnd, msg, wp, lp);
+    }
+
+    bool didHandle = false;
+    LRESULT res = wndBaseProcDispatch(w, hwnd, msg, wp, lp, didHandle);
+    if (didHandle) {
+        return res;
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
@@ -142,7 +268,7 @@ void WindowBase::Subclass() {
     CrashIf(!hwnd);
     WindowBase* wb = this;
     subclassId = NextSubclassId();
-    BOOL ok = SetWindowSubclass(hwnd, wndProcDispatch, subclassId, (DWORD_PTR)wb);
+    BOOL ok = SetWindowSubclass(hwnd, wndProcSubclassed, subclassId, (DWORD_PTR)wb);
     CrashIf(!ok);
     if (!ok) {
         subclassId = 0;
@@ -162,7 +288,7 @@ void WindowBase::SubclassParent() {
 
 void WindowBase::Unsubclass() {
     if (subclassId) {
-        RemoveWindowSubclass(hwnd, wndProcDispatch, subclassId);
+        RemoveWindowSubclass(hwnd, wndProcSubclassed, subclassId);
         subclassId = 0;
     }
     if (subclassParentId) {
@@ -172,6 +298,7 @@ void WindowBase::Unsubclass() {
 }
 
 WindowBase::WindowBase(HWND p) {
+    kind = kindWindowBase;
     parent = p;
 }
 
@@ -179,11 +306,11 @@ WindowBase::WindowBase(HWND p) {
 // a parent is destroyed
 void WindowBase::Destroy() {
     auto tmp = hwnd;
-    hwnd = nullptr;
     if (IsWindow(tmp)) {
         DestroyWindow(tmp);
         tmp = nullptr;
     }
+    hwnd = nullptr;
 }
 
 WindowBase::~WindowBase() {
@@ -321,111 +448,6 @@ void WindowBase::SetRtl(bool isRtl) {
 
 Kind kindWindow = "window";
 
-static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_NCCREATE == msg) {
-        CREATESTRUCT* cs = (CREATESTRUCT*)lp;
-        Window* w = (Window*)cs->lpCreateParams;
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)w);
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    Window* w = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-
-    // this is the last message ever received by hwnd
-    if (WM_NCDESTROY == msg) {
-        if (w->onDestroy) {
-            WindowDestroyArgs args{};
-            SetWndProcArgs(args);
-            args.window = w;
-            w->onDestroy(&args);
-            return 0;
-        }
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    if (WM_CLOSE == msg) {
-        if (w->onClose) {
-            WindowCloseArgs args{};
-            SetWndProcArgs(args);
-            w->onClose(&args);
-            if (args.cancel) {
-                return 0;
-            }
-        } else {
-            w->Destroy();
-        }
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    // TODDO: a hack, a Window might be deleted when we get here
-    // happens e.g. when we call CloseWindow() inside
-    // wndproc. Maybe instead of calling DestroyWindow()
-    // we should delete WindowInfo, for proper shutdown sequence
-    if (WM_DESTROY == msg) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    if (!w) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    if (w->msgFilter) {
-        WndProcArgs args{};
-        SetWndProcArgs(args);
-        w->msgFilter(&args);
-        if (args.didHandle) {
-            return args.result;
-        }
-    }
-
-    if (WM_CTLCOLORBTN == msg) {
-        if (ColorUnset != w->backgroundColor) {
-            auto bgBrush = w->backgroundColorBrush;
-            if (bgBrush != nullptr) {
-                return (LRESULT)bgBrush;
-            }
-        }
-    }
-
-    if ((WM_COMMAND == msg) && w->onWmCommand) {
-        WmCommandArgs args{};
-        SetWndProcArgs(args);
-        args.id = LOWORD(wp);
-        args.ev = HIWORD(wp);
-        w->onWmCommand(&args);
-        if (args.didHandle) {
-            return args.result;
-        }
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    if ((WM_SIZE == msg) && w->onSize) {
-        SizeArgs args;
-        SetWndProcArgs(args);
-        args.dx = LOWORD(lp);
-        args.dy = HIWORD(lp);
-        w->onSize(&args);
-        if (args.didHandle) {
-            return 0;
-        }
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    if (WM_PAINT == msg) {
-        PAINTSTRUCT ps;
-        BeginPaint(hwnd, &ps);
-        auto bgBrush = w->backgroundColorBrush;
-        if (bgBrush != nullptr) {
-            RECT rc = GetClientRect(hwnd);
-            FillRect(ps.hdc, &ps.rcPaint, bgBrush);
-        }
-        EndPaint(hwnd, &ps);
-        return 0;
-    }
-
-    return DefWindowProc(hwnd, msg, wp, lp);
-}
-
 struct winClassWithAtom {
     const WCHAR* winClass = nullptr;
     ATOM atom = 0;
@@ -446,7 +468,7 @@ static void RegisterWindowClass(Window* w) {
     wcex.cbSize = sizeof(wcex);
     wcex.hIcon = w->hIcon;
     wcex.hIconSm = w->hIconSm;
-    wcex.lpfnWndProc = WndProc;
+    wcex.lpfnWndProc = wndProcCustom;
     wcex.lpszClassName = w->winClass;
     wcex.lpszMenuName = w->lpszMenuName;
     ATOM atom = RegisterClassExW(&wcex);
@@ -456,10 +478,11 @@ static void RegisterWindowClass(Window* w) {
 }
 
 Window::Window() {
-    this->dwExStyle = 0;
-    this->dwStyle = WS_OVERLAPPEDWINDOW;
+    kind = kindWindow;
+    dwExStyle = 0;
+    dwStyle = WS_OVERLAPPEDWINDOW;
     if (parent != nullptr) {
-        this->dwStyle |= WS_CHILD;
+        dwStyle |= WS_CHILD;
     }
 }
 

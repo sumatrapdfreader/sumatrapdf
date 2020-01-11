@@ -110,7 +110,7 @@ static void UpdateTreeModel(TocEditorWindow* w) {
     TreeCtrl* treeCtrl = w->treeCtrl;
     treeCtrl->Clear();
 
-    // TODO: only delete the first levels because we keep reference to them
+    // TODO: delete the first levels because we keep reference to them
     // delete w->treeModel;
     w->treeModel = nullptr;
 
@@ -363,7 +363,9 @@ void TocEditorWindow::OnWindowSize(SizeArgs* args) {
     args->didHandle = true;
 }
 
-static void OnWindowDestroyed(WindowDestroyArgs*) {
+static void OnWindowClosed(WindowCloseArgs* args) {
+    WindowBase* w = (WindowBase*)gWindow->mainWindow;
+    CrashIf(w != args->w);
     delete gWindow;
     gWindow = nullptr;
 }
@@ -437,7 +439,7 @@ void StartTocEditor(TocEditorArgs* args) {
 
     using namespace std::placeholders;
     w->onSize = std::bind(&TocEditorWindow::OnWindowSize, gWindow, _1);
-    w->onDestroy = OnWindowDestroyed;
+    w->onClose = OnWindowClosed;
 
     gWindow->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::OnTreeItemChanged, gWindow, _1);
     gWindow->treeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
