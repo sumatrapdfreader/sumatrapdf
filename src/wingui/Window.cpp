@@ -51,7 +51,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         if (args.didHandle) {
             didHandle = true;
             return args.result;
-        }        
+        }
     }
 
     if (WM_CTLCOLORBTN == msg) {
