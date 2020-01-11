@@ -165,6 +165,7 @@ static EngineBase* ps2pdf(const WCHAR* fileName) {
         return nullptr;
     }
 
+    // TODO: should show a message box and do it in a background thread
     DWORD timeoutInMs = 40000;
     // allow to disable the timeout
     if (GetEnvironmentVariable(L"SUMATRAPDF_NO_GHOSTSCRIPT_TIMEOUT", nullptr, 0)) {

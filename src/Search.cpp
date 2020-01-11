@@ -718,7 +718,9 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
 // [GoToPage("c:\file.pdf",37)]
 #define DDECOMMAND_PAGE L"GotoPage"
 
-static const WCHAR* HandlePageCmd(const WCHAR* cmd, DDEACK& ack) {
+static const WCHAR* HandlePageCmd(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
+    UNUSED(hwnd);
+
     AutoFreeWstr pdfFile;
     UINT page = 0;
     const WCHAR* next = str::Parse(cmd, L"[GotoPage(\"%S\",%u)]", &pdfFile, &page);
@@ -727,6 +729,8 @@ static const WCHAR* HandlePageCmd(const WCHAR* cmd, DDEACK& ack) {
     }
 
     // check if the PDF is already opened
+    // TODO: prioritize window with HWND so that if we have the same file
+    // opened in multiple tabs / windows, we operate on the one that got the message
     WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
     if (!win) {
         return next;
@@ -794,7 +798,7 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     return next;
 }
 
-static void HandleDdeCmds(const WCHAR* cmd, DDEACK& ack) {
+static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
     if (str::IsEmpty(cmd)) {
         return;
     }
@@ -816,7 +820,7 @@ static void HandleDdeCmds(const WCHAR* cmd, DDEACK& ack) {
             nextCmd = HandleGotoCmd(cmd, ack);
         }
         if (!nextCmd) {
-            nextCmd = HandlePageCmd(cmd, ack);
+            nextCmd = HandlePageCmd(hwnd, cmd, ack);
         }
         if (!nextCmd) {
             nextCmd = HandleSetViewCmd(cmd, ack);
@@ -852,7 +856,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     } else {
         cmd = strconv::FromAnsi((const char*)command);
     }
-    HandleDdeCmds(cmd, ack);
+    HandleDdeCmds(hwnd, cmd, ack);
     GlobalUnlock((HGLOBAL)hi);
 
     lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, *(WORD*)&ack, hi);
@@ -880,6 +884,6 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     }
 
     DDEACK ack = {0};
-    HandleDdeCmds(cmd, ack);
+    HandleDdeCmds(hwnd, cmd, ack);
     return ack.fAck ? TRUE : FALSE;
 }
