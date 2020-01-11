@@ -384,7 +384,7 @@ void TocEditorWindow::OnTreeItemSelected(TreeSelectionChangedArgs* args) {
 }
 
 // in TableOfContents.cpp
-extern void OnDocTocCustomDraw(TreeItemCustomDrawArgs* args);
+extern void OnTocCustomDraw(TreeItemCustomDrawArgs* args);
 
 // sets initial position of w within hwnd. Assumes w->initialSize is set.
 static void PositionCloseTo(WindowBase* w, HWND hwnd) {
@@ -442,7 +442,7 @@ void StartTocEditor(TocEditorArgs* args) {
     w->onClose = OnWindowClosed;
 
     gWindow->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::OnTreeItemChanged, gWindow, _1);
-    gWindow->treeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
+    gWindow->treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
     gWindow->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::OnTreeItemSelected, gWindow, _1);
 
     UpdateTreeModel(gWindow);

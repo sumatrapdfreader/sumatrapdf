@@ -73,6 +73,16 @@ struct CharArgs : WndProcArgs {
 
 typedef std::function<void(CharArgs*)> CharHandler;
 
+struct MouseWheelArgs : WndProcArgs {
+    bool isVertical = false;
+    int delta = 0;
+    u32 keys = 0;
+    int x = 0;
+    int y = 0;
+};
+
+typedef std::function<void(MouseWheelArgs*)> MouseWheelHandler;
+
 extern Kind kindWindowBase;
 
 struct WindowBase {
@@ -112,6 +122,8 @@ struct WindowBase {
     CloseHandler onClose = nullptr;
     // for WM_CHAR
     CharHandler onChar = nullptr;
+    // for WM_MOUSEWHEEL and WM_MOUSEHWHEEL
+    MouseWheelHandler onMouseWheel = nullptr;
 
     COLORREF textColor = ColorUnset;
     COLORREF backgroundColor = ColorUnset;

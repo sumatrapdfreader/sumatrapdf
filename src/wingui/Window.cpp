@@ -108,6 +108,25 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         }
     }
 
+    // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-mousewheel
+    if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL) {
+        if (!w->onMouseWheel) {
+            return 0;
+        }
+        MouseWheelArgs args{};
+        SetWndProcArgs(args);
+        args.isVertical = (msg == WM_MOUSEWHEEL);
+        args.delta = GET_WHEEL_DELTA_WPARAM(wp);
+        args.keys = GET_KEYSTATE_WPARAM(wp);
+        args.x = GET_X_LPARAM(lp);
+        args.y = GET_Y_LPARAM(lp);
+        w->onMouseWheel(&args);
+        if (args.didHandle) {
+            didHandle = true;
+            return 0;
+        }
+    }
+
     // handle the rest in WndProc
     WndProcArgs args{};
     SetWndProcArgs(args);

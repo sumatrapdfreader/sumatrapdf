@@ -558,7 +558,7 @@ static bool ShouldCustomDraw(WindowInfo* win) {
     return false;
 }
 
-void OnDocTocCustomDraw(TreeItemCustomDrawArgs*);
+void OnTocCustomDraw(TreeItemCustomDrawArgs*);
 
 void LoadTocTree(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
@@ -615,7 +615,7 @@ void LoadTocTree(WindowInfo* win) {
 
     treeCtrl->onTreeItemCustomDraw = nullptr;
     if (ShouldCustomDraw(win)) {
-        treeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
+        treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
     }
     // UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     // RedrawWindow(hwnd, nullptr, nullptr, fl);
@@ -634,7 +634,7 @@ static void UpdateFont(HDC hdc, int fontFlags) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
-void OnDocTocCustomDraw(TreeItemCustomDrawArgs* args) {
+void OnTocCustomDraw(TreeItemCustomDrawArgs* args) {
 #if defined(DISPLAY_TOC_PAGE_NUMBERS)
     if (win->AsEbook())
         return CDRF_DODEFAULT;
@@ -746,27 +746,7 @@ static void OnTocTreeNotify(TreeNotifyArgs* args) {
 }
 
 static void TocTreeMsgFilter(WndProcArgs* args) {
-    HWND hwnd = args->hwnd;
-    UINT msg = args->msg;
-    WPARAM wp = args->wparam;
-    LPARAM lp = args->lparam;
-
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    if (!win) {
-        return;
-    }
-
-    TreeCtrl* tree = (TreeCtrl*)args->w;
-    CrashIf(tree->hwnd != hwnd);
-
-    if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL) {
-        // scroll the canvas if the cursor isn't over the ToC tree
-        if (!IsCursorOverWindow(hwnd)) {
-            args->didHandle = true;
-            args->result = SendMessage(win->hwndCanvas, msg, wp, lp);
-            return;
-        }
-    }
+    UNUSED(args);
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
     switch (msg) {
         case WM_SIZE:
@@ -849,6 +829,19 @@ void UnsubclassToc(WindowInfo* win) {
     }
 }
 
+static void TocTreeMouseWheelHandler(MouseWheelArgs* args) {
+    WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
+    CrashIf(!win);
+    if (!win) {
+        return;
+    }
+    // scroll the canvas if the cursor isn't over the ToC tree
+    if (!IsCursorOverWindow(args->hwnd)) {
+        args->didHandle = true;
+        args->result = SendMessage(win->hwndCanvas, args->msg, args->wparam, args->lparam);
+    }
+}
+
 static void TocTreeCharHandler(CharArgs* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
     CrashIf(!win);
@@ -893,6 +886,7 @@ void CreateToc(WindowInfo* win) {
     tocTreeCtrl->onGetTooltip = CustomizeTocTooltip;
     tocTreeCtrl->onContextMenu = OnTocContextMenu;
     tocTreeCtrl->onChar = TocTreeCharHandler;
+    tocTreeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
 
     bool ok = tocTreeCtrl->Create(L"TOC");
     CrashIf(!ok);
