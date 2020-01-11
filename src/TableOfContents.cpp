@@ -370,11 +370,12 @@ void ShowExportedBookmarksMsg(const char* path) {
 
 static void ExportBookmarksFromTab(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetToc();
-    str::Str path = strconv::WstrToUtf8(tab->filePath.get());
+    str::Str path = strconv::WstrToUtf8(tab->filePath);
     path.Append(".bkm");
     Vec<VbkmForFile*> bookmarks;
 
     VbkmForFile* bkms = new VbkmForFile();
+    bkms->filePath = strconv::WstrToUtf8(tab->filePath);
     bkms->toc = CloneTocTree(tocTree, false);
     bookmarks.push_back(bkms);
     bool ok = ExportBookmarksToFile(bookmarks, "", path.c_str());
