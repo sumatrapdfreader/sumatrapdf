@@ -163,7 +163,7 @@ func createExeZipWithGoWithNameMust(dir, nameInZip string) {
 	fatalIfErr(err)
 	defer f.Close()
 	zw := zip.NewWriter(f)
-	path := filepath.Join(dir, "SumatraPDF.zip")
+	path := filepath.Join(dir, "SumatraPDF.exe")
 	addZipFileWithNameMust(zw, path, nameInZip)
 	err = zw.Close()
 	fatalIfErr(err)
