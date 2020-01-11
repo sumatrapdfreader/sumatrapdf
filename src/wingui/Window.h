@@ -59,6 +59,14 @@ struct WmCommandArgs : WndProcArgs {
 
 typedef std::function<void(WmCommandArgs*)> WmCommandHandler;
 
+typedef std::function<void(WindowCloseArgs*)> CloseHandler;
+
+struct WindowDestroyArgs : WndProcArgs {
+    Window* window = nullptr;
+};
+
+typedef std::function<void(WindowDestroyArgs*)> DestroyHandler;
+
 extern Kind kindWindowBase;
 
 struct WindowBase {
@@ -90,6 +98,12 @@ struct WindowBase {
     ContextMenuHandler onContextMenu = nullptr;
     // allow handling WM_SIZE
     SizeHandler onSize = nullptr;
+    // for WM_COMMAND
+    WmCommandHandler onWmCommand = nullptr;
+    // for WM_NCDESTROY
+    DestroyHandler onDestroy = nullptr;
+    // for WM_CLOSE
+    CloseHandler onClose = nullptr;
 
     COLORREF textColor = ColorUnset;
     COLORREF backgroundColor = ColorUnset;
@@ -139,26 +153,11 @@ struct WindowBase {
     void SetRtl(bool);
 };
 
-typedef std::function<void(WindowCloseArgs*)> CloseHandler;
-
-struct WindowDestroyArgs : WndProcArgs {
-    Window* window = nullptr;
-};
-
-typedef std::function<void(WindowDestroyArgs*)> DestroyHandler;
-
 extern Kind kindWindow;
 
 // a top-level window. Must set winClass before
 // calling Create()
 struct Window : public WindowBase {
-    // TODO: move to WindowBase?
-    // for WM_COMMAND
-    WmCommandHandler onWmCommand = nullptr;
-    // for WM_NCDESTROY
-    DestroyHandler onDestroy = nullptr;
-
-    CloseHandler onClose = nullptr;
 
     Window();
     ~Window() override;

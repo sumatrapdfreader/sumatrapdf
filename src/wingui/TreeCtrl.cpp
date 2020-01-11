@@ -27,7 +27,7 @@ Tree view, checkboxes and other info:
 https://stackoverflow.com/questions/34161879/how-to-remove-checkboxes-on-specific-tree-view-items-with-the-tvs-checkboxes-sty
 */
 
-Kind kindTree = "treeV";
+Kind kindTree = "treeView";
 
 bool IsTree(Kind kind) {
     return kind == kindTree;

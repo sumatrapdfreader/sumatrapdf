@@ -175,6 +175,8 @@ WindowBase::WindowBase(HWND p) {
     parent = p;
 }
 
+// generally not needed for child controls as they are destroyed when
+// a parent is destroyed
 void WindowBase::Destroy() {
     auto tmp = hwnd;
     hwnd = nullptr;
