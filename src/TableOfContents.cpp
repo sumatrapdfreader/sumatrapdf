@@ -829,7 +829,7 @@ void UnsubclassToc(WindowInfo* win) {
     }
 }
 
-static void TocTreeMouseWheelHandler(MouseWheelArgs* args) {
+void TocTreeMouseWheelHandler(MouseWheelArgs* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
     CrashIf(!win);
     if (!win) {
@@ -842,7 +842,7 @@ static void TocTreeMouseWheelHandler(MouseWheelArgs* args) {
     }
 }
 
-static void TocTreeCharHandler(CharArgs* args) {
+void TocTreeCharHandler(CharArgs* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
     CrashIf(!win);
     if (!win) {
@@ -879,17 +879,17 @@ void CreateToc(WindowInfo* win) {
     win->altBookmarks = new DropDownCtrl(win->hwndTocBox);
     win->altBookmarks->Create();
 
-    auto* tocTreeCtrl = new TreeCtrl(win->hwndTocBox);
-    tocTreeCtrl->dwExStyle = WS_EX_STATICEDGE;
-    tocTreeCtrl->msgFilter = TocTreeMsgFilter;
-    tocTreeCtrl->onTreeNotify = OnTocTreeNotify;
-    tocTreeCtrl->onGetTooltip = CustomizeTocTooltip;
-    tocTreeCtrl->onContextMenu = OnTocContextMenu;
-    tocTreeCtrl->onChar = TocTreeCharHandler;
-    tocTreeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
+    auto* treeCtrl = new TreeCtrl(win->hwndTocBox);
+    treeCtrl->dwExStyle = WS_EX_STATICEDGE;
+    treeCtrl->msgFilter = TocTreeMsgFilter;
+    treeCtrl->onTreeNotify = OnTocTreeNotify;
+    treeCtrl->onGetTooltip = CustomizeTocTooltip;
+    treeCtrl->onContextMenu = OnTocContextMenu;
+    treeCtrl->onChar = TocTreeCharHandler;
+    treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
 
-    bool ok = tocTreeCtrl->Create(L"TOC");
+    bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);
-    win->tocTreeCtrl = tocTreeCtrl;
+    win->tocTreeCtrl = treeCtrl;
     SubclassToc(win);
 }

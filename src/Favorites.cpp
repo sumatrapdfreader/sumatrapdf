@@ -818,42 +818,6 @@ static void OnFavTreeContextMenu(ContextMenuArgs* args) {
     }
 }
 
-static void WndProcFavTree(WndProcArgs* args) {
-    HWND hwnd = args->hwnd;
-    UINT msg = args->msg;
-    WPARAM wp = args->wparam;
-    LPARAM lp = args->lparam;
-
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    if (!win) {
-        return;
-    }
-    CrashIf(hwnd != win->favTreeCtrl->hwnd);
-
-    if (msg == WM_ERASEBKGND) {
-        args->didHandle;
-        args->result = FALSE;
-        return;
-    }
-
-    if (msg == WM_CHAR) {
-        if (VK_ESCAPE == wp && gGlobalPrefs->escToExit && MayCloseWindow(win)) {
-            args->didHandle = true;
-            CloseWindow(win, true);
-        }
-        return;
-    }
-
-    if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL) {
-        // scroll the canvas if the cursor isn't over the ToC tree
-        if (!IsCursorOverWindow(win->favTreeCtrl->hwnd)) {
-            args->didHandle = true;
-            args->result = SendMessage(win->hwndCanvas, msg, wp, lp);
-            return;
-        }
-    }
-}
-
 static WNDPROC DefWndProcFavBox = nullptr;
 static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
@@ -876,6 +840,10 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
     return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
 }
 
+// in TableOfContents.cpp
+extern void TocTreeCharHandler(CharArgs* args);
+extern void TocTreeMouseWheelHandler(MouseWheelArgs* args);
+
 void CreateFavorites(WindowInfo* win) {
     HMODULE h = GetModuleHandleW(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
@@ -891,9 +859,10 @@ void CreateFavorites(WindowInfo* win) {
 
     TreeCtrl* treeCtrl = new TreeCtrl(win->hwndFavBox);
 
-    treeCtrl->msgFilter = WndProcFavTree;
     treeCtrl->onContextMenu = OnFavTreeContextMenu;
     treeCtrl->onTreeNotify = OnFavTreeNotify;
+    treeCtrl->onChar = TocTreeCharHandler;
+    treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
 
     bool ok = treeCtrl->Create(L"Fav");
     CrashIf(!ok);
