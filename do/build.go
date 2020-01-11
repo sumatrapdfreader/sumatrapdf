@@ -133,12 +133,12 @@ func revertBuildConfig() {
 	runExeMust("git", "checkout", buildConfigPath())
 }
 
-func addZipFileMust(w *zip.Writer, path string) {
+func addZipFileWithNameMust(w *zip.Writer, path, nameInZip string) {
 	fi, err := os.Stat(path)
 	fatalIfErr(err)
 	fih, err := zip.FileInfoHeader(fi)
 	fatalIfErr(err)
-	fih.Name = filepath.Base(path)
+	fih.Name = nameInZip
 	fih.Method = zip.Deflate
 	d, err := ioutil.ReadFile(path)
 	fatalIfErr(err)
@@ -151,14 +151,20 @@ func addZipFileMust(w *zip.Writer, path string) {
 	// or Close() call on zip.Writer
 }
 
+func addZipFileMust(w *zip.Writer, path string) {
+	nameInZip := filepath.Base(path)
+	addZipFileWithNameMust(w, path, nameInZip)
+}
+
 func createExeZipWithGoWithNameMust(dir, nameInZip string) {
-	path := filepath.Join(dir, "SumatraPDF.zip")
-	os.Remove(path) // called multiple times during upload
-	f, err := os.Create(path)
+	zipPath := filepath.Join(dir, "SumatraPDF.zip")
+	os.Remove(zipPath) // called multiple times during upload
+	f, err := os.Create(zipPath)
 	fatalIfErr(err)
 	defer f.Close()
 	zw := zip.NewWriter(f)
-	addZipFileMust(zw, filepath.Join(dir, nameInZip))
+	path := filepath.Join(dir, "SumatraPDF.zip")
+	addZipFileWithNameMust(zw, path, nameInZip)
 	err = zw.Close()
 	fatalIfErr(err)
 }
