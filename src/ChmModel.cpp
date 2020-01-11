@@ -122,10 +122,13 @@ int ChmModel::CurrentPageNo() const {
 
 void ChmModel::GoToPage(int pageNo, bool addNavPoint) {
     UNUSED(addNavPoint);
-    CrashIf(!ValidPageNo(pageNo));
-    if (ValidPageNo(pageNo)) {
-        DisplayPage(pages.at(pageNo - 1));
+    // TODO: not sure if crashing here is warranted
+    // I've seen a crash with call from RestoreTabOnStartup() which doesn't validate pageNo
+    SubmitCrashIf(!ValidPageNo(pageNo));
+    if (!ValidPageNo(pageNo)) {
+        return;
     }
+    DisplayPage(pages.at(pageNo - 1));
 }
 
 bool ChmModel::SetParentHwnd(HWND hwnd) {
