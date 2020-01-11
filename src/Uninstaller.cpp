@@ -37,7 +37,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-#include "CommandLineInfo.h"
+#include "Flags.h"
 #include "Installer.h"
 
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX

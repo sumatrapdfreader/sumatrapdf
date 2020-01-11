@@ -16,7 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\AppUtil.h" />
-    <ClInclude Include="..\src\CommandLineInfo.h" />
+    <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\SettingsStructs.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\SvgPath.h">
@@ -109,7 +109,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\AppUtil.cpp" />
-    <ClCompile Include="..\src\CommandLineInfo.cpp" />
+    <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\SettingsStructs.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\UnitTests.cpp" />

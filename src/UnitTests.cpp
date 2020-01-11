@@ -9,7 +9,7 @@
 
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-#include "CommandLineInfo.h"
+#include "Flags.h"
 
 // must be last to over-write assert()
 #include "utils/UtAssert.h"

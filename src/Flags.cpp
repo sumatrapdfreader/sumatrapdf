@@ -8,7 +8,7 @@
 
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-#include "CommandLineInfo.h"
+#include "Flags.h"
 #include "StressTesting.h"
 #include "SumatraConfig.h"
 
@@ -295,7 +295,8 @@ static int GetArgNo(const WCHAR* argName) {
     } else {
         return -1;
     }
-    return seqstrings::StrToIdx(argNames, argName);
+    AutoFreeWstr nameLowerCase = str::ToLower(argName);
+    return seqstrings::StrToIdx(argNames, nameLowerCase);
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */

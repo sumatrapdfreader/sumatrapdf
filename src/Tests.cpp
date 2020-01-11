@@ -6,7 +6,7 @@
 #include "utils/WinUtil.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-#include "CommandLineInfo.h"
+#include "Flags.h"
 
 #include "TreeModel.h"
 #include "EngineBase.h"

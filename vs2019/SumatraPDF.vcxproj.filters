@@ -48,9 +48,6 @@
     <ClInclude Include="..\src\ChmModel.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\CommandLineInfo.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\CrashHandler.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -76,6 +73,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\FileThumbnails.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Flags.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\GetDocumentOutlines.h">
@@ -260,9 +260,6 @@
     <ClCompile Include="..\src\ChmModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CommandLineInfo.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -288,6 +285,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\FileThumbnails.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Flags.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GetDocumentOutlines.cpp">

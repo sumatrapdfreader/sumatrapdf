@@ -31,7 +31,7 @@
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-#include "CommandLineInfo.h"
+#include "Flags.h"
 #include "Resource.h"
 #include "Version.h"
 #include "Installer.h"

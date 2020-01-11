@@ -35,7 +35,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "AppTools.h"
-#include "CommandLineInfo.h"
+#include "Flags.h"
 #include "Search.h"
 #include "StressTesting.h"
 

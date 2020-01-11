@@ -717,7 +717,6 @@
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\Caption.h" />
     <ClInclude Include="..\src\ChmModel.h" />
-    <ClInclude Include="..\src\CommandLineInfo.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
     <ClInclude Include="..\src\Doc.h" />
@@ -727,6 +726,7 @@
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FileHistory.h" />
     <ClInclude Include="..\src\FileThumbnails.h" />
+    <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\GetDocumentOutlines.h" />
     <ClInclude Include="..\src\GlobalPrefs.h" />
     <ClInclude Include="..\src\Installer.h" />
@@ -789,7 +789,6 @@
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\Caption.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
-    <ClCompile Include="..\src\CommandLineInfo.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\Doc.cpp" />
@@ -799,6 +798,7 @@
     <ClCompile Include="..\src\Favorites.cpp" />
     <ClCompile Include="..\src\FileHistory.cpp" />
     <ClCompile Include="..\src\FileThumbnails.cpp" />
+    <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\GetDocumentOutlines.cpp" />
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
     <ClCompile Include="..\src\InstUninstCommon.cpp" />

@@ -44,7 +44,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
-#include "CommandLineInfo.h"
+#include "Flags.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Canvas.h"

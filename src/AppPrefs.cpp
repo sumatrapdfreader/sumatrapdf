@@ -17,7 +17,7 @@
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
-#include "CommandLineInfo.h"
+#include "Flags.h"
 #include "WindowInfo.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
