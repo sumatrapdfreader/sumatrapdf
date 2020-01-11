@@ -593,7 +593,7 @@ void LoadTocTree(WindowInfo* win) {
         delete vbkm;
     }
 
-    win->altBookmarks->OnDropDownSelectionChanged = [=](int idx, std::string_view s) {
+    win->altBookmarks->onDropDownSelectionChanged = [=](int idx, std::string_view s) {
         AltBookmarksChanged(win, tab, idx, s);
     };
 

@@ -109,7 +109,7 @@ static ILayout* CreatedDropDownLayout(HWND parent) {
         std::string_view sv(s);
         w->items.Append(sv);
     }
-    w->OnDropDownSelectionChanged = onDropDownSelected;
+    w->onDropDownSelectionChanged = onDropDownSelected;
     w->Create();
     return NewDropDownLayout(w);
 }

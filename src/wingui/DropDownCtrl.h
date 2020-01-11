@@ -1,11 +1,11 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-typedef std::function<void(int, std::string_view)> OnDropDownSelectionChanged;
+typedef std::function<void(int, std::string_view)> DropDownSelectionChangedHandler;
 
 struct DropDownCtrl : public WindowBase {
     Vec<std::string_view> items;
-    OnDropDownSelectionChanged OnDropDownSelectionChanged = nullptr;
+    DropDownSelectionChangedHandler onDropDownSelectionChanged = nullptr;
 
     DropDownCtrl(HWND parent);
     ~DropDownCtrl();

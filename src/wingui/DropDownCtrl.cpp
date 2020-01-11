@@ -56,13 +56,13 @@ void DropDownCtrl::WndProcParent(WndProcArgs* args) {
     if (msg == WM_COMMAND) {
         auto code = HIWORD(wp);
         if (code == CBN_SELCHANGE) {
-            if (OnDropDownSelectionChanged) {
+            if (onDropDownSelectionChanged) {
                 int idx = GetCurrentSelection();
                 std::string_view s;
                 if (idx >= 0 && idx < (int)items.size()) {
                     s = items.at((size_t)idx);
                 }
-                OnDropDownSelectionChanged(idx, s);
+                onDropDownSelectionChanged(idx, s);
             }
             args->didHandle = true;
             args->result = 0;
