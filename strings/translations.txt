@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0ef2bf29f315b2b9ea180b3b0be5a3de06ebcd64
+2838caa0b0743e4a558e18fb5650be42dfa160c8
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -75,7 +75,7 @@ vn:Giới thiệu
 af:&Gewone Grootte\tCtrl+1
 am:Իրական &չափը\tCtrl+1
 ar:الحجم &الحقيقي\tCtrl+1
-az:&Əsl ölçü\tCtrl+1
+az:&Faktiki ölçü\tCtrl+1
 bg:&Оригинален (реален) размер\tCtrl+1
 bn:বাস্তবিক আকার\tCtrl+1
 br:&Tamanho real\tCtrl+1
@@ -3784,10 +3784,12 @@ uk:Додати %s сторінку до закладок з іменем(нео
 uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 :Add page %s to favorites\tCtrl+B
+az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
 es:Añadir página %s a favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
+ru:Добавить страницу %s в избранные\tCtrl+B
 tw:將第 %s 頁加入到最愛\tCtrl+B
 :Add to favorites
 am:Ավելացնել ընտրյալներին
@@ -5404,6 +5406,7 @@ uk:Закрити
 uz:Yopish
 vn:Đóng lại
 :Collapse All
+az:Hamısını bağla
 cn:全部折叠(&C)
 co:Piegà tuttu
 cz:Sbalit vše
@@ -5412,6 +5415,7 @@ fr:Tout réduire
 ga:Laghdaigh Gach
 it:Comprimi tutto
 nl:Alle Samenvouwen
+ru:Свернуть все
 tw:全部折叠(&C)
 :Comic books
 am:Հումորային գրքեր
@@ -8035,6 +8039,7 @@ uk:Помилка завантаження %s
 uz:%s yuklab olish xatosi
 vn:Không mở %s được
 :Expand All
+az:Hamısını aç
 cn:全部展开
 co:Spiegà tuttu
 cz:Rozbalit vše
@@ -8043,6 +8048,7 @@ fr:Tout développer
 ga:Leathnaigh Gach
 it:Espandi tutto
 nl:Alle Uitvouwen
+ru:Развернуть все
 tw:全部展開
 :F&avorites
 am:Ը&նտրյալներ
@@ -11567,6 +11573,7 @@ uk:Змінено:
 uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window\tCtrl+N
+az:Yeni pə&ncərə\tCtrl+N
 cn:新建窗口(&W)\tCtrl+N
 co:No&va finestra\tCtrl+N
 cz:Nové &okno\tCtrl+N
@@ -11574,6 +11581,8 @@ es:Nueva &ventana\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
 nl:Nieuw venster\tCrtl+N
+ru:Новое о&кно\tCtrl+N
+tr:Yeni &pencere\tCtrl+N
 tw:新建視窗(&W)\tCtrl+N
 :New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
@@ -14766,10 +14775,12 @@ uk:Повернути праворуч\tCtrl+Shift++
 uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
 :Save Annotations
+az:Annotasiyaları yadda saxla
 cn:保存注释
 es:Guardar Notas
 fr:Sauvegarder les annotations
 nl:Aantekeningen Opslaan
+ru:Сохранить аннотации
 tw:儲存注釋
 :Save As
 af:Stoor As
@@ -15402,16 +15413,20 @@ uk:Установити зворотній пошук.
 uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks\tF12
+az:Əl&fəcinləri göstər\tF12
 cn:显示书签(&B)\tF12
 es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
 nl:Toon Bladwijzers\tF12
+ru:Показать за&кладки\tF12
 tw:顯示書籤(&B)\tF12
 :Show &Favorites
+az:&Seçilmişləri göstər
 cn:显示收藏夹(&F)
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
 nl:Toon &Favorieten
+ru:Показать «И&збранное»
 tw:顯示最愛(&F)
 :Show &Pages Continuously
 am:Էջերը &ցուցադրել շարունակական
@@ -15547,10 +15562,12 @@ uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show Book&marks\tF12
+az:Əlfə&cinləri göstər\tF12
 cn:显示书签(&M)\tF12
 es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
 nl:Toon Blad&wijzers\tF12
+ru:Показать зак&ладки\tF12
 tw:顯示書籤(&M)\tF12
 :Show Favorites
 am:Ցուցադրել ընտրյալները
@@ -15674,6 +15691,7 @@ uk:Найбільш часто читані
 uz:Tez-tez o'qiladiganlarni ko'rsatish
 vn:Hiện Đọc thường xuyên
 :Show in &folder
+az:Qovlu&qda göstər
 cn:打开所在文件夹(&F)
 co:Affissà in u car&tulare
 cz:Zobrazit ve &složce
@@ -15681,6 +15699,7 @@ es:Mostrar en &Carpeta
 fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
 nl:Toon in &map
+ru:Показать в п&апке
 tw:打開所在資料夾(&F)
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
