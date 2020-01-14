@@ -90,6 +90,14 @@ struct TreeKeyDownArgs : WndProcArgs {
 
 typedef std::function<void(TreeKeyDownArgs*)> TreeKeyDown;
 
+struct TreeGetDispInfoArgs : WndProcArgs {
+    TreeCtrl* treeCtrl = nullptr;
+    TreeItem* treeItem = nullptr;
+    NMTVDISPINFOW* dispInfo = nullptr;
+};
+
+typedef std::function<void(TreeGetDispInfoArgs*)> TreeGetDispInfo;
+
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
 - set creation parameters
@@ -165,6 +173,9 @@ struct TreeCtrl : public WindowBase {
 
     // for WM_NOITFY with TVN_KEYDOWN
     TreeKeyDown onTreeKeyDown = nullptr;
+
+    // for WM_NOTIFY with TVN_GETDISPINFO
+    TreeGetDispInfo onTreeGetDispInfo = nullptr;
 
     Size idealSize{};
 

@@ -42,8 +42,9 @@ struct TocEditorWindow {
 
     ~TocEditorWindow();
     void OnWindowSize(SizeArgs*);
-    void OnTreeItemChanged(TreeItemChangedArgs*);
-    void OnTreeItemSelected(TreeSelectionChangedArgs*);
+    void TreeItemChanged(TreeItemChangedArgs*);
+    void TreeItemSelected(TreeSelectionChangedArgs*);
+    void TreeClick(TreeClickArgs* args);
 };
 
 TocEditorWindow::~TocEditorWindow() {
@@ -370,7 +371,7 @@ static void OnWindowClosed(WindowCloseArgs* args) {
     gWindow = nullptr;
 }
 
-void TocEditorWindow::OnTreeItemChanged(TreeItemChangedArgs* args) {
+void TocEditorWindow::TreeItemChanged(TreeItemChangedArgs* args) {
     if (!args->checkedChanged) {
         return;
     }
@@ -378,9 +379,18 @@ void TocEditorWindow::OnTreeItemChanged(TreeItemChangedArgs* args) {
     ti->isUnchecked = !args->newState.isChecked;
 }
 
-void TocEditorWindow::OnTreeItemSelected(TreeSelectionChangedArgs* args) {
+void TocEditorWindow::TreeItemSelected(TreeSelectionChangedArgs* args) {
     UNUSED(args);
     UpdateRemovePdfButtonStatus(gWindow);
+}
+
+void TocEditorWindow::TreeClick(TreeClickArgs* args) {
+    if (!args->isDblClick) {
+        return;
+    }
+    args->didHandle = true;
+    args->result = 1;
+
 }
 
 // in TableOfContents.cpp
@@ -441,9 +451,9 @@ void StartTocEditor(TocEditorArgs* args) {
     w->onSize = std::bind(&TocEditorWindow::OnWindowSize, gWindow, _1);
     w->onClose = OnWindowClosed;
 
-    gWindow->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::OnTreeItemChanged, gWindow, _1);
+    gWindow->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChanged, gWindow, _1);
     gWindow->treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
-    gWindow->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::OnTreeItemSelected, gWindow, _1);
+    gWindow->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelected, gWindow, _1);
 
     UpdateTreeModel(gWindow);
     // important to call this after hooking up onSize to ensure

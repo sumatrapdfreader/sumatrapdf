@@ -141,8 +141,6 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
     }
 
     auto* treeCtrl = (TreeCtrl*)this;
-    HWND hwnd = args->hwnd;
-    WPARAM wp = args->wparam;
     LPARAM lp = args->lparam;
 
     CrashIf(GetParent(treeCtrl->hwnd) != (HWND)hwnd);
@@ -196,10 +194,7 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
             }
         }
         treeCtrl->onTreeItemCustomDraw(&a);
-
-        if (a.didHandle) {
-            return;
-        }
+        return;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
@@ -313,6 +308,20 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         a.keyCode = nmkd->wVKey;
         a.flags = nmkd->flags;
         treeCtrl->onTreeKeyDown(&a);
+        return;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-getdispinfo
+    if (code == TVN_GETDISPINFO) {
+        if (!treeCtrl->onTreeGetDispInfo) {
+            return;
+        }
+        TreeGetDispInfoArgs a{};
+        CopyWndProcArgs cp(&a, args);
+        a.treeCtrl = treeCtrl;
+        a.dispInfo = (NMTVDISPINFOW*)lp;
+        a.treeItem = treeCtrl->GetTreeItemByHandle(a.dispInfo->item.hItem);
+        treeCtrl->onTreeGetDispInfo(&a);
         return;
     }
 }
