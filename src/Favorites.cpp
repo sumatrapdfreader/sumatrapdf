@@ -500,6 +500,7 @@ static void GoToFavForTreeItem(WindowInfo* win, TreeItem* ti) {
     GoToFavorite(win, f, fn);
 }
 
+#if 0
 static void GoToFavForTVItem(WindowInfo* win, TreeCtrl* treeCtrl, HTREEITEM hItem = nullptr) {
     TreeItem* ti = nullptr;
     if (nullptr == hItem) {
@@ -509,6 +510,7 @@ static void GoToFavForTVItem(WindowInfo* win, TreeCtrl* treeCtrl, HTREEITEM hIte
     }
     GoToFavForTreeItem(win, ti);
 }
+#endif
 
 static FavTreeItem* MakeFavTopLevelItem(DisplayState* fav, bool isExpanded) {
     auto* res = new FavTreeItem();
@@ -712,40 +714,6 @@ static void FavTreeSelectionChanged(TreeSelectionChangedArgs* args) {
     args->didHandle = true;
 }
 
-static void FavTreeNotify(TreeNotifyArgs* args) {
-    TreeCtrl* w = args->treeCtrl;
-    WindowInfo* win = FindWindowInfoByHwnd(w->hwnd);
-    NMTREEVIEW* pnmtv = args->treeView;
-    switch (pnmtv->hdr.code) {
-            // TVN_SELCHANGED intentionally not implemented (mouse clicks are handled
-            // in NM_CLICK, and keyboard navigation in NM_RETURN and TVN_KEYDOWN)
-
-        case TVN_KEYDOWN: {
-            TV_KEYDOWN* ptvkd = (TV_KEYDOWN*)pnmtv;
-            if (VK_TAB == ptvkd->wVKey) {
-                if (win->tabsVisible && IsCtrlPressed()) {
-                    TabsOnCtrlTab(win, IsShiftPressed());
-                } else {
-                    AdvanceFocus(win);
-                }
-                args->didHandle = true;
-                args->result = 1;
-            }
-            break;
-        }
-
-        case NM_RETURN:
-            GoToFavForTVItem(win, w);
-            break;
-
-        case NM_CUSTOMDRAW:
-            args->didHandle = true;
-            args->result = CDRF_DODEFAULT;
-            break;
-    }
-    return;
-}
-
 // if context menu invoked via keyboard, get selected item
 // if via right-click, selects the item under the cursor
 // in both cases can return null
@@ -851,6 +819,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
 // in TableOfContents.cpp
 extern void TocTreeCharHandler(CharArgs* args);
 extern void TocTreeMouseWheelHandler(MouseWheelArgs* args);
+extern void TocTreeKeyDown(TreeKeyDownArgs* args);
 
 void CreateFavorites(WindowInfo* win) {
     HMODULE h = GetModuleHandleW(nullptr);
@@ -868,10 +837,10 @@ void CreateFavorites(WindowInfo* win) {
     TreeCtrl* treeCtrl = new TreeCtrl(win->hwndFavBox);
 
     treeCtrl->onContextMenu = FavTreeContextMenu;
-    treeCtrl->onTreeNotify = FavTreeNotify;
     treeCtrl->onChar = TocTreeCharHandler;
     treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
     treeCtrl->onTreeSelectionChanged = FavTreeSelectionChanged;
+    treeCtrl->onTreeKeyDown = TocTreeKeyDown;
 
     bool ok = treeCtrl->Create(L"Fav");
     CrashIf(!ok);

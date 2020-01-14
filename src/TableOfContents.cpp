@@ -54,7 +54,7 @@
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
-static void CustomizeTocTooltip(TreeItmGetTooltipArgs* args) {
+static void TocCustomizeTooltip(TreeItmGetTooltipArgs* args) {
     auto* w = args->treeCtrl;
     auto* ti = args->treeItem;
     auto* nm = args->info;
@@ -215,22 +215,6 @@ static void GoToTocTreeItem(WindowInfo* win, TreeItem* ti, bool allowExternal) {
         uitask::Post([=] { GoToTocLinkTask(win, tocItem, tab, ctrl); });
     }
 }
-
-#if 0
-static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExternal) {
-    if (!win->IsDocLoaded()) {
-        return;
-    }
-    TreeCtrl* treeCtrl = win->tocTreeCtrl;
-    TreeItem* ti = nullptr;
-    if (hItem) {
-        ti = treeCtrl->GetTreeItemByHandle(hItem);
-    } else {
-        ti = treeCtrl->GetSelection();
-    }
-    GoToTocTreeItem(win, ti, allowExternal);
-}
-#endif
 
 void ClearTocBox(WindowInfo* win) {
     if (!win->tocLoaded) {
@@ -710,40 +694,26 @@ static void TocTreeSelectionChanged(TreeSelectionChangedArgs* args) {
     args->didHandle = true;
 }
 
-static void TocTreeNotify(TreeNotifyArgs* args) {
-    WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
-    CrashIf(!win);
-    NMTREEVIEWW* pnmtv = args->treeView;
-    HWND hwndFrom = pnmtv->hdr.hwndFrom;
-    auto action = pnmtv->action;
-    CrashIf(hwndFrom != win->tocTreeCtrl->hwnd);
-
-    switch (pnmtv->hdr.code) {
-        case TVN_KEYDOWN: {
-            TV_KEYDOWN* ptvkd = (TV_KEYDOWN*)pnmtv;
-            if (VK_TAB == ptvkd->wVKey) {
-                if (win->tabsVisible && IsCtrlPressed()) {
-                    TabsOnCtrlTab(win, IsShiftPressed());
-                } else {
-                    AdvanceFocus(win);
-                }
-                args->didHandle = true;
-                args->result = 1;
-                return;
-            }
-            break;
-        }
-#if 0
-        case NM_RETURN:
-            GoToTocLinkForTVItem(win, nullptr, true);
-            break;
-#endif
+// also used in Favorites.cpp
+void TocTreeKeyDown(TreeKeyDownArgs* args) {
+    if (args->keyCode != VK_TAB) {
+        return;
     }
+    args->didHandle = true;
+    args->result = 1;
+
+    WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
+    CrashIf(!win);
+    if (win->tabsVisible && IsCtrlPressed()) {
+        TabsOnCtrlTab(win, IsShiftPressed());
+        return;
+    }
+    AdvanceFocus(win);
 }
 
+#ifdef DISPLAY_TOC_PAGE_NUMBERS
 static void TocTreeMsgFilter(WndProcArgs* args) {
     UNUSED(args);
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
     switch (msg) {
         case WM_SIZE:
         case WM_HSCROLL:
@@ -755,8 +725,8 @@ static void TocTreeMsgFilter(WndProcArgs* args) {
             UpdateWindow(hwnd);
             break;
     }
-#endif
 }
+#endif
 
 // Position label with close button and tree window within their parent.
 // Used for toc and favorites.
@@ -877,13 +847,12 @@ void CreateToc(WindowInfo* win) {
 
     auto* treeCtrl = new TreeCtrl(win->hwndTocBox);
     treeCtrl->dwExStyle = WS_EX_STATICEDGE;
-    treeCtrl->msgFilter = TocTreeMsgFilter;
-    treeCtrl->onTreeNotify = TocTreeNotify;
-    treeCtrl->onGetTooltip = CustomizeTocTooltip;
+    treeCtrl->onGetTooltip = TocCustomizeTooltip;
     treeCtrl->onContextMenu = TocContextMenu;
     treeCtrl->onChar = TocTreeCharHandler;
     treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
     treeCtrl->onTreeSelectionChanged = TocTreeSelectionChanged;
+    treeCtrl->onTreeKeyDown = TocTreeKeyDown;
 
     bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);

@@ -81,6 +81,15 @@ struct TreeClickArgs : WndProcArgs {
 
 typedef std::function<void(TreeClickArgs*)> TreeClickHandler;
 
+struct TreeKeyDownArgs : WndProcArgs {
+    TreeCtrl* treeCtrl = nullptr;
+    NMTVKEYDOWN* nmkd = nullptr;
+    int keyCode = 0;
+    u32 flags = 0;
+};
+
+typedef std::function<void(TreeKeyDownArgs*)> TreeKeyDown;
+
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
 - set creation parameters
@@ -133,22 +142,29 @@ struct TreeCtrl : public WindowBase {
     // treeModel not owned by us
     TreeModel* treeModel = nullptr;
 
-    // allows the caller to set info tip by updating NMTVGETINFOTIP
-    TreeItemGetTooltipHandler onGetTooltip = nullptr;
-
     // for all WM_NOTIFY messages
     TreeNotifyHandler onTreeNotify = nullptr;
 
+    // for WM_NOTIFY with TVN_GETINFOTIP
+    TreeItemGetTooltipHandler onGetTooltip = nullptr;
+
+    // for WM_NOTIFY with TVN_SELCHANGED
     TreeSelectionChangedHandler onTreeSelectionChanged = nullptr;
 
+    // for WM_NOTIFY with TVN_ITEMEXPANDED
     TreeItemExpandedHandler onTreeItemExpanded = nullptr;
 
+    // for WM_NOTIFY with TVN_ITEMCHANGED
     TreeItemChangedHandler onTreeItemChanged = nullptr;
 
+    // for WM_NOTIFY wiht NM_CUSTOMDRAW
     TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
 
     // for WM_NOTIFY with NM_CLICK or NM_DBCLICK
     TreeClickHandler onTreeClick = nullptr;
+
+    // for WM_NOITFY with TVN_KEYDOWN
+    TreeKeyDown onTreeKeyDown = nullptr;
 
     Size idealSize{};
 
