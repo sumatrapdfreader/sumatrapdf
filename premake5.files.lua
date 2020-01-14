@@ -444,6 +444,7 @@ function sumatrapdf_files()
     "TextSelection.*",
     "Theme.*",
     "TocEditor.*",
+    "TocEditTitle.*",
     "Toolbar.*",
     "Translations.*",
     "Trans_sumatra_txt.cpp",

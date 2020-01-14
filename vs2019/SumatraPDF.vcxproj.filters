@@ -156,6 +156,9 @@
     <ClInclude Include="..\src\Theme.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TocEditTitle.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\TocEditor.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -381,6 +384,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Theme.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TocEditTitle.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TocEditor.cpp">

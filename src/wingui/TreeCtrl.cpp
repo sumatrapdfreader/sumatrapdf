@@ -143,7 +143,7 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
     auto* treeCtrl = (TreeCtrl*)this;
     LPARAM lp = args->lparam;
 
-    CrashIf(GetParent(treeCtrl->hwnd) != (HWND)hwnd);
+    CrashIf(GetParent(treeCtrl->hwnd) != (HWND)args->hwnd);
 
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
     if (treeCtrl->onTreeNotify) {

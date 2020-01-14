@@ -19,6 +19,7 @@
 #include "EngineManager.h"
 
 #include "ParseBKM.h"
+#include "TocEditTitle.h"
 #include "TocEditor.h"
 
 struct TocEditorWindow {
@@ -388,9 +389,16 @@ void TocEditorWindow::TreeClick(TreeClickArgs* args) {
     if (!args->isDblClick) {
         return;
     }
+    if (!args->treeItem) {
+        return;
+    }
+
     args->didHandle = true;
     args->result = 1;
 
+    TocItem* ti = (TocItem*)args->treeItem;
+    // TODO: do something if 
+    StartTocEditTitle(args->w->hwnd, ti);
 }
 
 // in TableOfContents.cpp
@@ -429,8 +437,9 @@ void StartTocEditor(TocEditorArgs* args) {
         gWindow = nullptr;
     }
 
-    gWindow = new TocEditorWindow();
-    gWindow->tocArgs = args;
+    auto tocWin = new TocEditorWindow();
+    gWindow = tocWin;
+    tocWin->tocArgs = args;
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Table of content editor");
@@ -442,20 +451,21 @@ void StartTocEditor(TocEditorArgs* args) {
     bool ok = w->Create();
     CrashIf(!ok);
 
-    gWindow->mainWindow = w;
-    gWindow->hwnd = w->hwnd;
+    tocWin->mainWindow = w;
+    tocWin->hwnd = w->hwnd;
 
     CreateMainLayout(gWindow);
 
     using namespace std::placeholders;
-    w->onSize = std::bind(&TocEditorWindow::OnWindowSize, gWindow, _1);
+    w->onSize = std::bind(&TocEditorWindow::OnWindowSize, tocWin, _1);
     w->onClose = OnWindowClosed;
 
-    gWindow->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChanged, gWindow, _1);
-    gWindow->treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
-    gWindow->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelected, gWindow, _1);
+    tocWin->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChanged, tocWin, _1);
+    tocWin->treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
+    tocWin->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelected, tocWin, _1);
+    tocWin->treeCtrl->onTreeClick = std::bind(&TocEditorWindow::TreeClick, tocWin, _1);
 
-    UpdateTreeModel(gWindow);
+        UpdateTreeModel(gWindow);
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     w->SetIsVisible(true);
