@@ -144,7 +144,7 @@ bool Save() {
     conv::FromZoom(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
 
     AutoFreeWstr path = GetSettingsPath();
-    CrashIfDebugOnly(!path.data);
+    DebugCarshIf(!path.data);
     if (!path.data) {
         return false;
     }
