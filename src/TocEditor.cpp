@@ -42,7 +42,8 @@ struct TocEditorWindow {
     bool canRemovePdf = false;
 
     ~TocEditorWindow();
-    void OnWindowSize(SizeArgs*);
+    void WindowSizeHandler(SizeArgs*);
+    void WindowClosedHandler(WindowCloseArgs*);
     void TreeItemChanged(TreeItemChangedArgs*);
     void TreeItemSelected(TreeSelectionChangedArgs*);
     void TreeClick(TreeClickArgs* args);
@@ -347,7 +348,7 @@ static void CreateMainLayout(TocEditorWindow* w) {
     w->mainLayout = padding;
 }
 
-void TocEditorWindow::OnWindowSize(SizeArgs* args) {
+void TocEditorWindow::WindowSizeHandler(SizeArgs* args) {
     int dx = args->dx;
     int dy = args->dy;
     HWND hwnd = args->hwnd;
@@ -365,7 +366,7 @@ void TocEditorWindow::OnWindowSize(SizeArgs* args) {
     args->didHandle = true;
 }
 
-static void OnWindowClosed(WindowCloseArgs* args) {
+void TocEditorWindow::WindowClosedHandler(WindowCloseArgs* args) {
     WindowBase* w = (WindowBase*)gWindow->mainWindow;
     CrashIf(w != args->w);
     delete gWindow;
@@ -456,16 +457,16 @@ void StartTocEditor(TocEditorArgs* args) {
 
     CreateMainLayout(gWindow);
 
-    using namespace std::placeholders;
-    w->onSize = std::bind(&TocEditorWindow::OnWindowSize, tocWin, _1);
-    w->onClose = OnWindowClosed;
+    using std::placeholders::_1;
+    w->onSize = std::bind(&TocEditorWindow::WindowSizeHandler, tocWin, _1);
+    w->onClose = std::bind(&TocEditorWindow::WindowClosedHandler, tocWin, _1);
 
     tocWin->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChanged, tocWin, _1);
     tocWin->treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
     tocWin->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelected, tocWin, _1);
     tocWin->treeCtrl->onTreeClick = std::bind(&TocEditorWindow::TreeClick, tocWin, _1);
 
-        UpdateTreeModel(gWindow);
+    UpdateTreeModel(gWindow);
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     w->SetIsVisible(true);
