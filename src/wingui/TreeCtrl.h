@@ -4,34 +4,34 @@
 
 struct TreeCtrl;
 
-struct TreeItmGetTooltipArgs {
-    WndProcArgs* procArgs = nullptr;
-    TreeCtrl* w = nullptr;
+struct TreeItmGetTooltipArgs : WndProcArgs {
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     NMTVGETINFOTIPW* info = nullptr;
 };
 
 typedef std::function<void(TreeItmGetTooltipArgs*)> TreeItemGetTooltipHandler;
 
-struct TreeNotifyArgs {
-    WndProcArgs* procArgs = nullptr;
-    TreeCtrl* w = nullptr;
+struct TreeNotifyArgs : WndProcArgs {
+    TreeCtrl* treeCtrl = nullptr;
     NMTREEVIEWW* treeView = nullptr;
 };
 
 typedef std::function<void(TreeNotifyArgs*)> TreeNotifyHandler;
 
-struct TreeSelectionChangedArgs {
-    WndProcArgs* procArgs = nullptr;
-    TreeCtrl* w = nullptr;
-    TreeItem* treeItem = nullptr;
+struct TreeSelectionChangedArgs : WndProcArgs {
+    TreeCtrl* treeCtrl = nullptr;
+    TreeItem* prevSelectedItem = nullptr;
+    TreeItem* selectedItem = nullptr;
+    NMTREEVIEW* nmtv = nullptr;
+    bool byKeyboard = false;
+    bool byMouse = false;
 };
 
 typedef std::function<void(TreeSelectionChangedArgs*)> TreeSelectionChangedHandler;
 
-struct TreeItemExpandedArgs {
-    WndProcArgs* procArgs = nullptr;
-    TreeCtrl* w = nullptr;
+struct TreeItemExpandedArgs : WndProcArgs {
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     bool isExpanded = false;
 };
@@ -45,9 +45,8 @@ struct TreeItemState {
     int nChildren = 0;
 };
 
-struct TreeItemChangedArgs {
-    WndProcArgs* procArgs = nullptr;
-    TreeCtrl* w = nullptr;
+struct TreeItemChangedArgs : WndProcArgs {
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     NMTVITEMCHANGE* nmic = nullptr;
 
@@ -61,14 +60,26 @@ struct TreeItemChangedArgs {
 
 typedef std::function<void(TreeItemChangedArgs*)> TreeItemChangedHandler;
 
-struct TreeItemCustomDrawArgs {
-    WndProcArgs* procArgs = nullptr;
-    TreeCtrl* w = nullptr;
+struct TreeItemCustomDrawArgs : WndProcArgs {
+    TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     NMTVCUSTOMDRAW* nm = nullptr;
 };
 
 typedef std::function<void(TreeItemCustomDrawArgs*)> TreeItemCustomDrawHandler;
+
+struct TreeClickArgs : WndProcArgs {
+    TreeCtrl* treeCtrl = nullptr;
+    TreeItem* treeItem = nullptr;
+    bool isDblClick = false;
+
+    // mouse x,y position relative to the window
+    PointI mouseWindow{};
+    // global (screen) mouse x,y position
+    PointI mouseGlobal{};
+};
+
+typedef std::function<void(TreeClickArgs*)> TreeClickHandler;
 
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
@@ -125,7 +136,7 @@ struct TreeCtrl : public WindowBase {
     // allows the caller to set info tip by updating NMTVGETINFOTIP
     TreeItemGetTooltipHandler onGetTooltip = nullptr;
 
-    // called to process all WM_NOTIFY messages
+    // for all WM_NOTIFY messages
     TreeNotifyHandler onTreeNotify = nullptr;
 
     TreeSelectionChangedHandler onTreeSelectionChanged = nullptr;
@@ -135,6 +146,9 @@ struct TreeCtrl : public WindowBase {
     TreeItemChangedHandler onTreeItemChanged = nullptr;
 
     TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
+
+    // for WM_NOTIFY with NM_CLICK or NM_DBCLICK
+    TreeClickHandler onTreeClick = nullptr;
 
     Size idealSize{};
 

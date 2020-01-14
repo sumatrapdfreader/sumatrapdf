@@ -105,34 +105,53 @@ static void SetTreeItemState(UINT uState, TreeItemState& state) {
     state.isChecked = n != 0;
 }
 
-#if 0
-static void CopyWndProcArgs(WndProcArgs& dest, WndProcArgs* src) {
-    dest.hwnd = src->hwnd;
-    dest.lparam = src->lparam;
-    dest.wparam = src->wparam;
-    dest.w = src->w;
-    dest.msg = src->msg;
+struct CopyWndProcArgs {
+    WndProcArgs* dst = nullptr;
+    WndProcArgs* src = nullptr;
+
+    CopyWndProcArgs() = delete;
+
+    CopyWndProcArgs(CopyWndProcArgs&) = delete;
+    CopyWndProcArgs(CopyWndProcArgs&&) = delete;
+    CopyWndProcArgs& operator=(CopyWndProcArgs&) = delete;
+
+    CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src);
+    ~CopyWndProcArgs();
+};
+
+CopyWndProcArgs::CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src) {
+    this->dst = dst;
+    this->src = src;
+    dst->hwnd = src->hwnd;
+    dst->msg = src->msg;
+    dst->lparam = src->lparam;
+    dst->wparam = src->wparam;
+    dst->w = src->w;
 }
-#endif
+
+CopyWndProcArgs::~CopyWndProcArgs() {
+    src->didHandle = dst->didHandle;
+    src->result = dst->result;
+}
 
 void TreeCtrl::WndProcParent(WndProcArgs* args) {
-    auto* w = (TreeCtrl*)this;
+    auto* treeCtrl = (TreeCtrl*)this;
     HWND hwnd = args->hwnd;
     UINT msg = args->msg;
     WPARAM wp = args->wparam;
     LPARAM lp = args->lparam;
 
-    CrashIf(GetParent(w->hwnd) != (HWND)hwnd);
+    CrashIf(GetParent(treeCtrl->hwnd) != (HWND)hwnd);
 
     if (msg == WM_NOTIFY) {
         NMTREEVIEWW* nm = (NMTREEVIEWW*)(lp);
-        if (w->onTreeNotify) {
+        if (treeCtrl->onTreeNotify) {
             TreeNotifyArgs a{};
-            a.procArgs = args;
-            a.w = w;
+            CopyWndProcArgs cp(&a, args);
+            a.treeCtrl = treeCtrl;
             a.treeView = nm;
 
-            w->onTreeNotify(&a);
+            treeCtrl->onTreeNotify(&a);
             if (args->didHandle) {
                 return;
             }
@@ -140,66 +159,74 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
 
         auto code = nm->hdr.code;
         if (code == TVN_GETINFOTIP) {
-            if (!w->onGetTooltip) {
+            if (!treeCtrl->onGetTooltip) {
                 return;
             }
             TreeItmGetTooltipArgs a{};
-            a.procArgs = args;
-            a.w = w;
+            CopyWndProcArgs cp(&a, args);
+            a.treeCtrl = treeCtrl;
             a.info = (NMTVGETINFOTIPW*)(nm);
-            a.treeItem = w->GetTreeItemByHandle(a.info->hItem);
-            w->onGetTooltip(&a);
-            args->didHandle = true;
-            args->result = 0;
+            a.treeItem = treeCtrl->GetTreeItemByHandle(a.info->hItem);
+            treeCtrl->onGetTooltip(&a);
             return;
         }
 
         // https://docs.microsoft.com/en-us/windows/win32/controls/nm-customdraw-tree-view
         if (code == NM_CUSTOMDRAW) {
-            if (!w->onTreeItemCustomDraw) {
+            if (!treeCtrl->onTreeItemCustomDraw) {
                 return;
             }
             TreeItemCustomDrawArgs a;
-            a.procArgs = args;
-            a.w = w;
+            CopyWndProcArgs cp(&a, args);
+            a.treeCtrl = treeCtrl;
             a.nm = (NMTVCUSTOMDRAW*)lp;
             HTREEITEM hItem = (HTREEITEM)a.nm->nmcd.dwItemSpec;
             // it can be 0 in CDDS_PREPAINT state
             if (hItem) {
-                a.treeItem = w->GetTreeItemByHandle(hItem);
+                a.treeItem = treeCtrl->GetTreeItemByHandle(hItem);
                 // TODO: log more info
                 SubmitCrashIf(!a.treeItem);
                 if (!a.treeItem) {
                     return;
                 }
             }
-            w->onTreeItemCustomDraw(&a);
-            if (a.procArgs->didHandle) {
+            treeCtrl->onTreeItemCustomDraw(&a);
+
+            if (args->didHandle) {
                 return;
             }
         }
 
         if (code == TVN_SELCHANGED) {
-            if (!w->onTreeSelectionChanged) {
+            if (!treeCtrl->onTreeSelectionChanged) {
                 return;
             }
             TreeSelectionChangedArgs a;
-            a.procArgs = args;
-            a.w = w;
-            a.treeItem = w->GetTreeItemByHandle(nm->itemNew.hItem);
+            CopyWndProcArgs cp(&a, args);
+            a.treeCtrl = treeCtrl;
+            a.nmtv = (NMTREEVIEW*)lp;
+            auto action = a.nmtv->action;
+            if (action == TVC_BYKEYBOARD) {
+                a.byKeyboard = true;
+            } else if (action == TVC_BYMOUSE) {
+                a.byMouse = true;
+            }
+            a.prevSelectedItem = treeCtrl->GetTreeItemByHandle(nm->itemOld.hItem);
+            a.selectedItem = treeCtrl->GetTreeItemByHandle(nm->itemNew.hItem);
             onTreeSelectionChanged(&a);
             return;
         }
 
         // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-itemchanged
         if (code == TVN_ITEMCHANGED) {
-            if (!w->onTreeItemChanged) {
+            if (!treeCtrl->onTreeItemChanged) {
                 return;
             }
             TreeItemChangedArgs a;
-            a.procArgs = args;
+            CopyWndProcArgs cp(&a, args);
+            a.treeCtrl = treeCtrl;
             a.nmic = (NMTVITEMCHANGE*)lp;
-            a.treeItem = w->GetTreeItemByHandle(a.nmic->hItem);
+            a.treeItem = treeCtrl->GetTreeItemByHandle(a.nmic->hItem);
             SetTreeItemState(a.nmic->uStateOld, a.prevState);
             SetTreeItemState(a.nmic->uStateNew, a.newState);
             a.expandedChanged = (a.prevState.isExpanded != a.newState.isExpanded);
@@ -210,7 +237,7 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         }
 
         if (code == TVN_ITEMEXPANDED) {
-            if (!w->onTreeItemExpanded) {
+            if (!treeCtrl->onTreeItemExpanded) {
                 return;
             }
             bool doNotify = false;
@@ -226,10 +253,43 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
                 return;
             }
             TreeItemExpandedArgs a{};
-            a.procArgs = args;
-            a.w = w;
-            a.treeItem = w->GetTreeItemByHandle(nm->itemNew.hItem);
+            CopyWndProcArgs cp(&a, args);
+            a.treeCtrl = treeCtrl;
+            a.treeItem = treeCtrl->GetTreeItemByHandle(nm->itemNew.hItem);
             onTreeItemExpanded(&a);
+            return;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/controls/nm-click-tree-view
+        if (code == NM_CLICK || code == NM_DBLCLK) {
+            if (!treeCtrl->onTreeClick) {
+                return;
+            }
+            NMHDR* nmhdr = (NMHDR*)lp;
+            TreeClickArgs a{};
+            CopyWndProcArgs cp(&a, args);
+            a.treeCtrl = treeCtrl;
+            a.isDblClick = (code == NM_DBLCLK);
+
+            DWORD pos = GetMessagePos();
+            a.mouseGlobal.x = GET_X_LPARAM(pos);
+            a.mouseGlobal.y = GET_Y_LPARAM(pos);
+            POINT pt{a.mouseGlobal.x, a.mouseGlobal.y};
+            if (pt.x != -1) {
+                MapWindowPoints(HWND_DESKTOP, nmhdr->hwndFrom, &pt, 1);
+            }
+            a.mouseWindow.x = pt.x;
+            a.mouseWindow.y = pt.y;
+
+            // determine which item has been clicked (if any)
+            TVHITTESTINFO ht = {0};
+            ht.pt.x = a.mouseWindow.x;
+            ht.pt.y = a.mouseWindow.y;
+            TreeView_HitTest(nmhdr->hwndFrom, &ht);
+            if ((ht.flags & TVHT_ONITEM)) {
+                a.treeItem = treeCtrl->GetTreeItemByHandle(ht.hItem);
+            }
+            treeCtrl->onTreeClick(&a);
             return;
         }
 
