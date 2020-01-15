@@ -266,8 +266,6 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
                 GetWindowRect(hwnd, &windowRect);
 
                 UINT flags = 0;
-                if (GetSystemMetrics(SM_MENUDROPALIGNMENT))
-                    flags |= TPM_RIGHTALIGN;
                 TrackPopupMenuEx(systemMenu, flags, windowRect.left, windowRect.bottom, win->hwndFrame,
                                                 nullptr);
             }
