@@ -42,8 +42,8 @@ struct TocEditorWindow {
     bool canRemovePdf = false;
 
     ~TocEditorWindow();
-    void WindowSizeHandler(SizeArgs*);
-    void WindowClosedHandler(WindowCloseArgs*);
+    void SizeHandler(SizeArgs*);
+    void CloseHandler(WindowCloseArgs*);
     void TreeItemChanged(TreeItemChangedArgs*);
     void TreeItemSelected(TreeSelectionChangedArgs*);
     void TreeClick(TreeClickArgs* args);
@@ -348,7 +348,7 @@ static void CreateMainLayout(TocEditorWindow* w) {
     w->mainLayout = padding;
 }
 
-void TocEditorWindow::WindowSizeHandler(SizeArgs* args) {
+void TocEditorWindow::SizeHandler(SizeArgs* args) {
     int dx = args->dx;
     int dy = args->dy;
     HWND hwnd = args->hwnd;
@@ -366,7 +366,7 @@ void TocEditorWindow::WindowSizeHandler(SizeArgs* args) {
     args->didHandle = true;
 }
 
-void TocEditorWindow::WindowClosedHandler(WindowCloseArgs* args) {
+void TocEditorWindow::CloseHandler(WindowCloseArgs* args) {
     WindowBase* w = (WindowBase*)gWindow->mainWindow;
     CrashIf(w != args->w);
     delete gWindow;
@@ -398,8 +398,7 @@ void TocEditorWindow::TreeClick(TreeClickArgs* args) {
     args->result = 1;
 
     TocItem* ti = (TocItem*)args->treeItem;
-    // TODO: do something if 
-    StartTocEditTitle(args->w->hwnd, ti);
+    StartTocEditTitle(mainWindow->hwnd, ti);
 }
 
 // in TableOfContents.cpp
@@ -438,9 +437,9 @@ void StartTocEditor(TocEditorArgs* args) {
         gWindow = nullptr;
     }
 
-    auto tocWin = new TocEditorWindow();
-    gWindow = tocWin;
-    tocWin->tocArgs = args;
+    auto win = new TocEditorWindow();
+    gWindow = win;
+    win->tocArgs = args;
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Table of content editor");
@@ -452,19 +451,19 @@ void StartTocEditor(TocEditorArgs* args) {
     bool ok = w->Create();
     CrashIf(!ok);
 
-    tocWin->mainWindow = w;
-    tocWin->hwnd = w->hwnd;
+    win->mainWindow = w;
+    win->hwnd = w->hwnd;
 
     CreateMainLayout(gWindow);
 
     using std::placeholders::_1;
-    w->onSize = std::bind(&TocEditorWindow::WindowSizeHandler, tocWin, _1);
-    w->onClose = std::bind(&TocEditorWindow::WindowClosedHandler, tocWin, _1);
+    w->onClose = std::bind(&TocEditorWindow::CloseHandler, win, _1);
+    w->onSize = std::bind(&TocEditorWindow::SizeHandler, win, _1);
 
-    tocWin->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChanged, tocWin, _1);
-    tocWin->treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
-    tocWin->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelected, tocWin, _1);
-    tocWin->treeCtrl->onTreeClick = std::bind(&TocEditorWindow::TreeClick, tocWin, _1);
+    win->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChanged, win, _1);
+    win->treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
+    win->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelected, win, _1);
+    win->treeCtrl->onTreeClick = std::bind(&TocEditorWindow::TreeClick, win, _1);
 
     UpdateTreeModel(gWindow);
     // important to call this after hooking up onSize to ensure
