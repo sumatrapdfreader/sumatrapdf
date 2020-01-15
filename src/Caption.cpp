@@ -55,7 +55,7 @@ static inline bool NeedsNonClientBandHack(HWND hwnd) {
 
 static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win);
 static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer);
-static HMENU GetUpdatedSystemMenu(HWND hwnd);
+static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem);
 static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y);
 
 CaptionInfo::CaptionInfo(HWND hwndCaption) : hwnd(hwndCaption), theme(nullptr), isMenuOpen(false) {
@@ -220,17 +220,24 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
 
     switch (message) {
         case WM_MOUSEMOVE: {
-            ClientRect rc(hwnd);
-            if (!rc.Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
+            if (CB_SYSTEM_MENU == index && (wParam & MK_LBUTTON)) {
                 ReleaseCapture();
+                // Trigger system move, there will be no WM_LBUTTONUP event for the button
+                SendMessage(win->hwndFrame, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
                 return 0;
-            }
-            if (win) {
-                if (TrackMouseLeave(hwnd)) {
-                    win->caption->btn[index].highlighted = true;
-                    InvalidateRgn(hwnd, nullptr, FALSE);
+            } else {
+                ClientRect rc(hwnd);
+                if (!rc.Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
+                    ReleaseCapture();
+                    return 0;
                 }
-                return 0;
+                if (win) {
+                    if (TrackMouseLeave(hwnd)) {
+                        win->caption->btn[index].highlighted = true;
+                        InvalidateRgn(hwnd, nullptr, FALSE);
+                    }
+                    return 0;
+                }
             }
         } break;
 
@@ -249,6 +256,28 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
             if (CB_MENU == index)
                 PostMessage(hwnd, WM_LBUTTONUP, 0, lParam);
             return CallWindowProc(DefWndProcButton, hwnd, message, wParam, lParam);
+
+        case WM_RBUTTONUP:
+        case WM_LBUTTONUP:
+            if (CB_SYSTEM_MENU == index) {
+                // Open system menu on click if not dragged (mouse move + left clic will trigger system move, see MOUSEMOVE event)
+                HMENU systemMenu = GetUpdatedSystemMenu(win->hwndFrame, false);
+                RECT windowRect;
+                GetWindowRect(hwnd, &windowRect);
+
+                UINT flags = 0;
+                if (GetSystemMetrics(SM_MENUDROPALIGNMENT))
+                    flags |= TPM_RIGHTALIGN;
+                TrackPopupMenuEx(systemMenu, flags, windowRect.left, windowRect.bottom, win->hwndFrame,
+                                                nullptr);
+            }
+            break;
+            
+        case WM_LBUTTONDBLCLK:
+            if (CB_SYSTEM_MENU == index) {
+                PostMessage(win->hwndFrame, WM_SYSCOMMAND, SC_CLOSE, 0);
+            }
+            break;
 
         case WM_KEYDOWN:
             if (CB_MENU == index && win && !win->caption->isMenuOpen &&
@@ -332,9 +361,15 @@ void RelayoutCaption(WindowInfo* win) {
         button->SetMargins(0, topMargin, 0, 0);
     }
 
-    button = &ci->btn[CB_MENU];
+    button = &ci->btn[CB_SYSTEM_MENU];
     int tabHeight = GetTabbarHeight(win->hwndFrame);
     rc.y += rc.dy - tabHeight;
+    dh.SetWindowPos(button->hwnd, nullptr, rc.x, rc.y, tabHeight, tabHeight, SWP_NOZORDER);
+    button->SetMargins(0, 0, 0, 0);
+
+    rc.x += tabHeight;
+    rc.dx -= tabHeight;
+    button = &ci->btn[CB_MENU];
     dh.SetWindowPos(button->hwnd, nullptr, rc.x, rc.y, tabHeight, tabHeight, SWP_NOZORDER);
     button->SetMargins(0, 0, 0, 0);
 
@@ -442,6 +477,13 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
         for (int i = 0; i < 3; i++) {
             gfx.DrawLine(&p, rc.x, rc.y + i * rc.dy / 2, rc.x + rc.dx, rc.y + i * rc.dy / 2);
         }
+    } else if (button == CB_SYSTEM_MENU) {
+        PaintCaptionBackground(memDC, win, false);
+        int xIcon = GetSystemMetrics(SM_CXSMICON);
+        int yIcon = GetSystemMetrics(SM_CYSMICON);
+        HICON hIcon = (HICON)GetClassLongPtr(
+            win->hwndFrame, GCLP_HICONSM);
+        DrawIconEx(memDC, (rButton.dx - xIcon) / 2, (rButton.dy - yIcon) / 2, hIcon, xIcon, yIcon, 0, NULL, DI_NORMAL);
     }
 
     buffer.Flush(item->hDC);
@@ -659,7 +701,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         case WM_NCRBUTTONUP:
             // Prepare and show the system menu.
             if (wParam == HTCAPTION) {
-                HMENU menu = GetUpdatedSystemMenu(hwnd);
+                HMENU menu = GetUpdatedSystemMenu(hwnd, true);
                 UINT flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
                 if (GetSystemMetrics(SM_MENUDROPALIGNMENT))
                     flags |= TPM_RIGHTALIGN;
@@ -727,7 +769,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     return 0;
 }
 
-static HMENU GetUpdatedSystemMenu(HWND hwnd) {
+static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem) {
     // don't reset the system menu (in case other applications have added to it)
     HMENU menu = GetSystemMenu(hwnd, FALSE);
 
@@ -742,7 +784,10 @@ static HMENU GetUpdatedSystemMenu(HWND hwnd) {
     EnableMenuItem(menu, SC_MAXIMIZE, maximized ? MF_GRAYED : MF_ENABLED);
     EnableMenuItem(menu, SC_CLOSE, MF_ENABLED);
     EnableMenuItem(menu, SC_RESTORE, maximized ? MF_ENABLED : MF_GRAYED);
-    SetMenuDefaultItem(menu, maximized ? SC_RESTORE : SC_MAXIMIZE, FALSE);
+    if (changeDefaultItem)
+        SetMenuDefaultItem(menu, maximized ? SC_RESTORE : SC_MAXIMIZE, FALSE);
+    else
+        SetMenuDefaultItem(menu, SC_CLOSE, FALSE);
 
     ToggleWindowStyle(hwnd, WS_VISIBLE, true);
 
@@ -771,7 +816,7 @@ static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y) {
         GetMenuItemInfo(win->menu, i, TRUE, &mii);
         AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);
     }
-    AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)GetUpdatedSystemMenu(win->hwndFrame), _TR("&Window"));
+    AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)GetUpdatedSystemMenu(win->hwndFrame, true), _TR("&Window"));
     count++;
 
     if (IsUIRightToLeft()) {

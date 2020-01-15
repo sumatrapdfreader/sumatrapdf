@@ -17,6 +17,7 @@ enum CaptionButtons {
     CB_RESTORE,
     CB_CLOSE,
     CB_MENU,
+    CB_SYSTEM_MENU,
     CB_BTN_COUNT
 };
 
