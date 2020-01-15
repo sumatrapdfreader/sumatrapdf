@@ -56,12 +56,21 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
     }
 
     if (WM_CTLCOLORBTN == msg) {
-        if (ColorUnset != w->backgroundColor) {
-            auto bgBrush = w->backgroundColorBrush;
-            if (bgBrush != nullptr) {
-                didHandle = true;
-                return (LRESULT)bgBrush;
-            }
+        auto bgBrush = w->backgroundColorBrush;
+        if (bgBrush != nullptr) {
+            didHandle = true;
+            return (LRESULT)bgBrush;
+        }
+    }
+
+    if (WM_CTLCOLORSTATIC == msg) {
+        auto bgBrush = w->backgroundColorBrush;
+        if (bgBrush != nullptr) {
+            HDC hdc = (HDC)wp;
+            //SetTextColor(hdc, RGB(0, 0, 0));
+            SetBkMode(hdc, TRANSPARENT);
+            didHandle = true;
+            return (LRESULT)bgBrush;
         }
     }
 
@@ -475,12 +484,25 @@ std::string_view WindowBase::GetText() {
 }
 
 void WindowBase::SetTextColor(COLORREF col) {
+    if (ColorNoChange == col) {
+        return;
+    }
     textColor = col;
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
 void WindowBase::SetBackgroundColor(COLORREF col) {
+    if (col == ColorNoChange) {
+        return;
+    }
     backgroundColor = col;
+    if (backgroundColorBrush != nullptr) {
+        DeleteObject(backgroundColorBrush);
+        backgroundColorBrush = nullptr;
+    }
+    if (backgroundColor != ColorUnset) {
+        backgroundColorBrush = CreateSolidBrush(backgroundColor);
+    }
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
@@ -565,9 +587,8 @@ bool Window::Create() {
     if (hfont == nullptr) {
         hfont = GetDefaultGuiFont();
     }
-    if (backgroundColor != ColorUnset) {
-        backgroundColorBrush = CreateSolidBrush(backgroundColor);
-    }
+    // trigger creating a backgroundBrush
+    SetBackgroundColor(backgroundColor);
     SetFont(hfont);
     HwndSetText(hwnd, text.AsView());
 
