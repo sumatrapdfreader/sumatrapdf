@@ -48,6 +48,9 @@ bool StartsWith(std::string_view s, const char* prefix) {
 // returns a copy of <s> where newlines are normalized to LF ('\n')
 // TODO: optimize
 std::string_view NormalizeNewlines(std::string_view s) {
+    if (s.empty()) {
+        return {};
+    }
     str::Str tmp(s);
     tmp.Replace("\r\n", "\n");
     tmp.Replace("\r", "\n");

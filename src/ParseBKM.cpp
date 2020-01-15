@@ -16,6 +16,10 @@
 #include "EngineBase.h"
 #include "ParseBKM.h"
 
+// Version of .bkm and .vbkm files. Allows us to change the mind
+// TODO: this is provisional version while in development
+constexpr char* kBkmVersion = "999";
+
 /*
 Creating and parsing of .bkm files that contain alternative bookmarks view
 for PDF files.
@@ -30,6 +34,11 @@ VbkmForFile::~VbkmForFile() {
 
 VbkmFile::~VbkmFile() {
     DeleteVecMembers(vbkms);
+}
+
+static std::string_view readFileNormalized(std::string_view path) {
+    AutoFree d = file::ReadFile(path);
+    return sv::NormalizeNewlines(d.as_view());
 }
 
 static void SerializeKeyVal(char* key, WCHAR* val, str::Str& s) {
@@ -257,6 +266,16 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
         return false;
     }
 
+    // second line should be "pages: $nPages"
+    auto nPagesV = sv::ParseValueOfKey(sv, "pages", true);
+    if (!nPagesV.ok) {
+        return false;
+    }
+    bkm->nPages = 0;
+    str::Parse(nPagesV.val, "%d", &bkm->nPages);
+    if (bkm->nPages == 0) {
+        return false;
+    }
 #if 0
     // this line should be "title: $title"
     auto title = sv::ParseValueOfKey(sv, "title", true);
@@ -343,28 +362,31 @@ bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm) {
     str::Str path = baseFileName;
     path.Append(".bkm");
 
-    AutoFree d = file::ReadFile(path.as_view());
-    if (d.empty()) {
+    AutoFree d = readFileNormalized(path.as_view());
+
+    std::string_view sv = d.as_view();
+    ParsedKV ver = sv::ParseValueOfKey(sv, "version", true);
+    if (!ver.ok) {
         return false;
     }
-    std::string_view sv = d.as_view();
-    AutoFree dataNormalized = sv::NormalizeNewlines(sv);
-
-    std::string_view svd = dataNormalized.as_view();
+    if (!str::Eq(ver.val, kBkmVersion)) {
+        return false;
+    }
 
     // first line could be name
-    auto name = sv::ParseValueOfKey(svd, "name", true);
+    auto name = sv::ParseValueOfKey(sv, "name", true);
     if (name.ok) {
         vbkm.name = name.val;
         name.val = nullptr;
     }
 
-    bool ok = parseVbkmSection(svd, vbkm.vbkms);
+    bool ok = parseVbkmSection(sv, vbkm.vbkms);
     return ok;
 }
 
 bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* name, const char* bkmPath) {
     str::Str s;
+    s.AppendFmt("version: %s\n", kBkmVersion);
     if (str::IsEmpty(name)) {
         name = "default view";
     }
@@ -373,6 +395,8 @@ bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* name,
         const char* path = vbkm->filePath;
         CrashIf(!path);
         s.AppendFmt("file: %s\n", path);
+        CrashIf(vbkm->nPages < 1);
+        s.AppendFmt("pages: %d\n", vbkm->nPages);
         TocTree* tocTree = vbkm->toc;
         SerializeBookmarksRec(tocTree->root, 0, s);
     }
@@ -412,10 +436,14 @@ static Vec<std::string_view> SplitVbkmIntoSectons(std::string_view s) {
     return res;
 }
 
-bool ParseVbkmFile(std::string_view d, VbkmFile& vbkm) {
-    AutoFree s = sv::NormalizeNewlines(d);
-
-    std::string_view sv = s;
+bool ParseVbkmFile(std::string_view sv, VbkmFile& vbkm) {
+    ParsedKV ver = sv::ParseValueOfKey(sv, "version", true);
+    if (!ver.ok) {
+        return false;
+    }
+    if (!str::Eq(ver.val, kBkmVersion)) {
+        return false;
+    }
 
     ParsedKV name = sv::ParseValueOfKey(sv, "name", true);
     if (!name.ok) {
@@ -441,11 +469,8 @@ bool ParseVbkmFile(std::string_view d, VbkmFile& vbkm) {
 }
 
 bool LoadVbkmFile(const char* filePath, VbkmFile& vbkm) {
-    std::string_view sv = file::ReadFile(filePath);
-    if (sv.empty()) {
-        return false;
-    }
-    AutoFree svFree = sv;
+    AutoFree d = readFileNormalized(filePath);
+    std::string_view sv = d.as_view();
     bool ok = ParseVbkmFile(sv, vbkm);
     return ok;
 }

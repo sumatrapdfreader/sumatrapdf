@@ -368,6 +368,7 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     VbkmForFile* bkms = new VbkmForFile();
     bkms->filePath = strconv::WstrToUtf8(tab->filePath);
     bkms->toc = CloneTocTree(tocTree, false);
+    bkms->nPages = tab->ctrl->PageCount();
     bookmarks.push_back(bkms);
     bool ok = ExportBookmarksToFile(bookmarks, "", path.c_str());
     delete bkms;
