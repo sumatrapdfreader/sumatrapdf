@@ -218,6 +218,7 @@ static bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, co
         AutoFreeWstr dllDir(path::GetDir(dllPath));
         DynSetDllDirectoryW(dllDir);
     }
+
     defer {
         if (DynSetDllDirectoryW) {
             DynSetDllDirectoryW(L"");
@@ -237,17 +238,19 @@ static bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, co
     typedef HRESULT(WINAPI * DllRegUnregProc)(VOID);
     if (args) {
         DllInstallProc DllInstall = (DllInstallProc)GetProcAddress(lib, "DllInstall");
-        if (DllInstall)
+        if (DllInstall) {
             ok = SUCCEEDED(DllInstall(install, args));
-        else
+        } else {
             args = nullptr;
+        }
     }
 
     if (!args) {
         const char* func = install ? "DllRegisterServer" : "DllUnregisterServer";
         DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func);
-        if (DllRegUnreg)
+        if (DllRegUnreg) {
             ok = SUCCEEDED(DllRegUnreg());
+        }
     }
     return ok;
 }
@@ -268,8 +271,9 @@ void UninstallBrowserPlugin() {
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
         dllPath.Set(GetInstalledBrowserPluginPath());
-        if (!file::Exists(dllPath))
+        if (!file::Exists(dllPath)) {
             return;
+        }
     }
     if (!UnRegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't uninstall browser plugin"));
@@ -310,15 +314,17 @@ void UninstallPdfPreviewer() {
 
 static bool IsProcWithName(DWORD processId, const WCHAR* modulePath) {
     AutoCloseHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
-    if (!hModSnapshot.IsValid())
+    if (!hModSnapshot.IsValid()) {
         return false;
+    }
 
     MODULEENTRY32W me32 = {0};
     me32.dwSize = sizeof(me32);
     BOOL ok = Module32FirstW(hModSnapshot, &me32);
     while (ok) {
-        if (path::IsSame(modulePath, me32.szExePath))
+        if (path::IsSame(modulePath, me32.szExePath)) {
             return true;
+        }
         ok = Module32NextW(hModSnapshot, &me32);
     }
     return false;
@@ -328,8 +334,9 @@ static bool IsProcWithName(DWORD processId, const WCHAR* modulePath) {
 // If <waitUntilTerminated> is true, will wait until process is fully killed.
 // Returns TRUE if killed a process
 static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool waitUntilTerminated) {
-    if (!IsProcWithName(processId, modulePath))
+    if (!IsProcWithName(processId, modulePath)) {
         return false;
+    }
 
     BOOL inheritHandle = FALSE;
     // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
@@ -344,8 +351,9 @@ static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool wa
         return false;
     }
 
-    if (waitUntilTerminated)
+    if (waitUntilTerminated) {
         WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
+    }
 
     return true;
 }
@@ -355,18 +363,21 @@ static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool wa
 // returns -1 on error, 0 if no matching processes
 int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
     AutoCloseHandle hProcSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
-    if (INVALID_HANDLE_VALUE == hProcSnapshot)
+    if (INVALID_HANDLE_VALUE == hProcSnapshot) {
         return -1;
+    }
 
     PROCESSENTRY32W pe32;
     pe32.dwSize = sizeof(pe32);
-    if (!Process32First(hProcSnapshot, &pe32))
+    if (!Process32First(hProcSnapshot, &pe32)) {
         return -1;
+    }
 
     int killCount = 0;
     do {
-        if (KillProcIdWithName(pe32.th32ProcessID, modulePath, waitUntilTerminated))
+        if (KillProcIdWithName(pe32.th32ProcessID, modulePath, waitUntilTerminated)) {
             killCount++;
+        }
     } while (Process32Next(hProcSnapshot, &pe32));
 
     if (killCount > 0) {
@@ -392,8 +403,9 @@ static bool SkipProcessByID(DWORD procID) {
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(WStrVec& names) {
     AutoCloseHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
-    if (INVALID_HANDLE_VALUE == snap)
+    if (INVALID_HANDLE_VALUE == snap) {
         return;
+    }
 
     PROCESSENTRY32W proc = {0};
     proc.dwSize = sizeof(proc);
@@ -430,10 +442,11 @@ static void SetCloseProcessMsg() {
     AutoFreeWstr procNames(str::Dup(ReadableProcName(gProcessesToClose.at(0))));
     for (size_t i = 1; i < gProcessesToClose.size(); i++) {
         const WCHAR* name = ReadableProcName(gProcessesToClose.at(i));
-        if (i < gProcessesToClose.size() - 1)
+        if (i < gProcessesToClose.size() - 1) {
             procNames.Set(str::Join(procNames, L", ", name));
-        else
+        } else {
             procNames.Set(str::Join(procNames, L" and ", name));
+        }
     }
     AutoFreeWstr s(str::Format(_TR("Please close %s to proceed!"), procNames.get()));
     SetMsg(s, COLOR_MSG_FAILED);
@@ -452,8 +465,9 @@ bool CheckInstallUninstallPossible(bool silent) {
         SetDefaultMsg();
     } else {
         SetCloseProcessMsg();
-        if (!silent)
+        if (!silent) {
             MessageBeep(MB_ICONEXCLAMATION);
+        }
     }
     InvalidateFrame();
 
@@ -587,8 +601,9 @@ void AnimStep() {
 
 static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
     static BOOL didLayout = FALSE;
-    if (didLayout)
+    if (didLayout) {
         return;
+    }
 
     LetterInfo* li;
     StringFormat sfmt;
@@ -629,8 +644,9 @@ static REAL DrawMessage(Graphics& g, const WCHAR* msg, REAL y, REAL dx, Color co
     bbox.X += (dx - bbox.Width) / 2.f;
     StringFormat sft;
     sft.SetAlignment(StringAlignmentCenter);
-    if (trans::IsCurrLangRtl())
+    if (trans::IsCurrLangRtl()) {
         sft.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
+    }
 #if DRAW_MSG_TEXT_SHADOW
     {
         bbox.X--;

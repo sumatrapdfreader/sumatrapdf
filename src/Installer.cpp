@@ -808,12 +808,14 @@ static void CreateMainWindow() {
     if (trans::IsCurrLangRtl()) {
         exStyle = WS_EX_LAYOUTRTL;
     }
+    WCHAR* winCls = INSTALLER_FRAME_CLASS_NAME;
+    int x = CW_USEDEFAULT;
+    int y = CW_USEDEFAULT;
     int dx = DpiScale(INSTALLER_WIN_DX);
     int dy = DpiScale(INSTALLER_WIN_DY);
-    DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
     HMODULE h = GetModuleHandleW(nullptr);
-    gHwndFrame = CreateWindowExW(exStyle, INSTALLER_FRAME_CLASS_NAME, title.Get(), dwStyle, CW_USEDEFAULT,
-                                 CW_USEDEFAULT, dx, dy, nullptr, nullptr, h, nullptr);
+    gHwndFrame = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
 }
 
 using namespace Gdiplus;
@@ -870,14 +872,16 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_COMMAND:
             handled = InstallerOnWmCommand(wParam);
-            if (!handled)
+            if (!handled) {
                 return DefWindowProc(hwnd, message, wParam, lParam);
+            }
             break;
 
         case WM_APP_INSTALLATION_FINISHED:
             OnInstallationFinished();
-            if (gButtonRunSumatra)
+            if (gButtonRunSumatra) {
                 gButtonRunSumatra->SetFocus();
+            }
             if (gButtonExit) {
                 gButtonExit->SetFocus();
             }
@@ -907,8 +911,9 @@ static BOOL InstanceInit() {
     InitInstallerUninstaller();
 
     CreateMainWindow();
-    if (!gHwndFrame)
+    if (!gHwndFrame) {
         return FALSE;
+    }
 
     SetDefaultMsg();
 
