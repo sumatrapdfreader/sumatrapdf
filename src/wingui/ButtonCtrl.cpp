@@ -64,8 +64,8 @@ void ButtonCtrl::WndProcParent(WndProcArgs* args) {
     if (msg == WM_COMMAND) {
         auto code = HIWORD(wp);
         if (code == BN_CLICKED) {
-            if (OnClicked) {
-                OnClicked();
+            if (onClicked) {
+                onClicked();
             }
         }
         args->didHandle = true;

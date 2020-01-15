@@ -480,7 +480,7 @@ ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s) {
 
 void CreateButtonExit(HWND hwndParent) {
     gButtonExit = CreateDefaultButtonCtrl(hwndParent, _TR("Close"));
-    gButtonExit->OnClicked = OnButtonExit;
+    gButtonExit->onClicked = OnButtonExit;
 }
 
 void OnButtonExit() {

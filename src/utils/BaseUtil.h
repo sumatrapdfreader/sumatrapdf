@@ -267,10 +267,10 @@ inline void DebugCarshIfFunc(bool cond) {
 #define __analysis_assume(x)
 #endif
 
-#define DebugCarshIf(cond)      \
+#define DebugCarshIf(cond)          \
     do {                            \
         __analysis_assume(!(cond)); \
-        DebugCarshIfFunc(cond); \
+        DebugCarshIfFunc(cond);     \
     }                               \
     while_0_nowarn
 

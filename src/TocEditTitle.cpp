@@ -24,10 +24,19 @@
 #include "TocEditor.h"
 #include "TocEditTitle.h"
 
+using std::placeholders::_1;
+
 struct EditTitleWindow {
+    HWND hwndOwner = nullptr;
+    TreeCtrl* treeCtrl = nullptr;
+    TocItem* tocItem = nullptr;
+
     Window* mainWindow = nullptr;
     ILayout* mainLayout = nullptr;
     EditCtrl* editTitle = nullptr;
+    CheckboxCtrl* checkboxItalic = nullptr;
+    CheckboxCtrl* checkboxBold = nullptr;
+    EditCtrl* editColor = nullptr;
 
     AutoFree initialTitle;
     bool initialIsBold = false;
@@ -38,11 +47,14 @@ struct EditTitleWindow {
     ~EditTitleWindow();
     void CloseHandler(WindowCloseArgs*);
     void SizeHandler(SizeArgs*);
+    void ButtonOkHandler();
+    void ButtonCancelHandler();
 };
 
 static EditTitleWindow* gEditTitleWindow = nullptr;
 
 EditTitleWindow::~EditTitleWindow() {
+    EnableWindow(hwndOwner, TRUE);
     delete mainWindow;
     delete mainLayout;
 }
@@ -72,6 +84,37 @@ void EditTitleWindow::SizeHandler(SizeArgs* args) {
     args->didHandle = true;
 }
 
+void EditTitleWindow::ButtonOkHandler() {
+    auto ti = tocItem;
+    std::string_view newTitle = editTitle->GetText();
+    WCHAR* newTitleW = strconv::Utf8ToWstr(newTitle);
+    str::Free(ti->title);
+    ti->title = newTitleW;
+
+    int fontFlags = 0;
+    if (checkboxBold->IsChecked()) {
+        bit::Set(fontFlags, fontBitBold);
+    }
+    if (checkboxItalic->IsChecked()) {
+        bit::Set(fontFlags, fontBitItalic);
+    }
+    ti->fontFlags = fontFlags;
+
+    std::string_view newColor = editColor->GetText();
+    COLORREF col = ColorUnset;
+    if (ParseColor(&col, newColor)) {
+        ti->color = col;
+    }
+
+    treeCtrl->UpdateItem(tocItem);
+    delete gEditTitleWindow;
+    gEditTitleWindow = nullptr;
+}
+
+void EditTitleWindow::ButtonCancelHandler() {
+    delete gEditTitleWindow;
+    gEditTitleWindow = nullptr;
+}
 
 static void createMainLayout(EditTitleWindow* win) {
     HWND parent = win->mainWindow->hwnd;
@@ -81,6 +124,7 @@ static void createMainLayout(EditTitleWindow* win) {
 
     {
         auto e = new EditCtrl(parent);
+        win->editTitle = e;
         e->SetCueText("Title");
         e->SetText(win->initialTitle.as_view());
         e->Create();
@@ -91,6 +135,7 @@ static void createMainLayout(EditTitleWindow* win) {
     // TODO: make this in a hbox
     {
         auto c = new CheckboxCtrl(parent);
+        win->checkboxBold = c;
         c->SetText("bold");
         c->SetIsChecked(win->initialIsBold);
         c->Create();
@@ -100,6 +145,7 @@ static void createMainLayout(EditTitleWindow* win) {
 
     {
         auto c = new CheckboxCtrl(parent);
+        win->checkboxItalic = c;
         c->SetText("italic");
         c->SetIsChecked(win->initialIsItalic);
         c->Create();
@@ -109,6 +155,7 @@ static void createMainLayout(EditTitleWindow* win) {
 
     {
         auto e = new EditCtrl(parent);
+        win->editColor = e;
         e->SetCueText("Color");
         e->SetText(win->initialColor.as_view());
         e->Create();
@@ -120,6 +167,7 @@ static void createMainLayout(EditTitleWindow* win) {
     {
         auto b = new ButtonCtrl(parent);
         b->SetText("Cancel");
+        b->onClicked = std::bind(&EditTitleWindow::ButtonCancelHandler, win);
         b->Create();
         auto l = NewButtonLayout(b);
         vbox->addChild(l);
@@ -128,6 +176,7 @@ static void createMainLayout(EditTitleWindow* win) {
     {
         auto b = new ButtonCtrl(parent);
         b->SetText("Ok");
+        b->onClicked = std::bind(&EditTitleWindow::ButtonOkHandler, win);
         b->Create();
         auto l = NewButtonLayout(b);
         vbox->addChild(l);
@@ -140,8 +189,10 @@ static void createMainLayout(EditTitleWindow* win) {
     win->mainLayout = padding;
 }
 
-static EditTitleWindow* createEditTitleWindow(TocItem* ti) {
+static EditTitleWindow* createEditTitleWindow(TreeCtrl* treeCtrl, TocItem* ti) {
     auto win = new EditTitleWindow();
+    win->treeCtrl = treeCtrl;
+    win->tocItem = ti;
     win->initialIsBold = bit::IsSet(ti->fontFlags, fontBitBold);
     win->initialIsItalic = bit::IsSet(ti->fontFlags, fontBitItalic);
     win->initialTitle = strconv::WstrToUtf8(ti->title);
@@ -152,6 +203,9 @@ static EditTitleWindow* createEditTitleWindow(TocItem* ti) {
     }
 
     auto w = new Window();
+    // remove minimize / maximize buttons from default style
+    w->dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Edit title");
     w->initialSize = {DpiScale(480), DpiScale(600)};
@@ -164,7 +218,6 @@ static EditTitleWindow* createEditTitleWindow(TocItem* ti) {
 
     // win->hwnd = w->hwnd;
 
-    using std::placeholders::_1;
     w->onClose = std::bind(&EditTitleWindow::CloseHandler, win, _1);
     w->onSize = std::bind(&EditTitleWindow::SizeHandler, win, _1);
 
@@ -175,14 +228,11 @@ static EditTitleWindow* createEditTitleWindow(TocItem* ti) {
     return win;
 }
 
-bool StartTocEditTitle(HWND hwndOwner, TocItem* ti) {
+bool StartTocEditTitle(HWND hwndOwner, TreeCtrl* treeCtrl, TocItem* ti) {
     CrashIf(gEditTitleWindow);
     EnableWindow(hwndOwner, FALSE);
-    gEditTitleWindow = createEditTitleWindow(ti);
-
-    defer {
-        EnableWindow(hwndOwner, TRUE);
-    };
+    gEditTitleWindow = createEditTitleWindow(treeCtrl, ti);
+    gEditTitleWindow->hwndOwner = hwndOwner;
 
     if (!gEditTitleWindow) {
         return false;

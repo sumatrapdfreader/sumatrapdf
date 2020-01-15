@@ -1,4 +1,5 @@
 
+
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
@@ -118,6 +119,8 @@ struct TreeCtrl : public WindowBase {
     TreeItem* GetSelection();
 
     TreeItem* HitTest(int x, int y);
+
+    bool UpdateItem(TreeItem*);
 
     bool SelectItem(TreeItem*);
 

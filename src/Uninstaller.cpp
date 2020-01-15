@@ -302,7 +302,7 @@ static bool UninstallerOnWmCommand(WPARAM wParam) {
 
 static void OnCreateWindow(HWND hwnd) {
     gButtonInstUninst = CreateDefaultButtonCtrl(hwnd, _TR("Uninstall SumatraPDF"));
-    gButtonInstUninst->OnClicked = OnButtonUninstall;
+    gButtonInstUninst->onClicked = OnButtonUninstall;
 }
 
 static void CreateMainWindow() {

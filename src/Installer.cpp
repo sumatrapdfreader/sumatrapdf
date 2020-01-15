@@ -371,7 +371,7 @@ static void OnButtonStartSumatra() {
 
 static void CreateButtonRunSumatra(HWND hwndParent) {
     gButtonRunSumatra = CreateDefaultButtonCtrl(hwndParent, _TR("Start SumatraPDF"));
-    gButtonRunSumatra->OnClicked = OnButtonStartSumatra;
+    gButtonRunSumatra->onClicked = OnButtonStartSumatra;
 }
 
 static bool CreateAppShortcut(int csidl) {
@@ -696,11 +696,11 @@ static void OnCreateWindow(HWND hwnd) {
     ClientRect r(hwnd);
 
     gButtonInstUninst = CreateDefaultButtonCtrl(hwnd, _TR("Install SumatraPDF"));
-    gButtonInstUninst->OnClicked = OnButtonInstall;
+    gButtonInstUninst->onClicked = OnButtonInstall;
 
     SIZE btnSize;
     gButtonOptions = CreateDefaultButtonCtrl(hwnd, _TR("&Options"));
-    gButtonOptions->OnClicked = OnButtonOptions;
+    gButtonOptions->onClicked = OnButtonOptions;
 
     btnSize = gButtonOptions->GetIdealSize();
     int x = WINDOW_MARGIN;
@@ -765,7 +765,7 @@ static void OnCreateWindow(HWND hwnd) {
     SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize.cx += DpiScale(hwnd, 4);
     gButtonBrowseDir = CreateDefaultButtonCtrl(hwnd, s);
-    gButtonBrowseDir->OnClicked = OnButtonBrowse;
+    gButtonBrowseDir->onClicked = OnButtonBrowse;
     btnSize = gButtonBrowseDir->GetIdealSize();
     x = r.dx - WINDOW_MARGIN - btnSize2.dx;
     SetWindowPos(gButtonBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,

@@ -541,42 +541,62 @@ TreeItem* TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
     return nullptr;
 }
 
-static HTREEITEM InsertItem(TreeCtrl* tree, HTREEITEM parent, TreeItem* item) {
-    TVINSERTSTRUCTW toInsert{};
+static void setTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes) {
     UINT mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
-
-    toInsert.hParent = parent;
-    toInsert.hInsertAfter = TVI_LAST;
-    toInsert.itemex.mask = mask;
+    tvitem->mask = mask;
 
     UINT stateMask = TVIS_EXPANDED;
     UINT state = 0;
-    if (item->IsExpanded()) {
+    if (ti->IsExpanded()) {
         state = TVIS_EXPANDED;
     }
 
-    if (tree->withCheckboxes) {
+    if (withCheckboxes) {
         stateMask |= TVIS_STATEIMAGEMASK;
-        bool isChecked = item->IsChecked();
+        bool isChecked = ti->IsChecked();
         UINT imgIdx = isChecked ? 2 : 1;
         UINT imgState = INDEXTOSTATEIMAGEMASK(imgIdx);
         state |= imgState;
     }
 
-    toInsert.itemex.state = state;
-    toInsert.itemex.stateMask = stateMask;
-    toInsert.itemex.lParam = reinterpret_cast<LPARAM>(item);
-    auto title = item->Text();
-    toInsert.itemex.pszText = title;
+    tvitem->state = state;
+    tvitem->stateMask = stateMask;
+    tvitem->lParam = reinterpret_cast<LPARAM>(ti);
+    auto title = ti->Text();
+    tvitem->pszText = title;
+}
+
+static HTREEITEM insertItem(TreeCtrl* tree, HTREEITEM parent, TreeItem* ti) {
+    TVINSERTSTRUCTW toInsert{};
+
+    toInsert.hParent = parent;
+    toInsert.hInsertAfter = TVI_LAST;
+
+    TVITEMEXW* tvitem = &toInsert.itemex;
+    setTVITEM(tvitem, ti, tree->withCheckboxes);
     HTREEITEM res = TreeView_InsertItem(tree->hwnd, &toInsert);
     return res;
+}
+
+bool TreeCtrl::UpdateItem(TreeItem* ti) {
+    HTREEITEM ht = GetHandleByTreeItem(ti);
+    CrashIf(!ht);
+    if (!ht) {
+        return false;
+    }
+
+    TVITEMEXW tvitem;
+    tvitem.hItem = ht;
+    setTVITEM(&tvitem, ti, withCheckboxes);
+    BOOL ok = TreeView_SetItem(hwnd, &tvitem);
+    return ok ? true : false;
 }
 
 static void PopulateTreeItem(TreeCtrl* tree, TreeItem* item, HTREEITEM parent) {
     int n = item->ChildCount();
     for (int i = 0; i < n; i++) {
         auto* ti = item->ChildAt(i);
-        HTREEITEM h = InsertItem(tree, parent, ti);
+        HTREEITEM h = insertItem(tree, parent, ti);
         auto v = std::make_tuple(ti, h);
         tree->insertedItems.push_back(v);
         PopulateTreeItem(tree, ti, h);
@@ -588,7 +608,7 @@ static void PopulateTree(TreeCtrl* tree, TreeModel* tm) {
     int n = tm->RootCount();
     for (int i = 0; i < n; i++) {
         auto* ti = tm->RootAt(i);
-        HTREEITEM h = InsertItem(tree, parent, ti);
+        HTREEITEM h = insertItem(tree, parent, ti);
         auto v = std::make_tuple(ti, h);
         tree->insertedItems.push_back(v);
         PopulateTreeItem(tree, ti, h);

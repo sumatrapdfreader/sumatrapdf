@@ -163,8 +163,11 @@ struct WindowBase {
     bool IsFocused();
 
     void SetFont(HFONT f);
+
     void SetText(const WCHAR* s);
     void SetText(std::string_view);
+    std::string_view GetText();
+
     void SetPos(RECT* r);
     void SetBounds(const RECT& r);
     void SetTextColor(COLORREF);

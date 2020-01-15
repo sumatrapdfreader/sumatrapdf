@@ -13,9 +13,9 @@ extern int TestTab(HINSTANCE hInstance, int nCmdShow);
 // in TestLayout.cpp
 extern int TestLayout(HINSTANCE hInstance, int nCmdShow);
 
-static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, OnClicked onClicked) {
+static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, ClickedHandler onClicked) {
     auto b = new ButtonCtrl(parent);
-    b->OnClicked = onClicked;
+    b->onClicked = onClicked;
     b->SetText(s);
     b->Create();
     return {NewButtonLayout(b), b};

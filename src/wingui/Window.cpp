@@ -1,4 +1,5 @@
 
+
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
@@ -466,6 +467,11 @@ void WindowBase::SetText(std::string_view sv) {
     text.Set(sv);
     HwndSetText(hwnd, text.AsView());
     InvalidateRect(hwnd, nullptr, FALSE);
+}
+
+std::string_view WindowBase::GetText() {
+    text = win::GetTextUtf8(hwnd);
+    return text.as_view();
 }
 
 void WindowBase::SetTextColor(COLORREF col) {

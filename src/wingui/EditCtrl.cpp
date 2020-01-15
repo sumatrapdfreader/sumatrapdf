@@ -67,8 +67,7 @@ void EditCtrl::WndProcParent(WndProcArgs* args) {
             if (w->OnTextChanged) {
                 EditTextChangedArgs eargs{};
                 eargs.procArgs = args;
-                str::Str s = win::GetTextUtf8(w->hwnd);
-                eargs.text = s.as_view();
+                eargs.text = w->GetText();
                 w->OnTextChanged(&eargs);
                 if (args->didHandle) {
                     return;
