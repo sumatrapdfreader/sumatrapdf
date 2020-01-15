@@ -1155,7 +1155,7 @@ HMENU BuildMenu(WindowInfo* win) {
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 #if 0
-    // cf. MenuBarAsPopupMenu in Caption.cpp
+    // see MenuBarAsPopupMenu in Caption.cpp
     m = GetSystemMenu(win->hwndFrame, FALSE);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
 #endif

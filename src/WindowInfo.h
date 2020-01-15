@@ -10,7 +10,7 @@ class FrameRateWnd;
 struct LabelWithCloseWnd;
 class SplitterWnd;
 struct SplitterCtrl;
-class CaptionInfo;
+struct CaptionInfo;
 
 class PageElement;
 class PageDestination;
