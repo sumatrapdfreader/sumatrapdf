@@ -792,9 +792,12 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 // Show the "menu bar" (and the desired submenu)
                 gMenuAccelPressed = (WCHAR)lParam;
                 if (' ' == gMenuAccelPressed) {
+                    // TODO: this is probably not needed anymore after we removed &Window sub-menu
+                    // and added app icon
                     // map space to the accelerator of the Window menu
-                    if (str::FindChar(_TR("&Window"), '&'))
+                    if (str::FindChar(_TR("&Window"), '&')) {
                         gMenuAccelPressed = *(str::FindChar(_TR("&Window"), '&') + 1);
+                    }
                 }
                 PostMessage(win->hwndCaption, WM_COMMAND, MAKELONG(BTN_ID_FIRST + CB_MENU, BN_CLICKED), 0);
                 *callDef = false;
@@ -893,8 +896,6 @@ static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y) {
         GetMenuItemInfo(win->menu, i, TRUE, &mii);
         AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);
     }
-    AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)GetUpdatedSystemMenu(win->hwndFrame, true), _TR("&Window"));
-    count++;
 
     if (IsUIRightToLeft()) {
         x += ClientRect(win->caption->btn[CB_MENU].hwnd).dx;
