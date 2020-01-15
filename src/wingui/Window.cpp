@@ -625,3 +625,28 @@ int RunMessageLoop(HACCEL accelTable) {
     }
     return (int)msg.wParam;
 }
+
+// sets initial position of w within hwnd. Assumes w->initialSize is set.
+void PositionCloseTo(WindowBase* w, HWND hwnd) {
+    CrashIf(!hwnd);
+    Size is = w->initialSize;
+    CrashIf(is.empty());
+    RECT r{};
+    BOOL ok = GetWindowRect(hwnd, &r);
+    CrashIf(!ok);
+
+    // position w in the the center of hwnd
+    // if window is bigger than hwnd, let the system position
+    // we don't want to hide it
+    int offX = (RectDx(r) - is.Width) / 2;
+    if (offX < 0) {
+        return;
+    }
+    int offY = (RectDy(r) - is.Height) / 2;
+    if (offY < 0) {
+        return;
+    }
+    Point& ip = w->initialPos;
+    ip.X = (Length)r.left + (Length)offX;
+    ip.Y = (Length)r.top + (Length)offY;
+}

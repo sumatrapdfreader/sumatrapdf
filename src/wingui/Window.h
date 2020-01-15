@@ -206,3 +206,4 @@ struct WindowBaseLayout : public ILayout {
 void HwndSetText(HWND hwnd, std::string_view s);
 UINT_PTR NextSubclassId();
 int RunMessageLoop(HACCEL accelTable);
+void PositionCloseTo(WindowBase* w, HWND hwnd);

@@ -6,6 +6,7 @@
 #include "utils/FileUtil.h"
 #include "utils/Log.h"
 #include "utils/WinUtil.h"
+#include "utils/Dpi.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/TreeModel.h"
@@ -404,32 +405,8 @@ void TocEditorWindow::TreeClick(TreeClickArgs* args) {
 // in TableOfContents.cpp
 extern void OnTocCustomDraw(TreeItemCustomDrawArgs* args);
 
-// sets initial position of w within hwnd. Assumes w->initialSize is set.
-static void PositionCloseTo(WindowBase* w, HWND hwnd) {
-    CrashIf(!hwnd);
-    Size is = w->initialSize;
-    CrashIf(is.empty());
-    RECT r{};
-    BOOL ok = GetWindowRect(hwnd, &r);
-    CrashIf(!ok);
-
-    // position w in the the center of hwnd
-    // if window is bigger than hwnd, let the system position
-    // we don't want to hide it
-    int offX = (RectDx(r) - is.Width) / 2;
-    if (offX < 0) {
-        return;
-    }
-    int offY = (RectDy(r) - is.Height) / 2;
-    if (offY < 0) {
-        return;
-    }
-    Point& ip = w->initialPos;
-    ip.X = (Length)r.left + (Length)offX;
-    ip.Y = (Length)r.top + (Length)offY;
-}
-
 void StartTocEditor(TocEditorArgs* args) {
+    HWND hwndOwner = args->hwndRelatedTo;
     if (gWindow != nullptr) {
         // TODO: maybe allow multiple windows
         gWindow->mainWindow->onDestroy = nullptr;
@@ -443,7 +420,9 @@ void StartTocEditor(TocEditorArgs* args) {
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Table of content editor");
-    w->initialSize = {640, 800};
+    int dx = DpiScale(hwndOwner, 640);
+    int dy = DpiScale(hwndOwner, 800);
+    w->initialSize = {dx, dy};
     PositionCloseTo(w, args->hwndRelatedTo);
     SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
     LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);

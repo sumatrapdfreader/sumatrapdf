@@ -13,6 +13,7 @@
 #include "wingui/TreeModel.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
+#include "wingui/StaticCtrl.h"
 #include "wingui/TreeCtrl.h"
 #include "wingui/EditCtrl.h"
 #include "wingui/CheckboxCtrl.h"
@@ -123,6 +124,14 @@ static void createMainLayout(EditTitleWindow* win) {
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     {
+        auto s = new StaticCtrl(parent);
+        s->SetText("Title:");
+        s->Create();
+        auto l = NewStaticLayout(s);
+        vbox->addChild(l);
+    }
+
+    {
         auto e = new EditCtrl(parent);
         win->editTitle = e;
         e->SetCueText("Title");
@@ -132,7 +141,7 @@ static void createMainLayout(EditTitleWindow* win) {
         vbox->addChild(l);
     }
 
-    // TODO: make this in a hbox
+    // TODO: make this in a hbox, maybe
     {
         auto c = new CheckboxCtrl(parent);
         win->checkboxBold = c;
@@ -154,6 +163,13 @@ static void createMainLayout(EditTitleWindow* win) {
     }
 
     {
+        auto s = new StaticCtrl(parent);
+        s->SetText("Color:");
+        s->Create();
+        auto l = NewStaticLayout(s);
+        vbox->addChild(l);
+    }
+    {
         auto e = new EditCtrl(parent);
         win->editColor = e;
         e->SetCueText("Color");
@@ -165,21 +181,28 @@ static void createMainLayout(EditTitleWindow* win) {
 
     // TODO: make in a hbox
     {
-        auto b = new ButtonCtrl(parent);
-        b->SetText("Cancel");
-        b->onClicked = std::bind(&EditTitleWindow::ButtonCancelHandler, win);
-        b->Create();
-        auto l = NewButtonLayout(b);
-        vbox->addChild(l);
-    }
+        auto buttons = new HBox();
+        buttons->alignMain = MainAxisAlign::MainEnd;
+        buttons->alignCross = CrossAxisAlign::CrossStart;
 
-    {
-        auto b = new ButtonCtrl(parent);
-        b->SetText("Ok");
-        b->onClicked = std::bind(&EditTitleWindow::ButtonOkHandler, win);
-        b->Create();
-        auto l = NewButtonLayout(b);
-        vbox->addChild(l);
+        {
+            auto b = new ButtonCtrl(parent);
+            b->SetText("Cancel");
+            b->onClicked = std::bind(&EditTitleWindow::ButtonCancelHandler, win);
+            b->Create();
+            auto l = NewButtonLayout(b);
+            buttons->addChild(l);
+        }
+
+        {
+            auto b = new ButtonCtrl(parent);
+            b->SetText("Ok");
+            b->onClicked = std::bind(&EditTitleWindow::ButtonOkHandler, win);
+            b->Create();
+            auto l = NewButtonLayout(b);
+            buttons->addChild(l);
+        }
+        vbox->addChild(buttons);
     }
 
     auto* padding = new Padding();
@@ -189,8 +212,9 @@ static void createMainLayout(EditTitleWindow* win) {
     win->mainLayout = padding;
 }
 
-static EditTitleWindow* createEditTitleWindow(TreeCtrl* treeCtrl, TocItem* ti) {
+static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TreeCtrl* treeCtrl, TocItem* ti) {
     auto win = new EditTitleWindow();
+    win->hwndOwner = hwndOwner;
     win->treeCtrl = treeCtrl;
     win->tocItem = ti;
     win->initialIsBold = bit::IsSet(ti->fontFlags, fontBitBold);
@@ -208,11 +232,13 @@ static EditTitleWindow* createEditTitleWindow(TreeCtrl* treeCtrl, TocItem* ti) {
 
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Edit title");
-    w->initialSize = {DpiScale(480), DpiScale(600)};
-    // PositionCloseTo(w, args->hwndRelatedTo);
-    SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
+    int dx = DpiScale(320);
+    int dy = DpiScale(228);
+    w->initialSize = {dx, dy};
+    PositionCloseTo(w, hwndOwner);
+    // SIZE winSize = {dx, dy};
     // LimitWindowSizeToScreen(nullptr, winSize);
-    w->initialSize = {winSize.cx, winSize.cy};
+    // w->initialSize = {winSize.cx, winSize.cy};
     bool ok = w->Create();
     CrashIf(!ok);
 
@@ -231,8 +257,7 @@ static EditTitleWindow* createEditTitleWindow(TreeCtrl* treeCtrl, TocItem* ti) {
 bool StartTocEditTitle(HWND hwndOwner, TreeCtrl* treeCtrl, TocItem* ti) {
     CrashIf(gEditTitleWindow);
     EnableWindow(hwndOwner, FALSE);
-    gEditTitleWindow = createEditTitleWindow(treeCtrl, ti);
-    gEditTitleWindow->hwndOwner = hwndOwner;
+    gEditTitleWindow = createEditTitleWindow(hwndOwner, treeCtrl, ti);
 
     if (!gEditTitleWindow) {
         return false;
