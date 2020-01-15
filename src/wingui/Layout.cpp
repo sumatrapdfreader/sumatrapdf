@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/Dpi.h"
 
 #include "Layout.h"
 
@@ -292,8 +293,6 @@ void Padding::SetBounds(Rect bounds) {
     this->child->SetBounds(bounds);
 }
 
-Length DIP = 1;
-
 // layout.go
 ILayout::ILayout(Kind k) {
     kind = k;
@@ -311,12 +310,12 @@ Length calculateHGap(ILayout* previous, ILayout* current) {
         if (IsButton(current)) {
             // Any pair of successive buttons will be assumed to be in a
             // related group.
-            return 7 * DIP;
+            return DpiScale(8);
         }
     }
 
     // The spacing between unrelated controls.
-    return 11 * DIP;
+    return DpiScale(11);
 }
 
 Length calculateVGap(ILayout* previous, ILayout* current) {
@@ -342,26 +341,28 @@ Length calculateVGap(ILayout* previous, ILayout* current) {
     if (IsLabel(previous)) {
         // Any label immediately preceding any other control will be assumed to
         // be 'associated'.
-        return 5 * DIP;
+        return DpiScale(2);
     }
+
     if (IsCheckbox(previous)) {
         if (IsCheckbox(current)) {
             // Any pair of successive checkboxes will be assumed to be in a
             // related group.
-            return 7 * DIP;
+            // return DpiScale(2);
+            return 0;
         }
     }
 
     // The spacing between unrelated controls.  This is also the default space
     // between paragraphs of text.
-    return 11 * DIP;
+    return DpiScale(8);
 }
 
 // vbox.go
 
-Kind vboxKind = "vbox";
+Kind kindVBox = "vbox";
 bool IsVBox(Kind kind) {
-    return kind == vboxKind;
+    return kind == kindVBox;
 }
 
 VBox::~VBox() {
@@ -662,14 +663,14 @@ boxElementInfo& VBox::addChild(ILayout* child) {
 }
 
 // hbox.go
-Kind hboxKind = "hbox";
+Kind kindHBox = "hbox";
 
 bool IsHBox(Kind kind) {
-    return kind == hboxKind;
+    return kind == kindHBox;
 }
 
 bool IsHBox(ILayout* l) {
-    return IsLayoutOfKind(l, hboxKind);
+    return IsLayoutOfKind(l, kindHBox);
 }
 
 HBox::~HBox() {
@@ -963,19 +964,19 @@ boxElementInfo& HBox::addChild(ILayout* child) {
 
 // align.go
 
-Kind alignKind = "align";
+Kind kindAlign = "align";
 
 bool IsAlign(Kind kind) {
-    return kind == alignKind;
+    return kind == kindAlign;
 }
 
 bool IsAlign(ILayout* l) {
-    return IsLayoutOfKind(l, alignKind);
+    return IsLayoutOfKind(l, kindAlign);
 }
 
 Align::Align(ILayout* c) {
     Child = c;
-    kind = alignKind;
+    kind = kindAlign;
 }
 
 Align::~Align() {
@@ -1069,12 +1070,14 @@ void Expand::SetBounds(Rect bounds) {
     return child->SetBounds(bounds);
 }
 
-Kind labelKind = "label";
+static Kind kindLabel = "label";
 
 bool IsLabeL(Kind kind) {
-    return kind == labelKind;
+    return kind == kindLabel;
 }
 
+extern bool IsStatic(Kind);
+
 bool IsLabel(ILayout* l) {
-    return IsLayoutOfKind(l, labelKind);
+    return IsLayoutOfKind(l, kindLabel) || IsStatic(l->kind);
 }

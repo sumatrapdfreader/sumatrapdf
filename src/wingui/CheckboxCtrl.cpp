@@ -11,7 +11,7 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/buttons
 
-Kind kindCheckbox = "checkbox";
+static Kind kindCheckbox = "checkbox";
 
 bool IsCheckbox(Kind kind) {
     return kind == kindCheckbox;

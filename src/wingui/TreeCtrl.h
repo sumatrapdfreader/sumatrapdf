@@ -89,15 +89,15 @@ struct TreeKeyDownArgs : WndProcArgs {
     u32 flags = 0;
 };
 
-typedef std::function<void(TreeKeyDownArgs*)> TreeKeyDown;
+typedef std::function<void(TreeKeyDownArgs*)> TreeKeyDownHandler;
 
 struct TreeGetDispInfoArgs : WndProcArgs {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
-    NMTVDISPINFOW* dispInfo = nullptr;
+    NMTVDISPINFOEXW* dispInfo = nullptr;
 };
 
-typedef std::function<void(TreeGetDispInfoArgs*)> TreeGetDispInfo;
+typedef std::function<void(TreeGetDispInfoArgs*)> TreeGetDispInfoHandler;
 
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
@@ -175,10 +175,10 @@ struct TreeCtrl : public WindowBase {
     TreeClickHandler onTreeClick = nullptr;
 
     // for WM_NOITFY with TVN_KEYDOWN
-    TreeKeyDown onTreeKeyDown = nullptr;
+    TreeKeyDownHandler onTreeKeyDown = nullptr;
 
     // for WM_NOTIFY with TVN_GETDISPINFO
-    TreeGetDispInfo onTreeGetDispInfo = nullptr;
+    TreeGetDispInfoHandler onTreeGetDispInfo = nullptr;
 
     Size idealSize{};
 
@@ -194,3 +194,5 @@ WindowBaseLayout* NewTreeLayout(TreeCtrl*);
 
 bool IsTree(Kind);
 bool IsTree(ILayout*);
+
+void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes);

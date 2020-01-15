@@ -23,6 +23,11 @@
 #include "TocEditTitle.h"
 #include "TocEditor.h"
 
+using std::placeholders::_1;
+
+// in TableOfContents.cpp
+extern void OnTocCustomDraw(TreeItemCustomDrawArgs* args);
+
 struct TocEditorWindow {
     HWND hwnd = nullptr;
     Window* mainWindow = nullptr;
@@ -45,9 +50,10 @@ struct TocEditorWindow {
     ~TocEditorWindow();
     void SizeHandler(SizeArgs*);
     void CloseHandler(WindowCloseArgs*);
-    void TreeItemChanged(TreeItemChangedArgs*);
-    void TreeItemSelected(TreeSelectionChangedArgs*);
-    void TreeClick(TreeClickArgs* args);
+    void TreeItemChangedHandler(TreeItemChangedArgs*);
+    void TreeItemSelectedHandler(TreeSelectionChangedArgs*);
+    void TreeClickHandler(TreeClickArgs* args);
+    void GetDispInfoHandler(TreeGetDispInfoArgs*);
 };
 
 TocEditorWindow::~TocEditorWindow() {
@@ -86,30 +92,6 @@ void ShowErrorMessage(const char* msg) {
     MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
 }
 
-static void AddPageNumbersToTocItem(TocItem* ti) {
-    int sno = ti->pageNo;
-    if (sno <= 0) {
-        return;
-    }
-    int eno = ti->endPageNo;
-    WCHAR* s = nullptr;
-    if (eno > sno) {
-        s = str::Format(L"%s (pages %d-%d)", ti->title, sno, eno);
-    } else {
-        s = str::Format(L"%s (page %d)", ti->title, sno);
-    }
-    str::Free(ti->title);
-    ti->title = s;
-}
-
-static void AddPageNumbersToTocItemsRecur(TocItem* ti) {
-    while (ti) {
-        AddPageNumbersToTocItem(ti);
-        AddPageNumbersToTocItemsRecur(ti->child);
-        ti = ti->next;
-    }
-}
-
 static void UpdateTreeModel(TocEditorWindow* w) {
     TreeCtrl* treeCtrl = w->treeCtrl;
     treeCtrl->Clear();
@@ -132,7 +114,6 @@ static void UpdateTreeModel(TocEditorWindow* w) {
         ti->child->parent = ti->child;
 
         CalcEndPageNo(ti->child, vbkm->nPages);
-        AddPageNumbersToTocItemsRecur(ti->child);
 
         if (!root) {
             root = ti;
@@ -321,32 +302,42 @@ static void CreateButtonsLayout(TocEditorWindow* w) {
     w->layoutButtons = buttons;
 }
 
-static void CreateMainLayout(TocEditorWindow* w) {
-    HWND hwnd = w->hwnd;
+static void CreateMainLayout(TocEditorWindow* win) {
+    HWND hwnd = win->hwnd;
     CrashIf(!hwnd);
 
-    CreateButtonsLayout(w);
+    CreateButtonsLayout(win);
 
     auto* main = new VBox();
     main->alignMain = MainAxisAlign::MainStart;
     main->alignCross = CrossAxisAlign::Stretch;
 
     auto* tree = new TreeCtrl(hwnd);
+    int dx = DpiScale(80);
+    int dy = DpiScale(120);
+    tree->idealSize = {dx, dy};
+
     tree->withCheckboxes = true;
+    tree->onTreeGetDispInfo = std::bind(&TocEditorWindow::GetDispInfoHandler, win, _1);
+
     bool ok = tree->Create(L"tree");
     CrashIf(!ok);
-    tree->idealSize = {80, 120};
+
+    tree->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChangedHandler, win, _1);
+    tree->onTreeItemCustomDraw = OnTocCustomDraw;
+    tree->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelectedHandler, win, _1);
+    tree->onTreeClick = std::bind(&TocEditorWindow::TreeClickHandler, win, _1);
 
     gWindow->treeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
 
     main->addChild(treeLayout, 1);
-    main->addChild(w->layoutButtons, 0);
+    main->addChild(win->layoutButtons, 0);
 
     auto* padding = new Padding();
     padding->insets = DefaultInsets();
     padding->child = main;
-    w->mainLayout = padding;
+    win->mainLayout = padding;
 }
 
 void TocEditorWindow::SizeHandler(SizeArgs* args) {
@@ -374,7 +365,7 @@ void TocEditorWindow::CloseHandler(WindowCloseArgs* args) {
     gWindow = nullptr;
 }
 
-void TocEditorWindow::TreeItemChanged(TreeItemChangedArgs* args) {
+void TocEditorWindow::TreeItemChangedHandler(TreeItemChangedArgs* args) {
     if (!args->checkedChanged) {
         return;
     }
@@ -382,12 +373,38 @@ void TocEditorWindow::TreeItemChanged(TreeItemChangedArgs* args) {
     ti->isUnchecked = !args->newState.isChecked;
 }
 
-void TocEditorWindow::TreeItemSelected(TreeSelectionChangedArgs* args) {
+void TocEditorWindow::TreeItemSelectedHandler(TreeSelectionChangedArgs* args) {
     UNUSED(args);
     UpdateRemovePdfButtonStatus(gWindow);
 }
 
-void TocEditorWindow::TreeClick(TreeClickArgs* args) {
+void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoArgs* args) {
+    args->didHandle = true;
+
+    TocItem* ti = (TocItem*)args->treeItem;
+    TVITEMEXW* tvitem = &args->dispInfo->item;
+    CrashIf(tvitem->mask != TVIF_TEXT);
+
+    size_t cchMax = tvitem->cchTextMax;
+    CrashIf(cchMax < 32);
+
+    int sno = ti->pageNo;
+    if (sno <= 0) {
+        str::BufSet(tvitem->pszText, cchMax, ti->title);
+        return;
+    }
+    int eno = ti->endPageNo;
+    WCHAR* s = nullptr;
+    if (eno > sno) {
+        s = str::Format(L"%s (pages %d-%d)", ti->title, sno, eno);
+    } else {
+        s = str::Format(L"%s (page %d)", ti->title, sno);
+    }
+    str::BufSet(tvitem->pszText, cchMax, s);
+    str::Free(s);
+}
+
+void TocEditorWindow::TreeClickHandler(TreeClickArgs* args) {
     if (!args->isDblClick) {
         return;
     }
@@ -401,9 +418,6 @@ void TocEditorWindow::TreeClick(TreeClickArgs* args) {
     TocItem* ti = (TocItem*)args->treeItem;
     StartTocEditTitle(mainWindow->hwnd, args->treeCtrl, ti);
 }
-
-// in TableOfContents.cpp
-extern void OnTocCustomDraw(TreeItemCustomDrawArgs* args);
 
 void StartTocEditor(TocEditorArgs* args) {
     HWND hwndOwner = args->hwndRelatedTo;
@@ -435,14 +449,8 @@ void StartTocEditor(TocEditorArgs* args) {
 
     CreateMainLayout(gWindow);
 
-    using std::placeholders::_1;
     w->onClose = std::bind(&TocEditorWindow::CloseHandler, win, _1);
     w->onSize = std::bind(&TocEditorWindow::SizeHandler, win, _1);
-
-    win->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChanged, win, _1);
-    win->treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
-    win->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelected, win, _1);
-    win->treeCtrl->onTreeClick = std::bind(&TocEditorWindow::TreeClick, win, _1);
 
     UpdateTreeModel(gWindow);
     // important to call this after hooking up onSize to ensure

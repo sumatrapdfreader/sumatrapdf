@@ -742,8 +742,11 @@ void PaintLine(HDC hdc, const RectI& rect) {
 void DrawCenteredText(HDC hdc, const RectI& r, const WCHAR* txt, bool isRTL) {
     SetBkMode(hdc, TRANSPARENT);
     RECT tmpRect = r.ToRECT();
-    DrawText(hdc, txt, -1, &tmpRect,
-             DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (isRTL ? DT_RTLREADING : 0));
+    UINT format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+    if (isRTL) {
+        format |= DT_RTLREADING;
+    }
+    DrawTextW(hdc, txt, -1, &tmpRect, format);
 }
 
 void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
@@ -807,17 +810,20 @@ bool IsCursorOverWindow(HWND hwnd) {
 
 bool GetCursorPosInHwnd(HWND hwnd, PointI& posOut) {
     POINT pt;
-    if (!GetCursorPos(&pt))
+    if (!GetCursorPos(&pt)) {
         return false;
-    if (!ScreenToClient(hwnd, &pt))
+    }
+    if (!ScreenToClient(hwnd, &pt)) {
         return false;
+    }
     posOut = PointI(pt.x, pt.y);
     return true;
 }
 
 void CenterDialog(HWND hDlg, HWND hParent) {
-    if (!hParent)
+    if (!hParent) {
         hParent = GetParent(hDlg);
+    }
 
     RectI rcDialog = WindowRect(hDlg);
     rcDialog.Offset(-rcDialog.x, -rcDialog.y);
@@ -837,21 +843,24 @@ void CenterDialog(HWND hDlg, HWND hParent) {
 /* Get the name of default printer or nullptr if not exists.
    The caller needs to free() the result */
 WCHAR* GetDefaultPrinterName() {
-    WCHAR buf[512];
+    WCHAR buf[512] = {0};
     DWORD bufSize = dimof(buf);
-    if (GetDefaultPrinter(buf, &bufSize))
+    if (GetDefaultPrinter(buf, &bufSize)) {
         return str::Dup(buf);
+    }
     return nullptr;
 }
 
 bool CopyTextToClipboard(const WCHAR* text, bool appendOnly) {
     CrashIf(!text);
-    if (!text)
+    if (!text) {
         return false;
+    }
 
     if (!appendOnly) {
-        if (!OpenClipboard(nullptr))
+        if (!OpenClipboard(nullptr)) {
             return false;
+        }
         EmptyClipboard();
     }
 
@@ -867,15 +876,17 @@ bool CopyTextToClipboard(const WCHAR* text, bool appendOnly) {
         SetClipboardData(CF_UNICODETEXT, handle);
     }
 
-    if (!appendOnly)
+    if (!appendOnly) {
         CloseClipboard();
+    }
 
     return handle != nullptr;
 }
 
 static bool SetClipboardImage(HBITMAP hbmp) {
-    if (!hbmp)
+    if (!hbmp) {
         return false;
+    }
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
     HANDLE h = nullptr;
@@ -893,15 +904,17 @@ static bool SetClipboardImage(HBITMAP hbmp) {
 
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
     if (!appendOnly) {
-        if (!OpenClipboard(nullptr))
+        if (!OpenClipboard(nullptr)) {
             return false;
+        }
         EmptyClipboard();
     }
 
     bool ok = SetClipboardImage(hbmp);
 
-    if (!appendOnly)
+    if (!appendOnly) {
         CloseClipboard();
+    }
 
     return ok;
 }
@@ -909,12 +922,14 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
 static void ToggleWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
     DWORD style = GetWindowLong(hwnd, type);
     DWORD newStyle;
-    if (enable)
+    if (enable) {
         newStyle = style | flags;
-    else
+    } else {
         newStyle = style & ~flags;
-    if (newStyle != style)
+    }
+    if (newStyle != style) {
         SetWindowLong(hwnd, type, newStyle);
+    }
 }
 
 void ToggleWindowStyle(HWND hwnd, DWORD flags, bool enable) {

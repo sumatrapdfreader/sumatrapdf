@@ -319,7 +319,7 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         TreeGetDispInfoArgs a{};
         CopyWndProcArgs cp(&a, args);
         a.treeCtrl = treeCtrl;
-        a.dispInfo = (NMTVDISPINFOW*)lp;
+        a.dispInfo = (NMTVDISPINFOEXW*)lp;
         a.treeItem = treeCtrl->GetTreeItemByHandle(a.dispInfo->item.hItem);
         treeCtrl->onTreeGetDispInfo(&a);
         return;
@@ -541,7 +541,7 @@ TreeItem* TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
     return nullptr;
 }
 
-static void setTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes) {
+void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes) {
     UINT mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
     tvitem->mask = mask;
 
@@ -573,7 +573,11 @@ static HTREEITEM insertItem(TreeCtrl* tree, HTREEITEM parent, TreeItem* ti) {
     toInsert.hInsertAfter = TVI_LAST;
 
     TVITEMEXW* tvitem = &toInsert.itemex;
-    setTVITEM(tvitem, ti, tree->withCheckboxes);
+    FillTVITEM(tvitem, ti, tree->withCheckboxes);
+    bool onDemand = tree->onTreeGetDispInfo != nullptr;
+    if (onDemand) {
+        tvitem->pszText = LPSTR_TEXTCALLBACK;
+    }
     HTREEITEM res = TreeView_InsertItem(tree->hwnd, &toInsert);
     return res;
 }
@@ -587,7 +591,11 @@ bool TreeCtrl::UpdateItem(TreeItem* ti) {
 
     TVITEMEXW tvitem;
     tvitem.hItem = ht;
-    setTVITEM(&tvitem, ti, withCheckboxes);
+    FillTVITEM(&tvitem, ti, withCheckboxes);
+    bool onDemand = onTreeGetDispInfo != nullptr;
+    if (onDemand) {
+        tvitem.pszText = LPSTR_TEXTCALLBACK;
+    }
     BOOL ok = TreeView_SetItem(hwnd, &tvitem);
     return ok ? true : false;
 }
