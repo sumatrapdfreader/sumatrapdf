@@ -67,7 +67,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         auto bgBrush = w->backgroundColorBrush;
         if (bgBrush != nullptr) {
             HDC hdc = (HDC)wp;
-            //SetTextColor(hdc, RGB(0, 0, 0));
+            // SetTextColor(hdc, RGB(0, 0, 0));
             SetBkMode(hdc, TRANSPARENT);
             didHandle = true;
             return (LRESULT)bgBrush;

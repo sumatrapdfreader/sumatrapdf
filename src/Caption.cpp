@@ -53,6 +53,48 @@ static inline bool NeedsNonClientBandHack(HWND hwnd) {
 // When DWM composition is enabled, this is the ratio between alpha channels of active and inactive caption colors.
 #define ACTIVE_INACTIVE_ALPHA_RATIO 2.0f
 
+enum CaptionButtons {
+    CB_BTN_FIRST = 0,
+    CB_MINIMIZE = CB_BTN_FIRST,
+    CB_MAXIMIZE,
+    CB_RESTORE,
+    CB_CLOSE,
+    CB_MENU,
+    CB_SYSTEM_MENU,
+    CB_BTN_COUNT
+};
+
+struct ButtonInfo {
+    HWND hwnd;
+    bool highlighted;
+    bool inactive;
+    // form the inner rectangle where the button image is drawn
+    RECT margins;
+
+    ButtonInfo();
+
+    void SetMargins(LONG left, LONG top, LONG right, LONG bottom);
+};
+
+class CaptionInfo {
+    HWND hwnd;
+
+  public:
+    ButtonInfo btn[CB_BTN_COUNT];
+    HTHEME theme;
+    COLORREF bgColor;
+    COLORREF textColor;
+    BYTE bgAlpha;
+    bool isMenuOpen;
+
+    explicit CaptionInfo(HWND hwndCaption);
+    ~CaptionInfo();
+
+    void UpdateTheme();
+    void UpdateColors(bool activeWindow);
+    void UpdateBackgroundAlpha();
+};
+
 static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win);
 static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer);
 static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem);
@@ -122,6 +164,24 @@ void ButtonInfo::SetMargins(LONG left, LONG top, LONG right, LONG bottom) {
     margins.top = top;
     margins.right = right;
     margins.bottom = bottom;
+}
+
+// TODO: not sure if needed, those are bitmaps
+void SetCaptionButtonsRtl(CaptionInfo* caption, bool isRTL) {
+    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
+        SetRtl(caption->btn[i].hwnd, isRTL);
+    }
+}
+
+// TODO: could lookup WindowInfo ourselves
+void CaptionUpdateUI(WindowInfo* win, CaptionInfo* caption) {
+    caption->UpdateTheme();
+    caption->UpdateColors(win->hwndFrame == GetForegroundWindow());
+    caption->UpdateBackgroundAlpha();
+}
+
+void DeleteCaption(CaptionInfo* caption) {
+    delete caption;
 }
 
 static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -260,17 +320,17 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_RBUTTONUP:
         case WM_LBUTTONUP:
             if (CB_SYSTEM_MENU == index) {
-                // Open system menu on click if not dragged (mouse move + left clic will trigger system move, see MOUSEMOVE event)
+                // Open system menu on click if not dragged (mouse move + left clic will trigger system move, see
+                // MOUSEMOVE event)
                 HMENU systemMenu = GetUpdatedSystemMenu(win->hwndFrame, false);
                 RECT windowRect;
                 GetWindowRect(hwnd, &windowRect);
 
                 UINT flags = 0;
-                TrackPopupMenuEx(systemMenu, flags, windowRect.left, windowRect.bottom, win->hwndFrame,
-                                                nullptr);
+                TrackPopupMenuEx(systemMenu, flags, windowRect.left, windowRect.bottom, win->hwndFrame, nullptr);
             }
             break;
-            
+
         case WM_LBUTTONDBLCLK:
             if (CB_SYSTEM_MENU == index) {
                 PostMessage(win->hwndFrame, WM_SYSCOMMAND, SC_CLOSE, 0);
@@ -479,8 +539,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
         PaintCaptionBackground(memDC, win, false);
         int xIcon = GetSystemMetrics(SM_CXSMICON);
         int yIcon = GetSystemMetrics(SM_CYSMICON);
-        HICON hIcon = (HICON)GetClassLongPtr(
-            win->hwndFrame, GCLP_HICONSM);
+        HICON hIcon = (HICON)GetClassLongPtr(win->hwndFrame, GCLP_HICONSM);
         DrawIconEx(memDC, (rButton.dx - xIcon) / 2, (rButton.dy - yIcon) / 2, hIcon, xIcon, yIcon, 0, NULL, DI_NORMAL);
     }
 

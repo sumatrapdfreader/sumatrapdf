@@ -76,7 +76,7 @@ WindowInfo::~WindowInfo() {
     delete buffer;
     delete notifications;
     delete tabSelectionHistory;
-    delete caption;
+    DeleteCaption(caption);
     DeleteVecMembers(tabs);
     // cbHandler is passed into Controller and must be deleted afterwards
     // (all controllers should have been deleted prior to WindowInfo, though)

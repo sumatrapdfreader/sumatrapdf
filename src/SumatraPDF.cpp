@@ -588,9 +588,8 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     SetRtl(win->hwndPageText, isRTL);
 
     SetRtl(win->hwndCaption, isRTL);
-    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
-        SetRtl(win->caption->btn[i].hwnd, isRTL);
-    }
+    SetCaptionButtonsRtl(win->caption, isRTL);
+
     // TODO: why isn't SetWindowPos(..., SWP_FRAMECHANGED) enough?
     SendMessage(win->hwndFrame, WM_DWMCOMPOSITIONCHANGED, 0, 0);
     RelayoutCaption(win);

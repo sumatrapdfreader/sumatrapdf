@@ -828,12 +828,11 @@ void SetTabsInTitlebar(WindowInfo* win, bool set) {
     tab->inTitlebar = set;
     SetParent(win->hwndTabBar, set ? win->hwndCaption : win->hwndFrame);
     ShowWindow(win->hwndCaption, set ? SW_SHOW : SW_HIDE);
-    if (set != win->isMenuHidden)
+    if (set != win->isMenuHidden) {
         ShowHideMenuBar(win);
+    }
     if (set) {
-        win->caption->UpdateTheme();
-        win->caption->UpdateColors(win->hwndFrame == GetForegroundWindow());
-        win->caption->UpdateBackgroundAlpha();
+        CaptionUpdateUI(win, win->caption);
         RelayoutCaption(win);
     } else if (dwm::IsCompositionEnabled()) {
         // remove the extended frame
