@@ -76,8 +76,10 @@ func main() {
 
 	// early check so we don't find it out only after 20 minutes of building
 	if flgUpload || flgUploadCiBuild {
-		panicIf(!hasSpacesCreds())
-		panicIf(!hasS3Creds())
+		if shouldSignAndUpload() {
+			panicIf(!hasSpacesCreds())
+			panicIf(!hasS3Creds())
+		}
 	}
 
 	if flgWc {
