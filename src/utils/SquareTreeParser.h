@@ -8,19 +8,21 @@ class SquareTreeNode {
     ~SquareTreeNode();
 
     struct DataItem {
-        const char* key;
+        const char* key = nullptr;
         union {
             const char* str;
             SquareTreeNode* child;
         } value;
-        bool isChild;
+        bool isChild = false;
 
-        DataItem() : key(nullptr) {
-        }
-        DataItem(const char* key, const char* string) : key(key), isChild(false) {
+        DataItem() = default;
+        DataItem(const char* k, const char* string) {
+            key = k;
             value.str = string;
         }
-        DataItem(const char* key, SquareTreeNode* node) : key(key), isChild(true) {
+        DataItem(const char* k, SquareTreeNode* node) {
+            key = k;
+            isChild = true;
             value.child = node;
         }
     };
