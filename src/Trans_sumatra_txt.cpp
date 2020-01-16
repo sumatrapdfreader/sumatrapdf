@@ -10102,7 +10102,7 @@ const char * gTranslations_lv =
   "Par SumatraPDF\0"\
   "Pievieno\305\241ana izlasei\0"\
   "Pievienot %s lappusi izlasei\0"\
-  "\0"\
+  "Pievienot %s lappusi gr\304\201matz\304\253m\304\223m\tCtrl+B\0"\
   "Pievienot %s lappusi izlasei ar (neoblig\304\201tu) nosaukumu:\0"\
   "Pievienot izlasei\0"\
   "Papildu\0"\
@@ -10128,7 +10128,7 @@ const char * gTranslations_lv =
   "Main\304\253t valodu (Change Language)\0"\
   "P\304\201rbaud\304\253t, vai nav &atjaunin\304\201jumi\0"\
   "Aizv\304\223rt\0"\
-  "\0"\
+  "Sak\304\274aut visu\0"\
   "Komiksu gr\304\201matas\0"\
   "Sader\304\253ba\0"\
   "Nep\304\201rtraukts\n\0"\
@@ -10170,7 +10170,7 @@ const char * gTranslations_lv =
   "Ievad\304\253t %s paroli\0"\
   "Ievadiet komandrindu, izsaucamu ar dubultklik\305\241\304\267i uz PDF dokumenta:\0"\
   "%s iel\304\201des k\304\274\305\253da\0"\
-  "\0"\
+  "Izv\304\223rst visu\0"\
   "Gr\304\201mat&z\304\253mes\0"\
   "&T\304\201l\304\201k\tAlt+Lab\304\201 bulti\305\206a\0"\
   "Pilnekr\304\201na re\305\276\304\253ms\tF11\0"\
@@ -10226,7 +10226,7 @@ const char * gTranslations_lv =
   "Saska\305\206ot re\304\243istru\0"\
   "Mobi dokumenti\0"\
   "Modific\304\223ts:\0"\
-  "\0"\
+  "Jauns &logs\tCtrl+N\0"\
   "Ir pieejama jauna versija %s. Vai lejupiel\304\201d\304\223t jauno versiju?\0"\
   "N\304\201kam\304\201 lappuse\0"\
   "Netika atrasta neviena atbilst\304\253ba\0"\
@@ -10277,7 +10277,7 @@ const char * gTranslations_lv =
   "P\304\201rd\304\223v\304\223t uz\0"\
   "Pagriezt pa &kreisi\tCtrl+Shift+-\0"\
   "Pagriezt pa &labi\tCtrl+Shift++\0"\
-  "\0"\
+  "Saglab\304\201t anot\304\201cijas\0"\
   "Saglab\304\201t k\304\201\0"\
   "Saglab\304\201t sa\304\253s&ni....\tCtrl+Shift+S\0"\
   "%d no %d mekl\304\223\305\241ana...\0"\
@@ -10288,14 +10288,14 @@ const char * gTranslations_lv =
   "Atlase:\0"\
   "Nos\305\253t\304\253t pa &e-pastu\0"\
   "Iestat\304\253t invers\304\201s mekl\304\223\305\241anas komandrindu\0"\
-  "\0"\
-  "\0"\
+  "R\304\201d\304\253t &gr\304\201matz\304\253mes\tF12\0"\
+  "R\304\201d\304\253t &izlasi\0"\
   "R\304\201d\304\253t &lappuses nep\304\201rtraukti\0"\
   "R\304\201d\304\253t &r\304\253kjoslu\0"\
-  "\0"\
+  "R\304\201d\304\253t gr\304\201mat&z\304\253mes\tF12\0"\
   "R\304\201d\304\253t &gr\304\201matz\304\253mes\0"\
   "R\304\201d\304\253t bie\305\276i las\304\253tos\0"\
-  "\0"\
+  "R\304\201d\304\253t &map\304\223\0"\
   "R\304\201d\304\253t &gr\304\201matz\304\253mju s\304\201njoslu, ja t\304\201 ir pieejama\0"\
   "Viena lappuse\0"\
   "Piedodiet, \305\241im nevajadz\304\223ja notikt!\n\nL\305\253dzu, spiediet 'Atcelt', ja j\305\253s v\304\223laties mums pal\304\253dz\304\223t nov\304\223rst \305\241\304\253s k\304\274\305\253mes c\304\223loni.\0"\

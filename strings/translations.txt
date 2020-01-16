@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2838caa0b0743e4a558e18fb5650be42dfa160c8
+ef97275d827a0dd329ed2cb391a3c030d9590946
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3788,6 +3788,7 @@ az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
 es:Añadir página %s a favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
+lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
 ru:Добавить страницу %s в избранные\tCtrl+B
 tw:將第 %s 頁加入到最愛\tCtrl+B
@@ -5414,6 +5415,7 @@ es:Ocultar Todo
 fr:Tout réduire
 ga:Laghdaigh Gach
 it:Comprimi tutto
+lv:Sakļaut visu
 nl:Alle Samenvouwen
 ru:Свернуть все
 tw:全部折叠(&C)
@@ -8047,6 +8049,7 @@ es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
 it:Espandi tutto
+lv:Izvērst visu
 nl:Alle Uitvouwen
 ru:Развернуть все
 tw:全部展開
@@ -11580,6 +11583,7 @@ cz:Nové &okno\tCtrl+N
 es:Nueva &ventana\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
+lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
 ru:Новое о&кно\tCtrl+N
 tr:Yeni &pencere\tCtrl+N
@@ -14779,6 +14783,7 @@ az:Annotasiyaları yadda saxla
 cn:保存注释
 es:Guardar Notas
 fr:Sauvegarder les annotations
+lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
 ru:Сохранить аннотации
 tw:儲存注釋
@@ -15417,6 +15422,7 @@ az:Əl&fəcinləri göstər\tF12
 cn:显示书签(&B)\tF12
 es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
+lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
 ru:Показать за&кладки\tF12
 tw:顯示書籤(&B)\tF12
@@ -15425,6 +15431,7 @@ az:&Seçilmişləri göstər
 cn:显示收藏夹(&F)
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
+lv:Rādīt &izlasi
 nl:Toon &Favorieten
 ru:Показать «И&збранное»
 tw:顯示最愛(&F)
@@ -15566,6 +15573,7 @@ az:Əlfə&cinləri göstər\tF12
 cn:显示书签(&M)\tF12
 es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
+lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
 ru:Показать зак&ладки\tF12
 tw:顯示書籤(&M)\tF12
@@ -15698,6 +15706,7 @@ cz:Zobrazit ve &složce
 es:Mostrar en &Carpeta
 fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
+lv:Rādīt &mapē
 nl:Toon in &map
 ru:Показать в п&апке
 tw:打開所在資料夾(&F)
