@@ -11,6 +11,8 @@
 #include "utils/HtmlPullParser.h"
 #include "utils/JsonParser.h"
 #include "utils/WinUtil.h"
+#include "utils/Timer.h"
+#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
@@ -137,6 +139,12 @@ RenderedBitmap* ImagesEngine::RenderPage(RenderPageArgs& args) {
     if (!page) {
         return nullptr;
     }
+
+    auto timeStart = TimeGet();
+    defer {
+        auto dur = TimeSinceInMs(timeStart);
+        logf("ImagesEngine::RenderPage() in %.2f\n", dur);
+    };
 
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -965,6 +973,12 @@ bool CbxEngineImpl::FinishLoading() {
         return false;
     }
 
+    auto timeStart = TimeGet();
+    defer {
+        auto dur = TimeSinceInMs(timeStart);
+        logf("CbxEngineImpl::FinisHLoading() in %.2f\n", dur);
+    };
+
     // not using the resolution of the contained images seems to be
     // expected, cf. http://forums.fofou.org/sumatrapdf/topic?id=3183827
     // TODO: return DpiGetForHwnd(HWND_DESKTOP) instead?
@@ -1188,6 +1202,11 @@ const WCHAR* CbxEngineImpl::GetDefaultFileExt() const {
 }
 
 Bitmap* CbxEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
+    auto timeStart = TimeGet();
+    defer {
+        auto dur = TimeSinceInMs(timeStart);
+        logf("CbxEngineImpl::LoadBitmapForPage(page: %d) took %.2f\n", pageNo, dur);
+    };
     ImageData img = GetImageData(pageNo);
     if (img.data) {
         deleteAfterUse = true;

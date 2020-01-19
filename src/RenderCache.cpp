@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/Timer.h"
 #include "utils/Log.h"
 
 #include "TreeModel.h"
@@ -741,7 +742,13 @@ static int cmpTilePosition(const void* a, const void* b) {
 
 UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo,
                         bool* renderOutOfDateCue) {
-    AssertCrash(pageInfo->shown && 0.0 != pageInfo->visibleRatio);
+    CrashIf(!pageInfo->shown || 0.0 == pageInfo->visibleRatio);
+
+    auto timeStart = TimeGet();
+    defer {
+        auto dur = TimeSinceInMs(timeStart);
+        logf("RenderCache::Paint() in %.2f\n", dur);
+    };
 
     if (!dm->ShouldCacheRendering(pageNo)) {
         int rotation = dm->GetRotation();
@@ -783,8 +790,9 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, Pag
         }
         tileOnScreen = pageInfo->pageOnScreen.Intersect(tileOnScreen);
         RectI isect = bounds.Intersect(tileOnScreen);
-        if (isect.IsEmpty())
+        if (isect.IsEmpty()) {
             continue;
+        }
 
         bool isTargetRes = tile.res == targetRes;
         UINT renderDelay = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, isTargetRes, renderOutOfDateCue,
@@ -795,18 +803,21 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, Pag
             queue.Append(TilePosition(tile.res + 1, tile.row * 2 + 1, tile.col * 2));
             queue.Append(TilePosition(tile.res + 1, tile.row * 2 + 1, tile.col * 2 + 1));
         }
-        if (isTargetRes && renderDelay > 0)
+        if (isTargetRes && renderDelay > 0) {
             neededScaling = true;
+        }
         renderDelayMin = std::min(renderDelay, renderDelayMin);
         // paint tiles from left to right from top to bottom
-        if (tile.res > 0 && queue.size() > 0 && tile.res < queue.at(0).res)
+        if (tile.res > 0 && queue.size() > 0 && tile.res < queue.at(0).res) {
             queue.Sort(cmpTilePosition);
+        }
     }
 
 #ifdef CONSERVE_MEMORY
     if (!neededScaling) {
-        if (renderOutOfDateCue)
+        if (renderOutOfDateCue) {
             *renderOutOfDateCue = false;
+        }
         // free tiles with different resolution
         TilePosition tile(targetRes, (USHORT)-1, 0);
         FreePage(dm, pageNo, &tile);

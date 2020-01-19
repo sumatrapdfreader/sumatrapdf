@@ -792,9 +792,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     // logToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
 
+    if (gIsDebugBuild) {
+        logToDebugger = true;
+    }
+
     log("Starting SumatraPDF\n");
 
-    testLogf();
+    //testLogf();
 
     // LogDpiAwareness();
 
