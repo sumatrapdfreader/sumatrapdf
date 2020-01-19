@@ -422,7 +422,7 @@ static BOOL InstanceInit() {
 static int RunApp() {
     MSG msg;
     FrameTimeoutCalculator ftc(60);
-    Timer t;
+    auto t = TimeGet();
     for (;;) {
         const DWORD timeout = ftc.GetTimeoutInMilliseconds();
         DWORD res = WAIT_TIMEOUT;
@@ -446,9 +446,10 @@ static int RunApp() {
         // check if there are processes that need to be closed but
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
-        if (t.GetTimeInMs() > 10000 && gButtonInstUninst && gButtonInstUninst->IsEnabled()) {
+        auto dur = TimeSinceInMs(t);
+        if (dur > 10000 && gButtonInstUninst && gButtonInstUninst->IsEnabled()) {
             CheckInstallUninstallPossible(true);
-            t.Start();
+            t= TimeGet();
         }
     }
 }

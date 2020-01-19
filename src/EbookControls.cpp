@@ -199,16 +199,16 @@ Size PageControl::GetDrawableSize() const {
 void PageControl::Paint(Graphics* gfx, int offX, int offY) {
     CrashIf(!IsVisible());
 
-    Timer timerAll;
+    auto timerAll = TimeGet();
 
     CachedStyle* s = cachedStyle;
-    Timer timerFill;
+    auto timerFill = TimeGet();
     Rect r(offX, offY, pos.Width, pos.Height);
     if (!s->bgColor->IsTransparent()) {
         Brush* br = BrushFromColorData(s->bgColor, r);
         gfx->FillRectangle(br, r);
     }
-    double durFill = timerFill.Stop();
+    double durFill = TimeSinceInMs(timerFill);
 
     if (!page)
         return;
@@ -235,13 +235,13 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
     bgColor.SetFromCOLORREF(bgCol);
     textRender->SetTextBgColor(bgColor);
 
-    Timer timerDrawHtml;
+    auto timerDrawHtml = TimeGet();
     DrawHtmlPage(gfx, textRender, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
-    double durDraw = timerDrawHtml.Stop();
+    double durDraw = TimeSinceInMs(timerDrawHtml);
     gfx->SetClip(&origClipRegion, CombineModeReplace);
     delete textRender;
 
-    double durAll = timerAll.Stop();
+    double durAll = TimeSinceInMs(timerAll);
     // logf("all: %.2f, fill: %.2f, draw html: %.2f\n", durAll, durFill, durDraw);
 }
 

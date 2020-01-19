@@ -787,7 +787,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
 }
 
 static void OnPaintDocument(WindowInfo* win) {
-    Timer t;
+    auto t = TimeGet();
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
@@ -805,7 +805,7 @@ static void OnPaintDocument(WindowInfo* win) {
 
     EndPaint(win->hwndCanvas, &ps);
     if (gShowFrameRate) {
-        win->frameRateWnd->ShowFrameRateDur(t.GetTimeInMs());
+        win->frameRateWnd->ShowFrameRateDur(TimeSinceInMs(t));
     }
 }
 
@@ -1236,7 +1236,7 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM
 ///// methods needed for the About/Start screen /////
 
 static void OnPaintAbout(WindowInfo* win) {
-    Timer t;
+    auto t = TimeGet();
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
@@ -1252,7 +1252,7 @@ static void OnPaintAbout(WindowInfo* win) {
 
     EndPaint(win->hwndCanvas, &ps);
     if (gShowFrameRate) {
-        win->frameRateWnd->ShowFrameRateDur(t.GetTimeInMs());
+        win->frameRateWnd->ShowFrameRateDur(TimeSinceInMs(t));
     }
 }
 

@@ -59,28 +59,26 @@ static bool IsInRange(Vec<PageRange>& ranges, int pageNo) {
 }
 
 static void BenchLoadRender(EngineBase* engine, int pagenum) {
-    Timer t;
+    auto t = TimeGet();
     bool ok = engine->BenchLoadPage(pagenum);
-    t.Stop();
 
     if (!ok) {
         logf(L"Error: failed to load page %d", pagenum);
         return;
     }
-    double timeMs = t.GetTimeInMs();
+    double timeMs = TimeSinceInMs(t);
     logf(L"pageload   %3d: %.2f ms", pagenum, timeMs);
 
-    t.Start();
+    t = TimeGet();
     RenderPageArgs args(pagenum, 1.0, 0);
     RenderedBitmap* rendered = engine->RenderPage(args);
-    t.Stop();
 
     if (!rendered) {
         logf(L"Error: failed to render page %d", pagenum);
         return;
     }
     delete rendered;
-    timeMs = t.GetTimeInMs();
+    timeMs = TimeSinceInMs(t);
     logf(L"pagerender %3d: %.2f ms", pagenum, timeMs);
 }
 
@@ -104,9 +102,9 @@ static int FormatWholeDoc(Doc& doc) {
 
 static int TimeOneMethod(Doc& doc, TextRenderMethod method, const WCHAR* methodName) {
     SetTextRenderMethod(method);
-    Timer t;
+    auto t = TimeGet();
     int nPages = FormatWholeDoc(doc);
-    double timesms = t.Stop();
+    double timesms = TimeSinceInMs(t);
     logf(L"%s: %.2f ms", methodName, timesms);
     return nPages;
 }
@@ -125,14 +123,14 @@ void BenchEbookLayout(const WCHAR* filePath) {
         logf(L"Error: not an ebook file");
         return;
     }
-    Timer t;
+    auto t = TimeGet();
     Doc doc = Doc::CreateFromFile(filePath);
     if (doc.LoadingFailed()) {
         logf(L"Error: failed to load the file as doc");
         doc.Delete();
         return;
     }
-    double timeMs = t.Stop();
+    double timeMs = TimeSinceInMs(t);
     logf(L"load: %.2f ms", timeMs);
 
     int nPages = TimeOneMethod(doc, TextRenderMethodGdi, L"gdi       ");
@@ -151,23 +149,22 @@ void BenchEbookLayout(const WCHAR* filePath) {
 }
 
 static void BenchChmLoadOnly(const WCHAR* filePath) {
-    Timer total;
+    auto total = TimeGet();
     logf(L"Starting: %s", filePath);
 
-    Timer t;
+    auto t = TimeGet();
     ChmModel* chmModel = ChmModel::Create(filePath, nullptr);
     if (!chmModel) {
         logf(L"Error: failed to load %s", filePath);
         return;
     }
 
-    double timeMs = t.Stop();
+    double timeMs = TimeSinceInMs(t);
     logf(L"load: %.2f ms", timeMs);
 
     delete chmModel;
-    total.Stop();
 
-    logf(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
+    logf(L"Finished (in %.2f ms): %s", TimeSinceInMs(total), filePath);
 }
 
 static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
@@ -189,17 +186,17 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
         return;
     }
 
-    Timer total;
+    auto total = TimeGet();
     logf(L"Starting: %s", filePath);
 
-    Timer t;
+    auto t = TimeGet();
     EngineBase* engine = EngineManager::CreateEngine(filePath);
     if (!engine) {
         logf(L"Error: failed to load %s", filePath);
         return;
     }
 
-    double timeMs = t.Stop();
+    double timeMs = TimeSinceInMs(t);
     logf(L"load: %.2f ms", timeMs);
     int pages = engine->PageCount();
     logf(L"page count: %d", pages);
@@ -222,9 +219,8 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     }
 
     delete engine;
-    total.Stop();
 
-    logf(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
+    logf(L"Finished (in %.2f ms): %s", TimeSinceInMs(total), filePath);
 }
 
 static bool IsFileToBench(const WCHAR* fileName) {
@@ -474,7 +470,7 @@ of PDFs before a release to make sure we're crash proof. */
 
 class StressTest {
     WindowInfo* win;
-    Timer currPageRenderTime;
+    LARGE_INTEGER currPageRenderTime;
     int currPage;
     int pageForSearchStart;
     int filesCount; // number of files processed so far
@@ -632,7 +628,7 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
 
     currPage = pageRanges.at(0).start;
     win->ctrl->GoToPage(currPage, false);
-    currPageRenderTime.Start();
+    currPageRenderTime = TimeGet();
     ++filesCount;
 
     pageForSearchStart = (rand() % win->ctrl->PageCount()) + 1;
@@ -652,7 +648,7 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
 }
 
 bool StressTest::GoToNextPage() {
-    double pageRenderTime = currPageRenderTime.GetTimeInMs();
+    double pageRenderTime = TimeSinceInMs(currPageRenderTime);
     AutoFreeWstr s(str::Format(L"Page %d rendered in %d milliseconds", currPage, (int)pageRenderTime));
     win->ShowNotification(s, NOS_DEFAULT, NG_STRESS_TEST_BENCHMARK);
 
@@ -669,7 +665,7 @@ bool StressTest::GoToNextPage() {
     }
 
     win->ctrl->GoToPage(currPage, false);
-    currPageRenderTime.Start();
+    currPageRenderTime = TimeGet();
 
     // start text search when we're in the middle of the document, so that
     // search thread touches both pages that were already rendered and not yet
@@ -728,7 +724,7 @@ void StressTest::OnTimer(int timerIdGot) {
     DisplayModel* dm = win->AsFixed();
     bool didRender = gRenderCache.Exists(dm, currPage, dm->GetRotation());
     if (!didRender && dm->ShouldCacheRendering(currPage)) {
-        double timeInMs = currPageRenderTime.GetTimeInMs();
+        double timeInMs = TimeSinceInMs(currPageRenderTime);
         if (timeInMs > 3.0 * 1000) {
             if (!GoToNextPage())
                 return;
