@@ -736,6 +736,7 @@ static void LogDpiAwareness() {
 }
 #endif
 
+#if 0
 static void testLogf() {
     const char* fileName = path::GetBaseNameNoFree(__FILE__);
     WCHAR* gswin32c = L"this is a path";
@@ -744,6 +745,7 @@ static void testLogf() {
     AutoFree tmpFileName = strconv::WstrToUtf8(path::GetBaseNameNoFree(tmpFile));
     logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin.get(), tmpFileName.get());
 }
+#endif
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
