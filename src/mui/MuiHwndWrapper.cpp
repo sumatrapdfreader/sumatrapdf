@@ -131,10 +131,11 @@ void HwndWrapper::LayoutIfRequested() {
 
 void HwndWrapper::OnPaint(HWND hwnd) {
     CrashIf(hwnd != hwndParent);
-    Timer t;
+    auto t = TimeGet();
     painter->Paint(hwnd, markedForRepaint);
     if (frameRateWnd) {
-        frameRateWnd->ShowFrameRateDur(t.GetTimeInMs());
+        auto dur = TimeSinceInMs(t);
+        frameRateWnd->ShowFrameRateDur(dur);
     }
     markedForRepaint = false;
 }

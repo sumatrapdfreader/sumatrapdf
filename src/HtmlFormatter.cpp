@@ -1336,7 +1336,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
     // draw, so first draw text and then paint everything else
     textDraw->SetTextColor(textColor);
     Status status = Ok;
-    Timer t;
+    auto t = TimeGet();
     textDraw->Lock();
     for (DrawInstr& i : *drawInstructions) {
         RectF bbox = i.bbox;
@@ -1354,7 +1354,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
             break;
     }
     textDraw->Unlock();
-    double dur = t.Stop();
+    double dur = TimeSinceInMs(t);
     // logf("DrawHtmlPage: textDraw %.2f ms\n", dur);
 
     for (DrawInstr& i : *drawInstructions) {

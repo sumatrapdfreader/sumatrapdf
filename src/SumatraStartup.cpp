@@ -1015,9 +1015,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
             continue;
         }
         AutoFree path = strconv::WstrToUtf8(filePath);
-        logf("before LoadOnStartup: '%s'\n", path.get());
         win = LoadOnStartup(filePath, i, !win);
-        logf("after LoadOnStartup: '%s'\n", path.get());
         if (!win) {
             retCode++;
             continue;
@@ -1035,9 +1033,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
                 continue;
             }
             AutoFree path = strconv::WstrToUtf8(filePath);
-            logf("before LoadOnStartup: '%s'\n", path.get());
             win = LoadOnStartup(filePath, i, !win);
-            logf("after LoadOnStartup: '%s'\n", path.get());
             if (!win) {
                 retCode++;
             }
