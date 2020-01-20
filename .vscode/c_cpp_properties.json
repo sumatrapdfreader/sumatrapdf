@@ -67,11 +67,7 @@
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um",
                 "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include",
                 "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include/experimental",
-                "${workspaceRoot}",
-                "${workspaceRoot}/src/",
-                "${workspaceRoot}/src/mui",
-                "${workspaceRoot}/src/utils",
-                "${workspaceRoot}/src/wingui"
+                "${workspaceRoot}/src"
             ],
             "defines": [
                 "_DEBUG",
@@ -87,11 +83,7 @@
                     "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um",
                     "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include",
                     "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include/experimental",
-                    "${workspaceRoot}",
-                    "${workspaceRoot}/src/",
-                    "${workspaceRoot}/src/mui",
-                    "${workspaceRoot}/src/utils",
-                    "${workspaceRoot}/src/wingui"
+                    "${workspaceRoot}/src"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

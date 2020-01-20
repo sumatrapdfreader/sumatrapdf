@@ -195,7 +195,7 @@ static WCHAR* GetDefaultPdfViewer() {
 
 static bool IsPdfFilterInstalled() {
     const WCHAR* key = L".pdf\\PersistentHandler";
-    AutoFreeWstr handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+    AutoFreeWstr handler_iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
     if (!handler_iid) {
         return false;
     }
@@ -204,7 +204,7 @@ static bool IsPdfFilterInstalled() {
 
 static bool IsPdfPreviewerInstalled() {
     const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
-    AutoFreeWstr handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+    AutoFreeWstr handler_iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
     if (!handler_iid) {
         return false;
     }
@@ -213,7 +213,7 @@ static bool IsPdfPreviewerInstalled() {
 
 // Note: doesn't handle (total) sizes above 4GB
 static DWORD GetDirSize(const WCHAR* dir) {
-    AutoFreeWstr dirPattern(path::Join(dir, L"*"));
+    AutoFreeWstr dirPattern = path::Join(dir, L"*");
     WIN32_FIND_DATA findData;
 
     HANDLE h = FindFirstFile(dirPattern, &findData);
@@ -225,7 +225,7 @@ static DWORD GetDirSize(const WCHAR* dir) {
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             totalSize += findData.nFileSizeLow;
         } else if (!str::Eq(findData.cFileName, L".") && !str::Eq(findData.cFileName, L"..")) {
-            AutoFreeWstr subdir(path::Join(dir, findData.cFileName));
+            AutoFreeWstr subdir = path::Join(dir, findData.cFileName);
             totalSize += GetDirSize(subdir);
         }
     } while (FindNextFile(h, &findData) != 0);
@@ -251,31 +251,31 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath.get());
 
     const WCHAR* appName = getAppName();
-    AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(appName);
+    AutoFreeWstr regPathUninst = getRegPathUninst(appName);
     // path to installed executable (or "$path,0" to force the first icon)
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayIcon", installedExePath);
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", appName);
+    ok &= WriteRegStr(hkey, regPathUninst, L"DisplayIcon", installedExePath);
+    ok &= WriteRegStr(hkey, regPathUninst, L"DisplayName", appName);
     // version format: "1.2"
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayVersion", CURR_VERSION_STR);
+    ok &= WriteRegStr(hkey, regPathUninst, L"DisplayVersion", CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsVistaOrGreater()) {
         AutoFreeWstr key = str::Join(appName, L" ", CURR_VERSION_STR);
-        ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", key);
+        ok &= WriteRegStr(hkey, regPathUninst, L"DisplayName", key);
     }
     DWORD size = GetDirSize(gCli->installDir) / 1024;
     // size of installed directory after copying files
-    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"EstimatedSize", size);
+    ok &= WriteRegDWORD(hkey, regPathUninst, L"EstimatedSize", size);
     // current date as YYYYMMDD
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"InstallDate", installDate);
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"InstallLocation", installDir);
-    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"NoModify", 1);
-    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"NoRepair", 1);
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"Publisher", TEXT(PUBLISHER_STR));
+    ok &= WriteRegStr(hkey, regPathUninst, L"InstallDate", installDate);
+    ok &= WriteRegStr(hkey, regPathUninst, L"InstallLocation", installDir);
+    ok &= WriteRegDWORD(hkey, regPathUninst, L"NoModify", 1);
+    ok &= WriteRegDWORD(hkey, regPathUninst, L"NoRepair", 1);
+    ok &= WriteRegStr(hkey, regPathUninst, L"Publisher", TEXT(PUBLISHER_STR));
     // command line for uninstaller
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"UninstallString", uninstallCmdLine);
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"URLInfoAbout", L"https://www.sumatrapdfreader.org/");
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"URLUpdateInfo", L"https://www.sumatrapdfreader.org/news.html");
+    ok &= WriteRegStr(hkey, regPathUninst, L"UninstallString", uninstallCmdLine);
+    ok &= WriteRegStr(hkey, regPathUninst, L"URLInfoAbout", L"https://www.sumatrapdfreader.org/");
+    ok &= WriteRegStr(hkey, regPathUninst, L"URLUpdateInfo", L"https://www.sumatrapdfreader.org/news.html");
 
     return ok;
 }
@@ -294,14 +294,21 @@ static bool WriteUninstallerRegistryInfos() {
 static bool WriteWin10Registry(HKEY hkey) {
     bool ok = true;
 
-    ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF", L"SOFTWARE\\SumatraPDF\\Capabilities");
-    ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities", L"ApplicationDescription",
-                      L"SumatraPDF is a PDF reader.");
-    ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities", L"ApplicationName", L"SumatraPDF Reader");
+    const WCHAR* appName = getAppName();
+    const WCHAR* exeName = getExeName();
+    // L"SOFTWARE\\SumatraPDF\\Capabilities"
+    AutoFreeWstr capKey = str::Join(L"SOFTWARE\\", appName, L"\\Capabilities");
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", appName, capKey);
+    AutoFreeWstr desc = str::Join(appName,  L" is a PDF reader.");
+    ok &= WriteRegStr(hkey, capKey, L"ApplicationDescription", desc);
+    AutoFreeWstr appLongName = str::Join(appName, L" Reader");
+    ok &= WriteRegStr(hkey, capKey, L"ApplicationName", appLongName);
 
+    // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
+    AutoFreeWstr keyAssoc = str::Join(capKey, L"\\FileAssociations");
     for (int i = 0; nullptr != gSupportedExts[i]; i++) {
         WCHAR* ext = gSupportedExts[i];
-        ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations", ext, L"SumatraPDF.exe");
+        ok &= WriteRegStr(hkey, keyAssoc, ext, exeName);
     }
     return ok;
 }
@@ -400,11 +407,11 @@ static void CreateButtonRunSumatra(HWND hwndParent) {
 }
 
 static bool CreateAppShortcut(int csidl) {
-    AutoFreeWstr shortcutPath(GetShortcutPath(csidl));
+    AutoFreeWstr shortcutPath = GetShortcutPath(csidl);
     if (!shortcutPath.Get()) {
         return false;
     }
-    AutoFreeWstr installedExePath(GetInstalledExePath());
+    AutoFreeWstr installedExePath = GetInstalledExePath();
     return CreateShortcut(shortcutPath, installedExePath);
 }
 

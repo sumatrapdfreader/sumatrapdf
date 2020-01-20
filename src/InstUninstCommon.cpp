@@ -157,12 +157,13 @@ WCHAR* GetUninstallerPath() {
 }
 
 WCHAR* GetShortcutPath(int csidl) {
-    AutoFreeWstr dir(GetSpecialFolder(csidl, false));
+    AutoFreeWstr dir = GetSpecialFolder(csidl, false);
     if (!dir) {
         return nullptr;
     }
     const WCHAR* appName = getAppName();
-    return path::Join(dir, appName, L".lnk");
+    AutoFreeWstr lnkName = str::Join(appName, L".lnk");
+    return path::Join(dir, lnkName);
 }
 
 WCHAR* GetInstalledBrowserPluginPath() {
@@ -209,14 +210,10 @@ static bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, co
         return false;
     }
 
-    defer {
-        OleUninitialize();
-    };
-
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
     if (DynSetDllDirectoryW) {
-        AutoFreeWstr dllDir(path::GetDir(dllPath));
+        AutoFreeWstr dllDir = path::GetDir(dllPath);
         DynSetDllDirectoryW(dllDir);
     }
 
@@ -224,6 +221,7 @@ static bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, co
         if (DynSetDllDirectoryW) {
             DynSetDllDirectoryW(L"");
         }
+        OleUninitialize();
     };
 
     HMODULE lib = LoadLibraryW(dllPath);
@@ -268,7 +266,7 @@ static bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullpt
 }
 
 void UninstallBrowserPlugin() {
-    AutoFreeWstr dllPath(GetBrowserPluginPath());
+    AutoFreeWstr dllPath = GetBrowserPluginPath();
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
         dllPath.Set(GetInstalledBrowserPluginPath());
@@ -282,21 +280,21 @@ void UninstallBrowserPlugin() {
 }
 
 void InstallPdfFilter() {
-    AutoFreeWstr dllPath(GetPdfFilterPath());
+    AutoFreeWstr dllPath = GetPdfFilterPath();
     if (!RegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't install PDF search filter"));
     }
 }
 
 void UninstallPdfFilter() {
-    AutoFreeWstr dllPath(GetPdfFilterPath());
+    AutoFreeWstr dllPath = GetPdfFilterPath();
     if (!UnRegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't uninstall PDF search filter"));
     }
 }
 
 void InstallPdfPreviewer() {
-    AutoFreeWstr dllPath(GetPdfPreviewerPath());
+    AutoFreeWstr dllPath = GetPdfPreviewerPath();
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
     if (!RegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't install PDF previewer"));
@@ -304,7 +302,7 @@ void InstallPdfPreviewer() {
 }
 
 void UninstallPdfPreviewer() {
-    AutoFreeWstr dllPath(GetPdfPreviewerPath());
+    AutoFreeWstr dllPath = GetPdfPreviewerPath();
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
     if (!UnRegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
@@ -640,7 +638,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
 }
 
 static REAL DrawMessage(Graphics& g, const WCHAR* msg, REAL y, REAL dx, Color color) {
-    AutoFreeWstr s(str::Dup(msg));
+    AutoFreeWstr s = str::Dup(msg);
 
     Font f(L"Impact", 16, FontStyleRegular);
     RectF maxbox(0, y, dx, 0);
