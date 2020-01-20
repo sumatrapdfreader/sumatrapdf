@@ -64,7 +64,7 @@
 #define GIT_COMMIT_ID_STR TEXT(QM(GIT_COMMIT_ID))
 #endif
 
-#define RA_MICRO_NAME L"Ra-Micro PDF Viewer"
+#define RA_MICRO_NAME L"RA-MICRO PDF Viewer"
 
 // TODO: replace this link with a better one where license information is nicely collected/linked
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
