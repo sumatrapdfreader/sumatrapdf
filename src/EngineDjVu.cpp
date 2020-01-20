@@ -393,6 +393,7 @@ struct DjVuInfoChunk {
 static_assert(sizeof(DjVuInfoChunk) == 10, "wrong size of DjVuInfoChunk structure");
 
 bool DjVuEngineImpl::LoadMediaboxes() {
+    const WCHAR* fileName = FileName();
     if (!fileName) {
         return false;
     }
@@ -816,6 +817,7 @@ bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
             return true;
         }
     }
+    const WCHAR* fileName = FileName();
     if (!fileName) {
         return false;
     }

@@ -99,8 +99,9 @@ EngineMultiImpl::~EngineMultiImpl() {
 }
 
 EngineBase* EngineMultiImpl::Clone() {
-    CrashIf(true);
-    return nullptr;
+    const WCHAR* fileName = FileName();
+    CrashIf(!fileName);
+    return EngineMultiImpl::CreateFromFile(fileName, nullptr);
 }
 
 RectD EngineMultiImpl::PageMediabox(int pageNo) {
@@ -311,8 +312,11 @@ static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
 }
 
 bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
-    AutoFree filePath = strconv::WstrToUtf8(fileName);
+    AutoFreeStr filePath = strconv::WstrToUtf8(fileName);
     bool ok = LoadVbkmFile(filePath.get(), vbkm);
+    if (!ok) {
+        return false;
+    }
 
     // create a TocTree combining all the files and hiding nodes that are unchecked
     // create a mapping between "virtual page" (from combined documents) to
@@ -387,6 +391,8 @@ bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
 
     tocTree = new TocTree(rootCopy);
     pageCount = nTotalPages;
+    SetFileName(fileName);
+
     return true;
 }
 
@@ -399,7 +405,6 @@ EngineBase* EngineMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* p
         delete engine;
         return nullptr;
     }
-    engine->fileName = str::Dup(fileName);
     return engine;
 }
 

@@ -449,7 +449,7 @@ static int RunApp() {
         auto dur = TimeSinceInMs(t);
         if (dur > 10000 && gButtonInstUninst && gButtonInstUninst->IsEnabled()) {
             CheckInstallUninstallPossible(true);
-            t= TimeGet();
+            t = TimeGet();
         }
     }
 }

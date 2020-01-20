@@ -271,6 +271,7 @@ class PsEngineImpl : public EngineBase {
     }
 
     std::string_view GetFileData() override {
+        const WCHAR* fileName = FileName();
         return file::ReadFile(fileName);
     }
 

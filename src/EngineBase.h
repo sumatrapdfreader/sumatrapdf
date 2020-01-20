@@ -302,6 +302,9 @@ class EngineBase {
     bool hasPageLabels = false;
     int pageCount = -1;
 
+    // TODO: migrate other engines to use this
+    AutoFreeWstr fileNameBase;
+
     virtual ~EngineBase();
     // creates a clone of this engine (e.g. for printing on a different thread)
     virtual EngineBase* Clone() = 0;
@@ -414,8 +417,6 @@ class EngineBase {
 
   protected:
     void SetFileName(const WCHAR* s);
-
-    AutoFreeWstr fileName;
 };
 
 class PasswordUI {

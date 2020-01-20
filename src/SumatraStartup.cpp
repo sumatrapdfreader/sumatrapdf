@@ -800,7 +800,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     log("Starting SumatraPDF\n");
 
-    //testLogf();
+    // testLogf();
 
     // LogDpiAwareness();
 

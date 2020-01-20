@@ -207,14 +207,16 @@ RectD EbookEngine::PageContentBox(int pageNo, RenderTarget target) {
 }
 
 std::string_view EbookEngine::GetFileData() {
+    const WCHAR* fileName = FileName();
     if (!fileName) {
         return {};
     }
-    return file::ReadFile(fileName.get());
+    return file::ReadFile(fileName);
 }
 
 bool EbookEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
+    const WCHAR* fileName = FileName();
     if (!fileName) {
         return false;
     }
@@ -769,7 +771,7 @@ EngineBase* EpubEngineImpl::Clone() {
 }
 
 bool EpubEngineImpl::Load(const WCHAR* fileName) {
-    this->fileName.SetCopy(fileName);
+    SetFileName(fileName);
     if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
         ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
@@ -821,6 +823,7 @@ bool EpubEngineImpl::FinishLoading() {
 }
 
 std::string_view EpubEngineImpl::GetFileData() {
+    const WCHAR* fileName = FileName();
     return GetStreamOrFileData(stream, fileName);
 }
 
@@ -835,6 +838,7 @@ bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
             return true;
         }
     }
+    const WCHAR* fileName = FileName();
     if (!fileName) {
         return false;
     }
@@ -902,7 +906,11 @@ class Fb2EngineImpl : public EbookEngine {
         delete doc;
     }
     EngineBase* Clone() override {
-        return fileName ? CreateFromFile(fileName) : nullptr;
+        const WCHAR* fileName = FileName();
+        if (!fileName) {
+            return nullptr;
+        }
+        return CreateFromFile(fileName);
     }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
@@ -924,7 +932,7 @@ class Fb2EngineImpl : public EbookEngine {
 };
 
 bool Fb2EngineImpl::Load(const WCHAR* fileName) {
-    this->fileName.SetCopy(fileName);
+    SetFileName(fileName);
     doc = Fb2Doc::CreateFromFile(fileName);
     return FinishLoading();
 }
@@ -1020,7 +1028,11 @@ class MobiEngineImpl : public EbookEngine {
         delete doc;
     }
     EngineBase* Clone() override {
-        return fileName ? CreateFromFile(fileName) : nullptr;
+        const WCHAR* fileName = FileName();
+        if (!fileName) {
+            return nullptr;
+        }
+        return CreateFromFile(fileName);
     }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
@@ -1043,7 +1055,7 @@ class MobiEngineImpl : public EbookEngine {
 };
 
 bool MobiEngineImpl::Load(const WCHAR* fileName) {
-    this->fileName.SetCopy(fileName);
+    SetFileName(fileName);
     doc = MobiDoc::CreateFromFile(fileName);
     return FinishLoading();
 }
@@ -1170,7 +1182,11 @@ class PdbEngineImpl : public EbookEngine {
         delete doc;
     }
     EngineBase* Clone() override {
-        return fileName ? CreateFromFile(fileName) : nullptr;
+        const WCHAR* fileName = FileName();
+        if (!fileName) {
+            return nullptr;
+        }
+        return CreateFromFile(fileName);
     }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
@@ -1189,7 +1205,7 @@ class PdbEngineImpl : public EbookEngine {
 };
 
 bool PdbEngineImpl::Load(const WCHAR* fileName) {
-    this->fileName.SetCopy(fileName);
+    SetFileName(fileName);
 
     doc = PalmDoc::CreateFromFile(fileName);
     if (!doc) {
@@ -1383,7 +1399,11 @@ class ChmEngineImpl : public EbookEngine {
         delete tocTree;
     }
     EngineBase* Clone() override {
-        return fileName ? CreateFromFile(fileName) : nullptr;
+        const WCHAR* fileName = FileName();
+        if (!fileName) {
+            return nullptr;
+        }
+        return CreateFromFile(fileName);
     }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
@@ -1508,7 +1528,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
 };
 
 bool ChmEngineImpl::Load(const WCHAR* fileName) {
-    this->fileName.SetCopy(fileName);
+    SetFileName(fileName);
     doc = ChmDoc::CreateFromFile(fileName);
     if (!doc) {
         return false;
@@ -1630,7 +1650,11 @@ class HtmlEngineImpl : public EbookEngine {
         delete doc;
     }
     EngineBase* Clone() override {
-        return fileName ? CreateFromFile(fileName) : nullptr;
+        const WCHAR* fileName = FileName();
+        if (!fileName) {
+            return nullptr;
+        }
+        return CreateFromFile(fileName);
     }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
@@ -1648,7 +1672,7 @@ class HtmlEngineImpl : public EbookEngine {
 };
 
 bool HtmlEngineImpl::Load(const WCHAR* fileName) {
-    this->fileName.SetCopy(fileName);
+    SetFileName(fileName);
 
     doc = HtmlDoc::CreateFromFile(fileName);
     if (!doc) {
@@ -1733,7 +1757,11 @@ class TxtEngineImpl : public EbookEngine {
         delete doc;
     }
     EngineBase* Clone() override {
-        return fileName ? CreateFromFile(fileName) : nullptr;
+        const WCHAR* fileName = FileName();
+        if (!fileName) {
+            return nullptr;
+        }
+        return CreateFromFile(fileName);
     }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
@@ -1756,7 +1784,7 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
         return false;
     }
 
-    this->fileName.SetCopy(fileName);
+    SetFileName(fileName);
 
     defaultFileExt = path::GetExtNoFree(fileName);
 

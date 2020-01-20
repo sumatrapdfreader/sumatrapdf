@@ -465,7 +465,7 @@ char* EngineBase::GetDecryptionKey() const {
 }
 
 const WCHAR* EngineBase::FileName() const {
-    return fileName.Get();
+    return fileNameBase.get();
 }
 
 RenderedBitmap* EngineBase::GetImageForPageElement(PageElement*) {
@@ -474,7 +474,7 @@ RenderedBitmap* EngineBase::GetImageForPageElement(PageElement*) {
 }
 
 void EngineBase::SetFileName(const WCHAR* s) {
-    fileName.SetCopy(s);
+    fileNameBase.SetCopy(s);
 }
 
 PointD EngineBase::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
