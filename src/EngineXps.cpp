@@ -188,10 +188,10 @@ static xps_document* xps_document_from_fz_document(fz_document* doc) {
     return (xps_document*)doc;
 }
 
-class XpsEngineImpl : public EngineBase {
+class EngineXps : public EngineBase {
   public:
-    XpsEngineImpl();
-    virtual ~XpsEngineImpl();
+    EngineXps();
+    virtual ~EngineXps();
     EngineBase* Clone() override;
 
     RectD PageMediabox(int pageNo) override;
@@ -268,12 +268,12 @@ class XpsEngineImpl : public EngineBase {
 };
 
 static void fz_lock_context_cs(void* user, int lock) {
-    XpsEngineImpl* e = (XpsEngineImpl*)user;
+    EngineXps* e = (EngineXps*)user;
     EnterCriticalSection(&e->mutexes[lock]);
 }
 
 static void fz_unlock_context_cs(void* user, int lock) {
-    XpsEngineImpl* e = (XpsEngineImpl*)user;
+    EngineXps* e = (EngineXps*)user;
     LeaveCriticalSection(&e->mutexes[lock]);
 }
 
@@ -286,7 +286,7 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
     fz_set_error_callback(ctx, fz_print_cb, nullptr);
 }
 
-XpsEngineImpl::XpsEngineImpl() {
+EngineXps::EngineXps() {
     kind = kindEngineXps;
     defaultFileExt = L".xps";
     fileDPI = 72.0f;
@@ -306,7 +306,7 @@ XpsEngineImpl::XpsEngineImpl() {
     installFitzErrorCallbacks(ctx);
 }
 
-XpsEngineImpl::~XpsEngineImpl() {
+EngineXps::~EngineXps() {
     EnterCriticalSection(&pagesAccess);
     EnterCriticalSection(ctxAccess);
 
@@ -348,7 +348,7 @@ XpsEngineImpl::~XpsEngineImpl() {
     DeleteCriticalSection(&pagesAccess);
 }
 
-EngineBase* XpsEngineImpl::Clone() {
+EngineBase* EngineXps::Clone() {
     ScopedCritSec scope(ctxAccess);
 
     // TODO: we used to support cloning streams
@@ -358,7 +358,7 @@ EngineBase* XpsEngineImpl::Clone() {
         return false;
     }
 
-    XpsEngineImpl* clone = new XpsEngineImpl();
+    EngineXps* clone = new EngineXps();
     bool ok = clone->Load(FileName());
     if (!ok) {
         delete clone;
@@ -370,7 +370,7 @@ EngineBase* XpsEngineImpl::Clone() {
     return clone;
 }
 
-bool XpsEngineImpl::Load(const WCHAR* fileName) {
+bool EngineXps::Load(const WCHAR* fileName) {
     AssertCrash(!FileName() && !_doc && !_docStream && ctx);
     SetFileName(fileName);
     if (!ctx)
@@ -394,7 +394,7 @@ bool XpsEngineImpl::Load(const WCHAR* fileName) {
     return LoadFromStream(stm);
 }
 
-bool XpsEngineImpl::Load(IStream* stream) {
+bool EngineXps::Load(IStream* stream) {
     AssertCrash(!_doc && !_docStream && ctx);
     if (!ctx)
         return false;
@@ -409,7 +409,7 @@ bool XpsEngineImpl::Load(IStream* stream) {
     return LoadFromStream(stm);
 }
 
-bool XpsEngineImpl::LoadFromStream(fz_stream* stm) {
+bool EngineXps::LoadFromStream(fz_stream* stm) {
     if (!stm) {
         return false;
     }
@@ -468,12 +468,12 @@ bool XpsEngineImpl::LoadFromStream(fz_stream* stm) {
     return true;
 }
 
-FzPageInfo* XpsEngineImpl::GetFzPageInfo(int pageNo, bool failIfBusy) {
+FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
     GetFzPage(pageNo, failIfBusy);
     return _pages[pageNo - 1];
 }
 
-fz_page* XpsEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
+fz_page* EngineXps::GetFzPage(int pageNo, bool failIfBusy) {
     ScopedCritSec scope(&pagesAccess);
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
@@ -546,7 +546,7 @@ fz_page* XpsEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
     return page;
 }
 
-int XpsEngineImpl::GetPageNo(fz_page* page) {
+int EngineXps::GetPageNo(fz_page* page) {
     for (auto& pageInfo : _pages) {
         if (pageInfo->page == page) {
             return pageInfo->pageNo;
@@ -555,12 +555,12 @@ int XpsEngineImpl::GetPageNo(fz_page* page) {
     return 0;
 }
 
-RectD XpsEngineImpl::PageMediabox(int pageNo) {
+RectD EngineXps::PageMediabox(int pageNo) {
     FzPageInfo* pi = _pages[pageNo - 1];
     return pi->mediabox;
 }
 
-RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
+RectD EngineXps::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
 
@@ -596,7 +596,7 @@ RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     return rect2.Intersect(mediabox);
 }
 
-RectD XpsEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineXps::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse) {
         ctm = fz_invert_matrix(ctm);
@@ -606,7 +606,7 @@ RectD XpsEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     return fz_rect_to_RectD(rect2);
 }
 
-RenderedBitmap* XpsEngineImpl::RenderPage(RenderPageArgs& args) {
+RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
     FzPageInfo* pageInfo = GetFzPageInfo(args.pageNo);
     fz_page* page = pageInfo->page;
     if (!page) {
@@ -677,7 +677,7 @@ RenderedBitmap* XpsEngineImpl::RenderPage(RenderPageArgs& args) {
     return bitmap;
 }
 
-std::string_view XpsEngineImpl::GetFileData() {
+std::string_view EngineXps::GetFileData() {
     std::string_view res;
     ScopedCritSec scope(ctxAccess);
 
@@ -700,7 +700,7 @@ std::string_view XpsEngineImpl::GetFileData() {
     return file::ReadFile(path);
 }
 
-bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EngineXps::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     AutoFree d = GetFileData();
@@ -717,7 +717,7 @@ bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots)
     return CopyFileW(path, dstPath, FALSE);
 }
 
-WCHAR* XpsEngineImpl::ExtractFontList() {
+WCHAR* EngineXps::ExtractFontList() {
     // load and parse all pages
     for (int i = 1; i <= PageCount(); i++) {
         GetFzPageInfo(i);
@@ -742,7 +742,7 @@ WCHAR* XpsEngineImpl::ExtractFontList() {
     return fonts.Join(L"\n");
 }
 
-WCHAR* XpsEngineImpl::GetProperty(DocumentProperty prop) {
+WCHAR* EngineXps::GetProperty(DocumentProperty prop) {
     if (DocumentProperty::FontList == prop) {
         return ExtractFontList();
     }
@@ -766,7 +766,7 @@ WCHAR* XpsEngineImpl::GetProperty(DocumentProperty prop) {
     }
 };
 
-void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+void EngineXps::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread
     ScopedCritSec scope(ctxAccess);
     if (list) {
@@ -776,12 +776,12 @@ void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     }
 }
 
-PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
+PageElement* EngineXps::GetElementAtPos(int pageNo, PointD pt) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
-Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
+Vec<PageElement*>* EngineXps::GetElements(int pageNo) {
     fz_page* page = GetFzPage(pageNo, true);
     if (!page) {
         return nullptr;
@@ -790,14 +790,14 @@ Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
     return FzGetElements(pageInfo);
 }
 
-RenderedBitmap* XpsEngineImpl::GetImageForPageElement(PageElement* pel) {
+RenderedBitmap* EngineXps::GetImageForPageElement(PageElement* pel) {
     auto r = pel->rect;
     int pageNo = pel->pageNo;
     int imageID = pel->imageID;
     return GetPageImage(pageNo, r, imageID);
 }
 
-WCHAR* XpsEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
+WCHAR* EngineXps::ExtractPageText(int pageNo, RectI** coordsOut) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_stext_page* stext = pageInfo->stext;
     if (!stext) {
@@ -808,7 +808,7 @@ WCHAR* XpsEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
     return content;
 }
 
-RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
+RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     if (!pageInfo->page) {
         return nullptr;
@@ -839,7 +839,7 @@ RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     return bmp;
 }
 
-PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* nameW) {
+PageDestination* EngineXps::GetNamedDest(const WCHAR* nameW) {
     AutoFree name = strconv::WstrToUtf8(nameW);
     if (!str::StartsWith(name, "#")) {
         name.Set(str::Join("#", name));
@@ -855,7 +855,7 @@ PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* nameW) {
     return nullptr;
 }
 
-TocItem* XpsEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter) {
+TocItem* EngineXps::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter) {
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
 
@@ -895,7 +895,7 @@ TocItem* XpsEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& 
     return root;
 }
 
-TocTree* XpsEngineImpl::GetToc() {
+TocTree* EngineXps::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -909,7 +909,7 @@ TocTree* XpsEngineImpl::GetToc() {
     return tocTree;
 }
 
-bool XpsEngineImpl::HasClipOptimizations(int pageNo) {
+bool EngineXps::HasClipOptimizations(int pageNo) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
     if (!pageInfo) {
         return false;
@@ -926,8 +926,8 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo) {
     return true;
 }
 
-EngineBase* XpsEngineImpl::CreateFromFile(const WCHAR* fileName) {
-    XpsEngineImpl* engine = new XpsEngineImpl();
+EngineBase* EngineXps::CreateFromFile(const WCHAR* fileName) {
+    EngineXps* engine = new EngineXps();
     if (!engine || !fileName || !engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -935,8 +935,8 @@ EngineBase* XpsEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-EngineBase* XpsEngineImpl::CreateFromStream(IStream* stream) {
-    XpsEngineImpl* engine = new XpsEngineImpl();
+EngineBase* EngineXps::CreateFromStream(IStream* stream) {
+    EngineXps* engine = new EngineXps();
     if (!engine->Load(stream)) {
         delete engine;
         return nullptr;
@@ -968,9 +968,9 @@ bool IsXpsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateXpsEngineFromFile(const WCHAR* fileName) {
-    return XpsEngineImpl::CreateFromFile(fileName);
+    return EngineXps::CreateFromFile(fileName);
 }
 
 EngineBase* CreateXpsEngineFromStream(IStream* stream) {
-    return XpsEngineImpl::CreateFromStream(stream);
+    return EngineXps::CreateFromStream(stream);
 }
