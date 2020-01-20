@@ -58,3 +58,10 @@ bool gWithTocEditor = false;
 #endif
 
 bool gIsRaMicroBuild = false;
+
+const WCHAR* getAppName() {
+    if (gIsRaMicroBuild) {
+        return L"RA-MICRO PDF Viewer";
+    }
+    return L"SumatraPDF";
+}

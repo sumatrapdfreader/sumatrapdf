@@ -6,8 +6,9 @@
 #include "utils/HtmlParserLookup.h"
 #include "mui/Mui.h"
 #include "utils/WinUtil.h"
-// ui
 #include "SumatraPDF.h"
+
+#include "SumatraConfig.h"
 #include "resource.h"
 #include "SumatraAbout2.h"
 #include "Translations.h"
@@ -276,7 +277,7 @@ static void DestroyAboutMuiWindow() {
 static void CopyAboutInfoToClipboard(HWND hwnd) {
     UNUSED(hwnd);
     str::WStr info(512);
-    info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, VERSION_TXT);
+    info.AppendFmt(L"%s %s\r\n", getAppName(), VERSION_TXT);
     for (size_t i = info.size() - 2; i > 0; i--) {
         info.Append('-');
     }

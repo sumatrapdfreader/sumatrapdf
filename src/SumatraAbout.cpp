@@ -64,8 +64,6 @@
 #define GIT_COMMIT_ID_STR TEXT(QM(GIT_COMMIT_ID))
 #endif
 
-#define RA_MICRO_NAME L"RA-MICRO PDF Viewer"
-
 // TODO: replace this link with a better one where license information is nicely collected/linked
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
 #define URL_LICENSE L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
@@ -122,13 +120,6 @@ static Vec<StaticLinkInfo> gLinkInfo;
 #define COL3 RGB(93, 160, 40)
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
-
-static const WCHAR* getAppName() {
-    if (gIsRaMicroBuild) {
-        return RA_MICRO_NAME;
-    }
-    return APP_NAME_STR;
-}
 
 static void DrawAppName(HDC hdc, PointI pt) {
     const WCHAR* txt = getAppName();

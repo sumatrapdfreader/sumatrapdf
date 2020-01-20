@@ -8,19 +8,20 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/CryptoUtil.h"
-#include "AppTools.h"
 #include "utils/DirIter.h"
 
+#include "AppTools.h"
+#include "SumatraConfig.h"
 #include "Translations.h"
 #include "Version.h"
-
-#define REG_PATH_UNINST L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP_NAME_STR
 
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetInstallationDir() in Installer.cpp
-    AutoFreeWstr installedPath(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    const WCHAR* appName = getAppName();
+    AutoFreeWstr regPathUninst = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
+    AutoFreeWstr installedPath = ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, regPathUninst, L"InstallLocation");
     if (!installedPath) {
         return false;
     }
@@ -101,7 +102,8 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     if (!path) {
         return nullptr;
     }
-    path = path::Join(path, APP_NAME_STR);
+    const WCHAR* appName = getAppName();
+    path = path::Join(path, appName);
     if (!path) {
         return nullptr;
     }
@@ -172,7 +174,6 @@ Note: When making changes below, please also adjust WriteExtendedFileExtensionIn
 UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 
 */
-#define REG_CLASSES_APP L"Software\\Classes\\" APP_NAME_STR
 #define REG_CLASSES_PDF L"Software\\Classes\\.pdf"
 
 #define REG_WIN_CURR L"Software\\Microsoft\\Windows\\CurrentVersion"
@@ -180,42 +181,66 @@ UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 
 void DoAssociateExeWithPdfExtension(HKEY hkey) {
     AutoFreeWstr exePath(GetExePath());
-    if (!exePath)
+    if (!exePath) {
         return;
+    }
+
+    AutoFreeWstr REG_CLASSES_APP = str::Join(L"Software\\Classes\\", getAppName());
 
     AutoFreeWstr prevHandler(nullptr);
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
-    if (prevHandler && !str::Eq(prevHandler, APP_NAME_STR))
+
+    bool ok = false;
+    const WCHAR* appName = getAppName();
+    if (prevHandler && !str::Eq(prevHandler, appName)) {
         WriteRegStr(hkey, REG_CLASSES_APP, L"previous.pdf", prevHandler);
+    }
 
     WriteRegStr(hkey, REG_CLASSES_APP, nullptr, _TR("PDF Document"));
-    WCHAR* icon_path = str::Join(exePath, L",1");
-    WriteRegStr(hkey, REG_CLASSES_APP L"\\DefaultIcon", nullptr, icon_path);
-    free(icon_path);
+    AutoFreeWstr icon_path = str::Join(exePath, L",1");
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_APP, L"\\DefaultIcon");
+        WriteRegStr(hkey, key, nullptr, icon_path);
+    }
 
-    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell", nullptr, L"open");
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_APP, L"\\shell");
+        WriteRegStr(hkey, key, nullptr, L"open");
+    }
 
-    AutoFreeWstr cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get())); // "${exePath}" "%1" %*
-    bool ok = WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\open\\command", nullptr, cmdPath);
+    // "${exePath}" "%1" %*
+    AutoFreeWstr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get());
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_APP, L"\\shell\\open\\command");
+        ok = WriteRegStr(hkey, key, nullptr, cmdPath);
+    }
 
-    // also register for printing
-    cmdPath.Set(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.Get())); // "${exePath}" -print-to-default "%1"
-    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\print\\command", nullptr, cmdPath);
+    // register for printing: "${exePath}" -print-to-default "%1"
+    cmdPath.Set(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.Get()));
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_APP, L"\\shell\\print\\command");
+        WriteRegStr(hkey, key, nullptr, cmdPath);
+    }
 
-    // also register for printing to specific printer
-    cmdPath.Set(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.Get())); // "${exePath}" -print-to "%2" "%1"
-    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\printto\\command", nullptr, cmdPath);
+    // register for printing to specific printer:
+    // "${exePath}" -print-to "%2" "%1"
+    cmdPath.Set(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.Get()));
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_APP, L"\\shell\\printto\\command");
+        WriteRegStr(hkey, key, nullptr, cmdPath);
+    };
 
     // Only change the association if we're confident, that we've registered ourselves well enough
-    if (!ok)
+    if (!ok) {
         return;
+    }
 
-    WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, APP_NAME_STR);
+    WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, appName);
     // TODO: also add SumatraPDF to the Open With lists for the other supported extensions?
-    WriteRegStr(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR, L"");
+    WriteRegStr(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", appName, L"");
     if (hkey == HKEY_CURRENT_USER) {
-        WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, L"Progid", APP_NAME_STR);
+        WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, L"Progid", appName);
         CrashIf(hkey == 0); // to appease prefast
         SHDeleteValue(hkey, REG_EXPLORER_PDF_EXT, L"Application");
         DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT L"\\UserChoice", true);
@@ -226,40 +251,56 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
 // Sumatra with .pdf files exist and have the right values
 bool IsExeAssociatedWithPdfExtension() {
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
+    const WCHAR* appName = getAppName();
+
     AutoFreeWstr tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Progid"));
-    if (tmp && !str::Eq(tmp, APP_NAME_STR))
+    if (tmp && !str::Eq(tmp, appName)) {
         return false;
+    }
 
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR.exe
     tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Application"));
-    if (tmp && !str::EqI(tmp, APP_NAME_STR L".exe"))
+    AutoFreeWstr exeName = str::Join(appName, L".exe");
+    if (tmp && !str::EqI(tmp, exeName)) {
         return false;
+    }
 
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
     tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", L"Progid"));
-    if (tmp && !str::Eq(tmp, APP_NAME_STR))
+    if (tmp && !str::Eq(tmp, appName)) {
         return false;
+    }
 
     // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
     tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr));
-    if (!str::Eq(tmp, APP_NAME_STR))
+    if (!str::Eq(tmp, appName)) {
         return false;
+    }
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR L"\\shell", nullptr));
-    if (!str::EqI(tmp, L"open"))
+    {
+        AutoFreeWstr key = str::Join(appName, L"\\shell");
+        tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+    }
+    if (!str::EqI(tmp, L"open")) {
         return false;
+    }
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR L"\\shell\\open\\command", nullptr));
-    if (!tmp)
+    {
+        AutoFreeWstr key = str::Join(appName, L"\\shell\\open\\command");
+        tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+    }
+    if (!tmp) {
         return false;
+    }
 
     WStrVec argList;
     ParseCmdLine(tmp, argList);
     AutoFreeWstr exePath(GetExePath());
-    if (!exePath || !argList.Contains(L"%1") || !str::Find(tmp, L"\"%1\""))
+    if (!exePath || !argList.Contains(L"%1") || !str::Find(tmp, L"\"%1\"")) {
         return false;
+    }
 
     return path::IsSame(exePath, argList.at(0));
 }
@@ -327,8 +368,9 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
 
     for (int i = 0; i < dimof(editor_rules); i++) {
         AutoFreeWstr path(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
-        if (!path)
+        if (!path) {
             continue;
+        }
 
         AutoFreeWstr exePath;
         if (editor_rules[i].Type == SiblingPath) {
