@@ -157,11 +157,12 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
                 logf("parseBookmarksLine: got 'font' without value in line '%s'\n", origLine.data());
                 return nullptr;
             }
-            if (str::EqI(val, "bold")) {
+            // TODO: for max correctness should split by "," but this works just as well
+            if (str::Contains(val, "bold")) {
                 bit::Set(res->fontFlags, fontBitBold);
                 continue;
             }
-            if (str::EqI(val, "italic")) {
+            if (str::Contains(val, "italic")) {
                 bit::Set(res->fontFlags, fontBitItalic);
                 continue;
             }
