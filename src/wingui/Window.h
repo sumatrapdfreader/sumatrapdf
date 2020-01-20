@@ -30,6 +30,20 @@ struct WndProcArgs {
         n.lparam = lp;    \
     }
 
+struct CopyWndProcArgs {
+    WndProcArgs* dst = nullptr;
+    WndProcArgs* src = nullptr;
+
+    CopyWndProcArgs() = delete;
+
+    CopyWndProcArgs(CopyWndProcArgs&) = delete;
+    CopyWndProcArgs(CopyWndProcArgs&&) = delete;
+    CopyWndProcArgs& operator=(CopyWndProcArgs&) = delete;
+
+    CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src);
+    ~CopyWndProcArgs();
+};
+
 typedef std::function<void(WndProcArgs*)> MsgFilter;
 
 struct SizeArgs : WndProcArgs {
@@ -82,6 +96,7 @@ struct MouseWheelArgs : WndProcArgs {
 };
 
 typedef std::function<void(MouseWheelArgs*)> MouseWheelHandler;
+
 
 extern Kind kindWindowBase;
 

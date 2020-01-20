@@ -105,35 +105,6 @@ static void SetTreeItemState(UINT uState, TreeItemState& state) {
     state.isChecked = n != 0;
 }
 
-struct CopyWndProcArgs {
-    WndProcArgs* dst = nullptr;
-    WndProcArgs* src = nullptr;
-
-    CopyWndProcArgs() = delete;
-
-    CopyWndProcArgs(CopyWndProcArgs&) = delete;
-    CopyWndProcArgs(CopyWndProcArgs&&) = delete;
-    CopyWndProcArgs& operator=(CopyWndProcArgs&) = delete;
-
-    CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src);
-    ~CopyWndProcArgs();
-};
-
-CopyWndProcArgs::CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src) {
-    this->dst = dst;
-    this->src = src;
-    dst->hwnd = src->hwnd;
-    dst->msg = src->msg;
-    dst->lparam = src->lparam;
-    dst->wparam = src->wparam;
-    dst->w = src->w;
-}
-
-CopyWndProcArgs::~CopyWndProcArgs() {
-    src->didHandle = dst->didHandle;
-    src->result = dst->result;
-}
-
 void TreeCtrl::WndProcParent(WndProcArgs* args) {
     UINT msg = args->msg;
     if (msg != WM_NOTIFY) {

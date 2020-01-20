@@ -1,7 +1,15 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-typedef std::function<void(int, std::string_view)> DropDownSelectionChangedHandler;
+struct DropDownCtrl;
+
+struct DropDownSelectionChangedArgs : WndProcArgs {
+    DropDownCtrl* dropDown = nullptr;
+    int idx = 0;
+    std::string_view item;
+};
+
+typedef std::function<void(DropDownSelectionChangedArgs*)> DropDownSelectionChangedHandler;
 
 struct DropDownCtrl : public WindowBase {
     Vec<std::string_view> items;

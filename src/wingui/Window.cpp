@@ -24,6 +24,22 @@ UINT_PTR NextSubclassId() {
     return g_subclassId;
 }
 
+
+CopyWndProcArgs::CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src) {
+    this->dst = dst;
+    this->src = src;
+    dst->hwnd = src->hwnd;
+    dst->msg = src->msg;
+    dst->lparam = src->lparam;
+    dst->wparam = src->wparam;
+    dst->w = src->w;
+}
+
+CopyWndProcArgs::~CopyWndProcArgs() {
+    src->didHandle = dst->didHandle;
+    src->result = dst->result;
+}
+
 void HwndSetText(HWND hwnd, std::string_view s) {
     // can be called before a window is created
     if (!hwnd) {

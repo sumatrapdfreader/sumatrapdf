@@ -98,7 +98,9 @@ static ILayout* CreateEditLayout(HWND parent, std::string_view s) {
 
 static char* ddItems[3] = {"foo", "another one", "bar"};
 
-static void onDropDownSelected(int idx, std::string_view s) {
+static void onDropDownSelected(DropDownSelectionChangedArgs* args) {
+    int idx = args->idx;
+    std::string_view s = args->item;
     dbglogf("drop down selection changed: %d, %s\n", idx, s.data());
 }
 

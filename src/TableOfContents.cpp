@@ -390,7 +390,7 @@ static MenuDef contextMenuDef[] = {
     {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
     {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
 };
-// clang-format on
+// clang-format on      
 
 static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     int pageNo = 0;
@@ -414,7 +414,7 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     // args->filePath = str::Dup(tab->filePath);
 
     VbkmFile vbkm;
-    AutoFree filePath = strconv::WstrToUtf8(tab->filePath);
+    AutoFreeStr filePath = strconv::WstrToUtf8(tab->filePath);
     if (str::EndsWithI(tab->filePath, L".vbkm")) {
         LoadVbkmFile(filePath, vbkm);
         int n = vbkm.vbkms.isize();
@@ -528,7 +528,7 @@ static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::strin
 
 // TODO: temporary
 static bool LoadAlterenativeBookmarks(const WCHAR* baseFileName, VbkmFile& vbkm) {
-    AutoFree tmp = strconv::WstrToUtf8(baseFileName);
+    AutoFreeStr tmp = strconv::WstrToUtf8(baseFileName);
     return LoadAlterenativeBookmarks(tmp.as_view(), vbkm);
 }
 
@@ -551,6 +551,14 @@ static bool ShouldCustomDraw(WindowInfo* win) {
 }
 
 void OnTocCustomDraw(TreeItemCustomDrawArgs*);
+
+static void dropDownSelectionChanged(DropDownSelectionChangedArgs* args) {
+    WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
+    TabInfo* tab = win->currentTab;
+    CrashIf(!tab);
+    AltBookmarksChanged(win, tab, args->idx, args->item);
+    args->didHandle = true;
+}
 
 void LoadTocTree(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
@@ -585,9 +593,7 @@ void LoadTocTree(WindowInfo* win) {
         delete vbkm;
     }
 
-    win->altBookmarks->onDropDownSelectionChanged = [=](int idx, std::string_view s) {
-        AltBookmarksChanged(win, tab, idx, s);
-    };
+    win->altBookmarks->onDropDownSelectionChanged = dropDownSelectionChanged;
 
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script
