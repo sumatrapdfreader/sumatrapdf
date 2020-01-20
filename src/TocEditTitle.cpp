@@ -146,8 +146,8 @@ static void createMainLayout(EditTitleWindow* win) {
         auto c = new CheckboxCtrl(parent);
         win->checkboxBold = c;
         c->SetText("bold");
-        c->SetIsChecked(win->initialIsBold);
         c->Create();
+        c->SetIsChecked(win->initialIsBold);
         auto l = NewCheckboxLayout(c);
         vbox->addChild(l);
     }
@@ -156,8 +156,8 @@ static void createMainLayout(EditTitleWindow* win) {
         auto c = new CheckboxCtrl(parent);
         win->checkboxItalic = c;
         c->SetText("italic");
-        c->SetIsChecked(win->initialIsItalic);
         c->Create();
+        c->SetIsChecked(win->initialIsItalic);
         auto l = NewCheckboxLayout(c);
         vbox->addChild(l);
     }

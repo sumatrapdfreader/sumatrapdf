@@ -27,6 +27,7 @@ static CheckState GetButtonCheckState(HWND hwnd) {
 }
 
 static void SetButtonCheckState(HWND hwnd, CheckState newState) {
+    CrashIf(!hwnd);
     Button_SetCheck(hwnd, newState);
 }
 
@@ -69,6 +70,8 @@ SIZE CheckboxCtrl::GetIdealSize() {
 }
 
 void CheckboxCtrl::SetCheckState(CheckState newState) {
+    // TODO: maybe remember if called before hwnd is created
+    CrashIf(!hwnd);
     SetButtonCheckState(hwnd, newState);
 }
 
@@ -78,10 +81,14 @@ CheckState CheckboxCtrl::GetCheckState() const {
 
 void CheckboxCtrl::SetIsChecked(bool isChecked) {
     CheckState newState = isChecked ? CheckState::Checked : CheckState::Unchecked;
+    // TODO: maybe remember if called before hwnd is created
+    CrashIf(!hwnd);
     SetButtonCheckState(hwnd, newState);
 }
 
 bool CheckboxCtrl::IsChecked() const {
+    // TODO: maybe make work before hwnd is created
+    CrashIf(!hwnd);
     auto state = GetCheckState();
     return state == CheckState::Checked;
 }
