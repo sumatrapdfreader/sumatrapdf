@@ -888,7 +888,7 @@ void EbookController::GetDisplayState(DisplayState* ds) {
 
     // don't modify any of the other DisplayState values
     // as long as they're not used, so that the same
-    // DisplayState settings can also be used for EbookEngine;
+    // DisplayState settings can also be used for EngineEbook;
     // we get reasonable defaults from DisplayState's constructor anyway
     ds->reparseIdx = currPageReparseIdx;
     str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));

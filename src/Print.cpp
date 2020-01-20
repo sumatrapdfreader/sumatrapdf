@@ -515,7 +515,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         return;
     }
     if (win->AsEbook()) {
-        // TODO: use EbookEngine for printing?
+        // TODO: use EngineEbook for printing?
         return;
     }
 

@@ -75,10 +75,10 @@ class EbookAbortCookie : public AbortCookie {
     }
 };
 
-class EbookEngine : public EngineBase {
+class EngineEbook : public EngineBase {
   public:
-    EbookEngine();
-    virtual ~EbookEngine();
+    EngineEbook();
+    virtual ~EngineEbook();
 
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
@@ -171,7 +171,7 @@ static TocItem* newEbookTocItem(TocItem* parent, const WCHAR* title, PageDestina
     return res;
 }
 
-EbookEngine::EbookEngine() {
+EngineEbook::EngineEbook() {
     supportsAnnotations = true;
     supportsAnnotationsForSaving = false;
     pageCount = 0;
@@ -182,7 +182,7 @@ EbookEngine::EbookEngine() {
     InitializeCriticalSection(&pagesAccess);
 }
 
-EbookEngine::~EbookEngine() {
+EngineEbook::~EngineEbook() {
     EnterCriticalSection(&pagesAccess);
 
     if (pages) {
@@ -194,19 +194,19 @@ EbookEngine::~EbookEngine() {
     DeleteCriticalSection(&pagesAccess);
 }
 
-RectD EbookEngine::PageMediabox(int pageNo) {
+RectD EngineEbook::PageMediabox(int pageNo) {
     UNUSED(pageNo);
     return pageRect;
 }
 
-RectD EbookEngine::PageContentBox(int pageNo, RenderTarget target) {
+RectD EngineEbook::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
     RectD mbox = PageMediabox(pageNo);
     mbox.Inflate(-pageBorder, -pageBorder);
     return mbox;
 }
 
-std::string_view EbookEngine::GetFileData() {
+std::string_view EngineEbook::GetFileData() {
     const WCHAR* fileName = FileName();
     if (!fileName) {
         return {};
@@ -214,7 +214,7 @@ std::string_view EbookEngine::GetFileData() {
     return file::ReadFile(fileName);
 }
 
-bool EbookEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EngineEbook::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     const WCHAR* fileName = FileName();
     if (!fileName) {
@@ -225,28 +225,28 @@ bool EbookEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
 }
 
 // make RenderCache request larger tiles than per default
-bool EbookEngine::HasClipOptimizations(int pageNo) {
+bool EngineEbook::HasClipOptimizations(int pageNo) {
     UNUSED(pageNo);
     return false;
 }
 
-bool EbookEngine::BenchLoadPage(int pageNo) {
+bool EngineEbook::BenchLoadPage(int pageNo) {
     UNUSED(pageNo);
     return true;
 }
 
-void EbookEngine::GetTransform(Matrix& m, float zoom, int rotation) {
+void EngineEbook::GetTransform(Matrix& m, float zoom, int rotation) {
     GetBaseTransform(m, pageRect.ToGdipRectF(), zoom, rotation);
 }
 
-Vec<DrawInstr>* EbookEngine::GetHtmlPage(int pageNo) {
+Vec<DrawInstr>* EngineEbook::GetHtmlPage(int pageNo) {
     CrashIf(pageNo < 1 || PageCount() < pageNo);
     if (pageNo < 1 || PageCount() < pageNo)
         return nullptr;
     return &pages->at(pageNo - 1)->instructions;
 }
 
-bool EbookEngine::ExtractPageAnchors() {
+bool EngineEbook::ExtractPageAnchors() {
     ScopedCritSec scope(&pagesAccess);
 
     DrawInstr* baseAnchor = nullptr;
@@ -273,7 +273,7 @@ bool EbookEngine::ExtractPageAnchors() {
     return true;
 }
 
-RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineEbook::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     UNUSED(pageNo);
     geomutil::RectT<REAL> rcF = rect.Convert<REAL>();
     auto p1 = PointF(rcF.x, rcF.y);
@@ -332,7 +332,7 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
     }
 }
 
-RenderedBitmap* EbookEngine::RenderPage(RenderPageArgs& args) {
+RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
     auto zoom = args.zoom;
     auto rotation = args.rotation;
@@ -392,7 +392,7 @@ static RectI GetInstrBbox(DrawInstr& instr, float pageBorder) {
     return bbox.Round();
 }
 
-WCHAR* EbookEngine::ExtractPageText(int pageNo, RectI** coordsOut) {
+WCHAR* EngineEbook::ExtractPageText(int pageNo, RectI** coordsOut) {
     const WCHAR* lineSep = L"\n";
     ScopedCritSec scope(&pagesAccess);
 
@@ -470,7 +470,7 @@ WCHAR* EbookEngine::ExtractPageText(int pageNo, RectI** coordsOut) {
     return content.StealData();
 }
 
-void EbookEngine::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+void EngineEbook::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     ScopedCritSec scope(&pagesAccess);
     if (list) {
         userAnnots = *list;
@@ -479,7 +479,7 @@ void EbookEngine::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     }
 }
 
-PageElement* EbookEngine::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
+PageElement* EngineEbook::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
     AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
         return newEbookLink(link, rect, nullptr, pageNo);
@@ -500,7 +500,7 @@ PageElement* EbookEngine::CreatePageLink(DrawInstr* link, RectI rect, int pageNo
     return newEbookLink(link, rect, dest, pageNo);
 }
 
-Vec<PageElement*>* EbookEngine::GetElements(int pageNo) {
+Vec<PageElement*>* EngineEbook::GetElements(int pageNo) {
     Vec<PageElement*>* els = new Vec<PageElement*>();
 
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
@@ -534,7 +534,7 @@ static RenderedBitmap* getImageFromData(ImageData id) {
     return new RenderedBitmap(hbmp, size);
 }
 
-RenderedBitmap* EbookEngine::GetImageForPageElement(PageElement* el) {
+RenderedBitmap* EngineEbook::GetImageForPageElement(PageElement* el) {
     int pageNo = el->pageNo;
     int idx = el->imageID;
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
@@ -543,7 +543,7 @@ RenderedBitmap* EbookEngine::GetImageForPageElement(PageElement* el) {
     return getImageFromData(i.img);
 }
 
-PageElement* EbookEngine::GetElementAtPos(int pageNo, PointD pt) {
+PageElement* EngineEbook::GetElementAtPos(int pageNo, PointD pt) {
     Vec<PageElement*>* els = GetElements(pageNo);
     if (!els)
         return nullptr;
@@ -561,7 +561,7 @@ PageElement* EbookEngine::GetElementAtPos(int pageNo, PointD pt) {
     return el;
 }
 
-PageDestination* EbookEngine::GetNamedDest(const WCHAR* name) {
+PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
     AutoFree name_utf8(strconv::WstrToUtf8(name));
     const char* id = name_utf8.Get();
     if (str::FindChar(id, '#')) {
@@ -612,7 +612,7 @@ PageDestination* EbookEngine::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-WCHAR* EbookEngine::ExtractFontList() {
+WCHAR* EngineEbook::ExtractFontList() {
     ScopedCritSec scope(&pagesAccess);
 
     Vec<mui::CachedFont*> seenFonts;
@@ -719,10 +719,10 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
 
 /* EngineBase for handling EPUB documents */
 
-class EpubEngineImpl : public EbookEngine {
+class EngineEpub : public EngineEbook {
   public:
-    EpubEngineImpl();
-    virtual ~EpubEngineImpl();
+    EngineEpub();
+    virtual ~EngineEpub();
     EngineBase* Clone() override;
 
     std::string_view GetFileData() override;
@@ -747,12 +747,12 @@ class EpubEngineImpl : public EbookEngine {
     bool FinishLoading();
 };
 
-EpubEngineImpl::EpubEngineImpl() : EbookEngine() {
+EngineEpub::EngineEpub() : EngineEbook() {
     kind = kindEngineEpub;
     defaultFileExt = L".epub";
 }
 
-EpubEngineImpl::~EpubEngineImpl() {
+EngineEpub::~EngineEpub() {
     delete doc;
     delete tocTree;
     if (stream) {
@@ -760,7 +760,7 @@ EpubEngineImpl::~EpubEngineImpl() {
     }
 }
 
-EngineBase* EpubEngineImpl::Clone() {
+EngineBase* EngineEpub::Clone() {
     if (stream) {
         return CreateFromStream(stream);
     }
@@ -770,7 +770,7 @@ EngineBase* EpubEngineImpl::Clone() {
     return nullptr;
 }
 
-bool EpubEngineImpl::Load(const WCHAR* fileName) {
+bool EngineEpub::Load(const WCHAR* fileName) {
     SetFileName(fileName);
     if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
@@ -784,14 +784,14 @@ bool EpubEngineImpl::Load(const WCHAR* fileName) {
     return FinishLoading();
 }
 
-bool EpubEngineImpl::Load(IStream* stream) {
+bool EngineEpub::Load(IStream* stream) {
     stream->AddRef();
     this->stream = stream;
     doc = EpubDoc::CreateFromStream(stream);
     return FinishLoading();
 }
 
-bool EpubEngineImpl::FinishLoading() {
+bool EngineEpub::FinishLoading() {
     if (!doc) {
         return false;
     }
@@ -822,12 +822,12 @@ bool EpubEngineImpl::FinishLoading() {
     return pageCount > 0;
 }
 
-std::string_view EpubEngineImpl::GetFileData() {
+std::string_view EngineEpub::GetFileData() {
     const WCHAR* fileName = FileName();
     return GetStreamOrFileData(stream, fileName);
 }
 
-bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EngineEpub::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
 
@@ -845,7 +845,7 @@ bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     return CopyFileW(fileName, dstPath, FALSE);
 }
 
-TocTree* EpubEngineImpl::GetToc() {
+TocTree* EngineEpub::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -859,8 +859,8 @@ TocTree* EpubEngineImpl::GetToc() {
     return tocTree;
 }
 
-EngineBase* EpubEngineImpl::CreateFromFile(const WCHAR* fileName) {
-    EpubEngineImpl* engine = new EpubEngineImpl();
+EngineBase* EngineEpub::CreateFromFile(const WCHAR* fileName) {
+    EngineEpub* engine = new EngineEpub();
     if (!engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -868,8 +868,8 @@ EngineBase* EpubEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-EngineBase* EpubEngineImpl::CreateFromStream(IStream* stream) {
-    EpubEngineImpl* engine = new EpubEngineImpl();
+EngineBase* EngineEpub::CreateFromStream(IStream* stream) {
+    EngineEpub* engine = new EngineEpub();
     if (!engine->Load(stream)) {
         delete engine;
         return nullptr;
@@ -886,22 +886,22 @@ bool IsEpubEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateEpubEngineFromFile(const WCHAR* fileName) {
-    return EpubEngineImpl::CreateFromFile(fileName);
+    return EngineEpub::CreateFromFile(fileName);
 }
 
 EngineBase* CreateEpubEngineFromStream(IStream* stream) {
-    return EpubEngineImpl::CreateFromStream(stream);
+    return EngineEpub::CreateFromStream(stream);
 }
 
 /* EngineBase for handling FictionBook2 documents */
 
-class Fb2EngineImpl : public EbookEngine {
+class EngineFb2 : public EngineEbook {
   public:
-    Fb2EngineImpl() : EbookEngine() {
+    EngineFb2() : EngineEbook() {
         kind = kindEngineFb2;
         defaultFileExt = L".fb2";
     }
-    virtual ~Fb2EngineImpl() {
+    virtual ~EngineFb2() {
         delete tocTree;
         delete doc;
     }
@@ -931,18 +931,18 @@ class Fb2EngineImpl : public EbookEngine {
     bool FinishLoading();
 };
 
-bool Fb2EngineImpl::Load(const WCHAR* fileName) {
+bool EngineFb2::Load(const WCHAR* fileName) {
     SetFileName(fileName);
     doc = Fb2Doc::CreateFromFile(fileName);
     return FinishLoading();
 }
 
-bool Fb2EngineImpl::Load(IStream* stream) {
+bool EngineFb2::Load(IStream* stream) {
     doc = Fb2Doc::CreateFromStream(stream);
     return FinishLoading();
 }
 
-bool Fb2EngineImpl::FinishLoading() {
+bool EngineFb2::FinishLoading() {
     if (!doc) {
         return false;
     }
@@ -969,7 +969,7 @@ bool Fb2EngineImpl::FinishLoading() {
     return pageCount > 0;
 }
 
-TocTree* Fb2EngineImpl::GetToc() {
+TocTree* EngineFb2::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -983,8 +983,8 @@ TocTree* Fb2EngineImpl::GetToc() {
     return tocTree;
 }
 
-EngineBase* Fb2EngineImpl::CreateFromFile(const WCHAR* fileName) {
-    Fb2EngineImpl* engine = new Fb2EngineImpl();
+EngineBase* EngineFb2::CreateFromFile(const WCHAR* fileName) {
+    EngineFb2* engine = new EngineFb2();
     if (!engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -992,8 +992,8 @@ EngineBase* Fb2EngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-EngineBase* Fb2EngineImpl::CreateFromStream(IStream* stream) {
-    Fb2EngineImpl* engine = new Fb2EngineImpl();
+EngineBase* EngineFb2::CreateFromStream(IStream* stream) {
+    EngineFb2* engine = new EngineFb2();
     if (!engine->Load(stream)) {
         delete engine;
         return nullptr;
@@ -1006,24 +1006,24 @@ bool IsFb2EngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateFb2EngineFromFile(const WCHAR* fileName) {
-    return Fb2EngineImpl::CreateFromFile(fileName);
+    return EngineFb2::CreateFromFile(fileName);
 }
 
 EngineBase* CreateFb2EngineFromStream(IStream* stream) {
-    return Fb2EngineImpl::CreateFromStream(stream);
+    return EngineFb2::CreateFromStream(stream);
 }
 
 /* EngineBase for handling Mobi documents */
 
 #include "MobiDoc.h"
 
-class MobiEngineImpl : public EbookEngine {
+class EngineMobi : public EngineEbook {
   public:
-    MobiEngineImpl() : EbookEngine() {
+    EngineMobi() : EngineEbook() {
         kind = kindEngineMobi;
         defaultFileExt = L".mobi";
     }
-    ~MobiEngineImpl() override {
+    ~EngineMobi() override {
         delete tocTree;
         delete doc;
     }
@@ -1054,18 +1054,18 @@ class MobiEngineImpl : public EbookEngine {
     bool FinishLoading();
 };
 
-bool MobiEngineImpl::Load(const WCHAR* fileName) {
+bool EngineMobi::Load(const WCHAR* fileName) {
     SetFileName(fileName);
     doc = MobiDoc::CreateFromFile(fileName);
     return FinishLoading();
 }
 
-bool MobiEngineImpl::Load(IStream* stream) {
+bool EngineMobi::Load(IStream* stream) {
     doc = MobiDoc::CreateFromStream(stream);
     return FinishLoading();
 }
 
-bool MobiEngineImpl::FinishLoading() {
+bool EngineMobi::FinishLoading() {
     if (!doc || PdbDocType::Mobipocket != doc->GetDocType()) {
         return false;
     }
@@ -1088,7 +1088,7 @@ bool MobiEngineImpl::FinishLoading() {
     return pageCount > 0;
 }
 
-PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
+PageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
     int filePos = _wtoi(name);
     if (filePos < 0 || 0 == filePos && *name != '0') {
         return nullptr;
@@ -1125,7 +1125,7 @@ PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
     return newSimpleDest(pageNo, rect);
 }
 
-TocTree* MobiEngineImpl::GetToc() {
+TocTree* EngineMobi::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1139,8 +1139,8 @@ TocTree* MobiEngineImpl::GetToc() {
     return tocTree;
 }
 
-EngineBase* MobiEngineImpl::CreateFromFile(const WCHAR* fileName) {
-    MobiEngineImpl* engine = new MobiEngineImpl();
+EngineBase* EngineMobi::CreateFromFile(const WCHAR* fileName) {
+    EngineMobi* engine = new EngineMobi();
     if (!engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -1148,8 +1148,8 @@ EngineBase* MobiEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-EngineBase* MobiEngineImpl::CreateFromStream(IStream* stream) {
-    MobiEngineImpl* engine = new MobiEngineImpl();
+EngineBase* EngineMobi::CreateFromStream(IStream* stream) {
+    EngineMobi* engine = new EngineMobi();
     if (!engine->Load(stream)) {
         delete engine;
         return nullptr;
@@ -1162,22 +1162,22 @@ bool IsMobiEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateMobiEngineFromFile(const WCHAR* fileName) {
-    return MobiEngineImpl::CreateFromFile(fileName);
+    return EngineMobi::CreateFromFile(fileName);
 }
 
 EngineBase* CreateMobiEngineFromStream(IStream* stream) {
-    return MobiEngineImpl::CreateFromStream(stream);
+    return EngineMobi::CreateFromStream(stream);
 }
 
 /* EngineBase for handling PalmDOC documents (and extensions such as TealDoc) */
 
-class PdbEngineImpl : public EbookEngine {
+class EnginePdb : public EngineEbook {
   public:
-    PdbEngineImpl() : EbookEngine() {
+    EnginePdb() : EngineEbook() {
         kind = kindEnginePdb;
         defaultFileExt = L".pdb";
     }
-    virtual ~PdbEngineImpl() {
+    virtual ~EnginePdb() {
         delete tocTree;
         delete doc;
     }
@@ -1204,7 +1204,7 @@ class PdbEngineImpl : public EbookEngine {
     bool Load(const WCHAR* fileName);
 };
 
-bool PdbEngineImpl::Load(const WCHAR* fileName) {
+bool EnginePdb::Load(const WCHAR* fileName) {
     SetFileName(fileName);
 
     doc = PalmDoc::CreateFromFile(fileName);
@@ -1231,7 +1231,7 @@ bool PdbEngineImpl::Load(const WCHAR* fileName) {
     return pageCount > 0;
 }
 
-TocTree* PdbEngineImpl::GetToc() {
+TocTree* EnginePdb::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1242,8 +1242,8 @@ TocTree* PdbEngineImpl::GetToc() {
     return tocTree;
 }
 
-EngineBase* PdbEngineImpl::CreateFromFile(const WCHAR* fileName) {
-    PdbEngineImpl* engine = new PdbEngineImpl();
+EngineBase* EnginePdb::CreateFromFile(const WCHAR* fileName) {
+    EnginePdb* engine = new EnginePdb();
     if (!engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -1256,7 +1256,7 @@ bool IsPdbEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreatePdbEngineFromFile(const WCHAR* fileName) {
-    return PdbEngineImpl::CreateFromFile(fileName);
+    return EnginePdb::CreateFromFile(fileName);
 }
 
 /* formatting extensions for CHM */
@@ -1385,15 +1385,15 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
 
 /* EngineBase for handling CHM documents */
 
-class ChmEngineImpl : public EbookEngine {
+class EngineChm : public EngineEbook {
   public:
-    ChmEngineImpl() : EbookEngine() {
+    EngineChm() : EngineEbook() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
         kind = kindEngineChm;
         defaultFileExt = L".chm";
     }
-    virtual ~ChmEngineImpl() {
+    virtual ~EngineChm() {
         delete dataCache;
         delete doc;
         delete tocTree;
@@ -1527,7 +1527,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
     }
 };
 
-bool ChmEngineImpl::Load(const WCHAR* fileName) {
+bool EngineChm::Load(const WCHAR* fileName) {
     SetFileName(fileName);
     doc = ChmDoc::CreateFromFile(fileName);
     if (!doc) {
@@ -1556,8 +1556,8 @@ bool ChmEngineImpl::Load(const WCHAR* fileName) {
     return pageCount > 0;
 }
 
-PageDestination* ChmEngineImpl::GetNamedDest(const WCHAR* name) {
-    PageDestination* dest = EbookEngine::GetNamedDest(name);
+PageDestination* EngineChm::GetNamedDest(const WCHAR* name) {
+    PageDestination* dest = EngineEbook::GetNamedDest(name);
     if (dest) {
         return dest;
     }
@@ -1566,13 +1566,13 @@ PageDestination* ChmEngineImpl::GetNamedDest(const WCHAR* name) {
         AutoFree urlUtf8(doc->ResolveTopicID(topicID));
         if (urlUtf8) {
             AutoFreeWstr url = strconv::Utf8ToWstr(urlUtf8.get());
-            dest = EbookEngine::GetNamedDest(url);
+            dest = EngineEbook::GetNamedDest(url);
         }
     }
     return dest;
 }
 
-TocTree* ChmEngineImpl::GetToc() {
+TocTree* EngineChm::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1601,8 +1601,8 @@ static PageDestination* newChmEmbeddedDest(const char* path) {
     return res;
 }
 
-PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
-    PageElement* linkEl = EbookEngine::CreatePageLink(link, rect, pageNo);
+PageElement* EngineChm::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
+    PageElement* linkEl = EngineEbook::CreatePageLink(link, rect, pageNo);
     if (linkEl) {
         return linkEl;
     }
@@ -1619,8 +1619,8 @@ PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int page
     return newEbookLink(link, rect, dest, pageNo);
 }
 
-EngineBase* ChmEngineImpl::CreateFromFile(const WCHAR* fileName) {
-    ChmEngineImpl* engine = new ChmEngineImpl();
+EngineBase* EngineChm::CreateFromFile(const WCHAR* fileName) {
+    EngineChm* engine = new EngineChm();
     if (!engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -1633,20 +1633,20 @@ bool IsChmEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateChmEngineFromFile(const WCHAR* fileName) {
-    return ChmEngineImpl::CreateFromFile(fileName);
+    return EngineChm::CreateFromFile(fileName);
 }
 
 /* EngineBase for handling HTML documents */
 /* (mainly to allow creating minimal regression test testcases more easily) */
 
-class HtmlEngineImpl : public EbookEngine {
+class EngineHtml : public EngineEbook {
   public:
-    HtmlEngineImpl() : EbookEngine() {
+    EngineHtml() : EngineEbook() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
         defaultFileExt = L".html";
     }
-    virtual ~HtmlEngineImpl() {
+    virtual ~EngineHtml() {
         delete doc;
     }
     EngineBase* Clone() override {
@@ -1671,7 +1671,7 @@ class HtmlEngineImpl : public EbookEngine {
     virtual PageElement* CreatePageLink(DrawInstr* link, RectI rect, int pageNo);
 };
 
-bool HtmlEngineImpl::Load(const WCHAR* fileName) {
+bool EngineHtml::Load(const WCHAR* fileName) {
     SetFileName(fileName);
 
     doc = HtmlDoc::CreateFromFile(fileName);
@@ -1711,22 +1711,22 @@ static PageDestination* newRemoteHtmlDest(const WCHAR* relativeURL) {
     return res;
 }
 
-PageElement* HtmlEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
+PageElement* EngineHtml::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
     if (0 == link->str.len) {
         return nullptr;
     }
 
     AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url) || '#' == *url) {
-        return EbookEngine::CreatePageLink(link, rect, pageNo);
+        return EngineEbook::CreatePageLink(link, rect, pageNo);
     }
 
     PageDestination* dest = newRemoteHtmlDest(url);
     return newEbookLink(link, rect, dest, pageNo, true);
 }
 
-EngineBase* HtmlEngineImpl::CreateFromFile(const WCHAR* fileName) {
-    HtmlEngineImpl* engine = new HtmlEngineImpl();
+EngineBase* EngineHtml::CreateFromFile(const WCHAR* fileName) {
+    EngineHtml* engine = new EngineHtml();
     if (!engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -1739,20 +1739,20 @@ bool IsHtmlEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateHtmlEngineFromFile(const WCHAR* fileName) {
-    return HtmlEngineImpl::CreateFromFile(fileName);
+    return EngineHtml::CreateFromFile(fileName);
 }
 
 /* EngineBase for handling TXT documents */
 
-class TxtEngineImpl : public EbookEngine {
+class EngineTxt : public EngineEbook {
   public:
-    TxtEngineImpl() : EbookEngine() {
+    EngineTxt() : EngineEbook() {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
         defaultFileExt = L".txt";
     }
-    virtual ~TxtEngineImpl() {
+    virtual ~EngineTxt() {
         delete tocTree;
         delete doc;
     }
@@ -1779,7 +1779,7 @@ class TxtEngineImpl : public EbookEngine {
     bool Load(const WCHAR* fileName);
 };
 
-bool TxtEngineImpl::Load(const WCHAR* fileName) {
+bool EngineTxt::Load(const WCHAR* fileName) {
     if (!fileName) {
         return false;
     }
@@ -1817,7 +1817,7 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
     return pageCount > 0;
 }
 
-TocTree* TxtEngineImpl::GetToc() {
+TocTree* EngineTxt::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1829,8 +1829,8 @@ TocTree* TxtEngineImpl::GetToc() {
     return tocTree;
 }
 
-EngineBase* TxtEngineImpl::CreateFromFile(const WCHAR* fileName) {
-    TxtEngineImpl* engine = new TxtEngineImpl();
+EngineBase* EngineTxt::CreateFromFile(const WCHAR* fileName) {
+    EngineTxt* engine = new EngineTxt();
     if (!engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -1843,5 +1843,5 @@ bool IsTxtEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateTxtEngineFromFile(const WCHAR* fileName) {
-    return TxtEngineImpl::CreateFromFile(fileName);
+    return EngineTxt::CreateFromFile(fileName);
 }

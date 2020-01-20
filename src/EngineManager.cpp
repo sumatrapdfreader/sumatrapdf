@@ -19,7 +19,7 @@
 
 namespace EngineManager {
 
-bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines) {
+bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEngineEbooks) {
     if (IsEnginePdfSupportedFile(filePath, sniff)) {
         return true;
     }
@@ -48,7 +48,7 @@ bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines)
         return true;
     }
 
-    if (!enableEbookEngines) {
+    if (!enableEngineEbooks) {
         return false;
     }
 
@@ -73,7 +73,7 @@ bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines)
     return false;
 }
 
-EngineBase* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableChmEngine, bool enableEbookEngines) {
+EngineBase* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableChmEngine, bool enableEngineEbooks) {
     CrashIf(!filePath);
 
     EngineBase* engine = nullptr;
@@ -97,7 +97,7 @@ RetrySniffing:
         engine = CreatePsEngineFromFile(filePath);
     } else if (enableChmEngine && IsChmEngineSupportedFile(filePath, sniff)) {
         engine = CreateChmEngineFromFile(filePath);
-    } else if (!enableEbookEngines) {
+    } else if (!enableEngineEbooks) {
         // don't try to create any of the below ebook engines
     } else if (IsEpubEngineSupportedFile(filePath, sniff)) {
         engine = CreateEpubEngineFromFile(filePath);
@@ -123,7 +123,7 @@ RetrySniffing:
         goto RetrySniffing;
     }
 
-    // CrashIf(engine && !IsSupportedFile(filePath, sniff, enableEbookEngines));
+    // CrashIf(engine && !IsSupportedFile(filePath, sniff, enableEngineEbooks));
     return engine;
 }
 
