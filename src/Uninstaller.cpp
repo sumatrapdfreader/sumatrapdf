@@ -91,7 +91,8 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
         }
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION));
-    if (str::EqI(buf, EXENAME)) {
+    const WCHAR* exeName = getExeName();
+    if (str::EqI(buf, exeName)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION);
         if (res != ERROR_SUCCESS) {
             LogLastError(res);
@@ -124,6 +125,7 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
 static void RemoveOwnRegistryKeys(HKEY hkey) {
     UnregisterFromBeingDefaultViewer(hkey);
     const WCHAR* appName = getAppName();
+    const WCHAR* exeName = getExeName();
     AutoFreeWstr REG_CLASSES_APP = getRegClassesApp(appName);
     DeleteRegKey(hkey, REG_CLASSES_APP);
     AutoFreeWstr REG_CLASSES_APPS = getRegClassesApps(appName);
@@ -133,12 +135,13 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
         SHDeleteValueW(hkey, key, appName);
     }
 
+    AutoFreeWstr openWithVal = str::Join(L"\\OpenWithList\\", exeName);
     for (int j = 0; nullptr != gSupportedExts[j]; j++) {
         AutoFreeWstr keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
         SHDeleteValueW(hkey, keyname, appName);
         DeleteEmptyRegKey(hkey, keyname);
 
-        keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithList\\" EXENAME));
+        keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[j], openWithVal));
         if (!DeleteRegKey(hkey, keyname)) {
             continue;
         }

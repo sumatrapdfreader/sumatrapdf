@@ -65,3 +65,10 @@ const WCHAR* getAppName() {
     }
     return L"SumatraPDF";
 }
+
+const WCHAR* getExeName() {
+    if (gIsRaMicroBuild) {
+        return L"RA-MICRO PDF Viewer.exe";
+    }
+    return L"SumatraPDF.exe";
+}

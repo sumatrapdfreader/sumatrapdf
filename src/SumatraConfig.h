@@ -18,3 +18,4 @@ extern const char* gitSha1;
 extern const char* preReleaseVersion;
 
 const WCHAR* getAppName();
+const WCHAR* getExeName();

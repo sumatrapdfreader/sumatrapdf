@@ -1,8 +1,6 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define EXENAME APP_NAME_STR L".exe"
-
 #define INSTALLER_FRAME_CLASS_NAME L"SUMATRA_PDF_INSTALLER_FRAME"
 
 #define INSTALLER_WIN_DX 420

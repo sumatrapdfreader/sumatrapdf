@@ -328,9 +328,10 @@ static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // Also, if Sumatra is the only program handling those docs, our
     // PDF icon will be shown (we need icons and properly configure them)
     bool ok = true;
+    AutoFreeWstr openWithVal = str::Join(L"\\OpenWithList\\", getExeName());
     for (int i = 0; nullptr != gSupportedExts[i]; i++) {
         WCHAR* ext = gSupportedExts[i];
-        AutoFreeWstr name = str::Join(L"Software\\Classes\\", ext, L"\\OpenWithList\\" EXENAME);
+        AutoFreeWstr name = str::Join(L"Software\\Classes\\", ext, openWithVal);
         ok &= CreateRegKey(hkey, name.get());
     }
     return ok;
@@ -342,7 +343,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
 
     AutoFreeWstr exePath(GetInstalledExePath());
     if (HKEY_LOCAL_MACHINE == hkey) {
-        const WCHAR* key = L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" EXENAME;
+        AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", getExeName());
         ok &= WriteRegStr(hkey, key, nullptr, exePath);
     }
     AutoFreeWstr REG_CLASSES_APPS = getRegClassesApps(getAppName());
