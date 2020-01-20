@@ -226,18 +226,18 @@ static EngineBase* psgz2pdf(const WCHAR* fileName) {
     return ps2pdf(tmpFile);
 }
 
-// PsEngineImpl is mostly a proxy for a PdfEngine that's fed whatever
+// EnginePs is mostly a proxy for a PdfEngine that's fed whatever
 // the ps2pdf conversion from Ghostscript returns
-class PsEngineImpl : public EngineBase {
+class EnginePs : public EngineBase {
   public:
-    PsEngineImpl() {
+    EnginePs() {
         kind = kindEnginePostScript;
         defaultFileExt = L".ps";
         supportsAnnotations = false;
         supportsAnnotationsForSaving = false;
     }
 
-    virtual ~PsEngineImpl() {
+    virtual ~EnginePs() {
         delete pdfEngine;
     }
 
@@ -246,7 +246,7 @@ class PsEngineImpl : public EngineBase {
         if (!newEngine) {
             return nullptr;
         }
-        PsEngineImpl* clone = new PsEngineImpl();
+        EnginePs* clone = new EnginePs();
         if (FileName()) {
             clone->SetFileName(FileName());
         }
@@ -367,8 +367,8 @@ class PsEngineImpl : public EngineBase {
     }
 };
 
-EngineBase* PsEngineImpl::CreateFromFile(const WCHAR* fileName) {
-    PsEngineImpl* engine = new PsEngineImpl();
+EngineBase* EnginePs::CreateFromFile(const WCHAR* fileName) {
+    EnginePs* engine = new EnginePs();
     if (!engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -403,5 +403,5 @@ bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreatePsEngineFromFile(const WCHAR* fileName) {
-    return PsEngineImpl::CreateFromFile(fileName);
+    return EnginePs::CreateFromFile(fileName);
 }
