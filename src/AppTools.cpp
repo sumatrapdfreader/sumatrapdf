@@ -9,6 +9,7 @@
 #include "utils/WinUtil.h"
 #include "utils/CryptoUtil.h"
 #include "utils/DirIter.h"
+#include "utils/RegistryPaths.h"
 
 #include "AppTools.h"
 #include "SumatraConfig.h"
@@ -174,10 +175,6 @@ Note: When making changes below, please also adjust WriteExtendedFileExtensionIn
 UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 
 */
-#define REG_CLASSES_PDF L"Software\\Classes\\.pdf"
-
-#define REG_WIN_CURR L"Software\\Microsoft\\Windows\\CurrentVersion"
-#define REG_EXPLORER_PDF_EXT REG_WIN_CURR L"\\Explorer\\FileExts\\.pdf"
 
 void DoAssociateExeWithPdfExtension(HKEY hkey) {
     AutoFreeWstr exePath(GetExePath());

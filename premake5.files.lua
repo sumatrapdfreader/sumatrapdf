@@ -498,6 +498,7 @@ function utils_files()
     "JsonParser.*",
     "LzmaSimpleArchive.*",
     "PEB.h",
+    "RegistryPaths.*",
     "Scoped.h",
     "ScopedWin.h",
     "SerializeTxt.*",

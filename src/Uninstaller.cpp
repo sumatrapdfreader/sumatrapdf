@@ -26,6 +26,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/Log.h"
+#include "utils/RegistryPaths.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"

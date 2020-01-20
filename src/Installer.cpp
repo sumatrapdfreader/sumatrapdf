@@ -16,6 +16,7 @@
 #include "utils/CmdLineParser.h"
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
+#include "utils/RegistryPaths.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -179,7 +180,7 @@ static bool ExtractInstallerFiles() {
 
 /* Caller needs to free() the result. */
 static WCHAR* GetDefaultPdfViewer() {
-    AutoFreeWstr buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
+    AutoFreeWstr buf = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID);
     if (buf) {
         return buf.StealData();
     }

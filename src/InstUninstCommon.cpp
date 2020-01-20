@@ -16,9 +16,9 @@
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/Log.h"
-
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
+#include "utils/RegistryPaths.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"

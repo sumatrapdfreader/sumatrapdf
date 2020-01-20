@@ -30,18 +30,7 @@ extern int gButtonDy;
 #define REG_PATH_UNINST L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP_NAME_STR
 
 #define REG_CLASSES_APP L"Software\\Classes\\" APP_NAME_STR
-#define REG_CLASSES_PDF L"Software\\Classes\\.pdf"
 #define REG_CLASSES_APPS L"Software\\Classes\\Applications\\" EXENAME
-
-#define REG_EXPLORER_PDF_EXT L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
-#define PROG_ID L"ProgId"
-#define APPLICATION L"Application"
-
-#ifndef _WIN64
-#define REG_PATH_PLUGIN L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin"
-#else
-#define REG_PATH_PLUGIN L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64"
-#endif
 
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 
