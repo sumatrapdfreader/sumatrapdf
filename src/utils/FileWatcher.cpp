@@ -112,7 +112,8 @@ static void GetFileState(const WCHAR* filePath, FileState* fs) {
     // copy f.pdf f2.pdf will change lastAccessTime of f.pdf)
     // So I'm sticking with lastWriteTime
     fs->time = file::GetModificationTime(filePath);
-    fs->size = file::GetSize(filePath);
+    AutoFreeStr path = strconv::WstrToUtf8(filePath);
+    fs->size = file::GetSize(path.as_view());
 }
 
 static bool FileStateEq(FileState* fs1, FileState* fs2) {

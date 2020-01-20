@@ -488,6 +488,11 @@ HANDLE OpenReadOnly(const WCHAR* filePath) {
     return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
+HANDLE OpenReadOnly(std::string_view path) {
+    AutoFreeWstr filePath = strconv::Utf8ToWstr(path);
+    return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
 FILE* OpenFILE(const WCHAR* path) {
     if (!path) {
         return nullptr;
@@ -513,13 +518,13 @@ bool Exists(const WCHAR* filePath) {
 }
 
 // returns -1 on error (can't use INVALID_FILE_SIZE because it won't cast right)
-int64_t GetSize(const WCHAR* filePath) {
-    CrashIf(!filePath);
-    if (!filePath) {
+i64 GetSize(std::string_view filePath) {
+    CrashIf(filePath.empty());
+    if (filePath.empty()) {
         return -1;
     }
 
-    AutoCloseHandle h(OpenReadOnly(filePath));
+    AutoCloseHandle h = OpenReadOnly(filePath);
     if (h == INVALID_HANDLE_VALUE) {
         return -1;
     }
@@ -542,7 +547,7 @@ std::string_view ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) 
 // buf must be at least toRead in size (note: it won't be zero-terminated)
 // returns -1 for error
 int ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
-    AutoCloseHandle h(OpenReadOnly(filePath));
+    AutoCloseHandle h = OpenReadOnly(filePath);
     if (h == INVALID_HANDLE_VALUE) {
         return false;
     }

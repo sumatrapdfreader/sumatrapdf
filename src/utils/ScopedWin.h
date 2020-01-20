@@ -21,8 +21,15 @@ class AutoCloseHandle {
     }
 
     ~AutoCloseHandle() {
-        if (IsValid())
+        if (IsValid()) {
             CloseHandle(handle);
+        }
+    }
+
+    AutoCloseHandle& operator=(HANDLE h) {
+        CrashIf(handle != nullptr);
+        CrashIf(h == nullptr);
+        handle = h;
     }
 
     operator HANDLE() const {
