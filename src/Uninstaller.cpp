@@ -52,7 +52,9 @@ static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(getAppName());
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
     // legacy, this key was added by installers up to version 1.8
-    bool ok2 = DeleteRegKey(hkey, L"Software\\" APP_NAME_STR);
+    const WCHAR* appName = getAppName();
+    AutoFreeWstr key = str::Join(L"Software\\", appName);
+    bool ok2 = DeleteRegKey(hkey, key);
     return ok1 && ok2;
 }
 
@@ -67,7 +69,8 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     AutoFreeWstr curr = ReadRegStr(hkey, REG_CLASSES_PDF, nullptr);
     AutoFreeWstr REG_CLASSES_APP = getRegClassesApp(getAppName());
     AutoFreeWstr prev = ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf");
-    if (!curr || !str::Eq(curr, APP_NAME_STR)) {
+    const WCHAR* appName = getAppName();
+    if (!curr || !str::Eq(curr, appName)) {
         // not the default, do nothing
     } else if (prev) {
         WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, prev);
@@ -81,20 +84,23 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
     AutoFreeWstr buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
-    if (str::Eq(buf, APP_NAME_STR)) {
+    if (str::Eq(buf, appName)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
-        if (res != ERROR_SUCCESS)
+        if (res != ERROR_SUCCESS) {
             LogLastError(res);
+        }
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION));
     if (str::EqI(buf, EXENAME)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION);
-        if (res != ERROR_SUCCESS)
+        if (res != ERROR_SUCCESS) {
             LogLastError(res);
+        }
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
-    if (str::Eq(buf, APP_NAME_STR))
+    if (str::Eq(buf, appName)) {
         DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", true);
+    }
 }
 
 static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
@@ -117,14 +123,19 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
 
 static void RemoveOwnRegistryKeys(HKEY hkey) {
     UnregisterFromBeingDefaultViewer(hkey);
-    AutoFreeWstr REG_CLASSES_APP = getRegClassesApp(getAppName());
+    const WCHAR* appName = getAppName();
+    AutoFreeWstr REG_CLASSES_APP = getRegClassesApp(appName);
     DeleteRegKey(hkey, REG_CLASSES_APP);
+    AutoFreeWstr REG_CLASSES_APPS = getRegClassesApps(appName);
     DeleteRegKey(hkey, REG_CLASSES_APPS);
-    SHDeleteValue(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR);
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_PDF, L"\\OpenWithProgids");
+        SHDeleteValueW(hkey, key, appName);
+    }
 
     for (int j = 0; nullptr != gSupportedExts[j]; j++) {
         AutoFreeWstr keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
-        SHDeleteValue(hkey, keyname, APP_NAME_STR);
+        SHDeleteValueW(hkey, keyname, appName);
         DeleteEmptyRegKey(hkey, keyname);
 
         keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithList\\" EXENAME));
@@ -323,11 +334,15 @@ static void CreateMainWindow() {
 
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
-    MessageBox(nullptr, L"uninstall.exe [/s][/d <path>]\n\
+    const WCHAR* appName = getAppName();
+    AutoFreeWstr caption = str::Join(appName, L" Uninstaller Usage");
+    AutoFreeWstr msg = str::Format(
+        L"uninstall.exe [/s][/d <path>]\n\
     \n\
-    /s\tuninstalls " APP_NAME_STR L" silently (without user interaction).\n\
-    /d\tchanges the directory from where " APP_NAME_STR L" will be uninstalled.",
-    APP_NAME_STR L" Uninstaller Usage", MB_OK | MB_ICONINFORMATION);
+    /s\tuninstalls %s silently (without user interaction).\n\
+    /d\tchanges the directory from where %s will be uninstalled.",
+        appName, appName);
+    MessageBoxW(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 
 using namespace Gdiplus;

@@ -650,15 +650,21 @@ static void EnsureNotInstaller() {
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    MessageBox(nullptr, L"SumatraPDF installer options:\n\
+    const WCHAR* appName = getAppName();
+
+    AutoFreeWstr msg = str::Format(
+        L"%s installer options:\n\
     [/s][/d <path>][/with-filter][/with-preview][/x]\n\
     \n\
-    /s\tinstalls " APP_NAME_STR L" silently (without user interaction).\n\
-    /d\tchanges the directory where " APP_NAME_STR L" will be installed.\n\
+    /s\tinstalls %s silently (without user interaction).\n\
+    /d\tchanges the directory where %s will be installed.\n\
     /with-filter\tinstall search filter\n\
     /with-preview\tinstall shell preview\n\
     /x\tjust extracts the files contained within the installer.\n\
-", APP_NAME_STR L" Installer Usage", MB_OK);
+",
+        appName, appName, appName);
+    AutoFreeWstr caption = str::Join(appName, L" Installer Usage");
+    MessageBoxW(nullptr, msg, caption, MB_OK);
 }
 
 // in Installer.cpp

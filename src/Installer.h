@@ -24,8 +24,6 @@ extern int gBottomPartDy;
 
 extern int gButtonDy;
 
-#define REG_CLASSES_APPS L"Software\\Classes\\Applications\\" EXENAME
-
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 
 struct InstUninstGlobals {

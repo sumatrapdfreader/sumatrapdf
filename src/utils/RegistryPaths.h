@@ -17,3 +17,4 @@
 
 WCHAR* getRegPathUninst(const WCHAR* appName);
 WCHAR* getRegClassesApp(const WCHAR* appName);
+WCHAR* getRegClassesApps(const WCHAR* appName);

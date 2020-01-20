@@ -13,3 +13,7 @@ WCHAR* getRegPathUninst(const WCHAR* appName) {
 WCHAR* getRegClassesApp(const WCHAR* appName) {
     return str::Join(L"Software\\Classes\\", appName);
 }
+
+WCHAR* getRegClassesApps(const WCHAR* appName) {
+    return str::Join(L"Software\\Classes\\Applications\\", appName, L".exe");
+}

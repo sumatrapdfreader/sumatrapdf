@@ -345,16 +345,29 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
         const WCHAR* key = L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" EXENAME;
         ok &= WriteRegStr(hkey, key, nullptr, exePath);
     }
+    AutoFreeWstr REG_CLASSES_APPS = getRegClassesApps(getAppName());
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     AutoFreeWstr iconPath(str::Join(exePath, L",1"));
-    ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\DefaultIcon", nullptr, iconPath);
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\DefaultIcon");
+        ok &= WriteRegStr(hkey, key, nullptr, iconPath);
+    }
     AutoFreeWstr cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.get()));
-    ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Open\\Command", nullptr, cmdPath);
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Open\\Command");
+        ok &= WriteRegStr(hkey, key, nullptr, cmdPath);
+    }
     AutoFreeWstr printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.get()));
-    ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", nullptr, printPath);
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Print\\Command");
+        ok &= WriteRegStr(hkey, key, nullptr, printPath);
+    }
     AutoFreeWstr printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.get()));
-    ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\PrintTo\\Command", nullptr, printToPath);
+    {
+        AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\PrintTo\\Command");
+        ok &= WriteRegStr(hkey, key, nullptr, printToPath);
+    }
 
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
