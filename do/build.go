@@ -169,10 +169,6 @@ func createExeZipWithGoWithNameMust(dir, nameInZip string) {
 	fatalIfErr(err)
 }
 
-func createExeZipWithGoMust(dir string) {
-	createExeZipWithGoWithNameMust(dir, "SumatraPDF.exe")
-}
-
 func createExeZipWithPigz(dir string) {
 	srcFile := "SumatraPDF.exe"
 	srcPath := filepath.Join(dir, srcFile)
@@ -299,8 +295,10 @@ func buildPreRelease(isDaily bool) {
 	signFilesMust(rel64Dir)
 
 	// TODO: use pigz for release
-	createExeZipWithGoMust(rel32Dir)
-	createExeZipWithGoMust(rel64Dir)
+	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-32.exe", preReleaseVer)
+	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
+	nameInZip = fmt.Sprintf("SumatraPDF-prerel-%s.exe", preReleaseVer)
+	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
 	createPdbZipMust(rel32Dir)
 	createPdbZipMust(rel64Dir)
@@ -384,8 +382,10 @@ func buildRelease() {
 	runTestUtilMust(rel64Dir)
 	signFilesMust(rel64Dir)
 
-	createExeZipWithGoMust(rel32Dir)
-	createExeZipWithGoMust(rel64Dir)
+	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-32.exe", preReleaseVer)
+	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
+	nameInZip = fmt.Sprintf("SumatraPDF-prerel-%s.exe", preReleaseVer)
+	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
 	createPdbZipMust(rel32Dir)
 	createPdbZipMust(rel64Dir)

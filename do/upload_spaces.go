@@ -169,8 +169,8 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 
 	// over-ride SumtraPDF.exe name
 	if buildType == buildTypeRaMicro {
-		name := fmt.Sprintf("RAMicro-PDFViewer-%s.exe", ver)
-		createExeZipWithGoWithNameMust(rel64Dir, name)
+		nameInZip := fmt.Sprintf("RAMicro-PDFViewer-%s.exe", ver)
+		createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 	}
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
