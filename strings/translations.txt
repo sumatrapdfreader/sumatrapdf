@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ef97275d827a0dd329ed2cb391a3c030d9590946
+3572c2317ab01b118087185d1a86023cd0295bc8
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -97,7 +97,7 @@ fa:&اندازه واقعی\tCtrl+1
 fi:&Todellinen koko\tCtrl+1
 fr:&Taille réelle\tCtrl+1
 fy-nl:Wiere grutte\tCtrl+1
-ga:&Fíormhéid\tCtrl+1
+ga:&Méid Iarbhír\tCtrl+1
 gl:&Tamaño actual\tCtrl+1
 he:גודל מקורי\tCtrl+1
 hi:वास्तविक आकार(&A)\tCtrl+1
@@ -3678,7 +3678,7 @@ eu:Gehitu %s Orrialdea Gogokoenetara
 fa:افزودن صفحه‌ی %s به علاقه‌مندی‌ها
 fi:&Lisää sivu %s suosikkeihin
 fr:Ajouter la page %s aux favoris
-ga:Cuir leathanach a %s le na ceanáin
+ga:Cuir leathanach a %s leis na ceanáin
 gl:Engadir a páxina %s aos favoritos
 he:הוסף את עמוד מס' %s למועדפים...
 hi:पृष्ठ %s को पसंदीदा सूचि में जोड़े
@@ -3788,6 +3788,7 @@ az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
 es:Añadir página %s a favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
+ga:Cuir leathanach %s leis na ceanáin\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
 ru:Добавить страницу %s в избранные\tCtrl+B
@@ -3816,7 +3817,7 @@ eu:Gehitu Gogokoenetara
 fa:افزودن به علاقه‌مندی‌ها
 fi:Lisää suosikkeihin
 fr:Ajouter aux favoris
-ga:Cuir leis na ceanáin
+ga:Cuir leis na ceanáin é
 gl:Engadir a favoritos
 he:הוסף למועדפים
 hi:पसंदीदा सूचि में जोड़ें
@@ -4020,7 +4021,7 @@ eu:Sostengatutako agiri guztiak
 fa:همه‌ی اسناد پشتیبانی شده
 fi:Kaikki tuetut asiakirjat
 fr:Tous les documents pris en charge
-ga:Gach cáipéis inléite
+ga:Gach cáipéis a thugtar tacaíocht dóibh
 gl:Todos os documentos compatibles
 he:כל הקבצים הנתמכים
 hi:सभी समर्थित दस्तावेज़
@@ -4427,7 +4428,7 @@ fa:خودکار
 fi:Automaattinen
 fr:Automatique
 fy-nl:Automatysk
-ga:Uathoibríoch
+ga:Go huathoibríoch
 gl:Automático
 he:אוטומטית
 hi:स्वचालित
@@ -4630,7 +4631,7 @@ eu:Gogoekoenen Lasterbideak
 fa:میانبرهای نشانک
 fi:Pikakuvakkeet
 fr:Raccourcis des signets
-ga:Déan ceanáin d'aicearraí
+ga:Déan leabharmharc d'aicearraí
 gl:Atallos de marcadores
 he:קיצורי דרך לסימנייה
 hi:चिन्हित अल्प तरीका
@@ -4757,7 +4758,7 @@ eu:Gogokoenak
 fa:نشانک‌ها
 fi:Kirjanmerkit
 fr:Signets
-ga:Ceanáin
+ga:Leabharmharcanna
 gl:Marcadores
 he:סימניות
 hi:चिन्हित
@@ -4956,7 +4957,7 @@ eu:Ezinezkoa Internetera elkarketatzea (%#x akatsa).
 fa:نمی‌توان به اینترنت وصل شد (خطای %#x)
 fi:Internetiin yhdistäminen epäonnistui (virhe %#x).
 fr:Impossible de se connecter à Internet (erreur %#x)
-ga:Ní féidir ceangailt leis an idirlíon (botún %#x).
+ga:Ní féidir ceangail leis an idirlíon (botún %#x).
 gl:Non se pode conectar a Internet (error %#x).
 he:כישלון בחיבור לאינטרנט (שגיאה %#x).
 hi:इंटरनेट से जुड़​ नहीं पा रहा है ( ग़लती %#x )
@@ -5160,7 +5161,7 @@ fa:جستجوی معکوس قابل اجرا نیست. لطفاً تنظیمات
 fi:Käänteisen hakukomennon aloittaminen epäonnistui. Tarkista komentorivi asetuksista.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 fy-nl:Kin de omkearde sykrjochting net starte. Kontrolearje de opdrachtrigel yn de ynstellingen.
-ga:Ní féidir ordú cuardaigh aisiompaithe a thosú. Dearbháil líne na n-orduithe sna socruithe.
+ga:Ní féidir ordú cuardaigh aisiompaithe a thosú. Dearbháil líne an ordaithe sna socruithe.
 gl:Non se pode iniciar o comando de busca inversa. Revisa a liña de comandos na configuración.
 he:פקודת חיפוש הפוך נכשלה. אנא בדוק את שורת הפקודה בהגדרות.
 hi:उलटा खोज कमांड शुरू हो पा रहा । कृपया सेटिंग्स में कमांड लाइन की जाँच करें ।
@@ -5226,7 +5227,7 @@ fa:تغییر زبان (Change Language)
 fi:Valitse kieli (Change Language)
 fr:Changer de langue (Change Language)
 fy-nl:Taal kieze (Change Language)
-ga:Athraigh an Teanga (Change Language)
+ga:Athraigh an Teanga
 gl:Cambiar lingua
 he:שנה שפת ממשק (Change language)
 hi:भाषा बदलें (Change Language)
@@ -6042,7 +6043,7 @@ eu:Idazkia kopiatzea eragotzita (kopiatzea irudi bezala bakarrik)
 fa:رونوشت‌گیری از متن ممنوع است (رونوشت فقط به صورت عکس)
 fi:Tekstin kopioiminen kiellettiin (kopioidaan vain kuvana)
 fr:La copie de texte est refusée (seule une capture d’écran est faite)
-ga:Níorbh fhéidir téacs a mhacasamhlú (macasamhlú mar íomhá amháin)
+ga:Níorbh fhéidir téacs a mhacasamhlú (tá sé á mhacasamhlú mar íomhá amháin)
 gl:Impediuse copiar texto (estase a copiar só como imaxe)
 he:העתקת הטקסט לא התאפשרה (מעתיק כתמונה בלבד)
 hi:टेक्स्ट कि प्रतियां बनाने से अस्वीकृत ( केवल छवि के रूप में प्रतिलिपिकरण )
@@ -14783,6 +14784,7 @@ az:Annotasiyaları yadda saxla
 cn:保存注释
 es:Guardar Notas
 fr:Sauvegarder les annotations
+ga:Taisc na Nótaí
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
 ru:Сохранить аннотации
@@ -15422,6 +15424,7 @@ az:Əl&fəcinləri göstər\tF12
 cn:显示书签(&B)\tF12
 es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
+ga:Taispeáin na &Leabharmharcanna\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
 ru:Показать за&кладки\tF12
@@ -15431,6 +15434,7 @@ az:&Seçilmişləri göstər
 cn:显示收藏夹(&F)
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
+ga:Taispeáin na &Ceanáin
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
 ru:Показать «И&збранное»
@@ -15573,6 +15577,7 @@ az:Əlfə&cinləri göstər\tF12
 cn:显示书签(&M)\tF12
 es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
+ga:Taispeáin na Leabhar&mharcanna\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
 ru:Показать зак&ладки\tF12
