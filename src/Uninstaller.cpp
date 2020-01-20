@@ -329,7 +329,7 @@ static void ShowUsage() {
 using namespace Gdiplus;
 
 static WCHAR* GetInstallationDir() {
-    AutoFreeWstr dir(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
             dir.Set(path::GetDir(dir));

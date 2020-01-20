@@ -21,7 +21,7 @@ bool HasBeenInstalled() {
     // see GetInstallationDir() in Installer.cpp
     const WCHAR* appName = getAppName();
     AutoFreeWstr regPathUninst = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
-    AutoFreeWstr installedPath = ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, regPathUninst, L"InstallLocation");
+    AutoFreeWstr installedPath = ReadRegStr2(regPathUninst, L"InstallLocation");
     if (!installedPath) {
         return false;
     }

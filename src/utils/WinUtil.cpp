@@ -241,13 +241,16 @@ char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
     return (char*)s.data();
 }
 
-WCHAR* ReadRegStr2(HKEY keySub1, HKEY keySub2, const WCHAR* keyName, const WCHAR* valName) {
+WCHAR* ReadRegStr2(const WCHAR* keyName, const WCHAR* valName) {
+    HKEY keySub1 = HKEY_LOCAL_MACHINE;
+    HKEY keySub2 = HKEY_CURRENT_USER;
     WCHAR* res = ReadRegStr(keySub1, keyName, valName);
     if (!res) {
         res = ReadRegStr(keySub2, keyName, valName);
     }
     return res;
 }
+
 bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
     DWORD cbData = (DWORD)(str::Len(value) + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(keySub, keyName, valName, REG_SZ, (const void*)value, cbData);

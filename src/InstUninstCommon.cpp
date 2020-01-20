@@ -165,7 +165,7 @@ WCHAR* GetShortcutPath(int csidl) {
 }
 
 WCHAR* GetInstalledBrowserPluginPath() {
-    return ReadRegStr2(HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER, REG_PATH_PLUGIN, L"Path");
+    return ReadRegStr2(REG_PATH_PLUGIN, L"Path");
 }
 
 static bool IsUsingInstallation(DWORD procId) {
