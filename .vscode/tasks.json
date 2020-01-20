@@ -1,0 +1,56 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-rel-64",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "${workspaceFolder}\\vs2019\\SumatraPDF.sln",
+                // Ask msbuild to generate full paths for file names.
+                "/property:GenerateFullPaths=true",
+                "/t:SumatraPDF-dll",
+                "/p:Configuration=Release;Platform=x64",
+                // multi-process
+                "/m",
+                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                // Reveal the output only if unrecognized errors occur.
+                "reveal": "silent"
+            },
+            // Use the standard MS compiler pattern to detect errors, warnings and infos
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-dbg-64",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "${workspaceFolder}\\vs2019\\SumatraPDF.sln",
+                // Ask msbuild to generate full paths for file names.
+                "/property:GenerateFullPaths=true",
+                "/t:SumatraPDF-dll",
+                "/property:Configuration=Debug",
+                "/property:Platform=x64",
+                // multi-process
+                "/m",
+                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": "build",
+            "presentation": {
+                // Reveal the output only if unrecognized errors occur.
+                "reveal": "silent"
+            },
+            // Use the standard MS compiler pattern to detect errors, warnings and infos
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}
+
+// 	
