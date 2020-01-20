@@ -163,8 +163,9 @@ PageElement* clonePageElement(PageElement*);
 
 // those are the same as F font bitmask in PDF docs
 // for TocItem::fontFlags
-constexpr int fontBitBold = 0;
-constexpr int fontBitItalic = 1;
+// https://www.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf page 369
+constexpr int fontBitItalic = 0;
+constexpr int fontBitBold = 1;
 
 extern Kind kindTocFzOutline;
 extern Kind kindTocFzLink;

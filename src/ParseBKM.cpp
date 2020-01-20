@@ -160,12 +160,11 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
             // TODO: for max correctness should split by "," but this works just as well
             if (str::Contains(val, "bold")) {
                 bit::Set(res->fontFlags, fontBitBold);
-                continue;
             }
             if (str::Contains(val, "italic")) {
                 bit::Set(res->fontFlags, fontBitItalic);
-                continue;
             }
+            continue;
         }
 
         // TODO: fail if those have values
