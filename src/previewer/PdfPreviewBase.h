@@ -210,7 +210,7 @@ protected:
     long m_lRef, * m_plModuleRef;
     ScopedComPtr<IStream> m_pStream;
     EngineBase *m_engine;
-    // engines based on ImagesEngine require GDI+ to be preloaded
+    // engines based on EngineImages require GDI+ to be preloaded
     ScopedGdiPlus *m_gdiScope;
     // state for IPreviewHandler
     ScopedComPtr<IUnknown> m_site;

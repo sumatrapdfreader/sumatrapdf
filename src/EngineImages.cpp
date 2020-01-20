@@ -28,7 +28,7 @@ Kind kindEngineComicBooks = "engineComicBooks";
 // number of decoded bitmaps to cache for quicker rendering
 #define MAX_IMAGE_PAGE_CACHE 10
 
-///// ImagesEngine methods apply to all types of engines handling full-page images /////
+///// EngineImages methods apply to all types of engines handling full-page images /////
 
 struct ImagePage {
     int pageNo = 0;
@@ -42,10 +42,10 @@ struct ImagePage {
     }
 };
 
-class ImagesEngine : public EngineBase {
+class EngineImages : public EngineBase {
   public:
-    ImagesEngine();
-    virtual ~ImagesEngine();
+    EngineImages();
+    virtual ~EngineImages();
 
     RectD PageMediabox(int pageNo) override;
 
@@ -98,7 +98,7 @@ class ImagesEngine : public EngineBase {
     void DropPage(ImagePage* page, bool forceRemove);
 };
 
-ImagesEngine::ImagesEngine() {
+EngineImages::EngineImages() {
     kind = kindEngineImage;
 
     supportsAnnotations = false;
@@ -109,7 +109,7 @@ ImagesEngine::ImagesEngine() {
     InitializeCriticalSection(&cacheAccess);
 }
 
-ImagesEngine::~ImagesEngine() {
+EngineImages::~EngineImages() {
     EnterCriticalSection(&cacheAccess);
     while (pageCache.size() > 0) {
         ImagePage* lastPage = pageCache.Last();
@@ -120,7 +120,7 @@ ImagesEngine::~ImagesEngine() {
     DeleteCriticalSection(&cacheAccess);
 }
 
-RectD ImagesEngine::PageMediabox(int pageNo) {
+RectD EngineImages::PageMediabox(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > pageCount));
     int n = pageNo - 1;
     if (mediaboxes.at(n).IsEmpty()) {
@@ -129,7 +129,7 @@ RectD ImagesEngine::PageMediabox(int pageNo) {
     return mediaboxes.at(n);
 }
 
-RenderedBitmap* ImagesEngine::RenderPage(RenderPageArgs& args) {
+RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
     auto pageRect = args.pageRect;
     auto zoom = args.zoom;
@@ -143,7 +143,7 @@ RenderedBitmap* ImagesEngine::RenderPage(RenderPageArgs& args) {
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logf("ImagesEngine::RenderPage() in %.2f\n", dur);
+        logf("EngineImages::RenderPage() in %.2f\n", dur);
     };
 
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
@@ -189,11 +189,11 @@ RenderedBitmap* ImagesEngine::RenderPage(RenderPageArgs& args) {
     return new RenderedBitmap(hbmp, screen.Size(), hMap);
 }
 
-void ImagesEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotation) {
+void EngineImages::GetTransform(Matrix& m, int pageNo, float zoom, int rotation) {
     GetBaseTransform(m, PageMediabox(pageNo).ToGdipRectF(), zoom, rotation);
 }
 
-RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineImages::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     PointF pts[2] = {PointF((REAL)rect.x, (REAL)rect.y), PointF((REAL)(rect.x + rect.dx), (REAL)(rect.y + rect.dy))};
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);
@@ -219,7 +219,7 @@ static PageElement* newImageElement(ImagePage* page) {
     return res;
 }
 
-Vec<PageElement*>* ImagesEngine::GetElements(int pageNo) {
+Vec<PageElement*>* EngineImages::GetElements(int pageNo) {
     // TODO: this is inefficient because we don't need to
     // decompress the image. just need to know the size
     ImagePage* page = GetPage(pageNo);
@@ -234,7 +234,7 @@ Vec<PageElement*>* ImagesEngine::GetElements(int pageNo) {
     return els;
 }
 
-PageElement* ImagesEngine::GetElementAtPos(int pageNo, PointD pt) {
+PageElement* EngineImages::GetElementAtPos(int pageNo, PointD pt) {
     if (!PageMediabox(pageNo).Contains(pt)) {
         return nullptr;
     }
@@ -247,7 +247,7 @@ PageElement* ImagesEngine::GetElementAtPos(int pageNo, PointD pt) {
     return res;
 }
 
-RenderedBitmap* ImagesEngine::GetImageForPageElement(PageElement* pel) {
+RenderedBitmap* EngineImages::GetImageForPageElement(PageElement* pel) {
     int pageNo = pel->imageID;
     auto page = GetPage(pageNo);
 
@@ -264,11 +264,11 @@ RenderedBitmap* ImagesEngine::GetImageForPageElement(PageElement* pel) {
     return new RenderedBitmap(hbmp, s);
 }
 
-std::string_view ImagesEngine::GetFileData() {
+std::string_view EngineImages::GetFileData() {
     return GetStreamOrFileData(fileStream.Get(), FileName());
 }
 
-bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EngineImages::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     const WCHAR* srcPath = FileName();
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
@@ -285,7 +285,7 @@ bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) 
     return file::WriteFile(dstPath, d.as_view());
 }
 
-ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
+ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
     ScopedCritSec scope(&cacheAccess);
 
     ImagePage* result = nullptr;
@@ -327,7 +327,7 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
     return result;
 }
 
-void ImagesEngine::DropPage(ImagePage* page, bool forceRemove) {
+void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
     ScopedCritSec scope(&cacheAccess);
     page->refs--;
     CrashIf(page->refs < 0);
@@ -346,10 +346,10 @@ void ImagesEngine::DropPage(ImagePage* page, bool forceRemove) {
 
 ///// ImageEngine handles a single image file /////
 
-class ImageEngineImpl : public ImagesEngine {
+class EngineImage : public EngineImages {
   public:
-    ImageEngineImpl();
-    virtual ~ImageEngineImpl();
+    EngineImage();
+    virtual ~EngineImage();
 
     EngineBase* Clone() override;
 
@@ -372,21 +372,21 @@ class ImageEngineImpl : public ImagesEngine {
     RectD LoadMediabox(int pageNo) override;
 };
 
-ImageEngineImpl::ImageEngineImpl() {
+EngineImage::EngineImage() {
     kind = kindEngineImage;
 }
 
-ImageEngineImpl::~ImageEngineImpl() {
+EngineImage::~EngineImage() {
     delete image;
 }
 
-EngineBase* ImageEngineImpl::Clone() {
+EngineBase* EngineImage::Clone() {
     Bitmap* bmp = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!bmp) {
         return nullptr;
     }
 
-    ImageEngineImpl* clone = new ImageEngineImpl();
+    EngineImage* clone = new EngineImage();
     clone->SetFileName(FileName());
     clone->defaultFileExt = defaultFileExt;
     clone->fileExt = fileExt;
@@ -400,7 +400,7 @@ EngineBase* ImageEngineImpl::Clone() {
     return clone;
 }
 
-bool ImageEngineImpl::LoadSingleFile(const WCHAR* file) {
+bool EngineImage::LoadSingleFile(const WCHAR* file) {
     if (!file) {
         return false;
     }
@@ -413,7 +413,7 @@ bool ImageEngineImpl::LoadSingleFile(const WCHAR* file) {
     return FinishLoading();
 }
 
-bool ImageEngineImpl::LoadFromStream(IStream* stream) {
+bool EngineImage::LoadFromStream(IStream* stream) {
     if (!stream) {
         return false;
     }
@@ -440,7 +440,7 @@ bool ImageEngineImpl::LoadFromStream(IStream* stream) {
     return FinishLoading();
 }
 
-bool ImageEngineImpl::FinishLoading() {
+bool EngineImage::FinishLoading() {
     if (!image || image->GetLastStatus() != Ok) {
         return false;
     }
@@ -489,7 +489,7 @@ static WCHAR* GetImageProperty(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     return value;
 }
 
-WCHAR* ImageEngineImpl::GetProperty(DocumentProperty prop) {
+WCHAR* EngineImage::GetProperty(DocumentProperty prop) {
     switch (prop) {
         case DocumentProperty::Title:
             return GetImageProperty(image, PropertyTagImageDescription, PropertyTagXPTitle);
@@ -508,7 +508,7 @@ WCHAR* ImageEngineImpl::GetProperty(DocumentProperty prop) {
     }
 }
 
-Bitmap* ImageEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
+Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     if (1 == pageNo) {
         deleteAfterUse = false;
         return image;
@@ -532,7 +532,7 @@ Bitmap* ImageEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     return frame;
 }
 
-RectD ImageEngineImpl::LoadMediabox(int pageNo) {
+RectD EngineImage::LoadMediabox(int pageNo) {
     if (1 == pageNo) {
         return RectD(0, 0, image->GetWidth(), image->GetHeight());
     }
@@ -560,7 +560,7 @@ RectD ImageEngineImpl::LoadMediabox(int pageNo) {
     return mbox;
 }
 
-bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots) {
+bool EngineImage::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     bool ok = true;
     PdfCreator* c = new PdfCreator();
@@ -585,8 +585,8 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
     return ok;
 }
 
-EngineBase* ImageEngineImpl::CreateFromFile(const WCHAR* fileName) {
-    ImageEngineImpl* engine = new ImageEngineImpl();
+EngineBase* EngineImage::CreateFromFile(const WCHAR* fileName) {
+    EngineImage* engine = new EngineImage();
     if (!engine->LoadSingleFile(fileName)) {
         delete engine;
         return nullptr;
@@ -594,8 +594,8 @@ EngineBase* ImageEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-EngineBase* ImageEngineImpl::CreateFromStream(IStream* stream) {
-    ImageEngineImpl* engine = new ImageEngineImpl();
+EngineBase* EngineImage::CreateFromStream(IStream* stream) {
+    EngineImage* engine = new EngineImage();
     if (!engine->LoadFromStream(stream)) {
         delete engine;
         return nullptr;
@@ -631,18 +631,18 @@ bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateImageEngineFromFile(const WCHAR* fileName) {
-    return ImageEngineImpl::CreateFromFile(fileName);
+    return EngineImage::CreateFromFile(fileName);
 }
 
 EngineBase* CreateImageEngineFromStream(IStream* stream) {
-    return ImageEngineImpl::CreateFromStream(stream);
+    return EngineImage::CreateFromStream(stream);
 }
 
 ///// ImageDirEngine handles a directory full of image files /////
 
-class ImageDirEngineImpl : public ImagesEngine {
+class EngineImageDir : public EngineImages {
   public:
-    ImageDirEngineImpl() {
+    EngineImageDir() {
         fileDPI = 96.0f;
         kind = kindEngineImageDir;
         defaultFileExt = L"";
@@ -651,7 +651,7 @@ class ImageDirEngineImpl : public ImagesEngine {
         hasPageLabels = true;
     }
 
-    virtual ~ImageDirEngineImpl() {
+    virtual ~EngineImageDir() {
         delete tocTree;
     }
 
@@ -691,7 +691,7 @@ class ImageDirEngineImpl : public ImagesEngine {
     TocTree* tocTree = nullptr;
 };
 
-bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
+bool EngineImageDir::LoadImageDir(const WCHAR* dirName) {
     SetFileName(dirName);
 
     AutoFreeWstr pattern(path::Join(dirName, L"*"));
@@ -728,7 +728,7 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
     return true;
 }
 
-WCHAR* ImageDirEngineImpl::GetPageLabel(int pageNo) const {
+WCHAR* EngineImageDir::GetPageLabel(int pageNo) const {
     if (pageNo < 1 || PageCount() < pageNo) {
         return EngineBase::GetPageLabel(pageNo);
     }
@@ -737,7 +737,7 @@ WCHAR* ImageDirEngineImpl::GetPageLabel(int pageNo) const {
     return str::DupN(fileName, path::GetExtNoFree(fileName) - fileName);
 }
 
-int ImageDirEngineImpl::GetPageByLabel(const WCHAR* label) const {
+int EngineImageDir::GetPageByLabel(const WCHAR* label) const {
     for (size_t i = 0; i < pageFileNames.size(); i++) {
         const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(i));
         const WCHAR* fileExt = path::GetExtNoFree(fileName);
@@ -753,7 +753,7 @@ static TocItem* newImageDirTocItem(TocItem* parent, WCHAR* title, int pageNo) {
     return new TocItem(parent, title, pageNo);
 };
 
-TocTree* ImageDirEngineImpl::GetToc() {
+TocTree* EngineImageDir::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -770,7 +770,7 @@ TocTree* ImageDirEngineImpl::GetToc() {
     return tocTree;
 }
 
-bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EngineImageDir::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     // only copy the files if the target directory doesn't exist yet
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
@@ -786,7 +786,7 @@ bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAn
     return ok;
 }
 
-Bitmap* ImageDirEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
+Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     AutoFree bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
     if (bmpData.data) {
         deleteAfterUse = true;
@@ -795,7 +795,7 @@ Bitmap* ImageDirEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) 
     return nullptr;
 }
 
-RectD ImageDirEngineImpl::LoadMediabox(int pageNo) {
+RectD EngineImageDir::LoadMediabox(int pageNo) {
     AutoFree bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
     if (bmpData.data) {
         Size size = BitmapSizeFromData(bmpData.data, bmpData.size());
@@ -804,7 +804,7 @@ RectD ImageDirEngineImpl::LoadMediabox(int pageNo) {
     return RectD();
 }
 
-bool ImageDirEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots) {
+bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     bool ok = true;
     PdfCreator* c = new PdfCreator();
@@ -819,9 +819,9 @@ bool ImageDirEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUser
     return ok;
 }
 
-EngineBase* ImageDirEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* EngineImageDir::CreateFromFile(const WCHAR* fileName) {
     AssertCrash(dir::Exists(fileName));
-    ImageDirEngineImpl* engine = new ImageDirEngineImpl();
+    EngineImageDir* engine = new EngineImageDir();
     if (!engine->LoadImageDir(fileName)) {
         delete engine;
         return nullptr;
@@ -836,15 +836,15 @@ bool IsImageDirEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateImageDirEngineFromFile(const WCHAR* fileName) {
-    return ImageDirEngineImpl::CreateFromFile(fileName);
+    return EngineImageDir::CreateFromFile(fileName);
 }
 
 ///// CbxEngine handles comic book files (either .cbz, .cbr, .cb7 or .cbt) /////
 
-class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
+class EngineCbx : public EngineImages, public json::ValueVisitor {
   public:
-    CbxEngineImpl(MultiFormatArchive* arch);
-    ~CbxEngineImpl() override;
+    EngineCbx(MultiFormatArchive* arch);
+    ~EngineCbx() override;
 
     EngineBase* Clone() override;
 
@@ -896,12 +896,12 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
 };
 
 // TODO: refactor so that doesn't have to keep <arch>
-CbxEngineImpl::CbxEngineImpl(MultiFormatArchive* arch) {
+EngineCbx::EngineCbx(MultiFormatArchive* arch) {
     cbxFile = arch;
     kind = kindEngineComicBooks;
 }
 
-CbxEngineImpl::~CbxEngineImpl() {
+EngineCbx::~EngineCbx() {
     delete tocTree;
 
     // can be set in error conditions but generally is
@@ -913,7 +913,7 @@ CbxEngineImpl::~CbxEngineImpl() {
     }
 }
 
-EngineBase* CbxEngineImpl::Clone() {
+EngineBase* EngineCbx::Clone() {
     if (fileStream) {
         ScopedComPtr<IStream> stm;
         HRESULT res = fileStream->Clone(&stm);
@@ -927,7 +927,7 @@ EngineBase* CbxEngineImpl::Clone() {
     return nullptr;
 }
 
-bool CbxEngineImpl::LoadFromFile(const WCHAR* file) {
+bool EngineCbx::LoadFromFile(const WCHAR* file) {
     if (!file) {
         return false;
     }
@@ -935,7 +935,7 @@ bool CbxEngineImpl::LoadFromFile(const WCHAR* file) {
     return FinishLoading();
 }
 
-bool CbxEngineImpl::LoadFromStream(IStream* stream) {
+bool EngineCbx::LoadFromStream(IStream* stream) {
     if (!stream) {
         return false;
     }
@@ -967,7 +967,7 @@ static const WCHAR* GetExtFromArchiveType(MultiFormatArchive* cbxFile) {
     return nullptr;
 }
 
-bool CbxEngineImpl::FinishLoading() {
+bool EngineCbx::FinishLoading() {
     CrashIf(!cbxFile);
     if (!cbxFile) {
         return false;
@@ -976,7 +976,7 @@ bool CbxEngineImpl::FinishLoading() {
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logf("CbxEngineImpl::FinisHLoading() in %.2f\n", dur);
+        logf("EngineCbx::FinisHLoading() in %.2f\n", dur);
     };
 
     // not using the resolution of the contained images seems to be
@@ -1065,11 +1065,11 @@ bool CbxEngineImpl::FinishLoading() {
     return true;
 }
 
-TocTree* CbxEngineImpl::GetToc() {
+TocTree* EngineCbx::GetToc() {
     return tocTree;
 }
 
-ImageData CbxEngineImpl::GetImageData(int pageNo) {
+ImageData EngineCbx::GetImageData(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > PageCount()));
     return images[pageNo - 1];
 }
@@ -1084,7 +1084,7 @@ static char* GetTextContent(HtmlPullParser& parser) {
 
 // extract ComicInfo.xml metadata
 // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
-void CbxEngineImpl::ParseComicInfoXml(const char* xmlData) {
+void EngineCbx::ParseComicInfoXml(const char* xmlData) {
     // TODO: convert UTF-16 data and skip UTF-8 BOM
     HtmlPullParser parser(xmlData, str::Len(xmlData));
     HtmlToken* tok;
@@ -1130,7 +1130,7 @@ void CbxEngineImpl::ParseComicInfoXml(const char* xmlData) {
 
 // extract ComicBookInfo metadata
 // cf. http://code.google.com/p/comicbookinfo/
-bool CbxEngineImpl::Visit(const char* path, const char* value, json::DataType type) {
+bool EngineCbx::Visit(const char* path, const char* value, json::DataType type) {
     if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
         propTitle.Set(strconv::Utf8ToWstr(value));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear"))
@@ -1161,7 +1161,7 @@ bool CbxEngineImpl::Visit(const char* path, const char* value, json::DataType ty
            str::FindChar(propDate, '/') <= propDate;
 }
 
-bool CbxEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots) {
+bool EngineCbx::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     bool ok = true;
     PdfCreator* c = new PdfCreator();
@@ -1177,7 +1177,7 @@ bool CbxEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnot
     return ok;
 }
 
-WCHAR* CbxEngineImpl::GetProperty(DocumentProperty prop) {
+WCHAR* EngineCbx::GetProperty(DocumentProperty prop) {
     switch (prop) {
         case DocumentProperty::Title:
             return str::Dup(propTitle);
@@ -1197,15 +1197,15 @@ WCHAR* CbxEngineImpl::GetProperty(DocumentProperty prop) {
     }
 }
 
-const WCHAR* CbxEngineImpl::GetDefaultFileExt() const {
+const WCHAR* EngineCbx::GetDefaultFileExt() const {
     return defaultExt;
 }
 
-Bitmap* CbxEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
+Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logf("CbxEngineImpl::LoadBitmapForPage(page: %d) took %.2f\n", pageNo, dur);
+        logf("EngineCbx::LoadBitmapForPage(page: %d) took %.2f\n", pageNo, dur);
     };
     ImageData img = GetImageData(pageNo);
     if (img.data) {
@@ -1215,7 +1215,7 @@ Bitmap* CbxEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     return nullptr;
 }
 
-RectD CbxEngineImpl::LoadMediabox(int pageNo) {
+RectD EngineCbx::LoadMediabox(int pageNo) {
     // fill the cache to prevent the first few images from being unpacked twice
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
@@ -1237,14 +1237,14 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo) {
 #define RAR5_SIGNATURE "Rar!\x1A\x07\x01\x00"
 #define RAR5_SIGNATURE_LEN 8
 
-EngineBase* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* EngineCbx::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
         file::StartsWithN(fileName, "PK\x03\x04", 4)) {
         auto* archive = OpenZipArchive(fileName, false);
         if (!archive) {
             return nullptr;
         }
-        auto* engine = new CbxEngineImpl(archive);
+        auto* engine = new EngineCbx(archive);
         if (engine->LoadFromFile(fileName)) {
             return engine;
         }
@@ -1257,7 +1257,7 @@ EngineBase* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
         file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN)) {
         auto* archive = OpenRarArchive(fileName);
         if (archive) {
-            auto* engine = new CbxEngineImpl(archive);
+            auto* engine = new EngineCbx(archive);
             if (engine->LoadFromFile(fileName)) {
                 return engine;
             }
@@ -1268,7 +1268,7 @@ EngineBase* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
         file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C")) {
         MultiFormatArchive* archive = Open7zArchive(fileName);
         if (archive) {
-            auto* engine = new CbxEngineImpl(archive);
+            auto* engine = new EngineCbx(archive);
             if (engine->LoadFromFile(fileName)) {
                 return engine;
             }
@@ -1278,7 +1278,7 @@ EngineBase* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbt") || str::EndsWithI(fileName, L".tar")) {
         MultiFormatArchive* archive = OpenTarArchive(fileName);
         if (archive) {
-            auto* engine = new CbxEngineImpl(archive);
+            auto* engine = new EngineCbx(archive);
             if (engine->LoadFromFile(fileName)) {
                 return engine;
             }
@@ -1288,10 +1288,10 @@ EngineBase* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return nullptr;
 }
 
-EngineBase* CbxEngineImpl::CreateFromStream(IStream* stream) {
+EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
     auto* archive = OpenZipArchive(stream, false);
     if (archive) {
-        auto* engine = new CbxEngineImpl(archive);
+        auto* engine = new EngineCbx(archive);
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
@@ -1300,7 +1300,7 @@ EngineBase* CbxEngineImpl::CreateFromStream(IStream* stream) {
 
     archive = OpenRarArchive(stream);
     if (archive) {
-        auto* engine = new CbxEngineImpl(archive);
+        auto* engine = new EngineCbx(archive);
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
@@ -1309,7 +1309,7 @@ EngineBase* CbxEngineImpl::CreateFromStream(IStream* stream) {
 
     archive = Open7zArchive(stream);
     if (archive) {
-        auto* engine = new CbxEngineImpl(archive);
+        auto* engine = new EngineCbx(archive);
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
@@ -1318,7 +1318,7 @@ EngineBase* CbxEngineImpl::CreateFromStream(IStream* stream) {
 
     archive = OpenTarArchive(stream);
     if (archive) {
-        auto* engine = new CbxEngineImpl(archive);
+        auto* engine = new EngineCbx(archive);
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
@@ -1349,9 +1349,9 @@ bool IsCbxEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateCbxEngineFromFile(const WCHAR* fileName) {
-    return CbxEngineImpl::CreateFromFile(fileName);
+    return EngineCbx::CreateFromFile(fileName);
 }
 
 EngineBase* CreateCbxEngineFromStream(IStream* stream) {
-    return CbxEngineImpl::CreateFromStream(stream);
+    return EngineCbx::CreateFromStream(stream);
 }
