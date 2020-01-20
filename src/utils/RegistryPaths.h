@@ -14,4 +14,6 @@
 #define REG_CLASSES_PDF L"Software\\Classes\\.pdf"
 
 #define REG_WIN_CURR L"Software\\Microsoft\\Windows\\CurrentVersion"
-#define REG_EXPLORER_PDF_EXT L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
+
+WCHAR* getRegPathUninst(const WCHAR* appName);
+WCHAR* getRegClassesApp(const WCHAR* appName);

@@ -145,7 +145,11 @@ bool CopySelfToDir(const WCHAR* destDir) {
     return ok;
 }
 
-#define PREFS_FILE_NAME L"SumatraPDF-settings.txt"
+//#define PREFS_FILE_NAME L"SumatraPDF-settings.txt"
+
+static WCHAR* getPrefsFileName() {
+    return str::Join(getAppName(), L"-settings.txt");
+}
 
 static void CopySettingsFile() {
     // up to 3.1.2 we stored settings in %APPDATA%
@@ -154,8 +158,10 @@ static void CopySettingsFile() {
     AutoFreeWstr srcDir = GetSpecialFolder(CSIDL_APPDATA, false);
     AutoFreeWstr dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
 
-    AutoFreeWstr srcPath = path::Join(srcDir.data, APP_NAME_STR, PREFS_FILE_NAME);
-    AutoFreeWstr dstPath = path::Join(dstDir.data, APP_NAME_STR, PREFS_FILE_NAME);
+    const WCHAR* appName = getAppName();
+    AutoFreeWstr prefsFileName = getPrefsFileName();
+    AutoFreeWstr srcPath = path::Join(srcDir.data, appName, prefsFileName);
+    AutoFreeWstr dstPath = path::Join(dstDir.data, appName, prefsFileName);
 
     // don't over-write
     BOOL failIfExists = true;
@@ -244,15 +250,19 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     AutoFreeWstr uninstallerPath = GetUninstallerPath();
     AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath.get());
 
+    const WCHAR* appName = getAppName();
+    AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(appName);
     // path to installed executable (or "$path,0" to force the first icon)
     ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayIcon", installedExePath);
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", APP_NAME_STR);
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", appName);
     // version format: "1.2"
     ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayVersion", CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
-    if (!IsVistaOrGreater())
-        ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", APP_NAME_STR L" " CURR_VERSION_STR);
+    if (!IsVistaOrGreater()) {
+        AutoFreeWstr key = str::Join(appName, L" ", CURR_VERSION_STR);
+        ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", key);
+    }
     DWORD size = GetDirSize(gCli->installDir) / 1024;
     // size of installed directory after copying files
     ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"EstimatedSize", size);
@@ -671,8 +681,10 @@ static void OnButtonBrowse() {
     AutoFreeWstr installPath = str::Dup(path);
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    if (!str::EndsWithI(path, L"\\" APP_NAME_STR)) {
-        installPath = path::Join(path, APP_NAME_STR);
+    const WCHAR* appName = getAppName();
+    AutoFreeWstr end = str::Join(L"\\", appName);
+    if (!str::EndsWithI(path, end)) {
+        installPath = path::Join(path, appName);
     }
     gTextboxInstDir->SetText(installPath);
     gTextboxInstDir->SetSelection(0, -1);
@@ -724,7 +736,8 @@ static void OnCreateWindow(HWND hwnd) {
     y -= (staticDy + WINDOW_MARGIN);
 
     AutoFreeWstr defaultViewer(GetDefaultPdfViewer());
-    BOOL hasOtherViewer = !str::EqI(defaultViewer, APP_NAME_STR);
+    const WCHAR* appName = getAppName();
+    BOOL hasOtherViewer = !str::EqI(defaultViewer, appName);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
     // only show this checkbox if the CPU arch of DLL and OS match
@@ -822,6 +835,8 @@ static void CreateMainWindow() {
 using namespace Gdiplus;
 
 static WCHAR* GetInstallationDir() {
+    const WCHAR* appName = getAppName();
+    AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(appName);
     AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
@@ -834,13 +849,13 @@ static WCHAR* GetInstallationDir() {
     // fall back to %APPLOCALDATA%\SumatraPDF
     WCHAR* dataDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
     if (dataDir) {
-        WCHAR* res = path::Join(dataDir, APP_NAME_STR);
+        WCHAR* res = path::Join(dataDir, appName);
         str::Free(dataDir);
         return res;
     }
 
     // fall back to C:\ as a last resort
-    return str::Dup(L"C:\\" APP_NAME_STR);
+    return str::Join(L"C:\\", appName);
 }
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {

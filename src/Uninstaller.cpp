@@ -49,6 +49,7 @@ static HANDLE hThread = nullptr;
 static bool success = false;
 
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
+    AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(getAppName());
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
     // legacy, this key was added by installers up to version 1.8
     bool ok2 = DeleteRegKey(hkey, L"Software\\" APP_NAME_STR);
@@ -63,8 +64,9 @@ static bool RemoveUninstallerRegistryInfo() {
 
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
-    AutoFreeWstr curr(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
-    AutoFreeWstr prev(ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf"));
+    AutoFreeWstr curr = ReadRegStr(hkey, REG_CLASSES_PDF, nullptr);
+    AutoFreeWstr REG_CLASSES_APP = getRegClassesApp(getAppName());
+    AutoFreeWstr prev = ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf");
     if (!curr || !str::Eq(curr, APP_NAME_STR)) {
         // not the default, do nothing
     } else if (prev) {
@@ -115,6 +117,7 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
 
 static void RemoveOwnRegistryKeys(HKEY hkey) {
     UnregisterFromBeingDefaultViewer(hkey);
+    AutoFreeWstr REG_CLASSES_APP = getRegClassesApp(getAppName());
     DeleteRegKey(hkey, REG_CLASSES_APP);
     DeleteRegKey(hkey, REG_CLASSES_APPS);
     SHDeleteValue(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR);
@@ -330,6 +333,7 @@ static void ShowUsage() {
 using namespace Gdiplus;
 
 static WCHAR* GetInstallationDir() {
+    AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(getAppName());
     AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {

@@ -24,12 +24,6 @@ extern int gBottomPartDy;
 
 extern int gButtonDy;
 
-// This is in HKLM. Note that on 64bit windows, if installing 32bit app
-// the installer has to be 32bit as well, so that it goes into proper
-// place in registry (under Software\Wow6432Node\Microsoft\Windows\...
-#define REG_PATH_UNINST L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP_NAME_STR
-
-#define REG_CLASSES_APP L"Software\\Classes\\" APP_NAME_STR
 #define REG_CLASSES_APPS L"Software\\Classes\\Applications\\" EXENAME
 
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)

@@ -161,7 +161,8 @@ WCHAR* GetShortcutPath(int csidl) {
     if (!dir) {
         return nullptr;
     }
-    return path::Join(dir, APP_NAME_STR L".lnk");
+    const WCHAR* appName = getAppName();
+    return path::Join(dir, appName, L".lnk");
 }
 
 WCHAR* GetInstalledBrowserPluginPath() {
