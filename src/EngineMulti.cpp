@@ -34,10 +34,10 @@ struct EnginePage {
 
 Kind kindEngineMulti = "enginePdfMulti";
 
-class EngineMultiImpl : public EngineBase {
+class EngineMulti : public EngineBase {
   public:
-    EngineMultiImpl();
-    virtual ~EngineMultiImpl();
+    EngineMulti();
+    virtual ~EngineMulti();
     EngineBase* Clone() override;
 
     RectD PageMediabox(int pageNo) override;
@@ -80,13 +80,13 @@ class EngineMultiImpl : public EngineBase {
     TocTree* tocTree = nullptr;
 };
 
-EngineBase* EngineMultiImpl::PageToEngine(int& pageNo) const {
+EngineBase* EngineMulti::PageToEngine(int& pageNo) const {
     EnginePage& ep = pageToEngine[pageNo - 1];
     pageNo = ep.pageNoInEngine;
     return ep.engine;
 }
 
-EngineMultiImpl::EngineMultiImpl() {
+EngineMulti::EngineMulti() {
     kind = kindEngineMulti;
     defaultFileExt = L".vbkm";
     fileDPI = 72.0f;
@@ -94,87 +94,87 @@ EngineMultiImpl::EngineMultiImpl() {
     supportsAnnotationsForSaving = false;
 }
 
-EngineMultiImpl::~EngineMultiImpl() {
+EngineMulti::~EngineMulti() {
     delete tocTree;
 }
 
-EngineBase* EngineMultiImpl::Clone() {
+EngineBase* EngineMulti::Clone() {
     const WCHAR* fileName = FileName();
     CrashIf(!fileName);
-    return EngineMultiImpl::CreateFromFile(fileName, nullptr);
+    return EngineMulti::CreateFromFile(fileName, nullptr);
 }
 
-RectD EngineMultiImpl::PageMediabox(int pageNo) {
+RectD EngineMulti::PageMediabox(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->PageMediabox(pageNo);
 }
 
-RectD EngineMultiImpl::PageContentBox(int pageNo, RenderTarget target) {
+RectD EngineMulti::PageContentBox(int pageNo, RenderTarget target) {
     EngineBase* e = PageToEngine(pageNo);
     return e->PageContentBox(pageNo, target);
 }
 
-RenderedBitmap* EngineMultiImpl::RenderPage(RenderPageArgs& args) {
+RenderedBitmap* EngineMulti::RenderPage(RenderPageArgs& args) {
     EngineBase* e = PageToEngine(args.pageNo);
     return e->RenderPage(args);
 }
 
-RectD EngineMultiImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineMulti::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     EngineBase* e = PageToEngine(pageNo);
     return e->Transform(rect, pageNo, zoom, rotation, inverse);
 }
 
-std::string_view EngineMultiImpl::GetFileData() {
+std::string_view EngineMulti::GetFileData() {
     return {};
 }
 
-bool EngineMultiImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EngineMulti::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     return false;
 }
 
-bool EngineMultiImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
+bool EngineMulti::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
     return false;
 }
 
-WCHAR* EngineMultiImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
+WCHAR* EngineMulti::ExtractPageText(int pageNo, RectI** coordsOut) {
     EngineBase* e = PageToEngine(pageNo);
     return e->ExtractPageText(pageNo, coordsOut);
 }
 
-bool EngineMultiImpl::HasClipOptimizations(int pageNo) {
+bool EngineMulti::HasClipOptimizations(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->HasClipOptimizations(pageNo);
 }
 
-WCHAR* EngineMultiImpl::GetProperty(DocumentProperty prop) {
+WCHAR* EngineMulti::GetProperty(DocumentProperty prop) {
     return nullptr;
 }
 
-void EngineMultiImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+void EngineMulti::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: support user annotations
 }
 
-bool EngineMultiImpl::BenchLoadPage(int pageNo) {
+bool EngineMulti::BenchLoadPage(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->BenchLoadPage(pageNo);
 }
 
-Vec<PageElement*>* EngineMultiImpl::GetElements(int pageNo) {
+Vec<PageElement*>* EngineMulti::GetElements(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->GetElements(pageNo);
 }
 
-PageElement* EngineMultiImpl::GetElementAtPos(int pageNo, PointD pt) {
+PageElement* EngineMulti::GetElementAtPos(int pageNo, PointD pt) {
     EngineBase* e = PageToEngine(pageNo);
     return e->GetElementAtPos(pageNo, pt);
 }
 
-RenderedBitmap* EngineMultiImpl::GetImageForPageElement(PageElement* pel) {
+RenderedBitmap* EngineMulti::GetImageForPageElement(PageElement* pel) {
     EngineBase* e = PageToEngine(pel->pageNo);
     return e->GetImageForPageElement(pel);
 }
 
-PageDestination* EngineMultiImpl::GetNamedDest(const WCHAR* name) {
+PageDestination* EngineMulti::GetNamedDest(const WCHAR* name) {
     int n = 0;
     for (auto&& f : vbkm.vbkms) {
         auto e = f->engine;
@@ -209,12 +209,12 @@ static void updateTocItemsPageNo(TocItem* i, int nPageNoAdd) {
     }
 }
 
-TocTree* EngineMultiImpl::GetToc() {
+TocTree* EngineMulti::GetToc() {
     CrashIf(!tocTree);
     return tocTree;
 }
 
-WCHAR* EngineMultiImpl::GetPageLabel(int pageNo) const {
+WCHAR* EngineMulti::GetPageLabel(int pageNo) const {
     if (pageNo < 1 || pageNo >= pageCount) {
         return nullptr;
     }
@@ -223,7 +223,7 @@ WCHAR* EngineMultiImpl::GetPageLabel(int pageNo) const {
     return e->GetPageLabel(pageNo);
 }
 
-int EngineMultiImpl::GetPageByLabel(const WCHAR* label) const {
+int EngineMulti::GetPageByLabel(const WCHAR* label) const {
     int n = 0;
     for (auto&& f : vbkm.vbkms) {
         auto e = f->engine;
@@ -311,7 +311,7 @@ static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
     MarkAsVisibleRecur(root, !root->isUnchecked, visible);
 }
 
-bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
+bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     AutoFreeStr filePath = strconv::WstrToUtf8(fileName);
     bool ok = LoadVbkmFile(filePath.get(), vbkm);
     if (!ok) {
@@ -396,11 +396,11 @@ bool EngineMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     return true;
 }
 
-EngineBase* EngineMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+EngineBase* EngineMulti::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (str::IsEmpty(fileName)) {
         return nullptr;
     }
-    EngineMultiImpl* engine = new EngineMultiImpl();
+    EngineMulti* engine = new EngineMulti();
     if (!engine->Load(fileName, pwdUI)) {
         delete engine;
         return nullptr;
@@ -417,5 +417,5 @@ bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateEngineMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-    return EngineMultiImpl::CreateFromFile(fileName, pwdUI);
+    return EngineMulti::CreateFromFile(fileName, pwdUI);
 }
