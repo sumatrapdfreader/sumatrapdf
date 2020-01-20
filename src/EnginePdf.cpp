@@ -268,10 +268,10 @@ struct PageTreeStackItem {
     }
 };
 
-class PdfEngineImpl : public EngineBase {
+class EnginePdf : public EngineBase {
   public:
-    PdfEngineImpl();
-    virtual ~PdfEngineImpl();
+    EnginePdf();
+    virtual ~EnginePdf();
     EngineBase* Clone() override;
 
     RectD PageMediabox(int pageNo) override;
@@ -364,12 +364,12 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
 static void fz_lock_context_cs(void* user, int lock) {
-    PdfEngineImpl* e = (PdfEngineImpl*)user;
+    EnginePdf* e = (EnginePdf*)user;
     EnterCriticalSection(&e->mutexes[lock]);
 }
 
 static void fz_unlock_context_cs(void* user, int lock) {
-    PdfEngineImpl* e = (PdfEngineImpl*)user;
+    EnginePdf* e = (EnginePdf*)user;
     LeaveCriticalSection(&e->mutexes[lock]);
 }
 
@@ -385,7 +385,7 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
     fz_set_error_callback(ctx, fz_print_cb, nullptr);
 }
 
-PdfEngineImpl::PdfEngineImpl() {
+EnginePdf::EnginePdf() {
     kind = kindEnginePdf;
     supportsAnnotations = true;
     supportsAnnotationsForSaving = true;
@@ -407,7 +407,7 @@ PdfEngineImpl::PdfEngineImpl() {
     pdf_install_load_system_font_funcs(ctx);
 }
 
-PdfEngineImpl::~PdfEngineImpl() {
+EnginePdf::~EnginePdf() {
     EnterCriticalSection(&pagesAccess);
 
     // TODO: remove this lock and see what happens
@@ -468,7 +468,7 @@ class PasswordCloner : public PasswordUI {
     }
 };
 
-EngineBase* PdfEngineImpl::Clone() {
+EngineBase* EnginePdf::Clone() {
     ScopedCritSec scope(ctxAccess);
     if (!FileName()) {
         // before port we could clone streams but it's no longer possible
@@ -482,7 +482,7 @@ EngineBase* PdfEngineImpl::Clone() {
         pwdUI = new PasswordCloner(pdf_crypt_key(ctx, doc->crypt));
     }
 
-    PdfEngineImpl* clone = new PdfEngineImpl();
+    EnginePdf* clone = new EnginePdf();
     bool ok = clone->Load(FileName(), pwdUI);
     if (!ok) {
         delete clone;
@@ -525,7 +525,7 @@ static const WCHAR* findEmbedMarks(const WCHAR* fileName) {
     return nullptr;
 }
 
-bool PdfEngineImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
+bool EnginePdf::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     CrashIf(FileName() || _doc || !ctx);
     SetFileName(fileName);
     if (!ctx) {
@@ -592,7 +592,7 @@ bool PdfEngineImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
-bool PdfEngineImpl::Load(IStream* stream, PasswordUI* pwdUI) {
+bool EnginePdf::Load(IStream* stream, PasswordUI* pwdUI) {
     CrashIf(FileName() || _doc || !ctx);
     if (!ctx) {
         return false;
@@ -611,7 +611,7 @@ bool PdfEngineImpl::Load(IStream* stream, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
-bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
+bool EnginePdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
     }
@@ -715,7 +715,7 @@ static PageLayoutType GetPreferredLayout(fz_context* ctx, pdf_document* doc) {
     return layout;
 }
 
-bool PdfEngineImpl::FinishLoading() {
+bool EnginePdf::FinishLoading() {
     pageCount = 0;
     fz_try(ctx) {
         // this call might throw the first time
@@ -845,7 +845,7 @@ bool PdfEngineImpl::FinishLoading() {
     return true;
 }
 
-PageDestination* destFromAttachment(PdfEngineImpl* engine, fz_outline* outline) {
+PageDestination* destFromAttachment(EnginePdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationLaunchEmbedded;
     // WCHAR* path = strconv::Utf8ToWstr(outline->uri);
@@ -855,7 +855,7 @@ PageDestination* destFromAttachment(PdfEngineImpl* engine, fz_outline* outline) 
     return dest;
 }
 
-TocItem* PdfEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment) {
+TocItem* EnginePdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment) {
     TocItem* root = nullptr;
     TocItem* curr = nullptr;
 
@@ -915,7 +915,7 @@ TocItem* PdfEngineImpl::BuildTocTree(TocItem* parent, fz_outline* outline, int& 
 }
 
 // TODO: maybe build in FinishDownload
-TocTree* PdfEngineImpl::GetToc() {
+TocTree* EnginePdf::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -946,7 +946,7 @@ TocTree* PdfEngineImpl::GetToc() {
     return tocTree;
 }
 
-PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
+PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
     ScopedCritSec scope1(&pagesAccess);
     ScopedCritSec scope2(ctxAccess);
 
@@ -993,12 +993,12 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
     return pageDest;
 }
 
-FzPageInfo* PdfEngineImpl::GetFzPageInfo(int pageNo, bool failIfBusy) {
+FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool failIfBusy) {
     GetFzPage(pageNo, failIfBusy);
     return _pages[pageNo - 1];
 }
 
-fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
+fz_page* EnginePdf::GetFzPage(int pageNo, bool failIfBusy) {
     ScopedCritSec scope(&pagesAccess);
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
@@ -1057,12 +1057,12 @@ fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
     return page;
 }
 
-RectD PdfEngineImpl::PageMediabox(int pageNo) {
+RectD EnginePdf::PageMediabox(int pageNo) {
     FzPageInfo* pi = _pages[pageNo - 1];
     return pi->mediabox;
 }
 
-RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
+RectD EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
 
     ScopedCritSec scope(ctxAccess);
@@ -1097,7 +1097,7 @@ RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     return rect2.Intersect(mediabox);
 }
 
-RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EnginePdf::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     CrashIf(zoom <= 0);
     fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse) {
@@ -1108,7 +1108,7 @@ RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     return fz_rect_to_RectD(rect2);
 }
 
-RenderedBitmap* PdfEngineImpl::RenderPage(RenderPageArgs& args) {
+RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
 
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
@@ -1188,41 +1188,41 @@ RenderedBitmap* PdfEngineImpl::RenderPage(RenderPageArgs& args) {
     return bitmap;
 }
 
-PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
+PageElement* EnginePdf::GetElementAtPos(int pageNo, PointD pt) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
-Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
+Vec<PageElement*>* EnginePdf::GetElements(int pageNo) {
     auto* pageInfo = GetFzPageInfo(pageNo, true);
     return FzGetElements(pageInfo);
 }
 
-RenderedBitmap* PdfEngineImpl::GetImageForPageElement(PageElement* pel) {
+RenderedBitmap* EnginePdf::GetImageForPageElement(PageElement* pel) {
     auto r = pel->rect;
     int pageNo = pel->pageNo;
     int imageID = pel->imageID;
     return GetPageImage(pageNo, r, imageID);
 }
 
-bool PdfEngineImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
+bool EnginePdf::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
     return SaveFileAs(pdfFileName, includeUserAnnots);
 }
 
-bool PdfEngineImpl::BenchLoadPage(int pageNo) {
+bool EnginePdf::BenchLoadPage(int pageNo) {
     return GetFzPage(pageNo) != nullptr;
 }
 
-fz_matrix PdfEngineImpl::viewctm(int pageNo, float zoom, int rotation) {
+fz_matrix EnginePdf::viewctm(int pageNo, float zoom, int rotation) {
     const fz_rect tmpRc = RectD_to_fz_rect(PageMediabox(pageNo));
     return fz_create_view_ctm(tmpRc, zoom, rotation);
 }
 
-fz_matrix PdfEngineImpl::viewctm(fz_page* page, float zoom, int rotation) {
+fz_matrix EnginePdf::viewctm(fz_page* page, float zoom, int rotation) {
     return fz_create_view_ctm(fz_bound_page(ctx, page), zoom, rotation);
 }
 
-void PdfEngineImpl::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
+void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
     auto& comments = pageInfo->comments;
 
     auto page = (pdf_page*)pageInfo->page;
@@ -1287,7 +1287,7 @@ void PdfEngineImpl::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo)
     comments.Reverse();
 }
 
-RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
+RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     if (!pageInfo->page) {
         return nullptr;
@@ -1326,7 +1326,7 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 }
 
 // TODO: remember this instead of re-doing
-WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
+WCHAR* EnginePdf::ExtractPageText(int pageNo, RectI** coordsOut) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_stext_page* stext = pageInfo->stext;
     if (!stext) {
@@ -1337,7 +1337,7 @@ WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
     return content;
 }
 
-bool PdfEngineImpl::IsLinearizedFile() {
+bool EnginePdf::IsLinearizedFile() {
     ScopedCritSec scope(ctxAccess);
     // determine the object number of the very first object in the file
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
@@ -1415,7 +1415,7 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
     }
 }
 
-WCHAR* PdfEngineImpl::ExtractFontList() {
+WCHAR* EnginePdf::ExtractFontList() {
     Vec<pdf_obj*> fontList;
     Vec<pdf_obj*> resList;
 
@@ -1538,7 +1538,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
     return fonts.Join(L"\n");
 }
 
-WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
+WCHAR* EnginePdf::GetProperty(DocumentProperty prop) {
     if (!_doc) {
         return nullptr;
     }
@@ -1620,7 +1620,7 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
     return nullptr;
 };
 
-void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+void EnginePdf::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread
     ScopedCritSec scope(ctxAccess);
     if (list) {
@@ -1630,7 +1630,7 @@ void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     }
 }
 
-std::string_view PdfEngineImpl::GetFileData() {
+std::string_view EnginePdf::GetFileData() {
     std::string_view res;
     ScopedCritSec scope(ctxAccess);
 
@@ -1655,7 +1655,7 @@ std::string_view PdfEngineImpl::GetFileData() {
     return file::ReadFile(path);
 }
 
-bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+bool EnginePdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
@@ -1852,7 +1852,7 @@ static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* pa
     pdf_update_appearance(ctx, annot);
 }
 
-bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
+bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
     if (!userAnnots.size()) {
         return true;
     }
@@ -1895,7 +1895,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
 
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0
-bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
+bool EnginePdf::SaveEmbedded(LinkSaverUI& saveUI, int num) {
     ScopedCritSec scope(ctxAccess);
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
 
@@ -1916,7 +1916,7 @@ bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
 }
 #endif
 
-bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
+bool EnginePdf::HasClipOptimizations(int pageNo) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
     if (!pageInfo) {
         return false;
@@ -1933,7 +1933,7 @@ bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
     return true;
 }
 
-WCHAR* PdfEngineImpl::GetPageLabel(int pageNo) const {
+WCHAR* EnginePdf::GetPageLabel(int pageNo) const {
     if (!_pageLabels || pageNo < 1 || PageCount() < pageNo) {
         return EngineBase::GetPageLabel(pageNo);
     }
@@ -1941,7 +1941,7 @@ WCHAR* PdfEngineImpl::GetPageLabel(int pageNo) const {
     return str::Dup(_pageLabels->at(pageNo - 1));
 }
 
-int PdfEngineImpl::GetPageByLabel(const WCHAR* label) const {
+int EnginePdf::GetPageByLabel(const WCHAR* label) const {
     int pageNo = 0;
     if (_pageLabels) {
         pageNo = _pageLabels->Find(label) + 1;
@@ -1954,11 +1954,11 @@ int PdfEngineImpl::GetPageByLabel(const WCHAR* label) const {
     return pageNo;
 }
 
-EngineBase* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+EngineBase* EnginePdf::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (str::IsEmpty(fileName)) {
         return nullptr;
     }
-    PdfEngineImpl* engine = new PdfEngineImpl();
+    EnginePdf* engine = new EnginePdf();
     if (!engine->Load(fileName, pwdUI)) {
         delete engine;
         return nullptr;
@@ -1966,8 +1966,8 @@ EngineBase* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwd
     return engine;
 }
 
-EngineBase* PdfEngineImpl::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
-    PdfEngineImpl* engine = new PdfEngineImpl();
+EngineBase* EnginePdf::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
+    EnginePdf* engine = new EnginePdf();
     if (!engine->Load(stream, pwdUI)) {
         delete engine;
         return nullptr;
@@ -1991,9 +1991,9 @@ bool IsEnginePdfSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateEnginePdfFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-    return PdfEngineImpl::CreateFromFile(fileName, pwdUI);
+    return EnginePdf::CreateFromFile(fileName, pwdUI);
 }
 
 EngineBase* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI) {
-    return PdfEngineImpl::CreateFromStream(stream, pwdUI);
+    return EnginePdf::CreateFromStream(stream, pwdUI);
 }

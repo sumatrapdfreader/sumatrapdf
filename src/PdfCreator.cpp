@@ -240,7 +240,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
         return false;
     }
 
-    // adapted from PdfEngineImpl::GetProperty
+    // adapted from EnginePdf::GetProperty
     static struct {
         DocumentProperty prop;
         char* name;
