@@ -13,8 +13,6 @@
 // a distinguishing string at the end of the version number
 // (e.g. version 2.3.2z or 2.4opt)
 
-#define APP_NAME_STR       L"SumatraPDF"
-
 #define _QUOTEME(x) #x
 #define QM(x) _QUOTEME(x)
 #define _QUOTEME2(x, y) _QUOTEME(x##y)
