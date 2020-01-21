@@ -207,9 +207,9 @@ struct TreeCtrl : public WindowBase {
 
     TreeItemState GetItemState(TreeItem*);
 
-    void dragBegin(NMTREEVIEWW*);
-    void dragMove(int x, int y);
-    void dragEnd();
+    void DragBegin(NMTREEVIEWW*);
+    void DragMove(int x, int y);
+    void DragEnd();
 };
 
 WindowBaseLayout* NewTreeLayout(TreeCtrl*);

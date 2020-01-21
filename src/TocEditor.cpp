@@ -54,7 +54,23 @@ struct TocEditorWindow {
     void TreeItemSelectedHandler(TreeSelectionChangedArgs*);
     void TreeClickHandler(TreeClickArgs* args);
     void GetDispInfoHandler(TreeGetDispInfoArgs*);
+    void TreeItemDragged(TreeItemDraggeddArgs*);
 };
+
+void TocEditorWindow::TreeItemDragged(TreeItemDraggeddArgs* args) {
+    TocItem* dragged = (TocItem*)args->draggedItem;
+    TocItem* dragTarget = (TocItem*)args->dragTargetItem;
+    dbglogf("TreeItemDragged:");
+    if (dragged != nullptr) {
+        AutoFreeStr s = strconv::WstrToUtf8(dragged->title);
+        dbglogf(" dragged: %s", s.get());
+    }
+    if (dragTarget != nullptr) {
+        AutoFreeStr s = strconv::WstrToUtf8(dragTarget->title);
+        dbglogf("  on: %s", s.get());
+    }
+    dbglogf("\n");
+}
 
 TocEditorWindow::~TocEditorWindow() {
     // TODO: delete the top but not children, because
@@ -328,7 +344,7 @@ static void CreateMainLayout(TocEditorWindow* win) {
     tree->onTreeItemCustomDraw = OnTocCustomDraw;
     tree->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelectedHandler, win, _1);
     tree->onTreeClick = std::bind(&TocEditorWindow::TreeClickHandler, win, _1);
-
+    tree->onTreeItemDragged = std::bind(&TocEditorWindow::TreeItemDragged, win, _1);
     gWindow->treeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
 

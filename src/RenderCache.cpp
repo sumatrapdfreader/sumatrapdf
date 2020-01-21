@@ -747,7 +747,8 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, Pag
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logf("RenderCache::Paint() in %.2f\n", dur);
+        logf("RenderCache::Paint() pageNo: %d, bounds={%d,%d,%d,%d} in %.2f\n", pageNo, bounds.x, bounds.y, bounds.dx,
+             bounds.dy, dur);
     };
 
     if (!dm->ShouldCacheRendering(pageNo)) {

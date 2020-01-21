@@ -4,6 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/BitManip.h"
+#include "utils/Dpi.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -168,13 +170,15 @@ static void NcCalcSize(HWND hwnd, NCCALCSIZE_PARAMS* params) {
 
 SIZE EditCtrl::GetIdealSize() {
     SIZE s1 = MeasureTextInHwnd(hwnd, L"Minimal", hfont);
-    WCHAR* txt = win::GetText(hwnd);
+    // dbglogf("EditCtrl::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
+    AutoFreeWstr txt = win::GetText(hwnd);
     SIZE s2 = MeasureTextInHwnd(hwnd, txt, hfont);
-    free(txt);
+    // dbglogf("EditCtrl::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
     int dx = std::max(s1.cx, s2.cx);
-    int dy = std::max(s2.cy, s2.cy);
+    int dy = std::max(s1.cy, s2.cy);
     SIZE res{dx, dy};
+    // dbglogf("EditCtrl::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
 
     LRESULT margins = SendMessage(hwnd, EM_GETMARGINS, 0, 0);
     int lm = (int)LOWORD(margins);
@@ -182,9 +186,9 @@ SIZE EditCtrl::GetIdealSize() {
     res.cx += lm + rm;
 
     if (this->hasBorder) {
-        res.cx += 4;
-        res.cy += 4;
+        res.cx += DpiScale(hwnd, 4);
+        res.cy += DpiScale(hwnd, 4);
     }
-
+    // logf("EditCtrl::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
     return res;
 }

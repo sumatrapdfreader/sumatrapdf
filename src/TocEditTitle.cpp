@@ -173,8 +173,8 @@ static void createMainLayout(EditTitleWindow* win) {
         auto e = new EditCtrl(parent);
         win->editColor = e;
         e->SetCueText("Color");
-        e->SetText(win->initialColor.as_view());
         e->Create();
+        e->SetText(win->initialColor.as_view());
         auto l = NewEditLayout(e);
         vbox->addChild(l);
     }

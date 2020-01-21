@@ -114,7 +114,7 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         }
         int x = GET_X_LPARAM(args->lparam);
         int y = GET_Y_LPARAM(args->lparam);
-        dragMove(x, y);
+        DragMove(x, y);
         args->didHandle = true;
         return;
     }
@@ -123,7 +123,7 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         if (!isDragging) {
             return;
         }
-        dragEnd();
+        DragEnd();
         args->didHandle = true;
         return;
     }
@@ -322,14 +322,14 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         if (!treeCtrl->onTreeItemDragged) {
             return;
         }
-        dragBegin((NMTREEVIEWW*)lp);
+        DragBegin((NMTREEVIEWW*)lp);
         args->didHandle = true;
         return;
     }
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/drag-a-tree-view-item
-void TreeCtrl::dragBegin(NMTREEVIEWW* nmtv) {
+void TreeCtrl::DragBegin(NMTREEVIEWW* nmtv) {
     HTREEITEM hitem = nmtv->itemNew.hItem;
     draggedItem = GetTreeItemByHandle(hitem);
     HIMAGELIST himl = TreeView_CreateDragImage(hwnd, hitem);
@@ -338,12 +338,13 @@ void TreeCtrl::dragBegin(NMTREEVIEWW* nmtv) {
     BOOL ok = ImageList_DragEnter(hwnd, nmtv->ptDrag.x, nmtv->ptDrag.x);
     CrashIf(!ok);
 
-    ShowCursor(FALSE);
+    // ShowCursor(FALSE);
+    SetCursor(IDC_HAND);
     SetCapture(parent);
     isDragging = TRUE;
 }
 
-void TreeCtrl::dragMove(int xCur, int yCur) {
+void TreeCtrl::DragMove(int xCur, int yCur) {
     // logf("dragMove(): x: %d, y: %d\n", xCur, yCur);
     // drag the item to the current position of the mouse pointer
     // first convert the dialog coordinates to control coordinates
@@ -369,11 +370,11 @@ void TreeCtrl::dragMove(int xCur, int yCur) {
     ImageList_DragShowNolock(TRUE);
 }
 
-void TreeCtrl::dragEnd() {
+void TreeCtrl::DragEnd() {
     HTREEITEM htiDest = TreeView_GetDropHilight(hwnd);
     if (htiDest != nullptr) {
         dragTargetItem = GetTreeItemByHandle(htiDest);
-        //logf("finished dragging 0x%p on 0x%p\n", draggedItem, dragTargetItem);
+        // logf("finished dragging 0x%p on 0x%p\n", draggedItem, dragTargetItem);
         TreeItemDraggeddArgs args;
         args.treeCtrl = this;
         args.draggedItem = draggedItem;
@@ -383,7 +384,8 @@ void TreeCtrl::dragEnd() {
     ImageList_EndDrag();
     TreeView_SelectDropTarget(hwnd, nullptr);
     ReleaseCapture();
-    ShowCursor(TRUE);
+    SetCursor(IDC_ARROW);
+    // ShowCursor(TRUE);
     isDragging = false;
     draggedItem = nullptr;
     dragTargetItem = nullptr;

@@ -47,9 +47,8 @@ void HwndSetText(HWND hwnd, std::string_view s) {
     if (s.empty()) {
         return;
     }
-    WCHAR* ws = strconv::Utf8ToWstr(s);
+    AutoFreeWstr ws = strconv::Utf8ToWstr(s);
     win::SetText(hwnd, ws);
-    free(ws);
 }
 
 Kind kindWindowBase = "windowBase";
