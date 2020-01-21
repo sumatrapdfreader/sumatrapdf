@@ -5,7 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "uia/TextRange.h"
 #include "SettingsStructs.h"

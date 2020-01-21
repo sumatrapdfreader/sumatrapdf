@@ -299,7 +299,7 @@ static bool WriteWin10Registry(HKEY hkey) {
     // L"SOFTWARE\\SumatraPDF\\Capabilities"
     AutoFreeWstr capKey = str::Join(L"SOFTWARE\\", appName, L"\\Capabilities");
     ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", appName, capKey);
-    AutoFreeWstr desc = str::Join(appName,  L" is a PDF reader.");
+    AutoFreeWstr desc = str::Join(appName, L" is a PDF reader.");
     ok &= WriteRegStr(hkey, capKey, L"ApplicationDescription", desc);
     AutoFreeWstr appLongName = str::Join(appName, L" Reader");
     ok &= WriteRegStr(hkey, capKey, L"ApplicationName", appLongName);
@@ -371,7 +371,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Print\\Command");
         ok &= WriteRegStr(hkey, key, nullptr, printPath);
     }
-    AutoFreeWstr printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.get()));
+    AutoFreeWstr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.get());
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\PrintTo\\Command");
         ok &= WriteRegStr(hkey, key, nullptr, printToPath);
@@ -498,6 +498,7 @@ static void OnButtonOptions();
 
 static void OnButtonInstall() {
     if (gShowOptions) {
+        // hide and disable "Options" button during installation
         OnButtonOptions();
     }
 
@@ -617,11 +618,12 @@ static void OnButtonOptions() {
 
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
-    if (gShowOptions)
+    if (gShowOptions) {
         SetButtonTextAndResize(gButtonOptions, _TR("Hide &Options"));
-    //| ACCESSKEY_ALTERNATIVE
-    else
+    } else {
+        //| ACCESSKEY_ALTERNATIVE
         SetButtonTextAndResize(gButtonOptions, _TR("&Options"));
+    }
     //] ACCESSKEY_ALTERNATIVE
     //] ACCESSKEY_GROUP Installer
 
@@ -635,8 +637,9 @@ static void OnButtonOptions() {
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData) {
     switch (msg) {
         case BFFM_INITIALIZED:
-            if (!str::IsEmpty((WCHAR*)lpData))
+            if (!str::IsEmpty((WCHAR*)lpData)) {
                 SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+            }
             break;
 
         // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
@@ -645,8 +648,9 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
             if (SHGetPathFromIDList((LPITEMIDLIST)lParam, path) && dir::Exists(path)) {
                 SHFILEINFO sfi = {0};
                 SHGetFileInfo((LPCWSTR)lParam, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
-                if (!(sfi.dwAttributes & SFGAO_LINK))
+                if (!(sfi.dwAttributes & SFGAO_LINK)) {
                     break;
+                }
             }
             EnableWindow(GetDlgItem(hwnd, IDOK), FALSE);
         } break;
@@ -657,8 +661,9 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
 
 static BOOL BrowseForFolder(HWND hwnd, const WCHAR* lpszInitialFolder, const WCHAR* lpszCaption, WCHAR* lpszBuf,
                             DWORD dwBufSize) {
-    if (lpszBuf == nullptr || dwBufSize < MAX_PATH)
+    if (lpszBuf == nullptr || dwBufSize < MAX_PATH) {
         return FALSE;
+    }
 
     BROWSEINFO bi = {0};
     bi.hwndOwner = hwnd;

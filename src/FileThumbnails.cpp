@@ -8,7 +8,7 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"

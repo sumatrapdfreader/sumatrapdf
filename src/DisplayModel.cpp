@@ -48,7 +48,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/Log.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EngineManager.h"
 

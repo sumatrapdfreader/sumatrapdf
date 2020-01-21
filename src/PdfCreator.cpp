@@ -13,7 +13,7 @@ extern "C" {
 #include "utils/GdiplusUtil.h"
 #include "utils/Log.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "PdfCreator.h"

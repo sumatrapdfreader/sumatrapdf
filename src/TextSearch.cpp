@@ -4,7 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"

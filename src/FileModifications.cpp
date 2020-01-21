@@ -7,7 +7,7 @@
 #include "utils/FileUtil.h"
 #include "utils/SquareTreeParser.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "FileModifications.h"
 #include "Version.h"
@@ -158,7 +158,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* newAnnots
     str::Str data;
 
     const WCHAR* fileName = path::GetBaseNameNoFree(filePath);
-    // WCHAR* fileName = L"a’a.pdf"
+    // WCHAR* fileName = L"aï¿½a.pdf"
     std::string_view fileNameA = strconv::WstrToUtf8(fileName);
     data.Append("# SumatraPDF: modifications to \"");
     data.AppendView(fileNameA);

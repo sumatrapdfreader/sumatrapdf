@@ -8,7 +8,7 @@
 #include "GlobalPrefs.h"
 #include "Flags.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EngineManager.h"
 

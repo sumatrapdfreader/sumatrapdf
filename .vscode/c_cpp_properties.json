@@ -1,94 +1,32 @@
 {
     "configurations": [
         {
-            "name": "Mac",
-            "includePath": [
-                "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1",
-                "/usr/local/include",
-                "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include",
-                "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
-                "${workspaceRoot}",
-                "${workspaceRoot}/src",
-                "${workspaceRoot}/src/mui",
-                "${workspaceRoot}/src/utils",
-                "${workspaceRoot}/src/wingui"
-            ],
-            "defines": [],
-            "intelliSenseMode": "clang-x64",
-            "browse": {
-                "path": [
-                    "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1",
-                    "/usr/local/include",
-                    "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include",
-                    "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
-                    "${workspaceRoot}",
-                    "${workspaceRoot}/src/mui",
-                    "${workspaceRoot}/src/utils",
-                    "${workspaceRoot}/src/wingui"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            },
-            "macFrameworkPath": [
-                "/System/Library/Frameworks",
-                "/Library/Frameworks"
-            ]
-        },
-        {
-            "name": "Linux",
-            "includePath": [
-                "/usr/include",
-                "/usr/local/include",
-                "${workspaceRoot}",
-                "${workspaceRoot}/src/mui",
-                "${workspaceRoot}/src/utils",
-                "${workspaceRoot}/src/wingui"
-            ],
-            "defines": [],
-            "intelliSenseMode": "clang-x64",
-            "browse": {
-                "path": [
-                    "/usr/include",
-                    "/usr/local/include",
-                    "${workspaceRoot}",
-                    "${workspaceRoot}/src/mui",
-                    "${workspaceRoot}/src/utils",
-                    "${workspaceRoot}/src/wingui"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            }
-        },
-        {
             "name": "Win32",
             "includePath": [
+                "${workspaceRoot}/src",
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/shared",
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/ucrt",
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um",
                 "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include",
-                "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include/experimental",
-                "${workspaceRoot}/src"
+                "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include/experimental"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_WIN32",
-                "WIN32"
+                "WIN32",
+                "_CRT_SECURE_NO_WARNINGS",
+                "WINVER=0x0605",
+                "_WIN32_WINNT=0x0601"
             ],
             "intelliSenseMode": "msvc-x64",
             "browse": {
-                "path": [
-                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/shared",
-                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/ucrt",
-                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um",
-                    "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include",
-                    "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include/experimental",
-                    "${workspaceRoot}/src"
-                ],
+                "path": [],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
             },
-            "cppStandard": "c++17"
+            "cppStandard": "c++20",
+            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/bin/Hostx64/x64/cl.exe"
         }
     ],
     "version": 4

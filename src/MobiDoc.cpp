@@ -13,7 +13,7 @@
 #include "utils/PalmDbReader.h"
 #include "utils/TrivialHtmlParser.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "MobiDoc.h"

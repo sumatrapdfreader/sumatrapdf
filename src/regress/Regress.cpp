@@ -27,7 +27,7 @@ To write new regression test:
 #include "mui/Mui.h"
 #include "utils/WinUtil.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

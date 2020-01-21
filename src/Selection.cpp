@@ -8,7 +8,7 @@
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EngineManager.h"
 #include "SettingsStructs.h"

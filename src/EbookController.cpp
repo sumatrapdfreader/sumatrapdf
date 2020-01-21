@@ -13,7 +13,7 @@
 #include "utils/TrivialHtmlParser.h"
 #include "utils/Log.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

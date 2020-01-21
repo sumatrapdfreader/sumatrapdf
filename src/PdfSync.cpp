@@ -6,7 +6,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "PdfSync.h"
 
