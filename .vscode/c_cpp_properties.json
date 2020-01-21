@@ -4,11 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceRoot}/src",
-                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/shared",
-                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/ucrt",
-                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.18362.0/um",
-                "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include",
-                "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/include/experimental"
+                "${workspaceRoot}/src/util",
+                "${workspaceRoot}/src/wingui"
             ],
             "defines": [
                 "_DEBUG",
@@ -19,11 +16,12 @@
                 "WINVER=0x0605",
                 "_WIN32_WINNT=0x0601"
             ],
+            "windowsSdkVersion": "10.0.18362.0",
             "intelliSenseMode": "msvc-x64",
             "browse": {
                 "path": [],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
+                "limitSymbolsToIncludedHeaders": false,
+                "databaseFilename": "${workspaceRoot}/out/intellisense.db"
             },
             "cppStandard": "c++20",
             "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/bin/Hostx64/x64/cl.exe"

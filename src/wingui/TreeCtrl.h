@@ -99,6 +99,14 @@ struct TreeGetDispInfoArgs : WndProcArgs {
 
 typedef std::function<void(TreeGetDispInfoArgs*)> TreeGetDispInfoHandler;
 
+struct TreeItemDraggeddArgs {
+    TreeCtrl* treeCtrl = nullptr;
+    TreeItem* draggedItem = nullptr;
+    TreeItem* dragTargetItem = nullptr;
+};
+
+typedef std::function<void(TreeItemDraggeddArgs*)> TreeItemDraggedHandler;
+
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
 - set creation parameters
@@ -106,10 +114,65 @@ typedef std::function<void(TreeGetDispInfoArgs*)> TreeGetDispInfoHandler;
 */
 
 struct TreeCtrl : public WindowBase {
+    // creation parameters. must be set before CreateTreeCtrl() call
+    bool withCheckboxes = false;
+
+    // set before Create() to enable drag&drop
+    bool supportDragDrop = false;
+
+    bool isDragging = false;
+
+    TreeItem* draggedItem = nullptr;
+    TreeItem* dragTargetItem = nullptr;
+
+    // treeModel not owned by us
+    TreeModel* treeModel = nullptr;
+
+    // for all WM_NOTIFY messages
+    TreeNotifyHandler onTreeNotify = nullptr;
+
+    // for WM_NOTIFY with TVN_GETINFOTIP
+    TreeItemGetTooltipHandler onGetTooltip = nullptr;
+
+    // for WM_NOTIFY with TVN_SELCHANGED
+    TreeSelectionChangedHandler onTreeSelectionChanged = nullptr;
+
+    // for WM_NOTIFY with TVN_ITEMEXPANDED
+    TreeItemExpandedHandler onTreeItemExpanded = nullptr;
+
+    // for WM_NOTIFY with TVN_ITEMCHANGED
+    TreeItemChangedHandler onTreeItemChanged = nullptr;
+
+    // for WM_NOTIFY wiht NM_CUSTOMDRAW
+    TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
+
+    // for WM_NOTIFY with NM_CLICK or NM_DBCLICK
+    TreeClickHandler onTreeClick = nullptr;
+
+    // for WM_NOITFY with TVN_KEYDOWN
+    TreeKeyDownHandler onTreeKeyDown = nullptr;
+
+    // for WM_NOTIFY with TVN_GETDISPINFO
+    TreeGetDispInfoHandler onTreeGetDispInfo = nullptr;
+
+    // for TVN_BEGINDRAG / WM_MOUSEMOVE / WM_
+    TreeItemDraggedHandler onTreeItemDragged = nullptr;
+
+    Size idealSize{};
+
+    // private
+    TVITEMW item = {0};
+
+    // TreeItem* -> HTREEITEM mapping so that we can
+    // find HTREEITEM from TreeItem*
+    Vec<std::tuple<TreeItem*, HTREEITEM>> insertedItems;
+
     TreeCtrl(HWND parent);
     ~TreeCtrl();
 
     SIZE GetIdealSize() override;
+    void WndProc(WndProcArgs*) override;
+    void WndProcParent(WndProcArgs*) override;
 
     void Clear();
 
@@ -144,50 +207,9 @@ struct TreeCtrl : public WindowBase {
 
     TreeItemState GetItemState(TreeItem*);
 
-    void WndProc(WndProcArgs*) override;
-    void WndProcParent(WndProcArgs*) override;
-
-    // creation parameters. must be set before CreateTreeCtrl() call
-    bool withCheckboxes = false;
-
-    // treeModel not owned by us
-    TreeModel* treeModel = nullptr;
-
-    // for all WM_NOTIFY messages
-    TreeNotifyHandler onTreeNotify = nullptr;
-
-    // for WM_NOTIFY with TVN_GETINFOTIP
-    TreeItemGetTooltipHandler onGetTooltip = nullptr;
-
-    // for WM_NOTIFY with TVN_SELCHANGED
-    TreeSelectionChangedHandler onTreeSelectionChanged = nullptr;
-
-    // for WM_NOTIFY with TVN_ITEMEXPANDED
-    TreeItemExpandedHandler onTreeItemExpanded = nullptr;
-
-    // for WM_NOTIFY with TVN_ITEMCHANGED
-    TreeItemChangedHandler onTreeItemChanged = nullptr;
-
-    // for WM_NOTIFY wiht NM_CUSTOMDRAW
-    TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
-
-    // for WM_NOTIFY with NM_CLICK or NM_DBCLICK
-    TreeClickHandler onTreeClick = nullptr;
-
-    // for WM_NOITFY with TVN_KEYDOWN
-    TreeKeyDownHandler onTreeKeyDown = nullptr;
-
-    // for WM_NOTIFY with TVN_GETDISPINFO
-    TreeGetDispInfoHandler onTreeGetDispInfo = nullptr;
-
-    Size idealSize{};
-
-    // private
-    TVITEMW item = {0};
-
-    // TreeItem* -> HTREEITEM mapping so that we can
-    // find HTREEITEM from TreeItem*
-    Vec<std::tuple<TreeItem*, HTREEITEM>> insertedItems;
+    void dragBegin(NMTREEVIEWW*);
+    void dragMove(int x, int y);
+    void dragEnd();
 };
 
 WindowBaseLayout* NewTreeLayout(TreeCtrl*);

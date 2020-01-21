@@ -55,6 +55,8 @@
     "cctype": "cpp",
     "concepts": "cpp",
     "fstream": "cpp",
-    "iostream": "cpp"
-  }
+    "iostream": "cpp",
+    "*.idl": "cpp"
+  },
+  "C_Cpp.loggingLevel": "Debug"
 }

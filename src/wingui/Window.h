@@ -97,7 +97,6 @@ struct MouseWheelArgs : WndProcArgs {
 
 typedef std::function<void(MouseWheelArgs*)> MouseWheelHandler;
 
-
 extern Kind kindWindowBase;
 
 struct WindowBase {

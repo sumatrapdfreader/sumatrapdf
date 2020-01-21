@@ -107,6 +107,27 @@ static void SetTreeItemState(UINT uState, TreeItemState& state) {
 
 void TreeCtrl::WndProcParent(WndProcArgs* args) {
     UINT msg = args->msg;
+
+    if (msg == WM_MOUSEMOVE) {
+        if (!isDragging) {
+            return;
+        }
+        int x = GET_X_LPARAM(args->lparam);
+        int y = GET_Y_LPARAM(args->lparam);
+        dragMove(x, y);
+        args->didHandle = true;
+        return;
+    }
+
+    if (msg == WM_LBUTTONUP) {
+        if (!isDragging) {
+            return;
+        }
+        dragEnd();
+        args->didHandle = true;
+        return;
+    }
+
     if (msg != WM_NOTIFY) {
         return;
     }
@@ -295,6 +316,77 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         treeCtrl->onTreeGetDispInfo(&a);
         return;
     }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/drag-a-tree-view-item
+    if (code == TVN_BEGINDRAG) {
+        if (!treeCtrl->onTreeItemDragged) {
+            return;
+        }
+        dragBegin((NMTREEVIEWW*)lp);
+        args->didHandle = true;
+        return;
+    }
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/drag-a-tree-view-item
+void TreeCtrl::dragBegin(NMTREEVIEWW* nmtv) {
+    HTREEITEM hitem = nmtv->itemNew.hItem;
+    draggedItem = GetTreeItemByHandle(hitem);
+    HIMAGELIST himl = TreeView_CreateDragImage(hwnd, hitem);
+
+    ImageList_BeginDrag(himl, 0, 0, 0);
+    BOOL ok = ImageList_DragEnter(hwnd, nmtv->ptDrag.x, nmtv->ptDrag.x);
+    CrashIf(!ok);
+
+    ShowCursor(FALSE);
+    SetCapture(parent);
+    isDragging = TRUE;
+}
+
+void TreeCtrl::dragMove(int xCur, int yCur) {
+    // logf("dragMove(): x: %d, y: %d\n", xCur, yCur);
+    // drag the item to the current position of the mouse pointer
+    // first convert the dialog coordinates to control coordinates
+    POINT pt{xCur, yCur};
+    MapWindowPoints(parent, hwnd, &pt, 1);
+    ImageList_DragMove(pt.x, pt.y);
+
+    // turn off the dragged image so the background can be refreshed.
+    ImageList_DragShowNolock(FALSE);
+
+    // find out if the pointer is on the item. If it is,
+    // highlight the item as a drop target.
+    TVHITTESTINFO tvht{};
+    tvht.pt.x = pt.x;
+    tvht.pt.y = pt.y;
+    HTREEITEM htiTarget = TreeView_HitTest(hwnd, &tvht);
+
+    if (htiTarget != nullptr) {
+        // TODO: don't know which is better
+        SendMessage(hwnd, TVM_SELECTITEM, TVGN_DROPHILITE, (LPARAM)htiTarget);
+        // TreeView_SelectDropTarget(hwnd, htiTarget);
+    }
+    ImageList_DragShowNolock(TRUE);
+}
+
+void TreeCtrl::dragEnd() {
+    HTREEITEM htiDest = TreeView_GetDropHilight(hwnd);
+    if (htiDest != nullptr) {
+        dragTargetItem = GetTreeItemByHandle(htiDest);
+        //logf("finished dragging 0x%p on 0x%p\n", draggedItem, dragTargetItem);
+        TreeItemDraggeddArgs args;
+        args.treeCtrl = this;
+        args.draggedItem = draggedItem;
+        args.dragTargetItem = dragTargetItem;
+        onTreeItemDragged(&args);
+    }
+    ImageList_EndDrag();
+    TreeView_SelectDropTarget(hwnd, nullptr);
+    ReleaseCapture();
+    ShowCursor(TRUE);
+    isDragging = false;
+    draggedItem = nullptr;
+    dragTargetItem = nullptr;
 }
 
 static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
@@ -358,8 +450,8 @@ void TreeCtrl::WndProc(WndProcArgs* args) {
 TreeCtrl::TreeCtrl(HWND p) {
     kind = kindTree;
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
-    dwStyle |= TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT;
-    dwStyle |= TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
+    dwStyle |= TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
+    dwStyle |= TVS_TRACKSELECT | TVS_NOHSCROLL | TVS_INFOTIP;
     dwExStyle = TVS_EX_DOUBLEBUFFER;
     winClass = WC_TREEVIEWW;
     parent = p;
@@ -367,6 +459,10 @@ TreeCtrl::TreeCtrl(HWND p) {
 }
 
 bool TreeCtrl::Create(const WCHAR* title) {
+    if (!supportDragDrop) {
+        dwStyle |= TVS_DISABLEDRAGDROP;
+    }
+
     if (!title) {
         title = L"";
     }
@@ -374,6 +470,13 @@ bool TreeCtrl::Create(const WCHAR* title) {
     bool ok = WindowBase::Create();
     if (!ok) {
         return false;
+    }
+
+    if (supportDragDrop) {
+        // we need image list to create drag image in dragBegin()
+        HIMAGELIST himl = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1);
+        CrashIf(!himl);
+        TreeView_SetImageList(hwnd, himl, TVSIL_NORMAL);
     }
 
     if (IsVistaOrGreater()) {

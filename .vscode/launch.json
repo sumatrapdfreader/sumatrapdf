@@ -11,7 +11,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out/dbg64/SumatraPDF-dll.exe",
             "args": [],
-            "stopAtEntry": true,
+            "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false
@@ -23,7 +23,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/out/dbg64/SumatraPDF-dll.exe",
             "args": ["-install"],
-            "stopAtEntry": true,
+            "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false

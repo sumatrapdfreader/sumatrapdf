@@ -313,6 +313,7 @@ static void CreateMainLayout(TocEditorWindow* win) {
     main->alignCross = CrossAxisAlign::Stretch;
 
     auto* tree = new TreeCtrl(hwnd);
+    tree->supportDragDrop = true;
     int dx = DpiScale(80);
     int dy = DpiScale(120);
     tree->idealSize = {dx, dy};

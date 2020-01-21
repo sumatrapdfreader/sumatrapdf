@@ -24,7 +24,6 @@ UINT_PTR NextSubclassId() {
     return g_subclassId;
 }
 
-
 CopyWndProcArgs::CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src) {
     this->dst = dst;
     this->src = src;
@@ -290,17 +289,30 @@ static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
 // Another option: always create a reflector HWND window, like walk does
 static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
                                               DWORD_PTR dwRefData) {
-    HWND hwndCtrl = getChildHWNDForMessage(msg, wp, lp);
-    if (!hwndCtrl) {
-        return DefSubclassProc(hwnd, msg, wp, lp);
-    }
-
     WindowBase* w = (WindowBase*)dwRefData;
     // char* msgName = getWinMessageName(msg);
     // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x, id: %d, w: 0x%p\n", hwnd, msg, msgName, wp, uIdSubclass, w);
     if (uIdSubclass != w->subclassParentId) {
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
+
+    // needed for drag&drop in TreeCtrl
+    // TODO: not quite happy with this
+    if (WM_LBUTTONUP == msg || WM_MOUSEMOVE == msg) {
+        WndProcArgs args{};
+        SetWndProcArgs(args);
+        w->WndProcParent(&args);
+        if (args.didHandle) {
+            return args.result;
+        }
+        return DefSubclassProc(hwnd, msg, wp, lp);
+    }
+
+    HWND hwndCtrl = getChildHWNDForMessage(msg, wp, lp);
+    if (!hwndCtrl) {
+        return DefSubclassProc(hwnd, msg, wp, lp);
+    }
+
     CrashIf(hwnd != w->parent);
     if (hwndCtrl != w->hwnd) {
         return DefSubclassProc(hwnd, msg, wp, lp);
