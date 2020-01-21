@@ -1173,10 +1173,10 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
         fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, transparency);
         fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
+        fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
         if (dev) {
-            fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
         }
         fz_drop_pixmap(ctx, pix);
