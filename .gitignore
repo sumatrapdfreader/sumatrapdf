@@ -16,8 +16,7 @@ builds/
 mupdf/generated/
 vs2017/.vs/
 vs2019/.vs/
-.vscode/.BROWSE.VC.DB-shm
-.vscode/.BROWSE.VC.DB-wal
+.vscode/db/
 .vscode/ipch/
 bin/cmapdump.exe
 drmemlogs/
