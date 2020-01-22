@@ -419,6 +419,9 @@ bool EngineXps::LoadFromStream(fz_stream* stm) {
         _doc = xps_open_document_with_stream(ctx, stm);
         pageCount = fz_count_pages(ctx, _doc);
     }
+    fz_always(ctx) {
+        fz_drop_stream(ctx, stm);
+    }
     fz_catch(ctx) {
         return false;
     }
@@ -518,9 +521,9 @@ fz_page* EngineXps::GetFzPage(int pageNo, bool failIfBusy) {
         dev = fz_new_list_device(ctx, list);
         // TODO(port): should this be just fz_run_page_contents?
         fz_run_page(ctx, page, dev, fz_identity, &cookie);
+        fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
-        fz_close_device(ctx, dev);
         fz_drop_device(ctx, dev);
         dev = NULL;
     }
@@ -662,10 +665,10 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
         fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, false);
         fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
+        fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
         if (dev) {
-            fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
         }
         fz_drop_pixmap(ctx, pix);
