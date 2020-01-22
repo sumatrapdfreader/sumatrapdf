@@ -155,7 +155,7 @@ typedef struct fz_store_type_s
 	void *(*keep_key)(fz_context *ctx, void *key);
 	void (*drop_key)(fz_context *ctx, void *key);
 	int (*cmp_key)(fz_context *ctx, void *a, void *b);
-	void (*format_key)(fz_context *ctx, char *buf, int size, void *key);
+	void (*format_key)(fz_context *ctx, char *buf, size_t size, void *key);
 	int (*needs_reap)(fz_context *ctx, void *key);
 } fz_store_type;
 

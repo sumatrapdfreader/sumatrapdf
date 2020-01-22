@@ -3572,7 +3572,7 @@ static void ffi_PDFObject_toString(js_State *J)
 	int tight = js_isdefined(J, 1) ? js_toboolean(J, 1) : 1;
 	int ascii = js_isdefined(J, 2) ? js_toboolean(J, 2) : 0;
 	char *s = NULL;
-	int n;
+	size_t n;
 
 	fz_try(ctx)
 		s = pdf_sprint_obj(ctx, NULL, 0, &n, obj, tight, ascii);
@@ -3603,7 +3603,7 @@ static void ffi_PDFObject_valueOf(js_State *J)
 	else if (pdf_is_real(ctx, obj))
 		js_pushnumber(J, pdf_to_real(ctx, obj));
 	else if (pdf_is_string(ctx, obj))
-		js_pushlstring(J, pdf_to_str_buf(ctx, obj), pdf_to_str_len(ctx, obj));
+		js_pushlstring(J, pdf_to_str_buf(ctx, obj), (int)pdf_to_str_len(ctx, obj));
 	else if (pdf_is_name(ctx, obj))
 		js_pushstring(J, pdf_to_name(ctx, obj));
 	else

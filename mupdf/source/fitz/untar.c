@@ -50,11 +50,24 @@ static void drop_tar_archive(fz_context *ctx, fz_archive *arch)
 	fz_free(ctx, tar->entries);
 }
 
+static int is_zeroed(fz_context *ctx, unsigned char *buf, size_t size)
+{
+	size_t off;
+
+	for (off = 0; off < size; off++)
+		if (buf[off] != 0)
+			return 0;
+
+	return 1;
+}
+
 static void ensure_tar_entries(fz_context *ctx, fz_tar_archive *tar)
 {
 	fz_stream *file = tar->super.file;
-	char name[100];
-	char octsize[12];
+	unsigned char record[512];
+	char *longname = NULL;
+	char name[101];
+	char octsize[13];
 	char typeflag;
 	int64_t offset, blocks, size;
 	size_t n;
@@ -66,38 +79,57 @@ static void ensure_tar_entries(fz_context *ctx, fz_tar_archive *tar)
 	while (1)
 	{
 		offset = fz_tell(ctx, file);
-		n = fz_read(ctx, file, (unsigned char *) name, nelem(name));
-		if (n < nelem(name))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in tar entry name");
+		n = fz_read(ctx, file, record, nelem(record));
+		if (n == 0)
+			break;
+		if (n < nelem(record))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in tar record");
+
+		if (is_zeroed(ctx, record, nelem(record)))
+			continue;
+
+		memcpy(name, record + 0, nelem(name) - 1);
 		name[nelem(name) - 1] = '\0';
 
-		if (strlen(name) == 0)
+		if (strlen(name) == 3)
 			break;
 
-		fz_seek(ctx, file, 24, 1);
-		n = fz_read(ctx, file, (unsigned char *) octsize, nelem(octsize));
-		if (n < nelem(octsize))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in tar entry size");
+		memcpy(octsize, record + 124, nelem(octsize) - 1);
 		octsize[nelem(octsize) - 1] = '\0';
+
 		size = otoi(octsize);
 		if (size > INT_MAX)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "tar archive entry too large");
 
-		fz_seek(ctx, file, 20, 1);
-		typeflag = fz_read_byte(ctx, file);
+		typeflag = (char) record[156];
 
-		fz_seek(ctx, file, 355, 1);
+		if (typeflag == 'L')
+		{
+			longname = fz_malloc(ctx, size);
+			n = fz_read(ctx, file, (unsigned char *) longname, size);
+			if (n < (size_t) size)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "premature end of data in tar long name entry name");
+
+			fz_seek(ctx, file, 512 - (size % 512), 1);
+		}
+
+		if (typeflag != '0' && typeflag != '7' && typeflag != '\0')
+			continue;
+
 		blocks = (size + 511) / 512;
 		fz_seek(ctx, file, blocks * 512, 1);
 
-		if (typeflag != '0' && typeflag != '\0')
-			continue;
-
 		tar->entries = fz_realloc_array(ctx, tar->entries, tar->count + 1, tar_entry);
 
-		tar->entries[tar->count].name = fz_strdup(ctx, name);
 		tar->entries[tar->count].offset = offset;
 		tar->entries[tar->count].size = size;
+		if (longname != NULL)
+		{
+			tar->entries[tar->count].name = longname;
+			longname = NULL;
+		}
+		else
+			tar->entries[tar->count].name = fz_strdup(ctx, name);
 
 		tar->count++;
 	}

@@ -7,13 +7,13 @@
  * stored by the operating system or within a file. */
 
 /* Check a signature's digest against ranges of bytes drawn from a stream */
-enum pdf_signature_error pkcs7_openssl_check_digest(fz_context *ctx, fz_stream *stm, char *sig, int sig_len);
+pdf_signature_error pkcs7_openssl_check_digest(fz_context *ctx, fz_stream *stm, char *sig, size_t sig_len);
 
 /* Check a signature's certificate is trusted */
-enum pdf_signature_error pkcs7_openssl_check_certificate(char *sig, int sig_len);
+pdf_signature_error pkcs7_openssl_check_certificate(char *sig, size_t sig_len);
 
 /* Obtain the designated name information from signature's certificate */
-pdf_pkcs7_designated_name *pkcs7_openssl_designated_name(fz_context *ctx, char *sig, int sig_len);
+pdf_pkcs7_designated_name *pkcs7_openssl_designated_name(fz_context *ctx, char *sig, size_t sig_len);
 
 /* Free the resources associated with designated name information */
 void pkcs7_openssl_drop_designated_name(fz_context *ctx, pdf_pkcs7_designated_name *dn);

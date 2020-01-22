@@ -344,7 +344,7 @@ pdf_repair_xref(fz_context *ctx, pdf_document *doc)
 		list = fz_malloc_array(ctx, listcap, struct entry);
 
 		/* look for '%PDF' version marker within first kilobyte of file */
-		n = fz_read(ctx, doc->file, (unsigned char *)buf->scratch, fz_mini(buf->size, 1024));
+		n = fz_read(ctx, doc->file, (unsigned char *)buf->scratch, fz_minz(buf->size, 1024));
 
 		fz_seek(ctx, doc->file, 0, 0);
 		if (n >= 4)

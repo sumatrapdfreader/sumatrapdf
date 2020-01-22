@@ -110,7 +110,7 @@ void pdf_set_layer_config_as_default(fz_context *ctx, pdf_document *doc);
 
 int pdf_has_unsaved_changes(fz_context *ctx, pdf_document *doc);
 
-enum pdf_signature_error
+typedef enum
 {
 	PDF_SIGNATURE_ERROR_OKAY,
 	PDF_SIGNATURE_ERROR_NO_SIGNATURES,
@@ -120,7 +120,7 @@ enum pdf_signature_error
 	PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN,
 	PDF_SIGNATURE_ERROR_NOT_TRUSTED,
 	PDF_SIGNATURE_ERROR_UNKNOWN
-};
+} pdf_signature_error;
 
 typedef struct pdf_pkcs7_designated_name_s
 {
@@ -148,10 +148,10 @@ typedef pdf_pkcs7_designated_name *(pdf_pkcs7_designated_name_fn)(pdf_pkcs7_sign
 typedef void (pdf_pkcs7_drop_designated_name_fn)(pdf_pkcs7_signer *signer, pdf_pkcs7_designated_name *name);
 
 /* Predict the size of the digest. The actual digest returned by create_digest will be no greater in size */
-typedef int (pdf_pkcs7_max_digest_size_fn)(pdf_pkcs7_signer *signer);
+typedef size_t (pdf_pkcs7_max_digest_size_fn)(pdf_pkcs7_signer *signer);
 
 /* Create a signature based on ranges of bytes drawn from a stream */
-typedef int (pdf_pkcs7_create_digest_fn)(pdf_pkcs7_signer *signer, fz_stream *in, unsigned char *digest, int *digest_len);
+typedef int (pdf_pkcs7_create_digest_fn)(pdf_pkcs7_signer *signer, fz_stream *in, unsigned char *digest, size_t *digest_len);
 
 struct pdf_pkcs7_signer_s
 {
@@ -169,10 +169,10 @@ typedef struct pdf_unsaved_sig_s pdf_unsaved_sig;
 struct pdf_unsaved_sig_s
 {
 	pdf_obj *field;
-	int byte_range_start;
-	int byte_range_end;
-	int contents_start;
-	int contents_end;
+	size_t byte_range_start;
+	size_t byte_range_end;
+	size_t contents_start;
+	size_t contents_end;
 	pdf_pkcs7_signer *signer;
 	pdf_unsaved_sig *next;
 };
@@ -222,6 +222,7 @@ struct pdf_document_s
 	int save_in_progress;
 	int has_xref_streams;
 	int has_old_style_xrefs;
+	int has_linearization_object;
 
 	int rev_page_count;
 	pdf_rev_page_map *rev_page_map;

@@ -373,9 +373,9 @@ pdf_out_Tstar(fz_context *ctx, pdf_processor *proc)
 /* text showing */
 
 static void
-fz_write_pdf_string(fz_context *ctx, fz_output *out, const unsigned char *str, int len)
+fz_write_pdf_string(fz_context *ctx, fz_output *out, const unsigned char *str, size_t len)
 {
-	int i;
+	size_t i;
 
 	for (i = 0; i < len; ++i)
 		if (str[i] < 32 || str[i] >= 127)
@@ -416,7 +416,7 @@ pdf_out_TJ(fz_context *ctx, pdf_processor *proc, pdf_obj *array)
 }
 
 static void
-pdf_out_Tj(fz_context *ctx, pdf_processor *proc, char *str, int len)
+pdf_out_Tj(fz_context *ctx, pdf_processor *proc, char *str, size_t len)
 {
 	fz_output *out = ((pdf_output_processor*)proc)->out;
 	fz_write_pdf_string(ctx, out, (const unsigned char *)str, len);
@@ -424,7 +424,7 @@ pdf_out_Tj(fz_context *ctx, pdf_processor *proc, char *str, int len)
 }
 
 static void
-pdf_out_squote(fz_context *ctx, pdf_processor *proc, char *str, int len)
+pdf_out_squote(fz_context *ctx, pdf_processor *proc, char *str, size_t len)
 {
 	fz_output *out = ((pdf_output_processor*)proc)->out;
 	fz_write_pdf_string(ctx, out, (const unsigned char *)str, len);
@@ -432,7 +432,7 @@ pdf_out_squote(fz_context *ctx, pdf_processor *proc, char *str, int len)
 }
 
 static void
-pdf_out_dquote(fz_context *ctx, pdf_processor *proc, float aw, float ac, char *str, int len)
+pdf_out_dquote(fz_context *ctx, pdf_processor *proc, float aw, float ac, char *str, size_t len)
 {
 	fz_output *out = ((pdf_output_processor*)proc)->out;
 	fz_write_printf(ctx, out, "%g %g ", aw, ac);

@@ -186,7 +186,7 @@ int fz_packed_path_size(const fz_path *path)
 	or 'flat' packed. Simply pack a path (if required), and then
 	forget about the details.
 */
-int
+size_t
 fz_pack_path(fz_context *ctx, uint8_t *pack_, size_t max, const fz_path *path)
 {
 	uint8_t *ptr;

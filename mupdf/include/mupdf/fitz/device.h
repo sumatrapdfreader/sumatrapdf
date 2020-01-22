@@ -235,7 +235,7 @@ struct fz_cookie_s
 {
 	int abort;
 	int progress;
-	int progress_max; /* -1 for unknown */
+	size_t progress_max; /* (size_t)-1 for unknown */
 	int errors;
 	int incomplete;
 };

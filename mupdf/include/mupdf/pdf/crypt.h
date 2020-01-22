@@ -36,7 +36,7 @@ unsigned char *pdf_crypt_key(fz_context *ctx, pdf_crypt *crypt);
 
 void pdf_print_crypt(fz_context *ctx, fz_output *out, pdf_crypt *crypt);
 
-void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, int digest_offset, int digest_length, pdf_pkcs7_signer *signer);
+void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, size_t digest_offset, size_t digest_length, pdf_pkcs7_signer *signer);
 
 /*
 	User access permissions from PDF reference.
@@ -61,14 +61,14 @@ fz_stream *pdf_signature_hash_bytes(fz_context *ctx, pdf_document *doc, pdf_obj 
 
 int pdf_signature_incremental_change_since_signing(fz_context *ctx, pdf_document *doc, pdf_obj *signature);
 
-int pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents);
+size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents);
 
 void pdf_sign_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, pdf_pkcs7_signer *signer);
 
 void pdf_clear_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget);
 
-void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void (*fmt_str_out)(fz_context *, void *, const unsigned char *, int), void *arg, const unsigned char *s, int n);
+void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void (*fmt_str_out)(fz_context *, void *, const unsigned char *, size_t), void *arg, const unsigned char *s, size_t n);
 
-int pdf_encrypted_len(fz_context *ctx, pdf_crypt *crypt, int num, int gen, int len);
+size_t pdf_encrypted_len(fz_context *ctx, pdf_crypt *crypt, int num, int gen, size_t len);
 
 #endif

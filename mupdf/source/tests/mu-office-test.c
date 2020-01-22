@@ -34,7 +34,7 @@ load_error(void *cookie, MuOfficeDocErrorType error)
 
 static void render_progress(void *cookie, MuError error)
 {
-	assert((int)cookie == 5678);
+	assert((intptr_t)cookie == 5678);
 
 	fprintf(stderr, "render_progress: error=%d\n", error);
 	(void)ReleaseSemaphore(loaded, 1, NULL);

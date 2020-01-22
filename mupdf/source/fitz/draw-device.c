@@ -2480,7 +2480,7 @@ fz_cmp_tile_key(fz_context *ctx, void *k0_, void *k1_)
 }
 
 static void
-fz_format_tile_key(fz_context *ctx, char *s, int n, void *key_)
+fz_format_tile_key(fz_context *ctx, char *s, size_t n, void *key_)
 {
 	tile_key *key = (tile_key *)key_;
 	fz_snprintf(s, n, "(tile id=%x, ctm=%g %g %g %g, cs=%x, shape=%d, ga=%d)",

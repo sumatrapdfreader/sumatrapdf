@@ -169,7 +169,8 @@ load_indexed(fz_context *ctx, pdf_obj *array)
 	pdf_obj *lookupobj = pdf_array_get(ctx, array, 3);
 	fz_colorspace *base = NULL;
 	fz_colorspace *cs;
-	int i, n, high;
+	size_t i, n;
+	int high;
 	unsigned char *lookup = NULL;
 
 	fz_var(base);
@@ -186,7 +187,7 @@ load_indexed(fz_context *ctx, pdf_obj *array)
 
 		if (pdf_is_string(ctx, lookupobj))
 		{
-			int sn = fz_mini(n, pdf_to_str_len(ctx, lookupobj));
+			size_t sn = fz_minz(n, pdf_to_str_len(ctx, lookupobj));
 			unsigned char *buf = (unsigned char *) pdf_to_str_buf(ctx, lookupobj);
 			for (i = 0; i < sn; ++i)
 				lookup[i] = buf[i];
@@ -202,7 +203,7 @@ load_indexed(fz_context *ctx, pdf_obj *array)
 			fz_try(ctx)
 			{
 				file = pdf_open_stream(ctx, lookupobj);
-				i = (int)fz_read(ctx, file, lookup, n);
+				i = fz_read(ctx, file, lookup, n);
 				if (i < n)
 					memset(lookup+i, 0, n-i);
 			}

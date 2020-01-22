@@ -74,7 +74,7 @@ user_css_sum(fz_context *ctx)
 	const char *css = fz_user_css(ctx);
 	sum = crc32(0, NULL, 0);
 	if (css)
-		sum = crc32(sum, (Byte*)css, strlen(css));
+		sum = crc32(sum, (Byte*)css, (int)strlen(css));
 	return sum;
 }
 

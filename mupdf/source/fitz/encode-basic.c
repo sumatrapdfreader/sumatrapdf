@@ -330,7 +330,7 @@ static void deflate_write(fz_context *ctx, void *opaque, const void *data, size_
 	int err;
 
 	state->z.next_in = (Bytef*)data;
-	state->z.avail_in = n;
+	state->z.avail_in = (uInt)n;
 	do
 	{
 		state->z.next_out = buffer;

@@ -473,7 +473,7 @@ static inline int iswhite(int c)
 }
 
 static int
-find_html_tag(const char *tag, int len)
+find_html_tag(const char *tag, size_t len)
 {
 	int low = 0;
 	int high = nelem(html_tags);

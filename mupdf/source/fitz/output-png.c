@@ -12,15 +12,19 @@ static inline void big32(unsigned char *buf, unsigned int v)
 	buf[3] = (v) & 0xff;
 }
 
-static void putchunk(fz_context *ctx, fz_output *out, char *tag, unsigned char *data, int size)
+static void putchunk(fz_context *ctx, fz_output *out, char *tag, unsigned char *data, size_t size)
 {
 	unsigned int sum;
-	fz_write_int32_be(ctx, out, size);
+
+	if ((uint32_t)size != size)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "PNG chunk too large");
+
+	fz_write_int32_be(ctx, out, (int)size);
 	fz_write_data(ctx, out, tag, 4);
 	fz_write_data(ctx, out, data, size);
 	sum = crc32(0, NULL, 0);
 	sum = crc32(sum, (unsigned char*)tag, 4);
-	sum = crc32(sum, data, size);
+	sum = crc32(sum, data, (unsigned int)size);
 	fz_write_int32_be(ctx, out, sum);
 }
 

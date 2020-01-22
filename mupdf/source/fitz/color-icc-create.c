@@ -129,11 +129,11 @@ get_XYZ_doubletr(fz_context *ctx, icS15Fixed16Number XYZ[], float vector[])
 static void
 add_desc_tag(fz_context *ctx, fz_buffer *buf, const char text[], fz_icc_tag tag_list[], int curr_tag)
 {
-	int len = strlen(text);
+	size_t len = strlen(text);
 
 	fz_append_int32_be(ctx, buf, icSigTextDescriptionType);
 	fz_append_byte_n(ctx, buf, 0, 4);
-	fz_append_int32_be(ctx, buf, len + 1);
+	fz_append_int32_be(ctx, buf, (int)len + 1);
 	fz_append_string(ctx, buf, text);
 	/* 1 + 4 + 4 + 2 + 1 + 67 */
 	fz_append_byte_n(ctx, buf, 0, 79);
@@ -171,7 +171,7 @@ init_common_tags(fz_context *ctx, fz_icc_tag tag_list[], int num_tags, int *last
 	tag_list[curr_tag].sig = icSigProfileDescriptionTag;
 
 	/* temp_size = DATATYPE_SIZE + 4 (zeros) + 4 (len) + strlen(desc_name) + 1 (null) + 4 + 4 + 2 + 1 + 67 + bytepad; */
-	temp_size = strlen(desc_name) + 91;
+	temp_size = (int)strlen(desc_name) + 91;
 
 	tag_list[curr_tag].byte_padding = get_padding(temp_size);
 	tag_list[curr_tag].size = temp_size + tag_list[curr_tag].byte_padding;
@@ -180,7 +180,7 @@ init_common_tags(fz_context *ctx, fz_icc_tag tag_list[], int num_tags, int *last
 	tag_list[curr_tag].sig = icSigCopyrightTag;
 
 	/* temp_size = DATATYPE_SIZE + 4 (zeros) + strlen(copy_right) + 1 (null); */
-	temp_size = strlen(copy_right) + 9;
+	temp_size = (int)strlen(copy_right) + 9;
 	tag_list[curr_tag].byte_padding = get_padding(temp_size);
 	tag_list[curr_tag].size = temp_size + tag_list[curr_tag].byte_padding;
 	*last_tag = curr_tag;

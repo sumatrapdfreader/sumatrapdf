@@ -947,7 +947,7 @@ hail_mary_cmp_key(fz_context *ctx, void *k0, void *k1)
 }
 
 static void
-hail_mary_format_key(fz_context *ctx, char *s, int n, void *key_)
+hail_mary_format_key(fz_context *ctx, char *s, size_t n, void *key_)
 {
 	fz_strlcpy(s, "(hail mary font)", n);
 }

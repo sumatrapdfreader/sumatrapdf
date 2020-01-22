@@ -50,7 +50,7 @@ fz_option_eq(const char *a, const char *b)
 	return !strncmp(a, b, n) && (a[n] == ',' || a[n] == 0);
 }
 
-int
+size_t
 fz_copy_option(fz_context *ctx, const char *val, char *dest, size_t maxlen)
 {
 	const char *e = val;

@@ -550,7 +550,7 @@ fz_snprintf(char *buffer, size_t space, const char *fmt, ...)
 char *
 fz_asprintf(fz_context *ctx, const char *fmt, ...)
 {
-	int len;
+	size_t len;
 	char *mem;
 	va_list ap;
 	va_start(ap, fmt);

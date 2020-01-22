@@ -102,6 +102,8 @@ int pdf_set_choice_field_value(fz_context *ctx, pdf_widget *widget, const char *
 int pdf_signature_is_signed(fz_context *ctx, pdf_document *doc, pdf_obj *field);
 void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_pkcs7_signer *signer, int64_t stime);
 
+int pdf_count_signatures(fz_context *ctx, pdf_document *doc);
+
 void pdf_field_reset(fz_context *ctx, pdf_document *doc, pdf_obj *field);
 
 pdf_obj *pdf_lookup_field(fz_context *ctx, pdf_obj *form, const char *name);

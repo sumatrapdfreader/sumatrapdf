@@ -69,7 +69,7 @@ const char *pdf_to_name(fz_context *ctx, pdf_obj *obj);
 const char *pdf_to_text_string(fz_context *ctx, pdf_obj *obj);
 const char *pdf_to_string(fz_context *ctx, pdf_obj *obj, size_t *sizep);
 char *pdf_to_str_buf(fz_context *ctx, pdf_obj *obj);
-int pdf_to_str_len(fz_context *ctx, pdf_obj *obj);
+size_t pdf_to_str_len(fz_context *ctx, pdf_obj *obj);
 int pdf_to_num(fz_context *ctx, pdf_obj *obj);
 int pdf_to_gen(fz_context *ctx, pdf_obj *obj);
 
@@ -154,7 +154,7 @@ int pdf_obj_refs(fz_context *ctx, pdf_obj *ref);
 
 int pdf_obj_parent_num(fz_context *ctx, pdf_obj *obj);
 
-char *pdf_sprint_obj(fz_context *ctx, char *buf, int cap, int *len, pdf_obj *obj, int tight, int ascii);
+char *pdf_sprint_obj(fz_context *ctx, char *buf, size_t cap, size_t *len, pdf_obj *obj, int tight, int ascii);
 void pdf_print_obj(fz_context *ctx, fz_output *out, pdf_obj *obj, int tight, int ascii);
 void pdf_print_encrypted_obj(fz_context *ctx, fz_output *out, pdf_obj *obj, int tight, int ascii, pdf_crypt *crypt, int num, int gen);
 
@@ -171,7 +171,7 @@ fz_matrix pdf_to_matrix(fz_context *ctx, pdf_obj *array);
 
 pdf_document *pdf_get_indirect_document(fz_context *ctx, pdf_obj *obj);
 pdf_document *pdf_get_bound_document(fz_context *ctx, pdf_obj *obj);
-void pdf_set_str_len(fz_context *ctx, pdf_obj *obj, int newlen);
+void pdf_set_str_len(fz_context *ctx, pdf_obj *obj, size_t newlen);
 void pdf_set_int(fz_context *ctx, pdf_obj *obj, int64_t i);
 
 /* Voodoo to create PDF_NAME(Foo) macros from name-table.h */

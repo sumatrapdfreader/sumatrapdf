@@ -31,6 +31,7 @@ static void init_save_pdf_options(void)
 	save_opts.do_compress = 1;
 	save_opts.do_compress_images = 1;
 	save_opts.do_compress_fonts = 1;
+	save_opts.do_incremental = 1;
 }
 
 static const char *cryptalgo_names[] = {
@@ -52,6 +53,17 @@ static void save_pdf_options(void)
 	ui_layout(T, X, NW, 4, 2);
 
 	ui_checkbox("Incremental", &save_opts.do_incremental);
+	fz_try(ctx)
+	{
+		if (pdf_count_signatures(ctx, pdf))
+		{
+			ui_label("WARNING: Saving non-incrementally will break existing signatures");
+		}
+	}
+	fz_catch(ctx)
+	{
+		/* Ignore the error. */
+	}
 	ui_spacer();
 	ui_checkbox("Pretty-print", &save_opts.do_pretty);
 	ui_checkbox("Ascii", &save_opts.do_ascii);
@@ -94,23 +106,25 @@ static void save_pdf_options(void)
 	}
 }
 
-static void save_pdf_dialog(void)
+static void do_save_pdf_dialog(int for_signing)
 {
 	ui_input_init(&opwinput, "");
 	ui_input_init(&upwinput, "");
 
-	if (ui_save_file(save_filename, save_pdf_options))
+	if (ui_save_file(save_filename, save_pdf_options, for_signing ? "Select where to save the signed document:" : "Select where to save the document:"))
 	{
 		ui.dialog = NULL;
 		if (save_filename[0] != 0)
 		{
+			if (for_signing && !do_sign())
+				return;
 			if (save_opts.do_garbage)
 				save_opts.do_garbage = 2;
 			fz_try(ctx)
 			{
 				pdf_save_document(ctx, pdf, save_filename, &save_opts);
 				fz_strlcpy(filename, save_filename, PATH_MAX);
-				update_title();
+				reload();
 			}
 			fz_catch(ctx)
 			{
@@ -118,6 +132,23 @@ static void save_pdf_dialog(void)
 			}
 		}
 	}
+}
+
+static void save_pdf_dialog(void)
+{
+	do_save_pdf_dialog(0);
+}
+
+static void save_signed_pdf_dialog(void)
+{
+	do_save_pdf_dialog(1);
+}
+
+void do_save_signed_pdf_file(void)
+{
+	init_save_pdf_options();
+	ui_init_save_file(filename, pdf_filter);
+	ui.dialog = save_signed_pdf_dialog;
 }
 
 void do_save_pdf_file(void)
@@ -1017,7 +1048,7 @@ static void do_edit_quad_points(void)
 {
 	static fz_point pt = { 0, 0 };
 	static int marking = 0;
-	fz_quad hits[1000];
+	static fz_quad hits[1000];
 	int i, n;
 
 	if (ui_mouse_inside(view_page_area))

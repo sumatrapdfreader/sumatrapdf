@@ -458,7 +458,7 @@ const char *fz_pwg_write_options_usage =
 	"\n";
 
 static void
-warn_if_long(fz_context *ctx, const char *str, int ret)
+warn_if_long(fz_context *ctx, const char *str, size_t ret)
 {
 	if (ret > 0)
 		fz_warn(ctx, "Option %s is too long, truncated.", str);

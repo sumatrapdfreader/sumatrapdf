@@ -99,4 +99,18 @@ int pdf_repair_obj(fz_context *ctx, pdf_document *doc, pdf_lexbuf *buf, int64_t 
 
 pdf_obj *pdf_progressive_advance(fz_context *ctx, pdf_document *doc, int pagenum);
 
+int pdf_count_incremental_updates(fz_context *ctx, pdf_document *doc);
+int pdf_validate_changes(fz_context *ctx, pdf_document *doc, int version);
+int pdf_doc_was_linearized(fz_context *ctx, pdf_document *doc);
+
+typedef struct pdf_locked_fields_s pdf_locked_fields;
+int pdf_is_field_locked(fz_context *ctx, pdf_locked_fields *locked, const char *name);
+void pdf_drop_locked_fields(fz_context *ctx, pdf_locked_fields *locked);
+pdf_locked_fields *pdf_find_locked_fields(fz_context *ctx, pdf_document *doc, int version);
+pdf_locked_fields *pdf_find_locked_fields_for_sig(fz_context *ctx, pdf_document *doc, pdf_obj *sig);
+int pdf_validate_change_history(fz_context *ctx, pdf_document *doc);
+
+int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
+int pdf_validate_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget);
+
 #endif

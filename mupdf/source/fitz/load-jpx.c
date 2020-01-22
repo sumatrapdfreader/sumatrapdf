@@ -522,11 +522,6 @@ struct stream_block_s
  * threading systems.
  */
 
-/*
-sumatrapdf: need to add a single, global lock
-https://github.com/sumatrapdfreader/sumatrapdf/issues/1306
-*/
-
 static fz_context *opj_secret = NULL;
 
 static void set_opj_context(fz_context *ctx)
@@ -538,6 +533,11 @@ static fz_context *get_opj_context(void)
 {
 	return opj_secret;
 }
+
+/*
+sumatrapdf: need to add a single, global lock
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1306
+*/
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -618,7 +618,7 @@ void opj_free(void *ptr)
 static void * opj_aligned_malloc_n(size_t alignment, size_t size)
 {
 	uint8_t *ptr;
-	int off;
+	size_t off;
 
 	if (size == 0)
 		return NULL;
@@ -628,7 +628,7 @@ static void * opj_aligned_malloc_n(size_t alignment, size_t size)
 	if (ptr == NULL)
 		return NULL;
 	off = alignment-(((int)(intptr_t)ptr) & (alignment - 1));
-	ptr[off-1] = off;
+	ptr[off-1] = (uint8_t)off;
 	return ptr + off;
 }
 
@@ -665,7 +665,7 @@ static void fz_opj_error_callback(const char *msg, void *client_data)
 {
 	fz_context *ctx = (fz_context *)client_data;
 	char buf[200];
-	int n;
+	size_t n;
 	fz_strlcpy(buf, msg, sizeof buf);
 	n = strlen(buf);
 	if (buf[n-1] == '\n')
@@ -677,7 +677,7 @@ static void fz_opj_warning_callback(const char *msg, void *client_data)
 {
 	fz_context *ctx = (fz_context *)client_data;
 	char buf[200];
-	int n;
+	size_t n;
 	fz_strlcpy(buf, msg, sizeof buf);
 	n = strlen(buf);
 	if (buf[n-1] == '\n')

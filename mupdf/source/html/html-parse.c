@@ -1571,7 +1571,7 @@ fz_cmp_html_key(fz_context *ctx, void *k0_, void *k1_)
 }
 
 static void
-fz_format_html_key(fz_context *ctx, char *s, int n, void *key_)
+fz_format_html_key(fz_context *ctx, char *s, size_t n, void *key_)
 {
 	fz_html_key *key = (fz_html_key *)key_;
 	fz_snprintf(s, n, "(html doc=%p, ch=%d)", key->doc, key->chapter_num);

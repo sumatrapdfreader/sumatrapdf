@@ -298,7 +298,7 @@ void ui_init_open_file(const char *dir, int (*filter)(const char *fn))
 	load_dir(dir);
 }
 
-int ui_open_file(char filename[PATH_MAX])
+int ui_open_file(char filename[PATH_MAX], const char *label)
 {
 	static int last_click_time = 0;
 	static int last_click_sel = -1;
@@ -306,6 +306,11 @@ int ui_open_file(char filename[PATH_MAX])
 
 	ui_panel_begin(0, 0, 4, 4, 1);
 	{
+		if (label)
+		{
+			ui_layout(T, X, NW, 4, 2);
+			ui_label(label);
+		}
 		ui_layout(L, Y, NW, 0, 0);
 		ui_panel_begin(150, 0, 0, 0, 0);
 		{
@@ -424,12 +429,17 @@ static void bump_file_version(int dir)
 	}
 }
 
-int ui_save_file(char filename[PATH_MAX], void (*extra_panel)(void))
+int ui_save_file(char filename[PATH_MAX], void (*extra_panel)(void), const char *label)
 {
 	int i, rv = 0;
 
 	ui_panel_begin(0, 0, 4, 4, 1);
 	{
+		if (label)
+		{
+			ui_layout(T, X, NW, 4, 2);
+			ui_label(label);
+		}
 		ui_layout(L, Y, NW, 0, 0);
 		ui_panel_begin(150, 0, 0, 0, 0);
 		{

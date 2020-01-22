@@ -118,7 +118,7 @@ Low memory mode (avoid caching objects by clearing cache after each page).
 Run interpretation and rendering at the same time.
 .TP
 .B pages
-Comma separated list of page numbers and ranges (for example: 1,5,10-15).
+Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page.
 If no pages are specified, then all pages will be rendered.
 
 .SH CLEAN
@@ -169,7 +169,8 @@ If combined with -d, any decompressed streams will be recompressed.
 If combined with -a, the streams will also be hex encoded after compression.
 .TP
 .B pages
-Comma separated list of page numbers and ranges to include.
+Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page.
+If no pages are specified, then all pages will be included.
 
 .SH EXTRACT
 mutool extract [options] file.pdf [object numbers]
@@ -213,7 +214,8 @@ List patterns.
 List form and postscript XObjects.
 .TP
 .B pages
-Comma separated list of page numbers and ranges to include.
+Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page.
+If no pages are specified, then all pages will be included.
 
 .SH CREATE
 mutool create [-o output.pdf] [options] page1.txt [page2.txt ...]
@@ -293,7 +295,8 @@ of pages within the document.
 Use the specified password if the file is encrypted.
 .TP
 .B pages
-Comma separated list of page numbers and ranges to include.
+Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page.
+If no pages are specified, then all pages will be included.
 
 .SH POSTER
 mutool poster [options] input.pdf [output.pdf]

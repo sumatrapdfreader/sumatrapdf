@@ -281,7 +281,7 @@ void fz_write_int32_be(fz_context *ctx, fz_output *out, int x);
 void fz_write_int32_le(fz_context *ctx, fz_output *out, int x);
 void fz_write_printf(fz_context *ctx, fz_output *out, const char *fmt, ...);
 void fz_write_vprintf(fz_context *ctx, fz_output *out, const char *fmt, va_list ap);
-void fz_write_base64(fz_context *ctx, fz_output *out, const unsigned char *data, int size, int newline);
+void fz_write_base64(fz_context *ctx, fz_output *out, const unsigned char *data, size_t size, int newline);
 </pre>
 
 <p>

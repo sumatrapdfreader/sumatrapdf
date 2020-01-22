@@ -29,7 +29,7 @@ void fz_format_output_path(fz_context *ctx, char *path, size_t size, const char 
 char *fz_cleanname(char *name);
 
 int fz_strcasecmp(const char *a, const char *b);
-int fz_strncasecmp(const char *a, const char *b, int n);
+int fz_strncasecmp(const char *a, const char *b, size_t n);
 
 /*
 	FZ_UTFMAX: Maximum number of bytes in a decoded rune (maximum length returned by fz_chartorune).

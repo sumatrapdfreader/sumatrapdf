@@ -342,7 +342,7 @@ function AFMatchMonth(date) {
 	var names = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
 	var month = date.match(/Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/i);
 	if (month)
-		return names.indexOf(month[0].toLowerCase());
+		return names.indexOf(month[0].toLowerCase()) + 1;
 	return null;
 }
 

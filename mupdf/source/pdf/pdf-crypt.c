@@ -128,7 +128,7 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 		memcpy(crypt->u, pdf_to_str_buf(ctx, obj), 48);
 	else if (pdf_is_string(ctx, obj) && pdf_to_str_len(ctx, obj) < 32)
 	{
-		fz_warn(ctx, "encryption password key too short (%d)", pdf_to_str_len(ctx, obj));
+		fz_warn(ctx, "encryption password key too short (%zu)", pdf_to_str_len(ctx, obj));
 		memcpy(crypt->u, pdf_to_str_buf(ctx, obj), pdf_to_str_len(ctx, obj));
 	}
 	else
@@ -1072,15 +1072,15 @@ static void
 pdf_crypt_obj_imp(fz_context *ctx, pdf_crypt *crypt, pdf_obj *obj, unsigned char *key, int keylen)
 {
 	unsigned char *s;
-	int i, n;
+	int i;
 
 	if (pdf_is_indirect(ctx, obj))
 		return;
 
 	if (pdf_is_string(ctx, obj))
 	{
+		size_t n = pdf_to_str_len(ctx, obj);
 		s = (unsigned char *)pdf_to_str_buf(ctx, obj);
-		n = pdf_to_str_len(ctx, obj);
 
 		if (crypt->strf.method == PDF_CRYPT_RC4)
 		{
@@ -1116,7 +1116,7 @@ pdf_crypt_obj_imp(fz_context *ctx, pdf_crypt *crypt, pdf_obj *obj, unsigned char
 
 	else if (pdf_is_array(ctx, obj))
 	{
-		n = pdf_array_len(ctx, obj);
+		int n = pdf_array_len(ctx, obj);
 		for (i = 0; i < n; i++)
 		{
 			pdf_crypt_obj_imp(ctx, crypt, pdf_array_get(ctx, obj, i), key, keylen);
@@ -1125,7 +1125,7 @@ pdf_crypt_obj_imp(fz_context *ctx, pdf_crypt *crypt, pdf_obj *obj, unsigned char
 
 	else if (pdf_is_dict(ctx, obj))
 	{
-		n = pdf_dict_len(ctx, obj);
+		int n = pdf_dict_len(ctx, obj);
 		for (i = 0; i < n; i++)
 		{
 			pdf_crypt_obj_imp(ctx, crypt, pdf_dict_get_val(ctx, obj, i), key, keylen);
@@ -1209,7 +1209,7 @@ pdf_print_crypt(fz_context *ctx, fz_output *out, pdf_crypt *crypt)
 	fz_write_printf(ctx, out, "}\n");
 }
 
-void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void (*write_data)(fz_context *ctx, void *, const unsigned char *, int), void *arg, const unsigned char *s, int n)
+void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void (*write_data)(fz_context *ctx, void *, const unsigned char *, size_t), void *arg, const unsigned char *s, size_t n)
 {
 	unsigned char buffer[256];
 	unsigned char key[32];
@@ -1229,7 +1229,7 @@ void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void 
 		fz_arc4_init(&arc4, key, keylen);
 		while (n > 0)
 		{
-			int len = n;
+			size_t len = n;
 			if (len > (int)sizeof(buffer))
 				len = sizeof(buffer);
 			fz_arc4_encrypt(&arc4, buffer, s, len);
@@ -1257,12 +1257,12 @@ void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void 
 
 		while (n > 0)
 		{
-			int len = n;
+			size_t len = n;
 			if (len > 16)
 				len = 16;
 			memcpy(buffer, s, len);
 			if (len != 16)
-				memset(&buffer[len], 16-len, 16-len);
+				memset(&buffer[len], 16-(int)len, 16-len);
 			fz_aes_crypt_cbc(&aes, FZ_AES_ENCRYPT, 16, iv, buffer, buffer+16);
 			write_data(ctx, arg, buffer+16, 16);
 			s += 16;
@@ -1280,7 +1280,7 @@ void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void 
 	write_data(ctx, arg, s, n);
 }
 
-int pdf_encrypted_len(fz_context *ctx, pdf_crypt *crypt, int num, int gen, int len)
+size_t pdf_encrypted_len(fz_context *ctx, pdf_crypt *crypt, int num, int gen, size_t len)
 {
 	if (crypt == NULL)
 		return len;

@@ -37,7 +37,7 @@ static void usage(void)
 static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signature)
 {
 	char name[500];
-	enum pdf_signature_error err;
+	pdf_signature_error err;
 	int edits;
 
 	printf("verifying signature %d\n", pdf_to_num(ctx, signature));

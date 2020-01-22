@@ -80,7 +80,7 @@ pdf_set_cmap_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode)
  * multi-byte encoded strings.
  */
 void
-pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, int n)
+pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, size_t n)
 {
 	if (cmap->codespace_len + 1 == nelem(cmap->codespace))
 	{
@@ -88,7 +88,13 @@ pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned in
 		return;
 	}
 
-	cmap->codespace[cmap->codespace_len].n = n;
+	if ((uint32_t)n != n)
+	{
+		fz_warn(ctx, "assert: code space range too large");
+		return;
+	}
+
+	cmap->codespace[cmap->codespace_len].n = (int)n;
 	cmap->codespace[cmap->codespace_len].low = low;
 	cmap->codespace[cmap->codespace_len].high = high;
 	cmap->codespace_len ++;
@@ -693,7 +699,7 @@ pdf_map_range_to_range(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsign
  * Add a single one-to-many mapping.
  */
 void
-pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *values, int len)
+pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *values, size_t len)
 {
 	if (len == 1)
 	{
@@ -718,7 +724,7 @@ pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *valu
 		return;
 	}
 
-	add_mrange(ctx, cmap, low, values, len);
+	add_mrange(ctx, cmap, low, values, (int)len);
 }
 
 static void

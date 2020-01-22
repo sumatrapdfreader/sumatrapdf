@@ -1107,7 +1107,7 @@ int pdf_signature_byte_range(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 	{
 		for (i = 0; i < n; i++)
 		{
-			int offset = pdf_array_get_int(ctx, br, 2*i);
+			int64_t offset = pdf_array_get_int(ctx, br, 2*i);
 			int length = pdf_array_get_int(ctx, br, 2*i+1);
 
 			if (offset < 0 || offset > doc->file_size)
@@ -1289,18 +1289,22 @@ int pdf_signature_incremental_change_since_signing(fz_context *ctx, pdf_document
 
 int pdf_signature_is_signed(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 {
+	pdf_obj *v;
+
 	if (pdf_dict_get_inheritable(ctx, field, PDF_NAME(FT)) != PDF_NAME(Sig))
 		return 0;
-	return pdf_dict_get_inheritable(ctx, field, PDF_NAME(V)) != NULL;
+	/* Signatures can only be signed if the value is a /Sig field. */
+	v = pdf_dict_get_inheritable(ctx, field, PDF_NAME(V));
+	return pdf_name_eq(ctx, pdf_dict_get(ctx, v, PDF_NAME(Type)), PDF_NAME(Sig));
 }
 
 /* NOTE: contents is allocated and must be freed by the caller! */
-int pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents)
+size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents)
 {
-	pdf_obj *v_ref = pdf_dict_get(ctx, signature, PDF_NAME(V));
+	pdf_obj *v_ref = pdf_dict_get_inheritable(ctx, signature, PDF_NAME(V));
 	pdf_obj *v_obj = pdf_load_unencrypted_object(ctx, doc, pdf_to_num(ctx, v_ref));
 	char *copy = NULL;
-	int len;
+	size_t len;
 
 	fz_var(copy);
 	fz_try(ctx)
@@ -1333,9 +1337,13 @@ int pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_pkcs7_signer *signer, int64_t stime)
 {
 	pdf_obj *v = NULL;
+	pdf_obj *o = NULL;
+	pdf_obj *r = NULL;
+	pdf_obj *t = NULL;
+	pdf_obj *a = NULL;
 	pdf_obj *indv;
 	int vnum;
-	int max_digest_size;
+	size_t max_digest_size;
 	char *buf = NULL;
 	char date_string[40];
 
@@ -1346,6 +1354,10 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 	max_digest_size = signer->max_digest_size(signer);
 
 	fz_var(v);
+	fz_var(o);
+	fz_var(r);
+	fz_var(t);
+	fz_var(a);
 	fz_var(buf);
 	fz_try(ctx)
 	{
@@ -1366,6 +1378,22 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 		pdf_format_date(ctx, date_string, sizeof date_string, stime);
 		pdf_dict_put_text_string(ctx, v, PDF_NAME(M), date_string);
 
+		o = pdf_new_array(ctx, doc, 1);
+		pdf_dict_put(ctx, v, PDF_NAME(Reference), o);
+		r = pdf_new_dict(ctx, doc, 4);
+		pdf_array_put(ctx, o, 0, r);
+		pdf_dict_put(ctx, r, PDF_NAME(Data), pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root)));
+		pdf_dict_put(ctx, r, PDF_NAME(TransformMethod), PDF_NAME(FieldMDP));
+		pdf_dict_put(ctx, r, PDF_NAME(Type), PDF_NAME(SigRef));
+		t = pdf_new_dict(ctx, doc, 5);
+		pdf_dict_put(ctx, r, PDF_NAME(TransformParams), t);
+		pdf_dict_put(ctx, t, PDF_NAME(Action), pdf_dict_getp(ctx, field, "Lock/Action"));
+		a = pdf_dict_getp(ctx, field, "Lock/Fields");
+		if (a)
+			pdf_dict_put_drop(ctx, t, PDF_NAME(Fields), pdf_copy_array(ctx, a));
+		pdf_dict_put(ctx, t, PDF_NAME(Type), PDF_NAME(TransformParams));
+		pdf_dict_put(ctx, t, PDF_NAME(V), PDF_NAME(1_2));
+
 		/* Record details within the document structure so that contents
 		* and byte_range can be updated with their correct values at
 		* saving time */
@@ -1374,6 +1402,9 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 	fz_always(ctx)
 	{
 		pdf_drop_obj(ctx, v);
+		pdf_drop_obj(ctx, o);
+		pdf_drop_obj(ctx, r);
+		pdf_drop_obj(ctx, t);
 		fz_free(ctx, buf);
 	}
 	fz_catch(ctx)
@@ -1638,4 +1669,28 @@ void pdf_field_event_calculate(fz_context *ctx, pdf_document *doc, pdf_obj *fiel
 				fz_rethrow(ctx);
 		}
 	}
+}
+
+static void
+count_sigs(fz_context *ctx, pdf_obj *field, void *arg, pdf_obj **ft)
+{
+	int *n = (int *)arg;
+
+	if (!pdf_name_eq(ctx, pdf_dict_get(ctx, field, PDF_NAME(Type)), PDF_NAME(Annot)) ||
+		!pdf_name_eq(ctx, pdf_dict_get(ctx, field, PDF_NAME(Subtype)), PDF_NAME(Widget)) ||
+		!pdf_name_eq(ctx, *ft, PDF_NAME(Sig)))
+		return;
+
+	(*n)++;
+}
+
+static pdf_obj *ft_name[2] = { PDF_NAME(FT), NULL };
+
+int pdf_count_signatures(fz_context *ctx, pdf_document *doc)
+{
+	int n = 0;
+	pdf_obj *ft = NULL;
+	pdf_obj *form_fields = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm/Fields");
+	pdf_walk_tree(ctx, form_fields, PDF_NAME(Kids), count_sigs, NULL, &n, ft_name, &ft);
+	return n;
 }

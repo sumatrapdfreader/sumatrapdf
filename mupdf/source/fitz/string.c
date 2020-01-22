@@ -26,7 +26,7 @@ fz_strnlen(const char *s, size_t n)
 }
 
 int
-fz_strncasecmp(const char *a, const char *b, int n)
+fz_strncasecmp(const char *a, const char *b, size_t n)
 {
 	if (!n--)
 		return 0;

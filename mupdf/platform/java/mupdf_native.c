@@ -9007,7 +9007,7 @@ FUN(PDFObject_asByteString)(JNIEnv *env, jobject self)
 	const char *str = NULL;
 	jobject jbs = NULL;
 	jbyte *bs = NULL;
-	int len;
+	size_t len;
 
 	if (!ctx || !obj) return NULL;
 
@@ -9170,7 +9170,7 @@ FUN(PDFObject_toString)(JNIEnv *env, jobject self, jboolean tight, jboolean asci
 	pdf_obj *obj = from_PDFObject_safe(env, self);
 	jstring string = NULL;
 	char *s = NULL;
-	int n = 0;
+	size_t n = 0;
 
 	if (!ctx || !obj) return NULL;
 

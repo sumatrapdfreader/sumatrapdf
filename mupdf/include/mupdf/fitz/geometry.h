@@ -91,6 +91,11 @@ static inline int fz_maxi(int a, int b)
 	return (a > b ? a : b);
 }
 
+static inline size_t fz_maxz(size_t a, size_t b)
+{
+	return (a > b ? a : b);
+}
+
 static inline int64_t fz_maxi64(int64_t a, int64_t b)
 {
 	return (a > b ? a : b);

@@ -219,7 +219,7 @@ pdf_run_page_widgets_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *pa
 {
 	pdf_widget *widget;
 
-	if (cookie && cookie->progress_max != -1)
+	if (cookie && cookie->progress_max != (size_t)-1)
 	{
 		int count = 1;
 		for (widget = page->widgets; widget; widget = widget->next)
@@ -246,7 +246,7 @@ pdf_run_page_annots_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *pag
 {
 	pdf_annot *annot;
 
-	if (cookie && cookie->progress_max != -1)
+	if (cookie && cookie->progress_max != (size_t)-1)
 	{
 		int count = 1;
 		for (annot = page->annots; annot; annot = annot->next)

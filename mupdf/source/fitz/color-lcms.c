@@ -171,7 +171,7 @@ void fz_icc_profile_name(fz_context *ctx, fz_icc_profile *profile, char *name, s
 	cmsMLU *descMLU;
 	descMLU = cmsReadTag(GLO profile, cmsSigProfileDescriptionTag);
 	name[0] = 0;
-	cmsMLUgetASCII(GLO descMLU, "en", "US", name, size);
+	cmsMLUgetASCII(GLO descMLU, "en", "US", name, (cmsUInt32Number)size);
 }
 
 int fz_icc_profile_components(fz_context *ctx, fz_icc_profile *profile)

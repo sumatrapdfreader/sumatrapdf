@@ -84,9 +84,9 @@ struct pdf_processor_s
 
 	/* text showing */
 	void (*op_TJ)(fz_context *ctx, pdf_processor *proc, pdf_obj *array);
-	void (*op_Tj)(fz_context *ctx, pdf_processor *proc, char *str, int len);
-	void (*op_squote)(fz_context *ctx, pdf_processor *proc, char *str, int len);
-	void (*op_dquote)(fz_context *ctx, pdf_processor *proc, float aw, float ac, char *str, int len);
+	void (*op_Tj)(fz_context *ctx, pdf_processor *proc, char *str, size_t len);
+	void (*op_squote)(fz_context *ctx, pdf_processor *proc, char *str, size_t len);
+	void (*op_dquote)(fz_context *ctx, pdf_processor *proc, float aw, float ac, char *str, size_t len);
 
 	/* type 3 fonts */
 	void (*op_d0)(fz_context *ctx, pdf_processor *proc, float wx, float wy);
@@ -158,7 +158,7 @@ struct pdf_csi_s
 	pdf_obj *obj;
 	char name[256];
 	char string[256];
-	int string_len;
+	size_t string_len;
 	int top;
 	float stack[32];
 };

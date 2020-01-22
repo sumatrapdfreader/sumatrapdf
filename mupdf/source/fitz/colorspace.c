@@ -745,7 +745,7 @@ fz_cmp_link_key(fz_context *ctx, void *k0_, void *k1_)
 }
 
 static void
-fz_format_link_key(fz_context *ctx, char *s, int n, void *key_)
+fz_format_link_key(fz_context *ctx, char *s, size_t n, void *key_)
 {
 	static const char *hex = "0123456789abcdef";
 	fz_link_key *key = (fz_link_key *)key_;

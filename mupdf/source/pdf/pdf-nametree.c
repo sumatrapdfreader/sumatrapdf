@@ -1,6 +1,8 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
+#include <string.h>
+
 static pdf_obj *
 pdf_lookup_name_imp(fz_context *ctx, pdf_obj *node, pdf_obj *needle)
 {
@@ -239,4 +241,91 @@ pdf_lookup_number(fz_context *ctx, pdf_obj *node, int needle)
 	}
 
 	return NULL;
+}
+
+static void
+pdf_walk_tree_kid(fz_context *ctx,
+			pdf_obj *obj,
+			pdf_obj *kid_name,
+			void (*arrive)(fz_context *, pdf_obj *, void *, pdf_obj **),
+			void (*leave)(fz_context *, pdf_obj *, void *),
+			void *arg,
+			pdf_obj **inherit_names,
+			pdf_obj **inherit_vals)
+{
+	pdf_obj **new_vals = NULL;
+
+	if (obj == NULL || pdf_mark_obj(ctx, obj))
+		return;
+
+	fz_var(new_vals);
+
+	fz_try(ctx)
+	{
+		/* First we run through the names we've been asked to collect
+		 * inherited values for updating the values. */
+		if (inherit_names != NULL)
+		{
+			int i, n;
+
+			for (n = 0; inherit_names[n] != NULL; n++);
+
+			for (i = 0; i < n; i++)
+			{
+				pdf_obj *v = pdf_dict_get(ctx, obj, inherit_names[i]);
+				if (v != NULL)
+				{
+					if (new_vals == NULL)
+					{
+						new_vals = fz_malloc_array(ctx, n, pdf_obj *);
+						memcpy(new_vals, inherit_vals, n*sizeof(pdf_obj *));
+						inherit_vals = new_vals;
+					}
+					inherit_vals[i] = v;
+				}
+			}
+		}
+
+		if (arrive)
+			arrive(ctx, obj, arg, inherit_vals);
+		pdf_walk_tree(ctx, pdf_dict_get(ctx, obj, kid_name), kid_name, arrive, leave, arg, inherit_names, inherit_vals);
+		if (leave)
+			leave(ctx, obj, arg);
+	}
+	fz_always(ctx)
+	{
+		fz_free(ctx, new_vals);
+		pdf_unmark_obj(ctx, obj);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+void pdf_walk_tree(fz_context *ctx, pdf_obj *obj, pdf_obj *kid_name,
+			void (*arrive)(fz_context *, pdf_obj *, void *, pdf_obj **),
+			void (*leave)(fz_context *, pdf_obj *, void *),
+			void *arg,
+			pdf_obj **inherit_names,
+			pdf_obj **inherit_vals)
+{
+	if (obj == NULL || pdf_mark_obj(ctx, obj))
+		return;
+
+	fz_try(ctx)
+	{
+		if (pdf_is_array(ctx, obj))
+		{
+			int i, n = pdf_array_len(ctx, obj);
+			for (i = 0; i < n; i++)
+				pdf_walk_tree_kid(ctx, pdf_array_get(ctx, obj, i), kid_name, arrive, leave, arg, inherit_names, inherit_vals);
+		}
+		else
+		{
+			pdf_walk_tree_kid(ctx, obj, kid_name, arrive, leave, arg, inherit_names, inherit_vals);
+		}
+	}
+	fz_always(ctx)
+		pdf_unmark_obj(ctx, obj);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }

@@ -70,6 +70,14 @@ typedef void (fz_output_drop_fn)(fz_context *ctx, void *state);
 */
 typedef fz_stream *(fz_stream_from_output_fn)(fz_context *ctx, void *state);
 
+/*
+	A function type for use when implementing
+	fz_outputs. The supplied function of this type is called
+	when fz_truncate_output is called to truncate the file
+	at that point.
+*/
+typedef void (fz_truncate_fn)(fz_context *ctx, void *state);
+
 struct fz_output_s
 {
 	void *state;
@@ -79,6 +87,7 @@ struct fz_output_s
 	fz_output_close_fn *close;
 	fz_output_drop_fn *drop;
 	fz_stream_from_output_fn *as_stream;
+	fz_truncate_fn *truncate;
 	char *bp, *wp, *ep;
 };
 
@@ -112,6 +121,8 @@ void fz_drop_output(fz_context *, fz_output *);
 
 fz_stream *fz_stream_from_output(fz_context *, fz_output *);
 
+void fz_truncate_output(fz_context *, fz_output *);
+
 void fz_write_data(fz_context *ctx, fz_output *out, const void *data, size_t size);
 
 void fz_write_string(fz_context *ctx, fz_output *out, const char *s);
@@ -131,7 +142,7 @@ void fz_write_float_le(fz_context *ctx, fz_output *out, float f);
 
 void fz_write_rune(fz_context *ctx, fz_output *out, int rune);
 
-void fz_write_base64(fz_context *ctx, fz_output *out, const unsigned char *data, int size, int newline);
+void fz_write_base64(fz_context *ctx, fz_output *out, const unsigned char *data, size_t size, int newline);
 void fz_write_base64_buffer(fz_context *ctx, fz_output *out, fz_buffer *data, int newline);
 
 void fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void *user, int c), const char *fmt, va_list args);

@@ -397,12 +397,12 @@ static void console_println(js_State *J)
 	js_pushundefined(J);
 }
 
-static void util_printf_d(fz_context *ctx, fz_buffer *out, int ds, int sign, int pad, int w, int base, int value)
+static void util_printf_d(fz_context *ctx, fz_buffer *out, int ds, int sign, int pad, unsigned int w, int base, int value)
 {
 	static const char *digits = "0123456789abcdef";
 	char buf[50];
-	unsigned int a;
-	int i, m = 0;
+	unsigned int a, i;
+	int m = 0;
 
 	if (value < 0)
 	{
@@ -441,10 +441,10 @@ static void util_printf_d(fz_context *ctx, fz_buffer *out, int ds, int sign, int
 		fz_append_byte(ctx, out, buf[--i]);
 }
 
-static void util_printf_f(fz_context *ctx, fz_buffer *out, int ds, int sign, int pad, int special, int w, int p, double value)
+static void util_printf_f(fz_context *ctx, fz_buffer *out, int ds, int sign, int pad, int special, unsigned int w, int p, double value)
 {
 	char buf[40], *point, *digits = buf;
-	int n = 0;
+	size_t n = 0;
 	int m = 0;
 
 	fz_snprintf(buf, sizeof buf, "%.*f", p, value);
@@ -516,7 +516,8 @@ static void util_printf(js_State *J)
 	fz_context *ctx = js->ctx;
 	const char *fmt = js_tostring(J, 1);
 	fz_buffer *out = NULL;
-	int ds, w, p, sign, pad, special;
+	int ds, p, sign, pad, special;
+	unsigned int w;
 	int c, i = 1;
 	int failed = 0;
 	const char *str;

@@ -12,6 +12,9 @@
 #include <signal.h>
 #endif
 
+#include "mupdf/helpers/pkcs7-check.h"
+#include "mupdf/helpers/pkcs7-openssl.h"
+
 #include "mujs.h"
 
 #ifndef PATH_MAX
@@ -280,13 +283,13 @@ static fz_location try_location(js_State *J)
 static void push_location(js_State *J, fz_location loc)
 {
 	if (loc.chapter == 0)
-		js_pushnumber(J, loc.page+1);
+		js_pushnumber(J, (double)loc.page+1);
 	else
 	{
 		js_newarray(J);
-		js_pushnumber(J, loc.chapter+1);
+		js_pushnumber(J, (double)loc.chapter+1);
 		js_setindex(J, -2, 0);
-		js_pushnumber(J, loc.page+1);
+		js_pushnumber(J, (double)loc.page+1);
 		js_setindex(J, -2, 1);
 	}
 }
@@ -1024,7 +1027,7 @@ static void do_links(fz_link *link)
 static void do_page_selection(void)
 {
 	static fz_point pt = { 0, 0 };
-	fz_quad hits[1000];
+	static fz_quad hits[1000];
 	int i, n;
 
 	if (ui_mouse_inside(view_page_area))
@@ -1526,11 +1529,74 @@ static void do_app(void)
 	}
 }
 
+typedef struct
+{
+	int max;
+	int len;
+	pdf_obj **sig;
+} sigs_list;
+
+static void
+process_sigs(fz_context *ctx, pdf_obj *field, void *arg, pdf_obj **ft)
+{
+	sigs_list *sigs = (sigs_list *)arg;
+
+	if (!pdf_name_eq(ctx, pdf_dict_get(ctx, field, PDF_NAME(Type)), PDF_NAME(Annot)) ||
+		!pdf_name_eq(ctx, pdf_dict_get(ctx, field, PDF_NAME(Subtype)), PDF_NAME(Widget)) ||
+		!pdf_name_eq(ctx, pdf_dict_get(ctx, field, ft[0]), PDF_NAME(Sig)))
+		return;
+
+	if (sigs->len == sigs->max)
+	{
+		int newsize = sigs->max * 2;
+		if (newsize == 0)
+			newsize = 4;
+		sigs->sig = fz_realloc_array(ctx, sigs->sig, newsize, pdf_obj *);
+		sigs->max = newsize;
+	}
+
+	sigs->sig[sigs->len++] = field;
+}
+
+static char *short_signature_error_desc(pdf_signature_error err)
+{
+	switch (err)
+	{
+	case PDF_SIGNATURE_ERROR_OKAY:
+		return "OK";
+	case PDF_SIGNATURE_ERROR_NO_SIGNATURES:
+		return "No signatures";
+	case PDF_SIGNATURE_ERROR_NO_CERTIFICATE:
+		return "No certificate";
+	case PDF_SIGNATURE_ERROR_DIGEST_FAILURE:
+		return "Invalid";
+	case PDF_SIGNATURE_ERROR_SELF_SIGNED:
+		return "Self-signed";
+	case PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN:
+		return "Self-signed in chain";
+	case PDF_SIGNATURE_ERROR_NOT_TRUSTED:
+		return "Untrusted";
+	default:
+	case PDF_SIGNATURE_ERROR_UNKNOWN:
+		return "Unknown error";
+	}
+}
+
 static void do_info(void)
 {
 	char buf[100];
+	pdf_document *pdoc = pdf_specifics(ctx, doc);
+	sigs_list list = { 0, 0, NULL };
 
-	ui_dialog_begin(500, 14 * ui.lineheight);
+	if (pdoc)
+	{
+		static pdf_obj *ft_list[2] = { PDF_NAME(FT), NULL };
+		pdf_obj *ft;
+		pdf_obj *form_fields = pdf_dict_getp(ctx, pdf_trailer(ctx, pdoc), "Root/AcroForm/Fields");
+		pdf_walk_tree(ctx, form_fields, PDF_NAME(Kids), process_sigs, NULL, &list, &ft_list[0], &ft);
+	}
+
+	ui_dialog_begin(500, (14+list.len) * ui.lineheight);
 	ui_layout(T, X, W, 0, 0);
 
 	if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_TITLE, buf, sizeof buf) > 0)
@@ -1541,8 +1607,10 @@ static void do_info(void)
 		ui_label("Format: %s", buf);
 	if (fz_lookup_metadata(ctx, doc, FZ_META_ENCRYPTION, buf, sizeof buf) > 0)
 		ui_label("Encryption: %s", buf);
-	if (pdf_specifics(ctx, doc))
+	if (pdoc)
 	{
+		int updates = pdf_count_incremental_updates(ctx, pdoc);
+
 		if (fz_lookup_metadata(ctx, doc, "info:Creator", buf, sizeof buf) > 0)
 			ui_label("PDF Creator: %s", buf);
 		if (fz_lookup_metadata(ctx, doc, "info:Producer", buf, sizeof buf) > 0)
@@ -1561,6 +1629,58 @@ static void do_info(void)
 		else
 			fz_strlcat(buf, "none", sizeof buf);
 		ui_label("Permissions: %s", buf);
+		ui_label("PDF %sdocument with %d updates",
+			pdf_doc_was_linearized(ctx, pdoc) ? "linearized " : "",
+			updates);
+		if (updates > 0)
+		{
+			if (pdf_validate_change_history(ctx, pdoc) == 0)
+				ui_label("Change history seems valid");
+			else
+				ui_label("Change history invalid");
+		}
+
+		if (list.len)
+		{
+			int i;
+			for (i = 0; i < list.len; i++)
+			{
+				pdf_obj *field = list.sig[i];
+				fz_try(ctx)
+				{
+					if (pdf_signature_is_signed(ctx, pdf, field))
+					{
+						if (pdf_supports_signatures(ctx))
+						{
+							pdf_signature_error sig_cert_error = pdf_check_certificate(ctx, pdf, field);
+							pdf_signature_error sig_digest_error = pdf_check_digest(ctx, pdf, field);
+							ui_label("Signature %d: CERT: %s, DIGEST: %s%s", i+1,
+								short_signature_error_desc(sig_cert_error),
+								short_signature_error_desc(sig_digest_error),
+									pdf_signature_incremental_change_since_signing(ctx, pdf, field) ? ", Changed since": "");
+						}
+						else
+							ui_label("Signature %d: Signed (cannot test validity)", i+1);
+					}
+					else
+						ui_label("Signature %d: Unsigned", i+1);
+				}
+				fz_catch(ctx)
+					ui_label("Signature %d: Error", i+1);
+			}
+			fz_free(ctx, list.sig);
+
+			if (updates == 0)
+				ui_label("No updates since document creation");
+			else
+			{
+				int n = pdf_validate_change_history(ctx, pdf);
+				if (n == 0)
+					ui_label("Document changes conform to permissions");
+				else
+					ui_label("Document permissions violated %d updates ago", n);
+			}
+		}
 	}
 	ui_label("Page: %d / %d", fz_page_number_from_location(ctx, doc, currentpage)+1, fz_count_pages(ctx, doc));
 	{
@@ -1576,7 +1696,6 @@ static void do_info(void)
 	}
 	ui_label("ICC rendering: %s.", currenticc ? "on" : "off");
 	ui_label("Spot rendering: %s.", currentseparations ? "on" : "off");
-
 	ui_dialog_end();
 }
 
@@ -1849,7 +1968,7 @@ static int document_filter(const char *filename)
 
 static void do_open_document_dialog(void)
 {
-	if (ui_open_file(filename))
+	if (ui_open_file(filename, "Select a document to open:"))
 	{
 		ui.dialog = NULL;
 		if (filename[0] == 0)

@@ -114,6 +114,13 @@ pdf_obj *pdf_lookup_name(fz_context *ctx, pdf_document *doc, pdf_obj *which, pdf
 pdf_obj *pdf_load_name_tree(fz_context *ctx, pdf_document *doc, pdf_obj *which);
 pdf_obj *pdf_lookup_number(fz_context *ctx, pdf_obj *root, int needle);
 
+void pdf_walk_tree(fz_context *ctx, pdf_obj *obj, pdf_obj *kid_name,
+			void (*arrive)(fz_context *, pdf_obj *, void *, pdf_obj **),
+			void (*leave)(fz_context *, pdf_obj *, void *),
+			void *arg,
+			pdf_obj **names,
+			pdf_obj **values);
+
 int pdf_resolve_link(fz_context *ctx, pdf_document *doc, const char *uri, float *xp, float *yp);
 fz_location pdf_resolve_link_imp(fz_context *ctx, fz_document *doc_, const char *uri, float *xp, float *yp);
 fz_link *pdf_load_link_annots(fz_context *ctx, pdf_document *, pdf_obj *annots, int pagenum, fz_matrix page_ctm);
