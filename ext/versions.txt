@@ -47,9 +47,9 @@ harfbuzz        2.6.4      2019-10-29
   https://harfbuzz.org
   https://github.com/ArtifexSoftware/thirdparty-harfbuzz/commit/3a74ee
 
-mujs            1.0.5      2019-06-12
+mujs            1.0.6      Apr 4, 2019
   http://mujs.com/
-  http://git.ghostscript.com/?p=mujs.git;a=commit;h=14dc9355bd71818cf01c1c690c1c91a0978ea9b8
+  https://github.com/ArtifexSoftware/mujs/commit/00d4606c3baf813b7b1c176823b2729bf51002a2
 
 ../mupdf        trunk
   https://github.com/ArtifexSoftware/mupdf/commit/585596b77f3ee7dab36747c03eed2fd92d8a41b9

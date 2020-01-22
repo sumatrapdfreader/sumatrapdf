@@ -637,10 +637,10 @@ static void compile(Reprog *prog, Renode *node)
 	Reinst *inst, *split, *jump;
 	int i;
 
-loop:
 	if (!node)
 		return;
 
+loop:
 	switch (node->type) {
 	case P_CAT:
 		compile(prog, node->x);

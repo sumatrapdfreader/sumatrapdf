@@ -119,13 +119,6 @@ install-shared: install-common shared
 
 install: install-static
 
-uninstall:
-	rm -f $(DESTDIR)$(bindir)/mujs
-	rm -f $(DESTDIR)$(incdir)/mujs.h
-	rm -f $(DESTDIR)$(libdir)/pkgconfig/mujs.pc
-	rm -f $(DESTDIR)$(libdir)/libmujs.a
-	rm -f $(DESTDIR)$(libdir)/libmujs.so
-
 tarball:
 	git archive --format=zip --prefix=mujs-$(VERSION)/ HEAD > mujs-$(VERSION).zip
 	git archive --format=tar --prefix=mujs-$(VERSION)/ HEAD | gzip > mujs-$(VERSION).tar.gz
