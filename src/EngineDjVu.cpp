@@ -160,7 +160,6 @@ struct DjVuContext {
         }
         LeaveCriticalSection(&lock);
         DeleteCriticalSection(&lock);
-        minilisp_finish();
     }
 
     void SpinMessageLoop(bool wait = true) {
@@ -222,12 +221,12 @@ static void ReleaseDjVuContext() {
 }
 
 void CleanupDjVuEngine() {
-    if (!gDjVuContext) {
-        return;
+    if (gDjVuContext) {
+        CrashIf(gDjVuContext->refCount != 0);
+        delete gDjVuContext;
+        gDjVuContext = nullptr;
     }
-    CrashIf(gDjVuContext->refCount != 0);
-    delete gDjVuContext;
-    gDjVuContext = nullptr;
+    minilisp_finish();
 }
 
 class EngineDjVu : public EngineBase {
