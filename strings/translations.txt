@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3572c2317ab01b118087185d1a86023cd0295bc8
+375fe67ac1f75a2313ae8aa36bc609a2f6500edd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4168,7 +4168,7 @@ jv:Apa panjenengan yakin arep mbusak instalasi SumatraPDF?
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
 lt:Ar tikrai norite pašalinti SumatraPDF?
-lv:Vai jūs esat pārliecināts, ka vēlaties atinstalēt SumatraPDF?
+lv:Vai jūs esat pārliecināti, ka vēlaties atinstalēt SumatraPDF?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
 my:Adakah anda pasti anda mahu membuang SumatraPDF?
 ne:SumatraPDF हटाउन चाहानुहुन्छ?
@@ -15204,7 +15204,7 @@ ja:インストール先ディレクトリの選択:
 kr:SumatraPDF를 설치할 폴더 선택:
 ku::SumatraPDF فۆڵدەرێک دیاریبکە بۆ دابەزاندنی
 lt:Pasirinkite kur diegti SumatraPDF:
-lv:Atlasiet mapi, kurā jāinstalē SumatraPDF
+lv:Atlasiet mapi, kurā ir jāinstalē SumatraPDF
 mk:Изберете ја папката каде што треба да се инсталира SumatraPDF:
 my:Pilih folder di mana SumatraPDF harus dipasang:
 ne:SumatraPDF स्थापना गर्ने फोल्डर चयन गर्नुहोस्:
@@ -15619,7 +15619,7 @@ ka:რჩეულების ჩვენება
 kr:즐겨찾기 보이기
 ku:پیشاندانی پەسەندەکان
 lt:Rodyti parankinius
-lv:Rādīt &grāmatzīmes
+lv:Rādīt &izlasi
 mk:Прикажи омилени
 my:Papar kegemaran
 ne:मनपर्नेहरु देखाउनुहोस्

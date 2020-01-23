@@ -10109,7 +10109,7 @@ const char * gTranslations_lv =
   "Visi faili\0"\
   "Visi atbalst\304\253tie dokumenti\0"\
   "Programma:\0"\
-  "Vai j\305\253s esat p\304\201rliecin\304\201ts, ka v\304\223laties atinstal\304\223t SumatraPDF?\0"\
+  "Vai j\305\253s esat p\304\201rliecin\304\201ti, ka v\304\223laties atinstal\304\223t SumatraPDF?\0"\
   "Vai piesaist\304\253t PDF failiem?\0"\
   "Pielikums: %s\0"\
   "Autors:\0"\
@@ -10284,7 +10284,7 @@ const char * gTranslations_lv =
   "Atlas\304\253t &visu\0"\
   "Atlas\304\253t &visu\tCtrl+A\0"\
   "Atlas\304\253t saturu ar Ctrl+peles kreiso pogu\0"\
-  "Atlasiet mapi, kur\304\201 j\304\201instal\304\223 SumatraPDF\0"\
+  "Atlasiet mapi, kur\304\201 ir j\304\201instal\304\223 SumatraPDF\0"\
   "Atlase:\0"\
   "Nos\305\253t\304\253t pa &e-pastu\0"\
   "Iestat\304\253t invers\304\201s mekl\304\223\305\241anas komandrindu\0"\
@@ -10293,7 +10293,7 @@ const char * gTranslations_lv =
   "R\304\201d\304\253t &lappuses nep\304\201rtraukti\0"\
   "R\304\201d\304\253t &r\304\253kjoslu\0"\
   "R\304\201d\304\253t gr\304\201mat&z\304\253mes\tF12\0"\
-  "R\304\201d\304\253t &gr\304\201matz\304\253mes\0"\
+  "R\304\201d\304\253t &izlasi\0"\
   "R\304\201d\304\253t bie\305\276i las\304\253tos\0"\
   "R\304\201d\304\253t &map\304\223\0"\
   "R\304\201d\304\253t &gr\304\201matz\304\253mju s\304\201njoslu, ja t\304\201 ir pieejama\0"\
