@@ -797,7 +797,7 @@ int DisplayModel::GetPageNextToPoint(PointI pt) {
 
 PointI DisplayModel::CvtToScreen(int pageNo, PointD pt) {
     PageInfo* pageInfo = GetPageInfo(pageNo);
-    CrashIf(!pageInfo);
+    SubmitCrashIf(!pageInfo);
     if (!pageInfo) {
         return PointI();
     }

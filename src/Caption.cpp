@@ -441,8 +441,9 @@ void RelayoutCaption(WindowInfo* win) {
 }
 
 static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
-    if (!item || item->CtlType != ODT_BUTTON)
+    if (!item || item->CtlType != ODT_BUTTON) {
         return;
+    }
 
     RectI rButton = RectI::FromRECT(item->rcItem);
 
@@ -546,7 +547,9 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
         int xIcon = GetSystemMetrics(SM_CXSMICON);
         int yIcon = GetSystemMetrics(SM_CYSMICON);
         HICON hIcon = (HICON)GetClassLongPtr(win->hwndFrame, GCLP_HICONSM);
-        DrawIconEx(memDC, (rButton.dx - xIcon) / 2, (rButton.dy - yIcon) / 2, hIcon, xIcon, yIcon, 0, NULL, DI_NORMAL);
+        int x = (rButton.dx - xIcon) / 2;
+        int y = (rButton.dy - yIcon) / 2;
+        DrawIconEx(memDC, x, y, hIcon, xIcon, yIcon, 0, NULL, DI_NORMAL);
     }
 
     buffer.Flush(item->hDC);

@@ -295,7 +295,7 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     }
 
     // happened e.g. in crash 50539
-    DebugCarshIf(win->mouseAction != MouseAction::Idle);
+    DebugCrashIf(win->mouseAction != MouseAction::Idle);
     CrashIf(!win->AsFixed());
 
     SetFocus(win->hwndFrame);

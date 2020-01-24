@@ -247,7 +247,7 @@ inline void SendCrashIfFunc(bool cond, const char* condStr) {
 }
 
 // Sometimes we want to assert only in debug build (not in pre-release)
-inline void DebugCarshIfFunc(bool cond) {
+inline void DebugCrashIfFunc(bool cond) {
     UNUSED(cond);
 #if defined(DEBUG)
     if (cond) {
@@ -267,10 +267,10 @@ inline void DebugCarshIfFunc(bool cond) {
 #define __analysis_assume(x)
 #endif
 
-#define DebugCarshIf(cond)          \
+#define DebugCrashIf(cond)          \
     do {                            \
         __analysis_assume(!(cond)); \
-        DebugCarshIfFunc(cond);     \
+        DebugCrashIfFunc(cond);     \
     }                               \
     while_0_nowarn
 
@@ -336,7 +336,7 @@ inline void ZeroArray(T& a) {
 
 template <typename T>
 inline T limitValue(T val, T min, T max) {
-    DebugCarshIf(min > max);
+    DebugCrashIf(min > max);
     if (val < min) {
         return min;
     }

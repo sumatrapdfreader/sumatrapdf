@@ -555,7 +555,10 @@ void OnTocCustomDraw(TreeItemCustomDrawArgs*);
 static void dropDownSelectionChanged(DropDownSelectionChangedArgs* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
     TabInfo* tab = win->currentTab;
-    CrashIf(!tab);
+    DebugCrashIf(!tab);
+    if (!tab) {
+        return;
+    }
     AltBookmarksChanged(win, tab, args->idx, args->item);
     args->didHandle = true;
 }
