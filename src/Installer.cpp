@@ -29,6 +29,7 @@
 
 #include "Translations.h"
 
+#include "AppPrefs.h"
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
@@ -145,12 +146,6 @@ bool CopySelfToDir(const WCHAR* destDir) {
     return ok;
 }
 
-//#define PREFS_FILE_NAME L"SumatraPDF-settings.txt"
-
-static WCHAR* getPrefsFileName() {
-    return str::Join(getAppName(), L"-settings.txt");
-}
-
 static void CopySettingsFile() {
     // up to 3.1.2 we stored settings in %APPDATA%
     // after that we use %LOCALAPPDATA%
@@ -159,7 +154,7 @@ static void CopySettingsFile() {
     AutoFreeWstr dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
 
     const WCHAR* appName = getAppName();
-    AutoFreeWstr prefsFileName = getPrefsFileName();
+    WCHAR* prefsFileName = prefs::GetSettingsFileNameNoFree();
     AutoFreeWstr srcPath = path::Join(srcDir.data, appName, prefsFileName);
     AutoFreeWstr dstPath = path::Join(dstDir.data, appName, prefsFileName);
 

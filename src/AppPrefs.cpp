@@ -26,13 +26,6 @@
 #include "Toolbar.h"
 #include "Translations.h"
 
-static WCHAR* getPrefsFileName() {
-    if (gIsRaMicroBuild) {
-        return L"RAMicroPDF-settings.txt";
-    }
-    return L"SumatraPDF-settings.txt";
-}
-
 static WatchedFile* gWatchedSettingsFile = nullptr;
 
 // number of weeks past since 2011-01-01
@@ -55,8 +48,15 @@ static int cmpFloat(const void* a, const void* b) {
 
 namespace prefs {
 
+WCHAR* GetSettingsFileNameNoFree() {
+    if (gIsRaMicroBuild) {
+        return L"RAMicroPDF-settings.txt";
+    }
+    return L"SumatraPDF-settings.txt";
+}
+
 WCHAR* GetSettingsPath() {
-    return AppGenDataFilename(getPrefsFileName());
+    return AppGenDataFilename(GetSettingsFileNameNoFree());
 }
 
 /* Caller needs to prefs::CleanUp() */
