@@ -19,6 +19,8 @@
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/Log.h"
 
+#include "SumatraConfig.h"
+
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
@@ -167,8 +169,10 @@ static bool RegisterWinClass() {
     WNDCLASSEX wcex;
     ATOM atom;
 
+    HMODULE h = GetModuleHandleW(nullptr);
+    LPCWSTR iconName = MAKEINTRESOURCEW(getAppIconID());
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcFrame);
-    wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.hIcon = LoadIconW(h, iconName);
     CrashIf(!wcex.hIcon);
     // For the extended translucent frame to be visible, we need black background.
     wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
@@ -181,7 +185,7 @@ static bool RegisterWinClass() {
     CrashIf(!atom);
 
     FillWndClassEx(wcex, PROPERTIES_CLASS_NAME, WndProcProperties);
-    wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.hIcon = LoadIconW(h, iconName);
     CrashIf(!wcex.hIcon);
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);

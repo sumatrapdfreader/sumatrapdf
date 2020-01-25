@@ -13,6 +13,7 @@
 #include "wingui/Window.h"
 #include "wingui/TooltipCtrl.h"
 
+#include "SumatraConfig.h"
 #include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
@@ -549,7 +550,8 @@ void OnMenuAbout() {
     if (!gAtomAbout) {
         WNDCLASSEX wcex;
         FillWndClassEx(wcex, ABOUT_CLASS_NAME, WndProcAbout);
-        wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+        HMODULE h = GetModuleHandleW(nullptr);
+        wcex.hIcon = LoadIcon(h, MAKEINTRESOURCE(getAppIconID()));
         gAtomAbout = RegisterClassEx(&wcex);
         CrashIf(!gAtomAbout);
     }

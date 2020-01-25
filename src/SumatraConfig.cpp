@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 
+#include "resource.h"
 #include "Version.h"
 #include "SumatraConfig.h"
 
@@ -71,4 +72,11 @@ const WCHAR* getExeName() {
         return L"RA-MICRO PDF Viewer.exe";
     }
     return L"SumatraPDF.exe";
+}
+
+int getAppIconID() {
+    if (gIsRaMicroBuild) {
+        return IDI_RAMICRO;
+    }
+    return IDI_SUMATRAPDF;
 }

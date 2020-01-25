@@ -941,7 +941,7 @@ static bool RegisterWinClass() {
 
     FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
     auto h = GetModuleHandle(nullptr);
-    auto resName = MAKEINTRESOURCEW(IDI_SUMATRAPDF);
+    auto resName = MAKEINTRESOURCEW(getAppIconID());
     wcex.hIcon = LoadIcon(h, resName);
 
     ATOM atom = RegisterClassEx(&wcex);

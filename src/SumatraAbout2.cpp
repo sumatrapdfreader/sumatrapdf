@@ -341,7 +341,8 @@ void OnMenuAbout2() {
 
     if (!gAboutWndAtom) {
         FillWndClassEx(wcex, WND_CLASS_ABOUT2, WndProcAbout2);
-        wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+        HMODULE h = GetModuleHandleW(nullptr);
+        wcex.hIcon = LoadIcon(h, MAKEINTRESOURCE(getAppIconID()));
         gAboutWndAtom = RegisterClassEx(&wcex);
         CrashIf(!gAboutWndAtom);
     }
