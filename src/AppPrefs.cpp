@@ -11,6 +11,7 @@
 #include "EngineBase.h"
 #include "EngineEbook.h"
 
+#include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
@@ -25,7 +26,12 @@
 #include "Toolbar.h"
 #include "Translations.h"
 
-#define PREFS_FILE_NAME L"SumatraPDF-settings.txt"
+static WCHAR* getPrefsFileName() {
+    if (gIsRaMicroBuild) {
+        return L"RAMicroPDF-settings.txt";
+    }
+    return L"SumatraPDF-settings.txt";
+}
 
 static WatchedFile* gWatchedSettingsFile = nullptr;
 
@@ -50,7 +56,7 @@ static int cmpFloat(const void* a, const void* b) {
 namespace prefs {
 
 WCHAR* GetSettingsPath() {
-    return AppGenDataFilename(PREFS_FILE_NAME);
+    return AppGenDataFilename(getPrefsFileName());
 }
 
 /* Caller needs to prefs::CleanUp() */
