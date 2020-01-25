@@ -26,8 +26,9 @@ const (
 )
 
 var (
-	rel32Dir = filepath.Join("out", "rel32")
-	rel64Dir = filepath.Join("out", "rel64")
+	rel32Dir   = filepath.Join("out", "rel32")
+	rel64Dir   = filepath.Join("out", "rel64")
+	rel64RaDir = filepath.Join("out", "rel64ra")
 )
 
 func isValidBuildType(buildType string) bool {
@@ -160,26 +161,22 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
 	manifestRemotePath := remoteDir + prefix + "-manifest.txt"
 
-	// only 64-bit builds for ra-micro
+	// ra-micro only needs 64-bit builds
 	if buildType != buildTypeRaMicro {
 		files := getFileNamesWithPrefix(prefix)
 		err := minioUploadFiles(c, remoteDir, rel32Dir, files)
 		fatalIfErr(err)
 	}
 
-	// over-ride SumtraPDF.exe name
-	if buildType == buildTypeRaMicro {
-		nameInZip := fmt.Sprintf("RAMicro-PDFViewer-%s.exe", ver)
-		createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
-	}
-
+	dir64 := rel64Dir
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
 	if buildType == buildTypeRaMicro {
 		// must match createSumatraLatestJs
 		prefix = fmt.Sprintf("RAMicro-prerelease-%s-64", ver)
+		dir64 = rel64RaDir
 	}
 	files := getFileNamesWithPrefix(prefix)
-	err := minioUploadFiles(c, remoteDir, rel64Dir, files)
+	err := minioUploadFiles(c, remoteDir, dir64, files)
 	fatalIfErr(err)
 
 	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
@@ -305,5 +302,5 @@ func minioDeleteOldBuildsPrefix(buildType string) {
 func minioDeleteOldBuilds() {
 	minioDeleteOldBuildsPrefix(buildTypePreRel)
 	minioDeleteOldBuildsPrefix(buildTypeDaily)
-	//minioDeleteOldBuildsPrefix(buildTypeRaMicro)
+	minioDeleteOldBuildsPrefix(buildTypeRaMicro)
 }

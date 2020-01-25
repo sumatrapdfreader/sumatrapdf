@@ -235,7 +235,7 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 	logf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
 }
 
-func s3DeleteOldBuilkdsPrefix(buildType string) {
+func s3DeleteOldBuildsPrefix(buildType string) {
 	c := newS3Client()
 
 	nBuildsToRetain := nBuildsToRetainDaily
@@ -266,6 +266,6 @@ func s3DeleteOldBuilkdsPrefix(buildType string) {
 }
 
 func s3DeleteOldBuilds() {
-	s3DeleteOldBuilkdsPrefix(buildTypePreRel)
-	s3DeleteOldBuilkdsPrefix(buildTypeDaily)
+	s3DeleteOldBuildsPrefix(buildTypePreRel)
+	s3DeleteOldBuildsPrefix(buildTypeDaily)
 }
