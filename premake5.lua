@@ -51,7 +51,7 @@ include("premake5.files.lua")
 
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleaseAnalyze", }
-  platforms { "x32", "x32_xp", "x32_asan", "x64" }
+  platforms { "x32", "x32_xp", "x32_asan", "x64", "x64_ramicro" }
   startproject "SumatraPDF"
 
   filter "platforms:x32_xp"
@@ -76,6 +76,13 @@ workspace "SumatraPDF"
      architecture "x86_64"
      -- strangely this is not set by default for rc.exe
      resdefines { "_WIN64" }
+  filter {}
+
+  filter "platforms:x64_ramicro"
+     architecture "x86_64"
+     -- strangely this is not set by default for rc.exe
+     resdefines { "_WIN64", "RAMICRO" }
+     defines { "RAMICRO"}
   filter {}
 
   disablewarnings { "4127", "4189", "4324", "4458", "4522", "4702", "4800" }
@@ -121,6 +128,14 @@ workspace "SumatraPDF"
     targetdir "out/rel64_prefast"
   filter {"platforms:x64", "configurations:Debug"}
     targetdir "out/dbg64"
+  filter {}
+
+  filter {"platforms:x64_ramicro", "configurations:Release"}
+    targetdir "out/rel64ra"
+  filter {"platforms:x64_ramicro", "configurations:ReleaseAnalyze"}
+    targetdir "out/rel64ra_prefast"
+  filter {"platforms:x64_ramicro", "configurations:Debug"}
+    targetdir "out/dbg64ra"
   filter {}
 
   objdir "%{cfg.targetdir}/obj"
@@ -266,7 +281,7 @@ workspace "SumatraPDF"
        }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64'}
+    filter {'files:**.asm', 'platforms:x64 or x64_ramicro'}
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
@@ -383,7 +398,7 @@ workspace "SumatraPDF"
        }
     filter {}
     
-    filter {'files:**.asm', 'platforms:x64'}
+    filter {'files:**.asm', 'platforms:x64 or x64_ramicro'}
       buildmessage 'Compiling %{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {

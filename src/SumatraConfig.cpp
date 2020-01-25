@@ -58,7 +58,11 @@ bool gWithTocEditor = true;
 bool gWithTocEditor = false;
 #endif
 
+#if defined(RAMICRO)
+bool gIsRaMicroBuild = true;
+#else
 bool gIsRaMicroBuild = false;
+#endif
 
 const WCHAR* getAppName() {
     if (gIsRaMicroBuild) {

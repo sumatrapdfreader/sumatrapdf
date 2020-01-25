@@ -67,9 +67,13 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_SUMATRAPDF          ICON                    "..\\gfx\\SumatraPDF-smaller.ico"
-IDI_PDFDOC              ICON                    "..\\gfx\\PdfDoc.ico"
-IDI_RAMICRO             ICON                    "..\\gfx\\ramicro.ico"
+#if defined(RAMICRO)
+IDI_SUMATRAPDF          ICON        "..\\gfx\\ramicro.ico"
+#else
+IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
+#endif
+IDI_PDFDOC              ICON        "..\\gfx\\PdfDoc.ico"
+IDI_RAMICRO             ICON        "..\\gfx\\ramicro.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

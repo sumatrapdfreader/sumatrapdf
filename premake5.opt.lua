@@ -158,7 +158,7 @@
         }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64'}
+    filter {'files:**.asm', 'platforms:x64 or x64_ramicro'}
         buildmessage '%{file.relpath}'
         buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
         buildcommands {
@@ -222,7 +222,7 @@
         }
         filter {}
 
-        filter {'files:**.asm', 'platforms:x64'}
+        filter {'files:**.asm', 'platforms:x64 or x64_ramicro'}
         buildmessage 'Compiling %{file.relpath}'
         buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
         buildcommands {
