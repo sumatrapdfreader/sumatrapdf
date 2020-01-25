@@ -139,7 +139,8 @@ static bool CreateInstallationDirectory() {
 
 bool CopySelfToDir(const WCHAR* destDir) {
     auto exePath = GetExePath();
-    auto* dstPath = path::Join(destDir, L"SumatraPDF.exe");
+    auto exeName = getExeName();
+    auto* dstPath = path::Join(destDir, exeName);
     BOOL failIfExists = FALSE;
     BOOL ok = ::CopyFileW(exePath, dstPath, failIfExists);
     free(dstPath);
