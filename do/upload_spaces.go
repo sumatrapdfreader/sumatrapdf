@@ -153,8 +153,6 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 		return
 	}
 
-	isDaily := buildType == buildTypeDaily
-
 	remoteDir := getRemoteDir(buildType)
 
 	c := newMinioClient()
