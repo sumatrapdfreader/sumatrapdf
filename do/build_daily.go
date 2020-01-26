@@ -30,10 +30,7 @@ func buildDaily() {
 	runExeLoggedMust(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview;test_util", "/p:Configuration=Release;Platform=x64_ramicro", "/m")
 	signFilesMust(rel64RaDir)
 
-	// TODO: use pigz for release
-	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-32.exe", preReleaseVer)
-	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
-	nameInZip = fmt.Sprintf("SumatraPDF-prerel-%s.exe", preReleaseVer)
+	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s.exe", preReleaseVer)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
 	nameInZip = fmt.Sprintf("RAMicroPDFViewer-prerel-%s.exe", preReleaseVer)
