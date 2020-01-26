@@ -30,9 +30,3 @@ jobs:
           SPACES_KEY: ${{ secrets.SPACES_KEY }}
           SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
         run: .\doit.bat -ci-upload
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@master
-        with:
-          name: SumatraPDF
-          path: artifacts

@@ -53,6 +53,5 @@ func buildPreRelease() {
 	createPdbLzsaMust(rel64Dir)
 	createPdbLzsaMust(rel64RaDir)
 
-	copyArtifacts()
 	createManifestMust()
 }

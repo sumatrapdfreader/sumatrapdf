@@ -278,7 +278,6 @@ func makeAppx() {
 	fmt.Printf("makeAppx: '%s'\n", appExePath)
 }
 
-
 const (
 	artifactsDir = "artifacts"
 )
@@ -293,23 +292,6 @@ var (
 	}
 )
 
-// TODO: add version number to file names (like "Installer-3.2.0-pre3333")
-// TODO: make "SumatraPDF.exe.zip" from "SumatraPDF.exe", for smaller downloads
-func copyArtifactsFiles(dstDir, srcDir string) {
-	u.CreateDirIfNotExistsMust(dstDir)
-	for _, f := range artifactFiles {
-		src := filepath.Join(srcDir, f)
-		dst := filepath.Join(dstDir, f)
-		u.CopyFileMust(dst, src)
-	}
-}
-
-// This is for the benefit of GitHub Actions: copy files to artifacts directory
-func copyArtifacts() {
-	copyArtifactsFiles(filepath.Join(artifactsDir, "32"), filepath.Join("out", "rel32"))
-	copyArtifactsFiles(filepath.Join(artifactsDir, "64"), filepath.Join("out", "rel64"))
-}
-
 func signFilesMust(dir string) {
 	if !shouldSignAndUpload() {
 		logf("Skipping signing in dir '%s'\n", dir)
@@ -320,4 +302,3 @@ func signFilesMust(dir string) {
 	signMust(filepath.Join(dir, "PdfPreview.dll"))
 	signMust(filepath.Join(dir, "SumatraPDF-dll.exe"))
 }
-

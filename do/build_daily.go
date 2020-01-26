@@ -42,6 +42,5 @@ func buildDaily() {
 	createPdbLzsaMust(rel64Dir)
 	createPdbLzsaMust(rel64RaDir)
 
-	copyArtifacts()
 	createManifestMust()
 }
