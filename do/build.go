@@ -256,6 +256,10 @@ func createManifestMust() {
 		"SumatraPDF.pdb.lzsa",
 	}
 	dirs := []string{rel32Dir, rel64Dir}
+	// in daily build, there's no 32bit build
+	if !pathExists(rel32Dir) {
+		dirs = []string{rel64Dir}
+	}
 	for _, dir := range dirs {
 		for _, file := range files {
 			path := filepath.Join(dir, file)

@@ -100,6 +100,11 @@ func fileSizeMust(path string) int64 {
 	return size
 }
 
+func pathExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
 func removeDirMust(dir string) {
 	err := os.RemoveAll(dir)
 	fatalIfErr(err)
