@@ -268,7 +268,9 @@ func createManifestMust() {
 			lines = append(lines, line)
 		}
 	}
+
 	s := strings.Join(lines, "\n")
+	u.CreateDirIfNotExistsMust(artifactsDir)
 	path := filepath.Join(artifactsDir, "manifest.txt")
 	u.WriteFileMust(path, []byte(s))
 }
