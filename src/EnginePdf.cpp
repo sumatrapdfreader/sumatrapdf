@@ -781,12 +781,14 @@ bool EnginePdf::FinishLoading() {
         fz_warn(ctx, "Couldn't load attachments");
     }
 
+    pdf_obj* orig_info = nullptr;
     fz_try(ctx) {
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
         // displaying document properties
-        _info = pdf_dict_gets(ctx, pdf_trailer(ctx, doc), "Info");
-        if (_info) {
+        orig_info = pdf_dict_gets(ctx, pdf_trailer(ctx, doc), "Info");
+
+        if (orig_info) {
             _info = pdf_copy_str_dict(ctx, doc, _info);
         }
         if (!_info) {
