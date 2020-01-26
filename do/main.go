@@ -55,6 +55,7 @@ func main() {
 		flgCrashes                 bool
 		flgCheckAccessKeys         bool
 		flgBuildNo                 bool
+		flgTriggerPreRel           bool
 	)
 
 	{
@@ -77,6 +78,7 @@ func main() {
 		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
+		flag.BoolVar(&flgTriggerPreRel, "trigger-pre-rel", false, "trigger pre-release build")
 		flag.Parse()
 	}
 
@@ -90,6 +92,11 @@ func main() {
 
 	if flgWc {
 		doLineCount()
+		return
+	}
+
+	if flgTriggerPreRel {
+		triggerPreRelBuild()
 		return
 	}
 
