@@ -153,6 +153,8 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 		return
 	}
 
+	isDaily := buildType == buildTypeDaily
+
 	remoteDir := getRemoteDir(buildType)
 
 	c := newMinioClient()
@@ -162,7 +164,7 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 	manifestRemotePath := remoteDir + prefix + "-manifest.txt"
 
 	// ra-micro only needs 64-bit builds
-	if buildType != buildTypeRaMicro {
+	if buildType != buildTypeRaMicro && isDaily {
 		files := getFileNamesWithPrefix(prefix)
 		err := minioUploadFiles(c, remoteDir, rel32Dir, files)
 		fatalIfErr(err)

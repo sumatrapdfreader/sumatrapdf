@@ -174,6 +174,7 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 		return
 	}
 
+	isDaily := buildType == buildTypeDaily
 	panicIf(buildType == buildTypeRaMicro, "only uploading ramicro to spaces")
 
 	remoteDir := getRemoteDir(buildType)
@@ -185,11 +186,18 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 
 	verifyPreReleaseNotInS3Must(c, remoteDir, preReleaseVer)
 
-	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
+	var prefix string
+	var files []string
+	var err error
+
+	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
 	manifestRemotePath := remoteDir + prefix + "-manifest.txt"
-	files := getFileNamesWithPrefix(prefix)
-	err := s3UploadFiles(c, remoteDir, filepath.Join("out", "rel32"), files)
-	fatalIfErr(err)
+
+	if !isDaily {
+		files = getFileNamesWithPrefix(prefix)
+		err = s3UploadFiles(c, remoteDir, filepath.Join("out", "rel32"), files)
+		fatalIfErr(err)
+	}
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
 	files = getFileNamesWithPrefix(prefix)
