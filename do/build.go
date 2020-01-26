@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -27,6 +28,21 @@ var (
 func isNum(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
+}
+
+// https://goobar.io/2019/12/07/manually-trigger-a-github-actions-workflow/
+// send a webhook POST request to trigger a build
+func triggerPreRelBuild() {
+	data := `{"event_type": "build-pre-rel"}`
+	uri := "https://api.github.com/repos/sumatrapdfreader/sumatrapdf/dispatches"
+	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data))
+	u.Must(err)
+	req.Header.Set("Accept", "application/vnd.github.everest-preview+json")
+	val := fmt.Sprintf("token %s", "") // TODO: GitHub token
+	req.Header.Set("Authorization", val)
+	rsp, err := http.DefaultClient.Do(req)
+	u.Must(err)
+	u.PanicIf(rsp.StatusCode >= 400)
 }
 
 // Version must be in format x.y.z
@@ -262,59 +278,6 @@ func makeAppx() {
 	fmt.Printf("makeAppx: '%s'\n", appExePath)
 }
 
-func buildPreRelease(isDaily bool) {
-	// early exit if missing
-	detectSigntoolPath()
-	msbuildPath := detectMsbuildPath()
-
-	s := fmt.Sprintf("buidling pre-release version %s", preReleaseVer)
-	defer makePrintDuration(s)()
-	verifyGitCleanMust()
-	verifyOnMasterBranchMust()
-
-	if !isDaily {
-		verifyTranslationsMust()
-	}
-
-	clean()
-
-	setBuildConfig(gitSha1, preReleaseVer, isDaily)
-	defer revertBuildConfig()
-
-	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
-
-	// we want to sign files inside the installer, so we have to
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
-	runTestUtilMust(rel32Dir)
-	signFilesMust(rel32Dir)
-
-	runExeLoggedMust(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview;test_util", "/p:Configuration=Release;Platform=x64", "/m")
-	runTestUtilMust(rel64Dir)
-	signFilesMust(rel64Dir)
-
-	runExeLoggedMust(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview;test_util", "/p:Configuration=Release;Platform=x64_ramicro", "/m")
-	signFilesMust(rel64RaDir)
-
-	// TODO: use pigz for release
-	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-32.exe", preReleaseVer)
-	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
-	nameInZip = fmt.Sprintf("SumatraPDF-prerel-%s.exe", preReleaseVer)
-	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
-
-	nameInZip = fmt.Sprintf("RAMicroPDFViewer-prerel-%s.exe", preReleaseVer)
-	createExeZipWithGoWithNameMust(rel64RaDir, nameInZip)
-
-	createPdbZipMust(rel32Dir)
-	createPdbZipMust(rel64Dir)
-	createPdbZipMust(rel64RaDir)
-
-	createPdbLzsaMust(rel32Dir)
-	createPdbLzsaMust(rel64Dir)
-	createPdbLzsaMust(rel64RaDir)
-
-	copyArtifacts()
-	createManifestMust()
-}
 
 const (
 	artifactsDir = "artifacts"
@@ -358,47 +321,3 @@ func signFilesMust(dir string) {
 	signMust(filepath.Join(dir, "SumatraPDF-dll.exe"))
 }
 
-func buildRelease() {
-	// early exit if missing
-	detectSigntoolPath()
-	msbuildPath := detectMsbuildPath()
-
-	s := fmt.Sprintf("buidling release version %s", sumatraVersion)
-	defer makePrintDuration(s)()
-	verifyGitCleanMust()
-	verifyOnReleaseBranchMust()
-	verifyTranslationsMust()
-
-	//verifyReleaseNotInS3Must(sumatraVersion)
-	//verifyReleaseNotInSpaces(sumatraVersion)
-
-	setBuildConfig(gitSha1, preReleaseVer, false)
-	defer revertBuildConfig()
-
-	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
-
-	// we want to sign files inside the installer, so we have to
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
-	runTestUtilMust(rel32Dir)
-	signFilesMust(rel32Dir)
-
-	runExeLoggedMust(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview;test_util", "/p:Configuration=Release;Platform=x64", "/m")
-	runTestUtilMust(rel64Dir)
-	signFilesMust(rel64Dir)
-
-	// TODO: also build ramicro?
-
-	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-32.exe", preReleaseVer)
-	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
-	nameInZip = fmt.Sprintf("SumatraPDF-prerel-%s.exe", preReleaseVer)
-	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
-
-	createPdbZipMust(rel32Dir)
-	createPdbZipMust(rel64Dir)
-
-	createPdbLzsaMust(rel32Dir)
-	createPdbLzsaMust(rel64Dir)
-
-	copyArtifacts()
-	createManifestMust()
-}

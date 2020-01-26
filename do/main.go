@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -21,6 +22,11 @@ func regenPremake() {
 		cmd := exec.Command(premakePath, "vs2019")
 		u.RunCmdLoggedMust(cmd)
 	}
+}
+
+func isOnRepoDispatch() bool {
+	v := os.Getenv("GITHUB_EVENT_NAME")
+	return v == "repository_dispatch"
 }
 
 func main() {
@@ -143,12 +149,17 @@ func main() {
 	}
 
 	if flgCIBuild {
+		if isOnRepoDispatch() {
+			fmt.Printf("isOnRepoDispatch\n")
+			return
+		}
 		// ci build does the same thing as pre-release
 		if shouldSignAndUpload() {
 			failIfNoCertPwd()
 		}
 		detectVersions()
-		buildPreRelease(true)
+		buildDaily()
+		//buildPreRelease()
 		return
 	}
 
@@ -161,6 +172,10 @@ func main() {
 
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
+		if isOnRepoDispatch() {
+			fmt.Printf("isOnRepoDispatch\n")
+			return
+		}
 		if shouldSkipUpload() {
 			fmt.Printf("Skipping upload\n")
 			return
@@ -184,7 +199,7 @@ func main() {
 			failIfNoCertPwd()
 		}
 		detectVersions()
-		buildPreRelease(false)
+		buildDaily()
 		s3UploadPreReleaseMust(preReleaseVer, buildTypePreRel)
 		spacesUploadPreReleaseMust(preReleaseVer, buildTypePreRel)
 		return
