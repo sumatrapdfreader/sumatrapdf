@@ -293,7 +293,7 @@ func minioDeleteOldBuildsPrefix(buildType string) {
 				must(err)
 			}
 		} else {
-			fmt.Printf("%d, not deleting\n", v.ver)
+			//fmt.Printf("%d, not deleting\n", v.ver)
 			// for _, fn := range v.files {
 			// 	fmt.Printf("  %s not deleting\n", fn)
 			// }

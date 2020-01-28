@@ -5144,7 +5144,7 @@ const char * gTranslations_nl =
   "Zwart\0"\
   "Standaard opmaak:\0"\
   "Standaard &zoom:\0"\
-  "Standaard PDF-lezer kan niet worden aangepast in portable modus\0"\
+  "Als standaard aanwijzen in Portable modus kan niet hier\0"\
   "Niet toegestaan:\0"\
   "DjVu-documenten\0"\
   "Documenteigenschappen\0"\
@@ -10098,7 +10098,7 @@ const char * gTranslations_lv =
   "&J\304\201\0"\
   "&T\304\201lummai\305\206a\0"\
   "(no %d)\0"\
-  "(lappuse %s)\0"\
+  "(%s lappuse)\0"\
   "Par SumatraPDF\0"\
   "Pievieno\305\241ana izlasei\0"\
   "Pievienot %s lappusi izlasei\0"\
@@ -10175,7 +10175,7 @@ const char * gTranslations_lv =
   "&T\304\201l\304\201k\tAlt+Lab\304\201 bulti\305\206a\0"\
   "Pilnekr\304\201na re\305\276\304\253ms\tF11\0"\
   "Divas lappuses\0"\
-  "Neizdev\304\201s izdz\304\223st instal\304\201cijas no\305\206em\305\241anas programmas re\304\243istra atsl\304\223gas\0"\
+  "Neizdev\304\201s izdz\304\223st atinstal\304\223\305\241anas programmas re\304\243istra atsl\304\223gas\0"\
   "Neizdev\304\201s re\304\243istr\304\223t k\304\201 noklus\304\223juma programmu Windows 10 vid\304\223\0"\
   "Neizdev\304\201s p\304\201rd\304\223v\304\223t failu!\0"\
   "Neizdev\304\201s saglab\304\201t failu\0"\
@@ -10208,7 +10208,7 @@ const char * gTranslations_lv =
   "\0"\
   "Doties uz lappusi\0"\
   "Pasl\304\223pt &opcijas\0"\
-  "Sl\304\223pt bie\305\276i las\304\253tos\0"\
+  "Sl\304\223pt bie\305\276\304\201k las\304\253tos\0"\
   "Ieteikums: izmantojiet tausti\305\206u F3, lai atrastu atkal\0"\
   "Att\304\223lu faili (*.%s)\0"\
   "Instal\304\223t SumatraPDF\0"\
@@ -10251,7 +10251,7 @@ const char * gTranslations_lv =
   "PDF versija:\0"\
   "PDF dokumenti\0"\
   "Lap&pusi...\tCtrl+G\0"\
-  "Lappuse %s\0"\
+  "%s lappuse\0"\
   "Lappuses lielums:\0"\
   "%u lappuse nepast\304\201v\0"\
   "Lappuses m\304\223rogo\305\241ana\0"\
@@ -10269,7 +10269,7 @@ const char * gTranslations_lv =
   "V\304\223l joproj\304\201m notiek druk\304\201\305\241ana. Priek\305\241laikus p\304\201rtraukt un beigt?\0"\
   "V\304\223l joproj\304\201m notiek druk\304\201\305\241ana. Priek\305\241laikus p\304\201rtraukt un s\304\201kt no jauna?\0"\
   "Druk\304\201 %d lappusi no %d...\0"\
-  "Drukas probl\304\223ma.\0"\
+  "Druk\304\201\305\241anas probl\304\223ma.\0"\
   "P\304\201r&d\304\223v\304\223t...\tF2\0"\
   "&Atcer\304\223ties atv\304\223rtos failus\0"\
   "No\305\206emt no izlases\0"\
@@ -10302,8 +10302,8 @@ const char * gTranslations_lv =
   "Avota failam %s nav sinhroniz\304\201cijas punkta\0"\
   "Palaist SumatraPDF\0"\
   "T\304\223ma:\0"\
-  "SumatraPDF %s instal\304\223t\304\201js\0"\
-  "SumatraPDF %s atinstal\304\223t\304\201js\0"\
+  "SumatraPDF %s instal\304\223\305\241anas programma\0"\
+  "SumatraPDF %s atinstal\304\223\305\241anas programma\0"\
   "SumatraPDF opcijas\0"\
   "SumatraPDF atjaunin\304\201\305\241ana\0"\
   "SumatraPDF avar\304\223ja\0"\

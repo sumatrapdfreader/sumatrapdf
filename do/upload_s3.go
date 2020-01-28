@@ -38,14 +38,6 @@ func execTextTemplate(tmplText string, data interface{}) string {
 }
 
 // sumatrapdf/sumatralatest.js
-/*
-var sumLatestVer = 10175;
-var sumBuiltOn = "2015-07-23";
-var sumLatestName = "SumatraPDF-prerelease-10175.exe";
-var sumLatestExe = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175.exe";
-var sumLatestPdb = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175.pdb.zip";
-var sumLatestInstaller = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175-install.exe";
-*/
 func createSumatraLatestJs(buildType string) string {
 	appName := "SumatraPDF-prerelease"
 	if buildType == buildTypeRaMicro {
@@ -266,7 +258,7 @@ func s3DeleteOldBuildsPrefix(buildType string) {
 				must(err)
 			}
 		} else {
-			fmt.Printf("%d, not deleting\n", v.ver)
+			//fmt.Printf("%d, not deleting\n", v.ver)
 			// for _, fn := range v.files {
 			// 	fmt.Printf("  %s not deleting\n", fn)
 			// }

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-375fe67ac1f75a2313ae8aa36bc609a2f6500edd
+a72f30667deb3ab869fbb23d2c915cce00a66c63
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3491,7 +3491,7 @@ ka:(გვერდი %s)
 kr:(%s 페이지)
 ku:(پەڕە %s)
 lt:(%s psl.)
-lv:(lappuse %s)
+lv:(%s lappuse)
 mk:(страница %s)
 my:(halaman %s)
 ne:(पृष्ठ %s)
@@ -7361,7 +7361,7 @@ lv:Noklusējuma PDF lasītāju nevar izmainīt pārnesamam režīmam
 mk:Основниот читач на PDF не може да работи во мобилен режим
 my:Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
 ne:चलायमान मोडमा पूर्वनिर्धारित PDF पाठक परिवर्तन गर्न मिल्दैन
-nl:Standaard PDF-lezer kan niet worden aangepast in portable modus
+nl:Als standaard aanwijzen in Portable modus kan niet hier
 nn:Standard PDF-lesar kan ikkje bli endra i flyttbar modus
 no:Standard PDF-leser kan ikke endres i flyttbar modus
 pl:Domyślna przeglądarka PDF nie może być zmieniona w trybie przenośnym
@@ -8354,7 +8354,7 @@ ja:アンインストーラのレジストリキーを削除するのに失敗�
 kr:레지스트리 키를 삭제하지 못했습니다.
 ku:سڕینەوەی پاشکۆ و کلیلەکانی ڕیگستری سەرکەتو نەبوو
 lt:Nepavyko ištrinti šalinimo programos registro raktų
-lv:Neizdevās izdzēst instalācijas noņemšanas programmas reģistra atslēgas
+lv:Neizdevās izdzēst atinstalēšanas programmas reģistra atslēgas
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
 my:Gagal untuk memadam kekunci pendaftaran uninstaller
 ne:अनस्थापकको रजिस्टरी कुञ्जीहरू हटाउन असफल भयो
@@ -10481,7 +10481,7 @@ ka:ბოლოს წაკითხული დოკუმენტები
 kr:최근에 읽은 파일 감추기
 ku:شاردنەوەی زۆر خوێندراوەکان
 lt:Nerodyti dažniausiai skaitomų
-lv:Slēpt bieži lasītos
+lv:Slēpt biežāk lasītos
 mk:Сокриј често читани
 my:Sembunyikan Bacaan Kerap
 ne:प्रायजसो पढिएको लुकाउनुहोस्
@@ -13176,7 +13176,7 @@ kr:%s 페이지
 ku:پەڕەی %s
 kw:Folen %s
 lt:%s puslapis
-lv:Lappuse %s
+lv:%s lappuse
 mk:страница %s
 my:Halaman %s
 ne:पृष्ठ %s
@@ -14299,7 +14299,7 @@ kr:인쇄하는 중에 문제가 발생했습니다.
 ku:کێشە هەیە لە  چاپکردندا.
 kw:Kaletter ow pryntya
 lt:Spausdinimo problema.
-lv:Drukas problēma.
+lv:Drukāšanas problēma.
 mk:Проблем при печатење.
 ml:അച്ചടിയില് തകരാര്‍
 mm:ပုံနှိပ် ကရိယာ ပြသာနာ
@@ -16131,7 +16131,7 @@ ja:SumatraPDF %s インストーラ
 kr:SumatraPDF %s 설치 관리자
 ku:SumatraPDF %s دابەزاندنی
 lt:SumatraPDF diegimo programa %s
-lv:SumatraPDF %s instalētājs
+lv:SumatraPDF %s instalēšanas programma
 mk:Инсталација на SumatraPDF %s
 my:Installer SumatraPDF %s
 ne:Sumatrapdf %s स्थापक
@@ -16189,7 +16189,7 @@ ja:SumatraPDF %s アンインストーラ
 kr:SumatraPDF %s 제거 관리자
 ku:SumatraPDF %s سڕینەوەی
 lt:SumatraPDF šalinimo programa %s
-lv:SumatraPDF %s atinstalētājs
+lv:SumatraPDF %s atinstalēšanas programma
 mk:Деинсталација на SumatraPDF %s
 my:SumatraPDF %s Uninstaller
 ne:SumatraPDF %s अनस्थापक
