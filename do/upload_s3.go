@@ -25,7 +25,7 @@ func shouldSignAndUpload() bool {
 	}
 	event := os.Getenv("GITHUB_EVENT_NAME")
 	// other event is "pull_request"
-	return event == "push"
+	return event == "push" || event == "repository_dispatch"
 }
 
 func execTextTemplate(tmplText string, data interface{}) string {
