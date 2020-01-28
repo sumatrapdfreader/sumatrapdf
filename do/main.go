@@ -184,11 +184,14 @@ func main() {
 		}
 		flgUpload = true
 		detectVersions()
-		s3UploadPreReleaseMust(buildTypeDaily)
-		spacesUploadPreReleaseMust(buildTypeDaily)
 
 		if isOnRepoDispatch() {
+			s3UploadPreReleaseMust(buildTypePreRel)
+			spacesUploadPreReleaseMust(buildTypePreRel)
 			spacesUploadPreReleaseMust(buildTypeRaMicro)
+		} else {
+			s3UploadPreReleaseMust(buildTypeDaily)
+			spacesUploadPreReleaseMust(buildTypeDaily)
 		}
 
 		minioDeleteOldBuilds()
