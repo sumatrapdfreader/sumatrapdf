@@ -802,8 +802,6 @@ static void CreateMainWindow() {
     gHwndFrame = CreateWindowExW(exStyle, winCls, title.Get(), dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
 }
 
-using namespace Gdiplus;
-
 static WCHAR* GetInstallationDir() {
     const WCHAR* appName = getAppName();
     AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(appName);
@@ -965,7 +963,13 @@ static bool OpenEmbeddedFilesArchive() {
     return true;
 }
 
+int RunInstallerRaMicro(CommandLineInfo* cli);
+
 int RunInstaller(CommandLineInfo* cli) {
+    if (gIsRaMicroBuild) {
+        return RunInstallerRaMicro(cli);
+    }
+
     int ret = 0;
 
     gCli = cli;
@@ -1011,6 +1015,191 @@ int RunInstaller(CommandLineInfo* cli) {
     }
 
     BringWindowToTop(gHwndFrame);
+
+    ret = RunApp();
+
+Exit:
+    free(gInstUninstGlobals.firstError);
+
+    return ret;
+}
+
+/* ra-micro installer */
+
+using std::placeholders::_1;
+
+struct RaMicroInstallerWindow {
+    HWND hwnd = nullptr;
+    Window* mainWindow = nullptr;
+    ILayout* mainLayout = nullptr;
+
+    // not owned by us but by tocEditorLayout
+
+    ButtonCtrl* btnInstall = nullptr;
+    ButtonCtrl* btnExit = nullptr;
+
+    ~RaMicroInstallerWindow();
+
+    void CloseHandler(WindowCloseArgs*);
+    void SizeHandler(SizeArgs*);
+    void Install();
+    void Exit();
+};
+
+static RaMicroInstallerWindow* gRaMicroInstallerWindow = nullptr;
+
+RaMicroInstallerWindow::~RaMicroInstallerWindow() {
+    delete mainLayout;
+    delete mainWindow;
+}
+
+void RaMicroInstallerWindow::Install() {
+}
+
+void RaMicroInstallerWindow::Exit() {
+}
+
+void RaMicroInstallerWindow::CloseHandler(WindowCloseArgs* args) {
+    WindowBase* w = (WindowBase*)gRaMicroInstallerWindow->mainWindow;
+    CrashIf(w != args->w);
+    delete gRaMicroInstallerWindow;
+    gRaMicroInstallerWindow = nullptr;
+    PostQuitMessage(0);
+}
+
+void RaMicroInstallerWindow::SizeHandler(SizeArgs* args) {
+    int dx = args->dx;
+    int dy = args->dy;
+    HWND hwnd = args->hwnd;
+    if (dx == 0 || dy == 0) {
+        return;
+    }
+    Size windowSize{dx, dy};
+    auto c = Tight(windowSize);
+    auto size = mainLayout->Layout(c);
+    Point min{0, 0};
+    Point max{size.Width, size.Height};
+    Rect bounds{min, max};
+    mainLayout->SetBounds(bounds);
+    InvalidateRect(hwnd, nullptr, false);
+    args->didHandle = true;
+}
+
+static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, ClickedHandler onClicked) {
+    auto b = new ButtonCtrl(parent);
+    b->onClicked = onClicked;
+    b->SetText(s);
+    b->Create();
+    return {NewButtonLayout(b), b};
+}
+
+static void RaMicroInstallerWindowExit() {
+    gRaMicroInstallerWindow->mainWindow->Close();
+}
+
+static void RaMicroInstallerWindowInstall() {
+    logf("RaMicroInstallerWindowInstall()\n");
+}
+
+static bool CreateRaMicroInstallerWindow() {
+    HMODULE h = GetModuleHandleW(nullptr);
+    LPCWSTR iconName = MAKEINTRESOURCEW(getAppIconID());
+    HICON hIcon = LoadIconW(h, iconName);
+
+    auto win = new RaMicroInstallerWindow();
+    gRaMicroInstallerWindow = win;
+    auto w = new Window();
+    w->hIcon = hIcon;
+    w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    w->SetTitle("RA-MICRO Installer");
+    int dx = DpiScale(640);
+    int dy = DpiScale(800);
+    w->initialSize = {dx, dy};
+    SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
+    w->initialSize = {winSize.cx, winSize.cy};
+    bool ok = w->Create();
+    CrashIf(!ok);
+    win->hwnd = w->hwnd;
+
+    win->mainWindow = w;
+
+    HWND hwnd = win->hwnd;
+    CrashIf(!hwnd);
+
+    // create layout
+    HBox* buttons = new HBox();
+    buttons->alignMain = MainAxisAlign::SpaceBetween;
+    buttons->alignCross = CrossAxisAlign::CrossStart;
+    {
+        auto [l, b] = CreateButtonLayout(hwnd, "Exit", RaMicroInstallerWindowExit);
+        buttons->addChild(l);
+        win->btnExit = b;
+    }
+
+    {
+        auto [l, b] = CreateButtonLayout(hwnd, "Install", RaMicroInstallerWindowInstall);
+        buttons->addChild(l);
+        win->btnInstall = b;
+    }
+
+    VBox* main = new VBox();
+    main->alignMain = MainAxisAlign::MainEnd;
+    main->alignCross = CrossAxisAlign::CrossStart;
+    main->addChild(buttons);
+
+    auto* padding = new Padding();
+    padding->insets = DefaultInsets();
+    padding->child = main;
+    win->mainLayout = padding;
+
+    w->onClose = std::bind(&RaMicroInstallerWindow::CloseHandler, win, _1);
+    w->onSize = std::bind(&RaMicroInstallerWindow::SizeHandler, win, _1);
+    w->SetIsVisible(true);
+    return true;
+}
+
+int RunInstallerRaMicro(CommandLineInfo* cli) {
+    int ret = 0;
+
+    gCli = cli;
+    if (!gIsDebugBuild) {
+        if (!IsRunningElevated()) {
+            WCHAR* exePath = GetExePath();
+            WCHAR* cmdline = GetCommandLineW(); // not owning the memory
+            LaunchElevated(exePath, cmdline);
+            str::Free(exePath);
+            ::ExitProcess(0);
+        }
+    }
+
+    if (!OpenEmbeddedFilesArchive()) {
+        return 1;
+    }
+    gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
+
+    if (!gCli->installDir) {
+        gCli->installDir = GetInstallationDir();
+    }
+
+    if (gCli->silent) {
+        InstallerThread(nullptr);
+        ret = success ? 0 : 1;
+        goto Exit;
+    }
+
+    CreateRaMicroInstallerWindow();
+
+#if 0
+    if (!RegisterWinClass()) {
+        goto Exit;
+    }
+
+    if (!InstanceInit()) {
+        goto Exit;
+    }
+
+    BringWindowToTop(gHwndFrame);
+#endif
 
     ret = RunApp();
 

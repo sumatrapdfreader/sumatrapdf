@@ -34,7 +34,7 @@ struct TocEditorWindow {
     ILayout* mainLayout = nullptr;
     TocEditorArgs* tocArgs = nullptr;
 
-    // not owned by us but by tocEditorLayout
+    // not owned by us but by mainLayout
 
     ButtonCtrl* btnAddPdf = nullptr;
     ButtonCtrl* btnRemovePdf = nullptr;
