@@ -53,7 +53,7 @@ func createSumatraLatestJs(buildType string) string {
 		appName = "RAMicro-prerelease"
 	}
 	currDate := time.Now().Format("2006-01-02")
-	v := preReleaseVer
+	v := getPreReleaseVer()
 	tmplText := `
 var sumLatestVer = {{.Ver}};
 var sumBuiltOn = "{{.CurrDate}}";
@@ -169,11 +169,12 @@ func s3UploadFiles(c *S3Client, s3Dir string, dir string, files []string) error 
 
 // upload as:
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func s3UploadPreReleaseMust(ver string, buildType string) {
+func s3UploadPreReleaseMust(buildType string) {
 	if shouldSkipUpload() {
 		return
 	}
 
+	ver := getPreReleaseVer()
 	isDaily := buildType == buildTypeDaily
 	panicIf(buildType == buildTypeRaMicro, "only uploading ramicro to spaces")
 
@@ -184,7 +185,7 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 
 	timeStart := time.Now()
 
-	verifyPreReleaseNotInS3Must(c, remoteDir, preReleaseVer)
+	verifyPreReleaseNotInS3Must(c, remoteDir, ver)
 
 	var prefix string
 	var files []string

@@ -111,8 +111,8 @@ func getRemotePaths(buildType string) []string {
 			"software/sumatrapdf/sumpdf-prerelease-latest.txt",
 			"software/sumatrapdf/sumpdf-prerelease-update.txt",
 		}
-
 	}
+
 	if buildType == buildTypeDaily {
 		return []string{
 			"software/sumatrapdf/sumadaily.js",
@@ -120,6 +120,7 @@ func getRemotePaths(buildType string) []string {
 			"software/sumatrapdf/sumpdf-daily-update.txt",
 		}
 	}
+
 	if buildType == buildTypeRaMicro {
 		return []string{
 			"software/sumatrapdf/ramicrolatest.js",
@@ -145,7 +146,7 @@ func getRemotePaths(buildType string) []string {
 }
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func spacesUploadPreReleaseMust(ver string, buildType string) {
+func spacesUploadPreReleaseMust(buildType string) {
 	if shouldSkipUpload() {
 		return
 	}
@@ -153,6 +154,7 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 		return
 	}
 
+	ver := getPreReleaseVer()
 	remoteDir := getRemoteDir(buildType)
 
 	c := newMinioClient()

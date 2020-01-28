@@ -156,17 +156,16 @@ func main() {
 	}
 
 	if flgCIBuild {
-		if isOnRepoDispatch() {
-			fmt.Printf("isOnRepoDispatch\n")
-			return
-		}
 		// ci build does the same thing as pre-release
 		if shouldSignAndUpload() {
 			failIfNoCertPwd()
 		}
 		detectVersions()
+		if isOnRepoDispatch() {
+			buildPreRelease()
+			return
+		}
 		buildDaily()
-		//buildPreRelease()
 		return
 	}
 
@@ -179,21 +178,18 @@ func main() {
 
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
-		if isOnRepoDispatch() {
-			fmt.Printf("isOnRepoDispatch\n")
-			return
-		}
 		if shouldSkipUpload() {
 			fmt.Printf("Skipping upload\n")
 			return
 		}
 		flgUpload = true
 		detectVersions()
-		s3UploadPreReleaseMust(preReleaseVer, buildTypeDaily)
-		spacesUploadPreReleaseMust(preReleaseVer, buildTypeDaily)
+		s3UploadPreReleaseMust(buildTypeDaily)
+		spacesUploadPreReleaseMust(buildTypeDaily)
 
-		// must be called last because changes SumatraPDF.zip
-		spacesUploadPreReleaseMust(preReleaseVer, buildTypeRaMicro)
+		if isOnRepoDispatch() {
+			spacesUploadPreReleaseMust(buildTypeRaMicro)
+		}
 
 		minioDeleteOldBuilds()
 		s3DeleteOldBuilds()
@@ -207,8 +203,8 @@ func main() {
 		}
 		detectVersions()
 		buildDaily()
-		s3UploadPreReleaseMust(preReleaseVer, buildTypePreRel)
-		spacesUploadPreReleaseMust(preReleaseVer, buildTypePreRel)
+		s3UploadPreReleaseMust(buildTypePreRel)
+		spacesUploadPreReleaseMust(buildTypePreRel)
 		return
 	}
 

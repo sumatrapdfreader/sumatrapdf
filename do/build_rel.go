@@ -19,7 +19,8 @@ func buildRelease() {
 	//verifyReleaseNotInS3Must(sumatraVersion)
 	//verifyReleaseNotInSpaces(sumatraVersion)
 
-	setBuildConfig(gitSha1, preReleaseVer, false)
+	isDaily := false
+	setBuildConfig(isDaily)
 	defer revertBuildConfig()
 
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
@@ -35,6 +36,7 @@ func buildRelease() {
 
 	// TODO: also build ramicro?
 
+	preReleaseVer := getPreReleaseVer()
 	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-32.exe", preReleaseVer)
 	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
 	nameInZip = fmt.Sprintf("SumatraPDF-prerel-%s.exe", preReleaseVer)

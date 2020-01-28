@@ -20,10 +20,20 @@ var (
 )
 
 var (
-	preReleaseVer  string
-	gitSha1        string
-	sumatraVersion string
+	preReleaseVerCached string
+	gitSha1Cached       string
+	sumatraVersion      string
 )
+
+func getGitSha1() string {
+	panicIf(gitSha1Cached == "", "must call detectVersions() first")
+	return gitSha1Cached
+}
+
+func getPreReleaseVer() string {
+	panicIf(preReleaseVerCached == "", "must call detectVersions() first")
+	return preReleaseVerCached
+}
 
 func isNum(s string) bool {
 	_, err := strconv.Atoi(s)
@@ -73,11 +83,11 @@ func extractSumatraVersionMust() string {
 
 func detectVersions() {
 	ver := getGitLinearVersionMust()
-	preReleaseVer = strconv.Itoa(ver)
-	gitSha1 = getGitSha1Must()
+	preReleaseVerCached = strconv.Itoa(ver)
+	gitSha1Cached = getGitSha1Must()
 	sumatraVersion = extractSumatraVersionMust()
-	logf("preReleaseVer: '%s'\n", preReleaseVer)
-	logf("gitSha1: '%s'\n", gitSha1)
+	logf("preReleaseVer: '%s'\n", preReleaseVerCached)
+	logf("gitSha1: '%s'\n", gitSha1Cached)
 	logf("sumatraVersion: '%s'\n", sumatraVersion)
 }
 
@@ -132,10 +142,12 @@ func buildConfigPath() string {
 }
 
 // writes src/utils/BuildConfig.h to over-ride some of build settings
-func setBuildConfig(sha1, preRelVer string, isDaily bool) {
-	fatalIf(sha1 == "", "sha1 must be set")
-	s := fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
+func setBuildConfig(isDaily bool) {
+	sha1 := getGitSha1()
+	preRelVer := getPreReleaseVer()
 	todayDate := time.Now().Format("2006-01-02")
+
+	s := fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
 	s += fmt.Sprintf("#define BUILT_ON %s\n", todayDate)
 	if preRelVer != "" {
 		s += fmt.Sprintf("#define PRE_RELEASE_VER %s\n", preRelVer)
