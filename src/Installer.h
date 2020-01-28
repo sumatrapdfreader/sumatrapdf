@@ -33,7 +33,7 @@ struct ButtonCtrl;
 extern InstUninstGlobals gInstUninstGlobals;
 extern CommandLineInfo* gCli;
 extern const WCHAR* gDefaultMsg;
-extern WCHAR* gSupportedExts[];
+extern const WCHAR* gSupportedExts[];
 extern HWND gHwndFrame;
 extern ButtonCtrl* gButtonExit;
 extern ButtonCtrl* gButtonInstUninst;

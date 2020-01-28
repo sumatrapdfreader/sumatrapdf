@@ -285,61 +285,6 @@ static bool WriteUninstallerRegistryInfos() {
     return WriteUninstallerRegistryInfo(HKEY_CURRENT_USER);
 }
 
-// https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
-// http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794
-static bool WriteWin10Registry(HKEY hkey) {
-    bool ok = true;
-
-    const WCHAR* appName = getAppName();
-    const WCHAR* exeName = getExeName();
-    // L"SOFTWARE\\SumatraPDF\\Capabilities"
-    AutoFreeWstr capKey = str::Join(L"SOFTWARE\\", appName, L"\\Capabilities");
-    ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", appName, capKey);
-    AutoFreeWstr desc = str::Join(appName, L" is a PDF reader.");
-    ok &= WriteRegStr(hkey, capKey, L"ApplicationDescription", desc);
-    AutoFreeWstr appLongName = str::Join(appName, L" Reader");
-    ok &= WriteRegStr(hkey, capKey, L"ApplicationName", appLongName);
-
-    // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
-    AutoFreeWstr keyAssoc = str::Join(capKey, L"\\FileAssociations");
-    for (int i = 0; nullptr != gSupportedExts[i]; i++) {
-        WCHAR* ext = gSupportedExts[i];
-        ok &= WriteRegStr(hkey, keyAssoc, ext, exeName);
-    }
-    return ok;
-}
-
-static bool ListAsDefaultProgramWin10() {
-    bool ok = WriteWin10Registry(HKEY_LOCAL_MACHINE);
-    if (ok) {
-        return true;
-    }
-    return WriteWin10Registry(HKEY_CURRENT_USER);
-}
-
-static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
-    // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
-    // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be
-    // using OpenWithList but OpenWithProgIds. Also, it doesn't seem to work on my win7 32bit
-    // (HKLM\Software\Classes\.mobi\OpenWithList\SumatraPDF.exe key is present but "Open With"
-    // menu item doesn't even exist for .mobi files
-    // It's not so easy, though, because if we just set it to SumatraPDF,
-    // all gSupportedExts will be reported as "PDF Document" by Explorer, so this needs
-    // to be more intelligent. We should probably mimic Windows Media Player scheme i.e.
-    // set OpenWithProgIds to SumatraPDF.AssocFile.Mobi etc. and create apropriate
-    // \SOFTWARE\Classes\CLSID\{GUID}\ProgID etc. entries
-    // Also, if Sumatra is the only program handling those docs, our
-    // PDF icon will be shown (we need icons and properly configure them)
-    bool ok = true;
-    AutoFreeWstr openWithVal = str::Join(L"\\OpenWithList\\", getExeName());
-    for (int i = 0; nullptr != gSupportedExts[i]; i++) {
-        WCHAR* ext = gSupportedExts[i];
-        AutoFreeWstr name = str::Join(L"Software\\Classes\\", ext, openWithVal);
-        ok &= CreateRegKey(hkey, name.get());
-    }
-    return ok;
-}
-
 // cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     bool ok = true;
@@ -375,7 +320,8 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
 
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
-    ok &= ListAsDefaultProgramPreWin10(hkey);
+    const WCHAR* exeName = getExeName();
+    ok &= ListAsDefaultProgramPreWin10(exeName, gSupportedExts, hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
@@ -469,7 +415,9 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
 
-    if (!ListAsDefaultProgramWin10()) {
+    const WCHAR* appName = getAppName();
+    const WCHAR* exeName = getExeName();
+    if (!ListAsDefaultProgramWin10(appName, exeName, gSupportedExts)) {
         NotifyFailed(_TR("Failed to register as default program on win 10"));
     }
 

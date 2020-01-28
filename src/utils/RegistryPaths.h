@@ -18,3 +18,5 @@
 WCHAR* getRegPathUninst(const WCHAR* appName);
 WCHAR* getRegClassesApp(const WCHAR* appName);
 WCHAR* getRegClassesApps(const WCHAR* appName);
+bool ListAsDefaultProgramWin10(const WCHAR* appName, const WCHAR* exeName, const WCHAR* extensions[]);
+bool ListAsDefaultProgramPreWin10(const WCHAR* exeName, const WCHAR* extensions[], HKEY hkey);
