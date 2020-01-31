@@ -12995,13 +12995,13 @@ const char * gTranslations_br =
   "imprimindo documento\0";
 
 const char * gTranslations_pt = 
-  "&Sobre\0"\
-  "&Tamanho real\tCtrl+1\0"\
+  "&Acerca\0"\
+  "T&amanho real\tCtrl+1\0"\
   "Op\303\247\303\265es &avan\303\247adas...\0"\
-  "&Todas as p\303\241ginas selecionadas\0"\
-  "V&oltar\tAlt + <-\0"\
+  "Tod&as as p\303\241ginas selecionadas\0"\
+  "&Recuar\tAlt + <-\0"\
   "Como li&vro\tCtrl+8\0"\
-  "&Fechar\tCtrl+W\0"\
+  "Fe&char\tCtrl+W\0"\
   "&Copiar sele\303\247\303\243o\0"\
   "&Copiar sele\303\247\303\243o\tCtrl+C\0"\
   "&N\303\243o perguntar novamente\0"\
@@ -13049,23 +13049,23 @@ const char * gTranslations_pt =
   "&Amplia\303\247\303\243o\0"\
   "(de %d)\0"\
   "(p\303\241gina %s)\0"\
-  "Sobre o SumatraPDF\0"\
+  "Acerca de SumatraPDF\0"\
   "Adicionar favorito\0"\
   "Adicionar p\303\241gina %s aos favoritos\0"\
-  "\0"\
+  "Adicionar p\303\241gina %s aos favoritos\tCtrl+B\0"\
   "Adicionar p\303\241gina %s aos favoritos com nome (opcional):\0"\
   "Adicionar aos favoritos\0"\
   "Avan\303\247adas\0"\
   "Todos os ficheiros\0"\
   "Todos os documentos\0"\
   "Aplica\303\247\303\243o:\0"\
-  "Tem a certeza que quer desinstalar o SumatraPDF?\0"\
+  "Tem a certeza de que deseja desinstalar SumatraPDF?\0"\
   "Associar a ficheiros PDF?\0"\
   "Anexo: %s\0"\
   "Autor:\0"\
   "Autom\303\241tico\0"\
-  "&Procurar atualiza\303\247\303\265es automaticamente\0"\
-  "Vista de Livro\0"\
+  "Proc&urar atualiza\303\247\303\265es automaticamente\0"\
+  "Como livro\0"\
   "Atalhos de marcadores\0"\
   "Atalho para a p\303\241gina %s de %s\0"\
   "Marcadores\0"\
@@ -13078,7 +13078,7 @@ const char * gTranslations_pt =
   "Mudar idioma (Change Language)\0"\
   "Procurar at&ualiza\303\247\303\265es\0"\
   "Fechar\0"\
-  "\0"\
+  "Recolher tudo\0"\
   "Banda desenhada\0"\
   "Compatibilidade\0"\
   "Uma p\303\241gina cont\303\255nua\0"\
@@ -13120,7 +13120,7 @@ const char * gTranslations_pt =
   "Introduza a palavra-passe de %s\0"\
   "Indique a linha de comandos a invocar ao clicar duas vezes no documento PDF:\0"\
   "Erro ao carregar %s\0"\
-  "\0"\
+  "Expandir tudo\0"\
   "Fav&oritos\0"\
   "A&van\303\247ar\tAlt + ->\0"\
   "Ecr\303\243 co&mpleto\tCtrl+Shift+L\0"\
@@ -13176,7 +13176,7 @@ const char * gTranslations_pt =
   "Sens\303\255vel a mai\303\272sculas\0"\
   "Documentos Mobi\0"\
   "Modificado:\0"\
-  "\0"\
+  "Nova &janela\tCtrl+N\0"\
   "Est\303\241 dispon\303\255vel a nova vers\303\243o %s. Transferir?\0"\
   "P\303\241gina seguinte\0"\
   "Nenhuma ocorr\303\252ncia encontrada\0"\
@@ -13227,7 +13227,7 @@ const char * gTranslations_pt =
   "Mudar nome para\0"\
   "Rodar \303\240 &esquerda\tCtrl+Shift+-\0"\
   "Rodar \303\240 &direita\tCtrl+Shift++\0"\
-  "\0"\
+  "Guardar anota\303\247\303\265es\0"\
   "Gravar como\0"\
   "Criar atal&ho...\tCtrl+Shift+S\0"\
   "A procurar %d de %d...\0"\
@@ -13238,14 +13238,14 @@ const char * gTranslations_pt =
   "Selec\303\247\303\243o:\0"\
   "&Enviar por correio eletr\303\263nico...\0"\
   "Definir linha de comandos para procura inversa\0"\
-  "\0"\
-  "\0"\
+  "Mostrar &marcadores\tF12\0"\
+  "Mostrar &favoritos\0"\
   "M&ostrar p\303\241ginas cont\303\255nuas\0"\
   "Mostrar &barra de ferramentas\0"\
-  "\0"\
+  "Mostrar &marcadores\tF12\0"\
   "Mostrar favoritos\0"\
   "Mostrar frequentes\0"\
-  "\0"\
+  "Mostrar na &pasta\0"\
   "&Mostrar barra de marcadores quando dispon\303\255vel\0"\
   "Uma p\303\241gina\0"\
   "Isto n\303\243o devia ter ocorrido!\n\nPrima \"Cancelar\", se nos quiser ajudar a corrigir a origem deste erro.\0"\

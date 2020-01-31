@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a72f30667deb3ab869fbb23d2c915cce00a66c63
+c5145fab2775310187da61b39eb32121723ee49d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -52,7 +52,7 @@ nn:&Om
 no:&Om
 pa:&ਇਸ ਬਾਰੇ
 pl:&O SumatraPDF
-pt:&Sobre
+pt:&Acerca
 ro:&Despre
 ru:&О программе...
 si:&පිළීබඳව
@@ -123,7 +123,7 @@ nn:F&aktisk storleik\tCtrl+1
 no:Fak&tisk størrelse\tCtrl+1
 pa:&ਅਸਲ ਅਕਾਰ\tCtrl+1
 pl:&Rozmiar rzeczywisty\tCtrl+1
-pt:&Tamanho real\tCtrl+1
+pt:T&amanho real\tCtrl+1
 ro:Mărime &efectivă\tCtrl+1
 ru:&Настоящий размер\tCtrl+1
 si:&නියමිත ප්‍රමාණය\tCtrl+1
@@ -255,7 +255,7 @@ nn:&Alle valde sider
 no:&Alle valgte sider
 pa:&ਸਾਰੇ ਚੁਣੇ ਹੋਏ ਪੰਨੇ
 pl:&Zaznaczone strony
-pt:&Todas as páginas selecionadas
+pt:Tod&as as páginas selecionadas
 ro:Toate paginile selectate
 ru:&Все выбранные страницы
 si:&සියලු තේරූ පිටු
@@ -322,7 +322,7 @@ nn:&Tilbake\tAlt+Venstretast
 no:Tilbake\tAlt+←
 pa:&Back\tAlt+Left Arrow
 pl:&Wstecz\tAlt+W lewo
-pt:V&oltar\tAlt + <-
+pt:&Recuar\tAlt + <-
 ro:Înapoi\tAlt+<-
 ru:&Назад\tAlt+Стрелка влево
 si:&පසුපසට\tAlt+Left Arrow
@@ -455,7 +455,7 @@ nn:&Lukk\tCtrl+W
 no:&Lukk\tCtrl+W
 pa:ਬੰਦ ਕਰੋ(&C)\tCtrl+W
 pl:&Zamknij\tCtrl+W
-pt:&Fechar\tCtrl+W
+pt:Fe&char\tCtrl+W
 ro:Înc&hidere\tCtrl+W
 ru:&Закрыть\tCtrl+W
 si:&වසන්න\tCtrl+W
@@ -3567,7 +3567,7 @@ nn:Om SumatraPDF
 no:Om SumatraPDF
 pa:SumatraPDF ਬਾਰੇ
 pl:O SumatraPDF
-pt:Sobre o SumatraPDF
+pt:Acerca de SumatraPDF
 ro:Despre SumatraPDF
 ru:О программе SumatraPDF
 si:SumatraPDF පිළිබඳව
@@ -3791,6 +3791,7 @@ fr:Ajouter cette page aux %s favoris\tCtrl+B
 ga:Cuir leathanach %s leis na ceanáin\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
+pt:Adicionar página %s aos favoritos\tCtrl+B
 ru:Добавить страницу %s в избранные\tCtrl+B
 tw:將第 %s 頁加入到最愛\tCtrl+B
 :Add to favorites
@@ -4177,7 +4178,7 @@ nn:Er du sikker på at du vil avinstallere SumatraPDF?
 no:Vil du virkelig avinstallere SumatraPDF?
 pa:ਕੀ ਤੁਸੀਂ SumatraPDF ਨੂੰ ਅਣ-ਸਥਾਪਿਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
-pt:Tem a certeza que quer desinstalar o SumatraPDF?
+pt:Tem a certeza de que deseja desinstalar SumatraPDF?
 ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
 ru:Вы уверены, что хотите удалить SumatraPDF?
 si:ඔබට SumatraPDF අස්ථාපනය කිරීමට අවශ්‍ය බවට විශ්වාසද?
@@ -4521,7 +4522,7 @@ nn:Søk automatisk etter &oppdateringar
 no:Automatisk sjekk for &oppdateringer
 pa:ਆਪਣੇ-ਆਪ &ਅਪਡੇਟਾਂ ਦੀ ਜਾਂਚ ਕਰੋ
 pl:&Szukaj aktualizacji automatycznie
-pt:&Procurar atualizações automaticamente
+pt:Proc&urar atualizações automaticamente
 ro:Urmărește automat versiuni noi
 ru:&Автоматически проверять обновления
 si:යාවත්කාලකිරීම් ස්වයක්‍රීයව සොයන්න
@@ -4588,7 +4589,7 @@ nn:Bokvising
 no:Bokvisning
 pa:ਕਿਤਾਬੀ ਦਿੱਖ
 pl:Widok odczytu
-pt:Vista de Livro
+pt:Como livro
 ro:Vizualizare în format carte
 ru:В разворот
 si:පොත් දසුන
@@ -5418,6 +5419,7 @@ ga:Laghdaigh Gach
 it:Comprimi tutto
 lv:Sakļaut visu
 nl:Alle Samenvouwen
+pt:Recolher tudo
 ru:Свернуть все
 tw:全部折叠(&C)
 :Comic books
@@ -8052,6 +8054,7 @@ ga:Leathnaigh Gach
 it:Espandi tutto
 lv:Izvērst visu
 nl:Alle Uitvouwen
+pt:Expandir tudo
 ru:Развернуть все
 tw:全部展開
 :F&avorites
@@ -11586,6 +11589,7 @@ fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
 lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
+pt:Nova &janela\tCtrl+N
 ru:Новое о&кно\tCtrl+N
 tr:Yeni &pencere\tCtrl+N
 tw:新建視窗(&W)\tCtrl+N
@@ -14787,6 +14791,7 @@ fr:Sauvegarder les annotations
 ga:Taisc na Nótaí
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
+pt:Guardar anotações
 ru:Сохранить аннотации
 tw:儲存注釋
 :Save As
@@ -15427,6 +15432,7 @@ fr:Afficher les &signets\tF12
 ga:Taispeáin na &Leabharmharcanna\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
+pt:Mostrar &marcadores\tF12
 ru:Показать за&кладки\tF12
 tw:顯示書籤(&B)\tF12
 :Show &Favorites
@@ -15437,6 +15443,7 @@ fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
+pt:Mostrar &favoritos
 ru:Показать «И&збранное»
 tw:顯示最愛(&F)
 :Show &Pages Continuously
@@ -15580,6 +15587,7 @@ fr:Afficher les &marque-pages\tF12
 ga:Taispeáin na Leabhar&mharcanna\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
+pt:Mostrar &marcadores\tF12
 ru:Показать зак&ладки\tF12
 tw:顯示書籤(&M)\tF12
 :Show Favorites
@@ -15713,6 +15721,7 @@ fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
 lv:Rādīt &mapē
 nl:Toon in &map
+pt:Mostrar na &pasta
 ru:Показать в п&апке
 tw:打開所在資料夾(&F)
 :Show the &bookmarks sidebar when available
