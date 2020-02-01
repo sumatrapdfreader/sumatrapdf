@@ -2423,11 +2423,19 @@ static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
 }
 
 static void OnMenuSaveAnnotationsToSmx(WindowInfo* win) {
+    // this could be invoked due to external apps sending the message
+    // so need to validate. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1442
     DisplayModel* dm = win->AsFixed();
-    CrashIf(!dm);
+    if (!dm) {
+        return;
+    }
     EngineBase* engine = dm->GetEngine();
-    CrashIf(!engine->supportsAnnotations);
-    CrashIf(!dm->userAnnotsModified);
+    if (!engine->supportsAnnotations) {
+        return;
+    }
+    if (!dm->userAnnotsModified) {
+        return;
+    }
 
     const WCHAR* path = engine->FileName();
     bool ok = SaveFileModifications(path, dm->userAnnots);
