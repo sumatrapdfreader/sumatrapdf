@@ -789,7 +789,7 @@ bool EnginePdf::FinishLoading() {
         orig_info = pdf_dict_gets(ctx, pdf_trailer(ctx, doc), "Info");
 
         if (orig_info) {
-            _info = pdf_copy_str_dict(ctx, doc, _info);
+            _info = pdf_copy_str_dict(ctx, doc, orig_info);
         }
         if (!_info) {
             _info = pdf_new_dict(ctx, doc, 4);
