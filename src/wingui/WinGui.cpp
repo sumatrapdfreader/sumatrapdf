@@ -49,7 +49,7 @@ struct WinMsgWithName {
 #define WM_UAHMEASUREMENUITEM 0x0094
 #define WM_UAHNCPAINTMENUPOPUP 0x0095
 
-WinMsgWithName gWinMessageNames[] = {
+static WinMsgWithName gWinMessageNames[] = {
     dm(WM_NULL),
     dm(WM_CREATE),
     dm(WM_DESTROY),
@@ -139,6 +139,38 @@ WinMsgWithName gWinMessageNames[] = {
     dm(WM_NCMBUTTONUP),
     dm(WM_NCMBUTTONDBLCLK),
 
+    dm(WM_TOUCH),
+    dm(WM_NCPOINTERUPDATE),
+    dm(WM_NCPOINTERDOWN),
+    dm(WM_NCPOINTERUP),
+    dm(WM_POINTERUPDATE),
+    dm(WM_POINTERDOWN),
+    dm(WM_POINTERUP),
+    dm(WM_POINTERENTER),
+    dm(WM_POINTERLEAVE),
+    dm(WM_POINTERACTIVATE),
+    dm(WM_POINTERCAPTURECHANGED),
+    dm(WM_TOUCHHITTESTING),
+    dm(WM_POINTERWHEEL),
+    dm(WM_POINTERHWHEEL),
+    dm(DM_POINTERHITTEST),
+    dm(WM_POINTERROUTEDTO),
+    dm(WM_POINTERROUTEDAWAY),
+    dm(WM_POINTERROUTEDRELEASED),
+
+    dm(WM_IME_SETCONTEXT),
+    dm(WM_IME_NOTIFY),
+    dm(WM_IME_CONTROL),
+    dm(WM_IME_COMPOSITIONFULL),
+    dm(WM_IME_SELECT),
+    dm(WM_IME_CHAR),
+    dm(WM_IME_REQUEST),
+    dm(WM_IME_KEYDOWN),
+    dm(WM_IME_KEYUP),
+
+    dm(WM_MOUSEHOVER),
+    dm(WM_MOUSELEAVE),
+
     dm(WM_MENUSELECT),
     dm(WM_MENUCHAR),
     dm(WM_ENTERIDLE),
@@ -159,7 +191,6 @@ WinMsgWithName gWinMessageNames[] = {
     dm(WM_CTLCOLORSTATIC),
     dm(MN_GETHMENU),
 
-    dm(WM_MOUSEFIRST),
     dm(WM_MOUSEMOVE),
     dm(WM_LBUTTONDOWN),
     dm(WM_LBUTTONUP),

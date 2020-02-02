@@ -53,8 +53,9 @@ static int GenUniqueThreadId() {
     return (int)InterlockedIncrement(&gThreadNoSeq);
 }
 
-ThreadBase::ThreadBase(const char* name)
-    : hThread(nullptr), cancelRequested(false), threadNo(GenUniqueThreadId()), threadName(str::Dup(name)) {
+ThreadBase::ThreadBase(const char* name) {
+    threadNo = GenUniqueThreadId();
+    threadName = str::Dup(name);
     // lf("ThreadBase() %d", threadNo);
 }
 
@@ -65,8 +66,9 @@ ThreadBase::~ThreadBase() {
 
 DWORD WINAPI ThreadBase::ThreadProc(void* data) {
     ThreadBase* thread = reinterpret_cast<ThreadBase*>(data);
-    if (thread->threadName)
+    if (thread->threadName) {
         SetThreadName(GetCurrentThreadId(), thread->threadName);
+    }
     thread->Run();
     return 0;
 }

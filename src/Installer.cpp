@@ -81,9 +81,13 @@ static HANDLE hThread = nullptr;
 static bool success = false;
 
 int currProgress = 0;
-static inline void ProgressStep() {
+static void ProgressStep() {
+    if (gIsRaMicroBuild) {
+        return;
+    }
     currProgress++;
     if (gProgressBar) {
+        // possibly dangerous as is called on a thread
         gProgressBar->SetCurrent(currProgress);
     }
 }
@@ -368,8 +372,11 @@ static void CreateAppShortcuts() {
     }
 }
 
+void onRaMicroInstallerFinished();
+
 static DWORD WINAPI InstallerThread(LPVOID data) {
     UNUSED(data);
+
     success = false;
 
     if (!ExtractInstallerFiles()) {
@@ -389,19 +396,21 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     }
 #endif
 
-    if (gCli->withFilter) {
-        InstallPdfFilter();
-    } else if (IsPdfFilterInstalled()) {
-        UninstallPdfFilter();
-    }
+    if (!gIsRaMicroBuild) {
+        if (gCli->withFilter) {
+            InstallPdfFilter();
+        } else if (IsPdfFilterInstalled()) {
+            UninstallPdfFilter();
+        }
 
-    if (gCli->withPreview) {
-        InstallPdfPreviewer();
-    } else if (IsPdfPreviewerInstalled()) {
-        UninstallPdfPreviewer();
-    }
+        if (gCli->withPreview) {
+            InstallPdfPreviewer();
+        } else if (IsPdfPreviewerInstalled()) {
+            UninstallPdfPreviewer();
+        }
 
-    UninstallBrowserPlugin();
+        UninstallBrowserPlugin();
+    }
 
     CreateAppShortcuts();
 
@@ -426,10 +435,16 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     ProgressStep();
 
 Error:
+    if (gIsRaMicroBuild) {
+        onRaMicroInstallerFinished();
+        return 0;
+    }
     // TODO: roll back installation on failure (restore previous installation!)
-    if (gHwndFrame && !gCli->silent) {
-        Sleep(500); // allow a glimpse of the completed progress bar before hiding it
-        PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
+    if (gHwndFrame) {
+        if (!gCli->silent) {
+            Sleep(500); // allow a glimpse of the completed progress bar before hiding it
+            PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
+        }
     }
     return 0;
 }
@@ -1046,7 +1061,9 @@ struct RaMicroInstallerWindow {
     void CloseHandler(WindowCloseArgs*);
     void SizeHandler(SizeArgs*);
     void Install();
+    void InstallationFinished();
     void Exit();
+    void MsgHandler(WndProcArgs*);
 };
 
 static RaMicroInstallerWindow* gRaMicroInstallerWindow = nullptr;
@@ -1057,10 +1074,24 @@ RaMicroInstallerWindow::~RaMicroInstallerWindow() {
     delete bmpSplash;
 }
 
+void RaMicroInstallerWindow::MsgHandler(WndProcArgs* args) {
+    if (args->msg == WM_APP_INSTALLATION_FINISHED) {
+        InstallationFinished();
+        args->didHandle = true;
+        return;
+    }
+}
+
 void RaMicroInstallerWindow::Install() {
+    hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
+    logf("RaMicroInstallerWindowInstall()\n");
+}
+
+void RaMicroInstallerWindow::InstallationFinished() {
 }
 
 void RaMicroInstallerWindow::Exit() {
+    gRaMicroInstallerWindow->mainWindow->Close();
 }
 
 void RaMicroInstallerWindow::CloseHandler(WindowCloseArgs* args) {
@@ -1089,7 +1120,8 @@ void RaMicroInstallerWindow::SizeHandler(SizeArgs* args) {
     args->didHandle = true;
 }
 
-static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, ClickedHandler onClicked) {
+static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s,
+                                                            const ClickedHandler& onClicked) {
     auto b = new ButtonCtrl(parent);
     b->onClicked = onClicked;
     b->SetText(s);
@@ -1098,11 +1130,16 @@ static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::st
 }
 
 static void RaMicroInstallerWindowExit() {
-    gRaMicroInstallerWindow->mainWindow->Close();
+    gRaMicroInstallerWindow->Exit();
+}
+
+void onRaMicroInstallerFinished() {
+    // called on a background thread
+    PostMessage(gRaMicroInstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
 }
 
 static void RaMicroInstallerWindowInstall() {
-    logf("RaMicroInstallerWindowInstall()\n");
+    gRaMicroInstallerWindow->Install();
 }
 
 static Gdiplus::Bitmap* LoadRaMicroSplash() {
@@ -1125,6 +1162,7 @@ static bool CreateRaMicroInstallerWindow() {
     CrashIf(!win->bmpSplash);
 
     auto w = new Window();
+    w->msgFilter = std::bind(&RaMicroInstallerWindow::MsgHandler, win, _1);
     w->hIcon = hIcon;
     // w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->backgroundColor = MkRgb((u8)0xff, (u8)0xff, (u8)0xff);
@@ -1152,7 +1190,11 @@ static bool CreateRaMicroInstallerWindow() {
     buttons->alignMain = MainAxisAlign::SpaceBetween;
     buttons->alignCross = CrossAxisAlign::Stretch;
     {
+        // TODO: why std::bind() doesn't work?
+        // std::function<void(void)> ch = std::bind(&RaMicroInstallerWindow::Exit, win, _1);
         auto [l, b] = CreateButtonLayout(hwnd, "Exit", RaMicroInstallerWindowExit);
+        // b->onClicked = std::bind(&RaMicroInstallerWindow::Exit, win, _1);
+        // auto [l, b] = CreateButtonLayout(hwnd, "Exit", std::bind(&RaMicroInstallerWindow::Exit, win, _1));
         buttons->addChild(l);
         win->btnExit = b;
     }

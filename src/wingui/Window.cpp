@@ -226,7 +226,10 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     if (didHandle) {
         return res;
     }
-    return DefWindowProc(hwnd, msg, wp, lp);
+    res = DefWindowProcW(hwnd, msg, wp, lp);
+    // char* msgName = getWinMessageName(msg);
+    // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x, res: 0x%x\n", hwnd, msg, msgName, wp, res);
+    return res;
 }
 
 static LRESULT CALLBACK wndProcSubclassed(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
@@ -563,6 +566,7 @@ static void RegisterWindowClass(Window* w) {
     WNDCLASSEXW wcex = {};
     wcex.cbSize = sizeof(wcex);
     wcex.hIcon = w->hIcon;
+    wcex.hCursor = LoadCursorW(NULL, IDC_ARROW);
     wcex.hIconSm = w->hIconSm;
     wcex.lpfnWndProc = wndProcCustom;
     wcex.lpszClassName = w->winClass;
@@ -577,7 +581,9 @@ Window::Window() {
     kind = kindWindow;
     dwExStyle = 0;
     dwStyle = WS_OVERLAPPEDWINDOW;
-    if (parent != nullptr) {
+    if (parent == nullptr) {
+        dwStyle |= WS_CLIPCHILDREN;
+    } else {
         dwStyle |= WS_CHILD;
     }
 }

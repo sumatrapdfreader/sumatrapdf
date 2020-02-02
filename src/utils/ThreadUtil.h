@@ -4,9 +4,9 @@
 /* A very simple thread class that allows stopping a thread */
 class ThreadBase {
   private:
-    int threadNo;
-    HANDLE hThread;
-    bool cancelRequested;
+    LONG cancelRequested = 0;
+    int threadNo = 0;
+    HANDLE hThread = nullptr;
 
     static DWORD WINAPI ThreadProc(void* data);
 
@@ -16,10 +16,9 @@ class ThreadBase {
 
     virtual ~ThreadBase();
 
-    // note: no need for Interlocked* since this value is
-    //       only ever changed from false to true
     bool WasCancelRequested() {
-        return cancelRequested;
+      LONG res = InterlockedCompareExchange(&cancelRequested, 1, 0);
+      return res > 0;
     }
 
   public:
@@ -32,7 +31,7 @@ class ThreadBase {
     // request the thread to stop. It's up to Run() function
     // to call WasCancelRequested() and stop processing if it returns true.
     void RequestCancel() {
-        cancelRequested = true;
+      InterlockedIncrement(&cancelRequested);
     }
 
     // synchronously waits for the thread to end

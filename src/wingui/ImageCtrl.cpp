@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -22,17 +23,17 @@ bool IsImage(ILayout* l) {
 
 ImageCtrl::ImageCtrl(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE;
-    winClass = WC_BUTTONW;
+    winClass = WC_STATICW;
     kind = kindImage;
 }
 
 ImageCtrl::~ImageCtrl() {
 }
 
-using Gdiplus::ImageAttributes;
-using Gdiplus::UnitPixel;
 using Gdiplus::Color;
+using Gdiplus::ImageAttributes;
 using Gdiplus::SolidBrush;
+using Gdiplus::UnitPixel;
 
 static void OnImageCtrlPaint(ImageCtrl* w, COLORREF bgCol) {
     PAINTSTRUCT ps;
@@ -68,7 +69,7 @@ static void ImageCtrlWndProc(WndProcArgs* args) {
     UINT msg = args->msg;
     if (WM_ERASEBKGND == msg) {
         args->didHandle = true;
-        // TODO: should this be FALSE?
+        // do nothing, helps to avoid flicker
         args->result = TRUE;
         return;
     }
@@ -85,6 +86,9 @@ static void ImageCtrlWndProc(WndProcArgs* args) {
         args->didHandle = true;
         return;
     }
+
+    // char* msgName = getWinMessageName(msg);
+    // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, args->wparam);
 }
 
 bool ImageCtrl::Create() {
