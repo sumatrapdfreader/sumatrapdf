@@ -1084,10 +1084,10 @@ void RaMicroInstallerWindow::MsgHandler(WndProcArgs* args) {
 
 void RaMicroInstallerWindow::Install() {
     hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
-    logf("RaMicroInstallerWindowInstall()\n");
 }
 
 void RaMicroInstallerWindow::InstallationFinished() {
+    // TODO: show a message and change button
 }
 
 void RaMicroInstallerWindow::Exit() {
@@ -1129,17 +1129,9 @@ static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::st
     return {NewButtonLayout(b), b};
 }
 
-static void RaMicroInstallerWindowExit() {
-    gRaMicroInstallerWindow->Exit();
-}
-
 void onRaMicroInstallerFinished() {
     // called on a background thread
     PostMessage(gRaMicroInstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
-}
-
-static void RaMicroInstallerWindowInstall() {
-    gRaMicroInstallerWindow->Install();
 }
 
 static Gdiplus::Bitmap* LoadRaMicroSplash() {
@@ -1190,17 +1182,13 @@ static bool CreateRaMicroInstallerWindow() {
     buttons->alignMain = MainAxisAlign::SpaceBetween;
     buttons->alignCross = CrossAxisAlign::Stretch;
     {
-        // TODO: why std::bind() doesn't work?
-        // std::function<void(void)> ch = std::bind(&RaMicroInstallerWindow::Exit, win, _1);
-        auto [l, b] = CreateButtonLayout(hwnd, "Exit", RaMicroInstallerWindowExit);
-        // b->onClicked = std::bind(&RaMicroInstallerWindow::Exit, win, _1);
-        // auto [l, b] = CreateButtonLayout(hwnd, "Exit", std::bind(&RaMicroInstallerWindow::Exit, win, _1));
+        auto [l, b] = CreateButtonLayout(hwnd, "Exit", std::bind(&RaMicroInstallerWindow::Exit, win));
         buttons->addChild(l);
         win->btnExit = b;
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Install", RaMicroInstallerWindowInstall);
+        auto [l, b] = CreateButtonLayout(hwnd, "Install", std::bind(&RaMicroInstallerWindow::Install, win));
         buttons->addChild(l);
         win->btnInstall = b;
     }
