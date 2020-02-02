@@ -2018,12 +2018,12 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     }
 
 #ifdef HAS_PUBLIC_APP_KEY
-    size_t pubkeyLen;
-    const char* pubkey = LoadTextResource(IDD_PUBLIC_APP_KEY, &pubkeyLen);
-    CrashIf(!pubkey);
-    bool ok = VerifySHA1Signature(data->Get(), data->Size(), nullptr, pubkey, pubkeyLen);
-    if (!ok)
+    std::string_view pubkey = LoadDataResource(IDD_PUBLIC_APP_KEY);
+    CrashIf(pubkey.empty());
+    bool ok = VerifySHA1Signature(data->Get(), data->Size(), nullptr, pubkey.data(), pubkey.size());
+    if (!ok) {
         return ERROR_INTERNET_SEC_CERT_ERRORS;
+    }
 #endif
 
     SquareTree tree(data->Get());

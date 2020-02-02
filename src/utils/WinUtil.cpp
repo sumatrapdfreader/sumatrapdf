@@ -1710,7 +1710,7 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
     urlVar.bstrVal = SysAllocString(s);
 }
 
-char* LoadTextResource(int resId, size_t* sizeOut) {
+std::string_view LoadDataResource(int resId) {
     HRSRC resSrc = FindResource(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
     CrashIf(!resSrc);
     HGLOBAL res = LoadResource(nullptr, resSrc);
@@ -1718,10 +1718,8 @@ char* LoadTextResource(int resId, size_t* sizeOut) {
     DWORD size = SizeofResource(nullptr, resSrc);
     const char* resData = (const char*)LockResource(res);
     char* s = str::DupN(resData, size);
-    if (sizeOut)
-        *sizeOut = size;
     UnlockResource(res);
-    return s;
+    return {s, size};
 }
 
 static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1, HSZ hsz2, HDDEDATA hdata,

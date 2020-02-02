@@ -1,6 +1,8 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/buttons
+
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 
@@ -8,8 +10,6 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
-
-// https://docs.microsoft.com/en-us/windows/win32/controls/buttons
 
 Kind kindButton = "button";
 
@@ -32,9 +32,10 @@ ButtonCtrl::~ButtonCtrl() {
 
 bool ButtonCtrl::Create() {
     bool ok = WindowBase::Create();
-    if (ok) {
-        SubclassParent();
+    if (!ok) {
+        return false;
     }
+    SubclassParent();
     auto size = GetIdealSize();
     RECT r{0, 0, size.cx, size.cy};
     SetBounds(r);

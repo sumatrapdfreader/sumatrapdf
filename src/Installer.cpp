@@ -14,6 +14,7 @@
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
 #include "utils/CmdLineParser.h"
+#include "utils/GdiPlusUtil.h"
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/RegistryPaths.h"
@@ -26,6 +27,7 @@
 #include "wingui/EditCtrl.h"
 #include "wingui/StaticCtrl.h"
 #include "wingui/ProgressCtrl.h"
+#include "wingui/ImageCtrl.h"
 
 #include "Translations.h"
 
@@ -1032,6 +1034,7 @@ struct RaMicroInstallerWindow {
     HWND hwnd = nullptr;
     Window* mainWindow = nullptr;
     ILayout* mainLayout = nullptr;
+    Gdiplus::Bitmap* bmpSplash = nullptr;
 
     // not owned by us but by tocEditorLayout
 
@@ -1051,6 +1054,7 @@ static RaMicroInstallerWindow* gRaMicroInstallerWindow = nullptr;
 RaMicroInstallerWindow::~RaMicroInstallerWindow() {
     delete mainLayout;
     delete mainWindow;
+    delete bmpSplash;
 }
 
 void RaMicroInstallerWindow::Install() {
@@ -1101,6 +1105,14 @@ static void RaMicroInstallerWindowInstall() {
     logf("RaMicroInstallerWindowInstall()\n");
 }
 
+static Gdiplus::Bitmap* LoadRaMicroSplash() {
+    std::string_view d = LoadDataResource(IDD_RAMICRO_SPLASH);
+    if (d.empty()) {
+        return nullptr;
+    }
+    return BitmapFromData(d.data(), d.size());
+}
+
 static bool CreateRaMicroInstallerWindow() {
     HMODULE h = GetModuleHandleW(nullptr);
     LPCWSTR iconName = MAKEINTRESOURCEW(getAppIconID());
@@ -1108,12 +1120,19 @@ static bool CreateRaMicroInstallerWindow() {
 
     auto win = new RaMicroInstallerWindow();
     gRaMicroInstallerWindow = win;
+
+    win->bmpSplash = LoadRaMicroSplash();
+    CrashIf(!win->bmpSplash);
+
     auto w = new Window();
     w->hIcon = hIcon;
-    w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    // w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    w->backgroundColor = MkRgb((u8)0xff, (u8)0xff, (u8)0xff);
     w->SetTitle("RA-MICRO Installer");
-    int dx = DpiScale(640);
-    int dy = DpiScale(800);
+    int splashDx = (int)win->bmpSplash->GetWidth();
+    int splashDy = (int)win->bmpSplash->GetHeight();
+    int dx = splashDx + DpiScale(32 + 44); // image + padding
+    int dy = splashDy + DpiScale(84);      // image + buttons
     w->initialSize = {dx, dy};
     SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
     w->initialSize = {winSize.cx, winSize.cy};
@@ -1127,9 +1146,11 @@ static bool CreateRaMicroInstallerWindow() {
     CrashIf(!hwnd);
 
     // create layout
+    // TODO: image should be centered, the buttons should be on the edges
+    // Probably need to implement a Center layout
     HBox* buttons = new HBox();
     buttons->alignMain = MainAxisAlign::SpaceBetween;
-    buttons->alignCross = CrossAxisAlign::CrossStart;
+    buttons->alignCross = CrossAxisAlign::Stretch;
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Exit", RaMicroInstallerWindowExit);
         buttons->addChild(l);
@@ -1143,8 +1164,16 @@ static bool CreateRaMicroInstallerWindow() {
     }
 
     VBox* main = new VBox();
-    main->alignMain = MainAxisAlign::MainEnd;
-    main->alignCross = CrossAxisAlign::CrossStart;
+    main->alignMain = MainAxisAlign::SpaceAround;
+    main->alignCross = CrossAxisAlign::CrossCenter;
+
+    ImageCtrl* splashCtrl = new ImageCtrl(hwnd);
+    splashCtrl->bmp = win->bmpSplash;
+    ok = splashCtrl->Create();
+    CrashIf(!ok);
+    ILayout* splashLayout = NewImageLayout(splashCtrl);
+    main->addChild(splashLayout);
+
     main->addChild(buttons);
 
     auto* padding = new Padding();
@@ -1187,7 +1216,10 @@ int RunInstallerRaMicro(CommandLineInfo* cli) {
         goto Exit;
     }
 
-    CreateRaMicroInstallerWindow();
+    bool ok = CreateRaMicroInstallerWindow();
+    if (!ok) {
+        goto Exit;
+    }
 
 #if 0
     if (!RegisterWinClass()) {

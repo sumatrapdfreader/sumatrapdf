@@ -177,6 +177,9 @@
     <ClInclude Include="..\src\wingui\FrameRateWnd.h">
       <Filter>wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\ImageCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h">
       <Filter>wingui</Filter>
     </ClInclude>
@@ -366,6 +369,9 @@
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ImageCtrl.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp">

@@ -299,15 +299,14 @@ END
 #endif
 
 #ifdef HAS_PUBLIC_APP_KEY
-IDD_PUBLIC_APP_KEY  RCDATA                      "SumatraPDF.key"
+IDD_PUBLIC_APP_KEY      RCDATA               "SumatraPDF.key"
 #endif
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// RT_MANIFEST
-//
+IDD_RAMICRO_SPLASH      RCDATA               "..\\gfx\\ramicro-startscreen_310x230.png"
 
-1                       RT_MANIFEST             "SumatraPDF.exe.manifest"
+/////////////////////////////////////////////////////////////////////////////
+
+1                       RT_MANIFEST          "SumatraPDF.exe.manifest"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

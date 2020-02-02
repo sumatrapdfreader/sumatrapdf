@@ -17,7 +17,7 @@
 
 #define SPLITTER_CLASS_NAME L"SplitterWndClass"
 
-static void OnPaint(HWND hwnd, COLORREF bgCol) {
+static void OnSplitterCtrlPaint(HWND hwnd, COLORREF bgCol) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
     AutoDeleteBrush br = CreateSolidBrush(bgCol);
@@ -94,7 +94,7 @@ SplitterCtrl::~SplitterCtrl() {
     DeleteObject(bmp);
 }
 
-static void SplitterWndProc(WndProcArgs* args) {
+static void SplitterCtrlWndProc(WndProcArgs* args) {
     UINT msg = args->msg;
     if (WM_ERASEBKGND == msg) {
         args->didHandle = true;
@@ -161,7 +161,7 @@ static void SplitterWndProc(WndProcArgs* args) {
     }
 
     if (WM_PAINT == msg) {
-        OnPaint(w->hwnd, w->backgroundColor);
+        OnSplitterCtrlPaint(w->hwnd, w->backgroundColor);
         args->didHandle = true;
         return;
     }
@@ -180,7 +180,7 @@ bool SplitterCtrl::Create() {
     if (!ok) {
         return false;
     }
-    msgFilter = SplitterWndProc;
+    msgFilter = SplitterCtrlWndProc;
     // Subclass();
     return true;
 }

@@ -1,10 +1,6 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)
-#define COL_CLOSE_X_HOVER RGB(0xf9, 0xeb, 0xeb)  // white-ish
-#define COL_CLOSE_HOVER_BG RGB(0xC1, 0x35, 0x35) // red-ish
-
 enum class ImgFormat {
     Unknown,
     BMP,

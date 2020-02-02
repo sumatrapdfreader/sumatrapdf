@@ -1079,5 +1079,8 @@ bool IsLabeL(Kind kind) {
 extern bool IsStatic(Kind);
 
 bool IsLabel(ILayout* l) {
+    if (!l) {
+        return false;
+    }
     return IsLayoutOfKind(l, kindLabel) || IsStatic(l->kind);
 }

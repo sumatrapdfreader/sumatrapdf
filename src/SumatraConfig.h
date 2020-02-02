@@ -21,4 +21,3 @@ const WCHAR* getAppName();
 const WCHAR* getExeName();
 
 int getAppIconID();
-

@@ -206,7 +206,10 @@
 #define IDT_FILE_ADDTOFAV               3025
 #define IDT_VIEW_FIT_WIDTH              3026
 #define IDT_VIEW_FIT_PAGE               3027
+
 #define IDD_PUBLIC_APP_KEY              3060
+#define IDD_RAMICRO_SPLASH              3061
+
 #define IDC_SUMATRAPDF                  4000
 #define IDC_STATIC                      -1
 

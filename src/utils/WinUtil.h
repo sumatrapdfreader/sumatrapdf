@@ -217,7 +217,8 @@ double GetProcessRunningTime();
 
 void RunNonElevated(const WCHAR* exePath);
 void VariantInitBstr(VARIANT& urlVar, const WCHAR* s);
-char* LoadTextResource(int resId, size_t* sizeOut = nullptr);
+// TODO: this should be std::span<u8>
+std::string_view LoadDataResource(int resId);
 bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command);
 
 void RectInflateTB(RECT& r, int top, int bottom);
