@@ -1182,13 +1182,13 @@ static bool CreateRaMicroInstallerWindow() {
     buttons->alignMain = MainAxisAlign::SpaceBetween;
     buttons->alignCross = CrossAxisAlign::Stretch;
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Exit", std::bind(&RaMicroInstallerWindow::Exit, win));
+        auto [l, b] = CreateButtonLayout(hwnd, "Exit", [win]() { win->Exit(); });
         buttons->addChild(l);
         win->btnExit = b;
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Install", std::bind(&RaMicroInstallerWindow::Install, win));
+        auto [l, b] = CreateButtonLayout(hwnd, "Install", [win]() { win->Install(); });
         buttons->addChild(l);
         win->btnInstall = b;
     }
