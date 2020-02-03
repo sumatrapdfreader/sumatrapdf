@@ -46,4 +46,14 @@
 #define CURR_VERSION_STR TEXT(CURR_VERSION_STRA)
 
 #define COPYRIGHT_STR      "Copyright 2006-2020 all authors (GPLv3)"
+#if defined(RAMICRO)
+#define PUBLISHER_STR      "RA-MICRO"
+#else
 #define PUBLISHER_STR      "Krzysztof Kowalczyk"
+#endif
+
+#if defined(RAMICRO)
+#define APP_NAME_STR        "RA-MICRO PDF Viewer"
+#else
+#define APP_NAME_STR        "SumatraPDF"
+#endif
