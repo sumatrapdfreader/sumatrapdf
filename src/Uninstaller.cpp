@@ -43,6 +43,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "GlobalPrefs.h"
 #include "Flags.h"
 #include "Installer.h"
+#include "AppUtil.h"
 
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
@@ -489,26 +490,18 @@ static int RunApp() {
     }
 }
 
-int RunUninstallerRaMicro(CommandLineInfo* cli);
+int RunUninstallerRaMicro();
 
 int RunUninstaller(CommandLineInfo* cli) {
-    if (gIsRaMicroBuild) {
-        return RunUninstallerRaMicro(cli);
-    }
-
-    int ret = 1;
+    RelaunchElevatedIfNotDebug();
 
     gCli = cli;
 
-    if (!gIsDebugBuild) {
-        if (!IsRunningElevated()) {
-            WCHAR* exePath = GetExePath();
-            WCHAR* cmdline = GetCommandLineW(); // not owning the memory
-            LaunchElevated(exePath, cmdline);
-            str::Free(exePath);
-            ::ExitProcess(0);
-        }
+    if (gIsRaMicroBuild) {
+        return RunUninstallerRaMicro();
     }
+
+    int ret = 1;
 
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
     gCli->installDir = GetInstallationDir();
@@ -767,20 +760,8 @@ static bool CreateRaMicroUninstallerWindow() {
     return true;
 }
 
-int RunUninstallerRaMicro(CommandLineInfo* cli) {
+int RunUninstallerRaMicro() {
     int ret = 1;
-
-    gCli = cli;
-
-    if (!gIsDebugBuild) {
-        if (!IsRunningElevated()) {
-            WCHAR* exePath = GetExePath();
-            WCHAR* cmdline = GetCommandLineW(); // not owning the memory
-            LaunchElevated(exePath, cmdline);
-            str::Free(exePath);
-            ::ExitProcess(0);
-        }
-    }
 
     const WCHAR* msgFmt = _TR("Are you sure you want to uninstall %s?");
     const WCHAR* appName = getAppName();

@@ -35,6 +35,7 @@
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
+#include "AppUtil.h"
 #include "Flags.h"
 #include "Resource.h"
 #include "Version.h"
@@ -980,25 +981,17 @@ static bool OpenEmbeddedFilesArchive() {
     return true;
 }
 
-int RunInstallerRaMicro(CommandLineInfo* cli);
+int RunInstallerRaMicro();
 
 int RunInstaller(CommandLineInfo* cli) {
+    RelaunchElevatedIfNotDebug();
+    gCli = cli;
+
     if (gIsRaMicroBuild) {
-        return RunInstallerRaMicro(cli);
+        return RunInstallerRaMicro();
     }
 
     int ret = 0;
-
-    gCli = cli;
-    if (!gIsDebugBuild) {
-        if (!IsRunningElevated()) {
-            WCHAR* exePath = GetExePath();
-            WCHAR* cmdline = GetCommandLineW(); // not owning the memory
-            LaunchElevated(exePath, cmdline);
-            str::Free(exePath);
-            ::ExitProcess(0);
-        }
-    }
 
     if (!OpenEmbeddedFilesArchive()) {
         return 1;
@@ -1252,19 +1245,8 @@ static bool CreateRaMicroInstallerWindow() {
     return true;
 }
 
-int RunInstallerRaMicro(CommandLineInfo* cli) {
+int RunInstallerRaMicro() {
     int ret = 0;
-
-    gCli = cli;
-    if (!gIsDebugBuild) {
-        if (!IsRunningElevated()) {
-            WCHAR* exePath = GetExePath();
-            WCHAR* cmdline = GetCommandLineW(); // not owning the memory
-            LaunchElevated(exePath, cmdline);
-            str::Free(exePath);
-            ::ExitProcess(0);
-        }
-    }
 
     if (!OpenEmbeddedFilesArchive()) {
         return 1;
