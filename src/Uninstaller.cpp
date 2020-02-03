@@ -591,10 +591,6 @@ void RaMicroUninstallerWindow::MsgHandler(WndProcArgs* args) {
 
 void RaMicroUninstallerWindow::Uninstall() {
     if (finished) {
-        if (success) {
-            AutoFreeWstr exePath(GetInstalledExePath());
-            RunNonElevated(exePath);
-        }
         Exit();
         return;
     }
