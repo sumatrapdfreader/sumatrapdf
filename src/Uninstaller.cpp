@@ -27,6 +27,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/Log.h"
 #include "utils/RegistryPaths.h"
+#include "utils/GdiPlusUtil.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -34,6 +35,8 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/ButtonCtrl.h"
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
+#include "wingui/ImageCtrl.h"
+#include "wingui/StaticCtrl.h"
 
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"
@@ -117,8 +120,9 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
     }
     RegCloseKey(hkey);
 
-    if (isEmpty)
+    if (isEmpty) {
         DeleteRegKey(root, keyName);
+    }
     return isEmpty;
 }
 
@@ -126,22 +130,23 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     UnregisterFromBeingDefaultViewer(hkey);
     const WCHAR* appName = getAppName();
     const WCHAR* exeName = getExeName();
-    AutoFreeWstr REG_CLASSES_APP = getRegClassesApp(appName);
-    DeleteRegKey(hkey, REG_CLASSES_APP);
-    AutoFreeWstr REG_CLASSES_APPS = getRegClassesApps(appName);
-    DeleteRegKey(hkey, REG_CLASSES_APPS);
+    AutoFreeWstr regClassApp = getRegClassesApp(appName);
+    DeleteRegKey(hkey, regClassApp);
+    AutoFreeWstr regClassApps = getRegClassesApps(appName);
+    DeleteRegKey(hkey, regClassApps);
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_PDF, L"\\OpenWithProgids");
         SHDeleteValueW(hkey, key, appName);
     }
 
+    const WCHAR** supportedExts = getSupportedExts();
     AutoFreeWstr openWithVal = str::Join(L"\\OpenWithList\\", exeName);
-    for (int j = 0; nullptr != gSupportedExts[j]; j++) {
-        AutoFreeWstr keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
+    for (int j = 0; nullptr != supportedExts[j]; j++) {
+        AutoFreeWstr keyname(str::Join(L"Software\\Classes\\", supportedExts[j], L"\\OpenWithProgids"));
         SHDeleteValueW(hkey, keyname, appName);
         DeleteEmptyRegKey(hkey, keyname);
 
-        keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[j], openWithVal));
+        keyname.Set(str::Join(L"Software\\Classes\\", supportedExts[j], openWithVal));
         if (!DeleteRegKey(hkey, keyname)) {
             continue;
         }
@@ -155,8 +160,9 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     }
 
     // delete keys written in ListAsDefaultProgramWin10()
-    SHDeleteValue(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF");
-    DeleteRegKey(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities");
+    SHDeleteValue(hkey, L"SOFTWARE\\RegisteredApplications", appName);
+    AutoFreeWstr keyName = str::Format(L"SOFTWARE\\%s\\Capabilities", appName);
+    DeleteRegKey(hkey, keyName);
 }
 
 static void RemoveOwnRegistryKeys() {
@@ -206,6 +212,7 @@ const char* gInstalledFiles[] = {
     "PdfPreview.dll",
     // files no longer shipped, to be deleted
     "SumatraPDF.exe",
+    "RA-MICRO PDF Viewer.exe",
     "sumatrapdfprefs.dat",
     "DroidSansFallback.ttf",
     "npPdfViewer.dll",
@@ -242,6 +249,8 @@ static void RemoveShortcuts() {
     }
 }
 
+void onRaMicroUninstallerFinished();
+
 static DWORD WINAPI UninstallerThread(LPVOID data) {
     UNUSED(data);
     // also kill the original uninstaller, if it's just spawned
@@ -269,6 +278,11 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
 
     // always succeed, even for partial uninstallations
     success = true;
+
+    if (gIsRaMicroBuild) {
+        onRaMicroUninstallerFinished();
+        return 0;
+    }
 
     if (!gCli->silent) {
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
@@ -347,8 +361,6 @@ static void ShowUsage() {
         appName, appName);
     MessageBoxW(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
-
-using namespace Gdiplus;
 
 static WCHAR* GetInstallationDir() {
     AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(getAppName());
@@ -477,7 +489,13 @@ static int RunApp() {
     }
 }
 
+int RunUninstallerRaMicro(CommandLineInfo* cli);
+
 int RunUninstaller(CommandLineInfo* cli) {
+    if (gIsRaMicroBuild) {
+        return RunUninstallerRaMicro(cli);
+    }
+
     int ret = 1;
 
     gCli = cli;
@@ -527,6 +545,278 @@ int RunUninstaller(CommandLineInfo* cli) {
     }
 
     BringWindowToTop(gHwndFrame);
+    ret = RunApp();
+
+Exit:
+    free(gInstUninstGlobals.firstError);
+
+    return ret;
+}
+
+/* ra-micro uninstaller */
+
+using std::placeholders::_1;
+
+struct RaMicroUninstallerWindow {
+    HWND hwnd = nullptr;
+    Window* mainWindow = nullptr;
+    ILayout* mainLayout = nullptr;
+    Gdiplus::Bitmap* bmpSplash = nullptr;
+
+    // not owned by us but by mainLayout
+    ButtonCtrl* btnInstall = nullptr;
+    ButtonCtrl* btnExit = nullptr;
+    StaticCtrl* finishedText = nullptr;
+
+    bool finished = false;
+
+    ~RaMicroUninstallerWindow();
+
+    void CloseHandler(WindowCloseArgs*);
+    void SizeHandler(SizeArgs*);
+    void Uninstall();
+    void InstallationFinished();
+    void Exit();
+    void MsgHandler(WndProcArgs*);
+};
+
+static RaMicroUninstallerWindow* gRaMicroUninstallerWindow = nullptr;
+
+RaMicroUninstallerWindow::~RaMicroUninstallerWindow() {
+    delete mainLayout;
+    delete mainWindow;
+    delete bmpSplash;
+}
+
+void RaMicroUninstallerWindow::MsgHandler(WndProcArgs* args) {
+    if (args->msg == WM_APP_INSTALLATION_FINISHED) {
+        InstallationFinished();
+        args->didHandle = true;
+        return;
+    }
+}
+
+void RaMicroUninstallerWindow::Uninstall() {
+    if (finished) {
+        if (success) {
+            AutoFreeWstr exePath(GetInstalledExePath());
+            RunNonElevated(exePath);
+        }
+        Exit();
+        return;
+    }
+    hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, 0);
+}
+
+static Rect layoutAndSize(ILayout* layout, int dx, int dy) {
+    if (dx == 0 || dy == 0) {
+        return {};
+    }
+    Size windowSize{dx, dy};
+    auto c = Tight(windowSize);
+    auto size = layout->Layout(c);
+    Point min{0, 0};
+    Point max{size.Width, size.Height};
+    Rect bounds{min, max};
+    layout->SetBounds(bounds);
+    return bounds;
+}
+
+void RaMicroUninstallerWindow::InstallationFinished() {
+    CloseHandle(hThread);
+    hThread = nullptr;
+
+    finished = true;
+    btnInstall->SetText("Exit");
+    if (!success) {
+        finishedText->SetText("Uninstallation failed!");
+    }
+    finishedText->SetIsVisible(true);
+
+    RECT rc = GetClientRect(hwnd);
+    int dx = RectDx(rc);
+    int dy = RectDy(rc);
+    layoutAndSize(mainLayout, dx, dy);
+}
+
+void RaMicroUninstallerWindow::Exit() {
+    gRaMicroUninstallerWindow->mainWindow->Close();
+}
+
+void RaMicroUninstallerWindow::CloseHandler(WindowCloseArgs* args) {
+    WindowBase* w = (WindowBase*)gRaMicroUninstallerWindow->mainWindow;
+    CrashIf(w != args->w);
+    delete gRaMicroUninstallerWindow;
+    gRaMicroUninstallerWindow = nullptr;
+    PostQuitMessage(0);
+}
+
+void onRaMicroUninstallerFinished() {
+    // called on a background thread
+    PostMessage(gRaMicroUninstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
+}
+
+void RaMicroUninstallerWindow::SizeHandler(SizeArgs* args) {
+    int dx = args->dx;
+    int dy = args->dy;
+
+    layoutAndSize(mainLayout, dx, dy);
+
+    InvalidateRect(args->hwnd, nullptr, false);
+    args->didHandle = true;
+}
+
+void onRaMicroUnistallerFinished() {
+    // called on a background thread
+    PostMessage(gRaMicroUninstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
+}
+
+static Gdiplus::Bitmap* LoadRaMicroSplash() {
+    std::string_view d = LoadDataResource(IDD_RAMICRO_SPLASH);
+    if (d.empty()) {
+        return nullptr;
+    }
+    return BitmapFromData(d.data(), d.size());
+}
+
+static bool CreateRaMicroUninstallerWindow() {
+    HMODULE h = GetModuleHandleW(nullptr);
+    LPCWSTR iconName = MAKEINTRESOURCEW(getAppIconID());
+    HICON hIcon = LoadIconW(h, iconName);
+
+    auto win = new RaMicroUninstallerWindow();
+    gRaMicroUninstallerWindow = win;
+
+    win->bmpSplash = LoadRaMicroSplash();
+    CrashIf(!win->bmpSplash);
+
+    auto w = new Window();
+    w->msgFilter = std::bind(&RaMicroUninstallerWindow::MsgHandler, win, _1);
+    w->hIcon = hIcon;
+    // w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    w->backgroundColor = MkRgb((u8)0xff, (u8)0xff, (u8)0xff);
+    w->SetTitle("RA-MICRO Uninstaller");
+    int splashDx = (int)win->bmpSplash->GetWidth();
+    int splashDy = (int)win->bmpSplash->GetHeight();
+    int dx = splashDx + DpiScale(32 + 44); // image + padding
+    int dy = splashDy + DpiScale(104);     // image + buttons
+    w->initialSize = {dx, dy};
+    SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
+    w->initialSize = {winSize.cx, winSize.cy};
+    bool ok = w->Create();
+    CrashIf(!ok);
+    win->hwnd = w->hwnd;
+
+    win->mainWindow = w;
+
+    HWND hwnd = win->hwnd;
+    CrashIf(!hwnd);
+
+    // create layout
+    // TODO: image should be centered, the buttons should be on the edges
+    // Probably need to implement a Center layout
+    HBox* buttons = new HBox();
+    buttons->alignMain = MainAxisAlign::SpaceBetween;
+    buttons->alignCross = CrossAxisAlign::CrossEnd;
+
+    /*
+    {
+        auto [l, b] = CreateButtonLayout(hwnd, "Exit", [win]() { win->Exit(); });
+        buttons->addChild(l);
+        win->btnExit = b;
+    }
+    */
+
+    {
+        auto [l, b] = CreateButtonLayout(hwnd, "Uninstall RA-Micro", [win]() { win->Uninstall(); });
+        buttons->addChild(l);
+        win->btnInstall = b;
+    }
+
+    VBox* main = new VBox();
+    main->alignMain = MainAxisAlign::SpaceAround;
+    main->alignCross = CrossAxisAlign::CrossCenter;
+
+    ImageCtrl* splashCtrl = new ImageCtrl(hwnd);
+    splashCtrl->bmp = win->bmpSplash;
+    ok = splashCtrl->Create();
+    CrashIf(!ok);
+    ILayout* splashLayout = NewImageLayout(splashCtrl);
+    main->addChild(splashLayout);
+
+    win->finishedText = new StaticCtrl(hwnd);
+    win->finishedText->SetText("RA-MICRO was uninstalled!");
+    // TODO: bigger font and maybe bold and different color
+    // win->finishedText->SetFont();
+    win->finishedText->Create();
+    win->finishedText->SetIsVisible(false);
+    ILayout* finishedTextLayout = NewStaticLayout(win->finishedText);
+
+    main->addChild(finishedTextLayout);
+
+    main->addChild(buttons);
+
+    auto* padding = new Padding();
+    padding->insets = DefaultInsets();
+    padding->child = main;
+    win->mainLayout = padding;
+
+    w->onClose = std::bind(&RaMicroUninstallerWindow::CloseHandler, win, _1);
+    w->onSize = std::bind(&RaMicroUninstallerWindow::SizeHandler, win, _1);
+    w->SetIsVisible(true);
+    return true;
+}
+
+int RunUninstallerRaMicro(CommandLineInfo* cli) {
+    int ret = 1;
+
+    gCli = cli;
+
+    if (!gIsDebugBuild) {
+        if (!IsRunningElevated()) {
+            WCHAR* exePath = GetExePath();
+            WCHAR* cmdline = GetCommandLineW(); // not owning the memory
+            LaunchElevated(exePath, cmdline);
+            str::Free(exePath);
+            ::ExitProcess(0);
+        }
+    }
+
+    const WCHAR* msgFmt = _TR("Are you sure you want to uninstall %s?");
+    const WCHAR* appName = getAppName();
+    gDefaultMsg = str::Format(msgFmt, appName);
+    gCli->installDir = GetInstallationDir();
+
+    AutoFreeWstr exePath(GetInstalledExePath());
+    auto installerExists = file::Exists(exePath);
+
+    if (gCli->showHelp) {
+        ShowUsage();
+        ret = 0;
+        goto Exit;
+    }
+
+    // installerExists = true;
+    if (!installerExists) {
+        const WCHAR* caption = _TR("Uninstallation failed");
+        msgFmt = _TR("%s installation not found.");
+        const WCHAR* msg = str::Format(msgFmt, appName);
+        MessageBox(nullptr, msg, caption, MB_ICONEXCLAMATION | MB_OK);
+        str::Free(msg);
+        goto Exit;
+    }
+
+    if (gCli->silent) {
+        UninstallerThread(nullptr);
+        ret = success ? 0 : 1;
+        goto Exit;
+    }
+
+    bool ok = CreateRaMicroUninstallerWindow();
+    if (!ok) {
+        goto Exit;
+    }
+
     ret = RunApp();
 
 Exit:

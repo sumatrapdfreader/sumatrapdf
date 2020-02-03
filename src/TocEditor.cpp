@@ -90,14 +90,6 @@ TocEditorArgs::~TocEditorArgs() {
     DeleteVecMembers(bookmarks);
 }
 
-static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, ClickedHandler onClicked) {
-    auto b = new ButtonCtrl(parent);
-    b->onClicked = onClicked;
-    b->SetText(s);
-    b->Create();
-    return {NewButtonLayout(b), b};
-}
-
 void MessageNYI() {
     HWND hwnd = gWindow->mainWindow->hwnd;
     MessageBoxA(hwnd, "Not yet implemented!", "Information", MB_OK | MB_ICONINFORMATION);

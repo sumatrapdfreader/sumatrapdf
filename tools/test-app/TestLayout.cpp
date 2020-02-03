@@ -34,14 +34,6 @@ static void Draw(HWND hwnd, HDC hdc) {
     FillRect(hdc, &rc, brush);
 }
 
-static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, ClickedHandler onClicked) {
-    auto b = new ButtonCtrl(parent);
-    b->onClicked = onClicked;
-    b->SetText(s);
-    b->Create();
-    return {NewButtonLayout(b), b};
-}
-
 static void doMainLayout() {
     Size windowSize{currWinDx, currWinDy};
     Constraints constraints = Tight(windowSize);

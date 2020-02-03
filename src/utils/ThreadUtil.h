@@ -17,8 +17,8 @@ class ThreadBase {
     virtual ~ThreadBase();
 
     bool WasCancelRequested() {
-      LONG res = InterlockedCompareExchange(&cancelRequested, 1, 0);
-      return res > 0;
+        LONG res = InterlockedCompareExchange(&cancelRequested, 1, 0);
+        return res > 0;
     }
 
   public:
@@ -31,7 +31,7 @@ class ThreadBase {
     // request the thread to stop. It's up to Run() function
     // to call WasCancelRequested() and stop processing if it returns true.
     void RequestCancel() {
-      InterlockedIncrement(&cancelRequested);
+        InterlockedIncrement(&cancelRequested);
     }
 
     // synchronously waits for the thread to end

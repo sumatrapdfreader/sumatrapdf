@@ -19,3 +19,5 @@ ILayout* NewButtonLayout(ButtonCtrl* b);
 
 bool IsButton(Kind);
 bool IsButton(ILayout*);
+
+std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, const ClickedHandler& onClicked);

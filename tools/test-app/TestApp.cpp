@@ -13,14 +13,6 @@ extern int TestTab(HINSTANCE hInstance, int nCmdShow);
 // in TestLayout.cpp
 extern int TestLayout(HINSTANCE hInstance, int nCmdShow);
 
-static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, ClickedHandler onClicked) {
-    auto b = new ButtonCtrl(parent);
-    b->onClicked = onClicked;
-    b->SetText(s);
-    b->Create();
-    return {NewButtonLayout(b), b};
-}
-
 HINSTANCE gHinst = nullptr;
 
 static void LaunchDirectDraw() {

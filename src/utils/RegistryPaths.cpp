@@ -57,7 +57,7 @@ bool ListAsDefaultProgramPreWin10(const WCHAR* exeName, const WCHAR* extensions[
     // (HKLM\Software\Classes\.mobi\OpenWithList\SumatraPDF.exe key is present but "Open With"
     // menu item doesn't even exist for .mobi files
     // It's not so easy, though, because if we just set it to SumatraPDF,
-    // all gSupportedExts will be reported as "PDF Document" by Explorer, so this needs
+    // all getSupportedExts() will be reported as "PDF Document" by Explorer, so this needs
     // to be more intelligent. We should probably mimic Windows Media Player scheme i.e.
     // set OpenWithProgIds to SumatraPDF.AssocFile.Mobi etc. and create apropriate
     // \SOFTWARE\Classes\CLSID\{GUID}\ProgID etc. entries

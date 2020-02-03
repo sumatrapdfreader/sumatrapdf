@@ -86,13 +86,21 @@ InstUninstGlobals gInstUninstGlobals = {
 // list of supported file extensions for which SumatraPDF.exe will
 // be registered as a candidate for the Open With dialog's suggestions
 // clang-format off
-const WCHAR* gSupportedExts[] = {
+const WCHAR* gSupportedExtsSumatra[] = {
     L".pdf",  L".xps",  L".oxps", L".cbz",  L".cbr",  L".cb7", L".cbt",
     L".djvu", L".chm", L".mobi", L".epub", L".azw",  L".azw3", L"azw4",
     L".fb2", L".fb2z", L".prc",  L".tif", L".tiff", L".jp2",  L".png",
     L".jpg",  L".jpeg", L".tga", L".gif",  nullptr
 };
+const WCHAR* gSupportedExtsRaMicro[] = { L".pdf", nullptr };
 // clang-format on
+
+const WCHAR** getSupportedExts() {
+    if (gIsRaMicroBuild) {
+        return gSupportedExtsRaMicro;
+    }
+    return gSupportedExtsSumatra;
+}
 
 void NotifyFailed(const WCHAR* msg) {
     if (!gInstUninstGlobals.firstError) {

@@ -327,7 +327,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
     const WCHAR* exeName = getExeName();
-    ok &= ListAsDefaultProgramPreWin10(exeName, gSupportedExts, hkey);
+    ok &= ListAsDefaultProgramPreWin10(exeName, getSupportedExts(), hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
@@ -428,7 +428,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
 
     const WCHAR* appName = getAppName();
     const WCHAR* exeName = getExeName();
-    if (!ListAsDefaultProgramWin10(appName, exeName, gSupportedExts)) {
+    if (!ListAsDefaultProgramWin10(appName, exeName, getSupportedExts())) {
         NotifyFailed(_TR("Failed to register as default program on win 10"));
     }
 
@@ -821,8 +821,8 @@ static void CreateMainWindow() {
 
 static WCHAR* GetInstallationDir() {
     const WCHAR* appName = getAppName();
-    AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(appName);
-    AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");
+    AutoFreeWstr regPath = getRegPathUninst(appName);
+    AutoFreeWstr dir = ReadRegStr2(regPath, L"InstallLocation");
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
             dir.Set(path::GetDir(dir));
@@ -1051,10 +1051,12 @@ struct RaMicroInstallerWindow {
     ILayout* mainLayout = nullptr;
     Gdiplus::Bitmap* bmpSplash = nullptr;
 
-    // not owned by us but by tocEditorLayout
-
+    // not owned by us but by mainLayout
     ButtonCtrl* btnInstall = nullptr;
     ButtonCtrl* btnExit = nullptr;
+    StaticCtrl* finishedText = nullptr;
+
+    bool finished = false;
 
     ~RaMicroInstallerWindow();
 
@@ -1083,11 +1085,48 @@ void RaMicroInstallerWindow::MsgHandler(WndProcArgs* args) {
 }
 
 void RaMicroInstallerWindow::Install() {
+    if (finished) {
+        if (success) {
+            AutoFreeWstr exePath(GetInstalledExePath());
+            RunNonElevated(exePath);
+        }
+        Exit();
+        return;
+    }
     hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
 }
 
+static Rect layoutAndSize(ILayout* layout, int dx, int dy) {
+    if (dx == 0 || dy == 0) {
+        return {};
+    }
+    Size windowSize{dx, dy};
+    auto c = Tight(windowSize);
+    auto size = layout->Layout(c);
+    Point min{0, 0};
+    Point max{size.Width, size.Height};
+    Rect bounds{min, max};
+    layout->SetBounds(bounds);
+    return bounds;
+}
+
 void RaMicroInstallerWindow::InstallationFinished() {
-    // TODO: show a message and change button
+    CloseHandle(hThread);
+    hThread = nullptr;
+
+    finished = true;
+    if (success) {
+        btnInstall->SetText("Run RA-Micro");
+    } else {
+        btnInstall->SetText("Exit");
+        finishedText->SetText("Installation failed!");
+    }
+    finishedText->SetIsVisible(true);
+
+    RECT rc = GetClientRect(hwnd);
+    int dx = RectDx(rc);
+    int dy = RectDy(rc);
+    layoutAndSize(mainLayout, dx, dy);
 }
 
 void RaMicroInstallerWindow::Exit() {
@@ -1105,28 +1144,11 @@ void RaMicroInstallerWindow::CloseHandler(WindowCloseArgs* args) {
 void RaMicroInstallerWindow::SizeHandler(SizeArgs* args) {
     int dx = args->dx;
     int dy = args->dy;
-    HWND hwnd = args->hwnd;
-    if (dx == 0 || dy == 0) {
-        return;
-    }
-    Size windowSize{dx, dy};
-    auto c = Tight(windowSize);
-    auto size = mainLayout->Layout(c);
-    Point min{0, 0};
-    Point max{size.Width, size.Height};
-    Rect bounds{min, max};
-    mainLayout->SetBounds(bounds);
-    InvalidateRect(hwnd, nullptr, false);
-    args->didHandle = true;
-}
 
-static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s,
-                                                            const ClickedHandler& onClicked) {
-    auto b = new ButtonCtrl(parent);
-    b->onClicked = onClicked;
-    b->SetText(s);
-    b->Create();
-    return {NewButtonLayout(b), b};
+    layoutAndSize(mainLayout, dx, dy);
+
+    InvalidateRect(args->hwnd, nullptr, false);
+    args->didHandle = true;
 }
 
 void onRaMicroInstallerFinished() {
@@ -1162,7 +1184,7 @@ static bool CreateRaMicroInstallerWindow() {
     int splashDx = (int)win->bmpSplash->GetWidth();
     int splashDy = (int)win->bmpSplash->GetHeight();
     int dx = splashDx + DpiScale(32 + 44); // image + padding
-    int dy = splashDy + DpiScale(84);      // image + buttons
+    int dy = splashDy + DpiScale(104);     // image + buttons
     w->initialSize = {dx, dy};
     SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
     w->initialSize = {winSize.cx, winSize.cy};
@@ -1180,12 +1202,15 @@ static bool CreateRaMicroInstallerWindow() {
     // Probably need to implement a Center layout
     HBox* buttons = new HBox();
     buttons->alignMain = MainAxisAlign::SpaceBetween;
-    buttons->alignCross = CrossAxisAlign::Stretch;
+    buttons->alignCross = CrossAxisAlign::CrossEnd;
+
+    /*
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Exit", [win]() { win->Exit(); });
         buttons->addChild(l);
         win->btnExit = b;
     }
+    */
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Install", [win]() { win->Install(); });
@@ -1203,6 +1228,16 @@ static bool CreateRaMicroInstallerWindow() {
     CrashIf(!ok);
     ILayout* splashLayout = NewImageLayout(splashCtrl);
     main->addChild(splashLayout);
+
+    win->finishedText = new StaticCtrl(hwnd);
+    win->finishedText->SetText("Installation finished!");
+    // TODO: bigger font and maybe bold and different color
+    // win->finishedText->SetFont();
+    win->finishedText->Create();
+    win->finishedText->SetIsVisible(false);
+    ILayout* finishedTextLayout = NewStaticLayout(win->finishedText);
+
+    main->addChild(finishedTextLayout);
 
     main->addChild(buttons);
 
@@ -1234,7 +1269,7 @@ int RunInstallerRaMicro(CommandLineInfo* cli) {
     if (!OpenEmbeddedFilesArchive()) {
         return 1;
     }
-    gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
+    gDefaultMsg = _TR("Thank you for choosing RA-MICRO PDF!");
 
     if (!gCli->installDir) {
         gCli->installDir = GetInstallationDir();
