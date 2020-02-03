@@ -983,7 +983,7 @@ static bool OpenEmbeddedFilesArchive() {
 
 int RunInstallerRaMicro();
 
-int RunInstaller(CommandLineInfo* cli) {
+int RunInstaller(Flags* cli) {
     RelaunchElevatedIfNotDebug();
     gCli = cli;
 

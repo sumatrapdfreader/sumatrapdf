@@ -140,7 +140,7 @@ enum {
     Silent
 };
 
-CommandLineInfo::~CommandLineInfo() {
+Flags::~Flags() {
     free(printerName);
     free(printSettings);
     free(forwardSearchOrigin);
@@ -300,7 +300,7 @@ static int GetArgNo(const WCHAR* argName) {
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
+void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.size();

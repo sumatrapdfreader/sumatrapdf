@@ -31,7 +31,7 @@ struct InstUninstGlobals {
 struct ButtonCtrl;
 
 extern InstUninstGlobals gInstUninstGlobals;
-extern CommandLineInfo* gCli;
+extern Flags* gCli;
 extern const WCHAR* gDefaultMsg;
 extern HWND gHwndFrame;
 const WCHAR** getSupportedExts();

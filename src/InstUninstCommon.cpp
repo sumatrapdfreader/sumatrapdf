@@ -70,7 +70,7 @@ WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
 int gButtonDy = 0;
 
-CommandLineInfo* gCli = nullptr;
+Flags* gCli = nullptr;
 
 const WCHAR* gDefaultMsg = nullptr; // Note: translation, not freeing
 

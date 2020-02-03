@@ -15,7 +15,7 @@
 // TODO(port)
 // extern "C" void fz_redirect_dll_io_to_console();
 
-void TestRenderPage(const CommandLineInfo& i) {
+void TestRenderPage(const Flags& i) {
     if (i.showConsole) {
         RedirectIOToConsole();
         // fz_redirect_dll_io_to_console();
@@ -70,7 +70,7 @@ static void extractPageText(EngineBase* engine, int pageNo) {
     free(coordsOut);
 }
 
-void TestExtractPage(const CommandLineInfo& ci) {
+void TestExtractPage(const Flags& ci) {
     if (ci.showConsole) {
         RedirectIOToConsole();
         // fz_redirect_dll_io_to_console();

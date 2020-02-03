@@ -492,7 +492,7 @@ static int RunApp() {
 
 int RunUninstallerRaMicro();
 
-int RunUninstaller(CommandLineInfo* cli) {
+int RunUninstaller(Flags* cli) {
     RelaunchElevatedIfNotDebug();
 
     gCli = cli;

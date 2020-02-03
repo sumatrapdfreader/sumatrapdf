@@ -7,10 +7,10 @@ void BenchFileOrDir(WStrVec& pathsToBench);
 bool IsStressTesting();
 void BenchEbookLayout(WCHAR* filePath);
 
-class CommandLineInfo;
+class Flags;
 class WindowInfo;
 
-void StartStressTest(CommandLineInfo* i, WindowInfo* win);
+void StartStressTest(Flags* i, WindowInfo* win);
 
 void OnStressTestTimer(WindowInfo* win, int timerId);
 void FinishStressTest(WindowInfo* win);

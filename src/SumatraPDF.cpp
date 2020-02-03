@@ -99,7 +99,7 @@ bool gShowFrameRate = false;
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
-const WCHAR* gPluginURL = nullptr; // owned by CommandLineInfo in WinMain
+const WCHAR* gPluginURL = nullptr; // owned by Flags in WinMain
 
 static NotificationGroupId NG_PERSISTENT_WARNING = "persistentWarning";
 static NotificationGroupId NG_PAGE_INFO_HELPER = "pageInfoHelper";

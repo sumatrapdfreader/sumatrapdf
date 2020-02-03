@@ -203,7 +203,7 @@ static bool InstanceInit() {
     return true;
 }
 
-static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, CommandLineInfo& i, bool isFirstWin) {
+static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool isFirstWin) {
     // delegate file opening to a previously running instance by sending a DDE message
     WCHAR fullpath[MAX_PATH];
     GetFullPathName(filePath, dimof(fullpath), fullpath, nullptr);
@@ -239,7 +239,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, CommandLineInfo&
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
 }
 
-static WindowInfo* LoadOnStartup(const WCHAR* filePath, const CommandLineInfo& i, bool isFirstWin) {
+static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& i, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(i.printDialog && i.exitWhenDone) && !gPluginMode;
     WindowInfo* win = LoadDocument(args);
@@ -324,7 +324,7 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
     }
 }
 
-static bool SetupPluginMode(CommandLineInfo& i) {
+static bool SetupPluginMode(Flags& i) {
     if (!IsWindow(i.hwndPluginParent) || i.fileNames.size() == 0) {
         return false;
     }
@@ -553,7 +553,7 @@ static void ShutdownCommon() {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 }
 
-static void UpdateGlobalPrefs(const CommandLineInfo& i) {
+static void UpdateGlobalPrefs(const Flags& i) {
     if (i.inverseSearchCmdLine) {
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
@@ -672,10 +672,10 @@ static void ShowInstallerHelp() {
 }
 
 // in Installer.cpp
-extern int RunInstaller(CommandLineInfo*);
+extern int RunInstaller(Flags*);
 extern void ShowInstallerHelp();
 // in Uninstaller.cpp
-extern int RunUninstaller(CommandLineInfo*);
+extern int RunUninstaller(Flags*);
 
 // In release builds, we want to do fast exit and leave cleaning up (freeing memory) to the os.
 // In debug and in release asan builds, we want to cleanup ourselves in order to see leaks.
@@ -818,7 +818,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // gAddCrashMeMenu = true;
 
     logf(L"CmdLine: %s\n", GetCommandLineW());
-    CommandLineInfo i;
+    Flags i;
     ParseCommandLine(GetCommandLineW(), i);
 
     if (gIsDebugBuild || gIsPreReleaseBuild) {

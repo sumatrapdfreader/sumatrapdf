@@ -7,7 +7,7 @@ struct PageRange {
     int end = INT_MAX;
 };
 
-class CommandLineInfo {
+class Flags {
   public:
     WStrVec fileNames;
     // pathsToBenchmark contain 2 strings per each file to benchmark:
@@ -75,11 +75,11 @@ class CommandLineInfo {
     bool autoUpdate = false;
     bool registerAsDefault = false;
 
-    CommandLineInfo() = default;
-    ~CommandLineInfo();
+    Flags() = default;
+    ~Flags();
 };
 
-void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo&);
+void ParseCommandLine(const WCHAR* cmdLine, Flags&);
 
 bool IsValidPageRange(const WCHAR* ranges);
 bool IsBenchPagesInfo(const WCHAR* s);
