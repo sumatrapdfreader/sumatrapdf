@@ -6803,7 +6803,7 @@ const char * gTranslations_de =
   "\303\234ber &SumatraPDF\0"\
   "&Tats\303\244chliche Gr\303\266\303\237e\tStrg+1\0"\
   "&Mehr Optionen\342\200\246\0"\
-  "&Alle angegebenen Seiten\0"\
+  "&Alle ausgew\303\244hlten Seiten\0"\
   "&Zur\303\274ck\tAlt+<-\0"\
   "&Buchansicht\tStrg+8\0"\
   "&Schlie\303\237en\tStrg+W\0"\
@@ -6856,11 +6856,11 @@ const char * gTranslations_de =
   "(Seite %s)\0"\
   "\303\234ber SumatraPDF\0"\
   "Favoriten hinzuf\303\274gen\0"\
-  "Seite %s hinzuf\303\274gen\342\200\246\0"\
-  "\0"\
-  "Bezeichnung des Favoriten f\303\274r Seite %s (optional):\0"\
+  "Seite %s zu Favoriten hinzuf\303\274gen\342\200\246\0"\
+  "Seiten %s zu Favoriten hinzuf\303\274gen\tCtrl+B\0"\
+  "Seite %s zu Favoriten mit Namen (optional) hinzuf\303\274gen:\0"\
   "Zu Favoriten hinzuf\303\274gen\342\200\246\0"\
-  "Weiteres\0"\
+  "Erweitert\0"\
   "Alle Dateien\0"\
   "Alle unterst\303\274tzten Dokumente\0"\
   "Anwendung:\0"\
@@ -6879,11 +6879,11 @@ const char * gTranslations_de =
   "Keine Verbindung zum Internet m\303\266glich (Fehler %#x).\0"\
   "Abbrechen\0"\
   "Datei kann nicht gedruckt werden\0"\
-  "Fehler beim Ausf\303\274hren des Befehls f\303\274r die Inverssuche. Bitte \303\274berpr\303\274fen Sie die Einstellung.\0"\
+  "Fehler beim Ausf\303\274hren des Befehls f\303\274r die R\303\274ckw\303\244rtssuche. Bitte \303\274berpr\303\274fen Sie die Einstellung.\0"\
   "Sprache \303\244ndern (Change Language)\0"\
   "Nach &neuer Version suchen\0"\
   "Schlie\303\237en\0"\
-  "\0"\
+  "Alles schlie\303\237en\0"\
   "Comicb\303\274cher\0"\
   "Kompatibilit\303\244t\0"\
   "Fortlaufend\0"\
@@ -6908,7 +6908,7 @@ const char * gTranslations_de =
   "Konnte %s nicht kopieren\0"\
   "Erstellt am:\0"\
   "Aktuelle Datei\0"\
-  "Zeigerposition:\0"\
+  "Cursorposition:\0"\
   "&Zoomfaktor\342\200\246\tStrg+Y\0"\
   "Dunkel\0"\
   "Dunkler\0"\
@@ -6925,7 +6925,7 @@ const char * gTranslations_de =
   "Bitte Passwort f\303\274r %s eingeben\0"\
   "Beim Doppelklicken im PDF Dokument wird der folgende Befehl ausgef\303\274hrt:\0"\
   "Fehler beim \303\226ffnen von %s\0"\
-  "\0"\
+  "Alles \303\266ffnen\0"\
   "&Favoriten\0"\
   "Vor&w\303\244rts\tAlt+->\0"\
   "&Vollbild\tF11\0"\
@@ -6981,7 +6981,7 @@ const char * gTranslations_de =
   "Gro\303\237-/Kleinschreibung beachten\0"\
   "Kindle E-B\303\274cher\0"\
   "Ge\303\244ndert am:\0"\
-  "\0"\
+  "Neues Fenster\0"\
   "Es ist die neue Version %s vorhanden. M\303\266chten Sie diese herunterladen?\0"\
   "&N\303\244chste Seite\0"\
   "Suchbegriff nicht gefunden\0"\
@@ -7032,7 +7032,7 @@ const char * gTranslations_de =
   "Umbenennen zu\0"\
   "&Gegen UZS drehen\tStrg+Umschalt+-\0"\
   "Im &UZS drehen\tStrg+Umschalt++\0"\
-  "\0"\
+  "Anmerkungen speichern\0"\
   "Speichern unter\342\200\246\0"\
   "&Verkn\303\274pfung speichern\342\200\246\tStrg+Umschalt+S\0"\
   "Durchsuche Seite %d von %d\342\200\246\0"\
@@ -7043,14 +7043,14 @@ const char * gTranslations_de =
   "Auswahl:\0"\
   "Per &E-Mail versenden\342\200\246\0"\
   "Befehlszeile f\303\274r die Inverssuche setzen\0"\
-  "\0"\
-  "\0"\
+  "Lesezeichen anzeigen\0"\
+  "Favoriten anzeigen\0"\
   "Seiten &fortlaufend anzeigen\0"\
   "&Werkzeugleiste anzeigen\0"\
-  "\0"\
+  "Lesezeichen anzeigen\tF12\0"\
   "Favoriten anzeigen\0"\
   "Oft gelesene Dokumente einblenden\0"\
-  "\0"\
+  "Dokumet-&Ordner \303\266ffnen\0"\
   "&Lesezeichen standardm\303\244ssig anzeigen\0"\
   "Einzelne Seite\0"\
   "Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte dr\303\274cken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein m\303\266chten.\0"\
@@ -7091,7 +7091,7 @@ const char * gTranslations_de =
   "Verkleinern\0"\
   "Zoomfaktor\0"\
   "[Datei wurde ge\303\244ndert; aktualisiere\342\200\246] %s\0"\
-  "Text kopieren verweigert\0"\
+  "kopiere Text\0"\
   "Dokument drucken verweigert\0";
 
 const char * gTranslations_el = 

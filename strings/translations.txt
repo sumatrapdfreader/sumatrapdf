@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c5145fab2775310187da61b39eb32121723ee49d
+80080bfc2564ad21c18aa1cde03d0bcef90eed63
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -221,7 +221,7 @@ cn:所有已选定页面(&A)
 co:&Tutte e pagine selezziunate
 cy:&Pob tudalen â ddewiswyd
 cz:Vše&chny vybrané stránky
-de:&Alle angegebenen Seiten
+de:&Alle ausgewählten Seiten
 dk:&Alle valgte sider
 el:Ό&λες οι επιλεγμένες
 es:Tod&as las páginas seleccionadas
@@ -3669,7 +3669,7 @@ cn:添加第 %s 页到收藏夹
 co:Aghjunghje a pagina %s à i favuriti
 cy:Ychwanegu tudalen %s i'r Ffefrynnau
 cz:Přidat stránku %s k oblíbeným...
-de:Seite %s hinzufügen…
+de:Seite %s zu Favoriten hinzufügen…
 dk:Tilføj side %s til bogmærker
 el:Προσθήκη της σελίδας %s στα αγαπημένα
 es:Añadir página %s a favoritos
@@ -3734,7 +3734,7 @@ cn:以 (可选) 名称添加第 %s 页到收藏夹:
 co:Aghjunghje a pagina %s à i favuriti cù u nome (ozzionale) :
 cy:Ychwanegu tudalen %s i'r ffefrynnau gyda'r enw (dewisiol):
 cz:Přidat stránku %s k oblíbeným s (volitelným) názvem:
-de:Bezeichnung des Favoriten für Seite %s (optional):
+de:Seite %s zu Favoriten mit Namen (optional) hinzufügen:
 dk:Tilføj side %s til bogmærker med (valgfrit) navn:
 el:Προσθήκη σελίδας %s στα αγαπημένα με (προαιρετικό) όνομα:
 es:Añadir página %s a favoritos con nombre (opcional):
@@ -3786,6 +3786,7 @@ vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 :Add page %s to favorites\tCtrl+B
 az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
+de:Seiten %s zu Favoriten hinzufügen\tCtrl+B
 es:Añadir página %s a favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
 ga:Cuir leathanach %s leis na ceanáin\tCtrl+B
@@ -3876,7 +3877,7 @@ cn:高级
 co:Espertu
 cy:Uwch
 cz:Upřesnit
-de:Weiteres
+de:Erweitert
 dk:Avanceret
 el:Προχωρημένα
 es:Avanzado
@@ -5152,7 +5153,7 @@ cn:无法进行逆向搜索。请检查设置数值里的命令栏。
 co:Ùn pò micca lancià a cumanda di ricerca à l’arritrosa. Ci vole à verificà a linea di cumanda in e preferenze.
 cy:Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
 cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
-de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
+de:Fehler beim Ausführen des Befehls für die Rückwärtssuche. Bitte überprüfen Sie die Einstellung.
 dk:Kan ikke starte søgekommandoen invers. Kontroller venligst kommandolinjen i indstillingerne.
 el:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ ελέγξτε τη γραμμή εντολών στις ρυθμίσεις.
 es:No se puede iniciar la orden de búsqueda inversa. Compruebe la línea de órdenes en la configuración.
@@ -5413,6 +5414,7 @@ az:Hamısını bağla
 cn:全部折叠(&C)
 co:Piegà tuttu
 cz:Sbalit vše
+de:Alles schließen
 es:Ocultar Todo
 fr:Tout réduire
 ga:Laghdaigh Gach
@@ -6973,7 +6975,7 @@ cn:光标位置:
 co:Pusizione di u cursore :
 cy:Safle'r cyrchwr:
 cz:Pozice kurzoru:
-de:Zeigerposition:
+de:Cursorposition:
 dk:Markørposition:
 el:Θέση κέρσορα:
 es:Posición del cursor:
@@ -8048,6 +8050,7 @@ az:Hamısını aç
 cn:全部展开
 co:Spiegà tuttu
 cz:Rozbalit vše
+de:Alles öffnen
 es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
@@ -11584,6 +11587,7 @@ az:Yeni pə&ncərə\tCtrl+N
 cn:新建窗口(&W)\tCtrl+N
 co:No&va finestra\tCtrl+N
 cz:Nové &okno\tCtrl+N
+de:Neues Fenster
 es:Nueva &ventana\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
@@ -14786,6 +14790,7 @@ vn:Quay phải\tCtrl+Shift++
 :Save Annotations
 az:Annotasiyaları yadda saxla
 cn:保存注释
+de:Anmerkungen speichern
 es:Guardar Notas
 fr:Sauvegarder les annotations
 ga:Taisc na Nótaí
@@ -15427,6 +15432,7 @@ vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks\tF12
 az:Əl&fəcinləri göstər\tF12
 cn:显示书签(&B)\tF12
+de:Lesezeichen anzeigen
 es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
 ga:Taispeáin na &Leabharmharcanna\tF12
@@ -15438,6 +15444,7 @@ tw:顯示書籤(&B)\tF12
 :Show &Favorites
 az:&Seçilmişləri göstər
 cn:显示收藏夹(&F)
+de:Favoriten anzeigen
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
@@ -15582,6 +15589,7 @@ vn:Hiện thanh công cụ
 :Show Book&marks\tF12
 az:Əlfə&cinləri göstər\tF12
 cn:显示书签(&M)\tF12
+de:Lesezeichen anzeigen\tF12
 es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
 ga:Taispeáin na Leabhar&mharcanna\tF12
@@ -15716,6 +15724,7 @@ az:Qovlu&qda göstər
 cn:打开所在文件夹(&F)
 co:Affissà in u car&tulare
 cz:Zobrazit ve &složce
+de:Dokumet-&Ordner öffnen
 es:Mostrar en &Carpeta
 fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
@@ -18251,7 +18260,7 @@ cn:正在复制文本
 co:copia di testu
 cy:copïo testun
 cz:kopírování textu
-de:Text kopieren verweigert
+de:kopiere Text
 dk:kopierer tekst
 el:αντιγραφή κειμένου
 es:copiado de texto
