@@ -326,7 +326,9 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingData* ft) {
     }
 
     if (ft->finished) {
-        CrashIf(!pages);
+        // I guess !pages can happen if formatting interrupted quickly
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/1156
+        SubmitCrashIf(!pages);
         StopFormattingThread();
     }
     UpdateStatus();
