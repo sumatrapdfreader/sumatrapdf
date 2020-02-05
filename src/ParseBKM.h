@@ -88,33 +88,18 @@ struct BkmTree : TreeModel {
     TreeItem* RootAt(int n) override;
 };
 
-// represents bookmarks for a single file
-struct VbkmForFile {
-    // path of the original file
-    AutoFree filePath;
-    // TODO: serialize nPages after "file:"
-    int nPages = 0;
-
-    TocTree* toc = nullptr;
-
-    EngineBase* engine = nullptr;
-
-    VbkmForFile() = default;
-    ~VbkmForFile();
-};
-
 // represents a .vbkm file which represents one or more
 // physical files
 struct VbkmFile {
     AutoFree fileContent;
-    AutoFree name;
-    Vec<VbkmForFile*> vbkms;
+    char* name;
+    BkmTree* tree;
 
     VbkmFile() = default;
     ~VbkmFile();
 };
 
-bool ExportBookmarksToFile(const Vec<VbkmForFile*>&, const char* name, const char* path);
+bool ExportBookmarksToFile(BkmTree*, const char* name, const char* path);
 
 bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm);
 
