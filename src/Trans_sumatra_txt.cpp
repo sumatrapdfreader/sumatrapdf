@@ -12702,12 +12702,12 @@ const char * gTranslations_pl =
 const char * gTranslations_br = 
   "Sobre\0"\
   "&Tamanho real\tCtrl+1\0"\
-  "Op\303\247\303\265es &Avan\303\247adas...\0"\
+  "Op\303\247\303\265es &avan\303\247adas\342\200\246\0"\
   "Tod&as as p\303\241ginas selecionadas\0"\
   "Voltar\tAlt+<-\0"\
-  "Visualizar como livro\tCtrl+8\0"\
+  "Ver como livro\tCtrl+8\0"\
   "&Fechar\tCtrl+W\0"\
-  "&Copiar Sele\303\247\303\243o\0"\
+  "&Copiar sele\303\247\303\243o\0"\
   "Copiar sele\303\247\303\243o\tCtrl+C\0"\
   "N\303\243o perguntar novamente\0"\
   "Apenas as p\303\241ginas par&es\0"\
@@ -12748,18 +12748,18 @@ const char * gTranslations_br =
   "Ignorar esta vers\303\243o\0"\
   "&Tema\0"\
   "&Usar tamanhos de p\303\241gina originais\0"\
-  "&Ver\0"\
+  "&Exibir\0"\
   "&Janela\0"\
   "&Sim\0"\
   "\0"\
   "(de %d)\0"\
   "(p\303\241gina %s)\0"\
   "Sobre o SumatraPDF\0"\
-  "Adicionar aos Favoritos\0"\
-  "Adicionar p\303\241gina %s aos Favoritos\0"\
-  "\0"\
-  "Adicionar p\303\241gina %s aos Favoritos com outro nome (opcional):\0"\
-  "Adicionar aos Favoritos\0"\
+  "Adicionar aos favoritos\0"\
+  "Adicionar p\303\241gina %s aos favoritos\0"\
+  "Adicionar p\303\241gina %s aos favoritos\tCtrl+B\0"\
+  "Adicionar p\303\241gina %s aos favoritos com outro nome (opcional):\0"\
+  "Adicionar aos favoritos\0"\
   "Avan\303\247ado\0"\
   "Todos os arquivos\0"\
   "Todos os documentos suportados\0"\
@@ -12771,7 +12771,7 @@ const char * gTranslations_br =
   "Autom\303\241tico\0"\
   "&Procurar atualiza\303\247\303\265es automaticamente\0"\
   "Ver como livro\0"\
-  "Atalhos de Favoritos\0"\
+  "Atalhos de marcadores\0"\
   "Atalho para a p\303\241gina %s de %s\0"\
   "Marcadores\0"\
   "\0"\
@@ -12783,20 +12783,20 @@ const char * gTranslations_br =
   "Mudar o idioma (Change Language)\0"\
   "Procurar Atualiza\303\247\303\265es\0"\
   "Fechar\0"\
-  "\0"\
+  "Minimizar tudo\0"\
   "Quadrinhos\0"\
   "Compatibilidade\0"\
   "Cont\303\255nuo\0"\
   "Ver como livro cont\303\255nuo\0"\
   "P\303\241gina dupla cont\303\255nua\0"\
-  "\0"\
-  "Copiar &Imagem\0"\
-  "Copiar Ata&lho\0"\
-  "Copiar Co&ment\303\241rio\0"\
+  "Contribua com a tradu\303\247\303\243o\0"\
+  "Copiar &imagem\0"\
+  "Copiar ata&lho\0"\
+  "Copiar co&ment\303\241rio\0"\
   "C\303\263pia de texto negada (copiando somente como imagem)\0"\
   "Direito autoral:\0"\
-  "N\303\243o foi poss\303\255vel obter as propriedades da Impressora\0"\
-  "N\303\243o foi poss\303\255vel criar a pasta de instala\303\247\303\243o.\0"\
+  "N\303\243o foi poss\303\255vel obter as propriedades da impressora\0"\
+  "N\303\243o foi poss\303\255vel criar a pasta de instala\303\247\303\243o\0"\
   "N\303\243o foi poss\303\255vel acionar a impressora\0"\
   "N\303\243o foi poss\303\255vel instalar o pr\303\251-visualizador para PDF\0"\
   "N\303\243o foi poss\303\255vel instalar o filtro de pesquisa para PDF\0"\
@@ -12825,7 +12825,7 @@ const char * gTranslations_br =
   "Digite a senha de %s\0"\
   "Digite a linha de comando a ser invocada com um duplo clique sobre o documento PDF:\0"\
   "Erro ao carregar %s\0"\
-  "\0"\
+  "Expandir tudo\0"\
   "&Favoritos\0"\
   "Avan\303\247ar\tAlt+->\0"\
   "Tela cheia\tCtrl+Shift+L\0"\
@@ -12881,7 +12881,7 @@ const char * gTranslations_br =
   "Diferenciar min\303\272sculas e mai\303\272sculas\0"\
   "Documentos Mobi\0"\
   "Modificado:\0"\
-  "\0"\
+  "Novo &window\tCtrl+N\0"\
   "A vers\303\243o %s est\303\241 dispon\303\255vel. Baixar a nova vers\303\243o?\0"\
   "P\303\241gina seguinte\0"\
   "Nenhuma ocorr\303\252ncia encontrada\0"\
@@ -12927,12 +12927,12 @@ const char * gTranslations_br =
   "Problema de impress\303\243o.\0"\
   "Re&nomear...\tF2\0"\
   "&Lembrar arquivos abertos\0"\
-  "Remover dos Favoritos\0"\
-  "Remover p\303\241gina %s dos Favoritos\0"\
+  "Remover dos favoritos\0"\
+  "Remover p\303\241gina %s dos favoritos\0"\
   "Renomear para\0"\
   "Girar \303\240 esquerda\tCtrl+Shift+-\0"\
   "Girar \303\240 direita\tCtrl+Shift++\0"\
-  "\0"\
+  "Salvar anota\303\247\303\265es\0"\
   "Salvar como\0"\
   "S&alvar atalho...\tCtrl+Shift+S\0"\
   "Localizando %d de %d...\0"\
@@ -12943,14 +12943,14 @@ const char * gTranslations_br =
   "Sele\303\247\303\243o:\0"\
   "Enviar por email...\0"\
   "Configurar pesquisa inversa\0"\
-  "\0"\
-  "\0"\
+  "Mostrar &marcadores\tF12\0"\
+  "Mostrar &favoritos\0"\
   "Exibir p\303\241ginas de modo cont\303\255nuo\0"\
   "Mostrar barra de ferramentas\0"\
-  "\0"\
-  "Mostrar Favoritos\0"\
+  "Mostrar &marcadores\tF12\0"\
+  "Mostrar favoritos\0"\
   "Mostrar Lidos com freq\303\274\303\252ncia\0"\
-  "\0"\
+  "Mostrar na &pasta\0"\
   "Mostrar barra lateral de marcadores quando dispon\303\255vel\0"\
   "P\303\241gina \303\272nica\0"\
   "Desculpe, isso n\303\243o deveria ter acontecido!\n\nAperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.\0"\
@@ -12976,7 +12976,7 @@ const char * gTranslations_br =
   "T\303\255tulo:\0"\
   "Desinstalar SumatraPDF\0"\
   "A desinstala\303\247\303\243o falhou\0"\
-  "Desinstala\303\247\303\243o em progresso...\0"\
+  "Desinstala\303\247\303\243o em progresso\342\200\246\0"\
   "Arquivo fonte desconhecido (%s)\0"\
   "Usar &abas\0"\
   "Usar o SumatraPDF como o leitor PDF pa&dr\303\243o\0"\
@@ -12989,7 +12989,7 @@ const char * gTranslations_br =
   "\0"\
   "Aumentar zoom\0"\
   "Diminuir zoom\0"\
-  "Propor\303\247\303\243o de Zoom\0"\
+  "Propor\303\247\303\243o de zoom\0"\
   "[Mudan\303\247as detectadas; atualizando] %s\0"\
   "copiando texto\0"\
   "imprimindo documento\0";
