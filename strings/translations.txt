@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-493c7561c3d757e36a83cf25d8e79816e001923f
+a757ac33ccdb30169217bea43d3bd0c700c5a384
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -372,7 +372,7 @@ hr:&Knjiški pregled\tCtrl+8
 hu:&Könyv-mód (oldalpár címlappal)\tCtrl+8
 id:Tampilan &Buku\tCtrl+8
 it:Vista &libro\tCtrl+8
-ja:ブック ビュー&(B)\tCtrl+B
+ja:ブック ビュー(&B)\tCtrl+8
 jv:&Tampilan Buku\tCtrl+8
 ka:&წიგნის რეჟიმი\tCtrl+8
 kr:책처럼 보기(&B)\tCtrl+8
@@ -3791,6 +3791,7 @@ de:Seiten %s zu Favoriten hinzufügen\tCtrl+B
 es:Añadir página %s a favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
 ga:Cuir leathanach %s leis na ceanáin\tCtrl+B
+ja:ページ %s をお気に入りに追加\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
 pt:Adicionar página %s aos favoritos\tCtrl+B
@@ -5421,6 +5422,7 @@ es:Ocultar Todo
 fr:Tout réduire
 ga:Laghdaigh Gach
 it:Comprimi tutto
+ja:すべて折り畳む
 lv:Sakļaut visu
 nl:Alle Samenvouwen
 pt:Recolher tudo
@@ -8058,6 +8060,7 @@ es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
 it:Espandi tutto
+ja:すべて展開
 lv:Izvērst visu
 nl:Alle Uitvouwen
 pt:Expandir tudo
@@ -11595,6 +11598,7 @@ de:Neues Fenster
 es:Nueva &ventana\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
+ja:新しいウィンドウ (&W)\tCtrl+N
 lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
 pt:Nova &janela\tCtrl+N
@@ -14799,6 +14803,7 @@ de:Anmerkungen speichern
 es:Guardar Notas
 fr:Sauvegarder les annotations
 ga:Taisc na Nótaí
+ja:注釈を保存
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
 pt:Guardar anotações
@@ -15442,6 +15447,7 @@ de:Lesezeichen anzeigen
 es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
 ga:Taispeáin na &Leabharmharcanna\tF12
+ja:ブックマークを表示(&B)\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
 pt:Mostrar &marcadores\tF12
@@ -15455,6 +15461,7 @@ de:Favoriten anzeigen
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
+ja:お気に入りを表示(&F)
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
 pt:Mostrar &favoritos
@@ -15601,6 +15608,7 @@ de:Lesezeichen anzeigen\tF12
 es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
 ga:Taispeáin na Leabhar&mharcanna\tF12
+ja:ブックマークを表示 (&M)\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
 pt:Mostrar &marcadores\tF12
@@ -15737,6 +15745,7 @@ de:Dokumet-&Ordner öffnen
 es:Mostrar en &Carpeta
 fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
+ja:フォルダを表示(&F)
 lv:Rādīt &mapē
 nl:Toon in &map
 pt:Mostrar na &pasta
