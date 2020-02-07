@@ -230,7 +230,7 @@ static void UpdateRemovePdfButtonStatus(TocEditorWindow* w) {
     TreeItem* sel = w->treeCtrl->GetSelection();
     bool isEnabled = false;
     if (sel) {
-        BkmItem* item = (BkmItem*)sel;
+        TocItem* item = (TocItem*)sel;
         isEnabled = (item->engineFilePath != nullptr);
     }
     w->btnRemovePdf->SetIsEnabled(isEnabled);

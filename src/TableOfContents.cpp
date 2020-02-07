@@ -528,7 +528,7 @@ static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::strin
         TocTree* tocTree = tab->ctrl->GetToc();
         win->tocTreeCtrl->SetTreeModel(tocTree);
     } else {
-        BkmTree* tocTree = tab->altBookmarks[0]->tree;
+        TocTree* tocTree = tab->altBookmarks[0]->tree;
         win->tocTreeCtrl->SetTreeModel(tocTree);
     }
 }

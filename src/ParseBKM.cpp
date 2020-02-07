@@ -20,7 +20,7 @@
 // TODO: this is provisional version while in development
 constexpr char* kBkmVersion = "999";
 
-static Kind kindBkmItem = "bkmTreeItem";
+static Kind kindTocItem = "bkmTreeItem";
 
 /*
 Creating and parsing of .bkm files that contain alternative bookmarks view
@@ -71,7 +71,7 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
     s.AppendFmt(" rect:%g,%g,%g,%g", r.x, r.y, r.dx, r.dy);
 }
 
-static void SerializeBookmarksRec(BkmItem* node, int level, str::Str& s) {
+static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
     if (node->engineFilePath) {
         s.Append("file: ");
         s.Append(node->engineFilePath);
@@ -127,7 +127,7 @@ static void SerializeBookmarksRec(BkmItem* node, int level, str::Str& s) {
 }
 
 // indentation "quoted title" additional-metadata* destination
-static BkmItem* parseTocLine(std::string_view line, size_t* indentOut) {
+static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
     auto origLine = line; // save for debugging
 
     // lines might start with an indentation, 2 spaces for one level
@@ -142,7 +142,7 @@ static BkmItem* parseTocLine(std::string_view line, size_t* indentOut) {
     // first item on the line is a title
     str::Str title;
     bool ok = sv::ParseMaybeQuoted(line, title, false);
-    BkmItem* res = new BkmItem();
+    TocItem* res = new TocItem();
     res->title = strconv::Utf8ToWstr(title.as_view());
     PageDestination* dest = nullptr;
 
@@ -244,22 +244,22 @@ static BkmItem* parseTocLine(std::string_view line, size_t* indentOut) {
     return res;
 }
 
-struct BkmItemWithIndent {
-    BkmItem* item = nullptr;
+struct TocItemWithIndent {
+    TocItem* item = nullptr;
     size_t indent = 0;
 
-    BkmItemWithIndent() = default;
-    BkmItemWithIndent(BkmItem* item, size_t indent);
-    ~BkmItemWithIndent() = default;
+    TocItemWithIndent() = default;
+    TocItemWithIndent(TocItem* item, size_t indent);
+    ~TocItemWithIndent() = default;
 };
 
-BkmItemWithIndent::BkmItemWithIndent(BkmItem* item, size_t indent) {
+TocItemWithIndent::TocItemWithIndent(TocItem* item, size_t indent) {
     this->item = item;
     this->indent = indent;
 }
 
-static BkmTree* parseVbkm(std::string_view sv) {
-    Vec<BkmItemWithIndent> items;
+static TocTree* parseVbkm(std::string_view sv) {
+    Vec<TocItemWithIndent> items;
 
 #if 0
     // first line should be "file: $file"
@@ -294,14 +294,14 @@ static BkmTree* parseVbkm(std::string_view sv) {
         if (line.empty()) {
             break;
         }
-        BkmItem* item = parseTocLine(line, &indent);
+        TocItem* item = parseTocLine(line, &indent);
         if (item == nullptr) {
             for (auto& el : items) {
                 delete el.item;
             }
             return nullptr;
         }
-        BkmItemWithIndent iwl = {item, indent};
+        TocItemWithIndent iwl = {item, indent};
         items.Append(iwl);
     }
     size_t nItems = items.size();
@@ -312,7 +312,7 @@ static BkmTree* parseVbkm(std::string_view sv) {
         return nullptr;
     }
 
-    BkmTree* tree = new BkmTree();
+    TocTree* tree = new TocTree();
     // tree->name = str::Dup(title.val);
     tree->root = items[0].item;
 
@@ -385,7 +385,7 @@ bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm) {
     return vbkm.tree != nullptr;
 }
 
-bool ExportBookmarksToFile(BkmTree* bookmarks, const char* name, const char* bkmPath) {
+bool ExportBookmarksToFile(TocTree* bookmarks, const char* name, const char* bkmPath) {
     str::Str s;
     s.AppendFmt("version: %s\n", kBkmVersion);
     if (str::IsEmpty(name)) {

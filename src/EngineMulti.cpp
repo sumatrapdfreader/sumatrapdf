@@ -187,7 +187,7 @@ PageDestination* EngineMulti::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-static void updateBkmItemsPageNo(BkmItem* i, int nPageNoAdd) {
+static void updateTocItemsPageNo(TocItem* i, int nPageNoAdd) {
     if (nPageNoAdd == 0) {
         return;
     }
@@ -199,7 +199,7 @@ static void updateBkmItemsPageNo(BkmItem* i, int nPageNoAdd) {
         if (curr->dest) {
             curr->dest->pageNo += nPageNoAdd;
         }
-        updateBkmItemsPageNo(curr->child, nPageNoAdd);
+        updateTocItemsPageNo(curr->child, nPageNoAdd);
         curr->pageNo += nPageNoAdd;
         curr = curr->next;
     }
@@ -323,8 +323,8 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     int nTotalPages = 0;
 
     // same logic as in UpdateTreeModel
-    BkmItem* root = vbkm.tree->root;
-    BkmItem* curr = root;
+    TocItem* root = vbkm.tree->root;
+    TocItem* curr = root;
 
     for (auto&& vbkm : vbkm.vbkms) {
         CrashIf(vbkm->filePath.empty());
