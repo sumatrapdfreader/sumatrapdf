@@ -416,7 +416,7 @@ static bool IsForVbkm(WindowInfo* win) {
 static void StartTocEditorForWindowInfo(WindowInfo* win) {
     auto* tab = win->currentTab;
     TocEditorArgs* args = new TocEditorArgs();
-    // args->filePath = str::Dup(tab->filePath);
+    args->filePath = str::Dup(tab->filePath);
 
     VbkmFile *vbkm = new VbkmFile();
     AutoFreeStr filePath = strconv::WstrToUtf8(tab->filePath);
@@ -428,19 +428,18 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
         }
         args->bookmarks = vbkm;
     } else {
-        // TODO: NYI
-        CrashMe();
-#if 0
-        VbkmForFile* bkms = new VbkmForFile();
-        bkms->filePath = filePath.release();
-        bkms->nPages = tab->ctrl->PageCount();
-
         TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
-        bkms->toc = CloneTocTree(tree, false);
-        args->bookmarks.push_back(bkms);
-#endif
-    }
+        TocItem* rootCopy = CloneTocItemRecur(tree->root, false);
+        rootCopy->nPages = tab->ctrl->PageCount();
+        rootCopy->engineFilePath = filePath.release();
 
+        const WCHAR* name = path::GetBaseNameNoFree(tab->filePath);
+        TocItem* newRoot = new TocItem(nullptr, name, 0);
+        newRoot->isOpenDefault = true;
+        newRoot->child = rootCopy;
+        vbkm->tree = new TocTree(newRoot);
+    }
+    args->bookmarks = vbkm;
     args->hwndRelatedTo = win->hwndFrame;
     StartTocEditor(args);
 }

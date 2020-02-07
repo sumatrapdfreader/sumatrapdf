@@ -214,8 +214,9 @@ struct TocItem : TreeItem {
     TocItem* next = nullptr;
 
     // -- only for .vbkm usage (EngineMulti, TocEditor) --
+    // marks a node that represents a file
     char* engineFilePath = nullptr;
-
+    int nPages = 0;
     // auto-calculated page number that tells us a span from
     // pageNo => endPageNo
     int endPageNo = 0;
