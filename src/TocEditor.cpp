@@ -100,6 +100,19 @@ void ShowErrorMessage(const char* msg) {
     MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
 }
 
+void CalcEndPageNo2(TocItem* ti, int nPages) {
+    while (ti) {
+        // this marks a root node for a document
+        if (ti->nPages > 0) {
+            CalcEndPageNo(ti, nPages);
+            nPages += ti->nPages;
+        } else {
+            CalcEndPageNo2(ti->child, nPages);
+        }
+        ti = ti->next;
+    }
+}
+
 static void UpdateTreeModel(TocEditorWindow* w) {
     TreeCtrl* treeCtrl = w->treeCtrl;
     treeCtrl->Clear();
@@ -109,31 +122,7 @@ static void UpdateTreeModel(TocEditorWindow* w) {
     w->treeModel = nullptr;
 
     VbkmFile* bookmarks = w->tocArgs->bookmarks;
-
-    // TODO: calculate page numbers
-#if 0
-    TocItem* root = nullptr;
-    TocItem* curr = nullptr;
-    for (auto&& vbkm : bookmarks) {
-        TocItem* ti = new TocItem();
-        ti->isOpenDefault = true;
-        AutoFreeWstr path = strconv::Utf8ToWstr(vbkm->filePath.as_view());
-        const WCHAR* name = path::GetBaseNameNoFree(path);
-        ti->title = str::Dup(name);
-        ti->child = vbkm->toc->root;
-        ti->child->parent = ti->child;
-
-        CalcEndPageNo(ti->child, vbkm->nPages);
-
-        if (!root) {
-            root = ti;
-            curr = root;
-        } else {
-            curr->next = ti;
-            curr = ti;
-        }
-    }
-#endif
+    CalcEndPageNo2(bookmarks->tree->root, 0);
 
     w->treeModel = bookmarks->tree;
     treeCtrl->SetTreeModel(w->treeModel);
