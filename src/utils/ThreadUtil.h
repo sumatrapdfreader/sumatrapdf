@@ -17,7 +17,7 @@ class ThreadBase {
     virtual ~ThreadBase();
 
     bool WasCancelRequested() {
-        LONG res = InterlockedCompareExchange(&cancelRequested, 1, 0);
+        LONG res = InterlockedAdd(&cancelRequested, 0);
         return res > 0;
     }
 
