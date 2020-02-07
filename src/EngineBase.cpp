@@ -229,6 +229,7 @@ TocItem::~TocItem() {
     free(title);
     free(rawVal1);
     free(rawVal2);
+    free(engineFilePath);
 }
 
 void TocItem::AddSibling(TocItem* sibling) {
