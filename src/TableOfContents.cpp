@@ -360,6 +360,10 @@ void ShowExportedBookmarksMsg(const char* path) {
 }
 
 static void ExportBookmarksFromTab(TabInfo* tab) {
+    UNUSED(tab);
+    // TODO: NYI
+    CrashMe();
+#if 0
     auto* tocTree = tab->ctrl->GetToc();
     str::Str path = strconv::WstrToUtf8(tab->filePath);
     path.Append(".bkm");
@@ -374,6 +378,7 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     delete bkms;
 
     ShowExportedBookmarksMsg(path.c_str());
+#endif
 }
 
 // in Favorites.cpp
@@ -413,17 +418,19 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     TocEditorArgs* args = new TocEditorArgs();
     // args->filePath = str::Dup(tab->filePath);
 
-    VbkmFile vbkm;
+    VbkmFile *vbkm = new VbkmFile();
     AutoFreeStr filePath = strconv::WstrToUtf8(tab->filePath);
     if (str::EndsWithI(tab->filePath, L".vbkm")) {
-        LoadVbkmFile(filePath, vbkm);
-        int n = vbkm.vbkms.isize();
-        for (int i = 0; i < n; i++) {
-            auto b = vbkm.vbkms[i];
-            args->bookmarks.push_back(b);
+        bool ok = LoadVbkmFile(filePath, *vbkm);
+        if (!ok) {
+            // TODO: show error message box
+            return;
         }
-        vbkm.vbkms.clear();
+        args->bookmarks = vbkm;
     } else {
+        // TODO: NYI
+        CrashMe();
+#if 0
         VbkmForFile* bkms = new VbkmForFile();
         bkms->filePath = filePath.release();
         bkms->nPages = tab->ctrl->PageCount();
@@ -431,6 +438,7 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
         TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
         bkms->toc = CloneTocTree(tree, false);
         args->bookmarks.push_back(bkms);
+#endif
     }
 
     args->hwndRelatedTo = win->hwndFrame;
@@ -516,14 +524,13 @@ static void TocContextMenu(ContextMenuArgs* args) {
 }
 
 static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::string_view s) {
-    TocTree* tocTree = nullptr;
     if (n == 0) {
-        tocTree = tab->ctrl->GetToc();
+        TocTree* tocTree = tab->ctrl->GetToc();
+        win->tocTreeCtrl->SetTreeModel(tocTree);
     } else {
-        auto vbkms = tab->altBookmarks[0]->vbkms;
-        tocTree = vbkms.at(n - 1)->toc;
+        BkmTree* tocTree = tab->altBookmarks[0]->tree;
+        win->tocTreeCtrl->SetTreeModel(tocTree);
     }
-    win->tocTreeCtrl->SetTreeModel(tocTree);
 }
 
 // TODO: temporary
@@ -582,12 +589,11 @@ void LoadTocTree(WindowInfo* win) {
     // TODO: restore showing alternative bookmarks
     VbkmFile* vbkm = new VbkmFile();
     bool ok = LoadAlterenativeBookmarks(tab->filePath, *vbkm);
-    if (ok && vbkm->vbkms.size() > 0) {
+    if (ok) {
         tab->altBookmarks.push_back(vbkm);
         Vec<std::string_view> items;
-        size_t n = vbkm->vbkms.size();
         items.Append("Default");
-        char* name = vbkm->name.get();
+        char* name = vbkm->name;
         if (name) {
             items.Append(name);
         }

@@ -4,7 +4,7 @@
 struct TocEditorArgs {
     // file path for either .pdf or .vbkm file
     AutoFreeWstr filePath;
-    Vec<VbkmForFile*> bookmarks;
+    VbkmFile* bookmarks;
     HWND hwndRelatedTo = nullptr;
 
     ~TocEditorArgs();
