@@ -530,39 +530,6 @@ bool ExportBookmarksToFile(BkmTree* bookmarks, const char* name, const char* bkm
     return file::WriteFile(bkmPath, s.as_view());
 }
 
-// each logical record starts with "file:" line
-// we split s into list of records for each file
-// TODO: should we fail if the first line is not "file:" ?
-// Currently we ignore everything from the beginning
-// until first "file:" line
-static Vec<std::string_view> SplitVbkmIntoSectons(std::string_view s) {
-    Vec<std::string_view> res;
-    auto tmp = s;
-    Vec<const char*> addrs;
-
-    // find indexes of lines that start with "file:"
-    while (!tmp.empty()) {
-        auto line = sv::ParseUntil(tmp, '\n');
-        if (sv::StartsWith(line, "file:")) {
-            addrs.push_back(line.data());
-        }
-    }
-
-    size_t n = addrs.size();
-    if (n == 0) {
-        return res;
-    }
-    addrs.push_back(s.data() + s.size());
-    for (size_t i = 0; i < n; i++) {
-        const char* start = addrs[i];
-        const char* end = addrs[i + 1];
-        size_t size = end - start;
-        auto sv = std::string_view{start, size};
-        res.push_back(sv);
-    }
-    return res;
-}
-
 bool ParseVbkmFile(std::string_view sv, VbkmFile& vbkm) {
     ParsedKV ver = sv::ParseValueOfKey(sv, "version", true);
     if (!ver.ok) {
