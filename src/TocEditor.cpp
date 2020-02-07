@@ -100,7 +100,7 @@ void ShowErrorMessage(const char* msg) {
     MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
 }
 
-void CalcEndPageNo2(TocItem* ti, int nPages) {
+void CalcEndPageNo2(TocItem* ti, int& nPages) {
     while (ti) {
         // this marks a root node for a document
         if (ti->nPages > 0) {
@@ -117,12 +117,9 @@ static void UpdateTreeModel(TocEditorWindow* w) {
     TreeCtrl* treeCtrl = w->treeCtrl;
     treeCtrl->Clear();
 
-    // TODO: delete the first levels because we keep reference to them
-    // delete w->treeModel;
-    w->treeModel = nullptr;
-
     VbkmFile* bookmarks = w->tocArgs->bookmarks;
-    CalcEndPageNo2(bookmarks->tree->root, 0);
+    int nPages = 0;
+    CalcEndPageNo2(bookmarks->tree->root, nPages);
 
     w->treeModel = bookmarks->tree;
     treeCtrl->SetTreeModel(w->treeModel);
@@ -159,9 +156,6 @@ static void AddPdf() {
         return;
     }
 
-    // TODO: NYI
-    CrashMe();
-#if 0
     TocTree* tocTree = engine->GetToc();
     if (nullptr == tocTree) {
         // TODO: maybe add a dummy entry for the first page
@@ -169,14 +163,16 @@ static void AddPdf() {
         ShowErrorMessage("File doesn't have Table of content");
         return;
     }
-    tocTree = CloneTocTree(tocTree, false);
+    TocItem* tocRoot = CloneTocItemRecur(tocTree->root, false);
     int nPages = engine->PageCount();
-    VbkmForFile* bookmarks = new VbkmForFile();
-    bookmarks->toc = tocTree;
-    bookmarks->filePath = strconv::WstrToUtf8(filePath).data();
-    bookmarks->nPages = nPages;
-    w->tocArgs->bookmarks.push_back(bookmarks);
-#endif
+    tocRoot->engineFilePath = (char*)strconv::WstrToUtf8(filePath).data();
+    tocRoot->nPages = nPages;
+
+    const WCHAR* title = path::GetBaseNameNoFree(filePath);
+    TocItem* tocWrapper = new TocItem(tocRoot, title, 0);
+    tocWrapper->isOpenDefault = true;
+    tocWrapper->child = tocRoot;
+    w->tocArgs->bookmarks->tree->root->AddSibling(tocWrapper);
     UpdateTreeModel(w);
 
     delete engine;

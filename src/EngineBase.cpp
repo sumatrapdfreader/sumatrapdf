@@ -288,6 +288,9 @@ TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
     res->dest = clonePageDestination(ti->dest);
     res->child = CloneTocItemRecur(ti->child, removeUnchecked);
 
+    res->nPages = ti->nPages;
+    res->engineFilePath = str::Dup(ti->engineFilePath);
+
     TocItem* next = ti->next;
     if (removeUnchecked) {
         while (next && next->isUnchecked) {
