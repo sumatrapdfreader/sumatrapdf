@@ -116,6 +116,22 @@ static const char AdobeCA_p7c[] = {
 #warning detect version of openssl at compile time
 #endif
 
+#ifdef LIBRESSL_VERSION_NUMBER
+
+static inline const STACK_OF(PKCS12_SAFEBAG) *
+PKCS12_SAFEBAG_get0_safes(const PKCS12_SAFEBAG *bag)
+{
+	return (OBJ_obj2nid(bag->type) == NID_safeContentsBag) ? bag->value.safes : NULL;
+}
+
+static inline const PKCS8_PRIV_KEY_INFO *
+PKCS12_SAFEBAG_get0_p8inf(const PKCS12_SAFEBAG *bag)
+{
+	return (OBJ_obj2nid(bag->type) == NID_keyBag) ? bag->value.keybag : NULL;
+}
+
+#endif
+
 typedef struct
 {
 	fz_context *ctx;

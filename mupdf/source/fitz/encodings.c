@@ -81,7 +81,7 @@ fz_unicode_from_glyph_name(const char *name)
 			return single_code_list[m];
 	}
 
-	if (buf[0] == 'u' && buf[1] == 'n' && buf[2] == 'i')
+	if (buf[0] == 'u' && buf[1] == 'n' && buf[2] == 'i' && strlen(buf) == 7)
 		code = strtol(buf + 3, NULL, 16);
 	else if (buf[0] == 'u')
 		code = strtol(buf + 1, NULL, 16);

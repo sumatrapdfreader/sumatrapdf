@@ -187,6 +187,7 @@ static fz_location oldpage = {0,0}, currentpage = {0,0};
 static float oldzoom = DEFRES, currentzoom = DEFRES;
 static float oldrotate = 0, currentrotate = 0;
 
+static fz_output *trace_file = NULL;
 static int isfullscreen = 0;
 static int showoutline = 0;
 static int showlinks = 0;
@@ -614,6 +615,18 @@ void ui_show_warning_dialog(const char *fmt, ...)
 	ui.dialog = warning_dialog;
 }
 
+void trace_action(const char *fmt, ...)
+{
+	va_list args;
+	if (trace_file)
+	{
+		va_start(args, fmt);
+		fz_write_vprintf(ctx, trace_file, fmt, args);
+		fz_flush_output(ctx, trace_file);
+		va_end(args);
+	}
+}
+
 void update_title(void)
 {
 	char buf[256];
@@ -667,6 +680,9 @@ void transform_page(void)
 void load_page(void)
 {
 	fz_irect area;
+
+	if (trace_file)
+		trace_action("page = doc.loadPage(%d);\n", fz_page_number_from_location(ctx, doc, currentpage));
 
 	/* clear all editor selections */
 	if (selected_annot && pdf_annot_type(ctx, selected_annot) == PDF_ANNOT_WIDGET)
@@ -1204,6 +1220,8 @@ static void load_document(void)
 		}
 	}
 
+	trace_action("doc = new Document(%q);\n", filename);
+
 	doc = fz_open_accelerated_document(ctx, filename, accel);
 	if (fz_needs_password(ctx, doc))
 	{
@@ -1231,7 +1249,10 @@ static void load_document(void)
 	if (pdf)
 	{
 		if (enable_js)
+		{
+			trace_action("doc.enableJS();\n");
 			pdf_enable_js(ctx, pdf);
+		}
 		if (anchor)
 			jump_to_page(pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL));
 	}
@@ -1242,7 +1263,7 @@ static void load_document(void)
 	}
 	anchor = NULL;
 
-	currentpage = fz_clamp_location(ctx, doc, currentpage);
+	oldpage = currentpage = fz_clamp_location(ctx, doc, currentpage);
 }
 
 void reload(void)
@@ -1974,6 +1995,7 @@ static void do_open_document_dialog(void)
 		if (filename[0] == 0)
 			glutLeaveMainLoop();
 		else
+		{
 			load_document();
 		if (doc)
 		{
@@ -1982,6 +2004,7 @@ static void do_open_document_dialog(void)
 			shrinkwrap();
 			update_title();
 		}
+	}
 	}
 }
 
@@ -1997,6 +2020,7 @@ static void cleanup(void)
 		fz_debug_store(ctx);
 #endif
 
+	fz_drop_output(ctx, trace_file);
 	fz_drop_stext_page(ctx, page_text);
 	fz_drop_separations(ctx, seps);
 	fz_drop_link(ctx, links);
@@ -2022,6 +2046,7 @@ int main_utf8(int argc, char **argv)
 int main(int argc, char **argv)
 #endif
 {
+	const char *trace_file_name = NULL;
 	int c;
 
 #ifndef _WIN32
@@ -2033,7 +2058,7 @@ int main(int argc, char **argv)
 	screen_w = glutGet(GLUT_SCREEN_WIDTH) - SCREEN_FURNITURE_W;
 	screen_h = glutGet(GLUT_SCREEN_HEIGHT) - SCREEN_FURNITURE_H;
 
-	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJA:B:C:")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJA:B:C:T:")) != -1)
 	{
 		switch (c)
 		{
@@ -2050,11 +2075,22 @@ int main(int argc, char **argv)
 		case 'A': currentaa = fz_atoi(fz_optarg); break;
 		case 'C': currenttint = 1; tint_white = strtol(fz_optarg, NULL, 16); break;
 		case 'B': currenttint = 1; tint_black = strtol(fz_optarg, NULL, 16); break;
+		case 'T': trace_file_name = fz_optarg; break;
 		}
 	}
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	fz_register_document_handlers(ctx);
+
+	if (trace_file_name)
+	{
+		if (!strcmp(trace_file_name, "-"))
+			trace_file = fz_stdout(ctx);
+		else
+			trace_file = fz_new_output_with_path(ctx, trace_file_name, 0);
+		trace_action("var doc, page, annot, widget;\n");
+	}
+
 	if (layout_css)
 	{
 		fz_buffer *buf = fz_read_file(ctx, layout_css);

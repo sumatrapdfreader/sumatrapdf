@@ -60,8 +60,8 @@ pdf_annot_transform(fz_context *ctx, pdf_annot *annot)
 		h = 0;
 	else
 		h = (rect.y1 - rect.y0) / (bbox.y1 - bbox.y0);
-	x = rect.x0 - bbox.x0;
-	y = rect.y0 - bbox.y0;
+	x = rect.x0 - (bbox.x0 * w);
+	y = rect.y0 - (bbox.y0 * h);
 
 	return fz_pre_scale(fz_translate(x, y), w, h);
 }

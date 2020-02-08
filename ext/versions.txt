@@ -52,7 +52,7 @@ mujs            1.0.6      Apr 4, 2019
   https://github.com/ArtifexSoftware/mujs/commit/00d4606c3baf813b7b1c176823b2729bf51002a2
 
 ../mupdf        trunk
-  https://github.com/ArtifexSoftware/mupdf/commit/585596b77f3ee7dab36747c03eed2fd92d8a41b9
+  https://github.com/ArtifexSoftware/mupdf/commit/c27c17d7bb7bb0ea768724d6dbf9133764c02dd2
 
 UnRAR           5.8.4
   https://www.rarlab.com/rar_add.htm

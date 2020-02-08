@@ -4,6 +4,11 @@
 #include <string.h>
 #include <limits.h>
 
+#define TYPE_NORMAL_OLD '\0'
+#define TYPE_NORMAL '0'
+#define TYPE_CONTIGUOUS '7'
+#define TYPE_LONG_NAME 'L'
+
 typedef struct tar_entry_s tar_entry;
 typedef struct fz_tar_archive_s fz_tar_archive;
 
@@ -91,9 +96,6 @@ static void ensure_tar_entries(fz_context *ctx, fz_tar_archive *tar)
 		memcpy(name, record + 0, nelem(name) - 1);
 		name[nelem(name) - 1] = '\0';
 
-		if (strlen(name) == 3)
-			break;
-
 		memcpy(octsize, record + 124, nelem(octsize) - 1);
 		octsize[nelem(octsize) - 1] = '\0';
 
@@ -103,7 +105,7 @@ static void ensure_tar_entries(fz_context *ctx, fz_tar_archive *tar)
 
 		typeflag = (char) record[156];
 
-		if (typeflag == 'L')
+		if (typeflag == TYPE_LONG_NAME)
 		{
 			longname = fz_malloc(ctx, size);
 			n = fz_read(ctx, file, (unsigned char *) longname, size);
@@ -113,7 +115,8 @@ static void ensure_tar_entries(fz_context *ctx, fz_tar_archive *tar)
 			fz_seek(ctx, file, 512 - (size % 512), 1);
 		}
 
-		if (typeflag != '0' && typeflag != '7' && typeflag != '\0')
+		if (typeflag != TYPE_NORMAL_OLD && typeflag != TYPE_NORMAL &&
+			typeflag != TYPE_CONTIGUOUS)
 			continue;
 
 		blocks = (size + 511) / 512;

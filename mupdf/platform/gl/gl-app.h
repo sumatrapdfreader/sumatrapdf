@@ -258,3 +258,4 @@ void reload(void);
 void do_save_pdf_file(void);
 void do_save_signed_pdf_file(void);
 int do_sign(void);
+void trace_action(const char *fmt, ...);

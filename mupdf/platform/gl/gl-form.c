@@ -28,6 +28,7 @@ int do_sign(void)
 
 	fz_try(ctx)
 	{
+		trace_action("widget.sign(%q, %q);\n", cert_filename, cert_password.text);
 		signer = pkcs7_openssl_read_pfx(ctx, cert_filename, cert_password.text);
 		pdf_sign_signature(ctx, pdf, sig_widget, signer);
 		ui_show_warning_dialog("Signed document successfully.");
@@ -44,8 +45,10 @@ int do_sign(void)
 	}
 
 	if (pdf_update_page(ctx, sig_widget->page))
+	{
+		trace_action("page.update();\n");
 		render_page();
-
+	}
 	return ok;
 }
 
@@ -240,9 +243,13 @@ static void tx_dialog(void)
 			ui_spacer();
 			if (ui_button("Okay") || is == UI_INPUT_ACCEPT)
 			{
+				trace_action("widget.setTextValue(%q);\n", tx_input.text);
 				pdf_set_text_field_value(ctx, tx_widget, tx_input.text);
 				if (pdf_update_page(ctx, tx_widget->page))
+				{
+					trace_action("page.update();\n");
 					render_page();
+				}
 				ui.dialog = NULL;
 			}
 		}
@@ -282,7 +289,10 @@ static void ch_dialog(void)
 		ui_label("%s", label);
 		choice = ui_select("Widget/Ch", value, (const char **)options, n);
 		if (choice >= 0)
+		{
+			trace_action("widget.setChoiceValue(%q);\n", options[choice]);
 			pdf_set_choice_field_value(ctx, ch_widget, options[choice]);
+		}
 
 		ui_layout(B, X, NW, 2, 2);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
@@ -294,7 +304,10 @@ static void ch_dialog(void)
 			if (ui_button("Okay"))
 			{
 				if (pdf_update_page(ctx, ch_widget->page))
+				{
+					trace_action("page.update();\n");
 					render_page();
+				}
 				ui.dialog = NULL;
 			}
 		}
@@ -310,11 +323,12 @@ void do_widget_canvas(fz_irect canvas_area)
 	pdf_widget *widget;
 	fz_rect bounds;
 	fz_irect area;
+	int idx;
 
 	if (!pdf)
 		return;
 
-	for (widget = pdf_first_widget(ctx, page); widget; widget = pdf_next_widget(ctx, widget))
+	for (idx = 0, widget = pdf_first_widget(ctx, page); widget; ++idx, widget = pdf_next_widget(ctx, widget))
 	{
 		bounds = pdf_bound_widget(ctx, widget);
 		bounds = fz_transform_rect(bounds, view_page_ctm);
@@ -323,19 +337,28 @@ void do_widget_canvas(fz_irect canvas_area)
 		if (ui_mouse_inside(canvas_area) && ui_mouse_inside(area))
 		{
 			if (!widget->is_hot)
+			{
+				trace_action("page.getWidgets()[%d].eventEnter();\n", idx);
 				pdf_annot_event_enter(ctx, widget);
+			}
 			widget->is_hot = 1;
 
 			ui.hot = widget;
 			if (!ui.active && ui.down)
 			{
 				ui.active = widget;
+				trace_action("page.getWidgets()[%d].eventDown();\n", idx);
 				pdf_annot_event_down(ctx, widget);
 				if (selected_annot != widget)
 				{
 					if (selected_annot && pdf_annot_type(ctx, selected_annot) == PDF_ANNOT_WIDGET)
+					{
+						trace_action("widget.eventBlur();\n", idx);
 						pdf_annot_event_blur(ctx, selected_annot);
+					}
+					trace_action("widget = page.getWidgets()[%d];\n", idx);
 					selected_annot = widget;
+					trace_action("widget.eventFocus();\n");
 					pdf_annot_event_focus(ctx, widget);
 				}
 			}
@@ -343,7 +366,10 @@ void do_widget_canvas(fz_irect canvas_area)
 		else
 		{
 			if (widget->is_hot)
+			{
+				trace_action("page.getWidgets()[%d].eventExit();\n", idx);
 				pdf_annot_event_exit(ctx, widget);
+			}
 			widget->is_hot = 0;
 		}
 
@@ -378,6 +404,7 @@ void do_widget_canvas(fz_irect canvas_area)
 
 		if (ui.hot == widget && ui.active == widget && !ui.down)
 		{
+			trace_action("widget.eventUp();\n");
 			pdf_annot_event_up(ctx, widget);
 
 			if (pdf_widget_type(ctx, widget) == PDF_WIDGET_TYPE_SIGNATURE)
@@ -395,6 +422,7 @@ void do_widget_canvas(fz_irect canvas_area)
 					break;
 				case PDF_WIDGET_TYPE_CHECKBOX:
 				case PDF_WIDGET_TYPE_RADIOBUTTON:
+					trace_action("widget.toggle();\n");
 					pdf_toggle_widget(ctx, widget);
 					break;
 				case PDF_WIDGET_TYPE_TEXT:
@@ -412,5 +440,8 @@ void do_widget_canvas(fz_irect canvas_area)
 	}
 
 	if (pdf_update_page(ctx, page))
+	{
+		trace_action("page.update();\n");
 		render_page();
+	}
 }

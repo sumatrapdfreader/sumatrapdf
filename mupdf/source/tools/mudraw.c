@@ -669,7 +669,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 				out = fz_stdout(ctx);
 			else
 			{
-				fz_snprintf(buf, sizeof(buf), output, pagenum);
+				fz_format_output_path(ctx, buf, sizeof buf, output, pagenum);
 				out = fz_new_output_with_path(ctx, buf, 0);
 			}
 
@@ -1131,7 +1131,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			fz_close_output(ctx, out);
 			fz_drop_output(ctx, out);
 		}
-		fz_snprintf(text_buffer, sizeof(text_buffer), output, pagenum);
+		fz_format_output_path(ctx, text_buffer, sizeof text_buffer, output, pagenum);
 		out = fz_new_output_with_path(ctx, text_buffer, 0);
 	}
 
