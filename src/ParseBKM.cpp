@@ -71,17 +71,26 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
     s.AppendFmt(" rect:%g,%g,%g,%g", r.x, r.y, r.dx, r.dy);
 }
 
+static const char maxIndentStr[] = "                                                                             ";
+constexpr int maxIndent = (dimof(maxIndentStr) - 1) / 2;
+
+static std::string_view getIndentStr(int n) {
+    CrashIf(n > maxIndent);
+    return {maxIndentStr, (size_t)n * 2};
+}
+
 static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
-    if (node->engineFilePath) {
-        s.Append("file: ");
-        s.Append(node->engineFilePath);
-        s.Append("\n");
-        // TODO: also write page count?
-    }
+    std::string_view indentStr = getIndentStr(level);
     while (node) {
-        for (int i = 0; i < level; i++) {
-            s.Append("  ");
+        if (node->engineFilePath) {
+            s.AppendView(indentStr);
+            s.AppendFmt("file: %s\n", node->engineFilePath);
+            CrashIf(node->nPages == 0);
+            s.AppendView(indentStr);
+            s.AppendFmt("pages: %d\n", node->nPages);
         }
+
+        s.AppendView(indentStr);
         WCHAR* title = node->Text();
         AutoFree titleA = strconv::WstrToUtf8(title);
         sv::AppendMaybeQuoted(titleA.as_view(), s);
@@ -130,14 +139,10 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
 static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
     auto origLine = line; // save for debugging
 
-    // lines might start with an indentation, 2 spaces for one level
-    // TODO: maybe also count tabs as one level?
-    size_t indent = sv::SkipChars(line, ' ');
-    // must be multiple of 2
-    if (indent % 2 != 0) {
+    *indentOut = sv::ParseIndent(line);
+    if (*indentOut < 0) {
         return nullptr;
     }
-    *indentOut = indent / 2;
 
     // first item on the line is a title
     str::Str title;
@@ -262,25 +267,6 @@ static TocTree* parseVbkm(std::string_view sv) {
     Vec<TocItemWithIndent> items;
 
 #if 0
-    // first line should be "file: $file"
-    auto file = sv::ParseValueOfKey(sv, "file", true);
-    if (!file.ok) {
-        return false;
-    }
-
-    // second line should be "pages: $nPages"
-    auto nPagesV = sv::ParseValueOfKey(sv, "pages", true);
-    if (!nPagesV.ok) {
-        return false;
-    }
-    bkm->nPages = 0;
-    str::Parse(nPagesV.val, "%d", &bkm->nPages);
-    if (bkm->nPages == 0) {
-        return false;
-    }
-#endif
-
-#if 0
     // this line should be "title: $title"
     auto title = sv::ParseValueOfKey(sv, "title", true);
     if (!title.ok) {
@@ -290,6 +276,18 @@ static TocTree* parseVbkm(std::string_view sv) {
     size_t indent = 0;
     std::string_view line;
     while (true) {
+        // optional line "file: $file"
+        ParsedKV file = sv::TryParseValueOfKey(sv, "file", true);
+        // second line should be "pages: $nPages"
+        ParsedKV nPagesV = sv::TryParseValueOfKey(sv, "pages", true);
+        int nPages = 0;
+        if (nPagesV.ok) {
+            str::Parse(nPagesV.val, "%d", &nPages);
+            if (nPages == 0) {
+                return false;
+            }
+        }
+
         line = sv::ParseUntil(sv, '\n');
         if (line.empty()) {
             break;
@@ -301,6 +299,11 @@ static TocTree* parseVbkm(std::string_view sv) {
             }
             return nullptr;
         }
+        if (file.ok) {
+            item->engineFilePath = file.val;
+            file.val = nullptr;
+        }
+        item->nPages = nPages;
         TocItemWithIndent iwl = {item, indent};
         items.Append(iwl);
     }

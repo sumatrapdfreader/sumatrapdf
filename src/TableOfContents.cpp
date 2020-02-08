@@ -360,25 +360,13 @@ void ShowExportedBookmarksMsg(const char* path) {
 }
 
 static void ExportBookmarksFromTab(TabInfo* tab) {
-    UNUSED(tab);
-    // TODO: NYI
-    CrashMe();
-#if 0
-    auto* tocTree = tab->ctrl->GetToc();
+    // TODO: should I set engineFilePath and nPages on root node so that
+    // it's the same as .vbkm?
+    TocTree* tocTree = tab->ctrl->GetToc();
     str::Str path = strconv::WstrToUtf8(tab->filePath);
     path.Append(".bkm");
-    Vec<VbkmForFile*> bookmarks;
-
-    VbkmForFile* bkms = new VbkmForFile();
-    bkms->filePath = strconv::WstrToUtf8(tab->filePath);
-    bkms->toc = CloneTocTree(tocTree, false);
-    bkms->nPages = tab->ctrl->PageCount();
-    bookmarks.push_back(bkms);
-    bool ok = ExportBookmarksToFile(bookmarks, "", path.c_str());
-    delete bkms;
-
+    bool ok = ExportBookmarksToFile(tocTree, "", path.c_str());
     ShowExportedBookmarksMsg(path.c_str());
-#endif
 }
 
 // in Favorites.cpp

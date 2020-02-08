@@ -187,6 +187,18 @@ size_t SkipChars(std::string_view& sv, char c) {
     return SkipTo(sv, s);
 }
 
+// returns -1 on error
+int ParseIndent(std::string_view& sv) {
+    // lines might start with an indentation, 2 spaces for one level
+    // TODO: maybe also count tabs as one level?
+    size_t indent = sv::SkipChars(sv, ' ');
+    // must be multiple of 2
+    if (indent % 2 != 0) {
+        return -1;
+    }
+    return (int)indent / 2;
+}
+
 static bool CharNeedsQuoting(char c) {
     switch (c) {
         case '"':
@@ -383,11 +395,32 @@ ParsedKV ParseKV(std::string_view& sv, bool full) {
     return res;
 }
 
-// parse key/value out of <s>, expecting a given <key>
+// parse key/value out of <str>, expecting a given <key>
+// advances <str> past parsed value
 ParsedKV ParseValueOfKey(std::string_view& str, std::string_view key, bool full) {
     ParsedKV res = ParseKV(str, full);
     if (res.ok) {
         res.ok = str::Eq(key, res.key);
+    }
+    return res;
+}
+
+ParsedKV TryParseValueOfKey(std::string_view& str, std::string_view key, bool full) {
+    // TODO: maybe store indent in ParsedKV
+    std::string_view orig = str;
+    int indent = ParseIndent(str);
+    ParsedKV res;
+    res.ok = (indent >= 0);
+    if (!res.ok) {
+        return res;
+    }
+    res = ParseKV(str, full);
+    if (res.ok) {
+        res.ok = str::Eq(key, res.key);
+    }
+    // if failed, restore
+    if (!res.ok) {
+        str = orig;
     }
     return res;
 }
