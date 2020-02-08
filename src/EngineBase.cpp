@@ -301,12 +301,6 @@ TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
     return res;
 }
 
-TocTree* CloneTocTree(TocTree* tree, bool removeUnchecked) {
-    TocTree* res = new TocTree();
-    res->root = CloneTocItemRecur(tree->root, removeUnchecked);
-    return res;
-}
-
 WCHAR* TocItem::Text() {
     return title;
 }
@@ -386,6 +380,27 @@ TreeItem* TocTree::RootAt(int n) {
         node = node->next;
     }
     return node;
+}
+
+TocTree* CloneTocTree(TocTree* tree, bool removeUnchecked) {
+    TocTree* res = new TocTree();
+    res->root = CloneTocItemRecur(tree->root, removeUnchecked);
+    return res;
+}
+
+bool VisitTocTree(TocItem* ti, const std::function<bool(TocItem*)>& f) {
+    bool cont;
+    while (ti) {
+        cont = f(ti);
+        if (cont && ti->child) {
+            cont = VisitTocTree(ti->child, f);
+        }
+        if (!cont) {
+            return false;
+        }
+        ti = ti->next;
+    }
+    return true;
 }
 
 RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
