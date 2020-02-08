@@ -1005,7 +1005,7 @@ static OPJ_BOOL opj_jp2_check_color(opj_image_t *image, opj_jp2_color_t *color,
                 if (!pcol_usage[i]) {
                     is_sane = 0U;
                     opj_event_msg(p_manager, EVT_WARNING,
-                                  "Component mapping seems wrong. Trying to correct.\n", i);
+                                  "Component mapping seems wrong. Trying to correct.\n");
                     break;
                 }
             }
@@ -1079,7 +1079,7 @@ static OPJ_BOOL opj_jp2_apply_pclr(opj_image_t *image,
 
         /* Palette mapping: */
         new_comps[i].data = (OPJ_INT32*)
-                            opj_image_data_alloc(old_comps[cmp].w * old_comps[cmp].h * sizeof(OPJ_INT32));
+                            opj_image_data_alloc(sizeof(OPJ_INT32) * old_comps[cmp].w * old_comps[cmp].h);
         if (!new_comps[i].data) {
             while (i > 0) {
                 -- i;
@@ -1106,7 +1106,6 @@ static OPJ_BOOL opj_jp2_apply_pclr(opj_image_t *image,
 
         /* Direct use: */
         if (cmap[i].mtyp == 0) {
-            assert(cmp == 0);
             dst = new_comps[i].data;
             assert(dst);
             for (j = 0; j < max; ++j) {
@@ -1194,8 +1193,8 @@ static OPJ_BOOL opj_jp2_read_pclr(opj_jp2_t *jp2,
         return OPJ_FALSE;
     }
 
-    entries = (OPJ_UINT32*) opj_malloc((size_t)nr_channels * nr_entries * sizeof(
-                                           OPJ_UINT32));
+    entries = (OPJ_UINT32*) opj_malloc(sizeof(OPJ_UINT32) * nr_channels *
+                                       nr_entries);
     if (!entries) {
         return OPJ_FALSE;
     }

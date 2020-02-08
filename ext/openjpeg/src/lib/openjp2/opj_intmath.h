@@ -170,7 +170,7 @@ Divide an integer and round upwards
 static INLINE OPJ_UINT32  opj_uint_ceildiv(OPJ_UINT32  a, OPJ_UINT32  b)
 {
     assert(b);
-    return (a + b - 1) / b;
+    return (OPJ_UINT32)(((OPJ_UINT64)a + b - 1) / b);
 }
 
 /**

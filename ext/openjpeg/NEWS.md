@@ -1,6 +1,12 @@
 # OpenJPEG NEWS
 
-More details in the [Changelog](https://github.com/uclouvain/openjpeg/blob/master/CHANGELOG.md)
+More details in the [CHANGELOG](https://github.com/uclouvain/openjpeg/blob/master/CHANGELOG.md)
+
+## OpenJPEG 2.3.1 (April 2019)
+
+No API/ABI break compared to v2.3.0
+
+* Many bug fixes (including security fixes)
 
 ## OpenJPEG 2.3.0 (October 2017)
 

@@ -667,7 +667,11 @@ static OPJ_BOOL opj_t2_encode_packet(OPJ_UINT32 tileno,
     opj_tcd_resolution_t *res = &tilec->resolutions[resno];
 
     opj_bio_t *bio = 00;    /* BIO component */
+#ifdef ENABLE_EMPTY_PACKET_OPTIMIZATION
     OPJ_BOOL packet_empty = OPJ_TRUE;
+#else
+    OPJ_BOOL packet_empty = OPJ_FALSE;
+#endif
 
     /* <SOP 0xff91> */
     if (tcp->csty & J2K_CP_CSTY_SOP) {
@@ -728,6 +732,11 @@ static OPJ_BOOL opj_t2_encode_packet(OPJ_UINT32 tileno,
     }
     opj_bio_init_enc(bio, c, length);
 
+#ifdef ENABLE_EMPTY_PACKET_OPTIMIZATION
+    /* WARNING: this code branch is disabled, since it has been reported that */
+    /* such packets cause decoding issues with cinema J2K hardware */
+    /* decoders: https://groups.google.com/forum/#!topic/openjpeg/M7M_fLX_Bco */
+
     /* Check if the packet is empty */
     /* Note: we could also skip that step and always write a packet header */
     band = res->bands;
@@ -755,9 +764,8 @@ static OPJ_BOOL opj_t2_encode_packet(OPJ_UINT32 tileno,
             break;
         }
     }
-
+#endif
     opj_bio_write(bio, packet_empty ? 0 : 1, 1);           /* Empty header bit */
-
 
     /* Writing Packet header */
     band = res->bands;
@@ -1221,12 +1229,6 @@ static OPJ_BOOL opj_t2_read_packet_header(opj_t2_t* p_t2,
                 JAS_FPRINTF(stderr, "included=%d numnewpasses=%d increment=%d len=%d \n",
                             l_included, l_cblk->segs[l_segno].numnewpasses, l_increment,
                             l_cblk->segs[l_segno].newlen);
-
-                /* testcase 1802.pdf.SIGSEGV.36e.894 */
-                if (l_cblk->segs[l_segno].newlen > *l_modified_length_ptr) {
-                    opj_bio_destroy(l_bio);
-                    return OPJ_FALSE;
-                }
 
                 n -= (OPJ_INT32)l_cblk->segs[l_segno].numnewpasses;
                 if (n > 0) {

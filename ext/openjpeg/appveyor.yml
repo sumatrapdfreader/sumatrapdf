@@ -1,4 +1,4 @@
-version: 2.3.0.{build}
+version: 2.3.1.{build}
 branches:
   except:
   - coverity_scan
@@ -32,9 +32,9 @@ deploy:
   description: 'OpenJPEG $(appveyor_repo_tag_name) has been released. More info [here](https://github.com/uclouvain/openjpeg/blob/$(appveyor_repo_tag_name)/NEWS) and a detailed view [here](https://github.com/uclouvain/openjpeg/blob/$(appveyor_repo_tag_name)/CHANGES).'
   provider: GitHub
   auth_token:
-    secure: Huk03f1heCD/HMyA+4ZeVmICdmKn9rPxK5p8/KxzgL+FtJDHlqcllcCrtN9bDxRH # your encrypted token from GitHub
+    secure: XUL+IoRRw8U/4tupa/fMpinxurft7WRQHZiWHMLO5iuFbwZ+C3vCjVVVM+5Ebky7 # your encrypted token from GitHub
   artifact: /.*\.zip/            # upload all zip packages to release assets
-  draft: false
+  draft: true
   prerelease: false
   on:
     appveyor_repo_tag: true        # deploy on tag push only

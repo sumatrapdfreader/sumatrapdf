@@ -548,7 +548,7 @@ typedef struct opj_dparameters {
     /** Verbose mode */
     OPJ_BOOL m_verbose;
 
-    /** tile number ot the decoded tile*/
+    /** tile number of the decoded tile */
     OPJ_UINT32 tile_index;
     /** Nb of tile to decode */
     OPJ_UINT32 nb_tile_to_decode;
@@ -1178,7 +1178,8 @@ OPJ_API void OPJ_CALLCONV opj_stream_set_skip_function(opj_stream_t* p_stream,
         opj_stream_skip_fn p_function);
 
 /**
- * Sets the given function to be used as a seek function, the stream is then seekable.
+ * Sets the given function to be used as a seek function, the stream is then seekable,
+ * using SEEK_SET behavior.
  * @param       p_stream    the stream to modify
  * @param       p_function  the function to use a skip function.
 */
@@ -1313,6 +1314,9 @@ OPJ_API OPJ_BOOL OPJ_CALLCONV opj_setup_decoder(opj_codec_t *p_codec,
  * number, or "ALL_CPUS". If OPJ_NUM_THREADS is set and this function is called,
  * this function will override the behaviour of the environment variable.
  *
+ * Currently this function must be called after opj_setup_decoder() and
+ * before opj_read_header().
+ *
  * Note: currently only has effect on the decompressor.
  *
  * @param p_codec       decompressor handler
@@ -1381,7 +1385,7 @@ OPJ_API OPJ_BOOL OPJ_CALLCONV opj_set_decoded_components(opj_codec_t *p_codec,
  * performance improvements when reading an image by chunks.
  *
  * @param   p_codec         the jpeg2000 codec.
- * @param   p_image         the decoded image previously setted by opj_read_header
+ * @param   p_image         the decoded image previously set by opj_read_header
  * @param   p_start_x       the left position of the rectangle to decode (in image coordinates).
  * @param   p_end_x         the right position of the rectangle to decode (in image coordinates).
  * @param   p_start_y       the up position of the rectangle to decode (in image coordinates).

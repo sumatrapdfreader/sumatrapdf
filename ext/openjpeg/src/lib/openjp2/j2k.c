@@ -508,7 +508,7 @@ static OPJ_BOOL opj_j2k_write_cod(opj_j2k_t *p_j2k,
                                   opj_event_mgr_t * p_manager);
 
 /**
- * Reads a COD marker (Coding Styke defaults)
+ * Reads a COD marker (Coding style defaults)
  * @param       p_header_data   the data contained in the COD box.
  * @param       p_j2k                   the jpeg2000 codec.
  * @param       p_header_size   the size of the data contained in the COD marker.
@@ -1925,7 +1925,8 @@ static OPJ_BOOL opj_j2k_read_soc(opj_j2k_t *p_j2k,
     /* FIXME move it in a index structure included in p_j2k*/
     p_j2k->cstr_index->main_head_start = opj_stream_tell(p_stream) - 2;
 
-    opj_event_msg(p_manager, EVT_INFO, "Start to read j2k main header (%d).\n",
+    opj_event_msg(p_manager, EVT_INFO,
+                  "Start to read j2k main header (%" PRId64 ").\n",
                   p_j2k->cstr_index->main_head_start);
 
     /* Add the marker to the codestream index*/
@@ -2625,7 +2626,7 @@ static OPJ_BOOL opj_j2k_write_cod(opj_j2k_t *p_j2k,
 }
 
 /**
- * Reads a COD marker (Coding Styke defaults)
+ * Reads a COD marker (Coding style defaults)
  * @param       p_header_data   the data contained in the COD box.
  * @param       p_j2k                   the jpeg2000 codec.
  * @param       p_header_size   the size of the data contained in the COD marker.
@@ -2657,12 +2658,17 @@ static OPJ_BOOL opj_j2k_read_cod(opj_j2k_t *p_j2k,
             &l_cp->tcps[p_j2k->m_current_tile_number] :
             p_j2k->m_specific_param.m_decoder.m_default_tcp;
 
+#if 0
+    /* This check was added per https://github.com/uclouvain/openjpeg/commit/daed8cc9195555e101ab708a501af2dfe6d5e001 */
+    /* but this is no longer necessary to handle issue476.jp2 */
+    /* and this actually cause issues on legit files. See https://github.com/uclouvain/openjpeg/issues/1043 */
     /* Only one COD per tile */
     if (l_tcp->cod) {
         opj_event_msg(p_manager, EVT_ERROR,
                       "COD marker already read. No more than one COD marker per tile.\n");
         return OPJ_FALSE;
     }
+#endif
     l_tcp->cod = 1;
 
     /* Make sure room is sufficient */
@@ -3502,7 +3508,7 @@ static OPJ_BOOL opj_j2k_read_poc(opj_j2k_t *p_j2k,
     l_old_poc_nb = l_tcp->POC ? l_tcp->numpocs + 1 : 0;
     l_current_poc_nb += l_old_poc_nb;
 
-    if (l_current_poc_nb >= sizeof(l_tcp->pocs) / sizeof(l_tcp->pocs[0])) {
+    if (l_current_poc_nb >= J2K_MAX_POCS) {
         opj_event_msg(p_manager, EVT_ERROR, "Too many POCs %d\n", l_current_poc_nb);
         return OPJ_FALSE;
     }
@@ -4089,7 +4095,12 @@ static OPJ_BOOL opj_j2k_merge_ppt(opj_tcp_t *p_tcp, opj_event_mgr_t * p_manager)
     /* preconditions */
     assert(p_tcp != 00);
     assert(p_manager != 00);
-    assert(p_tcp->ppt_buffer == NULL);
+
+    if (p_tcp->ppt_buffer != NULL) {
+        opj_event_msg(p_manager, EVT_ERROR,
+                      "opj_j2k_merge_ppt() has already been called\n");
+        return OPJ_FALSE;
+    }
 
     if (p_tcp->ppt == 0U) {
         return OPJ_TRUE;
@@ -6419,7 +6430,9 @@ void opj_j2k_setup_decoder(opj_j2k_t *j2k, opj_dparameters_t *parameters)
 
 OPJ_BOOL opj_j2k_set_threads(opj_j2k_t *j2k, OPJ_UINT32 num_threads)
 {
-    if (opj_has_thread_support()) {
+    /* Currently we pass the thread-pool to the tcd, so we cannot re-set it */
+    /* afterwards */
+    if (opj_has_thread_support() && j2k->m_tcd == NULL) {
         opj_thread_pool_destroy(j2k->m_tp);
         j2k->m_tp = NULL;
         if (num_threads <= (OPJ_UINT32)INT_MAX) {
@@ -6434,9 +6447,8 @@ OPJ_BOOL opj_j2k_set_threads(opj_j2k_t *j2k, OPJ_UINT32 num_threads)
     return OPJ_FALSE;
 }
 
-static int opj_j2k_get_default_thread_count(void)
+static int opj_j2k_get_default_thread_count()
 {
-#if defined(MUTEX_win32) || defined(MUTEX_pthread)
     const char* num_threads_str = getenv("OPJ_NUM_THREADS");
     int num_cpus;
     int num_threads;
@@ -6458,9 +6470,6 @@ static int opj_j2k_get_default_thread_count(void)
         num_threads = 2 * num_cpus;
     }
     return num_threads;
-#else
-    return 0;
-#endif
 }
 
 /* ----------------------------------------------------------------------- */
@@ -8842,7 +8851,10 @@ OPJ_BOOL opj_j2k_read_tile_header(opj_j2k_t * p_j2k,
 
     /* Current marker is the EOC marker ?*/
     if (l_current_marker == J2K_MS_EOC) {
+        if (p_j2k->m_specific_param.m_decoder.m_state != J2K_STATE_EOC) {
+            p_j2k->m_current_tile_number = 0;
         p_j2k->m_specific_param.m_decoder.m_state = J2K_STATE_EOC;
+    }
     }
 
     /* FIXME DOC ???*/
@@ -9224,6 +9236,14 @@ static OPJ_BOOL opj_j2k_update_image_dimensions(opj_image_t* p_image,
     l_img_comp = p_image->comps;
     for (it_comp = 0; it_comp < p_image->numcomps; ++it_comp) {
         OPJ_INT32 l_h, l_w;
+        if (p_image->x0 > (OPJ_UINT32)INT_MAX ||
+                p_image->y0 > (OPJ_UINT32)INT_MAX ||
+                p_image->x1 > (OPJ_UINT32)INT_MAX ||
+                p_image->y1 > (OPJ_UINT32)INT_MAX) {
+            opj_event_msg(p_manager, EVT_ERROR,
+                          "Image coordinates above INT_MAX are not supported\n");
+            return OPJ_FALSE;
+        }
 
         l_img_comp->x0 = (OPJ_UINT32)opj_int_ceildiv((OPJ_INT32)p_image->x0,
                          (OPJ_INT32)l_img_comp->dx);
@@ -10645,6 +10665,42 @@ static OPJ_BOOL opj_j2k_allocate_tile_element_cstr_index(opj_j2k_t *p_j2k)
     return OPJ_TRUE;
 }
 
+static OPJ_BOOL opj_j2k_are_all_used_components_decoded(opj_j2k_t *p_j2k,
+        opj_event_mgr_t * p_manager)
+{
+    OPJ_UINT32 compno;
+    OPJ_BOOL decoded_all_used_components = OPJ_TRUE;
+
+    if (p_j2k->m_specific_param.m_decoder.m_numcomps_to_decode) {
+        for (compno = 0;
+                compno < p_j2k->m_specific_param.m_decoder.m_numcomps_to_decode; compno++) {
+            OPJ_UINT32 dec_compno =
+                p_j2k->m_specific_param.m_decoder.m_comps_indices_to_decode[compno];
+            if (p_j2k->m_output_image->comps[dec_compno].data == NULL) {
+                opj_event_msg(p_manager, EVT_WARNING, "Failed to decode component %d\n",
+                              dec_compno);
+                decoded_all_used_components = OPJ_FALSE;
+            }
+        }
+    } else {
+        for (compno = 0; compno < p_j2k->m_output_image->numcomps; compno++) {
+            if (p_j2k->m_output_image->comps[compno].data == NULL) {
+                opj_event_msg(p_manager, EVT_WARNING, "Failed to decode component %d\n",
+                              compno);
+                decoded_all_used_components = OPJ_FALSE;
+            }
+        }
+    }
+
+    if (decoded_all_used_components == OPJ_FALSE) {
+        opj_event_msg(p_manager, EVT_ERROR, "Failed to decode all used components\n");
+        return OPJ_FALSE;
+    }
+
+    return OPJ_TRUE;
+}
+
+
 static OPJ_BOOL opj_j2k_decode_tiles(opj_j2k_t *p_j2k,
                                      opj_stream_private_t *p_stream,
                                      opj_event_mgr_t * p_manager)
@@ -10754,6 +10810,10 @@ static OPJ_BOOL opj_j2k_decode_tiles(opj_j2k_t *p_j2k,
         if (++nr_tiles ==  p_j2k->m_cp.th * p_j2k->m_cp.tw) {
             break;
         }
+    }
+
+    if (! opj_j2k_are_all_used_components_decoded(p_j2k, p_manager)) {
+        return OPJ_FALSE;
     }
 
     return OPJ_TRUE;
@@ -10882,6 +10942,10 @@ static OPJ_BOOL opj_j2k_decode_one_tile(opj_j2k_t *p_j2k,
                           l_current_tile_no + 1, l_tile_no_to_dec + 1);
         }
 
+    }
+
+    if (! opj_j2k_are_all_used_components_decoded(p_j2k, p_manager)) {
+        return OPJ_FALSE;
     }
 
     return OPJ_TRUE;

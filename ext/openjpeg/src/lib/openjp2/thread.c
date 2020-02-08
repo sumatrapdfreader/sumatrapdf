@@ -723,6 +723,8 @@ static OPJ_BOOL opj_thread_pool_setup(opj_thread_pool_t* tp, int num_threads)
         tp->worker_threads[i].thread = opj_thread_create(opj_worker_thread_function,
                                        &(tp->worker_threads[i]));
         if (tp->worker_threads[i].thread == NULL) {
+            opj_mutex_destroy(tp->worker_threads[i].mutex);
+            opj_cond_destroy(tp->worker_threads[i].cond);
             tp->worker_threads_count = i;
             bRet = OPJ_FALSE;
             break;
@@ -732,7 +734,7 @@ static OPJ_BOOL opj_thread_pool_setup(opj_thread_pool_t* tp, int num_threads)
     /* Wait all threads to be started */
     /* printf("waiting for all threads to be started\n"); */
     opj_mutex_lock(tp->mutex);
-    while (tp->waiting_worker_thread_count < num_threads) {
+    while (tp->waiting_worker_thread_count < tp->worker_threads_count) {
         opj_cond_wait(tp->cond, tp->mutex);
     }
     opj_mutex_unlock(tp->mutex);

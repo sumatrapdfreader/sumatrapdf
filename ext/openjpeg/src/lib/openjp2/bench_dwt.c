@@ -257,7 +257,7 @@ int main(int argc, char** argv)
             size_t idx;
             size_t nValues = (size_t)(tilec.x1 - tilec.x0) *
                              (size_t)(tilec.y1 - tilec.y0);
-            for (idx = 0; i < (OPJ_INT32)nValues; i++) {
+            for (idx = 0; idx < nValues; idx++) {
                 if (tilec.data[idx] != getValue((OPJ_UINT32)idx)) {
                     printf("Difference found at idx = %u\n", (OPJ_UINT32)idx);
                     exit(1);

@@ -905,8 +905,24 @@ static INLINE OPJ_BOOL opj_tcd_init_tile(opj_tcd_t *p_tcd, OPJ_UINT32 p_tile_no,
             /* p. 64, B.6, ISO/IEC FDIS15444-1 : 2000 (18 august 2000)  */
             l_tl_prc_x_start = opj_int_floordivpow2(l_res->x0, (OPJ_INT32)l_pdx) << l_pdx;
             l_tl_prc_y_start = opj_int_floordivpow2(l_res->y0, (OPJ_INT32)l_pdy) << l_pdy;
-            l_br_prc_x_end = opj_int_ceildivpow2(l_res->x1, (OPJ_INT32)l_pdx) << l_pdx;
-            l_br_prc_y_end = opj_int_ceildivpow2(l_res->y1, (OPJ_INT32)l_pdy) << l_pdy;
+            {
+                OPJ_UINT32 tmp = ((OPJ_UINT32)opj_int_ceildivpow2(l_res->x1,
+                                  (OPJ_INT32)l_pdx)) << l_pdx;
+                if (tmp > (OPJ_UINT32)INT_MAX) {
+                    opj_event_msg(manager, EVT_ERROR, "Integer overflow\n");
+                    return OPJ_FALSE;
+                }
+                l_br_prc_x_end = (OPJ_INT32)tmp;
+            }
+            {
+                OPJ_UINT32 tmp = ((OPJ_UINT32)opj_int_ceildivpow2(l_res->y1,
+                                  (OPJ_INT32)l_pdy)) << l_pdy;
+                if (tmp > (OPJ_UINT32)INT_MAX) {
+                    opj_event_msg(manager, EVT_ERROR, "Integer overflow\n");
+                    return OPJ_FALSE;
+                }
+                l_br_prc_y_end = (OPJ_INT32)tmp;
+            }
             /*fprintf(stderr, "\t\t\tprc_x_start=%d, prc_y_start=%d, br_prc_x_end=%d, br_prc_y_end=%d \n", l_tl_prc_x_start, l_tl_prc_y_start, l_br_prc_x_end ,l_br_prc_y_end );*/
 
             l_res->pw = (l_res->x0 == l_res->x1) ? 0U : (OPJ_UINT32)((
@@ -1067,6 +1083,12 @@ static INLINE OPJ_BOOL opj_tcd_init_tile(opj_tcd_t *p_tcd, OPJ_UINT32 p_tile_no,
 
                     l_nb_code_blocks = l_current_precinct->cw * l_current_precinct->ch;
                     /*fprintf(stderr, "\t\t\t\t precinct_cw = %d x recinct_ch = %d\n",l_current_precinct->cw, l_current_precinct->ch);      */
+                    if ((((OPJ_UINT32) - 1) / (OPJ_UINT32)sizeof_block) <
+                            l_nb_code_blocks) {
+                        opj_event_msg(manager, EVT_ERROR,
+                                      "Size of code block data exceeds system limits\n");
+                        return OPJ_FALSE;
+                    }
                     l_nb_code_blocks_size = l_nb_code_blocks * (OPJ_UINT32)sizeof_block;
 
                     if (!l_current_precinct->cblks.blocks && (l_nb_code_blocks > 0U)) {
