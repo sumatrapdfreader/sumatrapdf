@@ -28,9 +28,9 @@ extern "C" {
 #include "EngineMulti.h"
 
 struct EnginePage {
-    int pageNoInEngine = 0;
+    TocItem* ti = nullptr;
     EngineBase* engine = nullptr;
-    AutoFreeStr filePath;
+    int pageNoInEngine = 0;
 };
 
 Kind kindEngineMulti = "enginePdfMulti";
@@ -312,9 +312,41 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         return false;
     }
 
-    // TODO: NYI
-    CrashMe();
+    // load all referenced files
+    int nTotalPages = 0;
+    std::function<bool(TocItem*)> f = [this, &nTotalPages](TocItem* ti) -> bool {
+        if (ti->engineFilePath == nullptr) {
+            return true;
+        }
 
+        AutoFreeWstr path = strconv::Utf8ToWstr(ti->engineFilePath);
+
+        EngineBase* engine = EngineManager::CreateEngine(path, nullptr);
+        if (!engine) {
+            return false;
+        }
+        int nPages = engine->PageCount();
+        for (int i = 1; i <= nPages; i++) {
+            EnginePage ep;
+            ep.engine = engine;
+            ep.ti = ti;
+            ep.pageNoInEngine =  i;
+            pageToEngine.Append(ep);
+        }
+        nTotalPages += nPages;
+        return true;
+    };
+
+    TocItem* tocRoot = CloneTocItemRecur(vbkm.tree->root, false);
+    ok = VisitTocTree(tocRoot, f);
+    if (!ok) {
+        return false;
+    }
+
+    tocTree = new TocTree(tocRoot);
+    pageCount = nTotalPages;
+
+    // TODO: finish me
 #if 0
     // create a TocTree combining all the files and hiding nodes that are unchecked
     // create a mapping between "virtual page" (from combined documents) to
@@ -389,8 +421,8 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
 
     tocTree = new TocTree(rootCopy);
     pageCount = nTotalPages;
-    SetFileName(fileName);
 #endif
+    SetFileName(fileName);
     return true;
 }
 
