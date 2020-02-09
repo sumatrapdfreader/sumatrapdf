@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a757ac33ccdb30169217bea43d3bd0c700c5a384
+1d48f5aa4309c4e7b45c81d8ed8501b825cebb1f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3791,6 +3791,7 @@ de:Seiten %s zu Favoriten hinzufügen\tCtrl+B
 es:Añadir página %s a favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
 ga:Cuir leathanach %s leis na ceanáin\tCtrl+B
+hr:Dodaj stranicu %s u favorite\tCtrl+B
 ja:ページ %s をお気に入りに追加\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
@@ -5421,6 +5422,7 @@ de:Alles schließen
 es:Ocultar Todo
 fr:Tout réduire
 ga:Laghdaigh Gach
+hr:Sažmi sve
 it:Comprimi tutto
 ja:すべて折り畳む
 lv:Sakļaut visu
@@ -8059,6 +8061,7 @@ de:Alles öffnen
 es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
+hr:Proširi sve
 it:Espandi tutto
 ja:すべて展開
 lv:Izvērst visu
@@ -11598,6 +11601,7 @@ de:Neues Fenster
 es:Nueva &ventana\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
+hr:&Novi prozor\tCtrl+N
 ja:新しいウィンドウ (&W)\tCtrl+N
 lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
@@ -14803,6 +14807,7 @@ de:Anmerkungen speichern
 es:Guardar Notas
 fr:Sauvegarder les annotations
 ga:Taisc na Nótaí
+hr:Spremi pribilješke
 ja:注釈を保存
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
@@ -15447,6 +15452,7 @@ de:Lesezeichen anzeigen
 es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
 ga:Taispeáin na &Leabharmharcanna\tF12
+hr:Prikaži &oznake\tF12
 ja:ブックマークを表示(&B)\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
@@ -15461,6 +15467,7 @@ de:Favoriten anzeigen
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
+hr:Prikaži &favorite
 ja:お気に入りを表示(&F)
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
@@ -15608,6 +15615,7 @@ de:Lesezeichen anzeigen\tF12
 es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
 ga:Taispeáin na Leabhar&mharcanna\tF12
+hr:Prikaži oznake\tF12
 ja:ブックマークを表示 (&M)\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
@@ -15745,6 +15753,7 @@ de:Dokumet-&Ordner öffnen
 es:Mostrar en &Carpeta
 fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
+hr:Prikaži u mapi
 ja:フォルダを表示(&F)
 lv:Rādīt &mapē
 nl:Toon in &map

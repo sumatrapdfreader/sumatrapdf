@@ -4202,7 +4202,7 @@ const char * gTranslations_hr =
   "O SumatriPDF\0"\
   "Dodaj favorita\0"\
   "Dodaj stranicu %s u favorite\0"\
-  "\0"\
+  "Dodaj stranicu %s u favorite\tCtrl+B\0"\
   "Dodaj stranicu %s u favorite sa (opcijnalno) imenom:\0"\
   "Dodaj u favorite\0"\
   "Napredno\0"\
@@ -4228,7 +4228,7 @@ const char * gTranslations_hr =
   "Promijeni jezik (Change Language)\0"\
   "Provjeri a\305\276uriranje\0"\
   "Zatvori\0"\
-  "\0"\
+  "Sa\305\276mi sve\0"\
   "Stripovi\0"\
   "Kompatibilnost\0"\
   "Slijedno\0"\
@@ -4270,7 +4270,7 @@ const char * gTranslations_hr =
   "Unesi lozinku za %s\0"\
   "Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:\0"\
   "Gre\305\241ka kod pokretanja %s\0"\
-  "\0"\
+  "Pro\305\241iri sve\0"\
   "F&avoriti\0"\
   "Naprijed\tAlt+->\0"\
   "Cijeli zaslon\tCtrl+Shift+L\0"\
@@ -4326,7 +4326,7 @@ const char * gTranslations_hr =
   "Razlikuj velika i mala slova\0"\
   "Mobi dokumenti\0"\
   "Promijenjeno:\0"\
-  "\0"\
+  "&Novi prozor\tCtrl+N\0"\
   "Dostupna je nova ina\304\215ica (%s). Preuzeti novu ina\304\215icu?\0"\
   "Sljede\304\207a stranica\0"\
   "Pojam nije prona\304\221en\0"\
@@ -4377,7 +4377,7 @@ const char * gTranslations_hr =
   "Preimenuj u\0"\
   "Zaokreni nalijevo\tCtrl+Shift+-\0"\
   "Zaokreni nadesno\tCtrl+Shift++\0"\
-  "\0"\
+  "Spremi pribilje\305\241ke\0"\
   "Spremi kao\0"\
   "Spremi p&re\304\215ac...\tCtrl+Shift+S\0"\
   "Pretra\305\276ujem %d. stranicu (od %d)...\0"\
@@ -4388,14 +4388,14 @@ const char * gTranslations_hr =
   "Odabir:\0"\
   "Po\305\241alji &e-po\305\241tom...\0"\
   "Omogu\304\207i unazadnu pretragu\0"\
-  "\0"\
-  "\0"\
+  "Prika\305\276i &oznake\tF12\0"\
+  "Prika\305\276i &favorite\0"\
   "Prika\305\276i stranice slijedno\0"\
   "Prika\305\276i alatnu traku\0"\
-  "\0"\
+  "Prika\305\276i oznake\tF12\0"\
   "Prika\305\276i favorite\0"\
   "Prika\305\276i naj\304\215e\305\241\304\207e \304\215itano\0"\
-  "\0"\
+  "Prika\305\276i u mapi\0"\
   "Prika\305\276i traku &oznaka kad je dostupna\0"\
   "Jedna stranica\0"\
   "Isprika, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otka\305\276i' ako nam \305\276elite pomo\304\207i ispraviti uzrok ovog ru\305\241enja.\0"\
