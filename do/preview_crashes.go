@@ -286,6 +286,20 @@ func downloadCrashes() {
 
 const nDaysToKeep = 14
 
+func deleteCrashRemoteAndLocal(mc *u.MinioClient, rf *minio.ObjectInfo) {
+	must(rf.Err)
+	var err error
+	if true {
+		err = mc.Delete(rf.Key)
+		must(err)
+	}
+	logf("Deleted '%s'\n", rf.Key)
+	path := crashPathFromKey(rf.Key)
+	if os.Remove(path) == nil {
+		logf("Deleted '%s'\n", path)
+	}
+}
+
 func deleteWithPrefix(prefix string) {
 	timeStart := time.Now()
 	defer func() {
@@ -295,16 +309,7 @@ func deleteWithPrefix(prefix string) {
 	remoteFiles, err := listRemoteFiles(mc, prefix)
 	must(err)
 	for _, rf := range remoteFiles {
-		must(rf.Err)
-		if true {
-			err = mc.Delete(rf.Key)
-			must(err)
-		}
-		logf("Deleted '%s'\n", rf.Key)
-		path := crashPathFromKey(rf.Key)
-		if os.Remove(path) == nil {
-			logf("Deleted '%s'\n", path)
-		}
+		deleteCrashRemoteAndLocal(mc, rf)
 	}
 }
 
@@ -351,5 +356,7 @@ func previewCrashes() {
 
 	downloadCrashes()
 	logf("dataDir: %s\n", dataDir)
-	showCrashesToTerminal()
+	if false {
+		showCrashesToTerminal()
+	}
 }
