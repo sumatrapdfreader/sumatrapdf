@@ -1225,7 +1225,7 @@ fz_matrix EnginePdf::viewctm(fz_page* page, float zoom, int rotation) {
 }
 
 void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
-    auto& comments = pageInfo->comments;
+    Vec<PageElement*>& comments = pageInfo->comments;
 
     auto page = (pdf_page*)pageInfo->page;
     if (!page) {
@@ -1245,29 +1245,32 @@ void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
             dbglogf("found file attachment annotation\n");
             // TODO: write a program for mass processing of files to find pdfs
             // with wanted features for testing
-#if 0
-            pdf_obj* file = pdf_dict_gets(annot->obj, "FS");
-            pdf_obj* embedded = pdf_dict_getsa(pdf_dict_gets(file, "EF"), "DOS", "F");
-            fz_rect rect;
-            pdf_to_rect(ctx, pdf_dict_gets(annot->obj, "Rect"), &rect);
+            pdf_obj* file_spec = pdf_dict_gets(ctx, annot->obj, "FS");
+            pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
+            char* file = pdf_parse_file_spec(ctx, doc, file_spec, nullptr);
+            dbglogf("attachement: %s\n", file);
+            // TODO: not sure if I need embedded, maybe <file> is enough to 
+            pdf_obj* embedded = pdf_dict_getsa(ctx, pdf_dict_gets(ctx, file_spec, "EF"), "DOS", "F");
+            fz_rect rect = pdf_annot_rect(ctx, annot);
+
             if (file && embedded && !fz_is_empty_rect(rect)) {
-                fz_link_dest ld;
-                ld.kind = FZ_LINK_LAUNCH;
-                ld.ld.launch.file_spec = pdf_file_spec_to_str(_doc, file);
-                ld.ld.launch.new_window = 1;
-                ld.ld.launch.embedded_num = pdf_to_num(embedded);
-                ld.ld.launch.embedded_gen = pdf_to_gen(embedded);
-                ld.ld.launch.is_uri = 0;
-                fz_transform_rect(&rect, &page->ctm);
-                // add links in top-to-bottom order (i.e. last-to-first)
-                fz_link* link = fz_new_link(ctx, &rect, ld);
-                link->next = page->links;
-                page->links = link;
+                PageElement* el = new PageElement();
+                el->kind = kindPageElementDest;
+                el->pageNo = pageNo;
+                el->rect = fz_rect_to_RectD(rect);
+                el->dest = new PageDestination();
+                el->dest->kind = kindDestinationLaunchEmbedded;
+                el->dest->value = strconv::Utf8ToWstr(file);
+                el->dest->pageNo = pageNo;
+                comments.Append(el);
+                // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+                // for saving the attachment to a file
                 // TODO: expose /Contents in addition to the file path
             } else if (!isContentsEmpty) {
-                annots.Append(annot);
+                dbglogf("attachment with no file but with content: '%s'\n", contents);
+                // TODO: fix me
+                // annots.Append(annot);
             }
-#endif
             continue;
         }
 
