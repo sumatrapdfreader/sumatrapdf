@@ -388,7 +388,7 @@ TocTree* CloneTocTree(TocTree* tree, bool removeUnchecked) {
     return res;
 }
 
-// TODO: speed up by removing recursion 
+// TODO: speed up by removing recursion
 bool VisitTocTree(TocItem* ti, const std::function<bool(TocItem*)>& f) {
     bool cont;
     while (ti) {

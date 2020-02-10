@@ -1249,7 +1249,7 @@ void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
             pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
             char* file = pdf_parse_file_spec(ctx, doc, file_spec, nullptr);
             dbglogf("attachement: %s\n", file);
-            // TODO: not sure if I need embedded, maybe <file> is enough to 
+            // TODO: not sure if I need embedded, maybe <file> is enough to
             pdf_obj* embedded = pdf_dict_getsa(ctx, pdf_dict_gets(ctx, file_spec, "EF"), "DOS", "F");
             fz_rect rect = pdf_annot_rect(ctx, annot);
 
