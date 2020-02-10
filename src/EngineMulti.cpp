@@ -316,6 +316,9 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     }
 
     Vec<EngineInfo> enginesInfo;
+    TocItem* tocRoot = CloneTocItemRecur(vbkm.tree->root, true);
+    delete vbkm.tree;
+    vbkm.tree = nullptr;
 
     // load all referenced files
     int nTotalPages = 0;
@@ -343,9 +346,9 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         return true;
     };
 
-    TocItem* tocRoot = CloneTocItemRecur(vbkm.tree->root, false);
     ok = VisitTocTree(tocRoot, f);
     if (!ok) {
+        delete tocRoot;
         return false;
     }
 
