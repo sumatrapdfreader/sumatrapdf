@@ -261,6 +261,8 @@ struct TocTree : TreeModel {
 
 TocTree* CloneTocTree(TocTree*, bool removeUnchecked);
 bool VisitTocTree(TocItem* ti, const std::function<bool(TocItem*)>& f);
+bool VisitTocTreeWithParent(TocItem* ti, const std::function<bool(TocItem* ti, TocItem* parent)>& f);
+void SetTocTreeParents(TocItem* treeRoot);
 
 // a helper that allows for rendering interruptions in an engine-agnostic way
 class AbortCookie {

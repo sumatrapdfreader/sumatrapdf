@@ -404,6 +404,35 @@ bool VisitTocTree(TocItem* ti, const std::function<bool(TocItem*)>& f) {
     return true;
 }
 
+static bool VisitTocTreeWithParentRecursive(TocItem* ti, TocItem* parent,
+                                            const std::function<bool(TocItem* ti, TocItem* parent)>& f) {
+    bool cont;
+    while (ti) {
+        cont = f(ti, parent);
+        if (cont && ti->child) {
+            cont = VisitTocTreeWithParentRecursive(ti->child, ti, f);
+        }
+        if (!cont) {
+            return false;
+        }
+        ti = ti->next;
+    }
+    return true;
+}
+
+bool VisitTocTreeWithParent(TocItem* ti, const std::function<bool(TocItem* ti, TocItem* parent)>& f) {
+    return VisitTocTreeWithParentRecursive(ti, nullptr, f);
+}
+
+static bool setTocItemParent(TocItem* ti, TocItem* parent) {
+    ti->parent = parent;
+    return true;
+}
+
+void SetTocTreeParents(TocItem* treeRoot) {
+    VisitTocTreeWithParent(treeRoot, setTocItemParent);
+}
+
 RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
                                AbortCookie** cookie_out) {
     this->pageNo = pageNo;

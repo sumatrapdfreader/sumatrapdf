@@ -120,6 +120,7 @@ static void UpdateTreeModel(TocEditorWindow* w) {
     VbkmFile* bookmarks = w->tocArgs->bookmarks;
     int nPages = 0;
     CalcEndPageNo2(bookmarks->tree->root, nPages);
+    SetTocTreeParents(bookmarks->tree->root);
 
     w->treeModel = bookmarks->tree;
     treeCtrl->SetTreeModel(w->treeModel);
@@ -179,35 +180,16 @@ static void AddPdf() {
 }
 
 static void RemovePdf() {
-    // TDOO: NYI
-    CrashMe();
     TocEditorWindow* w = gWindow;
-#if 0
     TreeItem* sel = w->treeCtrl->GetSelection();
     CrashIf(!sel);
-    size_t n = w->tocArgs->bookmarks.size();
-    CrashIf(n < 2);
-
     TocItem* di = (TocItem*)sel;
-    CrashIf(di->Parent() != nullptr);
-    WCHAR* toRemoveTitle = di->title;
-    size_t toRemoveIdx = 0;
-    VbkmForFile* bkmToRemove = nullptr;
-    for (size_t i = 0; i < n; i++) {
-        VbkmForFile* bkm = w->tocArgs->bookmarks[i];
-
-        AutoFreeWstr path = strconv::Utf8ToWstr(bkm->filePath.get());
-        const WCHAR* name = path::GetBaseNameNoFree(path);
-        if (str::Eq(name, toRemoveTitle)) {
-            toRemoveIdx = i;
-            bkmToRemove = bkm;
-            break;
-        }
-    }
-    CrashIf(!bkmToRemove);
-    w->tocArgs->bookmarks.RemoveAt(toRemoveIdx);
-    delete bkmToRemove;
-#endif
+    TreeItem* parent = di->Parent();
+    CrashIf(parent == nullptr); // TODO: not necessarily true for top-level item
+    CrashIf(parent != di->Parent());
+    TocItem* parent2 = (TocItem*)parent;
+    parent2->child = nullptr;
+    delete di;
     UpdateTreeModel(w);
 }
 
