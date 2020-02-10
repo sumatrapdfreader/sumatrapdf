@@ -1298,6 +1298,13 @@ int pdf_signature_is_signed(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 	return pdf_name_eq(ctx, pdf_dict_get(ctx, v, PDF_NAME(Type)), PDF_NAME(Sig));
 }
 
+int pdf_widget_is_signed(fz_context *ctx, pdf_widget *widget)
+{
+	if (widget == NULL)
+		return 0;
+	return pdf_signature_is_signed(ctx, widget->page->doc, widget->obj);
+}
+
 /* NOTE: contents is allocated and must be freed by the caller! */
 size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents)
 {

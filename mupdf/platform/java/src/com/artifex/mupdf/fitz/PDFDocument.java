@@ -125,4 +125,9 @@ public class PDFDocument extends Document
 	public boolean hasXFAForm() {
 		return !this.getTrailer().get("Root").get("AcroForm").get("XFA").isNull();
 	}
+
+	public native int countVersions();
+	public native int countUnsavedVersions();
+	public native int validateChangeHistory();
+	public native boolean wasPureXFA();
 }

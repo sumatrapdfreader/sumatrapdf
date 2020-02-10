@@ -3000,22 +3000,68 @@ void pdf_clear_xref_to_mark(fz_context *ctx, pdf_document *doc)
 	}
 }
 
-/* Linearized files are written as if they are a normal
- * file, plus an incremental update, where all the data
- * happens to be in the incremental update. For the purposes
- * of signing etc, we want to treat that original write as
- * an atomic one; i.e. we want to consider both those versions
- * as a single one. */
+/* This function returns the number of versions that there
+ * are in a file. i.e. 1 + the number of updates that
+ * the file on disc has been through. i.e. internal
+ * unsaved changes to the file (such as appearance streams)
+ * are ignored. Also, the initial write of a linearized
+ * file (which appears as a base file write + an incremental
+ * update) is treated as a single version. */
 int
-pdf_count_incremental_updates(fz_context *ctx, pdf_document *doc)
+pdf_count_versions(fz_context *ctx, pdf_document *doc)
 {
-	return doc->num_xref_sections-1-doc->has_linearization_object;
+	return doc->num_xref_sections-doc->num_incremental_sections-doc->has_linearization_object;
+}
+
+int
+pdf_count_unsaved_versions(fz_context *ctx, pdf_document *doc)
+{
+	return doc->num_incremental_sections;
 }
 
 int
 pdf_doc_was_linearized(fz_context *ctx, pdf_document *doc)
 {
 	return doc->has_linearization_object;
+}
+
+static int pdf_obj_exists(fz_context *ctx, pdf_document *doc, int i)
+{
+	pdf_xref_subsec *sub;
+	int j;
+
+	if (i < 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Negative object number requested");
+
+	if (i <= doc->max_xref_len)
+		j = doc->xref_index[i];
+	else
+		j = 0;
+
+	/* We may be accessing an earlier version of the document using xref_base
+	 * and j may be an index into a later xref section */
+	if (doc->xref_base > j)
+		j = doc->xref_base;
+
+	/* Find the first xref section where the entry is defined. */
+	for (; j < doc->num_xref_sections; j++)
+	{
+		pdf_xref *xref = &doc->xref_sections[j];
+
+		if (i < xref->num_objects)
+		{
+			for (sub = xref->subsec; sub != NULL; sub = sub->next)
+			{
+				if (i < sub->start || i >= sub->start + sub->len)
+					continue;
+
+				if (sub->table[i - sub->start].type)
+					return 1;
+			}
+		}
+	}
+
+	return 0;
 }
 
 enum {
@@ -3030,14 +3076,15 @@ typedef struct
 	int obj_changes[1];
 } pdf_changes;
 
-static void
+static int
 check_unchanged_between(fz_context *ctx, pdf_document *doc, pdf_changes *changes, pdf_obj *nobj, pdf_obj *oobj)
 {
 	int marked = 0;
+	int changed = 0;
 
 	/* Trivially identical => trivially unchanged. */
 	if (nobj == oobj)
-		return;
+		return 0;
 
 	/* Strictly speaking we shouldn't need to call fz_var,
 	 * but I suspect static analysis tools are not smart
@@ -3052,21 +3099,21 @@ check_unchanged_between(fz_context *ctx, pdf_document *doc, pdf_changes *changes
 		if (!pdf_is_indirect(ctx, oobj))
 		{
 			changes->obj_changes[pdf_to_num(ctx, nobj)] |= FIELD_CHANGE_INVALID;
-			return;
+			return 1;
 		}
 
 		/* Handle recursing back into ourselves. */
 		if (pdf_obj_marked(ctx, nobj))
 		{
 			if (pdf_obj_marked(ctx, oobj))
-				return;
+				return 0;
 			changes->obj_changes[pdf_to_num(ctx, nobj)] |= FIELD_CHANGE_INVALID;
-			return;
+			return 1;
 		}
 		else if (pdf_obj_marked(ctx, oobj))
 		{
 			changes->obj_changes[pdf_to_num(ctx, nobj)] |= FIELD_CHANGE_INVALID;
-			return;
+			return 1;
 		}
 
 		nobj = pdf_resolve_indirect_chain(ctx, nobj);
@@ -3091,8 +3138,10 @@ check_unchanged_between(fz_context *ctx, pdf_document *doc, pdf_changes *changes
 			fz_rethrow(ctx);
 
 		if (nobj == oobj)
-			return; /* Trivially identical */
+			return 0; /* Trivially identical */
 	}
+
+	fz_var(changed);
 
 	fz_try(ctx)
 	{
@@ -3104,6 +3153,7 @@ check_unchanged_between(fz_context *ctx, pdf_document *doc, pdf_changes *changes
 			{
 change_found:
 				changes->obj_changes[pdf_to_num(ctx, nobj)] |= FIELD_CHANGE_INVALID;
+				changed = 1;
 				break;
 			}
 
@@ -3113,7 +3163,7 @@ change_found:
 				pdf_obj *nval = pdf_dict_get(ctx, nobj, key);
 				pdf_obj *oval = pdf_dict_get(ctx, oobj, key);
 
-				check_unchanged_between(ctx, doc, changes, nval, oval);
+				changed |= check_unchanged_between(ctx, doc, changes, nval, oval);
 			}
 		}
 		else if (pdf_is_array(ctx, nobj))
@@ -3128,7 +3178,7 @@ change_found:
 				pdf_obj *nval = pdf_array_get(ctx, nobj, i);
 				pdf_obj *oval = pdf_array_get(ctx, oobj, i);
 
-				check_unchanged_between(ctx, doc, changes, nval, oval);
+				changed |= check_unchanged_between(ctx, doc, changes, nval, oval);
 			}
 		}
 		else if (pdf_objcmp(ctx, nobj, oobj))
@@ -3144,6 +3194,8 @@ change_found:
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
+
+	return changed;
 }
 
 typedef struct
@@ -3234,8 +3286,167 @@ pdf_is_field_locked(fz_context *ctx, pdf_locked_fields *locked, const char *name
 	return 0;
 }
 
+/* Unfortunately, in C, there is no legal way to define a function
+ * type that returns itself. We therefore have to use a struct
+ * wrapper. */
+typedef struct filter_wrap_s
+{
+	struct filter_wrap_s (*func)(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+} filter_wrap;
+
+typedef struct filter_wrap_s (*filter_fn)(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+
+#define RETURN_FILTER(f) { filter_wrap rf; rf.func = (f); return rf; }
+
+static filter_wrap filter_simple(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	RETURN_FILTER(NULL);
+}
+
+static filter_wrap filter_transformparams(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	if (pdf_name_eq(ctx, key, PDF_NAME(Type)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(P)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(V)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Document)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Msg)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(V)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Annots)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Form)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(FormEx)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(EF)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(P)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Action)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Fields)))
+		RETURN_FILTER(&filter_simple);
+	RETURN_FILTER(NULL);
+}
+
+static filter_wrap filter_reference(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	if (pdf_name_eq(ctx, key, PDF_NAME(Type)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(TransformMethod)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(DigestMethod)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(DigestValue)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(DigestLocation)))
+		RETURN_FILTER(&filter_simple);
+	if (pdf_name_eq(ctx, key, PDF_NAME(TransformParams)))
+		RETURN_FILTER(&filter_transformparams);
+	RETURN_FILTER(NULL);
+}
+
+static filter_wrap filter_prop_build_sub(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	if (pdf_name_eq(ctx, key, PDF_NAME(Name)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Date)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(R)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(PreRelease)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(OS)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(NonEFontNoWarn)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(TrustedMode)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(V)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(REx)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Preview)))
+		RETURN_FILTER(&filter_simple);
+	RETURN_FILTER(NULL);
+}
+
+static filter_wrap filter_prop_build(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	if (pdf_name_eq(ctx, key, PDF_NAME(Filter)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(PubSec)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(App)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(SigQ)))
+		RETURN_FILTER(&filter_prop_build_sub);
+	RETURN_FILTER(NULL);
+}
+
+static filter_wrap filter_v(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	/* Text can point to a stream object */
+	if (pdf_name_eq(ctx, key, PDF_NAME(Length)) && pdf_is_stream(ctx, dict))
+		RETURN_FILTER(&filter_simple);
+	/* Sigs point to a dict. */
+	if (pdf_name_eq(ctx, key, PDF_NAME(Type)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Filter)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(SubFilter)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Contents)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Cert)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(ByteRange)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Changes)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Name)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(M)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Location)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Reason)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(ContactInfo)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(R)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(V)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Prop_AuthTime)) ||
+		pdf_name_eq(ctx, key, PDF_NAME(Prop_AuthType)))
+	RETURN_FILTER(&filter_simple);
+	if (pdf_name_eq(ctx, key, PDF_NAME(Reference)))
+		RETURN_FILTER(filter_reference);
+	if (pdf_name_eq(ctx, key, PDF_NAME(Prop_Build)))
+		RETURN_FILTER(filter_prop_build);
+	RETURN_FILTER(NULL);
+}
+
+static filter_wrap filter_appearance(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+
+static filter_wrap filter_xobject_list(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	/* FIXME: Infinite recursion possible here? */
+	RETURN_FILTER(&filter_appearance);
+}
+
+static filter_wrap filter_font(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	/* In the example I've seen the /Name field was dropped, so we'll allow
+	 * local changes, but none that follow an indirection. */
+	RETURN_FILTER(NULL);
+}
+
+/* FIXME: One idea here is to make filter_font_list and filter_xobject_list
+ * only accept NEW objects as changes. Will think about this. */
+static filter_wrap filter_font_list(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	RETURN_FILTER(&filter_font);
+}
+
+static filter_wrap filter_resources(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	if (pdf_name_eq(ctx, key, PDF_NAME(XObject)))
+		RETURN_FILTER(&filter_xobject_list);
+	if (pdf_name_eq(ctx, key, PDF_NAME(Font)))
+		RETURN_FILTER(&filter_font_list);
+	RETURN_FILTER(NULL);
+}
+
+static filter_wrap filter_appearance(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	if (pdf_name_eq(ctx, key, PDF_NAME(Resources)))
+		RETURN_FILTER(&filter_resources);
+	RETURN_FILTER(NULL);
+}
+
+static filter_wrap filter_ap(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	/* Just the /N entry for now. May need to add more later. */
+	if (pdf_name_eq(ctx, key, PDF_NAME(N)) && pdf_is_stream(ctx, pdf_dict_get(ctx, dict, key)))
+		RETURN_FILTER(&filter_appearance);
+	RETURN_FILTER(NULL);
+}
+
+static filter_wrap filter_xfa(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	/* Text can point to a stream object */
+	if (pdf_is_stream(ctx, dict))
+		RETURN_FILTER(&filter_simple);
+	RETURN_FILTER(NULL);
+}
+
 static void
-all_changes_accepted(fz_context *ctx, pdf_changes *changes, pdf_obj *obj)
+filter_changes_accepted(fz_context *ctx, pdf_changes *changes, pdf_obj *obj, filter_fn filter)
 {
 	int obj_num;
 
@@ -3244,12 +3455,6 @@ all_changes_accepted(fz_context *ctx, pdf_changes *changes, pdf_obj *obj)
 
 	obj_num = pdf_to_num(ctx, obj);
 
-	/* FIXME: Might this function mark more than it should?
-	 * Malicious software could add a link from (say) an appearance
-	 * stream into the rest of the document, so we'd recurse in and
-	 * mark the rest of that as being fine too. Possibly we should be
-	 * smarter about which keys to recurse down.
-	 */
 	fz_try(ctx)
 	{
 		if (obj_num != 0)
@@ -3257,6 +3462,8 @@ all_changes_accepted(fz_context *ctx, pdf_changes *changes, pdf_obj *obj)
 			pdf_mark_obj(ctx, obj);
 			changes->obj_changes[obj_num] |= FIELD_CHANGE_VALID;
 		}
+		if (filter == NULL)
+			break;
 		if (pdf_is_dict(ctx, obj))
 		{
 			int i, n = pdf_dict_len(ctx, obj);
@@ -3264,12 +3471,10 @@ all_changes_accepted(fz_context *ctx, pdf_changes *changes, pdf_obj *obj)
 			for (i = 0; i < n; i++)
 			{
 				pdf_obj *key = pdf_dict_get_key(ctx, obj, i);
-				if (pdf_name_eq(ctx, key, PDF_NAME(P)) ||
-					pdf_name_eq(ctx, key, PDF_NAME(Parent)) ||
-					pdf_name_eq(ctx, key, PDF_NAME(StructParent)) ||
-					pdf_name_eq(ctx, key, PDF_NAME(Data)))
-					continue;
-				all_changes_accepted(ctx, changes, pdf_dict_get_val(ctx, obj, i));
+				pdf_obj *val = pdf_dict_get_val(ctx, obj, i);
+				filter_fn f = (filter(ctx, obj, key)).func;
+				if (f != NULL)
+					filter_changes_accepted(ctx, changes, val, f);
 			}
 		}
 		else if (pdf_is_array(ctx, obj))
@@ -3277,7 +3482,10 @@ all_changes_accepted(fz_context *ctx, pdf_changes *changes, pdf_obj *obj)
 			int i, n = pdf_array_len(ctx, obj);
 
 			for (i = 0; i < n; i++)
-				all_changes_accepted(ctx, changes, pdf_array_get(ctx, obj, i));
+			{
+				pdf_obj *val = pdf_array_get(ctx, obj, i);
+				filter_changes_accepted(ctx, changes, val, filter);
+			}
 		}
 	}
 	fz_always(ctx)
@@ -3285,21 +3493,6 @@ all_changes_accepted(fz_context *ctx, pdf_changes *changes, pdf_obj *obj)
 			pdf_unmark_obj(ctx, obj);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
-}
-
-static int
-check_field_value(fz_context *ctx, pdf_changes *changes, pdf_obj *nval, pdf_obj *parent, pdf_locked_fields *locked, const char *name)
-{
-	if (pdf_is_field_locked(ctx, locked, name))
-		return 0; /* Illegal change */
-
-	all_changes_accepted(ctx, changes, nval);
-
-	/* We also have to accept changes to any appearance stream for the widget for which this is the value. */
-	/* FIXME: For now accept all changes in the widget */
-	all_changes_accepted(ctx, changes, parent);
-
-	return 1;
 }
 
 static void
@@ -3333,6 +3526,8 @@ check_field(fz_context *ctx, pdf_document *doc, pdf_changes *changes, pdf_obj *o
 		int i, len;
 		const char *name;
 		size_t n;
+		pdf_obj *t;
+		int is_locked;
 
 		pdf_mark_obj(ctx, obj);
 
@@ -3340,19 +3535,24 @@ check_field(fz_context *ctx, pdf_document *doc, pdf_changes *changes, pdf_obj *o
 		doc->xref_base = o_xref_base+1;
 		old_obj = pdf_resolve_indirect_chain(ctx, obj);
 
-		name = pdf_to_text_string(ctx, pdf_dict_get(ctx, old_obj, PDF_NAME(T)));
-		n = strlen(name)+1;
-		if (*name_prefix)
-			n += 1 + strlen(name_prefix);
-		field_name = fz_malloc(ctx, n);
-		if (*name_prefix)
+		t = pdf_dict_get(ctx, old_obj, PDF_NAME(T));
+		if (t != NULL)
 		{
-			strcpy(field_name, name_prefix);
-			strcat(field_name, ".");
+			name = pdf_to_text_string(ctx, pdf_dict_get(ctx, old_obj, PDF_NAME(T)));
+			n = strlen(name)+1;
+			if (*name_prefix)
+				n += 1 + strlen(name_prefix);
+			field_name = fz_malloc(ctx, n);
+			if (*name_prefix)
+			{
+				strcpy(field_name, name_prefix);
+				strcat(field_name, ".");
+			}
+			else
+				*field_name = 0;
+			strcat(field_name, name);
+			name_prefix = field_name;
 		}
-		else
-			*field_name = 0;
-		strcat(field_name, name);
 
 		doc->xref_base = o_xref_base;
 
@@ -3367,13 +3567,22 @@ check_field(fz_context *ctx, pdf_document *doc, pdf_changes *changes, pdf_obj *o
 		if (o_v == NULL)
 			o_v = old_v;
 
+		is_locked = pdf_is_field_locked(ctx, locked, name_prefix);
 		if (pdf_name_eq(ctx, pdf_dict_get(ctx, new_obj, PDF_NAME(Type)), PDF_NAME(Annot)) &&
 			pdf_name_eq(ctx, pdf_dict_get(ctx, new_obj, PDF_NAME(Subtype)), PDF_NAME(Widget)))
 		{
-			if (check_field_value(ctx, changes, n_v, new_obj, locked, field_name))
-				changes->obj_changes[obj_num] |= FIELD_CHANGE_VALID;
+			if (is_locked)
+			{
+				/* If locked, V must not change! */
+				if (check_unchanged_between(ctx, doc, changes, n_v, o_v))
+					changes->obj_changes[obj_num] |= FIELD_CHANGE_INVALID;
+			}
 			else
-				changes->obj_changes[obj_num] |= FIELD_CHANGE_INVALID;
+			{
+				/* If not locked, V can change to be filled in! */
+				filter_changes_accepted(ctx, changes, n_v, &filter_v);
+				changes->obj_changes[obj_num] |= FIELD_CHANGE_VALID;
+			}
 		}
 
 		/* Check all the fields in the new object are
@@ -3413,7 +3622,7 @@ change_found:
 					/* For now at least, we'll count any change in number as a difference. */
 					if (pdf_to_num(ctx, nkid) != pdf_to_num(ctx, okid))
 						goto change_found;
-					check_field(ctx, doc, changes, nkid, locked, field_name, n_v, o_v);
+					check_field(ctx, doc, changes, nkid, locked, name_prefix, n_v, o_v);
 				}
 			}
 			else if (pdf_name_eq(ctx, key, PDF_NAME(V)))
@@ -3422,9 +3631,12 @@ change_found:
 			}
 			else if (pdf_name_eq(ctx, key, PDF_NAME(AP)))
 			{
-				/* Appearance streams can be regenerated. */
-				all_changes_accepted(ctx, changes, nval);
-				changes->obj_changes[obj_num] |= FIELD_CHANGE_VALID;
+				/* If we're locked, then nothing can change. If not,
+				 * we can change to be filled in. */
+				if (is_locked)
+					check_unchanged_between(ctx, doc, changes, nval, oval);
+				else
+					filter_changes_accepted(ctx, changes, nval, &filter_ap);
 			}
 			/* All other fields can't change */
 			else
@@ -3492,10 +3704,10 @@ merge_lock_specification(fz_context *ctx, pdf_locked_fields *fields, pdf_obj *lo
 	}
 	else
 	{
-		pdf_obj *f = pdf_dict_get(ctx, action, PDF_NAME(Fields));
+		pdf_obj *f = pdf_dict_get(ctx, lock, PDF_NAME(Fields));
 		int len = pdf_array_len(ctx, f);
 
-		if (pdf_name_eq(ctx, lock, PDF_NAME(Include)))
+		if (pdf_name_eq(ctx, action, PDF_NAME(Include)))
 		{
 			if (fields->all)
 			{
@@ -3532,7 +3744,7 @@ merge_lock_specification(fz_context *ctx, pdf_locked_fields *fields, pdf_obj *lo
 				}
 			}
 		}
-		else if  (pdf_name_eq(ctx, lock, PDF_NAME(Exclude)))
+		else if (pdf_name_eq(ctx, action, PDF_NAME(Exclude)))
 		{
 			if (fields->all)
 			{
@@ -3628,7 +3840,7 @@ find_locked_fields_aux(fz_context *ctx, pdf_obj *field, pdf_locked_fields *field
 		v = pdf_dict_get(ctx, field, PDF_NAME(V));
 		if (v == NULL)
 			v = inherit_v;
-		ft = pdf_dict_get(ctx, field, PDF_NAME(V));
+		ft = pdf_dict_get(ctx, field, PDF_NAME(FT));
 		if (ft == NULL)
 			ft = inherit_ft;
 
@@ -3636,7 +3848,7 @@ find_locked_fields_aux(fz_context *ctx, pdf_obj *field, pdf_locked_fields *field
 		 * signed (i.e. have a 'V' field). */
 		if (pdf_name_eq(ctx, pdf_dict_get(ctx, field, PDF_NAME(Subtype)), PDF_NAME(Widget)) &&
 			pdf_name_eq(ctx, ft, PDF_NAME(Sig)) &&
-			pdf_name_eq(ctx, pdf_dict_get(ctx, v, PDF_NAME(Type)), PDF_NAME(SigRef)))
+			pdf_name_eq(ctx, pdf_dict_get(ctx, v, PDF_NAME(Type)), PDF_NAME(Sig)))
 		{
 			/* Signed Sig Widgets (i.e. ones with a 'V' field) need
 			 * to have their lock field respected. */
@@ -3724,18 +3936,15 @@ pdf_find_locked_fields_for_sig(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 static int
 validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_locked_fields *locked)
 {
-	int n = pdf_count_incremental_updates(ctx, doc);
 	int o_xref_base = doc->xref_base;
 	pdf_changes *changes;
 	int num_objs;
-	int i;
+	int i, n;
 	int all_indirects = 1;
 
 	num_objs = doc->max_xref_len;
 	changes = Memento_label(fz_calloc(ctx, 1, sizeof(*changes) + sizeof(int)*(num_objs-1)), "pdf_changes");
 	changes->num_obj = num_objs;
-
-	fz_var(locked);
 
 	fz_try(ctx)
 	{
@@ -3755,15 +3964,15 @@ validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_lock
 		 * and having produced stuff that represents the same stuff). */
 
 		/* The metadata of a document may be regenerated. Allow for that. */
-		all_changes_accepted(ctx, changes, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/Metadata"));
+		filter_changes_accepted(ctx, changes, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/Metadata"), &filter_simple);
 
 		/* The ModDate of document info may be regenerated. Allow for that. */
 		/* FIXME: We accept all changes in document info, when maybe we ought to just
 		 * accept ModDate? */
-		all_changes_accepted(ctx, changes, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Info"));
+		filter_changes_accepted(ctx, changes, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Info"), &filter_simple);
 
 		/* The Encryption dict may be rewritten for the new Xref. */
-		all_changes_accepted(ctx, changes, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Encrypt"));
+		filter_changes_accepted(ctx, changes, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Encrypt"), &filter_simple);
 
 		/* We have to accept certain changes in the top level AcroForms dict,
 		 * so get the 2 versions... */
@@ -3771,7 +3980,7 @@ validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_lock
 		acroform_num = pdf_to_num(ctx, acroform);
 		new_acroform = pdf_resolve_indirect_chain(ctx, acroform);
 		doc->xref_base = version+1;
-		old_acroform = pdf_resolve_indirect_chain(ctx, acroform);
+		old_acroform = pdf_resolve_indirect_chain(ctx, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm"));
 		doc->xref_base = version;
 		n = pdf_dict_len(ctx, new_acroform);
 		for (i = 0; i < n; i++)
@@ -3798,10 +4007,15 @@ validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_lock
 				/* Accept this */
 				changes->obj_changes[acroform_num] |= FIELD_CHANGE_VALID;
 			}
+			else if (pdf_name_eq(ctx, key, PDF_NAME(DR)))
+			{
+				/* Accept any changes from within the Document Resources */
+				filter_changes_accepted(ctx, changes, nval, &filter_resources);
+			}
 			else if (pdf_name_eq(ctx, key, PDF_NAME(XFA)))
 			{
-				/* All changes are expected in XFA for now. */
-				all_changes_accepted(ctx, changes, nval);
+				/* Allow any changes within the XFA streams. */
+				filter_changes_accepted(ctx, changes, nval, &filter_xfa);
 			}
 			else if (pdf_objcmp(ctx, nval, oval))
 			{
@@ -3810,12 +4024,18 @@ validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_lock
 		}
 
 		/* Allow for any object streams/XRefs to be changed. */
-		doc->xref_base = o_xref_base+1;
+		doc->xref_base = version+1;
 		for (i = 1; i < num_objs; i++)
 		{
 			pdf_obj *oobj, *otype;
 			if (changes->obj_changes[i] != FIELD_CHANGED)
 				continue;
+			if (!pdf_obj_exists(ctx, doc, i))
+			{
+				/* Not present this version - must be newly created, can't be a change. */
+				changes->obj_changes[i] |= FIELD_CHANGE_VALID;
+				continue;
+			}
 			oobj = pdf_load_object(ctx, doc, i);
 			otype = pdf_dict_get(ctx, oobj, PDF_NAME(Type));
 			if (pdf_name_eq(ctx, otype, PDF_NAME(ObjStm)) ||
@@ -3827,10 +4047,7 @@ validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_lock
 		}
 	}
 	fz_always(ctx)
-	{
 		doc->xref_base = o_xref_base;
-		pdf_drop_locked_fields(ctx, locked);
-	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
@@ -3852,21 +4069,33 @@ validate_locked_fields(fz_context *ctx, pdf_document *doc, int version, pdf_lock
 int
 pdf_validate_changes(fz_context *ctx, pdf_document *doc, int version)
 {
-	int n = pdf_count_incremental_updates(ctx, doc);
+	int unsaved_versions = pdf_count_unsaved_versions(ctx, doc);
+	int n = pdf_count_versions(ctx, doc);
 	pdf_locked_fields *locked = NULL;
+	int result;
 
 	if (version < 0 || version >= n)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "There aren't that many changes to find in this document!");
 
-	/* First off, make us a list of which objects are allowed
-	 * to change by the signatures present in the version before
-	 * the one we are looking at. We need to look at the version
-	 * before, because we might (legally) introduce a signature in
-	 * this version that says "don't allow anything to change from
-	 * here on". */
-	locked = pdf_find_locked_fields(ctx, doc, version+1);
+	/* We are wanting to compare version+1 with version to make sure
+	 * that the only changes made in going to version are conformant
+	 * with what was allowed in version+1. The production of version
+	 * might have involved signing a signature field and locking down
+	 * more fields - this means that taking the list of locked things
+	 * from version rather than version+1 will give us bad results! */
+	locked = pdf_find_locked_fields(ctx, doc, unsaved_versions+version+1);
 
-	return validate_locked_fields(ctx, doc, version, locked);
+	if (!locked->all && locked->includes.len == 0 && locked->p == 0)
+	{
+		/* If nothing is locked at all, then all changes are permissible. */
+		result = 1;
+	}
+	else
+		result = validate_locked_fields(ctx, doc, unsaved_versions+version, locked);
+
+	pdf_drop_locked_fields(ctx, locked);
+
+	return result;
 }
 
 /* Checks the entire history of the document, and returns the number of
@@ -3877,13 +4106,13 @@ pdf_validate_changes(fz_context *ctx, pdf_document *doc, int version)
 int
 pdf_validate_change_history(fz_context *ctx, pdf_document *doc)
 {
-	int num_updates = pdf_count_incremental_updates(ctx, doc);
+	int num_versions = pdf_count_versions(ctx, doc);
 	int v;
 
-	if (num_updates < 1)
-		return 0; /* No updates, so no updates can be illegal */
+	if (num_versions < 2)
+		return 0; /* Unless there are at least 2 versions, there have been no updates. */
 
-	for(v = num_updates - 1; v >= 0; v--)
+	for(v = num_versions - 2; v >= 0; v--)
 	{
 		if (!pdf_validate_changes(ctx, doc, v))
 			return v+1;
@@ -3892,7 +4121,7 @@ pdf_validate_change_history(fz_context *ctx, pdf_document *doc)
 }
 
 /* Return the version that obj appears in, or -1 for not found. */
-int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
+int pdf_find_incremental_update_num_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 {
 	pdf_xref *xref = NULL;
 	pdf_xref_subsec *sub;
@@ -3901,9 +4130,13 @@ int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 	if (obj == NULL)
 		return -1;
 
+	/* obj needs to be indirect for us to get a num out of it. */
 	i = pdf_to_num(ctx, obj);
 	if (i <= 0)
 		return -1;
+
+	/* obj can't be indirect below, so resolve it here. */
+	obj = pdf_resolve_indirect_chain(ctx, obj);
 
 	/* Find the first xref section where the entry is defined. */
 	for (j = 0; j < doc->num_xref_sections; j++)
@@ -3928,17 +4161,92 @@ int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 	return -1;
 }
 
-int pdf_validate_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget)
+/* "Versions" allow for the first incremental update in a linearized file being
+ * ignored. */
+int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 {
+	int v = pdf_find_incremental_update_num_for_obj(ctx, doc, obj);
+	int n;
+
+	if (v == -1)
+		return -1;
+
+	n = pdf_count_versions(ctx, doc) + pdf_count_unsaved_versions(ctx, doc);
+	if (v > n)
+		return n;
+
+	return v;
+}
+
+int pdf_validate_signature(fz_context *ctx, pdf_widget *widget)
+{
+	pdf_document *doc = widget->page->doc;
+	int unsaved_versions = pdf_count_unsaved_versions(ctx, doc);
+	int num_versions = pdf_count_versions(ctx, doc) + unsaved_versions;
 	int version = pdf_find_version_for_obj(ctx, doc, widget->obj);
 	int i;
-	pdf_locked_fields *locked = pdf_find_locked_fields_for_sig(ctx, doc, widget->obj);
+	pdf_locked_fields *locked = NULL;
+	int o_xref_base;
 
-	for (i = version-1; i >= 0; i--)
+	if (version > num_versions-1)
+		version = num_versions-1;
+
+	/* Get the locked definition from the object when it was signed. */
+	o_xref_base = doc->xref_base;
+	doc->xref_base = version;
+
+	fz_var(locked); /* Not really needed, but it stops warnings */
+
+	fz_try(ctx)
 	{
-		if (!validate_locked_fields(ctx, doc, i, locked))
-			return i+1;
+		locked = pdf_find_locked_fields_for_sig(ctx, doc, widget->obj);
+		for (i = version-1; i >= unsaved_versions; i--)
+		{
+			doc->xref_base = i;
+			if (!validate_locked_fields(ctx, doc, i, locked))
+				break;
+		}
 	}
+	fz_always(ctx)
+	{
+		doc->xref_base = o_xref_base;
+		pdf_drop_locked_fields(ctx, locked);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
-	return 0;
+	return i+1-unsaved_versions;
+}
+
+int pdf_was_pure_xfa(fz_context *ctx, pdf_document *doc)
+{
+	int num_unsaved_versions = pdf_count_unsaved_versions(ctx, doc);
+	int num_versions = pdf_count_versions(ctx, doc);
+	int v;
+	int o_xref_base = doc->xref_base;
+	int pure_xfa = 0;
+
+	fz_var(pure_xfa);
+
+	fz_try(ctx)
+	{
+		for(v = num_versions + num_unsaved_versions; !pure_xfa && v >= num_unsaved_versions; v--)
+		{
+			pdf_obj *o;
+			doc->xref_base = v;
+			o = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm");
+			/* If we find a version that had an empty Root/AcroForm/Fields, but had a
+			 * Root/AcroForm/XFA entry, then we deduce that this was at one time a
+			 * pure XFA form. */
+			if (pdf_array_len(ctx, pdf_dict_get(ctx, o, PDF_NAME(Fields))) == 0 &&
+				pdf_dict_get(ctx, o, PDF_NAME(XFA)) != NULL)
+				pure_xfa = 1;
+		}
+	}
+	fz_always(ctx)
+		doc->xref_base = o_xref_base;
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return pure_xfa;
 }

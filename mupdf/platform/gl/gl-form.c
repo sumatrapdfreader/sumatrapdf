@@ -28,9 +28,9 @@ int do_sign(void)
 
 	fz_try(ctx)
 	{
-		trace_action("widget.sign(%q, %q);\n", cert_filename, cert_password.text);
+		trace_action("widget.sign(new PDFPKCS7Signer(%q, %q));\n", cert_filename, cert_password.text);
 		signer = pkcs7_openssl_read_pfx(ctx, cert_filename, cert_password.text);
-		pdf_sign_signature(ctx, pdf, sig_widget, signer);
+		pdf_sign_signature(ctx, sig_widget, signer);
 		ui_show_warning_dialog("Signed document successfully.");
 	}
 	fz_always(ctx)
@@ -56,7 +56,7 @@ static void do_clear_signature(void)
 {
 	fz_try(ctx)
 	{
-		pdf_clear_signature(ctx, pdf, sig_widget);
+		pdf_clear_signature(ctx, sig_widget);
 		ui_show_warning_dialog("Signature cleared successfully.");
 	}
 	fz_catch(ctx)
@@ -173,8 +173,12 @@ static void sig_verify_dialog(void)
 			ui_label("Digest error: %s", pdf_signature_error_description(sig_digest_error));
 		else if (sig_valid_until == 0)
 			ui_label("The fields signed by this signature are unchanged.");
+		else if (sig_valid_until == 1)
+			ui_label("This signature was invalidated in the last update by the signed fields being changed.");
+		else if (sig_valid_until == 2)
+			ui_label("This signature was invalidated in the penultimate update by the signed fields being changed.");
 		else
-			ui_label("This signature was invalided %d updates ago by the signed fields being changed.", sig_valid_until);
+			ui_label("This signature was invalidated %d updates ago by the signed fields being changed.", sig_valid_until);
 
 		ui_layout(B, X, NW, 2, 2);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
@@ -204,7 +208,7 @@ static void show_sig_dialog(pdf_widget *widget)
 		{
 			sig_cert_error = pdf_check_certificate(ctx, pdf, widget->obj);
 			sig_digest_error = pdf_check_digest(ctx, pdf, widget->obj);
-			sig_valid_until = pdf_validate_signature(ctx, pdf, widget);
+			sig_valid_until = pdf_validate_signature(ctx, widget);
 			pdf_signature_designated_name(ctx, pdf, widget->obj, sig_designated_name, sizeof(sig_designated_name));
 			ui.dialog = sig_verify_dialog;
 		}

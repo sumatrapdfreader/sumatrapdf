@@ -10229,6 +10229,78 @@ FUN(PDFDocument_calculate)(JNIEnv *env, jobject self)
 	}
 }
 
+JNIEXPORT jint JNICALL
+FUN(PDFDocument_countVersions)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument_safe(env, self);
+	int val = 0;
+
+	if (!ctx || !pdf)
+		return 0;
+
+	fz_try(ctx)
+		val = pdf_count_versions(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return val;
+}
+
+JNIEXPORT jint JNICALL
+FUN(PDFDocument_countUnsavedVersions)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument_safe(env, self);
+	int val = 0;
+
+	if (!ctx || !pdf)
+		return 0;
+
+	fz_try(ctx)
+		val = pdf_count_unsaved_versions(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return val;
+}
+
+JNIEXPORT jint JNICALL
+FUN(PDFDocument_validateChangeHistory)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument_safe(env, self);
+	int val = 0;
+
+	if (!ctx || !pdf)
+		return 0;
+
+	fz_try(ctx)
+		val = pdf_validate_change_history(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return val;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFDocument_wasPureXFA)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument_safe(env, self);
+	jboolean val = JNI_FALSE;
+
+	if (!ctx || !pdf)
+		return JNI_FALSE;
+
+	fz_try(ctx)
+		val = pdf_was_pure_xfa(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return val;
+}
+
 JNIEXPORT void JNICALL
 FUN(PDFWidget_finalize)(JNIEnv *env, jobject self)
 {
@@ -10496,4 +10568,50 @@ FUN(PDFWidget_textQuads)(JNIEnv *env, jobject self)
 
 	fz_drop_stext_page(ctx, stext);
 	return array;
+}
+
+JNIEXPORT jint JNICALL
+FUN(PDFWidget_validateSignature)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	int val = 0;
+
+	if (!ctx || !widget)
+		return 0;
+
+	fz_try(ctx)
+	{
+		val = pdf_validate_signature(ctx, widget);
+	}
+	fz_catch(ctx)
+	{
+		jni_rethrow(env, ctx);
+		return 0;
+	}
+
+	return val;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFWidget_isSigned)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_widget *widget = from_PDFWidget_safe(env, self);
+	jboolean val = JNI_FALSE;
+
+	if (!ctx || !widget)
+		return 0;
+
+	fz_try(ctx)
+	{
+		val = !!pdf_widget_is_signed(ctx, widget);
+	}
+	fz_catch(ctx)
+	{
+		jni_rethrow(env, ctx);
+		return 0;
+	}
+
+	return val;
 }

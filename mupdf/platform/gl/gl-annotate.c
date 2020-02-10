@@ -122,8 +122,9 @@ static void do_save_pdf_dialog(int for_signing)
 				save_opts.do_garbage = 2;
 			fz_try(ctx)
 			{
-				/* TODO: save opts to string */
-				trace_action("doc.save(%q);\n", save_filename);
+				static char opts_string[4096];
+				pdf_format_write_options(ctx, opts_string, sizeof(opts_string), &save_opts);
+				trace_action("doc.save(%q,%q);\n", save_filename, opts_string);
 				pdf_save_document(ctx, pdf, save_filename, &save_opts);
 				fz_strlcpy(filename, save_filename, PATH_MAX);
 				reload();
@@ -633,7 +634,7 @@ void do_annotate_panel(void)
 			{
 				trace_action("annot.setBorder(%d);\n", border);
 				pdf_set_annot_border(ctx, selected_annot, border);
-		}
+			}
 		}
 
 		if (should_edit_color(subtype))
@@ -650,7 +651,7 @@ void do_annotate_panel(void)
 			{
 				trace_action("annot.setOpacity(%g);\n", opacity / 255.0f);
 				pdf_set_annot_opacity(ctx, selected_annot, opacity / 255.0f);
-		}
+			}
 		}
 
 		ui_spacer();
@@ -1135,7 +1136,7 @@ static void do_edit_quad_points(void)
 						hits[i].ll.x, hits[i].ll.y,
 						hits[i].lr.x, hits[i].lr.y);
 					pdf_add_annot_quad_point(ctx, selected_annot, hits[i]);
-			}
+				}
 			}
 			marking = 0;
 		}

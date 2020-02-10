@@ -357,6 +357,8 @@ void pdf_write_document(fz_context *ctx, pdf_document *doc, fz_output *out, pdf_
 
 void pdf_save_document(fz_context *ctx, pdf_document *doc, const char *filename, pdf_write_options *opts);
 
+char *pdf_format_write_options(fz_context *ctx, char *buffer, size_t buffer_len, const pdf_write_options *opts);
+
 int pdf_can_be_saved_incrementally(fz_context *ctx, pdf_document *doc);
 
 #endif

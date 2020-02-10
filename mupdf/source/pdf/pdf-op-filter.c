@@ -1675,8 +1675,8 @@ pdf_filter_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_i
 	else
 	{
 		copy_resource(ctx, p, PDF_NAME(XObject), name);
-	if (p->chain->op_Do_image)
-		p->chain->op_Do_image(ctx, p->chain, name, image);
+		if (p->chain->op_Do_image)
+			p->chain->op_Do_image(ctx, p->chain, name, image);
 	}
 }
 
@@ -1709,8 +1709,8 @@ pdf_filter_Do_form(fz_context *ctx, pdf_processor *proc, const char *name, pdf_o
 	else
 	{
 		copy_resource(ctx, p, PDF_NAME(XObject), name);
-	if (p->chain->op_Do_form)
-		p->chain->op_Do_form(ctx, p->chain, name, xobj, page_resources);
+		if (p->chain->op_Do_form)
+			p->chain->op_Do_form(ctx, p->chain, name, xobj, page_resources);
 	}
 }
 

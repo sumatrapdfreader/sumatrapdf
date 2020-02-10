@@ -3291,8 +3291,8 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 
 		ensure_initial_incremental_contents(ctx, doc->file, opts->out);
 
-			fz_seek_output(ctx, opts->out, 0, SEEK_END);
-			fz_write_string(ctx, opts->out, "\n");
+		fz_seek_output(ctx, opts->out, 0, SEEK_END);
+		fz_write_string(ctx, opts->out, "\n");
 	}
 
 	xref_len = pdf_xref_len(ctx, doc);
@@ -3618,6 +3618,112 @@ void pdf_save_document(fz_context *ctx, pdf_document *doc, const char *filename,
 	{
 		fz_rethrow(ctx);
 	}
+}
+
+char *
+pdf_format_write_options(fz_context *ctx, char *buffer, size_t buffer_len, const pdf_write_options *opts)
+{
+#define ADD_OPT(S) do { if (!first) fz_strlcat(buffer, ",", buffer_len); fz_strlcat(buffer, (S), buffer_len); first = 0; } while (0)
+
+	int first = 1;
+	*buffer = 0;
+	if (opts->do_decompress)
+		ADD_OPT("decompress=yes");
+	if (opts->do_compress)
+		ADD_OPT("compress=yes");
+	if (opts->do_compress_fonts)
+		ADD_OPT("compress-fonts=yes");
+	if (opts->do_compress_images)
+		ADD_OPT("compress-images=yes");
+	if (opts->do_ascii)
+		ADD_OPT("ascii=yes");
+	if (opts->do_pretty)
+		ADD_OPT("pretty=yes");
+	if (opts->do_linear)
+		ADD_OPT("linearize=yes");
+	if (opts->do_clean)
+		ADD_OPT("clean=yes");
+	if (opts->do_sanitize)
+		ADD_OPT("sanitize=yes");
+	if (opts->do_incremental)
+		ADD_OPT("incremental=yes");
+	if (opts->do_encrypt == PDF_ENCRYPT_NONE)
+		ADD_OPT("decrypt=yes");
+	else if (opts->do_encrypt == PDF_ENCRYPT_KEEP)
+		ADD_OPT("decrypt=no");
+	switch(opts->do_encrypt)
+	{
+	default:
+	case PDF_ENCRYPT_UNKNOWN:
+		break;
+	case PDF_ENCRYPT_NONE:
+		ADD_OPT("encrypt=no");
+		break;
+	case PDF_ENCRYPT_KEEP:
+		ADD_OPT("encrypt=keep");
+		break;
+	case PDF_ENCRYPT_RC4_40:
+		ADD_OPT("encrypt=rc4-40");
+		break;
+	case PDF_ENCRYPT_RC4_128:
+		ADD_OPT("encrypt=rc4-128");
+		break;
+	case PDF_ENCRYPT_AES_128:
+		ADD_OPT("encrypt=aes-128");
+		break;
+	case PDF_ENCRYPT_AES_256:
+		ADD_OPT("encrypt=aes-256");
+		break;
+	}
+	if (strlen(opts->opwd_utf8)) {
+		ADD_OPT("owner-password=");
+		fz_strlcat(buffer, opts->opwd_utf8, buffer_len);
+	}
+	if (strlen(opts->upwd_utf8)) {
+		ADD_OPT("user-password=");
+		fz_strlcat(buffer, opts->opwd_utf8, buffer_len);
+	}
+	{
+		char temp[32];
+		ADD_OPT("permissions=");
+		fz_snprintf(temp, sizeof(temp), "%d", opts->permissions);
+		fz_strlcat(buffer, temp, buffer_len);
+	}
+	switch(opts->do_garbage)
+	{
+	case 0:
+		break;
+	case 1:
+		ADD_OPT("garbage=yes");
+		break;
+	case 2:
+		ADD_OPT("garbage=compact");
+		break;
+	case 3:
+		ADD_OPT("garbage=deduplicate");
+		break;
+	default:
+	{
+		char temp[32];
+		fz_snprintf(temp, sizeof(temp), "%d", opts->do_garbage);
+		ADD_OPT("garbage=");
+		fz_strlcat(buffer, temp, buffer_len);
+		break;
+	}
+	}
+	switch(opts->do_appearance)
+	{
+	case 1:
+		ADD_OPT("appearance=yes");
+		break;
+	case 2:
+		ADD_OPT("appearance=all");
+		break;
+	}
+
+#undef ADD_OPT
+
+	return buffer;
 }
 
 typedef struct pdf_writer_s pdf_writer;

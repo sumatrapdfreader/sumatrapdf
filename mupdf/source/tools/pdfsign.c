@@ -90,7 +90,7 @@ static void clear_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatu
 		page = pdf_load_page(ctx, doc, pageno);
 		for (widget = pdf_first_widget(ctx, page); widget; widget = pdf_next_widget(ctx, widget))
 			if (pdf_widget_type(ctx, widget) == PDF_WIDGET_TYPE_SIGNATURE && !pdf_objcmp_resolve(ctx, widget->obj, signature))
-				pdf_clear_signature(ctx, doc, widget);
+				pdf_clear_signature(ctx, widget);
 	}
 	fz_always(ctx)
 		fz_drop_page(ctx, (fz_page*)page);
@@ -120,7 +120,7 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 		page = pdf_load_page(ctx, doc, pageno);
 		for (widget = pdf_first_widget(ctx, page); widget; widget = pdf_next_widget(ctx, widget))
 			if (pdf_widget_type(ctx, widget) == PDF_WIDGET_TYPE_SIGNATURE && !pdf_objcmp_resolve(ctx, widget->obj, signature))
-				pdf_sign_signature(ctx, doc, widget, signer);
+				pdf_sign_signature(ctx, widget, signer);
 	}
 	fz_always(ctx)
 	{

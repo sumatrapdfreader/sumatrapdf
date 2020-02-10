@@ -148,4 +148,9 @@ public class PDFWidget extends PDFAnnotation
 		return options;
 	}
 	public native boolean setChoiceValue(String val);
+
+	/* Signature fields */
+
+	public native int validateSignature();
+	public native boolean isSigned();
 }

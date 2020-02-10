@@ -652,7 +652,7 @@ static void print_stack_default(void *addr)
             memcpy(backtrace_exe, strings[0], s - strings[0]);
             backtrace_exe[s-strings[0]] = 0;
             init_libbt();
-                print_stack_value(addr);
+            print_stack_value(addr);
         }
     }
 #endif

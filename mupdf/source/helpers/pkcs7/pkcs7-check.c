@@ -41,7 +41,7 @@ static void pdf_format_designated_name(pdf_pkcs7_designated_name *name, char *bu
 		", emailAddress=", name->email,
 		", C=", name->c};
 
-		if (buflen)
+	if (buflen)
 		buf[0] = 0;
 
 	n = sizeof(part)/sizeof(*part);

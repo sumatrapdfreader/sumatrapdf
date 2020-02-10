@@ -161,10 +161,11 @@ static void enact_sig_locking(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 	pdf_walk_tree(ctx, fields, PDF_NAME(Kids), check_field_locking, pop_field_locking, &data, &ff_names[0], &ff);
 }
 
-void pdf_sign_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, pdf_pkcs7_signer *signer)
+void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer)
 {
 	pdf_pkcs7_designated_name *dn = NULL;
 	fz_buffer *fzbuf = NULL;
+	pdf_document *doc = widget->page->doc;
 
 	fz_try(ctx)
 	{
@@ -236,7 +237,7 @@ void pdf_sign_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, 
 	}
 }
 
-void pdf_clear_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget)
+void pdf_clear_signature(fz_context *ctx, pdf_widget *widget)
 {
 	int flags;
 

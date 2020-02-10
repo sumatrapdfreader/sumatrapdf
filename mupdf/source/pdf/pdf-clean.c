@@ -65,7 +65,7 @@ pdf_filter_resources(fz_context *ctx, pdf_document *doc, pdf_obj *in_res, pdf_ob
 			{
 				pdf_obj *xobj = pdf_dict_get_val(ctx, obj, i);
 				if (xobj && pdf_dict_get(ctx, xobj, PDF_NAME(Subtype)) == PDF_NAME(Form))
-	{
+				{
 					pdf_filter_xobject(ctx, doc, xobj, in_res, filter);
 				}
 			}
@@ -75,7 +75,7 @@ pdf_filter_resources(fz_context *ctx, pdf_document *doc, pdf_obj *in_res, pdf_ob
 	/* Font */
 	obj = pdf_dict_get(ctx, res, PDF_NAME(Font));
 	if (obj)
-		{
+	{
 		n = pdf_dict_len(ctx, obj);
 		for (i = 0; i < n; i++)
 		{
@@ -85,7 +85,7 @@ pdf_filter_resources(fz_context *ctx, pdf_document *doc, pdf_obj *in_res, pdf_ob
 				pdf_filter_type3(ctx, doc, font, in_res, filter);
 			}
 		}
-		}
+	}
 
 }
 
@@ -123,7 +123,7 @@ pdf_filter_content_stream(
 	*out_res = NULL;
 
 	fz_try(ctx)
-		{
+	{
 		*out_buf = fz_new_buffer(ctx, 1024);
 		proc_buffer = pdf_new_buffer_processor(ctx, *out_buf, filter->ascii);
 		if (filter->sanitize)
@@ -283,13 +283,13 @@ pdf_filter_xobject(fz_context *ctx, pdf_document *doc, pdf_obj *stm, pdf_obj *pa
 		pdf_filter_content_stream(ctx, doc, stm, old_res, fz_identity, filter, struct_parents, &new_buf, &new_res);
 		pdf_update_stream(ctx, doc, stm, new_buf, 0);
 		pdf_dict_put(ctx, stm, PDF_NAME(Resources), new_res);
-		}
+	}
 	fz_always(ctx)
-		{
+	{
 		pdf_unmark_obj(ctx, stm);
 		fz_drop_buffer(ctx, new_buf);
 		pdf_drop_obj(ctx, new_res);
-		}
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 }
@@ -324,23 +324,23 @@ pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_re
 		return pdf_keep_obj(ctx, old_xobj);
 
 	fz_try(ctx)
-		{
+	{
 		new_xobj = pdf_add_object_drop(ctx, doc, pdf_copy_dict(ctx, old_xobj));
 		pdf_filter_content_stream(ctx, doc, old_xobj, old_res, transform, filter, struct_parents, &new_buf, &new_res);
 		pdf_update_stream(ctx, doc, new_xobj, new_buf, 0);
 		pdf_dict_put(ctx, new_xobj, PDF_NAME(Resources), new_res);
-		}
+	}
 	fz_always(ctx)
-		{
+	{
 		pdf_unmark_obj(ctx, old_xobj);
 		fz_drop_buffer(ctx, new_buf);
 		pdf_drop_obj(ctx, new_res);
-		}
+	}
 	fz_catch(ctx)
-		{
+	{
 		pdf_drop_obj(ctx, new_xobj);
 		fz_rethrow(ctx);
-		}
+	}
 
 	return new_xobj;
 }
@@ -391,8 +391,8 @@ void pdf_filter_annot_contents(fz_context *ctx, pdf_document *doc, pdf_annot *an
 	if (pdf_is_dict(ctx, ap))
 	{
 		int i, n = pdf_dict_len(ctx, ap);
-	for (i = 0; i < n; i++)
-	{
+		for (i = 0; i < n; i++)
+		{
 			pdf_obj *stm = pdf_dict_get_val(ctx, ap, i);
 			if (pdf_is_stream(ctx, stm))
 			{
