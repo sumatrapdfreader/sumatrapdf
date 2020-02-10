@@ -22,21 +22,22 @@ const lowestCrashingBuildToShow = 12064
 const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
 
 type CrashVersion struct {
-	main         string
-	build        int
-	isPreRelease bool
-	is64bit      bool
+	Main         string
+	Build        int
+	IsPreRelease bool
+	Is64bit      bool
 }
 
 type CrashInfo struct {
-	version          string
-	ver              *CrashVersion
-	crashFile        string
-	os               string
-	crashLines       []string
-	crashLinesAll    string
-	exceptionInfo    []string
-	exceptionInfoAll string
+	Day              string // yy-mm-dd format
+	Version          string
+	Ver              *CrashVersion
+	CrashFile        string
+	OS               string
+	CrashLines       []string
+	CrashLinesAll    string
+	ExceptionInfo    []string
+	ExceptionInfoAll string
 }
 
 /*
@@ -56,11 +57,11 @@ func parseCrashVersion(s string) *CrashVersion {
 	v := parts[0] // 3.2.11495
 	for _, s = range parts[1:] {
 		if s == "pre-release" {
-			res.isPreRelease = true
+			res.IsPreRelease = true
 			continue
 		}
 		if s == "64-bit" {
-			res.is64bit = true
+			res.Is64bit = true
 		}
 	}
 	// 3.2.11495
@@ -69,12 +70,12 @@ func parseCrashVersion(s string) *CrashVersion {
 	if len(parts) == 3 {
 		build, err := strconv.Atoi(parts[2])
 		must(err)
-		res.build = build
+		res.Build = build
 	}
 	if len(parts) == 2 {
-		res.main = parts[0] + "." + parts[1]
+		res.Main = parts[0] + "." + parts[1]
 	} else {
-		res.main = parts[0]
+		res.Main = parts[0]
 	}
 	return res
 }
@@ -94,7 +95,7 @@ func parseCrash(d []byte) *CrashInfo {
 	for _, l := range lines {
 		if inExceptionInfo {
 			if isEmptyLine(s) || len(tmpLines) > 5 {
-				res.exceptionInfo = tmpLines
+				res.ExceptionInfo = tmpLines
 				tmpLines = nil
 				inExceptionInfo = false
 				continue
@@ -104,7 +105,7 @@ func parseCrash(d []byte) *CrashInfo {
 		}
 		if inCrashLines {
 			if isEmptyLine(s) || len(tmpLines) > 6 {
-				res.crashLines = tmpLines
+				res.CrashLines = tmpLines
 				tmpLines = nil
 				inCrashLines = false
 				continue
@@ -113,11 +114,11 @@ func parseCrash(d []byte) *CrashInfo {
 			continue
 		}
 		if strings.HasPrefix(l, "Crash file:") {
-			res.crashFile = l
+			res.CrashFile = l
 			continue
 		}
 		if strings.HasPrefix(l, "OS:") {
-			res.os = l
+			res.OS = l
 			continue
 		}
 		if strings.HasPrefix(l, "Exception:") {
@@ -131,12 +132,12 @@ func parseCrash(d []byte) *CrashInfo {
 			continue
 		}
 		if strings.HasPrefix(l, "Ver:") {
-			res.version = l
-			res.ver = parseCrashVersion(l)
+			res.Version = l
+			res.Ver = parseCrashVersion(l)
 		}
 	}
-	res.crashLinesAll = strings.Join(res.crashLines, "\n")
-	res.exceptionInfoAll = strings.Join(res.exceptionInfo, "\n")
+	res.CrashLinesAll = strings.Join(res.CrashLines, "\n")
+	res.ExceptionInfoAll = strings.Join(res.ExceptionInfo, "\n")
 	return res
 }
 
@@ -153,13 +154,29 @@ func crashesDataDir() string {
 	return dir
 }
 
+// filePath is:
+// C:\Users\kjk\data\sumatra-crashes\2020\01\28\3f91b0910000006.txt
+// return "2020-01-28"
+func dayFromPath(path string) string {
+	// normalize to use / as dir separator
+	path = filepath.ToSlash(path)
+	// dir should be: C:/Users/kjk/data/sumatra-crashes/2020/01/28
+	parts := strings.Split(path, "/")
+	start := len(parts) - 4
+	parts = parts[start : start+3]
+	panicIf(len(parts) != 3)
+	return strings.Join(parts, "-")
+}
+
 func parseCrashFile(path string) *CrashInfo {
 	d := u.ReadFileMust(path)
-	return parseCrash(d)
+	ci := parseCrash(d)
+	ci.Day = dayFromPath(path)
+	return ci
 }
 
 func isCreateThumbnailCrash(ci *CrashInfo) bool {
-	s := ci.crashLinesAll
+	s := ci.CrashLinesAll
 	if strings.Contains(s, "!CreateThumbnailForFile+0x1ff") {
 		return true
 	}
@@ -170,7 +187,7 @@ func isCreateThumbnailCrash(ci *CrashInfo) bool {
 }
 
 func shouldShowCrash(ci *CrashInfo) bool {
-	build := ci.ver.build
+	build := ci.Ver.Build
 	// filter out outdated builds
 	if build > 0 && build < lowestCrashingBuildToShow {
 		return false
@@ -199,7 +216,7 @@ func showCrashesToTerminal() {
 		}
 		nTotalCrashes++
 		ci := parseCrashFile(path)
-		if ci == nil || ci.ver == nil {
+		if ci == nil || ci.Ver == nil {
 			logf("Failed to parse crash file '%s'\n", path)
 			return nil
 		}
@@ -208,11 +225,11 @@ func showCrashesToTerminal() {
 			return nil
 		}
 		logf("%s\n", path)
-		if len(ci.crashFile) != 0 {
-			logf("%s\n", ci.crashFile)
+		if len(ci.CrashFile) != 0 {
+			logf("%s\n", ci.CrashFile)
 		}
-		logf("ver: %s\n", ci.version)
-		for _, s := range ci.crashLines {
+		logf("ver: %s\n", ci.Version)
+		for _, s := range ci.CrashLines {
 			logf("%s\n", s)
 		}
 		logf("\n")
@@ -356,7 +373,5 @@ func previewCrashes() {
 
 	downloadCrashes()
 	logf("dataDir: %s\n", dataDir)
-	if false {
-		showCrashesToTerminal()
-	}
+	showCrashesToTerminal()
 }
