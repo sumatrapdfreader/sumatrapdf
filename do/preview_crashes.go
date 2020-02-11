@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/kjk/u"
@@ -29,15 +33,17 @@ type CrashVersion struct {
 }
 
 type CrashInfo struct {
+	N                int
 	Day              string // yy-mm-dd format
 	Version          string
 	Ver              *CrashVersion
 	CrashFile        string
 	OS               string
 	CrashLines       []string
-	CrashLinesAll    string
+	crashLinesAll    string
 	ExceptionInfo    []string
-	ExceptionInfoAll string
+	exceptionInfoAll string
+	path             string
 }
 
 /*
@@ -136,8 +142,8 @@ func parseCrash(d []byte) *CrashInfo {
 			res.Ver = parseCrashVersion(l)
 		}
 	}
-	res.CrashLinesAll = strings.Join(res.CrashLines, "\n")
-	res.ExceptionInfoAll = strings.Join(res.ExceptionInfo, "\n")
+	res.crashLinesAll = strings.Join(res.CrashLines, "\n")
+	res.exceptionInfoAll = strings.Join(res.ExceptionInfo, "\n")
 	return res
 }
 
@@ -172,11 +178,12 @@ func parseCrashFile(path string) *CrashInfo {
 	d := u.ReadFileMust(path)
 	ci := parseCrash(d)
 	ci.Day = dayFromPath(path)
+	ci.path = path
 	return ci
 }
 
 func isCreateThumbnailCrash(ci *CrashInfo) bool {
-	s := ci.CrashLinesAll
+	s := ci.crashLinesAll
 	if strings.Contains(s, "!CreateThumbnailForFile+0x1ff") {
 		return true
 	}
@@ -202,6 +209,33 @@ var (
 	nTotalCrashes    = 0
 	nNotShownCrashes = 0
 )
+
+func loadCrashes() []*CrashInfo {
+	dataDir := crashesDataDir()
+	nTotalCrashes = 0
+	logf("loadCrashes: data dir: '%s'", dataDir)
+	timeStart := time.Now()
+	defer logf("  finsished in %s, crashes: %d\n", time.Since(timeStart), nTotalCrashes)
+	var res []*CrashInfo
+	fn := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		nTotalCrashes++
+		ci := parseCrashFile(path)
+		if ci == nil || ci.Ver == nil {
+			logf("Failed to parse crash file '%s'\n", path)
+			return nil
+		}
+		res = append(res, ci)
+		return nil
+	}
+	filepath.Walk(dataDir, fn)
+	return res
+}
 
 func showCrashesToTerminal() {
 	nNotShownCrashes = 0
@@ -373,5 +407,120 @@ func previewCrashes() {
 
 	downloadCrashes()
 	logf("dataDir: %s\n", dataDir)
-	showCrashesToTerminal()
+	//showCrashesToTerminal()
+	showCrashesWeb()
+}
+
+var crashesCached []*CrashInfo
+
+func getCrashesCached() []*CrashInfo {
+	if crashesCached == nil {
+		crashesCached = loadCrashes()
+		for i := 0; i < len(crashesCached); i++ {
+			crashesCached[i].N = i
+		}
+	}
+	return crashesCached
+}
+
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.String()
+	if uri == "/" {
+		crashes := loadCrashes()
+		d := map[string]interface{}{
+			"Crashes": crashes,
+		}
+		serveHTMLTemplate(w, r, 200, "index.tmpl.html", d)
+		return
+	}
+	servePlainText(w, r, http.StatusNotFound, "'%s' not found", uri)
+}
+
+func handleIndex2(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.String()
+	path := strings.TrimPrefix(uri, "/")
+	if uri == "/" {
+		path = "index.html"
+	}
+	serveRelativeFile(w, r, path)
+}
+
+func handleCrash(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.String()
+	crashNoStr := strings.TrimPrefix(uri, "/crash/")
+	crashNo, err := strconv.Atoi(crashNoStr)
+	must(err)
+	crashes := getCrashesCached()
+	crash := crashes[crashNo]
+	crashBody := u.ReadFileMust(crash.path)
+	d := map[string]interface{}{
+		"CrashBody": string(crashBody),
+	}
+	serveHTMLTemplate(w, r, 200, "crash.tmpl.html", d)
+}
+
+func handleAPIGetCrashes(w http.ResponseWriter, r *http.Request) {
+	crashes := getCrashesCached()
+	d := map[string]interface{}{
+		"Crashes": crashes,
+	}
+	serveJSON(w, r, d)
+}
+
+// https://blog.gopheracademy.com/advent-2016/exposing-go-on-the-internet/
+func makeHTTPServer() *http.Server {
+	mux := &http.ServeMux{}
+	mux.HandleFunc("/", handleIndex2)
+	mux.HandleFunc("/crash/", handleCrash)
+	mux.HandleFunc("/api/crashes", handleAPIGetCrashes)
+
+	var handler http.Handler = mux
+
+	srv := &http.Server{
+		ReadTimeout:  120 * time.Second,
+		WriteTimeout: 120 * time.Second,
+		IdleTimeout:  120 * time.Second, // introduced in Go 1.8
+		Handler:      handler,
+	}
+	return srv
+}
+
+const (
+	httpPort    = ":8945"
+	flgHTTPAddr = "127.0.0.1" + httpPort
+)
+
+func showCrashesWeb() {
+	httpSrv := makeHTTPServer()
+	httpSrv.Addr = flgHTTPAddr
+
+	chServerClosed := make(chan bool, 1)
+	go func() {
+		err := httpSrv.ListenAndServe()
+		// mute error caused by Shutdown()
+		if err == http.ErrServerClosed {
+			err = nil
+		}
+		must(err)
+		chServerClosed <- true
+	}()
+	_ = u.OpenBrowser("http://" + flgHTTPAddr)
+
+	time.Sleep(time.Second * 2)
+
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt /* SIGINT */, syscall.SIGTERM)
+	<-c
+
+	ctx := context.Background()
+	if httpSrv != nil {
+		// Shutdown() needs a non-nil context
+		_ = httpSrv.Shutdown(ctx)
+		select {
+		case <-chServerClosed:
+			// do nothing
+		case <-time.After(time.Second * 5):
+			// timeout
+		}
+	}
 }

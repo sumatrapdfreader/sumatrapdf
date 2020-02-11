@@ -1,0 +1,97 @@
+<!doctype html>
+<httml>
+    <head>
+        <style>
+            html, body {
+                font-family: monospace;
+                font-size: 10pt;
+            }
+            .no-wrap {
+                white-space: nowrap;
+            }
+        </style>
+
+        <script>
+        </script>
+        <script>
+            let allCrashes = [];
+
+            function len(o) {
+                return o.length;
+            }
+            let days = [];
+            let crashesByDay = {};
+            let ractive = null;
+
+            function sortCrashCmp(a, b) {
+                const av = a.CrashLines[0];
+                const bv = b.CrashLines[0];
+                if (av > bv) {
+                    return 1;
+                }
+                if (av < bv) {
+                    return -1;
+                }
+                return 0;
+            }
+
+            function groupCrashesByDay() {
+                crashesByDay = {};
+                for (let crash of allCrashes) {
+                    const day = crash.Day;
+                    const a = crashesByDay[day] || [];
+                    a.push(crash);
+                    crashesByDay[day] = a;
+                }
+                days = Object.keys(crashesByDay);
+                days.sort();
+                days = days.reverse();
+                for (let day of days) {
+                    crashesByDay[day].sort(sortCrashCmp);
+                }
+            }
+
+            function getCrashesByDay(day) {
+                return crashesByDay[day];
+            }
+            function lenCrashesByDay(day) {
+                return len(crashesByDay[day]);
+            }
+
+            fetch("/api/crashes")
+            .then((response) => {
+                return response.json();
+            })
+            .then((myjson) => {
+                allCrashes = myjson.Crashes;
+                groupCrashesByDay();
+                ractive = new Ractive({
+                    target: '#target',
+                    template: '#template',
+                    data: { 
+                        days: days,
+                        lenCrashesByDay: lenCrashesByDay,
+                        getCrashesByDay: getCrashesByDay
+                    }
+            });
+            })           
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/ractive"></script>
+    </head>
+    <body>
+        <div id="target"></div>
+        <script id="template" type="text/ractive">
+            {{#each days as day}}
+                <div style="padding-bottom: 1em;">{{day}} {{lenCrashesByDay(day)}}
+                    {{#each getCrashesByDay(day) as crash}}
+                        <div class="no-wrap">
+                            <a href="/crash/{{.N}}">
+                                {{.CrashLines[0]}}
+                            </a>
+                        </div>
+                    {{/each}}
+                </div>
+            {{/each}}
+        </script>        
+    </body>
+</html>
