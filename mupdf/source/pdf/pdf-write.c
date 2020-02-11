@@ -3681,7 +3681,7 @@ pdf_format_write_options(fz_context *ctx, char *buffer, size_t buffer_len, const
 	}
 	if (strlen(opts->upwd_utf8)) {
 		ADD_OPT("user-password=");
-		fz_strlcat(buffer, opts->opwd_utf8, buffer_len);
+		fz_strlcat(buffer, opts->upwd_utf8, buffer_len);
 	}
 	{
 		char temp[32];
