@@ -860,6 +860,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
         return kindDestinationLaunchURL;
     }
 
+    logf("CalcDestKind(): unknown uri: '%s'\n", uri);
     // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
     CrashMePort();
     return nullptr;
