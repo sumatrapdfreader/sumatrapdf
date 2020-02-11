@@ -7,8 +7,19 @@
                 font-size: 10pt;
             }
         </style>
+        <script>
+            let crash = {{.Crash}};
+        </script>
     </head>
     <body>
+        <div style="padding-bottom: 1em;"><a href="/">All crashes</a></div>
+            {{range .CrashLinesLinked}}
+                {{if .URL}}
+                    <div><a href="{{.URL}}">{{.Text}}</a></div>
+                {{else}}
+                    <div>{{.Text}}</div>
+                {{end}}
+            {{end}}
         <pre>{{.CrashBody}}</pre>
     </body>
 </html>

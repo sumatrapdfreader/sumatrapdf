@@ -32,18 +32,67 @@ type CrashVersion struct {
 	Is64bit      bool
 }
 
+type CrashLine struct {
+	Text string
+	URL  string
+}
+
 type CrashInfo struct {
 	N                int
 	Day              string // yy-mm-dd format
 	Version          string
 	Ver              *CrashVersion
+	GitSha1          string
 	CrashFile        string
 	OS               string
 	CrashLines       []string
+	CrashLinesLinked []CrashLine
 	crashLinesAll    string
 	ExceptionInfo    []string
 	exceptionInfoAll string
 	path             string
+}
+
+func symbolicateCrashLine(s string, gitSha1 string) CrashLine {
+	parts := strings.SplitN(s, " ", 4)
+	if len(parts) < 2 {
+		return CrashLine{
+			Text: s,
+		}
+	}
+	parts = parts[2:]
+	text := strings.Join(parts, " ")
+	uri := ""
+	if len(parts) == 2 {
+		s = parts[1]
+		// D:\a\sumatrapdf\sumatrapdf\src\EbookController.cpp+329
+		idx := strings.LastIndex(s, `\sumatrapdf\`)
+		if idx > 0 {
+			s = s[idx+len(`\sumatrapdf\`):]
+			// src\EbookController.cpp+329
+			parts = strings.Split(s, "+")
+			// https://github.com/sumatrapdfreader/sumatrapdf/blob/67e5328b235fa3d5c23622bc8f05f43865fa03f8/.gitattributes#L2
+			line := ""
+			filePath := parts[0]
+			if len(parts) == 2 {
+				line = parts[1]
+			}
+			filePath = strings.Replace(filePath, "\\", "/", -1)
+			uri = "https://github.com/sumatrapdfreader/sumatrapdf/blob/" + gitSha1 + "/" + filePath + "#L" + line
+		}
+	}
+	res := CrashLine{
+		Text: text,
+		URL:  uri,
+	}
+	return res
+}
+
+func symbolicateCrashInfoLines(ci *CrashInfo) {
+	for _, s := range ci.CrashLines {
+		cl := symbolicateCrashLine(s, ci.GitSha1)
+		ci.CrashLinesLinked = append(ci.CrashLinesLinked, cl)
+	}
 }
 
 /*
@@ -90,6 +139,17 @@ func isEmptyLine(s string) bool {
 	return len(strings.TrimSpace((s))) == 0
 }
 
+func removeEmptyLines(a []string) []string {
+	var res []string
+	for _, s := range a {
+		s = strings.TrimSpace(s)
+		if len(s) > 0 {
+			res = append(res, s)
+		}
+	}
+	return res
+}
+
 func parseCrash(d []byte) *CrashInfo {
 	d = u.NormalizeNewlines(d)
 	s := string(d)
@@ -101,7 +161,7 @@ func parseCrash(d []byte) *CrashInfo {
 	for _, l := range lines {
 		if inExceptionInfo {
 			if isEmptyLine(s) || len(tmpLines) > 5 {
-				res.ExceptionInfo = tmpLines
+				res.ExceptionInfo = removeEmptyLines(tmpLines)
 				tmpLines = nil
 				inExceptionInfo = false
 				continue
@@ -111,7 +171,7 @@ func parseCrash(d []byte) *CrashInfo {
 		}
 		if inCrashLines {
 			if isEmptyLine(s) || len(tmpLines) > 6 {
-				res.CrashLines = tmpLines
+				res.CrashLines = removeEmptyLines(tmpLines)
 				tmpLines = nil
 				inCrashLines = false
 				continue
@@ -125,6 +185,11 @@ func parseCrash(d []byte) *CrashInfo {
 		}
 		if strings.HasPrefix(l, "OS:") {
 			res.OS = l
+			continue
+		}
+		if strings.HasPrefix(l, "Git:") {
+			parts := strings.Split(l, " ")
+			res.GitSha1 = parts[1]
 			continue
 		}
 		if strings.HasPrefix(l, "Exception:") {
@@ -144,6 +209,7 @@ func parseCrash(d []byte) *CrashInfo {
 	}
 	res.crashLinesAll = strings.Join(res.CrashLines, "\n")
 	res.exceptionInfoAll = strings.Join(res.ExceptionInfo, "\n")
+	symbolicateCrashInfoLines(res)
 	return res
 }
 
@@ -454,7 +520,8 @@ func handleCrash(w http.ResponseWriter, r *http.Request) {
 	crash := crashes[crashNo]
 	crashBody := u.ReadFileMust(crash.path)
 	d := map[string]interface{}{
-		"CrashBody": string(crashBody),
+		"CrashLinesLinked": crash.CrashLinesLinked,
+		"CrashBody":        string(crashBody),
 	}
 	serveHTMLTemplate(w, r, 200, "crash.tmpl.html", d)
 }
@@ -491,6 +558,8 @@ const (
 )
 
 func showCrashesWeb() {
+	getCrashesCached()
+
 	httpSrv := makeHTTPServer()
 	httpSrv.Addr = flgHTTPAddr
 

@@ -24,10 +24,19 @@
             let ractive = null;
 
             function sortCrashCmp(a, b) {
-                const av = a.CrashLines[0];
-                const bv = b.CrashLines[0];
-                if (av > bv) {
+                let av = a.CrashLines[0];
+                let bv = b.CrashLines[0];
+                av = shortenCrashLine(av);
+                bv = shortenCrashLine(bv)
+                if (len(av) > len(bv)) {
+                    return -1;
+                }
+                if (len(av) < len(bv)) {
                     return 1;
+                }
+
+                if (av > bv) {
+                    return -1;
                 }
                 if (av < bv) {
                     return -1;
@@ -57,7 +66,11 @@
             function lenCrashesByDay(day) {
                 return len(crashesByDay[day]);
             }
-
+            function shortenCrashLine(s) {
+                let parts = s.split(" ");
+                parts.splice(0, 2);
+                return parts.join(" ");
+            }
             fetch("/api/crashes")
             .then((response) => {
                 return response.json();
@@ -71,7 +84,8 @@
                     data: { 
                         days: days,
                         lenCrashesByDay: lenCrashesByDay,
-                        getCrashesByDay: getCrashesByDay
+                        getCrashesByDay: getCrashesByDay,
+                        shortenCrashLine: shortenCrashLine,
                     }
             });
             })           
@@ -86,7 +100,7 @@
                     {{#each getCrashesByDay(day) as crash}}
                         <div class="no-wrap">
                             <a href="/crash/{{.N}}">
-                                {{.CrashLines[0]}}
+                                {{shortenCrashLine(.CrashLines[0])}}
                             </a>
                         </div>
                     {{/each}}
