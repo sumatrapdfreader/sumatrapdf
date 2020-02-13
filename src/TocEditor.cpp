@@ -15,6 +15,13 @@
 #include "wingui/TreeCtrl.h"
 #include "wingui/ButtonCtrl.h"
 
+#include "resource.h"
+#include "ProgressUpdateUI.h"
+#include "Notifications.h"
+#include "SettingsStructs.h"
+#include "WindowInfo.h"
+#include "Menu.h"
+
 #include "EngineBase.h"
 #include "EngineMulti.h"
 #include "EngineManager.h"
@@ -55,7 +62,34 @@ struct TocEditorWindow {
     void TreeClickHandler(TreeClickArgs* args);
     void GetDispInfoHandler(TreeGetDispInfoArgs*);
     void TreeItemDragged(TreeItemDraggeddArgs*);
+    void TreeContextMenu(ContextMenuArgs*);
 };
+
+// clang-format off
+static MenuDef menuDefContext[] = {
+    {"Edit", 0, 0},
+    {"Add sibling", 0, 0},
+    {"Add child", 0, 0},
+    {"Remove", 0, 0},
+};
+// clang-format on
+
+void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
+    // TODO: implement me
+    args->didHandle = true;
+
+    POINT pt{};
+    TreeItem* ti = GetOrSelectTreeItemAtPos(args, pt);
+    if (!ti) {
+        return;
+    }
+    HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
+    MarkMenuOwnerDraw(popup);
+    UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
+    INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
+    FreeMenuOwnerDrawInfoData(popup);
+    DestroyMenu(popup);
+}
 
 void TocEditorWindow::TreeItemDragged(TreeItemDraggeddArgs* args) {
     TocItem* dragged = (TocItem*)args->draggedItem;
@@ -311,6 +345,7 @@ static void CreateMainLayout(TocEditorWindow* win) {
     tree->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelectedHandler, win, _1);
     tree->onTreeClick = std::bind(&TocEditorWindow::TreeClickHandler, win, _1);
     tree->onTreeItemDragged = std::bind(&TocEditorWindow::TreeItemDragged, win, _1);
+    tree->onContextMenu = std::bind(&TocEditorWindow::TreeContextMenu, win, _1);
     gWindow->treeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
 

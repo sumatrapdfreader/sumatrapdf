@@ -369,9 +369,6 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     ShowExportedBookmarksMsg(path.c_str());
 }
 
-// in Favorites.cpp
-extern TreeItem* GetOrSelectTreeItemAtPos(ContextMenuArgs* args, POINT& pt);
-
 // clang-format off
 static MenuDef contextMenuDef[] = {
     {_TRN("Expand All"),    IDM_EXPAND_ALL,         0 },

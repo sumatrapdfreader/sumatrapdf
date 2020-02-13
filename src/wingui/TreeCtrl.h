@@ -218,3 +218,4 @@ bool IsTree(Kind);
 bool IsTree(ILayout*);
 
 void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes);
+TreeItem* GetOrSelectTreeItemAtPos(ContextMenuArgs* args, POINT& pt);
