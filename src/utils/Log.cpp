@@ -13,7 +13,8 @@ static char* logFilePath;
 void log(std::string_view s) {
     if (!gLogBuf) {
         gLogAllocator = new HeapAllocator();
-        gLogBuf = new str::Str(16 * 1024, gLogAllocator);
+        gLogBuf = new str::Str(32 * 1024, gLogAllocator);
+        gLogBuf->allowFailure = true;
     }
     gLogBuf->Append(s.data(), s.size());
     if (logToStderr) {
