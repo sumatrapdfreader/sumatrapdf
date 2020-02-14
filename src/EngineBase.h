@@ -227,7 +227,8 @@ struct TocItem : TreeItem {
 
     ~TocItem() override;
 
-    void AddSibling(TocItem* sibling);
+    void AddSiblingAtEnd(TocItem* sibling);
+    void AddChild(TocItem* child);
 
     void OpenSingleNode();
 

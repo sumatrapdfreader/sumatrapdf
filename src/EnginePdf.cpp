@@ -943,7 +943,7 @@ TocTree* EnginePdf::GetToc() {
         tocTree = new TocTree(att);
         return tocTree;
     }
-    root->AddSibling(att);
+    root->AddSiblingAtEnd(att);
     tocTree = new TocTree(root);
     return tocTree;
 }

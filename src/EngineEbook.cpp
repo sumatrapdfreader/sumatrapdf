@@ -668,7 +668,7 @@ static void AppendTocItem(TocItem*& root, TocItem* item, int level) {
             return;
         }
     }
-    r2->AddSibling(item);
+    r2->AddSiblingAtEnd(item);
 }
 
 class EbookTocBuilder : public EbookTocVisitor {

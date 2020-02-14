@@ -1140,7 +1140,7 @@ TocItem* EngineDjVu::BuildTocTree(TocItem* parent, miniexp_t entry, int& idCount
         if (!node) {
             node = tocItem;
         } else {
-            node->AddSibling(tocItem);
+            node->AddSiblingAtEnd(tocItem);
         }
     }
 

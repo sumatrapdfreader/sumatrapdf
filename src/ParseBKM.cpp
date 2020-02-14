@@ -343,13 +343,13 @@ static TocTree* parseVbkm(std::string_view sv) {
             for (int j = (int)i - 1; j >= 0; j--) {
                 prev = items[j];
                 if (prev.indent == curr.indent) {
-                    prev.item->AddSibling(item);
+                    prev.item->AddSiblingAtEnd(item);
                     didFound = true;
                     break;
                 }
             }
             if (!didFound) {
-                tree->root->AddSibling(item);
+                tree->root->AddSiblingAtEnd(item);
             }
         }
     }

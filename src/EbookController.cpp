@@ -816,7 +816,7 @@ class EbookTocCollector : public EbookTocVisitor {
                 r2 = r2->child;
             }
             if (level <= 0) {
-                r2->AddSibling(item);
+                r2->AddSiblingAtEnd(item);
             } else {
                 r2->child = item;
             }

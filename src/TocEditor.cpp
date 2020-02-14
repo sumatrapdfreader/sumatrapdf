@@ -66,6 +66,63 @@ struct TocEditorWindow {
     void TreeContextMenu(ContextMenuArgs*);
 };
 
+static TocEditorWindow* gWindow = nullptr;
+
+void CalcEndPageNo2(TocItem* ti, int& nPages) {
+    while (ti) {
+        // this marks a root node for a document
+        if (ti->nPages > 0) {
+            CalcEndPageNo(ti, nPages);
+            nPages += ti->nPages;
+        } else {
+            CalcEndPageNo2(ti->child, nPages);
+        }
+        ti = ti->next;
+    }
+}
+
+static void UpdateTreeModel(TocEditorWindow* w) {
+    TreeCtrl* treeCtrl = w->treeCtrl;
+    treeCtrl->Clear();
+
+    VbkmFile* bookmarks = w->tocArgs->bookmarks;
+    int nPages = 0;
+    CalcEndPageNo2(bookmarks->tree->root, nPages);
+    SetTocTreeParents(bookmarks->tree->root);
+
+    w->treeModel = bookmarks->tree;
+    treeCtrl->SetTreeModel(w->treeModel);
+}
+
+static void SetTocItemFromTocEditArgs(TocItem* ti, TocEditArgs* args) {
+    std::string_view newTitle = args->title.as_view();
+    str::Free(ti->title);
+    ti->title = strconv::Utf8ToWstr(newTitle);
+
+    int fontFlags = 0;
+    if (args->bold) {
+        bit::Set(fontFlags, fontBitBold);
+    }
+    if (args->italic) {
+        bit::Set(fontFlags, fontBitItalic);
+    }
+    ti->fontFlags = fontFlags;
+    ti->color = args->color;
+}
+
+static TocItem* TocItemFromTocEditArgs(TocEditArgs* args) {
+    if (args == nullptr) {
+        return nullptr;
+    }
+    // we don't allow empty titles
+    if (args->title.empty()) {
+        return nullptr;
+    }
+    TocItem* ti = new TocItem();
+    SetTocItemFromTocEditArgs(ti, args);
+    return ti;
+}
+
 static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
     TocEditArgs* editArgs = new TocEditArgs();
     editArgs->bold = bit::IsSet(ti->fontFlags, fontBitBold);
@@ -78,21 +135,8 @@ static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
             // was cancelled
             return;
         }
-        std::string_view newTitle = args->title.as_view();
-        WCHAR* newTitleW = strconv::Utf8ToWstr(newTitle);
-        str::Free(ti->title);
-        ti->title = newTitleW;
 
-        int fontFlags = 0;
-        if (editArgs->bold) {
-            bit::Set(fontFlags, fontBitBold);
-        }
-        if (editArgs->italic) {
-            bit::Set(fontFlags, fontBitItalic);
-        }
-        ti->fontFlags = fontFlags;
-
-        ti->color = args->color;
+        SetTocItemFromTocEditArgs(ti, args);
         treeCtrl->UpdateItem(ti);
     });
 }
@@ -115,10 +159,11 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
     args->didHandle = true;
 
     POINT pt{};
-    TreeItem* ti = GetOrSelectTreeItemAtPos(args, pt);
-    if (!ti) {
+    TreeItem* menuTreeItem = GetOrSelectTreeItemAtPos(args, pt);
+    if (!menuTreeItem) {
         return;
     }
+    TocItem* menuTocItem = (TocItem*)menuTreeItem;
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
     MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
@@ -127,12 +172,34 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
     DestroyMenu(popup);
     switch (cmd) {
         case IDM_EDIT:
-            StartEditTocItem(mainWindow->hwnd, treeCtrl, (TocItem*)ti);
+            StartEditTocItem(mainWindow->hwnd, treeCtrl, menuTocItem);
             break;
         case IDM_ADD_SIBLING:
-            break;
-        case IDM_ADD_CHILD:
-            break;
+        case IDM_ADD_CHILD: {
+            TocEditArgs* editArgs = new TocEditArgs();
+            StartTocEditTitle(hwnd, editArgs, [=](TocEditArgs* args) {
+                delete editArgs;
+                TocItem* ti = TocItemFromTocEditArgs(args);
+                if (ti == nullptr) {
+                    // was cancelled or invalid
+                    return;
+                }
+                if (cmd == IDM_ADD_SIBLING) {
+                } else if (cmd == IDM_ADD_CHILD) {
+                    menuTocItem->AddChild(ti);
+                    // ensure is visible i.e. expand all parents of this item
+                    TocItem* curr = menuTocItem;
+                    while (curr) {
+                        curr->isOpenDefault = true;
+                        curr->isOpenToggled = false;
+                        curr = curr->parent;
+                    }
+                } else {
+                    CrashMe();
+                }
+                UpdateTreeModel(gWindow);
+            });
+        } break;
         case IDM_REMOVE:
             break;
     }
@@ -165,8 +232,6 @@ TocEditorWindow::~TocEditorWindow() {
     delete mainWindow;
 }
 
-static TocEditorWindow* gWindow = nullptr;
-
 TocEditorArgs::~TocEditorArgs() {
     delete bookmarks;
 }
@@ -179,32 +244,6 @@ void MessageNYI() {
 void ShowErrorMessage(const char* msg) {
     HWND hwnd = gWindow->mainWindow->hwnd;
     MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
-}
-
-void CalcEndPageNo2(TocItem* ti, int& nPages) {
-    while (ti) {
-        // this marks a root node for a document
-        if (ti->nPages > 0) {
-            CalcEndPageNo(ti, nPages);
-            nPages += ti->nPages;
-        } else {
-            CalcEndPageNo2(ti->child, nPages);
-        }
-        ti = ti->next;
-    }
-}
-
-static void UpdateTreeModel(TocEditorWindow* w) {
-    TreeCtrl* treeCtrl = w->treeCtrl;
-    treeCtrl->Clear();
-
-    VbkmFile* bookmarks = w->tocArgs->bookmarks;
-    int nPages = 0;
-    CalcEndPageNo2(bookmarks->tree->root, nPages);
-    SetTocTreeParents(bookmarks->tree->root);
-
-    w->treeModel = bookmarks->tree;
-    treeCtrl->SetTreeModel(w->treeModel);
 }
 
 static void AddPdf() {
@@ -254,7 +293,7 @@ static void AddPdf() {
     TocItem* tocWrapper = new TocItem(tocRoot, title, 0);
     tocWrapper->isOpenDefault = true;
     tocWrapper->child = tocRoot;
-    w->tocArgs->bookmarks->tree->root->AddSibling(tocWrapper);
+    w->tocArgs->bookmarks->tree->root->AddSiblingAtEnd(tocWrapper);
     UpdateTreeModel(w);
 
     delete engine;

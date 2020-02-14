@@ -764,7 +764,7 @@ TocTree* EngineImageDir::GetToc() {
         ws = GetPageLabel(i);
         TocItem* item = newImageDirTocItem(root, ws, i);
         item->id = i;
-        root->AddSibling(item);
+        root->AddSiblingAtEnd(item);
     }
     tocTree = new TocTree(root);
     return tocTree;

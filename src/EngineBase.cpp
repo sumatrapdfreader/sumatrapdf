@@ -232,12 +232,20 @@ TocItem::~TocItem() {
     free(engineFilePath);
 }
 
-void TocItem::AddSibling(TocItem* sibling) {
+void TocItem::AddSiblingAtEnd(TocItem* sibling) {
     TocItem* item = this;
     while (item->next) {
         item = item->next;
     }
     item->next = sibling;
+    sibling->parent = item->parent;
+}
+
+void TocItem::AddChild(TocItem* newChild) {
+    TocItem* currChild = child;
+    child = newChild;
+    newChild->parent = this;
+    newChild->next = currChild;
 }
 
 void TocItem::OpenSingleNode() {
