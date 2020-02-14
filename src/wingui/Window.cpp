@@ -504,6 +504,10 @@ void WindowBase::SetText(const WCHAR* s) {
 
 void WindowBase::SetText(std::string_view sv) {
     text.Set(sv);
+    // can be set before we create the window
+    if (!hwnd) {
+        return;
+    }
     HwndSetText(hwnd, text.AsView());
     InvalidateRect(hwnd, nullptr, FALSE);
 }
@@ -518,6 +522,10 @@ void WindowBase::SetTextColor(COLORREF col) {
         return;
     }
     textColor = col;
+    // can be set before we create the window
+    if (!hwnd) {
+        return;
+    }
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
@@ -532,6 +540,10 @@ void WindowBase::SetBackgroundColor(COLORREF col) {
     }
     if (backgroundColor != ColorUnset) {
         backgroundColorBrush = CreateSolidBrush(backgroundColor);
+    }
+    // can be set before we create the window
+    if (!hwnd) {
+        return;
     }
     InvalidateRect(hwnd, nullptr, FALSE);
 }
