@@ -4171,9 +4171,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
         UpdateDocumentColors(); // update document colors
         RedrawWindow(win->hwndFrame, nullptr, nullptr,
                      RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN); // paint new theme
-        UpdateDocumentColors();         // doing this a second time ensures the frequently read documents are updated
-        UpdateMenu(win, (HMENU)wParam); // update the radio buttons
-        prefs::Save();                  // save new preferences
+        UpdateDocumentColors();            // doing this a second time ensures the frequently read documents are updated
+        UpdateAppMenu(win, (HMENU)wParam); // update the radio buttons
+        prefs::Save();                     // save new preferences
     }
 #endif
 
@@ -4576,21 +4576,25 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_INITMENUPOPUP:
-            UpdateMenu(win, (HMENU)wParam);
+            UpdateAppMenu(win, (HMENU)wParam);
             break;
 
         case WM_COMMAND:
             return FrameOnCommand(win, hwnd, msg, wParam, lParam);
 
-#if defined(EXP_MENU_OWNER_DRAW)
         case WM_MEASUREITEM:
-            MenuOwnerDrawnMesureItem(hwnd, (MEASUREITEMSTRUCT*)lParam);
-            return TRUE;
+            if (gOwnerDrawMenu) {
+                MenuOwnerDrawnMesureItem(hwnd, (MEASUREITEMSTRUCT*)lParam);
+                return TRUE;
+            }
+            break;
 
         case WM_DRAWITEM:
-            MenuOwnerDrawnDrawItem(hwnd, (DRAWITEMSTRUCT*)lParam);
-            return TRUE;
-#endif
+            if (gOwnerDrawMenu) {
+                MenuOwnerDrawnDrawItem(hwnd, (DRAWITEMSTRUCT*)lParam);
+                return TRUE;
+            }
+            break;
 
         case WM_APPCOMMAND:
             // both keyboard and mouse drivers should produce WM_APPCOMMAND

@@ -2,9 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/FileUtil.h"
+#include "utils/BitManip.h"
 #include "utils/Log.h"
+#include "utils/FileUtil.h"
+#include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
@@ -65,17 +66,52 @@ struct TocEditorWindow {
     void TreeContextMenu(ContextMenuArgs*);
 };
 
+static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
+    TocEditArgs* editArgs = new TocEditArgs();
+    editArgs->bold = bit::IsSet(ti->fontFlags, fontBitBold);
+    editArgs->italic = bit::IsSet(ti->fontFlags, fontBitItalic);
+    editArgs->title = strconv::WstrToUtf8(ti->title);
+
+    StartTocEditTitle(hwnd, editArgs, [=](TocEditArgs* args) {
+        delete editArgs;
+        if (args == nullptr) {
+            // was cancelled
+            return;
+        }
+        std::string_view newTitle = args->title.as_view();
+        WCHAR* newTitleW = strconv::Utf8ToWstr(newTitle);
+        str::Free(ti->title);
+        ti->title = newTitleW;
+
+        int fontFlags = 0;
+        if (editArgs->bold) {
+            bit::Set(fontFlags, fontBitBold);
+        }
+        if (editArgs->italic) {
+            bit::Set(fontFlags, fontBitItalic);
+        }
+        ti->fontFlags = fontFlags;
+
+        ti->color = args->color;
+        treeCtrl->UpdateItem(ti);
+    });
+}
+
 // clang-format off
+#define IDM_EDIT            100
+#define IDM_ADD_SIBLING     101
+#define IDM_ADD_CHILD       102
+#define IDM_REMOVE          103
+
 static MenuDef menuDefContext[] = {
-    {"Edit", 0, 0},
-    {"Add sibling", 0, 0},
-    {"Add child", 0, 0},
-    {"Remove", 0, 0},
+    {"Edit",         IDM_EDIT, 0},
+    {"Add sibling",  IDM_ADD_SIBLING, 0},
+    {"Add child",    IDM_ADD_CHILD, 0},
+    {"Remove",       IDM_REMOVE, 0},
 };
 // clang-format on
 
 void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
-    // TODO: implement me
     args->didHandle = true;
 
     POINT pt{};
@@ -89,6 +125,17 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
     INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
+    switch (cmd) {
+        case IDM_EDIT:
+            StartEditTocItem(mainWindow->hwnd, treeCtrl, (TocItem*)ti);
+            break;
+        case IDM_ADD_SIBLING:
+            break;
+        case IDM_ADD_CHILD:
+            break;
+        case IDM_REMOVE:
+            break;
+    }
 }
 
 void TocEditorWindow::TreeItemDragged(TreeItemDraggeddArgs* args) {
@@ -434,7 +481,7 @@ void TocEditorWindow::TreeClickHandler(TreeClickArgs* args) {
     args->result = 1;
 
     TocItem* ti = (TocItem*)args->treeItem;
-    StartTocEditTitle(mainWindow->hwnd, args->treeCtrl, ti);
+    StartEditTocItem(mainWindow->hwnd, treeCtrl, ti);
 }
 
 void StartTocEditor(TocEditorArgs* args) {

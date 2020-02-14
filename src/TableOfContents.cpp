@@ -370,7 +370,13 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 }
 
 // clang-format off
-static MenuDef contextMenuDef[] = {
+#define IDM_EXPAND_ALL                  500
+#define IDM_COLLAPSE_ALL                501
+#define IDM_EXPORT_BOOKMARKS            502
+#define IDM_NEW_BOOKMARKS               503
+#define IDM_SEPARATOR                   504
+
+static MenuDef menuDefContext[] = {
     {_TRN("Expand All"),    IDM_EXPAND_ALL,         0 },
     {_TRN("Collapse All"),  IDM_COLLAPSE_ALL,       0 },
     // note: strings cannot be "" or else items are not there
@@ -445,7 +451,7 @@ static void TocContextMenu(ContextMenuArgs* args) {
         pageNo = dti->dest->GetPageNo();
     }
 
-    HMENU popup = BuildMenuFromMenuDef(contextMenuDef, dimof(contextMenuDef), CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
     if (!gWithTocEditor) {
         win::menu::Remove(popup, IDM_SEPARATOR);
         win::menu::Remove(popup, IDM_EXPORT_BOOKMARKS);
@@ -479,10 +485,10 @@ static void TocContextMenu(ContextMenuArgs* args) {
         win::menu::SetText(popup, IDM_NEW_BOOKMARKS, L"Edit Bookmarks");
     }
 
-    // MarkMenuOwnerDraw(popup);
+    MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
-    // FreeMenuOwnerDrawInfoData(popup);
+    FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
     switch (cmd) {
         case IDM_EXPORT_BOOKMARKS: {

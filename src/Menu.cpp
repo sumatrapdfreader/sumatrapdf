@@ -38,6 +38,17 @@
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
 
+// those are defined here instead of resource.h to avoid
+// having them overwritten by dialog editor
+#define IDM_VIEW_LAYOUT_FIRST IDM_VIEW_SINGLE_PAGE
+#define IDM_VIEW_LAYOUT_LAST IDM_VIEW_MANGA_MODE
+#define IDM_ZOOM_FIRST IDM_ZOOM_FIT_PAGE
+#define IDM_ZOOM_LAST IDM_ZOOM_CUSTOM
+// note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
+//       IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continuous range!
+static_assert(IDM_VIEW_LAYOUT_LAST - IDM_VIEW_LAYOUT_FIRST == 4, "view layout ids are not in a continuous range");
+static_assert(IDM_ZOOM_LAST - IDM_ZOOM_FIRST == 17, "zoom ids are not in a continuous range");
+
 bool gAddCrashMeMenu = false;
 
 void MenuUpdateDisplayMode(WindowInfo* win) {
@@ -363,20 +374,20 @@ static struct {
     unsigned short itemId;
     float zoom;
 } gZoomMenuIds[] = {
-    { IDM_ZOOM_6400,    6400.0 },
-    { IDM_ZOOM_3200,    3200.0 },
-    { IDM_ZOOM_1600,    1600.0 },
-    { IDM_ZOOM_800,     800.0  },
-    { IDM_ZOOM_400,     400.0  },
-    { IDM_ZOOM_200,     200.0  },
-    { IDM_ZOOM_150,     150.0  },
-    { IDM_ZOOM_125,     125.0  },
-    { IDM_ZOOM_100,     100.0  },
-    { IDM_ZOOM_50,      50.0   },
-    { IDM_ZOOM_25,      25.0   },
-    { IDM_ZOOM_12_5,    12.5   },
-    { IDM_ZOOM_8_33,    8.33f  },
-    { IDM_ZOOM_CUSTOM,  0      },
+    { IDM_ZOOM_6400,        6400.0 },
+    { IDM_ZOOM_3200,        3200.0 },
+    { IDM_ZOOM_1600,        1600.0 },
+    { IDM_ZOOM_800,         800.0  },
+    { IDM_ZOOM_400,         400.0  },
+    { IDM_ZOOM_200,         200.0  },
+    { IDM_ZOOM_150,         150.0  },
+    { IDM_ZOOM_125,         125.0  },
+    { IDM_ZOOM_100,         100.0  },
+    { IDM_ZOOM_50,          50.0   },
+    { IDM_ZOOM_25,          25.0   },
+    { IDM_ZOOM_12_5,        12.5   },
+    { IDM_ZOOM_8_33,        8.33f  },
+    { IDM_ZOOM_CUSTOM,      0      },
     { IDM_ZOOM_FIT_PAGE,    ZOOM_FIT_PAGE    },
     { IDM_ZOOM_FIT_WIDTH,   ZOOM_FIT_WIDTH   },
     { IDM_ZOOM_FIT_CONTENT, ZOOM_FIT_CONTENT },
@@ -462,7 +473,7 @@ static bool IsFileCloseMenuEnabled() {
     return false;
 }
 
-void MenuUpdateStateForWindow(WindowInfo* win) {
+static void MenuUpdateStateForWindow(WindowInfo* win) {
     // those menu items will be disabled if no document is opened, enabled otherwise
     static UINT menusToDisableIfNoDocument[] = {
         IDM_VIEW_ROTATE_LEFT,
@@ -907,8 +918,10 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
         }
     };
 }
-#if defined(EXP_MENU_OWNER_DRAW)
 void MarkMenuOwnerDraw(HMENU hmenu) {
+    if (!gOwnerDrawMenu) {
+        return;
+    }
     WCHAR buf[1024];
 
     MENUITEMINFOW mii = {0};
@@ -948,11 +961,6 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         }
     }
 }
-#else
-void MarkMenuOwnerDraw(HMENU hmenu) {
-    UNUSED(hmenu);
-}
-#endif
 
 enum {
     kMenuPaddingY = 2,
@@ -1173,7 +1181,7 @@ HMENU BuildMenu(WindowInfo* win) {
 }
 //] ACCESSKEY_GROUP Main Menubar
 
-void UpdateMenu(WindowInfo* win, HMENU m) {
+void UpdateAppMenu(WindowInfo* win, HMENU m) {
     CrashIf(!win);
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id) {

@@ -64,6 +64,13 @@ bool gIsRaMicroBuild = true;
 bool gIsRaMicroBuild = false;
 #endif
 
+// experimental, unfinished theme support for menus by making them owner-drawn
+#if defined(EXP_MENU_OWNER_DRAW)
+bool gOwnerDrawMenu = true;
+#else
+bool gOwnerDrawMenu = false;
+#endif
+
 const WCHAR* getAppName() {
     if (gIsRaMicroBuild) {
         return L"RA-MICRO PDF Viewer";

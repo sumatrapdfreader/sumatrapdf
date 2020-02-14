@@ -82,16 +82,13 @@
 #define IDM_OPEN_SELECTED_DOCUMENT      480
 #define IDM_PIN_SELECTED_DOCUMENT       481
 #define IDM_FORGET_SELECTED_DOCUMENT    482
-#define IDM_OPEN_WITH_EXTERNAL_FIRST    500
-#define IDM_OPEN_WITH_EXTERNAL_LAST     509
-#define IDM_FILE_HISTORY_FIRST          510
-#define IDM_FILE_HISTORY_LAST           519
 
-#define IDM_EXPAND_ALL                  525
-#define IDM_COLLAPSE_ALL                526
-#define IDM_EXPORT_BOOKMARKS            527
-#define IDM_NEW_BOOKMARKS               528
-#define IDM_SEPARATOR                   530
+/* 500 - 540 is reserved for local menu ids */
+
+#define IDM_OPEN_WITH_EXTERNAL_FIRST    540
+#define IDM_OPEN_WITH_EXTERNAL_LAST     541
+#define IDM_FILE_HISTORY_FIRST          542
+#define IDM_FILE_HISTORY_LAST           543
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551

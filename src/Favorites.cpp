@@ -251,7 +251,9 @@ void Favorites::RemoveAllForFile(const WCHAR* filePath) {
 #define MAX_FAV_SUBMENUS 10
 #define MAX_FAV_MENUS 10
 
+// clang-fomat off
 MenuDef menuDefFavContext[] = {{_TRN("Remove from favorites"), IDM_FAV_DEL, 0}};
+// clang-fomat on
 
 bool HasFavorites() {
     DisplayState* ds;
