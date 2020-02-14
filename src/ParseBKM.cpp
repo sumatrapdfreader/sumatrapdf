@@ -244,6 +244,7 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
         }
     }
     if (dest) {
+        res->dest = dest;
         dest->pageNo = res->pageNo;
     }
     return res;
