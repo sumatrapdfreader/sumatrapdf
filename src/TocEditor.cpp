@@ -51,7 +51,6 @@ struct TocEditorWindow {
     ILayout* layoutButtons = nullptr;
 
     TreeCtrl* treeCtrl = nullptr;
-    TreeModel* treeModel = nullptr;
 
     bool canRemovePdf = false;
 
@@ -86,12 +85,11 @@ static void UpdateTreeModel(TocEditorWindow* w) {
     treeCtrl->Clear();
 
     VbkmFile* bookmarks = w->tocArgs->bookmarks;
+    TocTree* tree = bookmarks->tree;
     int nPages = 0;
-    CalcEndPageNo2(bookmarks->tree->root, nPages);
-    SetTocTreeParents(bookmarks->tree->root);
-
-    w->treeModel = bookmarks->tree;
-    treeCtrl->SetTreeModel(w->treeModel);
+    CalcEndPageNo2(tree->root, nPages);
+    SetTocTreeParents(tree->root);
+    treeCtrl->SetTreeModel(tree);
 }
 
 static void SetTocItemFromTocEditArgs(TocItem* ti, TocEditArgs* args) {
@@ -156,6 +154,26 @@ static MenuDef menuDefContext[] = {
 };
 // clang-format on
 
+static bool RemoveTocItem(TocItem* ti) {
+    TocItem* parent = ti->parent;
+    if (parent->child == ti) {
+        parent->child = ti->next;
+        ti->next = nullptr;
+        return true;
+    }
+    TocItem* curr = parent->child;
+    while (curr) {
+        if (curr->next == ti) {
+            curr->next = ti->next;
+            ti->next = nullptr;
+            return true;
+        }
+        curr = curr->next;
+    }
+    CrashMe();
+    return false;
+}
+
 void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
     args->didHandle = true;
 
@@ -166,6 +184,16 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
     }
     TocItem* menuTocItem = (TocItem*)menuTreeItem;
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
+
+    bool canRemove = true;
+    TocTree* tree = (TocTree*)treeCtrl->treeModel;
+    if (tree->RootCount() == 1 && tree->root == menuTocItem) {
+        // don't allow removing only remaining root node
+        canRemove = false;
+    }
+    if (!canRemove) {
+        win::menu::SetEnabled(popup, IDM_REMOVE, false);
+    }
 
     MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
@@ -193,7 +221,6 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
                 } else {
                     CrashMe();
                 }
-                UpdateTreeModel(gWindow);
                 // ensure is visible i.e. expand all parents of this item
                 TocItem* curr = menuTocItem;
                 while (curr) {
@@ -201,10 +228,22 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
                     curr->isOpenToggled = false;
                     curr = curr->parent;
                 }
+                UpdateTreeModel(gWindow);
             });
         } break;
         case IDM_REMOVE:
-
+            // ensure is visible i.e. expand all parents of this item
+            TocItem* curr = menuTocItem->parent;
+            while (curr) {
+                curr->isOpenDefault = true;
+                curr->isOpenToggled = false;
+                curr = curr->parent;
+            }
+            bool ok = RemoveTocItem(menuTocItem);
+            if (ok) {
+                UpdateTreeModel(gWindow);
+                delete menuTocItem;
+            }
             break;
     }
 }
