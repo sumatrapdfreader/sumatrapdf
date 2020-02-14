@@ -152,6 +152,7 @@ static MenuDef menuDefContext[] = {
     {"Add sibling",  IDM_ADD_SIBLING, 0},
     {"Add child",    IDM_ADD_CHILD, 0},
     {"Remove",       IDM_REMOVE, 0},
+    { 0, 0, 0},
 };
 // clang-format on
 
@@ -164,7 +165,8 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
         return;
     }
     TocItem* menuTocItem = (TocItem*)menuTreeItem;
-    HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
+
     MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
@@ -202,6 +204,7 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
             });
         } break;
         case IDM_REMOVE:
+
             break;
     }
 }

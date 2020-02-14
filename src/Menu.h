@@ -30,7 +30,7 @@ void MenuOwnerDrawnMesureItem(HWND, MEASUREITEMSTRUCT*);
 void MenuOwnerDrawnDrawItem(HWND, DRAWITEMSTRUCT*);
 HFONT GetMenuFont();
 
-HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter = 0);
+HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter = 0);
 HMENU BuildMenu(WindowInfo* win);
 void OnWindowContextMenu(WindowInfo* win, int x, int y);
 void OnAboutContextMenu(WindowInfo* win, int x, int y);

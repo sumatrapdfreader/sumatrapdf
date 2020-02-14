@@ -385,6 +385,7 @@ static MenuDef menuDefContext[] = {
     {SEP_ITEM,              IDM_SEPARATOR,          MF_NO_TRANSLATE},
     {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
     {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
+    { 0, 0, 0},
 };
 // clang-format on      
 
@@ -451,7 +452,7 @@ static void TocContextMenu(ContextMenuArgs* args) {
         pageNo = dti->dest->GetPageNo();
     }
 
-    HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
     if (!gWithTocEditor) {
         win::menu::Remove(popup, IDM_SEPARATOR);
         win::menu::Remove(popup, IDM_EXPORT_BOOKMARKS);

@@ -251,9 +251,12 @@ void Favorites::RemoveAllForFile(const WCHAR* filePath) {
 #define MAX_FAV_SUBMENUS 10
 #define MAX_FAV_MENUS 10
 
-// clang-fomat off
-MenuDef menuDefFavContext[] = {{_TRN("Remove from favorites"), IDM_FAV_DEL, 0}};
-// clang-fomat on
+// clang-format off
+MenuDef menuDefFavContext[] = {
+    {_TRN("Remove from favorites"), IDM_FAV_DEL, 0},
+    { 0, 0, 0}
+};
+// clang-format on
 
 bool HasFavorites() {
     DisplayState* ds;
@@ -729,7 +732,7 @@ static void FavTreeContextMenu(ContextMenuArgs* args) {
     if (!ti) {
         return;
     }
-    HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, dimof(menuDefFavContext), CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, CreatePopupMenu());
     MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);

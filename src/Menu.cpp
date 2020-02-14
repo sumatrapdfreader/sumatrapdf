@@ -115,7 +115,8 @@ static MenuDef menuDefFile[] = {
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
     { SEP_ITEM,                             0,                          0 },
-    { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
+    { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP File Menu
 
@@ -139,6 +140,7 @@ static MenuDef menuDefView[] = {
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP View Menu
 
@@ -154,6 +156,7 @@ static MenuDef menuDefGoTo[] = {
     { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       0 },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
     { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             MF_NOT_FOR_EBOOK_UI },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP GoTo Menu
 
@@ -179,6 +182,7 @@ static MenuDef menuDefZoom[] = {
     { "25%",                                IDM_ZOOM_25,                MF_NO_TRANSLATE },
     { "12.5%",                              IDM_ZOOM_12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { "8.33%",                              IDM_ZOOM_8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP Zoom Menu
 
@@ -191,6 +195,7 @@ static MenuDef menuDefSettings[] = {
 #endif
     { _TRN("&Options..."),                  IDM_OPTIONS,                MF_REQ_PREF_ACCESS },
     { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP Settings Menu
 
@@ -200,6 +205,7 @@ MenuDef menuDefFavorites[] = {
     { _TRN("Add to favorites"),             IDM_FAV_ADD,                0 },
     { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 },
     { _TRN("Show Favorites"),               IDM_FAV_TOGGLE,             MF_REQ_DISK_ACCESS },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP Favorites Menu
 
@@ -210,6 +216,7 @@ static MenuDef menuDefHelp[] = {
     { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_REQ_INET_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("&About"),                       IDM_ABOUT,                  0 },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP Help Menu
 
@@ -220,6 +227,7 @@ static MenuDef menuDefDebug[] = {
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
     { "Download symbols",                   IDM_DEBUG_DOWNLOAD_SYMBOLS, MF_NO_TRANSLATE },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP Debug Menu
 
@@ -243,6 +251,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
 
@@ -252,19 +261,26 @@ static MenuDef menuDefContextStart[] = {
     { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { 0, 0, 0},
 };
 //] ACCESSKEY_GROUP Context Menu (Start)
 // clang-format on
 
-HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter) {
+HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
     CrashIf(!menu);
     bool wasSeparator = true;
     if (!gPluginMode) {
         flagFilter |= MF_PLUGIN_MODE_ONLY;
     }
 
-    for (int i = 0; i < menuLen; i++) {
+    int i = 0;
+    while (true) {
         MenuDef md = menuDefs[i];
+        if (md.title == nullptr) {
+            // sentinel
+            break;
+        }
+        i++;
         if ((md.flags & flagFilter)) {
             continue;
         }
@@ -594,7 +610,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
-    HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, dimof(menuDefContextStart), CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, CreatePopupMenu());
     win::menu::SetChecked(popup, IDM_PIN_SELECTED_DOCUMENT, state->isPinned);
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
@@ -644,7 +660,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         value = pageEl->GetValue();
     }
 
-    HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
+    HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
     if (!pageEl || pageEl->kind != kindPageElementDest || !value) {
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
     }
@@ -792,7 +808,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     }
 
     win::menu::Empty(menu);
-    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, filter);
+    BuildMenuFromMenuDef(menuDefFile, menu, filter);
     AppendRecentFilesToMenu(menu);
     AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
 
@@ -1128,12 +1144,12 @@ HMENU BuildMenu(WindowInfo* win) {
     HMENU m = CreateMenu();
     RebuildFileMenu(win->currentTab, m);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
-    m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu(), filter);
+    m = BuildMenuFromMenuDef(menuDefView, CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
-    m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), filter);
+    m = BuildMenuFromMenuDef(menuDefGoTo, CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
     if (!win->AsEbook()) {
-        m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu(), filter);
+        m = BuildMenuFromMenuDef(menuDefZoom, CreateMenu(), filter);
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
     }
 
@@ -1141,33 +1157,33 @@ HMENU BuildMenu(WindowInfo* win) {
     if (HasPermission(Perm_SavePreferences) && !win->AsEbook()) {
         // I think it makes sense to disable favorites in restricted mode
         // because they wouldn't be persisted, anyway
-        m = BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), CreateMenu());
+        m = BuildMenuFromMenuDef(menuDefFavorites, CreateMenu());
         RebuildFavMenu(win, m);
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
     }
 
-    m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu(), filter);
+    m = BuildMenuFromMenuDef(menuDefSettings, CreateMenu(), filter);
 #if defined(ENABLE_THEME)
     // Build the themes sub-menu of the settings menu
-    MenuDef menuDefTheme[THEME_COUNT];
+    MenuDef menuDefTheme[THEME_COUNT+1];
     static_assert(IDM_CHANGE_THEME_LAST - IDM_CHANGE_THEME_FIRST + 1 >= THEME_COUNT,
                   "Too many themes. Either remove some or update IDM_CHANGE_THEME_LAST");
     for (UINT i = 0; i < THEME_COUNT; i++) {
         menuDefTheme[i] = {GetThemeByIndex(i)->name, IDM_CHANGE_THEME_FIRST + i, 0};
     }
-    HMENU m2 = BuildMenuFromMenuDef(menuDefTheme, dimof(menuDefTheme), CreateMenu(), filter);
+    HMENU m2 = BuildMenuFromMenuDef(menuDefTheme, CreateMenu(), filter);
     AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)m2, _TR("&Theme"));
 #endif
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
 
-    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu(), filter);
+    m = BuildMenuFromMenuDef(menuDefHelp, CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 #if 0
     // see MenuBarAsPopupMenu in Caption.cpp
     m = GetSystemMenu(win->hwndFrame, FALSE);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
 #endif
-    m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu(), filter);
+    m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
 
     if (gAddCrashMeMenu) {
         AppendMenu(m, MF_SEPARATOR, 0, nullptr);
@@ -1188,7 +1204,7 @@ void UpdateAppMenu(WindowInfo* win, HMENU m) {
         RebuildFileMenu(win->currentTab, m);
     } else if (id == menuDefFavorites[0].id) {
         win::menu::Empty(m);
-        BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), m);
+        BuildMenuFromMenuDef(menuDefFavorites, m);
         RebuildFavMenu(win, m);
     }
     MenuUpdateStateForWindow(win);
