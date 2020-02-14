@@ -208,7 +208,9 @@ bool ParseColor(COLORREF* destColor, std::string_view sv) {
         return true;
     }
     ok = str::Parse(txt, n, "%2x%2x%2x", &r, &g, &b);
-    *destColor = MkRgb((u8)r, (u8)g, (u8)b);
+    if (ok) {
+        *destColor = MkRgb((u8)r, (u8)g, (u8)b);
+    }
     return ok;
 }
 
