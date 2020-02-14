@@ -185,19 +185,20 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
                     return;
                 }
                 if (cmd == IDM_ADD_SIBLING) {
+                    menuTocItem->AddSibling(ti);
                 } else if (cmd == IDM_ADD_CHILD) {
                     menuTocItem->AddChild(ti);
-                    // ensure is visible i.e. expand all parents of this item
-                    TocItem* curr = menuTocItem;
-                    while (curr) {
-                        curr->isOpenDefault = true;
-                        curr->isOpenToggled = false;
-                        curr = curr->parent;
-                    }
                 } else {
                     CrashMe();
                 }
                 UpdateTreeModel(gWindow);
+                // ensure is visible i.e. expand all parents of this item
+                TocItem* curr = menuTocItem;
+                while (curr) {
+                    curr->isOpenDefault = true;
+                    curr->isOpenToggled = false;
+                    curr = curr->parent;
+                }
             });
         } break;
         case IDM_REMOVE:

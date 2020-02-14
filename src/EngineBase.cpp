@@ -232,6 +232,13 @@ TocItem::~TocItem() {
     free(engineFilePath);
 }
 
+void TocItem::AddSibling(TocItem* sibling) {
+    TocItem* currNext = next;
+    next = sibling;
+    sibling->next = currNext;
+    sibling->parent = parent;
+}
+
 void TocItem::AddSiblingAtEnd(TocItem* sibling) {
     TocItem* item = this;
     while (item->next) {
@@ -248,8 +255,9 @@ void TocItem::AddChild(TocItem* newChild) {
     newChild->next = currChild;
 }
 
+// TODO: pick a better name. I think it's used to expand root-level item
 void TocItem::OpenSingleNode() {
-    // only open (root level) ToC nodes if there's at most two
+    // only open (root level) ToC nodes if there are at most two
     if (next && next->next) {
         return;
     }

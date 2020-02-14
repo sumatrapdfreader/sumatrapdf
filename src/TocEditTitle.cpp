@@ -238,6 +238,7 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
 
     win->mainWindow = w;
     createMainLayout(win);
+    win->editTitle->SetFocus();
     w->SetIsVisible(true);
 
     return win;
