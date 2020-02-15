@@ -127,6 +127,19 @@ skip_language_code_utf8(const unsigned char *s, size_t n, size_t i)
 	return 0;
 }
 
+/* SumatraPDF: detect UTF-8 strings and use them as is */
+static int pdf_is_valid_utf8(const unsigned char* data, const unsigned char* data_end) {
+    for (; data < data_end; data++) {
+        int skip = *data < 0x80 ? 0 : *data < 0xC0 ? -1 : *data < 0xE0 ? 1 : *data < 0xF0 ? 2 : *data < 0xF5 ? 3 : -1;
+        if (skip == -1)
+            return 0;
+        while (skip-- > 0)
+            if (++data >= data_end || (*data & 0xC0) != 0x80)
+                return 0;
+    }
+    return 1;
+}
+
 /* Convert Unicode/PdfDocEncoding string into utf-8 */
 char *
 pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *ssrcptr, size_t srclen)
@@ -200,7 +213,6 @@ pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *ssrcptr, size_t srclen
 			}
 		}
 	}
-
 	/* UTF-8 */
 	else if (srclen >= 3 && srcptr[0] == 239 && srcptr[1] == 187 && srcptr[2] == 191)
 	{
@@ -229,7 +241,13 @@ pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *ssrcptr, size_t srclen
 				*dstptr++ = srcptr[i++];
 		}
 	}
-
+    /* SumatraPDF: detect UTF-8 strings and use them as is */
+    /* TODO: also detect UTF-8 strings in pdf_to_ucs2(_buf)? */
+    else if (pdf_is_valid_utf8(srcptr, srcptr + srclen)) {
+        dst = fz_malloc(ctx, srclen + 1);
+        memcpy(dst, srcptr, srclen);
+        dstptr = dst + srclen;
+    }
 	/* PDFDocEncoding */
 	else
 	{
