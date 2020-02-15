@@ -87,6 +87,13 @@ struct CharArgs : WndProcArgs {
 
 typedef std::function<void(CharArgs*)> CharHandler;
 
+// TODO: extract data from LPARAM
+struct KeyArgs : WndProcArgs {
+    int keyVirtCode = 0;
+};
+
+typedef std::function<void(KeyArgs*)> KeyHandler;
+
 struct MouseWheelArgs : WndProcArgs {
     bool isVertical = false;
     int delta = 0;
@@ -134,6 +141,10 @@ struct WindowBase {
     DestroyHandler onDestroy = nullptr;
     // for WM_CLOSE
     CloseHandler onClose = nullptr;
+    // for WM_KEYDOWN
+    KeyHandler onKeyDown = nullptr;
+    // for WM_KEYUP
+    KeyHandler onKeyUp = nullptr;
     // for WM_CHAR
     CharHandler onChar = nullptr;
     // for WM_MOUSEWHEEL and WM_MOUSEHWHEEL

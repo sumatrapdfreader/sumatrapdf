@@ -69,6 +69,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         }
     }
 
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorbtn
     if (WM_CTLCOLORBTN == msg) {
         auto bgBrush = w->backgroundColorBrush;
         if (bgBrush != nullptr) {
@@ -77,6 +78,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         }
     }
 
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorstatic
     if (WM_CTLCOLORSTATIC == msg) {
         auto bgBrush = w->backgroundColorBrush;
         if (bgBrush != nullptr) {
@@ -88,6 +90,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         }
     }
 
+    // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-size
     if (WM_SIZE == msg) {
         if (!w->onSize) {
             return 0;
@@ -103,6 +106,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         }
     }
 
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-command
     if (WM_COMMAND == msg) {
         if (!w->onWmCommand) {
             return 0;
@@ -118,6 +122,39 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         }
     }
 
+    // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keydown
+    if (WM_KEYDOWN == msg) {
+        if (!w->onKeyDown) {
+            return 0;
+        }
+        KeyArgs args{};
+        SetWndProcArgs(args);
+        args.keyVirtCode = (int)wp;
+        w->onKeyDown(&args);
+        if (args.didHandle) {
+            didHandle = true;
+            // 0 means: did handle
+            return 0;
+        }
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keyup
+    if (WM_KEYUP == msg) {
+        if (!w->onKeyUp) {
+            return 0;
+        }
+        KeyArgs args{};
+        SetWndProcArgs(args);
+        args.keyVirtCode = (int)wp;
+        w->onKeyUp(&args);
+        if (args.didHandle) {
+            didHandle = true;
+            // 0 means: did handle
+            return 0;
+        }
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-char
     if (WM_CHAR == msg) {
         if (!w->onChar) {
             return 0;
@@ -128,7 +165,8 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         w->onChar(&args);
         if (args.didHandle) {
             didHandle = true;
-            return args.result;
+            // 0 means: did handle
+            return 0;
         }
     }
 
@@ -160,6 +198,9 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
 }
 
 static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    //char* msgName = getWinMessageName(msg);
+    //dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, wp);
+
     if (WM_NCCREATE == msg) {
         CREATESTRUCT* cs = (CREATESTRUCT*)lp;
         Window* w = (Window*)cs->lpCreateParams;
@@ -320,6 +361,7 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
 
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
     if (msg == WM_CONTEXTMENU && w->onContextMenu) {
         ContextMenuArgs args;
         SetWndProcArgs(args);
