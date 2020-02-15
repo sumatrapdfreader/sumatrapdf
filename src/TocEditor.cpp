@@ -67,6 +67,16 @@ struct TocEditorWindow {
 
 static TocEditorWindow* gWindow = nullptr;
 
+void MessageNYI() {
+    HWND hwnd = gWindow->mainWindow->hwnd;
+    MessageBoxA(hwnd, "Not yet implemented!", "Information", MB_OK | MB_ICONINFORMATION);
+}
+
+void ShowErrorMessage(const char* msg) {
+    HWND hwnd = gWindow->mainWindow->hwnd;
+    MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
+}
+
 void CalcEndPageNo2(TocItem* ti, int& nPages) {
     while (ti) {
         // this marks a root node for a document
@@ -144,12 +154,16 @@ static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
 #define IDM_ADD_SIBLING     101
 #define IDM_ADD_CHILD       102
 #define IDM_REMOVE          103
+#define IDM_ADD_PDF_CHILD   104
+#define IDM_ADD_PDF_SIBLING 105
 
 static MenuDef menuDefContext[] = {
-    {"Edit",         IDM_EDIT, 0},
-    {"Add sibling",  IDM_ADD_SIBLING, 0},
-    {"Add child",    IDM_ADD_CHILD, 0},
-    {"Remove",       IDM_REMOVE, 0},
+    {"Edit",                    IDM_EDIT, 0},
+    {"Add sibling",             IDM_ADD_SIBLING, 0},
+    {"Add child",               IDM_ADD_CHILD, 0},
+    {"Add PDF as a child",      IDM_ADD_PDF_CHILD, 0},
+    {"Add PDF as a sibling",    IDM_ADD_PDF_SIBLING, 0},
+    {"Remove",                  IDM_REMOVE, 0},
     { 0, 0, 0},
 };
 // clang-format on
@@ -174,6 +188,118 @@ static bool RemoveTocItem(TocItem* ti) {
     return false;
 }
 
+static EngineBase* ChooosePdfFile() {
+    TocEditorWindow* w = gWindow;
+    HWND hwnd = w->mainWindow->hwnd;
+
+    OPENFILENAME ofn = {0};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+
+    ofn.lpstrFilter = L".pdf\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
+
+    // OFN_ENABLEHOOK disables the new Open File dialog under Windows Vista
+    // and later, so don't use it and just allocate enough memory to contain
+    // several dozen file paths and hope that this is enough
+    // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
+    ofn.nMaxFile = MAX_PATH * 2;
+    AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
+    ofn.lpstrFile = file;
+
+    if (!GetOpenFileNameW(&ofn)) {
+        return nullptr;
+    }
+    WCHAR* filePath = ofn.lpstrFile;
+
+    EngineBase* engine = EngineManager::CreateEngine(filePath);
+    if (!engine) {
+        ShowErrorMessage("Failed to open a file!");
+        return nullptr;
+    }
+    return engine;
+}
+
+static bool AddPdfAsChild(TocItem* ti) {
+    EngineBase* engine = ChooosePdfFile();
+    if (!engine) {
+        return false;
+    }
+    TocTree* tocTree = engine->GetToc();
+    if (nullptr == tocTree) {
+        // TODO: maybe add a dummy entry for the first page
+        // or make top-level act as first page destination
+        ShowErrorMessage("File doesn't have Table of content");
+        delete engine;
+        return false;
+    }
+    TocItem* tocRoot = CloneTocItemRecur(tocTree->root, false);
+    int nPages = engine->PageCount();
+    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName()).data();
+    tocRoot->engineFilePath = filePath;
+    tocRoot->nPages = nPages;
+    ti->AddChild(tocRoot);
+    delete engine;
+    return true;
+}
+
+static bool AddPdfAsSibling(TocItem* ti) {
+    EngineBase* engine = ChooosePdfFile();
+    if (!engine) {
+        return false;
+    }
+    TocTree* tocTree = engine->GetToc();
+    if (nullptr == tocTree) {
+        // TODO: maybe add a dummy entry for the first page
+        // or make top-level act as first page destination
+        ShowErrorMessage("File doesn't have Table of content");
+        delete engine;
+        return false;
+    }
+
+    TocItem* tocRoot = CloneTocItemRecur(tocTree->root, false);
+    int nPages = engine->PageCount();
+    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName()).data();
+    tocRoot->engineFilePath = filePath;
+    tocRoot->nPages = nPages;
+    ti->AddSibling(tocRoot);
+    delete engine;
+    return true;
+}
+
+static void AddPdf() {
+    EngineBase* engine = ChooosePdfFile();
+    if (!engine) {
+        return;
+    }
+    TocTree* tocTree = engine->GetToc();
+    if (nullptr == tocTree) {
+        // TODO: maybe add a dummy entry for the first page
+        // or make top-level act as first page destination
+        ShowErrorMessage("File doesn't have Table of content");
+        delete engine;
+        return;
+    }
+
+    TocItem* tocRoot = CloneTocItemRecur(tocTree->root, false);
+    int nPages = engine->PageCount();
+    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName()).data();
+    tocRoot->engineFilePath = filePath;
+    tocRoot->nPages = nPages;
+
+    const WCHAR* title = path::GetBaseNameNoFree(engine->FileName());
+    TocItem* tocWrapper = new TocItem(tocRoot, title, 0);
+    tocWrapper->isOpenDefault = true;
+    tocWrapper->child = tocRoot;
+
+    TocEditorWindow* w = gWindow;
+    w->tocArgs->bookmarks->tree->root->AddSiblingAtEnd(tocWrapper);
+    UpdateTreeModel(w);
+
+    delete engine;
+}
+
 void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
     args->didHandle = true;
 
@@ -195,11 +321,34 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
         win::menu::SetEnabled(popup, IDM_REMOVE, false);
     }
 
+    bool canAddPdfChild = true;
+    bool canAddPdfSibling = true;
+    TocItem* ti = menuTocItem;
+    while (ti) {
+        if (ti->engineFilePath != nullptr) {
+            // can't add as a child if this node or any parent
+            // represents PDF file
+            canAddPdfChild = false;
+            // can't add as sibling if any parent represents PDF file
+            canAddPdfSibling = (ti == menuTocItem);
+            break;
+        }
+        ti = ti->parent;
+    }
+
+    if (!canAddPdfChild) {
+        win::menu::SetEnabled(popup, IDM_ADD_PDF_CHILD, false);
+    }
+    if (!canAddPdfSibling) {
+        win::menu::SetEnabled(popup, IDM_ADD_PDF_SIBLING, false);
+    }
+
     MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
+    bool ok;
     switch (cmd) {
         case IDM_EDIT:
             StartEditTocItem(mainWindow->hwnd, treeCtrl, menuTocItem);
@@ -231,6 +380,18 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
                 UpdateTreeModel(gWindow);
             });
         } break;
+        case IDM_ADD_PDF_CHILD:
+            ok = AddPdfAsChild(menuTocItem);
+            if (ok) {
+                UpdateTreeModel(gWindow);
+            }
+            break;
+        case IDM_ADD_PDF_SIBLING:
+            ok = AddPdfAsSibling(menuTocItem);
+            if (ok) {
+                UpdateTreeModel(gWindow);
+            }
+            break;
         case IDM_REMOVE:
             // ensure is visible i.e. expand all parents of this item
             TocItem* curr = menuTocItem->parent;
@@ -239,7 +400,7 @@ void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
                 curr->isOpenToggled = false;
                 curr = curr->parent;
             }
-            bool ok = RemoveTocItem(menuTocItem);
+            ok = RemoveTocItem(menuTocItem);
             if (ok) {
                 UpdateTreeModel(gWindow);
                 delete menuTocItem;
@@ -277,69 +438,6 @@ TocEditorWindow::~TocEditorWindow() {
 
 TocEditorArgs::~TocEditorArgs() {
     delete bookmarks;
-}
-
-void MessageNYI() {
-    HWND hwnd = gWindow->mainWindow->hwnd;
-    MessageBoxA(hwnd, "Not yet implemented!", "Information", MB_OK | MB_ICONINFORMATION);
-}
-
-void ShowErrorMessage(const char* msg) {
-    HWND hwnd = gWindow->mainWindow->hwnd;
-    MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
-}
-
-static void AddPdf() {
-    TocEditorWindow* w = gWindow;
-    HWND hwnd = w->mainWindow->hwnd;
-
-    OPENFILENAME ofn = {0};
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = hwnd;
-
-    ofn.lpstrFilter = L".pdf\0";
-    ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
-
-    // OFN_ENABLEHOOK disables the new Open File dialog under Windows Vista
-    // and later, so don't use it and just allocate enough memory to contain
-    // several dozen file paths and hope that this is enough
-    // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
-    ofn.nMaxFile = MAX_PATH * 2;
-    AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
-    ofn.lpstrFile = file;
-
-    if (!GetOpenFileNameW(&ofn)) {
-        return;
-    }
-    WCHAR* filePath = ofn.lpstrFile;
-
-    EngineBase* engine = EngineManager::CreateEngine(filePath);
-    if (!engine) {
-        ShowErrorMessage("Failed to open a file!");
-        return;
-    }
-
-    TocTree* tocTree = engine->GetToc();
-    if (nullptr == tocTree) {
-        // TODO: maybe add a dummy entry for the first page
-        // or make top-level act as first page destination
-        ShowErrorMessage("File doesn't have Table of content");
-        return;
-    }
-    TocItem* tocRoot = CloneTocItemRecur(tocTree->root, false);
-    int nPages = engine->PageCount();
-    tocRoot->engineFilePath = (char*)strconv::WstrToUtf8(filePath).data();
-    tocRoot->nPages = nPages;
-
-    const WCHAR* title = path::GetBaseNameNoFree(filePath);
-    TocItem* tocWrapper = new TocItem(tocRoot, title, 0);
-    tocWrapper->isOpenDefault = true;
-    tocWrapper->child = tocRoot;
-    w->tocArgs->bookmarks->tree->root->AddSiblingAtEnd(tocWrapper);
-    UpdateTreeModel(w);
-
-    delete engine;
 }
 
 static void RemovePdf() {
@@ -543,9 +641,21 @@ void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoArgs* args) {
     int eno = ti->endPageNo;
     WCHAR* s = nullptr;
     if (eno > sno) {
-        s = str::Format(L"%s (pages %d-%d)", ti->title, sno, eno);
+        if (ti->engineFilePath) {
+            const char* name = path::GetBaseNameNoFree(ti->engineFilePath);
+            AutoFreeWstr nameW = strconv::Utf8ToWstr(name);
+            s = str::Format(L"%s [file: %s, pages %d-%d]", ti->title, nameW.get(), sno, eno);
+        } else {
+            s = str::Format(L"%s [pages %d-%d]", ti->title, sno, eno);
+        }
     } else {
-        s = str::Format(L"%s (page %d)", ti->title, sno);
+        if (ti->engineFilePath) {
+            const char* name = path::GetBaseNameNoFree(ti->engineFilePath);
+            AutoFreeWstr nameW = strconv::Utf8ToWstr(name);
+            s = str::Format(L"%s [file: %s, page %d]", ti->title, nameW.get(), sno);
+        } else {
+            s = str::Format(L"%s [page %d]", ti->title, sno);
+        }
     }
     str::BufSet(tvitem->pszText, cchMax, s);
     str::Free(s);

@@ -48,6 +48,7 @@ void EditCtrl::WndProcParent(WndProcArgs* args) {
         return;
     }
 
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcoloredit
     if (WM_CTLCOLOREDIT == msg) {
         if (w->bgBrush == nullptr) {
             args->result = DefSubclassProc(hwnd, msg, wp, lp);
@@ -65,6 +66,7 @@ void EditCtrl::WndProcParent(WndProcArgs* args) {
     }
 
     if (WM_COMMAND == msg) {
+        // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
         if (EN_CHANGE == HIWORD(wp)) {
             if (w->OnTextChanged) {
                 EditTextChangedArgs eargs{};
@@ -82,6 +84,11 @@ void EditCtrl::WndProcParent(WndProcArgs* args) {
 }
 
 void EditCtrl::WndProc(WndProcArgs* args) {
+    // UINT msg = args->msg;
+    // auto wp = args->wparam;
+    // char* msgName = getWinMessageName(args->msg);
+    // dbglogf("EditCtrl::WndProc: hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, wp);
+
     EditCtrl* w = this;
     if (w->msgFilter) {
         w->msgFilter(args);
@@ -127,6 +134,7 @@ void EditCtrl::SetSelection(int start, int end) {
 }
 
 EditCtrl::EditCtrl(HWND p) : WindowBase(p) {
+    // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     dwStyle = WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL;
     winClass = WC_EDIT;
     kind = kindEdit;
@@ -142,10 +150,10 @@ bool EditCtrl::Create() {
     if (!ok) {
         return false;
     }
-
-    HwndSetCueText(hwnd, cueText.AsView());
     // Subclass();
     SubclassParent();
+
+    HwndSetCueText(hwnd, cueText.AsView());
     return true;
 }
 

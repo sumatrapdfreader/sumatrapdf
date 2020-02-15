@@ -22,13 +22,13 @@ bool IsSep(char c) {
 
 // Note: returns pointer inside <path>, do not free
 const char* GetBaseNameNoFree(const char* path) {
-    const char* fileBaseName = path + str::Len(path);
-    for (; fileBaseName > path; fileBaseName--) {
-        if (IsSep(fileBaseName[-1])) {
+    const char* s = path + str::Len(path);
+    for (; s > path; s--) {
+        if (IsSep(s[-1])) {
             break;
         }
     }
-    return fileBaseName;
+    return s;
 }
 
 // Note: returns pointer inside <path>, do not free
