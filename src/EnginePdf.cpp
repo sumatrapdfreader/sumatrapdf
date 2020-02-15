@@ -88,7 +88,10 @@ static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
         }
 
         char* uri = pdf_parse_file_spec(ctx, doc, dest, nullptr);
-        char* title = fz_strdup(ctx, pdf_to_name(ctx, name));
+        const char* nameStr = pdf_to_name(ctx, name);
+        // TODO: https://github.com/sumatrapdfreader/sumatrapdf/issues/1457
+        // char* title = pdf_new_utf8_from_pdf_string(ctx, nameStr, str::Len(nameStr));
+        char* title = fz_strdup(ctx, nameStr);
         int streamNo = pdf_to_num(ctx, embedded);
         fz_outline* link = fz_new_outline(ctx);
 
