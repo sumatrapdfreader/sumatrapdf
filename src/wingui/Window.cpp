@@ -24,7 +24,7 @@ UINT_PTR NextSubclassId() {
     return g_subclassId;
 }
 
-CopyWndProcArgs::CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src) {
+CopyWndEvent::CopyWndEvent(WndEvent* dst, WndEvent* src) {
     this->dst = dst;
     this->src = src;
     dst->hwnd = src->hwnd;
@@ -34,7 +34,7 @@ CopyWndProcArgs::CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src) {
     dst->w = src->w;
 }
 
-CopyWndProcArgs::~CopyWndProcArgs() {
+CopyWndEvent::~CopyWndEvent() {
     src->didHandle = dst->didHandle;
     src->result = dst->result;
 }
@@ -60,8 +60,8 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
     // or maybe get rid of WindowBase::WndProc and use msgFilterInternal
     // when per-control custom processing is needed
     if (w->msgFilter) {
-        WndProcArgs args{};
-        SetWndProcArgs(args);
+        WndEvent args{};
+        SetWndEvent(args);
         w->msgFilter(&args);
         if (args.didHandle) {
             didHandle = true;
@@ -95,8 +95,8 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         if (!w->onSize) {
             return 0;
         }
-        SizeArgs args;
-        SetWndProcArgs(args);
+        SizeEvent args;
+        SetWndEvent(args);
         args.dx = LOWORD(lp);
         args.dy = HIWORD(lp);
         w->onSize(&args);
@@ -111,8 +111,8 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         if (!w->onWmCommand) {
             return 0;
         }
-        WmCommandArgs args{};
-        SetWndProcArgs(args);
+        WmCommandEvent args{};
+        SetWndEvent(args);
         args.id = LOWORD(wp);
         args.ev = HIWORD(wp);
         w->onWmCommand(&args);
@@ -127,8 +127,8 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         if (!w->onKeyDown) {
             return 0;
         }
-        KeyArgs args{};
-        SetWndProcArgs(args);
+        KeyEvent args{};
+        SetWndEvent(args);
         args.keyVirtCode = (int)wp;
         w->onKeyDown(&args);
         if (args.didHandle) {
@@ -143,8 +143,8 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         if (!w->onKeyUp) {
             return 0;
         }
-        KeyArgs args{};
-        SetWndProcArgs(args);
+        KeyEvent args{};
+        SetWndEvent(args);
         args.keyVirtCode = (int)wp;
         w->onKeyUp(&args);
         if (args.didHandle) {
@@ -159,8 +159,8 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         if (!w->onChar) {
             return 0;
         }
-        CharArgs args{};
-        SetWndProcArgs(args);
+        CharEvent args{};
+        SetWndEvent(args);
         args.keyCode = (int)wp;
         w->onChar(&args);
         if (args.didHandle) {
@@ -175,8 +175,8 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         if (!w->onMouseWheel) {
             return 0;
         }
-        MouseWheelArgs args{};
-        SetWndProcArgs(args);
+        MouseWheelEvent args{};
+        SetWndEvent(args);
         args.isVertical = (msg == WM_MOUSEWHEEL);
         args.delta = GET_WHEEL_DELTA_WPARAM(wp);
         args.keys = GET_KEYSTATE_WPARAM(wp);
@@ -190,8 +190,8 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
     }
 
     // handle the rest in WndProc
-    WndProcArgs args{};
-    SetWndProcArgs(args);
+    WndEvent args{};
+    SetWndEvent(args);
     w->WndProc(&args);
     didHandle = args.didHandle;
     return args.result;
@@ -216,8 +216,8 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     // need WM_*DESTROY notifications?
     if (WM_NCDESTROY == msg) {
         if (w->onDestroy) {
-            WindowDestroyArgs args{};
-            SetWndProcArgs(args);
+            WindowDestroyEvent args{};
+            SetWndEvent(args);
             args.window = w;
             w->onDestroy(&args);
             return 0;
@@ -228,8 +228,8 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     // TODO: should this go into WindowBase?
     if (WM_CLOSE == msg) {
         if (w->onClose) {
-            WindowCloseArgs args{};
-            SetWndProcArgs(args);
+            WindowCloseEvent args{};
+            SetWndEvent(args);
             w->onClose(&args);
             if (args.cancel) {
                 return 0;
@@ -342,8 +342,8 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
     // needed for drag&drop in TreeCtrl
     // TODO: not quite happy with this
     if (WM_LBUTTONUP == msg || WM_MOUSEMOVE == msg) {
-        WndProcArgs args{};
-        SetWndProcArgs(args);
+        WndEvent args{};
+        SetWndEvent(args);
         w->WndProcParent(&args);
         if (args.didHandle) {
             return args.result;
@@ -363,8 +363,8 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
 
     // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
     if (msg == WM_CONTEXTMENU && w->onContextMenu) {
-        ContextMenuArgs args;
-        SetWndProcArgs(args);
+        ContextMenuEvent args;
+        SetWndEvent(args);
         args.w = w;
         args.mouseGlobal.x = GET_X_LPARAM(lp);
         args.mouseGlobal.y = GET_Y_LPARAM(lp);
@@ -378,8 +378,8 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
         return 0;
     }
 
-    WndProcArgs args{};
-    SetWndProcArgs(args);
+    WndEvent args{};
+    SetWndEvent(args);
     w->WndProcParent(&args);
     if (args.didHandle) {
         return args.result;
@@ -444,11 +444,11 @@ WindowBase::~WindowBase() {
     Destroy();
 }
 
-void WindowBase::WndProc(WndProcArgs* args) {
+void WindowBase::WndProc(WndEvent* args) {
     args->didHandle = false;
 }
 
-void WindowBase::WndProcParent(WndProcArgs* args) {
+void WindowBase::WndProcParent(WndEvent* args) {
     args->didHandle = false;
 }
 

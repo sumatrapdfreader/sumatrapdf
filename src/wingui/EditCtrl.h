@@ -2,12 +2,11 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct EditTextChangedArgs {
-    WndProcArgs* procArgs = nullptr;
+struct EditTextChangedEvent : WndEvent {
     std::string_view text{};
 };
 
-typedef std::function<void(EditTextChangedArgs*)> OnTextChanged;
+typedef std::function<void(EditTextChangedEvent*)> OnTextChanged;
 
 // pass to SetColor() function to indicate this color should not change
 #define NO_CHANGE (COLORREF)(-2) // -1 is taken by NO_COLOR in windows headers
@@ -33,8 +32,8 @@ struct EditCtrl : public WindowBase {
     ~EditCtrl();
     bool Create() override;
     SIZE GetIdealSize() override;
-    void WndProc(WndProcArgs*) override;
-    void WndProcParent(WndProcArgs*) override;
+    void WndProc(WndEvent*) override;
+    void WndProcParent(WndEvent*) override;
 
     void SetSelection(int start, int end);
     bool SetCueText(std::string_view);

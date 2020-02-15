@@ -10,7 +10,7 @@ struct ButtonCtrl : public WindowBase {
     ~ButtonCtrl() override;
     bool Create() override;
 
-    void WndProcParent(WndProcArgs*) override;
+    void WndProcParent(WndEvent*) override;
 
     SIZE GetIdealSize() override;
 };

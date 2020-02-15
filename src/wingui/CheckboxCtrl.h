@@ -16,7 +16,7 @@ struct CheckboxCtrl : public WindowBase {
     ~CheckboxCtrl();
     bool Create() override;
 
-    void WndProcParent(WndProcArgs*) override;
+    void WndProcParent(WndEvent*) override;
 
     SIZE GetIdealSize() override;
 

@@ -74,7 +74,7 @@ static ILayout* CreateCheckboxLayout(HWND parent, std::string_view s) {
     return NewCheckboxLayout(b);
 }
 
-static void onTextChanged(EditTextChangedArgs* args) {
+static void onTextChanged(EditTextChangedEvent* args) {
     std::string_view s = args->text;
     dbglogf("text changed: '%s'\n", s.data());
 }
@@ -90,7 +90,7 @@ static ILayout* CreateEditLayout(HWND parent, std::string_view s) {
 
 static char* ddItems[3] = {"foo", "another one", "bar"};
 
-static void onDropDownSelected(DropDownSelectionChangedArgs* args) {
+static void onDropDownSelected(DropDownSelectionChangedEvent* args) {
     int idx = args->idx;
     std::string_view s = args->item;
     dbglogf("drop down selection changed: %d, %s\n", idx, s.data());

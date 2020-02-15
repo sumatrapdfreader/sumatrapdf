@@ -65,7 +65,7 @@ static void OnImageCtrlPaint(ImageCtrl* w, COLORREF bgCol) {
     EndPaint(w->hwnd, &ps);
 }
 
-static void ImageCtrlWndProc(WndProcArgs* args) {
+static void ImageCtrlWndProc(WndEvent* args) {
     UINT msg = args->msg;
     if (WM_ERASEBKGND == msg) {
         args->didHandle = true;

@@ -48,7 +48,7 @@ bool CheckboxCtrl::Create() {
     return ok;
 }
 
-void CheckboxCtrl::WndProcParent(WndProcArgs* args) {
+void CheckboxCtrl::WndProcParent(WndEvent* args) {
     UINT msg = args->msg;
     WPARAM wp = args->wparam;
     if (msg == WM_COMMAND) {

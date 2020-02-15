@@ -54,7 +54,7 @@
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
-static void TocCustomizeTooltip(TreeItmGetTooltipArgs* args) {
+static void TocCustomizeTooltip(TreeItmGetTooltipEvent* args) {
     auto* w = args->treeCtrl;
     auto* ti = args->treeItem;
     auto* nm = args->info;
@@ -436,7 +436,7 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     StartTocEditor(args);
 }
 
-static void TocContextMenu(ContextMenuArgs* args) {
+static void TocContextMenu(ContextMenuEvent* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
     CrashIf(!win);
     const WCHAR* filePath = win->ctrl->FilePath();
@@ -548,9 +548,9 @@ static bool ShouldCustomDraw(WindowInfo* win) {
     return false;
 }
 
-void OnTocCustomDraw(TreeItemCustomDrawArgs*);
+void OnTocCustomDraw(TreeItemCustomDrawEvent*);
 
-static void dropDownSelectionChanged(DropDownSelectionChangedArgs* args) {
+static void dropDownSelectionChanged(DropDownSelectionChangedEvent* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
     TabInfo* tab = win->currentTab;
     DebugCrashIf(!tab);
@@ -632,7 +632,7 @@ static void UpdateFont(HDC hdc, int fontFlags) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
-void OnTocCustomDraw(TreeItemCustomDrawArgs* args) {
+void OnTocCustomDraw(TreeItemCustomDrawEvent* args) {
 #if defined(DISPLAY_TOC_PAGE_NUMBERS)
     if (win->AsEbook())
         return CDRF_DODEFAULT;
@@ -682,7 +682,7 @@ void OnTocCustomDraw(TreeItemCustomDrawArgs* args) {
     return;
 }
 
-static void TocTreeSelectionChanged(TreeSelectionChangedArgs* args) {
+static void TocTreeSelectionChanged(TreeSelectionChangedEvent* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
     CrashIf(!win);
 
@@ -702,7 +702,7 @@ static void TocTreeSelectionChanged(TreeSelectionChangedArgs* args) {
 }
 
 // also used in Favorites.cpp
-void TocTreeKeyDown(TreeKeyDownArgs* args) {
+void TocTreeKeyDown(TreeKeyDownEvent* args) {
     if (args->keyCode != VK_TAB) {
         return;
     }
@@ -719,7 +719,7 @@ void TocTreeKeyDown(TreeKeyDownArgs* args) {
 }
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
-static void TocTreeMsgFilter(WndProcArgs* args) {
+static void TocTreeMsgFilter(WndEvent* args) {
     UNUSED(args);
     switch (msg) {
         case WM_SIZE:
@@ -802,7 +802,7 @@ void UnsubclassToc(WindowInfo* win) {
     }
 }
 
-void TocTreeMouseWheelHandler(MouseWheelArgs* args) {
+void TocTreeMouseWheelHandler(MouseWheelEvent* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
     CrashIf(!win);
     if (!win) {
@@ -815,7 +815,7 @@ void TocTreeMouseWheelHandler(MouseWheelArgs* args) {
     }
 }
 
-void TocTreeCharHandler(CharArgs* args) {
+void TocTreeCharHandler(CharEvent* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
     CrashIf(!win);
     if (!win) {

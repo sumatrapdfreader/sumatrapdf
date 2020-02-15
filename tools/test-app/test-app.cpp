@@ -93,7 +93,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     CrashIf(!ok);
 
     auto l = CreateMainLayout(w->hwnd);
-    w->onSize = [&](SizeArgs* args) {
+    w->onSize = [&](SizeEvent* args) {
         HWND hwnd = args->hwnd;
         int dx = args->dx;
         int dy = args->dy;

@@ -50,7 +50,7 @@ SIZE StaticCtrl::GetIdealSize() {
     return s;
 }
 
-void StaticCtrl::WndProcParent(WndProcArgs* args) {
+void StaticCtrl::WndProcParent(WndEvent* args) {
     UINT msg = args->msg;
     if (msg == WM_COMMAND) {
         // TODO: support STN_CLICKED

@@ -36,7 +36,7 @@ ILayout* NewEditLayout(EditCtrl* e) {
     return new WindowBaseLayout(e, kindEdit);
 }
 
-void EditCtrl::WndProcParent(WndProcArgs* args) {
+void EditCtrl::WndProcParent(WndEvent* args) {
     EditCtrl* w = this;
 
     UINT msg = args->msg;
@@ -69,11 +69,11 @@ void EditCtrl::WndProcParent(WndProcArgs* args) {
         // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
         if (EN_CHANGE == HIWORD(wp)) {
             if (w->OnTextChanged) {
-                EditTextChangedArgs eargs{};
-                eargs.procArgs = args;
-                eargs.text = w->GetText();
-                w->OnTextChanged(&eargs);
-                if (args->didHandle) {
+                EditTextChangedEvent a;
+                CopyWndEvent cp(&a, args);
+                a.text = w->GetText();
+                w->OnTextChanged(&a);
+                if (a.didHandle) {
                     return;
                 }
             }
@@ -83,7 +83,7 @@ void EditCtrl::WndProcParent(WndProcArgs* args) {
     // TODO: handle WM_CTLCOLORSTATIC for read-only/disabled controls
 }
 
-void EditCtrl::WndProc(WndProcArgs* args) {
+void EditCtrl::WndProc(WndEvent* args) {
     // UINT msg = args->msg;
     // auto wp = args->wparam;
     // char* msgName = getWinMessageName(args->msg);

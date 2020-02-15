@@ -50,15 +50,15 @@ bool DropDownCtrl::Create() {
     return ok;
 }
 
-void DropDownCtrl::WndProcParent(WndProcArgs* args) {
+void DropDownCtrl::WndProcParent(WndEvent* args) {
     UINT msg = args->msg;
     WPARAM wp = args->wparam;
     if (msg == WM_COMMAND) {
         auto code = HIWORD(wp);
         if (code == CBN_SELCHANGE) {
             if (onDropDownSelectionChanged) {
-                DropDownSelectionChangedArgs a;
-                CopyWndProcArgs cp(&a, args);
+                DropDownSelectionChangedEvent a;
+                CopyWndEvent cp(&a, args);
                 a.dropDown = this;
                 a.idx = GetCurrentSelection();
                 std::string_view s;

@@ -57,7 +57,7 @@ SIZE ButtonCtrl::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-void ButtonCtrl::WndProcParent(WndProcArgs* args) {
+void ButtonCtrl::WndProcParent(WndEvent* args) {
     UINT msg = args->msg;
     WPARAM wp = args->wparam;
 

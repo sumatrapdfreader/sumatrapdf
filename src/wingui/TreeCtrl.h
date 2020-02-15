@@ -5,22 +5,22 @@
 
 struct TreeCtrl;
 
-struct TreeItmGetTooltipArgs : WndProcArgs {
+struct TreeItmGetTooltipEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     NMTVGETINFOTIPW* info = nullptr;
 };
 
-typedef std::function<void(TreeItmGetTooltipArgs*)> TreeItemGetTooltipHandler;
+typedef std::function<void(TreeItmGetTooltipEvent*)> TreeItemGetTooltipHandler;
 
-struct TreeNotifyArgs : WndProcArgs {
+struct TreeNotifyEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     NMTREEVIEWW* treeView = nullptr;
 };
 
-typedef std::function<void(TreeNotifyArgs*)> TreeNotifyHandler;
+typedef std::function<void(TreeNotifyEvent*)> TreeNotifyHandler;
 
-struct TreeSelectionChangedArgs : WndProcArgs {
+struct TreeSelectionChangedEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* prevSelectedItem = nullptr;
     TreeItem* selectedItem = nullptr;
@@ -29,15 +29,15 @@ struct TreeSelectionChangedArgs : WndProcArgs {
     bool byMouse = false;
 };
 
-typedef std::function<void(TreeSelectionChangedArgs*)> TreeSelectionChangedHandler;
+typedef std::function<void(TreeSelectionChangedEvent*)> TreeSelectionChangedHandler;
 
-struct TreeItemExpandedArgs : WndProcArgs {
+struct TreeItemExpandedEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     bool isExpanded = false;
 };
 
-typedef std::function<void(TreeItemExpandedArgs*)> TreeItemExpandedHandler;
+typedef std::function<void(TreeItemExpandedEvent*)> TreeItemExpandedHandler;
 
 struct TreeItemState {
     bool isSelected = false;
@@ -46,7 +46,7 @@ struct TreeItemState {
     int nChildren = 0;
 };
 
-struct TreeItemChangedArgs : WndProcArgs {
+struct TreeItemChangedEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     NMTVITEMCHANGE* nmic = nullptr;
@@ -59,17 +59,17 @@ struct TreeItemChangedArgs : WndProcArgs {
     TreeItemState newState{};
 };
 
-typedef std::function<void(TreeItemChangedArgs*)> TreeItemChangedHandler;
+typedef std::function<void(TreeItemChangedEvent*)> TreeItemChangedHandler;
 
-struct TreeItemCustomDrawArgs : WndProcArgs {
+struct TreeItemCustomDrawEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     NMTVCUSTOMDRAW* nm = nullptr;
 };
 
-typedef std::function<void(TreeItemCustomDrawArgs*)> TreeItemCustomDrawHandler;
+typedef std::function<void(TreeItemCustomDrawEvent*)> TreeItemCustomDrawHandler;
 
-struct TreeClickArgs : WndProcArgs {
+struct TreeClickEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     bool isDblClick = false;
@@ -80,24 +80,24 @@ struct TreeClickArgs : WndProcArgs {
     PointI mouseGlobal{};
 };
 
-typedef std::function<void(TreeClickArgs*)> TreeClickHandler;
+typedef std::function<void(TreeClickEvent*)> TreeClickHandler;
 
-struct TreeKeyDownArgs : WndProcArgs {
+struct TreeKeyDownEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     NMTVKEYDOWN* nmkd = nullptr;
     int keyCode = 0;
     u32 flags = 0;
 };
 
-typedef std::function<void(TreeKeyDownArgs*)> TreeKeyDownHandler;
+typedef std::function<void(TreeKeyDownEvent*)> TreeKeyDownHandler;
 
-struct TreeGetDispInfoArgs : WndProcArgs {
+struct TreeGetDispInfoEvent : WndEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* treeItem = nullptr;
     NMTVDISPINFOEXW* dispInfo = nullptr;
 };
 
-typedef std::function<void(TreeGetDispInfoArgs*)> TreeGetDispInfoHandler;
+typedef std::function<void(TreeGetDispInfoEvent*)> TreeGetDispInfoHandler;
 
 struct TreeItemDraggeddArgs {
     TreeCtrl* treeCtrl = nullptr;
@@ -171,8 +171,8 @@ struct TreeCtrl : public WindowBase {
     ~TreeCtrl();
 
     SIZE GetIdealSize() override;
-    void WndProc(WndProcArgs*) override;
-    void WndProcParent(WndProcArgs*) override;
+    void WndProc(WndEvent*) override;
+    void WndProcParent(WndEvent*) override;
 
     void Clear();
 
@@ -218,4 +218,4 @@ bool IsTree(Kind);
 bool IsTree(ILayout*);
 
 void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes);
-TreeItem* GetOrSelectTreeItemAtPos(ContextMenuArgs* args, POINT& pt);
+TreeItem* GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt);

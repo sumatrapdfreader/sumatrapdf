@@ -1053,12 +1053,12 @@ struct RaMicroInstallerWindow {
 
     ~RaMicroInstallerWindow();
 
-    void CloseHandler(WindowCloseArgs*);
-    void SizeHandler(SizeArgs*);
+    void CloseHandler(WindowCloseEvent*);
+    void SizeHandler(SizeEvent*);
     void Install();
     void InstallationFinished();
     void Exit();
-    void MsgHandler(WndProcArgs*);
+    void MsgHandler(WndEvent*);
 };
 
 static RaMicroInstallerWindow* gRaMicroInstallerWindow = nullptr;
@@ -1069,7 +1069,7 @@ RaMicroInstallerWindow::~RaMicroInstallerWindow() {
     delete bmpSplash;
 }
 
-void RaMicroInstallerWindow::MsgHandler(WndProcArgs* args) {
+void RaMicroInstallerWindow::MsgHandler(WndEvent* args) {
     if (args->msg == WM_APP_INSTALLATION_FINISHED) {
         InstallationFinished();
         args->didHandle = true;
@@ -1126,7 +1126,7 @@ void RaMicroInstallerWindow::Exit() {
     gRaMicroInstallerWindow->mainWindow->Close();
 }
 
-void RaMicroInstallerWindow::CloseHandler(WindowCloseArgs* args) {
+void RaMicroInstallerWindow::CloseHandler(WindowCloseEvent* args) {
     WindowBase* w = (WindowBase*)gRaMicroInstallerWindow->mainWindow;
     CrashIf(w != args->w);
     delete gRaMicroInstallerWindow;
@@ -1134,7 +1134,7 @@ void RaMicroInstallerWindow::CloseHandler(WindowCloseArgs* args) {
     PostQuitMessage(0);
 }
 
-void RaMicroInstallerWindow::SizeHandler(SizeArgs* args) {
+void RaMicroInstallerWindow::SizeHandler(SizeEvent* args) {
     int dx = args->dx;
     int dy = args->dy;
 

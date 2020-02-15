@@ -105,7 +105,7 @@ static void SetTreeItemState(UINT uState, TreeItemState& state) {
     state.isChecked = n != 0;
 }
 
-void TreeCtrl::WndProcParent(WndProcArgs* args) {
+void TreeCtrl::WndProcParent(WndEvent* args) {
     UINT msg = args->msg;
 
     if (msg == WM_MOUSEMOVE) {
@@ -139,8 +139,8 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
 
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
     if (treeCtrl->onTreeNotify) {
-        TreeNotifyArgs a{};
-        CopyWndProcArgs cp(&a, args);
+        TreeNotifyEvent a{};
+        CopyWndEvent cp(&a, args);
         a.treeCtrl = treeCtrl;
         a.treeView = nmtv;
 
@@ -157,8 +157,8 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         if (!treeCtrl->onGetTooltip) {
             return;
         }
-        TreeItmGetTooltipArgs a{};
-        CopyWndProcArgs cp(&a, args);
+        TreeItmGetTooltipEvent a{};
+        CopyWndEvent cp(&a, args);
         a.treeCtrl = treeCtrl;
         a.info = (NMTVGETINFOTIPW*)(nmtv);
         a.treeItem = treeCtrl->GetTreeItemByHandle(a.info->hItem);
@@ -171,8 +171,8 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         if (!treeCtrl->onTreeItemCustomDraw) {
             return;
         }
-        TreeItemCustomDrawArgs a;
-        CopyWndProcArgs cp(&a, args);
+        TreeItemCustomDrawEvent a;
+        CopyWndEvent cp(&a, args);
         a.treeCtrl = treeCtrl;
         a.nm = (NMTVCUSTOMDRAW*)lp;
         HTREEITEM hItem = (HTREEITEM)a.nm->nmcd.dwItemSpec;
@@ -194,8 +194,8 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         if (!treeCtrl->onTreeSelectionChanged) {
             return;
         }
-        TreeSelectionChangedArgs a;
-        CopyWndProcArgs cp(&a, args);
+        TreeSelectionChangedEvent a;
+        CopyWndEvent cp(&a, args);
         a.treeCtrl = treeCtrl;
         a.nmtv = nmtv;
         auto action = a.nmtv->action;
@@ -215,8 +215,8 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         if (!treeCtrl->onTreeItemChanged) {
             return;
         }
-        TreeItemChangedArgs a;
-        CopyWndProcArgs cp(&a, args);
+        TreeItemChangedEvent a;
+        CopyWndEvent cp(&a, args);
         a.treeCtrl = treeCtrl;
         a.nmic = (NMTVITEMCHANGE*)lp;
         a.treeItem = treeCtrl->GetTreeItemByHandle(a.nmic->hItem);
@@ -246,8 +246,8 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         if (!doNotify) {
             return;
         }
-        TreeItemExpandedArgs a{};
-        CopyWndProcArgs cp(&a, args);
+        TreeItemExpandedEvent a{};
+        CopyWndEvent cp(&a, args);
         a.treeCtrl = treeCtrl;
         a.treeItem = treeCtrl->GetTreeItemByHandle(nmtv->itemNew.hItem);
         onTreeItemExpanded(&a);
@@ -260,8 +260,8 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
             return;
         }
         NMHDR* nmhdr = (NMHDR*)lp;
-        TreeClickArgs a{};
-        CopyWndProcArgs cp(&a, args);
+        TreeClickEvent a{};
+        CopyWndEvent cp(&a, args);
         a.treeCtrl = treeCtrl;
         a.isDblClick = (code == NM_DBLCLK);
 
@@ -293,8 +293,8 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
             return;
         }
         NMTVKEYDOWN* nmkd = (NMTVKEYDOWN*)nmtv;
-        TreeKeyDownArgs a{};
-        CopyWndProcArgs cp(&a, args);
+        TreeKeyDownEvent a{};
+        CopyWndEvent cp(&a, args);
         a.treeCtrl = treeCtrl;
         a.nmkd = nmkd;
         a.keyCode = nmkd->wVKey;
@@ -308,8 +308,8 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         if (!treeCtrl->onTreeGetDispInfo) {
             return;
         }
-        TreeGetDispInfoArgs a{};
-        CopyWndProcArgs cp(&a, args);
+        TreeGetDispInfoEvent a{};
+        CopyWndEvent cp(&a, args);
         a.treeCtrl = treeCtrl;
         a.dispInfo = (NMTVDISPINFOEXW*)lp;
         a.treeItem = treeCtrl->GetTreeItemByHandle(a.dispInfo->item.hItem);
@@ -420,7 +420,7 @@ static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
     return true;
 }
 
-void TreeCtrl::WndProc(WndProcArgs* args) {
+void TreeCtrl::WndProc(WndEvent* args) {
     HWND hwnd = args->hwnd;
     UINT msg = args->msg;
     WPARAM wp = args->wparam;
@@ -751,7 +751,7 @@ WindowBaseLayout* NewTreeLayout(TreeCtrl* e) {
 // if via right-click, selects the item under the cursor
 // in both cases can return null
 // sets pt to screen position (for context menu coordinates)
-TreeItem* GetOrSelectTreeItemAtPos(ContextMenuArgs* args, POINT& pt) {
+TreeItem* GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
     TreeCtrl* treeCtrl = (TreeCtrl*)args->w;
     HWND hwnd = treeCtrl->hwnd;
 

@@ -3,13 +3,13 @@
 
 struct DropDownCtrl;
 
-struct DropDownSelectionChangedArgs : WndProcArgs {
+struct DropDownSelectionChangedEvent : WndEvent {
     DropDownCtrl* dropDown = nullptr;
     int idx = 0;
     std::string_view item;
 };
 
-typedef std::function<void(DropDownSelectionChangedArgs*)> DropDownSelectionChangedHandler;
+typedef std::function<void(DropDownSelectionChangedEvent*)> DropDownSelectionChangedHandler;
 
 struct DropDownCtrl : public WindowBase {
     Vec<std::string_view> items;
@@ -19,7 +19,7 @@ struct DropDownCtrl : public WindowBase {
     ~DropDownCtrl();
     bool Create() override;
 
-    void WndProcParent(WndProcArgs*) override;
+    void WndProcParent(WndEvent*) override;
 
     SIZE GetIdealSize() override;
 

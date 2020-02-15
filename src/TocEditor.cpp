@@ -34,7 +34,7 @@
 using std::placeholders::_1;
 
 // in TableOfContents.cpp
-extern void OnTocCustomDraw(TreeItemCustomDrawArgs* args);
+extern void OnTocCustomDraw(TreeItemCustomDrawEvent* args);
 
 struct TocEditorWindow {
     HWND hwnd = nullptr;
@@ -55,14 +55,14 @@ struct TocEditorWindow {
     bool canRemovePdf = false;
 
     ~TocEditorWindow();
-    void SizeHandler(SizeArgs*);
-    void CloseHandler(WindowCloseArgs*);
-    void TreeItemChangedHandler(TreeItemChangedArgs*);
-    void TreeItemSelectedHandler(TreeSelectionChangedArgs*);
-    void TreeClickHandler(TreeClickArgs* args);
-    void GetDispInfoHandler(TreeGetDispInfoArgs*);
+    void SizeHandler(SizeEvent*);
+    void CloseHandler(WindowCloseEvent*);
+    void TreeItemChangedHandler(TreeItemChangedEvent*);
+    void TreeItemSelectedHandler(TreeSelectionChangedEvent*);
+    void TreeClickHandler(TreeClickEvent* args);
+    void GetDispInfoHandler(TreeGetDispInfoEvent*);
     void TreeItemDragged(TreeItemDraggeddArgs*);
-    void TreeContextMenu(ContextMenuArgs*);
+    void TreeContextMenu(ContextMenuEvent*);
 };
 
 static TocEditorWindow* gWindow = nullptr;
@@ -300,7 +300,7 @@ static void AddPdf() {
     delete engine;
 }
 
-void TocEditorWindow::TreeContextMenu(ContextMenuArgs* args) {
+void TocEditorWindow::TreeContextMenu(ContextMenuEvent* args) {
     args->didHandle = true;
 
     POINT pt{};
@@ -585,7 +585,7 @@ static void CreateMainLayout(TocEditorWindow* win) {
     win->mainLayout = padding;
 }
 
-void TocEditorWindow::SizeHandler(SizeArgs* args) {
+void TocEditorWindow::SizeHandler(SizeEvent* args) {
     int dx = args->dx;
     int dy = args->dy;
     HWND hwnd = args->hwnd;
@@ -603,14 +603,14 @@ void TocEditorWindow::SizeHandler(SizeArgs* args) {
     args->didHandle = true;
 }
 
-void TocEditorWindow::CloseHandler(WindowCloseArgs* args) {
+void TocEditorWindow::CloseHandler(WindowCloseEvent* args) {
     WindowBase* w = (WindowBase*)gWindow->mainWindow;
     CrashIf(w != args->w);
     delete gWindow;
     gWindow = nullptr;
 }
 
-void TocEditorWindow::TreeItemChangedHandler(TreeItemChangedArgs* args) {
+void TocEditorWindow::TreeItemChangedHandler(TreeItemChangedEvent* args) {
     if (!args->checkedChanged) {
         return;
     }
@@ -618,12 +618,12 @@ void TocEditorWindow::TreeItemChangedHandler(TreeItemChangedArgs* args) {
     ti->isUnchecked = !args->newState.isChecked;
 }
 
-void TocEditorWindow::TreeItemSelectedHandler(TreeSelectionChangedArgs* args) {
+void TocEditorWindow::TreeItemSelectedHandler(TreeSelectionChangedEvent* args) {
     UNUSED(args);
     UpdateRemovePdfButtonStatus(gWindow);
 }
 
-void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoArgs* args) {
+void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoEvent* args) {
     args->didHandle = true;
 
     TocItem* ti = (TocItem*)args->treeItem;
@@ -661,7 +661,7 @@ void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoArgs* args) {
     str::Free(s);
 }
 
-void TocEditorWindow::TreeClickHandler(TreeClickArgs* args) {
+void TocEditorWindow::TreeClickHandler(TreeClickEvent* args) {
     if (!args->isDblClick) {
         return;
     }

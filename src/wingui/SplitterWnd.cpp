@@ -94,7 +94,7 @@ SplitterCtrl::~SplitterCtrl() {
     DeleteObject(bmp);
 }
 
-static void SplitterCtrlWndProc(WndProcArgs* args) {
+static void SplitterCtrlWndProc(WndEvent* args) {
     UINT msg = args->msg;
     if (WM_ERASEBKGND == msg) {
         args->didHandle = true;

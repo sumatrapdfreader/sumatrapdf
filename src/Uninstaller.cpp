@@ -565,12 +565,12 @@ struct RaMicroUninstallerWindow {
 
     ~RaMicroUninstallerWindow();
 
-    void CloseHandler(WindowCloseArgs*);
-    void SizeHandler(SizeArgs*);
+    void CloseHandler(WindowCloseEvent*);
+    void SizeHandler(SizeEvent*);
     void Uninstall();
     void InstallationFinished();
     void Exit();
-    void MsgHandler(WndProcArgs*);
+    void MsgHandler(WndEvent*);
 };
 
 static RaMicroUninstallerWindow* gRaMicroUninstallerWindow = nullptr;
@@ -581,7 +581,7 @@ RaMicroUninstallerWindow::~RaMicroUninstallerWindow() {
     delete bmpSplash;
 }
 
-void RaMicroUninstallerWindow::MsgHandler(WndProcArgs* args) {
+void RaMicroUninstallerWindow::MsgHandler(WndEvent* args) {
     if (args->msg == WM_APP_INSTALLATION_FINISHED) {
         InstallationFinished();
         args->didHandle = true;
@@ -632,7 +632,7 @@ void RaMicroUninstallerWindow::Exit() {
     gRaMicroUninstallerWindow->mainWindow->Close();
 }
 
-void RaMicroUninstallerWindow::CloseHandler(WindowCloseArgs* args) {
+void RaMicroUninstallerWindow::CloseHandler(WindowCloseEvent* args) {
     WindowBase* w = (WindowBase*)gRaMicroUninstallerWindow->mainWindow;
     CrashIf(w != args->w);
     delete gRaMicroUninstallerWindow;
@@ -645,7 +645,7 @@ void onRaMicroUninstallerFinished() {
     PostMessage(gRaMicroUninstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
 }
 
-void RaMicroUninstallerWindow::SizeHandler(SizeArgs* args) {
+void RaMicroUninstallerWindow::SizeHandler(SizeEvent* args) {
     int dx = args->dx;
     int dy = args->dy;
 

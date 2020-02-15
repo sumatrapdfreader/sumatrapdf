@@ -5,7 +5,7 @@
 struct WindowBase;
 struct Window;
 
-struct WndProcArgs {
+struct WndEvent {
     // args sent to WndProc
     HWND hwnd = nullptr;
     UINT msg = 0;
@@ -21,80 +21,80 @@ struct WndProcArgs {
     WindowBase* w = nullptr;
 };
 
-#define SetWndProcArgs(n) \
-    {                     \
-        n.w = w;          \
-        n.hwnd = hwnd;    \
-        n.msg = msg;      \
-        n.wparam = wp;    \
-        n.lparam = lp;    \
+#define SetWndEvent(n) \
+    {                  \
+        n.w = w;       \
+        n.hwnd = hwnd; \
+        n.msg = msg;   \
+        n.wparam = wp; \
+        n.lparam = lp; \
     }
 
-struct CopyWndProcArgs {
-    WndProcArgs* dst = nullptr;
-    WndProcArgs* src = nullptr;
+struct CopyWndEvent {
+    WndEvent* dst = nullptr;
+    WndEvent* src = nullptr;
 
-    CopyWndProcArgs() = delete;
+    CopyWndEvent() = delete;
 
-    CopyWndProcArgs(CopyWndProcArgs&) = delete;
-    CopyWndProcArgs(CopyWndProcArgs&&) = delete;
-    CopyWndProcArgs& operator=(CopyWndProcArgs&) = delete;
+    CopyWndEvent(CopyWndEvent&) = delete;
+    CopyWndEvent(CopyWndEvent&&) = delete;
+    CopyWndEvent& operator=(CopyWndEvent&) = delete;
 
-    CopyWndProcArgs(WndProcArgs* dst, WndProcArgs* src);
-    ~CopyWndProcArgs();
+    CopyWndEvent(WndEvent* dst, WndEvent* src);
+    ~CopyWndEvent();
 };
 
-typedef std::function<void(WndProcArgs*)> MsgFilter;
+typedef std::function<void(WndEvent*)> MsgFilter;
 
-struct SizeArgs : WndProcArgs {
+struct SizeEvent : WndEvent {
     int dx = 0;
     int dy = 0;
 };
 
-typedef std::function<void(SizeArgs*)> SizeHandler;
+typedef std::function<void(SizeEvent*)> SizeHandler;
 
-struct ContextMenuArgs : WndProcArgs {
+struct ContextMenuEvent : WndEvent {
     // mouse x,y position relative to the window
     PointI mouseWindow{};
     // global (screen) mouse x,y position
     PointI mouseGlobal{};
 };
 
-typedef std::function<void(ContextMenuArgs*)> ContextMenuHandler;
+typedef std::function<void(ContextMenuEvent*)> ContextMenuHandler;
 
-struct WindowCloseArgs : WndProcArgs {
+struct WindowCloseEvent : WndEvent {
     bool cancel = false;
 };
 
-struct WmCommandArgs : WndProcArgs {
+struct WmCommandEvent : WndEvent {
     int id = 0;
     int ev = 0;
 };
 
-typedef std::function<void(WmCommandArgs*)> WmCommandHandler;
+typedef std::function<void(WmCommandEvent*)> WmCommandHandler;
 
-typedef std::function<void(WindowCloseArgs*)> CloseHandler;
+typedef std::function<void(WindowCloseEvent*)> CloseHandler;
 
-struct WindowDestroyArgs : WndProcArgs {
+struct WindowDestroyEvent : WndEvent {
     Window* window = nullptr;
 };
 
-typedef std::function<void(WindowDestroyArgs*)> DestroyHandler;
+typedef std::function<void(WindowDestroyEvent*)> DestroyHandler;
 
-struct CharArgs : WndProcArgs {
+struct CharEvent : WndEvent {
     int keyCode = 0;
 };
 
-typedef std::function<void(CharArgs*)> CharHandler;
+typedef std::function<void(CharEvent*)> CharHandler;
 
 // TODO: extract data from LPARAM
-struct KeyArgs : WndProcArgs {
+struct KeyEvent : WndEvent {
     int keyVirtCode = 0;
 };
 
-typedef std::function<void(KeyArgs*)> KeyHandler;
+typedef std::function<void(KeyEvent*)> KeyHandler;
 
-struct MouseWheelArgs : WndProcArgs {
+struct MouseWheelEvent : WndEvent {
     bool isVertical = false;
     int delta = 0;
     u32 keys = 0;
@@ -102,7 +102,7 @@ struct MouseWheelArgs : WndProcArgs {
     int y = 0;
 };
 
-typedef std::function<void(MouseWheelArgs*)> MouseWheelHandler;
+typedef std::function<void(MouseWheelEvent*)> MouseWheelHandler;
 
 extern Kind kindWindowBase;
 
@@ -167,8 +167,8 @@ struct WindowBase {
     virtual bool Create();
     virtual SIZE GetIdealSize();
 
-    virtual void WndProc(WndProcArgs*);
-    virtual void WndProcParent(WndProcArgs*);
+    virtual void WndProc(WndEvent*);
+    virtual void WndProcParent(WndEvent*);
 
     void Destroy();
     void Subclass();

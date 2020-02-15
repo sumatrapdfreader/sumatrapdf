@@ -69,7 +69,7 @@ void TestApp(HINSTANCE hInstance) {
     CrashIf(!ok);
 
     auto l = CreateMainLayout(w->hwnd);
-    w->onSize = [&](SizeArgs* args) {
+    w->onSize = [&](SizeEvent* args) {
         HWND hwnd = args->hwnd;
         int dx = args->dx;
         int dy = args->dy;

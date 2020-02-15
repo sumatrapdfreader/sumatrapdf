@@ -700,7 +700,7 @@ void RememberFavTreeExpansionStateForAllWindows() {
     }
 }
 
-static void FavTreeSelectionChanged(TreeSelectionChangedArgs* args) {
+static void FavTreeSelectionChanged(TreeSelectionChangedEvent* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
     CrashIf(!win);
 
@@ -719,7 +719,7 @@ static void FavTreeSelectionChanged(TreeSelectionChangedArgs* args) {
     args->didHandle = true;
 }
 
-static void FavTreeContextMenu(ContextMenuArgs* args) {
+static void FavTreeContextMenu(ContextMenuEvent* args) {
     args->didHandle = true;
 
     TreeCtrl* treeCtrl = (TreeCtrl*)args->w;
@@ -783,9 +783,9 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
 }
 
 // in TableOfContents.cpp
-extern void TocTreeCharHandler(CharArgs* args);
-extern void TocTreeMouseWheelHandler(MouseWheelArgs* args);
-extern void TocTreeKeyDown(TreeKeyDownArgs* args);
+extern void TocTreeCharHandler(CharEvent* args);
+extern void TocTreeMouseWheelHandler(MouseWheelEvent* args);
+extern void TocTreeKeyDown(TreeKeyDownEvent* args);
 
 void CreateFavorites(WindowInfo* win) {
     HMODULE h = GetModuleHandleW(nullptr);

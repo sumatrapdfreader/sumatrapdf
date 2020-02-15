@@ -6,7 +6,7 @@ struct StaticCtrl : public WindowBase {
     ~StaticCtrl() override;
     bool Create() override;
 
-    void WndProcParent(WndProcArgs*) override;
+    void WndProcParent(WndEvent*) override;
 
     SIZE GetIdealSize() override;
 };
