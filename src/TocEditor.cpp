@@ -321,10 +321,16 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* args) {
         win::menu::SetEnabled(popup, IDM_REMOVE, false);
     }
 
+    // TODO: this is still not good enough to prevent all invalid cases
     bool canAddPdfChild = true;
     bool canAddPdfSibling = true;
     TocItem* ti = menuTocItem;
     while (ti) {
+        // if ti is a n-th sibling of a file node, this sets it to file node
+        // (i.e. first sibling)
+        if (ti->parent) {
+            ti = ti->parent->child;
+        }
         if (ti->engineFilePath != nullptr) {
             // can't add as a child if this node or any parent
             // represents PDF file
