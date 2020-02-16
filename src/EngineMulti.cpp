@@ -308,6 +308,22 @@ struct EngineInfo {
     int nPages = 0;
 };
 
+// to supporting moving .vbkm and it's associated files, we accept absolute paths
+// and relative to directory of .vbkm file
+std::string_view FindEnginePath(std::string_view vbkmPath, std::string_view engineFilePath) {
+    if (file::Exists(engineFilePath)) {
+        return engineFilePath;
+    }
+    AutoFreeStr dir = path::GetDir(vbkmPath);
+    const char* engineFileName = path::GetBaseNameNoFree(engineFilePath.data());
+    AutoFreeStr path = path::JoinUtf(dir, engineFileName, nullptr);
+    if (file::Exists(path.as_view())) {
+        std::string_view res = path.release();
+        return res;
+    }
+    return {};
+}
+
 bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     AutoFreeStr filePath = strconv::WstrToUtf8(fileName);
     bool ok = LoadVbkmFile(filePath.get(), vbkm);
@@ -322,7 +338,7 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
 
     // load all referenced files
     int nTotalPages = 0;
-    std::function<bool(TocItem*)> f = [this, &enginesInfo](TocItem* ti) -> bool {
+    std::function<bool(TocItem*)> f = [this, &enginesInfo, &filePath](TocItem* ti) -> bool {
         if (ti->engineFilePath == nullptr) {
             return true;
         }
@@ -330,8 +346,12 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         EngineBase* engine = nullptr;
         int nPages = 0;
         if (!ti->isUnchecked) {
-            AutoFreeWstr path = strconv::Utf8ToWstr(ti->engineFilePath);
-            engine = EngineManager::CreateEngine(path, nullptr);
+            AutoFreeStr path = FindEnginePath(filePath.as_view(), ti->engineFilePath);
+            if (path.empty()) {
+                return false;
+            }
+            AutoFreeWstr pathW = strconv::Utf8ToWstr(path.as_view());
+            engine = EngineManager::CreateEngine(pathW, nullptr);
             if (!engine) {
                 return false;
             }

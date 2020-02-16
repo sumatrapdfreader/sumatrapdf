@@ -20,7 +20,7 @@ bool IsSep(char c) {
     return '\\' == c || '/' == c;
 }
 
-// Note: returns pointer inside <path>, do not free
+// do not free, returns pointer inside <path>
 const char* GetBaseNameNoFree(const char* path) {
     const char* s = path + str::Len(path);
     for (; s > path; s--) {
@@ -31,7 +31,19 @@ const char* GetBaseNameNoFree(const char* path) {
     return s;
 }
 
-// Note: returns pointer inside <path>, do not free
+std::string_view GetBaseName(std::string_view path) {
+    const char* end = path.data() + path.size();
+    const char* s = end;
+    for (; s > path.data(); s--) {
+        if (IsSep(s[-1])) {
+            break;
+        }
+    }
+    const char* res = str::DupN(s, end - s);
+    return res;
+}
+
+// do not free, returns pointer inside <path>
 const char* GetExtNoFree(const char* path) {
     const char* ext = nullptr;
     char c = *path;
@@ -66,7 +78,7 @@ bool IsSep(WCHAR c) {
     return '\\' == c || '/' == c;
 }
 
-// Note: returns pointer inside <path>, do not free
+// do not free, returns pointer inside <path>
 const WCHAR* GetBaseNameNoFree(const WCHAR* path) {
     const WCHAR* end = path + str::Len(path);
     while (end > path) {
@@ -78,7 +90,7 @@ const WCHAR* GetBaseNameNoFree(const WCHAR* path) {
     return end;
 }
 
-// Note: returns pointer inside <path>, do not free
+// do not free, returns pointer inside <path>
 const WCHAR* GetExtNoFree(const WCHAR* path) {
     const WCHAR* ext = path + str::Len(path);
     while ((ext > path) && !IsSep(*ext)) {
@@ -90,7 +102,7 @@ const WCHAR* GetExtNoFree(const WCHAR* path) {
     return path + str::Len(path);
 }
 
-// Caller has to free()
+// caller has to free() the results
 WCHAR* GetDir(const WCHAR* path) {
     const WCHAR* baseName = GetBaseNameNoFree(path);
     if (baseName == path) {
@@ -106,6 +118,30 @@ WCHAR* GetDir(const WCHAR* path) {
         return str::DupN(path, 3);
     }
     if (baseName == path + 2 && str::StartsWith(path, L"\\\\")) {
+        // server root
+        return str::Dup(path);
+    }
+    // any subdirectory
+    return str::DupN(path, baseName - path - 1);
+}
+
+// caller has to free() the results
+std::string_view GetDir(std::string_view pathSV) {
+    const char* path = pathSV.data();
+    const char* baseName = GetBaseNameNoFree(path);
+    if (baseName == path) {
+        // relative directory
+        return str::Dup(".");
+    }
+    if (baseName == path + 1) {
+        // relative root
+        return str::DupN(path, 1);
+    }
+    if (baseName == path + 3 && path[1] == ':') {
+        // local drive root
+        return str::DupN(path, 3);
+    }
+    if (baseName == path + 2 && str::StartsWith(path, "\\\\")) {
         // server root
         return str::Dup(path);
     }

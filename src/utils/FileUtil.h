@@ -5,10 +5,14 @@ namespace path {
 
 bool IsSep(char c);
 
+std::string_view GetBaseName(std::string_view path);
+
 const char* GetBaseNameNoFree(const char* path);
 const char* GetExtNoFree(const char* path);
 
 char* JoinUtf(const char* path, const char* fileName, Allocator* allocator);
+
+std::string_view GetDir(std::string_view path);
 
 #if OS_WIN
 bool IsSep(WCHAR c);
