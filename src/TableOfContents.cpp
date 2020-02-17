@@ -426,13 +426,14 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     } else {
         TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
         TocItem* rootCopy = CloneTocItemRecur(tree->root, false);
-        rootCopy->nPages = tab->ctrl->PageCount();
-        rootCopy->engineFilePath = filePath.release();
 
         const WCHAR* name = path::GetBaseNameNoFree(tab->filePath);
         TocItem* newRoot = new TocItem(nullptr, name, 0);
         newRoot->isOpenDefault = true;
         newRoot->child = rootCopy;
+        newRoot->pageNo = 1; // default to first page in the PDF
+        newRoot->nPages = tab->ctrl->PageCount();
+        newRoot->engineFilePath = filePath.release();
         vbkm->tree = new TocTree(newRoot);
     }
     args->bookmarks = vbkm;
