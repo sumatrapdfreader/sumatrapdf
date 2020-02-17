@@ -401,8 +401,12 @@ static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
 
 static bool IsForVbkm(WindowInfo* win) {
     auto path = win->currentTab->filePath.get();
-    bool isVbkm = str::EndsWithI(path, L".vbkm");
-    return isVbkm;
+    return str::EndsWithI(path, L".vbkm");
+}
+
+static bool IsForPdf(WindowInfo* win) {
+    auto path = win->currentTab->filePath.get();
+    return str::EndsWithI(path, L".pdf");
 }
 
 static void StartTocEditorForWindowInfo(WindowInfo* win) {
@@ -453,7 +457,9 @@ static void TocContextMenu(ContextMenuEvent* args) {
     }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
-    if (!gWithTocEditor) {
+
+    bool showBookmarksMenu = gWithTocEditor && (IsForPdf(win) || IsForVbkm(win));
+    if (!showBookmarksMenu) {
         win::menu::Remove(popup, IDM_SEPARATOR);
         win::menu::Remove(popup, IDM_EXPORT_BOOKMARKS);
         win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
@@ -483,6 +489,7 @@ static void TocContextMenu(ContextMenuEvent* args) {
     }
 
     if (IsForVbkm(win)) {
+        // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
         win::menu::SetText(popup, IDM_NEW_BOOKMARKS, L"Edit Bookmarks");
     }
 
