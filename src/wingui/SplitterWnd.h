@@ -13,21 +13,21 @@ struct SplitterCtrl;
 // called when user drags the splitter ('done' is false) and when drag is finished ('done' is
 // true). the owner can constrain splitter by using current cursor
 // position and setting resizeAllowed to false if it's not allowed to go there
-struct SplitterMoveArgs {
+struct SplitterMoveEvent {
     SplitterCtrl* w = nullptr;
     bool done = false;
     // user can set to false to forbid resizing here
     bool resizeAllowed = true;
 };
 
-typedef std::function<void(SplitterMoveArgs*)> OnSplitterMove;
+typedef std::function<void(SplitterMoveEvent*)> SplitterMoveHandler;
 
 // TODO: maybe derive from WindowBase and allow registering custom classes
 // for WindowBase
 struct SplitterCtrl : public Window {
     SplitterType type = SplitterType::Horiz;
     bool isLive = true;
-    OnSplitterMove onSplitterMove = nullptr;
+    SplitterMoveHandler onSplitterMove = nullptr;
 
     HBITMAP bmp = nullptr;
     HBRUSH brush = nullptr;

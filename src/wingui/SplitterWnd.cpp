@@ -130,7 +130,7 @@ static void SplitterCtrlWndProc(WndEvent* args) {
             }
         }
         ReleaseCapture();
-        SplitterMoveArgs arg;
+        SplitterMoveEvent arg;
         arg.w = (SplitterCtrl*)args->w;
         arg.done = true;
         w->onSplitterMove(&arg);
@@ -145,7 +145,7 @@ static void SplitterCtrlWndProc(WndEvent* args) {
             curId = IDC_SIZEWE;
         }
         if (hwnd == GetCapture()) {
-            SplitterMoveArgs arg;
+            SplitterMoveEvent arg;
             arg.w = (SplitterCtrl*)args->w;
             arg.done = false;
             w->onSplitterMove(&arg);

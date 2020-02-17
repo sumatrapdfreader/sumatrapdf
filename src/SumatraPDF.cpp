@@ -142,8 +142,8 @@ static WStrVec gAllowedFileTypes;
 
 static void CloseDocumentInTab(WindowInfo*, bool keepUIEnabled = false, bool deleteModel = false);
 static void UpdatePageInfoHelper(WindowInfo*, NotificationWnd* wnd = nullptr, int pageNo = -1);
-static void OnSidebarSplitterMove(SplitterMoveArgs*);
-static void OnFavSplitterMove(SplitterMoveArgs*);
+static void OnSidebarSplitterMove(SplitterMoveEvent*);
+static void OnFavSplitterMove(SplitterMoveEvent*);
 static void DownloadDebugSymbols();
 
 void SetCurrentLang(const char* langCode) {
@@ -3973,7 +3973,7 @@ static bool FrameOnSysChar(WindowInfo* win, WPARAM key) {
     return false;
 }
 
-static void OnSidebarSplitterMove(SplitterMoveArgs* args) {
+static void OnSidebarSplitterMove(SplitterMoveEvent* args) {
     SplitterCtrl* splitter = args->w;
     HWND hwnd = splitter->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
@@ -4001,7 +4001,7 @@ static void OnSidebarSplitterMove(SplitterMoveArgs* args) {
     }
 }
 
-static void OnFavSplitterMove(SplitterMoveArgs* args) {
+static void OnFavSplitterMove(SplitterMoveEvent* args) {
     SplitterCtrl* splitter = args->w;
     HWND hwnd = splitter->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);

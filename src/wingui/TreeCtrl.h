@@ -99,13 +99,13 @@ struct TreeGetDispInfoEvent : WndEvent {
 
 typedef std::function<void(TreeGetDispInfoEvent*)> TreeGetDispInfoHandler;
 
-struct TreeItemDraggeddArgs {
+struct TreeItemDraggeddEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* draggedItem = nullptr;
     TreeItem* dragTargetItem = nullptr;
 };
 
-typedef std::function<void(TreeItemDraggeddArgs*)> TreeItemDraggedHandler;
+typedef std::function<void(TreeItemDraggeddEvent*)> TreeItemDraggedHandler;
 
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()

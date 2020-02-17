@@ -61,7 +61,7 @@ struct TocEditorWindow {
     void TreeItemSelectedHandler(TreeSelectionChangedEvent*);
     void TreeClickHandler(TreeClickEvent* args);
     void GetDispInfoHandler(TreeGetDispInfoEvent*);
-    void TreeItemDragged(TreeItemDraggeddArgs*);
+    void TreeItemDragged(TreeItemDraggeddEvent*);
     void TreeContextMenu(ContextMenuEvent*);
 
     void UpdateRemoveTocItemButtonStatus();
@@ -421,7 +421,7 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* args) {
     }
 }
 
-void TocEditorWindow::TreeItemDragged(TreeItemDraggeddArgs* args) {
+void TocEditorWindow::TreeItemDragged(TreeItemDraggeddEvent* args) {
     TocItem* dragged = (TocItem*)args->draggedItem;
     TocItem* dragTarget = (TocItem*)args->dragTargetItem;
     dbglogf("TreeItemDragged:");
@@ -579,10 +579,9 @@ static void CreateMainLayout(TocEditorWindow* win) {
     auto treeLayout = NewTreeLayout(tree);
 
     win->labelInfo = new StaticCtrl(hwnd);
-    win->labelInfo->SetText("Tip: use context menu");
+    win->labelInfo->SetText("Tip: use context menu for more actions");
     COLORREF col = MkGray(0x33);
     win->labelInfo->SetTextColor(col);
-    // win->labelInfo->SetBackgroundColor(MkRgb(0xff, 0xff, 0xff));
     win->labelInfo->Create();
     ILayout* labelLayout = NewStaticLayout(win->labelInfo);
 

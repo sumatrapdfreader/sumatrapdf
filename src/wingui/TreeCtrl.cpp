@@ -375,7 +375,7 @@ void TreeCtrl::DragEnd() {
     if (htiDest != nullptr) {
         dragTargetItem = GetTreeItemByHandle(htiDest);
         // logf("finished dragging 0x%p on 0x%p\n", draggedItem, dragTargetItem);
-        TreeItemDraggeddArgs args;
+        TreeItemDraggeddEvent args;
         args.treeCtrl = this;
         args.draggedItem = draggedItem;
         args.dragTargetItem = dragTargetItem;
