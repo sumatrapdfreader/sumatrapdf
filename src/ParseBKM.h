@@ -5,7 +5,7 @@
 // physical files
 struct VbkmFile {
     AutoFree fileContent;
-    char* name;
+    AutoFreeStr name;
     TocTree* tree;
 
     VbkmFile() = default;
