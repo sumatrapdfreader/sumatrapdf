@@ -69,6 +69,7 @@ struct TocEditorWindow {
     void SaveAsPdf();
     void RemoveItem();
     void AddPdf();
+    void RemoveTocItem(TocItem* ti);
 };
 
 static TocEditorWindow* gWindow = nullptr;
@@ -173,7 +174,7 @@ static MenuDef menuDefContext[] = {
 };
 // clang-format on
 
-static bool RemoveTocItem(TocItem* ti) {
+static bool RemoveIt(TocItem* ti) {
     TocItem* parent = ti->parent;
     if (parent->child == ti) {
         parent->child = ti->next;
@@ -191,6 +192,22 @@ static bool RemoveTocItem(TocItem* ti) {
     }
     CrashMe();
     return false;
+}
+
+void TocEditorWindow::RemoveTocItem(TocItem* ti) {
+    // ensure is visible i.e. expand all parents of this item
+    TocItem* curr = ti->parent;
+    while (curr) {
+        curr->isOpenDefault = true;
+        curr->isOpenToggled = false;
+        curr = curr->parent;
+    }
+
+    bool ok = RemoveIt(ti);
+    if (ok) {
+        UpdateTreeModel();
+        delete ti;
+    }
 }
 
 static EngineBase* ChooosePdfFile() {
@@ -403,18 +420,7 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* args) {
             }
             break;
         case IDM_REMOVE:
-            // ensure is visible i.e. expand all parents of this item
-            TocItem* curr = selectedTocItem->parent;
-            while (curr) {
-                curr->isOpenDefault = true;
-                curr->isOpenToggled = false;
-                curr = curr->parent;
-            }
-            ok = RemoveTocItem(selectedTocItem);
-            if (ok) {
-                UpdateTreeModel();
-                delete selectedTocItem;
-            }
+            RemoveTocItem(selectedTocItem);
             break;
     }
 }
@@ -453,15 +459,8 @@ TocEditorArgs::~TocEditorArgs() {
 void TocEditorWindow::RemoveItem() {
     TreeItem* sel = treeCtrl->GetSelection();
     CrashIf(!sel);
-    TocItem* di = (TocItem*)sel;
-    TreeItem* parent = di->Parent();
-    if (parent != nullptr) {
-        CrashIf(parent != di->Parent());
-    }
-    TocItem* parent2 = (TocItem*)parent;
-    parent2->child = nullptr;
-    delete di;
-    UpdateTreeModel();
+    TocItem* ti = (TocItem*)sel;
+    RemoveTocItem(ti);
 }
 
 void TocEditorWindow::UpdateRemoveTocItemButtonStatus() {
