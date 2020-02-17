@@ -103,6 +103,7 @@ struct TreeItemDraggeddEvent {
     TreeCtrl* treeCtrl = nullptr;
     TreeItem* draggedItem = nullptr;
     TreeItem* dragTargetItem = nullptr;
+    bool isStart = false;
 };
 
 typedef std::function<void(TreeItemDraggeddEvent*)> TreeItemDraggedHandler;
@@ -155,8 +156,9 @@ struct TreeCtrl : public WindowBase {
     // for WM_NOTIFY with TVN_GETDISPINFO
     TreeGetDispInfoHandler onTreeGetDispInfo = nullptr;
 
-    // for TVN_BEGINDRAG / WM_MOUSEMOVE / WM_
-    TreeItemDraggedHandler onTreeItemDragged = nullptr;
+    // for TVN_BEGINDRAG / WM_MOUSEMOVE / WM_LBUTTONUP
+    TreeItemDraggedHandler onTreeItemDragStart = nullptr;
+    TreeItemDraggedHandler onTreeItemDragEnd = nullptr;
 
     Size idealSize{};
 
@@ -207,7 +209,7 @@ struct TreeCtrl : public WindowBase {
 
     TreeItemState GetItemState(TreeItem*);
 
-    void DragBegin(NMTREEVIEWW*);
+    void DragStart(NMTREEVIEWW*);
     void DragMove(int x, int y);
     void DragEnd();
 };

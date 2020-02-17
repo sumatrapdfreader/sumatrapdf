@@ -319,17 +319,18 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/drag-a-tree-view-item
     if (code == TVN_BEGINDRAG) {
-        if (!treeCtrl->onTreeItemDragged) {
+        // we don't do dragging if not asked for drag end notification
+        if (!treeCtrl->onTreeItemDragEnd) {
             return;
         }
-        DragBegin((NMTREEVIEWW*)lp);
+        DragStart((NMTREEVIEWW*)lp);
         args->didHandle = true;
         return;
     }
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/drag-a-tree-view-item
-void TreeCtrl::DragBegin(NMTREEVIEWW* nmtv) {
+void TreeCtrl::DragStart(NMTREEVIEWW* nmtv) {
     HTREEITEM hitem = nmtv->itemNew.hItem;
     draggedItem = GetTreeItemByHandle(hitem);
     HIMAGELIST himl = TreeView_CreateDragImage(hwnd, hitem);
@@ -337,6 +338,14 @@ void TreeCtrl::DragBegin(NMTREEVIEWW* nmtv) {
     ImageList_BeginDrag(himl, 0, 0, 0);
     BOOL ok = ImageList_DragEnter(hwnd, nmtv->ptDrag.x, nmtv->ptDrag.x);
     CrashIf(!ok);
+
+    if (onTreeItemDragStart) {
+        TreeItemDraggeddEvent ev;
+        ev.treeCtrl = this;
+        ev.draggedItem = draggedItem;
+        ev.isStart = true;
+        onTreeItemDragStart(&ev);
+    }
 
     // ShowCursor(FALSE);
     SetCursor(IDC_HAND);
@@ -375,11 +384,12 @@ void TreeCtrl::DragEnd() {
     if (htiDest != nullptr) {
         dragTargetItem = GetTreeItemByHandle(htiDest);
         // logf("finished dragging 0x%p on 0x%p\n", draggedItem, dragTargetItem);
-        TreeItemDraggeddEvent args;
-        args.treeCtrl = this;
-        args.draggedItem = draggedItem;
-        args.dragTargetItem = dragTargetItem;
-        onTreeItemDragged(&args);
+        TreeItemDraggeddEvent ev;
+        ev.treeCtrl = this;
+        ev.draggedItem = draggedItem;
+        ev.dragTargetItem = dragTargetItem;
+        ev.isStart = false;
+        onTreeItemDragEnd(&ev);
     }
     ImageList_EndDrag();
     TreeView_SelectDropTarget(hwnd, nullptr);
@@ -475,7 +485,7 @@ bool TreeCtrl::Create(const WCHAR* title) {
     }
 
     if (supportDragDrop) {
-        // we need image list to create drag image in dragBegin()
+        // we need image list to create drag image in DragStart()
         HIMAGELIST himl = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1);
         CrashIf(!himl);
         TreeView_SetImageList(hwnd, himl, TVSIL_NORMAL);

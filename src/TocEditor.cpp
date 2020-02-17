@@ -61,7 +61,7 @@ struct TocEditorWindow {
     void TreeItemSelectedHandler(TreeSelectionChangedEvent*);
     void TreeClickHandler(TreeClickEvent* args);
     void GetDispInfoHandler(TreeGetDispInfoEvent*);
-    void TreeItemDragged(TreeItemDraggeddEvent*);
+    void TreeItemDragStartEnd(TreeItemDraggeddEvent*);
     void TreeContextMenu(ContextMenuEvent*);
 
     void UpdateRemoveTocItemButtonStatus();
@@ -421,9 +421,23 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* args) {
     }
 }
 
-void TocEditorWindow::TreeItemDragged(TreeItemDraggeddEvent* args) {
-    TocItem* dragged = (TocItem*)args->draggedItem;
-    TocItem* dragTarget = (TocItem*)args->dragTargetItem;
+static void SetInfoLabelText(StaticCtrl* l, bool forDrag) {
+    if (forDrag) {
+        l->SetText("Press SHIFT to add as a sibling, otherwise a child");
+    } else {
+        l->SetText("Tip: use context menu for more actions");
+    }
+}
+
+void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
+    if (ev->isStart) {
+        SetInfoLabelText(labelInfo, true);
+        return;
+    }
+
+    SetInfoLabelText(labelInfo, false);
+    TocItem* dragged = (TocItem*)ev->draggedItem;
+    TocItem* dragTarget = (TocItem*)ev->dragTargetItem;
     dbglogf("TreeItemDragged:");
     if (dragged != nullptr) {
         AutoFreeStr s = strconv::WstrToUtf8(dragged->title);
@@ -573,13 +587,14 @@ static void CreateMainLayout(TocEditorWindow* win) {
     tree->onTreeItemCustomDraw = OnTocCustomDraw;
     tree->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelectedHandler, win, _1);
     tree->onTreeClick = std::bind(&TocEditorWindow::TreeClickHandler, win, _1);
-    tree->onTreeItemDragged = std::bind(&TocEditorWindow::TreeItemDragged, win, _1);
+    tree->onTreeItemDragStart = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
+    tree->onTreeItemDragEnd = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
     tree->onContextMenu = std::bind(&TocEditorWindow::TreeContextMenu, win, _1);
     gWindow->treeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
 
     win->labelInfo = new StaticCtrl(hwnd);
-    win->labelInfo->SetText("Tip: use context menu for more actions");
+    SetInfoLabelText(win->labelInfo, false);
     COLORREF col = MkGray(0x33);
     win->labelInfo->SetTextColor(col);
     win->labelInfo->Create();
