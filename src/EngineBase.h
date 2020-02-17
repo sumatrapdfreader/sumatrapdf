@@ -232,6 +232,7 @@ struct TocItem : TreeItem {
     void AddChild(TocItem* child);
 
     void OpenSingleNode();
+    void DeleteJustSelf();
 
     PageDestination* GetPageDestination();
 

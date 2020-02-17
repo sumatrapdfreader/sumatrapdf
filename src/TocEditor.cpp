@@ -69,6 +69,8 @@ struct TocEditorWindow {
     void SaveAsPdf();
     void RemoveItem();
     void AddPdf();
+    void AddPdfAsSibling(TocItem* ti);
+    void AddPdfAsChild(TocItem* ti); 
     void RemoveTocItem(TocItem* ti);
 };
 
@@ -169,19 +171,33 @@ static MenuDef menuDefContext[] = {
     {"Add child",               IDM_ADD_CHILD, 0},
     {"Add PDF as a child",      IDM_ADD_PDF_CHILD, 0},
     {"Add PDF as a sibling",    IDM_ADD_PDF_SIBLING, 0},
-    {"Remove",                  IDM_REMOVE, 0},
+    {"Remove Item",             IDM_REMOVE, 0},
     { 0, 0, 0},
 };
 // clang-format on
 
-static bool RemoveIt(TocItem* ti) {
+static bool RemoveIt(TreeCtrl* treeCtrl, TocItem* ti) {
     TocItem* parent = ti->parent;
-    if (parent->child == ti) {
+    if (parent && parent->child == ti) {
         parent->child = ti->next;
         ti->next = nullptr;
         return true;
     }
-    TocItem* curr = parent->child;
+
+    // first sibling for ti
+    TocItem* curr = nullptr;
+    if (parent) {
+        curr = parent->child;
+    } else {
+        TocTree* tree = (TocTree*)treeCtrl->treeModel;
+        curr = tree->root;
+        // ti is the first top-level element
+        if (curr == ti) {
+            tree->root = ti->next;
+            return true;
+        }
+    }
+    // remove ti from list of siblings
     while (curr) {
         if (curr->next == ti) {
             curr->next = ti->next;
@@ -190,6 +206,7 @@ static bool RemoveIt(TocItem* ti) {
         }
         curr = curr->next;
     }
+    // didn't find ti in a list of siblings, shouldn't happen
     CrashMe();
     return false;
 }
@@ -203,10 +220,10 @@ void TocEditorWindow::RemoveTocItem(TocItem* ti) {
         curr = curr->parent;
     }
 
-    bool ok = RemoveIt(ti);
+    bool ok = RemoveIt(treeCtrl, ti);
     if (ok) {
         UpdateTreeModel();
-        delete ti;
+        ti->DeleteJustSelf();
     }
 }
 
@@ -243,52 +260,49 @@ static EngineBase* ChooosePdfFile() {
     return engine;
 }
 
-static bool AddPdfAsChild(TocItem* ti) {
-    EngineBase* engine = ChooosePdfFile();
-    if (!engine) {
-        return false;
-    }
-    // TODO: allow PDFs with no toc
+static TocItem* CreateWrapperItem(EngineBase* engine, TocItem* ti) {
+    TocItem* tocFileRoot = nullptr;
     TocTree* tocTree = engine->GetToc();
-    if (nullptr == tocTree) {
-        // TODO: maybe add a dummy entry for the first page
-        // or make top-level act as first page destination
-        ShowErrorMessage("File doesn't have Table of content");
-        delete engine;
-        return false;
+    // it's ok if engine doesn't have toc
+    if (tocTree) {
+        tocFileRoot = CloneTocItemRecur(tocTree->root, false);
     }
-    TocItem* tocRoot = CloneTocItemRecur(tocTree->root, false);
+
     int nPages = engine->PageCount();
     char* filePath = (char*)strconv::WstrToUtf8(engine->FileName()).data();
-    tocRoot->engineFilePath = filePath;
-    tocRoot->nPages = nPages;
-    ti->AddChild(tocRoot);
-    delete engine;
-    return true;
+    const WCHAR* title = path::GetBaseNameNoFree(engine->FileName());
+    TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
+    tocWrapper->isOpenDefault = true;
+    tocWrapper->child = tocFileRoot;
+    tocWrapper->engineFilePath = filePath;
+    tocWrapper->nPages = nPages;
+    tocWrapper->pageNo = 1;
+    if (tocFileRoot) {
+        tocFileRoot->parent = tocWrapper;
+    }
+    return tocWrapper;
 }
 
-static bool AddPdfAsSibling(TocItem* ti) {
+void TocEditorWindow::AddPdfAsChild(TocItem* ti) {
     EngineBase* engine = ChooosePdfFile();
     if (!engine) {
-        return false;
+        return;
     }
-    TocTree* tocTree = engine->GetToc();
-    if (nullptr == tocTree) {
-        // TODO: maybe add a dummy entry for the first page
-        // or make top-level act as first page destination
-        ShowErrorMessage("File doesn't have Table of content");
-        delete engine;
-        return false;
-    }
-
-    TocItem* tocRoot = CloneTocItemRecur(tocTree->root, false);
-    int nPages = engine->PageCount();
-    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName()).data();
-    tocRoot->engineFilePath = filePath;
-    tocRoot->nPages = nPages;
-    ti->AddSibling(tocRoot);
+    TocItem* tocWrapper = CreateWrapperItem(engine, ti);
+    ti->AddChild(tocWrapper);
+    UpdateTreeModel();
     delete engine;
-    return true;
+}
+
+void TocEditorWindow::AddPdfAsSibling(TocItem* ti) {
+    EngineBase* engine = ChooosePdfFile();
+    if (!engine) {
+        return;
+    }
+    TocItem* tocWrapper = CreateWrapperItem(engine, ti);
+    ti->AddSibling(tocWrapper);
+    UpdateTreeModel();
+    delete engine;
 }
 
 void TocEditorWindow::AddPdf() {
@@ -296,22 +310,10 @@ void TocEditorWindow::AddPdf() {
     if (!engine) {
         return;
     }
-    TocTree* tocTree = engine->GetToc();
-    TocItem* tocRoot = CloneTocItemRecur(tocTree->root, false);
 
-    int nPages = engine->PageCount();
-    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName()).data();
-    const WCHAR* title = path::GetBaseNameNoFree(engine->FileName());
-    TocItem* tocWrapper = new TocItem(tocRoot, title, 0);
-    tocWrapper->isOpenDefault = true;
-    tocWrapper->child = tocRoot;
-    tocWrapper->engineFilePath = filePath;
-    tocWrapper->nPages = nPages;
-    tocWrapper->pageNo = 0;
-
+    TocItem* tocWrapper = CreateWrapperItem(engine, (TocItem*)treeCtrl->treeModel->RootAt(0));
     tocArgs->bookmarks->tree->root->AddSiblingAtEnd(tocWrapper);
     UpdateTreeModel();
-
     delete engine;
 }
 
@@ -375,7 +377,6 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* args) {
     INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
-    bool ok;
     switch (cmd) {
         case IDM_EDIT:
             StartEditTocItem(mainWindow->hwnd, treeCtrl, selectedTocItem);
@@ -408,16 +409,10 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* args) {
             });
         } break;
         case IDM_ADD_PDF_CHILD:
-            ok = AddPdfAsChild(selectedTocItem);
-            if (ok) {
-                UpdateTreeModel();
-            }
+            AddPdfAsChild(selectedTocItem);
             break;
         case IDM_ADD_PDF_SIBLING:
-            ok = AddPdfAsSibling(selectedTocItem);
-            if (ok) {
-                UpdateTreeModel();
-            }
+            AddPdfAsSibling(selectedTocItem);
             break;
         case IDM_REMOVE:
             RemoveTocItem(selectedTocItem);
