@@ -83,12 +83,15 @@
 #define IDM_PIN_SELECTED_DOCUMENT       481
 #define IDM_FORGET_SELECTED_DOCUMENT    482
 
-/* 500 - 540 is reserved for local menu ids */
+/* 500 - 530 is reserved for local menu ids */
 
-#define IDM_OPEN_WITH_EXTERNAL_FIRST    540
-#define IDM_OPEN_WITH_EXTERNAL_LAST     541
-#define IDM_FILE_HISTORY_FIRST          542
-#define IDM_FILE_HISTORY_LAST           543
+/* a range for "external viewers" setting */
+#define IDM_OPEN_WITH_EXTERNAL_FIRST    530
+#define IDM_OPEN_WITH_EXTERNAL_LAST     539
+
+/* a range for file history */
+#define IDM_FILE_HISTORY_FIRST          540
+#define IDM_FILE_HISTORY_LAST           549
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
