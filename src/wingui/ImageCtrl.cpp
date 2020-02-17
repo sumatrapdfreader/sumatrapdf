@@ -65,17 +65,17 @@ static void OnImageCtrlPaint(ImageCtrl* w, COLORREF bgCol) {
     EndPaint(w->hwnd, &ps);
 }
 
-static void ImageCtrlWndProc(WndEvent* args) {
-    UINT msg = args->msg;
+static void ImageCtrlWndProc(WndEvent* ev) {
+    UINT msg = ev->msg;
     if (WM_ERASEBKGND == msg) {
-        args->didHandle = true;
+        ev->didHandle = true;
         // do nothing, helps to avoid flicker
-        args->result = TRUE;
+        ev->result = TRUE;
         return;
     }
 
-    HWND hwnd = args->hwnd;
-    ImageCtrl* w = (ImageCtrl*)args->w;
+    HWND hwnd = ev->hwnd;
+    ImageCtrl* w = (ImageCtrl*)ev->w;
     CrashIf(!w);
     if (!w) {
         return;
@@ -83,12 +83,12 @@ static void ImageCtrlWndProc(WndEvent* args) {
 
     if (WM_PAINT == msg) {
         OnImageCtrlPaint(w, w->backgroundColor);
-        args->didHandle = true;
+        ev->didHandle = true;
         return;
     }
 
     // char* msgName = getWinMessageName(msg);
-    // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, args->wparam);
+    // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, ev->wparam);
 }
 
 bool ImageCtrl::Create() {

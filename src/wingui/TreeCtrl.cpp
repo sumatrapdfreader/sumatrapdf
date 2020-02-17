@@ -105,17 +105,17 @@ static void SetTreeItemState(UINT uState, TreeItemState& state) {
     state.isChecked = n != 0;
 }
 
-void TreeCtrl::WndProcParent(WndEvent* args) {
-    UINT msg = args->msg;
+void TreeCtrl::WndProcParent(WndEvent* ev) {
+    UINT msg = ev->msg;
 
     if (msg == WM_MOUSEMOVE) {
         if (!isDragging) {
             return;
         }
-        int x = GET_X_LPARAM(args->lparam);
-        int y = GET_Y_LPARAM(args->lparam);
+        int x = GET_X_LPARAM(ev->lparam);
+        int y = GET_Y_LPARAM(ev->lparam);
         DragMove(x, y);
-        args->didHandle = true;
+        ev->didHandle = true;
         return;
     }
 
@@ -124,7 +124,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
             return;
         }
         DragEnd();
-        args->didHandle = true;
+        ev->didHandle = true;
         return;
     }
 
@@ -133,14 +133,14 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
     }
 
     auto* treeCtrl = (TreeCtrl*)this;
-    LPARAM lp = args->lparam;
+    LPARAM lp = ev->lparam;
 
-    CrashIf(GetParent(treeCtrl->hwnd) != (HWND)args->hwnd);
+    CrashIf(GetParent(treeCtrl->hwnd) != (HWND)ev->hwnd);
 
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
     if (treeCtrl->onTreeNotify) {
         TreeNotifyEvent a{};
-        CopyWndEvent cp(&a, args);
+        CopyWndEvent cp(&a, ev);
         a.treeCtrl = treeCtrl;
         a.treeView = nmtv;
 
@@ -158,7 +158,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
             return;
         }
         TreeItmGetTooltipEvent a{};
-        CopyWndEvent cp(&a, args);
+        CopyWndEvent cp(&a, ev);
         a.treeCtrl = treeCtrl;
         a.info = (NMTVGETINFOTIPW*)(nmtv);
         a.treeItem = treeCtrl->GetTreeItemByHandle(a.info->hItem);
@@ -172,7 +172,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
             return;
         }
         TreeItemCustomDrawEvent a;
-        CopyWndEvent cp(&a, args);
+        CopyWndEvent cp(&a, ev);
         a.treeCtrl = treeCtrl;
         a.nm = (NMTVCUSTOMDRAW*)lp;
         HTREEITEM hItem = (HTREEITEM)a.nm->nmcd.dwItemSpec;
@@ -195,7 +195,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
             return;
         }
         TreeSelectionChangedEvent a;
-        CopyWndEvent cp(&a, args);
+        CopyWndEvent cp(&a, ev);
         a.treeCtrl = treeCtrl;
         a.nmtv = nmtv;
         auto action = a.nmtv->action;
@@ -216,7 +216,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
             return;
         }
         TreeItemChangedEvent a;
-        CopyWndEvent cp(&a, args);
+        CopyWndEvent cp(&a, ev);
         a.treeCtrl = treeCtrl;
         a.nmic = (NMTVITEMCHANGE*)lp;
         a.treeItem = treeCtrl->GetTreeItemByHandle(a.nmic->hItem);
@@ -247,7 +247,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
             return;
         }
         TreeItemExpandedEvent a{};
-        CopyWndEvent cp(&a, args);
+        CopyWndEvent cp(&a, ev);
         a.treeCtrl = treeCtrl;
         a.treeItem = treeCtrl->GetTreeItemByHandle(nmtv->itemNew.hItem);
         onTreeItemExpanded(&a);
@@ -261,7 +261,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
         }
         NMHDR* nmhdr = (NMHDR*)lp;
         TreeClickEvent a{};
-        CopyWndEvent cp(&a, args);
+        CopyWndEvent cp(&a, ev);
         a.treeCtrl = treeCtrl;
         a.isDblClick = (code == NM_DBLCLK);
 
@@ -294,7 +294,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
         }
         NMTVKEYDOWN* nmkd = (NMTVKEYDOWN*)nmtv;
         TreeKeyDownEvent a{};
-        CopyWndEvent cp(&a, args);
+        CopyWndEvent cp(&a, ev);
         a.treeCtrl = treeCtrl;
         a.nmkd = nmkd;
         a.keyCode = nmkd->wVKey;
@@ -309,7 +309,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
             return;
         }
         TreeGetDispInfoEvent a{};
-        CopyWndEvent cp(&a, args);
+        CopyWndEvent cp(&a, ev);
         a.treeCtrl = treeCtrl;
         a.dispInfo = (NMTVDISPINFOEXW*)lp;
         a.treeItem = treeCtrl->GetTreeItemByHandle(a.dispInfo->item.hItem);
@@ -324,7 +324,7 @@ void TreeCtrl::WndProcParent(WndEvent* args) {
             return;
         }
         DragStart((NMTREEVIEWW*)lp);
-        args->didHandle = true;
+        ev->didHandle = true;
         return;
     }
 }
@@ -430,30 +430,30 @@ static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
     return true;
 }
 
-void TreeCtrl::WndProc(WndEvent* args) {
-    HWND hwnd = args->hwnd;
-    UINT msg = args->msg;
-    WPARAM wp = args->wparam;
+void TreeCtrl::WndProc(WndEvent* ev) {
+    HWND hwnd = ev->hwnd;
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wparam;
 
     TreeCtrl* w = this;
     CrashIf(w->hwnd != (HWND)hwnd);
 
     if (w->msgFilter) {
-        w->msgFilter(args);
-        if (args->didHandle) {
+        w->msgFilter(ev);
+        if (ev->didHandle) {
             return;
         }
     }
 
     if (WM_ERASEBKGND == msg) {
-        args->didHandle = true;
-        args->result = FALSE;
+        ev->didHandle = true;
+        ev->result = FALSE;
         return;
     }
 
     if (WM_KEYDOWN == msg) {
         if (HandleKey(w, wp)) {
-            args->didHandle = true;
+            ev->didHandle = true;
             return;
         }
     }

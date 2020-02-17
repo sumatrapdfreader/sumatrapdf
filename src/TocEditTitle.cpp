@@ -59,23 +59,24 @@ EditTitleWindow::~EditTitleWindow() {
     delete mainLayout;
 }
 
-void EditTitleWindow::CloseHandler(WindowCloseEvent* args) {
+void EditTitleWindow::CloseHandler(WindowCloseEvent* ev) {
     WindowBase* w = (WindowBase*)gEditTitleWindow->mainWindow;
-    CrashIf(w != args->w);
+    CrashIf(w != ev->w);
     gEditTitleWindow->onFinished(nullptr);
     delete gEditTitleWindow;
     gEditTitleWindow = nullptr;
 }
 
-void EditTitleWindow::KeyDownHandler(KeyEvent* args) {
+void EditTitleWindow::KeyDownHandler(KeyEvent* ev) {
+    UNUSED(ev);
     // TODO: I want Tab to navigate focus between elements
-    // dbglogf("KeyDown: %d\n", args->keyVirtCode);
+    // dbglogf("KeyDown: %d\n", ev->keyVirtCode);
 }
 
-void EditTitleWindow::SizeHandler(SizeEvent* args) {
-    int dx = args->dx;
-    int dy = args->dy;
-    HWND hwnd = args->hwnd;
+void EditTitleWindow::SizeHandler(SizeEvent* ev) {
+    int dx = ev->dx;
+    int dy = ev->dy;
+    HWND hwnd = ev->hwnd;
     if (dx == 0 || dy == 0) {
         return;
     }
@@ -87,7 +88,7 @@ void EditTitleWindow::SizeHandler(SizeEvent* args) {
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
     InvalidateRect(hwnd, nullptr, false);
-    args->didHandle = true;
+    ev->didHandle = true;
 }
 
 void EditTitleWindow::ButtonOkHandler() {

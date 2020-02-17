@@ -35,7 +35,7 @@
 using std::placeholders::_1;
 
 // in TableOfContents.cpp
-extern void OnTocCustomDraw(TreeItemCustomDrawEvent* args);
+extern void OnTocCustomDraw(TreeItemCustomDrawEvent*);
 
 struct TocEditorWindow {
     TocEditorArgs* tocArgs = nullptr;
@@ -59,7 +59,7 @@ struct TocEditorWindow {
     void CloseHandler(WindowCloseEvent*);
     void TreeItemChangedHandler(TreeItemChangedEvent*);
     void TreeItemSelectedHandler(TreeSelectionChangedEvent*);
-    void TreeClickHandler(TreeClickEvent* args);
+    void TreeClickHandler(TreeClickEvent*);
     void GetDispInfoHandler(TreeGetDispInfoEvent*);
     void TreeItemDragStartEnd(TreeItemDraggeddEvent*);
     void TreeContextMenu(ContextMenuEvent*);
@@ -333,11 +333,11 @@ static bool CanRemoveTocItem(TreeCtrl* treeCtrl, TocItem* ti) {
     return true;
 }
 
-void TocEditorWindow::TreeContextMenu(ContextMenuEvent* args) {
-    args->didHandle = true;
+void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
+    ev->didHandle = true;
 
     POINT pt{};
-    TreeItem* menuTreeItem = GetOrSelectTreeItemAtPos(args, pt);
+    TreeItem* menuTreeItem = GetOrSelectTreeItemAtPos(ev, pt);
     if (!menuTreeItem) {
         return;
     }
@@ -611,10 +611,10 @@ static void CreateMainLayout(TocEditorWindow* win) {
     win->mainLayout = padding;
 }
 
-void TocEditorWindow::SizeHandler(SizeEvent* args) {
-    int dx = args->dx;
-    int dy = args->dy;
-    HWND hwnd = args->hwnd;
+void TocEditorWindow::SizeHandler(SizeEvent* ev) {
+    int dx = ev->dx;
+    int dy = ev->dy;
+    HWND hwnd = ev->hwnd;
     if (dx == 0 || dy == 0) {
         return;
     }
@@ -626,34 +626,34 @@ void TocEditorWindow::SizeHandler(SizeEvent* args) {
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
     InvalidateRect(hwnd, nullptr, false);
-    args->didHandle = true;
+    ev->didHandle = true;
 }
 
-void TocEditorWindow::CloseHandler(WindowCloseEvent* args) {
+void TocEditorWindow::CloseHandler(WindowCloseEvent* ev) {
     WindowBase* w = (WindowBase*)gWindow->mainWindow;
-    CrashIf(w != args->w);
+    CrashIf(w != ev->w);
     delete gWindow;
     gWindow = nullptr;
 }
 
-void TocEditorWindow::TreeItemChangedHandler(TreeItemChangedEvent* args) {
-    if (!args->checkedChanged) {
+void TocEditorWindow::TreeItemChangedHandler(TreeItemChangedEvent* ev) {
+    if (!ev->checkedChanged) {
         return;
     }
-    TocItem* ti = (TocItem*)args->treeItem;
-    ti->isUnchecked = !args->newState.isChecked;
+    TocItem* ti = (TocItem*)ev->treeItem;
+    ti->isUnchecked = !ev->newState.isChecked;
 }
 
-void TocEditorWindow::TreeItemSelectedHandler(TreeSelectionChangedEvent* args) {
-    UNUSED(args);
+void TocEditorWindow::TreeItemSelectedHandler(TreeSelectionChangedEvent* ev) {
+    UNUSED(ev);
     UpdateRemoveTocItemButtonStatus();
 }
 
-void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoEvent* args) {
-    args->didHandle = true;
+void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoEvent* ev) {
+    ev->didHandle = true;
 
-    TocItem* ti = (TocItem*)args->treeItem;
-    TVITEMEXW* tvitem = &args->dispInfo->item;
+    TocItem* ti = (TocItem*)ev->treeItem;
+    TVITEMEXW* tvitem = &ev->dispInfo->item;
     CrashIf(tvitem->mask != TVIF_TEXT);
 
     size_t cchMax = tvitem->cchTextMax;
@@ -687,18 +687,18 @@ void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoEvent* args) {
     str::Free(s);
 }
 
-void TocEditorWindow::TreeClickHandler(TreeClickEvent* args) {
-    if (!args->isDblClick) {
+void TocEditorWindow::TreeClickHandler(TreeClickEvent* ev) {
+    if (!ev->isDblClick) {
         return;
     }
-    if (!args->treeItem) {
+    if (!ev->treeItem) {
         return;
     }
 
-    args->didHandle = true;
-    args->result = 1;
+    ev->didHandle = true;
+    ev->result = 1;
 
-    TocItem* ti = (TocItem*)args->treeItem;
+    TocItem* ti = (TocItem*)ev->treeItem;
     StartEditTocItem(mainWindow->hwnd, treeCtrl, ti);
 }
 

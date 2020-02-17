@@ -94,17 +94,17 @@ SplitterCtrl::~SplitterCtrl() {
     DeleteObject(bmp);
 }
 
-static void SplitterCtrlWndProc(WndEvent* args) {
-    UINT msg = args->msg;
+static void SplitterCtrlWndProc(WndEvent* ev) {
+    UINT msg = ev->msg;
     if (WM_ERASEBKGND == msg) {
-        args->didHandle = true;
+        ev->didHandle = true;
         // TODO: should this be FALSE?
-        args->result = TRUE;
+        ev->result = TRUE;
         return;
     }
 
-    HWND hwnd = args->hwnd;
-    SplitterCtrl* w = (SplitterCtrl*)args->w;
+    HWND hwnd = ev->hwnd;
+    SplitterCtrl* w = (SplitterCtrl*)ev->w;
     CrashIf(!w);
     if (!w) {
         return;
@@ -118,7 +118,7 @@ static void SplitterCtrlWndProc(WndEvent* args) {
             }
             DrawResizeLine(w->hwnd, w->brush, w->type, false, true, w->prevResizeLinePos);
         }
-        args->didHandle = true;
+        ev->didHandle = true;
         return;
     }
 
@@ -131,11 +131,11 @@ static void SplitterCtrlWndProc(WndEvent* args) {
         }
         ReleaseCapture();
         SplitterMoveEvent arg;
-        arg.w = (SplitterCtrl*)args->w;
+        arg.w = (SplitterCtrl*)ev->w;
         arg.done = true;
         w->onSplitterMove(&arg);
         ScheduleRepaint(w->hwnd);
-        args->didHandle = true;
+        ev->didHandle = true;
         return;
     }
 
@@ -146,7 +146,7 @@ static void SplitterCtrlWndProc(WndEvent* args) {
         }
         if (hwnd == GetCapture()) {
             SplitterMoveEvent arg;
-            arg.w = (SplitterCtrl*)args->w;
+            arg.w = (SplitterCtrl*)ev->w;
             arg.done = false;
             w->onSplitterMove(&arg);
             if (!arg.resizeAllowed) {
@@ -156,13 +156,13 @@ static void SplitterCtrlWndProc(WndEvent* args) {
             }
         }
         SetCursor(curId);
-        args->didHandle = true;
+        ev->didHandle = true;
         return;
     }
 
     if (WM_PAINT == msg) {
         OnSplitterCtrlPaint(w->hwnd, w->backgroundColor);
-        args->didHandle = true;
+        ev->didHandle = true;
         return;
     }
 }

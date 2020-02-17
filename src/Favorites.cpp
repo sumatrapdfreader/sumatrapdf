@@ -700,8 +700,8 @@ void RememberFavTreeExpansionStateForAllWindows() {
     }
 }
 
-static void FavTreeSelectionChanged(TreeSelectionChangedEvent* args) {
-    WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
+static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
+    WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
     CrashIf(!win);
 
     // When the focus is set to the toc window the first item in the treeview is automatically
@@ -710,25 +710,25 @@ static void FavTreeSelectionChanged(TreeSelectionChangedEvent* args) {
     // The case pnmtv->action==TVC_UNKNOWN is ignored because
     // it corresponds to a notification sent by
     // the function TreeView_DeleteAllItems after deletion of the item.
-    bool shouldHandle = args->byKeyboard || args->byMouse;
+    bool shouldHandle = ev->byKeyboard || ev->byMouse;
     if (!shouldHandle) {
         return;
     }
-    bool allowExternal = args->byMouse;
-    GoToFavForTreeItem(win, args->selectedItem);
-    args->didHandle = true;
+    bool allowExternal = ev->byMouse;
+    GoToFavForTreeItem(win, ev->selectedItem);
+    ev->didHandle = true;
 }
 
-static void FavTreeContextMenu(ContextMenuEvent* args) {
-    args->didHandle = true;
+static void FavTreeContextMenu(ContextMenuEvent* ev) {
+    ev->didHandle = true;
 
-    TreeCtrl* treeCtrl = (TreeCtrl*)args->w;
+    TreeCtrl* treeCtrl = (TreeCtrl*)ev->w;
     CrashIf(!IsTree(treeCtrl->kind));
     HWND hwnd = treeCtrl->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
     POINT pt{};
-    TreeItem* ti = GetOrSelectTreeItemAtPos(args, pt);
+    TreeItem* ti = GetOrSelectTreeItemAtPos(ev, pt);
     if (!ti) {
         return;
     }
@@ -783,9 +783,9 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
 }
 
 // in TableOfContents.cpp
-extern void TocTreeCharHandler(CharEvent* args);
-extern void TocTreeMouseWheelHandler(MouseWheelEvent* args);
-extern void TocTreeKeyDown(TreeKeyDownEvent* args);
+extern void TocTreeCharHandler(CharEvent* ev);
+extern void TocTreeMouseWheelHandler(MouseWheelEvent* ev);
+extern void TocTreeKeyDown(TreeKeyDownEvent* ev);
 
 void CreateFavorites(WindowInfo* win) {
     HMODULE h = GetModuleHandleW(nullptr);

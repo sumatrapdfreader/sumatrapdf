@@ -54,10 +54,10 @@
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
-static void TocCustomizeTooltip(TreeItmGetTooltipEvent* args) {
-    auto* w = args->treeCtrl;
-    auto* ti = args->treeItem;
-    auto* nm = args->info;
+static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
+    auto* w = ev->treeCtrl;
+    auto* ti = ev->treeItem;
+    auto* nm = ev->info;
     TocItem* tocItem = (TocItem*)ti;
     PageDestination* link = tocItem->GetPageDestination();
     if (!link) {
@@ -87,8 +87,8 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* args) {
 
     // Display the item's full label, if it's overlong
     RECT rcLine, rcLabel;
-    w->GetItemRect(args->treeItem, false, rcLine);
-    w->GetItemRect(args->treeItem, true, rcLabel);
+    w->GetItemRect(ev->treeItem, false, rcLine);
+    w->GetItemRect(ev->treeItem, true, rcLabel);
 
     if (rcLine.right + 2 < rcLabel.right) {
         str::WStr currInfoTip = ti->Text();
@@ -104,7 +104,7 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* args) {
     }
 
     str::BufSet(nm->pszText, nm->cchTextMax, infotip.Get());
-    args->didHandle = true;
+    ev->didHandle = true;
 }
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
@@ -441,15 +441,15 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     StartTocEditor(args);
 }
 
-static void TocContextMenu(ContextMenuEvent* args) {
-    WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
+static void TocContextMenu(ContextMenuEvent* ev) {
+    WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
     CrashIf(!win);
     const WCHAR* filePath = win->ctrl->FilePath();
 
     POINT pt{};
-    TreeItem* ti = GetOrSelectTreeItemAtPos(args, pt);
+    TreeItem* ti = GetOrSelectTreeItemAtPos(ev, pt);
     if (!ti) {
-        pt = {args->mouseGlobal.x, args->mouseGlobal.y};
+        pt = {ev->mouseGlobal.x, ev->mouseGlobal.y};
     }
     int pageNo = 0;
     TocItem* dti = (TocItem*)ti;
@@ -558,15 +558,15 @@ static bool ShouldCustomDraw(WindowInfo* win) {
 
 void OnTocCustomDraw(TreeItemCustomDrawEvent*);
 
-static void dropDownSelectionChanged(DropDownSelectionChangedEvent* args) {
-    WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
+static void dropDownSelectionChanged(DropDownSelectionChangedEvent* ev) {
+    WindowInfo* win = FindWindowInfoByHwnd(ev->hwnd);
     TabInfo* tab = win->currentTab;
     DebugCrashIf(!tab);
     if (!tab) {
         return;
     }
-    AltBookmarksChanged(win, tab, args->idx, args->item);
-    args->didHandle = true;
+    AltBookmarksChanged(win, tab, ev->idx, ev->item);
+    ev->didHandle = true;
 }
 
 void LoadTocTree(WindowInfo* win) {
@@ -640,7 +640,7 @@ static void UpdateFont(HDC hdc, int fontFlags) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
-void OnTocCustomDraw(TreeItemCustomDrawEvent* args) {
+void OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
 #if defined(DISPLAY_TOC_PAGE_NUMBERS)
     if (win->AsEbook())
         return CDRF_DODEFAULT;
@@ -658,21 +658,21 @@ void OnTocCustomDraw(TreeItemCustomDrawEvent* args) {
     break;
 #endif
 
-    args->result = CDRF_DODEFAULT;
-    args->didHandle = true;
+    ev->result = CDRF_DODEFAULT;
+    ev->didHandle = true;
 
-    TreeCtrl* w = args->treeCtrl;
-    NMTVCUSTOMDRAW* tvcd = args->nm;
+    TreeCtrl* w = ev->treeCtrl;
+    NMTVCUSTOMDRAW* tvcd = ev->nm;
     NMCUSTOMDRAW* cd = &(tvcd->nmcd);
     if (cd->dwDrawStage == CDDS_PREPAINT) {
         // ask to be notified about each item
-        args->result = CDRF_NOTIFYITEMDRAW;
+        ev->result = CDRF_NOTIFYITEMDRAW;
         return;
     }
 
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
         // called before drawing each item
-        TocItem* tocItem = (TocItem*)args->treeItem;
+        TocItem* tocItem = (TocItem*)ev->treeItem;
         ;
         if (!tocItem) {
             return;
@@ -682,7 +682,7 @@ void OnTocCustomDraw(TreeItemCustomDrawEvent* args) {
         }
         if (tocItem->fontFlags != 0) {
             UpdateFont(cd->hdc, tocItem->fontFlags);
-            args->result = CDRF_NEWFONT;
+            ev->result = CDRF_NEWFONT;
             return;
         }
         return;
@@ -690,8 +690,8 @@ void OnTocCustomDraw(TreeItemCustomDrawEvent* args) {
     return;
 }
 
-static void TocTreeSelectionChanged(TreeSelectionChangedEvent* args) {
-    WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
+static void TocTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
+    WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
     CrashIf(!win);
 
     // When the focus is set to the toc window the first item in the treeview is automatically
@@ -700,24 +700,24 @@ static void TocTreeSelectionChanged(TreeSelectionChangedEvent* args) {
     // The case pnmtv->action==TVC_UNKNOWN is ignored because
     // it corresponds to a notification sent by
     // the function TreeView_DeleteAllItems after deletion of the item.
-    bool shouldHandle = args->byKeyboard || args->byMouse;
+    bool shouldHandle = ev->byKeyboard || ev->byMouse;
     if (!shouldHandle) {
         return;
     }
-    bool allowExternal = args->byMouse;
-    GoToTocTreeItem(win, args->selectedItem, allowExternal);
-    args->didHandle = true;
+    bool allowExternal = ev->byMouse;
+    GoToTocTreeItem(win, ev->selectedItem, allowExternal);
+    ev->didHandle = true;
 }
 
 // also used in Favorites.cpp
-void TocTreeKeyDown(TreeKeyDownEvent* args) {
-    if (args->keyCode != VK_TAB) {
+void TocTreeKeyDown(TreeKeyDownEvent* ev) {
+    if (ev->keyCode != VK_TAB) {
         return;
     }
-    args->didHandle = true;
-    args->result = 1;
+    ev->didHandle = true;
+    ev->result = 1;
 
-    WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
+    WindowInfo* win = FindWindowInfoByHwnd(ev->hwnd);
     CrashIf(!win);
     if (win->tabsVisible && IsCtrlPressed()) {
         TabsOnCtrlTab(win, IsShiftPressed());
@@ -727,8 +727,8 @@ void TocTreeKeyDown(TreeKeyDownEvent* args) {
 }
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
-static void TocTreeMsgFilter(WndEvent* args) {
-    UNUSED(args);
+static void TocTreeMsgFilter(WndEvent* ev) {
+    UNUSED(ev);
     switch (msg) {
         case WM_SIZE:
         case WM_HSCROLL:
@@ -810,26 +810,26 @@ void UnsubclassToc(WindowInfo* win) {
     }
 }
 
-void TocTreeMouseWheelHandler(MouseWheelEvent* args) {
-    WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
+void TocTreeMouseWheelHandler(MouseWheelEvent* ev) {
+    WindowInfo* win = FindWindowInfoByHwnd(ev->hwnd);
     CrashIf(!win);
     if (!win) {
         return;
     }
     // scroll the canvas if the cursor isn't over the ToC tree
-    if (!IsCursorOverWindow(args->hwnd)) {
-        args->didHandle = true;
-        args->result = SendMessage(win->hwndCanvas, args->msg, args->wparam, args->lparam);
+    if (!IsCursorOverWindow(ev->hwnd)) {
+        ev->didHandle = true;
+        ev->result = SendMessage(win->hwndCanvas, ev->msg, ev->wparam, ev->lparam);
     }
 }
 
-void TocTreeCharHandler(CharEvent* args) {
-    WindowInfo* win = FindWindowInfoByHwnd(args->hwnd);
+void TocTreeCharHandler(CharEvent* ev) {
+    WindowInfo* win = FindWindowInfoByHwnd(ev->hwnd);
     CrashIf(!win);
     if (!win) {
         return;
     }
-    if (VK_ESCAPE != args->keyCode) {
+    if (VK_ESCAPE != ev->keyCode) {
         return;
     }
     if (!gGlobalPrefs->escToExit) {
@@ -840,7 +840,7 @@ void TocTreeCharHandler(CharEvent* args) {
     }
 
     CloseWindow(win, true);
-    args->didHandle = true;
+    ev->didHandle = true;
 }
 
 void CreateToc(WindowInfo* win) {

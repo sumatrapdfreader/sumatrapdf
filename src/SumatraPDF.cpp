@@ -3973,12 +3973,12 @@ static bool FrameOnSysChar(WindowInfo* win, WPARAM key) {
     return false;
 }
 
-static void OnSidebarSplitterMove(SplitterMoveEvent* args) {
-    SplitterCtrl* splitter = args->w;
+static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
+    SplitterCtrl* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     CrashIf(!win);
-    bool done = args->done;
+    bool done = ev->done;
 
     PointI pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
@@ -3992,7 +3992,7 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* args) {
     int minDx = std::min(SIDEBAR_MIN_WIDTH, rToc.dx);
     int maxDx = std::max(rFrame.dx / 2, rToc.dx);
     if (sidebarDx < minDx || sidebarDx > maxDx) {
-        args->resizeAllowed = false;
+        ev->resizeAllowed = false;
         return;
     }
 
@@ -4001,12 +4001,12 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* args) {
     }
 }
 
-static void OnFavSplitterMove(SplitterMoveEvent* args) {
-    SplitterCtrl* splitter = args->w;
+static void OnFavSplitterMove(SplitterMoveEvent* ev) {
+    SplitterCtrl* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     CrashIf(!win);
-    bool done = args->done;
+    bool done = ev->done;
 
     PointI pcur;
     GetCursorPosInHwnd(win->hwndTocBox, pcur);
@@ -4019,7 +4019,7 @@ static void OnFavSplitterMove(SplitterMoveEvent* args) {
     int minDy = std::min(TOC_MIN_DY, rToc.dy);
     int maxDy = std::max(rFrame.dy - TOC_MIN_DY, rToc.dy);
     if (tocDy < minDy || tocDy > maxDy) {
-        args->resizeAllowed = false;
+        ev->resizeAllowed = false;
         return;
     }
     gGlobalPrefs->tocDy = tocDy;

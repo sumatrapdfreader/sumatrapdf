@@ -36,12 +36,12 @@ ILayout* NewEditLayout(EditCtrl* e) {
     return new WindowBaseLayout(e, kindEdit);
 }
 
-void EditCtrl::WndProcParent(WndEvent* args) {
+void EditCtrl::WndProcParent(WndEvent* ev) {
     EditCtrl* w = this;
 
-    UINT msg = args->msg;
-    WPARAM wp = args->wparam;
-    LPARAM lp = args->lparam;
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wparam;
+    LPARAM lp = ev->lparam;
 
     HWND hwndCtrl = (HWND)lp;
     if (hwndCtrl != w->hwnd) {
@@ -51,7 +51,7 @@ void EditCtrl::WndProcParent(WndEvent* args) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcoloredit
     if (WM_CTLCOLOREDIT == msg) {
         if (w->bgBrush == nullptr) {
-            args->result = DefSubclassProc(hwnd, msg, wp, lp);
+            ev->result = DefSubclassProc(hwnd, msg, wp, lp);
             return;
         }
         HDC hdc = (HDC)wp;
@@ -60,8 +60,8 @@ void EditCtrl::WndProcParent(WndEvent* args) {
         if (w->textColor != ColorUnset) {
             ::SetTextColor(hdc, w->textColor);
         }
-        args->didHandle = true;
-        args->result = (INT_PTR)w->bgBrush;
+        ev->didHandle = true;
+        ev->result = (INT_PTR)w->bgBrush;
         return;
     }
 
@@ -70,7 +70,7 @@ void EditCtrl::WndProcParent(WndEvent* args) {
         if (EN_CHANGE == HIWORD(wp)) {
             if (w->OnTextChanged) {
                 EditTextChangedEvent a;
-                CopyWndEvent cp(&a, args);
+                CopyWndEvent cp(&a, ev);
                 a.text = w->GetText();
                 w->OnTextChanged(&a);
                 if (a.didHandle) {
@@ -83,16 +83,16 @@ void EditCtrl::WndProcParent(WndEvent* args) {
     // TODO: handle WM_CTLCOLORSTATIC for read-only/disabled controls
 }
 
-void EditCtrl::WndProc(WndEvent* args) {
-    // UINT msg = args->msg;
-    // auto wp = args->wparam;
-    // char* msgName = getWinMessageName(args->msg);
+void EditCtrl::WndProc(WndEvent* ev) {
+    // UINT msg = ev->msg;
+    // auto wp = ev->wparam;
+    // char* msgName = getWinMessageName(ev->msg);
     // dbglogf("EditCtrl::WndProc: hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, wp);
 
     EditCtrl* w = this;
     if (w->msgFilter) {
-        w->msgFilter(args);
-        if (args->didHandle) {
+        w->msgFilter(ev);
+        if (ev->didHandle) {
             return;
         }
     }

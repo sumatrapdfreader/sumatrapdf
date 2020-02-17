@@ -48,9 +48,9 @@ bool CheckboxCtrl::Create() {
     return ok;
 }
 
-void CheckboxCtrl::WndProcParent(WndEvent* args) {
-    UINT msg = args->msg;
-    WPARAM wp = args->wparam;
+void CheckboxCtrl::WndProcParent(WndEvent* ev) {
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wparam;
     if (msg == WM_COMMAND) {
         auto code = HIWORD(wp);
         if (code == BN_CLICKED) {
@@ -58,8 +58,8 @@ void CheckboxCtrl::WndProcParent(WndEvent* args) {
                 auto state = GetCheckState();
                 OnCheckStateChanged(state);
             }
-            args->didHandle = true;
-            args->result = 0;
+            ev->didHandle = true;
+            ev->result = 0;
             return;
         }
     }

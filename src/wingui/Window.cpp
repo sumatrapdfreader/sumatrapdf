@@ -464,12 +464,12 @@ WindowBase::~WindowBase() {
     Destroy();
 }
 
-void WindowBase::WndProc(WndEvent* args) {
-    args->didHandle = false;
+void WindowBase::WndProc(WndEvent* ev) {
+    ev->didHandle = false;
 }
 
-void WindowBase::WndProcParent(WndEvent* args) {
-    args->didHandle = false;
+void WindowBase::WndProcParent(WndEvent* ev) {
+    ev->didHandle = false;
 }
 
 SIZE WindowBase::GetIdealSize() {

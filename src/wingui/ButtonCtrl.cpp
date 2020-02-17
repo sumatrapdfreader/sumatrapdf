@@ -57,11 +57,11 @@ SIZE ButtonCtrl::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-void ButtonCtrl::WndProcParent(WndEvent* args) {
-    UINT msg = args->msg;
-    WPARAM wp = args->wparam;
+void ButtonCtrl::WndProcParent(WndEvent* ev) {
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wparam;
 
-    args->result = 0;
+    ev->result = 0;
     if (msg == WM_COMMAND) {
         auto code = HIWORD(wp);
         if (code == BN_CLICKED) {
@@ -69,7 +69,7 @@ void ButtonCtrl::WndProcParent(WndEvent* args) {
                 onClicked();
             }
         }
-        args->didHandle = true;
+        ev->didHandle = true;
     }
 }
 

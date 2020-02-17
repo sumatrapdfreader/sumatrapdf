@@ -1069,10 +1069,10 @@ RaMicroInstallerWindow::~RaMicroInstallerWindow() {
     delete bmpSplash;
 }
 
-void RaMicroInstallerWindow::MsgHandler(WndEvent* args) {
-    if (args->msg == WM_APP_INSTALLATION_FINISHED) {
+void RaMicroInstallerWindow::MsgHandler(WndEvent* ev) {
+    if (ev->msg == WM_APP_INSTALLATION_FINISHED) {
         InstallationFinished();
-        args->didHandle = true;
+        ev->didHandle = true;
         return;
     }
 }
@@ -1126,22 +1126,22 @@ void RaMicroInstallerWindow::Exit() {
     gRaMicroInstallerWindow->mainWindow->Close();
 }
 
-void RaMicroInstallerWindow::CloseHandler(WindowCloseEvent* args) {
+void RaMicroInstallerWindow::CloseHandler(WindowCloseEvent* ev) {
     WindowBase* w = (WindowBase*)gRaMicroInstallerWindow->mainWindow;
-    CrashIf(w != args->w);
+    CrashIf(w != ev->w);
     delete gRaMicroInstallerWindow;
     gRaMicroInstallerWindow = nullptr;
     PostQuitMessage(0);
 }
 
-void RaMicroInstallerWindow::SizeHandler(SizeEvent* args) {
-    int dx = args->dx;
-    int dy = args->dy;
+void RaMicroInstallerWindow::SizeHandler(SizeEvent* ev) {
+    int dx = ev->dx;
+    int dy = ev->dy;
 
     layoutAndSize(mainLayout, dx, dy);
 
-    InvalidateRect(args->hwnd, nullptr, false);
-    args->didHandle = true;
+    InvalidateRect(ev->hwnd, nullptr, false);
+    ev->didHandle = true;
 }
 
 void onRaMicroInstallerFinished() {
