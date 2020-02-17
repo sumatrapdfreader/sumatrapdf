@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-affbece9484487f09a16588488182aa76777b177
+6dadf93dd2ff66b8705bbc8e1d69d96c79ab9a87
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1817,7 +1817,7 @@ cn:打开文件(&O)
 co:&Apre u ducumentu
 cy:Agor &Dogfen
 cz:&Otevřít dokument
-de:Ö&ffnen
+de:Dokument ö&ffnen
 dk:&Åbn dokument
 el:Ά&νοιγμα εγγράφου
 es:&Abrir documento
@@ -2586,7 +2586,7 @@ cn:删除文件(&R)
 co:&Caccià u ducumentu
 cy:&Tynnu Dogfen
 cz:Odeb&rat dokument
-de:Von dieser Seite &entfernen
+de:Dokument löschen
 dk:&Fjern dokument
 el:&Απόκρυψη εγγράφου
 es:Elimina&r documento
@@ -2710,7 +2710,7 @@ cn:另存为(&A)...\tCtrl+A
 co:Arregistrà cù u &nome…\tCtrl+S
 cy:&Cadw fel...\tCtrl+S
 cz:&Uložit jako...\tCtrl+S
-de:Speichern &unter…\tStrg+S
+de:&Speichern unter…\tStrg+S
 dk:&Gem som ...\tCtrl+S
 el:&Αποθήκευση ως...\tCtrl+S
 es:&Guardar como...\tCtrl+S
@@ -4819,7 +4819,7 @@ cn:字节
 co:Ottetti
 cy:Beit
 cz:Bajtů
-de:Byte
+de:Bytes
 dk:Byte
 el:Bytes
 es:Bytes
@@ -5418,7 +5418,7 @@ br:Minimizar tudo
 cn:全部折叠(&C)
 co:Piegà tuttu
 cz:Sbalit vše
-de:Alles schließen
+de:Alles zuklappen
 es:Ocultar Todo
 fr:Tout réduire
 ga:Laghdaigh Gach
@@ -5916,7 +5916,7 @@ cn:复制链接地址(&L)
 co:Cupià l’&indirizzu di a leia
 cy:Copïo &Dolen Cyfeiriad
 cz:Kopírovat &adresu odkazu
-de:Adresse des &Links kopieren
+de:&Linkadresse kopieren
 dk:Kopier &henvisningsadresse
 el:Αντιγραφή &διεύθυνσης
 es:Copiar dirección del en&lace
@@ -7942,7 +7942,7 @@ cn:请输入您双击 PDF 文件后调用的命令行(&E):
 co:Scrivite a linea di cumanda à eseguisce quandu ci hè un doppiu-cliccu nant’à u ducumentu PDF :
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
-de:Beim Doppelklicken im PDF-Dokument wird der folgende Befehl ausgeführt:
+de:Beim Doppelklicken auf das PDF-Dokument wird der folgende Befehl ausgeführt:
 dk:Indtast den kommandolinje du vil bruge, når du dobbeltklikker på PDF-dokumentet:
 el:Εισάγετε την εντολή προς εκτέλεση με διπλό κλικ σε έγγραφο PDF:
 es:Introduzca los parámetros de línea de comandos que se ejecutarán al hacer doble-clic en el documento PDF:
@@ -8057,7 +8057,7 @@ br:Expandir tudo
 cn:全部展开
 co:Spiegà tuttu
 cz:Rozbalit vše
-de:Alles erweitern
+de:Alles aufklappen
 es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
@@ -8348,7 +8348,7 @@ cn:删除卸载程序注册项失败。
 co:Fiascu per squassà e chjave di registru di u disinstalladore
 cy:Methwyd dileu allweddi cofrestrfa'r dadosodwr
 cz:Nepodařilo se smazat odinslační záznamy z registru
-de:Konnte nicht alle Registry-Einträge löschen
+de:Fehler beim Löschen der Deinstallations-Registry-Schlüssel
 dk:Kunne ikke slette afinstalleringsnøgler i registreringsdatabasen
 el:Απέτυχε η διαγραφή των κλειδιών μητρώου απεγκατάστασης
 es:Error al eliminar las claves del registro del desinstalador
@@ -8524,7 +8524,7 @@ cn:保存文件失败
 co:Fiascu per arregistrà un schedariu
 cy:Methwyd cadw ffeil
 cz:Soubor se nepodařilo uložit
-de:Die Datei konnte nicht neu gespeichert werden!
+de:Die Datei konnte nicht gespeichert werden!
 dk:Kunne ikke gemme filen
 el:Αποτυχία αποθήκευσης αρχείου
 es:Error al guardar un archivo
@@ -8592,7 +8592,7 @@ cn:写入扩展名信息到注册项失败。
 co:Fiascu per scrive l’infurmazioni di l’estensione di schedariu ver di u registru
 cy:Methwyd ysgrifennu gwybodaeth estyniad ffeil estynedig i'r gofrestrfa
 cz:Nepodařilo se zapsat informace o příponě souboru do registru
-de:Konnte die Dateiformats-Verknüpfungen nicht vollständig in die Registry schreiben
+de:Fehler beim Schreiben der erweiterten Dateierweiterungsinformationen in die Registry
 dk:Kunne ikke skrive udvidet information om filens efternavn i registreringsdatabasen
 el:Απέτυχε η εγγραφή του εκτεταμένου αρχείου πληροφοριών στο μητρώο
 es:Fallo al escribir información de la extensión de archivo en el registro
@@ -8650,7 +8650,7 @@ cn:写入卸载信息到注册项失败。
 co:Fiascu per scrive l’infurmazioni di disinstallazione ver di u registru
 cy:Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa
 cz:Nepodařilo se zapsat odinslační záznamy do registru
-de:Konnte keine Deinstallations-Informationen in die Registry schreiben
+de:Fehler beim Schreiben der Deinstallationsinformationen in die Registry
 dk:Kunne ikke skrive afinstalleringsinformation i registreringsdatabasen
 el:Αποτυχία εγγραφής πληροφοριών απεγκαταστασης στο μητρώο
 es:Error al escribir información de desinstalación en el registro
@@ -11625,7 +11625,7 @@ cn:最新版本 %s。 是否下载新版本?
 co:A nova versione %s hè dispunibule. Scaricalla ?
 cy:Mae fersiwn newydd o %s ar gael. Llwytho'r fersiwn newydd i lawr??
 cz:Nová verze %s je k dispozici. Stáhnout novou verzi?
-de:Es ist die neue Version %s vorhanden. Möchten Sie diese herunterladen?
+de:Neue Version %s ist verfügbar. Möchten Sie diese herunterladen?
 dk:Ny version %s er tilgængelig. Hent ny version?
 el:Η νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
 es:Está disponible la nueva versión %s. ¿Desea descargarla?
@@ -12535,7 +12535,7 @@ cn:在 &Microsoft HTML Help 中打开(&M)
 co:Apre cù Microsoft &HTML Help
 cy:Agor yn Microsoft HTML Help
 cz:Otevřít v programu Microsoft HTML Help
-de:In der &Microsoft HTML-Hilfe öffnen
+de:Mit &Microsoft HTML-Hilfe öffnen
 dk:Åbn med Microsoft HTML Help
 el:Άνοιγμα με Microsoft HTML Help
 es:Abrir con &Microsoft HTML Help
@@ -15145,7 +15145,7 @@ cn:按 Ctrl+鼠标左键 选定内容
 co:Selezziunà u cuntenutu cù Ctrl+Buttone di manca di u topu
 cy:Dewis cynnwys drwy Ctrl a botwm chwith y llygoden
 cz:Vybrat obsah klávesou Ctrl a levým tlačítkem myši
-de:Inhalte mit Strg+linker Maustaste auswählen
+de:Inhalt mit Strg+linke Maustaste auswählen
 dk:Vælg indhold med Ctrl+venstre museknap
 el:Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτρο ποντικιού
 es:Seleccionar con Ctrl+Botón. Izq. del ratón
@@ -15774,7 +15774,7 @@ cn:可用时显示书签边栏(&B)
 co:Affissà a &barra laterale di l’unghjette s’ella hè dispunibule
 cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
 cz:Zo&brazit záložky v postranním panelu, jsou-li dostupné
-de:&Lesezeichen standardmäßig anzeigen
+de:&Lesezeichen-Seitenleiste anzeigen, wenn verfügbar
 dk:Vis sidepanelet for &bogmærker når tilgængeligt
 el:Εμφάνιση &πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 es:Mostrar la barra de &marcadores cuando esté disponible
@@ -16517,7 +16517,7 @@ cn:未找到 SumatraPDF 安装。
 co:Installazione di SumatraPDF micca trova.
 cy:Heb ganfod gosodiad SumatraPDF.
 cz:Instalace programu SumatraPDF nebyla nalezena.
-de:Keine SumatraPDF-Installation zum Deinstallieren gefunden.
+de:SumatraPDF-Installation nicht gefunden.
 dk:SumatraPDF-installation blev ikke fundet.
 el:Η εγκατάσταση του SumatraPDF δεν βρέθηκε.
 es:Instalación de SumatraPDF no encontrada.
@@ -17187,7 +17187,7 @@ cn:卸载 SumatraPDF
 co:Disinstallà SumatraPDF
 cy:Dadosod SumatraPDF
 cz:Odinstalovat SumatraPDF
-de:Deinstallieren
+de:SumatraPDF deinstallieren
 dk:Afinstaller SumatraPDF
 el:Απεγκατάσταση SumatraPDF
 es:Desinstalar SumatraPDF
@@ -18351,7 +18351,7 @@ cn:正在打印文档
 co:stampa di ducumentu
 cy:argraffu dogfen
 cz:tisk dokumentu
-de:Dokument drucken verweigert
+de:Dokument drucken
 dk:udskriver dokument
 el:εκτύπωση εγγράφου
 es:imprimiendo documento

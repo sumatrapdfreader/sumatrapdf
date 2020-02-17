@@ -6827,7 +6827,7 @@ const char * gTranslations_de =
   "&Nein\0"\
   "&Nein danke\0"\
   "Nur &ungerade Seiten\0"\
-  "\303\226&ffnen\0"\
+  "Dokument \303\266&ffnen\0"\
   "\303\226&ffnen\342\200\246\tStrg+O\0"\
   "&Optionen\0"\
   "&Optionen\342\200\246\0"\
@@ -6839,9 +6839,9 @@ const char * gTranslations_de =
   "&Drucken\342\200\246 (verweigert)\0"\
   "Passwort f\303\274r dieses Dokument &merken\0"\
   "Ansicht-&Einstellungen f\303\274r jedes Dokument einzeln merken\0"\
-  "Von dieser Seite &entfernen\0"\
+  "Dokument l\303\266schen\0"\
   "&Speichern unter\342\200\246\0"\
-  "Speichern &unter\342\200\246\tStrg+S\0"\
+  "&Speichern unter\342\200\246\tStrg+S\0"\
   "&Einstellungen\0"\
   "Seiten auf Druckbereich &verkleinern (falls n\303\266tig)\0"\
   "&Einzelne Seite\tStrg+6\0"\
@@ -6874,7 +6874,7 @@ const char * gTranslations_de =
   "Lesezeichen-Verkn\303\274pfungen\0"\
   "Lesezeichen-Verkn\303\274pfung zu Seite %s von %s\0"\
   "Lesezeichen\0"\
-  "Byte\0"\
+  "\0"\
   "CHM-Hilfedateien\0"\
   "Keine Verbindung zum Internet m\303\266glich (Fehler %#x).\0"\
   "Abbrechen\0"\
@@ -6883,7 +6883,7 @@ const char * gTranslations_de =
   "Sprache \303\244ndern (Change Language)\0"\
   "Nach &neuer Version suchen\0"\
   "Schlie\303\237en\0"\
-  "Alles schlie\303\237en\0"\
+  "Alles zuklappen\0"\
   "Comicb\303\274cher\0"\
   "Kompatibilit\303\244t\0"\
   "Fortlaufend\0"\
@@ -6891,7 +6891,7 @@ const char * gTranslations_de =
   "Fortlaufende Doppelseiten\0"\
   "\303\234bersetzung beisteuern\0"\
   "&Bild kopieren\0"\
-  "Adresse des &Links kopieren\0"\
+  "&Linkadresse kopieren\0"\
   "K&ommentar kopieren\0"\
   "Text kopieren verweigert (nur als Bild kopiert)\0"\
   "\0"\
@@ -6923,19 +6923,19 @@ const char * gTranslations_de =
   "EPUB-E-B\303\274cher\0"\
   "Bitte Passwort eingeben\0"\
   "Bitte Passwort f\303\274r %s eingeben\0"\
-  "Beim Doppelklicken im PDF-Dokument wird der folgende Befehl ausgef\303\274hrt:\0"\
+  "Beim Doppelklicken auf das PDF-Dokument wird der folgende Befehl ausgef\303\274hrt:\0"\
   "Fehler beim \303\226ffnen von %s\0"\
-  "Alles erweitern\0"\
+  "Alles aufklappen\0"\
   "&Favoriten\0"\
   "Vor&w\303\244rts\tAlt+->\0"\
   "&Vollbild\tF11\0"\
   "Doppelseite\0"\
-  "Konnte nicht alle Registry-Eintr\303\244ge l\303\266schen\0"\
+  "Fehler beim L\303\266schen der Deinstallations-Registry-Schl\303\274ssel\0"\
   "Fehler beim Registrieren als Standardanwendung unter Windows 10\0"\
   "Die Datei konnte nicht umbenannt werden!\0"\
-  "Die Datei konnte nicht neu gespeichert werden!\0"\
-  "Konnte die Dateiformats-Verkn\303\274pfungen nicht vollst\303\244ndig in die Registry schreiben\0"\
-  "Konnte keine Deinstallations-Informationen in die Registry schreiben\0"\
+  "Die Datei konnte nicht gespeichert werden!\0"\
+  "Fehler beim Schreiben der erweiterten Dateierweiterungsinformationen in die Registry\0"\
+  "Fehler beim Schreiben der Deinstallationsinformationen in die Registry\0"\
   "Schnelle Webanzeige\0"\
   "Favoriten\0"\
   "FictionBook-Dokumente\0"\
@@ -6982,7 +6982,7 @@ const char * gTranslations_de =
   "Mobi-Dokumente\0"\
   "Ge\303\244ndert am:\0"\
   "Neues Fenster\tStrg+N\0"\
-  "Es ist die neue Version %s vorhanden. M\303\266chten Sie diese herunterladen?\0"\
+  "Neue Version %s ist verf\303\274gbar. M\303\266chten Sie diese herunterladen?\0"\
   "&N\303\244chste Seite\0"\
   "Suchbegriff nicht gefunden\0"\
   "In der N\303\244he von Zeile %u in der Datei %s wurde kein Resultat gefunden\0"\
@@ -6996,7 +6996,7 @@ const char * gTranslations_de =
   "Mit %s \303\266ffnen\0"\
   "Mit &Adobe Reader \303\266ffnen\0"\
   "Mit F&oxit Reader \303\266ffnen\0"\
-  "In der &Microsoft HTML-Hilfe \303\266ffnen\0"\
+  "Mit &Microsoft HTML-Hilfe \303\266ffnen\0"\
   "Mit &Microsoft XPS-Viewer \303\266ffnen\0"\
   "Ei&genschaften\0"\
   "Ei&genschaften\tStrg+D\0"\
@@ -7038,7 +7038,7 @@ const char * gTranslations_de =
   "Durchsuche Seite %d von %d\342\200\246\0"\
   "Alles &markieren\0"\
   "Alles &markieren\tStrg+A\0"\
-  "Inhalte mit Strg+linker Maustaste ausw\303\244hlen\0"\
+  "Inhalt mit Strg+linke Maustaste ausw\303\244hlen\0"\
   "In welches Verzeichnis soll SumatraPDF installiert werden?\0"\
   "Auswahl:\0"\
   "Per &E-Mail versenden\342\200\246\0"\
@@ -7051,7 +7051,7 @@ const char * gTranslations_de =
   "Favoriten anzeigen\0"\
   "Oft gelesene Dokumente einblenden\0"\
   "Dokument-&Ordner \303\266ffnen\0"\
-  "&Lesezeichen standardm\303\244\303\237ig anzeigen\0"\
+  "&Lesezeichen-Seitenleiste anzeigen, wenn verf\303\274gbar\0"\
   "Einzelne Seite\0"\
   "Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte dr\303\274cken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein m\303\266chten.\0"\
   "Quelldatei %s hat keinen Synchronisationspunkt\0"\
@@ -7063,7 +7063,7 @@ const char * gTranslations_de =
   "SumatraPDF-Update\0"\
   "SumatraPDF ist abgest\303\274rzt\0"\
   "SumatraPDF wurde deinstalliert.\0"\
-  "Keine SumatraPDF-Installation zum Deinstallieren gefunden.\0"\
+  "SumatraPDF-Installation nicht gefunden.\0"\
   "PDF-Dateien werden standardm\303\244\303\237ig mit SumatraPDF ge\303\266ffnet\0"\
   "PDF-Dateien sollten nun mit SumatraPDF ge\303\266ffnet werden\0"\
   "Die Synchronisationsdatei kann nicht ge\303\266ffnet werden\0"\
@@ -7074,7 +7074,7 @@ const char * gTranslations_de =
   "Das Installationsprogramm wurde besch\303\244digt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!\0"\
   "Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterst\303\274tzung f\303\274r %s\0"\
   "Titel:\0"\
-  "Deinstallieren\0"\
+  "SumatraPDF deinstallieren\0"\
   "Die Deinstallation ist fehlgeschlagen\0"\
   "Die Deinstallation wird ausgef\303\274hrt\342\200\246\0"\
   "Unbekannte Datei (%s)\0"\
@@ -7092,7 +7092,7 @@ const char * gTranslations_de =
   "Zoomfaktor\0"\
   "[Datei wurde ge\303\244ndert; aktualisiere\342\200\246] %s\0"\
   "Text kopieren\0"\
-  "Dokument drucken verweigert\0";
+  "Dokument drucken\0";
 
 const char * gTranslations_el = 
   "&\316\243\317\207\316\265\317\204\316\271\316\272\316\254\0"\
