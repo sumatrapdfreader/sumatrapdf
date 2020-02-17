@@ -212,14 +212,17 @@ static bool RemoveIt(TreeCtrl* treeCtrl, TocItem* ti) {
     return false;
 }
 
-void TocEditorWindow::RemoveTocItem(TocItem* ti) {
-    // ensure is visible i.e. expand all parents of this item
-    TocItem* curr = ti->parent;
-    while (curr) {
-        curr->isOpenDefault = true;
-        curr->isOpenToggled = false;
-        curr = curr->parent;
+// ensure is visible i.e. expand all parents of this item
+static void EnsureExpanded(TocItem* ti) {
+    while (ti) {
+        ti->isOpenDefault = true;
+        ti->isOpenToggled = false;
+        ti = ti->parent;
     }
+}
+
+void TocEditorWindow::RemoveTocItem(TocItem* ti) {
+    EnsureExpanded(ti->parent);
 
     bool ok = RemoveIt(treeCtrl, ti);
     if (ok) {
@@ -399,13 +402,7 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* args) {
                 } else {
                     CrashMe();
                 }
-                // ensure is visible i.e. expand all parents of this item
-                TocItem* curr = selectedTocItem;
-                while (curr) {
-                    curr->isOpenDefault = true;
-                    curr->isOpenToggled = false;
-                    curr = curr->parent;
-                }
+                EnsureExpanded(selectedTocItem);
                 UpdateTreeModel();
             });
         } break;
