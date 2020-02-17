@@ -9,6 +9,9 @@
             .no-wrap {
                 white-space: nowrap;
             }
+            .ver {
+                padding-right: 0.5em;
+            }
         </style>
 
         <script>
@@ -71,6 +74,13 @@
                 parts.splice(0, 2);
                 return parts.join(" ");
             }
+            function shortenVer(s) {
+                s = s.replace("Ver:", "");
+                s = s.replace("pre-release", "");
+                s = s.replace("64-bit", "");
+                s = s.replace("  ", " ");
+                return s;
+            }
             fetch("/api/crashes")
             .then((response) => {
                 return response.json();
@@ -86,6 +96,7 @@
                         lenCrashesByDay: lenCrashesByDay,
                         getCrashesByDay: getCrashesByDay,
                         shortenCrashLine: shortenCrashLine,
+                        shortenVer: shortenVer,
                     }
             });
             })           
@@ -97,13 +108,18 @@
         <script id="template" type="text/ractive">
             {{#each days as day}}
                 <div style="padding-bottom: 1em;">{{day}} {{lenCrashesByDay(day)}}
-                    {{#each getCrashesByDay(day) as crash}}
-                        <div class="no-wrap">
-                            <a href="/crash/{{.N}}">
-                                {{shortenCrashLine(.CrashLines[0])}}
-                            </a>
-                        </div>
+                    <table>
+                        {{#each getCrashesByDay(day) as crash}}
+                        <tr>
+                            <td class="ver">{{shortenVer(.Version)}}</td>
+                            <td class="no-wrap">
+                                <a href="/crash/{{.N}}">
+                                    {{shortenCrashLine(.CrashLines[0])}}
+                                </a>
+                            </td>
+                        </tr>
                     {{/each}}
+                    </table>
                 </div>
             {{/each}}
         </script>        

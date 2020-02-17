@@ -1101,6 +1101,9 @@ RectD EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
 }
 
 RectD EnginePdf::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+    if (zoom <= 0) {
+        logf("zoom: %.2f\n", zoom);
+    }
     CrashIf(zoom <= 0);
     fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse) {
