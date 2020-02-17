@@ -181,10 +181,9 @@ static void createMainLayout(EditTitleWindow* win) {
         vbox->addChild(l);
     }
 
-    // TODO: make in a hbox
     {
         auto buttons = new HBox();
-        buttons->alignMain = MainAxisAlign::MainEnd;
+        buttons->alignMain = MainAxisAlign::SpaceBetween;
         buttons->alignCross = CrossAxisAlign::CrossStart;
 
         {
