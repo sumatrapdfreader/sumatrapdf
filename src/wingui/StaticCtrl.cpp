@@ -58,6 +58,12 @@ void StaticCtrl::WndProcParent(WndEvent* args) {
     }
 }
 
-ILayout* NewStaticLayout(StaticCtrl* b) {
-    return new WindowBaseLayout(b, kindStatic);
+ILayout* NewStaticLayout(StaticCtrl* w) {
+    return new WindowBaseLayout(w, kindStatic);
+}
+
+// label gets a special treatment in layout in that it "hugs" the next control
+// (is assumed to be associated with that control)
+ILayout* NewLabelLayout(StaticCtrl* w) {
+    return new WindowBaseLayout(w, kindLabel);
 }

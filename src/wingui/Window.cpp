@@ -56,7 +56,6 @@ Kind kindWindowBase = "windowBase";
 static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
     CrashIf(hwnd != w->hwnd);
 
-    // TODO: maybe more this to WindowBase::WndProc?
     // or maybe get rid of WindowBase::WndProc and use msgFilterInternal
     // when per-control custom processing is needed
     if (w->msgFilter) {
@@ -80,10 +79,14 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorstatic
     if (WM_CTLCOLORSTATIC == msg) {
+        HDC hdc = (HDC)wp;
+        if (w->textColor != ColorUnset) {
+            SetTextColor(hdc, w->textColor);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            didHandle = true;
+        }
         auto bgBrush = w->backgroundColorBrush;
         if (bgBrush != nullptr) {
-            HDC hdc = (HDC)wp;
-            // SetTextColor(hdc, RGB(0, 0, 0));
             SetBkMode(hdc, TRANSPARENT);
             didHandle = true;
             return (LRESULT)bgBrush;
@@ -297,6 +300,10 @@ static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CTLCOLORBTN == msg) {
         return (HWND)lp;
     }
+    if (WM_CTLCOLORSTATIC == msg) {
+        HDC hdc = (HDC)wp;
+        return WindowFromDC(hdc);
+    }
     // https://docs.microsoft.com/en-us/windows/win32/controls/wm-notify
     if (WM_NOTIFY == msg) {
         NMHDR* hdr = (NMHDR*)lp;
@@ -376,6 +383,19 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
         args.mouseWindow.y = pt.y;
         w->onContextMenu(&args);
         return 0;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorstatic
+    if (WM_CTLCOLORSTATIC == msg) {
+        HDC hdc = (HDC)wp;
+        if (w->textColor != ColorUnset) {
+            SetTextColor(hdc, w->textColor);
+        }
+        auto bgBrush = w->backgroundColorBrush;
+        if (bgBrush != nullptr) {
+            // SetBkMode(hdc, TRANSPARENT);
+            return (LRESULT)bgBrush;
+        }
     }
 
     WndEvent args{};

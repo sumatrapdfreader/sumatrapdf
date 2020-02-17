@@ -285,3 +285,5 @@ bool IsExpand(ILayout*);
 
 bool IsLabeL(Kind);
 bool IsLabel(ILayout*);
+
+extern Kind kindLabel;

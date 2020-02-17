@@ -11,7 +11,7 @@ struct StaticCtrl : public WindowBase {
     SIZE GetIdealSize() override;
 };
 
-ILayout* NewStaticLayout(StaticCtrl* b);
-
+ILayout* NewStaticLayout(StaticCtrl* w);
+ILayout* NewLabelLayout(StaticCtrl* w);
 bool IsStatic(Kind);
 bool IsStatic(ILayout*);

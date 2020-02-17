@@ -9,6 +9,10 @@ COLORREF MkRgb(u8 r, u8 g, u8 b) {
     return RGB(r, g, b);
 }
 
+COLORREF MkGray(u8 x) {
+    return MkRgb(x, x, x);
+}
+
 COLORREF MkRgba(u8 r, u8 g, u8 b, u8 a) {
     COLORREF col = RGB(r, g, b);
     COLORREF alpha = (COLORREF)a;

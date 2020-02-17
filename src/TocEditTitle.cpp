@@ -123,7 +123,7 @@ static void createMainLayout(EditTitleWindow* win) {
         auto s = new StaticCtrl(parent);
         s->SetText("Title:");
         s->Create();
-        auto l = NewStaticLayout(s);
+        auto l = NewLabelLayout(s);
         vbox->addChild(l);
     }
 
@@ -162,7 +162,7 @@ static void createMainLayout(EditTitleWindow* win) {
         auto s = new StaticCtrl(parent);
         s->SetText("Color:");
         s->Create();
-        auto l = NewStaticLayout(s);
+        auto l = NewLabelLayout(s);
         vbox->addChild(l);
     }
     {

@@ -1070,7 +1070,7 @@ void Expand::SetBounds(Rect bounds) {
     return child->SetBounds(bounds);
 }
 
-static Kind kindLabel = "label";
+Kind kindLabel = "label";
 
 bool IsLabeL(Kind kind) {
     return kind == kindLabel;
@@ -1082,5 +1082,5 @@ bool IsLabel(ILayout* l) {
     if (!l) {
         return false;
     }
-    return IsLayoutOfKind(l, kindLabel) || IsStatic(l->kind);
+    return IsLayoutOfKind(l, kindLabel);
 }

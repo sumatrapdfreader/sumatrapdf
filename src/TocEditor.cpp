@@ -15,6 +15,7 @@
 #include "wingui/Window.h"
 #include "wingui/TreeCtrl.h"
 #include "wingui/ButtonCtrl.h"
+#include "wingui/StaticCtrl.h"
 
 #include "resource.h"
 #include "ProgressUpdateUI.h"
@@ -37,18 +38,18 @@ using std::placeholders::_1;
 extern void OnTocCustomDraw(TreeItemCustomDrawEvent* args);
 
 struct TocEditorWindow {
-    HWND hwnd = nullptr;
-    Window* mainWindow = nullptr;
-    ILayout* mainLayout = nullptr;
     TocEditorArgs* tocArgs = nullptr;
+    HWND hwnd = nullptr;
 
+    ILayout* mainLayout = nullptr;
     // not owned by us but by mainLayout
-
+    Window* mainWindow = nullptr;
     ButtonCtrl* btnAddPdf = nullptr;
     ButtonCtrl* btnRemoveTocItem = nullptr;
     ButtonCtrl* btnExit = nullptr;
     ButtonCtrl* btnSaveAsVirtual = nullptr;
     ButtonCtrl* btnSaveAsPdf = nullptr;
+    StaticCtrl* labelInfo = nullptr;
     ILayout* layoutButtons = nullptr;
 
     TreeCtrl* treeCtrl = nullptr;
@@ -70,7 +71,7 @@ struct TocEditorWindow {
     void RemoveItem();
     void AddPdf();
     void AddPdfAsSibling(TocItem* ti);
-    void AddPdfAsChild(TocItem* ti); 
+    void AddPdfAsChild(TocItem* ti);
     void RemoveTocItem(TocItem* ti);
 };
 
@@ -556,10 +557,6 @@ static void CreateMainLayout(TocEditorWindow* win) {
 
     CreateButtonsLayout(win);
 
-    auto* main = new VBox();
-    main->alignMain = MainAxisAlign::MainStart;
-    main->alignCross = CrossAxisAlign::Stretch;
-
     auto* tree = new TreeCtrl(hwnd);
     tree->supportDragDrop = true;
     int dx = DpiScale(80);
@@ -581,7 +578,20 @@ static void CreateMainLayout(TocEditorWindow* win) {
     gWindow->treeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
 
+    win->labelInfo = new StaticCtrl(hwnd);
+    win->labelInfo->SetText("Tip: use context menu");
+    COLORREF col = MkGray(0x33);
+    win->labelInfo->SetTextColor(col);
+    // win->labelInfo->SetBackgroundColor(MkRgb(0xff, 0xff, 0xff));
+    win->labelInfo->Create();
+    ILayout* labelLayout = NewStaticLayout(win->labelInfo);
+
+    auto* main = new VBox();
+    main->alignMain = MainAxisAlign::MainStart;
+    main->alignCross = CrossAxisAlign::Stretch;
+
     main->addChild(treeLayout, 1);
+    main->addChild(labelLayout, 0);
     main->addChild(win->layoutButtons, 0);
 
     auto* padding = new Padding();

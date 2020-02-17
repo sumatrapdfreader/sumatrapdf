@@ -1228,7 +1228,7 @@ static bool CreateRaMicroInstallerWindow() {
     // win->finishedText->SetFont();
     win->finishedText->Create();
     win->finishedText->SetIsVisible(false);
-    ILayout* finishedTextLayout = NewStaticLayout(win->finishedText);
+    ILayout* finishedTextLayout = NewLabelLayout(win->finishedText);
 
     main->addChild(finishedTextLayout);
 
