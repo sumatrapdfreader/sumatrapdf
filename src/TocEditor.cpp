@@ -335,6 +335,54 @@ static bool CanRemoveTocItem(TreeCtrl* treeCtrl, TocItem* ti) {
     return true;
 }
 
+// TODO: simplify and verify is correct
+static bool CanAddPdfAsChild(TocItem* tocItem) {
+    bool canAddPdfChild = true;
+    bool canAddPdfSibling = true;
+    TocItem* ti = tocItem;
+    while (ti) {
+        // if ti is a n-th sibling of a file node, this sets it to file node
+        // (i.e. first sibling)
+        if (ti->parent) {
+            ti = ti->parent->child;
+        }
+        if (ti->engineFilePath != nullptr) {
+            // can't add as a child if this node or any parent
+            // represents PDF file
+            canAddPdfChild = false;
+            // can't add as sibling if any parent represents PDF file
+            canAddPdfSibling = (ti == tocItem);
+            break;
+        }
+        ti = ti->parent;
+    }
+    return canAddPdfChild;
+}
+
+// TODO: simplify and verify is correct
+static bool CanAddPdfAsSibling(TocItem* tocItem) {
+    bool canAddPdfChild = true;
+    bool canAddPdfSibling = true;
+    TocItem* ti = tocItem;
+    while (ti) {
+        // if ti is a n-th sibling of a file node, this sets it to file node
+        // (i.e. first sibling)
+        if (ti->parent) {
+            ti = ti->parent->child;
+        }
+        if (ti->engineFilePath != nullptr) {
+            // can't add as a child if this node or any parent
+            // represents PDF file
+            canAddPdfChild = false;
+            // can't add as sibling if any parent represents PDF file
+            canAddPdfSibling = (ti == tocItem);
+            break;
+        }
+        ti = ti->parent;
+    }
+    return canAddPdfSibling;
+}
+
 void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
     int nFiles = DragQueryFile(ev->hdrop, DRAGQUERY_NUMFILES, 0, 0);
     logf("TocEditorWindow::DropFilesHandler(): %d files\n", nFiles);
@@ -382,13 +430,31 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
         delete engine;
     };
 
-    // add as a last sibling
+    TocItem* fileToc = (TocItem*)treeCtrl->treeModel->RootAt(0);
+
+    // didn't drop on an existing itme: add as a last sibling
     if (ti == nullptr) {
-        TocItem* tocWrapper = CreateWrapperItem(engine, (TocItem*)treeCtrl->treeModel->RootAt(0));
+        TocItem* tocWrapper = CreateWrapperItem(engine, fileToc);
         tocArgs->bookmarks->tree->root->AddSiblingAtEnd(tocWrapper);
         UpdateTreeModel();
+        return;
     }
 
+    bool addAsSibling = IsShiftPressed();
+    if (addAsSibling) {
+        if (CanAddPdfAsSibling(ti)) {
+            TocItem* tocWrapper = CreateWrapperItem(engine, fileToc);
+            ti->AddSibling(tocWrapper);
+            UpdateTreeModel();
+        }
+        return;
+    }
+
+    if (CanAddPdfAsChild(ti)) {
+        TocItem* tocWrapper = CreateWrapperItem(engine, fileToc);
+        ti->AddChild(tocWrapper);
+        UpdateTreeModel();
+    }
 }
 
 void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
@@ -406,26 +472,8 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
         win::menu::SetEnabled(popup, IDM_REMOVE, false);
     }
 
-    // TODO: this is still not good enough to prevent all invalid cases
-    bool canAddPdfChild = true;
-    bool canAddPdfSibling = true;
-    TocItem* ti = selectedTocItem;
-    while (ti) {
-        // if ti is a n-th sibling of a file node, this sets it to file node
-        // (i.e. first sibling)
-        if (ti->parent) {
-            ti = ti->parent->child;
-        }
-        if (ti->engineFilePath != nullptr) {
-            // can't add as a child if this node or any parent
-            // represents PDF file
-            canAddPdfChild = false;
-            // can't add as sibling if any parent represents PDF file
-            canAddPdfSibling = (ti == selectedTocItem);
-            break;
-        }
-        ti = ti->parent;
-    }
+    bool canAddPdfChild = CanAddPdfAsChild(selectedTocItem);
+    bool canAddPdfSibling = CanAddPdfAsSibling(selectedTocItem);
 
     if (!canAddPdfChild) {
         win::menu::SetEnabled(popup, IDM_ADD_PDF_CHILD, false);
