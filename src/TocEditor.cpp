@@ -341,6 +341,15 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
     defer {
         DragFinish(ev->hdrop);
     };
+
+    POINT pt{};
+    BOOL ok = DragQueryPoint(ev->hdrop, &pt);
+    if (!ok) {
+        return; // probably shouldn't happen
+    }
+
+    TocItem* ti = (TocItem*)treeCtrl->GetItemAt(pt.x, pt.y);
+
     // TODO: maybe accept more than 1 file?
     if (nFiles != 1) {
         return;
@@ -360,8 +369,26 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
     if (!found) {
         return;
     }
+
+    EngineBase* engine = EngineManager::CreateEngine(filePath, nullptr);
     AutoFreeStr path = strconv::WstrToUtf8(filePath);
-    logf("Dropped file: '%s'\n", path.get());
+    logf("Dropped file: '%s' at (%d, %d) on item: 0x%x, engine: 0x%x\n", path.get(), pt.x, pt.y, ti, engine);
+
+    if (!engine) {
+        return;
+    }
+
+    defer {
+        delete engine;
+    };
+
+    // add as a last sibling
+    if (ti == nullptr) {
+        TocItem* tocWrapper = CreateWrapperItem(engine, (TocItem*)treeCtrl->treeModel->RootAt(0));
+        tocArgs->bookmarks->tree->root->AddSiblingAtEnd(tocWrapper);
+        UpdateTreeModel();
+    }
+
 }
 
 void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {

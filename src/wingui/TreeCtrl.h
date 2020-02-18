@@ -183,14 +183,10 @@ struct TreeCtrl : public WindowBase {
     str::WStr GetDefaultTooltip(TreeItem*);
     TreeItem* GetSelection();
 
-    TreeItem* HitTest(int x, int y);
-
     bool UpdateItem(TreeItem*);
-
     bool SelectItem(TreeItem*);
-
     bool GetItemRect(TreeItem*, bool justText, RECT& r);
-
+    TreeItem* GetItemAt(int x, int y);
     bool IsExpanded(TreeItem*);
 
     bool Create(const WCHAR* title);

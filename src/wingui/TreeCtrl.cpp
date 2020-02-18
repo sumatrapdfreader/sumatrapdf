@@ -594,7 +594,7 @@ str::WStr TreeCtrl::GetDefaultTooltip(TreeItem* ti) {
 }
 
 // get the item at a given (x,y) position in the window
-TreeItem* TreeCtrl::HitTest(int x, int y) {
+TreeItem* TreeCtrl::GetItemAt(int x, int y) {
     if (x < 0 || y < 0) {
         return nullptr;
     }
@@ -785,7 +785,7 @@ TreeItem* GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt) {
             pt.y = rcItem.bottom;
         }
     } else {
-        ti = treeCtrl->HitTest(pt.x, pt.y);
+        ti = treeCtrl->GetItemAt(pt.x, pt.y);
         if (!ti) {
             // only show context menu if over a node in tree
             return nullptr;
