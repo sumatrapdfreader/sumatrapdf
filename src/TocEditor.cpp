@@ -63,6 +63,7 @@ struct TocEditorWindow {
     void GetDispInfoHandler(TreeGetDispInfoEvent*);
     void TreeItemDragStartEnd(TreeItemDraggeddEvent*);
     void TreeContextMenu(ContextMenuEvent*);
+    void DropFilesHandler(DropFilesEvent*);
 
     void UpdateRemoveTocItemButtonStatus();
     void UpdateTreeModel();
@@ -332,6 +333,35 @@ static bool CanRemoveTocItem(TreeCtrl* treeCtrl, TocItem* ti) {
         return false;
     }
     return true;
+}
+
+void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
+    int nFiles = DragQueryFile(ev->hdrop, DRAGQUERY_NUMFILES, 0, 0);
+    logf("TocEditorWindow::DropFilesHandler(): %d files\n", nFiles);
+    defer {
+        DragFinish(ev->hdrop);
+    };
+    // TODO: maybe accept more than 1 file?
+    if (nFiles != 1) {
+        return;
+    }
+
+    // we only accept pdf files
+    WCHAR filePath[MAX_PATH] = {0};
+    bool found = false;
+    for (int i = 0; i < nFiles && !found; i++) {
+        DragQueryFile(ev->hdrop, i, filePath, dimof(filePath));
+        // TODO: maybe resolve .lnk files like OnDropFiles() in Canvas.cpp
+        if (str::EndsWithI(filePath, L".pdf")) {
+            found = true;
+        }
+    }
+
+    if (!found) {
+        return;
+    }
+    AutoFreeStr path = strconv::WstrToUtf8(filePath);
+    logf("Dropped file: '%s'\n", path.get());
 }
 
 void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
@@ -607,17 +637,16 @@ static void CreateMainLayout(TocEditorWindow* win) {
     CreateButtonsLayout(win);
 
     auto* tree = new TreeCtrl(hwnd);
-    tree->supportDragDrop = true;
+    gWindow->treeCtrl = tree;
+
     int dx = DpiScale(80);
     int dy = DpiScale(120);
     tree->idealSize = {dx, dy};
 
+    tree->supportDragDrop = true;
     tree->withCheckboxes = true;
     tree->onTreeGetDispInfo = std::bind(&TocEditorWindow::GetDispInfoHandler, win, _1);
-
-    bool ok = tree->Create(L"tree");
-    CrashIf(!ok);
-
+    tree->onDropFiles = std::bind(&TocEditorWindow::DropFilesHandler, win, _1);
     tree->onTreeItemChanged = std::bind(&TocEditorWindow::TreeItemChangedHandler, win, _1);
     tree->onTreeItemCustomDraw = OnTocCustomDraw;
     tree->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelectedHandler, win, _1);
@@ -625,7 +654,10 @@ static void CreateMainLayout(TocEditorWindow* win) {
     tree->onTreeItemDragStart = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
     tree->onTreeItemDragEnd = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
     tree->onContextMenu = std::bind(&TocEditorWindow::TreeContextMenu, win, _1);
-    gWindow->treeCtrl = tree;
+
+    bool ok = tree->Create(L"tree");
+    CrashIf(!ok);
+
     auto treeLayout = NewTreeLayout(tree);
 
     win->labelInfo = new StaticCtrl(hwnd);

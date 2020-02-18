@@ -1481,12 +1481,12 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
 }
 
 static void OnDropFiles(HDROP hDrop, bool dragFinish) {
-    WCHAR filePath[MAX_PATH];
-    const int count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
+    WCHAR filePath[MAX_PATH] = {0};
+    int nFiles = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
 
     bool isShift = IsShiftPressed();
     WindowInfo* win = nullptr;
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < nFiles; i++) {
         DragQueryFile(hDrop, i, filePath, dimof(filePath));
         if (str::EndsWithI(filePath, L".lnk")) {
             AutoFreeWstr resolved(ResolveLnk(filePath));
@@ -1515,9 +1515,11 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             OnDropFiles((HDROP)wParam, !lParam);
             return 0;
 
+        // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-erasebkgnd
         case WM_ERASEBKGND:
-            // do nothing, helps to avoid flicker
-            return TRUE;
+            // return non-zero to indicate we erased
+            // helps to avoid flicker
+            return 1;
     }
 
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);

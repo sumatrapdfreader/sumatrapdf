@@ -498,9 +498,6 @@ bool TreeCtrl::Create(const WCHAR* title) {
         DynSetWindowTheme(hwnd, L"Explorer", nullptr);
     }
 
-    Subclass();
-    SubclassParent();
-
     TreeView_SetUnicodeFormat(hwnd, true);
 
     // TVS_CHECKBOXES has to be set with SetWindowLong before populating with data
@@ -508,6 +505,12 @@ bool TreeCtrl::Create(const WCHAR* title) {
     if (withCheckboxes) {
         ToggleWindowStyle(hwnd, TVS_CHECKBOXES, true);
     }
+
+    // must be done at the end. Doing  ToggleWindowStyle() sends bogus (?)
+    // TVN_ITEMCHANGED notification. As an alternative we could ignore TVN_ITEMCHANGED
+    // if hItem doesn't point to an TreeItem
+    Subclass();
+    SubclassParent();
 
     return true;
 }

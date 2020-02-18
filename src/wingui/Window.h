@@ -104,6 +104,13 @@ struct MouseWheelEvent : WndEvent {
 
 typedef std::function<void(MouseWheelEvent*)> MouseWheelHandler;
 
+// https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-dragacceptfiles
+struct DropFilesEvent : WndEvent {
+    HDROP hdrop = nullptr;
+};
+
+typedef std::function<void(DropFilesEvent*)> DropFilesHandler;
+
 extern Kind kindWindowBase;
 
 struct WindowBase {
@@ -149,6 +156,9 @@ struct WindowBase {
     CharHandler onChar = nullptr;
     // for WM_MOUSEWHEEL and WM_MOUSEHWHEEL
     MouseWheelHandler onMouseWheel = nullptr;
+    // for WM_DROPFILES
+    // when set after Create() must also call DragAcceptFiles(hwnd, TRUE);
+    DropFilesHandler onDropFiles = nullptr;
 
     COLORREF textColor = ColorUnset;
     COLORREF backgroundColor = ColorUnset;
