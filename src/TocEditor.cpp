@@ -92,8 +92,8 @@ void CalcEndPageNo2(TocItem* ti, int& nPages) {
     while (ti) {
         // this marks a root node for a document
         if (ti->nPages > 0) {
+            nPages = ti->nPages;
             CalcEndPageNo(ti, nPages);
-            nPages += ti->nPages;
         } else {
             CalcEndPageNo2(ti->child, nPages);
         }
