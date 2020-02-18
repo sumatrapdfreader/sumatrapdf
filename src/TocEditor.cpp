@@ -385,7 +385,7 @@ static bool CanAddPdfAsSibling(TocItem* tocItem) {
 
 void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
     int nFiles = DragQueryFile(ev->hdrop, DRAGQUERY_NUMFILES, 0, 0);
-    logf("TocEditorWindow::DropFilesHandler(): %d files\n", nFiles);
+    //logf("TocEditorWindow::DropFilesHandler(): %d files\n", nFiles);
     defer {
         DragFinish(ev->hdrop);
     };
@@ -419,8 +419,10 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
     }
 
     EngineBase* engine = EngineManager::CreateEngine(filePath, nullptr);
+#if 0
     AutoFreeStr path = strconv::WstrToUtf8(filePath);
     logf("Dropped file: '%s' at (%d, %d) on item: 0x%x, engine: 0x%x\n", path.get(), pt.x, pt.y, ti, engine);
+#endif
 
     if (!engine) {
         return;
