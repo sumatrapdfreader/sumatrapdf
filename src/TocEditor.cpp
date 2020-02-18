@@ -145,6 +145,7 @@ static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
     editArgs->bold = bit::IsSet(ti->fontFlags, fontBitBold);
     editArgs->italic = bit::IsSet(ti->fontFlags, fontBitItalic);
     editArgs->title = strconv::WstrToUtf8(ti->title);
+    editArgs->color = ti->color;
 
     StartTocEditTitle(hwnd, editArgs, [=](TocEditArgs* args) {
         delete editArgs;
