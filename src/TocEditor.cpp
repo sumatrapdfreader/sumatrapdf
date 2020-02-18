@@ -72,7 +72,7 @@ struct TocEditorWindow {
     void AddPdf();
     void AddPdfAsSibling(TocItem* ti);
     void AddPdfAsChild(TocItem* ti);
-    void RemoveTocItem(TocItem* ti);
+    void RemoveTocItem(TocItem* ti, bool alsoDelete);
 };
 
 static TocEditorWindow* gWindow = nullptr;
@@ -222,11 +222,11 @@ static void EnsureExpanded(TocItem* ti) {
     }
 }
 
-void TocEditorWindow::RemoveTocItem(TocItem* ti) {
+void TocEditorWindow::RemoveTocItem(TocItem* ti, bool alsoDelete) {
     EnsureExpanded(ti->parent);
 
     bool ok = RemoveIt(treeCtrl, ti);
-    if (ok) {
+    if (ok && alsoDelete) {
         UpdateTreeModel();
         ti->DeleteJustSelf();
     }
@@ -414,7 +414,7 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
             AddPdfAsSibling(selectedTocItem);
             break;
         case IDM_REMOVE:
-            RemoveTocItem(selectedTocItem);
+            RemoveTocItem(selectedTocItem, true);
             break;
     }
 }
@@ -427,25 +427,62 @@ static void SetInfoLabelText(StaticCtrl* l, bool forDrag) {
     }
 }
 
+// find toc item that is a parent of a given ti that represents a pdf file
+static TocItem* FindFileParentItem(TocItem* ti) {
+    while (ti) {
+        if (ti->engineFilePath) {
+            return ti;
+        }
+        ti = ti->parent;
+    }
+    return nullptr;
+}
+
 void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
     if (ev->isStart) {
         SetInfoLabelText(labelInfo, true);
         return;
     }
-
     SetInfoLabelText(labelInfo, false);
-    TocItem* dragged = (TocItem*)ev->draggedItem;
-    TocItem* dragTarget = (TocItem*)ev->dragTargetItem;
-    dbglogf("TreeItemDragged:");
-    if (dragged != nullptr) {
-        AutoFreeStr s = strconv::WstrToUtf8(dragged->title);
-        dbglogf(" dragged: %s", s.get());
+
+    TocItem* src = (TocItem*)ev->draggedItem;
+    TocItem* dst = (TocItem*)ev->dragTargetItem;
+    CrashIf(!src);
+    if (!src) {
+        return;
     }
-    if (dragTarget != nullptr) {
-        AutoFreeStr s = strconv::WstrToUtf8(dragTarget->title);
-        dbglogf("  on: %s", s.get());
+    if (!dst) {
+        // TODO: append to end?
+        return;
     }
-    dbglogf("\n");
+
+    if (src == dst) {
+        return;
+    }
+
+    // entries inside a single PDF cannot be moved outside of it
+    // entries outside of a PDF cannot be moved inside PDF
+    TocItem* srcFileParent = FindFileParentItem(src);
+    TocItem* dstFileParent = FindFileParentItem(dst);
+    if (srcFileParent != dstFileParent) {
+        // TODO: show error message that will go away after a while
+        return;
+    }
+    // regular drag adds as a child. with shift adds as a sibling of
+    bool addAsSibling = IsShiftPressed();
+
+    AutoFreeStr srcTitle = strconv::WstrToUtf8(src->title);
+    AutoFreeStr dstTitle = strconv::WstrToUtf8(dst->title);
+    dbglogf("TreeItemDragged: dragged: %s on: %s. Add as: %s\n", srcTitle.get(), dstTitle.get(),
+            addAsSibling ? "sibling" : "child");
+
+    RemoveTocItem(src, false);
+    if (addAsSibling) {
+        dst->AddSibling(src);
+    } else {
+        dst->AddChild(src);
+    }
+    UpdateTreeModel();
 }
 
 TocEditorWindow::~TocEditorWindow() {
@@ -468,7 +505,7 @@ void TocEditorWindow::RemoveItem() {
     TreeItem* sel = treeCtrl->GetSelection();
     CrashIf(!sel);
     TocItem* ti = (TocItem*)sel;
-    RemoveTocItem(ti);
+    RemoveTocItem(ti, true);
 }
 
 void TocEditorWindow::UpdateRemoveTocItemButtonStatus() {
