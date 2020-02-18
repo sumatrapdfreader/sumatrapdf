@@ -622,7 +622,7 @@ static void CreateButtonsLayout(TocEditorWindow* w) {
 
     auto* buttons = new HBox();
 
-    buttons->alignMain = MainAxisAlign::SpaceBetween;
+    buttons->alignMain = MainAxisAlign::Homogeneous;
     buttons->alignCross = CrossAxisAlign::CrossStart;
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Add PDF", std::bind(&TocEditorWindow::AddPdf, w));
