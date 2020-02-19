@@ -963,6 +963,7 @@
     <ClInclude Include="..\src\Print.h" />
     <ClInclude Include="..\src\ProgressUpdateUI.h" />
     <ClInclude Include="..\src\RenderCache.h" />
+    <ClInclude Include="..\src\SaveAsPdf.h" />
     <ClInclude Include="..\src\Search.h" />
     <ClInclude Include="..\src\Selection.h" />
     <ClInclude Include="..\src\SettingsStructs.h" />
@@ -970,6 +971,7 @@
     <ClInclude Include="..\src\SumatraAbout.h" />
     <ClInclude Include="..\src\SumatraAbout2.h" />
     <ClInclude Include="..\src\SumatraDialogs.h" />
+    <ClInclude Include="..\src\SumatraPDF.h" />
     <ClInclude Include="..\src\SumatraProperties.h" />
     <ClInclude Include="..\src\TabInfo.h" />
     <ClInclude Include="..\src\TableOfContents.h" />
@@ -1037,6 +1039,7 @@
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\RenderCache.cpp" />
+    <ClCompile Include="..\src\SaveAsPdf.cpp" />
     <ClCompile Include="..\src\Search.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
     <ClCompile Include="..\src\SettingsStructs.cpp" />

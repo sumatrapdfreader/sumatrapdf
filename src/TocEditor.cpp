@@ -24,6 +24,7 @@
 #include "WindowInfo.h"
 #include "Menu.h"
 #include "Translations.h"
+#include "SaveAsPdf.h"
 
 #include "EngineBase.h"
 #include "EngineMulti.h"
@@ -669,6 +670,9 @@ extern void ShowExportedBookmarksMsg(const char* path);
 
 void TocEditorWindow::SaveAsPdf() {
     MessageNYI();
+    // TOOD: choose a file name
+    TocTree* tree = (TocTree*)treeCtrl->treeModel;
+    SaveVirutalAsPdf(tree->root, "foo");
 }
 
 void TocEditorWindow::SaveAsVirtual() {

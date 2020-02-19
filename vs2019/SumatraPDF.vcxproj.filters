@@ -114,6 +114,9 @@
     <ClInclude Include="..\src\RenderCache.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SaveAsPdf.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Search.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -133,6 +136,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SumatraDialogs.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SumatraPDF.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SumatraProperties.h">
@@ -327,6 +333,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RenderCache.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SaveAsPdf.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Search.cpp">
