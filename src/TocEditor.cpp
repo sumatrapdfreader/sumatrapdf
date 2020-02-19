@@ -385,7 +385,7 @@ static bool CanAddPdfAsSibling(TocItem* tocItem) {
 
 void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
     int nFiles = DragQueryFile(ev->hdrop, DRAGQUERY_NUMFILES, 0, 0);
-    //logf("TocEditorWindow::DropFilesHandler(): %d files\n", nFiles);
+    // logf("TocEditorWindow::DropFilesHandler(): %d files\n", nFiles);
     defer {
         DragFinish(ev->hdrop);
     };
@@ -545,6 +545,20 @@ static TocItem* FindFileParentItem(TocItem* ti) {
     return nullptr;
 }
 
+// return true if dst is a child of src
+static bool IsItemChildOf(TocItem* src, TocItem* dst) {
+    CrashIf(!src);
+    CrashIf(!dst);
+    TocItem* ti = dst;
+    while (ti) {
+        if (ti == src) {
+            return true;
+        }
+        ti = ti->parent;
+    }
+    return false;
+}
+
 void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
     if (ev->isStart) {
         SetInfoLabelText(labelInfo, true);
@@ -558,19 +572,32 @@ void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
     if (!src) {
         return;
     }
+
+    TocItem* srcFileParent = FindFileParentItem(src);
+    TocItem* dstFileParent = FindFileParentItem(dst);
     if (!dst) {
-        // TODO: append to end?
+        // if it's not an entry inside a file, drop at the end
+        if (srcFileParent != nullptr) {
+            return;
+        }
+        RemoveTocItem(src, false);
+        TocTree* tree = (TocTree*)treeCtrl->treeModel;
+        tree->root->AddSiblingAtEnd(src);
+        UpdateTreeModel();
         return;
     }
 
+    // ignore drop on itself
     if (src == dst) {
+        return;
+    }
+    // ignore if dropping on its own child
+    if (IsItemChildOf(src, dst)) {
         return;
     }
 
     // entries inside a single PDF cannot be moved outside of it
     // entries outside of a PDF cannot be moved inside PDF
-    TocItem* srcFileParent = FindFileParentItem(src);
-    TocItem* dstFileParent = FindFileParentItem(dst);
     if (srcFileParent != dstFileParent) {
         // TODO: show error message that will go away after a while
         return;
