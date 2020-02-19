@@ -6804,7 +6804,7 @@ const char * gTranslations_de =
   "&Tats\303\244chliche Gr\303\266\303\237e\tStrg+1\0"\
   "&Erweiterte Optionen\342\200\246\0"\
   "&Alle ausgew\303\244hlten Seiten\0"\
-  "&Zur\303\274ck\tAlt+<-\0"\
+  "Vorherige Ansicht\tAlt+<-\0"\
   "&Buchansicht\tStrg+8\0"\
   "&Schlie\303\237en\tStrg+W\0"\
   "Auswahl &kopieren\0"\
@@ -6880,7 +6880,7 @@ const char * gTranslations_de =
   "Abbrechen\0"\
   "Datei kann nicht gedruckt werden\0"\
   "Fehler beim Ausf\303\274hren des Befehls f\303\274r die R\303\274ckw\303\244rtssuche. Bitte \303\274berpr\303\274fen Sie die Einstellung.\0"\
-  "Sprache \303\244ndern (Change Language)\0"\
+  "Sprache \303\244ndern\342\200\246 (Change Language)\0"\
   "Nach &neuer Version suchen\0"\
   "Schlie\303\237en\0"\
   "Alles zuklappen\0"\
@@ -6923,11 +6923,11 @@ const char * gTranslations_de =
   "EPUB-E-B\303\274cher\0"\
   "Bitte Passwort eingeben\0"\
   "Bitte Passwort f\303\274r %s eingeben\0"\
-  "Beim Doppelklicken auf das PDF-Dokument wird der folgende Befehl ausgef\303\274hrt:\0"\
+  "Beim Doppelklick auf das PDF-Dokument wird der folgende Befehl ausgef\303\274hrt:\0"\
   "Fehler beim \303\226ffnen von %s\0"\
   "Alles aufklappen\0"\
   "&Favoriten\0"\
-  "Vor&w\303\244rts\tAlt+->\0"\
+  "N\303\244chste Ansicht\tAlt+->\0"\
   "&Vollbild\tF11\0"\
   "Doppelseite\0"\
   "Fehler beim L\303\266schen der Deinstallations-Registry-Schl\303\274ssel\0"\
@@ -6949,11 +6949,11 @@ const char * gTranslations_de =
   "Suchen:\0"\
   "An &Inhalt anpassen\tStrg+3\0"\
   "An &Seite anpassen\tStrg+0\0"\
-  "An &Breite anpassen\tStrg+2\0"\
+  "An Fenster&breite anpassen\tStrg+2\0"\
   "An Inhalt anpassen\0"\
   "An Seite anpassen\0"\
-  "An Breite anpassen\0"\
-  "An Breite anpassen und Seiten fortlaufend anzeigen\0"\
+  "An Fensterbreite anpassen\0"\
+  "An Fensterbreite anpassen und Seiten fortlaufend anzeigen\0"\
   "An eine einzelne Seite anpassen\0"\
   "Schriftarten:\0"\
   "Buch wird formatiert\342\200\246 Seite %d\0"\
@@ -6972,7 +6972,7 @@ const char * gTranslations_de =
   "Die Installation wird ausgef\303\274hrt\342\200\246\0"\
   "\0"\
   "PDF-Dokumente in Windows-&Suche einbeziehen\0"\
-  "&Vorschau f\303\274r PDF-Dokumente in Explorer aktivieren\0"\
+  "Windows soll eine &Vorschau f\303\274r PDF-Dokumente anzeigen\0"\
   "Hell\0"\
   "\0"\
   "SumatraPDF als Standardanwendung f\303\274r PDF-Dateien registrieren?\0"\
@@ -7017,7 +7017,7 @@ const char * gTranslations_de =
   "Postscript-Dokumente\0"\
   "&Pr\303\244sentation\tF5\0"\
   "&Vorherige Seite\0"\
-  "Drucken\0"\
+  "Drucken\342\200\246\0"\
   "Druckbereich\0"\
   "Drucker mit dem angegebenen Namen nicht gefunden\0"\
   "Druckvorgang l\303\244uft.\0"\
@@ -7036,10 +7036,10 @@ const char * gTranslations_de =
   "Speichern unter\342\200\246\0"\
   "&Verkn\303\274pfung speichern\342\200\246\tStrg+Umschalt+S\0"\
   "Durchsuche Seite %d von %d\342\200\246\0"\
-  "Alles &markieren\0"\
+  "Alles &markieren\tStrg+A\0"\
   "Alles &markieren\tStrg+A\0"\
   "Inhalt mit Strg+linke Maustaste ausw\303\244hlen\0"\
-  "In welches Verzeichnis soll SumatraPDF installiert werden?\0"\
+  "W\303\244hlen Sie den Ordner, in dem SumatraPDF installiert werden soll:\0"\
   "Auswahl:\0"\
   "Per &E-Mail versenden\342\200\246\0"\
   "Befehlszeile f\303\274r die Inverssuche setzen\0"\

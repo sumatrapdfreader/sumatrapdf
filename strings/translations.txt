@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6dadf93dd2ff66b8705bbc8e1d69d96c79ab9a87
+e570ddbfcc1068529a2ebb34614fbecc10959639
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -288,7 +288,7 @@ cn:向前翻(&B)\tAlt+左箭头
 co:&Nanzu\tAlt+Fleccia manca
 cy:Nôl\tAlt+Saeth Chwith
 cz:Z&pět\tAlt+Šipka vlevo
-de:&Zurück\tAlt+<-
+de:Vorherige Ansicht\tAlt+<-
 dk:&Tilbage\tAlt+venstre pil
 el:&Πίσω\tAlt+<-
 es:A&trás\tAlt+Izq
@@ -5222,7 +5222,7 @@ cn:更改语言 (Change Language)
 co:Cambià di lingua (Change Language)
 cy:Newid Iaith (Change Language)
 cz:Změnit jazyk... (Change Language)
-de:Sprache ändern (Change Language)
+de:Sprache ändern… (Change Language)
 dk:Skift sprog (Change Language)
 el:Αλλαγή γλώσσας (Change Language)
 es:Cambiar idioma (Change Language)
@@ -7942,7 +7942,7 @@ cn:请输入您双击 PDF 文件后调用的命令行(&E):
 co:Scrivite a linea di cumanda à eseguisce quandu ci hè un doppiu-cliccu nant’à u ducumentu PDF :
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
-de:Beim Doppelklicken auf das PDF-Dokument wird der folgende Befehl ausgeführt:
+de:Beim Doppelklick auf das PDF-Dokument wird der folgende Befehl ausgeführt:
 dk:Indtast den kommandolinje du vil bruge, når du dobbeltklikker på PDF-dokumentet:
 el:Εισάγετε την εντολή προς εκτέλεση με διπλό κλικ σε έγγραφο PDF:
 es:Introduzca los parámetros de línea de comandos que se ejecutarán al hacer doble-clic en el documento PDF:
@@ -8144,7 +8144,7 @@ cn:向后翻(&O)\tAlt+右箭头
 co:&Dopu\tAlt+Fleccia diritta
 cy:Ymlaen\tAlt+Saeth Dde
 cz:V&před\tAlt+Šipka vpravo
-de:Vor&wärts\tAlt+->
+de:Nächste Ansicht\tAlt+->
 dk:F&remad\tAlt+->
 el:Εμπ&ρός\tAlt+->
 es:Adelante\tAlt+Der
@@ -9567,7 +9567,7 @@ cn:符合宽度(&W)\tCtrl+2
 co:&Larghezza sana\tCtrl+2
 cy:&Fitio'r Lled\tCtrl+2
 cz:&Podle šířky\tCtrl+2
-de:An &Breite anpassen\tStrg+2
+de:An Fenster&breite anpassen\tStrg+2
 dk:Tilpas &bredde\tCtrl+2
 el:&Προσαρμογή στο πλάτος παραθύρου\tCtrl+2
 es:Ajustar a a&nchura\tCtrl+2
@@ -9769,7 +9769,7 @@ cn:符合宽度(&W)
 co:Larghezza sana
 cy:Fitio'r Lled
 cz:Podle šířky
-de:An Breite anpassen
+de:An Fensterbreite anpassen
 dk:Tilpas bredde
 el:Πλάτος παραθύρου
 es:Ajustar a ancho de página
@@ -9837,7 +9837,7 @@ cn:符合宽度连续模式(&W)
 co:Larghezza sana è vista in cuntinuu
 cy:Ffitio'r Lled a Dangos Tudalennau'n Barhaus
 cz:Přizpůsobit šířce okna a zobrazit stránky průběžně
-de:An Breite anpassen und Seiten fortlaufend anzeigen
+de:An Fensterbreite anpassen und Seiten fortlaufend anzeigen
 dk:Tilpas bredde og vis sider løbende
 el:Προσαρμογή πλάτους και εμφάνιση σελίδων συνεχόμενα
 es:Ajustar al ancho de página y mostrar las páginas de forma continua
@@ -11031,7 +11031,7 @@ cn:让 Windows 显示 PDF 文件的预览(&P)
 co:Permette à Windows di &previsualizà i ducumenti PDF
 cy:Gadael i Windows ddangos &rhagolwg o ddogfennau PDF
 cz:Nechte Windows zobrazit &náhledy PDF dokumentů
-de:&Vorschau für PDF-Dokumente in Explorer aktivieren
+de:Windows soll eine &Vorschau für PDF-Dokumente anzeigen
 dk:Lad Windows vise &forhåndsvisninger af PDF-dokumenter
 el:Εμφάνιση προεπισκόπησης των εγγράφων PDF στα Windows
 es:Mostrar miniaturas en los iconos de documentos &PDF
@@ -13867,7 +13867,7 @@ cn:打印
 co:Stampà
 cy:Argraffu
 cz:Tisk...
-de:Drucken
+de:Drucken…
 dk:Udskriv
 el:Εκτύπωση
 es:Imprimir
@@ -15023,7 +15023,7 @@ cn:全选(&A)
 co:&Tuttu selezziunà
 cy:Dewis &Popeth
 cz:Vybrat &vše
-de:Alles &markieren
+de:Alles &markieren\tStrg+A
 dk:Marker &alt
 el:Επιλογή ό&λων
 es:Seleccionar &todo
@@ -15208,7 +15208,7 @@ cn:选择 SumatraPDF 应被安装的文件夹：
 co:Selezziunà u cartulare induve SumatraPDF serà installatu :
 cy:Dewis y ffolder lle ddylai SumatraPDF gael ei gosod:
 cz:Vyberte adresář, do kterého chcete nainstalovat SumatraPDF:
-de:In welches Verzeichnis soll SumatraPDF installiert werden?
+de:Wählen Sie den Ordner, in dem SumatraPDF installiert werden soll:
 dk:Vælg mappen hvor SumatraPDF skal installeres:
 el:Επιλέξτε το φάκελο που θα εγκατασταθεί SumatraPDF:
 es:Seleccione la carpeta de instalación de SumatraPDF:
