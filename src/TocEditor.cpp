@@ -572,21 +572,11 @@ void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
     if (!src) {
         return;
     }
-
-    TocItem* srcFileParent = FindFileParentItem(src);
-    TocItem* dstFileParent = FindFileParentItem(dst);
     if (!dst) {
-        // if it's not an entry inside a file, drop at the end
-        if (srcFileParent != nullptr) {
-            return;
-        }
-        RemoveTocItem(src, false);
-        TocTree* tree = (TocTree*)treeCtrl->treeModel;
-        tree->root->AddSiblingAtEnd(src);
-        UpdateTreeModel();
+        // it doesn't seem possible to drop on empty node
+        // default code always selects a node
         return;
     }
-
     // ignore drop on itself
     if (src == dst) {
         return;
@@ -596,19 +586,30 @@ void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
         return;
     }
 
-    // entries inside a single PDF cannot be moved outside of it
-    // entries outside of a PDF cannot be moved inside PDF
-    if (srcFileParent != dstFileParent) {
-        // TODO: show error message that will go away after a while
-        return;
-    }
     // regular drag adds as a child. with shift adds as a sibling of
     bool addAsSibling = IsShiftPressed();
-
     AutoFreeStr srcTitle = strconv::WstrToUtf8(src->title);
     AutoFreeStr dstTitle = strconv::WstrToUtf8(dst->title);
     dbglogf("TreeItemDragged: dragged: %s on: %s. Add as: %s\n", srcTitle.get(), dstTitle.get(),
             addAsSibling ? "sibling" : "child");
+
+    // entries inside a single PDF cannot be moved outside of it
+    // entries outside of a PDF cannot be moved inside PDF
+    TocItem* srcFileParent = FindFileParentItem(src);
+    TocItem* dstFileParent = FindFileParentItem(dst);
+
+    if (srcFileParent != dstFileParent) {
+        if (addAsSibling) {
+            // allow adding file node as a sibling of another file node
+            if (src->engineFilePath && dst->engineFilePath) {
+                RemoveTocItem(src, false);
+                dst->AddSibling(src);
+                UpdateTreeModel();
+            }
+        }
+        // TODO: show a temporary error message that will go away after a while
+        return;
+    }
 
     RemoveTocItem(src, false);
     if (addAsSibling) {
