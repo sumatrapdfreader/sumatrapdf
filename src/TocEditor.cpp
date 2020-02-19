@@ -23,6 +23,7 @@
 #include "SettingsStructs.h"
 #include "WindowInfo.h"
 #include "Menu.h"
+#include "Translations.h"
 
 #include "EngineBase.h"
 #include "EngineMulti.h"
@@ -241,7 +242,12 @@ static EngineBase* ChooosePdfFile() {
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
 
-    ofn.lpstrFilter = L".pdf\0";
+    str::WStr fileFilter(256);
+    fileFilter.Append(_TR("PDF documents"));
+    fileFilter.Append(L"\1*.pdf\1");
+    str::TransChars(fileFilter.Get(), L"\1", L"\0");
+
+    ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
 
@@ -675,7 +681,7 @@ void TocEditorWindow::SaveAsVirtual() {
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L".vbkm\0";
+    ofn.lpstrFilter = L"VBKM files\0*.vbkm\0\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrDefExt = L"vbkm";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;

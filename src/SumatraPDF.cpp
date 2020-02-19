@@ -2761,7 +2761,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    AutoFreeWstr fileFilter(str::Format(L"%s\1*.lnk\1", _TR("Bookmark Shortcuts")));
+    AutoFreeWstr fileFilter = str::Format(L"%s\1*.lnk\1", _TR("Bookmark Shortcuts"));
     str::TransChars(fileFilter, L"\1", L"\0");
 
     OPENFILENAME ofn = {0};
