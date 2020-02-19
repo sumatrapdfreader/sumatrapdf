@@ -12407,7 +12407,7 @@ const char * gTranslations_fa =
 const char * gTranslations_pl = 
   "&O SumatraPDF\0"\
   "&Rozmiar rzeczywisty\tCtrl+1\0"\
-  "Opcje zaawansowane...\0"\
+  "Opcje &zaawansowane...\0"\
   "&Zaznaczone strony\0"\
   "&Wstecz\tAlt+W lewo\0"\
   "Widok o&dczytu\tCtrl+8\0"\
@@ -12445,7 +12445,7 @@ const char * gTranslations_pl =
   "Pami\304\231taj &has\305\202o dla tego dokumentu\0"\
   "Pami\304\231taj ustawienia dla &ka\305\274dego dokumentu\0"\
   "&Usu\305\204 dokument\0"\
-  "Zapisz jako...\0"\
+  "Zapisz &jako...\0"\
   "Zapisz &jako...\tCtrl+S\0"\
   "&Ustawienia\0"\
   "&Zmniejsz strony do rozmiaru wydruku (w razie potrzeby)\0"\
@@ -12462,7 +12462,7 @@ const char * gTranslations_pl =
   "O SumatraPDF\0"\
   "Dodaj do ulubionych\0"\
   "Dodaj stron\304\231 %s do ulubionych\0"\
-  "\0"\
+  "Dodaj stron\304\231 %s do ulubionych\tCtrl+B\0"\
   "Dodaj stron\304\231 %s do ulubionych pod (opcjonaln\304\205) nazw\304\205:\0"\
   "Dodaj do ulubionych\0"\
   "Zaawansowane\0"\
@@ -12488,14 +12488,14 @@ const char * gTranslations_pl =
   "Zmie\305\204 j\304\231zyk (Change Language)\0"\
   "Szukaj &aktualizacji\0"\
   "Zamknij\0"\
-  "\0"\
+  "Zwi\305\204 wszystko\0"\
   "Komiksy\0"\
   "Zgodno\305\233\304\207\0"\
   "Pojedyncza strona - uk\305\202ad ci\304\205g\305\202y\0"\
   "Widok odczytu - uk\305\202ad ci\304\205g\305\202y\0"\
   "Wiele stron - uk\305\202ad ci\304\205g\305\202y\0"\
   "Dodaj swoje t\305\202umaczenie\0"\
-  "Kopiuj obraz\0"\
+  "Kopiuj o&braz\0"\
   "Kopiuj adres z &odno\305\233nika\0"\
   "Kopiuj ko&mentarz\0"\
   "Nie mo\305\274na kopiowa\304\207 tekstu (mo\305\274na kopiowa\304\207 jako obrazy)\0"\
@@ -12530,10 +12530,10 @@ const char * gTranslations_pl =
   "Podaj has\305\202o dla %s\0"\
   "Podaj polecenie wykonywane po dwukrotnym klikni\304\231ciu pliku PDF:\0"\
   "B\305\202\304\205d \305\202adowania pliku %s\0"\
-  "\0"\
+  "Rozwi\305\204 wszystko\0"\
   "&Ulubione\0"\
   "&Dalej\tAlt+W prawo\0"\
-  "Pe\305\202ny ekran\tCtrl+Shift+L\0"\
+  "Pe\305\202ny &ekran\tF11\0"\
   "Wiele stron\0"\
   "Nie mo\305\274na usun\304\205\304\207 kluczy deinstalatora z rejestru\0"\
   "Nie uda\305\202o si\304\231 zarejestrowa\304\207 jako domy\305\233lny program na Windows 10\0"\
@@ -12567,7 +12567,7 @@ const char * gTranslations_pl =
   "Ostatnio otwierane\0"\
   "\0"\
   "Przejd\305\272 do strony\0"\
-  "Ukryj &Opcje\0"\
+  "Ukryj &opcje\0"\
   "Ukryj ostatnio otwierane\0"\
   "Wskaz\303\263wka: u\305\274yj klawisza F3, aby szuka\304\207 dalej\0"\
   "Pliki graficzne (*.%s)\0"\
@@ -12582,13 +12582,13 @@ const char * gTranslations_pl =
   "\0"\
   "Ustawi\304\207 program SumatraPDF jako domy\305\233ln\304\205 przegl\304\205dark\304\231 plik\303\263w PDF?\0"\
   "Ustaw SumatraPDF jako domy\305\233ln\304\205 przegl\304\205dark\304\231 PDF\0"\
-  "Tryb mangi\0"\
+  "Tryb &mangi\0"\
   "Uwzgl\304\231dnij wielko\305\233\304\207 liter\0"\
   "Dokumenty Mobi\0"\
   "Zmodyfikowano:\0"\
-  "\0"\
+  "Nowe &okno\tCtrl+N\0"\
   "Nowa wersja %s jest dost\304\231pna. Pobra\304\207 now\304\205 wersj\304\231?\0"\
-  "&Nast\304\231pna strona\0"\
+  "Nast\304\231pna strona\0"\
   "Nie znaleziono wynik\303\263w\0"\
   "Nie znaleziono wynik\303\263w w okolicach wiersza %u w pliku %s\0"\
   "Nie znaleziono pliku synchronizacji\0"\
@@ -12596,14 +12596,14 @@ const char * gTranslations_pl =
   "Liczba stron:\0"\
   "\0"\
   "Otw\303\263rz\0"\
-  "Otw\303\263rz w PDF-XChange\0"\
+  "Otw\303\263rz &w PDF-XChange\0"\
   "Otw\303\263rz dokument...\0"\
   "Otw\303\263rz w %s\0"\
   "Otw\303\263rz w &Adobe Reader\0"\
   "Otw\303\263rz w &Foxit Reader\0"\
-  "Otw\303\263rz w Microsoft HTML Help\0"\
-  "Otw\303\263rz w Microsoft XPS-Viewer\0"\
-  "W\305\202a\305\233ciwo\305\233ci\0"\
+  "Otw\303\263rz w &Microsoft HTML Help\0"\
+  "Otw\303\263rz w &Microsoft XPS-Viewer\0"\
+  "&W\305\202a\305\233ciwo\305\233ci\0"\
   "&W\305\202a\305\233ciwo\305\233ci\tCtrl+D\0"\
   "Dokument PDF\0"\
   "Optymalizacja PDF:\0"\
@@ -12619,8 +12619,8 @@ const char * gTranslations_pl =
   "Dokumenty PalmDoc\0"\
   "Zamknij  %s, aby kontynuowa\304\207!\0"\
   "Prosz\304\231 czeka\304\207 - renderowanie...\0"\
-  "Dokumenty postscript\0"\
-  "&Prezentacja\tCtrl+L\0"\
+  "Dokumenty PostScript\0"\
+  "&Prezentacja\tF5\0"\
   "Poprzednia strona\0"\
   "Drukuj\0"\
   "Zakres druku\0"\
@@ -12637,25 +12637,25 @@ const char * gTranslations_pl =
   "Zmie\305\204 nazw\304\231 na\0"\
   "Obr\303\263\304\207 w &lewo\tCtrl+Shift+Minus\0"\
   "Obr\303\263\304\207 w &prawo\tCtrl+Shift+Plus\0"\
-  "\0"\
+  "Zapisz adnotacje\0"\
   "Zapisz jako\0"\
   "Utw\303\263rz skr\303\263t do dokumentu\tCtrl+Shift+S\0"\
   "Szukanie %d z %d...\0"\
-  "Zaznacz wszystko\0"\
+  "Zaznacz &wszystko\0"\
   "Zaznacz &wszystko\tCtrl+A\0"\
   "Zaznacz zawarto\305\233\304\207 wciskaj\304\205c Ctrl i lewy przycisk myszy\0"\
   "Wybierz folder, w kt\303\263rym nale\305\274y zainstalowa\304\207 program SumatraPDF:\0"\
   "Selekcja:\0"\
   "Do\305\202\304\205cz do wiadomo\305\233ci &e-mail...\0"\
   "Ustaw wiersz polece\305\204 do odwrotnego wyszukiwania\0"\
-  "\0"\
-  "\0"\
+  "Poka\305\274 za&k\305\202adki\tF12\0"\
+  "Poka\305\274 &ulubione\0"\
   "Wy\305\233wietlaj strony w uk\305\202adzie &ci\304\205g\305\202ym\0"\
   "Poka\305\274 pasek &narz\304\231dzi\tF8\0"\
-  "\0"\
+  "Poka\305\274 za&k\305\202adki\tF12\0"\
   "Poka\305\274 ulubione\0"\
   "Poka\305\274 cz\304\231sto otwierane\0"\
-  "\0"\
+  "Poka\305\274 w &folderze\0"\
   "Poka\305\274 panel za&k\305\202adek, gdy s\304\205 dost\304\231pne\0"\
   "Pojedyncza strona\0"\
   "Przepraszamy - to nie powinno si\304\231 zdarzy\304\207!\n\nProsz\304\231 nacisn\304\205\304\207 przycisk 'Anuluj', je\305\274eli chcesz pom\303\263c nam w usuni\304\231ciu tego problemu.\0"\
@@ -12684,7 +12684,7 @@ const char * gTranslations_pl =
   "Trwa usuwanie...\0"\
   "Nieznany plik \305\272r\303\263d\305\202owy (%s)\0"\
   "W\305\202\304\205cz wy\305\233wietlanie &kart\0"\
-  "U\305\274ywaj SumatraPDF jako domy\305\233lnej przegl\304\205darki PDF\0"\
+  "U\305\274ywaj SumatraPDF jako &domy\305\233lnej przegl\304\205darki PDF\0"\
   "Widok\0"\
   "Odwied\305\272 &stron\304\231 internetow\304\205\0"\
   "Uwaga\0"\

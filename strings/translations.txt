@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e570ddbfcc1068529a2ebb34614fbecc10959639
+7e451e07819907604927acec8264800e5ca6105d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -188,7 +188,7 @@ nl:&Geavanceerde Opties...
 nn:&Avanserte innstillingar
 no:&Avanserte innstillinger
 pa:&ਉੱਨਤ ਵਿਕਲਪ
-pl:Opcje zaawansowane...
+pl:Opcje &zaawansowane...
 pt:Opções &avançadas...
 ro:Opțiuni &avansate...
 ru:&Расширенные настройки...
@@ -2676,7 +2676,7 @@ ne:ब&चत गर्नुहोस्...
 nl:Op&slaan als...
 nn:&Lagre som...
 no:&Lagre som...
-pl:Zapisz jako...
+pl:Zapisz &jako...
 pt:&Gravar como...
 ro:&Salvează ca...
 ru:Сохранить &как...
@@ -3795,6 +3795,7 @@ hr:Dodaj stranicu %s u favorite\tCtrl+B
 ja:ページ %s をお気に入りに追加\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
+pl:Dodaj stronę %s do ulubionych\tCtrl+B
 pt:Adicionar página %s aos favoritos\tCtrl+B
 ru:Добавить страницу %s в избранные\tCtrl+B
 tw:將第 %s 頁加入到最愛\tCtrl+B
@@ -5427,6 +5428,7 @@ it:Comprimi tutto
 ja:すべて折り畳む
 lv:Sakļaut visu
 nl:Alle Samenvouwen
+pl:Zwiń wszystko
 pt:Recolher tudo
 ru:Свернуть все
 tw:全部折叠(&C)
@@ -5882,7 +5884,7 @@ nl:Afbeelding kopiëren
 nn:Kopier &bilete
 no:Kopier &Bilde
 pa:&ਤਸਵੀਰ ਕਾਪੀ ਕਰੋ
-pl:Kopiuj obraz
+pl:Kopiuj o&braz
 pt:Copiar &imagem
 ro:Copiere &Imagine
 ru:Скопировать &изображение
@@ -8066,6 +8068,7 @@ it:Espandi tutto
 ja:すべて展開
 lv:Izvērst visu
 nl:Alle Uitvouwen
+pl:Rozwiń wszystko
 pt:Expandir tudo
 ru:Развернуть все
 tw:全部展開
@@ -8243,7 +8246,7 @@ nl:Volledig scherm\tCtrl+Shift+L
 nn:Full skjerm\tCtrl+Shift+L
 no:Fullskjerm\tCtrl+Shift+L
 pa:ਪੂਰੀ ਸਕਰੀਨ\tCtrl+Shift+L
-pl:Pełny ekran\tCtrl+Shift+L
+pl:Pełny &ekran\tF11
 pt:Ecrã co&mpleto\tCtrl+Shift+L
 ro:Tot ecranul\tCtrl+Shift+L
 ru:Полный &экран\tF11
@@ -10441,7 +10444,7 @@ ne:&विकल्पहरु लुकाउनुहोस्
 nl:Verberg &Opties
 nn:Skjul &innstillingar
 no:Skjule &Tillegg
-pl:Ukryj &Opcje
+pl:Ukryj &opcje
 pt:&Ocultar opções
 ro:Ascundere &Optiuni
 ru:Скрыть параметры
@@ -11376,7 +11379,7 @@ ne:Manga मोड
 nl:Man&gamodus
 nn:Man&ga-vising
 no:Man&ga-modus
-pl:Tryb mangi
+pl:Tryb &mangi
 pt:Modo man&ga
 ro:Mod man&ga
 ru:Режим Man&ga
@@ -11605,6 +11608,7 @@ hr:&Novi prozor\tCtrl+N
 ja:新しいウィンドウ (&W)\tCtrl+N
 lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
+pl:Nowe &okno\tCtrl+N
 pt:Nova &janela\tCtrl+N
 ru:Новое о&кно\tCtrl+N
 tr:Yeni &pencere\tCtrl+N
@@ -11729,7 +11733,7 @@ nl:Volgende pagina
 nn:Neste side
 no:Neste side
 pa:ਅਗਲੇ ਪੰਨੇ ਤੇ
-pl:&Następna strona
+pl:Następna strona
 pt:Página seguinte
 ro:Pagina următoare
 ru:Следующая страница
@@ -12252,7 +12256,7 @@ ne:PDF-XChange मा &खोल्नुहोस्
 nl:Openen met PDF-XChange
 nn:Opne &i PDF-XChange
 no:Åpne i PDF-XChange
-pl:Otwórz w PDF-XChange
+pl:Otwórz &w PDF-XChange
 pt:Abrir no PDF-&XChange
 ro:Deschide în PDF-XChange
 ru:Открыть в PDF-XChange
@@ -12566,7 +12570,7 @@ ne:Microsoft HTML Help मा &खोल्नुहोस्
 nl:Openen met Microsoft HTML Help
 nn:Opne i &Microsoft HTML-hjelp
 no:Åpne i &Microsoft HTML Help
-pl:Otwórz w Microsoft HTML Help
+pl:Otwórz w &Microsoft HTML Help
 pt:Abrir no &Microsoft HTML Help
 ro:Deschide în Microsoft HTML Help
 ru:Открыть в Microsoft HTML Help
@@ -12629,7 +12633,7 @@ ne:Microsoft XPS-Viewer मा &खोल्नुहोस्
 nl:Openen met Microsoft XPS-Viewer
 nn:Opne i &Microsoft XPS-visar
 no:Åpne i &Microsoft XPS-visning
-pl:Otwórz w Microsoft XPS-Viewer
+pl:Otwórz w &Microsoft XPS-Viewer
 pt:Abrir no &Microsoft XPS-Viewer
 ro:Deschide în Microsoft XPS-Viewer
 ru:Открыть в Microsoft XPS-Viewer
@@ -12690,7 +12694,7 @@ ne:&गुणहरु
 nl:E&igenschappen
 nn:E&genskaper
 no:E&genskaper
-pl:Właściwości
+pl:&Właściwości
 pt:&Propriedades
 ro:P&roprietăți
 ru:Сво&йства...
@@ -13704,7 +13708,7 @@ ne:पोस्ट स्क्रिप्ट कागजातहरु
 nl:Postscript documenten
 nn:Etterskriv dokumentar
 no:Postscript-dokumenter
-pl:Dokumenty postscript
+pl:Dokumenty PostScript
 pt:Documentos Postscript
 ro:Documente Postscript
 ru:Документы Postscript
@@ -13764,7 +13768,7 @@ ne:प्रस्तुती&करण\tCtrl+L
 nl:Pr&esentatie\tCtrl+L
 nn:Pr&esentasjon\tF5
 no:Pr&esentasjon\tCtrl+L
-pl:&Prezentacja\tCtrl+L
+pl:&Prezentacja\tF5
 pt:Aprese&ntação\tCtrl+L
 ro:Pr&ezentare\tCtrl+L
 ru:Пр&езентация\tF5
@@ -14811,6 +14815,7 @@ hr:Spremi pribilješke
 ja:注釈を保存
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
+pl:Zapisz adnotacje
 pt:Guardar anotações
 ru:Сохранить аннотации
 tw:儲存注釋
@@ -15052,7 +15057,7 @@ ne:सबै &चयन गर्नुहोस्
 nl:&Alles selecteren
 nn:Vel &alle
 no:Merk &alt
-pl:Zaznacz wszystko
+pl:Zaznacz &wszystko
 pt:&Selecionar tudo
 ro:Selecte&ază Tot
 ru:В&ыделить все
@@ -15456,6 +15461,7 @@ hr:Prikaži &oznake\tF12
 ja:ブックマークを表示(&B)\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
+pl:Pokaż za&kładki\tF12
 pt:Mostrar &marcadores\tF12
 ru:Показать за&кладки\tF12
 tw:顯示書籤(&B)\tF12
@@ -15471,6 +15477,7 @@ hr:Prikaži &favorite
 ja:お気に入りを表示(&F)
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
+pl:Pokaż &ulubione
 pt:Mostrar &favoritos
 ru:Показать «И&збранное»
 tw:顯示最愛(&F)
@@ -15619,6 +15626,7 @@ hr:Prikaži oznake\tF12
 ja:ブックマークを表示 (&M)\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
+pl:Pokaż za&kładki\tF12
 pt:Mostrar &marcadores\tF12
 ru:Показать зак&ладки\tF12
 tw:顯示書籤(&M)\tF12
@@ -15757,6 +15765,7 @@ hr:Prikaži u mapi
 ja:フォルダを表示(&F)
 lv:Rādīt &mapē
 nl:Toon in &map
+pl:Pokaż w &folderze
 pt:Mostrar na &pasta
 ru:Показать в п&апке
 tw:打開所在資料夾(&F)
@@ -17514,7 +17523,7 @@ ne:SumatraPDF पूर्वनिर्धारित PDF पाठकको 
 nl:Gebruik SumatraPDF als &standaard PDF lezer
 nn:Bruk SumatraPDF som standard PDF-lesar
 no:Bruk SumatraPDF som &standard PDF-leser
-pl:Używaj SumatraPDF jako domyślnej przeglądarki PDF
+pl:Używaj SumatraPDF jako &domyślnej przeglądarki PDF
 pt:Utilizar o SumatraPDF como leitor pa&drão de PDF
 ro:Folosiți SumatraPDF ca cititor implicit pentru fișiere P&DF
 ru:Использовать SumatraPDF для просмотра PDF
