@@ -615,6 +615,7 @@ void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
         dst->AddSibling(src);
     } else {
         dst->AddChild(src);
+        EnsureExpanded(src);
     }
     UpdateTreeModel();
 }
