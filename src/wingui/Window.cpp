@@ -762,8 +762,12 @@ i32 WindowBaseLayout::MinIntrinsicWidth(i32) {
 }
 
 void WindowBaseLayout::SetBounds(const Rect bounds) {
+    lastBounds = bounds;
+
     auto r = RectToRECT(bounds);
     ::MoveWindow(wb->hwnd, &r);
+    // TODO: optimize if doesn't change position
+    ::InvalidateRect(wb->hwnd, nullptr, TRUE);
 }
 
 int RunMessageLoop(HACCEL accelTable) {

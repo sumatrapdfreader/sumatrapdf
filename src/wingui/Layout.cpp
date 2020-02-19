@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/Dpi.h"
+#include "utils/WinUtil.h"
 
 #include "Layout.h"
 
@@ -286,6 +287,7 @@ Length Padding::MinIntrinsicWidth(Length height) {
 }
 
 void Padding::SetBounds(Rect bounds) {
+    lastBounds = bounds;
     bounds.Min.X += this->insets.Left;
     bounds.Min.Y += this->insets.Top;
     bounds.Max.X -= this->insets.Right;
@@ -546,6 +548,8 @@ Length VBox::MinIntrinsicHeight(Length width) {
 }
 
 void VBox::SetBounds(Rect bounds) {
+    lastBounds = bounds;
+
     auto n = childrenCount();
     if (n == 0) {
         return;
@@ -847,6 +851,7 @@ Length HBox::MinIntrinsicWidth(Length height) {
 }
 
 void HBox::SetBounds(Rect bounds) {
+    lastBounds = bounds;
     auto n = childrenCount();
     if (n == 0) {
         return;
@@ -1015,6 +1020,7 @@ Length Align::MinIntrinsicWidth(Length height) {
 }
 
 void Align::SetBounds(Rect bounds) {
+    lastBounds = bounds;
     Length bminx = bounds.Min.X;
     Length bmaxx = bounds.Max.X;
     Length cw = this->childSize.Width;
@@ -1067,6 +1073,7 @@ Length Expand::MinIntrinsicWidth(Length height) {
 }
 
 void Expand::SetBounds(Rect bounds) {
+    lastBounds = bounds;
     return child->SetBounds(bounds);
 }
 
@@ -1083,4 +1090,16 @@ bool IsLabel(ILayout* l) {
         return false;
     }
     return IsLayoutOfKind(l, kindLabel);
+}
+
+void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
+    Constraints c = ExpandInf();
+    c.Min = {minDx, minDy};
+    auto size = layout->Layout(c);
+    Point min{0, 0};
+    Point max{size.Width, size.Height};
+    Rect bounds{min, max};
+    layout->SetBounds(bounds);
+    ResizeHwndToClientArea(hwnd, size.Width, size.Height, false);
+    InvalidateRect(hwnd, nullptr, false);
 }

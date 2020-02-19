@@ -808,6 +808,13 @@ void TocEditorWindow::SizeHandler(SizeEvent* ev) {
     if (dx == 0 || dy == 0) {
         return;
     }
+    ev->didHandle = true;
+    InvalidateRect(hwnd, nullptr, false);
+    if (dx == mainLayout->lastBounds.Dx() && dy == mainLayout->lastBounds.Dy()) {
+        // avoid un-necessary layout
+        return;
+    }
+
     Size windowSize{dx, dy};
     auto c = Tight(windowSize);
     auto size = mainLayout->Layout(c);
@@ -815,8 +822,6 @@ void TocEditorWindow::SizeHandler(SizeEvent* ev) {
     Point max{size.Width, size.Height};
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
-    InvalidateRect(hwnd, nullptr, false);
-    ev->didHandle = true;
 }
 
 void TocEditorWindow::CloseHandler(WindowCloseEvent* ev) {
@@ -920,10 +925,11 @@ void StartTocEditor(TocEditorArgs* args) {
     win->mainWindow = w;
     win->hwnd = w->hwnd;
 
-    CreateMainLayout(gWindow);
-
     w->onClose = std::bind(&TocEditorWindow::CloseHandler, win, _1);
     w->onSize = std::bind(&TocEditorWindow::SizeHandler, win, _1);
+
+    CreateMainLayout(gWindow);
+    LayoutAndSizeToContent(win->mainLayout, 720, 800, w->hwnd);
 
     gWindow->UpdateTreeModel();
     // important to call this after hooking up onSize to ensure

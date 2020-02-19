@@ -84,6 +84,12 @@ void EditTitleWindow::SizeHandler(SizeEvent* ev) {
     if (dx == 0 || dy == 0) {
         return;
     }
+    ev->didHandle = true;
+    InvalidateRect(hwnd, nullptr, false);
+    if (dx == mainLayout->lastBounds.Dx() && dy == mainLayout->lastBounds.Dy()) {
+        // avoid un-necessary layout
+        return;
+    }
     Size windowSize{dx, dy};
     auto c = Tight(windowSize);
     auto size = mainLayout->Layout(c);
@@ -91,8 +97,6 @@ void EditTitleWindow::SizeHandler(SizeEvent* ev) {
     Point max{size.Width, size.Height};
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
-    InvalidateRect(hwnd, nullptr, false);
-    ev->didHandle = true;
 }
 
 void EditTitleWindow::ButtonOkHandler() {
@@ -153,7 +157,6 @@ static void createMainLayout(EditTitleWindow* win) {
         auto l = NewEditLayout(e);
         vbox->addChild(l);
     }
-
 
     int nPages = win->args->nPages;
     if (nPages > 0) {
@@ -256,6 +259,8 @@ static void createMainLayout(EditTitleWindow* win) {
 
     auto* padding = new Padding();
     padding->insets = DefaultInsets();
+    padding->insets.Left = DpiScale(parent, 8);
+    padding->insets.Right = DpiScale(parent, 8);
     padding->child = vbox;
 
     win->mainLayout = padding;
@@ -274,7 +279,7 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
 
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Edit title");
-    int dx = DpiScale(320);
+    int dx = DpiScale(340);
     int dy = DpiScale(258);
     w->initialSize = {dx, dy};
     PositionCloseTo(w, hwndOwner);
@@ -292,8 +297,7 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
 
     win->mainWindow = w;
     createMainLayout(win);
-
-
+    LayoutAndSizeToContent(win->mainLayout, 340, 0, w->hwnd);
     win->editTitle->SetFocus();
     w->SetIsVisible(true);
 

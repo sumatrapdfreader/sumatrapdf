@@ -89,6 +89,8 @@ struct ILayout {
     // allows easy way to hide / show elements
     // without rebuilding the whole layout
     bool isVisible = true;
+    // for easy debugging, remember last bounds
+    Rect lastBounds{};
 
     ILayout() = default;
     ILayout(Kind k);
@@ -287,3 +289,5 @@ bool IsLabeL(Kind);
 bool IsLabel(ILayout*);
 
 extern Kind kindLabel;
+
+void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
