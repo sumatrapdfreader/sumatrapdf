@@ -912,7 +912,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT message, WPARAM wParam, 
         return 0;
     }
 
-    bool horizontal = (LOWORD(wParam) & MK_ALT) || IsAltPressed();
+    bool horizontal = (LOWORD(wParam) & MK_SHIFT) || IsShiftPressed();
     if (horizontal) {
         gSuppressAltKey = true;
     }
@@ -932,9 +932,9 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT message, WPARAM wParam, 
         return 0;
     }
 
-    // added: shift while scrolling will scroll by half a page per tick
-    //        really usefull for browsing long files
-    if ((LOWORD(wParam) & MK_SHIFT) || IsShiftPressed()) {
+    // alt while scrolling will scroll by half a page per tick
+    // usefull for browsing long files
+    if ((LOWORD(wParam) & MK_ALT) || IsAltPressed()) {
         SendMessage(win->hwndCanvas, WM_VSCROLL, (delta > 0) ? SB_HPAGEUP : SB_HPAGEDOWN, 0);
         return 0;
     }
