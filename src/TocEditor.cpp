@@ -117,6 +117,7 @@ static void SetTocItemFromTocEditArgs(TocItem* ti, TocEditArgs* args) {
     std::string_view newTitle = args->title.as_view();
     str::Free(ti->title);
     ti->title = strconv::Utf8ToWstr(newTitle);
+    ti->pageNo = args->page;
 
     int fontFlags = 0;
     if (args->bold) {
@@ -142,15 +143,30 @@ static TocItem* TocItemFromTocEditArgs(TocEditArgs* args) {
     return ti;
 }
 
+// find toc item that is a parent of a given ti that represents a pdf file
+static TocItem* FindFileParentItem(TocItem* ti) {
+    while (ti) {
+        if (ti->engineFilePath) {
+            return ti;
+        }
+        ti = ti->parent;
+    }
+    return nullptr;
+}
+
 static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
     TocEditArgs* editArgs = new TocEditArgs();
     editArgs->bold = bit::IsSet(ti->fontFlags, fontBitBold);
     editArgs->italic = bit::IsSet(ti->fontFlags, fontBitItalic);
     editArgs->title = strconv::WstrToUtf8(ti->title);
     editArgs->color = ti->color;
+    TocItem* fileParent = FindFileParentItem(ti);
+    if (fileParent) {
+        editArgs->nPages = fileParent->nPages;
+        editArgs->page = ti->pageNo;
+    }
 
     StartTocEditTitle(hwnd, editArgs, [=](TocEditArgs* args) {
-        delete editArgs;
         if (args == nullptr) {
             // was cancelled
             return;
@@ -502,8 +518,11 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
         case IDM_ADD_SIBLING:
         case IDM_ADD_CHILD: {
             TocEditArgs* editArgs = new TocEditArgs();
+            TocItem* fileParent = FindFileParentItem(selectedTocItem);
+            if (fileParent) {
+                editArgs->nPages = fileParent->nPages;
+            }
             StartTocEditTitle(hwnd, editArgs, [=](TocEditArgs* args) {
-                delete editArgs;
                 TocItem* ti = TocItemFromTocEditArgs(args);
                 if (ti == nullptr) {
                     // was cancelled or invalid
@@ -538,17 +557,6 @@ static void SetInfoLabelText(StaticCtrl* l, bool forDrag) {
     } else {
         l->SetText("Tip: use context menu for more actions");
     }
-}
-
-// find toc item that is a parent of a given ti that represents a pdf file
-static TocItem* FindFileParentItem(TocItem* ti) {
-    while (ti) {
-        if (ti->engineFilePath) {
-            return ti;
-        }
-        ti = ti->parent;
-    }
-    return nullptr;
 }
 
 // return true if dst is a child of src

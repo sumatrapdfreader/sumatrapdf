@@ -28,6 +28,9 @@
 using std::placeholders::_1;
 
 struct EditTitleWindow {
+    // we own this
+    TocEditArgs* args = nullptr;
+
     HWND hwndOwner = nullptr;
     TreeCtrl* treeCtrl = nullptr;
     TocItem* tocItem = nullptr;
@@ -38,8 +41,8 @@ struct EditTitleWindow {
     CheckboxCtrl* checkboxItalic = nullptr;
     CheckboxCtrl* checkboxBold = nullptr;
     EditCtrl* editColor = nullptr;
+    EditCtrl* editPage = nullptr;
 
-    TocEditArgs* args = nullptr;
     TocEditFinishedHandler onFinished = nullptr;
 
     EditTitleWindow() = default;
@@ -55,6 +58,7 @@ static EditTitleWindow* gEditTitleWindow = nullptr;
 
 EditTitleWindow::~EditTitleWindow() {
     EnableWindow(hwndOwner, TRUE);
+    delete args;
     delete mainWindow;
     delete mainLayout;
 }
@@ -101,9 +105,21 @@ void EditTitleWindow::ButtonOkHandler() {
     // if invalid color value, preserve the orignal
     res->color = args->color;
     ParseColor(&res->color, colorStr);
-    gEditTitleWindow->onFinished(res);
-    delete res;
 
+    int nPage = 0;
+    int nPages = args->nPages;
+    if (nPages > 0) {
+        std::string_view pageStr = editPage->GetText();
+        str::Parse(pageStr.data(), "%d", &nPage);
+        if (nPage < 1 || nPage > nPages) {
+            nPage = 0;
+        }
+    }
+    res->page = nPage;
+
+    gEditTitleWindow->onFinished(res);
+
+    delete res;
     delete gEditTitleWindow;
     gEditTitleWindow = nullptr;
 }
@@ -136,6 +152,37 @@ static void createMainLayout(EditTitleWindow* win) {
         e->Create();
         auto l = NewEditLayout(e);
         vbox->addChild(l);
+    }
+
+
+    int nPages = win->args->nPages;
+    if (nPages > 0) {
+        {
+            auto s = new StaticCtrl(parent);
+            if (nPages == 0) {
+                s->SetText("Page");
+            } else {
+                AutoFreeStr pageStr = str::Format("Page (1-%d)", nPages);
+                s->SetText(pageStr.as_view());
+            }
+            s->Create();
+            auto l = NewLabelLayout(s);
+            vbox->addChild(l);
+        }
+        {
+            auto e = new EditCtrl(parent);
+            win->editPage = e;
+            e->SetCueText("Page");
+            e->Create();
+
+            int nPage = win->args->page;
+            if (nPage != 0) {
+                AutoFreeStr pageStr = str::Format("%d", nPage);
+                e->SetText(pageStr.as_view());
+            }
+            auto l = NewEditLayout(e);
+            vbox->addChild(l);
+        }
     }
 
     // TODO: make this in a hbox, maybe
@@ -228,7 +275,7 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Edit title");
     int dx = DpiScale(320);
-    int dy = DpiScale(228);
+    int dy = DpiScale(258);
     w->initialSize = {dx, dy};
     PositionCloseTo(w, hwndOwner);
     // SIZE winSize = {dx, dy};
@@ -245,6 +292,8 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
 
     win->mainWindow = w;
     createMainLayout(win);
+
+
     win->editTitle->SetFocus();
     w->SetIsVisible(true);
 
