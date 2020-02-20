@@ -59,6 +59,7 @@ func main() {
 		flgWebsiteRun              bool
 		flgWebsiteDeployProd       bool
 		flgWebsiteDeployDev        bool
+		flgWebsiteImportNotion     bool
 	)
 
 	{
@@ -85,6 +86,7 @@ func main() {
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
 		flag.BoolVar(&flgWebsiteDeployProd, "website-deploy-prod", false, "deploy website")
 		flag.BoolVar(&flgWebsiteDeployDev, "website-deploy-dev", false, "deploy a preview of website")
+		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
 		flag.Parse()
 	}
 
@@ -98,6 +100,11 @@ func main() {
 
 	if flgWebsiteRun {
 		websiteRunLocally()
+		return
+	}
+
+	if flgWebsiteImportNotion {
+		websiteImportNotion()
 		return
 	}
 
