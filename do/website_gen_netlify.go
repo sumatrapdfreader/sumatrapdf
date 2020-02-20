@@ -110,5 +110,6 @@ func netlifyWriteRedirects() {
 func netlifyBuild() {
 	// writes to "www" dir
 	netlifyWriteFile("/ping", []byte("pong"))
-	netlifyWriteRedirects()
+	// TODO: this seems to over-write redirects
+	//netlifyWriteRedirects()
 }
