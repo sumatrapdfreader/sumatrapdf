@@ -56,6 +56,9 @@ func main() {
 		flgCheckAccessKeys         bool
 		flgBuildNo                 bool
 		flgTriggerPreRel           bool
+		flgWebsiteRun              bool
+		flgWebsiteDeployProd       bool
+		flgWebsiteDeployDev        bool
 	)
 
 	{
@@ -79,6 +82,9 @@ func main() {
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
 		flag.BoolVar(&flgTriggerPreRel, "trigger-pre-rel", false, "trigger pre-release build")
+		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
+		flag.BoolVar(&flgWebsiteDeployProd, "website-deploy-prod", false, "deploy website")
+		flag.BoolVar(&flgWebsiteDeployDev, "website-deploy-dev", false, "deploy a preview of website")
 		flag.Parse()
 	}
 
@@ -88,6 +94,21 @@ func main() {
 			panicIf(!hasSpacesCreds())
 			panicIf(!hasS3Creds())
 		}
+	}
+
+	if flgWebsiteRun {
+		websiteRunLocally()
+		return
+	}
+
+	if flgWebsiteDeployDev {
+		websiteDeployDev()
+		return
+	}
+
+	if flgWebsiteDeployProd {
+		websiteDeployProd()
+		return
 	}
 
 	if flgWc {
