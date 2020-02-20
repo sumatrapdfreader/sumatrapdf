@@ -3,6 +3,7 @@ License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -331,4 +332,13 @@ char* getWinMessageName(UINT msg) {
         }
     }
     return "msg unknown";
+}
+
+void dbgLogMsg(char* prefix, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    UNUSED(lp);
+    char* msgName = getWinMessageName(msg);
+    if (!prefix) {
+        prefix = "";
+    }
+    dbglogf("%shwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", prefix, hwnd, msg, msgName, wp);
 }

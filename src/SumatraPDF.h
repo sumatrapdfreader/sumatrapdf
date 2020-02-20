@@ -14,8 +14,8 @@
 #endif
 
 // scrolls half a page down/up (needed for Shift+Up/Down)
-#define SB_HPAGEUP (WM_USER + 1)
-#define SB_HPAGEDOWN (WM_USER + 2)
+#define SB_HPAGEUP (WM_USER + 102)
+#define SB_HPAGEDOWN (WM_USER + 103)
 
 #define HIDE_CURSOR_TIMER_ID 3
 #define HIDE_CURSOR_DELAY_IN_MS 3000

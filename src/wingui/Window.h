@@ -128,12 +128,13 @@ struct WindowBase {
     DWORD dwStyle = 0;
     DWORD dwExStyle = 0;
     HFONT hfont = nullptr; // TODO: this should be abstract Font description
-    int menuId = 0;
 
     // those tweak WNDCLASSEX for RegisterClass() class
     HICON hIcon = nullptr;
     HICON hIconSm = nullptr;
     LPCWSTR lpszMenuName = nullptr;
+
+    int ctrlID = 0;
 
     // called at start of windows proc to allow intercepting messages
     MsgFilter msgFilter;
@@ -216,6 +217,8 @@ extern Kind kindWindow;
 // a top-level window. Must set winClass before
 // calling Create()
 struct Window : public WindowBase {
+    bool isDialog = false;
+
     Window();
     ~Window() override;
 
@@ -242,3 +245,6 @@ void HwndSetText(HWND hwnd, std::string_view s);
 UINT_PTR NextSubclassId();
 int RunMessageLoop(HACCEL accelTable);
 void PositionCloseTo(WindowBase* w, HWND hwnd);
+int GetNextCtrlID();
+HWND GetCurrentModelessDialog();
+void SetCurrentModelessDialog(HWND);

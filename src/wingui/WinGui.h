@@ -3,3 +3,4 @@
 
 SIZE MeasureTextInHwnd(HWND hwnd, const WCHAR* txt, HFONT font);
 char* getWinMessageName(UINT msg);
+void dbgLogMsg(char* prefix, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);

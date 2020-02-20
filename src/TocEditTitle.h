@@ -7,7 +7,7 @@ struct TocEditArgs {
     bool italic = false;
     COLORREF color = ColorUnset;
     int nPages = 0; // max pages in the doc
-    int page = 0; // valid: 1-nPages, 0 means not set
+    int page = 0;   // valid: 1-nPages, 0 means not set
 };
 
 // if EditTitleArgs is null, editing was cancelled

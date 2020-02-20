@@ -42,6 +42,7 @@ struct EditTitleWindow {
     CheckboxCtrl* checkboxBold = nullptr;
     EditCtrl* editColor = nullptr;
     EditCtrl* editPage = nullptr;
+    ButtonCtrl* buttonCancel = nullptr;
 
     TocEditFinishedHandler onFinished = nullptr;
 
@@ -142,7 +143,7 @@ static void createMainLayout(EditTitleWindow* win) {
 
     {
         auto s = new StaticCtrl(parent);
-        s->SetText("Title:");
+        s->SetText("&Title:");
         s->Create();
         auto l = NewLabelLayout(s);
         vbox->addChild(l);
@@ -150,6 +151,7 @@ static void createMainLayout(EditTitleWindow* win) {
 
     {
         auto e = new EditCtrl(parent);
+        e->dwStyle |= WS_GROUP;
         win->editTitle = e;
         e->SetCueText("Title");
         e->SetText(win->args->title.as_view());
@@ -163,9 +165,9 @@ static void createMainLayout(EditTitleWindow* win) {
         {
             auto s = new StaticCtrl(parent);
             if (nPages == 0) {
-                s->SetText("Page");
+                s->SetText("&Page");
             } else {
-                AutoFreeStr pageStr = str::Format("Page (1-%d)", nPages);
+                AutoFreeStr pageStr = str::Format("&Page (1-%d)", nPages);
                 s->SetText(pageStr.as_view());
             }
             s->Create();
@@ -192,7 +194,7 @@ static void createMainLayout(EditTitleWindow* win) {
     {
         auto c = new CheckboxCtrl(parent);
         win->checkboxBold = c;
-        c->SetText("bold");
+        c->SetText("&Bold");
         c->Create();
         c->SetIsChecked(win->args->bold);
         auto l = NewCheckboxLayout(c);
@@ -202,7 +204,7 @@ static void createMainLayout(EditTitleWindow* win) {
     {
         auto c = new CheckboxCtrl(parent);
         win->checkboxItalic = c;
-        c->SetText("italic");
+        c->SetText("&Italic");
         c->Create();
         c->SetIsChecked(win->args->italic);
         auto l = NewCheckboxLayout(c);
@@ -211,7 +213,7 @@ static void createMainLayout(EditTitleWindow* win) {
 
     {
         auto s = new StaticCtrl(parent);
-        s->SetText("Color:");
+        s->SetText("&Color:");
         s->Create();
         auto l = NewLabelLayout(s);
         vbox->addChild(l);
@@ -239,16 +241,18 @@ static void createMainLayout(EditTitleWindow* win) {
 
         {
             auto b = new ButtonCtrl(parent);
-            b->SetText("Cancel");
+            b->SetText("Cance&l");
             b->onClicked = std::bind(&EditTitleWindow::ButtonCancelHandler, win);
             b->Create();
+            win->buttonCancel = b;
             auto l = NewButtonLayout(b);
             buttons->addChild(l);
         }
 
         {
             auto b = new ButtonCtrl(parent);
-            b->SetText("Ok");
+            b->isDefault = true;
+            b->SetText("&Ok");
             b->onClicked = std::bind(&EditTitleWindow::ButtonOkHandler, win);
             b->Create();
             auto l = NewButtonLayout(b);
@@ -276,7 +280,7 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
     auto w = new Window();
     // remove minimize / maximize buttons from default style
     w->dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
-
+    w->isDialog = true;
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Edit title");
     int dx = DpiScale(340);
@@ -288,7 +292,6 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
     // w->initialSize = {winSize.cx, winSize.cy};
     bool ok = w->Create();
     CrashIf(!ok);
-
     // win->hwnd = w->hwnd;
 
     w->onClose = std::bind(&EditTitleWindow::CloseHandler, win, _1);
@@ -298,8 +301,9 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
     win->mainWindow = w;
     createMainLayout(win);
     LayoutAndSizeToContent(win->mainLayout, 340, 0, w->hwnd);
-    win->editTitle->SetFocus();
     w->SetIsVisible(true);
+
+    win->editTitle->SetFocus();
 
     return win;
 }

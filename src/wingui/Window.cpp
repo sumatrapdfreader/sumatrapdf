@@ -17,11 +17,44 @@
 
 #define DEFAULT_WIN_CLASS L"WC_WIN32_WINDOW"
 
-UINT_PTR g_subclassId = 0;
+static UINT_PTR g_subclassId = 0;
 
 UINT_PTR NextSubclassId() {
     g_subclassId++;
     return g_subclassId;
+}
+
+// initial value which should be save
+static int g_currCtrlID = 100;
+
+int GetNextCtrlID() {
+    ++g_currCtrlID;
+    return g_currCtrlID;
+}
+
+// to ensure we never overflow control ids
+// we reset the counter in Window::Window(),
+// because ids only need to be unique within window
+// this works as long as we don't interleave creation
+// of windows and controls in those windows
+void ResetCtrlID() {
+    g_currCtrlID = 100;
+}
+
+// http://www.guyswithtowels.com/blog/10-things-i-hate-about-win32.html#ModelessDialogs
+// to implement a standard dialog navigation we need to call
+// IsDialogMessage(hwnd) in message loop.
+// hwnd has to be current top-level window that is modeless dialog
+// we need to manually maintain this window
+HWND g_currentModelessDialog = nullptr;
+
+HWND GetCurrentModelessDialog() {
+    return g_currentModelessDialog;
+}
+
+// set to nullptr to disable
+void SetCurrentModelessDialog(HWND hwnd) {
+    g_currentModelessDialog = hwnd;
 }
 
 CopyWndEvent::CopyWndEvent(WndEvent* dst, WndEvent* src) {
@@ -272,6 +305,18 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    if (w->isDialog) {
+        if (WM_ACTIVATE == msg) {
+            if (wp == 0) {
+                // becoming inactive
+                SetCurrentModelessDialog(nullptr);
+            } else {
+                // becoming active
+                SetCurrentModelessDialog(w->hwnd);
+            }
+        }
+    }
+
     if (WM_PAINT == msg) {
         PAINTSTRUCT ps;
         BeginPaint(hwnd, &ps);
@@ -462,6 +507,7 @@ void WindowBase::Unsubclass() {
 WindowBase::WindowBase(HWND p) {
     kind = kindWindowBase;
     parent = p;
+    ctrlID = GetNextCtrlID();
 }
 
 // generally not needed for child controls as they are destroyed when
@@ -514,7 +560,7 @@ bool WindowBase::Create() {
     if (initialSize.Height > 0) {
         dy = initialSize.Height;
     }
-    HMENU m = (HMENU)(UINT_PTR)menuId;
+    HMENU m = (HMENU)(UINT_PTR)ctrlID;
     hwnd = CreateWindowExW(dwExStyle, winClass, L"", dwStyle, x, y, dx, dy, parent, m, h, nullptr);
 
     if (hwnd == nullptr) {
@@ -675,6 +721,7 @@ static void RegisterWindowClass(Window* w) {
 }
 
 Window::Window() {
+    ResetCtrlID();
     kind = kindWindow;
     dwExStyle = 0;
     dwStyle = WS_OVERLAPPEDWINDOW;
@@ -773,10 +820,14 @@ void WindowBaseLayout::SetBounds(const Rect bounds) {
 int RunMessageLoop(HACCEL accelTable) {
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+        if (TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
+            continue;
         }
+        if (IsDialogMessage(msg.hwnd, &msg)) {
+            continue;
+        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
     return (int)msg.wParam;
 }

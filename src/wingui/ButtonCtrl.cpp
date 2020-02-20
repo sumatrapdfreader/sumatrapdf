@@ -22,7 +22,7 @@ bool IsButton(ILayout* l) {
 }
 
 ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
-    dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON;
+    dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     winClass = WC_BUTTONW;
     kind = kindButton;
 }
@@ -31,6 +31,11 @@ ButtonCtrl::~ButtonCtrl() {
 }
 
 bool ButtonCtrl::Create() {
+    if (isDefault) {
+        dwStyle |= BS_DEFPUSHBUTTON;
+    } else {
+        dwStyle |= BS_PUSHBUTTON;
+    }
     bool ok = WindowBase::Create();
     if (!ok) {
         return false;

@@ -71,7 +71,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_ALPHATYPE*
 
 #define COL_WINDOW_BG RGB(0x99, 0x99, 0x99)
 #define PREVIEW_MARGIN 2
-#define UWM_PAINT_AGAIN (WM_USER + 1)
+#define UWM_PAINT_AGAIN (WM_USER + 101)
 
 class PageRenderer {
     EngineBase* engine;

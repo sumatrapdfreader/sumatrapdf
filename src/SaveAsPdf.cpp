@@ -18,7 +18,6 @@
 
 #include "SaveAsPdf.h"
 
-
 void SaveVirutalAsPdf(TocItem* root, char* filePath) {
     // TODO: implement me
 }

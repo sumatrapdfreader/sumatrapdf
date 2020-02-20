@@ -10,7 +10,7 @@ namespace uitask {
 static HWND gTaskDispatchHwnd = nullptr;
 
 #define UITASK_CLASS_NAME L"UITask_Wnd_Class"
-#define WM_EXECUTE_TASK (WM_USER + 1)
+#define WM_EXECUTE_TASK (WM_USER + 104)
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (WM_EXECUTE_TASK == msg) {

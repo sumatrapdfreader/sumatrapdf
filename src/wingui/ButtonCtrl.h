@@ -5,6 +5,7 @@ typedef std::function<void()> ClickedHandler;
 
 struct ButtonCtrl : public WindowBase {
     ClickedHandler onClicked = nullptr;
+    bool isDefault = false;
 
     ButtonCtrl(HWND parent);
     ~ButtonCtrl() override;

@@ -722,13 +722,13 @@ static void CreateButtonsLayout(TocEditorWindow* w) {
     buttons->alignMain = MainAxisAlign::Homogeneous;
     buttons->alignCross = CrossAxisAlign::CrossStart;
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Add PDF", std::bind(&TocEditorWindow::AddPdf, w));
+        auto [l, b] = CreateButtonLayout(hwnd, "&Add PDF", std::bind(&TocEditorWindow::AddPdf, w));
         buttons->addChild(l);
         w->btnAddPdf = b;
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Remove Item", std::bind(&TocEditorWindow::RemoveItem, w));
+        auto [l, b] = CreateButtonLayout(hwnd, "&Remove Item", std::bind(&TocEditorWindow::RemoveItem, w));
         buttons->addChild(l);
         w->btnRemoveTocItem = b;
     }
@@ -746,7 +746,7 @@ static void CreateButtonsLayout(TocEditorWindow* w) {
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Exit", std::bind(&Window::Close, w->mainWindow));
+        auto [l, b] = CreateButtonLayout(hwnd, "E&xit", std::bind(&Window::Close, w->mainWindow));
         buttons->addChild(l);
         w->btnExit = b;
     }
@@ -914,6 +914,7 @@ void StartTocEditor(TocEditorArgs* args) {
     gWindow = win;
     win->tocArgs = args;
     auto w = new Window();
+    w->isDialog = true;
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Table of content editor");
     int dx = DpiScale(hwndOwner, 640);

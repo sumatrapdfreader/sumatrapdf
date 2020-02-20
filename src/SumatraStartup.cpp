@@ -483,12 +483,20 @@ static int RunMessageLoop() {
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
         // dispatch the accelerator to the correct window
+        HWND accHwnd = msg.hwnd;
         WindowInfo* win = FindWindowInfoByHwnd(msg.hwnd);
-        HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
+        if (win) {
+            accHwnd = win->hwndFrame;
+        }
         if (TranslateAccelerator(accHwnd, accTable, &msg)) {
             continue;
         }
 
+        HWND hwndDialog = GetCurrentModelessDialog();
+        if (hwndDialog && IsDialogMessage(hwndDialog, &msg)) {
+            // dbgLogMsg("dialog: ", msg.hwnd, msg.message, msg.wParam, msg.lParam);
+            continue;
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

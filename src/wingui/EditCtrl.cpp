@@ -135,7 +135,8 @@ void EditCtrl::SetSelection(int start, int end) {
 
 EditCtrl::EditCtrl(HWND p) : WindowBase(p) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
-    dwStyle = WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL;
+    dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL;
+    dwStyle |= WS_BORDER;
     winClass = WC_EDIT;
     kind = kindEdit;
 }
