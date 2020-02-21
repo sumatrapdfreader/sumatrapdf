@@ -139,35 +139,15 @@ function dlHtml64(s1, s2, s3) {
 // used by downloadafter*.html pages
 function dlAfterHtml(s1, s2, s3, s4) {
   return (
-    '<a href="' +
-    gSumExeUrl +
-    '">' +
-    s1 +
-    "</a>" +
-    s2 +
-    '<a href="' +
-    gSumZipUrl +
-    '">' +
-    s3 +
-    "</a>" +
-    s4
+    '<a href="' + gSumExeUrl + '">' + s1 + "</a>" + s2 +
+    '<a href="' + gSumZipUrl + '">' + s3 + "</a>" + s4
   );
 }
 
 function dlAfterHtml64(s1, s2, s3, s4) {
   return (
-    '<a href="' +
-    gSumExeUrl64 +
-    '">' +
-    s1 +
-    "</a>" +
-    s2 +
-    '<a href="' +
-    gSumZipUrl64 +
-    '">' +
-    s3 +
-    "</a>" +
-    s4
+    '<a href="' + gSumExeUrl64 + '">' + s1 + "</a>" + s2 +
+    '<a href="' + gSumZipUrl64 + '">' + s3 + "</a>" + s4
   );
 }
 
@@ -189,7 +169,6 @@ function getBaseUrl() {
 	<div id="ddcolortabs">
 		<ul>
 			<li id="current"><a href="free-pdf-reader.html" title="Home"><span>Home</span></a></li>
-			<li><a href="news.html" title="News"><span>News</span></a></li>
 			<li><a href="manual.html" title="Manual"><span>Manual</span></a></li>
 			<li><a href="docs.html" title="Documentation"><span>Documentation</span></a></li>
 			<li><a href="download-free-pdf-viewer.html" title="Download"><span>Download</span></a></li>
@@ -203,7 +182,6 @@ var baseUrls = [
   ["download-free-pdf-viewer", "Download"],
   ["manual", "Manual"],
   ["docs", "Documentation"],
-  ["news", "Version History"],
   ["forum", "Discussion Forum"]
 ];
 
