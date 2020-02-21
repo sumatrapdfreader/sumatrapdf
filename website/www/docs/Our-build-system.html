@@ -70,28 +70,52 @@
             <h2 id="10f0c6b7-798e-4985-9a29-262bd48f3b17" class="">
               Running
             </h2>
-            <div id="15385ea5-b0fa-4e04-94a4-a3219c3d4512" class="">
-              You only have to worry about premake if you add new source files, since that requires re-generating Visual Studio solution. To make changes, modify 
+            <div id="9bc07424-9a1e-4413-aaca-68398bc11a20" class="">
+              Premake re-generates solution files from 
               <code>
-                premake5.lua
+                premake5.*.lua
               </code>
-              and/or 
-              <code>
-                premake5.files.lua
-              </code>
-              .
+              files.
             </div>
-            <div id="9b9c204e-1df4-4708-81eb-53118742e5d3" class="">
-              Download premake 5 from http://premake.github.io/download.html#v5. I put it in bin directory. Run 
-              <code>
-                bin\premake5 vs2017
-              </code>
-              and 
-              <code>
-                bin\premake5 vs2015
-              </code>
-              to re-generate Visual Studio project files.
+            <div id="5e991147-a784-472f-a76f-ebfd5a526558" class="">
+              You only need to do that if you add or remove source files.
             </div>
+            <div id="d8f4aeb6-25bc-4c95-88b0-0ce59a74f7d7" class="">
+              To re-generate:
+            </div>
+            <ul id="4af3ad27-efcd-46fc-9e32-b265bedeff02" class="bulleted-list">
+              <li>
+                install 
+                <a href="https://golang.org/">
+                  Go
+                </a>
+              </li>
+              <li>
+                make changes to 
+                <code>
+                  premake5.*.lua
+                </code>
+                files, most likely 
+                <code>
+                  premake5.files.lua
+                </code>
+              </li>
+              <li>
+                run 
+                <code>
+                  doit.bat -premake
+                </code>
+                which runs a Go program in 
+                <code>
+                  do
+                </code>
+                directory with 
+                <code>
+                  -premake
+                </code>
+                flag
+              </li>
+            </ul>
             <h2 id="1ef75d10-fcc5-4ff7-89c2-c1391a1acd71" class="">
               Customizing build
             </h2>
@@ -111,11 +135,81 @@
               <code>
                 #define
               </code>
-              customizations.
+              customization.
             </div>
+            <h2 id="f2d2481f-d563-4080-89cd-4a34a1185013" class="">
+              Build variants
+            </h2>
+            <div id="aadb6b33-fb98-46bf-bd01-85d14410286c" class="">
+              We have 
+              <code>
+                Debug
+              </code>
+              , 
+              <code>
+                Release
+              </code>
+              and 
+              <code>
+                ReleaseAnalyze
+              </code>
+              configurations. 
+              <code>
+                ReleaseAnalyze
+              </code>
+              runs code analysis.
+            </div>
+            <div id="c31d93d1-7a22-40b2-b401-76ee7825d95e" class="">
+              We have platforms:
+            </div>
+            <ul id="30b4b33d-3462-47d5-94bb-3c8fa1c5db6b" class="bulleted-list">
+              <li>
+                <code>
+                  Win32
+                </code>
+                : 32-bit build
+              </li>
+              <li>
+                <code>
+                  x64
+                </code>
+                : 64-bit build
+              </li>
+              <li>
+                <code>
+                  x32_xp
+                </code>
+                : 32-bit build for Windows XP. It requires a different compiler toolchain
+              </li>
+              <li>
+                <code>
+                  x32_asan
+                </code>
+                : 32-build with additional runtime 
+                <a href="https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/">
+                  Address Sanitizers
+                </a>
+                checks. Only available in 32-bit build because of compiler limitations
+              </li>
+            </ul>
             <h2 id="8815bf40-2c44-4b07-bf38-0e3d2ef0d0ab" class="">
               How official builds are made
             </h2>
+            <div id="5de75b70-69ed-4d3e-9650-99c2c88d5ee6" class="">
+              I use a Go program in 
+              <code>
+                do
+              </code>
+              directory, executed with 
+              <code>
+                doiit.bat -build-pre-rel
+              </code>
+              or 
+              <code>
+                doit.bat -build-rel
+              </code>
+              .
+            </div>
             <div id="a33eb2e0-ea6b-4679-8761-647b46b543c2" class="">
               I use 
               <a href="https://golang.org/">
@@ -130,6 +224,12 @@
             <div id="b9ca4d5f-8562-4c37-870b-631face260a3" class="">
             </div>
           </div>
+          <hr>
+          <center>
+            <a href="https://notion.so/3114db56b1a54b9bb026da6b92d36a80" class="suggest-change">
+              suggest change to this page
+            </a>
+          </center>
         </div>
       </div>
     </div>

@@ -3,6 +3,10 @@
 	padding-top: 0px;
 }
 
+.suggest-change {
+	font-size: 11px;
+}
+
 /* notion css */
 a, a.visited {
 	color: inherit;

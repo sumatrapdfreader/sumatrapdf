@@ -90,10 +90,11 @@ func (c *HTMLConverter) PageByID(id string) *notionapi.Page {
 }
 
 func (c *HTMLConverter) getURLAndTitleForBlock(block *notionapi.Block) (string, string) {
-	page := c.PageByID(block.ID)
+	id := block.ID
+	page := c.PageByID(id)
 	if page == nil {
 		title := block.Title
-		logf("No page for id %s %s\n", block.ID, title)
+		logf("No page for id %s %s\n", id, title)
 		pageURL := "https://notion.so/" + notionapi.ToNoDashID(c.page.ID)
 		logf("Link from page: %s\n", pageURL)
 		url := fileNameFromTitle(title)
@@ -110,6 +111,9 @@ func (c *HTMLConverter) RenderPage(block *notionapi.Block) bool {
 		c.conv.Printf(`<div class="notion-page" id="%s">`, block.ID)
 		c.conv.RenderChildren(block)
 		c.conv.Printf(`</div>`)
+		c.conv.Printf(`<hr>`)
+		uri := "https://notion.so/" + notionapi.ToNoDashID(block.ID)
+		c.conv.Printf(`<center><a href="%s" class="suggest-change">suggest change to this page</a></center>`, uri)
 		return true
 	}
 
@@ -251,13 +255,13 @@ func websiteImportNotion() {
 		notionToHTML(page, pages, d.IdToPage)
 	}
 
-	if false {
+	if true {
 		// using https://github.com/netlify/cli
 		cmd := exec.Command("netlify", "dev", "--dir", "www")
 		u.RunCmdLoggedMust(cmd)
+	} else {
+		err = os.Chdir("www")
+		must(err)
+		u.OpenBrowser("free-pdf-reader.html")
 	}
-
-	err = os.Chdir("www")
-	must(err)
-	u.OpenBrowser("free-pdf-reader.html")
 }
