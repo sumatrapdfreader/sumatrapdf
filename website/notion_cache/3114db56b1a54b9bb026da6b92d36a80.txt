@@ -1,4 +1,4 @@
-1849 1582241297773 httpcache-v1
+1849 1582246294982 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
@@ -44,7 +44,7 @@ Response:+1649
         "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1492328872920,
+        "last_edited_time": 1582246140000,
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
@@ -55,12 +55,12 @@ Response:+1649
           ]
         },
         "type": "page",
-        "version": 4
+        "version": 6
       }
     }
   ]
 }
-22218 1582241297774 httpcache-v1
+22715 1582246294983 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -73,7 +73,7 @@ Body:+152
   "pageId": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
   "verticalColumns": false
 }
-Response:+21977
+Response:+22474
 {
   "cursor": {
     "stack": []
@@ -230,7 +230,7 @@ Response:+21977
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492328872920,
+          "last_edited_time": 1582246140000,
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
@@ -241,7 +241,7 @@ Response:+21977
             ]
           },
           "type": "page",
-          "version": 4
+          "version": 6
         }
       },
       "32943d8f-4d8b-46e2-a3e5-622e75bc730b": {
@@ -335,18 +335,40 @@ Response:+21977
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492328887228,
+          "last_edited_time": 1582246140000,
           "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "Premake generates Visual Studio solution in directory vs2017 and vs2015 from premake5.lua file. We checkin generated solution files for convenience."
+                "Premake generates Visual Studio solution in directory "
+              ],
+              [
+                "vs2019 ",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ],
+              [
+                "from "
+              ],
+              [
+                "premake5.lua",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ],
+              [
+                " file. Generated solution files are stored in the repository for convenience."
               ]
             ]
           },
           "type": "text",
-          "version": 0
+          "version": 54
         }
       },
       "8815bf40-2c44-4b07-bf38-0e3d2ef0d0ab": {
@@ -551,7 +573,7 @@ Response:+21977
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492328880004,
+          "last_edited_time": 1582246140000,
           "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
           "parent_table": "block",
           "properties": {
@@ -569,12 +591,23 @@ Response:+21977
                 ]
               ],
               [
-                ". I've used alpha11 build."
+                ". For convenience, we store the binary in "
+              ],
+              [
+                "bin",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ],
+              [
+                " directory."
               ]
             ]
           },
           "type": "text",
-          "version": 0
+          "version": 103
         }
       },
       "edebffa1-9600-441e-adf5-b2ed3a094091": {
@@ -639,14 +672,13 @@ Response:+21977
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
-            "page_icon": "https://s3-us-west-2.amazonaws.com/secure.notion-static.com/499bc3f2-8206-4c35-8c19-3828d29a459f/SumatraPDF-256x256x32.png",
             "page_small_text": true
           },
           "id": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1574310780000,
+          "last_edited_time": 1582246260000,
           "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "parent_table": "space",
           "permissions": [
@@ -664,12 +696,12 @@ Response:+21977
           "properties": {
             "title": [
               [
-                "SumatraPDF Reader documentation"
+                "SumatraPDF documentation"
               ]
             ]
           },
           "type": "page",
-          "version": 23
+          "version": 30
         }
       }
     },
@@ -692,7 +724,7 @@ Response:+21977
     "space": {}
   }
 }
-13738 1582241297774 httpcache-v1
+13738 1582246294984 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+902
@@ -1102,7 +1134,7 @@ Response:+12745
     }
   ]
 }
-24422 1582241297776 httpcache-v1
+24422 1582246294984 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1166

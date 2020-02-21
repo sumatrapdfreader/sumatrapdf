@@ -60,6 +60,7 @@ func main() {
 		flgWebsiteDeployProd       bool
 		flgWebsiteDeployDev        bool
 		flgWebsiteImportNotion     bool
+		flgNoCache                 bool
 	)
 
 	{
@@ -87,6 +88,7 @@ func main() {
 		flag.BoolVar(&flgWebsiteDeployProd, "website-deploy-prod", false, "deploy website")
 		flag.BoolVar(&flgWebsiteDeployDev, "website-deploy-dev", false, "deploy a preview of website")
 		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
+		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
 		flag.Parse()
 	}
 

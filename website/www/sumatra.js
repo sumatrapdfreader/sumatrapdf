@@ -175,7 +175,7 @@ function dlAfterHtml64(s1, s2, s3, s4) {
 // special case for /docs/*.html => docs
 function getBaseUrl() {
   var loc = location.pathname; // '/free-pdf-reader.html etc.
-  if (loc.startsWith("/docs/")) {
+  if (loc.startsWith("/docs/") || loc.startsWith("docs/")) {
     return "docs";
   }
   var url = loc.split("/");
@@ -222,7 +222,7 @@ function navHtml() {
     var txt = baseUrls[i][1];
     if (currUrl == "docs") {
       url =
-        "/docs/SumatraPDF-documentation-fed36a5624d443fe9f7be0e410ecd715.html";
+        "/docs/SumatraPDF-documentation.html";
     }
     if (currUrl == "forum") {
       url = "https://forum.sumatrapdfreader.org";

@@ -1,4 +1,4 @@
-2256 1582244128043 httpcache-v1
+2256 1582246294626 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
@@ -47,7 +47,7 @@ Response:+2056
         "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1582243980000,
+        "last_edited_time": 1582246260000,
         "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "parent_table": "space",
         "permissions": [
@@ -70,12 +70,12 @@ Response:+2056
           ]
         },
         "type": "page",
-        "version": 29
+        "version": 30
       }
     }
   ]
 }
-61666 1582244128045 httpcache-v1
+61621 1582246294628 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -88,7 +88,7 @@ Body:+152
   "pageId": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
   "verticalColumns": false
 }
-Response:+61425
+Response:+61380
 {
   "cursor": {
     "stack": []
@@ -393,7 +393,7 @@ Response:+61425
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492328872920,
+          "last_edited_time": 1582246140000,
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
@@ -404,7 +404,7 @@ Response:+61425
             ]
           },
           "type": "page",
-          "version": 4
+          "version": 6
         }
       },
       "365a613a-d26e-4be2-875d-afa3f23d2b54": {
@@ -949,7 +949,7 @@ Response:+61425
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492311835960,
+          "last_edited_time": 1582246260000,
           "parent_id": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
           "parent_table": "block",
           "properties": {
@@ -958,21 +958,18 @@ Response:+61425
                 "Want to make SumatraPDF work better in your language? "
               ],
               [
-                "Contribute a translation",
+                "Contribute a translation.",
                 [
                   [
                     "a",
-                    "https://www.notion.so/Contribute-translation-dca4108e750d4f04836ccfd315bc62de"
+                    "https://www.notion.so/How-to-contribute-translation-da023536e9774982b09937c8ed8cf6c1"
                   ]
                 ]
-              ],
-              [
-                "."
               ]
             ]
           },
           "type": "text",
-          "version": 0
+          "version": 3
         }
       },
       "92b6b053-e190-401f-b706-2883a68c8bf9": {
@@ -1193,7 +1190,7 @@ Response:+61425
           "parent_id": "12d1eec8-f6b5-40fd-bc5c-dcb608b7e9d8",
           "parent_table": "block",
           "type": "column",
-          "version": 0
+          "version": 1
         }
       },
       "be6ef085-e89f-4903-8c2b-671c0743b690": {
@@ -1633,7 +1630,7 @@ Response:+61425
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582243980000,
+          "last_edited_time": 1582246260000,
           "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "parent_table": "space",
           "permissions": [
@@ -1656,7 +1653,7 @@ Response:+61425
             ]
           },
           "type": "page",
-          "version": 29
+          "version": 30
         }
       }
     },

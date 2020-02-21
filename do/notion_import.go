@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -50,8 +51,17 @@ func newNotionClient() *notionapi.Client {
 	return client
 }
 
+func fileNameFromTitle(title string) string {
+	return urlify(title) + ".html"
+}
+
+func fileNameForPage(page *notionapi.Page) string {
+	title := page.Root().Title
+	return fileNameFromTitle(title)
+}
+
 func afterPageDownload(page *notionapi.Page) error {
-	logf("Downloaded page %sn", page.ID)
+	logf("Downloaded page %sn\n", page.ID)
 	return nil
 }
 
@@ -62,17 +72,100 @@ type HTMLConverter struct {
 	conv     *tohtml.Converter
 }
 
+// PageByID returns a page given its id
+func (c *HTMLConverter) PageByID(id string) *notionapi.Page {
+	page := c.idToPage[id]
+	if page != nil {
+		return page
+	}
+	id2 := notionapi.ToDashID(id)
+	page = c.idToPage[id2]
+	if page == nil {
+		logf("Didn't find page for id %s' ('%s') in %d pages\n", id, id2, len(c.idToPage))
+		for id := range c.idToPage {
+			logf("%s\n", id)
+		}
+	}
+	return page
+}
+
+func (c *HTMLConverter) getURLAndTitleForBlock(block *notionapi.Block) (string, string) {
+	page := c.PageByID(block.ID)
+	if page == nil {
+		title := block.Title
+		logf("No page for id %s %s\n", block.ID, title)
+		pageURL := "https://notion.so/" + notionapi.ToNoDashID(c.page.ID)
+		logf("Link from page: %s\n", pageURL)
+		url := fileNameFromTitle(title)
+		return url, title
+	}
+	url := fileNameForPage(page)
+
+	return url, page.Root().Title
+}
+
+// RenderPage renders BlockPage
+func (c *HTMLConverter) RenderPage(block *notionapi.Block) bool {
+	if c.conv.Page.IsRoot(block) {
+		c.conv.Printf(`<div class="notion-page" id="%s">`, block.ID)
+		c.conv.RenderChildren(block)
+		c.conv.Printf(`</div>`)
+		return true
+	}
+
+	cls := "page-link"
+	if block.IsSubPage() {
+		cls = "page"
+	}
+
+	c.conv.Printf(`<div class="%s">`, cls)
+	url, title := c.getURLAndTitleForBlock(block)
+	title = html.EscapeString(title)
+	c.conv.Printf(`<a href="%s">%s</a>`, url, title)
+	c.conv.Printf(`</div>`)
+	return true
+}
+
+// if returns false, the block will be rendered with default
+func (c *HTMLConverter) blockRenderOverride(block *notionapi.Block) bool {
+	switch block.Type {
+	case notionapi.BlockPage:
+		return c.RenderPage(block)
+	}
+	return false
+}
+
+// change https://www.notion.so/Advanced-web-spidering-with-Puppeteer-ea07db1b9bff415ab180b0525f3898f6
+// =>
+// Advanced-web-spidering-with-Puppeteer.url
+func (c *HTMLConverter) rewriteURL(uri string) string {
+	id := notionapi.ExtractNoDashIDFromNotionURL(uri)
+	if id == "" {
+		return uri
+	}
+	page := c.PageByID(id)
+	// this might happen when I link to some-one else's public notion pages
+	// but we don't do that for Sumatra docs
+	if page == nil {
+		logf("Didn't find page for url '%s', id '%s'\n", uri, id)
+		os.Exit(0)
+	}
+	panicIf(page == nil)
+	return fileNameForPage(page)
+}
+
 // NewHTMLConverter returns new HTMLGenerator
-func NewHTMLConverter(page *notionapi.Page, idToPage map[string]*notionapi.Page) *HTMLConverter {
+func NewHTMLConverter(page *notionapi.Page, pages []*notionapi.Page, idToPage map[string]*notionapi.Page) *HTMLConverter {
 	res := &HTMLConverter{
 		page:     page,
 		idToPage: idToPage,
 	}
 
 	conv := tohtml.NewConverter(page)
+	conv.PageByIDProvider = tohtml.NewPageByIDFromPages(pages)
 	notionapi.PanicOnFailures = true
-	//conv.RenderBlockOverride = res.blockRenderOverride
-	//conv.RewriteURL = res.rewriteURL
+	conv.RenderBlockOverride = res.blockRenderOverride
+	conv.RewriteURL = res.rewriteURL
 	res.conv = conv
 	return res
 }
@@ -85,6 +178,7 @@ var tmpl = `<!doctype html>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<title>{{Title}}</title>
 	<link rel="stylesheet" href="../sumatra.css" type="text/css" />
+	<link rel="stylesheet" href="../notion.css" type="text/css" />
 </head>
 
 <body>
@@ -117,7 +211,7 @@ func (c *HTMLConverter) GenerateHTML() []byte {
 	page := c.page.Root()
 	f := page.FormatPage()
 	isMono := f != nil && f.PageFont == "mono"
-	s := `<p></p>`
+	s := ``
 	if isMono {
 		s += `<div style="font-family: monospace">`
 	}
@@ -132,13 +226,8 @@ func (c *HTMLConverter) GenerateHTML() []byte {
 	return d
 }
 
-func fileNameForPage(page *notionapi.Page) string {
-	title := page.Root().Title
-	return urlify(title) + ".html"
-}
-
-func notionToHTML(page *notionapi.Page, idToPage map[string]*notionapi.Page) {
-	conv := NewHTMLConverter(page, idToPage)
+func notionToHTML(page *notionapi.Page, pages []*notionapi.Page, idToPage map[string]*notionapi.Page) {
+	conv := NewHTMLConverter(page, pages, idToPage)
 	html := conv.GenerateHTML()
 	name := fileNameForPage(page)
 	path := filepath.Join("www", "docs", name)
@@ -159,7 +248,7 @@ func websiteImportNotion() {
 	pages, err := d.DownloadPagesRecursively(startPageID, afterPageDownload)
 	must(err)
 	for _, page := range pages {
-		notionToHTML(page, d.IdToPage)
+		notionToHTML(page, pages, d.IdToPage)
 	}
 
 	if false {
