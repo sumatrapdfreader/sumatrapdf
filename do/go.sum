@@ -19,6 +19,8 @@ github.com/kjk/atomicfile v0.0.0-20190916063300-2d5c7d7d05bf h1:HuwmGC6wEC0CdGC3
 github.com/kjk/atomicfile v0.0.0-20190916063300-2d5c7d7d05bf/go.mod h1:+YlBbo63AHA3uS6tdRhd42B+I1lV7H7+aqDhwTRl5rs=
 github.com/kjk/caching_http_client v0.0.0-20190810075619-06ff809674f7 h1:QpTfahFJ/tetY9TR6GeV3ubuzU5qJnmfTk35cJF8/WQ=
 github.com/kjk/caching_http_client v0.0.0-20190810075619-06ff809674f7/go.mod h1:uZMXWOA3unK8KYdy6aBIel64MMqZwsRFRKIvgSadLAU=
+github.com/kjk/fmthtml v0.0.0-20190816041536-39f5e479d32d h1:XPQyRFr5tgB3me4Y3H7IETjcSnLPiORh6O41ETe6o4c=
+github.com/kjk/fmthtml v0.0.0-20190816041536-39f5e479d32d/go.mod h1:lui2Jr5/5hp4zegfsA3aIlfPAjRAwWIxY6Nm/JjbQM0=
 github.com/kjk/notionapi v0.0.0-20200220221049-45ba7d333957 h1:Ji75gwmRvhymbuHYF6bvuuaqS6cSpNF5zDKPGHQoISI=
 github.com/kjk/notionapi v0.0.0-20200220221049-45ba7d333957/go.mod h1:TN6VHOLMXTSoGSaXDKTqvw5Aos628adXJAXSKvjTTRI=
 github.com/kjk/siser v0.0.0-20190801014033-b3367920d7f2 h1:vrqsThWMeIUgprELZhUEw0wFu/LJANlftGo6US4vIDg=
@@ -60,6 +62,7 @@ golang.org/x/crypto v0.0.0-20191227163750-53104e6ec876/go.mod h1:LzIPMQfyMNhhGPh
 golang.org/x/net v0.0.0-20190311183353-d8887717615a/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190522155817-f3200d17e092/go.mod h1:HSz+uSET+XFnRR8LxR5pz3Of3rY3CfYBVs4xY44aLks=
+golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 h1:efeOvDhwQ29Dj3SdAV/MJf8oukgn+8D8WgaCaRMchF8=
 golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

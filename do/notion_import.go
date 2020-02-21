@@ -2,8 +2,11 @@ package main
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
+	"github.com/kjk/fmthtml"
 	"github.com/kjk/notionapi"
 	"github.com/kjk/notionapi/caching_downloader"
 	"github.com/kjk/notionapi/tohtml"
@@ -74,14 +77,46 @@ func NewHTMLConverter(page *notionapi.Page, idToPage map[string]*notionapi.Page)
 	return res
 }
 
-// GenereateHTML returns generated HTML
-func (c *HTMLConverter) GenereateHTML() []byte {
+var tmpl = `<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>{{Title}}</title>
+	<link rel="stylesheet" href="../sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="../sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+		<br/>
+		<div id="center">
+			<div class="content">
+			{{InnerHTML}}
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+`
+
+// GenerateHTML returns generated HTML
+func (c *HTMLConverter) GenerateHTML() []byte {
 	inner, err := c.conv.ToHTML()
 	must(err)
 	page := c.page.Root()
 	f := page.FormatPage()
 	isMono := f != nil && f.PageFont == "mono"
-
 	s := `<p></p>`
 	if isMono {
 		s += `<div style="font-family: monospace">`
@@ -90,7 +125,11 @@ func (c *HTMLConverter) GenereateHTML() []byte {
 	if isMono {
 		s += `</div>`
 	}
-	return []byte(s)
+	title := page.Title
+	s = strings.Replace(tmpl, "{{InnerHTML}}", s, 1)
+	s = strings.Replace(s, "{{Title}}", title, 1)
+	d := fmthtml.Format([]byte(s))
+	return d
 }
 
 func fileNameForPage(page *notionapi.Page) string {
@@ -100,9 +139,9 @@ func fileNameForPage(page *notionapi.Page) string {
 
 func notionToHTML(page *notionapi.Page, idToPage map[string]*notionapi.Page) {
 	conv := NewHTMLConverter(page, idToPage)
-	html := conv.GenereateHTML()
+	html := conv.GenerateHTML()
 	name := fileNameForPage(page)
-	path := filepath.Join("www2", name)
+	path := filepath.Join("www", "docs", name)
 	logf("Writing '%s' for title '%s'\n", path, page.Root().Title)
 	u.WriteFileMust(path, html)
 }
@@ -122,4 +161,14 @@ func websiteImportNotion() {
 	for _, page := range pages {
 		notionToHTML(page, d.IdToPage)
 	}
+
+	if false {
+		// using https://github.com/netlify/cli
+		cmd := exec.Command("netlify", "dev", "--dir", "www")
+		u.RunCmdLoggedMust(cmd)
+	}
+
+	err = os.Chdir("www")
+	must(err)
+	u.OpenBrowser("free-pdf-reader.html")
 }

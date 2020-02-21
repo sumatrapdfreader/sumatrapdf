@@ -1,4 +1,4 @@
-2412 1582241295505 httpcache-v1
+2256 1582244128043 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
@@ -10,7 +10,7 @@ Body:+110
     }
   ]
 }
-Response:+2212
+Response:+2056
 {
   "results": [
     {
@@ -41,14 +41,13 @@ Response:+2212
         "format": {
           "page_cover_position": 1,
           "page_full_width": true,
-          "page_icon": "https://s3-us-west-2.amazonaws.com/secure.notion-static.com/499bc3f2-8206-4c35-8c19-3828d29a459f/SumatraPDF-256x256x32.png",
           "page_small_text": true
         },
         "id": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
         "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1574310780000,
+        "last_edited_time": 1582243980000,
         "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "parent_table": "space",
         "permissions": [
@@ -66,17 +65,17 @@ Response:+2212
         "properties": {
           "title": [
             [
-              "SumatraPDF Reader documentation"
+              "SumatraPDF documentation"
             ]
           ]
         },
         "type": "page",
-        "version": 23
+        "version": 29
       }
     }
   ]
 }
-61824 1582241295509 httpcache-v1
+61666 1582244128045 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -89,7 +88,7 @@ Body:+152
   "pageId": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
   "verticalColumns": false
 }
-Response:+61583
+Response:+61425
 {
   "cursor": {
     "stack": []
@@ -1628,14 +1627,13 @@ Response:+61583
           "format": {
             "page_cover_position": 1,
             "page_full_width": true,
-            "page_icon": "https://s3-us-west-2.amazonaws.com/secure.notion-static.com/499bc3f2-8206-4c35-8c19-3828d29a459f/SumatraPDF-256x256x32.png",
             "page_small_text": true
           },
           "id": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1574310780000,
+          "last_edited_time": 1582243980000,
           "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "parent_table": "space",
           "permissions": [
@@ -1653,12 +1651,12 @@ Response:+61583
           "properties": {
             "title": [
               [
-                "SumatraPDF Reader documentation"
+                "SumatraPDF documentation"
               ]
             ]
           },
           "type": "page",
-          "version": 23
+          "version": 29
         }
       }
     },
