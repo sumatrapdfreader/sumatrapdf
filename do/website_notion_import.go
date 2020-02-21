@@ -226,7 +226,10 @@ func (c *HTMLConverter) GenerateHTML() []byte {
 	title := page.Title
 	s = strings.Replace(tmpl, "{{InnerHTML}}", s, 1)
 	s = strings.Replace(s, "{{Title}}", title, 1)
-	d := fmthtml.Format([]byte(s))
+	d := []byte(s)
+	if false {
+		d = fmthtml.Format(d)
+	}
 	return d
 }
 
