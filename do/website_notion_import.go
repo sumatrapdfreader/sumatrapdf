@@ -45,7 +45,8 @@ func newNotionClient() *notionapi.Client {
 	client := &notionapi.Client{
 		AuthToken: token,
 	}
-	if true {
+	// if true, shows http requests sent to notion
+	if false {
 		client.Logger = os.Stdout
 	}
 	return client
@@ -78,7 +79,7 @@ func (c *HTMLConverter) PageByID(id string) *notionapi.Page {
 	if page != nil {
 		return page
 	}
-	id2 := notionapi.ToDashID(id)
+	id2 := notionapi.ToNoDashID(id)
 	page = c.idToPage[id2]
 	if page == nil {
 		logf("Didn't find page for id %s' ('%s') in %d pages\n", id, id2, len(c.idToPage))
@@ -258,11 +259,13 @@ func websiteImportNotion() {
 		notionToHTML(page, pages, d.IdToPage)
 	}
 
-	if true {
+	if false {
 		// using https://github.com/netlify/cli
 		cmd := exec.Command("netlify", "dev", "--dir", "www")
 		u.RunCmdLoggedMust(cmd)
-	} else {
+	}
+
+	if false {
 		err = os.Chdir("www")
 		must(err)
 		u.OpenBrowser("free-pdf-reader.html")
