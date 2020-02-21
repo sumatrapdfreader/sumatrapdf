@@ -35,6 +35,12 @@
 #include "os_types.h"
 #include "sha1.h"
 
+#ifdef JBIG_EXTERNAL_MEMENTO_H
+#include JBIG_EXTERNAL_MEMENTO_H
+#else
+#include "memento.h"
+#endif
+
 #include "jbig2.h"
 #include "jbig2_priv.h"
 #include "jbig2_image.h"
@@ -589,6 +595,8 @@ main(int argc, char **argv)
 cleanup:
     flush_errors(&params);
     jbig2_ctx_free(ctx);
+    if (params.last_message)
+        free(params.last_message);
     if (params.output_filename)
         free(params.output_filename);
     if (params.hash)

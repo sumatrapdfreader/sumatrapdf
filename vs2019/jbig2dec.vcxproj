@@ -728,6 +728,7 @@
     <ClCompile Include="..\ext\jbig2dec\jbig2_generic.c" />
     <ClCompile Include="..\ext\jbig2dec\jbig2_halftone.c" />
     <ClCompile Include="..\ext\jbig2dec\jbig2_huffman.c" />
+    <ClCompile Include="..\ext\jbig2dec\jbig2_hufftab.c" />
     <ClCompile Include="..\ext\jbig2dec\jbig2_image.c" />
     <ClCompile Include="..\ext\jbig2dec\jbig2_mmr.c" />
     <ClCompile Include="..\ext\jbig2dec\jbig2_page.c" />

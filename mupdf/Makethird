@@ -313,6 +313,7 @@ THIRD_SRC += thirdparty/jbig2dec/jbig2_arith_int.c
 THIRD_SRC += thirdparty/jbig2dec/jbig2_generic.c
 THIRD_SRC += thirdparty/jbig2dec/jbig2_halftone.c
 THIRD_SRC += thirdparty/jbig2dec/jbig2_huffman.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_hufftab.c
 THIRD_SRC += thirdparty/jbig2dec/jbig2_image.c
 THIRD_SRC += thirdparty/jbig2dec/jbig2_mmr.c
 THIRD_SRC += thirdparty/jbig2dec/jbig2_page.c

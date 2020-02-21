@@ -42,10 +42,11 @@ FE=-Fe
 #
 OBJS=getopt$(OBJ) getopt1$(OBJ) jbig2$(OBJ) jbig2_arith$(OBJ) \
  jbig2_arith_iaid$(OBJ) jbig2_arith_int$(OBJ) jbig2_huffman$(OBJ) \
- jbig2_generic$(OBJ) jbig2_refinement$(OBJ) jbig2_halftone$(OBJ)\
- jbig2_image$(OBJ) jbig2_image_pbm$(OBJ) $(JBIG2_IMAGE_PNG_OBJ) \
- jbig2_segment$(OBJ) jbig2_symbol_dict$(OBJ) jbig2_text$(OBJ) \
- jbig2_mmr$(OBJ) jbig2_page$(OBJ) jbig2dec$(OBJ) sha1$(OBJ)
+ jbig2_hufftab$(OBJ) jbig2_generic$(OBJ) jbig2_refinement$(OBJ) \
+ jbig2_halftone$(OBJ) jbig2_image$(OBJ) jbig2_image_pbm$(OBJ) \
+ $(JBIG2_IMAGE_PNG_OBJ) jbig2_segment$(OBJ) jbig2_symbol_dict$(OBJ) \
+ jbig2_text$(OBJ) jbig2_mmr$(OBJ) jbig2_page$(OBJ) jbig2dec$(OBJ) \
+ sha1$(OBJ)
 
 HDRS=getopt.h jbig2.h jbig2_arith.h jbig2_arith_iaid.h jbig2_arith_int.h \
  jbig2_generic.h jbig2_huffman.h jbig2_hufftab.h jbig2_image.h \
@@ -82,6 +83,9 @@ jbig2_refinement$(OBJ): jbig2_refinement.c $(HDRS)
 
 jbig2_huffman$(OBJ): jbig2_huffman.c $(HDRS)
 	$(CC) $(CFLAGS) -c jbig2_huffman.c
+
+jbig2_hufftab$(OBJ): jbig2_hufftab.c $(HDRS)
+	$(CC) $(CFLAGS) -c jbig2_hufftab.c
 
 jbig2_image$(OBJ): jbig2_image.c $(HDRS)
 	$(CC) $(CFLAGS) -c jbig2_image.c

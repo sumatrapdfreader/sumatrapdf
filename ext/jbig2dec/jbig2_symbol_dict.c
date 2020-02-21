@@ -664,14 +664,14 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 
                 /* SumatraPDF: prevent read access violation */
                 if (size < jbig2_huffman_offset(hs) || (size - jbig2_huffman_offset(hs) < (size_t) image->height * stride) || (size < jbig2_huffman_offset(hs))) {
-                    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "not enough data for decoding uncompressed (%d/%d)", image->height * stride,
-                                size - jbig2_huffman_offset(hs));
+                    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "not enough data for decoding uncompressed (%d/%li)", image->height * stride,
+                                (long) (size - jbig2_huffman_offset(hs)));
                     goto cleanup;
                 }
 
                 BMSIZE = (size_t) image->height * stride;
                 jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
-                            "reading %dx%d uncompressed bitmap for %d symbols (%d bytes)", image->width, image->height, NSYMSDECODED - HCFIRSTSYM, BMSIZE);
+                            "reading %dx%d uncompressed bitmap for %d symbols (%li bytes)", image->width, image->height, NSYMSDECODED - HCFIRSTSYM, (long) BMSIZE);
 
                 for (j = 0; j < image->height; j++) {
                     memcpy(dst, src, stride);
@@ -683,12 +683,12 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 
                 /* SumatraPDF: prevent read access violation */
                 if (size < jbig2_huffman_offset(hs) || size < BMSIZE || size - jbig2_huffman_offset(hs) < BMSIZE) {
-                    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "not enough data for decoding (%d/%d)", BMSIZE, size - jbig2_huffman_offset(hs));
+                    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "not enough data for decoding (%li/%li)", (long) BMSIZE, (long) (size - jbig2_huffman_offset(hs)));
                     goto cleanup;
                 }
 
                 jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
-                            "reading %dx%d collective bitmap for %d symbols (%d bytes)", image->width, image->height, NSYMSDECODED - HCFIRSTSYM, BMSIZE);
+                            "reading %dx%d collective bitmap for %d symbols (%li bytes)", image->width, image->height, NSYMSDECODED - HCFIRSTSYM, (long) BMSIZE);
 
                 rparams.MMR = 1;
                 code = jbig2_decode_generic_mmr(ctx, segment, &rparams, data + jbig2_huffman_offset(hs), BMSIZE, image);
@@ -1034,7 +1034,7 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segmen
             jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "failed to allocate arithmetic decoder states for generic regions");
             goto cleanup;
         }
-        memset(GB_stats, 0, stats_size);
+        memset(GB_stats, 0, sizeof (Jbig2ArithCx) * stats_size);
 
         stats_size = params.SDRTEMPLATE ? 1 << 10 : 1 << 13;
         GR_stats = jbig2_new(ctx, Jbig2ArithCx, stats_size);

@@ -159,6 +159,9 @@
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_huffman.c">
       <Filter>libjbig2dec</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_hufftab.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_image.c">
       <Filter>libjbig2dec</Filter>
     </ClCompile>

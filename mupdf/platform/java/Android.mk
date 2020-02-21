@@ -196,6 +196,7 @@ LOCAL_SRC_FILES += \
 	$(MUPDF_PATH)/thirdparty/jbig2dec/jbig2_generic.c \
 	$(MUPDF_PATH)/thirdparty/jbig2dec/jbig2_halftone.c \
 	$(MUPDF_PATH)/thirdparty/jbig2dec/jbig2_huffman.c \
+	$(MUPDF_PATH)/thirdparty/jbig2dec/jbig2_hufftab.c \
 	$(MUPDF_PATH)/thirdparty/jbig2dec/jbig2_image.c \
 	$(MUPDF_PATH)/thirdparty/jbig2dec/jbig2_mmr.c \
 	$(MUPDF_PATH)/thirdparty/jbig2dec/jbig2_page.c \

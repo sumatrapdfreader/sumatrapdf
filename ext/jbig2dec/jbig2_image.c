@@ -33,6 +33,9 @@
 #if !defined (INT32_MAX)
 #define INT32_MAX  0x7fffffff
 #endif
+#if !defined (UINT32_MAX)
+#define UINT32_MAX  0xffffffffu
+#endif
 
 /* allocate a Jbig2Image structure and its associated bitmap */
 Jbig2Image *
@@ -164,137 +167,232 @@ jbig2_image_resize(Jbig2Ctx *ctx, Jbig2Image *image, uint32_t width, uint32_t he
     return image;
 }
 
-/* composite one jbig2_image onto another
-   slow but general version */
-static int
-jbig2_image_compose_unopt(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src, int x, int y, Jbig2ComposeOp op)
+static inline void
+template_image_compose_opt(const uint8_t * JBIG2_RESTRICT ss, uint8_t * JBIG2_RESTRICT dd, int early, int late, uint8_t leftmask, uint8_t rightmask, uint32_t bytewidth_, uint32_t h, uint32_t shift, uint32_t dstride, uint32_t sstride, Jbig2ComposeOp op)
 {
-    uint32_t i, j;
-    uint32_t sw = src->width;
-    uint32_t sh = src->height;
-    uint32_t sx = 0;
-    uint32_t sy = 0;
+    int i;
+    uint32_t j;
+    int bytewidth = (int)bytewidth_;
 
-    /* clip to the dst image boundaries */
-    if (x < 0) {
-        sx += -x;
-        if (sw < (uint32_t) -x)
-            sw = 0;
-        else
-            sw -= -x;
-        x = 0;
+    if (bytewidth == 1) {
+        for (j = 0; j < h; j++) {
+            /* Only 1 byte! */
+            uint8_t v = (((early ? 0 : ss[0]<<8) | (late ? 0 : ss[1]))>>shift);
+            if (op == JBIG2_COMPOSE_OR)
+                *dd |= v & leftmask;
+            else if (op == JBIG2_COMPOSE_AND)
+                *dd &= (v & leftmask) | ~leftmask;
+            else if (op == JBIG2_COMPOSE_XOR)
+                *dd ^= v & leftmask;
+            else if (op == JBIG2_COMPOSE_XNOR)
+                *dd ^= (~v) & leftmask;
+            else /* Replace */
+                *dd = (v & leftmask) | (*dd & ~leftmask);
+            dd += dstride;
+            ss += sstride;
+        }
+        return;
     }
-    if (y < 0) {
-        sy += -y;
-        if (sh < (uint32_t) -y)
-            sh = 0;
-        else
-            sh -= -y;
-        y = 0;
+    bytewidth -= 2;
+    if (shift == 0) {
+        ss++;
+        for (j = 0; j < h; j++) {
+            /* Left byte */
+            const uint8_t * JBIG2_RESTRICT s = ss;
+            uint8_t * JBIG2_RESTRICT d = dd;
+            if (op == JBIG2_COMPOSE_OR)
+                *d++ |= *s++ & leftmask;
+            else if (op == JBIG2_COMPOSE_AND)
+                *d++ &= (*s++ & leftmask) | ~leftmask;
+            else if (op == JBIG2_COMPOSE_XOR)
+                *d++ ^= *s++ & leftmask;
+            else if (op == JBIG2_COMPOSE_XNOR)
+                *d++ ^= (~*s++) & leftmask;
+            else /* Replace */
+                *d = (*s++ & leftmask) | (*d & ~leftmask), d++;
+            /* Central run */
+            for (i = bytewidth; i != 0; i--) {
+                if (op == JBIG2_COMPOSE_OR)
+                    *d++ |= *s++;
+                else if (op == JBIG2_COMPOSE_AND)
+                    *d++ &= *s++;
+                else if (op == JBIG2_COMPOSE_XOR)
+                    *d++ ^= *s++;
+                else if (op == JBIG2_COMPOSE_XNOR)
+                    *d++ ^= ~*s++;
+                else /* Replace */
+                    *d++ = *s++;
+            }
+            /* Right byte */
+            if (op == JBIG2_COMPOSE_OR)
+                *d |= *s & rightmask;
+            else if (op == JBIG2_COMPOSE_AND)
+                *d &= (*s & rightmask) | ~rightmask;
+            else if (op == JBIG2_COMPOSE_XOR)
+                *d ^= *s & rightmask;
+            else if (op == JBIG2_COMPOSE_XNOR)
+                *d ^= (~*s) & rightmask;
+            else /* Replace */
+                *d = (*s & rightmask) | (*d & ~rightmask);
+            dd += dstride;
+            ss += sstride;
+        }
+    } else {
+        for (j = 0; j < h; j++) {
+            /* Left byte */
+            const uint8_t * JBIG2_RESTRICT s = ss;
+            uint8_t * JBIG2_RESTRICT d = dd;
+            uint8_t s0, s1, v;
+            s0 = early ? 0 : *s;
+            s++;
+            s1 = *s++;
+            v = ((s0<<8) | s1)>>shift;
+            if (op == JBIG2_COMPOSE_OR)
+                *d++ |= v & leftmask;
+            else if (op == JBIG2_COMPOSE_AND)
+                *d++ &= (v & leftmask) | ~leftmask;
+            else if (op == JBIG2_COMPOSE_XOR)
+                *d++ ^= v & leftmask;
+            else if (op == JBIG2_COMPOSE_XNOR)
+                *d++ ^= (~v) & leftmask;
+            else /* Replace */
+                *d = (v & leftmask) | (*d & ~leftmask), d++;
+            /* Central run */
+            for (i = bytewidth; i > 0; i--) {
+                s0 = s1; s1 = *s++;
+                v = ((s0<<8) | s1)>>shift;
+                if (op == JBIG2_COMPOSE_OR)
+                    *d++ |= v;
+                else if (op == JBIG2_COMPOSE_AND)
+                    *d++ &= v;
+                else if (op == JBIG2_COMPOSE_XOR)
+                    *d++ ^= v;
+                else if (op == JBIG2_COMPOSE_XNOR)
+                    *d++ ^= ~v;
+                else /* Replace */
+                    *d++ = v;
+            }
+            /* Right byte */
+            s0 = s1; s1 = (late ? 0 : *s);
+            v = (((s0<<8) | s1)>>shift);
+            if (op == JBIG2_COMPOSE_OR)
+                *d |= v & rightmask;
+            else if (op == JBIG2_COMPOSE_AND)
+                *d &= (v & rightmask) | ~rightmask;
+            else if (op == JBIG2_COMPOSE_XOR)
+                *d ^= v & rightmask;
+            else if (op == JBIG2_COMPOSE_XNOR)
+                *d ^= ~v & rightmask;
+            else /* Replace */
+                *d = (v & rightmask) | (*d & ~rightmask);
+            dd += dstride;
+            ss += sstride;
+        }
     }
-    if ((uint32_t) x + sw >= dst->width) {
-        if (dst->width >= (uint32_t) x)
-            sw = dst->width - x;
-        else
-            sw = 0;
-    }
-    if ((uint32_t) y + sh >= dst->height) {
-        if (dst->height >= (uint32_t) y)
-            sh = dst->height - y;
-        else
-            sh = 0;
-    }
+}
 
-    switch (op) {
-    case JBIG2_COMPOSE_OR:
-        for (j = 0; j < sh; j++) {
-            for (i = 0; i < sw; i++) {
-                jbig2_image_set_pixel(dst, i + x, j + y, jbig2_image_get_pixel(src, i + sx, j + sy) | jbig2_image_get_pixel(dst, i + x, j + y));
-            }
-        }
-        break;
-    case JBIG2_COMPOSE_AND:
-        for (j = 0; j < sh; j++) {
-            for (i = 0; i < sw; i++) {
-                jbig2_image_set_pixel(dst, i + x, j + y, jbig2_image_get_pixel(src, i + sx, j + sy) & jbig2_image_get_pixel(dst, i + x, j + y));
-            }
-        }
-        break;
-    case JBIG2_COMPOSE_XOR:
-        for (j = 0; j < sh; j++) {
-            for (i = 0; i < sw; i++) {
-                jbig2_image_set_pixel(dst, i + x, j + y, jbig2_image_get_pixel(src, i + sx, j + sy) ^ jbig2_image_get_pixel(dst, i + x, j + y));
-            }
-        }
-        break;
-    case JBIG2_COMPOSE_XNOR:
-        for (j = 0; j < sh; j++) {
-            for (i = 0; i < sw; i++) {
-                jbig2_image_set_pixel(dst, i + x, j + y, (jbig2_image_get_pixel(src, i + sx, j + sy) == jbig2_image_get_pixel(dst, i + x, j + y)));
-            }
-        }
-        break;
-    case JBIG2_COMPOSE_REPLACE:
-        for (j = 0; j < sh; j++) {
-            for (i = 0; i < sw; i++) {
-                jbig2_image_set_pixel(dst, i + x, j + y, jbig2_image_get_pixel(src, i + sx, j + sy));
-            }
-        }
-        break;
-    }
+static void
+jbig2_image_compose_opt_OR(const uint8_t *s, uint8_t *d, int early, int late, uint8_t mask, uint8_t rightmask, uint32_t bytewidth, uint32_t h, uint32_t shift, uint32_t dstride, uint32_t sstride)
+{
+    if (early || late)
+        template_image_compose_opt(s, d, early, late, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_OR);
+    else
+        template_image_compose_opt(s, d, 0, 0, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_OR);
+}
 
-    return 0;
+static void
+jbig2_image_compose_opt_AND(const uint8_t *s, uint8_t *d, int early, int late, uint8_t mask, uint8_t rightmask, uint32_t bytewidth, uint32_t h, uint32_t shift, uint32_t dstride, uint32_t sstride)
+{
+    if (early || late)
+        template_image_compose_opt(s, d, early, late, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_AND);
+    else
+        template_image_compose_opt(s, d, 0, 0, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_AND);
+}
+
+static void
+jbig2_image_compose_opt_XOR(const uint8_t *s, uint8_t *d, int early, int late, uint8_t mask, uint8_t rightmask, uint32_t bytewidth, uint32_t h, uint32_t shift, uint32_t dstride, uint32_t sstride)
+{
+    if (early || late)
+        template_image_compose_opt(s, d, early, late, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_XOR);
+    else
+        template_image_compose_opt(s, d, 0, 0, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_XOR);
+}
+
+static void
+jbig2_image_compose_opt_XNOR(const uint8_t *s, uint8_t *d, int early, int late, uint8_t mask, uint8_t rightmask, uint32_t bytewidth, uint32_t h, uint32_t shift, uint32_t dstride, uint32_t sstride)
+{
+    if (early || late)
+        template_image_compose_opt(s, d, early, late, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_XNOR);
+    else
+        template_image_compose_opt(s, d, 0, 0, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_XNOR);
+}
+
+static void
+jbig2_image_compose_opt_REPLACE(const uint8_t *s, uint8_t *d, int early, int late, uint8_t mask, uint8_t rightmask, uint32_t bytewidth, uint32_t h, uint32_t shift, uint32_t dstride, uint32_t sstride)
+{
+    if (early || late)
+        template_image_compose_opt(s, d, early, late, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_REPLACE);
+    else
+        template_image_compose_opt(s, d, 0, 0, mask, rightmask, bytewidth, h, shift, dstride, sstride, JBIG2_COMPOSE_REPLACE);
 }
 
 /* composite one jbig2_image onto another */
 int
 jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src, int x, int y, Jbig2ComposeOp op)
 {
-    uint32_t i, j;
     uint32_t w, h;
-    uint32_t leftbyte, rightbyte;
     uint32_t shift;
-    uint8_t *s, *ss;
-    uint8_t *d, *dd;
-    uint8_t mask, rightmask;
+    uint32_t leftbyte;
+    uint8_t *ss;
+    uint8_t *dd;
+    uint8_t leftmask, rightmask;
+    int early = x >= 0;
+    int late;
+    uint32_t bytewidth;
+    uint32_t syoffset = 0;
 
     if (src == NULL)
         return 0;
 
-    /* The optimized code for the OR operator below doesn't
-       handle the source image partially placed outside the
-       destination (above and/or to the left). The affected
-       intersection of the destination is computed correctly,
-       however the correct subset of the source image is not
-       chosen. Instead the upper left corner of the source image
-       is always used.
-
-       In the unoptimized version that handles all operators
-       (including OR) the correct subset of the source image is
-       chosen.
-
-       The workaround is to check whether the x/y coordinates to
-       the composition operator are negative and in this case use
-       the unoptimized implementation.
-
-       TODO: Fix the optimized OR implementation if possible. */
-    if (op != JBIG2_COMPOSE_OR || x < 0 || y < 0) {
-        /* hand off the the general routine */
-        return jbig2_image_compose_unopt(ctx, dst, src, x, y, op);
+    if ((UINT32_MAX - src->width  < (x > 0 ? x : -x)) ||
+        (UINT32_MAX - src->height < (y > 0 ? y : -y)))
+    {
+#ifdef JBIG2_DEBUG
+        jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1, "overflow in compose_image");
+#endif
+        return 0;
     }
 
-    /* optimized code for the prevalent OR operator */
+    /* This code takes a src image and combines it onto dst at offset (x,y), with operation op. */
+
+    /* Data is packed msb first within a byte, so with bits numbered: 01234567.
+     * Second byte is: 89abcdef. So to combine into a run, we use:
+     *       (s[0]<<8) | s[1] == 0123456789abcdef.
+     * To read from src into dst at offset 3, we need to read:
+     *    read:      0123456789abcdef...
+     *    write:  0123456798abcdef...
+     * In general, to read from src and write into dst at offset x, we need to shift
+     * down by (x&7) bits to allow for bit alignment. So shift = x&7.
+     * So the 'central' part of our runs will see us doing:
+     *   *d++ op= ((s[0]<<8)|s[1])>>shift;
+     * with special cases on the left and right edges of the run to mask.
+     * With the left hand edge, we have to be careful not to 'underread' the start of
+     * the src image; this is what the early flag is about. Similarly we have to be
+     * careful not to read off the right hand edge; this is what the late flag is for.
+     */
 
     /* clip */
     w = src->width;
     h = src->height;
-    ss = src->data;
+    shift = (x & 7);
+    ss = src->data - early;
 
     if (x < 0) {
         if (w < (uint32_t) -x)
             w = 0;
         else
             w += x;
+        ss += (-x-1)>>3;
         x = 0;
     }
     if (y < 0) {
@@ -302,10 +400,23 @@ jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src, int x, int 
             h = 0;
         else
             h += y;
+        syoffset = -y * src->stride;
         y = 0;
     }
-    w = ((uint32_t) x + w < dst->width) ? w : ((dst->width >= (uint32_t) x) ? dst->width - (uint32_t) x : 0);
-    h = ((uint32_t) y + h < dst->height) ? h : ((dst->height >= (uint32_t) y) ? dst->height - (uint32_t) y : 0);
+    if ((uint32_t)x + w > dst->width)
+    {
+        if (dst->width < (uint32_t)x)
+            w = 0;
+        else
+            w = dst->width - x;
+    }
+    if ((uint32_t)y + h > dst->height)
+    {
+        if (dst->height < (uint32_t)y)
+            h = 0;
+        else
+            h = dst->height - y;
+    }
 #ifdef JBIG2_DEBUG
     jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1, "compositing %dx%d at (%d, %d) after clipping", w, h, x, y);
 #endif
@@ -319,55 +430,32 @@ jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src, int x, int 
     }
 
     leftbyte = (uint32_t) x >> 3;
-    rightbyte = ((uint32_t) x + w - 1) >> 3;
-    shift = x & 7;
+    dd = dst->data + y * dst->stride + leftbyte;
+    bytewidth = (((uint32_t) x + w - 1) >> 3) - leftbyte + 1;
+    leftmask = 255>>(x&7);
+    rightmask = (((x+w)&7) == 0) ? 255 : ~(255>>((x+w)&7));
+    if (bytewidth == 1)
+        leftmask &= rightmask;
+    late = (ss + bytewidth >= src->data + ((src->width+7)>>3));
+    ss += syoffset;
 
-    /* general OR case */
-    s = ss;
-    d = dd = dst->data + y * dst->stride + leftbyte;
-    if (d < dst->data ||
-        leftbyte > dst->stride ||
-        d - leftbyte + (size_t) h * dst->stride > dst->data + (size_t) dst->height * dst->stride ||
-        s - leftbyte + (size_t) (h - 1) * src->stride + rightbyte > src->data + (size_t) src->height * src->stride) {
-        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "preventing heap overflow in jbig2_image_compose");
-    }
-    if (leftbyte == rightbyte) {
-        mask = 0x100 - (0x100 >> w);
-        for (j = 0; j < h; j++) {
-            *d |= (*s & mask) >> shift;
-            d += dst->stride;
-            s += src->stride;
-        }
-    } else if (shift == 0) {
-        rightmask = (w & 7) ? 0x100 - (1 << (8 - (w & 7))) : 0xFF;
-        for (j = 0; j < h; j++) {
-            for (i = leftbyte; i < rightbyte; i++)
-                *d++ |= *s++;
-            *d |= *s & rightmask;
-            d = (dd += dst->stride);
-            s = (ss += src->stride);
-        }
-    } else {
-        bool overlap = (((w + 7) >> 3) < ((x + w + 7) >> 3) - (x >> 3));
-
-        mask = 0x100 - (1 << shift);
-        if (overlap)
-            rightmask = (0x100 - (0x100 >> ((x + w) & 7))) >> (8 - shift);
-        else
-            rightmask = 0x100 - (0x100 >> (w & 7));
-        for (j = 0; j < h; j++) {
-            *d++ |= (*s & mask) >> shift;
-            for (i = leftbyte; i < rightbyte - 1; i++) {
-                *d |= ((*s++ & ~mask) << (8 - shift));
-                *d++ |= ((*s & mask) >> shift);
-            }
-            if (overlap)
-                *d |= (*s & rightmask) << (8 - shift);
-            else
-                *d |= ((s[0] & ~mask) << (8 - shift)) | ((s[1] & rightmask) >> shift);
-            d = (dd += dst->stride);
-            s = (ss += src->stride);
-        }
+    switch(op)
+    {
+    case JBIG2_COMPOSE_OR:
+        jbig2_image_compose_opt_OR(ss, dd, early, late, leftmask, rightmask, bytewidth, h, shift, dst->stride, src->stride);
+        break;
+    case JBIG2_COMPOSE_AND:
+        jbig2_image_compose_opt_AND(ss, dd, early, late, leftmask, rightmask, bytewidth, h, shift, dst->stride, src->stride);
+        break;
+    case JBIG2_COMPOSE_XOR:
+        jbig2_image_compose_opt_XOR(ss, dd, early, late, leftmask, rightmask, bytewidth, h, shift, dst->stride, src->stride);
+        break;
+    case JBIG2_COMPOSE_XNOR:
+        jbig2_image_compose_opt_XNOR(ss, dd, early, late, leftmask, rightmask, bytewidth, h, shift, dst->stride, src->stride);
+        break;
+    case JBIG2_COMPOSE_REPLACE:
+        jbig2_image_compose_opt_REPLACE(ss, dd, early, late, leftmask, rightmask, bytewidth, h, shift, dst->stride, src->stride);
+        break;
     }
 
     return 0;

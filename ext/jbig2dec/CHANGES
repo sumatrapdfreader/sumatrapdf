@@ -1,3 +1,22 @@
+Version 0.18 (2020 February 11)
+
+* Performance enhancements related to decoding of MMR and generic
+  regions as well as composing images onto pages.
+
+* Bug fixes for a few issues reported by Coverity and OSS-Fuzz.
+
+Version 0.17 (2019 September 16)
+
+* Improved test suite by verifying input file contents and adding
+  all ubc test streams. Fixed bugs where previously missing ubc
+  test streams were decoded incorrectly.
+
+* Bug fixes for a few issues reported by Coverity.
+
+* Moved version number to jbig2.h, and adapted configure
+  correspondingly. Added pkg-config file to be installed
+  along side library.
+
 Version 0.16 (2019 April 04)
 
 * API change allowing for library users to get the custom allocator

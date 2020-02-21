@@ -57,8 +57,7 @@ jbig2_decode_refinement_template0_unopt(Jbig2Ctx *ctx,
     const int dy = params->GRREFERENCEDY;
     uint32_t CONTEXT;
     int x, y;
-    bool bit;
-    int code = 0;
+    int bit;
 
     if (pixel_outside_field(params->grat[0], params->grat[1]) ||
         refpixel_outside_field(params->grat[2], params->grat[3]))
@@ -81,8 +80,8 @@ jbig2_decode_refinement_template0_unopt(Jbig2Ctx *ctx,
             CONTEXT |= jbig2_image_get_pixel(ref, x - dx + 1, y - dy - 1) << 10;
             CONTEXT |= jbig2_image_get_pixel(ref, x - dx + 0, y - dy - 1) << 11;
             CONTEXT |= jbig2_image_get_pixel(ref, x - dx + params->grat[2], y - dy + params->grat[3]) << 12;
-            bit = jbig2_arith_decode(as, &GR_stats[CONTEXT], &code);
-            if (code)
+            bit = jbig2_arith_decode(as, &GR_stats[CONTEXT]);
+            if (bit < 0)
                 return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "failed to decode arithmetic code when handling refinement template0");
             jbig2_image_set_pixel(image, x, y, bit);
         }
@@ -120,8 +119,7 @@ jbig2_decode_refinement_template1_unopt(Jbig2Ctx *ctx,
     const int dy = params->GRREFERENCEDY;
     uint32_t CONTEXT;
     int x, y;
-    bool bit;
-    int code = 0;
+    int bit;
 
     for (y = 0; y < GRH; y++) {
         for (x = 0; x < GRW; x++) {
@@ -136,8 +134,8 @@ jbig2_decode_refinement_template1_unopt(Jbig2Ctx *ctx,
             CONTEXT |= jbig2_image_get_pixel(ref, x - dx + 0, y - dy + 0) << 7;
             CONTEXT |= jbig2_image_get_pixel(ref, x - dx - 1, y - dy + 0) << 8;
             CONTEXT |= jbig2_image_get_pixel(ref, x - dx + 0, y - dy - 1) << 9;
-            bit = jbig2_arith_decode(as, &GR_stats[CONTEXT], &code);
-            if (code)
+            bit = jbig2_arith_decode(as, &GR_stats[CONTEXT]);
+            if (bit < 0)
                 return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "failed to decode arithmetic code when handling refinement template0");
             jbig2_image_set_pixel(image, x, y, bit);
         }
@@ -177,7 +175,6 @@ jbig2_decode_refinement_template1(Jbig2Ctx *ctx,
     byte *grreg_line = (byte *) image->data;
     byte *grref_line = (byte *) params->reference->data;
     int x, y;
-    int code = 0;
 
     for (y = 0; y < GRH; y++) {
         const int padded_width = (GRW + 7) & -8;
@@ -212,10 +209,10 @@ jbig2_decode_refinement_template1(Jbig2Ctx *ctx,
 
             /* this is the speed critical inner-loop */
             for (x_minor = 0; x_minor < minor_width; x_minor++) {
-                bool bit;
+                int bit;
 
-                bit = jbig2_arith_decode(as, &GR_stats[CONTEXT], &code);
-                if (code)
+                bit = jbig2_arith_decode(as, &GR_stats[CONTEXT]);
+                if (bit < 0)
                     return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "failed to decode arithmetic code when handling refinement template1");
                 result |= bit << (7 - x_minor);
                 CONTEXT = ((CONTEXT & 0x0d6) << 1) | bit |
@@ -308,10 +305,9 @@ jbig2_decode_refinement_TPGRON(Jbig2Ctx *ctx, const Jbig2RefinementRegionParams 
 {
     const int GRW = image->width;
     const int GRH = image->height;
-    int x, y, iv, bit, LTP = 0;
+    int x, y, iv, LTP = 0;
     uint32_t start_context = (params->GRTEMPLATE ? 0x40 : 0x100);
     ContextBuilder mkctx = (params->GRTEMPLATE ? mkctx1 : mkctx0);
-    int code = 0;
 
     if (params->GRTEMPLATE == 0 &&
         (pixel_outside_field(params->grat[0], params->grat[1]) ||
@@ -320,13 +316,14 @@ jbig2_decode_refinement_TPGRON(Jbig2Ctx *ctx, const Jbig2RefinementRegionParams 
                            "adaptive template pixel is out of field");
 
     for (y = 0; y < GRH; y++) {
-        LTP ^= jbig2_arith_decode(as, &GR_stats[start_context], &code);
-        if (code)
+        int bit = jbig2_arith_decode(as, &GR_stats[start_context]);
+        if (bit < 0)
             return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode arithmetic code when handling refinement TPGRON1");
+        LTP ^= bit;
         if (!LTP) {
             for (x = 0; x < GRW; x++) {
-                bit = jbig2_arith_decode(as, &GR_stats[mkctx(params, image, x, y)], &code);
-                if (code)
+                bit = jbig2_arith_decode(as, &GR_stats[mkctx(params, image, x, y)]);
+                if (bit < 0)
                     return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode arithmetic code when handling refinement TPGRON1");
                 jbig2_image_set_pixel(image, x, y, bit);
             }
@@ -334,8 +331,8 @@ jbig2_decode_refinement_TPGRON(Jbig2Ctx *ctx, const Jbig2RefinementRegionParams 
             for (x = 0; x < GRW; x++) {
                 iv = implicit_value(params, image, x, y);
                 if (iv < 0) {
-                    bit = jbig2_arith_decode(as, &GR_stats[mkctx(params, image, x, y)], &code);
-                    if (code)
+                    int bit = jbig2_arith_decode(as, &GR_stats[mkctx(params, image, x, y)]);
+                    if (bit < 0)
                         return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode arithmetic code when handling refinement TPGRON1");
                     jbig2_image_set_pixel(image, x, y, bit);
                 } else

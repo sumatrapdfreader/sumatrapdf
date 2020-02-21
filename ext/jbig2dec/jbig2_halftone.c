@@ -50,6 +50,12 @@ jbig2_hd_new(Jbig2Ctx *ctx, const Jbig2PatternDictParams *params, Jbig2Image *im
     uint32_t i;
     int j;
 
+    if (N == 0) {
+        /* We've wrapped. */
+        jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "params->GRAYMAX out of range");
+        return NULL;
+    }
+
     /* allocate a new struct */
     new = jbig2_new(ctx, Jbig2PatternDict, 1);
     if (new != NULL) {
@@ -458,7 +464,7 @@ jbig2_decode_halftone_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
     Jbig2Image *HSKIP = NULL;
     Jbig2PatternDict *HPATS;
     uint32_t i;
-    uint32_t mg, ng;
+    int32_t mg, ng;
     int32_t x, y;
     uint16_t gray_val;
     int code = 0;
@@ -481,8 +487,8 @@ jbig2_decode_halftone_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
         for (mg = 0; mg < params->HGH; ++mg) {
             for (ng = 0; ng < params->HGW; ++ng) {
-                x = (params->HGX + mg * (int32_t) params->HRY + ng * (int32_t) params->HRX) >> 8;
-                y = (params->HGY + mg * (int32_t) params->HRX - ng * (int32_t) params->HRY) >> 8;
+                x = (params->HGX + mg * params->HRY + ng * params->HRX) >> 8;
+                y = (params->HGY + mg * params->HRX - ng * params->HRY) >> 8;
 
                 if (x + HPATS->HPW <= 0 || x >= (int32_t) image->width || y + HPATS->HPH <= 0 || y >= (int32_t) image->height) {
                     jbig2_image_set_pixel(HSKIP, ng, mg, 1);

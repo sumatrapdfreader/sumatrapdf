@@ -8,9 +8,9 @@ CFLAGS := -Wall -Wextra -Wno-unused-parameter -g -O2
 
 LIB_SRCS := \
 	jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c \
-	jbig2_huffman.c jbig2_segment.c jbig2_page.c jbig2_symbol_dict.c \
-	jbig2_text.c jbig2_halftone.c jbig2_generic.c jbig2_refinement.c \
-	jbig2_mmr.c jbig2_image.c jbig2.c
+	jbig2_huffman.c jbig2_hufftab.c jbig2_segment.c jbig2_page.c \
+	jbig2_symbol_dict.c jbig2_text.c jbig2_halftone.c jbig2_generic.c \
+	jbig2_refinement.c jbig2_mmr.c jbig2_image.c jbig2.c
 LIB_OBJS := $(LIB_SRCS:%.c=%.o)
 LIB_HDRS := \
 	jbig2.h jbig2_arith.h jbig2_arith_iaid.h jbig2_arith_int.h \

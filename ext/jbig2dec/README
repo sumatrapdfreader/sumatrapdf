@@ -15,16 +15,18 @@ The program is only partially functional at this time, but should be
 useful in some limited contexts. We welcome files that the decoder can't
 handle, or renders incorrectly.
 
+More information about jbig2dec and updated versions are available from:
+https://jbig2dec.com/
+
 A set of example files is available from
-http://www.ece.ubc.ca/spmg/jbig2/bitstreams/main.html
-
-More information about this project and updated versions are available
-from:
-
-https://artifex.com/developers-ghostscript-jbig2dec/
+https://jbig2dec.com/tests/
 
 Development source code is kept in a git repository at:
-
 http://git.ghostscript.com/?p=jbig2dec.git
 
-The contact address for the project is <jbig2-dev@ghostscript.com>.
+Report bugs at https://bugs.ghostscript.com
+For security issues please use the "Security - Other" product,
+and for normal bugs the "jbig2dec" product.
+
+Contact the developers at the IRC channel #ghostscript at freenode.net
+or via the mailing list <gs-devel@ghostscript.com>.

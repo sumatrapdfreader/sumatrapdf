@@ -179,24 +179,32 @@ jbig2_ctx_new_imp(Jbig2Allocator *allocator, Jbig2Options options, Jbig2GlobalCt
 #define get_int16(bptr)\
     (((int)get_uint16(bptr) ^ 0x8000) - 0x8000)
 
+/* coverity[ -tainted_data_return ] */
+/* coverity[ -tainted_data_argument : arg-0 ] */
 int16_t
 jbig2_get_int16(const byte *bptr)
 {
     return get_int16(bptr);
 }
 
+/* coverity[ -tainted_data_return ] */
+/* coverity[ -tainted_data_argument : arg-0 ] */
 uint16_t
 jbig2_get_uint16(const byte *bptr)
 {
     return get_uint16(bptr);
 }
 
+/* coverity[ -tainted_data_return ] */
+/* coverity[ -tainted_data_argument : arg-0 ] */
 int32_t
 jbig2_get_int32(const byte *bptr)
 {
     return ((int32_t) get_int16(bptr) << 16) | get_uint16(bptr + 2);
 }
 
+/* coverity[ -tainted_data_return ] */
+/* coverity[ -tainted_data_argument : arg-0 ] */
 uint32_t
 jbig2_get_uint32(const byte *bptr)
 {
@@ -373,7 +381,7 @@ jbig2_data_in(Jbig2Ctx *ctx, const unsigned char *data, size_t size)
                 p += 4;
 
                 segment->data_length = p - s;
-                jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number, "unknown length determined to be %u", segment->data_length);
+                jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number, "unknown length determined to be %lu", (long) segment->data_length);
             }
             else if (segment->data_length > ctx->buf_wr_ix - ctx->buf_rd_ix)
                     return 0; /* need more data */
@@ -384,7 +392,7 @@ jbig2_data_in(Jbig2Ctx *ctx, const unsigned char *data, size_t size)
             if (ctx->state == JBIG2_FILE_RANDOM_BODIES) {
                 if (ctx->segment_index == ctx->n_segments)
                     ctx->state = JBIG2_FILE_EOF;
-            } else {            /* JBIG2_FILE_SEQUENCIAL_BODY */
+            } else {            /* JBIG2_FILE_SEQUENTIAL_BODY */
                 ctx->state = JBIG2_FILE_SEQUENTIAL_HEADER;
             }
             if (code < 0) {

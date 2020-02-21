@@ -26,7 +26,7 @@ extern "C"
 #define _JBIG2_H
 
 #define JBIG2_VERSION_MAJOR (0)
-#define JBIG2_VERSION_MINOR (16)
+#define JBIG2_VERSION_MINOR (18)
 
 /* warning levels */
 typedef enum {
@@ -105,6 +105,11 @@ void jbig2_release_page(Jbig2Ctx *ctx, Jbig2Image *image);
 int jbig2_complete_page(Jbig2Ctx *ctx);
 
 #endif                          /* _JBIG2_H */
+
+/* If we don't have a definition for inline, make it nothing so the code will compile */
+#ifndef inline
+#define inline
+#endif
 
 #ifdef __cplusplus
 }

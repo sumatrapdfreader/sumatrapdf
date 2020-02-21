@@ -42,21 +42,16 @@ struct _Jbig2ArithState {
     int offset;
 };
 
-#undef SOFTWARE_CONVENTION
-
 /*
-  A note on the "software conventions".
-
-  Previously, I had misinterpreted the spec, and had thought that the
-  spec's description of the "software convention" was wrong. Now I
-  believe that this code is both correct and matches the spec, with
-  SOFTWARE_CONVENTION defined or not. Thanks to William Rucklidge for
-  the clarification.
-
-  In any case, my benchmarking indicates no speed difference at all.
-  Therefore, for now we will just use the normative version.
-
- */
+  Previous versions of this code had a #define to allow
+  us to choose between using the revised arithmetic decoding
+  specified in the 'Software Convention' section of the spec.
+  Back to back tests showed that the 'Software Convention'
+  version was indeed slightly faster. We therefore enable it
+  by default. We also strip the option out, because a) it
+  makes the code harder to read, and b) such things are an
+  invitation to bitrot.
+*/
 
 static void
 jbig2_arith_bytein(Jbig2ArithState *as)
@@ -65,6 +60,23 @@ jbig2_arith_bytein(Jbig2ArithState *as)
     byte B;
 
     /* invariant: as->next_word_bytes > 0 */
+
+    /* This code confused me no end when I first read it, so a quick note
+     * to save others (and future me's) from being similarly confused.
+     * 'next_word' does indeed contain 'next_word_bytes' of valid data
+     * (always starting at the most significant byte). The confusing
+     * thing is that the first byte has always already been read.
+     * i.e. it serves only as an indication that the last byte we read
+     * was FF or not.
+     *
+     * The jbig2 bytestream uses FF bytes, followed by a byte > 0x8F as
+     * marker bytes. These never occur in normal streams of arithmetic
+     * encoding, so meeting one terminates the stream (with an infinite
+     * series of 1 bits).
+     *
+     * If we meet an FF byte, we return it as normal. We just 'remember'
+     * that fact for the next byte we read.
+     */
 
     /* Figure G.3 */
     B = (byte)((as->next_word >> 24) & 0xFF);
@@ -83,9 +95,6 @@ jbig2_arith_bytein(Jbig2ArithState *as)
 #ifdef JBIG2_DEBUG_ARITH
                 fprintf(stderr, "read %02x (aa)\n", B);
 #endif
-#ifndef SOFTWARE_CONVENTION
-                as->C += 0xFF00;
-#endif
                 as->CT = 8;
                 as->next_word = 0xFF000000 | (as->next_word >> 8);
                 as->next_word_bytes = 4;
@@ -94,11 +103,7 @@ jbig2_arith_bytein(Jbig2ArithState *as)
 #ifdef JBIG2_DEBUG_ARITH
                 fprintf(stderr, "read %02x (a)\n", B);
 #endif
-#ifdef SOFTWARE_CONVENTION
                 as->C += 0xFE00 - (B1 << 9);
-#else
-                as->C += B1 << 9;
-#endif
                 as->CT = 7;
             }
         } else {
@@ -106,9 +111,6 @@ jbig2_arith_bytein(Jbig2ArithState *as)
             if (B1 > 0x8F) {
 #ifdef JBIG2_DEBUG_ARITH
                 fprintf(stderr, "read %02x (ba)\n", B);
-#endif
-#ifndef SOFTWARE_CONVENTION
-                as->C += 0xFF00;
 #endif
                 as->CT = 8;
             } else {
@@ -118,11 +120,7 @@ jbig2_arith_bytein(Jbig2ArithState *as)
                 fprintf(stderr, "read %02x (b)\n", B);
 #endif
 
-#ifdef SOFTWARE_CONVENTION
                 as->C += 0xFE00 - (B1 << 9);
-#else
-                as->C += (B1 << 9);
-#endif
                 as->CT = 7;
             }
         }
@@ -141,11 +139,7 @@ jbig2_arith_bytein(Jbig2ArithState *as)
             as->next_word_bytes = new_bytes;
         }
         B = (byte)((as->next_word >> 24) & 0xFF);
-#ifdef SOFTWARE_CONVENTION
         as->C += 0xFF00 - (B << 8);
-#else
-        as->C += (B << 8);
-#endif
     }
 }
 
@@ -172,11 +166,7 @@ jbig2_arith_new(Jbig2Ctx *ctx, Jbig2WordStream *ws)
     result->offset = new_bytes;
 
     /* Figure E.20 */
-#ifdef SOFTWARE_CONVENTION
     result->C = (~(result->next_word >> 8)) & 0xFF0000;
-#else
-    result->C = (result->next_word >> 8) & 0xFF0000;
-#endif
 
     jbig2_arith_bytein(result);
     result->C <<= 7;
@@ -195,7 +185,7 @@ typedef struct {
     byte lps_xor;               /* lps_xor = index ^ NLPS ^ (SWITCH << 7) */
 } Jbig2ArithQe;
 
-const Jbig2ArithQe jbig2_arith_Qe[MAX_QE_ARRAY_SIZE] = {
+static const Jbig2ArithQe jbig2_arith_Qe[MAX_QE_ARRAY_SIZE] = {
     {0x5601, 1 ^ 0, 1 ^ 0 ^ 0x80},
     {0x3401, 2 ^ 1, 6 ^ 1},
     {0x1801, 3 ^ 2, 9 ^ 2},
@@ -258,34 +248,22 @@ jbig2_arith_renormd(Jbig2ArithState *as)
     } while ((as->A & 0x8000) == 0);
 }
 
-bool
-jbig2_arith_decode(Jbig2ArithState *as, Jbig2ArithCx *pcx, int *code)
+int
+jbig2_arith_decode(Jbig2ArithState *as, Jbig2ArithCx *pcx)
 {
     Jbig2ArithCx cx = *pcx;
     const Jbig2ArithQe *pqe;
     unsigned int index = cx & 0x7f;
     bool D;
 
-    if (index >= MAX_QE_ARRAY_SIZE) {
-        *code = -1;
-        return 0;
-    } else {
-        pqe = &jbig2_arith_Qe[index];
-    }
+    if (index >= MAX_QE_ARRAY_SIZE)
+        return -1; /* Error */
+
+    pqe = &jbig2_arith_Qe[index];
 
     /* Figure E.15 */
     as->A -= pqe->Qe;
-    if (
-#ifdef SOFTWARE_CONVENTION
-        /* Note: I do not think this is correct. See above. */
-        (as->C >> 16) < as->A
-#else
-        !((as->C >> 16) < pqe->Qe)
-#endif
-    ) {
-#ifndef SOFTWARE_CONVENTION
-        as->C -= pqe->Qe << 16;
-#endif
+    if ((as->C >> 16) < as->A) {
         if ((as->A & 0x8000) == 0) {
             /* MPS_EXCHANGE, Figure E.16 */
             if (as->A < pqe->Qe) {
@@ -296,16 +274,12 @@ jbig2_arith_decode(Jbig2ArithState *as, Jbig2ArithCx *pcx, int *code)
                 *pcx ^= pqe->mps_xor;
             }
             jbig2_arith_renormd(as);
-            *code = 0;
             return D;
         } else {
-            *code = 0;
             return cx >> 7;
         }
     } else {
-#ifdef SOFTWARE_CONVENTION
         as->C -= (as->A) << 16;
-#endif
         /* LPS_EXCHANGE, Figure E.17 */
         if (as->A < pqe->Qe) {
             as->A = pqe->Qe;
@@ -317,7 +291,6 @@ jbig2_arith_decode(Jbig2ArithState *as, Jbig2ArithCx *pcx, int *code)
             *pcx ^= pqe->lps_xor;
         }
         jbig2_arith_renormd(as);
-        *code = 0;
         return D;
     }
 }
@@ -378,7 +351,6 @@ main(int argc, char **argv)
     Jbig2ArithState *as;
     int i;
     Jbig2ArithCx cx = 0;
-    int code;
 
     ctx = jbig2_ctx_new(NULL, 0, NULL, NULL, NULL);
 
@@ -394,7 +366,7 @@ main(int argc, char **argv)
 #else
         (void)
 #endif
-            jbig2_arith_decode(as, &cx, &code);
+            jbig2_arith_decode(as, &cx);
 
 #ifdef JBIG2_DEBUG_ARITH
         fprintf(stderr, "%3d: D = %d, ", i, D);

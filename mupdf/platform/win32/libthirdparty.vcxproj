@@ -401,6 +401,7 @@
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_generic.c" />
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_halftone.c" />
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_huffman.c" />
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_hufftab.c" />
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_image.c" />
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_mmr.c" />
     <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_page.c" />

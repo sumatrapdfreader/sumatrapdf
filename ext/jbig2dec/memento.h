@@ -75,8 +75,7 @@
  * An example:
  *    Suppose we have a gs invocation that crashes with memory corruption.
  *     * Build with -DMEMENTO.
- *     * In your debugger put breakpoints on Memento_inited and
- *       Memento_Breakpoint.
+ *     * In your debugger put a breakpoint on Memento_breakpoint.
  *     * Run the program. It will stop in Memento_inited.
  *     * Execute Memento_setParanoia(1);  (In VS use Ctrl-Alt-Q). (Note #1)
  *     * Continue execution.
@@ -92,9 +91,9 @@
  *       and 1458 - so if we rerun and stop the program at 1457, we can then
  *       step through, possibly with a data breakpoint at 0x172e710 and see
  *       when it occurs.
- *     * So restart the program from the beginning. When we hit Memento_inited
- *       execute Memento_breakAt(1457); (and maybe Memento_setParanoia(1), or
- *       Memento_setParanoidAt(1457))
+ *     * So restart the program from the beginning. When we stop after
+ *       initialisation execute Memento_breakAt(1457); (and maybe
+ *       Memento_setParanoia(1), or Memento_setParanoidAt(1457))
  *     * Continue execution until we hit Memento_breakpoint.
  *     * Now you can step through and watch the memory corruption happen.
  *
@@ -157,6 +156,30 @@
  *    Both Windows and GCC provide separate new[] and delete[] operators
  *    for arrays. Apparently some systems do not. If this is the case for
  *    your system, define MEMENTO_CPP_NO_ARRAY_CONSTRUCTORS.
+ *
+ * "libbacktrace.so failed to load"
+ *
+ *    In order to give nice backtraces on unix, Memento will try to use
+ *    a libbacktrace dynamic library. If it can't find it, you'll see
+ *    that warning, and your backtraces won't include file/line information.
+ *
+ *    To fix this you'll need to build your own libbacktrace. Don't worry
+ *    it's really easy:
+ *       git clone git://github.com/ianlancetaylor/libbacktrace
+ *       cd libbacktrace
+ *       ./configure
+ *       make
+ *
+ *    This leaves the build .so as .libs/libbacktrace.so
+ *
+ *    Memento will look for this on LD_LIBRARY_PATH, or in /opt/lib/,
+ *    or in /lib/, or  in /usr/lib/, or in /usr/local/lib/. I recommend
+ *    using /opt/lib/ as this won't conflict with anything that you
+ *    get via a package manager like apt.
+ *
+ *       sudo mkdir /opt
+ *       sudo mkdir /opt/lib
+ *       sudo cp .libs/libbacktrace.so /opt/lib/
  */
 
 #ifndef MEMENTO_H
@@ -238,6 +261,8 @@ void Memento_stopLeaking(void);
 
 int Memento_sequence(void);
 
+int Memento_squeezing(void);
+
 void Memento_fin(void);
 
 void Memento_bt(void);
@@ -299,6 +324,7 @@ void Memento_bt(void);
 #define Memento_fin()                      do {} while (0)
 #define Memento_bt()                       do {} while (0)
 #define Memento_sequence()                 (0)
+#define Memento_squeezing()                (0)
 
 #endif /* MEMENTO */
 

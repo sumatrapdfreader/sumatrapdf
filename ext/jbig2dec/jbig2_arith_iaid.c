@@ -75,12 +75,11 @@ jbig2_arith_iaid_decode(Jbig2Ctx *ctx, Jbig2ArithIaidCtx *actx, Jbig2ArithState 
     int PREV = 1;
     int D;
     int i;
-    int code = 0;
 
     /* A.3 (2) */
     for (i = 0; i < SBSYMCODELEN; i++) {
-        D = jbig2_arith_decode(as, &IAIDx[PREV], &code);
-        if (code)
+        D = jbig2_arith_decode(as, &IAIDx[PREV]);
+        if (D < 0)
             return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode IAIDx code");
 #ifdef VERBOSE
         fprintf(stderr, "IAID%x: D = %d\n", PREV, D);

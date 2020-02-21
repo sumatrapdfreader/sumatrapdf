@@ -27,6 +27,7 @@
 #endif
 #include "os_types.h"
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -745,7 +746,10 @@ const mmr_table_node jbig2_mmr_black_decode[] = {
 static uint32_t
 jbig2_find_changing_element(const byte *line, uint32_t x, uint32_t w)
 {
-    int a, b;
+    int a;
+    uint8_t     all8;
+    uint16_t    all16;
+    uint32_t    all32;
 
     if (line == NULL)
         return w;
@@ -760,13 +764,128 @@ jbig2_find_changing_element(const byte *line, uint32_t x, uint32_t w)
         return x;
     }
 
-    while (x < w) {
-        b = getbit(line, x);
-        if (a != b)
-            break;
-        x++;
+    /* We will be looking for a uint8 or uint16 or uint32 that has at least one
+    bit different from <a>, so prepare some useful values for comparison. */
+    all8  = (a) ? 0xff : 0;
+    all16 = (a) ? 0xffff : 0;
+    all32 = (a) ? 0xffffffff : 0;
+
+    /* Check individual bits up to next 8-bit boundary.
+
+    [Would it be worth looking at top 4 bits, then at 2 bits then at 1 bit,
+    instead of iterating over all 8 bits? */
+
+    if ( ((uint8_t*) line)[ x / 8] == all8) {
+        /* Don't bother checking individual bits if the enclosing uint8 equals
+        all8 - just move to the next byte. */
+        x = x / 8 * 8 + 8;
+        if (x >= w) {
+            x = w;
+            goto end;
+        }
+    } else {
+        for(;;) {
+            if (x == w) {
+                goto end;
+            }
+            if (x % 8 == 0) {
+                break;
+            }
+            if (getbit(line, x) != a) {
+                goto end;
+            }
+            x += 1;
+        }
     }
 
+    assert(x % 8 == 0);
+    /* Check next uint8 if we are not on 16-bit boundary. */
+    if (x % 16) {
+        if (w - x < 8) {
+            goto check1;
+        }
+        if ( ((uint8_t*) line)[ x / 8] != all8) {
+            goto check1;
+        }
+        x += 8; /* This will make x a multiple of 16. */
+    }
+
+    assert(x % 16 == 0);
+    /* Check next uint16 if we are not on 32-bit boundary. */
+    if (x % 32) {
+        if (w - x < 16) {
+            goto check8;
+        }
+        if ( ((uint16_t*) line)[ x / 16] != all16) {
+            goto check8_no_eof;
+        }
+        x += 16; /* This will make x a multiple of 32. */
+    }
+
+    /* We are now on a 32-bit boundary. Check uint32's until we reach last
+    sub-32-bit region. */
+    assert(x % 32 == 0);
+    for(;;) {
+        if (w - x < 32) {
+            /* We could still look at the uint32 here - if it equals all32, we
+            know there is no match before <w> so could do {x = w; goto end;}.
+
+            But for now we simply fall into the epilogue checking, which will
+            look at the next uint16, then uint8, then last 8 bits. */
+            goto check16;
+        }
+        if (((uint32_t*) line)[x/32] != all32) {
+            goto check16_no_eof;
+        }
+        x += 32;
+    }
+
+    /* Check next uint16. */
+check16:
+    assert(x % 16 == 0);
+    if (w - x < 16) {
+        goto check8;
+    }
+check16_no_eof:
+    assert(w - x >= 16);
+    if ( ((uint16_t*) line)[x/16] != all16) {
+        goto check8_no_eof;
+    }
+    x += 16;
+
+    /* Check next uint8. */
+check8:
+    assert(x % 8 == 0);
+    if (w - x < 8) {
+        goto check1;
+    }
+check8_no_eof:
+    assert(w - x >= 8);
+    if ( ((uint8_t*) line)[x/8] != all8) {
+        goto check1;
+    }
+    x += 8;
+
+    /* Check up to the next 8 bits. */
+check1:
+    assert(x % 8 == 0);
+    if ( ((uint8_t*) line)[ x / 8] == all8) {
+        x = w;
+        goto end;
+    }
+    {
+        for(;;) {
+            if (x == w) {
+                goto end;
+            }
+            if (getbit(line, x) != a) {
+                goto end;
+            }
+            x += 1;
+        }
+    }
+
+end:
     return x;
 }
 
