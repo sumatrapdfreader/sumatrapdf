@@ -14,13 +14,8 @@ func cdWebsiteDir() {
 	must(err)
 }
 
-func regenWebsite() {
-	netlifyBuild()
-}
-
 func websiteDeployProd() {
 	cdWebsiteDir()
-	regenWebsite()
 	// using https://github.com/netlify/cli
 	cmd := exec.Command("netlify", "deploy", "--prod", "--open", "--dir", "www", "--site", "2963982f-7d39-439c-a7eb-0eb118efbd02")
 	u.RunCmdLoggedMust(cmd)
@@ -28,7 +23,6 @@ func websiteDeployProd() {
 
 func websiteDeployDev() {
 	cdWebsiteDir()
-	regenWebsite()
 	// using https://github.com/netlify/cli
 	cmd := exec.Command("netlify", "deploy", "--open", "--dir", "www", "--site", "2963982f-7d39-439c-a7eb-0eb118efbd02")
 	u.RunCmdLoggedMust(cmd)
@@ -36,9 +30,7 @@ func websiteDeployDev() {
 
 func websiteRunLocally() {
 	cdWebsiteDir()
-	regenWebsite()
 	// using https://github.com/netlify/cli
 	cmd := exec.Command("netlify", "dev", "--dir", "www")
 	u.RunCmdLoggedMust(cmd)
-
 }
