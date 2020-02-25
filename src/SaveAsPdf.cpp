@@ -20,8 +20,11 @@ extern "C" {
 #include "Translations.h"
 
 #include "EngineBase.h"
+#include "EngineManager.h"
 
 #include "SaveAsPdf.h"
+
+// based on pdfmerge.c in mupdf
 
 const pdf_write_options pdf_default_write_options2 = {
     0,  /* do_incremental */
@@ -42,28 +45,102 @@ const pdf_write_options pdf_default_write_options2 = {
     "", /* upwd_utf8[128] */
 };
 
+/* Copy as few key/value pairs as we can. Do not include items that reference other pages. */
+// clang-format off
+static pdf_obj* const copy_list[] = {
+    PDF_NAME(Contents),
+    PDF_NAME(Resources),
+    PDF_NAME(MediaBox),
+    PDF_NAME(CropBox),
+    PDF_NAME(BleedBox),
+    PDF_NAME(TrimBox),
+    PDF_NAME(ArtBox),
+    PDF_NAME(Rotate),
+    PDF_NAME(UserUnit)
+};
+// clang-format on
+
 struct PdfMerger {
     fz_context* ctx = nullptr;
     pdf_document* doc_des = nullptr;
-    EngineBase** engines = nullptr;
+    pdf_document* doc_src = nullptr;
     VecStr filePaths;
 
     PdfMerger() = default;
     ~PdfMerger();
     bool MergeAndSave(TocItem*, char* dstPath);
+    bool MergePdfFile(std::string_view);
+    void MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_map);
 };
 
 PdfMerger::~PdfMerger() {
-    if (engines) {
-        int nFiles = filePaths.size();
-        for (int i = 0; i < nFiles; i++) {
-            delete engines[i];
-        }
-        free(engines);
-    }
     pdf_drop_document(ctx, doc_des);
     fz_flush_warnings(ctx);
     fz_drop_context(ctx);
+}
+
+void PdfMerger::MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_map) {
+    pdf_obj* page_ref = nullptr;
+    pdf_obj* page_dict = nullptr;
+    pdf_obj* obj = nullptr;
+    pdf_obj* ref = nullptr;
+    int i;
+
+    fz_var(ref);
+    fz_var(page_dict);
+
+    fz_try(ctx) {
+        page_ref = pdf_lookup_page_obj(ctx, doc_src, page_from - 1);
+        pdf_flatten_inheritable_page_items(ctx, page_ref);
+
+        page_dict = pdf_new_dict(ctx, doc_des, 4);
+
+		pdf_dict_put(ctx, page_dict, PDF_NAME(Type), PDF_NAME(Page));
+        for (i = 0; i < (int)nelem(copy_list); i++) {
+            obj = pdf_dict_get(ctx, page_ref, copy_list[i]);
+            if (obj != nullptr) {
+                pdf_dict_put_drop(ctx, page_dict, copy_list[i], pdf_graft_mapped_object(ctx, graft_map, obj));
+            }
+        }
+
+        ref = pdf_add_object(ctx, doc_des, page_dict);
+
+        pdf_insert_page(ctx, doc_des, page_to - 1, ref);
+    }
+    fz_always(ctx) {
+        pdf_drop_obj(ctx, page_dict);
+        pdf_drop_obj(ctx, ref);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+}
+
+bool PdfMerger::MergePdfFile(std::string_view path) {
+    doc_src = pdf_open_document(ctx, path.data());
+    if (!doc_src) {
+        return false;
+    }
+
+    int nPages = 0;
+    pdf_graft_map* graft_map = nullptr;
+
+    fz_try(ctx) {
+        nPages = pdf_count_pages(ctx, doc_src);
+        graft_map = pdf_new_graft_map(ctx, doc_des);
+        for (int i = 1; i <= nPages; i++) {
+            MergePdfPage(i, - 1, graft_map);
+        }
+    }
+    fz_always(ctx) {
+        pdf_drop_graft_map(ctx, graft_map);
+        pdf_drop_document(ctx, doc_src);
+    }
+    fz_catch(ctx) {
+        // TODO: show error message
+        return false;
+    }
+    return true;
 }
 
 bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
@@ -82,8 +159,6 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
         return false;
     }
 
-    engines = AllocArray<EngineBase*>((size_t)nFiles);
-
     ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
 
     // TODO: install warnigngs redirect
@@ -95,6 +170,16 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
     }
     if (doc_des == nullptr) {
         return false;
+    }
+
+    bool ok;
+    for (int i = 0; i < nFiles; i++) {
+        std::string_view path = filePaths.at(i);
+        ok = MergePdfFile(path);
+        if (!ok) {
+            // TODO: show error message
+            return false;
+        }
     }
 
     pdf_write_options opts = pdf_default_write_options2;
@@ -113,27 +198,13 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
     return true;
 }
 
-/* Copy as few key/value pairs as we can. Do not include items that reference other pages. */
-// clang-format off
-static pdf_obj* const copy_list[] = {
-    PDF_NAME(Contents),
-    PDF_NAME(Resources),
-    PDF_NAME(MediaBox),
-    PDF_NAME(CropBox),
-    PDF_NAME(BleedBox),
-    PDF_NAME(TrimBox),
-    PDF_NAME(ArtBox),
-    PDF_NAME(Rotate),
-    PDF_NAME(UserUnit)
-};
-// clang-format on
-
-void SaveVirtualAsPdf(TocItem* root, char* dstPath) {
+bool SaveVirtualAsPdf(TocItem* root, char* dstPath) {
     PdfMerger* merger = new PdfMerger();
 
     bool ok = merger->MergeAndSave(root, dstPath);
+    delete merger;
     if (!ok) {
         // TODO: show error message
     }
-    delete merger;
+    return ok;
 }

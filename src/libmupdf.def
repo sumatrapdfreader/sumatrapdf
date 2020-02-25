@@ -70,6 +70,11 @@ EXPORTS
 	pdf_add_image
 	pdf_new_text_string
 	fz_new_buffer_from_copied_data
+	pdf_new_graft_map
+	pdf_drop_graft_map
+	pdf_graft_mapped_object
+	pdf_add_object
+	pdf_flatten_inheritable_page_items
 
 	fz_keep_bitmap
 	fz_drop_bitmap

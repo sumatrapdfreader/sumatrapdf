@@ -25,6 +25,7 @@
 #include "Menu.h"
 #include "Translations.h"
 #include "SaveAsPdf.h"
+#include "SumatraPDF.h"
 
 #include "EngineBase.h"
 #include "EngineMulti.h"
@@ -668,11 +669,54 @@ void TocEditorWindow::UpdateRemoveTocItemButtonStatus() {
 // in TableOfContents.cpp
 extern void ShowExportedBookmarksMsg(const char* path);
 
+static std::string_view PickSaveName() {
+    // Prepare the file filters (use \1 instead of \0 so that the
+    // double-zero terminated string isn't cut by the string handling
+    // methods too early on)
+    str::WStr fileFilter(256);
+    fileFilter.Append(_TR("PDF documents"));
+    fileFilter.Append(L"\1*.pdf\1");
+    str::TransChars(fileFilter.Get(), L"\1", L"\0");
+
+    WCHAR dstFileName[MAX_PATH] = {};
+
+    OPENFILENAME ofn = {0};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = nullptr;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = fileFilter.Get();
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = nullptr;
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    // note: explicitly not setting lpstrInitialDir so that the OS
+    // picks a reasonable default (in particular, we don't want this
+    // in plugin mode, which is likely the main reason for saving as...)
+
+    bool ok = GetSaveFileName(&ofn);
+    if (!ok) {
+        return {};
+    }
+    std::string_view res = strconv::WstrToUtf8(dstFileName);
+    return res;
+}
+
+static void ShowSavedAsPdfMsg(const char* path) {
+    str::Str msg;
+    msg.AppendFmt("Saved as PDF file %s", path);
+    str::Str caption;
+    caption.Append("Saved as PDF");
+    UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
+    MessageBoxA(nullptr, msg.Get(), caption.Get(), type);
+}
+
 void TocEditorWindow::SaveAsPdf() {
-    MessageNYI();
-    // TOOD: choose a file name
+    AutoFreeStr path = PickSaveName();
     TocTree* tree = (TocTree*)treeCtrl->treeModel;
-    SaveVirtualAsPdf(tree->root, "foo");
+    bool ok = SaveVirtualAsPdf(tree->root, (char*)path.get());
+    if (ok) {
+        ShowSavedAsPdfMsg(path.get());
+    }
 }
 
 void TocEditorWindow::SaveAsVirtual() {
