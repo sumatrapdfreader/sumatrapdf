@@ -23,21 +23,6 @@ extern "C" {
 
 #include "SaveAsPdf.h"
 
-struct PdfMerger {
-    fz_context* ctx = nullptr;
-    pdf_document* doc_des = nullptr;
-
-    PdfMerger() = default;
-    ~PdfMerger();
-    bool MergeAndSave(TocItem*, char* dstPath);
-};
-
-PdfMerger::~PdfMerger() {
-    pdf_drop_document(ctx, doc_des);
-    fz_flush_warnings(ctx);
-    fz_drop_context(ctx);
-}
-
 const pdf_write_options pdf_default_write_options2 = {
     0,  /* do_incremental */
     0,  /* do_pretty */
@@ -57,8 +42,47 @@ const pdf_write_options pdf_default_write_options2 = {
     "", /* upwd_utf8[128] */
 };
 
-bool PdfMerger::MergeAndSave(TocItem* ti, char* dstPath) {
+struct PdfMerger {
+    fz_context* ctx = nullptr;
+    pdf_document* doc_des = nullptr;
+    EngineBase** engines = nullptr;
+    VecStr filePaths;
 
+    PdfMerger() = default;
+    ~PdfMerger();
+    bool MergeAndSave(TocItem*, char* dstPath);
+};
+
+PdfMerger::~PdfMerger() {
+    if (engines) {
+        int nFiles = filePaths.size();
+        for (int i = 0; i < nFiles; i++) {
+            delete engines[i];
+        }
+        free(engines);
+    }
+    pdf_drop_document(ctx, doc_des);
+    fz_flush_warnings(ctx);
+    fz_drop_context(ctx);
+}
+
+bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
+    VisitTocTree(root, [this](TocItem* ti) -> bool {
+        if (!ti->engineFilePath) {
+            return true;
+        }
+        std::string_view path = ti->engineFilePath;
+        filePaths.Append(path);
+        return true;
+    });
+
+    int nFiles = filePaths.size();
+    if (nFiles == 0) {
+        // TODO: show an error message
+        return false;
+    }
+
+    engines = AllocArray<EngineBase*>((size_t)nFiles);
 
     ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
 
@@ -105,7 +129,6 @@ static pdf_obj* const copy_list[] = {
 // clang-format on
 
 void SaveVirutalAsPdf(TocItem* root, char* dstPath) {
-    // TODO: implement me
     PdfMerger* merger = new PdfMerger();
 
     bool ok = merger->MergeAndSave(root, dstPath);
