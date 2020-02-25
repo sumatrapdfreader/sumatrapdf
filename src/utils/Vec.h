@@ -755,3 +755,32 @@ void vectorRemove(std::vector<T>& v, const T el) {
     v.erase(std::remove(b, e, el), e);
 }
 #endif
+
+// TODO: could increase kVecStrIndexSize when expanding array
+constexpr int kVecStrIndexSize = 128;
+struct VecStrIndex {
+    VecStrIndex* next;
+    int nStrings;
+    char* offsets[kVecStrIndexSize];
+    i32 sizes[kVecStrIndexSize];
+    int nLeft();
+};
+
+// Append-only, optimized vector of strings. Allocates from pool allocator, so
+// strings are close together and freed in bulk
+// implemented in BaseUtil.cpp
+// TODO: inherit from PoolAllocator?
+struct VecStr {
+    PoolAllocator* allocator = nullptr;
+    VecStrIndex* firstIndex = nullptr;
+    VecStrIndex* currIndex = nullptr;
+    bool allowFailure = false;
+
+    VecStr() = delete;
+    ~VecStr();
+    int size();
+    bool allocateIndexIfNeeded();
+    bool Append(std::string_view sv);
+    void* allocate(size_t n);
+    std::string_view at(int);
+};

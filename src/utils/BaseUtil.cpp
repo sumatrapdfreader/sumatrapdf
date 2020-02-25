@@ -263,3 +263,96 @@ uint32_t MurmurHash2(const void* key, size_t len) {
 
     return h;
 }
+
+int VecStrIndex::nLeft() {
+    return kVecStrIndexSize - nStrings;
+}
+
+VecStr::~VecStr() {
+    delete allocator;
+}
+
+int VecStr::size() {
+    VecStrIndex* idx = firstIndex;
+    int n = 0;
+    while (idx) {
+        n += idx->nStrings;
+        idx = idx->next;
+    }
+    return n;
+}
+
+void* VecStr::allocate(size_t n) {
+    if (!allocator) {
+        allocator = new PoolAllocator();
+    }
+    return allocator->Alloc(n);
+}
+
+std::string_view VecStr::at(int i) {
+    CrashIf(i < 0);
+    VecStrIndex* idx = firstIndex;
+    while (idx) {
+        if (idx->nStrings > i) {
+            break;
+        }
+        i -= idx->nStrings;
+        idx = idx->next;
+    }
+    if (idx == nullptr) {
+        CrashMe();
+        return {};
+    }
+    CrashIf(idx->nStrings <= i);
+    if (idx->nStrings <= i) {
+        return false;
+    }
+    const char* s = (const char*)idx->offsets[i];
+    i32 size = idx->sizes[i];
+    return {s, (size_t)size};
+}
+
+bool VecStr::allocateIndexIfNeeded() {
+    if (currIndex && currIndex->nLeft() > 0) {
+        return true;
+    }
+
+    // for structures we want generous rounding, for strings no rounding
+    allocator->SetAllocRounding(8);
+    VecStrIndex* idx = (VecStrIndex*)allocate(sizeof(VecStrIndex));
+    allocator->SetAllocRounding(1); // TODO: 0?
+
+    if (allowFailure && !idx) {
+        return false;
+    }
+    idx->next = nullptr;
+    idx->nStrings = 0;
+
+    if (!firstIndex) {
+        firstIndex = idx;
+        currIndex = idx;
+    } else {
+        CrashIf(!firstIndex);
+        currIndex->next = idx;
+        currIndex = idx;
+    }
+    return true;
+}
+
+bool VecStr::Append(std::string_view sv) {
+        bool ok = allocateIndexIfNeeded();
+        if (!ok) {
+            return false;
+        }
+        // TODO: ensure sv.size() is < std::max(i32)
+        size_t strLen = sv.size();
+        void* dst = allocate(strLen + 1); // +1 for terminating zero
+        if (!dst && allowFailure) {
+            return false;
+        }
+        int n = currIndex->nStrings;
+        currIndex->offsets[n] = (char*)dst;
+        currIndex->sizes[n] = strLen;
+        currIndex->nStrings++;
+        return true;
+    }
