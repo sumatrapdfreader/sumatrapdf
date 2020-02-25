@@ -1,6 +1,11 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+extern "C" {
+#include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
+}
+
 #include "utils/BaseUtil.h"
 #include "utils/BitManip.h"
 #include "utils/Log.h"
@@ -18,6 +23,11 @@
 
 #include "SaveAsPdf.h"
 
-void SaveVirutalAsPdf(TocItem* root, char* filePath) {
+struct PdfMerger {
+    fz_context* ctx = nullptr;
+    pdf_document* doc_des = nullptr;
+};
+
+void SaveVirutalAsPdf(TocItem* root, char* dstPath) {
     // TODO: implement me
 }

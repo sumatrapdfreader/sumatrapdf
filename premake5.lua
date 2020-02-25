@@ -31,6 +31,7 @@ Reference for warnings:
  4458 - declaraion of X hides class member
  4522 - multiple assignment operators specified
  4530 - exception mismatch
+ 4611 - interaction between '_setjmp' and C++ object destruction is non-portable
  4702 - unreachable code
  4706 - assignment within conditional expression
  4800 - forcing value to bool (performance warning)
@@ -85,7 +86,7 @@ workspace "SumatraPDF"
      defines { "RAMICRO"}
   filter {}
 
-  disablewarnings { "4127", "4189", "4324", "4458", "4522", "4702", "4800" }
+  disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800" }
   warnings "Extra"
 
   location "this_is_invalid_location"
@@ -215,7 +216,7 @@ workspace "SumatraPDF"
       defines { "DISABLE_MMX" }
     filter{}
     disablewarnings { "4100", "4189", "4244", "4267", "4302", "4311", "4312", "4505"}
-    disablewarnings { "4456", "4457", "4459", "4530", "4611", "4701", "4702", "4703", "4706" }
+    disablewarnings { "4456", "4457", "4459", "4530", "4701", "4702", "4703", "4706" }
     includedirs { "ext/libjpeg-turbo" }
     libdjvu_files()
 
@@ -348,7 +349,7 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     disablewarnings { 
       "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457", 
-      "4819", "4701", "4706", "4838" 
+      "4701", "4706", "4819", "4838"
     }
     includedirs { "src", "src/wingui" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
