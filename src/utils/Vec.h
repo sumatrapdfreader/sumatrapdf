@@ -664,7 +664,7 @@ class WStrList {
     };
 
     Vec<Item> items;
-    size_t count;
+    size_t count = 0;
     Allocator* allocator;
 
     // variation of MurmurHash2 which deals with strings that are
@@ -682,8 +682,8 @@ class WStrList {
     }
 
   public:
-    explicit WStrList(size_t capHint = 0, Allocator* allocator = nullptr)
-        : items(capHint, allocator), count(0), allocator(allocator) {
+    explicit WStrList(size_t capHint = 0, Allocator* allocator = nullptr) : items(capHint, allocator) {
+        this->allocator = allocator;
     }
 
     ~WStrList() {
@@ -769,18 +769,16 @@ struct VecStrIndex {
 // Append-only, optimized vector of strings. Allocates from pool allocator, so
 // strings are close together and freed in bulk
 // implemented in BaseUtil.cpp
-// TODO: inherit from PoolAllocator?
 struct VecStr {
-    PoolAllocator* allocator = nullptr;
+    PoolAllocator allocator;
     VecStrIndex* firstIndex = nullptr;
     VecStrIndex* currIndex = nullptr;
     bool allowFailure = false;
 
-    VecStr() = delete;
-    ~VecStr();
+    VecStr() = default;
+    ~VecStr() = default;
     int size();
     bool allocateIndexIfNeeded();
     bool Append(std::string_view sv);
-    void* allocate(size_t n);
     std::string_view at(int);
 };

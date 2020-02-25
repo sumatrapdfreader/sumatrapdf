@@ -571,12 +571,12 @@ static void RegisterInternetProtocolFactory() {
 
     ScopedComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
-    AssertCrash(!FAILED(hr));
-    AssertCrash(nullptr == gInternetProtocolFactory);
+    CrashIf(FAILED(hr));
+    CrashIf(nullptr != gInternetProtocolFactory);
     gInternetProtocolFactory = new HW_IInternetProtocolFactory();
     hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0,
                                             nullptr, 0);
-    AssertCrash(!FAILED(hr));
+    CrashIf(FAILED(hr));
 }
 
 static void UnregisterInternetProtocolFactory() {

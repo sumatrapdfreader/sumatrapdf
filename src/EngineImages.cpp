@@ -820,7 +820,7 @@ bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnno
 }
 
 EngineBase* EngineImageDir::CreateFromFile(const WCHAR* fileName) {
-    AssertCrash(dir::Exists(fileName));
+    CrashIf(!dir::Exists(fileName));
     EngineImageDir* engine = new EngineImageDir();
     if (!engine->LoadImageDir(fileName)) {
         delete engine;

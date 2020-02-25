@@ -1038,9 +1038,10 @@ HDC DoubleBuffer::GetDC() const {
 }
 
 void DoubleBuffer::Flush(HDC hdc) {
-    AssertCrash(hdc != hdcBuffer);
-    if (hdcBuffer)
+    CrashIf(hdc == hdcBuffer);
+    if (hdcBuffer) {
         BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+    }
 }
 
 DeferWinPosHelper::DeferWinPosHelper() {

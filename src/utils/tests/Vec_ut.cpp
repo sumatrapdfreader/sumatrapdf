@@ -8,6 +8,39 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
+static void assertStrEq(std::string_view sv, const char* s) {
+    const char* svd = sv.data();
+    size_t n = sv.size();
+    bool ok = str::Eq(sv, s);
+    utassert(ok);
+    utassert(svd[n] == 0); // ensure ends with 0
+}
+
+static void VecStrTest() {
+    const char* str1 = "fo";
+    const char* str2 = "bar";
+    const char* str3 = "this is a large string, my friend";
+
+    VecStr v;
+    utassert(v.size() == 0);
+    v.Append(str1);
+    utassert(v.size() == 1);
+    v.Append(str2);
+    utassert(v.size() == 2);
+
+    // allocate a bunch to test allocating
+    for (int i = 0; i < 1024; i++) {
+        v.Append(str3);
+    }
+    utassert(v.size() == 1026);
+
+    assertStrEq(v.at(0), str1);
+    assertStrEq(v.at(1), str2);
+    for (int i = 0; i < 1024; i++) {
+        assertStrEq(v.at(i + 2), str3);
+    }
+}
+
 static void WStrVecTest() {
     WStrVec v;
     v.Append(str::Dup(L"foo"));
@@ -250,4 +283,5 @@ void VecTest() {
 
     WStrVecTest();
     StrListTest();
+    VecStrTest();
 }

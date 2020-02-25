@@ -383,7 +383,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
 }
 
 int DisplayModel::FirstVisiblePageNo() const {
-    AssertCrash(pagesInfo);
+    CrashIf(!pagesInfo);
     if (!pagesInfo)
         return INVALID_PAGE_NO;
 
@@ -403,7 +403,7 @@ int DisplayModel::CurrentPageNo() const {
     if (!IsContinuous(GetDisplayMode()))
         return startPage;
 
-    AssertCrash(pagesInfo);
+    CrashIf(!pagesInfo);
     if (!pagesInfo) {
         return INVALID_PAGE_NO;
     }

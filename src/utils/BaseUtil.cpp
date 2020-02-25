@@ -57,14 +57,11 @@ char* Allocator::StrDup(Allocator* a, const char* s) {
 // never moves in memory
 std::string_view Allocator::AllocString(Allocator* a, std::string_view str) {
     size_t n = str.size();
-    size_t toCopy = n + 1;
+    char* dst = (char*)Allocator::Alloc(a, n + 1);
     const char* src = str.data();
-    if (!src) {
-        src = "";
-    }
-    void* dst = Allocator::Alloc(a, toCopy);
-    memcpy(dst, (const void*)src, toCopy);
-    return std::string_view((const char*)dst, n);
+    memcpy(dst, (const void*)src, n);
+    dst[n] = 0; // we don't assume str.data() is 0-terminated
+    return std::string_view(dst, n);
 }
 
 #if OS_WIN
@@ -77,14 +74,42 @@ WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* s) {
 }
 #endif
 
+size_t PoolAllocator::MemBlockNode::Used() {
+    return size - free;
+}
+
+char* PoolAllocator::MemBlockNode::DataStart() {
+    return (char*)this + sizeof(MemBlockNode);
+}
+
+// adjust DataStart() to be aligned at alignTo boundary
+// alignTo should be a power of 2
+void PoolAllocator::MemBlockNode::AlignTo(size_t alignTo) {
+    if (alignTo < 2) {
+        // 0 and 1 mean: no alignment
+        return;
+    }
+    size_t n = Used();
+    size_t off = n % alignTo;
+    if (off == 0) {
+        // already aligned
+        return;
+    }
+    size_t pad = alignTo - off;
+    if (pad >= free) {
+        free = 0;
+    } else {
+        free -= pad;
+    }
+    CrashIf((size_t)DataStart() % alignTo != 0);
+}
+
 void PoolAllocator::SetMinBlockSize(size_t newMinBlockSize) {
-    CrashIf(currBlock); // can only be changed before first allocation
     minBlockSize = newMinBlockSize;
 }
 
-void PoolAllocator::SetAllocRounding(size_t newRounding) {
-    CrashIf(currBlock); // can only be changed before first allocation
-    allocRounding = newRounding;
+void PoolAllocator::Free(const void*) {
+    // does nothing, we can't free individual pieces of memory
 }
 
 void PoolAllocator::FreeAll() {
@@ -103,7 +128,6 @@ PoolAllocator::~PoolAllocator() {
 }
 
 void PoolAllocator::AllocBlock(size_t minSize) {
-    minSize = RoundUp(minSize, allocRounding);
     size_t size = minBlockSize;
     if (minSize > size) {
         size = minSize;
@@ -133,10 +157,11 @@ void* PoolAllocator::Realloc(void* mem, size_t size) {
 }
 
 void* PoolAllocator::Alloc(size_t size) {
-    size = RoundUp(size, allocRounding);
-    if (!currBlock || (currBlock->free < size)) {
-        AllocBlock(size);
+    size_t minSize = RoundUp(size, currAlign);
+    if (!currBlock || (currBlock->free < minSize)) {
+        AllocBlock(minSize);
     }
+    currBlock->AlignTo(currAlign);
 
     void* mem = (void*)(currBlock->DataStart() + currBlock->Used());
     currBlock->free -= size;
@@ -146,7 +171,7 @@ void* PoolAllocator::Alloc(size_t size) {
 // assuming allocated memory was for pieces of uniform size,
 // find the address of n-th piece
 void* PoolAllocator::FindNthPieceOfSize(size_t size, size_t n) const {
-    size = RoundUp(size, allocRounding);
+    size = RoundUp(size, currAlign);
     MemBlockNode* curr = firstBlock;
     while (curr) {
         size_t piecesInBlock = curr->Used() / size;
@@ -268,10 +293,6 @@ int VecStrIndex::nLeft() {
     return kVecStrIndexSize - nStrings;
 }
 
-VecStr::~VecStr() {
-    delete allocator;
-}
-
 int VecStr::size() {
     VecStrIndex* idx = firstIndex;
     int n = 0;
@@ -280,13 +301,6 @@ int VecStr::size() {
         idx = idx->next;
     }
     return n;
-}
-
-void* VecStr::allocate(size_t n) {
-    if (!allocator) {
-        allocator = new PoolAllocator();
-    }
-    return allocator->Alloc(n);
 }
 
 std::string_view VecStr::at(int i) {
@@ -305,7 +319,7 @@ std::string_view VecStr::at(int i) {
     }
     CrashIf(idx->nStrings <= i);
     if (idx->nStrings <= i) {
-        return false;
+        return {};
     }
     const char* s = (const char*)idx->offsets[i];
     i32 size = idx->sizes[i];
@@ -317,10 +331,9 @@ bool VecStr::allocateIndexIfNeeded() {
         return true;
     }
 
-    // for structures we want generous rounding, for strings no rounding
-    allocator->SetAllocRounding(8);
-    VecStrIndex* idx = (VecStrIndex*)allocate(sizeof(VecStrIndex));
-    allocator->SetAllocRounding(1); // TODO: 0?
+    // for structures we want aligned allocation. 8 should be good enough for everything
+    allocator.currAlign = 8;
+    VecStrIndex* idx = allocator.AllocStruct<VecStrIndex>();
 
     if (allowFailure && !idx) {
         return false;
@@ -333,6 +346,7 @@ bool VecStr::allocateIndexIfNeeded() {
         currIndex = idx;
     } else {
         CrashIf(!firstIndex);
+        CrashIf(!currIndex);
         currIndex->next = idx;
         currIndex = idx;
     }
@@ -340,19 +354,21 @@ bool VecStr::allocateIndexIfNeeded() {
 }
 
 bool VecStr::Append(std::string_view sv) {
-        bool ok = allocateIndexIfNeeded();
-        if (!ok) {
-            return false;
-        }
-        // TODO: ensure sv.size() is < std::max(i32)
-        size_t strLen = sv.size();
-        void* dst = allocate(strLen + 1); // +1 for terminating zero
-        if (!dst && allowFailure) {
-            return false;
-        }
-        int n = currIndex->nStrings;
-        currIndex->offsets[n] = (char*)dst;
-        currIndex->sizes[n] = strLen;
-        currIndex->nStrings++;
-        return true;
+    bool ok = allocateIndexIfNeeded();
+    if (!ok) {
+        return false;
     }
+    constexpr size_t maxLen = (size_t)std::numeric_limits<i32>::max();
+    CrashIf(sv.size() > maxLen);
+    if (sv.size() > maxLen) {
+        return false;
+    }
+    allocator.currAlign = 1; // no need to align allocations for string
+    std::string_view res = Allocator::AllocString(&allocator, sv);
+
+    int n = currIndex->nStrings;
+    currIndex->offsets[n] = (char*)res.data();
+    currIndex->sizes[n] = (i32)res.size();
+    currIndex->nStrings++;
+    return true;
+}

@@ -390,8 +390,7 @@ bool ListRemove(T** root, T* el) {
 // Base class for allocators that can be provided to Vec class
 // (and potentially others). Needed because e.g. in crash handler
 // we want to use Vec but not use standard malloc()/free() functions
-class Allocator {
-  public:
+struct Allocator {
     Allocator() {
     }
     virtual ~Allocator(){};
@@ -429,35 +428,29 @@ class Allocator {
 //
 // Note: we could be a bit more clever here by allocating data in 4K chunks
 // via VirtualAlloc() etc. instead of malloc(), which would lower the overhead
-class PoolAllocator : public Allocator {
+struct PoolAllocator : Allocator {
     // we'll allocate block of the minBlockSize unless
     // asked for a block of bigger size
     size_t minBlockSize = 4096;
-    size_t allocRounding = 8;
+    size_t currAlign = 8; // alignment of allocations
 
     struct MemBlockNode {
+        size_t Used();
+        char* DataStart();
+        void AlignTo(size_t alignTo);
+
         struct MemBlockNode* next;
         size_t size;
         size_t free;
-
-        size_t Used() {
-            return size - free;
-        }
-        char* DataStart() {
-            return (char*)this + sizeof(MemBlockNode);
-        }
         // data follows here
     };
 
     MemBlockNode* currBlock = nullptr;
     MemBlockNode* firstBlock = nullptr;
 
-  public:
-    explicit PoolAllocator() {
-    }
+    explicit PoolAllocator() = default;
 
     void SetMinBlockSize(size_t newMinBlockSize);
-    void SetAllocRounding(size_t newRounding);
     void FreeAll();
     ~PoolAllocator() override;
     void AllocBlock(size_t minSize);
@@ -465,9 +458,7 @@ class PoolAllocator : public Allocator {
     // Allocator methods
     void* Realloc(void* mem, size_t size) override;
 
-    virtual void Free(const void*) override {
-        // does nothing, we can't free individual pieces of memory
-    }
+    void Free(const void*) override;
 
     void* Alloc(size_t size) override;
 
@@ -523,10 +514,9 @@ class PoolAllocator : public Allocator {
 };
 
 #if OS_WIN
-class HeapAllocator : public Allocator {
+struct HeapAllocator : Allocator {
     HANDLE allocHeap = nullptr;
 
-  public:
     HeapAllocator(size_t initialSize = 128 * 1024) {
         allocHeap = HeapCreate(0, initialSize, 0);
     }

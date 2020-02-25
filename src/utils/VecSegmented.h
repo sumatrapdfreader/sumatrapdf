@@ -12,12 +12,12 @@
 template <typename T>
 class VecSegmented {
   protected:
-    size_t len;
+    size_t len = 0;
     PoolAllocator allocator;
 
   public:
-    VecSegmented() : len(0) {
-        allocator.SetAllocRounding(sizeof(T));
+    VecSegmented() {
+        allocator.currAlign = sizeof(T);
     }
 
     ~VecSegmented() {
