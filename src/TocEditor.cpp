@@ -672,7 +672,7 @@ void TocEditorWindow::SaveAsPdf() {
     MessageNYI();
     // TOOD: choose a file name
     TocTree* tree = (TocTree*)treeCtrl->treeModel;
-    SaveVirutalAsPdf(tree->root, "foo");
+    SaveVirtualAsPdf(tree->root, "foo");
 }
 
 void TocEditorWindow::SaveAsVirtual() {

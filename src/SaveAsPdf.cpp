@@ -128,7 +128,7 @@ static pdf_obj* const copy_list[] = {
 };
 // clang-format on
 
-void SaveVirutalAsPdf(TocItem* root, char* dstPath) {
+void SaveVirtualAsPdf(TocItem* root, char* dstPath) {
     PdfMerger* merger = new PdfMerger();
 
     bool ok = merger->MergeAndSave(root, dstPath);
