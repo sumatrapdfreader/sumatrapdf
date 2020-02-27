@@ -1825,6 +1825,9 @@ HCURSOR GetCursor(LPWSTR id) {
         }
     }
     CrashIf(cursorIdx == -1);
+    if (cursorIdx == -1) {
+        return nullptr;
+    }
     if (nullptr == cachedCursors[cursorIdx]) {
         cachedCursors[cursorIdx] = LoadCursor(nullptr, id);
         CrashIf(cachedCursors[cursorIdx] == nullptr);

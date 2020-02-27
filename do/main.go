@@ -24,6 +24,16 @@ func regenPremake() {
 	}
 }
 
+func runCppCheck() {
+	// -q : quiet, doesn't print progress report
+	// -v : prints more info about the error
+	// --inline-suppr: honor suppression comments in the code like:
+	// // cppcheck-suppress <type>
+	// ... line with a problem
+	cmd := exec.Command("cppcheck", "-q", "-v", "--inline-suppr", "src")
+	u.RunCmdLoggedMust(cmd)
+}
+
 func isOnRepoDispatch() bool {
 	v := os.Getenv("GITHUB_EVENT_NAME")
 	return v == "repository_dispatch"
@@ -61,6 +71,7 @@ func main() {
 		flgWebsiteDeployDev        bool
 		flgWebsiteImportNotion     bool
 		flgNoCache                 bool
+		flgCppCheck                bool
 	)
 
 	{
@@ -89,6 +100,7 @@ func main() {
 		flag.BoolVar(&flgWebsiteDeployDev, "website-deploy-dev", false, "deploy a preview of website")
 		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
+		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
 		flag.Parse()
 	}
 
@@ -142,6 +154,11 @@ func main() {
 
 	if flgCrashes {
 		previewCrashes()
+		return
+	}
+
+	if flgCppCheck {
+		runCppCheck()
 		return
 	}
 

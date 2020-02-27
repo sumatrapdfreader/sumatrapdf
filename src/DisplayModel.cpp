@@ -146,8 +146,8 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 }
 
 // must call SetInitialViewSettings() after creation
-DisplayModel::DisplayModel(EngineBase* eng, ControllerCallback* cb) : Controller(cb), engine(engine) {
-    engine = eng;
+DisplayModel::DisplayModel(EngineBase* engine, ControllerCallback* cb) : Controller(cb) {
+    this->engine = engine;
     CrashIf(!engine || engine->PageCount() <= 0);
     engineType = engine->kind;
 

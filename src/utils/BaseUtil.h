@@ -194,10 +194,12 @@ char (&DimofSizeHelper(T (&array)[N]))[N];
 // but it seemed to confuse callstack walking
 inline void CrashMe() {
     char* p = nullptr;
+    // cppcheck-suppress nullPointer
     *p = 0;
 }
 inline void CrashMePort() {
     char* p = nullptr;
+    // cppcheck-suppress nullPointer
     *p = 0;
 }
 #if COMPILER_MSVC

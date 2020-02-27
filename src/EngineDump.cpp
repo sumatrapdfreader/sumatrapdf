@@ -19,6 +19,10 @@
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
+static void Out1(char* msg) {
+    printf("%s", msg);
+}
+
 static bool NeedsEscape(const WCHAR* s) {
     if (str::FindChar(s, '<')) {
         return true;
@@ -71,7 +75,7 @@ static std::string_view Escape(const WCHAR* str) {
 }
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
-    Out("\t<Properties\n");
+    Out1("\t<Properties\n");
     AutoFree str = Escape(engine->FileName());
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str = Escape(engine->GetProperty(DocumentProperty::Title));
@@ -119,10 +123,10 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
         Out("\t\tUnsupportedFeatures=\"%s\"\n", str.Get());
     }
     if (!engine->AllowsPrinting()) {
-        Out("\t\tPrintingAllowed=\"no\"\n");
+        Out1("\t\tPrintingAllowed=\"no\"\n");
     }
     if (!engine->AllowsCopyingText()) {
-        Out("\t\tCopyingTextAllowed=\"no\"\n");
+        Out1("\t\tCopyingTextAllowed=\"no\"\n");
     }
     if (engine->IsImageCollection()) {
         Out("\t\tImageFileDPI=\"%g\"\n", engine->GetFileDPI());
@@ -130,7 +134,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     if (engine->preferredLayout) {
         Out("\t\tPreferredLayout=\"%d\"\n", engine->preferredLayout);
     }
-    Out("\t/>\n");
+    Out1("\t/>\n");
 
     if (!fullDump) {
         return;
@@ -174,34 +178,42 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
 void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
     for (; item; item = item->next) {
         AutoFree title(Escape(item->title));
-        for (int i = 0; i < level; i++)
-            Out("\t");
+        for (int i = 0; i < level; i++) {
+            Out1("\t");
+        }
         Out("<Item Title=\"%s\"", title.Get());
-        if (item->pageNo)
+        if (item->pageNo) {
             Out(" Page=\"%d\"", item->pageNo);
-        if (item->id != ++idCounter)
+        }
+        if (item->id != ++idCounter) {
             Out(" Id=\"%d\"", item->id);
+        }
         if (item->GetPageDestination()) {
             PageDestination* dest = item->GetPageDestination();
             AutoFree target = Escape(dest->GetValue());
-            if (target.Get())
+            if (target.Get()) {
                 Out(" Target=\"%s\"", target.Get());
-            if (item->pageNo != dest->GetPageNo())
+            }
+            if (item->pageNo != dest->GetPageNo()) {
                 Out(" TargetPage=\"%d\"", dest->GetPageNo());
+            }
             AutoFree rectStr(DestRectToStr(engine, dest));
-            if (rectStr)
+            if (rectStr) {
                 Out(" Target%s", rectStr.Get());
+            }
         }
-        if (!item->child)
+        if (!item->child) {
             Out(" />\n");
-        else {
-            if (item->isOpenDefault)
-                Out(" Expanded=\"yes\"");
-            Out(">\n");
+        } else {
+            if (item->isOpenDefault) {
+                Out1(" Expanded=\"yes\"");
+            }
+            Out1(">\n");
             DumpTocItem(engine, item->child, level + 1, idCounter);
-            for (int i = 0; i < level; i++)
-                Out("\t");
-            Out("</Item>\n");
+            for (int i = 0; i < level; i++) {
+                Out1("\t");
+            }
+            Out1("</Item>\n");
         }
     }
 }
@@ -216,9 +228,9 @@ void DumpToc(EngineBase* engine) {
         Out("\t<TocTree%s>\n", engine->HacToc() ? "" : " Expected=\"no\"");
         int idCounter = 0;
         DumpTocItem(engine, root, 2, idCounter);
-        Out("\t</TocTree>\n");
+        Out1("\t</TocTree>\n");
     } else if (engine->HacToc()) {
-        Out("\t<TocTree />\n");
+        Out1("\t<TocTree />\n");
     }
 }
 
@@ -245,11 +257,13 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     RectI bbox = engine->PageMediabox(pageNo).Round();
     Out("\t\tMediaBox=\"%d %d %d %d\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);
     RectI cbox = engine->PageContentBox(pageNo).Round();
-    if (cbox != bbox)
+    if (cbox != bbox) {
         Out("\t\tContentBox=\"%d %d %d %d\"\n", cbox.x, cbox.y, cbox.dx, cbox.dy);
-    if (!engine->HasClipOptimizations(pageNo))
-        Out("\t\tHasClipOptimizations=\"no\"\n");
-    Out("\t>\n");
+    }
+    if (!engine->HasClipOptimizations(pageNo)) {
+        Out1("\t\tHasClipOptimizations=\"no\"\n");
+    }
+    Out1("\t>\n");
 
     if (fullDump) {
         AutoFree text(Escape(engine->ExtractPageText(pageNo)));
@@ -260,41 +274,46 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
 
     Vec<PageElement*>* els = engine->GetElements(pageNo);
     if (els && els->size() > 0) {
-        Out("\t\t<PageElements>\n");
+        Out1("\t\t<PageElements>\n");
         for (size_t i = 0; i < els->size(); i++) {
             RectD rect = els->at(i)->GetRect();
             Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", ElementTypeToStr(els->at(i)),
                 rect.x, rect.y, rect.dx, rect.dy);
             PageDestination* dest = els->at(i)->AsLink();
             if (dest) {
-                if (dest->Kind() != nullptr)
+                if (dest->Kind() != nullptr) {
                     Out("\t\t\t\tLinkType=\"%s\"\n", dest->Kind());
+                }
                 AutoFree value(Escape(dest->GetValue()));
-                if (value.Get())
+                if (value.Get()) {
                     Out("\t\t\t\tLinkTarget=\"%s\"\n", value.Get());
-                if (dest->GetPageNo())
+                }
+                if (dest->GetPageNo()) {
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetPageNo());
+                }
                 AutoFree rectStr(DestRectToStr(engine, dest));
-                if (rectStr)
+                if (rectStr) {
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());
+                }
             }
             AutoFree name(Escape(els->at(i)->GetValue()));
-            if (name.Get())
+            if (name.Get()) {
                 Out("\t\t\t\tLabel=\"%s\"\n", name.Get());
-            Out("\t\t\t/>\n");
+            }
+            Out1("\t\t\t/>\n");
         }
-        Out("\t\t</PageElements>\n");
+        Out1("\t\t</PageElements>\n");
         DeleteVecMembers(*els);
     }
     delete els;
 
-    Out("\t</Page>\n");
+    Out1("\t</Page>\n");
 }
 
 void DumpThumbnail(EngineBase* engine) {
     RectD rect = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     if (rect.IsEmpty()) {
-        Out("\t<Thumbnail />\n");
+        Out1("\t<Thumbnail />\n");
         return;
     }
 
@@ -304,32 +323,35 @@ void DumpThumbnail(EngineBase* engine) {
     RenderPageArgs args(1, zoom, 0, &rect);
     RenderedBitmap* bmp = engine->RenderPage(args);
     if (!bmp) {
-        Out("\t<Thumbnail />\n");
+        Out1("\t<Thumbnail />\n");
         return;
     }
 
     size_t len;
     ScopedMem<unsigned char> data(tga::SerializeBitmap(bmp->GetBitmap(), &len));
     AutoFree hexData(data ? str::MemToHex(data, len) : nullptr);
-    if (hexData)
+    if (hexData) {
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
-    else
-        Out("\t<Thumbnail />\n");
+    } else {
+        Out1("\t<Thumbnail />\n");
+    }
 
     delete bmp;
 }
 
 void DumpData(EngineBase* engine, bool fullDump) {
-    Out(UTF8_BOM);
-    Out("<?xml version=\"1.0\"?>\n");
-    Out("<EngineDump>\n");
+    Out1(UTF8_BOM);
+    Out1("<?xml version=\"1.0\"?>\n");
+    Out1("<EngineDump>\n");
     DumpProperties(engine, fullDump);
     DumpToc(engine);
-    for (int i = 1; i <= engine->PageCount(); i++)
+    for (int i = 1; i <= engine->PageCount(); i++) {
         DumpPageContent(engine, i, fullDump);
-    if (fullDump)
+    }
+    if (fullDump) {
         DumpThumbnail(engine);
-    Out("</EngineDump>\n");
+    }
+    Out1("</EngineDump>\n");
 }
 
 #define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg) TEXT("\n"), __VA_ARGS__)
@@ -340,10 +362,12 @@ bool CheckRenderPath(const WCHAR* path) {
     const WCHAR* p = path - 1;
     while ((p = str::FindChar(p + 1, '%')) != nullptr) {
         p++;
-        if (*p == '%')
+        if (*p == '%') {
             continue;
-        if (*p == '0' && '1' <= *(p + 1) && *(p + 1) <= '9')
+        }
+        if (*p == '0' && '1' <= *(p + 1) && *(p + 1) <= '9') {
             p += 2;
+        }
         if (hasArg || *p != 'd') {
             ErrOut("Error: Render path may contain '%%d' only once, other '%%' signs must be doubled!");
             return false;
@@ -354,8 +378,9 @@ bool CheckRenderPath(const WCHAR* path) {
 }
 
 bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.f, bool silent = false) {
-    if (!CheckRenderPath(renderPath))
+    if (!CheckRenderPath(renderPath)) {
         return false;
+    }
 
     if (str::EndsWithI(renderPath, L".txt")) {
         str::WStr text(1024);

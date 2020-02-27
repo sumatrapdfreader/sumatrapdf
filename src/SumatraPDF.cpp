@@ -721,12 +721,15 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, SizeI size, co
 
     pageRect = dm->GetEngine()->Transform(pageRect, 1, 1.0f, 0);
     float zoom = size.dx / (float)pageRect.dx;
-    if (pageRect.dy > (float)size.dy / zoom)
+    if (pageRect.dy > (float)size.dy / zoom) {
         pageRect.dy = (float)size.dy / zoom;
+    }
     pageRect = dm->GetEngine()->Transform(pageRect, 1, 1.0f, 0, true);
 
+    // TODO: this is leaking?
     RenderingCallback* callback = new ThumbnailRenderingTask(saveThumbnail);
     gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
+    // cppcheck-suppress memleak
 }
 
 static void CreateThumbnailForFile(WindowInfo* win, DisplayState& ds) {
@@ -869,17 +872,19 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
         return;
     }
 
-    if (win->AsEbook())
+    if (win->AsEbook()) {
         pageNo = win->AsEbook()->CurrentTocPageNo();
-    else if (INVALID_PAGE_NO != pageNo) {
+    } else if (INVALID_PAGE_NO != pageNo) {
         AutoFreeWstr buf(win->ctrl->GetPageLabel(pageNo));
         win::SetText(win->hwndPageBox, buf);
         ToolbarUpdateStateForWindow(win, false);
-        if (win->ctrl->HasPageLabels())
+        if (win->ctrl->HasPageLabels()) {
             UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
+        }
     }
-    if (pageNo == win->currPageNo)
+    if (pageNo == win->currPageNo) {
         return;
+    }
 
     UpdateTocSelection(win, pageNo);
     win->currPageNo = pageNo;

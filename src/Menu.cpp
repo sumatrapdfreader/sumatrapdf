@@ -848,7 +848,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     if (!supportsAnnotations) {
         win::menu::Remove(menu, IDM_SAVE_ANNOTATIONS_SMX);
     } else {
-        win::menu::SetEnabled(menu, IDM_SAVE_ANNOTATIONS_SMX, dm->userAnnotsModified);
+        win::menu::SetEnabled(menu, IDM_SAVE_ANNOTATIONS_SMX, dm && dm->userAnnotsModified);
     }
 }
 
