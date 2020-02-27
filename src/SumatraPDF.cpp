@@ -272,16 +272,19 @@ bool LaunchBrowser(const WCHAR* url) {
         return SendMessage(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
-    if (!HasPermission(Perm_DiskAccess))
+    if (!HasPermission(Perm_DiskAccess)) {
         return false;
+    }
 
     // check if this URL's protocol is allowed
     AutoFreeWstr protocol;
-    if (!str::Parse(url, L"%S:", &protocol))
+    if (!str::Parse(url, L"%S:", &protocol)) {
         return false;
+    }
     str::ToLowerInPlace(protocol);
-    if (!gAllowedLinkProtocols.Contains(protocol))
+    if (!gAllowedLinkProtocols.Contains(protocol)) {
         return false;
+    }
 
     return LaunchFile(url, nullptr, L"open");
 }
@@ -289,20 +292,23 @@ bool LaunchBrowser(const WCHAR* url) {
 // lets the shell open a file of any supported perceived type
 // in the default application for opening such files
 bool OpenFileExternally(const WCHAR* path) {
-    if (!HasPermission(Perm_DiskAccess) || gPluginMode)
+    if (!HasPermission(Perm_DiskAccess) || gPluginMode) {
         return false;
+    }
 
     // check if this file's perceived type is allowed
     const WCHAR* ext = path::GetExtNoFree(path);
     AutoFreeWstr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
-    if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml"))
+    if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml")) {
         perceivedType.SetCopy(L"webpage");
+    }
     str::ToLowerInPlace(perceivedType);
-    if (gAllowedFileTypes.Contains(L"*"))
+    if (gAllowedFileTypes.Contains(L"*")) {
         /* allow all file types (not recommended) */;
-    else if (!perceivedType || !gAllowedFileTypes.Contains(perceivedType))
+    } else if (!perceivedType || !gAllowedFileTypes.Contains(perceivedType)) {
         return false;
+    }
 
     // TODO: only do this for trusted files (cf. IsUntrustedFile)?
     return LaunchFile(path);
@@ -317,28 +323,49 @@ void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepCont
     UpdateToolbarState(win);
 }
 
+static bool IsWindowInfoHwnd(WindowInfo* win, HWND hwnd, HWND parent) {
+    if (hwnd == win->hwndFrame) {
+        return true;
+    }
+    if (!parent) {
+        return false;
+    }
+    // canvas, toolbar, rebar, tocbox, splitters
+    if (parent == win->hwndFrame) {
+        return true;
+    }
+    // infotips, message windows
+
+    if (parent == win->hwndCanvas) {
+        return true;
+    }
+    // page and find labels and boxes
+    if (parent == win->hwndToolbar) {
+        return true;
+    }
+    // ToC tree, sidebar title and close button
+    if (parent == win->hwndTocBox) {
+        return true;
+    }
+    // Favorites tree, title, and close button
+    if (parent == win->hwndFavBox) {
+        return true;
+    }
+    // tab bar
+    if (parent == win->hwndTabBar) {
+        return true;
+    }
+    // caption buttons, tab bar
+    if (parent == win->hwndCaption) {
+        return true;
+    }
+    return false;
+}
+
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd) {
     HWND parent = GetParent(hwnd);
-    for (size_t i = 0; i < gWindows.size(); i++) {
-        WindowInfo* win = gWindows.at(i);
-        if (hwnd == win->hwndFrame)
-            return win;
-        if (!parent)
-            continue;
-        if ( // canvas, toolbar, rebar, tocbox, splitters
-            parent == win->hwndFrame ||
-            // infotips, message windows
-            parent == win->hwndCanvas ||
-            // page and find labels and boxes
-            parent == win->hwndToolbar ||
-            // ToC tree, sidebar title and close button
-            parent == win->hwndTocBox ||
-            // Favorites tree, title, and close button
-            parent == win->hwndFavBox ||
-            // tab bar
-            parent == win->hwndTabBar ||
-            // caption buttons, tab bar
-            parent == win->hwndCaption) {
+    for (WindowInfo* win : gWindows) {
+        if (IsWindowInfoHwnd(win, hwnd, parent)) {
             return win;
         }
     }
