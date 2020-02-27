@@ -6,7 +6,7 @@
 struct VbkmFile {
     AutoFree fileContent;
     AutoFreeStr name;
-    TocTree* tree;
+    TocTree* tree = nullptr;
 
     VbkmFile() = default;
     ~VbkmFile();

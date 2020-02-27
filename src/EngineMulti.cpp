@@ -25,6 +25,12 @@ extern "C" {
 #include "ParseBKM.h"
 #include "EngineMulti.h"
 
+struct EngineInfo {
+    TocItem* tocRoot = nullptr;
+    EngineBase* engine = nullptr;
+    int nPages = 0;
+};
+
 struct EnginePage {
     int pageNoInEngine = 0;
     EngineBase* engine = nullptr;
@@ -68,8 +74,8 @@ class EngineMulti : public EngineBase {
     int GetPageByLabel(const WCHAR* label) const override;
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI);
-
-    static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
+    bool LoadFromFiles(std::string_view dir, VecStr& files);
+    void UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo);
 
     EngineBase* PageToEngine(int& pageNo) const;
     VbkmFile vbkm;
@@ -99,7 +105,8 @@ EngineMulti::~EngineMulti() {
 EngineBase* EngineMulti::Clone() {
     const WCHAR* fileName = FileName();
     CrashIf(!fileName);
-    return EngineMulti::CreateFromFile(fileName, nullptr);
+    // TODO: support CreateFromFiles()
+    return CreateEngineMultiFromFile(fileName, nullptr);
 }
 
 RectD EngineMulti::PageMediabox(int pageNo) {
@@ -300,12 +307,6 @@ static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
     MarkAsVisibleRecur(root, !root->isUnchecked, visible);
 }
 
-struct EngineInfo {
-    TocItem* tocRoot = nullptr;
-    EngineBase* engine = nullptr;
-    int nPages = 0;
-};
-
 // to supporting moving .vbkm and it's associated files, we accept absolute paths
 // and relative to directory of .vbkm file
 std::string_view FindEnginePath(std::string_view vbkmPath, std::string_view engineFilePath) {
@@ -322,6 +323,78 @@ std::string_view FindEnginePath(std::string_view vbkmPath, std::string_view engi
     return {};
 }
 
+bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
+    int n = files.size();
+    TocItem* tocFiles = nullptr;
+    Vec<EngineInfo> enginesInfo;
+    for (int i = 0; i < n; i++) {
+        std::string_view path = files.at(i);
+        AutoFreeWstr pathW = strconv::Utf8ToWstr(path);
+        EngineBase* engine = EngineManager::CreateEngine(pathW);
+        if (!engine) {
+            continue;
+        }
+        TocTree* toc = engine->GetToc();
+        TocItem* fileRoot = CloneTocItemRecur(toc->root, false);
+        fileRoot->engineFilePath = str::Dup(path);
+        int nPages = engine->PageCount();
+        fileRoot->nPages = nPages;
+        std::string_view name = path::GetBaseNameNoFree(path.data());
+        AutoFreeWstr title = strconv::Utf8ToWstr(name);
+        TocItem* wrapper = new TocItem(tocFiles, title, 1);
+        wrapper->child = fileRoot;
+        if (tocFiles == nullptr) {
+            tocFiles = wrapper;
+        } else {
+            tocFiles->AddSiblingAtEnd(wrapper);
+        }
+
+        EngineInfo ei;
+        ei.engine = engine;
+        ei.tocRoot = wrapper;
+        ei.nPages = nPages;
+        enginesInfo.Append(ei);
+    }
+    if (tocFiles == nullptr) {
+        return false;
+    }
+    UpdatePagesForEngines(enginesInfo);
+
+    AutoFreeWstr dirW = strconv::Utf8ToWstr(dir);
+    TocItem* root = new TocItem(tocFiles, dirW, 0);
+    tocTree = new TocTree(root);
+    return true;
+}
+
+void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
+    int nTotalPages = 0;
+    for (auto&& ei : enginesInfo) {
+        TocItem* child = ei.tocRoot;
+        if (child->isUnchecked) {
+            continue;
+        }
+        int nPages = ei.nPages;
+        Vec<bool> visiblePages;
+        for (int i = 0; i < nPages; i++) {
+            visiblePages.Append(true);
+        }
+        CalcRemovedPages(child, visiblePages);
+
+        int nPage = 0;
+        for (int i = 0; i < nPages; i++) {
+            if (!visiblePages[i]) {
+                continue;
+            }
+            EnginePage ep{i + 1, ei.engine};
+            pageToEngine.push_back(ep);
+            nPage++;
+        }
+        updateTocItemsPageNo(child, nTotalPages);
+        nTotalPages += nPage;
+    }
+    pageCount = nTotalPages;
+}
+
 bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     AutoFreeStr filePath = strconv::WstrToUtf8(fileName);
     bool ok = LoadVbkmFile(filePath.get(), vbkm);
@@ -335,8 +408,7 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     vbkm.tree = nullptr;
 
     // load all referenced files
-    int nTotalPages = 0;
-    std::function<bool(TocItem*)> f = [this, &enginesInfo, &filePath](TocItem* ti) -> bool {
+    auto loadEngines = [this, &enginesInfo, &filePath](TocItem* ti) -> bool {
         if (ti->engineFilePath == nullptr) {
             return true;
         }
@@ -364,54 +436,16 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         return true;
     };
 
-    ok = VisitTocTree(tocRoot, f);
+    ok = VisitTocTree(tocRoot, loadEngines);
     if (!ok) {
         delete tocRoot;
         return false;
     }
 
-    for (auto&& ei : enginesInfo) {
-        TocItem* child = ei.tocRoot;
-        if (child->isUnchecked) {
-            continue;
-        }
-        int nPages = ei.nPages;
-        Vec<bool> visiblePages;
-        for (int i = 0; i < nPages; i++) {
-            visiblePages.Append(true);
-        }
-        CalcRemovedPages(child, visiblePages);
-
-        int nPage = 0;
-        for (int i = 0; i < nPages; i++) {
-            if (!visiblePages[i]) {
-                continue;
-            }
-            EnginePage ep{i + 1, ei.engine};
-            pageToEngine.push_back(ep);
-            nPage++;
-        }
-        updateTocItemsPageNo(child, nTotalPages);
-        nTotalPages += nPage;
-    }
-
+    UpdatePagesForEngines(enginesInfo);
     tocTree = new TocTree(tocRoot);
-    pageCount = nTotalPages;
-
     SetFileName(fileName);
     return true;
-}
-
-EngineBase* EngineMulti::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-    if (str::IsEmpty(fileName)) {
-        return nullptr;
-    }
-    EngineMulti* engine = new EngineMulti();
-    if (!engine->Load(fileName, pwdUI)) {
-        delete engine;
-        return nullptr;
-    }
-    return engine;
 }
 
 bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff) {
@@ -423,5 +457,22 @@ bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 EngineBase* CreateEngineMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-    return EngineMulti::CreateFromFile(fileName, pwdUI);
+    if (str::IsEmpty(fileName)) {
+        return nullptr;
+    }
+    EngineMulti* engine = new EngineMulti();
+    if (!engine->Load(fileName, pwdUI)) {
+        delete engine;
+        return nullptr;
+    }
+    return engine;
+}
+
+EngineBase* CreateEngineMultiFromFiles(std::string_view dir, VecStr& files) {
+    EngineMulti* engine = new EngineMulti();
+    if (!engine->LoadFromFiles(dir, files)) {
+        delete engine;
+        return nullptr;
+    }
+    return engine;
 }

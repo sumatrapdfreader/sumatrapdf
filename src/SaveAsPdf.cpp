@@ -95,7 +95,7 @@ void PdfMerger::MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_ma
 
         page_dict = pdf_new_dict(ctx, doc_des, 4);
 
-		pdf_dict_put(ctx, page_dict, PDF_NAME(Type), PDF_NAME(Page));
+        pdf_dict_put(ctx, page_dict, PDF_NAME(Type), PDF_NAME(Page));
         for (i = 0; i < (int)nelem(copy_list); i++) {
             obj = pdf_dict_get(ctx, page_ref, copy_list[i]);
             if (obj != nullptr) {
@@ -129,7 +129,7 @@ bool PdfMerger::MergePdfFile(std::string_view path) {
         nPages = pdf_count_pages(ctx, doc_src);
         graft_map = pdf_new_graft_map(ctx, doc_des);
         for (int i = 1; i <= nPages; i++) {
-            MergePdfPage(i, - 1, graft_map);
+            MergePdfPage(i, -1, graft_map);
         }
     }
     fz_always(ctx) {

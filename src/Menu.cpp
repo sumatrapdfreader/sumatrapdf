@@ -38,7 +38,6 @@
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
 
-
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continuous range!
 static_assert(IDM_VIEW_LAYOUT_LAST - IDM_VIEW_LAYOUT_FIRST == 4, "view layout ids are not in a continuous range");
@@ -267,6 +266,9 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
     bool wasSeparator = true;
     if (!gPluginMode) {
         flagFilter |= MF_PLUGIN_MODE_ONLY;
+    }
+    if (gIsRaMicroBuild) {
+        flagFilter |= MF_RAMICRO_ONLY;
     }
 
     int i = 0;

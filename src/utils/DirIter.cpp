@@ -118,7 +118,6 @@ bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsIn
         }
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
-
     return paths.size() > 0;
 }
 
@@ -143,6 +142,35 @@ std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR* dir) {
         }
     } while (FindNextFileW(hfind, &fdata));
     FindClose(hfind);
-
     return res;
+}
+
+bool CollectFilesFromDirectory(std::string_view dir, VecStr& files,
+                               const std::function<bool(std::string_view)>& fileMatchesFn) {
+    AutoFreeWstr dirW = strconv::Utf8ToWstr(dir);
+    AutoFreeWstr pattern = path::Join(dirW, L"*");
+
+    WIN32_FIND_DATA fdata;
+    HANDLE hfind = FindFirstFileW(pattern, &fdata);
+    if (INVALID_HANDLE_VALUE == hfind) {
+        return false;
+    }
+
+    bool isFile;
+    do {
+        isFile = IsRegularFile(fdata.dwFileAttributes);
+        if (isFile) {
+            AutoFreeStr name = strconv::WstrToUtf8(fdata.cFileName);
+            AutoFreeStr filePath = path::JoinUtf(dir.data(), name.get(), nullptr);
+            bool matches = true;
+            if (fileMatchesFn) {
+                matches = fileMatchesFn(filePath.as_view());
+            }
+            if (matches) {
+                files.Append(filePath.as_view());
+            }
+        }
+    } while (FindNextFileW(hfind, &fdata));
+    FindClose(hfind);
+    return true;
 }

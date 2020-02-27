@@ -32,6 +32,7 @@
 #include "EngineBase.h"
 #include "EnginePs.h"
 #include "EngineManager.h"
+#include "EngineMulti.h"
 #include "EngineImages.h"
 #include "Doc.h"
 #include "FileModifications.h"
@@ -2927,11 +2928,28 @@ static bool BrowseForFolder(HWND hwnd, WCHAR* initialFolder, WCHAR* caption, WCH
 
 static void OnMenuOpenFolder(WindowInfo* win) {
     HWND hwnd = win->hwndFrame;
-    WCHAR folderPath[MAX_PATH + 2] = {0};
-    bool ok = BrowseForFolder(hwnd, nullptr, L"Select folder with PDF files", folderPath, dimof(folderPath));
+    WCHAR dirW[MAX_PATH + 2] = {0};
+    bool ok = BrowseForFolder(hwnd, nullptr, L"Select folder with PDF files", dirW, dimof(dirW));
     if (!ok) {
         return;
     }
+    auto isValidFunc = [](std::string_view path) -> bool {
+        bool isValid = str::EndsWithI(path.data(), ".pdf");
+        return isValid;
+    };
+    VecStr files;
+    AutoFreeStr dir = strconv::WstrToUtf8(dirW);
+    ok = CollectFilesFromDirectory(dir.as_view(), files, isValidFunc);
+    if (!ok) {
+        // TODO: show error message
+        return;
+    }
+    if (files.size() == 0) {
+        // TODO: show error message
+        return;
+    }
+    EngineBase* engine = CreateEngineMultiFromFiles(dir.as_view(), files);
+    delete engine;
 }
 
 static void OnMenuOpen(WindowInfo* win) {

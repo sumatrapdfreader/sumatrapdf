@@ -452,6 +452,7 @@ struct PoolAllocator : Allocator {
 
     void SetMinBlockSize(size_t newMinBlockSize);
     void FreeAll();
+    void reset();
     ~PoolAllocator() override;
     void AllocBlock(size_t minSize);
 

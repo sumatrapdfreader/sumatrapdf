@@ -1610,8 +1610,9 @@ double GetProcessRunningTime() {
     GetSystemTimeAsFileTime(&currTime);
     HANDLE hproc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
     double timeInMs = 0;
-    if (!hproc)
+    if (!hproc) {
         return 0;
+    }
     if (GetProcessTimes(hproc, &startTime, &d1, &d2, &d3)) {
         ULARGE_INTEGER start = FileTimeToLargeInteger(startTime);
         ULARGE_INTEGER curr = FileTimeToLargeInteger(currTime);
@@ -1626,8 +1627,9 @@ double GetProcessRunningTime() {
 // This is just to satisfy /analyze. CloseHandle(nullptr) works perfectly fine
 // but /analyze complains anyway
 BOOL SafeCloseHandle(HANDLE* h) {
-    if (!*h)
+    if (!*h) {
         return TRUE;
+    }
     BOOL ok = CloseHandle(*h);
     *h = nullptr;
     return ok;

@@ -123,6 +123,21 @@ void PoolAllocator::FreeAll() {
     firstBlock = nullptr;
 }
 
+// optimization: frees all but first block
+// allows for more efficient re-use of PoolAllocator
+// with more effort we could preserve all blocks (not sure if worth it)
+void PoolAllocator::reset() {
+    if (!firstBlock) {
+        return;
+    }
+    MemBlockNode* first = firstBlock;
+    firstBlock = first->next;
+    FreeAll();
+    firstBlock = first;
+    first->next = nullptr;
+    first->free = first->size;
+}
+
 PoolAllocator::~PoolAllocator() {
     FreeAll();
 }
@@ -371,4 +386,10 @@ bool VecStr::Append(std::string_view sv) {
     currIndex->sizes[n] = (i32)res.size();
     currIndex->nStrings++;
     return true;
+}
+
+void VecStr::reset() {
+    allocator.reset();
+    firstIndex = nullptr;
+    currIndex = nullptr;
 }

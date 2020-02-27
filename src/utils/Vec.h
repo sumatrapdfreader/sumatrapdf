@@ -779,6 +779,7 @@ struct VecStr {
     ~VecStr() = default;
     int size();
     bool allocateIndexIfNeeded();
+    void reset();
     bool Append(std::string_view sv);
     std::string_view at(int);
 };
