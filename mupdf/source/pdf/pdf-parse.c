@@ -213,6 +213,7 @@ pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *ssrcptr, size_t srclen
 			}
 		}
 	}
+
 	/* UTF-8 */
 	else if (srclen >= 3 && srcptr[0] == 239 && srcptr[1] == 187 && srcptr[2] == 191)
 	{
