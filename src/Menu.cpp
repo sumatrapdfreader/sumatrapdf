@@ -38,12 +38,7 @@
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
 
-// those are defined here instead of resource.h to avoid
-// having them overwritten by dialog editor
-#define IDM_VIEW_LAYOUT_FIRST IDM_VIEW_SINGLE_PAGE
-#define IDM_VIEW_LAYOUT_LAST IDM_VIEW_MANGA_MODE
-#define IDM_ZOOM_FIRST IDM_ZOOM_FIT_PAGE
-#define IDM_ZOOM_LAST IDM_ZOOM_CUSTOM
+
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continuous range!
 static_assert(IDM_VIEW_LAYOUT_LAST - IDM_VIEW_LAYOUT_FIRST == 4, "view layout ids are not in a continuous range");
@@ -86,7 +81,8 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
     { _TRN("New &window\tCtrl+N"),          IDM_NEW_WINDOW,             MF_REQ_DISK_ACCESS },
-    { _TRN("&Open...\tCtrl+O"),             IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
+    { _TRN("&Open...\tCtrl+O"),             IDM_OPEN,                   MF_REQ_DISK_ACCESS },
+    { "Open Folder",                        IDM_OPEN_FOLDER,            MF_REQ_DISK_ACCESS | MF_RAMICRO_ONLY },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
     { _TRN("Show in &folder"),              IDM_SHOW_IN_FOLDER,         MF_REQ_DISK_ACCESS },
     { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },

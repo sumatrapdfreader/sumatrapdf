@@ -2868,6 +2868,9 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
     LoadDocument(args);
 }
 
+static void OnMenuOpenFolder(WindowInfo* win) {
+}
+
 static void OnMenuOpen(WindowInfo* win) {
     if (!HasPermission(Perm_DiskAccess)) {
         return;
@@ -4198,6 +4201,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_OPEN:
         case IDT_FILE_OPEN:
             OnMenuOpen(win);
+            break;
+        case IDM_OPEN_FOLDER:
+            OnMenuOpenFolder(win);
             break;
 
         case IDM_SAVEAS:
