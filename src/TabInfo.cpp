@@ -107,7 +107,7 @@ bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::string_view data) {
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    bool ok = GetSaveFileName(&ofn);
+    bool ok = GetSaveFileNameW(&ofn);
     if (!ok) {
         return false;
     }

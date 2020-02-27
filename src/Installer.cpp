@@ -621,32 +621,33 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
     return 0;
 }
 
-static BOOL BrowseForFolder(HWND hwnd, const WCHAR* lpszInitialFolder, const WCHAR* lpszCaption, WCHAR* lpszBuf,
-                            DWORD dwBufSize) {
-    if (lpszBuf == nullptr || dwBufSize < MAX_PATH) {
-        return FALSE;
+static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* caption, WCHAR* buf, DWORD cchBufSize) {
+    if (buf == nullptr || cchBufSize < MAX_PATH) {
+        return false;
     }
 
     BROWSEINFO bi = {0};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-    bi.lpszTitle = lpszCaption;
+    bi.lpszTitle = caption;
     bi.lpfn = BrowseCallbackProc;
-    bi.lParam = (LPARAM)lpszInitialFolder;
+    bi.lParam = (LPARAM)initialFolder;
 
-    BOOL ok = FALSE;
     LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
-    if (pidlFolder) {
-        ok = SHGetPathFromIDList(pidlFolder, lpszBuf);
-
-        IMalloc* pMalloc = nullptr;
-        if (SUCCEEDED(SHGetMalloc(&pMalloc)) && pMalloc) {
-            pMalloc->Free(pidlFolder);
-            pMalloc->Release();
-        }
+    if (!pidlFolder) {
+        return false;
     }
-
-    return ok;
+    BOOL ok = SHGetPathFromIDList(pidlFolder, buf);
+    if (!ok) {
+        return false;
+    }
+    IMalloc* pMalloc = nullptr;
+    HRESULT hr = SHGetMalloc(&pMalloc);
+    if (SUCCEEDED(hr) && pMalloc) {
+        pMalloc->Free(pidlFolder);
+        pMalloc->Release();
+    }
+    return true;
 }
 
 static void OnButtonBrowse() {
@@ -659,7 +660,7 @@ static void OnButtonBrowse() {
     }
 
     WCHAR path[MAX_PATH] = {};
-    BOOL ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"),
+    bool ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"),
                               path, dimof(path));
     if (!ok) {
         gButtonBrowseDir->SetFocus();

@@ -2571,7 +2571,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     // picks a reasonable default (in particular, we don't want this
     // in plugin mode, which is likely the main reason for saving as...)
 
-    bool ok = GetSaveFileName(&ofn);
+    bool ok = GetSaveFileNameW(&ofn);
     if (!ok) {
         return;
     }
@@ -2738,7 +2738,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    ok = GetSaveFileName(&ofn);
+    ok = GetSaveFileNameW(&ofn);
     if (!ok) {
         return;
     }
@@ -2801,7 +2801,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     ofn.lpstrDefExt = L"lnk";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (!GetSaveFileName(&ofn)) {
+    if (!GetSaveFileNameW(&ofn)) {
         return;
     }
 
@@ -2895,7 +2895,43 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
     LoadDocument(args);
 }
 
+// TODO: similar to Installer.cpp
+static bool BrowseForFolder(HWND hwnd, WCHAR* initialFolder, WCHAR* caption, WCHAR* buf, DWORD cchBufSize) {
+    if (buf == nullptr || cchBufSize < MAX_PATH) {
+        return false;
+    }
+
+    BROWSEINFO bi = {0};
+    bi.hwndOwner = hwnd;
+    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+    bi.lpszTitle = caption;
+    // bi.lpfn = BrowseCallbackProc;
+    bi.lParam = (LPARAM)initialFolder;
+
+    LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
+    if (!pidlFolder) {
+        return false;
+    }
+    BOOL ok = SHGetPathFromIDList(pidlFolder, buf);
+    if (!ok) {
+        return false;
+    }
+    IMalloc* pMalloc = nullptr;
+    HRESULT hr = SHGetMalloc(&pMalloc);
+    if (SUCCEEDED(hr) && pMalloc) {
+        pMalloc->Free(pidlFolder);
+        pMalloc->Release();
+    }
+    return true;
+}
+
 static void OnMenuOpenFolder(WindowInfo* win) {
+    HWND hwnd = win->hwndFrame;
+    WCHAR folderPath[MAX_PATH + 2] = {0};
+    bool ok = BrowseForFolder(hwnd, nullptr, L"Select folder with PDF files", folderPath, dimof(folderPath));
+    if (!ok) {
+        return;
+    }
 }
 
 static void OnMenuOpen(WindowInfo* win) {

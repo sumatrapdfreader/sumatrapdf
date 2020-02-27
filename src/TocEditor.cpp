@@ -693,7 +693,7 @@ static std::string_view PickSaveName() {
     // picks a reasonable default (in particular, we don't want this
     // in plugin mode, which is likely the main reason for saving as...)
 
-    bool ok = GetSaveFileName(&ofn);
+    bool ok = GetSaveFileNameW(&ofn);
     if (!ok) {
         return {};
     }
