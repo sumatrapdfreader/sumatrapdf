@@ -34,10 +34,17 @@ func runCppCheck(all bool) {
 	// // cppcheck-suppress <type>
 	// ... line with a problem
 	var cmd *exec.Cmd
+
+	// TODO: not sure if adding Windows SDK include  path helps.
+	// It takes a lot of time and doesn't seem to provide value
+	//winSdkIncludeDir := `C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um`
+	// "-I", winSdkIncludeDir
+	// "-D__RPCNDR_H_VERSION__=440"
+
 	if all {
-		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1990", "-D_M_X64", "-q", "-v", "--enable=style", "--suppress=constParameter", "--suppress=cstyleCast", "--suppress=useStlAlgorithm", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
+		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-q", "-v", "--enable=style", "--suppress=constParameter", "--suppress=cstyleCast", "--suppress=useStlAlgorithm", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	} else {
-		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1990", "-D_M_X64", "-q", "-v", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
+		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-q", "-v", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	}
 	u.RunCmdLoggedMust(cmd)
 }
