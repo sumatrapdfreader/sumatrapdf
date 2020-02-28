@@ -203,7 +203,7 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
             }
         }
         if (!item->child) {
-            Out(" />\n");
+            Out1(" />\n");
         } else {
             if (item->isOpenDefault) {
                 Out1(" Expanded=\"yes\"");
