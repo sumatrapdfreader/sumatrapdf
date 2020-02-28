@@ -54,7 +54,7 @@
 #include "CrashHandler.h"
 #include "FileThumbnails.h"
 #include "Print.h"
-#include "Search.h"
+#include "SearchAndDDE.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"

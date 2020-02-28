@@ -25,7 +25,7 @@
 #include "resource.h"
 #include "AppTools.h"
 #include "Menu.h"
-#include "Search.h"
+#include "SearchAndDDE.h"
 #include "Toolbar.h"
 #include "Translations.h"
 

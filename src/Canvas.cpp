@@ -42,7 +42,7 @@
 #include "Caption.h"
 #include "Menu.h"
 #include "uia/Provider.h"
-#include "Search.h"
+#include "SearchAndDDE.h"
 #include "Selection.h"
 #include "SumatraAbout.h"
 #include "Tabs.h"

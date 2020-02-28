@@ -132,6 +132,8 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab);
 WindowInfo* FindWindowInfoByTab(TabInfo* tab);
 WindowInfo* FindWindowInfoByController(Controller* ctrl);
 
+class EngineBase;
+
 // LoadDocument carries a lot of state, this holds them in
 // one place
 struct LoadArgs {
@@ -140,6 +142,7 @@ struct LoadArgs {
         this->win = win;
     }
 
+    EngineBase* engine = nullptr;
     const WCHAR* fileName = nullptr;
     WindowInfo* win = nullptr;
     bool showWin = true;

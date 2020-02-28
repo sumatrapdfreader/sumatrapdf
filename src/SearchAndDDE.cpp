@@ -31,7 +31,7 @@
 #include "TabInfo.h"
 #include "resource.h"
 #include "AppTools.h"
-#include "Search.h"
+#include "SearchAndDDE.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"

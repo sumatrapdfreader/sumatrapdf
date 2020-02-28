@@ -427,7 +427,7 @@ function sumatrapdf_files()
     "RenderCache.*",
     "resource.h",
     "SaveAsPdf.*",
-    "Search.*",
+    "SearchAndDDE.*",
     "Selection.*",
     "SettingsStructs.*",
     "SumatraPDF.cpp",

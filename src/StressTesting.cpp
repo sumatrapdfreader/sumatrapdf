@@ -36,7 +36,7 @@
 #include "TabInfo.h"
 #include "AppTools.h"
 #include "Flags.h"
-#include "Search.h"
+#include "SearchAndDDE.h"
 #include "StressTesting.h"
 
 #define FIRST_STRESS_TIMER_ID 101

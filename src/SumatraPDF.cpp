@@ -67,7 +67,7 @@
 #include "FileThumbnails.h"
 #include "Menu.h"
 #include "Print.h"
-#include "Search.h"
+#include "SearchAndDDE.h"
 #include "Selection.h"
 #include "StressTesting.h"
 #ifdef ENABLE_ALTERNATIVE_ABOUT_DIALOG
@@ -896,6 +896,17 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     }
 }
 
+static Controller* CreateControllerForEngine(EngineBase* engine, const WCHAR* filePath, PasswordUI* pwdUI, WindowInfo* win) {
+    logf(L"CreateControllerForEngine: '%s'\n", filePath);
+    if (!win->cbHandler) {
+        win->cbHandler = new ControllerCallbackHandler(win);
+    }
+    Controller* ctrl = nullptr;
+    ctrl = new DisplayModel(engine, win->cbHandler);
+    CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
+    return ctrl;
+}
+
 static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pwdUI, WindowInfo* win) {
     logf(L"CreateControllerForFile: '%s'\n", filePath);
     if (!win->cbHandler) {
@@ -1229,6 +1240,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
 }
 
 void ReloadDocument(WindowInfo* win, bool autorefresh) {
+    // TODO: must disable reload for EngineMulti representing a directory
     TabInfo* tab = win->currentTab;
     if (!win->IsDocLoaded()) {
         if (!autorefresh && tab) {
@@ -1623,7 +1635,12 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
 
     HwndPasswordUI pwdUI(win->hwndFrame);
-    Controller* ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
+    Controller* ctrl = nullptr;
+    if (args.engine != nullptr) {
+        ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
+    } else {
+        ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
+    }
     // don't fail if a user tries to load an SMX file instead
     if (!ctrl && IsModificationsFile(fullPath)) {
         *(WCHAR*)path::GetExtNoFree(fullPath) = '\0';

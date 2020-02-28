@@ -964,7 +964,7 @@
     <ClInclude Include="..\src\ProgressUpdateUI.h" />
     <ClInclude Include="..\src\RenderCache.h" />
     <ClInclude Include="..\src\SaveAsPdf.h" />
-    <ClInclude Include="..\src\Search.h" />
+    <ClInclude Include="..\src\SearchAndDDE.h" />
     <ClInclude Include="..\src\Selection.h" />
     <ClInclude Include="..\src\SettingsStructs.h" />
     <ClInclude Include="..\src\StressTesting.h" />
@@ -1041,7 +1041,7 @@
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\RenderCache.cpp" />
     <ClCompile Include="..\src\SaveAsPdf.cpp" />
-    <ClCompile Include="..\src\Search.cpp" />
+    <ClCompile Include="..\src\SearchAndDDE.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
     <ClCompile Include="..\src\SettingsStructs.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />
