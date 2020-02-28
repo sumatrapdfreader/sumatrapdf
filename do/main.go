@@ -24,7 +24,7 @@ func regenPremake() {
 	}
 }
 
-func runCppCheck() {
+func runCppCheck(all bool) {
 	// -q : quiet, doesn't print progress report
 	// -v : prints more info about the error
 	// --platform=win64 : sets platform to 64 bits
@@ -33,7 +33,12 @@ func runCppCheck() {
 	// --inline-suppr: honor suppression comments in the code like:
 	// // cppcheck-suppress <type>
 	// ... line with a problem
-	cmd := exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1990", "-D_M_X64", "-q", "-v", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
+	var cmd *exec.Cmd
+	if all {
+		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1990", "-D_M_X64", "-q", "-v", "--enable=style", "--suppress=constParameter", "--suppress=cstyleCast", "--suppress=useStlAlgorithm", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
+	} else {
+		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1990", "-D_M_X64", "-q", "-v", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
+	}
 	u.RunCmdLoggedMust(cmd)
 }
 
@@ -75,6 +80,7 @@ func main() {
 		flgWebsiteImportNotion     bool
 		flgNoCache                 bool
 		flgCppCheck                bool
+		flgCppCheckAll             bool
 	)
 
 	{
@@ -104,6 +110,7 @@ func main() {
 		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
+		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
 		flag.Parse()
 	}
 
@@ -160,8 +167,8 @@ func main() {
 		return
 	}
 
-	if flgCppCheck {
-		runCppCheck()
+	if flgCppCheck || flgCppCheckAll {
+		runCppCheck(flgCppCheckAll)
 		return
 	}
 
