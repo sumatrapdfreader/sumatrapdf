@@ -83,7 +83,7 @@ PoolAllocatorFixed::~PoolAllocatorFixed() {
     }
 }
 
-void* PoolAllocatorFixed::Realloc(void* mem, size_t size) {
+void* PoolAllocatorFixed::Realloc(void*, size_t) {
     // no-op
     return nullptr;
 }
