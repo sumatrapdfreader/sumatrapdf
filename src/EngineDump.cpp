@@ -355,6 +355,7 @@ void DumpData(EngineBase* engine, bool fullDump) {
 }
 
 #define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg) TEXT("\n"), __VA_ARGS__)
+#define ErrOut1(msg) fwprintf(stderr, TEXT("%s"), TEXT(msg) TEXT("\n"))
 
 bool CheckRenderPath(const WCHAR* path) {
     CrashIf(!path);
@@ -369,7 +370,7 @@ bool CheckRenderPath(const WCHAR* path) {
             p += 2;
         }
         if (hasArg || *p != 'd') {
-            ErrOut("Error: Render path may contain '%%d' only once, other '%%' signs must be doubled!");
+            ErrOut1("Error: Render path may contain '%%d' only once, other '%%' signs must be doubled!");
             return false;
         }
         hasArg = true;

@@ -71,8 +71,11 @@
 
 static bool TryLoadMemTrace() {
     AutoFreeWstr dllPath(path::GetPathOfFileInAppDir(L"memtrace.dll"));
-    if (!LoadLibrary(dllPath))
+    // technically leaking but we don't care
+    // cppcheck-suppress leakReturnValNotUsed
+    if (!LoadLibrary(dllPath)) {
         return false;
+    }
     return true;
 }
 
@@ -626,6 +629,9 @@ static bool IsInstallerAndNamedAsSuch() {
 // if we can load "libmupdf.dll" this is likely an installed executable
 static bool SeemsInstalled() {
     HMODULE h = LoadLibraryW(L"libmupdf.dll");
+    // technically this is leaking but we don't care
+    // because libmupdf.dll must be loaded anyway
+    // cppcheck-suppress resourceLeak
     return h != nullptr;
 }
 

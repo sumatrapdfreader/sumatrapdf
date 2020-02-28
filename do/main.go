@@ -27,10 +27,13 @@ func regenPremake() {
 func runCppCheck() {
 	// -q : quiet, doesn't print progress report
 	// -v : prints more info about the error
+	// --platform=win64 : sets platform to 64 bits
+	// -DWIN32 -D_WIN32 -D_MSC_VER=1990 : set some defines and speeds up
+	//    checking because cppcheck doesn't check all possible combinations
 	// --inline-suppr: honor suppression comments in the code like:
 	// // cppcheck-suppress <type>
 	// ... line with a problem
-	cmd := exec.Command("cppcheck", "-q", "-v", "--inline-suppr", "src")
+	cmd := exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1990", "-D_M_X64", "-q", "-v", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	u.RunCmdLoggedMust(cmd)
 }
 

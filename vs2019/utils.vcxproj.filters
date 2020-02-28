@@ -144,6 +144,12 @@
     <ClInclude Include="..\src\utils\UITask.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\Vec.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\VecSegmented.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\WebpReader.h">
       <Filter>utils</Filter>
     </ClInclude>

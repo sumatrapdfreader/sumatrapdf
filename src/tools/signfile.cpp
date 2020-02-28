@@ -19,16 +19,17 @@
 #include "utils/FileUtil.h"
 
 #define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg) TEXT("\n"), __VA_ARGS__)
+#define ErrOut1(msg) fwprintf(stderr, TEXT("%s"), TEXT(msg) TEXT("\n"))
 
 void ShowUsage(const WCHAR* exeName) {
     ErrOut("Syntax: %s", path::GetBaseNameNoFree(exeName));
-    ErrOut("\t[-cert CertName]\t- name of the certificate to use");      // when omitted uses first available
-    ErrOut("\t[-out filename.out]\t- where to save the signature file"); // when omitted uses stdout
-    ErrOut("\t[-comment #]\t\t- comment syntax for signed text files");  // needed when saving the signature into the
+    ErrOut1("\t[-cert CertName]\t- name of the certificate to use");      // when omitted uses first available
+    ErrOut1("\t[-out filename.out]\t- where to save the signature file"); // when omitted uses stdout
+    ErrOut1("\t[-comment #]\t\t- comment syntax for signed text files");  // needed when saving the signature into the
                                                                          // signed file
-    ErrOut("\t[-pubkey public.key]\t- where to save the public key");    // usually not needed
-    ErrOut("\tfilename.in"); // usually needed, optional when -pubkey is present
-    ErrOut("");
+    ErrOut1("\t[-pubkey public.key]\t- where to save the public key");    // usually not needed
+    ErrOut1("\tfilename.in"); // usually needed, optional when -pubkey is present
+    ErrOut1("");
 
     HCERTSTORE hStore = CertOpenSystemStore(NULL, L"My");
     CrashAlwaysIf(!hStore);
@@ -37,21 +38,22 @@ void ShowUsage(const WCHAR* exeName) {
     while ((pCertCtx = CertEnumCertificatesInStore(hStore, pCertCtx)) != nullptr) {
         WCHAR name[128];
         DWORD res = CertGetNameString(pCertCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, name, dimof(name));
-        if (!res)
+        if (!res) {
             continue;
+        }
         HCRYPTPROV hProv = NULL;
         DWORD keySpec = 0;
         BOOL ok = CryptAcquireCertificatePrivateKey(pCertCtx, 0, nullptr, &hProv, &keySpec, nullptr);
         if (!ok || (keySpec & AT_SIGNATURE) != AT_SIGNATURE)
             continue;
         if (!hasCert) {
-            ErrOut("Available certificates:");
+            ErrOut1("Available certificates:");
             hasCert = true;
         }
         ErrOut("\"%s\"", name);
     }
     if (!hasCert)
-        ErrOut("Warning: Failed to find a signature certificate in store \"My\"!");
+        ErrOut1("Warning: Failed to find a signature certificate in store \"My\"!");
     CertCloseStore(hStore, 0);
 }
 
