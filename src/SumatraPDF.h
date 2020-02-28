@@ -75,7 +75,7 @@ enum MenuToolbarFlags {
 
 class Controller;
 class Favorites;
-class FileHistory;
+struct FileHistory;
 class WindowInfo;
 class NotificationWnd;
 class RenderCache;

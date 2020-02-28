@@ -54,6 +54,19 @@ static int cmpOpenCount(const void* a, const void* b) {
     return dsA->index < dsB->index ? -1 : 1;
 }
 
+void FileHistory::Append(DisplayState* state) {
+    CrashIf(!state->filePath);
+    states->Append(state);
+}
+
+void FileHistory::Remove(DisplayState* state) {
+    states->Remove(state);
+}
+
+void FileHistory::UpdateStatesSource(Vec<DisplayState*>* states) {
+    this->states = states;
+}
+
 void FileHistory::Clear(bool keepFavorites) {
     if (!states)
         return;

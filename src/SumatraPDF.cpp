@@ -896,7 +896,8 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     }
 }
 
-static Controller* CreateControllerForEngine(EngineBase* engine, const WCHAR* filePath, PasswordUI* pwdUI, WindowInfo* win) {
+static Controller* CreateControllerForEngine(EngineBase* engine, const WCHAR* filePath, PasswordUI* pwdUI,
+                                             WindowInfo* win) {
     logf(L"CreateControllerForEngine: '%s'\n", filePath);
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);

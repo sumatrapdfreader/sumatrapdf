@@ -278,7 +278,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
                 continue;
             }
         }
-        if ((md.flags &  MF_RAMICRO_ONLY) != 0) {
+        if ((md.flags & MF_RAMICRO_ONLY) != 0) {
             if (!gIsRaMicroBuild) {
                 continue;
             }
