@@ -469,7 +469,9 @@ ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, in
         res = TextRenderHdc::Create(gfx, dx, dy);
     }
     CrashIf(!res);
-    res->method = method;
+    if (res) {
+        res->method = method;
+    }
     return res;
 }
 

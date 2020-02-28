@@ -43,36 +43,24 @@ class ITextRender {
 
 class TextRenderGdi : public ITextRender {
   private:
-    HDC hdcGfxLocked;
-    HDC hdcForTextMeasure;
-    HGDIOBJ hdcForTextMeasurePrevFont;
-    CachedFont* currFont;
-    Gdiplus::Graphics* gfx;
+    HDC hdcGfxLocked = nullptr;
+    HDC hdcForTextMeasure = nullptr;
+    HGDIOBJ hdcForTextMeasurePrevFont = nullptr;
+    CachedFont* currFont = nullptr;
+    Gdiplus::Graphics* gfx = nullptr;
     Gdiplus::Color textColor;
     Gdiplus::Color textBgColor;
-    WCHAR txtConvBuf[512];
+    WCHAR txtConvBuf[512] = {0};
 
-    HDC memHdc;
-    HGDIOBJ memHdcPrevFont;
-    HBITMAP memBmp;
-    HGDIOBJ memHdcPrevBitmap;
-    void* memBmpData;
-    int memBmpDx, memBmpDy;
+    HDC memHdc = nullptr;
+    HGDIOBJ memHdcPrevFont = nullptr;
+    HBITMAP memBmp = nullptr;
+    HGDIOBJ memHdcPrevBitmap = nullptr;
+    void* memBmpData = nullptr;
+    int memBmpDx = 0;
+    int memBmpDy = 0;
 
-    TextRenderGdi()
-        : hdcGfxLocked(nullptr),
-          hdcForTextMeasure(nullptr),
-          hdcForTextMeasurePrevFont(nullptr),
-          currFont(nullptr),
-          gfx(nullptr),
-          memHdc(nullptr),
-          memHdcPrevFont(nullptr),
-          memBmp(nullptr),
-          memHdcPrevBitmap(nullptr),
-          memBmpData(nullptr),
-          memBmpDx(0),
-          memBmpDy(0) {
-    }
+    TextRenderGdi() = default;
 
     void FreeMemBmp();
     void CreateClearBmpOfSize(int dx, int dy);
