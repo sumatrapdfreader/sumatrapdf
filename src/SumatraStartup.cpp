@@ -212,7 +212,12 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
     GetFullPathName(filePath, dimof(fullpath), fullpath, nullptr);
 
     str::WStr cmd;
-    cmd.AppendFmt(L"[Open(\"%s\", 0, 1, 0)]", fullpath);
+    int newWindow = 0;
+    if (i.inNewWindow) {
+        // 2 forces opening a new window
+        newWindow = 2;
+    }
+    cmd.AppendFmt(L"[Open(\"%s\", %d, 1, 0)]", fullpath, newWindow);
     if (i.destName && isFirstWin) {
         cmd.AppendFmt(L"[GotoNamedDest(\"%s\", \"%s\")]", fullpath, i.destName);
     } else if (i.pageNumber > 0 && isFirstWin) {
@@ -222,13 +227,12 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         const WCHAR* viewMode = prefs::conv::FromDisplayMode(i.startView);
-        cmd.AppendFmt(L"[" DDECOMMAND_SETVIEW L"(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode, i.startZoom,
-                      i.startScroll.x, i.startScroll.y);
+        cmd.AppendFmt(L"[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode, i.startZoom, i.startScroll.x,
+                      i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));
-        cmd.AppendFmt(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath.get(),
-                      i.forwardSearchLine);
+        cmd.AppendFmt(L"[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath.get(), i.forwardSearchLine);
     }
 
     if (!i.reuseDdeInstance) {
@@ -988,10 +992,11 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         hPrevWnd = FindPrevInstWindow(&hMutex);
     }
     if (hPrevWnd) {
-        for (size_t n = 0; n < i.fileNames.size(); n++) {
+        size_t nFiles = i.fileNames.size();
+        for (size_t n = 0; n < nFiles; n++) {
             OpenUsingDde(hPrevWnd, i.fileNames.at(n), i, 0 == n);
         }
-        if (0 == i.fileNames.size()) {
+        if (0 == nFiles) {
             win::ToForeground(hPrevWnd);
         }
         goto Exit;

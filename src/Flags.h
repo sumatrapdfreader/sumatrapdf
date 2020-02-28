@@ -42,6 +42,9 @@ class Flags {
     bool regress = false;
     bool tester = false;
     bool ramicro = false;
+    // -new-window, if true and we're using tabs, opens
+    // the document in new window
+    bool inNewWindow = false;
 
     // stress-testing related
     WCHAR* stressTestPath = nullptr;

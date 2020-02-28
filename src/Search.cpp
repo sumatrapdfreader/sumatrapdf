@@ -569,8 +569,14 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 
 // DDE commands
 
+// forward-search command
+//  format: [ForwardSearch(["<pdffilepath>",]"<sourcefilepath>",<line>,<column>[,<newwindow>, <setfocus>])]
+//    if pdffilepath is provided, the file will be opened if no open window can be found for it
+//    if newwindow = 1 then a new window is created even if the file is already open
+//    if focus = 1 then the focus is set to the window
+//  eg: [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
 // Synchronization command format:
-// [<DDECOMMAND_SYNC>(["<pdffile>",]"<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
+// [ForwardSearch(["<pdffile>",]"<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
 static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
@@ -637,7 +643,9 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
 // [<DDECOMMAND_OPEN>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
 static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile;
-    BOOL newWindow = 0, setFocus = 0, forceRefresh = 0;
+    int newWindow = 0;
+    BOOL setFocus = 0;
+    BOOL forceRefresh = 0;
     const WCHAR* next = str::Parse(cmd, L"[Open(\"%S\")]", &pdfFile);
     if (!next) {
         const WCHAR* pat = L"[Open(\"%S\",%u,%u,%u)]";
@@ -647,6 +655,13 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         return nullptr;
     }
 
+    bool focusTab = (newWindow == 0);
+    WindowInfo* win = nullptr;
+    if (newWindow == 2) {
+        // TODO: don't do it if we have a about window
+        win = CreateAndShowWindowInfo(nullptr);
+    }
+
     // on startup this is called while LoadDocument is in progress, which causes
     // all sort of mayhem. Queue files to be loaded in a sequence
     if (gIsStartup) {
@@ -654,10 +669,11 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         return next;
     }
 
-    bool focusTab = !newWindow;
-    WindowInfo* win = FindWindowInfoByFile(pdfFile, focusTab);
+    if (win == nullptr) {
+        win = FindWindowInfoByFile(pdfFile, focusTab);
+    }
     if (newWindow || !win) {
-        LoadArgs args(pdfFile, !newWindow ? win : nullptr);
+        LoadArgs args(pdfFile, win);
         win = LoadDocument(args);
     } else if (win && !win->IsDocLoaded()) {
         ReloadDocument(win);
@@ -751,8 +767,12 @@ static const WCHAR* HandlePageCmd(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
     return next;
 }
 
+// set view mode and zoom level
+//  format: [SetView("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
+//  eg: [SetView("c:\file.pdf", "book view", -2)]
+//  note: use -1 for ZOOM_FIT_PAGE, -2 for ZOOM_FIT_WIDTH and -3 for ZOOM_FIT_CONTENT
 // Set view mode and zoom level. Format:
-// [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
+// [SetView("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
 static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, viewMode;
     float zoom = INVALID_ZOOM;

@@ -4,20 +4,6 @@
 #define PDFSYNC_DDE_SERVICE L"SUMATRA"
 #define PDFSYNC_DDE_TOPIC L"control"
 
-// forward-search command
-//  format: [ForwardSearch(["<pdffilepath>",]"<sourcefilepath>",<line>,<column>[,<newwindow>, <setfocus>])]
-//    if pdffilepath is provided, the file will be opened if no open window can be found for it
-//    if newwindow = 1 then a new window is created even if the file is already open
-//    if focus = 1 then the focus is set to the window
-//  eg: [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
-#define DDECOMMAND_SYNC L"ForwardSearch"
-
-// set view mode and zoom level
-//  format: [SetView("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
-//  eg: [SetView("c:\file.pdf", "book view", -2)]
-//  note: use -1 for ZOOM_FIT_PAGE, -2 for ZOOM_FIT_WIDTH and -3 for ZOOM_FIT_CONTENT
-#define DDECOMMAND_SETVIEW L"SetView"
-
 LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam);
 LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam);

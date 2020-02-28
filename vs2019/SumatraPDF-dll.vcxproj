@@ -1000,6 +1000,7 @@
     <ClInclude Include="..\src\mui\MuiScrollBar.h" />
     <ClInclude Include="..\src\mui\SvgPath.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
+    <ClInclude Include="..\src\resource.h" />
     <ClInclude Include="..\src\uia\DocumentProvider.h" />
     <ClInclude Include="..\src\uia\PageProvider.h" />
     <ClInclude Include="..\src\uia\Provider.h" />

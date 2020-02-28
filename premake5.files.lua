@@ -425,6 +425,7 @@ function sumatrapdf_files()
     "Print.*",
     "ProgressUpdateUI.*",
     "RenderCache.*",
+    "resource.h",
     "SaveAsPdf.*",
     "Search.*",
     "Selection.*",

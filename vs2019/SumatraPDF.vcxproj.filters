@@ -225,6 +225,9 @@
     <ClInclude Include="..\src\mui\TextRender.h">
       <Filter>src\mui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\resource.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\uia\DocumentProvider.h">
       <Filter>src\uia</Filter>
     </ClInclude>
