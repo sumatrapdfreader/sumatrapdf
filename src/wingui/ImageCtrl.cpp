@@ -74,7 +74,6 @@ static void ImageCtrlWndProc(WndEvent* ev) {
         return;
     }
 
-    HWND hwnd = ev->hwnd;
     ImageCtrl* w = (ImageCtrl*)ev->w;
     CrashIf(!w);
     if (!w) {
@@ -87,6 +86,7 @@ static void ImageCtrlWndProc(WndEvent* ev) {
         return;
     }
 
+    // HWND hwnd = ev->hwnd;
     // char* msgName = getWinMessageName(msg);
     // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, ev->wparam);
 }

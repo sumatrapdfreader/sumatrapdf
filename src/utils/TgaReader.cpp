@@ -72,18 +72,22 @@ static_assert(sizeof(TgaHeader) == 18, "wrong size of TgaHeader structure");
 static_assert(sizeof(TgaFooter) == 26, "wrong size of TgaFooter structure");
 static_assert(sizeof(TgaExtArea) == 495, "wrong size of TgaExtArea structure");
 
-static inline uint16_t convLE(uint16_t x) {
-    uint8_t* data = (uint8_t*)&x;
-    // TODO: change to version that doesn't use tricks
-    // cppcheck-suppress objectIndex
+static uint16_t readLE16(u8* data) {
     return data[0] | (data[1] << 8);
 }
 
-static inline uint32_t convLE(uint32_t x) {
-    uint8_t* data = (uint8_t*)&x;
-    // TODO: change to version that doesn't use tricks
-    // cppcheck-suppress objectIndex
+static uint16_t convLE(uint16_t x) {
+    u8* data = (u8*)&x;
+    return readLE16(data);
+}
+
+static uint32_t readLE32(u8* data) {
     return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+}
+
+static uint32_t convLE(uint32_t x) {
+    u8* data = (u8*)&x;
+    return readLE32(data);
 }
 
 static bool HasVersion2Footer(const char* data, size_t len) {
@@ -95,16 +99,18 @@ static bool HasVersion2Footer(const char* data, size_t len) {
 }
 
 static const TgaExtArea* GetExtAreaPtr(const char* data, size_t len) {
-    if (!HasVersion2Footer(data, len))
+    if (!HasVersion2Footer(data, len)) {
         return nullptr;
+    }
     const TgaFooter* footerLE = (const TgaFooter*)(data + len - sizeof(TgaFooter));
     if (convLE(footerLE->extAreaOffset) < sizeof(TgaHeader) ||
         convLE(footerLE->extAreaOffset) + sizeof(TgaExtArea) + sizeof(TgaFooter) > len) {
         return nullptr;
     }
     const TgaExtArea* extAreaLE = (const TgaExtArea*)(data + convLE(footerLE->extAreaOffset));
-    if (convLE(extAreaLE->size) < sizeof(TgaExtArea))
+    if (convLE(extAreaLE->size) < sizeof(TgaExtArea)) {
         return nullptr;
+    }
     return extAreaLE;
 }
 
