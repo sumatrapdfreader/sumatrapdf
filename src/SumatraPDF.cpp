@@ -585,7 +585,7 @@ void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
 // depending on the currently used language (cf. IsUIRightToLeft)
 static void UpdateWindowRtlLayout(WindowInfo* win) {
     bool isRTL = IsUIRightToLeft();
-    bool wasRTL = (GetWindowLong(win->hwndFrame, GWL_EXSTYLE) & WS_EX_LAYOUTRTL) != 0;
+    bool wasRTL = (GetWindowLongW(win->hwndFrame, GWL_EXSTYLE) & WS_EX_LAYOUTRTL) != 0;
     if (wasRTL == isRTL)
         return;
 
@@ -2971,7 +2971,13 @@ static void OnMenuOpenFolder(WindowInfo* win) {
         return;
     }
     EngineBase* engine = CreateEngineMultiFromFiles(dir.as_view(), files);
-    delete engine;
+    if (!engine) {
+        // TODO: show error message
+        return;
+    }
+    LoadArgs args(dirW, win);
+    args.engine = engine;
+    LoadDocument(args);
 }
 
 static void OnMenuOpen(WindowInfo* win) {

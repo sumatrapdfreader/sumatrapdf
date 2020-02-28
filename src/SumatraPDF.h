@@ -142,9 +142,11 @@ struct LoadArgs {
         this->win = win;
     }
 
+    // we don't own those values
     EngineBase* engine = nullptr;
     const WCHAR* fileName = nullptr;
     WindowInfo* win = nullptr;
+
     bool showWin = true;
     bool forceReuse = false;
     // over-writes placeWindow and other flags and forces no changing

@@ -264,12 +264,6 @@ static MenuDef menuDefContextStart[] = {
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
     CrashIf(!menu);
     bool wasSeparator = true;
-    if (!gPluginMode) {
-        flagFilter |= MF_PLUGIN_MODE_ONLY;
-    }
-    if (gIsRaMicroBuild) {
-        flagFilter |= MF_RAMICRO_ONLY;
-    }
 
     int i = 0;
     while (true) {
@@ -279,9 +273,17 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
             break;
         }
         i++;
-        if ((md.flags & flagFilter)) {
-            continue;
+        if ((md.flags & MF_PLUGIN_MODE_ONLY) != 0) {
+            if (!gPluginMode) {
+                continue;
+            }
         }
+        if ((md.flags &  MF_RAMICRO_ONLY) != 0) {
+            if (!gIsRaMicroBuild) {
+                continue;
+            }
+        }
+
         if (!HasPermission(md.flags >> PERM_FLAG_OFFSET)) {
             continue;
         }
