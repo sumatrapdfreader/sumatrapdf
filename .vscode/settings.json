@@ -56,7 +56,8 @@
     "concepts": "cpp",
     "fstream": "cpp",
     "iostream": "cpp",
-    "*.idl": "cpp"
+    "*.idl": "cpp",
+    "random": "cpp"
   },
   "C_Cpp.loggingLevel": "Debug"
 }

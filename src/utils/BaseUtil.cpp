@@ -74,6 +74,80 @@ WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* s) {
 }
 #endif
 
+PoolAllocatorFixed::~PoolAllocatorFixed() {
+    auto curr = firstBlock;
+    while (curr) {
+        auto next = curr->next;
+        free(curr);
+        curr = next;
+    }
+}
+
+void* PoolAllocatorFixed::Realloc(void* mem, size_t size) {
+    // no-op
+    return nullptr;
+}
+
+void PoolAllocatorFixed::Free(const void*) {
+    // no-op
+}
+
+void* PoolAllocatorFixed::Alloc(size_t size) {
+    // it's ok if size is smaller than element size
+    // because of padding, but shouldn't be bigger than 16
+    int diff = elementSize - (int)size;
+    CrashIf(diff < 0);
+    CrashIf(diff > 16);
+
+    // allocate a block if needed
+    if (currBlock == nullptr || currBlock->nUsed == elementsPerBlock) {
+        // TODO: maybe round up to 16
+        size_t sz = sizeof(PoolAllocatorFixed::Block) + (elementSize * elementsPerBlock);
+        auto block = (PoolAllocatorFixed::Block*)malloc(sz);
+        block->nUsed = 0;
+        if (!firstBlock) {
+            firstBlock = block;
+        } else {
+            currBlock->next = block;
+        }
+        block->next = nullptr;
+        if (currBlock) {
+            currBlock->next = block;
+        }
+        currBlock = block;
+    }
+
+    char* d = (char*)currBlock;
+    // TODO: maybe round up sizeof() to 16 bytes
+    d += sizeof(PoolAllocatorFixed::Block);
+    d += currBlock->nUsed * elementSize;
+    currBlock->nUsed += 1;
+    return (void*)d;
+}
+
+void* PoolAllocatorFixed::At(int i) {
+    auto curr = firstBlock;
+    while (curr && i > curr->nUsed) {
+        i -= curr->nUsed;
+        curr = curr->next;
+    }
+    char* d = (char*)curr;
+    // TODO: maybe round up sizeof() to 16 bytes
+    d += sizeof(PoolAllocatorFixed::Block);
+    d += i * elementSize;
+    return (void*)d;
+}
+
+int PoolAllocatorFixed::Count() {
+    int n = 0;
+    auto curr = firstBlock;
+    while (curr) {
+        n += curr->nUsed;
+        curr = curr->next;
+    }
+    return n;
+}
+
 size_t PoolAllocator::MemBlockNode::Used() {
     return size - free;
 }

@@ -422,6 +422,29 @@ struct Allocator {
 #endif
 };
 
+struct PoolAllocatorFixed : Allocator {
+    int elementSize = 0;
+    int elementsPerBlock = 1024;
+    struct Block {
+        struct Block* next;
+        int nUsed;
+        // data follows
+    };
+    Block* currBlock = nullptr;
+    Block* firstBlock = nullptr;
+
+    explicit PoolAllocatorFixed() = default;
+
+    // Allocator methods
+    ~PoolAllocatorFixed() override;
+    void* Realloc(void* mem, size_t size) override;
+    void Free(const void*) override;
+    void* Alloc(size_t size) override;
+
+    int Count();
+    void* At(int i);
+};
+
 // PoolAllocator is for the cases where we need to allocate pieces of memory
 // that are meant to be freed together. It simplifies the callers (only need
 // to track this object and not all allocated pieces). Allocation and freeing
@@ -455,14 +478,12 @@ struct PoolAllocator : Allocator {
     void SetMinBlockSize(size_t newMinBlockSize);
     void FreeAll();
     void reset();
-    ~PoolAllocator() override;
     void AllocBlock(size_t minSize);
 
     // Allocator methods
+    ~PoolAllocator() override;
     void* Realloc(void* mem, size_t size) override;
-
     void Free(const void*) override;
-
     void* Alloc(size_t size) override;
 
     void* FindNthPieceOfSize(size_t size, size_t n) const;
