@@ -74,17 +74,22 @@ static_assert(sizeof(TgaExtArea) == 495, "wrong size of TgaExtArea structure");
 
 static inline uint16_t convLE(uint16_t x) {
     uint8_t* data = (uint8_t*)&x;
+    // TODO: change to version that doesn't use tricks
+    // cppcheck-suppress objectIndex
     return data[0] | (data[1] << 8);
 }
 
 static inline uint32_t convLE(uint32_t x) {
     uint8_t* data = (uint8_t*)&x;
+    // TODO: change to version that doesn't use tricks
+    // cppcheck-suppress objectIndex
     return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
 }
 
 static bool HasVersion2Footer(const char* data, size_t len) {
-    if (len < sizeof(TgaHeader) + sizeof(TgaFooter))
+    if (len < sizeof(TgaHeader) + sizeof(TgaFooter)) {
         return false;
+    }
     const TgaFooter* footerLE = (const TgaFooter*)(data + len - sizeof(TgaFooter));
     return str::EqN(footerLE->signature, TGA_FOOTER_SIGNATURE, sizeof(footerLE->signature));
 }
