@@ -322,7 +322,7 @@ static Prop* UniqifyProp(Prop& p) {
         p.Free();
         return existing;
     }
-    return gAllProps->push_back(p);
+    return gAllProps->Append(p);
 }
 
 Prop* Prop::AllocStyleName(const char* styleName) {
@@ -596,7 +596,7 @@ CachedStyle* CacheStyle(Style* style, bool* changedOut) {
     }
 
     StyleCacheEntry newEntry = {style, GetStyleId(style), s};
-    e = gStyleCache->push_back(newEntry);
+    e = gStyleCache->Append(newEntry);
     return &e->cachedStyle;
 }
 
