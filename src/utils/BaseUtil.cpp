@@ -55,12 +55,12 @@ char* Allocator::StrDup(Allocator* a, const char* s) {
 // allocates a copy of the source string inside the allocator.
 // it's only safe in PoolAllocator because allocated data
 // never moves in memory
-std::string_view Allocator::AllocString(Allocator* a, std::string_view str) {
-    size_t n = str.size();
+std::string_view Allocator::AllocString(Allocator* a, std::string_view sv) {
+    size_t n = sv.size();
     char* dst = (char*)Allocator::Alloc(a, n + 1);
-    const char* src = str.data();
+    const char* src = sv.data();
     memcpy(dst, (const void*)src, n);
-    dst[n] = 0; // we don't assume str.data() is 0-terminated
+    dst[n] = 0; // we don't assume sv.data() is 0-terminated
     return std::string_view(dst, n);
 }
 
@@ -74,170 +74,50 @@ WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* s) {
 }
 #endif
 
-PoolAllocatorFixed::~PoolAllocatorFixed() {
-    auto curr = firstBlock;
-    while (curr) {
-        auto next = curr->next;
-        free(curr);
-        curr = next;
-    }
-}
-
-void* PoolAllocatorFixed::Realloc(void*, size_t) {
-    // no-op
-    return nullptr;
-}
-
-void PoolAllocatorFixed::Free(const void*) {
-    // no-op
-}
-
-void* PoolAllocatorFixed::Alloc(size_t size) {
-    // it's ok if size is smaller than element size
-    // because of padding, but shouldn't be bigger than 16
-    int diff = elementSize - (int)size;
-    CrashIf(diff < 0);
-    CrashIf(diff > 16);
-
-    // allocate a block if needed
-    if (currBlock == nullptr || currBlock->nUsed == elementsPerBlock) {
-        // TODO: maybe round up to 16
-        size_t sz = sizeof(PoolAllocatorFixed::Block) + (elementSize * elementsPerBlock);
-        auto block = (PoolAllocatorFixed::Block*)malloc(sz);
-        block->nUsed = 0;
-        if (!firstBlock) {
-            firstBlock = block;
-        } else {
-            currBlock->next = block;
-        }
-        block->next = nullptr;
-        if (currBlock) {
-            currBlock->next = block;
-        }
-        currBlock = block;
-    }
-
-    char* d = (char*)currBlock;
-    // TODO: maybe round up sizeof() to 16 bytes
-    d += sizeof(PoolAllocatorFixed::Block);
-    d += currBlock->nUsed * elementSize;
-    currBlock->nUsed += 1;
-    return (void*)d;
-}
-
-void* PoolAllocatorFixed::At(int i) {
-    auto curr = firstBlock;
-    while (curr && i > curr->nUsed) {
-        i -= curr->nUsed;
-        curr = curr->next;
-    }
-    char* d = (char*)curr;
-    // TODO: maybe round up sizeof() to 16 bytes
-    d += sizeof(PoolAllocatorFixed::Block);
-    d += i * elementSize;
-    return (void*)d;
-}
-
-int PoolAllocatorFixed::Count() {
-    int n = 0;
-    auto curr = firstBlock;
-    while (curr) {
-        n += curr->nUsed;
-        curr = curr->next;
-    }
-    return n;
-}
-
-size_t PoolAllocator::MemBlockNode::Used() {
-    return size - free;
-}
-
-char* PoolAllocator::MemBlockNode::DataStart() {
-    return (char*)this + sizeof(MemBlockNode);
-}
-
-// adjust DataStart() to be aligned at alignTo boundary
-// alignTo should be a power of 2
-void PoolAllocator::MemBlockNode::AlignTo(size_t alignTo) {
-    if (alignTo < 2) {
-        // 0 and 1 mean: no alignment
-        return;
-    }
-    size_t n = Used();
-    size_t off = n % alignTo;
-    if (off == 0) {
-        // already aligned
-        return;
-    }
-    size_t pad = alignTo - off;
-    if (pad >= free) {
-        free = 0;
-    } else {
-        free -= pad;
-    }
-    CrashIf((size_t)DataStart() % alignTo != 0);
-}
-
-void PoolAllocator::SetMinBlockSize(size_t newMinBlockSize) {
-    minBlockSize = newMinBlockSize;
-}
-
 void PoolAllocator::Free(const void*) {
     // does nothing, we can't free individual pieces of memory
 }
 
 void PoolAllocator::FreeAll() {
-    MemBlockNode* curr = firstBlock;
+    Block* curr = firstBlock;
     while (curr) {
-        MemBlockNode* next = curr->next;
+        Block* next = curr->next;
         free(curr);
         curr = next;
     }
     currBlock = nullptr;
     firstBlock = nullptr;
+    nAllocs = 0;
 }
 
 // optimization: frees all but first block
 // allows for more efficient re-use of PoolAllocator
 // with more effort we could preserve all blocks (not sure if worth it)
 void PoolAllocator::reset() {
+    FreeAll();
+
+    // TODO: optimize by not freeing the first block, to speed up re-use
+#if 0
     if (!firstBlock) {
         return;
     }
-    MemBlockNode* first = firstBlock;
+    Block* first = firstBlock;
     firstBlock = first->next;
     FreeAll();
+
     firstBlock = first;
     first->next = nullptr;
-    first->free = first->size;
+    first->nAllocs = 0;
+    // TODO: properly reset first
+#endif
 }
 
 PoolAllocator::~PoolAllocator() {
     FreeAll();
 }
 
-void PoolAllocator::AllocBlock(size_t minSize) {
-    size_t size = minBlockSize;
-    if (minSize > size) {
-        size = minSize;
-    }
-    MemBlockNode* node = (MemBlockNode*)calloc(1, sizeof(MemBlockNode) + size);
-    CrashAlwaysIf(!node);
-    if (!firstBlock) {
-        firstBlock = node;
-    }
-    node->size = size;
-    node->free = size;
-    if (currBlock) {
-        currBlock->next = node;
-    }
-    currBlock = node;
-}
-
 // Allocator methods
-void* PoolAllocator::Realloc(void* mem, size_t size) {
-    UNUSED(mem);
-    UNUSED(size);
+void* PoolAllocator::Realloc(void*, size_t) {
     // TODO: we can't do that because we don't know the original
     // size of memory piece pointed by mem. We could remember it
     // within the block that we allocate
@@ -245,33 +125,78 @@ void* PoolAllocator::Realloc(void* mem, size_t size) {
     return nullptr;
 }
 
-void* PoolAllocator::Alloc(size_t size) {
-    size_t minSize = RoundUp(size, currAlign);
-    if (!currBlock || (currBlock->free < minSize)) {
-        AllocBlock(minSize);
+static bool BlockHasSpaceFor(PoolAllocator::Block* block, int size, int allocAlign) {
+    if (!block) {
+        return false;
     }
-    currBlock->AlignTo(currAlign);
-
-    void* mem = (void*)(currBlock->DataStart() + currBlock->Used());
-    currBlock->free -= size;
-    return mem;
+    char* d = RoundUp(block->curr, allocAlign);
+    // data + i32 index of allocation
+    d += (size + sizeof(i32));
+    if (d > block->end) {
+        return false;
+    }
+    return true;
 }
 
-// assuming allocated memory was for pieces of uniform size,
-// find the address of n-th piece
-void* PoolAllocator::FindNthPieceOfSize(size_t size, size_t n) const {
-    size = RoundUp(size, currAlign);
-    MemBlockNode* curr = firstBlock;
-    while (curr) {
-        size_t piecesInBlock = curr->Used() / size;
-        if (piecesInBlock > n) {
-            char* p = (char*)curr + sizeof(MemBlockNode) + (n * size);
-            return (void*)p;
+void* PoolAllocator::Alloc(size_t size) {
+    if (!BlockHasSpaceFor(currBlock, (int)size, allocAlign)) {
+        int freeSpaceSize = (int)size + sizeof(i32); // + space for index
+        int hdrSize = RoundUp((int)sizeof(PoolAllocator::Block), allocAlign);
+        int blockSize = hdrSize + freeSpaceSize;
+        if (blockSize < minBlockSize) {
+            blockSize = minBlockSize;
+            freeSpaceSize = minBlockSize - hdrSize;
         }
-        n -= piecesInBlock;
+        // TODO: zero with calloc()? slower but safer
+        auto block = (Block*)malloc(blockSize);
+        char* start = (char*)block;
+
+        block->nAllocs = 0;
+        block->curr = start + hdrSize;
+        block->dataSize = freeSpaceSize;
+        block->end = start + block->dataSize;
+        block->next = nullptr;
+        if (!firstBlock) {
+            firstBlock = block;
+        }
+        if (currBlock) {
+            currBlock->next = block;
+        }
+        currBlock = block;
+    }
+    char* res = RoundUp(currBlock->curr, allocAlign);
+    currBlock->curr = res + size;
+
+    char* blockStart = (char*)currBlock;
+
+    i32 offset = (i32)(res - blockStart);
+    i32* index = (i32*)currBlock->end;
+    index -= 1;
+    index[0] = offset;
+    currBlock->end = (char*)index;
+    currBlock->nAllocs += 1;
+    nAllocs += 1;
+    return res;
+}
+
+void* PoolAllocator::At(int i) {
+    CrashIf(i < 0 || i >= nAllocs);
+    if (i < 0 || i >= nAllocs) {
+        return nullptr;
+    }
+    auto curr = firstBlock;
+    while (curr && i >= curr->nAllocs) {
+        i -= curr->nAllocs;
         curr = curr->next;
     }
-    return nullptr;
+    CrashIf(!curr);
+    CrashIf(i >= curr->nAllocs);
+    i32* index = (i32*)curr->end;
+    // elements are in reverse
+    int idx = curr->nAllocs - i - 1;
+    i32 offset = index[idx];
+    char* d = (char*)curr + offset;
+    return (void*)d;
 }
 
 #if !OS_WIN
@@ -305,7 +230,19 @@ size_t RoundUp(size_t n, size_t rounding) {
 }
 
 int RoundUp(int n, int rounding) {
+    if (rounding <= 1) {
+        return n;
+    }
     return ((n + rounding - 1) / rounding) * rounding;
+}
+
+char* RoundUp(char* d, int rounding) {
+    if (rounding <= 1) {
+        return d;
+    }
+    uintptr_t n = (uintptr_t)d;
+    n = ((n + rounding - 1) / rounding) * rounding;
+    return (char*)n;
 }
 
 size_t RoundToPowerOf2(size_t size) {
@@ -421,7 +358,7 @@ bool VecStr::allocateIndexIfNeeded() {
     }
 
     // for structures we want aligned allocation. 8 should be good enough for everything
-    allocator.currAlign = 8;
+    allocator.allocAlign = 8;
     VecStrIndex* idx = allocator.AllocStruct<VecStrIndex>();
 
     if (allowFailure && !idx) {
@@ -452,7 +389,7 @@ bool VecStr::Append(std::string_view sv) {
     if (sv.size() > maxLen) {
         return false;
     }
-    allocator.currAlign = 1; // no need to align allocations for string
+    allocator.allocAlign = 1; // no need to align allocations for string
     std::string_view res = Allocator::AllocString(&allocator, sv);
 
     int n = currIndex->nStrings;

@@ -202,7 +202,7 @@ MapStrToInt::MapStrToInt(size_t initialSize) {
     // we use PoolAllocator to allocate HashTableEntry entries
     // and copies of string keys
     allocator = new PoolAllocator();
-    allocator->currAlign = 4;
+    allocator->allocAlign = 4;
     h = NewHashTable(initialSize, allocator);
 }
 

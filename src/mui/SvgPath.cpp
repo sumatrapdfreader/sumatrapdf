@@ -171,42 +171,42 @@ GraphicsPath* GraphicsPathFromPathData(const char* s) {
     }
     GraphicsPath* gp = ::new GraphicsPath();
     PointF prevEnd(0.f, 0.f);
-    for (SvgPathInstr& i : instr) {
-        PathInstr type = i.type;
+    for (SvgPathInstr* i : instr) {
+        PathInstr type = i->type;
 
         // convert relative coordinates to absolute based on end position of
         // previous element
         // TODO: support the rest of instructions
         if (PathInstr::MoveRel == type) {
-            RelPointToAbs(prevEnd, i.v);
+            RelPointToAbs(prevEnd, i->v);
             type = PathInstr::MoveAbs;
         } else if (PathInstr::LineToRel == type) {
-            RelPointToAbs(prevEnd, i.v);
+            RelPointToAbs(prevEnd, i->v);
             type = PathInstr::LineToAbs;
         } else if (PathInstr::HLineRel == type) {
-            RelXToAbs(prevEnd, i.v);
+            RelXToAbs(prevEnd, i->v);
             type = PathInstr::HLineAbs;
         } else if (PathInstr::VLineRel == type) {
-            RelYToAbs(prevEnd, i.v);
+            RelYToAbs(prevEnd, i->v);
             type = PathInstr::VLineAbs;
         }
 
         if (PathInstr::MoveAbs == type) {
-            PointF p(i.v[0], i.v[1]);
+            PointF p(i->v[0], i->v[1]);
             prevEnd = p;
             gp->StartFigure();
         } else if (PathInstr::LineToAbs == type) {
-            PointF p(i.v[0], i.v[1]);
+            PointF p(i->v[0], i->v[1]);
             gp->AddLine(prevEnd, p);
             prevEnd = p;
         } else if (PathInstr::HLineAbs == type) {
             PointF p(prevEnd);
-            p.X = i.v[0];
+            p.X = i->v[0];
             gp->AddLine(prevEnd, p);
             prevEnd = p;
         } else if (PathInstr::VLineAbs == type) {
             PointF p(prevEnd);
-            p.Y = i.v[0];
+            p.Y = i->v[0];
             gp->AddLine(prevEnd, p);
             prevEnd = p;
         } else if ((PathInstr::Close == type) || (PathInstr::Close2 == type)) {

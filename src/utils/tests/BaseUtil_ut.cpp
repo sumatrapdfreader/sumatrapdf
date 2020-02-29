@@ -77,7 +77,59 @@ static void GeomTest() {
     }
 }
 
+static const char* strings[] = {"s1", "string", "another one", "and one more"};
+
+static void PoolAllocatorStringsTest(PoolAllocator& a, int nRounds) {
+    a.reset();
+
+    int nStrings = (int)dimof(strings);
+    for (int i = 0; i < nRounds; i++) {
+        for (int j = 0; j < nStrings; j++) {
+            const char* s = strings[j];
+            std::string_view sv = s;
+            std::string_view got = Allocator::AllocString(&a, sv);
+            utassert(str::Eq(sv, got.data()));
+        }
+    }
+
+    int nTotal = nStrings * nRounds;
+    int nString = 0;
+    for (int i = 0; i < nTotal; i++) {
+        const char* exp = strings[nString];
+        nString = (nString + 1) % nStrings;
+
+        void* d = a.At(i);
+        char* got = (char*)d;
+        utassert(str::Eq(exp, got));
+    }
+}
+
+static void PoolAllocatorTest() {
+    PoolAllocator a;
+    PoolAllocatorStringsTest(a, 2048);
+    a.allocAlign = 1;
+    PoolAllocatorStringsTest(a, 2048);
+}
+
+static int roundUpTestCases[] = {
+    0, 0, 1, 8, 2, 8, 3, 8, 4, 8, 5, 8, 6, 8, 7, 8, 8, 8, 9, 16,
+};
+
 void BaseUtilTest() {
+    PoolAllocatorTest();
+
+    size_t n = dimof(roundUpTestCases) / 2;
+    for (size_t i = 0; i < n; i++) {
+        int v = roundUpTestCases[i * 2];
+        int exp = roundUpTestCases[i * 2 + 1];
+        int got = RoundUp(v, 8);
+        utassert(exp == got);
+        size_t got2 = RoundUp((size_t)v, (size_t)8);
+        utassert(got2 == (size_t)exp);
+        char* got3 = RoundUp((char*)(uintptr_t)v, (int)8);
+        utassert(got3 == (char*)(uintptr_t)exp);
+    }
+
     utassert(RoundToPowerOf2(0) == 1);
     utassert(RoundToPowerOf2(1) == 1);
     utassert(RoundToPowerOf2(2) == 2);

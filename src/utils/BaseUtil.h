@@ -364,6 +364,7 @@ uint32_t MurmurHash2(const void* key, size_t len);
 
 size_t RoundUp(size_t n, size_t rounding);
 int RoundUp(int n, int rounding);
+char* RoundUp(char*, int rounding);
 
 template <typename T>
 void ListInsert(T** root, T* el) {
@@ -422,29 +423,6 @@ struct Allocator {
 #endif
 };
 
-struct PoolAllocatorFixed : Allocator {
-    int elementSize = 0;
-    int elementsPerBlock = 1024;
-    struct Block {
-        struct Block* next;
-        int nUsed;
-        // data follows
-    };
-    Block* currBlock = nullptr;
-    Block* firstBlock = nullptr;
-
-    explicit PoolAllocatorFixed() = default;
-
-    // Allocator methods
-    ~PoolAllocatorFixed() override;
-    void* Realloc(void* mem, size_t size) override;
-    void Free(const void*) override;
-    void* Alloc(size_t size) override;
-
-    int Count();
-    void* At(int i);
-};
-
 // PoolAllocator is for the cases where we need to allocate pieces of memory
 // that are meant to be freed together. It simplifies the callers (only need
 // to track this object and not all allocated pieces). Allocation and freeing
@@ -456,29 +434,31 @@ struct PoolAllocatorFixed : Allocator {
 struct PoolAllocator : Allocator {
     // we'll allocate block of the minBlockSize unless
     // asked for a block of bigger size
-    size_t minBlockSize = 4096;
-    size_t currAlign = 8; // alignment of allocations
+    int minBlockSize = 4096;
+    // alignment of allocations, must be 2^N or <= 1 to disable
+    // We might apply padding so that allocated memory starts at
+    // multiply of allocAlign. This is sometimes needed to satisfy ABI
+    // requirements or to ensure CPU operations (like SSE) are fast
+    int allocAlign = 8;
 
-    struct MemBlockNode {
-        size_t Used();
-        char* DataStart();
-        void AlignTo(size_t alignTo);
-
-        struct MemBlockNode* next;
-        size_t size;
-        size_t free;
+    // contains allocated data and index of each allocation
+    struct Block {
+        struct Block* next;
+        int dataSize; // for debugging, not used
+        int nAllocs;
+        char* curr;
+        // from the end, we store index of each allocation relative
+        // to start of the block. <end> points at the current
+        // reverse end of i32 array of indexes
+        char* end;
         // data follows here
     };
 
-    MemBlockNode* currBlock = nullptr;
-    MemBlockNode* firstBlock = nullptr;
+    Block* currBlock = nullptr;
+    Block* firstBlock = nullptr;
+    int nAllocs = 0;
 
-    explicit PoolAllocator() = default;
-
-    void SetMinBlockSize(size_t newMinBlockSize);
-    void FreeAll();
-    void reset();
-    void AllocBlock(size_t minSize);
+    PoolAllocator() = default;
 
     // Allocator methods
     ~PoolAllocator() override;
@@ -486,7 +466,9 @@ struct PoolAllocator : Allocator {
     void Free(const void*) override;
     void* Alloc(size_t size) override;
 
-    void* FindNthPieceOfSize(size_t size, size_t n) const;
+    void FreeAll();
+    void reset();
+    void* At(int i);
 
     // only valid for structs, could alloc objects with
     // placement new()
@@ -501,39 +483,37 @@ struct PoolAllocator : Allocator {
     // cf. http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     template <typename T>
     class Iter {
-        MemBlockNode* block;
-        size_t blockPos;
+        PoolAllocator* self;
+        int idx;
 
       public:
-        Iter(MemBlockNode* block) : block(block), blockPos(0) {
-            CrashIf(block && (block->Used() % sizeof(T)) != 0);
-            CrashIf(block && block->Used() == 0);
+        // TODO: can make it more efficient
+        Iter(PoolAllocator* a, int startIdx) {
+            self = a;
+            idx = startIdx;
         }
 
         bool operator!=(const Iter& other) const {
-            return block != other.block || blockPos != other.blockPos;
+            return idx != other.idx;
         }
-        T& operator*() const {
-            return *(T*)(block->DataStart() + blockPos);
+
+        T* operator*() const {
+            return (T*)self->At(idx);
         }
+
         Iter& operator++() {
-            blockPos += sizeof(T);
-            if (block->Used() == blockPos) {
-                block = block->next;
-                blockPos = 0;
-                CrashIf(block && block->Used() == 0);
-            }
+            idx += 1;
             return *this;
         }
     };
 
     template <typename T>
     Iter<T> begin() {
-        return Iter<T>(firstBlock);
+        return Iter<T>(this, 0);
     }
     template <typename T>
     Iter<T> end() {
-        return Iter<T>(nullptr);
+        return Iter<T>(this, nAllocs);
     }
 };
 

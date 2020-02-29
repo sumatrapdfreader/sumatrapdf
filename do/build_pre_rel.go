@@ -26,8 +26,10 @@ func buildPreRelease() {
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
 
 	// we want to sign files inside the installer, so we have to
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 	runTestUtilMust(rel32Dir)
+
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 	signFilesMust(rel32Dir)
 	createPdbZipMust(rel32Dir)
 	createPdbLzsaMust(rel32Dir)

@@ -269,7 +269,7 @@ func main() {
 			failIfNoCertPwd()
 		}
 		detectVersions()
-		buildDaily()
+		buildPreRelease()
 		s3UploadPreReleaseMust(buildTypePreRel)
 		spacesUploadPreReleaseMust(buildTypePreRel)
 		return

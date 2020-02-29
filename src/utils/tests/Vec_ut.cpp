@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include <utils/VecSegmented.h>
 
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
@@ -123,7 +124,29 @@ static size_t VecTestAppendFmt() {
     return l;
 }
 
+struct Num {
+    int n;
+    int n2;
+};
+
+static void VecSegmentedTest() {
+    VecSegmented<Num> vec;
+    int nTotal = 1033;
+    for (int i = 0; i < nTotal; i++) {
+        vec.push_back(Num{i, i+1});
+    }
+    utassert(vec.size() == (size_t)nTotal);
+    int i = 0;
+    for (Num* n : vec) {
+        utassert(n->n == i);
+        utassert(n->n2 == i+1);
+        ++i;
+    }
+}
+
 void VecTest() {
+    VecSegmentedTest();
+
     Vec<int> ints;
     utassert(ints.size() == 0);
     ints.Append(1);

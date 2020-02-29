@@ -10,28 +10,22 @@
    It's also safe to read allocated elements in any thread.
 */
 template <typename T>
-class VecSegmented {
-  protected:
-    size_t len = 0;
+struct VecSegmented {
     PoolAllocator allocator;
 
-  public:
-    VecSegmented() {
-        allocator.currAlign = sizeof(T);
-    }
+    VecSegmented() = default;
 
     ~VecSegmented() {
         allocator.FreeAll();
     }
 
-    T* AllocAtEnd(size_t count = 1) {
-        void* p = allocator.Alloc(count * sizeof(T));
-        len += count;
+    T* AllocAtEnd() {
+        void* p = allocator.Alloc(sizeof(T));
         return reinterpret_cast<T*>(p);
     }
 
     size_t size() const {
-        return len;
+        return allocator.nAllocs;
     }
 
     // TODO: push_back() should return void

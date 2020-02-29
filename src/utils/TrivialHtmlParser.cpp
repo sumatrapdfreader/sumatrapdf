@@ -116,13 +116,15 @@ HtmlParser::HtmlParser()
 }
 
 HtmlParser::~HtmlParser() {
-    if (freeHtml)
+    if (freeHtml) {
         free(html);
+    }
 }
 
 void HtmlParser::Reset() {
-    if (freeHtml)
+    if (freeHtml) {
         free(html);
+    }
     html = nullptr;
     freeHtml = false;
     rootElement = currElement = nullptr;
@@ -135,6 +137,7 @@ void HtmlParser::Reset() {
 HtmlAttr* HtmlParser::AllocAttr(char* name, HtmlAttr* next) {
     HtmlAttr* attr = allocator.AllocStruct<HtmlAttr>();
     attr->name = name;
+    attr->val = nullptr;
     attr->next = next;
     ++attributesCount;
     return attr;
@@ -153,7 +156,10 @@ HtmlElement* HtmlParser::AllocElement(HtmlTag tag, char* name, HtmlElement* pare
     HtmlElement* el = allocator.AllocStruct<HtmlElement>();
     el->tag = tag;
     el->name = name;
+    el->firstAttr = nullptr;
     el->up = parent;
+    el->down = nullptr;
+    el->next = nullptr;
     el->codepage = codepage;
     ++elementsCount;
     return el;

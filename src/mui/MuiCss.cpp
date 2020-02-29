@@ -126,13 +126,13 @@ void Initialize() {
 }
 
 void Destroy() {
-    for (Prop& p : *gAllProps) {
-        p.Free();
+    for (Prop* p : *gAllProps) {
+        p->Free();
     }
     delete gAllProps;
 
-    for (StyleCacheEntry& e : *gStyleCache) {
-        delete e.style;
+    for (StyleCacheEntry* e : *gStyleCache) {
+        delete e->style;
     }
     delete gStyleCache;
 }
@@ -309,9 +309,9 @@ bool Prop::Eq(const Prop* other) const {
 }
 
 static Prop* FindExistingProp(Prop* prop) {
-    for (Prop& p : *gAllProps) {
-        if (p.Eq(prop))
-            return &p;
+    for (Prop* p : *gAllProps) {
+        if (p->Eq(prop))
+            return p;
     }
     return nullptr;
 }
@@ -548,12 +548,12 @@ CachedStyle* CacheStyle(Style* style, bool* changedOut) {
     ScopedMuiCritSec muiCs;
     StyleCacheEntry* e = nullptr;
 
-    for (StyleCacheEntry& e2 : *gStyleCache) {
-        if (e2.style == style) {
-            if (e2.styleId == GetStyleId(style)) {
-                return &e2.cachedStyle;
+    for (StyleCacheEntry* e2 : *gStyleCache) {
+        if (e2->style == style) {
+            if (e2->styleId == GetStyleId(style)) {
+                return &e2->cachedStyle;
             }
-            e = &e2;
+            e = e2;
             break;
         }
     }
@@ -601,28 +601,32 @@ CachedStyle* CacheStyle(Style* style, bool* changedOut) {
 }
 
 CachedStyle* CachedStyleByName(const char* name) {
-    if (!name)
+    if (!name) {
         return nullptr;
-    for (StyleCacheEntry& e : *gStyleCache) {
-        if (str::Eq(e.cachedStyle.styleName, name))
-            return &e.cachedStyle;
+    }
+    for (StyleCacheEntry* e : *gStyleCache) {
+        if (str::Eq(e->cachedStyle.styleName, name))
+            return &e->cachedStyle;
     }
     return nullptr;
 }
 
 Style* StyleByName(const char* name) {
-    if (!name)
+    if (!name) {
         return nullptr;
-    for (StyleCacheEntry& e : *gStyleCache) {
-        if (str::Eq(e.cachedStyle.styleName, name))
-            return e.style;
+    }
+    for (StyleCacheEntry* e : *gStyleCache) {
+        if (str::Eq(e->cachedStyle.styleName, name)) {
+            return e->style;
+        }
     }
     return nullptr;
 }
 
 Brush* BrushFromColorData(ColorData* color, const RectF& r) {
-    if (ColorSolid == color->type)
+    if (ColorSolid == color->type) {
         return color->solid.cachedBrush;
+    }
 
     if (ColorGradientLinear == color->type) {
         ColorDataGradientLinear* d = &color->gradientLinear;
