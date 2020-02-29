@@ -281,14 +281,16 @@ void SetMainWndBgCol(EbookControls* ctrls) {
     CrashIf(!styleMainWnd);
     u8 r, g, b;
     UnpackRgb(bgColor, r, g, b);
+    u8 rt, gt, bt;
+    UnpackRgb(txtColor, rt, gt, bt);
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, r, g, b));
     ctrls->mainWnd->SetStyle(styleMainWnd);
 
     Style* styleStatus = StyleByName("styleStatus");
     styleStatus->Set(Prop::AllocColorSolid(PropBgColor, r, g, b));
+    styleStatus->Set(Prop::AllocColorSolid(PropColor, rt, gt, bt));
     ctrls->status->SetStyle(styleStatus);
 
-    // TODO: should also allow to change text color
     // TODO: also match the colors of progress bar to be based on background color
     // TODO: update tab color
 
