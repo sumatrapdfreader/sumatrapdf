@@ -107,7 +107,7 @@ class DisplayModel : public Controller {
     // table of contents
     TocTree* GetToc() override {
         if (!engine) {
-            return false;
+            return nullptr;
         }
         return engine->GetToc();
     }

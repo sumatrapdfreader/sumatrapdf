@@ -150,7 +150,7 @@ void VecTest() {
     Vec<int> ints;
     utassert(ints.size() == 0);
     ints.Append(1);
-    ints.Push(2);
+    ints.Append(2);
     ints.InsertAt(0, -1);
     utassert(ints.size() == 3);
     utassert(ints.at(0) == -1 && ints.at(1) == 1 && ints.at(2) == 2);
@@ -158,7 +158,7 @@ void VecTest() {
     int last = ints.Pop();
     utassert(last == 2);
     utassert(ints.size() == 2);
-    ints.Push(3);
+    ints.Append(3);
     ints.RemoveAt(0);
     utassert(ints.size() == 2);
     utassert(ints.at(0) == 1 && ints.at(1) == 3);
@@ -166,7 +166,7 @@ void VecTest() {
     utassert(ints.size() == 0);
 
     for (int i = 0; i < 1000; i++) {
-        ints.Push(i);
+        ints.Append(i);
     }
     utassert(ints.size() == 1000 && ints.at(500) == 500);
     ints.Remove(500);
@@ -234,7 +234,7 @@ void VecTest() {
             if (i % 2 == 0)
                 v.AppendChar('a');
             else
-                v.Push('a');
+                v.AppendChar('a');
         }
 
         for (size_t i = 1; i <= 16; i++) {

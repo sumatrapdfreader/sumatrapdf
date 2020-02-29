@@ -159,7 +159,7 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* 
         }
 
         if (lines) {
-            lines->Push(str::DupN(text + (c0 - coords), c - c0));
+            lines->Append(str::DupN(text + (c0 - coords), c - c0));
             continue;
         }
 

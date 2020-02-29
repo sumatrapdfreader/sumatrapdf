@@ -244,9 +244,10 @@ bool HuffDicDecompressor::DecodeOne(uint32_t code, str::Str& dst) {
             logf("infinite recursion\n");
             return false;
         }
-        recursionGuard.Push(code);
-        if (!Decompress(p, symLen, dst))
+        recursionGuard.Append(code);
+        if (!Decompress(p, symLen, dst)) {
             return false;
+        }
         recursionGuard.Pop();
     } else {
         symLen &= 0x7fff;

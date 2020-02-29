@@ -1076,25 +1076,29 @@ void HtmlFormatter::UpdateTagNesting(HtmlToken* t) {
     bool isInline = IsInlineTag(t->tag);
     if (t->IsStartTag()) {
         if (IsInlineTag(t->tag)) {
-            tagNesting.Push(t->tag);
+            tagNesting.Append(t->tag);
             return;
         }
         // close all tags that can't contain this new block-level tag
-        for (; idx > 0 && AutoCloseOnOpen(t->tag, tagNesting.at(idx - 1)); idx--)
-            ;
+        for (; idx > 0 && AutoCloseOnOpen(t->tag, tagNesting.at(idx - 1)); idx--) {
+            // no-op
+        }
     } else {
         // close all tags that were contained within the current tag
         // (for inline tags just up to the next block-level tag)
-        for (; idx > 0 && (!isInline || IsInlineTag(tagNesting.at(idx - 1))) && t->tag != tagNesting.at(idx - 1); idx--)
-            ;
-        if (0 == idx || tagNesting.at(idx - 1) != t->tag)
+        for (; idx > 0 && (!isInline || IsInlineTag(tagNesting.at(idx - 1))) && t->tag != tagNesting.at(idx - 1);
+             idx--) {
+            // no-op
+        }
+        if (0 == idx || tagNesting.at(idx - 1) != t->tag) {
             return;
+        }
     }
 
     AutoCloseTags(tagNesting.size() - idx);
 
     if (t->IsStartTag())
-        tagNesting.Push(t->tag);
+        tagNesting.Append(t->tag);
     else {
         CrashIf(!t->IsEndTag() || t->tag != tagNesting.Last());
         tagNesting.Pop();

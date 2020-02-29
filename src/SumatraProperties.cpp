@@ -294,15 +294,15 @@ static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
     WStrVec props;
 
     if (parts.Contains(L"linearized"))
-        props.Push(str::Dup(_TR("Fast Web View")));
+        props.Append(str::Dup(_TR("Fast Web View")));
     if (parts.Contains(L"tagged"))
-        props.Push(str::Dup(_TR("Tagged PDF")));
+        props.Append(str::Dup(_TR("Tagged PDF")));
     if (parts.Contains(L"PDFX"))
-        props.Push(str::Dup(L"PDF/X (ISO 15930)"));
+        props.Append(str::Dup(L"PDF/X (ISO 15930)"));
     if (parts.Contains(L"PDFA1"))
-        props.Push(str::Dup(L"PDF/A (ISO 19005)"));
+        props.Append(str::Dup(L"PDF/A (ISO 19005)"));
     if (parts.Contains(L"PDFE1"))
-        props.Push(str::Dup(L"PDF/E (ISO 24517)"));
+        props.Append(str::Dup(L"PDF/E (ISO 24517)"));
 
     return props.Join(L", ");
 }
@@ -318,10 +318,10 @@ static WCHAR* FormatPermissions(Controller* ctrl) {
 
     EngineBase* engine = ctrl->AsFixed()->GetEngine();
     if (!engine->AllowsPrinting()) {
-        denials.Push(str::Dup(_TR("printing document")));
+        denials.Append(str::Dup(_TR("printing document")));
     }
     if (!engine->AllowsCopyingText()) {
-        denials.Push(str::Dup(_TR("copying text")));
+        denials.Append(str::Dup(_TR("copying text")));
     }
 
     return denials.Join(L", ");

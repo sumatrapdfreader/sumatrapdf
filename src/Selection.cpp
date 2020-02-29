@@ -259,7 +259,7 @@ void CopySelectionToClipboard(WindowInfo* win) {
             for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
                 WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
                 if (text) {
-                    selections.Push(text);
+                    selections.Append(text);
                 }
             }
             selText.Set(selections.Join());

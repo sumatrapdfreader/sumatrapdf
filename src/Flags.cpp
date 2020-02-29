@@ -456,12 +456,12 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
         } else if (is_arg_with_param(Bench)) {
             WCHAR* s = str::Dup(param);
             ++n;
-            i.pathsToBenchmark.Push(s);
+            i.pathsToBenchmark.Append(s);
             s = nullptr;
             if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
                 s = str::Dup(argList.at(++n));
             }
-            i.pathsToBenchmark.Push(s);
+            i.pathsToBenchmark.Append(s);
             i.exitImmediately = true;
         } else if (CrashOnOpen == arg) {
             // to make testing of crash reporting system in pre-release/release
@@ -507,7 +507,7 @@ void ParseCommandLine(const WCHAR* cmdLine, Flags& i) {
                 filePath = ResolveLnk(argName);
             if (!filePath)
                 filePath = str::Dup(argName);
-            i.fileNames.Push(filePath);
+            i.fileNames.Append(filePath);
         }
     }
 }

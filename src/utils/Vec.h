@@ -230,10 +230,6 @@ class Vec {
         --len;
     }
 
-    bool Push(T el) {
-        return Append(el);
-    }
-
     T Pop() {
         CrashIf(0 == len);
         T el = at(len - 1);
@@ -409,7 +405,7 @@ class WStr : public Vec<WCHAR> {
         return true;
     }
 
-    void Set(std::wstring s) {
+    void Set(const std::wstring& s) {
         Reset();
         AppendView(s);
     }

@@ -225,7 +225,7 @@ int Pdfsync::RebuildIndex() {
     sheetIndex.Append(0);
 
     // add the initial tex file to the source file stack
-    filestack.Push(srcfiles.size());
+    filestack.Append(srcfiles.size());
     srcfiles.Append(jobName.StealData());
     PdfsyncFileIndex findex = {0};
     fileIndex.Append(findex);
@@ -287,7 +287,7 @@ int Pdfsync::RebuildIndex() {
                     filename.Set(PrependDir(filename));
                 }
 
-                filestack.Push(srcfiles.size());
+                filestack.Append(srcfiles.size());
                 srcfiles.Append(filename.StealData());
                 findex.start = findex.end = lines.size();
                 fileIndex.Append(findex);
@@ -436,8 +436,9 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<
         return PDFSYNCERR_NORECORD_FOR_THATLINE;
 
     // we read all the consecutive records until we reach a record belonging to another line
-    for (size_t i = lineIx; i < lines.size() && lines.at(i).line == lines.at(lineIx).line; i++)
-        records.Push(lines.at(i).record);
+    for (size_t i = lineIx; i < lines.size() && lines.at(i).line == lines.at(lineIx).line; i++) {
+        records.Append(lines.at(i).record);
+    }
 
     return PDFSYNCERR_SUCCESS;
 }
@@ -467,7 +468,7 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* pa
         // PdfSync coordinates are y-inversed
         RectD mbox = engine->PageMediabox(firstPage);
         rc.y = mbox.dy - (rc.y + rc.dy);
-        rects.Push(rc.Round());
+        rects.Append(rc.Round());
     }
 
     if (rects.size() > 0)
@@ -594,7 +595,7 @@ TryAgainAnsi:
         rc.y = (double)synctex_node_box_visible_v(node) - (double)synctex_node_box_visible_height(node);
         rc.dx = synctex_node_box_visible_width(node),
         rc.dy = (double)synctex_node_box_visible_height(node) + (double)synctex_node_box_visible_depth(node);
-        rects.Push(rc.Round());
+        rects.Append(rc.Round());
     }
 
     if (firstpage <= 0)

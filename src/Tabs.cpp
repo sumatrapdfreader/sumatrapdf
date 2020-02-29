@@ -665,7 +665,7 @@ void SaveCurrentTabInfo(WindowInfo* win) {
 
     // update the selection history
     win->tabSelectionHistory->Remove(tab);
-    win->tabSelectionHistory->Push(tab);
+    win->tabSelectionHistory->Append(tab);
 }
 
 void UpdateCurrentTabBgColor(WindowInfo* win) {

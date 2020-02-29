@@ -30,6 +30,7 @@ class AutoCloseHandle {
         CrashIf(handle != nullptr);
         CrashIf(h == nullptr);
         handle = h;
+        return *this;
     }
 
     operator HANDLE() const {

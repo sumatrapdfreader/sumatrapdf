@@ -517,7 +517,6 @@ struct PoolAllocator : Allocator {
     }
 };
 
-#if OS_WIN
 struct HeapAllocator : Allocator {
     HANDLE allocHeap = nullptr;
 
@@ -536,8 +535,10 @@ struct HeapAllocator : Allocator {
     void Free(const void* mem) override {
         HeapFree(allocHeap, 0, (void*)mem);
     }
+
+    HeapAllocator(const HeapAllocator&) = delete;
+    HeapAllocator& operator=(const HeapAllocator&) = delete;
 };
-#endif
 
 // A helper for allocating an array of elements of type T
 // either on stack (if they fit within StackBufInBytes)
