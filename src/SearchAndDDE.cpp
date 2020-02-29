@@ -271,14 +271,14 @@ struct FindThreadData : public ProgressUpdateUI {
         }
     }
 
-    virtual void UpdateProgress(int current, int total) {
+    void UpdateProgress(int current, int total) override {
         if (!wnd || WasCanceled()) {
             return;
         }
         uitask::Post([=] { UpdateFindStatusTask(win, wnd, current, total); });
     }
 
-    virtual bool WasCanceled() {
+    bool WasCanceled() override {
         return !WindowInfoStillValid(win) || win->findCanceled;
     }
 };

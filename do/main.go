@@ -42,7 +42,7 @@ func runCppCheck(all bool) {
 	// "-D__RPCNDR_H_VERSION__=440"
 
 	if all {
-		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-q", "-v", "--enable=style", "--suppress=constParameter", "--suppress=cstyleCast", "--suppress=useStlAlgorithm", "--suppress=noExplicitConstructor", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
+		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-q", "-v", "--enable=style", "--suppress=constParameter", "--suppress=cstyleCast", "--suppress=useStlAlgorithm", "--suppress=noExplicitConstructor", "--suppress=variableScope", "--suppress=memsetClassFloat", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	} else {
 		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-q", "-v", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	}

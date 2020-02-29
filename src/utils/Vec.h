@@ -267,7 +267,7 @@ class Vec {
         return els;
     }
 
-    [[nodiscard]] int Find(T el, size_t startAt = 0) const {
+    [[nodiscard]] int Find(const T& el, size_t startAt = 0) const {
         for (size_t i = startAt; i < len; i++) {
             if (els[i] == el) {
                 return (int)i;
@@ -276,12 +276,12 @@ class Vec {
         return -1;
     }
 
-    [[nodiscard]] bool Contains(T el) const {
+    [[nodiscard]] bool Contains(const T& el) const {
         return -1 != Find(el);
     }
 
     // returns position of removed element or -1 if not removed
-    int Remove(T el) {
+    int Remove(const T& el) {
         int i = Find(el);
         if (-1 == i) {
             return -1;
