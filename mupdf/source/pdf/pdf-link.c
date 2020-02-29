@@ -175,6 +175,156 @@ pdf_parse_file_spec(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec, pdf_
 	return uri;
 }
 
+const char *
+pdf_embedded_file_name(fz_context *ctx, pdf_obj *fs)
+{
+	pdf_obj *filename = pdf_dict_get(ctx, fs, PDF_NAME(UF));
+	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(F));
+	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(Unix));
+	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(DOS));
+	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(Mac));
+	return pdf_to_text_string(ctx, filename);
+}
+
+pdf_obj *
+pdf_embedded_file_stream(fz_context *ctx, pdf_obj *fs)
+{
+	pdf_obj *ef = pdf_dict_get(ctx, fs, PDF_NAME(EF));
+	pdf_obj *file = pdf_dict_get(ctx, ef, PDF_NAME(UF));
+	if (!file) file = pdf_dict_get(ctx, ef, PDF_NAME(F));
+	if (!file) file = pdf_dict_get(ctx, ef, PDF_NAME(Unix));
+	if (!file) file = pdf_dict_get(ctx, ef, PDF_NAME(DOS));
+	if (!file) file = pdf_dict_get(ctx, ef, PDF_NAME(Mac));
+	return file;
+}
+
+const char *
+pdf_embedded_file_type(fz_context *ctx, pdf_obj *fs)
+{
+	pdf_obj *file = pdf_embedded_file_stream(ctx, fs);
+	pdf_obj *subtype = pdf_dict_get(ctx, file, PDF_NAME(Subtype));
+	return subtype ? pdf_to_name(ctx, subtype) : "application/octet-stream";
+}
+
+int
+pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs)
+{
+	return pdf_is_stream(ctx, pdf_embedded_file_stream(ctx, fs));
+}
+
+fz_buffer *
+pdf_load_embedded_file(fz_context *ctx, pdf_obj *fs)
+{
+	return pdf_load_stream(ctx, pdf_embedded_file_stream(ctx, fs));
+}
+
+const char *
+pdf_guess_mime_type_from_file_name(fz_context *ctx, const char *filename)
+{
+	const char *ext = strrchr(filename, '.');
+	if (ext)
+	{
+		if (!fz_strcasecmp(ext, ".pdf")) return "application/pdf";
+		if (!fz_strcasecmp(ext, ".xml")) return "application/xml";
+		if (!fz_strcasecmp(ext, ".zip")) return "application/zip";
+		if (!fz_strcasecmp(ext, ".tar")) return "application/x-tar";
+
+		/* Text */
+		if (!fz_strcasecmp(ext, ".txt")) return "text/plain";
+		if (!fz_strcasecmp(ext, ".rtf")) return "application/rtf";
+		if (!fz_strcasecmp(ext, ".csv")) return "text/csv";
+		if (!fz_strcasecmp(ext, ".html")) return "text/html";
+		if (!fz_strcasecmp(ext, ".htm")) return "text/html";
+		if (!fz_strcasecmp(ext, ".css")) return "text/css";
+
+		/* Office */
+		if (!fz_strcasecmp(ext, ".doc")) return "application/msword";
+		if (!fz_strcasecmp(ext, ".ppt")) return "application/vnd.ms-powerpoint";
+		if (!fz_strcasecmp(ext, ".xls")) return "application/vnd.ms-excel";
+		if (!fz_strcasecmp(ext, ".docx")) return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+		if (!fz_strcasecmp(ext, ".pptx")) return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+		if (!fz_strcasecmp(ext, ".xlsx")) return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+		if (!fz_strcasecmp(ext, ".odt")) return "application/vnd.oasis.opendocument.text";
+		if (!fz_strcasecmp(ext, ".odp")) return "application/vnd.oasis.opendocument.presentation";
+		if (!fz_strcasecmp(ext, ".ods")) return "application/vnd.oasis.opendocument.spreadsheet";
+
+		/* Image */
+		if (!fz_strcasecmp(ext, ".bmp")) return "image/bmp";
+		if (!fz_strcasecmp(ext, ".gif")) return "image/gif";
+		if (!fz_strcasecmp(ext, ".jpeg")) return "image/jpeg";
+		if (!fz_strcasecmp(ext, ".jpg")) return "image/jpeg";
+		if (!fz_strcasecmp(ext, ".png")) return "image/png";
+		if (!fz_strcasecmp(ext, ".svg")) return "image/svg+xml";
+		if (!fz_strcasecmp(ext, ".tif")) return "image/tiff";
+		if (!fz_strcasecmp(ext, ".tiff")) return "image/tiff";
+
+		/* Sound */
+		if (!fz_strcasecmp(ext, ".flac")) return "audio/flac";
+		if (!fz_strcasecmp(ext, ".mp3")) return "audio/mpeg";
+		if (!fz_strcasecmp(ext, ".ogg")) return "audio/ogg";
+		if (!fz_strcasecmp(ext, ".wav")) return "audio/wav";
+
+		/* Movie */
+		if (!fz_strcasecmp(ext, ".avi")) return "video/x-msvideo";
+		if (!fz_strcasecmp(ext, ".mov")) return "video/quicktime";
+		if (!fz_strcasecmp(ext, ".mp4")) return "video/mp4";
+		if (!fz_strcasecmp(ext, ".webm")) return "video/webm";
+	}
+	return "application/octet-stream";
+}
+
+pdf_obj *
+pdf_add_embedded_file(fz_context *ctx, pdf_document *doc,
+	const char *filename, const char *mimetype, fz_buffer *contents)
+{
+	const char *s;
+	char asciiname[1024];
+	pdf_obj *file = NULL;
+	pdf_obj *filespec = NULL;
+	pdf_obj *ef;
+	size_t i;
+
+	fz_var(file);
+	fz_var(filespec);
+
+	for (i = 0, s = filename; *s && i + 1 < sizeof asciiname; ++i)
+	{
+		int c;
+		s += fz_chartorune(&c, s);
+		asciiname[i] = (c >= 32 && c <= 126) ? c : '_';
+	}
+	asciiname[i] = 0;
+
+	if (!mimetype)
+		mimetype = pdf_guess_mime_type_from_file_name(ctx, filename);
+
+	fz_try(ctx)
+	{
+		file = pdf_add_new_dict(ctx, doc, 3);
+		pdf_dict_put(ctx, file, PDF_NAME(Type), PDF_NAME(EmbeddedFile));
+		pdf_dict_put_name(ctx, file, PDF_NAME(Subtype), mimetype);
+		pdf_update_stream(ctx, doc, file, contents, 0);
+
+		filespec = pdf_add_new_dict(ctx, doc, 4);
+		pdf_dict_put(ctx, filespec, PDF_NAME(Type), PDF_NAME(Filespec));
+		pdf_dict_put_text_string(ctx, filespec, PDF_NAME(F), asciiname);
+		pdf_dict_put_text_string(ctx, filespec, PDF_NAME(UF), filename);
+		ef = pdf_dict_put_dict(ctx, filespec, PDF_NAME(EF), 1);
+		pdf_dict_put(ctx, ef, PDF_NAME(F), file);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, file);
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, filespec);
+		fz_rethrow(ctx);
+	}
+
+	return filespec;
+}
+
 char *
 pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *action, int pagenum)
 {

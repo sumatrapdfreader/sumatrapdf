@@ -94,22 +94,27 @@ check_field_locking(fz_context *ctx, pdf_obj *obj, void *data_, pdf_obj **ff)
 
 	fz_try(ctx)
 	{
-		const char *name;
-		size_t n;
+		const char *name = NULL;
+		size_t n = 1;
+		pdf_obj *t;
 
-		name = pdf_to_text_string(ctx, pdf_dict_get(ctx, obj, PDF_NAME(T)));
-		n = strlen(name)+1;
+		t = pdf_dict_get(ctx, obj, PDF_NAME(T));
+		if (t != NULL)
+		{
+			name = pdf_to_text_string(ctx, t);
+			n += strlen(name);
+		}
+		if (data->prefix->name[0] && name)
+			n += 1;
 		if (data->prefix->name[0])
-			n += 1 + strlen(data->prefix->name);
+			n += strlen(data->prefix->name);
 		prefix = fz_calloc(ctx, 1, sizeof(*prefix)+n);
 		prefix->prev = data->prefix;
 		if (data->prefix->name[0])
-		{
 			strcpy(prefix->name, data->prefix->name);
+		if (data->prefix->name[0] && name)
 			strcat(prefix->name, ".");
-		}
-		else
-			prefix->name[0] = 0;
+		if (name)
 		strcat(prefix->name, name);
 		data->prefix = prefix;
 

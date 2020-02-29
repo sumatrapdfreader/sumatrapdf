@@ -770,6 +770,46 @@ pdf_set_annot_border(fz_context *ctx, pdf_annot *annot, float w)
 	pdf_dirty_annot(ctx, annot);
 }
 
+fz_text_language
+pdf_document_language(fz_context *ctx, pdf_document *doc)
+{
+	pdf_obj *trailer = pdf_trailer(ctx, doc);
+	pdf_obj *root = pdf_dict_get(ctx, trailer, PDF_NAME(Root));
+	pdf_obj *lang = pdf_dict_get(ctx, root, PDF_NAME(Lang));
+	return fz_text_language_from_string(pdf_to_text_string(ctx, lang));
+}
+
+void pdf_set_document_language(fz_context *ctx, pdf_document *doc, fz_text_language lang)
+{
+	pdf_obj *trailer = pdf_trailer(ctx, doc);
+	pdf_obj *root = pdf_dict_get(ctx, trailer, PDF_NAME(Root));
+	char buf[8];
+	if (lang == FZ_LANG_UNSET)
+		pdf_dict_del(ctx, root, PDF_NAME(Lang));
+	else
+		pdf_dict_put_text_string(ctx, root, PDF_NAME(Lang), fz_string_from_text_language(buf, lang));
+}
+
+fz_text_language
+pdf_annot_language(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *lang = pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(Lang));
+	if (lang)
+		return fz_text_language_from_string(pdf_to_str_buf(ctx, lang));
+	return pdf_document_language(ctx, annot->page->doc);
+}
+
+void
+pdf_set_annot_language(fz_context *ctx, pdf_annot *annot, fz_text_language lang)
+{
+	char buf[8];
+	if (lang == FZ_LANG_UNSET)
+		pdf_dict_del(ctx, annot->obj, PDF_NAME(Lang));
+	else
+		pdf_dict_put_text_string(ctx, annot->obj, PDF_NAME(Lang), fz_string_from_text_language(buf, lang));
+	pdf_dirty_annot(ctx, annot);
+}
+
 int
 pdf_annot_quadding(fz_context *ctx, pdf_annot *annot)
 {

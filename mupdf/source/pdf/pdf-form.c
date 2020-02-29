@@ -1348,6 +1348,8 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 	pdf_obj *r = NULL;
 	pdf_obj *t = NULL;
 	pdf_obj *a = NULL;
+	pdf_obj *b = NULL;
+	pdf_obj *l = NULL;
 	pdf_obj *indv;
 	int vnum;
 	size_t max_digest_size;
@@ -1365,6 +1367,8 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 	fz_var(r);
 	fz_var(t);
 	fz_var(a);
+	fz_var(b);
+	fz_var(l);
 	fz_var(buf);
 	fz_try(ctx)
 	{
@@ -1394,10 +1398,37 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 		pdf_dict_put(ctx, r, PDF_NAME(Type), PDF_NAME(SigRef));
 		t = pdf_new_dict(ctx, doc, 5);
 		pdf_dict_put(ctx, r, PDF_NAME(TransformParams), t);
-		pdf_dict_put(ctx, t, PDF_NAME(Action), pdf_dict_getp(ctx, field, "Lock/Action"));
+
+		l = pdf_dict_getp(ctx, field, "Lock/Action");
+		if (l)
+		{
 		a = pdf_dict_getp(ctx, field, "Lock/Fields");
-		if (a)
+		}
+		else
+		{
+			/* Lock action wasn't specified so encode an Include. Encode an empty array
+			 * (leave a == NULL), even if Lock/Fields exists because we don't really
+			 * know what to do with the information if the action isn't defined.
+			 * Possibly there is info in an XFA form that we aren't able to read. */
+			l = PDF_NAME(Include);
+		}
+
+		pdf_dict_put(ctx, t, PDF_NAME(Action), l);
+
+		if (pdf_name_eq(ctx, l, PDF_NAME(Include)) || pdf_name_eq(ctx, l, PDF_NAME(Exclude)))
+		{
+			/* For action Include and Exclude, we need to encode a Fields array */
+			if (!a)
+			{
+				/* If one wasn't defined or we chose to ignore it because no action
+				 * was defined then use an empty one. */
+				b = pdf_new_array(ctx, doc, 0);
+				a = b;
+			}
+
 			pdf_dict_put_drop(ctx, t, PDF_NAME(Fields), pdf_copy_array(ctx, a));
+		}
+
 		pdf_dict_put(ctx, t, PDF_NAME(Type), PDF_NAME(TransformParams));
 		pdf_dict_put(ctx, t, PDF_NAME(V), PDF_NAME(1_2));
 
@@ -1412,6 +1443,7 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 		pdf_drop_obj(ctx, o);
 		pdf_drop_obj(ctx, r);
 		pdf_drop_obj(ctx, t);
+		pdf_drop_obj(ctx, b);
 		fz_free(ctx, buf);
 	}
 	fz_catch(ctx)

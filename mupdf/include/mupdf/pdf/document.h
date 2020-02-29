@@ -320,6 +320,9 @@ void pdf_finish_edit(fz_context *ctx, pdf_document *doc);
 
 int pdf_recognize(fz_context *doc, const char *magic);
 
+fz_text_language pdf_document_language(fz_context *ctx, pdf_document *doc);
+void pdf_set_document_language(fz_context *ctx, pdf_document *doc, fz_text_language lang);
+
 typedef struct pdf_write_options_s pdf_write_options;
 
 /*

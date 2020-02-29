@@ -1242,6 +1242,7 @@ void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void 
 
 	if (crypt->strf.method == PDF_CRYPT_AESV2 || crypt->strf.method == PDF_CRYPT_AESV3)
 	{
+		size_t len = 0;
 		fz_aes aes;
 		unsigned char iv[16];
 
@@ -1257,7 +1258,7 @@ void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void 
 
 		while (n > 0)
 		{
-			size_t len = n;
+			len = n;
 			if (len > 16)
 				len = 16;
 			memcpy(buffer, s, len);
@@ -1265,10 +1266,10 @@ void pdf_encrypt_data(fz_context *ctx, pdf_crypt *crypt, int num, int gen, void 
 				memset(&buffer[len], 16-(int)len, 16-len);
 			fz_aes_crypt_cbc(&aes, FZ_AES_ENCRYPT, 16, iv, buffer, buffer+16);
 			write_data(ctx, arg, buffer+16, 16);
-			s += 16;
-			n -= 16;
+			s += len;
+			n -= len;
 		}
-		if (n == 0) {
+		if (len == 16) {
 			memset(buffer, 16, 16);
 			fz_aes_crypt_cbc(&aes, FZ_AES_ENCRYPT, 16, iv, buffer, buffer+16);
 			write_data(ctx, arg, buffer+16, 16);

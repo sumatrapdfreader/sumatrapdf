@@ -1943,9 +1943,11 @@ void do_main(void)
 				search_hit_quads, nelem(search_hit_quads));
 			if (search_hit_count)
 			{
+				float search_hit_x = search_hit_quads[0].ul.x;
+				float search_hit_y = search_hit_quads[0].ul.y;
 				search_active = 0;
 				search_hit_page = search_page;
-				jump_to_location(search_hit_page);
+				jump_to_location_xy(search_hit_page, search_hit_x, search_hit_y);
 			}
 			else
 			{
