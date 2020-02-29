@@ -1004,7 +1004,7 @@ bool EngineCbx::FinishLoading() {
         if (IsImageEngineSupportedFile(fileName) &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseNameNoFree(fileName), ".")) {
-            pageFiles.push_back(fileInfo);
+            pageFiles.Append(fileInfo);
         }
     }
 

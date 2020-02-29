@@ -148,10 +148,6 @@ class Vec {
         memset(buf, 0, sizeof(buf));
     }
 
-    void clear() {
-        Reset();
-    }
-
     bool SetSize(size_t newSize) {
         Reset();
         return MakeSpaceAt(0, newSize);
@@ -185,10 +181,6 @@ class Vec {
     }
 
     bool Append(const T& el) {
-        return InsertAt(len, el);
-    }
-
-    bool push_back(const T& el) {
         return InsertAt(len, el);
     }
 
@@ -321,7 +313,7 @@ class Vec {
         return els[len]; // nullptr-sentinel
     }
 
-    [[nodiscard]] bool empty() const {
+    [[nodiscard]] bool IsEmpty() const {
         return len == 0;
     }
 

@@ -133,13 +133,13 @@ static void VecSegmentedTest() {
     VecSegmented<Num> vec;
     int nTotal = 1033;
     for (int i = 0; i < nTotal; i++) {
-        vec.push_back(Num{i, i+1});
+        vec.Append(Num{i, i + 1});
     }
-    utassert(vec.size() == (size_t)nTotal);
+    utassert(vec.Size() == (size_t)nTotal);
     int i = 0;
     for (Num* n : vec) {
         utassert(n->n == i);
-        utassert(n->n2 == i+1);
+        utassert(n->n2 == i + 1);
         ++i;
     }
 }

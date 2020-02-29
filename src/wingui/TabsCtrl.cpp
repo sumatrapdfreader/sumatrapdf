@@ -153,7 +153,7 @@ void LayoutTabs(TabsCtrl* ctrl) {
         x += padRight;
         long dx = (x - xStart);
         ti->tabRect = MakeRect(xStart, 0, dx, dy);
-        if (!ti->toolTip.empty()) {
+        if (!ti->toolTip.IsEmpty()) {
             if (ti->hwndTooltip) {
                 DestroyWindow(ti->hwndTooltip);
             }
@@ -224,7 +224,7 @@ static void Paint(TabsCtrl* ctrl) {
 
     int tabIdx = 0;
     for (const auto& ti : priv->tabInfos) {
-        if (ti->title.empty()) {
+        if (ti->title.IsEmpty()) {
             continue;
         }
         auto tabType = Tab::Background;
@@ -459,20 +459,20 @@ void DeleteTabsCtrl(TabsCtrl* ctrl) {
 void SetState(TabsCtrl* ctrl, TabsCtrlState* state) {
     auto priv = ctrl->priv;
     priv->state = state;
-    priv->tabInfos.clear();
+    priv->tabInfos.Reset();
 
     // measure size of tab's title
     auto& tabInfos = priv->tabInfos;
     for (auto& tab : state->tabs) {
         auto ti = new TabItemInfo();
-        tabInfos.push_back(ti);
+        tabInfos.Append(ti);
         ti->titleSize = MakeSize(0, 0);
-        if (!tab->title.empty()) {
+        if (!tab->title.IsEmpty()) {
             ti->title = wstrFromUtf8(tab->title);
             const WCHAR* s = ti->title.c_str();
             ti->titleSize = TextSizeInHwnd2(priv->hwnd, s, priv->font);
         }
-        if (!tab->toolTip.empty()) {
+        if (!tab->toolTip.IsEmpty()) {
             ti->toolTip = wstrFromUtf8(tab->toolTip);
         }
     }

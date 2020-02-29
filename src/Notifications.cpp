@@ -318,11 +318,11 @@ void Notifications::Add(NotificationWnd* wnd, NotificationGroupId groupId) {
     }
     wnd->groupId = groupId;
 
-    if (!wnds.empty()) {
+    if (!wnds.IsEmpty()) {
         auto lastIdx = this->wnds.size() - 1;
         MoveBelow(this->wnds[lastIdx], wnd);
     }
-    this->wnds.push_back(wnd);
+    this->wnds.Append(wnd);
 }
 
 NotificationWnd* Notifications::GetForGroup(NotificationGroupId groupId) const {
@@ -356,7 +356,7 @@ void Notifications::RemoveNotification(NotificationWnd* wnd) {
 }
 
 void Notifications::Relayout() {
-    if (this->wnds.empty()) {
+    if (this->wnds.IsEmpty()) {
         return;
     }
 

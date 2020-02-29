@@ -589,7 +589,7 @@ void LoadTocTree(WindowInfo* win) {
     VbkmFile* vbkm = new VbkmFile();
     bool ok = LoadAlterenativeBookmarks(tab->filePath, *vbkm);
     if (ok) {
-        tab->altBookmarks.push_back(vbkm);
+        tab->altBookmarks.Append(vbkm);
         Vec<std::string_view> items;
         items.Append("Default");
         char* name = vbkm->name;

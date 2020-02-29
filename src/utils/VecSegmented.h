@@ -24,12 +24,11 @@ struct VecSegmented {
         return reinterpret_cast<T*>(p);
     }
 
-    size_t size() const {
+    size_t Size() const {
         return allocator.nAllocs;
     }
 
-    // TODO: push_back() should return void
-    T* push_back(const T& el) {
+    T* Append(const T& el) {
         T* elPtr = AllocAtEnd();
         *elPtr = el;
         return elPtr;

@@ -70,7 +70,7 @@ Vec<std::string_view> Split(std::string_view sv, char split, size_t max) {
         char c = *s;
         if (c == split) {
             size_t size = s - prev;
-            res.push_back({prev, size});
+            res.Append({prev, size});
             prev = s + 1;
             if (max != 0 && max == res.size()) {
                 break;
@@ -81,7 +81,7 @@ Vec<std::string_view> Split(std::string_view sv, char split, size_t max) {
     // add the rest if non-empty
     size_t size = end - prev;
     if (size > 0) {
-        res.push_back({prev, size});
+        res.Append({prev, size});
     }
     return res;
 }

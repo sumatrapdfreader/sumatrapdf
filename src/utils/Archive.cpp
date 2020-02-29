@@ -68,7 +68,7 @@ bool MultiFormatArchive::Open(ar_stream* data, const char* archivePath) {
         i->filePos = ar_entry_get_offset(ar_);
         i->fileTime = ar_entry_get_filetime(ar_);
         i->name = Allocator::AllocString(&allocator_, name);
-        fileInfos_.push_back(i);
+        fileInfos_.Append(i);
 
         fileId++;
     }
@@ -409,7 +409,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
         i->filePos = 0;
         i->fileTime = (int64_t)rarHeader.FileTime;
         i->name = Allocator::AllocString(&allocator_, name.Get());
-        fileInfos_.push_back(i);
+        fileInfos_.Append(i);
 
         fileId++;
 

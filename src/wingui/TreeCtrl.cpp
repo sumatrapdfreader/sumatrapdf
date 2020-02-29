@@ -565,7 +565,7 @@ void TreeCtrl::CollapseAll() {
 
 void TreeCtrl::Clear() {
     treeModel = nullptr;
-    insertedItems.clear();
+    insertedItems.Reset();
 
     HWND hwnd = this->hwnd;
     ::SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
@@ -695,7 +695,7 @@ static void PopulateTreeItem(TreeCtrl* tree, TreeItem* item, HTREEITEM parent) {
         auto* ti = item->ChildAt(i);
         HTREEITEM h = insertItem(tree, parent, ti);
         auto v = std::make_tuple(ti, h);
-        tree->insertedItems.push_back(v);
+        tree->insertedItems.Append(v);
         PopulateTreeItem(tree, ti, h);
     }
 }
@@ -707,7 +707,7 @@ static void PopulateTree(TreeCtrl* tree, TreeModel* tm) {
         auto* ti = tm->RootAt(i);
         HTREEITEM h = insertItem(tree, parent, ti);
         auto v = std::make_tuple(ti, h);
-        tree->insertedItems.push_back(v);
+        tree->insertedItems.Append(v);
         PopulateTreeItem(tree, ti, h);
     }
 }
@@ -717,7 +717,7 @@ void TreeCtrl::SetTreeModel(TreeModel* tm) {
 
     SuspendRedraw();
 
-    insertedItems.clear();
+    insertedItems.Reset();
     TreeView_DeleteAllItems(hwnd);
 
     treeModel = tm;

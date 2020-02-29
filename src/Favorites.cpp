@@ -544,7 +544,7 @@ static void MakeFavSecondLevel(FavTreeItem* parent, DisplayState* f) {
         ti->text = FavReadableName(fn);
         ti->parent = parent;
         ti->favorite = fn;
-        parent->children.push_back(ti);
+        parent->children.Append(ti);
     }
 }
 
@@ -556,7 +556,7 @@ static FavTreeModel* BuildFavTreeModel(WindowInfo* win) {
         DisplayState* f = gFavorites.GetFavByFilePath(filePathsSorted.at(i));
         bool isExpanded = win->expandedFavorites.Contains(f);
         FavTreeItem* ti = MakeFavTopLevelItem(f, isExpanded);
-        res->children.push_back(ti);
+        res->children.Append(ti);
         if (f->favorites->size() > 1) {
             MakeFavSecondLevel(ti, f);
         }
@@ -674,7 +674,7 @@ void DelFavorite(const WCHAR* filePath, int pageNo) {
 }
 
 void RememberFavTreeExpansionState(WindowInfo* win) {
-    win->expandedFavorites.clear();
+    win->expandedFavorites.Reset();
     TreeCtrl* treeCtrl = win->favTreeCtrl;
     TreeModel* tm = treeCtrl ? treeCtrl->treeModel : nullptr;
     if (!tm) {
@@ -689,7 +689,7 @@ void RememberFavTreeExpansionState(WindowInfo* win) {
             FavTreeItem* fti = (FavTreeItem*)ti;
             Favorite* fn = fti->favorite;
             DisplayState* f = gFavorites.GetByFavorite(fn);
-            win->expandedFavorites.push_back(f);
+            win->expandedFavorites.Append(f);
         }
     }
 }

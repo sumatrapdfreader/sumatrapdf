@@ -143,7 +143,7 @@ static bool ParseSvgPathData(const char* s, VecSegmented<SvgPathInstr>& instr) {
         if (!s) {
             return false;
         }
-        instr.push_back(i);
+        instr.Append(i);
 
         s = skipWs(s);
     }

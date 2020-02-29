@@ -150,7 +150,7 @@ int TestTab(HINSTANCE hInstance, int nCmdShow) {
     };
 
     for (auto& tab : tabs) {
-        tabsState->tabs.push_back(tab);
+        tabsState->tabs.Append(tab);
     }
 
     SetState(g_tabsCtrl, tabsState);

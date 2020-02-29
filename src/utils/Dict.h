@@ -18,8 +18,8 @@ enum { DEFAULT_HASH_TABLE_INITIAL_SIZE = 16 * 1024 };
 // note: StrToInt would be more natural name but it's re-#define'd in <shlwapi.h>
 class MapStrToInt {
   public:
-    PoolAllocator* allocator;
-    HashTable* h;
+    PoolAllocator allocator;
+    HashTable* h = nullptr;
 
     explicit MapStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapStrToInt();
@@ -34,8 +34,8 @@ class MapStrToInt {
 
 class MapWStrToInt {
   public:
-    PoolAllocator* allocator;
-    HashTable* h;
+    PoolAllocator allocator;
+    HashTable* h = nullptr;
 
     explicit MapWStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapWStrToInt();

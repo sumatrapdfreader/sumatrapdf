@@ -237,7 +237,7 @@ int EngineMulti::GetPageByLabel(const WCHAR* label) const {
 
 static void CollectTocItemsRecur(TocItem* ti, Vec<TocItem*>& v) {
     while (ti) {
-        v.push_back(ti);
+        v.Append(ti);
         CollectTocItemsRecur(ti->child, v);
         ti = ti->next;
     }
@@ -386,7 +386,7 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
                 continue;
             }
             EnginePage ep{i + 1, ei.engine};
-            pageToEngine.push_back(ep);
+            pageToEngine.Append(ep);
             nPage++;
         }
         updateTocItemsPageNo(child, nTotalPages);

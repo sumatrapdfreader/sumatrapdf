@@ -236,14 +236,13 @@ struct TocItem : TreeItem {
 
     PageDestination* GetPageDestination();
 
-    WCHAR* Text();
-
     // TreeItem
     TreeItem* Parent() override;
     int ChildCount() override;
     TreeItem* ChildAt(int n) override;
     bool IsExpanded() override;
     bool IsChecked() override;
+    WCHAR* Text() override;
 
     bool PageNumbersMatch() const;
 };

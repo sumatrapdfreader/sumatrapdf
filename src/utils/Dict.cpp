@@ -201,14 +201,12 @@ static bool RemoveEntry(HashTable* h, HasherComparator* hc, uintptr_t key, uintp
 MapStrToInt::MapStrToInt(size_t initialSize) {
     // we use PoolAllocator to allocate HashTableEntry entries
     // and copies of string keys
-    allocator = new PoolAllocator();
-    allocator->allocAlign = 4;
-    h = NewHashTable(initialSize, allocator);
+    allocator.allocAlign = 4;
+    h = NewHashTable(initialSize, &allocator);
 }
 
 MapStrToInt::~MapStrToInt() {
     DeleteHashTable(h);
-    delete allocator;
 }
 
 size_t MapStrToInt::Count() const {
@@ -226,7 +224,7 @@ size_t MapStrToInt::Count() const {
 //   * sets existingKeyOut to (interned) key
 bool MapStrToInt::Insert(const char* key, int val, int* existingValOut, const char** existingKeyOut) {
     bool newEntry;
-    HashTableEntry* e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &allocator, newEntry);
     if (!newEntry) {
         if (existingValOut)
             *existingValOut = (int)e->val;
@@ -234,7 +232,7 @@ bool MapStrToInt::Insert(const char* key, int val, int* existingValOut, const ch
             *existingKeyOut = (const char*)e->key;
         return false;
     }
-    e->key = (intptr_t)Allocator::StrDup(allocator, key);
+    e->key = (intptr_t)Allocator::StrDup(&allocator, key);
     e->val = (intptr_t)val;
     if (existingKeyOut)
         *existingKeyOut = (const char*)e->key;
@@ -264,13 +262,11 @@ bool MapStrToInt::Get(const char* key, int* valOut) {
 MapWStrToInt::MapWStrToInt(size_t initialSize) {
     // we use PoolAllocator to allocate HashTableEntry entries
     // and copies of string keys
-    allocator = new PoolAllocator();
-    h = NewHashTable(initialSize, allocator);
+    h = NewHashTable(initialSize, &allocator);
 }
 
 MapWStrToInt::~MapWStrToInt() {
     DeleteHashTable(h);
-    delete allocator;
 }
 
 size_t MapWStrToInt::Count() const {
@@ -279,13 +275,13 @@ size_t MapWStrToInt::Count() const {
 
 bool MapWStrToInt::Insert(const WCHAR* key, int val, int* prevVal) {
     bool newEntry;
-    HashTableEntry* e = GetOrCreateEntry(h, &gWStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &gWStrKeyHasherComparator, (uintptr_t)key, &allocator, newEntry);
     if (!newEntry) {
         if (prevVal)
             *prevVal = (int)e->val;
         return false;
     }
-    e->key = (intptr_t)Allocator::StrDup(allocator, key);
+    e->key = (intptr_t)Allocator::StrDup(&allocator, key);
     e->val = (intptr_t)val;
 
     HashTableResizeIfNeeded(h, &gWStrKeyHasherComparator);
