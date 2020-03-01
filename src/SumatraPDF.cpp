@@ -2956,24 +2956,9 @@ static void OnMenuOpenFolder(WindowInfo* win) {
     if (!ok) {
         return;
     }
-    auto isValidFunc = [](std::string_view path) -> bool {
-        bool isValid = str::EndsWithI(path.data(), ".pdf");
-        return isValid;
-    };
-    VecStr files;
-    AutoFreeStr dir = strconv::WstrToUtf8(dirW);
-    ok = CollectFilesFromDirectory(dir.as_view(), files, isValidFunc);
-    if (!ok) {
-        // TODO: show error message
-        return;
-    }
-    if (files.size() == 0) {
-        // TODO: show error message
-        return;
-    }
-    EngineBase* engine = CreateEngineMultiFromFiles(dir.as_view(), files);
+
+    EngineBase* engine = CreateEngineMultiFromDirectory(dirW);
     if (!engine) {
-        // TODO: show error message
         return;
     }
     LoadArgs args(dirW, win);

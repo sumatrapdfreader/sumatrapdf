@@ -10,6 +10,7 @@ extern "C" {
 #include "utils/Archive.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+#include "utils/DirIter.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "utils/TrivialHtmlParser.h"
@@ -361,8 +362,13 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
     UpdatePagesForEngines(enginesInfo);
 
     AutoFreeWstr dirW = strconv::Utf8ToWstr(dir);
-    TocItem* root = new TocItem(tocFiles, dirW, 0);
+    TocItem* root = new TocItem(nullptr, dirW, 0);
+    root->child = tocFiles;
     tocTree = new TocTree(root);
+
+    AutoFreeWstr fileName = strconv::Utf8ToWstr(dir);
+    SetFileName(fileName);
+
     return true;
 }
 
@@ -472,6 +478,30 @@ EngineBase* CreateEngineMultiFromFiles(std::string_view dir, VecStr& files) {
     EngineMulti* engine = new EngineMulti();
     if (!engine->LoadFromFiles(dir, files)) {
         delete engine;
+        return nullptr;
+    }
+    return engine;
+}
+
+EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
+    auto isValidFunc = [](std::string_view path) -> bool {
+        bool isValid = str::EndsWithI(path.data(), ".pdf");
+        return isValid;
+    };
+    VecStr files;
+    AutoFreeStr dir = strconv::WstrToUtf8(dirW);
+    bool ok = CollectFilesFromDirectory(dir.as_view(), files, isValidFunc);
+    if (!ok) {
+        // TODO: show error message
+        return nullptr;
+    }
+    if (files.size() == 0) {
+        // TODO: show error message
+        return nullptr;
+    }
+    EngineBase* engine = CreateEngineMultiFromFiles(dir.as_view(), files);
+    if (!engine) {
+        // TODO: show error message
         return nullptr;
     }
     return engine;

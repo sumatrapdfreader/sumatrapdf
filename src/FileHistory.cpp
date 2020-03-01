@@ -42,14 +42,17 @@ static int cmpOpenCount(const void* a, const void* b) {
     DisplayState* dsA = *(DisplayState**)a;
     DisplayState* dsB = *(DisplayState**)b;
     // sort pinned documents before unpinned ones
-    if (dsA->isPinned != dsB->isPinned)
+    if (dsA->isPinned != dsB->isPinned) {
         return dsA->isPinned ? -1 : 1;
+    }
     // sort pinned documents alphabetically
-    if (dsA->isPinned)
+    if (dsA->isPinned) {
         return str::CmpNatural(path::GetBaseNameNoFree(dsA->filePath), path::GetBaseNameNoFree(dsB->filePath));
+    }
     // sort often opened documents first
-    if (dsA->openCount != dsB->openCount)
+    if (dsA->openCount != dsB->openCount) {
         return dsB->openCount - dsA->openCount;
+    }
     // use recency as the criterion in case of equal open counts
     return dsA->index < dsB->index ? -1 : 1;
 }
@@ -68,8 +71,9 @@ void FileHistory::UpdateStatesSource(Vec<DisplayState*>* states) {
 }
 
 void FileHistory::Clear(bool keepFavorites) {
-    if (!states)
+    if (!states) {
         return;
+    }
     Vec<DisplayState*> keep;
     for (size_t i = 0; i < states->size(); i++) {
         if (keepFavorites && states->at(i)->favorites->size() > 0) {
@@ -83,16 +87,18 @@ void FileHistory::Clear(bool keepFavorites) {
 }
 
 DisplayState* FileHistory::Get(size_t index) const {
-    if (index < states->size())
+    if (index < states->size()) {
         return states->at(index);
+    }
     return nullptr;
 }
 
 DisplayState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
     for (size_t i = 0; i < states->size(); i++) {
         if (str::EqI(states->at(i)->filePath, filePath)) {
-            if (idxOut)
+            if (idxOut) {
                 *idxOut = i;
+            }
             return states->at(i);
         }
     }
@@ -120,8 +126,9 @@ DisplayState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
 bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) {
     CrashIf(!filePath);
     DisplayState* state = Find(filePath, nullptr);
-    if (!state)
+    if (!state) {
         return false;
+    }
     // move the file history entry to the end of the list
     // of recently opened documents (if it exists at all),
     // so that the user could still try opening it again
@@ -131,10 +138,11 @@ bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) {
     int idx = states->Find(state);
     if (idx < newIdx && state != states->Last()) {
         states->Remove(state);
-        if (states->size() <= (size_t)newIdx)
+        if (states->size() <= (size_t)newIdx) {
             states->Append(state);
-        else
+        } else {
             states->InsertAt(newIdx, state);
+        }
     }
     // also delete the thumbnail and move the link towards the
     // back in the Frequently Read list
@@ -154,8 +162,9 @@ void FileHistory::GetFrequencyOrder(Vec<DisplayState*>& list) const {
     size_t i = 0;
     for (DisplayState* ds : *states) {
         ds->index = i++;
-        if (!ds->isMissing || ds->isPinned)
+        if (!ds->isMissing || ds->isPinned) {
             list.Append(ds);
+        }
     }
     list.Sort(cmpOpenCount);
 }
@@ -170,27 +179,30 @@ void FileHistory::Purge(bool alwaysUseDefaultState) {
     if (alwaysUseDefaultState) {
         Vec<DisplayState*> frequencyList;
         GetFrequencyOrder(frequencyList);
-        if (frequencyList.size() > FILE_HISTORY_MAX_RECENT)
+        if (frequencyList.size() > FILE_HISTORY_MAX_RECENT) {
             minOpenCount = frequencyList.at(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
+        }
     }
 
     for (size_t j = states->size(); j > 0; j--) {
         DisplayState* state = states->at(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
-        if (state->isPinned || state->decryptionKey != nullptr || state->favorites->size() > 0)
+        if (state->isPinned || state->decryptionKey != nullptr || state->favorites->size() > 0) {
             continue;
-        // forget about missing documents without valuable state
-        if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState))
+        }
+        if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState)) {
+            // forget about missing documents without valuable state
             states->RemoveAt(j - 1);
-        // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
-        else if (j > FILE_HISTORY_MAX_FILES)
+        } else if (j > FILE_HISTORY_MAX_FILES) {
+            // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
             states->RemoveAt(j - 1);
-        // forget about files that were hardly used (and without valuable state)
-        else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > FILE_HISTORY_MAX_RECENT)
+        } else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > FILE_HISTORY_MAX_RECENT) {
+            // forget about files that were hardly used (and without valuable state)
             states->RemoveAt(j - 1);
-        else
+        } else {
             continue;
+        }
         DeleteDisplayState(state);
     }
 }

@@ -64,7 +64,7 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
     } else if (IsBookView(displayMode)) {
         id = IDM_VIEW_BOOK;
     } else {
-        AssertCrash(!win->ctrl && DM_AUTOMATIC == displayMode);
+        CrashIf(win->ctrl || DM_AUTOMATIC != displayMode);
     }
 
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
@@ -322,7 +322,8 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, UINT index) {
     int menuIdx = (int)((index + 1) % 10);
     menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
-    InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
+    UINT flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
+    InsertMenuW(menuFile, IDM_EXIT, flags, menuId, menuString);
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {
