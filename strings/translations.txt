@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7e451e07819907604927acec8264800e5ca6105d
+c0f6f1d53e39b1adc1929f3621570bebd561803c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3799,6 +3799,7 @@ pl:Dodaj stronę %s do ulubionych\tCtrl+B
 pt:Adicionar página %s aos favoritos\tCtrl+B
 ru:Добавить страницу %s в избранные\tCtrl+B
 tw:將第 %s 頁加入到最愛\tCtrl+B
+uk:Додати %s сторінку до закладок\tCtrl+B
 :Add to favorites
 am:Ավելացնել ընտրյալներին
 ar:اضافة للمفضلة
@@ -5432,6 +5433,7 @@ pl:Zwiń wszystko
 pt:Recolher tudo
 ru:Свернуть все
 tw:全部折叠(&C)
+uk:Згорнути всі
 :Comic books
 am:Հումորային գրքեր
 ar:الكتب الهزلية
@@ -8072,6 +8074,7 @@ pl:Rozwiń wszystko
 pt:Expandir tudo
 ru:Развернуть все
 tw:全部展開
+uk:Розгорнути всі
 :F&avorites
 am:Ը&նտրյալներ
 ar:المفضلة
@@ -14819,6 +14822,7 @@ pl:Zapisz adnotacje
 pt:Guardar anotações
 ru:Сохранить аннотации
 tw:儲存注釋
+uk:Зберегти аннотації
 :Save As
 af:Stoor As
 am:Պահպանել որպես
