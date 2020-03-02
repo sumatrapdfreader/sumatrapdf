@@ -13,6 +13,8 @@ const char* GetExtNoFree(const char* path);
 char* JoinUtf(const char* path, const char* fileName, Allocator* allocator);
 
 std::string_view GetDir(std::string_view path);
+bool IsDirectory(std::string_view);
+bool IsDirectory(std::wstring_view);
 
 #if OS_WIN
 bool IsSep(WCHAR c);

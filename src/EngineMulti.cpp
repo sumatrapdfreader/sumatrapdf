@@ -459,12 +459,22 @@ bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff) {
         // we don't support sniffing
         return false;
     }
-    return str::EndsWithI(fileName, L".vbkm");
+    if (str::EndsWithI(fileName, L".vbkm")) {
+        return true;
+    }
+    // for 'Open Folder' functionality
+    if (path::IsDirectory(fileName)) {
+        return true;
+    }
+    return false;
 }
 
 EngineBase* CreateEngineMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (str::IsEmpty(fileName)) {
         return nullptr;
+    }
+    if (path::IsDirectory(fileName)) {
+        return CreateEngineMultiFromDirectory(fileName);
     }
     EngineMulti* engine = new EngineMulti();
     if (!engine->Load(fileName, pwdUI)) {

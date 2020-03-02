@@ -73,6 +73,29 @@ char* JoinUtf(const char* path, const char* fileName, Allocator* allocator) {
     return str::Join(path, sepStr, fileName, allocator);
 }
 
+bool IsDirectory(std::wstring_view path) {
+    DWORD attrs = GetFileAttributesW(path.data());
+    if (INVALID_FILE_ATTRIBUTES == attrs) {
+        return false;
+    }
+    if ((attrs & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+        return true;
+    }
+    return false;
+}
+
+bool IsDirectory(std::string_view path) {
+    AutoFreeWstr pathW = strconv::Utf8ToWstr(path);
+    DWORD attrs = GetFileAttributesW(pathW);
+    if (INVALID_FILE_ATTRIBUTES == attrs) {
+        return false;
+    }
+    if ((attrs & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+        return true;
+    }
+    return false;
+}
+
 #if OS_WIN
 bool IsSep(WCHAR c) {
     return '\\' == c || '/' == c;
