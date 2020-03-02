@@ -52,7 +52,9 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
     if (!dest) {
         return;
     }
-    s.AppendFmt(" destkind:%s", dest->kind);
+    if (dest->kind) {
+        s.AppendFmt(" destkind:%s", dest->kind);
+    }
     SerializeKeyVal("destname", dest->GetName(), s);
     SerializeKeyVal("destvalue", dest->GetValue(), s);
     // Note: not serializing dest->pageno because it's redundant with
