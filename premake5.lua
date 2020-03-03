@@ -70,6 +70,7 @@ workspace "SumatraPDF"
     architecture "x86"
     buildoptions { "/fsanitize=address"}
     defines { "ASAN_BUILD=1" }
+    defines { "RAMICRO"}
     disablewarnings { "4731" }
   filter {}
 

@@ -395,7 +395,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4731;4127;4189;4324;4458;4522;4611;4702;4800;4100;4244;4267;4456;4457;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_7Z;BZ_NO_STDIO;_7ZIP_PPMD_SUPPPORT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;DEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_7Z;BZ_NO_STDIO;_7ZIP_PPMD_SUPPPORT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\zlib;..\ext\bzip2;..\ext\lzma\C;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -515,7 +515,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4731;4127;4189;4324;4458;4522;4611;4702;4800;4100;4244;4267;4456;4457;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_7Z;BZ_NO_STDIO;_7ZIP_PPMD_SUPPPORT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_7Z;BZ_NO_STDIO;_7ZIP_PPMD_SUPPPORT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\zlib;..\ext\bzip2;..\ext\lzma\C;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -646,7 +646,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4731;4127;4189;4324;4458;4522;4611;4702;4800;4100;4244;4267;4456;4457;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_7Z;BZ_NO_STDIO;_7ZIP_PPMD_SUPPPORT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0605;_WIN32_WINNT=0x0601;NDEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_7Z;BZ_NO_STDIO;_7ZIP_PPMD_SUPPPORT;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\zlib;..\ext\bzip2;..\ext\lzma\C;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
