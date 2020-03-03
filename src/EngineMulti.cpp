@@ -191,20 +191,24 @@ PageDestination* EngineMulti::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-static void updateTocItemsPageNo(TocItem* i, int nPageNoAdd) {
+static void updateTocItemsPageNo(TocItem* ti, int nPageNoAdd, bool root) {
     if (nPageNoAdd == 0) {
         return;
     }
-    if (!i) {
+    if (!ti) {
         return;
     }
-    auto curr = i;
+    auto curr = ti;
     while (curr) {
         if (curr->dest) {
             curr->dest->pageNo += nPageNoAdd;
         }
-        updateTocItemsPageNo(curr->child, nPageNoAdd);
         curr->pageNo += nPageNoAdd;
+            
+        updateTocItemsPageNo(curr->child, nPageNoAdd, false);
+        if (root) {
+            return;
+        }
         curr = curr->next;
     }
 }
@@ -391,8 +395,8 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
 void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
     int nTotalPages = 0;
     for (auto&& ei : enginesInfo) {
-        TocItem* child = ei.tocRoot;
-        if (child->isUnchecked) {
+        TocItem* root = ei.tocRoot;
+        if (root->isUnchecked) {
             continue;
         }
         int nPages = ei.engine->PageCount();
@@ -418,11 +422,26 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
             EnginePage ep{i, ei.engine};
             pageToEngine.Append(ep);
         }
-        updateTocItemsPageNo(ei.tocRoot, nTotalPages);
+        updateTocItemsPageNo(ei.tocRoot, nTotalPages, true);
         nTotalPages += nPages;
 #endif
     }
     pageCount = nTotalPages;
+    CrashIf((size_t)pageCount != pageToEngine.size());
+
+    auto verifyPages = [&nTotalPages](TocItem* ti) -> bool {
+        int pageNo = ti->pageNo;
+        CrashIf(pageNo > nTotalPages);
+        return true;
+    };
+
+    for (auto&& ei : enginesInfo) {
+        TocItem* root = ei.tocRoot;
+        if (root->isUnchecked) {
+            continue;
+        }
+        VisitTocTree(root, verifyPages);
+    }
 }
 
 bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
