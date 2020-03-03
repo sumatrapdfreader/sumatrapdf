@@ -335,15 +335,18 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
         if (!engine) {
             continue;
         }
+        TocItem* fileToc = nullptr;
         TocTree* toc = engine->GetToc();
-        TocItem* fileRoot = CloneTocItemRecur(toc->root, false);
-        fileRoot->engineFilePath = str::Dup(path);
         int nPages = engine->PageCount();
-        fileRoot->nPages = nPages;
+        if (toc) {
+            fileToc = CloneTocItemRecur(toc->root, false);
+            fileToc->engineFilePath = str::Dup(path);
+            fileToc->nPages = nPages;
+        }
         std::string_view name = path::GetBaseNameNoFree(path.data());
         AutoFreeWstr title = strconv::Utf8ToWstr(name);
         TocItem* wrapper = new TocItem(tocFiles, title, 1);
-        wrapper->child = fileRoot;
+        wrapper->child = fileToc;
         if (tocFiles == nullptr) {
             tocFiles = wrapper;
         } else {
