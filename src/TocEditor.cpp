@@ -808,8 +808,7 @@ static void CreateMainLayout(TocEditorWindow* win) {
     tree->onTreeItemCustomDraw = OnTocCustomDraw;
     tree->onTreeSelectionChanged = std::bind(&TocEditorWindow::TreeItemSelectedHandler, win, _1);
     tree->onTreeClick = std::bind(&TocEditorWindow::TreeClickHandler, win, _1);
-    tree->onTreeItemDragStart = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
-    tree->onTreeItemDragEnd = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
+    tree->onTreeItemDragStartEnd = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
     tree->onContextMenu = std::bind(&TocEditorWindow::TreeContextMenu, win, _1);
 
     bool ok = tree->Create(L"tree");

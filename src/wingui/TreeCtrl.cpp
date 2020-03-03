@@ -320,7 +320,7 @@ void TreeCtrl::WndProcParent(WndEvent* ev) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/drag-a-tree-view-item
     if (code == TVN_BEGINDRAG) {
         // we don't do dragging if not asked for drag end notification
-        if (!treeCtrl->onTreeItemDragEnd) {
+        if (!treeCtrl->onTreeItemDragStartEnd) {
             return;
         }
         DragStart((NMTREEVIEWW*)lp);
@@ -339,12 +339,12 @@ void TreeCtrl::DragStart(NMTREEVIEWW* nmtv) {
     BOOL ok = ImageList_DragEnter(hwnd, nmtv->ptDrag.x, nmtv->ptDrag.x);
     CrashIf(!ok);
 
-    if (onTreeItemDragStart) {
+    if (onTreeItemDragStartEnd) {
         TreeItemDraggeddEvent ev;
         ev.treeCtrl = this;
         ev.draggedItem = draggedItem;
         ev.isStart = true;
-        onTreeItemDragStart(&ev);
+        onTreeItemDragStartEnd(&ev);
     }
 
     // ShowCursor(FALSE);
@@ -389,7 +389,7 @@ void TreeCtrl::DragEnd() {
         ev.draggedItem = draggedItem;
         ev.dragTargetItem = dragTargetItem;
         ev.isStart = false;
-        onTreeItemDragEnd(&ev);
+        onTreeItemDragStartEnd(&ev);
     }
     ImageList_EndDrag();
     TreeView_SelectDropTarget(hwnd, nullptr);

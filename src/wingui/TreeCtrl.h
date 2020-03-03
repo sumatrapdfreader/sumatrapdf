@@ -157,8 +157,7 @@ struct TreeCtrl : public WindowBase {
     TreeGetDispInfoHandler onTreeGetDispInfo = nullptr;
 
     // for TVN_BEGINDRAG / WM_MOUSEMOVE / WM_LBUTTONUP
-    TreeItemDraggedHandler onTreeItemDragStart = nullptr;
-    TreeItemDraggedHandler onTreeItemDragEnd = nullptr;
+    TreeItemDraggedHandler onTreeItemDragStartEnd = nullptr;
 
     Size idealSize{};
 
