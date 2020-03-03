@@ -29,7 +29,6 @@ extern "C" {
 struct EngineInfo {
     TocItem* tocRoot = nullptr;
     EngineBase* engine = nullptr;
-    int nPages = 0;
 };
 
 struct EnginePage {
@@ -268,6 +267,7 @@ void CalcEndPageNo(TocItem* root, int nPages) {
     prev->endPageNo = nPages;
 }
 
+#if 0
 static void MarkAsInvisibleRecur(TocItem* ti, bool markInvisible, Vec<bool>& visible) {
     while (ti) {
         if (markInvisible) {
@@ -307,6 +307,7 @@ static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
     // from nodes that are not unchecked
     MarkAsVisibleRecur(root, !root->isUnchecked, visible);
 }
+#endif
 
 // to supporting moving .vbkm and it's associated files, we accept absolute paths
 // and relative to directory of .vbkm file
@@ -369,7 +370,6 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
         EngineInfo ei;
         ei.engine = engine;
         ei.tocRoot = wrapper;
-        ei.nPages = engine->PageCount();
         enginesInfo.Append(ei);
     }
     if (tocFiles == nullptr) {
@@ -395,13 +395,13 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
         if (child->isUnchecked) {
             continue;
         }
-        int nPages = ei.nPages;
+        int nPages = ei.engine->PageCount();
+#if 0
         Vec<bool> visiblePages;
         for (int i = 0; i < nPages; i++) {
             visiblePages.Append(true);
         }
         CalcRemovedPages(child, visiblePages);
-
         int nPage = 0;
         for (int i = 0; i < nPages; i++) {
             if (!visiblePages[i]) {
@@ -413,6 +413,14 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
         }
         updateTocItemsPageNo(child, nTotalPages);
         nTotalPages += nPage;
+#else
+        for (int i = 1; i <= nPages; i++) {
+            EnginePage ep{i, ei.engine};
+            pageToEngine.Append(ep);
+        }
+        updateTocItemsPageNo(ei.tocRoot, nTotalPages);
+        nTotalPages += nPages;
+#endif
     }
     pageCount = nTotalPages;
 }
@@ -448,12 +456,9 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         if (!engine) {
             return false;
         }
-        int nPages = engine->PageCount();
-
         EngineInfo ei;
         ei.engine = engine;
         ei.tocRoot = ti;
-        ei.nPages = nPages;
         enginesInfo.Append(ei);
         return true;
     };
