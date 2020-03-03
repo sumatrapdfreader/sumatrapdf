@@ -312,7 +312,7 @@ static void CalcRemovedPages(TocItem* root, Vec<bool>& visible) {
 // and relative to directory of .vbkm file
 std::string_view FindEnginePath(std::string_view vbkmPath, std::string_view engineFilePath) {
     if (file::Exists(engineFilePath)) {
-        return engineFilePath;
+        return str::Dup(engineFilePath);
     }
     AutoFreeStr dir = path::GetDir(vbkmPath);
     const char* engineFileName = path::GetBaseNameNoFree(engineFilePath.data());
@@ -430,25 +430,25 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     vbkm.tree = nullptr;
 
     // load all referenced files
-    auto loadEngines = [this, &enginesInfo, &filePath](TocItem* ti) -> bool {
+    auto loadEngines = [&enginesInfo, &filePath](TocItem* ti) -> bool {
         if (ti->engineFilePath == nullptr) {
+            return true;
+        }
+        if (ti->isUnchecked) {
             return true;
         }
 
         EngineBase* engine = nullptr;
-        int nPages = 0;
-        if (!ti->isUnchecked) {
-            AutoFreeStr path = FindEnginePath(filePath.as_view(), ti->engineFilePath);
-            if (path.empty()) {
-                return false;
-            }
-            AutoFreeWstr pathW = strconv::Utf8ToWstr(path.as_view());
-            engine = EngineManager::CreateEngine(pathW, nullptr);
-            if (!engine) {
-                return false;
-            }
-            nPages = engine->PageCount();
+        AutoFreeStr path = FindEnginePath(filePath.as_view(), ti->engineFilePath);
+        if (path.empty()) {
+            return false;
         }
+        AutoFreeWstr pathW = strconv::Utf8ToWstr(path.as_view());
+        engine = EngineManager::CreateEngine(pathW, nullptr);
+        if (!engine) {
+            return false;
+        }
+        int nPages = engine->PageCount();
 
         EngineInfo ei;
         ei.engine = engine;
