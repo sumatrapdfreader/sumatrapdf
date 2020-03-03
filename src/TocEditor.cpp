@@ -689,6 +689,9 @@ static void ShowSavedAsPdfMsg(const char* path) {
 
 void TocEditorWindow::SaveAsPdf() {
     AutoFreeStr path = PickSaveName();
+    if (path.empty()) {
+        return;
+    }
     TocTree* tree = (TocTree*)treeCtrl->treeModel;
     bool ok = SaveVirtualAsPdf(tree->root, (char*)path.get());
     if (ok) {
