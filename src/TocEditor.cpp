@@ -290,35 +290,12 @@ static EngineBase* ChooosePdfFile() {
     return engine;
 }
 
-static TocItem* CreateWrapperItem(EngineBase* engine, TocItem* ti) {
-    TocItem* tocFileRoot = nullptr;
-    TocTree* tocTree = engine->GetToc();
-    // it's ok if engine doesn't have toc
-    if (tocTree) {
-        tocFileRoot = CloneTocItemRecur(tocTree->root, false);
-    }
-
-    int nPages = engine->PageCount();
-    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName()).data();
-    const WCHAR* title = path::GetBaseNameNoFree(engine->FileName());
-    TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
-    tocWrapper->isOpenDefault = true;
-    tocWrapper->child = tocFileRoot;
-    tocWrapper->engineFilePath = filePath;
-    tocWrapper->nPages = nPages;
-    tocWrapper->pageNo = 1;
-    if (tocFileRoot) {
-        tocFileRoot->parent = tocWrapper;
-    }
-    return tocWrapper;
-}
-
 void TocEditorWindow::AddPdfAsChild(TocItem* ti) {
     EngineBase* engine = ChooosePdfFile();
     if (!engine) {
         return;
     }
-    TocItem* tocWrapper = CreateWrapperItem(engine, ti);
+    TocItem* tocWrapper = CreateWrapperItem(engine);
     ti->AddChild(tocWrapper);
     UpdateTreeModel();
     delete engine;
@@ -329,7 +306,7 @@ void TocEditorWindow::AddPdfAsSibling(TocItem* ti) {
     if (!engine) {
         return;
     }
-    TocItem* tocWrapper = CreateWrapperItem(engine, ti);
+    TocItem* tocWrapper = CreateWrapperItem(engine);
     ti->AddSibling(tocWrapper);
     UpdateTreeModel();
     delete engine;
@@ -341,7 +318,7 @@ void TocEditorWindow::AddPdf() {
         return;
     }
 
-    TocItem* tocWrapper = CreateWrapperItem(engine, (TocItem*)treeCtrl->treeModel->RootAt(0));
+    TocItem* tocWrapper = CreateWrapperItem(engine);
     tocArgs->bookmarks->tree->root->AddSiblingAtEnd(tocWrapper);
     UpdateTreeModel();
     delete engine;
@@ -460,7 +437,7 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
 
     // didn't drop on an existing itme: add as a last sibling
     if (ti == nullptr) {
-        TocItem* tocWrapper = CreateWrapperItem(engine, fileToc);
+        TocItem* tocWrapper = CreateWrapperItem(engine);
         tocArgs->bookmarks->tree->root->AddSiblingAtEnd(tocWrapper);
         UpdateTreeModel();
         return;
@@ -469,7 +446,7 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
     bool addAsSibling = IsShiftPressed();
     if (addAsSibling) {
         if (CanAddPdfAsSibling(ti)) {
-            TocItem* tocWrapper = CreateWrapperItem(engine, fileToc);
+            TocItem* tocWrapper = CreateWrapperItem(engine);
             ti->AddSibling(tocWrapper);
             UpdateTreeModel();
         }
@@ -477,7 +454,7 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
     }
 
     if (CanAddPdfAsChild(ti)) {
-        TocItem* tocWrapper = CreateWrapperItem(engine, fileToc);
+        TocItem* tocWrapper = CreateWrapperItem(engine);
         ti->AddChild(tocWrapper);
         UpdateTreeModel();
     }

@@ -324,6 +324,29 @@ std::string_view FindEnginePath(std::string_view vbkmPath, std::string_view engi
     return {};
 }
 
+TocItem* CreateWrapperItem(EngineBase* engine) {
+    TocItem* tocFileRoot = nullptr;
+    TocTree* tocTree = engine->GetToc();
+    // it's ok if engine doesn't have toc
+    if (tocTree) {
+        tocFileRoot = CloneTocItemRecur(tocTree->root, false);
+    }
+
+    int nPages = engine->PageCount();
+    const WCHAR* title = path::GetBaseNameNoFree(engine->FileName());
+    TocItem* tocWrapper = new TocItem(tocFileRoot, title, 0);
+    tocWrapper->isOpenDefault = true;
+    tocWrapper->child = tocFileRoot;
+    char* filePath = (char*)strconv::WstrToUtf8(engine->FileName()).data();
+    tocWrapper->engineFilePath = filePath;
+    tocWrapper->nPages = nPages;
+    tocWrapper->pageNo = 1;
+    if (tocFileRoot) {
+        tocFileRoot->parent = tocWrapper;
+    }
+    return tocWrapper;
+}
+
 bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
     int n = files.size();
     TocItem* tocFiles = nullptr;
@@ -335,18 +358,8 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
         if (!engine) {
             continue;
         }
-        TocItem* fileToc = nullptr;
-        TocTree* toc = engine->GetToc();
-        int nPages = engine->PageCount();
-        if (toc) {
-            fileToc = CloneTocItemRecur(toc->root, false);
-            fileToc->engineFilePath = str::Dup(path);
-            fileToc->nPages = nPages;
-        }
-        std::string_view name = path::GetBaseNameNoFree(path.data());
-        AutoFreeWstr title = strconv::Utf8ToWstr(name);
-        TocItem* wrapper = new TocItem(tocFiles, title, 1);
-        wrapper->child = fileToc;
+
+        TocItem* wrapper = CreateWrapperItem(engine);
         if (tocFiles == nullptr) {
             tocFiles = wrapper;
         } else {
@@ -356,7 +369,7 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
         EngineInfo ei;
         ei.engine = engine;
         ei.tocRoot = wrapper;
-        ei.nPages = nPages;
+        ei.nPages = engine->PageCount();
         enginesInfo.Append(ei);
     }
     if (tocFiles == nullptr) {

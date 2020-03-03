@@ -7,3 +7,4 @@ bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff = false);
 EngineBase* CreateEngineMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEngineMultiFromFiles(std::string_view dir, VecStr& files);
 EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW);
+TocItem* CreateWrapperItem(EngineBase* engine);
