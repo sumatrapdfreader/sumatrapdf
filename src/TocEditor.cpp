@@ -443,7 +443,7 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
         return;
     }
 
-    bool addAsSibling = IsShiftPressed();
+    bool addAsSibling = !IsShiftPressed();
     if (addAsSibling) {
         if (CanAddPdfAsSibling(ti)) {
             TocItem* tocWrapper = CreateWrapperItem(engine);
@@ -532,7 +532,7 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
 
 static void SetInfoLabelText(StaticCtrl* l, bool forDrag) {
     if (forDrag) {
-        l->SetText("Press SHIFT to add as a sibling, otherwise a child");
+        l->SetText("Press SHIFT to add as a child, otherwise a ");
     } else {
         l->SetText("Tip: use context menu for more actions");
     }
@@ -579,8 +579,8 @@ void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
         return;
     }
 
-    // regular drag adds as a child. with shift adds as a sibling of
-    bool addAsSibling = IsShiftPressed();
+    // regular drag adds as a sibling, with shift adds as a child
+    bool addAsSibling = !IsShiftPressed();
     AutoFreeStr srcTitle = strconv::WstrToUtf8(src->title);
     AutoFreeStr dstTitle = strconv::WstrToUtf8(dst->title);
     dbglogf("TreeItemDragged: dragged: %s on: %s. Add as: %s\n", srcTitle.get(), dstTitle.get(),
