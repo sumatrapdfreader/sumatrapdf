@@ -15,6 +15,7 @@ WCHAR* FromCodePage(const char* src, UINT cp);
 WCHAR* Utf8ToWstr(std::string_view sv);
 
 std::string_view WstrToUtf8(const WCHAR* src, size_t cchSrcLen = -1);
+std::string_view WstrToUtf8(std::wstring_view);
 
 std::string_view WstrToCodePage(const WCHAR* txt, UINT codePage, int cchTxtLen = -1);
 std::string_view WstrToAnsi(const WCHAR*);

@@ -144,6 +144,10 @@ std::string_view WstrToUtf8(const WCHAR* src, size_t cchSrcLen) {
     return WstrToCodePage(src, CP_UTF8, (int)cchSrcLen);
 }
 
+std::string_view WstrToUtf8(std::wstring_view sv) {
+    return WstrToCodePage(sv.data(), CP_UTF8, (int)sv.size());
+}
+
 WCHAR* FromAnsi(const char* src, size_t cbSrcLen) {
     return ToWideChar(src, CP_ACP, (int)cbSrcLen);
 }

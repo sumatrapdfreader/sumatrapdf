@@ -382,9 +382,9 @@ static MenuDef menuDefContext[] = {
     // note: strings cannot be "" or else items are not there
     {"add",                 IDM_FAV_ADD,            MF_NO_TRANSLATE},
     {"del",                 IDM_FAV_DEL,            MF_NO_TRANSLATE},
-    {SEP_ITEM,              IDM_SEPARATOR,          MF_NO_TRANSLATE},
-    {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
-    {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
+    {SEP_ITEM,              IDM_SEPARATOR,          MF_NO_TRANSLATE | MF_RAMICRO_ONLY},
+    {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE | MF_RAMICRO_ONLY},
+    {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE | MF_RAMICRO_ONLY},
     { 0, 0, 0},
 };
 // clang-format on      

@@ -699,35 +699,44 @@ void TocEditorWindow::SaveAsPdf() {
 void TocEditorWindow::SaveAsVirtual() {
     str::WStr pathw = tocArgs->filePath.get();
 
+    bool isVbkm = str::EndsWithI(pathw.Get(), L".vbkm");
     // if the source was .vbkm file, we over-write it by default
     // any other format, we add .vbkm extension by default
-    if (!str::EndsWithI(pathw.Get(), L".vbkm")) {
+    if (!isVbkm) {
         pathw.Append(L".vbkm");
     }
-    WCHAR dstFileName[MAX_PATH]{0};
-    str::BufSet(&(dstFileName[0]), dimof(dstFileName), pathw.Get());
 
-    HWND hwnd = gWindow->mainWindow->hwnd;
+    char* patha = nullptr;
+    if (IsShiftPressed() && isVbkm) {
+        // when SHIFT is pressed write without asking for a file
+        patha = (char*)strconv::WstrToUtf8(pathw.as_view()).data();
+    } else {
+        WCHAR dstFileName[MAX_PATH]{0};
+        str::BufSet(&(dstFileName[0]), dimof(dstFileName), pathw.Get());
 
-    OPENFILENAME ofn{0};
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = hwnd;
-    ofn.lpstrFile = dstFileName;
-    ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L"VBKM files\0*.vbkm\0\0";
-    ofn.nFilterIndex = 1;
-    ofn.lpstrDefExt = L"vbkm";
-    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-    // note: explicitly not setting lpstrInitialDir so that the OS
-    // picks a reasonable default (in particular, we don't want this
-    // in plugin mode, which is likely the main reason for saving as...)
+        HWND hwnd = gWindow->mainWindow->hwnd;
+        OPENFILENAME ofn{0};
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = hwnd;
+        ofn.lpstrFile = dstFileName;
+        ofn.nMaxFile = dimof(dstFileName);
+        ofn.lpstrFilter = L"VBKM files\0*.vbkm\0\0";
+        ofn.nFilterIndex = 1;
+        ofn.lpstrDefExt = L"vbkm";
+        ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+        // note: explicitly not setting lpstrInitialDir so that the OS
+        // picks a reasonable default (in particular, we don't want this
+        // in plugin mode, which is likely the main reason for saving as...)
 
-    bool ok = GetSaveFileNameW(&ofn);
-    if (!ok) {
-        return;
+        bool ok = GetSaveFileNameW(&ofn);
+        if (!ok) {
+            return;
+        }
+        patha = (char*)strconv::WstrToUtf8(dstFileName).data();
     }
-    AutoFree patha = strconv::WstrToUtf8(dstFileName);
-    ok = ExportBookmarksToFile(tocArgs->bookmarks->tree, "", patha);
+
+    bool ok = ExportBookmarksToFile(tocArgs->bookmarks->tree, "", patha);
+    free(patha);
     if (!ok) {
         return;
     }
