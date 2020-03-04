@@ -844,7 +844,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
         if (pageNo == -1) {
             // TODO: figure out what it could be
             logf("CalcDestKind(): unknown uri: '%s'\n", uri);
-            CrashMePort();
+            SubmitCrashIf(true);
             return nullptr;
         }
         return kindDestinationScrollTo;
@@ -861,7 +861,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
 
     logf("CalcDestKind(): unknown uri: '%s'\n", uri);
     // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
-    CrashMePort();
+    SubmitCrashIf(true);
     return nullptr;
 #if 0
     switch (link->kind) {
@@ -1084,14 +1084,13 @@ PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt) {
 
 // TODO: construct this only once per page and change the API
 // to not free the result of GetElements()
-Vec<PageElement*>* FzGetElements(FzPageInfo* pageInfo) {
+void FzGetElements(Vec<PageElement*>* els, FzPageInfo* pageInfo) {
     if (!pageInfo) {
-        return nullptr;
+        return;
     }
 
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
-    Vec<PageElement*>* els = new Vec<PageElement*>();
     int pageNo = pageInfo->pageNo;
 
     size_t imageIdx = 0;
@@ -1120,7 +1119,6 @@ Vec<PageElement*>* FzGetElements(FzPageInfo* pageInfo) {
     }
 
     els->Reverse();
-    return els;
 }
 
 void FzLinkifyPageText(FzPageInfo* pageInfo) {

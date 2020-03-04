@@ -1212,7 +1212,13 @@ PageElement* EnginePdf::GetElementAtPos(int pageNo, PointD pt) {
 
 Vec<PageElement*>* EnginePdf::GetElements(int pageNo) {
     auto* pageInfo = GetFzPageInfo(pageNo, true);
-    return FzGetElements(pageInfo);
+    auto res = new Vec<PageElement*>();
+    FzGetElements(res, pageInfo);
+    if (res->IsEmpty()) {
+        delete res;
+        return nullptr;
+    }
+    return res;
 }
 
 RenderedBitmap* EnginePdf::GetImageForPageElement(PageElement* pel) {

@@ -197,11 +197,6 @@ inline void CrashMe() {
     // cppcheck-suppress nullPointer
     *p = 0;
 }
-inline void CrashMePort() {
-    char* p = nullptr;
-    // cppcheck-suppress nullPointer
-    *p = 0;
-}
 #if COMPILER_MSVC
 #pragma warning(pop)
 #endif

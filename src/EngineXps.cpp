@@ -218,6 +218,7 @@ class EngineXps : public EngineBase {
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
+    void ResolveLinks(Vec<PageElement*>* els, fz_link* links);
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -782,13 +783,48 @@ PageElement* EngineXps::GetElementAtPos(int pageNo, PointD pt) {
     return FzGetElementAtPos(pageInfo, pt);
 }
 
+// TODO: probably need to use fz_resolve_link(ctx, _doc, link->uri, &x, &y)
+// in FzGetElements().
+void EngineXps::ResolveLinks(Vec<PageElement*>* els, fz_link* link) {
+    float x, y;
+    fz_location loc;
+    while (link) {
+        loc = fz_resolve_link(ctx, _doc, link->uri, &x, &y);
+        if (loc.page != -1 && loc.chapter != -1) {
+            // TODO: need to support uris that are chapter / page
+            // maybe prefix uris with document type
+        } else {
+            logf("EngineXps::ResolveLink: unresolved uri '%s'\n", link->uri);
+        }
+        link = link->next;
+    }
+}
+
 Vec<PageElement*>* EngineXps::GetElements(int pageNo) {
     fz_page* page = GetFzPage(pageNo, true);
     if (!page) {
         return nullptr;
     }
     FzPageInfo* pageInfo = _pages[pageNo - 1];
-    return FzGetElements(pageInfo);
+    auto res = new Vec<PageElement*>();
+
+#if 0
+    fz_link* links = pageInfo->links;
+    ResolveLinks(res, links);
+    // this is a hack: temporarily remove pageInfo->links so that FzGetElements()
+    // doesn't process it
+    pageInfo->links = nullptr;
+#endif
+
+    FzGetElements(res, pageInfo);
+#if 0
+    pageInfo->links = links;
+#endif
+    if (res->IsEmpty()) {
+        delete res;
+        return nullptr;
+    }
+    return res;
 }
 
 RenderedBitmap* EngineXps::GetImageForPageElement(PageElement* pel) {
@@ -827,7 +863,7 @@ RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectD rect, size_t imageIdx)
     fz_pixmap* pixmap = nullptr;
     fz_try(ctx) {
         fz_image* image = positions.at(imageIdx).image;
-        // CrashMePort();
+        // SubmitCrashIf(true);
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
     }
