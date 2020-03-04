@@ -843,6 +843,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
         int pageNo = resolve_link(uri, &x, &y);
         if (pageNo == -1) {
             // TODO: figure out what it could be
+            logf("CalcDestKind(): unknown uri: '%s'\n", uri);
             CrashMePort();
             return nullptr;
         }
