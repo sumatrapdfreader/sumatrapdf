@@ -608,11 +608,22 @@ bool WindowBase::IsEnabled() {
 }
 
 void WindowBase::SetIsVisible(bool isVisible) {
-    ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
+    if (GetParent(hwnd) == nullptr) {
+        ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
+    } else {
+        BOOL bIsVisible = toBOOL(isVisible);
+        SetWindowStyle(hwnd, WS_VISIBLE, bIsVisible);
+    }
 }
 
 bool WindowBase::IsVisible() {
-    return ::IsWindowVisible(hwnd);
+    if (GetParent(hwnd) == nullptr) {
+        // TODO: what to do for top-level window?
+        CrashMe();
+        return true;
+    }
+    bool isVisible = IsWindowStyleSet(hwnd, WS_VISIBLE);
+    return isVisible;
 }
 
 void WindowBase::SetPos(RECT* r) {
@@ -685,7 +696,7 @@ void WindowBase::SetColors(COLORREF bg, COLORREF txt) {
 }
 
 void WindowBase::SetRtl(bool isRtl) {
-    ToggleWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
+    SetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
 }
 
 Kind kindWindow = "window";

@@ -2,10 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct Action {
-  // uniquley identifies action for e.g. for menu item
-  int id;
-  const char* name;
-  // TODO: add hash code for fast lookup
+    // uniquley identifies action for e.g. for menu item
+    int id;
+    const char* name;
+    // TODO: add hash code for fast lookup
 };
 
 // ids of pre-defined actions. Must start at 0 because

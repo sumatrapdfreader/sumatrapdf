@@ -725,9 +725,9 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                     // Remove the WS_VISIBLE style to prevent DefWindowProc from drawing
                     // in the caption's area when processing these mesages.
                     // TODO: can't such drawing be prevented by handling WM_(NC)PAINT instead?
-                    ToggleWindowStyle(hwnd, WS_VISIBLE, false);
+                    SetWindowStyle(hwnd, WS_VISIBLE, false);
                     LRESULT res = DefWindowProc(hwnd, msg, wParam, lParam);
-                    ToggleWindowStyle(hwnd, WS_VISIBLE, true);
+                    SetWindowStyle(hwnd, WS_VISIBLE, true);
                     *callDef = false;
                     return res;
                 }
@@ -857,7 +857,7 @@ static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem) {
 
     // prevents drawing in the caption's area
     // TODO: how can this even happen?
-    ToggleWindowStyle(hwnd, WS_VISIBLE, false);
+    SetWindowStyle(hwnd, WS_VISIBLE, false);
 
     bool maximized = IsZoomed(hwnd);
     EnableMenuItem(menu, SC_SIZE, maximized ? MF_GRAYED : MF_ENABLED);
@@ -872,7 +872,7 @@ static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem) {
         SetMenuDefaultItem(menu, SC_CLOSE, FALSE);
     }
 
-    ToggleWindowStyle(hwnd, WS_VISIBLE, true);
+    SetWindowStyle(hwnd, WS_VISIBLE, true);
 
     return menu;
 }

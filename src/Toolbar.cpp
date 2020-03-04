@@ -197,8 +197,8 @@ void ShowOrHideToolbar(WindowInfo* win) {
 }
 
 void UpdateFindbox(WindowInfo* win) {
-    ToggleWindowStyle(win->hwndFindBg, SS_WHITERECT, win->IsDocLoaded());
-    ToggleWindowStyle(win->hwndPageBg, SS_WHITERECT, win->IsDocLoaded());
+    SetWindowStyle(win->hwndFindBg, SS_WHITERECT, win->IsDocLoaded());
+    SetWindowStyle(win->hwndPageBg, SS_WHITERECT, win->IsDocLoaded());
 
     InvalidateRect(win->hwndToolbar, nullptr, TRUE);
     UpdateWindow(win->hwndToolbar);

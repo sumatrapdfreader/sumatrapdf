@@ -114,7 +114,7 @@ static void SplitterCtrlWndProc(WndEvent* ev) {
         SetCapture(hwnd);
         if (!w->isLive) {
             if (w->parentClipsChildren) {
-                ToggleWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, false);
+                SetWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, false);
             }
             DrawResizeLine(w->hwnd, w->brush, w->type, false, true, w->prevResizeLinePos);
         }
@@ -126,7 +126,7 @@ static void SplitterCtrlWndProc(WndEvent* ev) {
         if (!w->isLive) {
             DrawResizeLine(w->hwnd, w->brush, w->type, true, false, w->prevResizeLinePos);
             if (w->parentClipsChildren) {
-                ToggleWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, true);
+                SetWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, true);
             }
         }
         ReleaseCapture();

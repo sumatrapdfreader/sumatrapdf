@@ -544,6 +544,8 @@ void LoadTocTree(WindowInfo* win) {
         return;
     }
 
+    DeleteVecMembers(tab->altBookmarks);
+
     // TODO: for now just for testing
     // TODO: restore showing alternative bookmarks
     VbkmFile* vbkm = new VbkmFile();
@@ -561,7 +563,13 @@ void LoadTocTree(WindowInfo* win) {
         delete vbkm;
     }
 
-    win->altBookmarks->onDropDownSelectionChanged = dropDownSelectionChanged;
+    if (tab->altBookmarks.size() > 0) {
+        win->altBookmarks->onDropDownSelectionChanged = dropDownSelectionChanged;
+        win->altBookmarks->SetIsVisible(true);
+    } else {
+        win->altBookmarks->onDropDownSelectionChanged = nullptr;
+        win->altBookmarks->SetIsVisible(false);
+    }
 
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script
@@ -583,6 +591,7 @@ void LoadTocTree(WindowInfo* win) {
     if (ShouldCustomDraw(win)) {
         treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
     }
+    LayoutTreeContainer(win->tocLabelWithClose, win->altBookmarks, win->tocTreeCtrl->hwnd);
     // UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     // RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
@@ -709,23 +718,20 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND 
     HWND hwndContainer = GetParent(hwndTree);
     SizeI labelSize = l->GetIdealSize();
     WindowRect rc(hwndContainer);
-    bool altBookmarksVisible = altBookmarks && altBookmarks->items.size() > 0;
+    bool altBookmarksVisible = altBookmarks && altBookmarks->IsVisible();
     int dy = rc.dy;
     int y = 0;
     MoveWindow(l->hwnd, y, 0, rc.dx, labelSize.dy, TRUE);
     dy -= labelSize.dy;
     y += labelSize.dy;
-    if (altBookmarks) {
-        altBookmarks->SetIsVisible(altBookmarksVisible);
-        if (altBookmarksVisible) {
-            SIZE bs = altBookmarks->GetIdealSize();
-            int elDy = bs.cy;
-            RECT r{0, y, rc.dx, y + elDy};
-            altBookmarks->SetBounds(r);
-            elDy += 4;
-            dy -= elDy;
-            y += elDy;
-        }
+    if (altBookmarksVisible) {
+        SIZE bs = altBookmarks->GetIdealSize();
+        int elDy = bs.cy;
+        RECT r{0, y, rc.dx, y + elDy};
+        altBookmarks->SetBounds(r);
+        elDy += 4;
+        dy -= elDy;
+        y += elDy;
     }
     MoveWindow(hwndTree, 0, y, rc.dx, dy, TRUE);
 }

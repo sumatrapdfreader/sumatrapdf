@@ -922,7 +922,7 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
     return ok;
 }
 
-static void ToggleWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
+static void SetWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
     DWORD style = GetWindowLong(hwnd, type);
     DWORD newStyle;
     if (enable) {
@@ -935,16 +935,31 @@ static void ToggleWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
     }
 }
 
-void ToggleWindowStyle(HWND hwnd, DWORD flags, bool enable) {
-    ToggleWindowStyle(hwnd, flags, enable, GWL_STYLE);
+bool IsWindowStyleSet(HWND hwnd, DWORD flags) {
+    DWORD style = GetWindowLong(hwnd, GWL_STYLE);
+    return bit::IsMaskSet<DWORD>(style, flags);
 }
 
-void ToggleWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
-    ToggleWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
+bool IsWindowStyleExSet(HWND hwnd, DWORD flags) {
+    DWORD style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    return (style != flags) != 0;
+}
+
+bool IsRtl(HWND hwnd) {
+    DWORD style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    return bit::IsMaskSet<DWORD>(style, WS_EX_LAYOUTRTL);
 }
 
 void SetRtl(HWND hwnd, bool isRtl) {
-    ToggleWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
+    SetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
+}
+
+void SetWindowStyle(HWND hwnd, DWORD flags, bool enable) {
+    SetWindowStyle(hwnd, flags, enable, GWL_STYLE);
+}
+
+void SetWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
+    SetWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
 }
 
 RectI ChildPosWithinParent(HWND hwnd) {
@@ -1271,11 +1286,6 @@ WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form) {
     if (sizeEst <= 0)
         return nullptr;
     return res.StealData();
-}
-
-bool IsRtl(HWND hwnd) {
-    DWORD style = GetWindowLong(hwnd, GWL_EXSTYLE);
-    return bit::IsMaskSet<DWORD>(style, WS_EX_LAYOUTRTL);
 }
 
 namespace win {

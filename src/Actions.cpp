@@ -8,14 +8,14 @@
 VecSegmented<Action> gActions;
 
 Action* GetActionByClass(enum class Actions action) {
-  return gActions.AtPtr((int)action);
+    return gActions.AtPtr((int)action);
 }
 
 Action* GetActionByName(const char* name) {
-  for (Action* a : gActions) {
-    if (str::EqI(a->name, name)) {
-      return a;
+    for (Action* a : gActions) {
+        if (str::EqI(a->name, name)) {
+            return a;
+        }
     }
-  }
-  return nullptr;
+    return nullptr;
 }

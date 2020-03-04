@@ -104,10 +104,15 @@ void CenterDialog(HWND hDlg, HWND hParent = nullptr);
 WCHAR* GetDefaultPrinterName();
 bool CopyTextToClipboard(const WCHAR* text, bool appendOnly = false);
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
-void ToggleWindowStyle(HWND hwnd, DWORD flags, bool enable);
-void ToggleWindowExStyle(HWND hwnd, DWORD flags, bool enable);
+
+bool IsWindowStyleSet(HWND hwnd, DWORD flags);
+bool IsWindowStyleExSet(HWND hwnd, DWORD flags);
+void SetWindowStyle(HWND hwnd, DWORD flags, bool enable);
+void SetWindowExStyle(HWND hwnd, DWORD flags, bool enable);
+
 bool IsRtl(HWND hwnd);
 void SetRtl(HWND hwnd, bool isRtl);
+
 RectI ChildPosWithinParent(HWND);
 HFONT GetDefaultGuiFont();
 HFONT GetDefaultGuiFont(bool bold, bool italic);

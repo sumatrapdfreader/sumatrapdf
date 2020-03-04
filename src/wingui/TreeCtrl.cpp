@@ -503,10 +503,10 @@ bool TreeCtrl::Create(const WCHAR* title) {
     // TVS_CHECKBOXES has to be set with SetWindowLong before populating with data
     // https: // docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
     if (withCheckboxes) {
-        ToggleWindowStyle(hwnd, TVS_CHECKBOXES, true);
+        SetWindowStyle(hwnd, TVS_CHECKBOXES, true);
     }
 
-    // must be done at the end. Doing  ToggleWindowStyle() sends bogus (?)
+    // must be done at the end. Doing  SetWindowStyle() sends bogus (?)
     // TVN_ITEMCHANGED notification. As an alternative we could ignore TVN_ITEMCHANGED
     // if hItem doesn't point to an TreeItem
     Subclass();

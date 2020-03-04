@@ -68,7 +68,7 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     SetWindowLongPtr(this->hwnd, GWLP_USERDATA, (LONG_PTR)this);
     DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
     // TODO: this is suspicious. Why CS_DROPSHADOW is mixed with WS_EX_LAYOUTRTL ?
-    ToggleWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
+    SetWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
     UpdateWindowPosition(msg, true);
     ShowWindow(this->hwnd, SW_SHOW);
 
@@ -133,7 +133,7 @@ void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool 
         this->hasCancel = false;
     }
     DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
-    ToggleWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
+    SetWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
     this->UpdateWindowPosition(message, false);
     InvalidateRect(this->hwnd, nullptr, TRUE);
     if (timeoutInMS != 0) {

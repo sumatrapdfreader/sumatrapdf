@@ -1024,7 +1024,7 @@ static void UpdateUiForCurrentTab(WindowInfo* win) {
     UpdateCurrentTabBgColor(win);
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
-    ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, onlyNumbers);
+    SetWindowStyle(win->hwndPageBox, ES_NUMBER, onlyNumbers);
 }
 
 static bool showTocByDefault(const WCHAR* filePath) {
