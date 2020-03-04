@@ -917,15 +917,16 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
 
     Controller* ctrl = nullptr;
 
-    bool enableChmAndEbook = gGlobalPrefs->chmUI.useFixedPageUI;
+    bool enableChm = gGlobalPrefs->chmUI.useFixedPageUI;
+    bool enableEbook = gGlobalPrefs->ebookUI.useFixedPageUI;
     // enableChmAndEbook = true;
-    EngineBase* engine = EngineManager::CreateEngine(filePath, pwdUI, enableChmAndEbook, enableChmAndEbook);
+    EngineBase* engine = EngineManager::CreateEngine(filePath, pwdUI, enableChm, enableEbook);
 
     if (engine) {
     LoadEngineInFixedPageUI:
         ctrl = new DisplayModel(engine, win->cbHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
-    } else if (ChmModel::IsSupportedFile(filePath) && !gGlobalPrefs->chmUI.useFixedPageUI) {
+    } else if (ChmModel::IsSupportedFile(filePath) && !enableChm) {
         ChmModel* chmModel = ChmModel::Create(filePath, win->cbHandler);
         if (chmModel) {
             // make sure that MSHTML can't be used as a potential exploit
@@ -949,7 +950,7 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
             ctrl = chmModel;
         }
         CrashIf(ctrl && (!ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook()));
-    } else if (Doc::IsSupportedFile(filePath) && !gGlobalPrefs->ebookUI.useFixedPageUI) {
+    } else if (Doc::IsSupportedFile(filePath) && !enableEbook) {
         Doc doc = Doc::CreateFromFile(filePath);
         if (doc.IsDocLoaded()) {
             ctrl = EbookController::Create(doc, win->hwndCanvas, win->cbHandler, win->frameRateWnd);
