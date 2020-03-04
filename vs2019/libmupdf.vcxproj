@@ -866,7 +866,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\tools\premake\no_op_for_premake.cpp" />
+    <ClCompile Include="..\src\no_op_for_premake.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\libmupdf.rc" />
