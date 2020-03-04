@@ -236,8 +236,12 @@ static bool RemoveIt(TreeCtrl* treeCtrl, TocItem* ti) {
 // ensure is visible i.e. expand all parents of this item
 static void EnsureExpanded(TocItem* ti) {
     while (ti) {
-        ti->isOpenDefault = true;
+        ti->isOpenDefault = false;
         ti->isOpenToggled = false;
+        if (ti->child) {
+            // isOpenDefault / isOpenToggled is only meaningful for nodes with children
+            ti->isOpenDefault = true;
+        }
         ti = ti->parent;
     }
 }
@@ -601,6 +605,13 @@ void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
             }
         }
         // TODO: show a temporary error message that will go away after a while
+        return;
+    }
+
+    if (addAsSibling && dst->engineFilePath) {
+        // - foo.pdf file
+        //   - child
+        // can't add child as a singling of foo.pdf
         return;
     }
 
