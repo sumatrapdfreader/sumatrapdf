@@ -120,7 +120,7 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
         if (node->isOpenDefault) {
             s.AppendFmt(" open-default");
         }
-        if (node->isOpenDefault) {
+        if (node->isOpenToggled) {
             s.AppendFmt(" open-toggled");
         }
         if (node->isUnchecked) {
