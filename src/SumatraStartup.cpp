@@ -852,9 +852,11 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     if (i.ramicro) {
         gIsRaMicroBuild = true;
+        gWithTocEditor = true;
     }
     if (ExeHasNameOfRaMicro()) {
         gIsRaMicroBuild = true;
+        gWithTocEditor = true;
     }
 
     if (i.showHelp && IsInstallerButNotInstalled()) {
