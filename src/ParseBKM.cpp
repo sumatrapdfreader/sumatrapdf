@@ -18,7 +18,7 @@
 
 // Version of .bkm and .vbkm files. Allows us to change the mind
 // TODO: this is provisional version while in development
-constexpr char* kBkmVersion = "999";
+constexpr char* kBkmVersion = "998";
 
 static Kind kindTocItem = "bkmTreeItem";
 
