@@ -1006,8 +1006,10 @@ void StartTocEditorForWindowInfo(WindowInfo* win) {
         args->bookmarks = vbkm;
     } else {
         TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
-        TocItem* rootCopy = CloneTocItemRecur(tree->root, false);
-
+        TocItem* rootCopy = nullptr;
+        if (tree && tree->root) {
+            rootCopy = CloneTocItemRecur(tree->root, false);
+        }
         const WCHAR* name = path::GetBaseNameNoFree(tab->filePath);
         TocItem* newRoot = new TocItem(nullptr, name, 0);
         newRoot->isOpenDefault = true;
