@@ -844,7 +844,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
         if (pageNo == -1) {
             // TODO: figure out what it could be
             logf("CalcDestKind(): unknown uri: '%s'\n", uri);
-            //SubmitCrashIf(true);
+            // SubmitCrashIf(true);
             return nullptr;
         }
         return kindDestinationScrollTo;
@@ -861,7 +861,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
 
     logf("CalcDestKind(): unknown uri: '%s'\n", uri);
     // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
-    //SubmitCrashIf(true);
+    // SubmitCrashIf(true);
     return nullptr;
 #if 0
     switch (link->kind) {
@@ -1164,6 +1164,8 @@ void FzLinkifyPageText(FzPageInfo* pageInfo) {
         pel->dest->kind = kindDestinationLaunchURL;
         pel->dest->pageNo = 0;
         pel->dest->value = str::Dup(uri);
+        pel->value = str::Dup(uri);
+        pel->rect = fz_rect_to_RectD(bbox);
         pageInfo->autoLinks.Append(pel);
     }
     delete list;
