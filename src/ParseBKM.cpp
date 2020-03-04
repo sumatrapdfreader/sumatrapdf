@@ -187,12 +187,12 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
             continue;
         }
 
-        if (str::Eq(key, "unchecked")) {
+        if (str::EqI(key, "unchecked")) {
             res->isUnchecked = true;
             continue;
         }
 
-        if (str::Eq(key, "page")) {
+        if (str::EqI(key, "page")) {
             if (!val) {
                 return nullptr;
             }
@@ -245,6 +245,7 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
         }
     }
     if (dest) {
+        CrashIf(dest->kind == nullptr);
         res->dest = dest;
         dest->pageNo = res->pageNo;
     }
@@ -369,6 +370,9 @@ bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm) {
     path.Append(".bkm");
 
     AutoFree d = readFileNormalized(path.as_view());
+    if (d.empty()) {
+        return false;
+    }
 
     std::string_view sv = d.as_view();
     ParsedKV ver = sv::ParseValueOfKey(sv, "version", true);

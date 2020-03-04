@@ -355,23 +355,22 @@ bool ParseMaybeQuoted(std::string_view& sv, str::Str& out, bool full) {
 // find key (':', ' ' or end of text) in <sv>
 static std::string_view parseKey(std::string_view& sv) {
     sv::SkipChars(sv, ' ');
+    if (sv.empty()) {
+        return {};
+    }
     const char* s = sv.data();
     const char* end = s + sv.size();
 
     const char* keyStart = s;
-    const char* keyEnd = end;
     while (s < end) {
         char c = *s;
         if (c == ':' || c == ' ') {
-            keyEnd = s;
-            s++;
             break;
         }
         s++;
     }
-    size_t keySize = (keyEnd - keyStart);
+    size_t keySize = (s - keyStart);
     sv::SkipTo(sv, s);
-    sv::SkipChars(sv, ' ');
     return {keyStart, keySize};
 }
 
@@ -387,8 +386,24 @@ ParsedKV ParseKV(std::string_view& sv, bool full) {
         res.ok = false;
         return res;
     }
+    res.ok = true;
     res.key = str::Dup(key);
+    if (sv.empty()) {
+        // just a key at the end
+        return res;
+    }
+    const char* s = sv.data();
+    if (s[0] == ' ') {
+        // just a key, eat whitespace to advance to next kv
+        sv::SkipChars(sv, ' ');
+        return res;
+    }
 
+    // key:value, eat ':'
+    CrashIf(sv[0] != ':');
+    sv::SkipN(sv, 1);
+    // there can be space after ':'
+    sv::SkipChars(sv, ' ');
     str::Str val;
     res.ok = ParseMaybeQuoted(sv, val, full);
     res.val = val.StealData();

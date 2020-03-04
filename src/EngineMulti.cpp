@@ -204,7 +204,7 @@ static void updateTocItemsPageNo(TocItem* ti, int nPageNoAdd, bool root) {
             curr->dest->pageNo += nPageNoAdd;
         }
         curr->pageNo += nPageNoAdd;
-            
+
         updateTocItemsPageNo(curr->child, nPageNoAdd, false);
         if (root) {
             return;
