@@ -27,6 +27,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Actions.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\AppColors.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -250,6 +253,9 @@
     </ClCompile>
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c">
       <Filter>ext\synctex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Actions.cpp">
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\AppColors.cpp">
       <Filter>src</Filter>

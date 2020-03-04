@@ -28,6 +28,11 @@ struct VecSegmented {
         return allocator.nAllocs;
     }
 
+    T* AtPtr(int i) {
+        void* p = allocator.At(i);
+        return (T*)p;
+    }
+
     T* Append(const T& el) {
         T* elPtr = AllocAtEnd();
         *elPtr = el;

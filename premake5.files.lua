@@ -393,6 +393,7 @@ files {
 
 function sumatrapdf_files()
   files_in_dir("src", {
+    "Actions.*",
     "AppColors.*",
     "AppPrefs.*",
     "AppTools.*",
