@@ -21,6 +21,10 @@
 
 #include "EngineBase.h"
 
+#include "ProgressUpdateUI.h"
+#include "Notifications.h"
+#include "SettingsStructs.h"
+#include "WindowInfo.h"
 #include "ParseBKM.h"
 #include "TocEditor.h"
 #include "TocEditTitle.h"

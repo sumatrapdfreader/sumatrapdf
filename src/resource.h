@@ -131,6 +131,8 @@
 #define IDM_DEBUG_ANNOTATION            628
 #define IDM_DEBUG_DOWNLOAD_SYMBOLS      630
 #define IDM_ADVANCED_OPTIONS            632
+#define IDM_NEW_BOOKMARKS               634
+
 #define IDM_FAV_FIRST                   700
 #define IDM_FAV_LAST                    900
 #define IDM_CHANGE_THEME_FIRST          940

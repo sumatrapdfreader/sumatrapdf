@@ -6,6 +6,8 @@
 #include "utils/CmdLineParser.h"
 #include "utils/FileUtil.h"
 #include "utils/HtmlParserLookup.h"
+#include "utils/BitManip.h"
+#include "utils/Dpi.h"
 #include "mui/Mui.h"
 #include "utils/WinUtil.h"
 
@@ -35,8 +37,7 @@
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
-#include "utils/BitManip.h"
-#include "utils/Dpi.h"
+#include "TocEditor.h"
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continuous range!
@@ -242,6 +243,8 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Bookmarks\tF12"),         IDM_VIEW_BOOKMARKS,         0                 },
     { _TRN("Show &Toolbar\tF8"),            IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             IDM_SAVE_ANNOTATIONS_SMX,   MF_REQ_DISK_ACCESS },
+    // TODO: translate
+    {"New Bookmarks",                       IDM_NEW_BOOKMARKS,          MF_NO_TRANSLATE},
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
@@ -662,6 +665,19 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
+
+    bool showBookmarksMenu = EnableTocEditorForWindowInfo(win);
+    if (!showBookmarksMenu) {
+        win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
+    } else {
+        auto path = win->currentTab->filePath.get();
+        if (str::EndsWithI(path, L".vbkm")) {
+            // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
+            // TODO: translate
+            win::menu::SetText(popup, IDM_NEW_BOOKMARKS, L"Edit Bookmarks");
+        }
+    }
+
     if (!pageEl || pageEl->kind != kindPageElementDest || !value) {
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
     }
@@ -744,6 +760,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case IDM_PROPERTIES:
         case IDM_VIEW_SHOW_HIDE_TOOLBAR:
         case IDM_SAVE_ANNOTATIONS_SMX:
+        case IDM_NEW_BOOKMARKS:
             SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
             break;
 

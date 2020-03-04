@@ -54,6 +54,7 @@
 #include "Notifications.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
+#include "TocEditor.h"
 #include "resource.h"
 #include "Flags.h"
 #include "AppPrefs.h"
@@ -4401,6 +4402,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_SAVE_ANNOTATIONS_SMX:
             OnMenuSaveAnnotationsToSmx(win);
+            break;
+
+        case IDM_NEW_BOOKMARKS:
+            StartTocEditorForWindowInfo(win);
             break;
 
         case IDM_VIEW_SHOW_HIDE_MENUBAR:

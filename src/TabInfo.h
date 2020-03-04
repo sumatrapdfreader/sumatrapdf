@@ -39,7 +39,7 @@ class TabInfo {
     DisplayModel* AsFixed() const;
 
     // only if AsFixed()
-    EngineBase* TabInfo::GetEngine() const;
+    EngineBase* GetEngine() const;
     Kind GetEngineType() const;
 
     ChmModel* AsChm() const;

@@ -17,19 +17,23 @@
 #include "wingui/ButtonCtrl.h"
 #include "wingui/StaticCtrl.h"
 
+#include "EngineBase.h"
+#include "EngineMulti.h"
+#include "EngineManager.h"
+
 #include "resource.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SettingsStructs.h"
+#include "GlobalPrefs.h"
 #include "WindowInfo.h"
+#include "TabInfo.h"
+#include "Controller.h"
 #include "Menu.h"
 #include "Translations.h"
 #include "SaveAsPdf.h"
 #include "SumatraPDF.h"
-
-#include "EngineBase.h"
-#include "EngineMulti.h"
-#include "EngineManager.h"
+#include "SumatraConfig.h"
 
 #include "ParseBKM.h"
 #include "TocEditTitle.h"
@@ -984,4 +988,50 @@ void StartTocEditor(TocEditorArgs* args) {
     // first layout is triggered
     w->SetIsVisible(true);
     gWindow->UpdateRemoveTocItemButtonStatus();
+}
+
+void StartTocEditorForWindowInfo(WindowInfo* win) {
+    auto* tab = win->currentTab;
+    TocEditorArgs* args = new TocEditorArgs();
+    args->filePath = str::Dup(tab->filePath);
+
+    VbkmFile* vbkm = new VbkmFile();
+    AutoFreeStr filePath = strconv::WstrToUtf8(tab->filePath);
+    if (str::EndsWithI(tab->filePath, L".vbkm")) {
+        bool ok = LoadVbkmFile(filePath, *vbkm);
+        if (!ok) {
+            // TODO: show error message box
+            return;
+        }
+        args->bookmarks = vbkm;
+    } else {
+        TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
+        TocItem* rootCopy = CloneTocItemRecur(tree->root, false);
+
+        const WCHAR* name = path::GetBaseNameNoFree(tab->filePath);
+        TocItem* newRoot = new TocItem(nullptr, name, 0);
+        newRoot->isOpenDefault = true;
+        newRoot->child = rootCopy;
+        newRoot->pageNo = 1; // default to first page in the PDF
+        newRoot->nPages = tab->ctrl->PageCount();
+        newRoot->engineFilePath = filePath.release();
+        vbkm->tree = new TocTree(newRoot);
+    }
+    args->bookmarks = vbkm;
+    args->hwndRelatedTo = win->hwndFrame;
+    StartTocEditor(args);
+}
+
+bool EnableTocEditorForWindowInfo(WindowInfo* win) {
+    if (!gWithTocEditor) {
+        return false;
+    }
+    auto path = win->currentTab->filePath.get();
+    if (str::EndsWithI(path, L".vbkm")) {
+        return true;
+    }
+    if (str::EndsWithI(path, L".pdf")) {
+        return true;
+    }
+    return false;
 }

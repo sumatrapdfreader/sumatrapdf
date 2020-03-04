@@ -373,7 +373,6 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 #define IDM_EXPAND_ALL                  500
 #define IDM_COLLAPSE_ALL                501
 #define IDM_EXPORT_BOOKMARKS            502
-#define IDM_NEW_BOOKMARKS               503
 #define IDM_SEPARATOR                   504
 
 static MenuDef menuDefContext[] = {
@@ -382,9 +381,10 @@ static MenuDef menuDefContext[] = {
     // note: strings cannot be "" or else items are not there
     {"add",                 IDM_FAV_ADD,            MF_NO_TRANSLATE},
     {"del",                 IDM_FAV_DEL,            MF_NO_TRANSLATE},
-    {SEP_ITEM,              IDM_SEPARATOR,          MF_NO_TRANSLATE | MF_RAMICRO_ONLY},
-    {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE | MF_RAMICRO_ONLY},
-    {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE | MF_RAMICRO_ONLY},
+    {SEP_ITEM,              IDM_SEPARATOR,          MF_NO_TRANSLATE},
+    // TODO: translate
+    {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
+    {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
     { 0, 0, 0},
 };
 // clang-format on      
@@ -397,48 +397,6 @@ static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     AutoFreeWstr name = str::Dup(dti->title);
     AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
-}
-
-static bool IsForVbkm(WindowInfo* win) {
-    auto path = win->currentTab->filePath.get();
-    return str::EndsWithI(path, L".vbkm");
-}
-
-static bool IsForPdf(WindowInfo* win) {
-    auto path = win->currentTab->filePath.get();
-    return str::EndsWithI(path, L".pdf");
-}
-
-static void StartTocEditorForWindowInfo(WindowInfo* win) {
-    auto* tab = win->currentTab;
-    TocEditorArgs* args = new TocEditorArgs();
-    args->filePath = str::Dup(tab->filePath);
-
-    VbkmFile *vbkm = new VbkmFile();
-    AutoFreeStr filePath = strconv::WstrToUtf8(tab->filePath);
-    if (str::EndsWithI(tab->filePath, L".vbkm")) {
-        bool ok = LoadVbkmFile(filePath, *vbkm);
-        if (!ok) {
-            // TODO: show error message box
-            return;
-        }
-        args->bookmarks = vbkm;
-    } else {
-        TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
-        TocItem* rootCopy = CloneTocItemRecur(tree->root, false);
-
-        const WCHAR* name = path::GetBaseNameNoFree(tab->filePath);
-        TocItem* newRoot = new TocItem(nullptr, name, 0);
-        newRoot->isOpenDefault = true;
-        newRoot->child = rootCopy;
-        newRoot->pageNo = 1; // default to first page in the PDF
-        newRoot->nPages = tab->ctrl->PageCount();
-        newRoot->engineFilePath = filePath.release();
-        vbkm->tree = new TocTree(newRoot);
-    }
-    args->bookmarks = vbkm;
-    args->hwndRelatedTo = win->hwndFrame;
-    StartTocEditor(args);
 }
 
 static void TocContextMenu(ContextMenuEvent* ev) {
@@ -459,11 +417,18 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
-    bool showBookmarksMenu = gWithTocEditor && (IsForPdf(win) || IsForVbkm(win));
+    bool showBookmarksMenu = EnableTocEditorForWindowInfo(win);
     if (!showBookmarksMenu) {
         win::menu::Remove(popup, IDM_SEPARATOR);
         win::menu::Remove(popup, IDM_EXPORT_BOOKMARKS);
         win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
+    } else {
+          auto path = win->currentTab->filePath.get();
+        if (str::EndsWithI(path, L".vbkm")) {
+            // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
+            // TODO: translate
+            win::menu::SetText(popup, IDM_NEW_BOOKMARKS, L"Edit Bookmarks");
+        }
     }
 
     if (pageNo > 0) {
@@ -487,11 +452,6 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     } else {
         win::menu::Remove(popup, IDM_FAV_ADD);
         win::menu::Remove(popup, IDM_FAV_DEL);
-    }
-
-    if (IsForVbkm(win)) {
-        // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
-        win::menu::SetText(popup, IDM_NEW_BOOKMARKS, L"Edit Bookmarks");
     }
 
     MarkMenuOwnerDraw(popup);
