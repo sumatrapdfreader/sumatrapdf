@@ -88,6 +88,7 @@ func main() {
 		flgNoCache                 bool
 		flgCppCheck                bool
 		flgCppCheckAll             bool
+		flgDiff                    bool
 	)
 
 	{
@@ -118,6 +119,7 @@ func main() {
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
 		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
+		flag.BoolVar(&flgDiff, "diff", false, "preview diff using winmerge")
 		flag.Parse()
 	}
 
@@ -146,6 +148,11 @@ func main() {
 
 	if flgWebsiteDeployProd {
 		websiteDeployProd()
+		return
+	}
+
+	if flgDiff {
+		winmergeDiffPreview()
 		return
 	}
 

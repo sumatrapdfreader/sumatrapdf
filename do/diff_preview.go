@@ -32,6 +32,7 @@ const (
 	NotCheckedIn
 )
 
+// GitChange represents a single git change
 type GitChange struct {
 	Type int // Modified, Added etc.
 	Path string
@@ -42,40 +43,6 @@ func printStack() {
 	buf := make([]byte, 1024*164)
 	n := runtime.Stack(buf, false)
 	fmt.Printf("%s", buf[:n])
-}
-
-func fatalf(format string, args ...interface{}) {
-	fmt.Printf(format, args...)
-	printStack()
-	os.Exit(1)
-}
-
-func fatalIf(cond bool, format string, args ...interface{}) {
-	if cond {
-		fmt.Printf(format, args...)
-		printStack()
-		os.Exit(1)
-	}
-}
-
-func fatalIfErr(err error) {
-	if err != nil {
-		fatalf("%s\n", err.Error())
-	}
-}
-
-func toTrimmedLines(d []byte) []string {
-	lines := strings.Split(string(d), "\n")
-	i := 0
-	for _, l := range lines {
-		l = strings.TrimSpace(l)
-		// remove empty lines
-		if len(l) > 0 {
-			lines[i] = l
-			i++
-		}
-	}
-	return lines[:i]
 }
 
 func detectExeMust(name string) string {
@@ -92,6 +59,11 @@ func detectExeMust(name string) string {
 
 func detectExesMust() {
 	gitPath = detectExeMust("git")
+	path := `C:\Program Files\WinMerge\WinMergeU.exe`
+	if pathExists(path) {
+		winMergePath = path
+		return
+	}
 	winMergePath = detectExeMust("WinMergeU")
 }
 
@@ -138,6 +110,10 @@ func parseGitStatusLineMust(s string) *GitChange {
 		c.Type = Deleted
 	case "??":
 		c.Type = NotCheckedIn
+	case "RM":
+		// TODO: handle line:
+		// RM tools/diff-preview.go -> do/diff_preview.go
+		return nil
 	default:
 		fatalIf(true, "invalid line: '%s'\n", s)
 	}
@@ -151,6 +127,9 @@ func parseGitStatusMust(out []byte, includeNotCheckedIn bool) []*GitChange {
 	lines := toTrimmedLines(out)
 	for _, l := range lines {
 		c := parseGitStatusLineMust(l)
+		if c == nil {
+			continue
+		}
 		if !includeNotCheckedIn && c.Type == NotCheckedIn {
 			continue
 		}
@@ -324,10 +303,10 @@ func cdToGitRoot() {
 	}
 }
 
-func main() {
+func winmergeDiffPreview() {
 	detectExesMust()
 	createTempDirMust()
-	fmt.Printf("temp dir: %s\n", tempDir)
+	logf("temp dir: %s\n", tempDir)
 	deleteOldDirs()
 
 	cdToGitRoot()
