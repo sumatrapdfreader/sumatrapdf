@@ -696,6 +696,7 @@ bool SetZoneIdentifier(const WCHAR* filePath, int zoneId) {
 namespace dir {
 
 #if OS_WIN
+// TODO: duplicate with path::IsDirectory()
 bool Exists(const WCHAR* dir) {
     if (nullptr == dir) {
         return false;

@@ -80,7 +80,7 @@ class EngineMulti : public EngineBase {
     EngineBase* PageToEngine(int& pageNo) const;
     VbkmFile vbkm;
     Vec<EnginePage> pageToEngine;
-
+    Vec<EngineInfo> enginesInfo;
     TocTree* tocTree = nullptr;
 };
 
@@ -99,6 +99,9 @@ EngineMulti::EngineMulti() {
 }
 
 EngineMulti::~EngineMulti() {
+    for (auto&& ei : enginesInfo) {
+        delete ei.engine;
+    }
     delete tocTree;
 }
 
@@ -191,6 +194,17 @@ PageDestination* EngineMulti::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
+static bool IsPageNavigationDestination(PageDestination* dest) {
+    if (!dest) {
+        return false;
+    }
+    if (dest->kind == kindDestinationScrollTo) {
+        return true;
+    }
+    // TODO: possibly more kinds
+    return false;
+}
+
 static void updateTocItemsPageNo(TocItem* ti, int nPageNoAdd, bool root) {
     if (nPageNoAdd == 0) {
         return;
@@ -200,10 +214,10 @@ static void updateTocItemsPageNo(TocItem* ti, int nPageNoAdd, bool root) {
     }
     auto curr = ti;
     while (curr) {
-        if (curr->dest) {
+        if (IsPageNavigationDestination(curr->dest)) {
             curr->dest->pageNo += nPageNoAdd;
+            curr->pageNo += nPageNoAdd;
         }
-        curr->pageNo += nPageNoAdd;
 
         updateTocItemsPageNo(curr->child, nPageNoAdd, false);
         if (root) {
@@ -355,7 +369,6 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
 bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
     int n = files.size();
     TocItem* tocFiles = nullptr;
-    Vec<EngineInfo> enginesInfo;
     for (int i = 0; i < n; i++) {
         std::string_view path = files.at(i);
         AutoFreeWstr pathW = strconv::Utf8ToWstr(path);
@@ -430,6 +443,9 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
     CrashIf((size_t)pageCount != pageToEngine.size());
 
     auto verifyPages = [&nTotalPages](TocItem* ti) -> bool {
+        if (!IsPageNavigationDestination(ti->dest)) {
+            return true;
+        }
         int pageNo = ti->pageNo;
         CrashIf(pageNo > nTotalPages);
         return true;
@@ -451,13 +467,12 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         return false;
     }
 
-    Vec<EngineInfo> enginesInfo;
     TocItem* tocRoot = CloneTocItemRecur(vbkm.tree->root, true);
     delete vbkm.tree;
     vbkm.tree = nullptr;
 
     // load all referenced files
-    auto loadEngines = [&enginesInfo, &filePath](TocItem* ti) -> bool {
+    auto loadEngines = [this, &filePath](TocItem* ti) -> bool {
         if (ti->engineFilePath == nullptr) {
             return true;
         }
@@ -478,7 +493,7 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         EngineInfo ei;
         ei.engine = engine;
         ei.tocRoot = ti;
-        enginesInfo.Append(ei);
+        this->enginesInfo.Append(ei);
         return true;
     };
 
@@ -494,6 +509,8 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     return true;
 }
 
+#include "SumatraConfig.h"
+
 bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         // we don't support sniffing
@@ -502,9 +519,17 @@ bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff) {
     if (str::EndsWithI(fileName, L".vbkm")) {
         return true;
     }
-    // for 'Open Folder' functionality
-    if (path::IsDirectory(fileName)) {
-        return true;
+
+    // TODO: in 3.1.2 we open folder of images (IsImageDirEngineSupportedFile)
+    // To avoid changing behavior, we open pdfs only in ramicro build
+    // this should be controlled via cmd-line flag e.g. -folder-open-pdf
+    // Then we could have more options, like -folder-open-images (default)
+    // -folder-open-all (show all files we support in toc)
+    if (gIsRaMicroBuild) {
+        // for 'Open Folder' functionality
+        if (path::IsDirectory(fileName)) {
+            return true;
+        }
     }
     return false;
 }
