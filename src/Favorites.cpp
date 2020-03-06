@@ -254,7 +254,7 @@ void Favorites::RemoveAllForFile(const WCHAR* filePath) {
 // clang-format off
 MenuDef menuDefFavContext[] = {
     {_TRN("Remove from favorites"), IDM_FAV_DEL, 0},
-    { 0, 0, 0}
+    { 0, 0, 0 }
 };
 // clang-format on
 

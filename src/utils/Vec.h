@@ -294,6 +294,11 @@ class Vec {
         qsort(els, len, sizeof(T), cmpFunc);
     }
 
+    void SortTyped(int (*cmpFunc)(const T* a, const T* b)) {
+        auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
+        qsort(els, len, sizeof(T), cmpFunc2);
+    }
+
     void Reverse() {
         for (size_t i = 0; i < len / 2; i++) {
             std::swap(els[i], els[len - i - 1]);

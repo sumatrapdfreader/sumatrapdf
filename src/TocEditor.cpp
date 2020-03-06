@@ -192,13 +192,14 @@ static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
 #define IDM_ADD_PDF_SIBLING 105
 
 static MenuDef menuDefContext[] = {
+    // TODO: translate
     {"Edit",                    IDM_EDIT, 0},
     {"Add sibling",             IDM_ADD_SIBLING, 0},
     {"Add child",               IDM_ADD_CHILD, 0},
     {"Add PDF as a child",      IDM_ADD_PDF_CHILD, 0},
     {"Add PDF as a sibling",    IDM_ADD_PDF_SIBLING, 0},
     {"Remove Item",             IDM_REMOVE, 0},
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 // clang-format on
 
@@ -1024,7 +1025,7 @@ void StartTocEditorForWindowInfo(WindowInfo* win) {
     StartTocEditor(args);
 }
 
-bool EnableTocEditorForWindowInfo(WindowInfo* win) {
+bool IsTocEditorEnabledForWindowInfo(WindowInfo* win) {
     if (!gWithTocEditor) {
         return false;
     }

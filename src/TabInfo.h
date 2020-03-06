@@ -5,12 +5,14 @@ struct SelectionOnPage;
 struct WatchedFile;
 struct VbkmFile;
 
+enum class TocSort { None, TagSmallFirst, TagBigFirst, Color };
+
 /* Data related to a single document loaded into a tab/window */
 /* (none of these depend on WindowInfo, so that a TabInfo could
    be moved between windows once this is supported) */
-class TabInfo {
-  public:
+struct TabInfo {
     AutoFreeWstr filePath;
+    WindowInfo* win = nullptr;
     Controller* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
     AutoFreeWstr frameTitle;
@@ -32,8 +34,12 @@ class TabInfo {
     float prevZoomVirtual = INVALID_ZOOM;
     DisplayMode prevDisplayMode = DM_AUTOMATIC;
     Vec<VbkmFile*> altBookmarks;
+    TocSort tocSort = TocSort::None;
+    TocTree* currToc = nullptr; // not owned by us
+    // if sortTag is != SortTag::None, this is a sorted toc tree to be displayed
+    TocTree* tocSorted = nullptr;
 
-    TabInfo(const WCHAR* filePath = nullptr);
+    TabInfo(WindowInfo* win, const WCHAR* filePath = nullptr);
     ~TabInfo();
 
     DisplayModel* AsFixed() const;

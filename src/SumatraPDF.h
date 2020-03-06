@@ -79,7 +79,7 @@ struct FileHistory;
 class WindowInfo;
 class NotificationWnd;
 class RenderCache;
-class TabInfo;
+struct TabInfo;
 struct LabelWithCloseWnd;
 struct SessionData;
 struct DropDownCtrl;

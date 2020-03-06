@@ -20,7 +20,7 @@ class ControllerCallback;
 class ChmModel;
 class DisplayModel;
 class EbookController;
-class TabInfo;
+struct TabInfo;
 
 struct TreeCtrl;
 struct TooltipCtrl;

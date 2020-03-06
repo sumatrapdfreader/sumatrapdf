@@ -25,7 +25,8 @@
 #include "Translations.h"
 #include "ParseBKM.h"
 
-TabInfo::TabInfo(const WCHAR* filePath) {
+TabInfo::TabInfo(WindowInfo* win, const WCHAR* filePath) {
+    this->win = win;
     this->filePath.SetCopy(filePath);
 }
 
@@ -37,6 +38,7 @@ TabInfo::~TabInfo() {
     DeleteVecMembers(altBookmarks);
     delete selectionOnPage;
     delete ctrl;
+    delete tocSorted;
 }
 
 DisplayModel* TabInfo::AsFixed() const {

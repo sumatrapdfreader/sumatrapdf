@@ -687,7 +687,7 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
         return nullptr;
     }
 
-    TabInfo* tab = new TabInfo(filePath);
+    TabInfo* tab = new TabInfo(win, filePath);
     win->tabs.Append(tab);
     tab->canvasRc = win->canvasRc;
 

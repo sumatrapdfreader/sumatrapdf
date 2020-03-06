@@ -237,7 +237,7 @@ void ToggleTocBox(WindowInfo* win) {
     }
     SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
     if (win->tocVisible) {
-        SetFocus(win->tocTreeCtrl->hwnd);
+        win->tocTreeCtrl->SetFocus();
     }
 }
 
@@ -374,6 +374,9 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 #define IDM_COLLAPSE_ALL                501
 #define IDM_EXPORT_BOOKMARKS            502
 #define IDM_SEPARATOR                   504
+#define IDM_SORT_TAG_SMALL_FIRST        505
+#define IDM_SORT_TAG_BIG_FIRST          506
+#define IDM_SORT_COLOR                  507
 
 static MenuDef menuDefContext[] = {
     {_TRN("Expand All"),    IDM_EXPAND_ALL,         0 },
@@ -385,7 +388,15 @@ static MenuDef menuDefContext[] = {
     // TODO: translate
     {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
     {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
-    { 0, 0, 0},
+    { 0, 0, 0 },
+};
+
+static MenuDef menuDefSortByTag[] = {
+    // TODO: translate
+    {"Tag (small first)",   IDM_SORT_TAG_SMALL_FIRST, 0 },
+    {"Tag (big first)",     IDM_SORT_TAG_BIG_FIRST,   0 },
+    {"Color",               IDM_SORT_COLOR,           0 },
+    { 0, 0, 0 },
 };
 // clang-format on      
 
@@ -397,6 +408,178 @@ static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     AutoFreeWstr name = str::Dup(dti->title);
     AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
+}
+
+struct TocItemWithSortInfo {
+    TocItem* ti;
+    int tag;
+    COLORREF color;
+};
+
+// extract a tag in <s> in format "(<n>)$"
+static int ParseTocTag(const WCHAR* s) {
+    const WCHAR* is = str::FindCharLast(s, '(');
+    if (is == nullptr) {
+        return 0;
+    }
+    int tag = 0;
+    str::Parse(is, L"(%d)$", &tag);
+    if (tag == 0) {
+        return tag;
+    }
+    return tag;
+}
+
+static bool HasDifferentColors(Vec<TocItemWithSortInfo>& tocItems) {
+    int prevColor = tocItems[0].color;
+    int n = tocItems.isize();
+    for (int i = 0; i < n; i++) {
+        int color = tocItems[i].color;
+        if (color != prevColor) {
+            return true;
+        }
+        prevColor = color;
+    }
+    return false;
+}
+
+static bool HasDifferentTags(Vec<TocItemWithSortInfo>& tocItems) {
+    int prevTag = tocItems[0].tag;
+    int n = tocItems.isize();
+    for (int i = 0; i < n; i++) {
+        int tag = tocItems[i].tag;
+        if (tag != prevTag) {
+            return true;
+        }
+        prevTag = tag;
+    }
+    return false;
+}
+
+int sortByTagSmallFirst(const TocItemWithSortInfo* t1, const TocItemWithSortInfo* t2) {
+    if (t1->tag == t2->tag) {
+        return 0;
+    }
+    if (t1->tag > t2->tag) {
+        return 1;
+    }
+    return -1;
+}
+
+int sortByTagBigFirst(const TocItemWithSortInfo* t1, const TocItemWithSortInfo* t2) {
+    if (t1->tag == t2->tag) {
+        return 0;
+    }
+    if (t1->tag > t2->tag) {
+        return -1;
+    }
+    return 1;
+}
+
+static COLORREF fixupColor(COLORREF c) {
+    if (c == ColorUnset) {
+        return 0;
+    }
+    return c;
+}
+
+// order of sorting by color is rather arbitrary
+int sortByColor(const TocItemWithSortInfo* t1, const TocItemWithSortInfo* t2) {
+    auto c1 = fixupColor(t1->color);
+    auto c2 = fixupColor(t2->color);
+    if (c1 == c2) {
+        return 0;
+    }
+    if (c1 > c2) {
+        return 1;
+    }
+    return -1;
+}
+
+static TocItem* SortTocItemsByTag(Vec<TocItemWithSortInfo>& tocItems, TocSort tocSort) {
+    int n = tocItems.isize();
+    if (n == 0) {
+        return nullptr;
+    }
+    TocItem* first = tocItems[0].ti;
+    if (n == 1) {
+        return first;
+    }
+    bool wasSorted = false;
+    if (tocSort == TocSort::TagSmallFirst || tocSort == TocSort::TagBigFirst) {
+        if (!HasDifferentTags(tocItems)) {
+            return first;
+        }
+        wasSorted = true;
+        switch (tocSort) {
+            case TocSort::TagSmallFirst:
+                tocItems.SortTyped(sortByTagSmallFirst);
+                break;
+            case TocSort::TagBigFirst:
+                tocItems.SortTyped(sortByTagBigFirst);
+                break;
+        }
+    } else if (tocSort == TocSort::Color) {
+        if (!HasDifferentColors(tocItems)) {
+            return first;
+        }
+        tocItems.SortTyped(sortByColor);
+        wasSorted = true;
+    } else {
+        CrashMe();
+    }
+
+    if (!wasSorted) {
+        return first;
+    }
+
+    // rebuild siblings order after sorting
+    first = tocItems[0].ti;
+    TocItem* curr = first;
+    for (int i = 1; i < n; i++) {
+        TocItem* next = tocItems[i].ti;
+        curr->next = next;
+        curr = next;
+    }
+    curr->next = nullptr;
+    return first;
+}
+
+static TocItem* SortTocItemSiblingsRec(TocItem* ti, TocSort tocSort) {
+    if (ti == nullptr) {
+        return nullptr;
+    }
+    TocItem* curr = ti;
+    Vec<TocItemWithSortInfo> items;
+    while (curr) {
+        int tag = ParseTocTag(curr->title);
+        TocItemWithSortInfo tii{curr, tag, curr->color};
+        items.Append(tii);
+        curr->child = SortTocItemSiblingsRec(curr->child, tocSort);
+        curr = curr->next;
+    }
+    TocItem* res = SortTocItemsByTag(items, tocSort);
+    return res;
+}
+
+static TocTree* SortTocTree(TocTree* tree, TocSort tocSort) {
+    if (tocSort == TocSort::None) {
+        return nullptr;
+    }
+    auto res = CloneTocTree(tree, false);
+    res->root = SortTocItemSiblingsRec(res->root, tocSort);
+    return res;
+}
+
+static void SortAndSetTocTree(TabInfo* tab) {
+    delete tab->tocSorted;
+    tab->tocSorted = SortTocTree(tab->currToc, tab->tocSort);
+
+    TocTree* toShow = tab->tocSorted;
+    if (toShow == nullptr) {
+        toShow = tab->currToc;
+    }
+    tab->win->tocTreeCtrl->SetTreeModel(toShow);
 }
 
 static void TocContextMenu(ContextMenuEvent* ev) {
@@ -415,9 +598,33 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         pageNo = dti->dest->GetPageNo();
     }
 
+    TabInfo* tab = win->currentTab;
+    bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(win);
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
-    bool showBookmarksMenu = EnableTocEditorForWindowInfo(win);
+    if (showBookmarksMenu) {
+        HMENU popupSort = BuildMenuFromMenuDef(menuDefSortByTag, CreatePopupMenu());
+        UINT flags = MF_BYCOMMAND | MF_ENABLED | MF_POPUP;
+        // TODO: translate
+        InsertMenuW(popup, 0, flags, (UINT_PTR)popupSort, L"Sort By");
+
+        win::menu::SetChecked(popupSort, IDM_SORT_TAG_SMALL_FIRST, false);
+        win::menu::SetChecked(popupSort, IDM_SORT_TAG_BIG_FIRST, false);
+        win::menu::SetChecked(popupSort, IDM_SORT_COLOR, false);
+
+        switch (tab->tocSort) {
+            case TocSort::TagBigFirst:
+                win::menu::SetChecked(popupSort, IDM_SORT_TAG_BIG_FIRST, true);
+                break;
+            case TocSort::TagSmallFirst:
+                win::menu::SetChecked(popupSort, IDM_SORT_TAG_SMALL_FIRST, true);
+                break;
+            case TocSort::Color:
+                win::menu::SetChecked(popupSort, IDM_SORT_COLOR, true);
+                break;
+        }
+    }
+
     if (!showBookmarksMenu) {
         win::menu::Remove(popup, IDM_SEPARATOR);
         win::menu::Remove(popup, IDM_EXPORT_BOOKMARKS);
@@ -460,10 +667,9 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
     switch (cmd) {
-        case IDM_EXPORT_BOOKMARKS: {
-            auto* tab = win->currentTab;
+        case IDM_EXPORT_BOOKMARKS:
             ExportBookmarksFromTab(tab);
-        } break;
+            break;
         case IDM_NEW_BOOKMARKS:
             StartTocEditorForWindowInfo(win);
             break;
@@ -479,17 +685,40 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         case IDM_FAV_DEL:
             DelFavorite(filePath, pageNo);
             break;
+        case IDM_SORT_TAG_BIG_FIRST:
+            if (tab->tocSort == TocSort::TagBigFirst) {
+                tab->tocSort = TocSort::None;
+            } else {
+                tab->tocSort = TocSort::TagBigFirst;
+            }
+            SortAndSetTocTree(tab);
+            break;
+        case IDM_SORT_TAG_SMALL_FIRST:
+            if (tab->tocSort == TocSort::TagSmallFirst) {
+                tab->tocSort = TocSort::None;
+            } else {
+                tab->tocSort = TocSort::TagSmallFirst;
+            }
+            SortAndSetTocTree(tab);
+            break;
+        case IDM_SORT_COLOR:
+            if (tab->tocSort == TocSort::Color) {
+                tab->tocSort = TocSort::None;
+            } else {
+                tab->tocSort = TocSort::Color;
+            }
+            SortAndSetTocTree(tab);
+            break;
     }
 }
 
 static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::string_view s) {
     if (n == 0) {
-        TocTree* tocTree = tab->ctrl->GetToc();
-        win->tocTreeCtrl->SetTreeModel(tocTree);
+        tab->currToc = tab->ctrl->GetToc();        
     } else {
-        TocTree* tocTree = tab->altBookmarks[0]->tree;
-        win->tocTreeCtrl->SetTreeModel(tocTree);
+        tab->currToc = tab->altBookmarks[0]->tree;
     }
+    SortAndSetTocTree(tab);
 }
 
 // TODO: temporary
@@ -543,6 +772,8 @@ void LoadTocTree(WindowInfo* win) {
     if (!tocTree || !tocTree->root) {
         return;
     }
+
+    tab->currToc = tocTree;
 
     DeleteVecMembers(tab->altBookmarks);
 
@@ -737,7 +968,7 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND 
 }
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
-    WindowInfo* winFromData = reinterpret_cast<WindowInfo*>(data);
+    WindowInfo* winFromData = (WindowInfo*)(data);
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
         return DefSubclassProc(hwnd, msg, wp, lp);

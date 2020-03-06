@@ -112,7 +112,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
     { SEP_ITEM,                             0,                          0 },
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP File Menu
 
@@ -136,7 +136,7 @@ static MenuDef menuDefView[] = {
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP View Menu
 
@@ -152,7 +152,7 @@ static MenuDef menuDefGoTo[] = {
     { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       0 },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
     { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             MF_NOT_FOR_EBOOK_UI },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP GoTo Menu
 
@@ -178,7 +178,7 @@ static MenuDef menuDefZoom[] = {
     { "25%",                                IDM_ZOOM_25,                MF_NO_TRANSLATE },
     { "12.5%",                              IDM_ZOOM_12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { "8.33%",                              IDM_ZOOM_8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Zoom Menu
 
@@ -191,7 +191,7 @@ static MenuDef menuDefSettings[] = {
 #endif
     { _TRN("&Options..."),                  IDM_OPTIONS,                MF_REQ_PREF_ACCESS },
     { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Settings Menu
 
@@ -201,7 +201,7 @@ MenuDef menuDefFavorites[] = {
     { _TRN("Add to favorites"),             IDM_FAV_ADD,                0 },
     { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 },
     { _TRN("Show Favorites"),               IDM_FAV_TOGGLE,             MF_REQ_DISK_ACCESS },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Favorites Menu
 
@@ -212,7 +212,7 @@ static MenuDef menuDefHelp[] = {
     { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_REQ_INET_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("&About"),                       IDM_ABOUT,                  0 },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Help Menu
 
@@ -223,7 +223,7 @@ static MenuDef menuDefDebug[] = {
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
     { "Download symbols",                   IDM_DEBUG_DOWNLOAD_SYMBOLS, MF_NO_TRANSLATE },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Debug Menu
 
@@ -249,7 +249,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
 
@@ -259,7 +259,7 @@ static MenuDef menuDefContextStart[] = {
     { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
-    { 0, 0, 0},
+    { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Start)
 // clang-format on
@@ -294,16 +294,16 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
         if (str::Eq(md.title, SEP_ITEM)) {
             // prevent two consecutive separators
             if (!wasSeparator) {
-                AppendMenu(menu, MF_SEPARATOR, (UINT_PTR)md.id, nullptr);
+                AppendMenuW(menu, MF_SEPARATOR, (UINT_PTR)md.id, nullptr);
             }
             wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
             AutoFreeWstr tmp = strconv::Utf8ToWstr(md.title);
-            AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
+            AppendMenuW(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         } else {
             const WCHAR* tmp = trans::GetTranslation(md.title);
-            AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
+            AppendMenuW(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         }
     }
@@ -666,7 +666,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
-    bool showBookmarksMenu = EnableTocEditorForWindowInfo(win);
+    bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(win);
     if (!showBookmarksMenu) {
         win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
     } else {
