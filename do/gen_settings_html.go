@@ -184,20 +184,16 @@ of <code>UiLanguage</code> setting in <a href="settings%VER%.html">settings file
 var indent_str = "    "
 
 func extract_url(s string) []string {
-	return []string{s}
+	if !strings.HasSuffix(s, ")") {
+		return []string{s}
+	}
+	word_end := strings.Index(s, "]")
+	panicIf(word_end == -1)
+	word := s[:word_end]
+	panicIf(s[word_end+1] != '(')
+	url := s[word_end+2 : len(s)-1]
+	return []string{word, url}
 }
-
-/*
-def extract_url(s):
-    if not s.endswith(")"):
-        return [s]
-    word_end = s.find("]")
-    assert word_end != -1
-    word = s[:word_end]
-    assert s[word_end + 1] == "("
-    url = s[word_end + 2:-1]
-    return [word, url]
-*/
 
 func cgi_escape(s string) string {
 	return html.EscapeString(s)
@@ -339,6 +335,8 @@ func gen_langs_html() {
 	s := strings.Replace(langs_html_tmpl, "%INSIDE%", inside, -1)
 	s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
 	s = strings.Replace(s, "settings.html", settings_file_name(), -1)
+	s = strings.Replace(s, "\n", "\r\n", -1)
+
 	path := filepath.Join(settings_dir(), langs_file_name())
 	u.WriteFileMust(path, []byte(s))
 
@@ -354,6 +352,8 @@ func gen_settings_html() {
 	s := strings.Replace(html_tmpl, "%INSIDE%", inside, -1)
 	s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
 	s = strings.Replace(s, "langs.html", langs_file_name(), -1)
+	s = strings.Replace(s, "\n", "\r\n", -1)
+
 	path := filepath.Join(settings_dir(), settings_file_name())
 	u.WriteFileMust(path, []byte(s))
 
