@@ -29,7 +29,6 @@ const (
 	// TODO: remove, python compat
 	False = false
 	True  = true
-	None  = ""
 )
 
 type Field struct {
@@ -59,7 +58,7 @@ func (f *Field) SetInternal() *Field {
 
 func (f *Field) SetPreRelease() *Field {
 	f.PreRelease = true
-	if f.Type.Name == "struct" {
+	if f.Type.Name == "Struct" {
 		f.Type.Name = "Prerelease"
 	}
 	return f
@@ -100,14 +99,14 @@ func (self *Field) cdefault(built map[string]int) string {
 
 	if self.Type == String {
 		if self.Default == nil {
-			return `(intptr_t)0` // TODO: is this correct?
+			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)L"%s"`, self.Default)
 	}
 
 	if self.Type == Utf8String {
 		if self.Default == nil {
-			return `(intptr_t)0` // TODO: is this correct?
+			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, self.Default)
 	}
@@ -115,31 +114,32 @@ func (self *Field) cdefault(built map[string]int) string {
 	typeName := self.Type.Name
 	switch typeName {
 	case "Struct", "Array", "Compact", "Prerelease":
+		idStr := ""
 		id := built[self.StructName]
-		if id == 0 {
-			return fmt.Sprintf("(intptr_t)&g%sInfo", self.StructName)
+		if id > 0 {
+			idStr = fmt.Sprintf("_%d_", id)
 		}
-		return fmt.Sprintf("(intptr_t)&g%sInfo_%d_", self.StructName, id)
+		return fmt.Sprintf("(intptr_t)&g%s%sInfo", self.StructName, idStr)
 	}
 
 	switch typeName {
 	case "ColorArray", "FloatArray", "IntArray":
 		if self.Default == nil {
-			return `(intptr_t)"0"`
+			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, self.Default)
 	}
 
 	if typeName == "StringArray" {
 		if self.Default == nil {
-			return `(intptr_t)"0"`
+			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, self.Default)
 	}
 
 	if typeName == "Comment" {
 		if self.Comment == "" {
-			return `(intptr_t)0`
+			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, self.Comment)
 	}
@@ -180,11 +180,6 @@ func (f *Field) SetStructName(structName string) *Field {
 	return f
 }
 
-func get_sumatrapdf_version() string {
-	// TODO: implement me
-	return "3.2"
-}
-
 func MkStruct(name string, fields []*Field, comment string) *Field {
 	structName := name
 	typ := &Type{"Struct", structName}
@@ -205,7 +200,7 @@ func MkArray(name string, fields []*Field, comment string) *Field {
 	ctype := fmt.Sprintf("Vec<%s*>*", structName)
 	typ := &Type{"Array", ctype}
 	res := MkField(name, typ, fields, comment)
-	res.StructName = EmptyLine().StructName
+	res.StructName = structName
 	return res
 }
 
@@ -301,7 +296,7 @@ var (
 			"top, right, bottom and left margin (in that order) between window and document"),
 		MkCompactStruct("PageSpacing", PageSpacing,
 			"horizontal and vertical distance between two pages in facing and book view modes").SetStructName("SizeI"),
-		MkCompactArray("GradientColors", Color, None, // "#2828aa #28aa28 #aa2828",
+		MkCompactArray("GradientColors", Color, nil, // "#2828aa #28aa28 #aa2828",
 			"colors to use for the gradient from top to bottom (stops will be inserted "+
 				"at regular intervals throughout the document); currently only up to three "+
 				"colors are supported; the idea behind this experimental feature is that the "+
@@ -337,13 +332,13 @@ var (
 	}
 
 	ExternalViewer = []*Field{
-		MkField("CommandLine", String, None,
+		MkField("CommandLine", String, nil,
 			"command line with which to call the external viewer, may contain "+
 				"%p for page number and \"%1\" for the file name (add quotation "+
 				"marks around paths containing spaces)"),
-		MkField("Name", String, None,
+		MkField("Name", String, nil,
 			"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
-		MkField("Filter", String, None,
+		MkField("Filter", String, nil,
 			"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
 	}
 
@@ -357,18 +352,18 @@ var (
 	}
 
 	Favorite = []*Field{
-		MkField("Name", String, None,
+		MkField("Name", String, nil,
 			"name of this favorite as shown in the menu"),
 		MkField("PageNo", Int, 0,
 			"number of the bookmarked page"),
-		MkField("PageLabel", String, None,
+		MkField("PageLabel", String, nil,
 			"label for this page (only present if logical and physical page numbers are not the same)"),
 		MkField("MenuId", Int, 0,
 			"id of this favorite in the menu (assigned by AppendFavMenuItems)").SetInternal(),
 	}
 
 	FileSettings = []*Field{
-		MkField("FilePath", String, None,
+		MkField("FilePath", String, nil,
 			"path of the document"),
 		MkArray("Favorites", Favorite,
 			"Values which are persisted for bookmarks/favorites"),
@@ -383,7 +378,7 @@ var (
 				"but used to be opened very frequently constantly remain in top positions, "+
 				"the openCount will be cut in half after every week, so that the "+
 				"Frequently Read list hopefully better reflects the currently relevant documents").SetDoc("number of times this document has been opened recently"),
-		MkField("DecryptionKey", Utf8String, None,
+		MkField("DecryptionKey", Utf8String, nil,
 			"Hex encoded MD5 fingerprint of file content (32 chars) followed by "+
 				"crypt key (64 chars) - only applies for PDF documents").SetDoc("data required to open a password protected document without having to " +
 			"ask for the password again"),
@@ -419,16 +414,16 @@ var (
 		MkField("ReparseIdx", Int, 0,
 			"index into an ebook's HTML data from which reparsing has to happen "+
 				"in order to restore the last viewed page (i.e. the equivalent of PageNo for the ebook UI)").SetDoc("data required to restore the last read page in the ebook UI"),
-		MkCompactArray("TocState", Int, None,
+		MkCompactArray("TocState", Int, nil,
 			"tocState is an array of ids for ToC items that have been toggled by "+
 				"the user (i.e. aren't in their default expansion state). - "+
 				"Note: We intentionally track toggle state as opposed to expansion state "+
 				"so that we only have to save a diff instead of all states for the whole "+
 				"tree (which can be quite large) (internal)").SetDoc("data required to determine which parts of the table of contents have been expanded"),
 		// NOTE: fields below UseDefaultState aren't serialized if UseDefaultState is true!
-		MkField("Thumbnail", &Type{None, "RenderedBitmap *"}, "NULL",
+		MkField("Thumbnail", &Type{"", "RenderedBitmap *"}, "NULL",
 			"thumbnails are saved as PNG files in sumatrapdfcache directory").SetInternal(),
-		MkField("Index", &Type{None, "size_t"}, "0",
+		MkField("Index", &Type{"", "size_t"}, "0",
 			"temporary value needed for FileHistory::cmpOpenCount").SetInternal(),
 	}
 
@@ -436,7 +431,7 @@ var (
 	rememberedDisplayState = []string{"DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"}
 
 	TabState = []*Field{
-		MkField("FilePath", String, None,
+		MkField("FilePath", String, nil,
 			"path of the document"),
 		MkField("DisplayMode", String, "automatic",
 			"same as FileStates -> DisplayMode"),
@@ -450,7 +445,7 @@ var (
 			"how far this document has been scrolled (in x and y direction)").SetStructName("PointI"),
 		MkField("ShowToc", Bool, True,
 			"if true, the table of contents was shown when the document was closed"),
-		MkCompactArray("TocState", Int, None,
+		MkCompactArray("TocState", Int, nil,
 			"same as FileStates -> TocState"),
 	}
 
@@ -465,7 +460,7 @@ var (
 	}
 
 	GlobalPrefs = []*Field{
-		MkComment(fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings%s.html", get_sumatrapdf_version())),
+		MkComment(""),
 		EmptyLine(),
 
 		MkField("MainWindowBackground", Color, RGBA(0xFF, 0xF2, 0x00, 0x80),
@@ -522,7 +517,7 @@ var (
 		MkStruct("AnnotationDefaults", AnnotationDefaults,
 			"default values for user added annotations in FixedPageUI documents "+
 				"(preliminary and still subject to change)").SetExpert().SetPreRelease(),
-		MkCompactArray("DefaultPasswords", String, None,
+		MkCompactArray("DefaultPasswords", String, nil,
 			"passwords to try when opening a password protected document").SetDoc("a whitespace separated list of passwords to try when opening a password protected document " +
 			"(passwords containing spaces must be quoted)").SetExpert().SetVersion("2.4"),
 		MkField("CustomScreenDPI", Int, 0,
@@ -533,24 +528,24 @@ var (
 		MkField("RememberStatePerDocument", Bool, True,
 			"if true, we store display settings for each document separately (i.e. everything "+
 				"after UseDefaultState in FileStates)"),
-		MkField("UiLanguage", Utf8String, None,
+		MkField("UiLanguage", Utf8String, nil,
 			"ISO code of the current UI language").SetDoc("[ISO code](langs.html) of the current UI language"),
 		MkField("ShowToolbar", Bool, True,
 			"if true, we show the toolbar at the top of the window"),
 		MkField("ShowFavorites", Bool, False,
 			"if true, we show the Favorites sidebar"),
-		MkField("AssociatedExtensions", String, None,
+		MkField("AssociatedExtensions", String, nil,
 			"a list of extensions that SumatraPDF has associated itself with and will "+
 				"reassociate if a different application takes over (e.g. \".pdf .xps .epub\")"),
 		MkField("AssociateSilently", Bool, False,
 			"whether file associations should be fixed silently or only after user feedback"),
 		MkField("CheckForUpdates", Bool, True,
 			"if true, we check once a day if an update is available"),
-		MkField("VersionToSkip", String, None,
+		MkField("VersionToSkip", String, nil,
 			"we won't ask again to update to this version"),
 		MkField("RememberOpenedFiles", Bool, True,
 			"if true, we remember which files we opened and their display settings"),
-		MkField("InverseSearchCmdLine", String, None,
+		MkField("InverseSearchCmdLine", String, nil,
 			"pattern used to launch the LaTeX editor when doing inverse search"),
 		MkField("EnableTeXEnhancements", Bool, False,
 			"if true, we expose the SyncTeX inverse search command line in Settings -> Options"),
@@ -584,7 +579,7 @@ var (
 			"information about opened files (in most recently used order)"),
 		MkArray("SessionData", SessionData,
 			"state of the last session, usage depends on RestoreSession").SetVersion("3.1"),
-		MkCompactArray("ReopenOnce", String, None,
+		MkCompactArray("ReopenOnce", String, nil,
 			"a list of paths for files to be reopened at the next start "+
 				"or the string \"SessionData\" if this data is saved in SessionData "+
 				"(needed for auto-updating)").SetDoc("data required for reloading documents after an auto-update").SetVersion("3.0"),
@@ -595,7 +590,7 @@ var (
 		// non-serialized fields
 		MkCompactStruct("LastPrefUpdate", FileTime,
 			"modification time of the preferences file when it was last read").SetStructName("FILETIME").SetInternal(),
-		MkField("DefaultDisplayModeEnum", &Type{None, "DisplayMode"}, "DM_AUTOMATIC",
+		MkField("DefaultDisplayModeEnum", &Type{"", "DisplayMode"}, "DM_AUTOMATIC",
 			"value of DefaultDisplayMode for internal usage").SetInternal(),
 		MkField("DefaultZoomFloat", Float, -1,
 			"value of DefaultZoom for internal usage").SetInternal(),
@@ -608,9 +603,22 @@ var (
 			"in SumatraPDF-settings.txt")
 )
 
-// this meant to limit line to 72 chars but we do it with clang-format now
-func FormatComment(comment string, start string) string {
-	return start + " " + comment
+// limit comment lines to 72 chars
+func FormatComment(comment string, start string) []string {
+	var lines []string
+	parts := strings.Split(comment, " ")
+	line := start
+	for _, part := range parts {
+		if len(line)+len(part) > 71 {
+			lines = append(lines, line)
+			line = start
+		}
+		line += " " + part
+	}
+	if line != start {
+		lines = append(lines, line)
+	}
+	return lines
 }
 
 func FormatArrayLines(data [][]string) []string {
@@ -627,22 +635,22 @@ func BuildStruct(struc *Field, built map[string]int) string {
 	required := []string{}
 	var s string
 	if struc.Comment != "" {
-		s = FormatComment(struc.Comment, "//")
-		lines = append(lines, s)
+		comments := FormatComment(struc.Comment, "//")
+		lines = append(lines, comments...)
 	}
 	s = fmt.Sprintf("struct %s {", struc.StructName)
 	lines = append(lines, s)
-	def := struc.Default.([]*Field)
-	for _, field := range def {
+	fields := struc.Default.([]*Field)
+	for _, field := range fields {
 		if field.isComment() {
 			continue
 		}
-		s := FormatComment(field.Comment, "\t//")
-		lines = append(lines, s)
+		comments := FormatComment(field.Comment, "\t//")
+		lines = append(lines, comments...)
 		s = fmt.Sprintf("\t%s %s;", field.Type.Ctype, field.CName)
 		lines = append(lines, s)
 		switch field.Type.Name {
-		case "Struct", "CompactStruct", "Array":
+		case "Struct", "Compact", "Array", "Prerelease":
 			name := field.Name
 			if name == field.StructName || name == field.StructName+"s" {
 				if _, ok := built[name]; !ok {
@@ -655,8 +663,9 @@ func BuildStruct(struc *Field, built map[string]int) string {
 		}
 	}
 	lines = append(lines, "};")
-	lines = append(lines, required...)
-	return strings.Join(lines, "\n")
+	s1 := strings.Join(required, "\n")
+	s2 := strings.Join(lines, "\n")
+	return s1 + s2
 }
 
 func BuildMetaData(struc *Field, built map[string]int) string {
@@ -668,24 +677,26 @@ func BuildMetaData(struc *Field, built map[string]int) string {
 		suffix = fmt.Sprintf("_%d_", n)
 	}
 	fullName := struc.StructName + suffix
-	def := struc.Default.([]*Field)
+	fields := struc.Default.([]*Field)
 	var s string
-	for _, field := range def {
+	for _, field := range fields {
 		if field.Internal {
 			continue
 		}
 		dataLine := []string{}
 		s = fmt.Sprintf("offsetof(%s, %s)", struc.StructName, field.CName)
 		dataLine = append(dataLine, s)
-		s = fmt.Sprintf("Type_%s", field.Type.Name)
+
+		tpName := field.Type.Name
+		s = fmt.Sprintf("Type_%s", tpName)
 		dataLine = append(dataLine, s)
 		s = field.cdefault(built)
 		dataLine = append(dataLine, s)
 
 		names = append(names, field.Name)
 		switch field.Type.Name {
-		case "Struct", "CompactStruct", "Array":
-			sublines := BuildMetaData(field, map[string]int{}) // TODO: pass built?
+		case "Struct", "Compact", "Array":
+			sublines := BuildMetaData(field, built) // TODO: pass built?
 			lines = append(lines, sublines)
 			lines = append(lines, "")
 			built[field.StructName]++
@@ -753,6 +764,10 @@ func genSettingsStruct() string {
 }
 
 func genAndSaveSettingsStructs() {
+	helpURI := fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings%s.html", extractSumatraVersionMust())
+
+	GlobalPrefs[0].Comment = helpURI
+
 	s := genSettingsStruct()
 
 	// TODO: port this
