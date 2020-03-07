@@ -316,7 +316,7 @@ struct GlobalPrefs {
     AnnotationDefaults annotationDefaults;
     // passwords to try when opening a password protected document
     Vec<WCHAR*>* defaultPasswords;
-    // actual resolution of the main screen in DPI (if this value  isn't
+    // actual resolution of the main screen in DPI (if this value isn't
     // positive, the system's UI setting is used)
     int customScreenDPI;
     // if true, we store display settings for each document separately

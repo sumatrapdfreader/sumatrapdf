@@ -522,7 +522,7 @@ var (
 			"(passwords containing spaces must be quoted)").SetExpert().SetVersion("2.4"),
 		MkField("CustomScreenDPI", Int, 0,
 			"actual resolution of the main screen in DPI (if this value "+
-				" isn't positive, the system's UI setting is used)").SetExpert().SetVersion("2.5"),
+				"isn't positive, the system's UI setting is used)").SetExpert().SetVersion("2.5"),
 		EmptyLine(),
 
 		MkField("RememberStatePerDocument", Bool, True,
@@ -790,6 +790,8 @@ func genAndSaveSettingsStructs() {
 	u.WriteFileMust(path, []byte(s))
 	detectClangFormat()
 	clangFormatFile(path)
-
 	fmt.Printf("Wrote '%s'\n", path)
+
+	gen_settings_html()
+	gen_langs_html()
 }
