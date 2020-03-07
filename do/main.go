@@ -89,6 +89,7 @@ func main() {
 		flgCppCheck                bool
 		flgCppCheckAll             bool
 		flgDiff                    bool
+		flgGenStructs              bool
 	)
 
 	{
@@ -120,6 +121,7 @@ func main() {
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
 		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
 		flag.BoolVar(&flgDiff, "diff", false, "preview diff using winmerge")
+		flag.BoolVar(&flgGenStructs, "gen-structs", false, "re-generate src/SettingsStructs.h")
 		flag.Parse()
 	}
 
@@ -153,6 +155,11 @@ func main() {
 
 	if flgDiff {
 		winmergeDiffPreview()
+		return
+	}
+
+	if flgGenStructs {
+		genAndSaveSettingsStructs()
 		return
 	}
 
