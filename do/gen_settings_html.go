@@ -201,10 +201,11 @@ func cgi_escape(s string) string {
 
 func gen_comment(comment string, field_id string, start string, first bool) string {
 	line_len := 100
-	s := start + fmt.Sprintf(`<span class="cm" id="%s">`, field_id)
-	if !first {
-		s = "\n" + s
+	s := "\n"
+	if first {
+		s = ""
 	}
+	s = s + start + fmt.Sprintf(`<span class="cm" id="%s">`, field_id)
 	left := line_len - len(start)
 	// [foo](bar.html) is turned into <a href="bar.html">foo</a>
 	href_text := ""
@@ -229,7 +230,7 @@ func gen_comment(comment string, field_id string, start string, first bool) stri
 			continue
 		}
 		if left < len(word) {
-			s = strings.TrimRight(s, " ") + "\n" + start
+			s = rstrip(s) + "\n" + start
 			left = line_len - len(start)
 		}
 		word += " "
@@ -241,9 +242,17 @@ func gen_comment(comment string, field_id string, start string, first bool) stri
 		}
 		s += word
 	}
-	s = strings.TrimSpace(s)
+	s = rstrip(s)
 	s += `</span>`
 	return s
+}
+
+func lstrip(s string) string {
+	return strings.TrimLeft(s, " \n\r\t")
+}
+
+func rstrip(s string) string {
+	return strings.TrimRight(s, " \n\r\t")
 }
 
 func gen_struct(struc *Field, indent string, prerelease bool) string {
@@ -262,7 +271,10 @@ func gen_struct(struc *Field, indent string, prerelease bool) string {
 			comment += fmt.Sprintf(" (introduced in version %s)", field.Version)
 		}
 
-		field_id := struc.Name + "_" + field.Name
+		field_id := field.Name
+		if indent != "" {
+			field_id = struc.Name + "_" + field.Name
+		}
 		s := gen_comment(comment, field_id, indent, first)
 		lines = append(lines, s)
 
@@ -278,8 +290,8 @@ func gen_struct(struc *Field, indent string, prerelease bool) string {
 			inside := gen_struct(field, indent+indent_str, prerelease)
 			lines = append(lines, start, inside, end)
 		} else {
-			// TODO: implement
-			//s = field.inidefault(commentChar="").lstrip()
+			s = field.inidefault()
+			s = lstrip(s)
 			lines = append(lines, indent+s)
 		}
 		first = false
@@ -336,14 +348,15 @@ func gen_langs_html() {
 	s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
 	s = strings.Replace(s, "settings.html", settings_file_name(), -1)
 	s = strings.Replace(s, "\n", "\r\n", -1)
+	// undo html escaping that differs from Python
+	// TODO: possibly remove
+	//s = strings.Replace(s, "&#39;", "'", -1)
 
 	path := filepath.Join(settings_dir(), langs_file_name())
 	u.WriteFileMust(path, []byte(s))
 
-	if false {
-		path = filepath.Join(blog_dir(), langs_file_name())
-		u.WriteFileMust(path, []byte(s))
-	}
+	path = filepath.Join(blog_dir(), langs_file_name())
+	u.WriteFileMust(path, []byte(s))
 }
 
 func gen_settings_html() {
@@ -353,12 +366,13 @@ func gen_settings_html() {
 	s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
 	s = strings.Replace(s, "langs.html", langs_file_name(), -1)
 	s = strings.Replace(s, "\n", "\r\n", -1)
+	// undo html escaping that differs from Python
+	// TODO: possibly remove
+	//s = strings.Replace(s, "&#39;", "'", -1)
 
 	path := filepath.Join(settings_dir(), settings_file_name())
 	u.WriteFileMust(path, []byte(s))
 
-	if false {
-		path = filepath.Join(blog_dir(), settings_file_name())
-		u.WriteFileMust(path, []byte(s))
-	}
+	path = filepath.Join(blog_dir(), settings_file_name())
+	u.WriteFileMust(path, []byte(s))
 }

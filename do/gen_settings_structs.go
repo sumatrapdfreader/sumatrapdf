@@ -83,34 +83,28 @@ func (self *Field) cdefault(built map[string]int) string {
 		// "true" or "false", happens to be the same in C++ as in Go
 		return fmt.Sprintf("%v", self.Default)
 	}
-
 	if self.Type == Color {
 		return fmt.Sprintf("0x%06x", self.Default)
 	}
-
 	if self.Type == Float {
 		// converting float to intptr_t rounds the value
 		return fmt.Sprintf(`(intptr_t)"%v"`, self.Default)
 	}
-
 	if self.Type == Int {
 		return fmt.Sprintf("%d", self.Default)
 	}
-
 	if self.Type == String {
 		if self.Default == nil {
 			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)L"%s"`, self.Default)
 	}
-
 	if self.Type == Utf8String {
 		if self.Default == nil {
 			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, self.Default)
 	}
-
 	typeName := self.Type.Name
 	switch typeName {
 	case "Struct", "Array", "Compact", "Prerelease":
@@ -121,7 +115,6 @@ func (self *Field) cdefault(built map[string]int) string {
 		}
 		return fmt.Sprintf("(intptr_t)&g%s%sInfo", self.StructName, idStr)
 	}
-
 	switch typeName {
 	case "ColorArray", "FloatArray", "IntArray":
 		if self.Default == nil {
@@ -129,20 +122,77 @@ func (self *Field) cdefault(built map[string]int) string {
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, self.Default)
 	}
-
 	if typeName == "StringArray" {
 		if self.Default == nil {
 			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, self.Default)
 	}
-
 	if typeName == "Comment" {
 		if self.Comment == "" {
 			return "0"
 		}
 		return fmt.Sprintf(`(intptr_t)"%s"`, self.Comment)
 	}
+	panicIf(true)
+	return ""
+}
+
+func (self *Field) inidefault() string {
+	commentChar := ""
+	if self.Type == Bool {
+		// "true" or "false", happens to be the same in C++ as in Go
+		return fmt.Sprintf("%s = %v", self.Name, self.Default)
+	}
+	if self.Type == Color {
+		col := self.Default.(uint32)
+		return fmt.Sprintf("%s = #%02x%02x%02x", self.Name, col&0xFF, (col>>8)&0xFF, (col>>16)&0xFF)
+	}
+	if self.Type == Float {
+		// converting float to intptr_t rounds the value
+		return fmt.Sprintf(`%s = %v`, self.Name, self.Default)
+	}
+	if self.Type == Int {
+		return fmt.Sprintf("%s = %d", self.Name, self.Default)
+	}
+	if self.Type == String {
+		if self.Default != nil {
+			return fmt.Sprintf(`%s = %s`, self.Name, self.Default)
+		}
+		return fmt.Sprintf(`%s %s =`, commentChar, self.Name)
+	}
+	if self.Type == Utf8String {
+		if self.Default != nil {
+			return fmt.Sprintf(`%s = %s`, self.Name, self.Default)
+		}
+		return fmt.Sprintf(`%s %s =`, commentChar, self.Name)
+	}
+	typeName := self.Type.Name
+	if typeName == "Compact" {
+		fields := self.Default.([]*Field)
+		var vals []string
+		for _, field := range fields {
+			v := field.inidefault()
+			parts := strings.SplitN(v, " = ", 2)
+			vals = append(vals, parts[1])
+		}
+		v := strings.Join(vals, " ")
+		return fmt.Sprintf("%s = %s", self.Name, v)
+	}
+	switch typeName {
+	case "ColorArray", "FloatArray", "IntArray":
+		if self.Default != nil {
+			return fmt.Sprintf("%s = %v", self.Name, self.Default)
+		}
+		return fmt.Sprintf("%s %s =", commentChar, self.Name)
+	}
+	if typeName == "StringArray" {
+		if self.Default != nil {
+			return fmt.Sprintf("%s = %v", self.Name, self.Default)
+		}
+		return fmt.Sprintf("%s %s =", commentChar, self.Name)
+	}
+	panicIf(true)
 	return ""
 }
 
