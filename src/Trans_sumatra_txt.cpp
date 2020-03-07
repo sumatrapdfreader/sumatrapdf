@@ -5142,7 +5142,7 @@ const char * gTranslations_nl =
   "Aangepaste &Zoom...\tCtrl+Y\0"\
   "Donker\0"\
   "Zwart\0"\
-  "Standaard opmaak:\0"\
+  "Standaardopmaak:\0"\
   "Standaard &zoom:\0"\
   "Als standaard aanwijzen in Portable modus kan niet hier\0"\
   "Niet toegestaan:\0"\
@@ -5301,12 +5301,12 @@ const char * gTranslations_nl =
   "Tekstdocumenten\0"\
   "Dank u om voor SumatraPDF te kiezen!\0"\
   "Dank u! SumatraPDF is geinstalleerd.\0"\
-  "Het installatieprogramma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!\0"\
+  "Het installatieprogramma is beschadigd. Gelieve het opnieuw te downloaden.\nOnze excuses voor het ongemak!\0"\
   "Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogelijk niet goed weergegeven\0"\
   "Titel:\0"\
-  "Deinstalleer SumatraPDF\0"\
-  "Deinstallatie mislukt\0"\
-  "Deinstallatie is bezig...\0"\
+  "Verwijder SumatraPDF\0"\
+  "Verwijderen mislukt\0"\
+  "Verwijderen is bezig...\0"\
   "Onbekend bronbestand (%s)\0"\
   "Gebruik &tabs\0"\
   "Gebruik SumatraPDF als &standaard PDF lezer\0"\

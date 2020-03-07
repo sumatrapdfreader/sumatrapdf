@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c0f6f1d53e39b1adc1929f3621570bebd561803c
+ad0c0eed7d0b2e880e1f09edb42e06e0c5713525
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7245,7 +7245,7 @@ lv:Noklusējuma &izkārtojums
 mk:&Основен поглед:
 my:Default &Susunatur:
 ne:पूर्वनिर्धारित स&जावट:
-nl:Standaard opmaak:
+nl:Standaardopmaak:
 nn:Standard &oppsett:
 no:Standard sideoppsett:
 pl:&Układ domyślny:
@@ -17044,7 +17044,7 @@ lv:Instalēšanas programma ir bijusi bojāta. Lūdzu, lejupielādējiet to vēl
 mk:Датотеката за инсталирање е расипана. Ве молам преземете ја повторно.\nИзвинете на незгодата!
 my:Installer telah rosak. Sila muat turun sekali lagi.\nMinta maaf atas kesulitan!
 ne:अनस्थापक बिगारिएको छ | कृपया पुनः डाउनलोड गर्नुहोस् | \n असुविधाको लागि क्षमाप्रार्थी छौं।
-nl:Het installatieprogramma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!
+nl:Het installatieprogramma is beschadigd. Gelieve het opnieuw te downloaden.\nOnze excuses voor het ongemak!
 nn:Installeringsprogrammet har blitt korrumpert. Venligst installer han igjen.\nVi beklager for problemane!
 no:Installeringsprogrammet er defekt. Vennligst last det ned på nytt. \nBeklager!
 pl:Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za kłopot.
@@ -17226,7 +17226,7 @@ mk:Избриши SumatraPDF
 ml:സുമാത്ര പി.ഡി.എഫ്.നീക്കം ചെയ്യുക.
 my:Membuang SumatraPDF
 ne:SumatraPDF अनस्थापना गर्नुहोस
-nl:Deinstalleer SumatraPDF
+nl:Verwijder SumatraPDF
 nn:Avinstaller SumatraPDF
 no:Avinstaller SumatraPDF
 pl:Usuń SumatraPDF
@@ -17285,7 +17285,7 @@ lv:Atinstalēšana neizdevās
 mk:Бришењето не успеа
 my:Penyahpasangan gagal
 ne:अनस्थापना विफल
-nl:Deinstallatie mislukt
+nl:Verwijderen mislukt
 nn:Avinstallering mislykkast
 no:Feil ved avinstallering
 pl:Usunięcie programu nie powiodło się
@@ -17344,7 +17344,7 @@ lv:Notiek atinstalēšana...
 mk:Бришењето е во тек...
 my:Penyahpasangan sedang dijalankan ...
 ne:अनस्थापना प्रगति...
-nl:Deinstallatie is bezig...
+nl:Verwijderen is bezig...
 nn:Avinstallasjon under arbeid...
 no:Avinstallering pågår...
 pl:Trwa usuwanie...
