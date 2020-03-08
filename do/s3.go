@@ -28,7 +28,7 @@ func md5B64OfBytes(d []byte) string {
 
 func md5B64OfFile(path string) string {
 	d, err := ioutil.ReadFile(path)
-	fatalIfErr(err)
+	panicIfErr(err)
 	return md5B64OfBytes(d)
 }
 

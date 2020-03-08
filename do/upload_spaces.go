@@ -167,7 +167,7 @@ func spacesUploadPreReleaseMust(buildType string) {
 	if buildType == buildTypePreRel {
 		files := getFileNamesWithPrefix(prefix)
 		err := minioUploadFiles(c, remoteDir, rel32Dir, files)
-		fatalIfErr(err)
+		panicIfErr(err)
 	}
 
 	dir64 := rel64Dir
@@ -179,11 +179,11 @@ func spacesUploadPreReleaseMust(buildType string) {
 	}
 	files := getFileNamesWithPrefix(prefix)
 	err := minioUploadFiles(c, remoteDir, dir64, files)
-	fatalIfErr(err)
+	panicIfErr(err)
 
 	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
 	err = c.UploadFilePublic(manifestRemotePath, manifestLocalPath)
-	fatalIfErr(err)
+	panicIfErr(err)
 	logf("Uploaded to spaces: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
 
 	remotePaths := getRemotePaths(buildType)
@@ -191,19 +191,19 @@ func spacesUploadPreReleaseMust(buildType string) {
 	s := createSumatraLatestJs(buildType)
 	remotePath := remotePaths[0]
 	err = c.UploadDataPublic(remotePath, []byte(s))
-	fatalIfErr(err)
+	panicIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 
 	remotePath = remotePaths[1]
 	err = c.UploadDataPublic(remotePath, []byte(ver))
-	fatalIfErr(err)
+	panicIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 
 	//don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
 	remotePath = remotePaths[2]
 	err = c.UploadDataPublic(remotePath, []byte(s))
-	fatalIfErr(err)
+	panicIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 
 	logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))

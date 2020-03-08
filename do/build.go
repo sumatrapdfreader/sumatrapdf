@@ -156,7 +156,7 @@ func setBuildConfig(isDaily bool) {
 		s += "#define IS_DAILY_BUILD 1\n"
 	}
 	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
-	fatalIfErr(err)
+	panicIfErr(err)
 }
 
 func revertBuildConfig() {
@@ -165,17 +165,17 @@ func revertBuildConfig() {
 
 func addZipFileWithNameMust(w *zip.Writer, path, nameInZip string) {
 	fi, err := os.Stat(path)
-	fatalIfErr(err)
+	panicIfErr(err)
 	fih, err := zip.FileInfoHeader(fi)
-	fatalIfErr(err)
+	panicIfErr(err)
 	fih.Name = nameInZip
 	fih.Method = zip.Deflate
 	d, err := ioutil.ReadFile(path)
-	fatalIfErr(err)
+	panicIfErr(err)
 	fw, err := w.CreateHeader(fih)
-	fatalIfErr(err)
+	panicIfErr(err)
 	_, err = fw.Write(d)
-	fatalIfErr(err)
+	panicIfErr(err)
 	// fw is just a io.Writer so we can't Close() it. It's not necessary as
 	// it's implicitly closed by the next Create(), CreateHeader()
 	// or Close() call on zip.Writer
@@ -190,13 +190,13 @@ func createExeZipWithGoWithNameMust(dir, nameInZip string) {
 	zipPath := filepath.Join(dir, "SumatraPDF.zip")
 	os.Remove(zipPath) // called multiple times during upload
 	f, err := os.Create(zipPath)
-	fatalIfErr(err)
+	panicIfErr(err)
 	defer f.Close()
 	zw := zip.NewWriter(f)
 	path := filepath.Join(dir, "SumatraPDF.exe")
 	addZipFileWithNameMust(zw, path, nameInZip)
 	err = zw.Close()
-	fatalIfErr(err)
+	panicIfErr(err)
 }
 
 func createExeZipWithPigz(dir string) {
@@ -215,7 +215,7 @@ func createExeZipWithPigz(dir string) {
 	removeFileMust(dstPath)
 
 	wd, err := os.Getwd()
-	fatalIfErr(err)
+	panicIfErr(err)
 	pigzExePath := filepath.Join(wd, "bin", "pigz.exe")
 	fatalIf(!u.FileExists(pigzExePath), "file '%s' doesn't exist\n", pigzExePath)
 	cmd := exec.Command(pigzExePath, "-11", "--keep", "--zip", srcFile)
@@ -227,13 +227,13 @@ func createExeZipWithPigz(dir string) {
 
 	fatalIf(!u.FileExists(dstPathTmp), "file '%s' doesn't exist\n", dstPathTmp)
 	err = os.Rename(dstPathTmp, dstPath)
-	fatalIfErr(err)
+	panicIfErr(err)
 }
 
 func createPdbZipMust(dir string) {
 	path := filepath.Join(dir, "SumatraPDF.pdb.zip")
 	f, err := os.Create(path)
-	fatalIfErr(err)
+	panicIfErr(err)
 	defer f.Close()
 	w := zip.NewWriter(f)
 
@@ -242,14 +242,14 @@ func createPdbZipMust(dir string) {
 	}
 
 	err = w.Close()
-	fatalIfErr(err)
+	panicIfErr(err)
 }
 
 func createPdbLzsaMust(dir string) {
 	args := []string{"SumatraPDF.pdb.lzsa"}
 	args = append(args, pdbFiles...)
 	curDir, err := os.Getwd()
-	fatalIfErr(err)
+	panicIfErr(err)
 	makeLzsaPath := filepath.Join(curDir, "bin", "MakeLZSA.exe")
 	cmd := exec.Command(makeLzsaPath, args...)
 	cmd.Dir = dir

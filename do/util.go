@@ -16,32 +16,13 @@ import (
 	"github.com/kjk/u"
 )
 
-func must(err error) {
-	u.Must(err)
-}
-
-func logf(format string, args ...interface{}) {
-	u.Logf(format, args...)
-}
-
-func fatalf(format string, args ...interface{}) {
-	s := fmt.Sprintf(format, args...)
-	panic(s)
-}
-
-func fatalIf(cond bool, args ...interface{}) {
-	u.PanicIf(cond, args...)
-}
-
-func panicIf(cond bool, args ...interface{}) {
-	u.PanicIf(cond, args...)
-}
-
-func fatalIfErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
+var (
+	must       = u.Must
+	logf       = u.Logf
+	fatalIf    = u.PanicIf
+	panicIf    = u.PanicIf
+	panicIfErr = u.PanicIfErr
+)
 
 func absPathMust(path string) string {
 	res, err := filepath.Abs(path)
@@ -107,7 +88,7 @@ func pathExists(path string) bool {
 
 func removeDirMust(dir string) {
 	err := os.RemoveAll(dir)
-	fatalIfErr(err)
+	panicIfErr(err)
 }
 
 func removeFileMust(path string) {
@@ -115,7 +96,7 @@ func removeFileMust(path string) {
 		return
 	}
 	err := os.Remove(path)
-	fatalIfErr(err)
+	panicIfErr(err)
 }
 
 func listExeFiles(dir string) {
@@ -209,17 +190,17 @@ func fileSha1Hex(path string) (string, error) {
 
 func httpDlMust(uri string) []byte {
 	res, err := http.Get(uri)
-	fatalIfErr(err)
+	panicIfErr(err)
 	d, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
-	fatalIfErr(err)
+	panicIfErr(err)
 	return d
 }
 
 func httpDlToFileMust(uri string, path string, sha1Hex string) {
 	if u.FileExists(path) {
 		sha1File, err := fileSha1Hex(path)
-		fatalIfErr(err)
+		panicIfErr(err)
 		fatalIf(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
 		return
 	}
@@ -228,7 +209,7 @@ func httpDlToFileMust(uri string, path string, sha1Hex string) {
 	sha1File := dataSha1Hex(d)
 	fatalIf(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
 	err := ioutil.WriteFile(path, d, 0755)
-	fatalIfErr(err)
+	panicIfErr(err)
 }
 
 func evalTmpl(s string, v interface{}) string {

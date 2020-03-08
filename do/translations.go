@@ -25,13 +25,13 @@ func translationsSha1HexMust(d []byte) string {
 
 func lastTranslationsSha1HexMust() string {
 	d, err := ioutil.ReadFile(translationsPath())
-	fatalIfErr(err)
+	panicIfErr(err)
 	return translationsSha1HexMust(d)
 }
 
 func saveTranslationsMust(d []byte) {
 	err := ioutil.WriteFile(translationsPath(), d, 0644)
-	fatalIfErr(err)
+	panicIfErr(err)
 }
 
 func verifyTranslationsMust() {

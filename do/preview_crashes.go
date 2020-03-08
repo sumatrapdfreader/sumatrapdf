@@ -104,8 +104,8 @@ produces:
 	isPreRelease: true
 	is64bit: tru
 */
-func parseCrashVersion(s string) *CrashVersion {
-	s = strings.TrimPrefix(s, "Ver: ")
+func parseCrashVersion(line string) *CrashVersion {
+	s := strings.TrimPrefix(line, "Ver: ")
 	s = strings.TrimSpace(s)
 	parts := strings.Split(s, " ")
 	res := &CrashVersion{}
@@ -119,18 +119,18 @@ func parseCrashVersion(s string) *CrashVersion {
 			res.Is64bit = true
 		}
 	}
-	// 3.2.11495
+	// v is like: "3.2.11495 (dbg)"
 	parts = strings.Split(v, ".")
-	u.PanicIf(len(parts) < 2, "has %d parts in '%s'", len(parts), v)
-	if len(parts) == 3 {
+	switch len(parts) {
+	case 3:
 		build, err := strconv.Atoi(parts[2])
 		must(err)
 		res.Build = build
-	}
-	if len(parts) == 2 {
+	case 2:
 		res.Main = parts[0] + "." + parts[1]
-	} else {
-		res.Main = parts[0]
+	default:
+		// shouldn't happen but sadly there are badly generated crash reports
+		res.Main = v
 	}
 	return res
 }

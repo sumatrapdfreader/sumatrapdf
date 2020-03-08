@@ -75,7 +75,7 @@ var sumLatestInstaller64 = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-64-install.e
 func s3ListPreReleaseFilesMust(c *S3Client, prefix string) []string {
 	bucket := c.GetBucket()
 	resp, err := bucket.List(prefix, "", "", maxS3Results)
-	fatalIfErr(err)
+	panicIfErr(err)
 	//fatalIf(resp.IsTruncated, "truncated response! implement reading all the files\n")
 	var res []string
 	for _, key := range resp.Contents {
@@ -189,17 +189,17 @@ func s3UploadPreReleaseMust(buildType string) {
 	if !isDaily {
 		files = getFileNamesWithPrefix(prefix)
 		err = s3UploadFiles(c, remoteDir, filepath.Join("out", "rel32"), files)
-		fatalIfErr(err)
+		panicIfErr(err)
 	}
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
 	files = getFileNamesWithPrefix(prefix)
 	err = s3UploadFiles(c, remoteDir, filepath.Join("out", "rel64"), files)
-	fatalIfErr(err)
+	panicIfErr(err)
 
 	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
 	err = c.UploadFileReader(manifestRemotePath, manifestLocalPath, true)
-	fatalIfErr(err)
+	panicIfErr(err)
 	logf("Uploaded to s3: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
 
 	remotePaths := []string{
@@ -218,19 +218,19 @@ func s3UploadPreReleaseMust(buildType string) {
 	s := createSumatraLatestJs(buildType)
 	remotePath := remotePaths[0]
 	err = c.UploadString(remotePath, s, true)
-	fatalIfErr(err)
+	panicIfErr(err)
 	logf("Uploaded to s3: '%s'\n", remotePath)
 
 	remotePath = remotePaths[1]
 	err = c.UploadString(remotePath, ver, true)
-	fatalIfErr(err)
+	panicIfErr(err)
 	logf("Uploaded to s3: '%s'\n", remotePath)
 
 	// don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
 	remotePath = remotePaths[2]
 	err = c.UploadString(remotePath, s, true)
-	fatalIfErr(err)
+	panicIfErr(err)
 	logf("Uploaded to s3: '%s'\n", remotePath)
 
 	logf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
