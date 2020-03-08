@@ -261,3 +261,84 @@ function httpsRedirect() {
 }
 
 httpsRedirect();
+
+var allShots = [
+  "img/homepage.png", 
+  "img/format-pdf.png", 
+  "img/format-epub.png",
+  "img/menu-file.png",
+  "img/menu-view.jpg",
+  "img/dialog-langs.png",
+];
+
+var shotDescriptions = [
+  "Homepage",
+  "supports PDF format, tabbed interface",
+  "supports eBook (EPUB and MOBI) formats",
+  "file menu",
+  "multiple types of views",
+  "translated to multiple languages",
+]
+var currImg = "img/homepage.png";
+
+function getEl(id) {
+  if (id[0] == "#") {
+    id = id.substr(1);
+  }
+  return document.getElementById(id);
+}
+
+function getImgIdx(img) {
+  var n = allShots.length;
+  for (var i = 0; i < n; i++) {
+    if (img == allShots[i]) {
+      return i;
+    }
+  }
+  return 0;
+}
+
+function changeShot(imgUrl) {
+  currImg = imgUrl;
+
+  var el = getEl("main-shot");
+  el.setAttribute("src", currImg);
+
+  var n = allShots.length;
+  var isFirstImage = false;
+  var isLastImage = false;
+  for (var i = 0; i < n; i++) {
+    // get id from image path i.e. "img/homepage.png" => "homepage.png"
+    var uri = allShots[i];
+    var id = uri.split("/")[1];
+    el = getEl(id);
+    if (uri == imgUrl) {
+      isFirstImage = i == 0;
+      isLastImage = i == n - 1;
+      el.classList.add("selected-img");
+      el = getEl("shot-description");
+      var desc = shotDescriptions[i];
+      el.textContent = desc;
+    } else {
+      el.classList.remove("selected-img");
+    }
+  }
+}
+
+function advanceImage(n) {
+  var idx = getImgIdx(currImg) + n;
+  if (idx < 0) {
+    idx = allShots.length + idx;
+  } else {
+    idx = idx % allShots.length;
+  }
+  changeShot(allShots[idx]);
+}
+
+function imgNext() {
+  advanceImage(1);
+}
+
+function imgPrev() {
+  advanceImage(-1);
+}

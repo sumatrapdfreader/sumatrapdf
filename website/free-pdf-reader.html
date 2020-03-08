@@ -8,17 +8,18 @@
   <meta name="description" content="Sumatra PDF reader and viewer for Windows" />
   <title>Free PDF Reader - Sumatra PDF</title>
   <link rel="stylesheet" href="sumatra.css" type="text/css" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+  <script type="text/javascript" src="sumatra.js"></script>
   <script>
-    (adsbygoogle = window.adsbygoogle || []).push({
-      google_ad_client: "ca-pub-8305375090017172",
-      enable_page_level_ads: true
-    });
+    function onload() {
+      changeShot("img/homepage.png");
+      updateDlUrl();
+    }
+    document.addEventListener("DOMContentLoaded", onload);
   </script>
 </head>
 
 <body>
-  <script type="text/javascript" src="sumatra.js"></script>
 
   <div id="container">
     <div id="banner">
@@ -31,6 +32,70 @@
     </div>
 
     <br />
+
+    <div class="img-wrapper-wrapper">
+      <div class="img-wrapper" style="position: relative;">
+        <div id="shot-description">
+          Homepage
+        </div>
+        <img id="main-shot" src="img/homepage.png" />
+        <a class="for-nav-icon nav-icon-left" href="#" onclick="imgPrev(); return false;">
+          <svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="nav-icon">
+            <g>
+              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" class="style-scope yt-icon">
+              </path>
+            </g>
+          </svg>
+        </a>
+  
+        <a class="for-nav-icon nav-icon-right" href="#" onclick="imgNext(); return false;">
+          <svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="nav-icon" style="">
+            <g>
+              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" class="yt-icon"></path>
+            </g>
+          </svg>
+        </a>
+      </div>
+    </div>
+  
+    <div class="center mt3 mb6">
+      <div id="homepage.png" class="pa1 ib">
+        <a href="#" onclick="changeShot('img/homepage.png'); return false;">
+          <img src="img/homepage.png" width="80" height="60" />
+        </a>
+      </div>
+  
+      <div id="format-pdf.png" class="pa1 ib">
+        <a href="#" onclick="changeShot('img/format-pdf.png'); return false;">
+          <img src="img/format-pdf.png" width="80" height="60" />
+        </a>
+      </div>
+
+      <div id="format-epub.png" class="pa1 ib">
+        <a href="#" onclick="changeShot('img/format-pdf.png'); return false;">
+          <img src="img/format-epub.png" width="80" height="60" />
+        </a>
+      </div>
+
+      <div id="menu-file.png" class="pa1 ib">
+        <a href="#" onclick="changeShot('img/menu-file.png'); return false;">
+          <img src="img/menu-file.png" width="80" height="60" />
+        </a>
+      </div>
+
+      <div id="menu-view.jpg" class="pa1 ib">
+        <a href="#" onclick="changeShot('img/menu-view.jpg'); return false;">
+          <img src="img/menu-view.jpg" width="80" height="60" />
+        </a>
+      </div>
+
+      <div id="dialog-langs.png" class="pa1 ib">
+        <a href="#" onclick="changeShot('img/dialog-langs.png'); return false;">
+          <img src="img/dialog-langs.png" width="80" height="60" />
+        </a>
+      </div>
+
+    </div> 
 
     <div id="center">
 
@@ -73,17 +138,6 @@
                   href="https://github.com/sumatrapdfreader/sumatrapdf">GitHub</a>.</p>
 
             </div>
-          </td>
-          <td valign="top">
-            <table>
-              <tr>
-                <td>
-                  <a href="img/sum-shot-03-full.png">
-                    <img src="img/sum-shot-03-small.png" hspace="4" />
-                  </a>
-                </td>
-              </tr>
-            </table>
           </td>
         </tr>
       </table>
