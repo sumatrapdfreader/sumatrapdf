@@ -710,7 +710,7 @@ void SerializeRec(EncodeState& es, const uint8_t* structStart, const StructMetad
 
 std::string_view Serialize(const uint8_t* rootStruct, const StructMetadata* def) {
     EncodeState es;
-    es.res.Append(UTF8_BOM "; see https://www.sumatrapdfreader.org/settings.html for documentation" NL);
+    es.res.Append(UTF8_BOM "; see https://www.sumatrapdfreader.org/settings/settings.html for documentation" NL);
     es.nest = 0;
     SerializeRec(es, rootStruct, def);
     size_t size = es.res.size();

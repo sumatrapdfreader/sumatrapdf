@@ -238,13 +238,12 @@ func notionToHTML(page *notionapi.Page, pages []*notionapi.Page, idToPage map[st
 	conv := NewHTMLConverter(page, pages, idToPage)
 	html := conv.GenerateHTML()
 	name := fileNameForPage(page)
-	path := filepath.Join("www", "docs", name)
+	path := filepath.Join("docs", name)
 	logf("Writing '%s' for title '%s'\n", path, page.Root().Title)
 	u.WriteFileMust(path, html)
 }
 
 func websiteImportNotion() {
-	cdWebsiteDir()
 	logf("websiteImportNotion() started\n")
 	client := newNotionClient()
 	cache, err := caching_downloader.NewDirectoryCache(cacheDir)
@@ -261,12 +260,12 @@ func websiteImportNotion() {
 
 	if false {
 		// using https://github.com/netlify/cli
-		cmd := exec.Command("netlify", "dev", "--dir", "www")
+		cmd := exec.Command("netlify", "dev", "--dir", "website")
 		u.RunCmdLoggedMust(cmd)
 	}
 
 	if false {
-		err = os.Chdir("www")
+		err = os.Chdir("website")
 		must(err)
 		u.OpenBrowser("free-pdf-reader.html")
 	}

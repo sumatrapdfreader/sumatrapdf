@@ -317,7 +317,7 @@ func settings_dir() string {
 }
 
 func blog_dir() string {
-	return filepath.Join("website", "www")
+	return filepath.Join("website")
 }
 
 func langs_file_name() string {
