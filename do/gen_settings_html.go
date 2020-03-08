@@ -316,8 +316,8 @@ func settings_dir() string {
 	return filepath.Join("docs", "settings")
 }
 
-func blog_dir() string {
-	return filepath.Join("website")
+func websiteSettingsDir() string {
+	return filepath.Join("website", "settings")
 }
 
 func langs_file_name() string {
@@ -355,7 +355,7 @@ func gen_langs_html() {
 	path := filepath.Join(settings_dir(), langs_file_name())
 	u.WriteFileMust(path, []byte(s))
 
-	path = filepath.Join(blog_dir(), langs_file_name())
+	path = filepath.Join(websiteSettingsDir(), langs_file_name())
 	u.WriteFileMust(path, []byte(s))
 }
 
@@ -373,6 +373,6 @@ func gen_settings_html() {
 	path := filepath.Join(settings_dir(), settings_file_name())
 	u.WriteFileMust(path, []byte(s))
 
-	path = filepath.Join(blog_dir(), settings_file_name())
+	path = filepath.Join(websiteSettingsDir(), settings_file_name())
 	u.WriteFileMust(path, []byte(s))
 }
