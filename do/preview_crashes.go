@@ -534,10 +534,18 @@ func handleAPIGetCrashes(w http.ResponseWriter, r *http.Request) {
 	serveJSON(w, r, d)
 }
 
+func handle404(w http.ResponseWriter, r *http.Request) {
+	//w.Header().Set("Content-Type", htmlMimeType)
+	w.WriteHeader(http.StatusNotFound)
+	msg := "Not found"
+	_, _ = w.Write([]byte(msg))
+}
+
 // https://blog.gopheracademy.com/advent-2016/exposing-go-on-the-internet/
 func makeHTTPServer() *http.Server {
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/", handleIndex2)
+	mux.HandleFunc("/favicon.ico", handle404)
 	mux.HandleFunc("/crash/", handleCrash)
 	mux.HandleFunc("/api/crashes", handleAPIGetCrashes)
 
