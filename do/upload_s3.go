@@ -147,11 +147,10 @@ func newS3Client() *S3Client {
 	return c
 }
 
-func s3UploadFiles(c *S3Client, s3Dir string, dir string, files []string) error {
-	n := len(files) / 2
-	for i := 0; i < n; i++ {
-		pathLocal := filepath.Join(dir, files[2*i])
-		pathRemote := files[2*i+1]
+func s3UploadFiles(c *S3Client, s3Dir string, dir string, files [][]string) error {
+	for _, f := range files {
+		pathLocal := filepath.Join(dir, f[0])
+		pathRemote := f[1]
 		err := c.UploadFileReader(s3Dir+pathRemote, pathLocal, true)
 		if err != nil {
 			return fmt.Errorf("failed to upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
@@ -182,7 +181,7 @@ func s3UploadPreReleaseMust(buildType string) {
 	verifyPreReleaseNotInS3Must(c, remoteDir, ver)
 
 	var prefix string
-	var files []string
+	var files [][]string
 	var err error
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s", ver)

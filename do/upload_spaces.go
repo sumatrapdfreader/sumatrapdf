@@ -79,11 +79,10 @@ func hasS3Creds() bool {
 	return true
 }
 
-func minioUploadFiles(c *u.MinioClient, prefix string, dir string, files []string) error {
-	n := len(files) / 2
-	for i := 0; i < n; i++ {
-		pathLocal := filepath.Join(dir, files[2*i])
-		pathRemote := prefix + files[2*i+1]
+func minioUploadFiles(c *u.MinioClient, prefix string, dir string, files [][]string) error {
+	for _, f := range files {
+		pathLocal := filepath.Join(dir, f[0])
+		pathRemote := prefix + f[1]
 		err := c.UploadFilePublic(pathRemote, pathLocal)
 		if err != nil {
 			return fmt.Errorf("failed to upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
@@ -91,17 +90,6 @@ func minioUploadFiles(c *u.MinioClient, prefix string, dir string, files []strin
 		logf("Uploaded to spaces: '%s' as '%s'\n", pathLocal, pathRemote)
 	}
 	return nil
-}
-
-func getFileNamesWithPrefix(prefix string) []string {
-	files := []string{
-		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
-		"SumatraPDF.zip", fmt.Sprintf("%s.zip", prefix),
-		"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix),
-		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
-		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
-	}
-	return files
 }
 
 func getRemotePaths(buildType string) []string {
