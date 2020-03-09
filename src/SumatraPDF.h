@@ -7,10 +7,10 @@
 
 #define WEBSITE_MAIN_URL L"https://www.sumatrapdfreader.org/"
 #define WEBSITE_MANUAL_URL L"https://www.sumatrapdfreader.org/manual.html"
-#define WEBSITE_TRANSLATIONS_URL L"https://www.notion.so/How-to-contribute-translation-da023536e9774982b09937c8ed8cf6c1"
+#define WEBSITE_TRANSLATIONS_URL L"https://www.sumatrapdfreader.org/docs/How-to-contribute-translation.html"
 
 #ifndef CRASH_REPORT_URL
-#define CRASH_REPORT_URL L"https://www.notion.so/Join-the-project-as-a-developer-be6ef085e89f49038c2b671c0743b690"
+#define CRASH_REPORT_URL L"https://www.sumatrapdfreader.org/docs/Join-the-project-as-a-developer.html"
 #endif
 
 // scrolls half a page down/up (needed for Shift+Up/Down)

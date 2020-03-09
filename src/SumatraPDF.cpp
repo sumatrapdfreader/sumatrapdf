@@ -157,7 +157,6 @@ void SetCurrentLang(const char* langCode) {
     }
     trans::SetCurrentLangByCode(langCode);
 }
-
 #ifndef SUMATRA_UPDATE_INFO_URL
 #if 0 // defined(PRE_RELEASE_VER)
 #define SUMATRA_UPDATE_INFO_URL \
