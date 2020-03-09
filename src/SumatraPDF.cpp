@@ -158,6 +158,9 @@ void SetCurrentLang(const char* langCode) {
     trans::SetCurrentLangByCode(langCode);
 }
 
+// the default is for pre-release version.
+// for release we override BuildConfig.h and set to
+// https://www.sumatrapdfreader.org/update-check-rel.txt
 #ifndef SUMATRA_UPDATE_INFO_URL
 #define SUMATRA_UPDATE_INFO_URL \
     L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt"

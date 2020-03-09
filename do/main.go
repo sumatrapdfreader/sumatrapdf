@@ -293,10 +293,8 @@ func main() {
 	}
 
 	if flgBuildPreRelease {
-		if flgUpload {
-			// if uploading, make sure we can sign
-			failIfNoCertPwd()
-		}
+		// make sure we can sign
+		failIfNoCertPwd()
 		detectVersions()
 		buildPreRelease()
 		s3UploadPreReleaseMust(buildTypePreRel)
