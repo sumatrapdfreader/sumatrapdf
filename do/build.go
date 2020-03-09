@@ -141,20 +141,37 @@ func buildConfigPath() string {
 	return filepath.Join("src", "utils", "BuildConfig.h")
 }
 
-// writes src/utils/BuildConfig.h to over-ride some of build settings
-func setBuildConfig(isDaily bool) {
+func getBuildConfigCommon() string {
 	sha1 := getGitSha1()
-	preRelVer := getPreReleaseVer()
-	todayDate := time.Now().Format("2006-01-02")
-
 	s := fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
+	todayDate := time.Now().Format("2006-01-02")
 	s += fmt.Sprintf("#define BUILT_ON %s\n", todayDate)
-	if preRelVer != "" {
-		s += fmt.Sprintf("#define PRE_RELEASE_VER %s\n", preRelVer)
-	}
-	if isDaily {
-		s += "#define IS_DAILY_BUILD 1\n"
-	}
+	return s
+}
+
+// writes src/utils/BuildConfig.h to over-ride some of build settings
+func setBuildConfigDaily() {
+	s := getBuildConfigCommon()
+	// daily are also pre-release builds
+	preRelVer := getPreReleaseVer()
+	panicIf(preRelVer == "")
+	s += fmt.Sprintf("#define PRE_RELEASE_VER %s\n", preRelVer)
+	s += "#define IS_DAILY_BUILD 1\n"
+	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
+	panicIfErr(err)
+}
+
+func setBuildConfigPreRelease() {
+	s := getBuildConfigCommon()
+	preRelVer := getPreReleaseVer()
+	s += fmt.Sprintf("#define PRE_RELEASE_VER %s\n", preRelVer)
+	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
+	panicIfErr(err)
+}
+
+func setBuildConfigRelease() {
+	s := getBuildConfigCommon()
+	s += "#define SUMATRA_UPDATE_INFO_URL https://www.sumatrapdfreader.org/update-check-rel.txt\n"
 	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
 	panicIfErr(err)
 }

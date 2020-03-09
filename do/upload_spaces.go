@@ -130,19 +130,19 @@ func getRemotePaths(buildType string) []string {
 	}
 
 	if buildType == buildTypeRel {
-		panic("NYI")
-		// TODO: those are not the right paths
-		/*
-			return []string{
-				"software/sumatrapdf/rel.js",
-				"software/sumatrapdf/rel-latest.txt",
-				"software/sumatrapdf/rel.txt",
-			}
-		*/
+		return []string{
+			"software/sumatrapdf/sumarellatest.js",
+			"software/sumatrapdf/release-latest.txt",
+			"software/sumatrapdf/release-update.txt",
+		}
 	}
 
 	panicIf(true, "Unkonwn buildType='%s'", buildType)
 	return nil
+}
+
+func verifyReleaseNotInSpaces(ver string) {
+
 }
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.

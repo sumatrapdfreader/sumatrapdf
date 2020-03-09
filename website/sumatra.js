@@ -46,35 +46,44 @@ var gPrevSumatraVersion = [
 ];
 
 var dlPrefix = "/dl/";
+var dl2Prefix = "/dl2/";
 
 function a(href, txt) {
   return '<a href="' + href + '">' + txt + "</a>";
 }
 
+function dlURL(ver, name) {
+  if (ver >= "3.2") {
+    return dlPrefix2 + name;
+  }
+  return dlPrefix + name;
+}
+
 function installerHref(ver) {
-  var txt = "SumatraPDF-" + ver + "-install.exe";
-  var url = dlPrefix + txt;
-  return a(url, txt);
+  var name = "SumatraPDF-" + ver + "-install.exe";
+  var url = dlURL(ver, name);
+  return a(url, name);
 }
 
 function zipHref(ver) {
-  var txt = "SumatraPDF-" + ver + ".zip";
-  var url = dlPrefix + txt;
-  return a(url, txt);
+  var name = "SumatraPDF-" + ver + ".zip";
+  var url = dlURL(ver, name);
+  return a(url, name);
 }
 
 function installer64Href(ver) {
-  var txt = "SumatraPDF-" + ver + "-64-install.exe";
-  var url = dlPrefix + txt;
-  return a(url, txt);
+  var name = "SumatraPDF-" + ver + "-64-install.exe";
+  var url = dlURL(ver, name);
+  return a(url, name);
 }
 
 function zip64Href(ver) {
-  var txt = "SumatraPDF-" + ver + "-64.zip";
-  var url = dlPrefix + txt;
-  return a(url, txt);
+  var name = "SumatraPDF-" + ver + "-64.zip";
+  var url = dlURL(ver, name);
+  return a(url, name);
 }
 
+// TODO: change to dlPrefix2 after releasing 3.2
 var gSumExeName = "SumatraPDF-" + gSumVer + "-install.exe";
 var gSumZipName = "SumatraPDF-" + gSumVer + ".zip";
 var gSumExeUrl = dlPrefix + gSumExeName;
@@ -263,8 +272,8 @@ function httpsRedirect() {
 httpsRedirect();
 
 var allShots = [
-  "img/homepage.png", 
-  "img/format-pdf.png", 
+  "img/homepage.png",
+  "img/format-pdf.png",
   "img/format-epub.png",
   "img/menu-file.png",
   "img/menu-view.jpg",

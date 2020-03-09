@@ -91,16 +91,18 @@ func verifyPreReleaseNotInS3Must(c *S3Client, remoteDir string, ver string) {
 	if !flgUpload {
 		return
 	}
-	s3Path := remoteDir + fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
-	fatalIf(c.Exists(s3Path), "build %s already exists in s3 because '%s' exists\n", ver, s3Path)
+	remotePath := remoteDir + fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
+	fatalIf(c.Exists(remotePath), "build %s already exists in s3 because '%s' exists\n", ver, remotePath)
 }
 
-func verifyReleaseNotInS3Must(c *S3Client, remoteDir string, ver string) {
+func verifyReleaseNotInS3Must(ver string) {
 	if !flgUpload {
 		return
 	}
-	s3Path := remoteDir + fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
-	fatalIf(c.Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", ver, s3Path)
+	c := newS3Client()
+	remoteDir := getRemoteDir(buildTypeRel)
+	remotePath := remoteDir + fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
+	fatalIf(c.Exists(remotePath), "build '%s' already exists in s3 because '%s' existst\n", ver, remotePath)
 }
 
 func dumpEnv() {

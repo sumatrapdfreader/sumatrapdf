@@ -18,8 +18,7 @@ func buildDaily() {
 
 	clean()
 
-	isDaily := true
-	setBuildConfig(isDaily)
+	setBuildConfigDaily()
 	defer revertBuildConfig()
 
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")

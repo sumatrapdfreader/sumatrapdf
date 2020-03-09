@@ -1,3 +1,5 @@
+/dl/*	https://kjkpub.nyc3.digitaloceanspaces.com/software/sumatrapdf/rel/:splat	302
+/dl2/*	https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/rel/:splat	302
 /	/free-pdf-reader.html	302
 /docs/Command-line-arguments-*	/docs/Command-line-arguments.html	302
 /docs/Configure-Sumatra-for-restricted-use-*	/docs/Configure-Sumatra-for-restricted-use.html	302
@@ -35,7 +37,6 @@
 /develop.html/	/docs/Join-the-project-as-a-developer.html	302
 /develop.html	/docs/Join-the-project-as-a-developer.html	302
 /forum.html	https://forum.sumatrapdfreader.org	302
-/dl/*	https://kjkpub.nyc3.digitaloceanspaces.com/software/sumatrapdf/rel/:splat	302
 /langs.html /settings/langs.html	302
 /langs3.1.1.html    /settings/langs3.1.1.html	302
 /langs3.1.2.html    /settings/langs3.1.2.html	302

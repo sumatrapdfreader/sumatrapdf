@@ -157,14 +157,10 @@ void SetCurrentLang(const char* langCode) {
     }
     trans::SetCurrentLangByCode(langCode);
 }
+
 #ifndef SUMATRA_UPDATE_INFO_URL
-#if 0 // defined(PRE_RELEASE_VER)
-#define SUMATRA_UPDATE_INFO_URL \
-    L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-latest.txt"
-#else
 #define SUMATRA_UPDATE_INFO_URL \
     L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt"
-#endif
 #endif
 
 #ifndef SVN_UPDATE_LINK
