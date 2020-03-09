@@ -6,18 +6,17 @@ import (
 )
 
 func buildPreRelease() {
-	// early exit if missing
-	detectSigntoolPath()
+	detectSigntoolPath() // early exit if missing
 
-	ver := getPreReleaseVer()
+	ver := getVerForBuildType(buildTypePreRel)
 	s := fmt.Sprintf("buidling pre-release version %s", ver)
 	defer makePrintDuration(s)()
+
 	verifyGitCleanMust()
 	verifyOnMasterBranchMust()
-
 	verifyTranslationsMust()
-	clean()
 
+	clean()
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
@@ -26,7 +25,7 @@ func buildPreRelease() {
 	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
 
 	build64()
-	nameInZip = fmt.Sprintf("SumatraPDF-prerel-%s.exe", ver)
+	nameInZip = fmt.Sprintf("SumatraPDF-prerel-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
 	buildRa64()
@@ -39,6 +38,7 @@ func buildPreRelease() {
 	prefix := fmt.Sprintf("SumatraPDF-%s", sumatraVersion)
 	copyBuiltFilesAll(dstDir, prefix)
 
+	// note: manifest won't be for the right files but we don't care
 	dstDir = filepath.Join("out", "final-ramicro")
 	prefix = fmt.Sprintf("RAMicroPDFViewer-prerelease-%s", ver)
 	copyBuiltFilesRa64(dstDir, prefix)

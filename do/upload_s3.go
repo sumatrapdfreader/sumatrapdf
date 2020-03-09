@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"text/template"
 	"time"
@@ -39,32 +41,38 @@ func execTextTemplate(tmplText string, data interface{}) string {
 
 // sumatrapdf/sumatralatest.js
 func createSumatraLatestJs(buildType string) string {
-	appName := "SumatraPDF-prerelease"
-	if buildType == buildTypeRaMicro {
-		// must match name in spacesUploadPreReleaseMust
+	var appName string
+	switch buildType {
+	case buildTypePreRel, buildTypeDaily:
+		appName = "SumatraPDF-prerelease"
+	case buildTypeRel:
+		appName = "SumatraPDF"
+	case buildTypeRaMicro:
+		// must match name in spacesUploadBuildMust
 		appName = "RAMicro-prerelease"
+	default:
+		panicIf(true, "invalid buildType '%s'", buildType)
 	}
+
 	currDate := time.Now().Format("2006-01-02")
-	v := getPreReleaseVer()
 	tmplText := `
 var sumLatestVer = {{.Ver}};
 var sumBuiltOn = "{{.CurrDate}}";
 var sumLatestName = "{{.AppName}}-{{.Ver}}.exe";
 
-var sumLatestExe         = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}.exe";
-var sumLatestExeZip      = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}.zip";
-var sumLatestPdb         = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}.pdb.zip";
-var sumLatestInstaller   = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-install.exe";
+var sumLatestExe         = "{{.Host}}/{{.AppName}}-{{.Ver}}.exe";
+var sumLatestExeZip      = "{{.Host}}/{{.AppName}}-{{.Ver}}.zip";
+var sumLatestPdb         = "{{.Host}}/{{.AppName}}-{{.Ver}}.pdb.zip";
+var sumLatestInstaller   = "{{.Host}}/{{.AppName}}-{{.Ver}}-install.exe";
 
-var sumLatestExe64       = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-64.exe";
-var sumLatestExeZip64    = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-64.zip";
-var sumLatestPdb64       = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-64.pdb.zip";
-var sumLatestInstaller64 = "{{.Host}}{{.Dir}}/{{.AppName}}-{{.Ver}}-64-install.exe";
+var sumLatestExe64       = "{{.Host}}/{{.AppName}}-{{.Ver}}-64.exe";
+var sumLatestExeZip64    = "{{.Host}}/{{.AppName}}-{{.Ver}}-64.zip";
+var sumLatestPdb64       = "{{.Host}}/{{.AppName}}-{{.Ver}}-64.pdb.zip";
+var sumLatestInstaller64 = "{{.Host}}/{{.AppName}}-{{.Ver}}-64-install.exe";
 `
 	d := map[string]interface{}{
-		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/",
-		"Ver":      v,
-		"Dir":      buildType,
+		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType,
+		"Ver":      getVerForBuildType(buildType),
 		"CurrDate": currDate,
 		"AppName":  appName,
 	}
@@ -85,24 +93,31 @@ func s3ListPreReleaseFilesMust(c *S3Client, prefix string) []string {
 	return res
 }
 
-// we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
-// consider a pre-release build already present in s3 if manifest file exists
-func verifyPreReleaseNotInS3Must(c *S3Client, remoteDir string, ver string) {
-	if !flgUpload {
-		return
-	}
-	remotePath := remoteDir + fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
-	fatalIf(c.Exists(remotePath), "build %s already exists in s3 because '%s' exists\n", ver, remotePath)
+// only check one file we know will be uploaded
+func verifyBuildNotInS3ShortMust(buildType string) {
+	dirRemote := getRemoteDir(buildType)
+	ver := getVerForBuildType(buildType)
+	fname := fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
+	remotePath := path.Join(dirRemote, fname)
+	c := newS3Client()
+	fatalIf(c.Exists(remotePath), "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
 }
 
-func verifyReleaseNotInS3Must(ver string) {
+// we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
+// consider a pre-release build already present in s3 if manifest file exists
+func verifyBuildNotInS3Must(c *S3Client, buildType string) {
 	if !flgUpload {
 		return
 	}
-	c := newS3Client()
-	remoteDir := getRemoteDir(buildTypeRel)
-	remotePath := remoteDir + fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
-	fatalIf(c.Exists(remotePath), "build '%s' already exists in s3 because '%s' existst\n", ver, remotePath)
+	dirRemote := getRemoteDir(buildType)
+	dirLocal := getFinalDirForBuildType(buildType)
+	files, err := ioutil.ReadDir(dirLocal)
+	panicIfErr(err)
+	for _, f := range files {
+		fname := f.Name()
+		remotePath := path.Join(dirRemote, fname)
+		fatalIf(c.Exists(remotePath), "build from dir %s already exists in s3 because file '%s' exists\n", dirLocal, remotePath)
+	}
 }
 
 func dumpEnv() {
@@ -147,97 +162,97 @@ func newS3Client() *S3Client {
 	return c
 }
 
-func s3UploadFiles(c *S3Client, s3Dir string, dir string, files [][]string) error {
+func hasS3Creds() bool {
+	if os.Getenv("AWS_ACCESS") == "" {
+		logf("Not uploading to s3 because AWS_ACCESS env variable not set\n")
+		return false
+	}
+	if os.Getenv("AWS_SECRET") == "" {
+		logf("Not uploading to s3 because AWS_SECRET env variable not set\n")
+		return false
+	}
+	return true
+}
+
+func s3UploadDir(c *S3Client, dirRemote string, dirLocal string) error {
+	files, err := ioutil.ReadDir(dirLocal)
+	must(err)
 	for _, f := range files {
-		pathLocal := filepath.Join(dir, f[0])
-		pathRemote := f[1]
-		err := c.UploadFileReader(s3Dir+pathRemote, pathLocal, true)
+		fname := f.Name()
+		pathLocal := filepath.Join(dirLocal, fname)
+		pathRemote := path.Join(dirRemote, fname)
+		err := c.UploadFileReader(pathRemote, pathLocal, true)
 		if err != nil {
-			return fmt.Errorf("failed to upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
+			return fmt.Errorf("failed s3 upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
 		}
 		logf("Uploaded to s3: '%s' as '%s'\n", pathLocal, pathRemote)
 	}
 	return nil
 }
 
+func getFinalDirForBuildType(buildType string) string {
+	var dir string
+	switch buildType {
+	case buildTypeDaily:
+		dir = "final-daily"
+	case buildTypeRel:
+		dir = "final-release"
+	case buildTypePreRel:
+		dir = "final-prerel"
+	case buildTypeRaMicro:
+		dir = "final-ramicro"
+	default:
+		panicIf(true, "invalid buildType '%s'", buildType)
+	}
+	return filepath.Join("out", dir)
+}
+
+// this returns version to be used in uploaded file names
+func getVerForBuildType(buildType string) string {
+	switch buildType {
+	case buildTypeDaily, buildTypePreRel, buildTypeRaMicro:
+		// this is linear build number like "12223"
+		return getPreReleaseVer()
+	case buildTypeRel:
+		// this is program version like "3.2"
+		return sumatraVersion
+	}
+	panicIf(true, "invalid buildType '%s'", buildType)
+	return ""
+}
+
 // upload as:
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func s3UploadPreReleaseMust(buildType string) {
+func s3UploadBuildMust(buildType string) {
 	if shouldSkipUpload() {
 		return
 	}
-
-	ver := getPreReleaseVer()
-	isDaily := buildType == buildTypeDaily
 	panicIf(buildType == buildTypeRaMicro, "only uploading ramicro to spaces")
 
-	remoteDir := getRemoteDir(buildType)
-
+	timeStart := time.Now()
 	c := newS3Client()
 	c.VerifyHasSecrets()
 
-	timeStart := time.Now()
+	dirRemote := getRemoteDir(buildType)
+	dirLocal := getFinalDirForBuildType(buildType)
+	verifyBuildNotInS3Must(c, buildType)
 
-	verifyPreReleaseNotInS3Must(c, remoteDir, ver)
+	err := s3UploadDir(c, dirRemote, dirLocal)
+	panicIfErr(err)
 
-	var prefix string
-	var files [][]string
-	var err error
-
-	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
-	manifestRemotePath := remoteDir + prefix + "-manifest.txt"
-
-	if !isDaily {
-		files = getFileNamesWithPrefix(prefix)
-		err = s3UploadFiles(c, remoteDir, filepath.Join("out", "rel32"), files)
+	files := getFilesForLatestInfo(buildType)
+	for _, f := range files {
+		remotePath := f[0]
+		err = c.UploadString(remotePath, f[1], true)
 		panicIfErr(err)
+		logf("Uploaded to s3: '%s'\n", remotePath)
 	}
-
-	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
-	files = getFileNamesWithPrefix(prefix)
-	err = s3UploadFiles(c, remoteDir, filepath.Join("out", "rel64"), files)
-	panicIfErr(err)
-
-	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
-	err = c.UploadFileReader(manifestRemotePath, manifestLocalPath, true)
-	panicIfErr(err)
-	logf("Uploaded to s3: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
-
-	remotePaths := []string{
-		"software/sumatrapdf/sumatralatest.js",
-		"software/sumatrapdf/sumpdf-prerelease-latest.txt",
-		"software/sumatrapdf/sumpdf-prerelease-update.txt",
-	}
-	if buildType == buildTypeDaily {
-		remotePaths = []string{
-			"software/sumatrapdf/sumadaily.js",
-			"software/sumatrapdf/sumpdf-daily-latest.txt",
-			"software/sumatrapdf/sumpdf-daily-update.txt",
-		}
-	}
-
-	s := createSumatraLatestJs(buildType)
-	remotePath := remotePaths[0]
-	err = c.UploadString(remotePath, s, true)
-	panicIfErr(err)
-	logf("Uploaded to s3: '%s'\n", remotePath)
-
-	remotePath = remotePaths[1]
-	err = c.UploadString(remotePath, ver, true)
-	panicIfErr(err)
-	logf("Uploaded to s3: '%s'\n", remotePath)
-
-	// don't set a Stable version for pre-release builds
-	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	remotePath = remotePaths[2]
-	err = c.UploadString(remotePath, s, true)
-	panicIfErr(err)
-	logf("Uploaded to s3: '%s'\n", remotePath)
 
 	logf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
 }
 
 func s3DeleteOldBuildsPrefix(buildType string) {
+	panicIf(buildType == buildTypeRel, "can't delete release builds")
 	c := newS3Client()
 
 	nBuildsToRetain := nBuildsToRetainDaily
@@ -270,4 +285,5 @@ func s3DeleteOldBuildsPrefix(buildType string) {
 func s3DeleteOldBuilds() {
 	s3DeleteOldBuildsPrefix(buildTypePreRel)
 	s3DeleteOldBuildsPrefix(buildTypeDaily)
+	s3DeleteOldBuildsPrefix(buildTypeRaMicro)
 }

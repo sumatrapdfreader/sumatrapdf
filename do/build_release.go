@@ -80,21 +80,20 @@ func buildRa64() {
 }
 
 func buildRelease() {
-	// early exit if missing
-	detectSigntoolPath()
+	detectSigntoolPath() // early exit if missing
 
-	ver := sumatraVersion
+	ver := getVerForBuildType(buildTypeRel)
 	s := fmt.Sprintf("buidling release version %s", ver)
 	defer makePrintDuration(s)()
+
 	verifyGitCleanMust()
 	verifyOnReleaseBranchMust()
 	verifyTranslationsMust()
 
-	verifyReleaseNotInS3Must(ver)
-	verifyReleaseNotInSpaces(ver)
+	verifyBuildNotInS3ShortMust(buildTypeRel)
+	verifyBuildNotInSpacesShortMust(buildTypeRel)
 
 	clean()
-
 	setBuildConfigRelease()
 	defer revertBuildConfig()
 
@@ -103,7 +102,7 @@ func buildRelease() {
 	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
 
 	build64()
-	nameInZip = fmt.Sprintf("SumatraPDF-%s.exe", ver)
+	nameInZip = fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
 	createManifestMust()

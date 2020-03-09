@@ -266,12 +266,12 @@ func main() {
 		detectVersions()
 
 		if isOnRepoDispatch() {
-			s3UploadPreReleaseMust(buildTypePreRel)
-			spacesUploadPreReleaseMust(buildTypePreRel)
-			spacesUploadPreReleaseMust(buildTypeRaMicro)
+			s3UploadBuildMust(buildTypePreRel)
+			spacesUploadBuildMust(buildTypePreRel)
+			spacesUploadBuildMust(buildTypeRaMicro)
 		} else {
-			s3UploadPreReleaseMust(buildTypeDaily)
-			spacesUploadPreReleaseMust(buildTypeDaily)
+			s3UploadBuildMust(buildTypeDaily)
+			spacesUploadBuildMust(buildTypeDaily)
 		}
 
 		minioDeleteOldBuilds()
@@ -280,25 +280,23 @@ func main() {
 	}
 
 	if flgBuildRelease {
-		if flgUpload {
-			failIfNoCertPwd()
-		}
+		failIfNoCertPwd()
 		detectVersions()
 		buildRelease()
 		if flgUpload {
-			//s3UploadReleaseMust()
-			//spacesUploadReleaseMust()
+			s3UploadBuildMust(buildTypeRel)
+			spacesUploadBuildMust(buildTypeRel)
 		}
 		return
 	}
 
 	if flgBuildPreRelease {
-		// make sure we can sign
+		// make sure we can sign the executables
 		failIfNoCertPwd()
 		detectVersions()
 		buildPreRelease()
-		s3UploadPreReleaseMust(buildTypePreRel)
-		spacesUploadPreReleaseMust(buildTypePreRel)
+		s3UploadBuildMust(buildTypePreRel)
+		spacesUploadBuildMust(buildTypePreRel)
 		return
 	}
 

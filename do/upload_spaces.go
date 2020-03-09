@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -16,7 +18,7 @@ import (
 // builds to retain
 const nBuildsToRetainPreRel = 16
 const nBuildsToRetainDaily = 64
-const nBuildsToRetaininMicro = 128
+const nBuildsToRetaininMicro = 32
 
 const (
 	buildTypeDaily   = "daily"
@@ -30,67 +32,6 @@ var (
 	rel64Dir   = filepath.Join("out", "rel64")
 	rel64RaDir = filepath.Join("out", "rel64ra")
 )
-
-func isValidBuildType(buildType string) bool {
-	switch buildType {
-	case buildTypeDaily, buildTypePreRel, buildTypeRel, buildTypeRaMicro:
-		return true
-	}
-	return false
-}
-
-func getRemoteDir(buildType string) string {
-	panicIf(!isValidBuildType(buildType), "invalid build type: '%s'", buildType)
-	return "software/sumatrapdf/" + buildType + "/"
-}
-
-func newMinioClient() *u.MinioClient {
-	res := &u.MinioClient{
-		StorageKey:    os.Getenv("SPACES_KEY"),
-		StorageSecret: os.Getenv("SPACES_SECRET"),
-		Bucket:        "kjkpubsf",
-		Endpoint:      "sfo2.digitaloceanspaces.com",
-	}
-	res.EnsureConfigured()
-	return res
-}
-
-func hasSpacesCreds() bool {
-	if os.Getenv("SPACES_KEY") == "" {
-		logf("Not uploading to do spaces because SPACES_KEY env variable not set\n")
-		return false
-	}
-	if os.Getenv("SPACES_SECRET") == "" {
-		logf("Not uploading to do spaces because SPACES_SECRET env variable not set\n")
-		return false
-	}
-	return true
-}
-
-func hasS3Creds() bool {
-	if os.Getenv("AWS_ACCESS") == "" {
-		logf("Not uploading to s3 because AWS_ACCESS env variable not set\n")
-		return false
-	}
-	if os.Getenv("AWS_SECRET") == "" {
-		logf("Not uploading to s3 because AWS_SECRET env variable not set\n")
-		return false
-	}
-	return true
-}
-
-func minioUploadFiles(c *u.MinioClient, prefix string, dir string, files [][]string) error {
-	for _, f := range files {
-		pathLocal := filepath.Join(dir, f[0])
-		pathRemote := prefix + f[1]
-		err := c.UploadFilePublic(pathRemote, pathLocal)
-		if err != nil {
-			return fmt.Errorf("failed to upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
-		}
-		logf("Uploaded to spaces: '%s' as '%s'\n", pathLocal, pathRemote)
-	}
-	return nil
-}
 
 func getRemotePaths(buildType string) []string {
 	if buildType == buildTypePreRel {
@@ -129,12 +70,104 @@ func getRemotePaths(buildType string) []string {
 	return nil
 }
 
-func verifyReleaseNotInSpaces(ver string) {
+func isValidBuildType(buildType string) bool {
+	switch buildType {
+	case buildTypeDaily, buildTypePreRel, buildTypeRel, buildTypeRaMicro:
+		return true
+	}
+	return false
+}
 
+func getRemoteDir(buildType string) string {
+	panicIf(!isValidBuildType(buildType), "invalid build type: '%s'", buildType)
+	return "software/sumatrapdf/" + buildType + "/"
+}
+
+func newMinioClient() *u.MinioClient {
+	res := &u.MinioClient{
+		StorageKey:    os.Getenv("SPACES_KEY"),
+		StorageSecret: os.Getenv("SPACES_SECRET"),
+		Bucket:        "kjkpubsf",
+		Endpoint:      "sfo2.digitaloceanspaces.com",
+	}
+	res.EnsureConfigured()
+	return res
+}
+
+func hasSpacesCreds() bool {
+	if os.Getenv("SPACES_KEY") == "" {
+		logf("Not uploading to do spaces because SPACES_KEY env variable not set\n")
+		return false
+	}
+	if os.Getenv("SPACES_SECRET") == "" {
+		logf("Not uploading to do spaces because SPACES_SECRET env variable not set\n")
+		return false
+	}
+	return true
+}
+
+// TODO: add Exists() method to u.MinioClient to keep code closer to s3
+func minioExists(c *u.MinioClient, remotePath string) bool {
+	_, err := c.StatObject(remotePath)
+	return err == nil
+}
+
+func minioUploadDir(c *u.MinioClient, dirRemote string, dirLocal string) error {
+	files, err := ioutil.ReadDir(dirLocal)
+	must(err)
+	for _, f := range files {
+		fname := f.Name()
+		pathLocal := filepath.Join(dirLocal, fname)
+		pathRemote := path.Join(dirRemote, fname)
+		err := c.UploadFilePublic(pathRemote, pathLocal)
+		if err != nil {
+			return fmt.Errorf("failed spaces upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
+		}
+		logf("Uploaded to spaces: '%s' as '%s'\n", pathLocal, pathRemote)
+	}
+	return nil
+}
+
+func verifyBuildNotInSpacesShortMust(buildType string) {
+	dirRemote := getRemoteDir(buildType)
+	ver := getVerForBuildType(buildType)
+	fname := fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
+	remotePath := path.Join(dirRemote, fname)
+	c := newMinioClient()
+	fatalIf(minioExists(c, remotePath), "build of type '%s' for ver '%s' already exists in s3 because file '%s' exists\n", buildType, ver, remotePath)
+}
+
+// we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
+// consider a pre-release build already present in s3 if manifest file exists
+func verifyBuildNotInSpacesMust(c *u.MinioClient, buildType string) {
+	if !flgUpload {
+		return
+	}
+	dirRemote := getRemoteDir(buildType)
+	dirLocal := getFinalDirForBuildType(buildType)
+	files, err := ioutil.ReadDir(dirLocal)
+	panicIfErr(err)
+	for _, f := range files {
+		fname := f.Name()
+		remotePath := path.Join(dirRemote, fname)
+		fatalIf(minioExists(c, remotePath), "build from dir %s already exists in s3 because file '%s' exists\n", dirLocal, remotePath)
+	}
+}
+
+func getFilesForLatestInfo(buildType string) [][]string {
+	remotePaths := getRemotePaths(buildType)
+	var res [][]string
+	s := createSumatraLatestJs(buildType)
+	res = append(res, []string{remotePaths[0], s})
+	ver := getVerForBuildType(buildType)
+	res = append(res, []string{remotePaths[1], ver})
+	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
+	res = append(res, []string{remotePaths[2], ver})
+	return res
 }
 
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func spacesUploadPreReleaseMust(buildType string) {
+func spacesUploadBuildMust(buildType string) {
 	if shouldSkipUpload() {
 		return
 	}
@@ -142,57 +175,23 @@ func spacesUploadPreReleaseMust(buildType string) {
 		return
 	}
 
-	ver := getPreReleaseVer()
-	remoteDir := getRemoteDir(buildType)
-
-	c := newMinioClient()
 	timeStart := time.Now()
+	c := newMinioClient()
 
-	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
-	manifestRemotePath := remoteDir + prefix + "-manifest.txt"
+	dirRemote := getRemoteDir(buildType)
+	dirLocal := getFinalDirForBuildType(buildType)
+	//verifyBuildNotInSpaces(c, buildType)
 
-	// ra-micro only needs 64-bit builds
-	if buildType == buildTypePreRel {
-		files := getFileNamesWithPrefix(prefix)
-		err := minioUploadFiles(c, remoteDir, rel32Dir, files)
+	err := minioUploadDir(c, dirRemote, dirLocal)
+	panicIfErr(err)
+
+	files := getFilesForLatestInfo(buildType)
+	for _, f := range files {
+		remotePath := f[0]
+		err = c.UploadDataPublic(remotePath, []byte(f[1]))
 		panicIfErr(err)
+		logf("Uploaded to spaces: '%s'\n", remotePath)
 	}
-
-	dir64 := rel64Dir
-	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
-	if buildType == buildTypeRaMicro {
-		// must match createSumatraLatestJs
-		prefix = fmt.Sprintf("RAMicro-prerelease-%s-64", ver)
-		dir64 = rel64RaDir
-	}
-	files := getFileNamesWithPrefix(prefix)
-	err := minioUploadFiles(c, remoteDir, dir64, files)
-	panicIfErr(err)
-
-	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
-	err = c.UploadFilePublic(manifestRemotePath, manifestLocalPath)
-	panicIfErr(err)
-	logf("Uploaded to spaces: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
-
-	remotePaths := getRemotePaths(buildType)
-
-	s := createSumatraLatestJs(buildType)
-	remotePath := remotePaths[0]
-	err = c.UploadDataPublic(remotePath, []byte(s))
-	panicIfErr(err)
-	logf("Uploaded to spaces: '%s'\n", remotePath)
-
-	remotePath = remotePaths[1]
-	err = c.UploadDataPublic(remotePath, []byte(ver))
-	panicIfErr(err)
-	logf("Uploaded to spaces: '%s'\n", remotePath)
-
-	//don't set a Stable version for pre-release builds
-	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	remotePath = remotePaths[2]
-	err = c.UploadDataPublic(remotePath, []byte(s))
-	panicIfErr(err)
-	logf("Uploaded to spaces: '%s'\n", remotePath)
 
 	logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
 }
@@ -252,6 +251,8 @@ func groupFilesByVersion(files []string) []*filesByVer {
 }
 
 func minioDeleteOldBuildsPrefix(buildType string) {
+	panicIf(buildType == buildTypeRel, "can't delete release builds")
+
 	nBuildsToRetain := nBuildsToRetainDaily
 	if buildType == buildTypePreRel {
 		nBuildsToRetain = nBuildsToRetainPreRel

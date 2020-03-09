@@ -6,22 +6,21 @@ import (
 )
 
 func buildDaily() {
-	// early exit if missing
-	detectSigntoolPath()
+	detectSigntoolPath() // early exit if missing
 
-	ver := getPreReleaseVer()
+	ver := getVerForBuildType(buildTypeDaily)
 	s := fmt.Sprintf("buidling daily version %s", ver)
 	defer makePrintDuration(s)()
+
 	verifyGitCleanMust()
 	verifyOnMasterBranchMust()
 
 	clean()
-
 	setBuildConfigDaily()
 	defer revertBuildConfig()
 
 	build64()
-	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s.exe", ver)
+	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
 	createManifestMust()
