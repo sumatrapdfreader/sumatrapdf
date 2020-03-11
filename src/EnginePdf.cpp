@@ -407,7 +407,7 @@ EnginePdf::EnginePdf() {
     fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
-    ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_UNLIMITED);
+    ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_DEFAULT);
     installFitzErrorCallbacks(ctx);
 
     pdf_install_load_system_font_funcs(ctx);
