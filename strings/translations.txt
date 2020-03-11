@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ad0c0eed7d0b2e880e1f09edb42e06e0c5713525
+58f618306c05eb0bcc99457f7d1f98e3b2c83584
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5415,6 +5415,7 @@ uk:Закрити
 uz:Yopish
 vn:Đóng lại
 :Collapse All
+ar:طي الكل
 az:Hamısını bağla
 br:Minimizar tudo
 cn:全部折叠(&C)
@@ -8056,6 +8057,7 @@ uk:Помилка завантаження %s
 uz:%s yuklab olish xatosi
 vn:Không mở %s được
 :Expand All
+ar:بسط الكل
 az:Hamısını aç
 br:Expandir tudo
 cn:全部展开
@@ -14807,6 +14809,7 @@ uk:Повернути праворуч\tCtrl+Shift++
 uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
 :Save Annotations
+ar:حفظ الحواشي
 az:Annotasiyaları yadda saxla
 br:Salvar anotações
 cn:保存注释
