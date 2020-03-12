@@ -42,6 +42,8 @@
 #define DRAW_TEXT_SHADOW 1
 #define DRAW_MSG_TEXT_SHADOW 0
 
+#define TEN_SECONDS_IN_MS 10 * 1000
+
 using namespace Gdiplus;
 
 Color gCol1(196, 64, 50);
@@ -61,6 +63,7 @@ Color COLOR_MSG_INSTALLATION(gCol5);
 Color COLOR_MSG_FAILED(gCol1);
 
 HWND gHwndFrame = nullptr;
+WCHAR* firstError = nullptr;
 ButtonCtrl* gButtonExit = nullptr;
 ButtonCtrl* gButtonInstUninst = nullptr;
 HFONT gFontDefault = nullptr;
@@ -69,6 +72,8 @@ bool gForceCrash = false;
 WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
 int gButtonDy = 0;
+// if Sumatra is already installed, this is the installation dir
+WCHAR* gExistingInstallDir = nullptr;
 
 Flags* gCli = nullptr;
 
@@ -78,10 +83,6 @@ static AutoFreeWstr gMsg;
 static Color gMsgColor;
 
 static WStrVec gProcessesToClose;
-
-InstUninstGlobals gInstUninstGlobals = {
-    nullptr, /* WCHAR *firstError */
-};
 
 // list of supported file extensions for which SumatraPDF.exe will
 // be registered as a candidate for the Open With dialog's suggestions
@@ -95,7 +96,7 @@ const WCHAR* gSupportedExtsSumatra[] = {
 const WCHAR* gSupportedExtsRaMicro[] = { L".pdf", nullptr };
 // clang-format on
 
-const WCHAR** getSupportedExts() {
+const WCHAR** GetSupportedExts() {
     if (gIsRaMicroBuild) {
         return gSupportedExtsRaMicro;
     }
@@ -103,8 +104,8 @@ const WCHAR** getSupportedExts() {
 }
 
 void NotifyFailed(const WCHAR* msg) {
-    if (!gInstUninstGlobals.firstError) {
-        gInstUninstGlobals.firstError = str::Dup(msg);
+    if (!firstError) {
+        firstError = str::Dup(msg);
     }
     logf(L"NotifyFailed: %s\n", msg);
 }
@@ -146,23 +147,29 @@ WCHAR* GetInstallDirNoFree() {
 }
 
 WCHAR* GetBrowserPluginPath() {
-    WCHAR* dir = GetInstallDirNoFree();
-    return path::Join(dir, L"npPdfViewer.dll");
+    if (!gExistingInstallDir) {
+        return nullptr;
+    }
+    return path::Join(gExistingInstallDir, L"npPdfViewer.dll");
 }
 
 WCHAR* GetPdfFilterPath() {
-    WCHAR* dir = GetInstallDirNoFree();
-    return path::Join(dir, L"PdfFilter.dll");
+    if (!gExistingInstallDir) {
+        return nullptr;
+    }
+    return path::Join(gExistingInstallDir, L"PdfFilter.dll");
 }
 
-WCHAR* GetPdfPreviewerPath() {
-    WCHAR* dir = GetInstallDirNoFree();
-    return path::Join(dir, L"PdfPreview.dll");
+static WCHAR* GetPdfPreviewerPath() {
+    if (!gExistingInstallDir) {
+        return nullptr;
+    }
+    return path::Join(gExistingInstallDir, L"PdfPreview.dll");
 }
 
 WCHAR* GetInstalledExePath() {
     WCHAR* dir = GetInstallDirNoFree();
-    return path::Join(dir, getExeName());
+    return path::Join(dir, GetExeName());
 }
 
 WCHAR* GetUninstallerPath() {
@@ -174,7 +181,7 @@ WCHAR* GetShortcutPath(int csidl) {
     if (!dir) {
         return nullptr;
     }
-    const WCHAR* appName = getAppName();
+    const WCHAR* appName = GetAppName();
     AutoFreeWstr lnkName = str::Join(appName, L".lnk");
     return path::Join(dir, lnkName);
 }
@@ -306,6 +313,11 @@ void UninstallPdfFilter() {
     }
 }
 
+void UninstallPdfFilterSilent() {
+    AutoFreeWstr dllPath = GetPdfFilterPath();
+    UnRegisterServerDLL(dllPath);
+}
+
 void InstallPdfPreviewer() {
     AutoFreeWstr dllPath = GetPdfPreviewerPath();
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
@@ -322,7 +334,11 @@ void UninstallPdfPreviewer() {
     }
 }
 
-#define TEN_SECONDS_IN_MS 10 * 1000
+void UninstallPdfPreviewerSilent() {
+    AutoFreeWstr dllPath = GetPdfPreviewerPath();
+    // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
+    UnRegisterServerDLL(dllPath);
+}
 
 static bool IsProcWithName(DWORD processId, const WCHAR* modulePath) {
     AutoCloseHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
@@ -436,20 +452,25 @@ static void ProcessesUsingInstallation(WStrVec& names) {
     }
 }
 
-static const WCHAR* nameList[] = {
-    nullptr,          nullptr,         L"plugin-container.exe", L"Mozilla Firefox", L"chrome.exe",
-    L"Google Chrome", L"prevhost.exe", L"Windows Explorer",     L"dllhost.exe",     L"Windows Explorer",
+// clang-format off
+static const WCHAR* readableProcessNames[] = {
+    nullptr, nullptr, // to be filled with our process
+    L"plugin-container.exe", L"Mozilla Firefox",
+    L"chrome.exe", L"Google Chrome",
+    L"prevhost.exe", L"Windows Explorer",
+    L"dllhost.exe", L"Windows Explorer"
 };
+// clang-format on
 
 static const WCHAR* ReadableProcName(const WCHAR* procPath) {
-    const WCHAR* exeName = getExeName();
-    const WCHAR* appName = getAppName();
-    nameList[0] = exeName;
-    nameList[1] = appName;
+    const WCHAR* exeName = GetExeName();
+    const WCHAR* appName = GetAppName();
+    readableProcessNames[0] = exeName;
+    readableProcessNames[1] = appName;
     const WCHAR* procName = path::GetBaseNameNoFree(procPath);
-    for (size_t i = 0; i < dimof(nameList); i += 2) {
-        if (str::EqI(procName, nameList[i])) {
-            return nameList[i + 1];
+    for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {
+        if (str::EqI(procName, readableProcessNames[i])) {
+            return readableProcessNames[i + 1];
         }
     }
     return procName;
@@ -523,19 +544,28 @@ typedef struct {
     // part that doesn't change
     char c;
     Color col, colShadow;
-    REAL rotation;
-    REAL dyOff; // displacement
+    float rotation;
+    float dyOff; // displacement
 
     // part calculated during layout
-    REAL dx, dy;
-    REAL x;
+    float dx, dy;
+    float x;
 } LetterInfo;
 
-LetterInfo gLetters[] = {{'S', gCol1, gCol1Shadow, -3.f, 0, 0, 0},   {'U', gCol2, gCol2Shadow, 0.f, 0, 0, 0},
-                         {'M', gCol3, gCol3Shadow, 2.f, -2.f, 0, 0}, {'A', gCol4, gCol4Shadow, 0.f, -2.4f, 0, 0},
-                         {'T', gCol5, gCol5Shadow, 0.f, 0, 0, 0},    {'R', gCol5, gCol5Shadow, 2.3f, -1.4f, 0, 0},
-                         {'A', gCol4, gCol4Shadow, 0.f, 0, 0, 0},    {'P', gCol3, gCol3Shadow, 0.f, -2.3f, 0, 0},
-                         {'D', gCol2, gCol2Shadow, 0.f, 3.f, 0, 0},  {'F', gCol1, gCol1Shadow, 0.f, 0, 0, 0}};
+// clang-format off
+LetterInfo gLetters[] = {
+    {'S', gCol1, gCol1Shadow, -3.f, 0, 0, 0},
+    {'U', gCol2, gCol2Shadow, 0.f, 0, 0, 0},
+    {'M', gCol3, gCol3Shadow, 2.f, -2.f, 0, 0},
+    {'A', gCol4, gCol4Shadow, 0.f, -2.4f, 0, 0},
+    {'T', gCol5, gCol5Shadow, 0.f, 0, 0, 0},
+    {'R', gCol5, gCol5Shadow, 2.3f, -1.4f, 0, 0},
+    {'A', gCol4, gCol4Shadow, 0.f, 0, 0, 0},
+    {'P', gCol3, gCol3Shadow, 0.f, -2.3f, 0, 0},
+    {'D', gCol2, gCol2Shadow, 0.f, 3.f, 0, 0},
+    {'F', gCol1, gCol1Shadow, 0.f, 0, 0, 0}
+};
+// clang-format on
 
 #define SUMATRA_LETTERS_COUNT (dimof(gLetters))
 

@@ -7,15 +7,15 @@
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
-WCHAR* getRegPathUninst(const WCHAR* appName) {
+WCHAR* GetRegPathUninst(const WCHAR* appName) {
     return str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", appName);
 }
 
-WCHAR* getRegClassesApp(const WCHAR* appName) {
+WCHAR* GetRegClassesApp(const WCHAR* appName) {
     return str::Join(L"Software\\Classes\\", appName);
 }
 
-WCHAR* getRegClassesApps(const WCHAR* appName) {
+WCHAR* GetRegClassesApps(const WCHAR* appName) {
     return str::Join(L"Software\\Classes\\Applications\\", appName, L".exe");
 }
 
@@ -57,7 +57,7 @@ bool ListAsDefaultProgramPreWin10(const WCHAR* exeName, const WCHAR* extensions[
     // (HKLM\Software\Classes\.mobi\OpenWithList\SumatraPDF.exe key is present but "Open With"
     // menu item doesn't even exist for .mobi files
     // It's not so easy, though, because if we just set it to SumatraPDF,
-    // all getSupportedExts() will be reported as "PDF Document" by Explorer, so this needs
+    // all GetSupportedExts() will be reported as "PDF Document" by Explorer, so this needs
     // to be more intelligent. We should probably mimic Windows Media Player scheme i.e.
     // set OpenWithProgIds to SumatraPDF.AssocFile.Mobi etc. and create apropriate
     // \SOFTWARE\Classes\CLSID\{GUID}\ProgID etc. entries

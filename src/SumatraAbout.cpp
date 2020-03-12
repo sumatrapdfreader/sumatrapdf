@@ -123,7 +123,7 @@ static Vec<StaticLinkInfo> gLinkInfo;
 #define COL5 RGB(112, 115, 207)
 
 static void DrawAppName(HDC hdc, PointI pt) {
-    const WCHAR* txt = getAppName();
+    const WCHAR* txt = GetAppName();
     if (gIsRaMicroBuild) {
         // simple black-ish version
         COLORREF col = RGB(0x43, 0x43, 0x43);
@@ -165,7 +165,7 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 
     SIZE txtSize{};
     /* calculate minimal top box size */
-    const WCHAR* txt = getAppName();
+    const WCHAR* txt = GetAppName();
 
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     result.dy = txtSize.cy + DpiScale(hwnd, ABOUT_BOX_MARGIN_DY * 2);
@@ -192,7 +192,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
     SetBkMode(hdc, TRANSPARENT);
 
     SIZE txtSize;
-    const WCHAR* txt = getAppName();
+    const WCHAR* txt = GetAppName();
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawAppName(hdc, mainRect.TL());
@@ -423,7 +423,7 @@ static void CopyAboutInfoToClipboard(HWND hwnd) {
     UNUSED(hwnd);
     str::WStr info(512);
     AutoFreeWstr ver = GetAppVersion();
-    info.AppendFmt(L"%s %s\r\n", getAppName(), ver.Get());
+    info.AppendFmt(L"%s %s\r\n", GetAppName(), ver.Get());
     for (size_t i = info.size() - 2; i > 0; i--) {
         info.Append('-');
     }
@@ -551,7 +551,7 @@ void OnMenuAbout() {
         WNDCLASSEX wcex;
         FillWndClassEx(wcex, ABOUT_CLASS_NAME, WndProcAbout);
         HMODULE h = GetModuleHandleW(nullptr);
-        wcex.hIcon = LoadIcon(h, MAKEINTRESOURCE(getAppIconID()));
+        wcex.hIcon = LoadIcon(h, MAKEINTRESOURCE(GetAppIconID()));
         gAtomAbout = RegisterClassEx(&wcex);
         CrashIf(!gAtomAbout);
     }

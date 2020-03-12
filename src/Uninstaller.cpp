@@ -53,10 +53,10 @@ static HANDLE hThread = nullptr;
 static bool success = false;
 
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
-    AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(getAppName());
+    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppName());
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
     // legacy, this key was added by installers up to version 1.8
-    const WCHAR* appName = getAppName();
+    const WCHAR* appName = GetAppName();
     AutoFreeWstr key = str::Join(L"Software\\", appName);
     bool ok2 = DeleteRegKey(hkey, key);
     return ok1 && ok2;
@@ -71,9 +71,9 @@ static bool RemoveUninstallerRegistryInfo() {
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     AutoFreeWstr curr = ReadRegStr(hkey, REG_CLASSES_PDF, nullptr);
-    AutoFreeWstr REG_CLASSES_APP = getRegClassesApp(getAppName());
+    AutoFreeWstr REG_CLASSES_APP = GetRegClassesApp(GetAppName());
     AutoFreeWstr prev = ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf");
-    const WCHAR* appName = getAppName();
+    const WCHAR* appName = GetAppName();
     if (!curr || !str::Eq(curr, appName)) {
         // not the default, do nothing
     } else if (prev) {
@@ -95,7 +95,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
         }
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION));
-    const WCHAR* exeName = getExeName();
+    const WCHAR* exeName = GetExeName();
     if (str::EqI(buf, exeName)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, APPLICATION);
         if (res != ERROR_SUCCESS) {
@@ -129,18 +129,18 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
 
 static void RemoveOwnRegistryKeys(HKEY hkey) {
     UnregisterFromBeingDefaultViewer(hkey);
-    const WCHAR* appName = getAppName();
-    const WCHAR* exeName = getExeName();
-    AutoFreeWstr regClassApp = getRegClassesApp(appName);
+    const WCHAR* appName = GetAppName();
+    const WCHAR* exeName = GetExeName();
+    AutoFreeWstr regClassApp = GetRegClassesApp(appName);
     DeleteRegKey(hkey, regClassApp);
-    AutoFreeWstr regClassApps = getRegClassesApps(appName);
+    AutoFreeWstr regClassApps = GetRegClassesApps(appName);
     DeleteRegKey(hkey, regClassApps);
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_PDF, L"\\OpenWithProgids");
         SHDeleteValueW(hkey, key, appName);
     }
 
-    const WCHAR** supportedExts = getSupportedExts();
+    const WCHAR** supportedExts = GetSupportedExts();
     AutoFreeWstr openWithVal = str::Join(L"\\OpenWithList\\", exeName);
     for (int j = 0; nullptr != supportedExts[j]; j++) {
         AutoFreeWstr keyname(str::Join(L"Software\\Classes\\", supportedExts[j], L"\\OpenWithProgids"));
@@ -315,7 +315,7 @@ void OnUninstallationFinished() {
     gButtonInstUninst = nullptr;
     CreateButtonExit(gHwndFrame);
     SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
-    gMsgError = gInstUninstGlobals.firstError;
+    gMsgError = firstError;
     InvalidateFrame();
 
     CloseHandle(hThread);
@@ -352,7 +352,7 @@ static void CreateMainWindow() {
 
 static void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
-    const WCHAR* appName = getAppName();
+    const WCHAR* appName = GetAppName();
     AutoFreeWstr caption = str::Join(appName, L" Uninstaller Usage");
     AutoFreeWstr msg = str::Format(
         L"uninstall.exe [/s][/d <path>]\n\
@@ -364,7 +364,7 @@ static void ShowUsage() {
 }
 
 static WCHAR* GetInstallationDir() {
-    AutoFreeWstr REG_PATH_UNINST = getRegPathUninst(getAppName());
+    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppName());
     AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
@@ -431,7 +431,7 @@ static bool RegisterWinClass() {
 
     FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
     auto h = GetModuleHandle(nullptr);
-    auto iconName = MAKEINTRESOURCEW(getAppIconID());
+    auto iconName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIcon(h, iconName);
 
     ATOM atom = RegisterClassEx(&wcex);
@@ -504,6 +504,7 @@ int RunUninstaller(Flags* cli) {
     int ret = 1;
 
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
+    gExistingInstallDir = GetInstallationDir();
     gCli->installDir = GetInstallationDir();
 
     AutoFreeWstr exePath(GetInstalledExePath());
@@ -541,7 +542,7 @@ int RunUninstaller(Flags* cli) {
     ret = RunApp();
 
 Exit:
-    free(gInstUninstGlobals.firstError);
+    free(firstError);
 
     return ret;
 }
@@ -670,7 +671,7 @@ static Gdiplus::Bitmap* LoadRaMicroSplash() {
 
 static bool CreateRaMicroUninstallerWindow() {
     HMODULE h = GetModuleHandleW(nullptr);
-    LPCWSTR iconName = MAKEINTRESOURCEW(getAppIconID());
+    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
     HICON hIcon = LoadIconW(h, iconName);
 
     auto win = new RaMicroUninstallerWindow();
@@ -760,7 +761,7 @@ int RunUninstallerRaMicro() {
     int ret = 1;
 
     const WCHAR* msgFmt = _TR("Are you sure you want to uninstall %s?");
-    const WCHAR* appName = getAppName();
+    const WCHAR* appName = GetAppName();
     gDefaultMsg = str::Format(msgFmt, appName);
     gCli->installDir = GetInstallationDir();
 
@@ -797,7 +798,7 @@ int RunUninstallerRaMicro() {
     ret = RunApp();
 
 Exit:
-    free(gInstUninstGlobals.firstError);
+    free(firstError);
 
     return ret;
 }

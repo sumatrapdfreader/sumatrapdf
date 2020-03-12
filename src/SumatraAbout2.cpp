@@ -277,7 +277,7 @@ static void DestroyAboutMuiWindow() {
 static void CopyAboutInfoToClipboard(HWND hwnd) {
     UNUSED(hwnd);
     str::WStr info(512);
-    info.AppendFmt(L"%s %s\r\n", getAppName(), VERSION_TXT);
+    info.AppendFmt(L"%s %s\r\n", GetAppName(), VERSION_TXT);
     for (size_t i = info.size() - 2; i > 0; i--) {
         info.Append('-');
     }
@@ -342,7 +342,7 @@ void OnMenuAbout2() {
     if (!gAboutWndAtom) {
         FillWndClassEx(wcex, WND_CLASS_ABOUT2, WndProcAbout2);
         HMODULE h = GetModuleHandleW(nullptr);
-        wcex.hIcon = LoadIcon(h, MAKEINTRESOURCE(getAppIconID()));
+        wcex.hIcon = LoadIcon(h, MAKEINTRESOURCE(GetAppIconID()));
         gAboutWndAtom = RegisterClassEx(&wcex);
         CrashIf(!gAboutWndAtom);
     }

@@ -47,20 +47,11 @@
 // if 1, adds checkbox to register as default PDF viewer
 #define ENABLE_REGISTER_DEFAULT 0
 
-struct InstallerGlobals {
 #if ENABLE_REGISTER_DEFAULT
-    bool registerAsDefault;
+static bool gRegisterAsDefault = false;
 #endif
-    bool autoUpdate;
-};
 
-static InstallerGlobals gInstallerGlobals = {
-#if ENABLE_REGISTER_DEFAULT
-    false, /* bool registerAsDefault */
-#endif
-    false, /* bool autoUpdate */
-};
-
+static bool gAutoUpdate = false;
 static HBRUSH ghbrBackground = nullptr;
 
 static ButtonCtrl* gButtonOptions = nullptr;
@@ -146,7 +137,7 @@ static bool CreateInstallationDirectory() {
 
 bool CopySelfToDir(const WCHAR* destDir) {
     auto exePath = GetExePath();
-    auto exeName = getExeName();
+    auto exeName = GetExeName();
     auto* dstPath = path::Join(destDir, exeName);
     BOOL failIfExists = FALSE;
     BOOL ok = ::CopyFileW(exePath, dstPath, failIfExists);
@@ -161,7 +152,7 @@ static void CopySettingsFile() {
     AutoFreeWstr srcDir = GetSpecialFolder(CSIDL_APPDATA, false);
     AutoFreeWstr dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
 
-    const WCHAR* appName = getAppName();
+    const WCHAR* appName = GetAppName();
     WCHAR* prefsFileName = prefs::GetSettingsFileNameNoFree();
     AutoFreeWstr srcPath = path::Join(srcDir.data, appName, prefsFileName);
     AutoFreeWstr dstPath = path::Join(dstDir.data, appName, prefsFileName);
@@ -253,8 +244,8 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     AutoFreeWstr uninstallerPath = GetUninstallerPath();
     AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath.get());
 
-    const WCHAR* appName = getAppName();
-    AutoFreeWstr regPathUninst = getRegPathUninst(appName);
+    const WCHAR* appName = GetAppName();
+    AutoFreeWstr regPathUninst = GetRegPathUninst(appName);
     // path to installed executable (or "$path,0" to force the first icon)
     ok &= WriteRegStr(hkey, regPathUninst, L"DisplayIcon", installedExePath);
     ok &= WriteRegStr(hkey, regPathUninst, L"DisplayName", appName);
@@ -298,10 +289,10 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
 
     AutoFreeWstr exePath(GetInstalledExePath());
     if (HKEY_LOCAL_MACHINE == hkey) {
-        AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", getExeName());
+        AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", GetExeName());
         ok &= WriteRegStr(hkey, key, nullptr, exePath);
     }
-    AutoFreeWstr REG_CLASSES_APPS = getRegClassesApps(getAppName());
+    AutoFreeWstr REG_CLASSES_APPS = GetRegClassesApps(GetAppName());
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     AutoFreeWstr iconPath(str::Join(exePath, L",1"));
@@ -327,8 +318,8 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
 
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
-    const WCHAR* exeName = getExeName();
-    ok &= ListAsDefaultProgramPreWin10(exeName, getSupportedExts(), hkey);
+    const WCHAR* exeName = GetExeName();
+    ok &= ListAsDefaultProgramPreWin10(exeName, GetSupportedExts(), hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
@@ -427,9 +418,9 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
 
-    const WCHAR* appName = getAppName();
-    const WCHAR* exeName = getExeName();
-    if (!ListAsDefaultProgramWin10(appName, exeName, getSupportedExts())) {
+    const WCHAR* appName = GetAppName();
+    const WCHAR* exeName = GetExeName();
+    if (!ListAsDefaultProgramWin10(appName, exeName, GetSupportedExts())) {
         NotifyFailed(_TR("Failed to register as default program on win 10"));
     }
 
@@ -476,8 +467,9 @@ static void OnButtonInstall() {
     }
 
     WCHAR* userInstallDir = win::GetText(gTextboxInstDir->hwnd);
-    if (!str::IsEmpty(userInstallDir))
+    if (!str::IsEmpty(userInstallDir)) {
         str::ReplacePtr(&gCli->installDir, userInstallDir);
+    }
     free(userInstallDir);
 
 #if ENABLE_REGISTER_DEFAULT
@@ -539,12 +531,12 @@ static void OnInstallationFinished() {
         CreateButtonExit(gHwndFrame);
         SetMsg(_TR("Installation failed!"), COLOR_MSG_FAILED);
     }
-    gMsgError = gInstUninstGlobals.firstError;
+    gMsgError = firstError;
     InvalidateFrame();
 
     CloseHandle(hThread);
 
-    if (gInstallerGlobals.autoUpdate && success) {
+    if (gAutoUpdate && success) {
         // click the Start button
         PostMessage(gHwndFrame, WM_COMMAND, IDOK, 0);
     }
@@ -670,7 +662,7 @@ static void OnButtonBrowse() {
     AutoFreeWstr installPath = str::Dup(path);
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    const WCHAR* appName = getAppName();
+    const WCHAR* appName = GetAppName();
     AutoFreeWstr end = str::Join(L"\\", appName);
     if (!str::EndsWithI(path, end)) {
         installPath = path::Join(path, appName);
@@ -725,7 +717,7 @@ static void OnCreateWindow(HWND hwnd) {
     y -= (staticDy + WINDOW_MARGIN);
 
     AutoFreeWstr defaultViewer(GetDefaultPdfViewer());
-    const WCHAR* appName = getAppName();
+    const WCHAR* appName = GetAppName();
     BOOL hasOtherViewer = !str::EqI(defaultViewer, appName);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
@@ -797,7 +789,7 @@ static void OnCreateWindow(HWND hwnd) {
 
     gButtonInstUninst->SetFocus();
 
-    if (gInstallerGlobals.autoUpdate) {
+    if (gAutoUpdate) {
         // click the Install button
         PostMessage(hwnd, WM_COMMAND, IDOK, 0);
     }
@@ -822,8 +814,8 @@ static void CreateMainWindow() {
 }
 
 static WCHAR* GetInstallationDir() {
-    const WCHAR* appName = getAppName();
-    AutoFreeWstr regPath = getRegPathUninst(appName);
+    const WCHAR* appName = GetAppName();
+    AutoFreeWstr regPath = GetRegPathUninst(appName);
     AutoFreeWstr dir = ReadRegStr2(regPath, L"InstallLocation");
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
@@ -902,7 +894,7 @@ static bool RegisterWinClass() {
 
     FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
     auto h = GetModuleHandle(nullptr);
-    auto resName = MAKEINTRESOURCEW(getAppIconID());
+    auto resName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIcon(h, resName);
 
     ATOM atom = RegisterClassEx(&wcex);
@@ -1000,18 +992,21 @@ int RunInstaller(Flags* cli) {
 
     gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
 
+    gExistingInstallDir = GetInstallationDir();
+
     if (!gCli->installDir) {
         gCli->installDir = GetInstallationDir();
     }
 
+    if (!gCli->withFilter) {
+        gCli->withFilter = IsPdfFilterInstalled();
+    }
+    if (!gCli->withPreview) {
+        gCli->withPreview = IsPdfPreviewerInstalled();
+    }
+
     if (gCli->silent) {
         // make sure not to uninstall the plugins during silent installation
-        if (!gCli->withFilter) {
-            gCli->withFilter = IsPdfFilterInstalled();
-        }
-        if (!gCli->withPreview) {
-            gCli->withPreview = IsPdfPreviewerInstalled();
-        }
         InstallerThread(nullptr);
         ret = success ? 0 : 1;
         goto Exit;
@@ -1030,7 +1025,7 @@ int RunInstaller(Flags* cli) {
     ret = RunApp();
 
 Exit:
-    free(gInstUninstGlobals.firstError);
+    free(firstError);
 
     return ret;
 }
@@ -1160,7 +1155,7 @@ static Gdiplus::Bitmap* LoadRaMicroSplash() {
 
 static bool CreateRaMicroInstallerWindow() {
     HMODULE h = GetModuleHandleW(nullptr);
-    LPCWSTR iconName = MAKEINTRESOURCEW(getAppIconID());
+    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
     HICON hIcon = LoadIconW(h, iconName);
 
     auto win = new RaMicroInstallerWindow();
@@ -1284,7 +1279,7 @@ int RunInstallerRaMicro() {
     ret = RunApp();
 
 Exit:
-    free(gInstUninstGlobals.firstError);
+    free(firstError);
 
     return ret;
 }

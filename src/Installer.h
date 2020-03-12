@@ -24,23 +24,20 @@ extern int gButtonDy;
 
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 
-struct InstUninstGlobals {
-    WCHAR* firstError;
-};
-
 struct ButtonCtrl;
 
-extern InstUninstGlobals gInstUninstGlobals;
+extern WCHAR* firstError;
 extern Flags* gCli;
 extern const WCHAR* gDefaultMsg;
 extern HWND gHwndFrame;
-const WCHAR** getSupportedExts();
+const WCHAR** GetSupportedExts();
 extern ButtonCtrl* gButtonExit;
 extern ButtonCtrl* gButtonInstUninst;
 extern HFONT gFontDefault;
 extern WCHAR* gMsgError;
 extern bool gShowOptions;
 extern bool gReproBug;
+extern WCHAR* gExistingInstallDir;
 
 extern Gdiplus::Color COLOR_MSG_WELCOME;
 extern Gdiplus::Color COLOR_MSG_OK;
@@ -68,7 +65,9 @@ ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s);
 void InstallPdfFilter();
 void InstallPdfPreviewer();
 void UninstallPdfFilter();
+void UninstallPdfFilterSilent();
 void UninstallPdfPreviewer();
+void UninstallPdfPreviewerSilent();
 void UninstallBrowserPlugin();
 bool CheckInstallUninstallPossible(bool silent = false);
 WCHAR* GetInstallDirNoFree();
@@ -76,8 +75,6 @@ WCHAR* GetInstalledExePath();
 WCHAR* GetUninstallerPath();
 WCHAR* GetInstalledBrowserPluginPath();
 WCHAR* GetBrowserPluginPath();
-WCHAR* GetPdfFilterPath();
-WCHAR* GetPdfPreviewerPath();
 WCHAR* GetShortcutPath(int csidl);
 int KillProcess(const WCHAR* processPath, bool waitUntilTerminated);
 void NotifyFailed(const WCHAR* msg);

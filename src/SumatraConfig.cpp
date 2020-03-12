@@ -71,21 +71,21 @@ bool gOwnerDrawMenu = true;
 bool gOwnerDrawMenu = false;
 #endif
 
-const WCHAR* getAppName() {
+const WCHAR* GetAppName() {
     if (gIsRaMicroBuild) {
         return L"RA-MICRO PDF Viewer";
     }
     return L"SumatraPDF";
 }
 
-const WCHAR* getExeName() {
+const WCHAR* GetExeName() {
     if (gIsRaMicroBuild) {
         return L"RA-MICRO PDF Viewer.exe";
     }
     return L"SumatraPDF.exe";
 }
 
-int getAppIconID() {
+int GetAppIconID() {
     if (gIsRaMicroBuild) {
         return IDI_RAMICRO;
     }

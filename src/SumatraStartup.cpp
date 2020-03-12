@@ -173,7 +173,7 @@ static bool RegisterWinClass() {
     ATOM atom;
 
     HMODULE h = GetModuleHandleW(nullptr);
-    LPCWSTR iconName = MAKEINTRESOURCEW(getAppIconID());
+    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcFrame);
     wcex.hIcon = LoadIconW(h, iconName);
     CrashIf(!wcex.hIcon);
@@ -672,7 +672,7 @@ static void EnsureNotInstaller() {
 
 static void ShowInstallerHelp() {
     // Note: translation services aren't initialized at this point, so English only
-    const WCHAR* appName = getAppName();
+    const WCHAR* appName = GetAppName();
 
     AutoFreeWstr msg = str::Format(
         L"%s installer options:\n\
