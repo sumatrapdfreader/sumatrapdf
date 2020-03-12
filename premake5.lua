@@ -60,6 +60,7 @@ workspace "SumatraPDF"
     toolset "v141_xp"
     disablewarnings { "4091" }
     buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
+    defines { "BUILD_XP" }
   filter {}
 
   filter "platforms:x32"

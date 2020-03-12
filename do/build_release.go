@@ -39,3 +39,31 @@ func buildRelease() {
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
 	copyBuiltManifest(dstDir, prefix)
 }
+
+// a faster release build for testing that only does 64-bit installer
+func buildReleaseFast() {
+	detectSigntoolPath() // early exit if missing
+
+	ver := getVerForBuildType(buildTypeRel)
+	s := fmt.Sprintf("buidling release version %s", ver)
+	defer makePrintDuration(s)()
+
+	verifyGitCleanMust()
+	verifyOnReleaseBranchMust()
+
+	//verifyBuildNotInS3ShortMust(buildTypeRel)
+	//verifyBuildNotInSpacesShortMust(buildTypeRel)
+
+	clean()
+	setBuildConfigRelease()
+	defer revertBuildConfig()
+
+	build(rel64Dir, "Release", "x64")
+	nameInZip := fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
+	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
+
+	dstDir := filepath.Join("out", "final-rel-fast")
+	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
+	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
+	copyBuiltManifest(dstDir, prefix)
+}

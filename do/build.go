@@ -84,7 +84,11 @@ func copyBuiltFiles(dstDir string, srcDir string, prefix string) {
 		dstName := f[1]
 		dstPath := filepath.Join(dstDir, dstName)
 		u.CreateDirForFileMust(dstPath)
-		u.CopyFileMust(dstPath, srcPath)
+		if u.FileExists(srcPath) {
+			u.CopyFileMust(dstPath, srcPath)
+		} else {
+			logf("Skipping copying '%s'\n", srcPath)
+		}
 	}
 }
 
@@ -107,6 +111,15 @@ func build(dir, config, platform string) {
 	signFilesMust(dir)
 	createPdbZipMust(dir)
 	createPdbLzsaMust(dir)
+}
+
+func buildJustInstaller(dir, config, platform string) {
+	msbuildPath := detectMsbuildPath()
+	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
+
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF-dll;PdfFilter;PdfPreview`, p, `/m`)
+	signFilesMust(dir)
 }
 
 func extractSumatraVersionMust() string {
@@ -376,7 +389,9 @@ func signFilesMust(dir string) {
 	if !shouldSignAndUpload() {
 		logf("Skipping signing in dir '%s'\n", dir)
 	}
-	signMust(filepath.Join(dir, "SumatraPDF.exe"))
+	if u.FileExists(filepath.Join(dir, "SumatraPDF.exe")) {
+		signMust(filepath.Join(dir, "SumatraPDF.exe"))
+	}
 	signMust(filepath.Join(dir, "libmupdf.dll"))
 	signMust(filepath.Join(dir, "PdfFilter.dll"))
 	signMust(filepath.Join(dir, "PdfPreview.dll"))
