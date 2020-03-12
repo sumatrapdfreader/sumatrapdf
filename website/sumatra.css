@@ -278,13 +278,15 @@ col, colgroup, table, tbody, td, tfoot, th, thead, tr {
 
 .img-wrapper {
   position: relative;
+  min-width: 90vw;
+  max-width: 720px;
+  max-height: 700px;
+  display: flex;
+  justify-content: space-around;
 }
 
 .img-wrapper > img {
   object-fit: scale-down;
-  max-width: 95vw;
-  max-width: 720px;
-  max-height: 700px;
 }
 
 .nav-icon-left {

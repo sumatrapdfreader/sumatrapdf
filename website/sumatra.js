@@ -3,6 +3,8 @@ var gSumVer = "3.1.2";
 
 // used by download-prev* pages, update after releasing a new version
 var gPrevSumatraVersion = [
+  "3.2",
+  "3.1.2",
   "3.1.1",
   "3.1",
   "3.0",
@@ -46,7 +48,7 @@ var gPrevSumatraVersion = [
 ];
 
 var dlPrefix = "/dl/";
-var dl2Prefix = "/dl2/";
+var dlPrefix2 = "/dl2/";
 
 function a(href, txt) {
   return '<a href="' + href + '">' + txt + "</a>";
