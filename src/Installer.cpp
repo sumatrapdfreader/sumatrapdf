@@ -69,6 +69,7 @@ static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfPreviewer = nullptr;
 static ProgressCtrl* gProgressBar = nullptr;
 static ButtonCtrl* gButtonExit = nullptr;
+static ButtonCtrl* gButtonInstUninst = nullptr;
 
 static HANDLE hThread = nullptr;
 static bool success = false;

@@ -52,6 +52,7 @@ static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;
 static bool success = false;
 static ButtonCtrl* gButtonExit = nullptr;
+static ButtonCtrl* gButtonInstUninst = nullptr;
 
 static void OnButtonExit() {
     SendMessage(gHwndFrame, WM_CLOSE, 0, 0);

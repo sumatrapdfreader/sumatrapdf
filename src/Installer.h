@@ -30,7 +30,6 @@ extern WCHAR* firstError;
 extern Flags* gCli;
 extern const WCHAR* gDefaultMsg;
 extern HWND gHwndFrame;
-extern ButtonCtrl* gButtonInstUninst;
 extern HFONT gFontDefault;
 extern WCHAR* gMsgError;
 extern bool gShowOptions;

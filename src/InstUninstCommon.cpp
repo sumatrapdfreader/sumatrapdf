@@ -64,8 +64,6 @@ Color COLOR_MSG_FAILED(gCol1);
 
 HWND gHwndFrame = nullptr;
 WCHAR* firstError = nullptr;
-ButtonCtrl* gButtonExit = nullptr;
-ButtonCtrl* gButtonInstUninst = nullptr;
 HFONT gFontDefault = nullptr;
 bool gShowOptions = false;
 bool gForceCrash = false;
