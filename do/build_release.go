@@ -63,5 +63,4 @@ func buildReleaseFast() {
 	dstDir := filepath.Join("out", "final-rel-fast")
 	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
-	copyBuiltManifest(dstDir, prefix)
 }
