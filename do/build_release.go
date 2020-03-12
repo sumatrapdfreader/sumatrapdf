@@ -58,7 +58,7 @@ func buildReleaseFast() {
 	setBuildConfigRelease()
 	defer revertBuildConfig()
 
-	build(rel64Dir, "Release", "x64")
+	buildJustInstaller(rel64Dir, "Release", "x64")
 	nameInZip := fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
