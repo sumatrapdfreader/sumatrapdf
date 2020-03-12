@@ -92,7 +92,7 @@
 #if defined(SUMATRA_UPDATE_INFO_URL)
 static const WCHAR* gUpdateInfoURL = SUMATRA_UPDATE_INFO_URL;
 #else
-static const WCHAR* gUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt"
+static const WCHAR* gUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
 
 //static const WCHAR* gUpdateInfoURL = L"https://www.sumatrapdfreader.org/update-check-rel.txt";
 #endif
@@ -118,7 +118,7 @@ static const WCHAR* gUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.
 #if defined(DEBUG)
 bool gDebugShowLinks = true;
 #else
-    bool gDebugShowLinks = false;
+bool gDebugShowLinks = false;
 #endif
 
 // used to show it in debug, but is not very useful,
