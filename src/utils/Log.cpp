@@ -38,6 +38,7 @@ void log(std::string_view s) {
     if (logToDebugger) {
         OutputDebugStringA(s.data());
     }
+    gLogMutex.Unlock();
 }
 
 void log(const char* s) {
