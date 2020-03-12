@@ -220,24 +220,30 @@ static bool RemoveEmptyDirectory(const WCHAR* dir) {
 // uninstallation (all listed files that actually exist).
 // When a file is no longer shipped, just disable the install flag so that the
 // file is still correctly removed when SumatraPDF is eventually uninstalled.
+// clang-format off
 const char* gInstalledFiles[] = {
     "libmupdf.dll",
     "PdfFilter.dll",
     "PdfPreview.dll",
-    // files no longer shipped, to be deleted
+    // those probably won't delete because in use
     "SumatraPDF.exe",
     "RA-MICRO PDF Viewer.exe",
-    "sumatrapdfprefs.dat",
+    // files no longer shipped, to be deleted
     "DroidSansFallback.ttf",
     "npPdfViewer.dll",
     "uninstall.exe",
     "UnRar.dll",
     "UnRar64.dll",
+    // other files we might generate
+    "sumatrapdfprefs.dat",
+    "SumatraPDF-settings.txt",
+
 };
+// clang-format on
 
 // TODO: maybe just delete the directory
 static void RemoveInstalledFiles() {
-    const WCHAR* dir = GetInstallDirNoFree();
+    AutoFreeWstr dir = GetExistingInstallationDir();
     size_t n = dimof(gInstalledFiles);
     for (size_t i = 0; i < n; i++) {
         const char* s = gInstalledFiles[i];
