@@ -52,7 +52,7 @@ static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;
 static bool success = false;
 static ButtonCtrl* gButtonExit = nullptr;
-static ButtonCtrl* gButtonInstUninst = nullptr;
+static ButtonCtrl* gButtonUninstaller = nullptr;
 
 static void OnButtonExit() {
     SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
@@ -314,7 +314,7 @@ static void OnButtonUninstall() {
     }
 
     // disable the button during uninstallation
-    gButtonInstUninst->SetIsEnabled(false);
+    gButtonUninstaller->SetIsEnabled(false);
     SetMsg(_TR("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
@@ -322,8 +322,8 @@ static void OnButtonUninstall() {
 }
 
 void OnUninstallationFinished() {
-    delete gButtonInstUninst;
-    gButtonInstUninst = nullptr;
+    delete gButtonUninstaller;
+    gButtonUninstaller = nullptr;
     CreateButtonExit(gHwndFrame);
     SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = firstError;
@@ -345,8 +345,8 @@ static bool UninstallerOnWmCommand(WPARAM wParam) {
 }
 
 static void OnCreateWindow(HWND hwnd) {
-    gButtonInstUninst = CreateDefaultButtonCtrl(hwnd, _TR("Uninstall SumatraPDF"));
-    gButtonInstUninst->onClicked = OnButtonUninstall;
+    gButtonUninstaller = CreateDefaultButtonCtrl(hwnd, _TR("Uninstall SumatraPDF"));
+    gButtonUninstaller->onClicked = OnButtonUninstall;
 }
 
 static void CreateMainWindow() {
@@ -494,7 +494,7 @@ static int RunApp() {
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
         auto dur = TimeSinceInMs(t);
-        if (dur > 10000 && gButtonInstUninst && gButtonInstUninst->IsEnabled()) {
+        if (dur > 10000 && gButtonUninstaller && gButtonUninstaller->IsEnabled()) {
             CheckInstallUninstallPossible(true);
             t = TimeGet();
         }

@@ -69,7 +69,7 @@ static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfPreviewer = nullptr;
 static ProgressCtrl* gProgressBar = nullptr;
 static ButtonCtrl* gButtonExit = nullptr;
-static ButtonCtrl* gButtonInstUninst = nullptr;
+static ButtonCtrl* gButtonInstaller = nullptr;
 
 static HANDLE hThread = nullptr;
 static bool success = false;
@@ -523,7 +523,7 @@ static void OnButtonInstall() {
     delete gCheckboxRegisterPdfPreviewer;
     delete gButtonOptions;
 
-    gButtonInstUninst->SetIsEnabled(false);
+    gButtonInstaller->SetIsEnabled(false);
 
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
@@ -532,7 +532,7 @@ static void OnButtonInstall() {
 }
 
 static void OnInstallationFinished() {
-    delete gButtonInstUninst;
+    delete gButtonInstaller;
     delete gProgressBar;
 
     if (success) {
@@ -700,8 +700,8 @@ static void OnCreateWindow(HWND hwnd) {
     RECT rc;
     ClientRect r(hwnd);
 
-    gButtonInstUninst = CreateDefaultButtonCtrl(hwnd, _TR("Install SumatraPDF"));
-    gButtonInstUninst->onClicked = OnButtonInstall;
+    gButtonInstaller = CreateDefaultButtonCtrl(hwnd, _TR("Install SumatraPDF"));
+    gButtonInstaller->onClicked = OnButtonInstall;
 
     SIZE btnSize;
     gButtonOptions = CreateDefaultButtonCtrl(hwnd, _TR("&Options"));
@@ -798,7 +798,7 @@ static void OnCreateWindow(HWND hwnd) {
     gShowOptions = !gShowOptions;
     OnButtonOptions();
 
-    gButtonInstUninst->SetFocus();
+    gButtonInstaller->SetFocus();
 
     if (gAutoUpdate) {
         // click the Install button
@@ -958,7 +958,7 @@ static int RunApp() {
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
         auto dur = TimeSinceInMs(t);
-        if (dur > 10000 && gButtonInstUninst && gButtonInstUninst->IsEnabled()) {
+        if (dur > 10000 && gButtonInstaller && gButtonInstaller->IsEnabled()) {
             CheckInstallUninstallPossible(true);
             t = TimeGet();
         }
