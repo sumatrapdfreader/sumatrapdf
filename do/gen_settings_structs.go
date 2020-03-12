@@ -815,7 +815,7 @@ func genSettingsStruct() string {
 }
 
 func genAndSaveSettingsStructs() {
-	helpURI := fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings%s.html", extractSumatraVersionMust())
+	helpURI := fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings/settings%s.html", extractSumatraVersionMust())
 
 	GlobalPrefs[0].Comment = helpURI
 
