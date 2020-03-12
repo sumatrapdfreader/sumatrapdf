@@ -133,6 +133,10 @@ void ScheduleRepaint(HWND hwnd);
 // do WM_PAINT immediately
 void RepaintNow(HWND hwnd);
 
+bool RegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr);
+bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr);
+bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args = nullptr);
+
 inline BOOL toBOOL(bool b) {
     return b ? TRUE : FALSE;
 }

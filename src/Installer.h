@@ -3,6 +3,10 @@
 
 #define INSTALLER_FRAME_CLASS_NAME L"SUMATRA_PDF_INSTALLER_FRAME"
 
+#define BROWSER_PLUGIN_NAME L"npPdfViewer.dll"
+#define SEARCH_FILTER_DLL_NAME L"PdfFilter.dll"
+#define PREVIEW_DLL_NAME L"PdfPreview.dll"
+
 #define INSTALLER_WIN_DX 420
 #define INSTALLER_WIN_DY 340
 
@@ -34,7 +38,6 @@ extern HFONT gFontDefault;
 extern WCHAR* gMsgError;
 extern bool gShowOptions;
 extern bool gReproBug;
-extern WCHAR* gExistingInstallDir;
 
 extern Gdiplus::Color COLOR_MSG_WELCOME;
 extern Gdiplus::Color COLOR_MSG_OK;
@@ -51,27 +54,37 @@ extern Gdiplus::Color gCol4Shadow;
 extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
-const WCHAR** GetSupportedExts();
+ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s);
 void InitInstallerUninstaller();
 void OnPaintFrame(HWND hwnd);
 void AnimStep();
-ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s);
-void InstallPdfFilter();
-void InstallPdfPreviewer();
-void UninstallPdfFilter();
-void UninstallPdfFilterSilent();
-void UninstallPdfPreviewer();
-void UninstallPdfPreviewerSilent();
-void UninstallBrowserPlugin();
-bool CheckInstallUninstallPossible(bool silent = false);
-WCHAR* GetInstallDirNoFree();
-WCHAR* GetInstalledExePath();
-WCHAR* GetUninstallerPath();
-WCHAR* GetInstalledBrowserPluginPath();
-WCHAR* GetBrowserPluginPath();
-WCHAR* GetShortcutPath(int csidl);
-int KillProcess(const WCHAR* processPath, bool waitUntilTerminated);
 void NotifyFailed(const WCHAR* msg);
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);
 void SetDefaultMsg();
+
+int KillProcess(const WCHAR* processPath, bool waitUntilTerminated);
+
+const WCHAR** GetSupportedExts();
+
 const WCHAR* GetOwnPath();
+WCHAR* GetShortcutPath(int csidl);
+
+WCHAR* GetExistingInstallationDir();
+WCHAR* GetInstallDirNoFree();
+WCHAR* GetInstalledExePath();
+WCHAR* GetUninstallerPath();
+
+WCHAR* GetInstallationFilePath(WCHAR* name);
+WCHAR* GetExistingInstallationFilePath(WCHAR* name);
+
+void RegisterPreviewer();
+void UnRegisterPreviewer(bool silent);
+bool IsPreviewerInstalled();
+
+void RegisterSearchFilter();
+void UnRegisterSearchFilter(bool silent);
+bool IsSearchFilterInstalled();
+
+void UninstallBrowserPlugin();
+
+bool CheckInstallUninstallPossible(bool silent = false);

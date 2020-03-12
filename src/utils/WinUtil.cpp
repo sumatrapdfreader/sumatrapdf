@@ -1288,6 +1288,67 @@ WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form) {
     return res.StealData();
 }
 
+// http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
+bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args) {
+    if (FAILED(OleInitialize(nullptr))) {
+        return false;
+    }
+
+    // make sure that the DLL can find any DLLs it depends on and
+    // which reside in the same directory (in this case: libmupdf.dll)
+    if (DynSetDllDirectoryW) {
+        AutoFreeWstr dllDir = path::GetDir(dllPath);
+        DynSetDllDirectoryW(dllDir);
+    }
+
+    defer {
+        if (DynSetDllDirectoryW) {
+            DynSetDllDirectoryW(L"");
+        }
+        OleUninitialize();
+    };
+
+    HMODULE lib = LoadLibraryW(dllPath);
+    if (!lib) {
+        return false;
+    }
+    defer {
+        FreeLibrary(lib);
+    };
+
+    bool ok = false;
+    typedef HRESULT(WINAPI * DllInstallProc)(BOOL, LPCWSTR);
+    typedef HRESULT(WINAPI * DllRegUnregProc)(VOID);
+    if (args) {
+        DllInstallProc DllInstall = (DllInstallProc)GetProcAddress(lib, "DllInstall");
+        if (DllInstall) {
+            ok = SUCCEEDED(DllInstall(install, args));
+        } else {
+            args = nullptr;
+        }
+    }
+
+    if (!args) {
+        const char* func = install ? "DllRegisterServer" : "DllUnregisterServer";
+        DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func);
+        if (DllRegUnreg) {
+            ok = SUCCEEDED(DllRegUnreg());
+        }
+    }
+    return ok;
+}
+
+bool RegisterServerDLL(const WCHAR* dllPath, const WCHAR* args) {
+    return RegisterOrUnregisterServerDLL(dllPath, true, args);
+}
+
+bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args) {
+    if (!file::Exists(dllPath)) {
+        return true;
+    }
+    return RegisterOrUnregisterServerDLL(dllPath, false, args);
+}
+
 namespace win {
 
 void ToForeground(HWND hwnd) {

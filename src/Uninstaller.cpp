@@ -53,6 +53,8 @@ static HANDLE hThread = nullptr;
 static bool success = false;
 static ButtonCtrl* gButtonExit = nullptr;
 static ButtonCtrl* gButtonUninstaller = nullptr;
+static bool gWasSearchFilterInstalled = false;
+static bool gWasPreviewInstaller = false;
 
 static void OnButtonExit() {
     SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
@@ -278,11 +280,13 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
         NotifyFailed(_TR("Failed to delete uninstaller registry keys"));
     }
 
+    // mark them as uninstalled
+    gWasSearchFilterInstalled = false;
+    gWasPreviewInstaller = false;
+
     RemoveShortcuts();
 
     UninstallBrowserPlugin();
-    UninstallPdfFilter();
-    UninstallPdfPreviewer();
     RemoveOwnRegistryKeys();
 
     RemoveInstalledFiles();
@@ -375,16 +379,10 @@ static void ShowUsage() {
 }
 
 static WCHAR* GetInstallationDir() {
-    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppName());
-    AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");
+    WCHAR* dir = GetExistingInstallationDir();
     if (dir) {
-        if (str::EndsWithI(dir, L".exe")) {
-            dir.Set(path::GetDir(dir));
-        }
-        if (!str::IsEmpty(dir.Get()) && dir::Exists(dir))
-            return dir.StealData();
+        return dir;
     }
-
     // fall back to the uninstaller's path
     return path::GetDir(GetOwnPath());
 }
@@ -514,8 +512,10 @@ int RunUninstaller(Flags* cli) {
 
     int ret = 1;
 
+    gWasSearchFilterInstalled = IsSearchFilterInstalled();
+    gWasPreviewInstaller = IsPreviewerInstalled();
+
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
-    gExistingInstallDir = GetInstallationDir();
     gCli->installDir = GetInstallationDir();
 
     AutoFreeWstr exePath(GetInstalledExePath());
@@ -551,6 +551,14 @@ int RunUninstaller(Flags* cli) {
 
     BringWindowToTop(gHwndFrame);
     ret = RunApp();
+
+    // re-register if we un-registered but uninstallation was cancelled
+    if (gWasSearchFilterInstalled) {
+        RegisterSearchFilter();
+    }
+    if (gWasPreviewInstaller) {
+        RegisterPreviewer();
+    }
 
 Exit:
     free(firstError);

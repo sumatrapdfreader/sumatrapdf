@@ -30,6 +30,9 @@
 #include "CrashHandler.h"
 #include "Translations.h"
 
+#include "ifilter/PdfFilter.h"
+#include "previewer/PdfPreview.h"
+
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
@@ -70,8 +73,6 @@ bool gForceCrash = false;
 WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
 int gButtonDy = 0;
-// if Sumatra is already installed, this is the installation dir
-WCHAR* gExistingInstallDir = nullptr;
 
 Flags* gCli = nullptr;
 
@@ -121,14 +122,6 @@ static HFONT CreateDefaultGuiFont() {
     return f;
 }
 
-const WCHAR* GetOwnPath() {
-    static WCHAR exePath[MAX_PATH];
-    exePath[0] = '\0';
-    GetModuleFileName(nullptr, exePath, dimof(exePath));
-    exePath[dimof(exePath) - 1] = '\0';
-    return exePath;
-}
-
 static void InvalidateFrame() {
     ClientRect rc(gHwndFrame);
     RECT rcTmp = rc.ToRECT();
@@ -140,29 +133,43 @@ void InitInstallerUninstaller() {
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 }
 
+const WCHAR* GetOwnPath() {
+    static WCHAR exePath[MAX_PATH];
+    exePath[0] = '\0';
+    GetModuleFileName(nullptr, exePath, dimof(exePath));
+    exePath[dimof(exePath) - 1] = '\0';
+    return exePath;
+}
+
+WCHAR* GetExistingInstallationDir() {
+    AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppName());
+    AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");
+    if (!dir) {
+        return nullptr;
+    }
+    if (str::EndsWithI(dir, L".exe")) {
+        dir.Set(path::GetDir(dir));
+    }
+    if (!str::IsEmpty(dir.Get()) && dir::Exists(dir)) {
+        return dir.StealData();
+    }
+    return nullptr;
+}
+
+WCHAR* GetExistingInstallationFilePath(WCHAR* name) {
+    WCHAR* dir = GetExistingInstallationDir();
+    if (!dir) {
+        return nullptr;
+    }
+    return path::Join(dir, name);
+}
+
 WCHAR* GetInstallDirNoFree() {
     return gCli->installDir;
 }
 
-WCHAR* GetBrowserPluginPath() {
-    if (!gExistingInstallDir) {
-        return nullptr;
-    }
-    return path::Join(gExistingInstallDir, L"npPdfViewer.dll");
-}
-
-WCHAR* GetPdfFilterPath() {
-    if (!gExistingInstallDir) {
-        return nullptr;
-    }
-    return path::Join(gExistingInstallDir, L"PdfFilter.dll");
-}
-
-static WCHAR* GetPdfPreviewerPath() {
-    if (!gExistingInstallDir) {
-        return nullptr;
-    }
-    return path::Join(gExistingInstallDir, L"PdfPreview.dll");
+WCHAR* GetInstallationFilePath(WCHAR* name) {
+    return path::Join(gCli->installDir, name);
 }
 
 WCHAR* GetInstalledExePath() {
@@ -189,6 +196,11 @@ WCHAR* GetInstalledBrowserPluginPath() {
 }
 
 static bool IsUsingInstallation(DWORD procId) {
+    AutoFreeWstr dir = GetExistingInstallationDir();
+    if (dir.empty()) {
+        return false;
+    }
+
     DWORD myProcID = GetCurrentProcessId();
     if (procId == myProcID) {
         return false;
@@ -199,10 +211,8 @@ static bool IsUsingInstallation(DWORD procId) {
         return false;
     }
 
-    AutoFreeWstr libmupdf(path::Join(GetInstallDirNoFree(), L"libmupdf.dll"));
-    AutoFreeWstr browserPlugin(GetBrowserPluginPath());
-    const WCHAR* libmupdfName = path::GetBaseNameNoFree(libmupdf);
-    const WCHAR* browserPluginName = path::GetBaseNameNoFree(browserPlugin);
+    AutoFreeWstr libmupdf = path::Join(dir, L"libmupdf.dll");
+    AutoFreeWstr browserPlugin = path::Join(dir, BROWSER_PLUGIN_NAME);
 
     MODULEENTRY32 mod = {0};
     mod.dwSize = sizeof(mod);
@@ -222,69 +232,8 @@ static bool IsUsingInstallation(DWORD procId) {
     return false;
 }
 
-// http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
-static bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args = nullptr) {
-    if (FAILED(OleInitialize(nullptr))) {
-        return false;
-    }
-
-    // make sure that the DLL can find any DLLs it depends on and
-    // which reside in the same directory (in this case: libmupdf.dll)
-    if (DynSetDllDirectoryW) {
-        AutoFreeWstr dllDir = path::GetDir(dllPath);
-        DynSetDllDirectoryW(dllDir);
-    }
-
-    defer {
-        if (DynSetDllDirectoryW) {
-            DynSetDllDirectoryW(L"");
-        }
-        OleUninitialize();
-    };
-
-    HMODULE lib = LoadLibraryW(dllPath);
-    if (!lib) {
-        return false;
-    }
-    defer {
-        FreeLibrary(lib);
-    };
-
-    bool ok = false;
-    typedef HRESULT(WINAPI * DllInstallProc)(BOOL, LPCWSTR);
-    typedef HRESULT(WINAPI * DllRegUnregProc)(VOID);
-    if (args) {
-        DllInstallProc DllInstall = (DllInstallProc)GetProcAddress(lib, "DllInstall");
-        if (DllInstall) {
-            ok = SUCCEEDED(DllInstall(install, args));
-        } else {
-            args = nullptr;
-        }
-    }
-
-    if (!args) {
-        const char* func = install ? "DllRegisterServer" : "DllUnregisterServer";
-        DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func);
-        if (DllRegUnreg) {
-            ok = SUCCEEDED(DllRegUnreg());
-        }
-    }
-    return ok;
-}
-
-static bool RegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr) {
-    return RegisterOrUnregisterServerDLL(dllPath, true, args);
-}
-
-static bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr) {
-    if (!file::Exists(dllPath)) {
-        return true;
-    }
-    return RegisterOrUnregisterServerDLL(dllPath, false, args);
-}
-
 void UninstallBrowserPlugin() {
-    AutoFreeWstr dllPath = GetBrowserPluginPath();
+    AutoFreeWstr dllPath = GetExistingInstallationFilePath(BROWSER_PLUGIN_NAME);
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
         dllPath.Set(GetInstalledBrowserPluginPath());
@@ -292,50 +241,67 @@ void UninstallBrowserPlugin() {
             return;
         }
     }
-    if (!UnRegisterServerDLL(dllPath)) {
-        NotifyFailed(_TR("Couldn't uninstall browser plugin"));
+    bool ok = UnRegisterServerDLL(dllPath);
+    if (ok) {
+        return;
     }
+    NotifyFailed(_TR("Couldn't uninstall browser plugin"));
 }
 
-void InstallPdfFilter() {
-    AutoFreeWstr dllPath = GetPdfFilterPath();
-    if (!RegisterServerDLL(dllPath)) {
-        NotifyFailed(_TR("Couldn't install PDF search filter"));
+bool IsSearchFilterInstalled() {
+    const WCHAR* key = L".pdf\\PersistentHandler";
+    AutoFreeWstr iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
+    if (!iid) {
+        return false;
     }
+    return str::EqI(iid, SZ_PDF_FILTER_HANDLER);
 }
 
-void UninstallPdfFilter() {
-    AutoFreeWstr dllPath = GetPdfFilterPath();
-    if (!UnRegisterServerDLL(dllPath)) {
-        NotifyFailed(_TR("Couldn't uninstall PDF search filter"));
+bool IsPreviewerInstalled() {
+    const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
+    AutoFreeWstr iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
+    if (!iid) {
+        return false;
     }
+    return str::EqI(iid, SZ_PDF_PREVIEW_CLSID);
 }
 
-void UninstallPdfFilterSilent() {
-    AutoFreeWstr dllPath = GetPdfFilterPath();
-    UnRegisterServerDLL(dllPath);
+void RegisterSearchFilter() {
+    AutoFreeWstr dllPath = GetInstallationFilePath(SEARCH_FILTER_DLL_NAME);
+    bool ok = RegisterServerDLL(dllPath);
+    if (ok) {
+        return;
+    }
+    NotifyFailed(_TR("Couldn't install PDF search filter"));
 }
 
-void InstallPdfPreviewer() {
-    AutoFreeWstr dllPath = GetPdfPreviewerPath();
+void UnRegisterSearchFilter(bool silent) {
+    AutoFreeWstr dllPath = GetExistingInstallationFilePath(SEARCH_FILTER_DLL_NAME);
+    bool ok = UnRegisterServerDLL(dllPath);
+    if (ok || silent) {
+        return;
+    }
+    NotifyFailed(_TR("Couldn't uninstall PDF search filter"));
+}
+
+void RegisterPreviewer() {
+    AutoFreeWstr dllPath = GetInstallationFilePath(PREVIEW_DLL_NAME);
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
-    if (!RegisterServerDLL(dllPath)) {
-        NotifyFailed(_TR("Couldn't install PDF previewer"));
+    bool ok = RegisterServerDLL(dllPath);
+    if (ok) {
+        return;
     }
+    NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
-void UninstallPdfPreviewer() {
-    AutoFreeWstr dllPath = GetPdfPreviewerPath();
+void UnRegisterPreviewer(bool silent) {
+    AutoFreeWstr dllPath = GetExistingInstallationFilePath(PREVIEW_DLL_NAME);
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
-    if (!UnRegisterServerDLL(dllPath)) {
-        NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
+    bool ok = UnRegisterServerDLL(dllPath);
+    if (ok || silent) {
+        return;
     }
-}
-
-void UninstallPdfPreviewerSilent() {
-    AutoFreeWstr dllPath = GetPdfPreviewerPath();
-    // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
-    UnRegisterServerDLL(dllPath);
+    NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
 }
 
 static bool IsProcWithName(DWORD processId, const WCHAR* modulePath) {

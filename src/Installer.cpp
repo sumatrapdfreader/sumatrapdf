@@ -65,14 +65,16 @@ static ButtonCtrl* gButtonBrowseDir = nullptr;
 #if ENABLE_REGISTER_DEFAULT
 static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
 #endif
-static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
-static CheckboxCtrl* gCheckboxRegisterPdfPreviewer = nullptr;
+static CheckboxCtrl* gCheckboxRegisterSearchFilter = nullptr;
+static CheckboxCtrl* gCheckboxRegisterPreviewer = nullptr;
 static ProgressCtrl* gProgressBar = nullptr;
 static ButtonCtrl* gButtonExit = nullptr;
 static ButtonCtrl* gButtonInstaller = nullptr;
 
 static HANDLE hThread = nullptr;
 static bool success = false;
+static bool gWasSearchFilterInstalled = false;
+static bool gWasPreviewInstaller = false;
 
 int currProgress = 0;
 static void ProgressStep() {
@@ -196,24 +198,6 @@ static WCHAR* GetDefaultPdfViewer() {
         return buf.StealData();
     }
     return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr);
-}
-
-static bool IsPdfFilterInstalled() {
-    const WCHAR* key = L".pdf\\PersistentHandler";
-    AutoFreeWstr handler_iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
-    if (!handler_iid) {
-        return false;
-    }
-    return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
-}
-
-static bool IsPdfPreviewerInstalled() {
-    const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
-    AutoFreeWstr handler_iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
-    if (!handler_iid) {
-        return false;
-    }
-    return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
 }
 
 // Note: doesn't handle (total) sizes above 4GB
@@ -399,17 +383,17 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     }
 #endif
 
+    // mark them as uninstalled
+    gWasSearchFilterInstalled = false;
+    gWasPreviewInstaller = false;
+
     if (!gIsRaMicroBuild) {
         if (gCli->withFilter) {
-            InstallPdfFilter();
-        } else if (IsPdfFilterInstalled()) {
-            UninstallPdfFilter();
+            RegisterSearchFilter();
         }
 
         if (gCli->withPreview) {
-            InstallPdfPreviewer();
-        } else if (IsPdfPreviewerInstalled()) {
-            UninstallPdfPreviewer();
+            RegisterPreviewer();
         }
 
         UninstallBrowserPlugin();
@@ -490,9 +474,9 @@ static void OnButtonInstall() {
 #endif
 
     // note: this checkbox isn't created when running inside Wow64
-    gCli->withFilter = gCheckboxRegisterPdfFilter != nullptr && gCheckboxRegisterPdfFilter->IsChecked();
+    gCli->withFilter = gCheckboxRegisterSearchFilter != nullptr && gCheckboxRegisterSearchFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
-    gCli->withPreview = gCheckboxRegisterPdfPreviewer != nullptr && gCheckboxRegisterPdfPreviewer->IsChecked();
+    gCli->withPreview = gCheckboxRegisterPreviewer != nullptr && gCheckboxRegisterPreviewer->IsChecked();
 
     // create a progress bar in place of the Options button
     int dx = DpiScale(gHwndFrame, INSTALLER_WIN_DX / 2);
@@ -519,8 +503,8 @@ static void OnButtonInstall() {
 #if ENABLE_REGISTER_DEFAULT
     delete gCheckboxRegisterDefault;
 #endif
-    delete gCheckboxRegisterPdfFilter;
-    delete gCheckboxRegisterPdfPreviewer;
+    delete gCheckboxRegisterSearchFilter;
+    delete gCheckboxRegisterPreviewer;
     delete gButtonOptions;
 
     gButtonInstaller->SetIsEnabled(false);
@@ -578,8 +562,8 @@ static void OnButtonOptions() {
 #if ENABLE_REGISTER_DEFAULT
     EnableAndShow(gCheckboxRegisterDefault, gShowOptions);
 #endif
-    EnableAndShow(gCheckboxRegisterPdfFilter, gShowOptions);
-    EnableAndShow(gCheckboxRegisterPdfPreviewer, gShowOptions);
+    EnableAndShow(gCheckboxRegisterSearchFilter, gShowOptions);
+    EnableAndShow(gCheckboxRegisterPreviewer, gShowOptions);
 
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
@@ -737,17 +721,17 @@ static void OnCreateWindow(HWND hwnd) {
     if (IsProcessAndOsArchSame()) {
         // for Windows XP, this means only basic thumbnail support
         const WCHAR* s = _TR("Let Windows show &previews of PDF documents");
-        bool isChecked = gCli->withPreview || IsPdfPreviewerInstalled();
-        gCheckboxRegisterPdfPreviewer = CreateCheckbox(hwnd, s, isChecked);
+        bool isChecked = gCli->withPreview || IsPreviewerInstalled();
+        gCheckboxRegisterPreviewer = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
-        gCheckboxRegisterPdfPreviewer->SetPos(&rc);
+        gCheckboxRegisterPreviewer->SetPos(&rc);
         y -= staticDy;
 
-        isChecked = gCli->withFilter || IsPdfFilterInstalled();
+        isChecked = gCli->withFilter || IsSearchFilterInstalled();
         s = _TR("Let Windows Desktop Search &search PDF documents");
-        gCheckboxRegisterPdfFilter = CreateCheckbox(hwnd, s, isChecked);
+        gCheckboxRegisterSearchFilter = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
-        gCheckboxRegisterPdfFilter->SetPos(&rc);
+        gCheckboxRegisterSearchFilter->SetPos(&rc);
         y -= staticDy;
     }
 
@@ -995,6 +979,9 @@ int RunInstaller(Flags* cli) {
         return RunInstallerRaMicro();
     }
 
+    gWasSearchFilterInstalled = IsSearchFilterInstalled();
+    gWasPreviewInstaller = IsPreviewerInstalled();
+
     int ret = 0;
 
     if (!OpenEmbeddedFilesArchive()) {
@@ -1003,17 +990,15 @@ int RunInstaller(Flags* cli) {
 
     gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
 
-    gExistingInstallDir = GetInstallationDir();
-
     if (!gCli->installDir) {
         gCli->installDir = GetInstallationDir();
     }
 
     if (!gCli->withFilter) {
-        gCli->withFilter = IsPdfFilterInstalled();
+        gCli->withFilter = IsSearchFilterInstalled();
     }
     if (!gCli->withPreview) {
-        gCli->withPreview = IsPdfPreviewerInstalled();
+        gCli->withPreview = IsPreviewerInstalled();
     }
 
     if (gCli->silent) {
@@ -1034,6 +1019,14 @@ int RunInstaller(Flags* cli) {
     BringWindowToTop(gHwndFrame);
 
     ret = RunApp();
+
+    // re-register if we un-registered but installation was cancelled
+    if (gWasSearchFilterInstalled) {
+        RegisterSearchFilter();
+    }
+    if (gWasPreviewInstaller) {
+        RegisterPreviewer();
+    }
 
 Exit:
     free(firstError);
