@@ -6,10 +6,11 @@ extern str::Str* gLogBuf;
 extern bool logToStderr;
 extern bool logToDebugger;
 
+void StartLogToFile(const char* path);
+
 void log(std::string_view s);
 void log(const char* s);
 void logf(const char* fmt, ...);
-void logToFile(const char* path);
 
 void dbglogf(const char* fmt, ...);
 

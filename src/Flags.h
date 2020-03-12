@@ -77,6 +77,7 @@ class Flags {
     bool justExtractFiles = false;
     bool autoUpdate = false;
     bool registerAsDefault = false;
+    bool log = false;
 
     Flags() = default;
     ~Flags();

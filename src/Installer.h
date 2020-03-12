@@ -88,3 +88,5 @@ bool IsSearchFilterInstalled();
 void UninstallBrowserPlugin();
 
 bool CheckInstallUninstallPossible(bool silent = false);
+
+void StartInstallerLogging();

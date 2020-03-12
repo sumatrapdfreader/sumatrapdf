@@ -174,6 +174,7 @@ static void CopySettingsFile() {
     BOOL failIfExists = true;
     // don't care if it fails or not
     ::CopyFileW(srcPath.data, dstPath.data, failIfExists);
+    log("did copy settings file\n");
 }
 
 static bool ExtractInstallerFiles() {
@@ -357,6 +358,7 @@ static void CreateAppShortcuts() {
         int csidl = shortcutDirs[i];
         CreateAppShortcut(csidl);
     }
+    log("did create app shortcuts\n");
 }
 
 void onRaMicroInstallerFinished();
@@ -367,6 +369,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     success = false;
 
     if (!ExtractInstallerFiles()) {
+        log("ExtractInstallerFiles() failed\n");
         goto Error;
     }
 
@@ -374,6 +377,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
 
     // all files have been extracted at this point
     if (gCli->justExtractFiles) {
+        log("InstallerThread: finishing early because justExtractFiles\n");
         return 0;
     }
 
@@ -406,16 +410,19 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     success = true;
 
     if (!WriteUninstallerRegistryInfos()) {
+        log("WriteUninstallerRegistryInfos() failed\n");
         NotifyFailed(_TR("Failed to write the uninstallation information to the registry"));
     }
 
     if (!WriteExtendedFileExtensionInfos()) {
+        log("WriteExtendedFileExtensionInfos() failed\n");
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
 
     const WCHAR* appName = GetAppName();
     const WCHAR* exeName = GetExeName();
     if (!ListAsDefaultProgramWin10(appName, exeName, GetSupportedExts())) {
+        log("Failed to register as default program on win 10\n");
         NotifyFailed(_TR("Failed to register as default program on win 10"));
     }
 
@@ -974,13 +981,23 @@ int RunInstallerRaMicro();
 int RunInstaller(Flags* cli) {
     RelaunchElevatedIfNotDebug();
     gCli = cli;
+    if (gCli->log) {
+        StartInstallerLogging();
+        log("Starting the installer\n");
+    }
 
     if (gIsRaMicroBuild) {
         return RunInstallerRaMicro();
     }
 
     gWasSearchFilterInstalled = IsSearchFilterInstalled();
+    if (gWasSearchFilterInstalled) {
+        log("Search filter is installed\n");
+    }
     gWasPreviewInstaller = IsPreviewerInstalled();
+    if (gWasPreviewInstaller) {
+        log("Previewer is installed\n");
+    }
 
     int ret = 0;
 
@@ -993,6 +1010,7 @@ int RunInstaller(Flags* cli) {
     if (!gCli->installDir) {
         gCli->installDir = GetInstallationDir();
     }
+    // TODO: log installation dir
 
     if (!gCli->withFilter) {
         gCli->withFilter = IsSearchFilterInstalled();
@@ -1001,7 +1019,17 @@ int RunInstaller(Flags* cli) {
         gCli->withPreview = IsPreviewerInstalled();
     }
 
+    // unregister search filter and previewer to reduce
+    // possibility of blocking
+    if (gWasSearchFilterInstalled) {
+        UnRegisterSearchFilter(true);
+    }
+    if (gWasPreviewInstaller) {
+        UnRegisterPreviewer(true);
+    }
+
     if (gCli->silent) {
+        log("Silent installation\n");
         // make sure not to uninstall the plugins during silent installation
         InstallerThread(nullptr);
         ret = success ? 0 : 1;
@@ -1009,10 +1037,12 @@ int RunInstaller(Flags* cli) {
     }
 
     if (!RegisterWinClass()) {
+        log("RegisterWinClass() failed\n");
         goto Exit;
     }
 
     if (!InstanceInit()) {
+        log("InstanceInit() failed\n");
         goto Exit;
     }
 
@@ -1022,9 +1052,11 @@ int RunInstaller(Flags* cli) {
 
     // re-register if we un-registered but installation was cancelled
     if (gWasSearchFilterInstalled) {
+        log("re-registering search filter\n");
         RegisterSearchFilter();
     }
     if (gWasPreviewInstaller) {
+        log("re-registering previewer\n");
         RegisterPreviewer();
     }
 

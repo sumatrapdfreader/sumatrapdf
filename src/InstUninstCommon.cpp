@@ -243,8 +243,10 @@ void UninstallBrowserPlugin() {
     }
     bool ok = UnRegisterServerDLL(dllPath);
     if (ok) {
+        log("did uninstall browser plugin\n");
         return;
     }
+    log("failed to uninstall browser plugin\n");
     NotifyFailed(_TR("Couldn't uninstall browser plugin"));
 }
 
@@ -270,18 +272,25 @@ void RegisterSearchFilter() {
     AutoFreeWstr dllPath = GetInstallationFilePath(SEARCH_FILTER_DLL_NAME);
     bool ok = RegisterServerDLL(dllPath);
     if (ok) {
+        log("registered search filter\n");
         return;
     }
+    log("failed to register search filter\n");
     NotifyFailed(_TR("Couldn't install PDF search filter"));
 }
 
 void UnRegisterSearchFilter(bool silent) {
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(SEARCH_FILTER_DLL_NAME);
     bool ok = UnRegisterServerDLL(dllPath);
+    if (ok) {
+        log("unregistered search filter\n");
+    } else {
+        log("failed to unregister search filter\n");
+    }
     if (ok || silent) {
         return;
     }
-    NotifyFailed(_TR("Couldn't uninstall PDF search filter"));
+    NotifyFailed(_TR("Couldn't uninstall Sumatra search filter"));
 }
 
 void RegisterPreviewer() {
@@ -289,8 +298,10 @@ void RegisterPreviewer() {
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
     bool ok = RegisterServerDLL(dllPath);
     if (ok) {
+        log("registered previewer\n");
         return;
     }
+    log("failed to register previewer\n");
     NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
@@ -298,6 +309,11 @@ void UnRegisterPreviewer(bool silent) {
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(PREVIEW_DLL_NAME);
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
     bool ok = UnRegisterServerDLL(dllPath);
+    if (ok) {
+        log("registered search filter\n");
+    } else {
+        log("failed to register search filter\n");
+    }
     if (ok || silent) {
         return;
     }
@@ -753,4 +769,22 @@ void OnPaintFrame(HWND hwnd) {
     HDC dc = BeginPaint(hwnd, &ps);
     DrawFrame(hwnd, dc, &ps);
     EndPaint(hwnd, &ps);
+}
+
+static char* PickInstallerLogPath() {
+    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    if (!dir) {
+        return nullptr;
+    }
+    AutoFreeStr dira = strconv::WstrToUtf8(dir);
+    return path::JoinUtf(dira, "sumatra-install-log.txt", nullptr);
+}
+
+void StartInstallerLogging() {
+    char* dir = PickInstallerLogPath();
+    if (!dir) {
+        return;
+    }
+    StartLogToFile(dir);
+    free(dir);
 }

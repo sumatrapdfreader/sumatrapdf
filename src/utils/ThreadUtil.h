@@ -1,6 +1,24 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+struct Mutex {
+    CRITICAL_SECTION cs;
+
+    Mutex() {
+        InitializeCriticalSection(&cs);
+    }
+    ~Mutex() {
+        DeleteCriticalSection(&cs);
+    }
+
+    void Lock() {
+        EnterCriticalSection(&cs);
+    }
+    void Unlock() {
+        LeaveCriticalSection(&cs);
+    }
+};
+
 /* A very simple thread class that allows stopping a thread */
 class ThreadBase {
   private:

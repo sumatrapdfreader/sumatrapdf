@@ -505,6 +505,9 @@ int RunUninstaller(Flags* cli) {
     RelaunchElevatedIfNotDebug();
 
     gCli = cli;
+    if (gCli->log) {
+        StartInstallerLogging();
+    }
 
     if (gIsRaMicroBuild) {
         return RunUninstallerRaMicro();

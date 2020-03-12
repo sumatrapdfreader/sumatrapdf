@@ -1,4 +1,7 @@
 #include "utils/BaseUtil.h"
+#include "utils/ThreadUtil.h"
+
+Mutex gLogMutex;
 
 // we use HeapAllocator because we can do logging during crash handling
 // where we want to avoid allocator deadlocks by calling malloc()
@@ -11,6 +14,8 @@ bool logToDebugger = false;
 static char* logFilePath;
 
 void log(std::string_view s) {
+    gLogMutex.Lock();
+
     if (!gLogBuf) {
         gLogAllocator = new HeapAllocator();
         gLogBuf = new str::Str(32 * 1024, gLogAllocator);
@@ -43,12 +48,12 @@ void log(const char* s) {
 void logf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFree s(str::FmtV(fmt, args));
+    AutoFree s = str::FmtV(fmt, args);
     log(s.as_view());
     va_end(args);
 }
 
-void logToFile(const char* path) {
+void StartLogToFile(const char* path) {
     logFilePath = str::Dup(path);
     remove(path);
 }
@@ -66,7 +71,7 @@ void log(const WCHAR* s) {
 void logf(const WCHAR* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFreeWstr s(str::FmtV(fmt, args));
+    AutoFreeWstr s = str::FmtV(fmt, args);
     log(s);
     va_end(args);
 }
@@ -76,7 +81,7 @@ void logf(const WCHAR* fmt, ...) {
 void dbglogf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFree s(str::FmtV(fmt, args));
+    AutoFree s = str::FmtV(fmt, args);
     OutputDebugStringA(s.Get());
     va_end(args);
 }

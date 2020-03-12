@@ -1,7 +1,6 @@
-class ScopedCritSec {
+struct ScopedCritSec {
     CRITICAL_SECTION* cs = nullptr;
 
-  public:
     explicit ScopedCritSec(CRITICAL_SECTION* cs) : cs(cs) {
         EnterCriticalSection(cs);
     }
