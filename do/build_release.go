@@ -37,22 +37,6 @@ func copyBuiltManifest(dstDir string, prefix string) {
 	u.CopyFileMust(dstPath, srcPath)
 }
 
-func copyBuiltFilesAll(dstDir string, prefix string) {
-	copyBuiltFiles(dstDir, rel32Dir, prefix)
-	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
-	copyBuiltManifest(dstDir, prefix)
-}
-
-func copyBuiltFiles64(dstDir string, prefix string) {
-	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
-	copyBuiltManifest(dstDir, prefix)
-}
-
-func copyBuiltFilesRa64(dstDir string, prefix string) {
-	copyBuiltFiles(dstDir, rel64RaDir, prefix+"-64")
-	copyBuiltManifest(dstDir, prefix)
-}
-
 func build(dir, config, platform string) {
 	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
@@ -65,18 +49,6 @@ func build(dir, config, platform string) {
 	signFilesMust(dir)
 	createPdbZipMust(dir)
 	createPdbLzsaMust(dir)
-}
-
-func build32() {
-	build(rel32Dir, "Release", "Win32")
-}
-
-func build64() {
-	build(rel64Dir, "Release", "x64")
-}
-
-func buildRa64() {
-	build(rel64RaDir, "Release", "x64_ramicro")
 }
 
 func buildRelease() {
@@ -97,11 +69,11 @@ func buildRelease() {
 	setBuildConfigRelease()
 	defer revertBuildConfig()
 
-	build32()
+	build(rel32XPDir, "Release", "x32_xp")
 	nameInZip := fmt.Sprintf("SumatraPDF-%s-32.exe", ver)
-	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
+	createExeZipWithGoWithNameMust(rel32XPDir, nameInZip)
 
-	build64()
+	build(rel64Dir, "Release", "x64")
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
@@ -109,5 +81,7 @@ func buildRelease() {
 
 	dstDir := filepath.Join("out", "final-rel")
 	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
-	copyBuiltFilesAll(dstDir, prefix)
+	copyBuiltFiles(dstDir, rel32XPDir, prefix)
+	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
+	copyBuiltManifest(dstDir, prefix)
 }

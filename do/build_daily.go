@@ -19,13 +19,13 @@ func buildDaily() {
 	setBuildConfigDaily()
 	defer revertBuildConfig()
 
-	build64()
+	build(rel64Dir, "Release", "x64")
 	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
-
 	createManifestMust()
 
 	dstDir := filepath.Join("out", "final-daily")
 	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
-	copyBuiltFiles64(dstDir, prefix)
+	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
+	copyBuiltManifest(dstDir, prefix)
 }

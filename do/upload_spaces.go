@@ -29,6 +29,7 @@ const (
 
 var (
 	rel32Dir   = filepath.Join("out", "rel32")
+	rel32XPDir = filepath.Join("out", "rel32_xp")
 	rel64Dir   = filepath.Join("out", "rel64")
 	rel64RaDir = filepath.Join("out", "rel64ra")
 )
