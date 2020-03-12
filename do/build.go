@@ -371,8 +371,8 @@ func makeAppx() {
 	fmt.Printf("makeAppx: '%s'\n", appExePath)
 }
 
-const (
-	artifactsDir = "artifacts"
+var (
+	artifactsDir = filepath.Join("out", "artifacts")
 )
 
 var (
