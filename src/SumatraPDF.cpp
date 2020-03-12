@@ -86,12 +86,39 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 
+// the default is for pre-release version.
+// for release we override BuildConfig.h and set to
+// clang-format off
+#if defined(SUMATRA_UPDATE_INFO_URL)
+static const WCHAR* gUpdateInfoURL = SUMATRA_UPDATE_INFO_URL;
+#else
+static const WCHAR* gUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt"
+
+//static const WCHAR* gUpdateInfoURL = L"https://www.sumatrapdfreader.org/update-check-rel.txt";
+#endif
+
+#ifndef SVN_UPDATE_LINK
+#if defined(PRE_RELEASE_VER)
+#define SVN_UPDATE_LINK L"https://www.sumatrapdfreader.org/prerelease.html"
+#else
+#define SVN_UPDATE_LINK L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
+#endif
+#endif
+// clang-format on
+
+#define SECS_IN_DAY 60 * 60 * 24
+
+#define RESTRICTIONS_FILE_NAME L"sumatrapdfrestrict.ini"
+
+#define DEFAULT_LINK_PROTOCOLS L"http,https,mailto"
+#define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video,webpage"
+
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
 #if defined(DEBUG)
 bool gDebugShowLinks = true;
 #else
-bool gDebugShowLinks = false;
+    bool gDebugShowLinks = false;
 #endif
 
 // used to show it in debug, but is not very useful,
@@ -157,29 +184,6 @@ void SetCurrentLang(const char* langCode) {
     }
     trans::SetCurrentLangByCode(langCode);
 }
-
-// the default is for pre-release version.
-// for release we override BuildConfig.h and set to
-// https://www.sumatrapdfreader.org/update-check-rel.txt
-#ifndef SUMATRA_UPDATE_INFO_URL
-#define SUMATRA_UPDATE_INFO_URL \
-    L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt"
-#endif
-
-#ifndef SVN_UPDATE_LINK
-#ifdef PRE_RELEASE_VER
-#define SVN_UPDATE_LINK L"https://www.sumatrapdfreader.org/prerelease.html"
-#else
-#define SVN_UPDATE_LINK L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
-#endif
-#endif
-
-#define SECS_IN_DAY 60 * 60 * 24
-
-#define RESTRICTIONS_FILE_NAME L"sumatrapdfrestrict.ini"
-
-#define DEFAULT_LINK_PROTOCOLS L"http,https,mailto"
-#define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video,webpage"
 
 void InitializePolicies(bool restrict) {
     // default configuration should be to restrict everything
@@ -2044,7 +2048,6 @@ Portable [
 # to allow safe transmission over http, the file may also be signed:
 # Signature sha1:<SHA-1 signature to be verified using IDD_PUBLIC_APP_KEY>
 */
-
 static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (rsp->error != 0) {
         return rsp->error;
@@ -2052,7 +2055,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (rsp->httpStatusCode != 200) {
         return ERROR_INTERNET_INVALID_URL;
     }
-    if (!str::StartsWith(rsp->url.Get(), SUMATRA_UPDATE_INFO_URL)) {
+    if (!str::StartsWith(rsp->url.Get(), gUpdateInfoURL)) {
         return ERROR_INTERNET_INVALID_URL;
     }
     str::Str* data = &rsp->data;
@@ -2085,7 +2088,10 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     }
 
     AutoFreeWstr verTxt = strconv::Utf8ToWstr(latest);
-    if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
+    const WCHAR* myVer = UPDATE_CHECK_VER;
+    // myVer = L"3.1"; // for ad-hoc debugging of auto-update code
+    bool hasUpdate = CompareVersion(verTxt, myVer) > 0;
+    if (!hasUpdate) {
         /* if automated => don't notify that there is no new version */
         if (!silent) {
             MessageBoxWarning(hParent, _TR("You have the latest version."), _TR("SumatraPDF Update"));
@@ -2096,7 +2102,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (silent) {
         const char* stable = node->GetValue("Stable");
         if (stable && IsValidProgramVersion(stable) &&
-            CompareVersion(AutoFreeWstr(strconv::Utf8ToWstr(stable)), UPDATE_CHECK_VER) <= 0) {
+            CompareVersion(AutoFreeWstr(strconv::Utf8ToWstr(stable)), myVer) <= 0) {
             // don't update just yet if the older version is still marked as stable
             return 0;
         }
@@ -2111,7 +2117,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     // either open the browser, do nothing or don't be reminded of
     // this update ever again
     bool skipThisVersion = false;
-    INT_PTR res = Dialog_NewVersionAvailable(hParent, UPDATE_CHECK_VER, verTxt, &skipThisVersion);
+    INT_PTR res = Dialog_NewVersionAvailable(hParent, myVer, verTxt, &skipThisVersion);
     if (skipThisVersion) {
         free(gGlobalPrefs->versionToSkip);
         gGlobalPrefs->versionToSkip = verTxt.StealData();
@@ -2180,13 +2186,12 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
     }
     gUpdateTaskInProgress = true;
     HWND hwnd = win->hwndFrame;
-    const WCHAR* url = SUMATRA_UPDATE_INFO_URL L"?v=" UPDATE_CHECK_VER;
-    HttpGetAsync(url, [=](HttpRsp* rsp) {
+    str::WStr url = gUpdateInfoURL;
+    url.Append(L"?v=");
+    url.Append(UPDATE_CHECK_VER);
+    HttpGetAsync(url.Get(), [=](HttpRsp* rsp) {
         gUpdateTaskInProgress = false;
-        uitask::Post([=] {
-            ProcessAutoUpdateCheckResult(hwnd, rsp, autoCheck);
-            delete rsp;
-        });
+        uitask::Post([=] { ProcessAutoUpdateCheckResult(hwnd, rsp, autoCheck); });
     });
 }
 

@@ -239,10 +239,11 @@ Exit:
 
 // callback function f is responsible for deleting HttpRsp
 void HttpGetAsync(const WCHAR* url, const std::function<void(HttpRsp*)>& f) {
-    RunAsync([=] {
-        auto rsp = new HttpRsp;
-        rsp->url.SetCopy(url);
-        HttpGet(url, rsp);
+    // rsp is owned and deleted by f callback
+    HttpRsp* rsp = new HttpRsp;
+    rsp->url.SetCopy(url);
+    RunAsync([rsp, f] {
+        HttpGet(rsp->url, rsp);
         f(rsp);
     });
 }
