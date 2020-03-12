@@ -65,6 +65,49 @@ func verifyCorrectVersionMust(ver string) {
 		u.PanicIf(!isNum(part), "%s is not a valid version number", ver)
 	}
 }
+func getFileNamesWithPrefix(prefix string) [][]string {
+	files := [][]string{
+		{"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix)},
+		{"SumatraPDF.zip", fmt.Sprintf("%s.zip", prefix)},
+		{"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix)},
+		{"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix)},
+		{"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix)},
+	}
+	return files
+}
+
+func copyBuiltFiles(dstDir string, srcDir string, prefix string) {
+	files := getFileNamesWithPrefix(prefix)
+	for _, f := range files {
+		srcName := f[0]
+		srcPath := filepath.Join(srcDir, srcName)
+		dstName := f[1]
+		dstPath := filepath.Join(dstDir, dstName)
+		u.CreateDirForFileMust(dstPath)
+		u.CopyFileMust(dstPath, srcPath)
+	}
+}
+
+func copyBuiltManifest(dstDir string, prefix string) {
+	srcPath := filepath.Join(artifactsDir, "manifest.txt")
+	dstName := prefix + "-manifest.txt"
+	dstPath := filepath.Join(dstDir, dstName)
+	u.CopyFileMust(dstPath, srcPath)
+}
+
+func build(dir, config, platform string) {
+	msbuildPath := detectMsbuildPath()
+	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
+
+	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util`, p, `/m`)
+	runTestUtilMust(dir)
+
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview`, p, `/m`)
+	signFilesMust(dir)
+	createPdbZipMust(dir)
+	createPdbLzsaMust(dir)
+}
 
 func extractSumatraVersionMust() string {
 	path := filepath.Join("src", "Version.h")
