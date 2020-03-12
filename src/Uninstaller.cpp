@@ -51,6 +51,16 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 static HBRUSH ghbrBackground = nullptr;
 static HANDLE hThread = nullptr;
 static bool success = false;
+static ButtonCtrl* gButtonExit = nullptr;
+
+static void OnButtonExit() {
+    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
+}
+
+static void CreateButtonExit(HWND hwndParent) {
+    gButtonExit = CreateDefaultButtonCtrl(hwndParent, _TR("Close"));
+    gButtonExit->onClicked = OnButtonExit;
+}
 
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppName());

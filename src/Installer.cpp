@@ -68,6 +68,7 @@ static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfPreviewer = nullptr;
 static ProgressCtrl* gProgressBar = nullptr;
+static ButtonCtrl* gButtonExit = nullptr;
 
 static HANDLE hThread = nullptr;
 static bool success = false;
@@ -90,6 +91,15 @@ static CheckboxCtrl* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChec
     w->Create();
     w->SetIsChecked(isChecked);
     return w;
+}
+
+static void OnButtonExit() {
+    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
+}
+
+static void CreateButtonExit(HWND hwndParent) {
+    gButtonExit = CreateDefaultButtonCtrl(hwndParent, _TR("Close"));
+    gButtonExit->onClicked = OnButtonExit;
 }
 
 bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {

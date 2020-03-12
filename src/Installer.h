@@ -30,8 +30,6 @@ extern WCHAR* firstError;
 extern Flags* gCli;
 extern const WCHAR* gDefaultMsg;
 extern HWND gHwndFrame;
-const WCHAR** GetSupportedExts();
-extern ButtonCtrl* gButtonExit;
 extern ButtonCtrl* gButtonInstUninst;
 extern HFONT gFontDefault;
 extern WCHAR* gMsgError;
@@ -54,13 +52,10 @@ extern Gdiplus::Color gCol4Shadow;
 extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
-struct ButtonCtrl;
-
+const WCHAR** GetSupportedExts();
 void InitInstallerUninstaller();
 void OnPaintFrame(HWND hwnd);
-void OnButtonExit();
 void AnimStep();
-void CreateButtonExit(HWND hwndParent);
 ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s);
 void InstallPdfFilter();
 void InstallPdfPreviewer();

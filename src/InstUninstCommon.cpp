@@ -530,15 +530,6 @@ ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s) {
     return b;
 }
 
-void CreateButtonExit(HWND hwndParent) {
-    gButtonExit = CreateDefaultButtonCtrl(hwndParent, _TR("Close"));
-    gButtonExit->onClicked = OnButtonExit;
-}
-
-void OnButtonExit() {
-    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
-}
-
 // This display is inspired by http://letteringjs.com/
 typedef struct {
     // part that doesn't change
