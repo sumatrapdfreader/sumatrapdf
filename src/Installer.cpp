@@ -979,6 +979,8 @@ static bool OpenEmbeddedFilesArchive() {
 int RunInstallerRaMicro();
 
 int RunInstaller(Flags* cli) {
+    logToDebugger = true;
+
     RelaunchElevatedIfNotDebug();
     gCli = cli;
     if (gCli->log) {

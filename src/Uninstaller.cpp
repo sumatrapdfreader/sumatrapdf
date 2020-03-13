@@ -508,12 +508,15 @@ static int RunApp() {
 int RunUninstallerRaMicro();
 
 int RunUninstaller(Flags* cli) {
-    RelaunchElevatedIfNotDebug();
 
     gCli = cli;
+    logToDebugger = true;
     if (gCli->log) {
-        StartInstallerLogging();
+        StartUnInstallerLogging();
+        log("Starting the uninstaller\n");
     }
+
+    RelaunchElevatedIfNotDebug();
 
     if (gIsRaMicroBuild) {
         return RunUninstallerRaMicro();

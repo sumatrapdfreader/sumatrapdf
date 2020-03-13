@@ -90,3 +90,4 @@ void UninstallBrowserPlugin();
 bool CheckInstallUninstallPossible(bool silent = false);
 
 void StartInstallerLogging();
+void StartUnInstallerLogging();

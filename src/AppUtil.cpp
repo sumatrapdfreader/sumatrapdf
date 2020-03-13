@@ -116,7 +116,7 @@ void RelaunchElevatedIfNotDebug() {
     if (IsRunningElevated()) {
         return;
     }
-    WCHAR* exePath = GetExePath();
+    AutoFreeWstr exePath = GetExePath();
     WCHAR* cmdline = GetCommandLineW(); // not owning the memory
     LaunchElevated(exePath, cmdline);
     ::ExitProcess(0);

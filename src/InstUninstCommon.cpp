@@ -788,3 +788,21 @@ void StartInstallerLogging() {
     StartLogToFile(dir);
     free(dir);
 }
+
+static char* PickUnInstallerLogPath() {
+    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    if (!dir) {
+        return nullptr;
+    }
+    AutoFreeStr dira = strconv::WstrToUtf8(dir);
+    return path::JoinUtf(dira, "sumatra-uninstall-log.txt", nullptr);
+}
+
+void StartUnInstallerLogging() {
+    char* dir = PickUnInstallerLogPath();
+    if (!dir) {
+        return;
+    }
+    StartLogToFile(dir);
+    free(dir);
+}
