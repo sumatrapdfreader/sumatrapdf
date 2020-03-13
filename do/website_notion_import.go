@@ -1,11 +1,16 @@
 package main
 
 import (
+	"crypto/sha1"
+	"fmt"
 	"html"
+	"io/ioutil"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/kjk/fmthtml"
 	"github.com/kjk/notionapi"
@@ -16,9 +21,99 @@ import (
 
 var (
 	cacheDir        = "notion_cache"
+	cacheImgDir     = filepath.Join("docs", "img")
 	startPageID     = "fed36a5624d443fe9f7be0e410ecd715"
 	nDownloadedPage int
 )
+
+func sha1OfLink(link string) string {
+	link = strings.ToLower(link)
+	h := sha1.New()
+	h.Write([]byte(link))
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+var imgFiles []os.FileInfo
+
+func findImageInDir(imgDir string, sha1 string) string {
+	if len(imgFiles) == 0 {
+		imgFiles, _ = ioutil.ReadDir(imgDir)
+	}
+	for _, fi := range imgFiles {
+		if strings.HasPrefix(fi.Name(), sha1) {
+			return filepath.Join(imgDir, fi.Name())
+		}
+	}
+	return ""
+}
+
+func guessExt(fileName string, contentType string) string {
+	ext := strings.ToLower(filepath.Ext(fileName))
+	// TODO: maybe allow every non-empty extension. This
+	// white-listing might not be a good idea
+	switch ext {
+	case ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".svg":
+		return ext
+	}
+
+	contentType = strings.ToLower(contentType)
+	switch contentType {
+	case "image/png":
+		return ".png"
+	case "image/jpeg":
+		return ".jpg"
+	case "image/svg+xml":
+		return ".svg"
+	}
+	panic(fmt.Errorf("didn't find ext for file '%s', content type '%s'", fileName, contentType))
+}
+
+func downloadImage(c *notionapi.Client, uri string) ([]byte, string, error) {
+	img, err := c.DownloadFile(uri)
+	if err != nil {
+		// TODO: getSignedURLs stopped working so we need this workaround
+		// should move this logic down to c.DownloadFile()
+		uri = "https://www.notion.so/image/" + url.PathEscape(uri)
+		img, err = c.DownloadFile(uri)
+	}
+	if err != nil {
+		logf("\n  failed with %s\n", err)
+		return nil, "", err
+	}
+	ext := guessExt(uri, img.Header.Get("Content-Type"))
+	return img.Data, ext, nil
+}
+
+// return path of cached image on disk
+func downloadAndCacheImage(c *notionapi.Client, uri string) (string, error) {
+	sha := sha1OfLink(uri)
+
+	//ext := strings.ToLower(filepath.Ext(uri))
+
+	u.CreateDirMust(cacheImgDir)
+
+	cachedPath := findImageInDir(cacheImgDir, sha)
+	if cachedPath != "" {
+		logf("Image %s already downloaded as %s\n", uri, cachedPath)
+		return cachedPath, nil
+	}
+
+	timeStart := time.Now()
+	logf("Downloading %s ... ", uri)
+
+	imgData, ext, err := downloadImage(c, uri)
+	must(err)
+
+	cachedPath = filepath.Join(cacheImgDir, sha+ext)
+
+	err = ioutil.WriteFile(cachedPath, imgData, 0644)
+	if err != nil {
+		return "", err
+	}
+	logf("finished in %s. Wrote as '%s'\n", time.Since(timeStart), cachedPath)
+
+	return cachedPath, nil
+}
 
 func eventObserver(ev interface{}) {
 	switch v := ev.(type) {
@@ -38,9 +133,7 @@ func eventObserver(ev interface{}) {
 
 func newNotionClient() *notionapi.Client {
 	token := os.Getenv("NOTION_TOKEN")
-	if token == "" {
-		logf("NOTION_TOKEN env variable not set, only public pages accessible\n")
-	}
+	panicIf(token == "", "NOTION_TOKEN env variable not set, needed for downloading images\n")
 	// TODO: verify token still valid, somehow
 	client := &notionapi.Client{
 		AuthToken: token,
@@ -68,6 +161,7 @@ func afterPageDownload(page *notionapi.Page) error {
 
 // HTMLConverter renders article as html
 type HTMLConverter struct {
+	client   *notionapi.Client
 	page     *notionapi.Page
 	idToPage map[string]*notionapi.Page
 	conv     *tohtml.Converter
@@ -131,11 +225,31 @@ func (c *HTMLConverter) RenderPage(block *notionapi.Block) bool {
 	return true
 }
 
+func normalizeID(id string) string {
+	return notionapi.ToNoDashID(id)
+}
+
+// RenderImage downloads and renders an image
+func (c *HTMLConverter) RenderImage(block *notionapi.Block) bool {
+	link := block.Source
+	path, err := downloadAndCacheImage(c.client, link)
+	if err != nil {
+		logf("genImage: downloadAndCacheImage('%s') from page https://notion.so/%s failed with '%s'\n", link, normalizeID(c.page.ID), err)
+		must(err)
+	}
+	relURL := "img/" + filepath.Base(path)
+	// TODO: add explicit width / height
+	c.conv.Printf(`<img src="%s">`, relURL)
+	return true
+}
+
 // if returns false, the block will be rendered with default
 func (c *HTMLConverter) blockRenderOverride(block *notionapi.Block) bool {
 	switch block.Type {
 	case notionapi.BlockPage:
 		return c.RenderPage(block)
+	case notionapi.BlockImage:
+		return c.RenderImage(block)
 	}
 	return false
 }
@@ -234,8 +348,9 @@ func (c *HTMLConverter) GenerateHTML() []byte {
 	return d
 }
 
-func notionToHTML(page *notionapi.Page, pages []*notionapi.Page, idToPage map[string]*notionapi.Page) {
+func notionToHTML(client *notionapi.Client, page *notionapi.Page, pages []*notionapi.Page, idToPage map[string]*notionapi.Page) {
 	conv := NewHTMLConverter(page, pages, idToPage)
+	conv.client = client
 	html := conv.GenerateHTML()
 	name := fileNameForPage(page)
 	path := filepath.Join("docs", name)
@@ -256,7 +371,7 @@ func websiteImportNotion() {
 	pages, err := d.DownloadPagesRecursively(startPageID, afterPageDownload)
 	must(err)
 	for _, page := range pages {
-		notionToHTML(page, pages, d.IdToPage)
+		notionToHTML(client, page, pages, d.IdToPage)
 	}
 
 	if false {
