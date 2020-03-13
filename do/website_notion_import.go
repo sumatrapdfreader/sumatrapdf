@@ -245,6 +245,7 @@ func notionToHTML(page *notionapi.Page, pages []*notionapi.Page, idToPage map[st
 
 func websiteImportNotion() {
 	logf("websiteImportNotion() started\n")
+	must(os.Chdir("website"))
 	client := newNotionClient()
 	cache, err := caching_downloader.NewDirectoryCache(cacheDir)
 	must(err)
