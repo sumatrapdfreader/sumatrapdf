@@ -100,7 +100,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
-    AutoFreeWstr buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
+    AutoFreeWstr buf = ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
     if (str::Eq(buf, appName)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
         if (res != ERROR_SUCCESS) {
@@ -123,13 +123,16 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
 
 static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
     HKEY hkey;
-    if (RegOpenKeyEx(root, keyName, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
+    LSTATUS status = RegOpenKeyExW(root, keyName, 0, KEY_READ, &hkey);
+    if (status != ERROR_SUCCESS) {
         return true;
+    }
 
     DWORD subkeys, values;
     bool isEmpty = false;
-    if (RegQueryInfoKey(hkey, nullptr, nullptr, nullptr, &subkeys, nullptr, nullptr, &values, nullptr, nullptr, nullptr,
-                        nullptr) == ERROR_SUCCESS) {
+    status = RegQueryInfoKeyW(hkey, nullptr, nullptr, nullptr, &subkeys, nullptr, nullptr, &values, nullptr, nullptr, nullptr,
+                        nullptr);
+    if (status == ERROR_SUCCESS) {
         isEmpty = 0 == subkeys && 0 == values;
     }
     RegCloseKey(hkey);
@@ -151,6 +154,11 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_PDF, L"\\OpenWithProgids");
         SHDeleteValueW(hkey, key, appName);
+    }
+
+    if (HKEY_LOCAL_MACHINE == hkey) {
+        AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
+        DeleteRegKey(hkey, key);
     }
 
     const WCHAR** supportedExts = GetSupportedExts();

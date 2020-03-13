@@ -284,25 +284,26 @@ static bool WriteUninstallerRegistryInfos() {
 static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     bool ok = true;
 
-    AutoFreeWstr exePath(GetInstalledExePath());
+    const WCHAR* exeName = GetExeName();
+    AutoFreeWstr exePath = GetInstalledExePath();
     if (HKEY_LOCAL_MACHINE == hkey) {
-        AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", GetExeName());
+        AutoFreeWstr key = str::Join(L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\", exeName);
         ok &= WriteRegStr(hkey, key, nullptr, exePath);
     }
     AutoFreeWstr REG_CLASSES_APPS = GetRegClassesApps(GetAppName());
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
-    AutoFreeWstr iconPath(str::Join(exePath, L",1"));
+    AutoFreeWstr iconPath = str::Join(exePath, L",1");
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\DefaultIcon");
         ok &= WriteRegStr(hkey, key, nullptr, iconPath);
     }
-    AutoFreeWstr cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.get()));
+    AutoFreeWstr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath.get());
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Open\\Command");
         ok &= WriteRegStr(hkey, key, nullptr, cmdPath);
     }
-    AutoFreeWstr printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.get()));
+    AutoFreeWstr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.get());
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Print\\Command");
         ok &= WriteRegStr(hkey, key, nullptr, printPath);
@@ -315,7 +316,6 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
 
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
-    const WCHAR* exeName = GetExeName();
     ok &= ListAsDefaultProgramPreWin10(exeName, GetSupportedExts(), hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)

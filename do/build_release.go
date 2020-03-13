@@ -48,7 +48,9 @@ func buildReleaseFast() {
 	s := fmt.Sprintf("buidling release version %s", ver)
 	defer makePrintDuration(s)()
 
-	verifyGitCleanMust()
+	if !isGitClean() {
+		logf("%s", "note: unsaved git changes\n")
+	}
 	verifyOnReleaseBranchMust()
 
 	//verifyBuildNotInS3ShortMust(buildTypeRel)
