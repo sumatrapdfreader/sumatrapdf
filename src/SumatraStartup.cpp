@@ -615,6 +615,9 @@ static bool ExeHasNameOfRaMicro() {
 static bool ExeHasNameOfInstaller() {
     AutoFreeWstr exePath = GetExePath();
     const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
+    if (str::FindI(exeName, L"uninstall")) {
+        return false;
+    }
     return str::FindI(exeName, L"install");
 }
 
