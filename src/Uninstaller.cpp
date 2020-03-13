@@ -185,6 +185,7 @@ static void RemoveOwnRegistryKeys() {
     log("RemoveOwnRegistryKeys()\n");
 }
 
+#if 0
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at
 // uninstallation (all listed files that actually exist).
@@ -207,13 +208,18 @@ const char* gInstalledFiles[] = {
     // other files we might generate
     "sumatrapdfprefs.dat",
     "SumatraPDF-settings.txt",
-
 };
 // clang-format on
+#endif
 
-// TODO: maybe just delete the directory
 static void RemoveInstalledFiles() {
-    AutoFreeWstr dir = GetExistingInstallationDir();
+    // can't use GetExistingInstallationDir() anymore because we
+    // delete registry entries
+    WCHAR* dir = gCli->installDir;
+    if (!dir) {
+        log("RemoveInstalledFiles(): dir is empty\n");
+    }
+#if 0
     size_t n = dimof(gInstalledFiles);
     for (size_t i = 0; i < n; i++) {
         const char* s = gInstalledFiles[i];
@@ -224,8 +230,9 @@ static void RemoveInstalledFiles() {
             logf(L"RemoveInstalledFiles(): removed '%s'\n", path.Get());
         }
     }
+#endif
     bool ok = dir::RemoveAll(dir);
-    logf(L"RemoveInstalledFiles(): removed '%s', ok = %d\n", dir.Get(), (int)ok);
+    logf(L"RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }
 
 static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
@@ -270,7 +277,9 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     UninstallBrowserPlugin();
     RemoveOwnRegistryKeys();
 
+    log("Before RemoveInstalledFiles()\n");
     RemoveInstalledFiles();
+    log("After RemoveInstalledFiles()\n");
     // NotifyFailed(_TR("Couldn't remove installation directory"));
 
     // always succeed, even for partial uninstallations
