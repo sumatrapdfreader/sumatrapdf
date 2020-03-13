@@ -838,8 +838,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // TODO: temporary, to test crash reporting
     // gAddCrashMeMenu = true;
 
-    strconv::StackWstrToUtf8 cmdLineA = GetCommandLineW();
-    logf("CmdLine: %s\n", cmdLineA);
+    {
+        strconv::StackWstrToUtf8 cmdLineA = GetCommandLineW();
+        logf("CmdLine: %s\n", cmdLineA.Get());
+    }
 
     Flags i;
     ParseCommandLine(GetCommandLineW(), i);

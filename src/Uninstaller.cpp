@@ -221,13 +221,11 @@ static void RemoveInstalledFiles() {
         AutoFreeWstr path = path::Join(dir, relPath);
         BOOL ok = DeleteFileW(path);
         if (ok) {
-            strconv::StackWstrToUtf8 patha = path.as_view();
-            logf("RemoveInstalledFiles(): removed '%s'\n", patha.Get());
+            logf(L"RemoveInstalledFiles(): removed '%s'\n", path.Get());
         }
     }
     bool ok = dir::RemoveAll(dir);
-    strconv::StackWstrToUtf8 dira = dir.as_view();
-    logf("RemoveInstalledFiles(): removed '%s', ok = %d\n", dira.Get(), (int)ok);
+    logf(L"RemoveInstalledFiles(): removed '%s', ok = %d\n", dir.Get(), (int)ok);
 }
 
 static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};

@@ -428,7 +428,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     }
 
     ProgressStep();
-
+    log("Installer thread finished\n");
 Error:
     if (gIsRaMicroBuild) {
         onRaMicroInstallerFinished();
