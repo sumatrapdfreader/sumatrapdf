@@ -277,9 +277,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     UninstallBrowserPlugin();
     RemoveOwnRegistryKeys();
 
-    log("Before RemoveInstalledFiles()\n");
     RemoveInstalledFiles();
-    log("After RemoveInstalledFiles()\n");
     // NotifyFailed(_TR("Couldn't remove installation directory"));
 
     // always succeed, even for partial uninstallations
