@@ -536,26 +536,25 @@ static void RelaunchElevatedFromTempDirectory() {
         return;
     }
 
-    logf(L"Re-launching '%s' as elevated\n", installerTempPath.Get());
-    WCHAR* cmdline = GetCommandLineW(); // not owning the memory
-    LaunchElevated(installerTempPath, cmdline);
+    WCHAR* cmdLine = GetCommandLineW(); // not owning the memory
+    logf(L"Re-launching '%s' with args '%s' as elevated\n", installerTempPath.Get(), cmdLine);
+    LaunchElevated(installerTempPath, cmdLine);
     ::ExitProcess(0);
 }
 
 int RunUninstallerRaMicro();
 
 int RunUninstaller(Flags* cli) {
-    gCli = cli;
     logToDebugger = true;
+    gCli = cli;
     if (gCli->log) {
         StartUnInstallerLogging();
-        log("Starting the uninstaller\n");
     }
-
-    int ret = 1;
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
+    logf(L"Starting uninstaller for '%s'\n", gCli->installDir);
 
+    int ret = 1;
     AutoFreeWstr exePath = GetInstalledExePath();
     auto installerExists = file::Exists(exePath);
     if (!installerExists) {

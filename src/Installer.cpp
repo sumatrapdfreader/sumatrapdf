@@ -1018,13 +1018,16 @@ static void RelaunchElevatedIfNotDebug() {
 
 int RunInstaller(Flags* cli) {
     logToDebugger = true;
-
-    RelaunchElevatedIfNotDebug();
     gCli = cli;
     if (gCli->log) {
         StartInstallerLogging();
-        log("Starting the installer\n");
     }
+    if (!gCli->installDir) {
+        gCli->installDir = GetInstallationDir();
+    }
+    logf(L"Starting installer from '%s'\n", gCli->installDir);
+
+    RelaunchElevatedIfNotDebug();
 
     if (gIsRaMicroBuild) {
         return RunInstallerRaMicro();
@@ -1046,10 +1049,6 @@ int RunInstaller(Flags* cli) {
     }
 
     gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
-
-    if (!gCli->installDir) {
-        gCli->installDir = GetInstallationDir();
-    }
 
     logf(L"Installing to '%s'\n", gCli->installDir);
 
