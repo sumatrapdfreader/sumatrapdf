@@ -998,6 +998,24 @@ static void StartInstallerLogging() {
     free(dir);
 }
 
+static void RelaunchElevatedIfNotDebug() {
+    if (gIsDebugBuild) {
+        // for easier debugging, we don't require
+        // elevation in debug build
+        return;
+    }
+    if (IsRunningElevated()) {
+        log("Already running elevated\n");
+        return;
+    }
+    AutoFreeWstr exePath = GetExePath();
+    strconv::StackWstrToUtf8 exePathA = exePath.as_view();
+    logf("Re-launching '%s' as elevated\n", exePathA.Get());
+    WCHAR* cmdline = GetCommandLineW(); // not owning the memory
+    LaunchElevated(exePath, cmdline);
+    ::ExitProcess(0);
+}
+
 int RunInstaller(Flags* cli) {
     logToDebugger = true;
 
@@ -1032,17 +1050,20 @@ int RunInstaller(Flags* cli) {
     if (!gCli->installDir) {
         gCli->installDir = GetInstallationDir();
     }
-    // TODO: log installation dir
+
+    logf(L"Installing to '%s'\n", gCli->installDir);
 
     if (!gCli->withFilter) {
         gCli->withFilter = IsSearchFilterInstalled();
+        log("setting gCli->withFilter because search filter installed\n");
     }
     if (!gCli->withPreview) {
         gCli->withPreview = IsPreviewerInstalled();
+        log("setting gCli->withPreview because previewer installed\n");
     }
 
     // unregister search filter and previewer to reduce
-    // possibility of blocking
+    // possibility of blocking the installation because the dlls are loaded
     if (gWasSearchFilterInstalled) {
         UnRegisterSearchFilter(true);
     }

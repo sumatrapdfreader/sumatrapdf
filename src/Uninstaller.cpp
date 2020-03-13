@@ -504,6 +504,44 @@ static void StartUnInstallerLogging() {
     free(dir);
 }
 
+static WCHAR* GetUninstallerPathInTemp() {
+    WCHAR tempDir[MAX_PATH + 14] = {0};
+    DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
+    CrashAlwaysIf(res == 0 || res >= dimof(tempDir));
+    return path::Join(tempDir, L"Sumatra-Uninstaller.exe");
+}
+
+// to be able to delete installation directory we must copy
+// ourselves to temp directory and re-launch
+static void RelaunchElevatedFromTempDirectory() {
+    if (gIsDebugBuild) {
+        // for easier debugging, debug build doesn't need
+        // to be copied / re-launched
+        return;
+    }
+
+    AutoFreeWstr installerTempPath = GetUninstallerPathInTemp();
+    AutoFreeWstr ownPath = GetExePath();
+    if (str::EqI(installerTempPath, ownPath)) {
+        if (IsRunningElevated()) {
+            log("Already running elevated and from temp dir\n");
+            return;
+        }
+    }
+
+    logf(L"must copy installer '%s' to '%s'\n", ownPath.Get(), installerTempPath.Get());
+    BOOL ok = CopyFileW(ownPath, installerTempPath, FALSE);
+    if (!ok) {
+        logf("failed to copy installer\n");
+        return;
+    }
+
+    logf(L"Re-launching '%s' as elevated\n", installerTempPath.Get());
+    WCHAR* cmdline = GetCommandLineW(); // not owning the memory
+    LaunchElevated(installerTempPath, cmdline);
+    ::ExitProcess(0);
+}
+
 int RunUninstallerRaMicro();
 
 int RunUninstaller(Flags* cli) {
@@ -533,7 +571,7 @@ int RunUninstaller(Flags* cli) {
         goto Exit;
     }
 
-    RelaunchElevatedIfNotDebug();
+    RelaunchElevatedFromTempDirectory();
 
     if (gIsRaMicroBuild) {
         return RunUninstallerRaMicro();
