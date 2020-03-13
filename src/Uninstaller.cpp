@@ -556,12 +556,12 @@ int RunUninstaller(Flags* cli) {
     gCli->installDir = GetExistingInstallationDir();
     WCHAR* cmdLine = GetCommandLineW();
     AutoFreeWstr exePath = GetExePath();
-    logf(L"Starting uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, gCli->installDir);
+    logf(L"Starting uninstaller '%s' with args '%s' for '%s'\n", exePath.Get(), cmdLine, gCli->installDir);
 
     int ret = 1;
-    AutoFreeWstr exePath = GetInstalledExePath();
     auto installerExists = file::Exists(exePath);
     if (!installerExists) {
+        log("Uninstaller executable doesn't exist\n");
         const WCHAR* caption = _TR("Uninstallation failed");
         const WCHAR* msg = _TR("SumatraPDF installation not found.");
         MessageBox(nullptr, msg, caption, MB_ICONEXCLAMATION | MB_OK);
