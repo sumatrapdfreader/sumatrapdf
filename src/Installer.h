@@ -66,7 +66,6 @@ int KillProcess(const WCHAR* processPath, bool waitUntilTerminated);
 
 const WCHAR** GetSupportedExts();
 
-const WCHAR* GetOwnPath();
 WCHAR* GetShortcutPath(int csidl);
 
 WCHAR* GetExistingInstallationDir();

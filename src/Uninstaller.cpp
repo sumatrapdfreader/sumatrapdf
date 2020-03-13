@@ -276,7 +276,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
     WCHAR* exePath = GetUninstallerPath();
-    const WCHAR* ownPath = GetOwnPath();
+    AutoFreeWstr ownPath = GetExePath();
     if (!path::IsSame(exePath, ownPath)) {
         KillProcess(exePath, TRUE);
     }
@@ -384,14 +384,17 @@ static void ShowUsage() {
     MessageBoxW(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 
+#if 0
 static WCHAR* GetInstallationDir() {
     WCHAR* dir = GetExistingInstallationDir();
     if (dir) {
         return dir;
     }
     // fall back to the uninstaller's path
-    return path::GetDir(GetOwnPath());
+    AutoFreeWstr exePath = GetExePath();
+    return path::GetDir(exePath);
 }
+#endif
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     bool handled;
@@ -541,7 +544,6 @@ int RunUninstaller(Flags* cli) {
     }
 
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
-    gCli->installDir = GetInstallationDir();
 
     // installerExists = true;
     if (!installerExists) {
@@ -807,7 +809,6 @@ int RunUninstallerRaMicro() {
     const WCHAR* msgFmt = _TR("Are you sure you want to uninstall %s?");
     const WCHAR* appName = GetAppName();
     gDefaultMsg = str::Format(msgFmt, appName);
-    gCli->installDir = GetInstallationDir();
 
     AutoFreeWstr exePath(GetInstalledExePath());
     auto installerExists = file::Exists(exePath);

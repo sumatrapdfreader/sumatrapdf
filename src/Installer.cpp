@@ -823,8 +823,9 @@ static WCHAR* GetInstallationDir() {
         if (str::EndsWithI(dir, L".exe")) {
             dir.Set(path::GetDir(dir));
         }
-        if (!str::IsEmpty(dir.Get()) && dir::Exists(dir))
+        if (!str::IsEmpty(dir.Get()) && dir::Exists(dir)) {
             return dir.StealData();
+        }
     }
 
     // fall back to %APPLOCALDATA%\SumatraPDF

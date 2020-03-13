@@ -133,14 +133,6 @@ void InitInstallerUninstaller() {
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 }
 
-const WCHAR* GetOwnPath() {
-    static WCHAR exePath[MAX_PATH];
-    exePath[0] = '\0';
-    GetModuleFileName(nullptr, exePath, dimof(exePath));
-    exePath[dimof(exePath) - 1] = '\0';
-    return exePath;
-}
-
 WCHAR* GetExistingInstallationDir() {
     AutoFreeWstr REG_PATH_UNINST = GetRegPathUninst(GetAppName());
     AutoFreeWstr dir = ReadRegStr2(REG_PATH_UNINST, L"InstallLocation");

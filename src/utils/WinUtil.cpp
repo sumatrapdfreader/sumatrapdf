@@ -379,9 +379,8 @@ WCHAR* GetExePath() {
 Caller needs to free()
 */
 WCHAR* GetExeDir() {
-    WCHAR* path = GetExePath();
+    AutoFreeWstr path = GetExePath();
     WCHAR* dir = path::GetDir(path);
-    free(path);
     return dir;
 }
 

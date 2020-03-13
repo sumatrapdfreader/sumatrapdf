@@ -161,25 +161,30 @@ StackWstrToUtf8::StackWstrToUtf8(std::wstring_view sv) {
     if (sv.empty()) {
         return;
     }
-    int cch = sv.size();
+    int cch = (int)sv.size();
     const WCHAR* s = sv.data();
-    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, cch, nullptr, 0, nullptr, nullptr);
-    int cbBufSize = (int)sizeof(buf) - 1;
-    int res;
-    if (cbConverted <= cbBufSize) {
-        res = WideCharToMultiByte(CP_UTF8, 0, s, cch, buf, cbConverted, nullptr, nullptr);
-        CrashIf(res > cbConverted);
-        buf[res] = '\0';
+    int cbBufSize = (int)sizeof(buf) - 1; // -1 for terminating zero
+    int res = WideCharToMultiByte(CP_UTF8, 0, s, cch, buf, cbBufSize, nullptr, nullptr);
+    if (res > 0) {
+        buf[res] = 0;
         return;
     }
 
-    overflow = AllocArray<char>(cbBufSize + 1); // +1 for terminating 0
+    // the buffer wasn't big enough, so measure how much we need and allocate
+    int cbNeeded = WideCharToMultiByte(CP_UTF8, 0, s, cch, nullptr, 0, nullptr, nullptr);
+    overflow = AllocArray<char>((size_t)cbNeeded + 1); // +1 for terminating 0
     if (!overflow) {
         return;
     }
-    res = WideCharToMultiByte(CP_UTF8, 0, s, cch, buf, cbConverted, nullptr, nullptr);
-    CrashIf(res > cbConverted);
-    overflow[res] = '\0';
+    res = WideCharToMultiByte(CP_UTF8, 0, s, cch, overflow, cbNeeded, nullptr, nullptr);
+    CrashIf(res != cbNeeded);
+}
+
+    char* StackWstrToUtf8::Get() const {
+    if (overflow) {
+        return overflow;
+    }
+    return (char*)buf;
 }
 
 #if 0
@@ -194,6 +199,10 @@ StackWstrToUtf8& StackWstrToUtf8::operator=(const StackWstrToUtf8& other) {
     return *this;
 }
 #endif
+
+StackWstrToUtf8::operator char*() const {
+    return Get();
+}
 
 StackWstrToUtf8::~StackWstrToUtf8() {
     str::Free(overflow);
