@@ -1101,7 +1101,7 @@ int RunInstaller(Flags* cli) {
         log("re-registering previewer\n");
         RegisterPreviewer();
     }
-
+    log("Installer finished\n");
 Exit:
     free(firstError);
 

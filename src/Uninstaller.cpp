@@ -536,7 +536,9 @@ static void RelaunchElevatedFromTempDirectory() {
         return;
     }
 
-    WCHAR* cmdLine = GetCommandLineW(); // not owning the memory
+    // TODO: should extract cmd-line from GetCommandLineW() by skipping the first
+    // item, which is path to the executable
+    WCHAR* cmdLine = L"-uninstall";
     logf(L"Re-launching '%s' with args '%s' as elevated\n", installerTempPath.Get(), cmdLine);
     LaunchElevated(installerTempPath, cmdLine);
     ::ExitProcess(0);
@@ -552,7 +554,9 @@ int RunUninstaller(Flags* cli) {
     }
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
-    logf(L"Starting uninstaller for '%s'\n", gCli->installDir);
+    WCHAR* cmdLine = GetCommandLineW();
+    AutoFreeWstr exePath = GetExePath();
+    logf(L"Starting uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, gCli->installDir);
 
     int ret = 1;
     AutoFreeWstr exePath = GetInstalledExePath();
