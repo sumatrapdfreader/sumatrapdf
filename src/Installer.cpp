@@ -234,11 +234,11 @@ static WCHAR* GetInstallDate() {
 static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     bool ok = true;
 
-    AutoFreeWstr installedExePath = GetInstalledExePath();
+    AutoFreeWstr installedExePath = GetInstallationFilePath(GetExeName());
     AutoFreeWstr installDate = GetInstallDate();
-    AutoFreeWstr installDir = path::GetDir(installedExePath);
-    AutoFreeWstr uninstallerPath = GetUninstallerPath();
-    AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath.get());
+    WCHAR* installDir = GetInstallDirNoFree();
+    WCHAR* uninstallerPath = installedExePath; // same as
+    AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath);
 
     const WCHAR* appName = GetAppName();
     AutoFreeWstr regPathUninst = GetRegPathUninst(appName);
@@ -265,7 +265,8 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     // command line for uninstaller
     ok &= WriteRegStr(hkey, regPathUninst, L"UninstallString", uninstallCmdLine);
     ok &= WriteRegStr(hkey, regPathUninst, L"URLInfoAbout", L"https://www.sumatrapdfreader.org/");
-    ok &= WriteRegStr(hkey, regPathUninst, L"URLUpdateInfo", L"https://www.sumatrapdfreader.org/news.html");
+    ok &= WriteRegStr(hkey, regPathUninst, L"URLUpdateInfo",
+                      L"https://www.sumatrapdfreader.org/docs/Version-history.html");
 
     return ok;
 }
@@ -279,7 +280,7 @@ static bool WriteUninstallerRegistryInfos() {
     return WriteUninstallerRegistryInfo(HKEY_CURRENT_USER);
 }
 
-// cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
+// http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     bool ok = true;
 
@@ -978,6 +979,24 @@ static bool OpenEmbeddedFilesArchive() {
 }
 
 int RunInstallerRaMicro();
+
+static char* PickInstallerLogPath() {
+    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    if (!dir) {
+        return nullptr;
+    }
+    AutoFreeStr dira = strconv::WstrToUtf8(dir);
+    return path::JoinUtf(dira, "sumatra-install-log.txt", nullptr);
+}
+
+static void StartInstallerLogging() {
+    char* dir = PickInstallerLogPath();
+    if (!dir) {
+        return;
+    }
+    StartLogToFile(dir);
+    free(dir);
+}
 
 int RunInstaller(Flags* cli) {
     logToDebugger = true;

@@ -127,8 +127,9 @@ void RelaunchElevatedIfNotDebug() {
         log("Already running elevated\n");
         return;
     }
-    log("Re-starting elevated\n");
     AutoFreeWstr exePath = GetExePath();
+    strconv::StackWstrToUtf8 exePathA = exePath.as_view();
+    logf("Re-launching '%s' as elevated\n", exePathA.Get());
     WCHAR* cmdline = GetCommandLineW(); // not owning the memory
     LaunchElevated(exePath, cmdline);
     ::ExitProcess(0);

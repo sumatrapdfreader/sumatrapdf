@@ -182,37 +182,7 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
 static void RemoveOwnRegistryKeys() {
     RemoveOwnRegistryKeys(HKEY_LOCAL_MACHINE);
     RemoveOwnRegistryKeys(HKEY_CURRENT_USER);
-}
-
-static bool RemoveEmptyDirectory(const WCHAR* dir) {
-    WIN32_FIND_DATA findData;
-    bool ok = TRUE;
-
-    AutoFreeWstr dirPattern(path::Join(dir, L"*"));
-    HANDLE h = FindFirstFileW(dirPattern, &findData);
-    if (h != INVALID_HANDLE_VALUE) {
-        do {
-            AutoFreeWstr path(path::Join(dir, findData.cFileName));
-            DWORD attrs = findData.dwFileAttributes;
-            // filter out directories. Even though there shouldn't be any
-            // subdirectories, it also filters out the standard "." and ".."
-            if ((attrs & FILE_ATTRIBUTE_DIRECTORY) && !str::Eq(findData.cFileName, L".") &&
-                !str::Eq(findData.cFileName, L"..")) {
-                ok &= RemoveEmptyDirectory(path);
-            }
-        } while (FindNextFileW(h, &findData) != 0);
-        FindClose(h);
-    }
-
-    if (!::RemoveDirectoryW(dir)) {
-        DWORD lastError = GetLastError();
-        if (ERROR_DIR_NOT_EMPTY != lastError && ERROR_FILE_NOT_FOUND != lastError) {
-            LogLastError(lastError);
-            ok = false;
-        }
-    }
-
-    return ok;
+    log("RemoveOwnRegistryKeys()\n");
 }
 
 // The following list is used to verify that all the required files have been
@@ -249,10 +219,15 @@ static void RemoveInstalledFiles() {
         const char* s = gInstalledFiles[i];
         AutoFreeWstr relPath = strconv::Utf8ToWstr(s);
         AutoFreeWstr path = path::Join(dir, relPath);
-        DeleteFile(path);
+        BOOL ok = DeleteFileW(path);
+        if (ok) {
+            strconv::StackWstrToUtf8 patha = path.as_view();
+            logf("RemoveInstalledFiles(): removed '%s'\n", patha.Get());
+        }
     }
-
-    RemoveEmptyDirectory(dir);
+    bool ok = dir::RemoveAll(dir);
+    strconv::StackWstrToUtf8 dira = dir.as_view();
+    logf("RemoveInstalledFiles(): removed '%s', ok = %d\n", dira.Get(), (int)ok);
 }
 
 static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
@@ -267,22 +242,24 @@ static void RemoveShortcuts() {
         DeleteFile(path);
         free(path);
     }
+    logf("removed shortcuts\n");
 }
 
 void onRaMicroUninstallerFinished();
 
 static DWORD WINAPI UninstallerThread(LPVOID data) {
     UNUSED(data);
+    log("UninstallerThread started\n");
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
-    WCHAR* exePath = GetUninstallerPath();
+    AutoFreeWstr exePath = GetInstalledExePath();
     AutoFreeWstr ownPath = GetExePath();
     if (!path::IsSame(exePath, ownPath)) {
-        KillProcess(exePath, TRUE);
+        KillProcess(exePath, true);
     }
-    free(exePath);
 
     if (!RemoveUninstallerRegistryInfo()) {
+        log("RemoveUninstallerRegistryInfo failed\n");
         NotifyFailed(_TR("Failed to delete uninstaller registry keys"));
     }
 
@@ -306,6 +283,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
         return 0;
     }
 
+    log("UninstallerThread finished\n");
     if (!gCli->silent) {
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     }
@@ -360,7 +338,7 @@ static void OnCreateWindow(HWND hwnd) {
 }
 
 static void CreateMainWindow() {
-    AutoFreeWstr title(str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR));
+    AutoFreeWstr title = str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR);
     WCHAR* winCls = INSTALLER_FRAME_CLASS_NAME;
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
@@ -508,6 +486,24 @@ static int RunApp() {
     }
 }
 
+static char* PickUnInstallerLogPath() {
+    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    if (!dir) {
+        return nullptr;
+    }
+    AutoFreeStr dira = strconv::WstrToUtf8(dir);
+    return path::JoinUtf(dira, "sumatra-uninstall-log.txt", nullptr);
+}
+
+static void StartUnInstallerLogging() {
+    char* dir = PickUnInstallerLogPath();
+    if (!dir) {
+        return;
+    }
+    StartLogToFile(dir);
+    free(dir);
+}
+
 int RunUninstallerRaMicro();
 
 int RunUninstaller(Flags* cli) {
@@ -518,10 +514,19 @@ int RunUninstaller(Flags* cli) {
         log("Starting the uninstaller\n");
     }
 
+    int ret = 1;
+    // TODO: remove dependency on this in the uninstaller
+    gCli->installDir = GetExistingInstallationDir();
+
     AutoFreeWstr exePath = GetInstalledExePath();
     auto installerExists = file::Exists(exePath);
+    if (!installerExists) {
+        const WCHAR* caption = _TR("Uninstallation failed");
+        const WCHAR* msg = _TR("SumatraPDF installation not found.");
+        MessageBox(nullptr, msg, caption, MB_ICONEXCLAMATION | MB_OK);
+        goto Exit;
+    }
 
-    int ret = 1;
     if (gCli->showHelp) {
         ShowUsage();
         ret = 0;
@@ -544,14 +549,6 @@ int RunUninstaller(Flags* cli) {
     }
 
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
-
-    // installerExists = true;
-    if (!installerExists) {
-        const WCHAR* caption = _TR("Uninstallation failed");
-        const WCHAR* msg = _TR("SumatraPDF installation not found.");
-        MessageBox(nullptr, msg, caption, MB_ICONEXCLAMATION | MB_OK);
-        goto Exit;
-    }
 
     // unregister search filter and previewer to reduce
     // possibility of blocking

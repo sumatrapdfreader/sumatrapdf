@@ -71,10 +71,9 @@ WCHAR* GetShortcutPath(int csidl);
 WCHAR* GetExistingInstallationDir();
 WCHAR* GetInstallDirNoFree();
 WCHAR* GetInstalledExePath();
-WCHAR* GetUninstallerPath();
 
-WCHAR* GetInstallationFilePath(WCHAR* name);
-WCHAR* GetExistingInstallationFilePath(WCHAR* name);
+WCHAR* GetInstallationFilePath(const WCHAR* name);
+WCHAR* GetExistingInstallationFilePath(const WCHAR* name);
 
 void RegisterPreviewer();
 void UnRegisterPreviewer(bool silent);
@@ -87,6 +86,3 @@ bool IsSearchFilterInstalled();
 void UninstallBrowserPlugin();
 
 bool CheckInstallUninstallPossible(bool silent = false);
-
-void StartInstallerLogging();
-void StartUnInstallerLogging();

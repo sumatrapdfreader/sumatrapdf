@@ -148,7 +148,7 @@ WCHAR* GetExistingInstallationDir() {
     return nullptr;
 }
 
-WCHAR* GetExistingInstallationFilePath(WCHAR* name) {
+WCHAR* GetExistingInstallationFilePath(const WCHAR* name) {
     WCHAR* dir = GetExistingInstallationDir();
     if (!dir) {
         return nullptr;
@@ -160,17 +160,13 @@ WCHAR* GetInstallDirNoFree() {
     return gCli->installDir;
 }
 
-WCHAR* GetInstallationFilePath(WCHAR* name) {
+WCHAR* GetInstallationFilePath(const WCHAR* name) {
     return path::Join(gCli->installDir, name);
 }
 
 WCHAR* GetInstalledExePath() {
     WCHAR* dir = GetInstallDirNoFree();
     return path::Join(dir, GetExeName());
-}
-
-WCHAR* GetUninstallerPath() {
-    return GetInstalledExePath();
 }
 
 WCHAR* GetShortcutPath(int csidl) {
@@ -257,21 +253,23 @@ bool IsPreviewerInstalled() {
 void RegisterSearchFilter() {
     AutoFreeWstr dllPath = GetInstallationFilePath(SEARCH_FILTER_DLL_NAME);
     bool ok = RegisterServerDLL(dllPath);
+    strconv::StackWstrToUtf8 dllPathA = dllPath.as_view();
     if (ok) {
-        log("registered search filter\n");
+        logf("registered search filter in dll '%s'\n", dllPathA.Get());
         return;
     }
-    log("failed to register search filter\n");
+    logf("failed to register search filter in dll '%s'\n", dllPathA.Get());
     NotifyFailed(_TR("Couldn't install PDF search filter"));
 }
 
 void UnRegisterSearchFilter(bool silent) {
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(SEARCH_FILTER_DLL_NAME);
     bool ok = UnRegisterServerDLL(dllPath);
+    strconv::StackWstrToUtf8 dllPathA = dllPath.as_view();
     if (ok) {
-        log("unregistered search filter\n");
+        logf("unregistered search filter in dll '%s'\n", dllPathA.Get());
     } else {
-        log("failed to unregister search filter\n");
+        logf("failed to unregister search filter in dll '%s'\n", dllPathA.Get());
     }
     if (ok || silent) {
         return;
@@ -283,11 +281,12 @@ void RegisterPreviewer() {
     AutoFreeWstr dllPath = GetInstallationFilePath(PREVIEW_DLL_NAME);
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
     bool ok = RegisterServerDLL(dllPath);
+    strconv::StackWstrToUtf8 dllPathA = dllPath.as_view();
     if (ok) {
-        log("registered previewer\n");
+        logf("registered previewer in dll '%s'\n", dllPathA.Get());
         return;
     }
-    log("failed to register previewer\n");
+    logf("failed to register previewer in dll '%s'\n", dllPathA.Get());
     NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
@@ -295,10 +294,11 @@ void UnRegisterPreviewer(bool silent) {
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(PREVIEW_DLL_NAME);
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
     bool ok = UnRegisterServerDLL(dllPath);
+    strconv::StackWstrToUtf8 dllPathA = dllPath.as_view();
     if (ok) {
-        log("registered search filter\n");
+        logf("registered search filter in dll '%s'\n", dllPathA.Get());
     } else {
-        log("failed to register search filter\n");
+        logf("failed to register search filter in dll '%s'\n", dllPathA.Get());
     }
     if (ok || silent) {
         return;
@@ -335,7 +335,7 @@ static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool wa
     BOOL inheritHandle = FALSE;
     // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
     DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE;
-    AutoCloseHandle hProcess(OpenProcess(dwAccess, inheritHandle, processId));
+    AutoCloseHandle hProcess = OpenProcess(dwAccess, inheritHandle, processId);
     if (!hProcess.IsValid()) {
         return false;
     }
@@ -356,7 +356,7 @@ static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool wa
 // modulePath
 // returns -1 on error, 0 if no matching processes
 int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
-    AutoCloseHandle hProcSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
+    AutoCloseHandle hProcSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == hProcSnapshot) {
         return -1;
     }
@@ -370,6 +370,7 @@ int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
     int killCount = 0;
     do {
         if (KillProcIdWithName(pe32.th32ProcessID, modulePath, waitUntilTerminated)) {
+            logf("Killed process with id %d\n", (int)pe32.th32ProcessID);
             killCount++;
         }
     } while (Process32Next(hProcSnapshot, &pe32));
@@ -396,7 +397,7 @@ static bool SkipProcessByID(DWORD procID) {
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(WStrVec& names) {
-    AutoCloseHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
         return;
     }
@@ -452,7 +453,7 @@ static void SetCloseProcessMsg() {
             procNames.Set(str::Join(procNames, L" and ", name));
         }
     }
-    AutoFreeWstr s(str::Format(_TR("Please close %s to proceed!"), procNames.get()));
+    AutoFreeWstr s = str::Format(_TR("Please close %s to proceed!"), procNames.get());
     SetMsg(s, COLOR_MSG_FAILED);
 }
 
@@ -755,40 +756,4 @@ void OnPaintFrame(HWND hwnd) {
     HDC dc = BeginPaint(hwnd, &ps);
     DrawFrame(hwnd, dc, &ps);
     EndPaint(hwnd, &ps);
-}
-
-static char* PickInstallerLogPath() {
-    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
-    if (!dir) {
-        return nullptr;
-    }
-    AutoFreeStr dira = strconv::WstrToUtf8(dir);
-    return path::JoinUtf(dira, "sumatra-install-log.txt", nullptr);
-}
-
-void StartInstallerLogging() {
-    char* dir = PickInstallerLogPath();
-    if (!dir) {
-        return;
-    }
-    StartLogToFile(dir);
-    free(dir);
-}
-
-static char* PickUnInstallerLogPath() {
-    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
-    if (!dir) {
-        return nullptr;
-    }
-    AutoFreeStr dira = strconv::WstrToUtf8(dir);
-    return path::JoinUtf(dira, "sumatra-uninstall-log.txt", nullptr);
-}
-
-void StartUnInstallerLogging() {
-    char* dir = PickUnInstallerLogPath();
-    if (!dir) {
-        return;
-    }
-    StartLogToFile(dir);
-    free(dir);
 }

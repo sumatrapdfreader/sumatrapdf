@@ -180,7 +180,7 @@ StackWstrToUtf8::StackWstrToUtf8(std::wstring_view sv) {
     CrashIf(res != cbNeeded);
 }
 
-    char* StackWstrToUtf8::Get() const {
+char* StackWstrToUtf8::Get() const {
     if (overflow) {
         return overflow;
     }
