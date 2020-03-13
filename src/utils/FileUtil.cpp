@@ -640,7 +640,7 @@ bool WriteFile(const WCHAR* filePath, std::string_view d) {
 
 // Return true if the file wasn't there or was successfully deleted
 bool Delete(const WCHAR* filePath) {
-    BOOL ok = DeleteFile(filePath);
+    BOOL ok = DeleteFileW(filePath);
     return ok || GetLastError() == ERROR_FILE_NOT_FOUND;
 }
 

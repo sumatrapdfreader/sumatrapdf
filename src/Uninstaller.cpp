@@ -560,8 +560,8 @@ int RunUninstaller(Flags* cli) {
     // TODO: remove dependency on this in the uninstaller
     gCli->installDir = GetExistingInstallationDir();
     WCHAR* cmdLine = GetCommandLineW();
-    AutoFreeWstr exePath = GetExePath();
-    logf(L"Starting uninstaller '%s' with args '%s' for '%s'\n", exePath.Get(), cmdLine, gCli->installDir);
+    WCHAR* exePath = GetExePath();
+    logf(L"Starting uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, gCli->installDir);
 
     int ret = 1;
     auto installerExists = file::Exists(exePath);
@@ -629,7 +629,12 @@ int RunUninstaller(Flags* cli) {
     if (gWasPreviewInstaller) {
         RegisterPreviewer(true);
     }
+    // This will likely fail because the file is in use
+    // Deleting self executable is very complicated
+    bool ok = file::Delete(exePath);
+    logf(L"Deleted '%s', ok=%d\n", exePath, ok);
     log("Uninstaller finished\n");
+
 Exit:
     free(firstError);
 
@@ -862,7 +867,6 @@ int RunUninstallerRaMicro() {
         goto Exit;
     }
 
-    // installerExists = true;
     if (!installerExists) {
         const WCHAR* caption = _TR("Uninstallation failed");
         msgFmt = _TR("%s installation not found.");
