@@ -394,11 +394,11 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
 
     if (!gIsRaMicroBuild) {
         if (gCli->withFilter) {
-            RegisterSearchFilter();
+            RegisterSearchFilter(false);
         }
 
         if (gCli->withPreview) {
-            RegisterPreviewer();
+            RegisterPreviewer(false);
         }
 
         UninstallBrowserPlugin();
@@ -1095,11 +1095,11 @@ int RunInstaller(Flags* cli) {
     // re-register if we un-registered but installation was cancelled
     if (gWasSearchFilterInstalled) {
         log("re-registering search filter\n");
-        RegisterSearchFilter();
+        RegisterSearchFilter(true);
     }
     if (gWasPreviewInstaller) {
         log("re-registering previewer\n");
-        RegisterPreviewer();
+        RegisterPreviewer(true);
     }
     log("Installer finished\n");
 Exit:

@@ -619,12 +619,12 @@ int RunUninstaller(Flags* cli) {
 
     // re-register if we un-registered but uninstallation was cancelled
     if (gWasSearchFilterInstalled) {
-        RegisterSearchFilter();
+        RegisterSearchFilter(true);
     }
     if (gWasPreviewInstaller) {
-        RegisterPreviewer();
+        RegisterPreviewer(true);
     }
-
+    log("Uninstaller finished\n");
 Exit:
     free(firstError);
 

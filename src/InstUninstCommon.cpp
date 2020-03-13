@@ -250,43 +250,46 @@ bool IsPreviewerInstalled() {
     return str::EqI(iid, SZ_PDF_PREVIEW_CLSID);
 }
 
-void RegisterSearchFilter() {
+void RegisterSearchFilter(bool silent) {
     AutoFreeWstr dllPath = GetInstallationFilePath(SEARCH_FILTER_DLL_NAME);
     bool ok = RegisterServerDLL(dllPath);
-    strconv::StackWstrToUtf8 dllPathA = dllPath.as_view();
     if (ok) {
-        logf("registered search filter in dll '%s'\n", dllPathA.Get());
+        logf(L"registered search filter in dll '%s'\n", dllPath.Get());
         return;
     }
-    logf("failed to register search filter in dll '%s'\n", dllPathA.Get());
+    logf(L"failed to register search filter in dll '%s'\n", dllPath.Get());
+    if (silent) {
+        return;
+    }
     NotifyFailed(_TR("Couldn't install PDF search filter"));
 }
 
 void UnRegisterSearchFilter(bool silent) {
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(SEARCH_FILTER_DLL_NAME);
     bool ok = UnRegisterServerDLL(dllPath);
-    strconv::StackWstrToUtf8 dllPathA = dllPath.as_view();
     if (ok) {
-        logf("unregistered search filter in dll '%s'\n", dllPathA.Get());
-    } else {
-        logf("failed to unregister search filter in dll '%s'\n", dllPathA.Get());
+        logf(L"unregistered search filter in dll '%s'\n", dllPath.Get());
+        return;
     }
-    if (ok || silent) {
+    logf(L"failed to unregister search filter in dll '%s'\n", dllPath.Get());
+    if (silent) {
         return;
     }
     NotifyFailed(_TR("Couldn't uninstall Sumatra search filter"));
 }
 
-void RegisterPreviewer() {
+void RegisterPreviewer(bool silent) {
     AutoFreeWstr dllPath = GetInstallationFilePath(PREVIEW_DLL_NAME);
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
     bool ok = RegisterServerDLL(dllPath);
-    strconv::StackWstrToUtf8 dllPathA = dllPath.as_view();
     if (ok) {
-        logf("registered previewer in dll '%s'\n", dllPathA.Get());
+        logf(L"registered previewer in dll '%s'\n", dllPath.Get());
         return;
     }
-    logf("failed to register previewer in dll '%s'\n", dllPathA.Get());
+    if (silent) {
+        return;
+    }
+    logf(L"failed to register previewer in dll '%s'\n", dllPath.Get());
     NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
@@ -294,13 +297,12 @@ void UnRegisterPreviewer(bool silent) {
     AutoFreeWstr dllPath = GetExistingInstallationFilePath(PREVIEW_DLL_NAME);
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
     bool ok = UnRegisterServerDLL(dllPath);
-    strconv::StackWstrToUtf8 dllPathA = dllPath.as_view();
     if (ok) {
-        logf("registered search filter in dll '%s'\n", dllPathA.Get());
-    } else {
-        logf("failed to register search filter in dll '%s'\n", dllPathA.Get());
+        logf(L"unregistered previewer in dll '%s'\n", dllPath.Get());
+        return;
     }
-    if (ok || silent) {
+    logf(L"failed to unregister previewer in dll '%s'\n", dllPath.Get());
+    if (silent) {
         return;
     }
     NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
