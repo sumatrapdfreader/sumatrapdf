@@ -57,7 +57,6 @@ WCHAR* GetSpecialFolder(int csidl, bool createIfMissing = false);
 void DisableDataExecution();
 void RedirectIOToConsole();
 WCHAR* GetExePath();
-char* GetExePathA();
 WCHAR* GetExeDir();
 WCHAR* GetSystem32Dir();
 WCHAR* GetCurrentDir();

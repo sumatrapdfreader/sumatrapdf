@@ -24,4 +24,22 @@ WCHAR* FromAnsi(const char* src, size_t cbSrcLen = (size_t)-1);
 size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp);
 size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, UINT cp);
 
+struct StackWstrToUtf8 {
+    char buf[512];
+    char* overflow = nullptr;
+
+    StackWstrToUtf8(std::wstring_view);
+    StackWstrToUtf8& operator=(const StackWstrToUtf8&) = delete;
+    ~StackWstrToUtf8();
+    char* Get() const {
+        if (overflow) {
+            return overflow;
+        }
+        return (char*)buf;
+    }
+    operator char*() const {
+        return Get();
+    }
+};
+
 } // namespace strconv

@@ -4884,8 +4884,9 @@ bool IsDllBuild() {
 void GetProgramInfo(str::Str& s) {
     AutoFree d = strconv::WstrToUtf8(gCrashFilePath);
     s.AppendFmt("Crash file: %s\r\n", d.data);
-    AutoFree exePath = GetExePathA();
-    s.AppendFmt("Exe: %s\r\n", exePath.get());
+
+    strconv::StackWstrToUtf8 exePath = GetExePath();
+    s.AppendFmt("Exe: %s\r\n", exePath.Get());
     const char* exeType = IsDllBuild() ? "dll" : "static";
     if (builtOn != nullptr) {
         s.AppendFmt("BuiltOn: %s\n", builtOn);

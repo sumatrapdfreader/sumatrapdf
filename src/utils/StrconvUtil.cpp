@@ -156,4 +156,47 @@ std::string_view WstrToAnsi(const WCHAR* src) {
     return WstrToCodePage(src, CP_ACP);
 }
 
+StackWstrToUtf8::StackWstrToUtf8(std::wstring_view sv) {
+    buf[0] = 0;
+    if (sv.empty()) {
+        return;
+    }
+    int cch = sv.size();
+    const WCHAR* s = sv.data();
+    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, cch, nullptr, 0, nullptr, nullptr);
+    int cbBufSize = (int)sizeof(buf) - 1;
+    int res;
+    if (cbConverted <= cbBufSize) {
+        res = WideCharToMultiByte(CP_UTF8, 0, s, cch, buf, cbConverted, nullptr, nullptr);
+        CrashIf(res > cbConverted);
+        buf[res] = '\0';
+        return;
+    }
+
+    overflow = AllocArray<char>(cbBufSize + 1); // +1 for terminating 0
+    if (!overflow) {
+        return;
+    }
+    res = WideCharToMultiByte(CP_UTF8, 0, s, cch, buf, cbConverted, nullptr, nullptr);
+    CrashIf(res > cbConverted);
+    overflow[res] = '\0';
+}
+
+#if 0
+StackWstrToUtf8& StackWstrToUtf8::operator=(const StackWstrToUtf8& other) {
+    if (this == &other) {
+        return *this;
+    }
+    str::Free(overflow);
+    overflow = nullptr;
+    memcpy(this->buf, other.buf, sizeof(this->buf));
+    this->overflow = str::Dup(other.overflow);
+    return *this;
+}
+#endif
+
+StackWstrToUtf8::~StackWstrToUtf8() {
+    str::Free(overflow);
+}
+
 } // namespace strconv

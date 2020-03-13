@@ -508,12 +508,21 @@ static int RunApp() {
 int RunUninstallerRaMicro();
 
 int RunUninstaller(Flags* cli) {
-
     gCli = cli;
     logToDebugger = true;
     if (gCli->log) {
         StartUnInstallerLogging();
         log("Starting the uninstaller\n");
+    }
+
+    AutoFreeWstr exePath = GetInstalledExePath();
+    auto installerExists = file::Exists(exePath);
+
+    int ret = 1;
+    if (gCli->showHelp) {
+        ShowUsage();
+        ret = 0;
+        goto Exit;
     }
 
     RelaunchElevatedIfNotDebug();
@@ -522,22 +531,17 @@ int RunUninstaller(Flags* cli) {
         return RunUninstallerRaMicro();
     }
 
-    int ret = 1;
-
     gWasSearchFilterInstalled = IsSearchFilterInstalled();
+    if (gWasSearchFilterInstalled) {
+        log("Search filter is installed\n");
+    }
     gWasPreviewInstaller = IsPreviewerInstalled();
+    if (gWasPreviewInstaller) {
+        log("Previewer is installed\n");
+    }
 
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
     gCli->installDir = GetInstallationDir();
-
-    AutoFreeWstr exePath(GetInstalledExePath());
-    auto installerExists = file::Exists(exePath);
-
-    if (gCli->showHelp) {
-        ShowUsage();
-        ret = 0;
-        goto Exit;
-    }
 
     // installerExists = true;
     if (!installerExists) {
@@ -545,6 +549,15 @@ int RunUninstaller(Flags* cli) {
         const WCHAR* msg = _TR("SumatraPDF installation not found.");
         MessageBox(nullptr, msg, caption, MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
+    }
+
+    // unregister search filter and previewer to reduce
+    // possibility of blocking
+    if (gWasSearchFilterInstalled) {
+        UnRegisterSearchFilter(true);
+    }
+    if (gWasPreviewInstaller) {
+        UnRegisterPreviewer(true);
     }
 
     if (gCli->silent) {

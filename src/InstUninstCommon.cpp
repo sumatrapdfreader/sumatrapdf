@@ -253,18 +253,12 @@ void UninstallBrowserPlugin() {
 bool IsSearchFilterInstalled() {
     const WCHAR* key = L".pdf\\PersistentHandler";
     AutoFreeWstr iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
-    if (!iid) {
-        return false;
-    }
     return str::EqI(iid, SZ_PDF_FILTER_HANDLER);
 }
 
 bool IsPreviewerInstalled() {
     const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
     AutoFreeWstr iid = ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr);
-    if (!iid) {
-        return false;
-    }
     return str::EqI(iid, SZ_PDF_PREVIEW_CLSID);
 }
 
