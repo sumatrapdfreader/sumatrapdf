@@ -6,6 +6,7 @@
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
 #include "utils/Log.h"
+#include "utils/LogDbg.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"

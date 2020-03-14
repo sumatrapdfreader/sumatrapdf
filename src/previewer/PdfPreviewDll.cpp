@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/LogDbg.h"
 
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
@@ -97,12 +98,26 @@ class CClassFactory : public IClassFactory {
     CLSID m_clsid;
 };
 
+static const char* GetReason(DWORD dwReason) {
+    switch (dwReason) {
+        case DLL_PROCESS_ATTACH:
+            return "DLL_PROCESS_ATTACH";
+        case DLL_THREAD_ATTACH:
+            return "DLL_PROCESS_ATTACH";
+        case DLL_THREAD_DETACH:
+            return "DLL_PROCESS_ATTACH";
+        case DLL_PROCESS_DETACH:
+            return "DLL_PROCESS_ATTACH";
+    }
+    return "Unknown reason";
+}
+
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
     UNUSED(lpReserved);
     if (dwReason == DLL_PROCESS_ATTACH) {
         CrashIf(hInstance != GetInstance());
     }
-
+    dbglogf("PdfPreview: DllMain %s\n", GetReason(dwReason));
     return TRUE;
 }
 

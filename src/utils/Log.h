@@ -5,14 +5,11 @@ extern HeapAllocator* gLogAllocator;
 extern str::Str* gLogBuf;
 extern bool logToStderr;
 extern bool logToDebugger;
-
 void StartLogToFile(const char* path);
 
 void log(std::string_view s);
 void log(const char* s);
 void logf(const char* fmt, ...);
-
-void dbglogf(const char* fmt, ...);
 
 #if OS_WIN
 void log(const WCHAR* s);

@@ -30,6 +30,9 @@
     <ClInclude Include="..\src\ifilter\PdfFilter.h">
       <Filter>ifilter</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\LogDbg.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\PalmDbReader.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -53,6 +56,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp">
       <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\LogDbg.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\PalmDbReader.cpp">
       <Filter>utils</Filter>

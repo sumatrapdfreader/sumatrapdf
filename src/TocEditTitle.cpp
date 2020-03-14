@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/Log.h"
+#include "utils/LogDbg.h"
 #include "utils/WinUtil.h"
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"

@@ -873,6 +873,7 @@
     <ClInclude Include="..\src\mui\MiniMui.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\previewer\PdfPreview.h" />
+    <ClInclude Include="..\src\utils\LogDbg.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>
   <ItemGroup>
@@ -1027,6 +1028,7 @@
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
+    <ClCompile Include="..\src\utils\LogDbg.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">true</ExcludedFromBuild>

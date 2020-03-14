@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/BitManip.h"
 #include "utils/Log.h"
+#include "utils/LogDbg.h"
 #include "utils/FileUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"

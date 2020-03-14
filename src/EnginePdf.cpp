@@ -16,6 +16,7 @@ extern "C" {
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
 #include "utils/Log.h"
+#include "utils/LogDbg.h"
 
 #include "AppColors.h"
 #include "wingui/TreeModel.h"

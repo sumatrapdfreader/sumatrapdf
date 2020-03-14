@@ -90,6 +90,9 @@
     <ClInclude Include="..\src\utils\Log.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\LogDbg.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -294,6 +297,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\Log.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\LogDbg.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">

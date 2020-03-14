@@ -867,6 +867,7 @@
     <ClInclude Include="..\src\ifilter\CTeXFilter.h" />
     <ClInclude Include="..\src\ifilter\FilterBase.h" />
     <ClInclude Include="..\src\ifilter\PdfFilter.h" />
+    <ClInclude Include="..\src\utils\LogDbg.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>
   <ItemGroup>
@@ -925,6 +926,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_ramicro|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp" />
+    <ClCompile Include="..\src\utils\LogDbg.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">true</ExcludedFromBuild>

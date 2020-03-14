@@ -502,6 +502,7 @@ function utils_files()
     "HttpUtil.*",
     "JsonParser.*",
     "Log.*",
+    "LogDbg.*",
     "LzmaSimpleArchive.*",
     "PEB.h",
     "RegistryPaths.*",
@@ -919,6 +920,7 @@ function pdf_preview_files()
     "PdfPreviewDll.cpp",
   })
   files {
+    "src/utils/LogDbg.*",
     "src/MUPDF_Exports.cpp",
     "src/EngineBase.*",
     "src/EngineFzUtil.*",
@@ -953,6 +955,7 @@ function pdf_filter_files()
     "FilterBase.h",
   })
   files {
+    "src/utils/LogDbg.*",
     "src/MUPDF_Exports.cpp",
     "src/EngineBase.*",
     "src/EngineFzUtil.*",

@@ -5,6 +5,7 @@
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/Log.h"
+#include "utils/LogDbg.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
