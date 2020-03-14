@@ -515,8 +515,9 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
         case WM_LBUTTONUP:
             url = GetStaticLink(gLinkInfo, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            if (url && url == gClickedURL)
-                LaunchBrowser(url);
+            if (url && url == gClickedURL) {
+                SumatraLaunchBrowser(url);
+            }
             break;
 
         case WM_CHAR:

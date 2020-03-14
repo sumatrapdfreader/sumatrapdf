@@ -70,6 +70,7 @@ func main() {
 		flgBuildPreRelease         bool
 		flgBuildRelease            bool
 		flgBuildReleaseFast        bool
+		flgBuildRelease32Fast      bool
 		flgSmoke                   bool
 		flgClangFormat             bool
 		flgFormat                  bool
@@ -102,7 +103,8 @@ func main() {
 		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
-		flag.BoolVar(&flgBuildReleaseFast, "build-release-fast", false, "build a fast subset of relese for testing")
+		flag.BoolVar(&flgBuildReleaseFast, "build-release-fast", false, "build only 64-bit release installer, for testing")
+		flag.BoolVar(&flgBuildRelease32Fast, "build-release-32-fast", false, "build only 32-bit release installer, for testing")
 		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
@@ -298,6 +300,13 @@ func main() {
 		failIfNoCertPwd()
 		detectVersions()
 		buildReleaseFast()
+		return
+	}
+
+	if flgBuildRelease32Fast {
+		failIfNoCertPwd()
+		detectVersions()
+		buildRelease32Fast()
 		return
 	}
 

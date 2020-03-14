@@ -17,6 +17,7 @@
 #include "utils/WinUtil.h"
 #include "utils/Archive.h"
 #include "utils/LzmaSimpleArchive.h"
+#include "utils/LogDbg.h"
 #include "utils/Log.h"
 
 #include "SumatraConfig.h"
@@ -871,6 +872,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         return 0;
     }
 
+    // do this before running installer etc. so that we have disk / net permissions
+    // (default policy is to disallow everything)
+    InitializePolicies(i.restrictedUse);
+
     if (i.justExtractFiles) {
         ExtractInstallerFiles();
         ::ExitProcess(0);
@@ -914,7 +919,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         return 0;
     }
 
-    InitializePolicies(i.restrictedUse);
     if (i.appdataDir) {
         SetAppDataPath(i.appdataDir);
     }

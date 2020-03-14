@@ -106,7 +106,7 @@ void InitializePolicies(bool restrict);
 void RestrictPolicies(int revokePermission);
 bool HasPermission(int permission);
 bool IsUIRightToLeft();
-bool LaunchBrowser(const WCHAR* url);
+bool SumatraLaunchBrowser(const WCHAR* url);
 bool OpenFileExternally(const WCHAR* path);
 void AssociateExeWithPdfExtension();
 void CloseTab(WindowInfo* win, bool quitIfLast = false);

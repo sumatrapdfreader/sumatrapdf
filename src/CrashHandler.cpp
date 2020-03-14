@@ -14,6 +14,7 @@
 #include "utils/HttpUtil.h"
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/WinUtil.h"
+#include "utils/LogDbg.h"
 #include "utils/Log.h"
 
 #include "SumatraPDF.h"
@@ -134,8 +135,8 @@ static void SaveCrashInfo(char* s, size_t size) {
 }
 
 static void SendCrashInfo(char* s, size_t size) {
+    dbglog("SendCrashInfo()\n");
     if (str::IsEmpty(s)) {
-        // plog("SendCrashInfo(): s is empty");
         return;
     }
 
@@ -154,26 +155,26 @@ static void SendCrashInfo(char* s, size_t size) {
 static void DeleteSymbolsIfExist() {
     // TODO: remove all files in symDir (symbols, previous crash files
     bool ok = file::Delete(gLibMupdfPdbPath);
-    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok);
+    dbglogf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok);
     ok = file::Delete(gSumatraPdfPdbPath);
-    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok);
+    dbglogf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok);
     ok = file::Delete(gSumatraPdfDllPdbPath);
-    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfDllPdbPath, (int)ok);
+    dbglogf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfDllPdbPath, (int)ok);
 }
 
 static bool ExtractSymbols(const char* archiveData, size_t dataSize, char* dstDir, Allocator* allocator) {
-    logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, (int)dataSize);
+    dbglogf("ExtractSymbols: dir '%s', size: %d\n", dstDir, (int)dataSize);
     lzma::SimpleArchive archive;
     bool ok = ParseSimpleArchive(archiveData, dataSize, &archive);
     if (!ok) {
-        logf("ExtractSymbols: ParseSimpleArchive failed\n");
+        dbglogf("ExtractSymbols: ParseSimpleArchive failed\n");
         return false;
     }
 
     for (int i = 0; i < archive.filesCount; i++) {
         lzma::FileInfo* fi = &(archive.files[i]);
         const char* name = fi->name;
-        logf("ExtractSymbols: file %d is '%s'\n", i, name);
+        dbglogf("ExtractSymbols: file %d is '%s'\n", i, name);
         char* uncompressed = GetFileDataByIdx(&archive, i, allocator);
         if (!uncompressed) {
             return false;
@@ -188,7 +189,7 @@ static bool ExtractSymbols(const char* archiveData, size_t dataSize, char* dstDi
         Allocator::Free(allocator, filePath);
         Allocator::Free(allocator, uncompressed);
         if (!ok) {
-            logf("ExtractSymbols: failed to write '%s'\n", filePath);
+            dbglogf("ExtractSymbols: failed to write '%s'\n", filePath);
             return false;
         }
     }
@@ -202,9 +203,9 @@ static bool ExtractSymbols(const char* archiveData, size_t dataSize, char* dstDi
 // note: to simplify callers, it could choose pdbZipPath by itself (in a temporary
 // directory) as the file is deleted on exit anyway
 static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
-    logf(L"DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
+    dbglogf(L"DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
     if (!symDir || !dir::Exists(symDir)) {
-        log("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
+        dbglog("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
         return false;
     }
 
@@ -212,17 +213,17 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
 
     if (gDisableSymbolsDownload) {
         // don't care about debug builds because we don't release them
-        log("DownloadAndUnzipSymbols: DEBUG build so not doing anything\n");
+        dbglog("DownloadAndUnzipSymbols: DEBUG build so not doing anything\n");
         return false;
     }
 
     HttpRsp rsp;
     if (!HttpGet(gSymbolsUrl, &rsp)) {
-        log("DownloadAndUnzipSymbols: couldn't download symbols\n");
+        dbglog("DownloadAndUnzipSymbols: couldn't download symbols\n");
         return false;
     }
     if (!HttpRspOk(&rsp)) {
-        log("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
+        dbglog("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
     }
 
     char symDirUtf[512];
@@ -230,19 +231,20 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
     strconv::WcharToUtf8Buf(symDir, symDirUtf, sizeof(symDirUtf));
     bool ok = ExtractSymbols(rsp.data.Get(), rsp.data.size(), symDirUtf, gCrashHandlerAllocator);
     if (!ok) {
-        log("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");
+        dbglog("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");
     }
     return ok;
 }
 
 bool CrashHandlerDownloadSymbols() {
+    dbglog("CrashHandlerDownloadSymbols()\n");
     if (!dir::Create(gSymbolsDir)) {
-        log("SubmitCrashInfo: couldn't create symbols dir\n");
+        dbglog("CrashHandlerDownloadSymbols: couldn't create symbols dir\n");
         return false;
     }
 
     if (!dbghelp::Initialize(gSymbolPathW, false)) {
-        log("SubmitCrashInfo: dbghelp::Initialize() failed\n");
+        dbglog("CrashHandlerDownloadSymbols: dbghelp::Initialize() failed\n");
         return false;
     }
 
@@ -251,17 +253,19 @@ bool CrashHandlerDownloadSymbols() {
     }
 
     if (!DownloadAndUnzipSymbols(gSymbolsDir)) {
-        log("SubmitCrashInfo: failed to download symbols\n");
+        dbglog("CrashHandlerDownloadSymbols: failed to download symbols\n");
         return false;
     }
 
     if (!dbghelp::Initialize(gSymbolPathW, true)) {
-        log("SubmitCrashInfo: second dbghelp::Initialize() failed\n");
+        dbglog("CrashHandlerDownloadSymbols: second dbghelp::Initialize() failed\n");
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        logf(L"SubmitCrashInfo: HasSymbols() false after downloading symbols, gSymbolPathW: '%s'\n", gSymbolPathW);
+        dbglog("CrashHandlerDownloadSymbols: HasSymbols() false after downloading symbols, gSymbolPathW:");
+        dbglog(gSymbolPathW);
+        dbglog("\n");
         return false;
     }
     return true;
@@ -271,11 +275,13 @@ bool CrashHandlerDownloadSymbols() {
 // so we'll try to download them and retry. If we can resolve symbols, we'll
 // get the callstacks etc. and submit to our server for analysis.
 void SubmitCrashInfo() {
+    dbglog("SubmitCrashInfo()\n");
     if (!CrashHandlerCanUseNet()) {
+        dbglog("SubmitCrashInfo(): skipping because !CrashHandlerCanUseNet()\n");
         return;
     }
 
-    logf(L"SubmitCrashInfo: gSymbolPathW: '%s'\n", gSymbolPathW);
+    dbglogf(L"SubmitCrashInfo: gSymbolPathW: '%s'\n", gSymbolPathW);
 
     bool ok = CrashHandlerDownloadSymbols();
 
@@ -283,11 +289,13 @@ void SubmitCrashInfo() {
     size_t size = 0;
     s = BuildCrashInfoText(&size);
     if (!s) {
+        dbglog("SubmitCrashInfo(): skipping because !BuildCrashInfoText()\n");
         return;
     }
     SaveCrashInfo(s, size);
     SendCrashInfo(s, size);
     gCrashHandlerAllocator->Free(s);
+    dbglog("SubmitCrashInfo() finished\n");
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID data) {
@@ -312,8 +320,10 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
+    dbglog("DumpExceptionHandler\n");
     static bool wasHere = false;
     if (wasHere) {
+        dbglog("DumpExceptionHandler: wasHere set\n");
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     }
 
@@ -642,12 +652,17 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
     CrashIf(gDumpEvent || gDumpThread);
 
     if (!crashDumpPath) {
+        dbglog("InstallCrashHandler: skipping because !crashDumpPath\n");
         return;
     }
 
     if (!SetSymbolsDir(symDir)) {
+        dbglog("InstallCrashHandler: skipping because !SetSymbolsDir()\n");
         return;
     }
+
+    dbglogf(L"InstallCrashHandler crashDumpPath: '%s', crashFilePath: '%s', symDir: '%s'\n", crashDumpPath,
+            crashFilePath, symDir);
 
     gCrashDumpPath = str::Dup(crashDumpPath);
     gCrashFilePath = str::Dup(crashFilePath);
@@ -656,6 +671,7 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
     // as they're not helpful
     bool isWine = BuildModulesInfo();
     if (isWine) {
+        dbglog("InstallCrashHandler: skipping because isWine\n");
         return;
     }
 
@@ -677,10 +693,12 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
 
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent) {
+        dbglog("InstallCrashHandler: skipping because !gDumpEvent\n");
         return;
     }
     gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, 0);
     if (!gDumpThread) {
+        dbglog("InstallCrashHandler: skipping because !gDumpThread\n");
         return;
     }
     gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);

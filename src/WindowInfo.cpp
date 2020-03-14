@@ -296,7 +296,7 @@ void LinkHandler::GotoLink(PageDestination* link) {
         } else {
             // LaunchBrowser will reject unsupported URI schemes
             // TODO: support file URIs?
-            LaunchBrowser(path);
+            SumatraLaunchBrowser(path);
         }
         return;
     }

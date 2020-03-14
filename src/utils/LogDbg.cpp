@@ -6,6 +6,10 @@
 // as it spams the debug output
 bool gDisableDbgLog = false;
 
+void dbglog(const char* msg) {
+    OutputDebugStringA(msg);
+}
+
 void dbglogf(const char* fmt, ...) {
     if (gDisableDbgLog) {
         return;
@@ -18,6 +22,14 @@ void dbglogf(const char* fmt, ...) {
     va_end(args);
 }
 
-void dbglog(const char* msg) {
-    OutputDebugStringA(msg);
+void dbglog(const WCHAR* msg) {
+    OutputDebugStringW(msg);
+}
+
+void dbglogf(const WCHAR* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    AutoFreeWstr s = str::FmtV(fmt, args);
+    OutputDebugStringW(s);
+    va_end(args);
 }

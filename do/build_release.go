@@ -66,3 +66,30 @@ func buildReleaseFast() {
 	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
 }
+
+// a faster release build for testing that only does 32-bit installer
+func buildRelease32Fast() {
+	detectSigntoolPath() // early exit if missing
+
+	ver := getVerForBuildType(buildTypeRel)
+	s := fmt.Sprintf("buidling release version %s", ver)
+	defer makePrintDuration(s)()
+
+	if !isGitClean() {
+		logf("%s", "note: unsaved git changes\n")
+	}
+	verifyOnReleaseBranchMust()
+
+	//verifyBuildNotInS3ShortMust(buildTypeRel)
+	//verifyBuildNotInSpacesShortMust(buildTypeRel)
+
+	clean()
+	setBuildConfigRelease()
+	defer revertBuildConfig()
+
+	buildJustInstaller(rel32Dir, "Release", "Win32")
+
+	dstDir := filepath.Join("out", "final-rel32-fast")
+	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
+	copyBuiltFiles(dstDir, rel32Dir, prefix+"-32")
+}

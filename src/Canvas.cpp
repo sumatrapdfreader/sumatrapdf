@@ -1284,7 +1284,7 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) 
             LoadArgs args(url, win);
             LoadDocument(args);
         } else {
-            LaunchBrowser(url);
+            SumatraLaunchBrowser(url);
         }
     }
     win->url = nullptr;

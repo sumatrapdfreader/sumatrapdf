@@ -584,6 +584,10 @@ bool LaunchFile(const WCHAR* path, const WCHAR* params, const WCHAR* verb, bool 
     return !!ShellExecuteExW(&sei);
 }
 
+bool LaunchBrowser(const WCHAR* url) {
+    return LaunchFile(url, nullptr, L"open");
+}
+
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
     PROCESS_INFORMATION pi = {0};
     STARTUPINFOW si = {0};

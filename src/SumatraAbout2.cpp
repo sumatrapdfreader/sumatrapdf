@@ -208,7 +208,7 @@ void ButtonUrlHandler::Clicked(Control* c, int x, int y) {
     UNUSED(x);
     UNUSED(y);
     WCHAR* url = c->toolTip;
-    LaunchBrowser(url);
+    SumatraLaunchBrowser(url);
 }
 
 // we only need one instance

@@ -15,6 +15,7 @@
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+#include "utils/LogDbg.h"
 #include "utils/Log.h"
 #include "utils/GdiPlusUtil.h"
 
@@ -191,8 +192,9 @@ void InitializePolicies(bool restrict) {
     CrashIf(gAllowedLinkProtocols.size() != 0 || gAllowedFileTypes.size() != 0);
 
     // the -restrict command line flag overrides any sumatrapdfrestrict.ini configuration
-    if (restrict)
+    if (restrict) {
         return;
+    }
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
     // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
@@ -259,7 +261,7 @@ bool HasPermission(int permission) {
 
 // lets the shell open a URI for any supported scheme in
 // the appropriate application (web browser, mail client, etc.)
-bool LaunchBrowser(const WCHAR* url) {
+bool SumatraLaunchBrowser(const WCHAR* url) {
     if (gPluginMode) {
         // pass the URI back to the browser
         CrashIf(gWindows.empty());
@@ -2127,7 +2129,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         if (AutoUpdateInitiate(data->Get()))
             return 0;
 #endif
-        LaunchBrowser(SVN_UPDATE_LINK);
+        SumatraLaunchBrowser(SVN_UPDATE_LINK);
     }
     prefs::Save();
 
@@ -4494,15 +4496,15 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VISIT_WEBSITE:
-            LaunchBrowser(WEBSITE_MAIN_URL);
+            SumatraLaunchBrowser(WEBSITE_MAIN_URL);
             break;
 
         case IDM_MANUAL:
-            LaunchBrowser(WEBSITE_MANUAL_URL);
+            SumatraLaunchBrowser(WEBSITE_MANUAL_URL);
             break;
 
         case IDM_CONTRIBUTE_TRANSLATION:
-            LaunchBrowser(WEBSITE_TRANSLATIONS_URL);
+            SumatraLaunchBrowser(WEBSITE_TRANSLATIONS_URL);
             break;
 
         case IDM_ABOUT:
@@ -4919,11 +4921,13 @@ bool CrashHandlerCanUseNet() {
 }
 
 void ShowCrashHandlerMessage() {
+    dbglog("ShowCrashHandlerMessage()\n");
     // don't show a message box in restricted use, as the user most likely won't be
     // able to do anything about it anyway and it's up to the application provider
     // to fix the unexpected behavior (of which for a restricted set of documents
     // there should be much less, anyway)
     if (!HasPermission(Perm_DiskAccess)) {
+        dbglog("ShowCrashHandlerMessage: skipping beacuse !HasPermission(Perm_DiskAccess)\n");
         return;
     }
 
@@ -4937,10 +4941,19 @@ void ShowCrashHandlerMessage() {
     char* msg = "We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.";
     UINT flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
     flags |= MB_SETFOREGROUND | MB_TOPMOST;
+
     int res = MessageBoxA(nullptr, msg, "SumatraPDF crashed", flags);
-    if (IDCANCEL == res) {
-        LaunchFile(gCrashFilePath, nullptr, L"open");
+    if (IDCANCEL != res) {
+        return;
     }
+    if (!gCrashFilePath) {
+        dbglog("ShowCrashHandlerMessage: !gCrashFilePath\n");
+        return;
+    }
+    LaunchFile(gCrashFilePath, nullptr, L"open");
+    auto url = L"https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
+    LaunchFile(url, nullptr, L"open");
+    return;
 }
 
 static WCHAR* GetSymbolsDir() {

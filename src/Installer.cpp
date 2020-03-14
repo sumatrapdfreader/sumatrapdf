@@ -10,6 +10,7 @@
 #include "utils/FileUtil.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
+#include "utils/LogDbg.h"
 #include "utils/Log.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
@@ -1032,6 +1033,23 @@ int RunInstaller(Flags* cli) {
     if (gIsRaMicroBuild) {
         return RunInstallerRaMicro();
     }
+
+    if (!IsProcessAndOsArchSame()) {
+        logf("Mismatch of the OS and executable arch\n");
+        char* msg =
+            "You're installing 32-bit SumatraPDF on 64-bit OS. Are you sure?\nPress 'Ok' to proceed.\nPress 'Cancel' "
+            "to download 64-bit version.";
+        UINT flags = MB_ICONERROR | MB_OK | MB_OKCANCEL;
+        flags |= MB_SETFOREGROUND | MB_TOPMOST;
+        int res = MessageBoxA(nullptr, msg, "SumatraPDF Installer", flags);
+        if (IDCANCEL == res) {
+            LaunchBrowser(L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html");
+            return 0;
+        }
+    }
+
+    // just when testing
+    //CrashMe();
 
     gWasSearchFilterInstalled = IsSearchFilterInstalled();
     if (gWasSearchFilterInstalled) {

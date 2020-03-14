@@ -3,5 +3,8 @@
 
 extern bool gDisableDbgLog;
 
-void dbglogf(const char* fmt, ...);
 void dbglog(const char*);
+void dbglogf(const char* fmt, ...);
+
+void dbglog(const WCHAR*);
+void dbglogf(const WCHAR* fmt, ...);
