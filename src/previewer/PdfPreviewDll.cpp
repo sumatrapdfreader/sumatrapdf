@@ -106,11 +106,11 @@ static const char* GetReason(DWORD dwReason) {
         case DLL_PROCESS_ATTACH:
             return "DLL_PROCESS_ATTACH";
         case DLL_THREAD_ATTACH:
-            return "DLL_PROCESS_ATTACH";
+            return "DLL_THREAD_ATTACH";
         case DLL_THREAD_DETACH:
-            return "DLL_PROCESS_ATTACH";
+            return "DLL_THREAD_DETACH";
         case DLL_PROCESS_DETACH:
-            return "DLL_PROCESS_ATTACH";
+            return "DLL_PROCESS_DETACH";
     }
     return "Unknown reason";
 }
