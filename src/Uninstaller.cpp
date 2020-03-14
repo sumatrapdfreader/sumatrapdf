@@ -130,8 +130,8 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
 
     DWORD subkeys, values;
     bool isEmpty = false;
-    status = RegQueryInfoKeyW(hkey, nullptr, nullptr, nullptr, &subkeys, nullptr, nullptr, &values, nullptr, nullptr, nullptr,
-                        nullptr);
+    status = RegQueryInfoKeyW(hkey, nullptr, nullptr, nullptr, &subkeys, nullptr, nullptr, &values, nullptr, nullptr,
+                              nullptr, nullptr);
     if (status == ERROR_SUCCESS) {
         isEmpty = 0 == subkeys && 0 == values;
     }
@@ -557,6 +557,42 @@ static void RelaunchElevatedFromTempDirectory() {
     ::ExitProcess(0);
 }
 
+static WCHAR* GetSelfDeleteBatchPathInTemp() {
+    WCHAR tempDir[MAX_PATH + 14] = {0};
+    DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
+    CrashAlwaysIf(res == 0 || res >= dimof(tempDir));
+    return path::Join(tempDir, L"sumatra-self-del.bat");
+}
+
+// a hack to allow deleting our own executable
+// we create a bash script that deletes us
+static void InitSelfDelete() {
+    AutoFreeWstr exePath = GetExePath();
+    AutoFreeStr exePathA = strconv::WstrToUtf8(exePath);
+    str::Str script;
+    // wait 2 seconds to give our process time to exit
+    // alternatively use ping,
+    // https://stackoverflow.com/questions/1672338/how-to-sleep-for-five-seconds-in-a-batch-file-cmd
+    script.Append("timeout /t 2 /nobreak >nul\r\n");
+    // delete our executable
+    script.AppendFmt("del \"%s\"\r\n", exePathA.Get());
+    // del itself
+    // https://stackoverflow.com/questions/2888976/how-to-make-bat-file-delete-it-self-after-completion
+    script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
+
+    AutoFreeWstr scriptPath = GetSelfDeleteBatchPathInTemp();
+    AutoFreeStr scriptPathA = strconv::WstrToUtf8(scriptPath.as_view());
+    bool ok = file::WriteFile(scriptPathA, script.as_view());
+    if (!ok) {
+        logf("Failed to write '%s'\n", scriptPathA.Get());
+        return;
+    }
+    logf("Created self-delete batch script '%s'\n", scriptPathA.Get());
+    AutoFreeWstr cmdLine = str::Format(L"cmd.exe /C \"%s\"", scriptPath.Get());
+    DWORD flags = CREATE_NO_WINDOW;
+    LaunchProcess(cmdLine, nullptr, flags);
+}
+
 int RunUninstallerRaMicro();
 
 int RunUninstaller(Flags* cli) {
@@ -637,15 +673,9 @@ int RunUninstaller(Flags* cli) {
     if (gWasPreviewInstaller) {
         RegisterPreviewer(true);
     }
-    // This will likely fail because the file is in use
-    // Deleting self executable is very complicated
-    bool ok = file::Delete(exePath);
-    logf(L"Deleted '%s', ok=%d\n", exePath, ok);
-    log("Uninstaller finished\n");
-
+    InitSelfDelete();
 Exit:
     free(firstError);
-
     return ret;
 }
 

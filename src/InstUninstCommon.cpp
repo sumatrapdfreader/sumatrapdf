@@ -447,7 +447,7 @@ bool KillProcessesUsingInstallation() {
         proc.dwSize = sizeof(proc);
         ok = Process32Next(snap, &proc);
     }
-    return killedAllProcesses;    
+    return killedAllProcesses;
 }
 
 // return names of processes that are running part of the installation
