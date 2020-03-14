@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-58f618306c05eb0bcc99457f7d1f98e3b2c83584
+da76247580283216a5d1a3db75ebb4220be8f1c4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -154,7 +154,7 @@ by:П&ашыраныя налады
 ca-xv:Opcions &avançades...
 ca:Opcions &avançades...
 cn:高级选项(&A)...
-co:Ozzioni di l’espertu…
+co:Ozzioni d’&espertu…
 cy:Dewisiadau &Uwch...
 cz:&Pokročilé možnosti...
 de:&Erweiterte Optionen…
@@ -747,7 +747,7 @@ by:Па &дзве старонцы\tCtrl+7
 ca-xv:Pàgina &doble\tCtrl+7
 ca:Pàgina &doble\tCtrl+7
 cn:双页模式(&F)\tCtrl+7
-co:Pagina &doppia\tCtrl+7
+co:Pagina d&oppia\tCtrl+7
 cy:&Wynebu\tCtrl+7
 cz:&Dvojstránky\tCtrl+7
 de:&Doppelseite\tStrg+7
@@ -2520,7 +2520,7 @@ by:Запомніць гэтыя параметры для &кожнага да�
 ca-xv:Conserva estes &preferències per a cada document
 ca:Conserva aquestes &preferències per a cada document
 cn:为每一个文档记住这些设置(&R)
-co:Arricurdassi ste &preferenze per ogni ducumentu
+co:Arricurdassi di ste &preferenze per ogni ducumentu
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 cz:&Pamatovat si tato nastavení pro každý dokument
 de:Ansicht-&Einstellungen für jedes Dokument einzeln merken
@@ -3787,6 +3787,7 @@ vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
 br:Adicionar página %s aos favoritos\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
+co:Aghjunghje a &pagina %s à i favuriti\tCtrl+B
 de:Seite %s zu Favoriten hinzufügen\tStrg+B
 es:Añadir página %s a favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
@@ -14429,7 +14430,7 @@ by:&Запомніць адкрытыя файлы
 ca-xv:Recorda els fitxers &oberts
 ca:Recorda els fitxers &oberts
 cn:记住已打开的文件(&O)
-co:Arricurdassi i &schedarii aperti
+co:Arricurdassi di i &schedarii aperti
 cy:Co&fio ffeiliau ar agor
 cz:Pamatovat si &otevřené soubory
 de:Liste der &zuletzt geöffneten Dokumente anlegen
@@ -14494,7 +14495,7 @@ by:Выдаліць з лепшых закладак
 ca-xv:Suprimeix dels preferits
 ca:Suprimeix dels preferits
 cn:自收藏删除
-co:Caccià da i favuriti
+co:&Caccià da i favuriti
 cy:Tynnu o'r ffefrynnau
 cz:Odebrat z oblíbených
 de:Aus Favoriten entfernen
@@ -14750,7 +14751,7 @@ by:Павярнуць па гадзінніку\tCtrl+Shift++
 ca-xv:Gira a la dreta\tCtrl+Maj++
 ca:Gira a la dreta\tCtrl+Shift++
 cn:向右旋转(&R)\tCtrl+Shift++
-co:&Girà à diritta\tCtrl+Maiusc++
+co:Girà à &diritta\tCtrl+Maiusc++
 cy:Troi &Clocwedd\tCtrl+Shift++
 cz:Otočit dop&rava\tCtrl+Shift+Num+
 de:Im &UZS drehen\tStrg+Umschalt++
@@ -14813,6 +14814,7 @@ ar:حفظ الحواشي
 az:Annotasiyaları yadda saxla
 br:Salvar anotações
 cn:保存注释
+co:Arregistrà l’ann&utazioni
 de:Anmerkungen speichern
 es:Guardar Notas
 fr:Sauvegarder les annotations
@@ -15460,6 +15462,7 @@ vn:Đặt dòng lệnh tìm kiếm ngược
 az:Əl&fəcinləri göstər\tF12
 br:Mostrar &marcadores\tF12
 cn:显示书签(&B)\tF12
+co:Affissà l’&indette\tF12
 de:Lesezeichen anzeigen\tF12
 es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
@@ -15476,6 +15479,7 @@ tw:顯示書籤(&B)\tF12
 az:&Seçilmişləri göstər
 br:Mostrar &favoritos
 cn:显示收藏夹(&F)
+co:Affissà i &favuriti
 de:&Favoriten anzeigen
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
@@ -15625,6 +15629,7 @@ vn:Hiện thanh công cụ
 az:Əlfə&cinləri göstər\tF12
 br:Mostrar &marcadores\tF12
 cn:显示书签(&M)\tF12
+co:Affissà l’&indette\tF12
 de:Lesezeichen anzeigen\tF12
 es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
