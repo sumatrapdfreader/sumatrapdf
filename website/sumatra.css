@@ -292,13 +292,13 @@ col, colgroup, table, tbody, td, tfoot, th, thead, tr {
 
 .nav-icon-left {
   position: absolute;
-  left: -16px;
+  left: 0;
   top: calc(50% - 24px);
 }
 
 .nav-icon-right {
   position: absolute;
-  right: -16px;
+  right: 0;
   top: calc(50% - 24px);
 }
 
