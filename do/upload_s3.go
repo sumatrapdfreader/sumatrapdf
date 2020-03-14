@@ -240,7 +240,12 @@ func s3UploadBuildMust(buildType string) {
 	err := s3UploadDir(c, dirRemote, dirLocal)
 	panicIfErr(err)
 
-	files := getFilesForLatestInfo(buildType)
+	// for release build we don't upload files with version info
+	if buildType == buildTypeRel {
+		return
+	}
+
+	files := getVersionFilesForLatestInfo(buildType)
 	for _, f := range files {
 		remotePath := f[0]
 		err = c.UploadString(remotePath, f[1], true)

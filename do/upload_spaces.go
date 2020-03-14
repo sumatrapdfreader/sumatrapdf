@@ -155,13 +155,15 @@ func verifyBuildNotInSpacesMust(c *u.MinioClient, buildType string) {
 	}
 }
 
-func getFilesForLatestInfo(buildType string) [][]string {
+func getVersionFilesForLatestInfo(buildType string) [][]string {
+	panicIf(buildType == buildTypeRel)
 	remotePaths := getRemotePaths(buildType)
 	var res [][]string
 	s := createSumatraLatestJs(buildType)
 	res = append(res, []string{remotePaths[0], s})
 	ver := getVerForBuildType(buildType)
 	res = append(res, []string{remotePaths[1], ver})
+	// TOOD different for ramicro
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
 	res = append(res, []string{remotePaths[2], ver})
 	return res
@@ -186,7 +188,12 @@ func spacesUploadBuildMust(buildType string) {
 	err := minioUploadDir(c, dirRemote, dirLocal)
 	panicIfErr(err)
 
-	files := getFilesForLatestInfo(buildType)
+	// for release build we don't upload files with version info
+	if buildType == buildTypeRel {
+		return
+	}
+
+	files := getVersionFilesForLatestInfo(buildType)
 	for _, f := range files {
 		remotePath := f[0]
 		err = c.UploadDataPublic(remotePath, []byte(f[1]))
