@@ -287,6 +287,7 @@ col, colgroup, table, tbody, td, tfoot, th, thead, tr {
 
 .img-wrapper > img {
   object-fit: scale-down;
+  max-width: 100%;
 }
 
 .nav-icon-left {
