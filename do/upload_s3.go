@@ -196,7 +196,7 @@ func getFinalDirForBuildType(buildType string) string {
 	case buildTypeDaily:
 		dir = "final-daily"
 	case buildTypeRel:
-		dir = "final-release"
+		dir = "final-rel"
 	case buildTypePreRel:
 		dir = "final-prerel"
 	case buildTypeRaMicro:
