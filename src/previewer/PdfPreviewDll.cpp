@@ -22,6 +22,7 @@ class CClassFactory : public IClassFactory {
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
+        dbglog("PdfPreview: QueryInterface()\n");
         static const QITAB qit[] = {QITABENT(CClassFactory, IClassFactory), {0}};
         return QISearch(this, qit, riid, ppv);
     }
@@ -37,6 +38,8 @@ class CClassFactory : public IClassFactory {
 
     // IClassFactory
     IFACEMETHODIMP CreateInstance(IUnknown* punkOuter, REFIID riid, void** ppv) {
+        dbglog("PdfPreview: CreateInstance()\n");
+
         *ppv = nullptr;
         if (punkOuter)
             return CLASS_E_NOAGGREGATION;
@@ -137,6 +140,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     if (!pClassFactory) {
         return E_OUTOFMEMORY;
     }
+    dbglog("PdfPreview: DllGetClassObject\n");
     return pClassFactory->QueryInterface(riid, ppv);
 }
 
@@ -189,6 +193,7 @@ static struct {
 };
 
 STDAPI DllRegisterServer() {
+    dbglog("PdfPreview: DllRegisterServer\n");
     AutoFreeWstr dllPath = path::GetPathOfFileInAppDir();
     if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());        
@@ -249,6 +254,7 @@ STDAPI DllRegisterServer() {
 }
 
 STDAPI DllUnregisterServer() {
+    dbglog("PdfPreview: DllUnregisterServer\n");
     HRESULT hr = S_OK;
 
 #define DeleteOrFail_(key)                     \

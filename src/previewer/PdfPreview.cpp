@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/LogDbg.h"
 
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
@@ -22,8 +23,11 @@
 
 IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha) {
     EngineBase* engine = GetEngine();
-    if (!engine)
+    if (!engine) {
         return E_FAIL;
+    }
+
+    dbglogf("PdfPreview: PreviewBase::GetThumbnail(cx=%d)\n", (int)cx);
 
     RectD page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
@@ -112,15 +116,17 @@ class PageRenderer {
         InitializeCriticalSection(&currAccess);
     }
     ~PageRenderer() {
-        if (thread)
+        if (thread) {
             WaitForSingleObject(thread, INFINITE);
+        }
         delete currBmp;
         DeleteCriticalSection(&currAccess);
     }
 
     RectD GetPageRect(int pageNo) {
-        if (preventRecursion)
+        if (preventRecursion) {
             return RectD();
+        }
 
         preventRecursion = true;
         // assume that any engine methods could lead to a seek
@@ -131,18 +137,21 @@ class PageRenderer {
     }
 
     void Render(HDC hdc, RectI target, int pageNo, float zoom) {
+        dbglog("PdfPreview: PageRenderer::Render()\n");
+
         ScopedCritSec scope(&currAccess);
-        if (currBmp && currPage == pageNo && currSize == target.Size())
+        if (currBmp && currPage == pageNo && currSize == target.Size()) {
             currBmp->StretchDIBits(hdc, target);
-        else if (!thread) {
+        } else if (!thread) {
             reqPage = pageNo;
             reqZoom = zoom;
             reqSize = target.Size();
             reqAbort = false;
             thread = CreateThread(nullptr, 0, RenderThread, this, 0, 0);
         } else if (reqPage != pageNo || reqSize != target.Size()) {
-            if (abortCookie)
+            if (abortCookie) {
                 abortCookie->Abort();
+            }
             reqAbort = true;
         }
     }
@@ -301,6 +310,8 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT message, WPARAM wParam, L
 }
 
 IFACEMETHODIMP PreviewBase::DoPreview() {
+    dbglog("PdfPreview: PreviewBase::DoPreview()\n");
+
     WNDCLASSEX wcex = {0};
     wcex.cbSize = sizeof(wcex);
     wcex.lpfnWndProc = PreviewWndProc;
@@ -311,8 +322,9 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
 
     m_hwnd = CreateWindow(wcex.lpszClassName, nullptr, WS_CHILD | WS_VSCROLL | WS_VISIBLE, m_rcParent.x, m_rcParent.x,
                           m_rcParent.dx, m_rcParent.dy, m_hwndParent, nullptr, nullptr, nullptr);
-    if (!m_hwnd)
+    if (!m_hwnd) {
         return HRESULT_FROM_WIN32(GetLastError());
+    }
 
     this->renderer = nullptr;
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
@@ -340,6 +352,7 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
 }
 
 EngineBase* CPdfPreview::LoadEngine(IStream* stream) {
+    dbglog("PdfPreview: CPdfPreview::LoadEngine()\n");
     return CreateEnginePdfFromStream(stream);
 }
 

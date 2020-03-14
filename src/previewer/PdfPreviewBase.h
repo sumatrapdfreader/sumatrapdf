@@ -146,14 +146,20 @@ public:
 
     // IPersistFile (for Windows XP)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
+        strconv::StackWstrToUtf8 fileName = pszFileName;
+        dbglogf("PdfPreview: PreviewBase::Load('%s')\n", fileName.Get());
+
         UNUSED(dwMode);
         HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (hFile == INVALID_HANDLE_VALUE)
+        if (hFile == INVALID_HANDLE_VALUE) {
+            dbglog("PdfPreview: PreviewBase::Load() failed, no file\n");
             return E_INVALIDARG;
+        }
         DWORD size = GetFileSize(hFile, nullptr), read;
         HGLOBAL data = GlobalAlloc(GMEM_MOVEABLE, size);
         if (!data) {
             CloseHandle(hFile);
+            dbglog("PdfPreview: PreviewBase::Load() failed, not enough memory\n");
             return E_OUTOFMEMORY;
         }
         BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, nullptr);
@@ -164,6 +170,7 @@ public:
         IStream *pStm;
         if (!ok || FAILED(CreateStreamOnHGlobal(data, TRUE, &pStm))) {
             GlobalFree(data);
+            dbglog("PdfPreview: PreviewBase::Load() failed, couldn't create stream\n");
             return E_FAIL;
         }
         HRESULT res = Initialize(pStm, 0);
@@ -177,30 +184,37 @@ public:
 
     // IExtractImage2 (for Windows XP)
     IFACEMETHODIMP Extract(HBITMAP *phBmpThumbnail) {
-        if (!phBmpThumbnail || !m_extractCx)
+        if (!phBmpThumbnail || !m_extractCx) {
             return E_INVALIDARG;
+        }
+        dbglog("PdfPreview: PreviewBase::Extract()\n");
         WTS_ALPHATYPE dummy;
         return GetThumbnail(m_extractCx, phBmpThumbnail, &dummy);
     }
     IFACEMETHODIMP GetLocation(LPWSTR pszPathBuffer, DWORD cch, DWORD *pdwPriority, const SIZE *prgSize, DWORD dwRecClrDepth, DWORD *pdwFlags) {
         UNUSED(pszPathBuffer);  UNUSED(cch);  UNUSED(pdwPriority); UNUSED(dwRecClrDepth);
-        if (!prgSize || !pdwFlags)
+        if (!prgSize || !pdwFlags) {
             return E_INVALIDARG;
+        }
+        dbglog("PdfPreview: PreviewBase::GetLocation()\n");
         // cheap implementation: ignore anything that isn't useful for IThumbnailProvider::GetThumbnail
         m_extractCx = std::min(prgSize->cx, prgSize->cy);
         *pdwFlags |= IEIFLAG_CACHE;
         return S_OK;
     }
     IFACEMETHODIMP GetDateStamp(FILETIME *pDateStamp) {
-        if (!m_dateStamp.dwLowDateTime && !m_dateStamp.dwHighDateTime)
+        if (!m_dateStamp.dwLowDateTime && !m_dateStamp.dwHighDateTime) {
             return E_FAIL;
+        }
+        dbglog("PdfPreview: PreviewBase::GetDateStamp()\n");
         *pDateStamp = m_dateStamp;
         return S_OK;
     }
 
     EngineBase *GetEngine() {
-        if (!m_engine && m_pStream)
+        if (!m_engine && m_pStream) {
             m_engine = LoadEngine(m_pStream);
+        }
         return m_engine;
     }
 

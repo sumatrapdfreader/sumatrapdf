@@ -4,3 +4,4 @@
 extern bool gDisableDbgLog;
 
 void dbglogf(const char* fmt, ...);
+void dbglog(const char*);
