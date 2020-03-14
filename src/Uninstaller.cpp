@@ -268,7 +268,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     AutoFreeWstr exePath = GetInstalledExePath();
     AutoFreeWstr ownPath = GetExePath();
     if (!path::IsSame(exePath, ownPath)) {
-        KillProcess(exePath, true);
+        KillProcessesWithModule(exePath, true);
     }
 
     if (!RemoveUninstallerRegistryInfo()) {

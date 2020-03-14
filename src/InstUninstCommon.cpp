@@ -183,24 +183,29 @@ WCHAR* GetInstalledBrowserPluginPath() {
     return ReadRegStr2(REG_PATH_PLUGIN, L"Path");
 }
 
-static bool IsUsingInstallation(DWORD procId) {
-    AutoFreeWstr dir = GetExistingInstallationDir();
-    if (dir.empty()) {
+static bool SkipProcessByID(DWORD procID) {
+    // TODO: don't know why this process shows up as using
+    // our files
+    if (procID == 0) {
+        return true;
+    }
+    if (procID == GetCurrentProcessId()) {
+        return true;
+    }
+    return false;
+}
+
+static bool IsProcessUsingFiles(DWORD procId, WCHAR* file1, WCHAR* file2) {
+    if (SkipProcessByID(procId)) {
         return false;
     }
-
-    DWORD myProcID = GetCurrentProcessId();
-    if (procId == myProcID) {
+    if (!file1 && !file2) {
         return false;
     }
-
-    AutoCloseHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId));
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId);
     if (snap == INVALID_HANDLE_VALUE) {
         return false;
     }
-
-    AutoFreeWstr libmupdf = path::Join(dir, L"libmupdf.dll");
-    AutoFreeWstr browserPlugin = path::Join(dir, BROWSER_PLUGIN_NAME);
 
     MODULEENTRY32 mod = {0};
     mod.dwSize = sizeof(mod);
@@ -208,15 +213,14 @@ static bool IsUsingInstallation(DWORD procId) {
     while (cont) {
         WCHAR* exePath = mod.szExePath;
         const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
-        if (path::IsSame(libmupdf, exePath)) {
+        if (file1 && path::IsSame(file1, exePath)) {
             return true;
         }
-        if (path::IsSame(browserPlugin, exePath)) {
+        if (file2 && path::IsSame(file2, exePath)) {
             return true;
         }
         cont = Module32Next(snap, &mod);
     }
-
     return false;
 }
 
@@ -308,7 +312,7 @@ void UnRegisterPreviewer(bool silent) {
     NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
 }
 
-static bool IsProcWithName(DWORD processId, const WCHAR* modulePath) {
+static bool IsProcWithModule(DWORD processId, const WCHAR* modulePath) {
     AutoCloseHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
     if (!hModSnapshot.IsValid()) {
         return false;
@@ -326,11 +330,32 @@ static bool IsProcWithName(DWORD processId, const WCHAR* modulePath) {
     return false;
 }
 
+static bool KillProcWithId(DWORD processId, bool waitUntilTerminated) {
+    BOOL inheritHandle = FALSE;
+    // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
+    DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE;
+    AutoCloseHandle hProcess = OpenProcess(dwAccess, inheritHandle, processId);
+    if (!hProcess.IsValid()) {
+        return false;
+    }
+
+    BOOL killed = TerminateProcess(hProcess, 0);
+    if (!killed) {
+        return false;
+    }
+
+    if (waitUntilTerminated) {
+        WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
+    }
+
+    return true;
+}
+
 // Kill a process with given <processId> if it has a module (dll or exe) <modulePath>.
 // If <waitUntilTerminated> is true, will wait until process is fully killed.
 // Returns TRUE if killed a process
-static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool waitUntilTerminated) {
-    if (!IsProcWithName(processId, modulePath)) {
+static bool KillProcWithIdAndModule(DWORD processId, const WCHAR* modulePath, bool waitUntilTerminated) {
+    if (!IsProcWithModule(processId, modulePath)) {
         return false;
     }
 
@@ -357,7 +382,8 @@ static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool wa
 // returns number of killed processes that have a module (exe or dll) with a given
 // modulePath
 // returns -1 on error, 0 if no matching processes
-int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
+int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated) {
+    logf("KillProcessesWithModule: '%s'\n", modulePath);
     AutoCloseHandle hProcSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == hProcSnapshot) {
         return -1;
@@ -371,7 +397,7 @@ int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
 
     int killCount = 0;
     do {
-        if (KillProcIdWithName(pe32.th32ProcessID, modulePath, waitUntilTerminated)) {
+        if (KillProcWithIdAndModule(pe32.th32ProcessID, modulePath, waitUntilTerminated)) {
             logf("Killed process with id %d\n", (int)pe32.th32ProcessID);
             killCount++;
         }
@@ -384,21 +410,56 @@ int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
     return killCount;
 }
 
-static bool SkipProcessByID(DWORD procID) {
-    // TODO: don't know why this process shows up as using
-    // our files
-    if (procID == 0) {
+// In order to install over existing installation or uninstall
+// we need to kill all processes that that use files from
+// installation directory. We only need to check processes that
+// have libmupdf.dll from installation directory loaded
+// because that covers SumatraPDF.exe and processes like dllhost.exe
+// that load PdfPreview.dll or PdfFilter.dll (which link to libmupdf.dll)
+// returns false if there are processes and we failed to kill them
+bool KillProcessesUsingInstallation() {
+    AutoFreeWstr dir = GetExistingInstallationDir();
+    if (dir.empty()) {
         return true;
     }
-    if (procID == GetCurrentProcessId()) {
-        return true;
+    AutoFreeWstr libmupdf = path::Join(dir, L"libmupdf.dll");
+    AutoFreeWstr browserPlugin = path::Join(dir, BROWSER_PLUGIN_NAME);
+
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (INVALID_HANDLE_VALUE == snap) {
+        return false;
     }
-    return false;
+
+    bool killedAllProcesses = true;
+    PROCESSENTRY32W proc = {0};
+    proc.dwSize = sizeof(proc);
+    BOOL ok = Process32First(snap, &proc);
+    while (ok) {
+        DWORD procID = proc.th32ProcessID;
+        if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
+            logf(L"KillProcessesUsingInstallation: attempting to kill process %d '%s'\n", (int)procID, proc.szExeFile);
+            bool didKill = KillProcWithId(procID, true);
+            logf("KillProcessesUsingInstallation: KillProcWithId(%d) returned %d\n", procID, (int)didKill);
+            if (!didKill) {
+                killedAllProcesses = false;
+            }
+        }
+        proc.dwSize = sizeof(proc);
+        ok = Process32Next(snap, &proc);
+    }
+    return killedAllProcesses;    
 }
 
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(WStrVec& names) {
+    AutoFreeWstr dir = GetExistingInstallationDir();
+    if (dir.empty()) {
+        return;
+    }
+    AutoFreeWstr libmupdf = path::Join(dir, L"libmupdf.dll");
+    AutoFreeWstr browserPlugin = path::Join(dir, BROWSER_PLUGIN_NAME);
+
     AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (INVALID_HANDLE_VALUE == snap) {
         return;
@@ -409,12 +470,10 @@ static void ProcessesUsingInstallation(WStrVec& names) {
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
         DWORD procID = proc.th32ProcessID;
-        if (!SkipProcessByID(procID)) {
-            if (IsUsingInstallation(procID)) {
-                // TODO: this kils ReadableProcName logic
-                WCHAR* name = str::Format(L"%s (%d)", proc.szExeFile, (int)procID);
-                names.Append(name);
-            }
+        if (IsProcessUsingFiles(procID, libmupdf, browserPlugin)) {
+            // TODO: this kils ReadableProcName logic
+            WCHAR* name = str::Format(L"%s (%d)", proc.szExeFile, (int)procID);
+            names.Append(name);
         }
         proc.dwSize = sizeof(proc);
         ok = Process32Next(snap, &proc);
@@ -464,6 +523,13 @@ void SetDefaultMsg() {
 }
 
 bool CheckInstallUninstallPossible(bool silent) {
+    bool ok = KillProcessesUsingInstallation();
+    logf("CheckInstallUninstallPossible: KillProcessesUsingInstallation() returned %d\n", ok);
+
+    // now determine which processes are using installation files
+    // and ask user to close them.
+    // shouldn't be necessary given KillProcessesUsingInstallation(), we
+    // do it just in case
     gProcessesToClose.Reset();
     ProcessesUsingInstallation(gProcessesToClose);
 

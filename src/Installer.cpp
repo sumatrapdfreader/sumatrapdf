@@ -461,7 +461,7 @@ static void OnButtonInstall() {
     {
         /* if the app is running, we have to kill it so that we can over-write the executable */
         WCHAR* exePath = GetInstalledExePath();
-        KillProcess(exePath, true);
+        KillProcessesWithModule(exePath, true);
         str::Free(exePath);
     }
 
