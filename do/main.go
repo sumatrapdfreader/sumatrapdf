@@ -92,6 +92,7 @@ func main() {
 		flgCppCheckAll             bool
 		flgDiff                    bool
 		flgGenStructs              bool
+		flgUpdateVer               string
 	)
 
 	{
@@ -126,6 +127,7 @@ func main() {
 		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
 		flag.BoolVar(&flgDiff, "diff", false, "preview diff using winmerge")
 		flag.BoolVar(&flgGenStructs, "gen-structs", false, "re-generate src/SettingsStructs.h")
+		flag.StringVar(&flgUpdateVer, "update-auto-update-ver", "", "update version used for auto-update checks")
 		flag.Parse()
 	}
 
@@ -306,6 +308,11 @@ func main() {
 		buildPreRelease()
 		s3UploadBuildMust(buildTypePreRel)
 		spacesUploadBuildMust(buildTypePreRel)
+		return
+	}
+
+	if flgUpdateVer != "" {
+		updateAutoUpdateVer(flgUpdateVer)
 		return
 	}
 

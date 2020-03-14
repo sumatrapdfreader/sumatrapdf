@@ -3,7 +3,6 @@ var gSumVer = "3.1.2";
 
 // used by download-prev* pages, update after releasing a new version
 var gPrevSumatraVersion = [
-  "3.2",
   "3.1.2",
   "3.1.1",
   "3.1",
