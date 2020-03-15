@@ -88,6 +88,7 @@ func main() {
 		flgWebsiteDeployProd       bool
 		flgWebsiteDeployDev        bool
 		flgWebsiteImportNotion     bool
+		flgWebsiteImportAndDeploy  bool
 		flgNoCache                 bool
 		flgCppCheck                bool
 		flgCppCheckAll             bool
@@ -124,6 +125,7 @@ func main() {
 		flag.BoolVar(&flgWebsiteDeployProd, "website-deploy-prod", false, "deploy website")
 		flag.BoolVar(&flgWebsiteDeployDev, "website-deploy-dev", false, "deploy a preview of website")
 		flag.BoolVar(&flgWebsiteImportNotion, "website-import-notion", false, "import docs from notion")
+		flag.BoolVar(&flgWebsiteImportAndDeploy, "website-import-deploy", false, "import from notion and deploy")
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
 		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
@@ -157,6 +159,12 @@ func main() {
 	}
 
 	if flgWebsiteDeployProd {
+		websiteDeployProd()
+		return
+	}
+
+	if flgWebsiteImportAndDeploy {
+		websiteImportNotion()
 		websiteDeployProd()
 		return
 	}
