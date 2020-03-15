@@ -48,6 +48,7 @@ var gPrevSumatraVersion = [
 
 var dlPrefix = "/dl/";
 var dlPrefix2 = "/dl2/";
+var host = "https://www.sumatrapdfreader.org";
 
 function a(href, txt) {
   return '<a href="' + href + '">' + txt + "</a>";
@@ -66,10 +67,22 @@ function installerHref(ver) {
   return a(url, name);
 }
 
+function installerHref2(ver) {
+  var name = "SumatraPDF-" + ver + "-install.exe";
+  var url = dlURL(ver, name);
+  return host + url;
+}
+
 function zipHref(ver) {
   var name = "SumatraPDF-" + ver + ".zip";
   var url = dlURL(ver, name);
   return a(url, name);
+}
+
+function zipHref2(ver) {
+  var name = "SumatraPDF-" + ver + ".zip";
+  var url = dlURL(ver, name);
+  return host + url;
 }
 
 function installer64Href(ver) {
@@ -78,10 +91,22 @@ function installer64Href(ver) {
   return a(url, name);
 }
 
+function installer64Href2(ver) {
+  var name = "SumatraPDF-" + ver + "-64-install.exe";
+  var url = dlURL(ver, name);
+  return host + url;
+}
+
 function zip64Href(ver) {
   var name = "SumatraPDF-" + ver + "-64.zip";
   var url = dlURL(ver, name);
   return a(url, name);
+}
+
+function zip64Href2(ver) {
+  var name = "SumatraPDF-" + ver + "-64.zip";
+  var url = dlURL(ver, name);
+  return host + url;
 }
 
 var gSumExeName = "SumatraPDF-" + gSumVer + "-install.exe";
@@ -187,6 +212,24 @@ function verNewerOrEqThan31(ver) {
   }
   var minor = parseInt(parts[1]);
   return minor >= 1;
+}
+
+// used by download-prev* pages
+function prevDownloadsList2() {
+  var s = "";
+  for (var i = 0; i < gPrevSumatraVersion.length; i++) {
+    var ver = gPrevSumatraVersion[i];
+    s += "<p>";
+    s += "<b>Version: " + ver + "</b><br>\n";
+    s += "Installer" + ": " + installerHref2(ver) + "<br>\n";
+    s += "Zip file" + ": " + zipHref2(ver);
+    if (verNewerOrEqThan31(ver)) {
+      s += "<br>" + "Installer" + " 64-bit: " + installer64Href2(ver) + "<br>\n";
+      s += "Zip file" + " 64-bit: " + zip64Href2(ver);
+    }
+    s += "</p>\n";
+  }
+  return s;
 }
 
 // used by download-prev* pages
