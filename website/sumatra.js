@@ -1,5 +1,5 @@
 // update after releasing a new version
-var gSumVer = "3.1.2";
+var gSumVer = "3.2";
 
 // used by download-prev* pages, update after releasing a new version
 var gPrevSumatraVersion = [
@@ -84,67 +84,15 @@ function zip64Href(ver) {
   return a(url, name);
 }
 
-// TODO: change to dlPrefix2 after releasing 3.2
 var gSumExeName = "SumatraPDF-" + gSumVer + "-install.exe";
 var gSumZipName = "SumatraPDF-" + gSumVer + ".zip";
-var gSumExeUrl = dlPrefix + gSumExeName;
-var gSumZipUrl = dlPrefix + gSumZipName;
+var gSumExeUrl = dlPrefix2 + gSumExeName;
+var gSumZipUrl = dlPrefix2 + gSumZipName;
 
 var gSumExeName64 = "SumatraPDF-" + gSumVer + "-64-install.exe";
 var gSumZipName64 = "SumatraPDF-" + gSumVer + "-64.zip";
-var gSumExeUrl64 = dlPrefix + gSumExeName64;
-var gSumZipUrl64 = dlPrefix + gSumZipName64;
-
-// used by download-free-pdf-viewer*.html pages
-function dlHtml(s1, s2, s3) {
-  if (!s3) {
-    s3 = "";
-  } else {
-    s3 = " <span style='font-size:90%; color:gray'>" + s3 + "</span>";
-  }
-  return (
-    "<table><tr><td>" +
-    s1 +
-    '&nbsp;&nbsp;</td><td><a href="' +
-    gSumExeUrl +
-    '" onclick="return SetupRedirect()">' +
-    gSumExeName +
-    "</a></td></tr><tr><td>" +
-    s2 +
-    '&nbsp;&nbsp;</td><td><a href="' +
-    gSumZipUrl +
-    '" onclick="return SetupRedirect()">' +
-    gSumZipName +
-    "</a>" +
-    s3 +
-    "</td></tr></table>"
-  );
-}
-
-function dlHtml64(s1, s2, s3) {
-  if (!s3) {
-    s3 = "";
-  } else {
-    s3 = " <span style='font-size:90%; color:gray'>" + s3 + "</span>";
-  }
-  return (
-    "<table><tr><td>" +
-    s1 +
-    '&nbsp;&nbsp;</td><td><a href="' +
-    gSumExeUrl64 +
-    '" onclick="return SetupRedirect()">' +
-    gSumExeName64 +
-    "</a></td></tr><tr><td>" +
-    s2 +
-    '&nbsp;&nbsp;</td><td><a href="' +
-    gSumZipUrl64 +
-    '" onclick="return SetupRedirect()">' +
-    gSumZipName64 +
-    "</a>" +
-    s3 +
-    "</td></tr></table>"
-  );
-}
+var gSumExeUrl64 = dlPrefix2 + gSumExeName64;
+var gSumZipUrl64 = dlPrefix2 + gSumZipName64;
 
 // used by downloadafter*.html pages
 function dlAfterHtml(s1, s2, s3, s4) {
@@ -277,7 +225,7 @@ var allShots = [
   "img/format-pdf.png",
   "img/format-epub.png",
   "img/menu-file.png",
-  "img/menu-view.jpg",
+  "img/menu-view.png",
   "img/dialog-langs.png",
 ];
 
