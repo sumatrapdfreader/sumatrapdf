@@ -318,6 +318,11 @@ class Vec {
         return len == 0;
     }
 
+    // TOOD: replace with IsEmpty()
+    [[nodiscard]] bool empty() const {
+        return len == 0;
+    }
+
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     typedef T* iterator;

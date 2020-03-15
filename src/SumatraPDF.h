@@ -89,7 +89,7 @@ extern bool gDebugShowLinks;
 extern bool gShowFrameRate;
 
 extern const WCHAR* gPluginURL;
-extern std::vector<WindowInfo*> gWindows;
+extern Vec<WindowInfo*> gWindows;
 extern Favorites gFavorites;
 extern FileHistory gFileHistory;
 extern WNDPROC DefWndProcCloseButton;

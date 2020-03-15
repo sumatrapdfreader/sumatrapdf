@@ -337,10 +337,10 @@ NotificationWnd* Notifications::GetForGroup(NotificationGroupId groupId) const {
 
 void Notifications::RemoveForGroup(NotificationGroupId groupId) {
     CrashIf(groupId == nullptr);
-    std::vector<NotificationWnd*> toRemove;
+    Vec<NotificationWnd*> toRemove;
     for (auto* wnd : this->wnds) {
         if (wnd->groupId == groupId) {
-            toRemove.push_back(wnd);
+            toRemove.Append(wnd);
         }
     }
     for (auto* wnd : toRemove) {
