@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\lice">
+      <UniqueIdentifier>{3A983C0A-E7C1-449D-B869-8CC1CE792C2F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include=".\nseel-caltab.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include=".\nseel-cfunc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include=".\nseel-compiler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include=".\nseel-eval.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include=".\nseel-lextab.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include=".\nseel-ram.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include=".\nseel-yylex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice_arc.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice_bmp.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice_ico.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice_image.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice_line.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice_lvg.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice_pcx.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice_text.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lice\lice_textnew.cpp">
+      <Filter>Source Files\lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\fft.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include=".\loose_eel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include=".\ns-eel-addfuncs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include=".\ns-eel-int.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include=".\ns-eel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="asm-nseel-x64.obj">
+      <Filter>Source Files</Filter>
+    </Object>
+  </ItemGroup>
+</Project>

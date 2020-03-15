@@ -1,0 +1,50 @@
+gfx_init("vis",1024,768);
+
+zp=-0.84;
+fill=0;
+radj=1;
+while ((c=gfx_getchar())!=27 && c >= 0)
+(
+  c == 'f' ? fill=!fill;
+  c == 'j' ? jitter=!jitter;
+  c == 'm' ? radj = !radj;
+
+  gfx_r=gfx_g=gfx_b=1;
+  gfx_a=1;
+  gfx_x=gfx_y=0;
+  gfx_printf("[f]ill=%s, [j]itter=%s, [m]ove=%s [%f] %d,%d",fill?"on":"off",jitter?"on":"off",radj?"on":"off",zp,mouse_x,mouse_y);
+  gfx_a=0.25;
+
+
+  radj ? zp+=0.03;
+  gfx_getchar('up') ? zp+=0.03;
+  gfx_getchar('down') ? zp-=0.03;
+  zp2+=0.1; 
+  rd = (1+sin(zp*1.3))*(gfx_w/8-16) + 3;
+  jitter ? (  
+    xoffs=0.5+sin(zp2*6.7)*0.5;
+    yoffs=0.5+sin(zp2*7.7)*0.5;
+    rd|=0;
+    rd += 0.5+sin(zp2*3.1)*0.5
+  ) : ( xoffs=yoffs=0; rd|= 0;);
+
+
+  gfx_circle(xoffs+(gfx_w/4)|0,yoffs+(gfx_h/2)|0,rd, fill,0);
+  gfx_circle(xoffs+(gfx_w*3/4)|0,yoffs+(gfx_h/2)|0,rd, fill,1);
+
+  gfx_mode=4+(1<<4); // filtering off, additive
+  gfx_a=1;
+  zsz=20;
+  outsz=gfx_w/4;
+  gfx_blit(-1,0,0,
+        gfx_w/4-zsz, gfx_h/2-zsz, zsz*2,zsz*2, 
+        0,gfx_h-outsz,outsz,outsz);
+
+  gfx_blit(-1,0,0,
+        gfx_w*3/4-zsz, gfx_h/2-zsz, zsz*2,zsz*2, 
+        gfx_w-outsz,gfx_h-outsz,outsz,outsz);
+  gfx_mode=0;
+
+  gfx_update();
+  sleep(30);
+);

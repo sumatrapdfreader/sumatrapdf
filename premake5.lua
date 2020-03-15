@@ -223,6 +223,15 @@ workspace "SumatraPDF"
     libdjvu_files()
 
 
+  project "wdl"
+    kind "StaticLib"
+    language "C++"
+    includedirs  { "ext/WDL" }
+    disablewarnings { "4018", "4100", "4244", "4505", "4456", "4457", "4245", "4701", "4706", "4996" }
+    characterset "MBCS"
+    wdl_files()
+
+
   project "unarrlib"
     kind "StaticLib"
     language "C"
@@ -330,12 +339,14 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
     harfbuzz_files()
 
+
   project "mujs"
     kind "StaticLib"
     language "C"
     includedirs { "ext/mujs" }
     disablewarnings { "4090", "4100", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+
 
   project "chm"
     kind "StaticLib"
@@ -640,7 +651,7 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     links {
-      "engines", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar"
+      "engines", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar", "wdl"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -690,7 +701,7 @@ workspace "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
 
     links {
-      "libmupdf", "unrar", "unarrlib", "utils", "engines"
+      "libmupdf", "unrar", "unarrlib", "utils", "engines", "wdl"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

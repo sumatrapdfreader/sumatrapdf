@@ -1,0 +1,180 @@
+// asynchronous HTTP server in EEL
+
+
+function httpd.init(port, maxcon, table, stringoffs, wwwroot) global()
+(
+  this.maxcon = maxcon;
+  this.tab = table;
+  this.port = port;
+  this.stringtab = stringoffs;
+  this.string_recsz = 2;
+  this.recsz = 3; 
+  #this.wwwroot = wwwroot;
+);
+
+function httpd.getrecval(conid, parm) global()
+(
+  conid >= 0 && conid < this.maxcon ? (
+    parm == 'sock' ? this.tab + conid*this.recsz + 0 : // socket
+    parm == 'st'   ? this.tab + conid*this.recsz + 1 : // state
+    parm == 'fh'   ? this.tab + conid*this.recsz + 2 : // file handle
+    0)
+  : 0
+);
+
+function httpd.set(conid, parm, value) local(x) global()
+(
+  x = httpd.getrecval(conid,parm);
+  x>=0 ? x[]=value;
+);
+function httpd.get(conid, parm) local(x) global()
+(
+  x=httpd.getrecval(conid,parm);
+  x>=0?x[];
+);
+function httpd.getbuf(conid, w) global()
+(
+  conid >=0 && conid < this.maxcon ? this.stringtab + this.string_recsz*conid + w : -1;
+);
+function httpd.close(conid) global()
+(
+  conid >=0 && conid < this.maxcon ? 
+  (
+    tcp_close(httpd.get(conid,'sock'));
+    fclose(httpd.get(conid,'fh'));
+    httpd.set(conid,'sock',0);
+    httpd.set(conid,'fh',0);
+  );
+);
+function httpd.file_for_req(req, response) local(fn,fp) global() (
+  !strcmp(req,"") || !strcmp(req,"/") ? req = "/index.html";
+
+  str_getchar(req,0) == '/' && 
+    !match("*..*",req) && 
+       (fp=fopen(fn = strcat(#=#this.wwwroot,req),"rb")) > 0 ? 
+  (
+    fseek(fp,0,1);
+    printf("GET %s -- 200: %s\n",req,fn);
+    strcat(response,sprintf(#, "HTTP/1.1 200 OK\r\n"
+                     "Content-length: %d\r\n"
+                     "Content-type: text/html\r\n"
+                     "\r\n",
+                     ftell(fp)));
+      fseek(fp,0,-1);
+    fp;
+  ) : (
+    printf("GET %s -- 404\n",req);
+
+    fn = "The file specified could not be found.";
+    strcat(response,sprintf(#, "HTTP/1.1 404 NOT FOUND\r\n"
+                     "Content-length: %d\r\n"
+                     "Content-type: text/plain\r\n"
+                     "\r\n"
+                     "%s", strlen(fn),fn));
+    0;
+  );
+);
+
+// run input and output buffers
+function httpd.runcon(idx) local(sock,x,str,rv,buffers) global() (
+  rv=0;
+  sock = httpd.get(idx,'sock');
+  sock > 0 ? 
+  (
+    x=tcp_recv(sock,str=#);
+    x<0 ? (
+      httpd.close(idx);
+    ) : (
+      buffers=httpd.getbuf(idx,0);
+      x>0 ? strcat(buffers,str);
+      rv+=x;
+
+      strlen(buffers+1)>0 ? 
+      (
+        (x=tcp_send(sock,buffers+1)) > 0 ? 
+        (
+          rv+=1;
+          str_delsub(buffers+1.1,0,x); 
+        );
+      );
+    );
+  );
+  rv;
+);
+
+
+function httpd.run() local(sock, x, i, str, rv, t,hdrs,httpdver) global() (
+  str=#;
+  hdrs=#;
+  rv=0;
+  sock=tcp_listen(this.port,"",str);
+  sock > 0 ? 
+  (
+    i=0;
+    while (i < this.maxcon && httpd.get(i,'sock')) ( i += 1; );
+    i < this.maxcon ? (
+      tcp_set_block(sock,0);
+      httpd.set(i,'sock',sock);
+      httpd.set(i,'st',0);
+
+      x=0;
+      loop(this.string_recsz, strcpy(httpd.getbuf(i,x), ""); x+=1; );
+      printf("httpd.run(): connection from '%s'\n",str);
+      rv+=1;
+
+    ) : (
+      printf("httpd.run(): dropping connect from '%s', slots full\n",str);
+      tcp_close(x);
+    );
+  );
+
+  i=0;
+  while (i < this.maxcon)
+  (
+    this.httpd.runcon(i) ?
+    (
+      t = httpd.getbuf(i,0);
+      this.httpd.get(i,'st') == 0 ? 
+      (
+        match("GET %S HTTP/1.%1d%S",t,str,httpdver,hdrs) && 
+            str_getchar(hdrs,0)=='\r' && str_getchar(hdrs,1)=='\n' &&  
+            !strcmp(strcpy_substr(#,hdrs,-4),"\r\n\r\n")
+            ? 
+        (
+          httpd.set(i,'st',1 | 
+            ((httpdver==0 || matchi("\r\nConnection:*close\r\n",hdrs))?2:0)
+          );
+
+          httpd.set(i,'fh',httpd.file_for_req(str,t+1));
+        );
+      );
+
+      httpd.get(i,'fh') && !strlen(t+1) ? fread(httpd.get(i,'fh'),t+1,4096);
+
+      httpd.get(i,'st') == 3 ? (
+        strlen(t+1) == 0 ? (
+          httpd.close(i);
+          printf("sent data, closing\n");
+        );
+      );
+ 
+      rv+=1;
+    );
+    i+=1;
+  );
+
+
+  rv;
+);
+
+argc != 3 || strlen(argv[1])<1 || !match("%d",argv[2],port) ? (
+  printf("Usage: \n\t%s www_root port\n",argv[0]);
+) : (
+  srv.httpd.init(port, 100, 100000, 10000, argv[1]);
+  // string [conidx] = send buffe
+  while(1)
+  (
+    srv.httpd.run() || Sleep(10);
+  );
+);
+

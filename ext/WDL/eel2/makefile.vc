@@ -1,0 +1,45 @@
+
+EEL_SOURCE = nseel-caltab.c nseel-cfunc.c nseel-compiler.c nseel-eval.c nseel-lextab.c nseel-ram.c nseel-yylex.c 
+
+LICE_SOURCE = ../lice/lice.cpp ../lice/lice_image.cpp ../lice/lice_line.cpp ../lice/lice_ico.cpp ../lice/lice_bmp.cpp ../lice/lice_textnew.cpp ../lice/lice_text.cpp ../lice/lice_arc.cpp
+
+FFT_SOURCE = ../fft.c
+CFLAGS = /DWDL_FFT_REALSIZE=8 /DEEL_LICE_WANT_STANDALONE
+
+CFLAGS = $(CFLAGS) -DNSEEL_LOOPFUNC_SUPPORT_MAXLEN=0
+
+LFLAGS =
+
+!ifndef VC6
+CFLAGS = $(CFLAGS) /MT
+!else
+CFLAGS = $(CFLAGS) /MD
+LFLAGS = $(LFLAGS) /OPT:NOWIN98
+!endif
+
+!ifdef x64 
+!ifndef PORTABLE
+EEL_SOURCE = $(EEL_SOURCE) asm-nseel-x64.obj
+!endif
+!endif
+
+
+default: loose_eel.exe
+
+!ifdef PORTABLE
+CFLAGS = $(CFLAGS) -DEEL_TARGET_PORTABLE
+!endif
+
+loose_eel.cpp: eel*.h ns-eel*.h
+
+$(EEL_SOURCE): ns-eel*.h
+
+
+loose_eel.exe: loose_eel.cpp $(EEL_SOURCE) $(FFT_SOURCE) $(LICE_SOURCE)
+	cl $(CFLAGS) $**  /link wsock32.lib user32.lib gdi32.lib advapi32.lib $(LFLAGS) /out:$@ 
+
+eel_disasm.exe: eel_disasm.cpp $(EEL_SOURCE)
+	cl $(CFLAGS) $**  /link wsock32.lib user32.lib gdi32.lib advapi32.lib $(LFLAGS) /out:$@ 
+
+test: eel_disasm.exe
+	eel_disasm "buf[a] = x*y"

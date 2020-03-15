@@ -1,0 +1,470 @@
+FFMPEG: added WDL_VideoDecode class to grab video frames
+
+2010-08-16:
+Now available via Git! The zipped distributions may go away someday?
+EEL2: optional eel1 compat (allows you to build AVS using EEL2 and support old presets)
+LICE: FillTriangle/Polygon/Bezier coordinates are now cleanly inclusive
+LineParse: when parsing small lines, no heap use (requires an extra 2k of stack space per parser)
+PtrList: do not pass NULLs to deletion functions
+Scrollbar: improved zoom button sizing
+sc_bounce: fixed a session ID handling bug
+SWELL: no WM_CTLCOLOR* on text fields
+SWELL: rendering glitch fix when destroying small subviews
+SWELL: font and combo box sizes are more consistent
+SWELL: emulate WM_NC/HTCAPTION on OSX for double-click in titlebar
+SWELL: API for setting relative raise amounts for owned windows
+Virtwnd: VirtualStaticText: added GetCharFromCoord()
+Virtwnd: fixed scaled blit clipping on right/bottom, various other clip problems
+Virtwnd: bgcache handles differing images automatically
+
+
+2010-07-14:
+SWELL: better TrackPopupMenu() behavior when using TPM_RETURNCMD
+SWELL: resource script generation improved, faster, simpler use: mac_resgen.php file.rc [file2.rc ...]
+SWELL: more accurate MoveToEx()/LineTo()
+SWELL: fixes to no-maninmiddle-cocoa mode
+SWELL: WM_ERASEBKGND fixes
+SWELL: added GetPrivateProfileSection()/WritePrivateProfileSection() (untested)
+EEL: tan() optimized and fixed on osx/i386
+EEL: fix for broken fmod() on VC2005/2008 x64
+Pitch shifter: bugfixes, latency compensation
+LCF: fixed broken encoding on widths non multiples of 4
+LICE: better drawing of non-UTF8 8-bit text
+LineParser: gettoken_str() now returns const char ptr
+FileWrite: append support, option for no exclusive locking
+Scrollbar: fixes for scaling, nonstandard scrollbar sizes, better image caching
+String: allow SetLen() to shrink buffers
+WIN32-UTF8: ShellExecute() UTF8 support
+WndSizer: added set_orig_rect()
+Virtwnd: more controls support disabling state
+Virtwnd: static text controls support drawing text vertically
+
+2010-06-07:
+File Browsing: fixed single file select on multifile open on Win2k/98 (windows bug)
+File Browsing: UTF8 fixes
+LICE: bitmaps are now forced to 64 byte alignment, backing stores are (by default) row aligned
+IPlug: fixed OSX compiling (SWELL changes had made it not compile)
+IPlug: VST_SDK path is now normalized, put VST_SDK/ at the same level as WDL/
+IPlug: image files for sample are now in the correct place (and not zipped)
+Mutex: WDL_SharedMutex (for shared/exclusive locks)
+Scrollbar: obey LICE rowspan on image loading
+SWELL: CreateBitmap() optimizations
+SWELL: Much faster INI file read/write
+SWELL: Experimental mode to bypass OS X's default compositing code for SWELL views. This can be disabled by defining SWELL_CUT_OUT_COMPOSITING_MIDDLEMAN to 0.
+SWELL: hugely optimized BitBlt() (no longer floods kernel messages)
+SWELL: removed BitBltAlpha*(), added flag for BitBlt(), SRCCOPY_USEALPHA
+SWELL: added SWELL_FlushWindow(), ReleaseDC() no longer implies window flush
+SWELL: dialog background drawing improvements/optimizations
+
+2010-06-01:
+DirScan: GetCurrentFileSize() support for OSx/Linux
+FileRead: detect when no shared lock acquired, update file size on demand since it can change
+IPlug: tweaks from Tale
+LCF: added LCF read/write (Lice Capture Format, a good high quality lossless screencapture codec)
+LICE: moved warning pragma into lice_combine.h from lice.h, to prevent app warnings from being supressed
+LICE: less dependent on SWELL
+LICE: added octree palette generation/mapping
+LICE: better .gif support, animated .gif writing
+LICE: LICE_bitmapcmp() improvements (can give bounding rect of difference)
+LICE: lice_arc simplification
+Resampler: fixed crash on mode switches
+SHM_msgreply: fixed issue with colliding named pipe names on OSX/Linux
+SWELL: menu shortcuts fixed support for various keys, control modifier
+SWELL: fixed GetDC()/ReleaseDC() updating window
+SWELL: organized swell.h into swell-types.h, swell-functions.h
+SWELL: stronger typing for various handles
+SWELL: listview scrolling fixes
+SWELL: fixed swell prefix support (for app-specific objC class name prefixes)
+SWELL: ES_CENTER, ES_RIGHT support
+SWELL: avoiding excessive WM_SIZE coming from top level window updates (destroying, focus change, etc)
+SWELL: greatly optimized .ini file access functions (use assocarray, for bsearching of contents)
+Virtwnd: rendered bg image cache support
+Virtwnd: better support for 0px wide/tall windows (not drawing)
+Virtwnd: better margin support in static text, button controls
+Virtwnd: static text controls now can have children, autodisable border if background image set
+Virtwnd: added GetPositionInTopVWnd()
+Virtwnd: buttons can now force text along with their images, can ignore double click
+Virtwnd: IAccessible wrapper layer, support for setting per-virtwnd description strings
+
+
+2010-04-19:
+SWELL: support for control key (as FLWIN, windows key)
+iPlug: less dependent on SWELL for OSX (just swell-gdi)
+iPlug: fixed projects to compile
+
+2010-04-15:
+Added: Denormal.h denormal fixing functions and other FP utilities
+Added: pooled string class
+Added: basic unzip functions to zlib
+Added: filebrowse.h for file browsing abstraction
+Added: resample.h, low-decent-high quality samplerate conversion
+assocarray: fixed leak on Clear(), added reverse lookup, changekey, deletebyindex
+ConvoEngine: fixed quality when switching between silent/mono/stereo
+convoEngine: optimizations
+dirscan: better UTF8 fixes
+EEL2: support for OS X x86_64, linux x86_64, fixes for Windows x64
+FileRead: open for read even when files are also opened for writes
+HeapBuf: fixed leak on operator=()
+iPlug: better cocoa view detection
+iPlug: control+drag for slow control
+LAME support: force newer APIs for x64, dynamic loading on linux, other fixes
+Linux: better support for linux and linux/64 throughout much of WDL
+LICE: arc drawing clipping fix
+LICE: trapezoid drawing clipping fix (used by polygon drawing)
+LICE: bezier clipping fix
+LICE: added LICE_LoadPNGFromMemory()
+Projectcontext: zlib mem support (ifdef'd out)
+PtrList: WDL_PtrList_DeleteOnDestroy class for autodeletion of items
+Scrollbar: prevent invalid draws with overlapping windows
+SHM_msgreply/connection: support for OSX/linux
+SWELL: generic target, with optional GDK support (in progress)
+SWELL: clipboard improvements (CF_TEXT support, etc)
+SWELL: more cursor images
+SWELL: assorted OSX fixes/improvements/corrections
+SWELL: text alignment support for listview columns/headers
+SWELL: internal organization improvements
+SWELL: stronger typing for HMENU
+SWELL: GDI pooling optimizations, fixes for shutdown cleanup with pooled objects
+SWELL: x86_64 support
+SWELL: multitouch, hoirz mousewheel support
+SWELL: OSX text drawing improvements
+SWELL: LoadLibrary()/GetProcAddress() improvements, support for bundle loading, DllMain()
+SWELL: CreateSocketEvent(), WaitForMultipleSocketObjects (or something)
+SWELL: SWELL_CreateProcess()
+SWELL: WM_SETFONT support for text boxes
+SWELL: SetTimer() with callback support
+SWELL: Carbon text field processing improvements
+SWELL: better .cur loading (10.4 compat), hotspot detection
+SWELL: AU Cocoa UI code fixed for certain bundle filanames
+Timing: improvements
+VerbEngine: fixed PPC denorm support
+WDLTypes: WDL_FIXALIGN for forcing 8 byte alignment on struct members
+WDLTypes: added WDL_bool (for 1 byte bools)
+win32_utf8: fixes, added fopenUTF8()
+wndsize: safer NULL pointer checking
+
+2009-11-30:
+DirScan: handle scanning / on posix correctly
+EEL: fixed x64 bugs on certain functions
+FileRead: no longer use F_NOCACHE on OSX on remote filesystems
+IPlug: OSX updates, project updates
+JNetLib: added outgoing interface option for connections
+LAME: fixed calling of LAME on win32 (correct tag writing, etc)
+LAME: fixed VBR modes on linux/OSX, correct end of encode flushing
+LICE: DrawText supports LICE_DT_NEEDALPHA for forcing setting of alphachannel
+LICE: LICE_ProcessRect() for per pixel transformations
+LICE: HSV adjust blend mode now has S and V adjusting full range rather than 0.5. 
+LICE: ++ Existing code using LICE_BLIT_MODE_HSVADJ may need to be adjusted.
+SWELL: Sample SWELL application
+SWELL: Main application framework (with instructions on creating new applications)
+SWELL: Submenu fixes
+SWELL: listview imagelist separate small/state support
+SWELL: Added API to initiate a drag and drop operation
+SWELL: Greatly improved keyboard handling for dialogs
+SWELL: Tweaks to positioning of group and tab controls
+SWELL: More listview/listbox APIs implemented (thanks sws), WM_CONTEXTMENU fixes
+SWELL: SetWindowPos Z ordering enabled
+SWELL: Added SetCurrentDirectory()
+SWELL: Fixes for browseforfile etc
+SWELL: GL support for swell HWNDs
+SWELL: Fixed WritePrivateProfileString section deletion
+SWELL: Fixed errors when GWL_STYLE changed in WM_CREATE/WM_INITDIALOG
+SWELL: TrackPopupMenu() fixed when initiated from non-mouse-event
+SWELL: preliminary support for targetting 64-bit on 10.6+
+virtwnd: buttons can own their image resources
+virtwnd: handy utility dialog-derived class for win32 (handles paint correctly)
+virtwnd: nested children fixes, vwnds automatically reset parent pointers of children on removal
+virtwnd: cursor, tooltip processing infrastructure
+virtwnd: fixed WDL_VirtualWnd_PreprocessBGConfig() on certain images
+wdltypes: defined GCLP_HICONSM on VC6
+Added scrollbar emulation for SWELL, skinned scrollbar support for win32 (thanks to J Brown / Cool Scrollbar Library)
+Added ProjectContext utility functions
+
+2009-10-10:
+HeapBuf: optional WDL_HEAPBUF_DYNAMIC setting, for simpler and less configurable allocation management
+HeapBuf/etc now handle failures better, added CopyFrom()
+IPlug: OS X updates
+LICE: line drawing optimizations, AA gamma correction
+LICE: bezier-fill improvements
+LICE: size optimizations, options to favor size over speed throughout LICE
+LICE: scaledblit() no longer processes source-clipped pixels
+LICE: scaledblit() now properly supports negative width source/dest rects (flips)
+LICE: blit() fix for negative coordinates
+LICE: Optimized copy/multiply blend modes to not require clamping (big gains in alpha-blended and filtered blits)
+LICE: Optimized alpha blending (half the multiplies)
+Virtwnd: buttons now have constant icon alpha parameter
+Virtwnd: sliders no longer send excess scroll messages
+Virtwnd: theme background drawing has flag to not draw left/right sides
+SHM: fixed/optimized datapipe class, added low-latency threadsafe SHM message/reply class
+SWELL: fixes to GetPrivateProfileString() with NULL second parameter
+SWELL: added SWELL_GetAudioUnitCocoaView
+SWELL: support for EndDialog() in modal WM_INITDIALOG
+SWELL: SetMenuItemModifier() cleanups
+SWELL: File browse dialogs now set default menu
+SWELL: ScrollWindow() now properly invalidates the window
+SWELL: EM_SCROLL, EM_SETSEL, EM_GETSEL support for edit fields
+SWELL: OPAQUE text bk mode suport
+SWELL: drag/drop source handling
+SWELL: GetMenuItemInfo() MIIM_ID support
+SWELL: Added SWELL_GetDefaultButtonID(), SWELL_KeyToASCII
+scsrc: support for HTTP POST-ing chunks of encoded data to URL
+scsrc: simplified data reprocessor api
+scsrc: added sc_bounce/*.php (PHP data streaming server for scsrc)
+WDL_PtrList::FindSorted() fixed
+AssocArray fixes
+win32_utf8 fixes
+FileRead/FileWrite: better async file reading error handling, Win32 and OS X locking improvements
+Added FFMPEG wrapper for encoding video files (with optional audio)
+RFB client support (LICE--jnetlib)
+
+2009-07-04:
+
+WDL_SharedPool optimizations
+SWELL: Fixes to carbon window hosting
+SWELL: drop list tweaks
+WDL_PtrList: fixed FindSorted() compilation on VC2008
+Added VC2010 projects for LICE etc
+
+2009-07-02:
+
+SWELL: mouse positioning updates (with synergy2 detection)
+SWELL: WM_CTLCOLOR*, WM_DISPLAYCHANGE support
+SWELL: BS_LEFTTEXT support for checkboxes
+SWELL: Fixed menu item updating for top level submenus
+SWELL: Implemented TreeView_HitTest
+SWELL: Exposed API for SetOpaque
+SWELL: nifty child window debug/diagnostic mode
+SWELL: (default) options to use non-round buttons etc
+SWELL: Fixed BitBltAlpha() for LICE sysbitmaps
+SWELL: Carbon hosted window updates (no menu, activation fixes for BFD2, etc)
+LICE: 8-bit PNG loading, JPG load from resource support
+LICE: optimized source alpha w/ constalpha=1.0, other cases
+virtwnd: listbox text drawing updates
+LICE: LICE_CachedFont fixes when using both cached fonts and OS rendering
+WDL_FileRead: support for synchronous unbuffered reads
+WDL_FileRead/Write: OS X native open()/pread/mmap support (large files and unbuffered reads etc)
+WDL_String: safer Get() for empty strings (returns read-write pointer)
+WDL_PtrList: FindSorted / InsertSorted, EmptySafe()
+WDL_Queue: optimized Compact() to autodetect pointless compacts
+WDL_MergeSort: optimized for in-order data (stays in place)
+EEL: safer locking of RAM
+IPlug: better bitmap caching, jpg loading, x64 support, OS X udpates
+AudioBufferContainer: supports wet/dry
+UTF8 support fixes
+Added WDL_AssocArray
+
+
+
+2009-04-08:
+
+UTF-8 support, win32_utf8.cpp for Win32 support (SWELL gets it automatically)
+LICE: line and circle updates for fractional coordinates
+LICE: preliminary SVG stuff
+LICE: CachedFont updates (can render natively if possible and desired, better owned font support)
+LICE: scaled blitting downsizing uses special filtering
+LICE: disabled experimental GL extensions by default
+LICE: better bezier stuff
+IPlug: OSX URL update, VST parameter index validation, other updates
+virtwnd: listbox improvements (horizontal mode etc)
+SWELL: preliminary WM_CTLCOLORDLG support, dialog background updates
+SWELL: better default button sizing
+PtrList: InsertSorted() and FindSorted() methods
+wndsize: margin querying api
+LAME support handles mono signals better, better search paths
+added basic blowfish implementation
+added basic IRC line parsing/formatting functions
+added incomplete non-working SHM datapipe class
+convolution engine updates
+
+
+2009-01-16: restored LICE bitmap ABI for compatability with older WDL versions
+2009-01-15: Convolution engine optimizations and bugfixes, slightly updated impulse API
+2009-01-13: simple reusable pitch shifter/time stretcher added
+2009-01-11: WDL_Queue autocompact optimizations
+2009-01-10: ADPCM decoder (IMA + MSADPCM + cADPCM), IMA/cADPCM encoder
+2009-01-08: virtwnd comboboxes support SUB tags
+2009-01-07: Vorbis encoder supports multichannel encoding
+2009-01-01: Added LICE_DashedLine
+2009-01-01: LICE_LoadPNGFromNamedResource() for OSX
+2008-12-29: iPlug: added images for example
+2008-12-27: LICE: Preliminary work for allowing LICE operations to be GL accelerated
+2008-12-20: LICE: added effect names to test application
+2008-12-20: LICE: added preliminary SVG support
+2008-12-13: SWELL: Imagelists no longer free their bitmaps (to match win)
+2008-12-13: WDL_WndSizer: reduced chance of HDWP leaks when invalid windows are stored
+2008-12-09: Virtwnd: grayed state for buttons
+2008-12-07: SWELL fixes for BitBlt/StretchBlt() with certain coordinates
+2008-12-06: LICE HSV combining blend modes
+2008-12-05: Plush2 multitexture fixes, fixed source-alpha modes
+2008-12-04: Virtwnd: improved ordering of notification calls to allow deleting a vwnd from a command message
+2008-11-24: WDL_String optimizations for empty strings
+2008-11-22: LICE: line drawing improvements (changed signature of LICE_Line to use integers)
+2008-11-20: SWELL: start on GTK implementations, far away from useful though
+2008-11-19: EEL2 fixes for recent GCC versions on Linux, constness
+2008-11-18: Added WDL_HeapBuf copy constructors
+2008-11-18: LICE: RGB/HSV colorspace conversions
+2008-11-17: LICE: overlay blend modes
+2008-11-16: LICE: Better bezier drawing
+2008-11-16: LICE: improved circle/arc drawing routes
+2008-11-15: LICE JPEG loading fixes, JPEG writing, PNG writing byteorder fixes
+2008-11-14: LICE_FillCircle() (needs optimizing)
+2008-11-11: LICE_LoadImage, LICE_GetImageExtensoinList(),and LICE_CmpBitmap()
+2008-11-08: LICE test app has new "fly" demo
+2008-11-06: LICE: fixed bug in LICE_SubBitmap
+2008-11-06: JNetLib: optional interface modes so you can easily reuse jnetlib across modules
+2008-11-06: LICE: bitmaps no longer flipped on OS X, made isFlipped() non-virtual to enable better compile-time optimization
+2008-11-05: LICE: reduced image resize heap thrashing
+2008-11-05: virtwnd detects at load whether backgrounds have alphachannel info in each section
+2008-11-04: virtwnd backgrounds disable filtering when not stretching
+2008-11-03: LICE: optimizations for 50/50 fills, fast unfiltered stretchblt, etc
+2008-11-03: virtwnd overhauls (removing HICON use)
+2008-11-03: LICE: .ico loading overhaul, support for OS X
+2008-11-01: SWELL: faster BitBlt() support
+2008-11-01: LICE_CachedText OS X fixes
+2008-10-31: LICE: LICE_LoadBMP() OS X support
+2008-10-31: SWELL: GetObject() API subset
+2008-10-31: LICE_MultiplyAddRect updated documentation and internals
+2008-10-31: LICE_IFonts can own/destroy HFONTs
+2008-10-30: LICE: Fixed a lot of small accuracy bugs
+2008-10-30: LICE: PCX reading support
+2008-10-30: Plush2: fixed singletexture mode when only multitexture compiled in
+2008-10-30: Plush2: fixed repeating textures in bilinear mode
+2008-10-30: Wndsizer: margin support
+2008-10-30: Virtwnd: now uses LICE almost exclusively to draw controls
+2008-10-30: Added Plush2: a port of the old 8bpp 3D rendering engine to a C++, 24 bit, LICE-combining multitexture capable colored lighting rendering engine 
+2008-10-27: Added LICE_FillTriangle(), LICE_HalveBlitAA(), fixed bug in LICE_StretchedBlit()
+2008-10-26: Added iplug, a VST/AU plug-in framework
+2008-10-26: LICE: LICE_SubBitmap for easy clipped rendering
+2008-10-21: LICE: Added LICE_DrawRect(), LICE_DrawGlyph(), fast tiny circle drawing (glyph based), optimizations to internals
+2008-10-20: LICE: Added LICE_IFont and LICE_CachedFont() for quick drawing and drawing to non-sysbitmaps. Also has certain useful other effects.
+2008-10-20: LICE: Added LICE_DrawBezier
+2008-10-20: Virtwnd: item backgrounds can now specify (with 255,255,0,255) outside-areas for some controls
+2008-10-13: Added mergesort.h
+2008-10-10: Added fast sinewave genereator (sinewavegen.h)
+2008-10-10: SWELL: Keyboard fixes
+2008-10-09: SWELL: Changed the way ScrollWindow() is implemented (scrolls children)
+2008-10-09: Virtwnd: fixes for large canvas drawing
+2008-10-05: Tweaks all around to reduce memory use (WDL_String gets WDL_HeapBuf granularity options etc in constructor)
+2008-09-29: SWELL: Fixed MK_* VK_* bugs
+2008-09-22: Win32_Curses updates, better OS X compatability, block cursor
+2008-09-20: SWELL: ShowWindow(SW_HIDE) DestroyWindow() deal with focus better now
+2008-09-17: Virtwnd: support for querying painter info, etc
+2008-09-08: audiobuffercontainer fixes, optimizations
+2008-09-06: Virtwnd sliders can optionally always send notifications on first click
+2008-08-31: Overhauled pooling classes to be more general and reusable
+2008-08-30: SWELL: Improved EndDialog() processing
+2008-08-29: SWELL: Default menu for windows, modal windows
+2008-08-28: SWELL: made GDI pooling threadsafe (Rosetta on 10.5 requires it)
+2008-08-28: SWELL: fixed shift+mousewheel being sent correctly
+2008-08-15: Fixed issues with Vorbis encoding-EOF-ness for NINJAM, added Vorbis comment support
+2008-07-30: Cleaned up WDL_Queue's endian-converting functions
+2008-07-28: Fixed WDL_String::Ellipsize()
+2008-07-28: Added EEL2, a fast expression evaluator/code compiler that supports x86, x64 and PPC, MSVC and GCC.
+2008-07-27: SWELL: fixed an issue with OS X hanging on fractional window positions
+2008-07-22: Added WDL_String::Ellipsize()
+2008-07-20: Win64 compatability, wdl_types.h has GetClassLongPtr() etc defines for MSVC6/OSX
+2008-07-19: SWELL: GDI object pooling to reduce heap thrashing
+2008-07-19: wndsize: fixed window positioning bug when used in SWELL.
+2008-07-19: SWELL: LVNI_SELECTED support
+2008-07-19: SWELL: better support for 64 bit OS X 10.5.
+2008-07-17: VirtWnd slider mousewheel fixes
+2008-07-15: SWELL: Treeview API improvements
+2008-07-14: Added WDL_DLGRET for DLGPROC return type to ease compiler differences (use instead of BOOL CALLBACK or UINT_PTR CALLBACK)
+2008-07-11: added win32_curses super-basic curses emulation for windows GUI
+2008-07-10: LICE bitmap allocation changes (safer failures)
+2008-07-10: SWELL: fixed GetCursorPos()/SetCursorPos() relationships
+2008-07-10: SWELL: WM_MBUTTON* support
+2008-07-08: Heapbuf can have optional small pre-allocations, heapbuf trace mode (to monitor heap use)
+2008-06-30: LICE: Better bezierness
+2008-06-30: SWELL: BitBltAlpha() and BitBltAlphaFromMem()
+2008-06-24: WDL_FileWrite: fixed GetSize() at eof before flushing
+2008-06-02: SWELL: many more bugfixes, initial work on 64 bit support, more
+2008-05-21: Virtwnd: userdata for all virtwnd support
+2008-05-05: SWELL: huge updates (too much to list)
+2008-04-28: LICE: schwa's updated lice_bezier with support for quadratic nurbs
+2008-04-27: SWELL: updates to EndDialog, added rc2cpp_dlg.php
+2008-04-0x: fileread improvements for errors in async mode
+2008-03-01: SWELL: ImageList_Destroy support
+2008-02-09: lineparser improvements
+2008-02-09: slightly faster drawtext, text cleanups
+2008-02-09: virtwnd buttons only refresh on changes of button images
+2008-02-09: virtwnd buttons support overlay outlines
+2008-02-09: SWELL: php converter for menus: .rc to cpp 
+2008-02-09: SWELL: cursor hiding support
+2008-02-09: wndsize: fix for when no window set
+2008-02-09: lice: png write support (thanks cryptomail)
+2008-02-09: shoutcast source: better encoder reinitialization, IRC channel support
+2008-02-09: FFT: more define options
+2008-02-09: convolution engine: fixed some bugs, added test app, _Div mode which allows high-cpu ZL operation
+2008-01-25: LICE: flipped surface support for arcs
+2007-12-17: SWELL: BM_SETCHECK support for buttons, basic FindWindowEx() emulation, better control font size selection
+2007-12-13: SWELL: Basic ScrollWindow() emulation
+2007-12-13: LICE: Updated LICE_IBitmap to include getDC()
+2007-12-12: SWELL: GetDC(), GetWindowDC() improvements, GetSystemMetrics()
+2007-12-12: SWELL: better WM_MOUSEWHEEL, WM_CONTEXTMENU message propagation
+2007-12-11: SWELL: WM_NCCALCSIZE, WM_NCHITTEST etc support
+2007-12-10: SWELL: basic _controlfp() support for rounding control (on x86)
+2007-12-06: LICE: better bitmapped font
+2007-12-05: LICE: schwa's faster/smaller lice_line
+2007-12-04: SWELL: updated documentation in swell.h, GlobalAlloc supports GMEM_FIXED
+2007-12-03: SWELL: added time.h inclusion for 10.5, fixed DrawText() when no font selected
+2007-12-02: SWELL: GetProp API support, GetDC/GetWindowDC now usable during WM_PAINT/NCPAINT (they get the same HDC as BeginPaint)
+2007-12-02: SWELL: dialogs can now have their window procedures subclassed, WM_NCPAINT support
+2007-11-29: SWELL: fixed EnumClipboardFormats sometimes getting in an infinite loop
+2007-11-29: SWELL: big DrawText overhaul (now uses NSAttributedString to draw)
+2007-11-29: SWELL: added a bunch more compatibility defines to swell.h
+2007-11-24: SWELL: support for having the application automatically provide the SWELL API to children
+2007-11-24: SWELL: fixed some issues with name collisions to old deprecated Mac APIs
+2007-11-24: SWELL: added opaque flag for dialogs (implicit on resourceless child windows)
+2007-11-24: SWELL: basic GetDC()/ReleaseDC() support
+2007-11-24: LICE: made OS X test app use opaque view (huge speedup)
+2007-11-24: LICE: test app shows framerate
+2007-11-23: SWELL: tons of menu fixes, dialog fixes, API extensions, more. too much to list.
+2007-11-23: LICE: LICE_line supports flipped surfaces
+2007-11-13: SWELL: Owned window support, tons of updates
+2007-11-13: Virtwnd: support for controls eating mousedowns without capturing
+2007-11-09: Fixed distribution making to include more docs/etc
+2007-11-09: LICE: Test app now uses SWELL to run on OS X, included OS X example test project
+2007-11-09: SWELL: Extensive updates for child dialogs, modal/modeless dialogs (mouse messages, painting, etc etc)
+2007-11-09: SWELL: Modal/Modeless windows now support having their own menus (via GetMenu/SetMenu)
+2007-11-09: SWELL: Added user-defined control classes for dialog template loading
+2007-11-09: Updated GIFlib config.h for OS X support
+2007-10-30: LICE: GIF, JPEG loading (included JPEG library and GifLib)
+2007-10-30: LICE: Added bezier functions (Schwa)
+2000-10-28: FileRead: better use of asynchronous buffer space, application level buffered synchronous reading support
+2007-10-26: SWELL: WM_PAINT/BeginPaint/EndPaint emulation for child dialogs
+2007-10-26: SWELL: SendMessage for windows that support it, made virtwnd use sendmessage
+2007-10-26: SWELL: 3-state checkboxes, SetWindowLong improvements, fake *Capture, more
+2007-10-24: SWELL: DialogBox/CreateDialog emulation, timer fixes, tons more
+2007-10-23: LICE: scwha added LICE_ClipLine()
+2007-10-19: LAMEEnc preliminary linux/OSX support (needs a lot of work though)
+2007-09-17: virtual window system cleanups, sliders have mouse-hiding ctrl+ modifier mode
+2007-09-17: virtual window system listbox custom drawing
+2007-09-17: virtual window system, other improvements
+2007-09-17: filewrite recovers from asynchronous failures from threads quitting
+2007-09-12: pcmfmtcvt: corrected non-standard pcm format conversion
+2007-09-14: LICE: fixed circle drawing with vc6 (template bug)
+2007-09-01: LICE: faster rotating blit (fixed point)
+2007-08-31: virtwnd: sliders can have centerline color defined in their skininfo
+2007-08-27: LICE: faster more-fixed-point mode for LICE_ScaledBlit
+2007-08-26: LICE: LICE_ScaledBlit properly obeys using a subimage source (and wont filter from outside)
+2007-08-26: added db2val.h for easy dB<-->linear scale conversion
+2007-08-25: virtwnd: stuff to let control bgs and window bg images have pink lines to define unstretched edges
+2007-08-23: virtwnd: added listbox control
+2007-08-22: LICE: defines for disabling Dodge, Add blend modes
+2007-08-22: LICE: updated deltablit, added transformblit
+2007-08-22: LICE: made LICE_FillRect support LICE_MODE_USE_ALPHA
+2007-08-21: LICE: added LICE_BLIT_MODE_DODGE (thx schwa)
+2007-08-21: LICE: added LICE_Blur, overloaded LICE_Blit() with better parameters
+2007-08-16: LICE: added LICE_FillRect()
+2007-08-15: filewrite: fixed GetSize() after flushed and unflushed writes in async mode
+2007-08-04: virtwnd: made static text labels not refresh if text did not change
+2007-08-04: started more detailed changelog
+2007-07-23: added basic freeverb based reverb engine (verbengine.h)
+2007-07-09: schwa fixes the FFT library's reordering API
+2007-07-07: virtwnd fully uses LICE, support for advanced UI features
+2007-07-01: lineparse.h now supports reading floats that use a , instead of .
+2007-06-20: fileread.h has been asynchronous reading behavior
+2007-06-20: virtwnd uses LICE for rendering gradients and general composition
+2007-06-17: renamed string.h to wdlstring.h for if WDL is added to include paths
+2007-05-09: first WDL release

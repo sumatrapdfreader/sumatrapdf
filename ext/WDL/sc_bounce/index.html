@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>stream</title>
+<script type="text/javascript">
+
+var g_url;
+
+function getinfo() {
+  var r=0;
+/*@cc_on @*/
+/*@if (@_jscript_version >= 5)
+try { r = new ActiveXObject("Msxml2.XMLHTTP"); } catch (e) { try { r = new ActiveXObject("Microsoft.XMLHTTP"); } catch (E) { r = 0; } }
+@end @*/
+  if (!r && typeof XMLHttpRequest!='undefined') { try { r = new XMLHttpRequest(); } catch (e) { r=0; } }
+  if (!r && W.createRequest) { try { r = W.createRequest(); } catch (e) { r=0; } }
+  if (!r) return;
+  r.open("GET", g_url + "&get=info", true);
+  r.onreadystatechange = function() {
+    if (r.readyState == 4) {
+      if (r.status == 200) {
+         var t = r.responseText.split("\n");
+         if (t.length > 1) {
+           document.getElementById("name").innerHTML = t[0];
+           document.getElementById("title").innerHTML = t[1];
+         }
+      }
+      window.setTimeout(getinfo, 10000);
+    }
+  };
+  r.send(null);
+}
+
+function doplay() {
+  g_url = "stream.php?stream=" + window.location.hash.replace(/^#(.+)$/,"$1");
+  getinfo();
+
+  var player = document.getElementById("player");
+  player.src = g_url + "&t=stream.mp3";
+  player.load();
+  player.play();
+}
+
+</script>
+</head>
+<body onload='doplay()'>
+  <div id="name">...loading...</div>
+  <div id="title"></div>
+  <audio id="player" controls />
+</body>
+</html>

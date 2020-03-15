@@ -1,0 +1,20 @@
+argc < 2 ? (
+  printf("Usage: %s [script]\n",argv[0]);
+
+) : (
+  printf("loading '%s'\n",argv[1]);
+  x = fopen(argv[1],"r");
+  !x ? (
+    printf("Error opening '%s'\n",argv[1]) 
+  ) : (
+    #str="";
+    while (fgets(x,#line)) ( #str += #line; );
+    fclose(x);
+    loop(30,
+    start_t = time_precise();
+    eval(#str) || printf("error evaluating script\n");
+    start_t = time_precise()-start_t;
+    printf("finished in %f milliseconds\n",start_t*1000.0);
+    );
+  );
+);
