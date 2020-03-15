@@ -873,7 +873,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
 }
 
 // so that we can do free everything at exit
-std::vector<MenuOwnerDrawInfo*> g_menuDrawInfos;
+Vec<MenuOwnerDrawInfo*> g_menuDrawInfos;
 
 void FreeAllMenuDrawInfos() {
     while (g_menuDrawInfos.size() != 0) {
@@ -883,9 +883,7 @@ void FreeAllMenuDrawInfos() {
 }
 
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
-    auto it = std::remove(begin(g_menuDrawInfos), end(g_menuDrawInfos), modi);
-    CrashIf(it == end(g_menuDrawInfos));
-    g_menuDrawInfos.erase(it, end(g_menuDrawInfos));
+    g_menuDrawInfos.Remove(modi);
     str::Free(modi->text);
     free(modi);
 }
@@ -978,7 +976,7 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
             FreeMenuOwnerDrawInfo(modi);
         }
         auto modi = AllocStruct<MenuOwnerDrawInfo>();
-        g_menuDrawInfos.push_back(modi);
+        g_menuDrawInfos.Append(modi);
         modi->fState = mii.fState;
         modi->fType = mii.fType;
         modi->hbmpItem = mii.hbmpItem;

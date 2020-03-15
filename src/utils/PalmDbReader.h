@@ -34,7 +34,7 @@ class PdbReader {
 
     // offset of each pdb record within the file + a sentinel
     // value equal to file size to simplify use
-    std::vector<PdbRecordHeader> recInfos;
+    Vec<PdbRecordHeader> recInfos;
 
     bool ParseHeader();
 
