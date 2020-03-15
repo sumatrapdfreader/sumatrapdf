@@ -1049,7 +1049,7 @@ int RunInstaller(Flags* cli) {
     }
 
     // just when testing
-    //CrashMe();
+    // CrashMe();
 
     gWasSearchFilterInstalled = IsSearchFilterInstalled();
     if (gWasSearchFilterInstalled) {

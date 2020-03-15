@@ -139,7 +139,7 @@ bool Save() {
     // update display states for all tabs
     for (WindowInfo* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
-            UpdateTabFileDisplayStateForWin(win, tab);
+            UpdateTabFileDisplayStateForTab(tab);
         }
     }
 

@@ -119,7 +119,7 @@ void AdvanceFocus(WindowInfo* win);
 bool WindowInfoStillValid(WindowInfo* win);
 void SetCurrentLanguageAndRefreshUI(const char* langCode);
 void UpdateDocumentColors();
-void UpdateTabFileDisplayStateForWin(WindowInfo* win, TabInfo* td);
+void UpdateTabFileDisplayStateForTab(TabInfo* td);
 bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield = false);
 void ReloadDocument(WindowInfo* win, bool autorefresh = false);
 void OnMenuViewFullscreen(WindowInfo* win, bool presentation = false);
@@ -129,7 +129,6 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 // note: background tabs are only searched if focusTab is true
 WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab);
 WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab);
-WindowInfo* FindWindowInfoByTab(TabInfo* tab);
 WindowInfo* FindWindowInfoByController(Controller* ctrl);
 
 class EngineBase;

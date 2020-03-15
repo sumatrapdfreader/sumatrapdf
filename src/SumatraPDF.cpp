@@ -426,17 +426,6 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab) {
     return nullptr;
 }
 
-WindowInfo* FindWindowInfoByTab(TabInfo* tab) {
-    auto fn = [&](WindowInfo* win) -> bool { return win->tabs.Contains(tab); };
-    // TODO: make it into a function
-    auto b = std::begin(gWindows);
-    auto e = std::end(gWindows);
-    if (auto res = std::find_if(b, e, fn); res != e) {
-        return *res;
-    }
-    return nullptr;
-}
-
 WindowInfo* FindWindowInfoByController(Controller* ctrl) {
     auto fn = [&](WindowInfo* win) {
         return win->tabs.FindEl([&](TabInfo* tab) { return tab->ctrl == ctrl; }) != NULL;
@@ -544,9 +533,9 @@ static void UpdateDisplayStateWindowRect(WindowInfo* win, DisplayState& ds, bool
     ds.sidebarDx = gGlobalPrefs->sidebarDx;
 }
 
-static void UpdateSidebarDisplayState(WindowInfo* win, TabInfo* tab, DisplayState* ds) {
+static void UpdateSidebarDisplayState(TabInfo* tab, DisplayState* ds) {
     CrashIf(!tab);
-
+    WindowInfo* win = tab->win;
     ds->showToc = tab->showToc;
     if (win->tocLoaded && tab == win->currentTab) {
         TocTree* tocTree = tab->ctrl->GetToc();
@@ -555,7 +544,9 @@ static void UpdateSidebarDisplayState(WindowInfo* win, TabInfo* tab, DisplayStat
     *ds->tocState = tab->tocState;
 }
 
-void UpdateTabFileDisplayStateForWin(WindowInfo* win, TabInfo* tab) {
+void UpdateTabFileDisplayStateForTab(TabInfo* tab) {
+    WindowInfo* win = tab->win;
+    // TODO: this is called multiple times for each tab
     RememberDefaultWindowPosition(win);
     if (!tab || !tab->ctrl) {
         return;
@@ -566,7 +557,7 @@ void UpdateTabFileDisplayStateForWin(WindowInfo* win, TabInfo* tab) {
     }
     tab->ctrl->GetDisplayState(ds);
     UpdateDisplayStateWindowRect(win, *ds, false);
-    UpdateSidebarDisplayState(win, tab, ds);
+    UpdateSidebarDisplayState(tab, ds);
 }
 
 bool IsUIRightToLeft() {
@@ -1273,7 +1264,7 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
     DisplayState* ds = NewDisplayState(tab->filePath);
     tab->ctrl->GetDisplayState(ds);
     UpdateDisplayStateWindowRect(win, *ds);
-    UpdateSidebarDisplayState(win, tab, ds);
+    UpdateSidebarDisplayState(tab, ds);
     // Set the windows state based on the actual window's placement
     int wstate = WIN_STATE_NORMAL;
     if (win->isFullScreen) {
@@ -1556,9 +1547,10 @@ void scheduleReloadTab(TabInfo* tab) {
     // to prevent race conditions between file changes and closing tabs,
     // use the tab only on the main UI thread
     uitask::Post([=] {
-        WindowInfo* win = FindWindowInfoByTab(tab);
-        if (!win)
+        WindowInfo* win = tab->win;
+        if (!win) {
             return;
+        }
         tab->reloadOnFocus = true;
         if (tab == win->currentTab) {
             // delay the reload slightly, in case we get another request immediately after this one
@@ -1754,63 +1746,75 @@ WindowInfo* LoadDocument(LoadArgs& args) {
 }
 
 // Loads document data into the WindowInfo.
-void LoadModelIntoTab(WindowInfo* win, TabInfo* tdata) {
-    if (!win || !tdata)
+void LoadModelIntoTab(TabInfo* tab) {
+    if (!tab) {
         return;
+    }
+    WindowInfo* win = tab->win;
+    if (!tab) {
+        return;
+    }
 
     CloseDocumentInTab(win, true);
 
-    win->currentTab = tdata;
-    win->ctrl = tdata->ctrl;
+    win->currentTab = tab;
+    win->ctrl = tab->ctrl;
 
-    if (win->AsChm())
+    if (win->AsChm()) {
         win->AsChm()->SetParentHwnd(win->hwndCanvas);
-    // prevent the ebook UI from redrawing before win->RedrawAll at the bottom
-    else if (win->AsEbook())
+    } else if (win->AsEbook()) {
+        // prevent the ebook UI from redrawing before win->RedrawAll at the bottom
         win->AsEbook()->EnableMessageHandling(false);
-    // tell UI Automation about content change
-    else if (win->AsFixed() && win->uia_provider)
+    } else if (win->AsFixed() && win->uia_provider) {
+        // tell UI Automation about content change
         win->uia_provider->OnDocumentLoad(win->AsFixed());
+    }
 
     UpdateUiForCurrentTab(win);
 
-    if (win->presentation != PM_DISABLED)
-        SetSidebarVisibility(win, tdata->showTocPresentation, gGlobalPrefs->showFavorites);
-    else
-        SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
+    if (win->presentation != PM_DISABLED) {
+        SetSidebarVisibility(win, tab->showTocPresentation, gGlobalPrefs->showFavorites);
+    } else {
+        SetSidebarVisibility(win, tab->showToc, gGlobalPrefs->showFavorites);
+    }
 
     if (win->AsFixed()) {
-        if (tdata->canvasRc != win->canvasRc)
+        if (tab->canvasRc != win->canvasRc) {
             win->ctrl->SetViewPortSize(win->GetViewPortSize());
+        }
         DisplayModel* dm = win->AsFixed();
         dm->SetScrollState(dm->GetScrollState());
-        if (dm->GetPresentationMode() != (win->presentation != PM_DISABLED))
+        if (dm->GetPresentationMode() != (win->presentation != PM_DISABLED)) {
             dm->SetPresentationMode(!dm->GetPresentationMode());
+        }
     } else if (win->AsChm()) {
         win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
     } else if (win->AsEbook()) {
         win->AsEbook()->EnableMessageHandling(true);
-        if (tdata->canvasRc != win->canvasRc)
+        if (tab->canvasRc != win->canvasRc) {
             win->ctrl->SetViewPortSize(win->GetViewPortSize());
+        }
     }
-    tdata->canvasRc = win->canvasRc;
+    tab->canvasRc = win->canvasRc;
 
-    win->showSelection = tdata->selectionOnPage != nullptr;
-    if (win->uia_provider)
+    win->showSelection = tab->selectionOnPage != nullptr;
+    if (win->uia_provider) {
         win->uia_provider->OnSelectionChanged();
+    }
 
     SetFocus(win->hwndFrame);
     win->RedrawAll(true);
 
-    if (tdata->reloadOnFocus) {
-        tdata->reloadOnFocus = false;
+    if (tab->reloadOnFocus) {
+        tab->reloadOnFocus = false;
         ReloadDocument(win, true);
     }
 }
 
 static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int pageNo) {
-    if (!win->ctrl->ValidPageNo(pageNo))
+    if (!win->ctrl->ValidPageNo(pageNo)) {
         pageNo = win->ctrl->CurrentPageNo();
+    }
     AutoFreeWstr pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, win->ctrl->PageCount()));
     if (win->ctrl->HasPageLabels()) {
         AutoFreeWstr label(win->ctrl->GetPageLabel(pageNo));
@@ -2396,7 +2400,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
     } else {
         // this happens otherwise in prefs::Save
         for (TabInfo* tab : win->tabs) {
-            UpdateTabFileDisplayStateForWin(win, tab);
+            UpdateTabFileDisplayStateForTab(tab);
         }
     }
     TabsOnCloseWindow(win);
@@ -2774,7 +2778,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
         return;
     }
 
-    UpdateTabFileDisplayStateForWin(win, win->currentTab);
+    UpdateTabFileDisplayStateForTab(win->currentTab);
     CloseDocumentInTab(win, true, true);
     SetFocus(win->hwndFrame);
 
@@ -3113,7 +3117,7 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
     }
 
     // TODO: check for unsaved modifications
-    UpdateTabFileDisplayStateForWin(win, tab);
+    UpdateTabFileDisplayStateForTab(tab);
     LoadArgs args(files.at(index), win);
     args.forceReuse = true;
     LoadDocument(args);

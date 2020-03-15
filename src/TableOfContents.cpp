@@ -175,10 +175,12 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 }
 #endif
 
-static void GoToTocLinkTask(WindowInfo* win, TocItem* tocItem, TabInfo* tab, Controller* ctrl) {
+static void GoToTocLinkTask(TocItem* tocItem, TabInfo* tab, Controller* ctrl) {
+    WindowInfo* win = tab->win;
     // tocItem is invalid if the Controller has been replaced
-    if (!WindowInfoStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl)
+    if (!WindowInfoStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl) {
         return;
+    }
 
     // make sure that the tree item that the user selected
     // isn't unselected in UpdateTocSelection right again
@@ -212,7 +214,7 @@ static void GoToTocTreeItem(WindowInfo* win, TreeItem* ti, bool allowExternal) {
         // delay changing the page until the tree messages have been handled
         TabInfo* tab = win->currentTab;
         Controller* ctrl = win->ctrl;
-        uitask::Post([=] { GoToTocLinkTask(win, tocItem, tab, ctrl); });
+        uitask::Post([=] { GoToTocLinkTask(tocItem, tab, ctrl); });
     }
 }
 
@@ -712,7 +714,8 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 }
 
-static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::string_view s) {
+static void AltBookmarksChanged(TabInfo* tab, int n, std::string_view s) {
+    WindowInfo* win = tab->win;
     if (n == 0) {
         tab->currToc = tab->ctrl->GetToc();        
     } else {
@@ -754,7 +757,7 @@ static void dropDownSelectionChanged(DropDownSelectionChangedEvent* ev) {
     if (!tab) {
         return;
     }
-    AltBookmarksChanged(win, tab, ev->idx, ev->item);
+    AltBookmarksChanged(tab, ev->idx, ev->item);
     ev->didHandle = true;
 }
 

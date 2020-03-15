@@ -309,7 +309,8 @@ class TabPainter {
     }
 };
 
-static void SetTabTitle(WindowInfo* win, TabInfo* tab) {
+static void SetTabTitle(TabInfo* tab) {
+    WindowInfo* win = tab->win;
     TCITEM tcs;
     tcs.mask = TCIF_TEXT;
     tcs.pszText = (WCHAR*)tab->GetTabTitle();
@@ -321,8 +322,8 @@ static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
         return;
 
     std::swap(win->tabs.at(tab1), win->tabs.at(tab2));
-    SetTabTitle(win, win->tabs.at(tab1));
-    SetTabTitle(win, win->tabs.at(tab2));
+    SetTabTitle(win->tabs.at(tab1));
+    SetTabTitle(win->tabs.at(tab2));
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     if (tab1 == current)
@@ -712,12 +713,12 @@ void TabsOnChangedDoc(WindowInfo* win) {
 
     CrashIf(win->tabs.Find(tab) != TabCtrl_GetCurSel(win->hwndTabBar));
     VerifyTabInfo(win, tab);
-    SetTabTitle(win, tab);
+    SetTabTitle(tab);
 }
 
 static void RemoveTab(WindowInfo* win, int idx) {
     TabInfo* tab = win->tabs.at(idx);
-    UpdateTabFileDisplayStateForWin(win, tab);
+    UpdateTabFileDisplayStateForTab(tab);
     win->tabSelectionHistory->Remove(tab);
     win->tabs.Remove(tab);
     if (tab == win->currentTab) {
@@ -744,7 +745,7 @@ void TabsOnCloseDoc(WindowInfo* win) {
     if (win->tabs.size() > 0) {
         TabInfo* tab = win->tabSelectionHistory->Pop();
         TabCtrl_SetCurSel(win->hwndTabBar, win->tabs.Find(tab));
-        LoadModelIntoTab(win, tab);
+        LoadModelIntoTab(tab);
     }
 }
 
@@ -771,7 +772,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lparam, int tab1, int tab2) {
 
         case TCN_SELCHANGE:
             current = TabCtrl_GetCurSel(win->hwndTabBar);
-            LoadModelIntoTab(win, win->tabs.at(current));
+            LoadModelIntoTab(win->tabs.at(current));
             break;
 
         case T_CLOSING:
