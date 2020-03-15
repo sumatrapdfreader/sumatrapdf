@@ -414,29 +414,29 @@ static void ParseMuiDefinition(TxtNode* root, ParsedMui& res) {
             CacheStyleFromStruct(node);
         } else if (node->IsStructWithName("ButtonVector")) {
             ButtonVector* b = ButtonVectorFromDef(node);
-            res.allControls.push_back(b);
-            res.vecButtons.push_back(b);
+            res.allControls.Append(b);
+            res.vecButtons.Append(b);
         } else if (node->IsStructWithName("Button")) {
             Button* b = ButtonFromDef(node);
-            res.allControls.push_back(b);
-            res.buttons.push_back(b);
+            res.allControls.Append(b);
+            res.buttons.Append(b);
         } else if (node->IsStructWithName("ScrollBar")) {
             ScrollBar* sb = ScrollBarFromDef(node);
-            res.allControls.push_back(sb);
-            res.scrollBars.push_back(sb);
+            res.allControls.Append(sb);
+            res.scrollBars.Append(sb);
         } else if (node->IsStructWithName("HorizontalLayout")) {
             HorizontalLayout* l = HorizontalLayoutFromDef(res, node);
-            res.layouts.push_back(l);
+            res.layouts.Append(l);
         } else if (node->IsStructWithName("VerticalLayout")) {
             VerticalLayout* l = VerticalLayoutFromDef(res, node);
-            res.layouts.push_back(l);
+            res.layouts.Append(l);
         } else {
             AutoFree keyName(node->KeyDup());
             ControlCreatorFunc creatorFunc = FindControlCreatorFuncFor(keyName);
             if (creatorFunc) {
                 Control* c = creatorFunc(node);
                 if (c) {
-                    res.allControls.push_back(c);
+                    res.allControls.Append(c);
                 }
                 continue;
             }
@@ -445,7 +445,7 @@ static void ParseMuiDefinition(TxtNode* root, ParsedMui& res) {
             CrashIf(!layoutCreatorFunc);
             ILayout* layout = layoutCreatorFunc(&res, node);
             if (layout) {
-                res.layouts.push_back(layout);
+                res.layouts.Append(layout);
             }
         }
     }

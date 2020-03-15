@@ -211,6 +211,13 @@ class Vec {
         memset(els + len, 0, count * sizeof(T));
     }
 
+    void RemoveLast() {
+        if (len == 0) {
+            return;
+        }
+        RemoveAt(len-1);
+    }
+
     // This is a fast version of RemoveAt() which replaces the element we're
     // removing with the last element, copying less memory.
     // It can only be used if order of elements doesn't matter and elements

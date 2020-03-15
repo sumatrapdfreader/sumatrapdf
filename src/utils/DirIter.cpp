@@ -60,12 +60,14 @@ static bool IsRegularFile(DWORD fileAttr) {
     return true;
 }
 
+#if 0
 static bool IsDirectory(DWORD fileAttr) {
     if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
         return true;
     }
     return false;
 }
+#endif
 
 // "." and ".." are special
 static bool IsSpecialDir(const WCHAR* s) {
@@ -121,6 +123,7 @@ bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsIn
     return paths.size() > 0;
 }
 
+#if 0
 // returns a list of directories (full paths) in a given directory
 // TODO: add recursive flag
 std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR* dir) {
@@ -144,6 +147,7 @@ std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR* dir) {
     FindClose(hfind);
     return res;
 }
+#endif
 
 bool CollectFilesFromDirectory(std::string_view dir, VecStr& files,
                                const std::function<bool(std::string_view)>& fileMatchesFn) {

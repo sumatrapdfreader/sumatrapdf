@@ -1,7 +1,7 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-/* VecSegmented has (mostly) the same API as std::vector but allocates
+/* VecSegmented has (mostly) the same API as Vec but allocates
    using PoolAllocator. This means it's append only (we have no
    easy way to remove an item). The upside is that we can retain
    pointers to elements within the vector because we never

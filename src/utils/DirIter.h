@@ -37,7 +37,7 @@ class DirIter {
 };
 
 bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles = false);
-std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR*);
+//std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR*);
 
 bool CollectFilesFromDirectory(std::string_view dir, VecStr& files,
                                const std::function<bool(std::string_view path)>& fileMatches);

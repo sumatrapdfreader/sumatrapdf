@@ -134,7 +134,7 @@ void TxtParser::SetToParse(const std::string_view& str) {
     // we create an implicit array node to hold the nodes we'll parse
     CrashIf(0 != nodes.size());
     TxtNode* node = AllocTxtNode(TxtNode::Type::Array);
-    nodes.push_back(node);
+    nodes.Append(node);
 }
 
 static bool IsCommentStartChar(char c) {
@@ -364,13 +364,13 @@ static void ParseNodes(TxtParser& parser) {
             if (1 == parser.nodes.size()) {
                 goto Failed;
             }
-            parser.nodes.pop_back();
+            parser.nodes.RemoveLast();
             continue;
         }
         TxtNode* currParent = parser.nodes.at(parser.nodes.size() - 1);
         currParent->AddChild(currNode);
         if (TxtNode::Type::Text != currNode->type) {
-            parser.nodes.push_back(currNode);
+            parser.nodes.Append(currNode);
         }
     }
 Failed:

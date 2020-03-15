@@ -71,7 +71,7 @@ struct TxtParser {
     Token tok;
     char escapeChar = SERIALIZE_ESCAPE_CHAR;
     bool failed = false;
-    std::vector<TxtNode*> nodes;
+    Vec<TxtNode*> nodes;
 
     TxtNode* AllocTxtNode(TxtNode::Type);
     TxtNode* AllocTxtNodeFromToken(const Token&, TxtNode::Type);
