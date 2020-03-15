@@ -165,6 +165,7 @@ func main() {
 
 	if flgWebsiteImportAndDeploy {
 		websiteImportNotion()
+		u.CdUpDir("sumatrapdf")
 		websiteDeployProd()
 		return
 	}
