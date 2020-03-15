@@ -62,5 +62,5 @@ class TextSearch : public TextSelection {
 
     WCHAR* lastText = nullptr;
     int nPages = 0;
-    std::vector<bool> pagesToSkip;
+    Vec<bool> pagesToSkip;
 };

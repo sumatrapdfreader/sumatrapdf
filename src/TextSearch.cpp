@@ -15,14 +15,14 @@
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (isWordChar(c) && (unsigned short)(c) < 0x2E80)
 
-static void markAllPagesNonSkip(std::vector<bool>& pagesToSkip) {
+static void markAllPagesNonSkip(Vec<bool>& pagesToSkip) {
     for (size_t i = 0; i < pagesToSkip.size(); i++) {
         pagesToSkip[i] = false;
     }
 }
 TextSearch::TextSearch(EngineBase* engine, PageTextCache* textCache) : TextSelection(engine, textCache) {
     nPages = engine->PageCount();
-    pagesToSkip.resize(nPages);
+    pagesToSkip.SetSize(nPages);
     markAllPagesNonSkip(pagesToSkip);
 }
 
