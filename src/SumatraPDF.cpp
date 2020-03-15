@@ -98,11 +98,11 @@ static const WCHAR* gUpdateInfoURL = L"https://kjkpubsf.sfo2.digitaloceanspaces.
 //static const WCHAR* gUpdateInfoURL = L"https://www.sumatrapdfreader.org/update-check-rel.txt";
 #endif
 
-#ifndef SVN_UPDATE_LINK
+#ifndef WEBSITE_DOWNLOAD_PAGE_URL
 #if defined(PRE_RELEASE_VER)
-#define SVN_UPDATE_LINK L"https://www.sumatrapdfreader.org/prerelease.html"
+#define WEBSITE_DOWNLOAD_PAGE_URL L"https://www.sumatrapdfreader.org/prerelease.html"
 #else
-#define SVN_UPDATE_LINK L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
+#define WEBSITE_DOWNLOAD_PAGE_URL L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
 #endif
 #endif
 // clang-format on
@@ -1957,83 +1957,6 @@ static void RememberSessionState() {
     }
 }
 
-#if defined(SUPPORTS_AUTO_UPDATE) && !defined(HAS_PUBLIC_APP_KEY)
-#error Auto-update without authentication of the downloaded data is not recommended
-#endif
-
-#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
-static void OnMenuExit();
-
-bool AutoUpdateInitiate(const char* updateData) {
-    SquareTree tree(updateData);
-    SquareTreeNode* node = tree.root ? tree.root->GetChild("SumatraPDF") : nullptr;
-    CrashIf(!node);
-
-    bool installer = HasBeenInstalled();
-    SquareTreeNode* data = node->GetChild(installer ? "Installer" : "Portable");
-    if (!data)
-        return false;
-    const char* url = data->GetValue("URL");
-    const char* hash = data->GetValue("Hash");
-    if (!url || !hash || !str::EndsWithI(url, ".exe"))
-        return false;
-
-    AutoFreeWstr exeUrl = strconv::Utf8ToWstr(url);
-    HttpRsp rsp;
-    if (!HttpGet(exeUrl, &rsp))
-        return false;
-
-    unsigned char digest[32];
-    CalcSHA2Digest((const unsigned char*)rsp.data.Get(), rsp.data.size(), digest);
-    AutoFree fingerPrint(_MemToHex(&digest));
-    if (!str::EqI(fingerPrint, hash))
-        return false;
-
-    AutoFreeWstr updateExe, updateArgs;
-    if (installer) {
-        AutoFreeWstr tmpDir(path::GetTempPath());
-        updateExe.Set(path::Join(tmpDir, L"SumatraPDF-install-update.exe"));
-        // TODO: make the installer delete itself after the update?
-        updateArgs.SetCopy(L"-autoupdate");
-    } else {
-        AutoFreeWstr thisExe(GetExePath());
-        updateExe.Set(str::Join(thisExe, L"-update.exe"));
-        updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe.get()));
-    }
-
-    bool ok = file::WriteFile(updateExe, rsp.data.as_view());
-    if (!ok)
-        return false;
-
-    // remember currently opened files for reloading after the update
-    CrashIf(gGlobalPrefs->reopenOnce->size() > 0);
-#if 0
-    RememberSessionState();
-    gGlobalPrefs->reopenOnce->Append(str::Dup(L"SessionData"));
-#else
-    for (auto* win : gWindows) {
-        for (TabInfo* tab : win->tabs) {
-            gGlobalPrefs->reopenOnce->Append(str::Dup(tab->filePath));
-        }
-    }
-#endif
-    // save session before launching the installer (which force-quits SumatraPDF)
-    if (installer)
-        prefs::Save();
-
-    ok = LaunchFile(updateExe, updateArgs);
-    if (ok)
-        OnMenuExit();
-    else {
-        gGlobalPrefs->reopenOnce->FreeMembers();
-#if 0
-        ResetSessionState(gGlobalPrefs->sessionData);
-#endif
-    }
-    return ok;
-}
-#endif
-
 /* The format used for SUMATRA_UPDATE_INFO_URL looks as follows:
 
 [SumatraPDF]
@@ -2043,16 +1966,6 @@ Latest 2.6
 Stable 2.5.3
 # Stable is optional and indicates the oldest version for which automated update
 # checks don't yet report the available update
-
-# further information can be added, e.g. the following experimental subkey for
-# auto-updating (requires SUPPORTS_AUTO_UPDATE)
-Portable [
-    URL: <download URL for the uncompressed portable .exe>
-    Hash <SHA-256 hash of that file>
-]
-
-# to allow safe transmission over http, the file may also be signed:
-# Signature sha1:<SHA-1 signature to be verified using IDD_PUBLIC_APP_KEY>
 */
 static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (rsp->error != 0) {
@@ -2076,15 +1989,6 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (!str::StartsWith(data->Get(), '[' == data->at(0) ? "[SumatraPDF]" : "SumatraPDF")) {
         return ERROR_INTERNET_LOGIN_FAILURE;
     }
-
-#ifdef HAS_PUBLIC_APP_KEY
-    std::string_view pubkey = LoadDataResource(IDD_PUBLIC_APP_KEY);
-    CrashIf(pubkey.empty());
-    bool ok = VerifySHA1Signature(data->Get(), data->Size(), nullptr, pubkey.data(), pubkey.size());
-    if (!ok) {
-        return ERROR_INTERNET_SEC_CERT_ERRORS;
-    }
-#endif
 
     SquareTree tree(data->Get());
     SquareTreeNode* node = tree.root ? tree.root->GetChild("SumatraPDF") : nullptr;
@@ -2129,11 +2033,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         gGlobalPrefs->versionToSkip = verTxt.StealData();
     }
     if (IDYES == res) {
-#ifdef SUPPORTS_AUTO_UPDATE
-        if (AutoUpdateInitiate(data->Get()))
-            return 0;
-#endif
-        SumatraLaunchBrowser(SVN_UPDATE_LINK);
+        SumatraLaunchBrowser(WEBSITE_DOWNLOAD_PAGE_URL);
     }
     prefs::Save();
 

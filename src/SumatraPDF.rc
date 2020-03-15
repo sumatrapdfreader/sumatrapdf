@@ -297,10 +297,6 @@ END
 1                       RCDATA               QM(INSTALL_PAYLOAD_ZIP)
 #endif
 
-#ifdef HAS_PUBLIC_APP_KEY
-IDD_PUBLIC_APP_KEY      RCDATA               "SumatraPDF.key"
-#endif
-
 IDD_RAMICRO_SPLASH      RCDATA               "..\\gfx\\ramicro-startscreen_310x230.png"
 
 /////////////////////////////////////////////////////////////////////////////

@@ -512,54 +512,6 @@ static int RunMessageLoop() {
     return (int)msg.wParam;
 }
 
-#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
-static bool RetryIO(const std::function<bool()>& func, int tries = 10) {
-    while (tries-- > 0) {
-        if (func())
-            return true;
-        Sleep(200);
-    }
-    return false;
-}
-
-static bool AutoUpdateMain() {
-    WStrVec argList;
-    ParseCmdLine(GetCommandLine(), argList, 4);
-    if (argList.size() != 3 || !str::Eq(argList.at(1), L"-autoupdate")) {
-        // the argument was misinterpreted, let SumatraPDF start as usual
-        return false;
-    }
-    if (str::Eq(argList.at(2), L"replace")) {
-        // older 2.6 prerelease versions used implicit paths
-        AutoFreeWstr exePath(GetExePath());
-        CrashIf(!str::EndsWith(exePath, L".exe-updater.exe"));
-        exePath[str::Len(exePath) - 12] = '\0';
-        free(argList.at(2));
-        argList.at(2) = str::Format(L"replace:%s", exePath.get());
-    }
-    const WCHAR* otherExe = nullptr;
-    if (str::StartsWith(argList.at(2), L"replace:"))
-        otherExe = argList.at(2) + 8;
-    else if (str::StartsWith(argList.at(2), L"cleanup:"))
-        otherExe = argList.at(2) + 8;
-    if (!str::EndsWithI(otherExe, L".exe") || !file::Exists(otherExe)) {
-        // continue startup
-        return false;
-    }
-    RetryIO([&] { return file::Delete(otherExe); });
-    if (str::StartsWith(argList.at(2), L"cleanup:")) {
-        // continue startup, restoring the previous session
-        return false;
-    }
-    AutoFreeWstr thisExe(GetExePath());
-    RetryIO([&] { return CopyFile(thisExe, otherExe, FALSE) != 0; });
-    // TODO: somehow indicate success or failure
-    AutoFreeWstr cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe.get()));
-    RetryIO([&] { return LaunchFile(otherExe, cleanupArgs); });
-    return true;
-}
-#endif
-
 static void ShutdownCommon() {
     mui::Destroy();
     uitask::Destroy();
@@ -896,14 +848,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         retCode = RunUninstaller(&i);
         ::ExitProcess(retCode);
     }
-
-#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
-    if (str::StartsWith(cmdLine, "-autoupdate")) {
-        bool quit = AutoUpdateMain();
-        if (quit)
-            return 0;
-    }
-#endif
 
     EnsureNotInstaller();
 
