@@ -249,6 +249,7 @@ bool CrashHandlerDownloadSymbols() {
     }
 
     if (dbghelp::HasSymbols()) {
+        dbglog("CrashHandlerDownloadSymbols(): skipping because dbghelp::HasSymbols()\n");
         return true;
     }
 
