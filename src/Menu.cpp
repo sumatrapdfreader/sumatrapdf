@@ -223,6 +223,7 @@ static MenuDef menuDefDebug[] = {
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
     { "Download symbols",                   IDM_DEBUG_DOWNLOAD_SYMBOLS, MF_NO_TRANSLATE },
+    { "Test app",                           IDM_DEBUG_TEST_APP,         MF_NO_TRANSLATE },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Debug Menu
@@ -1200,6 +1201,10 @@ HMENU BuildMenu(WindowInfo* win) {
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
 #endif
     m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
+
+    if (!gIsDebugBuild) {
+        RemoveMenu(m, IDM_DEBUG_TEST_APP, MF_BYCOMMAND);
+    }
 
     if (gAddCrashMeMenu) {
         AppendMenu(m, MF_SEPARATOR, 0, nullptr);

@@ -867,6 +867,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         SetAppDataPath(i.appdataDir);
     }
 
+    if (i.testApp) {
+        // in TestApp.cpp
+        extern void TestApp(HINSTANCE hInstance);
+        TestApp(hInstance);
+        return 0;
+    }
+
     prefs::Load();
     UpdateGlobalPrefs(i);
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
@@ -884,13 +891,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         RedirectIOToConsole();
         // TODO(port)
         // fz_redirect_dll_io_to_console();
-    }
-
-    if (i.testApp) {
-        // in TestApp.cpp
-        extern void TestApp(HINSTANCE hInstance);
-        TestApp(hInstance);
-        return 0;
     }
 
     if (i.registerAsDefault) {

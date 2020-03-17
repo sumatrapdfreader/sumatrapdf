@@ -4529,6 +4529,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             FrameOnChar(win, 'h');
             break;
 
+        case IDM_DEBUG_TEST_APP:
+            extern void TestApp(HINSTANCE hInstance);
+            TestApp(GetModuleHandle(nullptr));
+            break;
+
         case IDM_DEBUG_CRASH_ME:
             CrashMe();
             break;

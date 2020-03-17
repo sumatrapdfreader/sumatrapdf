@@ -130,6 +130,7 @@
 #define IDM_DEBUG_MUI                   626
 #define IDM_DEBUG_ANNOTATION            628
 #define IDM_DEBUG_DOWNLOAD_SYMBOLS      630
+#define IDM_DEBUG_TEST_APP              631
 #define IDM_ADVANCED_OPTIONS            632
 #define IDM_NEW_BOOKMARKS               634
 

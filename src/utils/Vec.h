@@ -215,7 +215,7 @@ class Vec {
         if (len == 0) {
             return;
         }
-        RemoveAt(len-1);
+        RemoveAt(len - 1);
     }
 
     // This is a fast version of RemoveAt() which replaces the element we're
