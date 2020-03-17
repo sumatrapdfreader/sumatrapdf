@@ -1090,25 +1090,23 @@ int RunInstaller(Flags* cli) {
 
     if (gCli->silent) {
         log("Silent installation\n");
-        // make sure not to uninstall the plugins during silent installation
         InstallerThread(nullptr);
         ret = success ? 0 : 1;
-        goto Exit;
+    } else {
+        if (!RegisterWinClass()) {
+            log("RegisterWinClass() failed\n");
+            goto Exit;
+        }
+
+        if (!InstanceInit()) {
+            log("InstanceInit() failed\n");
+            goto Exit;
+        }
+
+        BringWindowToTop(gHwndFrame);
+
+        ret = RunApp();
     }
-
-    if (!RegisterWinClass()) {
-        log("RegisterWinClass() failed\n");
-        goto Exit;
-    }
-
-    if (!InstanceInit()) {
-        log("InstanceInit() failed\n");
-        goto Exit;
-    }
-
-    BringWindowToTop(gHwndFrame);
-
-    ret = RunApp();
 
     // re-register if we un-registered but installation was cancelled
     if (gWasSearchFilterInstalled) {
