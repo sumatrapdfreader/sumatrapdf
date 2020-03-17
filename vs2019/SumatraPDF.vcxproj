@@ -1043,6 +1043,7 @@
     <ClCompile Include="..\src\testcode\TestApp.cpp" />
     <ClCompile Include="..\src\testcode\TestDirectDraw.cpp" />
     <ClCompile Include="..\src\testcode\TestLayout.cpp" />
+    <ClCompile Include="..\src\testcode\TestLice.cpp" />
     <ClCompile Include="..\src\testcode\TestTab.cpp" />
     <ClCompile Include="..\src\uia\DocumentProvider.cpp" />
     <ClCompile Include="..\src\uia\PageProvider.cpp" />

@@ -983,6 +983,7 @@ function test_app_files()
     "TestDirectDraw.cpp",
     "TestTab.cpp",
     "TestLayout.cpp",
+    "TestLice.cpp",
   })
 end
 

@@ -12,6 +12,8 @@ extern int TestDirectDraw(HINSTANCE hInstance, int nCmdShow);
 extern int TestTab(HINSTANCE hInstance, int nCmdShow);
 // in TestLayout.cpp
 extern int TestLayout(HINSTANCE hInstance, int nCmdShow);
+// in TestLice.cpp
+extern int TestLice(HINSTANCE hInstance, int nCmdShow);
 
 HINSTANCE gHinst = nullptr;
 
@@ -25,6 +27,10 @@ static void LaunchTabs() {
 
 static void LaunchLayout() {
     TestLayout(gHinst, SW_SHOW);
+}
+
+static void LaunchLice() {
+    TestLice(gHinst, SW_SHOW);
 }
 
 static ILayout* CreateMainLayout(HWND hwnd) {
@@ -47,6 +53,10 @@ static ILayout* CreateMainLayout(HWND hwnd) {
         vbox->addChild(l);
     }
 
+    {
+        auto [l, b] = CreateButtonLayout(hwnd, "Lice test", LaunchLice);
+        vbox->addChild(l);
+    }
     auto* padding = new Padding();
     padding->child = vbox;
     padding->insets = DefaultInsets();
