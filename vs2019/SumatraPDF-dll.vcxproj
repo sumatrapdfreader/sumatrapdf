@@ -1114,6 +1114,9 @@
     <ProjectReference Include="engines.vcxproj">
       <Project>{CE5B946A-3A3B-1306-4353-9EDCAFB17967}</Project>
     </ProjectReference>
+    <ProjectReference Include="wdl.vcxproj">
+      <Project>{6CBA880B-D8C3-887C-613F-9F7CCD47947C}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
