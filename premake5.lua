@@ -713,21 +713,3 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:d2d1.lib" }
     dependson { "PdfFilter", "PdfPreview" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
-
-  --[[
-  project "TestApp"
-    kind "WindowedApp"
-    language "C++"
-    cppdialect "C++latest"
-    entrypoint "WinMainCRTStartup"
-    flags { "NoManifest" }
-    includedirs { "src" }
-    test_app_files()
-    links {
-      "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
-      "version", "wininet", "d2d1.lib",
-    }
-    filter "platforms:x32_asan"
-      links { "clang_rt.asan-i386.lib" }
-    filter {}
-  --]]

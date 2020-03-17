@@ -1002,6 +1002,7 @@
     <ClInclude Include="..\src\mui\SvgPath.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\resource.h" />
+    <ClInclude Include="..\src\testcode\test-app.h" />
     <ClInclude Include="..\src\uia\DocumentProvider.h" />
     <ClInclude Include="..\src\uia\PageProvider.h" />
     <ClInclude Include="..\src\uia\Provider.h" />
@@ -1085,15 +1086,15 @@
     <ClCompile Include="..\src\mui\SvgPath.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\regress\Regress.cpp" />
+    <ClCompile Include="..\src\testcode\TestApp.cpp" />
+    <ClCompile Include="..\src\testcode\TestDirectDraw.cpp" />
+    <ClCompile Include="..\src\testcode\TestLayout.cpp" />
+    <ClCompile Include="..\src\testcode\TestTab.cpp" />
     <ClCompile Include="..\src\uia\DocumentProvider.cpp" />
     <ClCompile Include="..\src\uia\PageProvider.cpp" />
     <ClCompile Include="..\src\uia\Provider.cpp" />
     <ClCompile Include="..\src\uia\StartPageProvider.cpp" />
     <ClCompile Include="..\src\uia\TextRange.cpp" />
-    <ClCompile Include="..\tools\test-app\TestApp.cpp" />
-    <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp" />
-    <ClCompile Include="..\tools\test-app\TestLayout.cpp" />
-    <ClCompile Include="..\tools\test-app\TestTab.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc" />

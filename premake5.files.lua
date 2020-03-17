@@ -459,7 +459,7 @@ function sumatrapdf_files()
     "Tests.cpp",
     "regress/Regress.*",
   })
-  test_app_files_2()
+  test_app_files()
 end
 
 
@@ -976,47 +976,13 @@ function pdf_filter_files()
   filter {}
 end
 
-function test_app_files_2()
-  files_in_dir("tools/test-app", {
+function test_app_files()
+  files_in_dir("src/testcode", {
+    "test-app.h",
     "TestApp.cpp",
     "TestDirectDraw.cpp",
     "TestTab.cpp",
     "TestLayout.cpp",
-  })
-end
-
-function test_app_files()
-  files_in_dir("tools/test-app", {
-    "resource.h",
-    "small.ico",
-    "targetver.h",
-    "test-app.cpp",
-    "test-app.h",
-    "test-app.ico",
-    "test-app.rc",
-    "TestDirectDraw.cpp",
-    "TestTab.cpp",
-    "TestLayout.cpp",
-  })
-
-  files_in_dir("src/utils", {
-    "BaseUtil.*",
-    "ColorUtil.*",
-    "Dpi.*",
-    "FileUtil.*",
-    "Scoped.h",
-    "Log.*",
-    "StrconvUtil.*",
-    "StringViewUtil.*",
-    "StrUtil.*",
-    "StrUtil_win.cpp",
-    "WinDynCalls.*",
-    "WinUtil.*",
-  })
-
-  files_in_dir("src/wingui", {
-    "*.h",
-    "*.cpp",
   })
 end
 

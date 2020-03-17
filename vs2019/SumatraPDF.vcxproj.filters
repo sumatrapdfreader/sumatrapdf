@@ -16,14 +16,11 @@
     <Filter Include="src\regress">
       <UniqueIdentifier>{F7CE8947-6384-023D-EC78-FC13582DF940}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\testcode">
+      <UniqueIdentifier>{D744682D-C3A7-F7D1-6C2D-3088586FC354}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\uia">
       <UniqueIdentifier>{1B3F30A9-871E-AF44-9036-3A1BFC9415A6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="tools">
-      <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="tools\test-app">
-      <UniqueIdentifier>{933C0C81-7F0A-0087-689E-70AD540BDCEB}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -230,6 +227,9 @@
     </ClInclude>
     <ClInclude Include="..\src\resource.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\testcode\test-app.h">
+      <Filter>src\testcode</Filter>
     </ClInclude>
     <ClInclude Include="..\src\uia\DocumentProvider.h">
       <Filter>src\uia</Filter>
@@ -473,6 +473,18 @@
     <ClCompile Include="..\src\regress\Regress.cpp">
       <Filter>src\regress</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\testcode\TestApp.cpp">
+      <Filter>src\testcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\testcode\TestDirectDraw.cpp">
+      <Filter>src\testcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\testcode\TestLayout.cpp">
+      <Filter>src\testcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\testcode\TestTab.cpp">
+      <Filter>src\testcode</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\uia\DocumentProvider.cpp">
       <Filter>src\uia</Filter>
     </ClCompile>
@@ -487,18 +499,6 @@
     </ClCompile>
     <ClCompile Include="..\src\uia\TextRange.cpp">
       <Filter>src\uia</Filter>
-    </ClCompile>
-    <ClCompile Include="..\tools\test-app\TestApp.cpp">
-      <Filter>tools\test-app</Filter>
-    </ClCompile>
-    <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp">
-      <Filter>tools\test-app</Filter>
-    </ClCompile>
-    <ClCompile Include="..\tools\test-app\TestLayout.cpp">
-      <Filter>tools\test-app</Filter>
-    </ClCompile>
-    <ClCompile Include="..\tools\test-app\TestTab.cpp">
-      <Filter>tools\test-app</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
