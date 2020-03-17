@@ -41,7 +41,6 @@ Gdiplus::Color FromColor(COLORREF c);
 Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c);
 Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c);
 
-#if OS_WIN
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
 This adds equivalent functions that don't have this problem and ugly
 substitutions to make sure we don't use Get*Value() in the future */
@@ -49,6 +48,8 @@ BYTE GetRValueSafe(COLORREF rgb);
 BYTE GetGValueSafe(COLORREF rgb);
 BYTE GetBValueSafe(COLORREF rgb);
 
+// disabled because not compatible with wdl / lice
+#if 0
 #undef GetRValue
 #define GetRValue UseGetRValueSafeInstead
 #undef GetGValue

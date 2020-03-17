@@ -16,13 +16,13 @@
 
 #include "test-app.h"
 
+#include "lice/lice.h"
+
+static LICE_IBitmap *framebuffer;
+
 static HINSTANCE hInst;
 static const WCHAR* WIN_CLASS = L"LiceWndCls";
 static HWND g_hwnd = nullptr;
-static VBox* vboxLayout = nullptr;
-static ILayout* mainLayout = nullptr;
-static int currWinDx = 0;
-static int currWinDy = 0;
 
 #define COL_GRAY RGB(0xdd, 0xdd, 0xdd)
 #define COL_WHITE RGB(0xff, 0xff, 0xff)
@@ -30,8 +30,21 @@ static int currWinDy = 0;
 
 static void Draw(HWND hwnd, HDC hdc) {
     RECT rc = GetClientRect(hwnd);
-    AutoDeleteBrush brush(CreateSolidBrush(COL_GRAY));
-    FillRect(hdc, &rc, brush);
+  
+    int dx= RectDx(rc);
+    int dy = RectDy(rc);
+    if (!framebuffer->resize(dx, dy)) {
+      dbglog("framebuffer->resize failed\n");
+      AutoDeleteBrush brush(CreateSolidBrush(COL_GRAY));
+      FillRect(hdc, &rc, brush);
+      return;
+    }
+    auto bgCol = LICE_RGBA(63,63,63,255);
+    LICE_Clear(framebuffer, bgCol);
+
+    int x = rc.left;
+    int y = rc.top;
+    BitBlt(hdc, x, y, dx,dy, framebuffer->getDC(), 0, 0, SRCCOPY);
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -45,8 +58,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_SIZE: {
             RECT rect;
             GetClientRect(hwnd, &rect);
-            currWinDx = RectDx(rect);
-            currWinDy = RectDy(rect);
+            int currWinDx = RectDx(rect);
+            int currWinDy = RectDy(rect);
             dbglogf("WM_SIZE: wp: %d, (%d,%d)\n", (int)wp, currWinDx, currWinDy);
             //doMainLayout();
             return 0;
@@ -68,7 +81,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             HDC hdc = BeginPaint(hwnd, &ps);
             Draw(hwnd, hdc);
             EndPaint(hwnd, &ps);
-
             // ValidateRect(hwnd, NULL);
         } break;
         case WM_DESTROY:
@@ -123,6 +135,7 @@ static BOOL CreateMainWindow(HINSTANCE hInstance, int nCmdShow) {
 int TestLice(HINSTANCE hInstance, int nCmdShow) {
     RegisterWinClass(hInstance);
 
+    framebuffer = new LICE_SysBitmap(0,0);
     if (!CreateMainWindow(hInstance, nCmdShow)) {
         CrashAlwaysIf(true);
         return FALSE;

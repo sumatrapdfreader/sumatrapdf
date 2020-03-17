@@ -629,7 +629,7 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
-    includedirs { "src", "mupdf/include" }
+    includedirs { "src", "mupdf/include", "ext/WDL" }
 
     synctex_files()
     mui_files()
@@ -675,7 +675,7 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
-    includedirs { "src", "mupdf/include" }
+    includedirs { "src", "mupdf/include", "ext/WDL" }
 
     synctex_files()
     mui_files()

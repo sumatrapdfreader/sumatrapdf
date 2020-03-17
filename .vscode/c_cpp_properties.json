@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceRoot}/src",
                 "${workspaceRoot}/src/util",
-                "${workspaceRoot}/src/wingui"
+                "${workspaceRoot}/src/wingui",
+                "${workspaceRoot}/ext/WDL"
             ],
             "defines": [
                 "_DEBUG",
