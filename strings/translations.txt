@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-da76247580283216a5d1a3db75ebb4220be8f1c4
+3f209f18a4e8084b181c9def369a0f85948a24a4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3792,7 +3792,9 @@ de:Seite %s zu Favoriten hinzufügen\tStrg+B
 es:Añadir página %s a favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
 ga:Cuir leathanach %s leis na ceanáin\tCtrl+B
+he:הוסף את עמוד מס' %s למועדפים\tCtrl+B
 hr:Dodaj stranicu %s u favorite\tCtrl+B
+id:Tambah halaman %s ke favorit\tCtrl+B
 ja:ページ %s をお気に入りに追加\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
@@ -5426,7 +5428,9 @@ de:Alles zuklappen
 es:Ocultar Todo
 fr:Tout réduire
 ga:Laghdaigh Gach
+he:כווץ הכל
 hr:Sažmi sve
+id:Tutup Semua
 it:Comprimi tutto
 ja:すべて折り畳む
 lv:Sakļaut visu
@@ -8068,7 +8072,9 @@ de:Alles aufklappen
 es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
+he:הרחב הכל
 hr:Proširi sve
+id:Buka Semua
 it:Espandi tutto
 ja:すべて展開
 lv:Izvērst visu
@@ -11610,7 +11616,9 @@ de:Neues Fenster\tStrg+N
 es:Nueva &ventana\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
+he:חלון חדש\tCtrl+N
 hr:&Novi prozor\tCtrl+N
+id:&Jendela Baru\tCtrl+N
 ja:新しいウィンドウ (&W)\tCtrl+N
 lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
@@ -14819,7 +14827,9 @@ de:Anmerkungen speichern
 es:Guardar Notas
 fr:Sauvegarder les annotations
 ga:Taisc na Nótaí
+he:שמור אנוטציות
 hr:Spremi pribilješke
+id:Simpan Catatan
 ja:注釈を保存
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
@@ -15467,7 +15477,9 @@ de:Lesezeichen anzeigen\tF12
 es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
 ga:Taispeáin na &Leabharmharcanna\tF12
+he:הצג סימניות\tCtrl+F12
 hr:Prikaži &oznake\tF12
+id:Tampilkan &Markah\tF12
 ja:ブックマークを表示(&B)\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
@@ -15484,7 +15496,9 @@ de:&Favoriten anzeigen
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
+he:הצג מועדפים
 hr:Prikaži &favorite
+id:Tampilkan &Favorit
 ja:お気に入りを表示(&F)
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
@@ -15634,7 +15648,9 @@ de:Lesezeichen anzeigen\tF12
 es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
 ga:Taispeáin na Leabhar&mharcanna\tF12
+he:הצג סימניות\tF12
 hr:Prikaži oznake\tF12
+id:Tampilkan &Markah\tF12
 ja:ブックマークを表示 (&M)\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
@@ -15773,7 +15789,9 @@ de:Dokument-&Ordner öffnen
 es:Mostrar en &Carpeta
 fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
+he:פתח תיקייה מכילה...
 hr:Prikaži u mapi
+id:Tampilkan dalam &folder
 ja:フォルダを表示(&F)
 lv:Rādīt &mapē
 nl:Toon in &map
