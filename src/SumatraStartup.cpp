@@ -680,13 +680,13 @@ static void ShowInstallerHelp() {
 
     AutoFreeWstr msg = str::Format(
         L"%s installer options:\n\
-    [/s][/d <path>][/with-filter][/with-preview][/x]\n\
+    [-s][-d <path>][-with-filter][-with-preview][-x]\n\
     \n\
-    /s\tinstalls %s silently (without user interaction).\n\
-    /d\tchanges the directory where %s will be installed.\n\
-    /with-filter\tinstall search filter\n\
-    /with-preview\tinstall shell preview\n\
-    /x\tjust extracts the files contained within the installer.\n\
+    -s\tinstalls %s silently (without user interaction).\n\
+    -d\tchanges the directory where %s will be installed.\n\
+    -with-filter\tinstall search filter\n\
+    -with-preview\tinstall shell preview\n\
+    -x\tjust extracts the files contained within the installer.\n\
 ",
         appName, appName, appName);
     AutoFreeWstr caption = str::Join(appName, L" Installer Usage");
