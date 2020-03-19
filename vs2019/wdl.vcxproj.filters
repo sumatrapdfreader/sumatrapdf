@@ -4,6 +4,9 @@
     <Filter Include="lice">
       <UniqueIdentifier>{42149A7C-2E4B-9B0D-D737-8110C34D170F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tinyxml">
+      <UniqueIdentifier>{1ABD1BE2-869C-9A7D-8FB4-2554FB1201DF}</UniqueIdentifier>
+    </Filter>
     <Filter Include="wingui">
       <UniqueIdentifier>{D80B1F25-C4AD-49FB-AD68-5D4F99A9D04B}</UniqueIdentifier>
     </Filter>
@@ -26,6 +29,15 @@
     </ClInclude>
     <ClInclude Include="..\ext\WDL\lice\lice_text.h">
       <Filter>lice</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\WDL\tinyxml\libxml_tinyxml.h">
+      <Filter>tinyxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\WDL\tinyxml\tinystr.h">
+      <Filter>tinyxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\WDL\tinyxml\tinyxml.h">
+      <Filter>tinyxml</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\WDL\wingui\dlgitemborder.h">
       <Filter>wingui</Filter>
@@ -62,6 +74,9 @@
     <ClCompile Include="..\ext\WDL\lice\lice_line.cpp">
       <Filter>lice</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\WDL\lice\lice_lvg.cpp">
+      <Filter>lice</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\WDL\lice\lice_palette.cpp">
       <Filter>lice</Filter>
     </ClCompile>
@@ -73,6 +88,25 @@
     </ClCompile>
     <ClCompile Include="..\ext\WDL\lice\lice_textnew.cpp">
       <Filter>lice</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\WDL\projectcontext.cpp" />
+    <ClCompile Include="..\ext\WDL\tinyxml\libxml_tinyxml.cpp">
+      <Filter>tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\WDL\tinyxml\svgtiny_colors.c">
+      <Filter>tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\WDL\tinyxml\tinystr.cpp">
+      <Filter>tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\WDL\tinyxml\tinyxml.cpp">
+      <Filter>tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\WDL\tinyxml\tinyxmlerror.cpp">
+      <Filter>tinyxml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\WDL\tinyxml\tinyxmlparser.cpp">
+      <Filter>tinyxml</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\WDL\wingui\virtwnd-iaccessible.cpp">
       <Filter>wingui</Filter>

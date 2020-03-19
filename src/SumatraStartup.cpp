@@ -799,6 +799,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     Flags i;
     ParseCommandLine(GetCommandLineW(), i);
 
+    if (true) {
+        int TestLice(HINSTANCE hInstance, int nCmdShow);
+        retCode = TestLice(hInstance, nCmdShow);
+        goto Exit;
+    }
+
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (i.tester) {
             extern int TesterMain(); // in Tester.cpp

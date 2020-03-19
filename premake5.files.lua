@@ -988,6 +988,16 @@ function test_app_files()
 end
 
 function wdl_files()
+  files_in_dir("ext/WDL", {
+    "projectcontext.cpp",
+  })
+
+  files_in_dir("ext/WDL/tinyxml", {
+    "*.cpp",
+    "*.c",
+    "*.h",
+  })
+
   files_in_dir("ext/WDL/lice", {
     "lice.*",
     "lice_arc.cpp",
@@ -1007,7 +1017,7 @@ function wdl_files()
     -- "lice_jpg_write.cpp",
     -- "lice_lcf.*",
     "lice_line.cpp",
-    -- "lice_lvg.cpp",
+    "lice_lvg.cpp",
     "lice_palette.cpp",
     -- "lice_pcx.cpp",
     -- "lice_png.cpp",
