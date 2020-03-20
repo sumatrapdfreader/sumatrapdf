@@ -1265,34 +1265,29 @@ void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
 
         if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
             dbglogf("found file attachment annotation\n");
-            // TODO: write a program for mass processing of files to find pdfs
-            // with wanted features for testing
-            pdf_obj* file_spec = pdf_dict_gets(ctx, annot->obj, "FS");
-            pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
-            char* file = pdf_parse_file_spec(ctx, doc, file_spec, nullptr);
-            dbglogf("attachement: %s\n", file);
-            // TODO: not sure if I need embedded, maybe <file> is enough to
-            pdf_obj* embedded = pdf_dict_getsa(ctx, pdf_dict_gets(ctx, file_spec, "EF"), "DOS", "F");
-            fz_rect rect = pdf_annot_rect(ctx, annot);
 
-            if (file && embedded && !fz_is_empty_rect(rect)) {
-                PageElement* el = new PageElement();
-                el->kind = kindPageElementDest;
-                el->pageNo = pageNo;
-                el->rect = fz_rect_to_RectD(rect);
-                el->dest = new PageDestination();
-                el->dest->kind = kindDestinationLaunchEmbedded;
-                el->dest->value = strconv::Utf8ToWstr(file);
-                el->dest->pageNo = pageNo;
-                comments.Append(el);
-                // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-                // for saving the attachment to a file
-                // TODO: expose /Contents in addition to the file path
-            } else if (!isContentsEmpty) {
-                dbglogf("attachment with no file but with content: '%s'\n", contents);
-                // TODO: fix me
-                // annots.Append(annot);
+            pdf_obj* fs = pdf_dict_get(ctx, annot->obj, PDF_NAME(FS));
+            const char* attname = pdf_embedded_file_name(ctx, fs);
+            fz_rect rect = pdf_annot_rect(ctx, annot);
+            if (str::IsEmpty(attname) || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
+                continue;
             }
+
+            dbglogf("attachement: %s\n", attname);
+
+            PageElement* el = new PageElement();
+            el->kind = kindPageElementDest;
+            el->pageNo = pageNo;
+            el->rect = fz_rect_to_RectD(rect);
+            el->value = strconv::Utf8ToWstr(attname);
+            el->dest = new PageDestination();
+            el->dest->kind = kindDestinationLaunchEmbedded;
+            el->dest->value = strconv::Utf8ToWstr(attname);
+            el->dest->pageNo = pageNo;
+            comments.Append(el);
+            // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+            // for saving the attachment to a file
+            // TODO: expose /Contents in addition to the file path
             continue;
         }
 

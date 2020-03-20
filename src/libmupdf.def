@@ -76,6 +76,8 @@ EXPORTS
 	pdf_add_object
 	pdf_flatten_inheritable_page_items
 	fz_resolve_link
+	pdf_is_embedded_file
+	pdf_embedded_file_name
 
 	fz_keep_bitmap
 	fz_drop_bitmap
