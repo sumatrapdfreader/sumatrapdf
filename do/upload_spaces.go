@@ -210,9 +210,13 @@ func spacesUploadBuildMust(buildType string) {
 func extractVersionFromName(s string) int {
 	parts := strings.Split(s, "/")
 	name := parts[len(parts)-1]
+	// TODO: eventually we'll only need prerel- as prerelease-
+	// is older naming
 	name = strings.TrimPrefix(name, "SumatraPDF-prerelease-")
+	name = strings.TrimPrefix(name, "SumatraPDF-prerel-")
 
 	name = strings.TrimPrefix(name, "RAMicro-prerelease-")
+	name = strings.TrimPrefix(name, "RAMicro-prerel-")
 
 	// TODO: temporary, for old builds in s3
 	name = strings.TrimPrefix(name, "SumatraPDF-prerelase-")
@@ -226,7 +230,12 @@ func extractVersionFromName(s string) int {
 	parts = strings.Split(parts[0], ".")
 	verStr := parts[0]
 	ver, err := strconv.Atoi(verStr)
-	panicIf(err != nil, "extractVersionFromName: '%s'\n", s)
+	if err != nil {
+		// TODO: temporary, for builds uploaded with bad names
+		//
+		return 1
+	}
+	//panicIf(err != nil, "extractVersionFromName: '%s', err='%s'\n", s, err)
 	return ver
 }
 
