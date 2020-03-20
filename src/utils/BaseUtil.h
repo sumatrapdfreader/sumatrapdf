@@ -220,11 +220,11 @@ inline void CrashMe() {
 // in some builds, so it shouldn't contain the actual logic of the code
 
 inline void CrashIfFunc(bool cond) {
-    UNUSED(cond);
-#if defined(PRE_RELEASE_VER) || defined(DEBUG)
-    if (cond) {
-        CrashMe();
+    if (!cond) {
+        return;
     }
+#if defined(PRE_RELEASE_VER) || defined(DEBUG)
+    CrashMe();
 #endif
 }
 
@@ -234,22 +234,22 @@ inline void CrashIfFunc(bool cond) {
 extern void SendCrashReport(const char*);
 
 inline void SendCrashIfFunc(bool cond, const char* condStr) {
-    UNUSED(cond);
+    if (!cond) {
+        return;
+    }
     UNUSED(condStr);
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
-    if (cond) {
-        SendCrashReport(condStr);
-    }
+    SendCrashReport(condStr);
 #endif
 }
 
 // Sometimes we want to assert only in debug build (not in pre-release)
 inline void DebugCrashIfFunc(bool cond) {
-    UNUSED(cond);
-#if defined(DEBUG)
-    if (cond) {
-        CrashMe();
+    if (!cond) {
+        return;
     }
+#if defined(DEBUG)
+    CrashMe();
 #endif
 }
 

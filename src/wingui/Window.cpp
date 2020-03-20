@@ -563,6 +563,7 @@ bool WindowBase::Create() {
     }
     HMENU m = (HMENU)(UINT_PTR)ctrlID;
     hwnd = CreateWindowExW(dwExStyle, winClass, L"", dwStyle, x, y, dx, dy, parent, m, h, nullptr);
+    CrashIf(!hwnd);
 
     if (hwnd == nullptr) {
         return false;
