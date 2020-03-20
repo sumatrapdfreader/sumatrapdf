@@ -25,7 +25,7 @@ func buildDaily() {
 	createManifestMust()
 
 	dstDir := filepath.Join("out", "final-daily")
-	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
+	prefix := fmt.Sprintf("SumatraPDF-prerel-%s", ver)
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
 	copyBuiltManifest(dstDir, prefix)
 }

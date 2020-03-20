@@ -93,10 +93,17 @@ static void Draw(HWND hwnd, HDC hdc) {
       FillRect(hdc, &rc, brush);
       return;
     }
-    auto bgCol = LICE_RGBA(0xa3, 0xa3, 0xa3, 255);
+    auto bgCol = LICE_RGBA(0xc3, 0xc3, 0xc3, 255);
     LICE_Clear(framebuffer, bgCol);
 
-    LICE_IBitmap* bmp = LICE_RenderLVG(gLvg, 100, 100, nullptr);
+#if 1
+    LICE_IBitmap* bmpDest = new LICE_SubBitmap(framebuffer, 0, 0, 100, 100);
+    // TODO: to avoid black background, need to modify lvgImageCtx::render()
+    // and remove LICE_Clear
+    LICE_RenderLVG(gLvg, 100, 100, bmpDest);
+#else
+    auto bm = LICE_RenderLVG(gLvg, 100, 100, nullptr);
+    // alternative that renders to a temp bitmap
     RECT srcRect = { 0, 0, 100, 100 };
     int mode = LICE_BLIT_MODE_COPY | LICE_BLIT_USE_ALPHA;
     LICE_Blit(framebuffer, bmp, 10, 10, &srcRect, 1.f, mode);
@@ -105,6 +112,7 @@ static void Draw(HWND hwnd, HDC hdc) {
         //mode = LICE_BLIT_MODE_COPY;
         LICE_Blit(framebuffer, gSvgPrinter, 120, 120, &srcRect, 1.f, mode);
     }
+#endif
     
     int x = rc.left;
     int y = rc.top;
