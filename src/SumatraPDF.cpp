@@ -4336,23 +4336,27 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_GOTO_NEXT_PAGE:
-            if (win->IsDocLoaded())
+            if (win->IsDocLoaded()) {
                 ctrl->GoToNextPage();
+            }
             break;
 
         case IDM_GOTO_PREV_PAGE:
-            if (win->IsDocLoaded())
+            if (win->IsDocLoaded()) {
                 ctrl->GoToPrevPage();
+            }
             break;
 
         case IDM_GOTO_FIRST_PAGE:
-            if (win->IsDocLoaded())
+            if (win->IsDocLoaded()) {
                 ctrl->GoToFirstPage();
+            }
             break;
 
         case IDM_GOTO_LAST_PAGE:
-            if (win->IsDocLoaded())
+            if (win->IsDocLoaded()) {
                 ctrl->GoToLastPage();
+            }
             break;
 
         case IDM_GOTO_PAGE:
@@ -4368,8 +4372,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_ROTATE_LEFT:
-            if (win->AsFixed())
+            if (win->AsFixed()) {
                 win->AsFixed()->RotateBy(-90);
+            }
             break;
 
         case IDM_VIEW_ROTATE_RIGHT:
@@ -4484,16 +4489,17 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_COPY_SELECTION:
             // Don't break the shortcut for text boxes
-            if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox))
+            if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
                 SendMessage(GetFocus(), WM_COPY, 0, 0);
-            else if (!HasPermission(Perm_CopySelection))
+            } else if (!HasPermission(Perm_CopySelection)) {
                 break;
-            else if (win->AsChm())
+            } else if (win->AsChm()) {
                 win->AsChm()->CopySelection();
-            else if (win->currentTab && win->currentTab->selectionOnPage)
+            } else if (win->currentTab && win->currentTab->selectionOnPage) {
                 CopySelectionToClipboard(win);
-            else if (win->AsFixed())
+            } else if (win->AsFixed()) {
                 win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
+            }
             break;
 
         case IDM_SELECT_ALL:
@@ -4517,13 +4523,15 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             DownloadDebugSymbols();
             break;
 
-        case IDM_DEBUG_MUI:
+        case IDM_DEBUG_MUI: {
             mui::SetDebugPaint(!mui::IsDebugPaint());
-            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !mui::IsDebugPaint());
-            for (size_t i = 0; i < gWindows.size(); i++) {
-                gWindows.at(i)->RedrawAll(true);
+            bool isChecked = !mui::IsDebugPaint();
+            HMENU m = GetMenu(win->hwndFrame);
+            win::menu::SetChecked(m, IDM_DEBUG_MUI, isChecked);
+            for (auto& w : gWindows) {
+                w->RedrawAll(true);
             }
-            break;
+        } break;
 
         case IDM_DEBUG_ANNOTATION:
             FrameOnChar(win, 'h');
