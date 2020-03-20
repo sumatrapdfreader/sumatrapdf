@@ -799,7 +799,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     Flags i;
     ParseCommandLine(GetCommandLineW(), i);
 
-    if (true) {
+    if (false && gIsDebugBuild) {
         int TestLice(HINSTANCE hInstance, int nCmdShow);
         retCode = TestLice(hInstance, nCmdShow);
         goto Exit;
