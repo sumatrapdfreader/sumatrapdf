@@ -44,12 +44,12 @@ func createSumatraLatestJs(buildType string) string {
 	var appName string
 	switch buildType {
 	case buildTypePreRel, buildTypeDaily:
-		appName = "SumatraPDF-prerelease"
+		appName = "SumatraPDF-prerel"
 	case buildTypeRel:
 		appName = "SumatraPDF"
 	case buildTypeRaMicro:
 		// must match name in spacesUploadBuildMust
-		appName = "RAMicro-prerelease"
+		appName = "RAMicro-prerel"
 	default:
 		panicIf(true, "invalid buildType '%s'", buildType)
 	}
@@ -58,23 +58,22 @@ func createSumatraLatestJs(buildType string) string {
 	tmplText := `
 var sumLatestVer = {{.Ver}};
 var sumBuiltOn = "{{.CurrDate}}";
-var sumLatestName = "{{.AppName}}-{{.Ver}}.exe";
+var sumLatestName = "{{.Prefix}}.exe";
 
-var sumLatestExe         = "{{.Host}}/{{.AppName}}-{{.Ver}}.exe";
-var sumLatestExeZip      = "{{.Host}}/{{.AppName}}-{{.Ver}}.zip";
-var sumLatestPdb         = "{{.Host}}/{{.AppName}}-{{.Ver}}.pdb.zip";
-var sumLatestInstaller   = "{{.Host}}/{{.AppName}}-{{.Ver}}-install.exe";
+var sumLatestExe         = "{{.Host}}/{{.Prefix}}.exe";
+var sumLatestExeZip      = "{{.Host}}/{{.Prefix}}.zip";
+var sumLatestPdb         = "{{.Host}}/{{.Prefix}}.pdb.zip";
+var sumLatestInstaller   = "{{.Host}}/{{.Prefix}}-install.exe";
 
-var sumLatestExe64       = "{{.Host}}/{{.AppName}}-{{.Ver}}-64.exe";
-var sumLatestExeZip64    = "{{.Host}}/{{.AppName}}-{{.Ver}}-64.zip";
-var sumLatestPdb64       = "{{.Host}}/{{.AppName}}-{{.Ver}}-64.pdb.zip";
-var sumLatestInstaller64 = "{{.Host}}/{{.AppName}}-{{.Ver}}-64-install.exe";
+var sumLatestExe64       = "{{.Host}}/{{.Prefix}}-64.exe";
+var sumLatestExeZip64    = "{{.Host}}/{{.Prefix}}-64.zip";
+var sumLatestPdb64       = "{{.Host}}/{{.Prefix}}-64.pdb.zip";
+var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 `
 	d := map[string]interface{}{
 		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType,
-		"Ver":      getVerForBuildType(buildType),
 		"CurrDate": currDate,
-		"AppName":  appName,
+		"Prefix":   appName + "-" + getVerForBuildType(buildType),
 	}
 	return execTextTemplate(tmplText, d)
 }

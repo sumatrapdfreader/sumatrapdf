@@ -35,14 +35,14 @@ func buildPreRelease() {
 	createManifestMust()
 
 	dstDir := filepath.Join("out", "final-prerel")
-	prefix := fmt.Sprintf("SumatraPDF-%s", sumatraVersion)
+	prefix := fmt.Sprintf("SumatraPDF-prerel-%s", ver)
 	copyBuiltFiles(dstDir, rel32Dir, prefix)
 	copyBuiltFiles(dstDir, rel64Dir, prefix+"-64")
 	copyBuiltManifest(dstDir, prefix)
 
 	// note: manifest won't be for the right files but we don't care
 	dstDir = filepath.Join("out", "final-ramicro")
-	prefix = fmt.Sprintf("RAMicroPDFViewer-prerelease-%s", ver)
+	prefix = fmt.Sprintf("RAMicroPDFViewer-prerel-%s", ver)
 	copyBuiltFiles(dstDir, rel64RaDir, prefix+"-64")
 	copyBuiltManifest(dstDir, prefix)
 }
