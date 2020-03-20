@@ -1034,7 +1034,7 @@ int RunInstaller(Flags* cli) {
         return RunInstallerRaMicro();
     }
 
-    if (!IsProcessAndOsArchSame()) {
+    if (!gCli->silent && !IsProcessAndOsArchSame()) {
         logf("Mismatch of the OS and executable arch\n");
         char* msg =
             "You're installing 32-bit SumatraPDF on 64-bit OS. Are you sure?\nPress 'Ok' to proceed.\nPress 'Cancel' "
