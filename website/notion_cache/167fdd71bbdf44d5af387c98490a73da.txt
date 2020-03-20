@@ -1,4 +1,4 @@
-1511 1584307435815 httpcache-v1
+1561 1584666330550 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
@@ -10,7 +10,7 @@ Body:+110
     }
   ]
 }
-Response:+1311
+Response:+1361
 {
   "results": [
     {
@@ -26,6 +26,7 @@ Response:+1311
           "de88d91f-017c-45b1-8254-df358cd6f3ac",
           "2e328add-846a-4c13-becd-c7c7e1608888",
           "aa448682-e1e4-47b9-afb6-816dd82845be",
+          "2e89d56b-34c8-4291-b6ce-ccd8f634f729",
           "2ae0bf61-734d-4bc6-8cfc-be161a1b5e47"
         ],
         "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
@@ -38,7 +39,7 @@ Response:+1311
         "id": "167fdd71-bbdf-44d5-af38-7c98490a73da",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1584307200000,
+        "last_edited_time": 1584666180000,
         "parent_id": "f5e37f44-d0d3-4149-94fd-dddad95e5462",
         "parent_table": "block",
         "properties": {
@@ -49,12 +50,12 @@ Response:+1311
           ]
         },
         "type": "page",
-        "version": 70
+        "version": 74
       }
     }
   ]
 }
-42325 1584307435816 httpcache-v1
+43111 1584666330551 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -67,7 +68,7 @@ Body:+152
   "pageId": "167fdd71-bbdf-44d5-af38-7c98490a73da",
   "verticalColumns": false
 }
-Response:+42084
+Response:+42870
 {
   "cursor": {
     "stack": []
@@ -87,6 +88,7 @@ Response:+42084
             "de88d91f-017c-45b1-8254-df358cd6f3ac",
             "2e328add-846a-4c13-becd-c7c7e1608888",
             "aa448682-e1e4-47b9-afb6-816dd82845be",
+            "2e89d56b-34c8-4291-b6ce-ccd8f634f729",
             "2ae0bf61-734d-4bc6-8cfc-be161a1b5e47"
           ],
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
@@ -99,7 +101,7 @@ Response:+42084
           "id": "167fdd71-bbdf-44d5-af38-7c98490a73da",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584307200000,
+          "last_edited_time": 1584666180000,
           "parent_id": "f5e37f44-d0d3-4149-94fd-dddad95e5462",
           "parent_table": "block",
           "properties": {
@@ -110,7 +112,7 @@ Response:+42084
             ]
           },
           "type": "page",
-          "version": 70
+          "version": 74
         }
       },
       "2ae0bf61-734d-4bc6-8cfc-be161a1b5e47": {
@@ -152,6 +154,36 @@ Response:+42084
           },
           "type": "bulleted_list",
           "version": 100
+        }
+      },
+      "2e89d56b-34c8-4291-b6ce-ccd8f634f729": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1584666180000,
+          "id": "2e89d56b-34c8-4291-b6ce-ccd8f634f729",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1584666180000,
+          "parent_id": "167fdd71-bbdf-44d5-af38-7c98490a73da",
+          "parent_table": "block",
+          "properties": {
+            "title": [
+              [
+                "https://www.sumatrapdfreader.org/download-prev.html",
+                [
+                  [
+                    "a",
+                    "https://www.sumatrapdfreader.org/download-prev.html"
+                  ]
+                ]
+              ]
+            ]
+          },
+          "type": "text",
+          "version": 18
         }
       },
       "2f449892-29f0-4b75-aea4-81793b96aeb8": {
@@ -466,27 +498,18 @@ Response:+42084
           "id": "aa448682-e1e4-47b9-afb6-816dd82845be",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584173040000,
+          "last_edited_time": 1584666180000,
           "parent_id": "167fdd71-bbdf-44d5-af38-7c98490a73da",
           "parent_table": "block",
           "properties": {
             "title": [
               [
                 "This release no longer supports Windows XP. Latest version that support XP is 3.1.2 that you can download from "
-              ],
-              [
-                "https://www.sumatrapdfreader.org/download-prev.html",
-                [
-                  [
-                    "a",
-                    "https://www.sumatrapdfreader.org/download-prev.html"
-                  ]
-                ]
               ]
             ]
           },
           "type": "text",
-          "version": 127
+          "version": 129
         }
       },
       "bc07d65f-d2ac-491e-893c-df0f964d27dc": {
@@ -957,7 +980,7 @@ Response:+42084
           "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584307020000,
+          "last_edited_time": 1584666240000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -968,7 +991,7 @@ Response:+42084
             ]
           },
           "type": "page",
-          "version": 400
+          "version": 401
         }
       },
       "fed36a56-24d4-43fe-9f7b-e0e410ecd715": {
@@ -1043,7 +1066,7 @@ Response:+42084
           "mobile_onboarding_completed": true,
           "onboarding_completed": true,
           "profile_photo": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/2dcaa66c-7674-4ff6-9924-601785b63561/head-bw-640x960.png",
-          "version": 288
+          "version": 290
         }
       }
     },
@@ -1094,7 +1117,7 @@ Response:+42084
     }
   }
 }
-31931 1584307435817 httpcache-v1
+31931 1584666330551 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1606
@@ -1997,7 +2020,7 @@ Response:+30233
     }
   ]
 }
-25881 1584307435817 httpcache-v1
+25881 1584666330552 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1430
