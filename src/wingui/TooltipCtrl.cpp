@@ -18,6 +18,8 @@ TooltipCtrl::TooltipCtrl(HWND p) : WindowBase(p) {
     dwExStyle = WS_EX_TOPMOST;
     dwStyle = WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
     winClass = TOOLTIPS_CLASS;
+    // CreateWindow() for tooltip fails if this is not 0
+    ctrlID = 0;
 }
 
 TooltipCtrl::~TooltipCtrl() {
