@@ -286,6 +286,9 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter) {
                 continue;
             }
         }
+        if (md.flags & flagFilter) {
+            continue;
+        }
 
         if (!HasPermission(md.flags >> PERM_FLAG_OFFSET)) {
             continue;
