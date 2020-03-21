@@ -78,6 +78,7 @@ EXPORTS
 	fz_resolve_link
 	pdf_is_embedded_file
 	pdf_embedded_file_name
+	fz_new_image_from_svg
 
 	fz_keep_bitmap
 	fz_drop_bitmap

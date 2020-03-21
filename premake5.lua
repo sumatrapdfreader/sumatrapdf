@@ -428,6 +428,7 @@ workspace "SumatraPDF"
     kind "SharedLib"
     language "C"
     disablewarnings { "4206", "4702" }
+    defines { "FZ_ENABLE_SVG" }
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
     files { "src/libmupdf.rc", "src/no_op_for_premake.cpp" }
@@ -451,6 +452,7 @@ workspace "SumatraPDF"
     optimize "On"
     undefines { "DEBUG" }
     defines { "NDEBUG" }
+    defines { "FZ_ENABLE_SVG" }
 
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
