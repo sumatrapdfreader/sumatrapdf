@@ -70,10 +70,12 @@ var sumLatestExeZip64    = "{{.Host}}/{{.Prefix}}-64.zip";
 var sumLatestPdb64       = "{{.Host}}/{{.Prefix}}-64.pdb.zip";
 var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 `
+	ver := getVerForBuildType(buildType)
 	d := map[string]interface{}{
 		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType,
+		"Ver":      ver,
 		"CurrDate": currDate,
-		"Prefix":   appName + "-" + getVerForBuildType(buildType),
+		"Prefix":   appName + "-" + ver,
 	}
 	return execTextTemplate(tmplText, d)
 }
