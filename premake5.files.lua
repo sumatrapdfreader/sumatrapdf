@@ -441,6 +441,7 @@ function sumatrapdf_files()
     "SumatraDialogs.*",
     "SumatraProperties.*",
     "StressTesting.*",
+    "SvgIcons.*",
     "TabInfo.*",
     "TableOfContents.*",
     "Tabs.*",

@@ -144,6 +144,9 @@
     <ClInclude Include="..\src\SumatraProperties.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SvgIcons.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\TabInfo.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -378,6 +381,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SumatraStartup.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SvgIcons.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TabInfo.cpp">

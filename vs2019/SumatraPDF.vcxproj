@@ -929,6 +929,7 @@
     <ClInclude Include="..\src\SumatraDialogs.h" />
     <ClInclude Include="..\src\SumatraPDF.h" />
     <ClInclude Include="..\src\SumatraProperties.h" />
+    <ClInclude Include="..\src\SvgIcons.h" />
     <ClInclude Include="..\src\TabInfo.h" />
     <ClInclude Include="..\src\TableOfContents.h" />
     <ClInclude Include="..\src\Tabs.h" />
@@ -1009,6 +1010,7 @@
     <ClCompile Include="..\src\SumatraPDF.cpp" />
     <ClCompile Include="..\src\SumatraProperties.cpp" />
     <ClCompile Include="..\src\SumatraStartup.cpp" />
+    <ClCompile Include="..\src\SvgIcons.cpp" />
     <ClCompile Include="..\src\TabInfo.cpp" />
     <ClCompile Include="..\src\TableOfContents.cpp" />
     <ClCompile Include="..\src\Tabs.cpp" />
