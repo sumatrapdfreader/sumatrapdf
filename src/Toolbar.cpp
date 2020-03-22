@@ -640,7 +640,8 @@ void CreateToolbar(WindowInfo* win) {
     if (useSvg) {
         // TODO: bitmap is skewed for dxDpi of 20, 24 etc.
         int dxDpi = 16;
-        int dx = (dxDpi * dpi) / 96;
+        int scale = (int)ceilf((float)dpi / 96.f);
+        int dx = dxDpi * scale;
         size.dx = dx;
         size.dy = dx;
         hbmp = BuildIconsBitmap(dx, dx);
