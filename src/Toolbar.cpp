@@ -88,12 +88,14 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
     int cmdId = gToolbarButtons[buttonNo].cmdId;
 
     // If restricted, disable
-    if (!HasPermission(gToolbarButtons[buttonNo].flags >> PERM_FLAG_OFFSET))
+    if (!HasPermission(gToolbarButtons[buttonNo].flags >> PERM_FLAG_OFFSET)) {
         return false;
+    }
 
     // If no file open, only enable open button
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return IDM_OPEN == cmdId;
+    }
 
     switch (cmdId) {
         case IDM_OPEN:
@@ -151,12 +153,13 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win) {
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         WPARAM buttonId = (WPARAM)i;
         const char* txt = gToolbarButtons[i].toolTip;
-        if (nullptr == txt)
+        if (nullptr == txt) {
             continue;
+        }
         const WCHAR* translation = trans::GetTranslation(txt);
         BuildTBBUTTONINFO(buttonInfo, translation);
         res = SendMessage(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)&buttonInfo);
-        AssertCrash(0 != res);
+        CrashIf(0 == res);
     }
 }
 
@@ -164,33 +167,39 @@ void ToolbarUpdateStateForWindow(WindowInfo* win, bool showHide) {
     const LPARAM enabled = (LPARAM)MAKELONG(1, 0);
     const LPARAM disabled = (LPARAM)MAKELONG(0, 0);
 
+    HWND hwnd = win->hwndToolbar;
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
+        auto& tb = gToolbarButtons[i];
         if (showHide) {
             BOOL hide = !IsVisibleToolbarButton(win, i);
-            SendMessage(win->hwndToolbar, TB_HIDEBUTTON, gToolbarButtons[i].cmdId, hide);
+            SendMessage(hwnd, TB_HIDEBUTTON, tb.cmdId, hide);
         }
-        if (TbIsSeparator(gToolbarButtons[i]))
+        if (TbIsSeparator(tb)) {
             continue;
+        }
 
         LPARAM buttonState = IsToolbarButtonEnabled(win, i) ? enabled : disabled;
-        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, gToolbarButtons[i].cmdId, buttonState);
+        SendMessage(hwnd, TB_ENABLEBUTTON, tb.cmdId, buttonState);
     }
 
     // Find labels may have to be repositioned if some
     // toolbar buttons were shown/hidden
-    if (showHide && NeedsFindUI(win))
+    if (showHide && NeedsFindUI(win)) {
         UpdateToolbarFindText(win);
+    }
 }
 
 void ShowOrHideToolbar(WindowInfo* win) {
-    if (win->presentation || win->isFullScreen)
+    if (win->presentation || win->isFullScreen) {
         return;
+    }
     if (gGlobalPrefs->showToolbar && !win->AsEbook()) {
         ShowWindow(win->hwndReBar, SW_SHOW);
     } else {
         // Move the focus out of the toolbar
-        if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox))
+        if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
             SetFocus(win->hwndFrame);
+        }
         ShowWindow(win->hwndReBar, SW_HIDE);
     }
     RelayoutWindow(win);
@@ -214,14 +223,14 @@ void UpdateFindbox(WindowInfo* win) {
 
 static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR* fileName, INT resourceId, bool useDibSection) {
     AutoFreeWstr path(AppGenDataFilename(fileName));
-
     UINT flags = useDibSection ? LR_CREATEDIBSECTION : 0;
     if (path) {
-        HBITMAP hBmp = (HBITMAP)LoadImage(nullptr, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | flags);
-        if (hBmp)
+        HBITMAP hBmp = (HBITMAP)LoadImageW(nullptr, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | flags);
+        if (hBmp) {
             return hBmp;
+        }
     }
-    return (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0, 0, flags);
+    return (HBITMAP)LoadImageW(hInst, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0, 0, flags);
 }
 
 static WNDPROC DefWndProcToolbar = nullptr;
@@ -259,18 +268,20 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
 static WNDPROC DefWndProcFindBox = nullptr;
 static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    if (!win || !win->IsDocLoaded())
+    if (!win || !win->IsDocLoaded()) {
         return DefWindowProc(hwnd, message, wParam, lParam);
+    }
 
     if (ExtendedEditWndProc(hwnd, message, wParam, lParam)) {
         // select the whole find box on a non-selecting click
     } else if (WM_CHAR == message) {
         switch (wParam) {
             case VK_ESCAPE:
-                if (win->findThread)
+                if (win->findThread) {
                     AbortFinding(win, false);
-                else
+                } else {
                     SetFocus(win->hwndFrame);
+                }
                 return 1;
 
             case VK_RETURN: {
@@ -294,8 +305,9 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             Edit_SetRectNoPaint(hwnd, &r);
         }
     } else if (WM_KEYDOWN == message) {
-        if (FrameOnKeydown(win, wParam, lParam, true))
+        if (FrameOnKeydown(win, wParam, lParam, true)) {
             return 0;
+        }
     }
 
     LRESULT ret = CallWindowProc(DefWndProcFindBox, hwnd, message, wParam, lParam);
@@ -315,8 +327,9 @@ void UpdateToolbarFindText(WindowInfo* win) {
     win::SetVisibility(win->hwndFindText, showUI);
     win::SetVisibility(win->hwndFindBg, showUI);
     win::SetVisibility(win->hwndFindBox, showUI);
-    if (!showUI)
+    if (!showUI) {
         return;
+    }
 
     const WCHAR* text = _TR("Find:");
     win::SetText(win->hwndFindText, text);
@@ -345,28 +358,34 @@ void UpdateToolbarFindText(WindowInfo* win) {
 }
 
 void UpdateToolbarState(WindowInfo* win) {
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return;
-
-    WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
-    if (win->ctrl->GetDisplayMode() == DM_CONTINUOUS && win->ctrl->GetZoomVirtual() == ZOOM_FIT_WIDTH)
+    }
+    HWND hwnd = win->hwndToolbar;
+    WORD state = (WORD)SendMessage(hwnd, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
+    DisplayMode dm = win->ctrl->GetDisplayMode();
+    float zoomVirtual = win->ctrl->GetZoomVirtual();
+    if (dm == DM_CONTINUOUS && zoomVirtual == ZOOM_FIT_WIDTH) {
         state |= TBSTATE_CHECKED;
-    else
+    } else {
         state &= ~TBSTATE_CHECKED;
-    SendMessage(win->hwndToolbar, TB_SETSTATE, IDT_VIEW_FIT_WIDTH, state);
+    }
+    SendMessage(hwnd, TB_SETSTATE, IDT_VIEW_FIT_WIDTH, state);
 
     bool isChecked = (state & TBSTATE_CHECKED);
 
-    state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
-    if (win->ctrl->GetDisplayMode() == DM_SINGLE_PAGE && win->ctrl->GetZoomVirtual() == ZOOM_FIT_PAGE)
+    state = (WORD)SendMessage(hwnd, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
+    if (dm == DM_SINGLE_PAGE && zoomVirtual == ZOOM_FIT_PAGE) {
         state |= TBSTATE_CHECKED;
-    else
+    } else {
         state &= ~TBSTATE_CHECKED;
-    SendMessage(win->hwndToolbar, TB_SETSTATE, IDT_VIEW_FIT_PAGE, state);
+    }
+    SendMessage(hwnd, TB_SETSTATE, IDT_VIEW_FIT_PAGE, state);
 
     isChecked |= (state & TBSTATE_CHECKED);
-    if (!isChecked)
+    if (!isChecked) {
         win->currentTab->prevZoomVirtual = INVALID_ZOOM;
+    }
 }
 
 #define TOOLBAR_MIN_ICON_SIZE 16
@@ -585,9 +604,30 @@ static bool UseDibSection(bool needsScaling) {
     return true;
 }
 
+#include "SvgIcons.h"
+#include "utils/LogDbg.h"
+
+void LogBitmapInfo(HBITMAP hbmp) {
+    BITMAP bmpInfo;
+    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
+#if 0
+    LONG bmType;
+    LONG bmWidth;
+    LONG bmHeight;
+    LONG bmWidthBytes;
+    WORD bmPlanes;
+    WORD bmBitsPixel;
+    LPVOID bmBits;
+#endif
+    dbglogf("dx: %d, dy: %d, stride: %d, bitsPerPixel: %d\n", (int)bmpInfo.bmWidth, (int)bmpInfo.bmHeight,
+            (int)bmpInfo.bmWidthBytes, (int)bmpInfo.bmBitsPixel);
+}
+
 void CreateToolbar(WindowInfo* win) {
-    HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, nullptr, WS_TOOLBAR, 0, 0, 0, 0, win->hwndFrame,
-                                      (HMENU)IDC_TOOLBAR, GetModuleHandle(nullptr), nullptr);
+    HINSTANCE hinst = GetModuleHandle(nullptr);
+    HWND hwndParnt = win->hwndFrame;
+    HWND hwndToolbar = CreateWindowExW(0, TOOLBARCLASSNAME, nullptr, WS_TOOLBAR, 0, 0, 0, 0, hwndParnt,
+                                       (HMENU)IDC_TOOLBAR, hinst, nullptr);
     win->hwndToolbar = hwndToolbar;
     SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
@@ -598,32 +638,51 @@ void CreateToolbar(WindowInfo* win) {
     // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
 
     int dpi = DpiGet(win->hwndFrame);
-    // scale toolbar images only by integral sizes (2, 3 etc.)
-    int scaleX = (int)ceilf((float)dpi / 96.f);
-    int scaleY = (int)ceilf((float)dpi / 96.f);
-    bool needsScaling = (scaleX > 1) || (scaleY > 1);
 
-    bool useDibSection = UseDibSection(needsScaling);
+    HBITMAP hbmp = nullptr;
+    bool useSvg = false;
 
-    // the name of the bitmap contains the number of icons so that after adding/removing
-    // icons a complete default toolbar is used rather than an incomplete customized one
-    HBITMAP hbmp = LoadExternalBitmap(GetModuleHandle(nullptr), L"toolbar_11.bmp", IDB_TOOLBAR, useDibSection);
-    SizeI size = GetBitmapSize(hbmp);
+    SizeI size{-1, -1};
+    if (useSvg) {
+        int dx = (16 * dpi) / 96;
+        dx = 16 * 2;
+        // size.dx = dx * 11;
+        size.dx = dx;
+        size.dy = dx;
+        hbmp = BuildIconsBitmap(dx, dx);
+    } else {
+        // scale toolbar images only by integral sizes (2, 3 etc.)
+        int scaleX = (int)ceilf((float)dpi / 96.f);
+        int scaleY = (int)ceilf((float)dpi / 96.f);
+        bool needsScaling = (scaleX > 1) || (scaleY > 1);
+        bool useDibSection = UseDibSection(needsScaling);
 
-    if (needsScaling) {
-        size.dx *= scaleX;
-        size.dy *= scaleY;
+        // the name of the bitmap contains the number of icons so that after adding/removing
+        // icons a complete default toolbar is used rather than an incomplete customized one
+        hbmp = LoadExternalBitmap(GetModuleHandle(nullptr), L"toolbar_11.bmp", IDB_TOOLBAR, useDibSection);
+        size = GetBitmapSize(hbmp);
 
-        UINT flags = LR_COPYDELETEORG;
-        if (useDibSection) {
-            flags |= LR_CREATEDIBSECTION;
+        if (needsScaling) {
+            size.dx *= scaleX;
+            size.dy *= scaleY;
+
+            UINT flags = LR_COPYDELETEORG;
+            if (useDibSection) {
+                flags |= LR_CREATEDIBSECTION;
+            }
+            hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, flags);
         }
-        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, flags);
     }
-
     // assume square icons
     HIMAGELIST himl = ImageList_Create(size.dy, size.dy, ILC_COLORDDB | ILC_MASK, 0, 0);
-    ImageList_AddMasked(himl, hbmp, RGB(0xFF, 0, 0xFF));
+    COLORREF mask = RGB(0xFF, 0, 0xFF);
+    if (useSvg) {
+        mask = RGB(0xff, 0xff, 0xff);
+    }
+    int amres = ImageList_AddMasked(himl, hbmp, mask);
+    int nImages = ImageList_GetImageCount(himl);
+    dbglogf("res: %d, nImages: %d\n", amres, nImages);
+    LogBitmapInfo(hbmp);
     DeleteObject(hbmp);
 
     // in Plugin mode, replace the Open with a Save As button
@@ -635,25 +694,29 @@ void CreateToolbar(WindowInfo* win) {
     }
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         tbButtons[i] = TbButtonFromButtonInfo(i);
-        if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH)
+        if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH) {
             tbButtons[i].fsStyle = BTNS_CHECK;
+        }
     }
-    SendMessage(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+    SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
 
     LRESULT exstyle = SendMessage(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
-    SendMessage(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
-
-    SendMessage(hwndToolbar, TB_ADDBUTTONS, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
+    SendMessageW(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
+    bool ok = SendMessageW(hwndToolbar, TB_ADDBUTTONS, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
+    if (!ok) {
+        DbgOutLastError();
+    }
 
     RECT rc;
-    LRESULT res = SendMessage(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
-    if (!res)
+    LRESULT res = SendMessageW(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
+    if (!res) {
         rc.left = rc.right = rc.top = rc.bottom = 0;
+    }
 
-    DWORD reBarStyle = WS_REBAR | WS_VISIBLE;
-    win->hwndReBar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, nullptr, reBarStyle, 0, 0, 0, 0, win->hwndFrame,
-                                    (HMENU)IDC_REBAR, GetModuleHandle(nullptr), nullptr);
+    DWORD dwStyle = WS_REBAR | WS_VISIBLE;
+    win->hwndReBar = CreateWindowExW(WS_EX_TOOLWINDOW, REBARCLASSNAME, nullptr, dwStyle, 0, 0, 0, 0, hwndParnt,
+                                     (HMENU)IDC_REBAR, hinst, nullptr);
 
     REBARINFO rbi;
     rbi.cbSize = sizeof(REBARINFO);
@@ -666,8 +729,9 @@ void CreateToolbar(WindowInfo* win) {
     rbBand.fMask = /*RBBIM_COLORS | RBBIM_TEXT | RBBIM_BACKGROUND | */
         RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE /*| RBBIM_SIZE*/;
     rbBand.fStyle = /*RBBS_CHILDEDGE |*/ /* RBBS_BREAK |*/ RBBS_FIXEDSIZE /*| RBBS_GRIPPERALWAYS*/;
-    if (theme::IsAppThemed())
+    if (theme::IsAppThemed()) {
         rbBand.fStyle |= RBBS_CHILDEDGE;
+    }
     rbBand.hbmBack = nullptr;
     rbBand.lpText = L"Toolbar";
     rbBand.hwndChild = hwndToolbar;
