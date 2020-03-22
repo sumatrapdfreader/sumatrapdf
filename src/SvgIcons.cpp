@@ -152,6 +152,7 @@ MupdfContext::MupdfContext() {
 }
 
 MupdfContext::~MupdfContext() {
+    fz_drop_context(ctx);
     for (int i = 0; i < FZ_LOCK_MAX; i++) {
         DeleteCriticalSection(&mutexes[i]);
     }
