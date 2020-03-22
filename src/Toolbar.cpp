@@ -610,23 +610,20 @@ static bool UseDibSection(bool needsScaling) {
 void LogBitmapInfo(HBITMAP hbmp) {
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-#if 0
-    LONG bmType;
-    LONG bmWidth;
-    LONG bmHeight;
-    LONG bmWidthBytes;
-    WORD bmPlanes;
-    WORD bmBitsPixel;
-    LPVOID bmBits;
-#endif
     dbglogf("dx: %d, dy: %d, stride: %d, bitsPerPixel: %d\n", (int)bmpInfo.bmWidth, (int)bmpInfo.bmHeight,
             (int)bmpInfo.bmWidthBytes, (int)bmpInfo.bmBitsPixel);
+    u8* bits = (u8*)bmpInfo.bmBits;
+    u8* d;
+    for (int y = 0; y < 5; y++) {
+        d = bits + (size_t)bmpInfo.bmWidthBytes * y;
+        dbglogf("y: %d, d: 0x%p\n", y, d);
+    }
 }
 
 void CreateToolbar(WindowInfo* win) {
     HINSTANCE hinst = GetModuleHandle(nullptr);
-    HWND hwndParnt = win->hwndFrame;
-    HWND hwndToolbar = CreateWindowExW(0, TOOLBARCLASSNAME, nullptr, WS_TOOLBAR, 0, 0, 0, 0, hwndParnt,
+    HWND hwndParent = win->hwndFrame;
+    HWND hwndToolbar = CreateWindowExW(0, TOOLBARCLASSNAME, nullptr, WS_TOOLBAR, 0, 0, 0, 0, hwndParent,
                                        (HMENU)IDC_TOOLBAR, hinst, nullptr);
     win->hwndToolbar = hwndToolbar;
     SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
@@ -634,23 +631,23 @@ void CreateToolbar(WindowInfo* win) {
     ShowWindow(hwndToolbar, SW_SHOW);
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
 
-    // stretch the toolbar bitmaps for higher DPI settings
-    // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
-
     int dpi = DpiGet(win->hwndFrame);
 
     HBITMAP hbmp = nullptr;
-    bool useSvg = false;
+    bool useSvg = true;
 
     SizeI size{-1, -1};
     if (useSvg) {
-        int dx = (16 * dpi) / 96;
-        dx = 16 * 2;
-        // size.dx = dx * 11;
+        // TODO: bitmap is skewed for dxDpi of 20, 24 etc.
+        int dxDpi = 16;
+        int dx = (dxDpi * dpi) / 96;
         size.dx = dx;
         size.dy = dx;
         hbmp = BuildIconsBitmap(dx, dx);
     } else {
+        // stretch the toolbar bitmaps for higher DPI settings
+        // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
+
         // scale toolbar images only by integral sizes (2, 3 etc.)
         int scaleX = (int)ceilf((float)dpi / 96.f);
         int scaleY = (int)ceilf((float)dpi / 96.f);
@@ -715,7 +712,7 @@ void CreateToolbar(WindowInfo* win) {
     }
 
     DWORD dwStyle = WS_REBAR | WS_VISIBLE;
-    win->hwndReBar = CreateWindowExW(WS_EX_TOOLWINDOW, REBARCLASSNAME, nullptr, dwStyle, 0, 0, 0, 0, hwndParnt,
+    win->hwndReBar = CreateWindowExW(WS_EX_TOOLWINDOW, REBARCLASSNAME, nullptr, dwStyle, 0, 0, 0, 0, hwndParent,
                                      (HMENU)IDC_REBAR, hinst, nullptr);
 
     REBARINFO rbi;

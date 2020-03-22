@@ -105,10 +105,23 @@ static const char* gIconZoomOut =
   <line x1="21" y1="21" x2="15" y2="15" />
 </svg>)";
 
+// clang-format off
 static const char* gAllIcons[] = {
-    gIconFileOpen, gIconPrint,  gIconPagePrev,   gIconPageNext,   gIconLayoutContinous, gIconLayoutSinglePage,
-    gIconZoomOut,  gIconZoomIn, gIconSearchPrev, gIconSearchNext, gIconMatchCase,
+    gIconFileOpen,
+    gIconPrint,
+    gIconPagePrev,
+    gIconPageNext,
+    gIconLayoutContinous,
+    gIconLayoutSinglePage,
+    gIconZoomOut,
+    gIconZoomIn,
+    gIconSearchPrev,
+    gIconSearchNext,
+    gIconMatchCase,
+    gIconFileOpen,
+    gIconPrint
 };
+// clang-format on
 
 struct MupdfContext {
     fz_locks_context fz_locks_ctx{};
@@ -249,7 +262,7 @@ HBITMAP CreateBitmapFromPixmap(fz_pixmap* pixmap) {
 HBITMAP BuildIconsBitmap(int dx, int dy) {
     MupdfContext* muctx = new MupdfContext();
     fz_pixmap* pixmap = BuildIconsPixmap(muctx, dx, dy);
-    ClearPixmap(pixmap);
+    //ClearPixmap(pixmap);
 #if 1
 #if 0
     RenderedBitmap* rbmp = new_rendered_fz_pixmap(muctx->ctx, pixmap);
