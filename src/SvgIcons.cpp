@@ -105,6 +105,15 @@ static const char* gIconZoomOut =
   <line x1="21" y1="21" x2="15" y2="15" />
 </svg>)";
 
+// https://github.com/tabler/tabler-icons/blob/master/icons/floppy-disk.svg
+static const char* gIconSave =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-floppy-disk" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M18 20h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9l5 5v9a2 2 0 0 1 -2 2" />
+  <circle cx="12" cy="13" r="2" />
+  <polyline points="4 8 10 8 10 4" />
+</svg>)";
+
 // clang-format off
 static const char* gAllIcons[] = {
     gIconFileOpen,
@@ -118,8 +127,8 @@ static const char* gAllIcons[] = {
     gIconSearchPrev,
     gIconSearchNext,
     gIconMatchCase,
-    gIconFileOpen,
-    gIconPrint
+    gIconMatchCase,  // TODO: remove this, is for compatiblity with bitmap icons
+    gIconSave,
 };
 // clang-format on
 
@@ -263,7 +272,7 @@ HBITMAP CreateBitmapFromPixmap(fz_pixmap* pixmap) {
 HBITMAP BuildIconsBitmap(int dx, int dy) {
     MupdfContext* muctx = new MupdfContext();
     fz_pixmap* pixmap = BuildIconsPixmap(muctx, dx, dy);
-    //ClearPixmap(pixmap);
+    // ClearPixmap(pixmap);
 #if 1
 #if 0
     RenderedBitmap* rbmp = new_rendered_fz_pixmap(muctx->ctx, pixmap);
