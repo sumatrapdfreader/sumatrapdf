@@ -1203,18 +1203,22 @@ HMENU BuildMenu(WindowInfo* win) {
     m = GetSystemMenu(win->hwndFrame, FALSE);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
 #endif
-    m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
 
-    if (!gIsDebugBuild) {
-        RemoveMenu(m, IDM_DEBUG_TEST_APP, MF_BYCOMMAND);
+
+    if (gShowDebugMenu) {
+        m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
+
+        if (!gIsDebugBuild) {
+            RemoveMenu(m, IDM_DEBUG_TEST_APP, MF_BYCOMMAND);
+        }
+
+        if (gAddCrashMeMenu) {
+            AppendMenu(m, MF_SEPARATOR, 0, nullptr);
+            AppendMenuA(m, MF_STRING, (UINT_PTR)IDM_DEBUG_CRASH_ME, "Crash me");
+        }
+
+        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
     }
-
-    if (gAddCrashMeMenu) {
-        AppendMenu(m, MF_SEPARATOR, 0, nullptr);
-        AppendMenuA(m, MF_STRING, (UINT_PTR)IDM_DEBUG_CRASH_ME, "Crash me");
-    }
-
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
 
     MarkMenuOwnerDraw(mainMenu);
     return mainMenu;

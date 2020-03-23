@@ -71,6 +71,12 @@ bool gOwnerDrawMenu = true;
 bool gOwnerDrawMenu = false;
 #endif
 
+#if defined(DEBUG) || defined(PRE_RELEASE_VER)
+bool gShowDebugMenu = true;
+#else
+bool gShowDebugMenu = false;
+#endif
+
 const WCHAR* GetAppName() {
     if (gIsRaMicroBuild) {
         return L"RA-MICRO PDF Viewer";

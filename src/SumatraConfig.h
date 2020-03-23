@@ -12,6 +12,7 @@ extern bool gIsPreReleaseBuild;
 extern bool gWithTocEditor;
 extern bool gIsRaMicroBuild;
 extern bool gOwnerDrawMenu;
+extern bool gShowDebugMenu;
 extern const char* builtOn;
 extern const char* currentVersion; // e.g. "3.2.1138"
 extern const char* gitSha1;
