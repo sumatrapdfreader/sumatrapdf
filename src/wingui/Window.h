@@ -21,6 +21,9 @@ struct WndEvent {
     WindowBase* w = nullptr;
 };
 
+void RegisterParentHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void *user);
+void UnregisterParentHandlerForMessage(HWND hwnd, UINT msg);
+
 #define SetWndEvent(n) \
     {                  \
         n.w = w;       \

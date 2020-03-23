@@ -23,7 +23,7 @@ ListBoxCtrl::ListBoxCtrl(HWND p) : WindowBase(p) {
     kind = kindListBox;
     dwExStyle = WS_EX_TOPMOST;
     // win.WS_BORDER|win.WS_TABSTOP|win.WS_VISIBLE|win.WS_VSCROLL|win.WS_HSCROLL|win.LBS_NOINTEGRALHEIGHT|win.LBS_NOTIFY|style,
-    dwStyle = WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
+    dwStyle = WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY |  LBS_OWNERDRAWFIXED;
     winClass = L"LISTBOX";
     // CreateWindow() for tooltip fails if this is not 0
     ctrlID = 0;

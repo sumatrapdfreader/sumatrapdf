@@ -8,6 +8,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/Log.h"
 #include "utils/LogDbg.h"
+#include "utils/VecSegmented.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -31,6 +32,97 @@ static int g_currCtrlID = 100;
 int GetNextCtrlID() {
     ++g_currCtrlID;
     return g_currCtrlID;
+}
+
+constexpr int kMaxParentMsgHandlers = 64;
+
+struct ParentMsgHandler {
+    HWND hwnd = nullptr;
+    void* user = nullptr;
+    void (*handler)(void* user, WndEvent* ev);
+    UINT msgs[kMaxParentMsgHandlers];
+    int nMessages;
+};
+
+VecSegmented<ParentMsgHandler> parentMsgHandlers;
+
+static ParentMsgHandler* FindParentMsgHandlerForHWND(HWND hwnd, bool create) {
+    ParentMsgHandler* firstFree = nullptr;
+    for (ParentMsgHandler* h : parentMsgHandlers) {
+        if (h->hwnd == hwnd) {
+            return h;
+        }
+        if (create && h->hwnd == nullptr && firstFree == nullptr) {
+            firstFree = h;
+        }
+    }
+    if (!create) {
+        return nullptr;
+    }
+    if (firstFree) {
+        return firstFree;
+    }
+    auto res = parentMsgHandlers.AllocAtEnd();
+    res->hwnd = hwnd;
+    res->user = nullptr;
+    res->handler = nullptr;
+    res->nMessages = 0;
+    return res;
+}
+
+void RegisterParentHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void *user) {
+    auto h = FindParentMsgHandlerForHWND(hwnd, true);
+    CrashIf(!h);
+    int n = h->nMessages;
+    CrashIf(n >= kMaxParentMsgHandlers);
+    for (int i = 0; i < n; i++) {
+        // we don't want multiple registrations for the same hwnd
+        CrashIf(h->msgs[i] == msg);
+    }
+    h->msgs[n] = msg;
+    h->nMessages++;
+    if (h->user == nullptr) {
+        h->user = user;
+    } else {
+        CrashIf(h->user != user);
+    }    
+}
+
+void UnregisterParentHandlerForMessage(HWND hwnd, UINT msg) {
+    auto h = FindParentMsgHandlerForHWND(hwnd, true);
+    CrashIf(!h);
+    int n =  h->nMessages;
+    int idx = -1;
+    for (int i = 0; i < n; i++) {
+        if (h->msgs[i] == msg) {
+            idx = i;
+            break;
+        }
+    }
+    CrashIf(idx == -1); // should be there
+    // a fast removal that doesn't preserve order
+    h->msgs[idx] = h->msgs[n-1];
+    h->msgs[n-1] = 0;
+    h->nMessages--;
+    if (h->nMessages == 0) {
+        h->hwnd = nullptr;
+        h->handler = nullptr;
+        h->user = nullptr;
+    }
+}
+
+static void HandleParentMessages(WndEvent* ev) {
+    ParentMsgHandler* h = FindParentMsgHandlerForHWND(ev->hwnd, false);
+    if (!h) {
+        return;
+    }
+    int n = h->nMessages;
+    for (int i = 0; i < n; i++) {
+        if (h->msgs[i] == ev->msg) {
+            h->handler(h->user, ev);
+            return;
+        }
+    }
 }
 
 // to ensure we never overflow control ids
@@ -89,6 +181,16 @@ Kind kindWindowBase = "windowBase";
 
 static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
     CrashIf(hwnd != w->hwnd);
+
+    {
+        WndEvent ev{};
+        SetWndEvent(ev);
+        HandleParentMessages(&ev);
+        if (ev.didHandle) {
+            didHandle = true;
+            return ev.result;
+        }
+    }
 
     // or maybe get rid of WindowBase::WndProc and use msgFilterInternal
     // when per-control custom processing is needed
