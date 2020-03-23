@@ -1204,6 +1204,8 @@ HMENU BuildMenu(WindowInfo* win) {
     m = GetSystemMenu(win->hwndFrame, FALSE);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
 #endif
+
+#if 0
     m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
 
     if (gAddCrashMeMenu) {
@@ -1212,6 +1214,7 @@ HMENU BuildMenu(WindowInfo* win) {
     }
 
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
+#endif
 
     MarkMenuOwnerDraw(mainMenu);
     return mainMenu;
