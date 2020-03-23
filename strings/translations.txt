@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3f209f18a4e8084b181c9def369a0f85948a24a4
+195e5cbef98d11f2747a0a664b1d9d357bfdcb22
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3795,6 +3795,7 @@ ga:Cuir leathanach %s leis na ceanáin\tCtrl+B
 he:הוסף את עמוד מס' %s למועדפים\tCtrl+B
 hr:Dodaj stranicu %s u favorite\tCtrl+B
 id:Tambah halaman %s ke favorit\tCtrl+B
+it:Aggiungi pagina %s ai preferiti\tCtrl+B
 ja:ページ %s をお気に入りに追加\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
@@ -11619,6 +11620,7 @@ ga:Fuinneog &nua\tCtrl+N
 he:חלון חדש\tCtrl+N
 hr:&Novi prozor\tCtrl+N
 id:&Jendela Baru\tCtrl+N
+it:Nuova &fiestra\tCtrl+N
 ja:新しいウィンドウ (&W)\tCtrl+N
 lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
@@ -14830,6 +14832,7 @@ ga:Taisc na Nótaí
 he:שמור אנוטציות
 hr:Spremi pribilješke
 id:Simpan Catatan
+it:Salva annotazioni
 ja:注釈を保存
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
@@ -15480,6 +15483,7 @@ ga:Taispeáin na &Leabharmharcanna\tF12
 he:הצג סימניות\tCtrl+F12
 hr:Prikaži &oznake\tF12
 id:Tampilkan &Markah\tF12
+it:Visualizza &Segnalibri\tF12
 ja:ブックマークを表示(&B)\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
@@ -15499,6 +15503,7 @@ ga:Taispeáin na &Ceanáin
 he:הצג מועדפים
 hr:Prikaži &favorite
 id:Tampilkan &Favorit
+it:Visualizza &Preferiti
 ja:お気に入りを表示(&F)
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
@@ -15651,6 +15656,7 @@ ga:Taispeáin na Leabhar&mharcanna\tF12
 he:הצג סימניות\tF12
 hr:Prikaži oznake\tF12
 id:Tampilkan &Markah\tF12
+it:Visualizza Segna&libri\tF12
 ja:ブックマークを表示 (&M)\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
@@ -15792,6 +15798,7 @@ ga:Taispeáin san &fillteán
 he:פתח תיקייה מכילה...
 hr:Prikaži u mapi
 id:Tampilkan dalam &folder
+it:Visualizza nella &cartella
 ja:フォルダを表示(&F)
 lv:Rādīt &mapē
 nl:Toon in &map
