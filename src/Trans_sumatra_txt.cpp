@@ -8892,7 +8892,7 @@ const char * gTranslations_it =
   "Informazioni su SumatraPDF\0"\
   "Aggiungi ai Preferiti\0"\
   "Aggiungi pagina %s ai Preferiti\0"\
-  "\0"\
+  "Aggiungi pagina %s ai preferiti\tCtrl+B\0"\
   "Aggiungi la pagina %s ai Preferiti con nome (opzionale):\0"\
   "Aggiungi ai Preferiti\0"\
   "Avanzate\0"\
@@ -9015,7 +9015,7 @@ const char * gTranslations_it =
   "Maiuscole/minuscole\0"\
   "Documenti Mobi\0"\
   "Data ultima modifica:\0"\
-  "\0"\
+  "Nuova &fiestra\tCtrl+N\0"\
   "\303\210 disponibile la versione %s. Scaricare la nuova versione?\0"\
   "Pagina successiva\0"\
   "Nessuna corrispondenza trovata\0"\
@@ -9066,7 +9066,7 @@ const char * gTranslations_it =
   "Rinomina in\0"\
   "Ruota a &sinistra\tCtrl+Maiusc+-\0"\
   "Ruota a &destra\tCtrl+Maiusc++\0"\
-  "\0"\
+  "Salva annotazioni\0"\
   "Salva come\0"\
   "Salva &collegamento\tCtrl+Maiusc+S\0"\
   "Ricerca: %d di %d...\0"\
@@ -9077,14 +9077,14 @@ const char * gTranslations_it =
   "Selezione\0"\
   "Invia via &email...\0"\
   "Imposta la ricerca inversa via riga di comando\0"\
-  "\0"\
-  "\0"\
+  "Visualizza &Segnalibri\tF12\0"\
+  "Visualizza &Preferiti\0"\
   "&Pagine in modo continuo\0"\
   "&Barra strumenti\0"\
-  "\0"\
+  "Visualizza Segna&libri\tF12\0"\
   "Visualizza Preferiti\0"\
   "Visualizza letto frequentemente\0"\
-  "\0"\
+  "Visualizza nella &cartella\0"\
   "Visualizza la &barra laterale dei segnalibri quando disponibile\0"\
   "Pagina singola\0"\
   "Questo non doveva succedere!\n\nSe vuoi aiutarci a capire la causa del blocco del programma seleziona 'Annulla'.\0"\
