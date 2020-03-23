@@ -801,6 +801,7 @@
     <ClInclude Include="..\src\wingui\ImageCtrl.h" />
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\wingui\Layout.h" />
+    <ClInclude Include="..\src\wingui\ListBoxCtrl.h" />
     <ClInclude Include="..\src\wingui\ProgressCtrl.h" />
     <ClInclude Include="..\src\wingui\SplitterWnd.h" />
     <ClInclude Include="..\src\wingui\StaticCtrl.h" />
@@ -868,6 +869,7 @@
     <ClCompile Include="..\src\wingui\ImageCtrl.cpp" />
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\wingui\Layout.cpp" />
+    <ClCompile Include="..\src\wingui\ListBoxCtrl.cpp" />
     <ClCompile Include="..\src\wingui\ProgressCtrl.cpp" />
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
     <ClCompile Include="..\src\wingui\StaticCtrl.cpp" />

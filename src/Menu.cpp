@@ -1208,7 +1208,6 @@ HMENU BuildMenu(WindowInfo* win) {
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
 #endif
 
-
     if (gShowDebugMenu) {
         m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
 

@@ -78,8 +78,8 @@ void ButtonCtrl::WndProcParent(WndEvent* ev) {
     }
 }
 
-ILayout* NewButtonLayout(ButtonCtrl* b) {
-    return new WindowBaseLayout(b, kindButton);
+ILayout* NewButtonLayout(ButtonCtrl* w) {
+    return new WindowBaseLayout(w, kindButton);
 }
 
 std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, const ClickedHandler& onClicked) {

@@ -11,7 +11,7 @@ struct DropDownSelectionChangedEvent : WndEvent {
 
 typedef std::function<void(DropDownSelectionChangedEvent*)> DropDownSelectionChangedHandler;
 
-struct DropDownCtrl : public WindowBase {
+struct DropDownCtrl : WindowBase {
     Vec<std::string_view> items;
     DropDownSelectionChangedHandler onDropDownSelectionChanged = nullptr;
 

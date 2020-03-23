@@ -195,6 +195,9 @@
     <ClInclude Include="..\src\wingui\Layout.h">
       <Filter>wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\ListBoxCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\ProgressCtrl.h">
       <Filter>wingui</Filter>
     </ClInclude>
@@ -390,6 +393,9 @@
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Layout.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ListBoxCtrl.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\ProgressCtrl.cpp">

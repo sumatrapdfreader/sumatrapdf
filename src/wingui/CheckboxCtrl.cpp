@@ -93,6 +93,6 @@ bool CheckboxCtrl::IsChecked() const {
     return state == CheckState::Checked;
 }
 
-ILayout* NewCheckboxLayout(CheckboxCtrl* b) {
-    return new WindowBaseLayout(b, kindCheckbox);
+ILayout* NewCheckboxLayout(CheckboxCtrl* w) {
+    return new WindowBaseLayout(w, kindCheckbox);
 }

@@ -756,8 +756,8 @@ SIZE TreeCtrl::GetIdealSize() {
     return SIZE{idealSize.Width, idealSize.Height};
 }
 
-WindowBaseLayout* NewTreeLayout(TreeCtrl* e) {
-    return new WindowBaseLayout(e, kindTree);
+WindowBaseLayout* NewTreeLayout(TreeCtrl* w) {
+    return new WindowBaseLayout(w, kindTree);
 }
 
 // if context menu invoked via keyboard, get selected item

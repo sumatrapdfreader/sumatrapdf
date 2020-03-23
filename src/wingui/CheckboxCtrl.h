@@ -9,7 +9,7 @@ enum class CheckState {
 
 typedef std::function<void(CheckState)> OnCheckStateChanged;
 
-struct CheckboxCtrl : public WindowBase {
+struct CheckboxCtrl : WindowBase {
     OnCheckStateChanged OnCheckStateChanged = nullptr;
 
     CheckboxCtrl(HWND parent);

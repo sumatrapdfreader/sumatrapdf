@@ -64,6 +64,6 @@ int ProgressCtrl::GetCurrent() {
     return current;
 }
 
-ILayout* NewProgressLayout(ProgressCtrl* b) {
-    return new WindowBaseLayout(b, kindProgress);
+ILayout* NewProgressLayout(ProgressCtrl* w) {
+    return new WindowBaseLayout(w, kindProgress);
 }

@@ -216,7 +216,7 @@ extern Kind kindWindow;
 
 // a top-level window. Must set winClass before
 // calling Create()
-struct Window : public WindowBase {
+struct Window : WindowBase {
     bool isDialog = false;
 
     Window();

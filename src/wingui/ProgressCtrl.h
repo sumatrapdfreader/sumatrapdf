@@ -1,7 +1,7 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct ProgressCtrl : public WindowBase {
+struct ProgressCtrl : WindowBase {
     explicit ProgressCtrl(HWND parent, int max = 0);
 
     // those might be outdated if user manipulates hwnd directly

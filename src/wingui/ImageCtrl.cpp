@@ -113,6 +113,6 @@ SIZE ImageCtrl::GetIdealSize() {
     return SIZE{(LONG)dx, (LONG)dy};
 }
 
-ILayout* NewImageLayout(ImageCtrl* b) {
-    return new WindowBaseLayout(b, kindImage);
+ILayout* NewImageLayout(ImageCtrl* w) {
+    return new WindowBaseLayout(w, kindImage);
 }

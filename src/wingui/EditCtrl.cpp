@@ -33,8 +33,8 @@ bool IsEdit(ILayout* l) {
     return IsLayoutOfKind(l, kindEdit);
 }
 
-ILayout* NewEditLayout(EditCtrl* e) {
-    return new WindowBaseLayout(e, kindEdit);
+ILayout* NewEditLayout(EditCtrl* w) {
+    return new WindowBaseLayout(w, kindEdit);
 }
 
 void EditCtrl::WndProcParent(WndEvent* ev) {

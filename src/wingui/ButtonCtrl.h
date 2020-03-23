@@ -3,7 +3,7 @@
 
 typedef std::function<void()> ClickedHandler;
 
-struct ButtonCtrl : public WindowBase {
+struct ButtonCtrl : WindowBase {
     ClickedHandler onClicked = nullptr;
     bool isDefault = false;
 

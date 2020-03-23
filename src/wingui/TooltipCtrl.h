@@ -1,7 +1,7 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct TooltipCtrl : public WindowBase {
+struct TooltipCtrl : WindowBase {
     bool isShowing = false;
 
     TooltipCtrl(HWND parent);

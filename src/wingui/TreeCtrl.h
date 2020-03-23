@@ -114,7 +114,7 @@ typedef std::function<void(TreeItemDraggeddEvent*)> TreeItemDraggedHandler;
 - ctrl->Create()
 */
 
-struct TreeCtrl : public WindowBase {
+struct TreeCtrl : WindowBase {
     // creation parameters. must be set before CreateTreeCtrl() call
     bool withCheckboxes = false;
 

@@ -17,7 +17,7 @@ Creation sequence:
 - set creation parameters
 - ctrl.Create()
 */
-struct EditCtrl : public WindowBase {
+struct EditCtrl : WindowBase {
     // data that can be set directly
 
     str::Str cueText;
