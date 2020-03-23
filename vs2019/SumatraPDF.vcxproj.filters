@@ -63,6 +63,9 @@
     <ClInclude Include="..\src\EbookControls.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\EditAnnotations.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ExternalViewers.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -294,6 +297,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EbookControls.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\EditAnnotations.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ExternalViewers.cpp">

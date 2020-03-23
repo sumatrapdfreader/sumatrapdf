@@ -38,6 +38,7 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "TocEditor.h"
+#include "EditAnnotations.h"
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continuous range!
@@ -245,6 +246,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Toolbar\tF8"),            IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             IDM_SAVE_ANNOTATIONS_SMX,   MF_REQ_DISK_ACCESS },
     // TODO: translate
+    { "Edit Annotations",                   IDM_EDIT_ANNOTATIONS, MF_REQ_DISK_ACCESS },
     {"New Bookmarks",                       IDM_NEW_BOOKMARKS,          MF_NO_TRANSLATE},
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
@@ -767,7 +769,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case IDM_NEW_BOOKMARKS:
             SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
             break;
-
+        case IDM_EDIT_ANNOTATIONS:
+            StartEditAnnotations();
+            break;
         case IDM_COPY_LINK_TARGET:
         case IDM_COPY_COMMENT:
             CopyTextToClipboard(value);

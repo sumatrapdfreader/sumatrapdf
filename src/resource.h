@@ -63,6 +63,7 @@
 #define IDM_FIND_PREV                   474
 #define IDM_FIND_MATCH                  476
 #define IDM_SAVE_ANNOTATIONS_SMX        478
+#define IDM_EDIT_ANNOTATIONS            479
 
 // values must be consequitive
 #define IDM_ZOOM_FIT_PAGE               480

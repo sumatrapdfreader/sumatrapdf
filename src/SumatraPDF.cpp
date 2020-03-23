@@ -86,6 +86,7 @@
 #include "uia/Provider.h"
 #include "Version.h"
 #include "SumatraConfig.h"
+#include "EditAnnotations.h"
 
 // the default is for pre-release version.
 // for release we override BuildConfig.h and set to
@@ -4317,6 +4318,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_SAVE_ANNOTATIONS_SMX:
             OnMenuSaveAnnotationsToSmx(win);
+            break;
+
+        case IDM_EDIT_ANNOTATIONS:
+            StartEditAnnotations();
             break;
 
         case IDM_NEW_BOOKMARKS:

@@ -406,6 +406,7 @@ function sumatrapdf_files()
     "Doc.*",
     "EbookController.*",
     "EbookControls.*",
+    "EditAnnotations.*",
     "ExternalViewers.*",
     "Favorites.*",
     "FileHistory.*",

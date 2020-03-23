@@ -947,6 +947,7 @@
     <ClInclude Include="..\src\Doc.h" />
     <ClInclude Include="..\src\EbookController.h" />
     <ClInclude Include="..\src\EbookControls.h" />
+    <ClInclude Include="..\src\EditAnnotations.h" />
     <ClInclude Include="..\src\ExternalViewers.h" />
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FileHistory.h" />
@@ -1026,6 +1027,7 @@
     <ClCompile Include="..\src\Doc.cpp" />
     <ClCompile Include="..\src\EbookController.cpp" />
     <ClCompile Include="..\src\EbookControls.cpp" />
+    <ClCompile Include="..\src\EditAnnotations.cpp" />
     <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
     <ClCompile Include="..\src\FileHistory.cpp" />
