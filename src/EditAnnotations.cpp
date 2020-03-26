@@ -34,6 +34,7 @@ struct EditAnnotationsWindow {
 
     ListBoxModel* lbModel = nullptr;
 
+    ~EditAnnotationsWindow();
     bool Create();
     void CreateMainLayout();
     void CloseHandler(WindowCloseEvent* ev);
@@ -44,19 +45,25 @@ struct EditAnnotationsWindow {
 
 static EditAnnotationsWindow* gEditAnnotationsWindow = nullptr;
 
+EditAnnotationsWindow::~EditAnnotationsWindow() {
+    delete mainWindow;
+    delete mainLayout;
+    delete lbModel;
+}
+
 void EditAnnotationsWindow::OnFinished() {
     // TODO: write me
 }
 
 void EditAnnotationsWindow::CloseHandler(WindowCloseEvent* ev) {
-    //CrashIf(w != ev->w);
+    // CrashIf(w != ev->w);
     OnFinished();
     delete gEditAnnotationsWindow;
     gEditAnnotationsWindow = nullptr;
 }
 
 void EditAnnotationsWindow::ButtonCancelHandler() {
-    //gEditAnnotationsWindow->onFinished(nullptr);
+    // gEditAnnotationsWindow->onFinished(nullptr);
     OnFinished();
     delete gEditAnnotationsWindow;
     gEditAnnotationsWindow = nullptr;
@@ -87,7 +94,7 @@ void EditAnnotationsWindow::SizeHandler(SizeEvent* ev) {
 void EditAnnotationsWindow::CreateMainLayout() {
     HWND parent = mainWindow->hwnd;
     auto vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::SpaceBetween;
+    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     {
@@ -96,7 +103,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
         CrashIf(!ok);
         listBox = w;
         auto l = NewListBoxLayout(w);
-        vbox->addChild(l);
+        vbox->addChild(l, 1);
     }
 
     {

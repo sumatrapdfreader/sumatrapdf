@@ -70,7 +70,7 @@ static ParentMsgHandler* FindParentMsgHandlerForHWND(HWND hwnd, bool create) {
     return res;
 }
 
-void RegisterParentHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void *user) {
+void RegisterParentHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void* user) {
     auto h = FindParentMsgHandlerForHWND(hwnd, true);
     CrashIf(!h);
     int n = h->nMessages;
@@ -85,13 +85,13 @@ void RegisterParentHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* 
         h->user = user;
     } else {
         CrashIf(h->user != user);
-    }    
+    }
 }
 
 void UnregisterParentHandlerForMessage(HWND hwnd, UINT msg) {
     auto h = FindParentMsgHandlerForHWND(hwnd, true);
     CrashIf(!h);
-    int n =  h->nMessages;
+    int n = h->nMessages;
     int idx = -1;
     for (int i = 0; i < n; i++) {
         if (h->msgs[i] == msg) {
@@ -101,8 +101,8 @@ void UnregisterParentHandlerForMessage(HWND hwnd, UINT msg) {
     }
     CrashIf(idx == -1); // should be there
     // a fast removal that doesn't preserve order
-    h->msgs[idx] = h->msgs[n-1];
-    h->msgs[n-1] = 0;
+    h->msgs[idx] = h->msgs[n - 1];
+    h->msgs[n - 1] = 0;
     h->nMessages--;
     if (h->nMessages == 0) {
         h->hwnd = nullptr;

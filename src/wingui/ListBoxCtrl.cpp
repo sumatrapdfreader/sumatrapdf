@@ -19,6 +19,9 @@ bool IsListBox(ILayout* l) {
     return IsLayoutOfKind(l, kindListBox);
 }
 
+ListBoxModelStrings::~ListBoxModelStrings() {
+}
+
 int ListBoxModelStrings::ItemsCount() {
     return strings.size();
 }

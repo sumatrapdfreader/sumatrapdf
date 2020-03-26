@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct ListBoxModel {
+    virtual ~ListBoxModel(){};
     virtual int ItemsCount() = 0;
     virtual Size Draw(bool measure) = 0;
     virtual std::string_view Item(int) = 0;
@@ -9,6 +10,8 @@ struct ListBoxModel {
 
 struct ListBoxModelStrings : ListBoxModel {
     VecStr strings;
+
+    ~ListBoxModelStrings() override;
     int ItemsCount() override;
     Size Draw(bool measure) override;
     std::string_view Item(int) override;
