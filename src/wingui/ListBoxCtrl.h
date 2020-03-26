@@ -2,12 +2,21 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct ListBoxModel {
-    virtual int ItemsCount();
-    virtual Size Draw(bool measure);
+    virtual int ItemsCount() = 0;
+    virtual Size Draw(bool measure) = 0;
+    virtual std::string_view Item(int) = 0;
+};
+
+struct ListBoxModelStrings : ListBoxModel {
+    VecStr strings;
+    int ItemsCount() override;
+    Size Draw(bool measure) override;
+    std::string_view Item(int) override;
 };
 
 struct ListBoxCtrl : WindowBase {
     ListBoxModel* model = nullptr;
+    SIZE minSize{240, 320};
 
     ListBoxCtrl(HWND parent);
     ~ListBoxCtrl() override;

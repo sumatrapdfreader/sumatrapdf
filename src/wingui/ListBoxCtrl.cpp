@@ -19,32 +19,62 @@ bool IsListBox(ILayout* l) {
     return IsLayoutOfKind(l, kindListBox);
 }
 
+int ListBoxModelStrings::ItemsCount() {
+    return strings.size();
+}
+
+Size ListBoxModelStrings::Draw(bool measure) {
+    UNUSED(measure);
+    CrashIf(true);
+    return Size{};
+}
+
+std::string_view ListBoxModelStrings::Item(int i) {
+    return strings.at(i);
+}
+
 ListBoxCtrl::ListBoxCtrl(HWND p) : WindowBase(p) {
     kind = kindListBox;
-    dwExStyle = WS_EX_TOPMOST;
+    dwExStyle = 0;
     // win.WS_BORDER|win.WS_TABSTOP|win.WS_VISIBLE|win.WS_VSCROLL|win.WS_HSCROLL|win.LBS_NOINTEGRALHEIGHT|win.LBS_NOTIFY|style,
-    dwStyle = WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY |  LBS_OWNERDRAWFIXED;
+    dwStyle =
+        WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
     winClass = L"LISTBOX";
-    // CreateWindow() for tooltip fails if this is not 0
     ctrlID = 0;
 }
 
 ListBoxCtrl::~ListBoxCtrl() {
 }
 
+static void FillWithItems(ListBoxCtrl* w, ListBoxModel* model) {
+    HWND hwnd = w->hwnd;
+    ListBox_ResetContent(hwnd);
+    for (int i = 0; i < model->ItemsCount(); i++) {
+        auto sv = model->Item(i);
+        AutoFreeWstr ws = strconv::Utf8ToWstr(sv);
+        ListBox_AddString(hwnd, ws.Get());
+    }
+}
+
 bool ListBoxCtrl::Create() {
     bool ok = WindowBase::Create();
-    // TODO: update ideal size based on the size of the model
+    // TODO: update ideal size based on the size of the model?
+    CrashIf(!ok);
+    if (!ok) {
+        return false;
+    }
+    if (model != nullptr) {
+        FillWithItems(this, model);
+    }
     return ok;
 }
 
 SIZE ListBoxCtrl::GetIdealSize() {
-    // TODO:
-    return SIZE{100, 32};
+    return minSize;
 }
 
 int ListBoxCtrl::GetSelectedItem() {
-    LRESULT res = SendMessageW(hwnd, LB_GETCURSEL, 0, 0);
+    LRESULT res = ListBox_GetCurSel(hwnd);
     return (int)res;
 }
 
@@ -56,7 +86,7 @@ bool ListBoxCtrl::SetSelectedItem(int n) {
     if (n >= nItems) {
         return false;
     }
-    LRESULT res = SendMessageW(hwnd, LB_SETCURSEL, n, 0);
+    LRESULT res = ListBox_SetCurSel(hwnd, n);
     if (res == LB_ERR) {
         return false;
     }
@@ -65,6 +95,9 @@ bool ListBoxCtrl::SetSelectedItem(int n) {
 
 void ListBoxCtrl::SetModel(ListBoxModel* model) {
     this->model = model;
+    if (model != nullptr) {
+        FillWithItems(this, model);
+    }
     // TODO: update ideal size based on the size of the model
 }
 

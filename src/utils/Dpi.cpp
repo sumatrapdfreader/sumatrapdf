@@ -80,7 +80,10 @@ int DpiGetForHwnd(HWND hwnd) {
 }
 
 int DpiGet(HWND hwnd) {
-    CrashIf(!hwnd);
+    if (hwnd == nullptr) {
+        hwnd = GetDesktopWindow();
+        CrashIf(!hwnd);
+    }
     if (hwnd == gLastHwnd) {
         CrashIf(gLastDpi == 0);
         return gLastDpi;
