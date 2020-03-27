@@ -34,95 +34,81 @@ int GetNextCtrlID() {
     return g_currCtrlID;
 }
 
-constexpr int kMaxParentMsgHandlers = 64;
+// a way to register for messages for a given hwnd / msg combo
 
-struct ParentMsgHandler {
-    HWND hwnd = nullptr;
+struct HwndMsgHandler {
+    HWND hwnd;
+    UINT msg;
     void* user = nullptr;
     void (*handler)(void* user, WndEvent* ev);
-    UINT msgs[kMaxParentMsgHandlers];
-    int nMessages;
 };
 
-VecSegmented<ParentMsgHandler> parentMsgHandlers;
+VecSegmented<HwndMsgHandler> gHwndMsgHandlers;
 
-static ParentMsgHandler* FindParentMsgHandlerForHWND(HWND hwnd, bool create) {
-    ParentMsgHandler* firstFree = nullptr;
-    for (ParentMsgHandler* h : parentMsgHandlers) {
-        if (h->hwnd == hwnd) {
+static void ClearHwndMsgHandler(HwndMsgHandler* h) {
+    h->hwnd = nullptr;
+    h->msg = 0;
+    h->user = nullptr;
+    h->handler = nullptr;
+}
+
+static HwndMsgHandler* FindHandlerForHwndAndMsg(HWND hwnd, UINT msg, bool create) {
+    CrashIf(hwnd == nullptr);
+    for (auto h : gHwndMsgHandlers) {
+        if (h->hwnd == hwnd && h->msg == msg) {
             return h;
-        }
-        if (create && h->hwnd == nullptr && firstFree == nullptr) {
-            firstFree = h;
         }
     }
     if (!create) {
         return nullptr;
     }
-    if (firstFree) {
-        return firstFree;
+    // we might have free slot
+    for (auto h : gHwndMsgHandlers) {
+        if (h->hwnd == nullptr) {
+            return h;
+        }
     }
-    auto res = parentMsgHandlers.AllocAtEnd();
+    auto res = gHwndMsgHandlers.AllocAtEnd();
+    ClearHwndMsgHandler(res);
     res->hwnd = hwnd;
-    res->user = nullptr;
-    res->handler = nullptr;
-    res->nMessages = 0;
+    res->msg = msg;
     return res;
 }
 
-void RegisterParentHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void* user) {
-    auto h = FindParentMsgHandlerForHWND(hwnd, true);
+void RegisterHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void* user) {
+    auto h = FindHandlerForHwndAndMsg(hwnd, msg, true);
     CrashIf(!h);
-    int n = h->nMessages;
-    CrashIf(n >= kMaxParentMsgHandlers);
-    for (int i = 0; i < n; i++) {
-        // we don't want multiple registrations for the same hwnd
-        CrashIf(h->msgs[i] == msg);
-    }
-    h->msgs[n] = msg;
-    h->nMessages++;
-    if (h->user == nullptr) {
-        h->user = user;
-    } else {
-        CrashIf(h->user != user);
-    }
+    h->handler = handler;
+    h->user = user;
 }
 
-void UnregisterParentHandlerForMessage(HWND hwnd, UINT msg) {
-    auto h = FindParentMsgHandlerForHWND(hwnd, true);
+void UnregisterHandlerForHwndAndMessage(HWND hwnd, UINT msg) {
+    auto h = FindHandlerForHwndAndMsg(hwnd, msg, false);
     CrashIf(!h);
-    int n = h->nMessages;
-    int idx = -1;
-    for (int i = 0; i < n; i++) {
-        if (h->msgs[i] == msg) {
-            idx = i;
-            break;
+    ClearHwndMsgHandler(h);
+}
+
+void UnregisterHandlersForHwnd(HWND hwnd) {
+    for (auto h : gHwndMsgHandlers) {
+        if (h->hwnd == hwnd) {
+            ClearHwndMsgHandler(h);
         }
-    }
-    CrashIf(idx == -1); // should be there
-    // a fast removal that doesn't preserve order
-    h->msgs[idx] = h->msgs[n - 1];
-    h->msgs[n - 1] = 0;
-    h->nMessages--;
-    if (h->nMessages == 0) {
-        h->hwnd = nullptr;
-        h->handler = nullptr;
-        h->user = nullptr;
     }
 }
 
 static void HandleParentMessages(WndEvent* ev) {
-    ParentMsgHandler* h = FindParentMsgHandlerForHWND(ev->hwnd, false);
+    HWND hwnd = ev->hwnd;
+    if (ev->msg == WM_COMMAND) {
+        HWND hwndMaybe = (HWND)ev->lparam;
+        if (hwndMaybe != 0) {
+            hwnd = hwndMaybe;
+        }
+    }
+    auto h = FindHandlerForHwndAndMsg(hwnd, ev->msg, false);
     if (!h) {
         return;
     }
-    int n = h->nMessages;
-    for (int i = 0; i < n; i++) {
-        if (h->msgs[i] == ev->msg) {
-            h->handler(h->user, ev);
-            return;
-        }
-    }
+    h->handler(h->user, ev);
 }
 
 // to ensure we never overflow control ids
@@ -358,6 +344,15 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
 static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // char* msgName = getWinMessageName(msg);
     // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, wp);
+
+    {
+        WndEvent ev{};
+        SetWndEventSimple(ev);
+        HandleParentMessages(&ev);
+        if (ev.didHandle) {
+            return ev.result;
+        }
+    }
 
     if (WM_NCCREATE == msg) {
         CREATESTRUCT* cs = (CREATESTRUCT*)lp;

@@ -21,8 +21,9 @@ struct WndEvent {
     WindowBase* w = nullptr;
 };
 
-void RegisterParentHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void* user);
-void UnregisterParentHandlerForMessage(HWND hwnd, UINT msg);
+void RegisterHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void* user);
+void UnregisterHandlerForHwndAndMessage(HWND hwnd, UINT msg);
+void UnregisterHandlersForHwnd(HWND hwnd);
 
 #define SetWndEvent(n) \
     {                  \
@@ -31,6 +32,14 @@ void UnregisterParentHandlerForMessage(HWND hwnd, UINT msg);
         n.msg = msg;   \
         n.wparam = wp; \
         n.lparam = lp; \
+    }
+
+#define SetWndEventSimple(n) \
+    {                        \
+        n.hwnd = hwnd;       \
+        n.msg = msg;         \
+        n.wparam = wp;       \
+        n.lparam = lp;       \
     }
 
 struct CopyWndEvent {

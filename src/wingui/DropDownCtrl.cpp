@@ -29,6 +29,7 @@ DropDownCtrl::DropDownCtrl(HWND parent) : WindowBase(parent) {
 }
 
 DropDownCtrl::~DropDownCtrl() {
+    UnregisterHandlersForHwnd(hwnd);
 }
 
 static void setDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
@@ -40,35 +41,43 @@ static void setDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
     }
 }
 
-bool DropDownCtrl::Create() {
-    bool ok = WindowBase::Create();
-    setDropDownItems(hwnd, items);
-    SetCurrentSelection(-1);
-    if (ok) {
-        SubclassParent();
-    }
-    return ok;
+static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+    auto w = (DropDownCtrl*)user;
+    w->HandleWM_COMMAND(ev);
 }
 
-void DropDownCtrl::WndProcParent(WndEvent* ev) {
+bool DropDownCtrl::Create() {
+    bool ok = WindowBase::Create();
+    CrashIf(!ok);
+    if (!ok) {
+        return false;
+    }
+    setDropDownItems(hwnd, items);
+    SetCurrentSelection(-1);
+
+    void* user = this;
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
+    return true;
+}
+
+void DropDownCtrl::HandleWM_COMMAND(WndEvent* ev) {
     UINT msg = ev->msg;
+    CrashIf(msg != WM_COMMAND);
     WPARAM wp = ev->wparam;
-    if (msg == WM_COMMAND) {
-        auto code = HIWORD(wp);
-        if (code == CBN_SELCHANGE) {
-            if (onDropDownSelectionChanged) {
-                DropDownSelectionChangedEvent a;
-                CopyWndEvent cp(&a, ev);
-                a.dropDown = this;
-                a.idx = GetCurrentSelection();
-                std::string_view s;
-                if (a.idx >= 0 && a.idx < (int)items.size()) {
-                    a.item = items.at(a.idx);
-                }
-                onDropDownSelectionChanged(&a);
+    auto code = HIWORD(wp);
+    if (code == CBN_SELCHANGE) {
+        if (onDropDownSelectionChanged) {
+            DropDownSelectionChangedEvent a;
+            CopyWndEvent cp(&a, ev);
+            a.dropDown = this;
+            a.idx = GetCurrentSelection();
+            std::string_view s;
+            if (a.idx >= 0 && a.idx < (int)items.size()) {
+                a.item = items.at(a.idx);
             }
-            return;
+            onDropDownSelectionChanged(&a);
         }
+        return;
     }
 }
 
