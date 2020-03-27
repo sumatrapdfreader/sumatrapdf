@@ -30,6 +30,11 @@ ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
 ButtonCtrl::~ButtonCtrl() {
 }
 
+static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+    auto w = (ButtonCtrl*)user;
+    w->HandleWM_COMMAND(ev);
+}
+
 bool ButtonCtrl::Create() {
     if (isDefault) {
         dwStyle |= BS_DEFPUSHBUTTON;
@@ -40,7 +45,8 @@ bool ButtonCtrl::Create() {
     if (!ok) {
         return false;
     }
-    SubclassParent();
+    void* user = this;
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
     auto size = GetIdealSize();
     RECT r{0, 0, size.cx, size.cy};
     SetBounds(r);
@@ -62,20 +68,19 @@ SIZE ButtonCtrl::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-void ButtonCtrl::WndProcParent(WndEvent* ev) {
+void ButtonCtrl::HandleWM_COMMAND(WndEvent* ev) {
     UINT msg = ev->msg;
+    CrashIf(msg != WM_COMMAND);
     WPARAM wp = ev->wparam;
 
     ev->result = 0;
-    if (msg == WM_COMMAND) {
-        auto code = HIWORD(wp);
-        if (code == BN_CLICKED) {
-            if (onClicked) {
-                onClicked();
-            }
+    auto code = HIWORD(wp);
+    if (code == BN_CLICKED) {
+        if (onClicked) {
+            onClicked();
         }
-        ev->didHandle = true;
     }
+    ev->didHandle = true;
 }
 
 ILayout* NewButtonLayout(ButtonCtrl* w) {
