@@ -207,18 +207,6 @@ Kind kindWindowBase = "windowBase";
 static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
     CrashIf(hwnd != w->hwnd);
 
-#if 0
-    {
-        WndEvent ev{};
-        SetWndEvent(ev);
-        HandleRegisteredMessages(&ev);
-        if (ev.didHandle) {
-            didHandle = true;
-            return ev.result;
-        }
-    }
-#endif
-
     // or maybe get rid of WindowBase::WndProc and use msgFilterInternal
     // when per-control custom processing is needed
     if (w->msgFilter) {
@@ -394,7 +382,27 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    {
+        WndEvent ev{};
+        SetWndEventSimple(ev);
+        HandleRegisteredMessages(&ev);
+        if (ev.didHandle) {
+            return ev.result;
+        }
+    }
+
+    // TODDO: a hack, a Window might be deleted when we get here
+    // happens e.g. when we call CloseWindow() inside
+    // wndproc. Maybe instead of calling DestroyWindow()
+    // we should delete WindowInfo, for proper shutdown sequence
+    if (WM_DESTROY == msg) {
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
     Window* w = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    if (!w) {
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
 
     // this is the last message ever received by hwnd
     // TODO: move it to wndBaseProcDispatch? Maybe they don't
@@ -423,18 +431,6 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    // TODDO: a hack, a Window might be deleted when we get here
-    // happens e.g. when we call CloseWindow() inside
-    // wndproc. Maybe instead of calling DestroyWindow()
-    // we should delete WindowInfo, for proper shutdown sequence
-    if (WM_DESTROY == msg) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    if (!w) {
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
     if (w->isDialog) {
         if (WM_ACTIVATE == msg) {
             if (wp == 0) {
@@ -459,15 +455,6 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return 0;
     }
 
-    {
-        WndEvent ev{};
-        SetWndEventSimple(ev);
-        HandleRegisteredMessages(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
-    }
-
     bool didHandle = false;
     LRESULT res = wndBaseProcDispatch(w, hwnd, msg, wp, lp, didHandle);
     if (didHandle) {
@@ -486,6 +473,15 @@ static LRESULT CALLBACK wndProcSubclassed(HWND hwnd, UINT msg, WPARAM wp, LPARAM
 
     if (uIdSubclass != w->subclassId) {
         return DefSubclassProc(hwnd, msg, wp, lp);
+    }
+
+    {
+        WndEvent ev{};
+        SetWndEvent(ev);
+        HandleRegisteredMessages(&ev);
+        if (ev.didHandle) {
+            return ev.result;
+        }
     }
 
     bool didHandle = false;
