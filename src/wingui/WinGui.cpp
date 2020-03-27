@@ -248,6 +248,15 @@ static WinMsgWithName gWinMessageNames[] = {
     dm(WM_XBUTTONUP),
     dm(WM_XBUTTONDBLCLK),
 
+    dm(WM_MOUSEHWHEEL),
+    dm(WM_NEXTMENU),
+    dm(WM_PARENTNOTIFY),
+    dm(WM_ENTERMENULOOP),
+    dm(WM_EXITMENULOOP),
+    dm(WM_SIZING),
+    dm(WM_CAPTURECHANGED),
+    dm(WM_MOVING),
+
     dm(WM_NCXBUTTONDOWN),
     dm(WM_NCXBUTTONUP),
     dm(WM_NCXBUTTONDBLCLK),
@@ -335,11 +344,33 @@ char* getWinMessageName(UINT msg) {
     return "msg unknown";
 }
 
+// we might want to not show frequently posted messages
+// clang-format off
+UINT gToIgnore[] = {
+    WM_NCHITTEST,
+    WM_SETCURSOR,
+    WM_MOUSEMOVE,
+};
+// clang-format on
+
+static bool shouldIgnoreMsg(UINT msg) {
+    int n = (int)dimof(gToIgnore);
+    for (int i = 0; i < n; i++) {
+        if (gToIgnore[i] == msg) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void dbgLogMsg(char* prefix, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    UNUSED(lp);
+    if (shouldIgnoreMsg(msg)) {
+        return;
+    }
+
     char* msgName = getWinMessageName(msg);
     if (!prefix) {
         prefix = "";
     }
-    dbglogf("%shwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", prefix, hwnd, msg, msgName, wp);
+    dbglogf("%shwnd: 0x%4p, msg: 0x%03x (%s), wp: 0x%x, lp: 0x%x\n", prefix, hwnd, msg, msgName, wp, lp);
 }

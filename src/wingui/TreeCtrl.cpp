@@ -5,6 +5,7 @@
 #include "utils/Log.h"
 #include "utils/WinUtil.h"
 #include "utils/WinDynCalls.h"
+#include "utils/BitManip.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -80,8 +81,6 @@ static TVITEMW* GetTVITEM(TreeCtrl* tree, TreeItem* ti) {
     HTREEITEM hi = tree->GetHandleByTreeItem(ti);
     return GetTVITEM(tree, hi);
 }
-
-#include "utils/BitManip.h"
 
 // expand if collapse, collapse if expanded
 static void TreeViewToggle(TreeCtrl* tree, HTREEITEM hItem, bool recursive) {
@@ -460,11 +459,17 @@ void TreeCtrl::WndProc(WndEvent* ev) {
     HWND hwnd = ev->hwnd;
     UINT msg = ev->msg;
     WPARAM wp = ev->wparam;
+    LPARAM lp = ev->lparam;
 
-    //dbgLogMsg("tree:", hwnd, msg, wp, ev->lparam);
+    dbgLogMsg("tree:", hwnd, msg, wp, ev->lparam);
 
     TreeCtrl* w = this;
     CrashIf(w->hwnd != (HWND)hwnd);
+
+    if (WM_RBUTTONDOWN == msg) {
+        DefWindowProc(hwnd, msg, wp, lp);
+        return;
+    }
 
     if (WM_CONTEXTMENU == msg && onContextMenu) {
         HandleWM_CONTEXTMENU(ev);
