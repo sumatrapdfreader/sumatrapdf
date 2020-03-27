@@ -842,9 +842,19 @@ static WCHAR* GetInstallationDir() {
     return str::Join(L"C:\\", appName);
 }
 
-static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     bool handled;
-    switch (message) {
+
+    {
+        WndEvent ev{};
+        SetWndEventSimple(ev);
+        HandleRegisteredMessages(&ev);
+        if (ev.didHandle) {
+            return ev.result;
+        }
+    }
+
+    switch (msg) {
         case WM_CREATE:
             OnCreateWindow(hwnd);
             break;
@@ -853,7 +863,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             if (ghbrBackground == nullptr) {
                 ghbrBackground = CreateSolidBrush(RGB(0xff, 0xf2, 0));
             }
-            HDC hdc = (HDC)wParam;
+            HDC hdc = (HDC)wp;
             SetTextColor(hdc, RGB(0, 0, 0));
             SetBkMode(hdc, TRANSPARENT);
             return (LRESULT)ghbrBackground;
@@ -871,9 +881,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_COMMAND:
-            handled = InstallerOnWmCommand(wParam);
+            handled = InstallerOnWmCommand(wp);
             if (!handled) {
-                return DefWindowProc(hwnd, message, wParam, lParam);
+                return DefWindowProc(hwnd, msg, wp, lp);
             }
             break;
 
@@ -888,7 +898,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
     }
 
     return 0;

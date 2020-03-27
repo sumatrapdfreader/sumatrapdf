@@ -455,7 +455,6 @@ static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
 }
 
 void TreeCtrl::WndProc(WndEvent* ev) {
-
     HWND hwnd = ev->hwnd;
     UINT msg = ev->msg;
     WPARAM wp = ev->wparam;

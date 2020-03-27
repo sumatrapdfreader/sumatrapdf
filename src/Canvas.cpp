@@ -1096,7 +1096,7 @@ static LRESULT OnGesture(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lP
 }
 
 static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    //dbgLogMsg("canvas:", hwnd, msg, wParam, lParam);
+    // dbgLogMsg("canvas:", hwnd, msg, wParam, lParam);
 
     switch (msg) {
         case WM_PAINT:
