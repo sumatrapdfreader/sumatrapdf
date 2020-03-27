@@ -9,6 +9,9 @@
 
 #include "Mui.h"
 #include "wingui/FrameRateWnd.h"
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
 
 namespace mui {
 
@@ -30,7 +33,7 @@ EventMgr::~EventMgr() {
 
 // Set minimum size that will be enforced by handling WM_GETMINMAXINFO
 // Default is (0,0), which is unlimited
-void EventMgr::SetMinSize(Size s) {
+void EventMgr::SetMinSize(Gdiplus::Size s) {
     // TODO: need to figure out a way to force resizing
     // respecting those constraints. Could just size manually.
     // Without doing sth., the constraints will only apply
@@ -40,7 +43,7 @@ void EventMgr::SetMinSize(Size s) {
 
 // Set maximum size that will be enforced by handling WM_GETMINMAXINFO
 // Default is (0,0), which is unlimited
-void EventMgr::SetMaxSize(Size s) {
+void EventMgr::SetMaxSize(Gdiplus::Size s) {
     // TODO: need to figure out a way to force resizing
     // respecting those constraints. Could just size manually.
     // Without doing sth., the constraints will only apply
@@ -195,7 +198,7 @@ LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled) {
     return TRUE;
 }
 
-LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) {
+LRESULT EventMgr::OnMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled) {
     wasHandled = false;
 
     if (WM_ENTERSIZEMOVE == msg) {
@@ -223,19 +226,19 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHan
     }
 
     if (WM_MOUSEMOVE == msg) {
-        int x = GET_X_LPARAM(lParam);
-        int y = GET_Y_LPARAM(lParam);
-        return OnMouseMove(wParam, x, y, wasHandled);
+        int x = GET_X_LPARAM(lp);
+        int y = GET_Y_LPARAM(lp);
+        return OnMouseMove(wp, x, y, wasHandled);
     }
 
     if (WM_LBUTTONUP == msg) {
-        int x = GET_X_LPARAM(lParam);
-        int y = GET_Y_LPARAM(lParam);
-        return OnLButtonUp(wParam, x, y, wasHandled);
+        int x = GET_X_LPARAM(lp);
+        int y = GET_Y_LPARAM(lp);
+        return OnLButtonUp(wp, x, y, wasHandled);
     }
 
     if (WM_GETMINMAXINFO == msg) {
-        return OnGetMinMaxInfo((MINMAXINFO*)lParam, wasHandled);
+        return OnGetMinMaxInfo((MINMAXINFO*)lp, wasHandled);
     }
 
     if (WM_PAINT == msg) {

@@ -1509,12 +1509,13 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish) {
     }
 }
 
-LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // messages that don't require win
+
     switch (msg) {
         case WM_DROPFILES:
-            CrashIf(lParam != 0 && lParam != 1);
-            OnDropFiles((HDROP)wParam, !lParam);
+            CrashIf(lp != 0 && lp != 1);
+            OnDropFiles((HDROP)wp, !lp);
             return 0;
 
         // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-erasebkgnd
@@ -1526,13 +1527,13 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        return DefWindowProc(hwnd, msg, wp, lp);
     }
 
     // messages that require win
     switch (msg) {
         case WM_TIMER:
-            OnTimer(win, hwnd, wParam);
+            OnTimer(win, hwnd, wp);
             return 0;
 
         case WM_SIZE:
@@ -1549,15 +1550,15 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             // says that UiaReturnRawElementProvider() should be called regardless of lParam
             // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
             if (gPluginMode) {
-                return DefWindowProc(hwnd, msg, wParam, lParam);
+                return DefWindowProc(hwnd, msg, wp, lp);
             }
             // disable UIAutomation in release builds until concurrency issues and
             // memory leaks have been figured out and fixed
             if (!gIsDebugBuild) {
-                return DefWindowProc(hwnd, msg, wParam, lParam);
+                return DefWindowProc(hwnd, msg, wp, lp);
             }
             if (!win->CreateUIAProvider()) {
-                return DefWindowProc(hwnd, msg, wParam, lParam);
+                return DefWindowProc(hwnd, msg, wp, lp);
             }
             // TODO: should win->uia_provider->Release() as in
             // http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
@@ -1568,26 +1569,26 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
             // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
             // and since WM_GETOBJECT is called many times, it accumulates
-            return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
+            return uia::ReturnRawElementProvider(hwnd, wp, lp, win->uia_provider);
 
         default:
             // TODO: achieve this split through subclassing or different window classes
             if (win->AsFixed()) {
-                return WndProcCanvasFixedPageUI(win, hwnd, msg, wParam, lParam);
+                return WndProcCanvasFixedPageUI(win, hwnd, msg, wp, lp);
             }
 
             if (win->AsChm()) {
-                return WndProcCanvasChmUI(win, hwnd, msg, wParam, lParam);
+                return WndProcCanvasChmUI(win, hwnd, msg, wp, lp);
             }
 
             if (win->AsEbook()) {
-                return WndProcCanvasEbookUI(win, hwnd, msg, wParam, lParam);
+                return WndProcCanvasEbookUI(win, hwnd, msg, wp, lp);
             }
 
             if (win->IsAboutWindow()) {
-                return WndProcCanvasAbout(win, hwnd, msg, wParam, lParam);
+                return WndProcCanvasAbout(win, hwnd, msg, wp, lp);
             }
 
-            return WndProcCanvasLoadError(win, hwnd, msg, wParam, lParam);
+            return WndProcCanvasLoadError(win, hwnd, msg, wp, lp);
     }
 }

@@ -4591,6 +4591,18 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
     }
 
+    {
+        WndEvent ev{};
+        ev.hwnd = hwnd;
+        ev.msg = msg;
+        ev.wparam = wParam;
+        ev.lparam = lParam;
+        HandleRegisteredMessages(&ev);
+        if (ev.didHandle) {
+            return ev.result;
+        }
+    }
+
     switch (msg) {
         case WM_CREATE:
             // do nothing

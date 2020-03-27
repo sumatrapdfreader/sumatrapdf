@@ -971,6 +971,18 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND 
 }
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
+    // this is a parent of TreeCtrl and DropDownCtrl
+    // TODO: TreeCtrl and DropDownCtrl should be children of frame
+
+    {
+        WndEvent ev{};
+        SetWndEventSimple(ev);
+        HandleRegisteredMessages(&ev);
+        if (ev.didHandle) {
+            return ev.result;
+        }
+    }
+
     WindowInfo* winFromData = (WindowInfo*)(data);
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
