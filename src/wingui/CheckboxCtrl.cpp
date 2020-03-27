@@ -40,28 +40,35 @@ CheckboxCtrl::CheckboxCtrl(HWND parent) : WindowBase(parent) {
 CheckboxCtrl::~CheckboxCtrl() {
 }
 
+static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+    auto w = (CheckboxCtrl*)user;
+    w->HandleWM_COMMAND(ev);
+}
+
 bool CheckboxCtrl::Create() {
     bool ok = WindowBase::Create();
-    if (ok) {
-        SubclassParent();
+    CrashIf(!ok);
+    if (!ok) {
+        return false;
     }
+    void* user = this;
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
     return ok;
 }
 
-void CheckboxCtrl::WndProcParent(WndEvent* ev) {
+void CheckboxCtrl::HandleWM_COMMAND(WndEvent* ev) {
     UINT msg = ev->msg;
+    CrashIf(msg != WM_COMMAND);
     WPARAM wp = ev->wparam;
-    if (msg == WM_COMMAND) {
-        auto code = HIWORD(wp);
-        if (code == BN_CLICKED) {
-            if (OnCheckStateChanged) {
-                auto state = GetCheckState();
-                OnCheckStateChanged(state);
-            }
-            ev->didHandle = true;
-            ev->result = 0;
-            return;
+    auto code = HIWORD(wp);
+    if (code == BN_CLICKED) {
+        if (OnCheckStateChanged) {
+            auto state = GetCheckState();
+            OnCheckStateChanged(state);
         }
+        ev->didHandle = true;
+        ev->result = 0;
+        return;
     }
 }
 
