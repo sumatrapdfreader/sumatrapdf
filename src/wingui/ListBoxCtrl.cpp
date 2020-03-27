@@ -62,7 +62,6 @@ static void FillWithItems(ListBoxCtrl* w, ListBoxModel* model) {
 bool ListBoxCtrl::Create() {
     bool ok = WindowBase::Create();
     // TODO: update ideal size based on the size of the model?
-    CrashIf(!ok);
     if (!ok) {
         return false;
     }

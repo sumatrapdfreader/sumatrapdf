@@ -33,10 +33,13 @@ ProgressCtrl::~ProgressCtrl() {
 
 bool ProgressCtrl::Create() {
     bool ok = WindowBase::Create();
+    if (!ok) {
+        return false;
+    }
     if (max != 0) {
         SetMax(max);
     }
-    return ok;
+    return true;
 }
 
 SIZE ProgressCtrl::GetIdealSize() {

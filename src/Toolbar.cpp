@@ -679,8 +679,10 @@ void CreateToolbar(WindowInfo* win) {
     }
     int amres = ImageList_AddMasked(himl, hbmp, mask);
     int nImages = ImageList_GetImageCount(himl);
+#if 0
     dbglogf("res: %d, nImages: %d\n", amres, nImages);
     LogBitmapInfo(hbmp);
+#endif
     DeleteObject(hbmp);
 
     // in Plugin mode, replace the Open with a Save As button

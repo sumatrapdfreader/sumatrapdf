@@ -39,7 +39,7 @@ static void doMainLayout() {
     Size windowSize{currWinDx, currWinDy};
     Constraints constraints = Tight(windowSize);
     auto size = mainLayout->Layout(constraints);
-    dbglogf("doLayout: (%d,%d) => (%d, %d)\n", currWinDx, currWinDy, size.Width, size.Height);
+    //dbglogf("doLayout: (%d,%d) => (%d, %d)\n", currWinDx, currWinDy, size.Width, size.Height);
     Point min{0, 0};
     Point max{size.Width, size.Height};
     Rect bounds{min, max};
@@ -81,12 +81,12 @@ static void onTextChanged(EditTextChangedEvent* args) {
 }
 
 static ILayout* CreateEditLayout(HWND parent, std::string_view s) {
-    auto e = new EditCtrl(parent);
-    e->SetText(s);
-    e->SetCueText("a cue text");
-    e->OnTextChanged = onTextChanged;
-    e->Create();
-    return NewEditLayout(e);
+    auto w = new EditCtrl(parent);
+    w->SetText(s);
+    w->SetCueText("a cue text");
+    w->OnTextChanged = onTextChanged;
+    w->Create();
+    return NewEditLayout(w);
 }
 
 static char* ddItems[3] = {"foo", "another one", "bar"};
@@ -214,7 +214,16 @@ static void CreateMainLayout(HWND hwnd) {
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    // dbglogf("msg: 0x%x, wp: %d, lp: %d\n", msg, (int)wp, (int)lp);
+    dbgLogMsg("tl", hwnd, msg, wp, lp);
+
+    {
+        WndEvent ev{};
+        SetWndEventSimple(ev);
+        HandleRegisteredMessages(&ev);
+        if (ev.didHandle) {
+            return ev.result;
+        }
+    }
 
     switch (msg) {
         case WM_CREATE:
@@ -226,7 +235,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             GetClientRect(hwnd, &rect);
             currWinDx = RectDx(rect);
             currWinDy = RectDy(rect);
-            dbglogf("WM_SIZE: wp: %d, (%d,%d)\n", (int)wp, currWinDx, currWinDy);
+            //dbglogf("WM_SIZE: wp: %d, (%d,%d)\n", (int)wp, currWinDx, currWinDy);
             doMainLayout();
             return 0;
             // return DefWindowProc(hwnd, msg, wp, lp);
@@ -306,6 +315,6 @@ int TestLayout(HINSTANCE hInstance, int nCmdShow) {
         return FALSE;
     }
     HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
-    auto res = RunMessageLoop(accelTable);
+    auto res = RunMessageLoop(accelTable, g_hwnd);
     return res;
 }

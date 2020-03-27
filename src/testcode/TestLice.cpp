@@ -348,7 +348,7 @@ int TestLice(HINSTANCE hInstance, int nCmdShow) {
         return FALSE;
     }
     HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
-    auto res = RunMessageLoop(accelTable);
+    auto res = RunMessageLoop(accelTable, g_hwnd);
     delete framebuffer;
     LICE_DestroyLVG(gLvg);
     destroySvgPixmaps();

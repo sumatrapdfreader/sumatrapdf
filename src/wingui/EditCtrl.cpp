@@ -37,51 +37,52 @@ ILayout* NewEditLayout(EditCtrl* w) {
     return new WindowBaseLayout(w, kindEdit);
 }
 
-void EditCtrl::WndProcParent(WndEvent* ev) {
+static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+    auto w = (EditCtrl*)user;
+    w->HandleWM_COMMAND(ev);
+}
+
+static void DispatchWM_CTLCOLOREDIT(void* user, WndEvent* ev) {
+    auto w = (EditCtrl*)user;
+    w->HandleWM_CTLCOLOREDIT(ev);
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcoloredit
+void EditCtrl::HandleWM_CTLCOLOREDIT(WndEvent* ev) {
+    CrashIf(ev->msg != WM_CTLCOLOREDIT);
+    EditCtrl* w = this;
+    HWND hwndCtrl = (HWND)ev->lparam;
+    CrashIf(hwndCtrl != w->hwnd);
+    if (w->bgBrush == nullptr) {
+        return;
+    }
+    HDC hdc = (HDC)ev->wparam;
+    // SetBkColor(hdc, w->bgCol);
+    SetBkMode(hdc, TRANSPARENT);
+    if (w->textColor != ColorUnset) {
+        ::SetTextColor(hdc, w->textColor);
+    }
+    ev->didHandle = true;
+    ev->result = (INT_PTR)w->bgBrush;
+}
+
+void EditCtrl::HandleWM_COMMAND(WndEvent* ev) {
+    CrashIf(ev->msg != WM_COMMAND);
     EditCtrl* w = this;
 
-    UINT msg = ev->msg;
-    WPARAM wp = ev->wparam;
-    LPARAM lp = ev->lparam;
-
-    HWND hwndCtrl = (HWND)lp;
-    if (hwndCtrl != w->hwnd) {
-        return;
-    }
-
-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcoloredit
-    if (WM_CTLCOLOREDIT == msg) {
-        if (w->bgBrush == nullptr) {
-            ev->result = DefSubclassProc(hwnd, msg, wp, lp);
-            return;
-        }
-        HDC hdc = (HDC)wp;
-        // SetBkColor(hdc, w->bgCol);
-        SetBkMode(hdc, TRANSPARENT);
-        if (w->textColor != ColorUnset) {
-            ::SetTextColor(hdc, w->textColor);
-        }
-        ev->didHandle = true;
-        ev->result = (INT_PTR)w->bgBrush;
-        return;
-    }
-
-    if (WM_COMMAND == msg) {
-        // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
-        if (EN_CHANGE == HIWORD(wp)) {
-            if (w->OnTextChanged) {
-                EditTextChangedEvent a;
-                CopyWndEvent cp(&a, ev);
-                a.text = w->GetText();
-                w->OnTextChanged(&a);
-                if (a.didHandle) {
-                    return;
-                }
+    // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
+    auto code = HIWORD(ev->wparam);
+    if (EN_CHANGE == code) {
+        if (w->OnTextChanged) {
+            EditTextChangedEvent a;
+            CopyWndEvent cp(&a, ev);
+            a.text = w->GetText();
+            w->OnTextChanged(&a);
+            if (a.didHandle) {
+                return;
             }
         }
     }
-
-    // TODO: handle WM_CTLCOLORSTATIC for read-only/disabled controls
 }
 
 void EditCtrl::WndProc(WndEvent* ev) {
@@ -152,8 +153,13 @@ bool EditCtrl::Create() {
     if (!ok) {
         return false;
     }
+
     // Subclass();
-    SubclassParent();
+
+    void* user = this;
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
+    RegisterHandlerForMessage(hwnd, WM_CTLCOLOREDIT, DispatchWM_CTLCOLOREDIT, user);
+    // TODO: handle WM_CTLCOLORSTATIC for read-only/disabled controls
 
     HwndSetCueText(hwnd, cueText.AsView());
     return true;

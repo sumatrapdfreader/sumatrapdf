@@ -157,6 +157,6 @@ int TestTab(HINSTANCE hInstance, int nCmdShow) {
     UpdateTabsSize();
 
     HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
-    auto res = RunMessageLoop(accelTable);
+    auto res = RunMessageLoop(accelTable, nullptr);
     return res;
 }

@@ -47,7 +47,6 @@ static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
 
 bool CheckboxCtrl::Create() {
     bool ok = WindowBase::Create();
-    CrashIf(!ok);
     if (!ok) {
         return false;
     }

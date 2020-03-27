@@ -32,7 +32,6 @@ StaticCtrl::StaticCtrl(HWND p) : WindowBase(p) {
 StaticCtrl::~StaticCtrl() {
 }
 
-
 static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
     auto w = (StaticCtrl*)user;
     w->HandleWM_COMMAND(ev);
@@ -40,7 +39,6 @@ static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
 
 bool StaticCtrl::Create() {
     bool ok = WindowBase::Create();
-    CrashIf(ok);
     if (!ok) {
         return false;
     }

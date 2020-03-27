@@ -33,7 +33,9 @@ struct EditCtrl : WindowBase {
     bool Create() override;
     SIZE GetIdealSize() override;
     void WndProc(WndEvent*) override;
-    void WndProcParent(WndEvent*) override;
+
+    void HandleWM_COMMAND(WndEvent*);
+    void HandleWM_CTLCOLOREDIT(WndEvent*);
 
     void SetSelection(int start, int end);
     bool SetCueText(std::string_view);

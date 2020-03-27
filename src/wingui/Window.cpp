@@ -96,13 +96,52 @@ void UnregisterHandlersForHwnd(HWND hwnd) {
     }
 }
 
-static void HandleParentMessages(WndEvent* ev) {
+// TODO: potentially more messages
+// https://docs.microsoft.com/en-us/cpp/mfc/reflected-window-message-ids?view=vs-2019
+static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorbtn
+    if (WM_CTLCOLORBTN == msg) {
+        return (HWND)lp;
+    }
+    if (WM_CTLCOLORSTATIC == msg) {
+        HDC hdc = (HDC)wp;
+        return WindowFromDC(hdc);
+    }
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-notify
+    if (WM_NOTIFY == msg) {
+        NMHDR* hdr = (NMHDR*)lp;
+        return hdr->hwndFrom;
+    }
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-command
+    if (WM_COMMAND == msg) {
+        return (HWND)lp;
+    }
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-drawitem
+    if (WM_DRAWITEM == msg) {
+        DRAWITEMSTRUCT* s = (DRAWITEMSTRUCT*)lp;
+        return s->hwndItem;
+    }
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
+    if (WM_CONTEXTMENU == msg) {
+        return (HWND)wp;
+    }
+    // TODO: there's no HWND so have to do it differently e.g. allocate
+    // unique CtlID, store it in WindowBase and compare that
+#if 0
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-measureitem
+    if (WM_MEASUREITEM == msg) {
+        MEASUREITEMSTRUCT* s = (MEASUREITEMSTRUCT*)lp;
+        return s->CtlID;
+    }
+#endif
+    return nullptr;
+}
+
+void HandleRegisteredMessages(WndEvent* ev) {
     HWND hwnd = ev->hwnd;
-    if (ev->msg == WM_COMMAND) {
-        HWND hwndMaybe = (HWND)ev->lparam;
-        if (hwndMaybe != 0) {
-            hwnd = hwndMaybe;
-        }
+    HWND hwndMaybe = getChildHWNDForMessage(ev->msg, ev->wparam, ev->lparam);
+    if (hwndMaybe != nullptr) {
+        hwnd = hwndMaybe;
     }
     auto h = FindHandlerForHwndAndMsg(hwnd, ev->msg, false);
     if (!h) {
@@ -171,7 +210,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
     {
         WndEvent ev{};
         SetWndEvent(ev);
-        HandleParentMessages(&ev);
+        HandleRegisteredMessages(&ev);
         if (ev.didHandle) {
             didHandle = true;
             return ev.result;
@@ -348,7 +387,7 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     {
         WndEvent ev{};
         SetWndEventSimple(ev);
-        HandleParentMessages(&ev);
+        HandleRegisteredMessages(&ev);
         if (ev.didHandle) {
             return ev.result;
         }
@@ -453,47 +492,6 @@ static LRESULT CALLBACK wndProcSubclassed(HWND hwnd, UINT msg, WPARAM wp, LPARAM
         return res;
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
-}
-
-// TODO: potentially more messages
-// https://docs.microsoft.com/en-us/cpp/mfc/reflected-window-message-ids?view=vs-2019
-static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorbtn
-    if (WM_CTLCOLORBTN == msg) {
-        return (HWND)lp;
-    }
-    if (WM_CTLCOLORSTATIC == msg) {
-        HDC hdc = (HDC)wp;
-        return WindowFromDC(hdc);
-    }
-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-notify
-    if (WM_NOTIFY == msg) {
-        NMHDR* hdr = (NMHDR*)lp;
-        return hdr->hwndFrom;
-    }
-    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-command
-    if (WM_COMMAND == msg) {
-        return (HWND)lp;
-    }
-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-drawitem
-    if (WM_DRAWITEM == msg) {
-        DRAWITEMSTRUCT* s = (DRAWITEMSTRUCT*)lp;
-        return s->hwndItem;
-    }
-    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
-    if (WM_CONTEXTMENU == msg) {
-        return (HWND)wp;
-    }
-    // TODO: there's no HWND so have to do it differently e.g. allocate
-    // unique CtlID, store it in WindowBase and compare that
-#if 0
-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-measureitem
-    if (WM_MEASUREITEM == msg) {
-        MEASUREITEMSTRUCT* s = (MEASUREITEMSTRUCT*)lp;
-        return s->CtlID;
-    }
-#endif
-    return nullptr;
 }
 
 // TODO: maybe just always subclass main window and reflect those messages
@@ -675,7 +673,6 @@ bool WindowBase::Create() {
     }
     SetFont(hfont);
     HwndSetText(hwnd, text.AsView());
-    // SubclassParent();
     return true;
 }
 
@@ -927,13 +924,13 @@ void WindowBaseLayout::SetBounds(const Rect bounds) {
     ::InvalidateRect(wb->hwnd, nullptr, TRUE);
 }
 
-int RunMessageLoop(HACCEL accelTable) {
+int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0)) {
         if (TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
             continue;
         }
-        if (IsDialogMessage(msg.hwnd, &msg)) {
+        if (hwndDialog && IsDialogMessage(hwndDialog, &msg)) {
             continue;
         }
         TranslateMessage(&msg);

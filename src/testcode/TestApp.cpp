@@ -101,6 +101,6 @@ void TestApp(HINSTANCE hInstance) {
     // first layout is triggered
     w->SetIsVisible(true);
 
-    auto res = RunMessageLoop(nullptr);
+    auto res = RunMessageLoop(nullptr, w->hwnd);
     return;
 }

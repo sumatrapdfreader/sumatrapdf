@@ -24,6 +24,7 @@ struct WndEvent {
 void RegisterHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void* user);
 void UnregisterHandlerForHwndAndMessage(HWND hwnd, UINT msg);
 void UnregisterHandlersForHwnd(HWND hwnd);
+void HandleRegisteredMessages(WndEvent* ev);
 
 #define SetWndEvent(n) \
     {                  \
@@ -255,7 +256,7 @@ struct WindowBaseLayout : public ILayout {
 
 void HwndSetText(HWND hwnd, std::string_view s);
 UINT_PTR NextSubclassId();
-int RunMessageLoop(HACCEL accelTable);
+int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
 void PositionCloseTo(WindowBase* w, HWND hwnd);
 int GetNextCtrlID();
 HWND GetCurrentModelessDialog();

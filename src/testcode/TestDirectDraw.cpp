@@ -223,6 +223,6 @@ int TestDirectDraw(HINSTANCE hInstance, int nCmdShow) {
     }
 
     HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
-    auto res = RunMessageLoop(accelTable);
+    auto res = RunMessageLoop(accelTable, nullptr);
     return res;
 }
