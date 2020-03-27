@@ -456,12 +456,20 @@ static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
 }
 
 void TreeCtrl::WndProc(WndEvent* ev) {
+
     HWND hwnd = ev->hwnd;
     UINT msg = ev->msg;
     WPARAM wp = ev->wparam;
 
+    //dbgLogMsg("tree:", hwnd, msg, wp, ev->lparam);
+
     TreeCtrl* w = this;
     CrashIf(w->hwnd != (HWND)hwnd);
+
+    if (WM_CONTEXTMENU == msg && onContextMenu) {
+        HandleWM_CONTEXTMENU(ev);
+        return;
+    }
 
     if (w->msgFilter) {
         w->msgFilter(ev);

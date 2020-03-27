@@ -207,6 +207,7 @@ Kind kindWindowBase = "windowBase";
 static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
     CrashIf(hwnd != w->hwnd);
 
+#if 0
     {
         WndEvent ev{};
         SetWndEvent(ev);
@@ -216,6 +217,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
             return ev.result;
         }
     }
+#endif
 
     // or maybe get rid of WindowBase::WndProc and use msgFilterInternal
     // when per-control custom processing is needed
@@ -384,15 +386,6 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     // char* msgName = getWinMessageName(msg);
     // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, wp);
 
-    {
-        WndEvent ev{};
-        SetWndEventSimple(ev);
-        HandleRegisteredMessages(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
-    }
-
     if (WM_NCCREATE == msg) {
         CREATESTRUCT* cs = (CREATESTRUCT*)lp;
         Window* w = (Window*)cs->lpCreateParams;
@@ -464,6 +457,15 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         EndPaint(hwnd, &ps);
         return 0;
+    }
+
+    {
+        WndEvent ev{};
+        SetWndEventSimple(ev);
+        HandleRegisteredMessages(&ev);
+        if (ev.didHandle) {
+            return ev.result;
+        }
     }
 
     bool didHandle = false;
@@ -749,6 +751,7 @@ void WindowBase::HandleWM_CONTEXTMENU(WndEvent* ev) {
     cmev.mouseWindow.x = pt.x;
     cmev.mouseWindow.y = pt.y;
     w->onContextMenu(&cmev);
+    ev->didHandle = true;
 }
 
 Kind kindWindow = "window";
