@@ -22,7 +22,7 @@ struct WndEvent {
 };
 
 void RegisterHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void* user);
-void UnregisterHandlerForHwndAndMessage(HWND hwnd, UINT msg);
+void UnregisterHandlerForMessage(HWND hwnd, UINT msg);
 void UnregisterHandlersForHwnd(HWND hwnd);
 void HandleRegisteredMessages(WndEvent* ev);
 
@@ -152,7 +152,7 @@ struct WindowBase {
     // called at start of windows proc to allow intercepting messages
     MsgFilter msgFilter;
 
-    // allow handling WM_CONTEXTMENU
+    // allow handling WM_CONTEXTMENU. Must be set before Create()
     ContextMenuHandler onContextMenu = nullptr;
     // allow handling WM_SIZE
     SizeHandler onSize = nullptr;
@@ -182,7 +182,6 @@ struct WindowBase {
 
     HWND hwnd = nullptr;
     UINT_PTR subclassId = 0;
-    UINT_PTR subclassParentId = 0;
 
     WindowBase() = default;
     WindowBase(HWND p);
@@ -192,11 +191,9 @@ struct WindowBase {
     virtual SIZE GetIdealSize();
 
     virtual void WndProc(WndEvent*);
-    virtual void WndProcParent(WndEvent*);
 
     void Destroy();
     void Subclass();
-    void SubclassParent();
     void Unsubclass();
 
     void SetIsEnabled(bool);
@@ -223,6 +220,8 @@ struct WindowBase {
     void SetBackgroundColor(COLORREF);
     void SetColors(COLORREF bg, COLORREF txt);
     void SetRtl(bool);
+
+    void HandleWM_CONTEXTMENU(WndEvent*);
 };
 
 extern Kind kindWindow;

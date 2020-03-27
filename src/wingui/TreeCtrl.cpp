@@ -37,6 +37,16 @@ bool IsTree(ILayout* l) {
     return IsLayoutOfKind(l, kindTree);
 }
 
+static void DispatchWM_NOTIFY(void* user, WndEvent* ev) {
+    auto w = (TreeCtrl*)user;
+    w->HandleWM_NOTIFY(ev);
+}
+
+static void DispatchMouseDuringDrag(void* user, WndEvent* ev) {
+    auto w = (TreeCtrl*)user;
+    w->HandleMouseDuringDrag(ev);
+}
+
 static void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree) {
     while (hItem) {
         TreeView_Expand(hTree, hItem, flag);
@@ -105,8 +115,10 @@ static void SetTreeItemState(UINT uState, TreeItemState& state) {
     state.isChecked = n != 0;
 }
 
-void TreeCtrl::WndProcParent(WndEvent* ev) {
+void TreeCtrl::HandleMouseDuringDrag(WndEvent* ev) {
     UINT msg = ev->msg;
+
+    CrashIf(!isDragging);
 
     if (msg == WM_MOUSEMOVE) {
         if (!isDragging) {
@@ -128,9 +140,13 @@ void TreeCtrl::WndProcParent(WndEvent* ev) {
         return;
     }
 
-    if (msg != WM_NOTIFY) {
-        return;
-    }
+    CrashIf(true);
+}
+
+void TreeCtrl::HandleWM_NOTIFY(WndEvent* ev) {
+    UINT msg = ev->msg;
+
+    CrashIf(msg != WM_NOTIFY);
 
     auto* treeCtrl = (TreeCtrl*)this;
     LPARAM lp = ev->lparam;
@@ -331,6 +347,12 @@ void TreeCtrl::WndProcParent(WndEvent* ev) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/drag-a-tree-view-item
 void TreeCtrl::DragStart(NMTREEVIEWW* nmtv) {
+    // need to intercept mouse messages in the parent window during dragging
+    HWND hwndParent = GetParent(hwnd);
+    void* user = this;
+    RegisterHandlerForMessage(hwndParent, WM_MOUSEMOVE, DispatchMouseDuringDrag, user);
+    RegisterHandlerForMessage(hwndParent, WM_LBUTTONUP, DispatchMouseDuringDrag, user);
+
     HTREEITEM hitem = nmtv->itemNew.hItem;
     draggedItem = GetTreeItemByHandle(hitem);
     HIMAGELIST himl = TreeView_CreateDragImage(hwnd, hitem);
@@ -350,7 +372,7 @@ void TreeCtrl::DragStart(NMTREEVIEWW* nmtv) {
     // ShowCursor(FALSE);
     SetCursor(IDC_HAND);
     SetCapture(parent);
-    isDragging = TRUE;
+    isDragging = true;
 }
 
 void TreeCtrl::DragMove(int xCur, int yCur) {
@@ -399,6 +421,9 @@ void TreeCtrl::DragEnd() {
     isDragging = false;
     draggedItem = nullptr;
     dragTargetItem = nullptr;
+    HWND hwndParent = GetParent(hwnd);
+    UnregisterHandlerForMessage(hwndParent, WM_MOUSEMOVE);
+    UnregisterHandlerForMessage(hwndParent, WM_LBUTTONUP);
 }
 
 static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
@@ -510,7 +535,9 @@ bool TreeCtrl::Create(const WCHAR* title) {
     // TVN_ITEMCHANGED notification. As an alternative we could ignore TVN_ITEMCHANGED
     // if hItem doesn't point to an TreeItem
     Subclass();
-    SubclassParent();
+
+    void* user = this;
+    RegisterHandlerForMessage(hwnd, WM_NOTIFY, DispatchWM_NOTIFY, user);
 
     return true;
 }

@@ -121,6 +121,7 @@ struct TreeCtrl : WindowBase {
     // set before Create() to enable drag&drop
     bool supportDragDrop = false;
 
+    // TODO: possibly not needed anymore
     bool isDragging = false;
 
     TreeItem* draggedItem = nullptr;
@@ -173,7 +174,9 @@ struct TreeCtrl : WindowBase {
 
     SIZE GetIdealSize() override;
     void WndProc(WndEvent*) override;
-    void WndProcParent(WndEvent*) override;
+
+    void HandleMouseDuringDrag(WndEvent*);
+    void HandleWM_NOTIFY(WndEvent*);
 
     void Clear();
 

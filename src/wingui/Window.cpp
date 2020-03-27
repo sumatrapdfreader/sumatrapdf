@@ -82,7 +82,7 @@ void RegisterHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, 
     h->user = user;
 }
 
-void UnregisterHandlerForHwndAndMessage(HWND hwnd, UINT msg) {
+void UnregisterHandlerForMessage(HWND hwnd, UINT msg) {
     auto h = FindHandlerForHwndAndMsg(hwnd, msg, false);
     CrashIf(!h);
     ClearHwndMsgHandler(h);
@@ -494,57 +494,8 @@ static LRESULT CALLBACK wndProcSubclassed(HWND hwnd, UINT msg, WPARAM wp, LPARAM
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-// TODO: maybe just always subclass main window and reflect those messages
-// back to their children instead of subclassing in each child
-// Another option: always create a reflector HWND window, like walk does
-static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
-                                              DWORD_PTR dwRefData) {
-    WindowBase* w = (WindowBase*)dwRefData;
-    // char* msgName = getWinMessageName(msg);
-    // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x, id: %d, w: 0x%p\n", hwnd, msg, msgName, wp, uIdSubclass, w);
-    if (uIdSubclass != w->subclassParentId) {
-        return DefSubclassProc(hwnd, msg, wp, lp);
-    }
-
-    // needed for drag&drop in TreeCtrl
-    // TODO: not quite happy with this
-    if (WM_LBUTTONUP == msg || WM_MOUSEMOVE == msg) {
-        WndEvent ev{};
-        SetWndEvent(ev);
-        w->WndProcParent(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
-        return DefSubclassProc(hwnd, msg, wp, lp);
-    }
-
-    HWND hwndCtrl = getChildHWNDForMessage(msg, wp, lp);
-    if (!hwndCtrl) {
-        return DefSubclassProc(hwnd, msg, wp, lp);
-    }
-
-    CrashIf(hwnd != w->parent);
-    if (hwndCtrl != w->hwnd) {
-        return DefSubclassProc(hwnd, msg, wp, lp);
-    }
-
-    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
-    if (msg == WM_CONTEXTMENU && w->onContextMenu) {
-        ContextMenuEvent ev;
-        SetWndEvent(ev);
-        ev.w = w;
-        ev.mouseGlobal.x = GET_X_LPARAM(lp);
-        ev.mouseGlobal.y = GET_Y_LPARAM(lp);
-        POINT pt{ev.mouseGlobal.x, ev.mouseGlobal.y};
-        if (pt.x != -1) {
-            MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
-        }
-        ev.mouseWindow.x = pt.x;
-        ev.mouseWindow.y = pt.y;
-        w->onContextMenu(&ev);
-        return 0;
-    }
-
+// TODO: do I need WM_CTLCOLORSTATIC?
+#if 0
     // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorstatic
     if (WM_CTLCOLORSTATIC == msg) {
         HDC hdc = (HDC)wp;
@@ -557,15 +508,7 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
             return (LRESULT)bgBrush;
         }
     }
-
-    WndEvent ev{};
-    SetWndEvent(ev);
-    w->WndProcParent(&ev);
-    if (ev.didHandle) {
-        return ev.result;
-    }
-    return DefSubclassProc(hwnd, msg, wp, lp);
-}
+#endif
 
 void WindowBase::Subclass() {
     CrashIf(!hwnd);
@@ -578,25 +521,10 @@ void WindowBase::Subclass() {
     }
 }
 
-void WindowBase::SubclassParent() {
-    CrashIf(!parent);
-    WindowBase* wb = this;
-    subclassParentId = NextSubclassId();
-    BOOL ok = SetWindowSubclass(parent, wndProcParentDispatch, subclassParentId, (DWORD_PTR)wb);
-    CrashIf(!ok);
-    if (!ok) {
-        subclassParentId = 0;
-    }
-}
-
 void WindowBase::Unsubclass() {
     if (subclassId) {
         RemoveWindowSubclass(hwnd, wndProcSubclassed, subclassId);
         subclassId = 0;
-    }
-    if (subclassParentId) {
-        RemoveWindowSubclass(parent, wndProcParentDispatch, subclassParentId);
-        subclassParentId = 0;
     }
 }
 
@@ -623,18 +551,20 @@ WindowBase::~WindowBase() {
         DeleteObject(backgroundColorBrush);
     }
     Destroy();
+    UnregisterHandlersForHwnd(hwnd);
 }
 
 void WindowBase::WndProc(WndEvent* ev) {
     ev->didHandle = false;
 }
 
-void WindowBase::WndProcParent(WndEvent* ev) {
-    ev->didHandle = false;
-}
-
 SIZE WindowBase::GetIdealSize() {
     return {};
+}
+
+static void DispatchWM_CONTEXTMENU(void* user, WndEvent* ev) {
+    auto w = (WindowBase*)user;
+    w->HandleWM_CONTEXTMENU(ev);
 }
 
 bool WindowBase::Create() {
@@ -666,6 +596,13 @@ bool WindowBase::Create() {
 
     if (onDropFiles != nullptr) {
         DragAcceptFiles(hwnd, TRUE);
+    }
+
+    // TODO: maybe always register so that we can set onContextMenu
+    // after creation
+    if (onContextMenu) {
+        void* user = this;
+        RegisterHandlerForMessage(hwnd, WM_CONTEXTMENU, DispatchWM_CONTEXTMENU, user);
     }
 
     if (hfont == nullptr) {
@@ -795,6 +732,25 @@ void WindowBase::SetRtl(bool isRtl) {
     SetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
 }
 
+void WindowBase::HandleWM_CONTEXTMENU(WndEvent* ev) {
+    CrashIf(ev->msg != WM_CONTEXTMENU);
+    WindowBase* w = this;
+    CrashIf(!w->onContextMenu);
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
+    ContextMenuEvent cmev;
+    CopyWndEvent cpev(&cmev, ev);
+    cmev.w = w;
+    cmev.mouseGlobal.x = GET_X_LPARAM(ev->lparam);
+    cmev.mouseGlobal.y = GET_Y_LPARAM(ev->lparam);
+    POINT pt{cmev.mouseGlobal.x, cmev.mouseGlobal.y};
+    if (pt.x != -1) {
+        MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
+    }
+    cmev.mouseWindow.x = pt.x;
+    cmev.mouseWindow.y = pt.y;
+    w->onContextMenu(&cmev);
+}
+
 Kind kindWindow = "window";
 
 struct winClassWithAtom {
@@ -865,6 +821,7 @@ bool Window::Create() {
     AutoFreeWstr title = strconv::Utf8ToWstr(this->text.as_view());
     HINSTANCE hinst = GetInstance();
     hwnd = CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);
+    CrashIf(!hwnd);
     if (!hwnd) {
         return false;
     }
@@ -875,11 +832,11 @@ bool Window::Create() {
     SetBackgroundColor(backgroundColor);
     SetFont(hfont);
     HwndSetText(hwnd, text.AsView());
-
     return true;
 }
 
 Window::~Window() {
+    UnregisterHandlersForHwnd(hwnd);
 }
 
 void Window::SetTitle(std::string_view title) {
