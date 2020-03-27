@@ -32,15 +32,24 @@ StaticCtrl::StaticCtrl(HWND p) : WindowBase(p) {
 StaticCtrl::~StaticCtrl() {
 }
 
+
+static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+    auto w = (StaticCtrl*)user;
+    w->HandleWM_COMMAND(ev);
+}
+
 bool StaticCtrl::Create() {
     bool ok = WindowBase::Create();
-    if (ok) {
-        SubclassParent();
+    CrashIf(ok);
+    if (!ok) {
+        return false;
     }
+    void* user = this;
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
     auto size = GetIdealSize();
     RECT r{0, 0, size.cx, size.cy};
     SetBounds(r);
-    return ok;
+    return true;
 }
 
 SIZE StaticCtrl::GetIdealSize() {
@@ -50,12 +59,10 @@ SIZE StaticCtrl::GetIdealSize() {
     return s;
 }
 
-void StaticCtrl::WndProcParent(WndEvent* ev) {
+void StaticCtrl::HandleWM_COMMAND(WndEvent* ev) {
     UINT msg = ev->msg;
-    if (msg == WM_COMMAND) {
-        // TODO: support STN_CLICKED
-        return;
-    }
+    CrashIf(msg != WM_COMMAND);
+    // TODO: support STN_CLICKED
 }
 
 ILayout* NewStaticLayout(StaticCtrl* w) {
