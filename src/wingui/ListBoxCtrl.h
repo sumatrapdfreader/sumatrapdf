@@ -19,7 +19,7 @@ struct ListBoxModelStrings : ListBoxModel {
 
 struct ListBoxCtrl : WindowBase {
     ListBoxModel* model = nullptr;
-    SIZE minSize{240, 320};
+    SIZE minSize{120, 32};
 
     ListBoxCtrl(HWND parent);
     ~ListBoxCtrl() override;

@@ -127,6 +127,9 @@ WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form);
 void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 void ResizeWindow(HWND, int dx, int dy);
 
+void MessageBoxWarningSimple(HWND hwnd, const WCHAR* msg, const WCHAR* title = nullptr);
+void MessageBoxNYI(HWND hwnd);
+
 // schedule WM_PAINT at window's leasure
 void ScheduleRepaint(HWND hwnd);
 

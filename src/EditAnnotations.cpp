@@ -17,6 +17,7 @@
 #include "wingui/StaticCtrl.h"
 #include "wingui/ButtonCtrl.h"
 #include "wingui/ListBoxCtrl.h"
+#include "wingui/DropDownCtrl.h"
 
 #include "EngineBase.h"
 #include "EngineMulti.h"
@@ -30,7 +31,9 @@ struct EditAnnotationsWindow {
     HWND hwnd = nullptr;
     ILayout* mainLayout = nullptr;
     ListBoxCtrl* listBox = nullptr;
+    DropDownCtrl* dropDownAdd = nullptr;
     ButtonCtrl* buttonCancel = nullptr;
+    ButtonCtrl* buttonDelete = nullptr;
 
     ListBoxModel* lbModel = nullptr;
 
@@ -40,7 +43,9 @@ struct EditAnnotationsWindow {
     void CloseHandler(WindowCloseEvent* ev);
     void SizeHandler(SizeEvent* ev);
     void ButtonCancelHandler();
+    void ButtonDeleteHandler();
     void OnFinished();
+    void DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev);
 };
 
 static EditAnnotationsWindow* gEditAnnotationsWindow = nullptr;
@@ -62,11 +67,21 @@ void EditAnnotationsWindow::CloseHandler(WindowCloseEvent* ev) {
     gEditAnnotationsWindow = nullptr;
 }
 
+void EditAnnotationsWindow::ButtonDeleteHandler() {
+    MessageBoxNYI(hwnd);
+}
+
 void EditAnnotationsWindow::ButtonCancelHandler() {
     // gEditAnnotationsWindow->onFinished(nullptr);
     OnFinished();
     delete gEditAnnotationsWindow;
     gEditAnnotationsWindow = nullptr;
+}
+
+void EditAnnotationsWindow::DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev) {
+    UNUSED(ev);
+    // TODO: implement me
+    MessageBoxNYI(hwnd);
 }
 
 void EditAnnotationsWindow::SizeHandler(SizeEvent* ev) {
@@ -91,11 +106,48 @@ void EditAnnotationsWindow::SizeHandler(SizeEvent* ev) {
     mainLayout->SetBounds(bounds);
 }
 
+// clang-format off
+const char* gAnnotationTypes[] = {
+    "Text",
+    "Free Text",
+    "Stamp",
+    "Caret",
+    "Ink",
+    "Square",
+    "Circle",
+    "Line",
+    "Polygon",
+    // TODO: more
+};
+// clang-format on
+
+void GetDropDownAddItems(Vec<std::string_view>& items) {
+    int n = (int)dimof(gAnnotationTypes);
+    for (int i = 0; i < n; i++) {
+        const char* s = gAnnotationTypes[i];
+        items.Append(s);
+    }
+}
+
 void EditAnnotationsWindow::CreateMainLayout() {
     HWND parent = mainWindow->hwnd;
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
+
+    {
+        auto w = new DropDownCtrl(parent);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        dropDownAdd = w;
+        w->onDropDownSelectionChanged = std::bind(&EditAnnotationsWindow::DropDownAddSelectionChanged, this, _1);
+        auto l = NewDropDownLayout(w);
+        vbox->addChild(l);
+        Vec<std::string_view> annotTypes;
+        GetDropDownAddItems(annotTypes);
+        w->SetItems(annotTypes);
+        w->SetCueBanner("Add annotation...");
+    }
 
     {
         auto w = new ListBoxCtrl(parent);
@@ -107,18 +159,30 @@ void EditAnnotationsWindow::CreateMainLayout() {
     }
 
     {
-        auto b = new ButtonCtrl(parent);
-        b->SetText("Cance&l");
-        b->onClicked = std::bind(&EditAnnotationsWindow::ButtonCancelHandler, this);
-        bool ok = b->Create();
+        auto w = new ButtonCtrl(parent);
+        w->SetText("Delete annotation");
+        w->onClicked = std::bind(&EditAnnotationsWindow::ButtonDeleteHandler, this);
+        bool ok = w->Create();
         CrashIf(!ok);
-        buttonCancel = b;
-        auto l = NewButtonLayout(b);
+        buttonDelete = w;
+        auto l = NewButtonLayout(w);
+        vbox->addChild(l);
+        w->SetIsEnabled(false);
+    }
+
+    {
+        auto w = new ButtonCtrl(parent);
+        w->SetText("Close");
+        w->onClicked = std::bind(&EditAnnotationsWindow::ButtonCancelHandler, this);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        buttonCancel = w;
+        auto l = NewButtonLayout(w);
         vbox->addChild(l);
     }
 
     auto lbm = new ListBoxModelStrings();
-    lbm->strings.Append("annotations 1");
+    lbm->strings.Append("first annotation");
     lbm->strings.Append("second annotations");
     lbModel = lbm;
     listBox->SetModel(lbModel);
@@ -130,8 +194,8 @@ bool EditAnnotationsWindow::Create() {
     // w->isDialog = true;
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Annotations");
-    int dx = DpiScale(nullptr, 640);
-    int dy = DpiScale(nullptr, 800);
+    int dx = DpiScale(nullptr, 320);
+    int dy = DpiScale(nullptr, 640);
     w->initialSize = {dx, dy};
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
@@ -147,7 +211,7 @@ bool EditAnnotationsWindow::Create() {
     w->onSize = std::bind(&EditAnnotationsWindow::SizeHandler, this, _1);
 
     CreateMainLayout();
-    LayoutAndSizeToContent(mainLayout, 720, 800, w->hwnd);
+    LayoutAndSizeToContent(mainLayout, 320, 640, w->hwnd);
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered

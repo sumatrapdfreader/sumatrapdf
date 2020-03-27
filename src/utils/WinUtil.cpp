@@ -1764,6 +1764,18 @@ void ResizeWindow(HWND hwnd, int dx, int dy) {
     SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, SWP_NOMOVE | SWP_NOZORDER);
 }
 
+void MessageBoxWarningSimple(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
+    UINT type = MB_OK | MB_ICONEXCLAMATION;
+    if (!title) {
+        title = L"Warning";
+    }
+    MessageBox(hwnd, msg, title, type);
+}
+
+void MessageBoxNYI(HWND hwnd) {
+    MessageBoxWarningSimple(hwnd, L"Not Yet Implemented!", L"NYI");
+}
+
 void ScheduleRepaint(HWND hwnd) {
     InvalidateRect(hwnd, nullptr, FALSE);
 }

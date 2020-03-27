@@ -43,7 +43,7 @@ static void setDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
 bool DropDownCtrl::Create() {
     bool ok = WindowBase::Create();
     setDropDownItems(hwnd, items);
-    SetCurrentSelection(0);
+    SetCurrentSelection(-1);
     if (ok) {
         SubclassParent();
     }
@@ -72,23 +72,26 @@ void DropDownCtrl::WndProcParent(WndEvent* ev) {
     }
 }
 
+// -1 means no selection
 int DropDownCtrl::GetCurrentSelection() {
     int res = (int)ComboBox_GetCurSel(hwnd);
     return res;
 }
 
+// -1 : no selection
 void DropDownCtrl::SetCurrentSelection(int n) {
-    int nItems = (int)items.size();
-    if (nItems == 0) {
+    if (n < 0) {
+        ComboBox_SetCurSel(hwnd, -1);
         return;
     }
-    if (n < 0) {
-        n = 0;
-    }
-    if (n >= nItems) {
-        n = nItems - 1;
-    }
+    int nItems = (int)items.size();
+    CrashIf(n >= nItems);
     ComboBox_SetCurSel(hwnd, n);
+}
+
+void DropDownCtrl::SetCueBanner(std::string_view sv) {
+    AutoFreeWstr ws = strconv::Utf8ToWstr(sv);
+    ComboBox_SetCueBannerText(hwnd, ws.Get());
 }
 
 void DropDownCtrl::SetItems(Vec<std::string_view>& newItems) {
@@ -97,8 +100,7 @@ void DropDownCtrl::SetItems(Vec<std::string_view>& newItems) {
         items.Append(s);
     }
     setDropDownItems(hwnd, items);
-    SetCurrentSelection(0);
-    SetCurrentSelection(0);
+    SetCurrentSelection(-1);
 }
 
 SIZE DropDownCtrl::GetIdealSize() {
