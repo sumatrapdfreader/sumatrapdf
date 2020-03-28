@@ -1,6 +1,8 @@
-const fs = require('fs');
+//const fs = require('fs');
+const fg = require('fast-glob');
+const path = require("path");
 
-const pdf  = require('pdfjs-dist/build/pdf.js');
+const pdf = require('pdfjs-dist/build/pdf.js');
 
 const pdfPath = "x:\\books\\books\\StartSmallStaySmall.pdf";
 
@@ -22,8 +24,8 @@ function len(a) {
   return a.length;
 }
 
-async function doPDF(path) {
-  const doc = await pdf.getDocument(path).promise;
+async function doPDF(filePath) {
+  const doc = await pdf.getDocument(filePath).promise;
   const nPages = doc.numPages;
   let nAnnots = 0;
   for (let i = 1; i <= nPages; i++) {
@@ -38,12 +40,27 @@ async function doPDF(path) {
     nAnnots += annots.length;
   }
   if (nAnnots > 0) {
-    console.log(`${path} has ${nPages} pages and ${nAnnots} annotations`);
+    console.log(`${filePath} has ${nPages} pages and ${nAnnots} annotations`);
   } else {
-    console.log(`${path} has ${nPages} pages`);
+    console.log(`${filePath} has ${nPages} pages`);
   }
 }
 
 (async function main() {
-  await doPDF(pdfPath);
+  //await doPDF(pdfPath);
+  const startDir = "x:\\books\\books";
+  const opts = {
+    cwd: startDir,
+  }
+  let nFiles = 0;
+  const maxFiles = 1032;
+  const stream = fg.stream("**/*.pdf", opts);
+  for await (const name of stream) {
+    const filePath = path.join(startDir, name);
+    await doPDF(filePath);
+    nFiles++;
+    if (nFiles > maxFiles) {
+      return;
+    }
+  }
 })();
