@@ -3976,13 +3976,19 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     }
 }
 
+extern void OpenSystemMenu(WindowInfo* win);
+
 static bool FrameOnSysChar(WindowInfo* win, WPARAM key) {
     // use Alt+1 to Alt+8 for selecting the first 8 tabs and Alt+9 for the last tab
     if (win->tabsVisible && ('1' <= key && key <= '9')) {
         TabsSelect(win, key < '9' ? (int)(key - '1') : (int)win->tabs.size() - 1);
         return true;
     }
-
+    // Alt + Space opens a sys menu
+    if (key == ' ') {
+        OpenSystemMenu(win);
+        return true;
+    }
     return false;
 }
 
@@ -4583,6 +4589,7 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
 LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
+    //dbgLogMsg("frame:", hwnd, msg, wParam, lParam);
     if (win && win->tabsInTitlebar) {
         bool callDefault = true;
         LRESULT res = CustomCaptionFrameProc(hwnd, msg, wParam, lParam, &callDefault, win);

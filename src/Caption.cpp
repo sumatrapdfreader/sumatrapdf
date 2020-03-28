@@ -271,6 +271,16 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, L
     return 0;
 }
 
+void OpenSystemMenu(WindowInfo* win) {
+    HWND hwndSysMenu = win->caption->btn[CB_SYSTEM_MENU].hwnd;
+    HMENU systemMenu = GetUpdatedSystemMenu(win->hwndFrame, false);
+    RECT rc;
+    GetWindowRect(hwndSysMenu, &rc);
+
+    UINT flags = 0;
+    TrackPopupMenuEx(systemMenu, flags, rc.left, rc.bottom, win->hwndFrame, nullptr);
+}
+
 static WNDPROC DefWndProcButton = nullptr;
 static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
@@ -285,7 +295,9 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
                 return 0;
             } else {
                 ClientRect rc(hwnd);
-                if (!rc.Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
+                int x = GET_X_LPARAM(lParam);
+                int y = GET_Y_LPARAM(lParam);
+                if (!rc.Contains(PointI(x, y))) {
                     ReleaseCapture();
                     return 0;
                 }
@@ -319,14 +331,9 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_RBUTTONUP:
         case WM_LBUTTONUP:
             if (CB_SYSTEM_MENU == index) {
-                // Open system menu on click if not dragged (mouse move + left clic will trigger system move, see
-                // MOUSEMOVE event)
-                HMENU systemMenu = GetUpdatedSystemMenu(win->hwndFrame, false);
-                RECT windowRect;
-                GetWindowRect(hwnd, &windowRect);
-
-                UINT flags = 0;
-                TrackPopupMenuEx(systemMenu, flags, windowRect.left, windowRect.bottom, win->hwndFrame, nullptr);
+                // Open system menu on click if not dragged (mouse move + left click
+                // will trigger system move, see MOUSEMOVE event)
+                OpenSystemMenu(win);
             }
             break;
 
