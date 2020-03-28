@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "pdfjs-dist": "^2.3.200"
+  }
+}
