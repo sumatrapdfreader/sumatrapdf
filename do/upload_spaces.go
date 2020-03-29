@@ -165,7 +165,7 @@ func getVersionFilesForLatestInfo(buildType string) [][]string {
 	res = append(res, []string{remotePaths[1], ver})
 	// TOOD different for ramicro
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	res = append(res, []string{remotePaths[2], ver})
+	res = append(res, []string{remotePaths[2], s})
 	return res
 }
 
