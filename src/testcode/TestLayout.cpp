@@ -216,13 +216,9 @@ static void CreateMainLayout(HWND hwnd) {
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     //dbgLogMsg("tl", hwnd, msg, wp, lp);
 
-    {
-        WndEvent ev{};
-        SetWndEventSimple(ev);
-        HandleRegisteredMessages(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
+    LRESULT res = 0;
+    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+        return res;
     }
 
     switch (msg) {

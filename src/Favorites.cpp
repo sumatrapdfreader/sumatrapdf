@@ -761,25 +761,30 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
 }
 
 static WNDPROC DefWndProcFavBox = nullptr;
-static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
-        return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
+        return CallWindowProc(DefWndProcFavBox, hwnd, msg, wp, lp);
+    }
+
+    LRESULT res = 0;
+    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+        return res;
     }
 
     TreeCtrl* treeCtrl = win->favTreeCtrl;
-    switch (message) {
+    switch (msg) {
         case WM_SIZE:
             LayoutTreeContainer(win->favLabelWithClose, nullptr, treeCtrl->hwnd);
             break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_FAV_LABEL_WITH_CLOSE) {
+            if (LOWORD(wp) == IDC_FAV_LABEL_WITH_CLOSE) {
                 ToggleFavorites(win);
             }
             break;
     }
-    return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
+    return CallWindowProc(DefWndProcFavBox, hwnd, msg, wp, lp);
 }
 
 // in TableOfContents.cpp

@@ -137,17 +137,21 @@ static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
     return nullptr;
 }
 
-void HandleRegisteredMessages(WndEvent* ev) {
-    HWND hwnd = ev->hwnd;
-    HWND hwndMaybe = getChildHWNDForMessage(ev->msg, ev->wparam, ev->lparam);
+bool HandleRegisteredMessages(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
+    HWND hwndLookup = hwnd;
+    HWND hwndMaybe = getChildHWNDForMessage(msg, wp, lp);
     if (hwndMaybe != nullptr) {
-        hwnd = hwndMaybe;
+        hwndLookup = hwndMaybe;
     }
-    auto h = FindHandlerForHwndAndMsg(hwnd, ev->msg, false);
+    auto h = FindHandlerForHwndAndMsg(hwndLookup, msg, false);
     if (!h) {
-        return;
+        return false;
     }
-    h->handler(h->user, ev);
+    WndEvent ev;
+    SetWndEventSimple(ev);
+    h->handler(h->user, &ev);
+    res = ev.result;
+    return ev.didHandle;
 }
 
 // to ensure we never overflow control ids
@@ -382,13 +386,9 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    {
-        WndEvent ev{};
-        SetWndEventSimple(ev);
-        HandleRegisteredMessages(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
+    LRESULT res = 0;
+    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+        return res;
     }
 
     // TODDO: a hack, a Window might be deleted when we get here
@@ -456,7 +456,7 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     }
 
     bool didHandle = false;
-    LRESULT res = wndBaseProcDispatch(w, hwnd, msg, wp, lp, didHandle);
+    res = wndBaseProcDispatch(w, hwnd, msg, wp, lp, didHandle);
     if (didHandle) {
         return res;
     }
@@ -475,17 +475,13 @@ static LRESULT CALLBACK wndProcSubclassed(HWND hwnd, UINT msg, WPARAM wp, LPARAM
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
 
-    {
-        WndEvent ev{};
-        SetWndEvent(ev);
-        HandleRegisteredMessages(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
+    LRESULT res = 0;
+    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+        return res;
     }
 
     bool didHandle = false;
-    LRESULT res = wndBaseProcDispatch(w, hwnd, msg, wp, lp, didHandle);
+    res = wndBaseProcDispatch(w, hwnd, msg, wp, lp, didHandle);
     if (didHandle) {
         return res;
     }

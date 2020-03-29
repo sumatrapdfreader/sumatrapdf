@@ -974,13 +974,9 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     // this is a parent of TreeCtrl and DropDownCtrl
     // TODO: TreeCtrl and DropDownCtrl should be children of frame
 
-    {
-        WndEvent ev{};
-        SetWndEventSimple(ev);
-        HandleRegisteredMessages(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
+    LRESULT res = 0;
+    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+        return res;
     }
 
     WindowInfo* winFromData = (WindowInfo*)(data);

@@ -845,13 +845,9 @@ static WCHAR* GetInstallationDir() {
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     bool handled;
 
-    {
-        WndEvent ev{};
-        SetWndEventSimple(ev);
-        HandleRegisteredMessages(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
+    LRESULT res = 0;
+    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+        return res;
     }
 
     switch (msg) {

@@ -4586,28 +4586,21 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
     return 0;
 }
 
-LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
-    //dbgLogMsg("frame:", hwnd, msg, wParam, lParam);
+    // dbgLogMsg("frame:", hwnd, msg, wp, lp);
     if (win && win->tabsInTitlebar) {
         bool callDefault = true;
-        LRESULT res = CustomCaptionFrameProc(hwnd, msg, wParam, lParam, &callDefault, win);
+        LRESULT res = CustomCaptionFrameProc(hwnd, msg, wp, lp, &callDefault, win);
         if (!callDefault) {
             return res;
         }
     }
 
-    {
-        WndEvent ev{};
-        ev.hwnd = hwnd;
-        ev.msg = msg;
-        ev.wparam = wParam;
-        ev.lparam = lParam;
-        HandleRegisteredMessages(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
+    LRESULT res = 0;
+    if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {
+        return res;
     }
 
     switch (msg) {
@@ -4616,17 +4609,17 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             goto InitMouseWheelInfo;
 
         case WM_SIZE:
-            if (win && SIZE_MINIMIZED != wParam) {
+            if (win && SIZE_MINIMIZED != wp) {
                 RememberDefaultWindowPosition(win);
-                int dx = LOWORD(lParam);
-                int dy = HIWORD(lParam);
+                int dx = LOWORD(lp);
+                int dy = HIWORD(lp);
                 // dbglog::LogF("dx: %d, dy: %d", dx, dy);
                 FrameOnSize(win, dx, dy);
             }
             break;
 
         case WM_GETMINMAXINFO:
-            return OnFrameGetMinMaxInfo((MINMAXINFO*)lParam);
+            return OnFrameGetMinMaxInfo((MINMAXINFO*)lp);
 
         case WM_MOVE:
             if (win) {
@@ -4635,22 +4628,22 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_INITMENUPOPUP:
-            UpdateAppMenu(win, (HMENU)wParam);
+            UpdateAppMenu(win, (HMENU)wp);
             break;
 
         case WM_COMMAND:
-            return FrameOnCommand(win, hwnd, msg, wParam, lParam);
+            return FrameOnCommand(win, hwnd, msg, wp, lp);
 
         case WM_MEASUREITEM:
             if (gOwnerDrawMenu) {
-                MenuOwnerDrawnMesureItem(hwnd, (MEASUREITEMSTRUCT*)lParam);
+                MenuOwnerDrawnMesureItem(hwnd, (MEASUREITEMSTRUCT*)lp);
                 return TRUE;
             }
             break;
 
         case WM_DRAWITEM:
             if (gOwnerDrawMenu) {
-                MenuOwnerDrawnDrawItem(hwnd, (DRAWITEMSTRUCT*)lParam);
+                MenuOwnerDrawnDrawItem(hwnd, (DRAWITEMSTRUCT*)lp);
                 return TRUE;
             }
             break;
@@ -4659,7 +4652,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             // both keyboard and mouse drivers should produce WM_APPCOMMAND
             // messages for their special keys, so handle these here and return
             // TRUE so as to not make them bubble up further
-            switch (GET_APPCOMMAND_LPARAM(lParam)) {
+            switch (GET_APPCOMMAND_LPARAM(lp)) {
                 case APPCOMMAND_BROWSER_BACKWARD:
                     SendMessage(hwnd, WM_COMMAND, IDM_GOTO_NAV_BACK, 0);
                     return TRUE;
@@ -4676,17 +4669,17 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     SendMessage(hwnd, WM_COMMAND, IDM_VIEW_BOOKMARKS, 0);
                     return TRUE;
             }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_CHAR:
             if (win) {
-                FrameOnChar(win, wParam, lParam);
+                FrameOnChar(win, wp, lp);
             }
             break;
 
         case WM_KEYDOWN:
             if (win) {
-                FrameOnKeydown(win, wParam, lParam);
+                FrameOnKeydown(win, wp, lp);
             }
             break;
 
@@ -4694,40 +4687,40 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             // pressing and releasing the Alt key focuses the menu even if
             // the wheel has been used for scrolling horizontally, so we
             // have to suppress that effect explicitly in this situation
-            if (VK_MENU == wParam && gSuppressAltKey) {
+            if (VK_MENU == wp && gSuppressAltKey) {
                 gSuppressAltKey = false;
                 return 0;
             }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_SYSCHAR:
-            if (win && FrameOnSysChar(win, wParam))
+            if (win && FrameOnSysChar(win, wp))
                 return 0;
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_SYSCOMMAND:
             // temporarily show the menu bar if it has been hidden
-            if (wParam == SC_KEYMENU && win && win->isMenuHidden) {
+            if (wp == SC_KEYMENU && win && win->isMenuHidden) {
                 ShowHideMenuBar(win, true);
             }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_EXITMENULOOP:
             // hide the menu bar again if it was shown only temporarily
-            if (!wParam && win && win->isMenuHidden) {
+            if (!wp && win && win->isMenuHidden) {
                 SetMenu(hwnd, nullptr);
             }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_CONTEXTMENU: {
             // opening the context menu with a keyboard doesn't call the canvas'
             // WM_CONTEXTMENU, as it never has the focus (mouse right-clicks are
             // handled as expected)
-            int x = GET_X_LPARAM(lParam);
-            int y = GET_Y_LPARAM(lParam);
+            int x = GET_X_LPARAM(lp);
+            int y = GET_Y_LPARAM(lp);
             if (win && (x == -1) && (y == -1) && !IsFocused(win->tocTreeCtrl->hwnd))
-                return SendMessage(win->hwndCanvas, WM_CONTEXTMENU, wParam, lParam);
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+                return SendMessage(win->hwndCanvas, WM_CONTEXTMENU, wp, lp);
+            return DefWindowProc(hwnd, msg, wp, lp);
         }
 
         case WM_SETTINGCHANGE:
@@ -4758,13 +4751,13 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
             }
             if (win->AsChm()) {
-                return win->AsChm()->PassUIMsg(msg, wParam, lParam);
+                return win->AsChm()->PassUIMsg(msg, wp, lp);
             }
             CrashIf(!win->AsFixed() && !win->AsEbook());
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
             // never receives WM_MOUSEWHEEL messages)
-            return SendMessage(win->hwndCanvas, msg, wParam, lParam);
+            return SendMessage(win->hwndCanvas, msg, wp, lp);
 
         case WM_CLOSE:
             if (MayCloseWindow(win)) {
@@ -4785,7 +4778,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_ENDSESSION:
             // TODO: check for unfinished print jobs in WM_QUERYENDSESSION?
-            if (wParam == TRUE) {
+            if (wp == TRUE) {
                 prefs::Save();
                 // we must quit so that we restore opened files on start.
                 DestroyWindow(hwnd);
@@ -4795,18 +4788,18 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_DDE_INITIATE:
             if (gPluginMode)
                 break;
-            return OnDDEInitiate(hwnd, wParam, lParam);
+            return OnDDEInitiate(hwnd, wp, lp);
         case WM_DDE_EXECUTE:
-            return OnDDExecute(hwnd, wParam, lParam);
+            return OnDDExecute(hwnd, wp, lp);
         case WM_DDE_TERMINATE:
-            return OnDDETerminate(hwnd, wParam, lParam);
+            return OnDDETerminate(hwnd, wp, lp);
 
         case WM_COPYDATA:
-            return OnCopyData(hwnd, wParam, lParam);
+            return OnCopyData(hwnd, wp, lp);
 
         case WM_TIMER:
             if (win && win->stressTest) {
-                OnStressTestTimer(win, (int)wParam);
+                OnStressTestTimer(win, (int)wp);
             }
             break;
 
@@ -4820,7 +4813,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return TRUE;
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
     }
     return 0;
 }
