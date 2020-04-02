@@ -30,7 +30,8 @@ static struct
 	struct list list_dir;
 	char curdir[PATH_MAX];
 	int count;
-	struct entry files[512];
+	int max;
+	struct entry *files;
 	int selected;
 } fc;
 
@@ -49,6 +50,17 @@ static int cmp_entry(const void *av, const void *bv)
 	if (b->is_dir && !a->is_dir) return 1;
 	/* then alphabetically */
 	return strcmp(a->name, b->name);
+}
+
+static void
+ensure_one_more_file(void)
+{
+	if (fc.count == fc.max)
+	{
+		int new_max = fc.max == 0 ? 512 : fc.max*2;
+		fc.files = fz_realloc_array(ctx, fc.files, new_max, struct entry);
+		fc.max = new_max;
+	}
 }
 
 #ifdef _WIN32
@@ -86,6 +98,7 @@ static void load_dir(const char *path)
 
 	fc.selected = -1;
 	fc.count = 0;
+	fc.max = 0;
 
 	MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, PATH_MAX);
 	for (i=0; wpath[i]; ++i)
@@ -100,6 +113,7 @@ static void load_dir(const char *path)
 			WideCharToMultiByte(CP_UTF8, 0, ffd.cFileName, -1, buf, PATH_MAX, NULL, NULL);
 			if (ffd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 				continue;
+			ensure_one_more_file();
 			fc.files[fc.count].is_dir = ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 			if (fc.files[fc.count].is_dir || !fc.filter || fc.filter(buf))
 			{
@@ -202,21 +216,25 @@ static void load_dir(const char *path)
 
 	fc.selected = -1;
 	fc.count = 0;
+	fc.max = 0;
+
 	dir = opendir(fc.curdir);
 	if (!dir)
 	{
+		ensure_one_more_file();
 		fc.files[fc.count].is_dir = 1;
 		fz_strlcpy(fc.files[fc.count].name, "..", FILENAME_MAX);
 		++fc.count;
 	}
 	else
 	{
-		while ((dp = readdir(dir)) && fc.count < (int)nelem(fc.files))
+		while ((dp = readdir(dir)))
 		{
 			/* skip hidden files */
 			if (dp->d_name[0] == '.' && strcmp(dp->d_name, ".") && strcmp(dp->d_name, ".."))
 				continue;
 			fz_snprintf(buf, sizeof buf, "%s/%s", fc.curdir, dp->d_name);
+			ensure_one_more_file();
 			fc.files[fc.count].is_dir = fz_is_directory(ctx, buf);
 			if (fc.files[fc.count].is_dir || !fc.filter || fc.filter(buf))
 			{

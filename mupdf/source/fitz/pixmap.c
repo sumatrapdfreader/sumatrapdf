@@ -1284,6 +1284,33 @@ fz_new_pixmap_from_1bpp_data(fz_context *ctx, int x, int y, int w, int h, unsign
 	return pixmap;
 }
 
+/* Check if the pixmap is a 1-channel image containing samples with only values 0 and 255 */
+int
+fz_is_pixmap_monochrome(fz_context *ctx, fz_pixmap *pixmap)
+{
+	int n = pixmap->n + pixmap->s + pixmap->alpha;
+	int w = pixmap->w;
+	int h = pixmap->h;
+	unsigned char *s = pixmap->samples;
+	int x;
+
+	if (n != 1)
+		return 0;
+
+	while (h--)
+	{
+		for (x = 0; x < w; ++x)
+		{
+			unsigned char v = s[x];
+			if (v != 0 && v != 255)
+				return 0;
+		}
+		s += pixmap->stride;
+	}
+
+	return 1;
+}
+
 #ifdef ARCH_ARM
 static void
 fz_subsample_pixmap_ARM(unsigned char *ptr, int w, int h, int f, int factor,
@@ -1820,41 +1847,41 @@ fz_convert_separation_pixmap_to_base(fz_context *ctx, const fz_pixmap *src)
 		}
 		else
 		{
-		if (src->alpha)
-		{
-			for (y = 0; y < src->h; y++)
+			if (src->alpha)
 			{
-				for (x = 0; x < src->w; x++)
+				for (y = 0; y < src->h; y++)
 				{
-					for (k = 0; k < sn; ++k)
-						src_v[k] = *s++ / 255.0f;
-					a = *s++;
-					ss->u.separation.eval(ctx, ss->u.separation.tint, src_v, sn, base_v, bn);
-					for (k = 0; k < bn; ++k)
-						*d++ = base_v[k] * 255.0f;
-					*d++ = a;
+					for (x = 0; x < src->w; x++)
+					{
+						for (k = 0; k < sn; ++k)
+							src_v[k] = *s++ / 255.0f;
+						a = *s++;
+						ss->u.separation.eval(ctx, ss->u.separation.tint, src_v, sn, base_v, bn);
+						for (k = 0; k < bn; ++k)
+							*d++ = base_v[k] * 255.0f;
+						*d++ = a;
+					}
+					s += s_line_inc;
+					d += d_line_inc;
 				}
-				s += s_line_inc;
-				d += d_line_inc;
+			}
+			else
+			{
+				for (y = 0; y < src->h; y++)
+				{
+					for (x = 0; x < src->w; x++)
+					{
+						for (k = 0; k < sn; ++k)
+							src_v[k] = *s++ / 255.0f;
+						ss->u.separation.eval(ctx, ss->u.separation.tint, src_v, sn, base_v, bn);
+						for (k = 0; k < bn; ++k)
+							*d++ = base_v[k] * 255.0f;
+					}
+					s += s_line_inc;
+					d += d_line_inc;
+				}
 			}
 		}
-		else
-		{
-			for (y = 0; y < src->h; y++)
-			{
-				for (x = 0; x < src->w; x++)
-				{
-					for (k = 0; k < sn; ++k)
-						src_v[k] = *s++ / 255.0f;
-					ss->u.separation.eval(ctx, ss->u.separation.tint, src_v, sn, base_v, bn);
-					for (k = 0; k < bn; ++k)
-						*d++ = base_v[k] * 255.0f;
-				}
-				s += s_line_inc;
-				d += d_line_inc;
-			}
-		}
-}
 
 		if (src->flags & FZ_PIXMAP_FLAG_INTERPOLATE)
 			dst->flags |= FZ_PIXMAP_FLAG_INTERPOLATE;

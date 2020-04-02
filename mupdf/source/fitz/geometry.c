@@ -883,6 +883,17 @@ fz_transform_quad(fz_quad q, fz_matrix m)
 	return q;
 }
 
+fz_quad
+fz_quad_from_rect(fz_rect r)
+{
+	fz_quad q;
+	q.ul = fz_make_point(r.x0, r.y0);
+	q.ur = fz_make_point(r.x1, r.y0);
+	q.ll = fz_make_point(r.x0, r.y1);
+	q.lr = fz_make_point(r.x1, r.y1);
+	return q;
+}
+
 int fz_is_point_inside_rect(fz_point p, fz_rect r)
 {
 	return (p.x >= r.x0 && p.x < r.x1 && p.y >= r.y0 && p.y < r.y1);
@@ -893,8 +904,41 @@ int fz_is_point_inside_irect(int x, int y, fz_irect r)
 	return (x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1);
 }
 
+static int fz_is_point_inside_triangle(fz_point p, fz_point a, fz_point b, fz_point c)
+{
+	float s, t, area;
+	s = a.y * c.x - a.x * c.y + (c.y - a.y) * p.x + (a.x - c.x) * p.y;
+	t = a.x * b.y - a.y * b.x + (a.y - b.y) * p.x + (b.x - a.x) * p.y;
+
+	if ((s < 0) != (t < 0))
+		return 0;
+
+	area = -b.y * c.x + a.y * (c.x - b.x) + a.x * (b.y - c.y) + b.x * c.y;
+
+	return area < 0 ?
+		(s <= 0 && s + t >= area) :
+		(s >= 0 && s + t <= area);
+}
+
 int fz_is_point_inside_quad(fz_point p, fz_quad q)
 {
-	// TODO: non-rectilinear quads
-	return fz_is_point_inside_rect(p, fz_rect_from_quad(q));
+	return
+		fz_is_point_inside_triangle(p, q.ul, q.ur, q.lr) ||
+		fz_is_point_inside_triangle(p, q.ul, q.lr, q.ll);
+}
+
+int fz_is_quad_inside_quad(fz_quad needle, fz_quad haystack)
+{
+	return
+		fz_is_point_inside_quad(needle.ul, haystack) &&
+		fz_is_point_inside_quad(needle.ur, haystack) &&
+		fz_is_point_inside_quad(needle.ll, haystack) &&
+		fz_is_point_inside_quad(needle.lr, haystack);
+}
+
+int fz_is_quad_intersecting_quad(fz_quad a, fz_quad b)
+{
+	fz_rect ar = fz_rect_from_quad(a);
+	fz_rect br = fz_rect_from_quad(b);
+	return !fz_is_empty_rect(fz_intersect_rect(ar, br));
 }

@@ -345,7 +345,11 @@ pdf_open_filter(fz_context *ctx, pdf_document *doc, fz_stream *file_stm, pdf_obj
 		else if (pdf_array_len(ctx, filters) > 0)
 			fstm = build_filter_chain(ctx, rstm, doc, filters, params, orig_num, orig_gen, imparams);
 		else
+		{
+			if (imparams)
+				imparams->type = FZ_IMAGE_RAW;
 			fstm = fz_keep_stream(ctx, rstm);
+		}
 	}
 	fz_always(ctx)
 		fz_drop_stream(ctx, rstm);

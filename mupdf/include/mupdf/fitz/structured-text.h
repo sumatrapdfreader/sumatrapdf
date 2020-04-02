@@ -173,6 +173,7 @@ enum
 fz_quad fz_snap_selection(fz_context *ctx, fz_stext_page *page, fz_point *ap, fz_point *bp, int mode);
 
 char *fz_copy_selection(fz_context *ctx, fz_stext_page *page, fz_point a, fz_point b, int crlf);
+char *fz_copy_rectangle(fz_context *ctx, fz_stext_page *page, fz_rect area, int crlf);
 
 /*
 	Options for creating a pixmap and draw device.

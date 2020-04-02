@@ -1402,7 +1402,7 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 		l = pdf_dict_getp(ctx, field, "Lock/Action");
 		if (l)
 		{
-		a = pdf_dict_getp(ctx, field, "Lock/Fields");
+			a = pdf_dict_getp(ctx, field, "Lock/Fields");
 		}
 		else
 		{

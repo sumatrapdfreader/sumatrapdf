@@ -19,4 +19,7 @@ unsigned char *fz_new_deflated_data(fz_context *ctx, size_t *compressed_length, 
 
 unsigned char *fz_new_deflated_data_from_buffer(fz_context *ctx, size_t *compressed_length, fz_buffer *buffer, fz_deflate_level level);
 
+fz_buffer *fz_compress_ccitt_fax_g3(fz_context *ctx, const unsigned char *data, int columns, int rows);
+fz_buffer *fz_compress_ccitt_fax_g4(fz_context *ctx, const unsigned char *data, int columns, int rows);
+
 #endif

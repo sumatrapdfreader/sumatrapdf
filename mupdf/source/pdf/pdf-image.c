@@ -333,10 +333,12 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 		if (cbuffer)
 		{
 			fz_compression_params *cp = &cbuffer->params;
-			switch (cp ? cp->type : FZ_IMAGE_UNKNOWN)
+			switch (cp->type)
 			{
 			default:
-				goto raw_or_unknown_compression;
+				goto unknown_compression;
+			case FZ_IMAGE_RAW:
+				break;
 			case FZ_IMAGE_JPEG:
 				if (cp->u.jpeg.color_transform != -1)
 					pdf_dict_put_int(ctx, dp, PDF_NAME(ColorTransform), cp->u.jpeg.color_transform);
@@ -376,7 +378,6 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 				if (cp->u.flate.bpc)
 					pdf_dict_put_int(ctx, dp, PDF_NAME(BitsPerComponent), cp->u.flate.bpc);
 				pdf_dict_put(ctx, imobj, PDF_NAME(Filter), PDF_NAME(FlateDecode));
-				pdf_dict_put_int(ctx, imobj, PDF_NAME(BitsPerComponent), image->bpc);
 				break;
 			case FZ_IMAGE_LZW:
 				if (cp->u.lzw.columns)
@@ -399,6 +400,10 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 			if (!pdf_dict_len(ctx, dp))
 				pdf_dict_del(ctx, imobj, PDF_NAME(DecodeParms));
 
+			pdf_dict_put_int(ctx, imobj, PDF_NAME(BitsPerComponent), image->bpc);
+			pdf_dict_put_int(ctx, imobj, PDF_NAME(Width), image->w);
+			pdf_dict_put_int(ctx, imobj, PDF_NAME(Height), image->h);
+
 			buffer = fz_keep_buffer(ctx, cbuffer->buffer);
 
 			if (image->use_decode)
@@ -410,59 +415,80 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 		}
 		else
 		{
-			unsigned int size;
-			int h;
-			unsigned char *d, *s;
+unknown_compression:
 
-raw_or_unknown_compression:
-			/* Currently, set to maintain resolution; should we consider
-			 * subsampling here according to desired output res? */
 			pixmap = fz_get_pixmap_from_image(ctx, image, NULL, NULL, NULL, NULL);
 			n = pixmap->n - pixmap->alpha - pixmap->s; /* number of colorants */
 			if (n == 0)
 				n = 1; /* treat pixmaps with only alpha or spots as grayscale */
 
-			size = image->w * n;
-			h = image->h;
-			s = pixmap->samples;
-			d = Memento_label(fz_malloc(ctx, size * h), "pdf_image_samples");
-			buffer = fz_new_buffer_from_data(ctx, d, size * h);
+			pdf_dict_put_int(ctx, imobj, PDF_NAME(Width), pixmap->w);
+			pdf_dict_put_int(ctx, imobj, PDF_NAME(Height), pixmap->h);
 
-			if (n == pixmap->n)
+			if (fz_is_pixmap_monochrome(ctx, pixmap))
 			{
-				/* If we use all channels, we can copy the data as is. */
+				int stride = (image->w + 7) / 8;
+				int h = pixmap->h;
+				int w = pixmap->w;
+				unsigned char *s = pixmap->samples;
+				unsigned char *d = fz_calloc(ctx, h, stride);
+				buffer = fz_new_buffer_from_data(ctx, d, h * stride);
+
+				pdf_dict_put_int(ctx, imobj, PDF_NAME(BitsPerComponent), 1);
+
 				while (h--)
 				{
-					memcpy(d, s, size);
-					d += size;
+					int x;
+					for (x = 0; x < w; ++x)
+						if (s[x] > 0)
+							d[x>>3] |= 1 << (7 - (x & 7));
 					s += pixmap->stride;
+					d += stride;
 				}
 			}
 			else
 			{
-				/* Need to remove the alpha and spot planes. */
-				/* TODO: extract alpha plane to a soft mask. */
-				/* TODO: convert spots to colors. */
+				unsigned int size = pixmap->w * n;
+				int h = pixmap->h;
+				unsigned char *s = pixmap->samples;
+				unsigned char *d = Memento_label(fz_malloc(ctx, size * h), "pdf_image_samples");
+				buffer = fz_new_buffer_from_data(ctx, d, size * h);
 
-				int line_skip = pixmap->stride - pixmap->w * pixmap->n;
-				int skip = pixmap->n - n;
-				while (h--)
+				pdf_dict_put_int(ctx, imobj, PDF_NAME(BitsPerComponent), 8);
+
+				if (n == pixmap->n)
 				{
-					int w = pixmap->w;
-					while (w--)
+					/* If we use all channels, we can copy the data as is. */
+					while (h--)
 					{
-						int k;
-						for (k = 0; k < n; ++k)
-							*d++ = *s++;
-						s += skip;
+						memcpy(d, s, size);
+						d += size;
+						s += pixmap->stride;
 					}
-					s += line_skip;
+				}
+				else
+				{
+					/* Need to remove the alpha and spot planes. */
+					/* TODO: extract alpha plane to a soft mask. */
+					/* TODO: convert spots to colors. */
+
+					int line_skip = pixmap->stride - pixmap->w * pixmap->n;
+					int skip = pixmap->n - n;
+					while (h--)
+					{
+						int w = pixmap->w;
+						while (w--)
+						{
+							int k;
+							for (k = 0; k < n; ++k)
+								*d++ = *s++;
+							s += skip;
+						}
+						s += line_skip;
+					}
 				}
 			}
 		}
-
-		pdf_dict_put_int(ctx, imobj, PDF_NAME(Width), pixmap ? pixmap->w : image->w);
-		pdf_dict_put_int(ctx, imobj, PDF_NAME(Height), pixmap ? pixmap->h : image->h);
 
 		if (image->imagemask)
 		{
@@ -471,8 +497,6 @@ raw_or_unknown_compression:
 		else
 		{
 			fz_colorspace *cs;
-
-			pdf_dict_put_int(ctx, imobj, PDF_NAME(BitsPerComponent), image->bpc);
 
 			cs = pixmap ? pixmap->colorspace : image->colorspace;
 			switch (fz_colorspace_type(ctx, cs))

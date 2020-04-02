@@ -28,3 +28,4 @@ CoverageReport*
 LastCoverageResults.log
 artifacts/
 .idea/
+src/.vscode

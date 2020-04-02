@@ -449,53 +449,21 @@ pdf_redact_text_filter(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, f
 	pdf_page *page = opaque;
 	pdf_annot *annot;
 	pdf_obj *qp;
-	fz_point p;
 	fz_rect r;
 	fz_quad q;
 	int i, n;
+	float w, h;
 
 	trm = fz_concat(trm, ctm);
-	p = fz_make_point(trm.e, trm.f);
+	bbox = fz_transform_rect(bbox, trm);
 
-	for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
-	{
-		if (pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)) == PDF_NAME(Redact))
-		{
-			qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
-			n = pdf_array_len(ctx, qp);
-			if (n > 0)
-			{
-				for (i = 0; i < n; i += 8)
-				{
-					q = pdf_to_quad(ctx, qp, i);
-					if (fz_is_point_inside_quad(p, q))
-						return 1;
-				}
-			}
-			else
-			{
-				r = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
-				if (fz_is_point_inside_rect(p, r))
-					return 1;
-			}
-		}
-	}
-
-	return 0;
-}
-
-static int
-pdf_redact_image_filter(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image)
-{
-	pdf_page *page = opaque;
-	pdf_annot *annot;
-	pdf_obj *qp;
-	fz_rect area;
-	fz_rect r;
-	fz_quad q;
-	int i, n;
-
-	area = fz_transform_rect(fz_unit_rect, ctm);
+	/* Shrink character bbox a bit */
+	w = bbox.x1 - bbox.x0;
+	h = bbox.y1 - bbox.y0;
+	bbox.x0 += w / 10;
+	bbox.x1 -= w / 10;
+	bbox.y0 += h / 10;
+	bbox.y1 -= h / 10;
 
 	for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
 	{
@@ -509,22 +477,155 @@ pdf_redact_image_filter(fz_context *ctx, void *opaque, fz_matrix ctm, const char
 				{
 					q = pdf_to_quad(ctx, qp, i);
 					r = fz_rect_from_quad(q);
-					r = fz_intersect_rect(r, area);
-					if (!fz_is_empty_rect(r))
+					if (!fz_is_empty_rect(fz_intersect_rect(bbox, r)))
 						return 1;
 				}
 			}
 			else
 			{
 				r = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
-				r = fz_intersect_rect(r, area);
-				if (!fz_is_empty_rect(r))
+				if (!fz_is_empty_rect(fz_intersect_rect(bbox, r)))
 					return 1;
 			}
 		}
 	}
 
 	return 0;
+}
+
+static fz_pixmap *
+pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap *pixmap, fz_quad q)
+{
+	fz_matrix inv_ctm;
+	fz_irect r;
+	int x, y, k, n, bpp;
+	unsigned char white;
+
+	if (!pixmap)
+	{
+		fz_pixmap *original = fz_get_pixmap_from_image(ctx, image, NULL, NULL, NULL, NULL);
+		fz_try(ctx)
+			pixmap = fz_clone_pixmap(ctx, original);
+		fz_always(ctx)
+			fz_drop_pixmap(ctx, original);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+	}
+
+	n = pixmap->n + pixmap->s;
+	bpp = pixmap->n + pixmap->s + pixmap->alpha;
+	if (fz_colorspace_is_subtractive(ctx, pixmap->colorspace))
+		white = 0;
+	else
+		white = 255;
+
+	inv_ctm = fz_post_scale(fz_invert_matrix(ctm), pixmap->w, pixmap->h);
+	r = fz_round_rect(fz_transform_rect(fz_rect_from_quad(q), inv_ctm));
+	r.x0 = fz_clampi(r.x0, 0, pixmap->w);
+	r.x1 = fz_clampi(r.x1, 0, pixmap->w);
+	r.y1 = fz_clampi(pixmap->h - r.y1, 0, pixmap->h);
+	r.y0 = fz_clampi(pixmap->h - r.y0, 0, pixmap->h);
+	for (y = r.y1; y < r.y0; ++y)
+	{
+		for (x = r.x0; x < r.x1; ++x)
+		{
+			unsigned char *s = &pixmap->samples[y * pixmap->stride + x * bpp];
+			for (k = 0; k < n; ++k)
+				s[k] = white;
+			if (pixmap->alpha)
+				s[k] = 255;
+		}
+	}
+
+	return pixmap;
+}
+
+static fz_image *
+pdf_redact_image_filter(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image)
+{
+	fz_pixmap *redacted = NULL;
+	pdf_page *page = opaque;
+	pdf_annot *annot;
+	pdf_obj *qp;
+	fz_quad area, q;
+	fz_rect r;
+	int i, n;
+
+	fz_var(redacted);
+
+	area = fz_transform_quad(fz_quad_from_rect(fz_unit_rect), ctm);
+
+	/* First see if we can redact the image completely */
+	for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
+	{
+		if (pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)) == PDF_NAME(Redact))
+		{
+			qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
+			n = pdf_array_len(ctx, qp);
+			if (n > 0)
+			{
+				for (i = 0; i < n; i += 8)
+				{
+					q = pdf_to_quad(ctx, qp, i);
+					if (fz_is_quad_inside_quad(area, q))
+						return NULL;
+				}
+			}
+			else
+			{
+				r = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
+				q = fz_quad_from_rect(r);
+				if (fz_is_quad_inside_quad(area, q))
+					return NULL;
+			}
+		}
+	}
+
+	/* Blank out redacted parts of the image if necessary */
+	fz_try(ctx)
+	{
+		for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
+		{
+			if (pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)) == PDF_NAME(Redact))
+			{
+				qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
+				n = pdf_array_len(ctx, qp);
+				if (n > 0)
+				{
+					for (i = 0; i < n; i += 8)
+					{
+						q = pdf_to_quad(ctx, qp, i);
+						if (fz_is_quad_intersecting_quad(area, q))
+							redacted = pdf_redact_image_imp(ctx, ctm, image, redacted, q);
+					}
+				}
+				else
+				{
+					r = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
+					q = fz_quad_from_rect(r);
+					if (fz_is_quad_intersecting_quad(area, q))
+						redacted = pdf_redact_image_imp(ctx, ctm, image, redacted, q);
+				}
+			}
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_pixmap(ctx, redacted);
+		fz_rethrow(ctx);
+	}
+
+	if (redacted)
+	{
+		fz_try(ctx)
+			image = fz_new_image_from_pixmap(ctx, redacted, NULL);
+		fz_always(ctx)
+			fz_drop_pixmap(ctx, redacted);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+		return image;
+	}
+	return fz_keep_image(ctx, image);
 }
 
 static int

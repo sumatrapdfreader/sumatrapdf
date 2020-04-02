@@ -11,6 +11,7 @@
 #endif
 
 static int is_draw_mode = 0;
+static int new_contents = 0;
 
 static char save_filename[PATH_MAX];
 static pdf_write_options save_opts;
@@ -28,10 +29,14 @@ static int pdf_filter(const char *fn)
 static void init_save_pdf_options(void)
 {
 	save_opts = pdf_default_write_options;
+	save_opts = pdf_default_write_options;
+	if (pdf->redacted)
+		save_opts.do_garbage = 1;
+	else
+		save_opts.do_incremental = 1;
 	save_opts.do_compress = 1;
 	save_opts.do_compress_images = 1;
 	save_opts.do_compress_fonts = 1;
-	save_opts.do_incremental = 1;
 }
 
 static const char *cryptalgo_names[] = {
@@ -52,7 +57,8 @@ static void save_pdf_options(void)
 	ui_label("PDF write options:");
 	ui_layout(T, X, NW, 4, 2);
 
-	ui_checkbox("Incremental", &save_opts.do_incremental);
+	if (pdf_can_be_saved_incrementally(ctx, pdf))
+		ui_checkbox("Incremental", &save_opts.do_incremental);
 	fz_try(ctx)
 	{
 		if (pdf_count_signatures(ctx, pdf))
@@ -422,11 +428,12 @@ static void do_annotate_contents(void)
 	static struct input input;
 	const char *contents;
 
-	if (selected_annot != last_annot)
+	if (selected_annot != last_annot || new_contents)
 	{
 		last_annot = selected_annot;
 		contents = pdf_annot_contents(ctx, selected_annot);
 		ui_input_init(&input, contents);
+		new_contents = 0;
 	}
 
 	ui_label("Contents:");
@@ -522,7 +529,7 @@ void do_annotate_panel(void)
 
 	ui_layout(T, X, NW, 2, 2);
 
-	if (ui_popup("CreateAnnotPopup", "Create...", 1, 15))
+	if (ui_popup("CreateAnnotPopup", "Create...", 1, 16))
 	{
 		if (ui_popup_item("Text")) new_annot(PDF_ANNOT_TEXT);
 		if (ui_popup_item("FreeText")) new_annot(PDF_ANNOT_FREE_TEXT);
@@ -846,11 +853,18 @@ void do_annotate_panel(void)
 
 	if (has_redact)
 	{
+		static pdf_redact_options redact_opts;
+		ui_spacer();
+		ui_checkbox("Don't black out", &redact_opts.no_black_boxes);
+		ui_checkbox("Don't redact images", &redact_opts.keep_images);
 		if (ui_button("Redact"))
 		{
 			selected_annot = NULL;
-			trace_action("page.redact();\n");
-			pdf_redact_page(ctx, pdf, page, NULL);
+			trace_action("page.applyRedactions(%s, %s);\n",
+				redact_opts.no_black_boxes ? "true" : "false",
+				redact_opts.keep_images ? "true" : "false");
+			pdf_redact_page(ctx, pdf, page, &redact_opts);
+			trace_page_update();
 			load_page();
 			render_page();
 		}
@@ -1176,6 +1190,8 @@ static void do_edit_quad_points(void)
 	static fz_point pt = { 0, 0 };
 	static int marking = 0;
 	static fz_quad hits[1000];
+	fz_rect rect;
+	char *text;
 	int i, n;
 
 	if (ui_mouse_inside(view_page_area))
@@ -1200,7 +1216,25 @@ static void do_edit_quad_points(void)
 		page_a = fz_transform_point(page_a, view_page_inv_ctm);
 		page_b = fz_transform_point(page_b, view_page_inv_ctm);
 
-		n = fz_highlight_selection(ctx, page_text, page_a, page_b, hits, nelem(hits));
+		if (ui.mod == GLUT_ACTIVE_CTRL)
+			fz_snap_selection(ctx, page_text, &page_a, &page_b, FZ_SELECT_WORDS);
+		else if (ui.mod == GLUT_ACTIVE_CTRL + GLUT_ACTIVE_SHIFT)
+			fz_snap_selection(ctx, page_text, &page_a, &page_b, FZ_SELECT_LINES);
+
+		if (ui.mod == GLUT_ACTIVE_SHIFT)
+		{
+			rect = fz_make_rect(
+					fz_min(page_a.x, page_b.x),
+					fz_min(page_a.y, page_b.y),
+					fz_max(page_a.x, page_b.x),
+					fz_max(page_a.y, page_b.y));
+			n = 1;
+			hits[0] = fz_quad_from_rect(rect);
+		}
+		else
+		{
+			n = fz_highlight_selection(ctx, page_text, page_a, page_b, hits, nelem(hits));
+		}
 
 		glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO); /* invert destination color */
 		glEnable(GL_BLEND);
@@ -1238,6 +1272,16 @@ static void do_edit_quad_points(void)
 						hits[i].lr.x, hits[i].lr.y);
 					pdf_add_annot_quad_point(ctx, selected_annot, hits[i]);
 				}
+
+				if (ui.mod == GLUT_ACTIVE_SHIFT)
+					text = fz_copy_rectangle(ctx, page_text, rect, 0);
+				else
+					text = fz_copy_selection(ctx, page_text, page_a, page_b, 0);
+
+				trace_action("annot.setContents(%q);\n", text);
+				pdf_set_annot_contents(ctx, selected_annot, text);
+				new_contents = 1;
+				fz_free(ctx, text);
 			}
 			marking = 0;
 		}

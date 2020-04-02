@@ -836,6 +836,7 @@
     <ClCompile Include="..\..\source\fitz\draw-scale-simple.c" />
     <ClCompile Include="..\..\source\fitz\draw-unpack.c" />
     <ClCompile Include="..\..\source\fitz\encode-basic.c" />
+    <ClCompile Include="..\..\source\fitz\encode-fax.c" />
     <ClCompile Include="..\..\source\fitz\encodings.c" />
     <ClCompile Include="..\..\source\fitz\error.c" />
     <ClCompile Include="..\..\source\fitz\filter-basic.c" />

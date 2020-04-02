@@ -13,6 +13,8 @@ static const char *cbz_ext_list[] = {
 	".gif",
 	".hdp",
 	".j2k",
+	".jb2",
+	".jbig2",
 	".jp2",
 	".jpeg",
 	".jpg",

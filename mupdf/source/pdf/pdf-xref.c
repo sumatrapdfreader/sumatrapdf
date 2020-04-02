@@ -3798,9 +3798,11 @@ find_locked_fields_value(fz_context *ctx, pdf_locked_fields *fields, pdf_obj *v)
 	for (i = 0; i < n; i++)
 	{
 		pdf_obj *sr = pdf_array_get(ctx, ref, i);
-		pdf_obj *tm, *tp;
+		pdf_obj *tm, *tp, *type;
 
-		if (!pdf_name_eq(ctx, pdf_dict_get(ctx, sr, PDF_NAME(Type)), PDF_NAME(SigRef)))
+		/* Type is optional, but if it exists, it'd better be SigRef. */
+		type = pdf_dict_get(ctx, sr, PDF_NAME(Type));
+		if (type != NULL && !pdf_name_eq(ctx, type, PDF_NAME(SigRef)))
 			continue;
 		tm = pdf_dict_get(ctx, sr, PDF_NAME(TransformMethod));
 		tp = pdf_dict_get(ctx, sr, PDF_NAME(TransformParams));
@@ -4178,6 +4180,14 @@ int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 	return v;
 }
 
+/* Returns the number of updates ago when a signature became invalid,
+ * not counting any unsaved changes.
+ * Thus:
+ *  -1 => Has changed in the current unsaved changes.
+ *   0 => still valid.
+ *   1 => became invalid on the last save
+ *   n => became invalid n saves ago
+ */
 int pdf_validate_signature(fz_context *ctx, pdf_widget *widget)
 {
 	pdf_document *doc = widget->page->doc;

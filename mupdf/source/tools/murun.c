@@ -4078,6 +4078,20 @@ static void ffi_PDFPage_update(js_State *J)
 	js_pushboolean(J, changed);
 }
 
+static void ffi_PDFPage_applyRedactions(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_page *page = js_touserdata(J, 0, "pdf_page");
+	pdf_redact_options opts;
+	memset(&opts, 0, sizeof opts);
+	if (js_isdefined(J, 1)) opts.no_black_boxes = js_toboolean(J, 1);
+	if (js_isdefined(J, 2)) opts.keep_images = js_toboolean(J, 2);
+	fz_try(ctx)
+		pdf_redact_page(ctx, page->doc, page, &opts);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 static void ffi_PDFAnnotation_bound(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -5291,6 +5305,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFPage.createAnnotation", ffi_PDFPage_createAnnotation, 1);
 		jsB_propfun(J, "PDFPage.deleteAnnotation", ffi_PDFPage_deleteAnnotation, 1);
 		jsB_propfun(J, "PDFPage.update", ffi_PDFPage_update, 0);
+		jsB_propfun(J, "PDFPage.applyRedactions", ffi_PDFPage_applyRedactions, 2);
 	}
 	js_setregistry(J, "pdf_page");
 

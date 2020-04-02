@@ -1246,9 +1246,9 @@ write_string_with_quadding(fz_context *ctx, fz_buffer *buf,
 			if (q == 0)
 				x = 0;
 			else if (q == 1)
-					x = (maxw - w) / 2;
-				else
-					x = (maxw - w);
+				x = (maxw - w) / 2;
+			else
+				x = (maxw - w);
 			fz_append_printf(ctx, buf, "%g %g Td\n", x - px, -lineheight);
 			if (b[-1] == '\n' || b[-1] == '\r')
 				write_string(ctx, buf, lang, font, fontname, size, a, b-1);
@@ -2262,7 +2262,7 @@ void pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const ch
 void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_obj *subtype;
-	pdf_obj *ap, *ap_n, *as;
+	pdf_obj *ap, *ap_n, *as, *ft;
 
 	subtype = pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype));
 	if (subtype == PDF_NAME(Popup))
@@ -2295,7 +2295,12 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 		annot->has_new_ap = 1;
 	}
 
-	if (!annot->ap || annot->needs_new_ap)
+	ft = pdf_dict_get(ctx, annot->obj, PDF_NAME(FT));
+
+	/* We cannot synthesise an appearance for a Sig, so don't even try.
+	 * Attempting to, will move the object into the new incremental
+	 * section, which will invalidate the signature. */
+	if ((!annot->ap && !pdf_name_eq(ctx, ft, PDF_NAME(Sig))) || annot->needs_new_ap)
 	{
 		fz_rect rect, bbox;
 		fz_matrix matrix = fz_identity;

@@ -83,6 +83,10 @@ void fz_srand48(fz_context *ctx, int32_t seed)
 */
 void fz_memrnd(fz_context *ctx, unsigned char *data, int len)
 {
+#ifdef CLUSTER
+	memset(data, 0x55, len);
+#else
 	while (len-- > 0)
 		*data++ = (unsigned char)fz_lrand48(ctx);
+#endif
 }

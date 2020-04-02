@@ -46,7 +46,7 @@ int do_sign(void)
 
 	if (pdf_update_page(ctx, sig_widget->page))
 	{
-		trace_action("page.update();\n");
+		trace_page_update();
 		render_page();
 	}
 	return ok;
@@ -251,7 +251,7 @@ static void tx_dialog(void)
 				pdf_set_text_field_value(ctx, tx_widget, tx_input.text);
 				if (pdf_update_page(ctx, tx_widget->page))
 				{
-					trace_action("page.update();\n");
+					trace_page_update();
 					render_page();
 				}
 				ui.dialog = NULL;
@@ -309,7 +309,7 @@ static void ch_dialog(void)
 			{
 				if (pdf_update_page(ctx, ch_widget->page))
 				{
-					trace_action("page.update();\n");
+					trace_page_update();
 					render_page();
 				}
 				ui.dialog = NULL;
@@ -445,7 +445,7 @@ void do_widget_canvas(fz_irect canvas_area)
 
 	if (pdf_update_page(ctx, page))
 	{
-		trace_action("page.update();\n");
+		trace_page_update();
 		render_page();
 	}
 }

@@ -75,6 +75,8 @@ void fz_gamma_pixmap(fz_context *ctx, fz_pixmap *pix, float gamma);
 
 fz_pixmap *fz_convert_pixmap(fz_context *ctx, fz_pixmap *pix, fz_colorspace *cs_des, fz_colorspace *prf, fz_default_colorspaces *default_cs, fz_color_params color_params, int keep_alpha);
 
+int fz_is_pixmap_monochrome(fz_context *ctx, fz_pixmap *pixmap);
+
 /*
 	Pixmaps represent a set of pixels for a 2 dimensional region of a
 	plane. Each pixel has n components per pixel, the last of which is

@@ -115,7 +115,7 @@ check_field_locking(fz_context *ctx, pdf_obj *obj, void *data_, pdf_obj **ff)
 		if (data->prefix->name[0] && name)
 			strcat(prefix->name, ".");
 		if (name)
-		strcat(prefix->name, name);
+			strcat(prefix->name, name);
 		data->prefix = prefix;
 
 		if (pdf_name_eq(ctx, pdf_dict_get(ctx, obj, PDF_NAME(Type)), PDF_NAME(Annot)) &&
@@ -187,6 +187,10 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 		size_t len = 0;
 		pdf_obj *form;
 		int sf;
+#ifdef CLUSTER
+		memset(&now, 0, sizeof(now));
+		memset(tm, 0, sizeof(*tm));
+#endif
 
 		/* Ensure that all fields that will be locked by this signature
 		 * are marked as ReadOnly. */

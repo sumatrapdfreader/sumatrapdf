@@ -1182,11 +1182,13 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 	unsigned char *buf = buffer->data;
 	fz_image *image = NULL;
 	int type;
+	int bpc;
 
 	if (len < 8)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown image file format");
 
 	type = fz_recognize_image_format(ctx, buf);
+	bpc = 8;
 	switch (type)
 	{
 	case FZ_IMAGE_PNM:
@@ -1215,6 +1217,7 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 		break;
 	case FZ_IMAGE_JBIG2:
 		fz_load_jbig2_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
+		bpc = 1;
 		break;
 	default:
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown image file format");
@@ -1227,7 +1230,7 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 		bc->params.type = type;
 		if (type == FZ_IMAGE_JPEG)
 			bc->params.u.jpeg.color_transform = -1;
-		image = fz_new_image_from_compressed_buffer(ctx, w, h, 8, cspace, xres, yres, 0, 0, NULL, NULL, bc, NULL);
+		image = fz_new_image_from_compressed_buffer(ctx, w, h, bpc, cspace, xres, yres, 0, 0, NULL, NULL, bc, NULL);
 	}
 	fz_always(ctx)
 		fz_drop_colorspace(ctx, cspace);

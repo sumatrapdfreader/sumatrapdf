@@ -811,6 +811,7 @@
     <ClCompile Include="..\mupdf\source\fitz\draw-scale-simple.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-unpack.c" />
     <ClCompile Include="..\mupdf\source\fitz\encode-basic.c" />
+    <ClCompile Include="..\mupdf\source\fitz\encode-fax.c" />
     <ClCompile Include="..\mupdf\source\fitz\encodings.c" />
     <ClCompile Include="..\mupdf\source\fitz\error.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-basic.c" />

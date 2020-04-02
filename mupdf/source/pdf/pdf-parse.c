@@ -133,13 +133,13 @@ is_valid_utf8(const unsigned char *s, const unsigned char *end)
 	for (; s < end; ++s)
 	{
 		int skip = *s < 0x80 ? 0 : *s < 0xC0 ? -1 : *s < 0xE0 ? 1 : *s < 0xF0 ? 2 : *s < 0xF5 ? 3 : -1;
-        if (skip == -1)
-            return 0;
-        while (skip-- > 0)
+		if (skip == -1)
+			return 0;
+		while (skip-- > 0)
 			if (++s >= end || (*s & 0xC0) != 0x80)
-                return 0;
-    }
-    return 1;
+				return 0;
+	}
+	return 1;
 }
 
 /* Convert Unicode/PdfDocEncoding string into utf-8 */
@@ -249,9 +249,9 @@ pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *ssrcptr, size_t srclen
 	else if (is_valid_utf8(srcptr, srcptr + srclen))
 	{
 		dst = Memento_label(fz_malloc(ctx, srclen + 1), "utf8_from_guess");
-        memcpy(dst, srcptr, srclen);
-        dstptr = dst + srclen;
-    }
+		memcpy(dst, srcptr, srclen);
+		dstptr = dst + srclen;
+	}
 
 	/* PDFDocEncoding */
 	else

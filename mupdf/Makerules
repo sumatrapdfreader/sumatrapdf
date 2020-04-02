@@ -74,6 +74,10 @@ SYS_MUJS_LIBS := -lmujs
 SYS_OPENJPEG_LIBS := -lopenjp2
 SYS_ZLIB_LIBS := -lz
 
+ifneq "$(CLUSTER)" ""
+  CFLAGS += -DCLUSTER
+endif
+
 ifeq ($(OS),MINGW)
   WINDRES := windres
   HAVE_WIN32 := yes

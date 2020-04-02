@@ -176,6 +176,9 @@
     <ClCompile Include="..\mupdf\source\fitz\encode-basic.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\encode-fax.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\encodings.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>

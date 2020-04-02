@@ -1557,6 +1557,35 @@ static void preloadobjstms(fz_context *ctx, pdf_document *doc)
  * Save streams and objects to the output
  */
 
+static int is_bitmap_stream(fz_context *ctx, pdf_obj *obj, size_t len, int *w, int *h)
+{
+	pdf_obj *bpc;
+	pdf_obj *cs;
+	int stride;
+	if (pdf_dict_get(ctx, obj, PDF_NAME(Subtype)) != PDF_NAME(Image))
+		return 0;
+	*w = pdf_dict_get_int(ctx, obj, PDF_NAME(Width));
+	*h = pdf_dict_get_int(ctx, obj, PDF_NAME(Height));
+	stride = (*w + 7) >> 3;
+	if ((size_t)stride * (*h) != len)
+		return 0;
+	bpc = pdf_dict_get(ctx, obj, PDF_NAME(BitsPerComponent));
+	if (pdf_is_int(ctx, bpc))
+	{
+		if (pdf_to_int(ctx, bpc) != 1)
+			return 0;
+		cs = pdf_dict_get(ctx, obj, PDF_NAME(ColorSpace));
+		if (!pdf_name_eq(ctx, cs, PDF_NAME(DeviceGray)))
+			return 0;
+	}
+	else
+	{
+		if (pdf_dict_get_bool(ctx, obj, PDF_NAME(ImageMask)) != 1)
+			return 0;
+	}
+	return 1;
+}
+
 static inline int isbinary(int c)
 {
 	if (c == '\n' || c == '\r' || c == '\t')
@@ -1749,13 +1778,15 @@ static void write_data(fz_context *ctx, void *arg, const unsigned char *data, si
 
 static void copystream(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, pdf_obj *obj_orig, int num, int gen, int do_deflate, int unenc)
 {
-	fz_buffer *tmp_unhex = NULL, *tmp_flate = NULL, *tmp_hex = NULL, *buf = NULL;
+	fz_buffer *tmp_unhex = NULL, *tmp_comp = NULL, *tmp_hex = NULL, *buf = NULL;
 	pdf_obj *obj = NULL;
+	pdf_obj *dp;
 	size_t len;
 	unsigned char *data;
+	int w, h;
 
 	fz_var(buf);
-	fz_var(tmp_flate);
+	fz_var(tmp_comp);
 	fz_var(tmp_hex);
 	fz_var(obj);
 
@@ -1774,16 +1805,20 @@ static void copystream(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 
 		if (do_deflate && !pdf_dict_get(ctx, obj, PDF_NAME(Filter)))
 		{
-			size_t clen;
-			unsigned char *cdata;
-			tmp_flate = deflatebuf(ctx, data, len);
-			clen = fz_buffer_storage(ctx, tmp_flate, &cdata);
-			if (clen < len)
+			if (is_bitmap_stream(ctx, obj, len, &w, &h))
 			{
-				len = clen;
-				data = cdata;
+				tmp_comp = fz_compress_ccitt_fax_g4(ctx, data, w, h);
+				pdf_dict_put(ctx, obj, PDF_NAME(Filter), PDF_NAME(CCITTFaxDecode));
+				dp = pdf_dict_put_dict(ctx, obj, PDF_NAME(DecodeParms), 1);
+				pdf_dict_put_int(ctx, dp, PDF_NAME(K), -1);
+				pdf_dict_put_int(ctx, dp, PDF_NAME(Columns), w);
+			}
+			else
+			{
+				tmp_comp = deflatebuf(ctx, data, len);
 				pdf_dict_put(ctx, obj, PDF_NAME(Filter), PDF_NAME(FlateDecode));
 			}
+			len = fz_buffer_storage(ctx, tmp_comp, &data);
 		}
 
 		if (opts->do_ascii && isbinarystream(ctx, data, len))
@@ -1816,7 +1851,7 @@ static void copystream(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 	{
 		fz_drop_buffer(ctx, tmp_unhex);
 		fz_drop_buffer(ctx, tmp_hex);
-		fz_drop_buffer(ctx, tmp_flate);
+		fz_drop_buffer(ctx, tmp_comp);
 		fz_drop_buffer(ctx, buf);
 		pdf_drop_obj(ctx, obj);
 	}
@@ -1828,13 +1863,15 @@ static void copystream(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 
 static void expandstream(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, pdf_obj *obj_orig, int num, int gen, int do_deflate, int unenc)
 {
-	fz_buffer *buf = NULL, *tmp_flate = NULL, *tmp_hex = NULL;
+	fz_buffer *buf = NULL, *tmp_comp = NULL, *tmp_hex = NULL;
 	pdf_obj *obj = NULL;
+	pdf_obj *dp;
 	size_t len;
 	unsigned char *data;
+	int w, h;
 
 	fz_var(buf);
-	fz_var(tmp_flate);
+	fz_var(tmp_comp);
 	fz_var(tmp_hex);
 	fz_var(obj);
 
@@ -1848,16 +1885,20 @@ static void expandstream(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 		len = fz_buffer_storage(ctx, buf, &data);
 		if (do_deflate)
 		{
-			unsigned char *cdata;
-			size_t clen;
-			tmp_flate = deflatebuf(ctx, data, len);
-			clen = fz_buffer_storage(ctx, tmp_flate, &cdata);
-			if (clen < len)
+			if (is_bitmap_stream(ctx, obj, len, &w, &h))
 			{
-				len = clen;
-				data = cdata;
+				tmp_comp = fz_compress_ccitt_fax_g4(ctx, data, w, h);
+				pdf_dict_put(ctx, obj, PDF_NAME(Filter), PDF_NAME(CCITTFaxDecode));
+				dp = pdf_dict_put_dict(ctx, obj, PDF_NAME(DecodeParms), 1);
+				pdf_dict_put_int(ctx, dp, PDF_NAME(K), -1);
+				pdf_dict_put_int(ctx, dp, PDF_NAME(Columns), w);
+			}
+			else
+			{
+				tmp_comp = deflatebuf(ctx, data, len);
 				pdf_dict_put(ctx, obj, PDF_NAME(Filter), PDF_NAME(FlateDecode));
 			}
+			len = fz_buffer_storage(ctx, tmp_comp, &data);
 		}
 
 		if (opts->do_ascii && isbinarystream(ctx, data, len))
@@ -1889,7 +1930,7 @@ static void expandstream(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 	fz_always(ctx)
 	{
 		fz_drop_buffer(ctx, tmp_hex);
-		fz_drop_buffer(ctx, tmp_flate);
+		fz_drop_buffer(ctx, tmp_comp);
 		fz_drop_buffer(ctx, buf);
 		pdf_drop_obj(ctx, obj);
 	}

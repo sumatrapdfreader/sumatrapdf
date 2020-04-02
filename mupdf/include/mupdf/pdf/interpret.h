@@ -201,7 +201,7 @@ pdf_processor *pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahx
 typedef struct pdf_filter_options_s
 {
 	void *opaque;
-	int (*image_filter)(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image);
+	fz_image *(*image_filter)(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image);
 	int (*text_filter)(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, fz_matrix trm, fz_matrix ctm, fz_rect bbox);
 	void (*after_text_object)(fz_context *ctx, void *opaque, pdf_document *doc, pdf_processor *chain, fz_matrix ctm);
 	void (*end_page)(fz_context *ctx, fz_buffer *buffer, void *arg);

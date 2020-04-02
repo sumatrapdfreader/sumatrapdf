@@ -635,6 +635,7 @@ function mupdf_files()
     "draw-scale-simple.c",
     "draw-unpack.c",
     "encode-basic.c",
+    "encode-fax.c",
     "encodings.c",
     "error.c",
     "filter-basic.c",
