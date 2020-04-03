@@ -18,6 +18,8 @@ const pdf = require('pdfjs-dist/es5/build/pdf.js');
 
 const pdfPath = "x:\\books\\books\\StartSmallStaySmall.pdf";
 const startDir = "x:\\books\\books";
+// if destDir is "", then don't copy
+const destDir = "c:\\Users\\kjk\\sumtest\\files-with-annots";
 
 let fileNo = 0;
 const maxFiles = 512;
@@ -112,7 +114,7 @@ function getAnnotName(annotType) {
   return annotationTypes[idx];
 }
 
-function dumpAnnotsByType() {
+function dumpAnnotsByTypeAndMaybeCopy(dstDir) {
   console.log("\n");
   //console.log(annotsByType);
   const keys = Object.keys(annotsByType);
@@ -134,6 +136,12 @@ function dumpAnnotsByType() {
         nPrintedFiles++;
         if (nPrintedFiles >= maxFiles) {
           break;
+        }
+        if (dstDir != "") {
+          const fileName = path.basename(filePath);
+          const dstName = `${annotType}-${fileName}`;
+          const dstPath = path.join(dstDir, dstName);
+          fs.copyFileSync(filePath, dstPath);
         }
         prevPageNo = -1;
         console.log(`  ${filePath}, page: ${pageNo}`)
@@ -201,5 +209,5 @@ async function doPDF(filePath) {
   }
 
   dumpWithAnnots();
-  dumpAnnotsByType();
+  dumpAnnotsByTypeAndMaybeCopy(destDir);
 })();
