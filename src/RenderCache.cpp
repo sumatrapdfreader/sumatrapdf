@@ -744,12 +744,14 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, Pag
                         bool* renderOutOfDateCue) {
     CrashIf(!pageInfo->shown || 0.0 == pageInfo->visibleRatio);
 
+#if 0
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
         logf("RenderCache::Paint() pageNo: %d, bounds={%d,%d,%d,%d} in %.2f\n", pageNo, bounds.x, bounds.y, bounds.dx,
              bounds.dy, dur);
     };
+#endif
 
     if (!dm->ShouldCacheRendering(pageNo)) {
         int rotation = dm->GetRotation();
