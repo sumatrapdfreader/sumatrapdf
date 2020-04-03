@@ -347,7 +347,7 @@ class EnginePdf : public EngineBase {
     bool LoadFromStream(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
 
-    FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy);
+    FzPageInfo* GetFzPageInfo(int pageNo, bool forSearch, bool failIfBusy);
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation);
     TocItem* BuildTocTree(TocItem* parent, fz_outline* entry, int& idCounter, bool isAttachment);
@@ -1004,30 +1004,39 @@ PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
     return pageDest;
 }
 
-FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool failIfBusy) {
+FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool forSearch, bool failIfBusy) {
     ScopedCritSec scope(&pagesAccess);
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = _pages[pageNo - 1];
-    // TODO: not sure what failIfBusy is supposed to do
-    if (pageInfo || failIfBusy) {
+    // TODO: maybe remove failIfBusy
+    if (failIfBusy) {
         return pageInfo;
     }
+    if (forSearch && pageInfo->loadedForSearch) {
+        return pageInfo;
+    }
+    if (!forSearch && pageInfo->loaded) {
+        return pageInfo;
+    }
+
     CrashIf(pageInfo->pageNo != pageNo);
 
-    ScopedCritSec ctxScope(ctxAccess);
-    fz_page* page = nullptr;
-    fz_var(page);
-    fz_try(ctx) {
-        page = fz_load_page(ctx, _doc, pageNo - 1);
-        pageInfo->page = page;
-    }
-    fz_catch(ctx) {
-        page = nullptr;
+    // might have been loaded by forSearch
+    if (!pageInfo->page) {
+        ScopedCritSec ctxScope(ctxAccess);
+        fz_try(ctx) {
+            pageInfo->page = fz_load_page(ctx, _doc, pageNo - 1);
+        }
+        fz_catch(ctx) {
+        }
     }
 
-    // TODO: should do something if page is nullptr?
+    fz_page* page = pageInfo->page;
+    if (!page) {
+        return nullptr;
+    }
 
     /* TODO: handle try later?
     if (fz_caught(ctx) != FZ_ERROR_TRYLATER) {
@@ -1035,25 +1044,25 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool failIfBusy) {
     }
     */
 
-    fz_display_list* list = NULL;
-    fz_var(list);
-    fz_try(ctx) {
-        list = fz_new_display_list_from_page(ctx, page);
-    }
-    fz_catch(ctx) {
-        list = nullptr;
-    }
-
-    pageInfo->list = list;
-
+    // when loading just for search, we load only stext
     fz_stext_options opts{};
     opts.flags = FZ_STEXT_PRESERVE_IMAGES;
-
     fz_try(ctx) {
         pageInfo->stext = fz_new_stext_page_from_page(ctx, page, &opts);
     }
     fz_catch(ctx) {
-        pageInfo->stext = nullptr;
+    }
+    pageInfo->loadedForSearch = true;
+    if (forSearch) {
+        return pageInfo;
+    }
+
+    pageInfo->loaded = true;
+
+    fz_try(ctx) {
+        pageInfo->list = fz_new_display_list_from_page(ctx, page);
+    }
+    fz_catch(ctx) {
     }
 
     auto* links = fz_load_links(ctx, page);
@@ -1072,7 +1081,7 @@ RectD EnginePdf::PageMediabox(int pageNo) {
 }
 
 RectD EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, false);
 
     ScopedCritSec scope(ctxAccess);
 
@@ -1129,7 +1138,7 @@ RectD EnginePdf::Transform(RectD rect, int pageNo, float zoom, int rotation, boo
 RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
 
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, false);
     fz_page* page = pageInfo->page;
     pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);
 
@@ -1207,12 +1216,12 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
 }
 
 PageElement* EnginePdf::GetElementAtPos(int pageNo, PointD pt) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, false);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
 Vec<PageElement*>* EnginePdf::GetElements(int pageNo) {
-    auto* pageInfo = GetFzPageInfo(pageNo, true);
+    auto* pageInfo = GetFzPageInfo(pageNo, false, true);
     auto res = new Vec<PageElement*>();
     FzGetElements(res, pageInfo);
     if (res->IsEmpty()) {
@@ -1234,7 +1243,7 @@ bool EnginePdf::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
 }
 
 bool EnginePdf::BenchLoadPage(int pageNo) {
-    return GetFzPageInfo(pageNo, false) != nullptr;
+    return GetFzPageInfo(pageNo, false, false) != nullptr;
 }
 
 fz_matrix EnginePdf::viewctm(int pageNo, float zoom, int rotation) {
@@ -1310,7 +1319,7 @@ void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
 }
 
 RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, false);
     if (!pageInfo->page) {
         return nullptr;
     }
@@ -1349,7 +1358,7 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, size_t imageIdx)
 
 // TODO: remember this instead of re-doing
 WCHAR* EnginePdf::ExtractPageText(int pageNo, RectI** coordsOut) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true, false);
     fz_stext_page* stext = pageInfo->stext;
     if (!stext) {
         return nullptr;
@@ -1444,7 +1453,7 @@ WCHAR* EnginePdf::ExtractFontList() {
     // collect all fonts from all page objects
     int nPages = PageCount();
     for (int i = 1; i <= nPages; i++) {
-        auto pageInfo = GetFzPageInfo(i, false);
+        auto pageInfo = GetFzPageInfo(i, false, false);
         if (!pageInfo) {
             continue;
         }
@@ -1894,7 +1903,7 @@ bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
 
     fz_try(ctx) {
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-            FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+            FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, false);
             pdf_page* page = pdf_page_from_fz_page(ctx, pageInfo->page);
 
             pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
@@ -1944,7 +1953,7 @@ bool EnginePdf::SaveEmbedded(LinkSaverUI& saveUI, int num) {
 #endif
 
 bool EnginePdf::HasClipOptimizations(int pageNo) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, true);
     if (!pageInfo) {
         return false;
     }

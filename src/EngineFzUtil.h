@@ -42,6 +42,8 @@ struct FzPageInfo {
     fz_stext_page* stext = nullptr;
     RectD mediabox = {};
     Vec<FitzImagePos> images;
+    bool loaded = false;
+    bool loadedForSearch = false;
 };
 
 struct LinkRectList {
