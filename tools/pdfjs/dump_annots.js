@@ -5,7 +5,7 @@
 const fs = require('fs');
 const fg = require('fast-glob');
 const path = require("path");
-const pdf = require('pdfjs-dist/build/pdf.js');
+const pdf = require('pdfjs-dist/es5/build/pdf.js');
 
 //console.log(pdf);
 //console.log(pdf.Util);
@@ -17,7 +17,7 @@ const pdf = require('pdfjs-dist/build/pdf.js');
 //pdf.util.setVerbosityLevel(0);
 
 const pdfPath = "x:\\books\\books\\StartSmallStaySmall.pdf";
-const startDir = "v:\\books\\books";
+const startDir = "x:\\books\\books";
 
 let fileNo = 0;
 const maxFiles = 512;
