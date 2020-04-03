@@ -252,6 +252,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
+    { _TRN("Exit Fullscreen"),              IDM_EXIT_FULLSCREEN,        0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
@@ -693,6 +694,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (!pageEl || pageEl->kind != kindPageElementImage) {
         win::menu::Remove(popup, IDM_COPY_IMAGE);
     }
+
+    bool isFullScreen = win->isFullScreen || win->presentation;
+    if (!isFullScreen) {
+        win::menu::Remove(popup, IDM_EXIT_FULLSCREEN);
+    }
     if (!win->currentTab->selectionOnPage) {
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
     }
@@ -791,6 +797,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             break;
         case IDM_FAV_DEL:
             DelFavorite(filePath, pageNo);
+            break;
+        case IDM_EXIT_FULLSCREEN:
+            ExitFullScreen(win);
             break;
     }
 

@@ -29,6 +29,7 @@
 #define IDM_SAVEAS_BOOKMARK             416
 #define IDM_SEND_BY_EMAIL               418
 #define IDM_PROPERTIES                  420
+#define IDM_EXIT_FULLSCREEN             421
 
 // values must be consequtive
 #define IDM_VIEW_SINGLE_PAGE            422
