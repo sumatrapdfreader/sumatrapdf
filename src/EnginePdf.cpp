@@ -347,7 +347,6 @@ class EnginePdf : public EngineBase {
     bool LoadFromStream(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
 
-    fz_page* GetFzPage(int pageNo, bool failIfBusy = false);
     FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy = false);
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation);
@@ -1006,31 +1005,29 @@ PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
 }
 
 FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool failIfBusy) {
-    GetFzPage(pageNo, failIfBusy);
-    return _pages[pageNo - 1];
-}
-
-fz_page* EnginePdf::GetFzPage(int pageNo, bool failIfBusy) {
     ScopedCritSec scope(&pagesAccess);
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = _pages[pageNo - 1];
-    CrashIf(pageInfo->pageNo != pageNo);
-    fz_page* page = pageInfo->page;
     // TODO: not sure what failIfBusy is supposed to do
-    if (page || failIfBusy) {
-        return page;
+    if (pageInfo || failIfBusy) {
+        return pageInfo;
     }
+    CrashIf(pageInfo->pageNo != pageNo);
 
     ScopedCritSec ctxScope(ctxAccess);
+    fz_page* page = nullptr;
     fz_var(page);
     fz_try(ctx) {
         page = fz_load_page(ctx, _doc, pageNo - 1);
         pageInfo->page = page;
     }
     fz_catch(ctx) {
+        page = nullptr;
     }
+
+    // TODO: should do something if page is nullptr?
 
     /* TODO: handle try later?
     if (fz_caught(ctx) != FZ_ERROR_TRYLATER) {
@@ -1066,7 +1063,7 @@ fz_page* EnginePdf::GetFzPage(int pageNo, bool failIfBusy) {
     MakePageElementCommentsFromAnnotations(pageInfo);
 
     fz_find_images(pageInfo->stext, pageInfo->images);
-    return page;
+    return pageInfo;
 }
 
 RectD EnginePdf::PageMediabox(int pageNo) {
@@ -1237,7 +1234,7 @@ bool EnginePdf::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
 }
 
 bool EnginePdf::BenchLoadPage(int pageNo) {
-    return GetFzPage(pageNo) != nullptr;
+    return GetFzPageInfo(pageNo) != nullptr;
 }
 
 fz_matrix EnginePdf::viewctm(int pageNo, float zoom, int rotation) {
@@ -1445,8 +1442,13 @@ WCHAR* EnginePdf::ExtractFontList() {
     Vec<pdf_obj*> resList;
 
     // collect all fonts from all page objects
-    for (int i = 1; i <= PageCount(); i++) {
-        fz_page* fzpage = GetFzPage(i);
+    int nPages = PageCount();
+    for (int i = 1; i <= nPages; i++) {
+        auto pageInfo = GetFzPageInfo(i);
+        if (!pageInfo) {
+            continue;
+        }
+        fz_page* fzpage = pageInfo->page;
         if (!fzpage) {
             continue;
         }
