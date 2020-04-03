@@ -210,7 +210,7 @@ class EngineXps : public EngineBase {
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
     bool BenchLoadPage(int pageNo) override {
-        return GetFzPageInfo(pageNo) != nullptr;
+        return GetFzPageInfo(pageNo, false) != nullptr;
     }
 
     Vec<PageElement*>* GetElements(int pageNo) override;
@@ -249,7 +249,7 @@ class EngineXps : public EngineBase {
     // bool Load(fz_stream* stm);
     bool LoadFromStream(fz_stream* stm);
 
-    FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy = false);
+    FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy);
     int GetPageNo(fz_page* page);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
         const fz_rect tmpRect = RectD_to_fz_rect(PageMediabox(pageNo));
@@ -558,7 +558,7 @@ RectD EngineXps::PageMediabox(int pageNo) {
 
 RectD EngineXps::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
 
     ScopedCritSec scope(ctxAccess);
 
@@ -603,7 +603,7 @@ RectD EngineXps::Transform(RectD rect, int pageNo, float zoom, int rotation, boo
 }
 
 RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
-    FzPageInfo* pageInfo = GetFzPageInfo(args.pageNo);
+    FzPageInfo* pageInfo = GetFzPageInfo(args.pageNo, false);
     fz_page* page = pageInfo->page;
     if (!page) {
         return nullptr;
@@ -716,7 +716,7 @@ bool EngineXps::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
 WCHAR* EngineXps::ExtractFontList() {
     // load and parse all pages
     for (int i = 1; i <= PageCount(); i++) {
-        GetFzPageInfo(i);
+        GetFzPageInfo(i, false);
     }
 
     ScopedCritSec scope(ctxAccess);
@@ -773,7 +773,7 @@ void EngineXps::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
 }
 
 PageElement* EngineXps::GetElementAtPos(int pageNo, PointD pt) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
@@ -828,7 +828,7 @@ RenderedBitmap* EngineXps::GetImageForPageElement(PageElement* pel) {
 }
 
 WCHAR* EngineXps::ExtractPageText(int pageNo, RectI** coordsOut) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     fz_stext_page* stext = pageInfo->stext;
     if (!stext) {
         return nullptr;
@@ -839,7 +839,7 @@ WCHAR* EngineXps::ExtractPageText(int pageNo, RectI** coordsOut) {
 }
 
 RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     if (!pageInfo->page) {
         return nullptr;
     }
