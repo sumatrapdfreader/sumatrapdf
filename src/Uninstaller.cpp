@@ -526,7 +526,7 @@ static WCHAR* GetUninstallerPathInTemp() {
 
 // to be able to delete installation directory we must copy
 // ourselves to temp directory and re-launch
-static void RelaunchElevatedFromTempDirectory() {
+static void RelaunchElevatedFromTempDirectory(Flags* cli) {
     if (gIsDebugBuild) {
         // for easier debugging, debug build doesn't need
         // to be copied / re-launched
@@ -551,9 +551,16 @@ static void RelaunchElevatedFromTempDirectory() {
 
     // TODO: should extract cmd-line from GetCommandLineW() by skipping the first
     // item, which is path to the executable
-    WCHAR* cmdLine = L"-uninstall";
-    logf(L"Re-launching '%s' with args '%s' as elevated\n", installerTempPath.Get(), cmdLine);
-    LaunchElevated(installerTempPath, cmdLine);
+
+    str::WStr cmdLine = L"-uninstall";
+    if (cli->silent) {
+        cmdLine.Append(L" -silent");
+    }
+    if (cli->log) {
+        cmdLine.Append(L" -log");
+    }
+    logf(L"Re-launching '%s' with args '%s' as elevated\n", installerTempPath.Get(), cmdLine.Get());
+    LaunchElevated(installerTempPath, cmdLine.Get());
     ::ExitProcess(0);
 }
 
@@ -623,7 +630,7 @@ int RunUninstaller(Flags* cli) {
         goto Exit;
     }
 
-    RelaunchElevatedFromTempDirectory();
+    RelaunchElevatedFromTempDirectory(cli);
 
     if (gIsRaMicroBuild) {
         return RunUninstallerRaMicro();
