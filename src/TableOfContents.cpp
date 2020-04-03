@@ -1015,6 +1015,7 @@ static void SubclassToc(WindowInfo* win) {
 void UnsubclassToc(WindowInfo* win) {
     if (win->tocBoxSubclassId != 0) {
         RemoveWindowSubclass(win->hwndTocBox, WndProcTocBox, win->tocBoxSubclassId);
+        win->tocBoxSubclassId = 0;
     }
 }
 

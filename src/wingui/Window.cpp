@@ -63,12 +63,16 @@ static HwndMsgHandler* FindHandlerForHwndAndMsg(HWND hwnd, UINT msg, bool create
         return nullptr;
     }
     // we might have free slot
+    HwndMsgHandler* res = nullptr;
     for (auto h : gHwndMsgHandlers) {
         if (h->hwnd == nullptr) {
-            return h;
+            res = h;
+            break;
         }
     }
-    auto res = gHwndMsgHandlers.AllocAtEnd();
+    if (!res) {
+        res = gHwndMsgHandlers.AllocAtEnd();
+    }
     ClearHwndMsgHandler(res);
     res->hwnd = hwnd;
     res->msg = msg;
