@@ -250,7 +250,6 @@ class EngineXps : public EngineBase {
     bool LoadFromStream(fz_stream* stm);
 
     FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy = false);
-    fz_page* GetFzPage(int pageNo, bool failIfBusy = false);
     int GetPageNo(fz_page* page);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
         const fz_rect tmpRect = RectD_to_fz_rect(PageMediabox(pageNo));
@@ -471,19 +470,14 @@ bool EngineXps::LoadFromStream(fz_stream* stm) {
 }
 
 FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
-    GetFzPage(pageNo, failIfBusy);
-    return _pages[pageNo - 1];
-}
-
-fz_page* EngineXps::GetFzPage(int pageNo, bool failIfBusy) {
     ScopedCritSec scope(&pagesAccess);
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = _pages[pageNo - 1];
     // TODO: not sure what failIfBusy is supposed to do
-    if (pageInfo->list || failIfBusy) {
-        return pageInfo->page;
+    if (pageInfo && pageInfo->list || failIfBusy) {
+        return pageInfo;
     }
 
     ScopedCritSec ctxScope(ctxAccess);
@@ -531,7 +525,7 @@ fz_page* EngineXps::GetFzPage(int pageNo, bool failIfBusy) {
         // fz_drop_separations(ctx, seps);
     }
     if (!list) {
-        return page;
+        return pageInfo;
     }
     pageInfo->list = list;
 
@@ -545,7 +539,7 @@ fz_page* EngineXps::GetFzPage(int pageNo, bool failIfBusy) {
     pageInfo->links = fz_load_links(ctx, page);
     FzLinkifyPageText(pageInfo);
 
-    return page;
+    return pageInfo;
 }
 
 int EngineXps::GetPageNo(fz_page* page) {
@@ -801,11 +795,10 @@ void EngineXps::ResolveLinks(Vec<PageElement*>* els, fz_link* link) {
 }
 
 Vec<PageElement*>* EngineXps::GetElements(int pageNo) {
-    fz_page* page = GetFzPage(pageNo, true);
-    if (!page) {
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
+    if (!pageInfo) {
         return nullptr;
     }
-    FzPageInfo* pageInfo = _pages[pageNo - 1];
     auto res = new Vec<PageElement*>();
 
 #if 0
