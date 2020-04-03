@@ -615,6 +615,36 @@ void ui_show_warning_dialog(const char *fmt, ...)
 	ui.dialog = warning_dialog;
 }
 
+static void quit_dialog(void)
+{
+	ui_dialog_begin(500, (ui.gridsize+4)*3);
+	ui_layout(T, NONE, NW, 2, 2);
+	ui_label("%C The document has unsaved changes. Are you sure you want to quit?", 0x26a0); /* WARNING SIGN */
+	ui_layout(B, X, S, 2, 2);
+	ui_panel_begin(0, ui.gridsize, 0, 0, 0);
+	{
+		ui_layout(R, NONE, S, 0, 0);
+		if (ui_button("Save"))
+			do_save_pdf_file();
+		ui_spacer();
+		if (ui_button("Discard") || ui.key == 'q')
+			glutLeaveMainLoop();
+		ui_layout(L, NONE, S, 0, 0);
+		if (ui_button("Cancel") || ui.key == KEY_ESCAPE)
+			ui.dialog = NULL;
+	}
+	ui_panel_end();
+	ui_dialog_end();
+}
+
+void quit(void)
+{
+	if (pdf && pdf_has_unsaved_changes(ctx, pdf))
+		ui.dialog = quit_dialog;
+	else
+		glutLeaveMainLoop();
+}
+
 void trace_action(const char *fmt, ...)
 {
 	va_list args;
@@ -1468,7 +1498,7 @@ static void clear_search(void)
 static void do_app(void)
 {
 	if (ui.key == KEY_F4 && ui.mod == GLUT_ACTIVE_ALT)
-		glutLeaveMainLoop();
+		quit();
 
 	if (ui.down || ui.middle || ui.right || ui.key)
 		showinfo = 0;
@@ -1485,7 +1515,7 @@ static void do_app(void)
 		case 'F': showform = !showform; break;
 		case 'i': showinfo = !showinfo; break;
 		case 'r': reload(); break;
-		case 'q': glutLeaveMainLoop(); break;
+		case 'q': quit(); break;
 		case 'S': do_save_pdf_file(); break;
 
 		case '>': layout_em = number > 0 ? number : layout_em + 1; relayout(); break;

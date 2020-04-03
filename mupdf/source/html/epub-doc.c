@@ -3,7 +3,6 @@
 
 #include <string.h>
 #include <math.h>
-#include <assert.h>
 
 #include <zlib.h> /* for crc32 */
 
@@ -315,7 +314,11 @@ accelerate_chapter(fz_context *ctx, epub_document *doc, epub_chapter *ch, fz_htm
 
 	if (ch->number < acc->num_chapters)
 	{
-		assert(acc->pages_in_chapter[ch->number] == p || acc->pages_in_chapter[ch->number] == -1);
+		if (acc->pages_in_chapter[ch->number] != p && acc->pages_in_chapter[ch->number] != -1)
+		{
+			fz_warn(ctx, "Invalidating stale accelerator data.");
+			invalidate_accelerator(ctx, doc->accel);
+		}
 		acc->pages_in_chapter[ch->number] = p;
 		return;
 	}

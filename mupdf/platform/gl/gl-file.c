@@ -98,7 +98,6 @@ static void load_dir(const char *path)
 
 	fc.selected = -1;
 	fc.count = 0;
-	fc.max = 0;
 
 	MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, PATH_MAX);
 	for (i=0; wpath[i]; ++i)
@@ -216,7 +215,6 @@ static void load_dir(const char *path)
 
 	fc.selected = -1;
 	fc.count = 0;
-	fc.max = 0;
 
 	dir = opendir(fc.curdir);
 	if (!dir)
