@@ -597,11 +597,11 @@ class WStrVec : public Vec<WCHAR*> {
         return tmp.StealData();
     }
 
-    int Find(const WCHAR* s, size_t startAt = 0) const {
-        for (size_t i = startAt; i < len; i++) {
+    int Find(const WCHAR* s, int startAt = 0) const {
+        for (int i = startAt; i < len; i++) {
             WCHAR* item = at(i);
             if (str::Eq(s, item))
-                return (int)i;
+                return i;
         }
         return -1;
     }

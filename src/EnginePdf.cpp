@@ -208,7 +208,7 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         }
         AutoFreeWstr prefix(pdf_to_wstr(ctx, data.at(i).prefix));
         for (int j = 0; j < secLen; j++) {
-            size_t idx = pli.startAt + j - 1;
+            int idx = pli.startAt + j - 1;
             free(labels->at(idx));
             WCHAR* label = FormatPageLabel(pli.type, pli.countFrom + j, prefix);
             labels->at(idx) = label;
@@ -223,8 +223,9 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     WStrVec dups(*labels);
     dups.Sort();
     for (size_t i = 1; i < dups.size(); i++) {
-        if (!str::Eq(dups.at(i), dups.at(i - 1)))
+        if (!str::Eq(dups.at(i), dups.at(i - 1))) {
             continue;
+        }
         int idx = labels->Find(dups.at(i)), counter = 0;
         while ((idx = labels->Find(dups.at(i), idx + 1)) != -1) {
             AutoFreeWstr unique;
@@ -233,8 +234,10 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
             } while (labels->Contains(unique));
             str::ReplacePtr(&labels->at(idx), unique);
         }
-        for (; i + 1 < dups.size() && str::Eq(dups.at(i), dups.at(i + 1)); i++)
-            ;
+        int nDups = dups.isize();
+        for (; i + 1 < nDups && str::Eq(dups.at(i), dups.at(i + 1)); i++) {
+            // no-op
+        }
     }
 
     return labels;
