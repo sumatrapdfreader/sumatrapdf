@@ -1045,6 +1045,18 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool forSearch, bool failIfBusy
     }
     */
 
+    if (forSearch) {
+        // when loading just for search, we load only stext without images
+        fz_stext_options opts{};
+        fz_try(ctx) {
+            pageInfo->stext_for_search = fz_new_stext_page_from_page(ctx, page, &opts);
+        }
+        fz_catch(ctx) {
+        }
+        pageInfo->loadedForSearch = true;
+        return pageInfo;
+    }
+
     // when loading just for search, we load only stext
     fz_stext_options opts{};
     opts.flags = FZ_STEXT_PRESERVE_IMAGES;
@@ -1052,10 +1064,6 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool forSearch, bool failIfBusy
         pageInfo->stext = fz_new_stext_page_from_page(ctx, page, &opts);
     }
     fz_catch(ctx) {
-    }
-    pageInfo->loadedForSearch = true;
-    if (forSearch) {
-        return pageInfo;
     }
 
     pageInfo->loaded = true;
@@ -1357,16 +1365,17 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, size_t imageIdx)
     return bmp;
 }
 
-// TODO: remember this instead of re-doing
 WCHAR* EnginePdf::ExtractPageText(int pageNo, RectI** coordsOut) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true, false);
-    fz_stext_page* stext = pageInfo->stext;
+    fz_stext_page* stext = pageInfo->stext_for_search;
     if (!stext) {
         return nullptr;
     }
     ScopedCritSec scope(ctxAccess);
-    WCHAR* content = fz_text_page_to_str(stext, coordsOut);
-    return content;
+    WCHAR* text = fz_text_page_to_str(stext, coordsOut);
+    fz_drop_stext_page(ctx, pageInfo->stext_for_search);
+    pageInfo->stext_for_search = nullptr;
+    return text;
 }
 
 bool EnginePdf::IsLinearizedFile() {
