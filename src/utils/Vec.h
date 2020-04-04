@@ -598,7 +598,7 @@ class WStrVec : public Vec<WCHAR*> {
     }
 
     int Find(const WCHAR* s, int startAt = 0) const {
-        for (int i = startAt; i < len; i++) {
+        for (int i = startAt; i < (int)len; i++) {
             WCHAR* item = at(i);
             if (str::Eq(s, item))
                 return i;

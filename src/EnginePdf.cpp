@@ -222,7 +222,8 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     // ensure that all page labels are unique (by appending a number to duplicates)
     WStrVec dups(*labels);
     dups.Sort();
-    for (size_t i = 1; i < dups.size(); i++) {
+    int nDups = dups.isize();
+    for (int i = 1; i < nDups; i++) {
         if (!str::Eq(dups.at(i), dups.at(i - 1))) {
             continue;
         }
@@ -234,7 +235,7 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
             } while (labels->Contains(unique));
             str::ReplacePtr(&labels->at(idx), unique);
         }
-        int nDups = dups.isize();
+        nDups = dups.isize();
         for (; i + 1 < nDups && str::Eq(dups.at(i), dups.at(i + 1)); i++) {
             // no-op
         }
