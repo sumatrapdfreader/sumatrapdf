@@ -731,6 +731,10 @@ static void testLogf() {
 }
 #endif
 
+// in mupdf_load_system_font.c
+extern "C" void init_system_font_list();
+extern "C" void destroy_system_font_list();
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
     UNUSED(hPrevInstance);
@@ -992,6 +996,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         }
     }
 
+    init_system_font_list();
     WindowInfo* win = nullptr;
     if (restoreSession) {
         for (SessionData* data : *gGlobalPrefs->sessionData) {
@@ -1119,6 +1124,7 @@ Exit:
 
     extern void CleanupDjVuEngine(); // in EngineDjVu.cpp
     CleanupDjVuEngine();
+    destroy_system_font_list();
 
     // wait for FileExistenceChecker to terminate
     // (which should be necessary only very rarely)

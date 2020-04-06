@@ -51,6 +51,7 @@ func clangFormatFiles() {
 		`src\wingui\*.h`,
 		`src\tools\*.cpp`,
 		`src\tools\*.h`,
+		`ext\mupdf_load_system_font.c`,
 	}
 	isWhiteListed := func(s string) bool {
 		whitelisted := []string{
