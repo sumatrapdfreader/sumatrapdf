@@ -252,7 +252,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
-    { _TRN("Exit Fullscreen"),              IDM_EXIT_FULLSCREEN,        0 },
+    { _TRN("E&xit Fullscreen"),             IDM_EXIT_FULLSCREEN,        0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
