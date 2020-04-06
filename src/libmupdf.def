@@ -80,7 +80,7 @@ EXPORTS
 	pdf_embedded_file_name
 	fz_new_image_from_svg
 	destroy_system_font_list
-	init_system_font_list
+	drop_cached_fonts_for_ctx
 
 	fz_keep_bitmap
 	fz_drop_bitmap

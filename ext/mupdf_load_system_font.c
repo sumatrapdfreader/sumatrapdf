@@ -102,6 +102,9 @@ static pdf_fontlistMS fontlistMS = {
     0,
 };
 
+static int did_init = 0;
+static CRITICAL_SECTION cs_fonts;
+
 static inline USHORT BEtoHs(USHORT x) {
     BYTE* data = (BYTE*)&x;
     return (data[0] << 8) | data[1];
@@ -453,26 +456,6 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
     FindClose(hList);
 }
 
-static LONG fontlist_locked = FALSE;
-
-void init_system_font_list(void) {
-}
-
-void destroy_system_font_list(void) {
-#if 0
-    int n = fontlistMS.len;
-    sys_font_info* e;
-    for (int i = 0; i < n; i++) {
-        e = &fontlistMS.fontmap[i];
-        if (e->cached_font) {
-            fz_drop_font()
-        }
-    }
-#endif
-    free(fontlistMS.fontmap);
-    memset(&fontlistMS, 0, sizeof(fontlistMS));
-}
-
 // cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define CURRENT_HMODULE ((HMODULE)&__ImageBase)
@@ -523,9 +506,6 @@ static void create_system_font_list(fz_context* ctx) {
         qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(sys_font_info), _stricmp);
     }
 #endif
-
-    // make sure to clean up after ourselves
-    atexit(destroy_system_font_list);
 }
 
 // TODO(port): replace the caller
@@ -536,15 +516,100 @@ static void* fz_resize_array(fz_context* ctx, void* p, unsigned int count, unsig
     return np;
 }
 
+typedef struct cached_font {
+    struct cached_font* next;
+    sys_font_info* fi;
+    fz_context* ctx;
+    fz_font* font;
+} cached_font;
+
+static cached_font* cached_fonts = 0;
+
+static fz_font* get_cached_font(fz_context* ctx, sys_font_info* fi) {
+    EnterCriticalSection(&cs_fonts);
+    cached_font* f = cached_fonts;
+    while (f) {
+        if (f->ctx == ctx && f->fi == fi) {
+            break;
+        }
+        f = f->next;
+    }
+    LeaveCriticalSection(&cs_fonts);
+    if (f) {
+        fz_keep_font(ctx, f->font);
+        return f->font;
+    }
+    return 0;
+}
+
+static void cache_font(fz_context* ctx, sys_font_info* fi, fz_font* font) {
+    cached_font* f = malloc(sizeof(cached_font));
+    f->fi = fi;
+    f->ctx = ctx;
+    f->font = font;
+    fz_keep_font(ctx, font);
+    EnterCriticalSection(&cs_fonts);
+    f->next = cached_fonts;
+    cached_fonts = f;
+    LeaveCriticalSection(&cs_fonts);
+}
+
+static void drop_cached_fonts() {
+    // happens at end so no need for locking
+    cached_font* curr = cached_fonts;
+    cached_font* next = 0;
+    int refs;
+    while (curr) {
+        next = curr->next;
+        refs = curr->font->refs;
+        if (refs != 1) {
+            // TODO: crash?
+            fz_warn(curr->ctx, "bad refcount %d", refs);
+        }
+        fz_drop_font(curr->ctx, curr->font);
+        free(curr);
+        curr = next;
+    }
+    cached_fonts = 0;
+}
+
+void drop_cached_fonts_for_ctx(fz_context* ctx) {
+    EnterCriticalSection(&cs_fonts);
+
+    cached_font** currp = &cached_fonts;
+    cached_font** nextp;
+    cached_font* curr;
+    cached_font* next;
+    int refs;
+    while (1) {
+        curr = *currp;
+        if (!curr) {
+            break;
+        }
+        nextp = &(curr->next);
+        if (curr->ctx == ctx) {
+            next = *nextp;
+            refs = curr->font->refs;
+            if (refs != 1) {
+                // TODO: crash?
+                fz_warn(ctx, "bad refcount %d", refs);
+            }
+            fz_drop_font(curr->ctx, curr->font);
+            free(curr);
+            *currp = next;
+        } else {
+            currp = nextp;
+        }
+    }
+    LeaveCriticalSection(&cs_fonts);
+}
+
 static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_name) {
     sys_font_info* found = NULL;
     char *comma, *fontname;
     fz_font* font;
 
-    // not using a CRITICAL_SECTION, as there's no good place for creating/deleting it
-    // (and can't use fz_context locks, as fontlistMS is reused across fz_context)
-    while (InterlockedCompareExchange(&fontlist_locked, TRUE, FALSE) != FALSE)
-        Sleep(10);
+    EnterCriticalSection(&cs_fonts);
     if (fontlistMS.len == 0) {
         fz_try(ctx) {
             create_system_font_list(ctx);
@@ -552,9 +617,8 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
         fz_catch(ctx) {
         }
     }
-    if (InterlockedCompareExchange(&fontlist_locked, FALSE, TRUE) != TRUE) {
-        assert(0);
-    }
+    LeaveCriticalSection(&cs_fonts);
+
     if (fontlistMS.len == 0)
         fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror: couldn't find any fonts");
 
@@ -612,11 +676,16 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
     if (!found)
         fz_throw(ctx, FZ_ERROR_GENERIC, "couldn't find system font '%s'", orig_name);
 
+    font = get_cached_font(ctx, found);
+    if (font) {
+        fz_warn(ctx, "found cached non-embedded font '%s' from '%s'", orig_name, found->fontpath);
+        return font;
+    }
     fz_warn(ctx, "loading non-embedded font '%s' from '%s'", orig_name, found->fontpath);
-
     font = fz_new_font_from_file(ctx, orig_name, found->fontpath, found->index,
                                  strcmp(found->fontface, "DroidSansFallback") != 0);
     font->flags.ft_substitute = 1;
+    cache_font(ctx, found, font);
     return font;
 }
 
@@ -714,9 +783,25 @@ static fz_font* pdf_load_windows_cjk_font(fz_context* ctx, const char* fontname,
 }
 #endif
 
+void init_system_font_list(void) {
+    // this should always happen on main thread
+    if (did_init)
+        return;
+    InitializeCriticalSection(&cs_fonts);
+    did_init = 1;
+}
+
+void destroy_system_font_list(void) {
+    drop_cached_fonts();
+    free(fontlistMS.fontmap);
+    memset(&fontlistMS, 0, sizeof(fontlistMS));
+    DeleteCriticalSection(&cs_fonts);
+}
+
 void pdf_install_load_system_font_funcs(fz_context* ctx) {
 #ifdef _WIN32
     // TODO(port): also fallback font?
+    init_system_font_list();
     fz_install_load_system_font_funcs(ctx, pdf_load_windows_font, pdf_load_windows_cjk_font, NULL);
 #endif
 }

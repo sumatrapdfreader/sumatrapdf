@@ -24,6 +24,9 @@ extern "C" {
 #include "EngineFzUtil.h"
 #include "EnginePdf.h"
 
+// in mupdf_load_system_font.c
+extern "C" void drop_cached_fonts_for_ctx(fz_context*);
+
 Kind kindEnginePdf = "enginePdf";
 
 static fz_link* FixupPageLinks(fz_link* root) {
@@ -447,10 +450,10 @@ EnginePdf::~EnginePdf() {
     pdf_drop_obj(ctx, _info);
 
     fz_drop_document(ctx, _doc);
+    drop_cached_fonts_for_ctx(ctx);
     fz_drop_context(ctx);
 
     delete _pageLabels;
-
     delete tocTree;
 
     for (size_t i = 0; i < dimof(mutexes); i++) {
