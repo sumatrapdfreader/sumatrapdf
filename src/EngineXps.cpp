@@ -537,7 +537,7 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
     }
 
     pageInfo->links = fz_load_links(ctx, page);
-    FzLinkifyPageText(pageInfo);
+    FzLinkifyPageText(pageInfo, pageInfo->stext);
 
     return pageInfo;
 }

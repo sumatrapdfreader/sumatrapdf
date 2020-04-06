@@ -1121,16 +1121,12 @@ void FzGetElements(Vec<PageElement*>* els, FzPageInfo* pageInfo) {
     els->Reverse();
 }
 
-void FzLinkifyPageText(FzPageInfo* pageInfo) {
-    if (!pageInfo) {
+void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
+    if (!pageInfo || !stext) {
         return;
     }
 
     RectI* coords;
-    fz_stext_page* stext = pageInfo->stext;
-    if (!stext) {
-        return;
-    }
     WCHAR* pageText = fz_text_page_to_str(stext, &coords);
     if (!pageText) {
         return;

@@ -82,7 +82,7 @@ PageDestination* newFzDestination(fz_outline*);
 PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt);
 void FzGetElements(Vec<PageElement*>* els, FzPageInfo* pageInfo);
 PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot);
-void FzLinkifyPageText(FzPageInfo* pageInfo);
+void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext);
 void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, const fz_rect cliprect,
                               bool endGroup, bool hasTransparency = false);
 void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, fz_matrix ctm,

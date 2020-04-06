@@ -1079,7 +1079,7 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool forSearch, bool failIfBusy
 
     auto* links = fz_load_links(ctx, page);
     pageInfo->links = FixupPageLinks(links);
-    FzLinkifyPageText(pageInfo);
+    FzLinkifyPageText(pageInfo, pageInfo->stext);
 
     MakePageElementCommentsFromAnnotations(pageInfo);
 
