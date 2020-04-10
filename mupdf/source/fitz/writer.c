@@ -277,7 +277,10 @@ fz_drop_document_writer(fz_context *ctx, fz_document_writer *wri)
 
 	mediabox: page size rectangle in points.
 
-	Returns a fz_device to write page contents to.
+	Returns a fz_device to write page contents to. This is
+	owned by the fz_document_writer and should not be passed to
+	fz_drop_device(). [Copies created with fz_keep_device() are owned by
+	the caller and should be passed to fz_drop_device() in the usual way.]
 */
 fz_device *
 fz_begin_page(fz_context *ctx, fz_document_writer *wri, fz_rect mediabox)

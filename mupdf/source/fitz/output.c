@@ -4,7 +4,6 @@
 #endif
 
 #include "mupdf/fitz.h"
-#include "fitz-imp.h"
 
 #include <errno.h>
 #include <stdarg.h>
@@ -205,8 +204,13 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot remove file '%s': %s", filename, strerror(errno));
 	}
 	file = fz_fopen_utf8(filename, append ? "rb+" : "wb+");
-	if (file == NULL && append)
+	if (append)
+	{
+		if (file == NULL)
 		file = fz_fopen_utf8(filename, "wb+");
+		else
+			fseek(file, 0, SEEK_END);
+	}
 #else
 	/* Ensure we create a brand new file. We don't want to clobber our old file. */
 	if (!append)
@@ -301,7 +305,7 @@ fz_drop_output(fz_context *ctx, fz_output *out)
 		if (out->drop)
 			out->drop(ctx, out->state);
 		fz_free(ctx, out->bp);
-		if (out != &fz_stdout_global)
+		if (out != &fz_stdout_global && out != &fz_stderr_global)
 			fz_free(ctx, out);
 	}
 }

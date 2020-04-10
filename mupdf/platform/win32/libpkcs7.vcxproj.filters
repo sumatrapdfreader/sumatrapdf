@@ -9,17 +9,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\mupdf\helpers\pkcs7-check.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\mupdf\helpers\pkcs7-openssl.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\helpers\pkcs7\pkcs7-check.c">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\helpers\pkcs7\pkcs7-openssl.c">
       <Filter>source</Filter>
     </ClCompile>

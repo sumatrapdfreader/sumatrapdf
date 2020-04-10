@@ -1,6 +1,5 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
-#include "../fitz/fitz-imp.h" // ick!
 
 #include <string.h>
 #include <time.h>

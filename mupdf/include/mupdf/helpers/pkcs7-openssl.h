@@ -15,10 +15,9 @@ pdf_signature_error pkcs7_openssl_check_certificate(char *sig, size_t sig_len);
 /* Obtain the designated name information from signature's certificate */
 pdf_pkcs7_designated_name *pkcs7_openssl_designated_name(fz_context *ctx, char *sig, size_t sig_len);
 
-/* Free the resources associated with designated name information */
-void pkcs7_openssl_drop_designated_name(fz_context *ctx, pdf_pkcs7_designated_name *dn);
-
 /* Read the certificate and private key from a pfx file, holding it as an opaque structure */
 pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, const char *pw);
+
+pdf_pkcs7_verifier *pkcs7_openssl_new_verifier(fz_context *ctx);
 
 #endif

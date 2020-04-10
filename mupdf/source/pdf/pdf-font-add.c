@@ -1,8 +1,6 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
-#include "../fitz/fitz-imp.h"
-
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #ifdef FT_FONT_FORMATS_H

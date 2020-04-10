@@ -387,6 +387,42 @@ fz_xml *fz_xml_find_down(fz_xml *item, const char *tag)
 	return fz_xml_find(item, tag);
 }
 
+int fz_xml_att_eq(fz_xml *item, const char *name, const char *match)
+{
+	const char *val = fz_xml_att(item, name);
+
+	return val ? !strcmp(val, match) : 0;
+}
+
+fz_xml *fz_xml_find_match(fz_xml *item, const char *tag, const char *att, const char *match)
+{
+	while (1)
+	{
+		item = fz_xml_find(item, tag);
+		if (item == NULL || fz_xml_att_eq(item, att, match))
+			break;
+		item = item->next;
+	}
+
+	return item;
+}
+
+fz_xml *fz_xml_find_next_match(fz_xml *item, const char *tag, const char *att, const char *match)
+{
+	do
+	{
+		item = fz_xml_find_next(item, tag);
+	}
+	while (item != NULL && !fz_xml_att_eq(item, att, match));
+
+	return item;
+}
+
+fz_xml *fz_xml_find_down_match(fz_xml *item, const char *tag, const char *att, const char *match)
+{
+	return fz_xml_find_match(fz_xml_down(item), tag, att, match);
+}
+
 fz_xml *fz_xml_root(fz_xml_doc *xml)
 {
 	return xml ? xml->root : NULL;

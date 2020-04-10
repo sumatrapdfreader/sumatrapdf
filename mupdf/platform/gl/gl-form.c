@@ -7,11 +7,10 @@
 #define PATH_MAX 2048
 #endif
 
-#include "mupdf/helpers/pkcs7-check.h"
 #include "mupdf/helpers/pkcs7-openssl.h"
 
 static pdf_widget *sig_widget;
-static char sig_designated_name[500];
+static char *sig_designated_name = NULL;
 static pdf_signature_error sig_cert_error;
 static pdf_signature_error sig_digest_error;
 static int sig_valid_until;
@@ -35,8 +34,7 @@ int do_sign(void)
 	}
 	fz_always(ctx)
 	{
-		if (signer)
-			signer->drop(signer);
+		pdf_drop_signer(ctx, signer);
 	}
 	fz_catch(ctx)
 	{
@@ -206,10 +204,23 @@ static void show_sig_dialog(pdf_widget *widget)
 
 		if (pdf_signature_is_signed(ctx, pdf, widget->obj))
 		{
-			sig_cert_error = pdf_check_certificate(ctx, pdf, widget->obj);
-			sig_digest_error = pdf_check_digest(ctx, pdf, widget->obj);
+			pdf_pkcs7_verifier *verifier;
+			pdf_pkcs7_designated_name *dn;
+
 			sig_valid_until = pdf_validate_signature(ctx, widget);
-			pdf_signature_designated_name(ctx, pdf, widget->obj, sig_designated_name, sizeof(sig_designated_name));
+
+			verifier = pkcs7_openssl_new_verifier(ctx);
+
+			sig_cert_error = pdf_check_certificate(ctx, verifier, pdf, widget->obj);
+			sig_digest_error = pdf_check_digest(ctx, verifier, pdf, widget->obj);
+
+			dn = pdf_signature_get_signatory(ctx, verifier, pdf, widget->obj);
+			fz_free(ctx, sig_designated_name);
+			sig_designated_name = pdf_signature_format_designated_name(ctx, dn);
+			pdf_signature_drop_designated_name(ctx, dn);
+
+			pdf_drop_verifier(ctx, verifier);
+
 			ui.dialog = sig_verify_dialog;
 		}
 		else

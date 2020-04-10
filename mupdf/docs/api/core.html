@@ -62,12 +62,12 @@ main()
 <p>
 MuPDF uses a setjmp based exception handling system. This is encapsulated
 by the use of three macros: fz_try, fz_always, and fz_catch.
-When an error is raised by fz_throw, or re-raised fz_rethrow, execution
+When an error is raised by fz_throw, or re-raised by fz_rethrow, execution
 will jump to the enclosing always/catch block.
 
 <p>
 All functions you call should be guarded by a fz_try block to catch the
-errors, or the program will call abort() on errors. You don't want that.
+errors, or the program will call exit() on errors. You don't want that.
 
 <p>
 The fz_always block is optional. It is typically used to free memory

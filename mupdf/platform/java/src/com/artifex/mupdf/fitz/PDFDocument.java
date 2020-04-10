@@ -104,8 +104,8 @@ public class PDFDocument extends Document
 
 	public native void save(String filename, String options);
 
-	protected native void nativeSaveWithStream(SeekableOutputStream stream, String options);
-	public void save(SeekableOutputStream stream, String options) {
+	protected native void nativeSaveWithStream(SeekableInputOutputStream stream, String options);
+	public void save(SeekableInputOutputStream stream, String options) {
 		nativeSaveWithStream(stream, options);
 	}
 

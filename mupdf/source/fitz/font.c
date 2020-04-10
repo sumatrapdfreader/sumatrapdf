@@ -1,6 +1,5 @@
 #include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"
-#include "fitz-imp.h"
 #include "draw-imp.h"
 
 #include <ft2build.h>

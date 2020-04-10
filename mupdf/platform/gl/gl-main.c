@@ -12,7 +12,6 @@
 #include <signal.h>
 #endif
 
-#include "mupdf/helpers/pkcs7-check.h"
 #include "mupdf/helpers/pkcs7-openssl.h"
 
 #include "mujs.h"
@@ -1780,17 +1779,15 @@ static void do_info(void)
 				{
 					if (pdf_signature_is_signed(ctx, pdf, field))
 					{
-						if (pdf_supports_signatures(ctx))
-						{
-							pdf_signature_error sig_cert_error = pdf_check_certificate(ctx, pdf, field);
-							pdf_signature_error sig_digest_error = pdf_check_digest(ctx, pdf, field);
+						pdf_pkcs7_verifier *verifier = pkcs7_openssl_new_verifier(ctx);
+						pdf_signature_error sig_cert_error = pdf_check_certificate(ctx, verifier, pdf, field);
+						pdf_signature_error sig_digest_error = pdf_check_digest(ctx, verifier, pdf, field);
 							ui_label("Signature %d: CERT: %s, DIGEST: %s%s", i+1,
 								short_signature_error_desc(sig_cert_error),
 								short_signature_error_desc(sig_digest_error),
 									pdf_signature_incremental_change_since_signing(ctx, pdf, field) ? ", Changed since": "");
-						}
-						else
-							ui_label("Signature %d: Signed (cannot test validity)", i+1);
+
+						pdf_drop_verifier(ctx, verifier);
 					}
 					else
 						ui_label("Signature %d: Unsigned", i+1);
@@ -2128,7 +2125,7 @@ static void cleanup(void)
 
 #ifndef NDEBUG
 	if (fz_atoi(getenv("FZ_DEBUG_STORE")))
-		fz_debug_store(ctx);
+		fz_debug_store(ctx, fz_stdout(ctx));
 #endif
 
 	fz_drop_output(ctx, trace_file);

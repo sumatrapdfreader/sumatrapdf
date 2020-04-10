@@ -986,7 +986,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\mupdf\fitz.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\annotation.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\archive.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\band-writer.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\bidi.h" />
@@ -1069,7 +1068,6 @@
     <ClInclude Include="..\..\include\mupdf\xps.h" />
     <ClInclude Include="..\..\source\fitz\colorspace-imp.h" />
     <ClInclude Include="..\..\source\fitz\draw-imp.h" />
-    <ClInclude Include="..\..\source\fitz\fitz-imp.h" />
     <ClInclude Include="..\..\source\fitz\glyph-cache-imp.h" />
     <ClInclude Include="..\..\source\fitz\html-tags.h" />
     <ClInclude Include="..\..\source\fitz\jmemcust.h" />

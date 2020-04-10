@@ -1,6 +1,5 @@
 #include "pdfapp.h"
 #include "curl_stream.h"
-#include "mupdf/helpers/pkcs7-check.h"
 #include "mupdf/helpers/pkcs7-openssl.h"
 
 #include <string.h>

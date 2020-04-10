@@ -33,6 +33,8 @@ char *fz_xml_tag(fz_xml *item);
 
 char *fz_xml_att(fz_xml *item, const char *att);
 
+int fz_xml_att_eq(fz_xml *item, const char *name, const char *match);
+
 char *fz_xml_text(fz_xml *item);
 
 void fz_debug_xml(fz_xml *item, int level);
@@ -40,5 +42,8 @@ void fz_debug_xml(fz_xml *item, int level);
 fz_xml *fz_xml_find(fz_xml *item, const char *tag);
 fz_xml *fz_xml_find_next(fz_xml *item, const char *tag);
 fz_xml *fz_xml_find_down(fz_xml *item, const char *tag);
+fz_xml *fz_xml_find_match(fz_xml *item, const char *tag, const char *att, const char *match);
+fz_xml *fz_xml_find_next_match(fz_xml *item, const char *tag, const char *att, const char *match);
+fz_xml *fz_xml_find_down_match(fz_xml *item, const char *tag, const char *att, const char *match);
 
 #endif

@@ -2209,7 +2209,6 @@ void pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const ch
 			fz_append_printf(ctx, buf, "%g %g Td\n", rect.x0+2, rect.y1 - size*0.8f - (h-size)/2);
 			add_required_fonts(ctx, annot->page->doc, res_font, lang, helv, "Helv", name);
 			write_string(ctx, buf, lang, helv, "Helv", size, name, name + strlen(name));
-			fz_append_string(ctx, buf, " Tj\n");
 			fz_append_string(ctx, buf, "ET\n");
 
 			/* Information text */

@@ -1,4 +1,4 @@
-#include "../fitz/fitz-imp.h"
+#include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"
 #include "html-imp.h"
 

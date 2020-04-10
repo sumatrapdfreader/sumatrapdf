@@ -3,20 +3,6 @@
 
 #include <string.h>
 
-size_t
-pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap)
-{
-	if (cmap == NULL)
-		return 0;
-	if (cmap->storable.refs < 0)
-		return 0;
-
-	return pdf_cmap_size(ctx, cmap->usecmap) +
-		cmap->rcap * sizeof *cmap->ranges +
-		cmap->xcap * sizeof *cmap->xranges +
-		cmap->mcap * sizeof *cmap->mranges;
-}
-
 /*
  * Load CMap stream in PDF file
  */

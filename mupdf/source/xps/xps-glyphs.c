@@ -1,6 +1,5 @@
 #include "mupdf/fitz.h"
 #include "xps-imp.h"
-#include "../fitz/fitz-imp.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H

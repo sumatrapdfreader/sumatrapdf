@@ -2,7 +2,6 @@
 
 #if FZ_ENABLE_PDF
 #include "mupdf/pdf.h"
-#include "mupdf/helpers/pkcs7-check.h"
 #include "mupdf/helpers/pkcs7-openssl.h"
 #endif
 
@@ -215,9 +214,10 @@ static void ffi_gc_fz_document(js_State *J, void *doc)
 
 static void ffi_gc_pdf_pkcs7_signer(js_State *J, void *signer_)
 {
+	fz_context *ctx = js_getcontext(J);
 	pdf_pkcs7_signer *signer = (pdf_pkcs7_signer *)signer_;
 	if (signer)
-		signer->drop(signer);
+		signer->drop(ctx, signer);
 }
 
 static void ffi_gc_fz_page(js_State *J, void *page)
@@ -4961,6 +4961,7 @@ static void ffi_PDFWidget_sign(js_State *J)
 	fz_context *ctx = js_getcontext(J);
 	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
 	pdf_pkcs7_signer *signer = js_touserdata(J, 1, "pdf_pkcs7_signer");
+
 	fz_try(ctx)
 		pdf_sign_signature(ctx, widget, signer);
 	fz_catch(ctx)

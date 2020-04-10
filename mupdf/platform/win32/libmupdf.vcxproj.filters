@@ -579,15 +579,15 @@
     <ClCompile Include="..\..\source\html\html-parse.c">
       <Filter>html</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\encode-fax.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\colorspace-imp.h">
       <Filter>fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
-      <Filter>fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\fitz\fitz-imp.h">
       <Filter>fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\fitz\glyph-cache-imp.h">
@@ -682,9 +682,6 @@
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\pdf\xref.h">
       <Filter>!include\pdf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\annotation.h">
-      <Filter>!include\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\archive.h">
       <Filter>!include\fitz</Filter>

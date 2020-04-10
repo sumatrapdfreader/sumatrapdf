@@ -1,5 +1,4 @@
 #include "mupdf/fitz.h"
-#include "fitz-imp.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -39,6 +38,7 @@ struct fz_store_s
 
 	int defer_reap_count;
 	int needs_reaping;
+	int scavenging;
 };
 
 /*
@@ -749,23 +749,25 @@ fz_debug_store_item(fz_context *ctx, void *state, void *key_, int keylen, void *
 	fz_item *item = item_;
 	int i;
 	char buf[256];
+	fz_output *out = (fz_output *)state;
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	item->type->format_key(ctx, buf, sizeof buf, item->key);
 	fz_lock(ctx, FZ_LOCK_ALLOC);
-	printf("hash[");
+	fz_write_printf(ctx, out, "hash[");
 	for (i=0; i < keylen; ++i)
-		printf("%02x", key[i]);
-	printf("][refs=%d][size=%d] key=%s val=%p\n", item->val->refs, (int)item->size, buf, (void *)item->val);
+		fz_write_printf(ctx, out,"%02x", key[i]);
+	fz_write_printf(ctx, out, "][refs=%d][size=%d] key=%s val=%p\n", item->val->refs, (int)item->size, buf, (void *)item->val);
 }
 
 static void
-fz_debug_store_locked(fz_context *ctx)
+fz_debug_store_locked(fz_context *ctx, fz_output *out)
 {
 	fz_item *item, *next;
 	char buf[256];
 	fz_store *store = ctx->store;
+	size_t list_total = 0;
 
-	printf("-- resource store contents --\n");
+	fz_write_printf(ctx, out, "-- resource store contents --\n");
 
 	for (item = store->head; item; item = next)
 	{
@@ -778,8 +780,9 @@ fz_debug_store_locked(fz_context *ctx)
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
 		item->type->format_key(ctx, buf, sizeof buf, item->key);
 		fz_lock(ctx, FZ_LOCK_ALLOC);
-		printf("store[*][refs=%d][size=%d] key=%s val=%p\n",
+		fz_write_printf(ctx, out, "store[*][refs=%d][size=%d] key=%s val=%p\n",
 				item->val->refs, (int)item->size, buf, (void *)item->val);
+		list_total += item->size;
 		if (next)
 		{
 			(void)Memento_dropRef(next->val);
@@ -787,48 +790,89 @@ fz_debug_store_locked(fz_context *ctx)
 		}
 	}
 
-	printf("-- resource store hash contents --\n");
-	fz_hash_for_each(ctx, store->hash, NULL, fz_debug_store_item);
-	printf("-- end --\n");
+	fz_write_printf(ctx, out, "-- resource store hash contents --\n");
+	fz_hash_for_each(ctx, store->hash, out, fz_debug_store_item);
+	fz_write_printf(ctx, out, "-- end --\n");
+
+	fz_write_printf(ctx, out, "max=%zu, size=%zu, actual size=%zu\n", store->max, store->size, list_total);
 }
 
 void
-fz_debug_store(fz_context *ctx)
+fz_debug_store(fz_context *ctx, fz_output *out)
 {
 	fz_lock(ctx, FZ_LOCK_ALLOC);
-	fz_debug_store_locked(ctx);
+	fz_debug_store_locked(ctx, out);
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 }
 
-/* This is now an n^2 algorithm - not ideal, but it'll only be bad if we are
- * actually managing to scavenge lots of blocks back. */
+/*
+	Consider if we have blocks of the following sizes in the store, from oldest
+	to newest:
+
+	A 32
+	B 64
+	C 128
+	D 256
+
+	Further suppose we need to free 97 bytes. Naively freeing blocks until we have
+	freed enough would mean we'd free A, B and C, when we could have freed just C.
+
+	We are forced into an n^2 algorithm by the need to drop the lock as part of the
+	eviction, so we might as well embrace it and go for a solution that properly
+	drops just C.
+
+	The algorithm used is to scan the list of blocks from oldest to newest, counting
+	how many bytes we can free in the blocks we pass. We stop this scan when we have
+	found enough blocks. We then free the largest block. This releases the lock
+	momentarily, which means we have to start the scan process all over again, so
+	we repeat. This guarantees we only evict a minimum of blocks, but does mean we
+	scan more blocks than we'd ideally like.
+ */
 static int
 scavenge(fz_context *ctx, size_t tofree)
 {
 	fz_store *store = ctx->store;
-	size_t count = 0;
-	fz_item *item, *prev;
+	size_t freed = 0;
+	fz_item *item;
 
-	/* Free the items */
-	for (item = store->tail; item; item = prev)
+	if (store->scavenging)
+		return 0;
+
+	store->scavenging = 1;
+
+	do
 	{
-		prev = item->prev;
+		/* Count through a suffix of objects in the store until
+		 * we find enough to give us what we need to evict. */
+		size_t suffix_size = 0;
+		fz_item *largest = NULL;
+
+		for (item = store->tail; item; item = item->prev)
+	{
 		if (item->val->refs == 1)
 		{
-			/* Free this item */
-			count += item->size;
-			evict(ctx, item); /* Drops then retakes lock */
+				/* This one is evictable */
+				suffix_size += item->size;
+				if (largest == NULL || item->size > largest->size)
+					largest = item;
+				if (suffix_size >= tofree - freed)
+					break;
+			}
+		}
 
-			if (count >= tofree)
+		/* If there are no evictable blocks, we can't find anything to free. */
+		if (largest == NULL)
 				break;
 
-			/* Have to restart search again, as prev may no longer
-			 * be valid due to release of lock in evict. */
-			prev = store->tail;
-		}
+		/* Free largest. */
+		freed += largest->size;
+		evict(ctx, largest); /* Drops then retakes lock */
 	}
+	while (freed < tofree);
+
+	store->scavenging = 0;
 	/* Success is managing to evict any blocks */
-	return count != 0;
+	return freed != 0;
 }
 
 void

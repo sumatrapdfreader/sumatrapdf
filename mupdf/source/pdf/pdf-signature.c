@@ -1,6 +1,5 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
-#include "../fitz/fitz-imp.h"
 
 #include <string.h>
 #include <time.h>
@@ -30,7 +29,7 @@ void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, size
 
 	fz_try(ctx)
 	{
-		int i, res;
+		int i;
 		size_t z;
 
 		brange = fz_calloc(ctx, brange_len, sizeof(*brange));
@@ -45,9 +44,7 @@ void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, size
 
 		digest_len = (hexdigest_length - 2) / 2;
 		digest = fz_malloc(ctx, digest_len);
-		res = signer->create_digest(signer, in, digest, &digest_len);
-		if (!res)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "pdf_pkcs7_create_digest failed");
+		digest_len = signer->create_digest(ctx, signer, in, digest, digest_len);
 
 		fz_drop_stream(ctx, in);
 		in = NULL;
@@ -172,6 +169,9 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 	fz_buffer *fzbuf = NULL;
 	pdf_document *doc = widget->page->doc;
 
+	fz_var(dn);
+	fz_var(fzbuf);
+
 	fz_try(ctx)
 	{
 		const char *dn_str;
@@ -201,11 +201,11 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 		/* Create an appearance stream only if the signature is intended to be visible */
 		if (!fz_is_empty_rect(rect))
 		{
-			dn = signer->designated_name(signer);
-			fzbuf = fz_new_buffer(ctx, 256);
-			if (!dn->cn)
+			dn = signer->get_signing_name(ctx, signer);
+			if (!dn || !dn->cn)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "Certificate has no common name");
 
+			fzbuf = fz_new_buffer(ctx, 256);
 			fz_append_printf(ctx, fzbuf, "cn=%s", dn->cn);
 
 			if (dn->o)
@@ -237,8 +237,8 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 	}
 	fz_always(ctx)
 	{
-		signer->drop_designated_name(signer, dn);
 		fz_drop_buffer(ctx, fzbuf);
+		pdf_signature_drop_designated_name(ctx, dn);
 	}
 	fz_catch(ctx)
 	{
@@ -260,4 +260,204 @@ void pdf_clear_signature(fz_context *ctx, pdf_widget *widget)
 	pdf_dict_del(ctx, ((pdf_annot *) widget)->obj, PDF_NAME(V));
 
 	pdf_update_signature_appearance(ctx, widget, NULL, NULL, NULL);
+}
+
+void pdf_drop_signer(fz_context *ctx, pdf_pkcs7_signer *signer)
+{
+	if (signer)
+		signer->drop(ctx, signer);
+}
+
+void pdf_drop_verifier(fz_context *ctx, pdf_pkcs7_verifier *verifier)
+{
+	if (verifier)
+		verifier->drop(ctx, verifier);
+}
+
+char *pdf_signature_error_description(pdf_signature_error err)
+{
+	switch (err)
+	{
+	case PDF_SIGNATURE_ERROR_OKAY:
+		return "OK";
+	case PDF_SIGNATURE_ERROR_NO_SIGNATURES:
+		return "No signatures.";
+	case PDF_SIGNATURE_ERROR_NO_CERTIFICATE:
+		return "No certificate.";
+	case PDF_SIGNATURE_ERROR_DIGEST_FAILURE:
+		return "Signature invalidated by change to document.";
+	case PDF_SIGNATURE_ERROR_SELF_SIGNED:
+		return "Self-signed certificate.";
+	case PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN:
+		return "Self-signed certificate in chain.";
+	case PDF_SIGNATURE_ERROR_NOT_TRUSTED:
+		return "Certificate not trusted.";
+	default:
+	case PDF_SIGNATURE_ERROR_UNKNOWN:
+		return "Unknown error.";
+	}
+}
+
+void pdf_signature_drop_designated_name(fz_context *ctx, pdf_pkcs7_designated_name *dn)
+{
+	if (dn)
+	{
+		fz_free(ctx, dn->c);
+		fz_free(ctx, dn->email);
+		fz_free(ctx, dn->ou);
+		fz_free(ctx, dn->o);
+		fz_free(ctx, dn->cn);
+		fz_free(ctx, dn);
+	}
+}
+
+char *pdf_signature_format_designated_name(fz_context *ctx, pdf_pkcs7_designated_name *name)
+{
+	const char *parts[] = {
+		"CN=", name->cn,
+		", O=", name->o,
+		", OU=", name->ou,
+		", emailAddress=", name->email,
+		", C=", name->c};
+	int len = 1;
+	char *s;
+	int i;
+
+	for (i = 0; i < (int)nelem(parts); i++)
+		if (parts[i])
+			len += strlen(parts[i]);
+
+	s = fz_malloc(ctx, len);
+	s[0] = '\0';
+
+	for (i = 0; i < (int)nelem(parts); i++)
+		if (parts[i])
+			fz_strlcat(s, parts[i], len);
+
+	return s;
+}
+
+pdf_pkcs7_designated_name *pdf_signature_get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature)
+{
+	char *contents = NULL;
+	int contents_len = 0;
+	pdf_pkcs7_designated_name *dn;
+
+	contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
+
+	fz_try(ctx)
+	dn = verifier->get_signatory(ctx, verifier, (unsigned char *)contents, contents_len);
+	fz_always(ctx)
+	fz_free(ctx, contents);
+	fz_catch(ctx)
+	fz_rethrow(ctx);
+
+	return dn;
+}
+
+pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature)
+{
+	pdf_signature_error result = PDF_SIGNATURE_ERROR_UNKNOWN;
+	fz_stream *bytes = NULL;
+	char *contents = NULL;
+	int contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
+	fz_var(bytes);
+	fz_try(ctx)
+	{
+		bytes = pdf_signature_hash_bytes(ctx, doc, signature);
+		result = verifier->check_digest(ctx, verifier, bytes, (unsigned char *)contents, contents_len);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_stream(ctx, bytes);
+		fz_free(ctx, contents);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return result;
+}
+
+pdf_signature_error pdf_check_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature)
+{
+	char *contents = NULL;
+	size_t contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
+	pdf_signature_error result = PDF_SIGNATURE_ERROR_UNKNOWN;
+	fz_try(ctx)
+		result = verifier->check_certificate(ctx, verifier, (unsigned char *)contents, contents_len);
+	fz_always(ctx)
+		fz_free(ctx, contents);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return result;
+}
+
+int pdf_check_signature(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature, char *ebuf, size_t ebufsize)
+{
+	int res = 0;
+
+	if (pdf_xref_obj_is_unsaved_signature(doc, signature))
+	{
+		fz_strlcpy(ebuf, "Signed but document yet to be saved.", ebufsize);
+		if (ebufsize > 0)
+			ebuf[ebufsize-1] = 0;
+		return 0;
+	}
+
+	fz_var(res);
+	fz_try(ctx)
+	{
+		if (pdf_signature_is_signed(ctx, doc, signature))
+		{
+			pdf_signature_error err;
+
+			err = pdf_check_digest(ctx, verifier, doc, signature);
+			if (err == PDF_SIGNATURE_ERROR_OKAY)
+				err = pdf_check_certificate(ctx, verifier, doc, signature);
+
+			fz_strlcpy(ebuf, pdf_signature_error_description(err), ebufsize);
+			res = (err == PDF_SIGNATURE_ERROR_OKAY);
+
+			switch (err)
+			{
+			case PDF_SIGNATURE_ERROR_SELF_SIGNED:
+			case PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN:
+			case PDF_SIGNATURE_ERROR_NOT_TRUSTED:
+			{
+				pdf_pkcs7_designated_name *dn;
+				char *s;
+
+				fz_strlcat(ebuf, " (", ebufsize);
+
+				dn = pdf_signature_get_signatory(ctx, verifier, doc, signature);
+				s = pdf_signature_format_designated_name(ctx, dn);
+				pdf_signature_drop_designated_name(ctx, dn);
+
+				fz_strlcat(ebuf, s, ebufsize);
+				fz_free(ctx, s);
+				fz_strlcat(ebuf, ")", ebufsize);
+				break;
+			}
+			default:
+				break;
+			}
+		}
+		else
+		{
+			res = 0;
+			fz_strlcpy(ebuf, "Not signed.", ebufsize);
+		}
+	}
+	fz_catch(ctx)
+	{
+		res = 0;
+		fz_strlcpy(ebuf, fz_caught_message(ctx), ebufsize);
+	}
+
+	if (ebufsize > 0)
+		ebuf[ebufsize-1] = 0;
+
+	return res;
 }

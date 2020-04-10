@@ -764,7 +764,6 @@
     <ClInclude Include="..\mupdf\source\fitz\bidi-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\draw-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\encodings.h" />
-    <ClInclude Include="..\mupdf\source\fitz\fitz-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\glyphlist.h" />
     <ClInclude Include="..\mupdf\source\fitz\html-tags.h" />
     <ClInclude Include="..\mupdf\source\fitz\icc34.h" />

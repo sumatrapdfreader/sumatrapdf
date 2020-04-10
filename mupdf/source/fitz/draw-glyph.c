@@ -1,6 +1,5 @@
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
-#include "fitz-imp.h"
 
 #include <string.h>
 #include <math.h>

@@ -1,4 +1,4 @@
-#include "fitz-imp.h"
+#include "mupdf/fitz.h"
 #include "draw-imp.h"
 
 #include <string.h>

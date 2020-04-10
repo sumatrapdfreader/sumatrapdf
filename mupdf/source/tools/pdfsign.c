@@ -4,7 +4,6 @@
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
-#include "mupdf/helpers/pkcs7-check.h"
 #include "mupdf/helpers/pkcs7-openssl.h"
 
 #include <string.h>
@@ -36,9 +35,11 @@ static void usage(void)
 
 static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signature)
 {
-	char name[500];
+	char *name;
 	pdf_signature_error err;
+	pdf_pkcs7_verifier *verifier;
 	int edits;
+	pdf_pkcs7_designated_name *dn = NULL;
 
 	printf("verifying signature %d\n", pdf_to_num(ctx, signature));
 
@@ -48,18 +49,23 @@ static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 		return;
 	}
 
-	pdf_signature_designated_name(ctx, doc, signature, name, sizeof name);
-	printf("  Designated name: %s\n", name);
+	verifier = pkcs7_openssl_new_verifier(ctx);
+	fz_var(dn);
+	fz_try(ctx)
+	{
+		dn = pdf_signature_get_signatory(ctx, verifier, doc, signature);
+		name = pdf_signature_format_designated_name(ctx, dn);
 
-	err = pdf_check_certificate(ctx, doc, signature);
+	printf("  Designated name: %s\n", name);
+		fz_free(ctx, name);
+
+		err = pdf_check_certificate(ctx, verifier, doc, signature);
 	if (err)
 		printf("  Certificate error: %s\n", pdf_signature_error_description(err));
 	else
 		printf("  Certificate is trusted.\n");
 
-	fz_try(ctx)
-	{
-		err = pdf_check_digest(ctx, doc, signature);
+		err = pdf_check_digest(ctx, verifier, doc, signature);
 		edits = pdf_signature_incremental_change_since_signing(ctx, doc, signature);
 		if (err)
 			printf("  Digest error: %s\n", pdf_signature_error_description(err));
@@ -68,8 +74,13 @@ static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 		else
 			printf("  The document is unchanged since signing.\n");
 	}
+	fz_always(ctx)
+	{
+		pdf_signature_drop_designated_name(ctx, dn);
+		pdf_drop_verifier(ctx, verifier);
+	}
 	fz_catch(ctx)
-		printf("  Digest error: %s\n", fz_caught_message(ctx));
+		printf("  Verification error: %s\n", fz_caught_message(ctx));
 }
 
 static void clear_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signature)
@@ -125,8 +136,7 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 	fz_always(ctx)
 	{
 		fz_drop_page(ctx, (fz_page*)page);
-		if (signer)
-			signer->drop(signer);
+		pdf_drop_signer(ctx, signer);
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
@@ -135,9 +145,20 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 
 static void list_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signature)
 {
-	char name[500];
-	pdf_signature_designated_name(ctx, doc, signature, name, sizeof name);
-	printf("%5d: signature name: %s\n", pdf_to_num(ctx, signature), name);
+	pdf_pkcs7_designated_name *dn;
+	pdf_pkcs7_verifier *verifier;
+	char *s;
+
+	verifier = pkcs7_openssl_new_verifier(ctx);
+
+	dn = pdf_signature_get_signatory(ctx, verifier, doc, signature);
+	s = pdf_signature_format_designated_name(ctx, dn);
+	pdf_signature_drop_designated_name(ctx, dn);
+
+	pdf_drop_verifier(ctx, verifier);
+
+	printf("%5d: signature name: %s\n", pdf_to_num(ctx, signature), s);
+	fz_free(ctx, s);
 }
 
 static void process_field(fz_context *ctx, pdf_document *doc, pdf_obj *field)

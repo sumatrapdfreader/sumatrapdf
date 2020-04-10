@@ -38,4 +38,7 @@ public class Context
 	// FIXME: We should support the store size being changed dynamically.
 	// This requires changes within the MuPDF core.
 	//public native static void setStoreSize(long newSize);
+
+	//  empty the store
+	public native static void emptyStore();
 }

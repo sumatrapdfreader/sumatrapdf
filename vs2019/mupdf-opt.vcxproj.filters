@@ -39,9 +39,6 @@
     <ClInclude Include="..\mupdf\source\fitz\encodings.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
-    <ClInclude Include="..\mupdf\source\fitz\fitz-imp.h">
-      <Filter>mupdf\source\fitz</Filter>
-    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\glyphlist.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>

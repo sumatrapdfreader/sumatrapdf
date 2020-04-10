@@ -420,7 +420,7 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 
 			case 'p':
 				bits = 8 * sizeof(void *);
-				w = 2 * sizeof(void *);
+				z = '0';
 				fmtputc(&out, '0');
 				fmtputc(&out, 'x');
 				/* fallthrough */

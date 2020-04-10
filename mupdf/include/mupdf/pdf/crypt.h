@@ -63,6 +63,7 @@ int pdf_signature_incremental_change_since_signing(fz_context *ctx, pdf_document
 
 size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents);
 
+typedef struct pdf_pkcs7_designated_name_s pdf_pkcs7_designated_name;
 void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer);
 
 void pdf_clear_signature(fz_context *ctx, pdf_widget *widget);

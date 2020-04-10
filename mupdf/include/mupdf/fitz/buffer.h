@@ -12,6 +12,15 @@
 */
 typedef struct fz_buffer_s fz_buffer;
 
+struct fz_buffer_s
+{
+	int refs;
+	unsigned char *data;
+	size_t cap, len;
+	int unused_bits;
+	int shared;
+};
+
 fz_buffer *fz_keep_buffer(fz_context *ctx, fz_buffer *buf);
 void fz_drop_buffer(fz_context *ctx, fz_buffer *buf);
 

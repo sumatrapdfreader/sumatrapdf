@@ -1,4 +1,4 @@
-#include "fitz-imp.h"
+#include "mupdf/fitz.h"
 
 /* This code needs to be kept out of stm_buffer.c to avoid it being
  * pulled into cmapdump.c */

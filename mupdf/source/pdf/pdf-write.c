@@ -2815,7 +2815,7 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 
 				for (usig = xref->unsaved_sigs; usig; usig = usig->next)
 				{
-					size_t size = usig->signer->max_digest_size(usig->signer);
+					size_t size = usig->signer->max_digest_size(ctx, usig->signer);
 
 					buf_size = fz_maxz(buf_size, size);
 				}
@@ -2896,7 +2896,7 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 				{
 					xref->unsaved_sigs = usig->next;
 					pdf_drop_obj(ctx, usig->field);
-					usig->signer->drop(usig->signer);
+					pdf_drop_signer(ctx, usig->signer);
 					fz_free(ctx, usig);
 				}
 

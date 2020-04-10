@@ -936,3 +936,19 @@ pdf_decode_cmap(pdf_cmap *cmap, unsigned char *buf, unsigned char *end, unsigned
 	*cpt = 0;
 	return 1;
 }
+
+size_t
+pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap)
+{
+	if (cmap == NULL)
+		return 0;
+	if (cmap->storable.refs < 0)
+		return 0;
+
+	return pdf_cmap_size(ctx, cmap->usecmap) +
+		cmap->rcap * sizeof *cmap->ranges +
+		cmap->xcap * sizeof *cmap->xranges +
+		cmap->mcap * sizeof *cmap->mranges +
+		cmap->tcap * sizeof *cmap->tree +
+		sizeof(*cmap);
+}

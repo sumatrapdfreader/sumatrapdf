@@ -416,11 +416,9 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\mupdf\helpers\pkcs7-check.h" />
     <ClInclude Include="..\..\include\mupdf\helpers\pkcs7-openssl.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\helpers\pkcs7\pkcs7-check.c" />
     <ClCompile Include="..\..\source\helpers\pkcs7\pkcs7-openssl.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

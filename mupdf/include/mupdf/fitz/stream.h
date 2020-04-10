@@ -18,6 +18,8 @@ int fz_file_exists(fz_context *ctx, const char *path);
 */
 typedef struct fz_stream_s fz_stream;
 
+fz_stream *fz_open_file_ptr_no_close(fz_context *ctx, FILE *file);
+
 fz_stream *fz_open_file(fz_context *ctx, const char *filename);
 
 fz_stream *fz_open_file_w(fz_context *ctx, const wchar_t *filename);

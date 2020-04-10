@@ -182,7 +182,7 @@ typedef int (fz_store_filter_fn)(fz_context *ctx, void *arg, void *key);
 
 void fz_filter_store(fz_context *ctx, fz_store_filter_fn *fn, void *arg, const fz_store_type *type);
 
-void fz_debug_store(fz_context *ctx);
+void fz_debug_store(fz_context *ctx, fz_output *out);
 
 void fz_defer_reap_start(fz_context *ctx);
 
