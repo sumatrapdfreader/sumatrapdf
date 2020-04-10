@@ -58,7 +58,7 @@ workspace "SumatraPDF"
   filter "platforms:x32_xp"
     architecture "x86"
     toolset "v141_xp"
-    disablewarnings { "4091" }
+    disablewarnings { "4091", "4819" }
     buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
     defines { "BUILD_XP" }
   filter {}
@@ -256,7 +256,7 @@ workspace "SumatraPDF"
   project "openjpeg"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4100", "4244", "4310", "4819" }
+    disablewarnings { "4100", "4244", "4310" }
 
     -- openjpeg has opj_config_private.h for such over-rides
     -- but we can't change it because we bring openjpeg as submodule
