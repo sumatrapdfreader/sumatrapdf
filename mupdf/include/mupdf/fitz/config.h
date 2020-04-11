@@ -47,7 +47,8 @@
 
 /*
 	Choose whether to enable JavaScript.
-	By default JavaScript is enabled both for mutool and PDF interactivity.
+	By default JavaScript is enabled both for mutool and PDF
+	interactivity.
 */
 /* #define FZ_ENABLE_JS 1 */
 
@@ -62,10 +63,12 @@
 /* To avoid all noto fonts except CJK, enable: */
 /* #define TOFU */
 
-/* To skip the CJK font, enable: (this implicitly enables TOFU_CJK_EXT and TOFU_CJK_LANG) */
+/* To skip the CJK font, enable: (this implicitly enables TOFU_CJK_EXT
+ * and TOFU_CJK_LANG) */
 /* #define TOFU_CJK */
 
-/* To skip CJK Extension A, enable: (this implicitly enables TOFU_CJK_LANG) */
+/* To skip CJK Extension A, enable: (this implicitly enables
+ * TOFU_CJK_LANG) */
 /* #define TOFU_CJK_EXT */
 
 /* To skip CJK language specific fonts, enable: */
@@ -85,7 +88,8 @@
 
 /* To skip the Base14 fonts, enable: */
 /* #define TOFU_BASE14 */
-/* (You probably really don't want to do that except for measurement purposes!) */
+/* (You probably really don't want to do that except for measurement
+ * purposes!) */
 
 /* ---------- DO NOT EDIT ANYTHING UNDER THIS LINE ---------- */
 

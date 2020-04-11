@@ -17,6 +17,10 @@ struct svg_document_s
 
 const char *svg_lex_number(float *fp, const char *str);
 float svg_parse_number(const char *str, float min, float max, float inherit);
+
+/*
+	Return length/coordinate in points.
+*/
 float svg_parse_length(const char *str, float percent, float font_size);
 float svg_parse_angle(const char *str);
 

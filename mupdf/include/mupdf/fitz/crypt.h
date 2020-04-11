@@ -18,8 +18,23 @@ struct fz_md5_s
 	unsigned char buffer[64];
 };
 
+/*
+	MD5 initialization. Begins an MD5 operation, writing a new
+	context.
+*/
 void fz_md5_init(fz_md5 *state);
+
+/*
+	MD5 block update operation. Continues an MD5 message-digest
+	operation, processing another message block, and updating the
+	context.
+*/
 void fz_md5_update(fz_md5 *state, const unsigned char *input, size_t inlen);
+
+/*
+	MD5 finalization. Ends an MD5 message-digest operation, writing
+	the message digest and zeroizing the context.
+*/
 void fz_md5_final(fz_md5 *state, unsigned char digest[16]);
 
 /* sha-256 digests */

@@ -488,32 +488,6 @@ fz_test_end_tile(fz_context *ctx, fz_device *dev_)
 		fz_end_tile(ctx, dev->passthrough);
 }
 
-/*
-	Create a device to test for features.
-
-	Currently only tests for the presence of non-grayscale colors.
-
-	is_color: Possible values returned:
-		0: Definitely greyscale
-		1: Probably color (all colors were grey, but there
-		were images or shadings in a non grey colorspace).
-		2: Definitely color
-
-	threshold: The difference from grayscale that will be tolerated.
-	Typical values to use are either 0 (be exact) and 0.02 (allow an
-	imperceptible amount of slop).
-
-	options: A set of bitfield options, from the FZ_TEST_OPT set.
-
-	passthrough: A device to pass all calls through to, or NULL.
-	If set, then the test device can both test and pass through to
-	an underlying device (like, say, the display list device). This
-	means that a display list can be created and at the end we'll
-	know if it's colored or not.
-
-	In the absence of a passthrough device, the device will throw
-	an exception to stop page interpretation when color is found.
-*/
 fz_device *
 fz_new_test_device(fz_context *ctx, int *is_color, float threshold, int options, fz_device *passthrough)
 {

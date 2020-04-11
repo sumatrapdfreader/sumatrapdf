@@ -230,25 +230,6 @@ const char *fz_pcl_write_options_usage =
 	"\tis_oce9050: Disable/Enable Oce 9050 model-specific output\n"
 	"\n";
 
-/*
-	Initialize PCL option struct for a given preset.
-
-	Currently defined presets include:
-
-		generic	Generic PCL printer
-		ljet4	HP DeskJet
-		dj500	HP DeskJet 500
-		fs600	Kyocera FS-600
-		lj	HP LaserJet, HP LaserJet Plus
-		lj2	HP LaserJet IIp, HP LaserJet IId
-		lj3	HP LaserJet III
-		lj3d	HP LaserJet IIId
-		lj4	HP LaserJet 4
-		lj4pl	HP LaserJet 4 PL
-		lj4d	HP LaserJet 4d
-		lp2563b	HP 2563B line printer
-		oce9050	Oce 9050 Line printer
-*/
 void fz_pcl_preset(fz_context *ctx, fz_pcl_options *opts, const char *preset)
 {
 	if (preset == NULL || *preset == 0 || !strcmp(preset, "generic"))
@@ -281,25 +262,6 @@ void fz_pcl_preset(fz_context *ctx, fz_pcl_options *opts, const char *preset)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Unknown preset '%s'", preset);
 }
 
-/*
-	Parse PCL options.
-
-	Currently defined options and values are as follows:
-
-		preset=X	Either "generic" or one of the presets as for fz_pcl_preset.
-		spacing=0	No vertical spacing capability
-		spacing=1	PCL 3 spacing (<ESC>*p+<n>Y)
-		spacing=2	PCL 4 spacing (<ESC>*b<n>Y)
-		spacing=3	PCL 5 spacing (<ESC>*b<n>Y and clear seed row)
-		mode2		Disable/Enable mode 2 graphics compression
-		mode3		Disable/Enable mode 3 graphics compression
-		eog_reset	End of graphics (<ESC>*rB) resets all parameters
-		has_duplex	Duplex supported (<ESC>&l<duplex>S)
-		has_papersize	Papersize setting supported (<ESC>&l<sizecode>A)
-		has_copies	Number of copies supported (<ESC>&l<copies>X)
-		is_ljet4pjl	Disable/Enable HP 4PJL model-specific output
-		is_oce9050	Disable/Enable Oce 9050 model-specific output
-*/
 fz_pcl_options *
 fz_parse_pcl_options(fz_context *ctx, fz_pcl_options *opts, const char *args)
 {
@@ -1039,7 +1001,7 @@ fz_band_writer *fz_new_color_pcl_band_writer(fz_context *ctx, fz_output *out, co
  * In the worst case, the result is N+(N/127)+1 bytes long,
  * where N is the original byte count (end_row - row).
  */
-int
+static int
 mode2compress(unsigned char *out, const unsigned char *in, int in_len)
 {
 	int x;
@@ -1095,7 +1057,7 @@ mode2compress(unsigned char *out, const unsigned char *in, int in_len)
  * Returns the number of bytes stored.	In the worst case,
  * the number of bytes is bytecount+(bytecount/8)+1.
  */
-int
+static int
 mode3compress(unsigned char *out, const unsigned char *in, unsigned char *prev, int in_len)
 {
 	unsigned char *compressed = out;

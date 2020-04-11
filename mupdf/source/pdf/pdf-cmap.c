@@ -74,11 +74,6 @@ pdf_set_cmap_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode)
 	cmap->wmode = wmode;
 }
 
-/*
- * Add a codespacerange section.
- * These ranges are used by pdf_decode_cmap to decode
- * multi-byte encoded strings.
- */
 void
 pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, size_t n)
 {
@@ -686,18 +681,12 @@ add_mrange(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *out, int len)
 	add_range(ctx, cmap, low, low, out_pos, 1, 1);
 }
 
-/*
- * Add a range of contiguous one-to-one mappings (ie 1..5 maps to 21..25)
- */
 void
 pdf_map_range_to_range(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, int out)
 {
 	add_range(ctx, cmap, low, high, out, 1, 0);
 }
 
-/*
- * Add a single one-to-many mapping.
- */
 void
 pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *values, size_t len)
 {
@@ -794,9 +783,6 @@ pdf_sort_cmap(fz_context *ctx, pdf_cmap *cmap)
 	cmap->tree = NULL;
 }
 
-/*
- * Lookup the mapping of a codepoint.
- */
 int
 pdf_lookup_cmap(pdf_cmap *cmap, unsigned int cpt)
 {
@@ -902,10 +888,6 @@ pdf_lookup_cmap_full(pdf_cmap *cmap, unsigned int cpt, int *out)
 	return 0;
 }
 
-/*
- * Use the codespace ranges to extract a codepoint from a
- * multi-byte encoded string.
- */
 int
 pdf_decode_cmap(pdf_cmap *cmap, unsigned char *buf, unsigned char *end, unsigned int *cpt)
 {

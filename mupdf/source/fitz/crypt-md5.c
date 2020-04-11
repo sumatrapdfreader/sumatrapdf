@@ -197,7 +197,6 @@ static void transform(unsigned int state[4], const unsigned char block[64])
 	memset(x, 0, sizeof (x));
 }
 
-/* MD5 initialization. Begins an MD5 operation, writing a new context. */
 void fz_md5_init(fz_md5 *context)
 {
 	context->count[0] = context->count[1] = 0;
@@ -209,9 +208,6 @@ void fz_md5_init(fz_md5 *context)
 	context->state[3] = 0x10325476;
 }
 
-/* MD5 block update operation. Continues an MD5 message-digest operation,
- * processing another message block, and updating the context.
- */
 void fz_md5_update(fz_md5 *context, const unsigned char *input, size_t inlen)
 {
 	size_t i, index, partlen;
@@ -247,9 +243,6 @@ void fz_md5_update(fz_md5 *context, const unsigned char *input, size_t inlen)
 	memcpy(context->buffer + index, input + i, inlen - i);
 }
 
-/* MD5 finalization. Ends an MD5 message-digest operation, writing the
- * the message digest and zeroizing the context.
- */
 void fz_md5_final(fz_md5 *context, unsigned char digest[16])
 {
 	unsigned char bits[8];

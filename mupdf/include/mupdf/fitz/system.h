@@ -76,12 +76,12 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 /*
-	Where possible (i.e. on platforms on which they are provided), use
-	sigsetjmp/siglongjmp in preference to setjmp/longjmp. We don't alter
-	signal handlers within mupdf, so there is no need for us to
-	store/restore them - hence we use the non-restoring variants. This
-	makes a large speed difference on MacOSX (and probably other
-	platforms too.
+	Where possible (i.e. on platforms on which they are provided),
+	use sigsetjmp/siglongjmp in preference to setjmp/longjmp. We
+	don't alter signal handlers within mupdf, so there is no need
+	for us to store/restore them - hence we use the non-restoring
+	variants. This makes a large speed difference on MacOSX (and
+	probably other platforms too.
 */
 #if HAVE_SIGSETJMP
 #define fz_setjmp(BUF) sigsetjmp(BUF, 0)
@@ -158,7 +158,8 @@ void fz_free_argv(int argc, char **argv);
 #define S_ISDIR(mode) ((mode) & S_IFDIR)
 #endif
 
-/* inline is standard in C++. For some compilers we can enable it within C too. */
+/* inline is standard in C++. For some compilers we can enable it within
+ * C too. */
 
 #ifndef __cplusplus
 #if defined (__STDC_VERSION_) && (__STDC_VERSION__ >= 199901L) /* C99 */
@@ -193,7 +194,8 @@ void fz_free_argv(int argc, char **argv);
 #endif
 #endif
 
-/* Flag unused parameters, for use with 'static inline' functions in headers. */
+/* Flag unused parameters, for use with 'static inline' functions in
+ * headers. */
 #if defined(__GNUC__) && (__GNUC__ > 2 || __GNUC__ == 2 && __GNUC_MINOR__ >= 7)
 #define FZ_UNUSED __attribute__((__unused__))
 #else
@@ -217,8 +219,8 @@ void fz_free_argv(int argc, char **argv);
 
 /* If we're compiling as thumb code, then we need to tell the compiler
  * to enter and exit ARM mode around our assembly sections. If we move
- * the ARM functions to a separate file and arrange for it to be compiled
- * without thumb mode, we can save some time on entry.
+ * the ARM functions to a separate file and arrange for it to be
+ * compiled without thumb mode, we can save some time on entry.
  */
 /* This is slightly suboptimal; __thumb__ and __thumb2__ become defined
  * and undefined by #pragma arm/#pragma thumb - but we can't define a
@@ -234,7 +236,8 @@ void fz_free_argv(int argc, char **argv);
 #endif
 
 #ifdef CLUSTER
-/* Include this first so our defines don't clash with the system definitions */
+/* Include this first so our defines don't clash with the system
+ * definitions */
 #include <math.h>
 /*
  * Trig functions

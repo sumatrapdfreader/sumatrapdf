@@ -38,7 +38,6 @@ pdf_drop_annots(fz_context *ctx, pdf_annot *annot)
 	}
 }
 
-/* Create transform to fit appearance stream to annotation Rect */
 fz_matrix
 pdf_annot_transform(fz_context *ctx, pdf_annot *annot)
 {
@@ -135,9 +134,6 @@ pdf_next_annot(fz_context *ctx, pdf_annot *annot)
 	return annot->next;
 }
 
-/*
-	Return the rectangle for an annotation on a page.
-*/
 fz_rect
 pdf_bound_annot(fz_context *ctx, pdf_annot *annot)
 {
@@ -255,11 +251,6 @@ static void check_allowed_subtypes(fz_context *ctx, pdf_annot *annot, pdf_obj *p
 		fz_throw(ctx, FZ_ERROR_GENERIC, "%s annotations have no %s property", pdf_to_name(ctx, subtype), pdf_to_name(ctx, property));
 }
 
-/*
-	create a new annotation of the specified type on the
-	specified page. The returned pdf_annot structure is owned by the page
-	and does not need to be freed.
-*/
 pdf_annot *
 pdf_create_annot_raw(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 {

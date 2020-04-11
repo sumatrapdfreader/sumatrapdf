@@ -3046,17 +3046,6 @@ const char *fz_pdf_write_options_usage =
 	"\towner-password=PASSWORD: password required to edit document\n"
 	"\n";
 
-/*
-	Parse option string into a pdf_write_options struct.
-	Matches the command line options to 'mutool clean':
-		g: garbage collect
-		d, i, f: expand all, fonts, images
-		l: linearize
-		a: ascii hex encode
-		z: deflate
-		c: clean content streams
-		s: sanitize content streams
-*/
 pdf_write_options *
 pdf_parse_write_options(fz_context *ctx, pdf_write_options *opts, const char *args)
 {
@@ -3132,11 +3121,6 @@ pdf_parse_write_options(fz_context *ctx, pdf_write_options *opts, const char *ar
 	return opts;
 }
 
-/*
-	Return true if the document can be saved incrementally. Applying
-	redactions or having a repaired document make incremental saving
-	impossible.
-*/
 int pdf_can_be_saved_incrementally(fz_context *ctx, pdf_document *doc)
 {
 	if (doc->repair_attempted)
@@ -3530,10 +3514,6 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 	}
 }
 
-/*
-	Returns true if there are digital signatures waiting to
-	to updated on save.
-*/
 int pdf_has_unsaved_sigs(fz_context *ctx, pdf_document *doc)
 {
 	int s;
@@ -3547,9 +3527,6 @@ int pdf_has_unsaved_sigs(fz_context *ctx, pdf_document *doc)
 	return 0;
 }
 
-/*
-	Write out the document to an output stream with all changes finalised.
-*/
 void pdf_write_document(fz_context *ctx, pdf_document *doc, fz_output *out, pdf_write_options *in_opts)
 {
 	pdf_write_options opts_defaults = pdf_default_write_options;
@@ -3579,9 +3556,6 @@ void pdf_write_document(fz_context *ctx, pdf_document *doc, fz_output *out, pdf_
 	do_pdf_save_document(ctx, doc, &opts, in_opts);
 }
 
-/*
-	Write out the document to a file with all changes finalised.
-*/
 void pdf_save_document(fz_context *ctx, pdf_document *doc, const char *filename, pdf_write_options *in_opts)
 {
 	pdf_write_options opts_defaults = pdf_default_write_options;

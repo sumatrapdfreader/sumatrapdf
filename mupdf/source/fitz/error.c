@@ -57,15 +57,6 @@ void fz_var_imp(void *var)
 	/* Do nothing */
 }
 
-/*
-	Flush any repeated warnings.
-
-	Repeated warnings are buffered, counted and eventually printed
-	along with the number of repetitions. Call fz_flush_warnings
-	to force printing of the latest buffered warning and the
-	number of repetitions, for example to make sure that all
-	warnings are printed before exiting an application.
-*/
 void fz_flush_warnings(fz_context *ctx)
 {
 	if (ctx->warn.count > 1)

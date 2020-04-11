@@ -374,7 +374,6 @@ void pdf_set_int(fz_context *ctx, pdf_obj *obj, int64_t i)
 		NUM(obj)->u.i = i;
 }
 
-/* for use by pdf_crypt_obj_imp to decrypt AES string in place */
 void pdf_set_str_len(fz_context *ctx, pdf_obj *obj, size_t newlen)
 {
 	RESOLVE(obj);

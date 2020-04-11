@@ -28,19 +28,6 @@ fz_new_buffer(fz_context *ctx, size_t size)
 	return b;
 }
 
-/*
-	Create a new buffer with existing data.
-
-	data: Pointer to existing data.
-	size: Size of existing data.
-
-	Takes ownership of data. Does not make a copy. Calls fz_free on the
-	data when the buffer is deallocated. Do not use 'data' after passing
-	to this function.
-
-	Returns pointer to new buffer. Throws exception on allocation
-	failure.
-*/
 fz_buffer *
 fz_new_buffer_from_data(fz_context *ctx, unsigned char *data, size_t size)
 {
@@ -64,9 +51,6 @@ fz_new_buffer_from_data(fz_context *ctx, unsigned char *data, size_t size)
 	return b;
 }
 
-/*
-	Like fz_new_buffer, but does not take ownership.
-*/
 fz_buffer *
 fz_new_buffer_from_shared_data(fz_context *ctx, const unsigned char *data, size_t size)
 {
@@ -83,9 +67,6 @@ fz_new_buffer_from_shared_data(fz_context *ctx, const unsigned char *data, size_
 	return b;
 }
 
-/*
-	Create a new buffer containing a copy of the passed data.
-*/
 fz_buffer *
 fz_new_buffer_from_copied_data(fz_context *ctx, const unsigned char *data, size_t size)
 {
@@ -95,9 +76,6 @@ fz_new_buffer_from_copied_data(fz_context *ctx, const unsigned char *data, size_
 	return b;
 }
 
-/*
-	Create a new buffer with data decoded from a base64 input string.
-*/
 fz_buffer *
 fz_new_buffer_from_base64(fz_context *ctx, const char *data, size_t size)
 {
@@ -146,13 +124,6 @@ fz_drop_buffer(fz_context *ctx, fz_buffer *buf)
 	}
 }
 
-/*
-	Ensure that a buffer has a given capacity,
-	truncating data if required.
-
-	capacity: The desired capacity for the buffer. If the current size
-	of the buffer contents is smaller than capacity, it is truncated.
-*/
 void
 fz_resize_buffer(fz_context *ctx, fz_buffer *buf, size_t size)
 {
@@ -164,10 +135,6 @@ fz_resize_buffer(fz_context *ctx, fz_buffer *buf, size_t size)
 		buf->len = buf->cap;
 }
 
-/*
-	Make some space within a buffer (i.e. ensure that
-	capacity > size).
-*/
 void
 fz_grow_buffer(fz_context *ctx, fz_buffer *buf)
 {
@@ -190,9 +157,6 @@ fz_ensure_buffer(fz_context *ctx, fz_buffer *buf, size_t min)
 	fz_resize_buffer(ctx, buf, newsize);
 }
 
-/*
-	Trim wasted capacity from a buffer by resizing internal memory.
-*/
 void
 fz_trim_buffer(fz_context *ctx, fz_buffer *buf)
 {
@@ -206,12 +170,6 @@ fz_clear_buffer(fz_context *ctx, fz_buffer *buf)
 	buf->len = 0;
 }
 
-/*
-	Zero-terminate buffer in order to use as a C string.
-
-	This byte is invisible and does not affect the length of the buffer as returned by fz_buffer_storage.
-	The zero byte is written *after* the data, and subsequent writes will overwrite the terminating byte.
-*/
 void
 fz_terminate_buffer(fz_context *ctx, fz_buffer *buf)
 {
@@ -221,13 +179,6 @@ fz_terminate_buffer(fz_context *ctx, fz_buffer *buf)
 	buf->data[buf->len] = 0;
 }
 
-/*
-	Retrieve internal memory of buffer.
-
-	datap: Output parameter that will be pointed to the data.
-
-	Returns the current size of the data in bytes.
-*/
 size_t
 fz_buffer_storage(fz_context *ctx, fz_buffer *buf, unsigned char **datap)
 {
@@ -236,10 +187,6 @@ fz_buffer_storage(fz_context *ctx, fz_buffer *buf, unsigned char **datap)
 	return (buf ? buf->len : 0);
 }
 
-/*
-	Ensure that a buffer's data ends in a
-	0 byte, and return a pointer to it.
-*/
 const char *
 fz_string_from_buffer(fz_context *ctx, fz_buffer *buf)
 {
@@ -249,19 +196,6 @@ fz_string_from_buffer(fz_context *ctx, fz_buffer *buf)
 	return (const char *)buf->data;
 }
 
-/*
-	Take ownership of buffer contents.
-	Performs the same task as fz_buffer_storage, but ownership of
-	the data buffer returns with this call. The buffer is left
-	empty.
-
-	Note: Bad things may happen if this is called on a buffer with
-	multiple references that is being used from multiple threads.
-
-	data: Pointer to place to retrieve data pointer.
-
-	Returns length of stream.
-*/
 size_t
 fz_buffer_extract(fz_context *ctx, fz_buffer *buf, unsigned char **datap)
 {
@@ -289,12 +223,6 @@ fz_append_buffer(fz_context *ctx, fz_buffer *buf, fz_buffer *extra)
 	buf->len += extra->len;
 }
 
-/*
-	fz_append_*: Append data to a buffer.
-	fz_append_printf: Format and append data to buffer using printf-like formatting (see fz_vsnprintf).
-	fz_append_pdf_string: Append a string with PDF syntax quotes and escapes.
-	The buffer will automatically grow as required.
-*/
 void
 fz_append_data(fz_context *ctx, fz_buffer *buf, const void *data, size_t len)
 {

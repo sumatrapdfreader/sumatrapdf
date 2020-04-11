@@ -2255,9 +2255,6 @@ void pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const ch
 	}
 }
 
-/*
-	Recreate the appearance stream for an annotation, if necessary.
-*/
 void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_obj *subtype;
@@ -2365,22 +2362,6 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 	pdf_clean_obj(ctx, annot->obj);
 }
 
-/*
-	Regenerate any appearance streams that are out of date and check for
-	cases where a different appearance stream should be selected because of
-	state changes.
-
-	Note that a call to pdf_pass_event for one page may lead to changes on
-	any other, so an app should call pdf_update_annot for every annotation
-	it currently displays. Also it is important that the pdf_annot object
-	is the one used to last render the annotation. If instead the app were
-	to drop the page or annotations and reload them then a call to
-	pdf_update_annot would not reliably be able to report all changed
-	annotations.
-
-	Returns true if the annotation appearance has changed since the last time
-	pdf_update_annot was called or the annotation was first loaded.
-*/
 int
 pdf_update_annot(fz_context *ctx, pdf_annot *annot)
 {

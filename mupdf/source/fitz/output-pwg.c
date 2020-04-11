@@ -8,9 +8,6 @@ typedef struct {
 	fz_pwg_options pwg;
 } pwg_band_writer;
 
-/*
-	Output the file header to a pwg stream, ready for pages to follow it.
-*/
 void
 fz_write_pwg_file_header(fz_context *ctx, fz_output *out)
 {

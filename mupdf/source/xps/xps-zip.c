@@ -34,9 +34,6 @@ xps_drop_part(fz_context *ctx, xps_document *doc, xps_part *part)
 	fz_free(ctx, part);
 }
 
-/*
- * Read and interleave split parts from a ZIP file.
- */
 xps_part *
 xps_read_part(fz_context *ctx, xps_document *doc, char *partname)
 {

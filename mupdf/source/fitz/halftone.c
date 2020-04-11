@@ -67,16 +67,6 @@ static unsigned char mono_ht[] =
 	0xF2, 0x72, 0xD2, 0x52, 0xFA, 0x7A, 0xDA, 0x5A, 0xF0, 0x70, 0xD0, 0x50, 0xF8, 0x78, 0xD8, 0x58
 };
 
-/*
-	Create a 'default' halftone structure
-	for the given number of components.
-
-	num_comps: The number of components to use.
-
-	Returns a simple default halftone. The default halftone uses
-	the same halftone tile for each plane, which may not be ideal
-	for all purposes.
-*/
 fz_halftone *fz_default_halftone(fz_context *ctx, int num_comps)
 {
 	fz_halftone *ht = fz_new_halftone(ctx, num_comps);
@@ -507,17 +497,6 @@ static void do_threshold_4(const unsigned char * FZ_RESTRICT ht_line, const unsi
 }
 #endif
 
-/*
-	Make a bitmap from a pixmap and a halftone.
-
-	pix: The pixmap to generate from. Currently must be a single color
-	component with no alpha.
-
-	ht: The halftone to use. NULL implies the default halftone.
-
-	Returns the resultant bitmap. Throws exceptions in the case of
-	failure to allocate.
-*/
 fz_bitmap *fz_new_bitmap_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)
 {
 	return fz_new_bitmap_from_pixmap_band(ctx, pix, ht, 0);
@@ -539,22 +518,6 @@ static int gcd(int u, int v)
 	while (1);
 }
 
-/*
-	Make a bitmap from a pixmap and a
-	halftone, allowing for the position of the pixmap within an
-	overall banded rendering.
-
-	pix: The pixmap to generate from. Currently must be a single color
-	component with no alpha.
-
-	ht: The halftone to use. NULL implies the default halftone.
-
-	band_start: Vertical offset within the overall banded rendering
-	(in pixels)
-
-	Returns the resultant bitmap. Throws exceptions in the case of
-	failure to allocate.
-*/
 fz_bitmap *fz_new_bitmap_from_pixmap_band(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht, int band_start)
 {
 	fz_bitmap *out = NULL;

@@ -78,9 +78,6 @@ void fz_srand48(fz_context *ctx, int32_t seed)
 	fz_seed48(ctx, p);
 }
 
-/*
-	Fill block with len bytes of pseudo-randomness.
-*/
 void fz_memrnd(fz_context *ctx, unsigned char *data, int len)
 {
 #ifdef CLUSTER

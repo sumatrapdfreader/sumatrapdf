@@ -275,6 +275,9 @@
     <ClCompile Include="..\mupdf\source\fitz\load-tiff.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\log.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\memento.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>

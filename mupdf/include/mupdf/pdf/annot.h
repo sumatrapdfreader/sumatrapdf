@@ -81,10 +81,25 @@ void pdf_drop_annot(fz_context *ctx, pdf_annot *annot);
 pdf_annot *pdf_first_annot(fz_context *ctx, pdf_page *page);
 pdf_annot *pdf_next_annot(fz_context *ctx, pdf_annot *annot);
 
+/*
+	Return the rectangle for an annotation on a page.
+*/
 fz_rect pdf_bound_annot(fz_context *ctx, pdf_annot *annot);
 
 enum pdf_annot_type pdf_annot_type(fz_context *ctx, pdf_annot *annot);
 
+/*
+	Interpret an annotation and render it on a device.
+
+	page: A page loaded by pdf_load_page.
+
+	annot: an annotation.
+
+	dev: Device used for rendering, obtained from fz_new_*_device.
+
+	ctm: A transformation matrix applied to the objects on the page,
+	e.g. to scale or rotate the page contents as desired.
+*/
 void pdf_run_annot(fz_context *ctx, pdf_annot *annot, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
 
 struct pdf_annot_s
@@ -125,11 +140,19 @@ int pdf_resolve_link(fz_context *ctx, pdf_document *doc, const char *uri, float 
 fz_location pdf_resolve_link_imp(fz_context *ctx, fz_document *doc_, const char *uri, float *xp, float *yp);
 fz_link *pdf_load_link_annots(fz_context *ctx, pdf_document *, pdf_obj *annots, int pagenum, fz_matrix page_ctm);
 
+/*
+	Create transform to fit appearance stream to annotation Rect
+*/
 fz_matrix pdf_annot_transform(fz_context *ctx, pdf_annot *annot);
 void pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots);
 void pdf_drop_annots(fz_context *ctx, pdf_annot *annot_list);
 void pdf_drop_widgets(fz_context *ctx, pdf_widget *widget_list);
 
+/*
+	create a new annotation of the specified type on the
+	specified page. The returned pdf_annot structure is owned by the page
+	and does not need to be freed.
+*/
 pdf_annot *pdf_create_annot_raw(fz_context *ctx, pdf_page *page, enum pdf_annot_type type);
 pdf_annot *pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type);
 
@@ -226,20 +249,67 @@ void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const c
 
 void pdf_dirty_annot(fz_context *ctx, pdf_annot *annot);
 
+/*
+	Recreate the appearance stream for an annotation, if necessary.
+*/
 void pdf_update_appearance(fz_context *ctx, pdf_annot *annot);
 void pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const char *name, const char *text, const char *date);
 
+/*
+	Regenerate any appearance streams that are out of date and check for
+	cases where a different appearance stream should be selected because of
+	state changes.
+
+	Note that a call to pdf_pass_event for one page may lead to changes on
+	any other, so an app should call pdf_update_annot for every annotation
+	it currently displays. Also it is important that the pdf_annot object
+	is the one used to last render the annotation. If instead the app were
+	to drop the page or annotations and reload them then a call to
+	pdf_update_annot would not reliably be able to report all changed
+	annotations.
+
+	Returns true if the annotation appearance has changed since the last time
+	pdf_update_annot was called or the annotation was first loaded.
+*/
 int pdf_update_annot(fz_context *ctx, pdf_annot *annot);
 
+/*
+	Recalculate form fields if necessary.
+
+	Loop through all annotations on the page and update them. Return true
+	if any of them were changed (by either event or javascript actions, or
+	by annotation editing) and need re-rendering.
+
+	If you need more granularity, loop through the annotations and call
+	pdf_update_annot for each one to detect changes on a per-annotation
+	basis.
+*/
 int pdf_update_page(fz_context *ctx, pdf_page *page);
 
+/*
+	Update internal state appropriate for editing this field. When editing
+	is true, updating the text of the text widget will not have any
+	side-effects such as changing other widgets or running javascript.
+	This state is intended for the period when a text widget is having
+	characters typed into it. The state should be reverted at the end of
+	the edit sequence and the text newly updated.
+*/
 void pdf_set_widget_editing_state(fz_context *ctx, pdf_widget *widget, int editing);
 
 int pdf_get_widget_editing_state(fz_context *ctx, pdf_widget *widget);
 
+/*
+	Toggle the state of a specified annotation. Applies only to check-box
+	and radio-button widgets.
+*/
 int pdf_toggle_widget(fz_context *ctx, pdf_widget *widget);
 
 fz_display_list *pdf_new_display_list_from_annot(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Render an annotation suitable for blending on top of the opaque
+	pixmap returned by fz_new_pixmap_from_page_contents.
+*/
 fz_pixmap *pdf_new_pixmap_from_annot(fz_context *ctx, pdf_annot *annot, fz_matrix ctm, fz_colorspace *cs, fz_separations *seps, int alpha);
 fz_stext_page *pdf_new_stext_page_from_annot(fz_context *ctx, pdf_annot *annot, const fz_stext_options *options);
 

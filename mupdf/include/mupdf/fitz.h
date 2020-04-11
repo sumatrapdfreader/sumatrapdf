@@ -9,6 +9,8 @@ extern "C" {
 #include "mupdf/fitz/config.h"
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/context.h"
+#include "mupdf/fitz/output.h"
+#include "mupdf/fitz/log.h"
 
 #include "mupdf/fitz/crypt.h"
 #include "mupdf/fitz/getopt.h"
@@ -26,7 +28,6 @@ extern "C" {
 #include "mupdf/fitz/compress.h"
 #include "mupdf/fitz/compressed-buffer.h"
 #include "mupdf/fitz/filter.h"
-#include "mupdf/fitz/output.h"
 #include "mupdf/fitz/archive.h"
 
 /* Resources */

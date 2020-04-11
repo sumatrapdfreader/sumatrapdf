@@ -2,11 +2,6 @@
 
 #include <string.h>
 
-/*
-	Create a new empty fz_text object.
-
-	Throws exception on failure to allocate.
-*/
 fz_text *
 fz_new_text(fz_context *ctx)
 {
@@ -92,31 +87,6 @@ fz_grow_text_span(fz_context *ctx, fz_text_span *span, int n)
 	span->cap = new_cap;
 }
 
-/*
-	Add a glyph/unicode value to a text object.
-
-	text: Text object to add to.
-
-	font: The font the glyph should be added in.
-
-	trm: The transform to use for the glyph.
-
-	glyph: The glyph id to add.
-
-	unicode: The unicode character for the glyph.
-
-	wmode: 1 for vertical mode, 0 for horizontal.
-
-	bidi_level: The bidirectional level for this glyph.
-
-	markup_dir: The direction of the text as specified in the
-	markup.
-
-	language: The language in use (if known, 0 otherwise)
-	(e.g. FZ_LANG_zh_Hans).
-
-	Throws exception on failure to allocate.
-*/
 void
 fz_show_glyph(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, int gid, int ucs, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language lang)
 {
@@ -136,29 +106,6 @@ fz_show_glyph(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, int 
 	span->len++;
 }
 
-/*
-	Add a UTF8 string to a text object.
-
-	text: Text object to add to.
-
-	font: The font the string should be added in.
-
-	trm: The transform to use.
-
-	s: The utf-8 string to add.
-
-	wmode: 1 for vertical mode, 0 for horizontal.
-
-	bidi_level: The bidirectional level for this glyph.
-
-	markup_dir: The direction of the text as specified in the
-	markup.
-
-	language: The language in use (if known, 0 otherwise)
-	(e.g. FZ_LANG_zh_Hans).
-
-	Returns the transform updated with the advance width of the string.
-*/
 fz_matrix
 fz_show_string(fz_context *ctx, fz_text *text, fz_font *user_font, fz_matrix trm, const char *s, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language language)
 {
@@ -181,21 +128,6 @@ fz_show_string(fz_context *ctx, fz_text *text, fz_font *user_font, fz_matrix trm
 	return trm;
 }
 
-/*
-	Find the bounds of a given text object.
-
-	text: The text object to find the bounds of.
-
-	stroke: Pointer to the stroke attributes (for stroked
-	text), or NULL (for filled text).
-
-	ctm: The matrix in use.
-
-	r: pointer to storage for the bounds.
-
-	Returns a pointer to r, which is updated to contain the
-	bounding box for the text object.
-*/
 fz_rect
 fz_bound_text(fz_context *ctx, const fz_text *text, const fz_stroke_state *stroke, fz_matrix ctm)
 {
@@ -241,15 +173,6 @@ fz_bound_text(fz_context *ctx, const fz_text *text, const fz_stroke_state *strok
 	return bbox;
 }
 
-/*
-	Convert ISO 639 (639-{1,2,3,5}) language specification
-	strings losslessly to a 15 bit fz_text_language code.
-
-	No validation is carried out. Obviously invalid (out
-	of spec) codes will be mapped to FZ_LANG_UNSET, but
-	well-formed (but undefined) codes will be blithely
-	accepted.
-*/
 fz_text_language fz_text_language_from_string(const char *str)
 {
 	fz_text_language lang;
@@ -294,12 +217,6 @@ fz_text_language fz_text_language_from_string(const char *str)
 	return lang;
 }
 
-/*
-	Recover ISO 639 (639-{1,2,3,5}) language specification
-	strings losslessly from a 15 bit fz_text_language code.
-
-	No validation is carried out. See note above.
-*/
 char *fz_string_from_text_language(char str[8], fz_text_language lang)
 {
 	int c;

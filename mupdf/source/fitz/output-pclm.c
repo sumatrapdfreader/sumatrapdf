@@ -10,15 +10,6 @@ const char *fz_pclm_write_options_usage =
 	"\tstrip-height=N: Strip height (default 16)\n"
 	"\n";
 
-/*
-	Parse PCLm options.
-
-	Currently defined options and values are as follows:
-
-		compression=none: No compression
-		compression=flate: Flate compression
-		strip-height=n: Strip height (default 16)
-*/
 fz_pclm_options *
 fz_parse_pclm_options(fz_context *ctx, fz_pclm_options *opts, const char *args)
 {

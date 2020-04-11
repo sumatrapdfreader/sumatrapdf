@@ -9,9 +9,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-/*
-	Return true if the named file exists and is readable.
-*/
 int
 fz_file_exists(fz_context *ctx, const char *path)
 {
@@ -26,19 +23,6 @@ fz_file_exists(fz_context *ctx, const char *path)
 	return !!file;
 }
 
-/*
-	Create a new stream object with the given
-	internal state and function pointers.
-
-	state: Internal state (opaque to everything but implementation).
-
-	next: Should provide the next set of bytes (up to max) of stream
-	data. Return the number of bytes read, or EOF when there is no
-	more data.
-
-	drop: Should clean up and free the internal state. May not
-	throw exceptions.
-*/
 fz_stream *
 fz_new_stream(fz_context *ctx, void *state, fz_stream_next_fn *next, fz_stream_drop_fn *drop)
 {
@@ -168,16 +152,6 @@ fz_stream *fz_open_file_ptr_no_close(fz_context *ctx, FILE *file)
 	return stm;
 }
 
-/*
-	Open the named file and wrap it in a stream.
-
-	filename: Path to a file. On non-Windows machines the filename should
-	be exactly as it would be passed to fopen(2). On Windows machines, the
-	path should be UTF-8 encoded so that non-ASCII characters can be
-	represented. Other platforms do the encoding as standard anyway (and
-	in most cases, particularly for MacOS and Linux, the encoding they
-	use is UTF-8 anyway).
-*/
 fz_stream *
 fz_open_file(fz_context *ctx, const char *name)
 {
@@ -193,14 +167,6 @@ fz_open_file(fz_context *ctx, const char *name)
 }
 
 #ifdef _WIN32
-/*
-	Open the named file and wrap it in a stream.
-
-	This function is only available when compiling for Win32.
-
-	filename: Wide character path to the file as it would be given
-	to _wfopen().
-*/
 fz_stream *
 fz_open_file_w(fz_context *ctx, const wchar_t *name)
 {
@@ -244,15 +210,6 @@ static void drop_buffer(fz_context *ctx, void *state_)
 	fz_drop_buffer(ctx, state);
 }
 
-/*
-	Open a buffer as a stream.
-
-	buf: The buffer to open. Ownership of the buffer is NOT passed in
-	(this function takes its own reference).
-
-	Returns pointer to newly created stream. May throw exceptions on
-	failure to allocate.
-*/
 fz_stream *
 fz_open_buffer(fz_context *ctx, fz_buffer *buf)
 {
@@ -270,17 +227,6 @@ fz_open_buffer(fz_context *ctx, fz_buffer *buf)
 	return stm;
 }
 
-/*
-	Open a block of memory as a stream.
-
-	data: Pointer to start of data block. Ownership of the data block is
-	NOT passed in.
-
-	len: Number of bytes in data block.
-
-	Returns pointer to newly created stream. May throw exceptions on
-	failure to allocate.
-*/
 fz_stream *
 fz_open_memory(fz_context *ctx, const unsigned char *data, size_t len)
 {

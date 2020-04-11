@@ -3,9 +3,6 @@
 
 #include <string.h>
 
-/*
- * Check if an object is a stream or not.
- */
 int
 pdf_obj_num_is_stream(fz_context *ctx, pdf_document *doc, int num)
 {
@@ -359,10 +356,6 @@ pdf_open_filter(fz_context *ctx, pdf_document *doc, fz_stream *file_stm, pdf_obj
 	return fstm;
 }
 
-/*
- * Construct a filter to decode a stream, without
- * constraining to stream length, and without decryption.
- */
 fz_stream *
 pdf_open_inline_stream(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj, int length, fz_stream *file_stm, fz_compression_params *imparams)
 {
@@ -417,9 +410,6 @@ pdf_load_compressed_inline_image(fz_context *ctx, pdf_document *doc, pdf_obj *di
 	}
 }
 
-/*
- * Open a stream for reading the raw (compressed but decrypted) data.
- */
 fz_stream *
 pdf_open_raw_stream_number(fz_context *ctx, pdf_document *doc, int num)
 {
@@ -451,11 +441,6 @@ pdf_open_image_stream(fz_context *ctx, pdf_document *doc, int num, fz_compressio
 	return pdf_open_filter(ctx, doc, doc->file, x->obj, num, x->stm_ofs, params);
 }
 
-/*
- * Open a stream for reading uncompressed data.
- * Put the opened file in doc->stream.
- * Using doc->file while a stream is open is a Bad idea.
- */
 fz_stream *
 pdf_open_stream_number(fz_context *ctx, pdf_document *doc, int num)
 {
@@ -470,9 +455,6 @@ pdf_open_stream_with_offset(fz_context *ctx, pdf_document *doc, int num, pdf_obj
 	return pdf_open_filter(ctx, doc, doc->file, dict, num, stm_ofs, NULL);
 }
 
-/*
- * Load raw (compressed but decrypted) contents of a stream into buf.
- */
 fz_buffer *
 pdf_load_raw_stream_number(fz_context *ctx, pdf_document *doc, int num)
 {
@@ -637,9 +619,6 @@ pdf_load_image_stream(fz_context *ctx, pdf_document *doc, int num, fz_compressio
 	return buf;
 }
 
-/*
- * Load uncompressed contents of a stream into buf.
- */
 fz_buffer *
 pdf_load_stream_number(fz_context *ctx, pdf_document *doc, int num)
 {

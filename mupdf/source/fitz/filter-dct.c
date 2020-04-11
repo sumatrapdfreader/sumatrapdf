@@ -312,7 +312,6 @@ close_dctd(fz_context *ctx, void *state_)
 	fz_free(ctx, state);
 }
 
-/* Default: color_transform = -1 (unset), l2factor = 0, jpegtables = NULL */
 fz_stream *
 fz_open_dctd(fz_context *ctx, fz_stream *chain, int color_transform, int l2factor, fz_stream *jpegtables)
 {

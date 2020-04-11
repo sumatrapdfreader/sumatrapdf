@@ -315,7 +315,6 @@ gsicc_create_compute_cam(fz_context *ctx, float white_src[], float *cam)
 	matrixmult(ctx, &(cat02matrixinv[0]), 3, 3, temp_matrix, 3, 3, cam);
 }
 
-/* Create ICC profile from PDF calGray and calRGB definitions */
 fz_buffer *
 fz_new_icc_data_from_cal(fz_context *ctx,
 	float wp[3],

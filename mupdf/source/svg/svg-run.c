@@ -839,7 +839,7 @@ svg_run_path(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *node, c
 }
 
 /* svg, symbol, image, foreignObject establish new viewports */
-void
+static void
 svg_parse_viewport(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state)
 {
 	char *w_att = fz_xml_att(node, "width");
@@ -880,7 +880,7 @@ svg_parse_preserve_aspect_ratio(const char *att, int *x, int *y)
 }
 
 /* svg, symbol, image, foreignObject plus marker, pattern, view can use viewBox to set the transform */
-void
+static void
 svg_parse_viewbox(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state)
 {
 	char *viewbox_att = fz_xml_att(node, "viewBox");
@@ -916,7 +916,7 @@ svg_parse_viewbox(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *s
 }
 
 /* parse transform and presentation attributes */
-void
+static void
 svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state)
 {
 	fz_stroke_state *stroke = &state->stroke;

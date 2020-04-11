@@ -87,14 +87,6 @@ const char *fz_stext_options_usage =
 	"\tpreserve-whitespace: do not convert all whitespace into space characters\n"
 	"\n";
 
-/*
-	Create an empty text page.
-
-	The text page is filled out by the text device to contain the blocks
-	and lines of text on the page.
-
-	mediabox: optional mediabox information.
-*/
 fz_stext_page *
 fz_new_stext_page(fz_context *ctx, fz_rect mediabox)
 {
@@ -758,9 +750,6 @@ fz_stext_drop_device(fz_context *ctx, fz_device *dev)
 	fz_drop_text(ctx, tdev->lasttext);
 }
 
-/*
-	Parse stext device options from a comma separated key-value string.
-*/
 fz_stext_options *
 fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *string)
 {
@@ -780,21 +769,6 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 	return opts;
 }
 
-/*
-	Create a device to extract the text on a page.
-
-	Gather the text on a page into blocks and lines.
-
-	The reading order is taken from the order the text is drawn in the
-	source file, so may not be accurate.
-
-	page: The text page to which content should be added. This will
-	usually be a newly created (empty) text page, but it can be one
-	containing data already (for example when merging multiple pages,
-	or watermarking).
-
-	options: Options to configure the stext device.
-*/
 fz_device *
 fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options *opts)
 {

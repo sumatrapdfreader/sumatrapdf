@@ -34,12 +34,46 @@ enum pdf_widget_type pdf_widget_type(fz_context *ctx, pdf_widget *widget);
 
 fz_rect pdf_bound_widget(fz_context *ctx, pdf_widget *widget);
 
+/*
+	get the maximum number of
+	characters permitted in a text widget
+*/
 int pdf_text_widget_max_len(fz_context *ctx, pdf_widget *tw);
+
+/*
+	get the type of content
+	required by a text widget
+*/
 int pdf_text_widget_format(fz_context *ctx, pdf_widget *tw);
 
+/*
+	get the list of options for a list box or combo box.
+
+	Returns the number of options and fills in their
+	names within the supplied array. Should first be called with a
+	NULL array to find out how big the array should be.  If exportval
+	is true, then the export values will be returned and not the list
+	values if there are export values present.
+*/
 int pdf_choice_widget_options(fz_context *ctx, pdf_widget *tw, int exportval, const char *opts[]);
 int pdf_choice_widget_is_multiselect(fz_context *ctx, pdf_widget *tw);
+
+/*
+	get the value of a choice widget.
+
+	Returns the number of options currently selected and fills in
+	the supplied array with their strings. Should first be called
+	with NULL as the array to find out how big the array need to
+	be. The filled in elements should not be freed by the caller.
+*/
 int pdf_choice_widget_value(fz_context *ctx, pdf_widget *tw, const char *opts[]);
+
+/*
+	set the value of a choice widget.
+
+	The caller should pass the number of options selected and an
+	array of their names
+*/
 void pdf_choice_widget_set_value(fz_context *ctx, pdf_widget *tw, int n, const char *opts[]);
 
 int pdf_choice_field_option_count(fz_context *ctx, pdf_obj *field);
@@ -84,6 +118,11 @@ void pdf_reset_form(fz_context *ctx, pdf_document *doc, pdf_obj *fields, int exc
 
 int pdf_field_type(fz_context *ctx, pdf_obj *field);
 int pdf_field_flags(fz_context *ctx, pdf_obj *field);
+
+/*
+	Retrieve the name for a field as a C string that
+	must be freed by the caller.
+*/
 char *pdf_field_name(fz_context *ctx, pdf_obj *field);
 const char *pdf_field_value(fz_context *ctx, pdf_obj *field);
 
@@ -98,6 +137,14 @@ const char *pdf_field_label(fz_context *ctx, pdf_obj *field);
 pdf_obj *pdf_button_field_on_state(fz_context *ctx, pdf_obj *field);
 
 int pdf_set_field_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, const char *text, int ignore_trigger_events);
+
+/*
+	Update the text of a text widget.
+
+	The text is first validated by the Field/Keystroke event processing and accepted only if it passes.
+
+	The function returns whether validation passed.
+*/
 int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *value);
 int pdf_set_choice_field_value(fz_context *ctx, pdf_widget *widget, const char *value);
 

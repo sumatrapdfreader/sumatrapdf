@@ -1290,18 +1290,6 @@ fz_list_drop_device(fz_context *ctx, fz_device *dev)
 	fz_drop_path(ctx, writer->path);
 }
 
-/*
-	Create a rendering device for a display list.
-
-	When the device is rendering a page it will populate the
-	display list with drawing commands (text, images, etc.). The
-	display list can later be reused to render a page many times
-	without having to re-interpret the page from the document file
-	for each rendering. Once the device is no longer needed, free
-	it with fz_drop_device.
-
-	list: A display list that the list device takes ownership of.
-*/
 fz_device *
 fz_new_list_device(fz_context *ctx, fz_display_list *list)
 {
@@ -1454,14 +1442,6 @@ fz_drop_display_list_imp(fz_context *ctx, fz_storable *list_)
 	fz_free(ctx, list);
 }
 
-/*
-	Create an empty display list.
-
-	A display list contains drawing commands (text, images, etc.).
-	Use fz_new_list_device for populating the list.
-
-	mediabox: Bounds of the page (in points) represented by the display list.
-*/
 fz_display_list *
 fz_new_display_list(fz_context *ctx, fz_rect mediabox)
 {
@@ -1488,50 +1468,17 @@ fz_drop_display_list(fz_context *ctx, fz_display_list *list)
 	fz_defer_reap_end(ctx);
 }
 
-/*
-	Return the bounding box of the page recorded in a display list.
-*/
 fz_rect
 fz_bound_display_list(fz_context *ctx, fz_display_list *list)
 {
 	return list->mediabox;
 }
 
-/*
-	Check for a display list being empty
-
-	list: The list to check.
-
-	Returns true if empty, false otherwise.
-*/
 int fz_display_list_is_empty(fz_context *ctx, const fz_display_list *list)
 {
 	return !list || list->len == 0;
 }
 
-/*
-	(Re)-run a display list through a device.
-
-	list: A display list, created by fz_new_display_list and
-	populated with objects from a page by running fz_run_page on a
-	device obtained from fz_new_list_device.
-
-	ctm: Transform to apply to display list contents. May include
-	for example scaling and rotation, see fz_scale, fz_rotate and
-	fz_concat. Set to fz_identity if no transformation is desired.
-
-	scissor: Only the part of the contents of the display list
-	visible within this area will be considered when the list is
-	run through the device. This does not imply for tile objects
-	contained in the display list.
-
-	cookie: Communication mechanism between caller and library
-	running the page. Intended for multi-threaded applications,
-	while single-threaded applications set cookie to NULL. The
-	caller may abort an ongoing page run. Cookie also communicates
-	progress information back to the caller. The fields inside
-	cookie are continually updated while the page is being run.
-*/
 void
 fz_run_display_list(fz_context *ctx, fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_rect scissor, fz_cookie *cookie)
 {

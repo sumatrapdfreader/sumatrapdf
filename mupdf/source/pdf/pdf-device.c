@@ -1116,15 +1116,6 @@ pdf_dev_drop_device(fz_context *ctx, fz_device *dev)
 	fz_free(ctx, pdev->gstates);
 }
 
-/*
-	Create a pdf device. Rendering to the device creates
-	new pdf content. WARNING: this device is work in progress. It doesn't
-	currently support all rendering cases.
-
-	Note that contents must be a stream (dictionary) to be updated (or
-	a reference to a stream). Callers should take care to ensure that it
-	is not an array, and that is it not shared with other objects/pages.
-*/
 fz_device *pdf_new_pdf_device(fz_context *ctx, pdf_document *doc, fz_matrix topctm, fz_rect mediabox, pdf_obj *resources, fz_buffer *buf)
 {
 	pdf_device *dev = fz_new_derived_device(ctx, pdf_device);
@@ -1194,23 +1185,6 @@ fz_device *pdf_new_pdf_device(fz_context *ctx, pdf_document *doc, fz_matrix topc
 	return (fz_device*)dev;
 }
 
-/*
-	Create a device that will record the
-	graphical operations given to it into a sequence of
-	pdf operations, together with a set of resources. This
-	sequence/set pair can then be used as the basis for
-	adding a page to the document (see pdf_add_page).
-
-	doc: The document for which these are intended.
-
-	mediabox: The bbox for the created page.
-
-	presources: Pointer to a place to put the created
-	resources dictionary.
-
-	pcontents: Pointer to a place to put the created
-	contents buffer.
-*/
 fz_device *pdf_page_write(fz_context *ctx, pdf_document *doc, fz_rect mediabox, pdf_obj **presources, fz_buffer **pcontents)
 {
 	fz_matrix pagectm = { 1, 0, 0, -1, -mediabox.x0, mediabox.y1 };

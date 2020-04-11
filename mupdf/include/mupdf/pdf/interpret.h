@@ -167,8 +167,28 @@ struct pdf_csi_s
 
 pdf_processor *pdf_new_run_processor(fz_context *ctx, fz_device *dev, fz_matrix ctm, const char *usage, pdf_gstate *gstate, fz_default_colorspaces *default_cs, fz_cookie *cookie);
 
+/*
+	Create a buffer processor.
+
+	This collects the incoming PDF operator stream into an fz_buffer.
+
+	buffer: The (possibly empty) buffer to which operators will be
+	appended.
+
+	ahxencode: If 0, then image streams will be send as binary,
+	otherwise they will be asciihexencoded.
+*/
 pdf_processor *pdf_new_buffer_processor(fz_context *ctx, fz_buffer *buffer, int ahxencode);
 
+/*
+	Create an output processor. This
+	sends the incoming PDF operator stream to an fz_output stream.
+
+	out: The output stream to which operators will be sent.
+
+	ahxencode: If 0, then image streams will be send as binary,
+	otherwise they will be asciihexencoded.
+*/
 pdf_processor *pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode);
 
 /*
@@ -212,9 +232,48 @@ typedef struct pdf_filter_options_s
 	int ascii;
 } pdf_filter_options;
 
+/*
+	Create a filter processor. This filters the PDF operators
+	it is fed, and passes them down (with some changes) to the
+	child filter.
+
+	The changes made by the filter are:
+
+	* No operations are allowed to change the top level gstate.
+	Additional q/Q operators are inserted to prevent this.
+
+	* Repeated/unnecessary colour operators are removed (so,
+	for example, "0 0 0 rg 0 1 rg 0.5 g" would be sanitised to
+	"0.5 g")
+
+	The intention of these changes is to provide a simpler,
+	but equivalent stream, repairing problems with mismatched
+	operators, maintaining structure (such as BMC, EMC calls)
+	and leaving the graphics state in an known (default) state
+	so that subsequent operations (such as synthesising new
+	operators to be appended to the stream) are easier.
+
+	The net graphical effect of the filtered operator stream
+	should be identical to the incoming operator stream.
+
+	chain: The child processor to which the filtered operators
+	will be fed.
+
+	old_res: The incoming resource dictionary.
+
+	new_res: An (initially empty) resource dictionary that will
+	be populated by copying entries from the old dictionary to
+	the new one as they are used. At the end therefore, this
+	contains exactly those resource objects actually required.
+
+	The filter options struct allows you to filter objects using callbacks.
+*/
 pdf_processor *pdf_new_filter_processor(fz_context *ctx, pdf_document *doc, pdf_processor *chain, pdf_obj *old_res, pdf_obj *new_res, int struct_parents, fz_matrix transform, pdf_filter_options *filter);
 pdf_obj *pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_res, fz_matrix ctm, pdf_filter_options *filter);
 
+/*
+	Functions to actually process annotations, glyphs and general stream objects.
+*/
 void pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *obj, pdf_obj *res, fz_cookie *cookie);
 void pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_page *page, pdf_annot *annot, fz_cookie *cookie);
 void pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *resources, fz_buffer *contents);

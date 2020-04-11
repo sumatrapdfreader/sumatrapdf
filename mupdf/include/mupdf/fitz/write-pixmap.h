@@ -37,8 +37,46 @@ struct fz_pcl_options_s
 	int page_count;
 };
 
+/*
+	Initialize PCL option struct for a given preset.
+
+	Currently defined presets include:
+
+		generic	Generic PCL printer
+		ljet4	HP DeskJet
+		dj500	HP DeskJet 500
+		fs600	Kyocera FS-600
+		lj	HP LaserJet, HP LaserJet Plus
+		lj2	HP LaserJet IIp, HP LaserJet IId
+		lj3	HP LaserJet III
+		lj3d	HP LaserJet IIId
+		lj4	HP LaserJet 4
+		lj4pl	HP LaserJet 4 PL
+		lj4d	HP LaserJet 4d
+		lp2563b	HP 2563B line printer
+		oce9050	Oce 9050 Line printer
+*/
 void fz_pcl_preset(fz_context *ctx, fz_pcl_options *opts, const char *preset);
 
+/*
+	Parse PCL options.
+
+	Currently defined options and values are as follows:
+
+		preset=X	Either "generic" or one of the presets as for fz_pcl_preset.
+		spacing=0	No vertical spacing capability
+		spacing=1	PCL 3 spacing (<ESC>*p+<n>Y)
+		spacing=2	PCL 4 spacing (<ESC>*b<n>Y)
+		spacing=3	PCL 5 spacing (<ESC>*b<n>Y and clear seed row)
+		mode2		Disable/Enable mode 2 graphics compression
+		mode3		Disable/Enable mode 3 graphics compression
+		eog_reset	End of graphics (<ESC>*rB) resets all parameters
+		has_duplex	Duplex supported (<ESC>&l<duplex>S)
+		has_papersize	Papersize setting supported (<ESC>&l<sizecode>A)
+		has_copies	Number of copies supported (<ESC>&l<copies>X)
+		is_ljet4pjl	Disable/Enable HP 4PJL model-specific output
+		is_oce9050	Disable/Enable Oce 9050 model-specific output
+*/
 fz_pcl_options *fz_parse_pcl_options(fz_context *ctx, fz_pcl_options *opts, const char *args);
 
 fz_band_writer *fz_new_mono_pcl_band_writer(fz_context *ctx, fz_output *out, const fz_pcl_options *options);
@@ -63,6 +101,15 @@ struct fz_pclm_options_s
 	int page_count;
 };
 
+/*
+	Parse PCLm options.
+
+	Currently defined options and values are as follows:
+
+		compression=none: No compression
+		compression=flate: Flate compression
+		strip-height=n: Strip height (default 16)
+*/
 fz_pclm_options *fz_parse_pclm_options(fz_context *ctx, fz_pclm_options *opts, const char *args);
 
 fz_band_writer *fz_new_pclm_band_writer(fz_context *ctx, fz_output *out, const fz_pclm_options *options);
@@ -110,8 +157,8 @@ typedef struct fz_pwg_options_s fz_pwg_options;
 
 struct fz_pwg_options_s
 {
-	/* These are not interpreted as CStrings by the writing code, but
-	 * are rather copied directly out. */
+	/* These are not interpreted as CStrings by the writing code,
+	 * but are rather copied directly out. */
 	char media_class[64];
 	char media_color[64];
 	char media_type[64];
@@ -160,6 +207,9 @@ void fz_write_bitmap_as_pwg_page(fz_context *ctx, fz_output *out, const fz_bitma
 fz_band_writer *fz_new_mono_pwg_band_writer(fz_context *ctx, fz_output *out, const fz_pwg_options *pwg);
 fz_band_writer *fz_new_pwg_band_writer(fz_context *ctx, fz_output *out, const fz_pwg_options *pwg);
 
+/*
+	Output the file header to a pwg stream, ready for pages to follow it.
+*/
 void fz_write_pwg_file_header(fz_context *ctx, fz_output *out); /* for use by mudraw.c */
 
 #endif

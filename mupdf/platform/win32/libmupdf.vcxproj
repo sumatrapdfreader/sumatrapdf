@@ -870,6 +870,7 @@
     <ClCompile Include="..\..\source\fitz\load-png.c" />
     <ClCompile Include="..\..\source\fitz\load-pnm.c" />
     <ClCompile Include="..\..\source\fitz\load-tiff.c" />
+    <ClCompile Include="..\..\source\fitz\log.c" />
     <ClCompile Include="..\..\source\fitz\memento.c" />
     <ClCompile Include="..\..\source\fitz\memory.c" />
     <ClCompile Include="..\..\source\fitz\noto.c" />
@@ -1002,7 +1003,6 @@
     <ClInclude Include="..\..\include\mupdf\fitz\document.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\filter.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\font.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\function.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\geometry.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\getopt.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\glyph-cache.h" />
@@ -1011,15 +1011,8 @@
     <ClInclude Include="..\..\include\mupdf\fitz\image-list.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\image.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\link.h" />
+    <ClInclude Include="..\..\include\mupdf\fitz\log.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\outline.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\output-pcl.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\output-pclm.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\output-png.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\output-pnm.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\output-ps.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\output-ps2.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\output-psd.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\output-pwg.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\output-svg.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\output.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\path.h" />
@@ -1032,12 +1025,10 @@
     <ClInclude Include="..\..\include\mupdf\fitz\string-util.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\structured-text.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\system.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\text-shaper.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\text.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\track-usage.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\transition.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\tree.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\ucdn.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\util.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\version.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\write-pixmap.h" />
@@ -1046,7 +1037,6 @@
     <ClInclude Include="..\..\include\mupdf\memento.h" />
     <ClInclude Include="..\..\include\mupdf\pdf.h" />
     <ClInclude Include="..\..\include\mupdf\pdf\annot.h" />
-    <ClInclude Include="..\..\include\mupdf\pdf\appearance.h" />
     <ClInclude Include="..\..\include\mupdf\pdf\clean.h" />
     <ClInclude Include="..\..\include\mupdf\pdf\cmap.h" />
     <ClInclude Include="..\..\include\mupdf\pdf\crypt.h" />
@@ -1065,16 +1055,11 @@
     <ClInclude Include="..\..\include\mupdf\pdf\resource.h" />
     <ClInclude Include="..\..\include\mupdf\pdf\xref.h" />
     <ClInclude Include="..\..\include\mupdf\ucdn.h" />
-    <ClInclude Include="..\..\include\mupdf\xps.h" />
-    <ClInclude Include="..\..\source\fitz\colorspace-imp.h" />
     <ClInclude Include="..\..\source\fitz\draw-imp.h" />
-    <ClInclude Include="..\..\source\fitz\glyph-cache-imp.h" />
     <ClInclude Include="..\..\source\fitz\html-tags.h" />
     <ClInclude Include="..\..\source\fitz\jmemcust.h" />
     <ClInclude Include="..\..\source\fitz\paint-glyph.h" />
     <ClInclude Include="..\..\source\fitz\unicodedata_db.h" />
-    <ClInclude Include="..\..\source\pdf\pdf-glyphlist.h" />
-    <ClInclude Include="..\..\source\pdf\pdf-interpret-imp.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libluratech.vcxproj">

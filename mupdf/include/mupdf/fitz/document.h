@@ -131,8 +131,8 @@ typedef fz_location (fz_document_resolve_link_fn)(fz_context *ctx, fz_document *
 
 /*
 	Type for a function to be called to
-	count the number of chapters in a document. See fz_count_chapters for
-	more information.
+	count the number of chapters in a document. See
+	fz_count_chapters for more information.
 */
 typedef int (fz_document_count_chapters_fn)(fz_context *ctx, fz_document *doc);
 
@@ -294,8 +294,7 @@ struct fz_document_s
 };
 
 /*
-	Function type to open a document from a
-	file.
+	Function type to open a document from a file.
 
 	filename: file to open
 
@@ -364,18 +363,69 @@ struct fz_document_handler_s
 	fz_document_open_accel_with_stream_fn *open_accel_with_stream;
 };
 
+/*
+	Register a handler for a document type.
+
+	handler: The handler to register.
+*/
 void fz_register_document_handler(fz_context *ctx, const fz_document_handler *handler);
 
+/*
+	Register handlers
+	for all the standard document types supported in
+	this build.
+*/
 void fz_register_document_handlers(fz_context *ctx);
 
+/*
+	Given a magic find a document handler that can handle a
+	document of this type.
+
+	magic: Can be a filename extension (including initial period) or
+	a mimetype.
+*/
 const fz_document_handler *fz_recognize_document(fz_context *ctx, const char *magic);
 
+/*
+	Open a document file and read its basic structure so pages and
+	objects can be located. MuPDF will try to repair broken
+	documents (without actually changing the file contents).
+
+	The returned fz_document is used when calling most other
+	document related functions.
+
+	filename: a path to a file as it would be given to open(2).
+*/
 fz_document *fz_open_document(fz_context *ctx, const char *filename);
 
+/*
+	Open a document file and read its basic structure so pages and
+	objects can be located. MuPDF will try to repair broken
+	documents (without actually changing the file contents).
+
+	The returned fz_document is used when calling most other
+	document related functions.
+
+	filename: a path to a file as it would be given to open(2).
+*/
 fz_document *fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *accel);
 
+/*
+	Open a document using the specified stream object rather than
+	opening a file on disk.
+
+	magic: a string used to detect document type; either a file name
+	or mime-type.
+*/
 fz_document *fz_open_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stream);
 
+/*
+	Open a document using the specified stream object rather than
+	opening a file on disk.
+
+	magic: a string used to detect document type; either a file name
+	or mime-type.
+*/
 fz_document *fz_open_accelerated_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stream, fz_stream *accel);
 
 int fz_document_supports_accelerator(fz_context *ctx, fz_document *doc);
@@ -390,22 +440,78 @@ void *fz_new_document_of_size(fz_context *ctx, int size);
 fz_document *fz_keep_document(fz_context *ctx, fz_document *doc);
 void fz_drop_document(fz_context *ctx, fz_document *doc);
 
+/*
+	Check if a document is encrypted with a
+	non-blank password.
+*/
 int fz_needs_password(fz_context *ctx, fz_document *doc);
 
+/*
+	Test if the given password can decrypt the document.
+
+	password: The password string to be checked. Some document
+	specifications do not specify any particular text encoding, so
+	neither do we.
+
+	Returns 0 for failure to authenticate, non-zero for success.
+
+	For PDF documents, further information can be given by examining
+	the bits in the return code.
+
+		Bit 0 => No password required
+		Bit 1 => User password authenticated
+		Bit 2 => Owner password authenticated
+*/
 int fz_authenticate_password(fz_context *ctx, fz_document *doc, const char *password);
 
+/*
+	Load the hierarchical document outline.
+
+	Should be freed by fz_drop_outline.
+*/
 fz_outline *fz_load_outline(fz_context *ctx, fz_document *doc);
 
+/*
+	Is the document reflowable.
+
+	Returns 1 to indicate reflowable documents, otherwise 0.
+*/
 int fz_is_document_reflowable(fz_context *ctx, fz_document *doc);
 
+/*
+	Layout reflowable document types.
+
+	w, h: Page size in points.
+	em: Default font size in points.
+*/
 void fz_layout_document(fz_context *ctx, fz_document *doc, float w, float h, float em);
 
+/*
+	Create a bookmark for the given page, which can be used to find
+	the same location after the document has been laid out with
+	different parameters.
+*/
 fz_bookmark fz_make_bookmark(fz_context *ctx, fz_document *doc, fz_location loc);
 
+/*
+	Find a bookmark and return its page number.
+*/
 fz_location fz_lookup_bookmark(fz_context *ctx, fz_document *doc, fz_bookmark mark);
 
+/*
+	Return the number of pages in document
+
+	May return 0 for documents with no pages.
+*/
 int fz_count_pages(fz_context *ctx, fz_document *doc);
 
+/*
+	Resolve an internal link to a page number.
+
+	xp, yp: Pointer to store coordinate of destination on the page.
+
+	Returns (-1,-1) if the URI cannot be resolved.
+*/
 fz_location fz_resolve_link(fz_context *ctx, fz_document *doc, const char *uri, float *xp, float *yp);
 fz_location fz_last_page(fz_context *ctx, fz_document *doc);
 fz_location fz_next_page(fz_context *ctx, fz_document *doc, fz_location loc);
@@ -416,31 +522,156 @@ int fz_page_number_from_location(fz_context *ctx, fz_document *doc, fz_location 
 
 fz_page *fz_load_page(fz_context *ctx, fz_document *doc, int number);
 
+/*
+	Return the number of chapters in the document.
+	At least 1.
+*/
 int fz_count_chapters(fz_context *ctx, fz_document *doc);
+
+/*
+	Return the number of pages in a chapter.
+	May return 0.
+*/
 int fz_count_chapter_pages(fz_context *ctx, fz_document *doc, int chapter);
+
+/*
+	Load a page.
+
+	After fz_load_page is it possible to retrieve the size of the
+	page using fz_bound_page, or to render the page using
+	fz_run_page_*. Free the page by calling fz_drop_page.
+
+	chapter: chapter number, 0 is the first chapter of the document.
+	number: page number, 0 is the first page of the chapter.
+*/
 fz_page *fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int page);
 
+/*
+	Load the list of links for a page.
+
+	Returns a linked list of all the links on the page, each with
+	its clickable region and link destination. Each link is
+	reference counted so drop and free the list of links by
+	calling fz_drop_link on the pointer return from fz_load_links.
+
+	page: Page obtained from fz_load_page.
+*/
 fz_link *fz_load_links(fz_context *ctx, fz_page *page);
 
 fz_page *fz_new_page_of_size(fz_context *ctx, int size);
 #define fz_new_derived_page(CTX,TYPE) \
 	((TYPE *)Memento_label(fz_new_page_of_size(CTX,sizeof(TYPE)),#TYPE))
 
+/*
+	Determine the size of a page at 72 dpi.
+*/
 fz_rect fz_bound_page(fz_context *ctx, fz_page *page);
 
+/*
+	Run a page through a device.
+
+	page: Page obtained from fz_load_page.
+
+	dev: Device obtained from fz_new_*_device.
+
+	transform: Transform to apply to page. May include for example
+	scaling and rotation, see fz_scale, fz_rotate and fz_concat.
+	Set to fz_identity if no transformation is desired.
+
+	cookie: Communication mechanism between caller and library
+	rendering the page. Intended for multi-threaded applications,
+	while single-threaded applications set cookie to NULL. The
+	caller may abort an ongoing rendering of a page. Cookie also
+	communicates progress information back to the caller. The
+	fields inside cookie are continually updated while the page is
+	rendering.
+*/
 void fz_run_page(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
 
+/*
+	Run a page through a device. Just the main
+	page content, without the annotations, if any.
+
+	page: Page obtained from fz_load_page.
+
+	dev: Device obtained from fz_new_*_device.
+
+	transform: Transform to apply to page. May include for example
+	scaling and rotation, see fz_scale, fz_rotate and fz_concat.
+	Set to fz_identity if no transformation is desired.
+
+	cookie: Communication mechanism between caller and library
+	rendering the page. Intended for multi-threaded applications,
+	while single-threaded applications set cookie to NULL. The
+	caller may abort an ongoing rendering of a page. Cookie also
+	communicates progress information back to the caller. The
+	fields inside cookie are continually updated while the page is
+	rendering.
+*/
 void fz_run_page_contents(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
+
+/*
+	Run the annotations on a page through a device.
+*/
 void fz_run_page_annots(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
+
+/*
+	Run the widgets on a page through a device.
+*/
 void fz_run_page_widgets(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
 
 fz_page *fz_keep_page(fz_context *ctx, fz_page *page);
 void fz_drop_page(fz_context *ctx, fz_page *page);
 
+/*
+	Get the presentation details for a given page.
+
+	transition: A pointer to a transition struct to fill out.
+
+	duration: A pointer to a place to set the page duration in
+	seconds. Will be set to 0 if no transition is specified for the
+	page.
+
+	Returns: a pointer to the transition structure, or NULL if there
+	is no transition specified for the page.
+*/
 fz_transition *fz_page_presentation(fz_context *ctx, fz_page *page, fz_transition *transition, float *duration);
 
+/*
+	Check permission flags on document.
+*/
 int fz_has_permission(fz_context *ctx, fz_document *doc, fz_permission p);
 
+/*
+	Retrieve document meta data strings.
+
+	doc: The document to query.
+
+	key: Which meta data key to retrieve...
+
+	Basic information:
+		'format'	-- Document format and version.
+		'encryption'	-- Description of the encryption used.
+
+	From the document information dictionary:
+		'info:Title'
+		'info:Author'
+		'info:Subject'
+		'info:Keywords'
+		'info:Creator'
+		'info:Producer'
+		'info:CreationDate'
+		'info:ModDate'
+
+	buf: The buffer to hold the results (a nul-terminated UTF-8
+	string).
+
+	size: Size of 'buf'.
+
+	Returns the size of the output string (may be larger than 'size'
+	if the output was truncated), or -1 if the key is not recognized
+	or found.
+*/
 int fz_lookup_metadata(fz_context *ctx, fz_document *doc, const char *key, char *buf, int size);
 
 #define FZ_META_FORMAT "format"
@@ -449,8 +680,20 @@ int fz_lookup_metadata(fz_context *ctx, fz_document *doc, const char *key, char 
 #define FZ_META_INFO_AUTHOR "info:Author"
 #define FZ_META_INFO_TITLE "info:Title"
 
+/*
+	Find the output intent colorspace if the document has defined
+	one.
+*/
 fz_colorspace *fz_document_output_intent(fz_context *ctx, fz_document *doc);
 
+/*
+	Get the separations details for a page.
+	This will be NULL, unless the format specifically supports
+	separations (such as PDF files). May be NULL even
+	so, if there are no separations on a page.
+
+	Returns a reference that must be dropped.
+*/
 fz_separations *fz_page_separations(fz_context *ctx, fz_page *page);
 
 int fz_page_uses_overprint(fz_context *ctx, fz_page *page);

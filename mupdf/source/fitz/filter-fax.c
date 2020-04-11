@@ -769,7 +769,6 @@ close_faxd(fz_context *ctx, void *state_)
 	fz_free(ctx, fax);
 }
 
-/* Default: columns = 1728, end_of_block = 1, the rest = 0 */
 fz_stream *
 fz_open_faxd(fz_context *ctx, fz_stream *chain,
 	int k, int end_of_line, int encoded_byte_align,

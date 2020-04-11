@@ -3,9 +3,6 @@
 
 #include <string.h>
 
-/*
- * Load CMap stream in PDF file
- */
 pdf_cmap *
 pdf_load_embedded_cmap(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj)
 {
@@ -65,9 +62,6 @@ pdf_load_embedded_cmap(fz_context *ctx, pdf_document *doc, pdf_obj *stmobj)
 	return cmap;
 }
 
-/*
- * Create an Identity-* CMap (for both 1 and 2-byte encodings)
- */
 pdf_cmap *
 pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes)
 {
@@ -91,10 +85,6 @@ pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes)
 	}
 	return cmap;
 }
-
-/*
- * Load built-in CMap resource.
- */
 
 #ifdef NO_CJK
 
@@ -275,9 +265,6 @@ pdf_load_builtin_cmap(fz_context *ctx, const char *name)
 
 #endif
 
-/*
- * Load predefined CMap from system.
- */
 pdf_cmap *
 pdf_load_system_cmap(fz_context *ctx, const char *cmap_name)
 {

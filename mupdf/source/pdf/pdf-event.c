@@ -7,12 +7,6 @@ typedef struct
 	pdf_alert_event alert;
 } pdf_alert_event_internal;
 
-/*
-	access the details of an alert event
-	The returned pointer and all the data referred to by the
-	structure are owned by mupdf and need not be freed by the
-	caller.
-*/
 pdf_alert_event *pdf_access_alert_event(fz_context *ctx, pdf_doc_event *event)
 {
 	pdf_alert_event *alert = NULL;
@@ -53,10 +47,6 @@ typedef struct
 	const char *item;
 } pdf_exec_menu_item_event_internal;
 
-/*
-	access the details of am execMenuItem
-	event, which consists of just the name of the menu item
-*/
 const char *pdf_access_exec_menu_item_event(fz_context *ctx, pdf_doc_event *event)
 {
 	const char *item = NULL;
@@ -85,11 +75,6 @@ typedef struct
 	pdf_launch_url_event launch_url;
 } pdf_launch_url_event_internal;
 
-/*
-	access the details of a launch-url
-	event. The returned pointer and all data referred to by the structure
-	are owned by mupdf and need not be freed by the caller.
-*/
 pdf_launch_url_event *pdf_access_launch_url_event(fz_context *ctx, pdf_doc_event *event)
 {
 	pdf_launch_url_event *launch_url = NULL;

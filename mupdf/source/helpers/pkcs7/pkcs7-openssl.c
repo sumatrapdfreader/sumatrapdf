@@ -141,7 +141,7 @@ static long stream_ctrl(BIO *b, int cmd, long arg1, void *arg2)
 	case BIO_C_FILE_SEEK:
 		fz_try(data->ctx)
 		{
-		fz_seek(data->ctx, data->stm, arg1, SEEK_SET);
+			fz_seek(data->ctx, data->stm, arg1, SEEK_SET);
 			ret = fz_tell(data->ctx, data->stm);
 		}
 		fz_catch(data->ctx)
@@ -852,7 +852,7 @@ pdf_pkcs7_designated_name *get_signatory(fz_context *ctx, pdf_pkcs7_verifier *ve
 	x509 = pk7_signer(pk7_certs(pk7sig), sk_PKCS7_SIGNER_INFO_value(sk, 0));
 
 	fz_try(ctx)
-	name = x509_designated_name(ctx, x509);
+		name = x509_designated_name(ctx, x509);
 	fz_catch(ctx)
 	{
 		PKCS7_free(pk7sig);

@@ -8,11 +8,6 @@ extern fz_document_handler img_document_handler;
 extern fz_document_handler html_document_handler;
 extern fz_document_handler epub_document_handler;
 
-/*
-	Register handlers
-	for all the standard document types supported in
-	this build.
-*/
 void fz_register_document_handlers(fz_context *ctx)
 {
 #if FZ_ENABLE_PDF

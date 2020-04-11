@@ -203,7 +203,6 @@ close_lzwd(fz_context *ctx, void *state_)
 	fz_free(ctx, lzw);
 }
 
-/* Default: early_change = 1 */
 fz_stream *
 fz_open_lzwd(fz_context *ctx, fz_stream *chain, int early_change, int min_bits, int reverse_bits, int old_tiff)
 {

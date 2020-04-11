@@ -20,6 +20,11 @@ pdf_obj *pdf_new_int(fz_context *ctx, int64_t i);
 pdf_obj *pdf_new_real(fz_context *ctx, float f);
 pdf_obj *pdf_new_name(fz_context *ctx, const char *str);
 pdf_obj *pdf_new_string(fz_context *ctx, const char *str, size_t len);
+
+/*
+	Create a PDF 'text string' by encoding input string as either ASCII or UTF-16BE.
+	In theory, we could also use PDFDocEncoding.
+*/
 pdf_obj *pdf_new_text_string(fz_context *ctx, const char *s);
 pdf_obj *pdf_new_indirect(fz_context *ctx, pdf_document *doc, int num, int gen);
 pdf_obj *pdf_new_array(fz_context *ctx, pdf_document *doc, int initialcap);
@@ -43,6 +48,10 @@ int pdf_is_string(fz_context *ctx, pdf_obj *obj);
 int pdf_is_array(fz_context *ctx, pdf_obj *obj);
 int pdf_is_dict(fz_context *ctx, pdf_obj *obj);
 int pdf_is_indirect(fz_context *ctx, pdf_obj *obj);
+
+/*
+	Check if an object is a stream or not.
+*/
 int pdf_obj_num_is_stream(fz_context *ctx, pdf_document *doc, int num);
 int pdf_is_stream(fz_context *ctx, pdf_obj *obj);
 pdf_obj *pdf_resolve_obj(fz_context *ctx, pdf_obj *a);
@@ -161,9 +170,32 @@ void pdf_print_encrypted_obj(fz_context *ctx, fz_output *out, pdf_obj *obj, int 
 void pdf_debug_obj(fz_context *ctx, pdf_obj *obj);
 void pdf_debug_ref(fz_context *ctx, pdf_obj *obj);
 
+/*
+	Convert Unicode/PdfDocEncoding string into utf-8.
+
+	The returned string must be freed by the caller.
+*/
 char *pdf_new_utf8_from_pdf_string(fz_context *ctx, const char *srcptr, size_t srclen);
+
+/*
+	Convert text string object to UTF-8.
+
+	The returned string must be freed by the caller.
+*/
 char *pdf_new_utf8_from_pdf_string_obj(fz_context *ctx, pdf_obj *src);
+
+/*
+	Load text stream and convert to UTF-8.
+
+	The returned string must be freed by the caller.
+*/
 char *pdf_new_utf8_from_pdf_stream_obj(fz_context *ctx, pdf_obj *src);
+
+/*
+	Load text stream or text string and convert to UTF-8.
+
+	The returned string must be freed by the caller.
+*/
 char *pdf_load_stream_or_string_as_utf8(fz_context *ctx, pdf_obj *src);
 
 fz_quad pdf_to_quad(fz_context *ctx, pdf_obj *array, int offset);
@@ -172,7 +204,6 @@ fz_matrix pdf_to_matrix(fz_context *ctx, pdf_obj *array);
 
 pdf_document *pdf_get_indirect_document(fz_context *ctx, pdf_obj *obj);
 pdf_document *pdf_get_bound_document(fz_context *ctx, pdf_obj *obj);
-void pdf_set_str_len(fz_context *ctx, pdf_obj *obj, size_t newlen);
 void pdf_set_int(fz_context *ctx, pdf_obj *obj, int64_t i);
 
 /* Voodoo to create PDF_NAME(Foo) macros from name-table.h */
@@ -193,5 +224,12 @@ enum {
 #define PDF_TRUE ((pdf_obj*)(intptr_t)PDF_ENUM_TRUE)
 #define PDF_FALSE ((pdf_obj*)(intptr_t)PDF_ENUM_FALSE)
 #define PDF_LIMIT ((pdf_obj*)(intptr_t)PDF_ENUM_LIMIT)
+
+/* Implementation details: subject to change. */
+
+/*
+	for use by pdf_crypt_obj_imp to decrypt AES string in place
+*/
+void pdf_set_str_len(fz_context *ctx, pdf_obj *obj, size_t newlen);
 
 #endif

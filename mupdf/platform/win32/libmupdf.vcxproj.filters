@@ -582,15 +582,12 @@
     <ClCompile Include="..\..\source\fitz\encode-fax.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\log.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\fitz\colorspace-imp.h">
-      <Filter>fitz</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
-      <Filter>fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\fitz\glyph-cache-imp.h">
       <Filter>fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\fitz\html-tags.h">
@@ -605,12 +602,6 @@
     <ClInclude Include="..\..\source\fitz\unicodedata_db.h">
       <Filter>fitz</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\pdf\pdf-glyphlist.h">
-      <Filter>pdf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\pdf\pdf-interpret-imp.h">
-      <Filter>pdf</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz.h">
       <Filter>!include</Filter>
     </ClInclude>
@@ -623,13 +614,7 @@
     <ClInclude Include="..\..\include\mupdf\ucdn.h">
       <Filter>!include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\xps.h">
-      <Filter>!include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\mupdf\pdf\annot.h">
-      <Filter>!include\pdf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\pdf\appearance.h">
       <Filter>!include\pdf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\pdf\clean.h">
@@ -731,9 +716,6 @@
     <ClInclude Include="..\..\include\mupdf\fitz\font.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\function.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\geometry.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
@@ -759,30 +741,6 @@
       <Filter>!include\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\outline.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\output-pcl.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\output-pclm.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\output-png.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\output-pnm.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\output-ps.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\output-ps2.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\output-psd.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\output-pwg.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\output-svg.h">
@@ -821,9 +779,6 @@
     <ClInclude Include="..\..\include\mupdf\fitz\system.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\text-shaper.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\text.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
@@ -834,9 +789,6 @@
       <Filter>!include\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\tree.h">
-      <Filter>!include\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\mupdf\fitz\ucdn.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\util.h">
@@ -852,6 +804,9 @@
       <Filter>!include\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\fitz\xml.h">
+      <Filter>!include\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\fitz\log.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
   </ItemGroup>

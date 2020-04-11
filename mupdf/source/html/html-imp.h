@@ -296,6 +296,12 @@ void fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css);
 int fz_get_css_match_display(fz_css_match *node);
 void fz_default_css_style(fz_context *ctx, fz_css_style *style);
 void fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, fz_css_match *match);
+
+/*
+	Lookup style in the splay tree, returning a pointer
+	to the found instance if there is one, creating and
+	inserting (and moving to root) one if there is not.
+*/
 const fz_css_style *fz_css_enlist(fz_context *ctx, const fz_css_style *style, fz_css_style_splay **tree, fz_pool *pool);
 
 float fz_from_css_number(fz_css_number number, float em, float percent_value, float auto_value);

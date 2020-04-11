@@ -56,14 +56,14 @@ static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 		dn = pdf_signature_get_signatory(ctx, verifier, doc, signature);
 		name = pdf_signature_format_designated_name(ctx, dn);
 
-	printf("  Designated name: %s\n", name);
+		printf("  Designated name: %s\n", name);
 		fz_free(ctx, name);
 
 		err = pdf_check_certificate(ctx, verifier, doc, signature);
-	if (err)
-		printf("  Certificate error: %s\n", pdf_signature_error_description(err));
-	else
-		printf("  Certificate is trusted.\n");
+		if (err)
+			printf("  Certificate error: %s\n", pdf_signature_error_description(err));
+		else
+			printf("  Certificate is trusted.\n");
 
 		err = pdf_check_digest(ctx, verifier, doc, signature);
 		edits = pdf_signature_incremental_change_since_signing(ctx, doc, signature);

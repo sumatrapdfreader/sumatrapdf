@@ -80,11 +80,6 @@ static fz_tree *fz_tree_split(fz_tree *node)
 	return node;
 }
 
-/*
-	Insert a new key/value pair and rebalance the tree.
-	Return the new root of the tree after inserting and rebalancing.
-	May be called with a NULL root to create a new tree.
-*/
 fz_tree *fz_tree_insert(fz_context *ctx, fz_tree *node, const char *key, void *value)
 {
 	if (node && node != &tree_sentinel)

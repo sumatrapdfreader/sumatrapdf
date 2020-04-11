@@ -46,15 +46,21 @@ static inline int fz_div255(int c, int a)
 */
 #define FZ_BLEND(SRC, DST, AMOUNT) ((((SRC)-(DST))*(AMOUNT) + ((DST)<<8))>>8)
 
+/*
+	Range checking atof
+*/
 float fz_atof(const char *s);
 
+/*
+	atoi that copes with NULL
+*/
 int fz_atoi(const char *s);
 int64_t fz_atoi64(const char *s);
 
 /*
 	Some standard math functions, done as static inlines for speed.
-	People with compilers that do not adequately implement inlines may
-	like to reimplement these using macros.
+	People with compilers that do not adequately implement inline
+	may like to reimplement these using macros.
 */
 static inline float fz_abs(float f)
 {
@@ -285,65 +291,339 @@ static inline int fz_is_identity(fz_matrix m)
 	return m.a == 1 && m.b == 0 && m.c == 0 && m.d == 1 && m.e == 0 && m.f == 0;
 }
 
+/*
+	Multiply two matrices.
+
+	The order of the two matrices are important since matrix
+	multiplication is not commutative.
+
+	Returns result.
+*/
 fz_matrix fz_concat(fz_matrix left, fz_matrix right);
 
+/*
+	Create a scaling matrix.
+
+	The returned matrix is of the form [ sx 0 0 sy 0 0 ].
+
+	m: Pointer to the matrix to populate
+
+	sx, sy: Scaling factors along the X- and Y-axes. A scaling
+	factor of 1.0 will not cause any scaling along the relevant
+	axis.
+
+	Returns m.
+*/
 fz_matrix fz_scale(float sx, float sy);
 
+/*
+	Scale a matrix by premultiplication.
+
+	m: Pointer to the matrix to scale
+
+	sx, sy: Scaling factors along the X- and Y-axes. A scaling
+	factor of 1.0 will not cause any scaling along the relevant
+	axis.
+
+	Returns m (updated).
+*/
 fz_matrix fz_pre_scale(fz_matrix m, float sx, float sy);
 
+/*
+	Scale a matrix by postmultiplication.
+
+	m: Pointer to the matrix to scale
+
+	sx, sy: Scaling factors along the X- and Y-axes. A scaling
+	factor of 1.0 will not cause any scaling along the relevant
+	axis.
+
+	Returns m (updated).
+*/
 fz_matrix fz_post_scale(fz_matrix m, float sx, float sy);
 
+/*
+	Create a shearing matrix.
+
+	The returned matrix is of the form [ 1 sy sx 1 0 0 ].
+
+	m: pointer to place to store returned matrix
+
+	sx, sy: Shearing factors. A shearing factor of 0.0 will not
+	cause any shearing along the relevant axis.
+
+	Returns m.
+*/
 fz_matrix fz_shear(float sx, float sy);
 
+/*
+	Premultiply a matrix with a shearing matrix.
+
+	The shearing matrix is of the form [ 1 sy sx 1 0 0 ].
+
+	m: pointer to matrix to premultiply
+
+	sx, sy: Shearing factors. A shearing factor of 0.0 will not
+	cause any shearing along the relevant axis.
+
+	Returns m (updated).
+*/
 fz_matrix fz_pre_shear(fz_matrix m, float sx, float sy);
 
+/*
+	Create a rotation matrix.
+
+	The returned matrix is of the form
+	[ cos(deg) sin(deg) -sin(deg) cos(deg) 0 0 ].
+
+	m: Pointer to place to store matrix
+
+	degrees: Degrees of counter clockwise rotation. Values less
+	than zero and greater than 360 are handled as expected.
+
+	Returns m.
+*/
 fz_matrix fz_rotate(float degrees);
 
+/*
+	Rotate a transformation by premultiplying.
+
+	The premultiplied matrix is of the form
+	[ cos(deg) sin(deg) -sin(deg) cos(deg) 0 0 ].
+
+	m: Pointer to matrix to premultiply.
+
+	degrees: Degrees of counter clockwise rotation. Values less
+	than zero and greater than 360 are handled as expected.
+
+	Returns m (updated).
+*/
 fz_matrix fz_pre_rotate(fz_matrix m, float degrees);
 
+/*
+	Create a translation matrix.
+
+	The returned matrix is of the form [ 1 0 0 1 tx ty ].
+
+	m: A place to store the created matrix.
+
+	tx, ty: Translation distances along the X- and Y-axes. A
+	translation of 0 will not cause any translation along the
+	relevant axis.
+
+	Returns m.
+*/
 fz_matrix fz_translate(float tx, float ty);
 
+/*
+	Translate a matrix by premultiplication.
+
+	m: The matrix to translate
+
+	tx, ty: Translation distances along the X- and Y-axes. A
+	translation of 0 will not cause any translation along the
+	relevant axis.
+
+	Returns m.
+*/
 fz_matrix fz_pre_translate(fz_matrix m, float tx, float ty);
 
+/*
+	Create transform matrix to draw page
+	at a given resolution and rotation. Adjusts the scaling
+	factors so that the page covers whole number of
+	pixels and adjust the page origin to be at 0,0.
+*/
 fz_matrix fz_transform_page(fz_rect mediabox, float resolution, float rotate);
 
+/*
+	Create an inverse matrix.
+
+	inverse: Place to store inverse matrix.
+
+	matrix: Matrix to invert. A degenerate matrix, where the
+	determinant is equal to zero, can not be inverted and the
+	original matrix is returned instead.
+
+	Returns inverse.
+*/
 fz_matrix fz_invert_matrix(fz_matrix matrix);
 
+/*
+	Attempt to create an inverse matrix.
+
+	inverse: Place to store inverse matrix.
+
+	matrix: Matrix to invert. A degenerate matrix, where the
+	determinant is equal to zero, can not be inverted.
+
+	Returns 1 if matrix is degenerate (singular), or 0 otherwise.
+*/
 int fz_try_invert_matrix(fz_matrix *inv, fz_matrix src);
 
+/*
+	Check if a transformation is rectilinear.
+
+	Rectilinear means that no shearing is present and that any
+	rotations present are a multiple of 90 degrees. Usually this
+	is used to make sure that axis-aligned rectangles before the
+	transformation are still axis-aligned rectangles afterwards.
+*/
 int fz_is_rectilinear(fz_matrix m);
 
+/*
+	Calculate average scaling factor of matrix.
+*/
 float fz_matrix_expansion(fz_matrix m);
 
+/*
+	Compute intersection of two rectangles.
+
+	Given two rectangles, update the first to be the smallest
+	axis-aligned rectangle that covers the area covered by both
+	given rectangles. If either rectangle is empty then the
+	intersection is also empty. If either rectangle is infinite
+	then the intersection is simply the non-infinite rectangle.
+	Should both rectangles be infinite, then the intersection is
+	also infinite.
+*/
 fz_rect fz_intersect_rect(fz_rect a, fz_rect b);
 
+/*
+	Compute intersection of two bounding boxes.
+
+	Similar to fz_intersect_rect but operates on two bounding
+	boxes instead of two rectangles.
+*/
 fz_irect fz_intersect_irect(fz_irect a, fz_irect b);
 
+/*
+	Compute union of two rectangles.
+
+	Given two rectangles, update the first to be the smallest
+	axis-aligned rectangle that encompasses both given rectangles.
+	If either rectangle is infinite then the union is also infinite.
+	If either rectangle is empty then the union is simply the
+	non-empty rectangle. Should both rectangles be empty, then the
+	union is also empty.
+*/
 fz_rect fz_union_rect(fz_rect a, fz_rect b);
 
+/*
+	Convert a rect into the minimal bounding box
+	that covers the rectangle.
+
+	Coordinates in a bounding box are integers, so rounding of the
+	rects coordinates takes place. The top left corner is rounded
+	upwards and left while the bottom right corner is rounded
+	downwards and to the right.
+*/
 fz_irect fz_irect_from_rect(fz_rect rect);
 
+/*
+	Round rectangle coordinates.
+
+	Coordinates in a bounding box are integers, so rounding of the
+	rects coordinates takes place. The top left corner is rounded
+	upwards and left while the bottom right corner is rounded
+	downwards and to the right.
+
+	This differs from fz_irect_from_rect, in that fz_irect_from_rect
+	slavishly follows the numbers (i.e any slight over/under
+	calculations can cause whole extra pixels to be added).
+	fz_round_rect allows for a small amount of rounding error when
+	calculating the bbox.
+*/
 fz_irect fz_round_rect(fz_rect rect);
 
+/*
+	Convert a bbox into a rect.
+
+	For our purposes, a rect can represent all the values we meet in
+	a bbox, so nothing can go wrong.
+
+	rect: A place to store the generated rectangle.
+
+	bbox: The bbox to convert.
+
+	Returns rect (updated).
+*/
 fz_rect fz_rect_from_irect(fz_irect bbox);
 
+/*
+	Expand a bbox by a given amount in all directions.
+*/
 fz_rect fz_expand_rect(fz_rect b, float expand);
 fz_irect fz_expand_irect(fz_irect a, int expand);
 
+/*
+	Expand a bbox to include a given point.
+	To create a rectangle that encompasses a sequence of points, the
+	rectangle must first be set to be the empty rectangle at one of
+	the points before including the others.
+*/
 fz_rect fz_include_point_in_rect(fz_rect r, fz_point p);
 
+/*
+	Translate bounding box.
+
+	Translate a bbox by a given x and y offset. Allows for overflow.
+*/
 fz_rect fz_translate_rect(fz_rect a, float xoff, float yoff);
 fz_irect fz_translate_irect(fz_irect a, int xoff, int yoff);
 
+/*
+	Test rectangle inclusion.
+
+	Return true if a entirely contains b.
+*/
 int fz_contains_rect(fz_rect a, fz_rect b);
 
+/*
+	Apply a transformation to a point.
+
+	transform: Transformation matrix to apply. See fz_concat,
+	fz_scale, fz_rotate and fz_translate for how to create a
+	matrix.
+
+	point: Pointer to point to update.
+
+	Returns transform (unchanged).
+*/
 fz_point fz_transform_point(fz_point point, fz_matrix m);
 fz_point fz_transform_point_xy(float x, float y, fz_matrix m);
 
+/*
+	Apply a transformation to a vector.
+
+	transform: Transformation matrix to apply. See fz_concat,
+	fz_scale and fz_rotate for how to create a matrix. Any
+	translation will be ignored.
+
+	vector: Pointer to vector to update.
+*/
 fz_point fz_transform_vector(fz_point vector, fz_matrix m);
 
+/*
+	Apply a transform to a rectangle.
+
+	After the four corner points of the axis-aligned rectangle
+	have been transformed it may not longer be axis-aligned. So a
+	new axis-aligned rectangle is created covering at least the
+	area of the transformed rectangle.
+
+	transform: Transformation matrix to apply. See fz_concat,
+	fz_scale and fz_rotate for how to create a matrix.
+
+	rect: Rectangle to be transformed. The two special cases
+	fz_empty_rect and fz_infinite_rect, may be used but are
+	returned unchanged as expected.
+*/
 fz_rect fz_transform_rect(fz_rect rect, fz_matrix m);
 
+/*
+	Normalize a vector to length one.
+*/
 fz_point fz_normalize_vector(fz_point p);
 
 fz_matrix fz_gridfit_matrix(int as_tiled, fz_matrix m);

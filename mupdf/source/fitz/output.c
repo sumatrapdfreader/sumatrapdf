@@ -131,17 +131,6 @@ static void file_truncate(fz_context *ctx, void *opaque)
 #endif
 }
 
-/*
-	Create a new output object with the given
-	internal state and function pointers.
-
-	state: Internal state (opaque to everything but implementation).
-
-	write: Function to output a given buffer.
-
-	close: Cleanup function to destroy state when output closed.
-	May permissibly be null.
-*/
 fz_output *
 fz_new_output(fz_context *ctx, int bufsiz, void *state, fz_output_write_fn *write, fz_output_close_fn *close, fz_output_drop_fn *drop)
 {
@@ -177,15 +166,6 @@ static void null_write(fz_context *ctx, void *opaque, const void *buffer, size_t
 {
 }
 
-/*
-	Open an output stream that writes to a
-	given path.
-
-	filename: The filename to write to (specified in UTF-8).
-
-	append: non-zero if we should append to the file, rather than
-	overwriting it.
-*/
 fz_output *
 fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 {
@@ -207,7 +187,7 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 	if (append)
 	{
 		if (file == NULL)
-		file = fz_fopen_utf8(filename, "wb+");
+			file = fz_fopen_utf8(filename, "wb+");
 		else
 			fseek(file, 0, SEEK_END);
 	}
@@ -263,12 +243,6 @@ buffer_drop(fz_context *ctx, void *opaque)
 	fz_drop_buffer(ctx, buffer);
 }
 
-/*
-	Open an output stream that appends
-	to a buffer.
-
-	buf: The buffer to append to.
-*/
 fz_output *
 fz_new_output_with_buffer(fz_context *ctx, fz_buffer *buf)
 {
@@ -278,9 +252,6 @@ fz_new_output_with_buffer(fz_context *ctx, fz_buffer *buf)
 	return out;
 }
 
-/*
-	Flush pending output and close an output stream.
-*/
 void
 fz_close_output(fz_context *ctx, fz_output *out)
 {
@@ -292,9 +263,6 @@ fz_close_output(fz_context *ctx, fz_output *out)
 	out->close = NULL;
 }
 
-/*
-	Free an output stream. Don't forget to close it first!
-*/
 void
 fz_drop_output(fz_context *ctx, fz_output *out)
 {
@@ -310,12 +278,6 @@ fz_drop_output(fz_context *ctx, fz_output *out)
 	}
 }
 
-/*
-	Seek to the specified file position.
-	See fseek for arguments.
-
-	Throw an error on unseekable outputs.
-*/
 void
 fz_seek_output(fz_context *ctx, fz_output *out, int64_t off, int whence)
 {
@@ -325,11 +287,6 @@ fz_seek_output(fz_context *ctx, fz_output *out, int64_t off, int whence)
 	out->seek(ctx, out->state, off, whence);
 }
 
-/*
-	Return the current file position.
-
-	Throw an error on untellable outputs.
-*/
 int64_t
 fz_tell_output(fz_context *ctx, fz_output *out)
 {
@@ -340,14 +297,6 @@ fz_tell_output(fz_context *ctx, fz_output *out)
 	return out->tell(ctx, out->state);
 }
 
-/*
-	obtain the fz_output in the form of a fz_stream
-
-	This allows data to be read back from some forms of fz_output object.
-	When finished reading, the fz_stream should be released by calling
-	fz_drop_stream. Until the fz_stream is dropped, no further operations
-	should be performed on the fz_output object.
-*/
 fz_stream *
 fz_stream_from_output(fz_context *ctx, fz_output *out)
 {
@@ -372,19 +321,12 @@ fz_write_emit(fz_context *ctx, void *out, int c)
 	fz_write_byte(ctx, out, c);
 }
 
-/*
-	va_list version of fz_write_printf.
-*/
 void
 fz_write_vprintf(fz_context *ctx, fz_output *out, const char *fmt, va_list args)
 {
 	fz_format_string(ctx, out, fz_write_emit, fmt, args);
 }
 
-/*
-	Format and write data to an output stream.
-	See fz_format_string for formatting details.
-*/
 void
 fz_write_printf(fz_context *ctx, fz_output *out, const char *fmt, ...)
 {
@@ -394,9 +336,6 @@ fz_write_printf(fz_context *ctx, fz_output *out, const char *fmt, ...)
 	va_end(args);
 }
 
-/*
-	Flush unwritten data.
-*/
 void
 fz_flush_output(fz_context *ctx, fz_output *out)
 {
@@ -431,12 +370,6 @@ fz_write_char(fz_context *ctx, fz_output *out, char x)
 	fz_write_byte(ctx, out, (unsigned char)x);
 }
 
-/*
-	Write data to output.
-
-	data: Pointer to data to write.
-	size: Size of data to write in bytes.
-*/
 void
 fz_write_data(fz_context *ctx, fz_output *out, const void *data_, size_t size)
 {
@@ -473,9 +406,6 @@ fz_write_data(fz_context *ctx, fz_output *out, const void *data_, size_t size)
 	}
 }
 
-/*
-	Write a string. Does not write zero terminator.
-*/
 void
 fz_write_string(fz_context *ctx, fz_output *out, const char *s)
 {
@@ -570,9 +500,6 @@ fz_write_float_be(fz_context *ctx, fz_output *out, float f)
 	fz_write_int32_be(ctx, out, u.i);
 }
 
-/*
-	Write a UTF-8 encoded unicode character.
-*/
 void
 fz_write_rune(fz_context *ctx, fz_output *out, int rune)
 {
@@ -646,24 +573,6 @@ fz_band_writer *fz_new_band_writer_of_size(fz_context *ctx, size_t size, fz_outp
 	return writer;
 }
 
-/*
-	Cause a band writer to write the header for
-	a banded image with the given properties/dimensions etc. This
-	also configures the bandwriter for the format of the data to be
-	passed in future calls.
-
-	w, h: Width and Height of the entire page.
-
-	n: Number of components (including spots and alphas).
-
-	alpha: Number of alpha components.
-
-	xres, yres: X and Y resolutions in dpi.
-
-	cs: Colorspace (NULL for bitmaps)
-
-	seps: Separation details (or NULL).
-*/
 void fz_write_header(fz_context *ctx, fz_band_writer *writer, int w, int h, int n, int alpha, int xres, int yres, int pagenum, fz_colorspace *cs, fz_separations *seps)
 {
 	if (writer == NULL || writer->band == NULL)
@@ -682,18 +591,6 @@ void fz_write_header(fz_context *ctx, fz_band_writer *writer, int w, int h, int 
 	writer->header(ctx, writer, cs);
 }
 
-/*
-	Cause a band writer to write the next band
-	of data for an image.
-
-	stride: The byte offset from the first byte of the data
-	for a pixel to the first byte of the data for the same pixel
-	on the row below.
-
-	band_height: The number of lines in this band.
-
-	samples: Pointer to first byte of the data.
-*/
 void fz_write_band(fz_context *ctx, fz_band_writer *writer, int stride, int band_height, const unsigned char *samples)
 {
 	if (writer == NULL || writer->band == NULL)

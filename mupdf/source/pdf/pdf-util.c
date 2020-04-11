@@ -30,10 +30,6 @@ pdf_new_display_list_from_annot(fz_context *ctx, pdf_annot *annot)
 	return list;
 }
 
-/*
-	Render an annotation suitable for blending on top of the opaque
-	pixmap returned by fz_new_pixmap_from_page_contents.
-*/
 fz_pixmap *
 pdf_new_pixmap_from_annot(fz_context *ctx, pdf_annot *annot, fz_matrix ctm, fz_colorspace *cs, fz_separations *seps, int alpha)
 {

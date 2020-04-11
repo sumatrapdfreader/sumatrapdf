@@ -215,7 +215,6 @@ ensure_solid_xref(fz_context *ctx, pdf_document *doc, int num, int which)
 		extend_xref_index(ctx, doc, num);
 }
 
-/* Used while reading the individual xref sections from a file */
 pdf_xref_entry *pdf_get_populating_xref_entry(fz_context *ctx, pdf_document *doc, int num)
 {
 	/* Return an entry within the xref currently being populated */
@@ -249,10 +248,6 @@ pdf_xref_entry *pdf_get_populating_xref_entry(fz_context *ctx, pdf_document *doc
 	return &sub->table[num-sub->start];
 }
 
-/* Used after loading a document to access entries */
-/* This will never throw anything, or return NULL if it is
- * only asked to return objects in range within a 'solid'
- * xref. */
 pdf_xref_entry *pdf_get_xref_entry(fz_context *ctx, pdf_document *doc, int i)
 {
 	pdf_xref *xref = NULL;
@@ -449,8 +444,6 @@ int pdf_xref_obj_is_unsaved_signature(pdf_document *doc, pdf_obj *obj)
 	return 0;
 }
 
-/* Ensure that the current populating xref has a single subsection
- * that covers the entire range. */
 void pdf_ensure_solid_xref(fz_context *ctx, pdf_document *doc, int num)
 {
 	if (doc->num_xref_sections == 0)
@@ -459,7 +452,6 @@ void pdf_ensure_solid_xref(fz_context *ctx, pdf_document *doc, int num)
 	ensure_solid_xref(ctx, doc, num, doc->num_xref_sections-1);
 }
 
-/* Ensure that an object has been cloned into the incremental xref section */
 void pdf_xref_ensure_incremental_object(fz_context *ctx, pdf_document *doc, int num)
 {
 	pdf_xref_entry *new_entry, *old_entry;
@@ -1623,12 +1615,6 @@ pdf_drop_document_imp(fz_context *ctx, pdf_document *doc)
 	pdf_invalidate_xfa(ctx, doc);
 }
 
-/*
-	Closes and frees an opened PDF document.
-
-	The resource store in the context associated with pdf_document
-	is emptied.
-*/
 void
 pdf_drop_document(fz_context *ctx, pdf_document *doc)
 {
@@ -2194,9 +2180,6 @@ pdf_count_objects(fz_context *ctx, pdf_document *doc)
 	return pdf_xref_len(ctx, doc);
 }
 
-/*
-	Allocate a slot in the xref table and return a fresh unused object number.
-*/
 int
 pdf_create_object(fz_context *ctx, pdf_document *doc)
 {
@@ -2218,9 +2201,6 @@ pdf_create_object(fz_context *ctx, pdf_document *doc)
 	return num;
 }
 
-/*
-	Remove object from xref table, marking the slot as free.
-*/
 void
 pdf_delete_object(fz_context *ctx, pdf_document *doc, int num)
 {
@@ -2246,9 +2226,6 @@ pdf_delete_object(fz_context *ctx, pdf_document *doc, int num)
 	x->obj = NULL;
 }
 
-/*
-	Replace object in xref table with the passed in object.
-*/
 void
 pdf_update_object(fz_context *ctx, pdf_document *doc, int num, pdf_obj *newobj)
 {
@@ -2277,13 +2254,6 @@ pdf_update_object(fz_context *ctx, pdf_document *doc, int num, pdf_obj *newobj)
 	pdf_set_obj_parent(ctx, newobj, num);
 }
 
-/*
-	Replace stream contents for object in xref table with the passed in buffer.
-
-	The buffer contents must match the /Filter setting if 'compressed' is true.
-	If 'compressed' is false, the /Filter and /DecodeParms entries are deleted.
-	The /Length entry is updated.
-*/
 void
 pdf_update_stream(fz_context *ctx, pdf_document *doc, pdf_obj *obj, fz_buffer *newbuf, int compressed)
 {
@@ -2388,15 +2358,6 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 	return doc;
 }
 
-/*
-	Opens a PDF document.
-
-	Same as pdf_open_document, but takes a stream instead of a
-	filename to locate the PDF document to open. Increments the
-	reference count of the stream. See fz_open_file,
-	fz_open_file_w or fz_open_fd for opening a stream, and
-	fz_drop_stream for closing an open stream.
-*/
 pdf_document *
 pdf_open_document_with_stream(fz_context *ctx, fz_stream *file)
 {
@@ -2414,23 +2375,6 @@ pdf_open_document_with_stream(fz_context *ctx, fz_stream *file)
 	return doc;
 }
 
-/*
-	Open a PDF document.
-
-	Open a PDF document by reading its cross reference table, so
-	MuPDF can locate PDF objects inside the file. Upon an broken
-	cross reference table or other parse errors MuPDF will restart
-	parsing the file from the beginning to try to rebuild a
-	(hopefully correct) cross reference table to allow further
-	processing of the file.
-
-	The returned pdf_document should be used when calling most
-	other PDF functions. Note that it wraps the context, so those
-	functions implicitly get access to the global state in
-	context.
-
-	filename: a path to a file as it would be given to open(2).
-*/
 pdf_document *
 pdf_open_document(fz_context *ctx, const char *filename)
 {
@@ -2788,10 +2732,6 @@ pdf_obj *pdf_progressive_advance(fz_context *ctx, pdf_document *doc, int pagenum
 	return doc->linear_page_refs[pagenum];
 }
 
-/*
-		Down-cast generic fitz objects into pdf specific variants.
-		Returns NULL if the objects are not from a PDF document.
-*/
 pdf_document *pdf_document_from_fz_document(fz_context *ctx, fz_document *ptr)
 {
 	return (pdf_document *)((ptr && ptr->count_pages == pdf_count_pages_imp) ? ptr : NULL);
@@ -2802,10 +2742,6 @@ pdf_page *pdf_page_from_fz_page(fz_context *ctx, fz_page *ptr)
 	return (pdf_page *)((ptr && ptr->bound_page == (fz_page_bound_page_fn*)pdf_bound_page) ? ptr : NULL);
 }
 
-/*
-	down-cast a fz_document to a pdf_document.
-	Returns NULL if underlying document is not PDF
-*/
 pdf_document *pdf_specifics(fz_context *ctx, fz_document *doc)
 {
 	return pdf_document_from_fz_document(ctx, doc);
@@ -3020,13 +2956,6 @@ void pdf_clear_xref_to_mark(fz_context *ctx, pdf_document *doc)
 	}
 }
 
-/* This function returns the number of versions that there
- * are in a file. i.e. 1 + the number of updates that
- * the file on disc has been through. i.e. internal
- * unsaved changes to the file (such as appearance streams)
- * are ignored. Also, the initial write of a linearized
- * file (which appears as a base file write + an incremental
- * update) is treated as a single version. */
 int
 pdf_count_versions(fz_context *ctx, pdf_document *doc)
 {
@@ -4140,11 +4069,6 @@ pdf_validate_changes(fz_context *ctx, pdf_document *doc, int version)
 	return result;
 }
 
-/* Checks the entire history of the document, and returns the number of
- * the last version that checked out OK.
- * i.e. 0 = "the entire history checks out OK".
- *      n = "none of the history checked out OK".
- */
 int
 pdf_validate_change_history(fz_context *ctx, pdf_document *doc)
 {
@@ -4163,7 +4087,8 @@ pdf_validate_change_history(fz_context *ctx, pdf_document *doc)
 }
 
 /* Return the version that obj appears in, or -1 for not found. */
-int pdf_find_incremental_update_num_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
+static int
+pdf_find_incremental_update_num_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 {
 	pdf_xref *xref = NULL;
 	pdf_xref_subsec *sub;
@@ -4203,8 +4128,6 @@ int pdf_find_incremental_update_num_for_obj(fz_context *ctx, pdf_document *doc, 
 	return -1;
 }
 
-/* "Versions" allow for the first incremental update in a linearized file being
- * ignored. */
 int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 {
 	int v = pdf_find_incremental_update_num_for_obj(ctx, doc, obj);
@@ -4220,14 +4143,6 @@ int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 	return v;
 }
 
-/* Returns the number of updates ago when a signature became invalid,
- * not counting any unsaved changes.
- * Thus:
- *  -1 => Has changed in the current unsaved changes.
- *   0 => still valid.
- *   1 => became invalid on the last save
- *   n => became invalid n saves ago
- */
 int pdf_validate_signature(fz_context *ctx, pdf_widget *widget)
 {
 	pdf_document *doc = widget->page->doc;

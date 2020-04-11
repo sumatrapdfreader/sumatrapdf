@@ -197,11 +197,6 @@ putrun(fz_context *ctx, fz_buffer *out, int run, int c)
 	}
 }
 
-/*
- * Compress bitmap data as CCITT Group 4 2D fax image.
- * Creates a stream assuming the default PDF parameters, except K=-1
- * and the number of columns.
- */
 fz_buffer *
 fz_compress_ccitt_fax_g4(fz_context *ctx, const unsigned char *src, int columns, int rows)
 {
@@ -267,11 +262,6 @@ fz_compress_ccitt_fax_g4(fz_context *ctx, const unsigned char *src, int columns,
 	return out;
 }
 
-/*
- * Compress bitmap data as CCITT Group 3 1D fax image.
- * Creates a stream assuming the default PDF parameters,
- * except the number of columns.
- */
 fz_buffer *
 fz_compress_ccitt_fax_g3(fz_context *ctx, const unsigned char *src, int columns, int rows)
 {

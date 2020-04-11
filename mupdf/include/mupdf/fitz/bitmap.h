@@ -6,9 +6,9 @@
 #include "mupdf/fitz/pixmap.h"
 
 /*
-	Bitmaps have 1 bit per component. Only used for creating halftoned
-	versions of contone buffers, and saving out. Samples are stored msb
-	first, akin to pbms.
+	Bitmaps have 1 bit per component. Only used for creating
+	halftoned versions of contone buffers, and saving out. Samples
+	are stored msb first, akin to pbms.
 */
 typedef struct fz_bitmap_s fz_bitmap;
 
@@ -17,16 +17,92 @@ void fz_drop_bitmap(fz_context *ctx, fz_bitmap *bit);
 
 /*
 	A halftone is a set of threshold tiles, one per component. Each
-	threshold tile is a pixmap, possibly of varying sizes and phases.
-	Currently, we only provide one 'default' halftone tile for operating
-	on 1 component plus alpha pixmaps (where the alpha is ignored). This
-	is signified by a fz_halftone pointer to NULL.
+	threshold tile is a pixmap, possibly of varying sizes and
+	phases. Currently, we only provide one 'default' halftone tile
+	for operating on 1 component plus alpha pixmaps (where the alpha
+	is ignored). This is signified by a fz_halftone pointer to NULL.
 */
 typedef struct fz_halftone_s fz_halftone;
 
+/*
+	Make a bitmap from a pixmap and a halftone.
+
+	pix: The pixmap to generate from. Currently must be a single
+	color component with no alpha.
+
+	ht: The halftone to use. NULL implies the default halftone.
+
+	Returns the resultant bitmap. Throws exceptions in the case of
+	failure to allocate.
+*/
 fz_bitmap *fz_new_bitmap_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht);
 
+/*
+	Make a bitmap from a pixmap and a
+	halftone, allowing for the position of the pixmap within an
+	overall banded rendering.
+
+	pix: The pixmap to generate from. Currently must be a single
+	color component with no alpha.
+
+	ht: The halftone to use. NULL implies the default halftone.
+
+	band_start: Vertical offset within the overall banded rendering
+	(in pixels)
+
+	Returns the resultant bitmap. Throws exceptions in the case of
+	failure to allocate.
+*/
 fz_bitmap *fz_new_bitmap_from_pixmap_band(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht, int band_start);
+
+/*
+	Create a new bitmap.
+
+	w, h: Width and Height for the bitmap
+
+	n: Number of color components (assumed to be a divisor of 8)
+
+	xres, yres: X and Y resolutions (in pixels per inch).
+
+	Returns pointer to created bitmap structure. The bitmap
+	data is uninitialised.
+*/
+fz_bitmap *fz_new_bitmap(fz_context *ctx, int w, int h, int n, int xres, int yres);
+
+/*
+	Retrieve details of a given bitmap.
+
+	bitmap: The bitmap to query.
+
+	w: Pointer to storage to retrieve width (or NULL).
+
+	h: Pointer to storage to retrieve height (or NULL).
+
+	n: Pointer to storage to retrieve number of color components (or
+	NULL).
+
+	stride: Pointer to storage to retrieve bitmap stride (or NULL).
+*/
+void fz_bitmap_details(fz_bitmap *bitmap, int *w, int *h, int *n, int *stride);
+
+void fz_clear_bitmap(fz_context *ctx, fz_bitmap *bit);
+
+/*
+	Create a 'default' halftone structure
+	for the given number of components.
+
+	num_comps: The number of components to use.
+
+	Returns a simple default halftone. The default halftone uses
+	the same halftone tile for each plane, which may not be ideal
+	for all purposes.
+*/
+fz_halftone *fz_default_halftone(fz_context *ctx, int num_comps);
+
+fz_halftone *fz_keep_halftone(fz_context *ctx, fz_halftone *half);
+void fz_drop_halftone(fz_context *ctx, fz_halftone *ht);
+
+/* Implementation details: subject to change. */
 
 struct fz_bitmap_s
 {
@@ -35,16 +111,5 @@ struct fz_bitmap_s
 	int xres, yres;
 	unsigned char *samples;
 };
-
-fz_bitmap *fz_new_bitmap(fz_context *ctx, int w, int h, int n, int xres, int yres);
-
-void fz_bitmap_details(fz_bitmap *bitmap, int *w, int *h, int *n, int *stride);
-
-void fz_clear_bitmap(fz_context *ctx, fz_bitmap *bit);
-
-fz_halftone *fz_default_halftone(fz_context *ctx, int num_comps);
-
-fz_halftone *fz_keep_halftone(fz_context *ctx, fz_halftone *half);
-void fz_drop_halftone(fz_context *ctx, fz_halftone *ht);
 
 #endif

@@ -744,7 +744,7 @@ static int find_fids(JNIEnv *env)
 	fid_Shade_pointer = get_field(&err, env, "pointer", "J");
 	mid_Shade_init = get_method(&err, env, "<init>", "(J)V");
 
-	cls_String = get_class(&err, env,  "java/lang/String");
+	cls_String = get_class(&err, env, "java/lang/String");
 
 	cls_StrokeState = get_class(&err, env, PKG"StrokeState");
 	fid_StrokeState_pointer = get_field(&err, env, "pointer", "J");
@@ -854,11 +854,11 @@ static JNIEnv *jni_attach_thread(fz_context *ctx, jboolean *detach)
 	int state;
 
 	*detach = JNI_FALSE;
-	state = (*jvm)->GetEnv(jvm, (void*)&env, MY_JNI_VERSION);
+	state = (*jvm)->GetEnv(jvm, (void *)&env, MY_JNI_VERSION);
 	if (state == JNI_EDETACHED)
 	{
 		*detach = JNI_TRUE;
-		state = (*jvm)->AttachCurrentThread(jvm, (void*)&env, NULL);
+		state = (*jvm)->AttachCurrentThread(jvm, (void *)&env, NULL);
 	}
 
 	if (state != JNI_OK)
@@ -1911,7 +1911,7 @@ static inline jobject to_PDFWidget(fz_context *ctx, JNIEnv *env, pdf_widget *wid
 
 	if ((*env)->ExceptionCheck(env))
 		return NULL;
-					(*env)->SetObjectField(env, jwidget, fid_PDFWidget_options, jopts);
+	(*env)->SetObjectField(env, jwidget, fid_PDFWidget_options, jopts);
 
 	return jwidget;
 }
@@ -2948,7 +2948,7 @@ static fz_device *fz_new_java_device(fz_context *ctx, JNIEnv *env, jclass cls)
 		return NULL;
 	}
 
-	return (fz_device*)dev;
+	return (fz_device *)dev;
 }
 
 JNIEXPORT jlong JNICALL
@@ -5845,9 +5845,9 @@ FUN(Document_loadOutline)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 	{
 		outline = fz_load_outline(ctx, doc);
-	if (outline)
-	{
-		joutline = to_Outline_safe(ctx, env, doc, outline);
+		if (outline)
+		{
+			joutline = to_Outline_safe(ctx, env, doc, outline);
 			if (!joutline && !(*env)->ExceptionCheck(env))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "loadOutline failed");
 		}
@@ -6401,8 +6401,8 @@ FUN(Page_textAsHtml)(JNIEnv *env, jobject self)
 		fz_print_stext_trailer_as_html(ctx, out);
 		fz_close_output(ctx, out);
 
-	len = fz_buffer_storage(ctx, buf, &data);
-	arr = (*env)->NewByteArray(env, (jsize)len);
+		len = fz_buffer_storage(ctx, buf, &data);
+		arr = (*env)->NewByteArray(env, (jsize)len);
 		if ((*env)->ExceptionCheck(env))
 			fz_throw_java(ctx, env);
 		if (!arr)
@@ -6415,7 +6415,7 @@ FUN(Page_textAsHtml)(JNIEnv *env, jobject self)
 	fz_always(ctx)
 	{
 		fz_drop_output(ctx, out);
-	fz_drop_buffer(ctx, buf);
+		fz_drop_buffer(ctx, buf);
 		fz_drop_device(ctx, dev);
 		fz_drop_stext_page(ctx, text);
 	}
@@ -7177,10 +7177,10 @@ FUN(StructuredText_copy)(JNIEnv *env, jobject self, jobject jpt1, jobject jpt2)
 	fz_try(ctx)
 	{
 		s = fz_copy_selection(ctx, text, pt1, pt2, 0);
-	jstring = (*env)->NewStringUTF(env, s);
+		jstring = (*env)->NewStringUTF(env, s);
 	}
 	fz_always(ctx)
-	fz_free(ctx, s);
+		fz_free(ctx, s);
 	fz_catch(ctx)
 	{
 		jni_rethrow(env, ctx);
@@ -8065,7 +8065,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 		return;
 	}
 
-		array = (*env)->NewGlobalRef(env, array);
+	array = (*env)->NewGlobalRef(env, array);
 	if (!array)
 	{
 		if (options)
@@ -8429,7 +8429,7 @@ FUN(PDFObject_readStream)(JNIEnv *env, jobject self)
 		len = fz_buffer_storage(ctx, buf, &data);
 
 		arr = (*env)->NewByteArray(env, (jsize)len);
-			if ((*env)->ExceptionCheck(env))
+		if ((*env)->ExceptionCheck(env))
 			fz_throw_java(ctx, env);
 		if (!arr)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "can not create byte array");
@@ -8437,7 +8437,7 @@ FUN(PDFObject_readStream)(JNIEnv *env, jobject self)
 		(*env)->SetByteArrayRegion(env, arr, 0, (jsize)len, (signed char *) data);
 		if ((*env)->ExceptionCheck(env))
 			fz_throw_java(ctx, env);
-		}
+	}
 	fz_always(ctx)
 		fz_drop_buffer(ctx, buf);
 	fz_catch(ctx)
@@ -8474,10 +8474,10 @@ FUN(PDFObject_readRawStream)(JNIEnv *env, jobject self)
 		if (!arr)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "can not create byte array");
 
-			(*env)->SetByteArrayRegion(env, arr, 0, (jsize)len, (signed char *) &data[0]);
-			if ((*env)->ExceptionCheck(env))
+		(*env)->SetByteArrayRegion(env, arr, 0, (jsize)len, (signed char *) &data[0]);
+		if ((*env)->ExceptionCheck(env))
 			fz_throw_java(ctx, env);
-		}
+	}
 	fz_always(ctx)
 		fz_drop_buffer(ctx, buf);
 	fz_catch(ctx)
@@ -8663,22 +8663,22 @@ FUN(PDFObject_getDictionary)(JNIEnv *env, jobject self, jstring jname)
 	if (!ctx || !dict) return NULL;
 	if (!jname) { jni_throw_arg(env, "name must not be null"); return NULL; }
 
-		name = (*env)->GetStringUTFChars(env, jname, NULL);
+	name = (*env)->GetStringUTFChars(env, jname, NULL);
 	if (!name)
 	{
 		jni_throw_run(env, "can not get name to lookup");
 		return NULL;
 	}
 
-		fz_try(ctx)
-			val = pdf_dict_gets(ctx, dict, name);
-		fz_always(ctx)
-			(*env)->ReleaseStringUTFChars(env, jname, name);
-		fz_catch(ctx)
-		{
-			jni_rethrow(env, ctx);
-			return NULL;
-		}
+	fz_try(ctx)
+		val = pdf_dict_gets(ctx, dict, name);
+	fz_always(ctx)
+		(*env)->ReleaseStringUTFChars(env, jname, name);
+	fz_catch(ctx)
+	{
+		jni_rethrow(env, ctx);
+		return NULL;
+	}
 
 	return to_PDFObject_safe(ctx, env, self, val);
 }

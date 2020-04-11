@@ -332,12 +332,6 @@ starts_with(const char **s, const char *string)
 			*tailptr = (char *) s;	\
 	while (0)
 
-/*
-	Locale-independent decimal to binary
-	conversion. On overflow return (-)INFINITY and set errno to ERANGE. On
-	underflow return 0 and set errno to ERANGE. Special inputs (case
-	insensitive): "NAN", "INF" or "INFINITY".
-*/
 float
 fz_strtof(const char *string, char **tailptr)
 {

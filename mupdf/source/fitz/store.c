@@ -41,12 +41,6 @@ struct fz_store_s
 	int scavenging;
 };
 
-/*
-	Create a new store inside the context
-
-	max: The maximum size (in bytes) that the store is allowed to grow
-	to. FZ_STORE_UNLIMITED means no limit.
-*/
 void
 fz_new_store_context(fz_context *ctx, size_t max)
 {
@@ -106,6 +100,8 @@ do_reap(fz_context *ctx)
 
 	ctx->store->needs_reaping = 0;
 
+	FZ_LOG_DUMP_STORE(ctx, "Before reaping store:\n");
+
 	/* Reap the items */
 	remove = NULL;
 	for (item = store->tail; item; item = prev)
@@ -161,6 +157,7 @@ do_reap(fz_context *ctx)
 		item->type->drop_key(ctx, item->key);
 		fz_free(ctx, item);
 	}
+	FZ_LOG_DUMP_STORE(ctx, "After reaping store:\n");
 }
 
 void fz_drop_key_storable(fz_context *ctx, const fz_key_storable *sc)
@@ -415,24 +412,6 @@ touch(fz_store *store, fz_item *item)
 	item->prev = NULL;
 }
 
-/*
-	Add an item to the store.
-
-	Add an item into the store, returning NULL for success. If an item
-	with the same key is found in the store, then our item will not be
-	inserted, and the function will return a pointer to that value
-	instead. This function takes its own reference to val, as required
-	(i.e. the caller maintains ownership of its own reference).
-
-	key: The key used to index the item.
-
-	val: The value to store.
-
-	itemsize: The size in bytes of the value (as counted towards the
-	store size).
-
-	type: Functions used to manipulate the key.
-*/
 void *
 fz_store_item(fz_context *ctx, void *key, void *val_, size_t itemsize, const fz_store_type *type)
 {
@@ -522,38 +501,45 @@ fz_store_item(fz_context *ctx, void *key, void *val_, size_t itemsize, const fz_
 	/* If we haven't got an infinite store, check for space within it */
 	if (store->max != FZ_STORE_UNLIMITED)
 	{
+		/* FIXME: Overflow? */
 		size = store->size + itemsize;
-		while (size > store->max)
+		if (size > store->max)
 		{
-			size_t saved;
-
-			/* First, do any outstanding reaping, even if defer_reap_count > 0 */
-			if (store->needs_reaping)
+			FZ_LOG_STORE(ctx, "Store size exceeded: item=%zu, size=%zu, max=%zu\n",
+				itemsize, store->size, store->max);
+			while (size > store->max)
 			{
-				do_reap(ctx); /* Drops alloc lock */
-				fz_lock(ctx, FZ_LOCK_ALLOC);
-			}
-			size = store->size + itemsize;
-			if (size <= store->max)
-				break;
+				size_t saved;
 
-			/* ensure_space may drop, then retake the lock */
-			saved = ensure_space(ctx, size - store->max);
-			size -= saved;
-			if (saved == 0)
-			{
-				/* Failed to free any space. */
-				/* We used to 'unstore' it here, but that's wrong.
-				 * If we've already spent the memory to malloc it
-				 * then not putting it in the store just means that
-				 * a resource used multiple times will just be malloced
-				 * again. Better to put it in the store, have the
-				 * store account for it, and for it to potentially be reused.
-				 * When the caller drops the reference to it, it can then
-				 * be dropped from the store on the next attempt to store
-				 * anything else. */
-				break;
+				/* First, do any outstanding reaping, even if defer_reap_count > 0 */
+				if (store->needs_reaping)
+				{
+					do_reap(ctx); /* Drops alloc lock */
+					fz_lock(ctx, FZ_LOCK_ALLOC);
+				}
+				size = store->size + itemsize;
+				if (size <= store->max)
+					break;
+
+				/* ensure_space may drop, then retake the lock */
+				saved = ensure_space(ctx, size - store->max);
+				size -= saved;
+				if (saved == 0)
+				{
+					/* Failed to free any space. */
+					/* We used to 'unstore' it here, but that's wrong.
+					 * If we've already spent the memory to malloc it
+					 * then not putting it in the store just means that
+					 * a resource used multiple times will just be malloced
+					 * again. Better to put it in the store, have the
+					 * store account for it, and for it to potentially be reused.
+					 * When the caller drops the reference to it, it can then
+					 * be dropped from the store on the next attempt to store
+					 * anything else. */
+					break;
+				}
 			}
+			FZ_LOG_DUMP_STORE(ctx, "After eviction:\n");
 		}
 	}
 	store->size += itemsize;
@@ -565,19 +551,6 @@ fz_store_item(fz_context *ctx, void *key, void *val_, size_t itemsize, const fz_
 	return NULL;
 }
 
-/*
-	Find an item within the store.
-
-	drop: The function used to free the value (to ensure we get a value
-	of the correct type).
-
-	key: The key used to index the item.
-
-	type: Functions used to manipulate the key.
-
-	Returns NULL for not found, otherwise returns a pointer to the value
-	indexed by key to which a reference has been taken.
-*/
 void *
 fz_find_item(fz_context *ctx, fz_store_drop_fn *drop, void *key, const fz_store_type *type)
 {
@@ -634,18 +607,6 @@ fz_find_item(fz_context *ctx, fz_store_drop_fn *drop, void *key, const fz_store_
 	return NULL;
 }
 
-/*
-	Remove an item from the store.
-
-	If an item indexed by the given key exists in the store, remove it.
-
-	drop: The function used to free the value (to ensure we get a value
-	of the correct type).
-
-	key: The key used to find the item to remove.
-
-	type: Functions used to manipulate the key.
-*/
 void
 fz_remove_item(fz_context *ctx, fz_store_drop_fn *drop, void *key, const fz_store_type *type)
 {
@@ -753,7 +714,7 @@ fz_debug_store_item(fz_context *ctx, void *state, void *key_, int keylen, void *
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	item->type->format_key(ctx, buf, sizeof buf, item->key);
 	fz_lock(ctx, FZ_LOCK_ALLOC);
-	fz_write_printf(ctx, out, "hash[");
+	fz_write_printf(ctx, out, "STORE\thash[");
 	for (i=0; i < keylen; ++i)
 		fz_write_printf(ctx, out,"%02x", key[i]);
 	fz_write_printf(ctx, out, "][refs=%d][size=%d] key=%s val=%p\n", item->val->refs, (int)item->size, buf, (void *)item->val);
@@ -767,7 +728,7 @@ fz_debug_store_locked(fz_context *ctx, fz_output *out)
 	fz_store *store = ctx->store;
 	size_t list_total = 0;
 
-	fz_write_printf(ctx, out, "-- resource store contents --\n");
+	fz_write_printf(ctx, out, "STORE\t-- resource store contents --\n");
 
 	for (item = store->head; item; item = next)
 	{
@@ -780,7 +741,7 @@ fz_debug_store_locked(fz_context *ctx, fz_output *out)
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
 		item->type->format_key(ctx, buf, sizeof buf, item->key);
 		fz_lock(ctx, FZ_LOCK_ALLOC);
-		fz_write_printf(ctx, out, "store[*][refs=%d][size=%d] key=%s val=%p\n",
+		fz_write_printf(ctx, out, "STORE\tstore[*][refs=%d][size=%d] key=%s val=%p\n",
 				item->val->refs, (int)item->size, buf, (void *)item->val);
 		list_total += item->size;
 		if (next)
@@ -790,11 +751,11 @@ fz_debug_store_locked(fz_context *ctx, fz_output *out)
 		}
 	}
 
-	fz_write_printf(ctx, out, "-- resource store hash contents --\n");
+	fz_write_printf(ctx, out, "STORE\t-- resource store hash contents --\n");
 	fz_hash_for_each(ctx, store->hash, out, fz_debug_store_item);
-	fz_write_printf(ctx, out, "-- end --\n");
+	fz_write_printf(ctx, out, "STORE\t-- end --\n");
 
-	fz_write_printf(ctx, out, "max=%zu, size=%zu, actual size=%zu\n", store->max, store->size, list_total);
+	fz_write_printf(ctx, out, "STORE\tmax=%zu, size=%zu, actual size=%zu\n", store->max, store->size, list_total);
 }
 
 void
@@ -848,9 +809,9 @@ scavenge(fz_context *ctx, size_t tofree)
 		fz_item *largest = NULL;
 
 		for (item = store->tail; item; item = item->prev)
-	{
-		if (item->val->refs == 1)
 		{
+			if (item->val->refs == 1)
+			{
 				/* This one is evictable */
 				suffix_size += item->size;
 				if (largest == NULL || item->size > largest->size)
@@ -862,14 +823,20 @@ scavenge(fz_context *ctx, size_t tofree)
 
 		/* If there are no evictable blocks, we can't find anything to free. */
 		if (largest == NULL)
-				break;
+			break;
 
 		/* Free largest. */
+		if (freed == 0) {
+			FZ_LOG_DUMP_STORE(ctx, "Before scavenge:\n");
+		}
 		freed += largest->size;
 		evict(ctx, largest); /* Drops then retakes lock */
 	}
 	while (freed < tofree);
 
+	if (freed != 0) {
+		FZ_LOG_DUMP_STORE(ctx, "After scavenge:\n");
+	}
 	store->scavenging = 0;
 	/* Success is managing to evict any blocks */
 	return freed != 0;
@@ -917,16 +884,6 @@ fz_drop_storable(fz_context *ctx, const fz_storable *sc)
 		s->drop(ctx, s);
 }
 
-/*
-	External function for callers to use
-	to scavenge while trying allocations.
-
-	size: The number of bytes we are trying to have free.
-
-	phase: What phase of the scavenge we are in. Updated on exit.
-
-	Returns non zero if we managed to free any memory.
-*/
 int fz_store_scavenge_external(fz_context *ctx, size_t size, int *phase)
 {
 	int ret;
@@ -938,18 +895,6 @@ int fz_store_scavenge_external(fz_context *ctx, size_t size, int *phase)
 	return ret;
 }
 
-/*
-	Internal function used as part of the scavenging
-	allocator; when we fail to allocate memory, before returning a
-	failure to the caller, we try to scavenge space within the store by
-	evicting at least 'size' bytes. The allocator then retries.
-
-	size: The number of bytes we are trying to have free.
-
-	phase: What phase of the scavenge we are in. Updated on exit.
-
-	Returns non zero if we managed to free any memory.
-*/
 int fz_store_scavenge(fz_context *ctx, size_t size, int *phase)
 {
 	fz_store *store;
@@ -961,7 +906,7 @@ int fz_store_scavenge(fz_context *ctx, size_t size, int *phase)
 
 #ifdef DEBUG_SCAVENGING
 	fz_write_printf(ctx, fz_stdout(ctx), "Scavenging: store=%zu size=%zu phase=%d\n", store->size, size, *phase);
-	fz_debug_store_locked(ctx);
+	fz_debug_store_locked(ctx, fz_stdout(ctx));
 	Memento_stats();
 #endif
 	do
@@ -989,7 +934,7 @@ int fz_store_scavenge(fz_context *ctx, size_t size, int *phase)
 		{
 #ifdef DEBUG_SCAVENGING
 			fz_write_printf(ctx, fz_stdout(ctx), "scavenged: store=%zu\n", store->size);
-			fz_debug_store(ctx);
+			fz_debug_store(ctx, fz_stdout(ctx));
 			Memento_stats();
 #endif
 			return 1;
@@ -998,22 +943,13 @@ int fz_store_scavenge(fz_context *ctx, size_t size, int *phase)
 	while (max > 0);
 
 #ifdef DEBUG_SCAVENGING
-	printf("scavenging failed\n");
-	fz_debug_store(ctx);
+	fz_write_printf(ctx, fz_stdout(ctx), "scavenging failed\n");
+	fz_debug_store(ctx, fz_stdout(ctx));
 	Memento_listBlocks();
 #endif
 	return 0;
 }
 
-/*
-	Evict items from the store until the total size of
-	the objects in the store is reduced to a given percentage of its
-	current size.
-
-	percent: %age of current size to reduce the store to.
-
-	Returns non zero if we managed to free enough memory, zero otherwise.
-*/
 int
 fz_shrink_store(fz_context *ctx, unsigned int percent)
 {
@@ -1116,19 +1052,6 @@ void fz_filter_store(fz_context *ctx, fz_store_filter_fn *fn, void *arg, const f
 	}
 }
 
-/*
-	Increment the defer reap count.
-
-	No reap operations will take place (except for those
-	triggered by an immediate failed malloc) until the
-	defer reap count returns to 0.
-
-	Call this at the start of a process during which you
-	potentially might drop many reapable objects.
-
-	It is vital that every fz_defer_reap_start is matched
-	by a fz_defer_reap_end call.
-*/
 void fz_defer_reap_start(fz_context *ctx)
 {
 	if (ctx->store == NULL)
@@ -1139,18 +1062,6 @@ void fz_defer_reap_start(fz_context *ctx)
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 }
 
-/*
-	Decrement the defer reap count.
-
-	If the defer reap count returns to 0, and the store
-	has reapable objects in, a reap pass will begin.
-
-	Call this at the end of a process during which you
-	potentially might drop many reapable objects.
-
-	It is vital that every fz_defer_reap_start is matched
-	by a fz_defer_reap_end call.
-*/
 void fz_defer_reap_end(fz_context *ctx)
 {
 	int reap;
@@ -1166,3 +1077,21 @@ void fz_defer_reap_end(fz_context *ctx)
 	else
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
 }
+
+#ifdef ENABLE_STORE_LOGGING
+
+void fz_log_dump_store(fz_context *ctx, const char *fmt, ...)
+{
+	fz_output *out;
+	va_list args;
+	va_start(args, fmt);
+	out = fz_new_log_for_module(ctx, "STORE");
+	fz_write_vprintf(ctx, out, fmt, args);
+	va_end(args);
+	fz_debug_store(ctx, out);
+	fz_write_printf(ctx, out, "STORE\tEND\n");
+	fz_close_output(ctx, out);
+	fz_drop_output(ctx, out);
+}
+
+#endif

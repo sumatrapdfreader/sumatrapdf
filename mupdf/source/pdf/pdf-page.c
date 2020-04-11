@@ -307,12 +307,6 @@ pdf_lookup_page_number(fz_context *ctx, pdf_document *doc, pdf_obj *page)
 		return pdf_lookup_page_number_slow(ctx, doc, page);
 }
 
-/*
-	Find the page number of a named destination.
-
-	For use with looking up the destination page of a fragment
-	identifier in hyperlinks: foo.pdf#bar or foo.pdf#page=5.
-*/
 int
 pdf_lookup_anchor(fz_context *ctx, pdf_document *doc, const char *name, float *xp, float *yp)
 {
@@ -350,12 +344,6 @@ pdf_flatten_inheritable_page_item(fz_context *ctx, pdf_obj *page, pdf_obj *key)
 		pdf_dict_put(ctx, page, key, val);
 }
 
-/*
-	Make page self sufficient.
-
-	Copy any inheritable page keys into the actual page object, removing
-	any dependencies on the page tree parents.
-*/
 void
 pdf_flatten_inheritable_page_items(fz_context *ctx, pdf_obj *page)
 {
@@ -599,14 +587,6 @@ pdf_page_presentation(fz_context *ctx, pdf_page *page, fz_transition *transition
 	return transition;
 }
 
-/*
-	Determine the size of a page.
-
-	Determine the page size in user space units, taking page rotation
-	into account. The page size is taken to be the crop box if it
-	exists (visible area after cropping), otherwise the media box will
-	be used (possibly including printing marks).
-*/
 fz_rect
 pdf_bound_page(fz_context *ctx, pdf_page *page)
 {
@@ -875,9 +855,6 @@ scan_page_seps(fz_context *ctx, pdf_obj *res, fz_separations **seps, res_finder_
 	}
 }
 
-/*
-	Get the separation details for a page.
-*/
 fz_separations *
 pdf_page_separations(fz_context *ctx, pdf_page *page)
 {
@@ -1059,9 +1036,6 @@ pdf_load_default_colorspaces(fz_context *ctx, pdf_document *doc, pdf_page *page)
 	return default_cs;
 }
 
-/*
-	Update default colorspaces for an xobject.
-*/
 fz_default_colorspaces *
 pdf_update_default_colorspaces(fz_context *ctx, fz_default_colorspaces *old_cs, pdf_obj *res)
 {
@@ -1084,16 +1058,6 @@ pdf_update_default_colorspaces(fz_context *ctx, fz_default_colorspaces *old_cs, 
 	return new_cs;
 }
 
-/*
-	Load a page and its resources.
-
-	Locates the page in the PDF document and loads the page and its
-	resources. After pdf_load_page is it possible to retrieve the size
-	of the page using pdf_bound_page, or to render the page using
-	pdf_run_page_*.
-
-	number: page number, where 0 is the first page of the document.
-*/
 pdf_page *
 pdf_load_page(fz_context *ctx, pdf_document *doc, int number)
 {
@@ -1173,15 +1137,6 @@ fz_page *pdf_load_page_imp(fz_context *ctx, fz_document *doc, int chapter, int n
 	return (fz_page*)pdf_load_page(ctx, (pdf_document*)doc, number);
 }
 
-/*
-	Delete a page from the page tree of
-	a document. This does not remove the page contents
-	or resources from the file.
-
-	doc: The document to operate on.
-
-	number: The page to remove (numbered from 0)
-*/
 void
 pdf_delete_page(fz_context *ctx, pdf_document *doc, int at)
 {
@@ -1200,18 +1155,6 @@ pdf_delete_page(fz_context *ctx, pdf_document *doc, int at)
 	}
 }
 
-/*
-	Delete a range of pages from the
-	page tree of a document. This does not remove the page
-	contents or resources from the file.
-
-	doc: The document to operate on.
-
-	start, end: The range of pages (numbered from 0)
-	(inclusive, exclusive) to remove. If end is negative or
-	greater than the number of pages in the document, it
-	will be taken to be the end of the document.
-*/
 void
 pdf_delete_page_range(fz_context *ctx, pdf_document *doc, int start, int end)
 {
@@ -1228,30 +1171,6 @@ pdf_delete_page_range(fz_context *ctx, pdf_document *doc, int start, int end)
 	}
 }
 
-/*
-	Create a pdf_obj within a document that
-	represents a page, from a previously created resources
-	dictionary and page content stream. This should then be
-	inserted into the document using pdf_insert_page.
-
-	After this call the page exists within the document
-	structure, but is not actually ever displayed as it is
-	not linked into the PDF page tree.
-
-	doc: The document to which to add the page.
-
-	mediabox: The mediabox for the page (should be identical
-	to that used when creating the resources/contents).
-
-	rotate: 0, 90, 180 or 270. The rotation to use for the
-	page.
-
-	resources: The resources dictionary for the new page
-	(typically created by pdf_page_write).
-
-	contents: The page contents for the new page (typically
-	create by pdf_page_write).
-*/
 pdf_obj *
 pdf_add_page(fz_context *ctx, pdf_document *doc, fz_rect mediabox, int rotate, pdf_obj *resources, fz_buffer *contents)
 {
@@ -1280,18 +1199,6 @@ pdf_add_page(fz_context *ctx, pdf_document *doc, fz_rect mediabox, int rotate, p
 	return pdf_add_object_drop(ctx, doc, page_obj);
 }
 
-/*
-	Insert a page previously created by
-	pdf_add_page into the pages tree of the document.
-
-	doc: The document to insert into.
-
-	at: The page number to insert at. 0 inserts at the start.
-	negative numbers, or INT_MAX insert at the end. Otherwise
-	n inserts after page n.
-
-	page: The page to insert.
-*/
 void
 pdf_insert_page(fz_context *ctx, pdf_document *doc, int at, pdf_obj *page_ref)
 {

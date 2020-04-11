@@ -106,14 +106,29 @@ fz_colorspace *fz_new_icc_colorspace(fz_context *ctx, enum fz_colorspace_type ty
 fz_colorspace *fz_new_cal_gray_colorspace(fz_context *ctx, float wp[3], float bp[3], float gamma);
 fz_colorspace *fz_new_cal_rgb_colorspace(fz_context *ctx, float wp[3], float bp[3], float gamma[3], float matrix[9]);
 
+/*
+	Create ICC profile from PDF calGray and calRGB definitions
+*/
 fz_buffer *fz_new_icc_data_from_cal(fz_context *ctx, float wp[3], float bp[3], float gamma[3], float matrix[9], int n);
 
 enum fz_colorspace_type fz_colorspace_type(fz_context *ctx, fz_colorspace *cs);
 const char *fz_colorspace_name(fz_context *ctx, fz_colorspace *cs);
 int fz_colorspace_n(fz_context *ctx, fz_colorspace *cs);
 
+/*
+	True for CMYK, Separation and DeviceN colorspaces.
+*/
 int fz_colorspace_is_subtractive(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	True if DeviceN color space has only colorants from the CMYK set.
+*/
 int fz_colorspace_device_n_has_only_cmyk(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	True if DeviceN color space has cyan magenta yellow or black as
+	one of its colorants.
+*/
 int fz_colorspace_device_n_has_cmyk(fz_context *ctx, fz_colorspace *cs);
 int fz_colorspace_is_gray(fz_context *ctx, fz_colorspace *cs);
 int fz_colorspace_is_rgb(fz_context *ctx, fz_colorspace *cs);
@@ -133,7 +148,6 @@ fz_colorspace *fz_device_bgr(fz_context *ctx);
 fz_colorspace *fz_device_cmyk(fz_context *ctx);
 fz_colorspace *fz_device_lab(fz_context *ctx);
 
-void fz_colorspace_name_process_colorants(fz_context *ctx, fz_colorspace *cs);
 void fz_colorspace_name_colorant(fz_context *ctx, fz_colorspace *cs, int n, const char *name);
 const char *fz_colorspace_colorant(fz_context *ctx, fz_colorspace *cs, int n);
 
@@ -175,6 +189,10 @@ struct fz_default_colorspaces_s
 	fz_colorspace *oi;
 };
 
+/*
+	Handle page specific default colorspace settings that PDF holds
+	in its page resources. Also track the output intent.
+*/
 fz_default_colorspaces *fz_new_default_colorspaces(fz_context *ctx);
 fz_default_colorspaces* fz_keep_default_colorspaces(fz_context *ctx, fz_default_colorspaces *default_cs);
 void fz_drop_default_colorspaces(fz_context *ctx, fz_default_colorspaces *default_cs);
@@ -191,8 +209,9 @@ void fz_set_default_cmyk(fz_context *ctx, fz_default_colorspaces *default_cs, fz
 void fz_set_default_output_intent(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs);
 
 /*
-	Color convert a pixmap. The passing of default_cs is needed due to the base cs of the image possibly
-	needing to be treated as being in one of the page default color spaces.
+	Color convert a pixmap. The passing of default_cs is needed due
+	to the base cs of the image possibly needing to be treated as
+	being in one of the page default color spaces.
 */
 void fz_convert_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, fz_colorspace *prf, const fz_default_colorspaces *default_cs, fz_color_params color_params, int copy_spots);
 void fz_fast_any_to_alpha(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, int copy_spots);

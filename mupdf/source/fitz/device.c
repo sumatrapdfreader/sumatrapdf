@@ -40,10 +40,6 @@ fz_disable_device(fz_context *ctx, fz_device *dev)
 	dev->end_layer = NULL;
 }
 
-/*
-	Signal the end of input, and flush any buffered output.
-	This is NOT called implicitly on fz_drop_device.
-*/
 void
 fz_close_device(fz_context *ctx, fz_device *dev)
 {
@@ -64,11 +60,6 @@ fz_keep_device(fz_context *ctx, fz_device *dev)
 	return fz_keep_imp(ctx, dev, &dev->refs);
 }
 
-/*
-	Free a device of any type and its resources.
-	Don't forget to call fz_close_device before dropping the device,
-	or you may get incomplete output!
-*/
 void
 fz_drop_device(fz_context *ctx, fz_device *dev)
 {
@@ -550,9 +541,6 @@ void fz_end_layer(fz_context *ctx, fz_device *dev)
 	}
 }
 
-/*
-	Find current scissor region as tracked by the device.
-*/
 fz_rect
 fz_device_current_scissor(fz_context *ctx, fz_device *dev)
 {

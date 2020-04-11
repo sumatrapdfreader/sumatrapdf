@@ -242,23 +242,6 @@ static void fmtname(struct fmtbuf *out, const char *s)
 	}
 }
 
-/*
-	Our customised 'printf'-like string formatter.
-	Takes %c, %d, %s, %u, %x, as usual.
-	Modifiers are not supported except for zero-padding ints (e.g. %02d, %03u, %04x, etc).
-	%g output in "as short as possible hopefully lossless non-exponent" form,
-	see fz_ftoa for specifics.
-	%f and %e output as usual.
-	%C outputs a utf8 encoded int.
-	%M outputs a fz_matrix*. %R outputs a fz_rect*. %P outputs a fz_point*.
-	%n outputs a PDF name (with appropriate escaping).
-	%q and %( output escaped strings in C/PDF syntax.
-	%l{d,u,x} indicates that the values are int64_t.
-	%z{d,u,x} indicates that the value is a size_t.
-
-	user: An opaque pointer that is passed to the emit function.
-	emit: A function pointer called to emit output bytes as the string is being formatted.
-*/
 void
 fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void *user, int c), const char *fmt, va_list args)
 {
@@ -506,9 +489,6 @@ static void snprintf_emit(fz_context *ctx, void *out_, int c)
 	++(out->n);
 }
 
-/*
-	A vsnprintf work-alike, using our custom formatter.
-*/
 size_t
 fz_vsnprintf(char *buffer, size_t space, const char *fmt, va_list args)
 {
@@ -525,9 +505,6 @@ fz_vsnprintf(char *buffer, size_t space, const char *fmt, va_list args)
 	return out.n;
 }
 
-/*
-	The non va_list equivalent of fz_vsnprintf.
-*/
 size_t
 fz_snprintf(char *buffer, size_t space, const char *fmt, ...)
 {

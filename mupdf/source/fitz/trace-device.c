@@ -533,9 +533,6 @@ fz_trace_set_default_colorspaces(fz_context *ctx, fz_device *dev_, fz_default_co
 	fz_write_printf(ctx, out, " oi=\"%s\"/>\n",fz_colorspace_name(ctx, fz_default_output_intent(ctx, dcs)));
 }
 
-/*
-	Create a device to print a debug trace of all device calls.
-*/
 fz_device *fz_new_trace_device(fz_context *ctx, fz_output *out)
 {
 	fz_trace_device *dev = fz_new_derived_device(ctx, fz_trace_device);

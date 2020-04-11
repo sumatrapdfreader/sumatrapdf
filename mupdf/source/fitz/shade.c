@@ -958,27 +958,6 @@ fz_process_shade_type7(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_
 	}
 }
 
-/*
-	Process a shade, using supplied callback
-	functions. This decomposes the shading to a mesh (even ones
-	that are not natively meshes, such as linear or radial
-	shadings), and processes triangles from those meshes.
-
-	shade: The shade to process.
-
-	ctm: The transform to use
-
-	prepare: Callback function to 'prepare' each vertex.
-	This function is passed an array of floats, and populates
-	a fz_vertex structure.
-
-	process: This function is passed 3 pointers to vertex
-	structures, and actually performs the processing (typically
-	filling the area between the vertexes).
-
-	process_arg: An opaque argument passed through from caller
-	to callback functions.
-*/
 void
 fz_process_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_rect scissor,
 		fz_shade_prepare_fn *prepare, fz_shade_process_fn *process, void *process_arg)
@@ -1103,12 +1082,6 @@ fz_keep_shade(fz_context *ctx, fz_shade *shade)
 	return fz_keep_storable(ctx, &shade->storable);
 }
 
-/*
-	Internal function to destroy a
-	shade. Only exposed for use with the fz_store.
-
-	shade: The reference to destroy.
-*/
 void
 fz_drop_shade_imp(fz_context *ctx, fz_storable *shade_)
 {
@@ -1127,17 +1100,6 @@ fz_drop_shade(fz_context *ctx, fz_shade *shade)
 	fz_drop_storable(ctx, &shade->storable);
 }
 
-/*
-	Bound a given shading.
-
-	shade: The shade to bound.
-
-	ctm: The transform to apply to the shade before bounding.
-
-	r: Pointer to storage to put the bounds in.
-
-	Returns r, updated to contain the bounds for the shading.
-*/
 fz_rect
 fz_bound_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm)
 {

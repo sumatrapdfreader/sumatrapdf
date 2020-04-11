@@ -669,6 +669,7 @@ function mupdf_files()
     "load-png.c",
     "load-pnm.c",
     "load-tiff.c",
+    "log.c",
     "memento.c",
     "memory.c",
     "noto.c",

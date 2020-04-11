@@ -74,9 +74,6 @@ fz_new_display_list_from_page_contents(fz_context *ctx, fz_page *page)
 	return list;
 }
 
-/*
-	Render the page to a pixmap using the transform and colorspace.
-*/
 fz_pixmap *
 fz_new_pixmap_from_display_list(fz_context *ctx, fz_display_list *list, fz_matrix ctm, fz_colorspace *cs, int alpha)
 {
@@ -122,9 +119,6 @@ fz_new_pixmap_from_display_list_with_separations(fz_context *ctx, fz_display_lis
 	return pix;
 }
 
-/*
-	Render the page contents without annotations.
-*/
 fz_pixmap *
 fz_new_pixmap_from_page_contents(fz_context *ctx, fz_page *page, fz_matrix ctm, fz_colorspace *cs, int alpha)
 {
@@ -332,11 +326,6 @@ fz_search_display_list(fz_context *ctx, fz_display_list *list, const char *needl
 	return count;
 }
 
-/*
-	Search for the 'needle' text on the page.
-	Record the hits in the hit_bbox array and return the number of hits.
-	Will stop looking once it has filled hit_max rectangles.
-*/
 int
 fz_search_page(fz_context *ctx, fz_page *page, const char *needle, fz_quad *hit_bbox, int hit_max)
 {
@@ -385,9 +374,6 @@ fz_search_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, in
 	return count;
 }
 
-/*
-	Convert structured text into plain text.
-*/
 fz_buffer *
 fz_new_buffer_from_stext_page(fz_context *ctx, fz_stext_page *page)
 {
@@ -470,9 +456,6 @@ fz_new_buffer_from_page_number(fz_context *ctx, fz_document *doc, int number, co
 	return buf;
 }
 
-/*
-	Write image as a data URI (for HTML and SVG output).
-*/
 void
 fz_write_image_as_data_uri(fz_context *ctx, fz_output *out, fz_image *image)
 {
@@ -525,10 +508,6 @@ fz_write_pixmap_as_data_uri(fz_context *ctx, fz_output *out, fz_pixmap *pixmap)
 		fz_rethrow(ctx);
 }
 
-/*
- * Use text extraction to convert the input document into XHTML, then
- * open the result as a new document that can be reflowed.
- */
 fz_document *
 fz_new_xhtml_document_from_document(fz_context *ctx, fz_document *old_doc)
 {

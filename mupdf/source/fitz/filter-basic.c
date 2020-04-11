@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-/* The null filter reads a specified amount of data from the substream. */
+/* null filter */
 
 struct null_filter
 {
@@ -58,7 +58,7 @@ fz_open_null_filter(fz_context *ctx, fz_stream *chain, int len, int64_t offset)
 	return fz_new_stream(ctx, state, next_null, close_null);
 }
 
-/* The range filter copies data from specified ranges of the chained stream */
+/* range filter */
 
 struct range_filter
 {
@@ -150,10 +150,7 @@ fz_open_range_filter(fz_context *ctx, fz_stream *chain, fz_range *ranges, int nr
 	return fz_new_stream(ctx, state, next_range, close_range);
 }
 
-/*
- * The endstream filter reads a PDF substream, and starts to look for an 'endstream' token
- * after the specified length.
- */
+/* endstream filter */
 
 #define END_CHECK_SIZE 32
 
@@ -290,7 +287,7 @@ fz_open_endstream_filter(fz_context *ctx, fz_stream *chain, int len, int64_t off
 	return fz_new_stream(ctx, state, next_endstream, close_endstream);
 }
 
-/* Concat filter concatenates several streams into one */
+/* concat filter */
 
 struct concat_filter
 {

@@ -14,18 +14,71 @@ typedef struct fz_glyph_s fz_glyph;
 
 fz_irect fz_glyph_bbox(fz_context *ctx, fz_glyph *glyph);
 
+/*
+	Return the width of the glyph in pixels.
+*/
 int fz_glyph_width(fz_context *ctx, fz_glyph *glyph);
 
+/*
+	Return the height of the glyph in pixels.
+*/
 int fz_glyph_height(fz_context *ctx, fz_glyph *glyph);
 
+/*
+	Create a new glyph from a pixmap
+
+	Returns a pointer to the new glyph. Throws exception on failure
+	to allocate.
+*/
 fz_glyph *fz_new_glyph_from_pixmap(fz_context *ctx, fz_pixmap *pix);
 
+/*
+	Create a new glyph from 8bpp data
+
+	x, y: X and Y position for the glyph
+
+	w, h: Width and Height for the glyph
+
+	sp: Source Pointer to data
+
+	span: Increment from line to line of data
+
+	Returns a pointer to the new glyph. Throws exception on failure
+	to allocate.
+*/
 fz_glyph *fz_new_glyph_from_8bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigned char *sp, int span);
 
+/*
+	Create a new glyph from 1bpp data
+
+	x, y: X and Y position for the glyph
+
+	w, h: Width and Height for the glyph
+
+	sp: Source Pointer to data
+
+	span: Increment from line to line of data
+
+	Returns a pointer to the new glyph. Throws exception on failure
+	to allocate.
+*/
 fz_glyph *fz_new_glyph_from_1bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigned char *sp, int span);
 
+/*
+	Take a reference to a glyph.
+
+	pix: The glyph to increment the reference for.
+
+	Returns pix.
+*/
 fz_glyph *fz_keep_glyph(fz_context *ctx, fz_glyph *pix);
 
+/*
+	Drop a reference and free a glyph.
+
+	Decrement the reference count for the glyph. When no
+	references remain the glyph will be freed.
+*/
 void fz_drop_glyph(fz_context *ctx, fz_glyph *pix);
 
 /*
@@ -36,23 +89,25 @@ void fz_drop_glyph(fz_context *ctx, fz_glyph *pix);
 
 	w, h: The width and height of the region in pixels.
 
-	samples: The sample data. The sample data is in a compressed format
-	designed to give reasonable compression, and to be fast to plot from.
+	samples: The sample data. The sample data is in a compressed
+	format designed to give reasonable compression, and to be fast
+	to plot from.
 
-	The first sizeof(int) * h bytes of the table, when interpreted as
-	ints gives the offset within the data block of that lines data. An
-	offset of 0 indicates that that line is completely blank.
+	The first sizeof(int) * h bytes of the table, when interpreted
+	as ints gives the offset within the data block of that lines
+	data. An offset of 0 indicates that that line is completely
+	blank.
 
 	The data for individual lines is a sequence of bytes:
 	 00000000 = end of lines data
-	 LLLLLL00 = extend the length given in the next run by the 6 L bits
-		given here.
+	 LLLLLL00 = extend the length given in the next run by the 6 L
+		bits given here.
 	 LLLLLL01 = A run of length L+1 transparent pixels.
-	 LLLLLE10 = A run of length L+1 solid pixels. If E then this is the
+	 LLLLLE10 = A run of length L+1 solid pixels. If E then this is
+		the last run on this line.
+	 LLLLLE11 = A run of length L+1 intermediate pixels followed by
+		L+1 bytes of literal pixel data. If E then this is the
 		last run on this line.
-	 LLLLLE11 = A run of length L+1 intermediate pixels followed by L+1
-		bytes of literal pixel data. If E then this is the last run
-		on this line.
 */
 struct fz_glyph_s
 {

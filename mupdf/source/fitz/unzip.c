@@ -407,11 +407,6 @@ static int count_zip_entries(fz_context *ctx, fz_archive *arch)
 	return zip->count;
 }
 
-/*
-	Detect if stream object is a zip archive.
-
-	Assumes that the stream object is seekable.
-*/
 int
 fz_is_zip_archive(fz_context *ctx, fz_stream *file)
 {
@@ -429,16 +424,6 @@ fz_is_zip_archive(fz_context *ctx, fz_stream *file)
 	return 1;
 }
 
-/*
-	Open a zip archive stream.
-
-	Open an archive using a seekable stream object rather than
-	opening a file or directory on disk.
-
-	An exception is throw if the stream is not a zip archive as
-	indicated by the presence of a zip signature.
-
-*/
 fz_archive *
 fz_open_zip_archive_with_stream(fz_context *ctx, fz_stream *file)
 {
@@ -469,15 +454,6 @@ fz_open_zip_archive_with_stream(fz_context *ctx, fz_stream *file)
 	return &zip->super;
 }
 
-/*
-	Open a zip archive file.
-
-	An exception is throw if the file is not a zip archive as
-	indicated by the presence of a zip signature.
-
-	filename: a path to a zip archive file as it would be given to
-	open(2).
-*/
 fz_archive *
 fz_open_zip_archive(fz_context *ctx, const char *filename)
 {

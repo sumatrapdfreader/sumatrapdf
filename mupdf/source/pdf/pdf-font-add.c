@@ -532,10 +532,6 @@ pdf_add_to_unicode(fz_context *ctx, pdf_document *doc, pdf_obj *fobj, fz_font *f
 		fz_rethrow(ctx);
 }
 
-/* Creates CID font with Identity-H CMap and a ToUnicode CMap that is created by
- * using the TTF cmap table "backwards" to go from the GID to a Unicode value.
- * We can possibly get width information that may have been embedded in
- * the PDF /W array (or W2 if vertical text) */
 pdf_obj *
 pdf_add_cid_font(fz_context *ctx, pdf_document *doc, fz_font *font)
 {
@@ -685,7 +681,6 @@ pdf_font_writing_supported(fz_font *font)
 	return 0;
 }
 
-/* Add a non-embedded UTF16-encoded CID-font for the CJK scripts: CNS1, GB1, Japan1, or Korea1 */
 pdf_obj *
 pdf_add_cjk_font(fz_context *ctx, pdf_document *doc, fz_font *fzfont, int script, int wmode, int serif)
 {

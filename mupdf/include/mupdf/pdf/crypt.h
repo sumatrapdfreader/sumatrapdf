@@ -12,6 +12,10 @@ enum
 	PDF_ENCRYPT_UNKNOWN
 };
 
+/*
+	Create crypt object for decrypting strings and streams
+	given the Encryption and ID objects.
+*/
 pdf_crypt *pdf_new_crypt(fz_context *ctx, pdf_obj *enc, pdf_obj *id);
 pdf_crypt *pdf_new_encrypt(fz_context *ctx, const char *opwd_utf8, const char *upwd_utf8, pdf_obj *id, int permissions, int algorithm);
 void pdf_drop_crypt(fz_context *ctx, pdf_crypt *crypt);
@@ -57,10 +61,17 @@ int pdf_document_permissions(fz_context *ctx, pdf_document *doc);
 
 int pdf_signature_byte_range(fz_context *ctx, pdf_document *doc, pdf_obj *signature, fz_range *byte_range);
 
+/*
+	retrieve an fz_stream to read the bytes hashed for the signature
+*/
 fz_stream *pdf_signature_hash_bytes(fz_context *ctx, pdf_document *doc, pdf_obj *signature);
 
 int pdf_signature_incremental_change_since_signing(fz_context *ctx, pdf_document *doc, pdf_obj *signature);
 
+/*
+	Retrieve the contents of a signature as a counted allocated
+	block that must be freed by the caller.
+*/
 size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents);
 
 typedef struct pdf_pkcs7_designated_name_s pdf_pkcs7_designated_name;

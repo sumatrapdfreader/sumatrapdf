@@ -64,18 +64,6 @@ fz_is_directory(fz_context *ctx, const char *path)
 	return S_ISDIR(info.st_mode);
 }
 
-/*
-	Open a directory as if it was an archive.
-
-	A special case where a directory is opened as if it was an
-	archive.
-
-	Note that for directories it is not possible to retrieve the
-	number of entries or list the entries. It is however possible
-	to check if the archive has a particular entry.
-
-	path: a path to a directory as it would be given to opendir(3).
-*/
 fz_archive *
 fz_open_directory(fz_context *ctx, const char *path)
 {

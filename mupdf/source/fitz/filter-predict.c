@@ -222,7 +222,6 @@ close_predict(fz_context *ctx, void *state_)
 	fz_free(ctx, state);
 }
 
-/* Default values: predictor = 1, columns = 1, colors = 1, bpc = 8 */
 fz_stream *
 fz_open_predict(fz_context *ctx, fz_stream *chain, int predictor, int columns, int colors, int bpc)
 {

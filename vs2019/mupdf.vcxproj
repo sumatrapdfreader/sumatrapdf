@@ -804,6 +804,7 @@
     <ClCompile Include="..\mupdf\source\fitz\load-png.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-pnm.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-tiff.c" />
+    <ClCompile Include="..\mupdf\source\fitz\log.c" />
     <ClCompile Include="..\mupdf\source\fitz\memento.c" />
     <ClCompile Include="..\mupdf\source\fitz\memory.c" />
     <ClCompile Include="..\mupdf\source\fitz\noto.c" />

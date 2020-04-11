@@ -41,34 +41,22 @@ static void fz_drop_style_context(fz_context *ctx)
 	}
 }
 
-/*
-	Toggle whether to respect document styles in HTML and EPUB.
-*/
 void fz_set_use_document_css(fz_context *ctx, int use)
 {
 	ctx->style->use_document_css = use;
 }
 
-/*
-	Return whether to respect document styles in HTML and EPUB.
-*/
 int fz_use_document_css(fz_context *ctx)
 {
 	return ctx->style->use_document_css;
 }
 
-/*
-	Set the user stylesheet source text for use with HTML and EPUB.
-*/
 void fz_set_user_css(fz_context *ctx, const char *user_css)
 {
 	fz_free(ctx, ctx->style->user_css);
 	ctx->style->user_css = user_css ? fz_strdup(ctx, user_css) : NULL;
 }
 
-/*
-	Get the user stylesheet source text.
-*/
 const char *fz_user_css(fz_context *ctx)
 {
 	return ctx->style->user_css;
@@ -102,28 +90,12 @@ static void fz_drop_tuning_context(fz_context *ctx)
 	}
 }
 
-/*
-	Set the tuning function to use for
-	image decode.
-
-	image_decode: Function to use.
-
-	arg: Opaque argument to be passed to tuning function.
-*/
 void fz_tune_image_decode(fz_context *ctx, fz_tune_image_decode_fn *image_decode, void *arg)
 {
 	ctx->tuning->image_decode = image_decode ? image_decode : fz_default_image_decode;
 	ctx->tuning->image_decode_arg = arg;
 }
 
-/*
-	Set the tuning function to use for
-	image scaling.
-
-	image_scale: Function to use.
-
-	arg: Opaque argument to be passed to tuning function.
-*/
 void fz_tune_image_scale(fz_context *ctx, fz_tune_image_scale_fn *image_scale, void *arg)
 {
 	ctx->tuning->image_scale = image_scale ? image_scale : fz_default_image_scale;
@@ -146,13 +118,6 @@ static void fz_init_random_context(fz_context *ctx)
 	fz_srand48(ctx, (uint32_t)time(NULL));
 }
 
-/*
-	Free a context and its global state.
-
-	The context and all of its global state is freed, and any
-	buffered warnings are flushed (see fz_flush_warnings). If NULL
-	is passed in nothing will happen.
-*/
 void
 fz_drop_context(fz_context *ctx)
 {
@@ -187,34 +152,6 @@ fz_init_error_context(fz_context *ctx)
 	ctx->warn.count = 0;
 }
 
-/*
-	Allocate context containing global state.
-
-	The global state contains an exception stack, resource store,
-	etc. Most functions in MuPDF take a context argument to be
-	able to reference the global state. See fz_drop_context for
-	freeing an allocated context.
-
-	alloc: Supply a custom memory allocator through a set of
-	function pointers. Set to NULL for the standard library
-	allocator. The context will keep the allocator pointer, so the
-	data it points to must not be modified or freed during the
-	lifetime of the context.
-
-	locks: Supply a set of locks and functions to lock/unlock
-	them, intended for multi-threaded applications. Set to NULL
-	when using MuPDF in a single-threaded applications. The
-	context will keep the locks pointer, so the data it points to
-	must not be modified or freed during the lifetime of the
-	context.
-
-	max_store: Maximum size in bytes of the resource store, before
-	it will start evicting cached resources such as fonts and
-	images. FZ_STORE_UNLIMITED can be used if a hard limit is not
-	desired. Use FZ_STORE_DEFAULT to get a reasonable size.
-
-	May return NULL.
-*/
 fz_context *
 fz_new_context_imp(const fz_alloc_context *alloc, const fz_locks_context *locks, size_t max_store, const char *version)
 {
@@ -271,21 +208,6 @@ fz_new_context_imp(const fz_alloc_context *alloc, const fz_locks_context *locks,
 	return ctx;
 }
 
-/*
-	Make a clone of an existing context.
-
-	This function is meant to be used in multi-threaded
-	applications where each thread requires its own context, yet
-	parts of the global state, for example caching, are shared.
-
-	ctx: Context obtained from fz_new_context to make a copy of.
-	ctx must have had locks and lock/functions setup when created.
-	The two contexts will share the memory allocator, resource
-	store, locks and lock/unlock functions. They will each have
-	their own exception stacks though.
-
-	May return NULL.
-*/
 fz_context *
 fz_clone_context(fz_context *ctx)
 {
@@ -318,21 +240,12 @@ fz_clone_context(fz_context *ctx)
 	return new_ctx;
 }
 
-/*
-	Set the user field in the context.
-
-	NULL initially, this field can be set to any opaque value
-	required by the user. It is copied on clones.
-*/
 void fz_set_user_context(fz_context *ctx, void *user)
 {
 	if (ctx != NULL)
 		ctx->user = user;
 }
 
-/*
-	Read the user field from the context.
-*/
 void *fz_user_context(fz_context *ctx)
 {
 	if (ctx == NULL)

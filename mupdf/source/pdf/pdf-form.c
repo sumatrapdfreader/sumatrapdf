@@ -139,11 +139,11 @@ lookup_field_sub(fz_context *ctx, pdf_obj *dict, const char *str)
 		len = e-str;
 		if (strncmp(str, match, len) != 0 || (match[len] != 0 && match[len] != '.'))
 			/* name doesn't match. */
-	return NULL;
+			return NULL;
 		str = e;
 		if (*str == '.')
 			str++;
-}
+	}
 
 	/* If there is a kids array, walk those looking for the appropriate one. */
 	kids = pdf_dict_get(ctx, dict, PDF_NAME(Kids));
@@ -153,7 +153,7 @@ lookup_field_sub(fz_context *ctx, pdf_obj *dict, const char *str)
 	/* No Kids, so we're a terminal node. We accept it as the match if we've
 	 * exhausted the match string. */
 	if (*str == 0)
-	return dict;
+		return dict;
 
 	return NULL;
 }
@@ -475,19 +475,11 @@ static void toggle_check_box(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 	doc->recalculate = 1;
 }
 
-/*
-	Determine whether changes have been made since the
-	document was opened or last saved.
-*/
 int pdf_has_unsaved_changes(fz_context *ctx, pdf_document *doc)
 {
 	return doc->dirty;
 }
 
-/*
-	Toggle the state of a specified annotation. Applies only to check-box
-	and radio-button widgets.
-*/
 int pdf_toggle_widget(fz_context *ctx, pdf_widget *widget)
 {
 	switch (pdf_widget_type(ctx, widget))
@@ -502,17 +494,6 @@ int pdf_toggle_widget(fz_context *ctx, pdf_widget *widget)
 	return 0;
 }
 
-/*
-	Recalculate form fields if necessary.
-
-	Loop through all annotations on the page and update them. Return true
-	if any of them were changed (by either event or javascript actions, or
-	by annotation editing) and need re-rendering.
-
-	If you need more granularity, loop through the annotations and call
-	pdf_update_annot for each one to detect changes on a per-annotation
-	basis.
-*/
 int
 pdf_update_page(fz_context *ctx, pdf_page *page)
 {
@@ -724,30 +705,30 @@ static char *get_field_name(fz_context *ctx, pdf_obj *field, int spare)
 		lname = pdf_dict_get_text_string(ctx, field, PDF_NAME(T));
 		llen = (int)strlen(lname);
 
-	/*
-	 * If we found a name at this point in the field hierarchy
-	 * then we'll need extra space for it and a dot
-	 */
-	if (llen)
-		spare += llen+1;
+		/*
+		 * If we found a name at this point in the field hierarchy
+		 * then we'll need extra space for it and a dot
+		 */
+		if (llen)
+			spare += llen+1;
 
-	if (parent)
-	{
-		res = get_field_name(ctx, parent, spare);
-	}
-	else
-	{
-		res = Memento_label(fz_malloc(ctx, spare+1), "form_field_name");
-		res[0] = 0;
-	}
+		if (parent)
+		{
+			res = get_field_name(ctx, parent, spare);
+		}
+		else
+		{
+			res = Memento_label(fz_malloc(ctx, spare+1), "form_field_name");
+			res[0] = 0;
+		}
 
-	if (llen)
-	{
-		if (res[0])
-			strcat(res, ".");
+		if (llen)
+		{
+			if (res[0])
+				strcat(res, ".");
 
-		strcat(res, lname);
-	}
+			strcat(res, lname);
+		}
 	}
 	fz_always(ctx)
 		pdf_unmark_obj(ctx, field);
@@ -757,7 +738,6 @@ static char *get_field_name(fz_context *ctx, pdf_obj *field, int spare)
 	return res;
 }
 
-/* Note: This function allocates a string for the return value that you must free manually. */
 char *pdf_field_name(fz_context *ctx, pdf_obj *field)
 {
 	return get_field_name(ctx, field, 0);
@@ -889,20 +869,12 @@ pdf_update_widget(fz_context *ctx, pdf_widget *widget)
 	return pdf_update_annot(ctx, widget);
 }
 
-/*
-	get the maximum number of
-	characters permitted in a text widget
-*/
 int pdf_text_widget_max_len(fz_context *ctx, pdf_widget *tw)
 {
 	pdf_annot *annot = (pdf_annot *)tw;
 	return pdf_to_int(ctx, pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(MaxLen)));
 }
 
-/*
-	get the type of content
-	required by a text widget
-*/
 int pdf_text_widget_format(fz_context *ctx, pdf_widget *tw)
 {
 	pdf_annot *annot = (pdf_annot *)tw;
@@ -925,11 +897,6 @@ int pdf_text_widget_format(fz_context *ctx, pdf_widget *tw)
 	return type;
 }
 
-/*
-	Update the text of a text widget.
-	The text is first validated by the Field/Keystroke event processing and accepted only if it passes.
-	The function returns whether validation passed.
-*/
 int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *new_value)
 {
 	pdf_document *doc = widget->page->doc;
@@ -991,14 +958,6 @@ int pdf_set_choice_field_value(fz_context *ctx, pdf_widget *widget, const char *
 	return pdf_set_text_field_value(ctx, widget, new_value);
 }
 
-/*
-	get the list of options for a list
-	box or combo box. Returns the number of options and fills in their
-	names within the supplied array. Should first be called with a
-	NULL array to find out how big the array should be.  If exportval
-	is true, then the export values will be returned and not the list
-	values if there are export values present.
-*/
 int pdf_choice_widget_options(fz_context *ctx, pdf_widget *tw, int exportval, const char *opts[])
 {
 	pdf_annot *annot = (pdf_annot *)tw;
@@ -1057,13 +1016,6 @@ int pdf_choice_widget_is_multiselect(fz_context *ctx, pdf_widget *tw)
 	}
 }
 
-/*
-	get the value of a choice widget.
-	Returns the number of options currently selected and fills in
-	the supplied array with their strings. Should first be called
-	with NULL as the array to find out how big the array need to
-	be. The filled in elements should not be freed by the caller.
-*/
 int pdf_choice_widget_value(fz_context *ctx, pdf_widget *tw, const char *opts[])
 {
 	pdf_annot *annot = (pdf_annot *)tw;
@@ -1098,11 +1050,6 @@ int pdf_choice_widget_value(fz_context *ctx, pdf_widget *tw, const char *opts[])
 	}
 }
 
-/*
-	set the value of a choice widget. The
-	caller should pass the number of options selected and an
-	array of their names
-*/
 void pdf_choice_widget_set_value(fz_context *ctx, pdf_widget *tw, int n, const char *opts[])
 {
 	pdf_annot *annot = (pdf_annot *)tw;
@@ -1260,9 +1207,6 @@ static void validate_byte_ranges(fz_context *ctx, pdf_document *doc, fz_range *u
 		fz_rethrow(ctx);
 }
 
-/*
-	retrieve an fz_stream to read the bytes hashed for the signature
-*/
 fz_stream *pdf_signature_hash_bytes(fz_context *ctx, pdf_document *doc, pdf_obj *signature)
 {
 	fz_range *byte_range = NULL;
@@ -1357,7 +1301,6 @@ int pdf_widget_is_signed(fz_context *ctx, pdf_widget *widget)
 	return pdf_signature_is_signed(ctx, widget->page->doc, widget->obj);
 }
 
-/* NOTE: contents is allocated and must be freed by the caller! */
 size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents)
 {
 	pdf_obj *v_ref = pdf_dict_get_inheritable(ctx, signature, PDF_NAME(V));
@@ -1730,14 +1673,6 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 	}
 }
 
-/*
-	Update internal state appropriate for editing this field. When editing
-	is true, updating the text of the text widget will not have any
-	side-effects such as changing other widgets or running javascript.
-	This state is intended for the period when a text widget is having
-	characters typed into it. The state should be reverted at the end of
-	the edit sequence and the text newly updated.
-*/
 void pdf_set_widget_editing_state(fz_context *ctx, pdf_widget *widget, int editing)
 {
 	widget->ignore_trigger_events = editing;
