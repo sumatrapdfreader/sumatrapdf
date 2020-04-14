@@ -1460,8 +1460,9 @@ WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectD region) {
 
 // returns true if it was necessary to scroll the display (horizontally or vertically)
 bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
-    if (!res->len)
+    if (!res->len) {
         return false;
+    }
 
     RectI extremes;
     for (int i = 0; i < res->len; i++) {
@@ -1470,8 +1471,9 @@ bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
     }
 
     // don't scroll if the whole result is already visible
-    if (RectI(PointI(), viewPort.Size()).Intersect(extremes) == extremes)
+    if (RectI(PointI(), viewPort.Size()).Intersect(extremes) == extremes) {
         return false;
+    }
 
     PageInfo* pageInfo = GetPageInfo(res->pages[0]);
     int sx = 0, sy = 0;
@@ -1480,39 +1482,45 @@ bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
     // (scrolling up) and 60% (scrolling down) of the screen, so that
     // the search direction remains obvious and we still display some
     // context before and after the found text
-    if (extremes.y < viewPort.dy * 2 / 5)
+    if (extremes.y < viewPort.dy * 2 / 5) {
         sy = extremes.y - viewPort.dy * 2 / 5;
-    else if (extremes.y + extremes.dy > viewPort.dy * 3 / 5)
+    } else if (extremes.y + extremes.dy > viewPort.dy * 3 / 5) {
         sy = std::min(extremes.y + extremes.dy - viewPort.dy * 3 / 5,
                       extremes.y + extremes.dy / 2 - viewPort.dy * 2 / 5);
+    }
 
     // horizontally, we try to position the search result at the
     // center of the screen, but don't scroll further than page
     // boundaries, so that as much context as possible remains visible
-    if (extremes.x < 0)
+    if (extremes.x < 0) {
         sx = std::max(extremes.x + extremes.dx / 2 - viewPort.dx / 2, pageInfo->pageOnScreen.x);
-    else if (extremes.x + extremes.dx >= viewPort.dx)
+    } else if (extremes.x + extremes.dx >= viewPort.dx) {
         sx = std::min(extremes.x + extremes.dx / 2 - viewPort.dx / 2,
                       pageInfo->pageOnScreen.x + pageInfo->pageOnScreen.dx - viewPort.dx);
+    }
 
-    if (sx != 0)
+    if (sx != 0) {
         ScrollXBy(sx);
-    if (sy != 0)
+    }
+    if (sy != 0) {
         ScrollYBy(sy, false);
+    }
 
     return sx != 0 || sy != 0;
 }
 
 ScrollState DisplayModel::GetScrollState() {
     ScrollState state(FirstVisiblePageNo(), -1, -1);
-    if (!ValidPageNo(state.page))
+    if (!ValidPageNo(state.page)) {
         state.page = CurrentPageNo();
+    }
 
     PageInfo* pageInfo = GetPageInfo(state.page);
     // Shortcut: don't calculate precise positions, if the
     // page wasn't scrolled right/down at all
-    if (!pageInfo || pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0)
+    if (!pageInfo || pageInfo->pageOnScreen.x > 0 && pageInfo->pageOnScreen.y > 0) {
         return state;
+    }
 
     RectI screen(PointI(), viewPort.Size());
     RectI pageVis = pageInfo->pageOnScreen.Intersect(screen);
@@ -1520,10 +1528,12 @@ ScrollState DisplayModel::GetScrollState() {
     PointD ptD = CvtFromScreen(pageVis.TL(), state.page);
 
     // Remember to show the margin, if it's currently visible
-    if (pageInfo->pageOnScreen.x <= 0)
+    if (pageInfo->pageOnScreen.x <= 0) {
         state.x = ptD.x;
-    if (pageInfo->pageOnScreen.y <= 0)
+    }
+    if (pageInfo->pageOnScreen.y <= 0) {
         state.y = ptD.y;
+    }
 
     return state;
 }
@@ -1532,19 +1542,22 @@ void DisplayModel::SetScrollState(ScrollState state) {
     // Update the internal metrics first
     GoToPage(state.page, 0);
     // Bail out, if the page wasn't scrolled
-    if (state.x < 0 && state.y < 0)
+    if (state.x < 0 && state.y < 0) {
         return;
+    }
 
     PointD newPtD(std::max(state.x, (double)0), std::max(state.y, (double)0));
     PointI newPt = CvtToScreen(state.page, newPtD);
 
     // Also show the margins, if this has been requested
-    if (state.x < 0)
+    if (state.x < 0) {
         newPt.x = -1;
-    else
+    } else {
         newPt.x += viewPort.x;
-    if (state.y < 0)
+    }
+    if (state.y < 0) {
         newPt.y = 0;
+    }
     GoToPage(state.page, newPt.y, false, newPt.x);
 }
 
@@ -1555,11 +1568,13 @@ void DisplayModel::SetScrollState(ScrollState state) {
 void DisplayModel::AddNavPoint() {
     ScrollState ss = GetScrollState();
     // remove the current and all Forward history entries
-    if (navHistoryIx < navHistory.size())
+    if (navHistoryIx < navHistory.size()) {
         navHistory.RemoveAt(navHistoryIx, navHistory.size() - navHistoryIx);
+    }
     // don't add another entry for the exact same position
-    if (navHistoryIx > 0 && ss == navHistory.at(navHistoryIx - 1))
+    if (navHistoryIx > 0 && ss == navHistory.at(navHistoryIx - 1)) {
         return;
+    }
     // make sure that the history doesn't grow overly large
     if (navHistoryIx >= MAX_NAV_HISTORY_LEN) {
         CrashIf(navHistoryIx > MAX_NAV_HISTORY_LEN);
@@ -1573,21 +1588,24 @@ void DisplayModel::AddNavPoint() {
 
 bool DisplayModel::CanNavigate(int dir) const {
     CrashIf(navHistoryIx > navHistory.size());
-    if (dir < 0)
+    if (dir < 0) {
         return navHistoryIx >= (size_t)-dir;
+    }
     return navHistoryIx + dir < navHistory.size();
 }
 
 /* Navigates |dir| steps forward or backwards. */
 void DisplayModel::Navigate(int dir) {
-    if (!CanNavigate(dir))
+    if (!CanNavigate(dir)) {
         return;
+    }
     // update the current history entry
     ScrollState ss = GetScrollState();
-    if (navHistoryIx < navHistory.size())
+    if (navHistoryIx < navHistory.size()) {
         navHistory.at(navHistoryIx) = ss;
-    else
+    } else {
         navHistory.Append(ss);
+    }
     navHistoryIx += dir;
     SetScrollState(navHistory.at(navHistoryIx));
 }
@@ -1599,8 +1617,9 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig) {
     for (size_t i = navHistory.size(); i > 0; i--) {
         if (!ValidPageNo(navHistory.at(i - 1).page)) {
             navHistory.RemoveAt(i - 1);
-            if (i - 1 < navHistoryIx)
+            if (i - 1 < navHistoryIx) {
                 navHistoryIx--;
+            }
         }
     }
 }
@@ -1625,15 +1644,16 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
     RectD rect = dest->GetRect();
     int pageNo = dest->GetPageNo();
 
-    if (rect.IsEmpty()) {
+    if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
         // PDF: /XYZ top left
         // scroll to rect.TL()
         PointD scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
         scroll = scrollD.ToInt();
 
         // default values for the coordinates mean: keep the current position
-        if (DEST_USE_DEFAULT == rect.x)
+        if (DEST_USE_DEFAULT == rect.x) {
             scroll.x = -1;
+        }
         if (DEST_USE_DEFAULT == rect.y) {
             PageInfo* pageInfo = GetPageInfo(CurrentPageNo());
             scroll.y = -(pageInfo->pageOnScreen.y - windowMargin.top);
