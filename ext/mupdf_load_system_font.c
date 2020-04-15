@@ -528,49 +528,16 @@ static cached_font* cached_fonts = 0;
 static fz_buffer* get_cached_font_buffer(fz_context* ctx, sys_font_info* fi) {
     EnterCriticalSection(&cs_fonts);
     cached_font* f = cached_fonts;
+    fz_buffer* buffer = NULL;
     while (f) {
         if (f->ctx == ctx && f->fi == fi) {
+            buffer = f->buffer;
             break;
         }
         f = f->next;
     }
     LeaveCriticalSection(&cs_fonts);
-    if (f) {
-        fz_keep_buffer(ctx, f->buffer);
-        return f->buffer;
-    }
-    return 0;
-}
-
-static void cache_font_buffer(fz_context* ctx, sys_font_info* fi, fz_buffer* buf) {
-    cached_font* f = malloc(sizeof(cached_font));
-    f->fi = fi;
-    f->ctx = ctx;
-    f->buffer = buf;
-    fz_keep_buffer(ctx, buf);
-    EnterCriticalSection(&cs_fonts);
-    f->next = cached_fonts;
-    cached_fonts = f;
-    LeaveCriticalSection(&cs_fonts);
-}
-
-static void drop_cached_fonts() {
-    // happens at end so no need for locking
-    cached_font* curr = cached_fonts;
-    cached_font* next = 0;
-    int refs;
-    while (curr) {
-        next = curr->next;
-        refs = curr->buffer->refs;
-        if (refs != 1) {
-            // TODO: crash?
-            fz_warn(curr->ctx, "bad refcount %d", refs);
-        }
-        fz_drop_buffer(curr->ctx, curr->buffer);
-        free(curr);
-        curr = next;
-    }
-    cached_fonts = 0;
+    return buffer;
 }
 
 void drop_cached_fonts_for_ctx(fz_context* ctx) {
@@ -592,7 +559,7 @@ void drop_cached_fonts_for_ctx(fz_context* ctx) {
             refs = curr->buffer->refs;
             if (refs != 1) {
                 // TODO: crash?
-                fz_warn(ctx, "bad refcount %d", refs);
+                fz_warn(ctx, "drop_cached_fonts_for_ctx: bad refcount %d", refs);
             }
             fz_drop_buffer(curr->ctx, curr->buffer);
             free(curr);
@@ -682,7 +649,18 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
         fz_warn(ctx, "found cached non-embedded buffer for font '%s' from '%s'", orig_name, found->fontpath);
     } else {
         buffer = fz_read_file(ctx, found->fontpath);
-        cache_font_buffer(ctx, found, buffer);
+        if (!buffer) {
+            return NULL;
+        }
+        cached_font* f = malloc(sizeof(cached_font));
+        f->fi = found;
+        f->ctx = ctx;
+        f->buffer = buffer;
+        EnterCriticalSection(&cs_fonts);
+        f->next = cached_fonts;
+        cached_fonts = f;
+        LeaveCriticalSection(&cs_fonts);
+
         fz_warn(ctx, "loading non-embedded font '%s' from '%s'", orig_name, found->fontpath);
     }
 
@@ -795,7 +773,6 @@ void init_system_font_list(void) {
 }
 
 void destroy_system_font_list(void) {
-    drop_cached_fonts();
     free(fontlistMS.fontmap);
     memset(&fontlistMS, 0, sizeof(fontlistMS));
     DeleteCriticalSection(&cs_fonts);
