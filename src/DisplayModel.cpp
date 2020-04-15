@@ -167,7 +167,7 @@ DisplayModel::DisplayModel(EngineBase* engine, ControllerCallback* cb) : Control
     pageSpacing.dy += 4;
 #endif
 
-    textCache = new PageTextCache(engine);
+    textCache = new DocumentTextCache(engine);
     textSelection = new TextSelection(engine, textCache);
     textSearch = new TextSearch(engine, textCache);
 }

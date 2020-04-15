@@ -20,7 +20,7 @@ static void markAllPagesNonSkip(Vec<bool>& pagesToSkip) {
         pagesToSkip[i] = false;
     }
 }
-TextSearch::TextSearch(EngineBase* engine, PageTextCache* textCache) : TextSelection(engine, textCache) {
+TextSearch::TextSearch(EngineBase* engine, DocumentTextCache* textCache) : TextSelection(engine, textCache) {
     nPages = engine->PageCount();
     pagesToSkip.SetSize(nPages);
     markAllPagesNonSkip(pagesToSkip);

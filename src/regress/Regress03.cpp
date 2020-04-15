@@ -6,7 +6,7 @@
 void SearchTestWithDir(const WCHAR* searchFile, const WCHAR* searchTerm, const TextSearchDirection direction,
                        const TextSel* expected, const int expectedLen) {
     EngineBase* engine = EngineManager::CreateEngine(searchFile, nullptr);
-    PageTextCache* textCache = new PageTextCache(engine);
+    DocumentTextCache* textCache = new DocumentTextCache(engine);
     TextSearch* tsrch = new TextSearch(engine, textCache);
     tsrch->SetDirection(direction);
     int findCount = 0;

@@ -8,68 +8,61 @@
 #include "EngineBase.h"
 #include "TextSelection.h"
 
-PageTextCache::PageTextCache(EngineBase* engine) : engine(engine) {
-    int count = engine->PageCount();
-    coords = AllocArray<RectI*>(count);
-    text = AllocArray<WCHAR*>(count);
-    lens = AllocArray<int>(count);
-#if defined(DEBUG)
-    debug_size = count * (sizeof(RectI*) + sizeof(WCHAR*) + sizeof(int));
-#endif
+DocumentTextCache::DocumentTextCache(EngineBase* engine) : engine(engine) {
+    nPages = engine->PageCount();
+    pagesText = AllocArray<PageText>(nPages);
+    debugSize = nPages * (sizeof(RectI*) + sizeof(WCHAR*) + sizeof(int));
 
     InitializeCriticalSection(&access);
 }
 
-PageTextCache::~PageTextCache() {
+DocumentTextCache::~DocumentTextCache() {
     EnterCriticalSection(&access);
 
     int nPages = engine->PageCount();
     for (int i = 0; i < nPages; i++) {
-        free(coords[i]);
-        free(text[i]);
+        PageText* pageText = &pagesText[i];
+        free(pageText->coords);
+        free(pageText->text);
     }
-
-    free(coords);
-    free(text);
-    free(lens);
-
+    free(pagesText);
     LeaveCriticalSection(&access);
     DeleteCriticalSection(&access);
 }
 
-bool PageTextCache::HasData(int pageNo) {
-    CrashIf(pageNo < 1 || pageNo > engine->PageCount());
-    return text[pageNo - 1] != nullptr;
+bool DocumentTextCache::HasData(int pageNo) {
+    CrashIf(pageNo < 1 || pageNo > nPages);
+    PageText* pageText = &pagesText[pageNo-1];
+    return pageText->text != nullptr;
 }
 
-const WCHAR* PageTextCache::GetData(int pageNo, int* lenOut, RectI** coordsOut) {
-    CrashIf(pageNo < 1 || pageNo > engine->PageCount());
+const WCHAR* DocumentTextCache::GetData(int pageNo, int* lenOut, RectI** coordsOut) {
+    CrashIf(pageNo < 1 || pageNo > nPages);
 
     ScopedCritSec scope(&access);
-    int idx = pageNo - 1;
-    if (!text[idx]) {
-        text[idx] = engine->ExtractPageText(pageNo, &coords[idx]);
-        if (!text[idx]) {
-            text[idx] = str::Dup(L"");
-            lens[idx] = 0;
+    PageText* pageText = &pagesText[pageNo - 1];
+
+    if (!pageText->text) {
+        pageText->text = engine->ExtractPageText(pageNo, &pageText->coords);
+        if (!pageText->text) {
+            pageText->text = str::Dup(L"");
+            pageText->len = 0;
         } else {
-            lens[idx] = (int)str::Len(text[idx]);
+            pageText->len = (int)str::Len(pageText->text);
         }
-#if defined(DEBUG)
-        debug_size += (lens[idx] + 1) * (sizeof(WCHAR) + sizeof(RectI));
-#endif
+        debugSize += (pageText->len + 1) * (sizeof(WCHAR) + sizeof(RectI));
     }
 
     if (lenOut) {
-        *lenOut = lens[idx];
+        *lenOut = pageText->len;
     }
     if (coordsOut) {
-        *coordsOut = coords[idx];
+        *coordsOut = pageText->coords;
     }
-    return text[idx];
+    return pageText->text;
 }
 
-TextSelection::TextSelection(EngineBase* engine, PageTextCache* textCache)
+TextSelection::TextSelection(EngineBase* engine, DocumentTextCache* textCache)
     : engine(engine), textCache(textCache), startPage(-1), endPage(-1), startGlyph(-1), endGlyph(-1) {
     result.len = 0;
     result.pages = nullptr;

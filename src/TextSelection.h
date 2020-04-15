@@ -9,19 +9,22 @@ inline bool isWordChar(WCHAR c) {
     return IsCharAlphaNumeric(c) || c == '_';
 }
 
-struct PageTextCache {
+struct PageText {
+    RectI* coords;
+    WCHAR* text;
+    int len;
+};
+
+struct DocumentTextCache {
     EngineBase* engine = nullptr;
-    RectI** coords = nullptr;
-    WCHAR** text = nullptr;
-    int* lens = nullptr;
-#if defined(DEBUG)
-    size_t debug_size;
-#endif
+    int nPages = 0;
+    PageText* pagesText = nullptr;
+    int debugSize;
 
     CRITICAL_SECTION access;
 
-    explicit PageTextCache(EngineBase* engine);
-    ~PageTextCache();
+    explicit DocumentTextCache(EngineBase* engine);
+    ~DocumentTextCache();
 
     bool HasData(int pageNo);
     const WCHAR* GetData(int pageNo, int* lenOut = nullptr, RectI** coordsOut = nullptr);
@@ -36,7 +39,7 @@ struct TextSel {
 };
 
 struct TextSelection {
-    TextSelection(EngineBase* engine, PageTextCache* textCache);
+    TextSelection(EngineBase* engine, DocumentTextCache* textCache);
     ~TextSelection();
 
     bool IsOverGlyph(int pageNo, double x, double y);
@@ -61,7 +64,7 @@ struct TextSelection {
     int startGlyph, endGlyph;
 
     EngineBase* engine;
-    PageTextCache* textCache;
+    DocumentTextCache* textCache;
 
     int FindClosestGlyph(int pageNo, double x, double y);
     void FillResultRects(int pageNo, int glyph, int length, WStrVec* lines = nullptr);
