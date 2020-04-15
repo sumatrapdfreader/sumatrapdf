@@ -13,7 +13,7 @@ PageTextCache::PageTextCache(EngineBase* engine) : engine(engine) {
     coords = AllocArray<RectI*>(count);
     text = AllocArray<WCHAR*>(count);
     lens = AllocArray<int>(count);
-#ifdef DEBUG
+#if defined(DEBUG)
     debug_size = count * (sizeof(RectI*) + sizeof(WCHAR*) + sizeof(int));
 #endif
 
@@ -23,7 +23,8 @@ PageTextCache::PageTextCache(EngineBase* engine) : engine(engine) {
 PageTextCache::~PageTextCache() {
     EnterCriticalSection(&access);
 
-    for (int i = 0; i < engine->PageCount(); i++) {
+    int nPages = engine->PageCount();
+    for (int i = 0; i < nPages; i++) {
         free(coords[i]);
         free(text[i]);
     }
@@ -42,26 +43,30 @@ bool PageTextCache::HasData(int pageNo) {
 }
 
 const WCHAR* PageTextCache::GetData(int pageNo, int* lenOut, RectI** coordsOut) {
-    ScopedCritSec scope(&access);
+    CrashIf(pageNo < 1 || pageNo > engine->PageCount());
 
-    if (!text[pageNo - 1]) {
-        text[pageNo - 1] = engine->ExtractPageText(pageNo, &coords[pageNo - 1]);
-        if (!text[pageNo - 1]) {
-            text[pageNo - 1] = str::Dup(L"");
-            lens[pageNo - 1] = 0;
+    ScopedCritSec scope(&access);
+    int idx = pageNo - 1;
+    if (!text[idx]) {
+        text[idx] = engine->ExtractPageText(pageNo, &coords[idx]);
+        if (!text[idx]) {
+            text[idx] = str::Dup(L"");
+            lens[idx] = 0;
         } else {
-            lens[pageNo - 1] = (int)str::Len(text[pageNo - 1]);
+            lens[idx] = (int)str::Len(text[idx]);
         }
-#ifdef DEBUG
-        debug_size += (lens[pageNo - 1] + 1) * (sizeof(WCHAR) + sizeof(RectI));
+#if defined(DEBUG)
+        debug_size += (lens[idx] + 1) * (sizeof(WCHAR) + sizeof(RectI));
 #endif
     }
 
-    if (lenOut)
-        *lenOut = lens[pageNo - 1];
-    if (coordsOut)
-        *coordsOut = coords[pageNo - 1];
-    return text[pageNo - 1];
+    if (lenOut) {
+        *lenOut = lens[idx];
+    }
+    if (coordsOut) {
+        *coordsOut = coords[idx];
+    }
+    return text[idx];
 }
 
 TextSelection::TextSelection(EngineBase* engine, PageTextCache* textCache)

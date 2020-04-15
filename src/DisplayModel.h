@@ -52,8 +52,8 @@ struct ScrollState {
     double y = 0;
 };
 
-class PageTextCache;
-class TextSelection;
+struct PageTextCache;
+struct TextSelection;
 class TextSearch;
 struct TextSel;
 class Synchronizer;

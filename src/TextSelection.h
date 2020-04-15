@@ -9,18 +9,17 @@ inline bool isWordChar(WCHAR c) {
     return IsCharAlphaNumeric(c) || c == '_';
 }
 
-class PageTextCache {
+struct PageTextCache {
     EngineBase* engine = nullptr;
     RectI** coords = nullptr;
     WCHAR** text = nullptr;
     int* lens = nullptr;
-#ifdef DEBUG
+#if defined(DEBUG)
     size_t debug_size;
 #endif
 
     CRITICAL_SECTION access;
 
-  public:
     explicit PageTextCache(EngineBase* engine);
     ~PageTextCache();
 
@@ -36,8 +35,7 @@ struct TextSel {
     RectI* rects = nullptr;
 };
 
-class TextSelection {
-  public:
+struct TextSelection {
     TextSelection(EngineBase* engine, PageTextCache* textCache);
     ~TextSelection();
 
@@ -59,7 +57,6 @@ class TextSelection {
 
     void GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const;
 
-  protected:
     int startPage, endPage;
     int startGlyph, endGlyph;
 

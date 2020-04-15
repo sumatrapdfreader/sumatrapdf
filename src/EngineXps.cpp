@@ -315,9 +315,6 @@ EngineXps::~EngineXps() {
         if (pi->stext) {
             fz_drop_stext_page(ctx, pi->stext);
         }
-        if (pi->list) {
-            fz_drop_display_list(ctx, pi->list);
-        }
         if (pi->page) {
             fz_drop_page(ctx, pi->page);
         }
@@ -476,7 +473,7 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = _pages[pageNo - 1];
     // TODO: not sure what failIfBusy is supposed to do
-    if (pageInfo && pageInfo->list || failIfBusy) {
+    if (pageInfo && pageInfo->page || failIfBusy) {
         return pageInfo;
     }
 
@@ -518,6 +515,9 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
     }
     fz_always(ctx) {
         fz_drop_device(ctx, dev);
+        if (list) {
+            fz_drop_display_list(ctx, list);
+        }
         dev = NULL;
     }
     fz_catch(ctx) {
@@ -527,7 +527,6 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
     if (!list) {
         return pageInfo;
     }
-    pageInfo->list = list;
 
     fz_try(ctx) {
         pageInfo->stext = fz_new_stext_page_from_page(ctx, page, nullptr);
@@ -565,20 +564,26 @@ RectD EngineXps::PageContentBox(int pageNo, RenderTarget target) {
     fz_cookie fzcookie = {};
     fz_rect rect = fz_empty_rect;
     fz_device* dev = nullptr;
+    fz_display_list* list = nullptr;
 
     fz_rect pagerect = fz_bound_page(ctx, pageInfo->page);
 
     fz_var(dev);
+    fz_var(list);
 
     RectD mediabox = pageInfo->mediabox;
 
     fz_try(ctx) {
         dev = fz_new_bbox_device(ctx, &rect);
-        fz_run_display_list(ctx, pageInfo->list, dev, fz_identity, pagerect, &fzcookie);
+        list = fz_new_display_list_from_page(ctx, pageInfo->page);
+        fz_run_display_list(ctx, list, dev, fz_identity, pagerect, &fzcookie);
         fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
         fz_drop_device(ctx, dev);
+        if (list) {
+            fz_drop_display_list(ctx, list);
+        }
     }
     fz_catch(ctx) {
         return mediabox;
@@ -635,16 +640,19 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
     fz_rect cliprect = fz_rect_from_irect(bbox);
 
     fz_pixmap* pix = nullptr;
-    fz_device* dev = NULL;
+    fz_device* dev = nullptr;
+    fz_display_list* list = nullptr;
     RenderedBitmap* bitmap = nullptr;
 
     fz_var(dev);
+    fz_var(list);
     fz_var(pix);
     fz_var(bitmap);
 
     Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, args.pageNo);
 
     fz_try(ctx) {
+        list = fz_new_display_list_from_page(ctx, page);
         pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
         // initialize with white background
         fz_clear_pixmap_with_value(ctx, pix, 0xff);
@@ -654,7 +662,7 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         // TODO: use fz_infinite_rect instead of cliprect?
         fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, false);
-        fz_run_display_list(ctx, pageInfo->list, dev, ctm, cliprect, fzcookie);
+        fz_run_display_list(ctx, list, dev, ctm, cliprect, fzcookie);
         fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, false);
         fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
@@ -663,6 +671,9 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
     fz_always(ctx) {
         if (dev) {
             fz_drop_device(ctx, dev);
+        }
+        if (list) {
+            fz_drop_display_list(ctx, list);
         }
         fz_drop_pixmap(ctx, pix);
     }

@@ -38,7 +38,6 @@ struct FzPageInfo {
     // comments are made out of annotations
     Vec<PageElement*> comments;
 
-    fz_display_list* list = nullptr;
     fz_stext_page* stext = nullptr;
     fz_stext_page* stext_for_search = nullptr; // no images to preserve memory
     RectD mediabox = {};

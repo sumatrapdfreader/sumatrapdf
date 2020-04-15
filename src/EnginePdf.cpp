@@ -433,9 +433,6 @@ EnginePdf::~EnginePdf() {
         if (pi->stext) {
             fz_drop_stext_page(ctx, pi->stext);
         }
-        if (pi->list) {
-            fz_drop_display_list(ctx, pi->list);
-        }
         if (pi->page) {
             fz_drop_page(ctx, pi->page);
         }
@@ -1071,12 +1068,6 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool forSearch, bool failIfBusy
 
     pageInfo->loaded = true;
 
-    fz_try(ctx) {
-        pageInfo->list = fz_new_display_list_from_page(ctx, page);
-    }
-    fz_catch(ctx) {
-    }
-
     auto* links = fz_load_links(ctx, page);
     pageInfo->links = FixupPageLinks(links);
     FzLinkifyPageText(pageInfo, pageInfo->stext);
@@ -1100,20 +1091,26 @@ RectD EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
     fz_cookie fzcookie = {};
     fz_rect rect = fz_empty_rect;
     fz_device* dev = nullptr;
+    fz_display_list* list = nullptr;
 
     fz_rect pagerect = fz_bound_page(ctx, pageInfo->page);
 
     fz_var(dev);
+    fz_var(list);
 
     RectD mediabox = pageInfo->mediabox;
 
     fz_try(ctx) {
+        list = fz_new_display_list_from_page(ctx, pageInfo->page);
         dev = fz_new_bbox_device(ctx, &rect);
-        fz_run_display_list(ctx, pageInfo->list, dev, fz_identity, pagerect, &fzcookie);
+        fz_run_display_list(ctx, list, dev, fz_identity, pagerect, &fzcookie);
         fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
         fz_drop_device(ctx, dev);
+        if (list) {
+            fz_drop_display_list(ctx, list);
+        }
     }
     fz_catch(ctx) {
         return mediabox;
@@ -1151,12 +1148,11 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
 
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, false);
-    fz_page* page = pageInfo->page;
-    pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);
-
-    if (!page || !pageInfo->list) {
+    if (!pageInfo || !pageInfo->page) {
         return nullptr;
     }
+    fz_page* page = pageInfo->page;
+    pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);
 
     int transparency = pdfpage->transparency;
 
@@ -1189,16 +1185,19 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     fz_rect cliprect = fz_rect_from_irect(bbox);
 
     fz_pixmap* pix = nullptr;
-    fz_device* dev = NULL;
+    fz_device* dev = nullptr;
     RenderedBitmap* bitmap = nullptr;
+    fz_display_list* list = nullptr;
 
     fz_var(dev);
     fz_var(pix);
     fz_var(bitmap);
+    fz_var(list);
 
     Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
 
     fz_try(ctx) {
+        list = fz_new_display_list_from_page(ctx, page);
         pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
         // initialize with white background
         fz_clear_pixmap_with_value(ctx, pix, 0xff);
@@ -1208,7 +1207,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         // TODO: use fz_infinite_rect instead of cliprect?
         fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, transparency);
-        fz_run_display_list(ctx, pageInfo->list, dev, ctm, cliprect, fzcookie);
+        fz_run_display_list(ctx, list, dev, ctm, cliprect, fzcookie);
         fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, transparency);
         fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
@@ -1219,6 +1218,9 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
             fz_drop_device(ctx, dev);
         }
         fz_drop_pixmap(ctx, pix);
+        if (list) {
+            fz_drop_display_list(ctx, list);
+        }
     }
     fz_catch(ctx) {
         delete bitmap;
