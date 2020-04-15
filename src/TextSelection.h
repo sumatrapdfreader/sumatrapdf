@@ -26,8 +26,8 @@ struct DocumentTextCache {
     explicit DocumentTextCache(EngineBase* engine);
     ~DocumentTextCache();
 
-    bool HasData(int pageNo);
-    const WCHAR* GetData(int pageNo, int* lenOut = nullptr, RectI** coordsOut = nullptr);
+    bool HasTextForPage(int pageNo);
+    const WCHAR* GetTextForPage(int pageNo, int* lenOut = nullptr, RectI** coordsOut = nullptr);
 };
 
 // TODO: replace with Vec<TextSel>

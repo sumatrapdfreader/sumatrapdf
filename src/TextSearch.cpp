@@ -110,7 +110,7 @@ void TextSearch::SetLastResult(TextSelection* sel) {
 
     searchHitStartAt = findPage = std::min(startPage, endPage);
     findIndex = (findPage == startPage ? startGlyph : endGlyph) + (int)str::Len(findText);
-    pageText = textCache->GetData(findPage);
+    pageText = textCache->GetTextForPage(findPage);
     forward = true;
 }
 
@@ -161,7 +161,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
             // ... or because we were looking at whitespace in the pattern and we were at a page break
             // -> skip to next page
             ++currentPage;
-            end = currentPageText = textCache->GetData(currentPage);
+            end = currentPageText = textCache->GetTextForPage(currentPage);
         }
         // treat "??" and "? ?" differently, since '?' could have been a word
         // character that's just missing an encoding (and '?' is the replacement
@@ -173,7 +173,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
             while ((!*end) && (currentPage < nPages)) {
                 // treat page break as whitespace, too
                 ++currentPage;
-                end = currentPageText = textCache->GetData(currentPage);
+                end = currentPageText = textCache->GetTextForPage(currentPage);
                 SkipWhitespace(end);
             }
         }
@@ -256,7 +256,7 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI* tracker) {
 
         Reset();
 
-        pageText = textCache->GetData(pageNo, &findIndex);
+        pageText = textCache->GetTextForPage(pageNo, &findIndex);
         if (pageText) {
             if (forward) {
                 findIndex = 0;
@@ -266,7 +266,7 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI* tracker) {
                 if (forward) {
                     if (findPage != r.page) {
                         findPage = r.page;
-                        pageText = textCache->GetData(findPage);
+                        pageText = textCache->GetTextForPage(findPage);
                     }
                     findIndex = r.offset;
                 }
@@ -309,7 +309,7 @@ TextSel* TextSearch::FindNext(ProgressUpdateUI* tracker) {
         if (forward) {
             findPage = finalGlyph.page;
             findIndex = finalGlyph.offset;
-            pageText = textCache->GetData(findPage);
+            pageText = textCache->GetTextForPage(findPage);
         }
         return &result;
     }

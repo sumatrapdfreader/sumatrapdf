@@ -214,7 +214,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_Value(BSTR* pRetV
     if (released)
         return E_FAIL;
 
-    const WCHAR* pageContent = dm->textCache->GetData(pageNum);
+    const WCHAR* pageContent = dm->textCache->GetTextForPage(pageNum);
     if (!pageContent) {
         *pRetVal = nullptr;
         return S_OK;

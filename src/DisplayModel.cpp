@@ -880,7 +880,7 @@ bool DisplayModel::IsOverText(PointI pt) {
     if (!RectI(PointI(), viewPort.Size()).Contains(pt)) {
         return false;
     }
-    if (!textCache->HasData(pageNo)) {
+    if (!textCache->HasTextForPage(pageNo)) {
         return false;
     }
 
@@ -1439,9 +1439,10 @@ void DisplayModel::RotateBy(int newRotation) {
  * into a newly allocated buffer (which the caller needs to free()). */
 WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectD region) {
     RectI* coords;
-    const WCHAR* pageText = textCache->GetData(pageNo, nullptr, &coords);
-    if (str::IsEmpty(pageText))
+    const WCHAR* pageText = textCache->GetTextForPage(pageNo, nullptr, &coords);
+    if (str::IsEmpty(pageText)) {
         return nullptr;
+    }
 
     str::WStr result;
     RectI regionI = region.Round();
@@ -1449,8 +1450,9 @@ WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectD region) {
         if (*src != '\n') {
             RectI rect = coords[src - pageText];
             RectI isect = regionI.Intersect(rect);
-            if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3)
+            if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
                 result.Append(*src);
+            }
         } else if (result.size() > 0 && result.Last() != '\n')
             result.Append(L"\r\n", 2);
     }

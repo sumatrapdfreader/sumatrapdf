@@ -624,8 +624,8 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
         // make sure that we have extracted page text for
         // all rendered pages to allow text selection and
         // searching without any further delays
-        if (!req.dm->textCache->HasData(req.pageNo)) {
-            req.dm->textCache->GetData(req.pageNo);
+        if (!req.dm->textCache->HasTextForPage(req.pageNo)) {
+            req.dm->textCache->GetTextForPage(req.pageNo);
         }
 
         CrashIf(req.abortCookie != nullptr);
