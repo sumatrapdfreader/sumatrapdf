@@ -430,9 +430,6 @@ EnginePdf::~EnginePdf() {
         if (pi->links) {
             fz_drop_link(ctx, pi->links);
         }
-        if (pi->stext) {
-            fz_drop_stext_page(ctx, pi->stext);
-        }
         if (pi->page) {
             fz_drop_page(ctx, pi->page);
         }
@@ -1005,6 +1002,9 @@ PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
     return pageDest;
 }
 
+// TODO: instead of forSearch use extractText which also
+// extracts and caches page text. To be used when called from
+// ExtractPageText
 FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool forSearch, bool failIfBusy) {
     ScopedCritSec scope(&pagesAccess);
 
@@ -1046,35 +1046,33 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool forSearch, bool failIfBusy
     */
 
     if (forSearch) {
-        // when loading just for search, we load only stext without images
-        fz_stext_options opts{};
-        fz_try(ctx) {
-            pageInfo->stext_for_search = fz_new_stext_page_from_page(ctx, page, &opts);
-        }
-        fz_catch(ctx) {
-        }
         pageInfo->loadedForSearch = true;
         return pageInfo;
     }
 
+    pageInfo->loaded = true;
+
+    fz_stext_page* stext = nullptr;
+    fz_var(stext);
     // when loading just for search, we load only stext
     fz_stext_options opts{};
     opts.flags = FZ_STEXT_PRESERVE_IMAGES;
     fz_try(ctx) {
-        pageInfo->stext = fz_new_stext_page_from_page(ctx, page, &opts);
+        stext = fz_new_stext_page_from_page(ctx, page, &opts);
     }
     fz_catch(ctx) {
     }
 
-    pageInfo->loaded = true;
-
     auto* links = fz_load_links(ctx, page);
     pageInfo->links = FixupPageLinks(links);
-    FzLinkifyPageText(pageInfo, pageInfo->stext);
-
     MakePageElementCommentsFromAnnotations(pageInfo);
+    if (!stext) {
+        return pageInfo;
+    }
 
-    fz_find_images(pageInfo->stext, pageInfo->images);
+    FzLinkifyPageText(pageInfo, stext);
+    fz_find_images(stext, pageInfo->images);
+    fz_drop_stext_page(ctx, stext);
     return pageInfo;
 }
 
@@ -1372,14 +1370,22 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, size_t imageIdx)
 
 WCHAR* EnginePdf::ExtractPageText(int pageNo, RectI** coordsOut) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true, false);
-    fz_stext_page* stext = pageInfo->stext_for_search;
+
+    ScopedCritSec scope(ctxAccess);
+
+    fz_stext_page* stext = nullptr;
+    fz_var(stext);
+    fz_stext_options opts{};
+    fz_try(ctx) {
+        stext = fz_new_stext_page_from_page(ctx, pageInfo->page, &opts);
+    }
+    fz_catch(ctx) {
+    }
     if (!stext) {
         return nullptr;
     }
-    ScopedCritSec scope(ctxAccess);
     WCHAR* text = fz_text_page_to_str(stext, coordsOut);
-    fz_drop_stext_page(ctx, pageInfo->stext_for_search);
-    pageInfo->stext_for_search = nullptr;
+    fz_drop_stext_page(ctx, stext);
     return text;
 }
 

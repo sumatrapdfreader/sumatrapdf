@@ -312,9 +312,6 @@ EngineXps::~EngineXps() {
         if (pi->links) {
             fz_drop_link(ctx, pi->links);
         }
-        if (pi->stext) {
-            fz_drop_stext_page(ctx, pi->stext);
-        }
         if (pi->page) {
             fz_drop_page(ctx, pi->page);
         }
@@ -527,16 +524,23 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
     if (!list) {
         return pageInfo;
     }
+    pageInfo->links = fz_load_links(ctx, page);
+
+    fz_stext_page* stext = nullptr;
+    fz_var(stext);
 
     fz_try(ctx) {
-        pageInfo->stext = fz_new_stext_page_from_page(ctx, page, nullptr);
+        stext = fz_new_stext_page_from_page(ctx, page, nullptr);
     }
     fz_catch(ctx) {
-        pageInfo->stext = nullptr;
     }
 
-    pageInfo->links = fz_load_links(ctx, page);
-    FzLinkifyPageText(pageInfo, pageInfo->stext);
+    if (!stext) {
+        return pageInfo;
+    }
+
+    FzLinkifyPageText(pageInfo, stext);
+    fz_drop_stext_page(ctx, stext);
 
     return pageInfo;
 }
@@ -839,13 +843,22 @@ RenderedBitmap* EngineXps::GetImageForPageElement(PageElement* pel) {
 }
 
 WCHAR* EngineXps::ExtractPageText(int pageNo, RectI** coordsOut) {
+    // TODO: optimize by extracting text in GetFzPageInfo()
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
-    fz_stext_page* stext = pageInfo->stext;
+    ScopedCritSec scope(ctxAccess);
+    fz_stext_page* stext = nullptr;
+    fz_var(stext);
+
+    fz_try(ctx) {
+        stext = fz_new_stext_page_from_page(ctx, pageInfo->page, nullptr);
+    }
+    fz_catch(ctx) {
+    }
     if (!stext) {
         return nullptr;
     }
-    ScopedCritSec scope(ctxAccess);
     WCHAR* content = fz_text_page_to_str(stext, coordsOut);
+    fz_drop_stext_page(ctx, stext);
     return content;
 }
 
