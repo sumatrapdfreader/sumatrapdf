@@ -22,7 +22,6 @@ class FitzAbortCookie : public AbortCookie {
 };
 
 struct FitzImagePos {
-    fz_image* image = nullptr;
     fz_rect rect = fz_unit_rect;
     fz_matrix transform;
 };
@@ -87,3 +86,5 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, f
 Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int pageNo);
 fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
                               fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha);
+fz_image* fz_find_image_at_idx(fz_context* ctx, FzPageInfo* pageInfo, int idx);
+void fz_find_image_positions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext);

@@ -1272,3 +1272,64 @@ void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, 
     } else
         fz_end_group(ctx, dev);
 }
+
+void fz_find_image_positions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext) {
+    if (!stext) {
+        return;
+    }
+    fz_stext_block* block = stext->first_block;
+    fz_image* image;
+    while (block) {
+        if (block->type != FZ_STEXT_BLOCK_IMAGE) {
+            block = block->next;
+            continue;
+        }
+        image = block->u.i.image;
+        if (image->colorspace != nullptr) {
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1480
+            // fz_convert_pixmap_samples doesn't handle src without colorspace
+            // TODO: this is probably not right
+            FitzImagePos img = {block->bbox, block->u.i.transform};
+            images.Append(img);
+        }
+        block = block->next;
+    }
+}
+
+fz_image* fz_find_image_at_idx(fz_context* ctx, FzPageInfo* pageInfo, int idx) {
+    fz_stext_options opts{};
+    opts.flags = FZ_STEXT_PRESERVE_IMAGES;
+    fz_stext_page* stext = nullptr;
+    fz_var(stext);
+    fz_try(ctx) {
+        stext = fz_new_stext_page_from_page(ctx, pageInfo->page, &opts);
+    }
+    fz_catch(ctx) {
+    }
+    if (!stext) {
+        return nullptr;
+    }
+    fz_stext_block* block = stext->first_block;
+    while (block) {
+        if (block->type != FZ_STEXT_BLOCK_IMAGE) {
+            block = block->next;
+            continue;
+        }
+        fz_image* image = block->u.i.image;
+        if (image->colorspace != nullptr) {
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1480
+            // fz_convert_pixmap_samples doesn't handle src without colorspace
+            // TODO: this is probably not right
+            if (idx == 0) {
+                // TODO: or maybe get pixmap here
+                image = fz_keep_image(ctx, image);
+                fz_drop_stext_page(ctx, stext);
+                return image;
+            }
+            idx--;
+        }
+        block = block->next;
+    }
+    fz_drop_stext_page(ctx, stext);
+    return nullptr;
+}

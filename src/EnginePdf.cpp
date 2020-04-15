@@ -263,7 +263,7 @@ void fz_find_images(fz_stext_page* text, Vec<FitzImagePos>& images) {
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/1480
             // fz_convert_pixmap_samples doesn't handle src without colorspace
             // TODO: this is probably not right
-            FitzImagePos img = {image, block->bbox, block->u.i.transform};
+            FitzImagePos img = {block->bbox, block->u.i.transform};
             images.Append(img);
         }
         block = block->next;
@@ -277,8 +277,10 @@ struct PageTreeStackItem {
     int next_page_no = 0;
 
     PageTreeStackItem(){};
-    explicit PageTreeStackItem(fz_context* ctx, pdf_obj* kids, int next_page_no = 0)
-        : kids(kids), i(-1), len(pdf_array_len(ctx, kids)), next_page_no(next_page_no) {
+    explicit PageTreeStackItem(fz_context* ctx, pdf_obj* kids, int next_page_no = 0) {
+        this->kids = kids;
+        this->len = pdf_array_len(ctx, kids);
+        this->next_page_no = next_page_no;
     }
 };
 
@@ -327,7 +329,7 @@ class EnginePdf : public EngineBase {
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
-    RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
+    RenderedBitmap* GetPageImage(int pageNo, RectD rect, int imageIx);
 
   protected:
     fz_context* ctx = nullptr;
@@ -1071,7 +1073,7 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool forSearch, bool failIfBusy
     }
 
     FzLinkifyPageText(pageInfo, stext);
-    fz_find_images(stext, pageInfo->images);
+    fz_find_image_positions(ctx, pageInfo->images, stext);
     fz_drop_stext_page(ctx, stext);
     return pageInfo;
 }
@@ -1330,7 +1332,7 @@ void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
     comments.Reverse();
 }
 
-RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
+RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, int imageIdx) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, false);
     if (!pageInfo->page) {
         return nullptr;
@@ -1347,7 +1349,12 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, size_t imageIdx)
 
     ScopedCritSec scope(ctxAccess);
 
-    fz_image* image = images.at(imageIdx).image;
+    fz_image* image = fz_find_image_at_idx(ctx, pageInfo, imageIdx);
+    CrashIf(!image);
+    if (!image) {
+        return nullptr;
+    }
+
     RenderedBitmap* bmp = nullptr;
     fz_pixmap* pixmap = nullptr;
     fz_var(pixmap);

@@ -261,7 +261,7 @@ class EngineXps : public EngineBase {
     }
 
     TocItem* BuildTocTree(TocItem* parent, fz_outline* entry, int& idCounter);
-    RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
+    RenderedBitmap* GetPageImage(int pageNo, RectD rect, int imageIx);
     WCHAR* ExtractFontList();
 };
 
@@ -538,8 +538,8 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
     if (!stext) {
         return pageInfo;
     }
-
     FzLinkifyPageText(pageInfo, stext);
+    fz_find_image_positions(ctx, pageInfo->images, stext);
     fz_drop_stext_page(ctx, stext);
 
     return pageInfo;
@@ -862,7 +862,7 @@ WCHAR* EngineXps::ExtractPageText(int pageNo, RectI** coordsOut) {
     return content;
 }
 
-RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
+RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectD rect, int imageIdx) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     if (!pageInfo->page) {
         return nullptr;
@@ -876,10 +876,13 @@ RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectD rect, size_t imageIdx)
     }
 
     ScopedCritSec scope(ctxAccess);
-
+    fz_image* image = fz_find_image_at_idx(ctx, pageInfo, imageIdx);
+    CrashIf(!image);
+    if (!image) {
+        return nullptr;
+    }
     fz_pixmap* pixmap = nullptr;
     fz_try(ctx) {
-        fz_image* image = positions.at(imageIdx).image;
         // SubmitCrashIf(true);
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
