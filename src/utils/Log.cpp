@@ -21,9 +21,9 @@ constexpr int kMaxLogBuf = 1024 * 1024 - 128;
 
 static bool shouldLog() {
     gLogMutex.Lock();
-    bool bufNotFull = gLogBuf && gLogBuf->isize() < kMaxLogBuf;
+    bool bufFull = gLogBuf && gLogBuf->isize() > kMaxLogBuf;
     gLogMutex.Unlock();
-    return bufNotFull;
+    return !bufFull;
 }
 
 void log(std::string_view s) {
