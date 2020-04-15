@@ -16,7 +16,21 @@ bool logToDebugger = false;
 
 static char* logFilePath;
 
+// 1 MB - 128 to stay under 1 MB even after appending (an estimate)
+constexpr int kMaxLogBuf = 1024 * 1024 - 128;
+
+static bool shouldLog() {
+    gLogMutex.Lock();
+    bool bufNotFull = gLogBuf && gLogBuf->isize() < kMaxLogBuf;
+    gLogMutex.Unlock();
+    return bufNotFull;
+}
+
 void log(std::string_view s) {
+    if (!shouldLog()) {
+        return;
+    }
+
     gLogMutex.Lock();
 
     if (!gLogBuf) {
@@ -50,6 +64,9 @@ void log(const char* s) {
 }
 
 void logf(const char* fmt, ...) {
+    if (!shouldLog()) {
+        return;
+    }
     va_list args;
     va_start(args, fmt);
     AutoFree s = str::FmtV(fmt, args);
@@ -67,12 +84,18 @@ void log(const WCHAR* s) {
     if (!s) {
         return;
     }
+    if (!shouldLog()) {
+        return;
+    }
     AutoFree tmp = strconv::WstrToUtf8(s);
     auto sv = tmp.as_view();
     log(sv);
 }
 
 void logf(const WCHAR* fmt, ...) {
+    if (!shouldLog()) {
+        return;
+    }
     va_list args;
     va_start(args, fmt);
     AutoFreeWstr s = str::FmtV(fmt, args);
