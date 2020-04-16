@@ -16,7 +16,6 @@ const pdf = require('pdfjs-dist/es5/build/pdf.js');
 //pdfUtil.setVerbosityLevel(0);
 //pdf.util.setVerbosityLevel(0);
 
-const pdfPath = "x:\\books\\books\\StartSmallStaySmall.pdf";
 const startDir = "x:\\books\\books";
 // if destDir is "", then don't copy
 const destDir = "c:\\Users\\kjk\\sumtest\\files-with-annots";
@@ -159,7 +158,11 @@ function dumpAnnotsByTypeAndMaybeCopy(dstDir) {
 
 async function doPDF(filePath) {
   var ab = fs.readFileSync(filePath, null).buffer;
-  const doc = await pdf.getDocument(ab).promise;
+  const params = {
+    data: ab,
+    verbosity: 0
+  }
+  const doc = await pdf.getDocument(params).promise;
   const nPages = doc.numPages;
   let nAnnots = 0;
   for (let i = 1; i <= nPages; i++) {
@@ -188,7 +191,11 @@ async function doPDF(filePath) {
 }
 
 (async function main() {
-  //await doPDF(pdfPath);
+  if (false) {
+    const pdfPath = "v:\\sumtest\\annots\\1-rooms2001.pdf";
+    await doPDF(pdfPath);
+    return;
+  }
   const opts = {
     cwd: startDir,
   }
