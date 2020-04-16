@@ -465,10 +465,11 @@ EnginePdf::~EnginePdf() {
 }
 
 class PasswordCloner : public PasswordUI {
-    unsigned char* cryptKey;
+    unsigned char* cryptKey = nullptr;
 
   public:
-    explicit PasswordCloner(unsigned char* cryptKey) : cryptKey(cryptKey) {
+    explicit PasswordCloner(unsigned char* cryptKey) {
+        this->cryptKey = cryptKey;
     }
 
     virtual WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
@@ -1868,15 +1869,15 @@ static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, p
 }
 #endif
 
-static enum pdf_annot_type PageAnnotTypeToPdf(PageAnnotType tp) {
+static enum pdf_annot_type PageAnnotTypeToPdf(AnnotationType tp) {
     switch (tp) {
-        case PageAnnotType::Highlight:
+        case AnnotationType::Highlight:
             return PDF_ANNOT_HIGHLIGHT;
-        case PageAnnotType::Squiggly:
+        case AnnotationType::Squiggly:
             return PDF_ANNOT_SQUIGGLY;
-        case PageAnnotType::Underline:
+        case AnnotationType::Underline:
             return PDF_ANNOT_UNDERLINE;
-        case PageAnnotType::StrikeOut:
+        case AnnotationType::StrikeOut:
             return PDF_ANNOT_SQUIGGLY;
     }
     return PDF_ANNOT_UNKNOWN;

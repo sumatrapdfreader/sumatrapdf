@@ -51,34 +51,34 @@ timestamp = 2013-03-10T05:43:21Z
 #define SMX_FILE_EXT L".smx"
 #define SMX_CURR_VERSION CURR_VERSION_STRA
 
-static char* PageAnnotTypeToString(PageAnnotType typ) {
+static char* PageAnnotTypeToString(AnnotationType typ) {
     switch (typ) {
-        case PageAnnotType::Highlight:
+        case AnnotationType::Highlight:
             return "highlight";
-        case PageAnnotType::Underline:
+        case AnnotationType::Underline:
             return "underline";
-        case PageAnnotType::StrikeOut:
+        case AnnotationType::StrikeOut:
             return "strikeout";
-        case PageAnnotType::Squiggly:
+        case AnnotationType::Squiggly:
             return "squiggly";
     }
     return "";
 }
 
-static PageAnnotType PageAnnotTypeFromString(const char* s) {
+static AnnotationType PageAnnotTypeFromString(const char* s) {
     if (str::EqI(s, "highlight")) {
-        return PageAnnotType::Highlight;
+        return AnnotationType::Highlight;
     }
     if (str::EqI(s, "underline")) {
-        return PageAnnotType::Underline;
+        return AnnotationType::Underline;
     }
     if (str::EqI(s, "strikeout")) {
-        return PageAnnotType::StrikeOut;
+        return AnnotationType::StrikeOut;
     }
     if (str::EqI(s, "squiggly")) {
-        return PageAnnotType::Squiggly;
+        return AnnotationType::Squiggly;
     }
-    return PageAnnotType::None;
+    return AnnotationType::None;
 }
 
 // TODO: change to str::string_view
@@ -103,10 +103,10 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
 
     Vec<PageAnnotation>* list = new Vec<PageAnnotation>();
     for (SquareTreeNode::DataItem& i : sqt.root->data) {
-        PageAnnotType type = PageAnnotTypeFromString(i.key);
+        AnnotationType type = PageAnnotTypeFromString(i.key);
 
         CrashIf(!i.isChild);
-        if (PageAnnotType::None == type || !i.isChild) {
+        if (AnnotationType::None == type || !i.isChild) {
             continue;
         }
 

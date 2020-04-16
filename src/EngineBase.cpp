@@ -34,7 +34,7 @@ SizeI RenderedBitmap::Size() const {
     return size;
 }
 
-PageAnnotation::PageAnnotation(PageAnnotType type, int pageNo, RectD rect, COLORREF color) {
+PageAnnotation::PageAnnotation(AnnotationType type, int pageNo, RectD rect, COLORREF color) {
     this->type = type;
     this->pageNo = pageNo;
     this->rect = rect;

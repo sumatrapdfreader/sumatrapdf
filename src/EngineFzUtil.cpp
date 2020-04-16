@@ -1178,10 +1178,10 @@ Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int
         }
         // include all annotations for pageNo that can be rendered by fz_run_user_annots
         switch (annot.type) {
-            case PageAnnotType::Highlight:
-            case PageAnnotType::Underline:
-            case PageAnnotType::StrikeOut:
-            case PageAnnotType::Squiggly:
+            case AnnotationType::Highlight:
+            case AnnotationType::Underline:
+            case AnnotationType::StrikeOut:
+            case AnnotationType::Squiggly:
                 result.Append(annot);
                 break;
         }
@@ -1204,22 +1204,22 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, f
         fz_path* path = fz_new_path(ctx);
         fz_stroke_state* stroke = nullptr;
         switch (annot.type) {
-            case PageAnnotType::Highlight:
+            case AnnotationType::Highlight:
                 fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.TL().y);
                 fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.TL().y);
                 fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y);
                 fz_lineto(ctx, path, annot.rect.TL().x, annot.rect.BR().y);
                 fz_closepath(ctx, path);
                 break;
-            case PageAnnotType::Underline:
+            case AnnotationType::Underline:
                 fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.25f);
                 fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.25f);
                 break;
-            case PageAnnotType::StrikeOut:
+            case AnnotationType::StrikeOut:
                 fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.TL().y + annot.rect.dy / 2);
                 fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.TL().y + annot.rect.dy / 2);
                 break;
-            case PageAnnotType::Squiggly:
+            case AnnotationType::Squiggly:
                 fz_moveto(ctx, path, annot.rect.TL().x + 1, annot.rect.BR().y);
                 fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y);
                 fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.5f);
@@ -1237,7 +1237,7 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, f
         float color[4];
         ToPdfRgba(annot.color, color);
         float a = color[3];
-        if (PageAnnotType::Highlight == annot.type) {
+        if (AnnotationType::Highlight == annot.type) {
             // render path with transparency effect
             fz_begin_group(ctx, dev, rect, nullptr, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
             fz_fill_path(ctx, dev, path, 0, ctm, cs, color, a, fz_default_color_params);
@@ -1260,7 +1260,7 @@ void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, 
     }
     bool needsTransparency = false;
     for (size_t i = 0; i < pageAnnots.size(); i++) {
-        if (PageAnnotType::Highlight == pageAnnots.at(i).type) {
+        if (AnnotationType::Highlight == pageAnnots.at(i).type) {
             needsTransparency = true;
             break;
         }

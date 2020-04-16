@@ -539,7 +539,7 @@ void EngineDjVu::AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int 
             }
             RectD arect;
             switch (annot.type) {
-                case PageAnnotType::Highlight:
+                case AnnotationType::Highlight:
                     arect = Transform(annot.rect, pageNo, zoom, rotation);
                     arect.Offset(-screen.x, -screen.y);
                     {
@@ -547,10 +547,10 @@ void EngineDjVu::AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int 
                         g.FillRectangle(&tmpBrush, arect.ToGdipRectF());
                     }
                     break;
-                case PageAnnotType::Underline:
-                case PageAnnotType::StrikeOut:
+                case AnnotationType::Underline:
+                case AnnotationType::StrikeOut:
                     arect = RectD(annot.rect.x, annot.rect.BR().y, annot.rect.dx, 0);
-                    if (PageAnnotType::StrikeOut == annot.type)
+                    if (AnnotationType::StrikeOut == annot.type)
                         arect.y -= annot.rect.dy / 2;
                     arect = Transform(arect, pageNo, zoom, rotation);
                     arect.Offset(-screen.x, -screen.y);
@@ -559,7 +559,7 @@ void EngineDjVu::AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int 
                         g.DrawLine(&tmpPen, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                     }
                     break;
-                case PageAnnotType::Squiggly: {
+                case AnnotationType::Squiggly: {
                     Pen p(FromColor(annot.color), 0.5f * zoom);
                     REAL dash[2] = {2, 2};
                     p.SetDashPattern(dash, dimof(dash));

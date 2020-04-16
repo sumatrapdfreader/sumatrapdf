@@ -28,7 +28,7 @@ enum PageLayoutType {
     Layout_NonContinuous = 32
 };
 
-enum class PageAnnotType {
+enum class AnnotationType {
     None,
     Highlight,
     Underline,
@@ -115,13 +115,13 @@ PageDestination* clonePageDestination(PageDestination* dest);
 
 // an user annotation on page
 struct PageAnnotation {
-    PageAnnotType type = PageAnnotType::None;
+    AnnotationType type = AnnotationType::None;
     int pageNo = -1;
     RectD rect = {};
     COLORREF color = 0;
 
     PageAnnotation() = default;
-    PageAnnotation(PageAnnotType type, int pageNo, RectD rect, COLORREF color);
+    PageAnnotation(AnnotationType type, int pageNo, RectD rect, COLORREF color);
     bool operator==(const PageAnnotation& other) const;
 };
 
