@@ -310,6 +310,8 @@ class EngineBase {
     bool hasPageLabels = false;
     int pageCount = -1;
 
+    Vec<Annotation> userAnnots;
+
     // TODO: migrate other engines to use this
     AutoFreeWstr fileNameBase;
 
@@ -364,7 +366,7 @@ class EngineBase {
 
     // informs the engine about annotations the user made so that they can be rendered, etc.
     // (this call supercedes any prior call to UpdateUserAnnotations)
-    virtual void UpdateUserAnnotations(Vec<Annotation>* annots) = 0;
+    void UpdateUserAnnotations(Vec<Annotation>* annots);
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

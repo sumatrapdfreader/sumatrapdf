@@ -1121,18 +1121,21 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
             dm->userAnnotsModified = false;
             dm->GetEngine()->UpdateUserAnnotations(dm->userAnnots);
             // tell UI Automation about content change
-            if (win->uia_provider)
+            if (win->uia_provider) {
                 win->uia_provider->OnDocumentLoad(dm);
+            }
         } else if (win->AsChm()) {
             win->AsChm()->SetParentHwnd(win->hwndCanvas);
             win->ctrl->SetDisplayMode(displayMode);
             ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
             win->ctrl->GoToPage(ss.page, false);
         } else if (win->AsEbook()) {
-            if (prevCtrl && prevCtrl->AsEbook() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath()))
+            if (prevCtrl && prevCtrl->AsEbook() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath())) {
                 win->ctrl->AsEbook()->CopyNavHistory(*prevCtrl->AsEbook());
-        } else
+            }
+        } else {
             CrashIf(true);
+        }
     } else {
         state = nullptr;
     }

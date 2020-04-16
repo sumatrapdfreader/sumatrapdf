@@ -59,8 +59,6 @@ class EngineMulti : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    void UpdateUserAnnotations(Vec<Annotation>* annots) override;
-
     bool BenchLoadPage(int pageNo) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
@@ -156,10 +154,6 @@ bool EngineMulti::HasClipOptimizations(int pageNo) {
 
 WCHAR* EngineMulti::GetProperty(DocumentProperty prop) {
     return nullptr;
-}
-
-void EngineMulti::UpdateUserAnnotations(Vec<Annotation>* annots) {
-    // TODO: support user annotations
 }
 
 bool EngineMulti::BenchLoadPage(int pageNo) {

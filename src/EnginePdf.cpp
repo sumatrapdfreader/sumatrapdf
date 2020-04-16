@@ -309,8 +309,6 @@ class EnginePdf : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    void UpdateUserAnnotations(Vec<Annotation>* annots) override;
-
     bool BenchLoadPage(int pageNo) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
@@ -345,8 +343,6 @@ class EnginePdf : public EngineBase {
     fz_outline* attachments = nullptr;
     pdf_obj* _info = nullptr;
     WStrVec* _pageLabels = nullptr;
-
-    Vec<Annotation> userAnnots; // TODO(port): put in PageInfo
 
     TocTree* tocTree = nullptr;
 
@@ -511,6 +507,7 @@ EngineBase* EnginePdf::Clone() {
     }
 
     clone->UpdateUserAnnotations(&userAnnots);
+
     return clone;
 }
 
@@ -1691,16 +1688,6 @@ WCHAR* EnginePdf::GetProperty(DocumentProperty prop) {
     }
     return nullptr;
 };
-
-void EnginePdf::UpdateUserAnnotations(Vec<Annotation>* annots) {
-    // TODO: use a new critical section to avoid blocking the UI thread
-    ScopedCritSec scope(ctxAccess);
-    if (annots) {
-        userAnnots = *annots;
-    } else {
-        userAnnots.Reset();
-    }
-}
 
 std::string_view EnginePdf::GetFileData() {
     std::string_view res;

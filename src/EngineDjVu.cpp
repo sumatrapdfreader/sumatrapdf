@@ -250,8 +250,6 @@ class EngineDjVu : public EngineBase {
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    void UpdateUserAnnotations(Vec<Annotation>* annots) override;
-
     // we currently don't load pages lazily, so there's nothing to do here
     bool BenchLoadPage(int pageNo) override;
 
@@ -946,15 +944,6 @@ WCHAR* EngineDjVu::ExtractPageText(int pageNo, RectI** coordsOut) {
     }
 
     return extracted.StealData();
-}
-
-void EngineDjVu::UpdateUserAnnotations(Vec<Annotation>* annots) {
-    ScopedCritSec scope(&gDjVuContext->lock);
-    if (annots) {
-        userAnnots = *annots;
-    } else {
-        userAnnots.Reset();
-    }
 }
 
 Vec<PageElement*>* EngineDjVu::GetElements(int pageNo) {

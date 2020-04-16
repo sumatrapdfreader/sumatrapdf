@@ -503,6 +503,15 @@ float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
+void EngineBase::UpdateUserAnnotations(Vec<Annotation>* annots) {
+    // TODO: protect with a mutex? Crash if not on UI thread?
+    if (annots) {
+        userAnnots = *annots;
+    } else {
+        userAnnots.Reset();
+    }
+}
+
 PageDestination* EngineBase::GetNamedDest(const WCHAR* name) {
     UNUSED(name);
     return nullptr;

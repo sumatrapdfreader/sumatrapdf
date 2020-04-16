@@ -65,10 +65,6 @@ class EngineImages : public EngineBase {
         return false;
     }
 
-    void UpdateUserAnnotations(Vec<Annotation>* annots) override {
-        UNUSED(annots);
-    }
-
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 

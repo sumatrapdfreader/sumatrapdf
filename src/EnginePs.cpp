@@ -306,10 +306,6 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetProperty(prop);
     }
 
-    void UpdateUserAnnotations(Vec<Annotation>* annots) override {
-        pdfEngine->UpdateUserAnnotations(annots);
-    }
-
     bool BenchLoadPage(int pageNo) override {
         return pdfEngine->BenchLoadPage(pageNo);
     }
