@@ -870,8 +870,8 @@ RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectD rect, int imageIdx) {
 
     Vec<FitzImagePos> positions;
 
-    if (imageIdx >= positions.size() || fz_rect_to_RectD(positions.at(imageIdx).rect) != rect) {
-        AssertCrash(0);
+    if (imageIdx >= positions.isize() || fz_rect_to_RectD(positions.at(imageIdx).rect) != rect) {
+        CrashIf(true);
         return nullptr;
     }
 

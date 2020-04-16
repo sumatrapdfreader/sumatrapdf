@@ -1338,7 +1338,7 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, int imageIdx) {
         return nullptr;
     }
     auto& images = pageInfo->images;
-    bool outOfBounds = imageIdx >= images.size();
+    bool outOfBounds = imageIdx >= images.isize();
     fz_rect imgRect = images.at(imageIdx).rect;
     bool badRect = fz_rect_to_RectD(imgRect) != rect;
     CrashIf(outOfBounds);
