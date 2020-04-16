@@ -94,7 +94,7 @@ class EngineEbook : public EngineBase {
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override;
 
-    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
+    void UpdateUserAnnotations(Vec<Annotation>* list) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
@@ -115,7 +115,7 @@ class EngineEbook : public EngineBase {
     // TODO: still needed?
     CRITICAL_SECTION pagesAccess;
     // access to userAnnots is protected by pagesAccess
-    Vec<PageAnnotation> userAnnots;
+    Vec<Annotation> userAnnots;
     // page dimensions can vary between filetypes
     RectD pageRect;
     float pageBorder;
@@ -288,9 +288,9 @@ RectD EngineEbook::Transform(RectD rect, int pageNo, float zoom, int rotation, b
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pageNo) {
+static void DrawAnnotations(Graphics& g, Vec<Annotation>& userAnnots, int pageNo) {
     for (size_t i = 0; i < userAnnots.size(); i++) {
-        PageAnnotation& annot = userAnnots.at(i);
+        Annotation& annot = userAnnots.at(i);
         if (annot.pageNo != pageNo)
             continue;
         PointF p1, p2;
@@ -470,7 +470,7 @@ WCHAR* EngineEbook::ExtractPageText(int pageNo, RectI** coordsOut) {
     return content.StealData();
 }
 
-void EngineEbook::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+void EngineEbook::UpdateUserAnnotations(Vec<Annotation>* list) {
     ScopedCritSec scope(&pagesAccess);
     if (list) {
         userAnnots = *list;

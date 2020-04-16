@@ -3801,13 +3801,13 @@ static void MakeAnnotationFromSelection(WindowInfo* win) {
     // TODO: we need to support overlapping selections better (merge them into existing
     // annotation?
     if (!dm->userAnnots) {
-        dm->userAnnots = new Vec<PageAnnotation>();
+        dm->userAnnots = new Vec<Annotation>();
     }
-    Vec<PageAnnotation>* annots = dm->userAnnots;
+    Vec<Annotation>* annots = dm->userAnnots;
     for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
         COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
         c = ColorSetAlpha(c, 0xcc);
-        auto addedAnnotation = PageAnnotation(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
+        auto addedAnnotation = Annotation(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
         size_t oldLen = annots->size();
         for (size_t i = 0; i < oldLen && i < annots->size(); ++i) {
             if (annots->at(i) == addedAnnotation) {
@@ -3815,7 +3815,7 @@ static void MakeAnnotationFromSelection(WindowInfo* win) {
             }
         }
         if (oldLen == annots->size()) {
-            annots->Append(PageAnnotation(AnnotationType::Highlight, sel.pageNo, sel.rect, c));
+            annots->Append(Annotation(AnnotationType::Highlight, sel.pageNo, sel.rect, c));
         }
         gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
     }

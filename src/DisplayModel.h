@@ -164,7 +164,7 @@ class DisplayModel : public Controller {
 
     // controller-specific data (easier to save here than on WindowInfo)
     Kind engineType = nullptr;
-    Vec<PageAnnotation>* userAnnots = nullptr;
+    Vec<Annotation>* userAnnots = nullptr;
     bool userAnnotsModified = false;
     Synchronizer* pdfSync = nullptr;
 

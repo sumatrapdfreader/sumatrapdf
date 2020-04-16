@@ -562,7 +562,7 @@ int main(int argc, char** argv) {
         ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameNoFree(filePath));
         return 1;
     }
-    Vec<PageAnnotation>* userAnnots = LoadFileModifications(engine->FileName());
+    Vec<Annotation>* userAnnots = LoadFileModifications(engine->FileName());
     engine->UpdateUserAnnotations(userAnnots);
     delete userAnnots;
     if (!loadOnly)

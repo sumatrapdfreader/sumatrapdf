@@ -114,15 +114,15 @@ PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value = null
 PageDestination* clonePageDestination(PageDestination* dest);
 
 // an user annotation on page
-struct PageAnnotation {
+struct Annotation {
     AnnotationType type = AnnotationType::None;
     int pageNo = -1;
     RectD rect = {};
     COLORREF color = 0;
 
-    PageAnnotation() = default;
-    PageAnnotation(AnnotationType type, int pageNo, RectD rect, COLORREF color);
-    bool operator==(const PageAnnotation& other) const;
+    Annotation() = default;
+    Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color);
+    bool operator==(const Annotation& other) const;
 };
 
 // use in PageDestination::GetDestRect for values that don't matter
@@ -364,7 +364,7 @@ class EngineBase {
 
     // informs the engine about annotations the user made so that they can be rendered, etc.
     // (this call supercedes any prior call to UpdateUserAnnotations)
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation>* list) = 0;
+    virtual void UpdateUserAnnotations(Vec<Annotation>* list) = 0;
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

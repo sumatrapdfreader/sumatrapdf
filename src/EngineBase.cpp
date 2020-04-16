@@ -34,14 +34,14 @@ SizeI RenderedBitmap::Size() const {
     return size;
 }
 
-PageAnnotation::PageAnnotation(AnnotationType type, int pageNo, RectD rect, COLORREF color) {
+Annotation::Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color) {
     this->type = type;
     this->pageNo = pageNo;
     this->rect = rect;
     this->color = color;
 }
 
-bool PageAnnotation::operator==(const PageAnnotation& other) const {
+bool Annotation::operator==(const Annotation& other) const {
     if (&other == this) {
         return true;
     }

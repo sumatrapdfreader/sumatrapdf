@@ -250,7 +250,7 @@ class EngineDjVu : public EngineBase {
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
+    void UpdateUserAnnotations(Vec<Annotation>* list) override;
 
     // we currently don't load pages lazily, so there's nothing to do here
     bool BenchLoadPage(int pageNo) override;
@@ -276,7 +276,7 @@ class EngineDjVu : public EngineBase {
     miniexp_t outline = miniexp_nil;
     miniexp_t* annos = nullptr;
     TocTree* tocTree = nullptr;
-    Vec<PageAnnotation> userAnnots;
+    Vec<Annotation> userAnnots;
 
     Vec<ddjvu_fileinfo_t> fileInfos;
 
@@ -533,7 +533,7 @@ void EngineDjVu::AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int 
         g.SetPageUnit(UnitPixel);
 
         for (size_t i = 0; i < userAnnots.size(); i++) {
-            PageAnnotation& annot = userAnnots.at(i);
+            Annotation& annot = userAnnots.at(i);
             if (annot.pageNo != pageNo) {
                 continue;
             }
@@ -948,7 +948,7 @@ WCHAR* EngineDjVu::ExtractPageText(int pageNo, RectI** coordsOut) {
     return extracted.StealData();
 }
 
-void EngineDjVu::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+void EngineDjVu::UpdateUserAnnotations(Vec<Annotation>* list) {
     ScopedCritSec scope(&gDjVuContext->lock);
     if (list) {
         userAnnots = *list;

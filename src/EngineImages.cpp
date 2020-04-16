@@ -65,7 +65,7 @@ class EngineImages : public EngineBase {
         return false;
     }
 
-    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override {
+    void UpdateUserAnnotations(Vec<Annotation>* list) override {
         UNUSED(list);
     }
 

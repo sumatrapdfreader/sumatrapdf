@@ -306,7 +306,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetProperty(prop);
     }
 
-    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override {
+    void UpdateUserAnnotations(Vec<Annotation>* list) override {
         pdfEngine->UpdateUserAnnotations(list);
     }
 

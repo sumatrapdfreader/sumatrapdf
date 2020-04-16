@@ -205,7 +205,7 @@ class EngineXps : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
+    void UpdateUserAnnotations(Vec<Annotation>* list) override;
 
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
@@ -239,7 +239,7 @@ class EngineXps : public EngineBase {
     xps_doc_props* _info = nullptr;
     fz_rect** imageRects = nullptr;
 
-    Vec<PageAnnotation> userAnnots;
+    Vec<Annotation> userAnnots;
 
     TocTree* tocTree = nullptr;
 
@@ -653,7 +653,7 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
     fz_var(pix);
     fz_var(bitmap);
 
-    Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, args.pageNo);
+    Vec<Annotation> pageAnnots = fz_get_user_page_annots(userAnnots, args.pageNo);
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, page);
@@ -777,7 +777,7 @@ WCHAR* EngineXps::GetProperty(DocumentProperty prop) {
     }
 };
 
-void EngineXps::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+void EngineXps::UpdateUserAnnotations(Vec<Annotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread
     ScopedCritSec scope(ctxAccess);
     if (list) {

@@ -1169,10 +1169,10 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     free(coords);
 }
 
-Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int pageNo) {
-    Vec<PageAnnotation> result;
+Vec<Annotation> fz_get_user_page_annots(Vec<Annotation>& userAnnots, int pageNo) {
+    Vec<Annotation> result;
     for (size_t i = 0; i < userAnnots.size(); i++) {
-        PageAnnotation& annot = userAnnots.at(i);
+        Annotation& annot = userAnnots.at(i);
         if (annot.pageNo != pageNo) {
             continue;
         }
@@ -1189,10 +1189,10 @@ Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int
     return result;
 }
 
-void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, fz_matrix ctm,
+void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation>& pageAnnots, fz_device* dev, fz_matrix ctm,
                              const fz_rect cliprect, fz_cookie* cookie) {
     for (size_t i = 0; i < pageAnnots.size() && (!cookie || !cookie->abort); i++) {
-        PageAnnotation& annot = pageAnnots.at(i);
+        Annotation& annot = pageAnnots.at(i);
         // skip annotation if it isn't visible
         fz_rect rect = RectD_to_fz_rect(annot.rect);
         rect = fz_transform_rect(rect, ctm);
@@ -1253,7 +1253,7 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, f
     }
 }
 
-void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, const fz_rect cliprect,
+void fz_run_page_transparency(fz_context* ctx, Vec<Annotation>& pageAnnots, fz_device* dev, const fz_rect cliprect,
                               bool endGroup, bool hasTransparency) {
     if (hasTransparency || pageAnnots.size() == 0) {
         return;

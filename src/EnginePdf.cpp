@@ -309,7 +309,7 @@ class EnginePdf : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
+    void UpdateUserAnnotations(Vec<Annotation>* list) override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -346,7 +346,7 @@ class EnginePdf : public EngineBase {
     pdf_obj* _info = nullptr;
     WStrVec* _pageLabels = nullptr;
 
-    Vec<PageAnnotation> userAnnots; // TODO(port): put in PageInfo
+    Vec<Annotation> userAnnots; // TODO(port): put in PageInfo
 
     TocTree* tocTree = nullptr;
 
@@ -1199,7 +1199,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     fz_var(bitmap);
     fz_var(list);
 
-    Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+    Vec<Annotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, page);
@@ -1689,7 +1689,7 @@ WCHAR* EnginePdf::GetProperty(DocumentProperty prop) {
     return nullptr;
 };
 
-void EnginePdf::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+void EnginePdf::UpdateUserAnnotations(Vec<Annotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread
     ScopedCritSec scope(ctxAccess);
     if (list) {
@@ -1883,7 +1883,7 @@ static enum pdf_annot_type PageAnnotTypeToPdf(AnnotationType tp) {
     return PDF_ANNOT_UNKNOWN;
 }
 
-static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, const PageAnnotation& userAnnot) {
+static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, const Annotation& userAnnot) {
     enum pdf_annot_type tp = PageAnnotTypeToPdf(userAnnot.type);
     pdf_annot* annot = pdf_create_annot(ctx, page, tp);
 
@@ -1930,7 +1930,7 @@ bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
     ScopedCritSec scope2(ctxAccess);
 
     bool ok = true;
-    Vec<PageAnnotation> pageAnnots;
+    Vec<Annotation> pageAnnots;
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
     int nAdded = 0;
 
