@@ -86,8 +86,9 @@ void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel) {
     win->showSelection = false;
     win->selectionMeasure = SizeD();
 
-    if (alsoTextSel && win->AsFixed())
+    if (alsoTextSel && win->AsFixed()) {
         win->AsFixed()->textSelection->Reset();
+    }
 }
 
 void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLORREF selectionColor, u8 alpha,

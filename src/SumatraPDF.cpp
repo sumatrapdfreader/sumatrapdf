@@ -3778,7 +3778,7 @@ static void OnFrameKeyB(WindowInfo* win) {
     }
 }
 
-static void MakeAnnotationFromSelection(WindowInfo* win) {
+static void MakeAnnotationFromSelection(TabInfo* tab) {
     bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
     if (!annotsEnabled) {
         return;
@@ -3786,7 +3786,7 @@ static void MakeAnnotationFromSelection(WindowInfo* win) {
 
     // converts current selection to annotation (or back to regular text
     // if it's already an annotation)
-    DisplayModel* dm = win->AsFixed();
+    DisplayModel* dm = tab->win->AsFixed();
     if (!dm) {
         return;
     }
@@ -3795,7 +3795,8 @@ static void MakeAnnotationFromSelection(WindowInfo* win) {
         return;
     }
 
-    bool ok = engine->supportsAnnotations && win->showSelection && win->currentTab->selectionOnPage;
+    WindowInfo* win = tab->win;
+    bool ok = engine->supportsAnnotations && win->showSelection && tab->selectionOnPage;
     if (!ok) {
         return;
     }
@@ -3807,7 +3808,7 @@ static void MakeAnnotationFromSelection(WindowInfo* win) {
         dm->userAnnots = new Vec<Annotation>();
     }
     Vec<Annotation>* annots = dm->userAnnots;
-    for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+    for (SelectionOnPage& sel : *tab->selectionOnPage) {
         COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
         c = ColorSetAlpha(c, 0xcc);
         auto addedAnnotation = Annotation(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
@@ -3974,7 +3975,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             OnFrameKeyM(win);
             break;
         case 'a':
-            MakeAnnotationFromSelection(win);
+            MakeAnnotationFromSelection(win->currentTab);
             break;
     }
 }
