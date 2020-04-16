@@ -4,5 +4,5 @@
 struct Annotation;
 
 Vec<Annotation>* LoadFileModifications(const WCHAR* filePath);
-bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation>* list);
+bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation>* annots);
 bool IsModificationsFile(const WCHAR* filePath);

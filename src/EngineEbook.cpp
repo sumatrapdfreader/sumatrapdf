@@ -94,7 +94,7 @@ class EngineEbook : public EngineBase {
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override;
 
-    void UpdateUserAnnotations(Vec<Annotation>* list) override;
+    void UpdateUserAnnotations(Vec<Annotation>* annots) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
@@ -470,10 +470,10 @@ WCHAR* EngineEbook::ExtractPageText(int pageNo, RectI** coordsOut) {
     return content.StealData();
 }
 
-void EngineEbook::UpdateUserAnnotations(Vec<Annotation>* list) {
+void EngineEbook::UpdateUserAnnotations(Vec<Annotation>* annots) {
     ScopedCritSec scope(&pagesAccess);
-    if (list) {
-        userAnnots = *list;
+    if (annots) {
+        userAnnots = *annots;
     } else {
         userAnnots.Reset();
     }

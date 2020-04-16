@@ -149,8 +149,8 @@ Vec<Annotation>* LoadFileModifications(const WCHAR* filePath) {
     return ParseFileModifications(data.get());
 }
 
-bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation>* newAnnots) {
-    if (!newAnnots) {
+bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation>* annots) {
+    if (!annots) {
         return false;
     }
 
@@ -185,8 +185,9 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation>* newAnnots) {
     }
     data.Append("\r\n");
 
-    for (size_t i = 0; i < newAnnots->size(); i++) {
-        Annotation& annot = newAnnots->at(i);
+    int nAnnots = annots->isize();
+    for (int i = 0; i < nAnnots; i++) {
+        Annotation& annot = annots->at(i);
         char* s = PageAnnotTypeToString(annot.type);
         if (str::IsEmpty(s)) {
             continue;

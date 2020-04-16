@@ -205,7 +205,7 @@ class EngineXps : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    void UpdateUserAnnotations(Vec<Annotation>* list) override;
+    void UpdateUserAnnotations(Vec<Annotation>* annots) override;
 
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
@@ -777,11 +777,11 @@ WCHAR* EngineXps::GetProperty(DocumentProperty prop) {
     }
 };
 
-void EngineXps::UpdateUserAnnotations(Vec<Annotation>* list) {
+void EngineXps::UpdateUserAnnotations(Vec<Annotation>* annots) {
     // TODO: use a new critical section to avoid blocking the UI thread
     ScopedCritSec scope(ctxAccess);
-    if (list) {
-        userAnnots = *list;
+    if (annots) {
+        userAnnots = *annots;
     } else {
         userAnnots.Reset();
     }

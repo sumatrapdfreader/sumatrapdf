@@ -364,7 +364,7 @@ class EngineBase {
 
     // informs the engine about annotations the user made so that they can be rendered, etc.
     // (this call supercedes any prior call to UpdateUserAnnotations)
-    virtual void UpdateUserAnnotations(Vec<Annotation>* list) = 0;
+    virtual void UpdateUserAnnotations(Vec<Annotation>* annots) = 0;
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

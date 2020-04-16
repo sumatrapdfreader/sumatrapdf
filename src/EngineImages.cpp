@@ -65,8 +65,8 @@ class EngineImages : public EngineBase {
         return false;
     }
 
-    void UpdateUserAnnotations(Vec<Annotation>* list) override {
-        UNUSED(list);
+    void UpdateUserAnnotations(Vec<Annotation>* annots) override {
+        UNUSED(annots);
     }
 
     Vec<PageElement*>* GetElements(int pageNo) override;
