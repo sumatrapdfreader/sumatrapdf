@@ -8,23 +8,20 @@
 #define TYPE_CONTIGUOUS '7'
 #define TYPE_LONG_NAME 'L'
 
-typedef struct tar_entry_s tar_entry;
-typedef struct fz_tar_archive_s fz_tar_archive;
-
-struct tar_entry_s
+typedef struct
 {
 	char *name;
 	int64_t offset;
 	int size;
-};
+} tar_entry;
 
-struct fz_tar_archive_s
+typedef struct
 {
 	fz_archive super;
 
 	int count;
 	tar_entry *entries;
-};
+} fz_tar_archive;
 
 static inline int isoctdigit(char c)
 {

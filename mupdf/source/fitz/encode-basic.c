@@ -1,6 +1,6 @@
 #include "mupdf/fitz.h"
 
-#include <zlib.h>
+#include "z-imp.h"
 
 struct ahx
 {

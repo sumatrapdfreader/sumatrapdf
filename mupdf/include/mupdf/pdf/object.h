@@ -1,8 +1,8 @@
 #ifndef MUPDF_PDF_OBJECT_H
 #define MUPDF_PDF_OBJECT_H
 
-typedef struct pdf_document_s pdf_document;
-typedef struct pdf_crypt_s pdf_crypt;
+typedef struct pdf_document pdf_document;
+typedef struct pdf_crypt pdf_crypt;
 
 /* Defined in PDF 1.7 according to Acrobat limit. */
 #define PDF_MAX_OBJECT_NUMBER 8388607
@@ -14,7 +14,7 @@ typedef struct pdf_crypt_s pdf_crypt;
  * Used by the filters and the mupdf parser.
  */
 
-typedef struct pdf_obj_s pdf_obj;
+typedef struct pdf_obj pdf_obj;
 
 pdf_obj *pdf_new_int(fz_context *ctx, int64_t i);
 pdf_obj *pdf_new_real(fz_context *ctx, float f);

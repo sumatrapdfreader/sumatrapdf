@@ -8,7 +8,7 @@
 	callback.
 */
 
-struct pdf_doc_event_s
+struct pdf_doc_event
 {
 	int type;
 };

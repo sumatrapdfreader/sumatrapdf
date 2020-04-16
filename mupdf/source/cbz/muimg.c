@@ -4,23 +4,20 @@
 
 #define DPI 72.0f
 
-typedef struct img_document_s img_document;
-typedef struct img_page_s img_page;
-
-struct img_page_s
+typedef struct
 {
 	fz_page super;
 	fz_image *image;
-};
+} img_page;
 
-struct img_document_s
+typedef struct
 {
 	fz_document super;
 	fz_buffer *buffer;
 	const char *format;
 	int page_count;
 	fz_pixmap *(*load_subimage)(fz_context *ctx, const unsigned char *p, size_t total, int subimage);
-};
+} img_document;
 
 static void
 img_drop_document(fz_context *ctx, fz_document *doc_)

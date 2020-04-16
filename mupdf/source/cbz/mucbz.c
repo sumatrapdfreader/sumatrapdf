@@ -5,9 +5,6 @@
 
 #define DPI 72.0f
 
-typedef struct cbz_document_s cbz_document;
-typedef struct cbz_page_s cbz_page;
-
 static const char *cbz_ext_list[] = {
 	".bmp",
 	".gif",
@@ -33,19 +30,19 @@ static const char *cbz_ext_list[] = {
 	NULL
 };
 
-struct cbz_page_s
+typedef struct
 {
 	fz_page super;
 	fz_image *image;
-};
+} cbz_page;
 
-struct cbz_document_s
+typedef struct
 {
 	fz_document super;
 	fz_archive *arch;
 	int page_count;
 	const char **page;
-};
+} cbz_document;
 
 static inline int cbz_isdigit(int c)
 {

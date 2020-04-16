@@ -7,19 +7,16 @@
 #include "mupdf/fitz/buffer.h"
 
 /* forward declaration for circular dependency */
-struct fz_device_s;
+struct fz_device;
 
 /* Various font encoding tables and lookup functions */
 
 extern const char *fz_glyph_name_from_adobe_standard[256];
-extern const char *fz_glyph_name_from_iso8859_1[256];
 extern const char *fz_glyph_name_from_iso8859_7[256];
 extern const char *fz_glyph_name_from_koi8u[256];
 extern const char *fz_glyph_name_from_mac_expert[256];
 extern const char *fz_glyph_name_from_mac_roman[256];
 extern const char *fz_glyph_name_from_win_ansi[256];
-extern const char *fz_glyph_name_from_windows_1250[256];
-extern const char *fz_glyph_name_from_windows_1251[256];
 extern const char *fz_glyph_name_from_windows_1252[256];
 
 extern const unsigned short fz_unicode_from_iso8859_1[256];
@@ -45,13 +42,13 @@ const char *fz_glyph_name_from_unicode_sc(int unicode);
 /*
 	An abstract font handle.
 */
-typedef struct fz_font_s fz_font;
+typedef struct fz_font fz_font;
 
 /*
- * Fonts come in two variants:
- *	Regular fonts are handled by FreeType.
- *	Type 3 fonts have callbacks to the interpreter.
- */
+	Fonts come in two variants:
+	Regular fonts are handled by FreeType.
+	Type 3 fonts have callbacks to the interpreter.
+*/
 
 /*
 	Retrieve the FT_Face handle
@@ -135,51 +132,6 @@ typedef struct
 */
 fz_shaper_data_t *fz_font_shaper_data(fz_context *ctx, fz_font *font);
 
-struct fz_font_s
-{
-	int refs;
-	char name[32];
-	fz_buffer *buffer;
-
-	fz_font_flags_t flags;
-
-	void *ft_face; /* has an FT_Face if used */
-	fz_shaper_data_t shaper_data;
-
-	fz_matrix t3matrix;
-	void *t3resources;
-	fz_buffer **t3procs; /* has 256 entries if used */
-	struct fz_display_list_s **t3lists; /* has 256 entries if used */
-	float *t3widths; /* has 256 entries if used */
-	unsigned short *t3flags; /* has 256 entries if used */
-	void *t3doc; /* a pdf_document for the callback */
-	void (*t3run)(fz_context *ctx, void *doc, void *resources, fz_buffer *contents, struct fz_device_s *dev, fz_matrix ctm, void *gstate, fz_default_colorspaces *default_cs);
-	void (*t3freeres)(fz_context *ctx, void *doc, void *resources);
-
-	fz_rect bbox;	/* font bbox is used only for t3 fonts */
-
-	int glyph_count;
-
-	/* per glyph bounding box cache */
-	fz_rect *bbox_table;
-
-	/* substitute metrics */
-	int width_count;
-	short width_default; /* in 1000 units */
-	short *width_table; /* in 1000 units */
-
-	/* cached glyph metrics */
-	float *advance_cache;
-
-	/* cached encoding lookup */
-	uint16_t *encoding_cache[256];
-
-	/* cached md5sum for caching */
-	int has_digest;
-	unsigned char digest[16];
-};
-
-
 /*
 	Retrieve a pointer to the name of the font.
 
@@ -190,9 +142,24 @@ struct fz_font_s
 */
 const char *fz_font_name(fz_context *ctx, fz_font *font);
 
+/*
+	Query whether the font flags say that this font is bold.
+*/
 int fz_font_is_bold(fz_context *ctx, fz_font *font);
+
+/*
+	Query whether the font flags say that this font is italic.
+*/
 int fz_font_is_italic(fz_context *ctx, fz_font *font);
+
+/*
+	Query whether the font flags say that this font is serif.
+*/
 int fz_font_is_serif(fz_context *ctx, fz_font *font);
+
+/*
+	Query whether the font flags say that this font is monospaced.
+*/
 int fz_font_is_monospaced(fz_context *ctx, fz_font *font);
 
 /*
@@ -331,7 +298,22 @@ const unsigned char *fz_lookup_base14_font(fz_context *ctx, const char *name, in
 
 	ordering: The desired ordering of the font (e.g. FZ_ADOBE_KOREA).
 
-	size: Pointer to a place to receive the length of the discovered
+	len: Pointer to a place to receive the length of the discovered
+	font buffer.
+
+	Returns a pointer to the font file data, or NULL if not present.
+*/
+const unsigned char *fz_lookup_cjk_font(fz_context *ctx, int ordering, int *len, int *index);
+
+/*
+	Search the builtin cjk fonts for a match for a given language.
+	Whether a font is present or not will depend on the
+	configuration in which MuPDF is built.
+
+	lang: Pointer to a (case sensitive) language string (e.g.
+	"ja", "ko", "zh-Hant" etc).
+
+	len: Pointer to a place to receive the length of the discovered
 	font buffer.
 
 	subfont: Pointer to a place to store the subfont index of the
@@ -339,8 +321,7 @@ const unsigned char *fz_lookup_base14_font(fz_context *ctx, const char *name, in
 
 	Returns a pointer to the font file data, or NULL if not present.
 */
-const unsigned char *fz_lookup_cjk_font(fz_context *ctx, int ordering, int *len, int *index);
-const unsigned char *fz_lookup_cjk_font_by_language(fz_context *ctx, const char *lang, int *size, int *subfont);
+const unsigned char *fz_lookup_cjk_font_by_language(fz_context *ctx, const char *lang, int *len, int *subfont);
 
 /*
 	Return the matching FZ_ADOBE_* ordering
@@ -373,7 +354,6 @@ const unsigned char *fz_lookup_noto_math_font(fz_context *ctx, int *len);
 const unsigned char *fz_lookup_noto_music_font(fz_context *ctx, int *len);
 const unsigned char *fz_lookup_noto_symbol1_font(fz_context *ctx, int *len);
 const unsigned char *fz_lookup_noto_symbol2_font(fz_context *ctx, int *len);
-
 const unsigned char *fz_lookup_noto_emoji_font(fz_context *ctx, int *len);
 
 /*
@@ -531,7 +511,7 @@ int fz_glyph_cacheable(fz_context *ctx, fz_font *font, int gid);
 
 	dev: The device to render onto.
 */
-void fz_run_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, struct fz_device_s *dev);
+void fz_run_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, struct fz_device *dev);
 
 /*
 	Return the advance for a given glyph.
@@ -570,6 +550,16 @@ int fz_encode_character(fz_context *ctx, fz_font *font, int unicode);
 	unknown.
 */
 int fz_encode_character_sc(fz_context *ctx, fz_font *font, int unicode);
+
+/*
+	Encode character.
+
+	Either by direct lookup of glyphname within a font, or, failing
+	that, by mapping glyphname to unicode and thence to the glyph
+	index within the given font.
+
+	Returns zero for type3 fonts.
+*/
 int fz_encode_character_by_glyph_name(fz_context *ctx, fz_font *font, const char *glyphname);
 
 /*
@@ -617,9 +607,19 @@ int fz_encode_character_with_fallback(fz_context *ctx, fz_font *font, int unicod
 */
 void fz_get_glyph_name(fz_context *ctx, fz_font *font, int glyph, char *buf, int size);
 
+/*
+	Retrieve font ascender in ems.
+*/
 float fz_font_ascender(fz_context *ctx, fz_font *font);
+
+/*
+	Retrieve font descender in ems.
+*/
 float fz_font_descender(fz_context *ctx, fz_font *font);
 
+/*
+	Retrieve the MD5 digest for the font's data.
+*/
 void fz_font_digest(fz_context *ctx, fz_font *font, unsigned char digest[16]);
 
 /* Implementation details: subject to change. */
@@ -656,5 +656,49 @@ void fz_hb_lock(fz_context *ctx);
 	FZ_LOCK_FREETYPE.
 */
 void fz_hb_unlock(fz_context *ctx);
+
+struct fz_font
+{
+	int refs;
+	char name[32];
+	fz_buffer *buffer;
+
+	fz_font_flags_t flags;
+
+	void *ft_face; /* has an FT_Face if used */
+	fz_shaper_data_t shaper_data;
+
+	fz_matrix t3matrix;
+	void *t3resources;
+	fz_buffer **t3procs; /* has 256 entries if used */
+	struct fz_display_list **t3lists; /* has 256 entries if used */
+	float *t3widths; /* has 256 entries if used */
+	unsigned short *t3flags; /* has 256 entries if used */
+	void *t3doc; /* a pdf_document for the callback */
+	void (*t3run)(fz_context *ctx, void *doc, void *resources, fz_buffer *contents, struct fz_device *dev, fz_matrix ctm, void *gstate, fz_default_colorspaces *default_cs);
+	void (*t3freeres)(fz_context *ctx, void *doc, void *resources);
+
+	fz_rect bbox;	/* font bbox is used only for t3 fonts */
+
+	int glyph_count;
+
+	/* per glyph bounding box cache */
+	fz_rect *bbox_table;
+
+	/* substitute metrics */
+	int width_count;
+	short width_default; /* in 1000 units */
+	short *width_table; /* in 1000 units */
+
+	/* cached glyph metrics */
+	float *advance_cache;
+
+	/* cached encoding lookup */
+	uint16_t *encoding_cache[256];
+
+	/* cached md5sum for caching */
+	int has_digest;
+	unsigned char digest[16];
+};
 
 #endif

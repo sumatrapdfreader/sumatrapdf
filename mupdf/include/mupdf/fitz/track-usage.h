@@ -3,27 +3,27 @@
 
 #ifdef TRACK_USAGE
 
-typedef struct track_usage_data_s {
+typedef struct track_usage_data {
 	int count;
 	const char *function;
 	int line;
 	const char *desc;
-	struct track_usage_data_s *next;
-} track_usage_data_t;
+	struct track_usage_data *next;
+} track_usage_data;
 
 #define TRACK_LABEL(A) \
 	do { \
-		static track_usage_data_t USAGE_DATA = { 0 };\
+		static track_usage_data USAGE_DATA = { 0 };\
 		track_usage(&USAGE_DATA, __FILE__, __LINE__, A);\
 	} while (0)
 
 #define TRACK_FN() \
 	do { \
-		static track_usage_data_t USAGE_DATA = { 0 };\
+		static track_usage_data USAGE_DATA = { 0 };\
 		track_usage(&USAGE_DATA, __FILE__, __LINE__, __FUNCTION__);\
 	} while (0)
 
-void track_usage(track_usage_data_t *data, const char *function, int line, const char *desc);
+void track_usage(track_usage_data *data, const char *function, int line, const char *desc);
 
 #else
 

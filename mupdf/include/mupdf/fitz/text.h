@@ -19,21 +19,17 @@
 	with indexes into the glyph array.
 */
 
-typedef struct fz_text_s fz_text;
-typedef struct fz_text_span_s fz_text_span;
-typedef struct fz_text_item_s fz_text_item;
-
-struct fz_text_item_s
+typedef struct
 {
 	float x, y;
 	int gid; /* -1 for one gid to many ucs mappings */
 	int ucs; /* -1 for one ucs to many gid mappings */
-};
+} fz_text_item;
 
 #define FZ_LANG_TAG2(c1,c2) ((c1-'a'+1) + ((c2-'a'+1)*27))
 #define FZ_LANG_TAG3(c1,c2,c3) ((c1-'a'+1) + ((c2-'a'+1)*27) + ((c3-'a'+1)*27*27))
 
-typedef enum fz_text_language_e
+typedef enum
 {
 	FZ_LANG_UNSET = 0,
 	FZ_LANG_ur = FZ_LANG_TAG2('u','r'),
@@ -45,7 +41,7 @@ typedef enum fz_text_language_e
 	FZ_LANG_zh_Hant = FZ_LANG_TAG3('z','h','t'),
 } fz_text_language;
 
-struct fz_text_span_s
+typedef struct fz_text_span
 {
 	fz_font *font;
 	fz_matrix trm;
@@ -55,14 +51,14 @@ struct fz_text_span_s
 	unsigned language : 15;		/* The language as marked in the original document */
 	int len, cap;
 	fz_text_item *items;
-	fz_text_span *next;
-};
+	struct fz_text_span *next;
+} fz_text_span;
 
-struct fz_text_s
+typedef struct
 {
 	int refs;
 	fz_text_span *head, *tail;
-};
+} fz_text;
 
 /*
 	Create a new empty fz_text object.

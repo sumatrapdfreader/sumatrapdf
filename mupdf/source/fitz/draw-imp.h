@@ -100,7 +100,7 @@ static inline int fz_idiv_up(int a, int b)
  * accuracy as a run time choice.
  */
 
-struct fz_overprint_s
+struct fz_overprint
 {
 	/* Bit i set -> never alter this color */
 	uint32_t mask[(FZ_MAX_COLORS+31)/32];
@@ -130,7 +130,7 @@ static int inline fz_overprint_required(const fz_overprint *op)
 	return 0;
 }
 
-typedef struct fz_rasterizer_s fz_rasterizer;
+typedef struct fz_rasterizer fz_rasterizer;
 
 typedef void (fz_rasterizer_drop_fn)(fz_context *ctx, fz_rasterizer *r);
 typedef int (fz_rasterizer_reset_fn)(fz_context *ctx, fz_rasterizer *r);
@@ -155,7 +155,7 @@ typedef struct
 	int reusable;
 } fz_rasterizer_fns;
 
-struct fz_rasterizer_s
+struct fz_rasterizer
 {
 	fz_rasterizer_fns fns;
 	fz_aa_context aa;

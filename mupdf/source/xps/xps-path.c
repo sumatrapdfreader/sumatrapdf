@@ -213,12 +213,6 @@ xps_draw_arc(fz_context *ctx, xps_document *doc, fz_path *path,
 	fz_lineto(ctx, path, point_x, point_y);
 }
 
-/*
- * Parse an abbreviated geometry string, and call
- * ghostscript moveto/lineto/curveto functions to
- * build up a path.
- */
-
 fz_path *
 xps_parse_abbreviated_geometry(fz_context *ctx, xps_document *doc, char *geom, int *fill_rule)
 {
@@ -789,11 +783,6 @@ xps_clip(fz_context *ctx, xps_document *doc, fz_matrix ctm, xps_resource *dict, 
 	fz_clip_path(ctx, dev, path, fill_rule == 0, ctm, fz_infinite_rect);
 	fz_drop_path(ctx, path);
 }
-
-/*
- * Parse an XPS <Path> element, and call relevant ghostscript
- * functions for drawing and/or clipping the child elements.
- */
 
 void
 xps_parse_path(fz_context *ctx, xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *dict, fz_xml *root)

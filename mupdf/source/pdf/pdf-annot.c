@@ -1359,6 +1359,7 @@ pdf_annot_ink_list_stroke_vertex(fz_context *ctx, pdf_annot *annot, int i, int k
 	return fz_transform_point(point, page_ctm);
 }
 
+/* FIXME: try/catch required for memory exhaustion */
 void
 pdf_set_annot_ink_list(fz_context *ctx, pdf_annot *annot, int n, const int *count, const fz_point *v)
 {

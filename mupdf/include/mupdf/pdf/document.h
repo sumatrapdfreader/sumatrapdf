@@ -1,15 +1,13 @@
 #ifndef MUPDF_PDF_DOCUMENT_H
 #define MUPDF_PDF_DOCUMENT_H
 
-typedef struct pdf_lexbuf_s pdf_lexbuf;
-typedef struct pdf_lexbuf_large_s pdf_lexbuf_large;
-typedef struct pdf_xref_s pdf_xref;
-typedef struct pdf_ocg_descriptor_s pdf_ocg_descriptor;
+typedef struct pdf_xref pdf_xref;
+typedef struct pdf_ocg_descriptor pdf_ocg_descriptor;
 
-typedef struct pdf_page_s pdf_page;
-typedef struct pdf_annot_s pdf_annot;
-typedef struct pdf_annot_s pdf_widget;
-typedef struct pdf_js_s pdf_js;
+typedef struct pdf_page pdf_page;
+typedef struct pdf_annot pdf_annot;
+typedef struct pdf_annot pdf_widget;
+typedef struct pdf_js pdf_js;
 
 enum
 {
@@ -17,7 +15,7 @@ enum
 	PDF_LEXBUF_LARGE = 65536
 };
 
-struct pdf_lexbuf_s
+typedef struct
 {
 	size_t size;
 	size_t base_size;
@@ -26,19 +24,19 @@ struct pdf_lexbuf_s
 	float f;
 	char *scratch;
 	char buffer[PDF_LEXBUF_SMALL];
-};
+} pdf_lexbuf;
 
-struct pdf_lexbuf_large_s
+typedef struct
 {
 	pdf_lexbuf base;
 	char buffer[PDF_LEXBUF_LARGE - PDF_LEXBUF_SMALL];
-};
+} pdf_lexbuf_large;
 
 /*
 	Document event structures are mostly opaque to the app. Only the type
 	is visible to the app.
 */
-typedef struct pdf_doc_event_s pdf_doc_event;
+typedef struct pdf_doc_event pdf_doc_event;
 
 /*
 	the type of function via which the app receives
@@ -246,10 +244,9 @@ void pdf_set_layer_config_as_default(fz_context *ctx, pdf_document *doc);
 int pdf_has_unsaved_changes(fz_context *ctx, pdf_document *doc);
 
 /* Unsaved signature fields */
-typedef struct pdf_pkcs7_signer_s pdf_pkcs7_signer;
-typedef struct pdf_unsaved_sig_s pdf_unsaved_sig;
+typedef struct pdf_pkcs7_signer pdf_pkcs7_signer;
 
-struct pdf_unsaved_sig_s
+typedef struct pdf_unsaved_sig
 {
 	pdf_obj *field;
 	size_t byte_range_start;
@@ -257,15 +254,14 @@ struct pdf_unsaved_sig_s
 	size_t contents_start;
 	size_t contents_end;
 	pdf_pkcs7_signer *signer;
-	pdf_unsaved_sig *next;
-};
+	struct pdf_unsaved_sig *next;
+} pdf_unsaved_sig;
 
-typedef struct pdf_rev_page_map_s pdf_rev_page_map;
-struct pdf_rev_page_map_s
+typedef struct
 {
 	int page;
 	int object;
-};
+} pdf_rev_page_map;
 
 typedef struct
 {
@@ -290,7 +286,7 @@ typedef struct {
 	pdf_xfa_entry *entries;
 } pdf_xfa;
 
-struct pdf_document_s
+struct pdf_document
 {
 	fz_document super;
 
@@ -390,7 +386,7 @@ struct pdf_document_s
 
 pdf_document *pdf_create_document(fz_context *ctx);
 
-typedef struct pdf_graft_map_s pdf_graft_map;
+typedef struct pdf_graft_map pdf_graft_map;
 
 /*
 	Return a deep copied object equivalent to the
@@ -525,14 +521,12 @@ int pdf_recognize(fz_context *doc, const char *magic);
 fz_text_language pdf_document_language(fz_context *ctx, pdf_document *doc);
 void pdf_set_document_language(fz_context *ctx, pdf_document *doc, fz_text_language lang);
 
-typedef struct pdf_write_options_s pdf_write_options;
-
 /*
 	In calls to fz_save_document, the following options structure can be used
 	to control aspects of the writing process. This structure may grow
 	in the future, and should be zero-filled to allow forwards compatibility.
 */
-struct pdf_write_options_s
+typedef struct
 {
 	int do_incremental; /* Write just the changed objects. */
 	int do_pretty; /* Pretty-print dictionaries and arrays. */
@@ -550,7 +544,7 @@ struct pdf_write_options_s
 	int permissions; /* Document encryption permissions. */
 	char opwd_utf8[128]; /* Owner password. */
 	char upwd_utf8[128]; /* User password. */
-};
+} pdf_write_options;
 
 extern const pdf_write_options pdf_default_write_options;
 

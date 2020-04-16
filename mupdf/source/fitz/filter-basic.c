@@ -385,14 +385,12 @@ fz_concat_push_drop(fz_context *ctx, fz_stream *concat, fz_stream *chain)
 
 /* ASCII Hex Decode */
 
-typedef struct fz_ahxd_s fz_ahxd;
-
-struct fz_ahxd_s
+typedef struct
 {
 	fz_stream *chain;
 	int eod;
 	unsigned char buffer[256];
-};
+} fz_ahxd;
 
 static inline int iswhite(int a)
 {
@@ -496,14 +494,12 @@ fz_open_ahxd(fz_context *ctx, fz_stream *chain)
 
 /* ASCII 85 Decode */
 
-typedef struct fz_a85d_s fz_a85d;
-
-struct fz_a85d_s
+typedef struct
 {
 	fz_stream *chain;
 	unsigned char buffer[256];
 	int eod;
-};
+} fz_a85d;
 
 static int
 next_a85d(fz_context *ctx, fz_stream *stm, size_t max)
@@ -627,14 +623,12 @@ fz_open_a85d(fz_context *ctx, fz_stream *chain)
 
 /* Run Length Decode */
 
-typedef struct fz_rld_s fz_rld;
-
-struct fz_rld_s
+typedef struct
 {
 	fz_stream *chain;
 	int run, n, c;
 	unsigned char buffer[256];
-};
+} fz_rld;
 
 static int
 next_rld(fz_context *ctx, fz_stream *stm, size_t max)
@@ -727,14 +721,12 @@ fz_open_rld(fz_context *ctx, fz_stream *chain)
 
 /* RC4 Filter */
 
-typedef struct fz_arc4c_s fz_arc4c;
-
-struct fz_arc4c_s
+typedef struct
 {
 	fz_stream *chain;
 	fz_arc4 arc4;
 	unsigned char buffer[256];
-};
+} fz_arc4c;
 
 static int
 next_arc4(fz_context *ctx, fz_stream *stm, size_t max)
@@ -775,9 +767,7 @@ fz_open_arc4(fz_context *ctx, fz_stream *chain, unsigned char *key, unsigned key
 
 /* AES Filter */
 
-typedef struct fz_aesd_s fz_aesd;
-
-struct fz_aesd_s
+typedef struct
 {
 	fz_stream *chain;
 	fz_aes aes;
@@ -786,7 +776,7 @@ struct fz_aesd_s
 	unsigned char bp[16];
 	unsigned char *rp, *wp;
 	unsigned char buffer[256];
-};
+} fz_aesd;
 
 static int
 next_aesd(fz_context *ctx, fz_stream *stm, size_t max)

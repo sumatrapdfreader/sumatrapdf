@@ -80,7 +80,7 @@ fz_drop_stream(fz_context *ctx, fz_stream *stm)
 // TODO: WIN32: HANDLE CreateFileW(), etc.
 // TODO: POSIX: int creat(), read(), write(), lseeko, etc.
 
-typedef struct fz_file_stream_s
+typedef struct
 {
 	FILE *file;
 	unsigned char buffer[4096];

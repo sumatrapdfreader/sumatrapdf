@@ -5,9 +5,6 @@
 
 #if FZ_ENABLE_JPX
 
-typedef struct fz_jpxd_s fz_jpxd;
-typedef struct stream_block_s stream_block;
-
 static void
 jpx_ycc_to_rgb(fz_context *ctx, fz_pixmap *pix, int cbsign, int crsign)
 {
@@ -55,7 +52,7 @@ jpx_ycc_to_rgb(fz_context *ctx, fz_pixmap *pix, int cbsign, int crsign)
 	(cs) == cJP2_Colorspace_Palette_ICCa || \
 	(cs) == cJP2_Colorspace_Palette_CMYKa)
 
-struct fz_jpxd_s
+typedef struct
 {
 	fz_pixmap *pix;
 	JP2_Palette_Params *palette;
@@ -69,13 +66,13 @@ struct fz_jpxd_s
 	JP2_Property_Value vstep[MAX_COMPONENTS];
 	JP2_Property_Value bpss[MAX_COMPONENTS];
 	JP2_Property_Value signs[MAX_COMPONENTS];
-};
+} fz_jpxd;
 
-struct stream_block_s
+typedef struct
 {
 	const unsigned char *data;
 	size_t size;
-};
+} stream_block;
 
 static void * JP2_Callback_Conv
 jpx_alloc(long size, JP2_Callback_Param param)
@@ -484,21 +481,21 @@ fz_load_jpx_info(fz_context *ctx, const unsigned char *data, size_t size, int *w
 
 #include <openjpeg.h>
 
-struct fz_jpxd_s
+typedef struct
 {
 	int width;
 	int height;
 	fz_colorspace *cs;
 	int xres;
 	int yres;
-};
+} fz_jpxd;
 
-struct stream_block_s
+typedef struct
 {
 	const unsigned char *data;
 	OPJ_SIZE_T size;
 	OPJ_SIZE_T pos;
-};
+} stream_block;
 
 /* OpenJPEG does not provide a safe mechanism to intercept
  * allocations. In the latest version all allocations go

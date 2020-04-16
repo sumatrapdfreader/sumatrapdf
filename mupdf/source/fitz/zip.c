@@ -12,7 +12,7 @@
 #define ZIP_CENTRAL_DIRECTORY_SIG 0x02014b50
 #define ZIP_END_OF_CENTRAL_DIRECTORY_SIG 0x06054b50
 
-struct fz_zip_writer_s
+struct fz_zip_writer
 {
 	fz_output *output;
 	fz_buffer *central;

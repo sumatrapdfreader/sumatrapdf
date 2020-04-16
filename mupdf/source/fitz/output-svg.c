@@ -6,9 +6,7 @@
 #define PATH_MAX 4096
 #endif
 
-typedef struct fz_svg_writer_s fz_svg_writer;
-
-struct fz_svg_writer_s
+typedef struct
 {
 	fz_document_writer super;
 	char *path;
@@ -17,7 +15,7 @@ struct fz_svg_writer_s
 	int text_format;
 	int reuse_images;
 	int id;
-};
+} fz_svg_writer;
 
 const char *fz_svg_write_options_usage =
 	"SVG output options:\n"

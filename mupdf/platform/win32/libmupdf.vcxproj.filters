@@ -809,5 +809,17 @@
     <ClInclude Include="..\..\include\mupdf\fitz\log.h">
       <Filter>!include\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\fitz\context-imp.h">
+      <Filter>fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\bidi-imp.h">
+      <Filter>fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\color-imp.h">
+      <Filter>fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\z-imp.h">
+      <Filter>fitz</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

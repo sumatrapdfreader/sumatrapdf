@@ -17,7 +17,7 @@ enum
 	FZ_MAX_SEPARATIONS = 64
 };
 
-typedef struct fz_separations_s fz_separations;
+typedef struct fz_separations fz_separations;
 
 typedef enum
 {

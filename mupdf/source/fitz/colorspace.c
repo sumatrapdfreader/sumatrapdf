@@ -1,5 +1,7 @@
 #include "mupdf/fitz.h"
 
+#include "color-imp.h"
+
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -687,9 +689,7 @@ void fz_set_default_output_intent(fz_context *ctx, fz_default_colorspaces *defau
 
 #if FZ_ENABLE_ICC
 
-typedef struct fz_link_key_s fz_link_key;
-
-struct fz_link_key_s {
+typedef struct {
 	int refs;
 	unsigned char src_md5[16];
 	unsigned char dst_md5[16];
@@ -700,7 +700,7 @@ struct fz_link_key_s {
 	unsigned char format;
 	unsigned char proof;
 	unsigned char bgr;
-};
+} fz_link_key;
 
 static void *
 fz_keep_link_key(fz_context *ctx, void *key_)

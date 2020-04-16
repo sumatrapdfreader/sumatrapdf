@@ -1,4 +1,6 @@
 #include "mupdf/fitz.h"
+
+#include "color-imp.h"
 #include "draw-imp.h"
 
 #include <assert.h>
@@ -59,14 +61,12 @@ static void paint_scan(fz_pixmap *FZ_RESTRICT pix, int y, int fx0, int fx1, int 
 	while (--w);
 }
 
-typedef struct edge_data_s edge_data;
-
-struct edge_data_s
+typedef struct
 {
 	float x;
 	float dx;
 	int v[2*MAXN];
-};
+} edge_data;
 
 static inline void prepare_edge(const float *FZ_RESTRICT vtop, const float *FZ_RESTRICT vbot, edge_data *FZ_RESTRICT edge, float y, int n)
 {

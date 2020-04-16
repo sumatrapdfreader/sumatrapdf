@@ -15,19 +15,15 @@ enum
 	MAX_LENGTH = 4097
 };
 
-typedef struct lzw_code_s lzw_code;
-
-struct lzw_code_s
+typedef struct
 {
 	int prev;			/* prev code (in string) */
 	unsigned short length;		/* string len, including this token */
 	unsigned char value;		/* data value */
 	unsigned char first_char;	/* first token of string */
-};
+} lzw_code;
 
-typedef struct fz_lzwd_s fz_lzwd;
-
-struct fz_lzwd_s
+typedef struct
 {
 	fz_stream *chain;
 	int eod;
@@ -48,7 +44,7 @@ struct fz_lzwd_s
 	unsigned char *rp, *wp;
 
 	unsigned char buffer[4096];
-};
+} fz_lzwd;
 
 static int
 next_lzwd(fz_context *ctx, fz_stream *stm, size_t len)

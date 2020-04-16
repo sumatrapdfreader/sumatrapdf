@@ -8,12 +8,22 @@
 
 enum { T, R, B, L };
 
-typedef struct epub_document_s epub_document;
-typedef struct epub_chapter_s epub_chapter;
-typedef struct epub_page_s epub_page;
-typedef struct epub_accelerator_s epub_accelerator;
+typedef struct epub_chapter epub_chapter;
+typedef struct epub_page epub_page;
 
-struct epub_document_s
+typedef struct
+{
+	int max_chapters;
+	int num_chapters;
+	float layout_w;
+	float layout_h;
+	float layout_em;
+	uint32_t css_sum;
+	int use_doc_css;
+	int *pages_in_chapter;
+} epub_accelerator;
+
+typedef struct
 {
 	fz_document super;
 	fz_archive *zip;
@@ -35,9 +45,9 @@ struct epub_document_s
 	 * to the most recently used html block here, thus
 	 * ensuring that the stored copy won't be evicted. */
 	fz_html *most_recent_html;
-};
+} epub_document;
 
-struct epub_chapter_s
+struct epub_chapter
 {
 	epub_document *doc;
 	char *path;
@@ -45,25 +55,13 @@ struct epub_chapter_s
 	epub_chapter *next;
 };
 
-struct epub_page_s
+struct epub_page
 {
 	fz_page super;
 	epub_document *doc;
 	epub_chapter *ch;
 	int number;
 	fz_html *html;
-};
-
-struct epub_accelerator_s
-{
-	int max_chapters;
-	int num_chapters;
-	float layout_w;
-	float layout_h;
-	float layout_em;
-	uint32_t css_sum;
-	int use_doc_css;
-	int *pages_in_chapter;
 };
 
 static uint32_t

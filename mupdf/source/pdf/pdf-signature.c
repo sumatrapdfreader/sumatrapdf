@@ -69,9 +69,9 @@ void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, size
 	}
 }
 
-typedef struct fieldname_prefix_s
+typedef struct fieldname_prefix
 {
-	struct fieldname_prefix_s *prev;
+	struct fieldname_prefix *prev;
 	char name[1];
 } fieldname_prefix;
 

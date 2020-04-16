@@ -23,7 +23,7 @@ pdf_obj *pdf_find_image_resource(fz_context *ctx, pdf_document *doc, fz_image *i
 pdf_obj *pdf_insert_image_resource(fz_context *ctx, pdf_document *doc, unsigned char md5[16], pdf_obj *obj);
 void pdf_drop_resource_tables(fz_context *ctx, pdf_document *doc);
 
-typedef struct pdf_function_s pdf_function;
+typedef struct pdf_function pdf_function;
 
 void pdf_eval_function(fz_context *ctx, pdf_function *func, const float *in, int inlen, float *out, int outlen);
 pdf_function *pdf_keep_function(fz_context *ctx, pdf_function *func);
@@ -44,9 +44,7 @@ fz_image *pdf_load_image(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 
 pdf_obj *pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image);
 
-typedef struct pdf_pattern_s pdf_pattern;
-
-struct pdf_pattern_s
+typedef struct
 {
 	fz_storable storable;
 	int ismask;
@@ -58,7 +56,7 @@ struct pdf_pattern_s
 	pdf_obj *resources;
 	pdf_obj *contents;
 	int id; /* unique ID for caching rendered tiles */
-};
+} pdf_pattern;
 
 pdf_pattern *pdf_load_pattern(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 pdf_pattern *pdf_keep_pattern(fz_context *ctx, pdf_pattern *pat);

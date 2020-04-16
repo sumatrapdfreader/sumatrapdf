@@ -8,8 +8,8 @@
 	XML document model
 */
 
-typedef struct fz_xml_doc_s fz_xml_doc;
-typedef struct fz_xml_s fz_xml;
+typedef struct fz_xml_doc fz_xml_doc;
+typedef struct fz_xml fz_xml;
 
 /*
 	Parse the contents of buffer into a tree of xml nodes.

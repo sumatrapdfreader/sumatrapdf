@@ -4,15 +4,14 @@
 #include "mupdf/pdf/font.h"
 #include "mupdf/pdf/resource.h"
 
-typedef struct pdf_csi_s pdf_csi;
-typedef struct pdf_gstate_s pdf_gstate;
-typedef struct pdf_processor_s pdf_processor;
+typedef struct pdf_gstate pdf_gstate;
+typedef struct pdf_processor pdf_processor;
 
 void *pdf_new_processor(fz_context *ctx, int size);
 void pdf_close_processor(fz_context *ctx, pdf_processor *proc);
 void pdf_drop_processor(fz_context *ctx, pdf_processor *proc);
 
-struct pdf_processor_s
+struct pdf_processor
 {
 	void (*close_processor)(fz_context *ctx, pdf_processor *proc);
 	void (*drop_processor)(fz_context *ctx, pdf_processor *proc);
@@ -140,7 +139,7 @@ struct pdf_processor_s
 	int hidden;
 };
 
-struct pdf_csi_s
+typedef struct
 {
 	/* input */
 	pdf_document *doc;
@@ -161,7 +160,7 @@ struct pdf_csi_s
 	size_t string_len;
 	int top;
 	float stack[32];
-};
+} pdf_csi;
 
 /* Functions to set up pdf_process structures */
 
@@ -218,7 +217,7 @@ pdf_processor *pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahx
 
 	ascii: If true, escape all binary data in the output.
 */
-typedef struct pdf_filter_options_s
+typedef struct
 {
 	void *opaque;
 	fz_image *(*image_filter)(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image);
@@ -279,7 +278,7 @@ void pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, 
 void pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *resources, fz_buffer *contents);
 
 /* Text handling helper functions */
-typedef struct pdf_text_state_s
+typedef struct
 {
 	float char_space;
 	float word_space;
@@ -291,7 +290,7 @@ typedef struct pdf_text_state_s
 	float rise;
 } pdf_text_state;
 
-typedef struct pdf_text_object_state_s
+typedef struct
 {
 	fz_text *text;
 	fz_rect text_bbox;

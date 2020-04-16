@@ -1,15 +1,13 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
-typedef struct pdf_output_processor_s pdf_output_processor;
-
-struct pdf_output_processor_s
+typedef struct
 {
 	pdf_processor super;
 	fz_output *out;
 	int ahxencode;
 	int extgstate;
-};
+} pdf_output_processor;
 
 /* general graphics state */
 

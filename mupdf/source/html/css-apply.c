@@ -1368,9 +1368,6 @@ verify_splay(const fz_css_style_splay *x)
 }
 #endif
 
-/* Lookup style in the splay tree, returning a pointer to the found instance
- * if there is one, creating and inserting (and moving to root) one if there
- * is not. */
 const fz_css_style *
 fz_css_enlist(fz_context *ctx, const fz_css_style *style, fz_css_style_splay **tree, fz_pool *pool)
 {

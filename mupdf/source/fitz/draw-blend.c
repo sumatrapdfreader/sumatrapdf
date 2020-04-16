@@ -113,10 +113,10 @@ int fz_lookup_blendmode(const char *name)
 	return FZ_BLEND_NORMAL;
 }
 
-char *fz_blendmode_name(int blendmode)
+const char *fz_blendmode_name(int blendmode)
 {
 	if (blendmode >= 0 && blendmode < (int)nelem(fz_blendmode_names))
-		return (char*)fz_blendmode_names[blendmode];
+		return fz_blendmode_names[blendmode];
 	return "Normal";
 }
 

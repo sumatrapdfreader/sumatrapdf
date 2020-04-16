@@ -21,13 +21,11 @@
 <raph> peter came up with this, and it makes sense
 */
 
-typedef struct cfd_node_s cfd_node;
-
-struct cfd_node_s
+typedef struct
 {
 	short val;
 	short nbits;
-};
+} cfd_node;
 
 enum
 {
@@ -294,8 +292,6 @@ static inline void setbits(unsigned char *line, int x0, int x1)
 	}
 }
 
-typedef struct fz_faxd_s fz_faxd;
-
 enum
 {
 	STATE_INIT,		/* initial state, optionally waiting for EOL */
@@ -306,7 +302,7 @@ enum
 	STATE_DONE		/* all done */
 };
 
-struct fz_faxd_s
+typedef struct
 {
 	fz_stream *chain;
 
@@ -332,7 +328,7 @@ struct fz_faxd_s
 	unsigned char *rp, *wp;
 
 	unsigned char buffer[4096];
-};
+} fz_faxd;
 
 static inline void eat_bits(fz_faxd *fax, int nbits)
 {

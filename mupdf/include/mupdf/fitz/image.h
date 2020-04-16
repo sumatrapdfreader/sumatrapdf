@@ -16,9 +16,9 @@
 	as more complex things that decode at different subsample
 	settings on demand.
 */
-typedef struct fz_image_s fz_image;
-typedef struct fz_compressed_image_s fz_compressed_image;
-typedef struct fz_pixmap_image_s fz_pixmap_image;
+typedef struct fz_image fz_image;
+typedef struct fz_compressed_image fz_compressed_image;
+typedef struct fz_pixmap_image fz_pixmap_image;
 
 /*
 	Called to get a handle to a pixmap from an image.
@@ -241,7 +241,7 @@ size_t fz_image_size(fz_context *ctx, fz_image *im);
 	Structure is public to allow other structures to
 	be derived from it. Do not access members directly.
 */
-struct fz_image_s
+struct fz_image
 {
 	fz_key_storable key_storable;
 	int w, h;

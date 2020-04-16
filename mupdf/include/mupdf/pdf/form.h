@@ -148,7 +148,7 @@ int pdf_set_field_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, cons
 int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *value);
 int pdf_set_choice_field_value(fz_context *ctx, pdf_widget *widget, const char *value);
 
-typedef struct pdf_pkcs7_designated_name_s
+typedef struct
 {
 	char *cn;
 	char *o;
@@ -171,7 +171,7 @@ typedef enum
 } pdf_signature_error;
 
 /* Object that can perform the cryptographic operation necessary for document signing */
-typedef struct pdf_pkcs7_signer_s pdf_pkcs7_signer;
+typedef struct pdf_pkcs7_signer pdf_pkcs7_signer;
 
 /* Increment the reference count for a signer object */
 typedef pdf_pkcs7_signer *(pdf_pkcs7_keep_signer_fn)(fz_context *ctx, pdf_pkcs7_signer *signer);
@@ -188,7 +188,7 @@ typedef size_t (pdf_pkcs7_max_digest_size_fn)(fz_context *ctx, pdf_pkcs7_signer 
 /* Create a signature based on ranges of bytes drawn from a stream */
 typedef int (pdf_pkcs7_create_digest_fn)(fz_context *ctx, pdf_pkcs7_signer *signer, fz_stream *in, unsigned char *digest, size_t digest_len);
 
-struct pdf_pkcs7_signer_s
+struct pdf_pkcs7_signer
 {
 	pdf_pkcs7_keep_signer_fn *keep;
 	pdf_pkcs7_drop_signer_fn *drop;
@@ -197,14 +197,14 @@ struct pdf_pkcs7_signer_s
 	pdf_pkcs7_create_digest_fn *create_digest;
 };
 
-typedef struct pdf_pkcs7_verifier_s pdf_pkcs7_verifier;
+typedef struct pdf_pkcs7_verifier pdf_pkcs7_verifier;
 
 typedef void (pdf_pkcs7_drop_verifier_fn)(fz_context *ctx, pdf_pkcs7_verifier *verifier);
 typedef pdf_signature_error (pdf_pkcs7_check_certificate_fn)(fz_context *ctx, pdf_pkcs7_verifier *verifier, unsigned char *signature, size_t len);
 typedef pdf_signature_error (pdf_pkcs7_check_digest_fn)(fz_context *ctx, pdf_pkcs7_verifier *verifier, fz_stream *in, unsigned char *signature, size_t len);
 typedef pdf_pkcs7_designated_name *(pdf_pkcs7_get_signatory_fn)(fz_context *ctx, pdf_pkcs7_verifier *verifier, unsigned char *signature, size_t len);
 
-struct pdf_pkcs7_verifier_s
+struct pdf_pkcs7_verifier
 {
 	pdf_pkcs7_drop_verifier_fn *drop;
 	pdf_pkcs7_check_certificate_fn *check_certificate;
@@ -243,7 +243,7 @@ pdf_obj *pdf_lookup_field(fz_context *ctx, pdf_obj *form, const char *name);
 
 /* Form text field editing events: */
 
-typedef struct pdf_keystroke_event_s
+typedef struct
 {
 	const char *value;
 	const char *change;

@@ -62,7 +62,6 @@ svg_parse_number(const char *str, float min, float max, float inherit)
 	return x;
 }
 
-/* Return length/coordinate in points */
 float
 svg_parse_length(const char *str, float percent, float font_size)
 {

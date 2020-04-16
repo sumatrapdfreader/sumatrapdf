@@ -10,8 +10,7 @@
  * Emit graphics calls to device.
  */
 
-typedef struct pdf_material_s pdf_material;
-typedef struct pdf_run_processor_s pdf_run_processor;
+typedef struct pdf_run_processor pdf_run_processor;
 
 static void pdf_run_xobject(fz_context *ctx, pdf_run_processor *proc, pdf_obj *xobj, pdf_obj *page_resources, fz_matrix transform, int is_smask);
 
@@ -29,7 +28,7 @@ enum
 	PDF_MAT_SHADE,
 };
 
-struct pdf_material_s
+typedef struct
 {
 	int kind;
 	fz_colorspace *colorspace;
@@ -39,9 +38,9 @@ struct pdf_material_s
 	fz_color_params color_params;
 	float alpha;
 	float v[FZ_MAX_COLORS];
-};
+} pdf_material;
 
-struct pdf_gstate_s
+struct pdf_gstate
 {
 	fz_matrix ctm;
 	int clip_depth;
@@ -65,7 +64,7 @@ struct pdf_gstate_s
 	int luminosity;
 };
 
-struct pdf_run_processor_s
+struct pdf_run_processor
 {
 	pdf_processor super;
 	fz_device *dev;
@@ -89,14 +88,12 @@ struct pdf_run_processor_s
 	int gparent;
 };
 
-typedef struct softmask_save_s softmask_save;
-
-struct softmask_save_s
+typedef struct
 {
 	pdf_obj *softmask;
 	pdf_obj *page_resources;
 	fz_matrix ctm;
-};
+} softmask_save;
 
 static pdf_gstate *
 begin_softmask(fz_context *ctx, pdf_run_processor *pr, softmask_save *save)

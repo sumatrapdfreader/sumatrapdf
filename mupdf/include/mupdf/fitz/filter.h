@@ -7,7 +7,7 @@
 #include "mupdf/fitz/store.h"
 #include "mupdf/fitz/stream.h"
 
-typedef struct fz_jbig2_globals_s fz_jbig2_globals;
+typedef struct fz_jbig2_globals fz_jbig2_globals;
 
 typedef struct
 {
@@ -158,11 +158,38 @@ fz_stream *fz_open_lzwd(fz_context *ctx, fz_stream *chain, int early_change, int
 */
 fz_stream *fz_open_predict(fz_context *ctx, fz_stream *chain, int predictor, int columns, int colors, int bpc);
 
+/*
+	Open a filter that performs jbig2 decompression on the chained
+	stream, using the optional globals record.
+*/
 fz_stream *fz_open_jbig2d(fz_context *ctx, fz_stream *chain, fz_jbig2_globals *globals);
 
+/*
+	Create a jbig2 globals record from a buffer.
+
+	Immutable once created.
+*/
 fz_jbig2_globals *fz_load_jbig2_globals(fz_context *ctx, fz_buffer *buf);
+
+/*
+	Increment the reference count for a jbig2 globals record.
+
+	Never throws an exception.
+*/
 fz_jbig2_globals *fz_keep_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals);
+
+/*
+	Decrement the reference count for a jbig2 globals record.
+	When the reference count hits zero, the record is freed.
+
+	Never throws an exception.
+*/
 void fz_drop_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals);
+
+/*
+	Special jbig2 globals drop function for use in implementing
+	store support.
+*/
 void fz_drop_jbig2_globals_imp(fz_context *ctx, fz_storable *globals);
 
 /* Extra filters for tiff */
@@ -172,7 +199,6 @@ void fz_drop_jbig2_globals_imp(fz_context *ctx, fz_storable *globals);
 	Decodes lines of w pixels to 8bpp greyscale.
 */
 fz_stream *fz_open_sgilog16(fz_context *ctx, fz_stream *chain, int w);
-/* SGI Log 24bit (LUV) */
 
 /*
 	SGI Log 24bit (LUV) decode from the chained filter.

@@ -14,10 +14,9 @@
  * into the Global Edge List.
  */
 
-typedef struct fz_path_s fz_path;
-typedef struct fz_stroke_state_s fz_stroke_state;
+typedef struct fz_path fz_path;
 
-typedef enum fz_linecap_e
+typedef enum
 {
 	FZ_LINECAP_BUTT = 0,
 	FZ_LINECAP_ROUND = 1,
@@ -25,7 +24,7 @@ typedef enum fz_linecap_e
 	FZ_LINECAP_TRIANGLE = 3
 } fz_linecap;
 
-typedef enum fz_linejoin_e
+typedef enum
 {
 	FZ_LINEJOIN_MITER = 0,
 	FZ_LINEJOIN_ROUND = 1,
@@ -33,7 +32,7 @@ typedef enum fz_linejoin_e
 	FZ_LINEJOIN_MITER_XPS = 3
 } fz_linejoin;
 
-struct fz_stroke_state_s
+typedef struct
 {
 	int refs;
 	fz_linecap start_cap, dash_cap, end_cap;
@@ -43,7 +42,7 @@ struct fz_stroke_state_s
 	float dash_phase;
 	int dash_len;
 	float dash_list[32];
-};
+} fz_stroke_state;
 
 typedef struct
 {

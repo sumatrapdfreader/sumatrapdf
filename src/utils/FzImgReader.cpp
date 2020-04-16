@@ -6,6 +6,7 @@
 #ifndef NO_LIBMUPDF
 extern "C" {
 #include <mupdf/fitz.h>
+#include "../mupdf/source/fitz/color-imp.h"
 }
 #endif
 

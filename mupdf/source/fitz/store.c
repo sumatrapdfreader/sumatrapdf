@@ -5,21 +5,19 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef struct fz_item_s fz_item;
-
-struct fz_item_s
+typedef struct fz_item
 {
 	void *key;
 	fz_storable *val;
 	size_t size;
-	fz_item *next;
-	fz_item *prev;
+	struct fz_item *next;
+	struct fz_item *prev;
 	fz_store *store;
 	const fz_store_type *type;
-};
+} fz_item;
 
 /* Every entry in fz_store is protected by the alloc lock */
-struct fz_store_s
+struct fz_store
 {
 	int refs;
 

@@ -4,7 +4,7 @@
 
 /* AA-tree */
 
-struct fz_tree_s
+struct fz_tree
 {
 	char *key;
 	void *value;

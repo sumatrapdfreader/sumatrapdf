@@ -11,7 +11,7 @@
 	Generic output streams - generalise between outputting to a
 	file, a buffer, etc.
 */
-typedef struct fz_output_s fz_output;
+typedef struct fz_output fz_output;
 
 /*
 	A function type for use when implementing
@@ -78,7 +78,7 @@ typedef fz_stream *(fz_stream_from_output_fn)(fz_context *ctx, void *state);
 */
 typedef void (fz_truncate_fn)(fz_context *ctx, void *state);
 
-struct fz_output_s
+struct fz_output
 {
 	void *state;
 	fz_output_write_fn *write;

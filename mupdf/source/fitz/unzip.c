@@ -3,7 +3,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include <zlib.h>
+#include "z-imp.h"
 
 #if !defined (INT32_MAX)
 #define INT32_MAX 2147483647L
@@ -20,22 +20,19 @@
 
 #define ZIP_ENCRYPTED_FLAG 0x1
 
-typedef struct zip_entry_s zip_entry;
-typedef struct fz_zip_archive_s fz_zip_archive;
-
-struct zip_entry_s
+typedef struct
 {
 	char *name;
 	uint64_t offset, csize, usize;
-};
+} zip_entry;
 
-struct fz_zip_archive_s
+typedef struct
 {
 	fz_archive super;
 
 	int count;
 	zip_entry *entries;
-};
+} fz_zip_archive;
 
 static void drop_zip_archive(fz_context *ctx, fz_archive *arch)
 {

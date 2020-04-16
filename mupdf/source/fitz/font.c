@@ -1,6 +1,8 @@
 #include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"
+
 #include "draw-imp.h"
+#include "color-imp.h"
 
 #include <ft2build.h>
 #include "hb.h"
@@ -282,7 +284,7 @@ float fz_font_descender(fz_context *ctx, fz_font *font)
  * Freetype hooks
  */
 
-struct fz_font_context_s
+struct fz_font_context
 {
 	int ctx_refs;
 	FT_Library ftlib;

@@ -4,14 +4,12 @@
 
 #include <string.h>
 
-typedef struct fz_inflate_state_s fz_inflate_state;
-
-struct fz_inflate_state_s
+typedef struct
 {
 	fz_stream *chain;
 	z_stream z;
 	unsigned char buffer[4096];
-};
+} fz_inflate_state;
 
 void *fz_zlib_alloc(void *ctx, unsigned int items, unsigned int size)
 {

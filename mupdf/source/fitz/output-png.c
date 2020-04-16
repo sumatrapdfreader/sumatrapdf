@@ -1,8 +1,8 @@
 #include "mupdf/fitz.h"
 
-#include <string.h>
+#include "z-imp.h"
 
-#include <zlib.h>
+#include <string.h>
 
 static inline void big32(unsigned char *buf, unsigned int v)
 {

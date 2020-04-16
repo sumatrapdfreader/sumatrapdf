@@ -4,6 +4,7 @@
 extern "C" {
 #include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
+#include "../mupdf/source/fitz/color-imp.h"
 }
 
 #include "utils/BaseUtil.h"

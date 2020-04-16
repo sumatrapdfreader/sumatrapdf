@@ -310,9 +310,7 @@ fz_save_pixmap_as_pclm(fz_context *ctx, fz_pixmap *pixmap, char *filename, int a
 
 /* High-level document writer interface */
 
-typedef struct fz_pclm_writer_s fz_pclm_writer;
-
-struct fz_pclm_writer_s
+typedef struct
 {
 	fz_document_writer super;
 	fz_draw_options draw;
@@ -321,7 +319,7 @@ struct fz_pclm_writer_s
 	fz_band_writer *bander;
 	fz_output *out;
 	int pagenum;
-};
+} fz_pclm_writer;
 
 static fz_device *
 pclm_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)

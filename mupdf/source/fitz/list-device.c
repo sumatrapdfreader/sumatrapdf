@@ -3,12 +3,9 @@
 #include <assert.h>
 #include <string.h>
 
-typedef struct fz_display_node_s fz_display_node;
-typedef struct fz_list_device_s fz_list_device;
-
 #define STACK_SIZE 96
 
-typedef enum fz_display_command_e
+typedef enum
 {
 	FZ_CMD_FILL_PATH,
 	FZ_CMD_STROKE_PATH,
@@ -78,7 +75,7 @@ typedef enum fz_display_command_e
  * Nodes are packed in the order:
  * header, rect, colorspace, color, alpha, ctm, stroke_state, path, private data.
  */
-struct fz_display_node_s
+typedef struct
 {
 	unsigned int cmd    : 5;
 	unsigned int size   : 9;
@@ -90,7 +87,7 @@ struct fz_display_node_s
 	unsigned int ctm    : 3;
 	unsigned int stroke : 1;
 	unsigned int flags  : 6;
-};
+} fz_display_node;
 
 enum {
 	CS_UNCHANGED = 0,
@@ -115,7 +112,7 @@ enum {
 	MAX_NODE_SIZE = (1<<9)-sizeof(fz_display_node)
 };
 
-struct fz_display_list_s
+struct fz_display_list
 {
 	fz_storable storable;
 	fz_display_node *list;
@@ -124,7 +121,7 @@ struct fz_display_list_s
 	size_t len;
 };
 
-struct fz_list_device_s
+typedef struct
 {
 	fz_device super;
 
@@ -145,7 +142,7 @@ struct fz_list_device_s
 		fz_rect rect;
 	} stack[STACK_SIZE];
 	int tiled;
-};
+} fz_list_device;
 
 enum { ISOLATED = 1, KNOCKOUT = 2 };
 enum { OPM = 1, OP = 2, BP = 3, RI = 4};
@@ -1126,15 +1123,13 @@ fz_list_end_group(fz_context *ctx, fz_device *dev)
 		0); /* private_data_len */
 }
 
-typedef struct fz_list_tile_data_s fz_list_tile_data;
-
-struct fz_list_tile_data_s
+typedef struct
 {
 	float xstep;
 	float ystep;
 	fz_rect view;
 	int id;
-};
+} fz_list_tile_data;
 
 static int
 fz_list_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id)

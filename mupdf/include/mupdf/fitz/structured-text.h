@@ -12,33 +12,29 @@
 /*
 	Simple text layout (for use with annotation editing primarily).
 */
-typedef struct fz_layout_char_s fz_layout_char;
-typedef struct fz_layout_line_s fz_layout_line;
-typedef struct fz_layout_block_s fz_layout_block;
-
-struct fz_layout_char_s
+typedef struct fz_layout_char
 {
 	float x, w;
 	const char *p; /* location in source text of character */
-	fz_layout_char *next;
-};
+	struct fz_layout_char *next;
+} fz_layout_char;
 
-struct fz_layout_line_s
+typedef struct fz_layout_line
 {
 	float x, y, h;
 	const char *p; /* location in source text of start of line */
 	fz_layout_char *text;
-	fz_layout_line *next;
-};
+	struct fz_layout_line *next;
+} fz_layout_line;
 
-struct fz_layout_block_s
+typedef struct
 {
 	fz_pool *pool;
 	fz_matrix matrix;
 	fz_matrix inv_matrix;
 	fz_layout_line *head, **tailp;
 	fz_layout_char **text_tailp;
-};
+} fz_layout_block;
 
 fz_layout_block *fz_new_layout(fz_context *ctx);
 void fz_drop_layout(fz_context *ctx, fz_layout_block *block);
@@ -51,10 +47,9 @@ void fz_add_layout_char(fz_context *ctx, fz_layout_block *block, float x, float 
 	(In development - Subject to change in future versions)
 */
 
-typedef struct fz_stext_char_s fz_stext_char;
-typedef struct fz_stext_line_s fz_stext_line;
-typedef struct fz_stext_block_s fz_stext_block;
-typedef struct fz_stext_page_s fz_stext_page;
+typedef struct fz_stext_char fz_stext_char;
+typedef struct fz_stext_line fz_stext_line;
+typedef struct fz_stext_block fz_stext_block;
 
 /*
 	FZ_STEXT_PRESERVE_LIGATURES: If this option is activated
@@ -89,12 +84,12 @@ enum
 	A text page is a list of blocks, together with an overall
 	bounding box.
 */
-struct fz_stext_page_s
+typedef struct
 {
 	fz_pool *pool;
 	fz_rect mediabox;
 	fz_stext_block *first_block, *last_block;
-};
+} fz_stext_page;
 
 enum
 {
@@ -106,7 +101,7 @@ enum
 	A text block is a list of lines of text (typically a paragraph),
 	or an image.
 */
-struct fz_stext_block_s
+struct fz_stext_block
 {
 	int type;
 	fz_rect bbox;
@@ -120,7 +115,7 @@ struct fz_stext_block_s
 /*
 	A text line is a list of characters that share a common baseline.
 */
-struct fz_stext_line_s
+struct fz_stext_line
 {
 	int wmode; /* 0 for horizontal, 1 for vertical */
 	fz_point dir; /* normalized direction of baseline */
@@ -133,7 +128,7 @@ struct fz_stext_line_s
 	A text char is a unicode character, the style in which is
 	appears, and the point at which it is positioned.
 */
-struct fz_stext_char_s
+struct fz_stext_char
 {
 	int c;
 	int color; /* sRGB hex color */
@@ -228,12 +223,10 @@ char *fz_copy_rectangle(fz_context *ctx, fz_stext_page *page, fz_rect area, int 
 /*
 	Options for creating a pixmap and draw device.
 */
-typedef struct fz_stext_options_s fz_stext_options;
-
-struct fz_stext_options_s
+typedef struct
 {
 	int flags;
-};
+} fz_stext_options;
 
 /*
 	Parse stext device options from a comma separated key-value

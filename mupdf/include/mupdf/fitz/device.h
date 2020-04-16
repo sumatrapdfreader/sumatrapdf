@@ -20,7 +20,7 @@
 		The bbox device calculates the bounding box for the page.
 	Other devices can (and will) be written in the future.
 */
-typedef struct fz_device_s fz_device;
+typedef struct fz_device fz_device;
 
 enum
 {
@@ -72,16 +72,37 @@ enum
 	FZ_BLEND_KNOCKOUT = 32
 };
 
+/*
+	Map from (case sensitive) blend mode string to enumeration.
+*/
 int fz_lookup_blendmode(const char *name);
-char *fz_blendmode_name(int blendmode);
 
-typedef struct fz_device_container_stack_s fz_device_container_stack;
-struct fz_device_container_stack_s
+/*
+	Map from enumeration to blend mode string.
+
+	The string is static, with arbitrary lifespan.
+*/
+const char *fz_blendmode_name(int blendmode);
+
+/*
+	The device structure is public to allow devices to be
+	implemented outside of fitz.
+
+	Device methods should always be called using e.g.
+	fz_fill_path(ctx, dev, ...) rather than
+	dev->fill_path(ctx, dev, ...)
+*/
+
+/*
+	Devices can keep track of containers (clips/masks/groups/tiles)
+	as they go to save callers having to do it.
+*/
+typedef struct
 {
 	fz_rect scissor;
 	int type;
 	int user;
-};
+} fz_device_container_stack;
 
 enum
 {
@@ -91,7 +112,7 @@ enum
 	fz_device_container_stack_is_tile,
 };
 
-struct fz_device_s
+struct fz_device
 {
 	int refs;
 	int hints;
@@ -139,6 +160,9 @@ struct fz_device_s
 	fz_device_container_stack *container;
 };
 
+/*
+	Device calls; graphics primitives and containers.
+*/
 void fz_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params);
 void fz_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params);
 void fz_clip_path(fz_context *ctx, fz_device *dev, const fz_path *path, int even_odd, fz_matrix ctm, fz_rect scissor);
@@ -164,8 +188,15 @@ void fz_render_flags(fz_context *ctx, fz_device *dev, int set, int clear);
 void fz_set_default_colorspaces(fz_context *ctx, fz_device *dev, fz_default_colorspaces *default_cs);
 void fz_begin_layer(fz_context *ctx, fz_device *dev, const char *layer_name);
 void fz_end_layer(fz_context *ctx, fz_device *dev);
-fz_device *fz_new_device_of_size(fz_context *ctx, int size);
 
+/*
+	Devices are created by calls to device implementations, for
+	instance: foo_new_device(). These will be implemented by calling
+	fz_new_derived_device(ctx, foo_device) where foo_device is a
+	structure "derived from" fz_device, for instance
+	typedef struct { fz_device base;  ...extras...} foo_device;
+*/
+fz_device *fz_new_device_of_size(fz_context *ctx, int size);
 #define fz_new_derived_device(CTX, TYPE) \
 	((TYPE *)Memento_label(fz_new_device_of_size(ctx,sizeof(TYPE)),#TYPE))
 
@@ -177,15 +208,31 @@ fz_device *fz_new_device_of_size(fz_context *ctx, int size);
 void fz_close_device(fz_context *ctx, fz_device *dev);
 
 /*
-	Free a device of any type and its resources.
+	Reduce the reference count on a device. When the reference count
+	reaches zero, the device and its resources will be freed.
 	Don't forget to call fz_close_device before dropping the device,
 	or you may get incomplete output!
+
+	Never throws exceptions.
 */
 void fz_drop_device(fz_context *ctx, fz_device *dev);
 
+/*
+	Increment the reference count for a device. Returns the same
+	pointer.
+
+	Never throws exceptions.
+*/
 fz_device *fz_keep_device(fz_context *ctx, fz_device *dev);
 
+/*
+	Enable (set) hint bits within the hint bitfield for a device.
+*/
 void fz_enable_device_hints(fz_context *ctx, fz_device *dev, int hints);
+
+/*
+	Disable (clear) hint bits within the hint bitfield for a device.
+*/
 void fz_disable_device_hints(fz_context *ctx, fz_device *dev, int hints);
 
 /*
@@ -203,8 +250,6 @@ enum
 /*
 	Cookie support - simple communication channel between app/library.
 */
-
-typedef struct fz_cookie_s fz_cookie;
 
 /*
 	Provide two-way communication between application and library.
@@ -245,14 +290,14 @@ typedef struct fz_cookie_s fz_cookie;
 	incomplete: Initially should be set to 0. Will be set to
 	non-zero if a TRYLATER error is thrown during rendering.
 */
-struct fz_cookie_s
+typedef struct
 {
 	int abort;
 	int progress;
 	size_t progress_max; /* (size_t)-1 for unknown */
 	int errors;
 	int incomplete;
-};
+} fz_cookie;
 
 /*
 	Create a device to print a debug trace of all device calls.
@@ -381,9 +426,7 @@ fz_device *fz_new_draw_device_type3(fz_context *ctx, fz_matrix transform, fz_pix
 	struct fz_draw_options: Options for creating a pixmap and draw
 	device.
 */
-typedef struct fz_draw_options_s fz_draw_options;
-
-struct fz_draw_options_s
+typedef struct
 {
 	int rotate;
 	int x_resolution;
@@ -394,7 +437,7 @@ struct fz_draw_options_s
 	int alpha;
 	int graphics;
 	int text;
-};
+} fz_draw_options;
 
 extern const char *fz_draw_options_usage;
 

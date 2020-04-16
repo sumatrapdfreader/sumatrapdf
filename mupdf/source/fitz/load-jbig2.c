@@ -239,7 +239,7 @@ struct info
 	fz_colorspace *cspace;
 };
 
-struct fz_jbig2_alloc_s
+struct fz_jbig2_allocator
 {
 	Jbig2Allocator super;
 	fz_context *ctx;
@@ -263,19 +263,19 @@ error_callback(void *data, const char *msg, Jbig2Severity severity, int32_t seg_
 
 static void *fz_jbig2_alloc(Jbig2Allocator *allocator, size_t size)
 {
-	fz_context *ctx = ((struct fz_jbig2_alloc_s *) allocator)->ctx;
+	fz_context *ctx = ((struct fz_jbig2_allocator *) allocator)->ctx;
 	return fz_malloc_no_throw(ctx, size);
 }
 
 static void fz_jbig2_free(Jbig2Allocator *allocator, void *p)
 {
-	fz_context *ctx = ((struct fz_jbig2_alloc_s *) allocator)->ctx;
+	fz_context *ctx = ((struct fz_jbig2_allocator *) allocator)->ctx;
 	fz_free(ctx, p);
 }
 
 static void *fz_jbig2_realloc(Jbig2Allocator *allocator, void *p, size_t size)
 {
-	fz_context *ctx = ((struct fz_jbig2_alloc_s *) allocator)->ctx;
+	fz_context *ctx = ((struct fz_jbig2_allocator *) allocator)->ctx;
 	if (size == 0)
 	{
 		fz_free(ctx, p);
@@ -291,7 +291,7 @@ jbig2_read_image(fz_context *ctx, struct info *jbig2, const unsigned char *buf, 
 {
 	Jbig2Ctx *jctx = NULL;
 	Jbig2Image *page = NULL;
-	struct fz_jbig2_alloc_s allocator;
+	struct fz_jbig2_allocator allocator;
 	fz_pixmap *pix = NULL;
 
 	allocator.super.alloc = fz_jbig2_alloc;

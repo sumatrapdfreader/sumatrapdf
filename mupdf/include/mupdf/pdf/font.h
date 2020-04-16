@@ -18,27 +18,23 @@ enum
 
 void pdf_load_encoding(const char **estrings, const char *encoding);
 
-typedef struct pdf_font_desc_s pdf_font_desc;
-typedef struct pdf_hmtx_s pdf_hmtx;
-typedef struct pdf_vmtx_s pdf_vmtx;
-
-struct pdf_hmtx_s
+typedef struct
 {
 	unsigned short lo;
 	unsigned short hi;
 	int w;	/* type3 fonts can be big! */
-};
+} pdf_hmtx;
 
-struct pdf_vmtx_s
+typedef struct
 {
 	unsigned short lo;
 	unsigned short hi;
 	short x;
 	short y;
 	short w;
-};
+} pdf_vmtx;
 
-struct pdf_font_desc_s
+typedef struct
 {
 	fz_storable storable;
 	size_t size;
@@ -77,7 +73,7 @@ struct pdf_font_desc_s
 	pdf_vmtx *vmtx;
 
 	int is_embedded;
-};
+} pdf_font_desc;
 
 void pdf_set_font_wmode(fz_context *ctx, pdf_font_desc *font, int wmode);
 void pdf_set_default_hmtx(fz_context *ctx, pdf_font_desc *font, int w);

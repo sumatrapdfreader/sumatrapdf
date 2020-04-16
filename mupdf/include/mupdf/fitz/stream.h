@@ -19,7 +19,7 @@ int fz_file_exists(fz_context *ctx, const char *path);
 
 	Only the data between rp and wp is valid.
 */
-typedef struct fz_stream_s fz_stream;
+typedef struct fz_stream fz_stream;
 
 fz_stream *fz_open_file_ptr_no_close(fz_context *ctx, FILE *file);
 
@@ -219,7 +219,7 @@ typedef void (fz_stream_drop_fn)(fz_context *ctx, void *state);
 */
 typedef void (fz_stream_seek_fn)(fz_context *ctx, fz_stream *stm, int64_t offset, int whence);
 
-struct fz_stream_s
+struct fz_stream
 {
 	int refs;
 	int error;

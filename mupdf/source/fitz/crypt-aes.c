@@ -527,6 +527,7 @@ void fz_aes_crypt_cbc( aes_context *ctx,
 	}
 }
 
+#ifdef UNUSED
 /*
  * AES-CFB buffer encryption/decryption
  */
@@ -569,3 +570,4 @@ void fz_aes_crypt_cfb( aes_context *ctx,
 
 	*iv_off = n;
 }
+#endif

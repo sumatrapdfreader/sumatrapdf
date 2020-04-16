@@ -2,9 +2,7 @@
 
 /* 4bit greyscale Thunderscan decoding */
 
-typedef struct fz_thunder_s fz_thunder;
-
-struct fz_thunder_s
+typedef struct
 {
 	fz_stream *chain;
 	int lastpixel;
@@ -13,7 +11,7 @@ struct fz_thunder_s
 
 	int len;
 	unsigned char *buffer;
-};
+} fz_thunder;
 
 static int
 next_thunder(fz_context *ctx, fz_stream *stm, size_t max)

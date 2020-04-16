@@ -1,9 +1,9 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-typedef struct fz_context_s fz_context;
-typedef struct fz_image_s fz_image;
-typedef struct pdf_document_s pdf_document;
+typedef struct fz_context fz_context;
+typedef struct fz_image fz_image;
+typedef struct pdf_document pdf_document;
 
 class PdfCreator {
   public:

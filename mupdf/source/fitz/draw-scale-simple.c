@@ -58,13 +58,11 @@ dst[j] = SUM(filter(dist[j,i] * F) * F * src[i])
 
 */
 
-typedef struct fz_scale_filter_s fz_scale_filter;
-
-struct fz_scale_filter_s
+typedef struct fz_scale_filter
 {
 	int width;
-	float (*fn)(fz_scale_filter *, float);
-};
+	float (*fn)(struct fz_scale_filter *, float);
+} fz_scale_filter;
 
 /* Image scale filters */
 
@@ -176,11 +174,9 @@ leave enough space) and then reordering afterwards.
 
 */
 
-typedef struct fz_weights_s fz_weights;
-
 /* This structure is accessed from ARM code - bear this in mind before
  * altering it! */
-struct fz_weights_s
+typedef struct
 {
 	int flip;	/* true if outputting reversed */
 	int count;	/* number of output pixels we have records for in this table */
@@ -189,9 +185,9 @@ struct fz_weights_s
 	int new_line;	/* True if no weights for the current output pixel */
 	int patch_l;	/* How many output pixels we skip over */
 	int index[1];
-};
+} fz_weights;
 
-struct fz_scale_cache_s
+struct fz_scale_cache
 {
 	int src_w;
 	float x;

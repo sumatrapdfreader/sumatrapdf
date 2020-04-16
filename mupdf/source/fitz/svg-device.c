@@ -4,43 +4,36 @@
 #include <float.h>
 #include <math.h>
 
-typedef struct svg_device_s svg_device;
-
-typedef struct tile_s tile;
-typedef struct font_s font;
-typedef struct glyph_s glyph;
-typedef struct image_s image;
-
-struct tile_s
+typedef struct
 {
 	int pattern;
 	fz_matrix ctm;
 	fz_rect view;
 	fz_rect area;
 	fz_point step;
-};
+} tile;
 
-struct glyph_s
+typedef struct glyph
 {
 	float x_off;
 	float y_off;
-};
+} glyph;
 
-struct font_s
+typedef struct
 {
 	int id;
 	fz_font *font;
 	int max_sentlist;
 	glyph *sentlist;
-};
+} font;
 
-struct image_s
+typedef struct
 {
 	int id;
 	fz_image *image;
-};
+} image;
 
-struct svg_device_s
+typedef struct
 {
 	fz_device super;
 
@@ -71,7 +64,7 @@ struct svg_device_s
 	image *images;
 
 	int layers;
-};
+} svg_device;
 
 /* SVG is awkward about letting us define things within symbol definitions
  * so we have to delay definitions until after the symbol definition ends. */

@@ -182,14 +182,12 @@ static struct {
 
 /* SGI Log 16bit (greyscale) */
 
-typedef struct fz_sgilog16_s fz_sgilog16;
-
-struct fz_sgilog16_s
+typedef struct
 {
 	fz_stream *chain;
 	int run, n, c, w;
 	uint16_t *temp;
-};
+} fz_sgilog16;
 
 static inline int
 sgilog16val(fz_context *ctx, uint16_t v)
@@ -334,14 +332,12 @@ fz_open_sgilog16(fz_context *ctx, fz_stream *chain, int w)
 
 /* SGI Log 24bit (LUV) */
 
-typedef struct fz_sgilog24_s fz_sgilog24;
-
-struct fz_sgilog24_s
+typedef struct
 {
 	fz_stream *chain;
 	int err, w;
 	uint8_t *temp;
-};
+} fz_sgilog24;
 
 static int
 uv_decode(float *up, float *vp, int c)	/* decode (u',v') index */
@@ -499,14 +495,12 @@ fz_open_sgilog24(fz_context *ctx, fz_stream *chain, int w)
 
 /* SGI Log 32bit */
 
-typedef struct fz_sgilog32_s fz_sgilog32;
-
-struct fz_sgilog32_s
+typedef struct
 {
 	fz_stream *chain;
 	int run, n, c, w;
 	uint32_t *temp;
-};
+} fz_sgilog32;
 
 static inline void
 sgilog32val(fz_context *ctx, uint32_t p, uint8_t *rgb)

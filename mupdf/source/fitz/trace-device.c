@@ -1,6 +1,6 @@
 #include "mupdf/fitz.h"
 
-typedef struct fz_trace_device_s
+typedef struct
 {
 	fz_device super;
 	fz_output *out;

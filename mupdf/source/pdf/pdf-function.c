@@ -14,8 +14,6 @@ enum
 	MAX_M = FZ_MAX_COLORS
 };
 
-typedef struct psobj_s psobj;
-
 enum
 {
 	SAMPLE = 0,
@@ -24,7 +22,20 @@ enum
 	POSTSCRIPT = 4
 };
 
-struct pdf_function_s
+typedef struct
+{
+	int type;
+	union
+	{
+		int b;				/* boolean (stack only) */
+		int i;				/* integer (stack and code) */
+		float f;			/* real (stack and code) */
+		int op;				/* operator (code only) */
+		int block;			/* if/ifelse block pointer (code only) */
+	} u;
+} psobj;
+
+struct pdf_function
 {
 	fz_storable storable;
 	size_t size;
@@ -120,26 +131,11 @@ static char *ps_op_names[] =
 	"roll", "round", "sin", "sqrt", "sub", "true", "truncate", "xor"
 };
 
-struct psobj_s
-{
-	int type;
-	union
-	{
-		int b;				/* boolean (stack only) */
-		int i;				/* integer (stack and code) */
-		float f;			/* real (stack and code) */
-		int op;				/* operator (code only) */
-		int block;			/* if/ifelse block pointer (code only) */
-	} u;
-};
-
-typedef struct ps_stack_s ps_stack;
-
-struct ps_stack_s
+typedef struct
 {
 	psobj stack[100];
 	int sp;
-};
+} ps_stack;
 
 static void
 ps_init_stack(ps_stack *st)

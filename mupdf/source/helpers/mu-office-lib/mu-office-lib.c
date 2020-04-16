@@ -106,7 +106,7 @@ static void muoffice_lock(void *user, int lock);
 
 static void muoffice_unlock(void *user, int lock);
 
-struct MuOfficeLib_s
+struct MuOfficeLib
 {
 	fz_context *ctx;
 	mu_mutex mutexes[FZ_LOCK_MAX+1];
@@ -294,7 +294,7 @@ char * MuOfficeLib_getSupportedFileExtensions(void)
 	return NULL;
 }
 
-struct MuOfficeDoc_s
+struct MuOfficeDoc
 {
 	MuOfficeLib *mu;
 	fz_context *ctx;
@@ -312,7 +312,7 @@ struct MuOfficeDoc_s
 	MuOfficePage *pages;
 };
 
-struct MuOfficePage_s
+struct MuOfficePage
 {
 	MuOfficePage *next;
 	MuOfficeDoc *doc;
@@ -323,7 +323,7 @@ struct MuOfficePage_s
 	fz_display_list *list;
 };
 
-struct MuOfficeRender_s
+struct MuOfficeRender
 {
 	MuOfficePage *page;
 	float zoom;

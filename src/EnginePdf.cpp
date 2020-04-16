@@ -79,6 +79,9 @@ static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
         return nullptr;
     }
 
+    // TODO: pdf_parse_file_spec() is no longer accessible
+    return nullptr;
+#if 0
     fz_outline root = {0}, *node = &root;
     for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
         pdf_obj* name = pdf_dict_get_key(ctx, dict, i);
@@ -107,6 +110,7 @@ static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
     pdf_drop_obj(ctx, dict);
 
     return root.next;
+#endif
 }
 
 struct PageLabelInfo {

@@ -1055,11 +1055,15 @@
     <ClInclude Include="..\..\include\mupdf\pdf\resource.h" />
     <ClInclude Include="..\..\include\mupdf\pdf\xref.h" />
     <ClInclude Include="..\..\include\mupdf\ucdn.h" />
+    <ClInclude Include="..\..\source\fitz\bidi-imp.h" />
+    <ClInclude Include="..\..\source\fitz\color-imp.h" />
+    <ClInclude Include="..\..\source\fitz\context-imp.h" />
     <ClInclude Include="..\..\source\fitz\draw-imp.h" />
     <ClInclude Include="..\..\source\fitz\html-tags.h" />
     <ClInclude Include="..\..\source\fitz\jmemcust.h" />
     <ClInclude Include="..\..\source\fitz\paint-glyph.h" />
     <ClInclude Include="..\..\source\fitz\unicodedata_db.h" />
+    <ClInclude Include="..\..\source\fitz\z-imp.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libluratech.vcxproj">

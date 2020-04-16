@@ -154,13 +154,6 @@ void mu_unlock_mutex(mu_mutex *mutex)
 
 #include <string.h>
 
-struct mu_semaphore
-{
-	int count;
-	pthread_mutex_t mutex;
-	pthread_cond_t cond;
-};
-
 int
 mu_create_semaphore(mu_semaphore *sem)
 {

@@ -158,6 +158,7 @@ pdf_load_name_tree_imp(fz_context *ctx, pdf_obj *dict, pdf_document *doc, pdf_ob
 	}
 }
 
+/* FIXME: fz_try/fz_catch needed here */
 pdf_obj *
 pdf_load_name_tree(fz_context *ctx, pdf_document *doc, pdf_obj *which)
 {

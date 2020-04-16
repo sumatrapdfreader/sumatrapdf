@@ -1,5 +1,7 @@
 #include "mupdf/fitz.h"
 
+#include "color-imp.h"
+
 #include <math.h>
 
 /* Fast color transforms */

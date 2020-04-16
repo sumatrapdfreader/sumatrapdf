@@ -1,37 +1,32 @@
 #ifndef MUPDF_PDF_CMAP_H
 #define MUPDF_PDF_CMAP_H
 
-typedef struct pdf_cmap_s pdf_cmap;
-typedef struct pdf_range_s pdf_range;
-typedef struct pdf_xrange_s pdf_xrange;
-typedef struct pdf_mrange_s pdf_mrange;
-
 #define PDF_MRANGE_CAP 8
 
-struct pdf_range_s
+typedef struct
 {
 	unsigned short low, high, out;
-};
+} pdf_range;
 
-struct pdf_xrange_s
+typedef struct
 {
 	unsigned int low, high, out;
-};
+} pdf_xrange;
 
-struct pdf_mrange_s
+typedef struct
 {
 	unsigned int low, out;
-};
+} pdf_mrange;
 
-typedef struct cmap_splay_s cmap_splay;
+typedef struct cmap_splay cmap_splay;
 
-struct pdf_cmap_s
+typedef struct pdf_cmap
 {
 	fz_storable storable;
 	char cmap_name[32];
 
 	char usecmap_name[32];
-	pdf_cmap *usecmap;
+	struct pdf_cmap *usecmap;
 
 	int wmode;
 
@@ -57,7 +52,7 @@ struct pdf_cmap_s
 
 	int tlen, tcap, ttop;
 	cmap_splay *tree;
-};
+} pdf_cmap;
 
 pdf_cmap *pdf_new_cmap(fz_context *ctx);
 pdf_cmap *pdf_keep_cmap(fz_context *ctx, pdf_cmap *cmap);

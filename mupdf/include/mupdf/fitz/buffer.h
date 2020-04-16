@@ -10,10 +10,34 @@
 
 	Buffers have a capacity (the number of bytes storage immediately
 	available) and a current size.
-*/
-typedef struct fz_buffer_s fz_buffer;
 
+	The contents of the structure are considered implementation
+	details and are subject to change. Users should use the accessor
+	functions in preference.
+*/
+typedef struct
+{
+	int refs;
+	unsigned char *data;
+	size_t cap, len;
+	int unused_bits;
+	int shared;
+} fz_buffer;
+
+/*
+	Take an additional reference to the buffer. The same pointer
+	is returned.
+
+	Never throws exceptions.
+*/
 fz_buffer *fz_keep_buffer(fz_context *ctx, fz_buffer *buf);
+
+/*
+	Drop a reference to the buffer. When the reference count reaches
+	zero, the buffer is destroyed.
+
+	Never throws exceptions.
+*/
 void fz_drop_buffer(fz_context *ctx, fz_buffer *buf);
 
 /*
@@ -84,8 +108,20 @@ void fz_grow_buffer(fz_context *ctx, fz_buffer *buf);
 */
 void fz_trim_buffer(fz_context *ctx, fz_buffer *buf);
 
+/*
+	Empties the buffer. Storage is not freed, but is held ready
+	to be reused as the buffer is refilled.
+
+	Never throws exceptions.
+*/
 void fz_clear_buffer(fz_context *ctx, fz_buffer *buf);
 
+/*
+	Append the contents of the source buffer onto the end of the
+	destination buffer, extending automatically as required.
+
+	Ownership of buffers does not change.
+*/
 void fz_append_buffer(fz_context *ctx, fz_buffer *destination, fz_buffer *source);
 
 /*
@@ -140,10 +176,16 @@ void fz_append_vprintf(fz_context *ctx, fz_buffer *buffer, const char *fmt, va_l
 */
 void fz_terminate_buffer(fz_context *ctx, fz_buffer *buf);
 
+/*
+	Create an MD5 digest from buffer contents.
+
+	Never throws exceptions.
+*/
 void fz_md5_buffer(fz_context *ctx, fz_buffer *buffer, unsigned char digest[16]);
 
 /*
 	Take ownership of buffer contents.
+
 	Performs the same task as fz_buffer_storage, but ownership of
 	the data buffer returns with this call. The buffer is left
 	empty.
@@ -156,16 +198,5 @@ void fz_md5_buffer(fz_context *ctx, fz_buffer *buffer, unsigned char digest[16])
 	Returns length of stream.
 */
 size_t fz_buffer_extract(fz_context *ctx, fz_buffer *buf, unsigned char **data);
-
-/* Implementation details: subject to change. */
-
-struct fz_buffer_s
-{
-	int refs;
-	unsigned char *data;
-	size_t cap, len;
-	int unused_bits;
-	int shared;
-};
 
 #endif

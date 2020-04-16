@@ -536,9 +536,7 @@ fz_parse_pwg_options(fz_context *ctx, fz_pwg_options *opts, const char *args)
 	return opts;
 }
 
-typedef struct fz_pwg_writer_s fz_pwg_writer;
-
-struct fz_pwg_writer_s
+typedef struct
 {
 	fz_document_writer super;
 	fz_draw_options draw;
@@ -546,7 +544,7 @@ struct fz_pwg_writer_s
 	int mono;
 	fz_pixmap *pixmap;
 	fz_output *out;
-};
+} fz_pwg_writer;
 
 static fz_device *
 pwg_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)

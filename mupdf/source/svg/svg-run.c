@@ -11,9 +11,7 @@
 
 #define MAX_USE_DEPTH 100
 
-typedef struct svg_state_s svg_state;
-
-struct svg_state_s
+typedef struct svg_state
 {
 	fz_matrix transform;
 	fz_stroke_state stroke;
@@ -33,7 +31,7 @@ struct svg_state_s
 	int stroke_is_set;
 	float stroke_color[3];
 	float stroke_opacity;
-};
+} svg_state;
 
 static void svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state);
 static void svg_run_element(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *state);

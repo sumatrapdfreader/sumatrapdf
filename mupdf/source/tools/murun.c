@@ -797,7 +797,7 @@ static fz_buffer *ffi_tobuffer(js_State *J, int idx)
 
 /* device calling into js from c */
 
-typedef struct js_device_s
+typedef struct
 {
 	fz_device super;
 	js_State *J;

@@ -3,8 +3,6 @@
 
 #include <string.h>
 
-typedef struct filter_gstate_s filter_gstate;
-
 typedef enum
 {
 	FLUSH_CTM = 1,
@@ -17,9 +15,7 @@ typedef enum
 	FLUSH_FILL = 1+2
 } gstate_flush_flags;
 
-typedef struct pdf_filter_gstate_s pdf_filter_gstate;
-
-struct pdf_filter_gstate_s
+typedef struct pdf_filter_gstate
 {
 	fz_matrix ctm;
 	struct
@@ -43,24 +39,24 @@ struct pdf_filter_gstate_s
 		float miterlimit;
 	} stroke;
 	pdf_text_state text;
-};
+} pdf_filter_gstate;
 
-struct filter_gstate_s
+typedef struct filter_gstate
 {
-	filter_gstate *next;
+	struct filter_gstate *next;
 	int pushed;
 	pdf_filter_gstate pending;
 	pdf_filter_gstate sent;
-};
+} filter_gstate;
 
-typedef struct editable_str_s
+typedef struct
 {
 	char *utf8;
 	int edited;
 	int pos;
 } editable_str;
 
-typedef struct tag_record_s
+typedef struct tag_record
 {
 	int bdc;
 	char *tag;
@@ -72,10 +68,10 @@ typedef struct tag_record_s
 	editable_str alt;
 	editable_str actualtext;
 
-	struct tag_record_s *prev;
+	struct tag_record *prev;
 } tag_record;
 
-typedef struct pdf_filter_processor_s
+typedef struct
 {
 	pdf_processor super;
 	pdf_document *doc;

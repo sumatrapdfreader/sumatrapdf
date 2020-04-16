@@ -1421,9 +1421,7 @@ fz_save_bitmap_as_pcl(fz_context *ctx, fz_bitmap *bitmap, char *filename, int ap
 
 /* High-level document writer interface */
 
-typedef struct fz_pcl_writer_s fz_pcl_writer;
-
-struct fz_pcl_writer_s
+typedef struct
 {
 	fz_document_writer super;
 	fz_draw_options draw;
@@ -1431,7 +1429,7 @@ struct fz_pcl_writer_s
 	fz_pixmap *pixmap;
 	int mono;
 	fz_output *out;
-};
+} fz_pcl_writer;
 
 static fz_device *
 pcl_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)

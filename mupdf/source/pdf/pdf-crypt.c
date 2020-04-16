@@ -12,15 +12,13 @@ enum
 	PDF_CRYPT_UNKNOWN,
 };
 
-typedef struct pdf_crypt_filter_s pdf_crypt_filter;
-
-struct pdf_crypt_filter_s
+typedef struct
 {
 	int method;
 	int length;
-};
+} pdf_crypt_filter;
 
-struct pdf_crypt_s
+struct pdf_crypt
 {
 	pdf_obj *id;
 

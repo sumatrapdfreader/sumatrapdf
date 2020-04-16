@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-typedef struct globals_s
+typedef struct
 {
 	pdf_document *doc;
 	fz_context *ctx;

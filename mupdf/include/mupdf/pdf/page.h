@@ -114,13 +114,11 @@ void pdf_run_page_widgets(fz_context *ctx, pdf_page *page, fz_device *dev, fz_ma
 void pdf_filter_page_contents(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_filter_options *filter);
 void pdf_filter_annot_contents(fz_context *ctx, pdf_document *doc, pdf_annot *annot, pdf_filter_options *filter);
 
-typedef struct pdf_redact_options_s pdf_redact_options;
-
-struct pdf_redact_options_s
+typedef struct
 {
 	int no_black_boxes;
 	int keep_images;
-};
+} pdf_redact_options;
 
 int pdf_redact_page(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_redact_options *opts);
 
@@ -137,7 +135,7 @@ fz_default_colorspaces *pdf_update_default_colorspaces(fz_context *ctx, fz_defau
  * Page tree, pages and related objects
  */
 
-struct pdf_page_s
+struct pdf_page
 {
 	fz_page super;
 	pdf_document *doc;

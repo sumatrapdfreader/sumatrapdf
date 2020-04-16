@@ -16,7 +16,7 @@
 	colorspace conversions and rescaling.
 */
 
-typedef struct fz_overprint_s fz_overprint;
+typedef struct fz_overprint fz_overprint;
 
 /*
 	Return the bounding box for a pixmap.
@@ -306,6 +306,8 @@ fz_pixmap *fz_convert_pixmap(fz_context *ctx, fz_pixmap *pix, fz_colorspace *cs_
 */
 int fz_is_pixmap_monochrome(fz_context *ctx, fz_pixmap *pixmap);
 
+/* Implementation details: subject to change.*/
+
 /*
 	Pixmaps represent a set of pixels for a 2 dimensional region of
 	a plane. Each pixel has n components per pixel. The components
@@ -351,7 +353,7 @@ int fz_is_pixmap_monochrome(fz_context *ctx, fz_pixmap *pixmap);
 	as we move across the line. The start of each scanline is offset
 	the start of the previous one by stride bytes.
 */
-struct fz_pixmap_s
+struct fz_pixmap
 {
 	fz_storable storable;
 	int x, y, w, h;
@@ -382,7 +384,7 @@ size_t fz_pixmap_size(fz_context *ctx, fz_pixmap *pix);
 
 fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, const fz_irect *clip);
 
-typedef struct fz_scale_cache_s fz_scale_cache;
+typedef struct fz_scale_cache fz_scale_cache;
 
 fz_scale_cache *fz_new_scale_cache(fz_context *ctx);
 void fz_drop_scale_cache(fz_context *ctx, fz_scale_cache *cache);

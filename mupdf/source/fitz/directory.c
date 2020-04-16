@@ -8,13 +8,12 @@
 #define stat _stat
 #endif
 
-typedef struct fz_directory_s fz_directory;
-struct fz_directory_s
+typedef struct
 {
 	fz_archive super;
 
 	char *path;
-};
+} fz_directory;
 
 static void drop_directory(fz_context *ctx, fz_archive *arch)
 {

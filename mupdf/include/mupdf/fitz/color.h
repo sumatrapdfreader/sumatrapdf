@@ -5,16 +5,27 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/store.h"
 
-typedef struct fz_colorspace_s fz_colorspace;
-typedef struct fz_pixmap_s fz_pixmap;
-
 #if FZ_ENABLE_ICC
-
-typedef struct fz_icc_instance_s fz_icc_instance;
-typedef struct fz_icc_profile_s fz_icc_profile;
-typedef struct fz_icc_link_s fz_icc_link;
-
+/*
+	Opaque type for an ICC Profile.
+*/
+typedef struct fz_icc_profile fz_icc_profile;
 #endif
+
+/*
+	Describes a given colorspace.
+*/
+typedef struct fz_colorspace fz_colorspace;
+
+/*
+	Pixmaps represent a set of pixels for a 2 dimensional region of
+	a plane. Each pixel has n components per pixel. The components
+	are in the order process-components, spot-colors, alpha, where
+	there can be 0 of any of those types. The data is in
+	premultiplied alpha when rendering, but non-premultiplied for
+	colorspace conversions and rescaling.
+*/
+typedef struct fz_pixmap fz_pixmap;
 
 /* Color handling parameters: rendering intent, overprint, etc. */
 
@@ -27,20 +38,40 @@ enum
 	FZ_RI_ABSOLUTE_COLORIMETRIC,
 };
 
-typedef struct fz_color_params_s fz_color_params;
-struct fz_color_params_s
+typedef struct
 {
 	uint8_t ri;	/* rendering intent */
 	uint8_t bp;	/* black point compensation */
 	uint8_t op;	/* overprinting */
 	uint8_t opm;	/* overprint mode */
-};
+}  fz_color_params;
 
 extern const fz_color_params fz_default_color_params;
 
+/*
+	Map from (case sensitive) rendering intent string to enumeration
+	value.
+*/
 int fz_lookup_rendering_intent(const char *name);
+
+/*
+	Map from enumerated rendering intent to string.
+
+	The returned string is static and therefore must not be freed.
+*/
 const char *fz_rendering_intent_name(int ri);
 
+/*
+	The maximum number of colorants available in any given
+	color/colorspace (not including alpha).
+
+	Changing this value will alter the amount of memory being used
+	(both stack and heap space), but not hugely. Speed should
+	(largely) be determined by the number of colors actually used.
+
+	FIXME: Increasing this past 32 will have issues with overprint
+	as the overprint mask is assumed to fit into an int.
+*/
 enum { FZ_MAX_COLORS = 32 };
 
 enum fz_colorspace_type
@@ -64,7 +95,273 @@ enum
 	FZ_COLORSPACE_HAS_CMYK_AND_SPOTS = 4|8,
 };
 
-struct fz_colorspace_s
+/*
+	Creates a new colorspace instance and returns a reference.
+
+	No internal checking is done that the colorspace type (e.g.
+	CMYK) matches with the flags (e.g. FZ_COLORSPACE_HAS_CMYK) or
+	colorant count (n) or name.
+
+	The reference should be dropped when it is finished with.
+
+	Colorspaces are immutable once created (with the exception of
+	setting up colorant names for separation spaces).
+*/
+fz_colorspace *fz_new_colorspace(fz_context *ctx, enum fz_colorspace_type type, int flags, int n, const char *name);
+
+/*
+	Increment the reference count for the colorspace.
+
+	Returns the same pointer. Never throws an exception.
+*/
+fz_colorspace *fz_keep_colorspace(fz_context *ctx, fz_colorspace *colorspace);
+
+/*
+	Drops a reference to the colorspace.
+
+	When the reference count reaches zero, the colorspace is
+	destroyed.
+*/
+void fz_drop_colorspace(fz_context *ctx, fz_colorspace *colorspace);
+
+/*
+	Create an indexed colorspace.
+
+	The supplied lookup table is high palette entries long. Each
+	entry is n bytes long, where n is given by the number of
+	colorants in the base colorspace, one byte per colorant.
+
+	Ownership of lookup is passed it; it will be freed on
+	destruction, so must be heap allocated.
+
+	The colorspace will keep an additional reference to the base
+	colorspace that will be dropped on destruction.
+
+	The returned reference should be dropped when it is finished
+	with.
+
+	Colorspaces are immutable once created.
+*/
+fz_colorspace *fz_new_indexed_colorspace(fz_context *ctx, fz_colorspace *base, int high, unsigned char *lookup);
+
+/*
+	Create a colorspace from an ICC profile supplied in buf.
+
+	Limited checking is done to ensure that the colorspace type is
+	appropriate for the supplied ICC profile.
+
+	An additional reference is taken to buf, which will be dropped
+	on destruction. Ownership is NOT passed in.
+
+	The returned reference should be dropped when it is finished
+	with.
+
+	Colorspaces are immutable once created.
+*/
+fz_colorspace *fz_new_icc_colorspace(fz_context *ctx, enum fz_colorspace_type type, int flags, const char *name, fz_buffer *buf);
+
+
+/*
+	Create a calibrated gray colorspace.
+
+	The returned reference should be dropped when it is finished
+	with.
+
+	Colorspaces are immutable once created.
+*/
+fz_colorspace *fz_new_cal_gray_colorspace(fz_context *ctx, float wp[3], float bp[3], float gamma);
+
+/*
+	Create a calibrated rgb colorspace.
+
+	The returned reference should be dropped when it is finished
+	with.
+
+	Colorspaces are immutable once created.
+*/
+fz_colorspace *fz_new_cal_rgb_colorspace(fz_context *ctx, float wp[3], float bp[3], float gamma[3], float matrix[9]);
+
+/*
+	Query the type of colorspace.
+*/
+enum fz_colorspace_type fz_colorspace_type(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	Query the name of a colorspace.
+
+	The returned string has the same lifespan as the colorspace
+	does. Caller should not free it.
+*/
+const char *fz_colorspace_name(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	Query the number of colorants in a colorspace.
+*/
+int fz_colorspace_n(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	True for CMYK, Separation and DeviceN colorspaces.
+*/
+int fz_colorspace_is_subtractive(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	True if DeviceN color space has only colorants from the CMYK set.
+*/
+int fz_colorspace_device_n_has_only_cmyk(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	True if DeviceN color space has cyan magenta yellow or black as
+	one of its colorants.
+*/
+int fz_colorspace_device_n_has_cmyk(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	Tests for particular types of colorspaces
+*/
+int fz_colorspace_is_gray(fz_context *ctx, fz_colorspace *cs);
+int fz_colorspace_is_rgb(fz_context *ctx, fz_colorspace *cs);
+int fz_colorspace_is_cmyk(fz_context *ctx, fz_colorspace *cs);
+int fz_colorspace_is_lab(fz_context *ctx, fz_colorspace *cs);
+int fz_colorspace_is_indexed(fz_context *ctx, fz_colorspace *cs);
+int fz_colorspace_is_device_n(fz_context *ctx, fz_colorspace *cs);
+int fz_colorspace_is_device(fz_context *ctx, fz_colorspace *cs);
+int fz_colorspace_is_device_gray(fz_context *ctx, fz_colorspace *cs);
+int fz_colorspace_is_device_cmyk(fz_context *ctx, fz_colorspace *cs);
+int fz_colorspace_is_lab_icc(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	Check to see that a colorspace is appropriate to be used as
+	a blending space (i.e. only grey, rgb or cmyk).
+*/
+int fz_is_valid_blend_colorspace(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	Retrieve global default colorspaces.
+
+	These return borrowed references that should not be dropped,
+	unless they are kept first.
+*/
+fz_colorspace *fz_device_gray(fz_context *ctx);
+fz_colorspace *fz_device_rgb(fz_context *ctx);
+fz_colorspace *fz_device_bgr(fz_context *ctx);
+fz_colorspace *fz_device_cmyk(fz_context *ctx);
+fz_colorspace *fz_device_lab(fz_context *ctx);
+
+/*
+	Assign a name for a given colorant in a colorspace.
+
+	Used while initially setting up a colorspace. The string is
+	copied into local storage, so need not be retained by the
+	caller.
+*/
+void fz_colorspace_name_colorant(fz_context *ctx, fz_colorspace *cs, int n, const char *name);
+
+/*
+	Retrieve a the name for a colorant.
+
+	Returns a pointer with the same lifespan as the colorspace.
+*/
+const char *fz_colorspace_colorant(fz_context *ctx, fz_colorspace *cs, int n);
+
+/* Color conversion */
+
+/*
+	Clamp the samples in a color to the correct ranges for a
+	given colorspace.
+*/
+void fz_clamp_color(fz_context *ctx, fz_colorspace *cs, const float *in, float *out);
+
+/*
+	Convert color values sv from colorspace ss into colorvalues dv
+	for colorspace ds, via an optional intervening space is,
+	respecting the given color_params.
+*/
+void fz_convert_color(fz_context *ctx, fz_colorspace *ss, const float *sv, fz_colorspace *ds, float *dv, fz_colorspace *is, fz_color_params params);
+
+/* Default (fallback) colorspace handling */
+
+/*
+	Structure to hold default colorspaces.
+*/
+typedef struct
+{
+	int refs;
+	fz_colorspace *gray;
+	fz_colorspace *rgb;
+	fz_colorspace *cmyk;
+	fz_colorspace *oi;
+}  fz_default_colorspaces;
+
+/*
+	Create a new default colorspace structure with values inherited
+	from the context, and return a reference to it.
+
+	These can be overridden using fz_set_default_xxxx.
+
+	These should not be overridden while more than one caller has
+	the reference for fear of race conditions.
+
+	The caller should drop this reference once finished with it.
+*/
+fz_default_colorspaces *fz_new_default_colorspaces(fz_context *ctx);
+
+/*
+	Keep an additional reference to the default colorspaces
+	structure.
+
+	Never throws exceptions.
+*/
+fz_default_colorspaces* fz_keep_default_colorspaces(fz_context *ctx, fz_default_colorspaces *default_cs);
+
+/*
+	Drop a reference to the default colorspaces structure. When the
+	reference count reaches 0, the references it holds internally
+	to the underlying colorspaces will be dropped, and the structure
+	will be destroyed.
+
+	Never throws exceptions.
+*/
+void fz_drop_default_colorspaces(fz_context *ctx, fz_default_colorspaces *default_cs);
+
+/*
+	Returns a reference to a newly cloned default colorspaces
+	structure.
+
+	The new clone may safely be altered without fear of race
+	conditions as the caller is the only reference holder.
+*/
+fz_default_colorspaces *fz_clone_default_colorspaces(fz_context *ctx, fz_default_colorspaces *base);
+
+/*
+	Retrieve default colorspaces (typically page local).
+
+	If default_cs is non NULL, the default is retrieved from there,
+	otherwise the global default is retrieved.
+
+	These return borrowed references that should not be dropped,
+	unless they are kept first.
+*/
+fz_colorspace *fz_default_gray(fz_context *ctx, const fz_default_colorspaces *default_cs);
+fz_colorspace *fz_default_rgb(fz_context *ctx, const fz_default_colorspaces *default_cs);
+fz_colorspace *fz_default_cmyk(fz_context *ctx, const fz_default_colorspaces *default_cs);
+fz_colorspace *fz_default_output_intent(fz_context *ctx, const fz_default_colorspaces *default_cs);
+
+/*
+	Set new defaults within the default colorspace structure.
+
+	New references are taken to the new default, and references to
+	the old defaults dropped.
+
+	Never throws exceptions.
+*/
+void fz_set_default_gray(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs);
+void fz_set_default_rgb(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs);
+void fz_set_default_cmyk(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs);
+void fz_set_default_output_intent(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs);
+
+/* Implementation details: subject to change. */
+
+struct fz_colorspace
 {
 	fz_key_storable key_storable;
 	enum fz_colorspace_type type;
@@ -94,169 +391,6 @@ struct fz_colorspace_s
 	} u;
 };
 
-fz_colorspace *fz_new_colorspace(fz_context *ctx, enum fz_colorspace_type type, int flags, int n, const char *name);
-fz_colorspace *fz_keep_colorspace(fz_context *ctx, fz_colorspace *colorspace);
-void fz_drop_colorspace(fz_context *ctx, fz_colorspace *colorspace);
 void fz_drop_colorspace_imp(fz_context *ctx, fz_storable *cs_);
-void fz_drop_colorspace_store_key(fz_context *ctx, fz_colorspace *cs);
-fz_colorspace *fz_keep_colorspace_store_key(fz_context *ctx, fz_colorspace *cs);
-
-fz_colorspace *fz_new_indexed_colorspace(fz_context *ctx, fz_colorspace *base, int high, unsigned char *lookup);
-fz_colorspace *fz_new_icc_colorspace(fz_context *ctx, enum fz_colorspace_type type, int flags, const char *name, fz_buffer *buf);
-fz_colorspace *fz_new_cal_gray_colorspace(fz_context *ctx, float wp[3], float bp[3], float gamma);
-fz_colorspace *fz_new_cal_rgb_colorspace(fz_context *ctx, float wp[3], float bp[3], float gamma[3], float matrix[9]);
-
-/*
-	Create ICC profile from PDF calGray and calRGB definitions
-*/
-fz_buffer *fz_new_icc_data_from_cal(fz_context *ctx, float wp[3], float bp[3], float gamma[3], float matrix[9], int n);
-
-enum fz_colorspace_type fz_colorspace_type(fz_context *ctx, fz_colorspace *cs);
-const char *fz_colorspace_name(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_n(fz_context *ctx, fz_colorspace *cs);
-
-/*
-	True for CMYK, Separation and DeviceN colorspaces.
-*/
-int fz_colorspace_is_subtractive(fz_context *ctx, fz_colorspace *cs);
-
-/*
-	True if DeviceN color space has only colorants from the CMYK set.
-*/
-int fz_colorspace_device_n_has_only_cmyk(fz_context *ctx, fz_colorspace *cs);
-
-/*
-	True if DeviceN color space has cyan magenta yellow or black as
-	one of its colorants.
-*/
-int fz_colorspace_device_n_has_cmyk(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_gray(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_rgb(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_cmyk(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_lab(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_indexed(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_device_n(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_device(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_device_gray(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_device_cmyk(fz_context *ctx, fz_colorspace *cs);
-int fz_colorspace_is_lab_icc(fz_context *ctx, fz_colorspace *cs);
-int fz_is_valid_blend_colorspace(fz_context *ctx, fz_colorspace *cs);
-
-fz_colorspace *fz_device_gray(fz_context *ctx);
-fz_colorspace *fz_device_rgb(fz_context *ctx);
-fz_colorspace *fz_device_bgr(fz_context *ctx);
-fz_colorspace *fz_device_cmyk(fz_context *ctx);
-fz_colorspace *fz_device_lab(fz_context *ctx);
-
-void fz_colorspace_name_colorant(fz_context *ctx, fz_colorspace *cs, int n, const char *name);
-const char *fz_colorspace_colorant(fz_context *ctx, fz_colorspace *cs, int n);
-
-/* Color conversion */
-
-typedef struct fz_color_converter_s fz_color_converter;
-typedef void (fz_color_convert_fn)(fz_context *ctx, fz_color_converter *cc, const float *src, float *dst);
-struct fz_color_converter_s
-{
-	fz_color_convert_fn *convert;
-	fz_color_convert_fn *convert_via;
-	fz_colorspace *ds;
-	fz_colorspace *ss;
-	fz_colorspace *ss_via;
-	void *opaque;
-#if FZ_ENABLE_ICC
-	fz_icc_link *link;
-#endif
-};
-
-fz_color_convert_fn *fz_lookup_fast_color_converter(fz_context *ctx, fz_colorspace *ss, fz_colorspace *ds);
-void fz_find_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colorspace *ss, fz_colorspace *ds, fz_colorspace *is, fz_color_params params);
-void fz_drop_color_converter(fz_context *ctx, fz_color_converter *cc);
-void fz_init_cached_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colorspace *ss, fz_colorspace *ds, fz_colorspace *is, fz_color_params params);
-void fz_fin_cached_color_converter(fz_context *ctx, fz_color_converter *cc);
-
-void fz_clamp_color(fz_context *ctx, fz_colorspace *cs, const float *in, float *out);
-void fz_convert_color(fz_context *ctx, fz_colorspace *ss, const float *sv, fz_colorspace *ds, float *dv, fz_colorspace *is, fz_color_params params);
-
-/* Default (fallback) colorspace handling */
-
-typedef struct fz_default_colorspaces_s fz_default_colorspaces;
-struct fz_default_colorspaces_s
-{
-	int refs;
-	fz_colorspace *gray;
-	fz_colorspace *rgb;
-	fz_colorspace *cmyk;
-	fz_colorspace *oi;
-};
-
-/*
-	Handle page specific default colorspace settings that PDF holds
-	in its page resources. Also track the output intent.
-*/
-fz_default_colorspaces *fz_new_default_colorspaces(fz_context *ctx);
-fz_default_colorspaces* fz_keep_default_colorspaces(fz_context *ctx, fz_default_colorspaces *default_cs);
-void fz_drop_default_colorspaces(fz_context *ctx, fz_default_colorspaces *default_cs);
-fz_default_colorspaces *fz_clone_default_colorspaces(fz_context *ctx, fz_default_colorspaces *base);
-
-fz_colorspace *fz_default_gray(fz_context *ctx, const fz_default_colorspaces *default_cs);
-fz_colorspace *fz_default_rgb(fz_context *ctx, const fz_default_colorspaces *default_cs);
-fz_colorspace *fz_default_cmyk(fz_context *ctx, const fz_default_colorspaces *default_cs);
-fz_colorspace *fz_default_output_intent(fz_context *ctx, const fz_default_colorspaces *default_cs);
-
-void fz_set_default_gray(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs);
-void fz_set_default_rgb(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs);
-void fz_set_default_cmyk(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs);
-void fz_set_default_output_intent(fz_context *ctx, fz_default_colorspaces *default_cs, fz_colorspace *cs);
-
-/*
-	Color convert a pixmap. The passing of default_cs is needed due
-	to the base cs of the image possibly needing to be treated as
-	being in one of the page default color spaces.
-*/
-void fz_convert_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, fz_colorspace *prf, const fz_default_colorspaces *default_cs, fz_color_params color_params, int copy_spots);
-void fz_fast_any_to_alpha(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, int copy_spots);
-void fz_convert_fast_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, int copy_spots);
-void fz_convert_slow_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, fz_colorspace *prf, fz_color_params params, int copy_spots);
-
-/* Color management engine */
-
-#if FZ_ENABLE_ICC
-
-void fz_new_icc_context(fz_context *ctx);
-void fz_drop_icc_context(fz_context *ctx);
-fz_icc_profile *fz_new_icc_profile(fz_context *ctx, unsigned char *data, size_t size);
-void fz_drop_icc_profile(fz_context *ctx, fz_icc_profile *profile);
-void fz_icc_profile_name(fz_context *ctx, fz_icc_profile *profile, char *name, size_t size);
-int fz_icc_profile_components(fz_context *ctx, fz_icc_profile *profile);
-int fz_icc_profile_is_lab(fz_context *ctx, fz_icc_profile *profile);
-fz_icc_link *fz_new_icc_link(fz_context *ctx,
-	fz_colorspace *src, int src_extras,
-	fz_colorspace *dst, int dst_extras,
-	fz_colorspace *prf,
-	fz_color_params color_params,
-	int format,
-	int copy_spots);
-void fz_drop_icc_link_imp(fz_context *ctx, fz_storable *link);
-void fz_drop_icc_link(fz_context *ctx, fz_icc_link *link);
-fz_icc_link *fz_find_icc_link(fz_context *ctx,
-	fz_colorspace *src, int src_extras,
-	fz_colorspace *dst, int dst_extras,
-	fz_colorspace *prf,
-	fz_color_params color_params,
-	int format,
-	int copy_spots);
-void fz_icc_transform_color(fz_context *ctx, fz_color_converter *cc, const float *src, float *dst);
-void fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, fz_pixmap *src, fz_pixmap *dst, int copy_spots);
-
-#endif
-
-struct fz_colorspace_context_s
-{
-	int ctx_refs;
-	fz_colorspace *gray, *rgb, *bgr, *cmyk, *lab;
-#if FZ_ENABLE_ICC
-	void *icc_instance;
-#endif
-};
 
 #endif

@@ -9,10 +9,7 @@
 
 #define GLYPH_HASH_LEN 509
 
-typedef struct fz_glyph_cache_entry_s fz_glyph_cache_entry;
-typedef struct fz_glyph_key_s fz_glyph_key;
-
-struct fz_glyph_key_s
+typedef struct
 {
 	fz_font *font;
 	int a, b;
@@ -20,20 +17,20 @@ struct fz_glyph_key_s
 	unsigned short gid;
 	unsigned char e, f;
 	int aa;
-};
+} fz_glyph_key;
 
-struct fz_glyph_cache_entry_s
+typedef struct fz_glyph_cache_entry
 {
 	fz_glyph_key key;
 	unsigned hash;
-	fz_glyph_cache_entry *lru_prev;
-	fz_glyph_cache_entry *lru_next;
-	fz_glyph_cache_entry *bucket_next;
-	fz_glyph_cache_entry *bucket_prev;
+	struct fz_glyph_cache_entry *lru_prev;
+	struct fz_glyph_cache_entry *lru_next;
+	struct fz_glyph_cache_entry *bucket_next;
+	struct fz_glyph_cache_entry *bucket_prev;
 	fz_glyph *val;
-};
+} fz_glyph_cache_entry;
 
-struct fz_glyph_cache_s
+struct fz_glyph_cache
 {
 	int refs;
 	size_t total;

@@ -3,23 +3,22 @@
 #include <string.h>
 #include <stdio.h>
 
-typedef struct fz_pool_node_s fz_pool_node;
+typedef struct fz_pool_node
+{
+	struct fz_pool_node *next;
+	char mem[1];
+} fz_pool_node;
 
 #define POOL_SIZE (4<<10) /* default size of pool blocks */
 #define POOL_SELF (1<<10) /* size where allocs are put into their own blocks */
 
-struct fz_pool_s
+struct fz_pool
 {
 	size_t size;
 	fz_pool_node *head, *tail;
 	char *pos, *end;
 };
 
-struct fz_pool_node_s
-{
-	fz_pool_node *next;
-	char mem[1];
-};
 
 fz_pool *fz_new_pool(fz_context *ctx)
 {

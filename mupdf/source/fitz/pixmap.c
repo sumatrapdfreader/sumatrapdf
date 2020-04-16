@@ -1,5 +1,7 @@
 #include "mupdf/fitz.h"
 
+#include "color-imp.h"
+
 #include <assert.h>
 #include <limits.h>
 #include <string.h>

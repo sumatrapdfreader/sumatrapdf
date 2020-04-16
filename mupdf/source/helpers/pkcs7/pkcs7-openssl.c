@@ -504,7 +504,7 @@ exit:
 	return res;
 }
 
-typedef struct pdf_pkcs7_designated_name_openssl_s
+typedef struct
 {
 	pdf_pkcs7_designated_name base;
 	char buf[8192];

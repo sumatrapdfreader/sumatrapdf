@@ -6,15 +6,13 @@
 
 #include <ldf_jb2.h>
 
-typedef struct fz_jbig2d_s fz_jbig2d;
-
-struct fz_jbig2_globals_s
+struct fz_jbig2_globals
 {
 	fz_storable storable;
 	fz_buffer *buf;
 };
 
-struct fz_jbig2d_s
+typedef struct
 {
 	fz_stream *chain;
 	fz_context *ctx;
@@ -26,7 +24,7 @@ struct fz_jbig2d_s
 	fz_buffer *input;
 	unsigned char *output;
 	int idx;
-};
+} fz_jbig2d;
 
 fz_jbig2_globals *
 fz_keep_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals)
@@ -241,31 +239,29 @@ fz_open_jbig2d(fz_context *ctx, fz_stream *chain, fz_jbig2_globals *globals)
 
 #include <jbig2.h>
 
-typedef struct fz_jbig2d_s fz_jbig2d;
-
-struct fz_jbig2_alloc_s
+typedef struct
 {
 	Jbig2Allocator alloc;
 	fz_context *ctx;
-};
+} fz_jbig2_allocators;
 
-struct fz_jbig2_globals_s
+struct fz_jbig2_globals
 {
 	fz_storable storable;
 	Jbig2GlobalCtx *gctx;
-	struct fz_jbig2_alloc_s alloc;
+	fz_jbig2_allocators alloc;
 };
 
-struct fz_jbig2d_s
+typedef struct
 {
 	fz_stream *chain;
 	Jbig2Ctx *ctx;
-	struct fz_jbig2_alloc_s alloc;
+	fz_jbig2_allocators alloc;
 	fz_jbig2_globals *gctx;
 	Jbig2Image *page;
 	int idx;
 	unsigned char buffer[4096];
-};
+} fz_jbig2d;
 
 fz_jbig2_globals *
 fz_keep_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals)
@@ -360,19 +356,19 @@ error_callback(void *data, const char *msg, Jbig2Severity severity, int32_t seg_
 
 static void *fz_jbig2_alloc(Jbig2Allocator *allocator, size_t size)
 {
-	fz_context *ctx = ((struct fz_jbig2_alloc_s *) allocator)->ctx;
+	fz_context *ctx = ((fz_jbig2_allocators *) allocator)->ctx;
 	return Memento_label(fz_malloc_no_throw(ctx, size), "jbig2_alloc");
 }
 
 static void fz_jbig2_free(Jbig2Allocator *allocator, void *p)
 {
-	fz_context *ctx = ((struct fz_jbig2_alloc_s *) allocator)->ctx;
+	fz_context *ctx = ((fz_jbig2_allocators *) allocator)->ctx;
 	fz_free(ctx, p);
 }
 
 static void *fz_jbig2_realloc(Jbig2Allocator *allocator, void *p, size_t size)
 {
-	fz_context *ctx = ((struct fz_jbig2_alloc_s *) allocator)->ctx;
+	fz_context *ctx = ((fz_jbig2_allocators *) allocator)->ctx;
 	if (size == 0)
 	{
 		fz_free(ctx, p);

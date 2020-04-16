@@ -55,6 +55,10 @@ float fz_atof(const char *s);
 	atoi that copes with NULL
 */
 int fz_atoi(const char *s);
+
+/*
+	64bit atoi that copes with NULL
+*/
 int64_t fz_atoi64(const char *s);
 
 /*
@@ -132,11 +136,10 @@ static inline void *fz_clampp(void *p, void *min, void *max)
 /*
 	fz_point is a point in a two-dimensional space.
 */
-typedef struct fz_point_s fz_point;
-struct fz_point_s
+typedef struct
 {
 	float x, y;
-};
+} fz_point;
 
 static inline fz_point fz_make_point(float x, float y)
 {
@@ -162,12 +165,11 @@ static inline fz_point fz_make_point(float x, float y)
 
 	x1, y1: The bottom right corner.
 */
-typedef struct fz_rect_s fz_rect;
-struct fz_rect_s
+typedef struct
 {
 	float x0, y0;
 	float x1, y1;
-};
+} fz_rect;
 
 static inline fz_rect fz_make_rect(float x0, float y0, float x1, float y1)
 {
@@ -180,12 +182,11 @@ static inline fz_rect fz_make_rect(float x0, float y0, float x1, float y1)
 
 	It's used in the draw device and for pixmap dimensions.
 */
-typedef struct fz_irect_s fz_irect;
-struct fz_irect_s
+typedef struct
 {
 	int x0, y0;
 	int x1, y1;
-};
+} fz_irect;
 
 static inline fz_irect fz_make_irect(int x0, int y0, int x1, int y1)
 {
@@ -269,11 +270,10 @@ static inline int fz_is_infinite_irect(fz_irect r)
 	| c d 0 | normally represented as [ a b c d e f ].
 	\ e f 1 /
 */
-typedef struct fz_matrix_s fz_matrix;
-struct fz_matrix_s
+typedef struct
 {
 	float a, b, c, d, e, f;
-};
+} fz_matrix;
 
 /*
 	Identity transform matrix.
@@ -630,11 +630,9 @@ fz_matrix fz_gridfit_matrix(int as_tiled, fz_matrix m);
 
 float fz_matrix_max_expansion(fz_matrix m);
 
-typedef struct fz_quad_s fz_quad;
-struct fz_quad_s
-{
+typedef struct{
 	fz_point ul, ur, ll, lr;
-};
+} fz_quad;
 
 static inline fz_quad fz_make_quad(
 	float ul_x, float ul_y,

@@ -5,8 +5,6 @@
 #include "mupdf/fitz/pixmap.h"
 
 /* Transition support */
-typedef struct fz_transition_s fz_transition;
-
 enum {
 	FZ_TRANSITION_NONE = 0, /* aka 'R' or 'REPLACE' */
 	FZ_TRANSITION_SPLIT,
@@ -22,7 +20,7 @@ enum {
 	FZ_TRANSITION_FADE
 };
 
-struct fz_transition_s
+typedef struct
 {
 	int type;
 	float duration; /* Effect duration (seconds) */
@@ -36,7 +34,7 @@ struct fz_transition_s
 	/* State variables for use of the transition code */
 	int state0;
 	int state1;
-};
+} fz_transition;
 
 /*
 	Generate a frame of a transition.

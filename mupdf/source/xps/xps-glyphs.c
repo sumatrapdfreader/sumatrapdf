@@ -357,10 +357,6 @@ xps_parse_glyph_metrics(char *s, float *advance, float *uofs, float *vofs, int b
 	return s;
 }
 
-/*
- * Parse unicode and indices strings and encode glyphs.
- * Calculate metrics for positioning.
- */
 fz_text *
 xps_parse_glyphs_imp(fz_context *ctx, xps_document *doc, fz_matrix ctm,
 	fz_font *font, float size, float originx, float originy,

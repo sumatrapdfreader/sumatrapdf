@@ -7,7 +7,7 @@
 #include "mupdf/fitz/document.h"
 #include "mupdf/fitz/device.h"
 
-typedef struct fz_document_writer_s fz_document_writer;
+typedef struct fz_document_writer fz_document_writer;
 
 /*
 	Function type to start
@@ -164,7 +164,7 @@ extern const char *fz_pwg_write_options_usage;
 	Structure is public to allow other structures to
 	be derived from it. Do not access members directly.
 */
-struct fz_document_writer_s
+struct fz_document_writer
 {
 	fz_document_writer_begin_page_fn *begin_page;
 	fz_document_writer_end_page_fn *end_page;

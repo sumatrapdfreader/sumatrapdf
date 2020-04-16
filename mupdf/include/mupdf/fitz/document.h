@@ -10,17 +10,27 @@
 #include "mupdf/fitz/outline.h"
 #include "mupdf/fitz/separation.h"
 
-typedef struct fz_document_s fz_document;
-typedef struct fz_document_handler_s fz_document_handler;
-typedef struct fz_page_s fz_page;
+typedef struct fz_document fz_document;
+typedef struct fz_document_handler fz_document_handler;
+typedef struct fz_page fz_page;
 typedef intptr_t fz_bookmark;
 
-typedef struct fz_location_s
+/*
+	Locations within the document are referred to in terms of
+	chapter and page, rather than just a page number. For some
+	documents (such as epub documents with large numbers of pages
+	broken into many chapters) this can make navigation much faster
+	as only the required chapter needs to be decoded at a time.
+*/
+typedef struct
 {
 	int chapter;
 	int page;
 } fz_location;
 
+/*
+	Simple constructor for fz_locations.
+*/
 static inline fz_location fz_make_location(int chapter, int page)
 {
 	fz_location loc = { chapter, page };
@@ -124,8 +134,8 @@ typedef void (fz_document_layout_fn)(fz_context *ctx, fz_document *doc, float w,
 
 /*
 	Type for a function to be called to
-	resolve an internal link to a page number. See fz_resolve_link
-	for more information.
+	resolve an internal link to a location (chapter/page number
+	tuple). See fz_resolve_link for more information.
 */
 typedef fz_location (fz_document_resolve_link_fn)(fz_context *ctx, fz_document *doc, const char *uri, float *xp, float *yp);
 
@@ -159,7 +169,7 @@ typedef int (fz_document_lookup_metadata_fn)(fz_context *ctx, fz_document *doc, 
 /*
 	Return output intent color space if it exists
 */
-typedef fz_colorspace* (fz_document_output_intent_fn)(fz_context *ctx, fz_document *doc);
+typedef fz_colorspace *(fz_document_output_intent_fn)(fz_context *ctx, fz_document *doc);
 
 /*
 	Write document accelerator data
@@ -173,8 +183,8 @@ typedef void (fz_document_output_accelerator_fn)(fz_context *ctx, fz_document *d
 typedef fz_bookmark (fz_document_make_bookmark_fn)(fz_context *ctx, fz_document *doc, fz_location loc);
 
 /*
-	Type for a function to lookup
-	a bookmark. See fz_lookup_bookmark for more information.
+	Type for a function to lookup a bookmark.
+	See fz_lookup_bookmark for more information.
 */
 typedef fz_location (fz_document_lookup_bookmark_fn)(fz_context *ctx, fz_document *doc, fz_bookmark mark);
 
@@ -241,59 +251,6 @@ typedef fz_separations *(fz_page_separations_fn)(fz_context *ctx, fz_page *page)
 typedef int (fz_page_uses_overprint_fn)(fz_context *ctx, fz_page *page);
 
 /*
-	Structure definition is public so other classes can
-	derive from it. Do not access the members directly.
-*/
-struct fz_page_s
-{
-	int refs;
-	int chapter; /* chapter number */
-	int number; /* page number in chapter */
-	int incomplete; /* incomplete from progressive loading; don't cache! */
-	fz_page_drop_page_fn *drop_page;
-	fz_page_bound_page_fn *bound_page;
-	fz_page_run_page_fn *run_page_contents;
-	fz_page_run_page_fn *run_page_annots;
-	fz_page_run_page_fn *run_page_widgets;
-	fz_page_load_links_fn *load_links;
-	fz_page_page_presentation_fn *page_presentation;
-	fz_page_control_separation_fn *control_separation;
-	fz_page_separation_disabled_fn *separation_disabled;
-	fz_page_separations_fn *separations;
-	fz_page_uses_overprint_fn *overprint;
-	fz_page **prev, *next; /* linked list of currently open pages */
-};
-
-/*
-	Structure definition is public so other classes can
-	derive from it. Callers should not access the members
-	directly, though implementations will need initialize
-	functions directly.
-*/
-struct fz_document_s
-{
-	int refs;
-	fz_document_drop_fn *drop_document;
-	fz_document_needs_password_fn *needs_password;
-	fz_document_authenticate_password_fn *authenticate_password;
-	fz_document_has_permission_fn *has_permission;
-	fz_document_load_outline_fn *load_outline;
-	fz_document_layout_fn *layout;
-	fz_document_make_bookmark_fn *make_bookmark;
-	fz_document_lookup_bookmark_fn *lookup_bookmark;
-	fz_document_resolve_link_fn *resolve_link;
-	fz_document_count_chapters_fn *count_chapters;
-	fz_document_count_pages_fn *count_pages;
-	fz_document_load_page_fn *load_page;
-	fz_document_lookup_metadata_fn *lookup_metadata;
-	fz_document_output_intent_fn *get_output_intent;
-	fz_document_output_accelerator_fn *output_accelerator;
-	int did_layout;
-	int is_reflowable;
-	fz_page *open; /* linked list of currently open pages */
-};
-
-/*
 	Function type to open a document from a file.
 
 	filename: file to open
@@ -351,17 +308,6 @@ typedef fz_document *(fz_document_open_accel_with_stream_fn)(fz_context *ctx, fz
 	is that this is of the required type.
 */
 typedef int (fz_document_recognize_fn)(fz_context *ctx, const char *magic);
-
-struct fz_document_handler_s
-{
-	fz_document_recognize_fn *recognize;
-	fz_document_open_fn *open;
-	fz_document_open_with_stream_fn *open_with_stream;
-	const char **extensions;
-	const char **mimetypes;
-	fz_document_open_accel_fn *open_accel;
-	fz_document_open_accel_with_stream_fn *open_accel_with_stream;
-};
 
 /*
 	Register a handler for a document type.
@@ -428,16 +374,48 @@ fz_document *fz_open_document_with_stream(fz_context *ctx, const char *magic, fz
 */
 fz_document *fz_open_accelerated_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stream, fz_stream *accel);
 
+/*
+	Query if the document supports the saving of accelerator data.
+*/
 int fz_document_supports_accelerator(fz_context *ctx, fz_document *doc);
 
+/*
+	Save accelerator data for the document to a given file.
+*/
 void fz_save_accelerator(fz_context *ctx, fz_document *doc, const char *accel);
 
+/*
+	Output accelerator data for the document to a given output
+	stream.
+*/
 void fz_output_accelerator(fz_context *ctx, fz_document *doc, fz_output *accel);
 
+/*
+	New documents are typically created by calls like
+	foo_new_document(fz_context *ctx, ...). These work by
+	deriving a new document type from fz_document, for instance:
+	typedef struct { fz_document base; ...extras... } foo_document;
+	These are allocated by calling
+	fz_new_derived_document(ctx, foo_document)
+*/
 void *fz_new_document_of_size(fz_context *ctx, int size);
 #define fz_new_derived_document(C,M) ((M*)Memento_label(fz_new_document_of_size(C, sizeof(M)), #M))
 
+/*
+	Increment the document reference count. The same pointer is
+	returned.
+
+	Never throws exceptions.
+*/
 fz_document *fz_keep_document(fz_context *ctx, fz_document *doc);
+
+/*
+	Decrement the document reference count. When the reference
+	count reaches 0, the document and all it's references are
+	freed.
+
+	Never throws exceptions.
+*/
 void fz_drop_document(fz_context *ctx, fz_document *doc);
 
 /*
@@ -513,13 +491,53 @@ int fz_count_pages(fz_context *ctx, fz_document *doc);
 	Returns (-1,-1) if the URI cannot be resolved.
 */
 fz_location fz_resolve_link(fz_context *ctx, fz_document *doc, const char *uri, float *xp, float *yp);
+
+/*
+	Function to get the location for the last page in the document.
+	Using this can be far more efficient in some cases than calling
+	fz_count_pages and using the page number.
+*/
 fz_location fz_last_page(fz_context *ctx, fz_document *doc);
+
+/*
+	Function to get the location of the next page (allowing for the
+	end of chapters etc). If at the end of the document, returns the
+	current location.
+*/
 fz_location fz_next_page(fz_context *ctx, fz_document *doc, fz_location loc);
+
+/*
+	Function to get the location of the previous page (allowing for
+	the end of chapters etc). If already at the start of the
+	document, returns the current page.
+*/
 fz_location fz_previous_page(fz_context *ctx, fz_document *doc, fz_location loc);
+
+/*
+	Clamps a location into valid chapter/page range. (First clamps
+	the chapter into range, then the page into range).
+*/
 fz_location fz_clamp_location(fz_context *ctx, fz_document *doc, fz_location loc);
+
+/*
+	Converts from page number to chapter+page. This may cause many
+	chapters to be laid out in order to calculate the number of
+	pages within those chapters.
+*/
 fz_location fz_location_from_page_number(fz_context *ctx, fz_document *doc, int number);
+
+/*
+	Converts from chapter+page to page number. This may cause many
+	chapters to be laid out in order to calculate the number of
+	pages within those chapters.
+*/
 int fz_page_number_from_location(fz_context *ctx, fz_document *doc, fz_location loc);
 
+/*
+	Load a given page number from a document. This may be much less
+	efficient than loading by location (chapter+page) for some
+	document types.
+*/
 fz_page *fz_load_page(fz_context *ctx, fz_document *doc, int number);
 
 /*
@@ -558,6 +576,11 @@ fz_page *fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, in
 */
 fz_link *fz_load_links(fz_context *ctx, fz_page *page);
 
+/*
+	Different document types will be implemented by deriving from
+	fz_page. This macro allocates such derived structures, and
+	initialises the base sections.
+*/
 fz_page *fz_new_page_of_size(fz_context *ctx, int size);
 #define fz_new_derived_page(CTX,TYPE) \
 	((TYPE *)Memento_label(fz_new_page_of_size(CTX,sizeof(TYPE)),#TYPE))
@@ -620,7 +643,20 @@ void fz_run_page_annots(fz_context *ctx, fz_page *page, fz_device *dev, fz_matri
 */
 void fz_run_page_widgets(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
 
+/*
+	Increment the reference count for the page. Returns the same
+	pointer.
+
+	Never throws exceptions.
+*/
 fz_page *fz_keep_page(fz_context *ctx, fz_page *page);
+
+/*
+	Decrements the reference count for the page. When the reference
+	count hits 0, the page and its references are freed.
+
+	Never throws exceptions.
+*/
 void fz_drop_page(fz_context *ctx, fz_page *page);
 
 /*
@@ -696,6 +732,76 @@ fz_colorspace *fz_document_output_intent(fz_context *ctx, fz_document *doc);
 */
 fz_separations *fz_page_separations(fz_context *ctx, fz_page *page);
 
+/*
+	Query if a given page requires overprint.
+*/
 int fz_page_uses_overprint(fz_context *ctx, fz_page *page);
+
+/* Implementation details: subject to change. */
+
+/*
+	Structure definition is public so other classes can
+	derive from it. Do not access the members directly.
+*/
+struct fz_page
+{
+	int refs;
+	int chapter; /* chapter number */
+	int number; /* page number in chapter */
+	int incomplete; /* incomplete from progressive loading; don't cache! */
+	fz_page_drop_page_fn *drop_page;
+	fz_page_bound_page_fn *bound_page;
+	fz_page_run_page_fn *run_page_contents;
+	fz_page_run_page_fn *run_page_annots;
+	fz_page_run_page_fn *run_page_widgets;
+	fz_page_load_links_fn *load_links;
+	fz_page_page_presentation_fn *page_presentation;
+	fz_page_control_separation_fn *control_separation;
+	fz_page_separation_disabled_fn *separation_disabled;
+	fz_page_separations_fn *separations;
+	fz_page_uses_overprint_fn *overprint;
+	fz_page **prev, *next; /* linked list of currently open pages */
+};
+
+/*
+	Structure definition is public so other classes can
+	derive from it. Callers should not access the members
+	directly, though implementations will need initialize
+	functions directly.
+*/
+struct fz_document
+{
+	int refs;
+	fz_document_drop_fn *drop_document;
+	fz_document_needs_password_fn *needs_password;
+	fz_document_authenticate_password_fn *authenticate_password;
+	fz_document_has_permission_fn *has_permission;
+	fz_document_load_outline_fn *load_outline;
+	fz_document_layout_fn *layout;
+	fz_document_make_bookmark_fn *make_bookmark;
+	fz_document_lookup_bookmark_fn *lookup_bookmark;
+	fz_document_resolve_link_fn *resolve_link;
+	fz_document_count_chapters_fn *count_chapters;
+	fz_document_count_pages_fn *count_pages;
+	fz_document_load_page_fn *load_page;
+	fz_document_lookup_metadata_fn *lookup_metadata;
+	fz_document_output_intent_fn *get_output_intent;
+	fz_document_output_accelerator_fn *output_accelerator;
+	int did_layout;
+	int is_reflowable;
+	fz_page *open; /* linked list of currently open pages */
+};
+
+struct fz_document_handler
+{
+	fz_document_recognize_fn *recognize;
+	fz_document_open_fn *open;
+	fz_document_open_with_stream_fn *open_with_stream;
+	const char **extensions;
+	const char **mimetypes;
+	fz_document_open_accel_fn *open_accel;
+	fz_document_open_accel_with_stream_fn *open_accel_with_stream;
+};
+
 
 #endif

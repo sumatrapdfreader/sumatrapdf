@@ -28,20 +28,20 @@
 	header.
  */
 
-typedef struct fz_storable_s fz_storable;
-typedef struct fz_key_storable_s fz_key_storable;
+typedef struct fz_storable fz_storable;
 
 typedef void (fz_store_drop_fn)(fz_context *, fz_storable *);
 
-struct fz_storable_s {
+struct fz_storable {
 	int refs;
 	fz_store_drop_fn *drop;
 };
 
-struct fz_key_storable_s {
+typedef struct
+{
 	fz_storable storable;
 	short store_key_refs;
-};
+} fz_key_storable;
 
 #define FZ_INIT_STORABLE(S_,RC,DROP) \
 	do { fz_storable *S = &(S_)->storable; S->refs = (RC); \
@@ -115,7 +115,7 @@ void fz_drop_key_storable_key(fz_context *, const fz_key_storable *);
 	fz_defer_reap_end to bracket a region in which many may be
 	triggered.
 */
-typedef struct fz_store_hash_s
+typedef struct
 {
 	fz_store_drop_fn *drop;
 	union
@@ -155,7 +155,7 @@ typedef struct fz_store_hash_s
 	} u;
 } fz_store_hash; /* 40 or 44 bytes */
 
-typedef struct fz_store_type_s
+typedef struct
 {
 	int (*make_hash_key)(fz_context *ctx, fz_store_hash *hash, void *key);
 	void *(*keep_key)(fz_context *ctx, void *key);

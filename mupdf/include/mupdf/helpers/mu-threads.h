@@ -35,9 +35,9 @@
 /*
 	Types
 */
-typedef struct mu_thread_s mu_thread;
-typedef struct mu_semaphore_s mu_semaphore;
-typedef struct mu_mutex_s mu_mutex;
+typedef struct mu_thread mu_thread;
+typedef struct mu_semaphore mu_semaphore;
+typedef struct mu_mutex mu_mutex;
 
 /*
 	Semaphores
@@ -177,17 +177,17 @@ void mu_unlock_mutex(mu_mutex *mutex);
 #ifdef DISABLE_MUTHREADS
 
 /* Null implementation */
-struct mu_semaphore_s
+struct mu_semaphore
 {
 	int dummy;
 };
 
-struct mu_thread_s
+struct mu_thread
 {
 	int dummy;
 };
 
-struct mu_mutex_s
+struct mu_mutex
 {
 	int dummy;
 };
@@ -197,19 +197,19 @@ struct mu_mutex_s
 #include <windows.h>
 
 /* Windows threads */
-struct mu_semaphore_s
+struct mu_semaphore
 {
 	HANDLE handle;
 };
 
-struct mu_thread_s
+struct mu_thread
 {
 	HANDLE handle;
 	mu_thread_fn *fn;
 	void *arg;
 };
 
-struct mu_mutex_s
+struct mu_mutex
 {
 	CRITICAL_SECTION mutex;
 };
@@ -227,21 +227,21 @@ struct mu_mutex_s
 
 #include <pthread.h>
 
-struct mu_semaphore_s
+struct mu_semaphore
 {
 	int count;
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
 };
 
-struct mu_thread_s
+struct mu_thread
 {
 	pthread_t thread;
 	mu_thread_fn *fn;
 	void *arg;
 };
 
-struct mu_mutex_s
+struct mu_mutex
 {
 	pthread_mutex_t mutex;
 };

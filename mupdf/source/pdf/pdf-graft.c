@@ -3,7 +3,7 @@
 
 #include <assert.h>
 
-struct pdf_graft_map_s
+struct pdf_graft_map
 {
 	int refs;
 	int len;

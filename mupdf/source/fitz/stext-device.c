@@ -63,9 +63,7 @@ void fz_add_layout_char(fz_context *ctx, fz_layout_block *block, float x, float 
 #define SPACE_DIST 0.15f
 #define SPACE_MAX_DIST 0.8f
 
-typedef struct fz_stext_device_s fz_stext_device;
-
-struct fz_stext_device_s
+typedef struct
 {
 	fz_device super;
 	fz_stext_page *page;
@@ -77,7 +75,7 @@ struct fz_stext_device_s
 	int flags;
 	int color;
 	const fz_text *lasttext;
-};
+} fz_stext_device;
 
 const char *fz_stext_options_usage =
 	"Text output options:\n"

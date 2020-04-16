@@ -22,7 +22,9 @@
 
 #include "mupdf/fitz/system.h"
 
-typedef enum fz_bidi_direction_e
+/* Implementation details: subject to change. */
+
+typedef enum
 {
 	FZ_BIDI_LTR = 0,
 	FZ_BIDI_RTL = 1,
@@ -30,7 +32,7 @@ typedef enum fz_bidi_direction_e
 }
 fz_bidi_direction;
 
-typedef enum fz_bidi_flags_e
+typedef enum
 {
 	FZ_BIDI_CLASSIFY_WHITE_SPACE = 1,
 	FZ_BIDI_REPLACE_TAB = 2

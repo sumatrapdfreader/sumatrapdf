@@ -17,7 +17,7 @@
 	when the hash table is destroyed.
 */
 
-typedef struct fz_hash_table_s fz_hash_table;
+typedef struct fz_hash_table fz_hash_table;
 typedef void (fz_hash_table_drop_fn)(fz_context *ctx, void *val);
 typedef void (fz_hash_table_for_each_fn)(fz_context *ctx, void *state, void *key, int keylen, void *val);
 

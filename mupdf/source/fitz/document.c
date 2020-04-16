@@ -11,7 +11,7 @@ enum
 #define DEFH (600)
 #define DEFEM (12)
 
-struct fz_document_handler_context_s
+struct fz_document_handler_context
 {
 	int refs;
 	int count;

@@ -3,15 +3,14 @@
 #include <string.h>
 #include <math.h>
 
-typedef struct fz_mesh_processor_s fz_mesh_processor;
-
-struct fz_mesh_processor_s {
+typedef struct
+{
 	fz_shade *shade;
 	fz_shade_prepare_fn *prepare;
 	fz_shade_process_fn *process;
 	void *process_arg;
 	int ncomp;
-};
+} fz_mesh_processor;
 
 #define SWAP(a,b) {fz_vertex *t = (a); (a) = (b); (b) = t;}
 
@@ -479,13 +478,11 @@ fz_process_shade_type5(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_
 
 /* Subdivide and tessellate tensor-patches */
 
-typedef struct tensor_patch_s tensor_patch;
-
-struct tensor_patch_s
+typedef struct
 {
 	fz_point pole[4][4];
 	float color[4][FZ_MAX_COLORS];
-};
+} tensor_patch;
 
 static void
 triangulate_patch(fz_context *ctx, fz_mesh_processor *painter, tensor_patch *p)

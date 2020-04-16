@@ -19,8 +19,6 @@
 #define SLASH_FILTER ("/Filter")
 
 
-typedef struct pdf_write_state_s pdf_write_state;
-
 /*
 	As part of linearization, we need to keep a list of what objects are used
 	by what page. We do this by recording the objects used in a given page
@@ -58,7 +56,7 @@ typedef struct {
 	page_objects *page[1];
 } page_objects_list;
 
-struct pdf_write_state_s
+typedef struct
 {
 	fz_output *out;
 
@@ -105,7 +103,7 @@ struct pdf_write_state_s
 	char upwd_utf8[128];
 	int permissions;
 	pdf_crypt *crypt;
-};
+} pdf_write_state;
 
 /*
  * Constants for use with use_list.
@@ -3741,9 +3739,7 @@ pdf_format_write_options(fz_context *ctx, char *buffer, size_t buffer_len, const
 	return buffer;
 }
 
-typedef struct pdf_writer_s pdf_writer;
-
-struct pdf_writer_s
+typedef struct
 {
 	fz_document_writer super;
 	pdf_document *pdf;
@@ -3753,7 +3749,7 @@ struct pdf_writer_s
 	fz_rect mediabox;
 	pdf_obj *resources;
 	fz_buffer *contents;
-};
+} pdf_writer;
 
 static fz_device *
 pdf_writer_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)

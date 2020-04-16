@@ -19,7 +19,7 @@
 	and tar files are included.
 */
 
-typedef struct fz_archive_s fz_archive;
+typedef struct fz_archive fz_archive;
 
 /*
 	Open a zip or tar archive
@@ -201,7 +201,7 @@ fz_archive *fz_open_zip_archive_with_stream(fz_context *ctx, fz_stream *file);
 	implementation.
 */
 
-typedef struct fz_zip_writer_s fz_zip_writer;
+typedef struct fz_zip_writer fz_zip_writer;
 
 /*
 	Create a new zip writer that writes to a given file.
@@ -243,7 +243,7 @@ void fz_drop_zip_writer(fz_context *ctx, fz_zip_writer *zip);
 	Implementation details: Subject to change.
 */
 
-struct fz_archive_s
+struct fz_archive
 {
 	fz_stream *file;
 	const char *format;

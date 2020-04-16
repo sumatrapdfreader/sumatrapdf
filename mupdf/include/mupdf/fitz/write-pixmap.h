@@ -13,9 +13,7 @@
 /*
 	PCL output
 */
-typedef struct fz_pcl_options_s fz_pcl_options;
-
-struct fz_pcl_options_s
+typedef struct
 {
 	/* Features of a particular printer */
 	int features;
@@ -35,7 +33,7 @@ struct fz_pcl_options_s
 
 	/* Updated as we move through the job */
 	int page_count;
-};
+} fz_pcl_options;
 
 /*
 	Initialize PCL option struct for a given preset.
@@ -90,16 +88,14 @@ void fz_save_pixmap_as_pcl(fz_context *ctx, fz_pixmap *pixmap, char *filename, i
 /*
 	PCLm output
 */
-typedef struct fz_pclm_options_s fz_pclm_options;
-
-struct fz_pclm_options_s
+typedef struct
 {
 	int compress;
 	int strip_height;
 
 	/* Updated as we move through the job */
 	int page_count;
-};
+} fz_pclm_options;
 
 /*
 	Parse PCLm options.
@@ -153,9 +149,7 @@ void fz_save_pixmap_as_psd(fz_context *ctx, fz_pixmap *pixmap, const char *filen
 void fz_write_pixmap_as_psd(fz_context *ctx, fz_output *out, const fz_pixmap *pixmap);
 fz_band_writer *fz_new_psd_band_writer(fz_context *ctx, fz_output *out);
 
-typedef struct fz_pwg_options_s fz_pwg_options;
-
-struct fz_pwg_options_s
+typedef struct
 {
 	/* These are not interpreted as CStrings by the writing code,
 	 * but are rather copied directly out. */
@@ -195,7 +189,7 @@ struct fz_pwg_options_s
 	 * are rather copied directly out. */
 	char rendering_intent[64];
 	char page_size_name[64];
-};
+} fz_pwg_options;
 
 void fz_save_pixmap_as_pwg(fz_context *ctx, fz_pixmap *pixmap, char *filename, int append, const fz_pwg_options *pwg);
 void fz_save_bitmap_as_pwg(fz_context *ctx, fz_bitmap *bitmap, char *filename, int append, const fz_pwg_options *pwg);

@@ -486,9 +486,7 @@ enum {
 	FZ_FORMAT_STEXT,
 };
 
-typedef struct fz_text_writer_s fz_text_writer;
-
-struct fz_text_writer_s
+typedef struct
 {
 	fz_document_writer super;
 	int format;
@@ -496,7 +494,7 @@ struct fz_text_writer_s
 	fz_stext_options opts;
 	fz_stext_page *page;
 	fz_output *out;
-};
+} fz_text_writer;
 
 static fz_device *
 text_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)

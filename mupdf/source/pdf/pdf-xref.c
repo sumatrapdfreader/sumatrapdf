@@ -2326,6 +2326,14 @@ pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, char *b
 	return -1;
 }
 
+
+static fz_location
+pdf_resolve_link_imp(fz_context *ctx, fz_document *doc_, const char *uri, float *xp, float *yp)
+{
+	pdf_document *doc = (pdf_document*)doc_;
+	return fz_make_location(0, pdf_resolve_link(ctx, doc, uri, xp, yp));
+}
+
 /*
 	Initializers for the fz_document interface.
 
@@ -3156,7 +3164,7 @@ typedef struct
 
 /* This structure is used to hold the definition of which fields
  * are locked. */
-struct pdf_locked_fields_s
+struct pdf_locked_fields
 {
 	int p;
 	int all;
@@ -3238,12 +3246,12 @@ pdf_is_field_locked(fz_context *ctx, pdf_locked_fields *locked, const char *name
 /* Unfortunately, in C, there is no legal way to define a function
  * type that returns itself. We therefore have to use a struct
  * wrapper. */
-typedef struct filter_wrap_s
+typedef struct filter_wrap
 {
-	struct filter_wrap_s (*func)(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+	struct filter_wrap (*func)(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 } filter_wrap;
 
-typedef struct filter_wrap_s (*filter_fn)(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
+typedef struct filter_wrap (*filter_fn)(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
 
 #define RETURN_FILTER(f) { filter_wrap rf; rf.func = (f); return rf; }
 

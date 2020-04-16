@@ -95,7 +95,7 @@ pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned in
 	cmap->codespace_len ++;
 }
 
-struct cmap_splay_s {
+struct cmap_splay {
 	unsigned int low;
 	unsigned int high;
 	unsigned int out;

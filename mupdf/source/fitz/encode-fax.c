@@ -2,13 +2,13 @@
 
 /* Fax G3/G4 tables */
 
-typedef struct cfe_code_s
+typedef struct
 {
 	unsigned short code;
 	unsigned short nbits;
 } cfe_code;
 
-typedef struct cf_runs_s {
+typedef struct {
 	cfe_code termination[64];
 	cfe_code makeup[41];
 } cf_runs;

@@ -5,9 +5,7 @@
 
 /* TODO: check if this works with 16bpp images */
 
-typedef struct fz_predict_s fz_predict;
-
-struct fz_predict_s
+typedef struct
 {
 	fz_stream *chain;
 
@@ -24,7 +22,7 @@ struct fz_predict_s
 	unsigned char *rp, *wp;
 
 	unsigned char buffer[4096];
-};
+} fz_predict;
 
 static inline int getcomponent(unsigned char *line, int x, int bpc)
 {

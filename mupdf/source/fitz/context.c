@@ -1,11 +1,13 @@
 #include "mupdf/fitz.h"
 
+#include "context-imp.h"
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
 
-struct fz_style_context_s
+struct fz_style_context
 {
 	int refs;
 	char *user_css;

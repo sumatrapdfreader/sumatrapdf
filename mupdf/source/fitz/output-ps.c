@@ -1,6 +1,6 @@
 #include "mupdf/fitz.h"
 
-#include <zlib.h>
+#include "z-imp.h"
 
 typedef struct ps_band_writer_s
 {
@@ -268,16 +268,14 @@ fz_band_writer *fz_new_ps_band_writer(fz_context *ctx, fz_output *out)
 
 /* High-level document writer interface */
 
-typedef struct fz_ps_writer_s fz_ps_writer;
-
-struct fz_ps_writer_s
+typedef struct
 {
 	fz_document_writer super;
 	fz_draw_options draw;
 	fz_pixmap *pixmap;
 	fz_output *out;
 	int count;
-};
+} fz_ps_writer;
 
 static fz_device *
 ps_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)

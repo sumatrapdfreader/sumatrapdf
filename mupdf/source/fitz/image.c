@@ -1,5 +1,7 @@
 #include "mupdf/fitz.h"
 
+#include "context-imp.h"
+
 #include <string.h>
 #include <math.h>
 #include <assert.h>
@@ -16,27 +18,26 @@ fz_key_storable_needs_reaping(fz_context *ctx, const fz_key_storable *ks)
 
 #define SCALABLE_IMAGE_DPI 96
 
-struct fz_compressed_image_s
+struct fz_compressed_image
 {
 	fz_image super;
 	fz_pixmap *tile;
 	fz_compressed_buffer *buffer;
 };
 
-struct fz_pixmap_image_s
+struct fz_pixmap_image
 {
 	fz_image super;
 	fz_pixmap *tile;
 };
 
-typedef struct fz_image_key_s fz_image_key;
-
-struct fz_image_key_s {
+typedef struct
+{
 	int refs;
 	fz_image *image;
 	int l2factor;
 	fz_irect rect;
-};
+} fz_image_key;
 
 fz_image *
 fz_keep_image(fz_context *ctx, fz_image *image)

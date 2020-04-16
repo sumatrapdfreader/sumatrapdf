@@ -8,16 +8,14 @@
 #define PATH_MAX 4096
 #endif
 
-typedef struct fz_cbz_writer_s fz_cbz_writer;
-
-struct fz_cbz_writer_s
+typedef struct
 {
 	fz_document_writer super;
 	fz_draw_options options;
 	fz_pixmap *pixmap;
 	int count;
 	fz_zip_writer *zip;
-};
+} fz_cbz_writer;
 
 static fz_device *
 cbz_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)
@@ -103,9 +101,7 @@ fz_new_cbz_writer(fz_context *ctx, const char *path, const char *options)
 
 /* generic image file output writer */
 
-typedef struct fz_pixmap_writer_s fz_pixmap_writer;
-
-struct fz_pixmap_writer_s
+typedef struct
 {
 	fz_document_writer super;
 	fz_draw_options options;
@@ -113,7 +109,7 @@ struct fz_pixmap_writer_s
 	void (*save)(fz_context *ctx, fz_pixmap *pix, const char *filename);
 	int count;
 	char *path;
-};
+} fz_pixmap_writer;
 
 static fz_device *
 pixmap_begin_page(fz_context *ctx, fz_document_writer *wri_, fz_rect mediabox)

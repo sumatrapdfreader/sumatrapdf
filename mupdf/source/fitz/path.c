@@ -15,7 +15,7 @@
 // a trailing move. Trailing moves can always be stripped when path
 // construction completes.
 
-typedef enum fz_path_command_e
+typedef enum
 {
 	FZ_MOVETO = 'M',
 	FZ_LINETO = 'L',
@@ -38,7 +38,7 @@ typedef enum fz_path_command_e
 	FZ_QUADTOCLOSE = 'q',
 } fz_path_item_kind;
 
-struct fz_path_s
+struct fz_path
 {
 	int8_t refs;
 	uint8_t packed;
@@ -50,7 +50,7 @@ struct fz_path_s
 	fz_point begin;
 };
 
-typedef struct fz_packed_path_s
+typedef struct
 {
 	int8_t refs;
 	uint8_t packed;

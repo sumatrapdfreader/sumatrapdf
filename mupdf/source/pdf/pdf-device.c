@@ -7,11 +7,9 @@
 
 #define ALLOWED_TEXT_POS_ERROR (0.001f)
 
-typedef struct pdf_device_s pdf_device;
+typedef struct pdf_device pdf_device;
 
-typedef struct gstate_s gstate;
-
-struct gstate_s
+typedef struct
 {
 	/* The first few entries aren't really graphics state things, but
 	 * they are recorded here as they are fundamentally intertwined with
@@ -30,7 +28,7 @@ struct gstate_s
 	float font_size;
 	int text_rendering_mode;
 	int knockout;
-};
+} gstate;
 
 /* The image digest information, object reference, as well as indirect reference
  * ID are all stored in doc->resources->image, and so they are maintained
@@ -42,26 +40,22 @@ struct gstate_s
  * already specified for this page which is the purpose of image_indices
  */
 
-typedef struct alpha_entry_s alpha_entry;
-
-struct alpha_entry_s
+typedef struct
 {
 	float alpha;
 	int stroke;
-};
+} alpha_entry;
 
-typedef struct group_entry_s group_entry;
-
-struct group_entry_s
+typedef struct
 {
 	int alpha;
 	int isolated;
 	int knockout;
 	fz_colorspace *colorspace;
 	pdf_obj *ref;
-};
+} group_entry;
 
-struct pdf_device_s
+struct pdf_device
 {
 	fz_device super;
 

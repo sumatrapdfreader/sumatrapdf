@@ -1,5 +1,7 @@
 #include "mupdf/fitz.h"
 
+#include "color-imp.h"
+
 #if FZ_ENABLE_ICC
 
 #ifndef LCMS_USE_FLOAT
@@ -50,7 +52,7 @@ static void fz_unmultiply_row(fz_context *ctx, int n, int c, int w, unsigned cha
 	}
 }
 
-struct fz_icc_link_s
+struct fz_icc_link
 {
 	fz_storable storable;
 	void *handle;

@@ -5,8 +5,6 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/geometry.h"
 
-typedef struct fz_link_s fz_link;
-
 /*
 	fz_link is a list of interactive links on a page.
 
@@ -26,14 +24,14 @@ typedef struct fz_link_s fz_link;
 
 	next: A pointer to the next link on the same page.
 */
-struct fz_link_s
+typedef struct fz_link
 {
 	int refs;
-	fz_link *next;
+	struct fz_link *next;
 	fz_rect rect;
 	void *doc;
 	char *uri;
-};
+} fz_link;
 
 fz_link *fz_new_link(fz_context *ctx, fz_rect bbox, void *doc, const char *uri);
 fz_link *fz_keep_link(fz_context *ctx, fz_link *link);

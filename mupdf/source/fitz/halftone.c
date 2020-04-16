@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-struct fz_halftone_s
+struct fz_halftone
 {
 	int refs;
 	int n;

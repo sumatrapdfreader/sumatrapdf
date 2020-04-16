@@ -187,7 +187,7 @@ struct attribute
 	char name[1];
 };
 
-struct fz_xml_doc_s
+struct fz_xml_doc
 {
 	fz_pool *pool;
 	fz_xml *root;
@@ -196,7 +196,7 @@ struct fz_xml_doc_s
 /* Text nodes never use the down pointer. Therefore
  * if the down pointer is the MAGIC_TEXT value, we
  * know there is text. */
-struct fz_xml_s
+struct fz_xml
 {
 	fz_xml *up, *down, *prev, *next;
 #ifdef FZ_XML_SEQ

@@ -8,7 +8,7 @@
 	AA-tree to look up things by strings.
 */
 
-typedef struct fz_tree_s fz_tree;
+typedef struct fz_tree fz_tree;
 
 void *fz_tree_lookup(fz_context *ctx, fz_tree *node, const char *key);
 

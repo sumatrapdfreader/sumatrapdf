@@ -1,5 +1,7 @@
 #include "mupdf/fitz.h"
 
+#include "color-imp.h"
+
 #include <assert.h>
 #include <string.h>
 
@@ -8,7 +10,7 @@ enum
 	FZ_SEPARATION_DISABLED_RENDER = 3
 };
 
-struct fz_separations_s
+struct fz_separations
 {
 	int refs;
 	int num_separations;
@@ -943,7 +945,6 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 
 	return dst;
 }
-
 
 void
 fz_convert_separation_colors(fz_context *ctx,

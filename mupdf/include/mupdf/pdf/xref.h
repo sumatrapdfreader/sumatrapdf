@@ -32,9 +32,7 @@ pdf_obj *pdf_add_stream(fz_context *ctx, pdf_document *doc, fz_buffer *buf, pdf_
 pdf_obj *pdf_add_new_dict(fz_context *ctx, pdf_document *doc, int initial);
 pdf_obj *pdf_add_new_array(fz_context *ctx, pdf_document *doc, int initial);
 
-typedef struct pdf_xref_entry_s pdf_xref_entry;
-
-struct pdf_xref_entry_s
+typedef struct
 {
 	char type;		/* 0=unset (f)ree i(n)use (o)bjstm */
 	unsigned char marked;	/* marked to keep alive with pdf_mark_xref */
@@ -44,19 +42,17 @@ struct pdf_xref_entry_s
 	int64_t stm_ofs;	/* on-disk stream */
 	fz_buffer *stm_buf;	/* in-memory stream (for updated objects) */
 	pdf_obj *obj;		/* stored/cached object */
-};
+} pdf_xref_entry;
 
-typedef struct pdf_xref_subsec_s pdf_xref_subsec;
-
-struct pdf_xref_subsec_s
+typedef struct pdf_xref_subsec
 {
-	pdf_xref_subsec *next;
+	struct pdf_xref_subsec *next;
 	int len;
 	int start;
 	pdf_xref_entry *table;
-};
+} pdf_xref_subsec;
 
-struct pdf_xref_s
+struct pdf_xref
 {
 	int num_objects;
 	pdf_xref_subsec *subsec;
@@ -171,7 +167,7 @@ int pdf_count_unsaved_versions(fz_context *ctx, pdf_document *doc);
 int pdf_validate_changes(fz_context *ctx, pdf_document *doc, int version);
 int pdf_doc_was_linearized(fz_context *ctx, pdf_document *doc);
 
-typedef struct pdf_locked_fields_s pdf_locked_fields;
+typedef struct pdf_locked_fields pdf_locked_fields;
 int pdf_is_field_locked(fz_context *ctx, pdf_locked_fields *locked, const char *name);
 void pdf_drop_locked_fields(fz_context *ctx, pdf_locked_fields *locked);
 pdf_locked_fields *pdf_find_locked_fields(fz_context *ctx, pdf_document *doc, int version);

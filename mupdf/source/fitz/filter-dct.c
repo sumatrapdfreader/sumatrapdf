@@ -8,9 +8,7 @@ typedef void * backing_store_ptr;
 #include "jmemcust.h"
 #endif
 
-typedef struct fz_dctd_s fz_dctd;
-
-struct fz_dctd_s
+typedef struct
 {
 	fz_stream *chain;
 	fz_stream *jpegtables;
@@ -29,7 +27,7 @@ struct fz_dctd_s
 	char msg[JMSG_LENGTH_MAX];
 
 	unsigned char buffer[4096];
-};
+} fz_dctd;
 
 #ifdef SHARE_JPEG
 

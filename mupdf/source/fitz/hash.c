@@ -12,15 +12,14 @@
 */
 
 enum { MAX_KEY_LEN = 48 };
-typedef struct fz_hash_entry_s fz_hash_entry;
 
-struct fz_hash_entry_s
+typedef struct
 {
 	unsigned char key[MAX_KEY_LEN];
 	void *val;
-};
+} fz_hash_entry;
 
-struct fz_hash_table_s
+struct fz_hash_table
 {
 	int keylen;
 	int size;

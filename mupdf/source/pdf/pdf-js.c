@@ -8,7 +8,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-struct pdf_js_s
+struct pdf_js
 {
 	fz_context *ctx;
 	pdf_document *doc;
