@@ -1277,13 +1277,15 @@ fz_matrix EnginePdf::viewctm(fz_page* page, float zoom, int rotation) {
 void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
     Vec<PageElement*>& comments = pageInfo->comments;
 
-    auto page = (pdf_page*)pageInfo->page;
+    auto page = pageInfo->page;
     if (!page) {
         return;
     }
+    auto pdfpage = pdf_page_from_fz_page(ctx, page);
     int pageNo = pageInfo->pageNo;
 
-    for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
+    pdf_annot* annot;
+    for (annot = pdf_first_annot(ctx, pdfpage); annot; annot = pdf_next_annot(ctx, annot)) {
         auto tp = pdf_annot_type(ctx, annot);
         const char* contents = pdf_annot_contents(ctx, annot); // don't free
         bool isContentsEmpty = str::IsEmpty(contents);
@@ -1500,7 +1502,8 @@ WCHAR* EnginePdf::ExtractFontList() {
         fz_try(ctx) {
             pdf_obj* resources = pdf_page_resources(ctx, page);
             pdf_extract_fonts(ctx, resources, fontList, resList);
-            for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
+            pdf_annot* annot;
+            for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot)) {
                 if (annot->ap) {
                     pdf_obj* o = annot->ap;
                     // TODO(port): not sure this is the right thing
