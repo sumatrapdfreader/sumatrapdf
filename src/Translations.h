@@ -1,4 +1,4 @@
-/* Copyright 2015 Krzysztof Kowalczyk.
+/* Copyright 2020 Krzysztof Kowalczyk.
    License: BSD */
 
 namespace trans {
