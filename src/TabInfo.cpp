@@ -78,6 +78,27 @@ const WCHAR* TabInfo::GetTabTitle() const {
     return path::GetBaseNameNoFree(filePath);
 }
 
+void TabInfo::MoveDocBy(int dx, int dy) {
+    if (!ctrl) {
+        return;
+    }
+    DisplayModel* dm = ctrl->AsFixed();
+    CrashIf(!dm);
+    if (!dm) {
+        return;
+    }
+    CrashIf(win->linkOnLastButtonDown);
+    if (win->linkOnLastButtonDown) {
+        return;
+    }
+    if (0 != dx) {
+        dm->ScrollXBy(dx);
+    }
+    if (0 != dy) {
+        dm->ScrollYBy(dy, false);
+    }
+}
+
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0
 LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {

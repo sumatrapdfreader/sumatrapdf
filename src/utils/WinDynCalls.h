@@ -91,7 +91,7 @@ typedef decltype(DwmGetWindowAttribute)* Sig_DwmGetWindowAttribute;
     V(DwmGetWindowAttribute)
 
 // normaliz.dll
-//typedef decltype(NormalizeString)* Sig_NormalizeString2;
+// typedef decltype(NormalizeString)* Sig_NormalizeString2;
 typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 
 #define NORMALIZ_API_LIST(V) V(NormalizeString)

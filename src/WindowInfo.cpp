@@ -189,35 +189,28 @@ void WindowInfo::Focus() {
 }
 
 void WindowInfo::ToggleZoom() {
-    CrashIf(!this->ctrl);
-    if (!this->IsDocLoaded())
+    CrashIf(!ctrl);
+    if (!IsDocLoaded()) {
         return;
-
-    if (ZOOM_FIT_PAGE == this->ctrl->GetZoomVirtual())
-        this->ctrl->SetZoomVirtual(ZOOM_FIT_WIDTH, nullptr);
-    else if (ZOOM_FIT_WIDTH == this->ctrl->GetZoomVirtual())
-        this->ctrl->SetZoomVirtual(ZOOM_FIT_CONTENT, nullptr);
-    else
-        this->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
+    }
+    float newZoom = ZOOM_FIT_PAGE;
+    float currZoom = ctrl->GetZoomVirtual();
+    if (ZOOM_FIT_PAGE == currZoom) {
+        newZoom = ZOOM_FIT_WIDTH;
+    } else if (ZOOM_FIT_WIDTH == currZoom) {
+        newZoom = ZOOM_FIT_CONTENT;
+    }
+    ctrl->SetZoomVirtual(newZoom, nullptr);
 }
 
 void WindowInfo::MoveDocBy(int dx, int dy) {
-    CrashIf(!this->AsFixed());
-    if (!this->AsFixed())
-        return;
-    CrashIf(this->linkOnLastButtonDown);
-    if (this->linkOnLastButtonDown)
-        return;
-    DisplayModel* dm = this->ctrl->AsFixed();
-    if (0 != dx)
-        dm->ScrollXBy(dx);
-    if (0 != dy)
-        dm->ScrollYBy(dy, false);
+    CrashIf(!currentTab);
+    currentTab->MoveDocBy(dx, dy);
 }
 
 void WindowInfo::ShowInfoTip(const WCHAR* text, RectI& rc, bool multiline) {
     if (str::IsEmpty(text)) {
-        this->HideInfoTip();
+        HideInfoTip();
         return;
     }
     infotip->Show(text, rc, multiline);
