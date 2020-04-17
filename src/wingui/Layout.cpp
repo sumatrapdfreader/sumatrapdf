@@ -8,19 +8,19 @@
 #include "Layout.h"
 
 int Rect::Width() const {
-    return Max.x - Min.x;
+    return max.x - min.x;
 }
 int Rect::Height() const {
-    return Max.y - Min.y;
+    return max.y - min.y;
 }
 
 int Rect::Dx() const {
-    return this->Max.x - this->Min.x;
+    return this->max.x - this->min.x;
 }
 
 // Dy returns r's height.
 int Rect::Dy() const {
-    return this->Max.y - this->Min.y;
+    return this->max.y - this->min.y;
 }
 
 bool Rect::empty() const {
@@ -28,10 +28,10 @@ bool Rect::empty() const {
 }
 
 RECT RectToRECT(const Rect r) {
-    LONG left = r.Min.x;
-    LONG top = r.Min.y;
-    LONG right = r.Max.x;
-    LONG bottom = r.Max.y;
+    LONG left = r.min.x;
+    LONG top = r.min.y;
+    LONG right = r.max.x;
+    LONG bottom = r.max.y;
     RECT res{left, top, right, bottom};
     return res;
 }
@@ -91,35 +91,35 @@ Constraints TightHeight(int height) {
 }
 
 SizeI Constraints::Constrain(SizeI size) const {
-    int w = clamp(size.dx, this->Min.dx, this->Max.dx);
-    int h = clamp(size.dy, this->Min.dy, this->Max.dy);
+    int w = clamp(size.dx, this->min.dx, this->max.dx);
+    int h = clamp(size.dy, this->min.dy, this->max.dy);
     return SizeI{w, h};
 }
 
 SizeI Constraints::ConstrainAndAttemptToPreserveAspectRatio(const SizeI size) const {
     if (this->IsTight()) {
-        return this->Min;
+        return this->min;
     }
 
     int width = size.dx;
     int height = size.dy;
 
-    if (width > this->Max.dx) {
-        width = this->Max.dx;
+    if (width > this->max.dx) {
+        width = this->max.dx;
         height = scale(width, size.dy, size.dx);
     }
-    if (height > this->Max.dy) {
-        height = this->Max.dy;
+    if (height > this->max.dy) {
+        height = this->max.dy;
         width = scale(height, size.dx, size.dy);
     }
 
-    if (width < this->Min.dx) {
-        width = this->Min.dx;
+    if (width < this->min.dx) {
+        width = this->min.dx;
         height = scale(width, size.dy, size.dx);
     }
 
-    if (height < this->Min.dy) {
-        height = this->Min.dy;
+    if (height < this->min.dy) {
+        height = this->min.dy;
         width = scale(height, size.dx, size.dy);
     }
 
@@ -128,37 +128,37 @@ SizeI Constraints::ConstrainAndAttemptToPreserveAspectRatio(const SizeI size) co
 }
 
 int Constraints::ConstrainHeight(int height) const {
-    return clamp(height, this->Min.dy, this->Max.dy);
+    return clamp(height, this->min.dy, this->max.dy);
 }
 
 int Constraints::ConstrainWidth(int width) const {
-    return clamp(width, this->Min.dx, this->Max.dx);
+    return clamp(width, this->min.dx, this->max.dx);
 }
 
 bool Constraints::HasBoundedHeight() const {
-    return this->Max.dy < Inf;
+    return this->max.dy < Inf;
 }
 
 bool Constraints::HasBoundedWidth() const {
-    return this->Max.dx < Inf;
+    return this->max.dx < Inf;
 }
 
 bool Constraints::HasTightWidth() const {
-    return this->Min.dx >= this->Max.dx;
+    return this->min.dx >= this->max.dx;
 }
 
 bool Constraints::HasTightHeight() const {
-    return this->Min.dy >= this->Max.dy;
+    return this->min.dy >= this->max.dy;
 }
 
 Constraints Constraints::Inset(int width, int height) const {
-    int minw = this->Min.dx;
+    int minw = this->min.dx;
     int deflatedMinWidth = guardInf(minw, std::max(0, minw - width));
-    int minh = this->Min.dy;
+    int minh = this->min.dy;
     int deflatedMinHeight = guardInf(minh, std::max(0, minh - height));
     SizeI min{deflatedMinWidth, deflatedMinHeight};
-    int maxw = this->Max.dx;
-    int maxh = this->Max.dy;
+    int maxw = this->max.dx;
+    int maxh = this->max.dy;
     SizeI max{
         std::max(deflatedMinWidth, guardInf(maxw, maxw - width)),
         std::max(deflatedMinHeight, guardInf(maxh, maxh - height)),
@@ -171,11 +171,11 @@ bool Constraints::IsBounded() const {
 }
 
 bool Constraints::IsNormalized() const {
-    return this->Min.dx >= 0.0 && this->Min.dx <= this->Max.dx && this->Min.dy >= 0.0 && this->Min.dy <= this->Max.dy;
+    return this->min.dx >= 0.0 && this->min.dx <= this->max.dx && this->min.dy >= 0.0 && this->min.dy <= this->max.dy;
 }
 
 bool Constraints::IsSatisfiedBy(SizeI size) const {
-    return this->Min.dx <= size.dx && size.dx <= this->Max.dx && this->Min.dy <= size.dy && size.dy <= this->Max.dy &&
+    return this->min.dx <= size.dx && size.dx <= this->max.dx && this->min.dy <= size.dy && size.dy <= this->max.dy &&
            size.dx != Inf && size.dy != Inf;
 }
 
@@ -184,42 +184,42 @@ bool Constraints::IsTight() const {
 }
 
 bool Constraints::IsZero() const {
-    return this->Min.dx == 0 && this->Min.dy == 0 && this->Max.dx == 0 && this->Max.dy == 0;
+    return this->min.dx == 0 && this->min.dy == 0 && this->max.dx == 0 && this->max.dy == 0;
 }
 
 Constraints Constraints::Loosen() const {
-    return Constraints{SizeI{}, this->Max};
+    return Constraints{SizeI{}, this->max};
 }
 
 Constraints Constraints::LoosenHeight() const {
-    return Constraints{SizeI{this->Min.dx, 0}, this->Max};
+    return Constraints{SizeI{this->min.dx, 0}, this->max};
 }
 
 Constraints Constraints::LoosenWidth() const {
-    return Constraints{SizeI{0, this->Min.dy}, this->Max};
+    return Constraints{SizeI{0, this->min.dy}, this->max};
 }
 
 Constraints Constraints::Tighten(SizeI size) const {
     Constraints bc = *this;
-    bc.Min.dx = clamp(size.dx, bc.Min.dx, bc.Max.dx);
-    bc.Max.dx = bc.Min.dx;
-    bc.Min.dy = clamp(size.dy, bc.Min.dy, bc.Max.dy);
-    bc.Max.dy = bc.Min.dy;
+    bc.min.dx = clamp(size.dx, bc.min.dx, bc.max.dx);
+    bc.max.dx = bc.min.dx;
+    bc.min.dy = clamp(size.dy, bc.min.dy, bc.max.dy);
+    bc.max.dy = bc.min.dy;
     return bc;
 }
 
 Constraints Constraints::TightenHeight(int height) const {
     Constraints bc = *this;
-    bc.Min.dy = clamp(height, bc.Min.dy, bc.Max.dy);
-    bc.Max.dy = bc.Min.dy;
+    bc.min.dy = clamp(height, bc.min.dy, bc.max.dy);
+    bc.max.dy = bc.min.dy;
     return bc;
 }
 
 Constraints Constraints::TightenWidth(int width) const {
     Constraints bc = *this;
 
-    bc.Min.dx = clamp(width, bc.Min.dx, bc.Max.dx);
-    bc.Max.dx = bc.Min.dx;
+    bc.min.dx = clamp(width, bc.min.dx, bc.max.dx);
+    bc.max.dx = bc.min.dx;
     return bc;
 }
 
@@ -279,10 +279,10 @@ int Padding::MinIntrinsicWidth(int height) {
 
 void Padding::SetBounds(Rect bounds) {
     lastBounds = bounds;
-    bounds.Min.x += this->insets.Left;
-    bounds.Min.y += this->insets.Top;
-    bounds.Max.x -= this->insets.Right;
-    bounds.Max.y -= this->insets.Bottom;
+    bounds.min.x += this->insets.Left;
+    bounds.min.y += this->insets.Top;
+    bounds.max.x -= this->insets.Right;
+    bounds.max.y -= this->insets.Bottom;
     this->child->SetBounds(bounds);
 }
 
@@ -401,15 +401,15 @@ SizeI VBox::Layout(const Constraints bc) {
     if (this->alignMain == MainAxisAlign::Homogeneous) {
         auto count = (i64)this->childrenCount();
         auto gap = calculateVGap(nullptr, nullptr);
-        cbc.TightenHeight(scale(cbc.Max.dy, 1, count) - scale(gap, count - 1, count));
+        cbc.TightenHeight(scale(cbc.max.dy, 1, count) - scale(gap, count - 1, count));
     } else {
-        cbc.Min.dy = 0;
-        cbc.Max.dy = Inf;
+        cbc.min.dy = 0;
+        cbc.max.dy = Inf;
     }
 
     if (this->alignCross == CrossAxisAlign::Stretch) {
         if (cbc.HasBoundedWidth()) {
-            cbc = cbc.TightenWidth(cbc.Max.dx);
+            cbc = cbc.TightenWidth(cbc.max.dx);
         } else {
             cbc = cbc.TightenWidth(this->MinIntrinsicWidth(Inf));
         }
@@ -443,10 +443,10 @@ SizeI VBox::Layout(const Constraints bc) {
     // Need to adjust width to any widgets that have flex
     if (totalFlex > 0) {
         auto extraHeight = int(0);
-        if (bc.HasBoundedHeight() && bc.Max.dy > this->totalHeight) {
-            extraHeight = bc.Max.dy - this->totalHeight;
-        } else if (bc.Min.dy > this->totalHeight) {
-            extraHeight = bc.Min.dy - this->totalHeight;
+        if (bc.HasBoundedHeight() && bc.max.dy > this->totalHeight) {
+            extraHeight = bc.max.dy - this->totalHeight;
+        } else if (bc.min.dy > this->totalHeight) {
+            extraHeight = bc.min.dy - this->totalHeight;
         }
 
         if (extraHeight > 0) {
@@ -463,7 +463,7 @@ SizeI VBox::Layout(const Constraints bc) {
         }
     }
     if (this->alignCross == CrossAxisAlign::Stretch) {
-        return bc.Constrain(SizeI{cbc.Min.dx, height});
+        return bc.Constrain(SizeI{cbc.min.dx, height});
     }
 
     return bc.Constrain(SizeI{width, height});
@@ -553,9 +553,9 @@ void VBox::SetBounds(Rect bounds) {
 
         for (size_t i = 0; i < n; i++) {
             auto& v = children[i];
-            auto y1 = bounds.Min.y + scale(dy, i, count);
-            auto y2 = bounds.Min.y + scale(dy, i + 1, count) - gap;
-            setBoundsForChild(i, v.layout, bounds.Min.x, y1, bounds.Max.x, y2);
+            auto y1 = bounds.min.y + scale(dy, i, count);
+            auto y2 = bounds.min.y + scale(dy, i + 1, count) - gap;
+            setBoundsForChild(i, v.layout, bounds.min.x, y1, bounds.max.x, y2);
         }
         return;
     }
@@ -570,15 +570,15 @@ void VBox::SetBounds(Rect bounds) {
                 // Do nothing
                 break;
             case MainAxisAlign::MainCenter:
-                bounds.Min.y += (bounds.Dy() - totalHeight) / 2;
+                bounds.min.y += (bounds.Dy() - totalHeight) / 2;
                 break;
             case MainAxisAlign::MainEnd:
-                bounds.Min.y = bounds.Max.y - totalHeight;
+                bounds.min.y = bounds.max.y - totalHeight;
                 break;
             case MainAxisAlign::SpaceAround: {
                 int l = (bounds.Dy() - totalHeight);
                 extraGap = scale(l, 1, i64(n) + 1);
-                bounds.Min.y += extraGap;
+                bounds.min.y += extraGap;
                 extraGap += calculateVGap(nullptr, nullptr);
                 break;
             }
@@ -590,14 +590,14 @@ void VBox::SetBounds(Rect bounds) {
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
-                    bounds.Min.y += (bounds.Dy() - totalHeight) / 2;
+                    bounds.min.y += (bounds.Dy() - totalHeight) / 2;
                 }
                 break;
         }
     }
 
     // Position all of the child controls.
-    auto posY = bounds.Min.y;
+    auto posY = bounds.min.y;
     ILayout* previous = nullptr;
     for (size_t i = 0; i < n; i++) {
         auto& v = children[i];
@@ -609,7 +609,7 @@ void VBox::SetBounds(Rect bounds) {
         }
 
         auto dy = v.size.dy;
-        setBoundsForChild(i, v.layout, bounds.Min.x, posY, bounds.Max.x, posY + dy);
+        setBoundsForChild(i, v.layout, bounds.min.x, posY, bounds.max.x, posY + dy);
         posY += dy + extraGap;
     }
 }
@@ -697,16 +697,16 @@ SizeI HBox::Layout(const Constraints bc) {
     if (alignMain == MainAxisAlign::Homogeneous) {
         auto count = i64(n);
         auto gap = calculateHGap(nullptr, nullptr);
-        auto maxw = cbc.Max.dx;
+        auto maxw = cbc.max.dx;
         cbc.TightenWidth(scale(maxw, 1, count) - scale(gap, count - 1, count));
     } else {
-        cbc.Min.dx = 0;
-        cbc.Max.dx = Inf;
+        cbc.min.dx = 0;
+        cbc.max.dx = Inf;
     }
 
     if (alignCross == CrossAxisAlign::Stretch) {
         if (cbc.HasBoundedHeight()) {
-            cbc = cbc.TightenHeight(cbc.Max.dy);
+            cbc = cbc.TightenHeight(cbc.max.dy);
         } else {
             cbc = cbc.TightenHeight(MinIntrinsicHeight(Inf));
         }
@@ -743,10 +743,10 @@ SizeI HBox::Layout(const Constraints bc) {
     // Need to adjust height to any widgets that have flex
     if (totalFlex > 0) {
         auto extraWidth = int(0);
-        if (bc.HasBoundedWidth() && bc.Max.dx > totalWidth) {
-            extraWidth = bc.Max.dx - totalWidth;
-        } else if (bc.Min.dx > totalWidth) {
-            extraWidth = bc.Min.dx - totalWidth;
+        if (bc.HasBoundedWidth() && bc.max.dx > totalWidth) {
+            extraWidth = bc.max.dx - totalWidth;
+        } else if (bc.min.dx > totalWidth) {
+            extraWidth = bc.min.dx - totalWidth;
         }
 
         if (extraWidth > 0) {
@@ -764,7 +764,7 @@ SizeI HBox::Layout(const Constraints bc) {
         }
     }
     if (alignCross == CrossAxisAlign::Stretch) {
-        return bc.Constrain(SizeI{width, cbc.Min.dy});
+        return bc.Constrain(SizeI{width, cbc.min.dy});
     }
     return bc.Constrain(SizeI{width, height});
 }
@@ -855,9 +855,9 @@ void HBox::SetBounds(Rect bounds) {
 
         for (size_t i = 0; i < n; i++) {
             auto v = children[i].layout;
-            auto x1 = bounds.Min.x + scale(dx, i, count);
-            auto x2 = bounds.Min.x + scale(dx, i + 1, count) - gap;
-            setBoundsForChild(i, v, x1, bounds.Min.y, x2, bounds.Max.y);
+            auto x1 = bounds.min.x + scale(dx, i, count);
+            auto x2 = bounds.min.x + scale(dx, i + 1, count) - gap;
+            setBoundsForChild(i, v, x1, bounds.min.y, x2, bounds.max.y);
         }
         return;
     }
@@ -872,15 +872,15 @@ void HBox::SetBounds(Rect bounds) {
                 // Do nothing
                 break;
             case MainAxisAlign::MainCenter:
-                bounds.Min.x += (bounds.Dx() - totalWidth) / 2;
+                bounds.min.x += (bounds.Dx() - totalWidth) / 2;
                 break;
             case MainAxisAlign::MainEnd:
-                bounds.Min.x = bounds.Max.x - totalWidth;
+                bounds.min.x = bounds.max.x - totalWidth;
                 break;
             case MainAxisAlign::SpaceAround: {
                 auto eg = (bounds.Dx() - totalWidth);
                 extraGap = scale(eg, 1, i64(n) + 1);
-                bounds.Min.x += extraGap;
+                bounds.min.x += extraGap;
                 extraGap += calculateHGap(nullptr, nullptr);
             } break;
             case MainAxisAlign::SpaceBetween:
@@ -891,14 +891,14 @@ void HBox::SetBounds(Rect bounds) {
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
-                    bounds.Min.x += (bounds.Dx() - totalWidth) / 2;
+                    bounds.min.x += (bounds.Dx() - totalWidth) / 2;
                 }
                 break;
         }
     }
 
     // Position all of the child controls.
-    auto posX = bounds.Min.x;
+    auto posX = bounds.min.x;
     ILayout* previous = nullptr;
     for (size_t i = 0; i < n; i++) {
         auto& v = children[i];
@@ -910,7 +910,7 @@ void HBox::SetBounds(Rect bounds) {
         }
 
         auto dx = children[i].size.dx;
-        setBoundsForChild(i, v.layout, posX, bounds.Min.y, posX + dx, bounds.Max.y);
+        setBoundsForChild(i, v.layout, posX, bounds.min.y, posX + dx, bounds.max.y);
         posX += dx + extraGap;
     }
 }
@@ -1012,15 +1012,15 @@ int Align::MinIntrinsicWidth(int height) {
 
 void Align::SetBounds(Rect bounds) {
     lastBounds = bounds;
-    int bminx = bounds.Min.x;
-    int bmaxx = bounds.Max.x;
+    int bminx = bounds.min.x;
+    int bmaxx = bounds.max.x;
     int cw = this->childSize.dx;
     i64 twm = AlignStart - AlignEnd;
     i64 tw = AlignEnd - AlignStart;
     int x = scale(bminx, this->HAlign - AlignEnd, twm) + scale(bmaxx - cw, this->HAlign - AlignStart, tw);
     int ch = this->childSize.dy;
-    int bminy = bounds.Min.y;
-    int bmaxy = bounds.Max.y;
+    int bminy = bounds.min.y;
+    int bmaxy = bounds.max.y;
     int y = scale(bminy, this->VAlign - AlignEnd, twm) + scale(bmaxy - ch, this->VAlign - AlignStart, tw);
     Rect b{PointI{x, y}, PointI{x + cw, y + ch}};
     this->Child->SetBounds(b);
@@ -1085,7 +1085,7 @@ bool IsLabel(ILayout* l) {
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
     Constraints c = ExpandInf();
-    c.Min = {minDx, minDy};
+    c.min = {minDx, minDy};
     auto size = layout->Layout(c);
     PointI min{0, 0};
     PointI max{size.dx, size.dy};

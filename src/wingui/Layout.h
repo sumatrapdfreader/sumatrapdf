@@ -7,8 +7,8 @@ const int Inf = std::numeric_limits<int>::max();
 
 // can't call it Rectangle because conflicts with GDI+ Rectangle function
 struct Rect {
-    PointI Min{};
-    PointI Max{};
+    PointI min{};
+    PointI max{};
 
     int Width() const;
     int Height() const;
@@ -24,8 +24,8 @@ int scale(int v, i64 num, i64 den);
 int guardInf(int a, int b);
 
 struct Constraints {
-    SizeI Min{};
-    SizeI Max{};
+    SizeI min{};
+    SizeI max{};
 
     SizeI Constrain(const SizeI) const;
     SizeI ConstrainAndAttemptToPreserveAspectRatio(const SizeI) const;
