@@ -52,6 +52,7 @@ struct TabInfo {
     EbookController* AsEbook() const;
 
     const WCHAR* GetTabTitle() const;
+    bool IsDocLoaded() const;
 };
 
 bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::string_view data);

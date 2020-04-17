@@ -41,6 +41,10 @@ TabInfo::~TabInfo() {
     delete tocSorted;
 }
 
+bool TabInfo::IsDocLoaded() const {
+    return ctrl != nullptr;
+}
+
 DisplayModel* TabInfo::AsFixed() const {
     return ctrl ? ctrl->AsFixed() : nullptr;
 }
