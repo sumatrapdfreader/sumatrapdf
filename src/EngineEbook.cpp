@@ -114,8 +114,6 @@ class EngineEbook : public EngineBase {
     PoolAllocator allocator;
     // TODO: still needed?
     CRITICAL_SECTION pagesAccess;
-    // access to userAnnots is protected by pagesAccess
-    Vec<Annotation> userAnnots;
     // page dimensions can vary between filetypes
     RectD pageRect;
     float pageBorder;

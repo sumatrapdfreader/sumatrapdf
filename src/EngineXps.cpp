@@ -239,8 +239,6 @@ class EngineXps : public EngineBase {
     xps_doc_props* _info = nullptr;
     fz_rect** imageRects = nullptr;
 
-    Vec<Annotation> userAnnots;
-
     TocTree* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
@@ -653,7 +651,7 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
     fz_var(pix);
     fz_var(bitmap);
 
-    Vec<Annotation> pageAnnots = fz_get_user_page_annots(userAnnots, args.pageNo);
+    Vec<Annotation> pageAnnots = GetAnnotationsForPage(userAnnots, args.pageNo);
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, page);

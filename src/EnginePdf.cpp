@@ -1196,7 +1196,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     fz_var(bitmap);
     fz_var(list);
 
-    Vec<Annotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+    Vec<Annotation> pageAnnots = GetAnnotationsForPage(userAnnots, pageNo);
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, page);
@@ -1929,7 +1929,7 @@ bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
             FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
             pdf_page* page = pdf_page_from_fz_page(ctx, pageInfo->page);
 
-            pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+            pageAnnots = GetAnnotationsForPage(userAnnots, pageNo);
             if (pageAnnots.size() == 0) {
                 continue;
             }

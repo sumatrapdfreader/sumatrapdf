@@ -567,10 +567,12 @@ int main(int argc, char** argv) {
     Vec<Annotation>* userAnnots = LoadFileModifications(engine->FileName());
     engine->UpdateUserAnnotations(userAnnots);
     delete userAnnots;
-    if (!loadOnly)
+    if (!loadOnly) {
         DumpData(engine, fullDump);
-    if (renderPath)
+    }
+    if (renderPath) {
         RenderDocument(engine, renderPath, renderZoom, silent);
+    }
     delete engine;
 
     return 0;

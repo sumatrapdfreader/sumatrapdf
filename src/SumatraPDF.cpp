@@ -709,19 +709,20 @@ class ControllerCallbackHandler : public ControllerCallback {
 };
 
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, SizeI size, const onBitmapRenderedCb& saveThumbnail) {
-    RectD pageRect = dm->GetEngine()->PageMediabox(1);
+    auto engine = dm->GetEngine();
+    RectD pageRect = engine->PageMediabox(1);
     if (pageRect.IsEmpty()) {
         // saveThumbnail must always be called for clean-up code
         saveThumbnail(nullptr);
         return;
     }
 
-    pageRect = dm->GetEngine()->Transform(pageRect, 1, 1.0f, 0);
+    pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
     float zoom = size.dx / (float)pageRect.dx;
     if (pageRect.dy > (float)size.dy / zoom) {
         pageRect.dy = (float)size.dy / zoom;
     }
-    pageRect = dm->GetEngine()->Transform(pageRect, 1, 1.0f, 0, true);
+    pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
 
     // TODO: this is leaking?
     RenderingCallback* callback = new ThumbnailRenderingTask(saveThumbnail);
@@ -3825,7 +3826,7 @@ static void MakeAnnotationFromSelection(TabInfo* tab) {
         gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
     }
     dm->userAnnotsModified = true;
-    dm->GetEngine()->UpdateUserAnnotations(dm->userAnnots);
+    engine->UpdateUserAnnotations(dm->userAnnots);
     ClearSearchResult(win); // causes invalidated tiles to be rerendered
 }
 

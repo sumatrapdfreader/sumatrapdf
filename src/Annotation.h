@@ -20,3 +20,6 @@ struct Annotation {
     Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color);
     bool operator==(const Annotation& other) const;
 };
+
+void DeleteVecAnnotations(Vec<Annotation*>* annots);
+Vec<Annotation> GetAnnotationsForPage(Vec<Annotation>& userAnnots, int pageNo);

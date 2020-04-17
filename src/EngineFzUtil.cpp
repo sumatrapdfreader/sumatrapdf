@@ -1171,26 +1171,6 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     free(coords);
 }
 
-Vec<Annotation> fz_get_user_page_annots(Vec<Annotation>& userAnnots, int pageNo) {
-    Vec<Annotation> result;
-    for (size_t i = 0; i < userAnnots.size(); i++) {
-        Annotation& annot = userAnnots.at(i);
-        if (annot.pageNo != pageNo) {
-            continue;
-        }
-        // include all annotations for pageNo that can be rendered by fz_run_user_annots
-        switch (annot.type) {
-            case AnnotationType::Highlight:
-            case AnnotationType::Underline:
-            case AnnotationType::StrikeOut:
-            case AnnotationType::Squiggly:
-                result.Append(annot);
-                break;
-        }
-    }
-    return result;
-}
-
 void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation>& pageAnnots, fz_device* dev, fz_matrix ctm,
                              const fz_rect cliprect, fz_cookie* cookie) {
     for (size_t i = 0; i < pageAnnots.size() && (!cookie || !cookie->abort); i++) {

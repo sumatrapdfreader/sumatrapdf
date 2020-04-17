@@ -276,12 +276,11 @@ class EngineDjVu : public EngineBase {
     miniexp_t outline = miniexp_nil;
     miniexp_t* annos = nullptr;
     TocTree* tocTree = nullptr;
-    Vec<Annotation> userAnnots;
 
     Vec<ddjvu_fileinfo_t> fileInfos;
 
     RenderedBitmap* CreateRenderedBitmap(const char* bmpData, SizeI size, bool grayscale) const;
-    void AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen);
+    void DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen);
     bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI>& coords);
     char* ResolveNamedDest(const char* name);
     TocItem* BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter);
@@ -518,7 +517,7 @@ bool EngineDjVu::FinishLoading() {
     return true;
 }
 
-void EngineDjVu::AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen) {
+void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen) {
     using namespace Gdiplus;
 
     if (!bmp || userAnnots.size() == 0) {
@@ -674,7 +673,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
         isBitonal = true;
     }
     bmp = CreateRenderedBitmap(bmpData, screen.Size(), isBitonal);
-    AddUserAnnots(bmp, pageNo, zoom, rotation, screen);
+    DrawUserAnnots(bmp, pageNo, zoom, rotation, screen);
 
     return bmp;
 }
