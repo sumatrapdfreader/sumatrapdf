@@ -115,21 +115,6 @@ typedef HRESULT(WINAPI* Sig_UiaGetReservedNotSupportedValue)(IUnknown** punkNotS
 
 // user32.dll
 
-// TODO: this shold be defined somewhere since msdn docs
-// mention HIDWORD https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-gestureinfo
-#if 1
-#ifndef _QWORD_DEFINED
-#define _QWORD_DEFINED
-typedef unsigned __int64 QWORD, *LPQWORD;
-#endif
-
-#ifndef MAKEQWORD
-#define MAKEQWORD(a, b) ((QWORD)(((QWORD)((DWORD)(a))) << 32 | ((DWORD)(b))))
-#define LODWORD(l) ((DWORD)((l)&0xFFFFFFFF))
-#define HIDWORD(l) ((DWORD)(((QWORD)(l) >> 32) & 0xFFFFFFFF))
-#endif
-#endif
-
 typedef decltype(GetGestureInfo)* Sig_GetGestureInfo;
 typedef decltype(CloseGestureInfoHandle)* Sig_CloseGestureInfoHandle;
 typedef decltype(SetGestureConfig)* Sig_SetGestureConfig;

@@ -998,6 +998,11 @@ static LRESULT CanvasOnMouseHWheel(WindowInfo* win, UINT message, WPARAM wParam,
     return TRUE;
 }
 
+static u32 LowerU64(ULONGLONG v) {
+    u32 res = (u32)v;
+    return res;
+}
+
 static LRESULT OnGesture(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lParam) {
     if (!touch::SupportsGestures()) {
         return DefWindowProc(win->hwndFrame, message, wParam, lParam);
@@ -1016,10 +1021,10 @@ static LRESULT OnGesture(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lP
     switch (gi.dwID) {
         case GID_ZOOM:
             if (gi.dwFlags != GF_BEGIN && win->AsFixed()) {
-                float zoom = (float)LODWORD(gi.ullArguments) / (float)win->touchState.startArg;
+                float zoom = (float)LowerU64(gi.ullArguments) / (float)win->touchState.startArg;
                 ZoomToSelection(win, zoom, false, true);
             }
-            win->touchState.startArg = LODWORD(gi.ullArguments);
+            win->touchState.startArg = LowerU64(gi.ullArguments);
             break;
 
         case GID_PAN:
@@ -1058,7 +1063,7 @@ static LRESULT OnGesture(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lP
             // Rotate the PDF 90 degrees in one direction
             if (gi.dwFlags == GF_END && win->AsFixed()) {
                 // This is in radians
-                double rads = GID_ROTATE_ANGLE_FROM_ARGUMENT(LODWORD(gi.ullArguments));
+                double rads = GID_ROTATE_ANGLE_FROM_ARGUMENT(LowerU64(gi.ullArguments));
                 // The angle from the rotate is the opposite of the Sumatra rotate, thus the negative
                 double degrees = -rads * 180 / M_PI;
 
