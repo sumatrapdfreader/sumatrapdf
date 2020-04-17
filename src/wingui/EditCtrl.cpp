@@ -185,26 +185,25 @@ static void NcCalcSize(HWND hwnd, NCCALCSIZE_PARAMS* params) {
 #endif
 
 SizeI EditCtrl::GetIdealSize() {
-    SIZE s1 = MeasureTextInHwnd(hwnd, L"Minimal", hfont);
+    SizeI s1 = MeasureTextInHwnd(hwnd, L"Minimal", hfont);
     // dbglogf("EditCtrl::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
     AutoFreeWstr txt = win::GetText(hwnd);
-    SIZE s2 = MeasureTextInHwnd(hwnd, txt, hfont);
+    SizeI s2 = MeasureTextInHwnd(hwnd, txt, hfont);
     // dbglogf("EditCtrl::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
-    int dx = std::max(s1.cx, s2.cx);
-    int dy = std::max(s1.cy, s2.cy);
-    SIZE res{dx, dy};
+    int dx = std::max(s1.dx, s2.dx);
+    int dy = std::max(s1.dy, s2.dy);
     // dbglogf("EditCtrl::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
 
     LRESULT margins = SendMessage(hwnd, EM_GETMARGINS, 0, 0);
     int lm = (int)LOWORD(margins);
     int rm = (int)HIWORD(margins);
-    res.cx += lm + rm;
+    dx += lm + rm;
 
     if (this->hasBorder) {
-        res.cx += DpiScale(hwnd, 4);
-        res.cy += DpiScale(hwnd, 4);
+        dx += DpiScale(hwnd, 4);
+        dy += DpiScale(hwnd, 4);
     }
     // logf("EditCtrl::GetIdealSize(): dx=%d, dy=%d\n", int(res.cx), int(res.cy));
-    return {res.cx, res.cy};
+    return {dx, dy};
 }
