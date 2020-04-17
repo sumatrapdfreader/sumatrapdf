@@ -3,6 +3,8 @@
 #include "context-imp.h"
 #include "color-imp.h"
 #include "draw-imp.h"
+#include "glyph-imp.h"
+#include "pixmap-imp.h"
 
 #include <string.h>
 #include <assert.h>

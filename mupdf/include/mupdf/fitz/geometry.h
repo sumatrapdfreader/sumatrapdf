@@ -626,14 +626,39 @@ fz_rect fz_transform_rect(fz_rect rect, fz_matrix m);
 */
 fz_point fz_normalize_vector(fz_point p);
 
+/*
+	Grid fit a matrix.
+
+	as_tiled = 0 => adjust the matrix so that the image of the unit
+	square completely covers any pixel that was touched by the
+	image of the unit square under the original matrix.
+
+	as_tiled = 1 => adjust the matrix so that the corners of the
+	image of the unit square align with the closest integer corner
+	of the image of the unit square under the original matrix.
+*/
 fz_matrix fz_gridfit_matrix(int as_tiled, fz_matrix m);
 
+/*
+	Find the largest expansion performed by this matrix.
+	(i.e. max(abs(m.a),abs(m.b),abs(m.c),abs(m.d))
+*/
 float fz_matrix_max_expansion(fz_matrix m);
 
-typedef struct{
+/*
+	A representation for a region defined by 4 points.
+
+	The significant difference between quads and rects is that
+	the edges of quads are not axis aligned.
+*/
+typedef struct
+{
 	fz_point ul, ur, ll, lr;
 } fz_quad;
 
+/*
+	Inline convenience construction function.
+*/
 static inline fz_quad fz_make_quad(
 	float ul_x, float ul_y,
 	float ur_x, float ur_y,
@@ -649,15 +674,48 @@ static inline fz_quad fz_make_quad(
 	return q;
 }
 
+/*
+	Convert a rect to a quad (losslessly).
+*/
 fz_quad fz_quad_from_rect(fz_rect r);
+
+/*
+	Convert a quad to the smallest rect that covers it.
+*/
 fz_rect fz_rect_from_quad(fz_quad q);
+
+/*
+	Transform a quad by a matrix.
+*/
 fz_quad fz_transform_quad(fz_quad q, fz_matrix m);
 
+/*
+	Inclusion test for quads.
+*/
 int fz_is_point_inside_quad(fz_point p, fz_quad q);
+
+/*
+	Inclusion test for rects.
+*/
 int fz_is_point_inside_rect(fz_point p, fz_rect r);
+
+/*
+	Inclusion test for irects.
+*/
 int fz_is_point_inside_irect(int x, int y, fz_irect r);
 
+/*
+	Inclusion test for quad in quad.
+
+	This may break down if quads are not 'well formed'.
+*/
 int fz_is_quad_inside_quad(fz_quad needle, fz_quad haystack);
+
+/*
+	Intersection test for quads.
+
+	This may break down if quads are not 'well formed'.
+*/
 int fz_is_quad_intersecting_quad(fz_quad a, fz_quad b);
 
 #endif

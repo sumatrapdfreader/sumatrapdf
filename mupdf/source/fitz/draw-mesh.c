@@ -2,6 +2,7 @@
 
 #include "color-imp.h"
 #include "draw-imp.h"
+#include "pixmap-imp.h"
 
 #include <assert.h>
 #include <math.h>

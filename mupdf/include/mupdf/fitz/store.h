@@ -27,39 +27,102 @@
 	includes a call to FZ_INIT_STORABLE to set up the fz_storable
 	header.
  */
-
 typedef struct fz_storable fz_storable;
 
+/*
+	Function type for a function to drop a storable object.
+
+	Objects within the store are identified by type by comparing
+	their drop_fn pointers.
+*/
 typedef void (fz_store_drop_fn)(fz_context *, fz_storable *);
 
+/*
+	Any storable object should include an fz_storable structure
+	at the start (by convention at least) of their structure.
+	(Unless it starts with an fz_key_storable, see below).
+*/
 struct fz_storable {
 	int refs;
 	fz_store_drop_fn *drop;
 };
 
+/*
+	Any storable object that can appear in the key of another
+	storable object should include an fz_key_storable structure
+	at the start (by convention at least) of their structure.
+*/
 typedef struct
 {
 	fz_storable storable;
 	short store_key_refs;
 } fz_key_storable;
 
+/*
+	Macro to initialise a storable object.
+*/
 #define FZ_INIT_STORABLE(S_,RC,DROP) \
 	do { fz_storable *S = &(S_)->storable; S->refs = (RC); \
 	S->drop = (DROP); \
 	} while (0)
 
+/*
+	Macro to initialise a key storable object.
+*/
 #define FZ_INIT_KEY_STORABLE(KS_,RC,DROP) \
 	do { fz_key_storable *KS = &(KS_)->key_storable; KS->store_key_refs = 0;\
 	FZ_INIT_STORABLE(KS,RC,DROP); \
 	} while (0)
 
+/*
+	Increment the reference count for a storable object.
+	Returns the same pointer.
+
+	Never throws exceptions.
+*/
 void *fz_keep_storable(fz_context *, const fz_storable *);
+
+/*
+	Decrement the reference count for a storable object. When the
+	reference count hits zero, the drop function for that object
+	is called to free the object.
+
+	Never throws exceptions.
+*/
 void fz_drop_storable(fz_context *, const fz_storable *);
 
+/*
+	Increment the (normal) reference count for a key storable
+	object. Returns the same pointer.
+
+	Never throws exceptions.
+*/
 void *fz_keep_key_storable(fz_context *, const fz_key_storable *);
+
+/*
+	Decrement the (normal) reference count for a storable object.
+	When the total reference count hits zero, the drop function for
+	that object is called to free the object.
+
+	Never throws exceptions.
+*/
 void fz_drop_key_storable(fz_context *, const fz_key_storable *);
 
+/*
+	Increment the (key) reference count for a key storable
+	object. Returns the same pointer.
+
+	Never throws exceptions.
+*/
 void *fz_keep_key_storable_key(fz_context *, const fz_key_storable *);
+
+/*
+	Decrement the (key) reference count for a storable object.
+	When the total reference count hits zero, the drop function for
+	that object is called to free the object.
+
+	Never throws exceptions.
+*/
 void fz_drop_key_storable_key(fz_context *, const fz_key_storable *);
 
 /*
@@ -155,6 +218,11 @@ typedef struct
 	} u;
 } fz_store_hash; /* 40 or 44 bytes */
 
+/*
+	Every type of object to be placed into the store defines an
+	fz_store_type. This contains the pointers to functions to
+	make hashes, manipulate keys, and check for needing reaping.
+*/
 typedef struct
 {
 	int (*make_hash_key)(fz_context *ctx, fz_store_hash *hash, void *key);
@@ -173,8 +241,21 @@ typedef struct
 */
 void fz_new_store_context(fz_context *ctx, size_t max);
 
-void fz_drop_store_context(fz_context *ctx);
+/*
+	Increment the reference count for the store context. Returns
+	the same pointer.
+
+	Never throws exceptions.
+*/
 fz_store *fz_keep_store_context(fz_context *ctx);
+
+/*
+	Decrement the reference count for the store context. When the
+	reference count hits zero, the store context is freed.
+
+	Never throws exceptions.
+*/
+void fz_drop_store_context(fz_context *ctx);
 
 /*
 	Add an item to the store.
@@ -227,6 +308,9 @@ void *fz_find_item(fz_context *ctx, fz_store_drop_fn *drop, void *key, const fz_
 */
 void fz_remove_item(fz_context *ctx, fz_store_drop_fn *drop, void *key, const fz_store_type *type);
 
+/*
+	Evict every item from the store.
+*/
 void fz_empty_store(fz_context *ctx);
 
 /*
@@ -267,10 +351,26 @@ int fz_store_scavenge_external(fz_context *ctx, size_t size, int *phase);
 */
 int fz_shrink_store(fz_context *ctx, unsigned int percent);
 
+/*
+	Callback function called by fz_filter_store on every item within
+	the store.
+
+	Return 1 to drop the item from the store, 0 to retain.
+*/
 typedef int (fz_store_filter_fn)(fz_context *ctx, void *arg, void *key);
 
+/*
+	Filter every element in the store with a matching type with the
+	given function.
+
+	If the function returns 1 for an element, drop the element.
+*/
 void fz_filter_store(fz_context *ctx, fz_store_filter_fn *fn, void *arg, const fz_store_type *type);
 
+/*
+	Output debugging information for the current state of the store
+	to the given output channel.
+*/
 void fz_debug_store(fz_context *ctx, fz_output *out);
 
 /*

@@ -78,9 +78,30 @@ typedef struct
 */
 void fz_walk_path(fz_context *ctx, const fz_path *path, const fz_path_walker *walker, void *arg);
 
+/*
+	Create a new (empty) path structure.
+*/
 fz_path *fz_new_path(fz_context *ctx);
 
+/*
+	Increment the reference count. Returns the same pointer.
+
+	All paths can be kept, regardless of their packing type.
+
+	Never throws exceptions.
+*/
 fz_path *fz_keep_path(fz_context *ctx, const fz_path *path);
+
+/*
+	Decrement the reference count. When the reference count hits
+	zero, free the path.
+
+	All paths can be dropped, regardless of their packing type.
+	Packed paths do not own the blocks into which they are packed
+	so dropping them does not free those blocks.
+
+	Never throws exceptions.
+*/
 void fz_drop_path(fz_context *ctx, const fz_path *path);
 
 /*
@@ -171,7 +192,8 @@ fz_point fz_currentpoint(fz_context *ctx, fz_path *path);
 
 	x, y: The coordinate to move to.
 
-	Throws exceptions on failure to allocate.
+	Throws exceptions on failure to allocate, or attempting to
+	modify a packed path.
 */
 void fz_moveto(fz_context *ctx, fz_path *path, float x, float y);
 
@@ -182,7 +204,8 @@ void fz_moveto(fz_context *ctx, fz_path *path, float x, float y);
 
 	x, y: The coordinate to line to.
 
-	Throws exceptions on failure to allocate.
+	Throws exceptions on failure to allocate, or attempting to
+	modify a packed path.
 */
 void fz_lineto(fz_context *ctx, fz_path *path, float x, float y);
 
@@ -202,7 +225,8 @@ void fz_lineto(fz_context *ctx, fz_path *path, float x, float y);
 
 	x1, y1: Second corner of the rectangle.
 
-	Throws exceptions on failure to allocate.
+	Throws exceptions on failure to allocate, or attempting to
+	modify a packed path.
 */
 void fz_rectto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, float y1);
 
@@ -216,7 +240,8 @@ void fz_rectto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, flo
 
 	x1, y1: The end coordinates for the quadratic curve.
 
-	Throws exceptions on failure to allocate.
+	Throws exceptions on failure to allocate, or attempting to
+	modify a packed path.
 */
 void fz_quadto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, float y1);
 
@@ -234,7 +259,8 @@ void fz_quadto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, flo
 
 	x2, y2: The end coordinates for the curve.
 
-	Throws exceptions on failure to allocate.
+	Throws exceptions on failure to allocate, or attempting to
+	modify a packed path.
 */
 void fz_curveto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, float y1, float x2, float y2);
 
@@ -250,7 +276,8 @@ void fz_curveto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, fl
 
 	x2, y2: The end coordinates for the curve.
 
-	Throws exceptions on failure to allocate.
+	Throws exceptions on failure to allocate, or attempting to
+	modify a packed path.
 */
 void fz_curvetov(fz_context *ctx, fz_path *path, float x1, float y1, float x2, float y2);
 
@@ -267,7 +294,8 @@ void fz_curvetov(fz_context *ctx, fz_path *path, float x1, float y1, float x2, f
 	x2, y2: The end coordinates for the curve (and the second
 	control coordinate).
 
-	Throws exceptions on failure to allocate.
+	Throws exceptions on failure to allocate, or attempting to
+	modify a packed path.
 */
 void fz_curvetoy(fz_context *ctx, fz_path *path, float x0, float y0, float x2, float y2);
 
@@ -276,8 +304,9 @@ void fz_curvetoy(fz_context *ctx, fz_path *path, float x0, float y0, float x2, f
 
 	path: The path to modify.
 
-	Throws exceptions on failure to allocate, and illegal
-	path closes (i.e. closing a non open path).
+	Throws exceptions on failure to allocate, attempting to modify
+	a packed path, and illegal path closes (i.e. closing a non open
+	path).
 */
 void fz_closepath(fz_context *ctx, fz_path *path);
 
@@ -311,8 +340,18 @@ void fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix transform);
 	Returns r, updated to contain the bounding rectangle.
 */
 fz_rect fz_bound_path(fz_context *ctx, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm);
+
+/*
+	Given a rectangle (assumed to be the bounding box for a path),
+	expand it to allow for the expansion of the bbox that would be
+	seen by stroking the path with the given stroke state and
+	transform.
+*/
 fz_rect fz_adjust_rect_for_stroke(fz_context *ctx, fz_rect rect, const fz_stroke_state *stroke, fz_matrix ctm);
 
+/*
+	A sane 'default' stroke state.
+*/
 extern const fz_stroke_state fz_default_stroke_state;
 
 /*

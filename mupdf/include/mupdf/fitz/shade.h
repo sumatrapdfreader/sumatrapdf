@@ -78,7 +78,20 @@ typedef struct
 	fz_compressed_buffer *buffer;
 } fz_shade;
 
+/*
+	Increment the reference count for the shade structure. The
+	same pointer is returned.
+
+	Never throws exceptions.
+*/
 fz_shade *fz_keep_shade(fz_context *ctx, fz_shade *shade);
+
+/*
+	Decrement the reference count for the shade structure. When
+	the reference count hits zero, the structure is freed.
+
+	Never throws exceptions.
+*/
 void fz_drop_shade(fz_context *ctx, fz_shade *shade);
 
 /*

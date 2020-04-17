@@ -393,7 +393,6 @@ pdf_load_compressed_inline_image(fz_context *ctx, pdf_document *doc, pdf_obj *di
 		leech = fz_open_leecher(ctx, istm, bc->buffer);
 		decomp = fz_open_image_decomp_stream(ctx, leech, &bc->params, &dummy_l2factor);
 		pixmap = fz_decomp_image_from_stream(ctx, decomp, image, NULL, indexed, 0);
-		fz_set_compressed_image_tile(ctx, image, pixmap);
 		fz_set_compressed_image_buffer(ctx, image, bc);
 	}
 	fz_always(ctx)

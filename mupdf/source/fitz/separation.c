@@ -1,6 +1,7 @@
 #include "mupdf/fitz.h"
 
 #include "color-imp.h"
+#include "pixmap-imp.h"
 
 #include <assert.h>
 #include <string.h>

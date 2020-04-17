@@ -987,7 +987,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		fz_empty_store(ctx);
 
 	if (showmemory)
-		fz_dump_glyph_cache_stats(ctx);
+		fz_dump_glyph_cache_stats(ctx, fz_stderr(ctx));
 
 	fz_flush_warnings(ctx);
 

@@ -620,3 +620,8 @@ void fz_drop_band_writer(fz_context *ctx, fz_band_writer *writer)
 	fz_drop_separations(ctx, writer->seps);
 	fz_free(ctx, writer);
 }
+
+int fz_output_supports_stream(fz_context *ctx, fz_output *out)
+{
+	return out != NULL && out->as_stream != NULL;
+}

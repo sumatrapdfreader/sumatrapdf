@@ -36,7 +36,21 @@ typedef enum
 */
 fz_separations *fz_new_separations(fz_context *ctx, int controllable);
 
+/*
+	Increment the reference count for a separations structure.
+	Returns the same pointer.
+
+	Never throws exceptions.
+*/
 fz_separations *fz_keep_separations(fz_context *ctx, fz_separations *sep);
+
+/*
+	Decrement the reference count for a separations structure.
+	When the reference count hits zero, the separations structure
+	is freed.
+
+	Never throws exceptions.
+*/
 void fz_drop_separations(fz_context *ctx, fz_separations *sep);
 
 /*

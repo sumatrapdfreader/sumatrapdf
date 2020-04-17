@@ -46,10 +46,39 @@ typedef struct fz_pixmap_image fz_pixmap_image;
 */
 fz_pixmap *fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subarea, fz_matrix *ctm, int *w, int *h);
 
-void fz_drop_image(fz_context *ctx, fz_image *image);
+/*
+	Increment the (normal) reference count for an image. Returns the
+	same pointer.
+
+	Never throws exceptions.
+*/
 fz_image *fz_keep_image(fz_context *ctx, fz_image *image);
 
+/*
+	Decrement the (normal) reference count for an image. When the
+	total (normal + key) reference count reaches zero, the image and
+	its resources are freed.
+
+	Never throws exceptions.
+*/
+void fz_drop_image(fz_context *ctx, fz_image *image);
+
+/*
+	Increment the store key reference for an image. Returns the same
+	pointer. (This is the count of references for an image held by
+	keys in the image store).
+
+	Never throws exceptions.
+*/
 fz_image *fz_keep_image_store_key(fz_context *ctx, fz_image *image);
+
+/*
+	Decrement the store key reference count for an image. When the
+	total (normal + key) reference count reaches zero, the image and
+	its resources are freed.
+
+	Never throws exceptions.
+*/
 void fz_drop_image_store_key(fz_context *ctx, fz_image *image);
 
 /*
@@ -59,8 +88,7 @@ void fz_drop_image_store_key(fz_context *ctx, fz_image *image);
 typedef void (fz_drop_image_fn)(fz_context *ctx, fz_image *image);
 
 /*
-	Function type to get a decoded pixmap
-	for an image.
+	Function type to get a decoded pixmap for an image.
 
 	im: The image to decode.
 
@@ -79,7 +107,8 @@ typedef void (fz_drop_image_fn)(fz_context *ctx, fz_image *image);
 	knows what remains to be done.
 
 	Returns a reference to a decoded pixmap that satisfies the
-	requirements of the request.
+	requirements of the request. The caller owns the returned
+	reference.
 */
 typedef fz_pixmap *(fz_image_get_pixmap_fn)(fz_context *ctx, fz_image *im, fz_irect *subarea, int w, int h, int *l2factor);
 
@@ -218,8 +247,22 @@ fz_image *fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer);
 */
 fz_image *fz_new_image_from_file(fz_context *ctx, const char *path);
 
+/*
+	Internal destructor exposed for fz_store integration.
+*/
 void fz_drop_image_imp(fz_context *ctx, fz_storable *image);
+
+/*
+	Internal destructor for the base image class members.
+
+	Exposed to allow derived image classes to be written.
+*/
 void fz_drop_image_base(fz_context *ctx, fz_image *image);
+
+/*
+	Decode a subarea of a compressed image at a given l2factor
+	from the given stream.
+*/
 fz_pixmap *fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image *image, fz_irect *subarea, int indexed, int l2factor);
 
 /*
@@ -235,6 +278,10 @@ fz_pixmap *fz_convert_indexed_pixmap_to_base(fz_context *ctx, const fz_pixmap *s
 	This creates a new bitmap containing the converted pixmap data.
 */
 fz_pixmap *fz_convert_separation_pixmap_to_base(fz_context *ctx, const fz_pixmap *src);
+
+/*
+	Return the size of the storage used by an image.
+*/
 size_t fz_image_size(fz_context *ctx, fz_image *im);
 
 /*
@@ -265,33 +312,6 @@ struct fz_image
 	float decode[FZ_MAX_COLORS * 2];
 };
 
-fz_pixmap *fz_load_jpeg(fz_context *ctx, const unsigned char *data, size_t size);
-fz_pixmap *fz_load_jpx(fz_context *ctx, const unsigned char *data, size_t size, fz_colorspace *cs);
-fz_pixmap *fz_load_png(fz_context *ctx, const unsigned char *data, size_t size);
-fz_pixmap *fz_load_tiff(fz_context *ctx, const unsigned char *data, size_t size);
-fz_pixmap *fz_load_jxr(fz_context *ctx, const unsigned char *data, size_t size);
-fz_pixmap *fz_load_gif(fz_context *ctx, const unsigned char *data, size_t size);
-fz_pixmap *fz_load_bmp(fz_context *ctx, const unsigned char *data, size_t size);
-fz_pixmap *fz_load_pnm(fz_context *ctx, const unsigned char *data, size_t size);
-fz_pixmap *fz_load_jbig2(fz_context *ctx, const unsigned char *data, size_t size);
-
-void fz_load_jpeg_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-void fz_load_jpx_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-void fz_load_png_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-void fz_load_tiff_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-void fz_load_jxr_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-void fz_load_gif_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-void fz_load_bmp_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-void fz_load_pnm_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-void fz_load_jbig2_info(fz_context *ctx, const unsigned char *data, size_t size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-
-int fz_load_tiff_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len);
-fz_pixmap *fz_load_tiff_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage);
-int fz_load_pnm_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len);
-fz_pixmap *fz_load_pnm_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage);
-int fz_load_jbig2_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len);
-fz_pixmap *fz_load_jbig2_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage);
-
 /*
 	Request the natural resolution
 	of an image.
@@ -301,9 +321,6 @@ fz_pixmap *fz_load_jbig2_subimage(fz_context *ctx, const unsigned char *buf, siz
 	if not encoded).
 */
 void fz_image_resolution(fz_image *image, int *xres, int *yres);
-
-fz_pixmap *fz_compressed_image_tile(fz_context *ctx, fz_compressed_image *cimg);
-void fz_set_compressed_image_tile(fz_context *ctx, fz_compressed_image *cimg, fz_pixmap *pix);
 
 /*
 	Retrieve the underlying compressed data for an image.
@@ -330,5 +347,22 @@ void fz_set_compressed_image_buffer(fz_context *ctx, fz_compressed_image *cimg, 
 */
 fz_pixmap *fz_pixmap_image_tile(fz_context *ctx, fz_pixmap_image *cimg);
 void fz_set_pixmap_image_tile(fz_context *ctx, fz_pixmap_image *cimg, fz_pixmap *pix);
+
+/* Implementation details: subject to change. */
+
+/*
+	Exposed for PDF.
+*/
+fz_pixmap *fz_load_jpx(fz_context *ctx, const unsigned char *data, size_t size, fz_colorspace *cs);
+
+/*
+	Exposed for CBZ.
+*/
+int fz_load_tiff_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len);
+fz_pixmap *fz_load_tiff_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage);
+int fz_load_pnm_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len);
+fz_pixmap *fz_load_pnm_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage);
+int fz_load_jbig2_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len);
+fz_pixmap *fz_load_jbig2_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage);
 
 #endif

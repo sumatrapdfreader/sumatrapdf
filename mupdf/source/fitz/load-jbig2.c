@@ -1,5 +1,7 @@
 #include "mupdf/fitz.h"
 
+#include "pixmap-imp.h"
+
 #ifdef HAVE_LURATECH
 
 #include <string.h>

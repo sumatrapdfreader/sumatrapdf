@@ -833,7 +833,7 @@ static int try_render_page(fz_context *ctx, int pagenum, fz_cookie *cookie, int 
 
 	if (showmemory)
 	{
-		fz_dump_glyph_cache_stats(ctx);
+		fz_dump_glyph_cache_stats(ctx, fz_stderr(ctx));
 	}
 
 	fz_flush_warnings(ctx);

@@ -3544,7 +3544,7 @@ void pdf_write_document(fz_context *ctx, pdf_document *doc, fz_output *out, pdf_
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't do incremental writes with linearisation");
 	if (in_opts->do_incremental && in_opts->do_encrypt != PDF_ENCRYPT_KEEP)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't do incremental writes when changing encryption");
-	if (pdf_has_unsaved_sigs(ctx, doc) && !out->as_stream)
+	if (pdf_has_unsaved_sigs(ctx, doc) && !fz_output_supports_stream(ctx, out))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't write pdf that has unsaved sigs to a fz_output unless it supports fz_stream_from_output!");
 
 	prepare_for_save(ctx, doc, in_opts);

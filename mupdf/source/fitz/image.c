@@ -1,6 +1,8 @@
 #include "mupdf/fitz.h"
 
 #include "context-imp.h"
+#include "image-imp.h"
+#include "pixmap-imp.h"
 
 #include <string.h>
 #include <math.h>
@@ -21,7 +23,6 @@ fz_key_storable_needs_reaping(fz_context *ctx, const fz_key_storable *ks)
 struct fz_compressed_image
 {
 	fz_image super;
-	fz_pixmap *tile;
 	fz_compressed_buffer *buffer;
 };
 
@@ -490,7 +491,6 @@ drop_compressed_image(fz_context *ctx, fz_image *image_)
 {
 	fz_compressed_image *image = (fz_compressed_image *)image_;
 
-	fz_drop_pixmap(ctx, image->tile);
 	fz_drop_compressed_buffer(ctx, image->buffer);
 }
 
@@ -933,7 +933,7 @@ compressed_image_get_size(fz_context *ctx, fz_image *image)
 	if (image == NULL)
 		return 0;
 
-	return sizeof(fz_pixmap_image) + fz_pixmap_size(ctx, im->tile) + (im->buffer && im->buffer->buffer ? im->buffer->buffer->cap : 0);
+	return sizeof(fz_pixmap_image) + (im->buffer && im->buffer->buffer ? im->buffer->buffer->cap : 0);
 }
 
 fz_image *
@@ -975,20 +975,6 @@ void fz_set_compressed_image_buffer(fz_context *ctx, fz_compressed_image *image,
 {
 	assert(image != NULL && image->super.get_pixmap == compressed_image_get_pixmap);
 	((fz_compressed_image *)image)->buffer = buf; /* Note: compressed buffers are not reference counted */
-}
-
-fz_pixmap *fz_compressed_image_tile(fz_context *ctx, fz_compressed_image *image)
-{
-	if (image == NULL || image->super.get_pixmap != compressed_image_get_pixmap)
-		return NULL;
-	return ((fz_compressed_image *)image)->tile;
-}
-
-void fz_set_compressed_image_tile(fz_context *ctx, fz_compressed_image *image, fz_pixmap *pix)
-{
-	assert(image != NULL && image->super.get_pixmap == compressed_image_get_pixmap);
-	fz_drop_pixmap(ctx, ((fz_compressed_image *)image)->tile);
-	((fz_compressed_image *)image)->tile = fz_keep_pixmap(ctx, pix);
 }
 
 fz_pixmap *fz_pixmap_image_tile(fz_context *ctx, fz_pixmap_image *image)

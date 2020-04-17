@@ -11,7 +11,6 @@
 	Generic output streams - generalise between outputting to a
 	file, a buffer, etc.
 */
-typedef struct fz_output fz_output;
 
 /*
 	A function type for use when implementing
@@ -78,7 +77,7 @@ typedef fz_stream *(fz_stream_from_output_fn)(fz_context *ctx, void *state);
 */
 typedef void (fz_truncate_fn)(fz_context *ctx, void *state);
 
-struct fz_output
+typedef struct
 {
 	void *state;
 	fz_output_write_fn *write;
@@ -89,7 +88,7 @@ struct fz_output
 	fz_stream_from_output_fn *as_stream;
 	fz_truncate_fn *truncate;
 	char *bp, *wp, *ep;
-};
+} fz_output;
 
 /*
 	Create a new output object with the given
@@ -123,13 +122,19 @@ fz_output *fz_new_output_with_path(fz_context *, const char *filename, int appen
 */
 fz_output *fz_new_output_with_buffer(fz_context *ctx, fz_buffer *buf);
 
+/*
+	Retrieve an fz_output that directs to stdout.
+
+	Should be fz_dropped when finished with.
+*/
 fz_output *fz_stdout(fz_context *ctx);
 
+/*
+	Retrieve an fz_output that directs to stdout.
+
+	Should be fz_dropped when finished with.
+*/
 fz_output *fz_stderr(fz_context *ctx);
-
-void fz_set_stdout(fz_context *ctx, fz_output *out);
-
-void fz_set_stderr(fz_context *ctx, fz_output *err);
 
 /*
 	Format and write data to an output stream.
@@ -173,7 +178,12 @@ void fz_close_output(fz_context *, fz_output *);
 void fz_drop_output(fz_context *, fz_output *);
 
 /*
-	obtain the fz_output in the form of a fz_stream
+	Query whether a given fz_output supports fz_stream_from_output.
+*/
+int fz_output_supports_stream(fz_context *ctx, fz_output *out);
+
+/*
+	Obtain the fz_output in the form of a fz_stream.
 
 	This allows data to be read back from some forms of fz_output
 	object. When finished reading, the fz_stream should be released
@@ -182,6 +192,12 @@ void fz_drop_output(fz_context *, fz_output *);
 */
 fz_stream *fz_stream_from_output(fz_context *, fz_output *);
 
+/*
+	Truncate the output at the current position.
+
+	This allows output streams which have seeked back from the end
+	of their storage to be truncated at the current point.
+*/
 void fz_truncate_output(fz_context *, fz_output *);
 
 /*
@@ -197,6 +213,9 @@ void fz_write_data(fz_context *ctx, fz_output *out, const void *data, size_t siz
 */
 void fz_write_string(fz_context *ctx, fz_output *out, const char *s);
 
+/*
+	Write different sized data to an output stream.
+*/
 void fz_write_int32_be(fz_context *ctx, fz_output *out, int x);
 void fz_write_int32_le(fz_context *ctx, fz_output *out, int x);
 void fz_write_uint32_be(fz_context *ctx, fz_output *out, unsigned int x);
@@ -215,7 +234,16 @@ void fz_write_float_le(fz_context *ctx, fz_output *out, float f);
 */
 void fz_write_rune(fz_context *ctx, fz_output *out, int rune);
 
+/*
+	Write a base64 encoded data block, optionally with periodic
+	newlines.
+*/
 void fz_write_base64(fz_context *ctx, fz_output *out, const unsigned char *data, size_t size, int newline);
+
+/*
+	Write a base64 encoded fz_buffer, optionally with periodic
+	newlines.
+*/
 void fz_write_base64_buffer(fz_context *ctx, fz_output *out, fz_buffer *data, int newline);
 
 /*
@@ -252,8 +280,17 @@ size_t fz_vsnprintf(char *buffer, size_t space, const char *fmt, va_list args);
 */
 size_t fz_snprintf(char *buffer, size_t space, const char *fmt, ...);
 
+/*
+	Allocated sprintf.
+
+	Returns a null terminated allocated block containing the
+	formatted version of the format string/args.
+*/
 char *fz_asprintf(fz_context *ctx, const char *fmt, ...);
 
+/*
+	Save the contents of a buffer to a file.
+*/
 void fz_save_buffer(fz_context *ctx, fz_buffer *buf, const char *filename);
 
 /*
@@ -268,6 +305,11 @@ void fz_save_buffer(fz_context *ctx, fz_buffer *buf, const char *filename);
 	Output streams don't use reference counting, so make sure to
 	close all of the filters in the reverse order of creation so
 	that data is flushed properly.
+
+	Accordingly, ownership of 'chain' is never passed into the
+	following functions, but remains with the caller, whose
+	responsibility it is to ensure they exist at least until
+	the returned fz_output is dropped.
 */
 
 fz_output *fz_new_asciihex_output(fz_context *ctx, fz_output *chain);

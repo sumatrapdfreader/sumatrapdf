@@ -1,5 +1,7 @@
 #include "mupdf/fitz.h"
 
+#include "pixmap-imp.h"
+
 #include <limits.h>
 #include <assert.h>
 #include <string.h>

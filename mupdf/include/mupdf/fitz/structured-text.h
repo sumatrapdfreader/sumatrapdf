@@ -36,9 +36,27 @@ typedef struct
 	fz_layout_char **text_tailp;
 } fz_layout_block;
 
+/*
+	Create a new layout block, with new allocation pool, zero
+	matrices, and initialise linked pointers.
+*/
 fz_layout_block *fz_new_layout(fz_context *ctx);
+
+/*
+	Drop layout block. Free the pool, and linked blocks.
+
+	Never throws exceptions.
+*/
 void fz_drop_layout(fz_context *ctx, fz_layout_block *block);
+
+/*
+	Add a new line to the end of the layout block.
+*/
 void fz_add_layout_line(fz_context *ctx, fz_layout_block *block, float x, float y, float h, const char *p);
+
+/*
+	Add a new char to the line at the end of the layout block.
+*/
 void fz_add_layout_char(fz_context *ctx, fz_layout_block *block, float x, float w, const char *p);
 
 /*

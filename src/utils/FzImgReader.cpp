@@ -7,6 +7,7 @@
 extern "C" {
 #include <mupdf/fitz.h>
 #include "../mupdf/source/fitz/color-imp.h"
+#include "../mupdf/source/fitz/image-imp.h"
 }
 #endif
 

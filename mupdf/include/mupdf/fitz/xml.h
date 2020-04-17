@@ -32,6 +32,9 @@ void fz_drop_xml(fz_context *ctx, fz_xml_doc *xml);
 */
 void fz_detach_xml(fz_context *ctx, fz_xml_doc *xml, fz_xml *node);
 
+/*
+	Return the topmost XML node of a document.
+*/
 fz_xml *fz_xml_root(fz_xml_doc *xml);
 
 /*
@@ -70,6 +73,12 @@ char *fz_xml_tag(fz_xml *item);
 */
 char *fz_xml_att(fz_xml *item, const char *att);
 
+/*
+	Check for a matching attribute on an XML node.
+
+	If the node has the requested attribute (name), and the value
+	matches (match) then return 1. Otherwise, 0.
+*/
 int fz_xml_att_eq(fz_xml *item, const char *name, const char *match);
 
 /*
@@ -83,11 +92,54 @@ char *fz_xml_text(fz_xml *item);
 */
 void fz_debug_xml(fz_xml *item, int level);
 
+/*
+	Search the siblings of XML nodes starting with item looking for
+	the first with the given tag.
+
+	Return NULL if none found.
+*/
 fz_xml *fz_xml_find(fz_xml *item, const char *tag);
+
+/*
+	Search the siblings of XML nodes starting with the first sibling
+	of item looking for the first with the given tag.
+
+	Return NULL if none found.
+*/
 fz_xml *fz_xml_find_next(fz_xml *item, const char *tag);
+
+/*
+	Search the siblings of XML nodes starting with the first child
+	of item looking for the first with the given tag.
+
+	Return NULL if none found.
+*/
 fz_xml *fz_xml_find_down(fz_xml *item, const char *tag);
+
+/*
+	Search the siblings of XML nodes starting with item looking for
+	the first with the given tag, and with a matching attribute.
+
+	Return NULL if none found.
+*/
 fz_xml *fz_xml_find_match(fz_xml *item, const char *tag, const char *att, const char *match);
+
+/*
+	Search the siblings of XML nodes starting with the first sibling
+	of item looking for the first with the given tag, and with a
+	matching attribute.
+
+	Return NULL if none found.
+*/
 fz_xml *fz_xml_find_next_match(fz_xml *item, const char *tag, const char *att, const char *match);
+
+/*
+	Search the siblings of XML nodes starting with the first child
+	of item looking for the first with the given tag, and with a
+	matching attribute.
+
+	Return NULL if none found.
+*/
 fz_xml *fz_xml_find_down_match(fz_xml *item, const char *tag, const char *att, const char *match);
 
 #endif

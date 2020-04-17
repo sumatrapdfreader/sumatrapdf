@@ -1,5 +1,7 @@
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
+#include "glyph-imp.h"
+#include "pixmap-imp.h"
 
 #include <string.h>
 #include <math.h>
@@ -42,6 +44,14 @@ struct fz_glyph_cache
 	fz_glyph_cache_entry *lru_head;
 	fz_glyph_cache_entry *lru_tail;
 };
+
+static size_t
+fz_glyph_size(fz_context *ctx, fz_glyph *glyph)
+{
+	if (glyph == NULL)
+		return 0;
+	return sizeof(fz_glyph) + glyph->size + fz_pixmap_size(ctx, glyph->pixmap);
+}
 
 void
 fz_new_glyph_cache_context(fz_context *ctx)
@@ -186,22 +196,6 @@ fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *trm,
 		return fz_render_ft_stroked_glyph(ctx, font, gid, subpix_trm, ctm, stroke, aa);
 	}
 	return fz_render_glyph(ctx, font, gid, trm, NULL, scissor, 1, aa);
-}
-
-fz_pixmap *
-fz_render_stroked_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *trm, fz_matrix ctm, const fz_stroke_state *stroke, const fz_irect *scissor, int aa)
-{
-	if (fz_font_ft_face(ctx, font))
-	{
-		fz_matrix subpix_trm;
-		unsigned char qe, qf;
-
-		if (stroke->dash_len > 0)
-			return NULL;
-		(void)fz_subpixel_adjust(ctx, trm, &subpix_trm, &qe, &qf);
-		return fz_render_ft_stroked_glyph_pixmap(ctx, font, gid, subpix_trm, ctm, stroke, aa);
-	}
-	return fz_render_glyph_pixmap(ctx, font, gid, trm, scissor, aa);
 }
 
 static unsigned do_hash(unsigned char *s, int len)
@@ -443,11 +437,11 @@ fz_render_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, 
 }
 
 void
-fz_dump_glyph_cache_stats(fz_context *ctx)
+fz_dump_glyph_cache_stats(fz_context *ctx, fz_output *out)
 {
 	fz_glyph_cache *cache = ctx->glyph_cache;
-	fz_write_printf(ctx, fz_stderr(ctx), "Glyph Cache Size: %zu\n", cache->total);
+	fz_write_printf(ctx, out, "Glyph Cache Size: %zu\n", cache->total);
 #ifndef NDEBUG
-	fz_write_printf(ctx, fz_stderr(ctx), "Glyph Cache Evictions: %d (%zu bytes)\n", cache->num_evictions, cache->evicted);
+	fz_write_printf(ctx, out, "Glyph Cache Evictions: %d (%zu bytes)\n", cache->num_evictions, cache->evicted);
 #endif
 }

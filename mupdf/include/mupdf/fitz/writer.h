@@ -50,7 +50,19 @@ typedef void (fz_document_writer_drop_writer_fn)(fz_context *ctx, fz_document_wr
 #define fz_new_derived_document_writer(CTX,TYPE,BEGIN_PAGE,END_PAGE,CLOSE,DROP) \
 	((TYPE *)Memento_label(fz_new_document_writer_of_size(CTX,sizeof(TYPE),BEGIN_PAGE,END_PAGE,CLOSE,DROP),#TYPE))
 
+/*
+	Look for a given option (key) in the opts string. Return 1 if
+	it has it, and update *val to point to the value within opts.
+*/
 int fz_has_option(fz_context *ctx, const char *opts, const char *key, const char **val);
+
+/*
+	Check to see if an option, a, from a string matches a reference
+	option, b.
+
+	(i.e. a could be 'foo' or 'foo,bar...' etc, but b can only be
+	'foo'.)
+*/
 int fz_option_eq(const char *a, const char *b);
 
 /*
@@ -84,7 +96,9 @@ fz_document_writer *fz_new_document_writer(fz_context *ctx, const char *path, co
 fz_document_writer *
 fz_new_document_writer_with_output(fz_context *ctx, fz_output *out, const char *format, const char *options);
 
-
+/*
+	Document writers for various possible output formats.
+*/
 fz_document_writer *fz_new_pdf_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_pdf_writer_with_output(fz_context *ctx, fz_output *out, const char *options);
 fz_document_writer *fz_new_svg_writer(fz_context *ctx, const char *path, const char *options);

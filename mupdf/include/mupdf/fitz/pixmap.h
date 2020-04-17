@@ -146,9 +146,29 @@ fz_pixmap *fz_new_pixmap_with_bbox_and_data(fz_context *ctx, fz_colorspace *colo
 	to allocate.
 */
 fz_pixmap *fz_new_pixmap_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, const fz_irect *rect);
+
+/*
+	Clone a pixmap, copying the pixels and associated data to new
+	storage.
+
+	The reference count of 'old' is unchanged.
+*/
 fz_pixmap *fz_clone_pixmap(fz_context *ctx, fz_pixmap *old);
 
+/*
+	Increment the reference count for the pixmap. The same pointer
+	is returned.
+
+	Never throws exceptions.
+*/
 fz_pixmap *fz_keep_pixmap(fz_context *ctx, fz_pixmap *pix);
+
+/*
+	Decrement the reference count for the pixmap. When the
+	reference count hits 0, the pixmap is freed.
+
+	Never throws exceptions.
+*/
 void fz_drop_pixmap(fz_context *ctx, fz_pixmap *pix);
 
 /*
@@ -245,13 +265,22 @@ void fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *pix, int value,
 */
 void fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix);
 
-void fz_invert_pixmap_luminance(fz_context *ctx, fz_pixmap *pix);
-
 /*
-	Invert all the pixels in a pixmap. All components
-	of all pixels are inverted (except alpha, which is unchanged).
+	Invert all the pixels in a pixmap. All components (process and
+	spots) of all pixels are inverted (except alpha, which is
+	unchanged).
 */
 void fz_invert_pixmap(fz_context *ctx, fz_pixmap *pix);
+
+/*
+	Transform the pixels in a pixmap so that luminance of each
+	pixel is inverted, and the chrominance remains unchanged (as
+	much as accuracy allows).
+
+	All components of all pixels are inverted (except alpha, which
+	is unchanged). Only supports Grey and RGB bitmaps.
+*/
+void fz_invert_pixmap_luminance(fz_context *ctx, fz_pixmap *pix);
 
 /*
 	Tint all the pixels in an RGB, BGR, or Gray pixmap.
@@ -307,6 +336,10 @@ fz_pixmap *fz_convert_pixmap(fz_context *ctx, fz_pixmap *pix, fz_colorspace *cs_
 int fz_is_pixmap_monochrome(fz_context *ctx, fz_pixmap *pixmap);
 
 /* Implementation details: subject to change.*/
+
+fz_pixmap *fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray);
+void fz_decode_tile(fz_context *ctx, fz_pixmap *pix, const float *decode);
+void fz_md5_pixmap(fz_context *ctx, fz_pixmap *pixmap, unsigned char digest[16]);
 
 /*
 	Pixmaps represent a set of pixels for a 2 dimensional region of
@@ -374,53 +407,5 @@ enum
 	FZ_PIXMAP_FLAG_INTERPOLATE = 1,
 	FZ_PIXMAP_FLAG_FREE_SAMPLES = 2
 };
-
-void fz_drop_pixmap_imp(fz_context *ctx, fz_storable *pix);
-
-void fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_irect r, const fz_default_colorspaces *default_cs);
-void fz_premultiply_pixmap(fz_context *ctx, fz_pixmap *pix);
-fz_pixmap *fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray);
-size_t fz_pixmap_size(fz_context *ctx, fz_pixmap *pix);
-
-fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, const fz_irect *clip);
-
-typedef struct fz_scale_cache fz_scale_cache;
-
-fz_scale_cache *fz_new_scale_cache(fz_context *ctx);
-void fz_drop_scale_cache(fz_context *ctx, fz_scale_cache *cache);
-fz_pixmap *fz_scale_pixmap_cached(fz_context *ctx, const fz_pixmap *src, float x, float y, float w, float h, const fz_irect *clip, fz_scale_cache *cache_x, fz_scale_cache *cache_y);
-
-void fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor);
-
-fz_irect fz_pixmap_bbox_no_ctx(const fz_pixmap *src);
-
-void fz_decode_tile(fz_context *ctx, fz_pixmap *pix, const float *decode);
-void fz_decode_indexed_tile(fz_context *ctx, fz_pixmap *pix, const float *decode, int maxval);
-void fz_unpack_tile(fz_context *ctx, fz_pixmap *dst, unsigned char *src, int n, int depth, size_t stride, int scale);
-
-void fz_md5_pixmap(fz_context *ctx, fz_pixmap *pixmap, unsigned char digest[16]);
-
-fz_pixmap *fz_new_pixmap_from_8bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigned char *sp, int span);
-fz_pixmap *fz_new_pixmap_from_1bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigned char *sp, int span);
-
-#ifdef HAVE_VALGRIND
-int fz_valgrind_pixmap(const fz_pixmap *pix);
-#else
-#define fz_valgrind_pixmap(pix) do {} while (0)
-#endif
-
-/*
-	Convert between different separation results.
-*/
-fz_pixmap *fz_clone_pixmap_area_with_different_seps(fz_context *ctx, fz_pixmap *src, const fz_irect *bbox, fz_colorspace *dcs, fz_separations *seps, fz_color_params color_params, fz_default_colorspaces *default_cs);
-
-/*
-	Convert a region of the src pixmap into the dst pixmap
-	via an optional proofing colorspace, prf.
-
-	We assume that we never map from a DeviceN space to another
-	DeviceN space here.
- */
-fz_pixmap *fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, fz_colorspace *prf, fz_color_params color_params, fz_default_colorspaces *default_cs);
 
 #endif

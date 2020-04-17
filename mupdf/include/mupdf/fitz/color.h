@@ -68,9 +68,6 @@ const char *fz_rendering_intent_name(int ri);
 	Changing this value will alter the amount of memory being used
 	(both stack and heap space), but not hugely. Speed should
 	(largely) be determined by the number of colors actually used.
-
-	FIXME: Increasing this past 32 will have issues with overprint
-	as the overprint mask is assumed to fit into an int.
 */
 enum { FZ_MAX_COLORS = 32 };
 

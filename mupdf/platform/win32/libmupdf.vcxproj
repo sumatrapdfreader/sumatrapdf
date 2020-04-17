@@ -1008,7 +1008,6 @@
     <ClInclude Include="..\..\include\mupdf\fitz\glyph-cache.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\glyph.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\hash.h" />
-    <ClInclude Include="..\..\include\mupdf\fitz\image-list.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\image.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\link.h" />
     <ClInclude Include="..\..\include\mupdf\fitz\log.h" />
@@ -1059,9 +1058,12 @@
     <ClInclude Include="..\..\source\fitz\color-imp.h" />
     <ClInclude Include="..\..\source\fitz\context-imp.h" />
     <ClInclude Include="..\..\source\fitz\draw-imp.h" />
+    <ClInclude Include="..\..\source\fitz\glyph-imp.h" />
     <ClInclude Include="..\..\source\fitz\html-tags.h" />
+    <ClInclude Include="..\..\source\fitz\image-imp.h" />
     <ClInclude Include="..\..\source\fitz\jmemcust.h" />
     <ClInclude Include="..\..\source\fitz\paint-glyph.h" />
+    <ClInclude Include="..\..\source\fitz\pixmap-imp.h" />
     <ClInclude Include="..\..\source\fitz\unicodedata_db.h" />
     <ClInclude Include="..\..\source\fitz\z-imp.h" />
   </ItemGroup>

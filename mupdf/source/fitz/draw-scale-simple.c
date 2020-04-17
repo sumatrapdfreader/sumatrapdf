@@ -11,7 +11,9 @@ intermediate results rather than ints.
 */
 
 #include "mupdf/fitz.h"
+
 #include "draw-imp.h"
+#include "pixmap-imp.h"
 
 #include <math.h>
 #include <string.h>

@@ -67,7 +67,20 @@ typedef struct
 */
 fz_text *fz_new_text(fz_context *ctx);
 
+/*
+	Increment the reference count for the text object. The same
+	pointer is returned.
+
+	Never throws exceptions.
+*/
 fz_text *fz_keep_text(fz_context *ctx, const fz_text *text);
+
+/*
+	Decrement the reference count for the text object. When the
+	reference count hits zero, the text object is freed.
+
+	Never throws exceptions.
+*/
 void fz_drop_text(fz_context *ctx, const fz_text *text);
 
 /*

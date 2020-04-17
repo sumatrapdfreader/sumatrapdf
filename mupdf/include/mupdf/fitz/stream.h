@@ -21,8 +21,6 @@ int fz_file_exists(fz_context *ctx, const char *path);
 */
 typedef struct fz_stream fz_stream;
 
-fz_stream *fz_open_file_ptr_no_close(fz_context *ctx, FILE *file);
-
 /*
 	Open the named file and wrap it in a stream.
 
@@ -85,6 +83,22 @@ fz_stream *fz_open_buffer(fz_context *ctx, fz_buffer *buf);
 */
 fz_stream *fz_open_leecher(fz_context *ctx, fz_stream *chain, fz_buffer *buf);
 
+/*
+	Increments the reference count for a stream. Returns the same
+	pointer.
+
+	Never throws exceptions.
+*/
+fz_stream *fz_keep_stream(fz_context *ctx, fz_stream *stm);
+
+/*
+	Decrements the reference count for a stream.
+
+	When the reference count for the stream hits zero, frees the
+	storage used for the fz_stream itself, and (usually)
+	releases the underlying resources that the stream is based upon
+	(depends on the method used to open the stream initially).
+*/
 void fz_drop_stream(fz_context *ctx, fz_stream *stm);
 
 /*
@@ -250,8 +264,6 @@ struct fz_stream
 */
 fz_stream *fz_new_stream(fz_context *ctx, void *state, fz_stream_next_fn *next, fz_stream_drop_fn *drop);
 
-fz_stream *fz_keep_stream(fz_context *ctx, fz_stream *stm);
-
 /*
 	Attempt to read a stream into a buffer. If truncated
 	is NULL behaves as fz_read_all, sets a truncated flag in case of
@@ -396,6 +408,13 @@ static inline void fz_unread_byte(fz_context *ctx FZ_UNUSED, fz_stream *stm)
 	stm->rp--;
 }
 
+/*
+	Query if the stream has reached EOF (during normal bytewise
+	reading).
+
+	See fz_is_eof_bits for the equivalent function for bitwise
+	reading.
+*/
 static inline int fz_is_eof(fz_context *ctx, fz_stream *stm)
 {
 	if (stm->rp == stm->wp)
@@ -509,9 +528,24 @@ static inline void fz_sync_bits(fz_context *ctx FZ_UNUSED, fz_stream *stm)
 	stm->avail = 0;
 }
 
+/*
+	Query if the stream has reached EOF (during bitwise
+	reading).
+
+	See fz_is_eof for the equivalent function for bytewise
+	reading.
+*/
 static inline int fz_is_eof_bits(fz_context *ctx, fz_stream *stm)
 {
 	return fz_is_eof(ctx, stm) && (stm->avail == 0 || stm->bits == EOF);
 }
+
+/* Implementation details: subject to change. */
+
+/*
+	Create a stream from a FILE * that will not be closed
+	when the stream is dropped.
+*/
+fz_stream *fz_open_file_ptr_no_close(fz_context *ctx, FILE *file);
 
 #endif
