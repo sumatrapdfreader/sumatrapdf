@@ -26,10 +26,10 @@ int ListBoxModelStrings::ItemsCount() {
     return strings.size();
 }
 
-Size ListBoxModelStrings::Draw(bool measure) {
+SizeI ListBoxModelStrings::Draw(bool measure) {
     UNUSED(measure);
     CrashIf(true);
-    return Size{};
+    return SizeI{};
 }
 
 std::string_view ListBoxModelStrings::Item(int i) {

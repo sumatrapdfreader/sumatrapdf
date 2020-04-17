@@ -87,7 +87,7 @@ void TestApp(HINSTANCE hInstance) {
             return;
         }
         //auto c = Loose(Size{dx, dy});
-        Size windowSize{dx, dy};
+        SizeI windowSize{dx, dy};
         auto c = Tight(windowSize);
         auto size = l->Layout(c);
         Point min{0, 0};

@@ -5,8 +5,6 @@
 
 const int Inf = std::numeric_limits<int>::max();
 
-typedef SizeI Size;
-
 struct Point {
     int X = 0;
     int Y = 0;
@@ -32,11 +30,11 @@ int scale(int v, i64 num, i64 den);
 int guardInf(int a, int b);
 
 struct Constraints {
-    Size Min{};
-    Size Max{};
+    SizeI Min{};
+    SizeI Max{};
 
-    Size Constrain(const Size) const;
-    Size ConstrainAndAttemptToPreserveAspectRatio(const Size) const;
+    SizeI Constrain(const SizeI) const;
+    SizeI ConstrainAndAttemptToPreserveAspectRatio(const SizeI) const;
     int ConstrainHeight(int height) const;
     int ConstrainWidth(int width) const;
     bool HasBoundedHeight() const;
@@ -47,12 +45,12 @@ struct Constraints {
     bool IsBounded() const;
     bool IsNormalized() const;
     bool IsTight() const;
-    bool IsSatisfiedBy(Size) const;
+    bool IsSatisfiedBy(SizeI) const;
     bool IsZero() const;
     Constraints Loosen() const;
     Constraints LoosenHeight() const;
     Constraints LoosenWidth() const;
-    Constraints Tighten(Size) const;
+    Constraints Tighten(SizeI) const;
     Constraints TightenHeight(int height) const;
     Constraints TightenWidth(int width) const;
 };
@@ -60,8 +58,8 @@ struct Constraints {
 Constraints ExpandInf();
 Constraints ExpandHeight(int width);
 Constraints ExpandWidth(int height);
-Constraints Loose(const Size size);
-Constraints Tight(const Size size);
+Constraints Loose(const SizeI size);
+Constraints Tight(const SizeI size);
 Constraints TightHeight(int height);
 
 typedef std::function<void()> NeedLayout;
@@ -87,7 +85,7 @@ struct ILayout {
     ILayout() = default;
     ILayout(Kind k);
     virtual ~ILayout(){};
-    virtual Size Layout(const Constraints bc) = 0;
+    virtual SizeI Layout(const Constraints bc) = 0;
     virtual int MinIntrinsicHeight(int width) = 0;
     virtual int MinIntrinsicWidth(int height) = 0;
     virtual void SetBounds(Rect) = 0;
@@ -121,10 +119,10 @@ inline Insets UniformInsets(int l) {
 struct Padding : public ILayout {
     Insets insets{};
     ILayout* child = nullptr;
-    Size childSize{};
+    SizeI childSize{};
 
     ~Padding() override;
-    Size Layout(const Constraints bc) override;
+    SizeI Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
@@ -142,7 +140,7 @@ struct Expand : public ILayout {
     // ILayout
     Expand(ILayout* c, int f);
     ~Expand() override;
-    Size Layout(const Constraints bc) override;
+    SizeI Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
@@ -185,7 +183,7 @@ enum class CrossAxisAlign : u8 {
 
 struct boxElementInfo {
     ILayout* layout = nullptr;
-    Size size = {};
+    SizeI size = {};
     int flex = 0;
 };
 
@@ -200,7 +198,7 @@ struct VBox : public ILayout {
     int totalFlex = 0;
 
     ~VBox() override;
-    Size Layout(const Constraints bc) override;
+    SizeI Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
@@ -225,7 +223,7 @@ struct HBox : public ILayout {
     int totalFlex = 0;
 
     ~HBox() override;
-    Size Layout(const Constraints bc) override;
+    SizeI Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
@@ -251,11 +249,11 @@ struct Align : public ILayout {
     float WidthFactor = 0;         // If greater than zero, ratio of container width to child width.
     float HeightFactor = 0;        // If greater than zero, ratio of container height to child height.
     ILayout* Child = 0;
-    Size childSize{};
+    SizeI childSize{};
 
     Align(ILayout*);
     ~Align() override;
-    Size Layout(const Constraints bc) override;
+    SizeI Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;

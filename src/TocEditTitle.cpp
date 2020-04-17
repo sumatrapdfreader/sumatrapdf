@@ -97,7 +97,7 @@ void EditTitleWindow::SizeHandler(SizeEvent* ev) {
         // avoid un-necessary layout
         return;
     }
-    Size windowSize{dx, dy};
+    SizeI windowSize{dx, dy};
     auto c = Tight(windowSize);
     auto size = mainLayout->Layout(c);
     Point min{0, 0};

@@ -63,44 +63,44 @@ int guardInf(int a, int b) {
 }
 
 Constraints ExpandInf() {
-    Size min{0, 0};
-    Size max{Inf, Inf};
+    SizeI min{0, 0};
+    SizeI max{Inf, Inf};
     return Constraints{min, max};
 }
 
 Constraints ExpandHeight(int width) {
-    Size min{width, 0};
-    Size max{width, Inf};
+    SizeI min{width, 0};
+    SizeI max{width, Inf};
     return Constraints{min, max};
 }
 
 Constraints ExpandWidth(int height) {
-    Size min{0, height};
-    Size max{Inf, height};
+    SizeI min{0, height};
+    SizeI max{Inf, height};
     return Constraints{min, max};
 }
 
-Constraints Loose(const Size size) {
-    return Constraints{Size{}, size};
+Constraints Loose(const SizeI size) {
+    return Constraints{SizeI{}, size};
 }
 
-Constraints Tight(const Size size) {
+Constraints Tight(const SizeI size) {
     return Constraints{size, size};
 }
 
 Constraints TightHeight(int height) {
-    Size min{0, height};
-    Size max{Inf, height};
+    SizeI min{0, height};
+    SizeI max{Inf, height};
     return Constraints{min, max};
 }
 
-Size Constraints::Constrain(Size size) const {
+SizeI Constraints::Constrain(SizeI size) const {
     int w = clamp(size.dx, this->Min.dx, this->Max.dx);
     int h = clamp(size.dy, this->Min.dy, this->Max.dy);
-    return Size{w, h};
+    return SizeI{w, h};
 }
 
-Size Constraints::ConstrainAndAttemptToPreserveAspectRatio(const Size size) const {
+SizeI Constraints::ConstrainAndAttemptToPreserveAspectRatio(const SizeI size) const {
     if (this->IsTight()) {
         return this->Min;
     }
@@ -127,7 +127,7 @@ Size Constraints::ConstrainAndAttemptToPreserveAspectRatio(const Size size) cons
         width = scale(height, size.dx, size.dy);
     }
 
-    Size c{width, height};
+    SizeI c{width, height};
     return this->Constrain(c);
 }
 
@@ -160,10 +160,10 @@ Constraints Constraints::Inset(int width, int height) const {
     int deflatedMinWidth = guardInf(minw, std::max(0, minw - width));
     int minh = this->Min.dy;
     int deflatedMinHeight = guardInf(minh, std::max(0, minh - height));
-    Size min{deflatedMinWidth, deflatedMinHeight};
+    SizeI min{deflatedMinWidth, deflatedMinHeight};
     int maxw = this->Max.dx;
     int maxh = this->Max.dy;
-    Size max{
+    SizeI max{
         std::max(deflatedMinWidth, guardInf(maxw, maxw - width)),
         std::max(deflatedMinHeight, guardInf(maxh, maxh - height)),
     };
@@ -178,7 +178,7 @@ bool Constraints::IsNormalized() const {
     return this->Min.dx >= 0.0 && this->Min.dx <= this->Max.dx && this->Min.dy >= 0.0 && this->Min.dy <= this->Max.dy;
 }
 
-bool Constraints::IsSatisfiedBy(Size size) const {
+bool Constraints::IsSatisfiedBy(SizeI size) const {
     return this->Min.dx <= size.dx && size.dx <= this->Max.dx && this->Min.dy <= size.dy && size.dy <= this->Max.dy &&
            size.dx != Inf && size.dy != Inf;
 }
@@ -192,18 +192,18 @@ bool Constraints::IsZero() const {
 }
 
 Constraints Constraints::Loosen() const {
-    return Constraints{Size{}, this->Max};
+    return Constraints{SizeI{}, this->Max};
 }
 
 Constraints Constraints::LoosenHeight() const {
-    return Constraints{Size{this->Min.dx, 0}, this->Max};
+    return Constraints{SizeI{this->Min.dx, 0}, this->Max};
 }
 
 Constraints Constraints::LoosenWidth() const {
-    return Constraints{Size{0, this->Min.dy}, this->Max};
+    return Constraints{SizeI{0, this->Min.dy}, this->Max};
 }
 
-Constraints Constraints::Tighten(Size size) const {
+Constraints Constraints::Tighten(SizeI size) const {
     Constraints bc = *this;
     bc.Min.dx = clamp(size.dx, bc.Min.dx, bc.Max.dx);
     bc.Max.dx = bc.Min.dx;
@@ -259,13 +259,13 @@ Padding::~Padding() {
     delete child;
 }
 
-Size Padding::Layout(const Constraints bc) {
+SizeI Padding::Layout(const Constraints bc) {
     auto hinset = this->insets.Left + this->insets.Right;
     auto vinset = this->insets.Top + this->insets.Bottom;
 
     auto innerConstraints = bc.Inset(hinset, vinset);
     this->childSize = this->child->Layout(innerConstraints);
-    return Size{
+    return SizeI{
         this->childSize.dx + hinset,
         this->childSize.dy + vinset,
     };
@@ -391,11 +391,11 @@ int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
     return totalFlex;
 }
 
-Size VBox::Layout(const Constraints bc) {
+SizeI VBox::Layout(const Constraints bc) {
     auto n = childrenCount();
     if (n == 0) {
         totalHeight = 0;
-        return bc.Constrain(Size{});
+        return bc.Constrain(SizeI{});
     }
     totalFlex = updateFlex(this->children, this->alignMain);
 
@@ -467,10 +467,10 @@ Size VBox::Layout(const Constraints bc) {
         }
     }
     if (this->alignCross == CrossAxisAlign::Stretch) {
-        return bc.Constrain(Size{cbc.Min.dx, height});
+        return bc.Constrain(SizeI{cbc.Min.dx, height});
     }
 
-    return bc.Constrain(Size{width, height});
+    return bc.Constrain(SizeI{width, height});
 }
 
 int VBox::MinIntrinsicWidth(int height) {
@@ -688,11 +688,11 @@ size_t HBox::childrenCount() {
     return n;
 }
 
-Size HBox::Layout(const Constraints bc) {
+SizeI HBox::Layout(const Constraints bc) {
     auto n = childrenCount();
     if (n == 0) {
         totalWidth = 0;
-        return bc.Constrain(Size{});
+        return bc.Constrain(SizeI{});
     }
     totalFlex = updateFlex(this->children, this->alignMain);
 
@@ -768,9 +768,9 @@ Size HBox::Layout(const Constraints bc) {
         }
     }
     if (alignCross == CrossAxisAlign::Stretch) {
-        return bc.Constrain(Size{width, cbc.Min.dy});
+        return bc.Constrain(SizeI{width, cbc.Min.dy});
     }
-    return bc.Constrain(Size{width, height});
+    return bc.Constrain(SizeI{width, height});
 }
 
 int HBox::MinIntrinsicHeight(int width) {
@@ -982,8 +982,8 @@ Align::Align(ILayout* c) {
 Align::~Align() {
 }
 
-Size Align::Layout(const Constraints bc) {
-    Size size = this->Child->Layout(bc.Loosen());
+SizeI Align::Layout(const Constraints bc) {
+    SizeI size = this->Child->Layout(bc.Loosen());
     this->childSize = size;
     auto f = this->WidthFactor;
     if (f > 0) {
@@ -1055,7 +1055,7 @@ Expand* CreateExpand(ILayout* child, int factor) {
 Expand::~Expand() {
 }
 
-Size Expand::Layout(const Constraints bc) {
+SizeI Expand::Layout(const Constraints bc) {
     return child->Layout(bc);
 }
 

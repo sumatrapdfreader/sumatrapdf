@@ -855,10 +855,10 @@ WindowBaseLayout::~WindowBaseLayout() {
     delete wb;
 }
 
-Size WindowBaseLayout::Layout(const Constraints bc) {
+SizeI WindowBaseLayout::Layout(const Constraints bc) {
     int width = MinIntrinsicWidth(0);
     int height = MinIntrinsicHeight(0);
-    return bc.Constrain(Size{width, height});
+    return bc.Constrain(SizeI{width, height});
 }
 
 int WindowBaseLayout::MinIntrinsicHeight(i32) {
@@ -898,7 +898,7 @@ int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
 // sets initial position of w within hwnd. Assumes w->initialSize is set.
 void PositionCloseTo(WindowBase* w, HWND hwnd) {
     CrashIf(!hwnd);
-    Size is = w->initialSize;
+    SizeI is = w->initialSize;
     CrashIf(is.empty());
     RECT r{};
     BOOL ok = GetWindowRect(hwnd, &r);
