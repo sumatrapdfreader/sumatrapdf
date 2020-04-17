@@ -369,16 +369,19 @@ bool ChmModel::Load(const WCHAR* fileName) {
     return pages.size() > 0;
 }
 
-class ChmCacheEntry {
-  public:
+struct ChmCacheEntry {
     // owned by ChmModel::poolAllocator
     const WCHAR* url = nullptr;
     AutoFree data{};
 
-    explicit ChmCacheEntry(const WCHAR* url) : url(url) {
-    }
+    explicit ChmCacheEntry(const WCHAR* url);
     ~ChmCacheEntry() = default;
 };
+
+
+ChmCacheEntry::ChmCacheEntry(const WCHAR* url) {
+    this->url = url;
+}
 
 ChmCacheEntry* ChmModel::FindDataForUrl(const WCHAR* url) {
     size_t n = urlDataCache.size();
