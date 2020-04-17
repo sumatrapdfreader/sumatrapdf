@@ -12,3 +12,4 @@ void RelayoutCaption(WindowInfo* win);
 void SetCaptionButtonsRtl(CaptionInfo*, bool isRtl);
 void CaptionUpdateUI(WindowInfo*, CaptionInfo*);
 void DeleteCaption(CaptionInfo*);
+void OpenSystemMenu(WindowInfo* win);

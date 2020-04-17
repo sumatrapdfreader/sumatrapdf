@@ -3986,8 +3986,6 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     }
 }
 
-extern void OpenSystemMenu(WindowInfo* win);
-
 static bool FrameOnSysChar(WindowInfo* win, WPARAM key) {
     // use Alt+1 to Alt+8 for selecting the first 8 tabs and Alt+9 for the last tab
     if (win->tabsVisible && ('1' <= key && key <= '9')) {
