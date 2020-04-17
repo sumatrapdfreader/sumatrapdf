@@ -13,7 +13,6 @@ UXTHEME_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
 USER32_API_LIST(API_DECLARATION)
 DWMAPI_API_LIST(API_DECLARATION)
-UIA_API_LIST(API_DECLARATION)
 DBGHELP_API_LIST(API_DECLARATION)
 
 #undef API_DECLARATION
@@ -60,11 +59,6 @@ void InitDynCalls() {
     h = SafeLoadLibrary(L"normaliz.dll");
     if (h) {
         NORMALIZ_API_LIST(API_LOAD);
-    }
-
-    h = SafeLoadLibrary(L"uiautomationcore.dll");
-    if (h) {
-        UIA_API_LIST(API_LOAD)
     }
 
 #if 0
@@ -194,45 +188,6 @@ HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWOR
     return DynDwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
 }
 }; // namespace dwm
-
-namespace uia {
-
-LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple* provider) {
-    if (!DynUiaReturnRawElementProvider) {
-        return 0;
-    }
-    return DynUiaReturnRawElementProvider(hwnd, wParam, lParam, provider);
-}
-
-HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple** pProvider) {
-    if (!DynUiaHostProviderFromHwnd) {
-        return E_NOTIMPL;
-    }
-    return DynUiaHostProviderFromHwnd(hwnd, pProvider);
-}
-
-HRESULT RaiseAutomationEvent(IRawElementProviderSimple* pProvider, EVENTID id) {
-    if (!DynUiaRaiseAutomationEvent) {
-        return E_NOTIMPL;
-    }
-    return DynUiaRaiseAutomationEvent(pProvider, id);
-}
-
-HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple* pProvider, StructureChangeType structureChangeType,
-                                   int* pRuntimeId, int cRuntimeIdLen) {
-    if (!DynUiaRaiseStructureChangedEvent) {
-        return E_NOTIMPL;
-    }
-    return DynUiaRaiseStructureChangedEvent(pProvider, structureChangeType, pRuntimeId, cRuntimeIdLen);
-}
-
-HRESULT GetReservedNotSupportedValue(IUnknown** punkNotSupportedValue) {
-    if (!DynUiaRaiseStructureChangedEvent) {
-        return E_NOTIMPL;
-    }
-    return DynUiaGetReservedNotSupportedValue(punkNotSupportedValue);
-}
-}; // namespace uia
 
 static const WCHAR* dllsToPreload =
     L"gdiplus.dll\0msimg32.dll\0shlwapi.dll\0urlmon.dll\0version.dll\0windowscodecs.dll\0wininet.dll\0\0";

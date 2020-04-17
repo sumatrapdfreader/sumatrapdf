@@ -1482,7 +1482,7 @@ void DeleteWindowInfo(WindowInfo* win) {
 
     if (win->uia_provider) {
         // tell UIA to release all objects cached in its store
-        uia::ReturnRawElementProvider(win->hwndCanvas, 0, 0, nullptr);
+        UiaReturnRawElementProvider(win->hwndCanvas, 0, 0, nullptr);
     }
 
     delete win;

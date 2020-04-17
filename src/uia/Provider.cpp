@@ -34,7 +34,7 @@ void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel *dm)
 
     document = new SumatraUIAutomationDocumentProvider(canvasHwnd, this);
     document->LoadDocument(dm);
-    uia::RaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, nullptr, 0);
+    UiaRaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, nullptr, 0);
 }
 
 void SumatraUIAutomationProvider::OnDocumentUnload()
@@ -43,14 +43,14 @@ void SumatraUIAutomationProvider::OnDocumentUnload()
         document->FreeDocument(); // tell that the dm is now invalid
         document->Release(); // release our hooks
         document = nullptr;
-        uia::RaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, nullptr, 0);
+        UiaRaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, nullptr, 0);
     }
 }
 
 void SumatraUIAutomationProvider::OnSelectionChanged()
 {
     if (document)
-        uia::RaiseAutomationEvent(document, UIA_Text_TextSelectionChangedEventId);
+        UiaRaiseAutomationEvent(document, UIA_Text_TextSelectionChangedEventId);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(REFIID riid, void **ppv)
@@ -114,7 +114,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPropertyValue(PROPERTY
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_HostRawElementProvider(IRawElementProviderSimple **pRetVal)
 {
-    return uia::HostProviderFromHwnd(canvasHwnd,pRetVal);
+    return UiaHostProviderFromHwnd(canvasHwnd, pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_ProviderOptions(ProviderOptions *pRetVal)

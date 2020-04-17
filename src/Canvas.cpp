@@ -1574,7 +1574,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
             // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
             // and since WM_GETOBJECT is called many times, it accumulates
-            return uia::ReturnRawElementProvider(hwnd, wp, lp, win->uia_provider);
+            return UiaReturnRawElementProvider(hwnd, wp, lp, win->uia_provider);
 
         default:
             // TODO: achieve this split through subclassing or different window classes

@@ -96,23 +96,6 @@ typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 
 #define NORMALIZ_API_LIST(V) V(NormalizeString)
 
-// TODO: no need for those to be dynamic
-typedef LRESULT(WINAPI* Sig_UiaReturnRawElementProvider)(HWND hwnd, WPARAM wParam, LPARAM lParam,
-                                                         IRawElementProviderSimple* el);
-typedef HRESULT(WINAPI* Sig_UiaHostProviderFromHwnd)(HWND hwnd, IRawElementProviderSimple** pProvider);
-typedef HRESULT(WINAPI* Sig_UiaRaiseAutomationEvent)(IRawElementProviderSimple* pProvider, EVENTID id);
-typedef HRESULT(WINAPI* Sig_UiaRaiseStructureChangedEvent)(IRawElementProviderSimple* pProvider,
-                                                           StructureChangeType structureChangeType, int* pRuntimeId,
-                                                           int cRuntimeIdLen);
-typedef HRESULT(WINAPI* Sig_UiaGetReservedNotSupportedValue)(IUnknown** punkNotSupportedValue);
-
-#define UIA_API_LIST(V)              \
-    V(UiaReturnRawElementProvider)   \
-    V(UiaHostProviderFromHwnd)       \
-    V(UiaRaiseAutomationEvent)       \
-    V(UiaRaiseStructureChangedEvent) \
-    V(UiaGetReservedNotSupportedValue)
-
 // user32.dll
 
 typedef decltype(GetGestureInfo)* Sig_GetGestureInfo;
@@ -187,7 +170,6 @@ UXTHEME_API_LIST(API_DECLARATION)
 DWMAPI_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
 USER32_API_LIST(API_DECLARATION)
-UIA_API_LIST(API_DECLARATION)
 DBGHELP_API_LIST(API_DECLARATION)
 #undef API_DECLARATION
 
@@ -222,16 +204,6 @@ BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
 BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo);
 BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
 } // namespace touch
-
-namespace uia {
-
-LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple*);
-HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple** pProvider);
-HRESULT RaiseAutomationEvent(IRawElementProviderSimple* pProvider, EVENTID id);
-HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple* pProvider, StructureChangeType structureChangeType,
-                                   int* pRuntimeId, int cRuntimeIdLen);
-HRESULT GetReservedNotSupportedValue(IUnknown** punkNotSupportedValue);
-}; // namespace uia
 
 void NoDllHijacking();
 void PrioritizeSystemDirectoriesForDllLoad();

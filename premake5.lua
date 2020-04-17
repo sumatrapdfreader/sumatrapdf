@@ -642,7 +642,7 @@ workspace "SumatraPDF"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
-      "version", "windowscodecs", "wininet", "d2d1.lib"
+      "version", "windowscodecs", "wininet", "d2d1.lib", "uiautomationcore.lib"
     }
     filter "platforms:x32_asan"
       -- asan-i386.lib
@@ -652,7 +652,8 @@ workspace "SumatraPDF"
     filter {}
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
-    linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:d2d1.lib" }
+    linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }
+    linkoptions { "/DELAYLOAD:d2d1.dll /DELAYLOAD:uiautomationcore.dll" }
 
 
   -- a dll version where most functionality is in libmupdf.dll
@@ -684,7 +685,7 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
-  
+
     files { "src/MuPDF_Exports.cpp" }
 
     links {
@@ -692,11 +693,12 @@ workspace "SumatraPDF"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
-      "version", "wininet", "d2d1.lib"
+      "version", "wininet", "d2d1.lib", "uiautomationcore.lib"
     }
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:libmupdf.dll" }
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
-    linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:d2d1.lib" }
+    linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }
+    linkoptions { "/DELAYLOAD:d2d1.dll /DELAYLOAD:uiautomationcore.dll" }
     dependson { "PdfFilter", "PdfPreview" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
