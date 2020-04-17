@@ -378,7 +378,6 @@ struct ChmCacheEntry {
     ~ChmCacheEntry() = default;
 };
 
-
 ChmCacheEntry::ChmCacheEntry(const WCHAR* url) {
     this->url = url;
 }

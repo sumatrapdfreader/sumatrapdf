@@ -294,10 +294,13 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectD rect) {
 
 // determine the count of tiles required for a page at a given zoom level
 USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) {
-    RectD mediabox = dm->GetEngine()->PageMediabox(pageNo);
+    auto engine = dm->GetEngine();
+    RectD mediabox = engine->PageMediabox(pageNo);
     float zoom = dm->GetZoomReal(pageNo);
+    float zoomVirt = dm->GetZoomVirtual();
+    RectI viewPort = dm->GetViewPort();
     int rotation = dm->GetRotation();
-    RectD pixelbox = dm->GetEngine()->Transform(mediabox, pageNo, zoom, rotation);
+    RectD pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
 
     float factorW = (float)pixelbox.dx / (maxTileSize.dx + 1);
     float factorH = (float)pixelbox.dy / (maxTileSize.dy + 1);
@@ -309,9 +312,8 @@ USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) {
     // use larger tiles when fitting page or width or when a page is smaller
     // than the visible canvas width/height or when rendering pages
     // without clipping optimizations
-    if (dm->GetZoomVirtual() == ZOOM_FIT_PAGE || dm->GetZoomVirtual() == ZOOM_FIT_WIDTH ||
-        pixelbox.dx <= dm->GetViewPort().dx || pixelbox.dy < dm->GetViewPort().dy ||
-        !dm->GetEngine()->HasClipOptimizations(pageNo)) {
+    if (zoomVirt == ZOOM_FIT_PAGE || zoomVirt == ZOOM_FIT_WIDTH || pixelbox.dx <= viewPort.dx ||
+        pixelbox.dy < viewPort.dy || !engine->HasClipOptimizations(pageNo)) {
         factorAvg /= 2.0;
     }
 

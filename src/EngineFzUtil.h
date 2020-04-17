@@ -39,8 +39,10 @@ struct FzPageInfo {
 
     RectD mediabox = {};
     Vec<FitzImagePos> images;
-    bool loaded = false;
-    bool loadedForSearch = false;
+
+    // if false, only loaded page (fast)
+    // if true, loaded expensive info (extracted text etc.)
+    bool fullyLoaded = false;
 };
 
 struct LinkRectList {
