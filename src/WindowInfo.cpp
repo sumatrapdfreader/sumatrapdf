@@ -19,6 +19,7 @@
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/SplitterWnd.h"
 
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineManager.h"
 #include "Doc.h"

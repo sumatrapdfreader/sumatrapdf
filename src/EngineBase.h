@@ -28,14 +28,6 @@ enum PageLayoutType {
     Layout_NonContinuous = 32
 };
 
-enum class AnnotationType {
-    None,
-    Highlight,
-    Underline,
-    StrikeOut,
-    Squiggly,
-};
-
 enum class DocumentProperty {
     Title,
     Author,
@@ -112,18 +104,6 @@ class PageDestination {
 
 PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value = nullptr);
 PageDestination* clonePageDestination(PageDestination* dest);
-
-// an user annotation on page
-struct Annotation {
-    AnnotationType type = AnnotationType::None;
-    int pageNo = -1;
-    RectD rect = {};
-    COLORREF color = 0;
-
-    Annotation() = default;
-    Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color);
-    bool operator==(const Annotation& other) const;
-};
 
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT -999.9
@@ -363,6 +343,9 @@ class EngineBase {
 
     // access to various document properties (such as Author, Title, etc.)
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
+
+    // Get annotations already present in the document
+    virtual void GetAnnotations(Vec<Annotation*>* annotsOut);
 
     // informs the engine about annotations the user made so that they can be rendered, etc.
     // (this call supercedes any prior call to UpdateUserAnnotations)

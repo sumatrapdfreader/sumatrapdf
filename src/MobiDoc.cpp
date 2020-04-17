@@ -5,7 +5,6 @@
 #include "utils/BitReader.h"
 #include "utils/ByteOrderDecoder.h"
 #include "utils/ScopedWin.h"
-
 #include "utils/FileUtil.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
@@ -14,6 +13,8 @@
 #include "utils/TrivialHtmlParser.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "MobiDoc.h"

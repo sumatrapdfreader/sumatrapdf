@@ -19,6 +19,7 @@ extern "C" {
 #include "resource.h"
 #include "Translations.h"
 
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineManager.h"
 

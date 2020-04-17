@@ -21,6 +21,7 @@
 
 #include "utils/GdiPlusUtil.h"
 
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineManager.h"
 #include "ParseBKM.h"

@@ -15,6 +15,8 @@
 #include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineImages.h"
 #include "PdfCreator.h"

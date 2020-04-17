@@ -8,6 +8,8 @@
 #include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "SettingsStructs.h"

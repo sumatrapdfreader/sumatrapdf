@@ -560,6 +560,7 @@ end
 
 function engines_files()
   files_in_dir("src", {
+    "Annotation.*",
     "Engine*",
     "ChmDoc.*",
     "EbookDoc.*",
@@ -926,6 +927,7 @@ function pdf_preview_files()
   files {
     "src/utils/LogDbg.*",
     "src/MUPDF_Exports.cpp",
+    "src/Annotation.*",
     "src/EngineBase.*",
     "src/EngineFzUtil.*",
     "src/EnginePdf.*",
@@ -961,6 +963,7 @@ function pdf_filter_files()
   files {
     "src/utils/LogDbg.*",
     "src/MUPDF_Exports.cpp",
+    "src/Annotation.*",
     "src/EngineBase.*",
     "src/EngineFzUtil.*",
     "src/EnginePdf.*",

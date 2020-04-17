@@ -28,6 +28,8 @@ To write new regression test:
 #include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

@@ -20,6 +20,7 @@
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/ButtonCtrl.h"
 
+#include "Annotation.h"
 #include "EngineBase.h"
 
 #include "ProgressUpdateUI.h"

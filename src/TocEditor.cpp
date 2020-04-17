@@ -18,6 +18,7 @@
 #include "wingui/ButtonCtrl.h"
 #include "wingui/StaticCtrl.h"
 
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineMulti.h"
 #include "EngineManager.h"

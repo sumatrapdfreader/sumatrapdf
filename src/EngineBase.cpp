@@ -9,6 +9,7 @@
 
 #include "wingui/TreeModel.h"
 
+#include "Annotation.h"
 #include "EngineBase.h"
 
 RenderedBitmap::~RenderedBitmap() {
@@ -32,32 +33,6 @@ HBITMAP RenderedBitmap::GetBitmap() const {
 
 SizeI RenderedBitmap::Size() const {
     return size;
-}
-
-Annotation::Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color) {
-    this->type = type;
-    this->pageNo = pageNo;
-    this->rect = rect;
-    this->color = color;
-}
-
-bool Annotation::operator==(const Annotation& other) const {
-    if (&other == this) {
-        return true;
-    }
-    if (other.type != type) {
-        return false;
-    }
-    if (other.pageNo != pageNo) {
-        return false;
-    }
-    if (other.color != color) {
-        return false;
-    }
-    if (other.rect != rect) {
-        return false;
-    }
-    return true;
 }
 
 Kind kindPageElementDest = "dest";
@@ -501,6 +476,10 @@ bool EngineBase::AllowsCopyingText() const {
 
 float EngineBase::GetFileDPI() const {
     return fileDPI;
+}
+
+void EngineBase::GetAnnotations(Vec<Annotation*>* annotsOut) {
+    // no-op implementation for most file types
 }
 
 void EngineBase::UpdateUserAnnotations(Vec<Annotation>* annots) {

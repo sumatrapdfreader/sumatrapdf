@@ -16,6 +16,8 @@
 
 #include "SumatraConfig.h"
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineDjVu.h"
 

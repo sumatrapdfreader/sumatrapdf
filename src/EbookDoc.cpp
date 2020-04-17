@@ -13,6 +13,8 @@
 #include "utils/ScopedWin.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

@@ -8,6 +8,8 @@
 #include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineManager.h"
 #include "SettingsStructs.h"

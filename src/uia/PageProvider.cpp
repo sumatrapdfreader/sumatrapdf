@@ -8,6 +8,8 @@
 #include "utils/ScopedWin.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "Controller.h"

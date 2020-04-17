@@ -681,6 +681,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\ChmDoc.h" />
     <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EbookFormatter.h" />
@@ -702,6 +703,7 @@
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\Annotation.cpp" />
     <ClCompile Include="..\src\ChmDoc.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">true</ExcludedFromBuild>

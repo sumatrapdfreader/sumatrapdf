@@ -9,6 +9,8 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"

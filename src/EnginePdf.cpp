@@ -20,6 +20,8 @@ extern "C" {
 
 #include "AppColors.h"
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
 #include "EnginePdf.h"
@@ -291,7 +293,7 @@ struct PageTreeStackItem {
 class EnginePdf : public EngineBase {
   public:
     EnginePdf();
-    virtual ~EnginePdf();
+    ~EnginePdf() override;
     EngineBase* Clone() override;
 
     RectD PageMediabox(int pageNo) override;
@@ -320,6 +322,8 @@ class EnginePdf : public EngineBase {
 
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
+
+    void GetAnnotations(Vec<Annotation*>* annotsOut) override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
     static EngineBase* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
@@ -2011,6 +2015,10 @@ int EnginePdf::GetPageByLabel(const WCHAR* label) const {
     }
 
     return pageNo;
+}
+
+void EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
+    // TODO: implement me
 }
 
 EngineBase* EnginePdf::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {

@@ -7,6 +7,8 @@
 #include "utils/FileUtil.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "PdfSync.h"
 

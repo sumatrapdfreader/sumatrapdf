@@ -7,6 +7,8 @@
 #include "utils/LogDbg.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EnginePdf.h"
 #include "EngineXps.h"

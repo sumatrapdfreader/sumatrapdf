@@ -19,6 +19,7 @@
 #include "wingui/ListBoxCtrl.h"
 #include "wingui/DropDownCtrl.h"
 
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineMulti.h"
 #include "EngineManager.h"

@@ -3,14 +3,16 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-
 #include "utils/FileUtil.h"
 #include "utils/SquareTreeParser.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
-#include "FileModifications.h"
 #include "Version.h"
+
+#include "FileModifications.h"
 
 /*
 The following format (SumatraPDF Modifications eXtensible) is used for

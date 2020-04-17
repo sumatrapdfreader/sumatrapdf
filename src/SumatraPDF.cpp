@@ -30,6 +30,7 @@
 #include "wingui/TooltipCtrl.h"
 #include "wingui/DropDownCtrl.h"
 
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EnginePs.h"
 #include "EngineManager.h"

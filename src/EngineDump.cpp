@@ -11,6 +11,8 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineDjVu.h"
 #include "EngineManager.h"

@@ -19,6 +19,8 @@
 #include "utils/ZipUtil.h"
 
 #include "wingui/TreeModel.h"
+
+#include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineEbook.h"
 #include "EbookBase.h"
