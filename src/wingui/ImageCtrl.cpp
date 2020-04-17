@@ -100,17 +100,17 @@ bool ImageCtrl::Create() {
         return false;
     }
     auto size = GetIdealSize();
-    RECT r{0, 0, size.cx, size.cy};
+    RECT r{0, 0, size.dx, size.dy};
     SetBounds(r);
     msgFilter = ImageCtrlWndProc;
     Subclass();
     return ok;
 }
 
-SIZE ImageCtrl::GetIdealSize() {
+SizeI ImageCtrl::GetIdealSize() {
     UINT dx = bmp->GetWidth();
     UINT dy = bmp->GetHeight();
-    return SIZE{(LONG)dx, (LONG)dy};
+    return SizeI{(int)dx, (int)dy};
 }
 
 ILayout* NewImageLayout(ImageCtrl* w) {

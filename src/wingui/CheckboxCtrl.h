@@ -18,7 +18,7 @@ struct CheckboxCtrl : WindowBase {
 
     void HandleWM_COMMAND(WndEvent*);
 
-    SIZE GetIdealSize() override;
+    SizeI GetIdealSize() override;
 
     void SetCheckState(CheckState);
     CheckState GetCheckState() const;

@@ -35,7 +35,7 @@ struct LabelWithCloseCtrl : public Window {
     void SetLabel(const WCHAR*);
 
     void SetPaddingXY(int x, int y);
-    SIZE GetIdealSize() override;
+    SizeI GetIdealSize() override;
 
     RectI closeBtnPos = {};
 

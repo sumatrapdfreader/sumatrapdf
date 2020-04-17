@@ -188,7 +188,7 @@ struct WindowBase {
     virtual ~WindowBase();
 
     virtual bool Create();
-    virtual SIZE GetIdealSize();
+    virtual SizeI GetIdealSize();
 
     virtual void WndProc(WndEvent*);
 
@@ -248,8 +248,8 @@ struct WindowBaseLayout : public ILayout {
     ~WindowBaseLayout() override;
 
     Size Layout(const Constraints bc) override;
-    i32 MinIntrinsicHeight(i32) override;
-    i32 MinIntrinsicWidth(i32) override;
+    int MinIntrinsicHeight(int) override;
+    int MinIntrinsicWidth(int) override;
     void SetBounds(const Rect bounds) override;
 };
 

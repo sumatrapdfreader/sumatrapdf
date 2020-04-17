@@ -42,7 +42,7 @@ bool ProgressCtrl::Create() {
     return true;
 }
 
-SIZE ProgressCtrl::GetIdealSize() {
+SizeI ProgressCtrl::GetIdealSize() {
     return {idealDx, idealDy};
 }
 

@@ -960,8 +960,8 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND 
     dy -= labelSize.dy;
     y += labelSize.dy;
     if (altBookmarksVisible) {
-        SIZE bs = altBookmarks->GetIdealSize();
-        int elDy = bs.cy;
+        SizeI bs = altBookmarks->GetIdealSize();
+        int elDy = bs.dy;
         RECT r{0, y, rc.dx, y + elDy};
         altBookmarks->SetBounds(r);
         elDy += 4;

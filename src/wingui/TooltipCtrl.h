@@ -8,7 +8,7 @@ struct TooltipCtrl : WindowBase {
     ~TooltipCtrl() override;
     bool Create() override;
 
-    SIZE GetIdealSize() override;
+    SizeI GetIdealSize() override;
 
     void Show(std::string_view s, RectI& rc, bool multiline);
     void Show(const WCHAR* text, RectI& rc, bool multiline);

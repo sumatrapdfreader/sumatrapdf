@@ -172,7 +172,7 @@ struct TreeCtrl : WindowBase {
     TreeCtrl(HWND parent);
     ~TreeCtrl();
 
-    SIZE GetIdealSize() override;
+    SizeI GetIdealSize() override;
     void WndProc(WndEvent*) override;
 
     void HandleMouseDuringDrag(WndEvent*);

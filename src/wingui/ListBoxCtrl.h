@@ -19,13 +19,13 @@ struct ListBoxModelStrings : ListBoxModel {
 
 struct ListBoxCtrl : WindowBase {
     ListBoxModel* model = nullptr;
-    SIZE minSize{120, 32};
+    SizeI minSize{120, 32};
 
     ListBoxCtrl(HWND parent);
     ~ListBoxCtrl() override;
     bool Create() override;
 
-    SIZE GetIdealSize() override;
+    SizeI GetIdealSize() override;
 
     int GetSelectedItem();
     bool SetSelectedItem(int);

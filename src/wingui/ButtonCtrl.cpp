@@ -48,22 +48,21 @@ bool ButtonCtrl::Create() {
     void* user = this;
     RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
     auto size = GetIdealSize();
-    RECT r{0, 0, size.cx, size.cy};
+    RECT r{0, 0, size.dx, size.dy};
     SetBounds(r);
     return ok;
 }
 
-// TODO: cache
-SIZE ButtonCtrl::GetIdealSize() {
+SizeI ButtonCtrl::GetIdealSize() {
     return ButtonGetIdealSize(hwnd);
 }
 
 #if 0
-SIZE ButtonCtrl::SetTextAndResize(const WCHAR* s) {
+SizeI ButtonCtrl::SetTextAndResize(const WCHAR* s) {
     win::SetText(this->hwnd, s);
-    SIZE size = this->GetIdealSize();
+    SizeI size = this->GetIdealSize();
     UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
-    SetWindowPos(this->hwnd, nullptr, 0, 0, size.cx, size.cy, flags);
+    SetWindowPos(this->hwnd, nullptr, 0, 0, size.dx, size.dy, flags);
     return size;
 }
 #endif

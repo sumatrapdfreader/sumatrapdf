@@ -556,7 +556,7 @@ void WindowBase::WndProc(WndEvent* ev) {
     ev->didHandle = false;
 }
 
-SIZE WindowBase::GetIdealSize() {
+SizeI WindowBase::GetIdealSize() {
     return {};
 }
 
@@ -856,19 +856,19 @@ WindowBaseLayout::~WindowBaseLayout() {
 }
 
 Size WindowBaseLayout::Layout(const Constraints bc) {
-    i32 width = MinIntrinsicWidth(0);
-    i32 height = MinIntrinsicHeight(0);
+    int width = MinIntrinsicWidth(0);
+    int height = MinIntrinsicHeight(0);
     return bc.Constrain(Size{width, height});
 }
 
-i32 WindowBaseLayout::MinIntrinsicHeight(i32) {
-    SIZE s = wb->GetIdealSize();
-    return (i32)s.cy;
+int WindowBaseLayout::MinIntrinsicHeight(i32) {
+    SizeI s = wb->GetIdealSize();
+    return s.dy;
 }
 
-i32 WindowBaseLayout::MinIntrinsicWidth(i32) {
-    SIZE s = wb->GetIdealSize();
-    return (i32)s.cx;
+int WindowBaseLayout::MinIntrinsicWidth(i32) {
+    SizeI s = wb->GetIdealSize();
+    return s.dx;
 }
 
 void WindowBaseLayout::SetBounds(const Rect bounds) {

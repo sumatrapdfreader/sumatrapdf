@@ -111,7 +111,7 @@ void DropDownCtrl::SetItems(Vec<std::string_view>& newItems) {
     SetCurrentSelection(-1);
 }
 
-SIZE DropDownCtrl::GetIdealSize() {
+SizeI DropDownCtrl::GetIdealSize() {
     SizeI s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
     for (std::string_view s : items) {
         WCHAR* ws = strconv::Utf8ToWstr(s);
@@ -124,7 +124,7 @@ SIZE DropDownCtrl::GetIdealSize() {
     // TODO: not sure if I want scrollbar. Only needed if a lot of items
     int pad = GetSystemMetrics(SM_CXVSCROLL);
     pad += 8;
-    return SIZE{s1.dx + pad, s1.dy + 2};
+    return {s1.dx + pad, s1.dy + 2};
 }
 
 ILayout* NewDropDownLayout(DropDownCtrl* w) {

@@ -1993,7 +1993,7 @@ void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
     }
 }
 
-SIZE ButtonGetIdealSize(HWND hwnd) {
+SizeI ButtonGetIdealSize(HWND hwnd) {
     // adjust to real size and position to the right
     SIZE s{};
     Button_GetIdealSize(hwnd, &s);
@@ -2003,7 +2003,8 @@ SIZE ButtonGetIdealSize(HWND hwnd) {
     hwndDpiAdjust(hwnd, &xPadding, &yPadding);
     s.cx += (int)xPadding;
     s.cy += (int)yPadding;
-    return s;
+    SizeI res = {s.cx, s.cy};
+    return res;
 }
 
 std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {

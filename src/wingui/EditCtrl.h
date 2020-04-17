@@ -31,7 +31,7 @@ struct EditCtrl : WindowBase {
     EditCtrl(HWND parent);
     ~EditCtrl();
     bool Create() override;
-    SIZE GetIdealSize() override;
+    SizeI GetIdealSize() override;
     void WndProc(WndEvent*) override;
 
     void HandleWM_COMMAND(WndEvent*);

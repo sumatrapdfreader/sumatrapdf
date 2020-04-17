@@ -289,7 +289,7 @@ void LabelWithCloseCtrl::SetPaddingXY(int x, int y) {
     ScheduleRepaint(hwnd);
 }
 
-SIZE LabelWithCloseCtrl::GetIdealSize() {
+SizeI LabelWithCloseCtrl::GetIdealSize() {
     AutoFreeWstr s = strconv::Utf8ToWstr(text.as_view());
     SizeI size = TextSizeInHwnd(hwnd, s);
     int btnDx = DpiScale(hwnd, CLOSE_BTN_DX);

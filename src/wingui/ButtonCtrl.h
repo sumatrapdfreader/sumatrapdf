@@ -13,7 +13,7 @@ struct ButtonCtrl : WindowBase {
 
     void HandleWM_COMMAND(WndEvent*);
 
-    SIZE GetIdealSize() override;
+    SizeI GetIdealSize() override;
 };
 
 ILayout* NewButtonLayout(ButtonCtrl* b);

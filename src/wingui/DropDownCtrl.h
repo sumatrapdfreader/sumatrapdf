@@ -21,7 +21,7 @@ struct DropDownCtrl : WindowBase {
 
     void HandleWM_COMMAND(WndEvent*);
 
-    SIZE GetIdealSize() override;
+    SizeI GetIdealSize() override;
 
     void SetCurrentSelection(int n);
     int GetCurrentSelection();

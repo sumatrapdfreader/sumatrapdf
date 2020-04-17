@@ -71,7 +71,7 @@ bool ListBoxCtrl::Create() {
     return ok;
 }
 
-SIZE ListBoxCtrl::GetIdealSize() {
+SizeI ListBoxCtrl::GetIdealSize() {
     return minSize;
 }
 

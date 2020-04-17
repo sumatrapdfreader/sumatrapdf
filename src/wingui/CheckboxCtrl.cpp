@@ -71,7 +71,7 @@ void CheckboxCtrl::HandleWM_COMMAND(WndEvent* ev) {
     }
 }
 
-SIZE CheckboxCtrl::GetIdealSize() {
+SizeI CheckboxCtrl::GetIdealSize() {
     return ButtonGetIdealSize(hwnd);
 }
 

@@ -32,8 +32,8 @@ bool TooltipCtrl::Create() {
     return ok;
 }
 
-SIZE TooltipCtrl::GetIdealSize() {
-    return SIZE{100, 32}; // not used as this is top-level window
+SizeI TooltipCtrl::GetIdealSize() {
+    return {100, 32}; // not used as this is top-level window
 }
 
 void TooltipCtrl::SetMaxWidth(int dx) {

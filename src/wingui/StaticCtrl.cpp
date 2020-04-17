@@ -45,16 +45,16 @@ bool StaticCtrl::Create() {
     void* user = this;
     RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
     auto size = GetIdealSize();
-    RECT r{0, 0, size.cx, size.cy};
+    RECT r{0, 0, size.dx, size.dy};
     SetBounds(r);
     return true;
 }
 
-SIZE StaticCtrl::GetIdealSize() {
+SizeI StaticCtrl::GetIdealSize() {
     WCHAR* txt = win::GetText(hwnd);
     SIZE s = MeasureTextInHwnd(hwnd, txt, hfont);
     free(txt);
-    return s;
+    return {s.cx, s.cy};
 }
 
 void StaticCtrl::HandleWM_COMMAND(WndEvent* ev) {
