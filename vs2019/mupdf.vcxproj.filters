@@ -33,10 +33,19 @@
     <ClInclude Include="..\mupdf\source\fitz\bidi-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\color-imp.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\context-imp.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\draw-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\encodings.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\glyph-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\glyphlist.h">
@@ -48,16 +57,25 @@
     <ClInclude Include="..\mupdf\source\fitz\icc34.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\image-imp.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\jmemcust.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\paint-glyph.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\pixmap-imp.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\smallcaps.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\ucdn_db.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\z-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
   </ItemGroup>

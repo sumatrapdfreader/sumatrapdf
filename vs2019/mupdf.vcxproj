@@ -722,15 +722,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\mupdf\source\fitz\bidi-imp.h" />
+    <ClInclude Include="..\mupdf\source\fitz\color-imp.h" />
+    <ClInclude Include="..\mupdf\source\fitz\context-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\draw-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\encodings.h" />
+    <ClInclude Include="..\mupdf\source\fitz\glyph-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\glyphlist.h" />
     <ClInclude Include="..\mupdf\source\fitz\html-tags.h" />
     <ClInclude Include="..\mupdf\source\fitz\icc34.h" />
+    <ClInclude Include="..\mupdf\source\fitz\image-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\jmemcust.h" />
     <ClInclude Include="..\mupdf\source\fitz\paint-glyph.h" />
+    <ClInclude Include="..\mupdf\source\fitz\pixmap-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\smallcaps.h" />
     <ClInclude Include="..\mupdf\source\fitz\ucdn_db.h" />
+    <ClInclude Include="..\mupdf\source\fitz\z-imp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\mupdf_load_system_font.c" />
