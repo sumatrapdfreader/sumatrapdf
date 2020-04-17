@@ -5,12 +5,7 @@
 
 const int Inf = std::numeric_limits<int>::max();
 
-// TODO: replace with SizeI
-struct Size {
-    int dx = 0;
-    int dy = 0;
-    bool empty() const;
-};
+typedef SizeI Size;
 
 struct Point {
     int X = 0;

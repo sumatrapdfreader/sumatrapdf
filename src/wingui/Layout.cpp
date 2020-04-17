@@ -7,10 +7,6 @@
 
 #include "Layout.h"
 
-bool Size::empty() const {
-    return dx == 0 || dy == 0;
-}
-
 bool Point::empty() const {
     return X == 0 || Y == 0;
 }

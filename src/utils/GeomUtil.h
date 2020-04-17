@@ -6,8 +6,7 @@
 namespace geomutil {
 
 template <typename T>
-class PointT {
-  public:
+struct PointT {
     T x, y;
 
     PointT() : x(0), y(0) {
@@ -33,8 +32,7 @@ class PointT {
 };
 
 template <typename T>
-class SizeT {
-  public:
+struct SizeT {
     T dx, dy;
 
     SizeT() : dx(0), dy(0) {
@@ -69,8 +67,7 @@ class SizeT {
 };
 
 template <typename T>
-class RectT {
-  public:
+struct RectT {
     T x, y;
     T dx, dy;
 
