@@ -18,6 +18,8 @@ The intent is to standardize how we do it.
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include <OleAcc.h>
+#include <WinNls.h>
+#include <processthreadsapi.h>
 
 // dbghelp.h is included here so that warning C4091 can be disabled in a single location
 #pragma warning(push)
@@ -28,24 +30,11 @@ The intent is to standardize how we do it.
 #include <tlhelp32.h>
 
 typedef decltype(SetProcessDEPPolicy)* Sig_SetProcessDEPPolicy;
-// typedef BOOL(WINAPI* Sig_SetProcessDEPPolicy)(DWORD dwFlags);
-
 typedef decltype(IsWow64Process)* Sig_IsWow64Process;
-// typedef BOOL(WINAPI* Sig_IsWow64Process)(HANDLE, PBOOL);
-
 typedef decltype(SetDllDirectoryW)* Sig_SetDllDirectoryW;
-// typedef BOOL(WINAPI* Sig_SetDllDirectoryW)(LPCWSTR);
-
-// TODO: not available in 32bit XP SDK
-// typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
-typedef BOOL(WINAPI* Sig_SetDefaultDllDirectories)(DWORD);
-
-// TODO: not available in 32bit XP SDK
-// typedef decltype(SetProcessMitigationPolicy)* Sig_SetProcessMitigationPolicy;
-typedef BOOL(WINAPI* Sig_SetProcessMitigationPolicy)(int, PVOID, SIZE_T);
-
+typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
+typedef decltype(SetProcessMitigationPolicy)* Sig_SetProcessMitigationPolicy;
 typedef decltype(RtlCaptureContext)* Sig_RtlCaptureContext;
-// typedef void(WINAPI* Sig_RtlCaptureContext)(PCONTEXT);
 
 #define KERNEL32_API_LIST(V)    \
     V(SetProcessDEPPolicy)      \
@@ -71,28 +60,13 @@ typedef HRESULT(WINAPI* Sig_NtSetInformationProcess)(HANDLE ProcessHandle, UINT 
 
 // uxtheme.dll
 typedef decltype(IsAppThemed)* Sig_IsAppThemed;
-// typedef BOOL(WINAPI* Sig_IsAppThemed)();
-
 typedef decltype(OpenThemeData)* Sig_OpenThemeData;
-// typedef HTHEME(WINAPI* Sig_OpenThemeData)(HWND hwnd, LPCWSTR pszClassList);
-
 typedef decltype(CloseThemeData)* Sig_CloseThemeData;
-// typedef HRESULT(WINAPI* Sig_CloseThemeData)(HTHEME hTheme);
-
 typedef decltype(DrawThemeBackground)* Sig_DrawThemeBackground;
-// typedef HRESULT(WINAPI* Sig_DrawThemeBackground)(HTHEME, HDC, int, int, LPCRECT, LPCRECT);
-
 typedef decltype(IsThemeActive)* Sig_IsThemeActive;
-// typedef BOOL(WINAPI* Sig_IsThemeActive)(void);
-
 typedef decltype(IsThemeBackgroundPartiallyTransparent)* Sig_IsThemeBackgroundPartiallyTransparent;
-// typedef BOOL(WINAPI* Sig_IsThemeBackgroundPartiallyTransparent)(HTHEME, int, int);
-
 typedef decltype(GetThemeColor)* Sig_GetThemeColor;
-// typedef HRESULT(WINAPI* Sig_GetThemeColor)(HTHEME, int, int, int, COLORREF*);
-
 typedef decltype(SetWindowTheme)* Sig_SetWindowTheme;
-// typedef HRESULT(WINAPI* Sig_SetWindowTheme)(HWND, LPCWSTR, LPCWSTR);
 
 #define UXTHEME_API_LIST(V)                  \
     V(IsAppThemed)                           \
@@ -105,10 +79,10 @@ typedef decltype(SetWindowTheme)* Sig_SetWindowTheme;
     V(GetThemeColor)
 
 /// dwmapi.dll
-typedef HRESULT(WINAPI* Sig_DwmIsCompositionEnabled)(BOOL* pfEnabled);
-typedef HRESULT(WINAPI* Sig_DwmExtendFrameIntoClientArea)(HWND hwnd, const MARGINS* pMarInset);
-typedef BOOL(WINAPI* Sig_DwmDefWindowProc)(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT* plResult);
-typedef HRESULT(WINAPI* Sig_DwmGetWindowAttribute)(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute);
+typedef decltype(DwmIsCompositionEnabled)* Sig_DwmIsCompositionEnabled;
+typedef decltype(DwmExtendFrameIntoClientArea)* Sig_DwmExtendFrameIntoClientArea;
+typedef decltype(DwmDefWindowProc)* Sig_DwmDefWindowProc;
+typedef decltype(DwmGetWindowAttribute)* Sig_DwmGetWindowAttribute;
 
 #define DWMAPI_API_LIST(V)          \
     V(DwmIsCompositionEnabled)      \
@@ -117,11 +91,12 @@ typedef HRESULT(WINAPI* Sig_DwmGetWindowAttribute)(HWND hwnd, DWORD dwAttribute,
     V(DwmGetWindowAttribute)
 
 // normaliz.dll
+//typedef decltype(NormalizeString)* Sig_NormalizeString2;
 typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 
 #define NORMALIZ_API_LIST(V) V(NormalizeString)
 
-// uiautomationcore.dll, not available under Win2000
+// TODO: no need for those to be dynamic
 typedef LRESULT(WINAPI* Sig_UiaReturnRawElementProvider)(HWND hwnd, WPARAM wParam, LPARAM lParam,
                                                          IRawElementProviderSimple* el);
 typedef HRESULT(WINAPI* Sig_UiaHostProviderFromHwnd)(HWND hwnd, IRawElementProviderSimple** pProvider);
@@ -155,25 +130,13 @@ typedef unsigned __int64 QWORD, *LPQWORD;
 #endif
 #endif
 
-// typedef decltype(GetGestureInfo) Sig_GetGestureInfo;
-typedef BOOL(WINAPI* Sig_GetGestureInfo)(HGESTUREINFO, PGESTUREINFO);
-
-// typedef decltype(CloseGestureInfoHandle) Sig_CloseGestureInfoHandle;
-typedef BOOL(WINAPI* Sig_CloseGestureInfoHandle)(HGESTUREINFO);
-
-// typedef decltype(SetGestureConfig) Sig_GetGestSig_SetGestureConfigureInfo;
-typedef BOOL(WINAPI* Sig_SetGestureConfig)(HWND, DWORD, UINT, PGESTURECONFIG, UINT);
-
-// typedef decltype(GetThreadDpiAwarenessContext) Sig_GetThreadDpiAwarenessContext;
-typedef DPI_AWARENESS_CONTEXT(WINAPI* Sig_GetThreadDpiAwarenessContext)();
-
-// typedef decltype(SetThreadDpiAwarenessContext) Sig_SetThreadDpiAwarenessContext;
-typedef DPI_AWARENESS_CONTEXT(WINAPI* Sig_SetThreadDpiAwarenessContext)(DPI_AWARENESS_CONTEXT);
-
-typedef DPI_AWARENESS(WINAPI* Sig_GetAwarenessFromDpiAwarenessContext)(DPI_AWARENESS_CONTEXT);
-
-// typedef decltype(GetDpiForWindow)* Sig_GetDpiForWindow;
-typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
+typedef decltype(GetGestureInfo)* Sig_GetGestureInfo;
+typedef decltype(CloseGestureInfoHandle)* Sig_CloseGestureInfoHandle;
+typedef decltype(SetGestureConfig)* Sig_SetGestureConfig;
+typedef decltype(GetThreadDpiAwarenessContext)* Sig_GetThreadDpiAwarenessContext;
+typedef decltype(SetThreadDpiAwarenessContext)* Sig_SetThreadDpiAwarenessContext;
+typedef decltype(GetDpiForWindow)* Sig_GetDpiForWindow;
+typedef decltype(GetAwarenessFromDpiAwarenessContext)* Sig_GetAwarenessFromDpiAwarenessContext;
 
 #define USER32_API_LIST(V)                 \
     V(GetDpiForWindow)                     \
@@ -185,9 +148,8 @@ typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
     V(CloseGestureInfoHandle)
 
 // dbghelp.dll,  may not be available under Win2000
+// TODO: no need to be dynamic anymore
 typedef decltype(MiniDumpWriteDump)* Sig_MiniDumpWriteDump;
-// typedef BOOL(WINAPI* Sig_MiniDumpWriteDump)(HANDLE, DWORD, HANDLE, LONG, PMINIDUMP_EXCEPTION_INFORMATION,
-//                                            PMINIDUMP_USER_STREAM_INFORMATION, PMINIDUMP_CALLBACK_INFORMATION);
 
 typedef BOOL(WINAPI* Sig_SymInitializeW)(HANDLE, PCWSTR, BOOL);
 typedef BOOL(WINAPI* Sig_SymInitialize)(HANDLE, PCSTR, BOOL);

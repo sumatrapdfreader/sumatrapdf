@@ -151,10 +151,11 @@ workspace "SumatraPDF"
 
   defines { 
     "WIN32", 
-    "_WIN32", 
-    "_CRT_SECURE_NO_WARNINGS", 
+    "_WIN32",
+    "_CRT_SECURE_NO_WARNINGS",
+    -- https://docs.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=vs-2019
     "WINVER=0x0605", -- latest Windows SDK
-    "_WIN32_WINNT=0x0601"
+    "_WIN32_WINNT=0x0603"
   }
 
   filter "configurations:Debug"
