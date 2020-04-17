@@ -7,10 +7,6 @@
 
 #include "Layout.h"
 
-bool Point::empty() const {
-    return x == 0 || y == 0;
-}
-
 int Rect::Width() const {
     return Max.x - Min.x;
 }
