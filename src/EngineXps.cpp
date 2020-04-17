@@ -355,7 +355,9 @@ EngineBase* EngineXps::Clone() {
         return nullptr;
     }
 
-    clone->UpdateUserAnnotations(&userAnnots);
+    // TODO: set a copy of annotsFromSmx
+    // clone->SetAnnotsFromSmx(cloneAnnots(annotsFromSmx));
+    clone->SetUnsavedAnnotations(unsavedAnnots);
 
     return clone;
 }
@@ -651,7 +653,8 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
     fz_var(pix);
     fz_var(bitmap);
 
-    Vec<Annotation> pageAnnots = GetAnnotationsForPage(userAnnots, args.pageNo);
+    // TODO: also get unsavedAnnots
+    Vec<Annotation*> pageAnnots = GetAnnotationsForPage(annotsFromSmx, args.pageNo);
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, page);
@@ -663,10 +666,10 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
         // or "Print". "Export" is not used
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         // TODO: use fz_infinite_rect instead of cliprect?
-        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, false);
+        fz_run_page_transparency(ctx, &pageAnnots, dev, cliprect, false, false);
         fz_run_display_list(ctx, list, dev, ctm, cliprect, fzcookie);
-        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, false);
-        fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
+        fz_run_page_transparency(ctx, &pageAnnots, dev, cliprect, true, false);
+        fz_run_user_page_annots(ctx, &pageAnnots, dev, ctm, cliprect, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
         fz_close_device(ctx, dev);
     }

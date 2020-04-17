@@ -1119,9 +1119,8 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
                 dm->CopyNavHistory(*prevCtrl->AsFixed());
             }
             // reload user annotations
-            dm->userAnnots = LoadFileModifications(args.fileName);
-            dm->userAnnotsModified = false;
-            dm->GetEngine()->UpdateUserAnnotations(dm->userAnnots);
+            auto annots = LoadFileModifications(args.fileName);
+            dm->GetEngine()->SetAnnotationsFromSmx(annots);
             // tell UI Automation about content change
             if (win->uia_provider) {
                 win->uia_provider->OnDocumentLoad(dm);
@@ -2404,14 +2403,15 @@ static void OnMenuSaveAnnotationsToSmx(WindowInfo* win) {
     if (!engine->supportsAnnotations) {
         return;
     }
-    if (!dm->userAnnotsModified) {
+    if (!dm->HasUnsavedAnnots()) {
         return;
     }
 
     const WCHAR* path = engine->FileName();
-    bool ok = SaveFileModifications(path, dm->userAnnots);
+    bool ok = SaveFileModifications(path, dm->unsavedAnnots);
     if (ok) {
-        dm->userAnnotsModified = false;
+        DeleteVecAnnotations(dm->unsavedAnnots);
+        dm->unsavedAnnots = nullptr;
     }
 }
 
@@ -2560,7 +2560,8 @@ static void OnMenuSaveAs(WindowInfo* win) {
             // rendering includes all page annotations
             ok = PdfCreator::RenderToFile(pathUtf8.Get(), engine);
         } else if (!saveAnnotsInDoc) {
-            SaveFileModifications(realDstFileName, win->AsFixed()->userAnnots);
+            // TODO: reload annotations and set as smx
+            SaveFileModifications(realDstFileName, dm->unsavedAnnots);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
@@ -2586,12 +2587,14 @@ static void OnMenuSaveAs(WindowInfo* win) {
             LocalFree(msgBuf);
         }
     }
-    if (ok && dm && dm->userAnnots && dm->userAnnotsModified && !convertToTXT && !convertToPDF) {
+    // TODO: reload annotations and set as smx
+    if (ok && dm && dm->HasUnsavedAnnots() && !convertToTXT && !convertToPDF) {
         if (!saveAnnotsInDoc || !engine || !engine->supportsAnnotationsForSaving) {
-            ok = SaveFileModifications(realDstFileName, dm->userAnnots);
+            ok = SaveFileModifications(realDstFileName, dm->unsavedAnnots);
         }
         if (ok && path::IsSame(srcFileName, realDstFileName)) {
-            dm->userAnnotsModified = false;
+            DeleteVecAnnotations(dm->unsavedAnnots);
+            dm->unsavedAnnots = nullptr;
         }
     }
     if (!ok) {
@@ -3806,27 +3809,28 @@ static void MakeAnnotationFromSelection(TabInfo* tab) {
     // existing list with a new one at the end
     // TODO: we need to support overlapping selections better (merge them into existing
     // annotation?
-    if (!dm->userAnnots) {
-        dm->userAnnots = new Vec<Annotation>();
+    if (!dm->unsavedAnnots) {
+        dm->unsavedAnnots = new Vec<Annotation*>();
     }
-    Vec<Annotation>* annots = dm->userAnnots;
+    Vec<Annotation*>* annots = dm->unsavedAnnots;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
         COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
         c = ColorSetAlpha(c, 0xcc);
         auto addedAnnotation = Annotation(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
         size_t oldLen = annots->size();
         for (size_t i = 0; i < oldLen && i < annots->size(); ++i) {
-            if (annots->at(i) == addedAnnotation) {
+            // TODO: add a function to compare Annotation
+            if (*annots->at(i) == addedAnnotation) {
                 annots->RemoveAtFast(i);
             }
         }
         if (oldLen == annots->size()) {
-            annots->Append(Annotation(AnnotationType::Highlight, sel.pageNo, sel.rect, c));
+            auto annot = new Annotation(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
+            annots->Append(annot);
         }
         gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
     }
-    dm->userAnnotsModified = true;
-    engine->UpdateUserAnnotations(dm->userAnnots);
+    engine->SetUnsavedAnnotations(dm->unsavedAnnots);
     ClearSearchResult(win); // causes invalidated tiles to be rerendered
 }
 

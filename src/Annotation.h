@@ -22,4 +22,4 @@ struct Annotation {
 };
 
 void DeleteVecAnnotations(Vec<Annotation*>* annots);
-Vec<Annotation> GetAnnotationsForPage(Vec<Annotation>& userAnnots, int pageNo);
+Vec<Annotation*> GetAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);

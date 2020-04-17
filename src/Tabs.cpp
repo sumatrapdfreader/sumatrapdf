@@ -736,7 +736,7 @@ void TabsOnCloseDoc(WindowInfo* win) {
     if (win->tabs.size() == 0)
         return;
 
-    /* if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
+    /* if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->HasUnsavedAnnots) {
         // TODO: warn about unsaved changes
     } */
 

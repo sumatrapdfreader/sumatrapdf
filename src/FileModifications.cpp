@@ -84,7 +84,7 @@ static AnnotationType PageAnnotTypeFromString(const char* s) {
 }
 
 // TODO: change to str::string_view
-static Vec<Annotation>* ParseFileModifications(const char* data) {
+static Vec<Annotation*>* ParseFileModifications(const char* data) {
     if (!data) {
         return nullptr;
     }
@@ -103,7 +103,7 @@ static Vec<Annotation>* ParseFileModifications(const char* data) {
         return nullptr;
     }
 
-    Vec<Annotation>* list = new Vec<Annotation>();
+    auto res = new Vec<Annotation*>();
     for (SquareTreeNode::DataItem& i : sqt.root->data) {
         AnnotationType type = PageAnnotTypeFromString(i.key);
 
@@ -136,13 +136,14 @@ static Vec<Annotation>* ParseFileModifications(const char* data) {
             opacity = 1.0f;
         }
         color = MkRgba((u8)r, (u8)g, (u8)b, (u8)(255 * opacity));
-        list->Append(Annotation(type, pageNo, rect.Convert<double>(), color));
+        auto annot = new Annotation(type, pageNo, rect.Convert<double>(), color);
+        res->Append(annot);
     }
 
-    return list;
+    return res;
 }
 
-Vec<Annotation>* LoadFileModifications(const WCHAR* filePath) {
+Vec<Annotation*>* LoadFileModifications(const WCHAR* filePath) {
     AutoFreeWstr modificationsPath = str::Join(filePath, SMX_FILE_EXT);
     AutoFree data = file::ReadFile(modificationsPath);
     if (data.empty()) {
@@ -151,7 +152,7 @@ Vec<Annotation>* LoadFileModifications(const WCHAR* filePath) {
     return ParseFileModifications(data.get());
 }
 
-bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation>* annots) {
+bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
     if (!annots) {
         return false;
     }
@@ -189,7 +190,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation>* annots) {
 
     int nAnnots = annots->isize();
     for (int i = 0; i < nAnnots; i++) {
-        Annotation& annot = annots->at(i);
+        const Annotation& annot = *annots->at(i);
         char* s = PageAnnotTypeToString(annot.type);
         if (str::IsEmpty(s)) {
             continue;

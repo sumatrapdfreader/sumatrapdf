@@ -564,9 +564,8 @@ int main(int argc, char** argv) {
         ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameNoFree(filePath));
         return 1;
     }
-    Vec<Annotation>* userAnnots = LoadFileModifications(engine->FileName());
-    engine->UpdateUserAnnotations(userAnnots);
-    delete userAnnots;
+    Vec<Annotation*>* annots = LoadFileModifications(engine->FileName());
+    engine->SetAnnotationsFromSmx(annots);
     if (!loadOnly) {
         DumpData(engine, fullDump);
     }

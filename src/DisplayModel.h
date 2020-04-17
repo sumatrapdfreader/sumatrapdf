@@ -164,10 +164,8 @@ class DisplayModel : public Controller {
 
     // controller-specific data (easier to save here than on WindowInfo)
     Kind engineType = nullptr;
-    // TODO: rename to unsavedUserAnnots and change userAnnotsModified
-    // to a function
-    Vec<Annotation>* userAnnots = nullptr;
-    bool userAnnotsModified = false;
+    Vec<Annotation*>* unsavedAnnots = nullptr;
+
     Synchronizer* pdfSync = nullptr;
 
     DocumentTextCache* textCache = nullptr;
@@ -227,6 +225,8 @@ class DisplayModel : public Controller {
 
     ScrollState GetScrollState();
     void SetScrollState(ScrollState state);
+
+    bool HasUnsavedAnnots();
 
     void CopyNavHistory(DisplayModel& orig);
 

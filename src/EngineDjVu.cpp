@@ -520,10 +520,12 @@ bool EngineDjVu::FinishLoading() {
 void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen) {
     using namespace Gdiplus;
 
-    if (!bmp || userAnnots.size() == 0) {
+    auto userAnnots = annotsFromSmx;
+    if (!bmp || !userAnnots || userAnnots->size() == 0) {
         return;
     }
 
+    int n = userAnnots->isize();
     HDC hdc = CreateCompatibleDC(nullptr);
     {
         ScopedSelectObject bmpScope(hdc, bmp->GetBitmap());
@@ -531,8 +533,8 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
         g.SetCompositingQuality(CompositingQualityHighQuality);
         g.SetPageUnit(UnitPixel);
 
-        for (size_t i = 0; i < userAnnots.size(); i++) {
-            Annotation& annot = userAnnots.at(i);
+        for (int i = 0; i < n; i++) {
+            const Annotation& annot = *userAnnots->at(i);
             if (annot.pageNo != pageNo) {
                 continue;
             }

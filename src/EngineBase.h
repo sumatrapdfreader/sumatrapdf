@@ -290,7 +290,10 @@ class EngineBase {
     bool hasPageLabels = false;
     int pageCount = -1;
 
-    Vec<Annotation> userAnnots;
+    // annotations from .smx file, owned by us
+    Vec<Annotation*>* annotsFromSmx = nullptr;
+    // owned by DisplayModel
+    Vec<Annotation*>* unsavedAnnots = nullptr;
 
     // TODO: migrate other engines to use this
     AutoFreeWstr fileNameBase;
@@ -349,7 +352,8 @@ class EngineBase {
 
     // informs the engine about annotations the user made so that they can be rendered, etc.
     // (this call supercedes any prior call to UpdateUserAnnotations)
-    void UpdateUserAnnotations(Vec<Annotation>* annots);
+    void SetAnnotationsFromSmx(Vec<Annotation*>* annots);
+    void SetUnsavedAnnotations(Vec<Annotation*>* annots);
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

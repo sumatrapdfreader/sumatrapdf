@@ -723,7 +723,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (!supportsAnnotations) {
         win::menu::Remove(popup, IDM_SAVE_ANNOTATIONS_SMX);
     } else {
-        win::menu::SetEnabled(popup, IDM_SAVE_ANNOTATIONS_SMX, dm->userAnnotsModified);
+        win::menu::SetEnabled(popup, IDM_SAVE_ANNOTATIONS_SMX, dm->HasUnsavedAnnots());
     }
 
     int pageNo = dm->GetPageNoByPoint({x, y});
@@ -887,7 +887,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     if (!supportsAnnotations) {
         win::menu::Remove(menu, IDM_SAVE_ANNOTATIONS_SMX);
     } else {
-        win::menu::SetEnabled(menu, IDM_SAVE_ANNOTATIONS_SMX, dm && dm->userAnnotsModified);
+        win::menu::SetEnabled(menu, IDM_SAVE_ANNOTATIONS_SMX, dm && dm->HasUnsavedAnnots());
     }
 }
 

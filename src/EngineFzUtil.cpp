@@ -1171,10 +1171,17 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     free(coords);
 }
 
-void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation>& pageAnnots, fz_device* dev, fz_matrix ctm,
+void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation*>* annots, fz_device* dev, fz_matrix ctm,
                              const fz_rect cliprect, fz_cookie* cookie) {
-    for (size_t i = 0; i < pageAnnots.size() && (!cookie || !cookie->abort); i++) {
-        Annotation& annot = pageAnnots.at(i);
+    if (!annots) {
+        return;
+    }
+    int n = annots->isize();
+    for (int i = 0; i < n; i++) {
+        if (cookie && cookie->abort) {
+            return;
+        }
+        const Annotation& annot = *annots->at(i);
         // skip annotation if it isn't visible
         fz_rect rect = RectD_to_fz_rect(annot.rect);
         rect = fz_transform_rect(rect, ctm);
@@ -1235,14 +1242,18 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation>& pageAnnots, fz_de
     }
 }
 
-void fz_run_page_transparency(fz_context* ctx, Vec<Annotation>& pageAnnots, fz_device* dev, const fz_rect cliprect,
+void fz_run_page_transparency(fz_context* ctx, Vec<Annotation*>* annots, fz_device* dev, const fz_rect cliprect,
                               bool endGroup, bool hasTransparency) {
-    if (hasTransparency || pageAnnots.size() == 0) {
+    if (!annots) {
+        return;
+    }
+    int n = annots->isize();
+    if (hasTransparency || n == 0) {
         return;
     }
     bool needsTransparency = false;
-    for (size_t i = 0; i < pageAnnots.size(); i++) {
-        if (AnnotationType::Highlight == pageAnnots.at(i).type) {
+    for (int i = 0; i < n; i++) {
+        if (AnnotationType::Highlight == annots->at(i)->type) {
             needsTransparency = true;
             break;
         }

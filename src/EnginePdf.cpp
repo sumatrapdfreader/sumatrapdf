@@ -511,7 +511,9 @@ EngineBase* EnginePdf::Clone() {
         clone->decryptionKey = nullptr;
     }
 
-    clone->UpdateUserAnnotations(&userAnnots);
+    // TODO: set a copy of annotsFromSmx
+    // clone->SetAnnotsFromSmx(cloneAnnots(annotsFromSmx));
+    clone->SetUnsavedAnnotations(unsavedAnnots);
 
     return clone;
 }
@@ -1196,7 +1198,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     fz_var(bitmap);
     fz_var(list);
 
-    Vec<Annotation> pageAnnots = GetAnnotationsForPage(userAnnots, pageNo);
+    Vec<Annotation*> annots = GetAnnotationsForPage(annotsFromSmx, pageNo);
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, page);
@@ -1208,10 +1210,10 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
         // or "Print". "Export" is not used
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         // TODO: use fz_infinite_rect instead of cliprect?
-        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, transparency);
+        fz_run_page_transparency(ctx, &annots, dev, cliprect, false, transparency);
         fz_run_display_list(ctx, list, dev, ctm, cliprect, fzcookie);
-        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, transparency);
-        fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
+        fz_run_page_transparency(ctx, &annots, dev, cliprect, true, transparency);
+        fz_run_user_page_annots(ctx, &annots, dev, ctm, cliprect, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
         fz_close_device(ctx, dev);
     }
@@ -1912,7 +1914,15 @@ static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* pa
 }
 
 bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
-    if (!userAnnots.size()) {
+    // TODO: should this be annotsFromSmx, unsvedAnnots, both?
+    int n = 0;
+    if (annotsFromSmx) {
+        n += annotsFromSmx->isize();
+    }
+    if (unsavedAnnots) {
+        n += unsavedAnnots->isize();
+    }
+    if (n == 0) {
         return true;
     }
 
@@ -1920,7 +1930,7 @@ bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
     ScopedCritSec scope2(ctxAccess);
 
     bool ok = true;
-    Vec<Annotation> pageAnnots;
+    Vec<Annotation*> pageAnnots;
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
     int nAdded = 0;
 
@@ -1929,13 +1939,14 @@ bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
             FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
             pdf_page* page = pdf_page_from_fz_page(ctx, pageInfo->page);
 
-            pageAnnots = GetAnnotationsForPage(userAnnots, pageNo);
+            // TODO: also get annotsFromSmx ?
+            pageAnnots = GetAnnotationsForPage(unsavedAnnots, pageNo);
             if (pageAnnots.size() == 0) {
                 continue;
             }
 
             for (auto&& annot : pageAnnots) {
-                add_user_annotation(ctx, doc, page, annot);
+                add_user_annotation(ctx, doc, page, *annot);
                 nAdded++;
             }
         }

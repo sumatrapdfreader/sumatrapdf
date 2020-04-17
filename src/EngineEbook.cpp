@@ -286,46 +286,67 @@ RectD EngineEbook::Transform(RectD rect, int pageNo, float zoom, int rotation, b
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-static void DrawAnnotations(Graphics& g, Vec<Annotation>& userAnnots, int pageNo) {
-    for (size_t i = 0; i < userAnnots.size(); i++) {
-        Annotation& annot = userAnnots.at(i);
-        if (annot.pageNo != pageNo)
+static void DrawAnnotationHighlight(Graphics& g, const Annotation& annot) {
+    SolidBrush tmpBrush(Unblend(annot.color, 119));
+    g.FillRectangle(&tmpBrush, annot.rect.ToGdipRectF());
+}
+
+static void DrawAnnotationUnderline(Graphics& g, const Annotation& annot) {
+    auto p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y);
+    auto p2 = PointF((float)annot.rect.BR().x, p1.Y);
+    {
+        Pen tmpPen(FromColor(annot.color));
+        g.DrawLine(&tmpPen, p1, p2);
+    }
+}
+
+static void DrawAnnotationStrikeOut(Graphics& g, const Annotation& annot) {
+    auto p1 = PointF((float)annot.rect.x, (float)annot.rect.y + (float)annot.rect.dy / 2);
+    auto p2 = PointF((float)annot.rect.BR().x, p1.Y);
+    {
+        Pen tmpPen(FromColor(annot.color));
+        g.DrawLine(&tmpPen, p1, p2);
+    }
+}
+
+static void DrawAnnotationSquiggly(Graphics& g, const Annotation& annot) {
+    Pen p(FromColor(annot.color), 0.5f);
+    REAL dash[2] = {2, 2};
+    p.SetDashPattern(dash, dimof(dash));
+    p.SetDashOffset(1);
+    auto p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y - 0.25f);
+    auto p2 = PointF((float)annot.rect.BR().x, p1.Y);
+    g.DrawLine(&p, p1, p2);
+    p.SetDashOffset(3);
+    p1.Y += 0.5f;
+    p2.Y += 0.5f;
+    g.DrawLine(&p, p1, p2);
+}
+
+static void DrawAnnotations(Graphics& g, Vec<Annotation*>* annots, int pageNo) {
+    if (!annots) {
+        return;
+    }
+    int n = annots->isize();
+    for (int i = 0; i < n; i++) {
+        const Annotation& annot = *annots->at(i);
+        if (annot.pageNo != pageNo) {
             continue;
+        }
         PointF p1, p2;
         switch (annot.type) {
-            case AnnotationType::Highlight: {
-                SolidBrush tmpBrush(Unblend(annot.color, 119));
-                g.FillRectangle(&tmpBrush, annot.rect.ToGdipRectF());
-            } break;
+            case AnnotationType::Highlight:
+                DrawAnnotationHighlight(g, annot);
+                break;
             case AnnotationType::Underline:
-                p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y);
-                p2 = PointF((float)annot.rect.BR().x, p1.Y);
-                {
-                    Pen tmpPen(FromColor(annot.color));
-                    g.DrawLine(&tmpPen, p1, p2);
-                }
+                DrawAnnotationUnderline(g, annot);
                 break;
             case AnnotationType::StrikeOut:
-                p1 = PointF((float)annot.rect.x, (float)annot.rect.y + (float)annot.rect.dy / 2);
-                p2 = PointF((float)annot.rect.BR().x, p1.Y);
-                {
-                    Pen tmpPen(FromColor(annot.color));
-                    g.DrawLine(&tmpPen, p1, p2);
-                }
+                DrawAnnotationStrikeOut(g, annot);
                 break;
-            case AnnotationType::Squiggly: {
-                Pen p(FromColor(annot.color), 0.5f);
-                REAL dash[2] = {2, 2};
-                p.SetDashPattern(dash, dimof(dash));
-                p.SetDashOffset(1);
-                p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y - 0.25f);
-                p2 = PointF((float)annot.rect.BR().x, p1.Y);
-                g.DrawLine(&p, p1, p2);
-                p.SetDashOffset(3);
-                p1.Y += 0.5f;
-                p2.Y += 0.5f;
-                g.DrawLine(&p, p1, p2);
-            } break;
+            case AnnotationType::Squiggly:
+                DrawAnnotationSquiggly(g, annot);
+                break;
         }
     }
 }
@@ -371,7 +392,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     mui::ITextRender* textDraw = mui::TextRenderGdiplus::Create(&g);
     DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black),
                  cookie ? &cookie->abort : nullptr);
-    DrawAnnotations(g, userAnnots, pageNo);
+    DrawAnnotations(g, annotsFromSmx, pageNo);
     delete textDraw;
     DeleteDC(hDC);
 
