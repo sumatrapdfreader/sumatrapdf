@@ -189,18 +189,9 @@ void WindowInfo::Focus() {
 }
 
 void WindowInfo::ToggleZoom() {
-    CrashIf(!ctrl);
-    if (!IsDocLoaded()) {
-        return;
+    if (currentTab) {
+        currentTab->ToggleZoom();
     }
-    float newZoom = ZOOM_FIT_PAGE;
-    float currZoom = ctrl->GetZoomVirtual();
-    if (ZOOM_FIT_PAGE == currZoom) {
-        newZoom = ZOOM_FIT_WIDTH;
-    } else if (ZOOM_FIT_WIDTH == currZoom) {
-        newZoom = ZOOM_FIT_CONTENT;
-    }
-    ctrl->SetZoomVirtual(newZoom, nullptr);
 }
 
 void WindowInfo::MoveDocBy(int dx, int dy) {

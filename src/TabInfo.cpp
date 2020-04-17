@@ -99,6 +99,22 @@ void TabInfo::MoveDocBy(int dx, int dy) {
     }
 }
 
+void TabInfo::ToggleZoom() {
+    CrashIf(!ctrl);
+    if (!IsDocLoaded()) {
+        return;
+    }
+    // TODO: maybe move to Controller?
+    float newZoom = ZOOM_FIT_PAGE;
+    float currZoom = ctrl->GetZoomVirtual();
+    if (ZOOM_FIT_PAGE == currZoom) {
+        newZoom = ZOOM_FIT_WIDTH;
+    } else if (ZOOM_FIT_WIDTH == currZoom) {
+        newZoom = ZOOM_FIT_CONTENT;
+    }
+    ctrl->SetZoomVirtual(newZoom, nullptr);
+}
+
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 #if 0
 LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {

@@ -3880,6 +3880,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     }
 
     auto* ctrl = win->ctrl;
+    DisplayModel* dm = win->AsFixed();
 
     switch (key) {
         case VK_SPACE:
@@ -3915,10 +3916,14 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             win->ToggleZoom();
             break;
         case '[':
-            win->AsFixed()->RotateBy(-90);
+            if (dm) {
+                dm->RotateBy(-90);
+            }
             break;
         case ']':
-            win->AsFixed()->RotateBy(90);
+            if (dm) {
+                dm->RotateBy(90);
+            }
             break;
         case 'f':
             if (win->isFullScreen == false) {
@@ -3936,14 +3941,15 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case '=':
         case 0xE0:
         case 0xE4:
-            ZoomToSelection(win, win->ctrl->GetNextZoomStep(ZOOM_MAX), false);
+            ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
             break;
         case '-':
-            ZoomToSelection(win, win->ctrl->GetNextZoomStep(ZOOM_MIN), false);
+            ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
             break;
         case '/':
-            if (!gIsDivideKeyDown)
+            if (!gIsDivideKeyDown) {
                 OnMenuFind(win);
+            }
             gIsDivideKeyDown = false;
             break;
         case 'c':
@@ -4568,8 +4574,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_FAV_DEL:
-            if (win->IsDocLoaded())
-                DelFavorite(win->ctrl->FilePath(), win->currPageNo);
+            if (win->IsDocLoaded()) {
+                DelFavorite(ctrl->FilePath(), win->currPageNo);
+            }
             break;
 
         case IDM_FAV_TOGGLE:
