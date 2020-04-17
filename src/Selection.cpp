@@ -27,11 +27,21 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 
+SelectionOnPage::SelectionOnPage(int pageNo, RectD* rect) {
+    this->pageNo = pageNo;
+    if (rect) {
+        this->rect = *rect;
+    } else {
+        this->rect = RectD();
+    }
+}
+
 RectI SelectionOnPage::GetRect(DisplayModel* dm) {
     // if the page is not visible, we return an empty rectangle
     PageInfo* pageInfo = dm->GetPageInfo(pageNo);
-    if (!pageInfo || pageInfo->visibleRatio <= 0.0)
+    if (!pageInfo || pageInfo->visibleRatio <= 0.0) {
         return RectI();
+    }
 
     return dm->CvtToScreen(pageNo, rect);
 }
@@ -79,15 +89,17 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
 }
 
 void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel) {
-    if (win->currentTab) {
-        delete win->currentTab->selectionOnPage;
-        win->currentTab->selectionOnPage = nullptr;
-    }
     win->showSelection = false;
     win->selectionMeasure = SizeD();
+    TabInfo* tab = win->currentTab;
+    if (!tab) {
+        return;
+    }
 
-    if (alsoTextSel && win->AsFixed()) {
-        win->AsFixed()->textSelection->Reset();
+    delete tab->selectionOnPage;
+    tab->selectionOnPage = nullptr;
+    if (alsoTextSel && tab->AsFixed()) {
+        tab->AsFixed()->textSelection->Reset();
     }
 }
 

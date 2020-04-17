@@ -329,7 +329,8 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 }
 
 static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
-    CrashIf(!win->AsFixed());
+    DisplayModel* dm = win->AsFixed();
+    CrashIf(!dm);
     auto ma = win->mouseAction;
     if (MouseAction::Idle == ma || MouseAction::DraggingRight == ma) {
         return;
@@ -342,17 +343,17 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     } else {
         OnSelectionStop(win, x, y, !didDragMouse);
         if (MouseAction::Selecting == ma && win->showSelection) {
-            win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
+            win->selectionMeasure = dm->CvtFromScreen(win->selectionRect).Size();
         }
     }
 
-    DisplayModel* dm = win->AsFixed();
     PointD ptPage = dm->CvtFromScreen(PointI(x, y));
     // TODO: win->linkHandler->GotoLink might spin the event loop
     PageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
     win->mouseAction = MouseAction::Idle;
 
+    TabInfo* tab = win->currentTab;
     if (didDragMouse) {
         /* pass */;
         /* return from white/black screens in presentation mode */
@@ -364,9 +365,9 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
         // highlight the clicked link (as a reminder of the last action once the user returns)
         if (dest && (kindDestinationLaunchURL == dest->Kind() || kindDestinationLaunchFile == dest->Kind())) {
             DeleteOldSelectionInfo(win, true);
-            win->currentTab->selectionOnPage =
+            tab->selectionOnPage =
                 SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
-            win->showSelection = win->currentTab->selectionOnPage != nullptr;
+            win->showSelection = tab->selectionOnPage != nullptr;
             win->RepaintAsync();
         }
         SetCursor(IDC_ARROW);
@@ -381,9 +382,9 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     } else if (PM_ENABLED == win->presentation) {
         /* in presentation mode, change pages on left/right-clicks */
         if ((key & MK_SHIFT)) {
-            win->ctrl->GoToPrevPage();
+            tab->ctrl->GoToPrevPage();
         } else {
-            win->ctrl->GoToNextPage();
+            tab->ctrl->GoToNextPage();
         }
     }
 
