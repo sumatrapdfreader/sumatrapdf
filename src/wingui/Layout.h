@@ -5,12 +5,10 @@
 
 const int Inf = std::numeric_limits<int>::max();
 
-typedef PointI Point;
-
 // can't call it Rectangle because conflicts with GDI+ Rectangle function
 struct Rect {
-    Point Min{};
-    Point Max{};
+    PointI Min{};
+    PointI Max{};
 
     int Width() const;
     int Height() const;

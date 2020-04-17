@@ -136,7 +136,7 @@ struct WindowBase {
     const WCHAR* winClass = nullptr;
 
     HWND parent = nullptr;
-    Point initialPos = {-1, -1};
+    PointI initialPos = {-1, -1};
     SizeI initialSize = {0, 0};
     DWORD dwStyle = 0;
     DWORD dwExStyle = 0;

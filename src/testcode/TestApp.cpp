@@ -90,8 +90,8 @@ void TestApp(HINSTANCE hInstance) {
         SizeI windowSize{dx, dy};
         auto c = Tight(windowSize);
         auto size = l->Layout(c);
-        Point min{0, 0};
-        Point max{size.dx, size.dy};
+        PointI min{0, 0};
+        PointI max{size.dx, size.dy};
         Rect bounds{min, max};
         l->SetBounds(bounds);
         InvalidateRect(hwnd, nullptr, false);

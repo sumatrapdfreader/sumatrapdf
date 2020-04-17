@@ -915,7 +915,7 @@ void PositionCloseTo(WindowBase* w, HWND hwnd) {
     if (offY < 0) {
         return;
     }
-    Point& ip = w->initialPos;
+    PointI& ip = w->initialPos;
     ip.x = (int)r.left + (int)offX;
     ip.y = (int)r.top + (int)offY;
 }

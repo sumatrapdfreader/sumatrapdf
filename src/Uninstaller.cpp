@@ -750,8 +750,8 @@ static Rect layoutAndSize(ILayout* layout, int dx, int dy) {
     SizeI windowSize{dx, dy};
     auto c = Tight(windowSize);
     auto size = layout->Layout(c);
-    Point min{0, 0};
-    Point max{size.dx, size.dy};
+    PointI min{0, 0};
+    PointI max{size.dx, size.dy};
     Rect bounds{min, max};
     layout->SetBounds(bounds);
     return bounds;
