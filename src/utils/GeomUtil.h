@@ -85,6 +85,22 @@ struct RectT {
     RectT(PointT<T> pt, SizeT<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
     }
 
+    T Width() const {
+        return dx;
+    }
+
+    T Height() const {
+        return dy;
+    }
+
+    T Dx() const {
+        return dx;
+    }
+
+    T Dy() const {
+        return dy;
+    }
+
     static RectT FromXY(T xs, T ys, T xe, T ye) {
         if (xs > xe)
             std::swap(xs, xe);
