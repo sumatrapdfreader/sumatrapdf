@@ -101,7 +101,7 @@ void EditTitleWindow::SizeHandler(SizeEvent* ev) {
     auto c = Tight(windowSize);
     auto size = mainLayout->Layout(c);
     Point min{0, 0};
-    Point max{size.Width, size.Height};
+    Point max{size.dx, size.dy};
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
 }

@@ -794,7 +794,7 @@ TreeItemState TreeCtrl::GetItemState(TreeItem* ti) {
 }
 
 SIZE TreeCtrl::GetIdealSize() {
-    return SIZE{idealSize.Width, idealSize.Height};
+    return SIZE{idealSize.dx, idealSize.dy};
 }
 
 WindowBaseLayout* NewTreeLayout(TreeCtrl* w) {

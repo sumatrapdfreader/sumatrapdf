@@ -873,7 +873,7 @@ void TocEditorWindow::SizeHandler(SizeEvent* ev) {
     auto c = Tight(windowSize);
     auto size = mainLayout->Layout(c);
     Point min{0, 0};
-    Point max{size.Width, size.Height};
+    Point max{size.dx, size.dy};
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
 }
@@ -971,7 +971,7 @@ void StartTocEditor(TocEditorArgs* args) {
     int dy = DpiScale(hwndOwner, 800);
     w->initialSize = {dx, dy};
     PositionCloseTo(w, args->hwndRelatedTo);
-    SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
+    SIZE winSize = {w->initialSize.dx, w->initialSize.dy};
     LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
     w->initialSize = {winSize.cx, winSize.cy};
     bool ok = w->Create();

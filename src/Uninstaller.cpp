@@ -751,7 +751,7 @@ static Rect layoutAndSize(ILayout* layout, int dx, int dy) {
     auto c = Tight(windowSize);
     auto size = layout->Layout(c);
     Point min{0, 0};
-    Point max{size.Width, size.Height};
+    Point max{size.dx, size.dy};
     Rect bounds{min, max};
     layout->SetBounds(bounds);
     return bounds;
@@ -836,7 +836,7 @@ static bool CreateRaMicroUninstallerWindow() {
     int dx = splashDx + DpiScale(32 + 44); // image + padding
     int dy = splashDy + DpiScale(104);     // image + buttons
     w->initialSize = {dx, dy};
-    SIZE winSize = {w->initialSize.Width, w->initialSize.Height};
+    SIZE winSize = {w->initialSize.dx, w->initialSize.dy};
     w->initialSize = {winSize.cx, winSize.cy};
     bool ok = w->Create();
     CrashIf(!ok);

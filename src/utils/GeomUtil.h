@@ -55,6 +55,11 @@ class SizeT {
         return dx == 0 || dy == 0;
     }
 
+    // TODO: temporary
+    bool empty() const {
+        return dx == 0 || dy == 0;
+    }
+
     bool operator==(const SizeT<T>& other) const {
         return this->dx == other.dx && this->dy == other.dy;
     }

@@ -577,12 +577,12 @@ bool WindowBase::Create() {
     }
 
     int dx = CW_USEDEFAULT;
-    if (initialSize.Width > 0) {
-        dx = initialSize.Width;
+    if (initialSize.dx > 0) {
+        dx = initialSize.dx;
     }
     int dy = CW_USEDEFAULT;
-    if (initialSize.Height > 0) {
-        dy = initialSize.Height;
+    if (initialSize.dy > 0) {
+        dy = initialSize.dy;
     }
     HMENU m = (HMENU)(UINT_PTR)ctrlID;
     hwnd = CreateWindowExW(dwExStyle, winClass, L"", dwStyle, x, y, dx, dy, parent, m, h, nullptr);
@@ -810,12 +810,12 @@ bool Window::Create() {
     }
 
     int dx = CW_USEDEFAULT;
-    if (initialSize.Width > 0) {
-        dx = initialSize.Width;
+    if (initialSize.dx > 0) {
+        dx = initialSize.dx;
     }
     int dy = CW_USEDEFAULT;
-    if (initialSize.Height > 0) {
-        dy = initialSize.Height;
+    if (initialSize.dy > 0) {
+        dy = initialSize.dy;
     }
     AutoFreeWstr title = strconv::Utf8ToWstr(this->text.as_view());
     HINSTANCE hinst = GetInstance();
@@ -907,15 +907,15 @@ void PositionCloseTo(WindowBase* w, HWND hwnd) {
     // position w in the the center of hwnd
     // if window is bigger than hwnd, let the system position
     // we don't want to hide it
-    int offX = (RectDx(r) - is.Width) / 2;
+    int offX = (RectDx(r) - is.dx) / 2;
     if (offX < 0) {
         return;
     }
-    int offY = (RectDy(r) - is.Height) / 2;
+    int offY = (RectDy(r) - is.dy) / 2;
     if (offY < 0) {
         return;
     }
     Point& ip = w->initialPos;
-    ip.X = (Length)r.left + (Length)offX;
-    ip.Y = (Length)r.top + (Length)offY;
+    ip.X = (int)r.left + (int)offX;
+    ip.Y = (int)r.top + (int)offY;
 }

@@ -3,21 +3,18 @@
 
 // port of https://gitlab.com/stone.code/goey
 
-typedef int32_t Length;
+const int Inf = std::numeric_limits<int>::max();
 
-const Length Inf = std::numeric_limits<Length>::max();
-
-extern Length DIP;
-
+// TODO: replace with SizeI
 struct Size {
-    Length Width = 0;
-    Length Height = 0;
+    int dx = 0;
+    int dy = 0;
     bool empty() const;
 };
 
 struct Point {
-    Length X = 0;
-    Length Y = 0;
+    int X = 0;
+    int Y = 0;
     bool empty() const;
 };
 
@@ -26,18 +23,18 @@ struct Rect {
     Point Min{};
     Point Max{};
 
-    Length Width() const;
-    Length Height() const;
-    Length Dx() const;
-    Length Dy() const;
+    int Width() const;
+    int Height() const;
+    int Dx() const;
+    int Dy() const;
     bool empty() const;
 };
 
 RECT RectToRECT(const Rect);
 
-Length clamp(Length v, Length vmin, Length vmax);
-Length scale(Length v, i64 num, i64 den);
-Length guardInf(Length a, Length b);
+int clamp(int v, int vmin, int vmax);
+int scale(int v, i64 num, i64 den);
+int guardInf(int a, int b);
 
 struct Constraints {
     Size Min{};
@@ -45,13 +42,13 @@ struct Constraints {
 
     Size Constrain(const Size) const;
     Size ConstrainAndAttemptToPreserveAspectRatio(const Size) const;
-    Length ConstrainHeight(Length height) const;
-    Length ConstrainWidth(Length width) const;
+    int ConstrainHeight(int height) const;
+    int ConstrainWidth(int width) const;
     bool HasBoundedHeight() const;
     bool HasBoundedWidth() const;
     bool HasTightWidth() const;
     bool HasTightHeight() const;
-    Constraints Inset(Length width, Length height) const;
+    Constraints Inset(int width, int height) const;
     bool IsBounded() const;
     bool IsNormalized() const;
     bool IsTight() const;
@@ -61,16 +58,16 @@ struct Constraints {
     Constraints LoosenHeight() const;
     Constraints LoosenWidth() const;
     Constraints Tighten(Size) const;
-    Constraints TightenHeight(Length height) const;
-    Constraints TightenWidth(Length width) const;
+    Constraints TightenHeight(int height) const;
+    Constraints TightenWidth(int width) const;
 };
 
 Constraints ExpandInf();
-Constraints ExpandHeight(Length width);
-Constraints ExpandWidth(Length height);
+Constraints ExpandHeight(int width);
+Constraints ExpandWidth(int height);
 Constraints Loose(const Size size);
 Constraints Tight(const Size size);
-Constraints TightHeight(Length height);
+Constraints TightHeight(int height);
 
 typedef std::function<void()> NeedLayout;
 
@@ -96,8 +93,8 @@ struct ILayout {
     ILayout(Kind k);
     virtual ~ILayout(){};
     virtual Size Layout(const Constraints bc) = 0;
-    virtual Length MinIntrinsicHeight(Length width) = 0;
-    virtual Length MinIntrinsicWidth(Length height) = 0;
+    virtual int MinIntrinsicHeight(int width) = 0;
+    virtual int MinIntrinsicWidth(int height) = 0;
     virtual void SetBounds(Rect) = 0;
 
     void SetIsVisible(bool);
@@ -105,24 +102,24 @@ struct ILayout {
 
 bool IsLayoutOfKind(ILayout*, Kind);
 
-Length calculateVGap(ILayout* previous, ILayout* current);
-Length calculateHGap(ILayout* previous, ILayout* current);
+int calculateVGap(ILayout* previous, ILayout* current);
+int calculateHGap(ILayout* previous, ILayout* current);
 
 // padding.go
 
 struct Insets {
-    Length Top = 0;
-    Length Right = 0;
-    Length Bottom = 0;
-    Length Left = 0;
+    int Top = 0;
+    int Right = 0;
+    int Bottom = 0;
+    int Left = 0;
 };
 
 inline Insets DefaultInsets() {
-    const Length padding = 8;
+    const int padding = 8;
     return Insets{padding, padding, padding, padding};
 }
 
-inline Insets UniformInsets(Length l) {
+inline Insets UniformInsets(int l) {
     return Insets{l, l, l, l};
 }
 
@@ -133,8 +130,8 @@ struct Padding : public ILayout {
 
     ~Padding() override;
     Size Layout(const Constraints bc) override;
-    Length MinIntrinsicHeight(Length width) override;
-    Length MinIntrinsicWidth(Length height) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
 };
 
@@ -151,8 +148,8 @@ struct Expand : public ILayout {
     Expand(ILayout* c, int f);
     ~Expand() override;
     Size Layout(const Constraints bc) override;
-    Length MinIntrinsicHeight(Length width) override;
-    Length MinIntrinsicWidth(Length height) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
 };
 
@@ -204,16 +201,16 @@ struct VBox : public ILayout {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
-    Length totalHeight = 0;
+    int totalHeight = 0;
     int totalFlex = 0;
 
     ~VBox() override;
     Size Layout(const Constraints bc) override;
-    Length MinIntrinsicHeight(Length width) override;
-    Length MinIntrinsicWidth(Length height) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
 
-    void setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
+    void setBoundsForChild(size_t i, ILayout* v, int posX, int posY, int posX2, int posY2);
 
     boxElementInfo& addChild(ILayout* child);
     boxElementInfo& addChild(ILayout* child, int flex);
@@ -229,16 +226,16 @@ struct HBox : public ILayout {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
-    Length totalWidth = 0;
+    int totalWidth = 0;
     int totalFlex = 0;
 
     ~HBox() override;
     Size Layout(const Constraints bc) override;
-    Length MinIntrinsicHeight(Length width) override;
-    Length MinIntrinsicWidth(Length height) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
 
-    void setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
+    void setBoundsForChild(size_t i, ILayout* v, int posX, int posY, int posX2, int posY2);
     boxElementInfo& addChild(ILayout* child);
     boxElementInfo& addChild(ILayout* child, int flex);
     size_t childrenCount();
@@ -264,8 +261,8 @@ struct Align : public ILayout {
     Align(ILayout*);
     ~Align() override;
     Size Layout(const Constraints bc) override;
-    Length MinIntrinsicHeight(Length width) override;
-    Length MinIntrinsicWidth(Length height) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
 };
 
