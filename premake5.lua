@@ -52,16 +52,8 @@ include("premake5.files.lua")
 
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleaseAnalyze", }
-  platforms { "x32", "x32_xp", "x32_asan", "x64", "x64_ramicro" }
+  platforms { "x32", "x32_asan", "x64", "x64_ramicro" }
   startproject "SumatraPDF"
-
-  filter "platforms:x32_xp"
-    architecture "x86"
-    toolset "v141_xp"
-    disablewarnings { "4091", "4819" }
-    buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
-    defines { "BUILD_XP" }
-  filter {}
 
   filter "platforms:x32"
      architecture "x86"
@@ -107,14 +99,6 @@ workspace "SumatraPDF"
     targetdir "out/rel32_prefast"
   filter {"platforms:x32", "configurations:Debug"}
     targetdir "out/dbg32"
-  filter {}
-
-  filter {"platforms:x32_xp", "configurations:Release"}
-    targetdir "out/rel32_xp"
-  filter {"platforms:x32_xp", "configurations:ReleaseAnalyze"}
-    targetdir "out/rel32_prefast_xp"
-  filter {"platforms:x32_xp", "configurations:Debug"}
-    targetdir "out/dbg32_xp"
   filter {}
 
   filter {"platforms:x32_asan", "configurations:Release"}
@@ -285,7 +269,7 @@ workspace "SumatraPDF"
     -- -I .\ext\libjpeg-turbo\win\ -f win32
     -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
     -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
-    filter {'files:**.asm', 'platforms:x32 or x32_xp or x32_asan'}
+    filter {'files:**.asm', 'platforms:x32 or x32_asan'}
        buildmessage '%{file.relpath}'
        buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
        buildcommands {
@@ -404,7 +388,7 @@ workspace "SumatraPDF"
     }
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm
-    filter {'files:**.asm', 'platforms:x32 or x32_xp or x32_asan'}
+    filter {'files:**.asm', 'platforms:x32 or x32_asan'}
        buildmessage 'Compiling %{file.relpath}'
        buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
        buildcommands {

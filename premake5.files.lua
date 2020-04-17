@@ -264,7 +264,7 @@ function libjpeg_turbo_files()
   --to build non-assembly version, use this:
   --files {"ext/libjpeg-turbo/jsimd_none.c"}
 
-  filter {'platforms:x32 or x32_xp or x32_asan'}
+  filter {'platforms:x32 or x32_asan'}
     files_in_dir("ext/libjpeg-turbo/simd", {
       "jsimdcpu.asm", "jccolmmx.asm", "jcgrammx.asm", "jdcolmmx.asm",
     	"jcsammmx.asm", "jdsammmx.asm", "jdmermmx.asm", "jcqntmmx.asm",
@@ -588,7 +588,7 @@ function mupdf_files()
     }
   filter {}
 
-  filter {"platforms:x32 or x32_xp or x32_asan"}
+  filter {"platforms:x32 or x32_asan"}
     files {
       "mupdf/fonts_32.asm",
     }

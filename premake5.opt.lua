@@ -150,7 +150,7 @@
     -- -I .\ext\libjpeg-turbo\win\ -f win32
     -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
     -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
-    filter {'files:**.asm', 'platforms:x32 or x32_xp or x32_asan'}
+    filter {'files:**.asm', 'platforms:x32 or x32_asan'}
         buildmessage '%{file.relpath}'
         buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
         buildcommands {
@@ -214,7 +214,7 @@
         }
         -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
         -- .\mupdf\font_base14.asm
-        filter {'files:**.asm', 'platforms:x32 or x32_xp or x32_asan'}
+        filter {'files:**.asm', 'platforms:x32 or x32_asan'}
         buildmessage 'Compiling %{file.relpath}'
         buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
         buildcommands {
