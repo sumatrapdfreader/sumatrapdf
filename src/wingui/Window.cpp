@@ -568,12 +568,12 @@ static void DispatchWM_CONTEXTMENU(void* user, WndEvent* ev) {
 bool WindowBase::Create() {
     auto h = GetModuleHandle(nullptr);
     int x = CW_USEDEFAULT;
-    if (initialPos.X != -1) {
-        x = initialPos.X;
+    if (initialPos.x != -1) {
+        x = initialPos.x;
     }
     int y = CW_USEDEFAULT;
-    if (initialPos.Y != -1) {
-        y = initialPos.Y;
+    if (initialPos.y != -1) {
+        y = initialPos.y;
     }
 
     int dx = CW_USEDEFAULT;
@@ -801,12 +801,12 @@ bool Window::Create() {
     RegisterWindowClass(this);
 
     int x = CW_USEDEFAULT;
-    if (initialPos.X != -1) {
-        x = initialPos.X;
+    if (initialPos.x != -1) {
+        x = initialPos.x;
     }
     int y = CW_USEDEFAULT;
-    if (initialPos.Y != -1) {
-        y = initialPos.Y;
+    if (initialPos.y != -1) {
+        y = initialPos.y;
     }
 
     int dx = CW_USEDEFAULT;
@@ -916,6 +916,6 @@ void PositionCloseTo(WindowBase* w, HWND hwnd) {
         return;
     }
     Point& ip = w->initialPos;
-    ip.X = (int)r.left + (int)offX;
-    ip.Y = (int)r.top + (int)offY;
+    ip.x = (int)r.left + (int)offX;
+    ip.y = (int)r.top + (int)offY;
 }

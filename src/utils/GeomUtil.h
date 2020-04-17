@@ -7,7 +7,8 @@ namespace geomutil {
 
 template <typename T>
 struct PointT {
-    T x, y;
+    T x = 0;
+    T y = 0;
 
     PointT() : x(0), y(0) {
     }
@@ -23,6 +24,11 @@ struct PointT {
         return PointT<int>((int)floor(x + 0.5), (int)floor(y + 0.5));
     }
 
+    // TODO: rename to IsEmpty()
+    bool empty() const {
+        return x == 0 && y == 0;
+    }
+
     bool operator==(const PointT<T>& other) const {
         return this->x == other.x && this->y == other.y;
     }
@@ -33,7 +39,8 @@ struct PointT {
 
 template <typename T>
 struct SizeT {
-    T dx, dy;
+    T dx = 0;
+    T dy = 0;
 
     SizeT() : dx(0), dy(0) {
     }

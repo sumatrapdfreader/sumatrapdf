@@ -6,8 +6,8 @@
 const int Inf = std::numeric_limits<int>::max();
 
 struct Point {
-    int X = 0;
-    int Y = 0;
+    int x = 0;
+    int y = 0;
     bool empty() const;
 };
 
