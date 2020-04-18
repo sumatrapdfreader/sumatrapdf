@@ -634,7 +634,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
             // TODO: when is wp != nullptr?
             hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
 
-            DoubleBuffer buffer(hwnd, RectI::FromRECT(rc));
+            DoubleBuffer buffer(hwnd, Rect::FromRECT(rc));
             tab->Paint(buffer.GetDC(), rc);
             buffer.Flush(hdc);
 

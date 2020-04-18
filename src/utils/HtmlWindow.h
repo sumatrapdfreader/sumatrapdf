@@ -85,7 +85,7 @@ class HtmlWindow {
     void CopySelection();
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
-    HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
+    HBITMAP TakeScreenshot(Rect area, SizeI finalSize);
 
     bool canGoBack;
     bool canGoForward;

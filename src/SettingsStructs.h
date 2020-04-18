@@ -199,7 +199,7 @@ struct FileState {
     // is minimized
     int windowState;
     // default position (can be on any monitor)
-    RectI windowPos;
+    Rect windowPos;
     // if true, we show table of contents (Bookmarks) sidebar if it's
     // present in the document
     bool showToc;
@@ -256,7 +256,7 @@ struct SessionData {
     // same as FileState -> WindowState
     int windowState;
     // default position (can be on any monitor)
-    RectI windowPos;
+    Rect windowPos;
     // width of favorites/bookmarks sidebar (if shown)
     int sidebarDx;
 };
@@ -357,7 +357,7 @@ struct GlobalPrefs {
     // default state of new windows (same as the last closed)
     int windowState;
     // default position (can be on any monitor)
-    RectI windowPos;
+    Rect windowPos;
     // if true, we show table of contents (Bookmarks) sidebar if it's
     // present in the document
     bool showToc;
@@ -488,12 +488,12 @@ static const StructInfo gAnnotationDefaultsInfo = {sizeof(AnnotationDefaults), 2
                                                    "HighlightColor\0SaveIntoDocument"};
 
 static const FieldInfo gRectIFields[] = {
-    {offsetof(RectI, x), Type_Int, 0},
-    {offsetof(RectI, y), Type_Int, 0},
-    {offsetof(RectI, dx), Type_Int, 0},
-    {offsetof(RectI, dy), Type_Int, 0},
+    {offsetof(Rect, x), Type_Int, 0},
+    {offsetof(Rect, y), Type_Int, 0},
+    {offsetof(Rect, dx), Type_Int, 0},
+    {offsetof(Rect, dy), Type_Int, 0},
 };
-static const StructInfo gRectIInfo = {sizeof(RectI), 4, gRectIFields, "X\0Y\0Dx\0Dy"};
+static const StructInfo gRectIInfo = {sizeof(Rect), 4, gRectIFields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFavoriteFields[] = {
     {offsetof(Favorite, name), Type_String, 0},
@@ -509,12 +509,12 @@ static const FieldInfo gPointIFields[] = {
 static const StructInfo gPointIInfo = {sizeof(PointI), 2, gPointIFields, "X\0Y"};
 
 static const FieldInfo gRectI_1_Fields[] = {
-    {offsetof(RectI, x), Type_Int, 0},
-    {offsetof(RectI, y), Type_Int, 0},
-    {offsetof(RectI, dx), Type_Int, 0},
-    {offsetof(RectI, dy), Type_Int, 0},
+    {offsetof(Rect, x), Type_Int, 0},
+    {offsetof(Rect, y), Type_Int, 0},
+    {offsetof(Rect, dx), Type_Int, 0},
+    {offsetof(Rect, dy), Type_Int, 0},
 };
-static const StructInfo gRectI_1_Info = {sizeof(RectI), 4, gRectI_1_Fields, "X\0Y\0Dx\0Dy"};
+static const StructInfo gRectI_1_Info = {sizeof(Rect), 4, gRectI_1_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, filePath), Type_String, 0},
@@ -562,12 +562,12 @@ static const StructInfo gTabStateInfo = {sizeof(TabState), 8, gTabStateFields,
                                          "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState"};
 
 static const FieldInfo gRectI_2_Fields[] = {
-    {offsetof(RectI, x), Type_Int, 0},
-    {offsetof(RectI, y), Type_Int, 0},
-    {offsetof(RectI, dx), Type_Int, 0},
-    {offsetof(RectI, dy), Type_Int, 0},
+    {offsetof(Rect, x), Type_Int, 0},
+    {offsetof(Rect, y), Type_Int, 0},
+    {offsetof(Rect, dx), Type_Int, 0},
+    {offsetof(Rect, dy), Type_Int, 0},
 };
-static const StructInfo gRectI_2_Info = {sizeof(RectI), 4, gRectI_2_Fields, "X\0Y\0Dx\0Dy"};
+static const StructInfo gRectI_2_Info = {sizeof(Rect), 4, gRectI_2_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gSessionDataFields[] = {
     {offsetof(SessionData, tabStates), Type_Array, (intptr_t)&gTabStateInfo},

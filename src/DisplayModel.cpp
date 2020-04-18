@@ -512,7 +512,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
 
     bool needHScroll = false;
     bool needVScroll = false;
-    viewPort = RectI(viewPort.TL(), totalViewPortSize);
+    viewPort = Rect(viewPort.TL(), totalViewPortSize);
 
 RestartLayout:
     int currPosY = windowMargin.top;
@@ -538,7 +538,7 @@ RestartLayout:
             continue;
         }
         SizeD pageSize = PageSizeAfterRotation(pageNo);
-        RectI pos;
+        Rect pos;
         // don't add the full 0.5 for rounding to account for precision errors
         float zoom = GetZoomReal(pageNo);
         pos.dx = (int)(pageSize.dx * zoom + 0.499);
@@ -732,8 +732,8 @@ void DisplayModel::RecalcVisibleParts() {
             continue;
         }
 
-        RectI pageRect = pageInfo->pos;
-        RectI visiblePart = pageRect.Intersect(viewPort);
+        Rect pageRect = pageInfo->pos;
+        Rect visiblePart = pageRect.Intersect(viewPort);
 
         pageInfo->visibleRatio = 0.0;
         if (!visiblePart.IsEmpty()) {
@@ -786,7 +786,7 @@ int DisplayModel::GetPageNextToPoint(PointI pt) {
             return pageNo;
         }
 
-        RectI r = pageInfo->pageOnScreen;
+        Rect r = pageInfo->pageOnScreen;
         unsigned int dist = distSq(pt.x - r.x - r.dx / 2, pt.y - r.y - r.dy / 2);
         if (dist < maxDist) {
             closest = pageNo;
@@ -811,17 +811,17 @@ PointI DisplayModel::CvtToScreen(int pageNo, PointD pt) {
     }
     PointD p = engine->Transform(pt, pageNo, zoom, rotation);
     // don't add the full 0.5 for rounding to account for precision errors
-    RectI r = pageInfo->pageOnScreen;
+    Rect r = pageInfo->pageOnScreen;
     p.x += 0.499 + r.x;
     p.y += 0.499 + r.y;
 
     return p.ToInt();
 }
 
-RectI DisplayModel::CvtToScreen(int pageNo, RectD r) {
+Rect DisplayModel::CvtToScreen(int pageNo, RectD r) {
     PointI TL = CvtToScreen(pageNo, r.TL());
     PointI BR = CvtToScreen(pageNo, r.BR());
-    return RectI::FromXY(TL, BR);
+    return Rect::FromXY(TL, BR);
 }
 
 PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo) {
@@ -836,7 +836,7 @@ PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo) {
     }
 
     // don't add the full 0.5 for rounding to account for precision errors
-    RectI r = pageInfo->pageOnScreen;
+    Rect r = pageInfo->pageOnScreen;
     PointD p = PointD(pt.x - 0.499 - r.x, pt.y - 0.499 - r.y);
     float zoom = pageInfo->zoomReal;
     // TODO: must be a better way
@@ -846,7 +846,7 @@ PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo) {
     return engine->Transform(p, pageNo, zoom, rotation, true);
 }
 
-RectD DisplayModel::CvtFromScreen(RectI r, int pageNo) {
+RectD DisplayModel::CvtFromScreen(Rect r, int pageNo) {
     if (!ValidPageNo(pageNo)) {
         pageNo = GetPageNextToPoint(r.TL());
     }
@@ -864,7 +864,7 @@ PageElement* DisplayModel::GetElementAtPos(PointI pt) {
         return nullptr;
     }
     // only return visible elements (for cursor interaction)
-    if (!RectI(PointI(), viewPort.Size()).Contains(pt)) {
+    if (!Rect(PointI(), viewPort.Size()).Contains(pt)) {
         return nullptr;
     }
 
@@ -879,7 +879,7 @@ bool DisplayModel::IsOverText(PointI pt) {
         return false;
     }
     // only return visible elements (for cursor interaction)
-    if (!RectI(PointI(), viewPort.Size()).Contains(pt)) {
+    if (!Rect(PointI(), viewPort.Size()).Contains(pt)) {
         return false;
     }
     if (!textCache->HasTextForPage(pageNo)) {
@@ -1440,18 +1440,18 @@ void DisplayModel::RotateBy(int newRotation) {
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * into a newly allocated buffer (which the caller needs to free()). */
 WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectD region) {
-    RectI* coords;
+    Rect* coords;
     const WCHAR* pageText = textCache->GetTextForPage(pageNo, nullptr, &coords);
     if (str::IsEmpty(pageText)) {
         return nullptr;
     }
 
     str::WStr result;
-    RectI regionI = region.Round();
+    Rect regionI = region.Round();
     for (const WCHAR* src = pageText; *src; src++) {
         if (*src != '\n') {
-            RectI rect = coords[src - pageText];
-            RectI isect = regionI.Intersect(rect);
+            Rect rect = coords[src - pageText];
+            Rect isect = regionI.Intersect(rect);
             if (!isect.IsEmpty() && 1.0 * isect.dx * isect.dy / (rect.dx * rect.dy) >= 0.3) {
                 result.Append(*src);
             }
@@ -1468,14 +1468,14 @@ bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
         return false;
     }
 
-    RectI extremes;
+    Rect extremes;
     for (int i = 0; i < res->len; i++) {
-        RectI rc = CvtToScreen(res->pages[i], res->rects[i].Convert<double>());
+        Rect rc = CvtToScreen(res->pages[i], res->rects[i].Convert<double>());
         extremes = extremes.Union(rc);
     }
 
     // don't scroll if the whole result is already visible
-    if (RectI(PointI(), viewPort.Size()).Intersect(extremes) == extremes) {
+    if (Rect(PointI(), viewPort.Size()).Intersect(extremes) == extremes) {
         return false;
     }
 
@@ -1526,8 +1526,8 @@ ScrollState DisplayModel::GetScrollState() {
         return state;
     }
 
-    RectI screen(PointI(), viewPort.Size());
-    RectI pageVis = pageInfo->pageOnScreen.Intersect(screen);
+    Rect screen(PointI(), viewPort.Size());
+    Rect pageVis = pageInfo->pageOnScreen.Intersect(screen);
     state.page = GetPageNextToPoint(pageVis.TL());
     PointD ptD = CvtFromScreen(pageVis.TL(), state.page);
 

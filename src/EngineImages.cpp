@@ -100,7 +100,7 @@ class EngineImages : public EngineBase {
 
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override {
+    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override {
         UNUSED(pageNo);
         UNUSED(coordsOut);
         return nullptr;
@@ -188,7 +188,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     };
 
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
-    RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
+    Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     PointI screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
 
@@ -213,7 +213,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     m.Translate((float)-screenTL.x, (float)-screenTL.y, MatrixOrderAppend);
     g.SetTransform(&m);
 
-    RectI pageRcI = PageMediabox(pageNo).Round();
+    Rect pageRcI = PageMediabox(pageNo).Round();
     ImageAttributes imgAttrs;
     imgAttrs.SetWrapMode(WrapModeTileFlipXY);
     Status ok = g.DrawImage(page->bmp, pageRcI.ToGdipRect(), 0, 0, pageRcI.dx, pageRcI.dy, UnitPixel, &imgAttrs);

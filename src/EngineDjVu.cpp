@@ -99,7 +99,7 @@ static PageDestination* newDjVuDestination(const char* link) {
     return res;
 }
 
-static PageElement* newDjVuLink(int pageNo, RectI rect, const char* link, const char* comment) {
+static PageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const char* comment) {
     auto res = new PageElement();
     res->rect = rect.Convert<double>();
     res->pageNo = pageNo;
@@ -247,7 +247,7 @@ class EngineDjVu : public EngineBase {
 
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
+    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
     bool HasClipOptimizations(int pageNo) override;
 
     WCHAR* GetProperty(DocumentProperty prop) override;
@@ -280,8 +280,8 @@ class EngineDjVu : public EngineBase {
     Vec<ddjvu_fileinfo_t> fileInfos;
 
     RenderedBitmap* CreateRenderedBitmap(const char* bmpData, SizeI size, bool grayscale) const;
-    void DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen);
-    bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI>& coords);
+    void DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, Rect screen);
+    bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>& coords);
     char* ResolveNamedDest(const char* name);
     TocItem* BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter);
     bool Load(const WCHAR* fileName);
@@ -517,7 +517,7 @@ bool EngineDjVu::FinishLoading() {
     return true;
 }
 
-void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen) {
+void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, Rect screen) {
     using namespace Gdiplus;
 
     if (!bmp || !userAnnots || userAnnots->size() == 0) {
@@ -626,8 +626,8 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
     auto rotation = args.rotation;
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
-    RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
-    RectI full = Transform(PageMediabox(pageNo), pageNo, zoom, rotation).Round();
+    Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
+    Rect full = Transform(PageMediabox(pageNo), pageNo, zoom, rotation).Round();
     screen = full.Intersect(screen);
 
     ddjvu_page_t* page = ddjvu_page_create_by_pageno(doc, pageNo - 1);
@@ -710,7 +710,7 @@ RectD EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
 
     ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
     double zoom = std::min(std::min(250.0 / pageRc.dx, 250.0 / pageRc.dy), 1.0);
-    RectI full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
+    Rect full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
     ddjvu_rect_t prect = {full.x, full.y, full.dx, full.dy}, rrect = prect;
 
     AutoFree bmpData = AllocArray<char>(full.dx * full.dy + 1);
@@ -826,7 +826,7 @@ bool EngineDjVu::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     return CopyFile(fileName, path, FALSE);
 }
 
-static void AppendNewline(str::WStr& extracted, Vec<RectI>& coords, const WCHAR* lineSep) {
+static void AppendNewline(str::WStr& extracted, Vec<Rect>& coords, const WCHAR* lineSep) {
     if (extracted.size() > 0 && ' ' == extracted.Last()) {
         extracted.Pop();
         coords.Pop();
@@ -835,7 +835,7 @@ static void AppendNewline(str::WStr& extracted, Vec<RectI>& coords, const WCHAR*
     coords.AppendBlanks(str::Len(lineSep));
 }
 
-bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI>& coords) {
+bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>& coords) {
     WCHAR* lineSep = L"\n";
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type)) {
@@ -863,7 +863,7 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI
     }
     int y1 = miniexp_to_int(miniexp_car(item));
     item = miniexp_cdr(item);
-    RectI rect = RectI::FromXY(x0, y0, x1, y1);
+    Rect rect = Rect::FromXY(x0, y0, x1, y1);
 
     miniexp_t str = miniexp_car(item);
     if (miniexp_stringp(str) && !miniexp_cdr(item)) {
@@ -877,13 +877,13 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI
             size_t len = str::Len(value);
             // TODO: split the rectangle into individual parts per glyph
             for (size_t i = 0; i < len; i++) {
-                coords.Append(RectI(rect.x, rect.y, rect.dx, rect.dy));
+                coords.Append(Rect(rect.x, rect.y, rect.dx, rect.dy));
             }
             extracted.AppendAndFree(value);
         }
         if (miniexp_symbol("word") == type) {
             extracted.Append(' ');
-            coords.Append(RectI(rect.x + rect.dx, rect.y, 2, rect.dy));
+            coords.Append(Rect(rect.x + rect.dx, rect.y, 2, rect.dy));
         }
         item = miniexp_cdr(item);
     }
@@ -895,7 +895,7 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI
     return !item;
 }
 
-WCHAR* EngineDjVu::ExtractPageText(int pageNo, RectI** coordsOut) {
+WCHAR* EngineDjVu::ExtractPageText(int pageNo, Rect** coordsOut) {
     const WCHAR* lineSep = L"\n";
     ScopedCritSec scope(&gDjVuContext->lock);
 
@@ -908,7 +908,7 @@ WCHAR* EngineDjVu::ExtractPageText(int pageNo, RectI** coordsOut) {
     }
 
     str::WStr extracted;
-    Vec<RectI> coords;
+    Vec<Rect> coords;
     bool success = ExtractPageText(pagetext, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);
     if (!success) {
@@ -930,9 +930,9 @@ WCHAR* EngineDjVu::ExtractPageText(int pageNo, RectI** coordsOut) {
             dpiFactor = GetFileDPI() / info.dpi;
 
         // TODO: the coordinates aren't completely correct yet
-        RectI page = PageMediabox(pageNo).Round();
+        Rect page = PageMediabox(pageNo).Round();
         for (size_t i = 0; i < coords.size(); i++) {
-            if (coords.at(i) != RectI()) {
+            if (coords.at(i) != Rect()) {
                 if (dpiFactor != 1.0) {
                     geomutil::RectT<float> pageF = coords.at(i).Convert<float>();
                     pageF.x *= dpiFactor;
@@ -966,7 +966,7 @@ Vec<PageElement*>* EngineDjVu::GetElements(int pageNo) {
     ScopedCritSec scope(&gDjVuContext->lock);
 
     Vec<PageElement*>* els = new Vec<PageElement*>();
-    RectI page = PageMediabox(pageNo).Round();
+    Rect page = PageMediabox(pageNo).Round();
 
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
@@ -1031,7 +1031,7 @@ Vec<PageElement*>* EngineDjVu::GetElements(int pageNo) {
             y = (int)(y * dpiFactor);
             h = (int)(h * dpiFactor);
         }
-        RectI rect(x, page.dy - y - h, w, h);
+        Rect rect(x, page.dy - y - h, w, h);
 
         AutoFree link = ResolveNamedDest(urlUtf8);
         const char* tmp = link.get();

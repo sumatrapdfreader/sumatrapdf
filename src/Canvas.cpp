@@ -427,7 +427,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
         OnMouseLeftButtonDown(win, x, y, key);
     } else if (pageEl && pageEl->Is(kindPageElementImage)) {
         // select an image that could be copied to the clipboard
-        RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+        Rect rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
 
         DeleteOldSelectionInfo(win, true);
         win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
@@ -519,13 +519,13 @@ static void OnMouseRightButtonDblClick(WindowInfo* win, int x, int y, WPARAM key
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE 1
 #define SHADOW_OFFSET 4
-static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation) {
+static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool presentation) {
     // Frame info
-    RectI frame = bounds;
+    Rect frame = bounds;
     frame.Inflate(BORDER_SIZE, BORDER_SIZE);
 
     // Shadow info
-    RectI shadow = frame;
+    Rect shadow = frame;
     shadow.Offset(SHADOW_OFFSET, SHADOW_OFFSET);
     if (frame.x < 0) {
         // the left of the page isn't visible, so start the shadow at the left
@@ -554,7 +554,7 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
 }
 #else
-static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation) {
+static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool presentation) {
     UNUSED(pageRect);
     UNUSED(presentation);
     AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
@@ -572,7 +572,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
         return;
     }
 
-    RectI viewPortRect(PointI(), dm.GetViewPort().Size());
+    Rect viewPortRect(PointI(), dm.GetViewPort().Size());
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
@@ -591,8 +591,8 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
             if (els->at(i)->Is(kindPageElementImage)) {
                 continue;
             }
-            RectI rect = dm.CvtToScreen(pageNo, els->at(i)->GetRect());
-            RectI isect = viewPortRect.Intersect(rect);
+            Rect rect = dm.CvtToScreen(pageNo, els->at(i)->GetRect());
+            Rect isect = viewPortRect.Intersect(rect);
             if (!isect.IsEmpty()) {
                 PaintRect(hdc, isect);
             }
@@ -615,7 +615,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
             }
 
             auto cbbox = dm.GetEngine()->PageContentBox(pageNo);
-            RectI rect = dm.CvtToScreen(pageNo, cbbox);
+            Rect rect = dm.CvtToScreen(pageNo, cbbox);
             PaintRect(hdc, rect);
         }
 
@@ -714,7 +714,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
     }
 
     bool rendering = false;
-    RectI screen(PointI(), dm->GetViewPort().Size());
+    Rect screen(PointI(), dm->GetViewPort().Size());
 
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo* pageInfo = dm->GetPageInfo(pageNo);
@@ -726,10 +726,10 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
             continue;
         }
 
-        RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
+        Rect bounds = pageInfo->pageOnScreen.Intersect(screen);
         // don't paint the frame background for images
         if (!dm->GetEngine()->IsImageCollection()) {
-            RectI r = pageInfo->pageOnScreen;
+            Rect r = pageInfo->pageOnScreen;
             auto presMode = win->presentation;
             PaintPageFrameAndShadow(hdc, bounds, r, presMode);
         }
@@ -843,7 +843,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                     WCHAR* text = pageEl->GetValue();
                     int pageNo = pageEl->GetPageNo();
                     auto r = pageEl->GetRect();
-                    RectI rc = dm->CvtToScreen(pageNo, r);
+                    Rect rc = dm->CvtToScreen(pageNo, r);
                     win->ShowInfoTip(text, rc, true);
 
                     bool isLink = pageEl->Is(kindPageElementDest);

@@ -55,7 +55,7 @@ void TestRenderPage(const Flags& i) {
 }
 
 static void extractPageText(EngineBase* engine, int pageNo) {
-    RectI* coordsOut; // not using the result, only to trigger the code path
+    Rect* coordsOut; // not using the result, only to trigger the code path
     WCHAR* uni = engine->ExtractPageText(pageNo, &coordsOut);
     str::Replace(uni, L"\n", L"_");
     AutoFree utf = strconv::WstrToUtf8(uni);

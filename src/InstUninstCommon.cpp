@@ -824,7 +824,7 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     g.ResetTransform();
 }
 
-static void DrawFrame2(Graphics& g, RectI r) {
+static void DrawFrame2(Graphics& g, Rect r) {
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(UnitPixel);

@@ -534,7 +534,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
         bi.cx = (WORD)size2.dx;
         SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
     } else {
-        RectI rc = ClientRect(win->hwndPageTotal);
+        Rect rc = ClientRect(win->hwndPageTotal);
         rc = MapRectToWindow(rc, win->hwndPageTotal, win->hwndToolbar);
         RECT rTmp = rc.ToRECT();
         InvalidateRect(win->hwndToolbar, &rTmp, TRUE);

@@ -306,7 +306,7 @@ class EnginePdf : public EngineBase {
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
-    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
+    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
 
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
@@ -1379,7 +1379,7 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, int imageIdx) {
     return bmp;
 }
 
-WCHAR* EnginePdf::ExtractPageText(int pageNo, RectI** coordsOut) {
+WCHAR* EnginePdf::ExtractPageText(int pageNo, Rect** coordsOut) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
 
     ScopedCritSec scope(ctxAccess);

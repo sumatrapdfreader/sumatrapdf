@@ -408,7 +408,7 @@ WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
 // Find the first window that has been produced from <file>
 WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab) {
     for (WindowInfo* win : gWindows) {
-        Vec<RectI> rects;
+        Vec<Rect> rects;
         UINT page;
         auto dm = win->AsFixed();
         if (dm && dm->pdfSync && dm->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
@@ -1198,7 +1198,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     if (shouldPlace) {
         if (args.isNewWindow && state && !state->windowPos.IsEmpty()) {
             // Make sure it doesn't have a position like outside of the screen etc.
-            RectI rect = ShiftRectToWorkArea(state->windowPos);
+            Rect rect = ShiftRectToWorkArea(state->windowPos);
             // This shouldn't happen until !win.IsAboutWindow(), so that we don't
             // accidentally update gGlobalState with this window's dimensions
             MoveWindow(win->hwndFrame, rect);
@@ -1357,7 +1357,7 @@ static void UpdateToolbarSidebarText(WindowInfo* win) {
 }
 
 static WindowInfo* CreateWindowInfo() {
-    RectI windowPos = gGlobalPrefs->windowPos;
+    Rect windowPos = gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty()) {
         EnsureAreaVisibility(windowPos);
     } else {
@@ -1451,7 +1451,7 @@ WindowInfo* CreateAndShowWindowInfo(SessionData* data) {
 
     if (data) {
         windowState = data->windowState;
-        RectI rect = ShiftRectToWorkArea(data->windowPos);
+        Rect rect = ShiftRectToWorkArea(data->windowPos);
         MoveWindow(win->hwndFrame, rect);
         // TODO: also restore data->sidebarDx
     }
@@ -3143,19 +3143,19 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
         }
 
         if (tocVisible) {
-            RectI rToc(rc.TL(), toc);
+            Rect rToc(rc.TL(), toc);
             dh.MoveWindow(win->hwndTocBox, rToc);
             if (showFavorites) {
-                RectI rSplitV(rc.x, rc.y + toc.dy, toc.dx, SPLITTER_DY);
+                Rect rSplitV(rc.x, rc.y + toc.dy, toc.dx, SPLITTER_DY);
                 dh.MoveWindow(win->favSplitter->hwnd, rSplitV);
                 toc.dy += SPLITTER_DY;
             }
         }
         if (showFavorites) {
-            RectI rFav(rc.x, rc.y + toc.dy, toc.dx, rc.dy - toc.dy);
+            Rect rFav(rc.x, rc.y + toc.dy, toc.dx, rc.dy - toc.dy);
             dh.MoveWindow(win->hwndFavBox, rFav);
         }
-        RectI rSplitH(rc.x + toc.dx, rc.y, SPLITTER_DX, rc.dy);
+        Rect rSplitH(rc.x + toc.dx, rc.y, SPLITTER_DX, rc.dy);
         dh.MoveWindow(win->sidebarSplitter->hwnd, rSplitH);
 
         rc.x += toc.dx + SPLITTER_DX;
@@ -3186,7 +3186,7 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy) {
     RelayoutFrame(win);
 
     if (win->presentation || win->isFullScreen) {
-        RectI fullscreen = GetFullscreenRect(win->hwndFrame);
+        Rect fullscreen = GetFullscreenRect(win->hwndFrame);
         WindowRect rect(win->hwndFrame);
         // Windows XP sometimes seems to change the window size on it's own
         if (rect != fullscreen && rect != GetVirtualScreenRect()) {
@@ -3415,7 +3415,7 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
     ws |= WS_MAXIMIZE;
 
     win->nonFullScreenFrameRect = WindowRect(win->hwndFrame);
-    RectI rect = GetFullscreenRect(win->hwndFrame);
+    Rect rect = GetFullscreenRect(win->hwndFrame);
 
     SetMenu(win->hwndFrame, nullptr);
     ShowWindow(win->hwndReBar, SW_HIDE);

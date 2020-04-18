@@ -482,9 +482,9 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
 #define MIN_WIN_DX 50
 #define MIN_WIN_DY 50
 
-void EnsureAreaVisibility(RectI& r) {
+void EnsureAreaVisibility(Rect& r) {
     // adjust to the work-area of the current monitor (not necessarily the primary one)
-    RectI work = GetWorkAreaRect(r);
+    Rect work = GetWorkAreaRect(r);
 
     // make sure that the window is neither too small nor bigger than the monitor
     if (r.dx < MIN_WIN_DX || r.dx > work.dx)
@@ -495,17 +495,17 @@ void EnsureAreaVisibility(RectI& r) {
     // check whether the lower half of the window's title bar is
     // inside a visible working area
     int captionDy = GetSystemMetrics(SM_CYCAPTION);
-    RectI halfCaption(r.x, r.y + captionDy / 2, r.dx, captionDy / 2);
+    Rect halfCaption(r.x, r.y + captionDy / 2, r.dx, captionDy / 2);
     if (halfCaption.Intersect(work).IsEmpty())
-        r = RectI(work.TL(), r.Size());
+        r = Rect(work.TL(), r.Size());
 }
 
-RectI GetDefaultWindowPos() {
+Rect GetDefaultWindowPos() {
     RECT workArea;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-    RectI work = RectI::FromRECT(workArea);
+    Rect work = Rect::FromRECT(workArea);
 
-    RectI r = work;
+    Rect r = work;
     r.dx = std::min((int)((double)r.dy * DEF_PAGE_RATIO), work.dx);
     r.x = (work.dx - r.dx) / 2;
 

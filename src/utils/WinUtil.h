@@ -29,7 +29,7 @@ void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt);
 
 BOOL SafeCloseHandle(HANDLE* h);
 void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR* clsName, WNDPROC wndproc);
-void MoveWindow(HWND hwnd, RectI rect);
+void MoveWindow(HWND hwnd, Rect rect);
 void MoveWindow(HWND hwnd, RECT* r);
 
 bool IsOs64();
@@ -76,11 +76,11 @@ bool IsCtrlPressed();
 
 HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize);
 
-RectI ShiftRectToWorkArea(RectI rect, bool bFully = false);
-RectI GetWorkAreaRect(RectI rect);
+Rect ShiftRectToWorkArea(Rect rect, bool bFully = false);
+Rect GetWorkAreaRect(Rect rect);
 void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
-RectI GetFullscreenRect(HWND);
-RectI GetVirtualScreenRect();
+Rect GetFullscreenRect(HWND);
+Rect GetVirtualScreenRect();
 
 bool LaunchFile(const WCHAR* path, const WCHAR* params = nullptr, const WCHAR* verb = nullptr, bool hidden = false);
 bool LaunchBrowser(const WCHAR* url);
@@ -89,9 +89,9 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args);
 bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
 bool IsRunningElevated();
 
-void PaintRect(HDC, const RectI&);
-void PaintLine(HDC, const RectI&);
-void DrawCenteredText(HDC hdc, const RectI& r, const WCHAR* txt, bool isRTL = false);
+void PaintRect(HDC, const Rect&);
+void PaintLine(HDC, const Rect&);
+void DrawCenteredText(HDC hdc, const Rect& r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 SizeI TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
 SIZE TextSizeInHwnd2(HWND, const WCHAR*, HFONT);
@@ -113,7 +113,7 @@ void SetWindowExStyle(HWND hwnd, DWORD flags, bool enable);
 bool IsRtl(HWND hwnd);
 void SetRtl(HWND hwnd, bool isRtl);
 
-RectI ChildPosWithinParent(HWND);
+Rect ChildPosWithinParent(HWND);
 HFONT GetDefaultGuiFont();
 HFONT GetDefaultGuiFont(bool bold, bool italic);
 long GetDefaultGuiFontSize();
@@ -182,10 +182,10 @@ class DoubleBuffer {
     HDC hdcCanvas = nullptr;
     HDC hdcBuffer = nullptr;
     HBITMAP doubleBuffer = nullptr;
-    RectI rect{};
+    Rect rect{};
 
   public:
-    DoubleBuffer(HWND hwnd, RectI rect);
+    DoubleBuffer(HWND hwnd, Rect rect);
     ~DoubleBuffer();
 
     HDC GetDC() const;
@@ -201,7 +201,7 @@ class DeferWinPosHelper {
     void End();
     void SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, UINT uFlags);
     void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE);
-    void MoveWindow(HWND hWnd, RectI r);
+    void MoveWindow(HWND hWnd, Rect r);
 };
 
 struct BitmapPixels {
@@ -224,7 +224,7 @@ COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut);
 HBITMAP CreateMemoryBitmap(SizeI size, HANDLE* hDataMapping = nullptr);
-bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, RectI target);
+bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 double GetProcessRunningTime();
 
 void RunNonElevated(const WCHAR* exePath);

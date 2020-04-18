@@ -13,14 +13,14 @@ struct SelectionOnPage {
     RectD rect; // position of selection rectangle on page (in page coordinates)
 
     // position of selection rectangle in the view port
-    RectI GetRect(DisplayModel* dm);
+    Rect GetRect(DisplayModel* dm);
 
-    static Vec<SelectionOnPage>* FromRectangle(DisplayModel* dm, RectI rect);
+    static Vec<SelectionOnPage>* FromRectangle(DisplayModel* dm, Rect rect);
     static Vec<SelectionOnPage>* FromTextSelect(TextSel* textSel);
 };
 
 void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel = false);
-void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLORREF selectionColor, BYTE alpha = 0x5f,
+void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, BYTE alpha = 0x5f,
                                 int margin = 1);
 void PaintSelection(WindowInfo* win, HDC hdc);
 void UpdateTextSelection(WindowInfo* win, bool select = true);

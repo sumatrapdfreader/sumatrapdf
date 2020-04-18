@@ -13,7 +13,7 @@
 DocumentTextCache::DocumentTextCache(EngineBase* engine) : engine(engine) {
     nPages = engine->PageCount();
     pagesText = AllocArray<PageText>(nPages);
-    debugSize = nPages * (sizeof(RectI*) + sizeof(WCHAR*) + sizeof(int));
+    debugSize = nPages * (sizeof(Rect*) + sizeof(WCHAR*) + sizeof(int));
 
     InitializeCriticalSection(&access);
 }
@@ -38,7 +38,7 @@ bool DocumentTextCache::HasTextForPage(int pageNo) {
     return pageText->text != nullptr;
 }
 
-const WCHAR* DocumentTextCache::GetTextForPage(int pageNo, int* lenOut, RectI** coordsOut) {
+const WCHAR* DocumentTextCache::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     CrashIf(pageNo < 1 || pageNo > nPages);
 
     ScopedCritSec scope(&access);
@@ -52,7 +52,7 @@ const WCHAR* DocumentTextCache::GetTextForPage(int pageNo, int* lenOut, RectI** 
         } else {
             pageText->len = (int)str::Len(pageText->text);
         }
-        debugSize += (pageText->len + 1) * (sizeof(WCHAR) + sizeof(RectI));
+        debugSize += (pageText->len + 1) * (sizeof(WCHAR) + sizeof(Rect));
     }
 
     if (lenOut) {
@@ -89,7 +89,7 @@ void TextSelection::Reset() {
 // glyph following it, which will be the first glyph (not) to be selected)
 int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
     int textLen;
-    RectI* coords;
+    Rect* coords;
     textCache->GetTextForPage(pageNo, &textLen, &coords);
     PointD pt = PointD(x, y);
 
@@ -137,18 +137,18 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
 
 void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* lines) {
     int len;
-    RectI* coords;
+    Rect* coords;
     const WCHAR* text = textCache->GetTextForPage(pageNo, &len, &coords);
     CrashIf(len < glyph + length);
-    RectI mediabox = engine->PageMediabox(pageNo).Round();
-    RectI *c = &coords[glyph], *end = c + length;
+    Rect mediabox = engine->PageMediabox(pageNo).Round();
+    Rect *c = &coords[glyph], *end = c + length;
     while (c < end) {
         // skip line breaks
         for (; c < end && !c->x && !c->dx; c++) {
             // no-op
         }
 
-        RectI bbox, *c0 = c;
+        Rect bbox, *c0 = c;
         for (; c < end && (c->x || c->dx); c++) {
             bbox = bbox.Union(*c);
         }
@@ -177,7 +177,7 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* 
                 newCap = 64;
             }
             int* newPages = (int*)realloc(result.pages, sizeof(int) * newCap);
-            RectI* newRects = (RectI*)realloc(result.rects, sizeof(RectI) * newCap);
+            Rect* newRects = (Rect*)realloc(result.rects, sizeof(Rect) * newCap);
             CrashIf(!newPages);
             CrashIf(!newRects);
             result.pages = newPages;
@@ -193,7 +193,7 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* 
 
 bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     int textLen;
-    RectI* coords;
+    Rect* coords;
     textCache->GetTextForPage(pageNo, &textLen, &coords);
 
     int glyphIx = FindClosestGlyph(pageNo, x, y);

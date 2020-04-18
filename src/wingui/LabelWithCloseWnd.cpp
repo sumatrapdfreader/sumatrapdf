@@ -42,7 +42,7 @@ static void DrawCloseButton(HDC hdc, LabelWithCloseWnd* w) {
     }
 
     Gdiplus::Color c;
-    RectI& r = w->closeBtnPos;
+    Rect& r = w->closeBtnPos;
 
     // in onhover state, background is a red-ish circle
     bool onHover = IsMouseOverClose(w);
@@ -94,7 +94,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     // A better way would be to intelligently truncate text or shrink the font
     // size (within reason)
     x = w->closeBtnPos.x - DpiScale(w->hwnd, LABEL_BUTTON_SPACE_DX);
-    RectI ri(x, 0, cr.dx - x, cr.dy);
+    Rect ri(x, 0, cr.dx - x, cr.dy);
     RECT r = ri.ToRECT();
     FillRect(hdc, &r, br);
 
@@ -109,7 +109,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
 static void OnPaint(LabelWithCloseWnd* w) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(w->hwnd, &ps);
-    DoubleBuffer buffer(w->hwnd, RectI::FromRECT(ps.rcPaint));
+    DoubleBuffer buffer(w->hwnd, Rect::FromRECT(ps.rcPaint));
     PaintHDC(w, buffer.GetDC(), ps);
     buffer.Flush(hdc);
     EndPaint(w->hwnd, &ps);
@@ -123,7 +123,7 @@ static void CalcCloseButtonPos(LabelWithCloseWnd* w, int dx, int dy) {
     if (dy > btnDy) {
         y = (dy - btnDy) / 2;
     }
-    w->closeBtnPos = RectI(x, y, btnDx, btnDy);
+    w->closeBtnPos = Rect(x, y, btnDx, btnDy);
 }
 
 static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {

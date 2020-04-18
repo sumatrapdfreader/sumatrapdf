@@ -22,7 +22,7 @@ RenderedBitmap* RenderedBitmap::Clone() const {
 }
 
 // render the bitmap into the target rectangle (streching and skewing as requird)
-bool RenderedBitmap::StretchDIBits(HDC hdc, RectI target) const {
+bool RenderedBitmap::StretchDIBits(HDC hdc, Rect target) const {
     return BlitHBITMAP(hbmp, hdc, target);
 }
 

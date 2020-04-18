@@ -10,7 +10,7 @@ inline bool isWordChar(WCHAR c) {
 }
 
 struct PageText {
-    RectI* coords;
+    Rect* coords;
     WCHAR* text;
     int len;
 };
@@ -27,7 +27,7 @@ struct DocumentTextCache {
     ~DocumentTextCache();
 
     bool HasTextForPage(int pageNo);
-    const WCHAR* GetTextForPage(int pageNo, int* lenOut = nullptr, RectI** coordsOut = nullptr);
+    const WCHAR* GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
 };
 
 // TODO: replace with Vec<TextSel>
@@ -35,7 +35,7 @@ struct TextSel {
     int len = 0;
     int cap = 0;
     int* pages = nullptr;
-    RectI* rects = nullptr;
+    Rect* rects = nullptr;
 };
 
 struct TextSelection {

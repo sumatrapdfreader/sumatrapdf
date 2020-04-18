@@ -67,7 +67,7 @@ const TextSel* BuildTextSelList(RegressSearchInfo& info) {
     TextSel* result = new TextSel[info.count + 1];
     result[info.count].len = 0;
     result[info.count].pages = (int*)nullptr;
-    result[info.count].rects = (RectI*)nullptr;
+    result[info.count].rects = (Rect*)nullptr;
     auto offs = 0;
     for (auto i = 0; i < info.count; ++i) {
         result[i].len = info.rectCounts[i];

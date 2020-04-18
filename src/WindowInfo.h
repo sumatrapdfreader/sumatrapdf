@@ -67,12 +67,12 @@ struct TouchState {
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
-    RectI rect{};
+    Rect rect{};
     const WCHAR* target = nullptr;
     const WCHAR* infotip = nullptr;
 
     StaticLinkInfo() = default;
-    explicit StaticLinkInfo(RectI rect, const WCHAR* target, const WCHAR* infotip = nullptr)
+    explicit StaticLinkInfo(Rect rect, const WCHAR* target, const WCHAR* infotip = nullptr)
         : rect(rect), target(target), infotip(infotip) {
     }
 };
@@ -176,7 +176,7 @@ class WindowInfo {
     // true while selecting and when currentTab->selectionOnPage != nullptr
     bool showSelection = false;
     // selection rectangle in screen coordinates (only needed while selecting)
-    RectI selectionRect;
+    Rect selectionRect;
     // size of the current rectangular selection in document units
     SizeD selectionMeasure;
 
@@ -188,9 +188,9 @@ class WindowInfo {
     int windowStateBeforePresentation = 0;
 
     long nonFullScreenWindowStyle = 0;
-    RectI nonFullScreenFrameRect{};
+    Rect nonFullScreenFrameRect{};
 
-    RectI canvasRc{};   // size of the canvas (excluding any scroll bars)
+    Rect canvasRc{};   // size of the canvas (excluding any scroll bars)
     int currPageNo = 0; // cached value, needed to determine when to auto-update the ToC selection
 
     int wheelAccumDelta = 0;
@@ -215,7 +215,7 @@ class WindowInfo {
      * and whether they should be shown. */
     struct {
         bool show;        // are the markers visible?
-        Vec<RectI> rects; // location of the markers in user coordinates
+        Vec<Rect> rects; // location of the markers in user coordinates
         int page;
         int hideStep; // value used to gradually hide the markers
     } fwdSearchMark;
@@ -240,7 +240,7 @@ class WindowInfo {
     void ToggleZoom();
     void MoveDocBy(int dx, int dy);
 
-    void ShowInfoTip(const WCHAR* text, RectI& rc, bool multiline = false);
+    void ShowInfoTip(const WCHAR* text, Rect& rc, bool multiline = false);
     void HideInfoTip();
     void ShowNotification(const WCHAR* message, int options = NOS_DEFAULT,
                           NotificationGroupId groupId = NG_RESPONSE_TO_ACTION);

@@ -56,7 +56,7 @@ class EngineMulti : public EngineBase {
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
-    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
+    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
 
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
@@ -144,7 +144,7 @@ bool EngineMulti::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots)
     return false;
 }
 
-WCHAR* EngineMulti::ExtractPageText(int pageNo, RectI** coordsOut) {
+WCHAR* EngineMulti::ExtractPageText(int pageNo, Rect** coordsOut) {
     EngineBase* e = PageToEngine(pageNo);
     return e->ExtractPageText(pageNo, coordsOut);
 }

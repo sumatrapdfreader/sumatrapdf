@@ -75,7 +75,7 @@ RECT GetClientRect(HWND hwnd) {
     return r;
 }
 
-void MoveWindow(HWND hwnd, RectI rect) {
+void MoveWindow(HWND hwnd, Rect rect) {
     MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
 }
 
@@ -645,8 +645,8 @@ bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline) {
 
 /* Ensure that the rectangle is at least partially in the work area on a
    monitor. The rectangle is shifted into the work area if necessary. */
-RectI ShiftRectToWorkArea(RectI rect, bool bFully) {
-    RectI monitor = GetWorkAreaRect(rect);
+Rect ShiftRectToWorkArea(Rect rect, bool bFully) {
+    Rect monitor = GetWorkAreaRect(rect);
 
     if (rect.y + rect.dy <= monitor.y || bFully && rect.y < monitor.y) {
         /* Rectangle is too far above work area */
@@ -687,7 +687,7 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size) {
 }
 
 // returns available area of the screen i.e. screen minus taskbar area
-RectI GetWorkAreaRect(RectI rect) {
+Rect GetWorkAreaRect(Rect rect) {
     RECT tmpRect = rect.ToRECT();
     HMONITOR hmon = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi = {0};
@@ -696,36 +696,36 @@ RectI GetWorkAreaRect(RectI rect) {
     if (!ok) {
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
     }
-    return RectI::FromRECT(mi.rcWork);
+    return Rect::FromRECT(mi.rcWork);
 }
 
 // returns the dimensions the given window has to have in order to be a fullscreen window
-RectI GetFullscreenRect(HWND hwnd) {
+Rect GetFullscreenRect(HWND hwnd) {
     MONITORINFO mi = {0};
     mi.cbSize = sizeof(mi);
     if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi)) {
-        return RectI::FromRECT(mi.rcMonitor);
+        return Rect::FromRECT(mi.rcMonitor);
     }
     // fall back to the primary monitor
-    return RectI(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    return Rect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
 
 static BOOL CALLBACK GetMonitorRectProc(HMONITOR hMonitor, HDC hdc, LPRECT rcMonitor, LPARAM data) {
     UNUSED(hMonitor);
     UNUSED(hdc);
-    RectI* rcAll = (RectI*)data;
-    *rcAll = rcAll->Union(RectI::FromRECT(*rcMonitor));
+    Rect* rcAll = (Rect*)data;
+    *rcAll = rcAll->Union(Rect::FromRECT(*rcMonitor));
     return TRUE;
 }
 
 // returns the smallest rectangle that covers the entire virtual screen (all monitors)
-RectI GetVirtualScreenRect() {
-    RectI result(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+Rect GetVirtualScreenRect() {
+    Rect result(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     EnumDisplayMonitors(nullptr, nullptr, GetMonitorRectProc, (LPARAM)&result);
     return result;
 }
 
-void PaintRect(HDC hdc, const RectI& rect) {
+void PaintRect(HDC hdc, const Rect& rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y + rect.dy - 1);
@@ -733,12 +733,12 @@ void PaintRect(HDC hdc, const RectI& rect) {
     LineTo(hdc, rect.x, rect.y);
 }
 
-void PaintLine(HDC hdc, const RectI& rect) {
+void PaintLine(HDC hdc, const Rect& rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
-void DrawCenteredText(HDC hdc, const RectI& r, const WCHAR* txt, bool isRTL) {
+void DrawCenteredText(HDC hdc, const Rect& r, const WCHAR* txt, bool isRTL) {
     SetBkMode(hdc, TRANSPARENT);
     RECT tmpRect = r.ToRECT();
     UINT format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
@@ -749,7 +749,7 @@ void DrawCenteredText(HDC hdc, const RectI& r, const WCHAR* txt, bool isRTL) {
 }
 
 void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
-    RectI rc = RectI::FromRECT(r);
+    Rect rc = Rect::FromRECT(r);
     DrawCenteredText(hdc, rc, txt, isRTL);
 }
 
@@ -824,10 +824,10 @@ void CenterDialog(HWND hDlg, HWND hParent) {
         hParent = GetParent(hDlg);
     }
 
-    RectI rcDialog = WindowRect(hDlg);
+    Rect rcDialog = WindowRect(hDlg);
     rcDialog.Offset(-rcDialog.x, -rcDialog.y);
-    RectI rcOwner = WindowRect(hParent ? hParent : GetDesktopWindow());
-    RectI rcRect = rcOwner;
+    Rect rcOwner = WindowRect(hParent ? hParent : GetDesktopWindow());
+    Rect rcRect = rcOwner;
     rcRect.Offset(-rcRect.x, -rcRect.y);
 
     // center dialog on its parent window
@@ -958,7 +958,7 @@ void SetWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
     SetWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
 }
 
-RectI ChildPosWithinParent(HWND hwnd) {
+Rect ChildPosWithinParent(HWND hwnd) {
     POINT pt = {0, 0};
     ClientToScreen(GetParent(hwnd), &pt);
     WindowRect rc(hwnd);
@@ -1012,7 +1012,7 @@ long GetDefaultGuiFontSize() {
     return -ncm.lfMessageFont.lfHeight;
 }
 
-DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect)
+DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect)
     : hTarget(hwnd), rect(rect), hdcBuffer(nullptr), doubleBuffer(nullptr) {
     hdcCanvas = ::GetDC(hwnd);
 
@@ -1081,7 +1081,7 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL
     this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
 }
 
-void DeferWinPosHelper::MoveWindow(HWND hWnd, RectI r) {
+void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
     this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
 }
 
@@ -1642,7 +1642,7 @@ HBITMAP CreateMemoryBitmap(SizeI size, HANDLE* hDataMapping) {
 }
 
 // render the bitmap into the target rectangle (streching and skewing as requird)
-bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, RectI target) {
+bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target) {
     HDC bmpDC = CreateCompatibleDC(hdc);
     if (!bmpDC) {
         return false;

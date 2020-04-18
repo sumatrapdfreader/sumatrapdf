@@ -33,8 +33,8 @@ void WinUtilTest() {
     }
 
     {
-        RectI oneScreen = GetFullscreenRect(nullptr);
-        RectI allScreens = GetVirtualScreenRect();
+        Rect oneScreen = GetFullscreenRect(nullptr);
+        Rect allScreens = GetVirtualScreenRect();
         utassert(allScreens.Intersect(oneScreen) == oneScreen);
     }
 

@@ -203,7 +203,7 @@ class EngineXps : public EngineBase {
 
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
+    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
@@ -829,7 +829,7 @@ RenderedBitmap* EngineXps::GetImageForPageElement(PageElement* pel) {
     return GetPageImage(pageNo, r, imageID);
 }
 
-WCHAR* EngineXps::ExtractPageText(int pageNo, RectI** coordsOut) {
+WCHAR* EngineXps::ExtractPageText(int pageNo, Rect** coordsOut) {
     // TODO: optimize by extracting text in GetFzPageInfo()
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     ScopedCritSec scope(ctxAccess);

@@ -22,7 +22,7 @@ struct TabInfo {
     // an array of ids for ToC items that have been expanded/collapsed by user
     Vec<int> tocState;
     // canvas dimensions when the document was last visible
-    RectI canvasRc;
+    Rect canvasRc;
     // whether to auto-reload the document when the tab is selected
     bool reloadOnFocus = 0;
     // FileWatcher token for unsubscribing

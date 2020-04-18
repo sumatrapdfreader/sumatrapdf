@@ -489,7 +489,7 @@ static void OnButtonInstall() {
 
     // create a progress bar in place of the Options button
     int dx = DpiScale(gHwndFrame, INSTALLER_WIN_DX / 2);
-    RectI rc(0, 0, dx, gButtonDy);
+    Rect rc(0, 0, dx, gButtonDy);
     rc = MapRectToWindow(rc, gButtonOptions->hwnd, gHwndFrame);
 
     int nInstallationSteps = gArchive.filesCount;

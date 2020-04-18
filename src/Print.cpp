@@ -174,7 +174,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     SetMapMode(hdc, MM_TEXT);
 
     const SizeI paperSize(GetDeviceCaps(hdc, PHYSICALWIDTH), GetDeviceCaps(hdc, PHYSICALHEIGHT));
-    const RectI printable(GetDeviceCaps(hdc, PHYSICALOFFSETX), GetDeviceCaps(hdc, PHYSICALOFFSETY),
+    const Rect printable(GetDeviceCaps(hdc, PHYSICALOFFSETX), GetDeviceCaps(hdc, PHYSICALOFFSETY),
                           GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
     float fileDPI = engine.GetFileDPI();
     float px = (float)GetDeviceCaps(hdc, LOGPIXELSX);
@@ -238,7 +238,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                         abortCookie->Clear();
                     }
                     if (bmp && bmp->GetBitmap()) {
-                        RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                        Rect rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
                         ok = bmp->StretchDIBits(hdc, rc);
                     }
                     delete bmp;
@@ -341,7 +341,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 }
                 if (bmp && bmp->GetBitmap()) {
                     auto size = bmp->Size();
-                    RectI rc(offset.x, offset.y, size.dx * shrink, size.dy * shrink);
+                    Rect rc(offset.x, offset.y, size.dx * shrink, size.dy * shrink);
                     ok = bmp->StretchDIBits(hdc, rc);
                 }
                 delete bmp;

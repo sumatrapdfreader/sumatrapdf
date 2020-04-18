@@ -395,9 +395,9 @@ void PaintForwardSearchMark(WindowInfo* win, HDC hdc) {
     int hiLiOff = gGlobalPrefs->forwardSearch.highlightOffset;
 
     // Draw the rectangles highlighting the forward search results
-    Vec<RectI> rects;
+    Vec<Rect> rects;
     for (size_t i = 0; i < win->fwdSearchMark.rects.size(); i++) {
-        RectI rect = win->fwdSearchMark.rects.at(i);
+        Rect rect = win->fwdSearchMark.rects.at(i);
         rect = dm->CvtToScreen(pageNo, rect.Convert<double>());
         if (hiLiOff > 0) {
             float zoom = dm->GetZoomReal(pageNo);
@@ -499,7 +499,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
 void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, UINT line, UINT col, UINT ret, UINT page,
-                             Vec<RectI>& rects) {
+                             Vec<Rect>& rects) {
     UNUSED(col);
     CrashIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
@@ -516,7 +516,7 @@ void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, UINT line, 
 
         // Scroll to show the overall highlighted zone
         int pageNo = page;
-        RectI overallrc = rects.at(0);
+        Rect overallrc = rects.at(0);
         for (size_t i = 1; i < rects.size(); i++) {
             overallrc = overallrc.Union(rects.at(i));
         }
@@ -631,7 +631,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
 
     ack.fAck = 1;
     UINT page;
-    Vec<RectI> rects;
+    Vec<Rect> rects;
     int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
     ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
     if (setFocus) {

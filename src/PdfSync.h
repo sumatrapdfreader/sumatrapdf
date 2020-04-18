@@ -37,7 +37,7 @@ class Synchronizer {
 
     // Forward-search:
     // The result is returned in page and rects (list of rectangles to highlight).
-    virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<RectI>& rects) = 0;
+    virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) = 0;
 
     // the caller must free() the command line
     WCHAR* PrepareCommandline(const WCHAR* pattern, const WCHAR* filename, UINT line, UINT col);

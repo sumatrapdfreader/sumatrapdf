@@ -253,7 +253,7 @@ typedef geomutil::SizeT<double> SizeD;
 typedef geomutil::PointT<int> PointI;
 typedef geomutil::PointT<double> PointD;
 
-typedef geomutil::RectT<int> RectI;
+typedef geomutil::RectT<int> Rect;
 typedef geomutil::RectT<double> RectD;
 
 inline SIZE ToSIZE(SizeI s) {
@@ -261,7 +261,7 @@ inline SIZE ToSIZE(SizeI s) {
 }
 #ifdef _WIN32
 
-class ClientRect : public RectI {
+class ClientRect : public Rect {
   public:
     explicit ClientRect(HWND hwnd) {
         RECT rc;
@@ -274,7 +274,7 @@ class ClientRect : public RectI {
     }
 };
 
-class WindowRect : public RectI {
+class WindowRect : public Rect {
   public:
     explicit WindowRect(HWND hwnd) {
         RECT rc;
@@ -287,10 +287,10 @@ class WindowRect : public RectI {
     }
 };
 
-inline RectI MapRectToWindow(RectI rect, HWND hwndFrom, HWND hwndTo) {
+inline Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
     RECT rc = rect.ToRECT();
     MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
-    return RectI::FromRECT(rc);
+    return Rect::FromRECT(rc);
 }
 
 #endif

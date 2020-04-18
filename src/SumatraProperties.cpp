@@ -44,8 +44,8 @@ class PropertyEl {
     AutoFreeWstr rightTxt;
 
     // data calculated by the layout
-    RectI leftPos;
-    RectI rightPos;
+    Rect leftPos;
+    Rect rightPos;
 
     // overlong paths get the ellipsis in the middle instead of at the end
     bool isPath;
@@ -329,7 +329,7 @@ static WCHAR* FormatPermissions(Controller* ctrl) {
     return denials.Join(L", ");
 }
 
-static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, RectI* rect) {
+static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* rect) {
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
@@ -377,12 +377,12 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, RectI*
 
     int offset = PROPERTIES_RECT_PADDING;
     if (rect)
-        *rect = RectI(0, 0, totalDx + 2 * offset, totalDy + offset);
+        *rect = Rect(0, 0, totalDx + 2 * offset, totalDy + offset);
 
     int currY = 0;
     for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl* el = layoutData->at(i);
-        el->leftPos = RectI(offset, offset + currY, leftMaxDx, el->leftPos.dy);
+        el->leftPos = Rect(offset, offset + currY, leftMaxDx, el->leftPos.dy);
         el->rightPos.x = offset + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
         el->rightPos.y = offset + currY;
         currY += el->rightPos.dy + PROPERTIES_TXT_DY_PADDING;
@@ -404,7 +404,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
     SetRtl(hwnd, IsUIRightToLeft());
 
     // get the dimensions required for the about box's content
-    RectI rc;
+    Rect rc;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
     UpdatePropertiesLayout(layoutData, hdc, &rc);
@@ -414,7 +414,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
     // (as long as they fit into the current monitor's work area)
     WindowRect wRc(hwnd);
     ClientRect cRc(hwnd);
-    RectI work = GetWorkAreaRect(WindowRect(hParent));
+    Rect work = GetWorkAreaRect(WindowRect(hParent));
     wRc.dx = std::min(rc.dx + wRc.dx - cRc.dx, work.dx);
     wRc.dy = std::min(rc.dy + wRc.dy - cRc.dy, work.dy);
     MoveWindow(hwnd, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
@@ -574,7 +574,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl* el = layoutData->at(i);
         const WCHAR* txt = el->rightTxt;
-        RectI rc = el->rightPos;
+        Rect rc = el->rightPos;
         if (rc.x + rc.dx > rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING)
             rc.dx = rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING - rc.x;
         rTmp = rc.ToRECT();
@@ -587,7 +587,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
 
 static void OnPaintProperties(HWND hwnd) {
     PAINTSTRUCT ps;
-    RectI rc;
+    Rect rc;
     HDC hdc = BeginPaint(hwnd, &ps);
     UpdatePropertiesLayout(FindPropertyWindowByHwnd(hwnd), hdc, &rc);
     DrawProperties(hwnd, hdc);

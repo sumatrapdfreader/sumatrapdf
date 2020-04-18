@@ -110,7 +110,7 @@ public:
     }
     IFACEMETHODIMP SetRect(const RECT *prc) {
         if (!prc) return E_INVALIDARG;
-        m_rcParent = RectI::FromRECT(*prc);
+        m_rcParent = Rect::FromRECT(*prc);
         if (m_hwnd) {
             SetWindowPos(m_hwnd, nullptr, m_rcParent.x, m_rcParent.y, m_rcParent.dx, m_rcParent.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
             InvalidateRect(m_hwnd, nullptr, TRUE);
@@ -229,7 +229,7 @@ protected:
     // state for IPreviewHandler
     ScopedComPtr<IUnknown> m_site;
     HWND        m_hwnd, m_hwndParent;
-    RectI       m_rcParent;
+    Rect       m_rcParent;
     // for IExtractImage2
     const WCHAR*m_clsid;
     UINT        m_extractCx;

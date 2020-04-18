@@ -435,9 +435,9 @@ static inline int wchars_per_rune(int rune) {
     return 1;
 }
 
-static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<RectI>& rects) {
+static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<Rect>& rects) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
-    RectI r = fz_rect_to_RectD(bbox).Round();
+    Rect r = fz_rect_to_RectD(bbox).Round();
 
     int n = wchars_per_rune(c->c);
     if (n == 2) {
@@ -472,7 +472,7 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<Rec
     }
 }
 
-static void AddLineSep(str::WStr& s, Vec<RectI>& rects, const WCHAR* lineSep, size_t lineSepLen) {
+static void AddLineSep(str::WStr& s, Vec<Rect>& rects, const WCHAR* lineSep, size_t lineSepLen) {
     if (lineSepLen == 0) {
         return;
     }
@@ -484,18 +484,18 @@ static void AddLineSep(str::WStr& s, Vec<RectI>& rects, const WCHAR* lineSep, si
 
     s.Append(lineSep);
     for (size_t i = 0; i < lineSepLen; i++) {
-        rects.Append(RectI());
+        rects.Append(Rect());
     }
 }
 
-WCHAR* fz_text_page_to_str(fz_stext_page* text, RectI** coordsOut) {
+WCHAR* fz_text_page_to_str(fz_stext_page* text, Rect** coordsOut) {
     const WCHAR* lineSep = L"\n";
 
     size_t lineSepLen = str::Len(lineSep);
     str::WStr content;
     // coordsOut is optional but we ask for it by default so we simplify the code
     // by always calculating it
-    Vec<RectI> rects;
+    Vec<Rect> rects;
 
     fz_stext_block* block = text->first_block;
     while (block) {
@@ -553,7 +553,7 @@ int resolve_link(const char* uri, float* xp, float* yp) {
     return -1;
 }
 
-static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, RectI* coords) {
+static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, Rect* coords) {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
     // (and that doesn't start with http or a footnote numeral)
@@ -611,7 +611,7 @@ static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
 }
 
 static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageText, const WCHAR* start,
-                                         const WCHAR* next, RectI* coords) {
+                                         const WCHAR* next, Rect* coords) {
     size_t lastIx = list->coords.size() - 1;
     AutoFreeWstr uri(list->links.at(lastIx));
     const WCHAR* end = next;
@@ -623,7 +623,7 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
 
         AutoFreeWstr part(str::DupN(next, end - next));
         uri.Set(str::Join(uri, part));
-        RectI bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
+        Rect bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(RectD_to_fz_rect(bbox.Convert<double>()));
 
         next = end + 1;
@@ -674,7 +674,7 @@ static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
 
 // caller needs to delete the result
 // TODO: return Vec<PageElement*> directly
-LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
+LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
     LinkRectList* list = new LinkRectList;
 
     for (const WCHAR* start = pageText; *start; start++) {
@@ -711,7 +711,7 @@ LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
         AutoFreeWstr part(str::DupN(start, end - start));
         WCHAR* uri = protocol ? str::Join(protocol, part) : part.StealData();
         list->links.Append(uri);
-        RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
+        Rect bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(RectD_to_fz_rect(bbox.Convert<double>()));
         if (multiline)
             end = LinkifyMultilineText(list, pageText, start, end + 1, coords);
@@ -1129,7 +1129,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         return;
     }
 
-    RectI* coords;
+    Rect* coords;
     WCHAR* pageText = fz_text_page_to_str(stext, &coords);
     if (!pageText) {
         return;

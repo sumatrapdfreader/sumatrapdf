@@ -18,7 +18,7 @@ bool NeedsFindUI(WindowInfo* win);
 void ClearSearchResult(WindowInfo* win);
 bool OnInverseSearch(WindowInfo* win, int x, int y);
 void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, UINT line, UINT col, UINT ret, UINT page,
-                             Vec<RectI>& rects);
+                             Vec<Rect>& rects);
 void PaintForwardSearchMark(WindowInfo* win, HDC hdc);
 void OnMenuFindPrev(WindowInfo* win);
 void OnMenuFindNext(WindowInfo* win);

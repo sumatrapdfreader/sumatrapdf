@@ -44,7 +44,7 @@ static void OnImageCtrlPaint(ImageCtrl* w, COLORREF bgCol) {
     GetWindowRect(w->hwnd, &r);
     int dx = RectDx(r);
     int dy = RectDy(r);
-    RectI rc{0, 0, dx, dy};
+    Rect rc{0, 0, dx, dy};
     Gdiplus::Rect rcp = rc.ToGdipRect();
 
     Color col(bgCol);

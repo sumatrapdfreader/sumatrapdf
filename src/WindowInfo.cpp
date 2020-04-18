@@ -120,7 +120,7 @@ EbookController* WindowInfo::AsEbook() const {
 // Notify both display model and double-buffer (if they exist)
 // about a potential change of available canvas size
 void WindowInfo::UpdateCanvasSize() {
-    RectI rc = ClientRect(hwndCanvas);
+    Rect rc = ClientRect(hwndCanvas);
     if (buffer && canvasRc == rc)
         return;
     canvasRc = rc;
@@ -200,7 +200,7 @@ void WindowInfo::MoveDocBy(int dx, int dy) {
     currentTab->MoveDocBy(dx, dy);
 }
 
-void WindowInfo::ShowInfoTip(const WCHAR* text, RectI& rc, bool multiline) {
+void WindowInfo::ShowInfoTip(const WCHAR* text, Rect& rc, bool multiline) {
     if (str::IsEmpty(text)) {
         HideInfoTip();
         return;

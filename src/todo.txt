@@ -7,9 +7,9 @@ Annotations:
 ------
 
 possible refactorings:
-- [X] convert Rect in Layout.h to be like RectI
-- replace Rect with RectI typedef
-- rename RectI, PointI, SizeI => Rect, Point, Size
+- [X] convert Rect in Layout.h to be like Rect
+- replace Rect with Rect typedef
+- rename Rect, PointI, SizeI => Rect, Point, Size
 - replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
 - remove DirectDraw test and don't link with d2d

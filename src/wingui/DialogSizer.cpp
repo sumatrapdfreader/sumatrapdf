@@ -59,7 +59,7 @@ class DialogData {
         if (!bShowSizingGrip)
             return;
 
-        RectI rcOld = rcGrip;
+        Rect rcOld = rcGrip;
         UpdateGripperRect();
         // We also need to invalidate the combined area of the old and new rectangles
         // otherwise we would have trail of grippers when we sized the dialog larger
@@ -84,14 +84,14 @@ class DialogData {
 
   private:
     HWND hwnd;
-    RectI rcGrip;
+    Rect rcGrip;
     // Draw the sizing grip...or not
     bool bShowSizingGrip;
 
     void UpdateGripperRect() {
         int width = GetSystemMetrics(SM_CXVSCROLL);
         int height = GetSystemMetrics(SM_CYHSCROLL);
-        rcGrip = RectI(sizeClient.dx - width, sizeClient.dy - height, width, height);
+        rcGrip = Rect(sizeClient.dx - width, sizeClient.dy - height, width, height);
     }
 };
 
@@ -121,7 +121,7 @@ void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
     for (int i = 0; i < pdd->nItemCount; i++) {
         const DialogSizerSizingItem* psd = pdd->psd + i;
         HWND hwndChild = GetDlgItem(hwnd, psd->uControlID);
-        RectI rect = MapRectToWindow(WindowRect(hwndChild), HWND_DESKTOP, hwnd);
+        Rect rect = MapRectToWindow(WindowRect(hwndChild), HWND_DESKTOP, hwnd);
 
         // Adjust the window horizontally
         if (psd->uSizeInfo & DS_MoveX)

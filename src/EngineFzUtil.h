@@ -67,9 +67,9 @@ std::string_view fz_extract_stream_data(fz_context* ctx, fz_stream* stream);
 
 RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap);
 
-WCHAR* fz_text_page_to_str(fz_stext_page* text, RectI** coordsOut);
+WCHAR* fz_text_page_to_str(fz_stext_page* text, Rect** coordsOut);
 
-LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords);
+LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords);
 int is_external_link(const char* uri);
 int resolve_link(const char* uri, float* xp, float* yp);
 TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestination* dest);

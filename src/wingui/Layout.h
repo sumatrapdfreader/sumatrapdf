@@ -5,8 +5,6 @@
 
 const int Inf = std::numeric_limits<int>::max();
 
-typedef RectI Rect;
-
 RECT RectToRECT(const Rect);
 
 int clamp(int v, int vmin, int vmax);

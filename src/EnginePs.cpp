@@ -108,11 +108,11 @@ class ScopedFile {
     }
 };
 
-static RectI ExtractDSCPageSize(const WCHAR* fileName) {
+static Rect ExtractDSCPageSize(const WCHAR* fileName) {
     char header[1024] = {0};
     int n = file::ReadN(fileName, header, sizeof(header) - 1);
     if (!str::StartsWith((char*)header, "%!PS-Adobe-")) {
-        return RectI();
+        return Rect();
     }
 
     // PostScript creators are supposed to set the page size
@@ -128,7 +128,7 @@ static RectI ExtractDSCPageSize(const WCHAR* fileName) {
         }
     }
 
-    return RectI();
+    return Rect();
 }
 
 static EngineBase* ps2pdf(const WCHAR* fileName) {
@@ -143,7 +143,7 @@ static EngineBase* ps2pdf(const WCHAR* fileName) {
 
     // try to help Ghostscript determine the intended page size
     AutoFreeWstr psSetup;
-    RectI page = ExtractDSCPageSize(fileName);
+    Rect page = ExtractDSCPageSize(fileName);
     if (!page.IsEmpty()) {
         psSetup = str::Format(L" << /PageSize [%i %i] >> setpagedevice", page.dx, page.dy);
     }
@@ -290,7 +290,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
     }
 
-    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override {
+    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override {
         return pdfEngine->ExtractPageText(pageNo, coordsOut);
     }
 

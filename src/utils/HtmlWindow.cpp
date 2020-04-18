@@ -1653,7 +1653,7 @@ void HtmlWindow::OnSize(SizeI size) {
     }
 
     if (oleInPlaceObject) {
-        RECT r = RectI(PointI(), size).ToRECT();
+        RECT r = Rect(PointI(), size).ToRECT();
         oleInPlaceObject->SetObjectRects(&r, &r);
     }
 }
@@ -1805,7 +1805,7 @@ void HtmlWindow::SetScrollbarToAuto() {
 // Take a screenshot of a given <area> inside an html window and resize
 // it to <finalSize>. It's up to the caller to make sure <area> fits
 // within window (we don't check that's the case)
-HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize) {
+HBITMAP HtmlWindow::TakeScreenshot(Rect area, SizeI finalSize) {
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch)

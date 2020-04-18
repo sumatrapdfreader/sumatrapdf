@@ -43,9 +43,9 @@ static void GeomTest() {
     for (size_t i = 0; i < dimof(testData); i++) {
         struct SRIData* curr = &testData[i];
 
-        RectI rx1(curr->x1s, curr->y1s, curr->x1e - curr->x1s, curr->y1e - curr->y1s);
-        RectI rx2 = RectI::FromXY(curr->x2s, curr->y2s, curr->x2e, curr->y2e);
-        RectI isect = rx1.Intersect(rx2);
+        Rect rx1(curr->x1s, curr->y1s, curr->x1e - curr->x1s, curr->y1e - curr->y1s);
+        Rect rx2 = Rect::FromXY(curr->x2s, curr->y2s, curr->x2e, curr->y2e);
+        Rect isect = rx1.Intersect(rx2);
         if (curr->intersect) {
             utassert(!isect.IsEmpty());
             utassert(isect.x == curr->i_xs && isect.y == curr->i_ys);
@@ -53,7 +53,7 @@ static void GeomTest() {
         } else {
             utassert(isect.IsEmpty());
         }
-        RectI urect = rx1.Union(rx2);
+        Rect urect = rx1.Union(rx2);
         utassert(urect.x == curr->u_xs && urect.y == curr->u_ys);
         utassert(urect.x + urect.dx == curr->u_xe && urect.y + urect.dy == curr->u_ye);
 
@@ -68,7 +68,7 @@ static void GeomTest() {
             utassert(isect.IsEmpty());
         }
         urect = rx1.Union(rx2);
-        utassert(RectI::FromXY(curr->u_xs, curr->u_ys, curr->u_xe, curr->u_ye) == urect);
+        utassert(Rect::FromXY(curr->u_xs, curr->u_ys, curr->u_xe, curr->u_ye) == urect);
 
         utassert(!rx1.Contains(PointI(-2, -2)));
         utassert(rx1.Contains(rx1.TL()));

@@ -174,7 +174,7 @@ static RectD GetTileRect(RectD pagerect, TilePosition tile) {
 }
 
 // get the coordinates of a specific tile
-static RectI GetTileRectDevice(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
+static Rect GetTileRectDevice(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
     RectD mediabox = engine->PageMediabox(pageNo);
     if (tile.res > 0 && tile.res != INVALID_TILE_RES) {
         mediabox = GetTileRect(mediabox, tile);
@@ -184,13 +184,13 @@ static RectI GetTileRectDevice(EngineBase* engine, int pageNo, int rotation, flo
 }
 
 static RectD GetTileRectUser(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
-    RectI pixelbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
+    Rect pixelbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
     return engine->Transform(pixelbox.Convert<double>(), pageNo, zoom, rotation, true);
 }
 
-static RectI GetTileOnScreen(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile,
-                             RectI pageOnScreen) {
-    RectI bbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
+static Rect GetTileOnScreen(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile,
+                             Rect pageOnScreen) {
+    Rect bbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
     bbox.Offset(pageOnScreen.x, pageOnScreen.y);
     return bbox;
 }
@@ -206,14 +206,14 @@ static bool IsTileVisible(DisplayModel* dm, int pageNo, TilePosition tile, float
     }
     int rotation = dm->GetRotation();
     float zoom = dm->GetZoomReal(pageNo);
-    RectI r = pageInfo->pageOnScreen;
-    RectI tileOnScreen = GetTileOnScreen(engine, pageNo, rotation, zoom, tile, r);
+    Rect r = pageInfo->pageOnScreen;
+    Rect tileOnScreen = GetTileOnScreen(engine, pageNo, rotation, zoom, tile, r);
     // consider nearby tiles visible depending on the fuzz factor
     tileOnScreen.x -= (int)(tileOnScreen.dx * fuzz * 0.5);
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
     tileOnScreen.y -= (int)(tileOnScreen.dy * fuzz * 0.5);
     tileOnScreen.dy = (int)(tileOnScreen.dy * (fuzz + 1));
-    RectI screen(PointI(), dm->GetViewPort().Size());
+    Rect screen(PointI(), dm->GetViewPort().Size());
     return !tileOnScreen.Intersect(screen).IsEmpty();
 }
 
@@ -298,7 +298,7 @@ USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) {
     RectD mediabox = engine->PageMediabox(pageNo);
     float zoom = dm->GetZoomReal(pageNo);
     float zoomVirt = dm->GetZoomVirtual();
-    RectI viewPort = dm->GetViewPort();
+    Rect viewPort = dm->GetViewPort();
     int rotation = dm->GetRotation();
     RectD pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
 
@@ -661,7 +661,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
 
 // TODO: conceptually, RenderCache is not the right place for code that paints
 //       (this is the only place that knows about Tiles, though)
-UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, TilePosition tile, RectI tileOnScreen,
+UINT RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
                             bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement) {
     float zoom = dm->GetZoomReal(pageNo);
     BitmapCacheEntry* entry = Find(dm, pageNo, dm->GetRotation(), zoom, &tile);
@@ -744,7 +744,7 @@ static int cmpTilePosition(const void* a, const void* b) {
     return ta->res != tb->res ? ta->res - tb->res : ta->row != tb->row ? ta->row - tb->row : ta->col - tb->col;
 }
 
-UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo,
+UINT RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo,
                         bool* renderOutOfDateCue) {
     CrashIf(!pageInfo->shown || 0.0 == pageInfo->visibleRatio);
 
@@ -789,14 +789,14 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, Pag
 
     while (queue.size() > 0) {
         TilePosition tile = queue.PopAt(0);
-        RectI tileOnScreen = GetTileOnScreen(dm->GetEngine(), pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
+        Rect tileOnScreen = GetTileOnScreen(dm->GetEngine(), pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
         if (tileOnScreen.IsEmpty()) {
             // display an error message when only empty tiles should be drawn (i.e. on page loading errors)
             renderDelayMin = std::min(RENDER_DELAY_FAILED, renderDelayMin);
             continue;
         }
         tileOnScreen = pageInfo->pageOnScreen.Intersect(tileOnScreen);
-        RectI isect = bounds.Intersect(tileOnScreen);
+        Rect isect = bounds.Intersect(tileOnScreen);
         if (isect.IsEmpty()) {
             continue;
         }

@@ -33,7 +33,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_ALPHATYPE*
 
     RectD page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
-    RectI thumb = RectD(0, 0, page.dx * zoom, page.dy * zoom).Round();
+    Rect thumb = RectD(0, 0, page.dx * zoom, page.dy * zoom).Round();
 
     BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -138,7 +138,7 @@ class PageRenderer {
         return bbox;
     }
 
-    void Render(HDC hdc, RectI target, int pageNo, float zoom) {
+    void Render(HDC hdc, Rect target, int pageNo, float zoom) {
         dbglog("PdfPreview: PageRenderer::Render()\n");
 
         ScopedCritSec scope(&currAccess);
@@ -204,7 +204,7 @@ static LRESULT OnPaint(HWND hwnd) {
         if (!page.IsEmpty()) {
             rect.Inflate(-PREVIEW_MARGIN, -PREVIEW_MARGIN);
             float zoom = (float)std::min(rect.dx / page.dx, rect.dy / page.dy) - 0.001f;
-            RectI onScreen = RectD(rect.x, rect.y, page.dx * zoom, page.dy * zoom).Round();
+            Rect onScreen = RectD(rect.x, rect.y, page.dx * zoom, page.dy * zoom).Round();
             onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
 
             RECT rcPage = onScreen.ToRECT();

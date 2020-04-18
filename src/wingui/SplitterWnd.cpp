@@ -32,7 +32,7 @@ static void DrawXorBar(HDC hdc, HBRUSH br, int x1, int y1, int width, int height
     SelectObject(hdc, hbrushOld);
 }
 
-static HDC InitDraw(HWND hwnd, RectI& rc) {
+static HDC InitDraw(HWND hwnd, Rect& rc) {
     rc = ChildPosWithinParent(hwnd);
     HDC hdc = GetDC(GetParent(hwnd));
     SetROP2(hdc, R2_NOTXORPEN);
@@ -40,14 +40,14 @@ static HDC InitDraw(HWND hwnd, RectI& rc) {
 }
 
 static void DrawResizeLineV(HWND hwnd, HBRUSH br, int x) {
-    RectI rc;
+    Rect rc;
     HDC hdc = InitDraw(hwnd, rc);
     DrawXorBar(hdc, br, x, rc.y, 4, rc.dy);
     ReleaseDC(GetParent(hwnd), hdc);
 }
 
 static void DrawResizeLineH(HWND hwnd, HBRUSH br, int y) {
-    RectI rc;
+    Rect rc;
     HDC hdc = InitDraw(hwnd, rc);
     DrawXorBar(hdc, br, rc.x, y, rc.dx, 4);
     ReleaseDC(GetParent(hwnd), hdc);

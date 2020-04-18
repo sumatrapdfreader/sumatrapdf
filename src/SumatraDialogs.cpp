@@ -638,14 +638,14 @@ bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut) {
 
 static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
     HWND hItem = GetDlgItem(hDlg, itemId);
-    RectI itemRc = MapRectToWindow(WindowRect(hItem), HWND_DESKTOP, hDlg);
+    Rect itemRc = MapRectToWindow(WindowRect(hItem), HWND_DESKTOP, hDlg);
     // shrink by the distance to the previous item
     HWND hPrev = prevId ? GetDlgItem(hDlg, prevId) : GetWindow(hItem, GW_HWNDPREV);
-    RectI prevRc = MapRectToWindow(WindowRect(hPrev), HWND_DESKTOP, hDlg);
+    Rect prevRc = MapRectToWindow(WindowRect(hPrev), HWND_DESKTOP, hDlg);
     int shrink = itemRc.y - prevRc.y + itemRc.dy - prevRc.dy;
     // move items below up, shrink container items and hide contained items
     for (HWND item = GetWindow(hDlg, GW_CHILD); item; item = GetWindow(item, GW_HWNDNEXT)) {
-        RectI rc = MapRectToWindow(WindowRect(item), HWND_DESKTOP, hDlg);
+        Rect rc = MapRectToWindow(WindowRect(item), HWND_DESKTOP, hDlg);
         if (rc.y >= itemRc.y + itemRc.dy) // below
             MoveWindow(item, rc.x, rc.y - shrink, rc.dx, rc.dy, TRUE);
         else if (rc.Intersect(itemRc) == rc) // contained (or self)

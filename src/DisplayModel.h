@@ -25,12 +25,12 @@ struct PageInfo {
     /* position and size within total area after applying zoom and rotation.
        Represents display rectangle for a given page.
        Calculated in DisplayModel::Relayout() */
-    RectI pos{};
+    Rect pos{};
 
     /* data that changes due to scrolling. Calculated in DisplayModel::RecalcVisibleParts() */
     float visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
     /* position of page relative to visible view port: pos.Offset(-viewPort.x, -viewPort.y) */
-    RectI pageOnScreen{};
+    Rect pageOnScreen{};
 
     // when zoomVirtual in DisplayMode is ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH
     // or ZOOM_FIT_CONTENT, this is per-page zoom level
@@ -183,7 +183,7 @@ class DisplayModel : public Controller {
     float GetZoomReal(int pageNo) const;
     void Relayout(float zoomVirtual, int rotation);
 
-    RectI GetViewPort() const {
+    Rect GetViewPort() const {
         return viewPort;
     }
     bool NeedHScroll() const {
@@ -218,9 +218,9 @@ class DisplayModel : public Controller {
 
     int GetPageNoByPoint(PointI pt);
     PointI CvtToScreen(int pageNo, PointD pt);
-    RectI CvtToScreen(int pageNo, RectD r);
+    Rect CvtToScreen(int pageNo, RectD r);
     PointD CvtFromScreen(PointI pt, int pageNo = INVALID_PAGE_NO);
-    RectD CvtFromScreen(RectI r, int pageNo = INVALID_PAGE_NO);
+    RectD CvtFromScreen(Rect r, int pageNo = INVALID_PAGE_NO);
 
     bool ShowResultRectToScreen(TextSel* res);
 
@@ -283,7 +283,7 @@ class DisplayModel : public Controller {
     /* size and position of the viewport on the canvas (resp size of the visible
        part of the canvase available for content (totalViewPortSize minus scroll bars)
        (canvasSize is always at least as big as viewPort.Size()) */
-    RectI viewPort;
+    Rect viewPort;
     /* total size of view port (draw area), including scroll bars */
     SizeI totalViewPortSize;
 

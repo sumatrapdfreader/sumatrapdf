@@ -91,8 +91,8 @@ struct AboutLayoutInfoEl {
     const WCHAR* url;
 
     /* data calculated by the layout */
-    RectI leftPos;
-    RectI rightPos;
+    Rect leftPos;
+    Rect rightPos;
 };
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
@@ -185,7 +185,7 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
     return result;
 }
 
-static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
+static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
     AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
     HGDIOBJ oldFont = SelectObject(hdc, fontSumatraTxt);
@@ -195,7 +195,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
     SIZE txtSize;
     const WCHAR* txt = GetAppName();
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    RectI mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    Rect mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawAppName(hdc, mainRect.TL());
 
     SetTextColor(hdc, WIN_COL_BLACK);
@@ -210,7 +210,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
     SelectObject(hdc, oldFont);
 }
 
-static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
+static Rect DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
     auto col = GetAppColor(AppColor::MainWindowLink);
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
@@ -222,7 +222,7 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
 
     SIZE txtSize;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    RectI rect(rc.dx - txtSize.cx - ABOUT_INNER_PADDING, rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx,
+    Rect rect(rc.dx - txtSize.cx - ABOUT_INNER_PADDING, rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx,
                txtSize.cy);
     if (IsUIRightToLeft())
         rect.x = ABOUT_INNER_PADDING;
@@ -230,7 +230,7 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
         ScopedSelectObject pen(hdc, penLinkLine);
-        PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+        PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
     }
 
     // make the click target larger
@@ -241,7 +241,7 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
 /* Draws the about screen and remembers some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
-static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkInfo) {
+static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkInfo) {
     auto col = GetAppColor(AppColor::MainWindowText);
     AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
     AutoDeletePen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
@@ -260,7 +260,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     FillRect(hdc, &rTmp, brushAboutBg);
 
     /* render title */
-    RectI titleRect(rect.TL(), CalcSumatraVersionSize(hwnd, hdc));
+    Rect titleRect(rect.TL(), CalcSumatraVersionSize(hwnd, hdc));
 
     AutoDeleteBrush bgBrush(CreateSolidBrush(col));
     ScopedSelectObject brush(hdc, bgBrush);
@@ -269,11 +269,11 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx,
               rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
 #else
-    RectI titleBgBand(0, rect.y, rc.dx, titleRect.dy);
+    Rect titleBgBand(0, rect.y, rc.dx, titleRect.dy);
     RECT rcLogoBg = titleBgBand.ToRECT();
     FillRect(hdc, &rcLogoBg, bgBrush);
-    PaintLine(hdc, RectI(0, rect.y, rc.dx, 0));
-    PaintLine(hdc, RectI(0, rect.y + titleRect.dy, rc.dx, 0));
+    PaintLine(hdc, Rect(0, rect.y, rc.dx, 0));
+    PaintLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
 #endif
 
     titleRect.Offset((rect.dx - titleRect.dx) / 2, 0);
@@ -315,18 +315,18 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
 
         if (hasUrl) {
             int underlineY = el->rightPos.y + el->rightPos.dy - 3;
-            PaintLine(hdc, RectI(el->rightPos.x, underlineY, el->rightPos.dx, 0));
+            PaintLine(hdc, Rect(el->rightPos.x, underlineY, el->rightPos.dx, 0));
             linkInfo.Append(StaticLinkInfo(el->rightPos, el->url, el->url));
         }
     }
 
     SelectObject(hdc, penDivideLine);
-    RectI divideLine(gAboutLayoutInfo[0].rightPos.x - ABOUT_LEFT_RIGHT_SPACE_DX, rect.y + titleRect.dy + 4, 0,
+    Rect divideLine(gAboutLayoutInfo[0].rightPos.x - ABOUT_LEFT_RIGHT_SPACE_DX, rect.y + titleRect.dy + 4, 0,
                      rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
     PaintLine(hdc, divideLine);
 }
 
-static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI* rect) {
+static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
 
@@ -377,7 +377,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI* rect) {
     }
 
     /* calculate total dimension and position */
-    RectI minRect;
+    Rect minRect;
     minRect.dx =
         ABOUT_LEFT_RIGHT_SPACE_DX + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
     if (minRect.dx < headerSize.dx)
@@ -412,7 +412,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI* rect) {
 
 static void OnPaintAbout(HWND hwnd) {
     PAINTSTRUCT ps;
-    RectI rc;
+    Rect rc;
     HDC hdc = BeginPaint(hwnd, &ps);
     SetLayout(hdc, LAYOUT_LTR);
     UpdateAboutLayoutInfo(hwnd, hdc, &rc);
@@ -567,7 +567,7 @@ void OnMenuAbout() {
     SetRtl(gHwndAbout, IsUIRightToLeft());
 
     // get the dimensions required for the about box's content
-    RectI rc;
+    Rect rc;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(gHwndAbout, &ps);
     SetLayout(hdc, LAYOUT_LTR);
@@ -590,7 +590,7 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
     UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
     if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
-        RectI rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
+        Rect rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
         win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }
 }
@@ -632,10 +632,10 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     bool isRtl = IsUIRightToLeft();
 
     /* render title */
-    RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(win->hwndCanvas, hdc));
+    Rect titleBox = Rect(PointI(0, 0), CalcSumatraVersionSize(win->hwndCanvas, hdc));
     titleBox.x = rc.dx - titleBox.dx - 3;
     DrawSumatraVersion(win->hwndCanvas, hdc, titleBox);
-    PaintLine(hdc, RectI(0, titleBox.dy, rc.dx, 0));
+    PaintLine(hdc, Rect(0, titleBox.dy, rc.dx, 0));
 
     /* render recent files list */
     SelectObject(hdc, penThumbBorder);
@@ -674,7 +674,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     SIZE txtSize;
     const WCHAR* txt = _TR("Frequently Read");
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    RectI headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    Rect headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl)
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     rTmp = headerRect.ToRECT();
@@ -693,7 +693,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             }
             DisplayState* state = list.at(h * width + w);
 
-            RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
+            Rect page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
                        offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), THUMBNAIL_DX, THUMBNAIL_DY);
             if (isRtl)
                 page.x = rc.dx - page.x - page.dx;
@@ -722,7 +722,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
             int iconSpace = DpiScale(win->hwndFrame, 20);
-            RectI rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
+            Rect rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
             if (isRtl)
                 rect.x -= iconSpace;
             rTmp = rect.ToRECT();
@@ -753,7 +753,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     SelectObject(hdc, penLinkLine);
 
     HIMAGELIST himl = (HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
-    RectI rectIcon(offset.x, rc.y, 0, 0);
+    Rect rectIcon(offset.x, rc.y, 0, 0);
     ImageList_GetIconSize(himl, &rectIcon.dx, &rectIcon.dy);
     rectIcon.y += (rc.dy - rectIcon.dy) / 2;
     if (isRtl)
@@ -762,12 +762,12 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     txt = _TR("Open a document...");
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    RectI rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    Rect rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl)
         rect.x = rectIcon.x - rect.dx - 3;
     rTmp = rect.ToRECT();
     DrawText(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
-    PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+    PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
     // make the click target larger
     rect = rect.Union(rectIcon);
     rect.Inflate(10, 10);

@@ -20,8 +20,8 @@ constexpr int TIMEOUT_TIMER_ID = 1;
 
 static void RegisterNotificationsWndClass();
 
-static RectI GetCancelRect(HWND hwnd) {
-    return RectI(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
+static Rect GetCancelRect(HWND hwnd) {
+    return Rect(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
 }
 
 NotificationWnd::NotificationWnd(HWND parent, int timeoutInMS) {
@@ -88,7 +88,7 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR* message, bool init) {
     SelectFont(hdc, oldfnt);
     ReleaseDC(this->hwnd, hdc);
 
-    RectI rMsg = RectI::FromRECT(rc);
+    Rect rMsg = Rect::FromRECT(rc);
     if (this->hasCancel) {
         rMsg.dy = std::max(rMsg.dy, 16);
         rMsg.dx += 20;
@@ -107,7 +107,7 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR* message, bool init) {
     if (!this->hasProgress) {
         SetWindowPos(this->hwnd, nullptr, 0, 0, rMsg.dx, rMsg.dy, flags);
     } else if (init) {
-        RectI r = WindowRect(this->hwnd);
+        Rect r = WindowRect(this->hwnd);
         r.dx = std::max(progressWidth + 2 * PADDING, rMsg.dx);
         r.dy = rMsg.dy + PROGRESS_HEIGHT + PADDING / 2;
         SetWindowPos(this->hwnd, nullptr, 0, 0, r.dx, r.dy, flags);
@@ -118,7 +118,7 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR* message, bool init) {
     // move the window to the right for a right-to-left layout
     if (IsUIRightToLeft()) {
         HWND parent = GetParent(this->hwnd);
-        RectI r = MapRectToWindow(WindowRect(this->hwnd), HWND_DESKTOP, parent);
+        Rect r = MapRectToWindow(WindowRect(this->hwnd), HWND_DESKTOP, parent);
         int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
         r.x = WindowRect(parent).dx - r.dx - TOP_LEFT_MARGIN - cxVScroll;
         flags = SWP_NOSIZE | SWP_NOZORDER;
@@ -205,7 +205,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     }
 
     rect.Inflate(-PADDING, -PADDING);
-    RectI rectMsg = rect;
+    Rect rectMsg = rect;
     if (wnd->hasProgress) {
         rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
     }
@@ -300,13 +300,13 @@ static void RegisterNotificationsWndClass() {
 }
 
 int Notifications::GetWndX(NotificationWnd* wnd) {
-    RectI rect = WindowRect(wnd->hwnd);
+    Rect rect = WindowRect(wnd->hwnd);
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd));
     return rect.x;
 }
 
 void Notifications::MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
-    RectI rect = WindowRect(fix->hwnd);
+    Rect rect = WindowRect(fix->hwnd);
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd));
     UINT flags = SWP_NOSIZE | SWP_NOZORDER;
     auto x = GetWndX(move);
@@ -397,7 +397,7 @@ void Notifications::Relayout() {
     HWND hwndCanvas = GetParent(first->hwnd);
     ClientRect frame(hwndCanvas);
     for (auto* wnd : this->wnds) {
-        RectI rect = WindowRect(wnd->hwnd);
+        Rect rect = WindowRect(wnd->hwnd);
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft()) {
             int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);

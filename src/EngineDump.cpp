@@ -167,7 +167,7 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
         return str::Format("Point=\"%.0f %.0f\"", pt.x, pt.y);
     }
     if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
-        RectI rc = engine->Transform(rect, pageNo, 1.0, 0).Round();
+        Rect rc = engine->Transform(rect, pageNo, 1.0, 0).Round();
         return str::Format("Rect=\"%d %d %d %d\"", rc.x, rc.y, rc.dx, rc.dy);
     }
     if (rect.y != DEST_USE_DEFAULT) {
@@ -256,9 +256,9 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
         AutoFree label(Escape(engine->GetPageLabel(pageNo)));
         Out("\t\tLabel=\"%s\"\n", label.Get());
     }
-    RectI bbox = engine->PageMediabox(pageNo).Round();
+    Rect bbox = engine->PageMediabox(pageNo).Round();
     Out("\t\tMediaBox=\"%d %d %d %d\"\n", bbox.x, bbox.y, bbox.dx, bbox.dy);
-    RectI cbox = engine->PageContentBox(pageNo).Round();
+    Rect cbox = engine->PageContentBox(pageNo).Round();
     if (cbox != bbox) {
         Out("\t\tContentBox=\"%d %d %d %d\"\n", cbox.x, cbox.y, cbox.dx, cbox.dy);
     }
@@ -320,7 +320,7 @@ void DumpThumbnail(EngineBase* engine) {
     }
 
     float zoom = std::min(128 / (float)rect.dx, 128 / (float)rect.dy) - 0.001f;
-    RectI thumb = RectD(0, 0, rect.dx * zoom, rect.dy * zoom).Round();
+    Rect thumb = RectD(0, 0, rect.dx * zoom, rect.dy * zoom).Round();
     rect = engine->Transform(thumb.Convert<double>(), 1, zoom, 0, true);
     RenderPageArgs args(1, zoom, 0, &rect);
     RenderedBitmap* bmp = engine->RenderPage(args);

@@ -291,7 +291,7 @@ static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& i, bool isF
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         UINT page;
-        Vec<RectI> rects;
+        Vec<Rect> rects;
         AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));
         int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);

@@ -647,7 +647,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
             url++;
         }
         if (str::Eq(url, homeUrl)) {
-            RectI area(0, 0, size.dx * 2, size.dy * 2);
+            Rect area(0, 0, size.dx * 2, size.dy * 2);
             HBITMAP hbmp = hw->TakeScreenshot(area, size);
             if (hbmp) {
                 RenderedBitmap* bmp = new RenderedBitmap(hbmp, size);

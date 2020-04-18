@@ -10,8 +10,8 @@ struct TooltipCtrl : WindowBase {
 
     SizeI GetIdealSize() override;
 
-    void Show(std::string_view s, RectI& rc, bool multiline);
-    void Show(const WCHAR* text, RectI& rc, bool multiline);
+    void Show(std::string_view s, Rect& rc, bool multiline);
+    void Show(const WCHAR* text, Rect& rc, bool multiline);
     void Hide();
 
     void SetMaxWidth(int dx);

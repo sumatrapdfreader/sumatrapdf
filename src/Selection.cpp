@@ -38,17 +38,17 @@ SelectionOnPage::SelectionOnPage(int pageNo, RectD* rect) {
     }
 }
 
-RectI SelectionOnPage::GetRect(DisplayModel* dm) {
+Rect SelectionOnPage::GetRect(DisplayModel* dm) {
     // if the page is not visible, we return an empty rectangle
     PageInfo* pageInfo = dm->GetPageInfo(pageNo);
     if (!pageInfo || pageInfo->visibleRatio <= 0.0) {
-        return RectI();
+        return Rect();
     }
 
     return dm->CvtToScreen(pageNo, rect);
 }
 
-Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, RectI rect) {
+Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect) {
     Vec<SelectionOnPage>* sel = new Vec<SelectionOnPage>();
 
     for (int pageNo = dm->GetEngine()->PageCount(); pageNo >= 1; --pageNo) {
@@ -57,7 +57,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, RectI rec
         if (!pageInfo || !pageInfo->shown)
             continue;
 
-        RectI intersect = rect.Intersect(pageInfo->pageOnScreen);
+        Rect intersect = rect.Intersect(pageInfo->pageOnScreen);
         if (intersect.IsEmpty())
             continue;
 
@@ -105,13 +105,13 @@ void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel) {
     }
 }
 
-void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLORREF selectionColor, u8 alpha,
+void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha,
                                 int margin) {
     // create path from rectangles
     Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
     screenRc.Inflate(margin, margin);
     for (size_t i = 0; i < rects.size(); i++) {
-        RectI rc = rects.at(i).Intersect(screenRc);
+        Rect rc = rects.at(i).Intersect(screenRc);
         if (!rc.IsEmpty())
             path.AddRectangle(rc.ToGdipRect());
     }
@@ -133,11 +133,11 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
 void PaintSelection(WindowInfo* win, HDC hdc) {
     CrashIf(!win->AsFixed());
 
-    Vec<RectI> rects;
+    Vec<Rect> rects;
 
     if (win->mouseAction == MouseAction::Selecting) {
         // during rectangle selection
-        RectI selRect = win->selectionRect;
+        Rect selRect = win->selectionRect;
         if (selRect.dx < 0) {
             selRect.x += selRect.dx;
             selRect.dx *= -1;
@@ -210,7 +210,7 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
         }
         // either scroll towards the center of the current selection (if there is any) ...
         else if (win->showSelection && win->currentTab->selectionOnPage) {
-            RectI selRect;
+            Rect selRect;
             for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
                 selRect = selRect.Union(sel.GetRect(dm));
             }
@@ -229,7 +229,7 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
             int page = dm->FirstVisiblePageNo();
             PageInfo* pageInfo = dm->GetPageInfo(page);
             if (pageInfo) {
-                RectI visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
+                Rect visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
                 pt = visible.TL();
 
                 int pageNo = dm->GetPageNoByPoint(pt);
@@ -330,11 +330,11 @@ void OnSelectAll(WindowInfo* win, bool textOnly) {
         for (pageNo = win->ctrl->PageCount(); !dm->GetPageInfo(pageNo)->shown; pageNo--)
             ;
         dm->textSelection->SelectUpTo(pageNo, -1);
-        win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
+        win->selectionRect = Rect::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         UpdateTextSelection(win);
     } else {
         DeleteOldSelectionInfo(win, true);
-        win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
+        win->selectionRect = Rect::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, win->selectionRect);
     }
 
@@ -383,7 +383,7 @@ void OnSelectionStart(WindowInfo* win, int x, int y, WPARAM key) {
     CrashIf(!win->AsFixed());
     DeleteOldSelectionInfo(win, true);
 
-    win->selectionRect = RectI(x, y, 0, 0);
+    win->selectionRect = Rect(x, y, 0, 0);
     win->showSelection = true;
     win->mouseAction = MouseAction::Selecting;
 
@@ -415,7 +415,7 @@ void OnSelectionStop(WindowInfo* win, int x, int y, bool aborted) {
     if (MouseAction::SelectingText == win->mouseAction)
         UpdateTextSelection(win);
 
-    win->selectionRect = RectI::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
+    win->selectionRect = Rect::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
     if (aborted ||
         (MouseAction::Selecting == win->mouseAction ? win->selectionRect.IsEmpty() : !win->currentTab->selectionOnPage))
         DeleteOldSelectionInfo(win, true);

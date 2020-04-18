@@ -486,14 +486,14 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
         return;
     }
 
-    RectI rButton = RectI::FromRECT(item->rcItem);
+    Rect rButton = Rect::FromRECT(item->rcItem);
 
     DoubleBuffer buffer(item->hwndItem, rButton);
     HDC memDC = buffer.GetDC();
 
     UINT button = item->CtlID - BTN_ID_FIRST;
     ButtonInfo* bi = &win->caption->btn[button];
-    RectI rc(rButton);
+    Rect rc(rButton);
     rc.x += bi->margins.left;
     rc.y += bi->margins.top;
     rc.dx -= bi->margins.left + bi->margins.right;
@@ -608,7 +608,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc) {
 static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer) {
     RECT rClip;
     GetClipBox(hdc, &rClip);
-    RectI rect = RectI::FromRECT(rClip);
+    Rect rect = Rect::FromRECT(rClip);
 
     COLORREF c = win->caption->bgColor;
 
@@ -803,7 +803,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         case WM_NCHITTEST: {
             // Provide hit testing for the caption.
             PointI pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            RectI rClient = MapRectToWindow(ClientRect(hwnd), hwnd, HWND_DESKTOP);
+            Rect rClient = MapRectToWindow(ClientRect(hwnd), hwnd, HWND_DESKTOP);
             WindowRect rCaption(win->hwndCaption);
             if (rClient.Contains(pt) && pt.y < rCaption.y + rCaption.dy) {
                 *callDef = false;
