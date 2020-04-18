@@ -17,7 +17,47 @@
 #include "resource.h"
 #include "Menu.h"
 
-using namespace Gdiplus;
+// using namespace Gdiplus;
+
+using Gdiplus::ARGB;
+using Gdiplus::Bitmap;
+using Gdiplus::Brush;
+using Gdiplus::Color;
+using Gdiplus::Font;
+using Gdiplus::FontStyle;
+using Gdiplus::FontStyleRegular;
+using Gdiplus::FontStyleUnderline;
+using Gdiplus::Graphics;
+using Gdiplus::LinearGradientBrush;
+using Gdiplus::LinearGradientMode;
+using Gdiplus::Ok;
+using Gdiplus::Pen;
+using Gdiplus::SolidBrush;
+using Gdiplus::Status;
+
+using Gdiplus::CombineModeReplace;
+using Gdiplus::CompositingQualityHighQuality;
+using Gdiplus::GraphicsPath;
+using Gdiplus::Image;
+using Gdiplus::Matrix;
+using Gdiplus::PenAlignmentInset;
+using Gdiplus::REAL;
+using Gdiplus::Region;
+using Gdiplus::SmoothingModeAntiAlias;
+using Gdiplus::StringFormat;
+using Gdiplus::StringFormatFlagsDirectionRightToLeft;
+using Gdiplus::TextRenderingHintClearTypeGridFit;
+using Gdiplus::UnitPixel;
+// using Gdiplus::;
+
+using Gdiplus::PointF;
+using Gdiplus::RectF;
+using Gdiplus::SizeF;
+
+// TODO: long term, we either don't want to use them or use explicit type
+using Gdiplus::Point;
+using Gdiplus::Rect;
+using Gdiplus::Size;
 
 #define CUSTOM_CAPTION_CLASS_NAME L"CustomCaption"
 #define UNDOCUMENTED_MENU_CLASS_NAME L"#32768"
