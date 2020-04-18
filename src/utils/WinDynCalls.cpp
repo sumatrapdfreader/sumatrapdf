@@ -20,7 +20,8 @@ DBGHELP_API_LIST(API_DECLARATION)
 #define API_LOAD(name) Dyn##name = (Sig_##name)GetProcAddress(h, #name);
 
 // Loads a DLL explicitly from the system's library collection
-HMODULE SafeLoadLibrary(const WCHAR* dllName) {
+static HMODULE SafeLoadLibrary(const char* dllNameA) {
+    AutoFreeWstr dllName = strconv::Utf8ToWstr(dllNameA);
     WCHAR dllPath[MAX_PATH];
     UINT res = GetSystemDirectoryW(dllPath, dimof(dllPath));
     if (!res || res >= dimof(dllPath)) {
@@ -34,29 +35,29 @@ HMODULE SafeLoadLibrary(const WCHAR* dllName) {
 }
 
 void InitDynCalls() {
-    HMODULE h = SafeLoadLibrary(L"kernel32.dll");
+    HMODULE h = SafeLoadLibrary("kernel32.dll");
     CrashAlwaysIf(!h);
     KERNEL32_API_LIST(API_LOAD);
 
-    h = SafeLoadLibrary(L"ntdll.dll");
+    h = SafeLoadLibrary("ntdll.dll");
     CrashAlwaysIf(!h);
     NTDLL_API_LIST(API_LOAD);
 
-    h = SafeLoadLibrary(L"user32.dll");
+    h = SafeLoadLibrary("user32.dll");
     CrashAlwaysIf(!h);
     USER32_API_LIST(API_LOAD);
 
-    h = SafeLoadLibrary(L"uxtheme.dll");
+    h = SafeLoadLibrary("uxtheme.dll");
     if (h) {
         UXTHEME_API_LIST(API_LOAD);
     }
 
-    h = SafeLoadLibrary(L"dwmapi.dll");
+    h = SafeLoadLibrary("dwmapi.dll");
     if (h) {
         DWMAPI_API_LIST(API_LOAD);
     }
 
-    h = SafeLoadLibrary(L"normaliz.dll");
+    h = SafeLoadLibrary("normaliz.dll");
     if (h) {
         NORMALIZ_API_LIST(API_LOAD);
     }
@@ -65,7 +66,7 @@ void InitDynCalls() {
     WCHAR *dbghelpPath = L"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll";
     h = LoadLibrary(dbghelpPath);
 #else
-    h = SafeLoadLibrary(L"dbghelp.dll");
+    h = SafeLoadLibrary("dbghelp.dll");
 #endif
     if (h) {
         DBGHELP_API_LIST(API_LOAD)
@@ -189,16 +190,16 @@ HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWOR
 }
 }; // namespace dwm
 
-static const WCHAR* dllsToPreload =
-    L"gdiplus.dll\0msimg32.dll\0shlwapi.dll\0urlmon.dll\0version.dll\0windowscodecs.dll\0wininet.dll\0\0";
+static const char* dllsToPreload =
+    "gdiplus.dll\0msimg32.dll\0shlwapi.dll\0urlmon.dll\0version.dll\0windowscodecs.dll\0wininet.dll\0";
 
 // try to mitigate dll hijacking by pre-loading all the dlls that we delay load or might
 // be loaded indirectly
 void NoDllHijacking() {
-    const WCHAR* dll = dllsToPreload;
+    const char* dll = dllsToPreload;
     while (*dll) {
         SafeLoadLibrary(dll);
-        seqstrings::SkipStr(dll);
+        dll = seqstrings::SkipStr(dll);
     }
 }
 

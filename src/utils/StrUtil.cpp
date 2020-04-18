@@ -949,28 +949,7 @@ namespace seqstrings {
 
 // advance to next string
 // return false if end of strings
-bool SkipStr(const char*& s) {
-    // empty string marks the end, means idx was too high
-    if (!*s) {
-        return false;
-    }
-    // skip past next '\0' char
-    while (*s) {
-        s++;
-    }
-    s++;
-    return true;
-}
-
-// advance to next string
-// return false if end of strings
-bool SkipStr(char*& s) {
-    return SkipStr((const char*&)s);
-}
-
-// advance to next string
-// return false if end of strings
-static const char* SkipStr2(const char* s) {
+const char* SkipStr(const char* s) {
     // empty string marks the end, means idx was too high
     if (!*s) {
         return nullptr;
@@ -980,6 +959,11 @@ static const char* SkipStr2(const char* s) {
         s++;
     }
     return s + 1;
+}
+
+char* SkipStr(char* s) {
+    auto res = SkipStr((const char*)s);
+    return (char*)res;
 }
 
 // Returns nullptr if s is the same as toFind
@@ -1026,7 +1010,7 @@ const char* IdxToStr(const char* strings, int idx) {
     CrashIf(idx < 0);
     const char* s = strings;
     while (idx > 0) {
-        s = SkipStr2(s);
+        s = SkipStr(s);
         if (!s) {
             return nullptr;
         }

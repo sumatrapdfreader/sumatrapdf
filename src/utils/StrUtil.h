@@ -164,13 +164,12 @@ WCHAR* GetFileName(const WCHAR* url);
 } // namespace url
 
 namespace seqstrings {
-bool SkipStr(char*& s);
-bool SkipStr(const char*& s);
+char* SkipStr(char* s);
+const char* SkipStr(const char* s);
 int StrToIdx(const char* strings, const char* toFind);
 const char* IdxToStr(const char* strings, int idx);
 
 #if OS_WIN
-bool SkipStr(const WCHAR*& s);
 int StrToIdx(const char* strings, const WCHAR* toFind);
 #endif
 } // namespace seqstrings

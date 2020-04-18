@@ -635,19 +635,6 @@ WCHAR* GetFileName(const WCHAR* url) {
 
 namespace seqstrings {
 
-// advance to next string
-// return false if end of strings
-bool SkipStr(const WCHAR*& s) {
-    if (!*s) {
-        return false;
-    }
-    while (*s) {
-        s++;
-    }
-    s++;
-    return true;
-}
-
 // Returns nullptr if s is the same as toFind
 // If they are not equal, returns end of s + 1
 static inline const char* StrEqWeird(const char* s, const WCHAR* toFind) {

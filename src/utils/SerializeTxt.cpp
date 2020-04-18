@@ -329,8 +329,9 @@ static TxtNode* StructNodeFromTextNode(DecodeState& ds, TxtNode* txtNode, const 
     TxtNode* child;
     for (;;) {
         slice.SkipWsUntilNewline();
-        if (slice.Finished())
+        if (slice.Finished()) {
             goto Error;
+        }
         child = ds.parser.AllocTxtNode(TxtNode::Type::Text);
         child->valStart = slice.curr;
         slice.SkipNonWs();
@@ -339,9 +340,10 @@ static TxtNode* StructNodeFromTextNode(DecodeState& ds, TxtNode* txtNode, const 
         child->keyEnd = fieldName + str::Len(fieldName);
         node->AddChild(child);
         ++fieldNo;
-        if (fieldNo == structDef->nFields)
+        if (fieldNo == structDef->nFields) {
             break;
-        seqstrings::SkipStr(fieldName);
+        }
+        fieldName = seqstrings::SkipStr(fieldName);
     }
     return node;
 Error:
@@ -497,9 +499,10 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode* firstNode, const Struct
     const char* fieldName = def->fieldNames;
     for (int i = 0; i < def->nFields; i++) {
         ok = DecodeField(ds, firstNode, fieldName, def->fields + i, res);
-        if (!ok)
+        if (!ok) {
             goto Error;
-        seqstrings::SkipStr(fieldName);
+        }
+        fieldName = seqstrings::SkipStr(fieldName);
     }
     return res;
 Error:
@@ -698,13 +701,14 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
 }
 
 void SerializeRec(EncodeState& es, const uint8_t* structStart, const StructMetadata* def) {
-    if (!structStart)
+    if (!structStart) {
         return;
+    }
     const char* fieldName = def->fieldNames;
     for (size_t i = 0; i < def->nFields; i++) {
         const FieldMetadata* fieldDef = &def->fields[i];
         SerializeField(es, fieldName, fieldDef, structStart);
-        seqstrings::SkipStr(fieldName);
+        fieldName = seqstrings::SkipStr(fieldName);
     }
 }
 
