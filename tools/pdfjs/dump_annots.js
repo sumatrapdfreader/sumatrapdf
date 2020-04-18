@@ -16,9 +16,12 @@ const pdf = require('pdfjs-dist/es5/build/pdf.js');
 //pdfUtil.setVerbosityLevel(0);
 //pdf.util.setVerbosityLevel(0);
 
-const startDir = "x:\\books\\books";
+let startDir = "x:\\books\\books";
 // if destDir is "", then don't copy
-const destDir = "c:\\Users\\kjk\\sumtest\\files-with-annots";
+let destDir = "c:\\Users\\kjk\\sumtest\\files-with-annots";
+
+//startDir = "c:\\Users\\kjk\\sumtest\\files-with-annots";
+//destDir = "";
 
 let fileNo = 0;
 const maxFiles = 512;
