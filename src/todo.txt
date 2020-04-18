@@ -30,6 +30,7 @@ possible refactorings:
 - ChmDoc::Load() WCHAR => std::string_view
 - test icons at different sizes (for toolbar they look bad at some sizes; see if it's toolbar or mupdf)
 - change VBox::childrenCount() to int
+- Engine => Document rename
 
 ------
 
@@ -43,6 +44,9 @@ Somewhat big items:
 - toolbar that is hidden by default by shows when mouse hovers over it
 - better search interface
 - integrate vld for mem leak detection
+- make home tab always visible
+- better looking notification windows
+- load documents in background
 
 ------
 
