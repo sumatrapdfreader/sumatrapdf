@@ -3,8 +3,11 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-3.2 (????-??-??)
-
+3.2 (2020-03-15)
+* upgraded core PDF parsing rendering to latest version of mupdf. Faster, less bugs.
+* support for multiple windows
+* improved management of favorites
+* dropped support for Windows XP. Use 3.1.2 on XP.
 
 3.1.1 (2015-11-02)
 * (re)add support for old processors that don't have SSE2

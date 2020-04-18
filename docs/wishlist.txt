@@ -5,7 +5,7 @@ implement) as low/med/high
 
 -- fullscreen (low)
 
-See if http://stackoverflow.com/questions/2382464/win32-full-screen-and-hiding-taskbar 
+See if http://stackoverflow.com/questions/2382464/win32-full-screen-and-hiding-taskbar
 has better way of switching to fullscreen
 
 -- text viewer (high)
@@ -34,14 +34,6 @@ For perf, we could cache thumbnails as a single, webp-encoded image + info
 about where a thumbnail for a given page is within the image (similar to
 sprite technique in web dev)
 
--- wclang build (med)
-
-To get static analysis from clang, use wclang (https://github.com/tpoechtrager/wclang).
-Would require writing a makefile and probably code changes to acommodate
-mingw winapi headers.
-
-Then would need another buildbot script (wclang only works on Linux).
-
 -- toolbar improvements (med, risky)
 
 Ditch using toolbar control for the toolbar and use more mui-like approach.
@@ -52,11 +44,6 @@ of controls in the toolbar).
 
 This would also help in unifying full-screen modes (overlaid, auto-hidden
 toolbar is a better match for full-screen mode than the current one).
-
--- change fit width mode
-
-Make all pages have uniform size. Currently they all have uniform zoom ratio
-and one big page can make other pages really small.
 
 -- better looking notifications (med)
 
@@ -111,14 +98,6 @@ We could avoid breaking styling because now we have access to the whole instruct
 stream and we could quickly scan back instructions from any point to find
 formatting instructions and recover current styling.
 
--- improve find UI (med, risky)
-
-The one I like the best is in Chrome browser (with
-modification needed for specyfing search parameters like case sensitivity
-and additions like 'match whole words' modifier). Another nice implementation
-is in Kindle PC reader.
-We could then free up significant amount of space in the toolbar.
-
 -- manual cropping of margins for PDFs (med, risky)
 
 Screen space is always at premium and most PDFs have very wasteful
@@ -141,8 +120,6 @@ like a page number.
 
 -- Editing/saving of PDF forms (high)
 
--- PDF JavaScript support using mujs (low, risky)
-
 -- Integration with web-based backup/viewer system (high)
 
 The idea is that users could easily backup their PDFs on the server. They would
@@ -150,18 +127,6 @@ have a convenient access to those PDFs from Sumatra as well as being able to
 view them on the web. Basically it would be private Scribd for PDFs only. The
 web service would have to be paid (since on-line storage is rather expensive)
 but there would be free accounts (with quota, similar to how Dropbox works).
-
--- Direct integration with Dropbox (high)
-
-They have APIs. Being able to list, download and read PDF files in Dropbox
-account. Not sure if that makes sense, though, since having Dropbox pretty much
-means the files are locally anyway.
-
--- Integration with Scribd (high)
-
-As an alternative (or addition) to Dropbox integration. Being able to search for
-PDF documents on Scribd and download/view them in Sumatra. They have APIs
-(http://www.scribd.com/developers).
 
 -- Document library management (high)
 
@@ -175,21 +140,6 @@ browsing/searching those files.
 
 This would be a good feature for those who have large collections of PDFs
 (compared to using file explorer or open file dialog for locating the file).
-
--- Native client version (super high)
-
-https://developers.google.com/native-client/.
-There are some challenges (need completely custom UI, fonts aren't as easy
-to get at, CHM support would be much harder). The upside is we would have
-no-install, browser hosted (well, at least in Chrome) app.
-
--- mac version (super high)
-
--- use SafeInt (low)
-
-We have quite a few places where we do integer overflow checks. Explore
-doing that in a systematic way, using SafeInt (http://safeint.codeplex.com/) or
-similar library (or extract useful stuff for us from SafeInt)
 
 -- use pdfium (high)
 

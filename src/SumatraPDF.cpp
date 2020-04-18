@@ -199,7 +199,7 @@ void InitializePolicies(bool restrict) {
     }
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
-    // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
+    // same directory as SumatraPDF.exe (see ../docs/sumatrapdfrestrict.ini)
     // (if the file isn't there, everything is allowed)
     AutoFreeWstr restrictPath(path::GetPathOfFileInAppDir(RESTRICTIONS_FILE_NAME));
     if (!file::Exists(restrictPath)) {

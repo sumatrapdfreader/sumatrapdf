@@ -44,11 +44,12 @@ Somewhat big items:
 - simplify Caption
 - smaller scrollbar that gets bigger when mouse is closer to it
 - toolbar that is hidden by default by shows when mouse hovers over it
-- better search interface
+- better text search UI
 - integrate vld for mem leak detection
 - make home tab always visible
 - better looking notification windows
-- load documents in background
+- load documents in a background thread
+- improve tabs (re-arrange with drag&drop, allow moving between windows)
 
 ------
 
@@ -120,3 +121,6 @@ icons:
     https://thenounproject.com/  lots of icons, needs attribution or pay $99/year for attribution and royalty free license
     https://icomoon.io/app/#/select
     https://github.com/microsoft/vscode-codicons
+
+- convert to .ico with https://www.icoconverter.com/
+- online icon editor: https://redketchup.io/icon-editor could be used to improve the low-resolution icons.
