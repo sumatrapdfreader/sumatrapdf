@@ -15,7 +15,7 @@ DirectionalLayout& DirectionalLayout::Add(const DirectionalLayoutData& ld) {
     return *this;
 }
 
-Size DirectionalLayout::Measure(const Size availableSize) {
+Gdiplus::Size DirectionalLayout::Measure(const Gdiplus::Size availableSize) {
     for (DirectionalLayoutData& e : els) {
         e.element->Measure(availableSize);
         e.desiredSize = e.element->DesiredSize();

@@ -338,7 +338,7 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingData* ft) {
 }
 
 void EbookController::TriggerLayout() {
-    Size s = ctrls->pagesLayout->GetPage1()->GetDrawableSize();
+    Gdiplus::Size s = ctrls->pagesLayout->GetPage1()->GetDrawableSize();
     SizeI size(s.Width, s.Height);
     if (size.IsEmpty()) {
         // we haven't been sized yet

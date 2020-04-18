@@ -26,8 +26,8 @@ class HwndWrapper : public Control {
     HwndWrapper(HWND hwnd = nullptr);
     virtual ~HwndWrapper();
 
-    void SetMinSize(Size minSize);
-    void SetMaxSize(Size maxSize);
+    void SetMinSize(Gdiplus::Size minSize);
+    void SetMaxSize(Gdiplus::Size maxSize);
 
     void RequestLayout();
     void MarkForRepaint() {
@@ -38,7 +38,7 @@ class HwndWrapper : public Control {
     void OnPaint(HWND hwnd);
 
     // ILayout
-    virtual Size Measure(const Size availableSize);
+    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
     virtual void Arrange(const Gdiplus::Rect finalRect);
 
     void TopLevelLayout();

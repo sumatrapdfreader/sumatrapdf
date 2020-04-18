@@ -148,11 +148,11 @@ class SumatraLogo : public Control {
     }
     virtual ~SumatraLogo() {
     }
-    virtual Size Measure(const Size availableSize);
+    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
     virtual void Paint(Graphics* gfx, int offX, int offY);
 };
 
-Size SumatraLogo::Measure(const Size availableSize) {
+Gdiplus::Size SumatraLogo::Measure(const Gdiplus::Size availableSize) {
     UNUSED(availableSize);
     Graphics* gfx = AllocGraphicsForMeasureText();
     CachedStyle* s = cachedStyle;

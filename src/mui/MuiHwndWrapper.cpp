@@ -34,7 +34,7 @@ HwndWrapper::~HwndWrapper() {
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void HwndWrapper::SetMinSize(Size s) {
+void HwndWrapper::SetMinSize(Gdiplus::Size s) {
     evtMgr->SetMinSize(s);
 }
 
@@ -43,7 +43,7 @@ void HwndWrapper::SetMinSize(Size s) {
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void HwndWrapper::SetMaxSize(Size s) {
+void HwndWrapper::SetMaxSize(Gdiplus::Size s) {
     evtMgr->SetMaxSize(s);
 }
 
@@ -54,7 +54,7 @@ void HwndWrapper::SetHwnd(HWND hwnd) {
     painter = new Painter(this);
 }
 
-Size HwndWrapper::Measure(const Size availableSize) {
+Gdiplus::Size HwndWrapper::Measure(const Gdiplus::Size availableSize) {
     if (layout) {
         return layout->Measure(availableSize);
     }
@@ -62,7 +62,7 @@ Size HwndWrapper::Measure(const Size availableSize) {
         ILayout* l = children.at(0);
         return l->Measure(availableSize);
     }
-    desiredSize = Size();
+    desiredSize = Gdiplus::Size();
     return desiredSize;
 }
 
@@ -83,9 +83,9 @@ void HwndWrapper::Arrange(const Gdiplus::Rect finalRect) {
 void HwndWrapper::TopLevelLayout() {
     CrashIf(!hwndParent);
     ClientRect rc(hwndParent);
-    Size availableSize(rc.dx, rc.dy);
+    Gdiplus::Size availableSize(rc.dx, rc.dy);
     // lf("(%3d,%3d) HwndWrapper::TopLevelLayout()", rc.dx, rc.dy);
-    Size s = Measure(availableSize);
+    Gdiplus::Size s = Measure(availableSize);
 
     if (firstLayout && sizeToFit) {
         firstLayout = false;

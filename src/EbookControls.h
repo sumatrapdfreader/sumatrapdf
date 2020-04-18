@@ -42,7 +42,7 @@ class PageControl : public Control {
         return page;
     }
 
-    Size GetDrawableSize() const;
+    Gdiplus::Size GetDrawableSize() const;
     DrawInstr* GetLinkAt(int x, int y) const;
 
     virtual void Paint(Graphics* gfx, int offX, int offY);
@@ -57,7 +57,7 @@ class PageControl : public Control {
 // all the space
 class PagesLayout : public ILayout {
   protected:
-    Size desiredSize;
+    Gdiplus::Size desiredSize;
     PageControl* page1;
     PageControl* page2;
     int spaceDx;
@@ -71,11 +71,11 @@ class PagesLayout : public ILayout {
     }
     virtual ~PagesLayout() {
     }
-    virtual Size DesiredSize() {
+    virtual Gdiplus::Size DesiredSize() {
         return desiredSize;
     }
 
-    virtual Size Measure(const Size availableSize);
+    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
     virtual void Arrange(const Gdiplus::Rect finalRect);
 
     PageControl* GetPage1() const {

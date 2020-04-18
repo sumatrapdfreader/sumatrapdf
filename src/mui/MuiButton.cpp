@@ -43,7 +43,7 @@ void Button::NotifyMouseLeave() {
 // Note: it might be that for some cases button with no text should collapse
 // in size but we don't have a need for that yet
 void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
-    Size prevSize = desiredSize;
+    Gdiplus::Size prevSize = desiredSize;
 
     desiredSize = GetBorderAndPaddingSize(cachedStyle);
     Graphics* gfx = AllocGraphicsForMeasureText();
@@ -89,7 +89,7 @@ void Button::SetText(const WCHAR* s) {
     RecalculateSize(true);
 }
 
-Size Button::Measure(const Size availableSize) {
+Gdiplus::Size Button::Measure(const Gdiplus::Size availableSize) {
     UNUSED(availableSize);
     // desiredSize is calculated when we change the
     // text, font or other attributes that influence
@@ -203,7 +203,7 @@ void ButtonVector::SetGraphicsPath(GraphicsPath* gp) {
 
 // TODO: the position still seems a bit off wrt. padding
 void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
-    Size prevSize = desiredSize;
+    Gdiplus::Size prevSize = desiredSize;
 
     CachedStyle* s = cachedStyle;
     desiredSize = GetBorderAndPaddingSize(s);
@@ -229,7 +229,7 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
         RequestRepaint(this);
 }
 
-Size ButtonVector::Measure(const Size availableSize) {
+Gdiplus::Size ButtonVector::Measure(const Gdiplus::Size availableSize) {
     UNUSED(availableSize);
     // do nothing: calculated in RecalculateSize()
     return desiredSize;
@@ -265,7 +265,7 @@ void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
     // and desired vertical/horizontal alignment.
     // Note: alignment is calculated against the size after substracting
     // ncSize is the size of the non-client parts i.e. border and padding, on both sides
-    Size ncSize = GetBorderAndPaddingSize(s);
+    Gdiplus::Size ncSize = GetBorderAndPaddingSize(s);
     int elOffY = s->vertAlign.CalcOffset(gpBbox.Height, pos.Height - ncSize.Height);
     int elOffX = s->horizAlign.CalcOffset(gpBbox.Width, pos.Width - ncSize.Width);
 

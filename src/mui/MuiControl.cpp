@@ -156,7 +156,7 @@ void Control::AddChild(Control* c1, Control* c2, Control* c3) {
         AddChild(c3);
 }
 
-Size Control::Measure(const Size availableSize) {
+Gdiplus::Size Control::Measure(const Gdiplus::Size availableSize) {
     if (layout) {
         return layout->Measure(availableSize);
     }
@@ -164,15 +164,15 @@ Size Control::Measure(const Size availableSize) {
         ILayout* l = children.at(0);
         return l->Measure(availableSize);
     }
-    desiredSize = Size();
+    desiredSize = Gdiplus::Size();
     return desiredSize;
 }
 
-Size Control::DesiredSize() {
+Gdiplus::Size Control::DesiredSize() {
     return desiredSize;
 }
 
-void Control::MeasureChildren(Size availableSize) const {
+void Control::MeasureChildren(Gdiplus::Size availableSize) const {
     for (size_t i = 0; i < GetChildCount(); i++) {
         GetChild(i)->Measure(availableSize);
     }

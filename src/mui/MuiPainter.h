@@ -8,7 +8,7 @@ class Painter {
     HwndWrapper* wnd;
     // bitmap for double-buffering
     Bitmap* cacheBmp;
-    Size sizeDuringLastPaint;
+    Gdiplus::Size sizeDuringLastPaint;
 
     void PaintBackground(Graphics* g, Gdiplus::Rect r);
 

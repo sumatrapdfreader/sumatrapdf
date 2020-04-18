@@ -56,7 +56,6 @@ using Gdiplus::SizeF;
 
 // TODO: long term, we either don't want to use them or use explicit type
 using Gdiplus::Point;
-using Gdiplus::Size;
 
 /*
 A css-like way to style controls/windows.
@@ -705,12 +704,12 @@ static void AddBorders(int& dx, int& dy, CachedStyle* s) {
     dy += (int)(bw.top + bw.bottom);
 }
 
-Size GetBorderAndPaddingSize(CachedStyle* s) {
+Gdiplus::Size GetBorderAndPaddingSize(CachedStyle* s) {
     Padding pad = s->padding;
     int dx = pad.left + pad.right;
     int dy = pad.top + pad.bottom;
     AddBorders(dx, dy, s);
-    return Size(dx, dy);
+    return Gdiplus::Size(dx, dy);
 }
 
 Style* GetStyleDefault() {

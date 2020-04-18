@@ -68,7 +68,6 @@ using Gdiplus::SizeF;
 
 // TODO: long term, we either don't want to use them or use explicit type
 using Gdiplus::Point;
-using Gdiplus::Size;
 
 Kind kindEngineImage = "engineImage";
 Kind kindEngineImageDir = "engineImageDir";
@@ -844,7 +843,7 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 RectD EngineImageDir::LoadMediabox(int pageNo) {
     AutoFree bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
     if (bmpData.data) {
-        Size size = BitmapSizeFromData(bmpData.data, bmpData.size());
+        Gdiplus::Size size = BitmapSizeFromData(bmpData.data, bmpData.size());
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();
@@ -1272,7 +1271,7 @@ RectD EngineCbx::LoadMediabox(int pageNo) {
 
     ImageData img = GetImageData(pageNo);
     if (img.data) {
-        Size size = BitmapSizeFromData(img.data, img.size());
+        Gdiplus::Size size = BitmapSizeFromData(img.data, img.size());
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();

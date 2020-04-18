@@ -185,14 +185,14 @@ void PageControl::NotifyMouseMove(int x, int y) {
 }
 
 // size of the drawable area i.e. size minus padding
-Size PageControl::GetDrawableSize() const {
-    Size s;
+Gdiplus::Size PageControl::GetDrawableSize() const {
+    Gdiplus::Size s;
     pos.GetSize(&s);
     Padding pad = cachedStyle->padding;
     s.Width -= (pad.left + pad.right);
     s.Height -= (pad.top + pad.bottom);
     if ((s.Width <= 0) || (s.Height <= 0))
-        return Size();
+        return Gdiplus::Size();
     return s;
 }
 
@@ -328,7 +328,7 @@ EbookControls* CreateEbookControls(HWND hwnd, FrameRateWnd* frameRateWnd) {
 
     ctrls->mainWnd = new HwndWrapper(hwnd);
     ctrls->mainWnd->frameRateWnd = frameRateWnd;
-    ctrls->mainWnd->SetMinSize(Size(320, 200));
+    ctrls->mainWnd->SetMinSize(Gdiplus::Size(320, 200));
 
     SetMainWndBgCol(ctrls);
     ctrls->mainWnd->layout = FindLayoutNamed(*muiDef, "mainLayout");
@@ -349,7 +349,7 @@ void DestroyEbookControls(EbookControls* ctrls) {
     delete ctrls;
 }
 
-Size PagesLayout::Measure(const Size availableSize) {
+Gdiplus::Size PagesLayout::Measure(const Gdiplus::Size availableSize) {
     desiredSize = availableSize;
     return desiredSize;
 }

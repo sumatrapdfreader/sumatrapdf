@@ -121,10 +121,10 @@ void Painter::Paint(HWND hwnd, bool isDirty) {
     // last version of page, which somewhat eliminates the problem but also
     // sometimes causes flickr
     // See http://www.catch22.net/tuts/flicker for info on win repainting
-    if (cacheBmp && !sizeDuringLastPaint.Equals(Size(r.dx, r.dy))) {
+    if (cacheBmp && !sizeDuringLastPaint.Equals(Gdiplus::Size(r.dx, r.dy))) {
         PaintBackground(&gDC, r.ToGdipRect());
         gDC.DrawImage(cacheBmp, 0, 0);
-        sizeDuringLastPaint = Size(r.dx, r.dy);
+        sizeDuringLastPaint = Gdiplus::Size(r.dx, r.dy);
     }
 
     if (BitmapNotBigEnough(cacheBmp, r.dx, r.dy)) {

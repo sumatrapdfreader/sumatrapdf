@@ -24,7 +24,7 @@ ScrollBar::ScrollBar(int onOverDy, int inactiveDy) : onOverDy(onOverDy), inactiv
     bit::Set(wantedInputBits, WantsMouseOverBit, WantsMouseClickBit);
 }
 
-Size ScrollBar::Measure(const Size availableSize) {
+Gdiplus::Size ScrollBar::Measure(const Gdiplus::Size availableSize) {
     // dx is max available
     desiredSize.Width = availableSize.Width;
 

@@ -56,7 +56,7 @@ class Grid : public Control {
     };
 
     struct Cell {
-        Size desiredSize;
+        Gdiplus::Size desiredSize;
         // TODO: more data
     };
 
@@ -74,7 +74,7 @@ class Grid : public Control {
     int* maxColWidth;
     int* maxRowHeight;
 
-    Size desiredSize; // calculated in Measure()
+    Gdiplus::Size desiredSize; // calculated in Measure()
 
     void RebuildCellDataIfNeeded();
     Cell* GetCell(int row, int col) const;
@@ -93,8 +93,8 @@ class Grid : public Control {
     virtual void Paint(Graphics* gfx, int offX, int offY);
 
     // ILayout
-    virtual Size Measure(const Size availableSize);
-    virtual Size DesiredSize() {
+    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
+    virtual Gdiplus::Size DesiredSize() {
         return desiredSize;
     }
     virtual void Arrange(const Gdiplus::Rect finalRect);

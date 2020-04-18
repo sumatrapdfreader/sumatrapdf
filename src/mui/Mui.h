@@ -57,7 +57,6 @@ using Gdiplus::SizeF;
 
 // TODO: long term, we either don't want to use them or use explicit type
 using Gdiplus::Point;
-using Gdiplus::Size;
 
 #include "MuiBase.h"
 #include "TextRender.h"

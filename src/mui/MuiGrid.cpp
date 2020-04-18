@@ -116,10 +116,10 @@ void Grid::Paint(Graphics* gfx, int offX, int offY) {
     }
 }
 
-Size Grid::Measure(const Size availableSize) {
+Gdiplus::Size Grid::Measure(const Gdiplus::Size availableSize) {
     RebuildCellDataIfNeeded();
 
-    Size borderSize(GetBorderAndPaddingSize(cachedStyle));
+    Gdiplus::Size borderSize(GetBorderAndPaddingSize(cachedStyle));
 
     Cell* cell;
     Control* el;
