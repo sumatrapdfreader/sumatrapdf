@@ -75,14 +75,20 @@ struct SizeT {
 
 template <typename T>
 struct RectT {
-    T x, y;
-    T dx, dy;
+    T x = 0;
+    T y = 0;
+    T dx = 0;
+    T dy = 0;
 
-    RectT() : x(0), y(0), dx(0), dy(0) {
-    }
+    RectT() = default;
+
     RectT(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) {
     }
+
     RectT(PointT<T> pt, SizeT<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
+    }
+
+    RectT(PointT<T> min, PointT<T> max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
     }
 
     T Width() const {
@@ -99,6 +105,14 @@ struct RectT {
 
     T Dy() const {
         return dy;
+    }
+
+    T Right() const {
+        return x + dx;
+    }
+
+    T Bottom() const {
+        return y + dy;
     }
 
     static RectT FromXY(T xs, T ys, T xe, T ye) {

@@ -7,29 +7,6 @@
 
 #include "Layout.h"
 
-Rect::Rect(PointI min, PointI max) {
-    x = min.x;
-    y = min.y;
-    dx = max.x - min.x;
-    dy = max.y - min.y;
-}
-
-int Rect::Width() const {
-    return dx;
-}
-int Rect::Height() const {
-    return dy;
-}
-
-int Rect::Dx() const {
-    return dx;
-}
-
-// Dy returns r's height.
-int Rect::Dy() const {
-    return dy;
-}
-
 int Rect::Right() const {
     return x + dx;
 }
