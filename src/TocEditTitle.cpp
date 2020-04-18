@@ -152,7 +152,7 @@ static void createMainLayout(EditTitleWindow* win) {
         s->SetText("&Title:");
         s->Create();
         auto l = NewLabelLayout(s);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
@@ -163,7 +163,7 @@ static void createMainLayout(EditTitleWindow* win) {
         e->SetText(win->args->title.as_view());
         e->Create();
         auto l = NewEditLayout(e);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     int nPages = win->args->nPages;
@@ -178,7 +178,7 @@ static void createMainLayout(EditTitleWindow* win) {
             }
             s->Create();
             auto l = NewLabelLayout(s);
-            vbox->addChild(l);
+            vbox->AddChild(l);
         }
         {
             auto e = new EditCtrl(parent);
@@ -192,7 +192,7 @@ static void createMainLayout(EditTitleWindow* win) {
                 e->SetText(pageStr.as_view());
             }
             auto l = NewEditLayout(e);
-            vbox->addChild(l);
+            vbox->AddChild(l);
         }
     }
 
@@ -204,7 +204,7 @@ static void createMainLayout(EditTitleWindow* win) {
         c->Create();
         c->SetIsChecked(win->args->bold);
         auto l = NewCheckboxLayout(c);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
@@ -214,7 +214,7 @@ static void createMainLayout(EditTitleWindow* win) {
         c->Create();
         c->SetIsChecked(win->args->italic);
         auto l = NewCheckboxLayout(c);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
@@ -222,7 +222,7 @@ static void createMainLayout(EditTitleWindow* win) {
         s->SetText("&Color:");
         s->Create();
         auto l = NewLabelLayout(s);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
     {
         auto e = new EditCtrl(parent);
@@ -237,7 +237,7 @@ static void createMainLayout(EditTitleWindow* win) {
 
         e->SetText(colorStr.as_view());
         auto l = NewEditLayout(e);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
@@ -252,7 +252,7 @@ static void createMainLayout(EditTitleWindow* win) {
             b->Create();
             win->buttonCancel = b;
             auto l = NewButtonLayout(b);
-            buttons->addChild(l);
+            buttons->AddChild(l);
         }
 
         {
@@ -262,9 +262,9 @@ static void createMainLayout(EditTitleWindow* win) {
             b->onClicked = std::bind(&EditTitleWindow::ButtonOkHandler, win);
             b->Create();
             auto l = NewButtonLayout(b);
-            buttons->addChild(l);
+            buttons->AddChild(l);
         }
-        vbox->addChild(buttons);
+        vbox->AddChild(buttons);
     }
 
     auto* padding = new Padding();

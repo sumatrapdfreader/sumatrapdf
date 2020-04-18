@@ -185,11 +185,11 @@ struct VBox : public ILayout {
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
 
-    void setBoundsForChild(size_t i, ILayout* v, int posX, int posY, int posX2, int posY2);
+    void SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2);
 
-    boxElementInfo& addChild(ILayout* child);
-    boxElementInfo& addChild(ILayout* child, int flex);
-    size_t childrenCount(); // only visible children
+    boxElementInfo& AddChild(ILayout* child);
+    boxElementInfo& AddChild(ILayout* child, int flex);
+    int ChildrenCount(); // only visible children
 };
 
 // hbox.go
@@ -210,10 +210,10 @@ struct HBox : public ILayout {
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect bounds) override;
 
-    void setBoundsForChild(size_t i, ILayout* v, int posX, int posY, int posX2, int posY2);
-    boxElementInfo& addChild(ILayout* child);
-    boxElementInfo& addChild(ILayout* child, int flex);
-    size_t childrenCount();
+    void SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, int posY2);
+    boxElementInfo& AddChild(ILayout* child);
+    boxElementInfo& AddChild(ILayout* child, int flex);
+    int ChildrenCount();
 };
 
 // align.go

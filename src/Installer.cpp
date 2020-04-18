@@ -1303,7 +1303,7 @@ static bool CreateRaMicroInstallerWindow() {
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Install", [win]() { win->Install(); });
-        buttons->addChild(l);
+        buttons->AddChild(l);
         win->btnInstall = b;
     }
 
@@ -1316,7 +1316,7 @@ static bool CreateRaMicroInstallerWindow() {
     ok = splashCtrl->Create();
     CrashIf(!ok);
     ILayout* splashLayout = NewImageLayout(splashCtrl);
-    main->addChild(splashLayout);
+    main->AddChild(splashLayout);
 
     win->finishedText = new StaticCtrl(hwnd);
     win->finishedText->SetText("Installation finished!");
@@ -1326,9 +1326,9 @@ static bool CreateRaMicroInstallerWindow() {
     win->finishedText->SetIsVisible(false);
     ILayout* finishedTextLayout = NewLabelLayout(win->finishedText);
 
-    main->addChild(finishedTextLayout);
+    main->AddChild(finishedTextLayout);
 
-    main->addChild(buttons);
+    main->AddChild(buttons);
 
     auto* padding = new Padding();
     padding->insets = DefaultInsets();

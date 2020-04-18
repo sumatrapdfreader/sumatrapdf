@@ -774,31 +774,31 @@ static void CreateButtonsLayout(TocEditorWindow* w) {
     buttons->alignCross = CrossAxisAlign::CrossStart;
     {
         auto [l, b] = CreateButtonLayout(hwnd, "&Add PDF", std::bind(&TocEditorWindow::AddPdf, w));
-        buttons->addChild(l);
+        buttons->AddChild(l);
         w->btnAddPdf = b;
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "&Remove Item", std::bind(&TocEditorWindow::RemoveItem, w));
-        buttons->addChild(l);
+        buttons->AddChild(l);
         w->btnRemoveTocItem = b;
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Save As PDF", std::bind(&TocEditorWindow::SaveAsPdf, w));
-        buttons->addChild(l);
+        buttons->AddChild(l);
         w->btnSaveAsPdf = b;
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Save As Virtual PDF", std::bind(&TocEditorWindow::SaveAsVirtual, w));
-        buttons->addChild(l);
+        buttons->AddChild(l);
         w->btnSaveAsVirtual = b;
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "E&xit", std::bind(&Window::Close, w->mainWindow));
-        buttons->addChild(l);
+        buttons->AddChild(l);
         w->btnExit = b;
     }
 
@@ -845,9 +845,9 @@ static void CreateMainLayout(TocEditorWindow* win) {
     main->alignMain = MainAxisAlign::MainStart;
     main->alignCross = CrossAxisAlign::Stretch;
 
-    main->addChild(treeLayout, 1);
-    main->addChild(labelLayout, 0);
-    main->addChild(win->layoutButtons, 0);
+    main->AddChild(treeLayout, 1);
+    main->AddChild(labelLayout, 0);
+    main->AddChild(win->layoutButtons, 0);
 
     auto* padding = new Padding();
     padding->insets = DefaultInsets();

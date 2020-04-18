@@ -162,47 +162,47 @@ static void CreateMainLayout(HWND hwnd) {
     vbox->alignCross = CrossAxisAlign::Stretch;
     {
         auto [l, b] = CreateButtonLayout(hwnd, "toggle main axis", ToggleMainAxis);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
     {
         auto [l, b] = CreateButtonLayout(hwnd, "advance progress", AdvanceProgress);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
         auto l = CreateEditLayout(hwnd, "initial text");
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "toggle cross axis", ToggleCrossAxis);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
         auto l = CreateCheckboxLayout(hwnd, "checkbox one");
-        auto elInfo = vbox->addChild(l, 0);
+        auto elInfo = vbox->AddChild(l, 0);
     }
     {
         auto l = CreateCheckboxLayout(hwnd, "checkbox two");
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
     {
         auto l = CreatedDropDownLayout(hwnd);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
     {
         auto l = CreateStaticLayout(hwnd, "static control");
         auto l2 = new Align(l);
         l2->HAlign = AlignEnd;
-        vbox->addChild(l2);
+        vbox->AddChild(l2);
     }
     {
         auto [l, w] = CreateProgressLayout(hwnd, maxProgress);
         w->idealDy = 32;
         w->idealDx = 128;
         gProgress = w;
-        vbox->addChild(l);
+        vbox->AddChild(l);
         AdvanceProgress();
     }
 

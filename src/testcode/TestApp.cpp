@@ -40,22 +40,22 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     vbox->alignCross = CrossAxisAlign::CrossCenter;
     {
         auto [l, b] = CreateButtonLayout(hwnd, "DirectDraw test", LaunchDirectDraw);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Tabs test", LaunchTabs);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Layout test", LaunchLayout);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Lice test", LaunchLice);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
     auto* padding = new Padding();
     padding->child = vbox;

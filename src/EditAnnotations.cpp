@@ -155,7 +155,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
         dropDownAdd = w;
         w->onDropDownSelectionChanged = std::bind(&EditAnnotationsWindow::DropDownAddSelectionChanged, this, _1);
         auto l = NewDropDownLayout(w);
-        vbox->addChild(l);
+        vbox->AddChild(l);
         Vec<std::string_view> annotTypes;
         GetDropDownAddItems(annotTypes);
         w->SetItems(annotTypes);
@@ -168,7 +168,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
         CrashIf(!ok);
         listBox = w;
         auto l = NewListBoxLayout(w);
-        vbox->addChild(l, 1);
+        vbox->AddChild(l, 1);
     }
 
     {
@@ -179,7 +179,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
         CrashIf(!ok);
         buttonDelete = w;
         auto l = NewButtonLayout(w);
-        vbox->addChild(l);
+        vbox->AddChild(l);
         w->SetIsEnabled(false);
     }
 
@@ -191,7 +191,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
         CrashIf(!ok);
         buttonCancel = w;
         auto l = NewButtonLayout(w);
-        vbox->addChild(l);
+        vbox->AddChild(l);
     }
 
     lbModel = new ListBoxModelStrings();
