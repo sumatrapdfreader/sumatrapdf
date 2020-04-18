@@ -392,7 +392,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     mui::ITextRender* textDraw = mui::TextRenderGdiplus::Create(&g);
     DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black),
                  cookie ? &cookie->abort : nullptr);
-    DrawAnnotations(g, annotsFromSmx, pageNo);
+    DrawAnnotations(g, userAnnots, pageNo);
     delete textDraw;
     DeleteDC(hDC);
 

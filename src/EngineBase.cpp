@@ -443,8 +443,6 @@ RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectD* page
 }
 
 EngineBase::~EngineBase() {
-    DeleteVecAnnotations(annotsFromSmx);
-    // unsavedAnnots are not owned by us
     free(decryptionKey);
 }
 
@@ -484,15 +482,9 @@ void EngineBase::GetAnnotations(Vec<Annotation*>* annotsOut) {
     // no-op implementation for most file types
 }
 
-void EngineBase::SetAnnotationsFromSmx(Vec<Annotation*>* annots) {
-    DeleteVecAnnotations(annotsFromSmx);
-    // we take ownership
-    annotsFromSmx = annots;
-}
-
-void EngineBase::SetUnsavedAnnotations(Vec<Annotation*>* annots) {
+void EngineBase::SetUserAnnotations(Vec<Annotation*>* annots) {
     // owned by DisplayModel
-    unsavedAnnots = annots;
+    userAnnots = annots;
 }
 
 PageDestination* EngineBase::GetNamedDest(const WCHAR* name) {

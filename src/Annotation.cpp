@@ -11,20 +11,20 @@ Annotation::Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF col
     this->color = color;
 }
 
-bool Annotation::operator==(const Annotation& other) const {
-    if (&other == this) {
+bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
+    if (a1 == a2) {
         return true;
     }
-    if (other.type != type) {
+    if (a1->type != a2->type) {
         return false;
     }
-    if (other.pageNo != pageNo) {
+    if (a1->pageNo != a2->pageNo) {
         return false;
     }
-    if (other.color != color) {
+    if (a1->color != a2->color) {
         return false;
     }
-    if (other.rect != rect) {
+    if (a1->rect != a2->rect) {
         return false;
     }
     return true;
@@ -43,9 +43,10 @@ Vec<Annotation*> GetAnnotationsForPage(Vec<Annotation*>* annots, int pageNo) {
     if (!annots) {
         return result;
     }
-    int n = annots->isize();
-    for (int i = 0; i < n; i++) {
-        Annotation* annot = annots->at(i);
+    for (auto& annot : *annots) {
+        if (annot->isDeleted) {
+            continue;
+        }
         if (annot->pageNo != pageNo) {
             continue;
         }

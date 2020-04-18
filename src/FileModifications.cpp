@@ -191,6 +191,9 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
     int nAnnots = annots->isize();
     for (int i = 0; i < nAnnots; i++) {
         const Annotation& annot = *annots->at(i);
+        if (annot.isDeleted) {
+            continue;
+        }
         char* s = PageAnnotTypeToString(annot.type);
         if (str::IsEmpty(s)) {
             continue;

@@ -179,7 +179,7 @@ DisplayModel::~DisplayModel() {
     cb->CleanUp(this);
 
     delete pdfSync;
-    DeleteVecAnnotations(unsavedAnnots);
+    DeleteVecAnnotations(userAnnots);
     delete textSearch;
     delete textSelection;
     delete textCache;
@@ -1692,5 +1692,13 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
 }
 
 bool DisplayModel::HasUnsavedAnnots() {
-    return unsavedAnnots && unsavedAnnots->size() > 0;
+    if (!userAnnots) {
+        return false;
+    }
+    for (auto& annot : *userAnnots) {
+        if (annot->isChanged) {
+            return true;
+        }
+    }
+    return false;
 }

@@ -565,7 +565,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     Vec<Annotation*>* annots = LoadFileModifications(engine->FileName());
-    engine->SetAnnotationsFromSmx(annots);
+    engine->SetUserAnnotations(annots);
     if (!loadOnly) {
         DumpData(engine, fullDump);
     }
@@ -573,6 +573,7 @@ int main(int argc, char** argv) {
         RenderDocument(engine, renderPath, renderZoom, silent);
     }
     delete engine;
+    DeleteVecAnnotations(annots);
 
     return 0;
 }

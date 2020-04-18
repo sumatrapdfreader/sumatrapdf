@@ -164,7 +164,8 @@ class DisplayModel : public Controller {
 
     // controller-specific data (easier to save here than on WindowInfo)
     Kind engineType = nullptr;
-    Vec<Annotation*>* unsavedAnnots = nullptr;
+    // loaded from .smx file and added by the user
+    Vec<Annotation*>* userAnnots = nullptr;
 
     Synchronizer* pdfSync = nullptr;
 

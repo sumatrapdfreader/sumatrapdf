@@ -520,7 +520,6 @@ bool EngineDjVu::FinishLoading() {
 void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen) {
     using namespace Gdiplus;
 
-    auto userAnnots = annotsFromSmx;
     if (!bmp || !userAnnots || userAnnots->size() == 0) {
         return;
     }
@@ -535,6 +534,9 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
 
         for (int i = 0; i < n; i++) {
             const Annotation& annot = *userAnnots->at(i);
+            if (annot.isDeleted) {
+                continue;
+            }
             if (annot.pageNo != pageNo) {
                 continue;
             }

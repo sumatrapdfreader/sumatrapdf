@@ -355,10 +355,7 @@ EngineBase* EngineXps::Clone() {
         return nullptr;
     }
 
-    // TODO: set a copy of annotsFromSmx
-    // clone->SetAnnotsFromSmx(cloneAnnots(annotsFromSmx));
-    clone->SetUnsavedAnnotations(unsavedAnnots);
-
+    clone->SetUserAnnotations(userAnnots);
     return clone;
 }
 
@@ -653,8 +650,7 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
     fz_var(pix);
     fz_var(bitmap);
 
-    // TODO: also get unsavedAnnots
-    Vec<Annotation*> pageAnnots = GetAnnotationsForPage(annotsFromSmx, args.pageNo);
+    Vec<Annotation*> pageAnnots = GetAnnotationsForPage(userAnnots, args.pageNo);
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, page);
