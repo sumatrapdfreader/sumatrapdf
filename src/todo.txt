@@ -1,0 +1,110 @@
+
+Annotations:
+ - EditAnnotationsWindow and TabInfo must self-reference
+ - implement EnginePdf::GetAnnotations
+ - display rect info in EditAnnotationsWindow
+
+------
+
+possible refactorings:
+- convert Rect in Layout.h to be like RectI
+- change how properties are retrieved (in bulk, instead of one-by-one)
+- convert Add Bookmark dialog to new widget / layout system
+- convert hwndTocBox to Window
+- move WindowInfo::tocLoaded into TabInfo
+- add Size that uses i32 and replace SizeI and RectangleI and Size in Layout with it, add to geom.h
+- change how we handle parent messages to be like in [https://github.com/andlabs/libui](https://github.com/andlabs/libui)
+- finish porting LabelWithCloseWnd ⇒ LabelWithCloseCtrl
+- turn PasswordUI class into a callback function
+- use char* instead of WCHAR* for files in Engines
+- turn LinkSaverUI class into a callback function
+- make SaveFileAsPDF non-virtual ([https://codeeval.dev/gist/23710422979e7a7235db96254afd0681](https://codeeval.dev/gist/23710422979e7a7235db96254afd0681))
+- tga::SerializeBitmap : change to return std::string_view
+- rethink how bitmaps are storied. Preferable store them in sth. similar to fz_pixmap() and just blit when painting, like mupdf viewer. Or make a virtual Blit()
+- rename RectI, PointI, SizeI => Rect, Point, Size
+- ChmDoc -> ChmFile
+- ChmDoc::Load() WCHAR => std::string_view
+- test icons at different sizes (for toolbar they look bad at some sizes; see if it's toolbar or mupdf)
+
+------
+
+Somewhat big items:
+- type-safe string formatter that splits parsing of format string and formatting
+- convert to wdl IBitmap
+- convert epub to use mupdf
+  - start with a test program that just draws every page at a given resolution
+- simplify Caption
+- smaller scrollbar that gets bigger when mouse is closer to it
+- toolbar that is hidden by default by shows when mouse hovers over it
+- better search interface
+
+------
+
+!! sppedup cbr archives
+- unpack images in the background, because that takes most of the time and they don't compress well anyway
+- maybe move blitting to WM_PAINT
+    - https://www-user.tu-chemnitz.de/~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15d.htm~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15d.htm
+    - https://www-user.tu-chemnitz.de/~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15c.htm~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15c.htm
+    - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setdibitstodevice
+    - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-stretchdibits
+    - https://stackoverflow.com/questions/1053052/a-generic-error-occurred-in-gdi-jpeg-image-to-memorystream
+    - https://devblogs.microsoft.com/oldnewthing/20090714-00/?p=17503
+    - https://devblogs.microsoft.com/oldnewthing/20090717-00/?p=17443
+    - https://devblogs.microsoft.com/oldnewthing/20180528-00/?p=98845
+    - https://devblogs.microsoft.com/oldnewthing/20090716-00/?p=17463
+    - https://devblogs.microsoft.com/oldnewthing/20090715-00/?p=17483
+
+------
+
+!! associate PDF files on Win 10
+- https://cs.chromium.org/chromium/src/chrome/installer/util/shell_util.cc?type=cs&q="Set+as+default"&sq=package:chromium&g=0&l=802 : chrome code
+- https://docs.microsoft.com/en-us/windows/win32/shell/fa-intro
+- https://docs.microsoft.com/en-us/windows/win32/shell/vista-managing-defaults
+- https://docs.microsoft.com/en-us/windows/win32/shell/default-programs
+- https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ee872123(v=vs.85)
+- https://stackoverflow.com/questions/36270355/file-association-and-thumbnail-preview-in-windows-10?rq=1
+- https://stackoverflow.com/questions/32178986/windows-10-equivalent-of-launchadvancedassociationui/52198802#52198802
+
+------
+
+Notes / references:
+- https://github.com/andlabs/libui : steal ideas for UI windows wrappers
+- https://github.com/johnfactotum/foliate : gnome epub reader using epub.js. Written in JavaScript / Gtk
+- https://gitlab.com/timofonic/libmobi
+- https://en.bandisoft.com/honeyview/ : steal good UI ideas
+- https://github.com/yue/yue/tree/master/nativeui : has UI code, including full-featured web view
+- https://github.com/neutralinojs/neutralinojs/blob/master/core-windows/src/webview.h : web view code
+
+------
+
+icons:
+- file open
+    - https://github.com/tabler/tabler-icons/blob/master/icons/folder.svg
+- print
+    - https://github.com/tabler/tabler-icons/blob/master/icons/printer.svg
+- next page, prev page
+    - https://github.com/tabler/tabler-icons/blob/master/icons/arrow-left.svg
+    - https://github.com/tabler/tabler-icons/blob/master/icons/arrow-right.svg
+- continuous layout
+    - https://github.com/tabler/tabler-icons/blob/master/icons/layout-rows.svg
+- single page layout
+    - https://github.com/tabler/tabler-icons/blob/master/icons/square.svg
+- zoom in, zoom out
+    - https://github.com/tabler/tabler-icons/blob/master/icons/zoom-in.svg
+    - https://github.com/tabler/tabler-icons/blob/master/icons/zoom-out.svg
+- find next, find prev
+    - https://github.com/tabler/tabler-icons/blob/master/icons/chevron-left.svg
+    - https://github.com/tabler/tabler-icons/blob/master/icons/chevron-right.svg
+- find match case
+    - https://github.com/tabler/tabler-icons/blob/master/icons/code.svg
+- maybe:
+    - rotate left / right
+    - https://github.com/tabler/tabler-icons/blob/master/icons/home.svg
+
+- possible icon sets
+    https://github.com/tabler/tabler-icons
+    https://github.com/refactoringui/heroicons (no match case and layout)
+    https://feathericons.com/ (no match case and layout)
+    https://thenounproject.com/  lots of icons, needs attribution or pay $99/year for attribution and royalty free license
+    https://icomoon.io/app/#/select
+    https://github.com/microsoft/vscode-codicons
