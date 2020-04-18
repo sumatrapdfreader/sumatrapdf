@@ -279,7 +279,7 @@ class EngineDjVu : public EngineBase {
 
     Vec<ddjvu_fileinfo_t> fileInfos;
 
-    RenderedBitmap* CreateRenderedBitmap(const char* bmpData, SizeI size, bool grayscale) const;
+    RenderedBitmap* CreateRenderedBitmap(const char* bmpData, Size size, bool grayscale) const;
     void DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, Rect screen);
     bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>& coords);
     char* ResolveNamedDest(const char* name);
@@ -583,7 +583,7 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
     DeleteDC(hdc);
 }
 
-RenderedBitmap* EngineDjVu::CreateRenderedBitmap(const char* bmpData, SizeI size, bool grayscale) const {
+RenderedBitmap* EngineDjVu::CreateRenderedBitmap(const char* bmpData, Size size, bool grayscale) const {
     int stride = ((size.dx * (grayscale ? 1 : 3) + 3) / 4) * 4;
 
     BITMAPINFO* bmi = (BITMAPINFO*)calloc(1, sizeof(BITMAPINFOHEADER) + (grayscale ? 256 * sizeof(RGBQUAD) : 0));

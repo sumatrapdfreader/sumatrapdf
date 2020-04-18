@@ -52,7 +52,7 @@ class DialogData {
     POINT ptSmallest;
 
     // we need this to decide how much the window has changed size when we get a WM_SIZE message
-    SizeI sizeClient;
+    Size sizeClient;
     bool bMaximised;
 
     void UpdateGripper() {
@@ -140,7 +140,7 @@ void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
     }
     EndDeferWindowPos(hdwp);
 
-    pdd->sizeClient = SizeI(cx, cy);
+    pdd->sizeClient = Size(cx, cy);
     // If we have a sizing grip enabled then adjust it's position
     pdd->UpdateGripper();
 }

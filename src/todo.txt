@@ -9,14 +9,14 @@ Annotations:
 possible refactorings:
 - [X] convert Rect in Layout.h to be like Rect
 - replace Rect with Rect typedef
-- rename Rect, PointI, SizeI => Rect, Point, Size
+- rename Rect, PointI, Size => Rect, Point, Size
 - replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
 - remove DirectDraw test and don't link with d2d
 - convert Add Bookmark dialog to new widget / layout system
 - convert hwndTocBox to Window
 - move WindowInfo::tocLoaded into TabInfo
-- add Size that uses i32 and replace SizeI and RectangleI and Size in Layout with it, add to geom.h
+- add Size that uses i32 and replace Size and RectangleI and Size in Layout with it, add to geom.h
 - change how we handle parent messages to be like in [https://github.com/andlabs/libui](https://github.com/andlabs/libui)
 - finish porting LabelWithCloseWnd ⇒ LabelWithCloseCtrl
 - turn PasswordUI class into a callback function

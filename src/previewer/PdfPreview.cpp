@@ -86,10 +86,10 @@ class PageRenderer {
     int currPage;
     RenderedBitmap* currBmp;
     // due to rounding differences, currBmp->Size() and currSize can differ slightly
-    SizeI currSize;
+    Size currSize;
     int reqPage;
     float reqZoom;
-    SizeI reqSize;
+    Size reqSize;
     bool reqAbort;
     AbortCookie* abortCookie;
 

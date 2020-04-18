@@ -600,7 +600,7 @@ ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s) {
 
     RECT r;
     GetClientRect(hwndParent, &r);
-    SizeI size = b->GetIdealSize();
+    Size size = b->GetIdealSize();
     int x = RectDx(r) - size.dx - WINDOW_MARGIN;
     int y = RectDy(r) - size.dy - WINDOW_MARGIN;
     r.left = x;

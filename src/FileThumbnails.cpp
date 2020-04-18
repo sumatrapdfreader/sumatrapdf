@@ -136,7 +136,7 @@ static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
     HBITMAP hbmp;
     RenderedBitmap* rendered = nullptr;
     if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) == Gdiplus::Ok) {
-        rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
+        rendered = new RenderedBitmap(hbmp, Size(bmp->GetWidth(), bmp->GetHeight()));
     }
     delete bmp;
 

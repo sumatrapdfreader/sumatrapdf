@@ -793,7 +793,7 @@ TreeItemState TreeCtrl::GetItemState(TreeItem* ti) {
     return res;
 }
 
-SizeI TreeCtrl::GetIdealSize() {
+Size TreeCtrl::GetIdealSize() {
     return {idealSize.dx, idealSize.dy};
 }
 

@@ -9,7 +9,7 @@ struct ImageCtrl : WindowBase {
     ~ImageCtrl() override;
     bool Create() override;
 
-    SizeI GetIdealSize() override;
+    Size GetIdealSize() override;
 };
 
 ILayout* NewImageLayout(ImageCtrl* b);

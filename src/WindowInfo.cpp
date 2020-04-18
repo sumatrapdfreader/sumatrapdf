@@ -143,8 +143,8 @@ void WindowInfo::UpdateCanvasSize() {
         notifications->Relayout();
 }
 
-SizeI WindowInfo::GetViewPortSize() {
-    SizeI size = canvasRc.Size();
+Size WindowInfo::GetViewPortSize() {
+    Size size = canvasRc.Size();
 
     DWORD style = GetWindowLong(hwndCanvas, GWL_STYLE);
     if ((style & WS_VSCROLL)) {

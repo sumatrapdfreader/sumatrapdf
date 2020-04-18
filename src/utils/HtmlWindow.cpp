@@ -1462,7 +1462,7 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     switch (msg) {
         case WM_SIZE:
             if (SIZE_MINIMIZED != wParam) {
-                win->OnSize(SizeI(LOWORD(lParam), HIWORD(lParam)));
+                win->OnSize(Size(LOWORD(lParam), HIWORD(lParam)));
                 return 0;
             }
             break;
@@ -1646,7 +1646,7 @@ HtmlWindow::~HtmlWindow() {
     FreeHtmlSetInProgressData();
 }
 
-void HtmlWindow::OnSize(SizeI size) {
+void HtmlWindow::OnSize(Size size) {
     if (webBrowser) {
         webBrowser->put_Width(size.dx);
         webBrowser->put_Height(size.dy);
@@ -1805,7 +1805,7 @@ void HtmlWindow::SetScrollbarToAuto() {
 // Take a screenshot of a given <area> inside an html window and resize
 // it to <finalSize>. It's up to the caller to make sure <area> fits
 // within window (we don't check that's the case)
-HBITMAP HtmlWindow::TakeScreenshot(Rect area, SizeI finalSize) {
+HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch)

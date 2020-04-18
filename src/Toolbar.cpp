@@ -343,7 +343,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
     int pos_x = r.right + 10;
     int pos_y = (r.bottom - findWndRect.dy) / 2;
 
-    SizeI size = TextSizeInHwnd(win->hwndFindText, text);
+    Size size = TextSizeInHwnd(win->hwndFindText, text);
     size.dx += TB_TEXT_PADDING_RIGHT;
 
     int padding = GetSystemMetrics(SM_CXEDGE);
@@ -476,7 +476,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     const WCHAR* text = _TR("Page:");
     if (!updateOnly)
         win::SetText(win->hwndPageText, text);
-    SizeI size = TextSizeInHwnd(win->hwndPageText, text);
+    Size size = TextSizeInHwnd(win->hwndPageText, text);
     size.dx += TB_TEXT_PADDING_RIGHT;
 
     WindowRect pageWndRect(win->hwndPageBg);
@@ -487,7 +487,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     int pos_y = (r.bottom - pageWndRect.dy) / 2;
 
     WCHAR* buf;
-    SizeI size2;
+    Size size2;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size
         buf = win::GetText(win->hwndPageTotal);
@@ -638,7 +638,7 @@ void CreateToolbar(WindowInfo* win) {
     HBITMAP hbmp = nullptr;
     bool useSvg = true;
 
-    SizeI size{-1, -1};
+    Size size{-1, -1};
     if (useSvg) {
         // TODO: bitmap is skewed for dxDpi of 20, 24 etc.
         int dxDpi = 16;

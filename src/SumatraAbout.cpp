@@ -157,8 +157,8 @@ static WCHAR* GetAppVersion() {
     return s.StealData();
 }
 
-static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
-    SizeI result{};
+static Size CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
+    Size result{};
 
     AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
     AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
@@ -333,7 +333,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
     /* calculate minimal top box size */
-    SizeI headerSize = CalcSumatraVersionSize(hwnd, hdc);
+    Size headerSize = CalcSumatraVersionSize(hwnd, hdc);
 
     /* calculate left text dimensions */
     SelectObject(hdc, fontLeftTxt);
@@ -701,7 +701,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             if (!state->thumbnail)
                 loadOk = LoadThumbnail(*state);
             if (loadOk && state->thumbnail) {
-                SizeI thumbSize = state->thumbnail->Size();
+                Size thumbSize = state->thumbnail->Size();
                 if (thumbSize.dx != THUMBNAIL_DX || thumbSize.dy != THUMBNAIL_DY) {
                     page.dy = thumbSize.dy * THUMBNAIL_DX / thumbSize.dx;
                     page.y += THUMBNAIL_DY - page.dy;

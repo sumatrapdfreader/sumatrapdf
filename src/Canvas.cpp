@@ -203,7 +203,7 @@ static void OnDraggingStop(WindowInfo* win, int x, int y, bool aborted) {
         return;
     }
 
-    SizeI drag(x - win->dragPrevPos.x, y - win->dragPrevPos.y);
+    Size drag(x - win->dragPrevPos.x, y - win->dragPrevPos.y);
     win->MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
@@ -669,7 +669,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
             colors[1] = gcols->at(1);
             colors[2] = gcols->at(2);
         }
-        SizeI size = dm->GetCanvasSize();
+        Size size = dm->GetCanvasSize();
         float percTop = 1.0f * dm->GetViewPort().y / size.dy;
         float percBot = 1.0f * dm->GetViewPort().BR().y / size.dy;
         if (!IsContinuous(dm->GetDisplayMode())) {
@@ -678,7 +678,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
             percBot += dm->CurrentPageNo() - 1;
             percBot /= dm->PageCount();
         }
-        SizeI vp = dm->GetViewPort().Size();
+        Size vp = dm->GetViewPort().Size();
         TRIVERTEX tv[4] = {{0, 0}, {vp.dx, vp.dy / 2}, {0, vp.dy / 2}, {vp.dx, vp.dy}};
         GRADIENT_RECT gr[2] = {{0, 1}, {2, 3}};
 

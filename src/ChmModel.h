@@ -31,7 +31,7 @@ class ChmModel : public Controller {
     void SetZoomVirtual(float zoom, PointI* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
-    void SetViewPortSize(SizeI size) override;
+    void SetViewPortSize(Size size) override;
 
     // table of contents
     TocTree* GetToc() override;
@@ -40,7 +40,7 @@ class ChmModel : public Controller {
 
     void GetDisplayState(DisplayState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
-    void CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) override;
+    void CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) override;
 
     // for quick type determination and type-safe casting
     ChmModel* AsChm() override;

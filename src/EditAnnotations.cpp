@@ -110,7 +110,7 @@ void EditAnnotationsWindow::SizeHandler(SizeEvent* ev) {
         // avoid un-necessary layout
         return;
     }
-    SizeI windowSize{dx, dy};
+    Size windowSize{dx, dy};
     auto c = Tight(windowSize);
     auto size = mainLayout->Layout(c);
     PointI min{0, 0};

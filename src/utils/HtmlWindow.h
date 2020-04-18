@@ -70,7 +70,7 @@ class HtmlWindow {
   public:
     ~HtmlWindow();
 
-    void OnSize(SizeI size);
+    void OnSize(Size size);
     void SetVisible(bool visible);
     void NavigateToUrl(const WCHAR* url);
     void NavigateToDataUrl(const WCHAR* url);
@@ -85,7 +85,7 @@ class HtmlWindow {
     void CopySelection();
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
-    HBITMAP TakeScreenshot(Rect area, SizeI finalSize);
+    HBITMAP TakeScreenshot(Rect area, Size finalSize);
 
     bool canGoBack;
     bool canGoForward;

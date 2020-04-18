@@ -160,7 +160,7 @@ struct TreeCtrl : WindowBase {
     // for TVN_BEGINDRAG / WM_MOUSEMOVE / WM_LBUTTONUP
     TreeItemDraggedHandler onTreeItemDragStartEnd = nullptr;
 
-    SizeI idealSize{};
+    Size idealSize{};
 
     // private
     TVITEMW item = {0};
@@ -172,7 +172,7 @@ struct TreeCtrl : WindowBase {
     TreeCtrl(HWND parent);
     ~TreeCtrl();
 
-    SizeI GetIdealSize() override;
+    Size GetIdealSize() override;
     void WndProc(WndEvent*) override;
 
     void HandleMouseDuringDrag(WndEvent*);

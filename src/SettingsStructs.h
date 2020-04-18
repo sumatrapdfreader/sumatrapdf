@@ -46,7 +46,7 @@ struct FixedPageUI {
     WindowMargin windowMargin;
     // horizontal and vertical distance between two pages in facing and
     // book view modes
-    SizeI pageSpacing;
+    Size pageSpacing;
     // colors to use for the gradient from top to bottom (stops will be
     // inserted at regular intervals throughout the document); currently
     // only up to three colors are supported; the idea behind this
@@ -81,7 +81,7 @@ struct ComicBookUI {
     WindowMargin windowMargin;
     // horizontal and vertical distance between two pages in facing and
     // book view modes
-    SizeI pageSpacing;
+    Size pageSpacing;
     // if true, default to displaying Comic Book files in manga mode (from
     // right to left if showing 2 pages at a time)
     bool cbxMangaMode;
@@ -403,10 +403,10 @@ static const FieldInfo gWindowMarginFields[] = {
 static const StructInfo gWindowMarginInfo = {sizeof(WindowMargin), 4, gWindowMarginFields, "Top\0Right\0Bottom\0Left"};
 
 static const FieldInfo gSizeIFields[] = {
-    {offsetof(SizeI, dx), Type_Int, 4},
-    {offsetof(SizeI, dy), Type_Int, 4},
+    {offsetof(Size, dx), Type_Int, 4},
+    {offsetof(Size, dy), Type_Int, 4},
 };
-static const StructInfo gSizeIInfo = {sizeof(SizeI), 2, gSizeIFields, "Dx\0Dy"};
+static const StructInfo gSizeIInfo = {sizeof(Size), 2, gSizeIFields, "Dx\0Dy"};
 
 static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, textColor), Type_Color, 0x000000},
@@ -440,10 +440,10 @@ static const StructInfo gWindowMargin_1_Info = {sizeof(WindowMargin), 4, gWindow
                                                 "Top\0Right\0Bottom\0Left"};
 
 static const FieldInfo gSizeI_1_Fields[] = {
-    {offsetof(SizeI, dx), Type_Int, 4},
-    {offsetof(SizeI, dy), Type_Int, 4},
+    {offsetof(Size, dx), Type_Int, 4},
+    {offsetof(Size, dy), Type_Int, 4},
 };
-static const StructInfo gSizeI_1_Info = {sizeof(SizeI), 2, gSizeI_1_Fields, "Dx\0Dy"};
+static const StructInfo gSizeI_1_Info = {sizeof(Size), 2, gSizeI_1_Fields, "Dx\0Dy"};
 
 static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, windowMargin), Type_Compact, (intptr_t)&gWindowMargin_1_Info},

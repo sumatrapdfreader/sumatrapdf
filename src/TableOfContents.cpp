@@ -951,7 +951,7 @@ static void TocTreeMsgFilter(WndEvent* ev) {
 // Used for toc and favorites.
 void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND hwndTree) {
     HWND hwndContainer = GetParent(hwndTree);
-    SizeI labelSize = l->GetIdealSize();
+    Size labelSize = l->GetIdealSize();
     WindowRect rc(hwndContainer);
     bool altBookmarksVisible = altBookmarks && altBookmarks->IsVisible();
     int dy = rc.dy;
@@ -960,7 +960,7 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND 
     dy -= labelSize.dy;
     y += labelSize.dy;
     if (altBookmarksVisible) {
-        SizeI bs = altBookmarks->GetIdealSize();
+        Size bs = altBookmarks->GetIdealSize();
         int elDy = bs.dy;
         RECT r{0, y, rc.dx, y + elDy};
         altBookmarks->SetBounds(r);

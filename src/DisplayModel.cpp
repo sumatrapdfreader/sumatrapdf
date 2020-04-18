@@ -199,7 +199,7 @@ PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
 }
 
 // Call this before the first Relayout
-void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newStartPage, SizeI viewPort, int screenDPI) {
+void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newStartPage, Size viewPort, int screenDPI) {
     totalViewPortSize = viewPort;
     dpiFactor = 1.0f * screenDPI / engine->GetFileDPI();
     if (ValidPageNo(newStartPage)) {
@@ -688,7 +688,7 @@ RestartLayout:
         }
     }
 
-    canvasSize = SizeI(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));
+    canvasSize = Size(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));
 }
 
 void DisplayModel::ChangeStartPage(int newStartPage) {
@@ -941,7 +941,7 @@ void DisplayModel::RenderVisibleParts() {
     }
 }
 
-void DisplayModel::SetViewPortSize(SizeI newViewPortSize) {
+void DisplayModel::SetViewPortSize(Size newViewPortSize) {
     ScrollState ss;
 
     bool isDocReady = ValidPageNo(startPage) && zoomReal != 0;

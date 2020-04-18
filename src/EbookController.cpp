@@ -259,7 +259,7 @@ void EbookController::CloseCurrentDocument() {
     StopFormattingThread();
     DeletePages(&pages);
     doc.Delete();
-    pageSize = SizeI(0, 0);
+    pageSize = Size(0, 0);
 }
 
 // returns page whose content contains reparseIdx
@@ -339,7 +339,7 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingData* ft) {
 
 void EbookController::TriggerLayout() {
     Gdiplus::Size s = ctrls->pagesLayout->GetPage1()->GetDrawableSize();
-    SizeI size(s.Width, s.Height);
+    Size size(s.Width, s.Height);
     if (size.IsEmpty()) {
         // we haven't been sized yet
         return;
@@ -590,7 +590,7 @@ bool EbookController::IsDoublePage() const {
     return ctrls->pagesLayout->GetPage2()->IsVisible();
 }
 
-static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border) {
+static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, Size pageSize, Size bmpSize, int border) {
     PoolAllocator textAllocator;
     auto dx = pageSize.dx - 2 * border;
     auto dy = pageSize.dy - 2 * border;
@@ -631,7 +631,7 @@ static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI
     return new RenderedBitmap(hbmp, bmpSize);
 }
 
-static RenderedBitmap* ThumbFromCoverPage(Doc doc, SizeI size) {
+static RenderedBitmap* ThumbFromCoverPage(Doc doc, Size size) {
     ImageData* coverImage = doc.GetCoverImage();
     if (!coverImage) {
         return nullptr;
@@ -659,12 +659,12 @@ static RenderedBitmap* ThumbFromCoverPage(Doc doc, SizeI size) {
     status = res.GetHBITMAP((ARGB)Color::White, &hbmp);
     delete coverBmp;
     if (status == Ok) {
-        return new RenderedBitmap(hbmp, SizeI(size.dx, size.dy));
+        return new RenderedBitmap(hbmp, Size(size.dx, size.dy));
     }
     return nullptr;
 }
 
-void EbookController::CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) {
+void EbookController::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) {
     // TODO: create thumbnail asynchronously
     CrashIf(!doc.IsDocLoaded());
     // if there is cover image, we use it to generate thumbnail by scaling
@@ -673,7 +673,7 @@ void EbookController::CreateThumbnail(SizeI size, const onBitmapRenderedCb& save
     RenderedBitmap* bmp = ThumbFromCoverPage(doc, size);
     if (!bmp) {
         // no cover image so generate thumbnail from first page
-        SizeI pageSize(size.dx * 3, size.dy * 3);
+        Size pageSize(size.dx * 3, size.dy * 3);
         bmp = RenderFirstDocPageToBitmap(doc, pageSize, size, 10);
     }
     saveThumbnail(bmp);
@@ -897,7 +897,7 @@ void EbookController::GetDisplayState(DisplayState* ds) {
     str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));
 }
 
-void EbookController::SetViewPortSize(SizeI size) {
+void EbookController::SetViewPortSize(Size size) {
     UNUSED(size);
     // relayouting gets the size from the canvas hwnd
     ctrls->mainWnd->RequestLayout();

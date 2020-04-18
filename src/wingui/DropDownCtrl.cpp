@@ -111,11 +111,11 @@ void DropDownCtrl::SetItems(Vec<std::string_view>& newItems) {
     SetCurrentSelection(-1);
 }
 
-SizeI DropDownCtrl::GetIdealSize() {
-    SizeI s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
+Size DropDownCtrl::GetIdealSize() {
+    Size s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
     for (std::string_view s : items) {
         WCHAR* ws = strconv::Utf8ToWstr(s);
-        SizeI s2 = TextSizeInHwnd(hwnd, ws, hfont);
+        Size s2 = TextSizeInHwnd(hwnd, ws, hfont);
         s1.dx = std::max(s1.dx, s2.dx);
         s1.dy = std::max(s1.dy, s2.dy);
         free(ws);

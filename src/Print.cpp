@@ -173,7 +173,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     // Positive x is to the right; positive y is down.
     SetMapMode(hdc, MM_TEXT);
 
-    const SizeI paperSize(GetDeviceCaps(hdc, PHYSICALWIDTH), GetDeviceCaps(hdc, PHYSICALHEIGHT));
+    const Size paperSize(GetDeviceCaps(hdc, PHYSICALWIDTH), GetDeviceCaps(hdc, PHYSICALHEIGHT));
     const Rect printable(GetDeviceCaps(hdc, PHYSICALOFFSETX), GetDeviceCaps(hdc, PHYSICALOFFSETY),
                           GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
     float fileDPI = engine.GetFileDPI();

@@ -8,7 +8,7 @@ struct StaticCtrl : WindowBase {
 
     void HandleWM_COMMAND(WndEvent*);
 
-    SizeI GetIdealSize() override;
+    Size GetIdealSize() override;
 };
 
 ILayout* NewStaticLayout(StaticCtrl* w);

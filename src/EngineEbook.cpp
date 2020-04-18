@@ -539,7 +539,7 @@ static RenderedBitmap* getImageFromData(ImageData id) {
         delete bmp;
         return nullptr;
     }
-    SizeI size(bmp->GetWidth(), bmp->GetHeight());
+    Size size(bmp->GetWidth(), bmp->GetHeight());
     delete bmp;
     return new RenderedBitmap(hbmp, size);
 }

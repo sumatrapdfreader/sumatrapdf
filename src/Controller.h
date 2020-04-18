@@ -21,10 +21,10 @@ class ControllerCallback {
     virtual void GotoLink(PageDestination* dest) = 0;
     // DisplayModel //
     virtual void Repaint() = 0;
-    virtual void UpdateScrollbars(SizeI canvas) = 0;
+    virtual void UpdateScrollbars(Size canvas) = 0;
     virtual void RequestRendering(int pageNo) = 0;
     virtual void CleanUp(DisplayModel* dm) = 0;
-    virtual void RenderThumbnail(DisplayModel* dm, SizeI size, const onBitmapRenderedCb&) = 0;
+    virtual void RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb&) = 0;
     // ChmModel //
     // tell the UI to move focus back to the main window
     // (if always == false, then focus is only moved if it's inside
@@ -67,7 +67,7 @@ class Controller {
     virtual void SetZoomVirtual(float zoom, PointI* fixPt) = 0;
     virtual float GetZoomVirtual(bool absolute = false) const = 0;
     virtual float GetNextZoomStep(float towards) const = 0;
-    virtual void SetViewPortSize(SizeI size) = 0;
+    virtual void SetViewPortSize(Size size) = 0;
 
     // table of contents
     bool HacToc() {
@@ -81,7 +81,7 @@ class Controller {
     // get display state (pageNo, zoom, scroll etc. of the document)
     virtual void GetDisplayState(DisplayState* ds) = 0;
     // asynchronously calls saveThumbnail (fails silently)
-    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)>& saveThumbnail) = 0;
+    virtual void CreateThumbnail(Size size, const std::function<void(RenderedBitmap*)>& saveThumbnail) = 0;
 
     // page labels (optional)
     virtual bool HasPageLabels() const {

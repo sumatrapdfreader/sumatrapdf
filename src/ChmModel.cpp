@@ -266,7 +266,7 @@ void ChmModel::SetPresentationMode(bool enable) {
     UNUSED(enable); /* not supported */
 }
 
-void ChmModel::SetViewPortSize(SizeI size) {
+void ChmModel::SetViewPortSize(Size size) {
     UNUSED(size); /* not needed(?) */
 }
 
@@ -602,14 +602,14 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     ChmDoc* doc = nullptr;
     HWND hwnd = nullptr;
     HtmlWindow* hw = nullptr;
-    SizeI size;
+    Size size;
     onBitmapRenderedCb saveThumbnail;
     AutoFreeWstr homeUrl;
     Vec<std::string_view> data;
     CRITICAL_SECTION docAccess;
 
   public:
-    ChmThumbnailTask(ChmDoc* doc, HWND hwnd, SizeI size, const onBitmapRenderedCb& saveThumbnail) {
+    ChmThumbnailTask(ChmDoc* doc, HWND hwnd, Size size, const onBitmapRenderedCb& saveThumbnail) {
         this->doc = doc;
         this->hwnd = hwnd;
         this->size = size;
@@ -675,7 +675,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
 
 // Create a thumbnail of chm document by loading it again and rendering
 // its first page to a hwnd specially created for it.
-void ChmModel::CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) {
+void ChmModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) {
     // doc and window will be destroyed by the callback once it's invoked
     ChmDoc* doc = ChmDoc::CreateFromFile(fileName);
     if (!doc) {

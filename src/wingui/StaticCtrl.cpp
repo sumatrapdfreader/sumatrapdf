@@ -50,9 +50,9 @@ bool StaticCtrl::Create() {
     return true;
 }
 
-SizeI StaticCtrl::GetIdealSize() {
+Size StaticCtrl::GetIdealSize() {
     WCHAR* txt = win::GetText(hwnd);
-    SizeI s = MeasureTextInHwnd(hwnd, txt, hfont);
+    Size s = MeasureTextInHwnd(hwnd, txt, hfont);
     free(txt);
     return s;
 }

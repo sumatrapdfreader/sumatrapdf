@@ -247,16 +247,15 @@ struct RectT {
 
 } // namespace geomutil
 
-typedef geomutil::SizeT<int> SizeI;
-typedef geomutil::SizeT<double> SizeD;
-
-typedef geomutil::PointT<int> PointI;
-typedef geomutil::PointT<double> PointD;
-
+typedef geomutil::SizeT<int> Size;
 typedef geomutil::RectT<int> Rect;
+typedef geomutil::PointT<int> PointI;
+
+typedef geomutil::SizeT<double> SizeD;
+typedef geomutil::PointT<double> PointD;
 typedef geomutil::RectT<double> RectD;
 
-inline SIZE ToSIZE(SizeI s) {
+inline SIZE ToSIZE(Size s) {
     return {s.dx, s.dy};
 }
 #ifdef _WIN32

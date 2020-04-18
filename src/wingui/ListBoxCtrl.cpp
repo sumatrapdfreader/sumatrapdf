@@ -26,10 +26,10 @@ int ListBoxModelStrings::ItemsCount() {
     return strings.size();
 }
 
-SizeI ListBoxModelStrings::Draw(bool measure) {
+Size ListBoxModelStrings::Draw(bool measure) {
     UNUSED(measure);
     CrashIf(true);
-    return SizeI{};
+    return Size{};
 }
 
 std::string_view ListBoxModelStrings::Item(int i) {
@@ -71,7 +71,7 @@ bool ListBoxCtrl::Create() {
     return ok;
 }
 
-SizeI ListBoxCtrl::GetIdealSize() {
+Size ListBoxCtrl::GetIdealSize() {
     return minSize;
 }
 

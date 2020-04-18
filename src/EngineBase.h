@@ -46,15 +46,15 @@ enum class DocumentProperty {
 class RenderedBitmap {
   public:
     HBITMAP hbmp = nullptr;
-    SizeI size = {};
+    Size size = {};
     AutoCloseHandle hMap = {};
 
-    RenderedBitmap(HBITMAP hbmp, SizeI size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
+    RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
     }
     ~RenderedBitmap();
     RenderedBitmap* Clone() const;
     HBITMAP GetBitmap() const;
-    SizeI Size() const;
+    Size Size() const;
     bool StretchDIBits(HDC hdc, Rect target) const;
 };
 

@@ -229,7 +229,7 @@ class WindowInfo {
     SumatraUIAutomationProvider* uia_provider = nullptr;
 
     void UpdateCanvasSize();
-    SizeI GetViewPortSize();
+    Size GetViewPortSize();
     void RedrawAll(bool update = false);
     void RepaintAsync(UINT delay = 0);
 

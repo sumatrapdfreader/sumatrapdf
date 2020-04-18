@@ -747,7 +747,7 @@ static Rect layoutAndSize(ILayout* layout, int dx, int dy) {
     if (dx == 0 || dy == 0) {
         return {};
     }
-    SizeI windowSize{dx, dy};
+    Size windowSize{dx, dy};
     auto c = Tight(windowSize);
     auto size = layout->Layout(c);
     PointI min{0, 0};

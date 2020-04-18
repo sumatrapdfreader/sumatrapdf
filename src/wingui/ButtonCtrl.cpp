@@ -53,14 +53,14 @@ bool ButtonCtrl::Create() {
     return ok;
 }
 
-SizeI ButtonCtrl::GetIdealSize() {
+Size ButtonCtrl::GetIdealSize() {
     return ButtonGetIdealSize(hwnd);
 }
 
 #if 0
-SizeI ButtonCtrl::SetTextAndResize(const WCHAR* s) {
+Size ButtonCtrl::SetTextAndResize(const WCHAR* s) {
     win::SetText(this->hwnd, s);
-    SizeI size = this->GetIdealSize();
+    Size size = this->GetIdealSize();
     UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
     SetWindowPos(this->hwnd, nullptr, 0, 0, size.dx, size.dy, flags);
     return size;

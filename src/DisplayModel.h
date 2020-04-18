@@ -102,7 +102,7 @@ class DisplayModel : public Controller {
     void SetZoomVirtual(float zoom, PointI* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
-    void SetViewPortSize(SizeI size) override;
+    void SetViewPortSize(Size size) override;
 
     // table of contents
     TocTree* GetToc() override {
@@ -118,7 +118,7 @@ class DisplayModel : public Controller {
 
     void GetDisplayState(DisplayState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
-    void CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) override {
+    void CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) override {
         cb->RenderThumbnail(this, size, saveThumbnail);
     }
 
@@ -192,7 +192,7 @@ class DisplayModel : public Controller {
     bool NeedVScroll() const {
         return viewPort.dx < totalViewPortSize.dx;
     }
-    SizeI GetCanvasSize() const {
+    Size GetCanvasSize() const {
         return canvasSize;
     }
 
@@ -231,7 +231,7 @@ class DisplayModel : public Controller {
 
     void CopyNavHistory(DisplayModel& orig);
 
-    void SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort, int screenDPI);
+    void SetInitialViewSettings(DisplayMode displayMode, int newStartPage, Size viewPort, int screenDPI);
     void SetDisplayR2L(bool r2l) {
         displayR2L = r2l;
     }
@@ -279,16 +279,16 @@ class DisplayModel : public Controller {
     int startPage = 1;
 
     /* size of virtual canvas containing all rendered pages. */
-    SizeI canvasSize;
+    Size canvasSize;
     /* size and position of the viewport on the canvas (resp size of the visible
        part of the canvase available for content (totalViewPortSize minus scroll bars)
        (canvasSize is always at least as big as viewPort.Size()) */
     Rect viewPort;
     /* total size of view port (draw area), including scroll bars */
-    SizeI totalViewPortSize;
+    Size totalViewPortSize;
 
     WindowMargin windowMargin;
-    SizeI pageSpacing;
+    Size pageSpacing;
 
     /* real zoom value calculated from zoomVirtual. Same as
        zoomVirtual * 0.01 * dpiFactor

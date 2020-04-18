@@ -242,9 +242,9 @@ bool LabelWithCloseWnd::Create(HWND parent, int cmd) {
     return this->hwnd != nullptr;
 }
 
-SizeI LabelWithCloseWnd::GetIdealSize() {
+Size LabelWithCloseWnd::GetIdealSize() {
     WCHAR* s = win::GetText(this->hwnd);
-    SizeI size = TextSizeInHwnd(this->hwnd, s);
+    Size size = TextSizeInHwnd(this->hwnd, s);
     free(s);
     int btnDx = DpiScale(this->hwnd, CLOSE_BTN_DX);
     int btnDy = DpiScale(this->hwnd, CLOSE_BTN_DY);
@@ -289,9 +289,9 @@ void LabelWithCloseCtrl::SetPaddingXY(int x, int y) {
     ScheduleRepaint(hwnd);
 }
 
-SizeI LabelWithCloseCtrl::GetIdealSize() {
+Size LabelWithCloseCtrl::GetIdealSize() {
     AutoFreeWstr s = strconv::Utf8ToWstr(text.as_view());
-    SizeI size = TextSizeInHwnd(hwnd, s);
+    Size size = TextSizeInHwnd(hwnd, s);
     int btnDx = DpiScale(hwnd, CLOSE_BTN_DX);
     int btnDy = DpiScale(hwnd, CLOSE_BTN_DY);
     size.dx += btnDx;

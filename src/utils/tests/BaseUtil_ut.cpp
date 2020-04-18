@@ -17,13 +17,13 @@ static void GeomTest() {
 
     SizeD szD(7.7, -3.3);
     utassert(szD.dx == 7.7 && szD.dy == -3.3);
-    SizeI szI = szD.ToInt();
+    Size szI = szD.ToInt();
     utassert(szI.dx == 8 && szI.dy == -3);
     szD = szI.Convert<double>();
     utassert(SizeD(8, -3) == szD);
 
     utassert(!szD.IsEmpty() && !szI.IsEmpty());
-    utassert(SizeI().IsEmpty() && SizeD().IsEmpty());
+    utassert(Size().IsEmpty() && SizeD().IsEmpty());
 
     struct SRIData {
         int x1s, x1e, y1s, y1e;

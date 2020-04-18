@@ -107,10 +107,10 @@ bool ImageCtrl::Create() {
     return ok;
 }
 
-SizeI ImageCtrl::GetIdealSize() {
+Size ImageCtrl::GetIdealSize() {
     UINT dx = bmp->GetWidth();
     UINT dy = bmp->GetHeight();
-    return SizeI{(int)dx, (int)dy};
+    return Size{(int)dx, (int)dy};
 }
 
 ILayout* NewImageLayout(ImageCtrl* w) {

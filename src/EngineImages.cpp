@@ -297,7 +297,7 @@ RenderedBitmap* EngineImages::GetImageForPageElement(PageElement* pel) {
     auto bmp = page->bmp;
     int dx = bmp->GetWidth();
     int dy = bmp->GetHeight();
-    SizeI s{dx, dy};
+    Size s{dx, dy};
     auto status = bmp->GetHBITMAP((ARGB)Color::White, &hbmp);
     DropPage(page, false);
     if (status != Ok) {

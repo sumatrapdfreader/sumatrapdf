@@ -754,7 +754,7 @@ void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SizeI TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
+Size TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
     SIZE sz{};
     size_t txtLen = str::Len(txt);
     HDC dc = GetWindowDC(hwnd);
@@ -767,7 +767,7 @@ SizeI TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
     GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
     SelectObject(dc, prev);
     ReleaseDC(hwnd, dc);
-    return SizeI(sz.cx, sz.cy);
+    return Size(sz.cx, sz.cy);
 }
 
 // TODO: unify with TextSizeInHwnd
@@ -789,11 +789,11 @@ SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
 }
 
 /* Return size of a text <txt> in a given <hdc>, taking into account its font */
-SizeI TextSizeInDC(HDC hdc, const WCHAR* txt) {
+Size TextSizeInDC(HDC hdc, const WCHAR* txt) {
     SIZE sz;
     size_t txtLen = str::Len(txt);
     GetTextExtentPoint32(hdc, txt, (int)txtLen, &sz);
-    return SizeI(sz.cx, sz.cy);
+    return Size(sz.cx, sz.cy);
 }
 
 bool IsFocused(HWND hwnd) {
@@ -1399,10 +1399,10 @@ bool HasCaption(HWND hwnd) {
 }
 } // namespace win
 
-SizeI GetBitmapSize(HBITMAP hbmp) {
+Size GetBitmapSize(HBITMAP hbmp) {
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    return SizeI(bmpInfo.bmWidth, bmpInfo.bmHeight);
+    return Size(bmpInfo.bmWidth, bmpInfo.bmHeight);
 }
 
 // cf. fz_mul255 in fitz.h
@@ -1449,7 +1449,7 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
     DIBSECTION info = {0};
     int nBytes = GetObject(hbmp, sizeof(info), &info);
     CrashIf(nBytes < sizeof(info.dsBm));
-    SizeI size(info.dsBm.bmWidth, info.dsBm.bmHeight);
+    Size size(info.dsBm.bmWidth, info.dsBm.bmHeight);
 
     res->size = size;
     res->hbmp = hbmp;
@@ -1517,7 +1517,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     DIBSECTION info = {0};
     int ret = GetObject(hbmp, sizeof(info), &info);
     CrashIf(ret < sizeof(info.dsBm));
-    SizeI size(info.dsBm.bmWidth, info.dsBm.bmHeight);
+    Size size(info.dsBm.bmWidth, info.dsBm.bmHeight);
 
     // for mapped 32-bit DI bitmaps: directly access the pixel data
     if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 32 == info.dsBm.bmBitsPixel &&
@@ -1591,7 +1591,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 // can be deserialized with LoadImage(nullptr, ..., LD_LOADFROMFILE) and its
 // dimensions determined again with GetBitmapSize(...))
 unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
-    SizeI size = GetBitmapSize(hbmp);
+    Size size = GetBitmapSize(hbmp);
     DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
     DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
     unsigned char* bmpData = AllocArray<unsigned char>(bmpBytes);
@@ -1623,7 +1623,7 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
     return bmpData;
 }
 
-HBITMAP CreateMemoryBitmap(SizeI size, HANDLE* hDataMapping) {
+HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping) {
     BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = size.dx;
@@ -1993,7 +1993,7 @@ void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
     }
 }
 
-SizeI ButtonGetIdealSize(HWND hwnd) {
+Size ButtonGetIdealSize(HWND hwnd) {
     // adjust to real size and position to the right
     SIZE s{};
     Button_GetIdealSize(hwnd, &s);
@@ -2003,7 +2003,7 @@ SizeI ButtonGetIdealSize(HWND hwnd) {
     hwndDpiAdjust(hwnd, &xPadding, &yPadding);
     s.cx += (int)xPadding;
     s.cy += (int)yPadding;
-    SizeI res = {s.cx, s.cy};
+    Size res = {s.cx, s.cy};
     return res;
 }
 

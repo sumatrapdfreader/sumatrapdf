@@ -19,7 +19,7 @@ struct ProgressCtrl : WindowBase {
     int GetMax();
     int GetCurrent();
 
-    SizeI GetIdealSize() override;
+    Size GetIdealSize() override;
 };
 
 ILayout* NewProgressLayout(ProgressCtrl* b);

@@ -330,7 +330,7 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
     }
     memcpy(data, bmpData, bmih->biSizeImage);
     free(bmpData);
-    return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
+    return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
 
 // had to create a copy of fz_convert_pixmap to ensure we always get the alpha
@@ -425,7 +425,7 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     // return a RenderedBitmap even if hbmp is nullptr so that callers can
     // distinguish rendering errors from GDI resource exhaustion
     // (and in the latter case retry using smaller target rectangles)
-    return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
+    return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
 
 static inline int wchars_per_rune(int rune) {

@@ -93,9 +93,9 @@ void PaintRect(HDC, const Rect&);
 void PaintLine(HDC, const Rect&);
 void DrawCenteredText(HDC hdc, const Rect& r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
-SizeI TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
+Size TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
 SIZE TextSizeInHwnd2(HWND, const WCHAR*, HFONT);
-SizeI TextSizeInDC(HDC, const WCHAR*);
+Size TextSizeInDC(HDC, const WCHAR*);
 
 bool IsFocused(HWND);
 bool IsCursorOverWindow(HWND);
@@ -206,7 +206,7 @@ class DeferWinPosHelper {
 
 struct BitmapPixels {
     u8* pixels;
-    SizeI size;
+    Size size;
     int nBytes;
     int nBytesPerPixel;
     int nBytesPerRow;
@@ -217,13 +217,13 @@ struct BitmapPixels {
 };
 
 void InitAllCommonControls();
-SizeI GetBitmapSize(HBITMAP hbmp);
+Size GetBitmapSize(HBITMAP hbmp);
 BitmapPixels* GetBitmapPixels(HBITMAP hbmp);
 void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
 COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut);
-HBITMAP CreateMemoryBitmap(SizeI size, HANDLE* hDataMapping = nullptr);
+HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 double GetProcessRunningTime();
 
@@ -248,5 +248,5 @@ void TriggerRepaint(HWND);
 POINT GetCursorPosInHwnd(HWND);
 HINSTANCE GetInstance();
 void hwndDpiAdjust(HWND hwnd, float* x, float* y);
-SizeI ButtonGetIdealSize(HWND hwnd);
+Size ButtonGetIdealSize(HWND hwnd);
 std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id);

@@ -64,7 +64,7 @@ void PdfCreator::SetProducerName(const WCHAR* name) {
 // TODO: in 3.1.2 we had grayscale optimization, not sure if worth it
 // TODO: the resulting pdf is big, even though we tell it to compress images
 // mabye encode bitmaps to *.png or .jp2 and use AddPageFromImageData
-static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, SizeI size) {
+static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
     int w = size.dx;
     int h = size.dy;
     int stride = ((w * 3 + 3) / 4) * 4;
@@ -213,7 +213,7 @@ bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) {
     return true;
 }
 
-static bool AddPageFromHBITMAP(PdfCreator* c, HBITMAP hbmp, SizeI size, float imgDpi) {
+static bool AddPageFromHBITMAP(PdfCreator* c, HBITMAP hbmp, Size size, float imgDpi) {
     if (!c->ctx || !c->doc) {
         return false;
     }
@@ -239,7 +239,7 @@ bool PdfCreator::AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi) {
     if (!imgDpi) {
         imgDpi = bmp->GetHorizontalResolution();
     }
-    bool ok = AddPageFromHBITMAP(this, hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()), imgDpi);
+    bool ok = AddPageFromHBITMAP(this, hbmp, Size(bmp->GetWidth(), bmp->GetHeight()), imgDpi);
     DeleteObject(hbmp);
     return ok;
 }

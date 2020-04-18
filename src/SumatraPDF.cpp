@@ -695,10 +695,10 @@ class ControllerCallbackHandler : public ControllerCallback {
         win->RepaintAsync();
     }
     void PageNoChanged(Controller* ctrl, int pageNo) override;
-    void UpdateScrollbars(SizeI canvas) override;
+    void UpdateScrollbars(Size canvas) override;
     void RequestRendering(int pageNo) override;
     void CleanUp(DisplayModel* dm) override;
-    void RenderThumbnail(DisplayModel* dm, SizeI size, const onBitmapRenderedCb&) override;
+    void RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb&) override;
     void GotoLink(PageDestination* dest) override {
         win->linkHandler->GotoLink(dest);
     }
@@ -708,7 +708,7 @@ class ControllerCallbackHandler : public ControllerCallback {
     void RequestDelayedLayout(int delay) override;
 };
 
-void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, SizeI size, const onBitmapRenderedCb& saveThumbnail) {
+void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb& saveThumbnail) {
     auto engine = dm->GetEngine();
     RectD pageRect = engine->PageMediabox(1);
     if (pageRect.IsEmpty()) {
@@ -754,7 +754,7 @@ static void CreateThumbnailForFile(WindowInfo* win, DisplayState& ds) {
     }
 
     WCHAR* filePath = str::Dup(win->ctrl->FilePath());
-    win->ctrl->CreateThumbnail(SizeI(THUMBNAIL_DX, THUMBNAIL_DY), [=](RenderedBitmap* bmp) {
+    win->ctrl->CreateThumbnail(Size(THUMBNAIL_DX, THUMBNAIL_DY), [=](RenderedBitmap* bmp) {
         uitask::Post([=] {
             if (bmp) {
                 SetThumbnail(gFileHistory.Find(filePath, nullptr), bmp);
@@ -812,7 +812,7 @@ void ControllerCallbackHandler::RequestDelayedLayout(int delay) {
     SetTimer(win->hwndCanvas, EBOOK_LAYOUT_TIMER_ID, delay, nullptr);
 }
 
-void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas) {
+void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     CrashIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
 
@@ -820,7 +820,7 @@ void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas) {
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
 
-    SizeI viewPort = dm->GetViewPort().Size();
+    Size viewPort = dm->GetViewPort().Size();
 
     if (viewPort.dx >= canvas.dx) {
         si.nPos = 0;
@@ -3111,9 +3111,9 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
     bool showFavorites = gGlobalPrefs->showFavorites && !gPluginMode && HasPermission(Perm_DiskAccess);
     bool tocVisible = win->tocVisible;
     if (tocVisible || showFavorites) {
-        SizeI toc = ClientRect(win->hwndTocBox).Size();
+        Size toc = ClientRect(win->hwndTocBox).Size();
         if (sidebarDx > 0) {
-            toc = SizeI(sidebarDx, rc.y);
+            toc = Size(sidebarDx, rc.y);
         }
         if (0 == toc.dx) {
             // TODO: use saved sidebarDx from saved preferences?

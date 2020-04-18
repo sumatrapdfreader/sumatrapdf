@@ -184,11 +184,11 @@ static void NcCalcSize(HWND hwnd, NCCALCSIZE_PARAMS* params) {
 }
 #endif
 
-SizeI EditCtrl::GetIdealSize() {
-    SizeI s1 = MeasureTextInHwnd(hwnd, L"Minimal", hfont);
+Size EditCtrl::GetIdealSize() {
+    Size s1 = MeasureTextInHwnd(hwnd, L"Minimal", hfont);
     // dbglogf("EditCtrl::GetIdealSize: s1.dx=%d, s2.dy=%d\n", (int)s1.cx, (int)s1.cy);
     AutoFreeWstr txt = win::GetText(hwnd);
-    SizeI s2 = MeasureTextInHwnd(hwnd, txt, hfont);
+    Size s2 = MeasureTextInHwnd(hwnd, txt, hfont);
     // dbglogf("EditCtrl::GetIdealSize: s2.dx=%d, s2.dy=%d\n", (int)s2.cx, (int)s2.cy);
 
     int dx = std::max(s1.dx, s2.dx);

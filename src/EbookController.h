@@ -61,14 +61,14 @@ class EbookController : public Controller {
         UNUSED(towards);
         return 100;
     }
-    void SetViewPortSize(SizeI size) override;
+    void SetViewPortSize(Size size) override;
 
     TocTree* GetToc() override;
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 
     void GetDisplayState(DisplayState* ds) override;
-    void CreateThumbnail(SizeI size, const onBitmapRenderedCb&) override;
+    void CreateThumbnail(Size size, const onBitmapRenderedCb&) override;
 
     bool GoToNextPage() override;
     bool GoToPrevPage(bool toBottom = false) override;
@@ -122,7 +122,7 @@ class EbookController : public Controller {
     int currPageReparseIdx = 0;
 
     // size of the page for which pages were generated
-    SizeI pageSize;
+    Size pageSize;
 
     EbookFormattingThread* formattingThread = nullptr;
     int formattingThreadNo = -1;

@@ -137,7 +137,7 @@ struct WindowBase {
 
     HWND parent = nullptr;
     PointI initialPos = {-1, -1};
-    SizeI initialSize = {0, 0};
+    Size initialSize = {0, 0};
     DWORD dwStyle = 0;
     DWORD dwExStyle = 0;
     HFONT hfont = nullptr; // TODO: this should be abstract Font description
@@ -188,7 +188,7 @@ struct WindowBase {
     virtual ~WindowBase();
 
     virtual bool Create();
-    virtual SizeI GetIdealSize();
+    virtual Size GetIdealSize();
 
     virtual void WndProc(WndEvent*);
 
@@ -247,7 +247,7 @@ struct WindowBaseLayout : public ILayout {
     WindowBaseLayout(WindowBase*, Kind);
     ~WindowBaseLayout() override;
 
-    SizeI Layout(const Constraints bc) override;
+    Size Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int) override;
     int MinIntrinsicWidth(int) override;
     void SetBounds(const Rect bounds) override;

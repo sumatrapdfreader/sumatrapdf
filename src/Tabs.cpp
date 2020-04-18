@@ -98,10 +98,10 @@ int GetTabbarHeight(HWND hwnd, float factor) {
     return (int)(dy * factor);
 }
 
-static inline SizeI GetTabSize(HWND hwnd) {
+static inline Size GetTabSize(HWND hwnd) {
     int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, MIN_TAB_WIDTH));
     int dy = DpiScale(hwnd, TABBAR_HEIGHT);
-    return SizeI(dx, dy);
+    return Size(dx, dy);
 }
 
 class TabPainter {
@@ -122,7 +122,7 @@ class TabPainter {
     LPARAM mouseCoordinates = 0;
     COLORREF currBgCol = DEFAULT_CURRENT_BG_COL;
 
-    TabPainter(HWND wnd, SizeI tabSize) {
+    TabPainter(HWND wnd, Size tabSize) {
         hwnd = wnd;
         Reshape(tabSize.dx, tabSize.dy);
     }
@@ -664,7 +664,7 @@ void CreateTabbar(WindowInfo* win) {
     SetWindowSubclass(hwndTabBar, TabBarProc, 0, (DWORD_PTR)win);
     SetWindowSubclass(GetParent(hwndTabBar), TabBarParentProc, 0, (DWORD_PTR)win);
 
-    SizeI tabSize = GetTabSize(win->hwndFrame);
+    Size tabSize = GetTabSize(win->hwndFrame);
     TabPainter* tp = new TabPainter(hwndTabBar, tabSize);
     SetWindowLongPtr(hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
 
@@ -862,7 +862,7 @@ void UpdateTabWidth(WindowInfo* win) {
     }
     ShowTabBar(win, true);
     ClientRect rect(win->hwndTabBar);
-    SizeI tabSize = GetTabSize(win->hwndFrame);
+    Size tabSize = GetTabSize(win->hwndFrame);
     auto maxDx = (rect.dx - 3) / count;
     tabSize.dx = std::min(tabSize.dx, maxDx);
     TabCtrl_SetItemSize(win->hwndTabBar, tabSize.dx, tabSize.dy);

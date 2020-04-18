@@ -553,9 +553,9 @@ static void EnableAndShow(WindowBase* w, bool enable) {
     }
 }
 
-static SizeI SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s) {
+static Size SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s) {
     b->SetText(s);
-    SizeI size = b->GetIdealSize();
+    Size size = b->GetIdealSize();
     UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED;
     SetWindowPos(b->hwnd, nullptr, 0, 0, size.dx, size.dy, flags);
     return size;
@@ -696,7 +696,7 @@ static void OnCreateWindow(HWND hwnd) {
     gButtonInstaller = CreateDefaultButtonCtrl(hwnd, _TR("Install SumatraPDF"));
     gButtonInstaller->onClicked = OnButtonInstall;
 
-    SizeI btnSize;
+    Size btnSize;
     gButtonOptions = CreateDefaultButtonCtrl(hwnd, _TR("&Options"));
     gButtonOptions->onClicked = OnButtonOptions;
 
@@ -709,7 +709,7 @@ static void OnCreateWindow(HWND hwnd) {
     gButtonDy = btnSize.dy;
     gBottomPartDy = gButtonDy + (WINDOW_MARGIN * 2);
 
-    SizeI size = TextSizeInHwnd(hwnd, L"Foo");
+    Size size = TextSizeInHwnd(hwnd, L"Foo");
     int staticDy = size.dy + DpiScale(hwnd, 6);
 
     y = r.dy - gBottomPartDy;
@@ -761,7 +761,7 @@ static void OnCreateWindow(HWND hwnd) {
     y -= (DpiScale(hwnd, 4) + WINDOW_MARGIN);
 
     const WCHAR* s = L"&...";
-    SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
+    Size btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize.dx += DpiScale(hwnd, 4);
     gButtonBrowseDir = CreateDefaultButtonCtrl(hwnd, s);
     gButtonBrowseDir->onClicked = OnButtonBrowse;
@@ -1189,7 +1189,7 @@ static Rect layoutAndSize(ILayout* layout, int dx, int dy) {
     if (dx == 0 || dy == 0) {
         return {};
     }
-    SizeI windowSize{dx, dy};
+    Size windowSize{dx, dy};
     auto c = Tight(windowSize);
     auto size = layout->Layout(c);
     PointI min{0, 0};

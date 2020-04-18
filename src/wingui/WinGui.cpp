@@ -11,7 +11,7 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "wingui/Window.h"
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SizeI MeasureTextInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
+Size MeasureTextInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
     SIZE sz{};
     size_t txtLen = str::Len(txt);
     HDC dc = GetWindowDC(hwnd);

@@ -98,7 +98,7 @@ class RenderCache {
     CRITICAL_SECTION requestAccess;
     HANDLE renderThread = nullptr;
 
-    SizeI maxTileSize{};
+    Size maxTileSize{};
     bool isRemoteSession = false;
 
     COLORREF textColor = 0;

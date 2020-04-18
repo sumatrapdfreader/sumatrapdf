@@ -32,7 +32,7 @@ bool TooltipCtrl::Create() {
     return ok;
 }
 
-SizeI TooltipCtrl::GetIdealSize() {
+Size TooltipCtrl::GetIdealSize() {
     return {100, 32}; // not used as this is top-level window
 }
 

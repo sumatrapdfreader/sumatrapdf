@@ -31,7 +31,7 @@ HBITMAP RenderedBitmap::GetBitmap() const {
     return hbmp;
 }
 
-SizeI RenderedBitmap::Size() const {
+Size RenderedBitmap::Size() const {
     return size;
 }
 

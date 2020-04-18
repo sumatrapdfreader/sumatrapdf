@@ -52,7 +52,7 @@ static void PositionWindow(FrameRateWnd* w, SIZE s) {
 
 static SIZE GetIdealSize(FrameRateWnd* w) {
     WCHAR* txt = str::Format(L"%d", w->frameRate);
-    SizeI s = TextSizeInHwnd(w->hwnd, txt);
+    Size s = TextSizeInHwnd(w->hwnd, txt);
 
     // add padding
     s.dy += 4;
