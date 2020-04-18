@@ -269,8 +269,8 @@ static void createMainLayout(EditTitleWindow* win) {
 
     auto* padding = new Padding();
     padding->insets = DefaultInsets();
-    padding->insets.Left = DpiScale(parent, 8);
-    padding->insets.Right = DpiScale(parent, 8);
+    padding->insets.left = DpiScale(parent, 8);
+    padding->insets.right = DpiScale(parent, 8);
     padding->child = vbox;
 
     win->mainLayout = padding;

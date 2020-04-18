@@ -270,8 +270,8 @@ Padding::~Padding() {
 }
 
 SizeI Padding::Layout(const Constraints bc) {
-    auto hinset = this->insets.Left + this->insets.Right;
-    auto vinset = this->insets.Top + this->insets.Bottom;
+    auto hinset = this->insets.left + this->insets.right;
+    auto vinset = this->insets.top + this->insets.bottom;
 
     auto innerConstraints = bc.Inset(hinset, vinset);
     this->childSize = this->child->Layout(innerConstraints);
@@ -282,21 +282,21 @@ SizeI Padding::Layout(const Constraints bc) {
 }
 
 int Padding::MinIntrinsicHeight(int width) {
-    auto vinset = this->insets.Top + this->insets.Bottom;
+    auto vinset = this->insets.top + this->insets.bottom;
     return this->child->MinIntrinsicHeight(width) + vinset;
 }
 
 int Padding::MinIntrinsicWidth(int height) {
-    auto hinset = this->insets.Left + this->insets.Right;
+    auto hinset = this->insets.left + this->insets.right;
     return this->child->MinIntrinsicWidth(height) + hinset;
 }
 
 void Padding::SetBounds(Rect bounds) {
     lastBounds = bounds;
-    bounds.x += insets.Left;
-    bounds.y += insets.Top;
-    bounds.dx -= (insets.Right + insets.Left);
-    bounds.dy -= (insets.Bottom + insets.Top);
+    bounds.x += insets.left;
+    bounds.y += insets.top;
+    bounds.dx -= (insets.right + insets.left);
+    bounds.dy -= (insets.bottom + insets.top);
     this->child->SetBounds(bounds);
 }
 

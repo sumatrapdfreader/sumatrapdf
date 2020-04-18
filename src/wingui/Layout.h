@@ -102,10 +102,10 @@ int calculateHGap(ILayout* previous, ILayout* current);
 // padding.go
 
 struct Insets {
-    int Top = 0;
-    int Right = 0;
-    int Bottom = 0;
-    int Left = 0;
+    int top = 0;
+    int right = 0;
+    int bottom = 0;
+    int left = 0;
 };
 
 inline Insets DefaultInsets() {
