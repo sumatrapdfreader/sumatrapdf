@@ -118,14 +118,10 @@ using Gdiplus::StringFormat;
 using Gdiplus::StringFormatFlagsDirectionRightToLeft;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
-// using Gdiplus::;
 
 using Gdiplus::PointF;
 using Gdiplus::RectF;
 using Gdiplus::SizeF;
-
-// TODO: long term, we either don't want to use them or use explicit type
-using Gdiplus::Point;
 
 static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
     AutoFree data(file::ReadFile(filePath));

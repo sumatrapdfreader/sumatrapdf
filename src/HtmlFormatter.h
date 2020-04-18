@@ -50,9 +50,6 @@ using Gdiplus::PointF;
 using Gdiplus::RectF;
 using Gdiplus::SizeF;
 
-// TODO: long term, we either don't want to use them or use explicit type
-using Gdiplus::Point;
-
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
 enum class DrawInstrType {

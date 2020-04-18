@@ -176,9 +176,6 @@ using Gdiplus::PointF;
 using Gdiplus::RectF;
 using Gdiplus::SizeF;
 
-// TODO: long term, we either don't want to use them or use explicit type
-using Gdiplus::Point;
-
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     PAINTSTRUCT ps = {0};
     HDC hdcWnd = BeginPaint(hwnd, &ps);

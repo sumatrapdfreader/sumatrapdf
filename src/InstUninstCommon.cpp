@@ -95,9 +95,6 @@ using Gdiplus::PointF;
 using Gdiplus::RectF;
 using Gdiplus::SizeF;
 
-// TODO: long term, we either don't want to use them or use explicit type
-using Gdiplus::Point;
-
 Color gCol1(196, 64, 50);
 Color gCol1Shadow(134, 48, 39);
 Color gCol2(227, 107, 35);

@@ -78,7 +78,7 @@ class Grid : public Control {
 
     void RebuildCellDataIfNeeded();
     Cell* GetCell(int row, int col) const;
-    Point GetCellPos(int row, int col) const;
+    Gdiplus::Point GetCellPos(int row, int col) const;
     Gdiplus::Rect GetCellBbox(Grid::CellData* d);
 
   public:

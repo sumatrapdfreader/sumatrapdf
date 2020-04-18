@@ -115,7 +115,7 @@ size_t CollectWindowsAt(Control* wndRoot, int x, int y, uint16_t wantedInputMask
     return controls->size();
 }
 
-static void DrawLine(Graphics* gfx, const Point& p1, const Point& p2, float width, Brush* br) {
+static void DrawLine(Graphics* gfx, const Gdiplus::Point& p1, const Gdiplus::Point& p2, float width, Brush* br) {
     if (0 == width)
         return;
     Pen p(br, width);
@@ -123,7 +123,7 @@ static void DrawLine(Graphics* gfx, const Point& p1, const Point& p2, float widt
 }
 
 void DrawBorder(Graphics* gfx, const Gdiplus::Rect r, CachedStyle* s) {
-    Point p1, p2;
+    Gdiplus::Point p1, p2;
     float width;
 
     // top

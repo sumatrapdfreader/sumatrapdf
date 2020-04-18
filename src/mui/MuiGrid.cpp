@@ -34,7 +34,7 @@ Grid::Cell* Grid::GetCell(int row, int col) const {
     return &cells[row * cols + col];
 }
 
-Point Grid::GetCellPos(int row, int col) const {
+Gdiplus::Point Grid::GetCellPos(int row, int col) const {
     int x = 0, y = 0;
     for (int c = 0; c < col; c++) {
         x += maxColWidth[c];
@@ -42,7 +42,7 @@ Point Grid::GetCellPos(int row, int col) const {
     for (int r = 0; r < row; r++) {
         y += maxRowHeight[r];
     }
-    return Point(x, y);
+    return Gdiplus::Point(x, y);
 }
 
 // if there were elements added/removed from the grid,
@@ -81,7 +81,7 @@ void Grid::RebuildCellDataIfNeeded() {
 Gdiplus::Rect Grid::GetCellBbox(Grid::CellData* d) {
     Gdiplus::Rect r;
     // TODO: probably add Grid's border to X
-    Point p(GetCellPos(d->row, d->col));
+    Gdiplus::Point p(GetCellPos(d->row, d->col));
     r.X = p.X;
     r.Y = p.Y;
     r.Height = maxRowHeight[d->row];
@@ -195,7 +195,7 @@ void Grid::Arrange(const Gdiplus::Rect finalRect) {
     for (Grid::CellData& d : els) {
         cell = GetCell(d.row, d.col);
         el = d.el;
-        Point pos(GetCellPos(d.row, d.col));
+        Gdiplus::Point pos(GetCellPos(d.row, d.col));
         int elDx = el->DesiredSize().Width;
         int containerDx = 0;
         for (int i = d.col; i < d.col + d.colSpan; i++) {
