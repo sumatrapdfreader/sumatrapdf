@@ -29,20 +29,11 @@ The intent is to standardize how we do it.
 #pragma warning(pop)
 #include <tlhelp32.h>
 
-typedef decltype(SetProcessDEPPolicy)* Sig_SetProcessDEPPolicy;
-typedef decltype(IsWow64Process)* Sig_IsWow64Process;
-typedef decltype(SetDllDirectoryW)* Sig_SetDllDirectoryW;
-typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
-typedef decltype(SetProcessMitigationPolicy)* Sig_SetProcessMitigationPolicy;
-typedef decltype(RtlCaptureContext)* Sig_RtlCaptureContext;
+#define API_DECLARATION(name) extern Sig_##name Dyn##name;
 
-#define KERNEL32_API_LIST(V)    \
-    V(SetProcessDEPPolicy)      \
-    V(IsWow64Process)           \
-    V(SetDllDirectoryW)         \
-    V(SetDefaultDllDirectories) \
-    V(RtlCaptureContext)        \
-    V(SetProcessMitigationPolicy)
+#define API_DECLARATION2(name)            \
+    typedef decltype(##name)* Sig_##name; \
+    extern Sig_##name Dyn##name;
 
 // ntdll.dll
 #define PROCESS_EXECUTE_FLAGS 0x22
@@ -58,16 +49,41 @@ typedef HRESULT(WINAPI* Sig_NtSetInformationProcess)(HANDLE ProcessHandle, UINT 
 
 #define NTDLL_API_LIST(V) V(NtSetInformationProcess)
 
-// uxtheme.dll
-typedef decltype(IsAppThemed)* Sig_IsAppThemed;
-typedef decltype(OpenThemeData)* Sig_OpenThemeData;
-typedef decltype(CloseThemeData)* Sig_CloseThemeData;
-typedef decltype(DrawThemeBackground)* Sig_DrawThemeBackground;
-typedef decltype(IsThemeActive)* Sig_IsThemeActive;
-typedef decltype(IsThemeBackgroundPartiallyTransparent)* Sig_IsThemeBackgroundPartiallyTransparent;
-typedef decltype(GetThemeColor)* Sig_GetThemeColor;
-typedef decltype(SetWindowTheme)* Sig_SetWindowTheme;
+NTDLL_API_LIST(API_DECLARATION)
 
+// normaliz.dll
+// TODO: need to rename our NormalizeString so that it doesn't conflict
+// typedef decltype(NormalizeString)* Sig_NormalizeString2;
+typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
+
+#define NORMALIZ_API_LIST(V) V(NormalizeString)
+
+NORMALIZ_API_LIST(API_DECLARATION)
+
+// kernel32.dll
+#define KERNEL32_API_LIST(V)    \
+    V(SetProcessDEPPolicy)      \
+    V(IsWow64Process)           \
+    V(SetDllDirectoryW)         \
+    V(SetDefaultDllDirectories) \
+    V(RtlCaptureContext)        \
+    V(SetProcessMitigationPolicy)
+
+KERNEL32_API_LIST(API_DECLARATION2)
+
+// user32.dll
+#define USER32_API_LIST(V)                 \
+    V(GetDpiForWindow)                     \
+    V(GetThreadDpiAwarenessContext)        \
+    V(GetAwarenessFromDpiAwarenessContext) \
+    V(SetThreadDpiAwarenessContext)        \
+    V(SetGestureConfig)                    \
+    V(GetGestureInfo)                      \
+    V(CloseGestureInfoHandle)
+
+USER32_API_LIST(API_DECLARATION2)
+
+// uxtheme.dll
 #define UXTHEME_API_LIST(V)                  \
     V(IsAppThemed)                           \
     V(OpenThemeData)                         \
@@ -78,74 +94,19 @@ typedef decltype(SetWindowTheme)* Sig_SetWindowTheme;
     V(SetWindowTheme)                        \
     V(GetThemeColor)
 
-/// dwmapi.dll
-typedef decltype(DwmIsCompositionEnabled)* Sig_DwmIsCompositionEnabled;
-typedef decltype(DwmExtendFrameIntoClientArea)* Sig_DwmExtendFrameIntoClientArea;
-typedef decltype(DwmDefWindowProc)* Sig_DwmDefWindowProc;
-typedef decltype(DwmGetWindowAttribute)* Sig_DwmGetWindowAttribute;
+UXTHEME_API_LIST(API_DECLARATION2)
 
+/// dwmapi.dll
 #define DWMAPI_API_LIST(V)          \
     V(DwmIsCompositionEnabled)      \
     V(DwmExtendFrameIntoClientArea) \
     V(DwmDefWindowProc)             \
     V(DwmGetWindowAttribute)
 
-// normaliz.dll
-// typedef decltype(NormalizeString)* Sig_NormalizeString2;
-typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
+DWMAPI_API_LIST(API_DECLARATION2)
 
-#define NORMALIZ_API_LIST(V) V(NormalizeString)
-
-// user32.dll
-
-typedef decltype(GetGestureInfo)* Sig_GetGestureInfo;
-typedef decltype(CloseGestureInfoHandle)* Sig_CloseGestureInfoHandle;
-typedef decltype(SetGestureConfig)* Sig_SetGestureConfig;
-typedef decltype(GetThreadDpiAwarenessContext)* Sig_GetThreadDpiAwarenessContext;
-typedef decltype(SetThreadDpiAwarenessContext)* Sig_SetThreadDpiAwarenessContext;
-typedef decltype(GetDpiForWindow)* Sig_GetDpiForWindow;
-typedef decltype(GetAwarenessFromDpiAwarenessContext)* Sig_GetAwarenessFromDpiAwarenessContext;
-
-#define USER32_API_LIST(V)                 \
-    V(GetDpiForWindow)                     \
-    V(GetThreadDpiAwarenessContext)        \
-    V(GetAwarenessFromDpiAwarenessContext) \
-    V(SetThreadDpiAwarenessContext)        \
-    V(SetGestureConfig)                    \
-    V(GetGestureInfo)                      \
-    V(CloseGestureInfoHandle)
-
-// dbghelp.dll,  may not be available under Win2000
-// TODO: no need to be dynamic anymore
-typedef decltype(MiniDumpWriteDump)* Sig_MiniDumpWriteDump;
-
-typedef BOOL(WINAPI* Sig_SymInitializeW)(HANDLE, PCWSTR, BOOL);
-typedef BOOL(WINAPI* Sig_SymInitialize)(HANDLE, PCSTR, BOOL);
-typedef BOOL(WINAPI* Sig_SymCleanup)(HANDLE);
-typedef DWORD(WINAPI* Sig_SymGetOptions)();
-typedef DWORD(WINAPI* Sig_SymSetOptions)(DWORD);
-
-typedef BOOL(WINAPI* Sig_StackWalk64)(DWORD MachineType, HANDLE hProcess, HANDLE hThread, LPSTACKFRAME64 StackFrame,
-                                      PVOID ContextRecord, PREAD_PROCESS_MEMORY_ROUTINE64 ReadMemoryRoutine,
-                                      PFUNCTION_TABLE_ACCESS_ROUTINE64 FunctionTableAccessRoutine,
-                                      PGET_MODULE_BASE_ROUTINE64 GetModuleBaseRoutine,
-                                      PTRANSLATE_ADDRESS_ROUTINE64 TranslateAddress);
-
-typedef BOOL(WINAPI* Sig_SymFromAddr)(HANDLE hProcess, DWORD64 Address, PDWORD64 Displacement, PSYMBOL_INFO Symbol);
-
-typedef PVOID(WINAPI* Sig_SymFunctionTableAccess64)(HANDLE hProcess, DWORD64 AddrBase);
-
-typedef DWORD64(WINAPI* Sig_SymGetModuleBase64)(HANDLE hProcess, DWORD64 qwAddr);
-
-typedef BOOL(WINAPI* Sig_SymSetSearchPathW)(HANDLE hProcess, PCWSTR SearchPath);
-
-typedef BOOL(WINAPI* Sig_SymSetSearchPath)(HANDLE hProcess, PCSTR SearchPath);
-
-typedef BOOL(WINAPI* Sig_SymRefreshModuleList)(HANDLE hProcess);
-
-typedef BOOL(WINAPI* Sig_SymGetLineFromAddr64)(HANDLE hProcess, DWORD64 dwAddr, PDWORD pdwDisplacement,
-                                               PIMAGEHLP_LINE64 Line);
-
+// dbghelp.dll, there are different versions not sure if I can rely on
+// this to be always present on every Windows version
 #define DBGHELP_API_LIST(V)     \
     V(MiniDumpWriteDump)        \
     V(SymInitializeW)           \
@@ -162,16 +123,10 @@ typedef BOOL(WINAPI* Sig_SymGetLineFromAddr64)(HANDLE hProcess, DWORD64 dwAddr, 
     V(SymRefreshModuleList)     \
     V(SymGetLineFromAddr64)
 
-#define API_DECLARATION(name) extern Sig_##name Dyn##name;
+DBGHELP_API_LIST(API_DECLARATION2)
 
-KERNEL32_API_LIST(API_DECLARATION)
-NTDLL_API_LIST(API_DECLARATION)
-UXTHEME_API_LIST(API_DECLARATION)
-DWMAPI_API_LIST(API_DECLARATION)
-NORMALIZ_API_LIST(API_DECLARATION)
-USER32_API_LIST(API_DECLARATION)
-DBGHELP_API_LIST(API_DECLARATION)
 #undef API_DECLARATION
+#undef API_DECLARATION2
 
 void InitDynCalls();
 
