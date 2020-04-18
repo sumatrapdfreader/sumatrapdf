@@ -667,6 +667,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
+    TabInfo* tab = win->currentTab;
     PageElement* pageEl = dm->GetElementAtPos({x, y});
     WCHAR* value = nullptr;
     if (pageEl) {
@@ -679,7 +680,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (!showBookmarksMenu) {
         win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
     } else {
-        auto path = win->currentTab->filePath.get();
+        auto path = tab->filePath.get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
             // TODO: translate
@@ -701,7 +702,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (!isFullScreen) {
         win::menu::Remove(popup, IDM_EXIT_FULLSCREEN);
     }
-    if (!win->currentTab->selectionOnPage) {
+    if (!tab->selectionOnPage) {
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
     }
     MenuUpdatePrintItem(win, popup, true);
@@ -778,7 +779,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
             break;
         case IDM_EDIT_ANNOTATIONS:
-            StartEditAnnotations();
+            StartEditAnnotations(tab);
             break;
         case IDM_COPY_LINK_TARGET:
         case IDM_COPY_COMMENT:
@@ -1164,6 +1165,7 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
 
 //[ ACCESSKEY_GROUP Main Menubar
 HMENU BuildMenu(WindowInfo* win) {
+    TabInfo* tab = win->currentTab;
     HMENU mainMenu = CreateMenu();
 
     int filter = 0;
@@ -1172,12 +1174,12 @@ HMENU BuildMenu(WindowInfo* win) {
     } else if (win->AsEbook()) {
         filter |= MF_NOT_FOR_EBOOK_UI;
     }
-    if (!win->currentTab || win->currentTab->GetEngineType() != kindEngineComicBooks) {
+    if (!tab || tab->GetEngineType() != kindEngineComicBooks) {
         filter |= MF_CBX_ONLY;
     }
 
     HMENU m = CreateMenu();
-    RebuildFileMenu(win->currentTab, m);
+    RebuildFileMenu(tab, m);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefView, CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));

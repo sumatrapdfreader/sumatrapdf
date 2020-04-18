@@ -950,9 +950,11 @@ namespace seqstrings {
 // advance to next string
 // return false if end of strings
 bool SkipStr(const char*& s) {
+    // empty string marks the end, means idx was too high
     if (!*s) {
         return false;
     }
+    // skip past next '\0' char
     while (*s) {
         s++;
     }
@@ -966,6 +968,20 @@ bool SkipStr(char*& s) {
     return SkipStr((const char*&)s);
 }
 
+// advance to next string
+// return false if end of strings
+static const char* SkipStr2(const char* s) {
+    // empty string marks the end, means idx was too high
+    if (!*s) {
+        return nullptr;
+    }
+    // skip past next '\0' char
+    while (*s) {
+        s++;
+    }
+    return s + 1;
+}
+
 // Returns nullptr if s is the same as toFind
 // If they are not equal, returns end of s + 1
 static inline const char* StrEqWeird(const char* s, const char* toFind) {
@@ -973,8 +989,9 @@ static inline const char* StrEqWeird(const char* s, const char* toFind) {
     for (;;) {
         c = *s++;
         if (0 == c) {
-            if (0 == *toFind)
+            if (0 == *toFind) {
                 return nullptr;
+            }
             return s;
         }
         if (c != *toFind++) {
@@ -1006,12 +1023,13 @@ int StrToIdx(const char* strings, const char* toFind) {
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
 const char* IdxToStr(const char* strings, int idx) {
+    CrashIf(idx < 0);
     const char* s = strings;
     while (idx > 0) {
-        while (*s) {
-            s++;
+        s = SkipStr2(s);
+        if (!s) {
+            return nullptr;
         }
-        s++;
         --idx;
     }
     return s;

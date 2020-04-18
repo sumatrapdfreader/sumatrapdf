@@ -24,6 +24,8 @@ struct Annotation {
     Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color);
 };
 
+std::string_view AnnotationName(AnnotationType);
+
 bool IsAnnotationEq(Annotation* a1, Annotation* a2);
 
 void DeleteVecAnnotations(Vec<Annotation*>* annots);
