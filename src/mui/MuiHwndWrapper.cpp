@@ -82,7 +82,7 @@ void HwndWrapper::Arrange(const Gdiplus::Rect finalRect) {
 // of WM_SIZE) or when the content of the window changes
 void HwndWrapper::TopLevelLayout() {
     CrashIf(!hwndParent);
-    ClientRect rc(hwndParent);
+    Rect rc = ClientRect(hwndParent);
     Gdiplus::Size availableSize(rc.dx, rc.dy);
     // lf("(%3d,%3d) HwndWrapper::TopLevelLayout()", rc.dx, rc.dy);
     Gdiplus::Size s = Measure(availableSize);

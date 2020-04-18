@@ -96,7 +96,7 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR* message, bool init) {
     rMsg.Inflate(PADDING, PADDING);
 
     if (this->shrinkLimit < 1.0f) {
-        ClientRect rcOrig(this->hwnd);
+        Rect rcOrig = ClientRect(this->hwnd);
         if (rMsg.dx < rcOrig.dx && rMsg.dx > rcOrig.dx * shrinkLimit) {
             rMsg.dx = rcOrig.dx;
         }
@@ -180,7 +180,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     PAINTSTRUCT ps = {0};
     HDC hdcWnd = BeginPaint(hwnd, &ps);
 
-    ClientRect rect(hwnd);
+    Rect rect = ClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rect);
     HDC hdc = buffer.GetDC();
     HFONT oldfnt = SelectFont(hdc, wnd->font);
@@ -395,7 +395,7 @@ void Notifications::Relayout() {
 
     auto* first = this->wnds[0];
     HWND hwndCanvas = GetParent(first->hwnd);
-    ClientRect frame(hwndCanvas);
+    Rect frame = ClientRect(hwndCanvas);
     for (auto* wnd : this->wnds) {
         Rect rect = WindowRect(wnd->hwnd);
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);

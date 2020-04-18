@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/Log.h"
+#include "utils/WinUtil.h"
 
 #include "Mui.h"
 
@@ -102,7 +103,7 @@ void Painter::Paint(HWND hwnd, bool isDirty) {
     Graphics gDC(dc);
     gDC.GetClip(&clip);
 
-    ClientRect r(hwnd);
+    Rect r = ClientRect(hwnd);
 
     // TODO: fix showing black parts when resizing a window.
     // my theory is that we see black background on right/bottom

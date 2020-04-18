@@ -177,7 +177,7 @@ class TabPainter {
         Gdiplus::GraphicsPathIterator iterator(&shapes);
         iterator.NextMarker(&shape);
 
-        ClientRect rClient(hwnd);
+        Rect rClient = ClientRect(hwnd);
         float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
         gfx.TranslateTransform(1.0f, yPosTab);
         for (int i = 0; i < Count(); i++) {
@@ -208,7 +208,7 @@ class TabPainter {
         iterator.NextMarker(&shape);
         Region region(&shape);
 
-        ClientRect rClient(hwnd);
+        Rect rClient = ClientRect(hwnd);
         float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
         gfx.TranslateTransform(float((width + 1) * index) + 1.0f, yPosTab);
         HRGN hRgn = region.GetHRGN(&gfx);
@@ -861,7 +861,7 @@ void UpdateTabWidth(WindowInfo* win) {
         return;
     }
     ShowTabBar(win, true);
-    ClientRect rect(win->hwndTabBar);
+    Rect rect = ClientRect(win->hwndTabBar);
     Size tabSize = GetTabSize(win->hwndFrame);
     auto maxDx = (rect.dx - 3) / count;
     tabSize.dx = std::min(tabSize.dx, maxDx);

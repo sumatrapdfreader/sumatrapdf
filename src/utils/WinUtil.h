@@ -23,6 +23,9 @@ SIZE MakeSize(long dx, long dy);
 RECT MakeRect(long x, long y, long dx, long dy);
 
 RECT GetClientRect(HWND);
+Rect ClientRect(HWND hwnd);
+Rect WindowRect(HWND hwnd);
+Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo);
 
 void Edit_SelectAll(HWND hwnd);
 void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt);

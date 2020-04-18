@@ -218,7 +218,7 @@ static Rect DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
 
     SetTextColor(hdc, col);
     SetBkMode(hdc, TRANSPARENT);
-    ClientRect rc(hwnd);
+    Rect rc = ClientRect(hwnd);
 
     SIZE txtSize;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
@@ -253,7 +253,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkIn
 
     ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
-    ClientRect rc(hwnd);
+    Rect rc = ClientRect(hwnd);
     RECT rTmp = rc.ToRECT();
     col = GetAppColor(AppColor::MainWindowBg);
     ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
@@ -389,7 +389,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
         minRect.dy += rightDy + ABOUT_TXT_DY;
     minRect.dy += 2 * ABOUT_LINE_OUTER_SIZE + 4;
 
-    ClientRect rc(hwnd);
+    Rect rc = ClientRect(hwnd);
     minRect.x = (rc.dx - minRect.dx) / 2;
     minRect.y = (rc.dy - minRect.dy) / 2;
 
@@ -576,8 +576,8 @@ void OnMenuAbout() {
     rc.Inflate(ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
 
     // resize the new window to just match these dimensions
-    WindowRect wRc(gHwndAbout);
-    ClientRect cRc(gHwndAbout);
+    Rect wRc = WindowRect(gHwndAbout);
+    Rect cRc = ClientRect(gHwndAbout);
     wRc.dx += rc.dx - cRc.dx;
     wRc.dy += rc.dy - cRc.dy;
     MoveWindow(gHwndAbout, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
@@ -586,7 +586,7 @@ void OnMenuAbout() {
 }
 
 void DrawAboutPage(WindowInfo* win, HDC hdc) {
-    ClientRect rc(win->hwndCanvas);
+    Rect rc = ClientRect(win->hwndCanvas);
     UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
     if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
@@ -620,7 +620,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     ScopedSelectObject font(hdc, fontSumatraTxt);
 
-    ClientRect rc(win->hwndCanvas);
+    Rect rc = ClientRect(win->hwndCanvas);
     RECT rTmp = rc.ToRECT();
     col = GetAppColor(AppColor::MainWindowBg);
     AutoDeleteBrush brushLogoBg(CreateSolidBrush(col));

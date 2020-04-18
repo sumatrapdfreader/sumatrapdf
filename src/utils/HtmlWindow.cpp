@@ -1817,7 +1817,7 @@ HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
     // capture the whole window (including scrollbars)
     // to image and create imageRes containing the area
     // user asked for
-    WindowRect winRc(hwndParent);
+    Rect winRc = WindowRect(hwndParent);
     Gdiplus::Bitmap image(winRc.dx, winRc.dy, PixelFormat24bppRGB);
     Gdiplus::Graphics g(&image);
 

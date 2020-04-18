@@ -304,7 +304,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
 }
 
 static void InvalidateFrame() {
-    ClientRect rc(gHwndFrame);
+    Rect rc = ClientRect(gHwndFrame);
     RECT rcTmp = rc.ToRECT();
     InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }

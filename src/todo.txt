@@ -11,7 +11,7 @@ possible refactorings:
 - [X] replace Rect with Rect typedef
 - [X] rename Rect, Point, Size => Rect, Point, Size
 - [X] simplify WinDynCalls.h
-- remove class ClientRect and class WindowRect, those can be functions returning Rect
+- [x] remove class ClientRect and class WindowRect, those can be functions returning Rect
 - replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
 - remove DirectDraw test and don't link with d2d
@@ -33,6 +33,7 @@ possible refactorings:
 - change VBox::childrenCount() to int
 - Engine* => Document* rename
 - rewrite file function a sniffer as a single function
+- extract tab code from Tabs.cpp into a tab control
 
 ------
 

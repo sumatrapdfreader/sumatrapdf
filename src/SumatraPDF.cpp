@@ -3040,7 +3040,7 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
 }
 
 static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sidebarDx = -1) {
-    ClientRect rc(win->hwndFrame);
+    Rect rc = ClientRect(win->hwndFrame);
     // don't relayout while the window is minimized
     if (rc.IsEmpty()) {
         return;
@@ -3070,7 +3070,7 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
                 if (dwm::IsCompositionEnabled() &&
                     SUCCEEDED(dwm::GetWindowAttribute(win->hwndFrame, DWMWA_CAPTION_BUTTON_BOUNDS, &capButtons,
                                                       sizeof(RECT)))) {
-                    WindowRect wr(win->hwndFrame);
+                    Rect wr = WindowRect(win->hwndFrame);
                     POINT pt = {wr.x + capButtons.left, wr.y + capButtons.top};
                     ScreenToClient(win->hwndFrame, &pt);
                     if (IsUIRightToLeft()) {
@@ -3099,10 +3099,10 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
     }
     if (gGlobalPrefs->showToolbar && !win->presentation && !win->isFullScreen && !win->AsEbook()) {
         if (updateToolbars) {
-            WindowRect rcRebar(win->hwndReBar);
+            Rect rcRebar = WindowRect(win->hwndReBar);
             dh.SetWindowPos(win->hwndReBar, nullptr, rc.x, rc.y, rc.dx, rcRebar.dy, SWP_NOZORDER);
         }
-        WindowRect rcRebar(win->hwndReBar);
+        Rect rcRebar = WindowRect(win->hwndReBar);
         rc.y += rcRebar.dy;
         rc.dy -= rcRebar.dy;
     }
@@ -3187,7 +3187,7 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy) {
 
     if (win->presentation || win->isFullScreen) {
         Rect fullscreen = GetFullscreenRect(win->hwndFrame);
-        WindowRect rect(win->hwndFrame);
+        Rect rect = WindowRect(win->hwndFrame);
         // Windows XP sometimes seems to change the window size on it's own
         if (rect != fullscreen && rect != GetVirtualScreenRect()) {
             MoveWindow(win->hwndFrame, fullscreen);
@@ -3474,7 +3474,7 @@ void ExitFullScreen(WindowInfo* win) {
         SetMenu(win->hwndFrame, win->menu);
     }
 
-    ClientRect cr(win->hwndFrame);
+    Rect cr = ClientRect(win->hwndFrame);
     SetWindowLong(win->hwndFrame, GWL_STYLE, win->nonFullScreenWindowStyle);
     UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
     SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, flags);
@@ -4015,8 +4015,8 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
     // make sure to keep this in sync with the calculations in RelayoutFrame
     // note: without the min/max(..., rToc.dx), the sidebar will be
     //       stuck at its width if it accidentally got too wide or too narrow
-    ClientRect rFrame(win->hwndFrame);
-    ClientRect rToc(win->hwndTocBox);
+    Rect rFrame = ClientRect(win->hwndFrame);
+    Rect rToc = ClientRect(win->hwndTocBox);
     int minDx = std::min(SIDEBAR_MIN_WIDTH, rToc.dx);
     int maxDx = std::max(rFrame.dx / 2, rToc.dx);
     if (sidebarDx < minDx || sidebarDx > maxDx) {
@@ -4041,8 +4041,8 @@ static void OnFavSplitterMove(SplitterMoveEvent* ev) {
     int tocDy = pcur.y; // without splitter
 
     // make sure to keep this in sync with the calculations in RelayoutFrame
-    ClientRect rFrame(win->hwndFrame);
-    ClientRect rToc(win->hwndTocBox);
+    Rect rFrame = ClientRect(win->hwndFrame);
+    Rect rToc = ClientRect(win->hwndTocBox);
     CrashIf(rToc.dx != ClientRect(win->hwndFavBox).dx);
     int minDy = std::min(TOC_MIN_DY, rToc.dy);
     int maxDy = std::max(rFrame.dy - TOC_MIN_DY, rToc.dy);

@@ -952,7 +952,7 @@ static void TocTreeMsgFilter(WndEvent* ev) {
 void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND hwndTree) {
     HWND hwndContainer = GetParent(hwndTree);
     Size labelSize = l->GetIdealSize();
-    WindowRect rc(hwndContainer);
+    Rect rc = WindowRect (hwndContainer);
     bool altBookmarksVisible = altBookmarks && altBookmarks->IsVisible();
     int dy = rc.dy;
     int y = 0;

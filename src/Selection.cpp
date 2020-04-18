@@ -215,7 +215,7 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
                 selRect = selRect.Union(sel.GetRect(dm));
             }
 
-            ClientRect rc(win->hwndCanvas);
+            Rect rc = ClientRect(win->hwndCanvas);
             pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
             pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
             pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);

@@ -75,6 +75,24 @@ RECT GetClientRect(HWND hwnd) {
     return r;
 }
 
+Rect ClientRect(HWND hwnd) {
+    RECT rc{};
+    GetClientRect(hwnd, &rc);
+    return Rect(rc);
+}
+
+Rect WindowRect(HWND hwnd) {
+    RECT rc{};
+    GetWindowRect(hwnd, &rc);
+    return Rect(rc);
+}
+
+Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
+    RECT rc = rect.ToRECT();
+    MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
+    return Rect::FromRECT(rc);
+}
+
 void MoveWindow(HWND hwnd, Rect rect) {
     MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
 }
@@ -803,7 +821,7 @@ bool IsFocused(HWND hwnd) {
 bool IsCursorOverWindow(HWND hwnd) {
     POINT pt;
     GetCursorPos(&pt);
-    WindowRect rcWnd(hwnd);
+    Rect rcWnd = WindowRect(hwnd);
     return rcWnd.Contains(Point(pt.x, pt.y));
 }
 
@@ -961,7 +979,7 @@ void SetWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
 Rect ChildPosWithinParent(HWND hwnd) {
     POINT pt = {0, 0};
     ClientToScreen(GetParent(hwnd), &pt);
-    WindowRect rc(hwnd);
+    Rect rc = WindowRect(hwnd);
     rc.Offset(-pt.x, -pt.y);
     return rc;
 }

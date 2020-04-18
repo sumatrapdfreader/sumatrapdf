@@ -238,7 +238,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, L
                 if (button == CB_MENU) {
                     if (!KillTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID) && !win->caption->isMenuOpen) {
                         HWND hMenuButton = win->caption->btn[CB_MENU].hwnd;
-                        WindowRect wr(hMenuButton);
+                        Rect wr = WindowRect(hMenuButton);
                         win->caption->isMenuOpen = true;
                         if (!lParam) {
                             // if the WM_COMMAND message was sent as a result of keyboard command
@@ -328,7 +328,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
                 SendMessage(win->hwndFrame, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
                 return 0;
             } else {
-                ClientRect rc(hwnd);
+                Rect rc = ClientRect(hwnd);
                 int x = GET_X_LPARAM(lParam);
                 int y = GET_Y_LPARAM(lParam);
                 if (!rc.Contains(Point(x, y))) {
@@ -416,7 +416,7 @@ void RegisterCaptionWndClass() {
 }
 
 void RelayoutCaption(WindowInfo* win) {
-    ClientRect rc(win->hwndCaption);
+    Rect rc = ClientRect(win->hwndCaption);
     CaptionInfo* ci = win->caption;
     ButtonInfo* button;
     DeferWinPosHelper dh;
@@ -685,7 +685,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 if (win->extendedFrameHeight == 0) {
                     return TRUE;
                 }
-                ClientRect rc(hwnd);
+                Rect rc = ClientRect(hwnd);
                 rc.dy = win->extendedFrameHeight;
                 HRGN extendedFrameRegion = CreateRectRgn(rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy);
                 int newRegionComplexity = ExtSelectClipRgn((HDC)wParam, extendedFrameRegion, RGN_AND);
@@ -804,7 +804,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             // Provide hit testing for the caption.
             Point pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             Rect rClient = MapRectToWindow(ClientRect(hwnd), hwnd, HWND_DESKTOP);
-            WindowRect rCaption(win->hwndCaption);
+            Rect rCaption = WindowRect(win->hwndCaption);
             if (rClient.Contains(pt) && pt.y < rCaption.y + rCaption.dy) {
                 *callDef = false;
                 if (pt.y < rCaption.y) {
@@ -879,7 +879,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
         case WM_DWMCOMPOSITIONCHANGED:
             win->caption->UpdateBackgroundAlpha();
-            ClientRect cr(hwnd);
+            Rect cr = ClientRect(hwnd);
             SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
             if (ClientRect(hwnd) == cr) {
                 SendMessage(hwnd, WM_SIZE, 0, MAKELONG(cr.dx, cr.dy));

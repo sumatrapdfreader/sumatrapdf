@@ -654,7 +654,7 @@ static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
             MoveWindow(item, rc.x, rc.y, rc.dx, rc.dy - shrink, TRUE);
     }
     // shrink the dialog
-    WindowRect dlgRc(hDlg);
+    Rect dlgRc = WindowRect(hDlg);
     MoveWindow(hDlg, dlgRc.x, dlgRc.y, dlgRc.dx, dlgRc.dy - shrink, TRUE);
 }
 

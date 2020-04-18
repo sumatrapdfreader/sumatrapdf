@@ -446,9 +446,9 @@ Error:
 }
 
 static void InvalidateFrame() {
-    ClientRect rc(gHwndFrame);
-    RECT rcTmp = rc.ToRECT();
-    InvalidateRect(gHwndFrame, &rcTmp, FALSE);
+    RECT rc;
+    GetClientRect(gHwndFrame, &rc);
+    InvalidateRect(gHwndFrame, &rc, FALSE);
 }
 
 static void OnButtonOptions();
@@ -585,7 +585,7 @@ static void OnButtonOptions() {
     //] ACCESSKEY_ALTERNATIVE
     //] ACCESSKEY_GROUP Installer
 
-    ClientRect rc(gHwndFrame);
+    Rect rc = ClientRect(gHwndFrame);
     RECT rcTmp = rc.ToRECT();
     InvalidateRect(gHwndFrame, &rcTmp, TRUE);
 
@@ -691,7 +691,7 @@ static bool InstallerOnWmCommand(WPARAM wParam) {
 //[ ACCESSKEY_GROUP Installer
 static void OnCreateWindow(HWND hwnd) {
     RECT rc;
-    ClientRect r(hwnd);
+    Rect r = ClientRect(hwnd);
 
     gButtonInstaller = CreateDefaultButtonCtrl(hwnd, _TR("Install SumatraPDF"));
     gButtonInstaller->onClicked = OnButtonInstall;

@@ -336,7 +336,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
     const WCHAR* text = _TR("Find:");
     win::SetText(win->hwndFindText, text);
 
-    WindowRect findWndRect(win->hwndFindBg);
+    Rect findWndRect = WindowRect(win->hwndFindBg);
 
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDT_VIEW_ZOOMIN, (LPARAM)&r);
@@ -479,7 +479,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     Size size = TextSizeInHwnd(win->hwndPageText, text);
     size.dx += TB_TEXT_PADDING_RIGHT;
 
-    WindowRect pageWndRect(win->hwndPageBg);
+    Rect pageWndRect = WindowRect(win->hwndPageBg);
 
     RECT r;
     SendMessage(win->hwndToolbar, TB_GETRECT, IDM_PRINT, (LPARAM)&r);

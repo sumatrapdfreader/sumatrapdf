@@ -69,7 +69,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     HBRUSH br = CreateSolidBrush(w->bgCol);
     FillRect(hdc, &ps.rcPaint, br);
 
-    ClientRect cr(w->hwnd);
+    Rect cr = ClientRect(w->hwnd);
 
     int x = DpiScale(w->hwnd, w->padX);
     int y = DpiScale(w->hwnd, w->padY);

@@ -25,11 +25,11 @@ class DialogData {
             nItemCount = 0;
 
         // Store some sizes etc. for later.
-        WindowRect rectWnd(hwnd);
+        Rect rectWnd = WindowRect(hwnd);
         ptSmallest.x = rectWnd.dx;
         ptSmallest.y = rectWnd.dy;
 
-        ClientRect rectClient(hwnd);
+        Rect rectClient = ClientRect(hwnd);
         sizeClient = rectClient.Size();
         UpdateGripperRect();
 

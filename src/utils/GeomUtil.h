@@ -82,6 +82,13 @@ struct RectT {
 
     RectT() = default;
 
+    RectT(const RECT r) {
+        x = r.left;
+        y = r.top;
+        dx = r.right - r.left;
+        dy = r.bottom - r.top;
+    }
+
     RectT(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) {
     }
 
@@ -258,38 +265,3 @@ typedef geomutil::RectT<double> RectD;
 inline SIZE ToSIZE(Size s) {
     return {s.dx, s.dy};
 }
-#ifdef _WIN32
-
-class ClientRect : public Rect {
-  public:
-    explicit ClientRect(HWND hwnd) {
-        RECT rc;
-        if (GetClientRect(hwnd, &rc)) {
-            x = rc.left;
-            dx = rc.right - rc.left;
-            y = rc.top;
-            dy = rc.bottom - rc.top;
-        }
-    }
-};
-
-class WindowRect : public Rect {
-  public:
-    explicit WindowRect(HWND hwnd) {
-        RECT rc;
-        if (GetWindowRect(hwnd, &rc)) {
-            x = rc.left;
-            dx = rc.right - rc.left;
-            y = rc.top;
-            dy = rc.bottom - rc.top;
-        }
-    }
-};
-
-inline Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
-    RECT rc = rect.ToRECT();
-    MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
-    return Rect::FromRECT(rc);
-}
-
-#endif

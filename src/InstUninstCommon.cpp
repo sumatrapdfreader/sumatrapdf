@@ -87,9 +87,6 @@ using Gdiplus::Status;
 using Gdiplus::StringAlignmentCenter;
 using Gdiplus::StringFormat;
 using Gdiplus::StringFormatFlagsDirectionRightToLeft;
-using Gdiplus::TextRenderingHintClearTypeGridFit;
-using Gdiplus::UnitPixel;
-using Gdiplus::Win32Error;
 
 using Gdiplus::PointF;
 using Gdiplus::RectF;
@@ -169,7 +166,7 @@ static HFONT CreateDefaultGuiFont() {
 }
 
 static void InvalidateFrame() {
-    ClientRect rc(gHwndFrame);
+    Rect rc = ClientRect(gHwndFrame);
     RECT rcTmp = rc.ToRECT();
     InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }
@@ -827,7 +824,7 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
 static void DrawFrame2(Graphics& g, Rect r) {
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
-    g.SetPageUnit(UnitPixel);
+    g.SetPageUnit(Gdiplus::UnitPixel);
 
     Font f(L"Impact", 40, FontStyleRegular);
     CalcLettersLayout(g, &f, r.dx);
@@ -858,7 +855,7 @@ static void DrawFrame2(Graphics& g, Rect r) {
 static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT*) {
     // TODO: cache bmp object?
     Graphics g(dc);
-    ClientRect rc(hwnd);
+    Rect rc = ClientRect(hwnd);
     Bitmap bmp(rc.dx, rc.dy, &g);
     Graphics g2((Image*)&bmp);
     DrawFrame2(g2, rc);

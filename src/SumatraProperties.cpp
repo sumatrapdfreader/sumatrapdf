@@ -412,8 +412,8 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
 
     // resize the new window to just match these dimensions
     // (as long as they fit into the current monitor's work area)
-    WindowRect wRc(hwnd);
-    ClientRect cRc(hwnd);
+    Rect wRc = WindowRect(hwnd);
+    Rect cRc = ClientRect(hwnd);
     Rect work = GetWorkAreaRect(WindowRect(hParent));
     wRc.dx = std::min(rc.dx + wRc.dx - cRc.dx, work.dx);
     wRc.dy = std::min(rc.dy + wRc.dy - cRc.dy, work.dy);
@@ -551,7 +551,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
 
     SetBkMode(hdc, TRANSPARENT);
 
-    ClientRect rcClient(hwnd);
+    Rect rcClient = ClientRect(hwnd);
     RECT rTmp = rcClient.ToRECT();
     auto col = GetAppColor(AppColor::MainWindowBg);
     ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
