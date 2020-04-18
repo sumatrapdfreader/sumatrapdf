@@ -203,7 +203,7 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedStyle* s = cachedStyle;
     auto timerFill = TimeGet();
-    Rect r(offX, offY, pos.Width, pos.Height);
+    Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
     if (!s->bgColor->IsTransparent()) {
         Brush* br = BrushFromColorData(s->bgColor, r);
         gfx->FillRectangle(br, r);
@@ -354,7 +354,7 @@ Size PagesLayout::Measure(const Size availableSize) {
     return desiredSize;
 }
 
-void PagesLayout::Arrange(const Rect finalRect) {
+void PagesLayout::Arrange(const Gdiplus::Rect finalRect) {
     // only page2 can be hidden
     CrashIf(!page1->IsVisible());
 
@@ -376,7 +376,7 @@ void PagesLayout::Arrange(const Rect finalRect) {
             CrashIf(dx < 10);
         }
     }
-    Rect r = finalRect;
+    Gdiplus::Rect r = finalRect;
     r.Width = dx;
     page1->Arrange(r);
     r.X = r.X + dx + spaceDx;

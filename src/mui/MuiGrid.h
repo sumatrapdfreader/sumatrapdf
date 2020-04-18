@@ -79,7 +79,7 @@ class Grid : public Control {
     void RebuildCellDataIfNeeded();
     Cell* GetCell(int row, int col) const;
     Point GetCellPos(int row, int col) const;
-    Rect GetCellBbox(Grid::CellData* d);
+    Gdiplus::Rect GetCellBbox(Grid::CellData* d);
 
   public:
     Vec<CellData> els;
@@ -97,5 +97,5 @@ class Grid : public Control {
     virtual Size DesiredSize() {
         return desiredSize;
     }
-    virtual void Arrange(const Rect finalRect);
+    virtual void Arrange(const Gdiplus::Rect finalRect);
 };

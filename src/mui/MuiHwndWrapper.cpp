@@ -66,7 +66,7 @@ Size HwndWrapper::Measure(const Size availableSize) {
     return desiredSize;
 }
 
-void HwndWrapper::Arrange(const Rect finalRect) {
+void HwndWrapper::Arrange(const Gdiplus::Rect finalRect) {
     if (layout) {
         // might over-write position if our layout knows about us
         layout->Arrange(finalRect);
@@ -96,7 +96,7 @@ void HwndWrapper::TopLevelLayout() {
     }
 
     desiredSize = availableSize;
-    Rect r(0, 0, availableSize.Width, availableSize.Height);
+    Gdiplus::Rect r(0, 0, availableSize.Width, availableSize.Height);
     SetPosition(r);
     if (centerContent) {
         int n = availableSize.Width - s.Width;

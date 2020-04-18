@@ -10,7 +10,7 @@ class Painter {
     Bitmap* cacheBmp;
     Size sizeDuringLastPaint;
 
-    void PaintBackground(Graphics* g, Rect r);
+    void PaintBackground(Graphics* g, Gdiplus::Rect r);
 
   public:
     Painter(HwndWrapper* wnd);

@@ -607,7 +607,7 @@ static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI
 
     Bitmap pageBmp(pageSize.dx, pageSize.dy, PixelFormat24bppRGB);
     Graphics g(&pageBmp);
-    Rect r(0, 0, pageSize.dx, pageSize.dy);
+    Gdiplus::Rect r(0, 0, pageSize.dx, pageSize.dy);
     r.Inflate(1, 1);
     SolidBrush br(Color(255, 255, 255));
     g.FillRectangle(&br, r);
@@ -621,7 +621,7 @@ static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI
     Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);
     Graphics g2(&res);
     g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    g2.DrawImage(&pageBmp, Rect(0, 0, bmpSize.dx, bmpSize.dy), 0, 0, pageSize.dx, pageSize.dy, UnitPixel);
+    g2.DrawImage(&pageBmp, Gdiplus::Rect(0, 0, bmpSize.dx, bmpSize.dy), 0, 0, pageSize.dx, pageSize.dy, UnitPixel);
 
     HBITMAP hbmp;
     Status status = res.GetHBITMAP((ARGB)Color::White, &hbmp);
@@ -649,7 +649,8 @@ static RenderedBitmap* ThumbFromCoverPage(Doc doc, SizeI size) {
     }
     Graphics g(&res);
     g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    Status status = g.DrawImage(coverBmp, Rect(0, 0, size.dx, size.dy), 0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
+    Status status =
+        g.DrawImage(coverBmp, Gdiplus::Rect(0, 0, size.dx, size.dy), 0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
     if (status != Ok) {
         delete coverBmp;
         return nullptr;

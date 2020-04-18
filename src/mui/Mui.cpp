@@ -122,7 +122,7 @@ static void DrawLine(Graphics* gfx, const Point& p1, const Point& p2, float widt
     gfx->DrawLine(&p, p1, p2);
 }
 
-void DrawBorder(Graphics* gfx, const Rect r, CachedStyle* s) {
+void DrawBorder(Graphics* gfx, const Gdiplus::Rect r, CachedStyle* s) {
     Point p1, p2;
     float width;
 
@@ -160,7 +160,7 @@ void DrawBorder(Graphics* gfx, const Rect r, CachedStyle* s) {
     DrawLine(gfx, p1, p2, width, br);
 }
 
-static void InvalidateAtOff(HWND hwnd, const Rect* r, int offX, int offY) {
+static void InvalidateAtOff(HWND hwnd, const Gdiplus::Rect* r, int offX, int offY) {
     RECT rc = RECTFromRect((*r));
     rc.left += offX;
     rc.right += offX;
@@ -170,13 +170,13 @@ static void InvalidateAtOff(HWND hwnd, const Rect* r, int offX, int offY) {
 }
 
 // r1 and r2 are relative to w. If both are nullptr, we invalidate the whole w
-void RequestRepaint(Control* c, const Rect* r1, const Rect* r2) {
+void RequestRepaint(Control* c, const Gdiplus::Rect* r1, const Gdiplus::Rect* r2) {
     // we might be called when the control hasn't yet been
     // placed in the window hierarchy
     if (!c->parent && !c->hwndParent)
         return;
 
-    Rect wRect(0, 0, c->pos.Width, c->pos.Height);
+    Gdiplus::Rect wRect(0, 0, c->pos.Width, c->pos.Height);
 
     int offX = 0, offY = 0;
     c->MapMyToRootPos(offX, offY);

@@ -65,7 +65,7 @@ static void RedistributeSizes(Vec<SizeInfo>& sizes, int totalSize) {
     }
 }
 
-void HorizontalLayout::Arrange(const Rect finalRect) {
+void HorizontalLayout::Arrange(const Gdiplus::Rect finalRect) {
     Vec<SizeInfo> sizes;
 
     for (DirectionalLayoutData& e : els) {
@@ -78,13 +78,13 @@ void HorizontalLayout::Arrange(const Rect finalRect) {
     for (DirectionalLayoutData& e : els) {
         int dy = CalcScaledClippedSize(finalRect.Height, e.sizeNonLayoutAxis, e.desiredSize.Height);
         int y = e.alignNonLayoutAxis.CalcOffset(dy, finalRect.Height);
-        e.element->Arrange(Rect((*si).finalPos, y, (*si).finalSize, dy));
+        e.element->Arrange(Gdiplus::Rect((*si).finalPos, y, (*si).finalSize, dy));
         ++si;
     }
     CrashIf(si != sizes.end());
 }
 
-void VerticalLayout::Arrange(const Rect finalRect) {
+void VerticalLayout::Arrange(const Gdiplus::Rect finalRect) {
     Vec<SizeInfo> sizes;
 
     for (DirectionalLayoutData& e : els) {
@@ -97,7 +97,7 @@ void VerticalLayout::Arrange(const Rect finalRect) {
     for (DirectionalLayoutData& e : els) {
         int dx = CalcScaledClippedSize(finalRect.Width, e.sizeNonLayoutAxis, e.desiredSize.Width);
         int x = e.alignNonLayoutAxis.CalcOffset(dx, finalRect.Width);
-        e.element->Arrange(Rect(x, (*si).finalPos, dx, (*si).finalSize));
+        e.element->Arrange(Gdiplus::Rect(x, (*si).finalPos, dx, (*si).finalSize));
         ++si;
     }
     CrashIf(si != sizes.end());

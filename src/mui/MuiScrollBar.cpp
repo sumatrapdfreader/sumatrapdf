@@ -72,7 +72,7 @@ void ScrollBar::Paint(Graphics* gfx, int offX, int offY) {
     if (IsMouseOver())
         dy = onOverDy;
 
-    Rect r(offX, offY + pos.Height - dy, pos.Width, dy);
+    Gdiplus::Rect r(offX, offY + pos.Height - dy, pos.Width, dy);
     Brush* br = BrushFromColorData(s->bgColor, r);
     gfx->FillRectangle(br, r);
 

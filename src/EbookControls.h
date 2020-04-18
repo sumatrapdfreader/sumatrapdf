@@ -76,7 +76,7 @@ class PagesLayout : public ILayout {
     }
 
     virtual Size Measure(const Size availableSize);
-    virtual void Arrange(const Rect finalRect);
+    virtual void Arrange(const Gdiplus::Rect finalRect);
 
     PageControl* GetPage1() const {
         return page1;

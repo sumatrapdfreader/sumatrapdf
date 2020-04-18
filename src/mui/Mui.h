@@ -57,7 +57,6 @@ using Gdiplus::SizeF;
 
 // TODO: long term, we either don't want to use them or use explicit type
 using Gdiplus::Point;
-using Gdiplus::Rect;
 using Gdiplus::Size;
 
 #include "MuiBase.h"
@@ -111,7 +110,7 @@ class WndInputWantedFilter : public WndFilter {
     }
     virtual bool Matches(Control* c, int offX, int offY) {
         if ((c->wantedInputBits & wantedInputMask) != 0) {
-            Rect r = Rect(offX, offY, c->pos.Width, c->pos.Height);
+            Gdiplus::Rect r = Gdiplus::Rect(offX, offY, c->pos.Width, c->pos.Height);
             return r.Contains(x, y);
         }
         return false;
@@ -124,9 +123,9 @@ void SetDebugPaint(bool debug);
 bool IsDebugPaint();
 size_t CollectWindowsAt(Control* wndRoot, int x, int y, uint16_t wantedInputMask, Vec<CtrlAndOffset>* ctrls);
 void CollectWindowsBreathFirst(Control* c, int offX, int offY, WndFilter* wndFilter, Vec<CtrlAndOffset>* ctrls);
-void RequestRepaint(Control* c, const Rect* r1 = nullptr, const Rect* r2 = nullptr);
+void RequestRepaint(Control* c, const Gdiplus::Rect* r1 = nullptr, const Gdiplus::Rect* r2 = nullptr);
 void RequestLayout(Control* c);
-void DrawBorder(Graphics* gfx, const Rect r, CachedStyle* s);
+void DrawBorder(Graphics* gfx, const Gdiplus::Rect r, CachedStyle* s);
 HwndWrapper* GetRootHwndWnd(const Control* c);
 
 } // namespace mui

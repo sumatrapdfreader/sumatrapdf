@@ -68,7 +68,6 @@ using Gdiplus::SizeF;
 
 // TODO: long term, we either don't want to use them or use explicit type
 using Gdiplus::Point;
-using Gdiplus::Rect;
 using Gdiplus::Size;
 
 Kind kindEngineImage = "engineImage";
@@ -209,7 +208,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     Color white(0xFF, 0xFF, 0xFF);
     SolidBrush tmpBrush(white);
-    Rect screenR(screen.ToGdipRect());
+    Gdiplus::Rect screenR(screen.ToGdipRect());
     screenR.Inflate(1, 1);
     g.FillRectangle(&tmpBrush, screenR);
 

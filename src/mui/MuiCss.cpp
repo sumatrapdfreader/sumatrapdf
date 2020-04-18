@@ -56,7 +56,6 @@ using Gdiplus::SizeF;
 
 // TODO: long term, we either don't want to use them or use explicit type
 using Gdiplus::Point;
-using Gdiplus::Rect;
 using Gdiplus::Size;
 
 /*
@@ -695,7 +694,7 @@ Brush* BrushFromColorData(ColorData* color, const RectF& r) {
     return ::new SolidBrush(0);
 }
 
-Brush* BrushFromColorData(ColorData* color, const Rect& r) {
+Brush* BrushFromColorData(ColorData* color, const Gdiplus::Rect& r) {
     return BrushFromColorData(color, RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
 }
 

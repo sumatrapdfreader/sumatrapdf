@@ -178,7 +178,6 @@ using Gdiplus::SizeF;
 
 // TODO: long term, we either don't want to use them or use explicit type
 using Gdiplus::Point;
-using Gdiplus::Rect;
 using Gdiplus::Size;
 
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
@@ -195,7 +194,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     Graphics graphics(hdc);
     auto col = GetAppColor(AppColor::NotificationsBg);
     SolidBrush br(GdiRgbFromCOLORREF(col));
-    graphics.FillRectangle(&br, Rect(0, 0, rTmp.right - rTmp.left, rTmp.bottom - rTmp.top));
+    graphics.FillRectangle(&br, Gdiplus::Rect(0, 0, rTmp.right - rTmp.left, rTmp.bottom - rTmp.top));
 
     if (wnd->highlight) {
         SetBkMode(hdc, OPAQUE);
@@ -233,7 +232,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
 
         col = GetAppColor(AppColor::NotifcationsProgress);
         Pen pen(GdiRgbFromCOLORREF(col));
-        graphics.DrawRectangle(&pen, Rect(rect.x, rect.y, rect.dx, rect.dy));
+        graphics.DrawRectangle(&pen, Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy));
 
         rect.x += 2;
         rect.dx = (wnd->progressWidth - 3) * wnd->progress / 100;
@@ -241,7 +240,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
         rect.dy -= 3;
 
         br.SetColor(GdiRgbFromCOLORREF(col));
-        graphics.FillRectangle(&br, Rect(rect.x, rect.y, rect.dx, rect.dy));
+        graphics.FillRectangle(&br, Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy));
     }
 
     SelectFont(hdc, oldfnt);

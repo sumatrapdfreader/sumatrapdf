@@ -29,7 +29,7 @@ Painter::~Painter() {
 // we paint the background in Painter() because I don't
 // want to add an artificial Control window just to cover
 // the whole HWND and paint the background.
-void Painter::PaintBackground(Graphics* g, Rect r) {
+void Painter::PaintBackground(Graphics* g, Gdiplus::Rect r) {
     // TODO: don't quite get why I need to expand the rectangle, but
     // sometimes there's a seemingly 1 pixel artifact on the left and
     // at the top if I don't do this
@@ -70,7 +70,7 @@ static void PaintWindowsInZOrder(Graphics* g, Control* c) {
             if (minUnpaintedZOrder == coff.c->zOrder) {
                 coff.c->Paint(g, coff.offX, coff.offY);
                 if (IsDebugPaint()) {
-                    Rect bbox(coff.offX, coff.offY, coff.c->pos.Width, coff.c->pos.Height);
+                    Gdiplus::Rect bbox(coff.offX, coff.offY, coff.c->pos.Width, coff.c->pos.Height);
                     g->DrawRectangle(&debugPen, bbox);
                 }
                 ++paintedCount;

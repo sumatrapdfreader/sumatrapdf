@@ -58,7 +58,7 @@ Control::Control(Control* newParent) {
     cachedStyle = nullptr;
     namedEventClick = nullptr;
     SetStyle(nullptr);
-    pos = Rect();
+    pos = Gdiplus::Rect();
     if (newParent)
         SetParent(newParent);
 }
@@ -178,7 +178,7 @@ void Control::MeasureChildren(Size availableSize) const {
     }
 }
 
-void Control::Arrange(const Rect finalRect) {
+void Control::Arrange(const Gdiplus::Rect finalRect) {
     SetPosition(finalRect);
     if (layout) {
         // might over-write position if our layout knows about us
@@ -209,7 +209,7 @@ void Control::Hide() {
     RequestLayout(this);
 }
 
-void Control::SetPosition(const Rect& p) {
+void Control::SetPosition(const Gdiplus::Rect& p) {
     if (p.Equals(pos))
         return; // perf optimization
     bool sizeChanged = (p.Width != pos.Width) || (p.Height != pos.Height);
@@ -217,9 +217,9 @@ void Control::SetPosition(const Rect& p) {
     // before and after position
     // TODO: not sure why I need this, but without it there
     // are drawing artifacts
-    Rect p1(p);
+    Gdiplus::Rect p1(p);
     p1.Inflate(1, 1);
-    Rect p2(pos);
+    Gdiplus::Rect p2(pos);
     p2.Inflate(1, 1);
     RequestRepaint(this, &p1, &p2);
     pos = p;

@@ -78,8 +78,8 @@ void Grid::RebuildCellDataIfNeeded() {
     dirty = false;
 }
 
-Rect Grid::GetCellBbox(Grid::CellData* d) {
-    Rect r;
+Gdiplus::Rect Grid::GetCellBbox(Grid::CellData* d) {
+    Gdiplus::Rect r;
     // TODO: probably add Grid's border to X
     Point p(GetCellPos(d->row, d->col));
     r.X = p.X;
@@ -101,14 +101,14 @@ void Grid::Paint(Graphics* gfx, int offX, int offY) {
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
-    Rect r(offX, offY, pos.Width, pos.Height);
+    Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
     DrawBorder(gfx, r, s);
 
     for (Grid::CellData& d : els) {
         if (!d.cachedStyle)
             continue;
 
-        Rect cellRect(GetCellBbox(&d));
+        Gdiplus::Rect cellRect(GetCellBbox(&d));
         cellRect.X += offX;
         cellRect.Y += offY;
         s = d.cachedStyle;
@@ -188,7 +188,7 @@ Size Grid::Measure(const Size availableSize) {
     return desiredSize;
 }
 
-void Grid::Arrange(const Rect finalRect) {
+void Grid::Arrange(const Gdiplus::Rect finalRect) {
     Cell* cell;
     Control* el;
 
@@ -208,7 +208,7 @@ void Grid::Arrange(const Rect finalRect) {
         int containerDy = maxRowHeight[d.row];
         int yOff = d.vertAlign.CalcOffset(elDy, containerDy);
         pos.Y += yOff;
-        Rect r(pos, cell->desiredSize);
+        Gdiplus::Rect r(pos, cell->desiredSize);
         el->Arrange(r);
     }
     SetPosition(finalRect);

@@ -144,7 +144,7 @@ void Button::Paint(Graphics* gfx, int offX, int offY) {
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
-    Rect r(offX, offY, pos.Width, pos.Height);
+    Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
     DrawBorder(gfx, r, s);
     if (str::IsEmpty(text))
         return;
@@ -208,7 +208,7 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
     CachedStyle* s = cachedStyle;
     desiredSize = GetBorderAndPaddingSize(s);
 
-    Rect bbox;
+    Gdiplus::Rect bbox;
     Brush* brStroke = BrushFromColorData(s->stroke, bbox);
     if (0.f == s->strokeWidth) {
         graphicsPath->GetBounds(&bbox);
@@ -244,13 +244,13 @@ void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
-    Rect r(offX, offY, pos.Width, pos.Height);
+    Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
     DrawBorder(gfx, r, s);
     if (!graphicsPath)
         return;
 
     // graphicsPath bbox can have non-zero X,Y
-    Rect gpBbox;
+    Gdiplus::Rect gpBbox;
     Brush* brFill = BrushFromColorData(s->fill, bbox);
     Brush* brStroke = BrushFromColorData(s->stroke, bbox);
     Pen pen(brStroke, s->strokeWidth);

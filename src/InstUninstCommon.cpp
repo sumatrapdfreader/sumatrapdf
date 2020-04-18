@@ -97,7 +97,6 @@ using Gdiplus::SizeF;
 
 // TODO: long term, we either don't want to use them or use explicit type
 using Gdiplus::Point;
-using Gdiplus::Rect;
 using Gdiplus::Size;
 
 Color gCol1(196, 64, 50);
