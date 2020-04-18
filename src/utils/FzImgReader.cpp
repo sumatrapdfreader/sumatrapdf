@@ -16,11 +16,11 @@ extern "C" {
 
 #ifndef NO_LIBMUPDF
 
-using namespace Gdiplus;
+// using namespace Gdiplus;
 
 namespace fitz {
 
-static Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
+static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
     int w = 0, h = 0, xres = 0, yres = 0;
     fz_colorspace* cs = nullptr;
     fz_stream* stm = nullptr;
@@ -38,24 +38,24 @@ static Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
         cs = nullptr;
     }
 
-    PixelFormat fmt = fz_device_rgb(ctx) == cs
-                          ? PixelFormat24bppRGB
-                          : fz_device_gray(ctx) == cs
-                                ? PixelFormat24bppRGB
-                                : fz_device_cmyk(ctx) == cs ? PixelFormat32bppCMYK : PixelFormatUndefined;
+    Gdiplus::PixelFormat fmt = fz_device_rgb(ctx) == cs
+                                   ? PixelFormat24bppRGB
+                                   : fz_device_gray(ctx) == cs
+                                         ? PixelFormat24bppRGB
+                                         : fz_device_cmyk(ctx) == cs ? PixelFormat32bppCMYK : PixelFormatUndefined;
     if (PixelFormatUndefined == fmt || w <= 0 || h <= 0 || !cs) {
         fz_drop_stream(ctx, stm);
         fz_drop_colorspace(ctx, cs);
         return nullptr;
     }
 
-    Bitmap bmp(w, h, fmt);
+    Gdiplus::Bitmap bmp(w, h, fmt);
     bmp.SetResolution(xres, yres);
 
-    Rect bmpRect(0, 0, w, h);
-    BitmapData bmpData;
-    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, fmt, &bmpData);
-    if (ok != Ok) {
+    Gdiplus::Rect bmpRect(0, 0, w, h);
+    Gdiplus::BitmapData bmpData;
+    Gdiplus::Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, fmt, &bmpData);
+    if (ok != Gdiplus::Ok) {
         fz_drop_stream(ctx, stm);
         fz_drop_colorspace(ctx, cs);
         return nullptr;
@@ -128,7 +128,7 @@ fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds
     return cvt;
 }
 
-static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
+static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     fz_pixmap* pix = nullptr;
     fz_pixmap* pix_argb = nullptr;
 
@@ -143,14 +143,14 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     }
 
     int w = pix->w, h = pix->h;
-    PixelFormat pixelFormat = PixelFormat32bppARGB;
-    Bitmap bmp(w, h, pixelFormat);
+    Gdiplus::PixelFormat pixelFormat = PixelFormat32bppARGB;
+    Gdiplus::Bitmap bmp(w, h, pixelFormat);
     bmp.SetResolution(pix->xres, pix->yres);
 
-    Rect bmpRect(0, 0, w, h);
-    BitmapData bmpData;
-    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, pixelFormat, &bmpData);
-    if (ok != Ok) {
+    Gdiplus::Rect bmpRect(0, 0, w, h);
+    Gdiplus::BitmapData bmpData;
+    Gdiplus::Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, pixelFormat, &bmpData);
+    if (ok != Gdiplus::Ok) {
         fz_drop_pixmap(ctx, pix);
         return nullptr;
     }
@@ -183,7 +183,7 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     return bmp.Clone(0, 0, w, h, pixelFormat);
 }
 
-Bitmap* ImageFromData(const char* data, size_t len) {
+Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
     if (len > INT_MAX || len < 12)
         return nullptr;
 
@@ -191,7 +191,7 @@ Bitmap* ImageFromData(const char* data, size_t len) {
     if (!ctx)
         return nullptr;
 
-    Bitmap* result = nullptr;
+    Gdiplus::Bitmap* result = nullptr;
     if (str::StartsWith(data, "\xFF\xD8"))
         result = ImageFromJpegData(ctx, data, (int)len);
     else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12))

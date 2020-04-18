@@ -35,7 +35,54 @@
 #include "TableOfContents.h"
 #include "Tabs.h"
 
-using namespace Gdiplus;
+// using namespace Gdiplus;
+
+using Gdiplus::ARGB;
+using Gdiplus::Bitmap;
+using Gdiplus::Brush;
+using Gdiplus::Color;
+using Gdiplus::CombineModeReplace;
+using Gdiplus::CompositingQualityHighQuality;
+using Gdiplus::Font;
+using Gdiplus::FontFamily;
+using Gdiplus::FontStyle;
+using Gdiplus::FontStyleBold;
+using Gdiplus::FontStyleItalic;
+using Gdiplus::FontStyleRegular;
+using Gdiplus::FontStyleStrikeout;
+using Gdiplus::FontStyleUnderline;
+using Gdiplus::FrameDimensionPage;
+using Gdiplus::FrameDimensionTime;
+using Gdiplus::Graphics;
+using Gdiplus::GraphicsPath;
+using Gdiplus::Image;
+using Gdiplus::ImageAttributes;
+using Gdiplus::InterpolationModeHighQualityBicubic;
+using Gdiplus::LinearGradientBrush;
+using Gdiplus::LinearGradientMode;
+using Gdiplus::LinearGradientModeVertical;
+using Gdiplus::Matrix;
+using Gdiplus::MatrixOrderAppend;
+using Gdiplus::Ok;
+using Gdiplus::OutOfMemory;
+using Gdiplus::PathData;
+using Gdiplus::Pen;
+using Gdiplus::PenAlignmentInset;
+using Gdiplus::PropertyItem;
+using Gdiplus::Region;
+using Gdiplus::SmoothingModeAntiAlias;
+using Gdiplus::SolidBrush;
+using Gdiplus::Status;
+using Gdiplus::StringAlignmentCenter;
+using Gdiplus::StringFormat;
+using Gdiplus::StringFormatFlagsDirectionRightToLeft;
+using Gdiplus::TextRenderingHintClearTypeGridFit;
+using Gdiplus::UnitPixel;
+using Gdiplus::Win32Error;
+
+using Gdiplus::PointF;
+using Gdiplus::RectF;
+using Gdiplus::SizeF;
 
 #define DEFAULT_CURRENT_BG_COL (COLORREF) - 1
 
@@ -127,7 +174,7 @@ class TabPainter {
         Graphics gfx(hwnd);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
         GraphicsPath shape;
-        GraphicsPathIterator iterator(&shapes);
+        Gdiplus::GraphicsPathIterator iterator(&shapes);
         iterator.NextMarker(&shape);
 
         ClientRect rClient(hwnd);
@@ -135,7 +182,7 @@ class TabPainter {
         gfx.TranslateTransform(1.0f, yPosTab);
         for (int i = 0; i < Count(); i++) {
             Gdiplus::Point pt(point);
-            gfx.TransformPoints(CoordinateSpaceWorld, CoordinateSpaceDevice, &pt, 1);
+            gfx.TransformPoints(Gdiplus::CoordinateSpaceWorld, Gdiplus::CoordinateSpaceDevice, &pt, 1);
             if (shape.IsVisible(pt, &gfx)) {
                 iterator.NextMarker(&shape);
                 if (inXbutton)
@@ -157,7 +204,7 @@ class TabPainter {
         Graphics gfx(hwnd);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
         GraphicsPath shape;
-        GraphicsPathIterator iterator(&shapes);
+        Gdiplus::GraphicsPathIterator iterator(&shapes);
         iterator.NextMarker(&shape);
         Region region(&shape);
 
@@ -193,14 +240,14 @@ class TabPainter {
         SetWorldTransform(hdc, &ctm);
 
         Graphics gfx(hdc);
-        gfx.SetCompositingMode(CompositingModeSourceCopy);
+        gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
         gfx.SetCompositingQuality(CompositingQualityHighQuality);
-        gfx.SetSmoothingMode(SmoothingModeHighQuality);
+        gfx.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
         gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
         gfx.SetPageUnit(UnitPixel);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
         GraphicsPath shape;
-        GraphicsPathIterator iterator(&shapes);
+        Gdiplus::GraphicsPathIterator iterator(&shapes);
 
         SolidBrush br(Color(0, 0, 0));
         Pen pen(&br, 2.0f);
@@ -209,9 +256,9 @@ class TabPainter {
         // TODO: adjust these constant values for DPI?
         RectF layout((float)DpiScale(hwnd, 3), 1.0f, float(width - DpiScale(hwnd, 20)), (float)height);
         StringFormat sf(StringFormat::GenericDefault());
-        sf.SetFormatFlags(StringFormatFlagsNoWrap);
+        sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
         sf.SetLineAlignment(StringAlignmentCenter);
-        sf.SetTrimming(StringTrimmingEllipsisCharacter);
+        sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
         float yPosTab = inTitlebar ? 0.0f : float(ClientRect(hwnd).dy - height - 1);
         for (int i = 0; i < Count(); i++) {
@@ -248,7 +295,7 @@ class TabPainter {
             }
 
             // paint tab's body
-            gfx.SetCompositingMode(CompositingModeSourceCopy);
+            gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
             iterator.NextMarker(&shape);
             br.SetColor(GdiRgbFromCOLORREF(bgCol));
             Gdiplus::Point points[4];
@@ -261,7 +308,7 @@ class TabPainter {
             gfx.ResetClip();
 
             // draw tab's text
-            gfx.SetCompositingMode(CompositingModeSourceOver);
+            gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
             br.SetColor(GdiRgbFromCOLORREF(textCol));
             gfx.DrawString(text.at(i), -1, &f, layout, &sf, &br);
 

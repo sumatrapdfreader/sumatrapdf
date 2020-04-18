@@ -107,10 +107,8 @@ void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel) {
 
 void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLORREF selectionColor, u8 alpha,
                                 int margin) {
-    using namespace Gdiplus;
-
     // create path from rectangles
-    GraphicsPath path(FillModeWinding);
+    Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
     screenRc.Inflate(margin, margin);
     for (size_t i = 0; i < rects.size(); i++) {
         RectI rc = rects.at(i).Intersect(screenRc);
@@ -119,15 +117,15 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
     }
 
     // fill path (and draw optional outline margin)
-    Graphics gs(hdc);
+    Gdiplus::Graphics gs(hdc);
     u8 r, g, b;
     UnpackRgb(selectionColor, r, g, b);
     Gdiplus::Color c(alpha, r, g, b);
-    SolidBrush tmpBrush(c);
+    Gdiplus::SolidBrush tmpBrush(c);
     gs.FillPath(&tmpBrush, &path);
     if (margin) {
         path.Outline(nullptr, 0.2f);
-        Pen tmpPen(Color(alpha, 0, 0, 0), (float)margin);
+        Gdiplus::Pen tmpPen(Gdiplus::Color(alpha, 0, 0, 0), (float)margin);
         gs.DrawPath(&tmpPen, &path);
     }
 }

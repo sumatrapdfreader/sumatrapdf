@@ -1802,8 +1802,6 @@ void HtmlWindow::SetScrollbarToAuto() {
     SysFreeString(s);
 }
 
-using namespace Gdiplus;
-
 // Take a screenshot of a given <area> inside an html window and resize
 // it to <finalSize>. It's up to the caller to make sure <area> fits
 // within window (we don't check that's the case)
@@ -1820,8 +1818,8 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize) {
     // to image and create imageRes containing the area
     // user asked for
     WindowRect winRc(hwndParent);
-    Bitmap image(winRc.dx, winRc.dy, PixelFormat24bppRGB);
-    Graphics g(&image);
+    Gdiplus::Bitmap image(winRc.dx, winRc.dy, PixelFormat24bppRGB);
+    Gdiplus::Graphics g(&image);
 
     HDC dc = g.GetHDC();
     RECTL rc = {0, 0, winRc.dx, winRc.dy};
@@ -1830,14 +1828,15 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize) {
     if (FAILED(hr))
         return nullptr;
 
-    Bitmap imageRes(finalSize.dx, finalSize.dy, PixelFormat24bppRGB);
-    Graphics g2(&imageRes);
-    g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    g2.DrawImage(&image, Rect(0, 0, finalSize.dx, finalSize.dy), area.x, area.y, area.dx, area.dy, UnitPixel);
+    Gdiplus::Bitmap imageRes(finalSize.dx, finalSize.dy, PixelFormat24bppRGB);
+    Gdiplus::Graphics g2(&imageRes);
+    g2.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+    g2.DrawImage(&image, Gdiplus::Rect(0, 0, finalSize.dx, finalSize.dy), area.x, area.y, area.dx, area.dy,
+                 Gdiplus::UnitPixel);
 
     HBITMAP hbmp;
-    Status ok = imageRes.GetHBITMAP((ARGB)Color::White, &hbmp);
-    if (ok != Ok)
+    Gdiplus::Status ok = imageRes.GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp);
+    if (ok != Gdiplus::Ok)
         return nullptr;
     return hbmp;
 }

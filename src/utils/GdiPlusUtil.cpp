@@ -15,7 +15,60 @@
 #include "utils/WinUtil.h"
 #include "utils/Log.h"
 
-using namespace Gdiplus;
+// using namespace Gdiplus;
+
+using Gdiplus::ARGB;
+using Gdiplus::Bitmap;
+using Gdiplus::BitmapData;
+using Gdiplus::Brush;
+using Gdiplus::CharacterRange;
+using Gdiplus::Color;
+using Gdiplus::CombineModeReplace;
+using Gdiplus::CompositingQualityHighQuality;
+using Gdiplus::Font;
+using Gdiplus::FontFamily;
+using Gdiplus::FontStyle;
+using Gdiplus::FontStyleBold;
+using Gdiplus::FontStyleItalic;
+using Gdiplus::FontStyleRegular;
+using Gdiplus::FontStyleStrikeout;
+using Gdiplus::FontStyleUnderline;
+using Gdiplus::FrameDimensionPage;
+using Gdiplus::FrameDimensionTime;
+using Gdiplus::Graphics;
+using Gdiplus::GraphicsPath;
+using Gdiplus::Image;
+using Gdiplus::ImageAttributes;
+using Gdiplus::InterpolationModeHighQualityBicubic;
+using Gdiplus::LinearGradientBrush;
+using Gdiplus::LinearGradientMode;
+using Gdiplus::LinearGradientModeVertical;
+using Gdiplus::Matrix;
+using Gdiplus::MatrixOrderAppend;
+using Gdiplus::Ok;
+using Gdiplus::OutOfMemory;
+using Gdiplus::Pen;
+using Gdiplus::PenAlignmentInset;
+using Gdiplus::PropertyItem;
+using Gdiplus::Region;
+using Gdiplus::SmoothingModeAntiAlias;
+using Gdiplus::SolidBrush;
+using Gdiplus::Status;
+using Gdiplus::StringAlignmentCenter;
+using Gdiplus::StringFormat;
+using Gdiplus::StringFormatFlagsDirectionRightToLeft;
+using Gdiplus::StringFormatFlagsMeasureTrailingSpaces;
+using Gdiplus::TextRenderingHintClearTypeGridFit;
+using Gdiplus::UnitPixel;
+using Gdiplus::Win32Error;
+// using Gdiplus::;
+// using Gdiplus::;
+// using Gdiplus::;
+// using Gdiplus::;
+
+using Gdiplus::PointF;
+using Gdiplus::RectF;
+using Gdiplus::SizeF;
 
 // Get width of each character and add them up.
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still
@@ -254,9 +307,9 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     double xres, yres;
     HR(pConverter->GetResolution(&xres, &yres));
     Bitmap bmp(w, h, PixelFormat32bppARGB);
-    Rect bmpRect(0, 0, w, h);
+    Gdiplus::Rect bmpRect(0, 0, w, h);
     BitmapData bmpData;
-    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
+    Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
     if (ok != Ok)
         return nullptr;
     HR(pConverter->CopyPixels(nullptr, bmpData.Stride, bmpData.Stride * h, (BYTE*)bmpData.Scan0));
@@ -408,8 +461,8 @@ Bitmap* BitmapFromData(const char* data, size_t len) {
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Size BitmapSizeFromData(const char* data, size_t len) {
-    Size result;
+Gdiplus::Size BitmapSizeFromData(const char* data, size_t len) {
+    Gdiplus::Size result;
     ByteReader r(data, len);
     switch (GfxFormatFromData(data, len)) {
         case ImgFormat::BMP:
@@ -536,7 +589,7 @@ Size BitmapSizeFromData(const char* data, size_t len) {
         // (currently happens for animated GIF)
         Bitmap* bmp = BitmapFromData(data, len);
         if (bmp)
-            result = Size(bmp->GetWidth(), bmp->GetHeight());
+            result = Gdiplus::Size(bmp->GetWidth(), bmp->GetHeight());
         delete bmp;
     }
 
@@ -546,10 +599,10 @@ Size BitmapSizeFromData(const char* data, size_t len) {
 CLSID GetEncoderClsid(const WCHAR* format) {
     CLSID null = {0};
     UINT numEncoders, size;
-    Status ok = GetImageEncodersSize(&numEncoders, &size);
+    Status ok = Gdiplus::GetImageEncodersSize(&numEncoders, &size);
     if (ok != Ok || 0 == size)
         return null;
-    ScopedMem<ImageCodecInfo> codecInfo((ImageCodecInfo*)malloc(size));
+    ScopedMem<Gdiplus::ImageCodecInfo> codecInfo((Gdiplus::ImageCodecInfo*)malloc(size));
     if (!codecInfo)
         return null;
     GetImageEncoders(numEncoders, size, codecInfo);

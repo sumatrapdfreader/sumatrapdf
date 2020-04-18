@@ -4,8 +4,6 @@
 #include "BaseUtil.h"
 #include "TgaReader.h"
 
-using namespace Gdiplus;
-
 namespace tga {
 
 #define TGA_FOOTER_SIGNATURE "TRUEVISION-XFILE."
@@ -116,7 +114,7 @@ static const TgaExtArea* GetExtAreaPtr(const char* data, size_t len) {
 
 // note: we only support the more common bit depths:
 // http://www.ryanjuckett.com/programming/graphics/26-parsing-colors-in-a-tga-file
-static PixelFormat GetPixelFormat(const TgaHeader* headerLE, ImageAlpha aType = Alpha_Normal) {
+static Gdiplus::PixelFormat GetPixelFormat(const TgaHeader* headerLE, ImageAlpha aType = Alpha_Normal) {
     int bits;
     if (Type_Palette == headerLE->imageType || Type_Palette_RLE == headerLE->imageType) {
         if (1 != headerLE->cmapType || 8 != headerLE->bitDepth && 16 != headerLE->bitDepth)
@@ -182,14 +180,14 @@ bool HasSignature(const char* data, size_t len) {
     return true;
 }
 
-static void SetImageProperty(Bitmap* bmp, PROPID id, const char* asciiValue) {
-    PropertyItem item;
+static void SetImageProperty(Gdiplus::Bitmap* bmp, PROPID id, const char* asciiValue) {
+    Gdiplus::PropertyItem item;
     item.id = id;
     item.type = PropertyTagTypeASCII;
     item.value = (void*)asciiValue;
     item.length = (ULONG)(str::Len(asciiValue) + 1);
-    Status ok = bmp->SetPropertyItem(&item);
-    CrashIf(ok != Ok);
+    Gdiplus::Status ok = bmp->SetPropertyItem(&item);
+    CrashIf(ok != Gdiplus::Ok);
 }
 
 static bool IsFieldSet(const char* field, size_t len, bool isBinary = false) {
@@ -200,7 +198,7 @@ static bool IsFieldSet(const char* field, size_t len, bool isBinary = false) {
     return false;
 }
 
-static void CopyMetadata(const char* data, size_t len, Bitmap* bmp) {
+static void CopyMetadata(const char* data, size_t len, Gdiplus::Bitmap* bmp) {
     const TgaExtArea* extAreaLE = GetExtAreaPtr(data, len);
     if (!extAreaLE)
         return;
@@ -321,7 +319,7 @@ Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
     s.n = (headerLE->bitDepth + 7) / 8;
     s.isRLE = headerLE->imageType >= 8;
 
-    PixelFormat format = GetPixelFormat(headerLE, GetAlphaType(data, len));
+    Gdiplus::PixelFormat format = GetPixelFormat(headerLE, GetAlphaType(data, len));
     if (!format)
         return nullptr;
 
@@ -331,11 +329,11 @@ Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
     bool invertX = (headerLE->flags & Flag_InvertX);
     bool invertY = (headerLE->flags & Flag_InvertY);
 
-    Bitmap bmp(w, h, format);
-    Rect bmpRect(0, 0, w, h);
-    BitmapData bmpData;
-    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, format, &bmpData);
-    if (ok != Ok)
+    Gdiplus::Bitmap bmp(w, h, format);
+    Gdiplus::Rect bmpRect(0, 0, w, h);
+    Gdiplus::BitmapData bmpData;
+    Gdiplus::Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, format, &bmpData);
+    if (ok != Gdiplus::Ok)
         return nullptr;
     for (int y = 0; y < h; y++) {
         char* rowOut = (char*)bmpData.Scan0 + bmpData.Stride * (invertY ? y : h - 1 - y);
