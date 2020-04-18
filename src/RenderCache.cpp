@@ -189,7 +189,7 @@ static RectD GetTileRectUser(EngineBase* engine, int pageNo, int rotation, float
 }
 
 static Rect GetTileOnScreen(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile,
-                             Rect pageOnScreen) {
+                            Rect pageOnScreen) {
     Rect bbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
     bbox.Offset(pageOnScreen.x, pageOnScreen.y);
     return bbox;
@@ -213,7 +213,7 @@ static bool IsTileVisible(DisplayModel* dm, int pageNo, TilePosition tile, float
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
     tileOnScreen.y -= (int)(tileOnScreen.dy * fuzz * 0.5);
     tileOnScreen.dy = (int)(tileOnScreen.dy * (fuzz + 1));
-    Rect screen(PointI(), dm->GetViewPort().Size());
+    Rect screen(Point(), dm->GetViewPort().Size());
     return !tileOnScreen.Intersect(screen).IsEmpty();
 }
 

@@ -8,13 +8,13 @@
 #include "utils/UtAssert.h"
 
 static const FieldInfo gSutPointIFields[] = {
-    {offsetof(PointI, x), Type_Int, 111},
-    {offsetof(PointI, y), Type_Int, 222},
+    {offsetof(Point, x), Type_Int, 111},
+    {offsetof(Point, y), Type_Int, 222},
 };
-static const StructInfo gSutPointIInfo = {sizeof(PointI), 2, gSutPointIFields, "X\0Y"};
+static const StructInfo gSutPointIInfo = {sizeof(Point), 2, gSutPointIFields, "X\0Y"};
 
 struct SutStructNested {
-    PointI point;
+    Point point;
     Vec<COLORREF>* colorArray;
 };
 
@@ -27,7 +27,7 @@ static const StructInfo gSutStructNestedInfo = {sizeof(SutStructNested), 2, gSut
 
 struct SutStructItem {
     Vec<float>* floatArray;
-    PointI compactPoint;
+    Point compactPoint;
     SutStructNested nested;
 };
 
@@ -54,7 +54,7 @@ struct SutStruct {
     Vec<int>* intArray;
     Vec<WCHAR*>* strArray;
     Vec<WCHAR*>* emptyStrArray;
-    PointI point;
+    Point point;
     Vec<SutStructItem*>* sutStructItems;
     char* internalString;
 };
@@ -164,7 +164,7 @@ Key = Value";
     utassert(str::Eq(data->strArray->at(0), L"with space") && str::Eq(data->strArray->at(1), L"plain") &&
              str::Eq(data->strArray->at(2), L"quote:\""));
     utassert(2 == data->sutStructItems->size());
-    utassert(PointI(-1, 5) == data->sutStructItems->at(0)->compactPoint);
+    utassert(Point(-1, 5) == data->sutStructItems->at(0)->compactPoint);
     utassert(2 == data->sutStructItems->at(0)->floatArray->size());
     utassert(0 == data->sutStructItems->at(0)->nested.colorArray->size());
     utassert(0 == data->sutStructItems->at(1)->floatArray->size());
@@ -187,7 +187,7 @@ Key = Value";
     utassert(3 == data->strArray->size() && 0 == data->emptyStrArray->size());
     utassert(str::Eq(data->strArray->at(0), L"one") && str::Eq(data->strArray->at(1), L"two three") &&
              str::Eq(data->strArray->at(2), L""));
-    utassert(PointI(111, 222) == data->point);
+    utassert(Point(111, 222) == data->point);
     utassert(data->sutStructItems && 0 == data->sutStructItems->size());
     FreeStruct(&gSutStructInfo, data);
 

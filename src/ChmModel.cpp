@@ -274,7 +274,7 @@ ChmModel* ChmModel::AsChm() {
     return this;
 }
 
-void ChmModel::SetZoomVirtual(float zoom, PointI* fixPt) {
+void ChmModel::SetZoomVirtual(float zoom, Point* fixPt) {
     UNUSED(fixPt);
     if (zoom > 0) {
         zoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
@@ -595,7 +595,7 @@ void ChmModel::GetDisplayState(DisplayState* ds) {
     prefs::conv::FromZoom(&ds->zoom, GetZoomVirtual(), ds);
 
     ds->pageNo = CurrentPageNo();
-    ds->scrollPos = PointI();
+    ds->scrollPos = Point();
 }
 
 class ChmThumbnailTask : public HtmlWindowCallback {

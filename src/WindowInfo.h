@@ -163,9 +163,9 @@ class WindowInfo {
     /* when dragging the document around, this is previous position of the
        cursor. A delta between previous and current is by how much we
        moved */
-    PointI dragPrevPos;
+    Point dragPrevPos;
     /* when dragging, mouse x/y position when dragging was started */
-    PointI dragStart;
+    Point dragStart;
 
     /* when moving the document by smooth scrolling, this keeps track of
        the speed at which we should scroll, which depends on the distance
@@ -190,7 +190,7 @@ class WindowInfo {
     long nonFullScreenWindowStyle = 0;
     Rect nonFullScreenFrameRect{};
 
-    Rect canvasRc{};   // size of the canvas (excluding any scroll bars)
+    Rect canvasRc{};    // size of the canvas (excluding any scroll bars)
     int currPageNo = 0; // cached value, needed to determine when to auto-update the ToC selection
 
     int wheelAccumDelta = 0;
@@ -214,7 +214,7 @@ class WindowInfo {
      * rectangular marks in the document. These variables indicate the position of the markers
      * and whether they should be shown. */
     struct {
-        bool show;        // are the markers visible?
+        bool show;       // are the markers visible?
         Vec<Rect> rects; // location of the markers in user coordinates
         int page;
         int hideStep; // value used to gradually hide the markers

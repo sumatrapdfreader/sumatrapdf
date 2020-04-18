@@ -40,8 +40,8 @@ static void doMainLayout() {
     Constraints constraints = Tight(windowSize);
     auto size = mainLayout->Layout(constraints);
     //dbglogf("doLayout: (%d,%d) => (%d, %d)\n", currWinDx, currWinDy, size.Width, size.Height);
-    PointI min{0, 0};
-    PointI max{size.dx, size.dy};
+    Point min{0, 0};
+    Point max{size.dx, size.dy};
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
     InvalidateRect(g_hwnd, nullptr, false);

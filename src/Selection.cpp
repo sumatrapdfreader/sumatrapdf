@@ -199,7 +199,7 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
         return;
     }
 
-    PointI pt;
+    Point pt;
     bool zoomToPt = false;
 
     if (win->AsFixed()) {
@@ -366,7 +366,7 @@ void OnSelectionEdgeAutoscroll(WindowInfo* win, int x, int y) {
     if (dx != 0 || dy != 0) {
         CrashIf(!win->AsFixed());
         DisplayModel* dm = win->AsFixed();
-        PointI oldOffset = dm->GetViewPort().TL();
+        Point oldOffset = dm->GetViewPort().TL();
         win->MoveDocBy(dx, dy);
 
         dx = dm->GetViewPort().x - oldOffset.x;
@@ -393,9 +393,9 @@ void OnSelectionStart(WindowInfo* win, int x, int y, WPARAM key) {
     // Ctrl+drag forces a rectangular selection
     if (!isCtrl || isShift) {
         DisplayModel* dm = win->AsFixed();
-        int pageNo = dm->GetPageNoByPoint(PointI(x, y));
+        int pageNo = dm->GetPageNoByPoint(Point(x, y));
         if (dm->ValidPageNo(pageNo)) {
-            PointD pt = dm->CvtFromScreen(PointI(x, y), pageNo);
+            PointD pt = dm->CvtFromScreen(Point(x, y), pageNo);
             dm->textSelection->StartAt(pageNo, pt.x, pt.y);
             win->mouseAction = MouseAction::SelectingText;
         }

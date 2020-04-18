@@ -75,9 +75,9 @@ struct TreeClickEvent : WndEvent {
     bool isDblClick = false;
 
     // mouse x,y position relative to the window
-    PointI mouseWindow{};
+    Point mouseWindow{};
     // global (screen) mouse x,y position
-    PointI mouseGlobal{};
+    Point mouseGlobal{};
 };
 
 typedef std::function<void(TreeClickEvent*)> TreeClickHandler;

@@ -53,7 +53,7 @@ static void DrawResizeLineH(HWND hwnd, HBRUSH br, int y) {
     ReleaseDC(GetParent(hwnd), hdc);
 }
 
-static void DrawResizeLineVH(HWND hwnd, HBRUSH br, bool isVert, PointI pos) {
+static void DrawResizeLineVH(HWND hwnd, HBRUSH br, bool isVert, Point pos) {
     if (isVert) {
         DrawResizeLineV(hwnd, br, pos.x);
     } else {
@@ -62,8 +62,8 @@ static void DrawResizeLineVH(HWND hwnd, HBRUSH br, bool isVert, PointI pos) {
 }
 
 static void DrawResizeLine(HWND hwnd, HBRUSH br, SplitterType stype, bool erasePrev, bool drawCurr,
-                           PointI& prevResizeLinePos) {
-    PointI pos;
+                           Point& prevResizeLinePos) {
+    Point pos;
     GetCursorPosInHwnd(GetParent(hwnd), pos);
     bool isVert = stype != SplitterType::Horiz;
 

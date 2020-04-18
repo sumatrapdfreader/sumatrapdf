@@ -266,7 +266,7 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
     }
 
     if (WM_SETCURSOR == msg && wnd->hasCancel) {
-        PointI pt;
+        Point pt;
         if (GetCursorPosInHwnd(hwnd, pt) && GetCancelRect(hwnd).Contains(pt)) {
             SetCursor(IDC_HAND);
             return TRUE;
@@ -274,7 +274,7 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
     }
 
     if (WM_LBUTTONUP == msg && wnd->hasCancel) {
-        if (GetCancelRect(hwnd).Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
+        if (GetCancelRect(hwnd).Contains(Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
             if (wnd->wndRemovedCb)
                 wnd->wndRemovedCb(wnd);
             else

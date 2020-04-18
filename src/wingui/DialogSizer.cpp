@@ -75,7 +75,7 @@ class DialogData {
         }
     }
 
-    bool InsideGripper(PointI pt) {
+    bool InsideGripper(Point pt) {
         return bShowSizingGrip && rcGrip.Contains(pt);
     }
 
@@ -170,7 +170,7 @@ static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             // If the gripper is enabled then perform a simple hit test on our gripper area.
             POINT pt = {LOWORD(lParam), HIWORD(lParam)};
             ScreenToClient(hwnd, &pt);
-            if (pdd->InsideGripper(PointI(pt.x, pt.y)))
+            if (pdd->InsideGripper(Point(pt.x, pt.y)))
                 return HTBOTTOMRIGHT;
         } break;
 

@@ -175,7 +175,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 
     const Size paperSize(GetDeviceCaps(hdc, PHYSICALWIDTH), GetDeviceCaps(hdc, PHYSICALHEIGHT));
     const Rect printable(GetDeviceCaps(hdc, PHYSICALOFFSETX), GetDeviceCaps(hdc, PHYSICALOFFSETY),
-                          GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
+                         GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
     float fileDPI = engine.GetFileDPI();
     float px = (float)GetDeviceCaps(hdc, LOGPIXELSX);
     float py = (float)GetDeviceCaps(hdc, LOGPIXELSY);
@@ -218,7 +218,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 }
 
                 RectD* clipRegion = &pd.sel.at(i).rect;
-                PointI offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
+                Point offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
                 if (pd.advData.scale != PrintScaleAdv::None) {
                     // center the selection on the physical paper
                     offset.x += (int)(printable.dx - bSize.dx * zoom) / 2;
@@ -296,7 +296,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             // center the page on the physical paper (except for PrintScaleNone
             // where the page starts at the very top left of the physical paper so
             // that printing forms/labels of varying size remains reliably possible)
-            PointI offset(-printable.x, -printable.y);
+            Point offset(-printable.x, -printable.y);
 
             if (pd.advData.scale != PrintScaleAdv::None) {
                 // make sure to fit all content into the printable area when scaling

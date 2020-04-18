@@ -22,7 +22,7 @@
 #define WND_CLASS_NAME L"LabelWithCloseWndClass"
 
 static bool IsMouseOverClose(LabelWithCloseWnd* w) {
-    PointI p;
+    Point p;
     GetCursorPosInHwnd(w->hwnd, p);
     return w->closeBtnPos.Contains(p);
 }

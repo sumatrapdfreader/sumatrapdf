@@ -32,7 +32,7 @@ struct SplitterCtrl : public Window {
     HBITMAP bmp = nullptr;
     HBRUSH brush = nullptr;
 
-    PointI prevResizeLinePos{};
+    Point prevResizeLinePos{};
     // if a parent clips children, DrawXorBar() doesn't work, so for
     // non-live resize, we need to remove WS_CLIPCHILDREN style from
     // parent and restore it when we're done

@@ -183,7 +183,7 @@ static void OnHScroll(WindowInfo* win, WPARAM wParam) {
 static void OnDraggingStart(WindowInfo* win, int x, int y, bool right = false) {
     SetCapture(win->hwndCanvas);
     win->mouseAction = right ? MouseAction::DraggingRight : MouseAction::Dragging;
-    win->dragPrevPos = PointI(x, y);
+    win->dragPrevPos = Point(x, y);
     if (GetCursor()) {
         SetCursor(gCursorDrag);
     }
@@ -229,7 +229,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
             return;
         }
         // shortly display the cursor if the mouse has moved and the cursor is hidden
-        if (PointI(x, y) != win->dragPrevPos && !GetCursor()) {
+        if (Point(x, y) != win->dragPrevPos && !GetCursor()) {
             if (win->mouseAction == MouseAction::Idle) {
                 SetCursor(IDC_ARROW);
             } else {
@@ -271,7 +271,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
             break;
     }
     // needed also for detecting cursor movement in presentation mode
-    win->dragPrevPos = PointI(x, y);
+    win->dragPrevPos = Point(x, y);
 
     NotificationWnd* wnd = win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
     if (!wnd) {
@@ -281,7 +281,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     if (MouseAction::Selecting == win->mouseAction) {
         win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
     }
-    UpdateCursorPositionHelper(win, PointI(x, y), wnd);
+    UpdateCursorPositionHelper(win, Point(x, y), wnd);
 }
 
 static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
@@ -303,14 +303,14 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 
     CrashIf(win->linkOnLastButtonDown);
     DisplayModel* dm = win->AsFixed();
-    PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
+    PageElement* pageEl = dm->GetElementAtPos(Point(x, y));
     if (pageEl && pageEl->Is(kindPageElementDest)) {
         win->linkOnLastButtonDown = pageEl;
     } else {
         delete pageEl;
     }
     win->dragStartPending = true;
-    win->dragStart = PointI(x, y);
+    win->dragStart = Point(x, y);
 
     // - without modifiers, clicking on text starts a text selection
     //   and clicking somewhere else starts a drag
@@ -321,7 +321,7 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     bool isShift = IsShiftPressed();
     bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm_CopySelection);
-    bool isOverText = dm->IsOverText(PointI(x, y));
+    bool isOverText = dm->IsOverText(Point(x, y));
     if (!canCopy || (isShift || !isOverText) && !isCtrl) {
         OnDraggingStart(win, x, y);
     } else {
@@ -348,7 +348,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
         }
     }
 
-    PointD ptPage = dm->CvtFromScreen(PointI(x, y));
+    PointD ptPage = dm->CvtFromScreen(Point(x, y));
     // TODO: win->linkHandler->GotoLink might spin the event loop
     PageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
@@ -410,10 +410,10 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
     }
 
     DisplayModel* dm = win->AsFixed();
-    if (dm->IsOverText(PointI(x, y))) {
-        int pageNo = dm->GetPageNoByPoint(PointI(x, y));
+    if (dm->IsOverText(Point(x, y))) {
+        int pageNo = dm->GetPageNoByPoint(Point(x, y));
         if (win->ctrl->ValidPageNo(pageNo)) {
-            PointD pt = dm->CvtFromScreen(PointI(x, y), pageNo);
+            PointD pt = dm->CvtFromScreen(Point(x, y), pageNo);
             dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
             UpdateTextSelection(win, false);
             win->RepaintAsync();
@@ -421,7 +421,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
         return;
     }
 
-    PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
+    PageElement* pageEl = dm->GetElementAtPos(Point(x, y));
     if (pageEl && pageEl->Is(kindPageElementDest)) {
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
@@ -447,7 +447,7 @@ static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 
             // record current mouse position, the farther the mouse is moved
             // from this position, the faster we scroll the document
-            win->dragStart = PointI(x, y);
+            win->dragStart = Point(x, y);
             SetCursor(IDC_SIZEALL);
             break;
 
@@ -470,7 +470,7 @@ static void OnMouseRightButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     SetFocus(win->hwndFrame);
 
     win->dragStartPending = true;
-    win->dragStart = PointI(x, y);
+    win->dragStart = Point(x, y);
 
     OnDraggingStart(win, x, y, true);
 }
@@ -572,7 +572,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
         return;
     }
 
-    Rect viewPortRect(PointI(), dm.GetViewPort().Size());
+    Rect viewPortRect(Point(), dm.GetViewPort().Size());
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
@@ -714,7 +714,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
     }
 
     bool rendering = false;
-    Rect screen(PointI(), dm->GetViewPort().Size());
+    Rect screen(Point(), dm->GetViewPort().Size());
 
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo* pageInfo = dm->GetPageInfo(pageNo);
@@ -812,7 +812,7 @@ static void OnPaintDocument(WindowInfo* win) {
 }
 
 static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
-    PointI pt;
+    Point pt;
 
     if (win->mouseAction != MouseAction::Idle) {
         win->HideInfoTip();
@@ -885,7 +885,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT message, WPARAM wParam, 
 
     // Note: not all mouse drivers correctly report the Ctrl key's state
     if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON)) {
-        PointI pt;
+        Point pt;
         GetCursorPosInHwnd(win->hwndCanvas, pt);
 
         float zoom = win->ctrl->GetNextZoomStep(delta < 0 ? ZOOM_MIN : ZOOM_MAX);
@@ -1303,7 +1303,7 @@ static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM ke
     UNUSED(key);
     // lf("Right button clicked on %d %d", x, y);
     SetFocus(win->hwndFrame);
-    win->dragStart = PointI(x, y);
+    win->dragStart = Point(x, y);
 }
 
 static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) {
@@ -1317,7 +1317,7 @@ static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key)
 }
 
 static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
-    PointI pt;
+    Point pt;
     if (GetCursorPosInHwnd(hwnd, pt)) {
         StaticLinkInfo linkInfo;
         if (GetStaticLink(win->staticLinks, pt.x, pt.y, &linkInfo)) {
@@ -1427,7 +1427,7 @@ void WindowInfo::RepaintAsync(UINT delay) {
 }
 
 static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
-    PointI pt;
+    Point pt;
 
     switch (timerId) {
         case REPAINT_TIMER_ID:

@@ -68,9 +68,9 @@ typedef std::function<void(SizeEvent*)> SizeHandler;
 
 struct ContextMenuEvent : WndEvent {
     // mouse x,y position relative to the window
-    PointI mouseWindow{};
+    Point mouseWindow{};
     // global (screen) mouse x,y position
-    PointI mouseGlobal{};
+    Point mouseGlobal{};
 };
 
 typedef std::function<void(ContextMenuEvent*)> ContextMenuHandler;
@@ -136,7 +136,7 @@ struct WindowBase {
     const WCHAR* winClass = nullptr;
 
     HWND parent = nullptr;
-    PointI initialPos = {-1, -1};
+    Point initialPos = {-1, -1};
     Size initialSize = {0, 0};
     DWORD dwStyle = 0;
     DWORD dwExStyle = 0;

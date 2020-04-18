@@ -8,8 +8,9 @@ Annotations:
 
 possible refactorings:
 - [X] convert Rect in Layout.h to be like Rect
-- replace Rect with Rect typedef
-- rename Rect, PointI, Size => Rect, Point, Size
+- [X] replace Rect with Rect typedef
+- [X] rename Rect, Point, Size => Rect, Point, Size
+- remove class ClientRect and class WindowRect, those can be functions returning Rect
 - replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
 - remove DirectDraw test and don't link with d2d

@@ -188,7 +188,7 @@ struct FileState {
     // before serialization
     WCHAR* displayMode;
     // how far this document has been scrolled (in x and y direction)
-    PointI scrollPos;
+    Point scrollPos;
     // number of the last read page
     int pageNo;
     // zoom (in %) or one of those values: fit page, fit width, fit content
@@ -238,7 +238,7 @@ struct TabState {
     // same as FileStates -> Rotation
     int rotation;
     // how far this document has been scrolled (in x and y direction)
-    PointI scrollPos;
+    Point scrollPos;
     // if true, the table of contents was shown when the document was
     // closed
     bool showToc;
@@ -503,10 +503,10 @@ static const FieldInfo gFavoriteFields[] = {
 static const StructInfo gFavoriteInfo = {sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel"};
 
 static const FieldInfo gPointIFields[] = {
-    {offsetof(PointI, x), Type_Int, 0},
-    {offsetof(PointI, y), Type_Int, 0},
+    {offsetof(Point, x), Type_Int, 0},
+    {offsetof(Point, y), Type_Int, 0},
 };
-static const StructInfo gPointIInfo = {sizeof(PointI), 2, gPointIFields, "X\0Y"};
+static const StructInfo gPointIInfo = {sizeof(Point), 2, gPointIFields, "X\0Y"};
 
 static const FieldInfo gRectI_1_Fields[] = {
     {offsetof(Rect, x), Type_Int, 0},
@@ -543,10 +543,10 @@ static StructInfo gFileStateInfo = {
     "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState"};
 
 static const FieldInfo gPointI_1_Fields[] = {
-    {offsetof(PointI, x), Type_Int, 0},
-    {offsetof(PointI, y), Type_Int, 0},
+    {offsetof(Point, x), Type_Int, 0},
+    {offsetof(Point, y), Type_Int, 0},
 };
-static const StructInfo gPointI_1_Info = {sizeof(PointI), 2, gPointI_1_Fields, "X\0Y"};
+static const StructInfo gPointI_1_Info = {sizeof(Point), 2, gPointI_1_Fields, "X\0Y"};
 
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), Type_String, 0},

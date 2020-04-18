@@ -99,7 +99,7 @@ class DisplayModel : public Controller {
         return displayMode;
     }
     void SetPresentationMode(bool enable) override;
-    void SetZoomVirtual(float zoom, PointI* fixPt) override;
+    void SetZoomVirtual(float zoom, Point* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
     void SetViewPortSize(Size size) override;
@@ -213,13 +213,13 @@ class DisplayModel : public Controller {
     void RotateBy(int rotation);
 
     WCHAR* GetTextInRegion(int pageNo, RectD region);
-    bool IsOverText(PointI pt);
-    PageElement* GetElementAtPos(PointI pt);
+    bool IsOverText(Point pt);
+    PageElement* GetElementAtPos(Point pt);
 
-    int GetPageNoByPoint(PointI pt);
-    PointI CvtToScreen(int pageNo, PointD pt);
+    int GetPageNoByPoint(Point pt);
+    Point CvtToScreen(int pageNo, PointD pt);
     Rect CvtToScreen(int pageNo, RectD r);
-    PointD CvtFromScreen(PointI pt, int pageNo = INVALID_PAGE_NO);
+    PointD CvtFromScreen(Point pt, int pageNo = INVALID_PAGE_NO);
     RectD CvtFromScreen(Rect r, int pageNo = INVALID_PAGE_NO);
 
     bool ShowResultRectToScreen(TextSel* res);
@@ -257,7 +257,7 @@ class DisplayModel : public Controller {
     float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
     SizeD PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
     void ChangeStartPage(int startPage);
-    PointI GetContentStart(int pageNo);
+    Point GetContentStart(int pageNo);
     void RecalcVisibleParts();
     void RenderVisibleParts();
     void AddNavPoint();
@@ -265,7 +265,7 @@ class DisplayModel : public Controller {
     void CalcZoomReal(float zoomVirtual);
     void GoToPage(int pageNo, int scrollY, bool addNavPt = false, int scrollX = -1);
     bool GoToPrevPage(int scrollY);
-    int GetPageNextToPoint(PointI pt);
+    int GetPageNextToPoint(Point pt);
 
     EngineBase* engine = nullptr;
 

@@ -249,7 +249,7 @@ struct RectT {
 
 typedef geomutil::SizeT<int> Size;
 typedef geomutil::RectT<int> Rect;
-typedef geomutil::PointT<int> PointI;
+typedef geomutil::PointT<int> Point;
 
 typedef geomutil::SizeT<double> SizeD;
 typedef geomutil::PointT<double> PointD;

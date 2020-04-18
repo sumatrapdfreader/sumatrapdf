@@ -30,7 +30,7 @@ class Flags {
     bool enterFullScreen = false;
     DisplayMode startView = DM_AUTOMATIC;
     float startZoom = INVALID_ZOOM;
-    PointI startScroll{-1, -1};
+    Point startScroll{-1, -1};
     bool showConsole = false;
     HWND hwndPluginParent = nullptr;
     WCHAR* pluginURL = nullptr;

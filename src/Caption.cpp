@@ -331,7 +331,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
                 ClientRect rc(hwnd);
                 int x = GET_X_LPARAM(lParam);
                 int y = GET_Y_LPARAM(lParam);
-                if (!rc.Contains(PointI(x, y))) {
+                if (!rc.Contains(Point(x, y))) {
                     ReleaseCapture();
                     return 0;
                 }
@@ -802,7 +802,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
         case WM_NCHITTEST: {
             // Provide hit testing for the caption.
-            PointI pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            Point pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             Rect rClient = MapRectToWindow(ClientRect(hwnd), hwnd, HWND_DESKTOP);
             WindowRect rCaption(win->hwndCaption);
             if (rClient.Contains(pt) && pt.y < rCaption.y + rCaption.dy) {

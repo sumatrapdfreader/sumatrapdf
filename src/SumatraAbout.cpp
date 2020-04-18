@@ -123,7 +123,7 @@ static Vec<StaticLinkInfo> gLinkInfo;
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
 
-static void DrawAppName(HDC hdc, PointI pt) {
+static void DrawAppName(HDC hdc, Point pt) {
     const WCHAR* txt = GetAppName();
     if (gIsRaMicroBuild) {
         // simple black-ish version
@@ -200,7 +200,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
 
     SetTextColor(hdc, WIN_COL_BLACK);
     SelectObject(hdc, fontVersionTxt);
-    PointI pt(mainRect.x + mainRect.dx + ABOUT_INNER_PADDING, mainRect.y);
+    Point pt(mainRect.x + mainRect.dx + ABOUT_INNER_PADDING, mainRect.y);
 
     AutoFreeWstr ver = GetAppVersion();
     TextOut(hdc, pt.x, pt.y, ver.Get(), (int)str::Len(ver.Get()));
@@ -223,7 +223,7 @@ static Rect DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     SIZE txtSize;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     Rect rect(rc.dx - txtSize.cx - ABOUT_INNER_PADDING, rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx,
-               txtSize.cy);
+              txtSize.cy);
     if (IsUIRightToLeft())
         rect.x = ABOUT_INNER_PADDING;
     RECT rTmp = rect.ToRECT();
@@ -322,7 +322,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkIn
 
     SelectObject(hdc, penDivideLine);
     Rect divideLine(gAboutLayoutInfo[0].rightPos.x - ABOUT_LEFT_RIGHT_SPACE_DX, rect.y + titleRect.dy + 4, 0,
-                     rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
+                    rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
     PaintLine(hdc, divideLine);
 }
 
@@ -449,7 +449,7 @@ const WCHAR* GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
         return nullptr;
     }
 
-    PointI pt(x, y);
+    Point pt(x, y);
     for (size_t i = 0; i < linkInfo.size(); i++) {
         if (linkInfo.at(i).rect.Contains(pt)) {
             if (info) {
@@ -483,7 +483,7 @@ static void DeleteInfotip() {
 
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     const WCHAR* url;
-    PointI pt;
+    Point pt;
 
     switch (message) {
         case WM_CREATE:
@@ -632,7 +632,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     bool isRtl = IsUIRightToLeft();
 
     /* render title */
-    Rect titleBox = Rect(PointI(0, 0), CalcSumatraVersionSize(win->hwndCanvas, hdc));
+    Rect titleBox = Rect(Point(0, 0), CalcSumatraVersionSize(win->hwndCanvas, hdc));
     titleBox.x = rc.dx - titleBox.dx - 3;
     DrawSumatraVersion(win->hwndCanvas, hdc, titleBox);
     PaintLine(hdc, Rect(0, titleBox.dy, rc.dx, 0));
@@ -660,11 +660,11 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     int height = std::min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) /
                               (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
                           FILE_HISTORY_MAX_FREQUENT / width);
-    PointI offset(rc.x + DOCLIST_MARGIN_LEFT +
-                      (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT -
-                       DOCLIST_MARGIN_RIGHT) /
-                          2,
-                  rc.y + DOCLIST_MARGIN_TOP);
+    Point offset(rc.x + DOCLIST_MARGIN_LEFT +
+                     (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT -
+                      DOCLIST_MARGIN_RIGHT) /
+                         2,
+                 rc.y + DOCLIST_MARGIN_TOP);
     if (offset.x < ABOUT_INNER_PADDING)
         offset.x = ABOUT_INNER_PADDING;
     else if (list.size() == 0)
@@ -694,7 +694,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             DisplayState* state = list.at(h * width + w);
 
             Rect page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
-                       offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), THUMBNAIL_DX, THUMBNAIL_DY);
+                      offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), THUMBNAIL_DX, THUMBNAIL_DY);
             if (isRtl)
                 page.x = rc.dx - page.x - page.dx;
             bool loadOk = true;

@@ -447,11 +447,11 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         gGlobalPrefs->enableTeXEnhancements = true;
     }
 
-    int pageNo = dm->GetPageNoByPoint(PointI(x, y));
+    int pageNo = dm->GetPageNoByPoint(Point(x, y));
     if (!tab->ctrl->ValidPageNo(pageNo))
         return false;
 
-    PointI pt = dm->CvtFromScreen(PointI(x, y), pageNo).ToInt();
+    Point pt = dm->CvtFromScreen(Point(x, y), pageNo).ToInt();
     AutoFreeWstr srcfilepath;
     UINT line, col;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
@@ -778,7 +778,7 @@ static const WCHAR* HandlePageCmd(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
 static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, viewMode;
     float zoom = INVALID_ZOOM;
-    PointI scroll(-1, -1);
+    Point scroll(-1, -1);
     const WCHAR* next = str::Parse(cmd, L"[SetView(\"%S\",%? \"%S\",%f)]", &pdfFile, &viewMode, &zoom);
     if (!next) {
         next =

@@ -9,7 +9,7 @@
 static void GeomTest() {
     PointD ptD(12.4, -13.6);
     utassert(ptD.x == 12.4 && ptD.y == -13.6);
-    PointI ptI = ptD.ToInt();
+    Point ptI = ptD.ToInt();
     utassert(ptI.x == 12 && ptI.y == -14);
     ptD = ptI.Convert<double>();
     utassert(PointD(12, -14) == ptD);
@@ -70,10 +70,10 @@ static void GeomTest() {
         urect = rx1.Union(rx2);
         utassert(Rect::FromXY(curr->u_xs, curr->u_ys, curr->u_xe, curr->u_ye) == urect);
 
-        utassert(!rx1.Contains(PointI(-2, -2)));
+        utassert(!rx1.Contains(Point(-2, -2)));
         utassert(rx1.Contains(rx1.TL()));
-        utassert(!rx1.Contains(PointI(rx1.x, INT_MAX)));
-        utassert(!rx1.Contains(PointI(INT_MIN, rx1.y)));
+        utassert(!rx1.Contains(Point(rx1.x, INT_MAX)));
+        utassert(!rx1.Contains(Point(INT_MIN, rx1.y)));
     }
 }
 

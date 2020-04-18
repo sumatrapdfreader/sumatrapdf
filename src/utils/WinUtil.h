@@ -99,7 +99,7 @@ Size TextSizeInDC(HDC, const WCHAR*);
 
 bool IsFocused(HWND);
 bool IsCursorOverWindow(HWND);
-bool GetCursorPosInHwnd(HWND, PointI&);
+bool GetCursorPosInHwnd(HWND, Point&);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
 WCHAR* GetDefaultPrinterName();
 bool CopyTextToClipboard(const WCHAR* text, bool appendOnly = false);

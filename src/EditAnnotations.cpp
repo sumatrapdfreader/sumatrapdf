@@ -113,8 +113,8 @@ void EditAnnotationsWindow::SizeHandler(SizeEvent* ev) {
     Size windowSize{dx, dy};
     auto c = Tight(windowSize);
     auto size = mainLayout->Layout(c);
-    PointI min{0, 0};
-    PointI max{size.dx, size.dy};
+    Point min{0, 0};
+    Point max{size.dx, size.dy};
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
 }

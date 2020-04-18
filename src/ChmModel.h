@@ -28,7 +28,7 @@ class ChmModel : public Controller {
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false);
     DisplayMode GetDisplayMode() const override;
     void SetPresentationMode(bool enable) override;
-    void SetZoomVirtual(float zoom, PointI* fixPt) override;
+    void SetZoomVirtual(float zoom, Point* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
     void SetViewPortSize(Size size) override;

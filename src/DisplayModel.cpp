@@ -96,7 +96,7 @@ void DisplayModel::GetDisplayState(DisplayState* ds) {
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;
-    ds->scrollPos = PointI();
+    ds->scrollPos = Point();
     if (!presentationMode) {
         ds->scrollPos = PointD(ss.x, ss.y).ToInt();
     }
@@ -746,7 +746,7 @@ void DisplayModel::RecalcVisibleParts() {
     }
 }
 
-int DisplayModel::GetPageNoByPoint(PointI pt) {
+int DisplayModel::GetPageNoByPoint(Point pt) {
     // no reasonable answer possible, if zoom hasn't been set yet
     if (zoomReal <= 0) {
         return -1;
@@ -767,7 +767,7 @@ int DisplayModel::GetPageNoByPoint(PointI pt) {
     return -1;
 }
 
-int DisplayModel::GetPageNextToPoint(PointI pt) {
+int DisplayModel::GetPageNextToPoint(Point pt) {
     if (zoomReal <= 0) {
         return startPage;
     }
@@ -797,11 +797,11 @@ int DisplayModel::GetPageNextToPoint(PointI pt) {
     return closest;
 }
 
-PointI DisplayModel::CvtToScreen(int pageNo, PointD pt) {
+Point DisplayModel::CvtToScreen(int pageNo, PointD pt) {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     SubmitCrashIf(!pageInfo);
     if (!pageInfo) {
-        return PointI();
+        return Point();
     }
 
     float zoom = pageInfo->zoomReal;
@@ -819,12 +819,12 @@ PointI DisplayModel::CvtToScreen(int pageNo, PointD pt) {
 }
 
 Rect DisplayModel::CvtToScreen(int pageNo, RectD r) {
-    PointI TL = CvtToScreen(pageNo, r.TL());
-    PointI BR = CvtToScreen(pageNo, r.BR());
+    Point TL = CvtToScreen(pageNo, r.TL());
+    Point BR = CvtToScreen(pageNo, r.BR());
     return Rect::FromXY(TL, BR);
 }
 
-PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo) {
+PointD DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     if (!ValidPageNo(pageNo)) {
         pageNo = GetPageNextToPoint(pt);
     }
@@ -858,13 +858,13 @@ RectD DisplayModel::CvtFromScreen(Rect r, int pageNo) {
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
    a link or nullptr if there is no link at this position. */
-PageElement* DisplayModel::GetElementAtPos(PointI pt) {
+PageElement* DisplayModel::GetElementAtPos(Point pt) {
     int pageNo = GetPageNoByPoint(pt);
     if (!ValidPageNo(pageNo)) {
         return nullptr;
     }
     // only return visible elements (for cursor interaction)
-    if (!Rect(PointI(), viewPort.Size()).Contains(pt)) {
+    if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
         return nullptr;
     }
 
@@ -873,13 +873,13 @@ PageElement* DisplayModel::GetElementAtPos(PointI pt) {
 }
 
 // note: returns false for pages that haven't been rendered yet
-bool DisplayModel::IsOverText(PointI pt) {
+bool DisplayModel::IsOverText(Point pt) {
     int pageNo = GetPageNoByPoint(pt);
     if (!ValidPageNo(pageNo)) {
         return false;
     }
     // only return visible elements (for cursor interaction)
-    if (!Rect(PointI(), viewPort.Size()).Contains(pt)) {
+    if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
         return false;
     }
     if (!textCache->HasTextForPage(pageNo)) {
@@ -984,10 +984,10 @@ RectD DisplayModel::GetContentBox(int pageNo) {
 
 /* get the (screen) coordinates of the point where a page's actual
    content begins (relative to the page's top left corner) */
-PointI DisplayModel::GetContentStart(int pageNo) {
+Point DisplayModel::GetContentStart(int pageNo) {
     RectD contentBox = GetContentBox(pageNo);
     if (contentBox.IsEmpty()) {
-        return PointI(0, 0);
+        return Point(0, 0);
     }
     return contentBox.TL().ToInt();
 }
@@ -1031,7 +1031,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     // intentionally ignore scrollX and scrollY when fitting to content
     if (ZOOM_FIT_CONTENT == zoomVirtual) {
         // scroll down to where the actual content starts
-        PointI start = GetContentStart(pageNo);
+        Point start = GetContentStart(pageNo);
         scrollX = start.x;
         scrollY = start.y;
         if (ColumnsFromDisplayMode(GetDisplayMode()) > 1) {
@@ -1039,7 +1039,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
             bool isBook = IsBookView(GetDisplayMode());
             int nPages = PageCount();
             int lastPageNo = LastPageInARowNo(pageNo, nColumns, isBook, nPages);
-            PointI second = GetContentStart(lastPageNo);
+            Point second = GetContentStart(lastPageNo);
             scrollY = std::min(scrollY, second.y);
         }
         viewPort.x = scrollX + pageInfo->pos.x - windowMargin.left;
@@ -1167,7 +1167,7 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
     int currPageNo = CurrentPageNo();
 
-    PointI top;
+    Point top;
     if ((0 == scrollY || -1 == scrollY) && zoomVirtual == ZOOM_FIT_CONTENT) {
         currPageNo = FirstVisiblePageNo();
         top = GetContentStart(currPageNo);
@@ -1306,7 +1306,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
     RepaintDisplay();
 }
 
-void DisplayModel::SetZoomVirtual(float zoomLevel, PointI* fixPt) {
+void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
     if (zoomLevel > 0)
         zoomLevel = limitValue(zoomLevel, ZOOM_MIN, ZOOM_MAX);
     if (!IsValidZoom(zoomLevel))
@@ -1340,7 +1340,7 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, PointI* fixPt) {
 
     if (fixPt) {
         // scroll so that the fix point remains in the same screen location after zooming
-        PointI centerI = CvtToScreen(centerPage, centerPt);
+        Point centerI = CvtToScreen(centerPage, centerPt);
         if (centerI.x - fixPt->x != 0)
             ScrollXBy(centerI.x - fixPt->x);
         if (centerI.y - fixPt->y != 0)
@@ -1475,7 +1475,7 @@ bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
     }
 
     // don't scroll if the whole result is already visible
-    if (Rect(PointI(), viewPort.Size()).Intersect(extremes) == extremes) {
+    if (Rect(Point(), viewPort.Size()).Intersect(extremes) == extremes) {
         return false;
     }
 
@@ -1526,7 +1526,7 @@ ScrollState DisplayModel::GetScrollState() {
         return state;
     }
 
-    Rect screen(PointI(), viewPort.Size());
+    Rect screen(Point(), viewPort.Size());
     Rect pageVis = pageInfo->pageOnScreen.Intersect(screen);
     state.page = GetPageNextToPoint(pageVis.TL());
     PointD ptD = CvtFromScreen(pageVis.TL(), state.page);
@@ -1551,7 +1551,7 @@ void DisplayModel::SetScrollState(ScrollState state) {
     }
 
     PointD newPtD(std::max(state.x, (double)0), std::max(state.y, (double)0));
-    PointI newPt = CvtToScreen(state.page, newPtD);
+    Point newPt = CvtToScreen(state.page, newPtD);
 
     // Also show the margins, if this has been requested
     if (state.x < 0) {
@@ -1644,7 +1644,7 @@ bool DisplayModel::ShouldCacheRendering(int pageNo) {
 void DisplayModel::ScrollToLink(PageDestination* dest) {
     CrashIf(!dest || dest->GetPageNo() <= 0);
 
-    PointI scroll(-1, 0);
+    Point scroll(-1, 0);
     RectD rect = dest->GetRect();
     int pageNo = dest->GetPageNo();
 

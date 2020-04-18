@@ -287,10 +287,10 @@ static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
 }
 
 // -scroll x,y
-static void ParseScrollValue(PointI* scroll, const WCHAR* txt) {
+static void ParseScrollValue(Point* scroll, const WCHAR* txt) {
     int x, y;
     if (str::Parse(txt, L"%d,%d%$", &x, &y))
-        *scroll = PointI(x, y);
+        *scroll = Point(x, y);
 }
 
 static int GetArgNo(const WCHAR* argName) {

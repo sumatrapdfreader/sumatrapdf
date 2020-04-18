@@ -261,18 +261,18 @@ void VecTest() {
     VecTestAppendFmt();
 
     {
-        Vec<PointI*> v;
+        Vec<Point*> v;
         srand((unsigned int)time(nullptr));
         for (int i = 0; i < 128; i++) {
-            v.Append(new PointI(i, i));
+            v.Append(new Point(i, i));
             size_t pos = rand() % v.size();
-            v.InsertAt(pos, new PointI(i, i));
+            v.InsertAt(pos, new Point(i, i));
         }
         utassert(v.size() == 128 * 2);
 
         while (v.size() > 64) {
             size_t pos = rand() % v.size();
-            PointI* f = v.at(pos);
+            Point* f = v.at(pos);
             v.Remove(f);
             delete f;
         }

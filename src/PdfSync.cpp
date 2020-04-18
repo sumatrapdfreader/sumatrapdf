@@ -48,7 +48,7 @@ class Pdfsync : public Synchronizer {
         AssertCrash(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
     }
 
-    virtual int DocToSource(UINT pageNo, PointI pt, AutoFreeWstr& filename, UINT* line, UINT* col);
+    virtual int DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col);
     virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects);
 
   private:
@@ -74,7 +74,7 @@ class SyncTex : public Synchronizer {
         synctex_scanner_free(scanner);
     }
 
-    virtual int DocToSource(UINT pageNo, PointI pt, AutoFreeWstr& filename, UINT* line, UINT* col);
+    virtual int DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col);
     virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects);
 
   private:
@@ -320,7 +320,7 @@ static int cmpLineRecords(const void* a, const void* b) {
     return ((PdfsyncLine*)a)->record - ((PdfsyncLine*)b)->record;
 }
 
-int Pdfsync::DocToSource(UINT pageNo, PointI pt, AutoFreeWstr& filename, UINT* line, UINT* col) {
+int Pdfsync::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) {
     if (IsIndexDiscarded())
         if (RebuildIndex() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
@@ -498,7 +498,7 @@ int SyncTex::RebuildIndex() {
     return Synchronizer::RebuildIndex();
 }
 
-int SyncTex::DocToSource(UINT pageNo, PointI pt, AutoFreeWstr& filename, UINT* line, UINT* col) {
+int SyncTex::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) {
     if (IsIndexDiscarded()) {
         if (RebuildIndex() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;

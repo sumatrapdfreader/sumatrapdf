@@ -189,7 +189,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
-    PointI screenTL = screen.TL();
+    Point screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
 
     HANDLE hMap = nullptr;

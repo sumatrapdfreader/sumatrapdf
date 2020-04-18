@@ -49,7 +49,7 @@ class EbookController : public Controller {
     void SetPresentationMode(bool enable) override {
         UNUSED(enable); /* not supported */
     }
-    void SetZoomVirtual(float zoom, PointI* fixPt) override {
+    void SetZoomVirtual(float zoom, Point* fixPt) override {
         UNUSED(zoom);
         UNUSED(fixPt); /* not supported */
     }

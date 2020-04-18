@@ -610,26 +610,26 @@ void VBox::setBoundsForChild(size_t i, ILayout* v, int posX, int posY, int posX2
     switch (alignCross) {
         case CrossAxisAlign::CrossStart:
             v->SetBounds(Rect{
-                PointI{posX, posY},
-                PointI{posX + dx, posY2},
+                Point{posX, posY},
+                Point{posX + dx, posY2},
             });
             break;
         case CrossAxisAlign::CrossCenter:
             v->SetBounds(Rect{
-                PointI{posX + (posX2 - posX - dx) / 2, posY},
-                PointI{posX + (posX2 - posX + dx) / 2, posY2},
+                Point{posX + (posX2 - posX - dx) / 2, posY},
+                Point{posX + (posX2 - posX + dx) / 2, posY2},
             });
             break;
         case CrossAxisAlign::CrossEnd:
             v->SetBounds(Rect{
-                PointI{posX2 - dx, posY},
-                PointI{posX2, posY2},
+                Point{posX2 - dx, posY},
+                Point{posX2, posY2},
             });
             break;
         case CrossAxisAlign::Stretch:
             v->SetBounds(Rect{
-                PointI{posX, posY},
-                PointI{posX2, posY2},
+                Point{posX, posY},
+                Point{posX2, posY2},
             });
             break;
     }
@@ -911,26 +911,26 @@ void HBox::setBoundsForChild(size_t i, ILayout* v, int posX, int posY, int posX2
     switch (alignCross) {
         case CrossAxisAlign::CrossStart:
             v->SetBounds(Rect{
-                PointI{posX, posY},
-                PointI{posX2, posY + dy},
+                Point{posX, posY},
+                Point{posX2, posY + dy},
             });
             break;
         case CrossAxisAlign::CrossCenter:
             v->SetBounds(Rect{
-                PointI{posX, posY + (posY2 - posY - dy) / 2},
-                PointI{posX2, posY + (posY2 - posY + dy) / 2},
+                Point{posX, posY + (posY2 - posY - dy) / 2},
+                Point{posX2, posY + (posY2 - posY + dy) / 2},
             });
             break;
         case CrossAxisAlign::CrossEnd:
             v->SetBounds(Rect{
-                PointI{posX, posY2 - dy},
-                PointI{posX2, posY2},
+                Point{posX, posY2 - dy},
+                Point{posX2, posY2},
             });
             break;
         case CrossAxisAlign::Stretch:
             v->SetBounds(Rect{
-                PointI{posX, posY},
-                PointI{posX2, posY2},
+                Point{posX, posY},
+                Point{posX2, posY2},
             });
             break;
     }
@@ -1013,7 +1013,7 @@ void Align::SetBounds(Rect bounds) {
     int bminy = bounds.y;
     int bmaxy = bounds.Bottom();
     int y = scale(bminy, this->VAlign - AlignEnd, twm) + scale(bmaxy - ch, this->VAlign - AlignStart, tw);
-    Rect b{PointI{x, y}, PointI{x + cw, y + ch}};
+    Rect b{Point{x, y}, Point{x + cw, y + ch}};
     this->Child->SetBounds(b);
 }
 
@@ -1078,8 +1078,8 @@ void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
     Constraints c = ExpandInf();
     c.min = {minDx, minDy};
     auto size = layout->Layout(c);
-    PointI min{0, 0};
-    PointI max{size.dx, size.dy};
+    Point min{0, 0};
+    Point max{size.dx, size.dy};
     Rect bounds{min, max};
     layout->SetBounds(bounds);
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);

@@ -1871,7 +1871,7 @@ static WCHAR* FormatCursorPosition(EngineBase* engine, PointD pt, MeasurementUni
     return str::Format(L"%s x %s %s", xPos.get(), yPos.get(), unitName);
 }
 
-void UpdateCursorPositionHelper(WindowInfo* win, PointI pos, NotificationWnd* wnd) {
+void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd) {
     static auto unit = MeasurementUnit::pt;
     // toggle measurement unit by repeatedly invoking the helper
     if (!wnd && win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
@@ -3835,7 +3835,7 @@ static void OnFrameKeyM(WindowInfo* win) {
     if (!win->AsFixed()) {
         return;
     }
-    PointI pt;
+    Point pt;
     if (GetCursorPosInHwnd(win->hwndCanvas, pt)) {
         UpdateCursorPositionHelper(win, pt, nullptr);
     }
@@ -4008,7 +4008,7 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
     CrashIf(!win);
     bool done = ev->done;
 
-    PointI pcur;
+    Point pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
     int sidebarDx = pcur.x; // without splitter
 
@@ -4036,7 +4036,7 @@ static void OnFavSplitterMove(SplitterMoveEvent* ev) {
     CrashIf(!win);
     bool done = ev->done;
 
-    PointI pcur;
+    Point pcur;
     GetCursorPosInHwnd(win->hwndTocBox, pcur);
     int tocDy = pcur.y; // without splitter
 
