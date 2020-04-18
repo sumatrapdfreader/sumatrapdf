@@ -7,8 +7,12 @@ Annotations:
 ------
 
 possible refactorings:
-- convert Rect in Layout.h to be like RectI
+- [X] convert Rect in Layout.h to be like RectI
+- replace Rect with RectI typedef
+- rename RectI, PointI, SizeI => Rect, Point, Size
+- replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
+- remove DirectDraw test and don't link with d2d
 - convert Add Bookmark dialog to new widget / layout system
 - convert hwndTocBox to Window
 - move WindowInfo::tocLoaded into TabInfo
@@ -21,10 +25,10 @@ possible refactorings:
 - make SaveFileAsPDF non-virtual ([https://codeeval.dev/gist/23710422979e7a7235db96254afd0681](https://codeeval.dev/gist/23710422979e7a7235db96254afd0681))
 - tga::SerializeBitmap : change to return std::string_view
 - rethink how bitmaps are storied. Preferable store them in sth. similar to fz_pixmap() and just blit when painting, like mupdf viewer. Or make a virtual Blit()
-- rename RectI, PointI, SizeI => Rect, Point, Size
 - ChmDoc -> ChmFile
 - ChmDoc::Load() WCHAR => std::string_view
 - test icons at different sizes (for toolbar they look bad at some sizes; see if it's toolbar or mupdf)
+- change VBox::childrenCount() to int
 
 ------
 
@@ -37,6 +41,7 @@ Somewhat big items:
 - smaller scrollbar that gets bigger when mouse is closer to it
 - toolbar that is hidden by default by shows when mouse hovers over it
 - better search interface
+- integrate vld for mem leak detection
 
 ------
 

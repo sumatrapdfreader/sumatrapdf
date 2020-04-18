@@ -7,20 +7,35 @@
 
 #include "Layout.h"
 
+Rect::Rect(PointI min, PointI max) {
+    x = min.x;
+    y = min.y;
+    dx = max.x - min.x;
+    dy = max.y - min.y;
+}
+
 int Rect::Width() const {
-    return max.x - min.x;
+    return dx;
 }
 int Rect::Height() const {
-    return max.y - min.y;
+    return dy;
 }
 
 int Rect::Dx() const {
-    return this->max.x - this->min.x;
+    return dx;
 }
 
 // Dy returns r's height.
 int Rect::Dy() const {
-    return this->max.y - this->min.y;
+    return dy;
+}
+
+int Rect::Right() const {
+    return x + dx;
+}
+
+int Rect::Bottom() const {
+    return y + dy;
 }
 
 bool Rect::empty() const {
@@ -28,12 +43,11 @@ bool Rect::empty() const {
 }
 
 RECT RectToRECT(const Rect r) {
-    LONG left = r.min.x;
-    LONG top = r.min.y;
-    LONG right = r.max.x;
-    LONG bottom = r.max.y;
-    RECT res{left, top, right, bottom};
-    return res;
+    LONG left = r.x;
+    LONG top = r.y;
+    LONG right = left + r.dx;
+    LONG bottom = top + r.dy;
+    return RECT{left, top, right, bottom};
 }
 
 int clamp(int v, int vmin, int vmax) {
@@ -279,10 +293,10 @@ int Padding::MinIntrinsicWidth(int height) {
 
 void Padding::SetBounds(Rect bounds) {
     lastBounds = bounds;
-    bounds.min.x += this->insets.Left;
-    bounds.min.y += this->insets.Top;
-    bounds.max.x -= this->insets.Right;
-    bounds.max.y -= this->insets.Bottom;
+    bounds.x += insets.Left;
+    bounds.y += insets.Top;
+    bounds.dx -= (insets.Right + insets.Left);
+    bounds.dy -= (insets.Bottom + insets.Top);
     this->child->SetBounds(bounds);
 }
 
@@ -553,9 +567,9 @@ void VBox::SetBounds(Rect bounds) {
 
         for (size_t i = 0; i < n; i++) {
             auto& v = children[i];
-            auto y1 = bounds.min.y + scale(dy, i, count);
-            auto y2 = bounds.min.y + scale(dy, i + 1, count) - gap;
-            setBoundsForChild(i, v.layout, bounds.min.x, y1, bounds.max.x, y2);
+            auto y1 = bounds.y + scale(dy, i, count);
+            auto y2 = bounds.y + scale(dy, i + 1, count) - gap;
+            setBoundsForChild(i, v.layout, bounds.x, y1, bounds.Right(), y2);
         }
         return;
     }
@@ -570,15 +584,15 @@ void VBox::SetBounds(Rect bounds) {
                 // Do nothing
                 break;
             case MainAxisAlign::MainCenter:
-                bounds.min.y += (bounds.Dy() - totalHeight) / 2;
+                bounds.y += (bounds.Dy() - totalHeight) / 2;
                 break;
             case MainAxisAlign::MainEnd:
-                bounds.min.y = bounds.max.y - totalHeight;
+                bounds.y = bounds.Bottom() - totalHeight;
                 break;
             case MainAxisAlign::SpaceAround: {
                 int l = (bounds.Dy() - totalHeight);
                 extraGap = scale(l, 1, i64(n) + 1);
-                bounds.min.y += extraGap;
+                bounds.y += extraGap;
                 extraGap += calculateVGap(nullptr, nullptr);
                 break;
             }
@@ -590,14 +604,14 @@ void VBox::SetBounds(Rect bounds) {
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
-                    bounds.min.y += (bounds.Dy() - totalHeight) / 2;
+                    bounds.y += (bounds.Dy() - totalHeight) / 2;
                 }
                 break;
         }
     }
 
     // Position all of the child controls.
-    auto posY = bounds.min.y;
+    auto posY = bounds.y;
     ILayout* previous = nullptr;
     for (size_t i = 0; i < n; i++) {
         auto& v = children[i];
@@ -609,7 +623,7 @@ void VBox::SetBounds(Rect bounds) {
         }
 
         auto dy = v.size.dy;
-        setBoundsForChild(i, v.layout, bounds.min.x, posY, bounds.max.x, posY + dy);
+        setBoundsForChild(i, v.layout, bounds.x, posY, bounds.Right(), posY + dy);
         posY += dy + extraGap;
     }
 }
@@ -855,9 +869,9 @@ void HBox::SetBounds(Rect bounds) {
 
         for (size_t i = 0; i < n; i++) {
             auto v = children[i].layout;
-            auto x1 = bounds.min.x + scale(dx, i, count);
-            auto x2 = bounds.min.x + scale(dx, i + 1, count) - gap;
-            setBoundsForChild(i, v, x1, bounds.min.y, x2, bounds.max.y);
+            auto x1 = bounds.x + scale(dx, i, count);
+            auto x2 = bounds.x + scale(dx, i + 1, count) - gap;
+            setBoundsForChild(i, v, x1, bounds.y, x2, bounds.Bottom());
         }
         return;
     }
@@ -872,15 +886,15 @@ void HBox::SetBounds(Rect bounds) {
                 // Do nothing
                 break;
             case MainAxisAlign::MainCenter:
-                bounds.min.x += (bounds.Dx() - totalWidth) / 2;
+                bounds.x += (bounds.Dx() - totalWidth) / 2;
                 break;
             case MainAxisAlign::MainEnd:
-                bounds.min.x = bounds.max.x - totalWidth;
+                bounds.x = bounds.Right() - totalWidth;
                 break;
             case MainAxisAlign::SpaceAround: {
                 auto eg = (bounds.Dx() - totalWidth);
                 extraGap = scale(eg, 1, i64(n) + 1);
-                bounds.min.x += extraGap;
+                bounds.x += extraGap;
                 extraGap += calculateHGap(nullptr, nullptr);
             } break;
             case MainAxisAlign::SpaceBetween:
@@ -891,14 +905,14 @@ void HBox::SetBounds(Rect bounds) {
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
-                    bounds.min.x += (bounds.Dx() - totalWidth) / 2;
+                    bounds.x += (bounds.Dx() - totalWidth) / 2;
                 }
                 break;
         }
     }
 
     // Position all of the child controls.
-    auto posX = bounds.min.x;
+    auto posX = bounds.x;
     ILayout* previous = nullptr;
     for (size_t i = 0; i < n; i++) {
         auto& v = children[i];
@@ -910,7 +924,7 @@ void HBox::SetBounds(Rect bounds) {
         }
 
         auto dx = children[i].size.dx;
-        setBoundsForChild(i, v.layout, posX, bounds.min.y, posX + dx, bounds.max.y);
+        setBoundsForChild(i, v.layout, posX, bounds.y, posX + dx, bounds.Bottom());
         posX += dx + extraGap;
     }
 }
@@ -1012,15 +1026,15 @@ int Align::MinIntrinsicWidth(int height) {
 
 void Align::SetBounds(Rect bounds) {
     lastBounds = bounds;
-    int bminx = bounds.min.x;
-    int bmaxx = bounds.max.x;
+    int bminx = bounds.x;
+    int bmaxx = bounds.Right();
     int cw = this->childSize.dx;
     i64 twm = AlignStart - AlignEnd;
     i64 tw = AlignEnd - AlignStart;
     int x = scale(bminx, this->HAlign - AlignEnd, twm) + scale(bmaxx - cw, this->HAlign - AlignStart, tw);
     int ch = this->childSize.dy;
-    int bminy = bounds.min.y;
-    int bmaxy = bounds.max.y;
+    int bminy = bounds.y;
+    int bmaxy = bounds.Bottom();
     int y = scale(bminy, this->VAlign - AlignEnd, twm) + scale(bmaxy - ch, this->VAlign - AlignStart, tw);
     Rect b{PointI{x, y}, PointI{x + cw, y + ch}};
     this->Child->SetBounds(b);

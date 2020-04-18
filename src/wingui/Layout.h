@@ -7,13 +7,20 @@ const int Inf = std::numeric_limits<int>::max();
 
 // can't call it Rectangle because conflicts with GDI+ Rectangle function
 struct Rect {
-    PointI min{};
-    PointI max{};
+    int x = 0;
+    int y = 0;
+    int dx = 0;
+    int dy = 0;
+
+    Rect() = default;
+    Rect(PointI min, PointI max);
 
     int Width() const;
     int Height() const;
     int Dx() const;
     int Dy() const;
+    int Right() const;
+    int Bottom() const;
     bool empty() const;
 };
 
