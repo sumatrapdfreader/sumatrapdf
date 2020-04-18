@@ -614,7 +614,7 @@ static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI
 
     ITextRender* textRender = CreateTextRender(renderMethod, &g, pageSize.dx, pageSize.dy);
     textRender->SetTextBgColor(Color(255, 255, 255));
-    DrawHtmlPage(&g, textRender, &pd->instructions, (REAL)border, (REAL)border, false, Color((ARGB)Color::Black));
+    DrawHtmlPage(&g, textRender, &pd->instructions, (float)border, (float)border, false, Color((ARGB)Color::Black));
     delete pd;
     delete textRender;
 

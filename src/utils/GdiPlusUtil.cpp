@@ -37,8 +37,8 @@ RectF MeasureTextAccurate2(Graphics* g, Font* f, const WCHAR* s, int len) {
     Status status = g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, len, r);
     CrashIf(status != Ok);
     RectF bbox;
-    REAL maxDy = 0;
-    REAL totalDx = 0;
+    float maxDy = 0;
+    float totalDx = 0;
     for (int i = 0; i < len; i++) {
         r[i].GetBounds(&bbox, g);
         if (bbox.Height > maxDy)
@@ -115,7 +115,7 @@ RectF MeasureTextQuick(Graphics* g, Font* f, const WCHAR* s, int len) {
     }
     // most documents look good enough with these adjustments
     if (!fixCache.at(idx)) {
-        REAL correct = 0;
+        float correct = 0;
         for (int i = 0; i < len; i++) {
             switch (s[i]) {
                 case 'i':
@@ -194,20 +194,20 @@ size_t StringLenForWidth(Graphics* g, Font* f, const WCHAR* s, size_t len, float
 
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
-REAL GetSpaceDx(Graphics* g, Font* f, TextMeasureAlgorithm algo) {
+float GetSpaceDx(Graphics* g, Font* f, TextMeasureAlgorithm algo) {
     RectF bbox;
 #if 0
     bbox = MeasureText(g, f, L" ", 1, algo);
-    REAL spaceDx1 = bbox.Width;
+    float spaceDx1 = bbox.Width;
     return spaceDx1;
 #else
     // this method seems to return (much) smaller size that measuring
     // the space itself
     bbox = MeasureText(g, f, L"wa", 2, algo);
-    REAL l1 = bbox.Width;
+    float l1 = bbox.Width;
     bbox = MeasureText(g, f, L"w a", 3, algo);
-    REAL l2 = bbox.Width;
-    REAL spaceDx2 = l2 - l1;
+    float l2 = bbox.Width;
+    float spaceDx2 = l2 - l1;
     return spaceDx2;
 #endif
 }
@@ -228,7 +228,7 @@ void GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation) {
         CrashIf(true);
 
     m.Scale(zoom, zoom, MatrixOrderAppend);
-    m.Rotate((REAL)rotation, MatrixOrderAppend);
+    m.Rotate((float)rotation, MatrixOrderAppend);
 }
 
 static Bitmap* WICDecodeImageFromStream(IStream* stream) {
@@ -261,7 +261,7 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
         return nullptr;
     HR(pConverter->CopyPixels(nullptr, bmpData.Stride, bmpData.Stride * h, (BYTE*)bmpData.Scan0));
     bmp.UnlockBits(&bmpData);
-    bmp.SetResolution((REAL)xres, (REAL)yres);
+    bmp.SetResolution((float)xres, (float)yres);
 #undef HR
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)

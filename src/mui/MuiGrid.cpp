@@ -97,7 +97,7 @@ void Grid::Paint(Graphics* gfx, int offX, int offY) {
     CrashIf(!IsVisible());
     CachedStyle* s = cachedStyle;
 
-    RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
+    RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 

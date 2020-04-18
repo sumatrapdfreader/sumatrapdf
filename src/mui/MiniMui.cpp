@@ -31,14 +31,12 @@ using Gdiplus::GraphicsPath;
 using Gdiplus::Image;
 using Gdiplus::Matrix;
 using Gdiplus::PenAlignmentInset;
-using Gdiplus::REAL;
 using Gdiplus::Region;
 using Gdiplus::SmoothingModeAntiAlias;
 using Gdiplus::StringFormat;
 using Gdiplus::StringFormatFlagsDirectionRightToLeft;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
-// using Gdiplus::;
 
 using Gdiplus::PointF;
 using Gdiplus::RectF;

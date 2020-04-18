@@ -127,7 +127,7 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
     gs.FillPath(&tmpBrush, &path);
     if (margin) {
         path.Outline(nullptr, 0.2f);
-        Pen tmpPen(Color(alpha, 0, 0, 0), (REAL)margin);
+        Pen tmpPen(Color(alpha, 0, 0, 0), (float)margin);
         gs.DrawPath(&tmpPen, &path);
     }
 }

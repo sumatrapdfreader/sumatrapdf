@@ -51,7 +51,6 @@ using Gdiplus::OutOfMemory;
 using Gdiplus::Pen;
 using Gdiplus::PenAlignmentInset;
 using Gdiplus::PropertyItem;
-using Gdiplus::REAL;
 using Gdiplus::Region;
 using Gdiplus::SmoothingModeAntiAlias;
 using Gdiplus::SolidBrush;
@@ -216,7 +215,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);
-    m.Translate((REAL)-screenTL.x, (REAL)-screenTL.y, MatrixOrderAppend);
+    m.Translate((float)-screenTL.x, (float)-screenTL.y, MatrixOrderAppend);
     g.SetTransform(&m);
 
     RectI pageRcI = PageMediabox(pageNo).Round();
@@ -241,7 +240,8 @@ void EngineImages::GetTransform(Matrix& m, int pageNo, float zoom, int rotation)
 }
 
 RectD EngineImages::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
-    PointF pts[2] = {PointF((REAL)rect.x, (REAL)rect.y), PointF((REAL)(rect.x + rect.dx), (REAL)(rect.y + rect.dy))};
+    PointF pts[2] = {PointF((float)rect.x, (float)rect.y),
+                     PointF((float)(rect.x + rect.dx), (float)(rect.y + rect.dy))};
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);
     if (inverse)

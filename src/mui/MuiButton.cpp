@@ -140,7 +140,7 @@ void Button::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedStyle* s = cachedStyle;
 
-    RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
+    RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
@@ -157,7 +157,7 @@ void Button::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedFont* cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
     Font* font = cachedFont->font;
-    gfx->DrawString(text, (int)str::Len(text), font, PointF((REAL)x, (REAL)y), nullptr, brColor);
+    gfx->DrawString(text, (int)str::Len(text), font, PointF((float)x, (float)y), nullptr, brColor);
 }
 
 ButtonVector::ButtonVector() {
@@ -240,7 +240,7 @@ void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedStyle* s = cachedStyle;
 
-    RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
+    RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 

@@ -80,7 +80,6 @@ using Gdiplus::OutOfMemory;
 using Gdiplus::Pen;
 using Gdiplus::PenAlignmentInset;
 using Gdiplus::PropertyItem;
-using Gdiplus::REAL;
 using Gdiplus::Region;
 using Gdiplus::SmoothingModeAntiAlias;
 using Gdiplus::SolidBrush;
@@ -732,8 +731,8 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
 
     LetterInfo* li;
     StringFormat sfmt;
-    const REAL letterSpacing = -12.f;
-    REAL totalDx = -letterSpacing; // counter last iteration of the loop
+    const float letterSpacing = -12.f;
+    float totalDx = -letterSpacing; // counter last iteration of the loop
     WCHAR s[2] = {0};
     PointF origin(0.f, 0.f);
     RectF bbox;
@@ -747,7 +746,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
         totalDx += letterSpacing;
     }
 
-    REAL x = ((REAL)dx - totalDx) / 2.f;
+    float x = ((float)dx - totalDx) / 2.f;
     for (int i = 0; i < dimof(gLetters); i++) {
         li = &gLetters[i];
         li->x = x;
@@ -758,7 +757,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
     didLayout = TRUE;
 }
 
-static REAL DrawMessage(Graphics& g, const WCHAR* msg, REAL y, REAL dx, Color color) {
+static float DrawMessage(Graphics& g, const WCHAR* msg, float y, float dx, Color color) {
     AutoFreeWstr s = str::Dup(msg);
 
     Font f(L"Impact", 16, FontStyleRegular);
@@ -788,7 +787,7 @@ static REAL DrawMessage(Graphics& g, const WCHAR* msg, REAL y, REAL dx, Color co
     return bbox.Height;
 }
 
-static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, REAL y) {
+static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     LetterInfo* li;
     WCHAR s[2] = {0};
     for (int i = 0; i < dimof(gLetters); i++) {
@@ -814,11 +813,11 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, REAL y) {
     }
 
     // draw version number
-    REAL x = gLetters[dimof(gLetters) - 1].x;
+    float x = gLetters[dimof(gLetters) - 1].x;
     g.TranslateTransform(x, y);
     g.RotateTransform(45.f);
-    REAL x2 = 15;
-    REAL y2 = -34;
+    float x2 = 15;
+    float y2 = -34;
 
     WCHAR* ver_s = L"v" CURR_VERSION_STR;
 #if DRAW_TEXT_SHADOW
@@ -852,12 +851,12 @@ static void DrawFrame2(Graphics& g, RectI r) {
         return;
     }
 
-    REAL msgY = (REAL)(r.dy / 2);
+    float msgY = (float)(r.dy / 2);
     if (gMsg) {
-        msgY += DrawMessage(g, gMsg, msgY, (REAL)r.dx, gMsgColor) + 5;
+        msgY += DrawMessage(g, gMsg, msgY, (float)r.dx, gMsgColor) + 5;
     }
     if (gMsgError) {
-        DrawMessage(g, gMsgError, msgY, (REAL)r.dx, COLOR_MSG_FAILED);
+        DrawMessage(g, gMsgError, msgY, (float)r.dx, COLOR_MSG_FAILED);
     }
 }
 

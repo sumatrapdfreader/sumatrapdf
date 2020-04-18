@@ -34,7 +34,6 @@ using Gdiplus::OutOfMemory;
 using Gdiplus::Pen;
 using Gdiplus::PenAlignmentInset;
 using Gdiplus::PropertyItem;
-using Gdiplus::REAL;
 using Gdiplus::Region;
 using Gdiplus::SmoothingModeAntiAlias;
 using Gdiplus::SolidBrush;
@@ -157,8 +156,8 @@ class HtmlFormatterArgs {
   public:
     HtmlFormatterArgs() = default;
 
-    REAL pageDx = 0;
-    REAL pageDy = 0;
+    float pageDx = 0;
+    float pageDy = 0;
 
     void SetFontName(const WCHAR* s) {
         fontName.SetCopy(s);
@@ -224,7 +223,7 @@ class HtmlFormatter {
     float CurrLineDx();
     float CurrLineDy();
     float NewLineX();
-    void LayoutLeftStartingAt(REAL offX);
+    void LayoutLeftStartingAt(float offX);
     void JustifyLineBoth();
     void JustifyCurrLine(AlignAttr align);
     bool FlushCurrLine(bool isParagraphBreak);
@@ -326,7 +325,7 @@ class HtmlFormatter {
     Vec<HtmlPage*>* FormatAllPages(bool skipEmptyPages = true);
 };
 
-void DrawHtmlPage(Graphics* g, mui::ITextRender* textRender, Vec<DrawInstr>* drawInstructions, REAL offX, REAL offY,
+void DrawHtmlPage(Graphics* g, mui::ITextRender* textRender, Vec<DrawInstr>* drawInstructions, float offX, float offY,
                   bool showBbox, Color textColor, bool* abortCookie = nullptr);
 
 mui::TextRenderMethod GetTextRenderMethod();

@@ -24,7 +24,7 @@ Gdiplus::RectF MeasureTextStandard(Gdiplus::Graphics* g, Gdiplus::Font* f, const
 Gdiplus::RectF MeasureTextQuick(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
 Gdiplus::RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, size_t len = -1,
                            TextMeasureAlgorithm algo = nullptr);
-// REAL     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=nullptr);
+// float     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=nullptr);
 // size_t   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm
 // algo=nullptr);
 

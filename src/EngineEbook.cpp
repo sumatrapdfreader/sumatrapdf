@@ -273,7 +273,7 @@ bool EngineEbook::ExtractPageAnchors() {
 
 RectD EngineEbook::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     UNUSED(pageNo);
-    geomutil::RectT<REAL> rcF = rect.Convert<REAL>();
+    geomutil::RectT<float> rcF = rect.Convert<float>();
     auto p1 = PointF(rcF.x, rcF.y);
     auto p2 = PointF(rcF.x + rcF.dx, rcF.y + rcF.dy);
     PointF pts[2] = {p1, p2};
@@ -311,7 +311,7 @@ static void DrawAnnotationStrikeOut(Graphics& g, const Annotation& annot) {
 
 static void DrawAnnotationSquiggly(Graphics& g, const Annotation& annot) {
     Pen p(FromColor(annot.color), 0.5f);
-    REAL dash[2] = {2, 2};
+    float dash[2] = {2, 2};
     p.SetDashPattern(dash, dimof(dash));
     p.SetDashOffset(1);
     auto p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y - 0.25f);
@@ -378,7 +378,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
 
     Matrix m;
     GetTransform(m, zoom, rotation);
-    m.Translate((REAL)-screenTL.x, (REAL)-screenTL.y, MatrixOrderAppend);
+    m.Translate((float)-screenTL.x, (float)-screenTL.y, MatrixOrderAppend);
     g.SetTransform(&m);
 
     EbookAbortCookie* cookie = nullptr;

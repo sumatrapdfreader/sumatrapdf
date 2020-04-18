@@ -192,7 +192,7 @@ void SumatraLogo::Paint(Graphics* gfx, int offX, int offY) {
         SolidBrush col(c);
         if (n >= dimof(gSumatraLogoCols))
             n = 0;
-        gfx->DrawString(txt, 1, font, PointF((REAL)x, (REAL)y), nullptr, &col);
+        gfx->DrawString(txt, 1, font, PointF((float)x, (float)y), nullptr, &col);
         bbox = MeasureText(gfx, font, txt, 1);
         x += CeilI(bbox.Width);
         txt++;

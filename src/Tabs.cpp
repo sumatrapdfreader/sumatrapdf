@@ -131,7 +131,7 @@ class TabPainter {
         iterator.NextMarker(&shape);
 
         ClientRect rClient(hwnd);
-        REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
+        float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
         gfx.TranslateTransform(1.0f, yPosTab);
         for (int i = 0; i < Count(); i++) {
             Gdiplus::Point pt(point);
@@ -142,7 +142,7 @@ class TabPainter {
                     *inXbutton = shape.IsVisible(pt, &gfx) ? true : false;
                 return i;
             }
-            gfx.TranslateTransform(REAL(width + 1), 0.0f);
+            gfx.TranslateTransform(float(width + 1), 0.0f);
         }
         if (inXbutton)
             *inXbutton = false;
@@ -162,8 +162,8 @@ class TabPainter {
         Region region(&shape);
 
         ClientRect rClient(hwnd);
-        REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
-        gfx.TranslateTransform(REAL((width + 1) * index) + 1.0f, yPosTab);
+        float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
+        gfx.TranslateTransform(float((width + 1) * index) + 1.0f, yPosTab);
         HRGN hRgn = region.GetHRGN(&gfx);
         InvalidateRgn(hwnd, hRgn, FALSE);
         DeleteObject(hRgn);
@@ -207,16 +207,16 @@ class TabPainter {
 
         Font f(hdc, GetDefaultGuiFont());
         // TODO: adjust these constant values for DPI?
-        RectF layout((REAL)DpiScale(hwnd, 3), 1.0f, REAL(width - DpiScale(hwnd, 20)), (REAL)height);
+        RectF layout((float)DpiScale(hwnd, 3), 1.0f, float(width - DpiScale(hwnd, 20)), (float)height);
         StringFormat sf(StringFormat::GenericDefault());
         sf.SetFormatFlags(StringFormatFlagsNoWrap);
         sf.SetLineAlignment(StringAlignmentCenter);
         sf.SetTrimming(StringTrimmingEllipsisCharacter);
 
-        REAL yPosTab = inTitlebar ? 0.0f : REAL(ClientRect(hwnd).dy - height - 1);
+        float yPosTab = inTitlebar ? 0.0f : float(ClientRect(hwnd).dy - height - 1);
         for (int i = 0; i < Count(); i++) {
             gfx.ResetTransform();
-            gfx.TranslateTransform(1.f + (REAL)(width + 1) * i - (REAL)rc.left, yPosTab - (REAL)rc.top);
+            gfx.TranslateTransform(1.f + (float)(width + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
 
             if (!gfx.IsVisible(0, 0, width + 1, height + 1))
                 continue;

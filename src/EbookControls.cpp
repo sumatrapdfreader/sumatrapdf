@@ -152,7 +152,7 @@ DrawInstr* PageControl::GetLinkAt(int x, int y) const {
     if (!page)
         return nullptr;
 
-    PointF pt((REAL)(x - cachedStyle->padding.left), (REAL)(y - cachedStyle->padding.top));
+    PointF pt((float)(x - cachedStyle->padding.left), (float)(y - cachedStyle->padding.top));
     for (DrawInstr& i : page->instructions) {
         if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmptyArea() && i.bbox.Contains(pt)) {
             return &i;
@@ -236,7 +236,7 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
     textRender->SetTextBgColor(bgColor);
 
     auto timerDrawHtml = TimeGet();
-    DrawHtmlPage(gfx, textRender, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
+    DrawHtmlPage(gfx, textRender, &page->instructions, (float)r.X, (float)r.Y, IsDebugPaint(), textColor);
     double durDraw = TimeSinceInMs(timerDrawHtml);
     gfx->SetClip(&origClipRegion, CombineModeReplace);
     delete textRender;

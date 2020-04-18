@@ -514,20 +514,20 @@ size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, f
 
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
-REAL GetSpaceDx(ITextRender* textMeasure) {
+float GetSpaceDx(ITextRender* textMeasure) {
     RectF bbox;
 #if 0
     bbox = textMeasure->Measure(L" ", 1, algo);
-    REAL spaceDx1 = bbox.Width;
+    float spaceDx1 = bbox.Width;
     return spaceDx1;
 #else
     // this method seems to return (much) smaller size that measuring
     // the space itself
     bbox = textMeasure->Measure(L"wa", 2);
-    REAL l1 = bbox.Width;
+    float l1 = bbox.Width;
     bbox = textMeasure->Measure(L"w a", 3);
-    REAL l2 = bbox.Width;
-    REAL spaceDx2 = l2 - l1;
+    float l2 = bbox.Width;
+    float spaceDx2 = l2 - l1;
     return spaceDx2;
 #endif
 }

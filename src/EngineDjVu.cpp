@@ -564,7 +564,7 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
                     break;
                 case AnnotationType::Squiggly: {
                     Pen p(FromColor(annot.color), 0.5f * zoom);
-                    REAL dash[2] = {2, 2};
+                    float dash[2] = {2, 2};
                     p.SetDashPattern(dash, dimof(dash));
                     p.SetDashOffset(1);
                     arect = Transform(RectD(annot.rect.x, annot.rect.BR().y - 0.25f, annot.rect.dx, 0), pageNo, zoom,

@@ -38,7 +38,7 @@ static void DrawCloseButton(HDC hdc, LabelWithCloseWnd* w) {
     // so we have to explicitly mirror all rendering horizontally
     if (IsRtl(w->hwnd)) {
         g.ScaleTransform(-1, 1);
-        g.TranslateTransform((Gdiplus::REAL)ClientRect(w->hwnd).dx, 0, Gdiplus::MatrixOrderAppend);
+        g.TranslateTransform((float)ClientRect(w->hwnd).dx, 0, Gdiplus::MatrixOrderAppend);
     }
 
     Gdiplus::Color c;

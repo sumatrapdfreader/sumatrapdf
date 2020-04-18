@@ -289,8 +289,8 @@ static bool IsVisibleDrawInstr(DrawInstr& i) {
 
 // sum of widths of all elements with a fixed size and flexible
 // spaces (using minimum value for its width)
-REAL HtmlFormatter::CurrLineDx() {
-    REAL dx = NewLineX();
+float HtmlFormatter::CurrLineDx() {
+    float dx = NewLineX();
     for (DrawInstr& i : currLineInstr) {
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
             dx += i.bbox.Width;
@@ -331,11 +331,11 @@ float HtmlFormatter::NewLineX() {
 
 // When this is called, Width and Height of each element is already set
 // We set position x of each visible element
-void HtmlFormatter::LayoutLeftStartingAt(REAL offX) {
+void HtmlFormatter::LayoutLeftStartingAt(float offX) {
     DrawInstr* lastInstr = nullptr;
     int instrCount = 0;
 
-    REAL x = offX + NewLineX();
+    float x = offX + NewLineX();
     for (DrawInstr& i : currLineInstr) {
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type || DrawInstrType::Image == i.type) {
             i.bbox.X = x;
@@ -371,7 +371,7 @@ void HtmlFormatter::DumpLineDebugInfo() {
 
 // Redistribute extra space in the line equally among the spaces
 void HtmlFormatter::JustifyLineBoth() {
-    REAL extraSpaceDxTotal = pageDx - currX;
+    float extraSpaceDxTotal = pageDx - currX;
 #ifdef DEBUG
     if (extraSpaceDxTotal < 0.f)
         DumpLineDebugInfo();
@@ -397,7 +397,7 @@ void HtmlFormatter::JustifyLineBoth() {
     if (0 == spaces)
         return;
     // redistribute extra dx space among elastic spaces
-    REAL extraSpaceDx = extraSpaceDxTotal / (float)spaces;
+    float extraSpaceDx = extraSpaceDxTotal / (float)spaces;
     float offX = 0.f;
     DrawInstr* lastStr = nullptr;
     for (DrawInstr& i : currLineInstr) {
@@ -569,7 +569,7 @@ void HtmlFormatter::EmitEmptyLine(float lineDy) {
 }
 
 static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
-    REAL imageY = -1;
+    float imageY = -1;
     for (size_t idx = instrs.size(); idx > 0; idx--) {
         DrawInstr& i = instrs.at(idx - 1);
         if (!IsVisibleDrawInstr(i))
@@ -592,18 +592,18 @@ bool HtmlFormatter::EmitImage(ImageData* img) {
     if (imgSize.Empty())
         return false;
 
-    SizeF newSize((REAL)imgSize.Width, (REAL)imgSize.Height);
+    SizeF newSize((float)imgSize.Width, (float)imgSize.Height);
     // move overly large images to a new line (if they don't fit entirely)
     if (!IsCurrLineEmpty() && (currX + newSize.Width > pageDx || currY + newSize.Height > pageDy))
         FlushCurrLine(false);
     // move overly large images to a new page
     // (if they don't fit even when scaled down to 75%)
-    REAL scalePage = std::min((pageDx - currX) / newSize.Width, pageDy / newSize.Height);
+    float scalePage = std::min((pageDx - currX) / newSize.Width, pageDy / newSize.Height);
     if (currY > 0 && currY + newSize.Height * std::min(scalePage, 0.75f) > pageDy)
         ForceNewPage();
     // if image is bigger than the available space, scale it down
     if (newSize.Width > pageDx - currX || newSize.Height > pageDy - currY) {
-        REAL scale = std::min(scalePage, (pageDy - currY) / newSize.Height);
+        float scale = std::min(scalePage, (pageDy - currY) / newSize.Height);
         // scale down images that follow right after a line
         // containing a single image as little as possible,
         // as they might be intended to be of the same size
@@ -1328,7 +1328,7 @@ Vec<HtmlPage*>* HtmlFormatter::FormatAllPages(bool skipEmptyPages) {
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
-void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, REAL offX, REAL offY,
+void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
                   bool showBbox, Color textColor, bool* abortCookie) {
     Pen debugPen(Color(255, 0, 0), 1);
     // Pen linePen(Color(0, 0, 0), 2.f);
@@ -1367,7 +1367,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         bbox.Y += offY;
         if (DrawInstrType::Line == i.type) {
             // hr is a line drawn in the middle of bounding box
-            REAL y = floorf(bbox.Y + bbox.Height / 2.f + 0.5f);
+            float y = floorf(bbox.Y + bbox.Height / 2.f + 0.5f);
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
             if (showBbox) {
@@ -1380,14 +1380,14 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
             // TODO: cache the bitmap somewhere (?)
             Bitmap* bmp = BitmapFromData(i.img.data, i.img.len);
             if (bmp) {
-                status = g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
+                status = g->DrawImage(bmp, bbox, 0, 0, (float)bmp->GetWidth(), (float)bmp->GetHeight(), UnitPixel);
                 // GDI+ sometimes seems to succeed in loading an image because it lazily decodes it
                 CrashIf(status != Ok && status != Win32Error);
             }
             delete bmp;
         } else if (DrawInstrType::LinkStart == i.type) {
             // TODO: set text color to blue
-            REAL y = floorf(bbox.Y + bbox.Height + 0.5f);
+            float y = floorf(bbox.Y + bbox.Height + 0.5f);
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
             Pen linkPen(textColor);
@@ -1427,8 +1427,8 @@ HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Allocator* textAll
     HtmlFormatterArgs* args = new HtmlFormatterArgs();
     args->SetFontName(L"Georgia");
     args->fontSize = 12.5f;
-    args->pageDx = (REAL)dx;
-    args->pageDy = (REAL)dy;
+    args->pageDx = (float)dx;
+    args->pageDy = (float)dy;
     args->textAllocator = textAllocator;
     args->textRenderMethod = GetTextRenderMethod();
     return args;

@@ -39,7 +39,6 @@ using Gdiplus::OutOfMemory;
 using Gdiplus::Pen;
 using Gdiplus::PenAlignmentInset;
 using Gdiplus::PropertyItem;
-using Gdiplus::REAL;
 using Gdiplus::Region;
 using Gdiplus::SmoothingModeAntiAlias;
 using Gdiplus::SolidBrush;

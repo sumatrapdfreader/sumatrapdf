@@ -41,7 +41,6 @@ using Gdiplus::GraphicsPath;
 using Gdiplus::Image;
 using Gdiplus::Matrix;
 using Gdiplus::PenAlignmentInset;
-using Gdiplus::REAL;
 using Gdiplus::Region;
 using Gdiplus::SmoothingModeAntiAlias;
 using Gdiplus::StringFormat;
