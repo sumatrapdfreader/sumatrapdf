@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-195e5cbef98d11f2747a0a664b1d9d357bfdcb22
+aad2a5cbc48665f6f12b462bb5643a63f151444a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -64,7 +64,7 @@ sq:&Për
 sr-rs:О програму
 sv:&Om
 ta:இநிரலைப் பற்றி (&A)
-th:เกี่ยวกับ
+th:&เกี่ยวกับ
 tl:Tungkol S&a...
 tr:&Hakkında
 tw:關於(&A)...
@@ -135,7 +135,7 @@ sq:Përmasa &reale\tCtrl+1
 sr-rs:Стварна величина\tCtrl+1
 sv:&Verklig storlek\tCtrl+1
 ta:மெய் அளவு\tCtrl+1 (&A)
-th:ขนาดจริง\tCtrl+1
+th:&ขนาดจริง Ctrl+1
 tl:Tunay na Laki\tCtrl+1
 tr:Gerçek &Boyut\tCtrl+1
 tw:實際大小(&A)\tCtrl+1
@@ -200,7 +200,7 @@ sq:Opsionet e &avancuara...
 sr-rs:Напредне опције
 sv:&Avancerade inställningar...
 ta:மேம்பட்ட விருப்பத்தேர்வுகள் (A)
-th:yyyy
+th:&การตั้งค่าขั้นสูง
 tr:Gelişmiş Ayarlar
 tw:進階選項(&A)...
 uk:Розширені налаштування...
@@ -266,7 +266,7 @@ sq:&Gjithë faqet e përzgjedhura
 sr-rs:Све изабране странице
 sv:&Alla valda sidor
 ta:அனைத்து தேர்ந்தெடுக்கப்பட்ட பக்கங்கள் (&A)
-th:หน้าที่เลือกทั้งหมด
+th:&หน้าที่เลือกทั้งหมด
 tl:&Lahat ng napiling pahina
 tr:Tüm seçilen &sayfalar
 tw:所有已選取頁面(&A)
@@ -333,7 +333,7 @@ sq:&Prapa\tAlt+Left Arrow
 sr-rs:Назад\tAlt+<-
 sv:Tillbaka\tAlt+Pil vänster
 ta:பின்\tAlt+Left Arrow
-th:ถอยกลับ\tAlt+Left Arrow
+th:&ถอยกลับ Alt+Left Arrow
 tl:Bumalik\tAlt+Left Arrow
 tr:&Geri\tAlt+Sol Ok
 tw:上一頁(&B)\tAlt+左箭頭
@@ -397,7 +397,7 @@ sq:&Libër\tCtrl+8
 sr-rs:Изглед књиге\tCtrl+8
 sv:&Bokvy\tCtrl+8
 ta:&புத்தக தோற்றம்\tCtrl+8
-th:แสดงแบบหนังสือ\tCtrl+8
+th:&แสดงแบบหนังสือ Ctrl+8
 tr:&Kitap Görünümü
 tw:書本檢視(&B)\tCtrl+8
 uk:Книжна розгортка\tCtrl+8
@@ -467,7 +467,7 @@ sq:&Mbyll\tCtrl+W
 sr-rs:Затвори\tCtrl+W
 sv:&Stäng\tCtrl+W
 ta:மூடு\tCtrl+W
-th:ปิด\tCtrl+W
+th:&ปิด Ctrl+W
 tl:Isara\tCtrl+W
 tr:&Kapat\tCtrl+W
 tw:關閉(&C)\tCtrl+W
@@ -531,7 +531,7 @@ sq:&Kopjoj materialin
 sr-rs:Копирај изабрано
 sv:&Kopiera markering
 ta:தேர்ந்தெடுத்தவற்றை நகலெடு
-th:คัดลอกตัวเลือก
+th:&คัดลอกตำแหน่งที่เลือก
 tl:Kopyahin ang napili
 tr:Seçimi &Kopyala
 tw:複製選取範圍(&C)
@@ -596,7 +596,7 @@ sq:&Kopjoj materialin\tCtrl+C
 sr-rs:Копирај изабрано
 sv:Kopiera markering\tCtrl+C
 ta:தேர்வுசெய்ததை நகல் செய்
-th:คัดลอกตัวเลือก\tCtrl+C
+th:&คัดลอกตำแหน่งที่เลือก Ctrl+C
 tl:&Kopyahin ang Napili\tCtrl+C
 tr:Seçileni &kopyala\tCtrl+C
 tw:複製選取範圍(&C)\tCtrl+C
@@ -666,7 +666,7 @@ sq:&Mos pyet më
 sr-rs:Не питај ме поново
 sv:Fråga inte igen
 ta:மரு படியும் கேட்காதே
-th:ไม่ต้องถามอีกครั้ง
+th:&ไม่ต้องถามอีกครั้ง
 tl:Huwag na akong tanunging muli
 tr:Tekrar &sorma
 tw:不要再問我(&D)
@@ -730,6 +730,7 @@ sq:Vetëm faqet &çift
 sr-rs:Само лица страница
 sv:Endast &jämna sidor
 ta:இரட்டைபடை எண்கள்  மட்டும்
+th:& แม้แต่หน้าเท่านั้น
 tl:Mga &even na pahina lamang
 tr:Sadece &çift sayfalar
 tw:祇有偶數頁(&E)
@@ -791,6 +792,7 @@ sq:&Përbri\tCtrl+7
 sr-rs:Наспрамно\tCtrl+7
 sv:&Sida vid sida\tCtrl+7
 ta:பார்வையில்\tCtrl+7
+th:&เป็นหน้า Ctrl + 7
 tl:&Magkaharap\tCrtl+7
 tr:Çift sayfa\tCtrl+7
 tw:雙頁模式(&F)
@@ -861,7 +863,7 @@ sq:&Skedar
 sr-rs:Датотека
 sv:&Arkiv
 ta:கோப்பு
-th:แฟ้ม
+th:&ไฟล์
 tl:&File
 tr:&Dosya
 tw:檔案(&F)
@@ -927,6 +929,7 @@ sq:&Gjej çfarë:
 sr-rs:Појам:
 sv:&Sök efter:
 ta:எதை தேடவும்
+th:&ค้นหาอะไร:
 tl:Hanapin ang:
 tr:&Bulunacak olan:
 tw:尋找(&F):
@@ -996,7 +999,7 @@ sq:&Faqja e parë\tHome
 sr-rs:Прва страница\tHome
 sv:Första sidan\tHome
 ta:முதல் பக்கம்\tHome
-th:หน้าแรก
+th:&หน้าแรก Home
 tl:Unang Pahina\tHome
 tr:&İlk Sayfa\tHome
 tw:第一頁(&F)\tHome
@@ -1058,6 +1061,7 @@ sq:&Përshtat faqet në hapësirën e printuar
 sr-rs:Подеси странице према области штампања
 sv:&Anpassa sidor till utskrivbart område
 ta:அச்சிடும் அளவில் பக்கத்தை காட்டு
+th:&ปรับหน้ากระดาษให้พอดีกับพื้นที่ที่สามารถพิมพ์ได้
 tl:Pagkasyahin ang mga pahina sa printable na area
 tr:Sayfaları &yazdırılabilecek alana ölçekle
 tw:縮放頁面以符合可列印區域(&F)
@@ -1128,7 +1132,7 @@ sq:&Shkoj te
 sr-rs:Иди
 sv:&Gå till
 ta:அங்கு செல்
-th:ไปที่
+th:&ไปที่
 tl:Pumun&ta Sa...
 tr:&Git
 tw:前往(&G)
@@ -1196,6 +1200,7 @@ sq:&Shkoj te faqja:
 sr-rs:Иди на страницу:
 sv:&Gå till sida:
 ta:பக்கதிர்க்கு செல்:
+th:&ไปที่หน้า:
 tl:Pumunta sa pahina:
 tr:Sayfaya &git:
 tw:前往頁(&G):
@@ -1266,7 +1271,7 @@ sq:&Ndihmë
 sr-rs:Помоћ
 sv:&Hjälp
 ta:உதவி
-th:ช่วยเหลือ
+th:&ช่วยเหลือ
 tl:Tulong
 tr:&Yardım
 tw:幫助(&H)
@@ -1336,7 +1341,7 @@ sq:&Faqja e fundit\tEnd
 sr-rs:Последња страница\tEnd
 sv:Sista sidan\tEnd
 ta:இறுதி பக்கம்\tEnd
-th:หน้าสุดท้าย
+th:&หน้าสุดท้าย End
 tl:Huling Pahina\tEnd
 tr:So&n Sayfa\tEnd
 tw:最後頁(&L)\tEnd
@@ -1400,6 +1405,7 @@ sq:&Zmadhimi:
 sr-rs:Увећање:
 sv:&Förstoring:
 ta:பெரிதாக்கம்
+th:&การขยาย:
 tl:&Laki
 tr:&Büyüteç:
 tw:倍率(&M)
@@ -1467,7 +1473,7 @@ sq:&Manuali
 sr-rs:Упутство
 sv:&Manual
 ta:செய்முறை ஏடு
-th:คู่มือการใช้งาน
+th:&คู่มือการใช้งาน
 tl:Gabay
 tr:&El kitabı
 tw:手冊(&M)
@@ -1531,6 +1537,7 @@ sq:&Krahasoj shkronjat
 sr-rs:Разликуј мала и велика слова
 sv:Matcha &versaler/gemener
 ta:தட்டுப் பொருத்தம்
+th:&จับคู่
 tl:Itug&ma ang laki ng mga letra
 tr:B&üyük/Küçük harf eşleştir
 tw:符合大小寫(&M)
@@ -1600,7 +1607,7 @@ sq:&Faqja tjetër\tRight Arrow
 sr-rs:Следећа страница\t->
 sv:Nästa sida\tPil höger
 ta:அடுத்த பக்கம்\t->
-th:หน้าถัดไป\t->
+th:&หน้าถัดไป Right Arrow
 tl:Sunod na Pahina\t->
 tr:&Sonraki Sayfa\t->
 tw:下一頁(&N)\t右箭頭
@@ -1669,6 +1676,7 @@ sq:&Jo
 sr-rs:Не
 sv:&Nej
 ta:இல்லை
+th:&ไม่ใช่
 tl:Hindi
 tr:&Hayır
 tw:否(&N)
@@ -1734,6 +1742,7 @@ sq:&Jo, faleminderit
 sr-rs:Не, хвала
 sv:&Nej, tack
 ta:இல்லை, நன்றி
+th:&ไม่เป็นไรขอบคุณ
 tl:'Di bale na lang
 tr:&Hayır, teşekkürler
 tw:不用了，謝謝(&N)
@@ -1797,6 +1806,7 @@ sq:Vetëm faqet &teke
 sr-rs:Само полеђине страница
 sv:Endast &udda sidor
 ta:ஒற்றைபடை பக்கங்கள் மட்டும்
+th:&เพิ่มหน้าแตกต่างเท่านั้น
 tl:Mga odd na pahina lamang
 tr:Sadece &tek sayfalar
 tw:僅有奇數頁(&O)
@@ -1859,6 +1869,7 @@ sq:&Hap dokumentin
 sr-rs:Отвори документ
 sv:&Öppna dokument
 ta:கோப்பை திற
+th:&เปิดเอกสาร
 tr:Belgeyi &Aç
 tw:開啟此文件(&O)
 uk:Відкрити документ
@@ -1928,7 +1939,7 @@ sq:&Hap...\tCtrl+O
 sr-rs:Отвори...\tCtrl+O
 sv:&Öppna...\tCtrl+O
 ta:திற...\tCtrl+O
-th:เปิด...\tCtrl+O
+th:&เปิด...Ctrl+O
 tl:Buksan...\tCtrl+O
 tr:&Aç...\tCtrl+O
 tw:開啟(&O)...\tCtrl+O
@@ -1990,6 +2001,7 @@ sq:&Opsionet
 sr-rs:Опције
 sv:Alternativ
 ta:&விருப்பம்
+th:&ตัวเลือก
 tr:&Ayarlar
 tw:選項(&O)
 uk:Налаштування
@@ -2052,6 +2064,7 @@ sq:&Opsionet...
 sr-rs:Опције...
 sv:Alternativ...
 ta:விருப்ப பேரம்
+th:&ตัวเลือก...
 tl:Mga Pagpipilian
 tr:&Seçenekler...
 tw:選項(&O)...
@@ -2116,6 +2129,7 @@ sq:&Fjalëkalimi:
 sr-rs:Лозинка
 sv:&Lösenord:
 ta:கடவுச்சொல்
+th:&รหัสผ่าน:
 tl:&Password:
 tr:&Şifre:
 tw:密碼(&P):
@@ -2177,6 +2191,7 @@ sq:&Fiksoj dokumentin
 sr-rs:Прикачи документ
 sv:&Fäst dokument
 ta:கோப்பை குத்திவை
+th:&เอกสาร Pin
 tr:Belgeye &Tuttur
 tw:釘選(&P)
 uk:Документ pin
@@ -2245,7 +2260,7 @@ sq:&Faqja e mëparshme\tLeft Arrow
 sr-rs:Претходна страница\t<-
 sv:Föregående sida\tPil vänster
 ta:முந்தைய பக்கம்\tLeft Arrow
-th:หน้าก่อนหน้า\t<-
+th:&หน้าก่อนหน้า Left Arrow
 tl:Naunang Pahina\t<-
 tr:&Önceki Sayfa\t<-
 tw:上一頁(&P)\t左箭頭
@@ -2309,6 +2324,7 @@ sq:&Printoj...
 sr-rs:Штампај...
 sv:&Skriv ut...
 ta:அச்சிடு...
+th:&พิมพ์...
 tl:I-&print
 tr:&Yazdır...
 tw:列印(&P)...
@@ -2371,6 +2387,7 @@ sq:&Printoj... (ndalohet)
 sr-rs:Штампај... (одбијено)
 sv:&Utskrift... (nekad)
 ta:அகசிடல்... (நிராகரிக்கப்பட்டது)
+th:&พิมพ์... (ถูกปฏิเสธ)
 tl:&I-print... (hindi maaari)
 tr:&Baskı... (reddedildi)
 tw:列印(&P)... (已中斷)
@@ -2441,7 +2458,7 @@ sq:&Printoj...\tCtrl+P
 sr-rs:Штампај...\tCtrl+P
 sv:Skriv &ut...\tCtrl+P
 ta:அச்சிடு...\tCtrl+P
-th:พิมพ์\tCtrl+P
+th:&พิมพ์...Ctrl+P
 tl:I-&print\tCtrl+P
 tr:&Yazdır...\tCtrl+P
 tw:列印(&P)...\tCtrl+P
@@ -2503,6 +2520,7 @@ sq:&Mbaj mend fjalëkalimin për këtë dokument
 sr-rs:Запамти лозинку за овај документ
 sv:&Kom ihåg lösenordet för detta dokument
 ta:கடவுச்சொல்லை நினைவில் வை
+th:&จำรหัสผ่านสำหรับเอกสารนี้
 tl:Tandaan ang password para sa dokumentong ito
 tr:Bu belge için şifreyi &hatırla
 tw:記憶此文件的密碼(&R)
@@ -2566,6 +2584,7 @@ sq:&Mbaj mend parametrat për çdo dokument
 sr-rs:Запамти ова подешавања за сваки појединачни документ
 sv:Kom ihåg dessa inställningar för &varje dokument
 ta:அமைப்புகளை ஞாபகம் கொள்
+th:&จดจำการตั้งค่าเหล่านี้สำหรับแต่ละเอกสาร
 tl:Tandaan ang settings ng bawat dokumento
 tr:Bu ayarları her belge için &hatırla
 tw:記憶每個文件的設定值(&R)
@@ -2627,6 +2646,7 @@ sq:&Heq dokumentin
 sr-rs:Уклони документ
 sv:&Ta bort dokument
 ta:கோப்பை நீக்கு
+th:&ลบเอกสาร
 tr:Belgeyi &Kaldır
 tw:移除此縮圖(&R)
 uk:Видалити документ
@@ -2688,6 +2708,7 @@ sq:&Ruaj si...
 sr-rs:Сачувај као...
 sv:&Spara som...
 ta:எனச் சேமி...
+th:&บันทึกเป็น...
 tl:I-&save bilang...
 tr:&Farklı Kaydet...
 tw:另存為(&A)...
@@ -2758,7 +2779,7 @@ sq:&Ruaj si...\tCtrl+S
 sr-rs:Сачувај као...\tCtrl+S
 sv:Spara so&m...\tCtrl+S
 ta:எனச் சேமி...\tCtrl+S
-th:บันทึกเป็น...\tCtrl+S
+th:&บันทึกเป็น...Ctrl+S
 tl:I-save Bilang...\tCtrl+S
 tr:&Farklı kaydet...\tCtrl+S
 tw:另存為(&A)...\tCtrl+S
@@ -2823,6 +2844,7 @@ sq:&Parametrat
 sr-rs:Подешавања
 sv:Alternati&v
 ta:அமைப்புகள்
+th:&การตั้งค่า
 tl:Mga Setting
 tr:&Ayarlar
 tw:設定值(&S)...
@@ -2884,6 +2906,7 @@ sq:&Ngjesh faqet në hapësirën e printuar (sipas nevojës)
 sr-rs:Скупи странице на област штампања (уколико је неопходно)
 sv:&Krymp sidor till utskrivbart område (om nödvändigt)
 ta:கோப்பை அச்சிடும் அளவிற்கு சுருக்கு (தேவைபட்டால்)
+th:&ย่อขนาดหน้ากระดาษไปยังพื้นที่ที่สามารถพิมพ์ได้ (ถ้าจำเป็น)
 tl:Paliitin ang pahina sa printable na area (kung kinakailangan)
 tr:Sayfaları baskı alanına &indirgele (gerekirse)
 tw:如有需要，縮小頁面符合可列印區域(&S)
@@ -2945,6 +2968,7 @@ sq:&Njëfletësh\tCtrl+6
 sr-rs:Појединачна страница\tCtrl+6
 sv:&Enkel sida\tCtrl+6
 ta:ஒற்றைப் பக்கம்\tCtrl+6
+th:&หน้าเดียว Ctrl+6 
 tr:&Tek Sayfa\tCtrl+6
 tw:單頁模式(&S)\tCtrl+6
 uk:Одна сторінка\tCtrl+6
@@ -3013,7 +3037,7 @@ sq:&Shmang këtë versionin
 sr-rs:Прескочи ову верзију
 sv:Hoppa över denna version
 ta:இப்பதிப்பை தவிர்
-th:ช้ามเวอร์ชั่นนี้ไป
+th:&ข้ามรุ่นนี้ไป
 tl:Laktawan ang bersyong ito
 tr:Bu s&ürümü atla
 tw:略過此版本(&S)
@@ -3065,6 +3089,7 @@ sq:&Motivi
 sr-rs:Тема
 sv:&Tema
 ta:கருப்பொருள் (&T)
+th:&ธีม
 tr:&Tema
 tw:主題(&T)
 uk:&Тема
@@ -3124,6 +3149,7 @@ sq:&Përdor përmasat origjinale të fletës
 sr-rs:Употреби оригиналне величине страница
 sv:Använd u&rsprungliga sidstorlekar
 ta:மூல பக்க அளவுகளை உபயோகி
+th:&ใช้ขนาดหน้าดั้งเดิม
 tl:Gamitin ang orihinal na laki ng mga pahina
 tr:Orijinal sayfa boyutlarını &kullan
 tw:使用頁面原始大小(&S)
@@ -3193,7 +3219,7 @@ sq:&Pamje
 sr-rs:Приказ
 sv:Vi&sa
 ta:நோக்கு
-th:มุมมอง
+th:&มุมมอง
 tl:Tignan
 tr:Gös&ter
 tw:檢視(&V)
@@ -3251,6 +3277,7 @@ sq:&Dritare
 sr-rs:П&розор
 sv:Fönster
 ta:விண்டாஸ் 
+th:&หน้าต่าง
 tr:&Pencere
 tw:視窗(&W)
 uk:&Вікно
@@ -3316,6 +3343,7 @@ sq:&Po
 sr-rs:Да
 sv:&Ja
 ta:ஆம்
+th:&ใช่
 tl:Oo
 tr:&Evet
 tw:是(&Y)
@@ -3385,7 +3413,7 @@ sq:&Shkalla
 sr-rs:Увећање
 sv:&Zoom
 ta:பெரிதாக்கு
-th:ขยาย
+th:&ขยายเข้าออก
 tl:Palakihin/paliitin
 tr:&Yakınlaştırma
 tw:縮放(&Z)
@@ -3449,6 +3477,7 @@ sq:(nga %d)
 sr-rs:(од %d)
 sv:(av %d)
 ta:(இன் %d)
+th:(จาก %d)
 tl:(ng %d)
 tr:(toplam %d)
 tw:（共 %d 頁）
@@ -3510,6 +3539,7 @@ sq:(faqja %s)
 sr-rs:(%s. страница)
 sv:(sida %s)
 ta:(பக்கம் %s)
+th:(หน้า %s)
 tr:(sayfa %s)
 tw:(第 %s 頁)
 uk:(сторінка %s)
@@ -3777,7 +3807,7 @@ sq:Mbani shënim faqen %s nën emrin (fakultativ):
 sr-rs:Додај страницу %s међу одабране под (опционо) именом:
 sv:Lägg till sida %s i Favoriter med (valfritt) namn:
 ta:பிடித்தவையில்  பக்கம் %s-ஐ (விருப்ப) பெயருடன் சேர்:
-th:เพิ่มหน้า %s ไปยังรายการโปรดพร้อม (สามารถเลือกได้) ชื่อ:
+th:เพิ่มหน้า %s ไปยังรายการโปรดพร้อมชื่อ (สามารถเลือกได้) :
 tr:%s no.lu sayfayı sık kullanılanlara (tercihe bağlı isimle) ekle:
 tw:以 (可選) 名稱加入第 %s 頁到最愛:
 uk:Додати %s сторінку до закладок з іменем(необов'язково):
@@ -3802,6 +3832,7 @@ nl:Pagina %s toevoegen aan favorieten\tCtrl+B
 pl:Dodaj stronę %s do ulubionych\tCtrl+B
 pt:Adicionar página %s aos favoritos\tCtrl+B
 ru:Добавить страницу %s в избранные\tCtrl+B
+th:เพิ่มหน้า %s ไปยังรายการโปรด Ctrl+B
 tw:將第 %s 頁加入到最愛\tCtrl+B
 uk:Додати %s сторінку до закладок\tCtrl+B
 :Add to favorites
@@ -4200,6 +4231,7 @@ sq:Jeni i sigurt se doni të çinstaloni SumatraPDF?
 sr-rs:Да ли желите деинсталацију СуматраПДФ
 sv:Är du säker på att du vill avinstallera SumatraPDF?
 ta:சுமத்ரா PDF நிறுவலை நீக்கவா?
+th:คุณแน่ใจหรือไม่ว่าต้องการถอนการติดตั้ง SumatraPDF?
 tr:SumatraPDF'yi bilgisayarınızdan kaldırmak istediğinize emin misiniz ?
 tw:你確定要解除安裝 SumatraPDF 嗎？
 uk:Ви впевнені, що хочете видалити SumatraPDF?
@@ -4269,7 +4301,7 @@ sq:Do e shoqëroni me skedarët PDF?
 sr-rs:Придружити PDF датотекама?
 sv:Koppla ihop med PDF-filer?
 ta:PDF கோப்புகளுடன் இணை
-th:เชื่อมกับไฟล์ PDF
+th:เชื่อมกับไฟล์ PDF หรือไม่?
 tl:I-associate sa mga PDF file?
 tr:PDF dosyaları ile bağdaştırmak ister misiniz?
 tw:設定 PDF 檔案關聯嗎?
@@ -4543,7 +4575,7 @@ sq:Verifikoj automatikisht &azhurnimet
 sr-rs:Аутоматски проверавај доступност нове верзије
 sv:Sök &automatiskt efter uppdateringar
 ta:தானாக புதுப்பித்த பதிப்பை தேடு
-th:ตรวจสอบการปรับปรุงให้ทันสมัยโดยอัตโนมัติ
+th:ตรวจสอบโดยอัตโนมัติ &อัพเดท
 tl:Awtomatikong tignan kung may mga pagbabago
 tr:&Güncellemeleri otomatik olarak kontrol et
 tw:自動檢查更新(&U)
@@ -4675,7 +4707,7 @@ sq:Shkurtoret e shenjimit
 sr-rs:Пречица ка обележивачу
 sv:Bokmärkesgenvägar
 ta:புத்தகக்குறி இடுக
-th:คั่นหน้าทางลัด
+th:ทางลัดคั่นหน้า
 tr:Yer imi kısayolları
 tw:書籤捷徑
 uk:Закладка ярликів
@@ -4737,7 +4769,7 @@ sq:Shkurtorja e shenjimit për faqet %s nga %s
 sr-rs:Обележи пречицу на страни %s од %s
 sv:Bokmärk genväg till sida %s av %s
 ta:%s / %s பக்கத்தின் புத்தகக்குறிக்கு குறுக்குவழி
-th:คั่นทางลัดไปยังหน้า %s ของ %s
+th:ทางลัดคั่นหน้าไปยังหน้า %s ของ %s
 tl:I-Bookmark shortcut sa page %s of %s
 tr:%s. sayfasına %s yer imi kısayolu
 tw:書籤捷徑指向第 %s 頁 (檔案 %s)
@@ -5276,7 +5308,7 @@ sq:Ndryshoj gjuhën (Change Language)
 sr-rs:Промени језик (Change Language)
 sv:Byt språk (Change Language)
 ta:மொழியை மாற்று (Change Language)
-th:เปลี่ยนภาษา (Change Language)
+th:เปลี่ยนภาษา
 tl:Ibahin ang Wika (Change Language)
 tr:Dil değiştir (Change Language)
 tw:變更語言 (Change Language)
@@ -5345,7 +5377,7 @@ sq:&Azhurnoj
 sr-rs:Провери постојање новије верзије
 sv:&Sök efter ny version
 ta:புதிய பதிப்பை தேடு
-th:&ตรวจสำหรับสอบเวอร์ชั่นใหม่
+th:ตรวจสอบ &อัพเดท
 tl:Tignan kung may bagong &bersyon
 tr:&Güncellemeleri kontrol et
 tw:檢查是否有新版本(&C)
@@ -5413,6 +5445,7 @@ sq:Mbyll
 sr-rs:Затвори
 sv:Stäng
 ta:மூடு
+th:ปิด
 tr:Kapat
 tw:關閉(&C)
 uk:Закрити
@@ -5439,6 +5472,7 @@ nl:Alle Samenvouwen
 pl:Zwiń wszystko
 pt:Recolher tudo
 ru:Свернуть все
+th:ยุบทั้งหมด
 tw:全部折叠(&C)
 uk:Згорнути всі
 :Comic books
@@ -5906,7 +5940,7 @@ sq:Kopjoj &figurën
 sr-rs:Копирај слику
 sv:Kop&iera bild
 ta:நகல் & படம்
-th:คัดลอกรูปภาพ
+th:คัดลอก &รูปภาพ
 tr:&Görüntüyü Kopyala
 tw:複製圖片(&I)
 uk:Скопіювати зображення
@@ -5969,7 +6003,7 @@ sq:Kopjoj adresën e &lidhësit
 sr-rs:Копирај адресу везе
 sv:Kopiera länkadress
 ta:நகல் &இணைப்பு முகவரி
-th:คัดลอก Link Address
+th:คัดลอก &ที่อยู่เชื่อมโยง
 tl:Kopyahin nag address ng &link
 tr:&Bağlantı Adresini Kopyala
 tw:複製連結位址(&L)
@@ -6033,7 +6067,7 @@ sq:Kopjoj ko&mentin
 sr-rs:Копирај коментар
 sv:Kopiera kommentar
 ta:கருத்து நகலெடுக்க
-th:คัดลอกความเห็น
+th:คัดลอก &ความเห็น
 tl:Kopyahin ang komento
 tr:&Açıklamayı Kopyala
 tw:複製註解(&M)
@@ -6288,6 +6322,7 @@ sq:Nuk mund të krijojë direktorinë për instalimin
 sr-rs:Инсталациони директоријум се не може креирати
 sv:Kunde inte skapa installationsmappen
 ta:நிறுவல் கோப்புறையினை உருவாக்க இயலவில்லை
+th:ไม่สามารถสร้างไดเรคทอรี่ติดตั้งได้
 tl:Hindi magawa ang installation directory
 tr:Kurulum dizini oluşturulamadı
 tw:無法建立安裝資料夾
@@ -6414,6 +6449,7 @@ sq:Nuk mund të instalojë parashikuesin e PDF-ve
 sr-rs:Прегледач ПДФ немогуће инсталирати
 sv:Kunde inte installera förhandstitt av PDF:er
 ta:PDF முன்னோட்டம் நிறுவ இயலவில்லை
+th:ไม่สามารถติดตั้งตัวแสดงตัวอย่าง PDF
 tr:PDF önizleyici yüklenemedi
 tw:無法安裝 PDF 預覽器
 uk:Не вдалося встановити програму для попереднього перегляду PDF
@@ -6475,6 +6511,7 @@ sq:Nuk mund të instalojë kërkuesin e PDF-ve
 sr-rs:Немогуће инсталирати филтер за претрагу
 sv:Kunde inte installera sökfilter för PDF
 ta:PDF தேடலை நிறுவ இயலவில்லை
+th:ไม่สามารถติดตั้งตัวกรองค้นหา PDF
 tr:PDF arama filtresi yüklenemedi
 tw:無法安裝 PDF 搜索過濾器
 uk:Не вдалося встановити фільтр пошуку для PDF
@@ -6535,6 +6572,7 @@ sq:Nuk mund të heqë direktorinë e përkohshme
 sr-rs:Немогуће уклонити привремени директоријум
 sv:Kunde inte ta bort installationsmappen
 ta:நிறுவிய கோப்புறையை நீக்க முடியவில்லை
+th:ไม่สามารถถอนไดเรคทอรี่การติดตั้ง
 tr:Kurulum dizini kaldırılamadı
 tw:無法移除安裝目錄
 uk:Не вдалося видалити папку, де було встановлено програму
@@ -6658,6 +6696,7 @@ sq:Nuk mund të çinstalojë parashikuesin e PDF-ve
 sr-rs:Немогуће деинсталирати ПДФ прегледач
 sv:Kunde inte avinstallera förhandstitt på PDF:er
 ta:PDF முன்னோட்டத்தை நீக்க முடியவில்லை
+th:ไม่สามารถถอนการติดตั้งโปรแกรมดูตัวอย่าง PDF
 tr:PDF önizleyicisi kaldırılamadı
 tw:無法解除安裝 PDF 預覽器
 uk:Не вдалося видалити програму попереднього перегляду PDF
@@ -6718,6 +6757,7 @@ sq:Nuk mund të çinstalojë kërkuesin e PDF-ve
 sr-rs:Немогућа деинсталација ПДФ филтер претраге
 sv:Kunde inte avinstallera sökfiltret för PDF:er
 ta:PDF தேடலை நீக்க முடியவில்லை
+th:ไม่สามารถถอนการติดตั้งตัวกรองการค้นหา PDF
 tr:PDF arama filtresi kaldırılamadı
 tw:無法安裝 PDF 搜索過濾器
 uk:Не вдалося видалити фільтр пошуку для PDF
@@ -6778,6 +6818,7 @@ sq:Nuk mund të çinstalojë spinën për shfletuesin
 sr-rs:Немогуће уклонити плугин за прегледач
 sv:Kunde inte avinstallera webbläsarens insticksprogram
 ta:உலாவி உள்இடுக்கைளை நீக்க முடியவில்லை
+th:ไม่สามารถถอนปลั๊กอินบราวเซอร์
 tr:Tarayıcı eklentisi silinemedi
 tw:無法解除安裝瀏覽器附加元件
 uk:Не вдалося видалити розширення для браузера
@@ -6837,6 +6878,7 @@ sq:%s nuk shkruhet në disk
 sr-rs:Немогућ упис %s на диск
 sv:Kunde inte spara %s på hårddisken
 ta:%s ஐ எழுத  இயலவில்லை
+th:ไม่สามารถเขียน %s ไปยังดิสก์
 tr:Diske %s yazılamadı
 tw:無法寫入 %s 到磁碟中
 uk:Не вдалося записати %s на диск
@@ -7033,6 +7075,7 @@ sq:Pozicioni i kursorit:
 sr-rs:Позиција курсора
 sv:Muspekarens position:
 ta:நிலைகாட்டியின் நிலை
+th:ตำแหน่งเคอร์เซอร์
 tr:İmleç konumu:
 tw:游標位置
 uk:Позиція вказівника:
@@ -7095,7 +7138,7 @@ sq:&Shkalla e caktuar...\tCtrl+Y
 sr-rs:Прилагођено увећање...\tCtrl+Y
 sv:&Anpassad zoom...\tCtrl+Y
 ta:விருப்பிற்கேற்ற பெருக்கம்\tCtrl+Y
-th:กำหนดการซูม...\tCtrl+Y
+th:การขยายเข้ากำหนดเอง...Ctrl+Y
 tl:Custom na laki...\tCtrl+Y
 tr:Kişiselleştirilmiş &Yakınlaştırma... \tCtrl+Y
 tw:自訂縮放(&Z)...\tCtrl+Y
@@ -7152,6 +7195,7 @@ sq:I errët
 sr-rs:Тамно
 sv:Mörk
 ta:இருள்
+th:เข้ม
 tr:Karanlık
 tw:暗(&D)
 uk:Темна
@@ -7205,6 +7249,7 @@ sq:Më i errët
 sr-rs:Тамније
 sv:Mörkare
 ta:மேலும் இருள்
+th:เข้มกว่า
 tr:Daha karanlık
 tw:更暗(&R)
 uk:Темніша
@@ -7267,7 +7312,7 @@ sq:&Faqosja standarde:
 sr-rs:Подразумевани приказ
 sv:Standard&utseende
 ta:கோட நிலை வடிவமைப்பு
-th:รูปแบบเริ่มต้น:
+th:รูปแบบ &ค่าเริ่มต้น:
 tl:Default na Ayos:
 tr:Varsayılan &Düzen:
 tw:預設布局(&L):
@@ -7332,7 +7377,7 @@ sq:&Shkalla standarde:
 sr-rs:Подразумевано увећање
 sv:Standard&zoomläge
 ta:கோட நிலை உரு அளவு
-th:ซูมเริ่มต้น:
+th:การขยายเข้าออก &ค่าเริ่มต้น:
 tl:Default na Laki:
 tr:Varsayılan &Yakınlaştırma:
 tw:預設縮放(&Z):
@@ -7656,6 +7701,7 @@ sq:Shkarkoj
 sr-rs:Преузми
 sv:&Hämta
 ta:பதிவிற்க்கம்
+th:ดาวน์โหลด
 tl:I-download
 tr:İndir
 tw:下載
@@ -7726,7 +7772,7 @@ sq:D&al\tCtrl+Q
 sr-rs:Изађи\tCtrl+Q
 sv:&Avsluta\tCtrl+Q
 ta:வெளியேறு\tCtrl+Q
-th:ออก\tCtrl+Q
+th:&ออก Ctrl+Q
 tl:Isara\tCtrl+Q
 tr:Ç&ık\tCtrl+O
 tw:離開(&X)\tCtrl+Q
@@ -7793,6 +7839,7 @@ sq:Libra elektronikë EPUB
 sr-rs:EPUB документи
 sv:EPUB-dokument
 ta:EPUB மின்புத்தகங்கள்
+th:หนังสืออิเล็คทรอนิกส์ EPUB
 tr:EPUB belgeleri
 tw:EPUB 文件
 uk:Документи EPUB
@@ -7994,6 +8041,7 @@ sq:Komanda që jepet kur klikoni dy herë dokumentin PDF:
 sr-rs:Унесите параметре командне линије који ће се извршити приликом двоклика на PDF документ:
 sv:Ange kommandorad som körs när du dubbelklickar på PDF-dokumentet:
 ta:நீங்கள் PDF ஆவணத்தின் மீது இரட்டை சொடுக்கும் போது செயலாக்க கட்டளை வரி உள்ளிடவும்:
+th:ป้อนบรรทัดคำสั่งเพื่อเรียกใช้เมื่อคุณดับเบิลคลิกที่เอกสาร PDF:
 tl:Pakisulat ang command na gagawin kapag dalawang beses na kli-nik ang dokumentong PDF:
 tr:PDF belgesine çift tıklanınca yürütülecek komutu giriniz:
 tw:請輸入滑鼠按兩下 PDF 文件時，應執行的指令(&E):
@@ -8057,6 +8105,7 @@ sq:Gabim në hapjen e %s
 sr-rs:Дошло је до грешке приликом учитавања датотеке %s
 sv:Fel vid öppning av %s
 ta:ஏற்றுவதில் பிழை %s
+th:เกิดข้อผิดพลาดในการโหลด %s
 tr:%s yükleme hatası
 tw:正在載入 %s 時發生錯誤
 uk:Помилка завантаження %s
@@ -8083,6 +8132,7 @@ nl:Alle Uitvouwen
 pl:Rozwiń wszystko
 pt:Expandir tudo
 ru:Развернуть все
+th:ขยายทั้งหมด
 tw:全部展開
 uk:Розгорнути всі
 :F&avorites
@@ -8141,6 +8191,7 @@ sq:P&ëlqej
 sr-rs:Одабир
 sv:&Favoriter
 ta:பிடித்தவை
+th:&รายการโปรด
 tr:S&ık kullanılanlar
 tw:我的最愛(&A)
 uk:Закладки
@@ -8203,6 +8254,7 @@ sq:P&ërpara\tAlt+Right Arrow
 sr-rs:Напред\tAlt+->
 sv:Framåt\tAlt+Pil höger
 ta:முன்னோக்கி \tAlt+Right Arrow
+th:&ไปข้างหน้า Alt + ลูกศรขวา
 tl:Susunod\tAlt+Right Arrow
 tr:İ&leri\tAlt+Sağ Ok
 tw:下一停頓頁面(&O)\tAlt+->
@@ -8272,7 +8324,7 @@ sq:Ekran i p&lotë\tCtrl+Shift+L
 sr-rs:Цео екран\tCtrl+Shift+L
 sv:Fullskärm\tF11
 ta:முழுத்திரை
-th:เต็มจอภาพ\tCtrl+Shift+L
+th:&เต็มจอภาพ F11
 tl:Pagkasyahin sa buong screen\tCtrl+Shift+L
 tr:&Tam Ekran\tCtrl+Shift+L
 tw:全螢幕顯示(&U)\tCtrl+Shift+L
@@ -8404,6 +8456,7 @@ sq:Problem me fshirjen e çinstaluesit nga regjistri
 sr-rs:Неуспело брисање кључева из регистри базе
 sv:Misslyckades med att ta bort registernycklar
 ta:நிறுவி நீக்கியின் பதிவை அழிக்க முடியவில்லை
+th:ไม่สามารถลบรีจิสตรีคีย์ของตัวถอนการติดตั้งได้
 tr:Kaldırıcı kayıt defteri anahtarlarını silemedi
 tw:刪除解除安裝器註冊項失敗。
 uk:Не вдалося видалити інформацію деінсталятора з реєстру
@@ -8458,6 +8511,7 @@ sq:Problem me regjistrimin si program standard në win 10
 sr-rs:Неуспело постављање као подразумевани програм на wин 10
 sv:Misslyckades med registrering som standardprogram på Win 10.
 ta:விண்டோஸ் 10-யில் இயல்புநிலை கணினிநிரலாக பதிவுசெய்வதில் தோல்வி
+th:ไม่สามารถลงทะเบียนเป็นโปรแกรมเริ่มต้นใน win 10
 tr:\nWin 10'da varsayılan program olarak kayıt edilemedi
 tw:Win 10 下註冊為預設程式失敗。
 uk:Не вдалося зареєструватися як програма по замовчуванню у Windows 10
@@ -8519,6 +8573,7 @@ sq:Problem me riemërtimin e skedarit!
 sr-rs:Немогуће је преименовати датотеку!
 sv:Kunde inte döpa om filen!
 ta:கோப்புக்கு மறுபெயரிட முடியவில்லை!
+th:ไม่สามารถเปลี่ยนชื่อไฟล์ได้!
 tr:Dosyanın ismi değiştirilemedi!
 tw:重新命名該檔案失敗!
 uk:Не вдалося перейменувати файл!
@@ -8647,6 +8702,7 @@ sq:Problem me shkrimin në regjistër të informacionit të zgjeruar për skedar
 sr-rs:Неуспео упис проширене екстензије фајла у регистри базу
 sv:Misslyckades med att spara registernycklar för den utökade filhanteringen
 ta:பதிவு செய்ய விரிவாக்கப்பட்ட கோப்பு நீட்டிப்பு தகவலை எழுத முடியவில்லை
+th:ไม่สามารถเขียนข้อมูลส่วนขยายไฟล์เพิ่มเติมไปยังรีจิสทรี
 tr:Kayıt defterine genişletimiş dosya uzantısı yazma başarısız oldu
 tw:寫入延遲檔案副檔名資訊到註冊項失敗。
 uk:Не вдалося записати інформацію про розширення файлу до реєстру
@@ -8705,6 +8761,7 @@ sq:Problem me shkrimin në regjistër të informacionit për çinstalimin
 sr-rs:Неуспео упис информација о деинсталацији у регистри базу
 sv:Misslyckades med att spara data för avinstallation i registret
 ta:நிறுவி நீக்கும் தகவலை பதிவில் எழுத முடியவில்லை
+th:ไม่สามารถเขียนข้อมูลการถอนการติดตั้งไปยังรีจิสทรี
 tr:Kayıt defterine kaldırma bilgisi yazma işi başarısız oldu
 tw:寫入解除安裝資訊到註冊項目失敗。
 uk:Не вдалося записати інформацію для видалення у реєстр
@@ -8765,6 +8822,7 @@ sq:Hapet shpejt në internet
 sr-rs:Брзи преглед на мрежи
 sv:Snabb webbvy
 ta:வேகமான வலை பார்வை
+th:มุมมองเว็บที่รวดเร็ว
 tr:Hızlı Web Görünümü
 tw:快速網頁模式
 uk:Швидкий веб перегляд
@@ -8829,6 +8887,7 @@ sq:Pëlqej
 sr-rs:Одабир
 sv:Favoriter
 ta:பிடித்தவை
+th:รายการโปรด
 tr:Sık kullanılanlar
 tw:最愛
 uk:Закладки
@@ -8889,6 +8948,7 @@ sq:Dokumente FictionBook
 sr-rs:FictionBook докуменат
 sv:FictionBook-dokument
 ta:புனைவு புத்தக ஆவணம்
+th:เอกสาร FictionBook
 tr:FictionBook belgeleri
 tw:FictionBook(fb2) 文件
 uk:Документи FictionBook
@@ -8951,6 +9011,7 @@ sq:Nuk gjendet skedari %s
 sr-rs:Датотека %s није пронађена
 sv:Fil %s hittades inte
 ta:%s கோப்பு கிடைக்கவில்லை
+th:ไม่พบไฟล์ %s
 tr:%s dosyası bulunamadı
 tw:找不到檔案 %s
 uk:Файл %s не знайдено
@@ -9016,6 +9077,7 @@ sq:Madhësia e skedarit:
 sr-rs:Величина:
 sv:Filstorlek:
 ta:கோப்பின் அளவு:
+th:ขนาดไฟล์ข้อมูล
 tl:Laki ng file:
 tr:Dosya boyutu:
 tw:檔案大小:
@@ -9084,6 +9146,7 @@ sq:Skedari:
 sr-rs:Датотека:
 sv:Fil:
 ta:கோப்பு
+th:ไฟล์
 tl:File:
 tr:Dosya:
 tw:檔案(&F):
@@ -9153,6 +9216,7 @@ sq:G&jej...\tCtrl+F
 sr-rs:Пронађи...\tCtrl+F
 sv:Sök...\tCtrl+F
 ta:தேடு...\tCtrl+F
+th:&ค้นหา ... Ctrl + F
 tl:Hanapin...\tCtrl+F
 tr:&Bul...\tCtrl+F
 tw:尋找(&F)...\tCtrl+F
@@ -9220,6 +9284,7 @@ sq:Gjej
 sr-rs:Пронађи
 sv:Sök
 ta:தேடு
+th:ค้นหา
 tl:Hanapin
 tr:Bul
 tw:尋找
@@ -9290,6 +9355,7 @@ sq:Gjej përpara
 sr-rs:Пронађи следеће
 sv:Sök nästa
 ta:அடுத்ததை தேடு
+th:ค้นหาต่อไป
 tl:Hanapin ang Susunod
 tr:Sonrakini Bul
 tw:向下尋找
@@ -9360,6 +9426,7 @@ sq:Gjej prapa
 sr-rs:Пронађи претходно
 sv:Sök föregående
 ta:முந்தையதை தேடு
+th:ค้นหาก่อนหน้า
 tl:Hanapin ang Nauna
 tr:Öncekini bul
 tw:向上尋找
@@ -9430,6 +9497,7 @@ sq:Gjej:
 sr-rs:Пронађи:
 sv:Sök:
 ta:தேடு:
+th:ค้นหา:
 tl:Hanapin:
 tr:Bul:
 tw:尋找(&F):
@@ -9491,6 +9559,7 @@ sq:Përshtat &materialin\tCtrl+3
 sr-rs:Подеси према садржају\tCtrl+3
 sv:Anpassa efter &innehåll\tCtrl+3
 ta:பொருத்தம் & உள்ளடக்கம்\tCtrl+3
+th:พอดี &เนื้อหา Ctrl + 3
 tl:Pagkasyahin ang laman\tCtrl+3
 tr:&İçeriğe ölçekle\tCtrl+3
 tw:符合內容(&C)\tCtrl+3
@@ -9560,7 +9629,7 @@ sq:Përshtat &faqen\tCtrl+0
 sr-rs:Подеси према страници\tCtrl+0
 sv:Anpassa efter &helsida\tCtrl+0
 ta:பக்கம் பொருந்தவை\tCtrl+0
-th:พอดีหน้า\tCtrl+0
+th:พอดี &หน้า Ctrl+0
 tl:Ipagkasya ang &Pahina\tCtrl+0
 tr:&Sayfaya sığdır\tCtrl+0
 tw:符合頁面(&P)\tCtrl+0
@@ -9630,7 +9699,7 @@ sq:Përshtat &gjerësinë\tCtrl+2
 sr-rs:Подеси према ширини\tCtrl+2
 sv:Anpassa efter &bredd\tCtrl+2
 ta:அகலம் பொருந்தவை\tCtrl+2
-th:พอดีความกว้าง\tCtrl+2
+th:พอดี &ความกว้าง Ctrl+2
 tl:&Ipagkasya ang Lapad\tCtrl+2
 tr:&Genişliğe sığdır\tCtrl+2
 tw:符合寬度(&H)\tCtrl+2
@@ -9693,6 +9762,7 @@ sq:Përshtat materialin
 sr-rs:Подеси према садржају
 sv:Anpassa efter innehåll
 ta:உள்ளடக்கம் பொருந்துக
+th:เต็มจอตามเนื้อหา
 tl:Pagkasyahin ang laman
 tr:İçeriğe ölçekle
 tw:符合內容(&T)
@@ -9894,6 +9964,7 @@ sq:Përshtat gjerësinë dhe tregoj faqet në vazhdimësi
 sr-rs:Подеси према ширини и прикажи странице без прекида
 sv:Anpassa efter bredd och visa sidor fortlöpande
 ta:அகலம் பொருத்தி பக்கங்கள் காட்டுக
+th:พอดีกับความกว้างและแสดงหน้าอย่างต่อเนื่อง
 tl:Pagkasyahin ang lapad at ipakita nang tuluy-tuloy ang mga pahina
 tr:Genişliğe ölçekle ve sayfaları devamlı göster
 tw:符合寬度且連續顯示頁面(&U)
@@ -9957,6 +10028,7 @@ sq:Përshtat në njëfletësh
 sr-rs:Подеси према појединачној страници
 sv:Anpassa till helsida
 ta:ஒற்றை பக்கம் பொருந்துக
+th:เต็มจอหน้าเดียว
 tl:Pagkasyahin ang isang pahina
 tr:Tek sayfaya ölçekle
 tw:符合單頁(&T)
@@ -10021,6 +10093,7 @@ sq:Fonte:
 sr-rs:Фонтови:
 sv:Typsnitt:
 ta:எழுத்துரு:
+th:ตัวหนังสือ
 tr:Yazı Tipleri:
 tw:字型(&F):
 uk:Шрифти
@@ -10080,6 +10153,7 @@ sq:Formaton librin... %d faqe
 sr-rs:Форматирање књиге... %d страница
 sv:Formatterar bok... %d sidor
 ta:புத்தகத்தை வடிவமைக்க ... %d பக்கங்கள்
+th:กำลังจัดรูปแบบหนังสือ ... %d หน้า
 tr:Kitap biçimlendiriliyor... %d sayfa
 tw:正在格式化書本... %d 頁
 uk:Форматується книга... %d сторінок
@@ -10142,6 +10216,7 @@ sq:Gjen tekstin në faqen %s
 sr-rs:Текст је пронађен на %s. страници
 sv:Hittade text på sidan %s
 ta:வாசகத்தை %s பக்கத்தில் கண்டுபிடிக்கப்பட்டுள்ளது
+th:พบข้อความที่หน้า %s
 tl:Nakita ang salita sa pahina %s
 tr:Metin %s numaralı sayfada bulundu
 tw:於第 %s 頁找到目標
@@ -10203,6 +10278,7 @@ sq:Gjen tekstin në faqen %s (përsëri)
 sr-rs:Пронађи текст на %s. страници (поново)
 sv:Hittade text på sida %s (igen)
 ta:உரை %s(மீண்டும்) இருக்கிறது
+th:พบข้อความที่หน้า %s (อีกครั้ง)
 tr:Metin sayfa %s bulundu (tekrar)
 tw:於第 %s 頁找到目標（已從頭尋找）
 uk:Знайти текст на сторінці %s (знову)
@@ -10265,6 +10341,7 @@ sq:Lexime të shpeshta
 sr-rs:Недавно читано
 sv:Mest lästa
 ta:அடிக்கடி படிப்பது
+th:อ่านบ่อยครั้ง
 tr:Sıkça okunan
 tw:經常開啟的檔案
 uk:Часто читані
@@ -10334,7 +10411,7 @@ sq:GB
 sr-rs:GB
 sv:GB
 ta:ஜிகா பைட்டு
-th:GB
+th:กิกะไบต์
 tl:GB
 tr:GB
 tw:GB
@@ -10469,6 +10546,7 @@ sq:Fsheh &opsionet
 sr-rs:Сакриј опције
 sv:Göm Alternativ
 ta:மறை & விருப்பம்
+th:ซ่อน &ตัวเลือก
 tr:Sakla & Seçenekler
 tw:隱藏選項(&O)
 uk:Приховати налаштування
@@ -10531,6 +10609,7 @@ sq:Fsheh leximet e shpeshta
 sr-rs:Сакриј „недавно читано”
 sv:Dölj mest lästa
 ta:அடிக்கடி வாசிப்பதை மறைக்க
+th:ซ่อนอ่านบ่อยๆ
 tr:Sıkça okunanı gizle
 tw:隱藏經常開啟的檔案
 uk:Приховати часто читані
@@ -10593,6 +10672,7 @@ sq:Këshillë: Përdorni tastin F3 për gjetjen e radhës
 sr-rs:Савет: Употребите тастер F3 за наставак претраге
 sv:Tips: Tryck F3 för att söka vidare
 ta:சிறுகுரிப்பு: F3 தட்டை பயன்படுத்தி மீண்டும் தேடு
+th:คำแนะนำ: ใช้ปุ่ม F3 เพื่อค้นหาอีกครั้ง
 tl:Payo: Pindutin ang F3 para maghanap muli
 tr:İpucu: yeniden bulmak için F3 tuşunu kullanın
 tw:提示: 按 F3 重新尋找。
@@ -10654,6 +10734,7 @@ sq:Figura (*.%s)
 sr-rs:Датотеке слика (*.%s)
 sv:Bildfiler (*.%s)
 ta:பட கோப்புகள் (*.%s)
+th:ไฟล์รูปภาพ (*.%s)
 tr:Görüntü dosyaları (*.%s)
 tw:圖片檔案 (*.%s)
 uk:Файли зображень (*.%s)
@@ -10717,6 +10798,7 @@ sq:Instaloj SumatraPDF
 sr-rs:Инсталација СуматраПДФ
 sv:Installera SumatraPDF
 ta:சுமத்ராPDFஐ நிறுவு
+th:ติดตั้ง SumatraPDF
 tr:SumatraPDF yükle
 tw:安裝 SumatraPDF
 uk:Встановити SumatraPDF
@@ -10777,6 +10859,7 @@ sq:Instaloj SumatraPDF në &dosje:
 sr-rs:Инсталација СуматраПДФ
 sv:Installera SumatraPDF i katalog:
 ta:சுமத்ராPDFஐ &கோப்புறையில் நிறுவவும்:
+th:ติดตั้ง SumatraPDF ใน &โฟลเดอร์:
 tr:&folder klasörüne SumatraPDF'yi yükle
 tw:安裝 SumatraPDF 於資料夾(&F):
 uk:Встановити SumatraPDF у папку
@@ -10839,6 +10922,7 @@ sq:Problem me instalimin!
 sr-rs:Инсталација неуспела!
 sv:Installationen misslyckades!
 ta:நிறுவல் தோல்வி!
+th:การติดตั้งล้มเหลว!
 tr:Yükleme başarısız !
 tw:安裝失敗！
 uk:Встановлення не було успішним!
@@ -10899,6 +10983,7 @@ sq:Instalimi vijon...
 sr-rs:Инсталација у току...
 sv:Installerar...
 ta:நிறுவல் செயலில் உள்ளது...
+th:กำลังติดตั้ง ...
 tr:Kurulum devam ediyor...
 tw:安裝正在進行...
 uk:Встановлення триває...
@@ -10968,7 +11053,7 @@ sq:KB
 sr-rs:kB
 sv:KB
 ta:KB
-th:KB
+th:กิโลไบต์
 tl:KB
 tr:KB
 tw:KB
@@ -11028,6 +11113,7 @@ sq:Lejoj Windows Desktop Search të &kërkojë dokumentet PDF
 sr-rs:Претрага Windows Desktop &претрага ПДФ документа
 sv:Låt Windows inbyggda sökfunktion indexera PDF-dokument
 ta:விண்டோஸ் டெஸ்க்டாப் தேடல் &PDF கோப்புகளை தேடட்டும்
+th:ให้ Windows Desktop Search &ค้นหาเอกสาร PDF
 tr:PDF belgelrini aramak için Windows Masaüstü Aramaya izin ver
 tw:讓 Windows 「桌面搜尋」搜尋 PDF 文件
 uk:Дозволити Windows Desktop Search пошук у PDF документах
@@ -11086,6 +11172,7 @@ sq:Lejoj Windows Desktop Search të &parashikojë dokumentet PDF
 sr-rs:Windows &приказ ПДФ документа
 sv:Visa förhandstitt av PDF-dokument i Windows
 ta:விண்டாஸ் PDF கோப்புகளை காண்பிக்க &முன்னோட்டம் செய்யட்டும்
+th:ให้ Windows แสดง &ตัวอย่างของเอกสาร PDF
 tr:PDF belgelerini görüntülemek ve önizleme için Windows'a izin ver
 tw:讓 Windows 顯示 PDF 文件的預覽(&P)
 uk:Дозволити Windows здійснювати попередній перегляд для PDF
@@ -11137,6 +11224,7 @@ sq:I çelët
 sr-rs:Светло
 sv:Ljus
 ta:வெளிச்சம்
+th:สว่าง
 tr:Aydınlık
 tw:亮(&L)
 uk:Світла
@@ -11205,7 +11293,7 @@ sq:MB
 sr-rs:MB
 sv:MB
 ta:MB
-th:MB
+th:เมกะไบต์
 tl:MB
 tr:MB
 tw:MB
@@ -11273,7 +11361,7 @@ sq:A të jetë SumatraPDF aplikacioni standard për skedarët PDF?
 sr-rs:Поставити SumatraPDF као подразумевану апликацију за PDF датотеке?
 sv:Ställa in SumatraPDF som standardprogram för PDF-filer?
 ta:சுமத்ராPDFயை கோட நிலை PDF படிப்பியாக மாற்றவா?
-th:ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐานสำหรับเปิดไฟล์ PDF
+th:ตั้ง SumatraPDF เป็นโปรแกรมมาตรฐานสำหรับเปิดไฟล์ PDF หรือไม่
 tl:Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files?
 tr:SumatraPDF'i PDF dosyaları için varsayılan uygulama yapmak ister misiniz?
 tw:把 SumatraPDF 作為預設的 PDF 閱讀器?
@@ -11404,6 +11492,7 @@ sq:Mënyra Man&ga
 sr-rs:Ман&га мод
 sv:Man&ga-läge
 ta:மேங்கா முறை
+th:โหมด Man&ga
 tr:Man&ga modu
 tw:漫畫模式(&G)
 uk:Режим манги
@@ -11471,6 +11560,7 @@ sq:Krahasoj madhësinë e shkrimit
 sr-rs:Разликуј мала и велика слова
 sv:Matcha versaler/gemener
 ta:தட்டுப்பொருத்தம்
+th:จับคู่
 tl:Ipantay ang Laki ng Titik
 tr:Büyük/Küçük harf eşleştir
 tw:符合大小寫
@@ -11535,6 +11625,7 @@ sq:Dokumente Mobi
 sr-rs:Mobi документи
 sv:Mobi-dokument
 ta:Mobi ஆவணங்கள்
+th:ข้อมูลมือถือ
 tr:Mobi belgeleri
 tw:Mobi 文件
 uk:Документи Mobi
@@ -11601,6 +11692,7 @@ sq:Modifikuar më:
 sr-rs:Измењена:
 sv:Ändrad:
 ta:மாற்ற்ப்பட்தது
+th:ได้ปรับแต่งแล้ว:
 tl:Nabago noong:
 tr:Değiştirilme tarihi:
 tw:檔案更新日期:
@@ -11627,6 +11719,7 @@ nl:Nieuw venster\tCrtl+N
 pl:Nowe &okno\tCtrl+N
 pt:Nova &janela\tCtrl+N
 ru:Новое о&кно\tCtrl+N
+th:เปิด &หน้าต่างใหม่ Ctrl+N
 tr:Yeni &pencere\tCtrl+N
 tw:新建視窗(&W)\tCtrl+N
 :New version %s is available. Download new version?
@@ -11691,7 +11784,7 @@ sq:Ka dalë versioni i ri %s. Do e shkarkoni?
 sr-rs:Доступна је верзија %s. Желите ли да преузмете нову верзију?
 sv:Ny version %s finns tillgänglig. Hämta ny version?
 ta:புதிய பதிப்பு %s பதிவிறக்க இருக்கிறது. பதிவிரக்கம் செய்யவா?
-th:เวอร์ชั่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่
+th:รุ่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่?
 tl:May bagong bersyon: %s. I-download?
 tr:Yeni sürüm %s dağıtıma sunulmuştur. İndirmek ister misiniz?
 tw:最新版本 %s。 是否下載新版本?
@@ -11829,6 +11922,7 @@ sq:Nuk ka ngjashmëri
 sr-rs:Појам није пронађен
 sv:Inga träffar hittades
 ta:ஒரு பொருத்தமும் இல்லை
+th:ไม่พบที่ตรงกัน
 tl:Walang makitang kapareha
 tr:Sonuç bulunamadı
 tw:找不到結果
@@ -11890,6 +11984,7 @@ sq:Pa rezultat në radhën %u te skedari %s
 sr-rs:Резултати око линије %u у датотеци %s нису пронађени
 sv:Inget resultat hittades vid rad %u i fil %s
 ta:%u வரியில் %s கோப்பில் முடிவுகள் கிடைக்கவில்லை
+th:ไม่พบผลลัพธ์รอบๆ บรรทัด %u ในไฟล์ %s
 tl:Walang nakitang resulta sa line %u ng file %s
 tr:%u satırı etrafında %s dosyasındaki sonuç bulunamadı
 tw:在第 %u 行附近（檔案 %s）找不到目標
@@ -11953,6 +12048,7 @@ sq:Nuk gjendet skedari i sinkronizimit
 sr-rs:Усклађивачка датотека није нађена
 sv:Ingen synkroniseringsfil hittad
 ta:ஒத்தியங்கு கோப்பு எதுவும் கண்டுபிடிக்கவில்லை
+th:ไม่พบไฟล์การซิงโครไนซ์
 tl:Walang makitang synchronization file
 tr:Herhangi bir senkronizasyon dosyası bulunamadı
 tw:找不到同步檔案
@@ -12016,6 +12112,7 @@ sq:Nuk ka info për sinkronizimin në këtë pozicion
 sr-rs:Нема података о усклађености на овој позицији
 sv:Synkroniseringsinformation saknas här
 ta:ஒத்தியங்கு தகவல் எதுவும் இந்த நிலையில் இல்லை
+th:ไม่มีข้อมูลการซิงโครไนซ์ที่ตำแหน่งนี้
 tl:Walang makitang detalye ng synchronization dito
 tr:Bu konumda senkronizasyon bilgisi mevcut değildir
 tw:沒有同步資料
@@ -12082,6 +12179,7 @@ sq:Numri i faqeve:
 sr-rs:Број страница:
 sv:Antal sidor:
 ta:பக்கங்களின் எண்ணிக்கை
+th:จำนวนของหน้า:
 tl:Bilang ng mga pahina:
 tr:Sayfa sayısı:
 tw:頁數：
@@ -12150,6 +12248,7 @@ sq:OK
 sr-rs:У реду
 sv:OK
 ta:சரி
+th:ตกลง
 tl:OK
 tr:Tamam
 tw:確定(&O)
@@ -12284,6 +12383,7 @@ sq:Hap &në PDF-XChange
 sr-rs:Отвори у програму PDF-XChange
 sv:Öppna i PDF-XChange
 ta:PDF-XChange இல் திற
+th:เปิด &ใน PDF-XChange
 tl:Buksan sa PDF-XChange
 tr:PDF-XChange ile aç
 tw:開啟於 PDF-XChange(&X)
@@ -12348,6 +12448,7 @@ sq:Hap një dokument...
 sr-rs:Отвори документ...
 sv:Öppna ett dokument...
 ta:ஆவணத்தை திறக்க...
+th:เปิดข้อมูล
 tr:Belge aç...
 tw:開啟檔案...
 uk:Відкрити документ...
@@ -12408,6 +12509,7 @@ sq:Hap në %s
 sr-rs:Отворити у %s
 sv:Öppna med %s
 ta:திற %s
+th:เปิดด้วย %s
 tr:%s içinde aç
 tw:以 %s 開啟
 uk:відкрити в %s
@@ -12472,6 +12574,7 @@ sq:Hap në &Adobe Reader
 sr-rs:Отвори у програму Adobe Reader
 sv:Öppna i Adobe &Reader
 ta:&Adobe Reader இல் திற
+th:เปิดด้วย &Adobe Reader
 tl:Buksan sa Adobe Reader
 tr:&Adobe Reader ile aç
 tw:開啟於 Adobe Reader(&A)
@@ -12535,6 +12638,7 @@ sq:Hap në &Foxit Reader
 sr-rs:Отвори у програму Foxit Reader
 sv:Öppna i Foxit Reader
 ta:&Foxit Reader இல் திற
+th:เปิดด้วย &Foxit Reader
 tl:Buksan sa Foxit Reader
 tr:&Adobe Foxit ile aç
 tw:開啟於 Foxit Reader(&F)
@@ -12598,6 +12702,7 @@ sq:Hap në &Microsoft HTML Help
 sr-rs:Отвори у програму Microsoft HTML Help
 sv:Öppna i Microsoft HTML Help
 ta:Microsoft HTML Help இல் திற
+th:เปิดด้วย &Microsoft HTML Help
 tl:Buksan sa Microsoft HTML Help
 tr:Microsoft HTML Help ile aç
 tw:開啟於 Microsoft HTML Help(&M)
@@ -12661,6 +12766,7 @@ sq:Hap në &Microsoft XPS-Viewer
 sr-rs:Отвори у програму Microsoft XPS-Viewer
 sv:Öppna i Microsoft XPS-Viewer
 ta:Microsoft XPS-Viewer இல் திற
+th:เปิดด้วย &Microsoft XPS-Viewer
 tl:Buksan sa Microsoft XPS-Viewer
 tr:Microsoft XPS-Viewer ile aç
 tw:開啟於 Microsoft XPS-Viewer(&W)
@@ -12722,6 +12828,7 @@ sq:V&eti
 sr-rs:Особине
 sv:E&genskaper
 ta:பண்புகள்
+th:&คุณสมบัติ
 tl:Mga katangian
 tr:Ö&zellikler
 tw:特性(&R)...
@@ -12784,6 +12891,7 @@ sq:V&eti\tCtrl+D
 sr-rs:Особине\tCtrl+D
 sv:&Egenskaper...\tCtrl+D
 ta:பண்புகள்...\tCtrl+D
+th:&คุณสมบัติ Ctrl+D
 tl:Mga Katangian\tCtrl+D
 tr:&Özellikleri\tCtrl+D
 tw:特性(&R)...\tCtrl+D
@@ -12851,6 +12959,7 @@ sq:Dokument PDF
 sr-rs:PDF документ
 sv:PDF-dokument
 ta:PDF கோப்பு
+th:เอกสาร PDF
 tl:PDF Document
 tr:PDF Belge
 tw:PDF 文件
@@ -12912,6 +13021,7 @@ sq:PDF optimizimet:
 sr-rs:PDF оптимизација
 sv:PDF-optimeringar:
 ta:PDF மேம்படுத்தல்கள்
+th:การเพิ่มประสิทธิภาพ PDF:
 tr:PDF Optimizasyonları:
 tw:PDF 最佳化:
 uk:Оптимізації PDF:
@@ -12973,6 +13083,7 @@ sq:PDF prodhuesi:
 sr-rs:PDF израдио
 sv:PDF-programvara:
 ta:PDF உற்பத்தியாளர்
+th:ผู้ผลิต PDF:
 tl:Gumawa ng PDF:
 tr:PDF Üretici:
 tw:PDF 產生器:
@@ -13037,6 +13148,7 @@ sq:PDF versioni:
 sr-rs:PDF верзија:
 sv:PDF-version:
 ta:PDF பதிப்பு
+th:รุ่น PDF:
 tl:Bersyon ng PDF:
 tr:PDF Sürümü:
 tw:PDF 版本：
@@ -13102,6 +13214,7 @@ sq:Dokumente PDF
 sr-rs:PDF документи
 sv:PDF-dokument
 ta:PDF கோப்புகள்
+th:เอกสาร PDF
 tl:Mga PDF na dokumento
 tr:PDF belgeleri
 tw:PDF 文件
@@ -13171,7 +13284,7 @@ sq:Fa&qja...\tCtrl+G
 sr-rs:Страница...\tCtrl+G
 sv:Sida...\tCtrl+G
 ta:பக்கம்...\tCtrl+G
-th:หน้า...\tCtrl+G
+th:&หน้า...Ctrl+G
 tl:Pahina...\tCtrl+G
 tr:&Sayfa...\tCtrl+G
 tw:前往頁(&G)...\tCtrl+G
@@ -13236,6 +13349,7 @@ sq:Faqja %s
 sr-rs:Страница %s
 sv:Sida %s
 ta:பக்கம் %s
+th:หน้า %s
 tr:Sayfa %s
 tw:第 %s 頁
 uk:Сторінка %s
@@ -13300,6 +13414,7 @@ sq:Përmasat:
 sr-rs:Димензије странице:
 sv:Sidstorlek:
 ta:பக்க அளவு
+th:ขนาดหน้า:
 tl:Laki ng Page
 tr:Sayfa Boyutu:
 tw:頁面大小(&Z):
@@ -13363,6 +13478,7 @@ sq:Nuk ekziston numri i faqes %u
 sr-rs:Страница број %u не постоји
 sv:Sidnummer %u finns ej
 ta:பக்க எண் %u இருக்கவில்லை
+th:หมายเลขหน้า %u ไม่เข้ากัน
 tl:Walang pahinang %u
 tr:%u numaralı sayfa mevcut değildir
 tw:第 %u 頁不存在
@@ -13424,6 +13540,7 @@ sq:Shkalla e fletës
 sr-rs:Подешавање величине странице
 sv:Skala om vid utskrift
 ta:பக்கம் அளவுமாற்றம்
+th:การปรับหน้า
 tl:Pagkalaki ng pahina
 tr:Sayfa ölçeklendirme
 tw:頁面縮放
@@ -13494,6 +13611,7 @@ sq:Faqja:
 sr-rs:Страница:
 sv:Sida:
 ta:பக்கம்:
+th:หน้า:
 tl:Pahina:
 tr:Sayfa:
 tw:頁:
@@ -13552,6 +13670,7 @@ sq:Dokumente PalmDoc
 sr-rs:PalmDoc документи
 sv:PalmDoc-dokument
 ta:PalmDOC-யின் ஆவணக்காப்பகம்
+th:เอกสาร PalmDoc
 tr:PalmDoc belgeleri
 tw:PalmDoc 文件
 uk:Документи PalmDoc
@@ -13612,6 +13731,7 @@ sq:Ju lutemi, mbyllni %s për të vazhduar!
 sr-rs:Затворите %s за наставак!
 sv:Vänligen stäng %s innan du fortsätter!
 ta:தயவு செய்து %s மூடிவிட்டு தொடரவும்!
+th:โปรดปิด %s เพื่อดำเนินการต่อ!
 tr:Devam etmek için %s kapatın!
 tw:請關閉 %s 以繼續。
 uk:Будь ласка закрийте %s, щоб продовжити!
@@ -13675,6 +13795,7 @@ sq:Ju lutemi, prisni - radhitet...
 sr-rs:Спремање приказа...
 sv:Ett ögonblick - förbereder...
 ta:தயவுசெய்து காத்திருக்கவும் - அளிக்கபட்டுவருகிறது...
+th:กรุณารอ - กำลังประมวลผล ... ...
 tl:Maghintay - pinapakita...
 tr:Bekleyiniz - oluşturulmakta...
 tw:請稍等—正在渲染...
@@ -13736,6 +13857,7 @@ sq:Dokumente Postscript
 sr-rs:Postscript документи
 sv:Postscript-dokument
 ta:போஸ்ட்ஸ்கிரிப்ட் ஆவணங்கள்
+th:เอกสาร Postscript
 tr:Postscript belgeleri
 tw:Postscript 文件
 uk:Документи postscript
@@ -13796,6 +13918,7 @@ sq:Pr&ezantim\tCtrl+L
 sr-rs:Презентација\tCtrl+L
 sv:Pr&esentation\tF5
 ta:விளக்கக்காட்சி \tCtrl+L
+th:&การนำเสนอ F5
 tl:Pr&esentasyon\tCtrl+L
 tr:Tan&ıtım\tCtrl+L
 tw:投影片顯示(&E)\tCtrl+L
@@ -13930,6 +14053,7 @@ sq:Printoj
 sr-rs:Штампај
 sv:Skriv ut
 ta:அச்சிட்டு
+th:พิมพ์
 tr:Yazdır
 tw:列印
 uk:Друк
@@ -13991,6 +14115,7 @@ sq:Kufiri i printimit
 sr-rs:Опсег штампања
 sv:Skriv ut urval
 ta:அச்சிடும் வரம்பு
+th:ช่วงพิมพ์
 tl:Mga ipi-print na pahina
 tr:Baskı aralığı
 tw:列印範圍
@@ -14052,6 +14177,7 @@ sq:Nuk ekziston printeri me këtë emër
 sr-rs:Штампач са наведеним именом не постоји
 sv:Det finns ingen skrivade med angivet namn
 ta:குறிபிட்ட பெயரில் அச்சுப்பொறி இல்லை.
+th:ไม่มีเครื่องพิมพ์ที่มีชื่อที่กำหนด
 tr:Girilen isimli Yazıcı bulunamadı
 tw:指定之印表機不存在
 uk:Принтера з даним іменем не існує
@@ -14115,6 +14241,7 @@ sq:Printimi vijon.
 sr-rs:Штампање у току!
 sv:Utskrift pågår.
 ta:அச்சு பணியில் உள்ளது
+th:กำลังพิมพ์
 tr:Baskı devam ediyor.
 tw:正在列印
 uk:Триває друк.
@@ -14174,6 +14301,7 @@ sq:Printimi vijon. Do e ndërprisni dhe e pezulloni?
 sr-rs:Штампање је и даље у току. Завршити и прекинути?
 sv:Utskrift pågår fortfarande. Avbryt och avsluta?
 ta:அச்சடித்தல் செயலில் உள்ளது. நிறுத்தி ரத்து செய்?
+th:การพิมพ์ยังอยู่ในระหว่างดำเนินการ ยกเลิกและหยุด?
 tr:Yazdırma sürüyor. İptal edip çıkmak istiyor musunuz?
 tw:正在列印，要中止並放棄嗎？
 uk:Друк ще не завершено. Перервати та вийти?
@@ -14234,6 +14362,7 @@ sq:Printimi vijon. Do e ndërprisni dhe e filloni nga e para?
 sr-rs:Штампање је још увек у току. Желите ли да прекинете штампање и почнете поново?
 sv:Utskriften pågår fortfarande. Avbryt och börja om?
 ta:அச்சிடுதல் செயல்பாட்டில் உள்ளது. கைவிட்டு மீண்டும் தொடங்கவா?
+th:การพิมพ์ยังอยู่ในระหว่างดำเนินการ ยกเลิกและเริ่มต้นใหม่หรือไม่?
 tr:Yazıcı hala kullanımda. Durdurup yeniden başlatılsınmı?
 tw:正在列印，是否要放棄並重新設定？
 uk:Друк ще не завершено. Перервати та розпочати знову?
@@ -14294,6 +14423,7 @@ sq:Printon faqen %d nga %d...
 sr-rs:Штампање %d. странице од укупно %d...
 sv:Skriver ut sida %d av %d...
 ta:அச்சிடும் பக்கம் %d உள் %d
+th:กำลังพิมพ์หน้า %d จาก %d ...
 tr:Sayfa %d %d yazdırılıyor...
 tw:正在列印第 %d 頁（共 %d 頁）
 uk:Друк сторінок з %d до %d...
@@ -14424,6 +14554,7 @@ sq:Rie&mërtoj...\tF2
 sr-rs:Преименуј...\tF2
 sv:Döp om...\tF2
 ta:மறுபெயரிடுதல்... \tF2
+th:&เปลี่ยนชื่อ... F2
 tr:İsim Değiştir
 tw:重新命名(&N)...\tF2
 uk:Перейменувати...\tF2
@@ -14486,6 +14617,7 @@ sq:Mbaj mend skedarët e &hapur
 sr-rs:Запамти отваране датотеке
 sv:Kom ihåg öppnade &filer
 ta:திறந்த &கோப்புகளை நினைவுகொள்
+th:จดจำ &ไฟล์ที่เปิดอยู่
 tl:Alalahanin ang mga binuksang files
 tr:&Açılan dosyaları hatırla
 tw:記憶最近開啟的檔案(&O)
@@ -14549,6 +14681,7 @@ sq:Heq nga pëlqimet
 sr-rs:Уклони из одабраних
 sv:Ta bort från favoriter
 ta:பிடித்தவற்றில் இருந்து நீக்குக
+th:ลบออกจากรายการโปรด
 tr:Sık kullanılanlardan çıkar
 tw:自最愛移除
 uk:Видалити із закладок
@@ -14609,6 +14742,7 @@ sq:Heq faqen %s nga pëlqimet
 sr-rs:Уклони страницу %s из одабраних
 sv:Ta bort sida %s från favoriter
 ta:%s பக்கத்தை பிடித்தவையில் இருந்து நீக்குக
+th:ลบหน้า %s ออกจากรายการโปรด
 tr:Sayfa %s sık kullanılanlardan çıkar
 tw:從我的最愛中移除第 %s 頁
 uk:Видалити %s сторінку із закладок
@@ -14672,6 +14806,7 @@ sq:Riemërtoj si
 sr-rs:Преименуј у
 sv:Döp om till
 ta:மறுபெயரிட்டு
+th:เปลี่ยนชื่อเป็น
 tr:Belirtilen İsme Değiştir
 tw:重新命名為
 uk:Перейменувати в
@@ -14741,7 +14876,7 @@ sq:Kthej &majtas\tCtrl+Shift+-
 sr-rs:Ротирај улево\tCtrl+Shift+-
 sv:Rotera åt vänster\tCtrl+Shift+-
 ta:இடதுப்புறம் சுழற்று\tCtrl+Shift+-
-th:หมุนซ้าย\tCtrl+Shift+-
+th:หมุน &ซ้าย Ctrl+Shift+-
 tl:Iikot Pakaliwa\tCtrl+Shift+-
 tr:S&ola çevir\tCtrl+Shift+-
 tw:頁面左旋(&L)\tCtrl+Shift+-
@@ -14812,7 +14947,7 @@ sq:Kthej &djathtas\tCtrl+Shift++
 sr-rs:Ротирај удесно\tCtrl+Shift++
 sv:Rotera åt höger\tCtrl+Shift++
 ta:வலப்புறம் சுழற்று\tCtrl+Shift++
-th:หมุนขวา\tCtrl+Shift++
+th:หมุน &ขวา Ctrl+Shift++
 tl:Iikot Pakanan\tCtrl+Shift++
 tr:&Sağa çevir\tCtrl+Shift++
 tw:頁面右旋(&R)\tCtrl+Shift++
@@ -14839,6 +14974,7 @@ nl:Aantekeningen Opslaan
 pl:Zapisz adnotacje
 pt:Guardar anotações
 ru:Сохранить аннотации
+th:บันทึกคำอธิบายประกอบ
 tw:儲存注釋
 uk:Зберегти аннотації
 :Save As
@@ -14967,6 +15103,7 @@ sq:&Ruaj s&hkurtoren...\tCtrl+Shift+S
 sr-rs:Сачувај пречицу...\tCtrl+Shift+S
 sv:Spara g&enväg...\tCtrl+Shift+S
 ta:குறுக்குவழி சேமி...\tCtrl+Shift+S
+th:บันทึก &ทางลัด... Ctrl+Shift+S
 tr:K&ısayolu kaydet...\tCtrl+Shift+S
 tw:儲存為捷徑(&H)...\tCtrl+Shift+S
 uk:Зберегти ярлик...\tCtrl+Shift+S
@@ -15029,6 +15166,7 @@ sq:Kërkon %d nga %d...
 sr-rs:Претраживање %d странице од укупно %d...
 sv:Söker %d av %d...
 ta:%d இல் %d தேடப்படுகிறது....
+th:กำลังค้นหา %d จาก %d ...
 tl:Hinahanap ang %d ng %dâ€¦
 tr:%d sayfa (toplam %d sayfa) taranıyor...
 tw:正在搜尋第 %d 頁 (共 %d 頁)
@@ -15091,6 +15229,7 @@ sq:Seleksionoj të &gjithë
 sr-rs:Изабери све
 sv:Markera &allt
 ta:அனைத்தையும் தேர்வு செய்
+th:เลือก &ทั้งหมด
 tl:Piliin lahat
 tr:&Hepsini Seç
 tw:全選(&A)
@@ -15152,6 +15291,7 @@ sq:Seleksionoj të &gjithë\tCtrl+A
 sr-rs:Изабери све\tCtrl+A
 sv:Markera &allt\tCtrl+A
 ta:அனைத்தையும் தேர்வு செய் \tCtrl+A
+th:เลือก &ทั้งหมด Ctrl+A
 tl:Piliin L&ahat\tCtrl+A
 tr:T&ümünü Seç\tCtrl+A
 tw:全選(&A)\tCtrl+A
@@ -15215,6 +15355,7 @@ sq:Seleksiononi materialin me Ctrl+butonin e majtë të mausit
 sr-rs:Изаберите садржај користећи Ctrl + лево дугме миша
 sv:Markera innehåll med Ctrl + vänster musknapp
 ta:உள்ளடகத்தை தேர்வு செய்ய Ctrl+இடது சுட்டெலி பொத்தானை அழுத்து
+th:เลือกเนื้อหาด้วย Ctrl+ปุ่มซ้ายของเมาส์
 tl:Mamili ng content gamit ang Ctrl+left mouse button
 tr:İçeriği Ctrl+sol fare butonu ile seç
 tw:按 Ctrl+滑鼠左鍵選取內容
@@ -15275,6 +15416,7 @@ sq:Seleksiononi dosjen ku do të instalohet SumatraPDF:
 sr-rs:Одабрати фолдер за инсталацију СуматраПДФ
 sv:Välj en katalog där SumatraPDF ska installeras:
 ta:சுமத்ராPDF நிறுவல் கோப்புறை தேர்வு செய்க:
+th:เลือกโฟลเดอร์ที่ควรติดตั้ง SumatraPDF:
 tr:SumatraPDF'in yükleneceği alanı seçin:
 tw:選擇 SumatraPDF 應被安裝的資料夾：
 uk:Виберіть папку, в яку буде встановлено SumatraPDF
@@ -15334,6 +15476,7 @@ sq:Përzgjedhja:
 sr-rs:Избор
 sv:Markering:
 ta:தேர்ந்தெடுக்க
+th:ตำแหน่งที่เลือก:
 tr:Seçim:
 tw:選取:
 uk:Виділення:
@@ -15397,6 +15540,7 @@ sq:Dërgoj me &e-mail...
 sr-rs:Пошаљи путем е-поште...
 sv:S&kicka som epost...
 ta:மின்னஞ்சலாக அனுப்பு...
+th:ส่งโดย &อีเมล์...
 tl:Ipadala sa &email...
 tr:&E-mail ile yolla...
 tw:發送電郵(&E)...
@@ -15490,6 +15634,7 @@ nl:Toon Bladwijzers\tF12
 pl:Pokaż za&kładki\tF12
 pt:Mostrar &marcadores\tF12
 ru:Показать за&кладки\tF12
+th:แสดง &บุ๊กมาร์ก F12
 tw:顯示書籤(&B)\tF12
 :Show &Favorites
 az:&Seçilmişləri göstər
@@ -15510,6 +15655,7 @@ nl:Toon &Favorieten
 pl:Pokaż &ulubione
 pt:Mostrar &favoritos
 ru:Показать «И&збранное»
+th:แสดง &รายการโปรด
 tw:顯示最愛(&F)
 :Show &Pages Continuously
 am:Էջերը &ցուցադրել շարունակական
@@ -15568,6 +15714,7 @@ sq:Tregoj &faqet në vazhdimësi
 sr-rs:Прикажи странице без прекида
 sv:Visa sidor fortlöpande
 ta:பக்கங்களை தொடர்ச்சியாக காட்டு
+th:แสดง &หน้าอย่างต่อเนื่อง
 tl:Ipakita nang tuloy-tuloy ang mga &pahina
 tr:&Sayfaları devamlı göster
 tw:連續顯示頁面(&P)
@@ -15637,7 +15784,7 @@ sq:Tregoj &brezin e mjeteve
 sr-rs:Трака са алаткама
 sv:Visa verktygsfält\tF8
 ta:கருவிப்பட்டை காண்பி
-th:แสดงแถบเครื่องมือ
+th:แสดง &แถบเครื่องมือ F8
 tl:Ipakita ang toolbar
 tr:&Araç çubuğunu göster
 tw:顯示工具列(&T)
@@ -15663,6 +15810,7 @@ nl:Toon Blad&wijzers\tF12
 pl:Pokaż za&kładki\tF12
 pt:Mostrar &marcadores\tF12
 ru:Показать зак&ладки\tF12
+th:แสดง &บุ๊กมาร์ก F12
 tw:顯示書籤(&M)\tF12
 :Show Favorites
 am:Ցուցադրել ընտրյալները
@@ -15720,6 +15868,7 @@ sq:Tregoj pëlqimet
 sr-rs:Прикажи одабране странице
 sv:Visa favoriter
 ta:பிடித்தவைகளை காட்டுக
+th:แสดงรายการโปรด
 tr:Sık kullanılanları göster
 tw:顯示最愛
 uk:Перелік закладок
@@ -15780,6 +15929,7 @@ sq:Tregoj leximet e shpeshta
 sr-rs:Прикажи недавно читане
 sv:Visa mest lästa
 ta:அடிக்கடி படிப்பவை
+th:แสดงการอ่านบ่อย
 tr:Sık okunanları göster
 tw:顯示經常開啟的檔案
 uk:Найбільш часто читані
@@ -15805,6 +15955,7 @@ nl:Toon in &map
 pl:Pokaż w &folderze
 pt:Mostrar na &pasta
 ru:Показать в п&апке
+th:แสดงใน &โฟลเดอร์
 tw:打開所在資料夾(&F)
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
@@ -15863,6 +16014,7 @@ sq:Tregoj &faqet me shenjë kur janë të gatshme
 sr-rs:Прикажи бочну траку са обележивачима
 sv:Visa sidopanel för &bokmärken när de finns
 ta:புத்தககுறி பட்டை இருந்தல் காட்டு
+th:แสดง &แถบข้างบุ๊คมาร์คเมื่อพร้อมใช้งาน
 tl:Ipakita ang &bookmarks sidebar kung naangkop
 tr:Yer &imleri yan çubuğunu bulunduğunda göster
 tw:可用時顯示書籤邊欄(&B)
@@ -15932,7 +16084,7 @@ sq:Njëfletësh
 sr-rs:Појединачна страница
 sv:Enkel sida
 ta:ஒற்றைப் பக்கம்
-th:หน้าเดี่ยว
+th:หน้าเดียว
 tl:Iisang Pahina
 tr:Tek sayfa
 tw:單頁模式
@@ -15995,6 +16147,7 @@ sq:Na falni, kjo nuk duhej të ndodhte!\n\nJu lutemi, shtypni 'Anuloj' që të n
 sr-rs:Опростите, ово није требало да се догоди!\n\nПритисните дугме 'Откажи' ако желите да нам помогнете у решавању овог проблема.
 sv:Ledsen, det där borde inte ha hänt!\n\nVar god tryck 'Avbryt', om du vill hjälpa oss att korrigera orsaken till denna krash.
 ta:மன்னிக்கவும், இது நடந்திருக்க கூடாது! \n\n தயவு செய்து 'ரத்துதை' அழுத்தவும், எங்களுக்கு இந்த விபத்தினை சரிசெய்ய உதவும்.
+th:ขออภัยนั่นไม่น่าจะเกิดขึ้น! \n\n กรุณากด 'ยกเลิก' หากคุณต้องการช่วยเราแก้ไขสาเหตุของความผิดพลาดนี้
 tr:Üzgünüz, bu olmamalıydı!\n\nEğer hatayı düzeltmemize yardımcı olmak istiyorsanız lütfen 'Cancel' a basın.
 tw:抱歉，這不該發生的！\n\n如果你希望協助我們修正這個錯誤，請按下 [取消] 。
 uk:Вибачте, але це не мало статись!\n\nНатисніть "Скасувати", якщо ви бажаєте допомогти нам виправити причину збою.
@@ -16057,6 +16210,7 @@ sq:Skedarit burimor %s i mungon pika e sinkronizimit
 sr-rs:Изворна датотека %s нема тачку усклађивања
 sv:Källfilen %s har ingen synkroniseringspunkt
 ta:%s முல கோப்பிர்க்கு ஒத்தியங்கு மையம் எதுவும் இல்லை
+th:ไฟล์ต้นฉบับ %s ไม่มีจุดประสาน
 tl:Walang synchronization point ang source file na %s
 tr:%s kaynak dosyasında senkronizasyon noktası yoktur
 tw:來源檔案 %s 沒有同步點
@@ -16118,6 +16272,7 @@ sq:Nis SumatraPDF
 sr-rs:Старовати СуматраПДФ
 sv:Starta SumatraPDF
 ta:சுமத்ராPDF தொடரவும்
+th:เริ่มต้น SumatraPDF
 tr:SumatraPDF'yi başlat
 tw:啟動 SumatraPDF
 uk:Запустити SumatraPDF
@@ -16181,6 +16336,7 @@ sq:Tema:
 sr-rs:Предмет:
 sv:Ämne:
 ta:எழுவாய்:
+th:เรื่อง:
 tl:Paksa:
 tr:Konu:
 tw:主題:
@@ -16241,6 +16397,7 @@ sq:Instaluesi i SumatraPDF %s
 sr-rs:СуматраПДФ %s инсталација
 sv:Installationsprogram för SumatraPDF %s
 ta:சுமத்ராPDF %s நிறுவி
+th:ตัวติดตั้ง %s SumatraPDF
 tr:SumatraPDF %s yükleyici
 tw:SumatraPDF %s 安裝器
 uk:Інсталятор SumatraPDF %s
@@ -16299,6 +16456,7 @@ sq:Çinstaluesi i SumatraPDF %s
 sr-rs:СуматраПДФ %s деинсталација
 sv:Avinstallationsprogram för SumatraPDF %s
 ta:சுமத்ராPDF %s நிறுவல்நீக்கி
+th:ถอนการติดตั้ง SumatraPDF %s
 tr:SumatraPDF %s Kaldırıcı
 tw:SumatraPDF %s 解除安裝器
 uk:Деінсталятор SumatraPDF %s
@@ -16361,6 +16519,7 @@ sq:SumatraPDF opsionet
 sr-rs:Подешавања програма SumatraPDF
 sv:SumatraPDF Inställningar
 ta:சுமத்ராPDFஇன் விருப்பப பேரம்
+th:ตัวเลือก SumatraPDF
 tl:Mga Opsyon para sa SumatraPDF
 tr:SumatraPDF Seçenekleri
 tw:SumatraPDF 選項
@@ -16423,6 +16582,7 @@ sq:SumatraPDF azhurnimi
 sr-rs:Ажурирање SumatraPDF
 sv:SumatraPDF Uppdatering
 ta:சுமத்ராPDF மேம்படுத்து
+th:อัพเดต SumatraPDF
 tl:Update sa SumatraPDF
 tr:SumatraPDF Güncelleme
 tw:SumatraPDF 更新
@@ -16485,6 +16645,7 @@ sq:SumatraPDF ngeci
 sr-rs:Програм SumatraPDF је крахирао
 sv:SumatraPDF avslutades oväntat
 ta:சுமத்ராPDF செயலிழந்தது
+th:SumatraPDF ขัดข้อง
 tl:Nag-crash ang SumatraPDF
 tr:SumatraPDF çöktü
 tw:SumatraPDF 發生錯誤
@@ -16544,6 +16705,7 @@ sq:SumatraPDF u çinstalua
 sr-rs:СуматраПДФ деинсталиран
 sv:SumatraPDF är nu borttaget.
 ta:சுமத்ராPDF நிறுவல் நீக்கப்பட்டது.
+th:ถอนการติดตั้ง SumatraPDF แล้ว
 tr:SumatraPDF kaldırıldı.
 tw:已解除安裝 SumatraPDF 。
 uk:SumatraPDF було успішно видалено.
@@ -16602,6 +16764,7 @@ sq:Nuk u gjet SumatraPDF i instaluar.
 sr-rs:СуматраПДФ инсталација није пронађена
 sv:Kunde inte hitta SumatraPDF-installation.
 ta:சுமத்ராPDF நிறுவல் கிடைக்கவில்லை.
+th:ไม่พบการติดตั้ง SumatraPDF
 tr:SumatraPDF kurulum dosyası bulunamadı.
 tw:未找到 SumatraPDF 安裝。
 uk:Встановлений SumatraPDF не було знайдено.
@@ -16664,6 +16827,7 @@ sq:SumatraPDF është lexuesi standard i PDF-ve
 sr-rs:SumatraPDF је ваш подразумевани PDF читач
 sv:SumatraPDF är din standardläsare för PDF
 ta:சுமத்ராPDF உங்களின் முதன்மை PDF படிப்பி
+th:SumatraPDF เป็นโปรแกรมอ่าน PDF เริ่มต้นของคุณ
 tl:SumatraPDF ang iyong default na pambasa ng mga PDF file
 tr:SumatraPDF varsayılan PDF okuyucunuz.
 tw:SumatraPDF 已是你的預設 PDF 閱讀器
@@ -16727,6 +16891,7 @@ sq:SumatraPDF tani do të jetë lexuesi standard i PDF-ve
 sr-rs:SumatraPDF је постављен као подразумевани PDF читач
 sv:SumatraPDF bör nu vara din standardläsare för PDF
 ta:சுமத்ராPDF இப்பொழுது உங்களின் முதன்மை PDF படிப்பி
+th:SumatraPDF ควรเป็นโปรแกรมอ่าน PDF เริ่มต้นของคุณแล้ว
 tl:SumatraPDF na dapat ang iyong default na pambasa ng mga PDF file
 tr:SumatraPDF artık varsayılan PDF okuyucunuzdur
 tw:SumatraPDF 已成為你的預設 PDF 閱讀器
@@ -16790,6 +16955,7 @@ sq:Nuk hapet skedari i sinkronizimit
 sr-rs:Није могуће отворити усклађивачку датотеку
 sv:Synkroniseringsfil kan ej öppnas
 ta:ஒத்தியங்கு கோப்பை திறக்க முடியவில்லை
+th:ไม่สามารถเปิดไฟล์การซิงโครไนซ์ได้
 tl:Hindi mabuksan ang synchronization file
 tr:Senkronizasyon dosyası açılamadı
 tw:無法開啟同步檔案
@@ -16851,6 +17017,7 @@ sq:PDF me etiketa
 sr-rs:Означени PDF
 sv:Taggad PDF
 ta:குறியிடப்பட்ட PDF
+th:แท็ก PDF
 tr:İşaretlenmiş PDF
 tw:已標示的 PDF
 uk:PDF з мітками
@@ -16913,6 +17080,7 @@ sq:Dokumente tekst
 sr-rs:Текстуални документи
 sv:Text-dokument
 ta:உரை கொப்புகள்
+th:เอกสารข้อความ
 tl:Mga tekstong dokumento
 tr:Metin belgeler
 tw:文字文件
@@ -16975,6 +17143,7 @@ sq:Faleminderit që zgjodhët SumatraPDF!
 sr-rs:Хвала на избору СуматраПДФ
 sv:Tack för att du väljer SumatraPDF!
 ta:சுமத்ரா PDF தேர்வு செய்ததுக்கு நன்றி!
+th:ขอขอบคุณที่เลือกใช้ SumatraPDF!
 tr:SumatraPDF 'i seçtiğiniz için teşekkürler !
 tw:感謝選擇 SumatraPDF!
 uk:Дякуємо, що вибрали SumatraPDF!
@@ -17034,6 +17203,7 @@ sq:Faleminderit! SumatraPDF u instalua.
 sr-rs:СуматраПДФ инсталиран. Хвала!
 sv:Tack! SumatraPDF är nu installerat.
 ta:நன்றி! சுமத்ரா PDF நிறுவப்பட்டு உள்ளது
+th:ขอบคุณ! ติดตั้ง SumatraPDF แล้ว
 tr:Teşekkürler! SumatraPDF bilgisayarınıza kuruldu
 tw:謝謝！ SumatraPDF 已安裝。
 uk:Дякуємо! SumatraPDF було успішно встановлено.
@@ -17092,6 +17262,7 @@ sq:Instaluesi ka të meta. Ju lutemi, shkarkojeni edhe një herë.\nNa falni pë
 sr-rs:Инсталација је оштећена. Скинути је поново. \n Извињавамо се.
 sv:Installationsprogrammet är skadat. Vänligen hämta det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
+th:โปรแกรมติดตั้งเสียหาย โปรดดาวน์โหลดอีกครั้ง \n ขออภัยในความไม่สะดวก!
 tr:Yükleyici hasar görmüş.Lütfen tekrar indirin.\nGeçici rahatsızlık için özür dileriz!
 tw:安裝程式已損壞。請重新下載。\n抱歉帶來不便！
 uk:Інсталятор було пошкоджено. Будь ласка завантажте його знову.\nВибачте за незручності!
@@ -17147,6 +17318,7 @@ sq:Ky dokument përdor veçori që nuk garantohen (%s) dhe mund të aplikohen pj
 sr-rs:Овај документ користи неподржане опције (%s) и може бити приказан некоректно
 sv:Detta dokument använder funktioner som inte stöds (%s) och kan inte återges korrekt
 ta:இவ்-ஆவணம் ஆதரிக்கப்படாத அம்சங்களை (%s) பயன்படுத்துவதால், திறக்கப்படுவதில் தோல்வி ஏற்படலாம்
+th:เอกสารนี้ใช้คุณสมบัติที่ไม่รองรับ (%s) และอาจแสดงผลไม่ถูกต้อง
 tr:Bu belge desteklenmeyen özellikler içeriyor (%s) ve doğru görüntülenemeyebilir
 tw:此文件使用未支援的功能 (%s) ，並可能無法正確的繪製。
 uk:Даний документ використовує можливості, що не підтримуються (%s) і тому може відображатися з помилками
@@ -17213,6 +17385,7 @@ sq:Titulli:
 sr-rs:Наслов:
 sv:Titel:
 ta:தலைப்பு:
+th:หัวข้อ:
 tl:Pamagat:
 tr:Başlık:
 tw:標題:
@@ -17274,6 +17447,7 @@ sq:Çinstaloj SumatraPDF
 sr-rs:Деинсталирање СуматраПДФ
 sv:Avinstallera SumatraPDF
 ta:சுமத்ராPDFஐ நிறுவல் நீக்கு
+th:ถอนการติดตั้ง SumatraPDF
 tr:SumatraPDF'i kaldır
 tw:解除安裝 SumatraPDF
 uk:Видалити SumatraPDF
@@ -17333,6 +17507,7 @@ sq:Dështoi çinstalimi
 sr-rs:Деинсталирање неуспело
 sv:Avinstallationen misslyckades
 ta:நிறுவல் நீக்கம் தோல்வி
+th:การถอนการติดตั้งล้มเหลว
 tr:Program kaldırma başarısız
 tw:解除安裝失敗
 uk:Видалення не було успішним
@@ -17392,6 +17567,7 @@ sq:Çinstalimi vijon...
 sr-rs:Деинсталирање у току ...
 sv:Avinstallerar...
 ta:நிறுவல் நீக்கம் செயல்படுகிறது...
+th:กำลังถอนการติดตั้งอยู่ ...
 tr:Program kaldırılıyor...
 tw:解除安裝正在進行...
 uk:Видалення триває...
@@ -17454,6 +17630,7 @@ sq:Skedar burimor i panjohur (%s)
 sr-rs:Непозната изворна датотека (%s)
 sv:Okänd källfil (%s)
 ta:(%s) மூல கோப்பு கிடைக்கவில்லை
+th:ไฟล์แหล่งที่ไม่รู้จัก (%s)
 tl:Hindi alam na source file (%s)
 tr:Bilinmeyen kaynak dosyası (%s)
 tw:未知來源檔案 (%s)
@@ -17512,6 +17689,7 @@ sq:Përdor &skedat
 sr-rs:Користити таб
 sv:Använd flikar
 ta:தாவல்களைப் பயன்படுத்துக (&T)
+th:ใช้แท็บ
 tr:&Sekmeler kullan
 tw:使用頁籤(&T):
 uk:Використовувати вкладки
@@ -17572,6 +17750,7 @@ sq:Përdor SumatraPDF si lexuesin &standard të PDF-ve
 sr-rs:СуматраПДФ је &подразумевани прегледач
 sv:Använd SumatraPDF som standardläsare för PDF
 ta:சுமத்ரா PDFஐ முன்னிருப்பக பயன்படுத்து
+th:ใช้ SumatraPDF เป็นโปรแกรมอ่าน PDF เริ่มต้น
 tr:SumatraPDF varsayılan PDF okuyucum olsun
 tw:使用 SumatraPDF 作為預設的 PDF 閱讀器(&U)
 uk:Використовувати SumatraPDF як переглядач для PDF за замовчуванням
@@ -17711,7 +17890,7 @@ sq:SumatraPDF në &internet
 sr-rs:Посети веб-сајт
 sv:Besök webbplats
 ta:வலைத்தளம் செல்
-th:เยี่ยมเว็บไชด์
+th:เยี่ยม &เว็บไชด์
 tl:Puntahan ang Websa&yt
 tr:&Website ziyaret et
 tw:瀏覽網站(&W)
@@ -17778,6 +17957,7 @@ sq:Kujdes
 sr-rs:Упозорење
 sv:Varning
 ta:எக்சரிக்கை
+th:คำเตือน
 tl:Babala
 tr:Uyarı
 tw:警告
@@ -17840,6 +18020,7 @@ sq:Dokumente XPS
 sr-rs:XPS документи
 sv:XPS-dokument
 ta:XPS ஆவணங்கள்
+th:เอกสาร XPS
 tr:XPS belgeleri
 tw:XPS 文件
 uk:Документи XPS
@@ -17907,7 +18088,7 @@ sq:Keni versionin e fundit.
 sr-rs:Ваша верзија је ажурна.
 sv:Du har den senaste versionen.
 ta:உங்களிடம் புதிய பதிப்பு உள்ளது
-th:โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
+th:โปรแกรมของคุณเป็นรุ่นล่าสุดอยู่แล้ว
 tl:Ito ang pinakabagong bersyon.
 tr:Güncel sürümü kullanıyorsunuz.
 tw:你的版本已是最新版。
@@ -17976,6 +18157,7 @@ sq:Keni versionin %s
 sr-rs:Имате верзију %s
 sv:Du har version %s
 ta:உங்களின் பதிப்பு %s
+th:คุณมีรุ่น %s
 tl:Ang bersyong nasa iyo ay %s
 tr:Kullandığınız sürüm: %s
 tw:你的版本為 %s
@@ -18040,6 +18222,7 @@ sq:Përshtat
 sr-rs:Увећај
 sv:Zoom
 ta:உரு அளவு
+th:ขยายเข้าออก
 tl:Laki
 tr:Yakınlaştırma
 tw:縮放
@@ -18110,7 +18293,7 @@ sq:Zmadhoj
 sr-rs:Увећај
 sv:Zooma in
 ta:பெரிதாக்கு
-th:ขยาย
+th:ขยายเข้า
 tl:Palakihin
 tr:Yakınlaştır
 tw:放大
@@ -18181,7 +18364,7 @@ sq:Zvogëloj
 sr-rs:Умањи
 sv:Zooma ut
 ta:சிறிதாக்கு
-th:ย่อ
+th:ขยายออก
 tl:Paliitin
 tr:Uzaklaştır
 tw:縮小
@@ -18246,6 +18429,7 @@ sq:Koeficienti i zmadhimit
 sr-rs:Проценат увећања
 sv:Zoomfaktor
 ta:உருக்காரணி
+th:อัตราการขยายเข้าออก
 tl:Antas ng laki
 tr:Yakınlaştırma faktörü
 tw:縮放比例
@@ -18376,7 +18560,7 @@ sq:kopjimi i tekstit
 sr-rs:копирање текста
 sv:kopierar text
 ta:நகல் எடுக்கப்படுகிறது
-th:คัดลอกข้อความ
+th:การคัดลอกข้อความ
 tl:kinokopya ang mensahe
 tr:metin kopyalanıyor
 tw:正在複製文字
@@ -18438,6 +18622,7 @@ sq:printimi i dokumentit
 sr-rs:штампање документа
 sv:skriver ut dokument
 ta:கோப்பு அக்சிடப்படுகிறது
+th:เอกสารการพิมพ์
 tl:ipini-print ang dokumento
 tr:belge yazdırılıyor
 tw:正在列印文件

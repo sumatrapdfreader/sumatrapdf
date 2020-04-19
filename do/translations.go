@@ -340,7 +340,7 @@ func downloadAndUpdateTranslationsIfChanged() bool {
 func downloadTranslationsMain() {
 	changed := downloadAndUpdateTranslationsIfChanged()
 	if changed {
-		logf("\nNew translations downloaded from the server! Check them in!")
+		logf("\nNew translations downloaded from the server! Check them in!\n")
 	}
 }
 
