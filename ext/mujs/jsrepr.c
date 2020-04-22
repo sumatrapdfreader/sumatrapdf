@@ -2,6 +2,8 @@
 #include "jslex.h"
 #include "jsvalue.h"
 #include "jsbuiltin.h"
+#include "jscompile.h"
+#include "utf.h"
 
 static void reprvalue(js_State *J, js_Buffer **sb);
 
@@ -161,6 +163,7 @@ static void reprvalue(js_State *J, js_Buffer **sb)
 			break;
 		case JS_CFUNCTION:
 		case JS_CSCRIPT:
+		case JS_CEVAL:
 			reprfun(J, sb, obj->u.f.function);
 			break;
 		case JS_CCFUNCTION:
@@ -192,9 +195,12 @@ static void reprvalue(js_State *J, js_Buffer **sb)
 			if (obj->u.r.flags & JS_REGEXP_M) js_putc(J, sb, 'm');
 			break;
 		case JS_CDATE:
-			js_puts(J, sb, "(new Date(");
-			fmtnum(J, sb, obj->u.number);
-			js_puts(J, sb, "))");
+			{
+				char buf[40];
+				js_puts(J, sb, "(new Date(");
+				js_puts(J, sb, jsV_numbertostring(J, buf, obj->u.number));
+				js_puts(J, sb, "))");
+			}
 			break;
 		case JS_CERROR:
 			js_puts(J, sb, "(new ");

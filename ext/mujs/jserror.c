@@ -61,10 +61,10 @@ static int jsB_ErrorX(js_State *J, js_Object *prototype)
 	js_pushobject(J, jsV_newobject(J, JS_CERROR, prototype));
 	if (top > 1) {
 		js_pushstring(J, js_tostring(J, 1));
-		js_setproperty(J, -2, "message");
+		js_defproperty(J, -2, "message", JS_DONTENUM);
 	}
 	if (jsB_stacktrace(J, 1))
-		js_setproperty(J, -2, "stackTrace");
+		js_defproperty(J, -2, "stackTrace", JS_DONTENUM);
 	return 1;
 }
 

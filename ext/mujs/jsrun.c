@@ -200,6 +200,7 @@ int js_iscallable(js_State *J, int idx)
 	if (v->type == JS_TOBJECT)
 		return v->u.object->type == JS_CFUNCTION ||
 			v->u.object->type == JS_CSCRIPT ||
+			v->u.object->type == JS_CEVAL ||
 			v->u.object->type == JS_CCFUNCTION;
 	return 0;
 }
@@ -443,6 +444,15 @@ void js_rot(js_State *J, int n)
 int js_isarrayindex(js_State *J, const char *p, int *idx)
 {
 	int n = 0;
+
+	/* check for empty string */
+	if (p[0] == 0)
+		return 0;
+
+	/* check for '0' and integers with leading zero */
+	if (p[0] == '0')
+		return (p[1] == 0) ? *idx = 0, 1 : 0;
+
 	while (*p) {
 		int c = *p++;
 		if (c >= '0' && c <= '9') {
@@ -792,6 +802,11 @@ void js_defglobal(js_State *J, const char *name, int atts)
 	js_pop(J, 1);
 }
 
+void js_delglobal(js_State *J, const char *name)
+{
+	jsR_delproperty(J, J->G, name);
+}
+
 void js_getproperty(js_State *J, int idx, const char *name)
 {
 	jsR_getproperty(J, js_toobject(J, idx), name);
@@ -1004,6 +1019,32 @@ static void jsR_callfunction(js_State *J, int n, js_Function *F, js_Environment 
 	jsR_restorescope(J);
 }
 
+static void jsR_calleval(js_State *J, int n, js_Function *F, js_Environment *scope)
+{
+	js_Value v;
+	int i;
+
+	scope = jsR_newenvironment(J, jsV_newobject(J, JS_COBJECT, NULL), scope);
+
+	jsR_savescope(J, scope);
+
+	/* scripts take no arguments */
+	js_pop(J, n);
+
+	for (i = 0; i < F->varlen; ++i) {
+		js_pushundefined(J);
+		js_initvar(J, F->vartab[i], -1);
+		js_pop(J, 1);
+	}
+
+	jsR_run(J, F);
+	v = *stackidx(J, -1);
+	TOP = --BOT; /* clear stack */
+	js_pushvalue(J, v);
+
+	jsR_restorescope(J);
+}
+
 static void jsR_callscript(js_State *J, int n, js_Function *F, js_Environment *scope)
 {
 	js_Value v;
@@ -1077,6 +1118,10 @@ void js_call(js_State *J, int n)
 	} else if (obj->type == JS_CSCRIPT) {
 		jsR_pushtrace(J, obj->u.f.function->name, obj->u.f.function->filename, obj->u.f.function->line);
 		jsR_callscript(J, n, obj->u.f.function, obj->u.f.scope);
+		--J->tracetop;
+	} else if (obj->type == JS_CEVAL) {
+		jsR_pushtrace(J, obj->u.f.function->name, obj->u.f.function->filename, obj->u.f.function->line);
+		jsR_calleval(J, n, obj->u.f.function, obj->u.f.scope);
 		--J->tracetop;
 	} else if (obj->type == JS_CCFUNCTION) {
 		jsR_pushtrace(J, obj->u.c.name, "native", 0);

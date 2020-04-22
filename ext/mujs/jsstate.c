@@ -6,13 +6,19 @@
 #include "jsbuiltin.h"
 
 #include <assert.h>
+#include <errno.h>
 
 static void *js_defaultalloc(void *actx, void *ptr, int size)
 {
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
 	if (size == 0) {
 		free(ptr);
 		return NULL;
 	}
+#endif
 	return realloc(ptr, (size_t)size);
 }
 
@@ -107,7 +113,7 @@ static void js_loadstringx(js_State *J, const char *filename, const char *source
 	P = jsP_parse(J, filename, source);
 	F = jsC_compilescript(J, P, iseval ? J->strict : J->default_strict);
 	jsP_freeparse(J);
-	js_newscript(J, F, iseval ? (J->strict ? J->E : NULL) : J->GE);
+	js_newscript(J, F, iseval ? (J->strict ? J->E : NULL) : J->GE, iseval ? JS_CEVAL : JS_CSCRIPT);
 
 	js_endtry(J);
 }
@@ -125,7 +131,7 @@ void js_loadstring(js_State *J, const char *filename, const char *source)
 void js_loadfile(js_State *J, const char *filename)
 {
 	FILE *f;
-	char *s;
+	char *s, *p;
 	int n, t;
 
 	f = fopen(filename, "rb");
@@ -171,7 +177,15 @@ void js_loadfile(js_State *J, const char *filename)
 		js_throw(J);
 	}
 
-	js_loadstring(J, filename, s);
+	/* skip first line if it starts with "#!" */
+	p = s;
+	if (p[0] == '#' && p[1] == '!') {
+		p += 2;
+		while (*p && *p != '\n')
+			++p;
+	}
+
+	js_loadstring(J, filename, p);
 
 	js_free(J, s);
 	fclose(f);

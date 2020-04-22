@@ -259,6 +259,7 @@ static int sortcmp(const void *avoid, const void *bvoid)
 	const js_Value *a = &aslot->v, *b = &bslot->v;
 	js_State *J = aslot->J;
 	const char *sx, *sy;
+	double v;
 	int c;
 
 	int unx = (a->type == JS_TUNDEFINED);
@@ -272,7 +273,8 @@ static int sortcmp(const void *avoid, const void *bvoid)
 		js_pushvalue(J, *a);
 		js_pushvalue(J, *b);
 		js_call(J, 2);
-		c = js_tonumber(J, -1);
+		v = js_tonumber(J, -1);
+		c = (v == 0) ? 0 : (v < 0) ? -1 : 1;
 		js_pop(J, 1);
 	} else {
 		js_pushvalue(J, *a);

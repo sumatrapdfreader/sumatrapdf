@@ -217,7 +217,7 @@ static double MakeDay(double y, double m, double date)
 		return NAN;
 
 	yd = floor(TimeFromYear(y) / msPerDay);
-	md = firstDayOfMonth[InLeapYear(y)][im];
+	md = firstDayOfMonth[DaysInYear(y) == 366][im];
 
 	return yd + md + date - 1;
 }
@@ -649,7 +649,7 @@ static void Dp_setMonth(js_State *J)
 	double t = LocalTime(js_todate(J, 0));
 	double y = YearFromTime(t);
 	double m = js_tonumber(J, 1);
-	double d = js_optnumber(J, 3, DateFromTime(t));
+	double d = js_optnumber(J, 2, DateFromTime(t));
 	js_setdate(J, 0, UTC(MakeDate(MakeDay(y, m, d), TimeWithinDay(t))));
 }
 
@@ -716,7 +716,7 @@ static void Dp_setUTCMonth(js_State *J)
 	double t = js_todate(J, 0);
 	double y = YearFromTime(t);
 	double m = js_tonumber(J, 1);
-	double d = js_optnumber(J, 3, DateFromTime(t));
+	double d = js_optnumber(J, 2, DateFromTime(t));
 	js_setdate(J, 0, MakeDate(MakeDay(y, m, d), TimeWithinDay(t)));
 }
 

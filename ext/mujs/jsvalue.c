@@ -312,8 +312,8 @@ const char *jsV_tostring(js_State *J, js_Value *v)
 				v->type = JS_TSHRSTR;
 				return v->u.shrstr;
 			} else {
-				v->type = JS_TMEMSTR;
 				v->u.memstr = jsV_newmemstring(J, p, n);
+				v->type = JS_TMEMSTR;
 				return v->u.memstr->p;
 			}
 		}
@@ -417,13 +417,13 @@ void js_newfunction(js_State *J, js_Function *fun, js_Environment *scope)
 			js_copy(J, -2);
 			js_defproperty(J, -2, "constructor", JS_DONTENUM);
 		}
-		js_defproperty(J, -2, "prototype", JS_DONTCONF);
+		js_defproperty(J, -2, "prototype", JS_DONTENUM | JS_DONTCONF);
 	}
 }
 
-void js_newscript(js_State *J, js_Function *fun, js_Environment *scope)
+void js_newscript(js_State *J, js_Function *fun, js_Environment *scope, int type)
 {
-	js_Object *obj = jsV_newobject(J, JS_CSCRIPT, NULL);
+	js_Object *obj = jsV_newobject(J, type, NULL);
 	obj->u.f.function = fun;
 	obj->u.f.scope = scope;
 	js_pushobject(J, obj);
@@ -445,7 +445,7 @@ void js_newcfunction(js_State *J, js_CFunction cfun, const char *name, int lengt
 			js_copy(J, -2);
 			js_defproperty(J, -2, "constructor", JS_DONTENUM);
 		}
-		js_defproperty(J, -2, "prototype", JS_DONTCONF);
+		js_defproperty(J, -2, "prototype", JS_DONTENUM | JS_DONTCONF);
 	}
 }
 
@@ -464,7 +464,7 @@ void js_newcconstructor(js_State *J, js_CFunction cfun, js_CFunction ccon, const
 		js_rot2(J); /* obj proto */
 		js_copy(J, -2); /* obj proto obj */
 		js_defproperty(J, -2, "constructor", JS_DONTENUM);
-		js_defproperty(J, -2, "prototype", JS_READONLY | JS_DONTENUM | JS_DONTCONF);
+		js_defproperty(J, -2, "prototype", JS_DONTENUM | JS_DONTCONF);
 	}
 }
 
@@ -592,12 +592,12 @@ retry:
 
 	if (x->type == JS_TBOOLEAN) {
 		x->type = JS_TNUMBER;
-		x->u.number = x->u.boolean;
+		x->u.number = x->u.boolean ? 1 : 0;
 		goto retry;
 	}
 	if (y->type == JS_TBOOLEAN) {
 		y->type = JS_TNUMBER;
-		y->u.number = y->u.boolean;
+		y->u.number = y->u.boolean ? 1 : 0;
 		goto retry;
 	}
 	if ((JSV_ISSTRING(x) || x->type == JS_TNUMBER) && y->type == JS_TOBJECT) {

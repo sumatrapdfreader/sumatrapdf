@@ -26,10 +26,14 @@ enum {
 
 	/* regexec flags */
 	REG_NOTBOL = 4,
-
-	/* limits */
-	REG_MAXSUB = 10
 };
+
+/* If you redefine REG_MAXSUB, you must make sure both the calling
+ * code and the regexp.c compilation unit use the same value!
+ */
+#ifndef REG_MAXSUB
+#define REG_MAXSUB 10
+#endif
 
 struct Resub {
 	int nsub;

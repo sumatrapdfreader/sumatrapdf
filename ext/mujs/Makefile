@@ -102,7 +102,7 @@ $(OUT)/mujs.pc:
 watch:
 	@ while ! inotifywait -q -e modify $(SRCS) $(HDRS) ; do time -p $(MAKE) ; done
 
-install-common: shell $(OUT)/mujs.pc
+install-common: $(OUT)/mujs $(OUT)/mujs.pc
 	install -d $(DESTDIR)$(incdir)
 	install -d $(DESTDIR)$(libdir)
 	install -d $(DESTDIR)$(libdir)/pkgconfig
@@ -111,13 +111,20 @@ install-common: shell $(OUT)/mujs.pc
 	install -m 644 $(OUT)/mujs.pc $(DESTDIR)$(libdir)/pkgconfig
 	install -m 755 $(OUT)/mujs $(DESTDIR)$(bindir)
 
-install-static: install-common static
+install-static: install-common $(OUT)/libmujs.a
 	install -m 644 $(OUT)/libmujs.a $(DESTDIR)$(libdir)
 
-install-shared: install-common shared
+install-shared: install-common $(OUT)/libmujs.so
 	install -m 755 $(OUT)/libmujs.so $(DESTDIR)$(libdir)
 
 install: install-static
+
+uninstall:
+	rm -f $(DESTDIR)$(bindir)/mujs
+	rm -f $(DESTDIR)$(incdir)/mujs.h
+	rm -f $(DESTDIR)$(libdir)/pkgconfig/mujs.pc
+	rm -f $(DESTDIR)$(libdir)/libmujs.a
+	rm -f $(DESTDIR)$(libdir)/libmujs.so
 
 tarball:
 	git archive --format=zip --prefix=mujs-$(VERSION)/ HEAD > mujs-$(VERSION).zip

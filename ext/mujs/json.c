@@ -5,6 +5,16 @@
 
 #include "utf.h"
 
+int js_isnumberobject(js_State *J, int idx)
+{
+	return js_isobject(J, idx) && js_toobject(J, idx)->type == JS_CNUMBER;
+}
+
+int js_isstringobject(js_State *J, int idx)
+{
+	return js_isobject(J, idx) && js_toobject(J, idx)->type == JS_CSTRING;
+}
+
 static void jsonnext(js_State *J)
 {
 	J->lookahead = jsY_lexjson(J);
@@ -206,6 +216,25 @@ static void fmtindent(js_State *J, js_Buffer **sb, const char *gap, int level)
 
 static int fmtvalue(js_State *J, js_Buffer **sb, const char *key, const char *gap, int level);
 
+static int filterprop(js_State *J, const char *key)
+{
+	int i, n, found;
+	/* replacer/property-list is in stack slot 2 */
+	if (js_isarray(J, 2)) {
+		found = 0;
+		n = js_getlength(J, 2);
+		for (i = 0; i < n && !found; ++i) {
+			js_getindex(J, 2, i);
+			if (js_isstring(J, -1) || js_isnumber(J, -1) ||
+				js_isstringobject(J, -1) || js_isnumberobject(J, -1))
+				found = !strcmp(key, js_tostring(J, -1));
+			js_pop(J, 1);
+		}
+		return found;
+	}
+	return 1;
+}
+
 static void fmtobject(js_State *J, js_Buffer **sb, js_Object *obj, const char *gap, int level)
 {
 	const char *key;
@@ -222,19 +251,21 @@ static void fmtobject(js_State *J, js_Buffer **sb, js_Object *obj, const char *g
 	js_putc(J, sb, '{');
 	js_pushiterator(J, -1, 1);
 	while ((key = js_nextiterator(J, -1))) {
-		save = (*sb)->n;
-		if (n) js_putc(J, sb, ',');
-		if (gap) fmtindent(J, sb, gap, level + 1);
-		fmtstr(J, sb, key);
-		js_putc(J, sb, ':');
-		if (gap)
-			js_putc(J, sb, ' ');
-		js_rot2(J);
-		if (!fmtvalue(J, sb, key, gap, level + 1))
-			(*sb)->n = save;
-		else
-			++n;
-		js_rot2(J);
+		if (filterprop(J, key)) {
+			save = (*sb)->n;
+			if (n) js_putc(J, sb, ',');
+			if (gap) fmtindent(J, sb, gap, level + 1);
+			fmtstr(J, sb, key);
+			js_putc(J, sb, ':');
+			if (gap)
+				js_putc(J, sb, ' ');
+			js_rot2(J);
+			if (!fmtvalue(J, sb, key, gap, level + 1))
+				(*sb)->n = save;
+			else
+				++n;
+			js_rot2(J);
+		}
 	}
 	js_pop(J, 1);
 	if (gap && n) fmtindent(J, sb, gap, level);
@@ -266,7 +297,7 @@ static void fmtarray(js_State *J, js_Buffer **sb, const char *gap, int level)
 
 static int fmtvalue(js_State *J, js_Buffer **sb, const char *key, const char *gap, int level)
 {
-	/* replacer is in 2 */
+	/* replacer/property-list is in 2 */
 	/* holder is in -1 */
 
 	js_getproperty(J, -1, key);
@@ -329,14 +360,14 @@ static void JSON_stringify(js_State *J)
 
 	gap = NULL;
 
-	if (js_isnumber(J, 3)) {
+	if (js_isnumber(J, 3) || js_isnumberobject(J, 3)) {
 		n = js_tointeger(J, 3);
 		if (n < 0) n = 0;
 		if (n > 10) n = 10;
 		memset(buf, ' ', n);
 		buf[n] = 0;
 		if (n > 0) gap = buf;
-	} else if (js_isstring(J, 3)) {
+	} else if (js_isstring(J, 3) || js_isstringobject(J, 3)) {
 		s = js_tostring(J, 3);
 		n = strlen(s);
 		if (n > 10) n = 10;

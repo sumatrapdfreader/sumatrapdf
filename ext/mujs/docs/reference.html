@@ -197,6 +197,10 @@ void js_setreport(js_State *J, js_Report report);
 Set a callback function for reporting various warnings
 and garbage collection statistics.
 
+<p>
+The report function must <i>not</i> throw an exception
+or call any other MuJS function except js_getcontext().
+
 <h3>Garbage collection</h3>
 
 <pre>
@@ -648,7 +652,7 @@ If these are set, they can be used to override accesses to certain properties.
 Any property accesses that are not overridden will be handled as usual in the runtime.
 The "HasProperty" callback should push a value and return true if it wants to
 handle the property, otherwise it should do nothing and return false. "Put"
-should pop a value and return true if it wants to handle the property.
+should read the top value and return true if it wants to handle the property.
 Likewise, "Delete" should return true if it wants to handle the property.
 
 <pre>

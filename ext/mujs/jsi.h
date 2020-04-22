@@ -69,14 +69,29 @@ typedef struct js_StackTrace js_StackTrace;
 
 /* Limits */
 
+#ifndef JS_STACKSIZE
 #define JS_STACKSIZE 256	/* value stack size */
-#define JS_ENVLIMIT 64		/* environment stack size */
+#endif
+#ifndef JS_ENVLIMIT
+#define JS_ENVLIMIT 128		/* environment stack size */
+#endif
+#ifndef JS_TRYLIMIT
 #define JS_TRYLIMIT 64		/* exception stack size */
+#endif
+#ifndef JS_GCLIMIT
 #define JS_GCLIMIT 10000	/* run gc cycle every N allocations */
+#endif
+#ifndef JS_ASTLIMIT
 #define JS_ASTLIMIT 100		/* max nested expressions */
+#endif
 
 /* instruction size -- change to int if you get integer overflow syntax errors */
+
+#ifdef JS_INSTRUCTION
+typedef JS_INSTRUCTION js_Instruction;
+#else
 typedef unsigned short js_Instruction;
+#endif
 
 /* String interning */
 
@@ -95,7 +110,7 @@ double js_strtod(const char *as, char **aas);
 
 void js_newarguments(js_State *J);
 void js_newfunction(js_State *J, js_Function *function, js_Environment *scope);
-void js_newscript(js_State *J, js_Function *function, js_Environment *scope);
+void js_newscript(js_State *J, js_Function *fun, js_Environment *scope, int type);
 void js_loadeval(js_State *J, const char *filename, const char *source);
 
 js_Regexp *js_toregexp(js_State *J, int idx);

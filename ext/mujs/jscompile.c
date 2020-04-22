@@ -192,16 +192,12 @@ static void emitnumber(JF, double num)
 		emitarg(J, F, 32768);
 		if (signbit(num))
 			emit(J, F, OP_NEG);
+	} else if (num >= SHRT_MIN && num <= SHRT_MAX && num == (int)num) {
+		emit(J, F, OP_INTEGER);
+		emitarg(J, F, num + 32768);
 	} else {
-		double nv = num + 32768;
-		js_Instruction iv = nv;
-		if (nv == iv) {
-			emit(J, F, OP_INTEGER);
-			emitarg(J, F, iv);
-		} else {
-			emit(J, F, OP_NUMBER);
-			emitarg(J, F, addnumber(J, F, num));
-		}
+		emit(J, F, OP_NUMBER);
+		emitarg(J, F, addnumber(J, F, num));
 	}
 }
 
@@ -556,6 +552,7 @@ static void ceval(JF, js_Ast *fun, js_Ast *args)
 {
 	int n = cargs(J, F, args);
 	F->lightweight = 0;
+	F->arguments = 1;
 	if (n == 0)
 		emit(J, F, OP_UNDEF);
 	else while (n-- > 1)
