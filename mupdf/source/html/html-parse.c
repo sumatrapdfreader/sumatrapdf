@@ -693,6 +693,8 @@ generate_boxes(fz_context *ctx,
 
 			display = fz_get_css_match_display(&match);
 
+			fz_apply_css_style(ctx, g->set, &style, &match);
+
 			if (tag[0]=='b' && tag[1]=='r' && tag[2]==0)
 			{
 				if (top->type == BOX_INLINE)
@@ -705,7 +707,6 @@ generate_boxes(fz_context *ctx,
 				else
 				{
 					box = new_short_box(ctx, g->pool, markup_dir);
-					fz_apply_css_style(ctx, g->set, &style, &match);
 					box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
 					top = insert_break_box(ctx, box, top);
 				}
@@ -720,8 +721,6 @@ generate_boxes(fz_context *ctx,
 					int w, h;
 					const char *w_att = fz_xml_att(node, "width");
 					const char *h_att = fz_xml_att(node, "height");
-					box = new_short_box(ctx, g->pool, markup_dir);
-					fz_apply_css_style(ctx, g->set, &style, &match);
 					if (w_att && (w = fz_atoi(w_att)) > 0)
 					{
 						style.width.value = w;
@@ -732,16 +731,31 @@ generate_boxes(fz_context *ctx,
 						style.height.value = h;
 						style.height.unit = strchr(h_att, '%') ? N_PERCENT : N_LENGTH;
 					}
-					box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
-					insert_inline_box(ctx, box, top, markup_dir, g);
-					generate_image(ctx, box, load_html_image(ctx, g->zip, g->base_uri, src), g);
+
+					if (display == DIS_BLOCK)
+					{
+						fz_html_box *imgbox;
+						box = new_box(ctx, g->pool, markup_dir);
+						box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
+						top = insert_block_box(ctx, box, top);
+						imgbox = new_short_box(ctx, g->pool, markup_dir);
+						imgbox->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
+						insert_inline_box(ctx, imgbox, box, markup_dir, g);
+						generate_image(ctx, imgbox, load_html_image(ctx, g->zip, g->base_uri, src), g);
+					}
+					else if (display == DIS_INLINE)
+					{
+						box = new_short_box(ctx, g->pool, markup_dir);
+						box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
+						insert_inline_box(ctx, box, top, markup_dir, g);
+						generate_image(ctx, box, load_html_image(ctx, g->zip, g->base_uri, src), g);
+					}
 				}
 			}
 
 			else if (tag[0]=='s' && tag[1]=='v' && tag[2]=='g' && tag[3]==0)
 			{
 				box = new_short_box(ctx, g->pool, markup_dir);
-				fz_apply_css_style(ctx, g->set, &style, &match);
 				box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
 				insert_inline_box(ctx, box, top, markup_dir, g);
 				generate_image(ctx, box, load_svg_image(ctx, g->zip, g->base_uri, node), g);
@@ -759,12 +773,9 @@ generate_boxes(fz_context *ctx,
 					{
 						fz_html_box *imgbox;
 						box = new_box(ctx, g->pool, markup_dir);
-						fz_default_css_style(ctx, &style);
-						fz_apply_css_style(ctx, g->set, &style, &match);
 						box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
 						top = insert_block_box(ctx, box, top);
 						imgbox = new_short_box(ctx, g->pool, markup_dir);
-						fz_apply_css_style(ctx, g->set, &style, &match);
 						imgbox->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
 						insert_inline_box(ctx, imgbox, box, markup_dir, g);
 						generate_image(ctx, imgbox, fz_keep_image(ctx, img), g);
@@ -772,7 +783,6 @@ generate_boxes(fz_context *ctx,
 					else if (display == DIS_INLINE)
 					{
 						box = new_short_box(ctx, g->pool, markup_dir);
-						fz_apply_css_style(ctx, g->set, &style, &match);
 						box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
 						insert_inline_box(ctx, box, top, markup_dir, g);
 						generate_image(ctx, box, fz_keep_image(ctx, img), g);
@@ -807,8 +817,6 @@ generate_boxes(fz_context *ctx,
 					box = new_short_box(ctx, g->pool, child_dir);
 				else
 					box = new_box(ctx, g->pool, child_dir);
-				fz_default_css_style(ctx, &style);
-				fz_apply_css_style(ctx, g->set, &style, &match);
 				box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
 
 				id = fz_xml_att(node, "id");
@@ -1351,7 +1359,6 @@ fz_parse_html(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const cha
 		html->layout_w = 0;
 		html->layout_h = 0;
 		html->layout_em = 0;
-		fz_default_css_style(ctx, &style);
 
 		match.up = NULL;
 		match.count = 0;

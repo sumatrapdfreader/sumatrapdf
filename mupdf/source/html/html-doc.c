@@ -233,5 +233,7 @@ fz_document_handler html_document_handler =
 	htdoc_open_document,
 	htdoc_open_document_with_stream,
 	htdoc_extensions,
-	htdoc_mimetypes
+	htdoc_mimetypes,
+	NULL,
+	NULL,
 };

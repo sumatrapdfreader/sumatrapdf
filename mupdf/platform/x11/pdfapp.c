@@ -40,24 +40,6 @@ stat_mtime(const char *path)
 	return info.st_mtime;
 }
 
-#ifdef _WIN32
-static const char *
-realpath(const char *path, char buf[PATH_MAX])
-{
-	wchar_t wpath[PATH_MAX];
-	wchar_t wbuf[PATH_MAX];
-	int i;
-	MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, PATH_MAX);
-	GetFullPathNameW(wpath, PATH_MAX, wbuf, NULL);
-	WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, PATH_MAX, NULL, NULL);
-	for (i=0; buf[i]; ++i)
-		if (buf[i] == '\\')
-			buf[i] = '/';
-	return buf;
-}
-
-#endif
-
 static int convert_to_accel_path(fz_context *ctx, char outname[], char *absname, size_t len)
 {
 	char *tmpdir;
@@ -89,7 +71,7 @@ static int convert_to_accel_path(fz_context *ctx, char outname[], char *absname,
 static int get_accelerator_filename(fz_context *ctx, char outname[], size_t len, const char *filename)
 {
 	char absname[PATH_MAX];
-	if (!realpath(filename, absname))
+	if (!fz_realpath(filename, absname))
 		return 0;
 	if (!convert_to_accel_path(ctx, outname, absname, len))
 		return 0;
@@ -180,7 +162,7 @@ char *pdfapp_version(pdfapp_t *app)
 {
 	return
 		"MuPDF " FZ_VERSION "\n"
-		"Copyright 2006-2017 Artifex Software, Inc.\n";
+		"Copyright 2006-2020 Artifex Software, Inc.\n";
 }
 
 char *pdfapp_usage(pdfapp_t *app)

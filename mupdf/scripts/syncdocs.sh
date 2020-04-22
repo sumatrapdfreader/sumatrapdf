@@ -117,7 +117,7 @@ cat >temp.foot <<EOF
 			</div>
 			<div class="col-ft-3 footright">
 				<img src="../images/Artifex_logo.png" width="194" height="40" alt=""><br>
-				&copy; Copyright 2019 Artifex Software, Inc.<br>
+				&copy; Copyright 2020 Artifex Software, Inc.<br>
 				All rights reserved.
 			</div>
 		</div>

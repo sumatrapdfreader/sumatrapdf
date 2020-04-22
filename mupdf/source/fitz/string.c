@@ -6,6 +6,14 @@
 #include <float.h>
 #include <stdlib.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
+#ifdef _WIN32
+#include <windows.h> /* for MultiByteToWideChar etc. */
+#endif
+
 static inline int
 fz_tolower(int c)
 {
@@ -126,6 +134,34 @@ fz_dirname(char *dir, const char *path, size_t n)
 	for(; dir[i] == '/'; --i) if (!i) { fz_strlcpy(dir, "/", n); return; }
 	dir[i+1] = 0;
 }
+
+#ifdef _WIN32
+
+char *fz_realpath(const char *path, char buf[PATH_MAX])
+{
+	wchar_t wpath[PATH_MAX];
+	wchar_t wbuf[PATH_MAX];
+	int i;
+	if (!MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, PATH_MAX))
+		return NULL;
+	if (!GetFullPathNameW(wpath, PATH_MAX, wbuf, NULL))
+		return NULL;
+	if (!WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, PATH_MAX, NULL, NULL))
+		return NULL;
+	for (i=0; buf[i]; ++i)
+		if (buf[i] == '\\')
+			buf[i] = '/';
+	return buf;
+}
+
+#else
+
+char *fz_realpath(const char *path, char buf[PATH_MAX])
+{
+	return realpath(path, buf);
+}
+
+#endif
 
 static inline int ishex(int a)
 {

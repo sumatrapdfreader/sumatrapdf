@@ -492,6 +492,7 @@ static void layout_flow(fz_context *ctx, fz_html_box *box, fz_html_box *top, flo
 			float margin_w = 0, margin_h = 0;
 			float max_w, max_h;
 			float xs = 1, ys = 1, s;
+			float aspect = 1;
 
 			find_accumulated_margins(ctx, box, &margin_w, &margin_h);
 			max_w = top->w - margin_w;
@@ -500,9 +501,16 @@ static void layout_flow(fz_context *ctx, fz_html_box *box, fz_html_box *top, flo
 			/* NOTE: We ignore the image DPI here, since most images in EPUB files have bogus values. */
 			node->w = node->content.image->w * 72 / 96;
 			node->h = node->content.image->h * 72 / 96;
+			aspect = node->w / node->h;
 
-			node->w = fz_from_css_number(node->box->style->width, top->em, top->w - margin_w, node->w);
-			node->h = fz_from_css_number(node->box->style->height, top->em, page_h - margin_h, node->h);
+			if (node->box->style->width.unit != N_AUTO)
+				node->w = fz_from_css_number(node->box->style->width, top->em, top->w - margin_w, node->w);
+			if (node->box->style->height.unit != N_AUTO)
+				node->h = fz_from_css_number(node->box->style->height, top->em, page_h - margin_h, node->h);
+			if (node->box->style->width.unit == N_AUTO && node->box->style->height.unit != N_AUTO)
+				node->w = node->h * aspect;
+			if (node->box->style->width.unit != N_AUTO && node->box->style->height.unit == N_AUTO)
+				node->h = node->w / aspect;
 
 			/* Shrink image to fit on one page if needed */
 			if (max_w > 0 && node->w > max_w)

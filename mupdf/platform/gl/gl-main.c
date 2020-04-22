@@ -24,7 +24,6 @@
 #include <unistd.h> /* for fork, exec, and getcwd */
 #else
 #include <direct.h> /* for getcwd */
-char *realpath(const char *path, char *resolved_path); /* in gl-file.c */
 #endif
 
 #ifdef __APPLE__
@@ -300,7 +299,7 @@ static void load_history(void)
 	char absname[PATH_MAX];
 	int i, n;
 
-	if (!realpath(filename, absname))
+	if (!fz_realpath(filename, absname))
 		return;
 
 	J = js_newstate(NULL, NULL, 0);
@@ -377,7 +376,7 @@ static void save_history(void)
 	if (!doc)
 		return;
 
-	if (!realpath(filename, absname))
+	if (!fz_realpath(filename, absname))
 		return;
 
 	J = js_newstate(NULL, NULL, 0);
@@ -471,7 +470,7 @@ static int convert_to_accel_path(char outname[], char *absname, size_t len)
 static int get_accelerator_filename(char outname[], size_t len)
 {
 	char absname[PATH_MAX];
-	if (!realpath(filename, absname))
+	if (!fz_realpath(filename, absname))
 		return 0;
 	if (!convert_to_accel_path(outname, absname, len))
 		return 0;

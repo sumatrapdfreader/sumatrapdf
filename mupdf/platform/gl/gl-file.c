@@ -68,20 +68,6 @@ ensure_one_more_file(void)
 #include <strsafe.h>
 #include <shlobj.h>
 
-const char *realpath(const char *path, char buf[PATH_MAX])
-{
-	wchar_t wpath[PATH_MAX];
-	wchar_t wbuf[PATH_MAX];
-	int i;
-	MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, PATH_MAX);
-	GetFullPathNameW(wpath, PATH_MAX, wbuf, NULL);
-	WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, PATH_MAX, NULL, NULL);
-	for (i=0; buf[i]; ++i)
-		if (buf[i] == '\\')
-			buf[i] = '/';
-	return buf;
-}
-
 static void load_dir(const char *path)
 {
 	WIN32_FIND_DATA ffd;
@@ -90,7 +76,7 @@ static void load_dir(const char *path)
 	char buf[PATH_MAX];
 	int i;
 
-	realpath(path, fc.curdir);
+	fz_realpath(path, fc.curdir);
 	if (!fz_is_directory(ctx, path))
 		return;
 
@@ -207,7 +193,7 @@ static void load_dir(const char *path)
 	DIR *dir;
 	struct dirent *dp;
 
-	realpath(path, fc.curdir);
+	fz_realpath(path, fc.curdir);
 	if (!fz_is_directory(ctx, fc.curdir))
 		return;
 

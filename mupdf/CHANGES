@@ -1,9 +1,35 @@
-List of changes since the last release
+List of changes in MuPDF 1.17.0
 
 	api: Improved accessors for markup/ink/polygon annotation data.
+	api: Chapter based API for faster EPUB loading.
+	api: Add more documentation to header files.
+	api: Improved digital signature signing and verification.
+	api: Validate changes in a signed PDF file.
+
+	build: Moved windows build to VS2019 solution.
+
+	pdf: Redaction now works on images and links as well as text.
+	pdf: Greek, Cyrillic, Chinese, Japanese, and Korean scripts in forms and annotations.
+	pdf: File attachment annotations.
+	pdf: Use CCITT Fax compression for 1-bit images when creating PDF files.
+
+	epub: More forgiving XHTML parsing.
+	epub: Accelerator files to cache chapter data for faster EPUB loading.
+	epub: Optimized memory use.
 
 	mutool run: Edit Markup, Ink, and Polygon annotation data.
 	mutool run: Fill out form fields.
+	viewer: Ask for confirmation before closing a PDF with unsaved changes.
+	viewer: Embed and extract file attachment annotations.
+
+	library: Miscellaneous bugfixes.
+	library: Fixes to store operation.
+
+	thirdparty: Updated Harfbuzz to 2.6.4.
+	thirdparty: Updated jbig2dec to 0.18.
+	thirdparty: Updated MuJS to 1.0.7.
+	thirdparty: Updated OpenJPEG to 2.3.1.
+	thirdparty: Updated cURL to 7.66.0 (windows only).
 
 List of changes in MuPDF 1.16.1
 

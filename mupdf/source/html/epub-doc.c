@@ -850,13 +850,13 @@ epub_init(fz_context *ctx, fz_archive *zip, fz_stream *accel)
 }
 
 static fz_document *
-epub_open_document_with_stream(fz_context *ctx, fz_stream *file, fz_stream *accel)
+epub_open_accel_document_with_stream(fz_context *ctx, fz_stream *file, fz_stream *accel)
 {
 	return epub_init(ctx, fz_open_zip_archive_with_stream(ctx, file), accel);
 }
 
 static fz_document *
-epub_open_document(fz_context *ctx, const char *filename, const char *accel)
+epub_open_accel_document(fz_context *ctx, const char *filename, const char *accel)
 {
 	fz_stream *afile = NULL;
 	fz_document *doc;
@@ -887,6 +887,18 @@ epub_open_document(fz_context *ctx, const char *filename, const char *accel)
 	return doc;
 }
 
+static fz_document *
+epub_open_document_with_stream(fz_context *ctx, fz_stream *file)
+{
+	return epub_init(ctx, fz_open_zip_archive_with_stream(ctx, file), NULL);
+}
+
+static fz_document *
+epub_open_document(fz_context *ctx, const char *filename)
+{
+	return epub_open_accel_document(ctx, filename, NULL);
+}
+
 static int
 epub_recognize(fz_context *doc, const char *magic)
 {
@@ -910,10 +922,10 @@ static const char *epub_mimetypes[] =
 fz_document_handler epub_document_handler =
 {
 	epub_recognize,
-	NULL,
-	NULL,
+	epub_open_document,
+	epub_open_document_with_stream,
 	epub_extensions,
 	epub_mimetypes,
-	epub_open_document,
-	epub_open_document_with_stream
+	epub_open_accel_document,
+	epub_open_accel_document_with_stream
 };
