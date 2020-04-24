@@ -460,6 +460,7 @@ function sumatrapdf_files()
 
     "Tests.cpp",
     "regress/Regress.*",
+    "todo.txt",
   })
   test_app_files()
 end

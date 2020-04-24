@@ -517,6 +517,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\todo.txt">
+      <Filter>src</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc">
       <Filter>src</Filter>
     </ResourceCompile>

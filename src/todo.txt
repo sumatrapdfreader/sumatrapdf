@@ -56,16 +56,16 @@ Somewhat big items:
 !! sppedup cbr archives
 - unpack images in the background, because that takes most of the time and they don't compress well anyway
 - maybe move blitting to WM_PAINT
-    - https://www-user.tu-chemnitz.de/~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15d.htm~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15d.htm
-    - https://www-user.tu-chemnitz.de/~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15c.htm~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15c.htm
-    - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setdibitstodevice
-    - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-stretchdibits
-    - https://stackoverflow.com/questions/1053052/a-generic-error-occurred-in-gdi-jpeg-image-to-memorystream
-    - https://devblogs.microsoft.com/oldnewthing/20090714-00/?p=17503
-    - https://devblogs.microsoft.com/oldnewthing/20090717-00/?p=17443
-    - https://devblogs.microsoft.com/oldnewthing/20180528-00/?p=98845
-    - https://devblogs.microsoft.com/oldnewthing/20090716-00/?p=17463
-    - https://devblogs.microsoft.com/oldnewthing/20090715-00/?p=17483
+  - https://www-user.tu-chemnitz.de/~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15d.htm~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15d.htm
+  - https://www-user.tu-chemnitz.de/~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15c.htm~heha/viewchm.php/hs/petzold.chm/petzoldi/ch15c.htm
+  - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setdibitstodevice
+  - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-stretchdibits
+  - https://stackoverflow.com/questions/1053052/a-generic-error-occurred-in-gdi-jpeg-image-to-memorystream
+  - https://devblogs.microsoft.com/oldnewthing/20090714-00/?p=17503
+  - https://devblogs.microsoft.com/oldnewthing/20090717-00/?p=17443
+  - https://devblogs.microsoft.com/oldnewthing/20180528-00/?p=98845
+  - https://devblogs.microsoft.com/oldnewthing/20090716-00/?p=17463
+  - https://devblogs.microsoft.com/oldnewthing/20090715-00/?p=17483
 
 ------
 
@@ -92,35 +92,36 @@ Notes / references:
 
 icons:
 - file open
-    - https://github.com/tabler/tabler-icons/blob/master/icons/folder.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/folder.svg
 - print
-    - https://github.com/tabler/tabler-icons/blob/master/icons/printer.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/printer.svg
 - next page, prev page
-    - https://github.com/tabler/tabler-icons/blob/master/icons/arrow-left.svg
-    - https://github.com/tabler/tabler-icons/blob/master/icons/arrow-right.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/arrow-left.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/arrow-right.svg
 - continuous layout
-    - https://github.com/tabler/tabler-icons/blob/master/icons/layout-rows.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/layout-rows.svg
 - single page layout
-    - https://github.com/tabler/tabler-icons/blob/master/icons/square.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/square.svg
 - zoom in, zoom out
-    - https://github.com/tabler/tabler-icons/blob/master/icons/zoom-in.svg
-    - https://github.com/tabler/tabler-icons/blob/master/icons/zoom-out.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/zoom-in.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/zoom-out.svg
 - find next, find prev
-    - https://github.com/tabler/tabler-icons/blob/master/icons/chevron-left.svg
-    - https://github.com/tabler/tabler-icons/blob/master/icons/chevron-right.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/chevron-left.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/chevron-right.svg
 - find match case
-    - https://github.com/tabler/tabler-icons/blob/master/icons/code.svg
+  - https://github.com/tabler/tabler-icons/blob/master/icons/code.svg
 - maybe:
-    - rotate left / right
-    - https://github.com/tabler/tabler-icons/blob/master/icons/home.svg
+  - rotate left / right
+  - https://github.com/tabler/tabler-icons/blob/master/icons/home.svg
 
 - possible icon sets
-    https://github.com/tabler/tabler-icons
-    https://github.com/refactoringui/heroicons (no match case and layout)
-    https://feathericons.com/ (no match case and layout)
-    https://thenounproject.com/  lots of icons, needs attribution or pay $99/year for attribution and royalty free license
-    https://icomoon.io/app/#/select
-    https://github.com/microsoft/vscode-codicons
+  https://github.com/tabler/tabler-icons
+  https://github.com/refactoringui/heroicons (no match case and layout)
+  https://feathericons.com/ (no match case and layout)
+  https://thenounproject.com/  lots of icons, needs attribution or pay $99/year for attribution and royalty free license
+  https://icomoon.io/app/#/select
+  https://github.com/microsoft/vscode-codicons
+  https://ionicons.com/
 
 - convert to .ico with https://www.icoconverter.com/
 - online icon editor: https://redketchup.io/icon-editor could be used to improve the low-resolution icons.

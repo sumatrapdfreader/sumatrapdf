@@ -875,6 +875,9 @@
     <ClCompile Include="..\src\uia\TextRange.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\todo.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc" />
   </ItemGroup>
   <ItemGroup>
