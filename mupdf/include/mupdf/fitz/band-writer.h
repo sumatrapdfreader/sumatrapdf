@@ -5,12 +5,12 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/output.h"
 
-/*
+/**
 	fz_band_writer
 */
 typedef struct fz_band_writer fz_band_writer;
 
-/*
+/**
 	Cause a band writer to write the header for
 	a banded image with the given properties/dimensions etc. This
 	also configures the bandwriter for the format of the data to be
@@ -30,7 +30,7 @@ typedef struct fz_band_writer fz_band_writer;
 */
 void fz_write_header(fz_context *ctx, fz_band_writer *writer, int w, int h, int n, int alpha, int xres, int yres, int pagenum, fz_colorspace *cs, fz_separations *seps);
 
-/*
+/**
 	Cause a band writer to write the next band
 	of data for an image.
 
@@ -44,7 +44,7 @@ void fz_write_header(fz_context *ctx, fz_band_writer *writer, int w, int h, int 
 */
 void fz_write_band(fz_context *ctx, fz_band_writer *writer, int stride, int band_height, const unsigned char *samples);
 
-/*
+/**
 	Drop the reference to the band writer, causing it to be
 	destroyed.
 

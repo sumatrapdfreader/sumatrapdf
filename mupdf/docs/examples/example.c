@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
 	/* Render page to an RGB pixmap. */
 	fz_try(ctx)
-		pix = fz_new_pixmap_from_page_number(ctx, doc, page_number, ctm, fz_device_rgb(ctx), NULL, 0);
+		pix = fz_new_pixmap_from_page_number(ctx, doc, page_number, ctm, fz_device_rgb(ctx), 0);
 	fz_catch(ctx)
 	{
 		fprintf(stderr, "cannot render page: %s\n", fz_caught_message(ctx));

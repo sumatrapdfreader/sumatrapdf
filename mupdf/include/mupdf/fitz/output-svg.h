@@ -11,7 +11,7 @@ enum {
 	FZ_SVG_TEXT_AS_TEXT = 1,
 };
 
-/*
+/**
 	Create a device that outputs (single page) SVG files to
 	the given output stream.
 
@@ -19,7 +19,7 @@ enum {
 */
 fz_device *fz_new_svg_device(fz_context *ctx, fz_output *out, float page_width, float page_height, int text_format, int reuse_images);
 
-/*
+/**
 	Create a device that outputs (single page) SVG files to
 	the given output stream.
 

@@ -9,7 +9,7 @@
 #include "mupdf/fitz/path.h"
 #include "mupdf/fitz/text.h"
 
-/*
+/**
 	The different format handlers (pdf, xps etc) interpret pages to
 	a device. These devices can then process the stream of calls
 	they receive in various ways:
@@ -72,19 +72,19 @@ enum
 	FZ_BLEND_KNOCKOUT = 32
 };
 
-/*
+/**
 	Map from (case sensitive) blend mode string to enumeration.
 */
 int fz_lookup_blendmode(const char *name);
 
-/*
+/**
 	Map from enumeration to blend mode string.
 
 	The string is static, with arbitrary lifespan.
 */
 const char *fz_blendmode_name(int blendmode);
 
-/*
+/**
 	The device structure is public to allow devices to be
 	implemented outside of fitz.
 
@@ -93,7 +93,7 @@ const char *fz_blendmode_name(int blendmode);
 	dev->fill_path(ctx, dev, ...)
 */
 
-/*
+/**
 	Devices can keep track of containers (clips/masks/groups/tiles)
 	as they go to save callers having to do it.
 */
@@ -160,7 +160,7 @@ struct fz_device
 	fz_device_container_stack *container;
 };
 
-/*
+/**
 	Device calls; graphics primitives and containers.
 */
 void fz_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params);
@@ -189,7 +189,7 @@ void fz_set_default_colorspaces(fz_context *ctx, fz_device *dev, fz_default_colo
 void fz_begin_layer(fz_context *ctx, fz_device *dev, const char *layer_name);
 void fz_end_layer(fz_context *ctx, fz_device *dev);
 
-/*
+/**
 	Devices are created by calls to device implementations, for
 	instance: foo_new_device(). These will be implemented by calling
 	fz_new_derived_device(ctx, foo_device) where foo_device is a
@@ -200,14 +200,14 @@ fz_device *fz_new_device_of_size(fz_context *ctx, int size);
 #define fz_new_derived_device(CTX, TYPE) \
 	((TYPE *)Memento_label(fz_new_device_of_size(ctx,sizeof(TYPE)),#TYPE))
 
-/*
+/**
 	Signal the end of input, and flush any buffered output.
 	This is NOT called implicitly on fz_drop_device. This
 	may throw exceptions.
 */
 void fz_close_device(fz_context *ctx, fz_device *dev);
 
-/*
+/**
 	Reduce the reference count on a device. When the reference count
 	reaches zero, the device and its resources will be freed.
 	Don't forget to call fz_close_device before dropping the device,
@@ -217,7 +217,7 @@ void fz_close_device(fz_context *ctx, fz_device *dev);
 */
 void fz_drop_device(fz_context *ctx, fz_device *dev);
 
-/*
+/**
 	Increment the reference count for a device. Returns the same
 	pointer.
 
@@ -225,17 +225,17 @@ void fz_drop_device(fz_context *ctx, fz_device *dev);
 */
 fz_device *fz_keep_device(fz_context *ctx, fz_device *dev);
 
-/*
+/**
 	Enable (set) hint bits within the hint bitfield for a device.
 */
 void fz_enable_device_hints(fz_context *ctx, fz_device *dev, int hints);
 
-/*
+/**
 	Disable (clear) hint bits within the hint bitfield for a device.
 */
 void fz_disable_device_hints(fz_context *ctx, fz_device *dev, int hints);
 
-/*
+/**
 	Find current scissor region as tracked by the device.
 */
 fz_rect fz_device_current_scissor(fz_context *ctx, fz_device *dev);
@@ -247,11 +247,11 @@ enum
 	FZ_NO_CACHE = 2,
 };
 
-/*
+/**
 	Cookie support - simple communication channel between app/library.
 */
 
-/*
+/**
 	Provide two-way communication between application and library.
 	Intended for multi-threaded applications where one thread is
 	rendering pages and another thread wants to read progress
@@ -299,12 +299,12 @@ typedef struct
 	int incomplete;
 } fz_cookie;
 
-/*
+/**
 	Create a device to print a debug trace of all device calls.
 */
 fz_device *fz_new_trace_device(fz_context *ctx, fz_output *out);
 
-/*
+/**
 	Create a device to compute the bounding
 	box of all marks on a page.
 
@@ -313,7 +313,7 @@ fz_device *fz_new_trace_device(fz_context *ctx, fz_output *out);
 */
 fz_device *fz_new_bbox_device(fz_context *ctx, fz_rect *rectp);
 
-/*
+/**
 	Create a device to test for features.
 
 	Currently only tests for the presence of non-grayscale colors.
@@ -352,7 +352,7 @@ enum
 	FZ_TEST_OPT_SHADINGS = 2
 };
 
-/*
+/**
 	Create a device to draw on a pixmap.
 
 	dest: Target pixmap for the draw device. See fz_new_pixmap*
@@ -366,7 +366,7 @@ enum
 */
 fz_device *fz_new_draw_device(fz_context *ctx, fz_matrix transform, fz_pixmap *dest);
 
-/*
+/**
 	Create a device to draw on a pixmap.
 
 	dest: Target pixmap for the draw device. See fz_new_pixmap*
@@ -383,7 +383,7 @@ fz_device *fz_new_draw_device(fz_context *ctx, fz_matrix transform, fz_pixmap *d
 */
 fz_device *fz_new_draw_device_with_bbox(fz_context *ctx, fz_matrix transform, fz_pixmap *dest, const fz_irect *clip);
 
-/*
+/**
 	Create a device to draw on a pixmap.
 
 	dest: Target pixmap for the draw device. See fz_new_pixmap*
@@ -400,7 +400,7 @@ fz_device *fz_new_draw_device_with_bbox(fz_context *ctx, fz_matrix transform, fz
 */
 fz_device *fz_new_draw_device_with_proof(fz_context *ctx, fz_matrix transform, fz_pixmap *dest, fz_colorspace *proof_cs);
 
-/*
+/**
 	Create a device to draw on a pixmap.
 
 	dest: Target pixmap for the draw device. See fz_new_pixmap*
@@ -422,7 +422,7 @@ fz_device *fz_new_draw_device_with_bbox_proof(fz_context *ctx, fz_matrix transfo
 
 fz_device *fz_new_draw_device_type3(fz_context *ctx, fz_matrix transform, fz_pixmap *dest);
 
-/*
+/**
 	struct fz_draw_options: Options for creating a pixmap and draw
 	device.
 */
@@ -441,12 +441,12 @@ typedef struct
 
 extern const char *fz_draw_options_usage;
 
-/*
+/**
 	Parse draw device options from a comma separated key-value string.
 */
 fz_draw_options *fz_parse_draw_options(fz_context *ctx, fz_draw_options *options, const char *string);
 
-/*
+/**
 	Create a new pixmap and draw device, using the specified options.
 
 	options: Options to configure the draw device, and choose the

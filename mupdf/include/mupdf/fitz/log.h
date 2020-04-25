@@ -4,7 +4,7 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/output.h"
 
-/*
+/**
 	The functions in this file offer simple logging abilities.
 
 	The default logfile is "fitz_log.txt". This can overridden by
@@ -19,17 +19,17 @@
 /* #define ENABLE_STORE_LOGGING */
 
 
-/*
+/**
 	Output a line to the log.
 */
 void fz_log(fz_context *ctx, const char *fmt, ...);
 
-/*
+/**
 	Output a line to the log for a given module.
 */
 void fz_log_module(fz_context *ctx, const char *module, const char *fmt, ...);
 
-/*
+/**
 	Internal function to actually do the opening of the logfile.
 
 	Caller should close/drop the output when finished with it.

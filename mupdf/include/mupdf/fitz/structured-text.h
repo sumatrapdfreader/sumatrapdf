@@ -9,7 +9,7 @@
 #include "mupdf/fitz/output.h"
 #include "mupdf/fitz/device.h"
 
-/*
+/**
 	Simple text layout (for use with annotation editing primarily).
 */
 typedef struct fz_layout_char
@@ -36,30 +36,30 @@ typedef struct
 	fz_layout_char **text_tailp;
 } fz_layout_block;
 
-/*
+/**
 	Create a new layout block, with new allocation pool, zero
 	matrices, and initialise linked pointers.
 */
 fz_layout_block *fz_new_layout(fz_context *ctx);
 
-/*
+/**
 	Drop layout block. Free the pool, and linked blocks.
 
 	Never throws exceptions.
 */
 void fz_drop_layout(fz_context *ctx, fz_layout_block *block);
 
-/*
+/**
 	Add a new line to the end of the layout block.
 */
 void fz_add_layout_line(fz_context *ctx, fz_layout_block *block, float x, float y, float h, const char *p);
 
-/*
+/**
 	Add a new char to the line at the end of the layout block.
 */
 void fz_add_layout_char(fz_context *ctx, fz_layout_block *block, float x, float w, const char *p);
 
-/*
+/**
 	Text extraction device: Used for searching, format conversion etc.
 
 	(In development - Subject to change in future versions)
@@ -69,7 +69,7 @@ typedef struct fz_stext_char fz_stext_char;
 typedef struct fz_stext_line fz_stext_line;
 typedef struct fz_stext_block fz_stext_block;
 
-/*
+/**
 	FZ_STEXT_PRESERVE_LIGATURES: If this option is activated
 	ligatures are passed through to the application in their
 	original form. If this option is deactivated ligatures are
@@ -98,7 +98,7 @@ enum
 	FZ_STEXT_INHIBIT_SPACES = 8,
 };
 
-/*
+/**
 	A text page is a list of blocks, together with an overall
 	bounding box.
 */
@@ -115,7 +115,7 @@ enum
 	FZ_STEXT_BLOCK_IMAGE = 1
 };
 
-/*
+/**
 	A text block is a list of lines of text (typically a paragraph),
 	or an image.
 */
@@ -130,7 +130,7 @@ struct fz_stext_block
 	fz_stext_block *prev, *next;
 };
 
-/*
+/**
 	A text line is a list of characters that share a common baseline.
 */
 struct fz_stext_line
@@ -142,7 +142,7 @@ struct fz_stext_line
 	fz_stext_line *prev, *next;
 };
 
-/*
+/**
 	A text char is a unicode character, the style in which is
 	appears, and the point at which it is positioned.
 */
@@ -159,7 +159,7 @@ struct fz_stext_char
 
 extern const char *fz_stext_options_usage;
 
-/*
+/**
 	Create an empty text page.
 
 	The text page is filled out by the text device to contain the
@@ -170,31 +170,31 @@ extern const char *fz_stext_options_usage;
 fz_stext_page *fz_new_stext_page(fz_context *ctx, fz_rect mediabox);
 void fz_drop_stext_page(fz_context *ctx, fz_stext_page *page);
 
-/*
+/**
 	Output a page to a file in HTML (visual) format.
 */
 void fz_print_stext_page_as_html(fz_context *ctx, fz_output *out, fz_stext_page *page, int id);
 void fz_print_stext_header_as_html(fz_context *ctx, fz_output *out);
 void fz_print_stext_trailer_as_html(fz_context *ctx, fz_output *out);
 
-/*
+/**
 	Output a page to a file in XHTML (semantic) format.
 */
 void fz_print_stext_page_as_xhtml(fz_context *ctx, fz_output *out, fz_stext_page *page, int id);
 void fz_print_stext_header_as_xhtml(fz_context *ctx, fz_output *out);
 void fz_print_stext_trailer_as_xhtml(fz_context *ctx, fz_output *out);
 
-/*
+/**
 	Output a page to a file in XML format.
 */
 void fz_print_stext_page_as_xml(fz_context *ctx, fz_output *out, fz_stext_page *page, int id);
 
-/*
+/**
 	Output a page to a file in UTF-8 format.
 */
 void fz_print_stext_page_as_text(fz_context *ctx, fz_output *out, fz_stext_page *page);
 
-/*
+/**
 	Search for occurrence of 'needle' in text page.
 
 	Return the number of hits and store hit quads in the passed in
@@ -205,7 +205,7 @@ void fz_print_stext_page_as_text(fz_context *ctx, fz_output *out, fz_stext_page 
 */
 int fz_search_stext_page(fz_context *ctx, fz_stext_page *text, const char *needle, fz_quad *quads, int max_quads);
 
-/*
+/**
 	Return a list of quads to highlight lines inside the selection
 	points.
 */
@@ -220,7 +220,7 @@ enum
 
 fz_quad fz_snap_selection(fz_context *ctx, fz_stext_page *page, fz_point *ap, fz_point *bp, int mode);
 
-/*
+/**
 	Return a newly allocated UTF-8 string with the text for a given
 	selection.
 
@@ -229,7 +229,7 @@ fz_quad fz_snap_selection(fz_context *ctx, fz_stext_page *page, fz_point *ap, fz
 */
 char *fz_copy_selection(fz_context *ctx, fz_stext_page *page, fz_point a, fz_point b, int crlf);
 
-/*
+/**
 	Return a newly allocated UTF-8 string with the text for a given
 	selection rectangle.
 
@@ -238,7 +238,7 @@ char *fz_copy_selection(fz_context *ctx, fz_stext_page *page, fz_point a, fz_poi
 */
 char *fz_copy_rectangle(fz_context *ctx, fz_stext_page *page, fz_rect area, int crlf);
 
-/*
+/**
 	Options for creating a pixmap and draw device.
 */
 typedef struct
@@ -246,13 +246,13 @@ typedef struct
 	int flags;
 } fz_stext_options;
 
-/*
+/**
 	Parse stext device options from a comma separated key-value
 	string.
 */
 fz_stext_options *fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *string);
 
-/*
+/**
 	Create a device to extract the text on a page.
 
 	Gather the text on a page into blocks and lines.

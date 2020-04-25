@@ -39,18 +39,18 @@ int fz_unicode_from_glyph_name_strict(const char *name);
 const char **fz_duplicate_glyph_names_from_unicode(int unicode);
 const char *fz_glyph_name_from_unicode_sc(int unicode);
 
-/*
+/**
 	An abstract font handle.
 */
 typedef struct fz_font fz_font;
 
-/*
+/**
 	Fonts come in two variants:
 	Regular fonts are handled by FreeType.
 	Type 3 fonts have callbacks to the interpreter.
 */
 
-/*
+/**
 	Retrieve the FT_Face handle
 	for the font.
 
@@ -62,7 +62,7 @@ typedef struct fz_font fz_font;
 */
 void *fz_font_ft_face(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Retrieve the Type3 procs
 	for a font.
 
@@ -76,7 +76,7 @@ fz_buffer **fz_font_t3_procs(fz_context *ctx, fz_font *font);
 /* common CJK font collections */
 enum { FZ_ADOBE_CNS, FZ_ADOBE_GB, FZ_ADOBE_JAPAN, FZ_ADOBE_KOREA };
 
-/*
+/**
 	Every fz_font carries a set of flags
 	within it, in a fz_font_flags_t structure.
 */
@@ -95,7 +95,7 @@ typedef struct
 	unsigned int invalid_bbox : 1;
 } fz_font_flags_t;
 
-/*
+/**
 	Retrieve a pointer to the font flags
 	for a given font. These can then be updated as required.
 
@@ -106,7 +106,7 @@ typedef struct
 */
 fz_font_flags_t *fz_font_flags(fz_font *font);
 
-/*
+/**
 	In order to shape a given font, we need to
 	declare it to a shaper library (harfbuzz, by default, but others
 	are possible). To avoid redeclaring it every time we need to
@@ -121,7 +121,7 @@ typedef struct
 	void (*destroy)(fz_context *ctx, void *); /* Destructor for shape_handle */
 } fz_shaper_data_t;
 
-/*
+/**
 	Retrieve a pointer to the shaper data
 	structure for the given font.
 
@@ -132,7 +132,7 @@ typedef struct
 */
 fz_shaper_data_t *fz_font_shaper_data(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Retrieve a pointer to the name of the font.
 
 	font: The font to query.
@@ -142,27 +142,27 @@ fz_shaper_data_t *fz_font_shaper_data(fz_context *ctx, fz_font *font);
 */
 const char *fz_font_name(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Query whether the font flags say that this font is bold.
 */
 int fz_font_is_bold(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Query whether the font flags say that this font is italic.
 */
 int fz_font_is_italic(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Query whether the font flags say that this font is serif.
 */
 int fz_font_is_serif(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Query whether the font flags say that this font is monospaced.
 */
 int fz_font_is_monospaced(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Retrieve a pointer to the font bbox.
 
 	font: The font to query.
@@ -172,7 +172,7 @@ int fz_font_is_monospaced(fz_context *ctx, fz_font *font);
 */
 fz_rect fz_font_bbox(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Type for user supplied system font loading hook.
 
 	name: The name of the font to load.
@@ -187,7 +187,7 @@ fz_rect fz_font_bbox(fz_context *ctx, fz_font *font);
 */
 typedef fz_font *(fz_load_system_font_fn)(fz_context *ctx, const char *name, int bold, int italic, int needs_exact_metrics);
 
-/*
+/**
 	Type for user supplied cjk font loading hook.
 
 	name: The name of the font to load.
@@ -201,7 +201,7 @@ typedef fz_font *(fz_load_system_font_fn)(fz_context *ctx, const char *name, int
 */
 typedef fz_font *(fz_load_system_cjk_font_fn)(fz_context *ctx, const char *name, int ordering, int serif);
 
-/*
+/**
 	Type for user supplied fallback font loading hook.
 
 	name: The name of the font to load.
@@ -216,7 +216,7 @@ typedef fz_font *(fz_load_system_cjk_font_fn)(fz_context *ctx, const char *name,
 */
 typedef fz_font *(fz_load_system_fallback_font_fn)(fz_context *ctx, int script, int language, int serif, int bold, int italic);
 
-/*
+/**
 	Install functions to allow MuPDF to request fonts from the
 	system.
 
@@ -227,7 +227,7 @@ void fz_install_load_system_font_funcs(fz_context *ctx,
 	fz_load_system_cjk_font_fn *f_cjk,
 	fz_load_system_fallback_font_fn *f_fallback);
 
-/*
+/**
 	Attempt to load a given font from the system.
 
 	name: The name of the desired font.
@@ -244,7 +244,7 @@ void fz_install_load_system_font_funcs(fz_context *ctx,
 */
 fz_font *fz_load_system_font(fz_context *ctx, const char *name, int bold, int italic, int needs_exact_metrics);
 
-/*
+/**
 	Attempt to load a given font from
 	the system.
 
@@ -259,7 +259,7 @@ fz_font *fz_load_system_font(fz_context *ctx, const char *name, int bold, int it
 */
 fz_font *fz_load_system_cjk_font(fz_context *ctx, const char *name, int ordering, int serif);
 
-/*
+/**
 	Search the builtin fonts for a match.
 	Whether a given font is present or not will depend on the
 	configuration in which MuPDF is built.
@@ -277,7 +277,7 @@ fz_font *fz_load_system_cjk_font(fz_context *ctx, const char *name, int ordering
 */
 const unsigned char *fz_lookup_builtin_font(fz_context *ctx, const char *name, int bold, int italic, int *len);
 
-/*
+/**
 	Search the builtin base14 fonts for a match.
 	Whether a given font is present or not will depend on the
 	configuration in which MuPDF is built.
@@ -291,7 +291,7 @@ const unsigned char *fz_lookup_builtin_font(fz_context *ctx, const char *name, i
 */
 const unsigned char *fz_lookup_base14_font(fz_context *ctx, const char *name, int *len);
 
-/*
+/**
 	Search the builtin cjk fonts for a match.
 	Whether a font is present or not will depend on the
 	configuration in which MuPDF is built.
@@ -305,7 +305,7 @@ const unsigned char *fz_lookup_base14_font(fz_context *ctx, const char *name, in
 */
 const unsigned char *fz_lookup_cjk_font(fz_context *ctx, int ordering, int *len, int *index);
 
-/*
+/**
 	Search the builtin cjk fonts for a match for a given language.
 	Whether a font is present or not will depend on the
 	configuration in which MuPDF is built.
@@ -323,13 +323,13 @@ const unsigned char *fz_lookup_cjk_font(fz_context *ctx, int ordering, int *len,
 */
 const unsigned char *fz_lookup_cjk_font_by_language(fz_context *ctx, const char *lang, int *len, int *subfont);
 
-/*
+/**
 	Return the matching FZ_ADOBE_* ordering
 	for the given language tag, such as "zh-Hant", "zh-Hans", "ja", or "ko".
 */
 int fz_lookup_cjk_ordering_by_language(const char *name);
 
-/*
+/**
 	Search the builtin noto fonts for a match.
 	Whether a font is present or not will depend on the
 	configuration in which MuPDF is built.
@@ -345,7 +345,7 @@ int fz_lookup_cjk_ordering_by_language(const char *name);
 */
 const unsigned char *fz_lookup_noto_font(fz_context *ctx, int script, int lang, int *len, int *subfont);
 
-/*
+/**
 	Search the builtin noto fonts specific symbol fonts.
 	Whether a font is present or not will depend on the
 	configuration in which MuPDF is built.
@@ -356,7 +356,7 @@ const unsigned char *fz_lookup_noto_symbol1_font(fz_context *ctx, int *len);
 const unsigned char *fz_lookup_noto_symbol2_font(fz_context *ctx, int *len);
 const unsigned char *fz_lookup_noto_emoji_font(fz_context *ctx, int *len);
 
-/*
+/**
 	Try to load a fallback font for the
 	given combination of font attributes. Whether a font is
 	present or not will depend on the configuration in which
@@ -376,7 +376,7 @@ const unsigned char *fz_lookup_noto_emoji_font(fz_context *ctx, int *len);
 */
 fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int serif, int bold, int italic);
 
-/*
+/**
 	Create a new (empty) type3 font.
 
 	name: Name of font (or NULL).
@@ -388,7 +388,7 @@ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int se
 */
 fz_font *fz_new_type3_font(fz_context *ctx, const char *name, fz_matrix matrix);
 
-/*
+/**
 	Create a new font from a font
 	file in memory.
 
@@ -406,7 +406,7 @@ fz_font *fz_new_type3_font(fz_context *ctx, const char *name, fz_matrix matrix);
 */
 fz_font *fz_new_font_from_memory(fz_context *ctx, const char *name, const unsigned char *data, int len, int index, int use_glyph_bbox);
 
-/*
+/**
 	Create a new font from a font file in a fz_buffer.
 
 	name: Name of font (leave NULL to use name from font).
@@ -421,7 +421,7 @@ fz_font *fz_new_font_from_memory(fz_context *ctx, const char *name, const unsign
 */
 fz_font *fz_new_font_from_buffer(fz_context *ctx, const char *name, fz_buffer *buffer, int index, int use_glyph_bbox);
 
-/*
+/**
 	Create a new font from a font file.
 
 	name: Name of font (leave NULL to use name from font).
@@ -436,14 +436,14 @@ fz_font *fz_new_font_from_buffer(fz_context *ctx, const char *name, fz_buffer *b
 */
 fz_font *fz_new_font_from_file(fz_context *ctx, const char *name, const char *path, int index, int use_glyph_bbox);
 
-/*
+/**
 	Create a new font from one of the built-in fonts.
 */
 fz_font *fz_new_base14_font(fz_context *ctx, const char *name);
 fz_font *fz_new_cjk_font(fz_context *ctx, int ordering);
 fz_font *fz_new_builtin_font(fz_context *ctx, const char *name, int is_bold, int is_italic);
 
-/*
+/**
 	Add a reference to an existing fz_font.
 
 	font: The font to add a reference to.
@@ -452,7 +452,7 @@ fz_font *fz_new_builtin_font(fz_context *ctx, const char *name, int is_bold, int
 */
 fz_font *fz_keep_font(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Drop a reference to a fz_font, destroying the
 	font when the last reference is dropped.
 
@@ -460,7 +460,7 @@ fz_font *fz_keep_font(fz_context *ctx, fz_font *font);
 */
 void fz_drop_font(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Set the font bbox.
 
 	font: The font to set the bbox for.
@@ -469,7 +469,7 @@ void fz_drop_font(fz_context *ctx, fz_font *font);
 */
 void fz_set_font_bbox(fz_context *ctx, fz_font *font, float xmin, float ymin, float xmax, float ymax);
 
-/*
+/**
 	Return a bbox for a given glyph in a font.
 
 	font: The font to look for the glyph in.
@@ -485,7 +485,7 @@ void fz_set_font_bbox(fz_context *ctx, fz_font *font, float xmin, float ymin, fl
 */
 fz_rect fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm);
 
-/*
+/**
 	Determine if a given glyph in a font
 	is cacheable. Certain glyphs in a type 3 font cannot safely
 	be cached, as their appearance depends on the enclosing
@@ -499,7 +499,7 @@ fz_rect fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm);
 */
 int fz_glyph_cacheable(fz_context *ctx, fz_font *font, int gid);
 
-/*
+/**
 	Run a glyph from a Type3 font to
 	a given device.
 
@@ -513,7 +513,7 @@ int fz_glyph_cacheable(fz_context *ctx, fz_font *font, int gid);
 */
 void fz_run_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, struct fz_device *dev);
 
-/*
+/**
 	Return the advance for a given glyph.
 
 	font: The font to look for the glyph in.
@@ -526,7 +526,7 @@ void fz_run_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, str
 */
 float fz_advance_glyph(fz_context *ctx, fz_font *font, int glyph, int wmode);
 
-/*
+/**
 	Find the glyph id for a given unicode
 	character within a font.
 
@@ -539,7 +539,7 @@ float fz_advance_glyph(fz_context *ctx, fz_font *font, int glyph, int wmode);
 */
 int fz_encode_character(fz_context *ctx, fz_font *font, int unicode);
 
-/*
+/**
 	Encode character, preferring small-caps variant if available.
 
 	font: The font to look for the unicode character in.
@@ -551,7 +551,7 @@ int fz_encode_character(fz_context *ctx, fz_font *font, int unicode);
 */
 int fz_encode_character_sc(fz_context *ctx, fz_font *font, int unicode);
 
-/*
+/**
 	Encode character.
 
 	Either by direct lookup of glyphname within a font, or, failing
@@ -562,7 +562,7 @@ int fz_encode_character_sc(fz_context *ctx, fz_font *font, int unicode);
 */
 int fz_encode_character_by_glyph_name(fz_context *ctx, fz_font *font, const char *glyphname);
 
-/*
+/**
 	Find the glyph id for
 	a given unicode character within a font, falling back to
 	an alternative if not found.
@@ -589,7 +589,7 @@ int fz_encode_character_by_glyph_name(fz_context *ctx, fz_font *font, const char
 */
 int fz_encode_character_with_fallback(fz_context *ctx, fz_font *font, int unicode, int script, int language, fz_font **out_font);
 
-/*
+/**
 	Find the name of a glyph
 
 	font: The font to look for the glyph in.
@@ -607,17 +607,17 @@ int fz_encode_character_with_fallback(fz_context *ctx, fz_font *font, int unicod
 */
 void fz_get_glyph_name(fz_context *ctx, fz_font *font, int glyph, char *buf, int size);
 
-/*
+/**
 	Retrieve font ascender in ems.
 */
 float fz_font_ascender(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Retrieve font descender in ems.
 */
 float fz_font_descender(fz_context *ctx, fz_font *font);
 
-/*
+/**
 	Retrieve the MD5 digest for the font's data.
 */
 void fz_font_digest(fz_context *ctx, fz_font *font, unsigned char digest[16]);
@@ -626,7 +626,7 @@ void fz_font_digest(fz_context *ctx, fz_font *font, unsigned char digest[16]);
 
 void fz_decouple_type3_font(fz_context *ctx, fz_font *font, void *t3doc);
 
-/*
+/**
 	map an FT error number to a
 	static string.
 
@@ -639,19 +639,19 @@ const char *ft_error_string(int err);
 int ft_char_index(void *face, int cid);
 int ft_name_index(void *face, const char *name);
 
-/*
+/**
 	Internal functions for our Harfbuzz integration
 	to work around the lack of thread safety.
 */
 
-/*
+/**
 	Lock against Harfbuzz being called
 	simultaneously in several threads. This reuses
 	FZ_LOCK_FREETYPE.
 */
 void fz_hb_lock(fz_context *ctx);
 
-/*
+/**
 	Unlock after a Harfbuzz call. This reuses
 	FZ_LOCK_FREETYPE.
 */

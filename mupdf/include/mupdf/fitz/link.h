@@ -5,7 +5,7 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/geometry.h"
 
-/*
+/**
 	fz_link is a list of interactive links on a page.
 
 	There is no relation between the order of the links in the
@@ -37,7 +37,7 @@ typedef struct fz_link
 	char *uri;
 } fz_link;
 
-/*
+/**
 	Create a new link record.
 
 	next is set to NULL with the expectation that the caller will
@@ -45,7 +45,7 @@ typedef struct fz_link
 */
 fz_link *fz_new_link(fz_context *ctx, fz_rect bbox, void *doc, const char *uri);
 
-/*
+/**
 	Increment the reference count for a link. The same pointer is
 	returned.
 
@@ -53,7 +53,7 @@ fz_link *fz_new_link(fz_context *ctx, fz_rect bbox, void *doc, const char *uri);
 */
 fz_link *fz_keep_link(fz_context *ctx, fz_link *link);
 
-/*
+/**
 	Decrement the reference count for a link. When the reference
 	count reaches zero, the link is destroyed.
 
@@ -63,7 +63,7 @@ fz_link *fz_keep_link(fz_context *ctx, fz_link *link);
 */
 void fz_drop_link(fz_context *ctx, fz_link *link);
 
-/*
+/**
 	Query whether a link is external to a document (determined by
 	uri containing a ':', intended to match with '://' which
 	separates the scheme from the scheme specific parts in URIs).

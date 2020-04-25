@@ -6,12 +6,12 @@
 #include "mupdf/fitz/font.h"
 #include "mupdf/fitz/pixmap.h"
 
-/*
+/**
 	Purge all the glyphs from the cache.
 */
 void fz_purge_glyph_cache(fz_context *ctx);
 
-/*
+/**
 	Create a pixmap containing a rendered glyph.
 
 	Lookup gid from font, clip it with scissor, and rendering it
@@ -25,7 +25,7 @@ void fz_purge_glyph_cache(fz_context *ctx);
 */
 fz_pixmap *fz_render_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, const fz_irect *scissor, int aa);
 
-/*
+/**
 	Nasty PDF interpreter specific hernia, required to allow the
 	interpreter to replay glyphs from a type3 font directly into
 	the target device.
@@ -36,7 +36,7 @@ fz_pixmap *fz_render_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_ma
 */
 void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate, fz_default_colorspaces *def_cs);
 
-/*
+/**
 	Force a type3 font to cache the displaylist for a given glyph
 	id.
 
@@ -46,12 +46,12 @@ void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, i
 */
 void fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid);
 
-/*
+/**
 	Dump debug statistics for the glyph cache.
 */
 void fz_dump_glyph_cache_stats(fz_context *ctx, fz_output *out);
 
-/*
+/**
 	Perform subpixel quantisation and adjustment on a glyph matrix.
 
 	ctm: On entry, the desired 'ideal' transformation for a glyph.

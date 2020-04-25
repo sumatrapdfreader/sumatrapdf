@@ -102,8 +102,8 @@ renderer(void *data)
 	// will render the request area of the page to the pixmap.
 
 	fprintf(stderr, "thread at page %d rendering!\n", pagenumber);
-	dev = fz_new_draw_device(ctx, &fz_identity, pix);
-	fz_run_display_list(ctx, list, dev, &fz_identity, &bbox, NULL);
+	dev = fz_new_draw_device(ctx, fz_identity, pix);
+	fz_run_display_list(ctx, list, dev, fz_identity, bbox, NULL);
 	fz_close_device(ctx, dev);
 	fz_drop_device(ctx, dev);
 
@@ -193,7 +193,6 @@ int main(int argc, char **argv)
 	{
 		fz_page *page;
 		fz_rect bbox;
-		fz_irect rbox;
 		fz_display_list *list;
 		fz_device *dev;
 		fz_pixmap *pix;
@@ -207,20 +206,20 @@ int main(int argc, char **argv)
 
 		// Compute the bounding box for each page.
 
-		fz_bound_page(ctx, page, &bbox);
+		bbox = fz_bound_page(ctx, page);
 
 		// Create a display list that will hold the drawing
 		// commands for the page. Once we have the display list
 		// this can safely be used on any other thread as it is
 		// not bound to a given context.
 
-		list = fz_new_display_list(ctx, &bbox);
+		list = fz_new_display_list(ctx, bbox);
 
 		// Run the loaded page through a display list device
 		// to populate the page's display list.
 
 		dev = fz_new_list_device(ctx, list);
-		fz_run_page(ctx, page, dev, &fz_identity, NULL);
+		fz_run_page(ctx, page, dev, fz_identity, NULL);
 		fz_close_device(ctx, dev);
 		fz_drop_device(ctx, dev);
 
@@ -231,7 +230,7 @@ int main(int argc, char **argv)
 
 		// Create a white pixmap using the correct dimensions.
 
-		pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), fz_round_rect(&rbox, &bbox), NULL, 0);
+		pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), fz_round_rect(bbox), NULL, 0);
 		fz_clear_pixmap_with_value(ctx, pix, 0xff);
 
 		// Populate the data structure to be sent to the

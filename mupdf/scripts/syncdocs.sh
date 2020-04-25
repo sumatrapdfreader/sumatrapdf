@@ -25,15 +25,6 @@ do
 <!DOCTYPE html>
 <html>
 <head>
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-54391264-6">
-	</script>
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag('js', new Date());
-		gtag('config', 'UA-54391264-6');
-	</script>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
@@ -112,11 +103,11 @@ cat >temp.foot <<EOF
 				<ul>
 					<li> <a href="https://artifex.com/support/" target="new">SUPPORT</a> </li>
 					<li> <a href="https://artifex.com/blog/artifex/" target="new">BLOG</a> </li>
-					<li> <a href="https://artifex.com/privacy-policy/" target="new">PRIVACY</a> </li>
+					<li> <a href="$ROOT/privacy.html" target="new">PRIVACY</a> </li>
 				</ul>
 			</div>
 			<div class="col-ft-3 footright">
-				<img src="../images/Artifex_logo.png" width="194" height="40" alt=""><br>
+				<img src="$ROOT/images/Artifex_logo.png" width="194" height="40" alt=""><br>
 				&copy; Copyright 2020 Artifex Software, Inc.<br>
 				All rights reserved.
 			</div>

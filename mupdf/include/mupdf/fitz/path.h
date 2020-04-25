@@ -5,7 +5,7 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/geometry.h"
 
-/*
+/**
  * Vector path buffer.
  * It can be stroked and dashed, or be filled.
  * It has a fill rule (nonzero or even_odd).
@@ -58,7 +58,7 @@ typedef struct
 	void (*rectto)(fz_context *ctx, void *arg, float x1, float y1, float x2, float y2);
 } fz_path_walker;
 
-/*
+/**
 	Walk the segments of a path, calling the
 	appropriate callback function from a given set for each
 	segment of the path.
@@ -78,12 +78,12 @@ typedef struct
 */
 void fz_walk_path(fz_context *ctx, const fz_path *path, const fz_path_walker *walker, void *arg);
 
-/*
+/**
 	Create a new (empty) path structure.
 */
 fz_path *fz_new_path(fz_context *ctx);
 
-/*
+/**
 	Increment the reference count. Returns the same pointer.
 
 	All paths can be kept, regardless of their packing type.
@@ -92,7 +92,7 @@ fz_path *fz_new_path(fz_context *ctx);
 */
 fz_path *fz_keep_path(fz_context *ctx, const fz_path *path);
 
-/*
+/**
 	Decrement the reference count. When the reference count hits
 	zero, free the path.
 
@@ -104,7 +104,7 @@ fz_path *fz_keep_path(fz_context *ctx, const fz_path *path);
 */
 void fz_drop_path(fz_context *ctx, const fz_path *path);
 
-/*
+/**
 	Minimise the internal storage used by a path.
 
 	As paths are constructed, the internal buffers
@@ -115,12 +115,12 @@ void fz_drop_path(fz_context *ctx, const fz_path *path);
 */
 void fz_trim_path(fz_context *ctx, fz_path *path);
 
-/*
+/**
 	Return the number of bytes required to pack a path.
 */
 int fz_packed_path_size(const fz_path *path);
 
-/*
+/**
 	Pack a path into the given block.
 	To minimise the size of paths, this function allows them to be
 	packed into a buffer with other information. Paths can be used
@@ -162,7 +162,7 @@ int fz_packed_path_size(const fz_path *path);
 */
 size_t fz_pack_path(fz_context *ctx, uint8_t *pack, size_t max, const fz_path *path);
 
-/*
+/**
 	Clone the data for a path.
 
 	This is used in preference to fz_keep_path when a whole
@@ -176,7 +176,7 @@ size_t fz_pack_path(fz_context *ctx, uint8_t *pack, size_t max, const fz_path *p
 */
 fz_path *fz_clone_path(fz_context *ctx, fz_path *path);
 
-/*
+/**
 	Return the current point that a path has
 	reached or (0,0) if empty.
 
@@ -184,7 +184,7 @@ fz_path *fz_clone_path(fz_context *ctx, fz_path *path);
 */
 fz_point fz_currentpoint(fz_context *ctx, fz_path *path);
 
-/*
+/**
 	Append a 'moveto' command to a path.
 	This 'opens' a path.
 
@@ -197,7 +197,7 @@ fz_point fz_currentpoint(fz_context *ctx, fz_path *path);
 */
 void fz_moveto(fz_context *ctx, fz_path *path, float x, float y);
 
-/*
+/**
 	Append a 'lineto' command to an open path.
 
 	path: The path to modify.
@@ -209,7 +209,7 @@ void fz_moveto(fz_context *ctx, fz_path *path, float x, float y);
 */
 void fz_lineto(fz_context *ctx, fz_path *path, float x, float y);
 
-/*
+/**
 	Append a 'rectto' command to an open path.
 
 	The rectangle is equivalent to:
@@ -230,7 +230,7 @@ void fz_lineto(fz_context *ctx, fz_path *path, float x, float y);
 */
 void fz_rectto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, float y1);
 
-/*
+/**
 	Append a 'quadto' command to an open path. (For a
 	quadratic bezier).
 
@@ -245,7 +245,7 @@ void fz_rectto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, flo
 */
 void fz_quadto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, float y1);
 
-/*
+/**
 	Append a 'curveto' command to an open path. (For a
 	cubic bezier).
 
@@ -264,7 +264,7 @@ void fz_quadto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, flo
 */
 void fz_curveto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, float y1, float x2, float y2);
 
-/*
+/**
 	Append a 'curvetov' command to an open path. (For a
 	cubic bezier with the first control coordinate equal to
 	the start point).
@@ -281,7 +281,7 @@ void fz_curveto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, fl
 */
 void fz_curvetov(fz_context *ctx, fz_path *path, float x1, float y1, float x2, float y2);
 
-/*
+/**
 	Append a 'curvetoy' command to an open path. (For a
 	cubic bezier with the second control coordinate equal to
 	the end point).
@@ -299,7 +299,7 @@ void fz_curvetov(fz_context *ctx, fz_path *path, float x1, float y1, float x2, f
 */
 void fz_curvetoy(fz_context *ctx, fz_path *path, float x0, float y0, float x2, float y2);
 
-/*
+/**
 	Close the current subpath.
 
 	path: The path to modify.
@@ -310,7 +310,7 @@ void fz_curvetoy(fz_context *ctx, fz_path *path, float x0, float y0, float x2, f
 */
 void fz_closepath(fz_context *ctx, fz_path *path);
 
-/*
+/**
 	Transform a path by a given
 	matrix.
 
@@ -323,7 +323,7 @@ void fz_closepath(fz_context *ctx, fz_path *path);
 */
 void fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix transform);
 
-/*
+/**
 	Return a bounding rectangle for a path.
 
 	path: The path to bound.
@@ -341,7 +341,7 @@ void fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix transform);
 */
 fz_rect fz_bound_path(fz_context *ctx, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm);
 
-/*
+/**
 	Given a rectangle (assumed to be the bounding box for a path),
 	expand it to allow for the expansion of the bbox that would be
 	seen by stroking the path with the given stroke state and
@@ -349,12 +349,12 @@ fz_rect fz_bound_path(fz_context *ctx, const fz_path *path, const fz_stroke_stat
 */
 fz_rect fz_adjust_rect_for_stroke(fz_context *ctx, fz_rect rect, const fz_stroke_state *stroke, fz_matrix ctm);
 
-/*
+/**
 	A sane 'default' stroke state.
 */
 extern const fz_stroke_state fz_default_stroke_state;
 
-/*
+/**
 	Create a new (empty) stroke state structure (with no dash
 	data) and return a reference to it.
 
@@ -362,7 +362,7 @@ extern const fz_stroke_state fz_default_stroke_state;
 */
 fz_stroke_state *fz_new_stroke_state(fz_context *ctx);
 
-/*
+/**
 	Create a new (empty) stroke state structure, with room for
 	dash data of the given length, and return a reference to it.
 
@@ -372,7 +372,7 @@ fz_stroke_state *fz_new_stroke_state(fz_context *ctx);
 */
 fz_stroke_state *fz_new_stroke_state_with_dash_len(fz_context *ctx, int len);
 
-/*
+/**
 	Take an additional reference to a stroke state structure.
 
 	No modifications should be carried out on a stroke
@@ -381,13 +381,13 @@ fz_stroke_state *fz_new_stroke_state_with_dash_len(fz_context *ctx, int len);
 */
 fz_stroke_state *fz_keep_stroke_state(fz_context *ctx, const fz_stroke_state *stroke);
 
-/*
+/**
 	Drop a reference to a stroke state structure, destroying the
 	structure if it is the last reference.
 */
 void fz_drop_stroke_state(fz_context *ctx, const fz_stroke_state *stroke);
 
-/*
+/**
 	Given a reference to a (possibly) shared stroke_state structure,
 	return a reference to an equivalent stroke_state structure
 	that is guaranteed to be unshared (i.e. one that can
@@ -403,7 +403,7 @@ void fz_drop_stroke_state(fz_context *ctx, const fz_stroke_state *stroke);
 */
 fz_stroke_state *fz_unshare_stroke_state(fz_context *ctx, fz_stroke_state *shared);
 
-/*
+/**
 	Given a reference to a (possibly) shared stroke_state structure,
 	return a reference to a stroke_state structure (with room for a
 	given amount of dash data) that is guaranteed to be unshared
@@ -419,7 +419,7 @@ fz_stroke_state *fz_unshare_stroke_state(fz_context *ctx, fz_stroke_state *share
 */
 fz_stroke_state *fz_unshare_stroke_state_with_dash_len(fz_context *ctx, fz_stroke_state *shared, int len);
 
-/*
+/**
 	Create an identical stroke_state structure and return a
 	reference to it.
 

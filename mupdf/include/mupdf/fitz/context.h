@@ -14,7 +14,7 @@ typedef struct fz_glyph_cache fz_glyph_cache;
 typedef struct fz_document_handler_context fz_document_handler_context;
 typedef struct fz_context fz_context;
 
-/*
+/**
 	Allocator structure; holds callbacks and private data pointer.
 */
 typedef struct
@@ -25,7 +25,7 @@ typedef struct
 	void (*free)(void *, void *);
 } fz_alloc_context;
 
-/*
+/**
 	Exception macro definitions. Just treat these as a black box -
 	pay no attention to the man behind the curtain.
 */
@@ -56,7 +56,7 @@ enum
 	FZ_ERROR_COUNT
 };
 
-/*
+/**
 	Flush any repeated warnings.
 
 	Repeated warnings are buffered, counted and eventually printed
@@ -67,7 +67,7 @@ enum
 */
 void fz_flush_warnings(fz_context *ctx);
 
-/*
+/**
 	Locking functions
 
 	MuPDF is kept deliberately free of any knowledge of particular
@@ -122,7 +122,7 @@ void fz_lock_debug_unlock(fz_context *ctx, int lock);
 
 #endif /* !FITZ_DEBUG_LOCKING */
 
-/*
+/**
 	Specifies the maximum size in bytes of the resource store in
 	fz_context. Given as argument to fz_new_context.
 
@@ -136,7 +136,7 @@ enum {
 	FZ_STORE_DEFAULT = 256 << 20,
 };
 
-/*
+/**
 	Allocate context containing global state.
 
 	The global state contains an exception stack, resource store,
@@ -166,7 +166,7 @@ enum {
 */
 #define fz_new_context(alloc, locks, max_store) fz_new_context_imp(alloc, locks, max_store, FZ_VERSION)
 
-/*
+/**
 	Make a clone of an existing context.
 
 	This function is meant to be used in multi-threaded
@@ -183,7 +183,7 @@ enum {
 */
 fz_context *fz_clone_context(fz_context *ctx);
 
-/*
+/**
 	Free a context and its global state.
 
 	The context and all of its global state is freed, and any
@@ -192,7 +192,7 @@ fz_context *fz_clone_context(fz_context *ctx);
 */
 void fz_drop_context(fz_context *ctx);
 
-/*
+/**
 	Set the user field in the context.
 
 	NULL initially, this field can be set to any opaque value
@@ -200,12 +200,12 @@ void fz_drop_context(fz_context *ctx);
 */
 void fz_set_user_context(fz_context *ctx, void *user);
 
-/*
+/**
 	Read the user field from the context.
 */
 void *fz_user_context(fz_context *ctx);
 
-/*
+/**
 	FIXME: Better not to expose fz_default_error_callback, and
 	fz_default_warning callback and to allow 'NULL' to be used
 	int fz_set_xxxx_callback to mean "defaults".
@@ -214,21 +214,21 @@ void *fz_user_context(fz_context *ctx);
 	fz_error_callback(ctx, message) to allow callers to inject
 	stuff into the error/warning streams?
 */
-/*
+/**
 	The default error callback. Declared publicly just so that the
 	error callback can be set back to this after it has been
 	overridden.
 */
 void fz_default_error_callback(void *user, const char *message);
 
-/*
+/**
 	The default warning callback. Declared publicly just so that
 	the warning callback can be set back to this after it has been
 	overridden.
 */
 void fz_default_warning_callback(void *user, const char *message);
 
-/*
+/**
 	Set the error callback. This will be called as part of the
 	exception handling.
 
@@ -236,7 +236,7 @@ void fz_default_warning_callback(void *user, const char *message);
 */
 void fz_set_error_callback(fz_context *ctx, void (*print)(void *user, const char *message), void *user);
 
-/*
+/**
 	Set the warning callback. This will be called as part of the
 	exception handling.
 
@@ -244,12 +244,12 @@ void fz_set_error_callback(fz_context *ctx, void (*print)(void *user, const char
 */
 void fz_set_warning_callback(fz_context *ctx, void (*print)(void *user, const char *message), void *user);
 
-/*
+/**
 	In order to tune MuPDF's behaviour, certain functions can
 	(optionally) be provided by callers.
 */
 
-/*
+/**
 	Given the width and height of an image,
 	the subsample factor, and the subarea of the image actually
 	required, the caller can decide whether to decode the whole
@@ -268,7 +268,7 @@ void fz_set_warning_callback(fz_context *ctx, void (*print)(void *user, const ch
 */
 typedef void (fz_tune_image_decode_fn)(void *arg, int w, int h, int l2factor, fz_irect *subarea);
 
-/*
+/**
 	Given the source width and height of
 	image, together with the actual required width and height,
 	decide whether we should use mitchell scaling.
@@ -285,7 +285,7 @@ typedef void (fz_tune_image_decode_fn)(void *arg, int w, int h, int l2factor, fz
 */
 typedef int (fz_tune_image_scale_fn)(void *arg, int dst_w, int dst_h, int src_w, int src_h);
 
-/*
+/**
 	Set the tuning function to use for
 	image decode.
 
@@ -295,7 +295,7 @@ typedef int (fz_tune_image_scale_fn)(void *arg, int dst_w, int dst_h, int src_w,
 */
 void fz_tune_image_decode(fz_context *ctx, fz_tune_image_decode_fn *image_decode, void *arg);
 
-/*
+/**
 	Set the tuning function to use for
 	image scaling.
 
@@ -305,13 +305,13 @@ void fz_tune_image_decode(fz_context *ctx, fz_tune_image_decode_fn *image_decode
 */
 void fz_tune_image_scale(fz_context *ctx, fz_tune_image_scale_fn *image_scale, void *arg);
 
-/*
+/**
 	Get the number of bits of antialiasing we are
 	using (for graphics). Between 0 and 8.
 */
 int fz_aa_level(fz_context *ctx);
 
-/*
+/**
 	Set the number of bits of antialiasing we should
 	use (for both text and graphics).
 
@@ -320,13 +320,13 @@ int fz_aa_level(fz_context *ctx);
 */
 void fz_set_aa_level(fz_context *ctx, int bits);
 
-/*
+/**
 	Get the number of bits of antialiasing we are
 	using for text. Between 0 and 8.
 */
 int fz_text_aa_level(fz_context *ctx);
 
-/*
+/**
 	Set the number of bits of antialiasing we
 	should use for text.
 
@@ -335,13 +335,13 @@ int fz_text_aa_level(fz_context *ctx);
 */
 void fz_set_text_aa_level(fz_context *ctx, int bits);
 
-/*
+/**
 	Get the number of bits of antialiasing we are
 	using for graphics. Between 0 and 8.
 */
 int fz_graphics_aa_level(fz_context *ctx);
 
-/*
+/**
 	Set the number of bits of antialiasing we
 	should use for graphics.
 
@@ -350,7 +350,7 @@ int fz_graphics_aa_level(fz_context *ctx);
 */
 void fz_set_graphics_aa_level(fz_context *ctx, int bits);
 
-/*
+/**
 	Get the minimum line width to be
 	used for stroked lines.
 
@@ -358,7 +358,7 @@ void fz_set_graphics_aa_level(fz_context *ctx, int bits);
 */
 float fz_graphics_min_line_width(fz_context *ctx);
 
-/*
+/**
 	Set the minimum line width to be
 	used for stroked lines.
 
@@ -366,37 +366,37 @@ float fz_graphics_min_line_width(fz_context *ctx);
 */
 void fz_set_graphics_min_line_width(fz_context *ctx, float min_line_width);
 
-/*
+/**
 	Get the user stylesheet source text.
 */
 const char *fz_user_css(fz_context *ctx);
 
-/*
+/**
 	Set the user stylesheet source text for use with HTML and EPUB.
 */
 void fz_set_user_css(fz_context *ctx, const char *text);
 
-/*
+/**
 	Return whether to respect document styles in HTML and EPUB.
 */
 int fz_use_document_css(fz_context *ctx);
 
-/*
+/**
 	Toggle whether to respect document styles in HTML and EPUB.
 */
 void fz_set_use_document_css(fz_context *ctx, int use);
 
-/*
+/**
 	Enable icc profile based operation.
 */
 void fz_enable_icc(fz_context *ctx);
 
-/*
+/**
 	Disable icc profile based operation.
 */
 void fz_disable_icc(fz_context *ctx);
 
-/*
+/**
 	Memory Allocation and Scavenging:
 
 	All calls to MuPDF's allocator functions pass through to the
@@ -414,7 +414,7 @@ void fz_disable_icc(fz_context *ctx);
 	referred to by the store being freed.
 */
 
-/*
+/**
 	Allocate memory for a structure, clear it, and tag the pointer
 	for Memento.
 
@@ -423,7 +423,7 @@ void fz_disable_icc(fz_context *ctx);
 #define fz_malloc_struct(CTX, TYPE) \
 	((TYPE*)Memento_label(fz_calloc(CTX, 1, sizeof(TYPE)), #TYPE))
 
-/*
+/**
 	Allocate uninitialized memory for an array of structures, and
 	tag the pointer for Memento. Does NOT clear the memory!
 
@@ -434,7 +434,7 @@ void fz_disable_icc(fz_context *ctx);
 #define fz_realloc_array(CTX, OLD, COUNT, TYPE) \
 	((TYPE*)Memento_label(fz_realloc(CTX, OLD, (COUNT) * sizeof(TYPE)), #TYPE "[]"))
 
-/*
+/**
 	Allocate uninitialized memory of a given size.
 	Does NOT clear the memory!
 
@@ -444,7 +444,7 @@ void fz_disable_icc(fz_context *ctx);
 */
 void *fz_malloc(fz_context *ctx, size_t size);
 
-/*
+/**
 	Allocate array of memory of count entries of size bytes.
 	Clears the memory to zero.
 
@@ -452,7 +452,7 @@ void *fz_malloc(fz_context *ctx, size_t size);
 */
 void *fz_calloc(fz_context *ctx, size_t count, size_t size);
 
-/*
+/**
 	Reallocates a block of memory to given size. Existing contents
 	up to min(old_size,new_size) are maintained. The rest of the
 	block is uninitialised.
@@ -465,7 +465,7 @@ void *fz_calloc(fz_context *ctx, size_t count, size_t size);
 */
 void *fz_realloc(fz_context *ctx, void *p, size_t size);
 
-/*
+/**
 	Free a previously allocated block of memory.
 
 	fz_free(ctx, NULL) does nothing.
@@ -474,30 +474,30 @@ void *fz_realloc(fz_context *ctx, void *p, size_t size);
 */
 void fz_free(fz_context *ctx, void *p);
 
-/*
+/**
 	fz_malloc equivalent that returns NULL rather than throwing
 	exceptions.
 */
 void *fz_malloc_no_throw(fz_context *ctx, size_t size);
 
-/*
+/**
 	fz_calloc equivalent that returns NULL rather than throwing
 	exceptions.
 */
 void *fz_calloc_no_throw(fz_context *ctx, size_t count, size_t size);
 
-/*
+/**
 	fz_realloc equivalent that returns NULL rather than throwing
 	exceptions.
 */
 void *fz_realloc_no_throw(fz_context *ctx, void *p, size_t size);
 
-/*
+/**
 	Portable strdup implementation, using fz allocators.
 */
 char *fz_strdup(fz_context *ctx, const char *s);
 
-/*
+/**
 	Fill block with len bytes of pseudo-randomness.
 */
 void fz_memrnd(fz_context *ctx, uint8_t *block, int len);
@@ -576,7 +576,7 @@ struct fz_context
 
 fz_context *fz_new_context_imp(const fz_alloc_context *alloc, const fz_locks_context *locks, size_t max_store, const char *version);
 
-/*
+/**
 	Lock one of the user supplied mutexes.
 */
 static inline void
@@ -586,7 +586,7 @@ fz_lock(fz_context *ctx, int lock)
 	ctx->locks.lock(ctx->locks.user, lock);
 }
 
-/*
+/**
 	Unlock one of the user supplied mutexes.
 */
 static inline void

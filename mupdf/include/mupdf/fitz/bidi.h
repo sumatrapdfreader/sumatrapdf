@@ -1,4 +1,4 @@
-/*
+/**
 	Bidirectional text processing.
 
 	Derived from the SmartOffice code, which is itself derived
@@ -39,7 +39,7 @@ typedef enum
 }
 fz_bidi_flags;
 
-/*
+/**
 	Prototype for callback function supplied to fz_bidi_fragment_text.
 
 	@param	fragment	first character in fragment
@@ -58,7 +58,7 @@ typedef void (fz_bidi_fragment_fn)(const uint32_t *fragment,
 					int script,
 					void *arg);
 
-/*
+/**
 	Partitions the given Unicode sequence into one or more
 	unidirectional fragments and invokes the given callback
 	function for each fragment.

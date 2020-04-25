@@ -2,13 +2,13 @@
 
 #define FZ_CONFIG_H
 
-/*
+/**
 	Enable the following for spot (and hence overprint/overprint
 	simulation) capable rendering. This forces FZ_PLOTTERS_N on.
 */
 /* #define FZ_ENABLE_SPOT_RENDERING 1 */
 
-/*
+/**
 	Choose which plotters we need.
 	By default we build all the plotters in. To avoid building
 	plotters in that aren't needed, define the unwanted
@@ -19,7 +19,7 @@
 /* #define FZ_PLOTTERS_CMYK 1 */
 /* #define FZ_PLOTTERS_N 1 */
 
-/*
+/**
 	Choose which document agents to include.
 	By default all are enabled. To avoid building unwanted
 	ones, define FZ_ENABLE_... to 0.
@@ -32,12 +32,12 @@
 /* #define FZ_ENABLE_HTML 1 */
 /* #define FZ_ENABLE_EPUB 1 */
 
-/*
+/**
 	Choose whether to enable ICC color profiles.
 */
 /* #define FZ_ENABLE_ICC 1 */
 
-/*
+/**
 	Choose whether to enable JPEG2000 decoding.
 	By default, it is enabled, but due to frequent security
 	issues with the third party libraries we support disabling
@@ -45,14 +45,14 @@
 */
 /* #define FZ_ENABLE_JPX 1 */
 
-/*
+/**
 	Choose whether to enable JavaScript.
 	By default JavaScript is enabled both for mutool and PDF
 	interactivity.
 */
 /* #define FZ_ENABLE_JS 1 */
 
-/*
+/**
 	Choose which fonts to include.
 	By default we include the base 14 PDF fonts,
 	DroidSansFallback from Android for CJK, and

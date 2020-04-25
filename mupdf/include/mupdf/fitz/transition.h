@@ -36,7 +36,7 @@ typedef struct
 	int state1;
 } fz_transition;
 
-/*
+/**
 	Generate a frame of a transition.
 
 	tpix: Target pixmap

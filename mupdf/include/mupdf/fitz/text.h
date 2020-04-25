@@ -7,7 +7,7 @@
 #include "mupdf/fitz/path.h"
 #include "mupdf/fitz/bidi.h"
 
-/*
+/**
 	Text buffer.
 
 	The trm field contains the a, b, c and d coefficients.
@@ -60,14 +60,14 @@ typedef struct
 	fz_text_span *head, *tail;
 } fz_text;
 
-/*
+/**
 	Create a new empty fz_text object.
 
 	Throws exception on failure to allocate.
 */
 fz_text *fz_new_text(fz_context *ctx);
 
-/*
+/**
 	Increment the reference count for the text object. The same
 	pointer is returned.
 
@@ -75,7 +75,7 @@ fz_text *fz_new_text(fz_context *ctx);
 */
 fz_text *fz_keep_text(fz_context *ctx, const fz_text *text);
 
-/*
+/**
 	Decrement the reference count for the text object. When the
 	reference count hits zero, the text object is freed.
 
@@ -83,7 +83,7 @@ fz_text *fz_keep_text(fz_context *ctx, const fz_text *text);
 */
 void fz_drop_text(fz_context *ctx, const fz_text *text);
 
-/*
+/**
 	Add a glyph/unicode value to a text object.
 
 	text: Text object to add to.
@@ -110,7 +110,7 @@ void fz_drop_text(fz_context *ctx, const fz_text *text);
 */
 void fz_show_glyph(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, int glyph, int unicode, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language language);
 
-/*
+/**
 	Add a UTF8 string to a text object.
 
 	text: Text object to add to.
@@ -136,7 +136,7 @@ void fz_show_glyph(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm,
 */
 fz_matrix fz_show_string(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, const char *s, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language language);
 
-/*
+/**
 	Find the bounds of a given text object.
 
 	text: The text object to find the bounds of.
@@ -153,7 +153,7 @@ fz_matrix fz_show_string(fz_context *ctx, fz_text *text, fz_font *font, fz_matri
 */
 fz_rect fz_bound_text(fz_context *ctx, const fz_text *text, const fz_stroke_state *stroke, fz_matrix ctm);
 
-/*
+/**
 	Convert ISO 639 (639-{1,2,3,5}) language specification
 	strings losslessly to a 15 bit fz_text_language code.
 
@@ -164,7 +164,7 @@ fz_rect fz_bound_text(fz_context *ctx, const fz_text *text, const fz_stroke_stat
 */
 fz_text_language fz_text_language_from_string(const char *str);
 
-/*
+/**
 	Recover ISO 639 (639-{1,2,3,5}) language specification
 	strings losslessly from a 15 bit fz_text_language code.
 

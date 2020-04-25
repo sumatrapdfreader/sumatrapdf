@@ -5,7 +5,7 @@
 
 /* md5 digests */
 
-/*
+/**
 	Structure definition is public to enable stack
 	based allocation. Do not access the members directly.
 */
@@ -16,7 +16,7 @@ typedef struct
 	unsigned char buffer[64];
 } fz_md5;
 
-/*
+/**
 	MD5 initialization. Begins an MD5 operation, writing a new
 	context.
 
@@ -24,7 +24,7 @@ typedef struct
 */
 void fz_md5_init(fz_md5 *state);
 
-/*
+/**
 	MD5 block update operation. Continues an MD5 message-digest
 	operation, processing another message block, and updating the
 	context.
@@ -33,7 +33,7 @@ void fz_md5_init(fz_md5 *state);
 */
 void fz_md5_update(fz_md5 *state, const unsigned char *input, size_t inlen);
 
-/*
+/**
 	MD5 finalization. Ends an MD5 message-digest operation, writing
 	the message digest and zeroizing the context.
 
@@ -43,7 +43,7 @@ void fz_md5_final(fz_md5 *state, unsigned char digest[16]);
 
 /* sha-256 digests */
 
-/*
+/**
 	Structure definition is public to enable stack
 	based allocation. Do not access the members directly.
 */
@@ -57,7 +57,7 @@ typedef struct
 	} buffer;
 } fz_sha256;
 
-/*
+/**
 	SHA256 initialization. Begins an SHA256 operation, initialising
 	the supplied context.
 
@@ -65,7 +65,7 @@ typedef struct
 */
 void fz_sha256_init(fz_sha256 *state);
 
-/*
+/**
 	SHA256 block update operation. Continues an SHA256 message-
 	digest operation, processing another message block, and updating
 	the context.
@@ -74,7 +74,7 @@ void fz_sha256_init(fz_sha256 *state);
 */
 void fz_sha256_update(fz_sha256 *state, const unsigned char *input, size_t inlen);
 
-/*
+/**
 	MD5 finalization. Ends an MD5 message-digest operation, writing
 	the message digest and zeroizing the context.
 
@@ -84,7 +84,7 @@ void fz_sha256_final(fz_sha256 *state, unsigned char digest[32]);
 
 /* sha-512 digests */
 
-/*
+/**
 	Structure definition is public to enable stack
 	based allocation. Do not access the members directly.
 */
@@ -98,7 +98,7 @@ typedef struct
 	} buffer;
 } fz_sha512;
 
-/*
+/**
 	SHA512 initialization. Begins an SHA512 operation, initialising
 	the supplied context.
 
@@ -106,7 +106,7 @@ typedef struct
 */
 void fz_sha512_init(fz_sha512 *state);
 
-/*
+/**
 	SHA512 block update operation. Continues an SHA512 message-
 	digest operation, processing another message block, and updating
 	the context.
@@ -115,7 +115,7 @@ void fz_sha512_init(fz_sha512 *state);
 */
 void fz_sha512_update(fz_sha512 *state, const unsigned char *input, size_t inlen);
 
-/*
+/**
 	SHA512 finalization. Ends an SHA512 message-digest operation,
 	writing the message digest and zeroizing the context.
 
@@ -127,7 +127,7 @@ void fz_sha512_final(fz_sha512 *state, unsigned char digest[64]);
 
 typedef fz_sha512 fz_sha384;
 
-/*
+/**
 	SHA384 initialization. Begins an SHA384 operation, initialising
 	the supplied context.
 
@@ -135,7 +135,7 @@ typedef fz_sha512 fz_sha384;
 */
 void fz_sha384_init(fz_sha384 *state);
 
-/*
+/**
 	SHA384 block update operation. Continues an SHA384 message-
 	digest operation, processing another message block, and updating
 	the context.
@@ -144,7 +144,7 @@ void fz_sha384_init(fz_sha384 *state);
 */
 void fz_sha384_update(fz_sha384 *state, const unsigned char *input, size_t inlen);
 
-/*
+/**
 	SHA384 finalization. Ends an SHA384 message-digest operation,
 	writing the message digest and zeroizing the context.
 
@@ -154,7 +154,7 @@ void fz_sha384_final(fz_sha384 *state, unsigned char digest[64]);
 
 /* arc4 crypto */
 
-/*
+/**
 	Structure definition is public to enable stack
 	based allocation. Do not access the members directly.
 */
@@ -165,7 +165,7 @@ typedef struct
 	unsigned char state[256];
 } fz_arc4;
 
-/*
+/**
 	RC4 initialization. Begins an RC4 operation, writing a new
 	context.
 
@@ -173,7 +173,7 @@ typedef struct
 */
 void fz_arc4_init(fz_arc4 *state, const unsigned char *key, size_t len);
 
-/*
+/**
 	RC4 block encrypt operation; encrypt src into dst (both of
 	length len) updating the RC4 state as we go.
 
@@ -181,7 +181,7 @@ void fz_arc4_init(fz_arc4 *state, const unsigned char *key, size_t len);
 */
 void fz_arc4_encrypt(fz_arc4 *state, unsigned char *dest, const unsigned char *src, size_t len);
 
-/*
+/**
 	RC4 finalization. Zero the context.
 
 	Never throws an exception.
@@ -190,7 +190,7 @@ void fz_arc4_final(fz_arc4 *state);
 
 /* AES block cipher implementation from XYSSL */
 
-/*
+/**
 	Structure definitions are public to enable stack
 	based allocation. Do not access the members directly.
 */
@@ -204,7 +204,7 @@ typedef struct
 #define FZ_AES_DECRYPT 0
 #define FZ_AES_ENCRYPT 1
 
-/*
+/**
 	AES encryption intialisation. Fills in the supplied context
 	and prepares for encryption using the given key.
 
@@ -214,7 +214,7 @@ typedef struct
 */
 int fz_aes_setkey_enc(fz_aes *ctx, const unsigned char *key, int keysize);
 
-/*
+/**
 	AES decryption intialisation. Fills in the supplied context
 	and prepares for decryption using the given key.
 
@@ -224,7 +224,7 @@ int fz_aes_setkey_enc(fz_aes *ctx, const unsigned char *key, int keysize);
 */
 int fz_aes_setkey_dec(fz_aes *ctx, const unsigned char *key, int keysize);
 
-/*
+/**
 	AES block processing. Encrypts or Decrypts (according to mode,
 	which must match what was initially set up) length bytes (which
 	must be a multiple of 16), using (and modifying) the insertion

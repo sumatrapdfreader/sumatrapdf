@@ -78,4 +78,6 @@ public final class AndroidDrawDevice extends NativeDevice
 	public static Bitmap drawPageFitWidth(Page page, int fitW) {
 		return drawPage(page, fitPageWidth(page, fitW));
 	}
+
+	public native final void invertLuminance();
 }

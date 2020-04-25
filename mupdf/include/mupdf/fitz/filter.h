@@ -15,67 +15,67 @@ typedef struct
 	size_t length;
 } fz_range;
 
-/*
+/**
 	The null filter reads a specified amount of data from the
 	substream.
 */
 fz_stream *fz_open_null_filter(fz_context *ctx, fz_stream *chain, int len, int64_t offset);
 
-/*
+/**
 	The range filter copies data from specified ranges of the
 	chained stream.
 */
 fz_stream *fz_open_range_filter(fz_context *ctx, fz_stream *chain, fz_range *ranges, int nranges);
 
-/*
+/**
 	The endstream filter reads a PDF substream, and starts to look
 	for an 'endstream' token after the specified length.
 */
 fz_stream *fz_open_endstream_filter(fz_context *ctx, fz_stream *chain, int len, int64_t offset);
 
-/*
+/**
 	Concat filter concatenates several streams into one.
 */
 fz_stream *fz_open_concat(fz_context *ctx, int max, int pad);
 
-/*
+/**
 	Add a chained stream to the end of the concatenate filter.
 
 	Ownership of chain is passed in.
 */
 void fz_concat_push_drop(fz_context *ctx, fz_stream *concat, fz_stream *chain);
 
-/*
+/**
 	arc4 filter performs RC4 decoding of data read from the chained
 	filter using the supplied key.
 */
 fz_stream *fz_open_arc4(fz_context *ctx, fz_stream *chain, unsigned char *key, unsigned keylen);
 
-/*
+/**
 	aesd filter performs AES decoding of data read from the chained
 	filter using the supplied key.
 */
 fz_stream *fz_open_aesd(fz_context *ctx, fz_stream *chain, unsigned char *key, unsigned keylen);
 
-/*
+/**
 	a85d filter performs ASCII 85 Decoding of data read
 	from the chained filter.
 */
 fz_stream *fz_open_a85d(fz_context *ctx, fz_stream *chain);
 
-/*
+/**
 	ahxd filter performs ASCII Hex decoding of data read
 	from the chained filter.
 */
 fz_stream *fz_open_ahxd(fz_context *ctx, fz_stream *chain);
 
-/*
+/**
 	rld filter performs Run Length Decoding of data read
 	from the chained filter.
 */
 fz_stream *fz_open_rld(fz_context *ctx, fz_stream *chain);
 
-/*
+/**
 	dctd filter performs DCT (JPEG) decoding of data read
 	from the chained filter.
 
@@ -90,7 +90,7 @@ fz_stream *fz_open_rld(fz_context *ctx, fz_stream *chain);
 */
 fz_stream *fz_open_dctd(fz_context *ctx, fz_stream *chain, int color_transform, int l2factor, fz_stream *jpegtables);
 
-/*
+/**
 	faxd filter performs FAX decoding of data read from
 	the chained filter.
 
@@ -116,7 +116,7 @@ fz_stream *fz_open_faxd(fz_context *ctx, fz_stream *chain,
 	int k, int end_of_line, int encoded_byte_align,
 	int columns, int rows, int end_of_block, int black_is_1);
 
-/*
+/**
 	flated filter performs LZ77 decoding (inflating) of data read
 	from the chained filter.
 
@@ -126,7 +126,7 @@ fz_stream *fz_open_faxd(fz_context *ctx, fz_stream *chain,
 */
 fz_stream *fz_open_flated(fz_context *ctx, fz_stream *chain, int window_bits);
 
-/*
+/**
 	lzwd filter performs LZW decoding of data read from the chained
 	filter.
 
@@ -144,7 +144,7 @@ fz_stream *fz_open_flated(fz_context *ctx, fz_stream *chain, int window_bits);
 */
 fz_stream *fz_open_lzwd(fz_context *ctx, fz_stream *chain, int early_change, int min_bits, int reverse_bits, int old_tiff);
 
-/*
+/**
 	predict filter performs pixel prediction on data read from
 	the chained filter.
 
@@ -158,27 +158,27 @@ fz_stream *fz_open_lzwd(fz_context *ctx, fz_stream *chain, int early_change, int
 */
 fz_stream *fz_open_predict(fz_context *ctx, fz_stream *chain, int predictor, int columns, int colors, int bpc);
 
-/*
+/**
 	Open a filter that performs jbig2 decompression on the chained
 	stream, using the optional globals record.
 */
 fz_stream *fz_open_jbig2d(fz_context *ctx, fz_stream *chain, fz_jbig2_globals *globals);
 
-/*
+/**
 	Create a jbig2 globals record from a buffer.
 
 	Immutable once created.
 */
 fz_jbig2_globals *fz_load_jbig2_globals(fz_context *ctx, fz_buffer *buf);
 
-/*
+/**
 	Increment the reference count for a jbig2 globals record.
 
 	Never throws an exception.
 */
 fz_jbig2_globals *fz_keep_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals);
 
-/*
+/**
 	Decrement the reference count for a jbig2 globals record.
 	When the reference count hits zero, the record is freed.
 
@@ -186,7 +186,7 @@ fz_jbig2_globals *fz_keep_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globa
 */
 void fz_drop_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals);
 
-/*
+/**
 	Special jbig2 globals drop function for use in implementing
 	store support.
 */
@@ -194,25 +194,25 @@ void fz_drop_jbig2_globals_imp(fz_context *ctx, fz_storable *globals);
 
 /* Extra filters for tiff */
 
-/*
+/**
 	SGI Log 16bit (greyscale) decode from the chained filter.
 	Decodes lines of w pixels to 8bpp greyscale.
 */
 fz_stream *fz_open_sgilog16(fz_context *ctx, fz_stream *chain, int w);
 
-/*
+/**
 	SGI Log 24bit (LUV) decode from the chained filter.
 	Decodes lines of w pixels to 8bpc rgb.
 */
 fz_stream *fz_open_sgilog24(fz_context *ctx, fz_stream *chain, int w);
 
-/*
+/**
 	SGI Log 32bit (LUV) decode from the chained filter.
 	Decodes lines of w pixels to 8bpc rgb.
 */
 fz_stream *fz_open_sgilog32(fz_context *ctx, fz_stream *chain, int w);
 
-/*
+/**
 	4bit greyscale Thunderscan decoding from the chained filter.
 	Decodes lines of w pixels to 8bpp greyscale.
 */

@@ -8,7 +8,7 @@
 #endif
 #endif
 
-/*
+/**
 	Include the standard libc headers.
 */
 
@@ -44,7 +44,7 @@ typedef unsigned __int64 uint64_t;
 #define FZ_SQRT2 1.41421356f
 #define FZ_LN2 0.69314718f
 
-/*
+/**
 	Spot architectures where we have optimisations.
 */
 
@@ -54,7 +54,7 @@ typedef unsigned __int64 uint64_t;
 #endif
 #endif
 
-/*
+/**
 	Some differences in libc can be smoothed over
 */
 
@@ -75,7 +75,7 @@ typedef unsigned __int64 uint64_t;
 #define HAVE_SIGSETJMP 0
 #endif
 
-/*
+/**
 	Where possible (i.e. on platforms on which they are provided),
 	use sigsetjmp/siglongjmp in preference to setjmp/longjmp. We
 	don't alter signal handlers within mupdf, so there is no need
@@ -239,7 +239,7 @@ void fz_free_argv(int argc, char **argv);
 /* Include this first so our defines don't clash with the system
  * definitions */
 #include <math.h>
-/*
+/**
  * Trig functions
  */
 static float

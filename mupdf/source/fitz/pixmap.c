@@ -847,7 +847,7 @@ fz_tint_pixmap(fz_context *ctx, fz_pixmap *pix, int black, int white)
 /* Invert luminance in RGB/BGR pixmap, but keep the colors as is. */
 static inline void invert_luminance(int type, unsigned char *s)
 {
-	int r, g, b, y, u, v, c, d, e;
+	int r, g, b, y;
 
 	/* Convert to YUV */
 	if (type == FZ_COLORSPACE_RGB)
@@ -863,20 +863,11 @@ static inline void invert_luminance(int type, unsigned char *s)
 		b = s[0];
 	}
 
-	y = ((66 * r + 129 * g + 25 * b + 128) >> 8) + 16;
-	u = ((-38 * r - 74 * g + 112 * b + 128) >> 8) + 128;
-	v = ((112 * r - 94 * g - 18 * b + 128) >> 8) + 128;
-
-	/* Invert luminance */
-	y = 255 - y;
-
-	/* Convert to RGB */
-	c = y - 16;
-	d = u - 128;
-	e = v - 128;
-	r = (298 * c + 409 * e + 128) >> 8;
-	g = (298 * c - 100 * d - 208 * e + 128) >> 8;
-	b = (298 * c + 516 * d + 128) >> 8;
+	y = (39336 * r + 76884 * g + 14900 * b + 32768)>>16;
+	y = 259-y;
+	r += y;
+	g += y;
+	b += y;
 
 	if (type == FZ_COLORSPACE_RGB)
 	{

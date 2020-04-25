@@ -3083,6 +3083,30 @@ FUN(NativeDevice_close)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT void JNICALL
+FUN(android_AndroidDrawDevice_invertLuminance)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_device *dev = from_Device(env, self);
+	NativeDeviceInfo *info;
+	int err;
+
+	if (!ctx || !dev) return;
+
+	info = lockNativeDevice(env, self, &err);
+	if (err)
+		return;
+
+	fz_try(ctx)
+	{
+		fz_invert_pixmap_luminance(ctx, info->pixmap);
+	}
+	fz_always(ctx)
+		unlockNativeDevice(env, info);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+}
+
+JNIEXPORT void JNICALL
 FUN(NativeDevice_fillPath)(JNIEnv *env, jobject self, jobject jpath, jboolean even_odd, jobject jctm, jobject jcs, jfloatArray jcolor, jfloat alpha, jint jcp)
 {
 	fz_context *ctx = get_context(env);

@@ -7,7 +7,7 @@
 #include "mupdf/fitz/stream.h"
 #include "mupdf/fitz/filter.h"
 
-/*
+/**
 	Compression parameters used for buffers of compressed data;
 	typically for the source data for images.
 */
@@ -53,7 +53,7 @@ typedef struct
 	} u;
 } fz_compression_params;
 
-/*
+/**
 	Buffers of compressed data; typically for the source data
 	for images.
 */
@@ -63,7 +63,7 @@ typedef struct
 	fz_buffer *buffer;
 } fz_compressed_buffer;
 
-/*
+/**
 	Return the storage size used for a buffer and its data.
 	Used in implementing store handling.
 
@@ -71,12 +71,12 @@ typedef struct
 */
 size_t fz_compressed_buffer_size(fz_compressed_buffer *buffer);
 
-/*
+/**
 	Open a stream to read the decompressed version of a buffer.
 */
 fz_stream *fz_open_compressed_buffer(fz_context *ctx, fz_compressed_buffer *);
 
-/*
+/**
 	Open a stream to read the decompressed version of a buffer,
 	with optional log2 subsampling.
 
@@ -88,13 +88,13 @@ fz_stream *fz_open_compressed_buffer(fz_context *ctx, fz_compressed_buffer *);
 */
 fz_stream *fz_open_image_decomp_stream_from_buffer(fz_context *ctx, fz_compressed_buffer *, int *l2factor);
 
-/*
+/**
 	Open a stream to read the decompressed version of another stream
 	with optional log2 subsampling.
 */
 fz_stream *fz_open_image_decomp_stream(fz_context *ctx, fz_stream *, fz_compression_params *, int *l2factor);
 
-/*
+/**
 	Recognise image format strings in the first 8 bytes from image
 	data.
 */
@@ -125,7 +125,7 @@ enum
 	FZ_IMAGE_TIFF,
 };
 
-/*
+/**
 	Drop a reference to a compressed buffer. Destroys the buffer
 	and frees any storage/other references held by it.
 

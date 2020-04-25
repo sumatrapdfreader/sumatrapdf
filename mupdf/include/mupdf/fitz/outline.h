@@ -8,7 +8,7 @@
 
 /* Outline */
 
-/*
+/**
 	fz_outline is a tree of the outline of a document (also known
 	as table of contents).
 
@@ -45,20 +45,20 @@ typedef struct fz_outline
 	float color[4];
 } fz_outline;
 
-/*
+/**
 	Create a new outline entry with zeroed fields for the caller
 	to fill in.
 */
 fz_outline *fz_new_outline(fz_context *ctx);
 
-/*
+/**
 	Increment the reference count. Returns the same pointer.
 
 	Never throws exceptions.
 */
 fz_outline *fz_keep_outline(fz_context *ctx, fz_outline *outline);
 
-/*
+/**
 	Decrements the reference count. When the reference point
 	reaches zero, the outline is freed.
 
