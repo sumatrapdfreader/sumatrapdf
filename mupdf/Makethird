@@ -57,7 +57,7 @@ THIRD_SRC += thirdparty/freetype/src/type1/type1.c
 THIRD_CFLAGS += $(FREETYPE_CFLAGS)
 
 $(OUT)/thirdparty/freetype/%.o: thirdparty/freetype/%.c
-	$(CC_CMD) $(FREETYPE_CFLAGS) \
+	$(CC_CMD) $(FREETYPE_CFLAGS) $(LIB_CFLAGS) \
 		-DFT_CONFIG_MODULES_H=\"slimftmodules.h\" \
 		-DFT_CONFIG_OPTIONS_H=\"slimftoptions.h\" \
 		-DFT2_BUILD_LIBRARY
@@ -128,7 +128,7 @@ THIRD_SRC += thirdparty/harfbuzz/src/hb-unicode.cc
 THIRD_CFLAGS += -Ithirdparty/harfbuzz/src
 
 $(OUT)/thirdparty/harfbuzz/%.o: thirdparty/harfbuzz/%.cc
-	$(CXX_CMD) $(FREETYPE_CFLAGS) -Iinclude/mupdf \
+	$(CXX_CMD) $(FREETYPE_CFLAGS) $(LIB_CFLAGS) -Iinclude/mupdf \
 		-DHAVE_FALLBACK=1 \
 		-DHAVE_OT \
 		-DHAVE_ROUND \
@@ -173,7 +173,7 @@ THIRD_CFLAGS += -Ithirdparty/jpegxr/Software
 THIRD_CFLAGS += -DHAVE_JPEGXR
 
 $(OUT)/thirdparty/jpegxr/%.o: thirdparty/jpegxr/%.c
-	$(CC_CMD) -Ithirdparty/jpegxr -Ithirdparty/jpegxr/Software -Wno-tautological-compare
+	$(CC_CMD) $(LIB_CFLAGS) -Ithirdparty/jpegxr -Ithirdparty/jpegxr/Software -Wno-tautological-compare
 
 endif
 endif
@@ -219,7 +219,7 @@ THIRD_SRC += thirdparty/libjpeg/jutils.c
 THIRD_CFLAGS += -Iscripts/libjpeg -Ithirdparty/libjpeg
 
 $(OUT)/thirdparty/libjpeg/%.o: thirdparty/libjpeg/%.c
-	$(CC_CMD) -Iscripts/libjpeg
+	$(CC_CMD) $(LIB_CFLAGS) -Iscripts/libjpeg
 
 endif
 
@@ -235,7 +235,7 @@ THIRD_SRC += $(sort $(wildcard thirdparty/lcms2/src/cms*.c))
 THIRD_CFLAGS += -Ithirdparty/lcms2/include -DHAVE_LCMS2MT
 
 $(OUT)/thirdparty/lcms2/%.o: thirdparty/lcms2/%.c
-	$(CC_CMD) -Ithirdparty/lcms2/include
+	$(CC_CMD) $(LIB_CFLAGS) -Ithirdparty/lcms2/include
 
 endif
 
@@ -250,7 +250,7 @@ THIRD_SRC += thirdparty/mujs/one.c
 THIRD_CFLAGS += -Ithirdparty/mujs
 
 $(OUT)/thirdparty/mujs/%.o: thirdparty/mujs/%.c
-	$(CC_CMD)
+	$(CC_CMD) $(LIB_CFLAGS)
 
 endif
 
@@ -275,7 +275,7 @@ THIRD_SRC += thirdparty/zlib/zutil.c
 THIRD_CFLAGS += -Ithirdparty/zlib
 
 $(OUT)/thirdparty/zlib/%.o: thirdparty/zlib/%.c
-	$(CC_CMD) -DHAVE_UNISTD_H -DHAVE_STDARG_H
+	$(CC_CMD) $(LIB_CFLAGS) -DHAVE_UNISTD_H -DHAVE_STDARG_H
 
 endif
 
@@ -295,7 +295,7 @@ LURATECH_CFLAGS += -Ithirdparty/luratech/lwf_jp2/library/source
 THIRD_CFLAGS += $(LURATECH_CFLAGS) -DHAVE_LURATECH
 
 $(OUT)/thirdparty/luratech/%.o: thirdparty/luratech/%.c
-	$(CC_CMD) -DLINUX $(LURATECH_CFLAGS) -Wno-tautological-compare -Wno-absolute-value -Wno-sign-compare
+	$(CC_CMD) $(LIB_CFLAGS) -DLINUX $(LURATECH_CFLAGS) -Wno-tautological-compare -Wno-absolute-value -Wno-sign-compare
 
 else # HAVE_LURATECH
 
@@ -325,7 +325,7 @@ THIRD_SRC += thirdparty/jbig2dec/jbig2_text.c
 THIRD_CFLAGS += -Ithirdparty/jbig2dec
 
 $(OUT)/thirdparty/jbig2dec/%.o: thirdparty/jbig2dec/%.c
-	$(CC_CMD) -DHAVE_STDINT_H -DJBIG_EXTERNAL_MEMENTO_H=\"mupdf/memento.h\" -Wno-sign-compare
+	$(CC_CMD) $(LIB_CFLAGS) -DHAVE_STDINT_H -DJBIG_EXTERNAL_MEMENTO_H=\"mupdf/memento.h\" -Wno-sign-compare
 
 endif
 
@@ -364,7 +364,7 @@ THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/thread.c
 THIRD_CFLAGS += $(OPENJPEG_CFLAGS)
 
 $(OUT)/thirdparty/openjpeg/%.o: thirdparty/openjpeg/%.c
-	$(CC_CMD) $(OPENJPEG_CFLAGS)
+	$(CC_CMD) $(LIB_CFLAGS) $(OPENJPEG_CFLAGS)
 
 endif
 
@@ -392,7 +392,7 @@ GLUT_LIB := $(OUT)/libfreeglut.a
 $(GLUT_LIB): $(GLUT_OBJ)
 
 $(OUT)/thirdparty/freeglut/%.o: thirdparty/freeglut/%.c
-	$(CC_CMD) $(LOCAL_GLUT_CFLAGS)
+	$(CC_CMD) $(LIB_CFLAGS) $(LOCAL_GLUT_CFLAGS)
 
 GLUT_CFLAGS := -Ithirdparty/freeglut/include
 GLUT_LIBS := -lGL -lX11 -lXrandr

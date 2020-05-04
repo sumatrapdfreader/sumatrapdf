@@ -364,5 +364,7 @@ int fz_load_pnm_subimage_count(fz_context *ctx, const unsigned char *buf, size_t
 fz_pixmap *fz_load_pnm_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage);
 int fz_load_jbig2_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len);
 fz_pixmap *fz_load_jbig2_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage);
+int fz_load_bmp_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len);
+fz_pixmap *fz_load_bmp_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage);
 
 #endif

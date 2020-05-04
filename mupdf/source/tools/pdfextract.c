@@ -229,6 +229,8 @@ static void extractobject(int num)
 			saveimage(ref);
 		if (isfontdesc(ref))
 			savefont(ref);
+
+		fz_empty_store(ctx);
 	}
 	fz_always(ctx)
 		pdf_drop_obj(ctx, ref);

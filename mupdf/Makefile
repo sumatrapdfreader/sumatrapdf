@@ -7,7 +7,11 @@ ifndef build
 endif
 
 ifndef OUT
+  ifeq ($(shared),yes)
+    OUT := build/shared-$(build)
+  else
   OUT := build/$(build)
+endif
 endif
 
 default: all
@@ -71,17 +75,20 @@ $(OUT)/%.a :
 $(OUT)/%.exe: %.c
 	$(LINK_CMD)
 
+$(OUT)/%.$(SO):
+	$(LINK_CMD) $(LIB_LDFLAGS) $(THIRD_LIBS) $(LIBCRYPTO_LIBS)
+
 $(OUT)/source/helpers/mu-threads/%.o : source/helpers/mu-threads/%.c
-	$(CC_CMD) $(THREADING_CFLAGS)
+	$(CC_CMD) $(LIB_CFLAGS) $(THREADING_CFLAGS)
 
 $(OUT)/source/helpers/pkcs7/%.o : source/helpers/pkcs7/%.c
-	$(CC_CMD) $(LIBCRYPTO_CFLAGS)
+	$(CC_CMD) $(LIB_CFLAGS) $(LIBCRYPTO_CFLAGS)
 
 $(OUT)/source/tools/%.o : source/tools/%.c
 	$(CC_CMD) -Wall $(THIRD_CFLAGS) $(THREADING_CFLAGS)
 
 $(OUT)/generated/%.o : generated/%.c
-	$(CC_CMD) -O0
+	$(CC_CMD) $(LIB_CFLAGS) -O0
 
 $(OUT)/platform/x11/%.o : platform/x11/%.c
 	$(CC_CMD) -Wall $(X11_CFLAGS)
@@ -94,11 +101,11 @@ $(OUT)/platform/gl/%.o : platform/gl/%.c
 
 ifeq ($(HAVE_OBJCOPY),yes)
   $(OUT)/source/fitz/noto.o : source/fitz/noto.c
-	$(CC_CMD) -Wall -Wdeclaration-after-statement -DHAVE_OBJCOPY $(THIRD_CFLAGS)
+	$(CC_CMD) -Wall -Wdeclaration-after-statement -DHAVE_OBJCOPY $(LIB_CFLAGS) $(THIRD_CFLAGS)
 endif
 
 $(OUT)/source/%.o : source/%.c
-	$(CC_CMD) -Wall -Wdeclaration-after-statement $(THIRD_CFLAGS)
+	$(CC_CMD) -Wall -Wdeclaration-after-statement $(LIB_CFLAGS) $(THIRD_CFLAGS)
 
 $(OUT)/platform/%.o : platform/%.c
 	$(CC_CMD) -Wall
@@ -189,10 +196,21 @@ generate: source/pdf/js/util.js.h
 
 # --- Library ---
 
+ifeq ($(shared),yes)
+MUPDF_LIB = $(OUT)/libmupdf.$(SO)
+
+$(MUPDF_LIB) : $(MUPDF_OBJ) $(THIRD_OBJ) $(THREAD_OBJ) $(PKCS7_OBJ)
+else
 MUPDF_LIB = $(OUT)/libmupdf.a
 THIRD_LIB = $(OUT)/libmupdf-third.a
 THREAD_LIB = $(OUT)/libmupdf-threads.a
 PKCS7_LIB = $(OUT)/libmupdf-pkcs7.a
+
+$(MUPDF_LIB) : $(MUPDF_OBJ)
+$(THIRD_LIB) : $(THIRD_OBJ)
+$(THREAD_LIB) : $(THREAD_OBJ)
+$(PKCS7_LIB) : $(PKCS7_OBJ)
+endif
 
 $(MUPDF_LIB) : $(MUPDF_OBJ)
 $(THIRD_LIB) : $(THIRD_OBJ)
@@ -388,6 +406,15 @@ debug:
 sanitize:
 	$(MAKE) build=sanitize
 
+shared: shared-$(build)
+
+shared-release:
+	$(MAKE) HAVE_GLUT=no shared=yes build=release
+shared-debug:
+	$(MAKE) HAVE_GLUT=no shared=yes build=debug
+shared-clean:
+	rm -rf build/shared-*
+
 android: generate
 	ndk-build -j8 \
 		APP_BUILD_SCRIPT=platform/java/Android.mk \
@@ -395,4 +422,29 @@ android: generate
 		APP_PLATFORM=android-16 \
 		APP_OPTIM=$(build)
 
+c++: c++-$(build)
+
+c++-release: shared-release
+	./scripts/mupdfwrap.py -d build/shared-release -b 01
+
+c++-debug: shared-debug
+	./scripts/mupdfwrap.py -d build/shared-debug -b 01
+
+c++-clean:
+	rm -rf platform/c++
+
+python: python-$(build)
+
+python-release: c++-release
+	./scripts/mupdfwrap.py -d build/shared-release -b 023
+
+python-debug: c++-debug
+	./scripts/mupdfwrap.py -d build/shared-debug -b 023
+
+python-clean:
+	rm -rf platform/python
+
 .PHONY: all clean nuke install third libs apps generate tags wasm
+.PHONY: shared shared-debug shared-clean
+.PHONY: c++ c++-release c++-debug c++-clean
+.PHONY: python python-debug python-clean

@@ -24,6 +24,7 @@ Reference for warnings:
  4245 - sign/unsigned mismatch
  4267 - 64bit, conversion with possible loss of data
  4302 - 64bit, type cast truncation
+ 4305 - 'initializing': truncation from 'double' to 'float'
  4310 - 64bit, cast truncates constant value
  4311 - 64bit, type cast pointer truncation
  4312 - 64bit, conversion to X of greater size
@@ -368,8 +369,8 @@ workspace "SumatraPDF"
     defines { "TOFU", "TOFU_CJK_LANG" }
     disablewarnings { 
       "4005", "4028", "4100", "4115", "4130", "4204", "4206", "4244",
-      "4245", "4267", "4295", "4389", "4456", "4457", "4459", "4702",
-      "4703", "4706",
+      "4245", "4267", "4295", "4305", "4389", "4456", "4457", "4459",
+      "4702", "4703", "4706",
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides

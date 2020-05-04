@@ -171,6 +171,12 @@ img_open_document_with_stream(fz_context *ctx, fz_stream *file)
 			doc->load_subimage = fz_load_jbig2_subimage;
 			doc->format = "JBIG2";
 		}
+		else if (fmt == FZ_IMAGE_BMP)
+		{
+			doc->page_count = fz_load_bmp_subimage_count(ctx, data, len);
+			doc->load_subimage = fz_load_bmp_subimage;
+			doc->format = "BMP";
+		}
 		else
 		{
 			doc->page_count = 1;

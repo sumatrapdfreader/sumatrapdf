@@ -1775,7 +1775,7 @@ int mudraw_main(int argc, char **argv)
 						fprintf(stderr, "Output format '%s' does not support spot rendering.\nDoing overprint simulation instead.\n", suffix_table[i].suffix+1);
 						spots = SPOTS_OVERPRINT_SIM;
 					}
-					i = 0;
+					i = -1;
 				}
 			}
 		}

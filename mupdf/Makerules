@@ -13,14 +13,28 @@ endif
 
 ifeq ($(OS),MACOS)
   LDREMOVEUNREACH := -Wl,-dead_strip
+  SO := dylib
 else
   LDREMOVEUNREACH := -Wl,--gc-sections
+  SO := so
 endif
 
 CFLAGS += -Wsign-compare
 
 SANITIZE_FLAGS += -fsanitize=address
 SANITIZE_FLAGS += -fsanitize=leak
+
+ifeq ($(shared),yes)
+  LIB_CFLAGS = -fPIC
+  ifeq ($(OS),MACOS)
+    LIB_LDFLAGS = -dynamiclib
+  else
+    LIB_LDFLAGS = -shared
+  endif
+else
+  LIB_CFLAGS =
+  LIB_LDFLAGS =
+endif
 
 ifeq ($(build),debug)
   CFLAGS += -pipe -g

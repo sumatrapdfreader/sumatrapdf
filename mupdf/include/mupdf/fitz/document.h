@@ -719,6 +719,9 @@ int fz_lookup_metadata(fz_context *ctx, fz_document *doc, const char *key, char 
 /**
 	Find the output intent colorspace if the document has defined
 	one.
+
+	Returns a borrowed reference that should not be dropped, unless
+	it is kept first.
 */
 fz_colorspace *fz_document_output_intent(fz_context *ctx, fz_document *doc);
 

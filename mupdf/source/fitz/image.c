@@ -1015,6 +1015,8 @@ fz_recognize_image_format(fz_context *ctx, unsigned char p[8])
 		return FZ_IMAGE_GIF;
 	if (p[0] == 'B' && p[1] == 'M')
 		return FZ_IMAGE_BMP;
+	if (p[0] == 'B' && p[1] == 'A')
+		return FZ_IMAGE_BMP;
 	if (p[0] == 0x97 && p[1] == 'J' && p[2] == 'B' && p[3] == '2' &&
 		p[4] == '\r' && p[5] == '\n'  && p[6] == 0x1a && p[7] == '\n')
 		return FZ_IMAGE_JBIG2;

@@ -69,340 +69,136 @@ static const unsigned char bw_palette[] = {
 };
 
 enum {
-	BI_RLE24 = -1,
-	BI_RGB = 0,
+	BI_NONE = 0,
 	BI_RLE8 = 1,
 	BI_RLE4 = 2,
 	BI_BITFIELDS = 3,
+	BI_HUFFMAN1D = 3,
 	BI_JPEG = 4,
+	BI_RLE24 = 4,
 	BI_PNG = 5,
 	BI_ALPHABITS = 6,
-	BI_UNSUPPORTED = 42,
 };
 
 struct info
 {
-	int filesize;
-	int offset;
+	char type[2];
+	uint32_t version;
+	uint32_t bitmapoffset;
+	uint32_t width, height;
+	uint16_t bitcount;
+	uint32_t compression;
+	uint32_t bitmapsize;
+	uint32_t xres, yres;
+	uint32_t colors;
+	uint32_t rmask, gmask, bmask, amask;
+	uint8_t palette[256 * 3];
+	uint32_t colorspacetype;
+	uint32_t endpoints[3 * 3];
+	uint32_t gamma[3];
+	uint32_t intent;
+	uint32_t profileoffset;
+	uint32_t profilesize;
+
 	int topdown;
-	int width, height;
-	int xres, yres;
-	int bitcount;
-	int compression;
-	int colors;
-	int rmask, gmask, bmask, amask;
-	unsigned char palette[256 * 3];
+	unsigned int rshift, gshift, bshift, ashift;
+	unsigned int rbits, gbits, bbits, abits;
 
-	int extramasks;
-	int palettetype;
 	unsigned char *samples;
-
-	int rshift, gshift, bshift, ashift;
-	int rbits, gbits, bbits, abits;
+	fz_colorspace *cs;
 };
 
 #define read8(p) ((p)[0])
 #define read16(p) (((p)[1] << 8) | (p)[0])
 #define read32(p) (((p)[3] << 24) | ((p)[2] << 16) | ((p)[1] << 8) | (p)[0])
 
+#define DPM_TO_DPI(dpm) ((dpm) * 25.4f / 1000.0f)
+
+#define is_bitmap_array(p) ((p)[0] == 'B' && (p)[1] == 'A')
+#define is_bitmap(p) ((p)[0] == 'B' && (p)[1] == 'M')
+
+#define is_os2_bmp(info) ((info)->version == 12 || (info)->version == 16 || (info)->version == 64)
+#define is_win_bmp(info) ((info)->version == 12 || (info)->version == 40 || (info)->version == 52 || (info)->version == 56 || (info)->version == 108 || (info)->version == 124)
+
+#define is_valid_win_compression(info) (is_win_bmp(info) && ((info)->compression == BI_NONE || (info)->compression == BI_RLE8 || (info)->compression == BI_RLE4 || (info)->compression == BI_BITFIELDS || (info)->compression == BI_JPEG || (info)->compression == BI_PNG || (info)->compression == BI_ALPHABITS || (info)->compression == BI_RLE24))
+#define is_valid_os2_compression(info) (is_os2_bmp(info) && ((info)->compression == BI_NONE || (info)->compression == BI_RLE8 || (info)->compression == BI_RLE4 || (info)->compression == BI_HUFFMAN1D || (info)->compression == BI_RLE24))
+#define is_valid_compression(info) (is_valid_win_compression(info) || is_valid_os2_compression(info))
+
+#define is_valid_rgb_bitcount(info) ((info)->compression == BI_NONE && ((info)->bitcount == 1 || (info)->bitcount == 2 || (info)->bitcount == 4 || (info)->bitcount == 8 || (info)->bitcount == 16 || (info)->bitcount == 24 || (info)->bitcount == 32))
+#define is_valid_rle8_bitcount(info) ((info)->compression == BI_RLE8 && (info)->bitcount == 8)
+#define is_valid_rle4_bitcount(info) ((info)->compression == BI_RLE4 && (info)->bitcount == 4)
+#define is_valid_bitfields_bitcount(info) (is_win_bmp(info) && (info)->compression == BI_BITFIELDS && ((info)->bitcount == 16 || (info)->bitcount == 32))
+#define is_valid_jpeg_bitcount(info) (is_win_bmp(info) && (info)->compression == BI_JPEG && (info)->bitcount == 0)
+#define is_valid_png_bitcount(info) (is_win_bmp(info) && (info)->compression == BI_PNG && (info)->bitcount == 0)
+#define is_valid_alphabits_bitcount(info) (is_win_bmp(info) && (info)->compression == BI_ALPHABITS && ((info)->bitcount == 16 || (info)->bitcount == 32))
+#define is_valid_rle24_bitcount(info) (is_os2_bmp(info) && (info)->compression == BI_RLE24 && (info)->bitcount == 24)
+#define is_valid_huffman1d_bitcount(info) (is_os2_bmp(info) && (info)->compression == BI_HUFFMAN1D && (info)->bitcount == 1)
+#define is_valid_bitcount(info) (is_valid_rgb_bitcount(info) || is_valid_rle8_bitcount(info) || is_valid_rle4_bitcount(info) || is_valid_bitfields_bitcount(info) || is_valid_jpeg_bitcount(info) || is_valid_png_bitcount(info) || is_valid_alphabits_bitcount(info) || is_valid_rle24_bitcount(info) || is_valid_huffman1d_bitcount(info))
+
+#define has_palette(info) ((info)->bitcount == 1 || (info)->bitcount == 2 || (info)->bitcount == 4 || (info)->bitcount == 8)
+#define has_color_masks(info) (((info)->bitcount == 16 || (info)->bitcount == 32) && (info)->version == 40 && ((info)->compression == BI_BITFIELDS || (info)->compression == BI_ALPHABITS))
+#define has_color_profile(info) ((info)->version == 108 || (info)->version == 124)
+
+#define palette_entry_size(info) ((info)->version == 12 ? 3 : 4)
+
 static const unsigned char *
-bmp_read_file_header(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
+bmp_read_file_header(fz_context *ctx, struct info *info, const unsigned char *begin, const unsigned char *end, const unsigned char *p)
 {
 	if (end - p < 14)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in file header in bmp image");
 
-	if (memcmp(&p[0], "BM", 2))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid signature in bmp image");
+	if (!is_bitmap(p))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid signature %02x%02x in bmp image", p[0], p[1]);
 
-	info->filesize = read32(p + 2);
-	info->offset = read32(p + 10);
+	info->type[0] = read8(p + 0);
+	info->type[1] = read8(p + 1);
+	/* read32(p+2) == file or header size */
+	/* read16(p+6) == hotspot x for icons/cursors */
+	/* read16(p+8) == hotspot y for icons/cursors */
+	info->bitmapoffset = read32(p + 10);
 
 	return p + 14;
 }
 
-static const unsigned char *
-bmp_read_bitmap_core_header(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
+static unsigned char *
+bmp_decompress_huffman1d(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char **end)
 {
-	int size;
+	fz_stream *encstm, *decstm;
+	fz_buffer *buf;
+	unsigned char *decoded;
+	size_t size;
 
-	size = read32(p + 0);
-	if (size != 12)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported core header size in bmp image");
+	encstm = fz_open_memory(ctx, p, *end - p);
 
-	if (size >= 12)
+	fz_var(decstm);
+	fz_var(buf);
+
+	fz_try(ctx)
 	{
-		if (end - p < 12)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in bitmap core header in bmp image");
+		decstm = fz_open_faxd(ctx, encstm,
+			0, /* 1 dimensional encoding */
+			0, /* end of line not required */
+			0, /* encoded byte align */
+			info->width, info->height,
+			0, /* end of block expected */
+			1 /* black is 1 */
+		);
+		buf = fz_read_all(ctx, decstm, 1024);
+		size = fz_buffer_storage(ctx, buf, &decoded);
 
-		info->width = read16(p + 4);
-		info->height = read16(p + 6);
-		info->bitcount = read16(p + 10);
+		size = fz_buffer_extract(ctx, buf, &decoded);
+		*end = decoded + size;
 	}
-
-	info->xres = 2835;
-	info->yres = 2835;
-	info->compression = BI_RGB;
-	info->palettetype = 0;
-
-	return p + size;
-}
-
-static const unsigned char *
-bmp_read_bitmap_os2_header(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
-{
-	int size;
-
-	size = read32(p + 0);
-	if (size != 16 && size != 64)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported os2 header size in bmp image");
-
-	if (size >= 16)
-	{
-		if (end - p < 16)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in bitmap os2 header in bmp image");
-
-		info->width = read32(p + 4);
-		info->height = read32(p + 8);
-		info->bitcount = read16(p + 14);
-
-		info->compression = BI_RGB;
-	}
-	if (size >= 64)
-	{
-		if (end - p < 64)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in bitmap os2 header in bmp image");
-
-		info->compression = read32(p + 16);
-		info->xres = read32(p + 24);
-		info->yres = read32(p + 28);
-		info->colors = read32(p + 32);
-
-		/* 4 in this header is interpreted as 24 bit RLE encoding */
-		if (info->compression < 0)
-			info->compression = BI_UNSUPPORTED;
-		else if (info->compression == 4)
-			info->compression = BI_RLE24;
-	}
-
-	info->palettetype = 1;
-
-	return p + size;
-}
-
-static void maskinfo(unsigned int mask, int *shift, int *bits)
-{
-	*bits = 0;
-	*shift = 0;
-	if (mask) {
-		while ((mask & 1) == 0) {
-			*shift += 1;
-			mask >>= 1;
-		}
-		while ((mask & 1) == 1) {
-			*bits += 1;
-			mask >>= 1;
-		}
-	}
-}
-
-static const unsigned char *
-bmp_read_bitmap_info_header(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
-{
-	int size;
-
-	size = read32(p + 0);
-	if (size != 40 && size != 52 && size != 56 && size != 64 &&
-			size != 108 && size != 124)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported info header size in bmp image");
-
-	if (size >= 40)
-	{
-		if (end - p < 40)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in bitmap info header in bmp image");
-
-		info->width = read32(p + 4);
-		info->topdown = (p[8 + 3] & 0x80) != 0;
-		if (info->topdown)
-			info->height = -read32(p + 8);
-		else
-			info->height = read32(p + 8);
-		info->bitcount = read16(p + 14);
-		info->compression = read32(p + 16);
-		info->xres = read32(p + 24);
-		info->yres = read32(p + 28);
-		info->colors = read32(p + 32);
-
-		if (size == 40 && info->compression == BI_BITFIELDS && (info->bitcount == 16 || info->bitcount == 32))
-			info->extramasks = 1;
-		else if (size == 40 && info->compression == BI_ALPHABITS && (info->bitcount == 16 || info->bitcount == 32))
-			info->extramasks = 1;
-
-		if (info->bitcount == 16) {
-			info->rmask = 0x00007c00;
-			info->gmask = 0x000003e0;
-			info->bmask = 0x0000001f;
-			info->amask = 0x00000000;
-		} else if (info->bitcount == 32) {
-			info->rmask = 0x00ff0000;
-			info->gmask = 0x0000ff00;
-			info->bmask = 0x000000ff;
-			info->amask = 0x00000000;
-		}
-	}
-	if (size >= 52)
-	{
-		if (end - p < 52)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in bitmap info header in bmp image");
-
-		if (info->compression == BI_BITFIELDS) {
-			info->rmask = read32(p + 40);
-			info->gmask = read32(p + 44);
-			info->bmask = read32(p + 48);
-		}
-	}
-	if (size >= 56)
-	{
-		if (end - p < 56)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in bitmap info header in bmp image");
-
-		if (info->compression == BI_BITFIELDS) {
-			info->amask = read32(p + 52);
-		}
-	}
-
-	info->palettetype = 1;
-
-	return p + size;
-}
-
-static const unsigned char *
-bmp_read_extra_masks(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
-{
-	int size = 0;
-
-	if (info->compression == BI_BITFIELDS)
-	{
-		size = 12;
-		if (end - p < 12)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in mask header in bmp image");
-
-		info->rmask = read32(p + 0);
-		info->gmask = read32(p + 4);
-		info->bmask = read32(p + 8);
-	}
-	else if (info->compression == BI_ALPHABITS)
-	{
-		size = 16;
-		if (end - p < 16)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in mask header in bmp image");
-
-		/* ignore alpha mask */
-		info->rmask = read32(p + 0);
-		info->gmask = read32(p + 4);
-		info->bmask = read32(p + 8);
-	}
-
-	return p + size;
-}
-
-static int
-bmp_palette_is_gray(fz_context *ctx, struct info *info, int readcolors)
-{
-	int i;
-	for (i = 0; i < readcolors; i++)
-	{
-		int rgdiff = fz_absi(info->palette[3 * i + 0] - info->palette[3 * i + 1]);
-		int gbdiff = fz_absi(info->palette[3 * i + 1] - info->palette[3 * i + 2]);
-		int rbdiff = fz_absi(info->palette[3 * i + 0] - info->palette[3 * i + 2]);
-		if (rgdiff > 2 || gbdiff > 2 || rbdiff > 2)
-			return 0;
-	}
-	return 1;
-}
-
-static void
-bmp_load_default_palette(fz_context *ctx, struct info *info, int readcolors)
-{
-	int i;
-
-	fz_warn(ctx, "color table too short; loading default palette");
-
-	if (info->bitcount == 8)
-	{
-		if (!bmp_palette_is_gray(ctx, info, readcolors))
-			memcpy(&info->palette[readcolors * 3], &web_palette[readcolors * 3],
-					sizeof(web_palette) - readcolors * 3);
-		else
-			for (i = readcolors; i < 256; i++)
+	fz_always(ctx)
 			{
-				info->palette[3 * i + 0] = i;
-				info->palette[3 * i + 1] = i;
-				info->palette[3 * i + 2] = i;
-			}
+		fz_drop_buffer(ctx, buf);
+		fz_drop_stream(ctx, decstm);
+		fz_drop_stream(ctx, encstm);
 	}
-	else if (info->bitcount == 4)
-	{
-		if (!bmp_palette_is_gray(ctx, info, readcolors))
-			memcpy(&info->palette[readcolors * 3], &vga_palette[readcolors * 3],
-					sizeof(vga_palette) - readcolors * 3);
-		else
-			for (i = readcolors; i < 16; i++)
-			{
-				info->palette[3 * i + 0] = (i << 4) | i;
-				info->palette[3 * i + 1] = (i << 4) | i;
-				info->palette[3 * i + 2] = (i << 4) | i;
-			}
-	}
-	else if (info->bitcount == 2)
-		memcpy(info->palette, gray_palette, sizeof(gray_palette));
-	else if (info->bitcount == 1)
-		memcpy(info->palette, bw_palette, sizeof(bw_palette));
-}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
-static const unsigned char *
-bmp_read_color_table(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
-{
-	int i, colors, readcolors;
-
-	if (info->bitcount > 8)
-		return p;
-
-	if (info->colors == 0)
-		colors = 1 << info->bitcount;
-	else
-		colors = info->colors;
-
-	colors = fz_mini(colors, 1 << info->bitcount);
-
-	if (info->palettetype == 0)
-	{
-		readcolors = fz_mini(colors, (end - p) / 3);
-		for (i = 0; i < readcolors; i++)
-		{
-			info->palette[3 * i + 0] = read8(p + i * 3 + 2);
-			info->palette[3 * i + 1] = read8(p + i * 3 + 1);
-			info->palette[3 * i + 2] = read8(p + i * 3 + 0);
-		}
-		if (readcolors < colors)
-			bmp_load_default_palette(ctx, info, readcolors);
-		return p + readcolors * 3;
-	}
-	else
-	{
-		readcolors = fz_mini(colors, (end - p) / 4);
-		for (i = 0; i < readcolors; i++)
-		{
-			/* ignore alpha channel */
-			info->palette[3 * i + 0] = read8(p + i * 4 + 2);
-			info->palette[3 * i + 1] = read8(p + i * 4 + 1);
-			info->palette[3 * i + 2] = read8(p + i * 4 + 0);
-		}
-		if (readcolors < colors)
-			bmp_load_default_palette(ctx, info, readcolors);
-		return p + readcolors * 4;
-	}
-
-	return p;
+	return decoded;
 }
 
 static unsigned char *
@@ -410,10 +206,11 @@ bmp_decompress_rle24(fz_context *ctx, struct info *info, const unsigned char *p,
 {
 	const unsigned char *sp;
 	unsigned char *dp, *ep, *decompressed;
-	int width = info->width;
-	int height = info->height;
-	int stride;
-	int x, i;
+	uint32_t width = info->width;
+	uint32_t height = info->height;
+	uint32_t stride;
+	uint32_t x, y;
+	int i;
 
 	stride = (width*3 + 3) / 4 * 4;
 
@@ -421,73 +218,101 @@ bmp_decompress_rle24(fz_context *ctx, struct info *info, const unsigned char *p,
 	dp = decompressed = fz_calloc(ctx, height, stride);
 	ep = dp + height * stride;
 	x = 0;
+	y = 0;
 
 	while (sp + 2 <= *end)
 	{
 		if (sp[0] == 0 && sp[1] == 0)
 		{ /* end of line */
-			if (x*3 < stride)
-				dp += stride - x*3;
 			sp += 2;
 			x = 0;
+			y++;
 		}
 		else if (sp[0] == 0 && sp[1] == 1)
 		{ /* end of bitmap */
-			dp = ep;
+			sp += 2;
 			break;
 		}
 		else if (sp[0] == 0 && sp[1] == 2)
 		{ /* delta */
-			int deltax, deltay;
-			if (sp + 4 > *end)
-				break;
-			deltax = sp[2];
-			deltay = sp[3];
-			dp += deltax*3 + deltay * stride;
-			sp += 4;
-			x += deltax;
+			sp += 2;
+			x += sp < *end ? *sp++ : 0;
+			y += sp < *end ? *sp++ : 0;
 		}
 		else if (sp[0] == 0 && sp[1] >= 3)
 		{ /* absolute */
-			int n = sp[1] * 3;
-			int nn = (n + 1) / 2 * 2;
-			if (sp + 2 + nn > *end)
-				break;
-			if (dp + n > ep) {
-				fz_warn(ctx, "buffer overflow in bitmap data in bmp image");
-				break;
-			}
+			int dn, sn, pad;
+			dn = sp[1];
+			sn = (dn * 3 + 1) / 2 * 2;
+			pad = sn & 1;
 			sp += 2;
-			for (i = 0; i < n; i++)
-				dp[i] = sp[i];
-			dp += n;
-			sp += (n + 1) / 2 * 2;
-			x += n;
+			if (sn > *end - sp)
+			{
+				fz_warn(ctx, "premature end of pixel data in absolute code in bmp image");
+				sn = ((*end - sp) / 3) * 3;
+				pad = (*end - sp) % 3;
+				dn = sn / 3;
+			}
+			else if (sn + pad > *end - sp)
+			{
+				fz_warn(ctx, "premature end of padding in absolute code in bmp image");
+				pad = 0;
+			}
+			for (i = 0; i < dn; i++)
+			{
+				uint32_t actualx = x;
+				uint32_t actualy = y;
+				if (actualx >= width || actualy >= height)
+				{
+					actualx = x % width;
+					actualy = y + x / width;
+				}
+				if (actualx < width && actualy < height)
+				{
+					dp = decompressed + actualy * stride + actualx * 3;
+					*dp++ = sp[i * 3 + 0];
+					*dp++ = sp[i * 3 + 1];
+					*dp++ = sp[i * 3 + 2];
+				}
+				x++;
+			}
+			sp += sn + pad;
 		}
 		else
 		{ /* encoded */
-			int n = sp[0] * 3;
-			if (sp + 1 + 3 > *end)
-				break;
-			if (dp + n > ep) {
-				fz_warn(ctx, "buffer overflow in bitmap data in bmp image");
-				break;
+			int dn, sn;
+			dn = sp[0];
+			sn = 3;
+			sp++;
+			if (sn > *end - sp)
+			{
+				fz_warn(ctx, "premature end of pixel data in encoded code in bmp image");
+				sn = 0;
+				dn = 0;
 			}
-			for (i = 0; i < n / 3; i++) {
-				dp[i * 3 + 0] = sp[1];
-				dp[i * 3 + 1] = sp[2];
-				dp[i * 3 + 2] = sp[3];
+			for (i = 0; i < dn; i++)
+			{
+				uint32_t actualx = x;
+				uint32_t actualy = y;
+				if (actualx >= width || actualy >= height)
+				{
+					actualx = x % width;
+					actualy = y + x / width;
 			}
-			dp += n;
-			sp += 1 + 3;
-			x += n;
+				if (actualx < width && actualy < height)
+				{
+					dp = decompressed + actualy * stride + actualx * 3;
+					*dp++ = sp[0];
+					*dp++ = sp[1];
+					*dp++ = sp[2];
+				}
+				x++;
+			}
+			sp += sn;
 		}
 	}
 
-	if (dp < ep)
-		fz_warn(ctx, "premature end of bitmap data in bmp image");
-
-	info->compression = BI_RGB;
+	info->compression = BI_NONE;
 	info->bitcount = 24;
 	*end = ep;
 	return decompressed;
@@ -498,10 +323,11 @@ bmp_decompress_rle8(fz_context *ctx, struct info *info, const unsigned char *p, 
 {
 	const unsigned char *sp;
 	unsigned char *dp, *ep, *decompressed;
-	int width = info->width;
-	int height = info->height;
-	int stride;
-	int x, i;
+	uint32_t width = info->width;
+	uint32_t height = info->height;
+	uint32_t stride;
+	uint32_t x, y;
+	int i;
 
 	stride = (width + 3) / 4 * 4;
 
@@ -509,68 +335,91 @@ bmp_decompress_rle8(fz_context *ctx, struct info *info, const unsigned char *p, 
 	dp = decompressed = fz_calloc(ctx, height, stride);
 	ep = dp + height * stride;
 	x = 0;
+	y = 0;
 
 	while (sp + 2 <= *end)
 	{
 		if (sp[0] == 0 && sp[1] == 0)
 		{ /* end of line */
-			if (x < stride)
-				dp += stride - x;
 			sp += 2;
 			x = 0;
+			y++;
 		}
 		else if (sp[0] == 0 && sp[1] == 1)
 		{ /* end of bitmap */
-			dp = ep;
+			sp += 2;
 			break;
 		}
 		else if (sp[0] == 0 && sp[1] == 2)
 		{ /* delta */
-			int deltax, deltay;
-			if (sp + 4 > *end)
-				break;
-			deltax = sp[2];
-			deltay = sp[3];
-			dp += deltax + deltay * stride;
-			sp += 4;
-			x += deltax;
+			sp +=2;
+			x += sp < *end ? *sp++ : 0;
+			y += sp < *end ? *sp++ : 0;
 		}
 		else if (sp[0] == 0 && sp[1] >= 3)
 		{ /* absolute */
-			int n = sp[1];
-			int nn = (n + 1) / 2 * 2;
-			if (sp + 2 + nn > *end)
-				break;
-			if (dp + n > ep) {
-				fz_warn(ctx, "buffer overflow in bitmap data in bmp image");
-				break;
-			}
+			int dn, sn, pad;
+			dn = sp[1];
+			sn = dn;
+			pad = sn & 1;
 			sp += 2;
-			for (i = 0; i < n; i++)
-				dp[i] = sp[i];
-			dp += n;
-			sp += (n + 1) / 2 * 2;
-			x += n;
+			if (sn > *end - sp)
+			{
+				fz_warn(ctx, "premature end of pixel data in absolute code in bmp image");
+				sn = *end - sp;
+				pad = 0;
+				dn = sn;
+			}
+			else if (sn + pad > *end - sp)
+			{
+				fz_warn(ctx, "premature end of padding in absolute code in bmp image");
+				pad = 0;
+			}
+			for (i = 0; i < dn; i++)
+			{
+				uint32_t actualx = x;
+				uint32_t actualy = y;
+				if (actualx >= width || actualy >= height)
+				{
+					actualx = x % width;
+					actualy = y + x / width;
+				}
+				if (actualx < width && actualy < height)
+				{
+					dp = decompressed + actualy * stride + actualx;
+					*dp++ = sp[i];
+				}
+				x++;
+			}
+			sp += sn + pad;
 		}
 		else
 		{ /* encoded */
-			int n = sp[0];
-			if (dp + n > ep) {
-				fz_warn(ctx, "buffer overflow in bitmap data in bmp image");
-				break;
+			int dn, sn;
+			dn = sp[0];
+			sn = 1;
+			sp++;
+			for (i = 0; i < dn; i++)
+			{
+				uint32_t actualx = x;
+				uint32_t actualy = y;
+				if (actualx >= width || actualy >= height)
+				{
+					actualx = x % width;
+					actualy = y + x / width;
 			}
-			for (i = 0; i < n; i++)
-				dp[i] = sp[1];
-			dp += n;
-			sp += 2;
-			x += n;
+				if (actualx < width && actualy < height)
+				{
+					dp = decompressed + actualy * stride + actualx;
+					*dp++ = sp[0];
+				}
+				x++;
+			}
+			sp += sn;
 		}
 	}
 
-	if (dp < ep)
-		fz_warn(ctx, "premature end of bitmap data in bmp image");
-
-	info->compression = BI_RGB;
+	info->compression = BI_NONE;
 	info->bitcount = 8;
 	*end = ep;
 	return decompressed;
@@ -581,10 +430,11 @@ bmp_decompress_rle4(fz_context *ctx, struct info *info, const unsigned char *p, 
 {
 	const unsigned char *sp;
 	unsigned char *dp, *ep, *decompressed;
-	int width = info->width;
-	int height = info->height;
-	int stride;
-	int i, x;
+	uint32_t width = info->width;
+	uint32_t height = info->height;
+	uint32_t stride;
+	uint32_t x, y;
+	int i;
 
 	stride = ((width + 1) / 2 + 3) / 4 * 4;
 
@@ -592,119 +442,147 @@ bmp_decompress_rle4(fz_context *ctx, struct info *info, const unsigned char *p, 
 	dp = decompressed = fz_calloc(ctx, height, stride);
 	ep = dp + height * stride;
 	x = 0;
+	y = 0;
 
 	while (sp + 2 <= *end)
 	{
 		if (sp[0] == 0 && sp[1] == 0)
 		{ /* end of line */
-			int xx = x / 2;
-			if (xx < stride)
-				dp += stride - xx;
 			sp += 2;
 			x = 0;
+			y++;
 		}
 		else if (sp[0] == 0 && sp[1] == 1)
 		{ /* end of bitmap */
-			dp = ep;
+			sp += 2;
 			break;
 		}
 		else if (sp[0] == 0 && sp[1] == 2)
 		{ /* delta */
-			int deltax, deltay, startlow;
-			if (sp + 4 > *end)
-				break;
-			deltax = sp[2];
-			deltay = sp[3];
-			startlow = x & 1;
-			dp += (deltax + startlow) / 2 + deltay * stride;
-			sp += 4;
-			x += deltax;
+			sp += 2;
+			x += sp < *end ? *sp++ : 0;
+			y += sp < *end ? *sp++ : 0;
 		}
 		else if (sp[0] == 0 && sp[1] >= 3)
 		{ /* absolute */
-			int n = sp[1];
-			int nn = ((n + 1) / 2 + 1) / 2 * 2;
-			if (sp + 2 + nn > *end)
-				break;
-			if (dp + n / 2 > ep) {
-				fz_warn(ctx, "buffer overflow in bitmap data in bmp image");
-				break;
-			}
+			int dn, sn, pad;
+			dn = sp[1];
+			sn = (dn + 1) / 2;
+			pad = sn & 1;
 			sp += 2;
-			for (i = 0; i < n; i++, x++)
+			if (sn > *end - sp)
 			{
-				int val = i & 1 ? (sp[i/2]) & 0xF : (sp[i/2] >> 4) & 0xF;
+				fz_warn(ctx, "premature end of pixel data in absolute code in bmp image");
+				sn = *end - sp;
+				pad = 0;
+				dn = sn * 2;
+			}
+			else if (sn + pad > *end - sp)
+			{
+				fz_warn(ctx, "premature end of padding in absolute code in bmp image");
+				pad = 0;
+			}
+			for (i = 0; i < dn; i++)
+			{
+				uint32_t actualx = x;
+				uint32_t actualy = y;
+				if (actualx >= width || actualy >= height)
+				{
+					actualx = x % width;
+					actualy = y + x / width;
+				}
+				if (actualx < width && actualy < height)
+				{
+					int val = i & 1 ? (sp[i >> 1]) & 0xF : (sp[i >> 1] >> 4) & 0xF;
+					dp = decompressed + actualy * stride + actualx / 2;
 				if (x & 1)
 					*dp++ |= val;
 				else
 					*dp |= val << 4;
 			}
-			sp += nn;
+				x++;
+			}
+			sp += sn + pad;
 		}
 		else
 		{ /* encoded */
-			int n = sp[0];
-			int hi = (sp[1] >> 4) & 0xF;
-			int lo = sp[1] & 0xF;
-			if (dp + n / 2 + (x & 1) > ep) {
-				fz_warn(ctx, "buffer overflow in bitmap data in bmp image");
-				break;
-			}
-			for (i = 0; i < n; i++, x++)
+			int dn, sn;
+			dn = sp[0];
+			sn = 1;
+			sp++;
+			for (i = 0; i < dn; i++)
 			{
-				int val = i & 1 ? lo : hi;
+				uint32_t actualx = x;
+				uint32_t actualy = y;
+				if (actualx >= width || actualy >= height)
+				{
+					actualx = x % width;
+					actualy = y + x / width;
+			}
+				if (actualx < width && actualy < height)
+			{
+					int val = i & 1 ? (sp[0] & 0xf) : (sp[0] >> 4) & 0xf;
+					dp = decompressed + actualy * stride + actualx / 2;
 				if (x & 1)
 					*dp++ |= val;
 				else
 					*dp |= val << 4;
 			}
-			sp += 2;
+				x++;
+			}
+			sp += sn;
 		}
 	}
 
-	info->compression = BI_RGB;
+	info->compression = BI_NONE;
 	info->bitcount = 4;
 	*end = ep;
 	return decompressed;
 }
 
 static fz_pixmap *
-bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
+bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *begin, const unsigned char *end, const unsigned char *p)
 {
-	const int mults[] = { 0, 8191, 2730, 1170, 546, 264, 130, 64 };
+	const unsigned int mults[] = { 0, 8191, 2730, 1170, 546, 264, 130, 64 };
 	fz_pixmap *pix;
 	const unsigned char *ssp;
 	unsigned char *ddp;
 	unsigned char *decompressed = NULL;
-	int bitcount, width, height;
-	int sstride, dstride;
-	int rmult, gmult, bmult, amult;
-	int rtrunc, gtrunc, btrunc, atrunc;
-	int x, y;
+	uint32_t bitcount;
+	uint32_t width;
+	int32_t height;
+	uint32_t sstride;
+	int32_t dstride;
+	unsigned int rmult, gmult, bmult, amult;
+	unsigned int rtrunc, gtrunc, btrunc, atrunc;
+	uint32_t x;
+	int32_t y;
 
-	if (info->compression == BI_RLE8)
-		ssp = decompressed = bmp_decompress_rle8(ctx, info, p, &end);
+	if (info->compression == BI_NONE)
+		ssp = p;
 	else if (info->compression == BI_RLE4)
 		ssp = decompressed = bmp_decompress_rle4(ctx, info, p, &end);
-	else if (info->compression == BI_RLE24)
-		ssp = decompressed = bmp_decompress_rle24(ctx, info, p, &end);
-	else
+	else if (info->compression == BI_RLE8)
+		ssp = decompressed = bmp_decompress_rle8(ctx, info, p, &end);
+	else if (is_win_bmp(info) && (info->compression == BI_BITFIELDS || info->compression == BI_ALPHABITS))
 		ssp = p;
+	else if (is_os2_bmp(info) && info->compression == BI_RLE24)
+		ssp = decompressed = bmp_decompress_rle24(ctx, info, p, &end);
+	else if (is_os2_bmp(info) && info->compression == BI_HUFFMAN1D)
+		ssp = decompressed = bmp_decompress_huffman1d(ctx, info, p, &end);
+	else
+		fz_throw(ctx, FZ_ERROR_GENERIC, "unhandled compression (%u)  in bmp image", info->compression);
 
 	bitcount = info->bitcount;
 	width = info->width;
 	height = info->height;
 
-	sstride = ((width * bitcount + 31) / 32) * 4;
-
-	if (ssp + sstride * height > end)
-	{
-		fz_free(ctx, decompressed);
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in bitmap data in bmp image");
-	}
-
 	fz_try(ctx)
-		pix = fz_new_pixmap(ctx, fz_device_rgb(ctx), width, height, NULL, 1);
+	{
+		pix = fz_new_pixmap(ctx, info->cs, width, height, NULL, 1);
+		fz_set_pixmap_resolution(ctx, pix, info->xres, info->yres);
+		fz_clear_pixmap(ctx, pix);
+	}
 	fz_catch(ctx)
 	{
 		fz_free(ctx, decompressed);
@@ -719,7 +597,21 @@ bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *p, cons
 		dstride = -dstride;
 	}
 
-	/* These only apply for components in 16-bit and 32-bit mode
+	sstride = ((width * bitcount + 31) / 32) * 4;
+	if (ssp + sstride * height > end)
+	{
+		fz_warn(ctx, "premature end in bitmap data in bmp image");
+
+		height = (end - ssp) / sstride;
+		if (height == 0 || height > SHRT_MAX)
+		{
+			fz_drop_pixmap(ctx, pix);
+			fz_free(ctx, decompressed);
+			fz_throw(ctx, FZ_ERROR_GENERIC, "image dimensions out of range in bmp image");
+		}
+	}
+
+	/* These are only used for 16- and 32-bit components
 	   1-bit (1 * 8191) / 32
 	   2-bit (3 * 2730) / 32
 	   3-bit (7 * 1170) / 32
@@ -855,108 +747,441 @@ bmp_read_bitmap(fz_context *ctx, struct info *info, const unsigned char *p, cons
 	return pix;
 }
 
-static fz_pixmap *
-bmp_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_t total, int only_metadata)
+static fz_colorspace *
+bmp_read_color_profile(fz_context *ctx, struct info *info, const unsigned char *begin, const unsigned char *end)
 {
-	const unsigned char *begin = p;
-	const unsigned char *end = p + total;
-	int size;
+	if (info->colorspacetype == 0)
+	{
+		float matrix[9] = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+		float wp[3] = { 0.95047, 1.0, 1.08883 }; /* D65 white point */
+		float bp[3] = { 0, 0, 0 };
+		float gamma[3] = { 1, 1, 1 };
+		int i;
 
-	memset(info, 0x00, sizeof (*info));
+		for (i = 0; i < 3; i++)
+			gamma[i] = (float) info->gamma[i] / (float) (1 << 16);
 
-	p = bmp_read_file_header(ctx, info, p, end);
+		for (i = 0; i < 9; i++)
+			matrix[i] = (float) info->endpoints[i] / (float) (1 << 30);
 
-	info->filesize = fz_mini(info->filesize, (int)total);
+		return fz_new_cal_rgb_colorspace(ctx, wp, bp, gamma, matrix);
+	}
+	else if (info->colorspacetype == 0x4c494e4b)
+	{
+		fz_warn(ctx, "ignoring linked color profile in bmp image");
+		return NULL;
+	}
+	else if (info->colorspacetype == 0x57696e20)
+	{
+		fz_warn(ctx, "ignoring windows color profile in bmp image");
+		return NULL;
+	}
+	else if (info->colorspacetype == 0x4d424544)
+	{
+		fz_buffer *profile;
+		fz_colorspace *cs;
+
+		if (end - begin < info->profileoffset + info->profilesize)
+		{
+			fz_warn(ctx, "ignoring truncated color profile in bmp image");
+			return NULL;
+		}
+
+		profile = fz_new_buffer_from_copied_data(ctx, begin + info->profileoffset, info->profilesize);
+
+		fz_try(ctx)
+			cs = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_RGB, 0, "BMPRGB", profile);
+		fz_always(ctx)
+			fz_drop_buffer(ctx, profile);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+
+		return cs;
+	}
+
+	fz_warn(ctx, "ignoring color profile with unknown type in bmp image");
+	return NULL;
+}
+
+static void
+compute_mask_info(unsigned int mask, unsigned int *shift, unsigned int *bits)
+{
+	*bits = 0;
+	*shift = 0;
+
+	while (mask && (mask & 1) == 0) {
+		*shift += 1;
+		mask >>= 1;
+	}
+	while (mask && (mask & 1) == 1) {
+		*bits += 1;
+		mask >>= 1;
+	}
+}
+
+static const unsigned char *
+bmp_read_color_masks(fz_context *ctx, struct info *info, const unsigned char *begin, const unsigned char *end, const unsigned char *p)
+{
+	int size = 0;
+
+	if (info->compression == BI_BITFIELDS)
+	{
+		size = 12;
+		if (end - p < 12)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in mask header in bmp image");
+
+		info->rmask = read32(p + 0);
+		info->gmask = read32(p + 4);
+		info->bmask = read32(p + 8);
+	}
+	else if (info->compression == BI_ALPHABITS)
+	{
+		size = 16;
+		if (end - p < 16)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in mask header in bmp image");
+
+		info->rmask = read32(p + 0);
+		info->gmask = read32(p + 4);
+		info->bmask = read32(p + 8);
+		info->amask = read32(p + 12);
+	}
+
+	return p + size;
+}
+
+static int
+bmp_palette_is_gray(fz_context *ctx, struct info *info, int readcolors)
+{
+	int i;
+	for (i = 0; i < readcolors; i++)
+	{
+		int rgdiff = fz_absi(info->palette[3 * i + 0] - info->palette[3 * i + 1]);
+		int gbdiff = fz_absi(info->palette[3 * i + 1] - info->palette[3 * i + 2]);
+		int rbdiff = fz_absi(info->palette[3 * i + 0] - info->palette[3 * i + 2]);
+		if (rgdiff > 2 || gbdiff > 2 || rbdiff > 2)
+			return 0;
+	}
+	return 1;
+}
+
+static void
+bmp_load_default_palette(fz_context *ctx, struct info *info, int readcolors)
+{
+	int i;
+
+	fz_warn(ctx, "color table too short; loading default palette");
+
+	if (info->bitcount == 8)
+{
+		if (!bmp_palette_is_gray(ctx, info, readcolors))
+			memcpy(&info->palette[readcolors * 3], &web_palette[readcolors * 3],
+					sizeof(web_palette) - readcolors * 3);
+		else
+			for (i = readcolors; i < 256; i++)
+			{
+				info->palette[3 * i + 0] = i;
+				info->palette[3 * i + 1] = i;
+				info->palette[3 * i + 2] = i;
+			}
+	}
+	else if (info->bitcount == 4)
+	{
+		if (!bmp_palette_is_gray(ctx, info, readcolors))
+			memcpy(&info->palette[readcolors * 3], &vga_palette[readcolors * 3],
+					sizeof(vga_palette) - readcolors * 3);
+		else
+			for (i = readcolors; i < 16; i++)
+			{
+				info->palette[3 * i + 0] = (i << 4) | i;
+				info->palette[3 * i + 1] = (i << 4) | i;
+				info->palette[3 * i + 2] = (i << 4) | i;
+			}
+	}
+	else if (info->bitcount == 2)
+		memcpy(info->palette, gray_palette, sizeof(gray_palette));
+	else if (info->bitcount == 1)
+		memcpy(info->palette, bw_palette, sizeof(bw_palette));
+}
+
+static const unsigned char *
+bmp_read_palette(fz_context *ctx, struct info *info, const unsigned char *begin, const unsigned char *end, const unsigned char *p)
+{
+	int i, expected, present, entry_size;
+	const unsigned char *bitmap;
+
+	entry_size = palette_entry_size(info);
+	bitmap = begin + info->bitmapoffset;
+
+	expected = fz_mini(info->colors, 1 << info->bitcount);
+	if (expected == 0)
+		expected = 1 << info->bitcount;
+	present = fz_mini(expected, (bitmap - p) / entry_size);
+
+	for (i = 0; i < present; i++)
+	{
+		/* ignore alpha channel even if present */
+		info->palette[3 * i + 0] = read8(p + i * entry_size + 2);
+		info->palette[3 * i + 1] = read8(p + i * entry_size + 1);
+		info->palette[3 * i + 2] = read8(p + i * entry_size + 0);
+	}
+
+	if (present < expected)
+		bmp_load_default_palette(ctx, info, present);
+
+	return p + present * entry_size;
+}
+
+static const unsigned char *
+bmp_read_info_header(fz_context *ctx, struct info *info, const unsigned char *begin, const unsigned char *end, const unsigned char *p)
+{
+	uint32_t size;
 
 	if (end - p < 4)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in bitmap core header in bmp image");
-	size = read32(p + 0);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in info header in bmp image");
+	size = info->version = read32(p + 0);
 
+	if (!is_win_bmp(info) && !is_os2_bmp(info))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown header version (%u) in bmp image", info->version);
+	if (end - p < size)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in info header in bmp image");
+
+	/* default compression */
+	info->compression = BI_NONE;
+
+	/* OS/2 1.x or Windows v2 */
 	if (size == 12)
-		p = bmp_read_bitmap_core_header(ctx, info, p, end);
-	else if (size == 40 || size == 52 || size == 56 || size == 108 || size == 124)
 	{
-		p = bmp_read_bitmap_info_header(ctx, info, p, end);
-		if (info->extramasks)
-			p = bmp_read_extra_masks(ctx, info, p, end);
+		/* read32(p+0) == header size */
+		info->width = read16(p + 4);
+		info->height = read16(p + 6);
+		/* read16(p+8) == planes */
+		info->bitcount = read16(p + 10);
 	}
-	else if (size == 16 || size == 64)
-		p = bmp_read_bitmap_os2_header(ctx, info, p, end);
-	else
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid header size (%d) in bmp image", size);
+	/* OS/2 2.x short header */
+	if (size >= 16)
+	{
+		/* read32(p+0) == header size */
+		info->width = read32(p + 4);
+		info->height = read32(p + 8);
+		/* read16(p+12) == planes */
+		info->bitcount = read16(p + 14);
+	}
 
-	maskinfo(info->rmask, &info->rshift, &info->rbits);
-	maskinfo(info->gmask, &info->gshift, &info->gbits);
-	maskinfo(info->bmask, &info->bshift, &info->bbits);
-	maskinfo(info->amask, &info->ashift, &info->abits);
+	/* default masks */
+	if (info->bitcount == 16)
+	{
+		info->rmask = 0x00007c00;
+		info->gmask = 0x000003e0;
+		info->bmask = 0x0000001f;
+		info->amask = 0x00000000;
+	}
+	else if (info->bitcount >= 24)
+	{
+		info->rmask = 0x00ff0000;
+		info->gmask = 0x0000ff00;
+		info->bmask = 0x000000ff;
+		info->amask = 0x00000000;
+	}
 
-	if (info->width <= 0 || info->width > SHRT_MAX || info->height <= 0 || info->height > SHRT_MAX)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "dimensions (%d x %d) out of range in bmp image",
-				info->width, info->height);
-	if (info->compression != BI_RGB && info->compression != BI_RLE8 &&
-			info->compression != BI_RLE4 && info->compression != BI_BITFIELDS &&
-			info->compression != BI_JPEG && info->compression != BI_PNG &&
-			info->compression != BI_ALPHABITS && info->compression != BI_RLE24)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported compression method (%d) in bmp image", info->compression);
-	if ((info->compression == BI_RGB && info->bitcount != 1 &&
-			info->bitcount != 2 && info->bitcount != 4 &&
-			info->bitcount != 8 && info->bitcount != 16 &&
-			info->bitcount != 24 && info->bitcount != 32) ||
-			(info->compression == BI_RLE8 && info->bitcount != 8) ||
-			(info->compression == BI_RLE4 && info->bitcount != 4) ||
-			(info->compression == BI_BITFIELDS && info->bitcount != 16 && info->bitcount != 32) ||
-			(info->compression == BI_JPEG && info->bitcount != 0) ||
-			(info->compression == BI_PNG && info->bitcount != 0) ||
-			(info->compression == BI_ALPHABITS && info->bitcount != 16 && info->bitcount != 32) ||
-			(info->compression == BI_RLE24 && info->bitcount != 24))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid bits per pixel (%d) for compression (%d) in bmp image",
-				info->bitcount, info->compression);
+	/* Windows v3 header */
+	if (size >= 40)
+	{
+		info->compression = read32(p + 16);
+		info->bitmapsize = read32(p + 20);
+		info->xres = read32(p + 24);
+		info->yres = read32(p + 28);
+		info->colors = read32(p + 32);
+		/* read32(p+36) == important colors */
+	}
+	/* Windows v3 header with RGB masks */
+	if (size == 52 || size == 56 || size == 108 || size == 124)
+	{
+		info->rmask = read32(p + 40);
+		info->gmask = read32(p + 44);
+		info->bmask = read32(p + 48);
+	}
+	/* Windows v3 header with RGBA masks */
+	if (size == 56 || size == 108 || size == 124)
+	{
+		info->amask = read32(p + 52);
+	}
+	/* OS/2 2.x long header */
+	if (size == 64)
+	{
+		/* read16(p+40) == units */
+		/* read16(p+42) == reserved */
+		/* read16(p+44) == recording */
+		/* read16(p+46) == rendering */
+		/* read32(p+48) == size1 */
+		/* read32(p+52) == size2 */
+		/* read32(p+56) == color encoding */
+		/* read32(p+60) == identifier */
+	}
+	/* Windows v4 header */
+	if (size >= 108)
+	{
+		info->colorspacetype = read32(p + 56);
+
+		info->endpoints[0] = read32(p + 60);
+		info->endpoints[1] = read32(p + 64);
+		info->endpoints[2] = read32(p + 68);
+
+		info->endpoints[3] = read32(p + 72);
+		info->endpoints[4] = read32(p + 76);
+		info->endpoints[5] = read32(p + 80);
+
+		info->endpoints[6] = read32(p + 84);
+		info->endpoints[7] = read32(p + 88);
+		info->endpoints[8] = read32(p + 92);
+
+		info->gamma[0] = read32(p + 96);
+		info->gamma[1] = read32(p + 100);
+		info->gamma[2] = read32(p + 104);
+	}
+	/* Windows v5 header */
+	if (size >= 124)
+	{
+		info->intent = read32(p + 108);
+		info->profileoffset = read32(p + 112);
+		info->profilesize = read32(p + 116);
+		/* read32(p+120) == reserved */
+	}
+
+	return p + size;
+}
+
+
+static fz_pixmap *
+bmp_read_image(fz_context *ctx, struct info *info, const unsigned char *begin, const unsigned char *end, const unsigned char *p, int only_metadata)
+{
+	const unsigned char *profilebegin;
+
+	memset(info, 0x00, sizeof (*info));
+	info->colorspacetype = 0xffffffff;
+
+	p = profilebegin = bmp_read_file_header(ctx, info, begin, end, p);
+
+	p = bmp_read_info_header(ctx, info, begin, end, p);
+
+	if (has_palette(info))
+		p = bmp_read_palette(ctx, info, begin, end, p);
+
+	if (has_color_masks(info))
+		p = bmp_read_color_masks(ctx, info, begin, end, p);
+
+	/* clamp bitmap offset to buffer size */
+	if (end - begin < info->bitmapoffset)
+		info->bitmapoffset = end - begin;
+
+	info->xres = DPM_TO_DPI(info->xres);
+	info->yres = DPM_TO_DPI(info->yres);
+
+	/* extract topdown/bottomup from height for windows bitmaps */
+	if (is_win_bmp(info))
+	{
+		int bits = info->version == 12 ? 16 : 32;
+
+		info->topdown = (info->height >> (bits - 1)) & 1;
+		if (info->topdown)
+		{
+			info->height--;
+			info->height = ~info->height;
+			info->height &= bits == 16 ? 0xffff : 0xffffffff;
+		}
+	}
+
+	/* GIMP incorrectly writes BMP v5 headers that omit color masks
+	but include colorspace information. This means they look like
+	BMP v4 headers and that we interpret the colorspace information
+	partially as color mask data, partially as colorspace information.
+	Let's work around this... */
+	if (info->version == 108 &&
+			info->rmask == 0x73524742 && /* colorspacetype */
+			info->gmask == 0x00000000 && /* endpoints[0] */
+			info->bmask == 0x00000000 && /* endpoints[1] */
+			info->amask == 0x00000000 && /* endpoints[2] */
+			info->colorspacetype == 0x00000000 && /* endpoints[3] */
+			info->endpoints[0] == 0x00000000 && /* endpoints[4] */
+			info->endpoints[1] == 0x00000000 && /* endpoints[5] */
+			info->endpoints[2] == 0x00000000 && /* endpoints[6] */
+			info->endpoints[3] == 0x00000000 && /* endpoints[7] */
+			info->endpoints[4] == 0x00000000 && /* endpoints[8] */
+			info->endpoints[5] == 0x00000000 && /* gamma[0] */
+			info->endpoints[6] == 0x00000000 && /* gamma[1] */
+			info->endpoints[7] == 0x00000000 && /* gamma[2] */
+			info->endpoints[8] == 0x00000002) /* intent */
+	{
+		info->rmask = 0;
+		info->colorspacetype = 0x73524742;
+		info->intent = 0x00000002;
+	}
+
+	/* get number of bits per component and component shift */
+	compute_mask_info(info->rmask, &info->rshift, &info->rbits);
+	compute_mask_info(info->gmask, &info->gshift, &info->gbits);
+	compute_mask_info(info->bmask, &info->bshift, &info->bbits);
+	compute_mask_info(info->amask, &info->ashift, &info->abits);
+
+	if (info->width == 0 || info->width > SHRT_MAX || info->height == 0 || info->height > SHRT_MAX)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image dimensions (%u x %u) out of range in bmp image", info->width, info->height);
+	if (!is_valid_compression(info))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported compression method (%u) in bmp image", info->compression);
+	if (!is_valid_bitcount(info))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid bits per pixel (%u) for compression (%u) in bmp image", info->bitcount, info->compression);
 	if (info->rbits < 0 || info->rbits > info->bitcount)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %d bit red mask in bmp image", info->rbits);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit red mask in bmp image", info->rbits);
 	if (info->gbits < 0 || info->gbits > info->bitcount)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %d bit green mask in bmp image", info->gbits);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit green mask in bmp image", info->gbits);
 	if (info->bbits < 0 || info->bbits > info->bitcount)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %d bit blue mask in bmp image", info->bbits);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit blue mask in bmp image", info->bbits);
 	if (info->abits < 0 || info->abits > info->bitcount)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %d bit alpha mask in bmp image", info->abits);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit alpha mask in bmp image", info->abits);
+
+	/* Read color profile or default to RGB */
+	if (has_color_profile(info))
+		info->cs = bmp_read_color_profile(ctx, info, profilebegin, end);
+	if (!info->cs)
+		info->cs = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
 
 	if (only_metadata)
 		return NULL;
 
-	if (info->compression == BI_JPEG)
+	/* bitmap cannot begin before headers have ended */
+	if (p - begin < info->bitmapoffset)
+		p = begin + info->bitmapoffset;
+
+	if (is_win_bmp(info) && info->compression == BI_JPEG)
 	{
-		if (p - begin < info->offset)
-			p = begin + info->offset;
+		if (end - p < info->bitmapsize)
+			fz_warn(ctx, "premature end in jpeg image embedded in bmp image");
 		return fz_load_jpeg(ctx, p, end - p);
 	}
-	else if (info->compression == BI_PNG)
+	else if (is_win_bmp(info) && info->compression == BI_PNG)
 	{
-		if (p - begin < info->offset)
-			p = begin + info->offset;
+		if (end - p < info->bitmapsize)
+			fz_warn(ctx, "premature end in png image embedded in bmp image");
 		return fz_load_png(ctx, p, end - p);
 	}
 	else
-	{
-		const unsigned char *color_table_end = begin + info->offset;
-		if (end - begin < info->offset)
-			color_table_end = end;
-		p = bmp_read_color_table(ctx, info, p, color_table_end);
-
-		if (p - begin < info->offset)
-			p = begin + info->offset;
-		return bmp_read_bitmap(ctx, info, p, end);
-	}
+		return bmp_read_bitmap(ctx, info, begin, end, p);
 }
 
 fz_pixmap *
 fz_load_bmp(fz_context *ctx, const unsigned char *p, size_t total)
 {
-	struct info bmp;
+	struct info info;
 	fz_pixmap *image;
 
-	image = bmp_read_image(ctx, &bmp, p, total, 0);
-	image->xres = bmp.xres / (1000.0f / 25.4f);
-	image->yres = bmp.yres / (1000.0f / 25.4f);
+	fz_try(ctx)
+	{
+		image = (fz_pixmap *) bmp_read_image(ctx, &info, p, p + total, p, 0);
+		image->xres = info.xres;
+		image->yres = info.yres;
+	}
+	fz_always(ctx)
+		fz_drop_colorspace(ctx, info.cs);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	return image;
 }
@@ -964,13 +1189,106 @@ fz_load_bmp(fz_context *ctx, const unsigned char *p, size_t total)
 void
 fz_load_bmp_info(fz_context *ctx, const unsigned char *p, size_t total, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
 {
-	struct info bmp;
+	struct info info;
 
-	bmp_read_image(ctx, &bmp, p, total, 1);
+	fz_try(ctx)
+	{
+		bmp_read_image(ctx, &info, p, p + total, p, 1);
+		*cspacep = fz_keep_colorspace(ctx, info.cs);
+		*wp = info.width;
+		*hp = info.height;
+		*xresp = info.xres;
+		*yresp = info.yres;
+	}
+	fz_always(ctx)
+		fz_drop_colorspace(ctx, info.cs);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
 
-	*cspacep = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
-	*wp = bmp.width;
-	*hp = bmp.height;
-	*xresp = bmp.xres / (1000.0f / 25.4f);
-	*yresp = bmp.yres / (1000.0f / 25.4f);
+fz_pixmap *
+fz_load_bmp_subimage(fz_context *ctx, const unsigned char *buf, size_t len, int subimage)
+{
+	const unsigned char *begin = buf;
+	const unsigned char *end = buf + len;
+	const unsigned char *p = begin;
+	struct info info;
+	int nextoffset = 0;
+	fz_pixmap *image;
+	int origidx = subimage;
+
+	do
+	{
+		p = begin + nextoffset;
+
+		if (is_bitmap_array(p))
+		{
+			/* read16(p+0) == type */
+			/* read32(p+2) == size of this header in bytes */
+			nextoffset = read32(p + 6);
+			/* read16(p+10) == suitable pelx dimensions */
+			/* read16(p+12) == suitable pely dimensions */
+			p += 14;
+		}
+		else if (nextoffset > 0)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected bitmap array magic (%02x%02x) in bmp image", p[0], p[1]);
+
+		if (end - begin < nextoffset)
+		{
+			fz_warn(ctx, "treating invalid next subimage offset as end of file");
+			nextoffset = 0;
+		}
+
+		subimage--;
+
+	} while (subimage >= 0 && nextoffset > 0);
+
+	if (subimage != -1)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "subimage index (%d) out of range in bmp image", origidx);
+
+	fz_try(ctx)
+		image = bmp_read_image(ctx, &info, begin, end, p, 0);
+	fz_always(ctx)
+		fz_drop_colorspace(ctx, info.cs);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return image;
+}
+
+int
+fz_load_bmp_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len)
+{
+	const unsigned char *begin = buf;
+	const unsigned char *end = buf + len;
+	int nextoffset = 0;
+	int count = 0;
+
+	do
+	{
+		const unsigned char *p = begin + nextoffset;
+
+		if (is_bitmap_array(p))
+		{
+			/* read16(p+0) == type */
+			/* read32(p+2) == size of this header in bytes */
+			nextoffset = read32(p + 6);
+			/* read16(p+10) == suitable pelx dimensions */
+			/* read16(p+12) == suitable pely dimensions */
+			p += 14;
+		}
+		else if (nextoffset > 0)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unexpected bitmap array magic (%02x%02x) in bmp image", p[0], p[1]);
+
+		if (end - begin < nextoffset)
+		{
+			fz_warn(ctx, "treating invalid next subimage offset as end of file");
+			nextoffset = 0;
+		}
+
+		count++;
+
+	} while (nextoffset > 0);
+
+	return count;
 }

@@ -184,7 +184,7 @@ int pdfposter_main(int argc, char **argv)
 	pdf_document *doc;
 	fz_context *ctx;
 
-	while ((c = fz_getopt(argc, argv, "x:y:")) != -1)
+	while ((c = fz_getopt(argc, argv, "x:y:p:")) != -1)
 	{
 		switch (c)
 		{

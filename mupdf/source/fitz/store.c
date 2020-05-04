@@ -170,6 +170,7 @@ void fz_drop_key_storable(fz_context *ctx, const fz_key_storable *sc)
 		return;
 
 	fz_lock(ctx, FZ_LOCK_ALLOC);
+	assert(s->storable.refs != 0);
 	if (s->storable.refs > 0)
 	{
 		(void)Memento_dropRef(s);

@@ -36,10 +36,10 @@ make it as simple as possible for integrators to make the small
 changes that may be require to update between versions.
 
 <p>
-Note, that we only list changes in existing APIs here, not additions
+Note, that we only list changes in existing APIs here, not all additions
 to the API.
 
-<h2>Changes from v1.16</h2>
+<h2>Changes from 1.16 to 1.17</h2>
 
 <p>
 The accessors for reading and creating QuadPoints, InkList and Vertices data
@@ -49,7 +49,59 @@ fz_point structs instead of float arrays. We have also added functions to
 construct the datastructures one piece at a time, removing the need to allocate
 a temporary array to pass.
 
-<h2>Changes from v1.15</h2>
+<ul>
+<li>typedef struct fz_quad { fz_point ul, ur, ll, lr; };
+</ul>
+
+<p>
+To facilitate loading EPUB documents without laying out the entire document at
+once, we have introduced chapters into the document structure. Each document
+instead of having just a plain list of pages, now has a list of chapters, and
+each chapter has a list of pages. Most of the old functions have the same
+functionality, but we have added several new functions, which if used, will
+provide significant speedups when jumping to a random page in large EPUB
+documents.
+
+<ul>
+<li>int fz_count_chapters(ctx, doc)
+<li>int fz_count_chapter_pages(ctx, doc, chapter)
+<li>fz_page *fz_load_chapter_page(ctx, doc, chapter, page)
+<li>int fz_search_chapter_page_number(ctx, doc, chapter, page, needle, hit_quads, hit_size)
+</ul>
+
+<p>
+However, in order to support bookmarks and links using chapters we have had to
+introduce a new struct "fz_location", and the functions to resolve links have
+changed to use this new struct.
+
+<ul>
+<li>typedef struct { int chapter, page; } fz_location;
+<li>fz_location fz_resolve_link(ctx, doc, uri, x, y);
+</ul>
+
+<p>
+Functions to map between a fixed page number
+and a fz_location have been added to help facilitate migration to the new API.
+
+<ul>
+<li>int fz_page_number_from_location(ctx, doc, location);
+<li>fz_location fz_location_from_page_number(ctx, doc, number);
+<li>fz_location fz_next_page(ctx, doc, location);
+<li>fz_location fz_previous_page(ctx, doc, location);
+<li>fz_location fz_last_page(ctx, doc);
+</ul>
+
+<p>
+The layout information for each chapter can at your option be cached in an
+"accelerator" file for even faster loading. This will help performance when
+using the old page number based rather than location based functions.
+
+<ul>
+<li>fz_document fz_open_accelerated_document(ctx, filename, accelerator_filename);
+<li>void fz_save_accelerator(ctx, document, accelerator_filename);
+</ul>
+
+<h2>Changes from 1.15 to 1.16</h2>
 
 <p>
 There has been a major overhaul of the color management architecture. Unless
@@ -83,7 +135,7 @@ The structured text html and xhtml output formats take an additional argument:
 the page number. This number is used to create an id attribute for each page to
 use as a hyperlink target.
 
-<h2>Changes from v1.14 to v1.15</h2>
+<h2>Changes from 1.14 to 1.15</h2>
 
 <dl>
 
