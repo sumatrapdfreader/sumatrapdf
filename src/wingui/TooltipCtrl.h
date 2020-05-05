@@ -14,5 +14,7 @@ struct TooltipCtrl : WindowBase {
     void Show(const WCHAR* text, Rect& rc, bool multiline);
     void Hide();
 
+    void SetDelayTime(int type, int timeInMs);
+
     void SetMaxWidth(int dx);
 };
