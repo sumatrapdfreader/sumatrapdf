@@ -545,6 +545,8 @@ bool TreeCtrl::Create(const WCHAR* title) {
         SetWindowStyle(hwnd, TVS_CHECKBOXES, true);
     }
 
+    SetToolTipsDelayTime(TTDT_AUTOPOP, 32767);
+
     // must be done at the end. Doing  SetWindowStyle() sends bogus (?)
     // TVN_ITEMCHANGED notification. As an alternative we could ignore TVN_ITEMCHANGED
     // if hItem doesn't point to an TreeItem
@@ -791,6 +793,19 @@ TreeItemState TreeCtrl::GetItemState(TreeItem* ti) {
     res.nChildren = item->cChildren;
 
     return res;
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/tvm-gettooltips
+HWND TreeCtrl::GetToolTipsHwnd() {
+    return TreeView_GetToolTips(hwnd);
+}
+
+void TreeCtrl::SetToolTipsDelayTime(int type, int timeInMs) {
+    CrashIf(!IsValidDelayType(type));
+    CrashIf(timeInMs < 0);
+    CrashIf(timeInMs > 32767); // TODO: or is it 65535?
+    HWND hwndToolTips = GetToolTipsHwnd();
+    SendMessageW(hwndToolTips, TTM_SETDELAYTIME, type, (LPARAM)timeInMs);
 }
 
 Size TreeCtrl::GetIdealSize() {

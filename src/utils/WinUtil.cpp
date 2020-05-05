@@ -2041,3 +2041,14 @@ std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
     DWORD dataSize = SizeofResource(nullptr, resSrc);
     return {data, dataSize, res};
 }
+
+bool IsValidDelayType(int type) {
+    switch (type) {
+        case TTDT_AUTOPOP:
+        case TTDT_INITIAL:
+        case TTDT_RESHOW:
+        case TTDT_AUTOMATIC:
+        return true;
+    }
+    return false;
+}

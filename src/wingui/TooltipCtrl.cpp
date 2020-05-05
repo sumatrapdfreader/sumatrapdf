@@ -85,22 +85,11 @@ void TooltipCtrl::Hide() {
     isShowing = false;
 }
 
-static bool isValidDelayType(int type) {
-    switch (type) {
-        case TTDT_AUTOPOP:
-        case TTDT_INITIAL:
-        case TTDT_RESHOW:
-        case TTDT_AUTOMATIC:
-        return true;
-    }
-    return false;
-}
-
 // https://docs.microsoft.com/en-us/windows/win32/controls/ttm-setdelaytime
 // type is: TTDT_AUTOPOP, TTDT_INITIAL, TTDT_RESHOW, TTDT_AUTOMATIC
 // timeInMs is max 32767 (~32 secs)
 void TooltipCtrl::SetDelayTime(int type, int timeInMs) {
-    CrashIf(!isValidDelayType(type));
+    CrashIf(!IsValidDelayType(type));
     CrashIf(timeInMs < 0);
     CrashIf(timeInMs > 32767); // TODO: or is it 65535?
     SendMessageW(hwnd, TTM_SETDELAYTIME, type, (LPARAM)timeInMs);

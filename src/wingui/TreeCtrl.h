@@ -207,6 +207,9 @@ struct TreeCtrl : WindowBase {
 
     TreeItemState GetItemState(TreeItem*);
 
+    HWND GetToolTipsHwnd();
+    void SetToolTipsDelayTime(int type, int timeInMs);
+
     void DragStart(NMTREEVIEWW*);
     void DragMove(int x, int y);
     void DragEnd();

@@ -253,3 +253,4 @@ HINSTANCE GetInstance();
 void hwndDpiAdjust(HWND hwnd, float* x, float* y);
 Size ButtonGetIdealSize(HWND hwnd);
 std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id);
+bool IsValidDelayType(int type);
