@@ -40,6 +40,11 @@ func signMust(path string) {
 	// the sign tool is finicky, so copy the cert to the same dir as
 	// the exe we're signing
 
+	// TODO: certificate expired so temporarily disable signing
+	if true {
+		return
+	}
+
 	var err error
 	// signing might fail due to temorary error ("The specified timestamp server either could not be reached or")
 	// so retry
