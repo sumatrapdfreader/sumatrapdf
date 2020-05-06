@@ -243,9 +243,10 @@ void pdf_set_layer_config_as_default(fz_context *ctx, pdf_document *doc);
 */
 int pdf_has_unsaved_changes(fz_context *ctx, pdf_document *doc);
 
-/* Unsaved signature fields */
+/* Object that can perform the cryptographic operation necessary for document signing */
 typedef struct pdf_pkcs7_signer pdf_pkcs7_signer;
 
+/* Unsaved signature fields */
 typedef struct pdf_unsaved_sig
 {
 	pdf_obj *field;

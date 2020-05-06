@@ -52,7 +52,7 @@ def load_ligs():
 		table['f_f_l.sc'] = 0xFB04
 
 if len(sys.argv) < 2:
-	print('usage: python scripts/makesubset.py scripts/MES-2.TXT', file=sys.stderr)
+	print('usage: python3 scripts/makesubset.py scripts/MES-2.TXT', file=sys.stderr)
 else:
 	for input in sys.argv[1:]:
 		if input == '-sc':

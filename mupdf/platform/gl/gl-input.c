@@ -137,6 +137,35 @@ static void ui_input_paste(struct input *input, const char *buf, int n)
 	input->q = input->p;
 }
 
+static void ui_do_copy(struct input *input)
+{
+	if (input->p != input->q)
+	{
+		char buf[sizeof input->text];
+		char *p = input->p < input->q ? input->p : input->q;
+		char *q = input->p > input->q ? input->p : input->q;
+		memmove(buf, p, q - p);
+		buf[q-p] = 0;
+		ui_set_clipboard(buf);
+	}
+}
+
+static void ui_do_cut(struct input *input)
+{
+	if (input->p != input->q)
+	{
+		ui_do_copy(input);
+		ui_input_delete_selection(input);
+	}
+}
+
+static void ui_do_paste(struct input *input)
+{
+	const char *buf = ui_get_clipboard();
+	if (buf)
+		ui_input_paste(input, buf, (int)strlen(buf));
+}
+
 static int ui_input_key(struct input *input, int multiline)
 {
 	switch (ui.key)
@@ -226,8 +255,14 @@ static int ui_input_key(struct input *input, int multiline)
 			input->p = input->q = end_line(input->p, input->end);
 		break;
 	case KEY_DELETE:
-		if (input->p != input->q)
+		if (ui.mod == GLUT_ACTIVE_SHIFT)
+		{
+			ui_do_cut(input);
+		}
+		else if (input->p != input->q)
+		{
 			ui_input_delete_selection(input);
+		}
 		else if (input->p < input->end)
 		{
 			char *np = next_char(input->p);
@@ -280,25 +315,19 @@ static int ui_input_key(struct input *input, int multiline)
 		*input->end = 0;
 		break;
 	case KEY_CTL_C:
+		ui_do_copy(input);
+		break;
 	case KEY_CTL_X:
-		if (input->p != input->q)
-		{
-			char buf[sizeof input->text];
-			char *p = input->p < input->q ? input->p : input->q;
-			char *q = input->p > input->q ? input->p : input->q;
-			memmove(buf, p, q - p);
-			buf[q-p] = 0;
-			ui_set_clipboard(buf);
-			if (ui.key == KEY_CTL_X)
-				ui_input_delete_selection(input);
-		}
+		ui_do_cut(input);
 		break;
 	case KEY_CTL_V:
-		{
-			const char *buf = ui_get_clipboard();
-			if (buf)
-				ui_input_paste(input, buf, (int)strlen(buf));
-		}
+		ui_do_paste(input);
+		break;
+	case KEY_INSERT:
+		if (ui.mod == GLUT_ACTIVE_CTRL)
+			ui_do_copy(input);
+		if (ui.mod == GLUT_ACTIVE_SHIFT)
+			ui_do_paste(input);
 		break;
 	default:
 		if (ui.key >= 32 && ui.plain)

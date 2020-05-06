@@ -190,7 +190,7 @@ bmp_decompress_huffman1d(fz_context *ctx, struct info *info, const unsigned char
 		*end = decoded + size;
 	}
 	fz_always(ctx)
-			{
+	{
 		fz_drop_buffer(ctx, buf);
 		fz_drop_stream(ctx, decstm);
 		fz_drop_stream(ctx, encstm);
@@ -298,7 +298,7 @@ bmp_decompress_rle24(fz_context *ctx, struct info *info, const unsigned char *p,
 				{
 					actualx = x % width;
 					actualy = y + x / width;
-			}
+				}
 				if (actualx < width && actualy < height)
 				{
 					dp = decompressed + actualy * stride + actualx * 3;
@@ -407,7 +407,7 @@ bmp_decompress_rle8(fz_context *ctx, struct info *info, const unsigned char *p, 
 				{
 					actualx = x % width;
 					actualy = y + x / width;
-			}
+				}
 				if (actualx < width && actualy < height)
 				{
 					dp = decompressed + actualy * stride + actualx;
@@ -495,11 +495,11 @@ bmp_decompress_rle4(fz_context *ctx, struct info *info, const unsigned char *p, 
 				{
 					int val = i & 1 ? (sp[i >> 1]) & 0xF : (sp[i >> 1] >> 4) & 0xF;
 					dp = decompressed + actualy * stride + actualx / 2;
-				if (x & 1)
-					*dp++ |= val;
-				else
-					*dp |= val << 4;
-			}
+					if (x & 1)
+						*dp++ |= val;
+					else
+						*dp |= val << 4;
+				}
 				x++;
 			}
 			sp += sn + pad;
@@ -518,16 +518,16 @@ bmp_decompress_rle4(fz_context *ctx, struct info *info, const unsigned char *p, 
 				{
 					actualx = x % width;
 					actualy = y + x / width;
-			}
+				}
 				if (actualx < width && actualy < height)
-			{
+				{
 					int val = i & 1 ? (sp[0] & 0xf) : (sp[0] >> 4) & 0xf;
 					dp = decompressed + actualy * stride + actualx / 2;
-				if (x & 1)
-					*dp++ |= val;
-				else
-					*dp |= val << 4;
-			}
+					if (x & 1)
+						*dp++ |= val;
+					else
+						*dp |= val << 4;
+				}
 				x++;
 			}
 			sp += sn;
@@ -872,7 +872,7 @@ bmp_load_default_palette(fz_context *ctx, struct info *info, int readcolors)
 	fz_warn(ctx, "color table too short; loading default palette");
 
 	if (info->bitcount == 8)
-{
+	{
 		if (!bmp_palette_is_gray(ctx, info, readcolors))
 			memcpy(&info->palette[readcolors * 3], &web_palette[readcolors * 3],
 					sizeof(web_palette) - readcolors * 3);

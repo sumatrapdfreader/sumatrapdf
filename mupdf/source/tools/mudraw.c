@@ -50,7 +50,7 @@ enum {
 	OUT_PNG, OUT_PNM, OUT_PGM, OUT_PPM, OUT_PAM,
 	OUT_PBM, OUT_PKM, OUT_PWG, OUT_PCL, OUT_PS, OUT_PSD,
 	OUT_TEXT, OUT_HTML, OUT_XHTML, OUT_STEXT, OUT_PCLM,
-	OUT_TRACE, OUT_SVG,
+	OUT_TRACE, OUT_BBOX, OUT_SVG,
 #if FZ_ENABLE_PDF
 	OUT_PDF,
 #endif
@@ -93,6 +93,7 @@ static const suffix_t suffix_table[] =
 	{ ".stext", OUT_STEXT, 0 },
 
 	{ ".trace", OUT_TRACE, 0 },
+	{ ".bbox", OUT_BBOX, 0 },
 };
 
 typedef struct
@@ -142,6 +143,7 @@ static const format_cs_table_t format_cs_table[] =
 	{ OUT_PSD, CS_CMYK, { CS_GRAY, CS_GRAY_ALPHA, CS_RGB, CS_RGB_ALPHA, CS_CMYK, CS_CMYK_ALPHA, CS_ICC } },
 
 	{ OUT_TRACE, CS_RGB, { CS_RGB } },
+	{ OUT_BBOX, CS_RGB, { CS_RGB } },
 	{ OUT_SVG, CS_RGB, { CS_RGB } },
 #if FZ_ENABLE_PDF
 	{ OUT_PDF, CS_RGB, { CS_RGB } },
@@ -437,7 +439,7 @@ static int has_percent_d(char *s)
 static void
 file_level_headers(fz_context *ctx)
 {
-	if (output_format == OUT_STEXT || output_format == OUT_TRACE)
+	if (output_format == OUT_STEXT || output_format == OUT_TRACE || output_format == OUT_BBOX)
 		fz_write_printf(ctx, out, "<?xml version=\"1.0\"?>\n");
 
 	if (output_format == OUT_HTML)
@@ -445,7 +447,7 @@ file_level_headers(fz_context *ctx)
 	if (output_format == OUT_XHTML)
 		fz_print_stext_header_as_xhtml(ctx, out);
 
-	if (output_format == OUT_STEXT || output_format == OUT_TRACE)
+	if (output_format == OUT_STEXT || output_format == OUT_TRACE || output_format == OUT_BBOX)
 		fz_write_printf(ctx, out, "<document name=\"%s\">\n", filename);
 
 	if (output_format == OUT_PS)
@@ -465,7 +467,7 @@ file_level_headers(fz_context *ctx)
 static void
 file_level_trailers(fz_context *ctx)
 {
-	if (output_format == OUT_STEXT || output_format == OUT_TRACE)
+	if (output_format == OUT_STEXT || output_format == OUT_TRACE || output_format == OUT_BBOX)
 		fz_write_printf(ctx, out, "</document>\n");
 
 	if (output_format == OUT_HTML)
@@ -563,6 +565,34 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 				fz_run_page(ctx, page, dev, fz_identity, cookie);
 			fz_write_printf(ctx, out, "</page>\n");
 			fz_close_device(ctx, dev);
+		}
+		fz_always(ctx)
+		{
+			fz_drop_device(ctx, dev);
+		}
+		fz_catch(ctx)
+		{
+			fz_drop_display_list(ctx, list);
+			fz_drop_separations(ctx, seps);
+			fz_drop_page(ctx, page);
+			fz_rethrow(ctx);
+		}
+	}
+
+	else if (output_format == OUT_BBOX)
+	{
+		fz_try(ctx)
+		{
+			fz_rect bbox = fz_empty_rect;
+			dev = fz_new_bbox_device(ctx, &bbox);
+			if (lowmemory)
+				fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
+			if (list)
+				fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, cookie);
+			else
+				fz_run_page(ctx, page, dev, fz_identity, cookie);
+			fz_close_device(ctx, dev);
+			fz_write_printf(ctx, out, "<page bbox=\"%R\" mediabox=\"%R\" />\n", &bbox, &mediabox);
 		}
 		fz_always(ctx)
 		{
@@ -933,7 +963,14 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		fz_always(ctx)
 		{
 			if (output_format != OUT_PCLM)
+			{
 				fz_drop_band_writer(ctx, bander);
+				/* bander must be set to NULL to avoid use-after-frees. A use-after-free
+				 * would occur when a valid page was followed by a page with invalid
+				 * pixmap dimensions, causing bander -- a static -- to point to previously
+				 * freed memory instead of a new band_writer. */
+				bander = NULL;
+			}
 			fz_drop_bitmap(ctx, bit);
 			bit = NULL;
 			if (num_workers > 0)
@@ -1928,7 +1965,7 @@ int mudraw_main(int argc, char **argv)
 				quiet = 1; /* automatically be quiet if printing to stdout */
 #ifdef _WIN32
 				/* Windows specific code to make stdout binary. */
-				if (output_format != OUT_TEXT && output_format != OUT_STEXT && output_format != OUT_HTML && output_format != OUT_XHTML && output_format != OUT_TRACE)
+				if (output_format != OUT_TEXT && output_format != OUT_STEXT && output_format != OUT_HTML && output_format != OUT_XHTML && output_format != OUT_TRACE && output_format != OUT_BBOX)
 					setmode(fileno(stdout), O_BINARY);
 #endif
 				out = fz_stdout(ctx);

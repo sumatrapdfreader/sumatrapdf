@@ -170,9 +170,6 @@ typedef enum
 	PDF_SIGNATURE_ERROR_UNKNOWN
 } pdf_signature_error;
 
-/* Object that can perform the cryptographic operation necessary for document signing */
-typedef struct pdf_pkcs7_signer pdf_pkcs7_signer;
-
 /* Increment the reference count for a signer object */
 typedef pdf_pkcs7_signer *(pdf_pkcs7_keep_signer_fn)(fz_context *ctx, pdf_pkcs7_signer *signer);
 

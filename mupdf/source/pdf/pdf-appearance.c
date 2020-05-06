@@ -1261,31 +1261,58 @@ write_string_with_quadding(fz_context *ctx, fz_buffer *buf,
 }
 
 static void
-write_comb_string(fz_context *ctx, fz_buffer *buf, const char *a, const char *b, fz_font *font, float cell_w)
+write_comb_string(fz_context *ctx, fz_buffer *buf,
+	fz_text_language lang, const char *fontname,
+	fz_font *font, float size, const char *text, float cell_w)
 {
-	float gw, pad, carry = 0;
-	fz_append_byte(ctx, buf, '[');
-	while (a < b)
+	struct text_walk_state state;
+	int last_enc = 0;
+	float pad, carry = 0;
+
+	init_text_walk(ctx, &state, lang, font, text, text + strlen(text));
+
+	while (next_text_walk(ctx, &state))
 	{
-		int c, g;
+		if (state.enc != last_enc)
+		{
+			if (last_enc)
+				fz_append_string(ctx, buf, "] TJ\n");
 
-		a += fz_chartorune(&c, a);
-		c = fz_windows_1252_from_unicode(c);
-		if (c < 0) c = REPLACEMENT;
+			switch (state.enc)
+			{
+			case ENC_LATIN: fz_append_printf(ctx, buf, "/%s %g Tf\n", fontname, size); break;
+			case ENC_GREEK: fz_append_printf(ctx, buf, "/%sGRK %g Tf\n", fontname, size); break;
+			case ENC_CYRILLIC: fz_append_printf(ctx, buf, "/%sCYR %g Tf\n", fontname, size); break;
+			case ENC_KOREAN: fz_append_printf(ctx, buf, "/Batang %g Tf\n", size); break;
+			case ENC_JAPANESE: fz_append_printf(ctx, buf, "/Mincho %g Tf\n", size); break;
+			case ENC_HANT: fz_append_printf(ctx, buf, "/Ming %g Tf\n", size); break;
+			case ENC_HANS: fz_append_printf(ctx, buf, "/Song %g Tf\n", size); break;
+			}
 
-		g = fz_encode_character(ctx, font, c);
-		gw = fz_advance_glyph(ctx, font, g, 0) * 1000;
-		pad = (cell_w - gw) / 2;
+			fz_append_byte(ctx, buf, '[');
+
+			last_enc = state.enc;
+		}
+
+		pad = (cell_w - state.w * 1000) / 2;
 		fz_append_printf(ctx, buf, "%g", -(carry + pad));
 		carry = pad;
 
-		fz_append_byte(ctx, buf, '(');
-		if (c == '(' || c == ')' || c == '\\')
-			fz_append_byte(ctx, buf, '\\');
-		fz_append_byte(ctx, buf, c);
-		fz_append_byte(ctx, buf, ')');
+		if (state.enc < ENC_KOREAN)
+		{
+			fz_append_byte(ctx, buf, '(');
+			if (state.c == '(' || state.c == ')' || state.c == '\\')
+				fz_append_byte(ctx, buf, '\\');
+			fz_append_byte(ctx, buf, state.c);
+			fz_append_byte(ctx, buf, ')');
+		}
+		else
+		{
+			fz_append_printf(ctx, buf, "<%04x>", state.c);
+		}
 	}
-	fz_append_string(ctx, buf, "] TJ\n");
+	if (last_enc)
+		fz_append_string(ctx, buf, "] TJ\n");
 }
 
 static void
@@ -1435,7 +1462,7 @@ write_variable_text(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj *
 		{
 			float ty = (h - size) / 2;
 			fz_append_printf(ctx, buf, "%g %g Td\n", padding, padding+h-baseline-ty);
-			write_comb_string(ctx, buf, text, text + strlen(text), font, (w * 1000 / size) / comb);
+			write_comb_string(ctx, buf, lang, fontname, font, size, text, (w * 1000 / size) / comb);
 		}
 		else
 		{

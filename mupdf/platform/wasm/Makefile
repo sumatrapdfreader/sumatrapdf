@@ -37,7 +37,7 @@ $(MUPDF_JS) $(MUPDF_WASM) : $(MUPDF_CORE) wrap.c wrap.js
 
 run: $(SAMPLE_PDF) $(MUPDF_JS) $(MUDPF_WASM)
 	(sleep 3; xdg-open http://127.0.0.1:8000/view-page.html) &
-	python -m SimpleHTTPServer 8000
+	python3 -m http.server 8000
 
 clean:
 	rm -f $(MUPDF_JS) $(MUPDF_WASM)

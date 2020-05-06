@@ -10,8 +10,8 @@ ifndef OUT
   ifeq ($(shared),yes)
     OUT := build/shared-$(build)
   else
-  OUT := build/$(build)
-endif
+    OUT := build/$(build)
+  endif
 endif
 
 default: all

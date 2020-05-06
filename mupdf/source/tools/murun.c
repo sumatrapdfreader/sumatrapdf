@@ -2699,6 +2699,83 @@ static void ffi_DisplayList_search(js_State *J)
 	}
 }
 
+static void ffi_StructuredText_walk(js_State *J)
+{
+	fz_stext_page *page = js_touserdata(J, 0, "fz_stext_page");
+	fz_stext_block *block;
+	fz_stext_line *line;
+	fz_stext_char *ch;
+
+	for (block = page->first_block; block; block = block->next)
+	{
+		if (block->type == FZ_STEXT_BLOCK_IMAGE)
+		{
+			if (js_hasproperty(J, 1, "onImageBlock"))
+			{
+				js_pushnull(J);
+				ffi_pushrect(J, block->bbox);
+				ffi_pushmatrix(J, block->u.i.transform);
+				ffi_pushimage(J, block->u.i.image);
+				js_call(J, 3);
+				js_pop(J, 1);
+			}
+		}
+		else if (block->type == FZ_STEXT_BLOCK_TEXT)
+		{
+			if (js_hasproperty(J, 1, "beginTextBlock"))
+			{
+				js_pushnull(J);
+				ffi_pushrect(J, block->bbox);
+				js_call(J, 1);
+				js_pop(J, 1);
+			}
+
+			for (line = block->u.t.first_line; line; line = line->next)
+			{
+				if (js_hasproperty(J, 1, "beginLine"))
+				{
+					js_pushnull(J);
+					ffi_pushrect(J, line->bbox);
+					js_pushboolean(J, line->wmode);
+					js_call(J, 2);
+					js_pop(J, 1);
+				}
+
+				for (ch = line->first_char; ch; ch = ch->next)
+				{
+					if (js_hasproperty(J, 1, "onChar"))
+					{
+						char utf[10];
+						js_pushnull(J);
+						utf[fz_runetochar(utf, ch->c)] = 0;
+						js_pushstring(J, utf);
+						ffi_pushpoint(J, ch->origin);
+						ffi_pushfont(J, ch->font);
+						js_pushnumber(J, ch->size);
+						ffi_pushquad(J, ch->quad);
+						js_call(J, 5);
+						js_pop(J, 1);
+					}
+				}
+
+				if (js_hasproperty(J, 1, "endLine"))
+				{
+					js_pushnull(J);
+					js_call(J, 0);
+					js_pop(J, 1);
+				}
+			}
+
+			if (js_hasproperty(J, 1, "endTextBlock"))
+			{
+				js_pushnull(J);
+				js_call(J, 0);
+				js_pop(J, 1);
+			}
+		}
+	}
+}
+
 static void ffi_StructuredText_search(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -5206,6 +5283,7 @@ int murun_main(int argc, char **argv)
 	js_getregistry(J, "Userdata");
 	js_newobjectx(J);
 	{
+		jsB_propfun(J, "StructuredText.walk", ffi_StructuredText_walk, 1);
 		jsB_propfun(J, "StructuredText.search", ffi_StructuredText_search, 1);
 		jsB_propfun(J, "StructuredText.highlight", ffi_StructuredText_highlight, 2);
 		jsB_propfun(J, "StructuredText.copy", ffi_StructuredText_copy, 2);

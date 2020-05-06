@@ -189,7 +189,53 @@ static void fmtint64(struct fmtbuf *out, int64_t value, int s, int z, int w, int
 	fmtuint64(out, a, s, z, w, base);
 }
 
-static void fmtquote(struct fmtbuf *out, const char *s, int sq, int eq)
+static void fmtquote(struct fmtbuf *out, const char *s, int sq, int eq, int verbatim)
+{
+	int i, n, c;
+	fmtputc(out, sq);
+	while (*s != 0) {
+		n = fz_chartorune(&c, s);
+		switch (c) {
+		default:
+			if (c < 32) {
+				fmtputc(out, '\\');
+				fmtputc(out, 'x');
+				fmtputc(out, "0123456789ABCDEF"[(c>>4)&15]);
+				fmtputc(out, "0123456789ABCDEF"[(c)&15]);
+			} else if (c > 127) {
+				if (verbatim)
+				{
+					for (i = 0; i < n; ++i)
+						fmtputc(out, s[i]);
+				}
+				else
+				{
+					fmtputc(out, '\\');
+					fmtputc(out, 'u');
+					fmtputc(out, "0123456789ABCDEF"[(c>>12)&15]);
+					fmtputc(out, "0123456789ABCDEF"[(c>>8)&15]);
+					fmtputc(out, "0123456789ABCDEF"[(c>>4)&15]);
+					fmtputc(out, "0123456789ABCDEF"[(c)&15]);
+				}
+			} else {
+				if (c == sq || c == eq)
+					fmtputc(out, '\\');
+				fmtputc(out, c);
+			}
+			break;
+		case '\\': fmtputc(out, '\\'); fmtputc(out, '\\'); break;
+		case '\b': fmtputc(out, '\\'); fmtputc(out, 'b'); break;
+		case '\f': fmtputc(out, '\\'); fmtputc(out, 'f'); break;
+		case '\n': fmtputc(out, '\\'); fmtputc(out, 'n'); break;
+		case '\r': fmtputc(out, '\\'); fmtputc(out, 'r'); break;
+		case '\t': fmtputc(out, '\\'); fmtputc(out, 't'); break;
+		}
+		s += n;
+	}
+	fmtputc(out, eq);
+}
+
+static void fmtquote_pdf(struct fmtbuf *out, const char *s, int sq, int eq)
 {
 	int c;
 	fmtputc(out, sq);
@@ -451,15 +497,20 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 				while ((c = *str++) != 0)
 					fmtputc(&out, c);
 				break;
+			case 'Q': /* quoted string (with verbatim unicode) */
+				str = va_arg(args, const char*);
+				if (!str) str = "";
+				fmtquote(&out, str, '"', '"', 1);
+				break;
 			case 'q': /* quoted string */
 				str = va_arg(args, const char*);
 				if (!str) str = "";
-				fmtquote(&out, str, '"', '"');
+				fmtquote(&out, str, '"', '"', 0);
 				break;
 			case '(': /* pdf string */
 				str = va_arg(args, const char*);
 				if (!str) str = "";
-				fmtquote(&out, str, '(', ')');
+				fmtquote_pdf(&out, str, '(', ')');
 				break;
 			case 'n': /* pdf name */
 				str = va_arg(args, const char*);

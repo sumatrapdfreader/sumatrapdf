@@ -220,7 +220,7 @@ fz_print_outline(fz_context *ctx, fz_output *out, fz_outline *outline, int level
 
 		for (i = 0; i < level; i++)
 			fz_write_byte(ctx, out, '\t');
-		fz_write_printf(ctx, out, "%q\t%s\n", outline->title, outline->uri);
+		fz_write_printf(ctx, out, "%Q\t%s\n", outline->title, outline->uri);
 		if (outline->down)
 			fz_print_outline(ctx, out, outline->down, level + 1);
 		outline = outline->next;

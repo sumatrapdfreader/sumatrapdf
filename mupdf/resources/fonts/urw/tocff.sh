@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# python scripts/makesubset.py -lig scripts/MES-2.TXT > resources/fonts/urw/subset.mes
-# python scripts/makesubset.py -lig scripts/SECS.TXT > resources/fonts/urw/subset.secs
-# python scripts/makesubset.py -lig scripts/WGL4.TXT > resources/fonts/urw/subset.wgl
+# python3 scripts/makesubset.py -lig scripts/MES-2.TXT > resources/fonts/urw/subset.mes
+# python3 scripts/makesubset.py -lig scripts/SECS.TXT > resources/fonts/urw/subset.secs
+# python3 scripts/makesubset.py -lig scripts/WGL4.TXT > resources/fonts/urw/subset.wgl
 
 for f in input/Nimbus*.t1
 do
