@@ -42,10 +42,10 @@ func isNum(s string) bool {
 
 // https://goobar.io/2019/12/07/manually-trigger-a-github-actions-workflow/
 // send a webhook POST request to trigger a build
-func triggerPreRelBuild() {
+func triggerBuildWebHook(typ string) {
 	ghtoken := os.Getenv("GITHUB_TOKEN")
 	panicIf(ghtoken == "", "need GITHUB_TOKEN env variable")
-	data := `{"event_type": "build-pre-rel"}`
+	data := fmt.Sprintf(`{"event_type": "%s"}`, typ)
 	uri := "https://api.github.com/repos/sumatrapdfreader/sumatrapdf/dispatches"
 	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data))
 	u.Must(err)
@@ -55,6 +55,14 @@ func triggerPreRelBuild() {
 	rsp, err := http.DefaultClient.Do(req)
 	u.Must(err)
 	u.PanicIf(rsp.StatusCode >= 400)
+}
+
+func triggerPreRelBuild() {
+	triggerBuildWebHook("build-pre-rel")
+}
+
+func triggerRaMicroPreRelBuild() {
+	triggerBuildWebHook("build-ramicro-pre-rel")
 }
 
 // Version must be in format x.y.z

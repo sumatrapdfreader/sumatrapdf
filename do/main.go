@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -49,9 +50,23 @@ func runCppCheck(all bool) {
 	u.RunCmdLoggedMust(cmd)
 }
 
+// https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables
+func dumpWebHookEventPayload() {
+	v := os.Getenv("GITHUB_EVENT_PATH")
+	d, err := ioutil.ReadFile(v)
+	if err != nil {
+		fmt.Printf("dumpWebHookEventPayload: GITHUB_EVENT_PATH='%s' and is not a file\n", v)
+	}
+	fmt.Printf("dumpWebHookEventPayload: GITHUB_EVENT_PATH='%s'. Content:\n%s\n", v, string(d))
+}
+
 func isOnRepoDispatch() bool {
 	v := os.Getenv("GITHUB_EVENT_NAME")
-	return v == "repository_dispatch"
+	isWebhookDispatch := v == "repository_dispatch"
+	if !isWebhookDispatch {
+		return false
+	}
+	return true
 }
 
 func main() {
@@ -84,6 +99,7 @@ func main() {
 		flgCheckAccessKeys         bool
 		flgBuildNo                 bool
 		flgTriggerPreRel           bool
+		flgTriggerRaMicroPreRel    bool
 		flgWebsiteRun              bool
 		flgWebsiteDeployProd       bool
 		flgWebsiteDeployDev        bool
@@ -121,6 +137,7 @@ func main() {
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
 		flag.BoolVar(&flgTriggerPreRel, "trigger-pre-rel", false, "trigger pre-release build")
+		flag.BoolVar(&flgTriggerRaMicroPreRel, "trigger-ramicro-pre-rel", false, "trigger pre-release build")
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
 		flag.BoolVar(&flgWebsiteDeployProd, "website-deploy-prod", false, "deploy website")
 		flag.BoolVar(&flgWebsiteDeployDev, "website-deploy-dev", false, "deploy a preview of website")
@@ -190,6 +207,11 @@ func main() {
 		return
 	}
 
+	if flgTriggerRaMicroPreRel {
+		triggerRaMicroPreRelBuild()
+		return
+	}
+
 	if flgClean {
 		clean()
 		return
@@ -251,6 +273,10 @@ func main() {
 	}
 
 	if flgCIBuild {
+		// TODO: temporary
+		dumpEnv()
+		dumpWebHookEventPayload()
+
 		// ci build does the same thing as pre-release
 		if shouldSignAndUpload() {
 			failIfNoCertPwd()

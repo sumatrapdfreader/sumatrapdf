@@ -279,3 +279,12 @@ func urlify(title string) string {
 	}
 	return s
 }
+
+func dumpEnv() {
+	env := os.Environ()
+	logf("\nEnv:\n")
+	for _, s := range env {
+		logf("env: %s\n", s)
+	}
+	logf("\n")
+}

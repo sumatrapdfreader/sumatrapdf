@@ -121,15 +121,6 @@ func verifyBuildNotInS3Must(c *S3Client, buildType string) {
 	}
 }
 
-func dumpEnv() {
-	env := os.Environ()
-	logf("\nEnv:\n")
-	for _, s := range env {
-		logf("env: %s\n", s)
-	}
-	logf("\n")
-}
-
 func isMaster() bool {
 	ref := os.Getenv("GITHUB_REF")
 	return ref == "refs/heads/master"
