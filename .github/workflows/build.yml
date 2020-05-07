@@ -16,6 +16,9 @@ jobs:
 
       - name: Check out source code
         uses: actions/checkout@v2
+        with:
+          # needed to calc build number via git log --oneline
+          fetch-depth: 0
 
       - name: Build
         env:
