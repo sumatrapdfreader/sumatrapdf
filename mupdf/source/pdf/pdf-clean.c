@@ -529,7 +529,7 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 	{
 		for (x = r.x0; x < r.x1; ++x)
 		{
-			unsigned char *s = &pixmap->samples[y * pixmap->stride + x * bpp];
+			unsigned char *s = &pixmap->samples[(size_t)y * pixmap->stride + (size_t)x * bpp];
 			for (k = 0; k < n; ++k)
 				s[k] = white;
 			if (pixmap->alpha)

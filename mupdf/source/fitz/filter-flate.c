@@ -13,7 +13,7 @@ typedef struct
 
 void *fz_zlib_alloc(void *ctx, unsigned int items, unsigned int size)
 {
-	return Memento_label(fz_malloc_no_throw(ctx, items * size), "zlib_alloc");
+	return Memento_label(fz_malloc_no_throw(ctx, (size_t)items * size), "zlib_alloc");
 }
 
 void fz_zlib_free(void *ctx, void *ptr)

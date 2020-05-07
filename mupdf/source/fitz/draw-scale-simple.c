@@ -231,7 +231,7 @@ new_weights(fz_context *ctx, fz_scale_filter *filter, int src_w, float dst_w, in
 	 * plus (2+max_len)*sizeof(int) for the weights
 	 * plus room for an extra set of weights for reordering.
 	 */
-	weights = fz_malloc(ctx, sizeof(*weights)+(max_len+3)*(patch_w+1)*sizeof(int));
+	weights = fz_malloc(ctx, sizeof(*weights)+(size_t)(max_len+3)*(patch_w+1)*sizeof(int));
 	if (!weights)
 		return NULL;
 	weights->count = -1;
@@ -1758,7 +1758,7 @@ fz_scale_pixmap_cached(fz_context *ctx, const fz_pixmap *src, float x, float y, 
 			goto cleanup;
 		fz_try(ctx)
 		{
-			temp = fz_calloc(ctx, temp_span*temp_rows, sizeof(unsigned char));
+			temp = fz_calloc(ctx, (size_t)temp_span*temp_rows, sizeof(unsigned char));
 		}
 		fz_catch(ctx)
 		{

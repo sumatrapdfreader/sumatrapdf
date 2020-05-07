@@ -126,7 +126,7 @@ parse_inline_image(fz_context *ctx, pdf_csi *csi, fz_stream *stm, char *csname, 
 				if (ch == 'I')
 				{
 					ch = fz_peek_byte(ctx, stm);
-					if (ch == ' ' || ch <= 32 || ch == EOF || ch == '<' || ch == '/')
+					if (ch == ' ' || ch <= 32 || ch == '<' || ch == '/')
 					{
 						found = 1;
 						break;

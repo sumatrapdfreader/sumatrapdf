@@ -2432,14 +2432,15 @@ static int
 my_log2(int x)
 {
 	int i = 0;
+	const int sign_bit = sizeof(int)*8-1;
 
 	if (x <= 0)
 		return 0;
 
-	while ((1<<i) <= x && (1<<i) > 0)
+	while ((1<<i) <= x && i < sign_bit)
 		i++;
 
-	if ((1<<i) <= 0)
+	if (i >= sign_bit)
 		return 0;
 
 	return i;

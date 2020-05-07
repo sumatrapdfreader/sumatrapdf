@@ -329,10 +329,11 @@ fz_search_display_list(fz_context *ctx, fz_display_list *list, const char *needl
 int
 fz_search_page(fz_context *ctx, fz_page *page, const char *needle, fz_quad *hit_bbox, int hit_max)
 {
+	fz_stext_options opts = { FZ_STEXT_DEHYPHENATE };
 	fz_stext_page *text;
 	int count = 0;
 
-	text = fz_new_stext_page_from_page(ctx, page, NULL);
+	text = fz_new_stext_page_from_page(ctx, page, &opts);
 	fz_try(ctx)
 		count = fz_search_stext_page(ctx, text, needle, hit_bbox, hit_max);
 	fz_always(ctx)

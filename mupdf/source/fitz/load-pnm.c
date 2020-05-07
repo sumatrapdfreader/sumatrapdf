@@ -406,7 +406,7 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 
 		if (pnm->maxval == 255)
 		{
-			memcpy(dp, p, w * h * n);
+			memcpy(dp, p, (size_t)w * h * n);
 			p += n * w * h;
 		}
 		else if (bitmap)
@@ -565,6 +565,7 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	{
 		int packed;
 		int w, h, n;
+		size_t size;
 
 		w = pnm->width;
 		h = pnm->height;
@@ -572,29 +573,30 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 
 		/* some encoders incorrectly pack bits into bytes and invert the image */
 		packed = 0;
+		size = (size_t)w * h * n;
 		if (pnm->maxval == 1)
 		{
-			const unsigned char *e_packed = p + w * h * n / 8;
+			const unsigned char *e_packed = p + size / 8;
 			if (e_packed < e - 1 && e_packed[0] == 'P' && e_packed[1] >= '0' && e_packed[1] <= '7')
 				e = e_packed;
-			if (e - p < w * h * n)
+			if (e < p || (size_t)(e - p) < size)
 				packed = 1;
 		}
-		if (packed && e - p < w * h * n / 8)
+		if (packed && (e < p || (size_t)(e - p) < size / 8))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "truncated packed image");
-		if (!packed && e - p < w * h * n * (pnm->maxval < 256 ? 1 : 2))
+		if (!packed && (e < p || (size_t)(e - p) < size * (pnm->maxval < 256 ? 1 : 2)))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "truncated image");
 
 		if (pnm->maxval == 255)
-			p += n * w * h;
+			p += size;
 		else if (bitmap && packed)
 			p += ((w + 7) / 8) * h;
 		else if (bitmap)
-			p += n * w * h;
+			p += size;
 		else if (pnm->maxval < 255)
-			p += n * w * h;
+			p += size;
 		else
-			p += 2 * n * w * h;
+			p += 2 * size;
 	}
 
 	if (!onlymeta)
@@ -602,6 +604,7 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 		unsigned char *dp;
 		int x, y, k, packed;
 		int w, h, n;
+		size_t size;
 
 		img = fz_new_pixmap(ctx, pnm->cs, pnm->width, pnm->height, NULL, pnm->alpha);
 		fz_try(ctx)
@@ -613,22 +616,23 @@ pam_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 			n = img->n;
 
 			/* some encoders incorrectly pack bits into bytes and invert the image */
+			size = (size_t)w * h * n;
 			packed = 0;
 			if (pnm->maxval == 1)
 			{
-				const unsigned char *e_packed = p + w * h * n / 8;
+				const unsigned char *e_packed = p + size / 8;
 				if (e_packed < e - 1 && e_packed[0] == 'P' && e_packed[1] >= '0' && e_packed[1] <= '7')
 					e = e_packed;
-				if (e - p < w * h * n)
+				if (e < p || (size_t)(e - p) < size)
 					packed = 1;
 			}
-			if (packed && e - p < w * h * n / 8)
+			if (packed && (e < p || (size_t)(e - p) < size / 8))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "truncated packed image");
-			if (!packed && e - p < w * h * n * (pnm->maxval < 256 ? 1 : 2))
+			if (!packed && (e < p || (size_t)(e - p) < size * (pnm->maxval < 256 ? 1 : 2)))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "truncated image");
 
 			if (pnm->maxval == 255)
-				memcpy(dp, p, w * h * n);
+				memcpy(dp, p, size);
 			else if (bitmap && packed)
 			{
 				for (y = 0; y < h; y++)

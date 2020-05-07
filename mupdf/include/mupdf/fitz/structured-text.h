@@ -89,6 +89,9 @@ typedef struct fz_stext_block fz_stext_block;
 	FZ_STEXT_INHIBIT_SPACES: If this option is set, we will not try
 	to add missing space characters where there are large gaps
 	between characters.
+
+	FZ_STEXT_DEHYPHENATE: If this option is set, hyphens at the
+	end of a line will be removed and the lines will be merged.
 */
 enum
 {
@@ -96,6 +99,7 @@ enum
 	FZ_STEXT_PRESERVE_WHITESPACE = 2,
 	FZ_STEXT_PRESERVE_IMAGES = 4,
 	FZ_STEXT_INHIBIT_SPACES = 8,
+	FZ_STEXT_DEHYPHENATE = 16,
 };
 
 /**

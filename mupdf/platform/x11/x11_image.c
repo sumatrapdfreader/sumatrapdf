@@ -122,7 +122,7 @@ createximage(Display *dpy, Visual *vis, XShmSegmentInfo *xsi, int depth, int w, 
 	}
 
 	xsi->shmid = shmget(IPC_PRIVATE,
-		img->bytes_per_line * img->height,
+		(size_t)img->bytes_per_line * img->height,
 		IPC_CREAT | 0777);
 	if (xsi->shmid < 0)
 	{
@@ -165,7 +165,7 @@ fallback:
 		abort();
 	}
 
-	img->data = malloc(h * img->bytes_per_line);
+	img->data = malloc((size_t)h * img->bytes_per_line);
 	if (!img->data)
 	{
 		fprintf(stderr, "fail: could not malloc");

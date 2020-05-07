@@ -193,7 +193,7 @@ fz_new_glyph_from_8bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigne
 		glyph->w = w;
 		glyph->h = h;
 		glyph->pixmap = NULL;
-		if (w == 0 || h == 0)
+		if (h == 0)
 		{
 			glyph->size = 0;
 			break;
@@ -341,7 +341,7 @@ fz_new_glyph_from_1bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigne
 		glyph->w = w;
 		glyph->h = h;
 		glyph->pixmap = NULL;
-		if (w == 0 || h == 0)
+		if (h == 0)
 		{
 			glyph->size = 0;
 			break;

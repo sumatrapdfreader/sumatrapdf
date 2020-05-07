@@ -196,7 +196,7 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 
 	if (writer->udata == NULL)
 	{
-		writer->usize = (w * n + 1) * band_height;
+		writer->usize = ((uLong)w * n + 1) * band_height;
 		/* Sadly the bound returned by compressBound is just for a
 		 * single usize chunk; if you compress a sequence of them
 		 * the buffering can result in you suddenly getting a block

@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #ifndef PATH_MAX
-#define PATH_MAX 2048
+#define PATH_MAX 4096
 #endif
 
 #include "mupdf/helpers/pkcs7-openssl.h"

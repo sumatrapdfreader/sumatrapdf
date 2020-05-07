@@ -374,7 +374,7 @@ fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 
 		fz_clear_pixmap(ctx, image);
 
-		row[0] = fz_malloc(ctx, cinfo.output_components * cinfo.output_width);
+		row[0] = fz_malloc(ctx, (size_t)cinfo.output_components * cinfo.output_width);
 		dp = image->samples;
 		stride = image->stride - image->w * image->n;
 		while (cinfo.output_scanline < cinfo.output_height)

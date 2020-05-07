@@ -432,7 +432,7 @@ unknown_compression:
 				int w = pixmap->w;
 				unsigned char *s = pixmap->samples;
 				unsigned char *d = fz_calloc(ctx, h, stride);
-				buffer = fz_new_buffer_from_data(ctx, d, h * stride);
+				buffer = fz_new_buffer_from_data(ctx, d, (size_t)h * stride);
 
 				pdf_dict_put_int(ctx, imobj, PDF_NAME(BitsPerComponent), 1);
 
@@ -448,7 +448,7 @@ unknown_compression:
 			}
 			else
 			{
-				unsigned int size = pixmap->w * n;
+				size_t size = pixmap->w * n;
 				int h = pixmap->h;
 				unsigned char *s = pixmap->samples;
 				unsigned char *d = Memento_label(fz_malloc(ctx, size * h), "pdf_image_samples");
@@ -535,7 +535,7 @@ unknown_compression:
 					}
 
 					pdf_array_push_int(ctx, arr, high);
-					pdf_array_push_string(ctx, arr, (char *) lookup, basen * (high + 1));
+					pdf_array_push_string(ctx, arr, (char *) lookup, (size_t)basen * (high + 1));
 				}
 				break;
 			case FZ_COLORSPACE_NONE:

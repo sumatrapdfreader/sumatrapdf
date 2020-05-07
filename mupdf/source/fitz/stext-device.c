@@ -83,6 +83,7 @@ const char *fz_stext_options_usage =
 	"\tpreserve-images: keep images in output\n"
 	"\tpreserve-ligatures: do not expand ligatures into constituent characters\n"
 	"\tpreserve-whitespace: do not convert all whitespace into space characters\n"
+	"\tdehyphenate: attempt to join up hyphenated words\n"
 	"\n";
 
 fz_stext_page *
@@ -218,6 +219,27 @@ add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_m
 	return ch;
 }
 
+void
+remove_last_char(fz_context *ctx, fz_stext_line *line)
+{
+	if (line && line->first_char)
+	{
+		fz_stext_char *prev = NULL;
+		fz_stext_char *ch = line->first_char;
+		while (ch->next)
+		{
+			prev = ch;
+			ch = ch->next;
+		}
+		if (prev)
+		{
+			/* the characters are pool allocated, so we don't actually leak the removed node */
+			line->last_char = prev;
+			line->last_char->next = NULL;
+		}
+	}
+}
+
 static int
 direction_from_bidi_class(int bidiclass, int curdir)
 {
@@ -249,6 +271,12 @@ direction_from_bidi_class(int bidiclass, int curdir)
 	default:
 		return 0;
 	}
+}
+
+static int is_hyphen(int c)
+{
+	/* check for: hyphen-minus, soft hyphen, hyphen, and non-breaking hyphen */
+	return (c == '-' || c == 0xAD || c == 0x2010 || c == 0x2011);
 }
 
 static float
@@ -426,6 +454,12 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	{
 		cur_block = add_text_block_to_page(ctx, page);
 		cur_line = cur_block->u.t.last_line;
+	}
+
+	if (new_line && (dev->flags & FZ_STEXT_DEHYPHENATE) && is_hyphen(dev->lastchar))
+	{
+		remove_last_char(ctx, cur_line);
+		new_line = 0;
 	}
 
 	/* Start a new line */
@@ -763,6 +797,8 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 		opts->flags |= FZ_STEXT_PRESERVE_IMAGES;
 	if (fz_has_option(ctx, string, "inhibit-spaces", &val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_INHIBIT_SPACES;
+	if (fz_has_option(ctx, string, "dehyphenate", &val) && fz_option_eq(val, "yes"))
+		opts->flags |= FZ_STEXT_DEHYPHENATE;
 
 	return opts;
 }

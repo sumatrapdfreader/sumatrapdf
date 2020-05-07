@@ -255,7 +255,7 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 
 	stride = tiff->imagewidth * (tiff->samplesperpixel + 2);
 
-	samples = Memento_label(fz_malloc(ctx, stride * tiff->imagelength), "tiff_samples");
+	samples = Memento_label(fz_malloc(ctx, (size_t)stride * tiff->imagelength), "tiff_samples");
 
 	for (y = 0; y < tiff->imagelength; y++)
 	{
@@ -1290,8 +1290,8 @@ tiff_decode_samples(fz_context *ctx, struct tiff *tiff)
 
 	if (tiff->imagelength > UINT_MAX / tiff->stride)
 		fz_throw(ctx, FZ_ERROR_MEMORY, "image too large");
-	tiff->samples = Memento_label(fz_malloc(ctx, tiff->imagelength * tiff->stride), "tiff_samples");
-	memset(tiff->samples, 0x55, tiff->imagelength * tiff->stride);
+	tiff->samples = Memento_label(fz_malloc(ctx, (size_t)tiff->imagelength * tiff->stride), "tiff_samples");
+	memset(tiff->samples, 0x55, (size_t)tiff->imagelength * tiff->stride);
 
 	if (tiff->tilelength && tiff->tilewidth && tiff->tileoffsets && tiff->tilebytecounts)
 		tiff_decode_tiles(ctx, tiff);

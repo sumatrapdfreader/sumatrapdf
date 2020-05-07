@@ -1034,7 +1034,7 @@ color_from_value(fz_css_value *value, fz_css_color initial)
 
 	if (value->type == CSS_HASH)
 	{
-		int r, g, b;
+		int r, g, b, a;
 		size_t n;
 hex_color:
 		n = strlen(value->data);
@@ -1043,18 +1043,35 @@ hex_color:
 			r = tohex(value->data[0]) * 16 + tohex(value->data[0]);
 			g = tohex(value->data[1]) * 16 + tohex(value->data[1]);
 			b = tohex(value->data[2]) * 16 + tohex(value->data[2]);
+			a = 255;
+		}
+		else if (n == 4)
+		{
+			r = tohex(value->data[0]) * 16 + tohex(value->data[0]);
+			g = tohex(value->data[1]) * 16 + tohex(value->data[1]);
+			b = tohex(value->data[2]) * 16 + tohex(value->data[2]);
+			a = tohex(value->data[3]) * 16 + tohex(value->data[3]);
 		}
 		else if (n == 6)
 		{
 			r = tohex(value->data[0]) * 16 + tohex(value->data[1]);
 			g = tohex(value->data[2]) * 16 + tohex(value->data[3]);
 			b = tohex(value->data[4]) * 16 + tohex(value->data[5]);
+			a = 255;
+		}
+		else if (n == 8)
+		{
+			r = tohex(value->data[0]) * 16 + tohex(value->data[1]);
+			g = tohex(value->data[2]) * 16 + tohex(value->data[3]);
+			b = tohex(value->data[4]) * 16 + tohex(value->data[5]);
+			a = tohex(value->data[6]) * 16 + tohex(value->data[7]);
 		}
 		else
 		{
 			r = g = b = 0;
+			a = 255;
 		}
-		return make_color(r, g, b, 255);
+		return make_color(r, g, b, a);
 	}
 
 	if (value->type == '(' && !strcmp(value->data, "rgb"))
@@ -1068,6 +1085,21 @@ hex_color:
 		g = fz_from_css_number(number_from_value(vg, 0, N_NUMBER), 255, 255, 0);
 		b = fz_from_css_number(number_from_value(vb, 0, N_NUMBER), 255, 255, 0);
 		return make_color(r, g, b, 255);
+	}
+
+	if (value->type == '(' && !strcmp(value->data, "rgba"))
+	{
+		fz_css_value *vr, *vg, *vb, *va;
+		int r, g, b, a;
+		vr = value->args;
+		vg = vr && vr->next ? vr->next->next : NULL; /* skip the ',' nodes */
+		vb = vg && vg->next ? vg->next->next : NULL; /* skip the ',' nodes */
+		va = vb && vb->next ? vb->next->next : NULL; /* skip the ',' nodes */
+		r = fz_from_css_number(number_from_value(vr, 0, N_NUMBER), 255, 255, 0);
+		g = fz_from_css_number(number_from_value(vg, 0, N_NUMBER), 255, 255, 0);
+		b = fz_from_css_number(number_from_value(vb, 0, N_NUMBER), 255, 255, 0);
+		a = fz_from_css_number(number_from_value(va, 0, N_NUMBER), 255, 255, 255);
+		return make_color(r, g, b, a);
 	}
 
 	if (value->type == CSS_KEYWORD)

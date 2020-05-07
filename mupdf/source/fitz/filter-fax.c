@@ -363,8 +363,8 @@ get_code(fz_context *ctx, fz_faxd *fax, const cfd_node *table, int initialbits)
 
 	if (nbits > initialbits)
 	{
-		int mask = (1 << (32 - initialbits)) - 1;
-		tidx = val + ((word & mask) >> (32 - nbits));
+		int wordmask = (1 << (32 - initialbits)) - 1;
+		tidx = val + ((word & wordmask) >> (32 - nbits));
 		val = table[tidx].val;
 		nbits = initialbits + table[tidx].nbits;
 	}

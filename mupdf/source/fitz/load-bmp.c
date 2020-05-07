@@ -1128,13 +1128,13 @@ bmp_read_image(fz_context *ctx, struct info *info, const unsigned char *begin, c
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported compression method (%u) in bmp image", info->compression);
 	if (!is_valid_bitcount(info))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid bits per pixel (%u) for compression (%u) in bmp image", info->bitcount, info->compression);
-	if (info->rbits < 0 || info->rbits > info->bitcount)
+	if (info->rbits > info->bitcount)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit red mask in bmp image", info->rbits);
-	if (info->gbits < 0 || info->gbits > info->bitcount)
+	if (info->gbits > info->bitcount)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit green mask in bmp image", info->gbits);
-	if (info->bbits < 0 || info->bbits > info->bitcount)
+	if (info->bbits > info->bitcount)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit blue mask in bmp image", info->bbits);
-	if (info->abits < 0 || info->abits > info->bitcount)
+	if (info->abits > info->bitcount)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unsupported %u bit alpha mask in bmp image", info->abits);
 
 	/* Read color profile or default to RGB */

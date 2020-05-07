@@ -182,7 +182,7 @@ load_indexed(fz_context *ctx, pdf_obj *array)
 
 		high = pdf_to_int(ctx, highobj);
 		high = fz_clampi(high, 0, 255);
-		n = base->n * (high + 1);
+		n = (size_t)base->n * (high + 1);
 		lookup = Memento_label(fz_malloc(ctx, n), "cs_lookup");
 
 		if (pdf_is_string(ctx, lookupobj))

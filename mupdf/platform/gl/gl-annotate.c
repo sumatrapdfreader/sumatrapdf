@@ -7,7 +7,7 @@
 #include <limits.h>
 
 #ifndef PATH_MAX
-#define PATH_MAX 2048
+#define PATH_MAX 4096
 #endif
 
 static int is_draw_mode = 0;
@@ -598,7 +598,7 @@ void do_annotate_panel(void)
 			const char *text_lang;
 			const char *text_font;
 			char lang_buf[8];
-			static float text_size_f, text_color[3];
+			static float text_size_f, text_color[4];
 			static int text_size;
 
 			q = pdf_annot_quadding(ctx, selected_annot);

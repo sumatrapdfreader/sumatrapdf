@@ -17,7 +17,7 @@
 #include "mujs.h"
 
 #ifndef PATH_MAX
-#define PATH_MAX 2048
+#define PATH_MAX 4096
 #endif
 
 #ifndef _WIN32

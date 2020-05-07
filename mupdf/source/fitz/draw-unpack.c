@@ -241,7 +241,7 @@ fz_unpack_tile(fz_context *ctx, fz_pixmap *dst, unsigned char *src, int n, int d
 	{
 		fz_stream *stm;
 		int x, k;
-		size_t skipbits = 8 * stride - w * n * depth;
+		size_t skipbits = 8 * stride - (size_t)w * n * depth;
 
 		if (skipbits > 32)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Inappropriate stride!");
@@ -264,7 +264,7 @@ fz_unpack_tile(fz_context *ctx, fz_pixmap *dst, unsigned char *src, int n, int d
 						*dp++ = 255;
 				}
 
-				dp += dst->stride - w * (n + (pad > 0));
+				dp += dst->stride - (size_t)w * (n + (pad > 0));
 				(void) fz_read_bits(ctx, stm, (int)skipbits);
 			}
 		}

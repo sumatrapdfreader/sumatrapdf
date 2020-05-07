@@ -1,3 +1,6 @@
+#ifndef MUPDF_GL_APP_H
+#define MUPDF_GL_APP_H
+
 #ifdef _WIN32
 #include <windows.h>
 void win_install(void);
@@ -260,3 +263,5 @@ void do_save_signed_pdf_file(void);
 int do_sign(void);
 void trace_action(const char *fmt, ...);
 void trace_page_update(void);
+
+#endif

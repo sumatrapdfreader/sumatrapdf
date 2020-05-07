@@ -1,3 +1,6 @@
+#ifndef MUPDF_BIDI_IMP_H
+#define MUPDF_BIDI_IMP_H
+
 /*  For use with Bidi Reference Implementation
     For more information see the associated file bidi-std.c
 
@@ -76,3 +79,5 @@ void fz_bidi_resolve_weak(fz_context *ctx, fz_bidi_level baselevel, fz_bidi_char
 void fz_bidi_resolve_whitespace(fz_bidi_level baselevel, const fz_bidi_chartype *pcls, fz_bidi_level *plevel, size_t cch);
 size_t fz_bidi_resolve_explicit(fz_bidi_level level, fz_bidi_chartype dir, fz_bidi_chartype *pcls, fz_bidi_level *plevel, size_t cch, fz_bidi_level nNest);
 size_t fz_bidi_resolve_paragraphs(fz_bidi_chartype *types, size_t cch);
+
+#endif

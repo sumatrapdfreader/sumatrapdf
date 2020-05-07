@@ -983,7 +983,7 @@ fz_pixmap_size(fz_context *ctx, fz_pixmap * pix)
 {
 	if (pix == NULL)
 		return 0;
-	return sizeof(*pix) + pix->n * pix->w * pix->h;
+	return sizeof(*pix) + (size_t)pix->n * pix->w * pix->h;
 }
 
 fz_pixmap *
@@ -1296,7 +1296,7 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 	back = f*fwd-n;
 	back2 = f*n-1;
 	fwd2 = (f-1)*n;
-	fwd3 = (f-1)*fwd + tile->stride - w * n;
+	fwd3 = (f-1)*fwd + (int)tile->stride - w * n;
 	factor *= 2;
 #ifdef ARCH_ARM
 	{
@@ -1414,7 +1414,7 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 	tile->stride = dst_w * n;
 	if (dst_h > INT_MAX / (dst_w * n))
 		fz_throw(ctx, FZ_ERROR_MEMORY, "pixmap too large");
-	tile->samples = fz_realloc(ctx, tile->samples, dst_h * dst_w * n);
+	tile->samples = fz_realloc(ctx, tile->samples, (size_t)dst_h * dst_w * n);
 }
 
 void

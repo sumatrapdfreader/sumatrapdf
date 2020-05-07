@@ -284,7 +284,7 @@ pam_write_band(fz_context *ctx, fz_band_writer *writer, int stride, int band_sta
 	else
 		for (y = 0; y < end; y++)
 		{
-			fz_write_data(ctx, out, sp, w * n);
+			fz_write_data(ctx, out, sp, (size_t)w * n);
 			sp += stride;
 		}
 }
