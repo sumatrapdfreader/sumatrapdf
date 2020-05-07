@@ -1,4 +1,4 @@
-2200 1584227199922 httpcache-v1
+2200 1588811600715 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
@@ -46,7 +46,7 @@ Response:+2000
         "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1584225660000,
+        "last_edited_time": 1588811460000,
         "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
         "parent_table": "space",
         "permissions": [
@@ -69,12 +69,12 @@ Response:+2000
           ]
         },
         "type": "page",
-        "version": 53
+        "version": 54
       }
     }
   ]
 }
-96338 1584227199924 httpcache-v1
+104206 1588811600717 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -87,7 +87,7 @@ Body:+152
   "pageId": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
   "verticalColumns": false
 }
-Response:+96097
+Response:+103964
 {
   "cursor": {
     "stack": []
@@ -146,6 +146,7 @@ Response:+96097
             "3443c516-43c6-4e06-b692-758f3c90542e",
             "9ca1cb4e-e8f8-4fc6-a93c-057ca6eea760",
             "17941d19-fbb7-4723-a33f-a47dee57dd41",
+            "bd76e0ce-df92-4eaa-9c66-64562282e9ec",
             "fb459433-1613-4ea1-8635-61c8ab414ab3",
             "85473ed8-52d3-4720-b5e6-7d7b3fe53ad3",
             "0cb88ad2-db9d-44f7-b130-98ed2a398f5e",
@@ -166,7 +167,7 @@ Response:+96097
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584058080000,
+          "last_edited_time": 1588087440000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -177,7 +178,7 @@ Response:+96097
             ]
           },
           "type": "page",
-          "version": 7
+          "version": 12
         }
       },
       "0c53a79e-9139-4ecc-b753-5ef6fed0678e": {
@@ -242,7 +243,7 @@ Response:+96097
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584077520000,
+          "last_edited_time": 1588811520000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -253,7 +254,7 @@ Response:+96097
             ]
           },
           "type": "page",
-          "version": 14
+          "version": 15
         }
       },
       "15eb2979-c4e4-4782-9647-3898d3ce81fa": {
@@ -584,7 +585,7 @@ Response:+96097
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492329304388,
+          "last_edited_time": 1587732300000,
           "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
@@ -595,7 +596,7 @@ Response:+96097
             ]
           },
           "type": "page",
-          "version": 0
+          "version": 4
         }
       },
       "49fadea0-08c1-49d4-808f-e1f4bdbc845a": {
@@ -893,7 +894,7 @@ Response:+96097
           "id": "638829dc-c8f2-4475-afcd-fa245d411e50",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1583008500000,
+          "last_edited_time": 1587586080000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -904,7 +905,7 @@ Response:+96097
             ]
           },
           "type": "page",
-          "version": 291
+          "version": 314
         }
       },
       "764b25da-299d-405f-8801-6ccb26b785d1": {
@@ -1304,11 +1305,14 @@ Response:+96097
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492308519385,
+          "discussions": [
+            "fb3d45a5-9403-4ad6-8924-6be24d4e1125"
+          ],
           "id": "9e2ee4c5-b789-468d-8cfb-128591bb368b",
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492308519385,
+          "last_edited_time": 1588811460000,
           "parent_id": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
           "parent_table": "block",
           "properties": {
@@ -1318,7 +1322,7 @@ Response:+96097
                 [
                   [
                     "a",
-                    "http://www.sumatrapdfreader.org/prerelease.html"
+                    "https://www.sumatrapdfreader.org/prerelease.html"
                   ]
                 ]
               ],
@@ -1328,7 +1332,7 @@ Response:+96097
             ]
           },
           "type": "bulleted_list",
-          "version": 0
+          "version": 9
         }
       },
       "b14ddf3f-6abb-4bb8-bc33-b9e133dae348": {
@@ -1817,11 +1821,14 @@ Response:+96097
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492296678415,
+          "discussions": [
+            "d2c9d63b-bf5f-449f-8a18-c5855870bf3a"
+          ],
           "id": "dec235fd-f1d2-45f9-aa52-bc16375f7e90",
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492296678415,
+          "last_edited_time": 1588811460000,
           "parent_id": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
           "parent_table": "block",
           "properties": {
@@ -1831,7 +1838,7 @@ Response:+96097
                 [
                   [
                     "a",
-                    "http://www.sumatrapdfreader.org/"
+                    "https://www.sumatrapdfreader.org/"
                   ]
                 ]
               ],
@@ -1853,7 +1860,7 @@ Response:+96097
             ]
           },
           "type": "text",
-          "version": 0
+          "version": 9
         }
       },
       "e36debe5-73d5-40fc-a61b-0519616412ae": {
@@ -1945,8 +1952,15 @@ Response:+96097
           "alive": true,
           "content": [
             "4003600d-916a-4d7a-bc76-512810eb9f20",
-            "167fdd71-bbdf-44d5-af38-7c98490a73da",
             "964b4736-a8b6-4e97-9213-9753503f47a5",
+            "9677dcfd-e1aa-4291-a374-18834345e9d6",
+            "4c2cdfca-6d8b-4e4d-9e08-0158caafabe9",
+            "167fdd71-bbdf-44d5-af38-7c98490a73da",
+            "2fbb51ec-cf38-4df9-a24e-5074a89b4caf",
+            "ba9f53c0-cf60-4482-a1ac-1cbd43770488",
+            "758ee2a9-3d85-4855-9aa2-709709c33db0",
+            "96762ab8-1c31-437d-abbc-fa6cebeed282",
+            "bdd20a42-e5d1-45b7-ba77-67537d4dc88a",
             "24dadf74-07f0-4d6e-af50-05f43399cd3f",
             "2824c7df-8167-4227-85af-05e86456de36",
             "62d9b1c4-3e0f-417b-b5f9-4cd70c216ff4",
@@ -2295,7 +2309,7 @@ Response:+96097
           "id": "f5e37f44-d0d3-4149-94fd-dddad95e5462",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582874580000,
+          "last_edited_time": 1584769200000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -2306,7 +2320,7 @@ Response:+96097
             ]
           },
           "type": "page",
-          "version": 389
+          "version": 405
         }
       },
       "fe8658cd-c83e-461a-aa57-95f224bd7ac6": {
@@ -2317,11 +2331,14 @@ Response:+96097
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492308460998,
+          "discussions": [
+            "ca342aab-32b8-4f71-b5e3-95fce14057df"
+          ],
           "id": "fe8658cd-c83e-461a-aa57-95f224bd7ac6",
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492308460998,
+          "last_edited_time": 1588811460000,
           "parent_id": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
           "parent_table": "block",
           "properties": {
@@ -2331,14 +2348,14 @@ Response:+96097
                 [
                   [
                     "a",
-                    "http://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
+                    "https://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
                   ]
                 ]
               ]
             ]
           },
           "type": "bulleted_list",
-          "version": 0
+          "version": 9
         }
       },
       "fed36a56-24d4-43fe-9f7b-e0e410ecd715": {
@@ -2374,7 +2391,7 @@ Response:+96097
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1584225660000,
+          "last_edited_time": 1588811460000,
           "parent_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "parent_table": "space",
           "permissions": [
@@ -2397,7 +2414,245 @@ Response:+96097
             ]
           },
           "type": "page",
-          "version": 53
+          "version": 54
+        }
+      }
+    },
+    "comment": {
+      "06b505ef-f4e9-4a25-aa92-c04bd89673d5": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
+          "created_by_table": "notion_user",
+          "created_time": 1588799940000,
+          "id": "06b505ef-f4e9-4a25-aa92-c04bd89673d5",
+          "last_edited_time": 1588799940000,
+          "parent_id": "ca342aab-32b8-4f71-b5e3-95fce14057df",
+          "parent_table": "discussion",
+          "text": [
+            [
+              "change to "
+            ],
+            [
+              "https://www.sumatrapdfreader.org/download-free-pdf-viewer.html",
+              [
+                [
+                  "a",
+                  "http://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
+                ]
+              ]
+            ]
+          ],
+          "version": 5
+        }
+      },
+      "358a0c06-ed7c-48ab-8803-b8dade0cfa66": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1588811460000,
+          "id": "358a0c06-ed7c-48ab-8803-b8dade0cfa66",
+          "last_edited_time": 1588811460000,
+          "parent_id": "fb3d45a5-9403-4ad6-8924-6be24d4e1125",
+          "parent_table": "discussion",
+          "text": [
+            [
+              "done"
+            ]
+          ],
+          "version": 3
+        }
+      },
+      "869c59a2-29e4-44a2-95df-853911b6fd21": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
+          "created_by_table": "notion_user",
+          "created_time": 1588799820000,
+          "id": "869c59a2-29e4-44a2-95df-853911b6fd21",
+          "last_edited_time": 1588799820000,
+          "parent_id": "d2c9d63b-bf5f-449f-8a18-c5855870bf3a",
+          "parent_table": "discussion",
+          "text": [
+            [
+              "change to "
+            ],
+            [
+              "https://www.sumatrapdfreader.org/",
+              [
+                [
+                  "a",
+                  "http://www.sumatrapdfreader.org/"
+                ]
+              ]
+            ]
+          ],
+          "version": 5
+        }
+      },
+      "9f7a9d8d-239d-4db4-8e35-35515c913c69": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1588811460000,
+          "id": "9f7a9d8d-239d-4db4-8e35-35515c913c69",
+          "last_edited_time": 1588811460000,
+          "parent_id": "ca342aab-32b8-4f71-b5e3-95fce14057df",
+          "parent_table": "discussion",
+          "text": [
+            [
+              "done"
+            ]
+          ],
+          "version": 3
+        }
+      },
+      "e9608d37-5f89-4527-a35e-51906830291b": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
+          "created_by_table": "notion_user",
+          "created_time": 1588799940000,
+          "id": "e9608d37-5f89-4527-a35e-51906830291b",
+          "last_edited_time": 1588799940000,
+          "parent_id": "fb3d45a5-9403-4ad6-8924-6be24d4e1125",
+          "parent_table": "discussion",
+          "text": [
+            [
+              "change to "
+            ],
+            [
+              "https://www.sumatrapdfreader.org/prerelease.html",
+              [
+                [
+                  "a",
+                  "http://www.sumatrapdfreader.org/prerelease.html"
+                ]
+              ]
+            ]
+          ],
+          "version": 5
+        }
+      },
+      "fd9912c8-df66-4962-a03a-350e3fc22f46": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1588811460000,
+          "id": "fd9912c8-df66-4962-a03a-350e3fc22f46",
+          "last_edited_time": 1588811460000,
+          "parent_id": "d2c9d63b-bf5f-449f-8a18-c5855870bf3a",
+          "parent_table": "discussion",
+          "text": [
+            [
+              "done"
+            ]
+          ],
+          "version": 3
+        }
+      }
+    },
+    "discussion": {
+      "ca342aab-32b8-4f71-b5e3-95fce14057df": {
+        "role": "editor",
+        "value": {
+          "comments": [
+            "06b505ef-f4e9-4a25-aa92-c04bd89673d5",
+            "9f7a9d8d-239d-4db4-8e35-35515c913c69"
+          ],
+          "context": [
+            [
+              "latest stable release",
+              [
+                [
+                  "a",
+                  "http://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
+                ]
+              ]
+            ]
+          ],
+          "id": "ca342aab-32b8-4f71-b5e3-95fce14057df",
+          "parent_id": "fe8658cd-c83e-461a-aa57-95f224bd7ac6",
+          "parent_table": "block",
+          "resolved": true,
+          "version": 3
+        }
+      },
+      "d2c9d63b-bf5f-449f-8a18-c5855870bf3a": {
+        "role": "editor",
+        "value": {
+          "comments": [
+            "869c59a2-29e4-44a2-95df-853911b6fd21",
+            "fd9912c8-df66-4962-a03a-350e3fc22f46"
+          ],
+          "context": [
+            [
+              "SumatraPDF",
+              [
+                [
+                  "a",
+                  "http://www.sumatrapdfreader.org/"
+                ]
+              ]
+            ],
+            [
+              " is a free "
+            ],
+            [
+              "PDF, EPUB, MOBI, CHM, XPS, DjVu, CBZ and CBR",
+              [
+                [
+                  "a",
+                  "https://www.notion.so/Supported-document-formats-0b6aad81599446829531ee215f11f2ea"
+                ]
+              ]
+            ],
+            [
+              " reader for Windows. "
+            ]
+          ],
+          "id": "d2c9d63b-bf5f-449f-8a18-c5855870bf3a",
+          "parent_id": "dec235fd-f1d2-45f9-aa52-bc16375f7e90",
+          "parent_table": "block",
+          "resolved": true,
+          "version": 3
+        }
+      },
+      "fb3d45a5-9403-4ad6-8924-6be24d4e1125": {
+        "role": "editor",
+        "value": {
+          "comments": [
+            "e9608d37-5f89-4527-a35e-51906830291b",
+            "358a0c06-ed7c-48ab-8803-b8dade0cfa66"
+          ],
+          "context": [
+            [
+              "pre-release builds",
+              [
+                [
+                  "a",
+                  "http://www.sumatrapdfreader.org/prerelease.html"
+                ]
+              ]
+            ],
+            [
+              " (latest features, potentially less stable)"
+            ]
+          ],
+          "id": "fb3d45a5-9403-4ad6-8924-6be24d4e1125",
+          "parent_id": "9e2ee4c5-b789-468d-8cfb-128591bb368b",
+          "parent_table": "block",
+          "resolved": true,
+          "version": 3
         }
       }
     },
@@ -2413,7 +2668,7 @@ Response:+96097
           "mobile_onboarding_completed": true,
           "onboarding_completed": true,
           "profile_photo": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/2dcaa66c-7674-4ff6-9924-601785b63561/head-bw-640x960.png",
-          "version": 288
+          "version": 299
         }
       }
     },
@@ -2432,6 +2687,8 @@ Response:+96097
           "disable_public_access": false,
           "icon": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/23900417-cede-4b11-8a9d-4dfa679dfcbd/head-bw-sq-120.png",
           "id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
+          "invite_link_code": "12acc07d85eea2b69ccacf1c41a3281059d795a1",
+          "invite_link_enabled": false,
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
@@ -2458,7 +2715,7 @@ Response:+96097
             }
           ],
           "shard_id": 913143,
-          "version": 252
+          "version": 254
         }
       }
     }
