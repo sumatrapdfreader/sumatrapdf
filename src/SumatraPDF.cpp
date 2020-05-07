@@ -2635,7 +2635,7 @@ static void OnMenuShowInFolder(WindowInfo* win) {
     }
 
     WCHAR* process = L"explorer.exe";
-    AutoFreeWstr args = str::Format(L"/select,%s", srcFileName);
+    AutoFreeWstr args = str::Format(L"/select,\"%s\"", srcFileName);
     CreateProcessHelper(process, args);
 }
 
