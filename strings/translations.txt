@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-aad2a5cbc48665f6f12b462bb5643a63f151444a
+5aba56a0f2bb41a6e1b4a0fc7a41d46bd9e4e70f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7138,7 +7138,7 @@ sq:&Shkalla e caktuar...\tCtrl+Y
 sr-rs:Прилагођено увећање...\tCtrl+Y
 sv:&Anpassad zoom...\tCtrl+Y
 ta:விருப்பிற்கேற்ற பெருக்கம்\tCtrl+Y
-th:การขยายเข้ากำหนดเอง...Ctrl+Y
+th:ขยายเข้าออกกำหนดเอง...Ctrl+Y
 tl:Custom na laki...\tCtrl+Y
 tr:Kişiselleştirilmiş &Yakınlaştırma... \tCtrl+Y
 tw:自訂縮放(&Z)...\tCtrl+Y
