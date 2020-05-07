@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -48,25 +46,6 @@ func runCppCheck(all bool) {
 		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-q", "-v", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	}
 	u.RunCmdLoggedMust(cmd)
-}
-
-// https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables
-func dumpWebHookEventPayload() {
-	v := os.Getenv("GITHUB_EVENT_PATH")
-	d, err := ioutil.ReadFile(v)
-	if err != nil {
-		fmt.Printf("dumpWebHookEventPayload: GITHUB_EVENT_PATH='%s' and is not a file\n", v)
-	}
-	fmt.Printf("dumpWebHookEventPayload: GITHUB_EVENT_PATH='%s'. Content:\n%s\n", v, string(d))
-}
-
-func isOnRepoDispatch() bool {
-	v := os.Getenv("GITHUB_EVENT_NAME")
-	isWebhookDispatch := v == "repository_dispatch"
-	if !isWebhookDispatch {
-		return false
-	}
-	return true
 }
 
 func main() {
@@ -276,19 +255,26 @@ func main() {
 
 	if flgCIBuild {
 		// TODO: temporary
-		dumpEnv()
-		dumpWebHookEventPayload()
+		//dumpEnv()
+		//dumpWebHookEventPayload()
 
 		// ci build does the same thing as pre-release
 		if shouldSignAndUpload() {
 			failIfNoCertPwd()
 		}
 		detectVersions()
-		if isOnRepoDispatch() {
+		gev := getGitHubEventType()
+		switch gev {
+		case githubEventNone:
+			// daily build on push
+			buildDaily()
+		case githubEventTypeBuildPreRel:
 			buildPreRelease()
-			return
+		case githubEventTypeBuildRaMicroPreRel:
+			buildRaMicroPreRelease()
+		default:
+			panic("unkown value from getGitHubEventType()")
 		}
-		buildDaily()
 		return
 	}
 
@@ -308,13 +294,19 @@ func main() {
 		flgUpload = true
 		detectVersions()
 
-		if isOnRepoDispatch() {
-			s3UploadBuildMust(buildTypePreRel)
-			spacesUploadBuildMust(buildTypePreRel)
-			spacesUploadBuildMust(buildTypeRaMicro)
-		} else {
+		gev := getGitHubEventType()
+		switch gev {
+		case githubEventNone:
+			// daily build on push
 			s3UploadBuildMust(buildTypeDaily)
 			spacesUploadBuildMust(buildTypeDaily)
+		case githubEventTypeBuildPreRel:
+			s3UploadBuildMust(buildTypePreRel)
+			spacesUploadBuildMust(buildTypePreRel)
+		case githubEventTypeBuildRaMicroPreRel:
+			spacesUploadBuildMust(buildTypeRaMicro)
+		default:
+			panic("unkown value from getGitHubEventType()")
 		}
 
 		minioDeleteOldBuilds()
