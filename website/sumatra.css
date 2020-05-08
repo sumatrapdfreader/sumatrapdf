@@ -52,6 +52,24 @@ h1, h2, h3 {
   padding-top: 15px;
   padding-left: 15px;
   padding-right: 15px;
+  position: relative;
+}
+
+#donate {
+  position: absolute;
+  top: 4px;
+  right: 16px;
+  /*border: 1px solid #CC6600; */
+  padding: 4px 8px;
+  text-decoration: none;
+  color: orangered;
+  color: red;
+}
+
+#donate:hover {
+  background-color: orange;
+  background-color: red;
+  color: #fff100;
 }
 
 #banner h1 {

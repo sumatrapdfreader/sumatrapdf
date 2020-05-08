@@ -1,16 +1,16 @@
-2500 1588913744253 httpcache-v1
+1729 1588913744721 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
 {
   "requests": [
     {
-      "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+      "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
       "table": "block"
     }
   ]
 }
-Response:+2300
+Response:+1529
 {
   "results": [
     {
@@ -18,62 +18,47 @@ Response:+2300
       "value": {
         "alive": true,
         "content": [
-          "32943d8f-4d8b-46e2-a3e5-622e75bc730b",
-          "00f0fa58-6c6c-4d0f-8c99-b4d2d5a2efec",
-          "e7eddc6f-83a4-4732-b9b1-4788cf7d13e1",
-          "73853a7f-3999-46a9-8a8c-69897cad4e80",
-          "10f0c6b7-798e-4985-9a29-262bd48f3b17",
-          "9bc07424-9a1e-4413-aaca-68398bc11a20",
-          "5e991147-a784-472f-a76f-ebfd5a526558",
-          "d8f4aeb6-25bc-4c95-88b0-0ce59a74f7d7",
-          "4af3ad27-efcd-46fc-9e32-b265bedeff02",
-          "98bfa851-f5bb-4642-8254-45337e0a6d37",
-          "e9aa80a4-b5bc-482b-9a4c-2ce6896cf5d4",
-          "4452a27b-3886-4443-a456-ce808b39a91f",
-          "24845d86-7003-4ebf-b7fa-876a63bc96b6",
-          "1ef75d10-fcc5-4ff7-89c2-c1391a1acd71",
-          "3b6713c7-36b6-4fbb-b0e7-b0d247082a48",
-          "d72b2707-84de-46bf-9806-917f0123d90e",
-          "f2d2481f-d563-4080-89cd-4a34a1185013",
-          "aadb6b33-fb98-46bf-bd01-85d14410286c",
-          "c31d93d1-7a22-40b2-b401-76ee7825d95e",
-          "30b4b33d-3462-47d5-94bb-3c8fa1c5db6b",
-          "8515e3fd-5ba7-4b17-9f1d-aa8730df2f82",
-          "2d0459f9-bb13-436e-9411-3a580d3943bb",
-          "8815bf40-2c44-4b07-bf38-0e3d2ef0d0ab",
-          "5de75b70-69ed-4d3e-9650-99c2c88d5ee6",
-          "a33eb2e0-ea6b-4679-8761-647b46b543c2",
-          "b9ca4d5f-8562-4c37-870b-631face260a3"
+          "60d7a95e-0833-458c-8493-12a0db47d28a",
+          "d5309b7c-f5f3-465e-b5d1-24c7231649dc",
+          "248e20cc-c1c5-4cf8-895f-6057b3588cd4",
+          "9cbf95c4-f1ce-429f-9230-69262d372c0f",
+          "36b6d4f0-cb8d-4c78-91da-2ca5f45fb0ff",
+          "fae717cc-cc14-4904-ae0c-ab697102c6a4",
+          "60ad6fc0-8267-4f6f-8661-e560352988ef",
+          "50a9a07b-e029-42df-87f1-a9201bc2199a",
+          "518dc8e1-3ee4-4c6b-82d3-4b3e96f24602",
+          "405595c3-d30b-40ff-a414-6e76bf65102c",
+          "06399a22-7a3e-49a9-91a2-58d4ccfd22ea",
+          "efc0d183-5a5f-498a-8a6b-338ca7358cf8",
+          "08643ae7-f47f-4c38-a835-9b42e4697380"
         ],
-        "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "created_by_table": "notion_user",
-        "created_time": 1492328872920,
+        "created_time": 1588885965554,
         "format": {
           "page_full_width": true,
           "page_small_text": true
         },
-        "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-        "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+        "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1588887840000,
+        "last_edited_time": 1588888260000,
         "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
         "parent_table": "block",
         "properties": {
           "title": [
             [
-              "Our build system"
+              "Info for new developers"
             ]
           ]
         },
         "type": "page",
-        "version": 49
+        "version": 72
       }
     }
   ]
 }
-36690 1588913744254 httpcache-v1
+21461 1588913744721 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -83,133 +68,33 @@ Body:+152
     "stack": []
   },
   "limit": 50,
-  "pageId": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+  "pageId": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
   "verticalColumns": false
 }
-Response:+36449
+Response:+21220
 {
   "cursor": {
     "stack": []
   },
   "recordMap": {
     "block": {
-      "00f0fa58-6c6c-4d0f-8c99-b4d2d5a2efec": {
+      "06399a22-7a3e-49a9-91a2-58d4ccfd22ea": {
         "role": "comment_only",
         "value": {
           "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1492328877627,
-          "id": "00f0fa58-6c6c-4d0f-8c99-b4d2d5a2efec",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_time": 1588888200000,
+          "id": "06399a22-7a3e-49a9-91a2-58d4ccfd22ea",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492328877627,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "type": "text",
-          "version": 4
-        }
-      },
-      "10f0c6b7-798e-4985-9a29-262bd48f3b17": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1492328913698,
-          "id": "10f0c6b7-798e-4985-9a29-262bd48f3b17",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492328913698,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+          "last_edited_time": 1588888260000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "Running"
-              ]
-            ]
-          },
-          "type": "sub_header",
-          "version": 4
-        }
-      },
-      "1ef75d10-fcc5-4ff7-89c2-c1391a1acd71": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1492329043253,
-          "id": "1ef75d10-fcc5-4ff7-89c2-c1391a1acd71",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492329043253,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "Customizing build"
-              ]
-            ]
-          },
-          "type": "sub_header",
-          "version": 0
-        }
-      },
-      "24845d86-7003-4ebf-b7fa-876a63bc96b6": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1588887853654,
-          "id": "24845d86-7003-4ebf-b7fa-876a63bc96b6",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1588887840000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "language": [
-              [
-                "Plain Text"
-              ]
-            ],
-            "title": [
-              [
-                "PS C:\\Users\\kjk\\src\\sumatrapdf\u003e ls *.lua\nMode                LastWriteTime         Length Name\n----                -------------         ------ ----\n-a----         4/24/2020 12:20 AM          22947 premake5.files.lua\n-a----          5/4/2020  7:51 PM          23565 premake5.lua\n-a----          5/4/2020  7:51 PM           8457 premake5.opt.lua"
-              ]
-            ]
-          },
-          "type": "code",
-          "version": 17
-        }
-      },
-      "2d0459f9-bb13-436e-9411-3a580d3943bb": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1582269240000,
-          "id": "2d0459f9-bb13-436e-9411-3a580d3943bb",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582269360000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "x32_asan",
+                "do",
                 [
                   [
                     "c"
@@ -217,43 +102,138 @@ Response:+36449
                 ]
               ],
               [
-                " : 32-build with additional runtime "
+                " : Go program that automates common tasks. Invoke with "
               ],
               [
-                "Address Sanitizers",
+                "doit.bat",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ]
+            ]
+          },
+          "type": "bulleted_list",
+          "version": 109
+        }
+      },
+      "08643ae7-f47f-4c38-a835-9b42e4697380": {
+        "role": "comment_only",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1588888140000,
+          "id": "08643ae7-f47f-4c38-a835-9b42e4697380",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1588888140000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
+          "parent_table": "block",
+          "type": "text",
+          "version": 10
+        }
+      },
+      "248e20cc-c1c5-4cf8-895f-6057b3588cd4": {
+        "role": "comment_only",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1588886040000,
+          "id": "248e20cc-c1c5-4cf8-895f-6057b3588cd4",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1588886100000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
+          "parent_table": "block",
+          "properties": {
+            "title": [
+              [
+                "Many tasks are automated with Go program in "
+              ],
+              [
+                "do",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ],
+              [
+                " directory. Run "
+              ],
+              [
+                "doit.bat",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ],
+              [
+                " for easy running of that program. use different cmd-line args to trigger different functions."
+              ]
+            ]
+          },
+          "type": "text",
+          "version": 244
+        }
+      },
+      "36b6d4f0-cb8d-4c78-91da-2ca5f45fb0ff": {
+        "role": "comment_only",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1588886160000,
+          "id": "36b6d4f0-cb8d-4c78-91da-2ca5f45fb0ff",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1588887900000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
+          "parent_table": "block",
+          "properties": {
+            "title": [
+              [
+                "Don't edit the solution directly. To learn how to make changes (add files, change compilation flags etc.) see info about "
+              ],
+              [
+                "build system",
                 [
                   [
                     "a",
-                    "https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/"
+                    "https://www.notion.so/Our-build-system-3114db56b1a54b9bb026da6b92d36a80"
                   ]
                 ]
               ],
               [
-                " checks. Only available in 32-bit build because of compiler limitations"
+                "."
               ]
             ]
           },
-          "type": "bulleted_list",
-          "version": 177
+          "type": "text",
+          "version": 206
         }
       },
-      "30b4b33d-3462-47d5-94bb-3c8fa1c5db6b": {
+      "405595c3-d30b-40ff-a414-6e76bf65102c": {
         "role": "comment_only",
         "value": {
           "alive": true,
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1582269180000,
-          "id": "30b4b33d-3462-47d5-94bb-3c8fa1c5db6b",
+          "created_time": 1588888080000,
+          "id": "405595c3-d30b-40ff-a414-6e76bf65102c",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582269300000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+          "last_edited_time": 1588888140000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "Win32",
+                "ext",
                 [
                   [
                     "c"
@@ -261,113 +241,31 @@ Response:+36449
                 ]
               ],
               [
-                " : 32-bit build"
+                " : other third-party libraries (some are needed for mupdf, some for Sumatra code)"
               ]
             ]
           },
           "type": "bulleted_list",
-          "version": 45
+          "version": 107
         }
       },
-      "3114db56-b1a5-4b9b-b026-da6b92d36a80": {
+      "50a9a07b-e029-42df-87f1-a9201bc2199a": {
         "role": "comment_only",
         "value": {
           "alive": true,
-          "content": [
-            "32943d8f-4d8b-46e2-a3e5-622e75bc730b",
-            "00f0fa58-6c6c-4d0f-8c99-b4d2d5a2efec",
-            "e7eddc6f-83a4-4732-b9b1-4788cf7d13e1",
-            "73853a7f-3999-46a9-8a8c-69897cad4e80",
-            "10f0c6b7-798e-4985-9a29-262bd48f3b17",
-            "9bc07424-9a1e-4413-aaca-68398bc11a20",
-            "5e991147-a784-472f-a76f-ebfd5a526558",
-            "d8f4aeb6-25bc-4c95-88b0-0ce59a74f7d7",
-            "4af3ad27-efcd-46fc-9e32-b265bedeff02",
-            "98bfa851-f5bb-4642-8254-45337e0a6d37",
-            "e9aa80a4-b5bc-482b-9a4c-2ce6896cf5d4",
-            "4452a27b-3886-4443-a456-ce808b39a91f",
-            "24845d86-7003-4ebf-b7fa-876a63bc96b6",
-            "1ef75d10-fcc5-4ff7-89c2-c1391a1acd71",
-            "3b6713c7-36b6-4fbb-b0e7-b0d247082a48",
-            "d72b2707-84de-46bf-9806-917f0123d90e",
-            "f2d2481f-d563-4080-89cd-4a34a1185013",
-            "aadb6b33-fb98-46bf-bd01-85d14410286c",
-            "c31d93d1-7a22-40b2-b401-76ee7825d95e",
-            "30b4b33d-3462-47d5-94bb-3c8fa1c5db6b",
-            "8515e3fd-5ba7-4b17-9f1d-aa8730df2f82",
-            "2d0459f9-bb13-436e-9411-3a580d3943bb",
-            "8815bf40-2c44-4b07-bf38-0e3d2ef0d0ab",
-            "5de75b70-69ed-4d3e-9650-99c2c88d5ee6",
-            "a33eb2e0-ea6b-4679-8761-647b46b543c2",
-            "b9ca4d5f-8562-4c37-870b-631face260a3"
-          ],
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1492328872920,
-          "format": {
-            "page_full_width": true,
-            "page_small_text": true
-          },
-          "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_time": 1588888080000,
+          "id": "50a9a07b-e029-42df-87f1-a9201bc2199a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1588887840000,
-          "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
+          "last_edited_time": 1588888080000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "Our build system"
-              ]
-            ]
-          },
-          "type": "page",
-          "version": 49
-        }
-      },
-      "32943d8f-4d8b-46e2-a3e5-622e75bc730b": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1492328877603,
-          "id": "32943d8f-4d8b-46e2-a3e5-622e75bc730b",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492328877603,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "type": "breadcrumb",
-          "version": 0
-        }
-      },
-      "3b6713c7-36b6-4fbb-b0e7-b0d247082a48": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1492329067159,
-          "id": "3b6713c7-36b6-4fbb-b0e7-b0d247082a48",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492329067159,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "Sometimes we want to customize the build with "
-              ],
-              [
-                "#ifdef",
+                "src",
                 [
                   [
                     "c"
@@ -375,69 +273,56 @@ Response:+36449
                 ]
               ],
               [
-                ". We could do it by adding additional configurations, but that can spiral out of control quickly."
+                " : main Sumatra code"
               ]
             ]
           },
-          "type": "text",
-          "version": 0
+          "type": "bulleted_list",
+          "version": 41
         }
       },
-      "4452a27b-3886-4443-a456-ce808b39a91f": {
+      "518dc8e1-3ee4-4c6b-82d3-4b3e96f24602": {
         "role": "comment_only",
         "value": {
           "alive": true,
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1588887840000,
-          "id": "4452a27b-3886-4443-a456-ce808b39a91f",
+          "created_time": 1588888080000,
+          "id": "518dc8e1-3ee4-4c6b-82d3-4b3e96f24602",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1588887840000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+          "last_edited_time": 1588888080000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "Relevant files:"
-              ]
-            ]
-          },
-          "type": "text",
-          "version": 25
-        }
-      },
-      "4af3ad27-efcd-46fc-9e32-b265bedeff02": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1582268640000,
-          "id": "4af3ad27-efcd-46fc-9e32-b265bedeff02",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582268640000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "install "
+                "mupdf",
+                [
+                  [
+                    "c"
+                  ]
+                ]
               ],
               [
-                "Go",
+                " : library used to parse / render PDF files (from "
+              ],
+              [
+                "https://mupdf.com/",
                 [
                   [
                     "a",
-                    "https://golang.org/"
+                    "https://mupdf.com/"
                   ]
                 ]
+              ],
+              [
+                ")"
               ]
             ]
           },
           "type": "bulleted_list",
-          "version": 26
+          "version": 85
         }
       },
       "57693e37-7cc6-4369-8a52-b098e71e0f1e": {
@@ -463,109 +348,74 @@ Response:+36449
           "version": 0
         }
       },
-      "5de75b70-69ed-4d3e-9650-99c2c88d5ee6": {
+      "60ad6fc0-8267-4f6f-8661-e560352988ef": {
         "role": "comment_only",
         "value": {
           "alive": true,
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1582268760000,
-          "id": "5de75b70-69ed-4d3e-9650-99c2c88d5ee6",
+          "created_time": 1588888080000,
+          "id": "60ad6fc0-8267-4f6f-8661-e560352988ef",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582269060000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+          "last_edited_time": 1588888200000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "I use a Go program in "
-              ],
-              [
-                "do",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " directory, executed with "
-              ],
-              [
-                "doiit.bat -build-pre-rel",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " or "
-              ],
-              [
-                "doit.bat -build-rel",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                "."
+                "Overview of the directories:"
               ]
             ]
           },
           "type": "text",
-          "version": 148
+          "version": 39
         }
       },
-      "5e991147-a784-472f-a76f-ebfd5a526558": {
+      "60d7a95e-0833-458c-8493-12a0db47d28a": {
         "role": "comment_only",
         "value": {
           "alive": true,
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1582268640000,
-          "id": "5e991147-a784-472f-a76f-ebfd5a526558",
+          "created_time": 1588885920000,
+          "id": "60d7a95e-0833-458c-8493-12a0db47d28a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582268640000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+          "last_edited_time": 1588885980000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "You only need to do that if you add or remove source files."
+                "Info to orient new developers to Sumatra code base."
               ]
             ]
           },
           "type": "text",
-          "version": 94
+          "version": 71
         }
       },
-      "73853a7f-3999-46a9-8a8c-69897cad4e80": {
+      "9cbf95c4-f1ce-429f-9230-69262d372c0f": {
         "role": "comment_only",
         "value": {
           "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1492328887228,
-          "id": "73853a7f-3999-46a9-8a8c-69897cad4e80",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_time": 1588886100000,
+          "id": "9cbf95c4-f1ce-429f-9230-69262d372c0f",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582246140000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+          "last_edited_time": 1588886160000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "Premake generates Visual Studio solution in directory "
+                "To build, use latest Visual Studio and open "
               ],
               [
-                "vs2019 ",
+                "vs2019\\SumatraPDF.sln",
                 [
                   [
                     "c"
@@ -573,467 +423,91 @@ Response:+36449
                 ]
               ],
               [
-                "from "
-              ],
-              [
-                "premake5.lua",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " file. Generated solution files are stored in the repository for convenience."
+                " solution. Look at different targets and configurations."
               ]
             ]
           },
           "type": "text",
-          "version": 54
+          "version": 135
         }
       },
-      "8515e3fd-5ba7-4b17-9f1d-aa8730df2f82": {
+      "c5d0ecb7-428e-4a83-86c9-5a7262da69ba": {
         "role": "comment_only",
         "value": {
           "alive": true,
+          "content": [
+            "60d7a95e-0833-458c-8493-12a0db47d28a",
+            "d5309b7c-f5f3-465e-b5d1-24c7231649dc",
+            "248e20cc-c1c5-4cf8-895f-6057b3588cd4",
+            "9cbf95c4-f1ce-429f-9230-69262d372c0f",
+            "36b6d4f0-cb8d-4c78-91da-2ca5f45fb0ff",
+            "fae717cc-cc14-4904-ae0c-ab697102c6a4",
+            "60ad6fc0-8267-4f6f-8661-e560352988ef",
+            "50a9a07b-e029-42df-87f1-a9201bc2199a",
+            "518dc8e1-3ee4-4c6b-82d3-4b3e96f24602",
+            "405595c3-d30b-40ff-a414-6e76bf65102c",
+            "06399a22-7a3e-49a9-91a2-58d4ccfd22ea",
+            "efc0d183-5a5f-498a-8a6b-338ca7358cf8",
+            "08643ae7-f47f-4c38-a835-9b42e4697380"
+          ],
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1582269180000,
-          "id": "8515e3fd-5ba7-4b17-9f1d-aa8730df2f82",
+          "created_time": 1588885965554,
+          "format": {
+            "page_full_width": true,
+            "page_small_text": true
+          },
+          "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1588885920000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+          "last_edited_time": 1588888260000,
+          "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "x64",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " : 64-bit build"
+                "Info for new developers"
               ]
             ]
           },
-          "type": "bulleted_list",
-          "version": 41
+          "type": "page",
+          "version": 72
         }
       },
-      "8815bf40-2c44-4b07-bf38-0e3d2ef0d0ab": {
+      "d5309b7c-f5f3-465e-b5d1-24c7231649dc": {
         "role": "comment_only",
         "value": {
           "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1492329090002,
-          "id": "8815bf40-2c44-4b07-bf38-0e3d2ef0d0ab",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_time": 1588886040000,
+          "id": "d5309b7c-f5f3-465e-b5d1-24c7231649dc",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582268760000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+          "last_edited_time": 1588886040000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "How official builds are made"
-              ]
-            ]
-          },
-          "type": "sub_header",
-          "version": 6
-        }
-      },
-      "98bfa851-f5bb-4642-8254-45337e0a6d37": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1582268700000,
-          "id": "98bfa851-f5bb-4642-8254-45337e0a6d37",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582268760000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "make changes to "
+                "You should install Go ("
               ],
               [
-                "premake5.*.lua",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " files, most likely "
-              ],
-              [
-                "premake5.files.lua",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ]
-            ]
-          },
-          "type": "bulleted_list",
-          "version": 154
-        }
-      },
-      "9bc07424-9a1e-4413-aaca-68398bc11a20": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1582268580000,
-          "id": "9bc07424-9a1e-4413-aaca-68398bc11a20",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582268640000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "Premake re-generates solution files from "
-              ],
-              [
-                "premake5.*.lua",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " files."
-              ]
-            ]
-          },
-          "type": "text",
-          "version": 81
-        }
-      },
-      "a33eb2e0-ea6b-4679-8761-647b46b543c2": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1492329104430,
-          "id": "a33eb2e0-ea6b-4679-8761-647b46b543c2",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1588885920000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "type": "text",
-          "version": 2
-        }
-      },
-      "aadb6b33-fb98-46bf-bd01-85d14410286c": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1582269060000,
-          "id": "aadb6b33-fb98-46bf-bd01-85d14410286c",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582269180000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "We have "
-              ],
-              [
-                "Debug",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                ", "
-              ],
-              [
-                "Release",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " and "
-              ],
-              [
-                "ReleaseAnalyze",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " configurations. "
-              ],
-              [
-                "ReleaseAnalyze",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " runs code analysis."
-              ]
-            ]
-          },
-          "type": "text",
-          "version": 180
-        }
-      },
-      "b9ca4d5f-8562-4c37-870b-631face260a3": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1492329113825,
-          "id": "b9ca4d5f-8562-4c37-870b-631face260a3",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492329113825,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "type": "text",
-          "version": 4
-        }
-      },
-      "c31d93d1-7a22-40b2-b401-76ee7825d95e": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1582269120000,
-          "id": "c31d93d1-7a22-40b2-b401-76ee7825d95e",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582269180000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "We have platforms:"
-              ]
-            ]
-          },
-          "type": "text",
-          "version": 31
-        }
-      },
-      "d72b2707-84de-46bf-9806-917f0123d90e": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1492329073393,
-          "id": "d72b2707-84de-46bf-9806-917f0123d90e",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582268760000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "Instead we have "
-              ],
-              [
-                "src\\utils\\BuildConfig.h ",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                "file. It's empty by default but you can changed it to add your "
-              ],
-              [
-                "#define",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " customization."
-              ]
-            ]
-          },
-          "type": "text",
-          "version": 2
-        }
-      },
-      "d8f4aeb6-25bc-4c95-88b0-0ce59a74f7d7": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1582268640000,
-          "id": "d8f4aeb6-25bc-4c95-88b0-0ce59a74f7d7",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582268640000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "To re-generate:"
-              ]
-            ]
-          },
-          "type": "text",
-          "version": 24
-        }
-      },
-      "e7eddc6f-83a4-4732-b9b1-4788cf7d13e1": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1492328880004,
-          "id": "e7eddc6f-83a4-4732-b9b1-4788cf7d13e1",
-          "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582246140000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "Our build system uses "
-              ],
-              [
-                "Premake5",
+                "https://golang.org/dl/",
                 [
                   [
                     "a",
-                    "http://premake.github.io/download.html#v5"
+                    "https://golang.org/dl/"
                   ]
                 ]
               ],
               [
-                ". For convenience, we store the binary in "
-              ],
-              [
-                "bin",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " directory."
+                ")."
               ]
             ]
           },
           "type": "text",
-          "version": 103
-        }
-      },
-      "e9aa80a4-b5bc-482b-9a4c-2ce6896cf5d4": {
-        "role": "comment_only",
-        "value": {
-          "alive": true,
-          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "created_by_table": "notion_user",
-          "created_time": 1582268640000,
-          "id": "e9aa80a4-b5bc-482b-9a4c-2ce6896cf5d4",
-          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582268700000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
-          "parent_table": "block",
-          "properties": {
-            "title": [
-              [
-                "run "
-              ],
-              [
-                "doit.bat -premake",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " which runs a Go program in "
-              ],
-              [
-                "do",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " directory with "
-              ],
-              [
-                "-premake",
-                [
-                  [
-                    "c"
-                  ]
-                ]
-              ],
-              [
-                " flag"
-              ]
-            ]
-          },
-          "type": "bulleted_list",
-          "version": 122
+          "version": 35
         }
       },
       "edebffa1-9600-441e-adf5-b2ed3a094091": {
@@ -1077,28 +551,77 @@ Response:+36449
           "version": 28
         }
       },
-      "f2d2481f-d563-4080-89cd-4a34a1185013": {
+      "efc0d183-5a5f-498a-8a6b-338ca7358cf8": {
         "role": "comment_only",
         "value": {
           "alive": true,
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
-          "created_time": 1582269060000,
-          "id": "f2d2481f-d563-4080-89cd-4a34a1185013",
+          "created_time": 1588888260000,
+          "id": "efc0d183-5a5f-498a-8a6b-338ca7358cf8",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1582269060000,
-          "parent_id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+          "last_edited_time": 1588888260000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
+          "parent_table": "block",
+          "type": "text",
+          "version": 10
+        }
+      },
+      "fae717cc-cc14-4904-ae0c-ab697102c6a4": {
+        "role": "comment_only",
+        "value": {
+          "alive": true,
+          "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "created_by_table": "notion_user",
+          "created_time": 1588887900000,
+          "id": "fae717cc-cc14-4904-ae0c-ab697102c6a4",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+          "last_edited_by_table": "notion_user",
+          "last_edited_time": 1588888080000,
+          "parent_id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "Build variants"
+                "We use "
+              ],
+              [
+                "GitHub Actions",
+                [
+                  [
+                    "a",
+                    "https://help.github.com/en/actions"
+                  ]
+                ]
+              ],
+              [
+                " for a CI system. See "
+              ],
+              [
+                ".github",
+                [
+                  [
+                    "c"
+                  ]
+                ]
+              ],
+              [
+                " directory. Most importantly it builds a 64-bit release version on every checkin to catch build errors and uploads it to storage and makes available via "
+              ],
+              [
+                "https://www.sumatrapdfreader.org/dailybuilds.html",
+                [
+                  [
+                    "a",
+                    "https://www.sumatrapdfreader.org/dailybuilds.html"
+                  ]
+                ]
               ]
             ]
           },
-          "type": "sub_header",
-          "version": 28
+          "type": "text",
+          "version": 281
         }
       },
       "fed36a56-24d4-43fe-9f7b-e0e410ecd715": {
@@ -1180,7 +703,7 @@ Response:+36449
     "space": {}
   }
 }
-27057 1588913744254 httpcache-v1
+27828 1588913744722 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1518
@@ -1196,6 +719,10 @@ Body:+1518
     },
     {
       "id": "2b746bfc-9e80-40f7-997f-55a7c4cf89e5",
+      "table": "block"
+    },
+    {
+      "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
       "table": "block"
     },
     {
@@ -1249,14 +776,10 @@ Body:+1518
     {
       "id": "be6ef085-e89f-4903-8c2b-671c0743b690",
       "table": "block"
-    },
-    {
-      "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
-      "table": "block"
     }
   ]
 }
-Response:+25447
+Response:+26218
 {
   "results": [
     {
@@ -1352,6 +875,64 @@ Response:+25447
         "parent_table": "block",
         "type": "text",
         "version": 3
+      }
+    },
+    {
+      "role": "comment_only",
+      "value": {
+        "alive": true,
+        "content": [
+          "32943d8f-4d8b-46e2-a3e5-622e75bc730b",
+          "00f0fa58-6c6c-4d0f-8c99-b4d2d5a2efec",
+          "e7eddc6f-83a4-4732-b9b1-4788cf7d13e1",
+          "73853a7f-3999-46a9-8a8c-69897cad4e80",
+          "10f0c6b7-798e-4985-9a29-262bd48f3b17",
+          "9bc07424-9a1e-4413-aaca-68398bc11a20",
+          "5e991147-a784-472f-a76f-ebfd5a526558",
+          "d8f4aeb6-25bc-4c95-88b0-0ce59a74f7d7",
+          "4af3ad27-efcd-46fc-9e32-b265bedeff02",
+          "98bfa851-f5bb-4642-8254-45337e0a6d37",
+          "e9aa80a4-b5bc-482b-9a4c-2ce6896cf5d4",
+          "4452a27b-3886-4443-a456-ce808b39a91f",
+          "24845d86-7003-4ebf-b7fa-876a63bc96b6",
+          "1ef75d10-fcc5-4ff7-89c2-c1391a1acd71",
+          "3b6713c7-36b6-4fbb-b0e7-b0d247082a48",
+          "d72b2707-84de-46bf-9806-917f0123d90e",
+          "f2d2481f-d563-4080-89cd-4a34a1185013",
+          "aadb6b33-fb98-46bf-bd01-85d14410286c",
+          "c31d93d1-7a22-40b2-b401-76ee7825d95e",
+          "30b4b33d-3462-47d5-94bb-3c8fa1c5db6b",
+          "8515e3fd-5ba7-4b17-9f1d-aa8730df2f82",
+          "2d0459f9-bb13-436e-9411-3a580d3943bb",
+          "8815bf40-2c44-4b07-bf38-0e3d2ef0d0ab",
+          "5de75b70-69ed-4d3e-9650-99c2c88d5ee6",
+          "a33eb2e0-ea6b-4679-8761-647b46b543c2",
+          "b9ca4d5f-8562-4c37-870b-631face260a3"
+        ],
+        "created_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+        "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+        "created_by_table": "notion_user",
+        "created_time": 1492328872920,
+        "format": {
+          "page_full_width": true,
+          "page_small_text": true
+        },
+        "id": "3114db56-b1a5-4b9b-b026-da6b92d36a80",
+        "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+        "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
+        "last_edited_by_table": "notion_user",
+        "last_edited_time": 1588887840000,
+        "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
+        "parent_table": "block",
+        "properties": {
+          "title": [
+            [
+              "Our build system"
+            ]
+          ]
+        },
+        "type": "page",
+        "version": 49
       }
     },
     {
@@ -1917,53 +1498,10 @@ Response:+25447
         "type": "page",
         "version": 10
       }
-    },
-    {
-      "role": "comment_only",
-      "value": {
-        "alive": true,
-        "content": [
-          "60d7a95e-0833-458c-8493-12a0db47d28a",
-          "d5309b7c-f5f3-465e-b5d1-24c7231649dc",
-          "248e20cc-c1c5-4cf8-895f-6057b3588cd4",
-          "9cbf95c4-f1ce-429f-9230-69262d372c0f",
-          "36b6d4f0-cb8d-4c78-91da-2ca5f45fb0ff",
-          "fae717cc-cc14-4904-ae0c-ab697102c6a4",
-          "60ad6fc0-8267-4f6f-8661-e560352988ef",
-          "50a9a07b-e029-42df-87f1-a9201bc2199a",
-          "518dc8e1-3ee4-4c6b-82d3-4b3e96f24602",
-          "405595c3-d30b-40ff-a414-6e76bf65102c",
-          "06399a22-7a3e-49a9-91a2-58d4ccfd22ea",
-          "efc0d183-5a5f-498a-8a6b-338ca7358cf8",
-          "08643ae7-f47f-4c38-a835-9b42e4697380"
-        ],
-        "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-        "created_by_table": "notion_user",
-        "created_time": 1588885965554,
-        "format": {
-          "page_full_width": true,
-          "page_small_text": true
-        },
-        "id": "c5d0ecb7-428e-4a83-86c9-5a7262da69ba",
-        "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-        "last_edited_by_table": "notion_user",
-        "last_edited_time": 1588888260000,
-        "parent_id": "edebffa1-9600-441e-adf5-b2ed3a094091",
-        "parent_table": "block",
-        "properties": {
-          "title": [
-            [
-              "Info for new developers"
-            ]
-          ]
-        },
-        "type": "page",
-        "version": 72
-      }
     }
   ]
 }
-48879 1588913744255 httpcache-v1
+48879 1588913744723 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1606

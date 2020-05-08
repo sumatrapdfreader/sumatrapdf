@@ -311,6 +311,7 @@ var tmpl = `<!doctype html>
 			<script type="text/javascript">
 				document.write(navHtml());
 			</script>
+			<a id="donate" href="/backers.html">Donate</a>
 		</div>
 		<br/>
 		<div id="center">
