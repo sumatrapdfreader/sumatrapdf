@@ -165,6 +165,7 @@ var baseUrls = [
   ["download-free-pdf-viewer", "Download"],
   ["manual", "Manual"],
   ["docs", "Documentation"],
+  ["backers", "Support SumatraPDF"],
   ["forum", "Discussion Forum"]
 ];
 
