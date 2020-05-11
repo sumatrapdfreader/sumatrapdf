@@ -16,3 +16,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 <h2 align="center">Backers via Patreon</h2>
 
 - Reinhold Thurner
+- Aazmandius
