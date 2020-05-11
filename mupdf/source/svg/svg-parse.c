@@ -185,9 +185,12 @@ svg_parse_transform(fz_context *ctx, svg_document *doc, const char *str, fz_matr
 
 		else if (!strcmp(keyword, "translate"))
 		{
-			if (nargs != 2)
+			if (nargs == 1)
+				transform = fz_concat(fz_translate(args[0], 0), transform);
+			else if (nargs == 2)
+				transform = fz_concat(fz_translate(args[0], args[1]), transform);
+			else
 				fz_throw(ctx, FZ_ERROR_SYNTAX, "wrong number of arguments to translate(): %d", nargs);
-			transform = fz_concat(fz_translate(args[0], args[1]), transform);
 		}
 
 		else if (!strcmp(keyword, "scale"))

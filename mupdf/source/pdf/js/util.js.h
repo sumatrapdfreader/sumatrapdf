@@ -62,7 +62,7 @@
 "}\n"
 "\n"
 "color.equal = function (a, b) {\n"
-"var i, n\n"
+"var i, n;\n"
 "if (a[0] === 'G')\n"
 "a = color.convert(a, b[0]);\n"
 "else\n"

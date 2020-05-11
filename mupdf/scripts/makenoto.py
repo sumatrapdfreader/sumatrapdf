@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, glob, os
+import glob, os
 
 scripts = []
 

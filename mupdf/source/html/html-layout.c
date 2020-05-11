@@ -331,31 +331,31 @@ static void layout_line(fz_context *ctx, float indent, float page_w, float line_
 		 * levels >= max_level (and decrement max_level). */
 		do
 		{
-			int start = 0;
-			int end;
+			int start_idx = 0;
+			int end_idx;
 			do
 			{
 				/* Skip until we find a level that's >= max_level */
-				while (start < n && reorder[start]->bidi_level < max_level)
-					start++;
+				while (start_idx < n && reorder[start_idx]->bidi_level < max_level)
+					start_idx++;
 				/* If start >= n-1 then no more runs. */
-				if (start >= n-1)
+				if (start_idx >= n-1)
 					break;
 				/* Find the end of the match */
-				i = start+1;
+				i = start_idx+1;
 				while (i < n && reorder[i]->bidi_level >= max_level)
 					i++;
 				/* Reverse from start to i-1 */
-				end = i-1;
-				while (start < end)
+				end_idx = i-1;
+				while (start_idx < end_idx)
 				{
-					fz_html_flow *t = reorder[start];
-					reorder[start++] = reorder[end];
-					reorder[end--] = t;
+					fz_html_flow *t = reorder[start_idx];
+					reorder[start_idx++] = reorder[end_idx];
+					reorder[end_idx--] = t;
 				}
-				start = i+1;
+				start_idx = i+1;
 			}
-			while (start < n);
+			while (start_idx < n);
 			max_level--;
 		}
 		while (max_level >= min_level);

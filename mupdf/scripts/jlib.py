@@ -10,16 +10,14 @@ import time
 import traceback
 
 
-def place( n=1):
+def place( frame_record):
     '''
     Useful debugging function - returns representation of source position of
     caller.
     '''
-    tb = traceback.extract_stack( None, 1+n)
-    if len(tb)==0:
-        # this can happen if psyco is being used.
-        return ''
-    filename, line, function, text = tb[0]
+    filename    = frame_record.filename
+    line        = frame_record.lineno
+    function    = frame_record.function
     ret = os.path.split( filename)[1] + ':' + str( line) + ':' + function + ':'
     if 0:
         tid = str( threading.currentThread())
@@ -27,12 +25,20 @@ def place( n=1):
     return ret
 
 
-def expand_nv( text, n=1):
+def expand_nv( text, caller):
     '''
     Returns <text> with special handling of {<expression>} items.
 
-    <expression> is evaluated in our caller's context (<n> stack frames up)
-    using eval(), and expanded to <expression> or <expression>=<value>.
+    text:
+        String containing {<expression>} items.
+    caller:
+        If an int, the number of frames to step up when looking for file:line
+        information or evaluating expressions.
+
+        Otherwise should be a frame record as returned by inspect.stack()[].
+
+    <expression> is evaluated in <caller>'s context using eval(), and expanded
+    to <expression> or <expression>=<value>.
 
     If <expression> ends with '=', this character is removed and we prefix the
     result with <expression>=.
@@ -47,7 +53,11 @@ def expand_nv( text, n=1):
     <expression> can also use ':' and '!' to control formatting, like
     str.format().
     '''
-    frame = inspect.stack()[n][0]
+    if isinstance( caller, int):
+        frame_record = inspect.stack()[ caller]
+    else:
+        frame_record = caller
+    frame = frame_record.frame
     try:
         def get_items():
             '''
@@ -89,7 +99,12 @@ def expand_nv( text, n=1):
                     value = eval( expression, frame.f_globals, frame.f_locals)
                     value_text = ('{0%s}' % tail).format( value)
                 except Exception as e:
-                    value_text = '{??Failed to evaluate %r because: %s??}' % (expression, e)
+                    value_text = '{??Failed to evaluate %r in context %s:%s because: %s??}' % (
+                            expression,
+                            frame_record.filename,
+                            frame_record.lineno,
+                            e,
+                            )
                 if nv:
                     ret += '%s=' % expression
                 ret += value_text
@@ -119,8 +134,10 @@ class LogPrefixTime:
         return ret
 
 class LogPrefixFileLine:
-    def __call__( self, n):
-        return place( n + 1) + ' '
+    def __call__( self, caller):
+        if isinstance( caller, int):
+            caller = inspect.stack()[ caller]
+        return place( caller) + ' '
 
 class LogPrefixScopes:
     '''
@@ -181,23 +198,27 @@ g_log_prefixe_scopes = LogPrefixScopes()
 g_log_prefixes = []
 
 
-def log_text( text=None, n=1, nv=True):
+def log_text( text=None, caller=1, nv=True):
     '''
     Returns log text, prepending all lines with text from g_log_prefixes.
 
     text:
         The text to output. Each line is prepended with prefix text.
-    n:
-        How many frames to step up when looking for file:line information or
-        evaluating expressions.
+    caller:
+        If an int, the number of frames to step up when looking for file:line
+        information or evaluating expressions.
+
+        Otherwise should be a frame record as returned by inspect.stack()[].
     nv:
         If true, we expand {...} in <text> using expand_nv().
     '''
+    if isinstance( caller, int):
+        caller += 1
     prefix = ''
     for p in g_log_prefixes:
         if callable( p):
             if isinstance( p, LogPrefixFileLine):
-                p = p(n+1)
+                p = p(caller)
             else:
                 p = p()
         prefix += p
@@ -206,7 +227,7 @@ def log_text( text=None, n=1, nv=True):
         return prefix
 
     if nv:
-        text = expand_nv( text, n+1)
+        text = expand_nv( text, caller)
 
     if text.endswith( '\n'):
         text = text[:-1]
@@ -275,9 +296,10 @@ def log( text, level=0, caller=1, nv=True, out=None):
 
     text:
         The text to output.
-    n:
+    caller:
         How many frames to step up to get caller's context when evaluating
-        file:line information and/or expressions.
+        file:line information and/or expressions. Or frame record as returned
+        by inspect.stack()[].
     nv:
         If true, we expand {...} in <text> using expand_nv().
     out:
@@ -302,9 +324,11 @@ def log( text, level=0, caller=1, nv=True, out=None):
     if out is None:
         out = sys.stdout
     level += g_log_delta
-    level += log_levels_find( caller+1)
+    if isinstance( caller, int):
+        caller += 1
+    level += log_levels_find( caller)
     if level <= 0:
-        text = log_text( text, caller+1, nv=nv)
+        text = log_text( text, caller, nv=nv)
         out.write( text)
         out.flush()
 
@@ -347,7 +371,7 @@ def log_levels_add_env( name='JLIB_log_levels'):
     t = os.environ.get( name)
     if t:
         for ffll in t.split( ','):
-            ffl, delta = t.split( '=', 1)
+            ffl, delta = ffll.split( '=', 1)
             delta = int( delta)
             ffl = ffl.split( ':')
             if 0:
@@ -937,9 +961,10 @@ def system(
 
     if verbose:
         if callable( verbose) or getattr( verbose, 'write', None):
-            verbose = make_out_callable( verbose)
+            pass
         else:
             verbose = out
+        verbose = make_out_callable( verbose)
 
     if verbose:
         print( 'running: %s' % command, file=verbose)
@@ -1063,8 +1088,11 @@ def update_file( text, filename):
         log( 'Unchanged: ' + filename)
     else:
         log( 'Updating:  ' + filename)
-        with open( filename, 'w') as f:
+        # Write to temp file and rename, to ensure we are atomic.
+        filename_temp = f'{filename}-jlib-temp'
+        with open( filename_temp, 'w') as f:
             f.write( text)
+        os.rename( filename_temp, filename)
 
 
 def mtime( filename, default=0):
@@ -1143,6 +1171,7 @@ def build(
         force_rebuild=False,
         out=None,
         all_reasons=False,
+        verbose=True,
         ):
     '''
     Ensures that <outfiles> are up to date using enhanced makefile-like
@@ -1162,10 +1191,15 @@ def build(
         Command to run.
     force_rebuild:
         If true, we always re-run the command.
+    out:
+        A callable, passed to jlib.system(). If None, we use jlib.log() with
+        our caller's stack record.
     all_reasons:
         If true we check all ways for a build being needed, even if we already
         know a build is needed; this only affects the diagnostic that we
         output.
+    verbose:
+        Passed to jlib.system().
 
     We compare mtimes of <infiles> and <outfiles>, and we also detect changes
     to the command itself.
@@ -1179,6 +1213,10 @@ def build(
         infiles = (infiles,)
     if isinstance( outfiles, str):
         infiles = (outfiles,)
+
+    if not out:
+        out_frame_record = inspect.stack()[1]
+        out = lambda text: log( text, caller=out_frame_record)
 
     command_filename = f'{outfiles[0]}.cmd'
 
@@ -1203,10 +1241,14 @@ def build(
             reasons.append( reason)
 
     if not reasons:
-        log( 'Already up to date: {" ".join(outfiles)}')
+        out( 'Already up to date: ' + ' '.join(outfiles))
         return
 
-    log( 'Rebuilding because {", and ".join( reasons)}: {" ".join(outfiles)}')
+    if out:
+        out( 'Rebuilding because %s: %s' % (
+                ', and '.join( reasons),
+                ' '.join(outfiles),
+                ))
 
     # Empty <command_filename) while we run the command so that if command
     # fails but still creates target(s), then next time we will know target(s)
@@ -1215,7 +1257,7 @@ def build(
     with open( command_filename, 'w') as f:
         pass
 
-    system( command, out=out)
+    system( command, out=out, verbose=verbose)
 
     with open( command_filename, 'w') as f:
         f.write( command)

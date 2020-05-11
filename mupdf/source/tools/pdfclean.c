@@ -114,7 +114,7 @@ int pdfclean_main(int argc, char **argv)
 
 	fz_try(ctx)
 	{
-		pdf_clean_file(ctx, infile, outfile, password, &opts, &argv[fz_optind], argc - fz_optind);
+		pdf_clean_file(ctx, infile, outfile, password, &opts, argc - fz_optind, &argv[fz_optind]);
 	}
 	fz_catch(ctx)
 	{

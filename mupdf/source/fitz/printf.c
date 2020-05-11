@@ -239,10 +239,10 @@ static void fmtquote_pdf(struct fmtbuf *out, const char *s, int sq, int eq)
 {
 	int c;
 	fmtputc(out, sq);
-	while ((c = *s++) != 0) {
+	while ((c = (unsigned char)*s++) != 0) {
 		switch (c) {
 		default:
-			if (c < 32 || (unsigned char)c > 127) {
+			if (c < 32 || c > 127) {
 				fmtputc(out, '\\');
 				if (sq == '(')
 				{

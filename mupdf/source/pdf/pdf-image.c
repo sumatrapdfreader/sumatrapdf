@@ -448,7 +448,7 @@ unknown_compression:
 			}
 			else
 			{
-				size_t size = pixmap->w * n;
+				size_t size = (size_t)pixmap->w * n;
 				int h = pixmap->h;
 				unsigned char *s = pixmap->samples;
 				unsigned char *d = Memento_label(fz_malloc(ctx, size * h), "pdf_image_samples");

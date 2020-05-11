@@ -313,7 +313,7 @@ static void retainpages(fz_context *ctx, globals *glo, int argc, char **argv)
 	pdf_drop_obj(ctx, root);
 }
 
-void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password, pdf_write_options *opts, char *argv[], int argc)
+void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password, pdf_write_options *opts, int argc, char *argv[])
 {
 	globals glo = { 0 };
 

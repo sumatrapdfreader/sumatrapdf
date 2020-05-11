@@ -54,7 +54,6 @@ int pdf_is_indirect(fz_context *ctx, pdf_obj *obj);
 */
 int pdf_obj_num_is_stream(fz_context *ctx, pdf_document *doc, int num);
 int pdf_is_stream(fz_context *ctx, pdf_obj *obj);
-pdf_obj *pdf_resolve_obj(fz_context *ctx, pdf_obj *a);
 int pdf_objcmp(fz_context *ctx, pdf_obj *a, pdf_obj *b);
 int pdf_objcmp_resolve(fz_context *ctx, pdf_obj *a, pdf_obj *b);
 int pdf_name_eq(fz_context *ctx, pdf_obj *a, pdf_obj *b);

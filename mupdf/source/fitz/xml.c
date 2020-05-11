@@ -739,12 +739,12 @@ open_implied(fz_context *ctx, struct parser *parser, int tag)
 		int implied_found = 0;
 		for (head = parser->head; head; head = head->up)
 		{
-			char *tag = fz_xml_tag(head);
+			char *parent_tag = fz_xml_tag(head);
 			int level;
 
-			if (tag == NULL)
+			if (parent_tag == NULL)
 				continue;
-			tag_num = find_html_tag(tag, strlen(tag));
+			tag_num = find_html_tag(parent_tag, strlen(parent_tag));
 			level = (html_tags[tag_num].flags>>TABLE_SHIFT) & TABLE_MASK;
 			if (level >= table_level)
 				close_to = head;
@@ -764,9 +764,9 @@ open_implied(fz_context *ctx, struct parser *parser, int tag)
 		}
 		if (!implied_found)
 		{
-			char *tag = html_tags[implied].tag;
+			char *implied_tag = html_tags[implied].tag;
 			open_implied(ctx, parser, implied);
-			xml_emit_open_tag(ctx, parser, tag, tag + strlen(tag), 0);
+			xml_emit_open_tag(ctx, parser, implied_tag, implied_tag + strlen(implied_tag), 0);
 		}
 	}
 	else
@@ -774,11 +774,11 @@ open_implied(fz_context *ctx, struct parser *parser, int tag)
 		/* Non table tag. Open by implication. */
 		for (head = parser->head; head; head = head->up)
 		{
-			char *tag = fz_xml_tag(head);
+			char *parent_tag = fz_xml_tag(head);
 
-			if (tag == NULL)
+			if (parent_tag == NULL)
 				continue;
-			tag_num = find_html_tag(tag, strlen(tag));
+			tag_num = find_html_tag(parent_tag, strlen(parent_tag));
 			if (tag_num == implied || tag_num == implied2 || tag_num == implied3)
 				break;
 		}

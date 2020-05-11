@@ -391,7 +391,7 @@ void pdf_set_annot_opacity(fz_context *ctx, pdf_annot *annot, float opacity);
 	n components, each between 0 and 1.
 	n = 1 (grey), 3 (rgb) or 4 (cmyk).
 */
-void pdf_set_annot_color(fz_context *ctx, pdf_annot *annot, int n, const float color[4]);
+void pdf_set_annot_color(fz_context *ctx, pdf_annot *annot, int n, const float *color);
 
 /*
 	Set the annotation interior color.
@@ -399,7 +399,7 @@ void pdf_set_annot_color(fz_context *ctx, pdf_annot *annot, int n, const float c
 	n components, each between 0 and 1.
 	n = 1 (grey), 3 (rgb) or 4 (cmyk).
 */
-void pdf_set_annot_interior_color(fz_context *ctx, pdf_annot *annot, int n, const float color[4]);
+void pdf_set_annot_interior_color(fz_context *ctx, pdf_annot *annot, int n, const float *color);
 
 /*
 	Set the quadding (justification) to use for the annotation.
@@ -498,6 +498,8 @@ void pdf_set_annot_author(fz_context *ctx, pdf_annot *annot, const char *author)
 void pdf_format_date(fz_context *ctx, char *s, int n, int64_t secs);
 int64_t pdf_annot_modification_date(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_modification_date(fz_context *ctx, pdf_annot *annot, int64_t time);
+int64_t pdf_annot_creation_date(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_creation_date(fz_context *ctx, pdf_annot *annot, int64_t time);
 
 void pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, float color[3]);
 void pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, const float color[3]);
