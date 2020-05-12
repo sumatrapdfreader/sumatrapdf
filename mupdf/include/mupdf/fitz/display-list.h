@@ -45,7 +45,7 @@ fz_display_list *fz_new_display_list(fz_context *ctx, fz_rect mediabox);
 	for each rendering. Once the device is no longer needed, free
 	it with fz_drop_device.
 
-	list: A display list that the list device takes ownership of.
+	list: A display list that the list device takes a reference to.
 */
 fz_device *fz_new_list_device(fz_context *ctx, fz_display_list *list);
 

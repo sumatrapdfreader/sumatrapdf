@@ -787,6 +787,7 @@ def system_raw(
         shell=True,
         encoding='latin_1',
         errors='strict',
+        buffer_len=-1,
         ):
     '''
     Runs command, writing output to <out> which can be an int fd, a python
@@ -815,6 +816,9 @@ def system_raw(
         errors:
             How to handle encoding errors; see docs for codecs module for
             details.
+        buffer_len:
+            The number of bytes we attempt to read at a time. If -1 we read
+            output one line at a time.
 
     Returns:
         subprocess's <returncode>, i.e. -N means killed by signal N, otherwise
@@ -845,8 +849,15 @@ def system_raw(
     out = make_out_callable( out)
 
     if stdout == subprocess.PIPE:
-        for line in child_out:
-            out.write( line)
+        if buffer_len == -1:
+            for line in child_out:
+                out.write( line)
+        else:
+            while 1:
+                text = child_out.read( buffer_len)
+                if not text:
+                    break
+                out.write( text)
     #decode( lambda : os.read( child_out.fileno(), 100), outfn, encoding)
 
     return child.wait()
@@ -879,6 +890,7 @@ def system(
         shell=True,
         encoding=None,
         errors='replace',
+        buffer_len=-1,
         ):
     '''
     Runs a command like os.system() or subprocess.*, but with more flexibility.
@@ -926,6 +938,9 @@ def system(
             How to handle encoding errors; see docs for codecs module
             for details. Defaults to 'replace' so we never raise a
             UnicodeDecodeError.
+        buffer_len:
+            The number of bytes we attempt to read at a time. If -1 we read
+            output one line at a time.
 
     Returns:
         If <rusage> is true, we return the rusage text.
@@ -974,7 +989,7 @@ def system(
         command2 += '/usr/bin/time -o ubt-out -f "D=%D E=%D F=%F I=%I K=%K M=%M O=%O P=%P R=%r S=%S U=%U W=%W X=%X Z=%Z c=%c e=%e k=%k p=%p r=%r s=%s t=%t w=%w x=%x C=%C"'
         command2 += ' '
         command2 += command
-        e = system_raw( command2, out, shell, encoding, errors)
+        e = system_raw( command2, out, shell, encoding, errors, buffer_len=buffer_len)
         with open('ubt-out') as f:
             rusage_text = f.read()
         #print 'have read rusage output: %r' % rusage_text
@@ -987,7 +1002,7 @@ def system(
             rusage_text = rusage_text[ nl+1:]
         return rusage_text
     else:
-        e = system_raw( command, out, shell, encoding, errors)
+        e = system_raw( command, out, shell, encoding, errors, buffer_len=buffer_len)
 
         if verbose:
             print( '[returned e=%s]' % e, file=verbose)

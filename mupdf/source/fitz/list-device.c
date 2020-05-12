@@ -1283,6 +1283,7 @@ fz_list_drop_device(fz_context *ctx, fz_device *dev)
 	fz_drop_colorspace(ctx, writer->colorspace);
 	fz_drop_stroke_state(ctx, writer->stroke);
 	fz_drop_path(ctx, writer->path);
+	fz_drop_display_list(ctx, writer->list);
 }
 
 fz_device *
@@ -1326,7 +1327,7 @@ fz_new_list_device(fz_context *ctx, fz_display_list *list)
 
 	dev->super.drop_device = fz_list_drop_device;
 
-	dev->list = list;
+	dev->list = fz_keep_display_list(ctx, list);
 	dev->path = NULL;
 	dev->alpha = 1.0f;
 	dev->ctm = fz_identity;

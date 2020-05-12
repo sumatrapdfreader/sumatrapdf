@@ -513,7 +513,6 @@ class ClassExtra:
             class_post='',
             class_pre='',
             class_top='',
-            constructor_default=None,
             constructor_prefixes=None,
             constructor_raw=True,
             constructor_excludes=None,
@@ -549,10 +548,6 @@ class ClassExtra:
         class_top:
             Extra text at start of class definition, e.g. for enums.
 
-        constructor_default:
-            If true, we define default constructor that sets m_internal to
-            NULL.
-
         constructor_prefixes:
             Extra fz_*() function name prefixes that can be used by class
             constructors_wrappers. We find all functions whose name starts with one of
@@ -567,7 +562,8 @@ class ClassExtra:
 
         constructor_raw:
             If true, create a constructor that takes a pointer to an instance
-            of the wrapped fz_ struct.
+            of the wrapped fz_ struct. If 'default', this constructor arg
+            defaults to NULL.
 
         constructor_excludes:
             Lists of constructor functions to ignore.
@@ -655,7 +651,6 @@ class ClassExtra:
         self.class_post = class_post
         self.class_pre = class_pre
         self.class_top = class_top
-        self.constructor_default = constructor_default
         self.constructor_excludes = constructor_excludes or []
         self.constructor_prefixes = constructor_prefixes or []
         self.constructor_raw = constructor_raw
@@ -810,6 +805,7 @@ classextras = ClassExtras(
                 ),
 
         fz_bitmap = ClassExtra(
+                accessors = True,
                 ),
 
         fz_buffer = ClassExtra(
@@ -829,11 +825,11 @@ classextras = ClassExtras(
                         f'''
                         {{
                             if (0) {{}}
-                            else if ( fixed = Fixed_GRAY)   m_internal = {rename.function_call( 'fz_device_gray')}();
-                            else if ( fixed = Fixed_RGB)    m_internal = {rename.function_call( 'fz_device_rgb' )}();
-                            else if ( fixed = Fixed_BGR)    m_internal = {rename.function_call( 'fz_device_bgr' )}();
-                            else if ( fixed = Fixed_CMYK)   m_internal = {rename.function_call( 'fz_device_cmyk')}();
-                            else if ( fixed = Fixed_LAB)    m_internal = {rename.function_call( 'fz_device_lab' )}();
+                            else if ( fixed == Fixed_GRAY)  m_internal = {rename.function_call( 'fz_device_gray')}();
+                            else if ( fixed == Fixed_RGB)   m_internal = {rename.function_call( 'fz_device_rgb' )}();
+                            else if ( fixed == Fixed_BGR)   m_internal = {rename.function_call( 'fz_device_bgr' )}();
+                            else if ( fixed == Fixed_CMYK)  m_internal = {rename.function_call( 'fz_device_cmyk')}();
+                            else if ( fixed == Fixed_LAB)   m_internal = {rename.function_call( 'fz_device_lab' )}();
                             else {{
                                 std::string message = "Unrecognised fixed colorspace id";
                                 throw ErrorGeneric(message.c_str());
@@ -880,13 +876,17 @@ classextras = ClassExtras(
                     comment = '/* Sets all fields to default values. */',
                     ),
                     ],
+                constructor_raw = False,
                 methods_extra = [
-                    ExtraMethod( 'void',    'set_abort()',          '{ m_internal.abort = 1; }\n'),
-                    ExtraMethod( 'int',     'get_progress()',       '{ return m_internal.progress; }\n'),
-                    ExtraMethod( 'size_t',  'get_progress_max()',   '{ return m_internal.progress_max; }\n'),
-                    ExtraMethod( 'int',     'get_errors()',         '{ return m_internal.errors; }\n'),
-                    ExtraMethod( 'int',     'get_incomplete()',     '{ return m_internal.incomplete; }\n'),
-                    ExtraMethod( 'void',    'increment_errors()',   '{ m_internal.errors += 1; }\n'),
+                    ExtraMethod( 'void',    'set_abort()',                  '{ m_internal.abort = 1; }\n'),
+
+                    # do we need these? - already provided by accessors.
+                    ExtraMethod( 'int',     'get_progress()',               '{ return m_internal.progress; }\n'),
+                    ExtraMethod( 'size_t',  'get_progress_max()',           '{ return m_internal.progress_max; }\n'),
+                    ExtraMethod( 'int',     'get_errors()',                 '{ return m_internal.errors; }\n'),
+                    ExtraMethod( 'int',     'get_incomplete()',             '{ return m_internal.incomplete; }\n'),
+
+                    ExtraMethod( 'void',    'increment_errors(int delta)',  '{ m_internal.errors += delta; }\n'),
                 ],
                 pod = True,
                 # I think other code asyncronously writes to our fields, so we
@@ -1056,6 +1056,10 @@ classextras = ClassExtras(
                     ''',
                 ),
 
+        fz_halftone = ClassExtra(
+                constructor_raw = 'default',
+                ),
+
         fz_irect = ClassExtra(
                 constructor_prefixes = [
                     'fz_irect_from_rect',
@@ -1063,7 +1067,6 @@ classextras = ClassExtras(
                     ],
                 pod='inline',
                 constructor_raw = True,
-                constructor_default = True,
                 ),
 
         fz_link = ClassExtra(
@@ -3568,7 +3571,10 @@ def class_raw_constructor(
         constructor_decl = f'{classname}({structname}* internal)'
     out_h.write( '\n')
     out_h.write( f'    {comment}\n')
-    out_h.write( f'    {constructor_decl};\n')
+    if extras.constructor_raw == 'default':
+        out_h.write( f'    {classname}({structname}* internal=NULL);\n')
+    else:
+        out_h.write( f'    {constructor_decl};\n')
 
     out_cpp.write( f'{classname}::{constructor_decl}\n')
     if extras.pod == 'inline':

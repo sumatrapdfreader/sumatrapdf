@@ -34,7 +34,8 @@ OUT_XHTML   = 14
 OUT_STEXT   = 15
 OUT_PCLM    = 16
 OUT_TRACE   = 17
-OUT_SVG     = 18
+OUT_BBOX    = 18
+OUT_SVG     = 19
 
 CS_INVALID      = 0
 CS_UNSET        = 1
@@ -91,6 +92,7 @@ suffix_table = [
         suffix_t( ".stext", OUT_STEXT, 0 ),
 
         suffix_t( ".trace", OUT_TRACE, 0 ),
+        suffix_t( ".bbox", OUT_BBOX, 0 ),
         ]
 
 class cs_name_t:
@@ -137,6 +139,7 @@ format_cs_table = [
         format_cs_table_t( OUT_PSD, CS_CMYK, [ CS_GRAY, CS_GRAY_ALPHA, CS_RGB, CS_RGB_ALPHA, CS_CMYK, CS_CMYK_ALPHA, CS_ICC ] ),
 
         format_cs_table_t( OUT_TRACE, CS_RGB, [ CS_RGB ] ),
+        format_cs_table_t( OUT_BBOX, CS_RGB, [ CS_RGB ] ),
         format_cs_table_t( OUT_SVG, CS_RGB, [ CS_RGB ] ),
 
         format_cs_table_t( OUT_TEXT, CS_RGB, [ CS_RGB ] ),
@@ -160,8 +163,8 @@ class worker_t:
         self.ctm = None
         self.tbounds = None
         self.pix = None
-        self.bit = NOne
-        self.cookie = None
+        self.bit = None
+        self.cookie = mupdf.Cookie()
 
 
 output = None
@@ -309,8 +312,8 @@ def usage():
             \t-y -{{,-}}*\tSelect layer config (by number), and toggle the listed entries
 
             \tpages\tcomma separated list of page numbers and ranges
-            ''');
-    sys.exit(1);
+            ''')
+    sys.exit(1)
 
 
 gettime_first = None
@@ -336,7 +339,7 @@ def has_percent_d(s):
 # Output file level (as opposed to page level) headers
 def file_level_headers():
 
-    if output_format == OUT_STEXT or output_format == OUT_TRACE:
+    if output_format in (OUT_STEXT, OUT_TRACE, OUT_BBOX):
         out.write_string( "<?xml version=\"1.0\"?>\n")
 
     if output_format == OUT_HTML:
@@ -344,7 +347,7 @@ def file_level_headers():
     if output_format == OUT_XHTML:
         out.print_stext_header_as_xhtml()
 
-    if output_format == OUT_STEXT or output_format == OUT_TRACE:
+    if output_format in (OUT_STEXT, OUT_TRACE, OUT_BBOX):
         out.write_string( f'<document name="{filename}">\n')
 
     if output_format == OUT_PS:
@@ -358,7 +361,7 @@ def file_level_headers():
         bander = mupdf.BandWriter(out, opts)
 
 def file_level_trailers():
-    if output_format == OUT_STEXT or output_format == OUT_TRACE:
+    if output_format in (OUT_STEXT, OUT_TRACE, OUT_BBOX):
         out.write_string( "</document>\n")
 
     if output_format == OUT_HTML:
@@ -396,7 +399,7 @@ def drawband( page, list_, ctm, tbounds, cookie, band_start, pix):
         pix.gamma_pixmap( gamma_value)
 
     if ((output_format == OUT_PCL or output_format == OUT_PWG) and out_cs == CS_MONO) or (output_format == OUT_PBM) or (output_format == OUT_PKM):
-        bit = mupdf.Bitmap( pix, None, band_start)
+        bit = mupdf.Bitmap( pix, mupdf.Halftone(), band_start)
     return bit
 
 
@@ -406,6 +409,7 @@ def drawband( page, list_, ctm, tbounds, cookie, band_start, pix):
 
 def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, seps):
 
+    global errored
     global output_file_per_page
     global out
     global output_pagenum
@@ -425,22 +429,43 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
         if lowmemory:
             dev.enable_device_hints( mupdf.FZ_NO_CACHE)
         if list_:
-            list_run_display_list( dev, fz_identity, fz_infinite_rect, cookie)
+            list_.run_display_list( dev, fz_identity, fz_infinite_rect, cookie)
         else:
             page.run( dev, fz_identity, cookie)
         out.write_string( "</page>\n")
         dev.close_device()
         dev = None
 
-    elif output_format == OUT_TEXT or output_format == OUT_HTML or output_format == OUT_XHTML or output_format == OUT_STEXT:
-        zoom = resolution / 72;
+    elif output_format == OUT_BBOX:
+        bbox = mupdf.Rect( mupdf.Rect.Fixed_EMPTY)
+        dev = mupdf.Device( bbox)
+        if lowmemory:
+            dev.enable_device_hints( mupdf.FZ_NO_CACHE)
+        if list_:
+            list_.run_display_list( dev, fz_identity, fz_infinite_rect, cookie)
+        else:
+            page.run( dev, fz_identity, cookie)
+        dev.close_device()
+        out.write_string( "<page bbox=\"%s %s %s %s\" mediabox=\"%s %s %s %s\" />\n",
+                bbox.x0,
+                bbox.y0,
+                bbox.x1,
+                bbox.y1,
+                mediabox.x0,
+                mediabox.y0,
+                mediabox.x1,
+                mediabox.y1,
+                )
+
+    elif output_format in (OUT_TEXT, OUT_HTML, OUT_XHTML, OUT_STEXT):
+        zoom = resolution / 72
         ctm = mupdf.Matrix(mupdf.pre_scale(mupdf.rotate(rotation), zoom, zoom))
 
         stext_options = mupdf.StextOptions()
 
         stext_options.flags = mupdf.FZ_STEXT_PRESERVE_IMAGES if (output_format == OUT_HTML or output_format == OUT_XHTML) else 0
         text = mupdf.StextPage( mediabox)
-        dev = mupdf.Device( text, stext_options);
+        dev = mupdf.Device( text, stext_options)
         if lowmemory:
             fz_enable_device_hints( dev, FZ_NO_CACHE)
         if list_:
@@ -460,7 +485,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
             out.write_string( "\f\n")
 
     elif output_format == OUT_SVG:
-        zoom = resolution / 72;
+        zoom = resolution / 72
         ctm = mupdf.Matrix(zoom, zoom)
         ctm.pre_rotate( rotation)
         tbounds = mupdf.Rect(mediabox, ctm)
@@ -488,16 +513,16 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
         ibounds = tbounds.round_rect()
 
         # Make local copies of our width/height
-        w = width;
-        h = height;
+        w = width
+        h = height
 
         # If a resolution is specified, check to see whether w/h are
         # exceeded; if not, unset them. */
         if res_specified:
-            t = ibounds.x1 - ibounds.x0;
+            t = ibounds.x1 - ibounds.x0
             if w and t <= w:
                 w = 0
-            t = ibounds.y1 - ibounds.y0;
+            t = ibounds.y1 - ibounds.y0
             if h and t <= h:
                 h = 0
 
@@ -530,7 +555,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
         band_ibounds = ibounds
         bands = 1
         totalheight = ibounds.y1 - ibounds.y0
-        drawheight = totalheight;
+        drawheight = totalheight
 
         if band_height != 0:
             # Banded rendering; we'll only render to a
@@ -594,7 +619,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
                 pix = w.pix
                 bit = w.bit
                 w.bit = None
-                cookie.increment_errors()
+                cookie.increment_errors(w.cookie.errors())
 
             else:
                 bit = drawband( page, list_, ctm, tbounds, cookie, band * band_height, pix)
@@ -602,7 +627,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
             if output:
                 if bander:
                     if bit:
-                        bander.write_band( bit.stride, drawheight, bit.samples)
+                        bander.write_band( bit.stride(), drawheight, bit.samples())
                     else:
                         bander.write_band( pix.stride(), drawheight, pix.samples())
                 bit = None
@@ -662,7 +687,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
         sys.stderr.write( "\n")
 
     if lowmemory:
-        mupdf.empty_store();
+        mupdf.empty_store()
 
     if showmemory:
         mupdf.dump_glyph_cache_stats(mupdf.stderr())
@@ -743,7 +768,7 @@ def drawpage( doc, pagenum):
         features = " color" if iscolor else " grayscale"
 
     if output_file_per_page:
-        bgprint_flush();
+        bgprint_flush()
         if out:
             out.close_output()
         text_buffer = mupdf.format_output_path( output, pagenum)
@@ -755,13 +780,13 @@ def drawpage( doc, pagenum):
             if not quiet or showfeatures or showtime or showmd5:
                 sys.stderr.write( "page %s %d%s" % (filename, pagenum, features))
 
-        bgprint.started = 1;
-        bgprint.page = page;
-        bgprint.list = list_;
-        bgprint.seps = seps;
-        bgprint.filename = filename;
-        bgprint.pagenum = pagenum;
-        bgprint.interptime = start;
+        bgprint.started = 1
+        bgprint.page = page
+        bgprint.list = list_
+        bgprint.seps = seps
+        bgprint.filename = filename
+        bgprint.pagenum = pagenum
+        bgprint.interptime = start
     else:
         if not quiet or showfeatures or showtime or showmd5:
             sys.stderr.write( "page %s %d%s" % (filename, pagenum, features))
@@ -789,7 +814,7 @@ def drawrange( doc, range_):
                 drawpage( doc, page)
         else:
             for page in range( spage, epage-1, -1):
-                drawpage( doc, page);
+                drawpage( doc, page)
 
 
 
@@ -1098,7 +1123,7 @@ def draw( argv):
         else:
             out = mupdf.Output(output, 0)
     else:
-        quiet = 1; # automatically be quiet if printing to stdout
+        quiet = 1 # automatically be quiet if printing to stdout
         if 0:
             # Windows specific code to make stdout binary.
             if output_format not in( OUT_TEXT, OUT_STEXT, OUT_HTML, OUT_XHTML, OUT_TRACE):
@@ -1148,7 +1173,7 @@ def draw( argv):
                     # Check whether that file exists, and isn't older than
                     # the document.
                     atime = stat_mtime( accelpath)
-                    dtime = stat_mtime( filename);
+                    dtime = stat_mtime( filename)
                     if atime == 0:
                         # No accelerator
                         pass
@@ -1219,12 +1244,12 @@ def draw( argv):
                 if not ignore_errors:
                     raise
                 bgprint_flush()
-                sys.stderr.write( f'ignoring error in {filename}\n');
+                sys.stderr.write( f'ignoring error in {filename}\n')
 
     except Exception as e:
         bgprint_flush()
         sys.stderr.write( f'error: cannot draw \'{filename}\' because: {e}\n')
-        errored = 1;
+        errored = 1
 
     if not output_file_per_page:
         file_level_trailers()
@@ -1247,8 +1272,8 @@ def draw( argv):
                 sys.stderr.write( f'slowest page {timing.maxpage}: {timing.max:.0f}ms\n')
         else:
             sys.stderr.write( f'total {timing.total:.0f}ms ({timing.layout:.0f}ms layout) / {timing.count} pages for an average of {timing.total / timing.count:.0f}ms in {files} files\n')
-            sys.stderr.write( f'fastest layout: {timing.minlayout:.0f}ms ({timing.minlayoutfilename})\n');
-            sys.stderr.write( f'slowest layout: {timing.maxlayout:.0f}ms ({timing.maxlayoutfilename})\n');
+            sys.stderr.write( f'fastest layout: {timing.minlayout:.0f}ms ({timing.minlayoutfilename})\n')
+            sys.stderr.write( f'slowest layout: {timing.maxlayout:.0f}ms ({timing.maxlayoutfilename})\n')
             sys.stderr.write( f'fastest page {timing.minpage}: {timing.min:.0f}ms ({timing.minfilename})\n')
             sys.stderr.write( f'slowest page {timing.maxpage}: {timing.max:.0f}ms ({timing.maxfilename})\n')
 
