@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.lang.reflect.Field;
 import java.util.Vector;
-import java.util.Date;
 
 public class Viewer extends Frame implements WindowListener, ActionListener, ItemListener, TextListener
 {

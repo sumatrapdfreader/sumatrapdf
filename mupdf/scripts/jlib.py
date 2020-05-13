@@ -4,6 +4,7 @@ import codecs
 import inspect
 import io
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -1133,6 +1134,21 @@ def get_filenames( paths):
                     yield path
         else:
             yield name
+
+def remove( path):
+    '''
+    Removes file or directory, without raising exception if it doesn't exist.
+
+    We assert-fail if the path still exists when we return, in case of
+    permission problems etc.
+    '''
+    try:
+        os.remove( path)
+    except Exception:
+        pass
+    shutil.rmtree( path, ignore_errors=1)
+    assert not os.path.exists( path)
+
 
 # Things for figuring out whether files need updating, using mtimes.
 #

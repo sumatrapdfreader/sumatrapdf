@@ -2,6 +2,13 @@
 #include "mupdf/pdf.h"
 
 #include <string.h>
+#include <time.h>
+
+#ifdef _WIN32
+#define timegm _mkgmtime
+#endif
+
+#define isdigit(c) (c >= '0' && c <= '9')
 
 fz_rect
 pdf_to_rect(fz_context *ctx, pdf_obj *array)
@@ -54,6 +61,117 @@ pdf_to_matrix(fz_context *ctx, pdf_obj *array)
 		m.f = pdf_array_get_real(ctx, array, 5);
 		return m;
 	}
+}
+
+int64_t
+pdf_to_date(fz_context *ctx, pdf_obj *time)
+{
+	const char *s = pdf_to_str_buf(ctx, time);
+	int tz_sign, tz_hour, tz_min, tz_adj;
+	struct tm tm;
+	time_t utc;
+
+	if (!s)
+		return -1;
+
+	memset(&tm, 0, sizeof tm);
+	tm.tm_mday = 1;
+
+	tz_sign = 1;
+	tz_hour = 0;
+	tz_min = 0;
+
+	if (s[0] == 'D' && s[1] == ':')
+		s += 2;
+
+	if (!isdigit(s[0]) || !isdigit(s[1]) || !isdigit(s[2]) || !isdigit(s[3]))
+	{
+		fz_warn(ctx, "invalid date format (missing year)");
+		return -1;
+	}
+	tm.tm_year = (s[0]-'0')*1000 + (s[1]-'0')*100 + (s[2]-'0')*10 + (s[3]-'0') - 1900;
+	s += 4;
+
+	if (tm.tm_year < 70)
+	{
+		fz_warn(ctx, "invalid date (year out of range)");
+		return -1;
+	}
+
+	if (isdigit(s[0]) && isdigit(s[1]))
+	{
+		tm.tm_mon = (s[0]-'0')*10 + (s[1]-'0') - 1; /* month is 0-11 in struct tm */
+		s += 2;
+		if (isdigit(s[0]) && isdigit(s[1]))
+		{
+			tm.tm_mday = (s[0]-'0')*10 + (s[1]-'0');
+			s += 2;
+			if (isdigit(s[0]) && isdigit(s[1]))
+			{
+				tm.tm_hour = (s[0]-'0')*10 + (s[1]-'0');
+				s += 2;
+				if (isdigit(s[0]) && isdigit(s[1]))
+				{
+					tm.tm_min = (s[0]-'0')*10 + (s[1]-'0');
+					s += 2;
+					if (isdigit(s[0]) && isdigit(s[1]))
+					{
+						tm.tm_sec = (s[0]-'0')*10 + (s[1]-'0');
+						s += 2;
+					}
+				}
+			}
+		}
+	}
+
+	if (tm.tm_sec > 60 || tm.tm_min > 59 || tm.tm_hour > 23 || tm.tm_mday > 31 || tm.tm_mon > 11)
+	{
+		fz_warn(ctx, "invalid date (a field is out of range)");
+		return -1;
+	}
+
+	if (s[0] == 'Z')
+	{
+		s += 1;
+	}
+	else if ((s[0] == '-' || s[0] == '+') && isdigit(s[1]) && isdigit(s[2]))
+	{
+		tz_sign = (s[0] == '-') ? -1 : 1;
+		tz_hour = (s[1]-'0')*10 + (s[2]-'0');
+		s += 3;
+		if (s[0] == '\'' && isdigit(s[1]) && isdigit(s[2]))
+		{
+			tz_min = (s[1]-'0')*10 + (s[2]-'0');
+			s += 3;
+			if (s[0] == '\'')
+				s += 1;
+		}
+	}
+
+	/* PDF is based on ISO/IEC 8824 which limits time zones from -15 to +16. */
+	if (tz_sign < 0 && (tz_hour > 15 || (tz_hour == 15 && tz_min > 0)))
+	{
+		fz_warn(ctx, "invalid date format (time zone out of range)");
+		return -1;
+	}
+	if (tz_sign > 0 && (tz_hour > 16 || (tz_hour == 16 && tz_min > 0)))
+	{
+		fz_warn(ctx, "invalid date format (time zone out of range)");
+		return -1;
+	}
+
+	if (s[0] != 0)
+		fz_warn(ctx, "invalid date format (garbage at end)");
+
+	utc = timegm(&tm);
+	if (utc == (time_t)-1)
+	{
+		fz_warn(ctx, "date overflow error");
+		return -1;
+	}
+
+	tz_adj = tz_sign * (tz_hour * 3600 + tz_min * 60);
+	return utc - tz_adj;
 }
 
 static int

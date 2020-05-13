@@ -1489,6 +1489,22 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setAuthor
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    getCreationDateNative
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getCreationDateNative
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
+ * Method:    setCreationDate
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setCreationDate
+  (JNIEnv *, jobject, jlong);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFAnnotation
  * Method:    getModificationDateNative
  * Signature: ()J
  */
@@ -2469,6 +2485,30 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_putDictionaryPDFObj
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_putDictionaryPDFObjectPDFObject
   (JNIEnv *, jobject, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFObject
+ * Method:    putDictionaryPDFObjectRect
+ * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;Lcom/artifex/mupdf/fitz/Rect;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_putDictionaryPDFObjectRect
+  (JNIEnv *, jobject, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFObject
+ * Method:    putDictionaryPDFObjectMatrix
+ * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;Lcom/artifex/mupdf/fitz/Matrix;)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_putDictionaryPDFObjectMatrix
+  (JNIEnv *, jobject, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFObject
+ * Method:    putDictionaryPDFObjectDate
+ * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;J)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFObject_putDictionaryPDFObjectDate
+  (JNIEnv *, jobject, jobject, jlong);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFObject

@@ -1569,7 +1569,6 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 	int vnum;
 	size_t max_digest_size;
 	char *buf = NULL;
-	char date_string[40];
 
 	vnum = pdf_create_object(ctx, doc);
 	indv = pdf_new_indirect(ctx, doc, vnum, 0);
@@ -1601,8 +1600,7 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 		pdf_dict_put(ctx, v, PDF_NAME(Filter), PDF_NAME(Adobe_PPKLite));
 		pdf_dict_put(ctx, v, PDF_NAME(SubFilter), PDF_NAME(adbe_pkcs7_detached));
 		pdf_dict_put(ctx, v, PDF_NAME(Type), PDF_NAME(Sig));
-		pdf_format_date(ctx, date_string, sizeof date_string, stime);
-		pdf_dict_put_text_string(ctx, v, PDF_NAME(M), date_string);
+		pdf_dict_put_date(ctx, v, PDF_NAME(M), stime);
 
 		o = pdf_new_array(ctx, doc, 1);
 		pdf_dict_put(ctx, v, PDF_NAME(Reference), o);

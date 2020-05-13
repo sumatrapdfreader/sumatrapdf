@@ -9063,6 +9063,53 @@ FUN(PDFObject_putDictionaryPDFObjectPDFObject)(JNIEnv *env, jobject self, jobjec
 }
 
 JNIEXPORT void JNICALL
+ FUN(PDFObject_putDictionaryPDFObjectRect)(JNIEnv *env, jobject self, jobject jname, jobject jrect)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *dict = from_PDFObject(env, self);
+	pdf_obj *name = from_PDFObject(env, jname);
+	fz_rect rect  = from_Rect(env, jrect);
+
+	if (!ctx || !dict) return;
+
+	fz_try(ctx)
+		pdf_dict_put_rect(ctx, dict, name, rect);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFObject_putDictionaryPDFObjectMatrix)(JNIEnv *env, jobject self, jobject jname, jobject jmatrix)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *dict = from_PDFObject(env, self);
+	pdf_obj *name = from_PDFObject(env, jname);
+	fz_matrix matrix = from_Matrix(env, jmatrix);
+
+	if (!ctx || !dict) return;
+
+	fz_try(ctx)
+		pdf_dict_put_matrix(ctx, dict, name, matrix);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFObject_putDictionaryPDFObjectDate)(JNIEnv *env, jobject self, jobject jname, jlong secs)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *dict = from_PDFObject(env, self);
+	pdf_obj *name = from_PDFObject(env, jname);
+
+	if (!ctx || !dict) return;
+
+	fz_try(ctx)
+		pdf_dict_put_date(ctx, dict, name, secs);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+}
+
+JNIEXPORT void JNICALL
 FUN(PDFObject_deleteArray)(JNIEnv *env, jobject self, jint index)
 {
 	fz_context *ctx = get_context(env);
@@ -9704,6 +9751,41 @@ FUN(PDFAnnotation_setModificationDate)(JNIEnv *env, jobject self, jlong time)
 
 	fz_try(ctx)
 		pdf_set_annot_modification_date(ctx, annot, time / 1000);
+	fz_catch(ctx)
+	{
+		jni_rethrow(env, ctx);
+		return;
+	}
+}
+
+JNIEXPORT jlong JNICALL
+FUN(PDFAnnotation_getCreationDateNative)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+	jlong t;
+
+	if (!ctx || !annot) return -1;
+
+	fz_try(ctx)
+		t = pdf_annot_creation_date(ctx, annot);
+	fz_catch(ctx)
+	{
+		jni_rethrow(env, ctx);
+		return -1;
+	}
+
+	return t * 1000;
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFAnnotation_setCreationDate)(JNIEnv *env, jobject self, jlong time)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *annot = from_PDFAnnotation(env, self);
+
+	fz_try(ctx)
+		pdf_set_annot_creation_date(ctx, annot, time / 1000);
 	fz_catch(ctx)
 	{
 		jni_rethrow(env, ctx);

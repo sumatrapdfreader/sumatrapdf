@@ -606,7 +606,7 @@ static char *x509_get_name_entry_string(fz_context *ctx, X509_NAME *name, int ni
 	int idx = X509_NAME_get_index_by_NID(name, nid, -1);
 	X509_NAME_ENTRY *entry = X509_NAME_get_entry(name, idx);
 	ASN1_STRING *data = X509_NAME_ENTRY_get_data(entry);
-	return fz_strdup(ctx, (const char *)ASN1_STRING_get0_data(data));
+	return data ? fz_strdup(ctx, (const char *)ASN1_STRING_get0_data(data)) : NULL;
 }
 
 static pdf_pkcs7_designated_name *x509_designated_name(fz_context *ctx, X509 *x509)

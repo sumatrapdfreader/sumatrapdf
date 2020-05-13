@@ -495,7 +495,6 @@ void pdf_set_annot_contents(fz_context *ctx, pdf_annot *annot, const char *text)
 const char *pdf_annot_author(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_author(fz_context *ctx, pdf_annot *annot, const char *author);
 
-void pdf_format_date(fz_context *ctx, char *s, int n, int64_t secs);
 int64_t pdf_annot_modification_date(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_modification_date(fz_context *ctx, pdf_annot *annot, int64_t time);
 int64_t pdf_annot_creation_date(fz_context *ctx, pdf_annot *annot);

@@ -205,9 +205,16 @@ svg_parse_transform(fz_context *ctx, svg_document *doc, const char *str, fz_matr
 
 		else if (!strcmp(keyword, "rotate"))
 		{
-			if (nargs != 1)
+			if (nargs == 1)
+				transform = fz_concat(fz_rotate(args[0]), transform);
+			else if (nargs == 3)
+			{
+				transform = fz_concat(fz_translate(args[1], args[2]), transform);
+				transform = fz_concat(fz_rotate(args[0]), transform);
+				transform = fz_concat(fz_translate(-args[1], -args[2]), transform);
+			}
+			else
 				fz_throw(ctx, FZ_ERROR_SYNTAX, "wrong number of arguments to rotate(): %d", nargs);
-			transform = fz_concat(fz_rotate(args[0]), transform);
 		}
 
 		else if (!strcmp(keyword, "skewX"))

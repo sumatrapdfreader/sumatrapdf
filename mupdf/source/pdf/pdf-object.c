@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define PDF_MAKE_NAME(STRING,NAME) STRING,
 static const char *PDF_NAME_LIST[] = {
@@ -851,6 +852,22 @@ pdf_obj *pdf_new_matrix(fz_context *ctx, pdf_document *doc, fz_matrix mtx)
 		fz_rethrow(ctx);
 	}
 	return arr;
+}
+
+pdf_obj *pdf_new_date(fz_context *ctx, pdf_document *doc, int64_t time)
+{
+	char s[40];
+	time_t secs = time;
+#ifdef _POSIX_SOURCE
+	struct tm tmbuf, *tm = gmtime_r(&secs, &tmbuf);
+#else
+	struct tm *tm = gmtime(&secs);
+#endif
+
+	if (time < 0 || !tm || !strftime(s, nelem(s), "D:%Y%m%d%H%M%SZ", tm))
+		return NULL;
+
+	return pdf_new_string(ctx, s, strlen(s));
 }
 
 /* dicts may only have names as keys! */
@@ -2293,6 +2310,11 @@ void pdf_dict_put_matrix(fz_context *ctx, pdf_obj *dict, pdf_obj *key, fz_matrix
 	pdf_dict_put_drop(ctx, dict, key, pdf_new_matrix(ctx, NULL, x));
 }
 
+void pdf_dict_put_date(fz_context *ctx, pdf_obj *dict, pdf_obj *key, int64_t time)
+{
+	pdf_dict_put_drop(ctx, dict, key, pdf_new_date(ctx, NULL, time));
+}
+
 pdf_obj *pdf_dict_put_array(fz_context *ctx, pdf_obj *dict, pdf_obj *key, int initial)
 {
 	pdf_obj *obj = pdf_new_array(ctx, pdf_get_bound_document(ctx, dict), initial);
@@ -2396,6 +2418,11 @@ fz_rect pdf_dict_get_rect(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
 fz_matrix pdf_dict_get_matrix(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
 {
 	return pdf_to_matrix(ctx, pdf_dict_get(ctx, dict, key));
+}
+
+int64_t pdf_dict_get_date(fz_context *ctx, pdf_obj *dict, pdf_obj *key)
+{
+	return pdf_to_date(ctx, pdf_dict_get(ctx, dict, key));
 }
 
 int pdf_array_get_bool(fz_context *ctx, pdf_obj *array, int index)

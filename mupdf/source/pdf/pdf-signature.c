@@ -227,13 +227,13 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 			pdf_update_signature_appearance(ctx, (pdf_annot *)widget, dn->cn, dn_str, len?now_str:NULL);
 		}
 
-		pdf_signature_set_value(ctx, doc, wobj, signer, now);
-
 		/* Update the SigFlags for the document if required */
 		form = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm");
 		sf = pdf_to_int(ctx, pdf_dict_get(ctx, form, PDF_NAME(SigFlags)));
 		if ((sf & (PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY)) != (PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY))
 			pdf_dict_put_drop(ctx, form, PDF_NAME(SigFlags), pdf_new_int(ctx, sf | PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY));
+
+		pdf_signature_set_value(ctx, doc, wobj, signer, now);
 	}
 	fz_always(ctx)
 	{

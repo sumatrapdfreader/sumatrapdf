@@ -406,7 +406,7 @@ static void do_annotate_author(void)
 static void do_annotate_date(void)
 {
 	time_t secs = pdf_annot_modification_date(ctx, selected_annot);
-	if (secs > 0)
+	if (secs >= 0)
 	{
 #ifdef _POSIX_SOURCE
 		struct tm tmbuf, *tm = gmtime_r(&secs, &tmbuf);

@@ -100,8 +100,16 @@ public class PDFAnnotation
 	public native void setInteriorColor(float[] color);
 	public native String getAuthor();
 	public native void setAuthor(String author);
+	protected native long getCreationDateNative();
+	protected native void setCreationDate(long time);
 	protected native long getModificationDateNative();
 	protected native void setModificationDate(long time);
+	public Date getCreationDate() {
+		return new Date(getCreationDateNative());
+	}
+	public void setCreationDate(Date date) {
+		setCreationDate(date.getTime());
+	}
 	public Date getModificationDate() {
 		return new Date(getModificationDateNative());
 	}
