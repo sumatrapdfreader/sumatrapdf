@@ -1,18 +1,29 @@
 
 Annotations:
- - implement EnginePdf::GetAnnotations
+ - finish EnginePdf::GetAnnotations
  - display rect info in EditAnnotationsWindow
- - make EditAnnotatinsWindow wider by default
+ - display flags
+ - display author info in EditAnnotationsWindow
+ - display date
+ - display contents in EditAnnotationsWindow
+ - display color
+ - display opacity
+ - display count of quad points
+ - display "popup" info 
+ - allow changing icon (for text annotations)
+ - [X] make EditAnnotatinsWindow wider by default
+ - when selecting annotation in list box, go to its page
+ - allow moving some annotations (TEXT)
+ - change our text higlight to match PDF i.e. use quad points
+ - add -dump-annots cmd-line arg that prints out all annotation info from PDF file
+ - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
+ - implement "Delete annotation"
 ------
 
 possible refactorings:
 - rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()
 - split LoadPage() into LoadPage() and LoadPagePartial()
-- [X] convert Rect in Layout.h to be like Rect
-- [X] replace Rect with Rect typedef
-- [X] rename Rect, Point, Size => Rect, Point, Size
-- [X] simplify WinDynCalls.h
-- [x] remove class ClientRect and class WindowRect, those can be functions returning Rect
+returning Rect
 - replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
 - remove DirectDraw test and don't link with d2d
@@ -126,3 +137,9 @@ icons:
 
 - convert to .ico with https://www.icoconverter.com/
 - online icon editor: https://redketchup.io/icon-editor could be used to improve the low-resolution icons.
+
+- [X] convert Rect in Layout.h to be like Rect
+- [X] replace Rect with Rect typedef
+- [X] rename Rect, Point, Size => Rect, Point, Size
+- [X] simplify WinDynCalls.h
+- [x] remove class ClientRect and class WindowRect, those can be functions

@@ -50,7 +50,7 @@ struct EditAnnotationsWindow {
     Vec<Annotation*>* annotations = nullptr;
 
     ~EditAnnotationsWindow();
-    bool Create(Vec<Annotation*>* annots);
+    bool Create();
     void CreateMainLayout();
     void CloseHandler(WindowCloseEvent* ev);
     void SizeHandler(SizeEvent* ev);
@@ -58,7 +58,7 @@ struct EditAnnotationsWindow {
     void ButtonDeleteHandler();
     void CloseWindow();
     void DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev);
-    void RebuildAnnotations(Vec<Annotation*>* annots);
+    void RebuildAnnotations();
 };
 
 void DeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
@@ -207,18 +207,16 @@ void EditAnnotationsWindow::CreateMainLayout() {
     mainLayout = vbox;
 }
 
-void EditAnnotationsWindow::RebuildAnnotations(Vec<Annotation*>* annots) {
-    annotations = annots;
-
+void EditAnnotationsWindow::RebuildAnnotations() {
     auto model = new ListBoxModelStrings();
     int n = 0;
-    if (annots) {
-        n = annots->isize();
+    if (annotations) {
+        n = annotations->isize();
     }
 
     str::Str s;
     for (int i = 0; i < n; i++) {
-        auto annot = annots->at(i);
+        auto annot = annotations->at(i);
         s.Reset();
         s.AppendFmt("page %d, ", annot->pageNo);
         s.AppendView(AnnotationName(annot->type));
@@ -230,14 +228,14 @@ void EditAnnotationsWindow::RebuildAnnotations(Vec<Annotation*>* annots) {
     lbModel = model;
 }
 
-bool EditAnnotationsWindow::Create(Vec<Annotation*>* annots) {
+bool EditAnnotationsWindow::Create() {
     auto w = new Window();
     // w->isDialog = true;
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Annotations");
-    int dx = DpiScale(nullptr, 480);
-    int dy = DpiScale(nullptr, 640);
-    w->initialSize = {dx, dy};
+    // int dx = DpiScale(nullptr, 480);
+    // int dy = DpiScale(nullptr, 640);
+    // w->initialSize = {dx, dy};
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
     // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
@@ -251,8 +249,8 @@ bool EditAnnotationsWindow::Create(Vec<Annotation*>* annots) {
     w->onSize = std::bind(&EditAnnotationsWindow::SizeHandler, this, _1);
 
     CreateMainLayout();
-    RebuildAnnotations(annots);
-    LayoutAndSizeToContent(mainLayout, 320, 640, w->hwnd);
+    RebuildAnnotations();
+    LayoutAndSizeToContent(mainLayout, 520, 720, w->hwnd);
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
@@ -265,7 +263,6 @@ void StartEditAnnotations(TabInfo* tab) {
     if (tab->editAnnotsWindow) {
         HWND hwnd = tab->editAnnotsWindow->mainWindow->hwnd;
         BringWindowToTop(hwnd);
-        ;
         return;
     }
     DisplayModel* dm = tab->AsFixed();
@@ -289,6 +286,7 @@ void StartEditAnnotations(TabInfo* tab) {
     auto win = new EditAnnotationsWindow();
     win->tab = tab;
     tab->editAnnotsWindow = win;
-    bool ok = win->Create(annots);
+    win->annotations = annots;
+    bool ok = win->Create();
     CrashIf(!ok);
 }

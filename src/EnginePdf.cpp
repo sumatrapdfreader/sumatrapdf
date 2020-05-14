@@ -2085,7 +2085,7 @@ static Annotation* AnnotationFromPdfAnnot(fz_context* ctx, pdf_annot* annot, int
     res->ctx = ctx;
     res->pdf_annot = annot;
     res->type = typ;
-    fz_rect rc = pdf_bound_annot(ctx, annot);
+    fz_rect rc = pdf_annot_rect(ctx, annot);
     res->rect = fz_rect_to_RectD(rc);
     float col[4];
     int nColComponents;
