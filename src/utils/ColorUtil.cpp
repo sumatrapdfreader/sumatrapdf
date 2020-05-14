@@ -72,6 +72,21 @@ static void UnpackRgbFloat(COLORREF c, float& r, float& g, float& b) {
     b /= 255.0f;
 }
 
+/*
+        n = 1 (grey), 3 (rgb) or 4 (cmyk).
+*/
+COLORREF FromPdfColor(int n, float color[4]) {
+    if (n == 1) {
+        return MkRgbaFloat(color[0], color[0], color[0], 0);
+    }
+    if (n == 3) {
+        return MkRgbaFloat(color[0], color[1], color[2], 0);
+    }
+    // TODO: what is CMYK?
+    CrashIf(true);
+    return 0;
+}
+
 COLORREF FromPdfColorRgba(float color[4]) {
     return MkRgbaFloat(color[0], color[1], color[2], color[3]);
 }

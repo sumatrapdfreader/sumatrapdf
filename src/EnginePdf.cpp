@@ -323,7 +323,7 @@ class EnginePdf : public EngineBase {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    void GetAnnotations(Vec<Annotation*>* annotsOut) override;
+    int GetAnnotations(Vec<Annotation*>* annotsOut) override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
     static EngineBase* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
@@ -2019,11 +2019,119 @@ int EnginePdf::GetPageByLabel(const WCHAR* label) const {
     return pageNo;
 }
 
-void EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
-    // TODO: implement me
-    // for (int i = 1; i < pageCount; i++) {
-    //     auto page = GetPage(i);
-    // }
+static AnnotationType AnnotationTypeFromPdfAnnot(fz_context* ctx, pdf_annot* annot) {
+    auto tp = pdf_annot_type(ctx, annot);
+    // TODO: support more types
+    // PDF_ANNOT_LINK,
+    // PDF_ANNOT_FREE_TEXT,
+    // PDF_ANNOT_LINE,
+    // PDF_ANNOT_SQUARE,
+    // PDF_ANNOT_CIRCLE,
+    // PDF_ANNOT_POLYGON,
+    // PDF_ANNOT_POLY_LINE,
+    // PDF_ANNOT_REDACT,
+    // PDF_ANNOT_STAMP,
+    // PDF_ANNOT_CARET,
+    // PDF_ANNOT_INK,
+    // PDF_ANNOT_POPUP,
+    // PDF_ANNOT_FILE_ATTACHMENT,
+    // PDF_ANNOT_SOUND,
+    // PDF_ANNOT_MOVIE,
+    // PDF_ANNOT_WIDGET,
+    // PDF_ANNOT_SCREEN,
+    // PDF_ANNOT_PRINTER_MARK,
+    // PDF_ANNOT_TRAP_NET,
+    // PDF_ANNOT_WATERMARK,
+    // PDF_ANNOT_3D,
+
+    switch (tp) {
+        case PDF_ANNOT_HIGHLIGHT:
+            return AnnotationType::Highlight;
+        case PDF_ANNOT_UNDERLINE:
+            return AnnotationType::Underline;
+        case PDF_ANNOT_STRIKE_OUT:
+            return AnnotationType::StrikeOut;
+        case PDF_ANNOT_SQUIGGLY:
+            return AnnotationType::Squiggly;
+        case PDF_ANNOT_TEXT:
+            return AnnotationType::Text;
+    }
+    CrashIf(true);
+    return AnnotationType::None;
+}
+
+bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv) {
+    size_t n = sv.size();
+    if (n == 0) {
+        return true;
+    }
+    for (size_t i = 0; i < n; i++) {
+        char c = sv[i];
+        if (!str::IsWs(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static Annotation* AnnotationFromPdfAnnot(fz_context* ctx, pdf_annot* annot, int pageNo) {
+    AnnotationType typ = AnnotationTypeFromPdfAnnot(ctx, annot);
+    if (typ == AnnotationType::None) {
+        // unsupported type
+        return nullptr;
+    }
+    Annotation* res = new Annotation();
+    res->pageNo = pageNo;
+    res->ctx = ctx;
+    res->pdf_annot = annot;
+    res->type = typ;
+    fz_rect rc = pdf_bound_annot(ctx, annot);
+    res->rect = fz_rect_to_RectD(rc);
+    float col[4];
+    int nColComponents;
+    pdf_annot_color(ctx, annot, &nColComponents, col);
+    res->color = FromPdfColor(nColComponents, col);
+    const char* s = pdf_annot_contents(ctx, annot);
+    res->contents.Set(s);
+    s = pdf_annot_author(ctx, annot);
+    if (!IsStringEmptyOrWhiteSpaceOnly(s)) {
+        res->author.Set(s);
+    }
+
+    // TODO: implement those
+    // pdf_annot_opacity(ctx, annot)
+    // pdf_annot_border
+    // pdf_annot_language
+    // pdf_annot_quadding
+    // pdf_annot_interior_color
+    // pdf_annot_flags
+    // pdf_annot_quad_point_count / pdf_annot_quad_point
+    // pdf_annot_ink_list_count / pdf_annot_ink_list_stroke_count / pdf_annot_ink_list_stroke_vertex
+    // pdf_annot_line_start_style, pdf_annot_line_end_style
+    // pdf_annot_icon_name
+    // pdf_annot_line
+    // pdf_annot_vertex_count
+    // pdf_annot_modification_date / pdf_annot_creation_date
+
+    return res;
+}
+
+int EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
+    int nAnnots = 0;
+    for (int i = 1; i < pageCount; i++) {
+        auto pi = GetFzPageInfo(i, false);
+        pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pi->page);
+        pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
+        while (annot) {
+            Annotation* a = AnnotationFromPdfAnnot(ctx, annot, i);
+            if (a) {
+                annotsOut->Append(a);
+                nAnnots++;
+            }
+            annot = pdf_next_annot(ctx, annot);
+        }
+    }
+    return nAnnots;
 }
 
 EngineBase* EnginePdf::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {

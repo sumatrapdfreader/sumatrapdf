@@ -6,6 +6,8 @@ Annotations:
 ------
 
 possible refactorings:
+- rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()
+- split LoadPage() into LoadPage() and LoadPagePartial()
 - [X] convert Rect in Layout.h to be like Rect
 - [X] replace Rect with Rect typedef
 - [X] rename Rect, Point, Size => Rect, Point, Size

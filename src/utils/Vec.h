@@ -532,9 +532,9 @@ class Str : public Vec<char> {
         return true;
     }
 
-    void Set(std::string_view s) {
+    void Set(std::string_view sv) {
         Reset();
-        AppendView(s);
+        AppendView(sv);
     }
 
     char* Get() const {

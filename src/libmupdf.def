@@ -42,7 +42,6 @@ EXPORTS
 	fz_rect_from_quad
 	fz_new_outline
 	;pdf_parse_file_spec
-	pdf_annot_rect
 	pdf_field_flags
 	pdf_field_label
 	fz_drop_document
@@ -450,18 +449,20 @@ EXPORTS
 	pdf_next_annot
 	pdf_bound_annot
 	pdf_annot_type
+	pdf_annot_rect
+	pdf_annot_color
+	pdf_annot_author
+	pdf_annot_contents
+	pdf_update_annot
+	pdf_create_annot
+	pdf_delete_annot
+	pdf_set_annot_contents
 	pdf_run_annot
 	pdf_parse_link_dest
 	pdf_lookup_dest
 	pdf_lookup_name
 	pdf_load_name_tree
 	pdf_load_link_annots
-	pdf_load_annots
-	pdf_update_annot
-	pdf_create_annot
-	pdf_delete_annot
-	pdf_set_annot_contents
-	pdf_annot_contents
 
 	pdf_new_cmap
 	pdf_keep_cmap

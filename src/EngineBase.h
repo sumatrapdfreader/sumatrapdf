@@ -347,7 +347,7 @@ class EngineBase {
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
 
     // Get annotations saved in the document (only applies to PDF docs)
-    virtual void GetAnnotations(Vec<Annotation*>* annotsOut);
+    virtual int GetAnnotations(Vec<Annotation*>* annotsOut);
 
     // informs the engine about annotations the user made so that they can be rendered, etc.
     // (this call supercedes any prior call to SetUserAnnotations)

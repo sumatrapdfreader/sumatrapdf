@@ -15,6 +15,7 @@ void UnpackRgb(COLORREF, u8& r, u8& g, u8& b);
 void UnpackRgba(COLORREF, u8& r, u8& g, u8& b, u8& a);
 
 // float is in range 0...1
+COLORREF FromPdfColor(int n, float color[4]);
 COLORREF FromPdfColorRgba(float col[4]);
 COLORREF FromPdfColorRgb(float col[3]);
 void ToPdfRgb(COLORREF c, float col[3]);

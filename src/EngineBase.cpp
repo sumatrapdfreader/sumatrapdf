@@ -478,8 +478,9 @@ float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
-void EngineBase::GetAnnotations(Vec<Annotation*>* annotsOut) {
+int EngineBase::GetAnnotations(Vec<Annotation*>* annotsOut) {
     // no-op implementation for most file types
+    return 0;
 }
 
 void EngineBase::SetUserAnnotations(Vec<Annotation*>* annots) {

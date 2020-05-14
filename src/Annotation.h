@@ -1,12 +1,16 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+extern "C" struct pdf_annot;
+extern "C" struct fz_context;
+
 enum class AnnotationType {
     None,
     Highlight,
     Underline,
     StrikeOut,
     Squiggly,
+    Text,
 };
 
 // an user annotation on page
@@ -15,10 +19,18 @@ struct Annotation {
     int pageNo = -1;
     RectD rect = {};
     COLORREF color = 0;
+
+    str::Str contents;
+    str::Str author;
+
     // either new annotation or has been modified
     bool isChanged = false;
     // deleted are not shown but can be undeleted
     bool isDeleted = false;
+
+    // set if constructed from mupdf annotation
+    fz_context* ctx = nullptr;
+    pdf_annot* pdf_annot = nullptr;
 
     Annotation() = default;
     Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color);

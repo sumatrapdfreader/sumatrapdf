@@ -47,7 +47,6 @@ struct EditAnnotationsWindow {
 
     ListBoxModel* lbModel = nullptr;
 
-    // Not owned by us
     Vec<Annotation*>* annotations = nullptr;
 
     ~EditAnnotationsWindow();
@@ -67,6 +66,15 @@ void DeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
 }
 
 EditAnnotationsWindow::~EditAnnotationsWindow() {
+    int nAnnots = annotations->isize();
+    for (int i = 0; i < nAnnots; i++) {
+        Annotation* a = annotations->at(i);
+        if (a->pdf_annot) {
+            // hacky: only annotations with pdf_annot set belong to us
+            delete a;
+        }
+    }
+    delete annotations;
     delete mainWindow;
     delete mainLayout;
     delete lbModel;
@@ -256,14 +264,28 @@ bool EditAnnotationsWindow::Create(Vec<Annotation*>* annots) {
 void StartEditAnnotations(TabInfo* tab) {
     if (tab->editAnnotsWindow) {
         HWND hwnd = tab->editAnnotsWindow->mainWindow->hwnd;
-        BringWindowToTop(hwnd);        ;
+        BringWindowToTop(hwnd);
+        ;
         return;
     }
-    Vec<Annotation*>* annots = nullptr;
     DisplayModel* dm = tab->AsFixed();
-    if (dm) {
-        annots = dm->userAnnots;
+    CrashIf(!dm);
+    if (!dm) {
+        return;
     }
+
+    Vec<Annotation*>* annots = new Vec<Annotation*>();
+    // those annotations are owned by us
+    dm->GetEngine()->GetAnnotations(annots);
+
+    // those annotations are owned by DisplayModel
+    // TODO: for uniformity, make a copy of them
+    if (dm->userAnnots) {
+        for (auto a : *dm->userAnnots) {
+            annots->Append(a);
+        }
+    }
+
     auto win = new EditAnnotationsWindow();
     win->tab = tab;
     tab->editAnnotsWindow = win;

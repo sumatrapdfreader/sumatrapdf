@@ -94,4 +94,3 @@ void TooltipCtrl::SetDelayTime(int type, int timeInMs) {
     CrashIf(timeInMs > 32767); // TODO: or is it 65535?
     SendMessageW(hwnd, TTM_SETDELAYTIME, type, (LPARAM)timeInMs);
 }
-
