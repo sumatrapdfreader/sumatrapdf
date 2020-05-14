@@ -101,11 +101,29 @@ void EditAnnotationsWindow::ButtonCancelHandler() {
     CloseWindow();
 }
 
+static void ShowAnnotationRect(EditAnnotationsWindow* w, int annotNo) {
+    w->staticRect->SetIsVisible(annotNo >= 0);
+    if (annotNo < 0) {
+        return;
+    }
+    Annotation* annot = w->annotations->at(annotNo);
+    str::Str s;
+    int x = (int)annot->rect.x;
+    int y = (int)annot->rect.y;
+    int dx = (int)annot->rect.Dx();
+    int dy = (int)annot->rect.Dy();
+    s.AppendFmt("Rect: %d %d %d %d", x, y, dx, dy);
+    w->staticRect->SetText(s.as_view());
+}
+
 void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev) {
-    // TODO: implement me
-    bool deleteButtonEnabled = (ev->idx >= 0);
-    buttonDelete->SetIsEnabled(deleteButtonEnabled);
-    MessageBoxNYI(mainWindow->hwnd);
+    // TODO: finish me
+    int itemNo = ev->idx;
+    bool itemSelected = (itemNo >= 0);
+    buttonDelete->SetIsEnabled(itemSelected);
+    ShowAnnotationRect(this, itemNo);
+    // TODO: go to page with selected annotation
+    // MessageBoxNYI(mainWindow->hwnd);
 }
 
 void EditAnnotationsWindow::DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev) {

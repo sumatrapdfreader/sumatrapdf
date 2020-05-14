@@ -1,7 +1,6 @@
 
 Annotations:
  - finish EnginePdf::GetAnnotations
- - display rect info in EditAnnotationsWindow
  - display flags
  - display author info in EditAnnotationsWindow
  - display date
@@ -11,13 +10,16 @@ Annotations:
  - display count of quad points
  - display "popup" info (obj = pdf_dict_get(ctx, selected_annot->obj, PDF_NAME(Popup));)
  - allow changing icon (for text annotations)
- - [X] make EditAnnotatinsWindow wider by default
  - when selecting annotation in list box, go to its page
  - allow moving some annotations (TEXT)
  - change our text higlight to match PDF i.e. use quad points
  - add -dump-annots cmd-line arg that prints out all annotation info from PDF file
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
  - implement "Delete annotation"
+ - size EditAnnotationsWindow to be the same as main window (but limit
+ )
+ - [X] display rect info in EditAnnotationsWindow
+ - [X] make EditAnnotationsWindow wider by default
 ------
 
 possible refactorings:
