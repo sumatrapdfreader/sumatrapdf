@@ -1,8 +1,8 @@
 
 Annotations:
- - EditAnnotationsWindow and TabInfo must self-reference
  - implement EnginePdf::GetAnnotations
  - display rect info in EditAnnotationsWindow
+ - make EditAnnotatinsWindow wider by default
 ------
 
 possible refactorings:

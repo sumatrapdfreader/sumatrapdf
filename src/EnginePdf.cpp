@@ -1196,7 +1196,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     fz_var(bitmap);
     fz_var(list);
 
-    Vec<Annotation*> annots = GetAnnotationsForPage(userAnnots, pageNo);
+    Vec<Annotation*> annots = FilterAnnotationsForPage(userAnnots, pageNo);
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, page);
@@ -1935,7 +1935,7 @@ bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
             FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
             pdf_page* page = pdf_page_from_fz_page(ctx, pageInfo->page);
 
-            pageAnnots = GetAnnotationsForPage(userAnnots, pageNo);
+            pageAnnots = FilterAnnotationsForPage(userAnnots, pageNo);
             if (pageAnnots.size() == 0) {
                 continue;
             }
@@ -2021,6 +2021,9 @@ int EnginePdf::GetPageByLabel(const WCHAR* label) const {
 
 void EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
     // TODO: implement me
+    // for (int i = 1; i < pageCount; i++) {
+    //     auto page = GetPage(i);
+    // }
 }
 
 EngineBase* EnginePdf::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {

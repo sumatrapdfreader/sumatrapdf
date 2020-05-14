@@ -45,7 +45,7 @@ void DeleteVecAnnotations(Vec<Annotation*>* annots) {
     delete annots;
 }
 
-Vec<Annotation*> GetAnnotationsForPage(Vec<Annotation*>* annots, int pageNo) {
+Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo) {
     Vec<Annotation*> result;
     if (!annots) {
         return result;

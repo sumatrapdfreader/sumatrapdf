@@ -650,7 +650,7 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
     fz_var(pix);
     fz_var(bitmap);
 
-    Vec<Annotation*> pageAnnots = GetAnnotationsForPage(userAnnots, args.pageNo);
+    Vec<Annotation*> pageAnnots = FilterAnnotationsForPage(userAnnots, args.pageNo);
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, page);

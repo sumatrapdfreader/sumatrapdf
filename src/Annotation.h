@@ -29,4 +29,4 @@ std::string_view AnnotationName(AnnotationType);
 bool IsAnnotationEq(Annotation* a1, Annotation* a2);
 
 void DeleteVecAnnotations(Vec<Annotation*>* annots);
-Vec<Annotation*> GetAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
+Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
