@@ -17,8 +17,20 @@ struct ListBoxModelStrings : ListBoxModel {
     std::string_view Item(int) override;
 };
 
+struct ListBoxCtrl;
+
+struct ListBoxSelectionChangedEvent : WndEvent {
+    ListBoxCtrl* listBox = nullptr;
+    int idx = 0;
+    std::string_view item;
+};
+
+typedef std::function<void(ListBoxSelectionChangedEvent*)> ListBoxSelectionChangedHandler;
+
 struct ListBoxCtrl : WindowBase {
     ListBoxModel* model = nullptr;
+    ListBoxSelectionChangedHandler onSelectionChanged = nullptr;
+
     Size minSize{120, 32};
 
     ListBoxCtrl(HWND parent);
@@ -27,8 +39,8 @@ struct ListBoxCtrl : WindowBase {
 
     Size GetIdealSize() override;
 
-    int GetSelectedItem();
-    bool SetSelectedItem(int);
+    int GetCurrentSelection();
+    bool SetCurrentSelection(int);
     void SetModel(ListBoxModel*);
 };
 

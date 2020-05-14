@@ -799,10 +799,10 @@ void LoadTocTree(WindowInfo* win) {
     }
 
     if (tab->altBookmarks.size() > 0) {
-        win->altBookmarks->onDropDownSelectionChanged = dropDownSelectionChanged;
+        win->altBookmarks->onSelectionChanged = dropDownSelectionChanged;
         win->altBookmarks->SetIsVisible(true);
     } else {
-        win->altBookmarks->onDropDownSelectionChanged = nullptr;
+        win->altBookmarks->onSelectionChanged = nullptr;
         win->altBookmarks->SetIsVisible(false);
     }
 

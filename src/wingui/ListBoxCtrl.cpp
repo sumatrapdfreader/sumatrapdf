@@ -59,6 +59,30 @@ static void FillWithItems(ListBoxCtrl* w, ListBoxModel* model) {
     }
 }
 
+static void DispatchSelectionChanged(ListBoxCtrl* w, WndEvent* ev) {
+    ListBoxSelectionChangedEvent a;
+    CopyWndEvent cp(&a, ev);
+    a.listBox = w;
+    a.idx = w->GetCurrentSelection();
+    std::string_view s;
+    if (a.idx >= 0 && a.idx < w->model->ItemsCount()) {
+        a.item = w->model->Item(a.idx);
+    }
+    w->onSelectionChanged(&a);
+}
+
+static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+    auto w = (ListBoxCtrl*)user;
+    UINT msg = ev->msg;
+    CrashIf(msg != WM_COMMAND);
+    WPARAM wp = ev->wparam;
+    auto code = HIWORD(wp);
+    if (code == LBN_SELCHANGE && w->onSelectionChanged) {
+        DispatchSelectionChanged(w, ev);
+        return;
+    }
+}
+
 bool ListBoxCtrl::Create() {
     bool ok = WindowBase::Create();
     // TODO: update ideal size based on the size of the model?
@@ -68,6 +92,8 @@ bool ListBoxCtrl::Create() {
     if (model != nullptr) {
         FillWithItems(this, model);
     }
+    void* user = this;
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
     return ok;
 }
 
@@ -75,12 +101,12 @@ Size ListBoxCtrl::GetIdealSize() {
     return minSize;
 }
 
-int ListBoxCtrl::GetSelectedItem() {
+int ListBoxCtrl::GetCurrentSelection() {
     LRESULT res = ListBox_GetCurSel(hwnd);
     return (int)res;
 }
 
-bool ListBoxCtrl::SetSelectedItem(int n) {
+bool ListBoxCtrl::SetCurrentSelection(int n) {
     if (n < 0) {
         return false;
     }

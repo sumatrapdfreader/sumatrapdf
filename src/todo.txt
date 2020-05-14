@@ -9,7 +9,7 @@ Annotations:
  - display color
  - display opacity
  - display count of quad points
- - display "popup" info 
+ - display "popup" info (obj = pdf_dict_get(ctx, selected_annot->obj, PDF_NAME(Popup));)
  - allow changing icon (for text annotations)
  - [X] make EditAnnotatinsWindow wider by default
  - when selecting annotation in list box, go to its page

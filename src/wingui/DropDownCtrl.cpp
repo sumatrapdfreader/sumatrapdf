@@ -41,9 +41,28 @@ static void setDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
     }
 }
 
+static void DispatchSelectionChanged(DropDownCtrl* w, WndEvent* ev) {
+    DropDownSelectionChangedEvent a;
+    CopyWndEvent cp(&a, ev);
+    a.dropDown = w;
+    a.idx = w->GetCurrentSelection();
+    std::string_view s;
+    if (a.idx >= 0 && a.idx < (int)w->items.size()) {
+        a.item = w->items.at(a.idx);
+    }
+    w->onSelectionChanged(&a);
+}
+
 static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
     auto w = (DropDownCtrl*)user;
-    w->HandleWM_COMMAND(ev);
+    UINT msg = ev->msg;
+    CrashIf(msg != WM_COMMAND);
+    WPARAM wp = ev->wparam;
+    auto code = HIWORD(wp);
+    if (code == CBN_SELCHANGE && w->onSelectionChanged) {
+        DispatchSelectionChanged(w, ev);
+        return;
+    }
 }
 
 bool DropDownCtrl::Create() {
@@ -57,27 +76,6 @@ bool DropDownCtrl::Create() {
     void* user = this;
     RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
     return true;
-}
-
-void DropDownCtrl::HandleWM_COMMAND(WndEvent* ev) {
-    UINT msg = ev->msg;
-    CrashIf(msg != WM_COMMAND);
-    WPARAM wp = ev->wparam;
-    auto code = HIWORD(wp);
-    if (code == CBN_SELCHANGE) {
-        if (onDropDownSelectionChanged) {
-            DropDownSelectionChangedEvent a;
-            CopyWndEvent cp(&a, ev);
-            a.dropDown = this;
-            a.idx = GetCurrentSelection();
-            std::string_view s;
-            if (a.idx >= 0 && a.idx < (int)items.size()) {
-                a.item = items.at(a.idx);
-            }
-            onDropDownSelectionChanged(&a);
-        }
-        return;
-    }
 }
 
 // -1 means no selection

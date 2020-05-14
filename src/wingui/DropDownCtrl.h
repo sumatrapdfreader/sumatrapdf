@@ -13,18 +13,16 @@ typedef std::function<void(DropDownSelectionChangedEvent*)> DropDownSelectionCha
 
 struct DropDownCtrl : WindowBase {
     Vec<std::string_view> items;
-    DropDownSelectionChangedHandler onDropDownSelectionChanged = nullptr;
+    DropDownSelectionChangedHandler onSelectionChanged = nullptr;
 
     DropDownCtrl(HWND parent);
     ~DropDownCtrl();
     bool Create() override;
 
-    void HandleWM_COMMAND(WndEvent*);
-
     Size GetIdealSize() override;
 
-    void SetCurrentSelection(int n);
     int GetCurrentSelection();
+    void SetCurrentSelection(int n);
     void SetItems(Vec<std::string_view>& newItems);
     void SetCueBanner(std::string_view);
 };

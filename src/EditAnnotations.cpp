@@ -41,6 +41,7 @@ struct EditAnnotationsWindow {
     ILayout* mainLayout = nullptr;
 
     ListBoxCtrl* listBox = nullptr;
+    StaticCtrl* staticRect = nullptr;
     DropDownCtrl* dropDownAdd = nullptr;
     ButtonCtrl* buttonCancel = nullptr;
     ButtonCtrl* buttonDelete = nullptr;
@@ -57,6 +58,7 @@ struct EditAnnotationsWindow {
     void ButtonCancelHandler();
     void ButtonDeleteHandler();
     void CloseWindow();
+    void ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev);
     void DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev);
     void RebuildAnnotations();
 };
@@ -97,6 +99,13 @@ void EditAnnotationsWindow::ButtonDeleteHandler() {
 
 void EditAnnotationsWindow::ButtonCancelHandler() {
     CloseWindow();
+}
+
+void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev) {
+    // TODO: implement me
+    bool deleteButtonEnabled = (ev->idx >= 0);
+    buttonDelete->SetIsEnabled(deleteButtonEnabled);
+    MessageBoxNYI(mainWindow->hwnd);
 }
 
 void EditAnnotationsWindow::DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev) {
@@ -161,7 +170,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
         bool ok = w->Create();
         CrashIf(!ok);
         dropDownAdd = w;
-        w->onDropDownSelectionChanged = std::bind(&EditAnnotationsWindow::DropDownAddSelectionChanged, this, _1);
+        w->onSelectionChanged = std::bind(&EditAnnotationsWindow::DropDownAddSelectionChanged, this, _1);
         auto l = NewDropDownLayout(w);
         vbox->AddChild(l);
         Vec<std::string_view> annotTypes;
@@ -175,8 +184,19 @@ void EditAnnotationsWindow::CreateMainLayout() {
         bool ok = w->Create();
         CrashIf(!ok);
         listBox = w;
+        w->onSelectionChanged = std::bind(&EditAnnotationsWindow::ListBoxSelectionChanged, this, _1);
         auto l = NewListBoxLayout(w);
         vbox->AddChild(l, 1);
+    }
+
+    {
+        auto w = new StaticCtrl(parent);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        staticRect = w;
+        auto l = NewStaticLayout(w);
+        vbox->AddChild(l, 1);
+        w->SetIsVisible(false);
     }
 
     {
