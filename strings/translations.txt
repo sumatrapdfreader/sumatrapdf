@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5aba56a0f2bb41a6e1b4a0fc7a41d46bd9e4e70f
+a8f00418333c1a7f69f5a83d89c74291715444f3
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3815,6 +3815,7 @@ uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 :Add page %s to favorites\tCtrl+B
 az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
+bg:Добави страница %s към любимите\tCtrl+B
 br:Adicionar página %s aos favoritos\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
 co:Aghjunghje a &pagina %s à i favuriti\tCtrl+B
@@ -5454,6 +5455,7 @@ vn:Đóng lại
 :Collapse All
 ar:طي الكل
 az:Hamısını bağla
+bg:Свиване на всички
 br:Minimizar tudo
 cn:全部折叠(&C)
 co:Piegà tuttu
@@ -8114,6 +8116,7 @@ vn:Không mở %s được
 :Expand All
 ar:بسط الكل
 az:Hamısını aç
+bg:Разгъване на всички
 br:Expandir tudo
 cn:全部展开
 co:Spiegà tuttu
@@ -11701,6 +11704,7 @@ uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window\tCtrl+N
 az:Yeni pə&ncərə\tCtrl+N
+bg:Нов &прозорец\tCtrl+N
 br:Novo &window\tCtrl+N
 cn:新建窗口(&W)\tCtrl+N
 co:No&va finestra\tCtrl+N
@@ -14957,6 +14961,7 @@ vn:Quay phải\tCtrl+Shift++
 :Save Annotations
 ar:حفظ الحواشي
 az:Annotasiyaları yadda saxla
+bg:Запази анотациите
 br:Salvar anotações
 cn:保存注释
 co:Arregistrà l’ann&utazioni
@@ -15617,6 +15622,7 @@ uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks\tF12
 az:Əl&fəcinləri göstər\tF12
+bg:Покажи &Любими\tF12
 br:Mostrar &marcadores\tF12
 cn:显示书签(&B)\tF12
 co:Affissà l’&indette\tF12
@@ -15638,6 +15644,7 @@ th:แสดง &บุ๊กมาร์ก F12
 tw:顯示書籤(&B)\tF12
 :Show &Favorites
 az:&Seçilmişləri göstər
+bg:Покажи &Любими
 br:Mostrar &favoritos
 cn:显示收藏夹(&F)
 co:Affissà i &favuriti
@@ -15793,6 +15800,7 @@ uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show Book&marks\tF12
 az:Əlfə&cinləri göstər\tF12
+bg:Покажи Отмет&ките\tF12
 br:Mostrar &marcadores\tF12
 cn:显示书签(&M)\tF12
 co:Affissà l’&indette\tF12
@@ -15937,6 +15945,7 @@ uz:Tez-tez o'qiladiganlarni ko'rsatish
 vn:Hiện Đọc thường xuyên
 :Show in &folder
 az:Qovlu&qda göstər
+bg:Покажи в &папка
 br:Mostrar na &pasta
 cn:打开所在文件夹(&F)
 co:Affissà in u car&tulare
