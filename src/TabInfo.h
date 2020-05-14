@@ -4,6 +4,7 @@
 struct SelectionOnPage;
 struct WatchedFile;
 struct VbkmFile;
+struct EditAnnotationsWindow;
 
 enum class TocSort { None, TagSmallFirst, TagBigFirst, Color };
 
@@ -38,6 +39,7 @@ struct TabInfo {
     TocTree* currToc = nullptr; // not owned by us
     // if sortTag is != SortTag::None, this is a sorted toc tree to be displayed
     TocTree* tocSorted = nullptr;
+    EditAnnotationsWindow* editAnnotsWindow = nullptr;
 
     TabInfo(WindowInfo* win, const WCHAR* filePath = nullptr);
     ~TabInfo();

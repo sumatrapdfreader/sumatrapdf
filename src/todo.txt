@@ -3,7 +3,6 @@ Annotations:
  - EditAnnotationsWindow and TabInfo must self-reference
  - implement EnginePdf::GetAnnotations
  - display rect info in EditAnnotationsWindow
-
 ------
 
 possible refactorings:

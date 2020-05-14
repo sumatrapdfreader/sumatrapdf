@@ -36,9 +36,10 @@
 using std::placeholders::_1;
 
 struct EditAnnotationsWindow {
+    TabInfo* tab = nullptr;
     Window* mainWindow = nullptr;
-    HWND hwnd = nullptr;
     ILayout* mainLayout = nullptr;
+
     ListBoxCtrl* listBox = nullptr;
     DropDownCtrl* dropDownAdd = nullptr;
     ButtonCtrl* buttonCancel = nullptr;
@@ -56,12 +57,14 @@ struct EditAnnotationsWindow {
     void SizeHandler(SizeEvent* ev);
     void ButtonCancelHandler();
     void ButtonDeleteHandler();
-    void OnFinished();
+    void CloseWindow();
     void DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev);
     void RebuildAnnotations(Vec<Annotation*>* annots);
 };
 
-static EditAnnotationsWindow* gEditAnnotationsWindow = nullptr;
+void DeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
+    delete w;
+}
 
 EditAnnotationsWindow::~EditAnnotationsWindow() {
     delete mainWindow;
@@ -69,32 +72,29 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
     delete lbModel;
 }
 
-void EditAnnotationsWindow::OnFinished() {
-    // TODO: write me
+void EditAnnotationsWindow::CloseWindow() {
+    // TODO: more?
+    tab->editAnnotsWindow = nullptr;
+    delete this;
 }
 
 void EditAnnotationsWindow::CloseHandler(WindowCloseEvent* ev) {
     // CrashIf(w != ev->w);
-    OnFinished();
-    delete gEditAnnotationsWindow;
-    gEditAnnotationsWindow = nullptr;
+    CloseWindow();
 }
 
 void EditAnnotationsWindow::ButtonDeleteHandler() {
-    MessageBoxNYI(hwnd);
+    MessageBoxNYI(mainWindow->hwnd);
 }
 
 void EditAnnotationsWindow::ButtonCancelHandler() {
-    // gEditAnnotationsWindow->onFinished(nullptr);
-    OnFinished();
-    delete gEditAnnotationsWindow;
-    gEditAnnotationsWindow = nullptr;
+    CloseWindow();
 }
 
 void EditAnnotationsWindow::DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev) {
     UNUSED(ev);
     // TODO: implement me
-    MessageBoxNYI(hwnd);
+    MessageBoxNYI(mainWindow->hwnd);
 }
 
 void EditAnnotationsWindow::SizeHandler(SizeEvent* ev) {
@@ -238,7 +238,6 @@ bool EditAnnotationsWindow::Create(Vec<Annotation*>* annots) {
     CrashIf(!ok);
 
     mainWindow = w;
-    hwnd = w->hwnd;
 
     w->onClose = std::bind(&EditAnnotationsWindow::CloseHandler, this, _1);
     w->onSize = std::bind(&EditAnnotationsWindow::SizeHandler, this, _1);
@@ -255,8 +254,9 @@ bool EditAnnotationsWindow::Create(Vec<Annotation*>* annots) {
 }
 
 void StartEditAnnotations(TabInfo* tab) {
-    UNUSED(tab);
-    if (gEditAnnotationsWindow) {
+    if (tab->editAnnotsWindow) {
+        HWND hwnd = tab->editAnnotsWindow->mainWindow->hwnd;
+        BringWindowToTop(hwnd);        ;
         return;
     }
     Vec<Annotation*>* annots = nullptr;
@@ -265,7 +265,8 @@ void StartEditAnnotations(TabInfo* tab) {
         annots = dm->userAnnots;
     }
     auto win = new EditAnnotationsWindow();
-    gEditAnnotationsWindow = win;
+    win->tab = tab;
+    tab->editAnnotsWindow = win;
     bool ok = win->Create(annots);
     CrashIf(!ok);
 }

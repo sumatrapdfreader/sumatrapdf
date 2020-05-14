@@ -26,6 +26,7 @@
 #include "Selection.h"
 #include "Translations.h"
 #include "ParseBKM.h"
+#include "EditAnnotations.h"
 
 TabInfo::TabInfo(WindowInfo* win, const WCHAR* filePath) {
     this->win = win;
@@ -41,6 +42,7 @@ TabInfo::~TabInfo() {
     delete selectionOnPage;
     delete ctrl;
     delete tocSorted;
+    DeleteEditAnnotationsWindow(editAnnotsWindow);
 }
 
 bool TabInfo::IsDocLoaded() const {
