@@ -12,7 +12,15 @@ public class PDFPage extends Page
 	public native PDFAnnotation createAnnotation(int subtype);
 	public native void deleteAnnotation(PDFAnnotation annot);
 
-	public native boolean applyRedactions();
+	public static final int REDACT_IMAGE_NONE = 0;
+	public static final int REDACT_IMAGE_REMOVE = 1;
+	public static final int REDACT_IMAGE_PIXELS = 2;
+
+	public native boolean applyRedactions(boolean blackBoxes, int imageMethod);
+
+	public boolean applyRedactions() {
+		return applyRedactions(true, REDACT_IMAGE_PIXELS);
+	}
 
 	public native boolean update();
 

@@ -114,10 +114,16 @@ void pdf_run_page_widgets(fz_context *ctx, pdf_page *page, fz_device *dev, fz_ma
 void pdf_filter_page_contents(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_filter_options *filter);
 void pdf_filter_annot_contents(fz_context *ctx, pdf_document *doc, pdf_annot *annot, pdf_filter_options *filter);
 
+enum {
+	PDF_REDACT_IMAGE_NONE,
+	PDF_REDACT_IMAGE_REMOVE,
+	PDF_REDACT_IMAGE_PIXELS,
+};
+
 typedef struct
 {
-	int no_black_boxes;
-	int keep_images;
+	int black_boxes;
+	int image_method;
 } pdf_redact_options;
 
 int pdf_redact_page(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_redact_options *opts);

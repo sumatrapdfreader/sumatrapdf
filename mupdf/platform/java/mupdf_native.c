@@ -8650,7 +8650,7 @@ FUN(PDFObject_resolve)(JNIEnv *env, jobject self)
 	}
 
 	pdf_keep_obj(ctx, ind);
-	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), self);
+	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(ind), self);
 	if (!jobj)
 		pdf_drop_obj(ctx, ind);
 	return jobj;
@@ -9063,7 +9063,7 @@ FUN(PDFObject_putDictionaryPDFObjectPDFObject)(JNIEnv *env, jobject self, jobjec
 }
 
 JNIEXPORT void JNICALL
- FUN(PDFObject_putDictionaryPDFObjectRect)(JNIEnv *env, jobject self, jobject jname, jobject jrect)
+FUN(PDFObject_putDictionaryPDFObjectRect)(JNIEnv *env, jobject self, jobject jname, jobject jrect)
 {
 	fz_context *ctx = get_context(env);
 	pdf_obj *dict = from_PDFObject(env, self);
@@ -9566,16 +9566,17 @@ FUN(PDFPage_update)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFPage_applyRedactions)(JNIEnv *env, jobject self)
+FUN(PDFPage_applyRedactions)(JNIEnv *env, jobject self, jboolean blackBoxes, jint imageMethod)
 {
 	fz_context *ctx = get_context(env);
 	pdf_page *page = from_PDFPage(env, self);
 	jboolean redacted = JNI_FALSE;
+	pdf_redact_options opts = { blackBoxes, imageMethod };
 
 	if (!ctx || !page) return JNI_FALSE;
 
 	fz_try(ctx)
-		redacted = pdf_redact_page(ctx, page->doc, page, NULL);
+		redacted = pdf_redact_page(ctx, page->doc, page, &opts);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 

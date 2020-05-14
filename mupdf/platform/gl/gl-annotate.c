@@ -458,6 +458,7 @@ static const char *line_ending_styles[] = {
 static const char *quadding_names[] = { "Left", "Center", "Right" };
 static const char *font_names[] = { "Cour", "Helv", "TiRo" };
 static const char *lang_names[] = { "", "ja", "ko", "zh-Hans", "zh-Hant" };
+static const char *im_redact_names[] = { "Keep images", "Remove images", "Erase pixels" };
 
 static int should_edit_border(enum pdf_annot_type subtype)
 {
@@ -853,16 +854,19 @@ void do_annotate_panel(void)
 
 	if (has_redact)
 	{
-		static pdf_redact_options redact_opts;
+		static pdf_redact_options redact_opts = { 1, PDF_REDACT_IMAGE_PIXELS };
+		int im_choice;
 		ui_spacer();
-		ui_checkbox("Don't black out", &redact_opts.no_black_boxes);
-		ui_checkbox("Don't redact images", &redact_opts.keep_images);
+		im_choice = ui_select("Redact/IM", im_redact_names[redact_opts.image_method], im_redact_names, nelem(im_redact_names));
+		if (im_choice != -1)
+			redact_opts.image_method = im_choice;
+		ui_checkbox("Draw black boxes", &redact_opts.black_boxes);
 		if (ui_button("Redact"))
 		{
 			selected_annot = NULL;
-			trace_action("page.applyRedactions(%s, %s);\n",
-				redact_opts.no_black_boxes ? "true" : "false",
-				redact_opts.keep_images ? "true" : "false");
+			trace_action("page.applyRedactions(%s, %d);\n",
+				redact_opts.black_boxes ? "true" : "false",
+				redact_opts.image_method);
 			pdf_redact_page(ctx, pdf, page, &redact_opts);
 			trace_page_update();
 			load_page();

@@ -243,15 +243,15 @@ match_att_has_condition(fz_xml *node, const char *att, const char *needle)
 	const char *ss;
 	size_t n;
 	if (haystack) {
-		/* Try matching whole property first. */
-		if (!strcmp(haystack, needle))
-			return 1;
-
-		/* Look for matching words. */
-		n = strlen(needle);
 		ss = strstr(haystack, needle);
-		if (ss && (ss[n] == ' ' || ss[n] == 0) && (ss == haystack || ss[-1] == ' '))
-			return 1;
+		if (ss)
+		{
+			n = strlen(needle);
+
+			/* Look for exact matches or matching words. */
+			if ((ss[n] == ' ' || ss[n] == 0) && (ss == haystack || ss[-1] == ' '))
+				return 1;
+		}
 	}
 	return 0;
 }
@@ -288,11 +288,13 @@ match_selector(fz_css_selector *sel, fz_xml *node)
 		if (sel->combine == ' ')
 		{
 			fz_xml *parent = fz_xml_up(node);
+			if (!parent || !match_selector(sel->right, node))
+				return 0;
+
 			while (parent)
 			{
 				if (match_selector(sel->left, parent))
-					if (match_selector(sel->right, node))
-						return 1;
+					return 1;
 				parent = fz_xml_up(parent);
 			}
 			return 0;

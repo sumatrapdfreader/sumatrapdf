@@ -885,7 +885,7 @@ generate_boxes(fz_context *ctx,
 					int child_section = section_depth;
 					if (!strcmp(tag, "ul") || !strcmp(tag, "ol"))
 						child_counter = 0;
-					if (!strcmp(tag, "section"))
+					else if (!strcmp(tag, "section"))
 						++child_section;
 					last_top = generate_boxes(ctx,
 						fz_xml_down(node),

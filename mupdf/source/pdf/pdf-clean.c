@@ -541,7 +541,51 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 }
 
 static fz_image *
-pdf_redact_image_filter(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image)
+pdf_redact_image_filter_remove(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image)
+{
+	fz_pixmap *redacted = NULL;
+	pdf_page *page = opaque;
+	pdf_annot *annot;
+	pdf_obj *qp;
+	fz_rect area;
+	fz_rect r;
+	int i, n;
+
+	fz_var(redacted);
+
+	area = fz_transform_rect(fz_unit_rect, ctm);
+
+	for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
+	{
+		if (pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)) == PDF_NAME(Redact))
+		{
+			qp = pdf_dict_get(ctx, annot->obj, PDF_NAME(QuadPoints));
+			n = pdf_array_len(ctx, qp);
+			if (n > 0)
+			{
+				for (i = 0; i < n; i += 8)
+				{
+					r = fz_rect_from_quad(pdf_to_quad(ctx, qp, i));
+					r = fz_intersect_rect(r, area);
+					if (!fz_is_empty_rect(r))
+						return NULL;
+				}
+			}
+			else
+			{
+				r = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
+				r = fz_intersect_rect(r, area);
+				if (!fz_is_empty_rect(r))
+					return NULL;
+			}
+		}
+	}
+
+	return fz_keep_image(ctx, image);
+}
+
+static fz_image *
+pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image)
 {
 	fz_pixmap *redacted = NULL;
 	pdf_page *page = opaque;
@@ -697,23 +741,25 @@ pdf_redact_page(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_redact_o
 {
 	pdf_annot *annot;
 	int has_redactions = 0;
-	int no_black_boxes = 0;
-	int keep_images = 0;
+	int black_boxes = 0;
+	int image_method = PDF_REDACT_IMAGE_PIXELS;
 
 	pdf_filter_options filter;
 
 	if (opts)
 	{
-		no_black_boxes = opts->no_black_boxes;
-		keep_images = opts->keep_images;
+		black_boxes = opts->black_boxes;
+		image_method = opts->image_method;
 	}
 
 	memset(&filter, 0, sizeof filter);
 	filter.opaque = page;
 	filter.text_filter = pdf_redact_text_filter;
-	if (!keep_images)
-		filter.image_filter = pdf_redact_image_filter;
-	if (!no_black_boxes)
+	if (image_method == PDF_REDACT_IMAGE_PIXELS)
+		filter.image_filter = pdf_redact_image_filter_pixels;
+	if (image_method == PDF_REDACT_IMAGE_REMOVE)
+		filter.image_filter = pdf_redact_image_filter_remove;
+	if (black_boxes)
 		filter.end_page = pdf_redact_end_page;
 	filter.recurse = 0; /* don't redact patterns, softmasks, and type3 fonts */
 	filter.instance_forms = 1; /* redact xobjects with instancing */

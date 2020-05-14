@@ -4159,10 +4159,9 @@ static void ffi_PDFPage_applyRedactions(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	pdf_page *page = js_touserdata(J, 0, "pdf_page");
-	pdf_redact_options opts;
-	memset(&opts, 0, sizeof opts);
-	if (js_isdefined(J, 1)) opts.no_black_boxes = js_toboolean(J, 1);
-	if (js_isdefined(J, 2)) opts.keep_images = js_toboolean(J, 2);
+	pdf_redact_options opts = { 1, PDF_REDACT_IMAGE_PIXELS };
+	if (js_isdefined(J, 1)) opts.black_boxes = js_toboolean(J, 1);
+	if (js_isdefined(J, 2)) opts.image_method = js_tointeger(J, 2);
 	fz_try(ctx)
 		pdf_redact_page(ctx, page->doc, page, &opts);
 	fz_catch(ctx)
