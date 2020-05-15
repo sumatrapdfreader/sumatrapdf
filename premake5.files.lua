@@ -798,6 +798,12 @@ function mupdf_files()
     "xps-util.c",
     "xps-zip.c",
   })
+  files {
+    "mupdf/include/mupdf/fitz/*.h",
+    "mupdf/include/mupdf/helpers/*.h",
+    "mupdf/include/mupdf/pdf/*.h",
+    "mupdf/include/mupdf/*.h"
+  }
 end
 
 function mudoc_files()

@@ -41,6 +41,7 @@ struct Annotation {
     RectD rect = {};
     COLORREF color = 0;
 
+    int flags;
     str::Str contents;
     str::Str author;
 

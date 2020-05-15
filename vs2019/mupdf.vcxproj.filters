@@ -7,6 +7,21 @@
     <Filter Include="mupdf">
       <UniqueIdentifier>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mupdf\include">
+      <UniqueIdentifier>{94397EE8-00FA-F91E-C934-439C35B43EFB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mupdf\include\mupdf">
+      <UniqueIdentifier>{1F0FC97C-8B70-A68A-14DE-EC3C803EDD49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mupdf\include\mupdf\fitz">
+      <UniqueIdentifier>{EB96A62B-D7BB-F5AB-0007-DB3BEC8AF4C9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mupdf\include\mupdf\helpers">
+      <UniqueIdentifier>{0107B334-6D14-E11A-F6FA-DC056207ADD1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mupdf\include\mupdf\pdf">
+      <UniqueIdentifier>{283605CB-946D-4D62-9D77-B185092E745B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mupdf\source">
       <UniqueIdentifier>{21F463C1-0D57-F365-B6DC-2B1CA21EBFE8}</UniqueIdentifier>
     </Filter>
@@ -30,6 +45,216 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz.h">
+      <Filter>mupdf\include\mupdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\archive.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\band-writer.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\bidi.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\bitmap.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\buffer.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\color.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\compress.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\compressed-buffer.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\config.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\context.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\crypt.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\device.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\display-list.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\document.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\filter.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\font.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\geometry.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\getopt.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\glyph-cache.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\glyph.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\hash.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\image.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\link.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\log.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\outline.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\output-svg.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\output.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\path.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\pixmap.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\pool.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\separation.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\shade.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\store.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\stream.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\string-util.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\structured-text.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\system.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\text.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\track-usage.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\transition.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\tree.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\util.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\version.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\write-pixmap.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\writer.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\xml.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\helpers\mu-office-lib.h">
+      <Filter>mupdf\include\mupdf\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\helpers\mu-threads.h">
+      <Filter>mupdf\include\mupdf\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\helpers\pkcs7-openssl.h">
+      <Filter>mupdf\include\mupdf\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\memento.h">
+      <Filter>mupdf\include\mupdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf.h">
+      <Filter>mupdf\include\mupdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\annot.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\clean.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\cmap.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\crypt.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\document.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\event.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\font.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\form.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\interpret.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\javascript.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\name-table.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\object.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\output-pdf.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\page.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\parse.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\resource.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\xref.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\ucdn.h">
+      <Filter>mupdf\include\mupdf</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\bidi-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
