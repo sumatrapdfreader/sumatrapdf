@@ -2,8 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-
 #include "utils/WinUtil.h"
+#include "utils/ColorUtil.h"
 
 COLORREF MkRgb(u8 r, u8 g, u8 b) {
     return RGB(r, g, b);
@@ -76,6 +76,9 @@ static void UnpackRgbFloat(COLORREF c, float& r, float& g, float& b) {
         n = 1 (grey), 3 (rgb) or 4 (cmyk).
 */
 COLORREF FromPdfColor(int n, float color[4]) {
+    if (n == 0) {
+        return ColorUnset;
+    }
     if (n == 1) {
         return MkRgbaFloat(color[0], color[0], color[0], 0);
     }

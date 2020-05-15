@@ -11,6 +11,7 @@ enum class AnnotationType {
     StrikeOut,
     Squiggly,
     Text,
+    FreeText,
 };
 
 // an user annotation on page

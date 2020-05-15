@@ -2055,6 +2055,8 @@ static AnnotationType AnnotationTypeFromPdfAnnot(fz_context* ctx, pdf_annot* ann
             return AnnotationType::Squiggly;
         case PDF_ANNOT_TEXT:
             return AnnotationType::Text;
+        case PDF_ANNOT_FREE_TEXT:
+            return AnnotationType::FreeText;
     }
     CrashIf(true);
     return AnnotationType::None;
