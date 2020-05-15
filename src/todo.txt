@@ -1,10 +1,9 @@
 
 Annotations:
  - finish EnginePdf::GetAnnotations
- - display flags
- - display author info in EditAnnotationsWindow
+ - finish AnnotationFromPdfAnnot
  - display date
- - display contents in EditAnnotationsWindow
+ - display contents
  - display color
  - display opacity
  - display count of quad points
@@ -20,6 +19,8 @@ Annotations:
  )
  - [X] display rect info in EditAnnotationsWindow
  - [X] make EditAnnotationsWindow wider by default
+ - [X] display author info in EditAnnotationsWindow
+ - maybe: display flags
 ------
 
 possible refactorings:

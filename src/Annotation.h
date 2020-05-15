@@ -41,6 +41,8 @@ struct Annotation {
     RectD rect = {};
     COLORREF color = 0;
 
+    // flags has the same meaning as mupdf annot.h
+    // TODO: not sure if want to preserve it
     int flags;
     str::Str contents;
     str::Str author;

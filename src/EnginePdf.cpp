@@ -2077,7 +2077,6 @@ static AnnotationType AnnotationTypeFromPdfAnnot(fz_context* ctx, pdf_annot* ann
             return AnnotationType::Watermark;
         case PDF_ANNOT_3D:
             return AnnotationType::ThreeD;
-
     }
     CrashIf(true);
     return AnnotationType::None;
@@ -2120,6 +2119,7 @@ static Annotation* AnnotationFromPdfAnnot(fz_context* ctx, pdf_annot* annot, int
     if (!IsStringEmptyOrWhiteSpaceOnly(s)) {
         res->author.Set(s);
     }
+    res->flags = pdf_annot_flags(ctx, annot);
 
     // TODO: implement those
     // pdf_annot_opacity(ctx, annot)
@@ -2127,7 +2127,6 @@ static Annotation* AnnotationFromPdfAnnot(fz_context* ctx, pdf_annot* annot, int
     // pdf_annot_language
     // pdf_annot_quadding
     // pdf_annot_interior_color
-    // pdf_annot_flags
     // pdf_annot_quad_point_count / pdf_annot_quad_point
     // pdf_annot_ink_list_count / pdf_annot_ink_list_stroke_count / pdf_annot_ink_list_stroke_vertex
     // pdf_annot_line_start_style, pdf_annot_line_end_style

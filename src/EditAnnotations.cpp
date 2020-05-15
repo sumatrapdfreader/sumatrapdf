@@ -42,6 +42,7 @@ struct EditAnnotationsWindow {
 
     ListBoxCtrl* listBox = nullptr;
     StaticCtrl* staticRect = nullptr;
+    StaticCtrl* staticAuthor = nullptr;
     DropDownCtrl* dropDownAdd = nullptr;
     ButtonCtrl* buttonCancel = nullptr;
     ButtonCtrl* buttonDelete = nullptr;
@@ -116,12 +117,28 @@ static void ShowAnnotationRect(EditAnnotationsWindow* w, int annotNo) {
     w->staticRect->SetText(s.as_view());
 }
 
+static void ShowAnnotationAuthor(EditAnnotationsWindow* w, int annotNo) {
+    w->staticAuthor->SetIsVisible(annotNo >= 0);
+    if (annotNo < 0) {
+        return;
+    }
+    Annotation* annot = w->annotations->at(annotNo);
+    if (annot->author.empty()) {
+        w->staticAuthor->SetIsVisible(false);
+        return;
+    }
+    str::Str s;
+    s.AppendFmt("Author: %s", annot->author.c_str());
+    w->staticAuthor->SetText(s.as_view());
+}
+
 void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev) {
     // TODO: finish me
     int itemNo = ev->idx;
     bool itemSelected = (itemNo >= 0);
     buttonDelete->SetIsEnabled(itemSelected);
     ShowAnnotationRect(this, itemNo);
+    ShowAnnotationAuthor(this, itemNo);
     // TODO: go to page with selected annotation
     // MessageBoxNYI(mainWindow->hwnd);
 }
@@ -213,7 +230,16 @@ void EditAnnotationsWindow::CreateMainLayout() {
         CrashIf(!ok);
         staticRect = w;
         auto l = NewStaticLayout(w);
-        vbox->AddChild(l, 1);
+        vbox->AddChild(l);
+        w->SetIsVisible(false);
+    }
+    {
+        auto w = new StaticCtrl(parent);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        staticAuthor = w;
+        auto l = NewStaticLayout(w);
+        vbox->AddChild(l);
         w->SetIsVisible(false);
     }
 

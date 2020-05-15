@@ -450,6 +450,7 @@ EXPORTS
 	pdf_bound_annot
 	pdf_annot_type
 	pdf_annot_rect
+	pdf_annot_flags
 	pdf_annot_color
 	pdf_annot_author
 	pdf_annot_contents
