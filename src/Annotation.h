@@ -12,6 +12,7 @@ enum class AnnotationType {
     Squiggly,
     Text,
     FreeText,
+    Line,
 };
 
 // an user annotation on page

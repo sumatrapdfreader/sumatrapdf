@@ -2023,8 +2023,6 @@ static AnnotationType AnnotationTypeFromPdfAnnot(fz_context* ctx, pdf_annot* ann
     auto tp = pdf_annot_type(ctx, annot);
     // TODO: support more types
     // PDF_ANNOT_LINK,
-    // PDF_ANNOT_FREE_TEXT,
-    // PDF_ANNOT_LINE,
     // PDF_ANNOT_SQUARE,
     // PDF_ANNOT_CIRCLE,
     // PDF_ANNOT_POLYGON,
@@ -2057,6 +2055,8 @@ static AnnotationType AnnotationTypeFromPdfAnnot(fz_context* ctx, pdf_annot* ann
             return AnnotationType::Text;
         case PDF_ANNOT_FREE_TEXT:
             return AnnotationType::FreeText;
+        case PDF_ANNOT_LINE:
+            return AnnotationType::Line;
     }
     CrashIf(true);
     return AnnotationType::None;
