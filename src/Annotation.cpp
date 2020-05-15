@@ -30,7 +30,11 @@ bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
     return true;
 }
 
-const char* annotNames = "None\0Highlight\0Underline\0StrikeOut\0Squiggly\0Text\0FreeText\0Line\0";
+const char* annotNames =
+    "None\0Highlight\0Underline\0StrikeOut\0Squiggly\0Text\0FreeText\0Line\0Square\0Ink\0Link\0Circle\0Polygon\0PolyLin"
+    "e\0Redact\0Stamp\0Caret\0Popup\0FileAttachment\0Sound\0Movie\0Widget\0Screen\0PrinterMar"
+    "k\0TrapNet\0Watermark\03D\0";
+
 std::string_view AnnotationName(AnnotationType tp) {
     int n = (int)tp;
     const char* s = seqstrings::IdxToStr(annotNames, n);

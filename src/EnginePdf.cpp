@@ -2022,25 +2022,6 @@ int EnginePdf::GetPageByLabel(const WCHAR* label) const {
 static AnnotationType AnnotationTypeFromPdfAnnot(fz_context* ctx, pdf_annot* annot) {
     auto tp = pdf_annot_type(ctx, annot);
     // TODO: support more types
-    // PDF_ANNOT_LINK,
-    // PDF_ANNOT_SQUARE,
-    // PDF_ANNOT_CIRCLE,
-    // PDF_ANNOT_POLYGON,
-    // PDF_ANNOT_POLY_LINE,
-    // PDF_ANNOT_REDACT,
-    // PDF_ANNOT_STAMP,
-    // PDF_ANNOT_CARET,
-    // PDF_ANNOT_INK,
-    // PDF_ANNOT_POPUP,
-    // PDF_ANNOT_FILE_ATTACHMENT,
-    // PDF_ANNOT_SOUND,
-    // PDF_ANNOT_MOVIE,
-    // PDF_ANNOT_WIDGET,
-    // PDF_ANNOT_SCREEN,
-    // PDF_ANNOT_PRINTER_MARK,
-    // PDF_ANNOT_TRAP_NET,
-    // PDF_ANNOT_WATERMARK,
-    // PDF_ANNOT_3D,
 
     switch (tp) {
         case PDF_ANNOT_HIGHLIGHT:
@@ -2057,6 +2038,46 @@ static AnnotationType AnnotationTypeFromPdfAnnot(fz_context* ctx, pdf_annot* ann
             return AnnotationType::FreeText;
         case PDF_ANNOT_LINE:
             return AnnotationType::Line;
+        case PDF_ANNOT_SQUARE:
+            return AnnotationType::Square;
+        case PDF_ANNOT_INK:
+            return AnnotationType::Ink;
+
+        case PDF_ANNOT_LINK:
+            return AnnotationType::Link;
+        case PDF_ANNOT_CIRCLE:
+            return AnnotationType::Circle;
+        case PDF_ANNOT_POLYGON:
+            return AnnotationType::Polygon;
+        case PDF_ANNOT_POLY_LINE:
+            return AnnotationType::PolyLine;
+        case PDF_ANNOT_REDACT:
+            return AnnotationType::Redact;
+        case PDF_ANNOT_STAMP:
+            return AnnotationType::Stamp;
+        case PDF_ANNOT_CARET:
+            return AnnotationType::Caret;
+        case PDF_ANNOT_POPUP:
+            return AnnotationType::Popup;
+        case PDF_ANNOT_FILE_ATTACHMENT:
+            return AnnotationType::FileAttachment;
+        case PDF_ANNOT_SOUND:
+            return AnnotationType::Sound;
+        case PDF_ANNOT_MOVIE:
+            return AnnotationType::Movie;
+        case PDF_ANNOT_WIDGET:
+            return AnnotationType::Widget;
+        case PDF_ANNOT_SCREEN:
+            return AnnotationType::Screen;
+        case PDF_ANNOT_PRINTER_MARK:
+            return AnnotationType::PrinterMark;
+        case PDF_ANNOT_TRAP_NET:
+            return AnnotationType::TrapNet;
+        case PDF_ANNOT_WATERMARK:
+            return AnnotationType::Watermark;
+        case PDF_ANNOT_3D:
+            return AnnotationType::ThreeD;
+
     }
     CrashIf(true);
     return AnnotationType::None;

@@ -13,6 +13,25 @@ enum class AnnotationType {
     Text,
     FreeText,
     Line,
+    Square,
+    Ink,
+    Link,
+    Circle,
+    Polygon,
+    PolyLine,
+    Redact,
+    Stamp,
+    Caret,
+    Popup,
+    FileAttachment,
+    Sound,
+    Movie,
+    Widget,
+    Screen,
+    PrinterMark,
+    TrapNet,
+    Watermark,
+    ThreeD
 };
 
 // an user annotation on page
