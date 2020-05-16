@@ -253,12 +253,6 @@ inline void DebugCrashIfFunc(bool cond) {
 #endif
 }
 
-#if COMPILER_MSVC
-#define while_0_nowarn __pragma(warning(push)) __pragma(warning(disable : 4127)) while (0) __pragma(warning(pop))
-#else
-#define while_0_nowarn while (0)
-#endif
-
 // __analysis_assume is defined by msvc for prefast analysis
 #if !defined(__analysis_assume)
 #define __analysis_assume(x)
@@ -269,7 +263,7 @@ inline void DebugCrashIfFunc(bool cond) {
         __analysis_assume(!(cond)); \
         DebugCrashIfFunc(cond);     \
     }                               \
-    while_0_nowarn
+    while (0)
 
 #define CrashAlwaysIf(cond)         \
     do {                            \
@@ -278,21 +272,21 @@ inline void DebugCrashIfFunc(bool cond) {
             CrashMe();              \
         }                           \
     }                               \
-    while_0_nowarn
+    while (0)
 
 #define CrashIf(cond)               \
     do {                            \
         __analysis_assume(!(cond)); \
         CrashIfFunc(cond);          \
     }                               \
-    while_0_nowarn
+    while (0)
 
 #define SubmitCrashIf(cond)           \
     do {                              \
         __analysis_assume(!(cond));   \
         SendCrashIfFunc(cond, #cond); \
     }                                 \
-    while_0_nowarn
+    while (0)
 
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
@@ -302,7 +296,7 @@ inline void DebugCrashIfFunc(bool cond) {
         __analysis_assume(cond); \
         CrashIfFunc(!(cond));    \
     }                            \
-    while_0_nowarn
+    while (0)
 
 #if !OS_WIN
 void ZeroMemory(void* p, size_t len);

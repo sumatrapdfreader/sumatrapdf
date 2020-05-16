@@ -81,7 +81,7 @@ workspace "SumatraPDF"
      defines { "RAMICRO"}
   filter {}
 
-  disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800" }
+  disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
   warnings "Extra"
 
   location "this_is_invalid_location"
