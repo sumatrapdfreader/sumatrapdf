@@ -21,6 +21,15 @@ Annotations:
  - [X] make EditAnnotationsWindow wider by default
  - [X] display author info in EditAnnotationsWindow
  - maybe: display flags
+
+------
+
+A system to trigger re-layout when e.g. a button text changes.
+Add a way to register function to be called for a given hwnd.
+WindowBaseLayout() registers for its hwnd and calls Relayout().
+Add TriggerRelayout(HWND) which searches for registered function
+for hwnd and its parents.
+
 ------
 
 possible refactorings:

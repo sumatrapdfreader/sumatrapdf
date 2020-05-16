@@ -264,3 +264,4 @@ extern Kind kindLabel;
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 Rect LayoutToSize(ILayout* layout, const Size size);
+Rect Relayout(ILayout* layout);

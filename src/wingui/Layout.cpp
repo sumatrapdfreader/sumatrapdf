@@ -1095,3 +1095,8 @@ Rect LayoutToSize(ILayout* layout, const Size size) {
     layout->SetBounds(bounds);
     return bounds;
 }
+
+Rect Relayout(ILayout* layout) {
+    auto b = layout->lastBounds;
+    return LayoutToSize(layout, b.Size());
+}

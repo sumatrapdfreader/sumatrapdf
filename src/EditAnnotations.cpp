@@ -139,6 +139,7 @@ void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent
     buttonDelete->SetIsEnabled(itemSelected);
     ShowAnnotationRect(this, itemNo);
     ShowAnnotationAuthor(this, itemNo);
+    Relayout(mainLayout);
     // TODO: go to page with selected annotation
     // MessageBoxNYI(mainWindow->hwnd);
 }
