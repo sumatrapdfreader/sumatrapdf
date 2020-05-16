@@ -44,8 +44,11 @@ struct Annotation {
     // flags has the same meaning as mupdf annot.h
     // TODO: not sure if want to preserve it
     int flags;
+
     str::Str contents;
     str::Str author;
+    time_t modificationDate;
+    time_t creationDate;
 
     // either new annotation or has been modified
     bool isChanged = false;

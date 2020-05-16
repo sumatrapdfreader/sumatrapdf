@@ -2120,6 +2120,8 @@ static Annotation* AnnotationFromPdfAnnot(fz_context* ctx, pdf_annot* annot, int
         res->author.Set(s);
     }
     res->flags = pdf_annot_flags(ctx, annot);
+    res->creationDate = pdf_annot_creation_date(ctx, annot);
+    res->modificationDate = pdf_annot_modification_date(ctx, annot);
 
     // TODO: implement those
     // pdf_annot_opacity(ctx, annot)
@@ -2133,7 +2135,6 @@ static Annotation* AnnotationFromPdfAnnot(fz_context* ctx, pdf_annot* annot, int
     // pdf_annot_icon_name
     // pdf_annot_line
     // pdf_annot_vertex_count
-    // pdf_annot_modification_date / pdf_annot_creation_date
 
     return res;
 }

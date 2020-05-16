@@ -262,8 +262,7 @@ inline void DebugCrashIfFunc(bool cond) {
     do {                            \
         __analysis_assume(!(cond)); \
         DebugCrashIfFunc(cond);     \
-    }                               \
-    while (0)
+    } while (0)
 
 #define CrashAlwaysIf(cond)         \
     do {                            \
@@ -271,22 +270,19 @@ inline void DebugCrashIfFunc(bool cond) {
         if (cond) {                 \
             CrashMe();              \
         }                           \
-    }                               \
-    while (0)
+    } while (0)
 
 #define CrashIf(cond)               \
     do {                            \
         __analysis_assume(!(cond)); \
         CrashIfFunc(cond);          \
-    }                               \
-    while (0)
+    } while (0)
 
 #define SubmitCrashIf(cond)           \
     do {                              \
         __analysis_assume(!(cond));   \
         SendCrashIfFunc(cond, #cond); \
-    }                                 \
-    while (0)
+    } while (0)
 
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
@@ -295,8 +291,7 @@ inline void DebugCrashIfFunc(bool cond) {
     do {                         \
         __analysis_assume(cond); \
         CrashIfFunc(!(cond));    \
-    }                            \
-    while (0)
+    } while (0)
 
 #if !OS_WIN
 void ZeroMemory(void* p, size_t len);

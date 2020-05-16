@@ -464,6 +464,8 @@ EXPORTS
 	pdf_lookup_name
 	pdf_load_name_tree
 	pdf_load_link_annots
+	pdf_annot_creation_date
+	pdf_annot_modification_date
 
 	pdf_new_cmap
 	pdf_keep_cmap

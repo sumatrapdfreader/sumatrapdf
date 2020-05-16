@@ -43,6 +43,7 @@ struct EditAnnotationsWindow {
     ListBoxCtrl* listBox = nullptr;
     StaticCtrl* staticRect = nullptr;
     StaticCtrl* staticAuthor = nullptr;
+    StaticCtrl* staticModificationDate = nullptr;
     DropDownCtrl* dropDownAdd = nullptr;
     ButtonCtrl* buttonCancel = nullptr;
     ButtonCtrl* buttonDelete = nullptr;
@@ -132,6 +133,29 @@ static void ShowAnnotationAuthor(EditAnnotationsWindow* w, int annotNo) {
     w->staticAuthor->SetText(s.as_view());
 }
 
+static void AppendPdfDate(str::Str& s, time_t secs) {
+    struct tm* tm = gmtime(&secs);
+    char buf[100];
+    strftime(buf, sizeof buf, "%Y-%m-%d %H:%M UTC", tm);
+    s.Append(buf);
+}
+
+static void ShowAnnotationModificationDate(EditAnnotationsWindow* w, int annotNo) {
+    w->staticModificationDate->SetIsVisible(annotNo >= 0);
+    if (annotNo < 0) {
+        return;
+    }
+    Annotation* annot = w->annotations->at(annotNo);
+    if (annot->modificationDate == 0) {
+        w->staticModificationDate->SetIsVisible(false);
+        return;
+    }
+    str::Str s;
+    s.Append("Date: ");
+    AppendPdfDate(s, annot->modificationDate);
+    w->staticModificationDate->SetText(s.as_view());
+}
+
 void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev) {
     // TODO: finish me
     int itemNo = ev->idx;
@@ -139,6 +163,7 @@ void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent
     buttonDelete->SetIsEnabled(itemSelected);
     ShowAnnotationRect(this, itemNo);
     ShowAnnotationAuthor(this, itemNo);
+    ShowAnnotationModificationDate(this, itemNo);
     Relayout(mainLayout);
     // TODO: go to page with selected annotation
     // MessageBoxNYI(mainWindow->hwnd);
@@ -189,6 +214,15 @@ void GetDropDownAddItems(Vec<std::string_view>& items) {
     }
 }
 
+static std::tuple<StaticCtrl*, ILayout*> MakeStatic(HWND parent) {
+    auto w = new StaticCtrl(parent);
+    bool ok = w->Create();
+    CrashIf(!ok);
+    auto l = NewStaticLayout(w);
+    w->SetIsVisible(false);
+    return {w, l};
+}
+
 void EditAnnotationsWindow::CreateMainLayout() {
     HWND parent = mainWindow->hwnd;
     auto vbox = new VBox();
@@ -220,22 +254,21 @@ void EditAnnotationsWindow::CreateMainLayout() {
     }
 
     {
-        auto w = new StaticCtrl(parent);
-        bool ok = w->Create();
-        CrashIf(!ok);
-        staticRect = w;
-        auto l = NewStaticLayout(w);
-        vbox->AddChild(l);
-        w->SetIsVisible(false);
+        auto res = MakeStatic(parent);
+        staticRect = std::get<0>(res);
+        vbox->AddChild(std::get<1>(res));
     }
+
     {
-        auto w = new StaticCtrl(parent);
-        bool ok = w->Create();
-        CrashIf(!ok);
-        staticAuthor = w;
-        auto l = NewStaticLayout(w);
-        vbox->AddChild(l);
-        w->SetIsVisible(false);
+        auto res = MakeStatic(parent);
+        staticAuthor = std::get<0>(res);
+        vbox->AddChild(std::get<1>(res));
+    }
+
+    {
+        auto res = MakeStatic(parent);
+        staticModificationDate = std::get<0>(res);
+        vbox->AddChild(std::get<1>(res));
     }
 
     {
