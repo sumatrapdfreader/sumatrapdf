@@ -30,9 +30,24 @@ ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
 ButtonCtrl::~ButtonCtrl() {
 }
 
+static void HandleWM_COMMAND(ButtonCtrl* w, WndEvent* ev) {
+    UINT msg = ev->msg;
+    CrashIf(msg != WM_COMMAND);
+    WPARAM wp = ev->wparam;
+
+    ev->result = 0;
+    auto code = HIWORD(wp);
+    if (code == BN_CLICKED) {
+        if (w->onClicked) {
+            w->onClicked();
+            ev->didHandle = true;
+        }
+    }
+}
+
 static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
     auto w = (ButtonCtrl*)user;
-    w->HandleWM_COMMAND(ev);
+    HandleWM_COMMAND(w, ev);
 }
 
 bool ButtonCtrl::Create() {
@@ -66,21 +81,6 @@ Size ButtonCtrl::SetTextAndResize(const WCHAR* s) {
     return size;
 }
 #endif
-
-void ButtonCtrl::HandleWM_COMMAND(WndEvent* ev) {
-    UINT msg = ev->msg;
-    CrashIf(msg != WM_COMMAND);
-    WPARAM wp = ev->wparam;
-
-    ev->result = 0;
-    auto code = HIWORD(wp);
-    if (code == BN_CLICKED) {
-        if (onClicked) {
-            onClicked();
-        }
-    }
-    ev->didHandle = true;
-}
 
 ILayout* NewButtonLayout(ButtonCtrl* w) {
     return new WindowBaseLayout(w, kindButton);
