@@ -1189,14 +1189,7 @@ static Rect layoutAndSize(ILayout* layout, int dx, int dy) {
     if (dx == 0 || dy == 0) {
         return {};
     }
-    Size windowSize{dx, dy};
-    auto c = Tight(windowSize);
-    auto size = layout->Layout(c);
-    Point min{0, 0};
-    Point max{size.dx, size.dy};
-    Rect bounds{min, max};
-    layout->SetBounds(bounds);
-    return bounds;
+    return LayoutToSize(layout, {dx, dy});
 }
 
 void RaMicroInstallerWindow::InstallationFinished() {

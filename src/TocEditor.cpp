@@ -864,18 +864,11 @@ void TocEditorWindow::SizeHandler(SizeEvent* ev) {
     }
     ev->didHandle = true;
     InvalidateRect(hwnd, nullptr, false);
-    if (dx == mainLayout->lastBounds.Dx() && dy == mainLayout->lastBounds.Dy()) {
+    if (mainLayout->lastBounds.EqSize(dx, dy)) {
         // avoid un-necessary layout
         return;
     }
-
-    Size windowSize{dx, dy};
-    auto c = Tight(windowSize);
-    auto size = mainLayout->Layout(c);
-    Point min{0, 0};
-    Point max{size.dx, size.dy};
-    Rect bounds{min, max};
-    mainLayout->SetBounds(bounds);
+    LayoutToSize(mainLayout, {dx, dy});
 }
 
 void TocEditorWindow::CloseHandler(WindowCloseEvent* ev) {

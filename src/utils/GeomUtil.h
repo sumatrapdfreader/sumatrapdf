@@ -114,6 +114,10 @@ struct RectT {
         return dy;
     }
 
+    bool EqSize(T otherDx, T otherDy) const {
+        return (dx == otherDx) && (dy == otherDy);
+    }
+
     T Right() const {
         return x + dx;
     }

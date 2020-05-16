@@ -36,14 +36,7 @@ static void Draw(HWND hwnd, HDC hdc) {
 }
 
 static void doMainLayout() {
-    Size windowSize{currWinDx, currWinDy};
-    Constraints constraints = Tight(windowSize);
-    auto size = mainLayout->Layout(constraints);
-    //dbglogf("doLayout: (%d,%d) => (%d, %d)\n", currWinDx, currWinDy, size.Width, size.Height);
-    Point min{0, 0};
-    Point max{size.dx, size.dy};
-    Rect bounds{min, max};
-    mainLayout->SetBounds(bounds);
+    LayoutToSize(mainLayout, {currWinDx, currWinDy});
     InvalidateRect(g_hwnd, nullptr, false);
 }
 

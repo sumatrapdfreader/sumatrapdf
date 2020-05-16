@@ -101,13 +101,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
             return;
         }
         //auto c = Loose(Size{dx, dy});
-        Size windowSize{dx, dy};
-        auto c = Tight(windowSize);
-        auto size = l->Layout(c);
-        Point min{0, 0};
-        Point max{size.Width, size.Height};
-        Rect bounds{min, max};
-        l->SetBounds(bounds);
+        LayoutToSize(l, {dx, dy});
         InvalidateRect(hwnd, nullptr, false);
     };
 
