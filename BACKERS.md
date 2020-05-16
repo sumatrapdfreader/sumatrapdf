@@ -18,3 +18,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Reinhold Thurner
 - Aazmandius
 - Linfeng Li
+- Hayashi Takehito
