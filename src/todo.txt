@@ -14,8 +14,7 @@ Annotations:
  - add -dump-annots cmd-line arg that prints out all annotation info from PDF file
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
  - implement "Delete annotation"
- - size EditAnnotationsWindow to be the same as main window (but limit
- )
+ - size EditAnnotationsWindow to be the same as main window and positioned intelligently
  - [X] display date
  - [X] display rect info in EditAnnotationsWindow
  - [X] make EditAnnotationsWindow wider by default
