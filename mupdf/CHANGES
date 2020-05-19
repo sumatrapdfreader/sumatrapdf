@@ -1,3 +1,17 @@
+List of changes since the last release:
+
+	mutool draw: bbox output format.
+	mutool run: StructuredText.walk()
+
+	mupdf-gl: Added IBM Common User Access shortcuts for copy & paste.
+
+	api: Dehyphenation option in structured text extraction, to improve searching
+		for words that are hyphenated across lines.
+	api: pdf_new_date, pdf_to_date, pdf_dict_put_date and pdf_dict_get_date.
+	api: Added choice of image redaction algorithms: none, full, partial.
+
+	svg: Many small parsing fixes.
+
 List of changes in MuPDF 1.17.0
 
 	api: Improved accessors for markup/ink/polygon annotation data.

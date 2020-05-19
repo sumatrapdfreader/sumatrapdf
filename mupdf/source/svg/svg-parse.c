@@ -239,3 +239,58 @@ svg_parse_transform(fz_context *ctx, svg_document *doc, const char *str, fz_matr
 
 	return transform;
 }
+
+float
+svg_parse_number_from_style(fz_context *ctx, svg_document *doc, const char *style, const char *att, float number)
+{
+	if (style)
+	{
+		char *end, *p = strstr(style, att);
+		if (p)
+		{
+			int n = strlen(att);
+			if (p[n] == ':')
+			{
+				p += n + 1;
+				while (*p && svg_is_whitespace(*p))
+					++p;
+				number = fz_strtof(p, &end);
+				if (end[0] == 'i' && end[1] == 'n') return number * 72;
+				if (end[0] == 'c' && end[1] == 'm') return number * 7200 / 254;
+				if (end[0] == 'm' && end[1] == 'm') return number * 720 / 254;
+				if (end[0] == 'p' && end[1] == 'c') return number * 12;
+			}
+		}
+	}
+	return number;
+}
+
+int
+svg_parse_enum_from_style(fz_context *ctx, svg_document *doc, const char *style, const char *att,
+	int ecount, const char *etable[], int value)
+{
+	char buf[100], *end, *p;
+	int i, n;
+	if (style)
+	{
+		p = strstr(style, att);
+		if (p)
+		{
+			n = strlen(att);
+			if (p[n] == ':')
+			{
+				p += n + 1;
+				while (*p && svg_is_whitespace(*p))
+					++p;
+				fz_strlcpy(buf, p, sizeof buf);
+				end = strchr(buf, ';');
+				if (end)
+					*end = 0;
+				for (i = 0; i < ecount; ++i)
+					if (!strcmp(etable[i], buf))
+						return i;
+			}
+		}
+	}
+	return value;
+}

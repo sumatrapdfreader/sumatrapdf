@@ -64,26 +64,6 @@ pdf_out_ri(fz_context *ctx, pdf_processor *proc, const char *intent)
 }
 
 static void
-pdf_out_gs_OP(fz_context *ctx, pdf_processor *proc, int b)
-{
-}
-
-static void
-pdf_out_gs_op(fz_context *ctx, pdf_processor *proc, int b)
-{
-}
-
-static void
-pdf_out_gs_OPM(fz_context *ctx, pdf_processor *proc, int i)
-{
-}
-
-static void
-pdf_out_gs_UseBlackPtComp(fz_context *ctx, pdf_processor *proc, pdf_obj *name)
-{
-}
-
-static void
 pdf_out_i(fz_context *ctx, pdf_processor *proc, float flatness)
 {
 	fz_output *out = ((pdf_output_processor*)proc)->out;
@@ -601,7 +581,7 @@ pdf_out_BI(fz_context *ctx, pdf_processor *proc, fz_image *img, const char *colo
 	else if (img->colorspace == fz_device_cmyk(ctx))
 		fz_write_string(ctx, out, "/CS/CMYK\n");
 	else if (colorspace)
-		fz_write_printf(ctx, out, "/CS%n/n", colorspace);
+		fz_write_printf(ctx, out, "/CS%n\n", colorspace);
 	else
 		fz_throw(ctx, FZ_ERROR_GENERIC, "BI operator can only show ImageMask, Gray, RGB, or CMYK images");
 	if (img->interpolate)
@@ -928,10 +908,10 @@ pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode)
 		proc->super.op_EX = pdf_out_EX;
 
 		/* extgstate */
-		proc->super.op_gs_OP = pdf_out_gs_OP;
-		proc->super.op_gs_op = pdf_out_gs_op;
-		proc->super.op_gs_OPM = pdf_out_gs_OPM;
-		proc->super.op_gs_UseBlackPtComp = pdf_out_gs_UseBlackPtComp;
+		proc->super.op_gs_OP = NULL;
+		proc->super.op_gs_op = NULL;
+		proc->super.op_gs_OPM = NULL;
+		proc->super.op_gs_UseBlackPtComp = NULL;
 	}
 
 	proc->out = out;

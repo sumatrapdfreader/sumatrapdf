@@ -17,6 +17,9 @@ struct svg_document_s
 
 const char *svg_lex_number(float *fp, const char *str);
 float svg_parse_number(const char *str, float min, float max, float inherit);
+float svg_parse_number_from_style(fz_context *ctx, svg_document *doc, const char *string, const char *name, float number);
+int svg_parse_enum_from_style(fz_context *ctx, svg_document *doc, const char *style, const char *att,
+	int ecount, const char *etable[], int value);
 
 /*
 	Return length/coordinate in points.
