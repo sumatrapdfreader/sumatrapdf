@@ -23,6 +23,9 @@ struct EditCtrl : WindowBase {
     str::Str cueText;
     OnTextChanged OnTextChanged;
 
+    // set before Create()
+    bool isMultiLine = false;
+
     // set those via SetColors() to keep bgBrush in sync with bgCol
     HBRUSH bgBrush = nullptr;
 
@@ -32,10 +35,6 @@ struct EditCtrl : WindowBase {
     ~EditCtrl();
     bool Create() override;
     Size GetIdealSize() override;
-    void WndProc(WndEvent*) override;
-
-    void HandleWM_COMMAND(WndEvent*);
-    void HandleWM_CTLCOLOREDIT(WndEvent*);
 
     void SetSelection(int start, int end);
     bool SetCueText(std::string_view);

@@ -288,7 +288,7 @@ static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot)
     if (!isVisible) {
         return;
     }
-    // TODO: set editContents
+    w->editContents->SetText(annot->contents.as_view());
 }
 
 static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
@@ -446,6 +446,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
 
     {
         auto w = new EditCtrl(parent);
+        w->isMultiLine = true;
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsVisible(false);

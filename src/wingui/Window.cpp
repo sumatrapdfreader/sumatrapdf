@@ -639,6 +639,7 @@ bool WindowBase::IsEnabled() {
 }
 
 void WindowBase::SetIsVisible(bool isVisible) {
+    // TODO: a different way to determine if is top level vs. child window?
     if (GetParent(hwnd) == nullptr) {
         ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
     } else {

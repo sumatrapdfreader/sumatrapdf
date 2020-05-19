@@ -23,6 +23,11 @@ Annotations:
 
 ------
 
+Website: add way to share on twitter, facebook, like on AlternativeTo, Slant, Capterra,
+like https://dynalist.io/features/full ("Spread The Word")
+
+------
+
 A system to trigger re-layout when e.g. a button text changes.
 Add a way to register function to be called for a given hwnd.
 WindowBaseLayout() registers for its hwnd and calls Relayout().
@@ -150,6 +155,7 @@ icons:
 - online icon editor: https://redketchup.io/icon-editor could be used to improve the low-resolution icons.
 
 - https://docs.microsoft.com/en-us/windows/package-manager/ : info about windows package manager
+- https://devblogs.microsoft.com/commandline/windows-package-manager-preview/
 
 - [X] convert Rect in Layout.h to be like Rect
 - [X] replace Rect with Rect typedef

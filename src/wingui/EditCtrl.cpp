@@ -37,38 +37,8 @@ ILayout* NewEditLayout(EditCtrl* w) {
     return new WindowBaseLayout(w, kindEdit);
 }
 
-static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
-    auto w = (EditCtrl*)user;
-    w->HandleWM_COMMAND(ev);
-}
-
-static void DispatchWM_CTLCOLOREDIT(void* user, WndEvent* ev) {
-    auto w = (EditCtrl*)user;
-    w->HandleWM_CTLCOLOREDIT(ev);
-}
-
-// https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcoloredit
-void EditCtrl::HandleWM_CTLCOLOREDIT(WndEvent* ev) {
-    CrashIf(ev->msg != WM_CTLCOLOREDIT);
-    EditCtrl* w = this;
-    HWND hwndCtrl = (HWND)ev->lparam;
-    CrashIf(hwndCtrl != w->hwnd);
-    if (w->bgBrush == nullptr) {
-        return;
-    }
-    HDC hdc = (HDC)ev->wparam;
-    // SetBkColor(hdc, w->bgCol);
-    SetBkMode(hdc, TRANSPARENT);
-    if (w->textColor != ColorUnset) {
-        ::SetTextColor(hdc, w->textColor);
-    }
-    ev->didHandle = true;
-    ev->result = (INT_PTR)w->bgBrush;
-}
-
-void EditCtrl::HandleWM_COMMAND(WndEvent* ev) {
+static void HandleWM_COMMAND(EditCtrl* w, WndEvent* ev) {
     CrashIf(ev->msg != WM_COMMAND);
-    EditCtrl* w = this;
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
     auto code = HIWORD(ev->wparam);
@@ -85,19 +55,32 @@ void EditCtrl::HandleWM_COMMAND(WndEvent* ev) {
     }
 }
 
-void EditCtrl::WndProc(WndEvent* ev) {
-    // UINT msg = ev->msg;
-    // auto wp = ev->wparam;
-    // char* msgName = getWinMessageName(ev->msg);
-    // dbglogf("EditCtrl::WndProc: hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, wp);
+static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+    auto w = (EditCtrl*)user;
+    HandleWM_COMMAND(w, ev);
+}
 
-    EditCtrl* w = this;
-    if (w->msgFilter) {
-        w->msgFilter(ev);
-        if (ev->didHandle) {
-            return;
-        }
+// https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcoloredit
+static void HandleWM_CTLCOLOREDIT(EditCtrl* w, WndEvent* ev) {
+    CrashIf(ev->msg != WM_CTLCOLOREDIT);
+    HWND hwndCtrl = (HWND)ev->lparam;
+    CrashIf(hwndCtrl != w->hwnd);
+    if (w->bgBrush == nullptr) {
+        return;
     }
+    HDC hdc = (HDC)ev->wparam;
+    // SetBkColor(hdc, w->bgCol);
+    SetBkMode(hdc, TRANSPARENT);
+    if (w->textColor != ColorUnset) {
+        ::SetTextColor(hdc, w->textColor);
+    }
+    ev->didHandle = true;
+    ev->result = (INT_PTR)w->bgBrush;
+}
+
+static void DispatchWM_CTLCOLOREDIT(void* user, WndEvent* ev) {
+    auto w = (EditCtrl*)user;
+    HandleWM_CTLCOLOREDIT(w, ev);
 }
 
 #if 0
@@ -116,7 +99,7 @@ void EditCtrl::SetColors(COLORREF txtCol, COLORREF bgCol) {
 }
 #endif
 
-static bool HwndSetCueText(HWND hwnd, std::string_view s) {
+static bool EditSetCueText(HWND hwnd, std::string_view s) {
     if (!hwnd) {
         return false;
     }
@@ -128,7 +111,7 @@ static bool HwndSetCueText(HWND hwnd, std::string_view s) {
 
 bool EditCtrl::SetCueText(std::string_view s) {
     cueText.Set(s);
-    return HwndSetCueText(hwnd, cueText.AsView());
+    return EditSetCueText(hwnd, cueText.AsView());
 }
 
 void EditCtrl::SetSelection(int start, int end) {
@@ -148,20 +131,21 @@ bool EditCtrl::Create() {
     // WS_BORDER is not set, which is a mystery, because it is being drawn.
     // also, WS_BORDER seems to be painted in client area
     hasBorder = bit::IsMaskSet<DWORD>(dwStyle, WS_BORDER);
+    if (isMultiLine) {
+        dwStyle |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
+    }
 
     bool ok = WindowBase::Create();
     if (!ok) {
         return false;
     }
 
-    // Subclass();
-
     void* user = this;
     RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
     RegisterHandlerForMessage(hwnd, WM_CTLCOLOREDIT, DispatchWM_CTLCOLOREDIT, user);
     // TODO: handle WM_CTLCOLORSTATIC for read-only/disabled controls
 
-    HwndSetCueText(hwnd, cueText.AsView());
+    EditSetCueText(hwnd, cueText.AsView());
     return true;
 }
 
