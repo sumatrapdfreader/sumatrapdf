@@ -2368,6 +2368,14 @@ JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFObject_getDictionary
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFObject
+ * Method:    getDictionaryKey
+ * Signature: (I)Lcom/artifex/mupdf/fitz/PDFObject;
+ */
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFObject_getDictionaryKey
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFObject
  * Method:    putArrayBoolean
  * Signature: (IZ)V
  */

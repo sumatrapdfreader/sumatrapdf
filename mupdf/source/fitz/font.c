@@ -1606,10 +1606,7 @@ fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gi
 		if (font->t3flags[gid] & FZ_DEVFLAG_COLOR)
 			fz_warn(ctx, "type3 glyph claims to be both masked and colored");
 	}
-	else if (font->t3flags[gid] & FZ_DEVFLAG_COLOR)
-	{
-	}
-	else
+	else if (!(font->t3flags[gid] & FZ_DEVFLAG_COLOR))
 	{
 		fz_warn(ctx, "type3 glyph doesn't specify masked or colored");
 	}

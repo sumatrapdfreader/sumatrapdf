@@ -1554,6 +1554,7 @@ fz_scale_pixmap_cached(fz_context *ctx, const fz_pixmap *src, float x, float y, 
 	/* Clamp small ranges of w and h */
 	if (w <= -1)
 	{
+		/* Large negative range. Don't clamp */
 	}
 	else if (w < 0)
 	{
@@ -1565,6 +1566,7 @@ fz_scale_pixmap_cached(fz_context *ctx, const fz_pixmap *src, float x, float y, 
 	}
 	if (h <= -1)
 	{
+		/* Large negative range. Don't clamp */
 	}
 	else if (h < 0)
 	{

@@ -34,7 +34,7 @@ static int isfontdesc(pdf_obj *obj)
 	return pdf_name_eq(ctx, type, PDF_NAME(FontDescriptor));
 }
 
-static void writepixmap(fz_context *ctx, fz_pixmap *pix, char *file, int dorgb)
+static void writepixmap(fz_pixmap *pix, char *file)
 {
 	char buf[1024];
 	fz_pixmap *rgb = NULL;
@@ -65,7 +65,7 @@ static void writepixmap(fz_context *ctx, fz_pixmap *pix, char *file, int dorgb)
 }
 
 static void
-writejpeg(fz_context *ctx, const unsigned char *data, size_t len, const char *file)
+writejpeg(const unsigned char *data, size_t len, const char *file)
 {
 	char buf[1024];
 	fz_output *out;
@@ -120,12 +120,12 @@ static void saveimage(pdf_obj *ref)
 		{
 			unsigned char *data;
 			size_t len = fz_buffer_storage(ctx, cbuf->buffer, &data);
-			writejpeg(ctx, data, len, buf);
+			writejpeg(data, len, buf);
 		}
 		else
 		{
 			pix = fz_get_pixmap_from_image(ctx, image, NULL, NULL, 0, 0);
-			writepixmap(ctx, pix, buf, dorgb);
+			writepixmap(pix, buf);
 		}
 	}
 	fz_always(ctx)

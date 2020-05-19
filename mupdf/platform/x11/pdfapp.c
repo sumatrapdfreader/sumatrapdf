@@ -680,6 +680,8 @@ static int pdfapp_save(pdfapp_t *app)
 			}
 			fz_catch(app->ctx)
 			{
+				/* Ignore any error, so we drop out with
+				 * failure below. */
 			}
 
 			if (written)

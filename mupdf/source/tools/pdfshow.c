@@ -208,7 +208,7 @@ static void showgrep(void)
 }
 
 static void
-fz_print_outline(fz_context *ctx, fz_output *out, fz_outline *outline, int level)
+print_outline(fz_outline *outline, int level)
 {
 	int i;
 	while (outline)
@@ -222,7 +222,7 @@ fz_print_outline(fz_context *ctx, fz_output *out, fz_outline *outline, int level
 			fz_write_byte(ctx, out, '\t');
 		fz_write_printf(ctx, out, "%Q\t%s\n", outline->title, outline->uri);
 		if (outline->down)
-			fz_print_outline(ctx, out, outline->down, level + 1);
+			print_outline(outline->down, level + 1);
 		outline = outline->next;
 	}
 }
@@ -231,7 +231,7 @@ static void showoutline(void)
 {
 	fz_outline *outline = fz_load_outline(ctx, (fz_document*)doc);
 	fz_try(ctx)
-		fz_print_outline(ctx, out, outline, 1);
+		print_outline(outline, 1);
 	fz_always(ctx)
 		fz_drop_outline(ctx, outline);
 	fz_catch(ctx)
@@ -559,6 +559,7 @@ int pdfshow_main(int argc, char **argv)
 	char *filename = NULL;
 	char *output = NULL;
 	int c;
+	int errored = 0;
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)
@@ -608,10 +609,11 @@ int pdfshow_main(int argc, char **argv)
 	}
 	fz_catch(ctx)
 	{
+		errored = 1;
 	}
 
 	fz_drop_output(ctx, out);
 	pdf_drop_document(ctx, doc);
 	fz_drop_context(ctx);
-	return 0;
+	return errored;
 }

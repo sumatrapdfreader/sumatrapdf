@@ -1662,7 +1662,7 @@ typedef struct
 } sigs_list;
 
 static void
-process_sigs(fz_context *ctx, pdf_obj *field, void *arg, pdf_obj **ft)
+process_sigs(fz_context *ctx_, pdf_obj *field, void *arg, pdf_obj **ft)
 {
 	sigs_list *sigs = (sigs_list *)arg;
 
@@ -2091,9 +2091,9 @@ static void usage(const char *argv0)
 	exit(1);
 }
 
-static int document_filter(const char *filename)
+static int document_filter(const char *fname)
 {
-	return !!fz_recognize_document(ctx, filename);
+	return !!fz_recognize_document(ctx, fname);
 }
 
 static void do_open_document_dialog(void)

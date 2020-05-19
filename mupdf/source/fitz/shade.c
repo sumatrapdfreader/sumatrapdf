@@ -789,6 +789,7 @@ fz_process_shade_type6(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_
 
 			if (flag == 0)
 			{
+				/* No patch data to copy forwards */
 			}
 			else if (flag == 1 && prevc)
 			{
@@ -902,6 +903,7 @@ fz_process_shade_type7(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_
 
 			if (flag == 0)
 			{
+				/* No patch data to copy forward */
 			}
 			else if (flag == 1 && prevc)
 			{

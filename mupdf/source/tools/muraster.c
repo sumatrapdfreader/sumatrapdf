@@ -716,7 +716,7 @@ static int dodrawpage(fz_context *ctx, int pagenum, fz_cookie *cookie, render_de
 }
 
 /* This functions tries to render a page, falling back repeatedly to try and make it work. */
-static int try_render_page(fz_context *ctx, int pagenum, fz_cookie *cookie, int start, int interptime, char *filename, int bg, int solo, render_details *render)
+static int try_render_page(fz_context *ctx, int pagenum, fz_cookie *cookie, int start, int interptime, char *fname, int bg, int solo, render_details *render)
 {
 	int status;
 
@@ -796,14 +796,14 @@ static int try_render_page(fz_context *ctx, int pagenum, fz_cookie *cookie, int 
 				timing.min = diff + interptime;
 				timing.mininterp = interptime;
 				timing.minpage = pagenum;
-				timing.minfilename = filename;
+				timing.minfilename = fname;
 			}
 			if (diff + interptime > timing.max)
 			{
 				timing.max = diff + interptime;
 				timing.maxinterp = interptime;
 				timing.maxpage = pagenum;
-				timing.maxfilename = filename;
+				timing.maxfilename = fname;
 			}
 			timing.total += diff + interptime;
 			timing.count ++;
@@ -816,13 +816,13 @@ static int try_render_page(fz_context *ctx, int pagenum, fz_cookie *cookie, int 
 			{
 				timing.min = diff;
 				timing.minpage = pagenum;
-				timing.minfilename = filename;
+				timing.minfilename = fname;
 			}
 			if (diff > timing.max)
 			{
 				timing.max = diff;
 				timing.maxpage = pagenum;
-				timing.maxfilename = filename;
+				timing.maxfilename = fname;
 			}
 			timing.total += diff;
 			timing.count ++;

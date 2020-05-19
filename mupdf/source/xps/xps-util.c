@@ -34,30 +34,33 @@ skip_scheme(char *path)
 
 	/* Skip over: alpha *(alpha | digit | "+" | "-" | ".") looking for : */
 	if (*p >= 'a' && *p <= 'z')
-	{}
+	{
+		/* Starts with a-z */
+	}
 	else if (*p >= 'A' && *p <= 'Z')
-	{}
+	{
+		/* Starts with A-Z */
+	}
 	else
 		return path;
 
 	while (*++p)
 	{
 		if (*p >= 'a' && *p <= 'z')
-		{}
-		else if (*p >= 'A' && *p <= 'Z')
-		{}
-		else if (*p >= '0' && *p <= '9')
-		{}
-		else if (*p == '+')
-		{}
-		else if (*p == '-')
-		{}
-		else if (*p == '.')
-		{}
-		else if (*p == ':')
+			continue;
+		if (*p >= 'A' && *p <= 'Z')
+			continue;
+		if (*p >= '0' && *p <= '9')
+			continue;
+		if (*p == '+')
+			continue;
+		if (*p == '-')
+			continue;
+		if (*p == '.')
+			continue;
+		if (*p == ':')
 			return p+1;
-		else
-			break;
+		break;
 	}
 	return path;
 }

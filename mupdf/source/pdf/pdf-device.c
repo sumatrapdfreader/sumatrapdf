@@ -124,7 +124,9 @@ pdf_dev_stroke_state(fz_context *ctx, pdf_device *pdev, const fz_stroke_state *s
 		fz_append_printf(ctx, gs->buf, "%g M\n", stroke_state->miterlimit);
 	}
 	if (gs->stroke_state == NULL && stroke_state->dash_len == 0)
-	{}
+	{
+		/* No stroke details. */
+	}
 	else if (!gs->stroke_state || gs->stroke_state->dash_phase != stroke_state->dash_phase || gs->stroke_state->dash_len != stroke_state->dash_len ||
 		memcmp(gs->stroke_state->dash_list, stroke_state->dash_list, sizeof(float)*stroke_state->dash_len))
 	{

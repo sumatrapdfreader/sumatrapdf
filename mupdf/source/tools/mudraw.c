@@ -525,7 +525,7 @@ static void drawband(fz_context *ctx, fz_page *page, fz_display_list *list, fz_m
 	}
 }
 
-static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, int pagenum, fz_cookie *cookie, int start, int interptime, char *filename, int bg, fz_separations *seps)
+static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, int pagenum, fz_cookie *cookie, int start, int interptime, char *fname, int bg, fz_separations *seps)
 {
 	fz_rect mediabox;
 	fz_device *dev = NULL;
@@ -714,9 +714,9 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		fz_matrix ctm;
 		fz_rect tbounds;
 		char buf[512];
-		fz_output *out = NULL;
+		fz_output *outs = NULL;
 
-		fz_var(out);
+		fz_var(outs);
 
 		zoom = resolution / 72;
 		ctm = fz_pre_rotate(fz_scale(zoom, zoom), rotation);
@@ -725,14 +725,14 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		fz_try(ctx)
 		{
 			if (!output || !strcmp(output, "-"))
-				out = fz_stdout(ctx);
+				outs = fz_stdout(ctx);
 			else
 			{
 				fz_format_output_path(ctx, buf, sizeof buf, output, pagenum);
-				out = fz_new_output_with_path(ctx, buf, 0);
+				outs = fz_new_output_with_path(ctx, buf, 0);
 			}
 
-			dev = fz_new_svg_device(ctx, out, tbounds.x1-tbounds.x0, tbounds.y1-tbounds.y0, FZ_SVG_TEXT_AS_PATH, 1);
+			dev = fz_new_svg_device(ctx, outs, tbounds.x1-tbounds.x0, tbounds.y1-tbounds.y0, FZ_SVG_TEXT_AS_PATH, 1);
 			if (lowmemory)
 				fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
 			if (list)
@@ -740,12 +740,12 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			else
 				fz_run_page(ctx, page, dev, ctm, cookie);
 			fz_close_device(ctx, dev);
-			fz_close_output(ctx, out);
+			fz_close_output(ctx, outs);
 		}
 		fz_always(ctx)
 		{
 			fz_drop_device(ctx, dev);
-			fz_drop_output(ctx, out);
+			fz_drop_output(ctx, outs);
 		}
 		fz_catch(ctx)
 		{
@@ -1012,14 +1012,14 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 				timing.min = diff + interptime;
 				timing.mininterp = interptime;
 				timing.minpage = pagenum;
-				timing.minfilename = filename;
+				timing.minfilename = fname;
 			}
 			if (diff + interptime > timing.max)
 			{
 				timing.max = diff + interptime;
 				timing.maxinterp = interptime;
 				timing.maxpage = pagenum;
-				timing.maxfilename = filename;
+				timing.maxfilename = fname;
 			}
 			timing.count ++;
 
@@ -1031,13 +1031,13 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			{
 				timing.min = diff;
 				timing.minpage = pagenum;
-				timing.minfilename = filename;
+				timing.minfilename = fname;
 			}
 			if (diff > timing.max)
 			{
 				timing.max = diff;
 				timing.maxpage = pagenum;
-				timing.maxfilename = filename;
+				timing.maxfilename = fname;
 			}
 			timing.total += diff;
 			timing.count ++;
@@ -1536,17 +1536,17 @@ static int convert_to_accel_path(fz_context *ctx, char outname[], char *absname,
 	return 1;
 }
 
-static int get_accelerator_filename(fz_context *ctx, char outname[], size_t len, const char *filename)
+static int get_accelerator_filename(fz_context *ctx, char outname[], size_t len, const char *fname)
 {
 	char absname[PATH_MAX];
-	if (!fz_realpath(filename, absname))
+	if (!fz_realpath(fname, absname))
 		return 0;
 	if (!convert_to_accel_path(ctx, outname, absname, len))
 		return 0;
 	return 1;
 }
 
-static void save_accelerator(fz_context *ctx, fz_document *doc, const char *filename)
+static void save_accelerator(fz_context *ctx, fz_document *doc, const char *fname)
 {
 	char absname[PATH_MAX];
 
@@ -1554,7 +1554,7 @@ static void save_accelerator(fz_context *ctx, fz_document *doc, const char *file
 		return;
 	if (!fz_document_supports_accelerator(ctx, doc))
 		return;
-	if (!get_accelerator_filename(ctx, absname, sizeof(absname), filename))
+	if (!get_accelerator_filename(ctx, absname, sizeof(absname), fname))
 		return;
 
 	fz_save_accelerator(ctx, doc, absname);
@@ -2200,6 +2200,10 @@ int mudraw_main(int argc, char **argv)
 	}
 	fz_catch(ctx)
 	{
+		if (!errored) {
+			fprintf(stderr, "Rendering failed\n");
+			errored = 1;
+		}
 	}
 
 	fz_drop_context(ctx);

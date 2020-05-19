@@ -594,6 +594,23 @@ static const char *string_from_join(fz_linejoin join)
 	}
 }
 
+static const char *string_from_line_ending(enum pdf_line_ending style)
+{
+	switch (style) {
+	default:
+	case PDF_ANNOT_LE_NONE: return "None";
+	case PDF_ANNOT_LE_SQUARE: return "Square";
+	case PDF_ANNOT_LE_CIRCLE: return "Circle";
+	case PDF_ANNOT_LE_DIAMOND: return "Diamond";
+	case PDF_ANNOT_LE_OPEN_ARROW: return "OpenArrow";
+	case PDF_ANNOT_LE_CLOSED_ARROW: return "ClosedArrow";
+	case PDF_ANNOT_LE_BUTT: return "Butt";
+	case PDF_ANNOT_LE_R_OPEN_ARROW: return "ROpenArrow";
+	case PDF_ANNOT_LE_R_CLOSED_ARROW: return "RCloseArrow";
+	case PDF_ANNOT_LE_SLASH: return "Slash";
+	}
+}
+
 static fz_linecap cap_from_string(const char *str)
 {
 	if (!strcmp(str, "Round")) return FZ_LINECAP_ROUND;
@@ -608,6 +625,21 @@ static fz_linejoin join_from_string(const char *str)
 	if (!strcmp(str, "Bevel")) return FZ_LINEJOIN_BEVEL;
 	if (!strcmp(str, "MiterXPS")) return FZ_LINEJOIN_MITER_XPS;
 	return FZ_LINEJOIN_MITER;
+}
+
+static enum pdf_line_ending line_ending_from_string(const char *str)
+{
+	if (!strcmp(str, "None")) return PDF_ANNOT_LE_NONE;
+	if (!strcmp(str, "Square")) return PDF_ANNOT_LE_SQUARE;
+	if (!strcmp(str, "Circle")) return PDF_ANNOT_LE_CIRCLE;
+	if (!strcmp(str, "Diamond")) return PDF_ANNOT_LE_DIAMOND;
+	if (!strcmp(str, "OpenArrow")) return PDF_ANNOT_LE_OPEN_ARROW;
+	if (!strcmp(str, "ClosedArrow")) return PDF_ANNOT_LE_CLOSED_ARROW;
+	if (!strcmp(str, "Butt")) return PDF_ANNOT_LE_BUTT;
+	if (!strcmp(str, "ROpenArrow")) return PDF_ANNOT_LE_R_OPEN_ARROW;
+	if (!strcmp(str, "RClosedArrow")) return PDF_ANNOT_LE_R_CLOSED_ARROW;
+	if (!strcmp(str, "Slash")) return PDF_ANNOT_LE_SLASH;
+	return PDF_ANNOT_LE_NONE;
 }
 
 static void ffi_pushstroke(js_State *J, const fz_stroke_state *stroke)
@@ -4776,6 +4808,39 @@ static void ffi_PDFAnnotation_setModificationDate(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_PDFAnnotation_getLineEndingStyles(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	enum pdf_line_ending start, end;
+
+	js_newarray(J);
+
+	fz_try(ctx)
+		pdf_annot_line_ending_styles(ctx, annot, &start, &end);
+	fz_catch(ctx)
+		rethrow(J);
+
+	js_newobject(J);
+	js_pushliteral(J, string_from_line_ending(start));
+	js_setproperty(J, -2, "start");
+	js_pushliteral(J, string_from_line_ending(end));
+	js_setproperty(J, -2, "end");
+}
+
+static void ffi_PDFAnnotation_setLineEndingStyles(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	enum pdf_line_ending start = line_ending_from_string(js_tostring(J, 1));
+	enum pdf_line_ending end = line_ending_from_string(js_tostring(J, 2));
+
+	fz_try(ctx)
+		pdf_set_annot_line_ending_styles(ctx, annot, start, end);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 static void ffi_PDFAnnotation_updateAppearance(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -5412,6 +5477,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFAnnotation.setAuthor", ffi_PDFAnnotation_setAuthor, 1);
 		jsB_propfun(J, "PDFAnnotation.getModificationDate", ffi_PDFAnnotation_getModificationDate, 0);
 		jsB_propfun(J, "PDFAnnotation.setModificationDate", ffi_PDFAnnotation_setModificationDate, 0);
+		jsB_propfun(J, "PDFAnnotation.getLineEndingStyles", ffi_PDFAnnotation_getLineEndingStyles, 0);
+		jsB_propfun(J, "PDFAnnotation.setLineEndingStyles", ffi_PDFAnnotation_setLineEndingStyles, 0);
 
 		jsB_propfun(J, "PDFAnnotation.getInkList", ffi_PDFAnnotation_getInkList, 0);
 		jsB_propfun(J, "PDFAnnotation.setInkList", ffi_PDFAnnotation_setInkList, 1);

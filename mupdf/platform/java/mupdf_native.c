@@ -8707,6 +8707,26 @@ FUN(PDFObject_getDictionary)(JNIEnv *env, jobject self, jstring jname)
 	return to_PDFObject_safe(ctx, env, self, val);
 }
 
+JNIEXPORT jobject JNICALL
+FUN(PDFObject_getDictionaryKey)(JNIEnv *env, jobject self, jint index)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *dict = from_PDFObject(env, self);
+	pdf_obj *key = NULL;
+
+	if (!ctx || !dict) return NULL;
+
+	fz_try(ctx)
+		key = pdf_dict_get_key(ctx, dict, index);
+	fz_catch(ctx)
+	{
+		jni_rethrow(env, ctx);
+		return NULL;
+	}
+
+	return to_PDFObject_safe(ctx, env, self, key);
+}
+
 JNIEXPORT void JNICALL
 FUN(PDFObject_putArrayBoolean)(JNIEnv *env, jobject self, jint index, jboolean b)
 {
@@ -9330,13 +9350,20 @@ JNIEXPORT jint JNICALL
 FUN(PDFObject_size)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	pdf_obj *arr = from_PDFObject(env, self);
+	pdf_obj *obj = from_PDFObject(env, self);
 	int len;
 
-	if (!ctx || !arr) return 0;
+	if (!ctx || !obj) return 0;
 
 	fz_try(ctx)
-		len = pdf_array_len(ctx, arr);
+	{
+		if (pdf_is_array(ctx, obj))
+			len = pdf_array_len(ctx, obj);
+		else if (pdf_is_dict(ctx, obj))
+			len = pdf_dict_len(ctx, obj);
+		else
+			len = 0;
+	}
 	fz_catch(ctx)
 	{
 		jni_rethrow(env, ctx);

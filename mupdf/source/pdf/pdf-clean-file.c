@@ -66,7 +66,7 @@ static int dest_is_valid(fz_context *ctx, pdf_obj *o, int page_count, int *page_
 
 	p = pdf_dict_get(ctx, o, PDF_NAME(Dest));
 	if (p == NULL)
-	{}
+		return 1; /* A name with no dest counts as valid. */
 	else if (pdf_is_string(ctx, p))
 		return string_in_names_list(ctx, p, names_list);
 	else if (!dest_is_valid_page(ctx, pdf_array_get(ctx, p, 0), page_object_nums, page_count))
