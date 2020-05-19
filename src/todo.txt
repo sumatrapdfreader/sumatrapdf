@@ -149,6 +149,8 @@ icons:
 - convert to .ico with https://www.icoconverter.com/
 - online icon editor: https://redketchup.io/icon-editor could be used to improve the low-resolution icons.
 
+- https://docs.microsoft.com/en-us/windows/package-manager/ : info about windows package manager
+
 - [X] convert Rect in Layout.h to be like Rect
 - [X] replace Rect with Rect typedef
 - [X] rename Rect, Point, Size => Rect, Point, Size
