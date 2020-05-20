@@ -324,8 +324,10 @@ static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
         isVisible = pdf_annot_has_icon_name(annot->ctx, a);
     }
     const char** icons = nullptr;
-    const char* currIcon = a ? pdf_annot_icon_name(annot->ctx, a) : nullptr;
+    const char* currIcon = nullptr;
     if (isVisible) {
+        // can only call if pdf_annot_has_icon_name() returned true
+        currIcon = pdf_annot_icon_name(annot->ctx, a);
         switch (annot->type) {
             case AnnotationType::Text:
                 icons = gTextIcons;
