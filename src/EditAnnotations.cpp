@@ -172,6 +172,8 @@ struct EditAnnotationsWindow {
     ListBoxModel* lbModel = nullptr;
 
     Vec<Annotation*>* annotations = nullptr;
+    // currently selected annotation
+    Annotation* annot = nullptr;
 
     ~EditAnnotationsWindow();
     bool Create();
@@ -187,6 +189,23 @@ struct EditAnnotationsWindow {
     void DropDownColorSelectionChanged(DropDownSelectionChangedEvent* ev);
     void RebuildAnnotations();
 };
+
+static int FindStringInArray(const char** items, const char* toFind, int valIfNotFound = -1) {
+    for (int i = 0; items[i] != nullptr; i++) {
+        const char* s = items[i];
+        if (str::Eq(s, toFind)) {
+            return i;
+        }
+    }
+    return valIfNotFound;
+}
+
+static void DropDownItemsFromStringArray(Vec<std::string_view>& items, const char** strings) {
+    for (int i = 0; strings[i] != nullptr; i++) {
+        const char* s = strings[i];
+        items.Append(s);
+    }
+}
 
 void DeleteEditAnnotationsWindow(EditAnnotationsWindow* w) {
     delete w;
@@ -298,18 +317,41 @@ static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot)
 }
 
 static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
-    bool isVisible = (annot != nullptr);
+    bool isVisible = (annot != nullptr) && annot->pdf_annot;
+    if (isVisible) {
+        isVisible = pdf_annot_has_icon_name(annot->ctx, annot->pdf_annot);
+    }
+    const char** icons = nullptr;
+    const char* currIcon = pdf_annot_icon_name(annot->ctx, annot->pdf_annot);
+    if (isVisible) {
+        switch (annot->type) {
+            case AnnotationType::Text:
+                icons = gTextIcons;
+                break;
+            case AnnotationType::FileAttachment:
+                icons = gFileAttachmentUcons;
+                break;
+            case AnnotationType::Sound:
+                icons = gSoundIcons;
+                break;
+            case AnnotationType::Stamp:
+                icons = gStampIcons;
+                break;
+        }
+    }
+    if (!icons) {
+        isVisible = false;
+    }
     w->staticIcon->SetIsVisible(isVisible);
     w->dropDownIcon->SetIsVisible(isVisible);
     if (!isVisible) {
         return;
     }
-    // TODO: set icons drop-down
-    /*
-        Vec<std::string_view> strings;
-        DropDownItemsFromStringArray(strings, gTextIcons);
-        w->SetItems(strings);
-    */
+    Vec<std::string_view> strings;
+    DropDownItemsFromStringArray(strings, icons);
+    w->dropDownIcon->SetItems(strings);
+    int idx = FindStringInArray(icons, currIcon, 0);
+    w->dropDownIcon->SetCurrentSelection(idx);
 }
 
 static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
@@ -324,7 +366,7 @@ static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
 void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev) {
     // TODO: finish me
     int itemNo = ev->idx;
-    Annotation* annot = nullptr;
+    annot = nullptr;
     if (itemNo >= 0) {
         annot = annotations->at(itemNo);
     }
@@ -338,7 +380,6 @@ void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent
     buttonDelete->SetIsVisible(annot != nullptr);
     Relayout(mainLayout);
     // TODO: go to page with selected annotation
-    // MessageBoxNYI(mainWindow->hwnd);
 }
 
 void EditAnnotationsWindow::DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev) {
@@ -373,13 +414,6 @@ void EditAnnotationsWindow::SizeHandler(SizeEvent* ev) {
         return;
     }
     LayoutToSize(mainLayout, {dx, dy});
-}
-
-void DropDownItemsFromStringArray(Vec<std::string_view>& items, const char** strings) {
-    for (int i = 0; strings[i] != nullptr; i++) {
-        const char* s = strings[i];
-        items.Append(s);
-    }
 }
 
 static std::tuple<StaticCtrl*, ILayout*> CreateStatic(HWND parent, std::string_view sv = {}) {

@@ -58,12 +58,7 @@ EXPORTS
 	fz_set_warning_callback
 	fz_set_error_callback
 	fz_new_buffer_from_shared_data
-	pdf_set_annot_rect
-	pdf_set_annot_color
 	pdf_update_appearance
-	pdf_set_annot_modification_date
-	pdf_add_annot_quad_point
-	pdf_set_annot_opacity
 	pdf_dict_put_drop
 	pdf_add_page
 	pdf_add_image
@@ -452,20 +447,41 @@ EXPORTS
 	pdf_annot_rect
 	pdf_annot_flags
 	pdf_annot_color
+	pdf_annot_icon_name
 	pdf_annot_author
 	pdf_annot_contents
+	pdf_annot_border
+	pdf_annot_line
+	pdf_annot_line_ending_styles
+	pdf_annot_quadding
+	pdf_annot_creation_date
+	pdf_annot_modification_date
+	pdf_annot_default_appearance
+	pdf_annot_has_icon_name
+	pdf_annot_has_author
 	pdf_update_annot
 	pdf_create_annot
 	pdf_delete_annot
 	pdf_set_annot_contents
+	pdf_set_annot_icon_name
+	pdf_set_annot_opacity
+	pdf_set_annot_rect
+	pdf_set_annot_color
+	pdf_set_annot_line
+	pdf_set_annot_author
+	pdf_set_annot_modification_date
+	pdf_set_annot_opacity
+	pdf_set_annot_quadding
+	pdf_set_annot_language
+	pdf_add_annot_quad_point
+	pdf_set_annot_default_appearance
+	pdf_set_annot_line_ending_styles
 	pdf_run_annot
 	pdf_parse_link_dest
 	pdf_lookup_dest
 	pdf_lookup_name
 	pdf_load_name_tree
 	pdf_load_link_annots
-	pdf_annot_creation_date
-	pdf_annot_modification_date
 
 	pdf_new_cmap
 	pdf_keep_cmap
