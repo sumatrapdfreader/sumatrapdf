@@ -211,6 +211,9 @@ struct WindowBase {
     void SetFont(HFONT f);
     HFONT GetFont() const;
 
+    HICON SetIcon(HICON);
+    HICON GetIcon() const;
+
     void SetText(const WCHAR* s);
     void SetText(std::string_view);
     std::string_view GetText();
@@ -254,7 +257,6 @@ struct WindowBaseLayout : public ILayout {
     void SetBounds(const Rect bounds) override;
 };
 
-void HwndSetText(HWND hwnd, std::string_view s);
 UINT_PTR NextSubclassId();
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
 void PositionCloseTo(WindowBase* w, HWND hwnd);

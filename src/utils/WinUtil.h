@@ -250,7 +250,15 @@ bool TrackMouseLeave(HWND);
 void TriggerRepaint(HWND);
 POINT GetCursorPosInHwnd(HWND);
 HINSTANCE GetInstance();
-void hwndDpiAdjust(HWND hwnd, float* x, float* y);
 Size ButtonGetIdealSize(HWND hwnd);
 std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id);
 bool IsValidDelayType(int type);
+
+void HwndDpiAdjust(HWND, float* x, float* y);
+void HwndSetText(HWND, std::string_view s);
+HICON HwndSetIcon(HWND, HICON);
+HICON HwndGetIcon(HWND);
+void HwndInvalidate(HWND);
+void HwndSetFont(HWND, HFONT);
+HFONT HwndGetFont(HWND);
+

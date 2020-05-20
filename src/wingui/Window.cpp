@@ -198,18 +198,6 @@ CopyWndEvent::~CopyWndEvent() {
     src->result = dst->result;
 }
 
-void HwndSetText(HWND hwnd, std::string_view s) {
-    // can be called before a window is created
-    if (!hwnd) {
-        return;
-    }
-    if (s.empty()) {
-        return;
-    }
-    AutoFreeWstr ws = strconv::Utf8ToWstr(s);
-    win::SetText(hwnd, ws);
-}
-
 Kind kindWindowBase = "windowBase";
 
 static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
@@ -670,13 +658,13 @@ void WindowBase::SetBounds(const RECT& r) {
 
 void WindowBase::SetFont(HFONT f) {
     hfont = f;
-    SetWindowFont(hwnd, f, TRUE);
+    HwndSetFont(hwnd, f);
 }
 
 HFONT WindowBase::GetFont() const {
     HFONT res = hfont;
     if (!res) {
-        res = GetWindowFont(hwnd);
+        res = HwndGetFont(hwnd);
     }
     if (!res) {
         res = GetDefaultGuiFont();
@@ -692,11 +680,8 @@ void WindowBase::SetText(const WCHAR* s) {
 void WindowBase::SetText(std::string_view sv) {
     text.Set(sv);
     // can be set before we create the window
-    if (!hwnd) {
-        return;
-    }
     HwndSetText(hwnd, text.AsView());
-    InvalidateRect(hwnd, nullptr, FALSE);
+    HwndInvalidate(hwnd);
 }
 
 std::string_view WindowBase::GetText() {
@@ -845,6 +830,9 @@ bool Window::Create() {
     SetBackgroundColor(backgroundColor);
     SetFont(hfont);
     HwndSetText(hwnd, text.AsView());
+    if (hIcon) {
+        HwndSetIcon(hwnd, hIcon);
+    }
     return true;
 }
 

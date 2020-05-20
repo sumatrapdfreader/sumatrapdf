@@ -1997,7 +1997,7 @@ HINSTANCE GetInstance() {
     return (HINSTANCE)&__ImageBase;
 }
 
-void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
+void HwndDpiAdjust(HWND hwnd, float* x, float* y) {
     auto dpi = DpiGet(hwnd);
 
     if (x != nullptr) {
@@ -2018,7 +2018,7 @@ Size ButtonGetIdealSize(HWND hwnd) {
     // add padding
     float xPadding = 8 * 2;
     float yPadding = 2 * 2;
-    hwndDpiAdjust(hwnd, &xPadding, &yPadding);
+    HwndDpiAdjust(hwnd, &xPadding, &yPadding);
     s.cx += (int)xPadding;
     s.cy += (int)yPadding;
     Size res = {s.cx, s.cy};
@@ -2051,4 +2051,52 @@ bool IsValidDelayType(int type) {
             return true;
     }
     return false;
+}
+
+void HwndSetText(HWND hwnd, std::string_view s) {
+    // can be called before a window is created
+    if (!hwnd) {
+        return;
+    }
+    if (s.empty()) {
+        return;
+    }
+    AutoFreeWstr ws = strconv::Utf8ToWstr(s);
+    win::SetText(hwnd, ws);
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-seticon
+HICON HwndSetIcon(HWND hwnd, HICON icon) {
+    if (!hwnd) {
+        return nullptr;
+    }
+    HICON res = (HICON)SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)icon);
+    return res;
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-geticon
+HICON HwndGetIcon(HWND hwnd) {
+    HICON res = (HICON)SendMessageW(hwnd, WM_GETICON, ICON_BIG, 0);
+    return res;
+}
+
+void HwndInvalidate(HWND hwnd) {
+    if (hwnd) {
+        InvalidateRect(hwnd, nullptr, FALSE);
+    }
+}
+
+void HwndSetFont(HWND hwnd, HFONT font) {
+    if (!hwnd || !font) {
+        return;
+    }
+    SetWindowFont(hwnd, font, TRUE);
+}
+
+HFONT HwndGetFont(HWND hwnd) {
+    if (!hwnd) {
+        return nullptr;
+    }
+    auto res = GetWindowFont(hwnd);
+    return res;
 }
