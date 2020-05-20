@@ -200,9 +200,7 @@ static void CreateMainLayout(HWND hwnd) {
     }
 
     vboxLayout = vbox;
-    auto* padding = new Padding();
-    padding->child = vbox;
-    padding->insets = DefaultInsets();
+    auto padding = new Padding(vbox, DefaultInsets());
     mainLayout = padding;
 }
 

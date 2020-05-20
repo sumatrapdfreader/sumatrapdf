@@ -120,7 +120,7 @@ void EditCtrl::SetSelection(int start, int end) {
 
 EditCtrl::EditCtrl(HWND p) : WindowBase(p) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
-    dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL;
+    dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_LEFT;
     dwStyle |= WS_BORDER;
     winClass = WC_EDIT;
     kind = kindEdit;
@@ -133,6 +133,9 @@ bool EditCtrl::Create() {
     hasBorder = bit::IsMaskSet<DWORD>(dwStyle, WS_BORDER);
     if (isMultiLine) {
         dwStyle |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
+    } else {
+        // ES_AUTOHSCROLL disable wrapping in multi-line setup
+        dwStyle |= ES_AUTOHSCROLL;
     }
 
     bool ok = WindowBase::Create();
@@ -177,6 +180,7 @@ Size EditCtrl::GetIdealSize() {
 
     int dx = std::max(s1.dx, s2.dx);
     int dy = std::max(s1.dy, s2.dy);
+    dy = dy * idealSizeLines;
     // dbglogf("EditCtrl::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
 
     LRESULT margins = SendMessage(hwnd, EM_GETMARGINS, 0, 0);

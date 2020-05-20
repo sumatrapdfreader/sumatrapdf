@@ -209,6 +209,7 @@ struct WindowBase {
     bool IsFocused();
 
     void SetFont(HFONT f);
+    HFONT GetFont() const;
 
     void SetText(const WCHAR* s);
     void SetText(std::string_view);

@@ -31,11 +31,14 @@ struct ListBoxCtrl : WindowBase {
     ListBoxModel* model = nullptr;
     ListBoxSelectionChangedHandler onSelectionChanged = nullptr;
 
-    Size minSize{120, 32};
+    Size idealSize{};
+    int idealSizeLines = 0;
 
     ListBoxCtrl(HWND parent);
     ~ListBoxCtrl() override;
     bool Create() override;
+
+    int GetItemHeight(int);
 
     Size GetIdealSize() override;
 

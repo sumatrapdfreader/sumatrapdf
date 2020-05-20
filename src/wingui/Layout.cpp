@@ -242,6 +242,12 @@ bool IsPadding(ILayout* l) {
     return IsLayoutOfKind(l, paddingKind);
 }
 
+Padding::Padding(ILayout* child, const Insets& insets) {
+    this->kind = paddingKind;
+    this->child = child;
+    this->insets = insets;
+}
+
 Padding::~Padding() {
     delete child;
 }
@@ -1099,4 +1105,33 @@ Rect LayoutToSize(ILayout* layout, const Size size) {
 Rect Relayout(ILayout* layout) {
     auto b = layout->lastBounds;
     return LayoutToSize(layout, b.Size());
+}
+
+// TODO: probably not needed
+Insets DefaultInsets() {
+    const int padding = 8;
+    return Insets{padding, padding, padding, padding};
+}
+
+// TODO: probably not needed
+Insets UniformInsets(int l) {
+    return Insets{l, l, l, l};
+}
+
+Insets DpiScaledInsets(HWND hwnd, int top, int right, int bottom, int left) {
+    CrashIf(top < 0);
+    if (right == -1) {
+        // only first given, consider all to be the same
+        right = top;
+        bottom = top;
+        left = top;
+    }
+    if (bottom == -1) {
+        // first 2 given, consider them top / bottom, left / right
+        bottom = top;
+        left = right;
+    }
+    CrashIf(left == -1);
+    Insets res = {DpiScale(hwnd, top), DpiScale(hwnd, right), DpiScale(hwnd, bottom), DpiScale(hwnd, left)};
+    return res;
 }

@@ -639,6 +639,8 @@ bool WindowBase::IsEnabled() {
 }
 
 void WindowBase::SetIsVisible(bool isVisible) {
+    // TODO: make it work before Create()?
+    CrashIf(!hwnd);
     // TODO: a different way to determine if is top level vs. child window?
     if (GetParent(hwnd) == nullptr) {
         ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
@@ -669,6 +671,17 @@ void WindowBase::SetBounds(const RECT& r) {
 void WindowBase::SetFont(HFONT f) {
     hfont = f;
     SetWindowFont(hwnd, f, TRUE);
+}
+
+HFONT WindowBase::GetFont() const {
+    HFONT res = hfont;
+    if (!res) {
+        res = GetWindowFont(hwnd);
+    }
+    if (!res) {
+        res = GetDefaultGuiFont();
+    }
+    return res;
 }
 
 void WindowBase::SetText(const WCHAR* s) {

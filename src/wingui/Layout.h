@@ -89,20 +89,16 @@ struct Insets {
     int left = 0;
 };
 
-inline Insets DefaultInsets() {
-    const int padding = 8;
-    return Insets{padding, padding, padding, padding};
-}
-
-inline Insets UniformInsets(int l) {
-    return Insets{l, l, l, l};
-}
+Insets DefaultInsets();
+Insets UniformInsets(int l);
+Insets DpiScaledInsets(HWND, int top, int right = -1, int bottom = -1, int left = -1);
 
 struct Padding : public ILayout {
-    Insets insets{};
     ILayout* child = nullptr;
+    Insets insets{};
     Size childSize{};
 
+    Padding(ILayout*, const Insets&);
     ~Padding() override;
     Size Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int width) override;

@@ -884,9 +884,7 @@ static bool CreateRaMicroUninstallerWindow() {
 
     main->AddChild(buttons);
 
-    auto* padding = new Padding();
-    padding->insets = DefaultInsets();
-    padding->child = main;
+    auto padding = new Padding(main, DpiScaledInsets(hwnd, 8));
     win->mainLayout = padding;
 
     w->onClose = std::bind(&RaMicroUninstallerWindow::CloseHandler, win, _1);

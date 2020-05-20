@@ -57,9 +57,7 @@ static ILayout* CreateMainLayout(HWND hwnd) {
         auto [l, b] = CreateButtonLayout(hwnd, "Lice test", LaunchLice);
         vbox->AddChild(l);
     }
-    auto* padding = new Padding();
-    padding->child = vbox;
-    padding->insets = DefaultInsets();
+    auto padding = new Padding(vbox, DefaultInsets());
     return padding;
 }
 

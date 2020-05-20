@@ -1323,9 +1323,7 @@ static bool CreateRaMicroInstallerWindow() {
 
     main->AddChild(buttons);
 
-    auto* padding = new Padding();
-    padding->insets = DefaultInsets();
-    padding->child = main;
+    auto padding = new Padding(main, DpiScaledInsets(hwnd, 8));
     win->mainLayout = padding;
 
     w->onClose = std::bind(&RaMicroInstallerWindow::CloseHandler, win, _1);

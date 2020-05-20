@@ -25,6 +25,7 @@
 #include "EngineMulti.h"
 #include "EngineManager.h"
 
+#include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"
@@ -158,9 +159,10 @@ struct EditAnnotationsWindow {
     DropDownCtrl* dropDownIcon = nullptr;
     StaticCtrl* staticColor = nullptr;
     DropDownCtrl* dropDownColor = nullptr;
-
-    ButtonCtrl* buttonCancel = nullptr;
     ButtonCtrl* buttonDelete = nullptr;
+
+    StaticCtrl* staticSpacer = nullptr;
+    ButtonCtrl* buttonCancel = nullptr;
 
     ListBoxModel* lbModel = nullptr;
 
@@ -318,12 +320,10 @@ static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
 void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev) {
     // TODO: finish me
     int itemNo = ev->idx;
-    bool itemSelected = (itemNo >= 0);
     Annotation* annot = nullptr;
     if (itemNo >= 0) {
         annot = annotations->at(itemNo);
     }
-    buttonDelete->SetIsEnabled(itemSelected);
     ShowAnnotationRect(this, annot);
     ShowAnnotationAuthor(this, annot);
     ShowAnnotationModificationDate(this, annot);
@@ -331,6 +331,7 @@ void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent
     ShowAnnotationsContents(this, annot);
     ShowAnnotationsIcon(this, annot);
     ShowAnnotationsColor(this, annot);
+    buttonDelete->SetIsVisible(annot != nullptr);
     Relayout(mainLayout);
     // TODO: go to page with selected annotation
     // MessageBoxNYI(mainWindow->hwnd);
@@ -411,12 +412,16 @@ void EditAnnotationsWindow::CreateMainLayout() {
 
     {
         auto w = new ListBoxCtrl(parent);
+        w->idealSizeLines = 5;
         bool ok = w->Create();
         CrashIf(!ok);
         listBox = w;
         w->onSelectionChanged = std::bind(&EditAnnotationsWindow::ListBoxSelectionChanged, this, _1);
         l = NewListBoxLayout(w);
-        vbox->AddChild(l, 1);
+        vbox->AddChild(l);
+
+        lbModel = new ListBoxModelStrings();
+        listBox->SetModel(lbModel);
     }
 
     {
@@ -447,6 +452,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
     {
         auto w = new EditCtrl(parent);
         w->isMultiLine = true;
+        w->idealSizeLines = 5;
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsVisible(false);
@@ -496,11 +502,18 @@ void EditAnnotationsWindow::CreateMainLayout() {
         w->SetText("Delete annotation");
         w->onClicked = std::bind(&EditAnnotationsWindow::ButtonDeleteHandler, this);
         bool ok = w->Create();
+        w->SetIsVisible(false);
         CrashIf(!ok);
         buttonDelete = w;
         l = NewButtonLayout(w);
         vbox->AddChild(l);
-        w->SetIsEnabled(false);
+    }
+
+    {
+        // used to take all available space between the what's above and below
+        // TODO: need a simpler way (just an ILayout*)
+        std::tie(staticSpacer, l) = CreateStatic(parent, " ");
+        vbox->AddChild(l, 2);
     }
 
     {
@@ -514,9 +527,8 @@ void EditAnnotationsWindow::CreateMainLayout() {
         vbox->AddChild(l);
     }
 
-    lbModel = new ListBoxModelStrings();
-    listBox->SetModel(lbModel);
-    mainLayout = vbox;
+    auto padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));
+    mainLayout = padding;
 }
 
 void EditAnnotationsWindow::RebuildAnnotations() {
@@ -542,6 +554,10 @@ void EditAnnotationsWindow::RebuildAnnotations() {
 
 bool EditAnnotationsWindow::Create() {
     auto w = new Window();
+    HMODULE h = GetModuleHandleW(nullptr);
+    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
+    w->hIcon = LoadIconW(h, iconName);
+
     // w->isDialog = true;
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Annotations");

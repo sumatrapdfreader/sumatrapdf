@@ -3,11 +3,14 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/Dpi.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ListBoxCtrl.h"
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/list-boxes
 
 Kind kindListBox = "listbox";
 
@@ -39,11 +42,11 @@ std::string_view ListBoxModelStrings::Item(int i) {
 ListBoxCtrl::ListBoxCtrl(HWND p) : WindowBase(p) {
     kind = kindListBox;
     dwExStyle = 0;
-    // win.WS_BORDER|win.WS_TABSTOP|win.WS_VISIBLE|win.WS_VSCROLL|win.WS_HSCROLL|win.LBS_NOINTEGRALHEIGHT|win.LBS_NOTIFY|style,
-    dwStyle =
-        WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
+    dwStyle = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
+    dwStyle |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
     winClass = L"LISTBOX";
     ctrlID = 0;
+    idealSize = {DpiScale(p, 120), DpiScale(p, 32)};
 }
 
 ListBoxCtrl::~ListBoxCtrl() {
@@ -97,8 +100,26 @@ bool ListBoxCtrl::Create() {
     return ok;
 }
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/lb-getitemheight
+int ListBoxCtrl::GetItemHeight(int idx) {
+    // idx only valid for LBS_OWNERDRAWVARIABLE, otherwise should be 0
+    int res = (int)SendMessageW(hwnd, LB_GETITEMHEIGHT, idx, 0);
+    if (res == LB_ERR) {
+        // if failed for some reason, fallback to measuring text in default font
+        HFONT f = GetFont();
+        Size sz = MeasureTextInHwnd(hwnd, L"A", f);
+        res = sz.dy;
+    }
+    return res;
+}
+
 Size ListBoxCtrl::GetIdealSize() {
-    return minSize;
+    Size res = idealSize;
+    if (idealSizeLines > 0) {
+        int dy = GetItemHeight(0) * idealSizeLines + DpiScale(hwnd, 2 + 2); // padding of 2 at top and bottom
+        res.dy = dy;
+    }
+    return res;
 }
 
 int ListBoxCtrl::GetCurrentSelection() {

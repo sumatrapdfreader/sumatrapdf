@@ -25,6 +25,7 @@ struct EditCtrl : WindowBase {
 
     // set before Create()
     bool isMultiLine = false;
+    int idealSizeLines = 1;
 
     // set those via SetColors() to keep bgBrush in sync with bgCol
     HBRUSH bgBrush = nullptr;

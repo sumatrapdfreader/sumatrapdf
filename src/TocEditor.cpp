@@ -849,9 +849,7 @@ static void CreateMainLayout(TocEditorWindow* win) {
     main->AddChild(labelLayout, 0);
     main->AddChild(win->layoutButtons, 0);
 
-    auto* padding = new Padding();
-    padding->insets = DefaultInsets();
-    padding->child = main;
+    auto padding = new Padding(main, DpiScaledInsets(hwnd, 8));
     win->mainLayout = padding;
 }
 

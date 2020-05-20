@@ -275,10 +275,12 @@ static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
 
     double width = size.dx * unitsPerInch;
     double height = size.dy * unitsPerInch;
-    if (((int)(width * 100)) % 100 == 99)
+    if (((int)(width * 100)) % 100 == 99) {
         width += 0.01;
-    if (((int)(height * 100)) % 100 == 99)
+    }
+    if (((int)(height * 100)) % 100 == 99) {
         height += 0.01;
+    }
 
     AutoFreeWstr strWidth(str::FormatFloatWithThousandSep(width));
     AutoFreeWstr strHeight(str::FormatFloatWithThousandSep(height));
