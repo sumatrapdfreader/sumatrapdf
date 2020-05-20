@@ -45,9 +45,9 @@ Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c);
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
 This adds equivalent functions that don't have this problem and ugly
 substitutions to make sure we don't use Get*Value() in the future */
-BYTE GetRValueSafe(COLORREF rgb);
-BYTE GetGValueSafe(COLORREF rgb);
-BYTE GetBValueSafe(COLORREF rgb);
+BYTE GetRed(COLORREF rgb);
+BYTE GetGreen(COLORREF rgb);
+BYTE GetBlue(COLORREF rgb);
 
 // disabled because not compatible with wdl / lice
 #if 0
