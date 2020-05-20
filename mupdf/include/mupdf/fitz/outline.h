@@ -41,7 +41,7 @@ typedef struct fz_outline
 
 	/* sumatrapdf: support color and flags */
 	int flags;
-	int has_color;
+	int n_color;
 	float color[4];
 } fz_outline;
 

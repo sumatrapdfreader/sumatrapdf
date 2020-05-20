@@ -26,6 +26,13 @@ Annotations:
 
 ------
 
+Maybe change how Annotation works.
+Either AnnotationAbstract class and AnnotationPdf and Annotation.
+Or Annotation with two representations:
+  AnnotationData or pdf_annot* and functions redirect to one or another.
+
+------
+
 Website: add way to share on twitter, facebook, like on AlternativeTo, Slant, Capterra,
 like https://dynalist.io/features/full ("Spread The Word")
 

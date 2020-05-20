@@ -5,6 +5,8 @@
 #include "utils/WinUtil.h"
 #include "utils/ColorUtil.h"
 
+// #define RGB(r,g,b)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
+
 COLORREF MkRgb(u8 r, u8 g, u8 b) {
     return RGB(r, g, b);
 }
@@ -61,6 +63,7 @@ static void UnpackRgbaFloat(COLORREF c, float& r, float& g, float& b, float& a) 
     a /= 255.0f;
 }
 
+#if 0
 static void UnpackRgbFloat(COLORREF c, float& r, float& g, float& b) {
     r = (float)(c & 0xff);
     r /= 255.0f;
@@ -71,9 +74,10 @@ static void UnpackRgbFloat(COLORREF c, float& r, float& g, float& b) {
     b = (float)(c & 0xff);
     b /= 255.0f;
 }
+#endif
 
 /*
-        n = 1 (grey), 3 (rgb) or 4 (cmyk).
+    n = 1 (grey), 3 (rgb) or 4 (cmyk).
 */
 COLORREF FromPdfColor(int n, float color[4]) {
     if (n == 0) {
@@ -85,23 +89,21 @@ COLORREF FromPdfColor(int n, float color[4]) {
     if (n == 3) {
         return MkRgbaFloat(color[0], color[1], color[2], 0);
     }
-    // TODO: what is CMYK?
+    if (n == 4) {
+    // TODO: handle CMYK
+#if 0
+		fz_convert_color(ctx, fz_device_cmyk(ctx), color, fz_device_rgb(ctx), rgb, NULL, fz_default_color_params);
+		r = rgb[0] * 255;
+		g = rgb[1] * 255;
+		b = rgb[2] * 255;
+		return 0xff000000 | (r<<16) | (g<<8) | b;
+#endif        
+    }
     CrashIf(true);
     return 0;
 }
 
-COLORREF FromPdfColorRgba(float color[4]) {
-    return MkRgbaFloat(color[0], color[1], color[2], color[3]);
-}
-
-COLORREF FromPdfColorRgb(float color[3]) {
-    return MkRgbaFloat(color[0], color[1], color[2], 0);
-}
-
-void ToPdfRgb(COLORREF c, float col[3]) {
-    UnpackRgbFloat(c, col[0], col[1], col[2]);
-}
-
+// TODO: figure out how to deal with alpha. Pick 0xff to mean "not set" in FromPdfColor ?
 void ToPdfRgba(COLORREF c, float col[4]) {
     UnpackRgbaFloat(c, col[0], col[1], col[2], col[3]);
 }

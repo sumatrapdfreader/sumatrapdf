@@ -64,7 +64,7 @@ pdf_load_outline_imp(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 			node->flags = pdf_dict_get_int(ctx, dict, PDF_NAME(F));
 			if ((obj = pdf_dict_get(ctx, dict, PDF_NAME(C))) != NULL) 
 			{
-				node->has_color = pdf_parse_color(ctx, obj, &(node->color[0]));
+				node->n_color = pdf_parse_color(ctx, obj, node->color);
 			}
 
 			obj = pdf_dict_get(ctx, dict, PDF_NAME(First));

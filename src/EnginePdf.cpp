@@ -910,8 +910,8 @@ TocItem* EnginePdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
         item->pageNo = pageNo;
         CrashIf(!item->PageNumbersMatch());
 
-        if (outline->has_color) {
-            item->color = FromPdfColorRgba(outline->color);
+        if (outline->n_color > 0) {
+            item->color = FromPdfColor(outline->n_color, outline->color);
         }
 
         if (outline->down) {
