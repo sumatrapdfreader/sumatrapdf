@@ -1,6 +1,11 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+extern "C" {
+#include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
+}
+
 #include "utils/BaseUtil.h"
 #include "utils/BitManip.h"
 #include "utils/Log.h"
@@ -267,20 +272,19 @@ static void ShowAnnotationModificationDate(EditAnnotationsWindow* w, Annotation*
 }
 
 static void ShowAnnotationsPopup(EditAnnotationsWindow* w, Annotation* annot) {
-    bool isVisible = false;
-    if (annot) {
-        // TODO: write me
-        /*
-            pdf_obj* obj = pdf_dict_get(ctx, annot->pdf_annot->obj, PDF_NAME(Popup));
-            if (obj) {
-                ui_label("Popup: %d 0 R", pdf_to_num(ctx, obj));
-            }
-        */
+    str::Str s;
+    if (annot && annot->pdf_annot) {
+        pdf_obj* obj = pdf_dict_get(annot->ctx, annot->pdf_annot->obj, PDF_NAME(Popup));
+        if (obj) {
+            s.AppendFmt("Popup: %d 0 R", pdf_to_num(annot->ctx, obj));
+        }
     }
+    bool isVisible = !s.empty();
     w->staticPopup->SetIsVisible(isVisible);
     if (!isVisible) {
         return;
     }
+    w->staticPopup->SetText(s.as_view());
 }
 
 static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot) {

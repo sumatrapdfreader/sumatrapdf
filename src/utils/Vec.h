@@ -499,6 +499,9 @@ class Str : public Vec<char> {
     }
 
     bool AppendView(const std::string_view sv) {
+        if (sv.empty()) {
+            return true;
+        }
         return this->Append(sv.data(), sv.size());
     }
 
