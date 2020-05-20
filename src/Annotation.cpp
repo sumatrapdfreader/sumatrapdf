@@ -1,8 +1,73 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+extern "C" {
+#include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
+}
+
 #include "utils/BaseUtil.h"
 #include "Annotation.h"
+
+AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
+    switch (tp) {
+        case PDF_ANNOT_HIGHLIGHT:
+            return AnnotationType::Highlight;
+        case PDF_ANNOT_UNDERLINE:
+            return AnnotationType::Underline;
+        case PDF_ANNOT_STRIKE_OUT:
+            return AnnotationType::StrikeOut;
+        case PDF_ANNOT_SQUIGGLY:
+            return AnnotationType::Squiggly;
+        case PDF_ANNOT_TEXT:
+            return AnnotationType::Text;
+        case PDF_ANNOT_FREE_TEXT:
+            return AnnotationType::FreeText;
+        case PDF_ANNOT_LINE:
+            return AnnotationType::Line;
+        case PDF_ANNOT_SQUARE:
+            return AnnotationType::Square;
+        case PDF_ANNOT_INK:
+            return AnnotationType::Ink;
+        case PDF_ANNOT_LINK:
+            return AnnotationType::Link;
+        case PDF_ANNOT_CIRCLE:
+            return AnnotationType::Circle;
+        case PDF_ANNOT_POLYGON:
+            return AnnotationType::Polygon;
+        case PDF_ANNOT_POLY_LINE:
+            return AnnotationType::PolyLine;
+        case PDF_ANNOT_REDACT:
+            return AnnotationType::Redact;
+        case PDF_ANNOT_STAMP:
+            return AnnotationType::Stamp;
+        case PDF_ANNOT_CARET:
+            return AnnotationType::Caret;
+        case PDF_ANNOT_POPUP:
+            return AnnotationType::Popup;
+        case PDF_ANNOT_FILE_ATTACHMENT:
+            return AnnotationType::FileAttachment;
+        case PDF_ANNOT_SOUND:
+            return AnnotationType::Sound;
+        case PDF_ANNOT_MOVIE:
+            return AnnotationType::Movie;
+        case PDF_ANNOT_WIDGET:
+            return AnnotationType::Widget;
+        case PDF_ANNOT_SCREEN:
+            return AnnotationType::Screen;
+        case PDF_ANNOT_PRINTER_MARK:
+            return AnnotationType::PrinterMark;
+        case PDF_ANNOT_TRAP_NET:
+            return AnnotationType::TrapNet;
+        case PDF_ANNOT_WATERMARK:
+            return AnnotationType::Watermark;
+        case PDF_ANNOT_3D:
+            return AnnotationType::ThreeD;
+        default:
+            CrashIf(true);
+    }
+    return AnnotationType::None;
+}
 
 Annotation::Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color) {
     this->type = type;

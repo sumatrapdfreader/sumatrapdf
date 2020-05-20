@@ -245,7 +245,7 @@ void EditAnnotationsWindow::ButtonCancelHandler() {
     CloseWindow();
 }
 
-static void ShowAnnotationRect(EditAnnotationsWindow* w, Annotation* annot) {
+void ShowAnnotationRect(EditAnnotationsWindow* w, Annotation* annot) {
     bool isVisible = (annot != nullptr);
     w->staticRect->SetIsVisible(isVisible);
     if (!isVisible) {
@@ -291,9 +291,10 @@ static void ShowAnnotationModificationDate(EditAnnotationsWindow* w, Annotation*
 }
 
 static void ShowAnnotationsPopup(EditAnnotationsWindow* w, Annotation* annot) {
+    pdf_annot* a = annot ? annot->pdf_annot : nullptr;
     str::Str s;
-    if (annot && annot->pdf_annot) {
-        pdf_obj* obj = pdf_dict_get(annot->ctx, annot->pdf_annot->obj, PDF_NAME(Popup));
+    if (a) {
+        pdf_obj* obj = pdf_dict_get(annot->ctx, a->obj, PDF_NAME(Popup));
         if (obj) {
             s.AppendFmt("Popup: %d 0 R", pdf_to_num(annot->ctx, obj));
         }
@@ -317,12 +318,13 @@ static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot)
 }
 
 static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
-    bool isVisible = (annot != nullptr) && annot->pdf_annot;
+    pdf_annot* a = annot ? annot->pdf_annot : nullptr;
+    bool isVisible = (a != nullptr);
     if (isVisible) {
-        isVisible = pdf_annot_has_icon_name(annot->ctx, annot->pdf_annot);
+        isVisible = pdf_annot_has_icon_name(annot->ctx, a);
     }
     const char** icons = nullptr;
-    const char* currIcon = pdf_annot_icon_name(annot->ctx, annot->pdf_annot);
+    const char* currIcon = a ? pdf_annot_icon_name(annot->ctx, a) : nullptr;
     if (isVisible) {
         switch (annot->type) {
             case AnnotationType::Text:
@@ -354,13 +356,78 @@ static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
     w->dropDownIcon->SetCurrentSelection(idx);
 }
 
+int ShouldEditBorder(AnnotationType subtype) {
+    switch (subtype) {
+        default:
+            return 0;
+        case AnnotationType::FreeText:
+            return 1;
+        case AnnotationType::Ink:
+        case AnnotationType::Line:
+        case AnnotationType::Square:
+        case AnnotationType::Circle:
+        case AnnotationType::Polygon:
+        case AnnotationType::PolyLine:
+            return 1;
+    }
+}
+
+int ShouldEditInteriorColor(AnnotationType subtype) {
+    switch (subtype) {
+        default:
+            return 0;
+        case AnnotationType::Line:
+        case AnnotationType::Square:
+        case AnnotationType::Circle:
+            return 1;
+    }
+}
+
+static int ShouldEditColor(AnnotationType subtype) {
+    switch (subtype) {
+        default:
+            return 0;
+        case AnnotationType::Stamp:
+        case AnnotationType::Text:
+        case AnnotationType::FileAttachment:
+        case AnnotationType::Sound:
+        case AnnotationType::Caret:
+            return 1;
+        case AnnotationType::FreeText:
+            return 1;
+        case AnnotationType::Ink:
+        case AnnotationType::Line:
+        case AnnotationType::Square:
+        case AnnotationType::Circle:
+        case AnnotationType::Polygon:
+        case AnnotationType::PolyLine:
+            return 1;
+        case AnnotationType::Highlight:
+        case AnnotationType::Underline:
+        case AnnotationType::StrikeOut:
+        case AnnotationType::Squiggly:
+            return 1;
+    }
+}
+
 static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
-    bool isVisible = annot != nullptr;
+    pdf_annot* a = annot ? annot->pdf_annot : nullptr;
+    bool isVisible = (a != nullptr);
+    if (isVisible) {
+        auto annotType = AnnotationTypeFromPdfAnnot(pdf_annot_type(annot->ctx, a));
+        isVisible = ShouldEditColor(annotType);
+    }
     w->staticColor->SetIsVisible(isVisible);
     w->dropDownColor->SetIsVisible(isVisible);
     if (!isVisible) {
         return;
     }
+#if 0
+    float color[4];
+    int hex;
+    int n;
+    pdf_annot_color(annot->ctx, a, &n, color);
+#endif
 }
 
 void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev) {
@@ -370,13 +437,22 @@ void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent
     if (itemNo >= 0) {
         annot = annotations->at(itemNo);
     }
-    ShowAnnotationRect(this, annot);
+    // TODO: mupdf shows it in 1.6 but not 1.7. Why?
+    // ShowAnnotationRect(this, annot);
     ShowAnnotationAuthor(this, annot);
     ShowAnnotationModificationDate(this, annot);
     ShowAnnotationsPopup(this, annot);
     ShowAnnotationsContents(this, annot);
+    // TODO: PDF_ANNOT_FREE_TEXT
+    // TODO: PDF_ANNOT_LINE
     ShowAnnotationsIcon(this, annot);
+    // TODO: border
     ShowAnnotationsColor(this, annot);
+    // TODO: icolor
+    // TODO: quad points
+    // TODO: vertices
+    // TODO: ink list
+    // TODO: PDF_ANNOT_FILE_ATTACHMENT
     buttonDelete->SetIsVisible(annot != nullptr);
     Relayout(mainLayout);
     // TODO: go to page with selected annotation
