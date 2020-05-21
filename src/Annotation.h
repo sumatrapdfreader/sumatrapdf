@@ -4,24 +4,25 @@
 extern "C" struct pdf_annot;
 extern "C" struct fz_context;
 
+// for fast conversions, must match the order of the above enum
+// (from mupdf annot.h)
 enum class AnnotationType {
-    None,
-    Highlight,
-    Underline,
-    StrikeOut,
-    Squiggly,
     Text,
+    Link,
     FreeText,
     Line,
     Square,
-    Ink,
-    Link,
     Circle,
     Polygon,
     PolyLine,
+    Highlight,
+    Underline,
+    Squiggly,
+    StrikeOut,
     Redact,
     Stamp,
     Caret,
+    Ink,
     Popup,
     FileAttachment,
     Sound,
@@ -31,12 +32,13 @@ enum class AnnotationType {
     PrinterMark,
     TrapNet,
     Watermark,
-    ThreeD
+    ThreeD,
+    Unknown = -1
 };
 
 // an user annotation on page
 struct Annotation {
-    AnnotationType type = AnnotationType::None;
+    AnnotationType type = AnnotationType::Unknown;
     int pageNo = -1;
     RectD rect = {};
     COLORREF color = 0;

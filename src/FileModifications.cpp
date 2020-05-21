@@ -80,7 +80,7 @@ static AnnotationType PageAnnotTypeFromString(const char* s) {
     if (str::EqI(s, "squiggly")) {
         return AnnotationType::Squiggly;
     }
-    return AnnotationType::None;
+    return AnnotationType::Unknown;
 }
 
 // TODO: change to str::string_view
@@ -108,7 +108,7 @@ static Vec<Annotation*>* ParseFileModifications(const char* data) {
         AnnotationType type = PageAnnotTypeFromString(i.key);
 
         CrashIf(!i.isChild);
-        if (AnnotationType::None == type || !i.isChild) {
+        if (AnnotationType::Unknown == type || !i.isChild) {
             continue;
         }
 

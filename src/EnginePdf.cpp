@@ -2036,7 +2036,7 @@ bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv) {
 static Annotation* AnnotationFromPdfAnnot(fz_context* ctx, pdf_annot* annot, int pageNo) {
     auto tp = pdf_annot_type(ctx, annot);
     AnnotationType typ = AnnotationTypeFromPdfAnnot(tp);
-    if (typ == AnnotationType::None) {
+    if (typ == AnnotationType::Unknown) {
         // unsupported type
         return nullptr;
     }
