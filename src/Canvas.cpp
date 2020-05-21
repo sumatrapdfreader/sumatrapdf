@@ -662,9 +662,9 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
             colors[1] = colors[2] = colors[0];
         } else if (nGCols == 2) {
             colors[2] = gcols->at(1);
-            colors[1] = RGB((GetRed(colors[0]) + GetRed(colors[2])) / 2,
-                            (GetGreen(colors[0]) + GetGreen(colors[2])) / 2,
-                            (GetBlue(colors[0]) + GetBlue(colors[2])) / 2);
+            colors[1] =
+                RGB((GetRed(colors[0]) + GetRed(colors[2])) / 2, (GetGreen(colors[0]) + GetGreen(colors[2])) / 2,
+                    (GetBlue(colors[0]) + GetBlue(colors[2])) / 2);
         } else {
             colors[1] = gcols->at(1);
             colors[2] = gcols->at(2);

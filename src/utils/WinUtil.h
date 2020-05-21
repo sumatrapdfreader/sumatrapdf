@@ -261,3 +261,4 @@ HICON HwndGetIcon(HWND);
 void HwndInvalidate(HWND);
 void HwndSetFont(HWND, HFONT);
 HFONT HwndGetFont(HWND);
+Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);

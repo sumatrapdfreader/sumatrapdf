@@ -107,7 +107,7 @@ int ListBoxCtrl::GetItemHeight(int idx) {
     if (res == LB_ERR) {
         // if failed for some reason, fallback to measuring text in default font
         HFONT f = GetFont();
-        Size sz = MeasureTextInHwnd(hwnd, L"A", f);
+        Size sz = HwndMeasureText(hwnd, L"A", f);
         res = sz.dy;
     }
     return res;

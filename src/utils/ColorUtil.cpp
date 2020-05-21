@@ -90,14 +90,14 @@ COLORREF FromPdfColor(int n, float color[4]) {
         return MkRgbaFloat(color[0], color[1], color[2], 0);
     }
     if (n == 4) {
-    // TODO: handle CMYK
+        // TODO: handle CMYK
 #if 0
 		fz_convert_color(ctx, fz_device_cmyk(ctx), color, fz_device_rgb(ctx), rgb, NULL, fz_default_color_params);
 		r = rgb[0] * 255;
 		g = rgb[1] * 255;
 		b = rgb[2] * 255;
 		return 0xff000000 | (r<<16) | (g<<8) | b;
-#endif        
+#endif
     }
     CrashIf(true);
     return 0;

@@ -52,7 +52,7 @@ bool StaticCtrl::Create() {
 
 Size StaticCtrl::GetIdealSize() {
     WCHAR* txt = win::GetText(hwnd);
-    Size s = MeasureTextInHwnd(hwnd, txt, hfont);
+    Size s = HwndMeasureText(hwnd, txt, hfont);
     free(txt);
     return s;
 }
