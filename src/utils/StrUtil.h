@@ -146,6 +146,7 @@ WCHAR* FormatRomanNumeral(int number);
 int CmpNatural(const WCHAR*, const WCHAR*);
 
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
+bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv);
 
 #endif
 } // namespace str

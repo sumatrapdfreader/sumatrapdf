@@ -919,6 +919,20 @@ int CmpNatural(const char* a, const char* b) {
     return diff;
 }
 
+bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv) {
+    size_t n = sv.size();
+    if (n == 0) {
+        return true;
+    }
+    for (size_t i = 0; i < n; i++) {
+        char c = sv[i];
+        if (!str::IsWs(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 } // namespace str
 
 namespace url {

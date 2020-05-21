@@ -136,7 +136,7 @@ static Vec<Annotation*>* ParseFileModifications(const char* data) {
             opacity = 1.0f;
         }
         color = MkRgba((u8)r, (u8)g, (u8)b, (u8)(255 * opacity));
-        auto annot = new Annotation(type, pageNo, rect.Convert<double>(), color);
+        auto annot = MakeAnnotationSmx(type, pageNo, rect.Convert<double>(), color);
         res->Append(annot);
     }
 
@@ -190,22 +190,23 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
 
     int nAnnots = annots->isize();
     for (int i = 0; i < nAnnots; i++) {
-        const Annotation& annot = *annots->at(i);
-        if (annot.isDeleted) {
+        Annotation* annot = annots->at(i);
+        if (annot->isDeleted) {
             continue;
         }
-        char* s = PageAnnotTypeToString(annot.type);
+        char* s = PageAnnotTypeToString(annot->type);
         if (str::IsEmpty(s)) {
             continue;
         }
         data.AppendFmt("[%s]\r\n", s);
-        data.AppendFmt("page = %d\r\n", annot.pageNo);
-        data.AppendFmt("rect = %g %g %g %g\r\n", annot.rect.x, annot.rect.y, annot.rect.dx, annot.rect.dy);
+        data.AppendFmt("page = %d\r\n", annot->pageNo);
+        RectD rect = annot->Rect();
+        data.AppendFmt("rect = %g %g %g %g\r\n", rect.x, rect.y, rect.dx, rect.dy);
         data.AppendFmt("color = ");
-        SerializeColorRgb(annot.color, data);
+        SerializeColorRgb(annot->Color(), data);
         data.Append("\r\n");
         u8 r, g, b, a;
-        UnpackRgba(annot.color, r, g, b, a);
+        UnpackRgba(annot->Color(), r, g, b, a);
         // TODO: should serialize as rgba in hex
         data.AppendFmt("opacity = %g\r\n", (float)a / 255.f);
         data.Append("\r\n");

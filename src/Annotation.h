@@ -36,37 +36,40 @@ enum class AnnotationType {
     Unknown = -1
 };
 
+struct AnnotationSmx;
+struct AnnotationPdf;
+
 // an user annotation on page
 struct Annotation {
+    // common to both smx and pdf
     AnnotationType type = AnnotationType::Unknown;
     int pageNo = -1;
-    RectD rect = {};
-    COLORREF color = 0;
-
-    // flags has the same meaning as mupdf annot.h
-    // TODO: not sure if want to preserve it
-    int flags;
-
-    str::Str contents;
-    str::Str author;
-    time_t modificationDate;
-    time_t creationDate;
 
     // either new annotation or has been modified
     bool isChanged = false;
     // deleted are not shown but can be undeleted
     bool isDeleted = false;
 
-    // set if constructed from mupdf annotation
-    fz_context* ctx = nullptr;
-    pdf_annot* pdf_annot = nullptr;
+    // only one of them must be set
+    AnnotationSmx* smx = nullptr;
+    AnnotationPdf* pdf = nullptr;
 
     Annotation() = default;
-    Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color);
+    ~Annotation();
+
+    AnnotationType Type() const;
+    int PageNo() const;
+    RectD Rect() const;
+    COLORREF Color();
+    std::string_view Author();
+    std::string_view Contents();
+    time_t CreationDate();
+    time_t ModificationDate();
 };
 
-std::string_view AnnotationName(AnnotationType);
+Annotation* MakeAnnotationSmx(AnnotationType, int pageNo, RectD, COLORREF);
 
+std::string_view AnnotationName(AnnotationType);
 bool IsAnnotationEq(Annotation* a1, Annotation* a2);
 
 void DeleteVecAnnotations(Vec<Annotation*>* annots);

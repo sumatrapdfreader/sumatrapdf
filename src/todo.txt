@@ -8,6 +8,7 @@ Annotations:
  - display border
  - allow changing icon
  - allow changing color
+ - filter out widgets
  - when selecting annotation in list box, go to its page
  - allow moving some annotations (TEXT)
  - change our text higlight to match PDF i.e. use quad points
@@ -15,6 +16,9 @@ Annotations:
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
  - implement "Delete annotation"
  - size EditAnnotationsWindow to be the same as main window and positioned intelligently
+
+ - [X] refactor Annotation and split into AnnotationSmx and AnnotationPdf
+ - [X] refactor AnnotationType
  - [X] display icon
  - [X] display "popup" info (obj = pdf_dict_get(ctx, selected_annot->obj, PDF_NAME(Popup));)
  - [X] display contents
@@ -26,10 +30,16 @@ Annotations:
 
 ------
 
-Maybe change how Annotation works.
-Either AnnotationAbstract class and AnnotationPdf and Annotation.
-Or Annotation with two representations:
-  AnnotationData or pdf_annot* and functions redirect to one or another.
+Layout:
+
+ - Include Insets directly in WindowBaseLayout to simplify doing layout.
+   Remove hacks in VBox() that guess padding and use explicit Insets.
+ - maybe: make WindowBase implement ILayout (i.e. fold WindowBaseLayout)
+   this would simplify
+ - for visibility of widget, implement sth. like CSS visibility:
+   * visible : shown
+   * hidden : not shown but takes space for the purpose of layout
+   * collapse : not shown and not taking space during layout
 
 ------
 

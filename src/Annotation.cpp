@@ -7,7 +7,12 @@ extern "C" {
 }
 
 #include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+
+#include "TreeModel.h"
 #include "Annotation.h"
+#include "EngineBase.h"
+#include "EngineFzUtil.h"
 
 // spot checks the definitions are the same
 static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);
@@ -17,32 +22,6 @@ static_assert((int)AnnotationType::Unknown == (int)PDF_ANNOT_UNKNOWN);
 
 AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
     return (AnnotationType)tp;
-}
-
-Annotation::Annotation(AnnotationType type, int pageNo, RectD rect, COLORREF color) {
-    this->type = type;
-    this->pageNo = pageNo;
-    this->rect = rect;
-    this->color = color;
-}
-
-bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
-    if (a1 == a2) {
-        return true;
-    }
-    if (a1->type != a2->type) {
-        return false;
-    }
-    if (a1->pageNo != a2->pageNo) {
-        return false;
-    }
-    if (a1->color != a2->color) {
-        return false;
-    }
-    if (a1->rect != a2->rect) {
-        return false;
-    }
-    return true;
 }
 
 // clang format-off
@@ -63,12 +42,174 @@ std::string_view AnnotationName(AnnotationType tp) {
     return {s};
 }
 
+struct AnnotationSmx {
+    RectD rect = {};
+    COLORREF color = 0;
+
+    // flags has the same meaning as mupdf annot.h
+    // TODO: not sure if want to preserve it
+    int flags;
+
+    str::Str contents;
+    str::Str author;
+
+    time_t creationDate;
+    time_t modificationDate;
+};
+
+struct AnnotationPdf {
+    // set if constructed from mupdf annotation
+    fz_context* ctx = nullptr;
+    pdf_page* page = nullptr;
+    pdf_annot* annot = nullptr;
+};
+
+bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
+    if (a1 == a2) {
+        return true;
+    }
+    // TODO: fix me
+    CrashIf(false);
+    if (a1->type != a2->type) {
+        return false;
+    }
+    if (a1->pageNo != a2->pageNo) {
+        return false;
+    }
+#if 0
+    if (a1->color != a2->color) {
+        return false;
+    }
+    if (a1->rect != a2->rect) {
+        return false;
+    }
+#endif
+    return false;
+}
+
+Annotation::~Annotation() {
+    delete smx;
+    delete pdf;
+}
+
 void DeleteVecAnnotations(Vec<Annotation*>* annots) {
     if (!annots) {
         return;
     }
     DeleteVecMembers(*annots);
     delete annots;
+}
+
+AnnotationType Annotation::Type() const {
+    CrashIf((int)type < 0);
+    return type;
+}
+
+int Annotation::PageNo() const {
+    CrashIf(pageNo < 0);
+    return pageNo;
+}
+
+COLORREF Annotation::Color() {
+    if (smx) {
+        return smx->color;
+    }
+    float col[4];
+    int nColComponents;
+    pdf_annot_color(pdf->ctx, pdf->annot, &nColComponents, col);
+    auto color = FromPdfColor(nColComponents, col);
+    return color;
+}
+
+RectD Annotation::Rect() const {
+    if (smx) {
+        return smx->rect;
+    }
+    // TODO: cache during creation?
+    fz_rect rc = pdf_annot_rect(pdf->ctx, pdf->annot);
+    auto rect = fz_rect_to_RectD(rc);
+    return rect;
+}
+
+std::string_view Annotation::Author() {
+    if (smx) {
+        return smx->author.as_view();
+    }
+    const char* s = pdf_annot_author(pdf->ctx, pdf->annot);
+    if (!str::IsStringEmptyOrWhiteSpaceOnly(s)) {
+        return {};
+    }
+    return s;
+}
+
+std::string_view Annotation::Contents() {
+    if (smx) {
+        return smx->contents.as_view();
+    }
+    // TODO: cache during creation?
+    const char* s = pdf_annot_contents(pdf->ctx, pdf->annot);
+    return s;
+}
+
+time_t Annotation::CreationDate() {
+    if (smx) {
+        return smx->creationDate;
+    }
+    auto res = pdf_annot_creation_date(pdf->ctx, pdf->annot);
+    return res;
+}
+
+time_t Annotation::ModificationDate() {
+    if (smx) {
+        return smx->modificationDate;
+    }
+    auto res = pdf_annot_modification_date(pdf->ctx, pdf->annot);
+    return res;
+}
+
+Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot, int pageNo) {
+    auto tp = pdf_annot_type(ctx, annot);
+    AnnotationType typ = AnnotationTypeFromPdfAnnot(tp);
+    if (typ == AnnotationType::Unknown) {
+        // unsupported type
+        return nullptr;
+    }
+    AnnotationPdf* apdf = new AnnotationPdf();
+    apdf->ctx = ctx;
+    apdf->annot = annot;
+    apdf->page = page;
+
+    Annotation* res = new Annotation();
+    res->pageNo = pageNo;
+    res->pdf = apdf;
+    res->type = typ;
+
+    // res->flags = pdf_annot_flags(ctx, annot);
+    // TODO: implement those
+    // pdf_annot_opacity(ctx, annot)
+    // pdf_annot_border
+    // pdf_annot_language
+    // pdf_annot_quadding
+    // pdf_annot_interior_color
+    // pdf_annot_quad_point_count / pdf_annot_quad_point
+    // pdf_annot_ink_list_count / pdf_annot_ink_list_stroke_count / pdf_annot_ink_list_stroke_vertex
+    // pdf_annot_line_start_style, pdf_annot_line_end_style
+    // pdf_annot_icon_name
+    // pdf_annot_line
+    // pdf_annot_vertex_count
+
+    return res;
+}
+
+Annotation* MakeAnnotationSmx(AnnotationType type, int pageNo, RectD rect, COLORREF col) {
+    AnnotationSmx* smx = new AnnotationSmx();
+    smx->rect = rect;
+    smx->color = col;
+    Annotation* res = new Annotation();
+    res->smx = smx;
+    res->type = type;
+    res->pageNo = pageNo;
+    return res;
 }
 
 Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo) {
@@ -80,11 +221,11 @@ Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo) 
         if (annot->isDeleted) {
             continue;
         }
-        if (annot->pageNo != pageNo) {
+        if (annot->PageNo() != pageNo) {
             continue;
         }
         // include all annotations for pageNo that can be rendered by fz_run_user_annots
-        switch (annot->type) {
+        switch (annot->Type()) {
             case AnnotationType::Highlight:
             case AnnotationType::Underline:
             case AnnotationType::StrikeOut:

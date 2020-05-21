@@ -1181,9 +1181,10 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation*>* annots, fz_devic
         if (cookie && cookie->abort) {
             return;
         }
-        const Annotation& annot = *annots->at(i);
+        Annotation* annot = annots->at(i);
         // skip annotation if it isn't visible
-        fz_rect rect = RectD_to_fz_rect(annot.rect);
+        RectD arect = annot->Rect();
+        fz_rect rect = RectD_to_fz_rect(arect);
         rect = fz_transform_rect(rect, ctm);
         if (fz_is_empty_rect(fz_intersect_rect(rect, cliprect))) {
             continue;
@@ -1192,27 +1193,27 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation*>* annots, fz_devic
         // and pdf_create_markup_annot in pdf_annot.c)
         fz_path* path = fz_new_path(ctx);
         fz_stroke_state* stroke = nullptr;
-        switch (annot.type) {
+        switch (annot->type) {
             case AnnotationType::Highlight:
-                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.TL().y);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.TL().y);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y);
-                fz_lineto(ctx, path, annot.rect.TL().x, annot.rect.BR().y);
+                fz_moveto(ctx, path, arect.TL().x, arect.TL().y);
+                fz_lineto(ctx, path, arect.BR().x, arect.TL().y);
+                fz_lineto(ctx, path, arect.BR().x, arect.BR().y);
+                fz_lineto(ctx, path, arect.TL().x, arect.BR().y);
                 fz_closepath(ctx, path);
                 break;
             case AnnotationType::Underline:
-                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.25f);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.25f);
+                fz_moveto(ctx, path, arect.TL().x, arect.BR().y - 0.25f);
+                fz_lineto(ctx, path, arect.BR().x, arect.BR().y - 0.25f);
                 break;
             case AnnotationType::StrikeOut:
-                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.TL().y + annot.rect.dy / 2);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.TL().y + annot.rect.dy / 2);
+                fz_moveto(ctx, path, arect.TL().x, arect.TL().y + arect.dy / 2);
+                fz_lineto(ctx, path, arect.BR().x, arect.TL().y + arect.dy / 2);
                 break;
             case AnnotationType::Squiggly:
-                fz_moveto(ctx, path, annot.rect.TL().x + 1, annot.rect.BR().y);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y);
-                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.5f);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.5f);
+                fz_moveto(ctx, path, arect.TL().x + 1, arect.BR().y);
+                fz_lineto(ctx, path, arect.BR().x, arect.BR().y);
+                fz_moveto(ctx, path, arect.TL().x, arect.BR().y - 0.5f);
+                fz_lineto(ctx, path, arect.BR().x, arect.BR().y - 0.5f);
                 stroke = fz_new_stroke_state_with_dash_len(ctx, 2);
                 CrashIf(!stroke);
                 stroke->linewidth = 0.5f;
@@ -1223,19 +1224,19 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation*>* annots, fz_devic
                 CrashIf(true);
         }
         fz_colorspace* cs = fz_device_rgb(ctx);
-        float color[4];
-        ToPdfRgba(annot.color, color);
-        float a = color[3];
-        if (AnnotationType::Highlight == annot.type) {
+        float pdfcolor[4];
+        ToPdfRgba(annot->Color(), pdfcolor);
+        float a = pdfcolor[3];
+        if (AnnotationType::Highlight == annot->type) {
             // render path with transparency effect
             fz_begin_group(ctx, dev, rect, nullptr, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
-            fz_fill_path(ctx, dev, path, 0, ctm, cs, color, a, fz_default_color_params);
+            fz_fill_path(ctx, dev, path, 0, ctm, cs, pdfcolor, a, fz_default_color_params);
             fz_end_group(ctx, dev);
         } else {
             if (!stroke) {
                 stroke = fz_new_stroke_state(ctx);
             }
-            fz_stroke_path(ctx, dev, path, stroke, ctm, cs, color, 1.0f, fz_default_color_params);
+            fz_stroke_path(ctx, dev, path, stroke, ctm, cs, pdfcolor, 1.0f, fz_default_color_params);
             fz_drop_stroke_state(ctx, stroke);
         }
         fz_drop_path(ctx, path);

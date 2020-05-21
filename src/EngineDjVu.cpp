@@ -533,47 +533,46 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
         g.SetPageUnit(UnitPixel);
 
         for (int i = 0; i < n; i++) {
-            const Annotation& annot = *userAnnots->at(i);
-            if (annot.isDeleted) {
+            Annotation* annot = userAnnots->at(i);
+            if (annot->isDeleted) {
                 continue;
             }
-            if (annot.pageNo != pageNo) {
+            if (annot->pageNo != pageNo) {
                 continue;
             }
+            RectD rect = annot->Rect();
             RectD arect;
-            switch (annot.type) {
+            switch (annot->type) {
                 case AnnotationType::Highlight:
-                    arect = Transform(annot.rect, pageNo, zoom, rotation);
+                    arect = Transform(rect, pageNo, zoom, rotation);
                     arect.Offset(-screen.x, -screen.y);
                     {
-                        SolidBrush tmpBrush(Unblend(annot.color, 119));
+                        SolidBrush tmpBrush(Unblend(annot->Color(), 119));
                         g.FillRectangle(&tmpBrush, arect.ToGdipRectF());
                     }
                     break;
                 case AnnotationType::Underline:
                 case AnnotationType::StrikeOut:
-                    arect = RectD(annot.rect.x, annot.rect.BR().y, annot.rect.dx, 0);
-                    if (AnnotationType::StrikeOut == annot.type)
-                        arect.y -= annot.rect.dy / 2;
+                    arect = RectD(rect.x, rect.BR().y, rect.dx, 0);
+                    if (AnnotationType::StrikeOut == annot->type)
+                        arect.y -= rect.dy / 2;
                     arect = Transform(arect, pageNo, zoom, rotation);
                     arect.Offset(-screen.x, -screen.y);
                     {
-                        Pen tmpPen(FromColor(annot.color), zoom);
+                        Pen tmpPen(FromColor(annot->Color()), zoom);
                         g.DrawLine(&tmpPen, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                     }
                     break;
                 case AnnotationType::Squiggly: {
-                    Pen p(FromColor(annot.color), 0.5f * zoom);
+                    Pen p(FromColor(annot->Color()), 0.5f * zoom);
                     float dash[2] = {2, 2};
                     p.SetDashPattern(dash, dimof(dash));
                     p.SetDashOffset(1);
-                    arect = Transform(RectD(annot.rect.x, annot.rect.BR().y - 0.25f, annot.rect.dx, 0), pageNo, zoom,
-                                      rotation);
+                    arect = Transform(RectD(rect.x, rect.BR().y - 0.25f, rect.dx, 0), pageNo, zoom, rotation);
                     arect.Offset(-screen.x, -screen.y);
                     g.DrawLine(&p, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                     p.SetDashOffset(3);
-                    arect = Transform(RectD(annot.rect.x, annot.rect.BR().y + 0.25f, annot.rect.dx, 0), pageNo, zoom,
-                                      rotation);
+                    arect = Transform(RectD(rect.x, rect.BR().y + 0.25f, rect.dx, 0), pageNo, zoom, rotation);
                     arect.Offset(-screen.x, -screen.y);
                     g.DrawLine(&p, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                 } break;

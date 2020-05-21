@@ -190,7 +190,8 @@ struct EditAnnotationsWindow {
     void RebuildAnnotations();
 };
 
-static int FindStringInArray(const char** items, const char* toFind, int valIfNotFound = -1) {
+// static
+int FindStringInArray(const char** items, const char* toFind, int valIfNotFound = -1) {
     for (int i = 0; items[i] != nullptr; i++) {
         const char* s = items[i];
         if (str::Eq(s, toFind)) {
@@ -215,7 +216,7 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
     int nAnnots = annotations->isize();
     for (int i = 0; i < nAnnots; i++) {
         Annotation* a = annotations->at(i);
-        if (a->pdf_annot) {
+        if (a->pdf) {
             // hacky: only annotations with pdf_annot set belong to us
             delete a;
         }
@@ -252,22 +253,23 @@ void ShowAnnotationRect(EditAnnotationsWindow* w, Annotation* annot) {
         return;
     }
     str::Str s;
-    int x = (int)annot->rect.x;
-    int y = (int)annot->rect.y;
-    int dx = (int)annot->rect.Dx();
-    int dy = (int)annot->rect.Dy();
+    RectD rect = annot->Rect();
+    int x = (int)rect.x;
+    int y = (int)rect.y;
+    int dx = (int)rect.Dx();
+    int dy = (int)rect.Dy();
     s.AppendFmt("Rect: %d %d %d %d", x, y, dx, dy);
     w->staticRect->SetText(s.as_view());
 }
 
 static void ShowAnnotationAuthor(EditAnnotationsWindow* w, Annotation* annot) {
-    bool isVisible = (annot != nullptr) && !annot->author.empty();
+    bool isVisible = (annot != nullptr) && !annot->Author().empty();
     w->staticAuthor->SetIsVisible(isVisible);
     if (!isVisible) {
         return;
     }
     str::Str s;
-    s.AppendFmt("Author: %s", annot->author.c_str());
+    s.AppendFmt("Author: %s", annot->Author().data());
     w->staticAuthor->SetText(s.as_view());
 }
 
@@ -279,24 +281,28 @@ static void AppendPdfDate(str::Str& s, time_t secs) {
 }
 
 static void ShowAnnotationModificationDate(EditAnnotationsWindow* w, Annotation* annot) {
-    bool isVisible = (annot != nullptr) && (annot->modificationDate != 0);
+    bool isVisible = (annot != nullptr) && (annot->ModificationDate() != 0);
     w->staticModificationDate->SetIsVisible(isVisible);
     if (!isVisible) {
         return;
     }
     str::Str s;
     s.Append("Date: ");
-    AppendPdfDate(s, annot->modificationDate);
+    AppendPdfDate(s, annot->ModificationDate());
     w->staticModificationDate->SetText(s.as_view());
 }
 
 static void ShowAnnotationsPopup(EditAnnotationsWindow* w, Annotation* annot) {
-    pdf_annot* a = annot ? annot->pdf_annot : nullptr;
+    UNUSED(w);
+    UNUSED(annot);
+#if 0
+    // TODO: support in AnnotationSmx? What exactly is it showing?
+    pdf_annot* a = annot && annot->pdf ? annot->pdf->annot : nullptr;
     str::Str s;
     if (a) {
-        pdf_obj* obj = pdf_dict_get(annot->ctx, a->obj, PDF_NAME(Popup));
+        pdf_obj* obj = pdf_dict_get(annot->pdf->ctx, a->obj, PDF_NAME(Popup));
         if (obj) {
-            s.AppendFmt("Popup: %d 0 R", pdf_to_num(annot->ctx, obj));
+            s.AppendFmt("Popup: %d 0 R", pdf_to_num(annot->pdf->ctx, obj));
         }
     }
     bool isVisible = !s.empty();
@@ -305,6 +311,7 @@ static void ShowAnnotationsPopup(EditAnnotationsWindow* w, Annotation* annot) {
         return;
     }
     w->staticPopup->SetText(s.as_view());
+#endif
 }
 
 static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot) {
@@ -314,20 +321,24 @@ static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot)
     if (!isVisible) {
         return;
     }
-    w->editContents->SetText(annot->contents.as_view());
+    w->editContents->SetText(annot->Contents());
 }
 
 static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
-    pdf_annot* a = annot ? annot->pdf_annot : nullptr;
+    UNUSED(w);
+    UNUSED(annot);
+#if 0
+    // TODO: replace with Annotation::IconName()
+    pdf_annot* a = annot && annot->pdf ? annot->pdf->annot : nullptr;
     bool isVisible = (a != nullptr);
     if (isVisible) {
-        isVisible = pdf_annot_has_icon_name(annot->ctx, a);
+        isVisible = pdf_annot_has_icon_name(annot->pdf->ctx, a);
     }
     const char** icons = nullptr;
     const char* currIcon = nullptr;
     if (isVisible) {
         // can only call if pdf_annot_has_icon_name() returned true
-        currIcon = pdf_annot_icon_name(annot->ctx, a);
+        currIcon = pdf_annot_icon_name(annot->pdf->ctx, a);
         switch (annot->type) {
             case AnnotationType::Text:
                 icons = gTextIcons;
@@ -356,6 +367,7 @@ static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
     w->dropDownIcon->SetItems(strings);
     int idx = FindStringInArray(icons, currIcon, 0);
     w->dropDownIcon->SetCurrentSelection(idx);
+#endif
 }
 
 int ShouldEditBorder(AnnotationType subtype) {
@@ -385,7 +397,8 @@ int ShouldEditInteriorColor(AnnotationType subtype) {
     }
 }
 
-static int ShouldEditColor(AnnotationType subtype) {
+// static
+int ShouldEditColor(AnnotationType subtype) {
     switch (subtype) {
         default:
             return 0;
@@ -413,10 +426,14 @@ static int ShouldEditColor(AnnotationType subtype) {
 }
 
 static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
-    pdf_annot* a = annot ? annot->pdf_annot : nullptr;
+    UNUSED(w);
+    UNUSED(annot);
+    // TODO: virtualize
+#if 0
+    pdf_annot* a = annot && annot->pdf ? annot->pdf->annot : nullptr;
     bool isVisible = (a != nullptr);
     if (isVisible) {
-        auto annotType = AnnotationTypeFromPdfAnnot(pdf_annot_type(annot->ctx, a));
+        auto annotType = AnnotationTypeFromPdfAnnot(pdf_annot_type(annot->pdf->ctx, a));
         isVisible = ShouldEditColor(annotType);
     }
     w->staticColor->SetIsVisible(isVisible);
@@ -424,6 +441,7 @@ static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
     if (!isVisible) {
         return;
     }
+#endif
 #if 0
     float color[4];
     int hex;

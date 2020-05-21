@@ -3820,7 +3820,7 @@ static void MakeAnnotationFromSelection(TabInfo* tab) {
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
         COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
         c = ColorSetAlpha(c, 0xcc);
-        auto annot = new Annotation(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
+        auto annot = MakeAnnotationSmx(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
         annot->isChanged = true;
         annots->Append(annot);
         gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);

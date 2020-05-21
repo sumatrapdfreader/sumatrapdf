@@ -1873,11 +1873,11 @@ static enum pdf_annot_type PageAnnotTypeToPdf(AnnotationType tp) {
     return PDF_ANNOT_UNKNOWN;
 }
 
-static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, const Annotation& userAnnot) {
-    enum pdf_annot_type tp = PageAnnotTypeToPdf(userAnnot.type);
+static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, Annotation* userAnnot) {
+    enum pdf_annot_type tp = PageAnnotTypeToPdf(userAnnot->Type());
     pdf_annot* annot = pdf_create_annot(ctx, page, tp);
 
-    fz_rect r = RectD_to_fz_rect(userAnnot.rect);
+    fz_rect r = RectD_to_fz_rect(userAnnot->Rect());
 
     // TODO: not sure if this is needed
 #if 0
@@ -1903,7 +1903,7 @@ static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* pa
 #endif
 
     float col[4];
-    ToPdfRgba(userAnnot.color, col);
+    ToPdfRgba(userAnnot->Color(), col);
     pdf_set_annot_color(ctx, annot, 3, col);
     pdf_set_annot_opacity(ctx, annot, col[3]);
 
@@ -1941,7 +1941,7 @@ bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
             }
 
             for (auto&& annot : pageAnnots) {
-                add_user_annotation(ctx, doc, page, *annot);
+                add_user_annotation(ctx, doc, page, annot);
                 nAdded++;
             }
         }
@@ -2019,63 +2019,8 @@ int EnginePdf::GetPageByLabel(const WCHAR* label) const {
     return pageNo;
 }
 
-bool IsStringEmptyOrWhiteSpaceOnly(std::string_view sv) {
-    size_t n = sv.size();
-    if (n == 0) {
-        return true;
-    }
-    for (size_t i = 0; i < n; i++) {
-        char c = sv[i];
-        if (!str::IsWs(c)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-static Annotation* AnnotationFromPdfAnnot(fz_context* ctx, pdf_annot* annot, int pageNo) {
-    auto tp = pdf_annot_type(ctx, annot);
-    AnnotationType typ = AnnotationTypeFromPdfAnnot(tp);
-    if (typ == AnnotationType::Unknown) {
-        // unsupported type
-        return nullptr;
-    }
-    Annotation* res = new Annotation();
-    res->pageNo = pageNo;
-    res->ctx = ctx;
-    res->pdf_annot = annot;
-    res->type = typ;
-    fz_rect rc = pdf_annot_rect(ctx, annot);
-    res->rect = fz_rect_to_RectD(rc);
-    float col[4];
-    int nColComponents;
-    pdf_annot_color(ctx, annot, &nColComponents, col);
-    res->color = FromPdfColor(nColComponents, col);
-    const char* s = pdf_annot_contents(ctx, annot);
-    res->contents.Set(s);
-    s = pdf_annot_author(ctx, annot);
-    if (!IsStringEmptyOrWhiteSpaceOnly(s)) {
-        res->author.Set(s);
-    }
-    res->flags = pdf_annot_flags(ctx, annot);
-    res->creationDate = pdf_annot_creation_date(ctx, annot);
-    res->modificationDate = pdf_annot_modification_date(ctx, annot);
-
-    // TODO: implement those
-    // pdf_annot_opacity(ctx, annot)
-    // pdf_annot_border
-    // pdf_annot_language
-    // pdf_annot_quadding
-    // pdf_annot_interior_color
-    // pdf_annot_quad_point_count / pdf_annot_quad_point
-    // pdf_annot_ink_list_count / pdf_annot_ink_list_stroke_count / pdf_annot_ink_list_stroke_vertex
-    // pdf_annot_line_start_style, pdf_annot_line_end_style
-    // pdf_annot_icon_name
-    // pdf_annot_line
-    // pdf_annot_vertex_count
-
-    return res;
-}
+// in Annotation.cpp
+extern Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot, int pageNo);
 
 int EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
     int nAnnots = 0;
@@ -2084,7 +2029,7 @@ int EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
         pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pi->page);
         pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
         while (annot) {
-            Annotation* a = AnnotationFromPdfAnnot(ctx, annot, i);
+            Annotation* a = MakeAnnotationPdf(ctx, pdfpage, annot, i);
             if (a) {
                 annotsOut->Append(a);
                 nAnnots++;

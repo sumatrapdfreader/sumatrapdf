@@ -286,36 +286,44 @@ RectD EngineEbook::Transform(RectD rect, int pageNo, float zoom, int rotation, b
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-static void DrawAnnotationHighlight(Graphics& g, const Annotation& annot) {
-    SolidBrush tmpBrush(Unblend(annot.color, 119));
-    g.FillRectangle(&tmpBrush, annot.rect.ToGdipRectF());
+static void DrawAnnotationHighlight(Graphics& g, Annotation* annot) {
+    RectD rect = annot->Rect();
+    auto color = annot->Color();
+    SolidBrush tmpBrush(Unblend(color, 119));
+    g.FillRectangle(&tmpBrush, rect.ToGdipRectF());
 }
 
-static void DrawAnnotationUnderline(Graphics& g, const Annotation& annot) {
-    auto p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y);
-    auto p2 = PointF((float)annot.rect.BR().x, p1.Y);
+static void DrawAnnotationUnderline(Graphics& g, Annotation* annot) {
+    RectD rect = annot->Rect();
+    auto color = annot->Color();
+    auto p1 = PointF((float)rect.x, (float)rect.BR().y);
+    auto p2 = PointF((float)rect.BR().x, p1.Y);
     {
-        Pen tmpPen(FromColor(annot.color));
+        Pen tmpPen(FromColor(color));
         g.DrawLine(&tmpPen, p1, p2);
     }
 }
 
-static void DrawAnnotationStrikeOut(Graphics& g, const Annotation& annot) {
-    auto p1 = PointF((float)annot.rect.x, (float)annot.rect.y + (float)annot.rect.dy / 2);
-    auto p2 = PointF((float)annot.rect.BR().x, p1.Y);
+static void DrawAnnotationStrikeOut(Graphics& g, Annotation* annot) {
+    RectD rect = annot->Rect();
+    auto color = annot->Color();
+    auto p1 = PointF((float)rect.x, (float)rect.y + (float)rect.dy / 2);
+    auto p2 = PointF((float)rect.BR().x, p1.Y);
     {
-        Pen tmpPen(FromColor(annot.color));
+        Pen tmpPen(FromColor(color));
         g.DrawLine(&tmpPen, p1, p2);
     }
 }
 
-static void DrawAnnotationSquiggly(Graphics& g, const Annotation& annot) {
-    Pen p(FromColor(annot.color), 0.5f);
+static void DrawAnnotationSquiggly(Graphics& g, Annotation* annot) {
+    RectD rect = annot->Rect();
+    auto color = annot->Color();
+    Pen p(FromColor(color), 0.5f);
     float dash[2] = {2, 2};
     p.SetDashPattern(dash, dimof(dash));
     p.SetDashOffset(1);
-    auto p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y - 0.25f);
-    auto p2 = PointF((float)annot.rect.BR().x, p1.Y);
+    auto p1 = PointF((float)rect.x, (float)rect.BR().y - 0.25f);
+    auto p2 = PointF((float)rect.BR().x, p1.Y);
     g.DrawLine(&p, p1, p2);
     p.SetDashOffset(3);
     p1.Y += 0.5f;
@@ -329,12 +337,12 @@ static void DrawAnnotations(Graphics& g, Vec<Annotation*>* annots, int pageNo) {
     }
     int n = annots->isize();
     for (int i = 0; i < n; i++) {
-        const Annotation& annot = *annots->at(i);
-        if (annot.pageNo != pageNo) {
+        Annotation* annot = annots->at(i);
+        if (annot->pageNo != pageNo) {
             continue;
         }
         PointF p1, p2;
-        switch (annot.type) {
+        switch (annot->type) {
             case AnnotationType::Highlight:
                 DrawAnnotationHighlight(g, annot);
                 break;
