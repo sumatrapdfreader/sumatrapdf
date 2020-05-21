@@ -1567,21 +1567,22 @@ static int is_bitmap_stream(fz_context *ctx, pdf_obj *obj, size_t len, int *w, i
 	stride = (*w + 7) >> 3;
 	if ((size_t)stride * (*h) != len)
 		return 0;
-	bpc = pdf_dict_get(ctx, obj, PDF_NAME(BitsPerComponent));
-	if (pdf_is_int(ctx, bpc))
+	if (pdf_dict_get_bool(ctx, obj, PDF_NAME(ImageMask)))
 	{
+		return 1;
+	}
+	else
+	{
+		bpc = pdf_dict_get(ctx, obj, PDF_NAME(BitsPerComponent));
+		if (!pdf_is_int(ctx, bpc))
+			return 0;
 		if (pdf_to_int(ctx, bpc) != 1)
 			return 0;
 		cs = pdf_dict_get(ctx, obj, PDF_NAME(ColorSpace));
 		if (!pdf_name_eq(ctx, cs, PDF_NAME(DeviceGray)))
 			return 0;
+		return 1;
 	}
-	else
-	{
-		if (pdf_dict_get_bool(ctx, obj, PDF_NAME(ImageMask)) != 1)
-			return 0;
-	}
-	return 1;
 }
 
 static inline int isbinary(int c)

@@ -263,5 +263,6 @@ void do_save_signed_pdf_file(void);
 int do_sign(void);
 void trace_action(const char *fmt, ...);
 void trace_page_update(void);
+void trace_save_snapshot(void);
 
 #endif

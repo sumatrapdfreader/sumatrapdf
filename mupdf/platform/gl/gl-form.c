@@ -9,6 +9,12 @@
 
 #include "mupdf/helpers/pkcs7-openssl.h"
 
+static void trace_field_value(pdf_obj *field, const char *set_value)
+{
+	const char *get_value = pdf_field_value(ctx, field);
+	trace_action("print('Set field %d:', repr(%q), repr(%q));\n", pdf_to_num(ctx, field), set_value, get_value);
+}
+
 static pdf_widget *sig_widget;
 static char *sig_designated_name = NULL;
 static pdf_signature_error sig_cert_error;
@@ -260,6 +266,7 @@ static void tx_dialog(void)
 			{
 				trace_action("widget.setTextValue(%q);\n", tx_input.text);
 				pdf_set_text_field_value(ctx, tx_widget, tx_input.text);
+				trace_field_value(tx_widget->obj, tx_input.text);
 				if (pdf_update_page(ctx, tx_widget->page))
 				{
 					trace_page_update();
@@ -307,6 +314,7 @@ static void ch_dialog(void)
 		{
 			trace_action("widget.setChoiceValue(%q);\n", options[choice]);
 			pdf_set_choice_field_value(ctx, ch_widget, options[choice]);
+			trace_field_value(ch_widget->obj, options[choice]);
 		}
 
 		ui_layout(B, X, NW, 2, 2);

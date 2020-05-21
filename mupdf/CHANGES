@@ -2,6 +2,7 @@ List of changes since the last release:
 
 	mutool draw: bbox output format.
 	mutool run: StructuredText.walk()
+	mutool run: PDFPage.process() and PDFAnnotation.process()
 
 	mupdf-gl: Added IBM Common User Access shortcuts for copy & paste.
 

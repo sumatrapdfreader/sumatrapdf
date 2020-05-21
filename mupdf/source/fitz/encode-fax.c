@@ -120,7 +120,7 @@ find_changing(const unsigned char *line, int x, int w)
 {
 	int a, b;
 
-	if (!line)
+	if (!line || x >= w)
 		return w;
 
 	if (x == -1)
@@ -147,7 +147,7 @@ find_changing(const unsigned char *line, int x, int w)
 static inline int
 find_changing_color(const unsigned char *line, int x, int w, int color)
 {
-	if (!line)
+	if (!line || x >= w)
 		return w;
 	x = find_changing(line, x, w);
 	if (x < w && getbit(line, x) != color)

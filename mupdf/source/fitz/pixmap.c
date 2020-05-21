@@ -1066,7 +1066,7 @@ fz_new_pixmap_from_1bpp_data(fz_context *ctx, int x, int y, int w, int h, unsign
 int
 fz_is_pixmap_monochrome(fz_context *ctx, fz_pixmap *pixmap)
 {
-	int n = pixmap->n + pixmap->s + pixmap->alpha;
+	int n = pixmap->n;
 	int w = pixmap->w;
 	int h = pixmap->h;
 	unsigned char *s = pixmap->samples;

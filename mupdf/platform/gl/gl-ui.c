@@ -399,6 +399,8 @@ void ui_init(int w, int h, const char *title)
 #if defined(FREEGLUT) && (GLUT_API_VERSION >= 6)
 	glutKeyboardExtFunc(on_keyboard);
 #else
+	fz_warn(ctx, "This version of MuPDF has been built WITHOUT clipboard or unicode input support!");
+	fz_warn(ctx, "Please file a complaint with your friendly local distribution manager.");
 	glutKeyboardFunc(on_keyboard);
 #endif
 	glutSpecialFunc(on_special);
