@@ -214,15 +214,8 @@ Constraints Constraints::TightenWidth(int width) const {
     return bc;
 }
 
-void LayoutManager::NeedLayout() {
-    needLayout = true;
-}
-
 void ILayout::SetIsVisible(bool newIsVisible) {
     isVisible = newIsVisible;
-    if (layoutManager) {
-        layoutManager->NeedLayout();
-    }
 }
 
 bool IsLayoutOfKind(ILayout* l, Kind kind) {

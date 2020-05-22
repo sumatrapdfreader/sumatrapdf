@@ -46,18 +46,8 @@ Constraints TightHeight(int height);
 
 typedef std::function<void()> NeedLayout;
 
-struct LayoutManager {
-    bool needLayout = false;
-
-    LayoutManager() = default;
-    virtual ~LayoutManager() = 0;
-
-    virtual void NeedLayout();
-};
-
 struct ILayout {
     Kind kind = nullptr;
-    LayoutManager* layoutManager = nullptr;
     // allows easy way to hide / show elements
     // without rebuilding the whole layout
     bool isVisible = true;
