@@ -33,7 +33,7 @@ JBIG2_IMAGE_PNG_OBJ=
 EXE=.exe
 OBJ=.obj
 NUL=
-CFLAGS=-nologo -W4 -Zi -DHAVE_STRING_H=1 -D_CRT_SECURE_NO_WARNINGS $(LIBPNG_CFLAGS) 
+CFLAGS=-nologo -W4 -Zi -DHAVE_STRING_H=1 -D_CRT_SECURE_NO_WARNINGS $(LIBPNG_CFLAGS)
 CC=cl
 FE=-Fe
 
@@ -55,7 +55,7 @@ HDRS=getopt.h jbig2.h jbig2_arith.h jbig2_arith_iaid.h jbig2_arith_int.h \
 all: jbig2dec$(EXE)
 
 jbig2dec$(EXE): $(OBJS)
-	$(CC) $(CFLAGS) $(FE)jbig2dec$(EXE) $(OBJS) $(LIBPNG_LDFLAGS) 
+	$(CC) $(CFLAGS) $(FE)jbig2dec$(EXE) $(OBJS) $(LIBPNG_LDFLAGS)
 
 getopt$(OBJ): getopt.c getopt.h
 	$(CC) $(CFLAGS) -c getopt.c

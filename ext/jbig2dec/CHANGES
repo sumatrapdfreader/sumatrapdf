@@ -79,7 +79,7 @@ Version 0.7 (2004 December 8)
  * successfully decodes ubc test streams 042_21, 042_22 and 042_23
  * generic region template 3 handling with arbitrary AT locations
  * successfully decodes ubc test streams 042_6 and 042_7
- 
+
 Version 0.6 (2003 December 31)
 
  * minor portability fix for cygwin
@@ -94,7 +94,7 @@ Version 0.5 (2003 December 4)
 
 Version 0.4 (released 2003 August 1)
 
- * redid license header to simplify relabelling for commercial 
+ * redid license header to simplify relabelling for commercial
    distribution, borrowing from Ghostscript.
 
 Version 0.3 (released 2003 May 20)

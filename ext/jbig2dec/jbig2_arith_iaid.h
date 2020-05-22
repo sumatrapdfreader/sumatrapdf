@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Artifex Software, Inc.
+/* Copyright (C) 2001-2020 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -22,7 +22,7 @@
 
 typedef struct _Jbig2ArithIaidCtx Jbig2ArithIaidCtx;
 
-Jbig2ArithIaidCtx *jbig2_arith_iaid_ctx_new(Jbig2Ctx *ctx, int SBSYMCODELEN);
+Jbig2ArithIaidCtx *jbig2_arith_iaid_ctx_new(Jbig2Ctx *ctx, uint8_t SBSYMCODELEN);
 
 int jbig2_arith_iaid_decode(Jbig2Ctx *ctx, Jbig2ArithIaidCtx *actx, Jbig2ArithState *as, int32_t *p_result);
 

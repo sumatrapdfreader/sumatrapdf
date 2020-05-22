@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Artifex Software, Inc.
+/* Copyright (C) 2001-2020 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -32,13 +32,6 @@
 #include "jbig2_arith.h"
 #include "jbig2_arith_int.h"
 
-#if !defined (INT32_MIN)
-#define INT32_MIN (-0x7fffffff - 1)
-#endif
-#if !defined (INT32_MAX)
-#define INT32_MAX  0x7fffffff
-#endif
-
 struct _Jbig2ArithIntCtx {
     Jbig2ArithCx IAx[512];
 };
@@ -49,7 +42,7 @@ jbig2_arith_int_ctx_new(Jbig2Ctx *ctx)
     Jbig2ArithIntCtx *result = jbig2_new(ctx, Jbig2ArithIntCtx, 1);
 
     if (result == NULL) {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to allocate arithmetic integer coding state");
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate arithmetic integer coding state");
         return NULL;
     } else {
         memset(result->IAx, 0, sizeof(result->IAx));
@@ -71,37 +64,37 @@ jbig2_arith_int_decode(Jbig2Ctx *ctx, Jbig2ArithIntCtx *actx, Jbig2ArithState *a
     int n_tail, offset;
     int i;
 
-    S = jbig2_arith_decode(as, &IAx[PREV]);
+    S = jbig2_arith_decode(ctx, as, &IAx[PREV]);
     if (S < 0)
-        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode IAx S");
+        return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to decode IAx S");
     PREV = (PREV << 1) | S;
 
-    bit = jbig2_arith_decode(as, &IAx[PREV]);
+    bit = jbig2_arith_decode(ctx, as, &IAx[PREV]);
     if (bit < 0)
-        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode IAx decision bit 0");
+        return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to decode IAx decision bit 0");
     PREV = (PREV << 1) | bit;
     if (bit) {
-        bit = jbig2_arith_decode(as, &IAx[PREV]);
+        bit = jbig2_arith_decode(ctx, as, &IAx[PREV]);
         if (bit < 0)
-            return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode IAx decision bit 1");
+            return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to decode IAx decision bit 1");
         PREV = (PREV << 1) | bit;
 
         if (bit) {
-            bit = jbig2_arith_decode(as, &IAx[PREV]);
+            bit = jbig2_arith_decode(ctx, as, &IAx[PREV]);
             if (bit < 0)
-                return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode IAx decision bit 2");
+                return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to decode IAx decision bit 2");
             PREV = (PREV << 1) | bit;
 
             if (bit) {
-                bit = jbig2_arith_decode(as, &IAx[PREV]);
+                bit = jbig2_arith_decode(ctx, as, &IAx[PREV]);
                 if (bit < 0)
-                    return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode IAx decision bit 3");
+                    return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to decode IAx decision bit 3");
                 PREV = (PREV << 1) | bit;
 
                 if (bit) {
-                    bit = jbig2_arith_decode(as, &IAx[PREV]);
+                    bit = jbig2_arith_decode(ctx, as, &IAx[PREV]);
                     if (bit < 0)
-                        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode IAx decision bit 4");
+                        return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to decode IAx decision bit 4");
                     PREV = (PREV << 1) | bit;
 
                     if (bit) {
@@ -130,15 +123,18 @@ jbig2_arith_int_decode(Jbig2Ctx *ctx, Jbig2ArithIntCtx *actx, Jbig2ArithState *a
 
     V = 0;
     for (i = 0; i < n_tail; i++) {
-        bit = jbig2_arith_decode(as, &IAx[PREV]);
+        bit = jbig2_arith_decode(ctx, as, &IAx[PREV]);
         if (bit < 0)
-            return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode IAx V bit %d", i);
+            return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to decode IAx V bit %d", i);
         PREV = ((PREV << 1) & 511) | (PREV & 256) | bit;
         V = (V << 1) | bit;
     }
 
-    /* make sure not to underflow/overflow 32 bit value */
-    if (V < INT32_MAX - 4436 || V > INT32_MIN + 4436)
+    /* offset is always >=0, so underflow can't happen. */
+    /* avoid overflow by clamping 32 bit value. */
+    if (V > INT32_MAX - offset)
+        V = INT32_MAX;
+    else
         V += offset;
     V = S ? -V : V;
     *p_result = V;

@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Artifex Software, Inc.
+/* Copyright (C) 2001-2020 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -70,7 +70,7 @@ void
 jbig2_dump_symbol_dict(Jbig2Ctx *ctx, Jbig2Segment *segment)
 {
     Jbig2SymbolDict *dict = (Jbig2SymbolDict *) segment->result;
-    int index;
+    uint32_t index;
     char filename[24];
     int code;
 
@@ -102,14 +102,14 @@ jbig2_sd_new(Jbig2Ctx *ctx, uint32_t n_symbols)
         new_dict->glyphs = jbig2_new(ctx, Jbig2Image *, n_symbols);
         new_dict->n_symbols = n_symbols;
     } else {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to allocate new empty symbol dictionary");
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate new empty symbol dictionary");
         return NULL;
     }
 
     if (new_dict->glyphs != NULL) {
         memset(new_dict->glyphs, 0, n_symbols * sizeof(Jbig2Image *));
     } else if (new_dict->n_symbols > 0) {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to allocate glyphs for new empty symbol dictionary");
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate glyphs for new empty symbol dictionary");
         jbig2_free(ctx->allocator, new_dict);
         return NULL;
     }
@@ -215,7 +215,7 @@ jbig2_sd_cat(Jbig2Ctx *ctx, uint32_t n_dicts, Jbig2SymbolDict **dicts)
             for (j = 0; j < dicts[i]->n_symbols; j++)
                 new_dict->glyphs[k++] = jbig2_image_reference(ctx, dicts[i]->glyphs[j]);
     } else {
-        jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "failed to allocate new symbol dictionary");
+        jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate new symbol dictionary");
     }
 
     return new_dict;
@@ -236,7 +236,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
     uint32_t SYMWIDTH, TOTWIDTH;
     uint32_t HCFIRSTSYM;
     uint32_t *SDNEWSYMWIDTHS = NULL;
-    int SBSYMCODELEN = 0;
+    uint8_t SBSYMCODELEN = 0;
     Jbig2WordStream *ws = NULL;
     Jbig2HuffmanState *hs = NULL;
     Jbig2ArithState *as = NULL;
@@ -271,6 +271,8 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
         return NULL;
     }
 
+    for (SBSYMCODELEN = 0; ((uint64_t) 1 << SBSYMCODELEN) < ((uint64_t) params->SDNUMINSYMS + params->SDNUMNEWSYMS); SBSYMCODELEN++);
+
     if (params->SDHUFF) {
         jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number, "huffman coded symbol dictionary");
         hs = jbig2_huffman_new(ctx, ws);
@@ -282,6 +284,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
             jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to allocate for symbol bitmap");
             goto cleanup;
         }
+        /* 6.5.5 (2) */
         if (!params->SDREFAGG) {
             SDNEWSYMWIDTHS = jbig2_new(ctx, uint32_t, params->SDNUMNEWSYMS);
             if (SDNEWSYMWIDTHS == NULL) {
@@ -310,7 +313,6 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
             jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to allocate symbol bitmap");
             goto cleanup;
         }
-        for (SBSYMCODELEN = 0; ((uint64_t) 1 << SBSYMCODELEN) < ((uint64_t) params->SDNUMINSYMS + params->SDNUMNEWSYMS); SBSYMCODELEN++);
         tparams.IAID = jbig2_arith_iaid_ctx_new(ctx, SBSYMCODELEN);
         tparams.IARDX = jbig2_arith_int_ctx_new(ctx);
         tparams.IARDY = jbig2_arith_int_ctx_new(ctx);
@@ -347,6 +349,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
     tparams.SBDSOFFSET = 0;
     tparams.SBRTEMPLATE = params->SDRTEMPLATE;
 
+    /* 6.5.5 (1) */
     SDNEWSYMS = jbig2_sd_new(ctx, params->SDNUMNEWSYMS);
     if (SDNEWSYMS == NULL) {
         jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to allocate new symbols (%u)", params->SDNUMNEWSYMS);
@@ -426,14 +429,24 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
                 break;
             }
 
-            SYMWIDTH = SYMWIDTH + DW;
-            TOTWIDTH = TOTWIDTH + SYMWIDTH;
-            if ((int32_t) SYMWIDTH < 0) {
-                code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "invalid SYMWIDTH value (%d) at symbol %d", SYMWIDTH, NSYMSDECODED + 1);
+            if (DW < 0 && SYMWIDTH < (uint32_t) -DW) {
+                code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "DW value (%d) would make SYMWIDTH (%u) negative at symbol %u", DW, SYMWIDTH, NSYMSDECODED + 1);
                 goto cleanup;
             }
+            if (DW > 0 && (uint32_t) DW > UINT32_MAX - SYMWIDTH) {
+                code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "DW value (%d) would make SYMWIDTH (%u) too large at symbol %u", DW, SYMWIDTH, NSYMSDECODED + 1);
+                goto cleanup;
+            }
+
+            SYMWIDTH = SYMWIDTH + DW;
+            if (SYMWIDTH > UINT32_MAX - TOTWIDTH) {
+                code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "SYMWIDTH value (%u) would make TOTWIDTH (%u) too large at symbol %u", SYMWIDTH, TOTWIDTH, NSYMSDECODED + 1);
+                goto cleanup;
+            }
+
+            TOTWIDTH = TOTWIDTH + SYMWIDTH;
 #ifdef JBIG2_DEBUG
-            jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number, "SYMWIDTH = %d TOTWIDTH = %d", SYMWIDTH, TOTWIDTH);
+            jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number, "SYMWIDTH = %u TOTWIDTH = %u", SYMWIDTH, TOTWIDTH);
 #endif
             /* 6.5.5 (4c.ii) */
             if (!params->SDHUFF || params->SDREFAGG) {

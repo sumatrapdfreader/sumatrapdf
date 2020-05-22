@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Artifex Software, Inc.
+/* Copyright (C) 2001-2020 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -47,12 +47,11 @@ jbig2_hd_new(Jbig2Ctx *ctx, const Jbig2PatternDictParams *params, Jbig2Image *im
     const uint32_t HPW = params->HDPW;
     const uint32_t HPH = params->HDPH;
     int code;
-    uint32_t i;
-    int j;
+    uint32_t i, j;
 
     if (N == 0) {
         /* We've wrapped. */
-        jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "params->GRAYMAX out of range");
+        jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "params->GRAYMAX out of range");
         return NULL;
     }
 
@@ -61,7 +60,7 @@ jbig2_hd_new(Jbig2Ctx *ctx, const Jbig2PatternDictParams *params, Jbig2Image *im
     if (new != NULL) {
         new->patterns = jbig2_new(ctx, Jbig2Image *, N);
         if (new->patterns == NULL) {
-            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to allocate pattern in collective bitmap dictionary");
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate pattern in collective bitmap dictionary");
             jbig2_free(ctx->allocator, new);
             return NULL;
         }
@@ -73,7 +72,7 @@ jbig2_hd_new(Jbig2Ctx *ctx, const Jbig2PatternDictParams *params, Jbig2Image *im
         for (i = 0; i < N; i++) {
             new->patterns[i] = jbig2_image_new(ctx, HPW, HPH);
             if (new->patterns[i] == NULL) {
-                jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "failed to allocate pattern element image");
+                jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate pattern element image");
                 for (j = 0; j < i; j++)
                     jbig2_free(ctx->allocator, new->patterns[j]);
                 jbig2_free(ctx->allocator, new);
@@ -84,7 +83,7 @@ jbig2_hd_new(Jbig2Ctx *ctx, const Jbig2PatternDictParams *params, Jbig2Image *im
                proper sub image */
             code = jbig2_image_compose(ctx, new->patterns[i], image, -i * (int32_t) HPW, 0, JBIG2_COMPOSE_REPLACE);
             if (code < 0) {
-                jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "failed to compose image into collective bitmap dictionary");
+                jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to compose image into collective bitmap dictionary");
                 for (j = 0; j < i; j++)
                     jbig2_free(ctx->allocator, new->patterns[j]);
                 jbig2_free(ctx->allocator, new);
@@ -92,7 +91,7 @@ jbig2_hd_new(Jbig2Ctx *ctx, const Jbig2PatternDictParams *params, Jbig2Image *im
             }
         }
     } else {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to allocate collective bitmap dictionary");
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate collective bitmap dictionary");
     }
 
     return new;
@@ -464,8 +463,7 @@ jbig2_decode_halftone_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
     Jbig2Image *HSKIP = NULL;
     Jbig2PatternDict *HPATS;
     uint32_t i;
-    int32_t mg, ng;
-    int32_t x, y;
+    uint32_t mg, ng;
     uint16_t gray_val;
     int code = 0;
 
@@ -487,10 +485,10 @@ jbig2_decode_halftone_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
         for (mg = 0; mg < params->HGH; ++mg) {
             for (ng = 0; ng < params->HGW; ++ng) {
-                x = (params->HGX + mg * params->HRY + ng * params->HRX) >> 8;
-                y = (params->HGY + mg * params->HRX - ng * params->HRY) >> 8;
+                int64_t x = ((int64_t) params->HGX + mg * params->HRY + ng * params->HRX) >> 8;
+                int64_t y = ((int64_t) params->HGY + mg * params->HRX - ng * params->HRY) >> 8;
 
-                if (x + HPATS->HPW <= 0 || x >= (int32_t) image->width || y + HPATS->HPH <= 0 || y >= (int32_t) image->height) {
+                if (x + HPATS->HPW <= 0 || x >= image->width || y + HPATS->HPH <= 0 || y >= image->height) {
                     jbig2_image_set_pixel(HSKIP, ng, mg, 1);
                 } else {
                     jbig2_image_set_pixel(HSKIP, ng, mg, 0);
@@ -519,8 +517,8 @@ jbig2_decode_halftone_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
     /* 6.6.5 point 5. place patterns with procedure mentioned in 6.6.5.2 */
     for (mg = 0; mg < params->HGH; ++mg) {
         for (ng = 0; ng < params->HGW; ++ng) {
-            x = (params->HGX + mg * (int32_t) params->HRY + ng * (int32_t) params->HRX) >> 8;
-            y = (params->HGY + mg * (int32_t) params->HRX - ng * (int32_t) params->HRY) >> 8;
+            int64_t x = ((int64_t) params->HGX + mg * params->HRY + ng * params->HRX) >> 8;
+            int64_t y = ((int64_t) params->HGY + mg * params->HRX - ng * params->HRY) >> 8;
 
             /* prevent pattern index >= HNUMPATS */
             gray_val = GI[ng][mg];

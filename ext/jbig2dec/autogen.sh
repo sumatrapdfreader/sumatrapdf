@@ -96,7 +96,7 @@ else
   AM_NEEDED=`fgrep AUTOMAKE_OPTIONS Makefile.am | $VERSIONGREP`
   AM_MAJOR_REQ=`echo $AM_NEEDED |cut -d. -f1`
   AM_MINOR_REQ=`echo $AM_NEEDED |cut -d. -f2`
-  
+
   echo "checking for automake $AM_NEEDED or later..."
 
   if [ $AM_MAJ -lt $AM_MAJOR_REQ -o $AM_MIN -lt $AM_MINOR_REQ ] ; then

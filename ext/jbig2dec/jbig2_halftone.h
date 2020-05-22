@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Artifex Software, Inc.
+/* Copyright (C) 2001-2020 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -23,7 +23,7 @@
 typedef struct {
     int n_patterns;
     Jbig2Image **patterns;
-    int HPW, HPH;
+    uint32_t HPW, HPH;
 } Jbig2PatternDict;
 
 /* Table 24 */

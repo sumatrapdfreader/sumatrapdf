@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Artifex Software, Inc.
+/* Copyright (C) 2001-2020 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -37,18 +37,27 @@
 #include "jbig2_arith_iaid.h"
 
 struct _Jbig2ArithIaidCtx {
-    int SBSYMCODELEN;
+    uint8_t SBSYMCODELEN;
     Jbig2ArithCx *IAIDx;
 };
 
 Jbig2ArithIaidCtx *
-jbig2_arith_iaid_ctx_new(Jbig2Ctx *ctx, int SBSYMCODELEN)
+jbig2_arith_iaid_ctx_new(Jbig2Ctx *ctx, uint8_t SBSYMCODELEN)
 {
-    Jbig2ArithIaidCtx *result = jbig2_new(ctx, Jbig2ArithIaidCtx, 1);
-    int ctx_size = 1 << SBSYMCODELEN;
+    Jbig2ArithIaidCtx *result;
+    size_t ctx_size;
 
+    if (sizeof(ctx_size) * 8 <= SBSYMCODELEN)
+    {
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "requested IAID arithmetic coding state size too large");
+        return NULL;
+    }
+
+    ctx_size = (size_t) 1U << SBSYMCODELEN;
+
+    result = jbig2_new(ctx, Jbig2ArithIaidCtx, 1);
     if (result == NULL) {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to allocate IAID arithmetic coding state");
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate IAID arithmetic coding state");
         return NULL;
     }
 
@@ -57,7 +66,7 @@ jbig2_arith_iaid_ctx_new(Jbig2Ctx *ctx, int SBSYMCODELEN)
     if (result->IAIDx == NULL)
     {
         jbig2_free(ctx->allocator, result);
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to allocate symbol ID in IAID arithmetic coding state");
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate symbol ID in IAID arithmetic coding state");
         return NULL;
     }
 
@@ -71,16 +80,17 @@ int
 jbig2_arith_iaid_decode(Jbig2Ctx *ctx, Jbig2ArithIaidCtx *actx, Jbig2ArithState *as, int32_t *p_result)
 {
     Jbig2ArithCx *IAIDx = actx->IAIDx;
-    int SBSYMCODELEN = actx->SBSYMCODELEN;
+    uint8_t SBSYMCODELEN = actx->SBSYMCODELEN;
+    /* A.3 (1) */
     int PREV = 1;
     int D;
     int i;
 
     /* A.3 (2) */
     for (i = 0; i < SBSYMCODELEN; i++) {
-        D = jbig2_arith_decode(as, &IAIDx[PREV]);
+        D = jbig2_arith_decode(ctx, as, &IAIDx[PREV]);
         if (D < 0)
-            return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to decode IAIDx code");
+            return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to decode IAIDx code");
 #ifdef VERBOSE
         fprintf(stderr, "IAID%x: D = %d\n", PREV, D);
 #endif

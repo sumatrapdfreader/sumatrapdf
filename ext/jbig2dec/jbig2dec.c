@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Artifex Software, Inc.
+/* Copyright (C) 2001-2020 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -65,14 +65,128 @@ typedef struct {
     SHA1_CTX *hash_ctx;
     char *output_filename;
     jbig2dec_format output_format;
+    size_t memory_limit;
+} jbig2dec_params_t;
+
+typedef struct {
+    int verbose;
     char *last_message;
     Jbig2Severity severity;
     char *type;
     long repeats;
-} jbig2dec_params_t;
+} jbig2dec_error_callback_state_t;
+
+typedef struct {
+    Jbig2Allocator super;
+    Jbig2Ctx *ctx;
+    size_t memory_limit;
+    size_t memory_used;
+    size_t memory_peak;
+} jbig2dec_allocator_t;
 
 static int print_version(void);
 static int print_usage(void);
+
+#define ALIGNMENT 16
+#define KBYTE 1024
+#define MBYTE (1024 * KBYTE)
+
+static void *jbig2dec_alloc(Jbig2Allocator *allocator_, size_t size)
+{
+    jbig2dec_allocator_t *allocator = (jbig2dec_allocator_t *) allocator_;
+    void *ptr;
+
+    if (size == 0)
+        return NULL;
+    if (size > allocator->memory_limit - ALIGNMENT - allocator->memory_used)
+        return NULL;
+
+    ptr = malloc(size + ALIGNMENT);
+    if (ptr == NULL)
+        return NULL;
+    memcpy(ptr, &size, sizeof(size));
+    allocator->memory_used += size + ALIGNMENT;
+
+    if (allocator->memory_used > allocator->memory_peak) {
+        allocator->memory_peak = allocator->memory_used;
+
+        if (allocator->ctx) {
+            size_t limit_mb = allocator->memory_limit / MBYTE;
+            size_t peak_mb = allocator->memory_peak / MBYTE;
+            jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "memory: limit: %lu Mbyte peak usage: %lu Mbyte", limit_mb, peak_mb);
+        }
+    }
+
+    return (unsigned char *) ptr + ALIGNMENT;
+}
+
+static void jbig2dec_free(Jbig2Allocator *allocator_, void *p)
+{
+    jbig2dec_allocator_t *allocator = (jbig2dec_allocator_t *) allocator_;
+    size_t size;
+
+    if (p == NULL)
+        return;
+
+    memcpy(&size, (unsigned char *) p - ALIGNMENT, sizeof(size));
+    allocator->memory_used -= size + ALIGNMENT;
+    free((unsigned char *) p - ALIGNMENT);
+}
+
+static void *jbig2dec_realloc(Jbig2Allocator *allocator_, void *p, size_t size)
+{
+    jbig2dec_allocator_t *allocator = (jbig2dec_allocator_t *) allocator_;
+    unsigned char *oldp = p ? (unsigned char *) p - ALIGNMENT : NULL;
+
+    if (size > SIZE_MAX - ALIGNMENT)
+        return NULL;
+
+    if (oldp == NULL)
+    {
+        if (size == 0)
+            return NULL;
+        if (size > allocator->memory_limit - ALIGNMENT - allocator->memory_used)
+            return NULL;
+
+        p = malloc(size + ALIGNMENT);
+    }
+    else
+    {
+        size_t oldsize;
+        memcpy(&oldsize, oldp, sizeof(oldsize));
+
+        if (size == 0)
+        {
+            allocator->memory_used -= oldsize + ALIGNMENT;
+            free(oldp);
+            return NULL;
+        }
+
+        if (size > allocator->memory_limit - allocator->memory_used + oldsize)
+            return NULL;
+
+        p = realloc(oldp, size + ALIGNMENT);
+        if (p == NULL)
+            return NULL;
+
+        allocator->memory_used -= oldsize + ALIGNMENT;
+    }
+
+    memcpy(p, &size, sizeof(size));
+    allocator->memory_used += size + ALIGNMENT;
+
+    if (allocator->memory_used > allocator->memory_peak) {
+        allocator->memory_peak = allocator->memory_used;
+
+        if (allocator->ctx) {
+            size_t limit_mb = allocator->memory_limit / MBYTE;
+            size_t peak_mb = allocator->memory_peak / MBYTE;
+            jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "memory: limit: %lu Mbyte peak usage: %lu Mbyte", limit_mb, peak_mb);
+        }
+    }
+
+    return (unsigned char *) p + ALIGNMENT;
+}
 
 /* page hashing functions */
 static void
@@ -151,9 +265,10 @@ parse_options(int argc, char *argv[], jbig2dec_params_t *params)
     };
     int option_idx = 1;
     int option;
+    int ret;
 
     while (1) {
-        option = getopt_long(argc, argv, "Vh?qv:do:t:e", long_options, &option_idx);
+        option = getopt_long(argc, argv, "Vh?qv:do:t:eM:", long_options, &option_idx);
         if (option == -1)
             break;
 
@@ -196,9 +311,14 @@ parse_options(int argc, char *argv[], jbig2dec_params_t *params)
         case 'e':
             params->embedded = 1;
             break;
+        case 'M':
+            ret = sscanf(optarg, "%zu", &params->memory_limit);
+            if (ret != 1)
+                fprintf(stderr, "could not parse memory limit argument\n");
+            break;
         default:
             if (!params->verbose)
-                fprintf(stdout, "unrecognized option: -%c\n", option);
+                fprintf(stderr, "unrecognized option: -%c\n", option);
             break;
         }
     }
@@ -226,22 +346,25 @@ print_usage(void)
             "  embedded streams.\n"
             "\n"
             "  available options:\n"
-            "    -h --help      this usage summary\n"
-            "    -q --quiet     suppress diagnostic output\n"
-            "    -v --verbose   set the verbosity level\n"
-            "    -d --dump      print the structure of the jbig2 file\n"
-            "                   rather than explicitly decoding\n"
-            "       --version   program name and version information\n"
-            "       --hash      print a hash of the decoded document\n"
-            "    -e --embedded  expect embedded bit stream without file header\n"
-            "    -o <file>      send decoded output to <file>\n"
-            "                   Defaults to the the input with a different\n"
-            "                   extension. Pass '-' for stdout.\n"
-            "    -t <type>      force a particular output file format\n"
+            "    -h --help       this usage summary\n"
+            "    -q --quiet      suppress diagnostic output\n"
+            "    -v --verbose    set the verbosity level\n"
+            "    -d --dump       print the structure of the jbig2 file\n"
+            "                    rather than explicitly decoding\n"
+            "    -V --version    program name and version information\n"
+            "    -m --hash       print a hash of the decoded document\n"
+            "    -e --embedded   expect embedded bit stream without file header\n"
+            "    -M <limit>      memory limit expressed in bytes\n"
+            "    -o <file>\n"
+            "    --output <file> send decoded output to <file>\n"
+            "                    Defaults to the the input with a different\n"
+            "                    extension. Pass '-' for stdout.\n"
+            "    -t <type>\n"
+            "    --format <type> force a particular output file format\n"
 #ifdef HAVE_LIBPNG
-            "                   supported options are 'png' and 'pbm'\n"
+            "                    supported options are 'png' and 'pbm'\n"
 #else
-            "                   the only supported option is 'pbm'\n"
+            "                    the only supported option is 'pbm'\n"
 #endif
             "\n");
 
@@ -249,27 +372,25 @@ print_usage(void)
 }
 
 static void
-error_callback(void *error_callback_data, const char *buf, Jbig2Severity severity, int32_t seg_idx)
+error_callback(void *error_callback_data, const char *message, Jbig2Severity severity, uint32_t seg_idx)
 {
-    jbig2dec_params_t *params = (jbig2dec_params_t *) error_callback_data;
+    jbig2dec_error_callback_state_t *state = (jbig2dec_error_callback_state_t *) error_callback_data;
     char *type;
-    char segment[22];
-    int len;
-    char *message;
+    int ret;
 
     switch (severity) {
     case JBIG2_SEVERITY_DEBUG:
-        if (params->verbose < 3)
+        if (state->verbose < 3)
             return;
         type = "DEBUG";
         break;
     case JBIG2_SEVERITY_INFO:
-        if (params->verbose < 2)
+        if (state->verbose < 2)
             return;
         type = "info";
         break;
     case JBIG2_SEVERITY_WARNING:
-        if (params->verbose < 1)
+        if (state->verbose < 1)
             return;
         type = "WARNING";
         break;
@@ -280,56 +401,58 @@ error_callback(void *error_callback_data, const char *buf, Jbig2Severity severit
         type = "unknown message";
         break;
     }
-    if (seg_idx == -1)
-        segment[0] = '\0';
-    else
-        snprintf(segment, sizeof(segment), "(segment 0x%02x)", seg_idx);
 
-    len = snprintf(NULL, 0, "jbig2dec %s %s %s", type, buf, segment);
-    if (len < 0) {
-        return;
+    if (state->last_message != NULL && !strcmp(message, state->last_message) && state->severity == severity && state->type == type) {
+        state->repeats++;
+        if (state->repeats % 1000000 == 0) {
+            ret = fprintf(stderr, "jbig2dec %s last message repeated %ld times so far\n", state->type, state->repeats);
+            if (ret < 0)
+                goto printerror;
+        }
+    } else {
+        if (state->repeats > 1) {
+            ret = fprintf(stderr, "jbig2dec %s last message repeated %ld times\n", state->type, state->repeats);
+            if (ret < 0)
+                goto printerror;
+        }
+
+        if (seg_idx == JBIG2_UNKNOWN_SEGMENT_NUMBER)
+            ret = fprintf(stderr, "jbig2dec %s %s\n", type, message);
+        else
+            ret = fprintf(stderr, "jbig2dec %s %s (segment 0x%08x)\n", type, message, seg_idx);
+        if (ret < 0)
+            goto printerror;
+
+        state->repeats = 0;
+        state->severity = severity;
+        state->type = type;
+        free(state->last_message);
+        state->last_message = NULL;
+
+        if (message) {
+            state->last_message = strdup(message);
+            if (state->last_message == NULL) {
+                ret = fprintf(stderr, "jbig2dec WARNING could not duplicate message\n");
+                if (ret < 0)
+                    goto printerror;
+            }
+        }
     }
 
-    message = malloc(len + 1);
-    if (message == NULL) {
-        return;
-    }
+    return;
 
-    len = snprintf(message, len + 1, "jbig2dec %s %s %s", type, buf, segment);
-    if (len < 0)
-    {
-        free(message);
-        return;
-    }
-
-    if (params->last_message != NULL && strcmp(message, params->last_message)) {
-        if (params->repeats > 1)
-            fprintf(stderr, "jbig2dec %s last message repeated %ld times\n", params->type, params->repeats);
-        fprintf(stderr, "%s\n", message);
-        free(params->last_message);
-        params->last_message = message;
-        params->severity = severity;
-        params->type = type;
-        params->repeats = 0;
-    } else if (params->last_message != NULL) {
-        params->repeats++;
-        if (params->repeats % 1000000 == 0)
-            fprintf(stderr, "jbig2dec %s last message repeated %ld times so far\n", params->type, params->repeats);
-        free(message);
-    } else if (params->last_message == NULL) {
-        fprintf(stderr, "%s\n", message);
-        params->last_message = message;
-        params->severity = severity;
-        params->type = type;
-        params->repeats = 0;
-    }
+printerror:
+    fprintf(stderr, "jbig2dec WARNING could not print message\n");
+    state->repeats = 0;
+    free(state->last_message);
+    state->last_message = NULL;
 }
 
 static void
-flush_errors(jbig2dec_params_t *params)
+flush_errors(jbig2dec_error_callback_state_t *state)
 {
-    if (params->repeats > 1) {
-        fprintf(stderr, "jbig2dec last message repeated %ld times\n", params->repeats);
+    if (state->repeats > 1) {
+        fprintf(stderr, "jbig2dec last message repeated %ld times\n", state->repeats);
     }
 }
 
@@ -338,7 +461,7 @@ make_output_filename(const char *input_filename, const char *extension)
 {
     char *output_filename;
     const char *c, *e;
-    int len;
+    size_t extlen, len;
 
     if (extension == NULL) {
         fprintf(stderr, "no filename extension; cannot create output filename!\n");
@@ -368,16 +491,18 @@ make_output_filename(const char *input_filename, const char *extension)
     if (e != NULL)
         len -= strlen(e);
 
+    extlen = strlen(extension);
+
     /* allocate enough space for the base + ext */
-    output_filename = (char *)malloc(len + strlen(extension) + 1);
+    output_filename = (char *)malloc(len + extlen + 1);
     if (output_filename == NULL) {
         fprintf(stderr, "failed to allocate memory for output filename\n");
         exit(1);
     }
 
-    strncpy(output_filename, c, len);
-    strncpy(output_filename + len, extension, strlen(extension));
-    *(output_filename + len + strlen(extension)) = '\0';
+    memcpy(output_filename, c, len);
+    memcpy(output_filename + len, extension, extlen);
+    *(output_filename + len + extlen) = '\0';
 
     /* return the new string */
     return (output_filename);
@@ -422,10 +547,13 @@ write_document_hash(jbig2dec_params_t *params)
 int
 main(int argc, char **argv)
 {
-    FILE *f = NULL, *f_page = NULL;
-    Jbig2Ctx *ctx = NULL;
-    uint8_t buf[4096];
     jbig2dec_params_t params;
+    jbig2dec_error_callback_state_t error_callback_state;
+    jbig2dec_allocator_t allocator_;
+    jbig2dec_allocator_t *allocator = &allocator_;
+    Jbig2Ctx *ctx = NULL;
+    FILE *f = NULL, *f_page = NULL;
+    uint8_t buf[4096];
     int filearg;
     int result = 1;
     int code;
@@ -437,10 +565,15 @@ main(int argc, char **argv)
     params.output_filename = NULL;
     params.output_format = jbig2dec_format_none;
     params.embedded = 0;
-    params.last_message = NULL;
-    params.repeats = 0;
+    params.memory_limit = 0;
 
     filearg = parse_options(argc, argv, &params);
+
+    error_callback_state.verbose = params.verbose;
+    error_callback_state.severity = JBIG2_SEVERITY_DEBUG;
+    error_callback_state.type = NULL;
+    error_callback_state.last_message = NULL;
+    error_callback_state.repeats = 0;
 
     if (params.hash)
         hash_init(&params);
@@ -487,7 +620,20 @@ main(int argc, char **argv)
             goto cleanup;
         }
 
-        ctx = jbig2_ctx_new(NULL, (Jbig2Options)(f_page != NULL || params.embedded ? JBIG2_OPTIONS_EMBEDDED : 0), NULL, error_callback, &params);
+        if (params.memory_limit == 0)
+            allocator = NULL;
+        else
+        {
+            allocator->super.alloc = jbig2dec_alloc;
+            allocator->super.free = jbig2dec_free;
+            allocator->super.realloc = jbig2dec_realloc;
+            allocator->ctx = NULL;
+            allocator->memory_limit = params.memory_limit;
+            allocator->memory_used = 0;
+            allocator->memory_peak = 0;
+        }
+
+        ctx = jbig2_ctx_new((Jbig2Allocator *) allocator, (Jbig2Options)(f_page != NULL || params.embedded ? JBIG2_OPTIONS_EMBEDDED : 0), NULL, error_callback, &error_callback_state);
         if (ctx == NULL) {
             fclose(f);
             if (f_page)
@@ -495,14 +641,29 @@ main(int argc, char **argv)
             goto cleanup;
         }
 
+        if (allocator != NULL)
+            allocator->ctx = ctx;
+
         /* pull the whole file/global stream into memory */
         for (;;) {
             int n_bytes = fread(buf, 1, sizeof(buf), f);
-
+            if (n_bytes < 0) {
+                if (f_page != NULL)
+                    jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to read jbig2 global stream");
+                else
+                    jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to read jbig2 page stream");
+            }
             if (n_bytes <= 0)
                 break;
-            if (jbig2_data_in(ctx, buf, n_bytes))
+
+            if (jbig2_data_in(ctx, buf, (size_t) n_bytes) < 0)
+            {
+                if (f_page != NULL)
+                    jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to process jbig2 global stream");
+                else
+                    jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to process jbig2 page stream");
                 break;
+            }
         }
         fclose(f);
 
@@ -510,15 +671,23 @@ main(int argc, char **argv)
         if (f_page != NULL) {
             Jbig2GlobalCtx *global_ctx = jbig2_make_global_ctx(ctx);
 
-            ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, global_ctx, error_callback, &params);
+            ctx = jbig2_ctx_new((Jbig2Allocator *) allocator, JBIG2_OPTIONS_EMBEDDED, global_ctx, error_callback, &error_callback_state);
             if (ctx != NULL) {
+                if (allocator != NULL)
+                    allocator->ctx = ctx;
+
                 for (;;) {
                     int n_bytes = fread(buf, 1, sizeof(buf), f_page);
-
+                    if (n_bytes < 0)
+                        jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to read jbig2 page stream");
                     if (n_bytes <= 0)
                         break;
-                    if (jbig2_data_in(ctx, buf, n_bytes))
+
+                    if (jbig2_data_in(ctx, buf, (size_t) n_bytes) < 0)
+                    {
+                        jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to process jbig2 page stream");
                         break;
+                    }
                 }
             }
             fclose(f_page);
@@ -535,7 +704,7 @@ main(int argc, char **argv)
             with parse errors. */
             code = jbig2_complete_page(ctx);
             if (code < 0) {
-                jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "unable to complete page");
+                jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to complete page");
                 goto cleanup;
             }
 
@@ -586,19 +755,24 @@ main(int argc, char **argv)
                 write_document_hash(&params);
         }
 
-
     }                           /* end params.mode switch */
+
+    if (allocator != NULL && allocator->ctx != NULL) {
+        size_t limit_mb = allocator->memory_limit / MBYTE;
+        size_t peak_mb = allocator->memory_peak / MBYTE;
+        jbig2_error(allocator->ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "memory: limit: %lu Mbyte peak usage: %lu Mbyte", limit_mb, peak_mb);
+    }
 
     /* fin */
     result = 0;
 
 cleanup:
-    flush_errors(&params);
+    flush_errors(&error_callback_state);
     jbig2_ctx_free(ctx);
-    if (params.last_message)
-        free(params.last_message);
     if (params.output_filename)
         free(params.output_filename);
+    if (error_callback_state.last_message)
+        free(error_callback_state.last_message);
     if (params.hash)
         hash_free(&params);
 

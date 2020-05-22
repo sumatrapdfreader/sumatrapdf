@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Artifex Software, Inc.
+/* Copyright (C) 2001-2020 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -33,13 +33,6 @@
 #include "jbig2_image.h"
 #include "jbig2_page.h"
 #include "jbig2_segment.h"
-
-#if !defined (INT32_MAX)
-#define INT32_MAX  0x7fffffff
-#endif
-#if !defined (UINT32_MAX)
-#define UINT32_MAX 0xffffffff
-#endif
 
 /* dump the page struct info */
 static void
@@ -79,13 +72,21 @@ jbig2_page_info(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_dat
 
     /* find a free page */
     {
-        int index, j;
+        size_t index, j;
 
         index = ctx->current_page;
         while (ctx->pages[index].state != JBIG2_PAGE_FREE) {
             index++;
             if (index >= ctx->max_page_index) {
                 /* grow the list */
+
+                if (ctx->max_page_index == UINT32_MAX) {
+                    return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "too many pages in jbig2 image");
+                }
+                else if (ctx->max_page_index > (UINT32_MAX >> 2)) {
+                    ctx->max_page_index = UINT32_MAX;
+                }
+
                 pages = jbig2_renew(ctx, ctx->pages, Jbig2Page, (ctx->max_page_index <<= 2));
                 if (pages == NULL) {
                     return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "failed to reallocate pages");
@@ -222,7 +223,7 @@ jbig2_complete_page(Jbig2Ctx *ctx)
 
     /* ensure image exists before marking page as complete */
     if (ctx->pages[ctx->current_page].image == NULL) {
-        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "page has no image, cannot be completed");
+        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "page has no image, cannot be completed");
     }
 
     ctx->pages[ctx->current_page].state = JBIG2_PAGE_COMPLETE;
@@ -270,27 +271,27 @@ jbig2_page_add_result(Jbig2Ctx *ctx, Jbig2Page *page, Jbig2Image *image, uint32_
     int code;
 
     if (x > INT32_MAX || y > INT32_MAX)
-        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "unsupported image coordinates");
+        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unsupported image coordinates");
 
     /* ensure image exists first */
     if (page->image == NULL)
-        return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "page info possibly missing, no image defined");
+        return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "page info possibly missing, no image defined");
 
     /* grow the page to accommodate a new stripe if necessary */
     if (page->striped && page->height == 0xFFFFFFFF) {
         uint32_t new_height;
 
         if (y > UINT32_MAX - image->height)
-                return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "adding image at coordinate would grow page out of bounds");
+                return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "adding image at coordinate would grow page out of bounds");
         new_height = y + image->height;
 
         if (page->image->height < new_height) {
             Jbig2Image *resized_image = NULL;
 
-            jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1, "growing page buffer to %u rows to accommodate new stripe", new_height);
+            jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "growing page buffer to %u rows to accommodate new stripe", new_height);
             resized_image = jbig2_image_resize(ctx, page->image, page->image->width, new_height, page->flags & 4);
             if (resized_image == NULL) {
-                return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "unable to resize image to accommodate new stripe");
+                return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "unable to resize image to accommodate new stripe");
             }
             page->image = resized_image;
         }
@@ -298,7 +299,7 @@ jbig2_page_add_result(Jbig2Ctx *ctx, Jbig2Page *page, Jbig2Image *image, uint32_
 
     code = jbig2_image_compose(ctx, page->image, image, x, y, op);
     if (code < 0)
-        return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "failed to compose image with page");
+        return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to compose image with page");
 
     return 0;
 }
@@ -318,7 +319,7 @@ jbig2_page_add_result(Jbig2Ctx *ctx, Jbig2Page *page, Jbig2Image *image, uint32_
 Jbig2Image *
 jbig2_page_out(Jbig2Ctx *ctx)
 {
-    int index;
+    uint32_t index;
 
     /* search for a completed page */
     for (index = 0; index < ctx->max_page_index; index++) {
@@ -327,12 +328,12 @@ jbig2_page_out(Jbig2Ctx *ctx)
             uint32_t page_number = ctx->pages[index].number;
 
             if (img == NULL) {
-                jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "page %d returned with no associated image", page_number);
+                jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "page %d returned with no associated image", page_number);
                 continue;
             }
 
             ctx->pages[index].state = JBIG2_PAGE_RETURNED;
-            jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1, "page %d returned to the client", page_number);
+            jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "page %d returned to the client", page_number);
             return jbig2_image_reference(ctx, img);
         }
     }
@@ -347,7 +348,7 @@ jbig2_page_out(Jbig2Ctx *ctx)
 void
 jbig2_release_page(Jbig2Ctx *ctx, Jbig2Image *image)
 {
-    int index;
+    uint32_t index;
 
     if (image == NULL)
         return;
@@ -357,11 +358,11 @@ jbig2_release_page(Jbig2Ctx *ctx, Jbig2Image *image)
         if (ctx->pages[index].image == image) {
             jbig2_image_release(ctx, image);
             ctx->pages[index].state = JBIG2_PAGE_RELEASED;
-            jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1, "page %d released by the client", ctx->pages[index].number);
+            jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "page %d released by the client", ctx->pages[index].number);
             return;
         }
     }
 
     /* no matching pages */
-    jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "failed to release unknown page");
+    jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to release unknown page");
 }

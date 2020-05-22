@@ -27,12 +27,12 @@ AC_PROG_LIBTOOL
 
 # platform specific compiler flags
 if test "x$GCC" = xyes; then
-  CFLAGS="$CFLAGS -Wall"
+  CFLAGS="$CFLAGS -Wall -Wsign-compare"
 fi
 
 # Checks for libraries.
 dnl by default we want png support if possible
-AC_ARG_WITH([libpng], 
+AC_ARG_WITH([libpng],
   AC_HELP_STRING([--with-libpng[=prefix]],
     [include support for png output (if libpng is available)]),
   [ac_cv_want_libpng="$withval"], [ac_cv_want_libpng="yes"])
@@ -68,9 +68,9 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([libintl.h stddef.h unistd.h strings.h])
 
 dnl We assume the fixed-size types from stdint.h. If that header is
-dnl not available, look for the same types in a few other headers. 
+dnl not available, look for the same types in a few other headers.
 dnl We also attempt to define them ourselves, but only use those if
-dnl the native versions aren't available. The substitutions happen 
+dnl the native versions aren't available. The substitutions happen
 dnl in a file config_types.h, whose template is created by autogen.sh
 
 stdint_types_in="no_replacement_found"
@@ -113,7 +113,7 @@ if test "x$ac_cv_header_stdint_h" != "xyes"; then
   elif test "x$stdint_types_discovered" = "xno"; then
     AC_MSG_ERROR([
 Unable to find suitable definitions of the stdint.h types (uint32_t and friends)
-You will have to define these yourself in a separate header. 
+You will have to define these yourself in a separate header.
 See config_win32.h for an example.
     ])
   fi
@@ -132,12 +132,11 @@ AC_C_BIGENDIAN
 AC_FUNC_MEMCMP
 dnl we use realloc() but don't depend on the zero-length behavior
 dnl tested by AC_FUNC_REALLOC
-AC_REPLACE_FUNCS([snprintf])
 
 AC_CHECK_FUNCS([memset strdup])
 
 dnl use our included getopt if the system doesn't have getopt_long()
-AC_CHECK_FUNC(getopt_long, 
+AC_CHECK_FUNC(getopt_long,
 	AC_DEFINE(HAVE_GETOPT_LONG,,
 	  [Define if the local libc includes getopt_long()]
 	),[

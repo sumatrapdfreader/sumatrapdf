@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2019 Artifex Software, Inc.
+/* Copyright (C) 2001-2020 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -30,13 +30,6 @@
 #include "jbig2_priv.h"
 #include "jbig2_image.h"
 
-#if !defined (INT32_MAX)
-#define INT32_MAX  0x7fffffff
-#endif
-#if !defined (UINT32_MAX)
-#define UINT32_MAX  0xffffffffu
-#endif
-
 /* allocate a Jbig2Image structure and its associated bitmap */
 Jbig2Image *
 jbig2_image_new(Jbig2Ctx *ctx, uint32_t width, uint32_t height)
@@ -45,13 +38,13 @@ jbig2_image_new(Jbig2Ctx *ctx, uint32_t width, uint32_t height)
     uint32_t stride;
 
     if (width == 0 || height == 0) {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to create zero sized image");
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to create zero sized image");
         return NULL;
     }
 
     image = jbig2_new(ctx, Jbig2Image, 1);
     if (image == NULL) {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to allocate image");
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate image");
         return NULL;
     }
 
@@ -59,13 +52,13 @@ jbig2_image_new(Jbig2Ctx *ctx, uint32_t width, uint32_t height)
 
     /* check for integer multiplication overflow */
     if (height > (INT32_MAX / stride)) {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "integer multiplication overflow (stride=%u, height=%u)", stride, height);
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "integer multiplication overflow (stride=%u, height=%u)", stride, height);
         jbig2_free(ctx->allocator, image);
         return NULL;
     }
     image->data = jbig2_new(ctx, uint8_t, (size_t) height * stride);
     if (image->data == NULL) {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to allocate image data buffer (stride=%u, height=%u)", stride, height);
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate image data buffer (stride=%u, height=%u)", stride, height);
         jbig2_free(ctx->allocator, image);
         return NULL;
     }
@@ -117,13 +110,13 @@ jbig2_image_resize(Jbig2Ctx *ctx, Jbig2Image *image, uint32_t width, uint32_t he
 
         /* check for integer multiplication overflow */
         if (image->height > (INT32_MAX / image->stride)) {
-            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "integer multiplication overflow during resize (stride=%u, height=%u)", image->stride, height);
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "integer multiplication overflow during resize (stride=%u, height=%u)", image->stride, height);
             return NULL;
         }
         /* use the same stride, just change the length */
         data = jbig2_renew(ctx, image->data, uint8_t, (size_t) height * image->stride);
         if (data == NULL) {
-            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1, "failed to reallocate image");
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to reallocate image");
             return NULL;
         }
         image->data = data;
@@ -141,14 +134,14 @@ jbig2_image_resize(Jbig2Ctx *ctx, Jbig2Image *image, uint32_t width, uint32_t he
 
         newimage = jbig2_image_new(ctx, width, height);
         if (newimage == NULL) {
-            jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "failed to allocate resized image");
+            jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to allocate resized image");
             return NULL;
         }
         jbig2_image_clear(ctx, newimage, value);
 
         code = jbig2_image_compose(ctx, newimage, image, 0, 0, JBIG2_COMPOSE_REPLACE);
         if (code < 0) {
-            jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1, "failed to compose image buffers when resizing");
+            jbig2_error(ctx, JBIG2_SEVERITY_WARNING, JBIG2_UNKNOWN_SEGMENT_NUMBER, "failed to compose image buffers when resizing");
             jbig2_image_release(ctx, newimage);
             return NULL;
         }
@@ -358,7 +351,7 @@ jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src, int x, int 
         (UINT32_MAX - src->height < (y > 0 ? y : -y)))
     {
 #ifdef JBIG2_DEBUG
-        jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1, "overflow in compose_image");
+        jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "overflow in compose_image");
 #endif
         return 0;
     }
@@ -418,13 +411,13 @@ jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src, int x, int 
             h = dst->height - y;
     }
 #ifdef JBIG2_DEBUG
-    jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1, "compositing %dx%d at (%d, %d) after clipping", w, h, x, y);
+    jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "compositing %dx%d at (%d, %d) after clipping", w, h, x, y);
 #endif
 
     /* check for zero clipping region */
     if ((w <= 0) || (h <= 0)) {
 #ifdef JBIG2_DEBUG
-        jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, -1, "zero clipping region");
+        jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, JBIG2_UNKNOWN_SEGMENT_NUMBER, "zero clipping region");
 #endif
         return 0;
     }
