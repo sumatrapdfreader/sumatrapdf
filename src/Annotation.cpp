@@ -136,7 +136,7 @@ std::string_view Annotation::Author() {
         return smx->author.as_view();
     }
     const char* s = pdf_annot_author(pdf->ctx, pdf->annot);
-    if (!str::IsStringEmptyOrWhiteSpaceOnly(s)) {
+    if (str::IsStringEmptyOrWhiteSpaceOnly(s)) {
         return {};
     }
     return s;

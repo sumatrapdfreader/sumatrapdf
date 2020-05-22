@@ -636,6 +636,9 @@ void WindowBase::SetIsVisible(bool isVisible) {
         BOOL bIsVisible = toBOOL(isVisible);
         SetWindowStyle(hwnd, WS_VISIBLE, bIsVisible);
     }
+    if (layout) {
+        layout->SetIsVisible(isVisible);
+    }
 }
 
 bool WindowBase::IsVisible() {
@@ -851,6 +854,7 @@ void Window::Close() {
 WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
     wb = b;
     kind = k;
+    b->layout = this;
 }
 
 WindowBaseLayout::~WindowBaseLayout() {

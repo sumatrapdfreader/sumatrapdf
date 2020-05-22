@@ -129,6 +129,7 @@ extern Kind kindWindowBase;
 struct WindowBase {
     Kind kind = nullptr;
 
+    ILayout* layout = nullptr;
     // data that can be set before calling Create()
 
     // either a custom class that we registered or

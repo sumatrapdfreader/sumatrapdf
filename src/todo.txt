@@ -1,5 +1,11 @@
+Layout:
+ - Include Insets directly in WindowBaseLayout to simplify doing layout.
+   Remove hacks in VBox() that guess padding and use explicit Insets
 
 Annotations:
+ - fix up ShowAnnotationsIcon
+ - fix up ShowAnnotationsColor
+ - fix up ShowAnnotationsPopup
  - finish EnginePdf::GetAnnotations
  - finish AnnotationFromPdfAnnot
  - display color
@@ -8,7 +14,7 @@ Annotations:
  - display border
  - allow changing icon
  - allow changing color
- - filter out widgets
+ - filter out widgets like
  - when selecting annotation in list box, go to its page
  - allow moving some annotations (TEXT)
  - change our text higlight to match PDF i.e. use quad points
@@ -31,11 +37,8 @@ Annotations:
 ------
 
 Layout:
-
- - Include Insets directly in WindowBaseLayout to simplify doing layout.
-   Remove hacks in VBox() that guess padding and use explicit Insets.
  - maybe: make WindowBase implement ILayout (i.e. fold WindowBaseLayout)
-   this would simplify
+   this would simplify the code to build layouts
  - for visibility of widget, implement sth. like CSS visibility:
    * visible : shown
    * hidden : not shown but takes space for the purpose of layout
