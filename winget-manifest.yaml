@@ -7,7 +7,7 @@ MinOSVersion: 7.0.0.0
 Description: PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader
 Homepage: https://www.sumatrapdfreader.org/
 License: Copyright (c) Krzysztof Kowalczyk.
-LicenseUrl: hhttps://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS
+LicenseUrl: https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS
 InstallerType: exe
 Silent: /s
 Installers:
