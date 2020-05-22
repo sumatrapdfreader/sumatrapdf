@@ -994,7 +994,6 @@ function test_app_files()
   files_in_dir("src/testcode", {
     "test-app.h",
     "TestApp.cpp",
-    "TestDirectDraw.cpp",
     "TestTab.cpp",
     "TestLayout.cpp",
     "TestLice.cpp",

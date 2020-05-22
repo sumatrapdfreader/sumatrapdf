@@ -65,7 +65,7 @@ possible refactorings:
 returning Rect
 - replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
-- remove DirectDraw test and don't link with d2d
+- [X] remove DirectDraw test and don't link with d2d
 - convert Add Bookmark dialog to new widget / layout system
 - convert hwndTocBox to Window
 - move WindowInfo::tocLoaded into TabInfo

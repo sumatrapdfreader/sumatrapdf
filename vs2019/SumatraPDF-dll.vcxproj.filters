@@ -491,9 +491,6 @@
     <ClCompile Include="..\src\testcode\TestApp.cpp">
       <Filter>src\testcode</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\testcode\TestDirectDraw.cpp">
-      <Filter>src\testcode</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\testcode\TestLayout.cpp">
       <Filter>src\testcode</Filter>
     </ClCompile>

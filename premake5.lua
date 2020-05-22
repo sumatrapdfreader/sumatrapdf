@@ -643,7 +643,7 @@ workspace "SumatraPDF"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
-      "version", "windowscodecs", "wininet", "d2d1.lib", "uiautomationcore.lib"
+      "version", "windowscodecs", "wininet", "uiautomationcore.lib"
     }
     filter "platforms:x32_asan"
       -- asan-i386.lib
@@ -654,7 +654,7 @@ workspace "SumatraPDF"
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }
-    linkoptions { "/DELAYLOAD:d2d1.dll /DELAYLOAD:uiautomationcore.dll" }
+    linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
 
 
   -- a dll version where most functionality is in libmupdf.dll
@@ -700,6 +700,6 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:libmupdf.dll" }
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }
-    linkoptions { "/DELAYLOAD:d2d1.dll /DELAYLOAD:uiautomationcore.dll" }
+    linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
     dependson { "PdfFilter", "PdfPreview" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }

@@ -6,8 +6,6 @@
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
 
-// in TestDirectDraw.cpp
-extern int TestDirectDraw(HINSTANCE hInstance, int nCmdShow);
 // in TestTab.cpp
 extern int TestTab(HINSTANCE hInstance, int nCmdShow);
 // in TestLayout.cpp
@@ -23,10 +21,6 @@ static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::st
 
 HINSTANCE gHinst = nullptr;
 
-static void LaunchDirectDraw() {
-    TestDirectDraw(gHinst, SW_SHOW);
-}
-
 static void LaunchTabs() {
     TestTab(gHinst, SW_SHOW);
 }
@@ -40,10 +34,6 @@ static ILayout* CreateMainLayout(HWND hwnd) {
 
     vbox->alignMain = MainAxisAlign::MainCenter;
     vbox->alignCross = CrossAxisAlign::CrossCenter;
-    {
-        auto [l, b] = CreateButtonLayout(hwnd, "DirectDraw test", LaunchDirectDraw);
-        vbox->addChild(l);
-    }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Tabs test", LaunchTabs);
@@ -80,7 +70,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     cc.dwICC = ICC_WIN95_CLASSES;
     InitCommonControlsEx(&cc);
 
-    // return TestDirectDraw(hInstance, nCmdShow);
     // return TestTab(hInstance, nCmdShow);
     // return TestLayout(hInstance, nCmdShow);
 
