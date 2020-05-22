@@ -131,16 +131,6 @@ Somewhat big items:
 
 ------
 
-Notes / references:
-- https://github.com/andlabs/libui : steal ideas for UI windows wrappers
-- https://github.com/johnfactotum/foliate : gnome epub reader using epub.js. Written in JavaScript / Gtk
-- https://gitlab.com/timofonic/libmobi
-- https://en.bandisoft.com/honeyview/ : steal good UI ideas
-- https://github.com/yue/yue/tree/master/nativeui : has UI code, including full-featured web view
-- https://github.com/neutralinojs/neutralinojs/blob/master/core-windows/src/webview.h : web view code
-
-------
-
 icons:
 - file open
   - https://github.com/tabler/tabler-icons/blob/master/icons/folder.svg
@@ -180,8 +170,14 @@ icons:
 - https://docs.microsoft.com/en-us/windows/package-manager/ : info about windows package manager
 - https://devblogs.microsoft.com/commandline/windows-package-manager-preview/
 
-- [X] convert Rect in Layout.h to be like Rect
-- [X] replace Rect with Rect typedef
-- [X] rename Rect, Point, Size => Rect, Point, Size
-- [X] simplify WinDynCalls.h
-- [x] remove class ClientRect and class WindowRect, those can be functions
+------
+
+Notes / references:
+- https://github.com/andlabs/libui : steal ideas for UI windows wrappers
+- https://github.com/johnfactotum/foliate : gnome epub reader using epub.js. Written in JavaScript / Gtk
+- https://gitlab.com/timofonic/libmobi
+- https://en.bandisoft.com/honeyview/ : steal good UI ideas
+- https://github.com/yue/yue/tree/master/nativeui : has UI code, including full-featured web view
+- https://github.com/neutralinojs/neutralinojs/blob/master/core-windows/src/webview.h : web view code
+- https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-layout?redirectedfrom=MSDN#sizingandspacing
+  info about spacing beween UI elements on windows

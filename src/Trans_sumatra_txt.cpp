@@ -2718,7 +2718,7 @@ const char * gTranslations_ca =
   "Quant al SumatraPDF\0"\
   "Afegeix un preferit\0"\
   "Afegeix la p\303\240gina %s als preferits\0"\
-  "\0"\
+  "Afegeix la p\303\240gina %s als preferits\tCtrl+B\0"\
   "Afegeix la p\303\240gina %s als preferits amb el nom (opcional):\0"\
   "Afegeix als preferits\0"\
   "Avan\303\247ats\0"\
@@ -2744,7 +2744,7 @@ const char * gTranslations_ca =
   "Canvia la llengua (Change Language)\0"\
   "&Comprova si hi ha una versi\303\263 nova\0"\
   "Tanca\0"\
-  "\0"\
+  "Replega-ho tot\0"\
   "Llibres de c\303\262mic\0"\
   "Compatibilitat\0"\
   "Cont\303\255nua\0"\
@@ -2785,7 +2785,7 @@ const char * gTranslations_ca =
   "Introdu\303\257u la constrasenya per a %s\0"\
   "Introdu\303\257u la l\303\255nia d'ordres que voleu executar en fer doble clic al document PDF:\0"\
   "S'ha produ\303\257t un error en carregar %s\0"\
-  "\0"\
+  "Desplega-ho tot\0"\
   "Pr&eferits\0"\
   "En&davant\tAlt+Right Arrow\0"\
   "Pantalla &completa\tCtrl+Shift+L\0"\
@@ -2841,7 +2841,7 @@ const char * gTranslations_ca =
   "Distigeix entre maj\303\272scules i min\303\272scules\0"\
   "Documents Mobi\0"\
   "Modificat:\0"\
-  "\0"\
+  "&Finestra nova\tCtrl+N\0"\
   "Es troba disponible una versi\303\263 nova %s. Voleu baixar-la?\0"\
   "P\303\240gina seg\303\274ent\0"\
   "No s'han trobat coincid\303\250ncies\0"\
@@ -2892,7 +2892,7 @@ const char * gTranslations_ca =
   "Canvia el nom a\0"\
   "Gira a l'esquerra\tCtrl+Shift+-\0"\
   "Gira a la dreta\tCtrl+Shift++\0"\
-  "\0"\
+  "Desa les anotacions\0"\
   "Anomena i desa\0"\
   "Desa una &drecera...\tCtrl+Maj+5\0"\
   "S'est\303\240 cercant %d de %d...\0"\
@@ -2903,14 +2903,14 @@ const char * gTranslations_ca =
   "Selecci\303\263:\0"\
   "Envia per correu-&e...\0"\
   "Cerca cap enrere\0"\
-  "\0"\
-  "\0"\
+  "Mostra els &marcadors\tF12\0"\
+  "Mostra els &preferits\0"\
   "Mostra les &p\303\240gines de forma cont\303\255nua\0"\
   "Mostra la &barra d'eines\0"\
-  "\0"\
+  "Mostra les &marcadors\tF12\0"\
   "Mostra els preferits\0"\
   "Mostra els m\303\251s llegits\0"\
-  "\0"\
+  "Mostra-ho a la &carpeta\0"\
   "Mostra la &barra lateral de marcadors quan estigui disponible\0"\
   "P\303\240gina \303\272nica\0"\
   "Aix\303\262 no hauria d'haver passat!\n\nFeu clic a 'Cancel\302\267la', si voleu ajudar-nos a corregir la causa d'aquest error.\0"\
@@ -3010,11 +3010,11 @@ const char * gTranslations_ca_xv =
   "(de %d)\0"\
   "(p\303\240gina %s)\0"\
   "Quant al SumatraPDF\0"\
-  "Afegix un preferit\0"\
-  "Afegix la p\303\240gina %s als preferits\0"\
-  "\0"\
-  "Afegix la p\303\240gina %s als preferits amb el nom (opcional):\0"\
-  "Afegix als preferits\0"\
+  "Afegeix un preferit\0"\
+  "Afegeix la p\303\240gina %s als preferits\0"\
+  "Afegeix la p\303\240gina %s als preferits\tCtrl+B\0"\
+  "Afegeix la p\303\240gina %s als preferits amb el nom (opcional):\0"\
+  "Afegeix als preferits\0"\
   "Avan\303\247ats\0"\
   "Tots els fitxers\0"\
   "Tots els documents suportats\0"\
@@ -3038,7 +3038,7 @@ const char * gTranslations_ca_xv =
   "Canvia la llengua (Change Language)\0"\
   "&Comprova si hi ha una versi\303\263 nova\0"\
   "Tanca\0"\
-  "\0"\
+  "Replega-ho tot\0"\
   "Llibres de c\303\262mic\0"\
   "Compatibilitat\0"\
   "Cont\303\255nua\0"\
@@ -3079,7 +3079,7 @@ const char * gTranslations_ca_xv =
   "Introdu\303\257u la constrasenya per a %s\0"\
   "Introdu\303\257u la l\303\255nia d'ordes que voleu executar en fer doble clic al document PDF:\0"\
   "S'ha produ\303\257t un error en carregar %s\0"\
-  "\0"\
+  "Desplega-ho tot\0"\
   "P&referits\0"\
   "Endavan&t\tAlt+Fletxa Dreta\0"\
   "Pantalla &complerta\tCtrl+Majus+L\0"\
@@ -3135,7 +3135,7 @@ const char * gTranslations_ca_xv =
   "Distigeix entre maj\303\272scules i min\303\272scules\0"\
   "Documents Mobi\0"\
   "Modificat:\0"\
-  "\0"\
+  "&Finestra nova\tCtrl+N\0"\
   "\303\211s disponible la nova versi\303\263 %s. Voleu baixar-la?\0"\
   "P\303\240gina seg\303\274ent\0"\
   "No s'han trobat coincid\303\250ncies\0"\
@@ -3186,7 +3186,7 @@ const char * gTranslations_ca_xv =
   "Canvia el nom a\0"\
   "Gira a l'esquerra\tCtrl+Maj+-\0"\
   "Gira a la dreta\tCtrl+Maj++\0"\
-  "\0"\
+  "Desa les anotacions\0"\
   "Anomena i guarda\0"\
   "Guarda una &drecera...\tCtrl+Maj+5\0"\
   "S'est\303\240 cercant %d de %d...\0"\
@@ -3197,14 +3197,14 @@ const char * gTranslations_ca_xv =
   "Selecci\303\263:\0"\
   "Envia per correu-&e...\0"\
   "Cerca endarrera\0"\
-  "\0"\
-  "\0"\
+  "Mostra els &marcadors\tF12\0"\
+  "Mostra els &preferits\0"\
   "Mostra les &p\303\240gines de forma cont\303\255nua\0"\
   "Mostra la &barra d'eines\0"\
-  "\0"\
+  "Mostra els &marcadors\tF12\0"\
   "Mostra els preferits\0"\
   "Mostra els m\303\251s llegits\0"\
-  "\0"\
+  "Mostra-ho en la &carpeta\0"\
   "Mostra la &barra lateral de marcadors quan estiga disponible\0"\
   "P\303\240gina \303\272nica\0"\
   "Aix\303\262 no hauria d'haver passat!\n\nFeu clic a 'Cancel\302\267la', si voleu ajudar-nos a corregir la causa d'este error\0"\

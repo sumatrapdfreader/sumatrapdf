@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a8f00418333c1a7f69f5a83d89c74291715444f3
+58559fa4be83f7e4f46a3b0a16c9d6008899216a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3625,7 +3625,7 @@ bn:প্রিয় যোগ করুন
 br:Adicionar aos favoritos
 bs:Dodaj favorit
 by:Дадаць у Лепшыя Закладкі
-ca-xv:Afegix un preferit
+ca-xv:Afegeix un preferit
 ca:Afegeix un preferit
 cn:添加到收藏夹(&A)
 co:Aghjunghje à i favuriti
@@ -3693,7 +3693,7 @@ bn:এই পাতাটিকে %s প্রিয়তে যোগ করু�
 br:Adicionar página %s aos favoritos
 bs:Dodaj stranicu %s u favorite
 by:Дадаць старонку %s у лепшыя закладкі
-ca-xv:Afegix la pàgina %s als preferits
+ca-xv:Afegeix la pàgina %s als preferits
 ca:Afegeix la pàgina %s als preferits
 cn:添加第 %s 页到收藏夹
 co:Aghjunghje a pagina %s à i favuriti
@@ -3758,7 +3758,7 @@ bn:%s পেইজটাকে প্রিয়তে যোগ করুন ন�
 br:Adicionar página %s aos favoritos com outro nome (opcional):
 bs:Dodaj stranicu %s u favorite sa (opcionalnim) nazivom:
 by:Дадаць старонку %s у лепшыя закладкі з (калі патрэбна) імянем:
-ca-xv:Afegix la pàgina %s als preferits amb el nom (opcional):
+ca-xv:Afegeix la pàgina %s als preferits amb el nom (opcional):
 ca:Afegeix la pàgina %s als preferits amb el nom (opcional):
 cn:以 (可选) 名称添加第 %s 页到收藏夹:
 co:Aghjunghje a pagina %s à i favuriti cù u nome (ozzionale) :
@@ -3817,6 +3817,8 @@ vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
 bg:Добави страница %s към любимите\tCtrl+B
 br:Adicionar página %s aos favoritos\tCtrl+B
+ca-xv:Afegeix la pàgina %s als preferits\tCtrl+B
+ca:Afegeix la pàgina %s als preferits\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
 co:Aghjunghje a &pagina %s à i favuriti\tCtrl+B
 de:Seite %s zu Favoriten hinzufügen\tStrg+B
@@ -3845,7 +3847,7 @@ bn:পছন্দের মধ্যে অন্তর্ভুক্ত ক�
 br:Adicionar aos favoritos
 bs:Dodaj u favorite
 by:Дадаць у лепшыя закладкі
-ca-xv:Afegix als preferits
+ca-xv:Afegeix als preferits
 ca:Afegeix als preferits
 cn:添加到收藏夹
 co:Aghjunghje à i favuriti
@@ -5457,6 +5459,8 @@ ar:طي الكل
 az:Hamısını bağla
 bg:Свиване на всички
 br:Minimizar tudo
+ca-xv:Replega-ho tot
+ca:Replega-ho tot
 cn:全部折叠(&C)
 co:Piegà tuttu
 cz:Sbalit vše
@@ -8118,6 +8122,8 @@ ar:بسط الكل
 az:Hamısını aç
 bg:Разгъване на всички
 br:Expandir tudo
+ca-xv:Desplega-ho tot
+ca:Desplega-ho tot
 cn:全部展开
 co:Spiegà tuttu
 cz:Rozbalit vše
@@ -11706,6 +11712,8 @@ vn:Ngày chỉnh sửa
 az:Yeni pə&ncərə\tCtrl+N
 bg:Нов &прозорец\tCtrl+N
 br:Novo &window\tCtrl+N
+ca-xv:&Finestra nova\tCtrl+N
+ca:&Finestra nova\tCtrl+N
 cn:新建窗口(&W)\tCtrl+N
 co:No&va finestra\tCtrl+N
 cz:Nové &okno\tCtrl+N
@@ -14963,6 +14971,8 @@ ar:حفظ الحواشي
 az:Annotasiyaları yadda saxla
 bg:Запази анотациите
 br:Salvar anotações
+ca-xv:Desa les anotacions
+ca:Desa les anotacions
 cn:保存注释
 co:Arregistrà l’ann&utazioni
 de:Anmerkungen speichern
@@ -15624,6 +15634,8 @@ vn:Đặt dòng lệnh tìm kiếm ngược
 az:Əl&fəcinləri göstər\tF12
 bg:Покажи &Любими\tF12
 br:Mostrar &marcadores\tF12
+ca-xv:Mostra els &marcadors\tF12
+ca:Mostra els &marcadors\tF12
 cn:显示书签(&B)\tF12
 co:Affissà l’&indette\tF12
 de:Lesezeichen anzeigen\tF12
@@ -15646,6 +15658,8 @@ tw:顯示書籤(&B)\tF12
 az:&Seçilmişləri göstər
 bg:Покажи &Любими
 br:Mostrar &favoritos
+ca-xv:Mostra els &preferits
+ca:Mostra els &preferits
 cn:显示收藏夹(&F)
 co:Affissà i &favuriti
 de:&Favoriten anzeigen
@@ -15802,6 +15816,8 @@ vn:Hiện thanh công cụ
 az:Əlfə&cinləri göstər\tF12
 bg:Покажи Отмет&ките\tF12
 br:Mostrar &marcadores\tF12
+ca-xv:Mostra els &marcadors\tF12
+ca:Mostra les &marcadors\tF12
 cn:显示书签(&M)\tF12
 co:Affissà l’&indette\tF12
 de:Lesezeichen anzeigen\tF12
@@ -15947,6 +15963,8 @@ vn:Hiện Đọc thường xuyên
 az:Qovlu&qda göstər
 bg:Покажи в &папка
 br:Mostrar na &pasta
+ca-xv:Mostra-ho en la &carpeta
+ca:Mostra-ho a la &carpeta
 cn:打开所在文件夹(&F)
 co:Affissà in u car&tulare
 cz:Zobrazit ve &složce
