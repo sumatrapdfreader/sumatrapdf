@@ -186,6 +186,8 @@ struct EditAnnotationsWindow {
     ButtonCtrl* buttonDelete = nullptr;
 
     StaticCtrl* staticSpacer = nullptr;
+    ButtonCtrl* buttonSavePDF = nullptr;
+    // TODO: not sure if want buttonCancel
     ButtonCtrl* buttonCancel = nullptr;
 
     ListBoxModel* lbModel = nullptr;
@@ -200,6 +202,7 @@ struct EditAnnotationsWindow {
     void CloseHandler(WindowCloseEvent* ev);
     void SizeHandler(SizeEvent* ev);
     void ButtonCancelHandler();
+    void ButtonSavePDFHandler();
     void ButtonDeleteHandler();
     void CloseWindow();
     void ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev);
@@ -263,6 +266,10 @@ void EditAnnotationsWindow::ButtonDeleteHandler() {
 
 void EditAnnotationsWindow::ButtonCancelHandler() {
     CloseWindow();
+}
+
+void EditAnnotationsWindow::ButtonSavePDFHandler() {
+    MessageBoxNYI(mainWindow->hwnd);
 }
 
 void ShowAnnotationRect(EditAnnotationsWindow* w, Annotation* annot) {
@@ -478,6 +485,19 @@ void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent
     // TODO: go to page with selected annotation
 }
 
+static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* w) {
+    bool didChange = false;
+    if (w->annotations) {
+        for (auto& annot : *w->annotations) {
+            if (annot->isChanged || annot->isDeleted) {
+                didChange = true;
+                break;
+            }
+        }
+    }
+    w->buttonSavePDF->SetIsEnabled(didChange);
+}
+
 void EditAnnotationsWindow::DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev) {
     UNUSED(ev);
     // TODO: implement me
@@ -485,9 +505,8 @@ void EditAnnotationsWindow::DropDownAddSelectionChanged(DropDownSelectionChanged
 }
 
 void EditAnnotationsWindow::DropDownIconSelectionChanged(DropDownSelectionChangedEvent* ev) {
-    UNUSED(ev);
-    // TODO: implement me
-    MessageBoxNYI(mainWindow->hwnd);
+    annot->SetIconName(ev->item);
+    EnableSaveIfAnnotationsChanged(this);
 }
 
 void EditAnnotationsWindow::DropDownColorSelectionChanged(DropDownSelectionChangedEvent* ev) {
@@ -648,6 +667,18 @@ void EditAnnotationsWindow::CreateMainLayout() {
         // TODO: need a simpler way (just an ILayout*)
         std::tie(staticSpacer, l) = CreateStatic(parent, " ");
         vbox->AddChild(l, 1);
+    }
+
+    {
+        auto w = new ButtonCtrl(parent);
+        w->SetText("Save PDF...");
+        w->onClicked = std::bind(&EditAnnotationsWindow::ButtonSavePDFHandler, this);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->SetIsEnabled(false); // only enable if there are changes
+        buttonSavePDF = w;
+        l = NewButtonLayout(w);
+        vbox->AddChild(l);
     }
 
     {

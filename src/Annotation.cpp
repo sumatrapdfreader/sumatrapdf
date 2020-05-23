@@ -186,6 +186,16 @@ std::string_view Annotation::IconName() {
     return {iconName};
 }
 
+void Annotation::SetIconName(std::string_view iconName) {
+    if (smx) {
+        smx->iconName.Set(iconName);
+    } else {
+        pdf_set_annot_icon_name(pdf->ctx, pdf->annot, iconName.data());
+    }
+    // TODO: only if the value changed
+    isChanged = true;
+}
+
 // ColorUnset if no color
 COLORREF Annotation::Color() {
     if (smx) {
