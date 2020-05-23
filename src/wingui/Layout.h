@@ -239,7 +239,7 @@ struct Align : public ILayout {
 };
 
 // spacer is to be used to take space
-// can be used for flexible 
+// can be used for flexible
 struct Spacer : public ILayout {
     int dx = 0;
     int dy = 0;

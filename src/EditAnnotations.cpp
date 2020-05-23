@@ -382,59 +382,67 @@ static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
     w->dropDownIcon->SetCurrentSelection(idx);
 }
 
-int ShouldEditBorder(AnnotationType subtype) {
-    switch (subtype) {
-        default:
-            return 0;
-        case AnnotationType::FreeText:
-            return 1;
-        case AnnotationType::Ink:
-        case AnnotationType::Line:
-        case AnnotationType::Square:
-        case AnnotationType::Circle:
-        case AnnotationType::Polygon:
-        case AnnotationType::PolyLine:
-            return 1;
+static bool IsAnnotationTypeInArray(AnnotationType* arr, size_t arrSize, AnnotationType toFind) {
+    for (size_t i = 0; i < arrSize; i++) {
+        if (toFind == arr[i]) {
+            return true;
+        }
     }
+    return false;
+}
+
+// clang-format off
+AnnotationType gAnnotsWithBorder[] = {
+    AnnotationType::FreeText,
+    AnnotationType::Ink,
+    AnnotationType::Line,
+    AnnotationType::Square,
+    AnnotationType::Circle,
+    AnnotationType::Polygon,
+    AnnotationType::PolyLine,
+};
+
+AnnotationType gAnnotsWithInteriorColor[] = {
+    AnnotationType::Line,
+    AnnotationType::Square,
+    AnnotationType::Circle,
+};
+
+AnnotationType gAnnotsWithColor[] = {
+    AnnotationType::Stamp,
+    AnnotationType::Text,
+    AnnotationType::FileAttachment,
+    AnnotationType::Sound,
+    AnnotationType::Caret,
+    AnnotationType::FreeText,
+    AnnotationType::Ink,
+    AnnotationType::Line,
+    AnnotationType::Square,
+    AnnotationType::Circle,
+    AnnotationType::Polygon,
+    AnnotationType::PolyLine,
+    AnnotationType::Highlight,
+    AnnotationType::Underline,
+    AnnotationType::StrikeOut,
+    AnnotationType::Squiggly,
+};
+
+// clang-format on
+
+int ShouldEditBorder(AnnotationType subtype) {
+    size_t n = dimof(gAnnotsWithBorder);
+    return IsAnnotationTypeInArray(gAnnotsWithBorder, n, subtype);
 }
 
 int ShouldEditInteriorColor(AnnotationType subtype) {
-    switch (subtype) {
-        default:
-            return 0;
-        case AnnotationType::Line:
-        case AnnotationType::Square:
-        case AnnotationType::Circle:
-            return 1;
-    }
+    size_t n = dimof(gAnnotsWithInteriorColor);
+    return IsAnnotationTypeInArray(gAnnotsWithInteriorColor, n, subtype);
 }
 
 // static
 int ShouldEditColor(AnnotationType subtype) {
-    switch (subtype) {
-        default:
-            return 0;
-        case AnnotationType::Stamp:
-        case AnnotationType::Text:
-        case AnnotationType::FileAttachment:
-        case AnnotationType::Sound:
-        case AnnotationType::Caret:
-            return 1;
-        case AnnotationType::FreeText:
-            return 1;
-        case AnnotationType::Ink:
-        case AnnotationType::Line:
-        case AnnotationType::Square:
-        case AnnotationType::Circle:
-        case AnnotationType::Polygon:
-        case AnnotationType::PolyLine:
-            return 1;
-        case AnnotationType::Highlight:
-        case AnnotationType::Underline:
-        case AnnotationType::StrikeOut:
-        case AnnotationType::Squiggly:
-            return 1;
-    }
+    size_t n = dimof(gAnnotsWithColor);
+    return IsAnnotationTypeInArray(gAnnotsWithColor, n, subtype);
 }
 
 static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
