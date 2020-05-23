@@ -141,9 +141,28 @@ static unsigned int gColorsValues[] = {
     0xff008080, /* teal */
     0xffffffff, /* white */
     0xffffff00, /* yellow */
+    0, // match nullptr
 };
 
 // clang-format on
+
+static_assert(dimof(gColors) == dimof(gColorsValues));
+
+const char* GetKnownColorName(COLORREF c) {
+    if (c == ColorUnset) {
+        return gColors[0];
+    }
+    // convert COLORREF to a format in gColorsValues
+    u8 r, g, b;
+    UnpackRgb(c, r, g, b);
+    COLORREF c2 = MkRgba(b, g, r, 0xff);
+    for (int i = 1; gColors[i]; i++) {
+        if (c2 == gColorsValues[i]) {
+            return gColors[i];
+        }
+    }
+    return nullptr;
+}
 
 struct EditAnnotationsWindow {
     TabInfo* tab = nullptr;
@@ -325,8 +344,6 @@ static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot)
 }
 
 static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
-    UNUSED(w);
-    UNUSED(annot);
     std::string_view iconName;
     if (annot) {
         iconName = annot->IconName();
@@ -420,28 +437,23 @@ int ShouldEditColor(AnnotationType subtype) {
 }
 
 static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
-    UNUSED(w);
-    UNUSED(annot);
-    // TODO: virtualize
-#if 0
-    pdf_annot* a = annot && annot->pdf ? annot->pdf->annot : nullptr;
-    bool isVisible = (a != nullptr);
-    if (isVisible) {
-        auto annotType = AnnotationTypeFromPdfAnnot(pdf_annot_type(annot->pdf->ctx, a));
-        isVisible = ShouldEditColor(annotType);
-    }
+    auto annotType = annot ? annot->Type() : AnnotationType::Unknown;
+    bool isVisible =  ShouldEditColor(annotType);
     w->staticColor->SetIsVisible(isVisible);
     w->dropDownColor->SetIsVisible(isVisible);
     if (!isVisible) {
         return;
     }
-#endif
-#if 0
-    float color[4];
-    int hex;
-    int n;
-    pdf_annot_color(annot->ctx, a, &n, color);
-#endif
+    COLORREF col = annot->Color();
+    Vec<std::string_view> strings;
+    DropDownItemsFromStringArray(strings, gColors);
+    w->dropDownColor->SetItems(strings);
+    const char* colorName = GetKnownColorName(col);
+    int idx = FindStringInArray(gColors, colorName, 0);
+    if (idx == -1) {
+        // TODO: not a known color name, so add hex version to the list
+    }
+    w->dropDownColor->SetCurrentSelection(idx);
 }
 
 void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev) {

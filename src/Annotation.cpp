@@ -44,7 +44,8 @@ std::string_view AnnotationName(AnnotationType tp) {
 
 struct AnnotationSmx {
     RectD rect = {};
-    COLORREF color = 0;
+    COLORREF color = ColorUnset;
+    COLORREF interiorColor = ColorUnset;
 
     // flags has the same meaning as mupdf annot.h
     // TODO: not sure if want to preserve it
@@ -111,17 +112,6 @@ int Annotation::PageNo() const {
     return pageNo;
 }
 
-COLORREF Annotation::Color() {
-    if (smx) {
-        return smx->color;
-    }
-    float col[4];
-    int nColComponents;
-    pdf_annot_color(pdf->ctx, pdf->annot, &nColComponents, col);
-    auto color = FromPdfColor(nColComponents, col);
-    return color;
-}
-
 RectD Annotation::Rect() const {
     if (smx) {
         return smx->rect;
@@ -180,6 +170,30 @@ std::string_view Annotation::IconName() {
     // can only call if pdf_annot_has_icon_name() returned true
     const char* iconName = pdf_annot_icon_name(pdf->ctx, pdf->annot);
     return {iconName};
+}
+
+// ColorUnset if no color
+COLORREF Annotation::Color() {
+    if (smx) {
+        return smx->color;
+    }
+    float color[4];
+    int n;
+    pdf_annot_color(pdf->ctx, pdf->annot, &n, color);
+    COLORREF res = FromPdfColor(n, color);
+    return res;
+}
+
+// ColorUnset if no color
+COLORREF Annotation::InteriorColor() {
+    if (smx) {
+        return smx->interiorColor;
+    }
+    float color[4];
+    int n;
+    pdf_annot_interior_color(pdf->ctx, pdf->annot, &n, color);
+    COLORREF res = FromPdfColor(n, color);
+    return res;
 }
 
 Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot, int pageNo) {

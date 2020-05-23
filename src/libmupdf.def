@@ -447,6 +447,7 @@ EXPORTS
 	pdf_annot_rect
 	pdf_annot_flags
 	pdf_annot_color
+	pdf_annot_interior_color
 	pdf_annot_icon_name
 	pdf_annot_author
 	pdf_annot_contents

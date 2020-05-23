@@ -60,7 +60,8 @@ struct Annotation {
     AnnotationType Type() const;
     int PageNo() const;
     RectD Rect() const;
-    COLORREF Color();
+    COLORREF Color();         // ColorUnset if no color
+    COLORREF InteriorColor(); // ColorUnset if no color
     std::string_view Author();
     std::string_view Contents();
     time_t CreationDate();
