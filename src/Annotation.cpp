@@ -191,6 +191,7 @@ void Annotation::SetIconName(std::string_view iconName) {
         smx->iconName.Set(iconName);
     } else {
         pdf_set_annot_icon_name(pdf->ctx, pdf->annot, iconName.data());
+        pdf_update_appearance(pdf->ctx, pdf->annot);
     }
     // TODO: only if the value changed
     isChanged = true;

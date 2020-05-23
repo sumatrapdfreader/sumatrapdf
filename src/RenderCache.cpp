@@ -386,7 +386,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 /* Render a bitmap for page <pageNo> in <dm>. */
 void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage) {
     ScopedCritSec scope(&requestAccess);
-    AssertCrash(dm);
+    CrashIf(!dm);
     if (!dm || dm->dontRenderFlag) {
         return;
     }
@@ -454,7 +454,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
         return false;
     }
 
-    AssertCrash(tile || pageRect && renderCb);
+    CrashIf(!(tile || pageRect && renderCb));
     if (!tile && !(pageRect && renderCb)) {
         return false;
     }
@@ -524,12 +524,12 @@ bool RenderCache::GetNextRequest(PageRenderRequest* req) {
     }
 
     CrashIf(requestCount < 0);
-    AssertCrash(requestCount <= MAX_PAGE_REQUESTS);
+    CrashIf(requestCount > MAX_PAGE_REQUESTS);
     requestCount--;
     *req = requests[requestCount];
     curReq = req;
-    AssertCrash(requestCount >= 0);
-    AssertCrash(!req->abort);
+    CrashIf(requestCount < 0);
+    CrashIf(req->abort);
 
     return true;
 }

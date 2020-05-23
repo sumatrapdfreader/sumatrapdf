@@ -897,7 +897,7 @@ void DisplayModel::RenderVisibleParts() {
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo* pageInfo = GetPageInfo(pageNo);
         if (pageInfo->visibleRatio > 0.0) {
-            AssertCrash(pageInfo->shown);
+            CrashIf(!pageInfo->shown);
             if (0 == firstVisiblePage)
                 firstVisiblePage = pageNo;
             lastVisiblePage = pageNo;

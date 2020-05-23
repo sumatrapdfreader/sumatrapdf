@@ -2107,15 +2107,20 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
     });
 }
 
+// re-render the document currently displayed in this window
+void RerenderForWindowInfo(WindowInfo* win) {
+    if (!win->AsFixed()) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    gRenderCache.CancelRendering(dm);
+    gRenderCache.KeepForDisplayModel(dm, dm);
+    win->RedrawAll(true);
+}
+
 static void RerenderEverything() {
     for (auto* win : gWindows) {
-        if (!win->AsFixed()) {
-            continue;
-        }
-        DisplayModel* dm = win->AsFixed();
-        gRenderCache.CancelRendering(dm);
-        gRenderCache.KeepForDisplayModel(dm, dm);
-        win->RedrawAll(true);
+        RerenderForWindowInfo(win);
     }
 }
 
