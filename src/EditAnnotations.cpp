@@ -429,18 +429,19 @@ AnnotationType gAnnotsWithColor[] = {
 
 // clang-format on
 
+// static
 int ShouldEditBorder(AnnotationType subtype) {
     size_t n = dimof(gAnnotsWithBorder);
     return IsAnnotationTypeInArray(gAnnotsWithBorder, n, subtype);
 }
 
+// static
 int ShouldEditInteriorColor(AnnotationType subtype) {
     size_t n = dimof(gAnnotsWithInteriorColor);
     return IsAnnotationTypeInArray(gAnnotsWithInteriorColor, n, subtype);
 }
 
-// static
-int ShouldEditColor(AnnotationType subtype) {
+static int ShouldEditColor(AnnotationType subtype) {
     size_t n = dimof(gAnnotsWithColor);
     return IsAnnotationTypeInArray(gAnnotsWithColor, n, subtype);
 }
@@ -489,7 +490,11 @@ void EditAnnotationsWindow::ListBoxSelectionChanged(ListBoxSelectionChangedEvent
     // TODO: ink list
     // TODO: PDF_ANNOT_FILE_ATTACHMENT
     buttonDelete->SetIsVisible(annot != nullptr);
-    Relayout(mainLayout);
+    // TODO: get from client size
+    auto currBounds = mainLayout->lastBounds;
+    int dx = currBounds.Dx();
+    int dy = currBounds.Dy();
+    LayoutAndSizeToContent(mainLayout, dx, dy, mainWindow->hwnd);
     // TODO: go to page with selected annotation
 }
 

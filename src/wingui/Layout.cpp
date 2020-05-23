@@ -1175,16 +1175,16 @@ void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
     InvalidateRect(hwnd, nullptr, false);
 }
 
-Rect LayoutToSize(ILayout* layout, const Size size) {
-    dbglayoutf("\nLayoutAndSizeToContent() %d,%d\n", size.dx, size.dy);
+Size LayoutToSize(ILayout* layout, const Size size) {
+    dbglayoutf("\nLayoutToSize() %d,%d\n", size.dx, size.dy);
     auto c = Tight(size);
     auto newSize = layout->Layout(c);
     Rect bounds{0, 0, newSize.dx, newSize.dy};
     layout->SetBounds(bounds);
-    return bounds;
+    return newSize;
 }
 
-Rect Relayout(ILayout* layout) {
+Size Relayout(ILayout* layout) {
     auto b = layout->lastBounds;
     return LayoutToSize(layout, b.Size());
 }

@@ -274,8 +274,8 @@ bool IsLabel(ILayout*);
 extern Kind kindLabel;
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
-Rect LayoutToSize(ILayout* layout, const Size size);
-Rect Relayout(ILayout* layout);
+Size LayoutToSize(ILayout* layout, const Size size);
+Size Relayout(ILayout* layout);
 
 void dbglayoutf(const char* fmt, ...);
 void LogConstraints(Constraints c, const char* suffix);

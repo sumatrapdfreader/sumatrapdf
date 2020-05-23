@@ -1185,7 +1185,7 @@ void RaMicroInstallerWindow::Install() {
     hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
 }
 
-static Rect layoutAndSize(ILayout* layout, int dx, int dy) {
+static Size layoutAndSize(ILayout* layout, int dx, int dy) {
     if (dx == 0 || dy == 0) {
         return {};
     }
