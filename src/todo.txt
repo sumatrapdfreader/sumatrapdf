@@ -3,10 +3,6 @@ Layout:
    Remove hacks in VBox() that guess padding and use explicit Insets
 
 Annotations:
- - [X] fix up ShowAnnotationsIcon
- - [X] fix up ShowAnnotationsColor
- - [X] fix up ShowAnnotationsPopup
- - [X] display color
  - finish EnginePdf::GetAnnotations
  - finish AnnotationFromPdfAnnot
  - display opacity
@@ -14,7 +10,7 @@ Annotations:
  - display border
  - allow changing icon
  - allow changing color
- - filter out widgets like
+ - don't allow editing of widget annotations (like mupdf-gl)
  - when selecting annotation in list box, go to its page
  - allow moving some annotations (TEXT)
  - change our text higlight to match PDF i.e. use quad points
@@ -22,9 +18,12 @@ Annotations:
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
  - implement "Delete annotation"
  - size EditAnnotationsWindow to be the same as main window and positioned intelligently
+ - UI ideas: https://getcleanshot.com/
 
-Annotation UI ideas: https://getcleanshot.com/
-
+ - [X] fix up ShowAnnotationsIcon
+ - [X] fix up ShowAnnotationsColor
+ - [X] fix up ShowAnnotationsPopup
+ - [X] display color
  - [X] refactor Annotation and split into AnnotationSmx and AnnotationPdf
  - [X] refactor AnnotationType
  - [X] display icon
