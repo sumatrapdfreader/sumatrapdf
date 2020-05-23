@@ -331,7 +331,10 @@ static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot)
     if (!isVisible) {
         return;
     }
-    w->editContents->SetText(annot->Contents());
+    str::Str s = annot->Contents();
+    // TODO: don't replace if already is "\r\n"
+    s.Replace("\n", "\r\n");
+    w->editContents->SetText(s.as_view());
 }
 
 static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
@@ -429,7 +432,7 @@ int ShouldEditColor(AnnotationType subtype) {
 
 static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
     auto annotType = annot ? annot->Type() : AnnotationType::Unknown;
-    bool isVisible =  ShouldEditColor(annotType);
+    bool isVisible = ShouldEditColor(annotType);
     w->staticColor->SetIsVisible(isVisible);
     w->dropDownColor->SetIsVisible(isVisible);
     if (!isVisible) {
@@ -502,7 +505,7 @@ void EditAnnotationsWindow::SizeHandler(SizeEvent* ev) {
     }
     ev->didHandle = true;
     InvalidateRect(hwnd, nullptr, false);
-    if (mainLayout->lastBounds.EqSize(dx, dy)) {
+    if (false && mainLayout->lastBounds.EqSize(dx, dy)) {
         // avoid un-necessary layout
         return;
     }
@@ -644,7 +647,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
         // used to take all available space between the what's above and below
         // TODO: need a simpler way (just an ILayout*)
         std::tie(staticSpacer, l) = CreateStatic(parent, " ");
-        vbox->AddChild(l, 2);
+        vbox->AddChild(l, 1);
     }
 
     {

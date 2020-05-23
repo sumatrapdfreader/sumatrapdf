@@ -175,7 +175,8 @@ struct VBox : public ILayout {
 
     boxElementInfo& AddChild(ILayout* child);
     boxElementInfo& AddChild(ILayout* child, int flex);
-    int ChildrenCount(); // only visible children
+    int ChildrenCount();
+    int VisibleChildrenCount();
 };
 
 // hbox.go
@@ -251,3 +252,6 @@ extern Kind kindLabel;
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 Rect LayoutToSize(ILayout* layout, const Size size);
 Rect Relayout(ILayout* layout);
+
+void dbglayoutf(const char* fmt, ...);
+void LogConstraints(Constraints c, const char* suffix);

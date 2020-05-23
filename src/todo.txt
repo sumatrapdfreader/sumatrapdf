@@ -18,6 +18,7 @@ Annotations:
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
  - implement "Delete annotation"
  - size EditAnnotationsWindow to be the same as main window and positioned intelligently
+ - size the window to ensure all elements fit (after LayoutToSize, resize if too small)
  - UI ideas: https://getcleanshot.com/
 
  - [X] fix up ShowAnnotationsIcon
@@ -40,10 +41,14 @@ Annotations:
 Layout:
  - maybe: make WindowBase implement ILayout (i.e. fold WindowBaseLayout)
    this would simplify the code to build layouts
+ - add layout debugging - print out bounds during layout and during SetBounds()
  - for visibility of widget, implement sth. like CSS visibility:
    * visible : shown
    * hidden : not shown but takes space for the purpose of layout
    * collapse : not shown and not taking space during layout
+ - fix HBox the same way as VBox (to properly handle hidden elements)
+ - rework how visibility handling during layout works. Maybe return size
+   as (0,0) if visibility == collaps
 
 ------
 
@@ -57,6 +62,11 @@ Add a way to register function to be called for a given hwnd.
 WindowBaseLayout() registers for its hwnd and calls Relayout().
 Add TriggerRelayout(HWND) which searches for registered function
 for hwnd and its parents.
+
+------
+
+Installer: maybe when running installer as admin user, install to
+ProgramFiles directory (maybe would fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1502)
 
 ------
 

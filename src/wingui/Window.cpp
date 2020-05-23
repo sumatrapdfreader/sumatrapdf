@@ -862,6 +862,9 @@ WindowBaseLayout::~WindowBaseLayout() {
 }
 
 Size WindowBaseLayout::Layout(const Constraints bc) {
+    dbglayoutf("WindowBase::Layout() %s ", kind);
+    LogConstraints(bc, "\n");
+
     int width = MinIntrinsicWidth(0);
     int height = MinIntrinsicHeight(0);
     return bc.Constrain(Size{width, height});
@@ -878,6 +881,8 @@ int WindowBaseLayout::MinIntrinsicWidth(i32) {
 }
 
 void WindowBaseLayout::SetBounds(const Rect bounds) {
+    dbglayoutf("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", kind, bounds.x, bounds.y, bounds.dx, bounds.dy);
+
     lastBounds = bounds;
 
     auto r = RectToRECT(bounds);

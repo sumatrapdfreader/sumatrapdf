@@ -1,7 +1,7 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-extern bool gDisableDbgLog;
+extern bool gEnableDbgLog;
 
 void dbglog(const char*);
 void dbglogf(const char* fmt, ...);

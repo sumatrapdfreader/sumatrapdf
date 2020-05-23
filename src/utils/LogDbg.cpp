@@ -4,14 +4,14 @@
 
 // useful for whole-sale disabling of debugger logging
 // as it spams the debug output
-bool gDisableDbgLog = false;
+bool gEnableDbgLog = true;
 
 void dbglog(const char* msg) {
     OutputDebugStringA(msg);
 }
 
 void dbglogf(const char* fmt, ...) {
-    if (gDisableDbgLog) {
+    if (!gEnableDbgLog) {
         return;
     }
 
