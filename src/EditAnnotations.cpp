@@ -312,25 +312,16 @@ static void ShowAnnotationModificationDate(EditAnnotationsWindow* w, Annotation*
 }
 
 static void ShowAnnotationsPopup(EditAnnotationsWindow* w, Annotation* annot) {
-    UNUSED(w);
-    UNUSED(annot);
-#if 0
-    // TODO: support in AnnotationSmx? What exactly is it showing?
-    pdf_annot* a = annot && annot->pdf ? annot->pdf->annot : nullptr;
-    str::Str s;
-    if (a) {
-        pdf_obj* obj = pdf_dict_get(annot->pdf->ctx, a->obj, PDF_NAME(Popup));
-        if (obj) {
-            s.AppendFmt("Popup: %d 0 R", pdf_to_num(annot->pdf->ctx, obj));
-        }
-    }
-    bool isVisible = !s.empty();
-    w->staticPopup->SetIsVisible(isVisible);
+    int popupId = annot ? annot->PopupId() : -1;
+    bool isVisible = popupId >= 0;
     if (!isVisible) {
+        w->staticPopup->SetIsVisible(isVisible);
         return;
     }
+    str::Str s;
+    s.AppendFmt("Popup: %d 0 R", popupId);
+    w->staticPopup->SetIsVisible(isVisible);
     w->staticPopup->SetText(s.as_view());
-#endif
 }
 
 static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot) {

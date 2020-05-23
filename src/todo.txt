@@ -4,11 +4,11 @@ Layout:
 
 Annotations:
  - [X] fix up ShowAnnotationsIcon
- - fix up ShowAnnotationsColor
- - fix up ShowAnnotationsPopup
+ - [X] fix up ShowAnnotationsColor
+ - [X] fix up ShowAnnotationsPopup
+ - [X] display color
  - finish EnginePdf::GetAnnotations
  - finish AnnotationFromPdfAnnot
- - display color
  - display opacity
  - display count of quad points
  - display border

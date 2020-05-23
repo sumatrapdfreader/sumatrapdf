@@ -142,6 +142,20 @@ std::string_view Annotation::Contents() {
     return s;
 }
 
+// -1 if not exist
+int Annotation::PopupId() {
+    if (smx) {
+        // not available for smx
+        return -1;
+    }
+    pdf_obj* obj = pdf_dict_get(pdf->ctx, pdf->annot->obj, PDF_NAME(Popup));
+    if (!obj) {
+        return -1;
+    }
+    int res = pdf_to_num(pdf->ctx, obj);
+    return res;
+}
+
 time_t Annotation::CreationDate() {
     if (smx) {
         return smx->creationDate;
