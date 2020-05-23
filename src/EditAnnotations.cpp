@@ -43,6 +43,7 @@ extern "C" {
 using std::placeholders::_1;
 
 // clang-format off
+// TODO: convert to flat string
 const char* gAnnotationTypes[] = {
     "Text",
     "Free Text",
@@ -185,7 +186,6 @@ struct EditAnnotationsWindow {
     DropDownCtrl* dropDownColor = nullptr;
     ButtonCtrl* buttonDelete = nullptr;
 
-    StaticCtrl* staticSpacer = nullptr;
     ButtonCtrl* buttonSavePDF = nullptr;
     // TODO: not sure if want buttonCancel
     ButtonCtrl* buttonCancel = nullptr;
@@ -664,8 +664,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
 
     {
         // used to take all available space between the what's above and below
-        // TODO: need a simpler way (just an ILayout*)
-        std::tie(staticSpacer, l) = CreateStatic(parent, " ");
+        l = new Spacer(0, 0);
         vbox->AddChild(l, 1);
     }
 

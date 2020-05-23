@@ -399,6 +399,10 @@ bool IsVBox(Kind kind) {
     return kind == kindVBox;
 }
 
+VBox::VBox() {
+    kind = kindVBox;
+}
+
 VBox::~VBox() {
     for (auto& c : children) {
         delete c.layout;
@@ -1212,4 +1216,31 @@ Insets DpiScaledInsets(HWND hwnd, int top, int right, int bottom, int left) {
     CrashIf(left == -1);
     Insets res = {DpiScale(hwnd, top), DpiScale(hwnd, right), DpiScale(hwnd, bottom), DpiScale(hwnd, left)};
     return res;
+}
+
+Kind kindSpacer = "spacer";
+
+Spacer::Spacer(int dx, int dy) {
+    kind = kindSpacer;
+    this->dx = dx;
+    this->dy = dy;
+}
+
+Spacer::~Spacer() {
+    // do nothing
+}
+
+Size Spacer::Layout(const Constraints bc) {
+    // do nothing
+    return bc.Constrain({dx, dy});
+}
+
+int Spacer::MinIntrinsicHeight(int width) {
+    return dy;
+}
+int Spacer::MinIntrinsicWidth(int height) {
+    return dx;
+}
+void Spacer::SetBounds(Rect) {
+    // do nothing
 }

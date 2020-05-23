@@ -46,6 +46,15 @@ Constraints TightHeight(int height);
 
 typedef std::function<void()> NeedLayout;
 
+// works like css visibility property
+enum class Visibility {
+    Visible,
+    // not visible but takes up space for purpose of layout
+    Hidden,
+    // not visible and doesn't take up space
+    Collapse,
+};
+
 struct ILayout {
     Kind kind = nullptr;
     // allows easy way to hide / show elements
@@ -165,6 +174,7 @@ struct VBox : public ILayout {
     int totalHeight = 0;
     int totalFlex = 0;
 
+    VBox();
     ~VBox() override;
     Size Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
@@ -222,6 +232,20 @@ struct Align : public ILayout {
 
     Align(ILayout*);
     ~Align() override;
+    Size Layout(const Constraints bc) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    void SetBounds(Rect) override;
+};
+
+// spacer is to be used to take space
+// can be used for flexible 
+struct Spacer : public ILayout {
+    int dx = 0;
+    int dy = 0;
+
+    Spacer(int, int);
+    ~Spacer() override;
     Size Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
