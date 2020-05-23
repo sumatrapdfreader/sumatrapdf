@@ -23,6 +23,8 @@ Annotations:
  - implement "Delete annotation"
  - size EditAnnotationsWindow to be the same as main window and positioned intelligently
 
+Annotation UI ideas: https://getcleanshot.com/
+
  - [X] refactor Annotation and split into AnnotationSmx and AnnotationPdf
  - [X] refactor AnnotationType
  - [X] display icon
