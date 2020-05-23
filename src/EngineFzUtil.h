@@ -93,4 +93,3 @@ void fz_find_image_positions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stex
 // float is in range 0...1
 COLORREF FromPdfColor(fz_context* ctx, int n, float color[4]);
 void ToPdfRgba(COLORREF c, float col[4]);
-

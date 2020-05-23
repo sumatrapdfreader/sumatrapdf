@@ -337,7 +337,6 @@ class EnginePdf : public EngineBase {
 
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, int imageIx);
 
-  protected:
     fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;
     fz_document* _doc = nullptr;
@@ -1909,6 +1908,66 @@ static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* pa
 
     pdf_set_annot_modification_date(ctx, annot, time(NULL));
     pdf_update_appearance(ctx, annot);
+}
+
+const pdf_write_options pdf_default_write_options2 = {
+    0,  /* do_incremental */
+    0,  /* do_pretty */
+    0,  /* do_ascii */
+    0,  /* do_compress */
+    0,  /* do_compress_images */
+    0,  /* do_compress_fonts */
+    0,  /* do_decompress */
+    0,  /* do_garbage */
+    0,  /* do_linear */
+    0,  /* do_clean */
+    0,  /* do_sanitize */
+    0,  /* do_appearance */
+    0,  /* do_encrypt */
+    ~0, /* permissions */
+    "", /* opwd_utf8[128] */
+    "", /* upwd_utf8[128] */
+};
+
+// re-save current pdf document using mupdf (as opposed to just saving the data)
+// this is used after the PDF was modified by the user (e.g. by adding / changing
+// annotations).
+// if filePath is not given, we save under the same name
+// TODO: if the file is locked, this might fail.
+bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view filePath) {
+    CrashIf(!engine);
+    if (!engine) {
+        return false;
+    }
+    EnginePdf* enginePdf = (EnginePdf*)engine;
+    strconv::StackWstrToUtf8 currPath = engine->FileName();
+    if (filePath.empty()) {
+        filePath = {currPath.Get()};
+    }
+    fz_context* ctx = enginePdf->ctx;
+    pdf_document* doc = pdf_document_from_fz_document(ctx, enginePdf->_doc);
+
+    pdf_write_options save_opts;
+    save_opts = pdf_default_write_options2;
+    save_opts.do_incremental = 1;
+    save_opts.do_compress = 1;
+    save_opts.do_compress_images = 1;
+    save_opts.do_compress_fonts = 1;
+    if (doc->redacted) {
+        save_opts.do_garbage = 1;
+    }
+
+    bool ok = true;
+    fz_try(ctx) {
+        pdf_save_document(ctx, doc, filePath.data(), &save_opts);
+    }
+    fz_catch(ctx) {
+        const char* errMsg = fz_caught_message(enginePdf->ctx);
+        logf("Pdf save of '%s' failed with '%s'\n", filePath.data(), errMsg);
+        // TODO: show error message
+        ok = false;
+    }
+    return ok;
 }
 
 bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {

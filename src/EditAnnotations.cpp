@@ -27,6 +27,7 @@ extern "C" {
 
 #include "Annotation.h"
 #include "EngineBase.h"
+#include "EnginePdf.h"
 #include "EngineMulti.h"
 #include "EngineManager.h"
 
@@ -145,9 +146,30 @@ static unsigned int gColorsValues[] = {
     0, // match nullptr
 };
 
+AnnotationType gAnnotsWithBorder[] = {
+    AnnotationType::FreeText,  AnnotationType::Ink,    AnnotationType::Line,
+    AnnotationType::Square,    AnnotationType::Circle, AnnotationType::Polygon,
+    AnnotationType::PolyLine,
+};
+
+AnnotationType gAnnotsWithInteriorColor[] = {
+    AnnotationType::Line, AnnotationType::Square, AnnotationType::Circle,
+};
+
+AnnotationType gAnnotsWithColor[] = {
+    AnnotationType::Stamp,     AnnotationType::Text,      AnnotationType::FileAttachment,
+    AnnotationType::Sound,     AnnotationType::Caret,     AnnotationType::FreeText,
+    AnnotationType::Ink,       AnnotationType::Line,      AnnotationType::Square,
+    AnnotationType::Circle,    AnnotationType::Polygon,   AnnotationType::PolyLine,
+    AnnotationType::Highlight, AnnotationType::Underline, AnnotationType::StrikeOut,
+    AnnotationType::Squiggly,
+};
 // clang-format on
 
 static_assert(dimof(gColors) == dimof(gColorsValues));
+
+// in SumatraPDF.cpp
+extern void RerenderForWindowInfo(WindowInfo*);
 
 const char* GetKnownColorName(COLORREF c) {
     if (c == ColorUnset) {
@@ -202,7 +224,6 @@ struct EditAnnotationsWindow {
     void CloseHandler(WindowCloseEvent* ev);
     void SizeHandler(SizeEvent* ev);
     void ButtonCancelHandler();
-    void ButtonSavePDFHandler();
     void ButtonDeleteHandler();
     void CloseWindow();
     void ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev);
@@ -268,51 +289,10 @@ void EditAnnotationsWindow::ButtonCancelHandler() {
     CloseWindow();
 }
 
-const pdf_write_options pdf_default_write_options2 = {
-    0,  /* do_incremental */
-    0,  /* do_pretty */
-    0,  /* do_ascii */
-    0,  /* do_compress */
-    0,  /* do_compress_images */
-    0,  /* do_compress_fonts */
-    0,  /* do_decompress */
-    0,  /* do_garbage */
-    0,  /* do_linear */
-    0,  /* do_clean */
-    0,  /* do_sanitize */
-    0,  /* do_appearance */
-    0,  /* do_encrypt */
-    ~0, /* permissions */
-    "", /* opwd_utf8[128] */
-    "", /* upwd_utf8[128] */
-};
-
-void EditAnnotationsWindow::ButtonSavePDFHandler() {
-    MessageBoxNYI(mainWindow->hwnd);
-    pdf_write_options save_opts;
-    save_opts = pdf_default_write_options2;
-#if 0
-    if (pdf->redacted)
-        save_opts.do_garbage = 1;
-    else
-        save_opts.do_incremental = 1;
-#endif
-    save_opts.do_compress = 1;
-    save_opts.do_compress_images = 1;
-    save_opts.do_compress_fonts = 1;
-#if 0
-    fz_try(ctx) {
-        static char opts_string[4096];
-        pdf_format_write_options(ctx, opts_string, sizeof(opts_string), &save_opts);
-        pdf_save_document(ctx, pdf, save_filename, &save_opts);
-        fz_strlcpy(filename, save_filename, PATH_MAX);
-        //reload();
-    }
-    fz_catch(ctx) {
-        // TODO: show error message
-        // fz_caught_message(ctx)
-    }
-#endif
+static void ButtonSavePDFHandler(EditAnnotationsWindow* w) {
+    EngineBase* engine = w->tab->AsFixed()->GetEngine();
+    EnginePdfSaveUpdated(engine, {});
+    // TODO: show a notification if saved or error message if failed to save
 }
 
 void ShowAnnotationRect(EditAnnotationsWindow* w, Annotation* annot) {
@@ -434,44 +414,6 @@ static bool IsAnnotationTypeInArray(AnnotationType* arr, size_t arrSize, Annotat
     return false;
 }
 
-// clang-format off
-AnnotationType gAnnotsWithBorder[] = {
-    AnnotationType::FreeText,
-    AnnotationType::Ink,
-    AnnotationType::Line,
-    AnnotationType::Square,
-    AnnotationType::Circle,
-    AnnotationType::Polygon,
-    AnnotationType::PolyLine,
-};
-
-AnnotationType gAnnotsWithInteriorColor[] = {
-    AnnotationType::Line,
-    AnnotationType::Square,
-    AnnotationType::Circle,
-};
-
-AnnotationType gAnnotsWithColor[] = {
-    AnnotationType::Stamp,
-    AnnotationType::Text,
-    AnnotationType::FileAttachment,
-    AnnotationType::Sound,
-    AnnotationType::Caret,
-    AnnotationType::FreeText,
-    AnnotationType::Ink,
-    AnnotationType::Line,
-    AnnotationType::Square,
-    AnnotationType::Circle,
-    AnnotationType::Polygon,
-    AnnotationType::PolyLine,
-    AnnotationType::Highlight,
-    AnnotationType::Underline,
-    AnnotationType::StrikeOut,
-    AnnotationType::Squiggly,
-};
-
-// clang-format on
-
 // static
 int ShouldEditBorder(AnnotationType subtype) {
     size_t n = dimof(gAnnotsWithBorder);
@@ -484,14 +426,9 @@ int ShouldEditInteriorColor(AnnotationType subtype) {
     return IsAnnotationTypeInArray(gAnnotsWithInteriorColor, n, subtype);
 }
 
-static int ShouldEditColor(AnnotationType subtype) {
-    size_t n = dimof(gAnnotsWithColor);
-    return IsAnnotationTypeInArray(gAnnotsWithColor, n, subtype);
-}
-
 static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
     auto annotType = annot ? annot->Type() : AnnotationType::Unknown;
-    bool isVisible = ShouldEditColor(annotType);
+    bool isVisible = IsAnnotationTypeInArray(gAnnotsWithColor, dimof(gAnnotsWithColor), annotType);
     w->staticColor->SetIsVisible(isVisible);
     w->dropDownColor->SetIsVisible(isVisible);
     if (!isVisible) {
@@ -559,9 +496,6 @@ void EditAnnotationsWindow::DropDownAddSelectionChanged(DropDownSelectionChanged
     // TODO: implement me
     MessageBoxNYI(mainWindow->hwnd);
 }
-
-// in SumatraPDF.cpp
-extern void RerenderForWindowInfo(WindowInfo*);
 
 void EditAnnotationsWindow::DropDownIconSelectionChanged(DropDownSelectionChangedEvent* ev) {
     annot->SetIconName(ev->item);
@@ -732,7 +666,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
     {
         auto w = new ButtonCtrl(parent);
         w->SetText("Save PDF...");
-        w->onClicked = std::bind(&EditAnnotationsWindow::ButtonSavePDFHandler, this);
+        w->onClicked = std::bind(&ButtonSavePDFHandler, this);
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enable if there are changes
