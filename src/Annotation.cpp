@@ -52,6 +52,7 @@ struct AnnotationSmx {
 
     str::Str contents;
     str::Str author;
+    str::Str iconName;
 
     time_t creationDate;
     time_t modificationDate;
@@ -165,6 +166,20 @@ time_t Annotation::ModificationDate() {
     }
     auto res = pdf_annot_modification_date(pdf->ctx, pdf->annot);
     return res;
+}
+
+// return empty() if no icon
+std::string_view Annotation::IconName() {
+    if (smx) {
+        return smx->iconName.as_view();
+    }
+    bool hasIcon = pdf_annot_has_icon_name(pdf->ctx, pdf->annot);
+    if (!hasIcon) {
+        return {};
+    }
+    // can only call if pdf_annot_has_icon_name() returned true
+    const char* iconName = pdf_annot_icon_name(pdf->ctx, pdf->annot);
+    return {iconName};
 }
 
 Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot, int pageNo) {

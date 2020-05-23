@@ -65,6 +65,7 @@ struct Annotation {
     std::string_view Contents();
     time_t CreationDate();
     time_t ModificationDate();
+    std::string_view IconName(); // empty() if no icon
 };
 
 Annotation* MakeAnnotationSmx(AnnotationType, int pageNo, RectD, COLORREF);

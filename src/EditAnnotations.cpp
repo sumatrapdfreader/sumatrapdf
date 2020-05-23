@@ -327,18 +327,13 @@ static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot)
 static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
     UNUSED(w);
     UNUSED(annot);
-#if 0
-    // TODO: replace with Annotation::IconName()
-    pdf_annot* a = annot && annot->pdf ? annot->pdf->annot : nullptr;
-    bool isVisible = (a != nullptr);
-    if (isVisible) {
-        isVisible = pdf_annot_has_icon_name(annot->pdf->ctx, a);
+    std::string_view iconName;
+    if (annot) {
+        iconName = annot->IconName();
     }
+    bool isVisible = !iconName.empty();
     const char** icons = nullptr;
-    const char* currIcon = nullptr;
     if (isVisible) {
-        // can only call if pdf_annot_has_icon_name() returned true
-        currIcon = pdf_annot_icon_name(annot->pdf->ctx, a);
         switch (annot->type) {
             case AnnotationType::Text:
                 icons = gTextIcons;
@@ -365,9 +360,8 @@ static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
     Vec<std::string_view> strings;
     DropDownItemsFromStringArray(strings, icons);
     w->dropDownIcon->SetItems(strings);
-    int idx = FindStringInArray(icons, currIcon, 0);
+    int idx = FindStringInArray(icons, iconName.data(), 0);
     w->dropDownIcon->SetCurrentSelection(idx);
-#endif
 }
 
 int ShouldEditBorder(AnnotationType subtype) {

@@ -3,7 +3,7 @@ Layout:
    Remove hacks in VBox() that guess padding and use explicit Insets
 
 Annotations:
- - fix up ShowAnnotationsIcon
+ - [X] fix up ShowAnnotationsIcon
  - fix up ShowAnnotationsColor
  - fix up ShowAnnotationsPopup
  - finish EnginePdf::GetAnnotations
