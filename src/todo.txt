@@ -3,6 +3,7 @@ Layout:
    Remove hacks in VBox() that guess padding and use explicit Insets
 
 Annotations:
+ - implement "Save PDF..."
  - display opacity
  - display count of quad points
  - display border

@@ -89,3 +89,8 @@ fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds
                               fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha);
 fz_image* fz_find_image_at_idx(fz_context* ctx, FzPageInfo* pageInfo, int idx);
 void fz_find_image_positions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext);
+
+// float is in range 0...1
+COLORREF FromPdfColor(fz_context* ctx, int n, float color[4]);
+void ToPdfRgba(COLORREF c, float col[4]);
+

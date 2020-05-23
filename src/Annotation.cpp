@@ -205,7 +205,7 @@ COLORREF Annotation::Color() {
     float color[4];
     int n;
     pdf_annot_color(pdf->ctx, pdf->annot, &n, color);
-    COLORREF res = FromPdfColor(n, color);
+    COLORREF res = FromPdfColor(pdf->ctx, n, color);
     return res;
 }
 
@@ -217,7 +217,7 @@ COLORREF Annotation::InteriorColor() {
     float color[4];
     int n;
     pdf_annot_interior_color(pdf->ctx, pdf->annot, &n, color);
-    COLORREF res = FromPdfColor(n, color);
+    COLORREF res = FromPdfColor(pdf->ctx, n, color);
     return res;
 }
 

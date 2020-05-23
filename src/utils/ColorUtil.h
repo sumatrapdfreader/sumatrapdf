@@ -14,10 +14,6 @@ COLORREF MkRgba(u8 r, u8 g, u8 b, u8 a);
 void UnpackRgb(COLORREF, u8& r, u8& g, u8& b);
 void UnpackRgba(COLORREF, u8& r, u8& g, u8& b, u8& a);
 
-// float is in range 0...1
-COLORREF FromPdfColor(int n, float color[4]);
-void ToPdfRgba(COLORREF c, float col[4]);
-
 COLORREF ColorSetRed(COLORREF c, u8 red);
 COLORREF ColorSetGreen(COLORREF c, u8 green);
 COLORREF ColorSetBlue(COLORREF c, u8 blue);

@@ -1328,3 +1328,65 @@ fz_image* fz_find_image_at_idx(fz_context* ctx, FzPageInfo* pageInfo, int idx) {
     fz_drop_stext_page(ctx, stext);
     return nullptr;
 }
+
+static COLORREF MkRgbaFloat(float r, float g, float b, float a) {
+    u8 rb = (u8)(r * 255.0f);
+    u8 gb = (u8)(g * 255.0f);
+    u8 bb = (u8)(b * 255.0f);
+    u8 aa = (u8)(a * 255.0f);
+    return MkRgba(rb, gb, bb, aa);
+}
+
+static void UnpackRgbaFloat(COLORREF c, float& r, float& g, float& b, float& a) {
+    r = (float)(c & 0xff);
+    c = c >> 8;
+    r /= 255.0f;
+    g = (float)(c & 0xff);
+    g /= 255.0f;
+    c = c >> 8;
+    b = (float)(c & 0xff);
+    b /= 255.0f;
+    c = c >> 8;
+    a = (float)(c & 0xff);
+    a /= 255.0f;
+}
+
+#if 0
+static void UnpackRgbFloat(COLORREF c, float& r, float& g, float& b) {
+    r = (float)(c & 0xff);
+    r /= 255.0f;
+    c = c >> 8;
+    g = (float)(c & 0xff);
+    g /= 255.0f;
+    c = c >> 8;
+    b = (float)(c & 0xff);
+    b /= 255.0f;
+}
+#endif
+
+/*
+    n = 1 (grey), 3 (rgb) or 4 (cmyk).
+*/
+COLORREF FromPdfColor(fz_context* ctx, int n, float color[4]) {
+    if (n == 0) {
+        return ColorUnset;
+    }
+    if (n == 1) {
+        return MkRgbaFloat(color[0], color[0], color[0], 0);
+    }
+    if (n == 3) {
+        return MkRgbaFloat(color[0], color[1], color[2], 0);
+    }
+    if (n == 4) {
+        float rgb[4];
+        fz_convert_color(ctx, fz_device_cmyk(ctx), color, fz_device_rgb(ctx), rgb, NULL, fz_default_color_params);
+        return MkRgbaFloat(rgb[0], rgb[0], rgb[0], 0);
+    }
+    CrashIf(true);
+    return 0;
+}
+
+void ToPdfRgba(COLORREF c, float col[4]) {
+    // TODO: figure out how to deal with alpha. Pick 0xff to mean "not set" in FromPdfColor ?
+    UnpackRgbaFloat(c, col[0], col[1], col[2], col[3]);
+}
