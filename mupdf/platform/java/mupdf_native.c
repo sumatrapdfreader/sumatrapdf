@@ -1,3 +1,13 @@
+/*
+NOTE!
+	The JNI specification states that New<PrimitiveType>Array() do not
+	throw java exceptions, but many JVMs (e.g. Android's) treat them the
+	same way as NewObjectArray which may throw e.g. OutOfMemoryError.
+	So after calling these functions it is as important to call
+	ExceptionCheck() to check for exceptions as for functions that
+	are marked as throwing exceptions according to the JNI specification.
+*/
+
 #include <jni.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -49,7 +59,7 @@ static inline jlong jlong_cast(const void *p)
 	return (jlong)(intptr_t)p;
 }
 
-/* Our vm */
+/* Our VM */
 static JavaVM *jvm = NULL;
 
 /* All the cached classes/mids/fids we need. */
@@ -831,6 +841,12 @@ static int find_fids(JNIEnv *env)
 
 	cls_OutOfMemoryError = get_class(&err, env, "java/lang/OutOfMemoryError");
 
+	if (err)
+	{
+		LOGE("one or more class, member or field IDs could not be found");
+		return -1;
+	}
+
 	/* Get and store the main JVM pointer. We need this in order to get
 	 * JNIEnv pointers on callback threads. This is specifically
 	 * guaranteed to be safe to store in a static var. */
@@ -838,11 +854,11 @@ static int find_fids(JNIEnv *env)
 	getvmErr = (*env)->GetJavaVM(env, &jvm);
 	if (getvmErr < 0)
 	{
-		LOGE("mupdf_native.c find_fids() GetJavaVM failed with %d", getvmErr);
-		err = 1;
+		LOGE("cannot get JVM interface (error %d)", getvmErr);
+		return -1;
 	}
 
-	return err;
+	return 0;
 }
 
 /* When making callbacks from C to java, we may be called on threads
@@ -999,7 +1015,8 @@ fz_font *load_droid_fallback_font(fz_context *ctx, int script, int language, int
 	case UCDN_SCRIPT_KATAKANA: return load_noto_cjk(ctx, JP);
 	case UCDN_SCRIPT_BOPOMOFO: return load_noto_cjk(ctx, TC);
 	case UCDN_SCRIPT_HAN:
-		switch (language) {
+		switch (language)
+		{
 		case FZ_LANG_ja: return load_noto_cjk(ctx, JP);
 		case FZ_LANG_ko: return load_noto_cjk(ctx, KR);
 		case FZ_LANG_zh_Hans: return load_noto_cjk(ctx, SC);
@@ -1160,7 +1177,8 @@ fz_font *load_droid_fallback_font(fz_context *ctx, int script, int language, int
 
 fz_font *load_droid_cjk_font(fz_context *ctx, const char *name, int ros, int serif)
 {
-	switch (ros) {
+	switch (ros)
+	{
 	case FZ_ADOBE_CNS: return load_noto_cjk(ctx, TC);
 	case FZ_ADOBE_GB: return load_noto_cjk(ctx, SC);
 	case FZ_ADOBE_JAPAN: return load_noto_cjk(ctx, JP);
@@ -1235,6 +1253,7 @@ static void drop_tls_context(void *arg)
 
 static int init_base_context(JNIEnv *env)
 {
+	int ret;
 	int i;
 
 #ifdef _WIN32
@@ -1245,9 +1264,17 @@ static int init_base_context(JNIEnv *env)
 	 * need to. */
 	context_key = TlsAlloc();
 	if (context_key == TLS_OUT_OF_INDEXES)
+	{
+		LOGE("cannot get thread local storage for storing base context");
 		return -1;
+	}
 #else
-	pthread_key_create(&context_key, drop_tls_context);
+	ret = pthread_key_create(&context_key, drop_tls_context);
+	if (ret < 0)
+	{
+		LOGE("cannot get thread local storage for storing base context");
+		return -1;
+	}
 #endif
 
 	for (i = 0; i < FZ_LOCK_MAX; i++)
@@ -1259,9 +1286,20 @@ static int init_base_context(JNIEnv *env)
 
 	base_context = fz_new_context(NULL, &locks, FZ_STORE_DEFAULT);
 	if (!base_context)
+	{
+		LOGE("cannot create base context");
+		fin_base_context(env);
 		return -1;
+	}
 
-	fz_register_document_handlers(base_context);
+	fz_try(base_context)
+		fz_register_document_handlers(base_context);
+	fz_catch(base_context)
+	{
+		LOGE("cannot register document handlers (%s)", fz_caught_message(base_context));
+		fin_base_context(env);
+		return -1;
+	}
 
 #ifdef HAVE_ANDROID
 	fz_install_load_system_font_funcs(base_context,
@@ -1300,9 +1338,14 @@ JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
 {
 	JNIEnv *env;
+	jint ret;
 
-	if ((*vm)->GetEnv(vm, (void **)&env, MY_JNI_VERSION) != JNI_OK)
+	ret = (*vm)->GetEnv(vm, (void **)&env, MY_JNI_VERSION);
+	if (ret != JNI_OK)
+	{
+		LOGE("cannot get JNI interface during load (error %d)", ret);
 		return -1;
+	}
 
 	return MY_JNI_VERSION;
 }
@@ -1310,9 +1353,15 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 {
 	JNIEnv *env;
+	jint ret;
 
-	if ((*vm)->GetEnv(vm, (void **)&env, MY_JNI_VERSION) != JNI_OK)
-		return; /* If this fails, we're really in trouble! */
+	ret = (*vm)->GetEnv(vm, (void **)&env, MY_JNI_VERSION);
+	if (ret != JNI_OK)
+	{
+		/* If this fails, we're really in trouble! */
+		LOGE("cannot get JNI interface during unload (error %d)", ret);
+		return;
+	}
 
 	fz_drop_context(base_context);
 	base_context = NULL;
@@ -1332,7 +1381,7 @@ FUN(Context_initNative)(JNIEnv *env, jclass cls)
 	if (init_base_context(env) < 0)
 		return -1;
 
-	if (find_fids(env) != 0)
+	if (find_fids(env) < 0)
 	{
 		fin_base_context(env);
 		return -1;
@@ -1501,7 +1550,7 @@ static inline jbyteArray to_jbyteArray(fz_context *ctx, JNIEnv *env, const unsig
 	if ((*env)->ExceptionCheck(env))
 		fz_throw_java(ctx, env);
 	if (!jarr)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can not allocate byte array");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot allocate byte array");
 
 	(*env)->SetByteArrayRegion(env, jarr, 0, n, (jbyte *) arr);
 	if ((*env)->ExceptionCheck(env))
@@ -1520,7 +1569,7 @@ static inline jfloatArray to_jfloatArray(fz_context *ctx, JNIEnv *env, const flo
 	if ((*env)->ExceptionCheck(env))
 		fz_throw_java(ctx, env);
 	if (!jarr)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can not allocate float array");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot allocate float array");
 
 	(*env)->SetFloatArrayRegion(env, jarr, 0, n, arr);
 	if ((*env)->ExceptionCheck(env))
@@ -1700,7 +1749,7 @@ static inline jobject to_Quad_safe(fz_context *ctx, JNIEnv *env, fz_quad quad)
 		quad.lr.x, quad.lr.y);
 }
 
-static inline jobjectArray to_jQuadArray_safe(fz_context *ctx, JNIEnv *env, const fz_quad *quads, jint n)
+static inline jobjectArray to_QuadArray_safe(fz_context *ctx, JNIEnv *env, const fz_quad *quads, jint n)
 {
 	jobjectArray arr;
 	int i;
@@ -1896,6 +1945,8 @@ static inline jobject to_PDFWidget(fz_context *ctx, JNIEnv *env, pdf_widget *wid
 				opts = Memento_label(fz_malloc(ctx, nopts * sizeof(*opts)), "to_PDFWidget");
 				pdf_choice_widget_options(ctx, widget, 0, opts);
 				jopts = to_StringArray_safe(ctx, env, opts, nopts);
+				if (!jopts || (*env)->ExceptionCheck(env))
+					fz_throw_java(ctx, env);
 			}
 		}
 	}
@@ -1909,8 +1960,6 @@ static inline jobject to_PDFWidget(fz_context *ctx, JNIEnv *env, pdf_widget *wid
 		return NULL;
 	}
 
-	if ((*env)->ExceptionCheck(env))
-		return NULL;
 	(*env)->SetObjectField(env, jwidget, fid_PDFWidget_options, jopts);
 
 	return jwidget;
@@ -2522,7 +2571,8 @@ static void SeekableInputStream_drop(fz_context *ctx, void *streamState_)
 	JNIEnv *env;
 
 	env = jni_attach_thread(ctx, &detach);
-	if (env == NULL) {
+	if (env == NULL)
+	{
 		fz_warn(ctx, "cannot attach to JVM in SeekableInputStream_drop; leaking input stream");
 		return;
 	}
@@ -2542,7 +2592,8 @@ static void SeekableOutputStream_drop(fz_context *ctx, void *streamState_)
 	JNIEnv *env;
 
 	env = jni_attach_thread(ctx, &detach);
-	if (env == NULL) {
+	if (env == NULL)
+	{
 		fz_warn(ctx, "cannot attach to JVM in SeekableOutputStream_drop; leaking output stream");
 		return;
 	}
@@ -3788,7 +3839,8 @@ static int androidDrawDevice_lock(JNIEnv *env, NativeDeviceInfo *info)
 	assert(info);
 	assert(info->object);
 
-	while (1) {
+	while (1)
+	{
 		ret = AndroidBitmap_lockPixels(env, info->object, (void **)&pixels);
 		if (ret == ANDROID_BITMAP_RESULT_SUCCESS)
 			break;
@@ -3880,7 +3932,8 @@ FUN(AndroidImage_newImageFromBitmap)(JNIEnv *env, jobject self, jobject jbitmap,
 		int phase = 0;
 		size_t size = info.width * info.height * 4;
 		pixmap = fz_new_pixmap(ctx, fz_device_rgb(ctx), info.width, info.height, NULL, 1);
-		while (1) {
+		while (1)
+		{
 			ret = AndroidBitmap_lockPixels(env, jbitmap, (void **)&pixels);
 			if (ret == ANDROID_BITMAP_RESULT_SUCCESS)
 				break;
@@ -4225,7 +4278,7 @@ FUN(Pixmap_getSamples)(JNIEnv *env, jobject self)
 	if (!ctx | !pixmap) return NULL;
 
 	arr = (*env)->NewByteArray(env, size);
-	if (!arr) { jni_throw_run(env, "can not create byte array"); return NULL; }
+	if (!arr) { jni_throw_run(env, "cannot create byte array"); return NULL; }
 
 	(*env)->SetByteArrayRegion(env, arr, 0, size, (const jbyte *)pixmap->samples);
 	if ((*env)->ExceptionCheck(env)) return NULL;
@@ -4893,7 +4946,8 @@ FUN(Text_walk)(JNIEnv *env, jobject self, jobject walker)
 				(*env)->DeleteLocalRef(env, jfont);
 			font = span->font;
 			jfont = to_Font_safe(ctx, env, font);
-			if (!jfont) return;
+			if (!jfont)
+				return;
 		}
 
 		for (i = 0; i < span->len; ++i)
@@ -5499,7 +5553,8 @@ FUN(Document_openNativeWithBuffer)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		n = (*env)->GetArrayLength(env, jbuffer);
 
 		buffer = (*env)->GetByteArrayElements(env, jbuffer, NULL);
-		if (!buffer) {
+		if (!buffer)
+		{
 			if (magic)
 				(*env)->ReleaseStringUTFChars(env, jmagic, magic);
 			jni_throw_run(env, "cannot get document bytes to read");
@@ -5511,7 +5566,8 @@ FUN(Document_openNativeWithBuffer)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		m = (*env)->GetArrayLength(env, jaccelerator);
 
 		accelerator = (*env)->GetByteArrayElements(env, jaccelerator, NULL);
-		if (!accelerator) {
+		if (!accelerator)
+		{
 			if (buffer)
 				(*env)->ReleaseByteArrayElements(env, jbuffer, buffer, 0);
 			if (magic)
@@ -6269,7 +6325,11 @@ FUN(Page_getLinks)(JNIEnv *env, jobject self)
 
 	/* now run through actually creating the link objects */
 	jlinks = (*env)->NewObjectArray(env, link_count, cls_Link, NULL);
-	if (!jlinks) return NULL;
+	if (!jlinks || (*env)->ExceptionCheck(env))
+	{
+		fz_drop_link(ctx, links);
+		return NULL;
+	}
 
 	link = links;
 	for (i = 0; link && i < link_count; i++)
@@ -6279,19 +6339,34 @@ FUN(Page_getLinks)(JNIEnv *env, jobject self)
 		jobject juri = NULL;
 
 		jbounds = to_Rect_safe(ctx, env, link->rect);
-		if (!jbounds) return NULL;
+		if (!jbounds || (*env)->ExceptionCheck(env))
+		{
+			fz_drop_link(ctx, links);
+			return NULL;
+		}
 
 		juri = (*env)->NewStringUTF(env, link->uri);
-		if (!juri) return NULL;
+		if (!juri || (*env)->ExceptionCheck(env))
+		{
+			fz_drop_link(ctx, links);
+			return NULL;
+		}
 
 		jlink = (*env)->NewObject(env, cls_Link, mid_Link_init, jbounds, juri);
+		if (!jlink || (*env)->ExceptionCheck(env))
+		{
+			fz_drop_link(ctx, links);
+			return NULL;
+		}
+		(*env)->DeleteLocalRef(env, juri);
 		(*env)->DeleteLocalRef(env, jbounds);
-		if (!jlink) return NULL;
-		if (juri)
-			(*env)->DeleteLocalRef(env, juri);
 
 		(*env)->SetObjectArrayElement(env, jlinks, i, jlink);
-		if ((*env)->ExceptionCheck(env)) return NULL;
+		if ((*env)->ExceptionCheck(env))
+		{
+			fz_drop_link(ctx, links);
+			return NULL;
+		}
 
 		(*env)->DeleteLocalRef(env, jlink);
 		link = link->next;
@@ -6327,7 +6402,7 @@ FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
 		return NULL;
 	}
 
-	return to_jQuadArray_safe(ctx, env, hits, n);
+	return to_QuadArray_safe(ctx, env, hits, n);
 }
 
 JNIEXPORT jobject JNICALL
@@ -6644,7 +6719,7 @@ FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
 		return NULL;
 	}
 
-	return to_jQuadArray_safe(ctx, env, hits, n);
+	return to_QuadArray_safe(ctx, env, hits, n);
 }
 
 /* Buffer interface */
@@ -7131,7 +7206,7 @@ FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle)
 		return NULL;
 	}
 
-	return to_jQuadArray_safe(ctx, env, hits, n);
+	return to_QuadArray_safe(ctx, env, hits, n);
 }
 
 JNIEXPORT jobject JNICALL
@@ -7154,7 +7229,7 @@ FUN(StructuredText_highlight)(JNIEnv *env, jobject self, jobject jpt1, jobject j
 		return NULL;
 	}
 
-	return to_jQuadArray_safe(ctx, env, hits, n);
+	return to_QuadArray_safe(ctx, env, hits, n);
 }
 
 JNIEXPORT jobject JNICALL
@@ -7498,7 +7573,8 @@ FUN(PDFDocument_newByteString)(JNIEnv *env, jobject self, jobject jbs)
 	}
 
 	(*env)->GetByteArrayRegion(env, jbs, 0, bslen, bs);
-	if ((*env)->ExceptionCheck(env)) {
+	if ((*env)->ExceptionCheck(env))
+	{
 		fz_free(ctx, bs);
 		return NULL;
 	}
@@ -8030,7 +8106,7 @@ SeekableOutputStream_as_stream(fz_context *ctx, void *opaque)
 	SeekableStreamState *state;
 	fz_stream *stm;
 
-	state = fz_malloc(ctx, sizeof(SeekableStreamState));
+	state = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_state");
 	state->stream = in_state->stream;
 	state->array = in_state->array;
 
@@ -8085,7 +8161,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 		if (options)
 			(*env)->ReleaseStringUTFChars(env, joptions, options);
 		(*env)->DeleteGlobalRef(env, stream);
-		jni_throw_run(env, "can not create byte array");
+		jni_throw_run(env, "cannot create byte array");
 		return;
 	}
 
@@ -8095,7 +8171,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 		if (options)
 			(*env)->ReleaseStringUTFChars(env, joptions, options);
 		(*env)->DeleteGlobalRef(env, stream);
-		jni_throw_run(env, "can not create global reference");
+		jni_throw_run(env, "cannot create global reference");
 		return;
 	}
 
@@ -8104,7 +8180,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 		if (jstream)
 		{
 			/* No exceptions can occur from here to stream owning state, so we must not free state. */
-			state = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreramState_state");
+			state = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_state");
 			state->stream = stream;
 			state->array = array;
 
@@ -8240,7 +8316,7 @@ FUN(PDFObject_isNull)(JNIEnv *env, jobject self)
 	pdf_obj *obj = from_PDFObject(env, self);
 	int b = 0;
 
-	if (!ctx || !obj) return JNI_FALSE;
+	if (!ctx) return JNI_FALSE;
 
 	fz_try(ctx)
 		b = pdf_is_null(ctx, obj);
@@ -8496,7 +8572,7 @@ FUN(PDFObject_readRawStream)(JNIEnv *env, jobject self)
 		if ((*env)->ExceptionCheck(env))
 			fz_throw_java(ctx, env);
 		if (!arr)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "can not create byte array");
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot create byte array");
 
 		(*env)->SetByteArrayRegion(env, arr, 0, (jsize)len, (signed char *) &data[0]);
 		if ((*env)->ExceptionCheck(env))
@@ -8690,7 +8766,7 @@ FUN(PDFObject_getDictionary)(JNIEnv *env, jobject self, jstring jname)
 	name = (*env)->GetStringUTFChars(env, jname, NULL);
 	if (!name)
 	{
-		jni_throw_run(env, "can not get name to lookup");
+		jni_throw_run(env, "cannot get name to lookup");
 		return NULL;
 	}
 
@@ -9313,7 +9389,7 @@ FUN(PDFObject_asByteString)(JNIEnv *env, jobject self)
 		return NULL;
 	if (!jbs)
 	{
-		jni_throw_run(env, "can not create byte array");
+		jni_throw_run(env, "cannot create byte array");
 		return NULL;
 	}
 	bs = (*env)->GetByteArrayElements(env, jbs, NULL);
@@ -10884,13 +10960,15 @@ FUN(PDFWidget_textQuads)(JNIEnv *env, jobject self)
 				for (fz_stext_char *ch = line->first_char; ch; ch = ch->next)
 				{
 					jquad = to_Quad_safe(ctx, env, ch->quad);
-					if (!jquad) {
+					if (!jquad)
+					{
 						fz_drop_stext_page(ctx, stext);
 						return NULL;
 					}
 
 					(*env)->SetObjectArrayElement(env, array, i, jquad);
-					if ((*env)->ExceptionCheck(env)) {
+					if ((*env)->ExceptionCheck(env))
+					{
 						fz_drop_stext_page(ctx, stext);
 						return NULL;
 					}
@@ -11013,7 +11091,7 @@ static char *string_field_to_utfchars(fz_context *ctx, JNIEnv *env, jobject obj,
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot not get UTF string");
 
 	fz_try(ctx)
-		val = fz_strdup(ctx, str);
+		val = Memento_label(fz_strdup(ctx, str), "string field");
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jstr, str);
 	fz_catch(ctx)
@@ -11046,7 +11124,7 @@ static pdf_pkcs7_designated_name *signer_designated_name(fz_context *ctx, pdf_pk
 	fz_var(name);
 	fz_try(ctx)
 	{
-		name = fz_calloc(ctx, 1, sizeof(*name));
+		name = Memento_label(fz_calloc(ctx, 1, sizeof(*name)), "designated name");
 		name->cn = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DesignatedName_cn);
 		name->o = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DesignatedName_o);
 		name->ou = string_field_to_utfchars(ctx, env, desname, fid_PKCS7DesignatedName_ou);
@@ -11144,7 +11222,7 @@ static int signer_create_digest(fz_context *ctx, pdf_pkcs7_signer *signer_, fz_s
 
 pdf_pkcs7_signer *pdf_pkcs7_java_signer_create(JNIEnv *env, fz_context *ctx, jobject java_signer)
 {
-	java_pkcs7_signer *signer = fz_calloc(ctx, 1, sizeof(*signer));
+	java_pkcs7_signer *signer = Memento_label(fz_calloc(ctx, 1, sizeof(*signer)), "java_pkcs7_signer");
 
 	if (signer == NULL)
 		return NULL;
@@ -11430,7 +11508,7 @@ FUN(PDFWidget_getDesignatedName)(JNIEnv *env, jobject self, jobject jverifier)
 		return NULL;
 	if (!jname)
 	{
-		jni_throw_run(env, "can not create designated name object");
+		jni_throw_run(env, "cannot create designated name object");
 		return NULL;
 	}
 
@@ -11625,7 +11703,7 @@ FUN(FitzInputStream_readArray)(JNIEnv *env, jobject self, jobject jarr, jint off
 	arr = (*env)->GetByteArrayElements(env, jarr, NULL);
 	if (!arr)
 	{
-		jni_throw_arg(env, "can not get buffer to read into");
+		jni_throw_arg(env, "cannot get buffer to read into");
 		return -1;
 	}
 

@@ -2916,7 +2916,7 @@ fz_draw_drop_device(fz_context *ctx, fz_device *devp)
 	fz_drop_rasterizer(ctx, rast);
 }
 
-fz_device *
+static fz_device *
 new_draw_device(fz_context *ctx, fz_matrix transform, fz_pixmap *dest, const fz_aa_context *aa, const fz_irect *clip, fz_colorspace *proof_cs)
 {
 	fz_draw_device *dev = fz_new_derived_device(ctx, fz_draw_device);
