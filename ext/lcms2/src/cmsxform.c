@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -166,6 +166,23 @@ void CMSEXPORT cmsDeleteTransform(cmsContext ContextID, cmsHTRANSFORM hTransform
     _cmsFree(ContextID, (void *)core);
 }
 
+
+static
+cmsUInt32Number PixelSize(cmsUInt32Number Format)
+{
+    cmsUInt32Number fmt_bytes = T_BYTES(Format);
+
+    // For double, the T_BYTES field is zero
+    if (fmt_bytes == 0)
+        return sizeof(cmsUInt64Number);
+
+    // Otherwise, it is already correct for all formats
+    return fmt_bytes;
+}
+
+
+
+
 // Apply transform.
 void CMSEXPORT cmsDoTransform(cmsContext ContextID, cmsHTRANSFORM  Transform,
                               const void* InputBuffer,
@@ -178,8 +195,8 @@ void CMSEXPORT cmsDoTransform(cmsContext ContextID, cmsHTRANSFORM  Transform,
 
     stride.BytesPerLineIn = 0;  // Not used
     stride.BytesPerLineOut = 0;
-    stride.BytesPerPlaneIn = Size;
-    stride.BytesPerPlaneOut = Size;
+    stride.BytesPerPlaneIn = Size * PixelSize(p->InputFormat);
+    stride.BytesPerPlaneOut = Size * PixelSize(p->OutputFormat);
 
     p -> xform(ContextID, p, InputBuffer, OutputBuffer, Size, 1, &stride);
 }
@@ -1136,7 +1153,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
     p->core->Lut = lut;
 
        // Let's see if any plug-in want to do the transform by itself
-       if (core->Lut != NULL) {
+       if (core->Lut != NULL && !(*dwFlags & cmsFLAGS_NOOPTIMIZE)) {
 
               for (Plugin = ctx->TransformCollection;
                      Plugin != NULL;

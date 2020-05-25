@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -237,7 +237,7 @@ cmsFormatter TiffFormatterFactory(cmsContext ContextID, cmsUInt32Number Type,
     return Result;
 }
 
-static cmsPluginFormatters TiffLabPlugin = { {cmsPluginMagicNumber, 2000, cmsPluginFormattersSig, NULL}, TiffFormatterFactory };
+static cmsPluginFormatters TiffLabPlugin = { {cmsPluginMagicNumber, 2000-2000, cmsPluginFormattersSig, NULL}, TiffFormatterFactory };
 
 
 
@@ -375,7 +375,7 @@ cmsUInt32Number ComputeOutputFormatDescriptor(cmsUInt32Number dwInput, int OutCo
 
 // Tile based transforms
 static
-int TileBasedXform(cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
+int TileBasedXform(cmsContext ContextID, cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
 {
     tsize_t BufSizeIn  = TIFFTileSize(in);
     tsize_t BufSizeOut = TIFFTileSize(out);
@@ -385,16 +385,20 @@ int TileBasedXform(cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
     int PixelCount, j;
 
 
+    // Check for bad tiffs
+    if (BufSizeIn > INT_MAX || BufSizeOut > INT_MAX)
+        FatalError("Probably corrupted TIFF, tile too big.");
+
     TIFFGetFieldDefaulted(in, TIFFTAG_TILEWIDTH,  &tw);
     TIFFGetFieldDefaulted(in, TIFFTAG_TILELENGTH, &tl);
 
     PixelCount = (int) tw * tl;
 
     BufferIn = (unsigned char *) _TIFFmalloc(BufSizeIn * nPlanes);
-    if (!BufferIn) OutOfMem(BufSizeIn * nPlanes);
+    if (!BufferIn) OutOfMem((cmsUInt32Number) BufSizeIn * nPlanes);
 
     BufferOut = (unsigned char *) _TIFFmalloc(BufSizeOut * nPlanes);
-    if (!BufferOut) OutOfMem(BufSizeOut * nPlanes);
+    if (!BufferOut) OutOfMem((cmsUInt32Number) BufSizeOut * nPlanes);
 
 
     for (i = 0; i < TileCount; i++) {
@@ -405,7 +409,7 @@ int TileBasedXform(cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
                 BufferIn + (j*BufSizeIn), BufSizeIn) < 0)   goto cleanup;
         }
 
-        cmsDoTransform(NULL, hXForm, BufferIn, BufferOut, PixelCount);
+        cmsDoTransform(ContextID, hXForm, BufferIn, BufferOut, PixelCount);
 
         for (j=0; j < nPlanes; j++) {
 
@@ -431,7 +435,7 @@ cleanup:
 // Strip based transforms
 
 static
-int StripBasedXform(cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
+int StripBasedXform(cmsContext ContextID, cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
 {
     tsize_t BufSizeIn  = TIFFStripSize(in);
     tsize_t BufSizeOut = TIFFStripSize(out);
@@ -443,6 +447,10 @@ int StripBasedXform(cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
     int j;
     int PixelCount;
 
+    // Check for bad tiffs
+    if (BufSizeIn > INT_MAX || BufSizeOut > INT_MAX)
+        FatalError("Probably corrupted TIFF, strip too big.");
+
     TIFFGetFieldDefaulted(in, TIFFTAG_IMAGEWIDTH,  &sw);
     TIFFGetFieldDefaulted(in, TIFFTAG_ROWSPERSTRIP, &sl);
     TIFFGetFieldDefaulted(in, TIFFTAG_IMAGELENGTH, &iml);
@@ -452,10 +460,10 @@ int StripBasedXform(cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
         sl = iml;   // One strip for whole image
 
     BufferIn = (unsigned char *) _TIFFmalloc(BufSizeIn * nPlanes);
-    if (!BufferIn) OutOfMem(BufSizeIn * nPlanes);
+    if (!BufferIn) OutOfMem((cmsUInt32Number) BufSizeIn * nPlanes);
 
     BufferOut = (unsigned char *) _TIFFmalloc(BufSizeOut * nPlanes);
-    if (!BufferOut) OutOfMem(BufSizeOut * nPlanes);
+    if (!BufferOut) OutOfMem((cmsUInt32Number) BufSizeOut * nPlanes);
 
 
     for (i = 0; i < StripCount; i++) {
@@ -469,7 +477,7 @@ int StripBasedXform(cmsHTRANSFORM hXForm, TIFF* in, TIFF* out, int nPlanes)
         PixelCount = (int) sw * (iml < sl ? iml : sl);
         iml -= sl;
 
-        cmsDoTransform(NULL, hXForm, BufferIn, BufferOut, PixelCount);
+        cmsDoTransform(ContextID, hXForm, BufferIn, BufferOut, PixelCount);
 
         for (j=0; j < nPlanes; j++) {
             if (TIFFWriteEncodedStrip(out, i + (j * StripCount),
@@ -667,7 +675,7 @@ void DoEmbedProfile(TIFF* Out, const char* ProfileFile)
     size = cmsfilelength(f);
     if (size < 0) return;
 
-    EmbedBuffer = (cmsUInt8Number*) malloc(size + 1);
+    EmbedBuffer = (cmsUInt8Number*) malloc((size_t) size + 1);
     if (EmbedBuffer == NULL) {
         OutOfMem(size+1);
         return;
@@ -675,7 +683,7 @@ void DoEmbedProfile(TIFF* Out, const char* ProfileFile)
 
     EmbedLen = (cmsUInt32Number) fread(EmbedBuffer, 1, (size_t) size, f);
 
-    if (EmbedLen != size)
+    if (EmbedLen != (cmsUInt32Number) size)
         FatalError("Cannot read %ld bytes to %s", size, ProfileFile);
 
     fclose(f);
@@ -688,7 +696,7 @@ void DoEmbedProfile(TIFF* Out, const char* ProfileFile)
 
 
 static
-cmsHPROFILE GetTIFFProfile(TIFF* in)
+cmsHPROFILE GetTIFFProfile(cmsContext ContextID, TIFF* in)
 {
     cmsCIExyYTRIPLE Primaries;
     cmsFloat32Number* chr;
@@ -705,13 +713,13 @@ cmsHPROFILE GetTIFFProfile(TIFF* in)
 
     if (TIFFGetField(in, TIFFTAG_ICCPROFILE, &EmbedLen, &EmbedBuffer)) {
 
-        hProfile = cmsOpenProfileFromMem(EmbedBuffer, EmbedLen);
+        hProfile = cmsOpenProfileFromMem(ContextID, EmbedBuffer, EmbedLen);
 
         // Print description found in the profile
         if (Verbose && (hProfile != NULL)) {
 
             fprintf(stdout, "\n[Embedded profile]\n");
-            PrintProfileInformation(NULL, hProfile);
+            PrintProfileInformation(ContextID, hProfile);
             fflush(stdout);
         }
 
@@ -747,14 +755,14 @@ cmsHPROFILE GetTIFFProfile(TIFF* in)
                 &gmg,
                 &gmb);
 
-            Curve[0] = cmsBuildTabulatedToneCurve16(NULL, 256, gmr);
-            Curve[1] = cmsBuildTabulatedToneCurve16(NULL, 256, gmg);
-            Curve[2] = cmsBuildTabulatedToneCurve16(NULL, 256, gmb);
+            Curve[0] = cmsBuildTabulatedToneCurve16(ContextID, 256, gmr);
+            Curve[1] = cmsBuildTabulatedToneCurve16(ContextID, 256, gmg);
+            Curve[2] = cmsBuildTabulatedToneCurve16(ContextID, 256, gmb);
 
-            hProfile = cmsCreateRGBProfileTHR(NULL, &WhitePoint, &Primaries, Curve);
+            hProfile = cmsCreateRGBProfile(ContextID, &WhitePoint, &Primaries, Curve);
 
             for (i=0; i < 3; i++)
-                cmsFreeToneCurve(NULL, Curve[i]);
+                cmsFreeToneCurve(ContextID, Curve[i]);
 
             if (Verbose) {
                 fprintf(stdout, "\n[Colorimetric TIFF]\n");
@@ -771,7 +779,7 @@ cmsHPROFILE GetTIFFProfile(TIFF* in)
 
 // Transform one image
 static
-int TransformImage(TIFF* in, TIFF* out, const char *cDefInpProf)
+int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefInpProf)
 {
     cmsHPROFILE hIn, hOut, hProof, hInkLimit = NULL;
     cmsHTRANSFORM xform;
@@ -783,7 +791,7 @@ int TransformImage(TIFF* in, TIFF* out, const char *cDefInpProf)
 
     // Observer adaptation state (only meaningful on absolute colorimetric intent)
 
-    cmsSetAdaptationState(ObserverAdaptationState);
+    cmsSetAdaptationState(ContextID, ObserverAdaptationState);
 
     if (EmbedProfile && cOutProf)
         DoEmbedProfile(out, cOutProf);
@@ -811,20 +819,20 @@ int TransformImage(TIFF* in, TIFF* out, const char *cDefInpProf)
 
     if (lIsDeviceLink) {
 
-        hIn = cmsOpenProfileFromFile(cDefInpProf, "r");
+        hIn = cmsOpenProfileFromFile(ContextID, cDefInpProf, "r");
     }
     else {
 
-        hIn =  GetTIFFProfile(in);
+        hIn =  GetTIFFProfile(ContextID, in);
 
         if (hIn == NULL)
-            hIn = OpenStockProfile(NULL, cDefInpProf);
+            hIn = OpenStockProfile(ContextID, cDefInpProf);
 
-        hOut = OpenStockProfile(NULL, cOutProf);
+        hOut = OpenStockProfile(ContextID, cOutProf);
 
         if (cProofing != NULL) {
 
-            hProof = OpenStockProfile(NULL, cProofing);
+            hProof = OpenStockProfile(ContextID, cProofing);
             dwFlags |= cmsFLAGS_SOFTPROOFING;
         }
     }
@@ -835,14 +843,14 @@ int TransformImage(TIFF* in, TIFF* out, const char *cDefInpProf)
 
     // Assure both, input profile and input TIFF are on same colorspace
 
-    if (_cmsLCMScolorSpace(NULL, cmsGetColorSpace(NULL, hIn)) != (int) T_COLORSPACE(wInput))
+    if (_cmsLCMScolorSpace(ContextID, cmsGetColorSpace(ContextID, hIn)) != (int) T_COLORSPACE(wInput))
         FatalError("Input profile is not operating in proper color space");
 
 
     if (!lIsDeviceLink)
-        OutputColorSpace = _cmsLCMScolorSpace(NULL, cmsGetColorSpace(NULL, hOut));
+        OutputColorSpace = _cmsLCMScolorSpace(ContextID, cmsGetColorSpace(ContextID, hOut));
     else
-        OutputColorSpace = _cmsLCMScolorSpace(NULL, cmsGetPCS(NULL, hIn));
+        OutputColorSpace = _cmsLCMScolorSpace(ContextID, cmsGetPCS(ContextID, hIn));
 
     wOutput  = ComputeOutputFormatDescriptor(wInput, OutputColorSpace, bps);
 
@@ -857,7 +865,7 @@ int TransformImage(TIFF* in, TIFF* out, const char *cDefInpProf)
             int nProfiles = 0;
 
 
-            hInkLimit = cmsCreateInkLimitingDeviceLink(cmsGetColorSpace(NULL, hOut), InkLimit);
+            hInkLimit = cmsCreateInkLimitingDeviceLink(ContextID, cmsGetColorSpace(ContextID, hOut), InkLimit);
 
             hProfiles[nProfiles++] = hIn;
             if (hProof) {
@@ -868,26 +876,26 @@ int TransformImage(TIFF* in, TIFF* out, const char *cDefInpProf)
             hProfiles[nProfiles++] = hOut;
             hProfiles[nProfiles++] = hInkLimit;
 
-            xform = cmsCreateMultiprofileTransform(hProfiles, nProfiles,
+            xform = cmsCreateMultiprofileTransform(ContextID, hProfiles, nProfiles,
                                                    wInput, wOutput, Intent, dwFlags);
 
     }
     else {
 
-        xform = cmsCreateProofingTransform(hIn, wInput,
+        xform = cmsCreateProofingTransform(ContextID, hIn, wInput,
                                            hOut, wOutput,
                                            hProof, Intent,
                                            ProofingIntent,
                                            dwFlags);
     }
 
-    cmsCloseProfile(NULL, hIn);
-    cmsCloseProfile(NULL, hOut);
+    cmsCloseProfile(ContextID, hIn);
+    cmsCloseProfile(ContextID, hOut);
 
     if (hInkLimit)
-        cmsCloseProfile(NULL, hInkLimit);
+        cmsCloseProfile(ContextID, hInkLimit);
     if (hProof)
-        cmsCloseProfile(NULL, hProof);
+        cmsCloseProfile(ContextID, hProof);
 
     if (xform == NULL) return 0;
 
@@ -901,14 +909,14 @@ int TransformImage(TIFF* in, TIFF* out, const char *cDefInpProf)
     // Handle tile by tile or strip by strip
     if (TIFFIsTiled(in)) {
 
-        TileBasedXform(xform, in, out, nPlanes);
+        TileBasedXform(ContextID, xform, in, out, nPlanes);
     }
     else {
-        StripBasedXform(xform, in, out, nPlanes);
+        StripBasedXform(ContextID, xform, in, out, nPlanes);
     }
 
 
-    cmsDeleteTransform(NULL, xform);
+    cmsDeleteTransform(ContextID, xform);
 
     TIFFWriteDirectory(out);
 
@@ -1134,11 +1142,14 @@ void HandleSwitches(int argc, char *argv[])
 
 int main(int argc, char* argv[])
 {
+    cmsContext ContextID;
     TIFF *in, *out;
 
-    cmsPlugin(&TiffLabPlugin);
+    ContextID = cmsCreateContext(NULL, NULL);
 
-    InitUtils(NULL, "tificc");
+    cmsPlugin(ContextID, &TiffLabPlugin);
+
+    InitUtils(ContextID, "tificc");
 
     HandleSwitches(argc, argv);
 
@@ -1164,7 +1175,7 @@ int main(int argc, char* argv[])
 
     do {
 
-        TransformImage(in, out, cInpProf);
+        TransformImage(ContextID, in, out, cInpProf);
 
 
     } while (TIFFReadDirectory(in));
@@ -1175,6 +1186,7 @@ int main(int argc, char* argv[])
     TIFFClose(in);
     TIFFClose(out);
 
+    cmsDeleteContext(ContextID);
+
     return 0;
 }
-

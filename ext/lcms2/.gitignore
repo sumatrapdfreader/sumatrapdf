@@ -30,6 +30,7 @@ Thumbs.db
 *.cache
 *.ilk
 *.log
+*.exe
 [Bb]in
 [Dd]ebug*/
 *.sbr
@@ -45,3 +46,13 @@ packages/
 /testbed/.libs/lt-testcms
 /testbed/.libs/testcms
 /testbed/testcms
+#Xcode
+libtool
+Build
+DerivedData
+.libs
+/utils/transicc/transicc
+/utils/tificc/tificc
+/utils/psicc/psicc
+/utils/linkicc/linkicc
+/utils/jpgicc/jpgicc

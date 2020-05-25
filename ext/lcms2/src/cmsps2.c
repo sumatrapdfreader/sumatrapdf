@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -295,21 +295,7 @@ cmsUInt8Number Word2Byte(cmsUInt16Number w)
 }
 
 
-// Convert to byte (using ICC2 notation)
-/*
-static
-cmsUInt8Number L2Byte(cmsUInt16Number w)
-{
-    int ww = w + 0x0080;
-
-    if (ww > 0xFFFF) return 0xFF;
-
-    return (cmsUInt8Number) ((cmsUInt16Number) (ww >> 8) & 0xFF);
-}
-*/
-
 // Write a cooked byte
-
 static
 void WriteByte(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt8Number b)
 {
@@ -326,7 +312,8 @@ void WriteByte(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt8Number b)
 // ----------------------------------------------------------------- PostScript generation
 
 
-// Removes offending Carriage returns
+// Removes offending carriage returns
+
 static
 char* RemoveCR(const char* txt)
 {
@@ -424,21 +411,6 @@ void EmitIntent(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number Rendering
 //        = Yn*( L* / 116) / 7.787      if (L*) < 6 / 29
 //
 
-/*
-static
-void EmitL2Y(cmsIOHANDLER* m)
-{
-    _cmsIOPrintf(ContextID, m,
-            "{ "
-                "100 mul 16 add 116 div "               // (L * 100 + 16) / 116
-                 "dup 6 29 div ge "                     // >= 6 / 29 ?
-                 "{ dup dup mul mul } "                 // yes, ^3 and done
-                 "{ 4 29 div sub 108 841 div mul } "    // no, slope limiting
-            "ifelse } bind ");
-}
-*/
-
-
 // Lab -> XYZ, see the discussion above
 
 static
@@ -459,12 +431,28 @@ void EmitLab2XYZ(cmsContext ContextID, cmsIOHANDLER* m)
     _cmsIOPrintf(ContextID, m, "]\n");
 }
 
+static
+void EmitSafeGuardBegin(cmsContext ContextID, cmsIOHANDLER* m, const char* name)
+{
+    _cmsIOPrintf(ContextID, m, "%%LCMS2: Save previous definition of %s on the operand stack\n", name);
+    _cmsIOPrintf(ContextID, m, "currentdict /%s known { /%s load } { null } ifelse\n", name, name);
+}
 
+static
+void EmitSafeGuardEnd(cmsContext ContextID, cmsIOHANDLER* m, const char* name, int depth)
+{
+    _cmsIOPrintf(ContextID, m, "%%LCMS2: Restore previous definition of %s\n", name);
+    if (depth > 1) {
+        // cycle topmost items on the stack to bring the previous definition to the front
+        _cmsIOPrintf(ContextID, m, "%d -1 roll ", depth);
+    }
+    _cmsIOPrintf(ContextID, m, "dup null eq { pop currentdict /%s undef } { /%s exch def } ifelse\n", name, name);
+}
 
 // Outputs a table of words. It does use 16 bits
 
 static
-void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table)
+void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table, const char* name)
 {
     cmsUInt32Number i;
     cmsFloat64Number gamma;
@@ -479,28 +467,33 @@ void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table)
     // Check if is really an exponential. If so, emit "exp"
     gamma = cmsEstimateGamma(ContextID, Table, 0.001);
      if (gamma > 0) {
-            _cmsIOPrintf(ContextID, m, "{ %g exp } bind ", gamma);
+            _cmsIOPrintf(ContextID, m, "/%s { %g exp } bind def\n", name, gamma);
             return;
      }
 
-    _cmsIOPrintf(ContextID, m, "{ ");
+    EmitSafeGuardBegin(ContextID, m, "lcms2gammatable");
+    _cmsIOPrintf(ContextID, m, "/lcms2gammatable [");
+
+    for (i=0; i < Table->nEntries; i++) {
+	if (i % 10 == 0)
+            _cmsIOPrintf(ContextID, m, "\n  ");
+        _cmsIOPrintf(ContextID, m, "%d ", Table->Table16[i]);
+    }
+
+    _cmsIOPrintf(ContextID, m, "] def\n");
+
+
+    // Emit interpolation code
+
+    // PostScript code                            Stack
+    // ===============                            ========================
+                                            	  // v
+    _cmsIOPrintf(ContextID, m, "/%s {\n  ", name);
 
     // Bounds check
     EmitRangeCheck(ContextID, m);
 
-    // Emit intepolation code
-
-    // PostScript code                      Stack
-    // ===============                      ========================
-                                            // v
-    _cmsIOPrintf(ContextID, m, " [");
-
-    for (i=0; i < Table->nEntries; i++) {
-        _cmsIOPrintf(ContextID, m, "%d ", Table->Table16[i]);
-    }
-
-    _cmsIOPrintf(ContextID, m, "] ");                        // v tab
-
+    _cmsIOPrintf(ContextID, m, "\n  //lcms2gammatable ");    // v tab
     _cmsIOPrintf(ContextID, m, "dup ");                      // v tab tab
     _cmsIOPrintf(ContextID, m, "length 1 sub ");             // v tab dom
     _cmsIOPrintf(ContextID, m, "3 -1 roll ");                // tab dom v
@@ -512,7 +505,7 @@ void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table)
     _cmsIOPrintf(ContextID, m, "ceiling cvi ");              // tab val2 cell0 cell1
     _cmsIOPrintf(ContextID, m, "3 index ");                  // tab val2 cell0 cell1 tab
     _cmsIOPrintf(ContextID, m, "exch ");                     // tab val2 cell0 tab cell1
-    _cmsIOPrintf(ContextID, m, "get ");                      // tab val2 cell0 y1
+    _cmsIOPrintf(ContextID, m, "get\n  ");                   // tab val2 cell0 y1
     _cmsIOPrintf(ContextID, m, "4 -1 roll ");                // val2 cell0 y1 tab
     _cmsIOPrintf(ContextID, m, "3 -1 roll ");                // val2 y1 tab cell0
     _cmsIOPrintf(ContextID, m, "get ");                      // val2 y1 y0
@@ -525,9 +518,11 @@ void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table)
     _cmsIOPrintf(ContextID, m, "sub ");                      // y0 (y1-y0) rest
     _cmsIOPrintf(ContextID, m, "mul ");                      // y0 t1
     _cmsIOPrintf(ContextID, m, "add ");                      // y
-    _cmsIOPrintf(ContextID, m, "65535 div ");                // result
+    _cmsIOPrintf(ContextID, m, "65535 div\n");               // result
 
-    _cmsIOPrintf(ContextID, m, " } bind ");
+    _cmsIOPrintf(ContextID, m, "} bind def\n");
+
+    EmitSafeGuardEnd(ContextID, m, "lcms2gammatable", 1);
 }
 
 
@@ -543,9 +538,10 @@ cmsBool GammaTableEquals(cmsUInt16Number* g1, cmsUInt16Number* g2, cmsUInt32Numb
 // Does write a set of gamma curves
 
 static
-void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsToneCurve* g[])
+void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsToneCurve* g[], const char* nameprefix)
 {
     cmsUInt32Number i;
+    static char buffer[2048];
 
     for( i=0; i < n; i++ )
     {
@@ -553,17 +549,16 @@ void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsTon
 
         if (i > 0 && GammaTableEquals(g[i-1]->Table16, g[i]->Table16, g[i]->nEntries)) {
 
-            _cmsIOPrintf(ContextID, m, "dup ");
+            _cmsIOPrintf(ContextID, m, "/%s%d /%s%d load def\n", nameprefix, i, nameprefix, i-1);
         }
         else {
-            Emit1Gamma(ContextID, m, g[i]);
+            snprintf(buffer, sizeof(buffer), "%s%d", nameprefix, i);
+	    buffer[sizeof(buffer)-1] = '\0';
+            Emit1Gamma(ContextID, m, g[i], buffer);
         }
     }
 
 }
-
-
-
 
 
 // Following code dumps a LUT onto memory stream
@@ -582,7 +577,7 @@ void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsTon
 //  component. -1 is used to mark beginning of whole block.
 
 static
-int OutputValueSampler(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+int OutputValueSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     cmsPsSamplerCargo* sc = (cmsPsSamplerCargo*) Cargo;
     cmsUInt32Number i;
@@ -662,11 +657,11 @@ int OutputValueSampler(cmsContext ContextID, register const cmsUInt16Number In[]
 
 static
 void WriteCLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsStage* mpe, const char* PreMaj,
-                                             const char* PostMaj,
-                                             const char* PreMin,
-                                             const char* PostMin,
-                                             int FixWhite,
-                                             cmsColorSpaceSignature ColorSpace)
+                                               const char* PostMaj,
+                                               const char* PreMin,
+                                               const char* PostMin,
+                                               int FixWhite,
+                                               cmsColorSpaceSignature ColorSpace)
 {
     cmsUInt32Number i;
     cmsPsSamplerCargo sc;
@@ -708,11 +703,11 @@ int EmitCIEBasedA(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Curve, cm
     _cmsIOPrintf(ContextID, m, "[ /CIEBasedA\n");
     _cmsIOPrintf(ContextID, m, "  <<\n");
 
-    _cmsIOPrintf(ContextID, m, "/DecodeA ");
+    EmitSafeGuardBegin(ContextID, m, "lcms2gammaproc");
+    Emit1Gamma(ContextID, m, Curve, "lcms2gammaproc");
 
-    Emit1Gamma(ContextID, m, Curve);
-
-    _cmsIOPrintf(ContextID, m, " \n");
+    _cmsIOPrintf(ContextID, m, "/DecodeA /lcms2gammaproc load\n");
+    EmitSafeGuardEnd(ContextID, m, "lcms2gammaproc", 3);
 
     _cmsIOPrintf(ContextID, m, "/MatrixA [ 0.9642 1.0000 0.8249 ]\n");
     _cmsIOPrintf(ContextID, m, "/RangeLMN [ 0.0 0.9642 0.0 1.0000 0.0 0.8249 ]\n");
@@ -736,11 +731,19 @@ int EmitCIEBasedABC(cmsContext ContextID, cmsIOHANDLER* m, cmsFloat64Number* Mat
 
     _cmsIOPrintf(ContextID, m, "[ /CIEBasedABC\n");
     _cmsIOPrintf(ContextID, m, "<<\n");
-    _cmsIOPrintf(ContextID, m, "/DecodeABC [ ");
 
-    EmitNGamma(ContextID, m, 3, CurveSet);
-
+    EmitSafeGuardBegin(ContextID, m, "lcms2gammaproc0");
+    EmitSafeGuardBegin(ContextID, m, "lcms2gammaproc1");
+    EmitSafeGuardBegin(ContextID, m, "lcms2gammaproc2");
+    EmitNGamma(ContextID, m, 3, CurveSet, "lcms2gammaproc");
+    _cmsIOPrintf(ContextID, m, "/DecodeABC [\n");
+    _cmsIOPrintf(ContextID, m, "   /lcms2gammaproc0 load\n");
+    _cmsIOPrintf(ContextID, m, "   /lcms2gammaproc1 load\n");
+    _cmsIOPrintf(ContextID, m, "   /lcms2gammaproc2 load\n");
     _cmsIOPrintf(ContextID, m, "]\n");
+    EmitSafeGuardEnd(ContextID, m, "lcms2gammaproc2", 3);
+    EmitSafeGuardEnd(ContextID, m, "lcms2gammaproc1", 3);
+    EmitSafeGuardEnd(ContextID, m, "lcms2gammaproc0", 3);
 
     _cmsIOPrintf(ContextID, m, "/MatrixABC [ " );
 
@@ -772,28 +775,31 @@ int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline
 {
     const char* PreMaj;
     const char* PostMaj;
-    const char* PreMin, *PostMin;
+    const char* PreMin, * PostMin;
     cmsStage* mpe;
+    int i, numchans;
+    static char buffer[2048];
 
-    mpe = Pipeline ->Elements;
+    mpe = Pipeline->Elements;
 
     switch (cmsStageInputChannels(ContextID, mpe)) {
     case 3:
+        _cmsIOPrintf(ContextID, m, "[ /CIEBasedDEF\n");
+        PreMaj = "<";
+        PostMaj = ">\n";
+        PreMin = PostMin = "";
+        break;
 
-            _cmsIOPrintf(ContextID, m, "[ /CIEBasedDEF\n");
-            PreMaj ="<";
-            PostMaj= ">\n";
-            PreMin = PostMin = "";
-            break;
     case 4:
-            _cmsIOPrintf(ContextID, m, "[ /CIEBasedDEFG\n");
-            PreMaj = "[";
-            PostMaj = "]\n";
-            PreMin = "<";
-            PostMin = ">\n";
-            break;
+        _cmsIOPrintf(ContextID, m, "[ /CIEBasedDEFG\n");
+        PreMaj = "[";
+        PostMaj = "]\n";
+        PreMin = "<";
+        PostMin = ">\n";
+        break;
+
     default:
-            return 0;
+        return 0;
 
     }
 
@@ -801,18 +807,34 @@ int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline
 
     if (cmsStageType(ContextID, mpe) == cmsSigCurveSetElemType) {
 
-        _cmsIOPrintf(ContextID, m, "/DecodeDEF [ ");
-        EmitNGamma(ContextID, m, cmsStageOutputChannels(ContextID, mpe), _cmsStageGetPtrToCurveSet(mpe));
+        numchans = cmsStageOutputChannels(ContextID, mpe);
+        for (i = 0; i < numchans; ++i) {
+            snprintf(buffer, sizeof(buffer), "lcms2gammaproc%d", i);
+            buffer[sizeof(buffer) - 1] = '\0';
+            EmitSafeGuardBegin(ContextID, m, buffer);
+        }
+        EmitNGamma(ContextID, m, cmsStageOutputChannels(ContextID, mpe), _cmsStageGetPtrToCurveSet(mpe), "lcms2gammaproc");
+        _cmsIOPrintf(ContextID, m, "/DecodeDEF [\n");
+        for (i = 0; i < numchans; ++i) {
+            snprintf(buffer, sizeof(buffer), "  /lcms2gammaproc%d load\n", i);
+            buffer[sizeof(buffer) - 1] = '\0';
+            _cmsIOPrintf(ContextID, m, buffer);
+        }
         _cmsIOPrintf(ContextID, m, "]\n");
+        for (i = numchans - 1; i >= 0; --i) {
+            snprintf(buffer, sizeof(buffer), "lcms2gammaproc%d", i);
+            buffer[sizeof(buffer) - 1] = '\0';
+            EmitSafeGuardEnd(ContextID, m, buffer, 3);
+        }
 
-        mpe = mpe ->Next;
+        mpe = mpe->Next;
     }
 
     if (cmsStageType(ContextID, mpe) == cmsSigCLutElemType) {
 
-            _cmsIOPrintf(ContextID, m, "/Table ");
-            WriteCLUT(ContextID, m, mpe, PreMaj, PostMaj, PreMin, PostMin, FALSE, (cmsColorSpaceSignature) 0);
-            _cmsIOPrintf(ContextID, m, "]\n");
+        _cmsIOPrintf(ContextID, m, "/Table ");
+        WriteCLUT(ContextID, m, mpe, PreMaj, PostMaj, PreMin, PostMin, FALSE, (cmsColorSpaceSignature)0);
+        _cmsIOPrintf(ContextID, m, "]\n");
     }
 
     EmitLab2XYZ(ContextID, m);
@@ -923,7 +945,7 @@ int WriteInputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, c
 
     default:
 
-        cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "Only 3, 4 channels supported for CSA. This profile has %d channels.", nChannels);
+        cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "Only 3, 4 channels are supported for CSA. This profile has %d channels.", nChannels);
         return 0;
     }
 
@@ -1239,8 +1261,6 @@ void EmitPQRStage(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, i
                     "exch pop exch pop exch pop exch pop } bind\n]\n");
 
         }
-
-
 }
 
 
@@ -1414,7 +1434,7 @@ int WriteNamedColorCRD(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
     cmsUInt32Number i, nColors, nColorant;
     cmsUInt32Number OutputFormat;
     char ColorName[cmsMAX_PATH];
-    char Colorant[128];
+    char Colorant[512];
     cmsNAMEDCOLORLIST* NamedColorList;
 
 

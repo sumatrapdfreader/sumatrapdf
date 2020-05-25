@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -38,7 +38,7 @@ int CMSEXPORT cmsGetEncodedCMMversion(void)
 // compare two strings ignoring case
 int CMSEXPORT cmsstrcasecmp(const char* s1, const char* s2)
 {
-    register const unsigned char *us1 = (const unsigned char *)s1,
+    CMSREGISTER const unsigned char *us1 = (const unsigned char *)s1,
                                  *us2 = (const unsigned char *)s2;
 
     while (toupper(*us1) == toupper(*us2++))

@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8C51BE48-ADB8-4089-A9EC-F6BF993A0548}</ProjectGuid>
-    <RootNamespace>lcms2mt_DLL</RootNamespace>
+    <RootNamespace>lcms2_DLL</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -90,16 +90,16 @@
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <TargetName>lcms2mt</TargetName>
+    <TargetName>lcms2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <TargetName>lcms2mt</TargetName>
+    <TargetName>lcms2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>lcms2mt</TargetName>
+    <TargetName>lcms2</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>lcms2mt</TargetName>
+    <TargetName>lcms2</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -116,7 +116,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>..\..\..\src\lcms2mt.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\..\src\lcms2.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -165,7 +165,7 @@
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>..\..\..\src\lcms2mt.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\..\..\src\lcms2.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -234,18 +234,18 @@
     <ClCompile Include="..\..\..\src\cmsxform.c" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\..\..\src\lcms2mt.def">
+    <CustomBuild Include="..\..\..\src\lcms2.def">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\lcms2_internal.h" />
-    <ClInclude Include="..\..\..\include\lcms2mt.h" />
-    <ClInclude Include="..\..\..\include\lcms2mt_plugin.h" />
+    <ClInclude Include="..\..\..\include\lcms2.h" />
+    <ClInclude Include="..\..\..\include\lcms2_plugin.h" />
     <ClInclude Include="..\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\lcms2mt.rc" />
+    <ResourceCompile Include="..\lcms2.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

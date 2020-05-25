@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -696,19 +696,19 @@ cmsUInt32Number ComputeOutputFormatDescriptor(cmsUInt32Number dwInput, int OutCo
 
 // Equivalence between ICC color spaces and lcms color spaces
 static
-int GetProfileColorSpace(cmsHPROFILE hProfile)
+int GetProfileColorSpace(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsColorSpaceSignature ProfileSpace = cmsGetColorSpace(NULL, hProfile);
+    cmsColorSpaceSignature ProfileSpace = cmsGetColorSpace(ContextID, hProfile);
 
-    return _cmsLCMScolorSpace(NULL, ProfileSpace);
+    return _cmsLCMScolorSpace(ContextID, ProfileSpace);
 }
 
 static
-int GetDevicelinkColorSpace(cmsHPROFILE hProfile)
+int GetDevicelinkColorSpace(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsColorSpaceSignature ProfileSpace = cmsGetPCS(NULL, hProfile);
+    cmsColorSpaceSignature ProfileSpace = cmsGetPCS(ContextID, hProfile);
 
-    return _cmsLCMScolorSpace(NULL, ProfileSpace);
+    return _cmsLCMScolorSpace(ContextID, ProfileSpace);
 }
 
 
@@ -842,7 +842,7 @@ void DoEmbedProfile(const char* ProfileFile)
 
 
 static
-int DoTransform(cmsHTRANSFORM hXForm, int OutputColorSpace)
+int DoTransform(cmsContext ContextID, cmsHTRANSFORM hXForm, int OutputColorSpace)
 {
     JSAMPROW ScanLineIn;
     JSAMPROW ScanLineOut;
@@ -874,7 +874,7 @@ int DoTransform(cmsHTRANSFORM hXForm, int OutputColorSpace)
 
        jpeg_read_scanlines(&Decompressor, &ScanLineIn, 1);
 
-       cmsDoTransform(NULL, hXForm, ScanLineIn, ScanLineOut, Decompressor.output_width);
+       cmsDoTransform(ContextID, hXForm, ScanLineIn, ScanLineOut, Decompressor.output_width);
 
        jpeg_write_scanlines(&Compressor, &ScanLineOut, 1);
        }
@@ -893,7 +893,7 @@ int DoTransform(cmsHTRANSFORM hXForm, int OutputColorSpace)
 // Transform one image
 
 static
-int TransformImage(char *cDefInpProf, char *cOutputProf)
+int TransformImage(cmsContext ContextID, char *cDefInpProf, char *cOutputProf)
 {
        cmsHPROFILE hIn, hOut, hProof;
        cmsHTRANSFORM xform;
@@ -904,7 +904,7 @@ int TransformImage(char *cDefInpProf, char *cOutputProf)
        cmsUInt8Number* EmbedBuffer;
 
 
-       cmsSetAdaptationState(ObserverAdaptationState);
+       cmsSetAdaptationState(ContextID, ObserverAdaptationState);
 
        if (BlackPointCompensation) {
 
@@ -923,7 +923,7 @@ int TransformImage(char *cDefInpProf, char *cOutputProf)
 
        if (GamutCheck) {
             dwFlags |= cmsFLAGS_GAMUTCHECK;
-            cmsSetAlarmCodes(Alarm);
+            cmsSetAlarmCodes(ContextID, Alarm);
        }
 
        // Take input color space
@@ -931,7 +931,7 @@ int TransformImage(char *cDefInpProf, char *cOutputProf)
 
         if (lIsDeviceLink) {
 
-            hIn = cmsOpenProfileFromFile(cDefInpProf, "r");
+            hIn = cmsOpenProfileFromFile(ContextID, cDefInpProf, "r");
             hOut = NULL;
             hProof = NULL;
        }
@@ -939,12 +939,12 @@ int TransformImage(char *cDefInpProf, char *cOutputProf)
 
         if (!IgnoreEmbedded && read_icc_profile(&Decompressor, &EmbedBuffer, &EmbedLen))
         {
-              hIn = cmsOpenProfileFromMem(EmbedBuffer, EmbedLen);
+              hIn = cmsOpenProfileFromMem(ContextID, EmbedBuffer, EmbedLen);
 
                if (Verbose) {
 
                   fprintf(stdout, " (Embedded profile found)\n");
-                  PrintProfileInformation(NULL, hIn);
+                  PrintProfileInformation(ContextID, hIn);
                   fflush(stdout);
               }
 
@@ -987,17 +987,17 @@ int TransformImage(char *cDefInpProf, char *cOutputProf)
             FatalError("Output profile couldn't be read.");
 
        // Assure both, input profile and input JPEG are on same colorspace
-       if (cmsGetColorSpace(NULL, hIn) != _cmsICCcolorSpace(NULL, T_COLORSPACE(wInput)))
+       if (cmsGetColorSpace(ContextID, hIn) != _cmsICCcolorSpace(ContextID, T_COLORSPACE(wInput)))
               FatalError("Input profile is not operating in proper color space");
 
 
        // Output colorspace is given by output profile
 
         if (lIsDeviceLink) {
-            OutputColorSpace = GetDevicelinkColorSpace(hIn);
+            OutputColorSpace = GetDevicelinkColorSpace(ContextID, hIn);
         }
         else {
-            OutputColorSpace = GetProfileColorSpace(hOut);
+            OutputColorSpace = GetProfileColorSpace(ContextID, hOut);
         }
 
        jpeg_copy_critical_parameters(&Decompressor, &Compressor);
@@ -1007,22 +1007,22 @@ int TransformImage(char *cDefInpProf, char *cOutputProf)
        wOutput      = ComputeOutputFormatDescriptor(wInput, OutputColorSpace);
 
 
-       xform = cmsCreateProofingTransform(hIn, wInput,
+       xform = cmsCreateProofingTransform(ContextID, hIn, wInput,
                                           hOut, wOutput,
                                           hProof, Intent,
                                           ProofingIntent, dwFlags);
        if (xform == NULL)
                  FatalError("Cannot transform by using the profiles");
 
-       DoTransform(xform, OutputColorSpace);
+       DoTransform(ContextID, xform, OutputColorSpace);
 
 
        jcopy_markers_execute(&Decompressor, &Compressor);
 
-       cmsDeleteTransform(NULL, xform);
-       cmsCloseProfile(NULL, hIn);
-       cmsCloseProfile(NULL, hOut);
-       if (hProof) cmsCloseProfile(NULL, hProof);
+       cmsDeleteTransform(ContextID, xform);
+       cmsCloseProfile(ContextID, hIn);
+       cmsCloseProfile(ContextID, hOut);
+       if (hProof) cmsCloseProfile(ContextID, hProof);
 
        return 1;
 }
@@ -1238,6 +1238,8 @@ void HandleSwitches(int argc, char *argv[])
 
 int main(int argc, char* argv[])
 {
+    cmsContext ContextID = cmsCreateContext(NULL, NULL);
+
     InitUtils(NULL, "jpgicc");
 
     HandleSwitches(argc, argv);
@@ -1249,12 +1251,14 @@ int main(int argc, char* argv[])
     OpenInput(argv[xoptind]);
     OpenOutput(argv[xoptind+1]);
 
-    TransformImage(cInpProf, cOutProf);
+    TransformImage(ContextID, cInpProf, cOutProf);
 
 
     if (Verbose) { fprintf(stdout, "\n"); fflush(stdout); }
 
     Done();
+
+    cmsDeleteContext(ContextID);
 
     return 0;
 }

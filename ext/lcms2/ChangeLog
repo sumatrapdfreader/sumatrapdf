@@ -1,14 +1,16 @@
+	LCMS2MT ChangeLog:
+
+------------------------
+2.10.art Featured release
+------------------------
+
+Merge 2.10 with 2.9.art.
+
 ------------------------
 2.9.art Featured release
 ------------------------
 
 Merge 2.9 with 2.8.art.
-
-------------------------
-2.9 Maintenance release
-------------------------
-
-No changelog provided.
 
 ------------------------
 2.8.art Featured release
@@ -21,6 +23,26 @@ Removed the 'THR' API functions as now unnecessary.
 Changed LCMS_VERSION (and checking logic).
 Extend T_EXTRA etc to allow for 63 extra channels.
 
+
+	Vanilla LCMS2 Changelog:
+	~~~~~~~~~~~~~~~~~~~~~~~~
+
+------------------------
+2.9 Maintenance release
+------------------------
+
+No changelog provided.
+
+-----------------------
+2.10 Featured release
+-----------------------
+Added a compilation toggle to remove "register" keyword in API.
+Previously commercial, fast_float plug-in is now released as open source under GPL3 license.
+MD5 functions are now accesible through plug-in API.
+Added support for Visual Studio 2019
+Bug fixing.
+
+
 -----------------------
 2.9 Maintenance release
 -----------------------
@@ -28,7 +50,7 @@ Several fixes related with security, and therefore not detailed here.
 C++ compiles now without warnings
 Added OSX and clang in travis
 Added a travis-ci test matrix for many compilers and OS. Thanks to Thomas Weber (debian) for this great improvement.
-testbed can now work with dynamic versions of library 
+testbed can now work with dynamic versions of library
 Fixed wrong planar formatters regarding linestride interpretation
 
 -----------------------

@@ -25,7 +25,7 @@ cmstypes.obj+
 cmsvirt.obj+
 cmswtpnt.obj+
 cmsxform.obj
-..\..\bin\lcms2.dll
+..\..\bin\lcms2mt.dll
 
 cw32mt.lib import32.lib
-..\..\src\lcms2.def
+..\..\src\lcms2mt.def
