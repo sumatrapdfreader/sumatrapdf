@@ -2122,3 +2122,18 @@ Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
     int dy = RectDy(r);
     return {dx, dy};
 }
+
+// position hwnd on the right of hwndRelative
+void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
+    Rect rHwnd = WindowRect(hwnd);
+    Rect rHwndRelative = WindowRect(hwndRelative);
+    rHwnd.x = rHwndRelative.x + rHwndRelative.dx;
+    rHwnd.y = rHwndRelative.y;
+    // position hwnd vertically in the middle of hwndRelative
+    int dyDiff = rHwndRelative.dy - rHwnd.dy;
+    if (dyDiff > 0) {
+        rHwnd.y += dyDiff / 2;
+    }
+    Rect r = ShiftRectToWorkArea(rHwnd, true);
+    SetWindowPos(hwnd, 0, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}

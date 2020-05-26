@@ -703,7 +703,7 @@ void StartEditAnnotations(TabInfo* tab) {
         }
     }
     LayoutAndSizeToContent(win->mainLayout, 520, minDy, w->hwnd);
-    // TODO: position to the right of tab->win->hwndFrame
+    HwndPositionToTheRightOf(w->hwnd, tab->win->hwndFrame);
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
