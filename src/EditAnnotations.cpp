@@ -44,85 +44,18 @@ extern "C" {
 using std::placeholders::_1;
 
 // clang-format off
-// TODO: convert to flat string
-const char* gAnnotationTypes[] = {
-    "Text",
-    "Free Text",
-    "Stamp",
-    "Caret",
-    "Ink",
-    "Square",
-    "Circle",
-    "Line",
-    "Polygon",
-    // TODO: more
-    nullptr,
-};
+// TODO: more
+const char* gAnnotationTypes = "Text\0Free Text\0Stamp\0Caret\0Ink\0Square\0Circle\0Line\0Polygon\0";
 
-const char* gTextIcons[] = {
-    "Comment", 
-    "Help", 
-    "Insert", 
-    "Key", 
-    "NewParagraph", 
-    "Note", 
-    "Paragraph",
-    nullptr,
-};
+const char* gTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
 
-const char *gFileAttachmentUcons[] = { 
-    "Graph",
-    "Paperclip",
-    "PushPin",
-    "Tag",
-    nullptr,
- };
+const char *gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
 
-const char *gSoundIcons[] = {
-    "Speaker",
-    "Mic",
-    nullptr,
-};
+const char *gSoundIcons = "Speaker\0Mic\0";
 
-const char *gStampIcons[] = {
-    "Approved", 
-    "AsIs",
-    "Confidential",
-    "Departmental",
-    "Draft",
-    "Experimental",
-    "Expired",
-    "Final",
-    "ForComment",
-    "ForPublicRelease",
-    "NotApproved",
-    "NotForPublicRelease",
-    "Sold",
-    "TopSecret",
-    nullptr,
-};
+const char *gStampIcons = "Approved\0AsIs\0Confidential\0Departmental\0Draft\0Experimental\0Expired\0Final\0ForComment\0ForPublicRelease\0NotApproved\0NotForPublicRelease\0Sold\0TopSecret\0";
 
-const char* gColors[] = {
-    "None",
-    "Aqua",
-    "Black",
-    "Blue",
-    "Fuchsia",
-    "Gray",
-    "Green",
-    "Lime",
-    "Maroon",
-    "Navy",
-    "Olive",
-    "Orange",
-    "Purple",
-    "Red",
-    "Silver",
-    "Teal",
-    "White",
-    "Yellow",
-    nullptr,
-};
+const char* gColors = "None\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
 
 static unsigned int gColorsValues[] = {
     0x00000000, /* transparent */
@@ -166,22 +99,22 @@ AnnotationType gAnnotsWithColor[] = {
 };
 // clang-format on
 
-static_assert(dimof(gColors) == dimof(gColorsValues));
 
 // in SumatraPDF.cpp
 extern void RerenderForWindowInfo(WindowInfo*);
 
 const char* GetKnownColorName(COLORREF c) {
     if (c == ColorUnset) {
-        return gColors[0];
-    }
+        return gColors;
+   }
     // convert COLORREF to a format in gColorsValues
     u8 r, g, b;
     UnpackRgb(c, r, g, b);
     COLORREF c2 = MkRgba(b, g, r, 0xff);
     for (int i = 1; gColors[i]; i++) {
         if (c2 == gColorsValues[i]) {
-            return gColors[i];
+            const char* s = seqstrings::IdxToStr(gColors, i);
+            return s;
         }
     }
     return nullptr;
@@ -219,20 +152,22 @@ struct EditAnnotationsWindow {
     ~EditAnnotationsWindow();
 };
 
-static int FindStringInArray(const char** items, const char* toFind, int valIfNotFound = -1) {
-    for (int i = 0; items[i] != nullptr; i++) {
-        const char* s = items[i];
-        if (str::Eq(s, toFind)) {
+static int FindStringInArray(const char* items, const char* toFind, int valIfNotFound = -1) {
+    int i = 0;
+    while (*items) {
+        if (str::Eq(items, toFind)) {
             return i;
         }
+        i++;
+        items = seqstrings::SkipStr(items);
     }
     return valIfNotFound;
 }
 
-static void DropDownItemsFromStringArray(Vec<std::string_view>& items, const char** strings) {
-    for (int i = 0; strings[i] != nullptr; i++) {
-        const char* s = strings[i];
-        items.Append(s);
+static void DropDownItemsFromStringArray(Vec<std::string_view>& items, const char* strings) {
+    while (*strings) {
+        items.Append(strings);
+        strings = seqstrings::SkipStr(strings);
     }
 }
 
@@ -354,7 +289,7 @@ static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
         iconName = annot->IconName();
     }
     bool isVisible = !iconName.empty();
-    const char** icons = nullptr;
+    const char* icons = nullptr;
     if (isVisible) {
         switch (annot->type) {
             case AnnotationType::Text:
