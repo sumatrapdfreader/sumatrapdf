@@ -56,7 +56,6 @@ struct EditTitleWindow {
     ~EditTitleWindow();
     void CloseHandler(WindowCloseEvent*);
     void SizeHandler(SizeEvent*);
-    void KeyDownHandler(KeyEvent*);
     void ButtonOkHandler();
     void ButtonCancelHandler();
 };
@@ -76,12 +75,6 @@ void EditTitleWindow::CloseHandler(WindowCloseEvent* ev) {
     gEditTitleWindow->onFinished(nullptr);
     delete gEditTitleWindow;
     gEditTitleWindow = nullptr;
-}
-
-void EditTitleWindow::KeyDownHandler(KeyEvent* ev) {
-    UNUSED(ev);
-    // TODO: I want Tab to navigate focus between elements
-    // dbglogf("KeyDown: %d\n", ev->keyVirtCode);
 }
 
 void EditTitleWindow::SizeHandler(SizeEvent* ev) {
@@ -293,7 +286,6 @@ static EditTitleWindow* createEditTitleWindow(HWND hwndOwner, TocEditArgs* args,
 
     w->onClose = std::bind(&EditTitleWindow::CloseHandler, win, _1);
     w->onSize = std::bind(&EditTitleWindow::SizeHandler, win, _1);
-    w->onKeyDown = std::bind(&EditTitleWindow::KeyDownHandler, win, _1);
 
     win->mainWindow = w;
     createMainLayout(win);

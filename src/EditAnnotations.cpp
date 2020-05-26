@@ -458,6 +458,12 @@ static void WndSizeHandler(EditAnnotationsWindow* w, SizeEvent* ev) {
     LayoutToSize(w->mainLayout, {dx, dy});
 }
 
+static void WndKeyHandler(EditAnnotationsWindow* w, KeyEvent* ev) {
+    UNUSED(w);
+    UNUSED(ev);
+    // on Alt, change the buttonSave text
+}
+
 static std::tuple<StaticCtrl*, ILayout*> CreateStatic(HWND parent, std::string_view sv = {}) {
     auto w = new StaticCtrl(parent);
     bool ok = w->Create();
@@ -685,7 +691,7 @@ void StartEditAnnotations(TabInfo* tab) {
 
     w->onClose = std::bind(WndCloseHandler, win, _1);
     w->onSize = std::bind(WndSizeHandler, win, _1);
-
+    w->onKeyDownUp = std::bind(WndKeyHandler, win, _1);
     CreateMainLayout(win);
     RebuildAnnotations(win);
 

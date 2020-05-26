@@ -1,3 +1,5 @@
+- [X] position to the right of tab->win->hwndFrame
+
 Layout:
  - Include Insets directly in WindowBaseLayout to simplify doing layout.
    Remove hacks in VBox() that guess padding and use explicit Insets
@@ -10,7 +12,6 @@ Annotations:
  - when selecting annotation in list box, go to its page
  - allow moving some annotations (TEXT)
  - implement delete
- - position to the right of tab->win->hwndFrame
  - change our text higlight to match PDF i.e. use quad points
  - add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
@@ -22,7 +23,6 @@ Annotations:
  - allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
    a dialog box for setting a color. Remember the custom colors in settings for future use.
  - UI ideas: https://getcleanshot.com/
-
  - maybe: display flags
  - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
 

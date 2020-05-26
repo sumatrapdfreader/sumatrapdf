@@ -273,30 +273,16 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keydown
-    if (WM_KEYDOWN == msg) {
-        if (!w->onKeyDown) {
-            return 0;
-        }
-        KeyEvent ev{};
-        SetWndEvent(ev);
-        ev.keyVirtCode = (int)wp;
-        w->onKeyDown(&ev);
-        if (ev.didHandle) {
-            didHandle = true;
-            // 0 means: did handle
-            return 0;
-        }
-    }
-
     // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keyup
-    if (WM_KEYUP == msg) {
-        if (!w->onKeyUp) {
+    if ((WM_KEYUP == msg) || (WM_KEYDOWN == msg)) {
+        if (!w->onKeyDownUp) {
             return 0;
         }
         KeyEvent ev{};
         SetWndEvent(ev);
+        ev.isUp = (WM_KEYUP == msg);
         ev.keyVirtCode = (int)wp;
-        w->onKeyUp(&ev);
+        w->onKeyDownUp(&ev);
         if (ev.didHandle) {
             didHandle = true;
             // 0 means: did handle

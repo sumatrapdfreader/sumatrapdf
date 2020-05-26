@@ -102,6 +102,7 @@ typedef std::function<void(CharEvent*)> CharHandler;
 
 // TODO: extract data from LPARAM
 struct KeyEvent : WndEvent {
+    bool isUp = false;
     int keyVirtCode = 0;
 };
 
@@ -164,10 +165,8 @@ struct WindowBase {
     DestroyHandler onDestroy = nullptr;
     // for WM_CLOSE
     CloseHandler onClose = nullptr;
-    // for WM_KEYDOWN
-    KeyHandler onKeyDown = nullptr;
-    // for WM_KEYUP
-    KeyHandler onKeyUp = nullptr;
+    // for WM_KEYDOWN / WM_KEYUP
+    KeyHandler onKeyDownUp = nullptr;
     // for WM_CHAR
     CharHandler onChar = nullptr;
     // for WM_MOUSEWHEEL and WM_MOUSEHWHEEL
