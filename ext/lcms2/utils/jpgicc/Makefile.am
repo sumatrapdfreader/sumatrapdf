@@ -14,7 +14,7 @@ else
 bin_PROGRAMS = 
 endif
 
-jpgicc_LDADD = $(top_builddir)/src/liblcms2.la @JPEGICC_DEPLIBS@
+jpgicc_LDADD = $(top_builddir)/src/liblcms2mt.la @JPEGICC_DEPLIBS@
 jpgicc_LDFLAGS = @LDFLAGS@
 jpgicc_SOURCES = jpgicc.c iccjpeg.c ../common/xgetopt.c ../common/vprf.c ../common/utils.h
 man_MANS = jpgicc.1

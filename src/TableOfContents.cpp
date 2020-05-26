@@ -800,10 +800,10 @@ void LoadTocTree(WindowInfo* win) {
 
     if (tab->altBookmarks.size() > 0) {
         win->altBookmarks->onSelectionChanged = dropDownSelectionChanged;
-        win->altBookmarks->SetIsVisible(true);
+        win->altBookmarks->SetVisibility(Visibility::Visible);
     } else {
         win->altBookmarks->onSelectionChanged = nullptr;
-        win->altBookmarks->SetIsVisible(false);
+        win->altBookmarks->SetVisibility(Visibility::Collapse);
     }
 
     // consider a ToC tree right-to-left if a more than half of the

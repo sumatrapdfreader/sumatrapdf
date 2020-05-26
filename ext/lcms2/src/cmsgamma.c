@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2013 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -888,7 +888,7 @@ void CMSEXPORT cmsFreeToneCurve(cmsContext ContextID, cmsToneCurve* Curve)
     if (Curve -> Evals)
         _cmsFree(ContextID, Curve -> Evals);
 
-    if (Curve) _cmsFree(ContextID, Curve);
+    _cmsFree(ContextID, Curve);
 }
 
 // Utility function, free 3 gamma tables

@@ -39,9 +39,8 @@ zlib            1.2.11     2017-01-15
   http://www.zlib.net/
   http://git.ghostscript.com/?p=thirdparty-zlib.git;a=commit;h=dea93d29387877a582fb57139378af312acd5400)
 
-lcms2           git        2019-01-02
-  http://git.ghostscript.com/?p=thirdparty-lcms2.git;a=shortlog;h=refs/heads/lcms2mt
-  http://git.ghostscript.com/?p=thirdparty-lcms2.git;a=commit;h=05db680de2d7178be21450bc0cc909460c7d4aeb
+lcms2           git        2019-05-22
+  http://git.ghostscript.com/?p=thirdparty-lcms2.git;a=commit;h=a8e6365459383c25453c57025ca593cc93f8b51a
 
 harfbuzz        2.6.4      2019-10-29
   https://harfbuzz.org

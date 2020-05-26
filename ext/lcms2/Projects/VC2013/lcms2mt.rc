@@ -27,8 +27,8 @@ LANGUAGE LANG_SPANISH, SUBLANG_SPANISH_MODERN
 //
 
 1 VERSIONINFO
- FILEVERSION 2,9,0,0
- PRODUCTVERSION 2,9,0,0
+ FILEVERSION 2,10,0,0
+ PRODUCTVERSION 2,10,0,0
  FILEFLAGSMASK 0x0L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -45,12 +45,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Marti Maria"
             VALUE "FileDescription", "lcms color engine"
-            VALUE "FileVersion", "2.9.0.0"
+            VALUE "FileVersion", "2.10.0.0"
             VALUE "InternalName", "lcms"
-            VALUE "LegalCopyright", "Copyright © Marti Maria 2017"
-            VALUE "OriginalFilename", "lcms2mt.dll"
+            VALUE "LegalCopyright", "Copyright © Marti Maria 2020"
+            VALUE "OriginalFilename", "lcms2.dll"
             VALUE "ProductName", "LittleCMS color engine"
-            VALUE "ProductVersion", "2.9.0.0"
+            VALUE "ProductVersion", "2.10.0.0"
         END
     END
     BLOCK "VarFileInfo"

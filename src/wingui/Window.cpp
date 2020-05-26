@@ -626,9 +626,11 @@ bool WindowBase::IsEnabled() {
     return tobool(enabled);
 }
 
-void WindowBase::SetIsVisible(bool isVisible) {
+void WindowBase::SetVisibility(Visibility newVisibility) {
     // TODO: make it work before Create()?
     CrashIf(!hwnd);
+    visibility = newVisibility;
+    bool isVisible = IsVisible();
     // TODO: a different way to determine if is top level vs. child window?
     if (GetParent(hwnd) == nullptr) {
         ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
@@ -637,11 +639,13 @@ void WindowBase::SetIsVisible(bool isVisible) {
         SetWindowStyle(hwnd, WS_VISIBLE, bIsVisible);
     }
     if (layout) {
-        layout->SetIsVisible(isVisible);
+        layout->SetVisibility(newVisibility);
     }
 }
 
-bool WindowBase::IsVisible() {
+Visibility WindowBase::GetVisiblility() const {
+    return visibility;
+#if 0
     if (GetParent(hwnd) == nullptr) {
         // TODO: what to do for top-level window?
         CrashMe();
@@ -649,6 +653,16 @@ bool WindowBase::IsVisible() {
     }
     bool isVisible = IsWindowStyleSet(hwnd, WS_VISIBLE);
     return isVisible;
+#endif
+}
+
+// convenience function
+void WindowBase::SetIsVisible(bool isVisible) {
+    SetVisibility(isVisible ? Visibility::Visible : Visibility::Collapse);
+}
+
+bool WindowBase::IsVisible() const {
+    return visibility == Visibility::Visible;
 }
 
 void WindowBase::SetPos(RECT* r) {

@@ -261,8 +261,8 @@ Constraints Constraints::TightenWidth(int width) const {
     return bc;
 }
 
-void ILayout::SetIsVisible(bool newIsVisible) {
-    isVisible = newIsVisible;
+void ILayout::SetVisibility(Visibility newVisibility) {
+    visibility = newVisibility;
 }
 
 bool IsLayoutOfKind(ILayout* l, Kind kind) {
@@ -413,28 +413,13 @@ int VBox::ChildrenCount() {
     return children.isize();
 }
 
-// TODO: probably not needed
-int VBox::VisibleChildrenCount() {
-    int n = 0;
-    int idx = 0;
-    for (auto& c : children) {
-        if (c.layout->isVisible) {
-            n++;
-        } else {
-            dbglayoutf("VBox::ChildrenCount(): idx: %d, %s not visible\n", idx, c.layout->kind);
-        }
-        idx++;
-    }
-    return n;
-}
-
 int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
     if (alignMain == MainAxisAlign::Homogeneous) {
         return 0;
     }
     int totalFlex = 0;
     for (auto& i : children) {
-        if (i.layout->isVisible) {
+        if (i.layout->visibility != Visibility::Collapse) {
             totalFlex += i.flex;
         }
     }
@@ -479,7 +464,7 @@ Size VBox::Layout(const Constraints bc) {
 
     for (int i = 0; i < n; i++) {
         auto& v = this->children.at(i);
-        if (!v.layout->isVisible) {
+        if (v.layout->visibility == Visibility::Collapse) {
             continue;
         }
         // Determine what gap needs to be inserted between the elements.
@@ -662,7 +647,7 @@ void VBox::SetBounds(Rect bounds) {
     ILayout* previous = nullptr;
     for (int i = 0; i < n; i++) {
         auto& v = children[i];
-        if (!v.layout->isVisible) {
+        if (v.layout->visibility == Visibility::Collapse) {
             continue;
         }
         if (IsPacked(alignMain)) {
@@ -741,13 +726,7 @@ HBox::~HBox() {
 }
 
 int HBox::ChildrenCount() {
-    int n = 0;
-    for (auto& c : children) {
-        if (c.layout->isVisible) {
-            n++;
-        }
-    }
-    return n;
+    return children.isize();
 }
 
 Size HBox::Layout(const Constraints bc) {
@@ -787,7 +766,7 @@ Size HBox::Layout(const Constraints bc) {
 
     for (int i = 0; i < n; i++) {
         auto& v = children[i];
-        if (!v.layout->isVisible) {
+        if (v.layout->visibility == Visibility::Collapse) {
             continue;
         }
         // Determine what gap needs to be inserted between the elements.

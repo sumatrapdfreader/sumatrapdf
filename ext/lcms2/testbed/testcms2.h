@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2014 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -27,13 +27,16 @@
 #ifndef TESTCMS2_H
 #define TESTCMS2_H
 
+#include "lcms2_internal.h"
+
+// On Visual Studio, use debug CRT
 #ifdef _MSC_VER
-#    define _CRT_SECURE_NO_WARNINGS 1
-#     include "crtdbg.h"
-#     include <io.h>
+#    include "crtdbg.h"
 #endif
 
-#include "lcms2_internal.h"
+#ifdef CMS_IS_WINDOWS_
+#    include <io.h>
+#endif
 
 #define cmsmin(a, b) (((a) < (b)) ? (a) : (b))
 
@@ -59,23 +62,22 @@ void TestMemoryLeaks(cmsBool ok);
 void Say(const char* str);
 
 // Plug-in tests
-cmsInt32Number CheckSimpleContext(void);
-cmsInt32Number CheckAllocContext(void);
-cmsInt32Number CheckAlarmColorsContext(void);
-cmsInt32Number CheckAdaptationStateContext(void);
-cmsInt32Number CheckInterp1DPlugin(void);
-cmsInt32Number CheckInterp3DPlugin(void);
-cmsInt32Number CheckParametricCurvePlugin(void);
-cmsInt32Number CheckFormattersPlugin(void);
-cmsInt32Number CheckTagTypePlugin(void);
-cmsInt32Number CheckMPEPlugin(void);
-cmsInt32Number CheckOptimizationPlugin(void);
-cmsInt32Number CheckIntentPlugin(void);
-cmsInt32Number CheckTransformPlugin(void);
-cmsInt32Number CheckMutexPlugin(void);
+cmsInt32Number CheckSimpleContext(cmsContext ContextID);
+cmsInt32Number CheckAllocContext(cmsContext ContextID);
+cmsInt32Number CheckAlarmColorsContext(cmsContext ContextID);
+cmsInt32Number CheckAdaptationStateContext(cmsContext ContextID);
+cmsInt32Number CheckInterp1DPlugin(cmsContext ContextID);
+cmsInt32Number CheckInterp3DPlugin(cmsContext ContextID);
+cmsInt32Number CheckParametricCurvePlugin(cmsContext ContextID);
+cmsInt32Number CheckFormattersPlugin(cmsContext ContextID);
+cmsInt32Number CheckTagTypePlugin(cmsContext ContextID);
+cmsInt32Number CheckMPEPlugin(cmsContext ContextID);
+cmsInt32Number CheckOptimizationPlugin(cmsContext ContextID);
+cmsInt32Number CheckIntentPlugin(cmsContext ContextID);
+cmsInt32Number CheckTransformPlugin(cmsContext ContextID);
+cmsInt32Number CheckMutexPlugin(cmsContext ContextID);
+cmsInt32Number CheckMethodPackDoublesFromFloat(cmsContext ContextID);
 
-
-cmsInt32Number CheckOptimizationPluginLeak(void);
 
 // Zoo
 void CheckProfileZOO(cmsContext ContextID);

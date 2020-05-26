@@ -512,8 +512,8 @@ pdf_redact_image_imp(fz_context *ctx, fz_matrix ctm, fz_image *image, fz_pixmap 
 			fz_rethrow(ctx);
 	}
 
-	n = pixmap->n + pixmap->s;
-	bpp = pixmap->n + pixmap->s + pixmap->alpha;
+	n = pixmap->n - pixmap->alpha;
+	bpp = pixmap->n;
 	if (fz_colorspace_is_subtractive(ctx, pixmap->colorspace))
 		white = 0;
 	else

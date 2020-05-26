@@ -14,10 +14,10 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 SUBDIRS = src include utils/tificc utils/transicc utils/linkicc utils/jpgicc utils/psicc testbed
 
 # Additional files to distribute
-EXTRA_DIST = AUTHORS COPYING ChangeLog doc Projects include bin Lib INSTALL README.1ST autogen.sh lcms2.pc.in
+EXTRA_DIST = AUTHORS COPYING ChangeLog doc Projects include bin Lib INSTALL README.1ST autogen.sh lcms2.pc.in plugins
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = lcms2.pc
+pkgconfig_DATA = lcms2mt.pc
 
 # Get names of plug-ins in the source package
 PLUGIN_DIRECTORIES = $(sort $(dir $(wildcard plugins/*/)))
@@ -39,17 +39,12 @@ clean-local:
 # Handle plug-ins
 all-local: 
 	@for d in $(PLUGIN_DIRECTORIES); do (cd $$d; $(MAKE) $(AM_MAKEFLAGS) all ); done
-	
+
 check-local: 
 	@for d in $(PLUGIN_DIRECTORIES); do (cd $$d; $(MAKE) $(AM_MAKEFLAGS) check ); done
-	
+
 install-exec-local:
 	@for d in $(PLUGIN_DIRECTORIES); do (cd $$d; $(MAKE) $(AM_MAKEFLAGS) install-exec ); done
 
 uninstall-local:
 	@for d in $(PLUGIN_DIRECTORIES); do (cd $$d; $(MAKE) $(AM_MAKEFLAGS) uninstall ); done
-
-
-
-	
-	

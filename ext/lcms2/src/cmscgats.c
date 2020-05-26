@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2018 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -681,8 +681,8 @@ cmsFloat64Number ParseFloatNumber(const char *Buffer)
 static
 void InSymbol(cmsContext ContextID, cmsIT8* it8)
 {
-    register char *idptr;
-    register int k;
+    CMSREGISTER char *idptr;
+    CMSREGISTER int k;
     SYMBOL key;
     int sng;
 
@@ -2166,65 +2166,47 @@ void CookPointers(cmsContext ContextID, cmsIT8* it8)
         if (cmsstrcasecmp(Fld, "SAMPLE_ID") == 0) {
 
             t -> SampleID = idField;
-
-            for (i=0; i < t -> nPatches; i++) {
-
-                char *Data = GetData(ContextID, it8, i, idField);
-                if (Data) {
-                    char Buffer[256];
-
-                    strncpy(Buffer, Data, 255);
-                    Buffer[255] = 0;
-
-                    if (strlen(Buffer) <= strlen(Data))
-                        strcpy(Data, Buffer);
-                    else
-                        SetData(ContextID, it8, i, idField, Buffer);
-
-                }
-            }
-
         }
 
         // "LABEL" is an extension. It keeps references to forward tables
 
-        if ((cmsstrcasecmp(Fld, "LABEL") == 0) || Fld[0] == '$' ) {
+        if ((cmsstrcasecmp(Fld, "LABEL") == 0) || Fld[0] == '$') {
 
-                    // Search for table references...
-                    for (i=0; i < t -> nPatches; i++) {
+            // Search for table references...
+            for (i = 0; i < t->nPatches; i++) {
 
-                            char *Label = GetData(ContextID, it8, i, idField);
+                char *Label = GetData(ContextID, it8, i, idField);
 
-                            if (Label) {
+                if (Label) {
 
-                                cmsUInt32Number k;
+                    cmsUInt32Number k;
 
-                                // This is the label, search for a table containing
-                                // this property
+                    // This is the label, search for a table containing
+                    // this property
 
-                                for (k=0; k < it8 ->TablesCount; k++) {
+                    for (k = 0; k < it8->TablesCount; k++) {
 
-                                    TABLE* Table = it8 ->Tab + k;
-                                    KEYVALUE* p;
+                        TABLE* Table = it8->Tab + k;
+                        KEYVALUE* p;
 
-                                    if (IsAvailableOnList(ContextID, Table->HeaderList, Label, NULL, &p)) {
+                        if (IsAvailableOnList(ContextID, Table->HeaderList, Label, NULL, &p)) {
 
-                                        // Available, keep type and table
-                                        char Buffer[256];
+                            // Available, keep type and table
+                            char Buffer[256];
 
-                                        char *Type  = p ->Value;
-                                        int  nTable = (int) k;
+                            char* Type = p->Value;
+                            int  nTable = (int)k;
 
-                                        snprintf(Buffer, 255, "%s %d %s", Label, nTable, Type );
+                            snprintf(Buffer, 255, "%s %d %s", Label, nTable, Type);
 
-                                        SetData(ContextID, it8, i, idField, Buffer);
-                                    }
-                                }
-
-
-                            }
-
+                            SetData(ContextID, it8, i, idField, Buffer);
+                        }
                     }
+
+
+                }
+
+            }
 
 
         }

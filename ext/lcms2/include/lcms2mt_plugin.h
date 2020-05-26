@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -93,6 +93,12 @@ CMSAPI cmsBool            CMSEXPORT _cmsMAT3inverse(cmsContext ContextID, const 
 CMSAPI cmsBool            CMSEXPORT _cmsMAT3solve(cmsContext ContextID, cmsVEC3* x, cmsMAT3* a, cmsVEC3* b);
 CMSAPI void               CMSEXPORT _cmsMAT3eval(cmsContext ContextID, cmsVEC3* r, const cmsMAT3* a, const cmsVEC3* v);
 
+
+// MD5 low level  -------------------------------------------------------------------------------------
+
+CMSAPI cmsHANDLE          CMSEXPORT cmsMD5alloc(cmsContext ContextID);
+CMSAPI void               CMSEXPORT cmsMD5add(cmsHANDLE Handle, const cmsUInt8Number* buf, cmsUInt32Number len);
+CMSAPI void               CMSEXPORT cmsMD5finish(cmsContext ContextID, cmsProfileID* ProfileID, cmsHANDLE Handle);
 
 // Error logging  -------------------------------------------------------------------------------------
 
@@ -254,9 +260,10 @@ struct _cms_interp_struc;
 // 16 bits forward interpolation. This function performs precision-limited linear interpolation
 // and is supposed to be quite fast. Implementation may be tetrahedral or trilinear, and plug-ins may
 // choose to implement any other interpolation algorithm.
-typedef void (* _cmsInterpFn16)(cmsContext ContextID, register const cmsUInt16Number Input[],
-                                register cmsUInt16Number Output[],
-                                register const struct _cms_interp_struc* p);
+typedef void (* _cmsInterpFn16)(cmsContext ContextID,
+                                CMSREGISTER const cmsUInt16Number Input[],
+                                CMSREGISTER cmsUInt16Number Output[],
+                                CMSREGISTER const struct _cms_interp_struc* p);
 
 // Floating point forward interpolation. Full precision interpolation using floats. This is not a
 // time critical function. Implementation may be tetrahedral or trilinear, and plug-ins may
@@ -337,10 +344,11 @@ typedef struct {
 
 struct _cmstransform_struct;
 
-typedef cmsUInt8Number* (* cmsFormatter16)(cmsContext ContextID, register struct _cmstransform_struct* CMMcargo,
-                                           register cmsUInt16Number Values[],
-                                           register cmsUInt8Number* Buffer,
-                                           register cmsUInt32Number Stride);
+typedef cmsUInt8Number* (* cmsFormatter16)(cmsContext ContextID,
+                                           CMSREGISTER struct _cmstransform_struct* CMMcargo,
+                                           CMSREGISTER cmsUInt16Number Values[],
+                                           CMSREGISTER cmsUInt8Number* Buffer,
+                                           CMSREGISTER cmsUInt32Number Stride);
 
 typedef cmsUInt8Number* (* cmsFormatterFloat)(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
                                               cmsFloat32Number Values[],
@@ -537,9 +545,10 @@ typedef struct {
 // the optimization  search. Or FALSE if it is unable to optimize and want to give a chance
 // to the rest of optimizers.
 
-typedef void     (* _cmsOPTeval16Fn)(cmsContext ContextID, register const cmsUInt16Number In[],
-                                     register cmsUInt16Number Out[],
-                                     register const void* Data);
+typedef void     (* _cmsOPTeval16Fn)(cmsContext ContextID,
+                                     CMSREGISTER const cmsUInt16Number In[],
+                                     CMSREGISTER cmsUInt16Number Out[],
+                                     CMSREGISTER const void* Data);
 
 
 typedef cmsBool  (* _cmsOPToptimizeFn)(cmsContext ContextID, cmsPipeline** Lut,

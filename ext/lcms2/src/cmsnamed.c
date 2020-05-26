@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -541,7 +541,7 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsAllocNamedColorList(cmsContext ContextID, cmsUIn
 
     while (v -> Allocated < n) {
         if (!GrowNamedColorList(ContextID, v)) {
-            _cmsFree(ContextID, (void*) v);
+            cmsFreeNamedColorList(ContextID, v);
             return NULL;
         }
     }
@@ -574,7 +574,11 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsDupNamedColorList(cmsContext ContextID, const cm
 
     // For really large tables we need this
     while (NewNC ->Allocated < v ->Allocated){
-        if (!GrowNamedColorList(ContextID, NewNC)) return NULL;
+        if (!GrowNamedColorList(ContextID, NewNC))
+        {
+            cmsFreeNamedColorList(ContextID, NewNC);
+            return NULL;
+        }
     }
 
     memmove(NewNC ->Prefix, v ->Prefix, sizeof(v ->Prefix));

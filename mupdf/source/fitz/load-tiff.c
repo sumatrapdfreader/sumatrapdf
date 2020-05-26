@@ -253,7 +253,7 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 	if (tiff->imagelength > UINT_MAX / tiff->imagewidth / (tiff->samplesperpixel + 2))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "image too large");
 
-	stride = tiff->imagewidth * (tiff->samplesperpixel + 2);
+	stride = tiff->imagewidth * (tiff->samplesperpixel + 2) * 2;
 
 	samples = Memento_label(fz_malloc(ctx, (size_t)stride * tiff->imagelength), "tiff_samples");
 
@@ -269,25 +269,31 @@ tiff_expand_colormap(fz_context *ctx, struct tiff *tiff)
 				int c = tiff_getcomp(src, x * 2, tiff->bitspersample);
 				int a = tiff_getcomp(src, x * 2 + 1, tiff->bitspersample);
 				*dst++ = tiff->colormap[c + 0] >> 8;
+				*dst++ = tiff->colormap[c + 0];
 				*dst++ = tiff->colormap[c + maxval] >> 8;
+				*dst++ = tiff->colormap[c + maxval];
 				*dst++ = tiff->colormap[c + maxval * 2] >> 8;
-				if (tiff->bitspersample <= 8)
-					*dst++ = a << (8 - tiff->bitspersample);
+				*dst++ = tiff->colormap[c + maxval * 2];
+				if (tiff->bitspersample <= 16)
+					*dst++ = a << (16 - tiff->bitspersample);
 				else
-					*dst++ = a >> (tiff->bitspersample - 8);
+					*dst++ = a >> (tiff->bitspersample - 16);
 			}
 			else
 			{
 				int c = tiff_getcomp(src, x, tiff->bitspersample);
 				*dst++ = tiff->colormap[c + 0] >> 8;
+				*dst++ = tiff->colormap[c + 0];
 				*dst++ = tiff->colormap[c + maxval] >> 8;
+				*dst++ = tiff->colormap[c + maxval];
 				*dst++ = tiff->colormap[c + maxval * 2] >> 8;
+				*dst++ = tiff->colormap[c + maxval * 2];
 			}
 		}
 	}
 
 	tiff->samplesperpixel += 2;
-	tiff->bitspersample = 8;
+	tiff->bitspersample = 16;
 	tiff->stride = stride;
 	fz_free(ctx, tiff->samples);
 	tiff->samples = samples;

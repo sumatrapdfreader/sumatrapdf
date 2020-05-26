@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -341,7 +341,7 @@ Error:
 //     K: Does not change
 
 static
-int InkLimitingSampler(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+int InkLimitingSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     cmsFloat64Number InkLimit = *(cmsFloat64Number *) Cargo;
     cmsFloat64Number SumCMY, SumCMYK, Ratio;
@@ -642,7 +642,7 @@ typedef struct {
 
 
 static
-int bchswSampler(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+int bchswSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     cmsCIELab LabIn, LabOut;
     cmsCIELCh LChIn, LChOut;
@@ -1058,9 +1058,10 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
             goto Error;
     }
 
-    // On the output side too
+    // On the output side too. Note that due to V2/V4 PCS encoding on lab we cannot fix white misalignments
     if ((xform ->core->ExitColorSpace) == cmsSigLabData && (Version < 4.0)) {
 
+        dwFlags |= cmsFLAGS_NOWHITEONWHITEFIXUP;
         if (!cmsPipelineInsertStage(ContextID, LUT, cmsAT_END, _cmsStageAllocLabV4ToV2(ContextID)))
             goto Error;
     }

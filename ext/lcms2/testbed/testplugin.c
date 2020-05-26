@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2020 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -46,7 +46,7 @@ cmsContext DupContext(cmsContext src, void* Data)
 // --------------------------------------------------------------------------------------------------
 
 // Allocation order
-cmsInt32Number CheckAllocContext(void)
+cmsInt32Number CheckAllocContext(cmsContext ContextID)
 {
      cmsContext c1, c2, c3, c4;
 
@@ -78,7 +78,7 @@ cmsInt32Number CheckAllocContext(void)
 }
 
 // Test the very basic context capabilities
-cmsInt32Number CheckSimpleContext(void)
+cmsInt32Number CheckSimpleContext(cmsContext ContextID)
 {
     int a = 1;
     int b = 32;
@@ -140,7 +140,7 @@ cmsInt32Number CheckSimpleContext(void)
 // --------------------------------------------------------------------------------------------------
 
 // This function tests the alarm codes across contexts
-cmsInt32Number CheckAlarmColorsContext(void)
+cmsInt32Number CheckAlarmColorsContext(cmsContext ContextID)
 {
     cmsInt32Number rc = 0;
     const cmsUInt16Number codes[] = {0x0000, 0x1111, 0x2222, 0x3333, 0x4444, 0x5555, 0x6666, 0x7777, 0x8888, 0x9999, 0xaaaa, 0xbbbb, 0xcccc, 0xdddd, 0xeeee, 0xffff};
@@ -178,7 +178,7 @@ cmsInt32Number CheckAlarmColorsContext(void)
 // --------------------------------------------------------------------------------------------------
 
 // Similar to the previous, but for adaptation state
-cmsInt32Number CheckAdaptationStateContext(void)
+cmsInt32Number CheckAdaptationStateContext(cmsContext ContextID)
 {
     cmsInt32Number rc = 0;
     cmsContext c1, c2, c3;
@@ -276,13 +276,13 @@ cmsInterpFunction my_Interpolators_Factory(cmsContext ContextID, cmsUInt32Number
 static
 cmsPluginInterpolation InterpPluginSample = {
 
-    { cmsPluginMagicNumber, 2060, cmsPluginInterpolationSig, NULL },
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginInterpolationSig, NULL },
     my_Interpolators_Factory
 };
 
 
 // This is the check code for 1D interpolation plug-in
-cmsInt32Number CheckInterp1DPlugin(void)
+cmsInt32Number CheckInterp1DPlugin(cmsContext ContextID)
 {
     cmsToneCurve* Sampled1D = NULL;
     cmsContext ctx = NULL;
@@ -345,7 +345,7 @@ Error:
 }
 
 // Checks the 3D interpolation
-cmsInt32Number CheckInterp3DPlugin(void)
+cmsInt32Number CheckInterp3DPlugin(cmsContext ContextID)
 {
 
     cmsPipeline* p;
@@ -512,7 +512,7 @@ static double Rec709Math(cmsContext ContextID, int Type, const double Params[], 
 
 cmsPluginParametricCurves Rec709Plugin = {
 
-    { cmsPluginMagicNumber, 2060, cmsPluginParametricCurveSig, NULL },
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginParametricCurveSig, NULL },
 
     1, {TYPE_709}, {5}, Rec709Math
 
@@ -521,7 +521,7 @@ cmsPluginParametricCurves Rec709Plugin = {
 
 static
 cmsPluginParametricCurves CurvePluginSample = {
-    { cmsPluginMagicNumber, 2060, cmsPluginParametricCurveSig, NULL },
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginParametricCurveSig, NULL },
 
     2,                       // nFunctions
     { TYPE_SIN, TYPE_COS },  // Function Types
@@ -531,7 +531,7 @@ cmsPluginParametricCurves CurvePluginSample = {
 
 static
 cmsPluginParametricCurves CurvePluginSample2 = {
-    { cmsPluginMagicNumber, 2060, cmsPluginParametricCurveSig, NULL },
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginParametricCurveSig, NULL },
 
     1,                       // nFunctions
     { TYPE_TAN},             // Function Types
@@ -542,7 +542,7 @@ cmsPluginParametricCurves CurvePluginSample2 = {
 // --------------------------------------------------------------------------------------------------
 // In this test, the DupContext function will be checked as well
 // --------------------------------------------------------------------------------------------------
-cmsInt32Number CheckParametricCurvePlugin(void)
+cmsInt32Number CheckParametricCurvePlugin(cmsContext ContextID)
 {
     cmsContext ctx = NULL;
     cmsContext cpy = NULL;
@@ -691,7 +691,7 @@ cmsFormatter my_FormatterFactory2(cmsContext ContextID, cmsUInt32Number Type,
 
 static
 cmsPluginFormatters FormattersPluginSample = { {cmsPluginMagicNumber,
-                                2060,
+                                2060-2000,
                                 cmsPluginFormattersSig,
                                 NULL},
                                 my_FormatterFactory };
@@ -700,13 +700,13 @@ cmsPluginFormatters FormattersPluginSample = { {cmsPluginMagicNumber,
 
 static
 cmsPluginFormatters FormattersPluginSample2 = { {cmsPluginMagicNumber,
-                                2060,
+                                2060-2000,
                                 cmsPluginFormattersSig,
                                 NULL},
                                 my_FormatterFactory2 };
 
 
-cmsInt32Number CheckFormattersPlugin(void)
+cmsInt32Number CheckFormattersPlugin(cmsContext ContextID)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
@@ -779,21 +779,22 @@ void Type_int_Free(cmsContext ContextID, struct _cms_typehandler_struct* self,
 
 static cmsPluginTag HiddenTagPluginSample = {
 
-    { cmsPluginMagicNumber, 2060, cmsPluginTagSig, NULL},
+    { cmsPluginMagicNumber, 2060-2000, cmsPluginTagSig, NULL},
     SigInt,  {  1, 1, { SigIntType }, NULL }
 };
 
 static cmsPluginTagType TagTypePluginSample = {
 
-     { cmsPluginMagicNumber, 2060, cmsPluginTagTypeSig,  (cmsPluginBase*) &HiddenTagPluginSample},
+     { cmsPluginMagicNumber, 2060-2000, cmsPluginTagTypeSig,  (cmsPluginBase*) &HiddenTagPluginSample},
      { SigIntType, Type_int_Read, Type_int_Write, Type_int_Dup, Type_int_Free, 0 }
 };
 
 
-cmsInt32Number CheckTagTypePlugin(void)
+cmsInt32Number CheckTagTypePlugin(cmsContext ContextID)
 {
     cmsContext ctx = NULL;
     cmsContext cpy = NULL;
+    cmsContext cpy2 = NULL;
     cmsHPROFILE h = NULL;
     cmsUInt32Number myTag = 1234;
     cmsUInt32Number rc = 0;
@@ -805,20 +806,24 @@ cmsInt32Number CheckTagTypePlugin(void)
     cmsPlugin(ctx, &TagTypePluginSample);
 
     cpy = DupContext(ctx, NULL);
+    cpy2 = DupContext(cpy, NULL);
 
-    h = cmsCreateProfilePlaceholder(cpy);
+    cmsDeleteContext(ctx);
+    cmsDeleteContext(cpy);
+
+    h = cmsCreateProfilePlaceholder(cpy2);
     if (h == NULL) {
         Fail("Create placeholder failed");
         goto Error;
     }
 
 
-    if (!cmsWriteTag(cpy, h, SigInt, &myTag)) {
+    if (!cmsWriteTag(cpy2, h, SigInt, &myTag)) {
         Fail("Plug-in failed");
         goto Error;
     }
 
-    rc = cmsSaveProfileToMem(cpy, h, NULL, &clen);
+    rc = cmsSaveProfileToMem(cpy2, h, NULL, &clen);
     if (!rc) {
         Fail("Fetch mem size failed");
         goto Error;
@@ -832,32 +837,32 @@ cmsInt32Number CheckTagTypePlugin(void)
     }
 
 
-    rc = cmsSaveProfileToMem(cpy, h, data, &clen);
+    rc = cmsSaveProfileToMem(cpy2, h, data, &clen);
     if (!rc) {
         Fail("Save to mem failed");
         goto Error;
     }
 
-    cmsCloseProfile(cpy, h);
+    cmsCloseProfile(cpy2, h);
 
-    cmsSetLogErrorHandler(cpy, NULL);
-    h = cmsOpenProfileFromMem(cpy, data, clen);
+    cmsSetLogErrorHandler(ContextID, NULL);
+    h = cmsOpenProfileFromMem(ContextID, data, clen);
     if (h == NULL) {
         Fail("Open profile failed");
         goto Error;
     }
 
-    ptr = (cmsUInt32Number*) cmsReadTag(cpy, h, SigInt);
+    ptr = (cmsUInt32Number*) cmsReadTag(ContextID, h, SigInt);
     if (ptr != NULL) {
 
         Fail("read tag/context switching failed");
         goto Error;
     }
 
-    cmsCloseProfile(cpy, h);
-    ResetFatalError(cpy);
+    cmsCloseProfile(ContextID, h);
+    ResetFatalError(ContextID);
 
-    h = cmsOpenProfileFromMem(cpy, data, clen);
+    h = cmsOpenProfileFromMem(cpy2, data, clen);
     if (h == NULL) {
         Fail("Open profile from mem failed");
         goto Error;
@@ -866,7 +871,7 @@ cmsInt32Number CheckTagTypePlugin(void)
     // Get rid of data
     free(data); data = NULL;
 
-    ptr = (cmsUInt32Number*) cmsReadTag(cpy, h, SigInt);
+    ptr = (cmsUInt32Number*) cmsReadTag(cpy2, h, SigInt);
     if (ptr == NULL) {
         Fail("Read tag/conext switching failed (2)");
         return 0;
@@ -874,9 +879,8 @@ cmsInt32Number CheckTagTypePlugin(void)
 
     rc = (*ptr == 1234);
 
-    cmsCloseProfile(cpy, h);
-    cmsDeleteContext(ctx);
-    cmsDeleteContext(cpy);
+    cmsCloseProfile(cpy2, h);
+    cmsDeleteContext(cpy2);
 
     return rc;
 
@@ -940,16 +944,17 @@ cmsBool Type_negate_Write(cmsContext ContextID, struct _cms_typehandler_struct* 
 static
 cmsPluginMultiProcessElement MPEPluginSample = {
 
-    {cmsPluginMagicNumber, 2060, cmsPluginMultiProcessElementSig, NULL},
+    {cmsPluginMagicNumber, 2060-2000, cmsPluginMultiProcessElementSig, NULL},
 
     { (cmsTagTypeSignature) SigNegateType, Type_negate_Read, Type_negate_Write, NULL, NULL, 0 }
 };
 
 
-cmsInt32Number CheckMPEPlugin(void)
+cmsInt32Number CheckMPEPlugin(cmsContext ContextID)
 {
     cmsContext ctx = NULL;
     cmsContext cpy = NULL;
+    cmsContext cpy2 = NULL;
     cmsHPROFILE h = NULL;
     cmsUInt32Number myTag = 1234;
     cmsUInt32Number rc = 0;
@@ -962,19 +967,23 @@ cmsInt32Number CheckMPEPlugin(void)
     cmsPlugin(ctx, &MPEPluginSample);
 
     cpy =  DupContext(ctx, NULL);
+    cpy2 = DupContext(cpy, NULL);
 
-    h = cmsCreateProfilePlaceholder(cpy);
+    cmsDeleteContext(ctx);
+    cmsDeleteContext(cpy);
+
+    h = cmsCreateProfilePlaceholder(cpy2);
     if (h == NULL) {
         Fail("Create placeholder failed");
         goto Error;
     }
 
-    pipe = cmsPipelineAlloc(cpy, 3, 3);
-    cmsPipelineInsertStage(cpy, pipe, cmsAT_BEGIN, StageAllocNegate(cpy));
+    pipe = cmsPipelineAlloc(cpy2, 3, 3);
+    cmsPipelineInsertStage(cpy2, pipe, cmsAT_BEGIN, StageAllocNegate(cpy2));
 
 
     In[0] = 0.3f; In[1] = 0.2f; In[2] = 0.9f;
-    cmsPipelineEvalFloat(cpy, In, Out, pipe);
+    cmsPipelineEvalFloat(cpy2, In, Out, pipe);
 
     rc = (IsGoodVal("0", Out[0], 1.0-In[0], 0.001) &&
            IsGoodVal("1", Out[1], 1.0-In[1], 0.001) &&
@@ -985,15 +994,15 @@ cmsInt32Number CheckMPEPlugin(void)
         goto Error;
     }
 
-    if (!cmsWriteTag(cpy, h, cmsSigDToB3Tag, pipe)) {
+    if (!cmsWriteTag(cpy2, h, cmsSigDToB3Tag, pipe)) {
         Fail("Plug-in failed");
         goto Error;
     }
 
     // This cleans the stage as well
-    cmsPipelineFree(cpy, pipe);
+    cmsPipelineFree(cpy2, pipe);
 
-    rc = cmsSaveProfileToMem(cpy, h, NULL, &clen);
+    rc = cmsSaveProfileToMem(cpy2, h, NULL, &clen);
     if (!rc) {
         Fail("Fetch mem size failed");
         goto Error;
@@ -1007,22 +1016,22 @@ cmsInt32Number CheckMPEPlugin(void)
     }
 
 
-    rc = cmsSaveProfileToMem(cpy, h, data, &clen);
+    rc = cmsSaveProfileToMem(cpy2, h, data, &clen);
     if (!rc) {
         Fail("Save to mem failed");
         goto Error;
     }
 
-    cmsCloseProfile(cpy, h);
+    cmsCloseProfile(cpy2, h);
 
-    cmsSetLogErrorHandler(cpy, NULL);
-    h = cmsOpenProfileFromMem(cpy, data, clen);
+    cmsSetLogErrorHandler(ContextID, NULL);
+    h = cmsOpenProfileFromMem(ContextID, data, clen);
     if (h == NULL) {
         Fail("Open profile failed");
         goto Error;
     }
 
-    pipe = (cmsPipeline*) cmsReadTag(cpy, h, cmsSigDToB3Tag);
+    pipe = (cmsPipeline*) cmsReadTag(ContextID, h, cmsSigDToB3Tag);
     if (pipe != NULL) {
 
         // Unsupported stage, should fail
@@ -1030,11 +1039,11 @@ cmsInt32Number CheckMPEPlugin(void)
         goto Error;
     }
 
-    cmsCloseProfile(cpy, h);
+    cmsCloseProfile(ContextID, h);
 
-    ResetFatalError(cpy);
+    ResetFatalError(ContextID);
 
-    h = cmsOpenProfileFromMem(cpy, data, clen);
+    h = cmsOpenProfileFromMem(cpy2, data, clen);
     if (h == NULL) {
         Fail("Open profile from mem failed");
         goto Error;
@@ -1043,7 +1052,7 @@ cmsInt32Number CheckMPEPlugin(void)
     // Get rid of data
     free(data); data = NULL;
 
-    pipe = (cmsPipeline*) cmsReadTag(cpy, h, cmsSigDToB3Tag);
+    pipe = (cmsPipeline*) cmsReadTag(cpy2, h, cmsSigDToB3Tag);
     if (pipe == NULL) {
         Fail("Read tag/conext switching failed (2)");
         return 0;
@@ -1051,22 +1060,20 @@ cmsInt32Number CheckMPEPlugin(void)
 
     // Evaluate for negation
     In[0] = 0.3f; In[1] = 0.2f; In[2] = 0.9f;
-    cmsPipelineEvalFloat(cpy, In, Out, pipe);
+    cmsPipelineEvalFloat(cpy2, In, Out, pipe);
 
      rc = (IsGoodVal("0", Out[0], 1.0-In[0], 0.001) &&
            IsGoodVal("1", Out[1], 1.0-In[1], 0.001) &&
            IsGoodVal("2", Out[2], 1.0-In[2], 0.001));
 
-    cmsCloseProfile(cpy, h);
-    cmsDeleteContext(ctx);
-    cmsDeleteContext(cpy);
+    cmsCloseProfile(cpy2, h);
+    cmsDeleteContext(cpy2);
     return rc;
 
 Error:
 
-    if (h != NULL) cmsCloseProfile(ctx, h);
-    if (ctx != NULL) cmsDeleteContext(ctx);
-    if (cpy != NULL) cmsDeleteContext(cpy);
+    if (h != NULL) cmsCloseProfile(cpy2, h);
+    if (cpy2 != NULL) cmsDeleteContext(cpy2);
     if (data) free(data);
 
     return 0;
@@ -1117,12 +1124,12 @@ cmsBool MyOptimize(cmsContext ContextID, cmsPipeline** Lut,
 
 cmsPluginOptimization OptimizationPluginSample = {
 
-    {cmsPluginMagicNumber, 2060, cmsPluginOptimizationSig, NULL},
+    {cmsPluginMagicNumber, 2060-2000, cmsPluginOptimizationSig, NULL},
     MyOptimize
 };
 
 
-cmsInt32Number CheckOptimizationPlugin(void)
+cmsInt32Number CheckOptimizationPlugin(cmsContext ContextID)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
@@ -1205,12 +1212,12 @@ cmsPipeline*  MyNewIntent(cmsContext      ContextID,
 
 static cmsPluginRenderingIntent IntentPluginSample = {
 
-    {cmsPluginMagicNumber, 2060, cmsPluginRenderingIntentSig, NULL},
+    {cmsPluginMagicNumber, 2060-2000, cmsPluginRenderingIntentSig, NULL},
 
     INTENT_DECEPTIVE, MyNewIntent,  "bypass gray to gray rendering intent"
 };
 
-cmsInt32Number CheckIntentPlugin(void)
+cmsInt32Number CheckIntentPlugin(cmsContext ContextID)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
@@ -1295,12 +1302,12 @@ cmsBool  TransformFactory(cmsContext ContextID, _cmsTransformFn* xformPtr,
 // The Plug-in entry point
 static cmsPluginTransform FullTransformPluginSample = {
 
-     { cmsPluginMagicNumber, 2060, cmsPluginTransformSig, NULL},
+     { cmsPluginMagicNumber, 2060-2000, cmsPluginTransformSig, NULL},
 
      TransformFactory
 };
 
-cmsInt32Number CheckTransformPlugin(void)
+cmsInt32Number CheckTransformPlugin(cmsContext ContextID)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
@@ -1390,7 +1397,7 @@ static cmsPluginMutex MutexPluginSample = {
 };
 
 
-cmsInt32Number CheckMutexPlugin(void)
+cmsInt32Number CheckMutexPlugin(cmsContext ContextID)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
@@ -1424,3 +1431,75 @@ cmsInt32Number CheckMutexPlugin(void)
 
     return 1;
 }
+
+
+cmsInt32Number CheckMethodPackDoublesFromFloat(cmsContext ContextID)
+{
+
+    cmsContext ctx = WatchDogContext(NULL);
+
+    cmsHTRANSFORM xform;
+    cmsHTRANSFORM l_pFakeProfileLAB;
+
+    cmsFloat64Number l_D_OutputColorArrayBlack[8];
+    cmsFloat64Number l_D_OutputColorArrayBlue[8];
+
+    cmsCIELab LabInBlack;
+    cmsCIELab LabInBlue;
+
+    cmsUInt16Number Lab_UI16_Black[3];
+    cmsUInt16Number Lab_UI16_Blue[3];
+
+    cmsHPROFILE OutputCMYKProfile;
+    cmsUInt32Number l_UI32_OutputFormat;
+
+
+    cmsPlugin(ctx, &FullTransformPluginSample);
+
+
+    l_pFakeProfileLAB = cmsCreateLab2Profile(ctx, NULL);
+
+    if (l_pFakeProfileLAB == NULL)
+        return 0;
+
+    OutputCMYKProfile = cmsOpenProfileFromFile(ctx, "TestCLT.icc", "r");
+
+    if (OutputCMYKProfile == NULL)
+        return 0;
+
+    l_UI32_OutputFormat = 0;
+    l_UI32_OutputFormat |= COLORSPACE_SH(PT_CMYK);
+    l_UI32_OutputFormat |= PLANAR_SH(1);
+    l_UI32_OutputFormat |= CHANNELS_SH(4);
+    l_UI32_OutputFormat |= BYTES_SH(0);
+    l_UI32_OutputFormat |= FLOAT_SH(1);
+
+
+    xform = cmsCreateTransform(ctx, l_pFakeProfileLAB, TYPE_Lab_DBL, OutputCMYKProfile, l_UI32_OutputFormat, INTENT_PERCEPTUAL, 0);
+    cmsCloseProfile(ctx, OutputCMYKProfile);
+    cmsCloseProfile(ctx, l_pFakeProfileLAB);
+
+    Lab_UI16_Black[0] = 0;
+    Lab_UI16_Black[1] = 32768;
+    Lab_UI16_Black[2] = 32768;
+
+    Lab_UI16_Blue[0] = 0;
+    Lab_UI16_Blue[1] = 8192;
+    Lab_UI16_Blue[2] = 8192;
+
+    cmsLabEncoded2Float(ctx, &LabInBlack, Lab_UI16_Black);
+    cmsLabEncoded2Float(ctx, &LabInBlue, Lab_UI16_Blue);
+
+    memset(l_D_OutputColorArrayBlack, 0, sizeof(l_D_OutputColorArrayBlack));
+    memset(l_D_OutputColorArrayBlue, 0, sizeof(l_D_OutputColorArrayBlue));
+
+    cmsDoTransform(ctx, xform, &LabInBlack, l_D_OutputColorArrayBlack, 1);
+    cmsDoTransform(ctx, xform, &LabInBlue, l_D_OutputColorArrayBlue, 1);
+
+
+    cmsDeleteTransform(ctx, xform);
+    cmsDeleteContext(ctx);
+
+    return 1;
+}
+

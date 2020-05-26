@@ -11,9 +11,9 @@ AM_CPPFLAGS =  -I$(top_builddir)/include -I$(top_srcdir)/include \
 
 bin_PROGRAMS = wtpt 
 
-wtpt_LDADD = $(top_builddir)/src/liblcms2.la 
+wtpt_LDADD = $(top_builddir)/src/liblcms2mt.la 
 wtpt_LDFLAGS = @LDFLAGS@
 wtpt_SOURCES = wtpt.c ../common/xgetopt.c ../common/vprf.c ../common/utils.h
-wtpt_MANS = wtpt.1
+man_MANS = wtpt.1
 
 EXTRA_DIST = $(man_MANS) roundtrip.c mktiff8.c mkgrayer.c mkcmy.c itufax.c

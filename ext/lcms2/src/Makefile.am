@@ -10,7 +10,7 @@ AUTOMAKE_OPTIONS = 1.7 foreign
 includedir = ${prefix}/include
 
 # Shared libraries built in this directory
-lib_LTLIBRARIES = liblcms2.la
+lib_LTLIBRARIES = liblcms2mt.la
 
 LIBRARY_CURRENT    = @LIBRARY_CURRENT@
 LIBRARY_REVISION   = @LIBRARY_REVISION@
@@ -18,12 +18,12 @@ LIBRARY_AGE        = @LIBRARY_AGE@
 
 AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 
-liblcms2_la_LDFLAGS = -no-undefined \
+liblcms2mt_la_LDFLAGS = -no-undefined \
   -version-info $(LIBRARY_CURRENT):$(LIBRARY_REVISION):$(LIBRARY_AGE)
 
-liblcms2_la_LIBADD = $(LCMS_LIB_DEPLIBS)
+liblcms2mt_la_LIBADD = $(LCMS_LIB_DEPLIBS)
 
-liblcms2_la_SOURCES = \
+liblcms2mt_la_SOURCES = \
   cmscnvrt.c cmserr.c cmsgamma.c cmsgmt.c cmsintrp.c cmsio0.c cmsio1.c cmslut.c \
   cmsplugin.c cmssm.c cmsmd5.c cmsmtrx.c cmspack.c cmspcs.c cmswtpnt.c cmsxform.c \
   cmssamp.c cmsnamed.c cmscam02.c cmsvirt.c cmstypes.c cmscgats.c cmsps2.c cmsopt.c \

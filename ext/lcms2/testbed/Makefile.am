@@ -14,7 +14,7 @@ check_PROGRAMS = testcms
 # The testsuite binary is statically linked. This is necessary as it uses some
 # of the internal functions that are not necessarily exported by the shared
 # library.
-testcms_LDADD = $(top_builddir)/src/liblcms2.la 
+testcms_LDADD = $(top_builddir)/src/liblcms2mt.la 
 testcms_LDFLAGS = -static @LDFLAGS@
 testcms_SOURCES = testcms2.c testplugin.c zoo_icc.c testcms2.h
 

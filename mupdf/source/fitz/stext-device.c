@@ -219,7 +219,7 @@ add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_m
 	return ch;
 }
 
-void
+static void
 remove_last_char(fz_context *ctx, fz_stext_line *line)
 {
 	if (line && line->first_char)

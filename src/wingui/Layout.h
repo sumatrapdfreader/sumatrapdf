@@ -59,7 +59,7 @@ struct ILayout {
     Kind kind = nullptr;
     // allows easy way to hide / show elements
     // without rebuilding the whole layout
-    bool isVisible = true;
+    Visibility visibility = Visibility::Visible;
     // for easy debugging, remember last bounds
     Rect lastBounds{};
 
@@ -71,7 +71,7 @@ struct ILayout {
     virtual int MinIntrinsicWidth(int height) = 0;
     virtual void SetBounds(Rect) = 0;
 
-    void SetIsVisible(bool);
+    void SetVisibility(Visibility);
 };
 
 bool IsLayoutOfKind(ILayout*, Kind);
@@ -186,7 +186,6 @@ struct VBox : public ILayout {
     boxElementInfo& AddChild(ILayout* child);
     boxElementInfo& AddChild(ILayout* child, int flex);
     int ChildrenCount();
-    int VisibleChildrenCount();
 };
 
 // hbox.go

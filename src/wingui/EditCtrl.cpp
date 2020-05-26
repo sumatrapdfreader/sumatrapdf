@@ -182,6 +182,9 @@ Size EditCtrl::GetIdealSize() {
     // for multi-line text, this measures multiple line.
     // TODO: maybe figure out better protocol
     int dy = std::min(s1.dy, s2.dy);
+    if (dy == 0) {
+        dy = std::max(s1.dy, s2.dy);
+    }
     dy = dy * idealSizeLines;
     // dbglogf("EditCtrl::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
 

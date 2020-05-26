@@ -16,7 +16,7 @@ else
 bin_PROGRAMS =
 endif
 
-tificc_LDADD = $(top_builddir)/src/liblcms2.la @TIFFICC_DEPLIBS@
+tificc_LDADD = $(top_builddir)/src/liblcms2mt.la @TIFFICC_DEPLIBS@
 tificc_LDFLAGS = @LDFLAGS@
 tificc_SOURCES = tificc.c ../common/xgetopt.c ../common/vprf.c ../common/utils.h
 man_MANS = tificc.1

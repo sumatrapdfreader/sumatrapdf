@@ -6,48 +6,31 @@ Annotations:
  - display opacity
  - display count of quad points
  - display border
- - allow changing color
  - don't allow editing of widget annotations (like mupdf-gl)
  - when selecting annotation in list box, go to its page
  - allow moving some annotations (TEXT)
  - implement delete
+ - position to the right of tab->win->hwndFrame
  - change our text higlight to match PDF i.e. use quad points
  - add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
  - implement "Delete annotation"
- - size EditAnnotationsWindow to be the same as main window and positioned intelligently to the left
  - a way to save PDF as a new file
  - add label for showing notification that saved or failed to save. Notification should self-dismiss
    after few seconds
  - display more annotation in the list if the window is larger
+ - allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
+   a dialog box for setting a color. Remember the custom colors in settings for future use.
  - UI ideas: https://getcleanshot.com/
 
- - [X] implement "Save PDF..."
- - [X] finish MakeAnnotationPdf
- - [X] finish EnginePdf::GetAnnotations
- - [X] allow changing icon
- - [X] size the window to ensure all elements fit (after LayoutToSize, resize if too small)
- - [X] fix up ShowAnnotationsIcon
- - [X] fix up ShowAnnotationsColor
- - [X] fix up ShowAnnotationsPopup
- - [X] display color
- - [X] refactor Annotation and split into AnnotationSmx and AnnotationPdf
- - [X] refactor AnnotationType
- - [X] display icon
- - [X] display "popup" info (obj = pdf_dict_get(ctx, selected_annot->obj, PDF_NAME(Popup));)
- - [X] display contents
- - [X] display date
- - [X] display rect info in EditAnnotationsWindow
- - [X] make EditAnnotationsWindow wider by default
- - [X] display author info in EditAnnotationsWindow
  - maybe: display flags
+ - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
 
 ------
 
 Layout:
  - maybe: make WindowBase implement ILayout (i.e. fold WindowBaseLayout)
    this would simplify the code to build layouts
- - [X] add layout debugging - print out bounds during layout and during SetBounds()
  - for visibility of widget, implement sth. like CSS visibility:
    * visible : shown
    * hidden : not shown but takes space for the purpose of layout
@@ -76,13 +59,20 @@ ProgramFiles directory (maybe would fix https://github.com/sumatrapdfreader/suma
 
 ------
 
+Fixes:
+- fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state from history)
+- fix memleaks on reading .vbkm file
+- tweak PositionCloseTo() to run after creation and use actual window position
+
+------
+
 possible refactorings:
 - rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()
 - split LoadPage() into LoadPage() and LoadPagePartial()
 returning Rect
 - replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
-- [X] remove DirectDraw test and don't link with d2d
+- add arm build (based on https://github.com/ntw-au/sumatrapdf)
 - convert Add Bookmark dialog to new widget / layout system
 - convert hwndTocBox to Window
 - move WindowInfo::tocLoaded into TabInfo

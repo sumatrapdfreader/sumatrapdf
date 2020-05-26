@@ -31,8 +31,8 @@
 		546B295E10AC5E4A0054D33A /* cmsvirt.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294610AC5E4A0054D33A /* cmsvirt.c */; };
 		546B295F10AC5E4A0054D33A /* cmswtpnt.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294710AC5E4A0054D33A /* cmswtpnt.c */; };
 		546B296010AC5E4A0054D33A /* cmsxform.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294810AC5E4A0054D33A /* cmsxform.c */; };
-		546B296310AC5E600054D33A /* lcms2mt.h in Headers */ = {isa = PBXBuildFile; fileRef = 546B296110AC5E600054D33A /* lcms2mt.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		546B296410AC5E600054D33A /* lcms2mt_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 546B296210AC5E600054D33A /* lcms2mt_plugin.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		546B296310AC5E600054D33A /* lcms2.h in Headers */ = {isa = PBXBuildFile; fileRef = 546B296110AC5E600054D33A /* lcms2.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		546B296410AC5E600054D33A /* lcms2_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 546B296210AC5E600054D33A /* lcms2_plugin.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		546B29AE10AC68410054D33A /* testcms2.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B29AD10AC68410054D33A /* testcms2.c */; };
 		54DBD06215A202BB00180017 /* cmshalf.c in Sources */ = {isa = PBXBuildFile; fileRef = 54DBD06015A202B200180017 /* cmshalf.c */; };
 		54E6DC7E18AE052800445185 /* testplugin.c in Sources */ = {isa = PBXBuildFile; fileRef = 54E6DC7D18AE052800445185 /* testplugin.c */; };
@@ -119,8 +119,8 @@
 		546B294610AC5E4A0054D33A /* cmsvirt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsvirt.c; path = ../../../src/cmsvirt.c; sourceTree = SOURCE_ROOT; };
 		546B294710AC5E4A0054D33A /* cmswtpnt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmswtpnt.c; path = ../../../src/cmswtpnt.c; sourceTree = SOURCE_ROOT; };
 		546B294810AC5E4A0054D33A /* cmsxform.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsxform.c; path = ../../../src/cmsxform.c; sourceTree = SOURCE_ROOT; };
-		546B296110AC5E600054D33A /* lcms2mt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lcms2mt.h; path = ../../../include/lcms2mt.h; sourceTree = SOURCE_ROOT; };
-		546B296210AC5E600054D33A /* lcms2mt_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lcms2mt_plugin.h; path = ../../../include/lcms2mt_plugin.h; sourceTree = SOURCE_ROOT; };
+		546B296110AC5E600054D33A /* lcms2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lcms2.h; path = ../../../include/lcms2.h; sourceTree = SOURCE_ROOT; };
+		546B296210AC5E600054D33A /* lcms2_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lcms2_plugin.h; path = ../../../include/lcms2_plugin.h; sourceTree = SOURCE_ROOT; };
 		546B29A310AC677E0054D33A /* testbed */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testbed; sourceTree = BUILT_PRODUCTS_DIR; };
 		546B29AC10AC682F0054D33A /* lcms2_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lcms2_internal.h; path = ../../../src/lcms2_internal.h; sourceTree = SOURCE_ROOT; };
 		546B29AD10AC68410054D33A /* testcms2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testcms2.c; path = ../../../testbed/testcms2.c; sourceTree = SOURCE_ROOT; };
@@ -213,8 +213,8 @@
 				CEBB92E31BF8EF2700B79324 /* cmsalpha.c */,
 				54DBD06015A202B200180017 /* cmshalf.c */,
 				546B29AC10AC682F0054D33A /* lcms2_internal.h */,
-				546B296110AC5E600054D33A /* lcms2mt.h */,
-				546B296210AC5E600054D33A /* lcms2mt_plugin.h */,
+				546B296110AC5E600054D33A /* lcms2.h */,
+				546B296210AC5E600054D33A /* lcms2_plugin.h */,
 				546B293110AC5E4A0054D33A /* cmscam02.c */,
 				546B293210AC5E4A0054D33A /* cmscgats.c */,
 				546B293310AC5E4A0054D33A /* cmscnvrt.c */,
@@ -252,8 +252,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D07F2BE0486CC7A007CD1D0 /* LittleCMS_Prefix.pch in Headers */,
-				546B296310AC5E600054D33A /* lcms2mt.h in Headers */,
-				546B296410AC5E600054D33A /* lcms2mt_plugin.h in Headers */,
+				546B296310AC5E600054D33A /* lcms2.h in Headers */,
+				546B296410AC5E600054D33A /* lcms2_plugin.h in Headers */,
 				CE790F6B1A31C2400083D722 /* lcms2_internal.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -131,6 +131,7 @@ struct WindowBase {
 
     ILayout* layout = nullptr;
     // data that can be set before calling Create()
+    Visibility visibility = Visibility::Visible;
 
     // either a custom class that we registered or
     // a win32 control class. Assumed static so not freed
@@ -200,8 +201,11 @@ struct WindowBase {
     void SetIsEnabled(bool);
     bool IsEnabled();
 
+    void SetVisibility(Visibility);
+    Visibility GetVisiblility() const;
+
     void SetIsVisible(bool);
-    bool IsVisible();
+    bool IsVisible() const;
 
     void SuspendRedraw();
     void ResumeRedraw();

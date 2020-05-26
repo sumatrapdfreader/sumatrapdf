@@ -223,18 +223,23 @@ float GetLightness(COLORREF c) {
 }
 
 #if OS_WIN
-BYTE GetRed(COLORREF rgb) {
+u8 GetRed(COLORREF rgb) {
     rgb = rgb & 0xff;
     return (u8)rgb;
 }
 
-BYTE GetGreen(COLORREF rgb) {
+u8 GetGreen(COLORREF rgb) {
     rgb = (rgb >> 8) & 0xff;
     return (u8)rgb;
 }
 
-BYTE GetBlue(COLORREF rgb) {
+u8 GetBlue(COLORREF rgb) {
     rgb = (rgb >> 16) & 0xff;
+    return (u8)rgb;
+}
+
+u8 GetAlpha(COLORREF rgb) {
+    rgb = (rgb >> 24) & 0xff;
     return (u8)rgb;
 }
 #endif
