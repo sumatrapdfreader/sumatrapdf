@@ -185,6 +185,7 @@ func main() {
 
 	if flgTriggerPreRel {
 		triggerPreRelBuild()
+		triggerRaMicroPreRelBuild()
 		return
 	}
 
