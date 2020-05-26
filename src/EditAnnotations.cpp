@@ -209,8 +209,6 @@ struct EditAnnotationsWindow {
     ButtonCtrl* buttonDelete = nullptr;
 
     ButtonCtrl* buttonSavePDF = nullptr;
-    // TODO: not sure if want buttonCancel
-    ButtonCtrl* buttonCancel = nullptr;
 
     ListBoxModel* lbModel = nullptr;
 
@@ -223,8 +221,6 @@ struct EditAnnotationsWindow {
     void CreateMainLayout();
     void CloseHandler(WindowCloseEvent* ev);
     void SizeHandler(SizeEvent* ev);
-    void ButtonCancelHandler();
-    void ButtonDeleteHandler();
     void CloseWindow();
     void ListBoxSelectionChanged(ListBoxSelectionChangedEvent* ev);
     void DropDownAddSelectionChanged(DropDownSelectionChangedEvent* ev);
@@ -281,12 +277,8 @@ void EditAnnotationsWindow::CloseHandler(WindowCloseEvent* ev) {
     CloseWindow();
 }
 
-void EditAnnotationsWindow::ButtonDeleteHandler() {
-    MessageBoxNYI(mainWindow->hwnd);
-}
-
-void EditAnnotationsWindow::ButtonCancelHandler() {
-    CloseWindow();
+static void ButtonDeleteHandler(EditAnnotationsWindow* w) {
+    MessageBoxNYI(w->mainWindow->hwnd);
 }
 
 static void ButtonSavePDFHandler(EditAnnotationsWindow* w) {
@@ -648,7 +640,7 @@ void EditAnnotationsWindow::CreateMainLayout() {
     {
         auto w = new ButtonCtrl(parent);
         w->SetText("Delete annotation");
-        w->onClicked = std::bind(&EditAnnotationsWindow::ButtonDeleteHandler, this);
+        w->onClicked = std::bind(&ButtonDeleteHandler, this);
         bool ok = w->Create();
         w->SetIsVisible(false);
         CrashIf(!ok);
@@ -671,17 +663,6 @@ void EditAnnotationsWindow::CreateMainLayout() {
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enable if there are changes
         buttonSavePDF = w;
-        l = NewButtonLayout(w);
-        vbox->AddChild(l);
-    }
-
-    {
-        auto w = new ButtonCtrl(parent);
-        w->SetText("Close");
-        w->onClicked = std::bind(&EditAnnotationsWindow::ButtonCancelHandler, this);
-        bool ok = w->Create();
-        CrashIf(!ok);
-        buttonCancel = w;
         l = NewButtonLayout(w);
         vbox->AddChild(l);
     }

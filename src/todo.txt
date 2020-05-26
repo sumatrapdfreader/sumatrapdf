@@ -3,10 +3,10 @@ Layout:
    Remove hacks in VBox() that guess padding and use explicit Insets
 
 Annotations:
+ - allow changing color
  - display opacity
  - display count of quad points
  - display border
- - allow changing color
  - don't allow editing of widget annotations (like mupdf-gl)
  - when selecting annotation in list box, go to its page
  - allow moving some annotations (TEXT)
@@ -22,6 +22,7 @@ Annotations:
  - display more annotation in the list if the window is larger
  - UI ideas: https://getcleanshot.com/
 
+ - [X] remove redundant "Close" button
  - [X] implement "Save PDF..."
  - [X] finish MakeAnnotationPdf
  - [X] finish EnginePdf::GetAnnotations
@@ -41,6 +42,7 @@ Annotations:
  - [X] make EditAnnotationsWindow wider by default
  - [X] display author info in EditAnnotationsWindow
  - maybe: display flags
+ - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
 
 ------
 
@@ -90,6 +92,7 @@ returning Rect
 - replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
 - [X] remove DirectDraw test and don't link with d2d
+- add arm build (based on https://github.com/ntw-au/sumatrapdf)
 - convert Add Bookmark dialog to new widget / layout system
 - convert hwndTocBox to Window
 - move WindowInfo::tocLoaded into TabInfo
