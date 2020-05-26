@@ -57,26 +57,38 @@ const char *gStampIcons = "Approved\0AsIs\0Confidential\0Departmental\0Draft\0Ex
 
 const char* gColors = "None\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
 
-static unsigned int gColorsValues[] = {
-    0x00000000, /* transparent */
-    0xff00ffff, /* aqua */
+
+// COLORREF is abgr format
+static COLORREF gColorsValues[] = {
+    //0x00000000, /* transparent */
+    ColorUnset, /* transparent */
+    //0xff00ffff, /* aqua */
+    0xffffff00, /* aqua */
     0xff000000, /* black */
-    0xff0000ff, /* blue */
+    //0xff0000ff, /* blue */
+    0xffff0000, /* blue */
+    //0xffff00ff, /* fuchsia */
     0xffff00ff, /* fuchsia */
     0xff808080, /* gray */
     0xff008000, /* green */
     0xff00ff00, /* lime */
-    0xff800000, /* maroon */
-    0xff000080, /* navy */
-    0xff808000, /* olive */
-    0xffffa500, /* orange */
+    //0xff800000, /* maroon */
+    0xff000080, /* maroon */
+    //0xff000080, /* navy */
+    0xff800000, /* navy */
+    //0xff808000, /* olive */
+    0xff008080, /* olive */
+    //0xffffa500, /* orange */
+    0xff00a5ff, /* orange */
     0xff800080, /* purple */
-    0xffff0000, /* red */
+    //0xffff0000, /* red */
+    0xff0000ff, /* red */
     0xffc0c0c0, /* silver */
-    0xff008080, /* teal */
+    //0xff008080, /* teal */
+    0xff808000, /* teal */
     0xffffffff, /* white */
-    0xffffff00, /* yellow */
-    0, // match nullptr
+    //0xffffff00, /* yellow */
+    0xff00ffff, /* yellow */
 };
 
 AnnotationType gAnnotsWithBorder[] = {
@@ -104,15 +116,9 @@ AnnotationType gAnnotsWithColor[] = {
 extern void RerenderForWindowInfo(WindowInfo*);
 
 const char* GetKnownColorName(COLORREF c) {
-    if (c == ColorUnset) {
-        return gColors;
-   }
-    // convert COLORREF to a format in gColorsValues
-    u8 r, g, b;
-    UnpackRgb(c, r, g, b);
-    COLORREF c2 = MkRgba(b, g, r, 0xff);
-    for (int i = 1; gColors[i]; i++) {
-        if (c2 == gColorsValues[i]) {
+    int n = (int)dimof(gColorsValues);
+    for (int i = 1; i < n; i++) {
+        if (c == gColorsValues[i]) {
             const char* s = seqstrings::IdxToStr(gColors, i);
             return s;
         }
@@ -421,9 +427,18 @@ static void DropDownIconSelectionChanged(EditAnnotationsWindow* w, DropDownSelec
 }
 
 static void DropDownColorSelectionChanged(EditAnnotationsWindow* w, DropDownSelectionChangedEvent* ev) {
-    UNUSED(ev);
-    // TODO: implement me
-    MessageBoxNYI(w->mainWindow->hwnd);
+    // get known color name
+    int nColors = (int)dimof(gColorsValues);
+    COLORREF col = ColorUnset;
+    if (ev->idx < nColors) {
+        col = gColorsValues[ev->idx];
+    } else {
+        // TODO: parse color from hex
+    }
+    // TODO: also opacity?
+    w->annot->SetColor(col);
+    EnableSaveIfAnnotationsChanged(w);
+    RerenderForWindowInfo(w->tab->win);
 }
 
 static void WndSizeHandler(EditAnnotationsWindow* w, SizeEvent* ev) {
@@ -581,7 +596,8 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
 
     {
         auto w = new ButtonCtrl(parent);
-        w->SetText("Save PDF...");
+        // TODO: maybe show file name e.g. "Save changes to foo.pdf"
+        w->SetText("Save changes to PDF");
         w->onClicked = std::bind(&ButtonSavePDFHandler, aw);
         bool ok = w->Create();
         CrashIf(!ok);
@@ -618,6 +634,7 @@ static void RebuildAnnotations(EditAnnotationsWindow* w) {
 
 static bool Create(EditAnnotationsWindow* aw) {
     auto w = new Window();
+    w->isDialog = true;
     HMODULE h = GetModuleHandleW(nullptr);
     LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
     w->hIcon = LoadIconW(h, iconName);

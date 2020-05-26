@@ -209,6 +209,38 @@ COLORREF Annotation::Color() {
     return res;
 }
 
+// return true if color changed
+bool Annotation::SetColor(COLORREF c) {
+    bool didChange;
+    if (smx) {
+        didChange = smx->color != c;
+        smx->color = c;
+        if (didChange) {
+            isChanged = true;
+        }
+        return didChange;
+    }
+    float color[4];
+    int n;
+    pdf_annot_color(pdf->ctx, pdf->annot, &n, color);
+    float newColor[4];
+    int newN = ToPdfRgba(c, newColor);
+    didChange = (n != newN);
+    if (!didChange) {
+        for (int i = 0; i < n; i++) {
+            if (color[i] != newColor[i]) {
+                didChange = true;
+            }
+        }
+    }
+    pdf_set_annot_color(pdf->ctx, pdf->annot, newN, newColor);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
+    if (didChange) {
+        isChanged = true;
+    }
+    return didChange;
+}
+
 // ColorUnset if no color
 COLORREF Annotation::InteriorColor() {
     if (smx) {

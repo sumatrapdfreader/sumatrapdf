@@ -3,7 +3,6 @@ Layout:
    Remove hacks in VBox() that guess padding and use explicit Insets
 
 Annotations:
- - allow changing color
  - display opacity
  - display count of quad points
  - display border
@@ -20,8 +19,11 @@ Annotations:
  - add label for showing notification that saved or failed to save. Notification should self-dismiss
    after few seconds
  - display more annotation in the list if the window is larger
+ - allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
+   a dialog box for setting a color. Remember the custom colors in settings for future use.
  - UI ideas: https://getcleanshot.com/
 
+ - [X] allow changing color
  - [X] remove redundant "Close" button
  - [X] implement "Save PDF..."
  - [X] finish MakeAnnotationPdf
