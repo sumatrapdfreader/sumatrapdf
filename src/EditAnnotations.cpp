@@ -111,14 +111,15 @@ AnnotationType gAnnotsWithColor[] = {
 };
 // clang-format on
 
-
 // in SumatraPDF.cpp
 extern void RerenderForWindowInfo(WindowInfo*);
 
 const char* GetKnownColorName(COLORREF c) {
+    // TODO: handle this better?
+    COLORREF c2 = ColorSetAlpha(c, 0xff);
     int n = (int)dimof(gColorsValues);
     for (int i = 1; i < n; i++) {
-        if (c == gColorsValues[i]) {
+        if (c2 == gColorsValues[i]) {
             const char* s = seqstrings::IdxToStr(gColors, i);
             return s;
         }
@@ -202,7 +203,7 @@ static void CloseWindow(EditAnnotationsWindow* w) {
     delete w;
 }
 
-static void WndCloseHandler(EditAnnotationsWindow*w, WindowCloseEvent* ev) {
+static void WndCloseHandler(EditAnnotationsWindow* w, WindowCloseEvent* ev) {
     // CrashIf(w != ev->w);
     CloseWindow(w);
 }
@@ -368,7 +369,7 @@ static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
     w->dropDownColor->SetCurrentSelection(idx);
 }
 
-static void ListBoxSelectionChanged(EditAnnotationsWindow* w,ListBoxSelectionChangedEvent* ev) {
+static void ListBoxSelectionChanged(EditAnnotationsWindow* w, ListBoxSelectionChangedEvent* ev) {
     // TODO: finish me
     int itemNo = ev->idx;
     w->annot = nullptr;
@@ -632,42 +633,6 @@ static void RebuildAnnotations(EditAnnotationsWindow* w) {
     w->lbModel = model;
 }
 
-static bool Create(EditAnnotationsWindow* aw) {
-    auto w = new Window();
-    w->isDialog = true;
-    HMODULE h = GetModuleHandleW(nullptr);
-    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
-    w->hIcon = LoadIconW(h, iconName);
-
-    // w->isDialog = true;
-    w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
-    w->SetTitle("Annotations");
-    // int dx = DpiScale(nullptr, 480);
-    // int dy = DpiScale(nullptr, 640);
-    // w->initialSize = {dx, dy};
-    // PositionCloseTo(w, args->hwndRelatedTo);
-    // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
-    // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
-    // w->initialSize = {winSize.cx, winSize.cy};
-    bool ok = w->Create();
-    CrashIf(!ok);
-
-    aw->mainWindow = w;
-
-    w->onClose = std::bind(WndCloseHandler, aw, _1);
-    w->onSize = std::bind(WndSizeHandler, aw, _1);
-
-    CreateMainLayout(aw);
-    RebuildAnnotations(aw);
-    LayoutAndSizeToContent(aw->mainLayout, 520, 720, w->hwnd);
-
-    // important to call this after hooking up onSize to ensure
-    // first layout is triggered
-    w->SetIsVisible(true);
-
-    return true;
-}
-
 void StartEditAnnotations(TabInfo* tab) {
     if (tab->editAnnotsWindow) {
         HWND hwnd = tab->editAnnotsWindow->mainWindow->hwnd;
@@ -696,6 +661,53 @@ void StartEditAnnotations(TabInfo* tab) {
     win->tab = tab;
     tab->editAnnotsWindow = win;
     win->annotations = annots;
-    bool ok = Create(win);
+
+    auto w = new Window();
+    w->isDialog = true;
+    HMODULE h = GetModuleHandleW(nullptr);
+    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
+    w->hIcon = LoadIconW(h, iconName);
+
+    // w->isDialog = true;
+    w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    w->SetTitle("Annotations");
+    // int dx = DpiScale(nullptr, 480);
+    // int dy = DpiScale(nullptr, 640);
+    // w->initialSize = {dx, dy};
+    // PositionCloseTo(w, args->hwndRelatedTo);
+    // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
+    // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
+    // w->initialSize = {winSize.cx, winSize.cy};
+    bool ok = w->Create();
+    CrashIf(!ok);
+
+    win->mainWindow = w;
+
+    w->onClose = std::bind(WndCloseHandler, win, _1);
+    w->onSize = std::bind(WndSizeHandler, win, _1);
+
+    CreateMainLayout(win);
+    RebuildAnnotations(win);
+
+    // size our editor window to be the same height as main window
+    int minDy = 720;
+    // TODO: this is slightly less that wanted
+    HWND hwnd = tab->win->hwndCanvas;
+    auto rc = ClientRect(hwnd);
+    if (rc.Dy() > 0) {
+        minDy = rc.Dy();
+        // if it's a tall window, up the number of items in list box
+        // from 5 to 14
+        if (minDy > 1024) {
+            win->listBox->idealSizeLines = 14;
+        }
+    }
+    LayoutAndSizeToContent(win->mainLayout, 520, minDy, w->hwnd);
+    // TODO: position to the right of tab->win->hwndFrame
+
+    // important to call this after hooking up onSize to ensure
+    // first layout is triggered
+    w->SetIsVisible(true);
+
     CrashIf(!ok);
 }

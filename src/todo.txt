@@ -10,11 +10,11 @@ Annotations:
  - when selecting annotation in list box, go to its page
  - allow moving some annotations (TEXT)
  - implement delete
+ - position to the right of tab->win->hwndFrame
  - change our text higlight to match PDF i.e. use quad points
  - add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
  - implement "Delete annotation"
- - size EditAnnotationsWindow to be the same as main window and positioned intelligently to the left
  - a way to save PDF as a new file
  - add label for showing notification that saved or failed to save. Notification should self-dismiss
    after few seconds
@@ -23,6 +23,7 @@ Annotations:
    a dialog box for setting a color. Remember the custom colors in settings for future use.
  - UI ideas: https://getcleanshot.com/
 
+ - [X] size EditAnnotationsWindow to be the same as main window
  - [X] allow changing color
  - [X] remove redundant "Close" button
  - [X] implement "Save PDF..."

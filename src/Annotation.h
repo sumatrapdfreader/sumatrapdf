@@ -61,7 +61,7 @@ struct Annotation {
     int PageNo() const;
     RectD Rect() const;
 
-    COLORREF Color();         // ColorUnset if no color
+    COLORREF Color(); // ColorUnset if no color
     bool SetColor(COLORREF);
 
     COLORREF InteriorColor(); // ColorUnset if no color
