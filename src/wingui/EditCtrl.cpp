@@ -17,7 +17,7 @@
 
 // TODO:
 // - expose EN_UPDATE
-// (http://msdn.microsoft.com/en-us/library/windows/desktop/bb761687(v=vs.85).aspx)
+// https://docs.microsoft.com/en-us/windows/win32/controls/en-update
 // - add border and possibly other decorations by handling WM_NCCALCSIZE, WM_NCPAINT and
 // WM_NCHITTEST
 //   etc., http://www.catch22.net/tuts/insert-buttons-edit-control

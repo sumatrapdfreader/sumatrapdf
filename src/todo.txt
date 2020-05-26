@@ -5,24 +5,22 @@ Layout:
    Remove hacks in VBox() that guess padding and use explicit Insets
 
 Annotations:
+ - a way to save PDF as a new file
+ - implement "Delete annotation"
+ - when selecting annotation in list box, go to its page
  - display opacity
  - display count of quad points
  - display border
  - don't allow editing of widget annotations (like mupdf-gl)
- - when selecting annotation in list box, go to its page
  - allow moving some annotations (TEXT)
- - implement delete
  - change our text higlight to match PDF i.e. use quad points
- - add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
- - implement "Delete annotation"
- - a way to save PDF as a new file
- - add label for showing notification that saved or failed to save. Notification should self-dismiss
-   after few seconds
- - display more annotation in the list if the window is larger
  - allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
    a dialog box for setting a color. Remember the custom colors in settings for future use.
  - UI ideas: https://getcleanshot.com/
+ - maybe: add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
+ - maybe: add label for showing notification that saved or failed to save. Notification should self-dismiss
+   after few seconds
  - maybe: display flags
  - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
 

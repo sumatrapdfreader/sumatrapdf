@@ -102,7 +102,7 @@ typedef std::function<void(CharEvent*)> CharHandler;
 
 // TODO: extract data from LPARAM
 struct KeyEvent : WndEvent {
-    bool isUp = false;
+    bool isDown = false;
     int keyVirtCode = 0;
 };
 

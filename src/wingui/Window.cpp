@@ -280,7 +280,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         }
         KeyEvent ev{};
         SetWndEvent(ev);
-        ev.isUp = (WM_KEYUP == msg);
+        ev.isDown = (WM_KEYDOWN == msg);
         ev.keyVirtCode = (int)wp;
         w->onKeyDownUp(&ev);
         if (ev.didHandle) {

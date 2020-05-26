@@ -213,8 +213,12 @@ static void ButtonDeleteHandler(EditAnnotationsWindow* w) {
 }
 
 static void ButtonSavePDFHandler(EditAnnotationsWindow* w) {
+    std::string_view dstFilePath{};
+    if (IsCtrlPressed()) {
+        // ask the user to select a new name
+    }
     EngineBase* engine = w->tab->AsFixed()->GetEngine();
-    EnginePdfSaveUpdated(engine, {});
+    EnginePdfSaveUpdated(engine, dstFilePath);
     // TODO: show a notification if saved or error message if failed to save
 }
 
@@ -459,9 +463,20 @@ static void WndSizeHandler(EditAnnotationsWindow* w, SizeEvent* ev) {
 }
 
 static void WndKeyHandler(EditAnnotationsWindow* w, KeyEvent* ev) {
-    UNUSED(w);
-    UNUSED(ev);
-    // on Alt, change the buttonSave text
+    // dbglogf("key: %d\n", ev->keyVirtCode);
+
+    // only interested in Ctrl
+    if (ev->keyVirtCode != VK_CONTROL) {
+        return;
+    }
+    if (!w->buttonSavePDF->IsEnabled()) {
+        return;
+    }
+    if (ev->isDown) {
+        w->buttonSavePDF->SetText("Save as new PDF");
+    } else {
+        w->buttonSavePDF->SetText("Save changes to PDF");
+    }
 }
 
 static std::tuple<StaticCtrl*, ILayout*> CreateStatic(HWND parent, std::string_view sv = {}) {
@@ -669,12 +684,12 @@ void StartEditAnnotations(TabInfo* tab) {
     win->annotations = annots;
 
     auto w = new Window();
-    w->isDialog = true;
+    //w->isDialog = true;
     HMODULE h = GetModuleHandleW(nullptr);
     LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
     w->hIcon = LoadIconW(h, iconName);
 
-    // w->isDialog = true;
+    w->isDialog = true;
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Annotations");
     // int dx = DpiScale(nullptr, 480);
