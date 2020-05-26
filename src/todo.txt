@@ -23,27 +23,6 @@ Annotations:
    a dialog box for setting a color. Remember the custom colors in settings for future use.
  - UI ideas: https://getcleanshot.com/
 
- - [X] size EditAnnotationsWindow to be the same as main window
- - [X] allow changing color
- - [X] remove redundant "Close" button
- - [X] implement "Save PDF..."
- - [X] finish MakeAnnotationPdf
- - [X] finish EnginePdf::GetAnnotations
- - [X] allow changing icon
- - [X] size the window to ensure all elements fit (after LayoutToSize, resize if too small)
- - [X] fix up ShowAnnotationsIcon
- - [X] fix up ShowAnnotationsColor
- - [X] fix up ShowAnnotationsPopup
- - [X] display color
- - [X] refactor Annotation and split into AnnotationSmx and AnnotationPdf
- - [X] refactor AnnotationType
- - [X] display icon
- - [X] display "popup" info (obj = pdf_dict_get(ctx, selected_annot->obj, PDF_NAME(Popup));)
- - [X] display contents
- - [X] display date
- - [X] display rect info in EditAnnotationsWindow
- - [X] make EditAnnotationsWindow wider by default
- - [X] display author info in EditAnnotationsWindow
  - maybe: display flags
  - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
 
@@ -52,7 +31,6 @@ Annotations:
 Layout:
  - maybe: make WindowBase implement ILayout (i.e. fold WindowBaseLayout)
    this would simplify the code to build layouts
- - [X] add layout debugging - print out bounds during layout and during SetBounds()
  - for visibility of widget, implement sth. like CSS visibility:
    * visible : shown
    * hidden : not shown but takes space for the purpose of layout
@@ -94,7 +72,6 @@ possible refactorings:
 returning Rect
 - replace as much use of RECT, SIZE, POINT with Rect, Size, Point
 - change how properties are retrieved (in bulk, instead of one-by-one)
-- [X] remove DirectDraw test and don't link with d2d
 - add arm build (based on https://github.com/ntw-au/sumatrapdf)
 - convert Add Bookmark dialog to new widget / layout system
 - convert hwndTocBox to Window
