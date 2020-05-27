@@ -498,7 +498,7 @@ void TreeCtrl::WndProc(WndEvent* ev) {
     }
 }
 
-TreeCtrl::TreeCtrl(HWND p) {
+TreeCtrl::TreeCtrl(HWND p) : WindowBase(p) {
     kind = kindTree;
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     dwStyle |= TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;

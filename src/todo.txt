@@ -1,8 +1,20 @@
 - [X] position to the right of tab->win->hwndFrame
+- [X] Include Insets directly in WindowBaseLayout to simplify doing layout.
+- [X] make WindowBase implement ILayout (i.e. fold WindowBaseLayout)
+this would simplify the code to build layouts
+- [X] for visibility of widget, implement sth. like CSS visibility:
+	* visible : shown
+	* hidden : not shown but takes space for the purpose of layout
+	* collapse : not shown and not taking space during layout
+- [X] rework how visibility handling during layout works. Maybe return size
+	as (0,0) if visibility == collaps
 
 Layout:
- - Include Insets directly in WindowBaseLayout to simplify doing layout.
-   Remove hacks in VBox() that guess padding and use explicit Insets
+ - Remove hacks in VBox() that guess padding and use explicit Insets
+ - fix HBox the same way as VBox (to properly handle hidden elements)
+ - remove Expand, don't know what it's for
+ - remove IsCheckbox(), IsLabel() etc.
+ - remove calculateHGap() and calculateVGap()
 
 Annotations:
  - a way to save PDF as a new file
@@ -23,19 +35,6 @@ Annotations:
    after few seconds
  - maybe: display flags
  - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
-
-------
-
-Layout:
- - maybe: make WindowBase implement ILayout (i.e. fold WindowBaseLayout)
-   this would simplify the code to build layouts
- - for visibility of widget, implement sth. like CSS visibility:
-   * visible : shown
-   * hidden : not shown but takes space for the purpose of layout
-   * collapse : not shown and not taking space during layout
- - rework how visibility handling during layout works. Maybe return size
-   as (0,0) if visibility == collaps
- - fix HBox the same way as VBox (to properly handle hidden elements)
 
 ------
 

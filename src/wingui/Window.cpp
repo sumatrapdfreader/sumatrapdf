@@ -616,12 +616,15 @@ bool WindowBase::IsEnabled() {
 Kind WindowBase::GetKind() {
     return kind;
 }
+
 int WindowBase::MinIntrinsicHeight(int width) {
     return layout->MinIntrinsicHeight(width);
 }
+
 int WindowBase::MinIntrinsicWidth(int height) {
     return layout->MinIntrinsicWidth(height);
 }
+
 Size WindowBase::Layout(const Constraints bc) {
     return layout->Layout(bc);
 }

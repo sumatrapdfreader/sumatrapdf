@@ -340,6 +340,10 @@ void Padding::SetBounds(Rect bounds) {
 
 // layout.go
 int calculateHGap(ILayout* previous, ILayout* current) {
+    if (true) {
+        return 0;
+    }
+
     // The vertical gap between most controls is 11 relative pixels.  However,
     // there are different rules for between a label and its associated control,
     // or between related controls.  These relationship do not appear in the
@@ -360,6 +364,10 @@ int calculateHGap(ILayout* previous, ILayout* current) {
 }
 
 int calculateVGap(ILayout* previous, ILayout* current) {
+    if (true) {
+        return 0;
+    }
+
     // The vertical gap between most controls is 11 relative pixels.  However,
     // there are different rules for between a label and its associated control,
     // or between related controls.  These relationship do not appear in the
