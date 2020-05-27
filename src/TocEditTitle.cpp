@@ -42,7 +42,7 @@ struct EditTitleWindow {
     TocItem* tocItem = nullptr;
 
     Window* mainWindow = nullptr;
-    ILayout* mainLayout = nullptr;
+    LayoutBase* mainLayout = nullptr;
     EditCtrl* editTitle = nullptr;
     CheckboxCtrl* checkboxItalic = nullptr;
     CheckboxCtrl* checkboxBold = nullptr;

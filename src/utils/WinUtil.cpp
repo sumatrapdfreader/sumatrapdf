@@ -2067,7 +2067,7 @@ void HwndSetText(HWND hwnd, std::string_view s) {
 
 // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-seticon
 HICON HwndSetIcon(HWND hwnd, HICON icon) {
-    if (!hwnd) {
+    if (!hwnd || !icon) {
         return nullptr;
     }
     HICON res = (HICON)SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)icon);

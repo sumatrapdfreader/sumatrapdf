@@ -56,6 +56,17 @@ enum class Visibility {
 };
 
 struct ILayout {
+    virtual ~ILayout(){};
+    virtual Kind GetKind() = 0;
+    virtual void SetVisibility(Visibility) = 0;
+    virtual Visibility GetVisibility() = 0;
+    virtual int MinIntrinsicHeight(int width) = 0;
+    virtual int MinIntrinsicWidth(int height) = 0;
+    virtual Size Layout(const Constraints bc) = 0;
+    virtual void SetBounds(Rect) = 0;
+};
+
+struct LayoutBase : public ILayout {
     Kind kind = nullptr;
     // allows easy way to hide / show elements
     // without rebuilding the whole layout
@@ -63,15 +74,12 @@ struct ILayout {
     // for easy debugging, remember last bounds
     Rect lastBounds{};
 
-    ILayout() = default;
-    ILayout(Kind k);
-    virtual ~ILayout(){};
-    virtual Size Layout(const Constraints bc) = 0;
-    virtual int MinIntrinsicHeight(int width) = 0;
-    virtual int MinIntrinsicWidth(int height) = 0;
-    virtual void SetBounds(Rect) = 0;
+    LayoutBase() = default;
+    LayoutBase(Kind);
 
-    void SetVisibility(Visibility);
+    Kind GetKind() override;
+    void SetVisibility(Visibility) override;
+    Visibility GetVisibility() override;
 };
 
 bool IsLayoutOfKind(ILayout*, Kind);
@@ -89,10 +97,9 @@ struct Insets {
 };
 
 Insets DefaultInsets();
-Insets UniformInsets(int l);
 Insets DpiScaledInsets(HWND, int top, int right = -1, int bottom = -1, int left = -1);
 
-struct Padding : public ILayout {
+struct Padding : public LayoutBase {
     ILayout* child = nullptr;
     Insets insets{};
     Size childSize{};
@@ -110,7 +117,7 @@ bool IsPadding(ILayout*);
 
 // expand.go
 
-struct Expand : public ILayout {
+struct Expand : public LayoutBase {
     ILayout* child = nullptr;
     int factor = 0;
 
@@ -167,7 +174,7 @@ struct boxElementInfo {
 bool IsVBox(Kind);
 bool IsVBox(ILayout*);
 
-struct VBox : public ILayout {
+struct VBox : public LayoutBase {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
@@ -193,7 +200,7 @@ struct VBox : public ILayout {
 bool IsHBox(Kind);
 bool IsHBox(ILayout*);
 
-struct HBox : public ILayout {
+struct HBox : public LayoutBase {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
@@ -221,7 +228,7 @@ constexpr Alignment AlignStart = -32768;
 constexpr Alignment AlignCenter = 0;
 constexpr Alignment AlignEnd = 0x7fff;
 
-struct Align : public ILayout {
+struct Align : public LayoutBase {
     Alignment HAlign = AlignStart; // Horizontal alignment of child widget.
     Alignment VAlign = AlignStart; // Vertical alignment of child widget.
     float WidthFactor = 0;         // If greater than zero, ratio of container width to child width.
@@ -239,7 +246,7 @@ struct Align : public ILayout {
 
 // spacer is to be used to take space
 // can be used for flexible
-struct Spacer : public ILayout {
+struct Spacer : public LayoutBase {
     int dx = 0;
     int dy = 0;
 
@@ -274,7 +281,6 @@ extern Kind kindLabel;
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 Size LayoutToSize(ILayout* layout, const Size size);
-Size Relayout(ILayout* layout);
 
 void dbglayoutf(const char* fmt, ...);
 void LogConstraints(Constraints c, const char* suffix);

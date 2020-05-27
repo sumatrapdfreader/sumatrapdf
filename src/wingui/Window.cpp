@@ -624,12 +624,9 @@ void WindowBase::SetVisibility(Visibility newVisibility) {
         BOOL bIsVisible = toBOOL(isVisible);
         SetWindowStyle(hwnd, WS_VISIBLE, bIsVisible);
     }
-    if (layout) {
-        layout->SetVisibility(newVisibility);
-    }
 }
 
-Visibility WindowBase::GetVisiblility() const {
+Visibility WindowBase::GetVisibility() {
     return visibility;
 #if 0
     if (GetParent(hwnd) == nullptr) {
@@ -673,6 +670,15 @@ HFONT WindowBase::GetFont() const {
         res = GetDefaultGuiFont();
     }
     return res;
+}
+
+void WindowBase::SetIcon(HICON iconIn) {
+    hIcon = iconIn;
+    HwndSetIcon(hwnd, hIcon);
+}
+
+HICON WindowBase::GetIcon() const {
+    return hIcon;
 }
 
 void WindowBase::SetText(const WCHAR* s) {
@@ -832,10 +838,8 @@ bool Window::Create() {
     // trigger creating a backgroundBrush
     SetBackgroundColor(backgroundColor);
     SetFont(hfont);
+    SetIcon(hIcon);
     HwndSetText(hwnd, text.AsView());
-    if (hIcon) {
-        HwndSetIcon(hwnd, hIcon);
-    }
     return true;
 }
 
@@ -852,9 +856,26 @@ void Window::Close() {
 }
 
 WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
+    UNUSED(k); // TODO: remove Kind argument
     wb = b;
-    kind = k;
     b->layout = this;
+}
+
+WindowBaseLayout::~WindowBaseLayout() {
+    delete wb;
+}
+
+// TODO: use it's own kind?
+Kind WindowBaseLayout::GetKind() {
+    return wb->kind;
+}
+
+void WindowBaseLayout::SetVisibility(Visibility newVisibility) {
+    wb->SetVisibility(newVisibility);
+}
+
+Visibility WindowBaseLayout::GetVisibility() {
+    return wb->GetVisibility();
 }
 
 // if only top given, set them all to top
@@ -864,12 +885,8 @@ void WindowBaseLayout::SetInsetsPt(int top, int right, int bottom, int left) {
     insets = DpiScaledInsets(hwnd, top, right, bottom, left);
 }
 
-WindowBaseLayout::~WindowBaseLayout() {
-    delete wb;
-}
-
 Size WindowBaseLayout::Layout(const Constraints bc) {
-    dbglayoutf("WindowBase::Layout() %s ", kind);
+    dbglayoutf("WindowBase::Layout() %s ", GetKind());
     LogConstraints(bc, "\n");
 
     int dx = MinIntrinsicWidth(0);
@@ -887,20 +904,20 @@ Size WindowBaseLayout::Layout(const Constraints bc) {
     return res;
 }
 
-int WindowBaseLayout::MinIntrinsicHeight(i32) {
+int WindowBaseLayout::MinIntrinsicHeight(int) {
     auto vinset = insets.top + insets.bottom;
     Size s = wb->GetIdealSize();
     return s.dy + vinset;
 }
 
-int WindowBaseLayout::MinIntrinsicWidth(i32) {
+int WindowBaseLayout::MinIntrinsicWidth(int) {
     auto hinset = insets.left + insets.right;
     Size s = wb->GetIdealSize();
     return s.dx + hinset;
 }
 
 void WindowBaseLayout::SetBounds(Rect bounds) {
-    dbglayoutf("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", kind, bounds.x, bounds.y, bounds.dx, bounds.dy);
+    dbglayoutf("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", GetKind(), bounds.x, bounds.y, bounds.dx, bounds.dy);
 
     lastBounds = bounds;
 

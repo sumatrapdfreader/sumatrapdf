@@ -261,15 +261,26 @@ Constraints Constraints::TightenWidth(int width) const {
     return bc;
 }
 
-void ILayout::SetVisibility(Visibility newVisibility) {
+LayoutBase::LayoutBase(Kind k) {
+    kind = k;
+}
+
+Kind LayoutBase::GetKind() {
+    return kind;
+}
+
+void LayoutBase::SetVisibility(Visibility newVisibility) {
     visibility = newVisibility;
+}
+Visibility LayoutBase::GetVisibility() {
+    return visibility;
 }
 
 bool IsLayoutOfKind(ILayout* l, Kind kind) {
     if (l == nullptr) {
         return false;
     }
-    return l->kind == kind;
+    return l->GetKind() == kind;
 }
 
 // padding.go
@@ -328,10 +339,6 @@ void Padding::SetBounds(Rect bounds) {
 }
 
 // layout.go
-ILayout::ILayout(Kind k) {
-    kind = k;
-}
-
 int calculateHGap(ILayout* previous, ILayout* current) {
     // The vertical gap between most controls is 11 relative pixels.  However,
     // there are different rules for between a label and its associated control,
@@ -419,7 +426,7 @@ int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
     }
     int totalFlex = 0;
     for (auto& i : children) {
-        if (i.layout->visibility != Visibility::Collapse) {
+        if (i.layout->GetVisibility() != Visibility::Collapse) {
             totalFlex += i.flex;
         }
     }
@@ -464,7 +471,7 @@ Size VBox::Layout(const Constraints bc) {
 
     for (int i = 0; i < n; i++) {
         auto& v = this->children.at(i);
-        if (v.layout->visibility == Visibility::Collapse) {
+        if (v.layout->GetVisibility() == Visibility::Collapse) {
             continue;
         }
         // Determine what gap needs to be inserted between the elements.
@@ -647,7 +654,7 @@ void VBox::SetBounds(Rect bounds) {
     ILayout* previous = nullptr;
     for (int i = 0; i < n; i++) {
         auto& v = children[i];
-        if (v.layout->visibility == Visibility::Collapse) {
+        if (v.layout->GetVisibility() == Visibility::Collapse) {
             continue;
         }
         if (IsPacked(alignMain)) {
@@ -766,7 +773,7 @@ Size HBox::Layout(const Constraints bc) {
 
     for (int i = 0; i < n; i++) {
         auto& v = children[i];
-        if (v.layout->visibility == Visibility::Collapse) {
+        if (v.layout->GetVisibility() == Visibility::Collapse) {
             continue;
         }
         // Determine what gap needs to be inserted between the elements.
@@ -1163,20 +1170,10 @@ Size LayoutToSize(ILayout* layout, const Size size) {
     return newSize;
 }
 
-Size Relayout(ILayout* layout) {
-    auto b = layout->lastBounds;
-    return LayoutToSize(layout, b.Size());
-}
-
 // TODO: probably not needed
 Insets DefaultInsets() {
     const int padding = 8;
     return Insets{padding, padding, padding, padding};
-}
-
-// TODO: probably not needed
-Insets UniformInsets(int l) {
-    return Insets{l, l, l, l};
 }
 
 Insets DpiScaledInsets(HWND hwnd, int top, int right, int bottom, int left) {

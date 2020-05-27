@@ -201,7 +201,7 @@ struct WindowBase {
     bool IsEnabled();
 
     void SetVisibility(Visibility);
-    Visibility GetVisiblility() const;
+    Visibility GetVisibility();
 
     void SetIsVisible(bool);
     bool IsVisible() const;
@@ -215,7 +215,7 @@ struct WindowBase {
     void SetFont(HFONT f);
     HFONT GetFont() const;
 
-    HICON SetIcon(HICON);
+    void SetIcon(HICON);
     HICON GetIcon() const;
 
     void SetText(const WCHAR* s);
@@ -253,16 +253,21 @@ struct WindowBaseLayout : public ILayout {
     WindowBase* wb = nullptr;
     Insets insets{};
     Size childSize{};
+    Rect lastBounds{};
 
     WindowBaseLayout(WindowBase*, Kind);
     ~WindowBaseLayout() override;
 
-    void SetInsetsPt(int top, int right=-1, int bottom=-1, int left=-1);
+    Kind GetKind() override;
+    void SetVisibility(Visibility) override;
+    Visibility GetVisibility() override;
 
-    Size Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int) override;
     int MinIntrinsicWidth(int) override;
+    Size Layout(const Constraints bc) override;
     void SetBounds(Rect bounds) override;
+
+    void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
 };
 
 UINT_PTR NextSubclassId();

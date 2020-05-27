@@ -50,7 +50,7 @@ struct TocEditorWindow {
     TocEditorArgs* tocArgs = nullptr;
     HWND hwnd = nullptr;
 
-    ILayout* mainLayout = nullptr;
+    LayoutBase* mainLayout = nullptr;
     // not owned by us but by mainLayout
     Window* mainWindow = nullptr;
     ButtonCtrl* btnAddPdf = nullptr;

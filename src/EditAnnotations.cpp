@@ -130,7 +130,7 @@ const char* GetKnownColorName(COLORREF c) {
 struct EditAnnotationsWindow {
     TabInfo* tab = nullptr;
     Window* mainWindow = nullptr;
-    ILayout* mainLayout = nullptr;
+    LayoutBase* mainLayout = nullptr;
 
     DropDownCtrl* dropDownAdd = nullptr;
 
@@ -532,8 +532,8 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
 
     {
         std::tie(aw->staticAuthor, l) = CreateStatic(parent);
-        //WindowBaseLayout* l2 = (WindowBaseLayout*)l;
-        //l2->SetInsetsPt(20, 0, 0, 0);
+        // WindowBaseLayout* l2 = (WindowBaseLayout*)l;
+        // l2->SetInsetsPt(20, 0, 0, 0);
         vbox->AddChild(l);
     }
 
@@ -686,7 +686,7 @@ void StartEditAnnotations(TabInfo* tab) {
     win->annotations = annots;
 
     auto w = new Window();
-    //w->isDialog = true;
+    // w->isDialog = true;
     HMODULE h = GetModuleHandleW(nullptr);
     LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
     w->hIcon = LoadIconW(h, iconName);
