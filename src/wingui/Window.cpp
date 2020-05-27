@@ -503,7 +503,7 @@ WindowBase::WindowBase(HWND p) {
     kind = kindWindowBase;
     parent = p;
     ctrlID = GetNextCtrlID();
-    layout = new WindowBaseLayout(this, kindWindowBase);
+    layout = new WindowBaseLayout(this);
 }
 
 // generally not needed for child controls as they are destroyed when
@@ -877,8 +877,7 @@ void Window::Close() {
     ::SendMessage(hwnd, WM_CLOSE, 0, 0);
 }
 
-WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
-    UNUSED(k); // TODO: remove Kind argument
+WindowBaseLayout::WindowBaseLayout(WindowBase* b) {
     wb = b;
     b->layout = this;
 }

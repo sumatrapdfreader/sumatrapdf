@@ -134,7 +134,7 @@ struct WindowBaseLayout : public ILayout {
     Size childSize{};
     Rect lastBounds{};
 
-    WindowBaseLayout(WindowBase*, Kind);
+    WindowBaseLayout(WindowBase*);
     ~WindowBaseLayout() override;
 
     Kind GetKind() override;

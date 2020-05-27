@@ -14,14 +14,6 @@
 
 Kind kindDropDown = "dropdown";
 
-bool IsDropDown(Kind kind) {
-    return kind == kindDropDown;
-}
-
-bool IsDropDown(ILayout* l) {
-    return IsLayoutOfKind(l, kindDropDown);
-}
-
 DropDownCtrl::DropDownCtrl(HWND parent) : WindowBase(parent) {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST;
     winClass = WC_COMBOBOX;
@@ -108,6 +100,8 @@ void DropDownCtrl::SetItems(Vec<std::string_view>& newItems) {
     SetCurrentSelection(-1);
 }
 
+#include "utils/LogDbg.h"
+
 Size DropDownCtrl::GetIdealSize() {
     Size s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
     for (std::string_view s : items) {
@@ -117,9 +111,15 @@ Size DropDownCtrl::GetIdealSize() {
         s1.dy = std::max(s1.dy, s2.dy);
         free(ws);
     }
-    // TODO: scale with dpi
     // TODO: not sure if I want scrollbar. Only needed if a lot of items
-    int pad = GetSystemMetrics(SM_CXVSCROLL);
-    pad += 8;
-    return {s1.dx + pad, s1.dy + 2};
+    int dxPad = GetSystemMetrics(SM_CXVSCROLL);
+    int dx = s1.dx + dxPad + DpiScale(hwnd, 8);
+    // TODO: 5 is a guessed number.
+    int dyPad = DpiScale(hwnd, 4);
+    int dy = s1.dy + dyPad;
+    Rect rc = WindowRect(hwnd);
+    if (rc.dy > dy) {
+        dy = rc.dy;
+    }
+    return {dx, dy};
 }

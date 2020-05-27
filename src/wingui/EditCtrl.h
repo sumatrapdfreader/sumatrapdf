@@ -21,7 +21,7 @@ struct EditCtrl : WindowBase {
     // data that can be set directly
 
     str::Str cueText;
-    OnTextChanged OnTextChanged;
+    OnTextChanged onTextChanged;
 
     // set before Create()
     bool isMultiLine = false;
@@ -41,6 +41,3 @@ struct EditCtrl : WindowBase {
     void SetSelection(int start, int end);
     bool SetCueText(std::string_view);
 };
-
-bool IsEdit(Kind);
-bool IsEdit(ILayout*);

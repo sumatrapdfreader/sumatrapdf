@@ -25,28 +25,18 @@
 
 Kind kindEdit = "edit";
 
-bool IsEdit(Kind kind) {
-    return kind == kindEdit;
-}
-
-bool IsEdit(ILayout* l) {
-    return IsLayoutOfKind(l, kindEdit);
-}
-
 static void HandleWM_COMMAND(EditCtrl* w, WndEvent* ev) {
     CrashIf(ev->msg != WM_COMMAND);
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
     auto code = HIWORD(ev->wparam);
-    if (EN_CHANGE == code) {
-        if (w->OnTextChanged) {
-            EditTextChangedEvent a;
-            CopyWndEvent cp(&a, ev);
-            a.text = w->GetText();
-            w->OnTextChanged(&a);
-            if (a.didHandle) {
-                return;
-            }
+    if (EN_CHANGE == code && w->onTextChanged) {
+        EditTextChangedEvent a;
+        CopyWndEvent cp(&a, ev);
+        a.text = w->GetText();
+        w->onTextChanged(&a);
+        if (a.didHandle) {
+            return;
         }
     }
 }

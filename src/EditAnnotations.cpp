@@ -558,7 +558,7 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         w->idealSizeLines = 5;
         bool ok = w->Create();
         CrashIf(!ok);
-        w->maxDx = 520;
+        w->maxDx = 150;
         w->SetIsVisible(false);
         aw->editContents = w;
         // TODO: hookup change request

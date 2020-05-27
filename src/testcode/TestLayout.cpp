@@ -77,7 +77,7 @@ static EditCtrl* CreateEdit(HWND parent, std::string_view s) {
     auto w = new EditCtrl(parent);
     w->SetText(s);
     w->SetCueText("a cue text");
-    w->OnTextChanged = onTextChanged;
+    w->onTextChanged = onTextChanged;
     w->Create();
     return w;
 }
