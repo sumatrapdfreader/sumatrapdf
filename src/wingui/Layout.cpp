@@ -395,7 +395,7 @@ Size VBox::Layout(const Constraints bc) {
     auto cbc = bc;
 
     if (alignMain == MainAxisAlign::Homogeneous) {
-        auto count = (i64)ChildrenCount();
+        auto count = (i64)NonCollapsedChildrenCount();
         auto gap = calculateVGap(nullptr, nullptr);
         cbc.TightenHeight(scale(cbc.max.dy, 1, count) - scale(gap, count - 1, count));
     } else {
@@ -698,7 +698,7 @@ Size HBox::Layout(const Constraints bc) {
     // Determine the constraints for layout of child elements.
     auto cbc = bc;
     if (alignMain == MainAxisAlign::Homogeneous) {
-        auto count = i64(n);
+        auto count = (i64)NonCollapsedChildrenCount();
         auto gap = calculateHGap(nullptr, nullptr);
         auto maxw = cbc.max.dx;
         cbc.TightenWidth(scale(maxw, 1, count) - scale(gap, count - 1, count));
@@ -722,7 +722,7 @@ Size HBox::Layout(const Constraints bc) {
 
     for (int i = 0; i < n; i++) {
         auto& v = children[i];
-        if (v.layout->GetVisibility() == Visibility::Collapse) {
+        if (!NotCollapsed(v.layout)) {
             continue;
         }
         // Determine what gap needs to be inserted between the elements.
@@ -744,28 +744,29 @@ Size HBox::Layout(const Constraints bc) {
     totalWidth = width;
 
     // Need to adjust height to any widgets that have flex
+    int extraWidth = 0;
     if (totalFlex > 0) {
-        auto extraWidth = int(0);
         if (bc.HasBoundedWidth() && bc.max.dx > totalWidth) {
             extraWidth = bc.max.dx - totalWidth;
         } else if (bc.min.dx > totalWidth) {
             extraWidth = bc.min.dx - totalWidth;
         }
-
-        if (extraWidth > 0) {
-            for (int i = 0; i < n; i++) {
-                auto& v = children[i];
-                if (v.flex > 0) {
-                    auto oldWidth = v.size.dx;
-                    auto nw = v.size.dx + extraWidth;
-                    auto fbc = cbc.TightenWidth(scale(nw, v.flex, totalFlex));
-                    auto size = v.layout->Layout(fbc);
-                    v.size = size;
-                    totalWidth += size.dx - oldWidth;
-                }
+    }
+    if (extraWidth > 0) {
+        for (int i = 0; i < n; i++) {
+            auto& v = children[i];
+            if (v.flex <= 0 || !NotCollapsed(v.layout)) {
+                continue;
             }
+            auto oldWidth = v.size.dx;
+            auto nw = v.size.dx + extraWidth;
+            auto fbc = cbc.TightenWidth(scale(nw, v.flex, totalFlex));
+            auto size = v.layout->Layout(fbc);
+            v.size = size;
+            totalWidth += size.dx - oldWidth;
         }
     }
+
     if (alignCross == CrossAxisAlign::Stretch) {
         return bc.Constrain(Size{width, cbc.min.dy});
     }
@@ -804,12 +805,12 @@ int HBox::MinIntrinsicWidth(int height) {
 
     auto size = children[0].layout->MinIntrinsicWidth(height);
     if (IsPacked(alignMain)) {
-        auto previous = children[0].layout;
         for (int i = 1; i < n; i++) {
             auto& v = children[i];
             // Add the preferred gap between this pair of widgets
-            size += calculateHGap(previous, v.layout);
-            previous = v.layout;
+            if (!NotCollapsed(v.layout)) {
+                continue;
+            }
             // Find minimum size for this widget, and update
             size += v.layout->MinIntrinsicWidth(height);
         }
@@ -819,6 +820,9 @@ int HBox::MinIntrinsicWidth(int height) {
     if (alignMain == MainAxisAlign::Homogeneous) {
         for (int i = 1; i < n; i++) {
             auto& v = children[i];
+            if (!NotCollapsed(v.layout)) {
+                continue;
+            }
             size = std::max(size, v.layout->MinIntrinsicWidth(height));
         }
 
@@ -829,8 +833,11 @@ int HBox::MinIntrinsicWidth(int height) {
     }
 
     for (int i = 1; i < n; i++) {
-        auto v = children[i].layout;
-        size += v->MinIntrinsicWidth(height);
+        auto l = children[i].layout;
+        if (!NotCollapsed(l)) {
+            continue;
+        }
+        size += l->MinIntrinsicWidth(height);
     }
 
     // Add a minimum gap between the controls.

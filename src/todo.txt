@@ -13,7 +13,7 @@ this would simplify the code to build layouts
 - [X] remove calculateHGap() and calculateVGap()
 - [X] remove Expand, it's not needed because VBox->AddChild() has flex factor
 - [X] remove IsCheckbox(), IsLabel() etc.
-- [X] fix HBox the same way as VBox (to properly handle hidden elements)
+- [X] HBox and VBox layout fixes for hidden elements
  
 Annotations:
  - a way to save PDF as a new file
@@ -58,6 +58,7 @@ Fixes:
 - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state from history)
 - fix memleaks on reading .vbkm file
 - tweak PositionCloseTo() to run after creation and use actual window position
+- probably VBox and HBox layout need to account for hidden elements
 
 ------
 
