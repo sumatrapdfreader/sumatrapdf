@@ -217,3 +217,5 @@ struct TreeCtrl : WindowBase {
 
 void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes);
 TreeItem* GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt);
+
+bool IsTreeKind(Kind);

@@ -724,7 +724,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     ev->didHandle = true;
 
     TreeCtrl* treeCtrl = (TreeCtrl*)ev->w;
-    CrashIf(!IsTree(treeCtrl->kind));
+    CrashIf(!IsTreeKind(treeCtrl->kind));
     HWND hwnd = treeCtrl->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 

@@ -30,6 +30,10 @@ https://stackoverflow.com/questions/34161879/how-to-remove-checkboxes-on-specifi
 
 Kind kindTree = "treeView";
 
+bool IsTreeKind(Kind k) {
+    return k == kindTree;
+}
+
 static void DispatchWM_NOTIFY(void* user, WndEvent* ev) {
     auto w = (TreeCtrl*)user;
     ev->w = w;
