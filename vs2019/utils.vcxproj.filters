@@ -180,9 +180,6 @@
     <ClInclude Include="..\src\wingui\EditCtrl.h">
       <Filter>wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\Form.h">
-      <Filter>wingui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\wingui\FrameRateWnd.h">
       <Filter>wingui</Filter>
     </ClInclude>
@@ -378,9 +375,6 @@
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\EditCtrl.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\Form.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">

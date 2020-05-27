@@ -99,7 +99,7 @@ struct Insets {
 Insets DefaultInsets();
 Insets DpiScaledInsets(HWND, int top, int right = -1, int bottom = -1, int left = -1);
 
-struct Padding : public LayoutBase {
+struct Padding : LayoutBase {
     ILayout* child = nullptr;
     Insets insets{};
     Size childSize{};
@@ -117,7 +117,7 @@ bool IsPadding(ILayout*);
 
 // expand.go
 
-struct Expand : public LayoutBase {
+struct Expand : LayoutBase {
     ILayout* child = nullptr;
     int factor = 0;
 
@@ -174,7 +174,7 @@ struct boxElementInfo {
 bool IsVBox(Kind);
 bool IsVBox(ILayout*);
 
-struct VBox : public LayoutBase {
+struct VBox : LayoutBase {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
@@ -200,7 +200,7 @@ struct VBox : public LayoutBase {
 bool IsHBox(Kind);
 bool IsHBox(ILayout*);
 
-struct HBox : public LayoutBase {
+struct HBox : LayoutBase {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
@@ -228,7 +228,7 @@ constexpr Alignment AlignStart = -32768;
 constexpr Alignment AlignCenter = 0;
 constexpr Alignment AlignEnd = 0x7fff;
 
-struct Align : public LayoutBase {
+struct Align : LayoutBase {
     Alignment HAlign = AlignStart; // Horizontal alignment of child widget.
     Alignment VAlign = AlignStart; // Vertical alignment of child widget.
     float WidthFactor = 0;         // If greater than zero, ratio of container width to child width.
@@ -246,7 +246,7 @@ struct Align : public LayoutBase {
 
 // spacer is to be used to take space
 // can be used for flexible
-struct Spacer : public LayoutBase {
+struct Spacer : LayoutBase {
     int dx = 0;
     int dy = 0;
 

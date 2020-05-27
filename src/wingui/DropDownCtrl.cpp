@@ -29,7 +29,6 @@ DropDownCtrl::DropDownCtrl(HWND parent) : WindowBase(parent) {
 }
 
 DropDownCtrl::~DropDownCtrl() {
-    UnregisterHandlersForHwnd(hwnd);
 }
 
 static void setDropDownItems(HWND hwnd, Vec<std::string_view>& items) {

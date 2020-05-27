@@ -296,12 +296,13 @@ static void ShowAnnotationsContents(EditAnnotationsWindow* w, Annotation* annot)
 
 static void ShowAnnotationsIcon(EditAnnotationsWindow* w, Annotation* annot) {
     std::string_view iconName;
+    bool isVisible = false;
     if (annot) {
         iconName = annot->IconName();
+        isVisible = !iconName.empty();
     }
-    bool isVisible = !iconName.empty();
     const char* icons = nullptr;
-    if (isVisible) {
+    if (annot && isVisible) {
         switch (annot->type) {
             case AnnotationType::Text:
                 icons = gTextIcons;
@@ -376,9 +377,11 @@ static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
 static void ListBoxSelectionChanged(EditAnnotationsWindow* w, ListBoxSelectionChangedEvent* ev) {
     // TODO: finish me
     int itemNo = ev->idx;
+    int annotPageNo = -1;
     w->annot = nullptr;
     if (itemNo >= 0) {
         w->annot = w->annotations->at(itemNo);
+        annotPageNo = w->annot->PageNo();
     }
     // TODO: mupdf shows it in 1.6 but not 1.7. Why?
     // ShowAnnotationRect(this, annot);
@@ -402,7 +405,9 @@ static void ListBoxSelectionChanged(EditAnnotationsWindow* w, ListBoxSelectionCh
     int dx = currBounds.Dx();
     int dy = currBounds.Dy();
     LayoutAndSizeToContent(w->mainLayout, dx, dy, w->mainWindow->hwnd);
-    // TODO: go to page with selected annotation
+    if (annotPageNo > 0) {
+        w->tab->AsFixed()->GoToPage(annotPageNo, false);
+    }
 }
 
 static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* w) {
@@ -553,6 +558,7 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         w->idealSizeLines = 5;
         bool ok = w->Create();
         CrashIf(!ok);
+        w->maxDx = 520;
         w->SetIsVisible(false);
         aw->editContents = w;
         // TODO: hookup change request
@@ -683,10 +689,6 @@ void StartEditAnnotations(TabInfo* tab) {
 
     w->isDialog = true;
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
-    w->SetTitle("Annotations");
-    // int dx = DpiScale(nullptr, 480);
-    // int dy = DpiScale(nullptr, 640);
-    // w->initialSize = {dx, dy};
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
     // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);

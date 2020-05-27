@@ -81,7 +81,6 @@ static HwndMsgHandler* FindHandlerForHwndAndMsg(HWND hwnd, UINT msg, bool create
 
 void RegisterHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void* user) {
     auto h = FindHandlerForHwndAndMsg(hwnd, msg, true);
-    CrashIf(!h);
     h->handler = handler;
     h->user = user;
 }
@@ -92,7 +91,7 @@ void UnregisterHandlerForMessage(HWND hwnd, UINT msg) {
     ClearHwndMsgHandler(h);
 }
 
-void UnregisterHandlersForHwnd(HWND hwnd) {
+static void UnregisterHandlersForHwnd(HWND hwnd) {
     for (auto h : gHwndMsgHandlers) {
         if (h->hwnd == hwnd) {
             ClearHwndMsgHandler(h);
@@ -102,7 +101,7 @@ void UnregisterHandlersForHwnd(HWND hwnd) {
 
 // TODO: potentially more messages
 // https://docs.microsoft.com/en-us/cpp/mfc/reflected-window-message-ids?view=vs-2019
-static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
+static HWND GetChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorbtn
     if (WM_CTLCOLORBTN == msg) {
         return (HWND)lp;
@@ -143,7 +142,7 @@ static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
 
 bool HandleRegisteredMessages(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
     HWND hwndLookup = hwnd;
-    HWND hwndMaybe = getChildHWNDForMessage(msg, wp, lp);
+    HWND hwndMaybe = GetChildHWNDForMessage(msg, wp, lp);
     if (hwndMaybe != nullptr) {
         hwndLookup = hwndMaybe;
     }
@@ -525,6 +524,9 @@ WindowBase::~WindowBase() {
     }
     Destroy();
     UnregisterHandlersForHwnd(hwnd);
+    // TODO: this leaks but we can't delete it
+    // probably will fix it if will merge WindowBaseLayout directly into WindowBase
+    // delete layout;
 }
 
 void WindowBase::WndProc(WndEvent* ev) {
@@ -865,7 +867,6 @@ bool Window::Create() {
 }
 
 Window::~Window() {
-    UnregisterHandlersForHwnd(hwnd);
 }
 
 void Window::SetTitle(std::string_view title) {
@@ -883,6 +884,11 @@ WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
 }
 
 WindowBaseLayout::~WindowBaseLayout() {
+    if (wb) {
+        // must null-out because WindowBase deletes its layout
+        // TODO: maybe don't delete wb here
+        wb->layout = nullptr;
+    }
     delete wb;
 }
 

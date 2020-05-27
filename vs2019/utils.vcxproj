@@ -645,7 +645,6 @@
     <ClInclude Include="..\src\wingui\DialogSizer.h" />
     <ClInclude Include="..\src\wingui\DropDownCtrl.h" />
     <ClInclude Include="..\src\wingui\EditCtrl.h" />
-    <ClInclude Include="..\src\wingui\Form.h" />
     <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
     <ClInclude Include="..\src\wingui\ImageCtrl.h" />
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
@@ -713,7 +712,6 @@
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
     <ClCompile Include="..\src\wingui\DropDownCtrl.cpp" />
     <ClCompile Include="..\src\wingui\EditCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\Form.cpp" />
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
     <ClCompile Include="..\src\wingui\ImageCtrl.cpp" />
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />

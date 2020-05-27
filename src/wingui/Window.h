@@ -23,7 +23,6 @@ struct WndEvent {
 
 void RegisterHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, WndEvent*), void* user);
 void UnregisterHandlerForMessage(HWND hwnd, UINT msg);
-void UnregisterHandlersForHwnd(HWND hwnd);
 bool HandleRegisteredMessages(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res);
 
 #define SetWndEvent(n) \

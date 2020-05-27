@@ -8,9 +8,10 @@ this would simplify the code to build layouts
 	* collapse : not shown and not taking space during layout
 - [X] rework how visibility handling during layout works. Maybe return size
 	as (0,0) if visibility == collaps
+- [X] Remove hacks in VBox() that guess padding and use explicit Insets
+- [X] when selecting annotation in list box, go to its page
 
 Layout:
- - Remove hacks in VBox() that guess padding and use explicit Insets
  - fix HBox the same way as VBox (to properly handle hidden elements)
  - remove Expand, don't know what it's for
  - remove IsCheckbox(), IsLabel() etc.
@@ -19,7 +20,6 @@ Layout:
 Annotations:
  - a way to save PDF as a new file
  - implement "Delete annotation"
- - when selecting annotation in list box, go to its page
  - display opacity
  - display count of quad points
  - display border
