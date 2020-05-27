@@ -504,6 +504,7 @@ WindowBase::WindowBase(HWND p) {
     kind = kindWindowBase;
     parent = p;
     ctrlID = GetNextCtrlID();
+    layout = new WindowBaseLayout(this, kindWindowBase);
 }
 
 // generally not needed for child controls as they are destroyed when
@@ -610,6 +611,23 @@ void WindowBase::SetIsEnabled(bool isEnabled) {
 bool WindowBase::IsEnabled() {
     BOOL enabled = ::IsWindowEnabled(hwnd);
     return tobool(enabled);
+}
+
+Kind WindowBase::GetKind() {
+    return kind;
+}
+int WindowBase::MinIntrinsicHeight(int width) {
+    return layout->MinIntrinsicHeight(width);
+}
+int WindowBase::MinIntrinsicWidth(int height) {
+    return layout->MinIntrinsicWidth(height);
+}
+Size WindowBase::Layout(const Constraints bc) {
+    return layout->Layout(bc);
+}
+
+void WindowBase::SetBounds(Rect r) {
+    return layout->SetBounds(r);
 }
 
 void WindowBase::SetVisibility(Visibility newVisibility) {

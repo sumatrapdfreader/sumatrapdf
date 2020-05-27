@@ -127,10 +127,34 @@ typedef std::function<void(DropFilesEvent*)> DropFilesHandler;
 
 extern Kind kindWindowBase;
 
-struct WindowBase {
+struct WindowBase;
+
+struct WindowBaseLayout : public ILayout {
+    WindowBase* wb = nullptr;
+    Insets insets{};
+    Size childSize{};
+    Rect lastBounds{};
+
+    WindowBaseLayout(WindowBase*, Kind);
+    ~WindowBaseLayout() override;
+
+    Kind GetKind() override;
+    void SetVisibility(Visibility) override;
+    Visibility GetVisibility() override;
+
+    int MinIntrinsicHeight(int) override;
+    int MinIntrinsicWidth(int) override;
+    Size Layout(const Constraints bc) override;
+    void SetBounds(Rect bounds) override;
+
+    void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
+};
+
+struct WindowBase : public ILayout {
     Kind kind = nullptr;
 
-    ILayout* layout = nullptr;
+    WindowBaseLayout* layout = nullptr;
+
     // data that can be set before calling Create()
     Visibility visibility = Visibility::Visible;
 
@@ -193,15 +217,21 @@ struct WindowBase {
 
     virtual void WndProc(WndEvent*);
 
+    // ILayout
+    Kind GetKind() override;
+    void SetVisibility(Visibility) override;
+    Visibility GetVisibility() override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    Size Layout(const Constraints bc) override;
+    void SetBounds(Rect) override;
+
     void Destroy();
     void Subclass();
     void Unsubclass();
 
     void SetIsEnabled(bool);
     bool IsEnabled();
-
-    void SetVisibility(Visibility);
-    Visibility GetVisibility();
 
     void SetIsVisible(bool);
     bool IsVisible() const;
@@ -247,27 +277,6 @@ struct Window : WindowBase {
     void SetTitle(std::string_view);
 
     void Close();
-};
-
-struct WindowBaseLayout : public ILayout {
-    WindowBase* wb = nullptr;
-    Insets insets{};
-    Size childSize{};
-    Rect lastBounds{};
-
-    WindowBaseLayout(WindowBase*, Kind);
-    ~WindowBaseLayout() override;
-
-    Kind GetKind() override;
-    void SetVisibility(Visibility) override;
-    Visibility GetVisibility() override;
-
-    int MinIntrinsicHeight(int) override;
-    int MinIntrinsicWidth(int) override;
-    Size Layout(const Constraints bc) override;
-    void SetBounds(Rect bounds) override;
-
-    void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
 };
 
 UINT_PTR NextSubclassId();

@@ -856,8 +856,8 @@ static bool CreateRaMicroUninstallerWindow() {
     */
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Uninstall RA-Micro", [win]() { win->Uninstall(); });
-        buttons->AddChild(l);
+        auto b = CreateButton(hwnd, "Uninstall RA-Micro", [win]() { win->Uninstall(); });
+        buttons->AddChild(b);
         win->btnInstall = b;
     }
 
@@ -869,8 +869,7 @@ static bool CreateRaMicroUninstallerWindow() {
     splashCtrl->bmp = win->bmpSplash;
     ok = splashCtrl->Create();
     CrashIf(!ok);
-    ILayout* splashLayout = NewImageLayout(splashCtrl);
-    main->AddChild(splashLayout);
+    main->AddChild(splashCtrl);
 
     win->finishedText = new StaticCtrl(hwnd);
     win->finishedText->SetText("RA-MICRO was uninstalled!");
@@ -878,9 +877,8 @@ static bool CreateRaMicroUninstallerWindow() {
     // win->finishedText->SetFont();
     win->finishedText->Create();
     win->finishedText->SetIsVisible(false);
-    ILayout* finishedTextLayout = NewStaticLayout(win->finishedText);
 
-    main->AddChild(finishedTextLayout);
+    main->AddChild(win->finishedText);
 
     main->AddChild(buttons);
 

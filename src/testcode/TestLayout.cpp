@@ -60,12 +60,12 @@ static void onCheckboxChanged(CheckState state) {
     dbglogf("new checkbox state: %s (%d)\n", name, (int)state);
 }
 
-static ILayout* CreateCheckboxLayout(HWND parent, std::string_view s) {
+static CheckboxCtrl* CreateCheckbox(HWND parent, std::string_view s) {
     auto b = new CheckboxCtrl(parent);
     b->SetText(s);
     b->OnCheckStateChanged = onCheckboxChanged;
     b->Create();
-    return NewCheckboxLayout(b);
+    return b;
 }
 
 static void onTextChanged(EditTextChangedEvent* args) {
@@ -73,13 +73,13 @@ static void onTextChanged(EditTextChangedEvent* args) {
     dbglogf("text changed: '%s'\n", s.data());
 }
 
-static ILayout* CreateEditLayout(HWND parent, std::string_view s) {
+static EditCtrl* CreateEdit(HWND parent, std::string_view s) {
     auto w = new EditCtrl(parent);
     w->SetText(s);
     w->SetCueText("a cue text");
     w->OnTextChanged = onTextChanged;
     w->Create();
-    return NewEditLayout(w);
+    return w;
 }
 
 static char* ddItems[3] = {"foo", "another one", "bar"};
@@ -90,7 +90,7 @@ static void onDropDownSelected(DropDownSelectionChangedEvent* args) {
     dbglogf("drop down selection changed: %d, %s\n", idx, s.data());
 }
 
-static ILayout* CreatedDropDownLayout(HWND parent) {
+static DropDownCtrl* CreatedDropDown(HWND parent) {
     auto w = new DropDownCtrl(parent);
     for (size_t i = 0; i < dimof(ddItems); i++) {
         char* s = ddItems[i];
@@ -99,24 +99,24 @@ static ILayout* CreatedDropDownLayout(HWND parent) {
     }
     w->onSelectionChanged = onDropDownSelected;
     w->Create();
-    return NewDropDownLayout(w);
+    return w;
 }
 
-static ILayout* CreateStaticLayout(HWND parent, std::string_view s) {
+static StaticCtrl* CreateStatic(HWND parent, std::string_view s) {
     auto w = new StaticCtrl(parent);
     w->SetText(s);
     w->Create();
-    return NewStaticLayout(w);
+    return w;
 }
 
 static int maxProgress = 8;
 static int currProgress = 0;
 static ProgressCtrl* gProgress = nullptr;
 
-static std::tuple<ILayout*, ProgressCtrl*> CreateProgressLayout(HWND parent, int maxRange) {
+static ProgressCtrl* CreateProgress(HWND parent, int maxRange) {
     auto w = new ProgressCtrl(parent, maxRange);
     w->Create();
-    return {NewProgressLayout(w), w};
+    return w;
 }
 
 static void ToggleMainAxis() {
@@ -154,48 +154,53 @@ static void CreateMainLayout(HWND hwnd) {
     vbox->alignMain = MainAxisAlign::MainEnd;
     vbox->alignCross = CrossAxisAlign::Stretch;
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "toggle main axis", ToggleMainAxis);
-        vbox->AddChild(l);
+        auto b = CreateButton(hwnd, "toggle main axis", ToggleMainAxis);
+        vbox->AddChild(b);
     }
+
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "advance progress", AdvanceProgress);
+        auto b = CreateButton(hwnd, "advance progress", AdvanceProgress);
+        vbox->AddChild(b);
+    }
+
+    {
+        auto l = CreateEdit(hwnd, "initial text");
         vbox->AddChild(l);
     }
 
     {
-        auto l = CreateEditLayout(hwnd, "initial text");
-        vbox->AddChild(l);
+        auto b = CreateButton(hwnd, "toggle cross axis", ToggleCrossAxis);
+        vbox->AddChild(b);
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "toggle cross axis", ToggleCrossAxis);
-        vbox->AddChild(l);
-    }
-
-    {
-        auto l = CreateCheckboxLayout(hwnd, "checkbox one");
+        auto l = CreateCheckbox(hwnd, "checkbox one");
         auto elInfo = vbox->AddChild(l, 0);
     }
+
     {
-        auto l = CreateCheckboxLayout(hwnd, "checkbox two");
+        auto l = CreateCheckbox(hwnd, "checkbox two");
         vbox->AddChild(l);
     }
+
     {
-        auto l = CreatedDropDownLayout(hwnd);
-        vbox->AddChild(l);
+        auto w = CreatedDropDown(hwnd);
+        vbox->AddChild(w);
     }
+
     {
-        auto l = CreateStaticLayout(hwnd, "static control");
+        auto l = CreateStatic(hwnd, "static control");
         auto l2 = new Align(l);
         l2->HAlign = AlignEnd;
         vbox->AddChild(l2);
     }
+
     {
-        auto [l, w] = CreateProgressLayout(hwnd, maxProgress);
+        auto w = CreateProgress(hwnd, maxProgress);
         w->idealDy = 32;
         w->idealDx = 128;
         gProgress = w;
-        vbox->AddChild(l);
+        vbox->AddChild(w);
         AdvanceProgress();
     }
 

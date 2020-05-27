@@ -149,7 +149,3 @@ void ListBoxCtrl::SetModel(ListBoxModel* model) {
     }
     // TODO: update ideal size based on the size of the model
 }
-
-WindowBaseLayout* NewListBoxLayout(ListBoxCtrl* w) {
-    return new WindowBaseLayout(w, kindListBox);
-}

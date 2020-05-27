@@ -27,7 +27,5 @@ struct DropDownCtrl : WindowBase {
     void SetCueBanner(std::string_view);
 };
 
-ILayout* NewDropDownLayout(DropDownCtrl* b);
-
 bool IsDropDown(Kind);
 bool IsDropDown(ILayout*);

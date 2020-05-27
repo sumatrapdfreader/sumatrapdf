@@ -82,14 +82,10 @@ Size ButtonCtrl::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-ILayout* NewButtonLayout(ButtonCtrl* w) {
-    return new WindowBaseLayout(w, kindButton);
-}
-
-std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, const ClickedHandler& onClicked) {
+ButtonCtrl* CreateButton(HWND parent, std::string_view s, const ClickedHandler& onClicked) {
     auto b = new ButtonCtrl(parent);
     b->onClicked = onClicked;
     b->SetText(s);
     b->Create();
-    return {NewButtonLayout(b), b};
+    return b;
 }

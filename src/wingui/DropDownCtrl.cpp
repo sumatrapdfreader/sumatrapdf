@@ -124,7 +124,3 @@ Size DropDownCtrl::GetIdealSize() {
     pad += 8;
     return {s1.dx + pad, s1.dy + 2};
 }
-
-ILayout* NewDropDownLayout(DropDownCtrl* w) {
-    return new WindowBaseLayout(w, kindDropDown);
-}

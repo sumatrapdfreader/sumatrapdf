@@ -1295,8 +1295,8 @@ static bool CreateRaMicroInstallerWindow() {
     */
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Install", [win]() { win->Install(); });
-        buttons->AddChild(l);
+        auto b = CreateButton(hwnd, "Install", [win]() { win->Install(); });
+        buttons->AddChild(b);
         win->btnInstall = b;
     }
 
@@ -1308,8 +1308,7 @@ static bool CreateRaMicroInstallerWindow() {
     splashCtrl->bmp = win->bmpSplash;
     ok = splashCtrl->Create();
     CrashIf(!ok);
-    ILayout* splashLayout = NewImageLayout(splashCtrl);
-    main->AddChild(splashLayout);
+    main->AddChild(splashCtrl);
 
     win->finishedText = new StaticCtrl(hwnd);
     win->finishedText->SetText("Installation finished!");
@@ -1317,9 +1316,8 @@ static bool CreateRaMicroInstallerWindow() {
     // win->finishedText->SetFont();
     win->finishedText->Create();
     win->finishedText->SetIsVisible(false);
-    ILayout* finishedTextLayout = NewLabelLayout(win->finishedText);
 
-    main->AddChild(finishedTextLayout);
+    main->AddChild(win->finishedText);
 
     main->AddChild(buttons);
 

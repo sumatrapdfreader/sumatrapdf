@@ -773,32 +773,32 @@ static void CreateButtonsLayout(TocEditorWindow* w) {
     buttons->alignMain = MainAxisAlign::Homogeneous;
     buttons->alignCross = CrossAxisAlign::CrossStart;
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "&Add PDF", std::bind(&TocEditorWindow::AddPdf, w));
-        buttons->AddChild(l);
+        auto b = CreateButton(hwnd, "&Add PDF", std::bind(&TocEditorWindow::AddPdf, w));
+        buttons->AddChild(b);
         w->btnAddPdf = b;
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "&Remove Item", std::bind(&TocEditorWindow::RemoveItem, w));
-        buttons->AddChild(l);
+        auto b = CreateButton(hwnd, "&Remove Item", std::bind(&TocEditorWindow::RemoveItem, w));
+        buttons->AddChild(b);
         w->btnRemoveTocItem = b;
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Save As PDF", std::bind(&TocEditorWindow::SaveAsPdf, w));
-        buttons->AddChild(l);
+        auto b = CreateButton(hwnd, "Save As PDF", std::bind(&TocEditorWindow::SaveAsPdf, w));
+        buttons->AddChild(b);
         w->btnSaveAsPdf = b;
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Save As Virtual PDF", std::bind(&TocEditorWindow::SaveAsVirtual, w));
-        buttons->AddChild(l);
+        auto b = CreateButton(hwnd, "Save As Virtual PDF", std::bind(&TocEditorWindow::SaveAsVirtual, w));
+        buttons->AddChild(b);
         w->btnSaveAsVirtual = b;
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "E&xit", std::bind(&Window::Close, w->mainWindow));
-        buttons->AddChild(l);
+        auto b = CreateButton(hwnd, "E&xit", std::bind(&Window::Close, w->mainWindow));
+        buttons->AddChild(b);
         w->btnExit = b;
     }
 
@@ -832,21 +832,18 @@ static void CreateMainLayout(TocEditorWindow* win) {
     bool ok = tree->Create(L"tree");
     CrashIf(!ok);
 
-    auto treeLayout = NewTreeLayout(tree);
-
     win->labelInfo = new StaticCtrl(hwnd);
     SetInfoLabelText(win->labelInfo, false);
     COLORREF col = MkGray(0x33);
     win->labelInfo->SetTextColor(col);
     win->labelInfo->Create();
-    ILayout* labelLayout = NewStaticLayout(win->labelInfo);
 
     auto* main = new VBox();
     main->alignMain = MainAxisAlign::MainStart;
     main->alignCross = CrossAxisAlign::Stretch;
 
-    main->AddChild(treeLayout, 1);
-    main->AddChild(labelLayout, 0);
+    main->AddChild(tree, 1);
+    main->AddChild(win->labelInfo, 0);
     main->AddChild(win->layoutButtons, 0);
 
     auto padding = new Padding(main, DpiScaledInsets(hwnd, 8));

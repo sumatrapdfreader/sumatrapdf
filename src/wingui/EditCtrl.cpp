@@ -33,10 +33,6 @@ bool IsEdit(ILayout* l) {
     return IsLayoutOfKind(l, kindEdit);
 }
 
-ILayout* NewEditLayout(EditCtrl* w) {
-    return new WindowBaseLayout(w, kindEdit);
-}
-
 static void HandleWM_COMMAND(EditCtrl* w, WndEvent* ev) {
     CrashIf(ev->msg != WM_COMMAND);
 

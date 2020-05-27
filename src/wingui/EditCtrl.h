@@ -41,7 +41,5 @@ struct EditCtrl : WindowBase {
     bool SetCueText(std::string_view);
 };
 
-ILayout* NewEditLayout(EditCtrl*);
-
 bool IsEdit(Kind);
 bool IsEdit(ILayout*);

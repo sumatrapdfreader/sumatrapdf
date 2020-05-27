@@ -112,7 +112,3 @@ Size ImageCtrl::GetIdealSize() {
     UINT dy = bmp->GetHeight();
     return Size{(int)dx, (int)dy};
 }
-
-ILayout* NewImageLayout(ImageCtrl* w) {
-    return new WindowBaseLayout(w, kindImage);
-}

@@ -66,7 +66,3 @@ int ProgressCtrl::GetCurrent() {
     current = (int)SendMessageW(hwnd, PBM_GETPOS, 0, 0);
     return current;
 }
-
-ILayout* NewProgressLayout(ProgressCtrl* w) {
-    return new WindowBaseLayout(w, kindProgress);
-}

@@ -812,10 +812,6 @@ Size TreeCtrl::GetIdealSize() {
     return {idealSize.dx, idealSize.dy};
 }
 
-WindowBaseLayout* NewTreeLayout(TreeCtrl* w) {
-    return new WindowBaseLayout(w, kindTree);
-}
-
 // if context menu invoked via keyboard, get selected item
 // if via right-click, selects the item under the cursor
 // in both cases can return null

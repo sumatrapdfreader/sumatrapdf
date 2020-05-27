@@ -14,9 +14,7 @@ struct ButtonCtrl : WindowBase {
     Size GetIdealSize() override;
 };
 
-ILayout* NewButtonLayout(ButtonCtrl* b);
-
 bool IsButton(Kind);
 bool IsButton(ILayout*);
 
-std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, const ClickedHandler& onClicked);
+ButtonCtrl* CreateButton(HWND parent, std::string_view s, const ClickedHandler& onClicked);

@@ -27,7 +27,5 @@ struct CheckboxCtrl : WindowBase {
     bool IsChecked() const;
 };
 
-ILayout* NewCheckboxLayout(CheckboxCtrl* b);
-
 bool IsCheckbox(Kind);
 bool IsCheckbox(ILayout*);

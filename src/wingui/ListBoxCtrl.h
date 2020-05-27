@@ -47,7 +47,5 @@ struct ListBoxCtrl : WindowBase {
     void SetModel(ListBoxModel*);
 };
 
-WindowBaseLayout* NewListBoxLayout(ListBoxCtrl*);
-
 bool IsListBox(Kind);
 bool IsListBox(ILayout*);

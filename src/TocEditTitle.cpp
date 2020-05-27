@@ -135,96 +135,88 @@ static void createMainLayout(EditTitleWindow* win) {
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     {
-        auto s = new StaticCtrl(parent);
-        s->SetText("&Title:");
-        s->Create();
-        auto l = NewLabelLayout(s);
-        vbox->AddChild(l);
+        auto w = new StaticCtrl(parent);
+        w->SetText("&Title:");
+        w->Create();
+        vbox->AddChild(w);
     }
 
     {
-        auto e = new EditCtrl(parent);
-        e->dwStyle |= WS_GROUP;
-        win->editTitle = e;
-        e->SetCueText("Title");
-        e->SetText(win->args->title.as_view());
-        e->Create();
-        auto l = NewEditLayout(e);
-        vbox->AddChild(l);
+        auto w = new EditCtrl(parent);
+        w->dwStyle |= WS_GROUP;
+        win->editTitle = w;
+        w->SetCueText("Title");
+        w->SetText(win->args->title.as_view());
+        w->Create();
+        vbox->AddChild(w);
     }
 
     int nPages = win->args->nPages;
     if (nPages > 0) {
         {
-            auto s = new StaticCtrl(parent);
+            auto w = new StaticCtrl(parent);
             if (nPages == 0) {
-                s->SetText("&Page");
+                w->SetText("&Page");
             } else {
                 AutoFreeStr pageStr = str::Format("&Page (1-%d)", nPages);
-                s->SetText(pageStr.as_view());
+                w->SetText(pageStr.as_view());
             }
-            s->Create();
-            auto l = NewLabelLayout(s);
-            vbox->AddChild(l);
+            w->Create();
+            vbox->AddChild(w);
         }
         {
-            auto e = new EditCtrl(parent);
-            win->editPage = e;
-            e->SetCueText("Page");
-            e->Create();
+            auto w = new EditCtrl(parent);
+            win->editPage = w;
+            w->SetCueText("Page");
+            w->Create();
 
             int nPage = win->args->page;
             if (nPage != 0) {
                 AutoFreeStr pageStr = str::Format("%d", nPage);
-                e->SetText(pageStr.as_view());
+                w->SetText(pageStr.as_view());
             }
-            auto l = NewEditLayout(e);
-            vbox->AddChild(l);
+            vbox->AddChild(w);
         }
     }
 
     // TODO: make this in a hbox, maybe
     {
-        auto c = new CheckboxCtrl(parent);
-        win->checkboxBold = c;
-        c->SetText("&Bold");
-        c->Create();
-        c->SetIsChecked(win->args->bold);
-        auto l = NewCheckboxLayout(c);
-        vbox->AddChild(l);
+        auto w = new CheckboxCtrl(parent);
+        win->checkboxBold = w;
+        w->SetText("&Bold");
+        w->Create();
+        w->SetIsChecked(win->args->bold);
+        vbox->AddChild(w);
     }
 
     {
-        auto c = new CheckboxCtrl(parent);
-        win->checkboxItalic = c;
-        c->SetText("&Italic");
-        c->Create();
-        c->SetIsChecked(win->args->italic);
-        auto l = NewCheckboxLayout(c);
-        vbox->AddChild(l);
+        auto w = new CheckboxCtrl(parent);
+        win->checkboxItalic = w;
+        w->SetText("&Italic");
+        w->Create();
+        w->SetIsChecked(win->args->italic);
+        vbox->AddChild(w);
     }
 
     {
-        auto s = new StaticCtrl(parent);
-        s->SetText("&Color:");
-        s->Create();
-        auto l = NewLabelLayout(s);
-        vbox->AddChild(l);
+        auto w = new StaticCtrl(parent);
+        w->SetText("&Color:");
+        w->Create();
+        vbox->AddChild(w);
     }
     {
-        auto e = new EditCtrl(parent);
-        win->editColor = e;
-        e->SetCueText("Color");
-        e->Create();
+        auto w = new EditCtrl(parent);
+        win->editColor = w;
+        w->SetCueText("Color");
+        w->Create();
 
         str::Str colorStr;
         if (win->args->color != ColorUnset) {
             SerializeColor(win->args->color, colorStr);
         }
 
-        e->SetText(colorStr.as_view());
-        auto l = NewEditLayout(e);
-        vbox->AddChild(l);
+        w->SetText(colorStr.as_view());
+        vbox->AddChild(w);
     }
 
     {
@@ -233,23 +225,21 @@ static void createMainLayout(EditTitleWindow* win) {
         buttons->alignCross = CrossAxisAlign::CrossStart;
 
         {
-            auto b = new ButtonCtrl(parent);
-            b->SetText("Cance&l");
-            b->onClicked = std::bind(&EditTitleWindow::ButtonCancelHandler, win);
-            b->Create();
-            win->buttonCancel = b;
-            auto l = NewButtonLayout(b);
-            buttons->AddChild(l);
+            auto w = new ButtonCtrl(parent);
+            w->SetText("Cance&l");
+            w->onClicked = std::bind(&EditTitleWindow::ButtonCancelHandler, win);
+            w->Create();
+            win->buttonCancel = w;
+            buttons->AddChild(w);
         }
 
         {
-            auto b = new ButtonCtrl(parent);
-            b->isDefault = true;
-            b->SetText("&Ok");
-            b->onClicked = std::bind(&EditTitleWindow::ButtonOkHandler, win);
-            b->Create();
-            auto l = NewButtonLayout(b);
-            buttons->AddChild(l);
+            auto w = new ButtonCtrl(parent);
+            w->isDefault = true;
+            w->SetText("&Ok");
+            w->onClicked = std::bind(&EditTitleWindow::ButtonOkHandler, win);
+            w->Create();
+            buttons->AddChild(w);
         }
         vbox->AddChild(buttons);
     }

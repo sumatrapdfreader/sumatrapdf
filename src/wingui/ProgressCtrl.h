@@ -22,7 +22,5 @@ struct ProgressCtrl : WindowBase {
     Size GetIdealSize() override;
 };
 
-ILayout* NewProgressLayout(ProgressCtrl* b);
-
 bool IsProgress(Kind);
 bool IsProgress(ILayout*);

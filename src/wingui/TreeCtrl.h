@@ -215,8 +215,6 @@ struct TreeCtrl : WindowBase {
     void DragEnd();
 };
 
-WindowBaseLayout* NewTreeLayout(TreeCtrl*);
-
 bool IsTree(Kind);
 bool IsTree(ILayout*);
 

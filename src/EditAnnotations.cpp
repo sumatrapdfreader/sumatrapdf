@@ -479,14 +479,13 @@ static void WndKeyHandler(EditAnnotationsWindow* w, KeyEvent* ev) {
     }
 }
 
-static std::tuple<StaticCtrl*, ILayout*> CreateStatic(HWND parent, std::string_view sv = {}) {
+static StaticCtrl* CreateStatic(HWND parent, std::string_view sv = {}) {
     auto w = new StaticCtrl(parent);
     bool ok = w->Create();
     CrashIf(!ok);
     w->SetText(sv);
     w->SetIsVisible(false);
-    auto l = NewStaticLayout(w);
-    return {w, l};
+    return w;
 }
 
 static void CreateMainLayout(EditAnnotationsWindow* aw) {
@@ -495,16 +494,13 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
-    ILayout* l = nullptr;
-
     {
         auto w = new DropDownCtrl(parent);
         bool ok = w->Create();
         CrashIf(!ok);
         aw->dropDownAdd = w;
         w->onSelectionChanged = std::bind(DropDownAddSelectionChanged, aw, _1);
-        l = NewDropDownLayout(w);
-        vbox->AddChild(l);
+        vbox->AddChild(w);
         Vec<std::string_view> annotTypes;
         DropDownItemsFromStringArray(annotTypes, gAnnotationTypes);
         w->SetItems(annotTypes);
@@ -518,38 +514,37 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         CrashIf(!ok);
         aw->listBox = w;
         w->onSelectionChanged = std::bind(ListBoxSelectionChanged, aw, _1);
-        l = NewListBoxLayout(w);
-        vbox->AddChild(l);
+        vbox->AddChild(w);
 
         aw->lbModel = new ListBoxModelStrings();
         aw->listBox->SetModel(aw->lbModel);
     }
 
     {
-        std::tie(aw->staticRect, l) = CreateStatic(parent);
-        vbox->AddChild(l);
+        aw->staticRect = CreateStatic(parent);
+        vbox->AddChild(aw->staticRect);
     }
 
     {
-        std::tie(aw->staticAuthor, l) = CreateStatic(parent);
+        aw->staticAuthor = CreateStatic(parent);
         // WindowBaseLayout* l2 = (WindowBaseLayout*)l;
         // l2->SetInsetsPt(20, 0, 0, 0);
-        vbox->AddChild(l);
+        vbox->AddChild(aw->staticAuthor);
     }
 
     {
-        std::tie(aw->staticModificationDate, l) = CreateStatic(parent);
-        vbox->AddChild(l);
+        aw->staticModificationDate = CreateStatic(parent);
+        vbox->AddChild(aw->staticModificationDate);
     }
 
     {
-        std::tie(aw->staticPopup, l) = CreateStatic(parent);
-        vbox->AddChild(l);
+        aw->staticPopup = CreateStatic(parent);
+        vbox->AddChild(aw->staticPopup);
     }
 
     {
-        std::tie(aw->staticContents, l) = CreateStatic(parent, "Contents:");
-        vbox->AddChild(l);
+        aw->staticContents = CreateStatic(parent, "Contents:");
+        vbox->AddChild(aw->staticContents);
     }
 
     {
@@ -561,13 +556,12 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         w->SetIsVisible(false);
         aw->editContents = w;
         // TODO: hookup change request
-        l = NewEditLayout(w);
-        vbox->AddChild(l);
+        vbox->AddChild(w);
     }
 
     {
-        std::tie(aw->staticIcon, l) = CreateStatic(parent, "Icon:");
-        vbox->AddChild(l);
+        aw->staticIcon = CreateStatic(parent, "Icon:");
+        vbox->AddChild(aw->staticIcon);
     }
 
     {
@@ -577,13 +571,12 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         w->SetIsVisible(false);
         aw->dropDownIcon = w;
         w->onSelectionChanged = std::bind(DropDownIconSelectionChanged, aw, _1);
-        l = NewDropDownLayout(w);
-        vbox->AddChild(l);
+        vbox->AddChild(w);
     }
 
     {
-        std::tie(aw->staticColor, l) = CreateStatic(parent, "Color:");
-        vbox->AddChild(l);
+        aw->staticColor = CreateStatic(parent, "Color:");
+        vbox->AddChild(aw->staticColor);
     }
 
     {
@@ -593,8 +586,7 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         w->SetIsVisible(false);
         aw->dropDownColor = w;
         w->onSelectionChanged = std::bind(DropDownColorSelectionChanged, aw, _1);
-        l = NewDropDownLayout(w);
-        vbox->AddChild(l);
+        vbox->AddChild(w);
         Vec<std::string_view> strings;
         DropDownItemsFromStringArray(strings, gColors);
         w->SetItems(strings);
@@ -608,13 +600,12 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         w->SetIsVisible(false);
         CrashIf(!ok);
         aw->buttonDelete = w;
-        l = NewButtonLayout(w);
-        vbox->AddChild(l);
+        vbox->AddChild(w);
     }
 
     {
         // used to take all available space between the what's above and below
-        l = new Spacer(0, 0);
+        auto l = new Spacer(0, 0);
         vbox->AddChild(l, 1);
     }
 
@@ -627,8 +618,7 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enable if there are changes
         aw->buttonSavePDF = w;
-        l = NewButtonLayout(w);
-        vbox->AddChild(l);
+        vbox->AddChild(w);
     }
 
     auto padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));

@@ -34,18 +34,18 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     vbox->alignCross = CrossAxisAlign::CrossCenter;
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Tabs test", LaunchTabs);
-        vbox->AddChild(l);
+        auto b = CreateButton(hwnd, "Tabs test", LaunchTabs);
+        vbox->AddChild(b);
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Layout test", LaunchLayout);
-        vbox->AddChild(l);
+        auto b = CreateButton(hwnd, "Layout test", LaunchLayout);
+        vbox->AddChild(b);
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Lice test", LaunchLice);
-        vbox->AddChild(l);
+        auto b = CreateButton(hwnd, "Lice test", LaunchLice);
+        vbox->AddChild(b);
     }
     auto padding = new Padding(vbox, DefaultInsets());
     return padding;

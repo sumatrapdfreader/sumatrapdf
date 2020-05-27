@@ -62,13 +62,3 @@ void StaticCtrl::HandleWM_COMMAND(WndEvent* ev) {
     CrashIf(msg != WM_COMMAND);
     // TODO: support STN_CLICKED
 }
-
-ILayout* NewStaticLayout(StaticCtrl* w) {
-    return new WindowBaseLayout(w, kindStatic);
-}
-
-// label gets a special treatment in layout in that it "hugs" the next control
-// (is assumed to be associated with that control)
-ILayout* NewLabelLayout(StaticCtrl* w) {
-    return new WindowBaseLayout(w, kindLabel);
-}
