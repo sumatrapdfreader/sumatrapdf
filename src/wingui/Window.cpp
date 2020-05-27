@@ -503,7 +503,6 @@ WindowBase::WindowBase(HWND p) {
     kind = kindWindowBase;
     parent = p;
     ctrlID = GetNextCtrlID();
-    layout = new WindowBaseLayout(this);
 }
 
 // generally not needed for child controls as they are destroyed when
@@ -524,9 +523,6 @@ WindowBase::~WindowBase() {
     }
     Destroy();
     UnregisterHandlersForHwnd(hwnd);
-    // TODO: this leaks but we can't delete it
-    // probably will fix it if will merge WindowBaseLayout directly into WindowBase
-    // delete layout;
 }
 
 void WindowBase::WndProc(WndEvent* ev) {
@@ -617,22 +613,6 @@ bool WindowBase::IsEnabled() {
 
 Kind WindowBase::GetKind() {
     return kind;
-}
-
-int WindowBase::MinIntrinsicHeight(int width) {
-    return layout->MinIntrinsicHeight(width);
-}
-
-int WindowBase::MinIntrinsicWidth(int height) {
-    return layout->MinIntrinsicWidth(height);
-}
-
-Size WindowBase::Layout(const Constraints bc) {
-    return layout->Layout(bc);
-}
-
-void WindowBase::SetBounds(Rect r) {
-    return layout->SetBounds(r);
 }
 
 void WindowBase::SetVisibility(Visibility newVisibility) {
@@ -877,41 +857,13 @@ void Window::Close() {
     ::SendMessage(hwnd, WM_CLOSE, 0, 0);
 }
 
-WindowBaseLayout::WindowBaseLayout(WindowBase* b) {
-    wb = b;
-    b->layout = this;
-}
-
-WindowBaseLayout::~WindowBaseLayout() {
-    if (wb) {
-        // must null-out because WindowBase deletes its layout
-        // TODO: maybe don't delete wb here
-        wb->layout = nullptr;
-    }
-    delete wb;
-}
-
-// TODO: use it's own kind?
-Kind WindowBaseLayout::GetKind() {
-    return wb->kind;
-}
-
-void WindowBaseLayout::SetVisibility(Visibility newVisibility) {
-    wb->SetVisibility(newVisibility);
-}
-
-Visibility WindowBaseLayout::GetVisibility() {
-    return wb->GetVisibility();
-}
-
 // if only top given, set them all to top
 // if top, right given, set bottom to top and left to right
-void WindowBaseLayout::SetInsetsPt(int top, int right, int bottom, int left) {
-    HWND hwnd = wb ? wb->hwnd : nullptr;
+void WindowBase::SetInsetsPt(int top, int right, int bottom, int left) {
     insets = DpiScaledInsets(hwnd, top, right, bottom, left);
 }
 
-Size WindowBaseLayout::Layout(const Constraints bc) {
+Size WindowBase::Layout(const Constraints bc) {
     dbglayoutf("WindowBase::Layout() %s ", GetKind());
     LogConstraints(bc, "\n");
 
@@ -930,19 +882,19 @@ Size WindowBaseLayout::Layout(const Constraints bc) {
     return res;
 }
 
-int WindowBaseLayout::MinIntrinsicHeight(int) {
+int WindowBase::MinIntrinsicHeight(int) {
     auto vinset = insets.top + insets.bottom;
-    Size s = wb->GetIdealSize();
+    Size s = GetIdealSize();
     return s.dy + vinset;
 }
 
-int WindowBaseLayout::MinIntrinsicWidth(int) {
+int WindowBase::MinIntrinsicWidth(int) {
     auto hinset = insets.left + insets.right;
-    Size s = wb->GetIdealSize();
+    Size s = GetIdealSize();
     return s.dx + hinset;
 }
 
-void WindowBaseLayout::SetBounds(Rect bounds) {
+void WindowBase::SetBounds(Rect bounds) {
     dbglayoutf("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", GetKind(), bounds.x, bounds.y, bounds.dx, bounds.dy);
 
     lastBounds = bounds;
@@ -953,9 +905,9 @@ void WindowBaseLayout::SetBounds(Rect bounds) {
     bounds.dy -= (insets.bottom + insets.top);
 
     auto r = RectToRECT(bounds);
-    ::MoveWindow(wb->hwnd, &r);
+    ::MoveWindow(hwnd, &r);
     // TODO: optimize if doesn't change position
-    ::InvalidateRect(wb->hwnd, nullptr, TRUE);
+    ::InvalidateRect(hwnd, nullptr, TRUE);
 }
 
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {

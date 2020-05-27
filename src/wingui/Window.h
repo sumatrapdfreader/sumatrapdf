@@ -128,31 +128,12 @@ extern Kind kindWindowBase;
 
 struct WindowBase;
 
-struct WindowBaseLayout : public ILayout {
-    WindowBase* wb = nullptr;
-    Insets insets{};
-    Size childSize{};
-    Rect lastBounds{};
-
-    WindowBaseLayout(WindowBase*);
-    ~WindowBaseLayout() override;
-
-    Kind GetKind() override;
-    void SetVisibility(Visibility) override;
-    Visibility GetVisibility() override;
-
-    int MinIntrinsicHeight(int) override;
-    int MinIntrinsicWidth(int) override;
-    Size Layout(const Constraints bc) override;
-    void SetBounds(Rect bounds) override;
-
-    void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
-};
-
 struct WindowBase : public ILayout {
     Kind kind = nullptr;
 
-    WindowBaseLayout* layout = nullptr;
+    Insets insets{};
+    Size childSize{};
+    Rect lastBounds{};
 
     // data that can be set before calling Create()
     Visibility visibility = Visibility::Visible;
@@ -224,6 +205,7 @@ struct WindowBase : public ILayout {
     int MinIntrinsicWidth(int height) override;
     Size Layout(const Constraints bc) override;
     void SetBounds(Rect) override;
+    void SetInsetsPt(int top, int right = -1, int bottom = -1, int left = -1);
 
     void Destroy();
     void Subclass();
