@@ -10,6 +10,3 @@ struct StaticCtrl : WindowBase {
 
     Size GetIdealSize() override;
 };
-
-bool IsStatic(Kind);
-bool IsStatic(ILayout*);

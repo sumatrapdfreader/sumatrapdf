@@ -14,14 +14,6 @@
 
 Kind kindImage = "image";
 
-bool IsImage(Kind kind) {
-    return kind == kindImage;
-}
-
-bool IsImage(ILayout* l) {
-    return IsLayoutOfKind(l, kindImage);
-}
-
 ImageCtrl::ImageCtrl(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE;
     winClass = WC_STATICW;

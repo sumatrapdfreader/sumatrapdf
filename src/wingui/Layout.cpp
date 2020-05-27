@@ -54,16 +54,8 @@ void LogConstraints(Constraints c, const char* suffix) {
     dbglayoutf("%s", s.c_str());
 }
 
-int Rect::Right() const {
-    return x + dx;
-}
-
-int Rect::Bottom() const {
-    return y + dy;
-}
-
-bool Rect::empty() const {
-    return Dx() == 0 || Dy() == 0;
+bool NotCollapsed(ILayout* l) {
+    return l->GetVisibility() == Visibility::Collapse;
 }
 
 RECT RectToRECT(const Rect r) {
@@ -338,81 +330,9 @@ void Padding::SetBounds(Rect bounds) {
     child->SetBounds(bounds);
 }
 
-// layout.go
-int calculateHGap(ILayout* previous, ILayout* current) {
-    if (true) {
-        return 0;
-    }
-
-    // The vertical gap between most controls is 11 relative pixels.  However,
-    // there are different rules for between a label and its associated control,
-    // or between related controls.  These relationship do not appear in the
-    // model provided by this package, so these relationships need to be
-    // inferred from the order and type of controls.
-    //
-    // https://msdn.microsoft.com/en-us/library/windows/desktop/dn742486.aspx#sizingandspacing
-    if (IsButton(previous)) {
-        if (IsButton(current)) {
-            // Any pair of successive buttons will be assumed to be in a
-            // related group.
-            return DpiScale(8);
-        }
-    }
-
-    // The spacing between unrelated controls.
-    return DpiScale(11);
-}
-
-int calculateVGap(ILayout* previous, ILayout* current) {
-    if (true) {
-        return 0;
-    }
-
-    // The vertical gap between most controls is 11 relative pixels.  However,
-    // there are different rules for between a label and its associated control,
-    // or between related controls.  These relationship do not appear in the
-    // model provided by this package, so these relationships need to be
-    // inferred from the order and type of controls.
-    //
-    // https://msdn.microsoft.com/en-us/library/windows/desktop/dn742486.aspx#sizingandspacing
-
-    // Unwrap and Expand widgets.
-    if (IsExpand(previous)) {
-        Expand* expand = (Expand*)previous;
-        previous = expand->child;
-    }
-    if (IsExpand(current)) {
-        Expand* expand = (Expand*)current;
-        current = expand->child;
-    }
-
-    // Apply layout rules.
-    if (IsLabel(previous)) {
-        // Any label immediately preceding any other control will be assumed to
-        // be 'associated'.
-        return DpiScale(2);
-    }
-
-    if (IsCheckbox(previous)) {
-        if (IsCheckbox(current)) {
-            // Any pair of successive checkboxes will be assumed to be in a
-            // related group.
-            // return DpiScale(2);
-            return 0;
-        }
-    }
-
-    // The spacing between unrelated controls.  This is also the default space
-    // between paragraphs of text.
-    return DpiScale(8);
-}
-
 // vbox.go
 
 Kind kindVBox = "vbox";
-bool IsVBox(Kind kind) {
-    return kind == kindVBox;
-}
 
 VBox::VBox() {
     kind = kindVBox;
@@ -428,17 +348,36 @@ int VBox::ChildrenCount() {
     return children.isize();
 }
 
+int VBox::NonCollapsedChildrenCount() {
+    int n = 0;
+    for (const auto& c : children) {
+        if (NotCollapsed(c.layout)) {
+            n++;
+        }
+    }
+    return n;
+}
+
 int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
     if (alignMain == MainAxisAlign::Homogeneous) {
         return 0;
     }
     int totalFlex = 0;
     for (auto& i : children) {
-        if (i.layout->GetVisibility() != Visibility::Collapse) {
+        if (NotCollapsed(i.layout)) {
             totalFlex += i.flex;
         }
     }
     return totalFlex;
+}
+
+// TODO: remove calculateVGap() and calculateHGap()
+static int calculateVGap(ILayout*, ILayout*) {
+    return 0;
+}
+
+static int calculateHGap(ILayout*, ILayout*) {
+    return 0;
 }
 
 Size VBox::Layout(const Constraints bc) {
@@ -726,14 +665,6 @@ boxElementInfo& VBox::AddChild(ILayout* child) {
 // hbox.go
 Kind kindHBox = "hbox";
 
-bool IsHBox(Kind kind) {
-    return kind == kindHBox;
-}
-
-bool IsHBox(ILayout* l) {
-    return IsLayoutOfKind(l, kindHBox);
-}
-
 HBox::~HBox() {
     for (auto& c : children) {
         delete c.layout;
@@ -742,6 +673,16 @@ HBox::~HBox() {
 
 int HBox::ChildrenCount() {
     return children.isize();
+}
+
+int HBox::NonCollapsedChildrenCount() {
+    int n = 0;
+    for (const auto& c : children) {
+        if (NotCollapsed(c.layout)) {
+            n++;
+        }
+    }
+    return n;
 }
 
 Size HBox::Layout(const Constraints bc) {
@@ -1025,14 +966,6 @@ boxElementInfo& HBox::AddChild(ILayout* child) {
 
 Kind kindAlign = "align";
 
-bool IsAlign(Kind kind) {
-    return kind == kindAlign;
-}
-
-bool IsAlign(ILayout* l) {
-    return IsLayoutOfKind(l, kindAlign);
-}
-
 Align::Align(ILayout* c) {
     Child = c;
     kind = kindAlign;
@@ -1092,67 +1025,6 @@ void Align::SetBounds(Rect bounds) {
     int y = scale(bminy, this->VAlign - AlignEnd, twm) + scale(bmaxy - ch, this->VAlign - AlignStart, tw);
     Rect b{Point{x, y}, Point{x + cw, y + ch}};
     this->Child->SetBounds(b);
-}
-
-// expand.go
-
-Kind kindExpand = "expand";
-
-bool IsExpand(Kind kind) {
-    return kind == kindExpand;
-}
-
-bool IsExpand(ILayout* l) {
-    return IsLayoutOfKind(l, kindExpand);
-}
-
-Expand::Expand(ILayout* c, int f) {
-    kind = kindExpand;
-    child = c;
-    factor = f;
-}
-
-Expand* CreateExpand(ILayout* child, int factor) {
-    return new Expand{child, factor};
-}
-
-Expand::~Expand() {
-}
-
-Size Expand::Layout(const Constraints bc) {
-    dbglayoutf("Expand::Layout() ");
-    LogConstraints(bc, "\n");
-
-    return child->Layout(bc);
-}
-
-int Expand::MinIntrinsicHeight(int width) {
-    return child->MinIntrinsicHeight(width);
-}
-
-int Expand::MinIntrinsicWidth(int height) {
-    return child->MinIntrinsicWidth(height);
-}
-
-void Expand::SetBounds(Rect bounds) {
-    dbglayoutf("Expand:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy);
-    lastBounds = bounds;
-    return child->SetBounds(bounds);
-}
-
-Kind kindLabel = "label";
-
-bool IsLabeL(Kind kind) {
-    return kind == kindLabel;
-}
-
-extern bool IsStatic(Kind);
-
-bool IsLabel(ILayout* l) {
-    if (!l) {
-        return false;
-    }
-    return IsLayoutOfKind(l, kindLabel);
 }
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {

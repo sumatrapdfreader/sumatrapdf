@@ -21,6 +21,3 @@ struct ProgressCtrl : WindowBase {
 
     Size GetIdealSize() override;
 };
-
-bool IsProgress(Kind);
-bool IsProgress(ILayout*);

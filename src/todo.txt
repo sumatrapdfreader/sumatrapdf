@@ -10,13 +10,11 @@ this would simplify the code to build layouts
 	as (0,0) if visibility == collaps
 - [X] Remove hacks in VBox() that guess padding and use explicit Insets
 - [X] when selecting annotation in list box, go to its page
-
-Layout:
- - fix HBox the same way as VBox (to properly handle hidden elements)
- - remove Expand, don't know what it's for
- - remove IsCheckbox(), IsLabel() etc.
- - remove calculateHGap() and calculateVGap()
-
+- [X] remove calculateHGap() and calculateVGap()
+- [X] remove Expand, it's not needed because VBox->AddChild() has flex factor
+- [X] remove IsCheckbox(), IsLabel() etc.
+- [X] fix HBox the same way as VBox (to properly handle hidden elements)
+ 
 Annotations:
  - a way to save PDF as a new file
  - implement "Delete annotation"

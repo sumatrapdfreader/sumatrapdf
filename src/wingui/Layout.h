@@ -66,6 +66,8 @@ struct ILayout {
     virtual void SetBounds(Rect) = 0;
 };
 
+bool NotCollapsed(ILayout*);
+
 struct LayoutBase : public ILayout {
     Kind kind = nullptr;
     // allows easy way to hide / show elements
@@ -83,9 +85,6 @@ struct LayoutBase : public ILayout {
 };
 
 bool IsLayoutOfKind(ILayout*, Kind);
-
-int calculateVGap(ILayout* previous, ILayout* current);
-int calculateHGap(ILayout* previous, ILayout* current);
 
 // padding.go
 
@@ -114,26 +113,6 @@ struct Padding : LayoutBase {
 
 bool IsPadding(Kind);
 bool IsPadding(ILayout*);
-
-// expand.go
-
-struct Expand : LayoutBase {
-    ILayout* child = nullptr;
-    int factor = 0;
-
-    // ILayout
-    Expand(ILayout* c, int f);
-    ~Expand() override;
-    Size Layout(const Constraints bc) override;
-    int MinIntrinsicHeight(int width) override;
-    int MinIntrinsicWidth(int height) override;
-    void SetBounds(Rect) override;
-};
-
-Expand* CreateExpand(ILayout*, int);
-
-bool IsExpand(Kind);
-bool IsExpand(ILayout*);
 
 // vbox.go
 
@@ -171,9 +150,6 @@ struct boxElementInfo {
     int flex = 0;
 };
 
-bool IsVBox(Kind);
-bool IsVBox(ILayout*);
-
 struct VBox : LayoutBase {
     Vec<boxElementInfo> children;
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
@@ -193,12 +169,10 @@ struct VBox : LayoutBase {
     boxElementInfo& AddChild(ILayout* child);
     boxElementInfo& AddChild(ILayout* child, int flex);
     int ChildrenCount();
+    int NonCollapsedChildrenCount();
 };
 
 // hbox.go
-
-bool IsHBox(Kind);
-bool IsHBox(ILayout*);
 
 struct HBox : LayoutBase {
     Vec<boxElementInfo> children;
@@ -217,6 +191,7 @@ struct HBox : LayoutBase {
     boxElementInfo& AddChild(ILayout* child);
     boxElementInfo& AddChild(ILayout* child, int flex);
     int ChildrenCount();
+    int NonCollapsedChildrenCount();
 };
 
 // align.go
@@ -257,27 +232,6 @@ struct Spacer : LayoutBase {
     int MinIntrinsicWidth(int height) override;
     void SetBounds(Rect) override;
 };
-
-bool IsAlign(Kind);
-bool IsAlign(ILayout*);
-
-// declaring here because used in Layout.cpp
-// lives in ButtonCtrl.cpp
-bool IsButton(Kind);
-bool IsButton(ILayout*);
-
-// declaring here because used in Layout.cpp
-// lives in ButtonCtrl.cpp
-bool IsCheckbox(Kind);
-bool IsCheckbox(ILayout*);
-
-bool IsExpand(Kind);
-bool IsExpand(ILayout*);
-
-bool IsLabeL(Kind);
-bool IsLabel(ILayout*);
-
-extern Kind kindLabel;
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 Size LayoutToSize(ILayout* layout, const Size size);

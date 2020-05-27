@@ -15,14 +15,6 @@
 
 Kind kindStatic = "static";
 
-bool IsStatic(Kind kind) {
-    return kind == kindStatic;
-}
-
-bool IsStatic(ILayout* l) {
-    return IsLayoutOfKind(l, kindStatic);
-}
-
 StaticCtrl::StaticCtrl(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE;
     winClass = WC_STATICW;

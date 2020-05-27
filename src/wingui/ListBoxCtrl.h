@@ -46,6 +46,3 @@ struct ListBoxCtrl : WindowBase {
     bool SetCurrentSelection(int);
     void SetModel(ListBoxModel*);
 };
-
-bool IsListBox(Kind);
-bool IsListBox(ILayout*);

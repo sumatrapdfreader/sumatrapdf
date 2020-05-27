@@ -13,14 +13,6 @@
 
 Kind kindButton = "button";
 
-bool IsButton(Kind kind) {
-    return kind == kindButton;
-}
-
-bool IsButton(ILayout* l) {
-    return IsLayoutOfKind(l, kindButton);
-}
-
 ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     winClass = WC_BUTTONW;

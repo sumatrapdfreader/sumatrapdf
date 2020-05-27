@@ -14,14 +14,6 @@
 
 Kind kindListBox = "listbox";
 
-bool IsListBox(Kind kind) {
-    return kind == kindListBox;
-}
-
-bool IsListBox(ILayout* l) {
-    return IsLayoutOfKind(l, kindListBox);
-}
-
 ListBoxModelStrings::~ListBoxModelStrings() {
 }
 

@@ -13,14 +13,6 @@
 
 Kind kindProgress = "progress";
 
-bool IsProgress(Kind kind) {
-    return kind == kindProgress;
-}
-
-bool IsProgress(ILayout* l) {
-    return IsLayoutOfKind(l, kindProgress);
-}
-
 ProgressCtrl::ProgressCtrl(HWND p, int initialMax) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE;
     winClass = PROGRESS_CLASSW;

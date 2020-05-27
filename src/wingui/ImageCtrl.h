@@ -11,6 +11,3 @@ struct ImageCtrl : WindowBase {
 
     Size GetIdealSize() override;
 };
-
-bool IsImage(Kind);
-bool IsImage(ILayout*);

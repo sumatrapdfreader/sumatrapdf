@@ -215,8 +215,5 @@ struct TreeCtrl : WindowBase {
     void DragEnd();
 };
 
-bool IsTree(Kind);
-bool IsTree(ILayout*);
-
 void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes);
 TreeItem* GetOrSelectTreeItemAtPos(ContextMenuEvent* args, POINT& pt);

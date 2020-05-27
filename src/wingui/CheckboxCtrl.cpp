@@ -13,14 +13,6 @@
 
 static Kind kindCheckbox = "checkbox";
 
-bool IsCheckbox(Kind kind) {
-    return kind == kindCheckbox;
-}
-
-bool IsCheckbox(ILayout* l) {
-    return IsLayoutOfKind(l, kindCheckbox);
-}
-
 static CheckState GetButtonCheckState(HWND hwnd) {
     auto res = Button_GetCheck(hwnd);
     return (CheckState)res;

@@ -124,8 +124,6 @@ struct DropFilesEvent : WndEvent {
 
 typedef std::function<void(DropFilesEvent*)> DropFilesHandler;
 
-extern Kind kindWindowBase;
-
 struct WindowBase;
 
 struct WindowBase : public ILayout {
@@ -242,8 +240,6 @@ struct WindowBase : public ILayout {
 
     void HandleWM_CONTEXTMENU(WndEvent*);
 };
-
-extern Kind kindWindow;
 
 // a top-level window. Must set winClass before
 // calling Create()
