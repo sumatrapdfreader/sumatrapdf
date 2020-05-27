@@ -857,6 +857,13 @@ WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
     b->layout = this;
 }
 
+// if only top given, set them all to top
+// if top, right given, set bottom to top and left to right
+void WindowBaseLayout::SetInsetsPt(int top, int right, int bottom, int left) {
+    HWND hwnd = wb ? wb->hwnd : nullptr;
+    insets = DpiScaledInsets(hwnd, top, right, bottom, left);
+}
+
 WindowBaseLayout::~WindowBaseLayout() {
     delete wb;
 }
@@ -865,25 +872,42 @@ Size WindowBaseLayout::Layout(const Constraints bc) {
     dbglayoutf("WindowBase::Layout() %s ", kind);
     LogConstraints(bc, "\n");
 
-    int width = MinIntrinsicWidth(0);
-    int height = MinIntrinsicHeight(0);
-    return bc.Constrain(Size{width, height});
+    int dx = MinIntrinsicWidth(0);
+    int dy = MinIntrinsicHeight(0);
+
+    auto hinset = insets.left + insets.right;
+    auto vinset = insets.top + insets.bottom;
+    auto innerConstraints = bc.Inset(hinset, vinset);
+
+    childSize = innerConstraints.Constrain(Size{dx, dy});
+    auto res = Size{
+        childSize.dx + hinset,
+        childSize.dy + vinset,
+    };
+    return res;
 }
 
 int WindowBaseLayout::MinIntrinsicHeight(i32) {
+    auto vinset = insets.top + insets.bottom;
     Size s = wb->GetIdealSize();
-    return s.dy;
+    return s.dy + vinset;
 }
 
 int WindowBaseLayout::MinIntrinsicWidth(i32) {
+    auto hinset = insets.left + insets.right;
     Size s = wb->GetIdealSize();
-    return s.dx;
+    return s.dx + hinset;
 }
 
-void WindowBaseLayout::SetBounds(const Rect bounds) {
+void WindowBaseLayout::SetBounds(Rect bounds) {
     dbglayoutf("WindowBaseLayout:SetBounds() %s %d,%d - %d, %d\n", kind, bounds.x, bounds.y, bounds.dx, bounds.dy);
 
     lastBounds = bounds;
+
+    bounds.x += insets.left;
+    bounds.y += insets.top;
+    bounds.dx -= (insets.right + insets.left);
+    bounds.dy -= (insets.bottom + insets.top);
 
     auto r = RectToRECT(bounds);
     ::MoveWindow(wb->hwnd, &r);

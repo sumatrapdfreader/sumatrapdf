@@ -282,10 +282,10 @@ bool IsPadding(ILayout* l) {
     return IsLayoutOfKind(l, paddingKind);
 }
 
-Padding::Padding(ILayout* child, const Insets& insets) {
-    this->kind = paddingKind;
-    this->child = child;
-    this->insets = insets;
+Padding::Padding(ILayout* childIn, const Insets& insetsIn) {
+    kind = paddingKind;
+    child = childIn;
+    insets = insetsIn;
 }
 
 Padding::~Padding() {
@@ -296,25 +296,25 @@ Size Padding::Layout(const Constraints bc) {
     dbglayoutf("Padding::Layout() ");
     LogConstraints(bc, "\n");
 
-    auto hinset = this->insets.left + this->insets.right;
-    auto vinset = this->insets.top + this->insets.bottom;
+    auto hinset = insets.left + insets.right;
+    auto vinset = insets.top + insets.bottom;
 
     auto innerConstraints = bc.Inset(hinset, vinset);
-    this->childSize = this->child->Layout(innerConstraints);
+    childSize = child->Layout(innerConstraints);
     return Size{
-        this->childSize.dx + hinset,
-        this->childSize.dy + vinset,
+        childSize.dx + hinset,
+        childSize.dy + vinset,
     };
 }
 
 int Padding::MinIntrinsicHeight(int width) {
-    auto vinset = this->insets.top + this->insets.bottom;
-    return this->child->MinIntrinsicHeight(width) + vinset;
+    auto vinset = insets.top + insets.bottom;
+    return child->MinIntrinsicHeight(width) + vinset;
 }
 
 int Padding::MinIntrinsicWidth(int height) {
-    auto hinset = this->insets.left + this->insets.right;
-    return this->child->MinIntrinsicWidth(height) + hinset;
+    auto hinset = insets.left + insets.right;
+    return child->MinIntrinsicWidth(height) + hinset;
 }
 
 void Padding::SetBounds(Rect bounds) {
@@ -324,7 +324,7 @@ void Padding::SetBounds(Rect bounds) {
     bounds.y += insets.top;
     bounds.dx -= (insets.right + insets.left);
     bounds.dy -= (insets.bottom + insets.top);
-    this->child->SetBounds(bounds);
+    child->SetBounds(bounds);
 }
 
 // layout.go

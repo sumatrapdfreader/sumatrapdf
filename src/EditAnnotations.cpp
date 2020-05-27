@@ -532,6 +532,8 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
 
     {
         std::tie(aw->staticAuthor, l) = CreateStatic(parent);
+        //WindowBaseLayout* l2 = (WindowBaseLayout*)l;
+        //l2->SetInsetsPt(20, 0, 0, 0);
         vbox->AddChild(l);
     }
 

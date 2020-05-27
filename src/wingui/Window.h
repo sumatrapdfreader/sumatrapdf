@@ -251,14 +251,18 @@ struct Window : WindowBase {
 
 struct WindowBaseLayout : public ILayout {
     WindowBase* wb = nullptr;
+    Insets insets{};
+    Size childSize{};
 
     WindowBaseLayout(WindowBase*, Kind);
     ~WindowBaseLayout() override;
 
+    void SetInsetsPt(int top, int right=-1, int bottom=-1, int left=-1);
+
     Size Layout(const Constraints bc) override;
     int MinIntrinsicHeight(int) override;
     int MinIntrinsicWidth(int) override;
-    void SetBounds(const Rect bounds) override;
+    void SetBounds(Rect bounds) override;
 };
 
 UINT_PTR NextSubclassId();
