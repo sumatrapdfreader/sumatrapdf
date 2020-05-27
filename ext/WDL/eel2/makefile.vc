@@ -8,7 +8,7 @@ CFLAGS = /DWDL_FFT_REALSIZE=8 /DEEL_LICE_WANT_STANDALONE
 
 CFLAGS = $(CFLAGS) -DNSEEL_LOOPFUNC_SUPPORT_MAXLEN=0
 
-LFLAGS =
+LFLAGS = shell32.lib user32.lib comdlg32.lib
 
 !ifndef VC6
 CFLAGS = $(CFLAGS) /MT
@@ -35,7 +35,7 @@ loose_eel.cpp: eel*.h ns-eel*.h
 $(EEL_SOURCE): ns-eel*.h
 
 
-loose_eel.exe: loose_eel.cpp $(EEL_SOURCE) $(FFT_SOURCE) $(LICE_SOURCE)
+loose_eel.exe: loose_eel.cpp $(EEL_SOURCE) $(FFT_SOURCE) $(LICE_SOURCE) ..\win32_utf8.c
 	cl $(CFLAGS) $**  /link wsock32.lib user32.lib gdi32.lib advapi32.lib $(LFLAGS) /out:$@ 
 
 eel_disasm.exe: eel_disasm.cpp $(EEL_SOURCE)

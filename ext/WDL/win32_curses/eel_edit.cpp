@@ -1402,6 +1402,8 @@ void EEL_Editor::onRightClick(HWND hwnd)
   if (flist.GetSize())
   {
     flist.Resort();
+    if (m_case_sensitive) flist.Resort(WDL_LogicalSortStringKeyedArray<int>::cmpistr);
+
     HMENU hm=CreatePopupMenu();
     int pos=0;
     for (i=0; i < flist.GetSize(); ++i)

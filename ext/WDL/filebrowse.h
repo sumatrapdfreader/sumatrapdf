@@ -7,7 +7,6 @@
 #include "swell/swell.h"
 #endif
 
-
 bool WDL_ChooseDirectory(HWND parent, const char *text, const char *initialdir, char *fn, int fnsize, bool preservecwd);
 bool WDL_ChooseFileForSave(HWND parent, 
                                       const char *text, 

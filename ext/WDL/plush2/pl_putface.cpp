@@ -10,10 +10,10 @@
 #define SWAP(a,b,t) { t ____tmp=(a); (a)=(b); (b)=____tmp; }
 
 #define PUTFACE_SORT() \
-  char i0 = 0; char i1 = 1; char i2 = 2; char stat; \
+  int i0 = 0; int i1 = 1; int i2 = 2; int stat; \
   if (TriFace->Scry[0] > TriFace->Scry[1]) {  i0 = 1; i1 = 0;  } \
-  if (TriFace->Scry[i0] > TriFace->Scry[2]) { SWAP(i0,i2,char); } \
-  if (TriFace->Scry[i1] > TriFace->Scry[i2]) { SWAP(i1,i2,char); } \
+  if (TriFace->Scry[i0] > TriFace->Scry[2]) { SWAP(i0,i2,int); } \
+  if (TriFace->Scry[i1] > TriFace->Scry[i2]) { SWAP(i1,i2,int); } \
   int Scrx[3] = {(int)(TriFace->Scrx[0]*(1<<XPOS_BITS)), (int)(TriFace->Scrx[1]*(1<<XPOS_BITS)),(int)(TriFace->Scrx[2]*(1<<XPOS_BITS))}; \
   int Scry[3] = {(int) (TriFace->Scry[0]+0.5), (int) (TriFace->Scry[1]+0.5), (int) (TriFace->Scry[2]+0.5)}; \
 

@@ -37,7 +37,7 @@
 
 #include "wdlcstring.h"
 #include "lameencdec.h"
-
+#include "win32_utf8.h"
 
 #ifdef __APPLE__
   #include <Carbon/Carbon.h>
@@ -86,6 +86,7 @@ static struct {
   size_t (*get_lametag_frame)(lame_t, unsigned char *, size_t);
   const char *(*get_lame_version)();
   int (*set_findReplayGain)(lame_t, int);
+
 } lame;
 
 #if 1
@@ -138,6 +139,7 @@ static bool tryLoadDLL2(const char *name)
   GETITEM(get_lametag_frame)
   GETITEM(set_findReplayGain)
   GETITEM_NP(get_lame_version)
+
   #undef GETITEM   
   #undef GETITEM_NP
   if (errcnt2)
@@ -240,7 +242,9 @@ int LameEncoder::CheckDLL() // returns 1 for lame API, 2 for Blade, 0 for none
 
 }
 
-LameEncoder::LameEncoder(int srate, int nch, int bitrate, int stereomode, int quality, int vbrmethod, int vbrquality, int vbrmax, int abr, int rpgain)
+LameEncoder::LameEncoder(int srate, int nch, int bitrate, int stereomode, int quality,
+  int vbrmethod, int vbrquality, int vbrmax, int abr, int rpgain,
+  WDL_StringKeyedArray<char*> *metadata)
 {
   m_lamestate=0;
   if (!CheckDLL())
@@ -252,7 +256,7 @@ LameEncoder::LameEncoder(int srate, int nch, int bitrate, int stereomode, int qu
   errorstat=0;
   m_nch=nch;
   m_encoder_nch = stereomode == 3 ? 1 : m_nch;
-
+  m_id3_len=0;
 
   m_lamestate=lame.init();
   if (!m_lamestate)
@@ -298,7 +302,13 @@ LameEncoder::LameEncoder(int srate, int nch, int bitrate, int stereomode, int qu
   }
   if (rpgain>0 && lame.set_findReplayGain) lame.set_findReplayGain(m_lamestate,1);
 
+  if (metadata && metadata->GetSize())
+  {
+    SetMetadata(metadata);
+  }
+
   lame.init_params(m_lamestate);
+
   in_size_samples=lame.get_framesize(m_lamestate);
 
   outtmp.Resize(65536);
@@ -402,6 +412,7 @@ static BOOL HasUTF8(const char *_str)
 }
 #endif
 
+
 LameEncoder::~LameEncoder()
 {
   if (m_lamestate)
@@ -412,21 +423,10 @@ LameEncoder::~LameEncoder()
       size_t a=lame.get_lametag_frame(m_lamestate,buf,sizeof(buf));
       if (a>0 && a<=sizeof(buf))
       {
-        FILE *fp=NULL;
-#ifdef _WIN32
-        if (HasUTF8(m_vbrfile.Get()) && GetVersion()<0x80000000)
-        {
-          WCHAR wf[2048];
-          if (MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,m_vbrfile.Get(),-1,wf,2048))
-          {
-            fp = _wfopen(wf,L"r+b");
-          }
-        }
-#endif
-        if (!fp) fp = fopen(m_vbrfile.Get(),"r+b");
+        FILE *fp = fopenUTF8(m_vbrfile.Get(),"r+b");
         if (fp)
         {
-          fseek(fp,0,SEEK_SET);
+          fseek(fp, m_id3_len, SEEK_SET);
           fwrite(buf,1,a,fp);
           fclose(fp);
         }
@@ -437,3 +437,314 @@ LameEncoder::~LameEncoder()
   }
 }
 
+
+#define _AddSyncSafeInt32(i) \
+  *p++=(((i)>>21)&0x7F); \
+  *p++=(((i)>>14)&0x7F); \
+  *p++=(((i)>>7)&0x7F); \
+  *p++=((i)&0x7F);
+
+#define _AddInt32(i) \
+  *p++=(((i)>>24)&0xFF); \
+  *p++=(((i)>>16)&0xFF); \
+  *p++=(((i)>>8)&0xFF); \
+  *p++=((i)&0xFF);
+
+#define CTOC_NAME "TOC" // arbitrary name of table of contents element
+
+unsigned char *PackID3Chunk(WDL_StringKeyedArray<char*> *metadata, int *buflen)
+{
+  if (!metadata || !buflen) return NULL;
+
+  unsigned char *buf=NULL;
+  *buflen=0;
+
+  int id3len=0;
+  int i;
+  for (i=0; i < metadata->GetSize(); ++i)
+  {
+    const char *id;
+    const char *val=metadata->Enumerate(i, &id);
+    if (strlen(id) < 8 || strncmp(id, "ID3:", 4) || !val) continue;
+    id += 4;
+    if (strlen(id) == 4 && id[0] == 'T')
+    {
+      id3len += 10+1+strlen(val);
+      if (!strcmp(id, "TXXX"))
+      {
+        // tag form is "desc=val", default to "USER" if desc is not supplied
+        const char *sep=strchr(val, '=');
+        if (!sep) id3len += 5;
+        else if (sep == val) id3len += 4;
+      }
+    }
+    else if (!strcmp(id, "COMM"))
+    {
+      id3len += 10+5+strlen(val);
+    }
+  }
+
+  WDL_HeapBuf apic_hdr;
+  int apic_datalen=0;
+  const char *apic_fn=metadata->Get("ID3:APIC_FILE");
+  if (apic_fn && apic_fn[0])
+  {
+    const char *mime=NULL;
+    const char *ext=WDL_get_fileext(apic_fn);
+    if (ext && (!stricmp(ext, ".jpg") || !stricmp(ext, ".jpeg"))) mime="image/jpeg";
+    else if (ext && !stricmp(ext, ".png")) mime="image/png";
+    if (mime)
+    {
+      FILE *fp=fopenUTF8(apic_fn, "rb"); // could stat but let's make sure we can open the file
+      if (fp)
+      {
+        fseek(fp, 0, SEEK_END);
+        apic_datalen=ftell(fp);
+        fclose(fp);
+      }
+    }
+    if (apic_datalen)
+    {
+      const char *t=metadata->Get("ID3:APIC_TYPE");
+      int type=-1;
+      if (t && t[0] >= '0' && t[0] <= '9') type=atoi(t);
+      if (type < 0 || type >= 16) type=3; // default "Cover (front)"
+
+      const char *desc=metadata->Get("ID3:APIC_DESC");
+      if (!desc) desc="";
+      int desclen=wdl_min(strlen(desc), 63);
+
+      int apic_hdrlen=1+strlen(mime)+1+1+desclen+1;
+      char *p=(char*)apic_hdr.Resize(apic_hdrlen);
+      if (p)
+      {
+        *p++=3; // UTF-8
+        memcpy(p, mime, strlen(mime)+1);
+        p += strlen(mime)+1;
+        *p++=type;
+        memcpy(p, desc, desclen);
+        p += desclen;
+        *p++=0;
+        id3len += 10+apic_hdrlen+apic_datalen;
+      }
+    }
+  }
+
+  int chapcnt=0, toclen=0;
+  char idbuf[512];
+  snprintf(idbuf,sizeof(idbuf), "ID3:CHAP%d", chapcnt+1);
+  const char *val=metadata->Get(idbuf);
+  while (val)
+  {
+    const char *c1=strchr(val, ':');
+    const char *c2=(c1 ? strchr(c1+1, ':') : NULL);
+    if (WDL_NOT_NORMALLY(!c1 || !c2)) break;
+
+    const char *id=idbuf+4;
+    int idlen=strlen(id);
+    int namelen=strlen(c2+1);
+    toclen += idlen+1;
+    id3len += 10+idlen+1+4*4+10+1+namelen+1;
+
+    if (++chapcnt == 255) break;
+    snprintf(idbuf,sizeof(idbuf), "ID3:CHAP%d", chapcnt+1);
+    val=metadata->Get(idbuf);
+  }
+  if (toclen)
+  {
+    toclen += strlen(CTOC_NAME)+1+2;
+    id3len += 10+toclen;
+  }
+
+  if (id3len)
+  {
+    id3len += 10;
+    buf=(unsigned char*)malloc(id3len);
+    unsigned char *p=buf;
+    memcpy(p,"ID3\x04\x00\x00", 6);
+    p += 6;
+    _AddSyncSafeInt32(id3len-10);
+    for (i=0; i < metadata->GetSize(); ++i)
+    {
+      const char *id;
+      const char *val=metadata->Enumerate(i, &id);
+      if (strlen(id) < 8 || strncmp(id, "ID3:", 4) || !val) continue;
+      id += 4;
+      if (strlen(id) == 4 && !strcmp(id, "TXXX"))
+      {
+        memcpy(p, id, 4);
+        p += 4;
+        const char *sep=strchr(val, '=');
+        if (sep == val)
+        {
+          ++val;
+          sep=NULL;
+        }
+        int len=strlen(val);
+        int tlen=len+(!sep ? 5 : 0);
+        _AddSyncSafeInt32(1+tlen);
+        memcpy(p, "\x00\x00\x03", 3); // UTF-8
+        p += 3;
+        if (sep)
+        {
+          memcpy(p, val, len);
+          p[sep-val]=0;
+        }
+        else
+        {
+          memcpy(p, "USER\x00", 5);
+          p += 5;
+          memcpy(p, val, len);
+        }
+        p += len;
+      }
+      else if (strlen(id) == 4 && id[0] == 'T')
+      {
+        memcpy(p, id, 4);
+        p += 4;
+        int len=strlen(val);
+        _AddSyncSafeInt32(1+len);
+        memcpy(p, "\x00\x00\x03", 3); // UTF-8
+        p += 3;
+        memcpy(p, val, len);
+        p += len;
+      }
+      else if (!strcmp(id, "COMM"))
+      {
+        // http://www.loc.gov/standards/iso639-2/php/code_list.php
+        // most apps ignore this, itunes wants "eng" or something locale-specific
+        const char *lang=metadata->Get("ID3:COMM_LANG");
+
+        memcpy(p, id, 4);
+        p += 4;
+        int len=strlen(val);
+        _AddSyncSafeInt32(5+len);
+        memcpy(p, "\x00\x00\x03", 3); // UTF-8
+        p += 3;
+        if (lang && strlen(lang) >= 3 &&
+          tolower(*lang) >= 'a' && tolower(*lang) <= 'z')
+        {
+          *p++=tolower(*lang++);
+          *p++=tolower(*lang++);
+          *p++=tolower(*lang++);
+          *p++=0;
+        }
+        else
+        {
+          // some apps write "XXX" for "no particular language"
+          memcpy(p, "XXX\x00", 4);
+          p += 4;
+        }
+        memcpy(p, val, len);
+        p += len;
+      }
+    }
+
+    if (toclen)
+    {
+      memcpy(p, "CTOC", 4);
+      p += 4;
+      _AddSyncSafeInt32(toclen);
+      memcpy(p, "\x00\x00", 2);
+      p += 2;
+      memcpy(p, CTOC_NAME, strlen(CTOC_NAME)+1);
+      p += strlen(CTOC_NAME)+1;
+      *p++=3; // CTOC flags: &1=top level, &2=ordered
+      *p++=(chapcnt&0xFF);
+
+      for (i=0; i < chapcnt; ++i)
+      {
+        snprintf(idbuf,sizeof(idbuf), "ID3:CHAP%d", i+1);
+        const char *val=metadata->Get(idbuf);
+        if (WDL_NOT_NORMALLY(!val)) break;
+        const char *c1=strchr(val, ':');
+        const char *c2=(c1 ? strchr(c1+1, ':') : NULL);
+        if (WDL_NOT_NORMALLY(!c1 || !c2)) break;
+
+        const char *id=idbuf+4;
+        int idlen=strlen(id);
+        memcpy(p, id, idlen+1);
+        p += idlen+1;
+      }
+
+      for (i=0; i < chapcnt; ++i)
+      {
+        snprintf(idbuf,sizeof(idbuf), "ID3:CHAP%d", i+1);
+        const char *val=metadata->Get(idbuf);
+        if (WDL_NOT_NORMALLY(!val)) break;
+        const char *c1=strchr(val, ':');
+        const char *c2=(c1 ? strchr(c1+1, ':') : NULL);
+        if (WDL_NOT_NORMALLY(!c1 || !c2)) break;
+
+        const char *id=idbuf+4;
+        int idlen=strlen(id);
+        int st=atoi(val);
+        int et=atoi(c1+1);
+        const char *name=c2+1;
+        int namelen=strlen(name);
+
+        memcpy(p, "CHAP", 4);
+        p += 4;
+        _AddSyncSafeInt32(idlen+1+4*4+10+1+namelen+1);
+        memcpy(p, "\x00\x00", 2);
+        p += 2;
+        memcpy(p, id, idlen+1);
+        p += idlen+1;
+        _AddInt32(st);
+        _AddInt32(et);
+        p += 8;
+        memcpy(p, "TIT2", 4);
+        p += 4;
+        _AddSyncSafeInt32(1+namelen+1);
+        memcpy(p, "\x00\x00\x03", 3); // UTF-8
+        p += 3;
+        memcpy(p, name, namelen+1);
+        p += namelen+1;
+      }
+    }
+
+    if (apic_hdr.GetSize() && apic_datalen)
+    {
+      memcpy(p, "APIC", 4);
+      p += 4;
+      int len=apic_hdr.GetSize()+apic_datalen;
+      _AddSyncSafeInt32(len);
+      memcpy(p, "\x00\x00", 2);
+      p += 2;
+      memcpy(p, apic_hdr.Get(), apic_hdr.GetSize());
+      p += apic_hdr.GetSize();
+      FILE *fp=fopenUTF8(apic_fn, "rb");
+      if (WDL_NORMALLY(fp))
+      {
+        fread(p, 1, apic_datalen, fp);
+        fclose(fp);
+      }
+      else // uh oh
+      {
+        memset(p, 0, apic_datalen);
+      }
+      p += apic_datalen;
+    }
+
+    if (WDL_NOT_NORMALLY(p-buf != id3len))
+    {
+      free(buf);
+      buf=NULL;
+    }
+  }
+
+  if (buf) *buflen=id3len;
+  return buf;
+}
+
+
+void LameEncoder::SetMetadata(WDL_StringKeyedArray<char*> *metadata)
+{
+  int buflen=0;
+  unsigned char *buf=PackID3Chunk(metadata, &buflen);
+  if (buf && buflen)
+  {
+    outqueue.Add(buf, buflen);
+    m_id3_len=buflen;
+  }
+}

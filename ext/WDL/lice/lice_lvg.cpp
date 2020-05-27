@@ -605,7 +605,7 @@ void *LICE_LoadLVG(const char *filename)
       fp = _wfopen(wf,L"rb");
   }
 #endif
-  if (!fp) fp = fopen(filename,"rb");
+  if (!fp) fp = WDL_fopenA(filename,"rb");
 
   if (fp)
   {

@@ -31,7 +31,7 @@ LICE_IBitmap *LICE_LoadPNG(const char *filename, LICE_IBitmap *bmp)
   }
 #endif
 
-  if (!fp) fp = fopen(filename,"rb");
+  if (!fp) fp = WDL_fopenA(filename,"rb");
   if (!fp) return 0;
 
   png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL); 

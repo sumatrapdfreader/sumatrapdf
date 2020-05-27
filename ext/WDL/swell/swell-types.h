@@ -642,6 +642,9 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define MB_ICONERROR 0
 #define MB_ICONSTOP 0
 #define MB_ICONINFORMATION 0
+#define MB_ICONQUESTION 0
+#define MB_TOPMOST 0
+#define MB_ICONEXCLAMATION 0
 
 #define IDOK                1
 #define IDCANCEL            2
@@ -719,6 +722,7 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define LB_GETSELCOUNT          0x0190
 #define LB_GETITEMDATA          0x0199
 #define LB_SETITEMDATA          0x019A
+#define LB_FINDSTRINGEXACT      0x01A2
 
 #define TBM_GETPOS              (WM_USER)
 #define TBM_SETTIC              (WM_USER+4)
@@ -999,6 +1003,7 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define EM_GETSEL               0xF0B0
 #define EM_SETSEL               0xF0B1
 #define EM_SCROLL               0xF0B5
+#define EM_REPLACESEL           0xF0C2
 #define EM_SETPASSWORDCHAR      0xF0CC
 
 #define SB_HORZ             0

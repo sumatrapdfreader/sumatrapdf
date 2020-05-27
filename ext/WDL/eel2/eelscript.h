@@ -10,6 +10,7 @@
 #include "../wdlstring.h"
 #include "../assocarray.h"
 #include "../queue.h"
+#include "../win32_utf8.h"
 #include "ns-eel.h"
 
 
@@ -94,7 +95,7 @@ class eelScriptInst {
       for (x=0;x<EELSCRIPT_MAX_FILE_HANDLES && m_handles[x];x++);
       if (x>= EELSCRIPT_MAX_FILE_HANDLES) return 0.0;
 
-      FILE *fp = fopen(fnstr.Get(),mode);
+      FILE *fp = fopenUTF8(fnstr.Get(),mode);
       if (!fp) return 0.0;
       m_handles[x]=fp;
       return x + EELSCRIPT_FILE_HANDLE_INDEX_BASE;
@@ -408,7 +409,7 @@ int eelScriptInst::runcode(const char *codeptr, int showerr, const char *showerr
 #else
         lstrcpyn_safe(buf,"/tmp/jsfx-out",sizeof(buf));
 #endif
-        FILE *fp = fopen(buf,"wb");
+        FILE *fp = fopenUTF8(buf,"wb");
         if (fp)
         {
           fwrite(p->code,1,p->code_size,fp);
@@ -501,7 +502,7 @@ FILE *eelscript_resolvePath(WDL_FastString &usefn, const char *fn, const char *c
         }
       }
 
-      FILE *fp = fopen(usefn.Get(),"r");
+      FILE *fp = fopenUTF8(usefn.Get(),"r");
       if (fp) return fp;
     }
     if (had_abs) usefn.Set(fn);
@@ -529,7 +530,7 @@ int eelScriptInst::loadfile(const char *fn, const char *callerfn, bool allowstdi
   }
   else if (!callerfn) 
   {
-    fp = fopen(fn,"r");
+    fp = fopenUTF8(fn,"r");
     if (fp) m_loaded_fnlist.Insert(fn,true);
   }
   else

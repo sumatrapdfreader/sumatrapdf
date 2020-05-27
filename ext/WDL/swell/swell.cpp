@@ -231,7 +231,13 @@ HANDLE CreateEventAsSocket(void *SA, BOOL manualReset, BOOL initialSig, const ch
   fcntl(buf->socket[0], F_SETFL, fcntl(buf->socket[0],F_GETFL) | O_NONBLOCK); // nonblocking
 
   char c=0;
-  if (initialSig&&buf->socket[1]>=0) write(buf->socket[1],&c,1);
+  if (initialSig&&buf->socket[1]>=0)
+  {
+    if (write(buf->socket[1],&c,1) != 1)
+    {
+      WDL_ASSERT( false /* write to socket failed in CreateEventAsSocket() */ );
+    }
+  }
 
   return buf;
 }
@@ -311,14 +317,14 @@ DWORD WaitForSingleObject(HANDLE hand, DWORD msTO)
           }
           else
           {
-            DWORD until = GetTickCount() + msTO;
+            const DWORD start_t = GetTickCount();
             for (;;)
             {
               pid_t v = waitpid(pb->pid,&wstatus,WNOHANG);
               if (v > 0) break;
 
               if (v < 0) return WAIT_FAILED;
-              if (GetTickCount() > until) return WAIT_TIMEOUT;
+              if ((GetTickCount()-start_t) > msTO) return WAIT_TIMEOUT;
               Sleep(1);
             }
           }
@@ -341,8 +347,8 @@ DWORD WaitForSingleObject(HANDLE hand, DWORD msTO)
           if (!msTO) return WAIT_TIMEOUT;
           if (msTO != INFINITE)
           {
-            DWORD d=GetTickCount()+msTO;
-            while (GetTickCount()<d && !thr->done) Sleep(1);
+            const DWORD d=GetTickCount();
+            while ((GetTickCount()-d)<msTO && !thr->done) Sleep(1);
             if (!thr->done) return WAIT_TIMEOUT;
           }
         }
@@ -609,7 +615,10 @@ BOOL SetEvent(HANDLE hand)
         if (select(se->socket[0]+1,&s,NULL,NULL,&tv)>0 && FD_ISSET(se->socket[0],&s)) return TRUE; // already set
       }
       char c=0; 
-      write(se->socket[1],&c,1); 
+      if (write(se->socket[1],&c,1) != 1)
+      {
+        WDL_ASSERT( false /* write to socket failed in SetEvent() */ );
+      }
     }
     return TRUE;
   }
@@ -630,7 +639,10 @@ BOOL ResetEvent(HANDLE hand)
     if (se->socket[0]>=0)
     {
       char buf[128];
-      read(se->socket[0],buf,sizeof(buf));
+      if (read(se->socket[0],buf,sizeof(buf)) < 0)
+      {
+        WDL_ASSERT( false /* read from socket failed in ResetEvent() */ );
+      }
     }
     return TRUE;
   }

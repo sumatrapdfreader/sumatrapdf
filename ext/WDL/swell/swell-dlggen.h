@@ -90,6 +90,7 @@ struct SWELL_DlgResourceEntry
 #define GROUPBOX       }, { "__SWELL_GROUP", 0, 
 #define CHECKBOX       }, { "__SWELL_CHECKBOX", 0, 
 #define LISTBOX        }, { "__SWELL_LISTBOX", 0, "", 
+#define ICON           }, { "__SWELL_ICON", 0, (const char*)(INT_PTR)
 
 #define NOT 
                                     
@@ -108,6 +109,9 @@ struct SWELL_DlgResourceEntry
 #define SS_BLACKRECT 0x4L
 #define SS_BLACKFRAME (SS_BLACKRECT)
 #define SS_LEFTNOWORDWRAP 0xCL
+#define SS_ETCHEDHORZ 0x10L
+#define SS_ETCHEDVERT 0x11L
+#define SS_ETCHEDFRAME 0x12L
 #define SS_TYPEMASK 0x1FL
 #define SS_NOTIFY 0x0100L
 

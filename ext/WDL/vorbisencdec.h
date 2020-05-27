@@ -74,6 +74,7 @@ public:
 #ifndef WDL_VORBIS_INTERFACE_ONLY
 
 #include "../WDL/queue.h"
+#include "../WDL/assocarray.h"
 
 
 class VorbisDecoder : public VorbisDecoderInterface
@@ -183,6 +184,12 @@ class VorbisDecoder : public VorbisDecoderInterface
     }
     int GenerateLappingSamples()
     {
+      if (vd.pcm_returned<0 ||
+          !vd.vi ||
+          !vd.vi->codec_setup)
+      {
+        return 0;
+      }
       float ** pcm;
       int samples = vorbis_synthesis_lapout(&vd,&pcm);
       if (samples <= 0) return 0;
@@ -234,7 +241,8 @@ class VorbisEncoder : public VorbisEncoderInterface
 {
 public:
 #ifdef VORBISENC_WANT_FULLCONFIG
-  VorbisEncoder(int srate, int nch, int serno, float qv, int cbr=-1, int minbr=-1, int maxbr=-1, const char *encname=NULL)
+  VorbisEncoder(int srate, int nch, int serno, float qv, int cbr=-1, int minbr=-1, int maxbr=-1,
+    const char *encname=NULL, WDL_StringKeyedArray<char*> *metadata=NULL)
 #elif defined(VORBISENC_WANT_QVAL)
   VorbisEncoder(int srate, int nch, float qv, int serno, const char *encname=NULL)
 #else
@@ -261,7 +269,7 @@ public:
     else
       m_err=vorbis_encode_init_vbr(&vi,nch,srate,qv);
 
-#else
+#else // VORBISENC_WANT_FULLCONFIG
 
   #ifndef VORBISENC_WANT_QVAL
       float qv=0.0;
@@ -290,13 +298,29 @@ public:
 
       if (qv<-0.10f)qv=-0.10f;
       if (qv>1.0f)qv=1.0f;
-  #endif
+  #endif // !VORBISENC_WANT_QVAL
 
       m_err=vorbis_encode_init_vbr(&vi,nch,srate>>m_ds,qv);
-#endif
+#endif // !VORBISENC_WANT_FULLCONFIG
 
     vorbis_comment_init(&vc);
     if (encname) vorbis_comment_add_tag(&vc,"ENCODER",(char *)encname);
+
+#ifdef VORBISENC_WANT_FULLCONFIG
+    if (metadata)
+    {
+      for (int i=0; i < metadata->GetSize(); ++i)
+      {
+        const char *key;
+        const char *val=metadata->Enumerate(i, &key);
+        if (key && val && key[0] && val[0])
+        {
+          vorbis_comment_add_tag(&vc, key, val);
+        }
+      }
+    }
+#endif // VORBISENC_WANT_FULLCONFIG
+
     vorbis_analysis_init(&vd,&vi);
     vorbis_block_init(&vd,&vb);
     ogg_stream_init(&os,m_ser=serno);

@@ -969,6 +969,7 @@ static void LICE_BlitInt(LICE_IBitmap *dest, LICE_IBitmap *src, int dstx, int ds
   if (dstx < 0) { sr.left -= dstx; dstx=0; }
   if (dsty < 0) { sr.top -= dsty; dsty=0; }  
 
+  if (sr.left < 0 || sr.top < 0) return; // overflow check
   if (sr.right <= sr.left || sr.bottom <= sr.top || dstx >= destbm_w || dsty >= destbm_h) return;
 
   if (sr.right > sr.left + (destbm_w-dstx)) sr.right = sr.left + (destbm_w-dstx);
@@ -1109,6 +1110,8 @@ void LICE_Blur(LICE_IBitmap *dest, LICE_IBitmap *src, int dstx, int dsty, int sr
   // clip to output
   if (dstx < 0) { sr.left -= dstx; dstx=0; }
   if (dsty < 0) { sr.top -= dsty; dsty=0; }
+
+  if (sr.left < 0 || sr.top < 0) return; // overflow check
 
   const int destbm_w = dest->getWidth(), destbm_h = dest->getHeight();
   if (sr.right <= sr.left || sr.bottom <= sr.top || dstx >= destbm_w || dsty >= destbm_h) return;
@@ -2700,11 +2703,13 @@ void LICE_DrawGlyphEx(LICE_IBitmap* dest, int x, int y, LICE_pixel color, const 
   
   if (x < 0) {
     src_x -= x;
+    if (src_x < 0) return; // overflow
     src_w += x;
     x = 0;
   }
   if (y < 0) {
     src_y -= y;
+    if (src_y < 0) return; // overflow
     src_h += y;
     y = 0;
   }

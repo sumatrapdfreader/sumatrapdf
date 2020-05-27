@@ -213,7 +213,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C++"
     includedirs  { "ext/WDL" }
-    disablewarnings { "4018", "4100", "4244", "4505", "4456", "4457", "4245", "4701", "4706", "4996" }
+    disablewarnings { "4018", "4100", "4244", "4505", "4456", "4457", "4245", "4505", "4701", "4706", "4996" }
     characterset "MBCS"
     wdl_files()
 
@@ -638,6 +638,9 @@ workspace "SumatraPDF"
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
 
+    -- for wdl
+    disablewarnings { "4505" }
+
     links {
       "engines", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar", "wdl"
     }
@@ -684,6 +687,9 @@ workspace "SumatraPDF"
 
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
+
+    -- for wdl
+    disablewarnings { "4505" }
 
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
 

@@ -4,7 +4,7 @@ LFLAGS=
 CXX=g++
 
 ifdef DEBUG
-CFLAGS += -D_DEBUG -O0
+CFLAGS += -D_DEBUG -O0 -DWDL_CHECK_FOR_NON_UTF8_FOPEN
 else
 CFLAGS += -DNDEBUG -O
 endif
@@ -63,7 +63,13 @@ ifndef NO_GFX
     CFLAGS += -DEEL_LICE_WANT_STANDALONE 
 
   ifeq ($(UNAME_S),Darwin)
+    CLANG_VER := $(shell clang --version|head -n 1| sed 's/.*version \([0-9][0-9]*\).*/\1/' )
+    CLANG_GT_9 := $(shell [ $(CLANG_VER) -gt 9 ] && echo true )
+    ifeq ($(CLANG_GT_9),true)
+      CFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
+    else
     CFLAGS += -mmacosx-version-min=10.5
+    endif
     OBJS += swell-wnd.o swell-gdi.o swell.o swell-misc.o swell-dlg.o swell-menu.o swell-kb.o
     LFLAGS += -lobjc -framework Cocoa -framework Carbon
   else

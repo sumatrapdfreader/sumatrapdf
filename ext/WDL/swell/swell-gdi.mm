@@ -29,6 +29,8 @@
 #import <CoreFoundation/CFDictionary.h>
 #import <objc/objc-runtime.h>
 #include "swell.h"
+#define SWELL_GetOSXVersion SWELL_GDI_GetOSXVersion
+#define SWELL_IMPLEMENT_GETOSXVERSION static
 #include "swell-internal.h"
 
 #include "../mutex.h"
@@ -46,31 +48,6 @@
 #ifndef SWELL_NO_METAL
 void SWELL_Metal_FillRect(void *_tex, int x, int y, int w, int h, int color);
 #endif
-
-// reimplement here so that swell-gdi isn't dependent on swell-misc, and vice-versa
-static int SWELL_GDI_GetOSXVersion()
-{
-  static SInt32 v;
-  if (!v)
-  {
-    if (NSAppKitVersionNumber >= 1266.0) 
-    {
-      if (NSAppKitVersionNumber >= 1670.0)  // unsure if this is correct (10.14.1 is 1671.1)
-        v = 0x10d0;
-      else if (NSAppKitVersionNumber >= 1404.0)
-        v = 0x10b0;
-      else
-        v=0x10a0; // 10.10+ Gestalt(gsv) return 0x109x, so we bump this to 0x10a0
-    }
-    else 
-    {
-      SInt32 a = 0x1040;
-      Gestalt(gestaltSystemVersion,&a);
-      v=a;
-    }
-  }
-  return v;
-}
 
 #ifdef __AVX__
 #include <immintrin.h>
@@ -1767,7 +1744,7 @@ void SWELL_FillDialogBackground(HDC hdc, const RECT *r, int level)
       NSColor *c = [NSColor windowBackgroundColor];
       if ([c respondsToSelector:@selector(CGColor)])
       {
-        CGContextSetFillColorWithColor(ctx, [c CGColor]);
+        CGContextSetFillColorWithColor(ctx, (CGColorRef)[c CGColor]);
         ok = true;
       }
     }

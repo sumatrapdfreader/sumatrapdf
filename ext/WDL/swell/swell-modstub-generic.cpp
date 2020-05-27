@@ -53,7 +53,7 @@ static int dummyFunc() { return 0; }
 static int doinit(void *(*GetFunc)(const char *name))
 {
   int errcnt=0;
-  for (int x = 0; x < sizeof(api_tab)/sizeof(api_tab[0]); x ++)
+  for (int x = 0; x < (int)(sizeof(api_tab)/sizeof(api_tab[0])); x ++)
   {
     *api_tab[x].func=GetFunc(api_tab[x].name);
     if (!*api_tab[x].func)

@@ -84,8 +84,7 @@ static bool fgets_to_typedbuf(WDL_TypedBuf<char> *buf, FILE *fp)
     if (buf->GetSize()<rdpos+4) break; // malloc fail, erg
     char *p = buf->Get()+rdpos;
     *p=0;
-    fgets(p,buf->GetSize()-rdpos,fp); 
-    if (!*p) break;
+    if (!fgets(p,buf->GetSize()-rdpos,fp) || !*p) break;
     while (*p) p++;
     if (p[-1] == '\r' || p[-1] == '\n') break;
 
@@ -153,7 +152,7 @@ static iniFileContext *GetFileContext(const char *name)
       free(ctx->m_curfn);
       ctx->m_curfn=strdup(name);
     }
-    FILE *fp = fopen(name,"r");
+    FILE *fp = WDL_fopenA(name,"r");
     
     if (!fp)
     {
@@ -253,7 +252,7 @@ static void WriteBackFile(iniFileContext *ctx)
     strcpy(p,".new");
   }
 
-  FILE *fp = fopen(newfn,"w");
+  FILE *fp = WDL_fopenA(newfn,"w");
   if (!fp) return;
   
   flock(fileno(fp),LOCK_EX);

@@ -785,9 +785,24 @@ static int DelegateMouseMove(NSView *view, NSEvent *theEvent)
       m_wndproc((HWND)self,WM_COMMAND,(LBN_DBLCLK<<16)|[(NSControl*)sender tag],(LPARAM)sender);
     else
     {
-      SWELL_ListView* v = (SWELL_ListView*)sender;
-      NMLISTVIEW nmlv={{(HWND)sender,(UINT_PTR)[(NSControl*)sender tag], NM_DBLCLK}, (int) [v clickedRow], (int) [sender clickedColumn], };
-      SWELL_ListView_Row *row=v->m_items->Get(nmlv.iItem);
+      SWELL_ListView *lv = (SWELL_ListView*)sender;
+      NMLISTVIEW nmlv={{(HWND)sender,(UINT_PTR)[(NSControl*)sender tag], NM_DBLCLK}, (int) [lv clickedRow], (int) [sender clickedColumn], };
+
+      if (nmlv.iItem == -1)
+      {
+        // ignore doubleclicks in column headers
+        NSTableHeaderView *v = [sender headerView];
+        if (v)
+        {
+          NSPoint pt=[NSEvent mouseLocation];
+          NSWindow *w = [self window];
+          pt = [w convertScreenToBase:pt];
+          pt = [v convertPoint:pt fromView:nil];
+          if (NSPointInRect(pt,[v bounds])) return;
+        }
+      }
+
+      SWELL_ListView_Row *row=lv->m_items->Get(nmlv.iItem);
       if (row)
        nmlv.lParam = row->m_param;
       m_wndproc((HWND)self,WM_NOTIFY,[(NSControl*)sender tag],(LPARAM)&nmlv);
@@ -1157,32 +1172,24 @@ static int DelegateMouseMove(NSView *view, NSEvent *theEvent)
   
   [self setHidden:YES];
   
-  
-  if ([parent isKindOfClass:[NSOpenPanel class]])
+  if ([parent isKindOfClass:[NSWindow class]])
+  {
+    if ([parent isKindOfClass:[NSPanel class]] &&
+        [parent respondsToSelector:@selector(setAccessoryView:)])
   {
     [(NSOpenPanel *)parent setAccessoryView:self];
+      if ([parent isKindOfClass:[NSOpenPanel class]] ||
+          [[parent className] isEqualToString:@"NSLocalOpenPanel"])
+      {
     if ([parent respondsToSelector:@selector(setAccessoryViewDisclosed:)])
       [(NSOpenPanel *)parent setAccessoryViewDisclosed:YES];
-    [self setHidden:NO];
-  }
-  else if ([parent isKindOfClass:[NSSavePanel class]])
-  {
-    [(NSSavePanel *)parent setAccessoryView:self];
-    [self setHidden:NO];
-  }
-  else if ([parent isKindOfClass:[NSColorPanel class]])
-  {
-    [(NSColorPanel *)parent setAccessoryView:self];
-    [self setHidden:NO];
   }  
-  else if ([parent isKindOfClass:[NSFontPanel class]])
-  {
-    [(NSFontPanel *)parent setAccessoryView:self];
     [self setHidden:NO];
   }    
-  else if ([parent isKindOfClass:[NSWindow class]])
+    else
   {
     [(NSWindow *)parent setContentView:self];
+  }
   }
   else
   {
@@ -1406,6 +1413,7 @@ static int DelegateMouseMove(NSView *view, NSEvent *theEvent)
 -(BOOL) swellWantsMetal { return m_use_metal > 0; }
 -(void) swellDrawMetal:(const RECT *)forRect
 {
+  SWELL_AutoReleaseHelper arparp;
 
 #define swell_metal_set_layer_gravity(layer, g) do { \
   const int grav = (g); \
@@ -1426,7 +1434,7 @@ static int DelegateMouseMove(NSView *view, NSEvent *theEvent)
   // this seems to work correclty, *except* - if you're using the high-performance card, the system will never go back to integrated,
   // presumably because our metal devices are open. Maybe we can flag them as "non-essential" ?
   const DWORD now = GetTickCount();
-  if (__CGDirectDisplayCopyCurrentMetalDevice && (!device || now > m_metal_device_lastchkt+1000 || now < m_metal_device_lastchkt-1000))
+  if (__CGDirectDisplayCopyCurrentMetalDevice && (!device || (now-m_metal_device_lastchkt)>1000))
   {
     m_metal_device_lastchkt = now;
     CGDirectDisplayID viewDisplayID = (CGDirectDisplayID) [self.window.screen.deviceDescription[@"NSScreenNumber"] unsignedIntegerValue];
@@ -1566,7 +1574,7 @@ static int DelegateMouseMove(NSView *view, NSEvent *theEvent)
     layer.contentsScale = m_metal_retina ? 2.0 : 1.0;
   }
   id<CAMetalDrawable> drawable = [layer nextDrawable];
-  if (WDL_NOT_NORMALLY(!drawable))
+  if (!drawable)
   {
     NSLog(@"swell-cocoa: metal surface got nul drawable\n");
     return;
@@ -2423,6 +2431,7 @@ SWELLDIALOGCOMMONIMPLEMENTS_WND(0)
     }
   }
     
+  [self setAutorecalculatesKeyViewLoop:YES];
   [self display];
   return self;
 }
@@ -2481,6 +2490,7 @@ SWELLDIALOGCOMMONIMPLEMENTS_WND(0)
  
   [ch release];
 
+  [self setAutorecalculatesKeyViewLoop:YES];
   [self display];
   [self release]; // matching retain above
   
@@ -2560,6 +2570,7 @@ SWELLDIALOGCOMMONIMPLEMENTS_WND(1)
 //  DOWINDOWMINMAXSIZES(ch)
   [ch release];
 
+  [self setAutorecalculatesKeyViewLoop:YES];
   [self setHidesOnDeactivate:NO];
   [self display];
   
@@ -2691,13 +2702,25 @@ HWND SWELL_CreateDialog(SWELL_DialogResourceIndex *reshead, const char *resid, H
   if (!p&&resid) return 0;
   
   NSView *parview=NULL;
-  if (parent && ([(id)parent isKindOfClass:[NSView class]] || 
-                 [(id)parent isKindOfClass:[NSSavePanel class]] || 
-                 [(id)parent isKindOfClass:[NSOpenPanel class]] ||
-                 [(id)parent isKindOfClass:[NSColorPanel class]] || 
-                 [(id)parent isKindOfClass:[NSFontPanel class]]
-                 )) parview=(NSView *)parent;
-  else if (parent && [(id)parent isKindOfClass:[NSWindow class]])  parview=(NSView *)[(id)parent contentView];
+  if (parent)
+  {
+    if ([(id)parent isKindOfClass:[NSView class]])
+    {
+      parview = (NSView *)parent;
+    }
+    else if ([(id)parent isKindOfClass:[NSWindow class]])
+    {
+      if ([(id)parent isKindOfClass:[NSPanel class]] &&
+          [(id)parent respondsToSelector:@selector(setAccessoryView:)])
+      {
+        parview=(NSView *)parent;
+      }
+      else
+      {
+        parview=(NSView *)[(NSWindow *)parent contentView];
+      }
+    }
+    }
   
   if ((!p || (p->windowTypeFlags&SWELL_DLG_WS_CHILD)) && parview && (p || !forceNonChild))
   {
@@ -4019,7 +4042,7 @@ void SWELL_Metal_FillRect(void *_tex, int x, int y, int w, int h, int color)
   const size_t len = npix*4;
   int tmp[4096], *buf=tmp;
   if (len > sizeof(tmp) && !(buf = (int *)malloc(len))) return;
-  for (int x = 0; x < npix; x++) buf[x] = color;
+  for (int i = 0; i < npix; i++) buf[i] = color;
   SWELL_Metal_Blit(_tex,(unsigned char *)buf,x,y,w,h,w, retina_hint);
   if (buf != tmp) free(buf);
 }

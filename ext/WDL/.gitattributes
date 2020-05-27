@@ -14,6 +14,7 @@
 *.bat    text eol=crlf
 *.cmd    text eol=crlf
 
+*.rc                text eol=crlf
 *.dsp               text eol=crlf
 *.dsw               text eol=crlf
 *.sln               text eol=crlf

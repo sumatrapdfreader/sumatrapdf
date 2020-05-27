@@ -260,9 +260,13 @@ typedef struct WindowPropRec
 @interface SWELL_BoxView : NSBox
 {
   NSInteger m_tag;
+@public
+  int m_etch_mode; // if nonzero, SS_ETCHEDHORZ etc
 }
 -(NSInteger) tag;
 -(void) setTag:(NSInteger)tag;
+-(void) drawRect:(NSRect)r;
+-(int) swellIsEtchBox;
 @end
 
 @interface SWELL_FocusRectWnd : NSView
@@ -650,6 +654,36 @@ static WDL_STATICFUNC_UNUSED void NSRECT_TO_RECT(RECT *r, const NSRect &tr)
 }
 #endif
 
+
+#ifdef SWELL_IMPLEMENT_GETOSXVERSION
+
+SWELL_IMPLEMENT_GETOSXVERSION int SWELL_GetOSXVersion()
+{
+  static SInt32 v;
+  if (!v)
+  {
+    if (NSAppKitVersionNumber >= 1266.0)
+    {
+      if (NSAppKitVersionNumber >= 1670.0)  // unsure if this is correct (10.14.1 is 1671.1)
+        v = 0x10d0;
+      else if (NSAppKitVersionNumber >= 1404.0)
+        v = 0x10b0;
+      else
+        v = 0x10a0; // 10.10+ Gestalt(gsv) return 0x109x, so we bump this to 0x10a0
+    }
+    else
+    {
+      SInt32 a = 0x1040;
+      Gestalt(gestaltSystemVersion,&a);
+      v=a;
+    }
+  }
+  return v;
+}
+
+#endif
+
+
 #elif defined(SWELL_TARGET_GDK)
 
 
@@ -827,8 +861,6 @@ HWND GetFocusIncludeMenus();
 void SWELL_RunEvents();
 
 bool swell_isOSwindowmenu(SWELL_OSWINDOW osw);
-
-bool swell_is_virtkey_char(int c);
 
 void swell_on_toplevel_raise(SWELL_OSWINDOW wnd); // called by swell-generic-gdk when a window is focused
 

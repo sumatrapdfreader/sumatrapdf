@@ -14,7 +14,7 @@
 
 LICE_IBitmap *LICE_LoadPCX(const char *filename, LICE_IBitmap *_bmp)
 {
-  FILE *fp = fopen(filename,"rb");
+  FILE *fp = WDL_fopenA(filename,"rb");
   if(!fp) return 0;
 
   fgetc(fp);
@@ -31,8 +31,11 @@ LICE_IBitmap *LICE_LoadPCX(const char *filename, LICE_IBitmap *_bmp)
   unsigned char pal[768];
   fseek(fp,-769,SEEK_END);
   if (fgetc(fp) != 12) { fclose(fp); return NULL; }
-  fread(pal,1,768,fp);
-  if (feof(fp)) { fclose(fp); return NULL; }
+  if (fread(pal,1,768,fp) != 768 || feof(fp))
+  {
+    fclose(fp);
+    return NULL;
+  }
 
 
   LICE_IBitmap *usebmp = NULL;

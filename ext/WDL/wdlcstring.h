@@ -83,7 +83,7 @@ extern "C" {
   char WDL_remove_filepart(char *str); // returns dir character that was zeroed, or 0 if new string is empty
   int WDL_remove_trailing_dirchars(char *str); // returns trailing dirchar count removed, will not convert "/" into ""
   size_t WDL_remove_trailing_crlf(char *str); // returns new length
-
+  const char *WDL_sanitize_ini_key_start(const char *p); // used for sanitizing the start of the "key" parameter to Write/GetPrivateProfile*. note does not fully santiize
 
   #if defined(_WIN32) && defined(_MSC_VER)
     void WDL_vsnprintf(char *o, size_t count, const char *format, va_list args);
@@ -216,6 +216,12 @@ extern "C" {
     while (p > str && (p[-1] == '\r' || p[-1] == '\n')) p--;
     *p = 0;
     return p-str;
+  }
+
+  _WDL_CSTRING_PREFIX const char *WDL_sanitize_ini_key_start(const char *p) // used for sanitizing the beginning of "key" parameter to Write/GetPrivateProfile*. does not fully sanitize
+  {
+    while (*p == ' ' || *p == '\t' || *p == '[') p++;
+    return p;
   }
 
   _WDL_CSTRING_PREFIX void WDL_VARARG_WARN(printf,3,4) snprintf_append(char *o, INT_PTR count, const char *format, ...)

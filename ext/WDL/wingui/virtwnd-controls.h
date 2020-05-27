@@ -90,7 +90,7 @@ class WDL_VirtualIconButton : public WDL_VWnd
 
     void SetGrayed(bool grayed) { m_grayed = grayed; SetEnabled(!grayed); }
 
-    void SetIcon(WDL_VirtualIconButton_SkinConfig *cfg, float alpha=1.0f, bool buttonownsicon=false);
+    virtual void SetIcon(WDL_VirtualIconButton_SkinConfig *cfg, float alpha=1.0f, bool buttonownsicon=false);
     void SetIsButton(bool isbutton) { m_is_button=isbutton; }
     bool GetIsButton() { return m_is_button; }
 

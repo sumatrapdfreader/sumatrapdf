@@ -692,7 +692,7 @@ return 0;
 
 void swell_load_color_theme(const char *fn)
 {
-  FILE *fp = fopen(fn,"r");
+  FILE *fp = WDL_fopenA(fn,"r");
   if (fp)
   {
     swell_colortheme load;

@@ -2558,6 +2558,12 @@ LRESULT WINAPI eel_lice_wndproc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             st[zp]=lowera;
           }
         }
+#ifdef _WIN32
+        if (!a && (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) && ((GetAsyncKeyState(VK_CONTROL)&0x8000)||(GetAsyncKeyState(VK_MENU)&0x8000)))
+        {
+          a = (int)MapVirtualKey((UINT)wParam,2/*MAPVK_VK_TO_CHAR*/);
+        }
+#endif
 
         if (a && uMsg != WM_KEYUP
 #ifdef _WIN32

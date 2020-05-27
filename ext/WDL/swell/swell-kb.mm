@@ -26,6 +26,7 @@
 
 #include "swell.h"
 #include "swell-dlggen.h"
+#include "../wdltypes.h"
 #import <Cocoa/Cocoa.h>
 #import <Carbon/Carbon.h>
 
@@ -433,12 +434,12 @@ static NSImage *swell_imageFromCursorString(const char *name, POINT *hotSpot)
     strcat(tmpn,"/Contents/Resources/");
     strcat(tmpn,name);
     strcat(tmpn,".cur");
-    fp = fopen(tmpn,"rb");
+    fp = WDL_fopenA(tmpn,"rb");
   }
   else 
   {
     isFullFn=true;
-    if (strlen(name)>4 && !stricmp(name+strlen(name)-4,".cur")) fp = fopen(name,"rb");    
+    if (strlen(name)>4 && !stricmp(name+strlen(name)-4,".cur")) fp = WDL_fopenA(name,"rb");
   }  
   
   if (fp)
@@ -453,7 +454,7 @@ static NSImage *swell_imageFromCursorString(const char *name, POINT *hotSpot)
         snprintf(tempfn+strlen(tempfn),256,"swellcur%x%x.ico", timeGetTime(),(int)getpid());
       }
       
-      FILE *outfp = fopen(tempfn,"wb");
+      FILE *outfp = WDL_fopenA(tempfn,"wb");
       if (outfp)
       {
         bool wantLoad=false;

@@ -23,6 +23,7 @@
 //#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 #include "swell.h"
+#define SWELL_IMPLEMENT_GETOSXVERSION
 #include "swell-internal.h"
 
 #include "../mutex.h"
@@ -119,13 +120,13 @@ void SWELL_ReleaseNSTask(void *p)
 DWORD SWELL_WaitForNSTask(void *p, DWORD msTO)
 {
   NSTask *a =(NSTask*)p;
-  DWORD t = msTO ? GetTickCount()+msTO : 0;
+  const DWORD t = GetTickCount();
   do 
   {
     if (![a isRunning]) return WAIT_OBJECT_0;
-    if (t) Sleep(1);
+    if (msTO) Sleep(1);
   }
-  while (GetTickCount()<t);
+  while (msTO && (GetTickCount()-t) < msTO);
 
   return [a isRunning] ? WAIT_TIMEOUT : WAIT_OBJECT_0;
 }
@@ -776,28 +777,5 @@ void SWELL_DisableAppNap(int disable)
 }
 
 
-int SWELL_GetOSXVersion()
-{
-  static SInt32 v;
-  if (!v)
-  {
-    if (NSAppKitVersionNumber >= 1266.0) 
-    {
-      if (NSAppKitVersionNumber >= 1670.0)  // unsure if this is correct (10.14.1 is 1671.1)
-        v = 0x10d0;
-      else if (NSAppKitVersionNumber >= 1404.0)
-        v = 0x10b0;
-      else
-        v = 0x10a0; // 10.10+ Gestalt(gsv) return 0x109x, so we bump this to 0x10a0
-    }
-    else 
-    {
-      SInt32 a = 0x1040;
-      Gestalt(gestaltSystemVersion,&a);
-      v=a;
-    }
-  }
-  return v;
-}
 
 #endif

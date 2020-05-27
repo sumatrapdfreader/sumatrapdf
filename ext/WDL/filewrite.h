@@ -244,7 +244,13 @@ public:
 
       if (m_filedes>=0)
       {
-        if (!wantAppendTo) ftruncate(m_filedes,0);
+        if (!wantAppendTo)
+        {
+          if (ftruncate(m_filedes,0) < 0)
+          {
+            WDL_ASSERT( false /* ftruncate() failed in WDL_FileWrite */ );
+          }
+        }
         else
         {
           struct stat64 st;

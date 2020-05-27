@@ -370,6 +370,7 @@ LICE_IBitmap *LICE_LoadIcon(const char *filename, int reqiconsz=16, LICE_IBitmap
 LICE_IBitmap *LICE_LoadIconFromResource(HINSTANCE hInst, const char *resid, int reqiconsz=16, LICE_IBitmap *bmp=NULL); // returns a bitmap (bmp if nonzero) on success
 
 LICE_IBitmap *LICE_LoadJPG(const char *filename, LICE_IBitmap *bmp=NULL);
+LICE_IBitmap *LICE_LoadJPGFromMemory(const void *data_in, int buflen, LICE_IBitmap *bmp = NULL);
 LICE_IBitmap* LICE_LoadJPGFromResource(HINSTANCE hInst, const char *resid, LICE_IBitmap* bmp = 0);
 
 LICE_IBitmap *LICE_LoadGIF(const char *filename, LICE_IBitmap *bmp=NULL, int *nframes=NULL); // if nframes set, will be set to number of images (stacked vertically), otherwise first frame used
@@ -603,7 +604,7 @@ void* LICE_CreateOctree(int maxcolors);
 void LICE_DestroyOctree(void* octree);
 void LICE_ResetOctree(void *octree, int maxcolors); // resets back to stock, but with spares (to avoid mallocs)
 int LICE_BuildOctree(void* octree, LICE_IBitmap* bmp);
-int LICE_BuildOctreeForAlpha(void* octree, LICE_IBitmap* bmp, int minalpha);
+int LICE_BuildOctreeForAlpha(void* octree, LICE_IBitmap* bmp, unsigned int minalpha);
 int LICE_BuildOctreeForDiff(void* octree, LICE_IBitmap* bmp, LICE_IBitmap* refbmp, LICE_pixel mask=LICE_RGBA(255,255,255,0));
 int LICE_FindInOctree(void* octree, LICE_pixel color);
 int LICE_ExtractOctreePalette(void* octree, LICE_pixel* palette);

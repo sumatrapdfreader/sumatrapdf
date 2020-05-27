@@ -29,12 +29,15 @@
 
 #include "queue.h"
 #include "wdlstring.h"
+#include "assocarray.h"
 
 class LameEncoder
 {
   public:
 
-    LameEncoder(int srate, int nch, int bitrate, int stereomode = 1, int quality = 2, int vbrmethod = -1, int vbrquality = 2, int vbrmax = 320, int abr = 128, int rpgain=0);
+    LameEncoder(int srate, int nch, int bitrate, int stereomode=1, int quality=2,
+      int vbrmethod=-1, int vbrquality=2, int vbrmax=320, int abr=128, int rpgain=0,
+      WDL_StringKeyedArray<char*> *metadata=NULL);
     ~LameEncoder();
 
     int Status() { return errorstat; } // 1=no dll, 2=error
@@ -64,6 +67,10 @@ class LameEncoder
     int GetNumChannels() { return m_encoder_nch; }
     
   private:
+
+    void SetMetadata(WDL_StringKeyedArray<char*> *metadata);
+    int m_id3_len;
+
     void *m_lamestate;
     WDL_Queue spltmp[2];
     WDL_HeapBuf outtmp;
@@ -71,7 +78,6 @@ class LameEncoder
     int errorstat;
     int in_size_samples;
     int m_nch,m_encoder_nch;
-
 };
 
 #endif

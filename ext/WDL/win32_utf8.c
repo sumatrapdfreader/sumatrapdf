@@ -793,7 +793,11 @@ FILE *fopenUTF8(const char *filename, const char *mode)
       if (rv) return rv;
     }
   }
+#ifdef fopen
+#undef fopen
+#endif
   return fopen(filename,mode);
+#define fopen fopenUTF8
 }
 
 int statUTF8(const char *filename, struct stat *buffer)

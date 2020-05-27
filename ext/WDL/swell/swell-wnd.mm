@@ -892,6 +892,24 @@ STANDARD_CONTROL_NEEDSDISPLAY_IMPL( m_lbMode ? "SysListView32_LB" : "SysListView
           }
         }
       return LB_ERR;
+      case LB_FINDSTRINGEXACT:
+        if (lParam)
+        {
+          int x = (int) wParam + 1;
+          if (x < 0) x=0;
+          const int n = self->m_items ? self->m_items->GetSize() : 0;
+          for (int i = 0; i < n; i ++)
+          {
+            SWELL_ListView_Row *row=self->m_items->Get(x);
+            if (row)
+            {
+              const char *p = row->m_vals.Get(0);
+              if (p && !stricmp(p,(const char *)lParam)) return x;
+            }
+            if (++x >= n) x=0;
+          }
+        }
+      return LB_ERR;
       case LB_GETSEL:
         return !!(ListView_GetItemState(hwnd,(int)wParam,LVIS_SELECTED)&LVIS_SELECTED);
       case LB_GETCURSEL:
@@ -2370,6 +2388,39 @@ BOOL SetDlgItemText(HWND hwnd, int idx, const char *text)
   return FALSE;
 }
 
+int GetWindowTextLength(HWND hwnd)
+{
+  if (!hwnd) return 0;
+
+  SWELL_BEGIN_TRY
+
+  NSView *pvw = (NSView *)hwnd;
+  if ([(id)pvw isKindOfClass:[NSView class]] && [[(id)pvw window] contentView] == pvw)
+  {
+    pvw=(NSView *)[(id)pvw window];
+  }
+
+  if ([(id)pvw respondsToSelector:@selector(onSwellGetText)])
+  {
+    const char *p=(const char *)[(SWELL_hwndChild*)pvw onSwellGetText];
+    return p ? (int)strlen(p) : 0;
+  }
+
+  NSString *s;
+
+  if ([pvw isKindOfClass:[NSButton class]]||[pvw isKindOfClass:[NSWindow class]]) s=[((NSButton *)pvw) title];
+  else if ([pvw isKindOfClass:[NSControl class]]) s=[((NSControl *)pvw) stringValue];
+  else if ([pvw isKindOfClass:[NSText class]])  s=[(NSText*)pvw string];
+  else if ([pvw isKindOfClass:[NSBox class]]) s=[(NSBox *)pvw title];
+  else return 0;
+
+  const char *p = s ? [s UTF8String] : NULL;
+  return p ? (int)strlen(p) : 0;
+
+  SWELL_END_TRY(;)
+  return 0;
+}
+
 BOOL GetDlgItemText(HWND hwnd, int idx, char *text, int textlen)
 {
   *text=0;
@@ -3074,6 +3125,25 @@ STANDARD_CONTROL_NEEDSDISPLAY_IMPL("Edit")
       if (lParam) *(int*)lParam = (int)(r.location+r.length);
     }
     return 0;
+    case EM_REPLACESEL:
+      if (lParam)
+      {
+        NSTextStorage *ts = [self textStorage];
+        if (ts)
+        {
+          NSRange r = [self selectedRange];
+          const char *s = (const char *)lParam;
+          NSString *str = *s ? (NSString*)SWELL_CStringToCFString(s) : NULL;
+
+          if (r.length > 0 && !str)
+            [ts deleteCharactersInRange:r];
+          else if (str)
+            [ts replaceCharactersInRange:r withString:str];
+
+          if (str) [str release];
+        }
+      }
+    return 0;
       
     case WM_SETFONT:
     {
@@ -3584,6 +3654,16 @@ HWND SWELL_MakeControl(const char *cname, int idx, const char *classname, int st
   }
   else if (!stricmp(classname, "static"))
   {
+    if ((style&SS_TYPEMASK) == SS_ETCHEDHORZ || (style&SS_TYPEMASK) == SS_ETCHEDVERT || (style&SS_TYPEMASK) == SS_ETCHEDFRAME)
+    {
+      SWELL_BoxView *obj=[[SWELL_BoxView alloc] init];
+      obj->m_etch_mode = style & SS_TYPEMASK;
+      [obj setTag:idx];
+      [obj setFrame:MakeCoords(x,y,w,h,false)];
+      [m_make_owner addSubview:obj];
+      [obj release];
+      return (HWND)obj;
+    }
     NSTextField *obj=[[SWELL_TextField alloc] init];
     [obj setEditable:NO];
     [obj setSelectable:NO];
@@ -3793,11 +3873,23 @@ STANDARD_CONTROL_NEEDSDISPLAY_IMPL("groupbox")
 {
   m_tag=tag;
 }
+
+-(void) drawRect:(NSRect) r
+{
+  // m_etch_mode override?
+  [super drawRect:r];
+}
+-(int)swellIsEtchBox
+{
+  return m_etch_mode;
+}
+
 @end
 
 HWND SWELL_MakeGroupBox(const char *name, int idx, int x, int y, int w, int h, int style)
 {
   SWELL_BoxView *obj=[[SWELL_BoxView alloc] init];
+  obj->m_etch_mode = 0;
   
   // this just doesn't work, you can't color the border unless it's NSBoxCustom, 
   // and I can't get it to show the title text if it's NSBoxCustom
@@ -5161,6 +5253,8 @@ LRESULT DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           if (d) SWELL_DoDialogColorUpdates(hwnd,d,true);
         }
       }
+      if ([(id)hwnd respondsToSelector:@selector(swellWantsMetal)] && [(SWELL_hwndChild *)hwnd swellWantsMetal])
+        InvalidateRect((HWND)hwnd,NULL,FALSE);
     }
   }
   else if (msg == WM_CTLCOLORSTATIC && wParam)
@@ -5171,7 +5265,7 @@ LRESULT DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       if (!br)
       {
         br = CreateSolidBrush(RGB(0,0,0)); // todo hm
-        br->color = [[NSColor windowBackgroundColor] CGColor];
+        br->color = (CGColorRef) [[NSColor windowBackgroundColor] CGColor];
         CFRetain(br->color);
       }
       SetTextColor((HDC)wParam,RGB(255,255,255));
@@ -5876,7 +5970,7 @@ HTREEITEM TreeView_GetChild(HWND hwnd, HTREEITEM item)
   if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return NULL;
 
   HTREEITEM__ *titem=(HTREEITEM__ *)item;
-  if (!titem) return TreeView_GetRoot(hwnd);
+  if (!titem || item == TVI_ROOT) return TreeView_GetRoot(hwnd);
   
   return (HTREEITEM) titem->m_children.Get(0);
 }
@@ -6409,6 +6503,10 @@ void SWELL_GenerateDialogFromList(const void *_list, int listsz)
     {
       SWELL_MakeLabel(list->flag1, list->str2, SIXFROMLIST);
     }
+    else if (!strcmp(list->str1,"__SWELL_ICON"))
+    {
+      // todo (str2 is likely a (const char *)(INT_PTR)resid
+    }
     else if (*list->str2)
     {
       SWELL_MakeControl(list->str1, list->flag1, list->str2, SIXFROMLIST);
@@ -6471,7 +6569,11 @@ void SWELL_GetDesiredControlSize(HWND hwnd, RECT *r)
 
 BOOL SWELL_IsGroupBox(HWND hwnd)
 {
-  if (hwnd && [(id)hwnd isKindOfClass:[SWELL_BoxView class]]) return TRUE;
+  if (hwnd && [(id)hwnd isKindOfClass:[SWELL_BoxView class]])
+  {
+    if (![(id)hwnd respondsToSelector:@selector(swellIsEtchBox)] || [(SWELL_BoxView *)hwnd swellIsEtchBox])
+      return TRUE;
+  }
   return FALSE;
 }
 BOOL SWELL_IsButton(HWND hwnd)

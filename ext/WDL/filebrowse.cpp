@@ -117,12 +117,52 @@ bool WDL_ChooseDirectory(HWND parent, const char *text, const char *initialdir, 
 #endif
 }
 
-static const char *stristr(const char* a, const char* b)
+static WDL_STATICFUNC_UNUSED const char *stristr(const char* a, const char* b)
 {
   const size_t n = strlen(a), len = strlen(b);
   for (size_t i = 0; i+len <= n; ++i) if (!strnicmp(a+i, b, len)) return a+i;
   return NULL;
 }
+
+#ifdef _WIN32
+struct WDL_FileBrowse_Dis {
+  enum { DLSZ = 10 };
+  WDL_FileBrowse_Dis(HWND par)
+  {
+    m_par = par;
+    memset(m_dislist,0,sizeof(m_dislist));
+    if (par) EnableOwnerWnds(par,0);
+  }
+  ~WDL_FileBrowse_Dis()
+  {
+    if (m_dislist[0]) EnableOwnerWnds(m_par, 1);
+  }
+  void EnableOwnerWnds(HWND p, int en)
+  {
+    int limit = 0, dlsz = 0;
+    HWND t;
+    while (NULL != (t = GetParent(p)) && limit++ < 20)
+    {
+      p = t;
+      if (!(GetWindowLong(p,GWL_STYLE)&WS_CHILD) && !en != !IsWindowEnabled(p))
+      {
+        if (!en)
+        {
+          EnableWindow(p,0);
+          m_dislist[dlsz] = p;
+          if (++dlsz == DLSZ) break;
+        }
+        else
+        {
+          for (dlsz = 0; dlsz < DLSZ && m_dislist[dlsz] != p && m_dislist[dlsz]; dlsz++);
+          if (dlsz < DLSZ && m_dislist[dlsz] == p) EnableWindow(p,1);
+        }
+      }
+    }
+  }
+  HWND m_par, m_dislist[DLSZ];
+};
+#endif
 
 bool WDL_ChooseFileForSave(HWND parent, 
                                       const char *text, 
@@ -145,7 +185,10 @@ bool WDL_ChooseFileForSave(HWND parent,
   char cwd[2048];
   GetCurrentDirectory(sizeof(cwd),cwd);
 
+  while (defext && *defext == '.') defext++; // this function can be passed defext of either .wav or wav, we always want it to be the latter
+
 #ifdef _WIN32
+  WDL_FileBrowse_Dis win32disfix(parent);
   char temp[4096];
   memset(temp,0,sizeof(temp));
   if (initialfile) lstrcpyn_safe(temp,initialfile,sizeof(temp));
@@ -172,7 +215,9 @@ bool WDL_ChooseFileForSave(HWND parent,
         {
           if(*p) p+=strlen(p)+1;
           if(!*p) break;
-          if(stristr(p, defext)) 
+          const char *ext = WDL_get_fileext(p);
+          if (*ext == '.') ext++;
+          if(!stricmp(ext,defext))
           {
             fd.setFileTypeIndex(i+1);
             break;
@@ -238,7 +283,11 @@ bool WDL_ChooseFileForSave(HWND parent,
   }
   else
   {
-    if (defext && *defext == '.') initialfile = defext; // SWELL supports default extension in filename field
+    if (defext && *defext)
+    {
+      snprintf(if_temp,sizeof(if_temp),".%s",defext); // SWELL treats initialfile of ".ext" as default extension
+      initialfile = if_temp;
+    }
   }
 
   bool r = BrowseForSaveFile(text,initialdir,initialfile,extlist,fn,fnsize);
@@ -273,6 +322,7 @@ char *WDL_ChooseFileForOpen2(HWND parent,
   GetCurrentDirectory(sizeof(olddir),olddir);
 
 #ifdef _WIN32
+  WDL_FileBrowse_Dis win32disfix(parent);
 
 #ifdef WDL_FILEBROWSE_WIN7VISTAMODE
   if (allowmul!=1)

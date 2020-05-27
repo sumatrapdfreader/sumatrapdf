@@ -203,6 +203,7 @@ SWELL_API_DEFINE(BOOL, SetDlgItemText,(HWND, int idx, const char *text))
 SWELL_API_DEFINE(BOOL, SetDlgItemInt,(HWND, int idx, int val, int issigned))
 SWELL_API_DEFINE(int, GetDlgItemInt,(HWND, int idx, BOOL *translated, int issigned))
 SWELL_API_DEFINE(BOOL, GetDlgItemText,(HWND, int idx, char *text, int textlen))
+SWELL_API_DEFINE(int, GetWindowTextLength,(HWND))
 
 #ifndef GetWindowText
 #define GetWindowText(hwnd,text,textlen) GetDlgItemText(hwnd,0,text,textlen)
@@ -421,13 +422,10 @@ SWELL_API_DEFINE(void, ListView_SetItemCount,(HWND h, int cnt))
 #define ListView_SetItemCountEx(list,cnt,flags) ListView_SetItemCount(list,cnt)
 
 SWELL_API_DEFINE(void, ListView_EnsureVisible,(HWND h, int i, BOOL pok))
-SWELL_API_DEFINE(bool, ListView_GetSubItemRect,(HWND h, int item, int subitem, int code, RECT *r))
 SWELL_API_DEFINE(void, ListView_SetImageList,(HWND h, HIMAGELIST imagelist, int which)) 
-SWELL_API_DEFINE(int, ListView_HitTest,(HWND h, LVHITTESTINFO *pinf))
 SWELL_API_DEFINE(int, ListView_SubItemHitTest,(HWND h, LVHITTESTINFO *pinf))
 SWELL_API_DEFINE(void, ListView_GetItemText,(HWND hwnd, int item, int subitem, char *text, int textmax))
 SWELL_API_DEFINE(void, ListView_SortItems,(HWND hwnd, PFNLVCOMPARE compf, LPARAM parm))
-SWELL_API_DEFINE(bool, ListView_GetItemRect,(HWND h, int item, RECT *r, int code))
 SWELL_API_DEFINE(bool, ListView_Scroll,(HWND h, int xscroll, int yscroll))
 SWELL_API_DEFINE(int, ListView_GetTopIndex,(HWND h))
 SWELL_API_DEFINE(int, ListView_GetCountPerPage,(HWND h))
@@ -437,6 +435,15 @@ SWELL_API_DEFINE(HWND, ListView_GetHeader,(HWND h))
 SWELL_API_DEFINE(int, Header_GetItemCount,(HWND h))
 SWELL_API_DEFINE(BOOL, Header_GetItem,(HWND h, int col, HDITEM* hi))
 SWELL_API_DEFINE(BOOL, Header_SetItem,(HWND h, int col, HDITEM* hi))
+
+  // NOTE: the Cocoa versions of these functions behave differently than swell-generic and Windows:
+  // they return the absolute (unscrolled) coordinates. In order to behave properly, the caller should
+  // use ClientToScreen in order to get to screen coordinates, and then convert those as desired.
+SWELL_API_DEFINE(bool, ListView_GetItemRect,(HWND h, int item, RECT *r, int code))
+SWELL_API_DEFINE(bool, ListView_GetSubItemRect,(HWND h, int item, int subitem, int code, RECT *r))
+  // NOTE: Cocoa version takes absolute (unscrolled) coordinates. ScreenToClient(listview) will convert screen
+  // coordinates to the correct coorindates
+SWELL_API_DEFINE(int, ListView_HitTest,(HWND h, LVHITTESTINFO *pinf))
 
 SWELL_API_DEFINE(int, SWELL_GetListViewHeaderHeight, (HWND h))
 
@@ -1073,10 +1080,8 @@ SWELL_API_DEFINE(int,SWELL_GetOSXVersion,())
 
 SWELL_API_DEFINE(void,SWELL_Register_Cursor_Resource,(const char *idx, const char *name, int hotspot_x, int hotspot_y))
 
-#ifndef SWELL_TARGET_OSX
-SWELL_API_DEFINE(bool, SWELL_ChooseColor, (HWND, int *, int ncustom, int *custom))
+SWELL_API_DEFINE(bool, SWELL_ChooseColor, (HWND, COLORREF *, int ncustom, COLORREF *custom))
 SWELL_API_DEFINE(bool, SWELL_ChooseFont, (HWND, LOGFONT*))
-#endif
 
 SWELL_API_DEFINE(bool, IsWindowEnabled, (HWND))
 

@@ -135,7 +135,7 @@ template<class RTYPE, class EXTRAINFOTYPE> class WDL_ResourcePool
           return ent;
         }
 
-        if (!bestnoown && (!ent->m_rpoolinfo.m_ownerptr || ent->m_rpoolinfo.m_owneduntil < now))
+        if (!bestnoown && (!ent->m_rpoolinfo.m_ownerptr || (now - (ent->m_rpoolinfo.m_owneduntil+1)) <= 0x7FFFFFFF))
         {
           bestent=ent;
           bestlastent=lastent;

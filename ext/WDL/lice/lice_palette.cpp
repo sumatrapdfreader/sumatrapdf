@@ -129,7 +129,7 @@ int LICE_BuildOctree(void* octree, LICE_IBitmap* bmp)
   return tree->leafcount;
 }
 
-int LICE_BuildOctreeForAlpha(void* octree, LICE_IBitmap* bmp, int minalpha)
+int LICE_BuildOctreeForAlpha(void* octree, LICE_IBitmap* bmp, unsigned int minalpha)
 {
   OTree* tree = (OTree*)octree;
   if (!tree || !bmp) return 0;
@@ -249,7 +249,7 @@ void LICE_TestPalette(LICE_IBitmap* bmp, LICE_pixel* palette, int numcolors)
       const LICE_pixel col = px[x];
       const int rgb[3] = { (int)LICE_GETR(col), (int)LICE_GETG(col), (int)LICE_GETB(col) };
 
-      int minerr;
+      int minerr = 0x7FFFFFFF;
       int bestcol=-1;
       int i;
       for (i = 0; i < numcolors; ++i)
@@ -257,7 +257,7 @@ void LICE_TestPalette(LICE_IBitmap* bmp, LICE_pixel* palette, int numcolors)
         const LICE_pixel palcol = palette[i];
         const int rerr[3] = { rgb[0]-(int)LICE_GETR(palcol), rgb[1]-(int)LICE_GETG(palcol), rgb[2]-(int)LICE_GETB(palcol) };
         const int err = rerr[0]*rerr[0]+rerr[1]*rerr[1]+rerr[2]*rerr[2];
-        if (bestcol < 0 || err < minerr)
+        if (err < minerr)
         {
           bestcol=i;
           minerr=err;

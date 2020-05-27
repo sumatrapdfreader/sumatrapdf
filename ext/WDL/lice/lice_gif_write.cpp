@@ -340,7 +340,7 @@ bool LICE_WriteGIFFrame(void *handle, LICE_IBitmap *frame, int xpos, int ypos, b
   }
   else if (wr->transalpha>0)
   {
-    const int al = wr->transalpha&0xff;
+    const unsigned int al = wr->transalpha&0xff;
     for(y=0;y<useh;y++)
     {
       int rdy=y;
@@ -470,7 +470,7 @@ bool LICE_WriteGIF(const char *filename, LICE_IBitmap *bmp, int transparent_alph
       int x=w;
       while(x--)
       {
-        if (LICE_GETA(*p) < transparent_alpha) 
+        if (LICE_GETA(*p) < (unsigned int)transparent_alpha)
         {
           has_transparent=1;
           break;

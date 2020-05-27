@@ -108,7 +108,7 @@ public:
 
 	  return output;
   }
-  void Reset() { memset(buffer.Get(),0,buffer.GetSize()*sizeof(double)); }
+  void Reset() { filterstore=0; memset(buffer.Get(),0,buffer.GetSize()*sizeof(double)); }
   void setdamp(double val) { damp=val;  }
   void setfeedback(double val) { feedback=val; }
 

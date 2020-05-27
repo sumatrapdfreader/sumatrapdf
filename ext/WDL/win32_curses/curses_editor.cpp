@@ -1299,6 +1299,12 @@ void WDL_CursesEditor::runSearch()
      }
      if (found)
      {
+       // make sure the end is on screen
+       m_offs_x = 0;
+       m_curs_x=wdl_max(m_select_x1,m_select_x2) + COLS/4;
+       setCursor();
+
+       m_curs_x = m_select_x1;
        draw();
        setCursor();
        char buf[512];
@@ -2245,7 +2251,11 @@ int WDL_CursesEditor::onChar(int c)
       {
         preSaveUndoState();
         m_curs_x=WDL_utf8_get_charlen(fl->Get());
-        fl->Append(tl->Get());
+
+        // if tl is all whitespace, don't bother appending to the previous line
+        const char *p = tl->Get();
+        while (*p == ' ' || *p == '\t') p++;
+        if (*p) fl->Append(tl->Get());
 
         m_text.Delete(m_curs_y--,true);
         draw();
@@ -2302,11 +2312,13 @@ int WDL_CursesEditor::onChar(int c)
         WDL_FastString *nl = new WDL_FastString();
         int plen=0;
         const char *pb = s->Get();
-        while (plen < bytepos && (pb[plen]== ' ' || pb[plen] == '\t')) plen++;
+        while (pb[plen]== ' ' || pb[plen] == '\t') plen++;
 
         if (plen>0) nl->Set(pb,plen);
 
-        nl->Append(pb+bytepos);
+        const char *insert = pb+bytepos;
+        while (*insert == ' ' || *insert == '\t') insert++;
+        nl->Append(insert);
         m_text.Insert(++m_curs_y,nl);
         s->SetLen(bytepos);
         m_curs_x=WDL_utf8_bytepos_to_charpos(nl->Get(),plen);
