@@ -157,6 +157,17 @@ bool Annotation::SetContents(std::string_view sv) {
     return true;
 }
 
+void Annotation::Delete() {
+    CrashIf(isDeleted);
+    if (smx) {
+        // no-op
+    } else {
+        pdf_delete_annot(pdf->ctx, pdf->page, pdf->annot);
+    }
+    isDeleted = true;
+    isChanged = true; // TODO: not sure I need this
+}
+
 // -1 if not exist
 int Annotation::PopupId() {
     if (smx) {

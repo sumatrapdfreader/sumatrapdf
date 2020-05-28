@@ -199,19 +199,34 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
     delete lbModel;
 }
 
-static void CloseWindow(EditAnnotationsWindow* w) {
-    // TODO: more?
-    w->tab->editAnnotsWindow = nullptr;
-    delete w;
+static void RebuildAnnotations(EditAnnotationsWindow* win) {
+    auto model = new ListBoxModelStrings();
+    int n = 0;
+    if (win->annotations) {
+        n = win->annotations->isize();
+    }
+
+    str::Str s;
+    for (int i = 0; i < n; i++) {
+        auto annot = win->annotations->at(i);
+        if (annot->isDeleted) {
+            continue;
+        }
+        s.Reset();
+        s.AppendFmt("page %d, ", annot->pageNo);
+        s.AppendView(AnnotationName(annot->type));
+        model->strings.Append(s.AsView());
+    }
+
+    win->listBox->SetModel(model);
+    delete win->lbModel;
+    win->lbModel = model;
 }
 
 static void WndCloseHandler(EditAnnotationsWindow* win, WindowCloseEvent* ev) {
-    // CrashIf(w != ev->w);
-    CloseWindow(win);
-}
-
-static void ButtonDeleteHandler(EditAnnotationsWindow* win) {
-    MessageBoxNYI(win->mainWindow->hwnd);
+    CrashIf(win->mainWindow != ev->w);
+    win->tab->editAnnotsWindow = nullptr;
+    delete win;
 }
 
 static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
@@ -406,40 +421,51 @@ static void ShowAnnotationsColor(EditAnnotationsWindow* w, Annotation* annot) {
     w->dropDownColor->SetCurrentSelection(idx);
 }
 
-static void ListBoxSelectionChanged(EditAnnotationsWindow* w, ListBoxSelectionChangedEvent* ev) {
-    // TODO: finish me
-    int itemNo = ev->idx;
+static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo) {
     int annotPageNo = -1;
-    w->annot = nullptr;
+    win->annot = nullptr;
     if (itemNo >= 0) {
-        w->annot = w->annotations->at(itemNo);
-        annotPageNo = w->annot->PageNo();
+        win->annot = win->annotations->at(itemNo);
+        annotPageNo = win->annot->PageNo();
     }
     // TODO: mupdf shows it in 1.6 but not 1.7. Why?
     // ShowAnnotationRect(this, annot);
-    ShowAnnotationAuthor(w, w->annot);
-    ShowAnnotationModificationDate(w, w->annot);
-    ShowAnnotationsPopup(w, w->annot);
-    ShowAnnotationsContents(w, w->annot);
+    ShowAnnotationAuthor(win, win->annot);
+    ShowAnnotationModificationDate(win, win->annot);
+    ShowAnnotationsPopup(win, win->annot);
+    ShowAnnotationsContents(win, win->annot);
     // TODO: PDF_ANNOT_FREE_TEXT
     // TODO: PDF_ANNOT_LINE
-    ShowAnnotationsIcon(w, w->annot);
+    ShowAnnotationsIcon(win, win->annot);
     // TODO: border
-    ShowAnnotationsColor(w, w->annot);
+    ShowAnnotationsColor(win, win->annot);
     // TODO: icolor
     // TODO: quad points
     // TODO: vertices
     // TODO: ink list
     // TODO: PDF_ANNOT_FILE_ATTACHMENT
-    w->buttonDelete->SetIsVisible(w->annot != nullptr);
+    win->buttonDelete->SetIsVisible(win->annot != nullptr);
     // TODO: get from client size
-    auto currBounds = w->mainLayout->lastBounds;
+    auto currBounds = win->mainLayout->lastBounds;
     int dx = currBounds.Dx();
     int dy = currBounds.Dy();
-    LayoutAndSizeToContent(w->mainLayout, dx, dy, w->mainWindow->hwnd);
+    LayoutAndSizeToContent(win->mainLayout, dx, dy, win->mainWindow->hwnd);
     if (annotPageNo > 0) {
-        w->tab->AsFixed()->GoToPage(annotPageNo, false);
+        win->tab->AsFixed()->GoToPage(annotPageNo, false);
     }
+}
+
+static void ButtonDeleteHandler(EditAnnotationsWindow* win) {
+    CrashIf(!win->annot);
+    win->annot->Delete();
+    RebuildAnnotations(win);
+    UpdateUIForSelectedAnnotation(win, -1);
+}
+
+static void ListBoxSelectionChanged(EditAnnotationsWindow* win, ListBoxSelectionChangedEvent* ev) {
+    // TODO: finish me
+    int itemNo = ev->idx;
+    UpdateUIForSelectedAnnotation(win, itemNo);
 }
 
 static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* win) {
@@ -688,27 +714,6 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
 
     auto padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));
     win->mainLayout = padding;
-}
-
-static void RebuildAnnotations(EditAnnotationsWindow* w) {
-    auto model = new ListBoxModelStrings();
-    int n = 0;
-    if (w->annotations) {
-        n = w->annotations->isize();
-    }
-
-    str::Str s;
-    for (int i = 0; i < n; i++) {
-        auto annot = w->annotations->at(i);
-        s.Reset();
-        s.AppendFmt("page %d, ", annot->pageNo);
-        s.AppendView(AnnotationName(annot->type));
-        model->strings.Append(s.AsView());
-    }
-
-    w->listBox->SetModel(model);
-    delete w->lbModel;
-    w->lbModel = model;
 }
 
 void StartEditAnnotations(TabInfo* tab) {

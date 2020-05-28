@@ -119,9 +119,12 @@ int ListBoxCtrl::GetCurrentSelection() {
     return (int)res;
 }
 
+// -1 to clear selection
+// returns false on error
 bool ListBoxCtrl::SetCurrentSelection(int n) {
     if (n < 0) {
-        return false;
+        ListBox_SetCurSel(hwnd, -1);
+        return true;
     }
     int nItems = model->ItemsCount();
     if (n >= nItems) {
@@ -139,5 +142,6 @@ void ListBoxCtrl::SetModel(ListBoxModel* model) {
     if (model != nullptr) {
         FillWithItems(this, model);
     }
+    SetCurrentSelection(-1);
     // TODO: update ideal size based on the size of the model
 }

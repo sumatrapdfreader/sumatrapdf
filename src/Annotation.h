@@ -77,6 +77,8 @@ struct Annotation {
 
     std::string_view IconName(); // empty() if no icon
     void SetIconName(std::string_view);
+
+    void Delete();
 };
 
 Annotation* MakeAnnotationSmx(AnnotationType, int pageNo, RectD, COLORREF);

@@ -16,9 +16,9 @@ this would simplify the code to build layouts
 - [X] HBox and VBox layout fixes for hidden elements
 - [X] allow changing of Contents
 - [X] a way to save PDF as a new file
+- [X] implement "Delete annotation"
 
 Annotations:
- - implement "Delete annotation"
  - display opacity
  - display count of quad points
  - display border
