@@ -65,6 +65,7 @@ struct Annotation {
     bool SetColor(COLORREF);
 
     COLORREF InteriorColor(); // ColorUnset if no color
+    bool SetInteriorColor(COLORREF);
 
     std::string_view Author();
 
@@ -80,6 +81,9 @@ struct Annotation {
 
     std::string_view IconName(); // empty() if no icon
     void SetIconName(std::string_view);
+
+    std::string_view DefaultAppearanceTextFont();
+    void SetDefaultAppearanceTextFont(std::string_view);
 
     void Delete();
 };

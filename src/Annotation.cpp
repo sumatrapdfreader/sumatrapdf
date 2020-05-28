@@ -266,30 +266,27 @@ COLORREF Annotation::Color() {
 
 // return true if color changed
 bool Annotation::SetColor(COLORREF c) {
-    bool didChange;
+    bool didChange = false;
     if (smx) {
         didChange = smx->color != c;
         smx->color = c;
-        if (didChange) {
-            isChanged = true;
-        }
-        return didChange;
-    }
-    float color[4];
-    int n;
-    pdf_annot_color(pdf->ctx, pdf->annot, &n, color);
-    float newColor[4];
-    int newN = ToPdfRgba(c, newColor);
-    didChange = (n != newN);
-    if (!didChange) {
-        for (int i = 0; i < n; i++) {
-            if (color[i] != newColor[i]) {
-                didChange = true;
+    } else {
+        float color[4];
+        int n;
+        pdf_annot_color(pdf->ctx, pdf->annot, &n, color);
+        float newColor[4];
+        int newN = ToPdfRgba(c, newColor);
+        didChange = (n != newN);
+        if (!didChange) {
+            for (int i = 0; i < n; i++) {
+                if (color[i] != newColor[i]) {
+                    didChange = true;
+                }
             }
         }
+        pdf_set_annot_color(pdf->ctx, pdf->annot, newN, newColor);
+        pdf_update_appearance(pdf->ctx, pdf->annot);
     }
-    pdf_set_annot_color(pdf->ctx, pdf->annot, newN, newColor);
-    pdf_update_appearance(pdf->ctx, pdf->annot);
     if (didChange) {
         isChanged = true;
     }
@@ -306,6 +303,61 @@ COLORREF Annotation::InteriorColor() {
     pdf_annot_interior_color(pdf->ctx, pdf->annot, &n, color);
     COLORREF res = FromPdfColor(pdf->ctx, n, color);
     return res;
+}
+
+bool Annotation::SetInteriorColor(COLORREF c) {
+    bool didChange = false;
+    if (smx) {
+        didChange = smx->interiorColor != c;
+        smx->interiorColor = c;
+    } else {
+        float color[4];
+        int n;
+        pdf_annot_interior_color(pdf->ctx, pdf->annot, &n, color);
+        float newColor[4];
+        int newN = ToPdfRgba(c, newColor);
+        didChange = (n != newN);
+        if (!didChange) {
+            for (int i = 0; i < n; i++) {
+                if (color[i] != newColor[i]) {
+                    didChange = true;
+                }
+            }
+        }
+        pdf_set_annot_interior_color(pdf->ctx, pdf->annot, newN, newColor);
+        pdf_update_appearance(pdf->ctx, pdf->annot);
+    }
+    if (didChange) {
+        isChanged = true;
+    }
+    return didChange;
+}
+
+std::string_view Annotation::DefaultAppearanceTextFont() {
+    if (smx) {
+        CrashIf(true);
+        return {};
+    }
+
+    const char* text_font;
+    float text_size_f;
+    float text_color[3];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &text_size_f, text_color);
+    return text_font;
+}
+
+void Annotation::SetDefaultAppearanceTextFont(std::string_view sv) {
+    if (smx) {
+        CrashIf(true);
+        return;
+    }
+    const char* text_font;
+    float text_size_f;
+    float text_color[3];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &text_size_f, text_color);
+    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, sv.data(), text_size_f, text_color);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
+    isChanged = true;
 }
 
 Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot, int pageNo) {

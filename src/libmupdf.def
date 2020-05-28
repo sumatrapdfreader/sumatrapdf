@@ -468,6 +468,7 @@ EXPORTS
 	pdf_set_annot_opacity
 	pdf_set_annot_rect
 	pdf_set_annot_color
+	pdf_set_annot_interior_color
 	pdf_set_annot_line
 	pdf_set_annot_author
 	pdf_set_annot_modification_date

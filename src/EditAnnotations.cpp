@@ -58,6 +58,9 @@ static const char *gStampIcons = "Approved\0AsIs\0Confidential\0Departmental\0Dr
 
 static const char* gColors = "None\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
 
+static const char *gFontNames = "Cour\0Helv\0TiRo\0";
+static const char *gFontReadableNames = "Courier\0Helvetica\0TimesRoman\0";
+
 // TODO: change to qTextAlignmentNames?
 static const char* gQuaddingNames = "Left\0Center\0Right\0";
 
@@ -151,6 +154,8 @@ struct EditAnnotationsWindow {
     DropDownCtrl* dropDownColor = nullptr;
     StaticCtrl* staticTextAlignment = nullptr;
     DropDownCtrl* dropDownTextAlignment = nullptr;
+    StaticCtrl* staticTextFont = nullptr;
+    DropDownCtrl* dropDownTextFont = nullptr;
 
     ButtonCtrl* buttonDelete = nullptr;
 
@@ -379,7 +384,6 @@ static void DoTextAlignment(EditAnnotationsWindow* w, Annotation* annot) {
     if (!isVisible) {
         return;
     }
-    Vec<std::string_view> strings;
     const char* items = gQuaddingNames;
     w->dropDownTextAlignment->SetItemsSeqStrings(items);
     w->dropDownTextAlignment->SetCurrentSelection(itemNo);
@@ -388,6 +392,40 @@ static void DoTextAlignment(EditAnnotationsWindow* w, Annotation* annot) {
 static void TextAlignmentSelectionChanged(EditAnnotationsWindow* w, DropDownSelectionChangedEvent* ev) {
     int newQuadding = ev->idx;
     w->annot->SetQuadding(newQuadding);
+    EnableSaveIfAnnotationsChanged(w);
+    RerenderForWindowInfo(w->tab->win);
+}
+
+static void DoTextFont(EditAnnotationsWindow* w, Annotation* annot) {
+    bool isVisible = false;
+    if (annot) {
+        switch (annot->Type()) {
+            case AnnotationType::FreeText:
+                isVisible = true;
+                break;
+        }
+    }
+    int itemNo = -1;
+    if (isVisible) {
+        std::string_view fontName = annot->DefaultAppearanceTextFont();
+        // TODO: might have other fonts, like "Symb" and "ZaDb"
+        itemNo = seqstrings::StrToIdx(gFontNames, fontName.data());
+        if (itemNo < 0) {
+            isVisible = false;
+        }
+    }
+    w->staticTextFont->SetIsVisible(isVisible);
+    w->dropDownTextFont->SetIsVisible(isVisible);
+    if (!isVisible) {
+        return;
+    }
+    w->dropDownTextFont->SetItemsSeqStrings(gFontReadableNames);
+    w->dropDownTextFont->SetCurrentSelection(itemNo);
+}
+
+static void TextFontSelectionChanged(EditAnnotationsWindow* w, DropDownSelectionChangedEvent* ev) {
+    const char* font = seqstrings::IdxToStr(gFontNames, ev->idx);
+    w->annot->SetDefaultAppearanceTextFont(font);
     EnableSaveIfAnnotationsChanged(w);
     RerenderForWindowInfo(w->tab->win);
 }
@@ -463,7 +501,6 @@ static void DoColor(EditAnnotationsWindow* w, Annotation* annot) {
         return;
     }
     COLORREF col = annot->Color();
-    Vec<std::string_view> strings;
     w->dropDownColor->SetItemsSeqStrings(gColors);
     const char* colorName = GetKnownColorName(col);
     int idx = FindStringInArray(gColors, colorName, 0);
@@ -488,6 +525,7 @@ static void ColorSelectionChanged(EditAnnotationsWindow* w, DropDownSelectionCha
     RerenderForWindowInfo(w->tab->win);
 }
 
+// TODO: maybe hide all elements first to simplify Do* functions
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo) {
     int annotPageNo = -1;
     AnnotationType annotType = AnnotationType::Unknown;
@@ -505,6 +543,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
     DoContents(win, win->annot);
 
     DoTextAlignment(win, win->annot);
+    DoTextFont(win, win->annot);
 
     // TODO: PDF_ANNOT_FREE_TEXT
     // TODO: PDF_ANNOT_LINE
@@ -714,6 +753,22 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetItemsSeqStrings(gQuaddingNames);
         w->onSelectionChanged = std::bind(TextAlignmentSelectionChanged, win, _1);
         win->dropDownTextAlignment = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        win->staticTextFont = CreateStaticHidden(parent, "Text Font:");
+        vbox->AddChild(win->staticTextFont);
+    }
+
+    {
+        auto w = new DropDownCtrl(parent);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->SetIsVisible(false);
+        w->SetItemsSeqStrings(gQuaddingNames);
+        w->onSelectionChanged = std::bind(TextFontSelectionChanged, win, _1);
+        win->dropDownTextFont = w;
         vbox->AddChild(w);
     }
 
