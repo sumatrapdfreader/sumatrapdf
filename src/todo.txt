@@ -17,12 +17,12 @@ this would simplify the code to build layouts
 - [X] allow changing of Contents
 - [X] a way to save PDF as a new file
 - [X] implement "Delete annotation"
+- [X] allow changing text alignment
 
 Annotations:
  - display opacity
  - display count of quad points
  - display border
- - don't allow editing of widget annotations (like mupdf-gl)
  - allow moving some annotations (TEXT)
  - change our text higlight to match PDF i.e. use quad points
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors

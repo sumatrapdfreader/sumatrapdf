@@ -68,6 +68,9 @@ struct Annotation {
 
     std::string_view Author();
 
+    int Quadding();
+    bool SetQuadding(int);
+
     std::string_view Contents();
     bool SetContents(std::string_view sv);
 

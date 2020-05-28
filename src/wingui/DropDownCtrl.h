@@ -24,5 +24,6 @@ struct DropDownCtrl : WindowBase {
     int GetCurrentSelection();
     void SetCurrentSelection(int n);
     void SetItems(Vec<std::string_view>& newItems);
+    void SetItemsSeqStrings(const char* items);
     void SetCueBanner(std::string_view);
 };

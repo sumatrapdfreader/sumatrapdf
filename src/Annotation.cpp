@@ -53,6 +53,7 @@ struct AnnotationSmx {
 
     str::Str contents;
     str::Str author;
+    int quadding; // aka Text Alignment
     str::Str iconName;
 
     time_t creationDate;
@@ -131,6 +132,34 @@ std::string_view Annotation::Author() {
         return {};
     }
     return s;
+}
+
+int Annotation::Quadding() {
+    if (smx) {
+        return smx->quadding;
+    }
+    return pdf_annot_quadding(pdf->ctx, pdf->annot);
+}
+
+static bool IsValidQuadding(int i) {
+    return i >= 0 && i <= 2;
+}
+
+// return true if changed
+bool Annotation::SetQuadding(int newQuadding) {
+    CrashIf(!IsValidQuadding(newQuadding));
+    bool didChange = Quadding() != newQuadding;
+    if (!didChange) {
+        return false;
+    }
+    if (smx) {
+        smx->quadding = newQuadding;
+    } else {
+        pdf_set_annot_quadding(pdf->ctx, pdf->annot, newQuadding);
+        pdf_update_appearance(pdf->ctx, pdf->annot);
+    }
+    isChanged = true;
+    return true;
 }
 
 std::string_view Annotation::Contents() {

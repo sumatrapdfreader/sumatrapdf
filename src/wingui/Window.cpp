@@ -621,6 +621,8 @@ bool WindowBase::IsFocused() {
 }
 
 void WindowBase::SetIsEnabled(bool isEnabled) {
+    // TODO: make it work even if not yet created?
+    CrashIf(!hwnd);
     BOOL enabled = isEnabled ? TRUE : FALSE;
     ::EnableWindow(hwnd, enabled);
 }

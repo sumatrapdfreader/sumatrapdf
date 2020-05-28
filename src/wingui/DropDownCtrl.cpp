@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
+#include "utils/LogDbg.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -100,7 +101,18 @@ void DropDownCtrl::SetItems(Vec<std::string_view>& newItems) {
     SetCurrentSelection(-1);
 }
 
-#include "utils/LogDbg.h"
+static void DropDownItemsFromStringArray(Vec<std::string_view>& items, const char* strings) {
+    while (*strings) {
+        items.Append(strings);
+        strings = seqstrings::SkipStr(strings);
+    }
+}
+
+void DropDownCtrl::SetItemsSeqStrings(const char* items) {
+    Vec<std::string_view> strings;
+    DropDownItemsFromStringArray(strings, items);
+    SetItems(strings);
+}
 
 Size DropDownCtrl::GetIdealSize() {
     Size s1 = TextSizeInHwnd(hwnd, L"Minimal", hfont);
