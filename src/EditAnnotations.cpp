@@ -31,6 +31,7 @@ extern "C" {
 #include "EngineMulti.h"
 #include "EngineManager.h"
 
+#include "Translations.h"
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
@@ -204,22 +205,52 @@ static void CloseWindow(EditAnnotationsWindow* w) {
     delete w;
 }
 
-static void WndCloseHandler(EditAnnotationsWindow* w, WindowCloseEvent* ev) {
+static void WndCloseHandler(EditAnnotationsWindow* win, WindowCloseEvent* ev) {
     // CrashIf(w != ev->w);
-    CloseWindow(w);
+    CloseWindow(win);
 }
 
-static void ButtonDeleteHandler(EditAnnotationsWindow* w) {
-    MessageBoxNYI(w->mainWindow->hwnd);
+static void ButtonDeleteHandler(EditAnnotationsWindow* win) {
+    MessageBoxNYI(win->mainWindow->hwnd);
 }
 
-static void ButtonSavePDFHandler(EditAnnotationsWindow* w) {
-    std::string_view dstFilePath{};
+static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
+    OPENFILENAME ofn = {0};
+    EngineBase* engine = win->tab->AsFixed()->GetEngine();
+    WCHAR dstFileName[MAX_PATH + 1] = {0};
     if (IsCtrlPressed()) {
-        // ask the user to select a new name
+        str::WStr fileFilter(256);
+        fileFilter.Append(_TR("PDF documents"));
+        fileFilter.Append(L"\1*.pdf\1");
+        fileFilter.Append(L"\1*.*\1");
+        str::TransChars(fileFilter.Get(), L"\1", L"\0");
+
+        // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
+        const WCHAR* name = engine->FileName();
+        str::BufSet(dstFileName, dimof(dstFileName), name);
+
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = win->mainWindow->hwnd;
+        ofn.lpstrFile = dstFileName;
+        ofn.nMaxFile = dimof(dstFileName);
+        ofn.lpstrFilter = fileFilter.Get();
+        ofn.nFilterIndex = 1;
+        //ofn.lpstrTitle = _TR("Rename To");
+        //ofn.lpstrInitialDir = initDir;
+        ofn.lpstrDefExt = L".pdf";
+        ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+
+        bool ok = GetSaveFileNameW(&ofn);
+        if (!ok) {
+            return;
+        }
+        AutoFreeStr dstFilePath = strconv::WstrToUtf8(dstFileName);
+        EnginePdfSaveUpdated(engine, dstFilePath.as_view());
+        // TODO: show a notification if saved or error message if failed to save
+        return;
     }
-    EngineBase* engine = w->tab->AsFixed()->GetEngine();
-    EnginePdfSaveUpdated(engine, dstFilePath);
+
+    EnginePdfSaveUpdated(engine, {});
     // TODO: show a notification if saved or error message if failed to save
 }
 
