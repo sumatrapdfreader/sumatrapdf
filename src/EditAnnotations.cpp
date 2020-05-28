@@ -148,6 +148,7 @@ struct EditAnnotationsWindow {
     DropDownCtrl* dropDownColor = nullptr;
     ButtonCtrl* buttonDelete = nullptr;
 
+    StaticCtrl* staticSaveTip = nullptr;
     ButtonCtrl* buttonSavePDF = nullptr;
 
     ListBoxModel* lbModel = nullptr;
@@ -410,17 +411,22 @@ static void ListBoxSelectionChanged(EditAnnotationsWindow* w, ListBoxSelectionCh
     }
 }
 
-static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* w) {
+static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* win) {
     bool didChange = false;
-    if (w->annotations) {
-        for (auto& annot : *w->annotations) {
+    if (win->annotations) {
+        for (auto& annot : *win->annotations) {
             if (annot->isChanged || annot->isDeleted) {
                 didChange = true;
                 break;
             }
         }
     }
-    w->buttonSavePDF->SetIsEnabled(didChange);
+    if (didChange) {
+        win->staticSaveTip->SetTextColor(MkRgb(0, 0, 0));
+    } else {
+        win->staticSaveTip->SetTextColor(MkRgb(0xcc, 0xcc, 0xcc));
+    }
+    win->buttonSavePDF->SetIsEnabled(didChange);
 }
 
 static void DropDownAddSelectionChanged(EditAnnotationsWindow* w, DropDownSelectionChangedEvent* ev) {
@@ -447,6 +453,15 @@ static void DropDownColorSelectionChanged(EditAnnotationsWindow* w, DropDownSele
     }
     // TODO: also opacity?
     w->annot->SetColor(col);
+    EnableSaveIfAnnotationsChanged(w);
+    RerenderForWindowInfo(w->tab->win);
+}
+
+// TODO: text changes are not immediately reflected in tooltip
+// TODO: there seems to be a leak
+static void ContentsChanged(EditAnnotationsWindow* w, EditTextChangedEvent* ev) {
+    ev->didHandle = true;
+    w->annot->SetContents(ev->text);
     EnableSaveIfAnnotationsChanged(w);
     RerenderForWindowInfo(w->tab->win);
 }
@@ -493,8 +508,8 @@ static StaticCtrl* CreateStatic(HWND parent, std::string_view sv = {}) {
     return w;
 }
 
-static void CreateMainLayout(EditAnnotationsWindow* aw) {
-    HWND parent = aw->mainWindow->hwnd;
+static void CreateMainLayout(EditAnnotationsWindow* win) {
+    HWND parent = win->mainWindow->hwnd;
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -503,8 +518,8 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         auto w = new DropDownCtrl(parent);
         bool ok = w->Create();
         CrashIf(!ok);
-        aw->dropDownAdd = w;
-        w->onSelectionChanged = std::bind(DropDownAddSelectionChanged, aw, _1);
+        win->dropDownAdd = w;
+        w->onSelectionChanged = std::bind(DropDownAddSelectionChanged, win, _1);
         vbox->AddChild(w);
         Vec<std::string_view> annotTypes;
         DropDownItemsFromStringArray(annotTypes, gAnnotationTypes);
@@ -515,41 +530,43 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
     {
         auto w = new ListBoxCtrl(parent);
         w->idealSizeLines = 5;
+        w->SetInsetsPt(4, 0);
         bool ok = w->Create();
         CrashIf(!ok);
-        aw->listBox = w;
-        w->onSelectionChanged = std::bind(ListBoxSelectionChanged, aw, _1);
+        win->listBox = w;
+        w->onSelectionChanged = std::bind(ListBoxSelectionChanged, win, _1);
         vbox->AddChild(w);
 
-        aw->lbModel = new ListBoxModelStrings();
-        aw->listBox->SetModel(aw->lbModel);
+        win->lbModel = new ListBoxModelStrings();
+        win->listBox->SetModel(win->lbModel);
     }
 
     {
-        aw->staticRect = CreateStatic(parent);
-        vbox->AddChild(aw->staticRect);
+        win->staticRect = CreateStatic(parent);
+        vbox->AddChild(win->staticRect);
     }
 
     {
-        aw->staticAuthor = CreateStatic(parent);
+        win->staticAuthor = CreateStatic(parent);
         // WindowBaseLayout* l2 = (WindowBaseLayout*)l;
         // l2->SetInsetsPt(20, 0, 0, 0);
-        vbox->AddChild(aw->staticAuthor);
+        vbox->AddChild(win->staticAuthor);
     }
 
     {
-        aw->staticModificationDate = CreateStatic(parent);
-        vbox->AddChild(aw->staticModificationDate);
+        win->staticModificationDate = CreateStatic(parent);
+        vbox->AddChild(win->staticModificationDate);
     }
 
     {
-        aw->staticPopup = CreateStatic(parent);
-        vbox->AddChild(aw->staticPopup);
+        win->staticPopup = CreateStatic(parent);
+        vbox->AddChild(win->staticPopup);
     }
 
     {
-        aw->staticContents = CreateStatic(parent, "Contents:");
-        vbox->AddChild(aw->staticContents);
+        win->staticContents = CreateStatic(parent, "Contents:");
+        win->staticContents->SetInsetsPt(4, 0, 0, 0);
+        vbox->AddChild(win->staticContents);
     }
 
     {
@@ -560,14 +577,15 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         CrashIf(!ok);
         w->maxDx = 150;
         w->SetIsVisible(false);
-        aw->editContents = w;
-        // TODO: hookup change request
+        win->editContents = w;
+        w->onTextChanged = std::bind(ContentsChanged, win, _1);
         vbox->AddChild(w);
     }
 
     {
-        aw->staticIcon = CreateStatic(parent, "Icon:");
-        vbox->AddChild(aw->staticIcon);
+        win->staticIcon = CreateStatic(parent, "Icon:");
+        win->staticIcon->SetInsetsPt(8, 0, 0, 0);
+        vbox->AddChild(win->staticIcon);
     }
 
     {
@@ -575,14 +593,15 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsVisible(false);
-        aw->dropDownIcon = w;
-        w->onSelectionChanged = std::bind(DropDownIconSelectionChanged, aw, _1);
+        win->dropDownIcon = w;
+        w->onSelectionChanged = std::bind(DropDownIconSelectionChanged, win, _1);
         vbox->AddChild(w);
     }
 
     {
-        aw->staticColor = CreateStatic(parent, "Color:");
-        vbox->AddChild(aw->staticColor);
+        win->staticColor = CreateStatic(parent, "Color:");
+        win->staticColor->SetInsetsPt(8, 0, 0, 0);
+        vbox->AddChild(win->staticColor);
     }
 
     {
@@ -590,8 +609,8 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsVisible(false);
-        aw->dropDownColor = w;
-        w->onSelectionChanged = std::bind(DropDownColorSelectionChanged, aw, _1);
+        win->dropDownColor = w;
+        w->onSelectionChanged = std::bind(DropDownColorSelectionChanged, win, _1);
         vbox->AddChild(w);
         Vec<std::string_view> strings;
         DropDownItemsFromStringArray(strings, gColors);
@@ -600,12 +619,13 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
 
     {
         auto w = new ButtonCtrl(parent);
+        w->SetInsetsPt(8, 0, 0, 0);
         w->SetText("Delete annotation");
-        w->onClicked = std::bind(&ButtonDeleteHandler, aw);
+        w->onClicked = std::bind(&ButtonDeleteHandler, win);
         bool ok = w->Create();
         w->SetIsVisible(false);
         CrashIf(!ok);
-        aw->buttonDelete = w;
+        win->buttonDelete = w;
         vbox->AddChild(w);
     }
 
@@ -616,19 +636,27 @@ static void CreateMainLayout(EditAnnotationsWindow* aw) {
     }
 
     {
+        win->staticSaveTip = CreateStatic(parent, "Tip: use Ctrl to save as a new PDF");
+        win->staticSaveTip->SetIsVisible(true);
+        win->staticSaveTip->SetTextColor(MkRgb(0xcc, 0xcc, 0xcc));
+        // make invisible until buttonSavePDF is enabled
+        vbox->AddChild(win->staticSaveTip);
+    }
+
+    {
         auto w = new ButtonCtrl(parent);
         // TODO: maybe show file name e.g. "Save changes to foo.pdf"
         w->SetText("Save changes to PDF");
-        w->onClicked = std::bind(&ButtonSavePDFHandler, aw);
+        w->onClicked = std::bind(&ButtonSavePDFHandler, win);
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetIsEnabled(false); // only enable if there are changes
-        aw->buttonSavePDF = w;
+        win->buttonSavePDF = w;
         vbox->AddChild(w);
     }
 
     auto padding = new Padding(vbox, DpiScaledInsets(parent, 4, 8));
-    aw->mainLayout = padding;
+    win->mainLayout = padding;
 }
 
 static void RebuildAnnotations(EditAnnotationsWindow* w) {

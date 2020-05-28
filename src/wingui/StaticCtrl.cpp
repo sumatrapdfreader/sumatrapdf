@@ -24,9 +24,34 @@ StaticCtrl::StaticCtrl(HWND p) : WindowBase(p) {
 StaticCtrl::~StaticCtrl() {
 }
 
-static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (StaticCtrl*)user;
-    w->HandleWM_COMMAND(ev);
+    UINT msg = ev->msg;
+    CrashIf(msg != WM_COMMAND);
+}
+
+// static
+void Handle_WM_CTLCOLORSTATIC(void* user, WndEvent* ev) {
+    auto w = (StaticCtrl*)user;
+    UINT msg = ev->msg;
+    CrashIf(msg != WM_CTLCOLORSTATIC);
+    HDC hdc = (HDC)ev->wparam;
+    if (w->textColor != ColorUnset) {
+        SetTextColor(hdc, w->textColor);
+    }
+    // the brush we return is the background color for the whole
+    // area of static control
+    // SetBkColor() is just for the part where the text is
+    // SetBkMode(hdc, TRANSPARENT) sets the part of the text to transparent
+    // (but the whole background is still controlled by the bruhs
+    auto bgBrush = w->backgroundColorBrush;
+    if (bgBrush != nullptr) {
+        SetBkColor(hdc, w->backgroundColor);
+        ev->result = (LRESULT)bgBrush;
+    } else {
+        SetBkMode(hdc, TRANSPARENT);
+    }
+    ev->didHandle = true;
 }
 
 bool StaticCtrl::Create() {
@@ -35,7 +60,8 @@ bool StaticCtrl::Create() {
         return false;
     }
     void* user = this;
-    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, Handle_WM_COMMAND, user);
+    // RegisterHandlerForMessage(hwnd, WM_CTLCOLORSTATIC, Handle_WM_CTLCOLORSTATIC, user);
     auto size = GetIdealSize();
     RECT r{0, 0, size.dx, size.dy};
     SetBounds(r);
@@ -47,10 +73,4 @@ Size StaticCtrl::GetIdealSize() {
     Size s = HwndMeasureText(hwnd, txt, hfont);
     free(txt);
     return s;
-}
-
-void StaticCtrl::HandleWM_COMMAND(WndEvent* ev) {
-    UINT msg = ev->msg;
-    CrashIf(msg != WM_COMMAND);
-    // TODO: support STN_CLICKED
 }

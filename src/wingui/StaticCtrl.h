@@ -4,9 +4,9 @@
 struct StaticCtrl : WindowBase {
     StaticCtrl(HWND parent);
     ~StaticCtrl() override;
+
     bool Create() override;
-
-    void HandleWM_COMMAND(WndEvent*);
-
     Size GetIdealSize() override;
+
+    HBRUSH tmpBgBrush = nullptr;
 };

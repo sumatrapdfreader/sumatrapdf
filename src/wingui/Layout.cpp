@@ -54,7 +54,7 @@ void LogConstraints(Constraints c, const char* suffix) {
     dbglayoutf("%s", s.c_str());
 }
 
-bool NotCollapsed(ILayout* l) {
+bool IsCollapsed(ILayout* l) {
     return l->GetVisibility() == Visibility::Collapse;
 }
 
@@ -205,8 +205,8 @@ bool Constraints::IsNormalized() const {
 }
 
 bool Constraints::IsSatisfiedBy(Size size) const {
-    return min.dx <= size.dx && size.dx <= max.dx && min.dy <= size.dy && size.dy <= max.dy &&
-           size.dx != Inf && size.dy != Inf;
+    return min.dx <= size.dx && size.dx <= max.dx && min.dy <= size.dy && size.dy <= max.dy && size.dx != Inf &&
+           size.dy != Inf;
 }
 
 bool Constraints::IsTight() const {
@@ -351,7 +351,7 @@ int VBox::ChildrenCount() {
 int VBox::NonCollapsedChildrenCount() {
     int n = 0;
     for (const auto& c : children) {
-        if (NotCollapsed(c.layout)) {
+        if (!IsCollapsed(c.layout)) {
             n++;
         }
     }
@@ -364,7 +364,7 @@ int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
     }
     int totalFlex = 0;
     for (auto& i : children) {
-        if (NotCollapsed(i.layout)) {
+        if (!IsCollapsed(i.layout)) {
             totalFlex += i.flex;
         }
     }
@@ -418,7 +418,7 @@ Size VBox::Layout(const Constraints bc) {
 
     for (int i = 0; i < n; i++) {
         auto& v = children.at(i);
-        if (v.layout->GetVisibility() == Visibility::Collapse) {
+        if (IsCollapsed(v.layout)) {
             continue;
         }
         // Determine what gap needs to be inserted between the elements.
@@ -601,7 +601,7 @@ void VBox::SetBounds(Rect bounds) {
     ILayout* previous = nullptr;
     for (int i = 0; i < n; i++) {
         auto& v = children[i];
-        if (v.layout->GetVisibility() == Visibility::Collapse) {
+        if (IsCollapsed(v.layout)) {
             continue;
         }
         if (IsPacked(alignMain)) {
@@ -678,7 +678,7 @@ int HBox::ChildrenCount() {
 int HBox::NonCollapsedChildrenCount() {
     int n = 0;
     for (const auto& c : children) {
-        if (NotCollapsed(c.layout)) {
+        if (!IsCollapsed(c.layout)) {
             n++;
         }
     }
@@ -722,7 +722,7 @@ Size HBox::Layout(const Constraints bc) {
 
     for (int i = 0; i < n; i++) {
         auto& v = children[i];
-        if (!NotCollapsed(v.layout)) {
+        if (IsCollapsed(v.layout)) {
             continue;
         }
         // Determine what gap needs to be inserted between the elements.
@@ -755,7 +755,7 @@ Size HBox::Layout(const Constraints bc) {
     if (extraWidth > 0) {
         for (int i = 0; i < n; i++) {
             auto& v = children[i];
-            if (v.flex <= 0 || !NotCollapsed(v.layout)) {
+            if (v.flex <= 0 || IsCollapsed(v.layout)) {
                 continue;
             }
             auto oldWidth = v.size.dx;
@@ -808,7 +808,7 @@ int HBox::MinIntrinsicWidth(int height) {
         for (int i = 1; i < n; i++) {
             auto& v = children[i];
             // Add the preferred gap between this pair of widgets
-            if (!NotCollapsed(v.layout)) {
+            if (IsCollapsed(v.layout)) {
                 continue;
             }
             // Find minimum size for this widget, and update
@@ -820,7 +820,7 @@ int HBox::MinIntrinsicWidth(int height) {
     if (alignMain == MainAxisAlign::Homogeneous) {
         for (int i = 1; i < n; i++) {
             auto& v = children[i];
-            if (!NotCollapsed(v.layout)) {
+            if (IsCollapsed(v.layout)) {
                 continue;
             }
             size = std::max(size, v.layout->MinIntrinsicWidth(height));
@@ -834,7 +834,7 @@ int HBox::MinIntrinsicWidth(int height) {
 
     for (int i = 1; i < n; i++) {
         auto l = children[i].layout;
-        if (!NotCollapsed(l)) {
+        if (IsCollapsed(l)) {
             continue;
         }
         size += l->MinIntrinsicWidth(height);

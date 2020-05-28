@@ -66,7 +66,7 @@ struct ILayout {
     virtual void SetBounds(Rect) = 0;
 };
 
-bool NotCollapsed(ILayout*);
+bool IsCollapsed(ILayout*);
 
 struct LayoutBase : public ILayout {
     Kind kind = nullptr;

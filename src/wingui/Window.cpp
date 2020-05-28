@@ -228,7 +228,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
         HDC hdc = (HDC)wp;
         if (w->textColor != ColorUnset) {
             SetTextColor(hdc, w->textColor);
-            SetTextColor(hdc, RGB(255, 255, 255));
+            // SetTextColor(hdc, RGB(255, 255, 255));
             didHandle = true;
         }
         auto bgBrush = w->backgroundColorBrush;

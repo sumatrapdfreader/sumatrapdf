@@ -67,7 +67,10 @@ struct Annotation {
     COLORREF InteriorColor(); // ColorUnset if no color
 
     std::string_view Author();
+
     std::string_view Contents();
+    bool SetContents(std::string_view sv);
+
     int PopupId(); // -1 if not exist
     time_t CreationDate();
     time_t ModificationDate();

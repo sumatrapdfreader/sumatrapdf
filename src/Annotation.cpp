@@ -142,6 +142,21 @@ std::string_view Annotation::Contents() {
     return s;
 }
 
+bool Annotation::SetContents(std::string_view sv) {
+    std::string_view currValue = Contents();
+    if (str::Eq(sv, currValue.data())) {
+        return false;
+    }
+    isChanged = true;
+    if (smx) {
+        smx->contents.Set(sv);
+    } else {
+        pdf_set_annot_contents(pdf->ctx, pdf->annot, sv.data());
+        pdf_update_appearance(pdf->ctx, pdf->annot);
+    }
+    return true;
+}
+
 // -1 if not exist
 int Annotation::PopupId() {
     if (smx) {
