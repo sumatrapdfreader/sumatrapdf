@@ -25,10 +25,11 @@
 
 Kind kindEdit = "edit";
 
-static void HandleWM_COMMAND(EditCtrl* w, WndEvent* ev) {
+// https://docs.microsoft.com/en-us/windows/win32/controls/en-change
+static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
+    auto w = (EditCtrl*)user;
     CrashIf(ev->msg != WM_COMMAND);
 
-    // https://docs.microsoft.com/en-us/windows/win32/controls/en-change
     auto code = HIWORD(ev->wparam);
     if (EN_CHANGE == code && w->onTextChanged) {
         EditTextChangedEvent a;
@@ -41,13 +42,9 @@ static void HandleWM_COMMAND(EditCtrl* w, WndEvent* ev) {
     }
 }
 
-static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
-    auto w = (EditCtrl*)user;
-    HandleWM_COMMAND(w, ev);
-}
-
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcoloredit
-static void HandleWM_CTLCOLOREDIT(EditCtrl* w, WndEvent* ev) {
+static void Handle_WM_CTLCOLOREDIT(void* user, WndEvent* ev) {
+    auto w = (EditCtrl*)user;
     CrashIf(ev->msg != WM_CTLCOLOREDIT);
     HWND hwndCtrl = (HWND)ev->lparam;
     CrashIf(hwndCtrl != w->hwnd);
@@ -62,11 +59,6 @@ static void HandleWM_CTLCOLOREDIT(EditCtrl* w, WndEvent* ev) {
     }
     ev->didHandle = true;
     ev->result = (INT_PTR)w->bgBrush;
-}
-
-static void DispatchWM_CTLCOLOREDIT(void* user, WndEvent* ev) {
-    auto w = (EditCtrl*)user;
-    HandleWM_CTLCOLOREDIT(w, ev);
 }
 
 #if 0
@@ -130,8 +122,8 @@ bool EditCtrl::Create() {
     }
 
     void* user = this;
-    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
-    RegisterHandlerForMessage(hwnd, WM_CTLCOLOREDIT, DispatchWM_CTLCOLOREDIT, user);
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, Handle_WM_COMMAND, user);
+    RegisterHandlerForMessage(hwnd, WM_CTLCOLOREDIT, Handle_WM_CTLCOLOREDIT, user);
     // TODO: handle WM_CTLCOLORSTATIC for read-only/disabled controls
 
     EditSetCueText(hwnd, cueText.AsView());

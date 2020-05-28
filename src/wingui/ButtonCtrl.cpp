@@ -22,7 +22,8 @@ ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
 ButtonCtrl::~ButtonCtrl() {
 }
 
-static void HandleWM_COMMAND(ButtonCtrl* w, WndEvent* ev) {
+static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
+    auto w = (ButtonCtrl*)user;
     UINT msg = ev->msg;
     CrashIf(msg != WM_COMMAND);
     WPARAM wp = ev->wparam;
@@ -37,11 +38,6 @@ static void HandleWM_COMMAND(ButtonCtrl* w, WndEvent* ev) {
     }
 }
 
-static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
-    auto w = (ButtonCtrl*)user;
-    HandleWM_COMMAND(w, ev);
-}
-
 bool ButtonCtrl::Create() {
     if (isDefault) {
         dwStyle |= BS_DEFPUSHBUTTON;
@@ -53,7 +49,7 @@ bool ButtonCtrl::Create() {
         return false;
     }
     void* user = this;
-    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, Handle_WM_COMMAND, user);
     auto size = GetIdealSize();
     RECT r{0, 0, size.dx, size.dy};
     SetBounds(r);

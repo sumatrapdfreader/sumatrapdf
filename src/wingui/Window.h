@@ -237,9 +237,9 @@ struct WindowBase : public ILayout {
     void SetBackgroundColor(COLORREF);
     void SetColors(COLORREF bg, COLORREF txt);
     void SetRtl(bool);
-
-    void HandleWM_CONTEXTMENU(WndEvent*);
 };
+
+void Handle_WM_CONTEXTMENU(WindowBase* w, WndEvent* ev);
 
 // a top-level window. Must set winClass before
 // calling Create()

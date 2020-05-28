@@ -235,8 +235,8 @@ static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
         ofn.nMaxFile = dimof(dstFileName);
         ofn.lpstrFilter = fileFilter.Get();
         ofn.nFilterIndex = 1;
-        //ofn.lpstrTitle = _TR("Rename To");
-        //ofn.lpstrInitialDir = initDir;
+        // ofn.lpstrTitle = _TR("Rename To");
+        // ofn.lpstrInitialDir = initDir;
         ofn.lpstrDefExt = L".pdf";
         ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 

@@ -63,7 +63,7 @@ static void onCheckboxChanged(CheckState state) {
 static CheckboxCtrl* CreateCheckbox(HWND parent, std::string_view s) {
     auto b = new CheckboxCtrl(parent);
     b->SetText(s);
-    b->OnCheckStateChanged = onCheckboxChanged;
+    b->onCheckStateChanged = onCheckboxChanged;
     b->Create();
     return b;
 }

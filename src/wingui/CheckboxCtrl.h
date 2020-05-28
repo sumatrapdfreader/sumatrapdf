@@ -10,13 +10,11 @@ enum class CheckState {
 typedef std::function<void(CheckState)> OnCheckStateChanged;
 
 struct CheckboxCtrl : WindowBase {
-    OnCheckStateChanged OnCheckStateChanged = nullptr;
+    OnCheckStateChanged onCheckStateChanged = nullptr;
 
     CheckboxCtrl(HWND parent);
     ~CheckboxCtrl();
     bool Create() override;
-
-    void HandleWM_COMMAND(WndEvent*);
 
     Size GetIdealSize() override;
 

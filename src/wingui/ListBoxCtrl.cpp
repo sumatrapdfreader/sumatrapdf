@@ -66,7 +66,7 @@ static void DispatchSelectionChanged(ListBoxCtrl* w, WndEvent* ev) {
     w->onSelectionChanged(&a);
 }
 
-static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (ListBoxCtrl*)user;
     UINT msg = ev->msg;
     CrashIf(msg != WM_COMMAND);
@@ -88,7 +88,7 @@ bool ListBoxCtrl::Create() {
         FillWithItems(this, model);
     }
     void* user = this;
-    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, Handle_WM_COMMAND, user);
     return ok;
 }
 

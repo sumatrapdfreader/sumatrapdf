@@ -44,7 +44,7 @@ static void DispatchSelectionChanged(DropDownCtrl* w, WndEvent* ev) {
     w->onSelectionChanged(&a);
 }
 
-static void DispatchWM_COMMAND(void* user, WndEvent* ev) {
+static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (DropDownCtrl*)user;
     UINT msg = ev->msg;
     CrashIf(msg != WM_COMMAND);
@@ -65,7 +65,7 @@ bool DropDownCtrl::Create() {
     SetCurrentSelection(-1);
 
     void* user = this;
-    RegisterHandlerForMessage(hwnd, WM_COMMAND, DispatchWM_COMMAND, user);
+    RegisterHandlerForMessage(hwnd, WM_COMMAND, Handle_WM_COMMAND, user);
     return true;
 }
 

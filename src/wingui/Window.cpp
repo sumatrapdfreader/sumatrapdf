@@ -533,9 +533,28 @@ Size WindowBase::GetIdealSize() {
     return {};
 }
 
-static void DispatchWM_CONTEXTMENU(void* user, WndEvent* ev) {
-    auto w = (WindowBase*)user;
-    w->HandleWM_CONTEXTMENU(ev);
+void Handle_WM_CONTEXTMENU(WindowBase* w, WndEvent* ev) {
+    CrashIf(ev->msg != WM_CONTEXTMENU);
+    CrashIf(!w->onContextMenu);
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
+    ContextMenuEvent cmev;
+    CopyWndEvent cpev(&cmev, ev);
+    cmev.w = w;
+    cmev.mouseGlobal.x = GET_X_LPARAM(ev->lparam);
+    cmev.mouseGlobal.y = GET_Y_LPARAM(ev->lparam);
+    POINT pt{cmev.mouseGlobal.x, cmev.mouseGlobal.y};
+    if (pt.x != -1) {
+        MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
+    }
+    cmev.mouseWindow.x = pt.x;
+    cmev.mouseWindow.y = pt.y;
+    w->onContextMenu(&cmev);
+    ev->didHandle = true;
+}
+
+static void Dispatch_WM_CONTEXTMENU(void* user, WndEvent* ev) {
+    WindowBase* w = (WindowBase*)user;
+    Handle_WM_CONTEXTMENU(w, ev);
 }
 
 bool WindowBase::Create() {
@@ -573,7 +592,7 @@ bool WindowBase::Create() {
     // after creation
     if (onContextMenu) {
         void* user = this;
-        RegisterHandlerForMessage(hwnd, WM_CONTEXTMENU, DispatchWM_CONTEXTMENU, user);
+        RegisterHandlerForMessage(hwnd, WM_CONTEXTMENU, Dispatch_WM_CONTEXTMENU, user);
     }
 
     if (hfont == nullptr) {
@@ -739,26 +758,6 @@ void WindowBase::SetColors(COLORREF bg, COLORREF txt) {
 
 void WindowBase::SetRtl(bool isRtl) {
     SetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
-}
-
-void WindowBase::HandleWM_CONTEXTMENU(WndEvent* ev) {
-    CrashIf(ev->msg != WM_CONTEXTMENU);
-    WindowBase* w = this;
-    CrashIf(!w->onContextMenu);
-    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
-    ContextMenuEvent cmev;
-    CopyWndEvent cpev(&cmev, ev);
-    cmev.w = w;
-    cmev.mouseGlobal.x = GET_X_LPARAM(ev->lparam);
-    cmev.mouseGlobal.y = GET_Y_LPARAM(ev->lparam);
-    POINT pt{cmev.mouseGlobal.x, cmev.mouseGlobal.y};
-    if (pt.x != -1) {
-        MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
-    }
-    cmev.mouseWindow.x = pt.x;
-    cmev.mouseWindow.y = pt.y;
-    w->onContextMenu(&cmev);
-    ev->didHandle = true;
 }
 
 Kind kindWindow = "window";

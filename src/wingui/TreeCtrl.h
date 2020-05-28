@@ -175,9 +175,6 @@ struct TreeCtrl : WindowBase {
     Size GetIdealSize() override;
     void WndProc(WndEvent*) override;
 
-    void HandleMouseDuringDrag(WndEvent*);
-    void HandleWM_NOTIFY(WndEvent*);
-
     void Clear();
 
     void SetTreeModel(TreeModel*);
@@ -209,10 +206,6 @@ struct TreeCtrl : WindowBase {
 
     HWND GetToolTipsHwnd();
     void SetToolTipsDelayTime(int type, int timeInMs);
-
-    void DragStart(NMTREEVIEWW*);
-    void DragMove(int x, int y);
-    void DragEnd();
 };
 
 void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes);
