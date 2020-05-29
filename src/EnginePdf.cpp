@@ -2084,7 +2084,7 @@ extern Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot*
 int EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
     int nAnnots = 0;
     for (int i = 1; i <= pageCount; i++) {
-        auto pi = GetFzPageInfo(i, false);
+        auto pi = GetFzPageInfo(i, true);
         pdf_page* pdfpage = pdf_page_from_fz_page(ctx, pi->page);
         pdf_annot* annot = pdf_first_annot(ctx, pdfpage);
         while (annot) {
