@@ -128,6 +128,15 @@ static HWND GetChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CONTEXTMENU == msg) {
         return (HWND)wp;
     }
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
+    if (WM_VSCROLL == msg) {
+        return (HWND)lp;
+    }
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-hscroll--trackbar-
+    if (WM_HSCROLL == msg) {
+        return (HWND)lp;
+    }
+
     // TODO: there's no HWND so have to do it differently e.g. allocate
     // unique CtlID, store it in WindowBase and compare that
 #if 0
@@ -868,13 +877,12 @@ Size WindowBase::Layout(const Constraints bc) {
     dbglayoutf("WindowBase::Layout() %s ", GetKind());
     LogConstraints(bc, "\n");
 
-    int dx = MinIntrinsicWidth(0);
-    int dy = MinIntrinsicHeight(0);
-
     auto hinset = insets.left + insets.right;
     auto vinset = insets.top + insets.bottom;
     auto innerConstraints = bc.Inset(hinset, vinset);
 
+    int dx = MinIntrinsicWidth(0);
+    int dy = MinIntrinsicHeight(0);
     childSize = innerConstraints.Constrain(Size{dx, dy});
     auto res = Size{
         childSize.dx + hinset,

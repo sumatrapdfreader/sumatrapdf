@@ -655,6 +655,7 @@
     <ClInclude Include="..\src\wingui\StaticCtrl.h" />
     <ClInclude Include="..\src\wingui\TabsCtrl.h" />
     <ClInclude Include="..\src\wingui\TooltipCtrl.h" />
+    <ClInclude Include="..\src\wingui\TrackbarCtrl.h" />
     <ClInclude Include="..\src\wingui\TreeCtrl.h" />
     <ClInclude Include="..\src\wingui\TreeModel.h" />
     <ClInclude Include="..\src\wingui\WinGui.h" />
@@ -722,6 +723,7 @@
     <ClCompile Include="..\src\wingui\StaticCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TooltipCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\TrackbarCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TreeModel.cpp" />
     <ClCompile Include="..\src\wingui\WinGui.cpp" />

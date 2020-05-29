@@ -360,6 +360,32 @@ void Annotation::SetDefaultAppearanceTextFont(std::string_view sv) {
     isChanged = true;
 }
 
+int Annotation::DefaultAppearanceTextSize() {
+    if (smx) {
+        CrashIf(true);
+        return {};
+    }
+    const char* text_font;
+    float text_size_f;
+    float text_color[3];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &text_size_f, text_color);
+    return (int)text_size_f;
+}
+
+void Annotation::SetDefaultAppearanceTextSize(int fontSize) {
+    if (smx) {
+        CrashIf(true);
+        return;
+    }
+    const char* text_font;
+    float text_size_f;
+    float text_color[3];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &text_size_f, text_color);
+    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, text_font, (float)fontSize, text_color);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
+    isChanged = true;
+}
+
 Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot, int pageNo) {
     auto tp = pdf_annot_type(ctx, annot);
     AnnotationType typ = AnnotationTypeFromPdfAnnot(tp);

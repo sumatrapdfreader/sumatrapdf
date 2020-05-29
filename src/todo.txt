@@ -19,9 +19,9 @@ this would simplify the code to build layouts
 - [X] implement "Delete annotation"
 - [X] allow changing text alignment
 - [X] allow changing text font
+- [X] change text size
 
 Annotations:
- - change text size
  - change text color
  - change border
  - change color

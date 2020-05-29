@@ -85,6 +85,9 @@ struct Annotation {
     std::string_view DefaultAppearanceTextFont();
     void SetDefaultAppearanceTextFont(std::string_view);
 
+    int DefaultAppearanceTextSize();
+    void SetDefaultAppearanceTextSize(int);
+
     void Delete();
 };
 
