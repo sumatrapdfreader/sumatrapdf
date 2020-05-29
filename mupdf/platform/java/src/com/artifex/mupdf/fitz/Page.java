@@ -50,6 +50,4 @@ public class Page
 	public native Quad[] search(String needle);
 
 	public native byte[] textAsHtml();
-
-	public native Separations getSeparations();
 }

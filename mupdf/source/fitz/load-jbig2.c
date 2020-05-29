@@ -248,18 +248,18 @@ struct fz_jbig2_allocator
 };
 
 static void
-error_callback(void *data, const char *msg, Jbig2Severity severity, int32_t seg_idx)
+error_callback(void *data, const char *msg, Jbig2Severity severity, uint32_t seg_idx)
 {
 	fz_context *ctx = data;
 	if (severity == JBIG2_SEVERITY_FATAL)
-		fz_warn(ctx, "jbig2dec error: %s (segment %d)", msg, seg_idx);
+		fz_warn(ctx, "jbig2dec error: %s (segment %u)", msg, seg_idx);
 	else if (severity == JBIG2_SEVERITY_WARNING)
-		fz_warn(ctx, "jbig2dec warning: %s (segment %d)", msg, seg_idx);
+		fz_warn(ctx, "jbig2dec warning: %s (segment %u)", msg, seg_idx);
 #ifdef JBIG2_DEBUG
 	else if (severity == JBIG2_SEVERITY_INFO)
-		fz_warn(ctx, "jbig2dec info: %s (segment %d)", msg, seg_idx);
+		fz_warn(ctx, "jbig2dec info: %s (segment %u)", msg, seg_idx);
 	else if (severity == JBIG2_SEVERITY_DEBUG)
-		fz_warn(ctx, "jbig2dec debug: %s (segment %d)", msg, seg_idx);
+		fz_warn(ctx, "jbig2dec debug: %s (segment %u)", msg, seg_idx);
 #endif
 }
 
