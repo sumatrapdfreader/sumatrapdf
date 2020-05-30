@@ -88,6 +88,12 @@ struct Annotation {
     int DefaultAppearanceTextSize();
     void SetDefaultAppearanceTextSize(int);
 
+    COLORREF DefaultAppearanceTextColor();
+    void SetDefaultAppearanceTextColor(COLORREF);
+
+    int BorderWidth();
+    void SetBorderWidth(int);
+
     void Delete();
 };
 

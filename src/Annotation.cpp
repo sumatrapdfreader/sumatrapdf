@@ -58,6 +58,11 @@ struct AnnotationSmx {
 
     time_t creationDate;
     time_t modificationDate;
+
+    str::Str textFont;
+    int textSize = 0;
+    COLORREF textColor = ColorUnset;
+    int borderWidth = 0;
 };
 
 struct AnnotationPdf {
@@ -335,54 +340,100 @@ bool Annotation::SetInteriorColor(COLORREF c) {
 
 std::string_view Annotation::DefaultAppearanceTextFont() {
     if (smx) {
-        CrashIf(true);
-        return {};
+        return smx->textFont.as_view();
     }
 
-    const char* text_font;
-    float text_size_f;
-    float text_color[3];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &text_size_f, text_color);
-    return text_font;
+    const char* fontName;
+    float sizeF;
+    float textColor[3];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
+    return fontName;
 }
 
 void Annotation::SetDefaultAppearanceTextFont(std::string_view sv) {
     if (smx) {
-        CrashIf(true);
+        smx->textFont.Set(sv);
         return;
     }
-    const char* text_font;
-    float text_size_f;
-    float text_color[3];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &text_size_f, text_color);
-    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, sv.data(), text_size_f, text_color);
+    const char* fontName;
+    float sizeF;
+    float textColor[3];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
+    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, sv.data(), sizeF, textColor);
     pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
 }
 
 int Annotation::DefaultAppearanceTextSize() {
     if (smx) {
-        CrashIf(true);
-        return {};
+        return smx->textSize;
     }
-    const char* text_font;
-    float text_size_f;
-    float text_color[3];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &text_size_f, text_color);
-    return (int)text_size_f;
+    const char* fontName;
+    float sizeF;
+    float textColor[3];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
+    return (int)sizeF;
 }
 
-void Annotation::SetDefaultAppearanceTextSize(int fontSize) {
+void Annotation::SetDefaultAppearanceTextSize(int textSize) {
     if (smx) {
         CrashIf(true);
+        smx->textSize = textSize;
+        isChanged = true;
+        return;
+    }
+    const char* fontName;
+    float sizeF;
+    float textColor[3];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
+    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, fontName, (float)textSize, textColor);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
+    isChanged = true;
+}
+
+COLORREF Annotation::DefaultAppearanceTextColor() {
+    if (smx) {
+        return smx->textColor;
+    }
+    const char* fontName;
+    float sizeF;
+    float textColor[3];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &fontName, &sizeF, textColor);
+    COLORREF res = FromPdfColor(pdf->ctx, 3, textColor);
+    return res;
+}
+
+void Annotation::SetDefaultAppearanceTextColor(COLORREF col) {
+    if (smx) {
+        smx->textColor = col;
+        isChanged = true;
         return;
     }
     const char* text_font;
-    float text_size_f;
-    float text_color[3];
-    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &text_size_f, text_color);
-    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, text_font, (float)fontSize, text_color);
+    float sizeF;
+    float textColor[4];
+    pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &sizeF, textColor);
+    ToPdfRgba(col, textColor);
+    pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, text_font, sizeF, textColor);
     pdf_update_appearance(pdf->ctx, pdf->annot);
+    isChanged = true;
+}
+
+int Annotation::BorderWidth() {
+    if (smx) {
+        return smx->borderWidth;
+    }
+    float res = pdf_annot_border(pdf->ctx, pdf->annot);
+    return (int)res;
+}
+
+void Annotation::SetBorderWidth(int newWidth) {
+    if (smx) {
+        smx->borderWidth = newWidth;
+    } else {
+        pdf_set_annot_border(pdf->ctx, pdf->annot, (float)newWidth);
+        pdf_update_appearance(pdf->ctx, pdf->annot);
+    }
     isChanged = true;
 }
 
@@ -402,21 +453,6 @@ Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot,
     res->pageNo = pageNo;
     res->pdf = apdf;
     res->type = typ;
-
-    // res->flags = pdf_annot_flags(ctx, annot);
-    // TODO: implement those
-    // pdf_annot_opacity(ctx, annot)
-    // pdf_annot_border
-    // pdf_annot_language
-    // pdf_annot_quadding
-    // pdf_annot_interior_color
-    // pdf_annot_quad_point_count / pdf_annot_quad_point
-    // pdf_annot_ink_list_count / pdf_annot_ink_list_stroke_count / pdf_annot_ink_list_stroke_vertex
-    // pdf_annot_line_start_style, pdf_annot_line_end_style
-    // pdf_annot_icon_name
-    // pdf_annot_line
-    // pdf_annot_vertex_count
-
     return res;
 }
 
