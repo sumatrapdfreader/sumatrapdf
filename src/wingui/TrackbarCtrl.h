@@ -29,6 +29,6 @@ struct TrackbarCtrl : WindowBase {
 
     Size GetIdealSize() override;
     void SetRange(int min, int max);
-    void SetPosition(int);
-    int GetPosition();
+    void SetValue(int);
+    int GetValue();
 };

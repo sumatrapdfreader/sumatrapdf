@@ -26,15 +26,15 @@ this would simplify the code to build layouts
 - [X] allow selecting custom color
 - [X] allow custom colors in TestColors drop-down
 - [X] edit line start and end
+- [X] edit opacity
 
 Annotations:
- - edit opacity
  - allow drawing of ink annotations
  - allow drawing of line
  - allow drawing of polygon
  - allow drawing of polyline
- - show count of quad points
- - delete quad points
+ - save attachment
+ - add attachment
  - allow moving annotations
  - change our text higlight to match PDF i.e. use quad points
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".

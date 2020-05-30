@@ -94,6 +94,9 @@ struct Annotation {
     void GetLineEndingStyles(int* start, int* end);
     void SetLineEndingStyles(int start, int end);
 
+    int Opacity();
+    void SetOpacity(int);
+
     int BorderWidth();
     void SetBorderWidth(int);
 

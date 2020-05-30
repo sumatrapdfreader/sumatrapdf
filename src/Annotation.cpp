@@ -65,6 +65,7 @@ struct AnnotationSmx {
     int borderWidth = 0;
     int lineEndingStart = 0;
     int lineEndingEnd = 0;
+    int opacity;
 };
 
 struct AnnotationPdf {
@@ -460,6 +461,28 @@ void Annotation::SetBorderWidth(int newWidth) {
         smx->borderWidth = newWidth;
     } else {
         pdf_set_annot_border(pdf->ctx, pdf->annot, (float)newWidth);
+        pdf_update_appearance(pdf->ctx, pdf->annot);
+    }
+    isChanged = true;
+}
+
+int Annotation::Opacity() {
+    if (smx) {
+        return smx->opacity;
+    }
+    float fopacity = pdf_annot_opacity(pdf->ctx, pdf->annot);
+    int res = (int)(fopacity * 255.f);
+    return res;
+}
+
+void Annotation::SetOpacity(int newOpacity) {
+    CrashIf(newOpacity < 0 || newOpacity > 255);
+    newOpacity = std::clamp(newOpacity, 0, 255);
+    if (smx) {
+        smx->opacity = newOpacity;
+    } else {
+        float fopacity = (float)newOpacity / 255.f;
+        pdf_set_annot_opacity(pdf->ctx, pdf->annot, fopacity);
         pdf_update_appearance(pdf->ctx, pdf->annot);
     }
     isChanged = true;

@@ -164,13 +164,17 @@ struct EditAnnotationsWindow {
 
     StaticCtrl* staticIcon = nullptr;
     DropDownCtrl* dropDownIcon = nullptr;
-    
+
     StaticCtrl* staticBorder = nullptr;
     TrackbarCtrl* trackbarBorder = nullptr;
+
     StaticCtrl* staticColor = nullptr;
     DropDownCtrl* dropDownColor = nullptr;
     StaticCtrl* staticInteriorColor = nullptr;
     DropDownCtrl* dropDownInteriorColor = nullptr;
+
+    StaticCtrl* staticOpacity = nullptr;
+    TrackbarCtrl* trackbarOpacity = nullptr;
 
     ButtonCtrl* buttonDelete = nullptr;
 
@@ -220,6 +224,10 @@ static void HidePerAnnotControls(EditAnnotationsWindow* win) {
     win->dropDownColor->SetIsVisible(false);
     win->staticInteriorColor->SetIsVisible(false);
     win->dropDownInteriorColor->SetIsVisible(false);
+
+    win->staticOpacity->SetIsVisible(false);
+    win->trackbarOpacity->SetIsVisible(false);
+
     win->buttonDelete->SetIsVisible(false);
 }
 
@@ -507,7 +515,7 @@ static void DoTextSize(EditAnnotationsWindow* win, Annotation* annot) {
     AutoFreeStr s = str::Format("Text Size: %d", fontSize);
     win->staticTextSize->SetText(s.as_view());
     win->annot->SetDefaultAppearanceTextSize(fontSize);
-    win->trackbarTextSize->SetPosition(fontSize);
+    win->trackbarTextSize->SetValue(fontSize);
     win->staticTextSize->SetIsVisible(true);
     win->trackbarTextSize->SetIsVisible(true);
 }
@@ -549,7 +557,7 @@ static void DoBorder(EditAnnotationsWindow* win, Annotation* annot) {
     borderWidth = std::clamp(borderWidth, borderWidthMin, borderWidthMax);
     AutoFreeStr s = str::Format("Border: %d", borderWidth);
     win->staticBorder->SetText(s.as_view());
-    win->trackbarBorder->SetPosition(borderWidth);
+    win->trackbarBorder->SetValue(borderWidth);
     win->staticBorder->SetIsVisible(true);
     win->trackbarBorder->SetIsVisible(true);
 }
@@ -667,6 +675,28 @@ static void InteriorColorSelectionChanged(EditAnnotationsWindow* win, DropDownSe
     RerenderForWindowInfo(win->tab->win);
 }
 
+static void DoOpacity(EditAnnotationsWindow* win, Annotation* annot) {
+    if (annot->Type() != AnnotationType::Highlight) {
+        return;
+    }
+    int opacity = win->annot->Opacity();
+    AutoFreeStr s = str::Format("Opacity: %d", opacity);
+    win->staticOpacity->SetText(s.as_view());
+    win->staticOpacity->SetIsVisible(true);
+    win->trackbarOpacity->SetIsVisible(true);
+    win->trackbarOpacity->SetValue(opacity);
+}
+
+static void OpacityChanging(EditAnnotationsWindow* win, TrackbarPosChangingEvent* ev) {
+    ev->didHandle = true;
+    int opacity = ev->pos;
+    win->annot->SetOpacity(opacity);
+    AutoFreeStr s = str::Format("Opacity: %d", opacity);
+    win->staticOpacity->SetText(s.as_view());
+    EnableSaveIfAnnotationsChanged(win);
+    RerenderForWindowInfo(win->tab->win);
+}
+
 // TODO: maybe hide all elements first to simplify Do* functions
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo) {
     int annotPageNo = -1;
@@ -709,6 +739,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
         DoBorder(win, win->annot);
         DoColor(win, win->annot);
         DoInteriorColor(win, win->annot);
+
+        DoOpacity(win, win->annot);
 
         win->buttonDelete->SetIsVisible(true);
     }
@@ -983,6 +1015,7 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         win->trackbarBorder = w;
         vbox->AddChild(w);
     }
+
     {
         win->staticColor = CreateStatic(parent, "Color:");
         win->staticColor->SetInsetsPt(8, 0, 0, 0);
@@ -1012,6 +1045,22 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetItemsSeqStrings(gColors);
         w->onSelectionChanged = std::bind(InteriorColorSelectionChanged, win, _1);
         win->dropDownInteriorColor = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        win->staticOpacity = CreateStatic(parent, "Opacity:");
+        vbox->AddChild(win->staticOpacity);
+    }
+
+    {
+        auto w = new TrackbarCtrl(parent);
+        w->rangeMin = 0;
+        w->rangeMax = 255;
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->onPosChanging = std::bind(OpacityChanging, win, _1);
+        win->trackbarOpacity = w;
         vbox->AddChild(w);
     }
 

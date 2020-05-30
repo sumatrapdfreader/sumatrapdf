@@ -47,7 +47,7 @@ static void Handle_WM_VHSCROLL(void* user, WndEvent* ev) {
             // pos is HIWORD so do nothing
             break;
         default:
-            pos = w->GetPosition();
+            pos = w->GetValue();
     }
 
     TrackbarPosChangingEvent a{};
@@ -82,7 +82,7 @@ bool TrackbarCtrl::Create() {
         return false;
     }
     SetRange(rangeMin, rangeMax);
-    SetPosition(rangeMin);
+    SetValue(rangeMin);
 
     void* user = this;
     if (isHorizontal) {
@@ -108,13 +108,13 @@ void TrackbarCtrl::SetRange(int min, int max) {
     SendMessage(hwnd, TBM_SETRANGE, redraw, range);
 }
 
-void TrackbarCtrl::SetPosition(int pos) {
+void TrackbarCtrl::SetValue(int pos) {
     WPARAM redraw = (WPARAM)TRUE;
     LPARAM p = (LPARAM)pos;
     SendMessage(hwnd, TBM_SETPOS, redraw, p);
 }
 
-int TrackbarCtrl::GetPosition() {
+int TrackbarCtrl::GetValue() {
     int res = (int)SendMessageW(hwnd, TBM_GETPOS, 0, 0);
     return res;
 }
