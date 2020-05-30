@@ -903,31 +903,36 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticRect = CreateStatic(parent);
-        vbox->AddChild(win->staticRect);
+        auto w = CreateStatic(parent);
+        win->staticRect = w;
+        vbox->AddChild(w);
     }
 
     {
-        win->staticAuthor = CreateStatic(parent);
+        auto w = CreateStatic(parent);
         // WindowBaseLayout* l2 = (WindowBaseLayout*)l;
         // l2->SetInsetsPt(20, 0, 0, 0);
-        vbox->AddChild(win->staticAuthor);
+        win->staticAuthor = w;
+        vbox->AddChild(w);
     }
 
     {
-        win->staticModificationDate = CreateStatic(parent);
-        vbox->AddChild(win->staticModificationDate);
+        auto w = CreateStatic(parent);
+        win->staticModificationDate = w;
+        vbox->AddChild(w);
     }
 
     {
-        win->staticPopup = CreateStatic(parent);
-        vbox->AddChild(win->staticPopup);
+        auto w = CreateStatic(parent);
+        win->staticPopup = w;
+        vbox->AddChild(w);
     }
 
     {
-        win->staticContents = CreateStatic(parent, "Contents:");
-        win->staticContents->SetInsetsPt(4, 0, 0, 0);
-        vbox->AddChild(win->staticContents);
+        auto w = CreateStatic(parent, "Contents:");
+        win->staticContents = w;
+        w->SetInsetsPt(4, 0, 0, 0);
+        vbox->AddChild(w);
     }
 
     {
@@ -943,12 +948,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticTextAlignment = CreateStatic(parent, "Text Alignment:");
-        vbox->AddChild(win->staticTextAlignment);
+        auto w = CreateStatic(parent, "Text Alignment:");
+        w->SetInsetsPt(8, 0, 0, 0);
+        win->staticTextAlignment = w;
+        vbox->AddChild(w);
     }
 
     {
         auto w = new DropDownCtrl(parent);
+        w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gQuaddingNames);
@@ -958,12 +966,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticTextFont = CreateStatic(parent, "Text Font:");
-        vbox->AddChild(win->staticTextFont);
+        auto w = CreateStatic(parent, "Text Font:");
+        w->SetInsetsPt(8, 0, 0, 0);
+        win->staticTextFont = w;
+        vbox->AddChild(w);
     }
 
     {
         auto w = new DropDownCtrl(parent);
+        w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gQuaddingNames);
@@ -973,12 +984,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticTextSize = CreateStatic(parent, "Text Size:");
-        vbox->AddChild(win->staticTextSize);
+        auto w = CreateStatic(parent, "Text Size:");
+        w->SetInsetsPt(8, 0, 0, 0);
+        win->staticTextSize = w;
+        vbox->AddChild(w);
     }
 
     {
         auto w = new TrackbarCtrl(parent);
+        w->SetInsetsPt(4, 0, 0, 0);
         w->rangeMin = 8;
         w->rangeMax = 36;
         bool ok = w->Create();
@@ -989,12 +1003,14 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticTextColor = CreateStatic(parent, "Text Color:");
-        vbox->AddChild(win->staticTextColor);
+        auto w = CreateStatic(parent, "Text Color:");
+        win->staticTextColor = w;
+        vbox->AddChild(w);
     }
 
     {
         auto w = new DropDownCtrl(parent);
+        w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
@@ -1004,13 +1020,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticLineStart = CreateStatic(parent, "Line Start:");
-        win->staticLineStart->SetInsetsPt(8, 0, 0, 0);
-        vbox->AddChild(win->staticLineStart);
+        auto w = CreateStatic(parent, "Line Start:");
+        w->SetInsetsPt(8, 0, 0, 0);
+        win->staticLineStart = w;
+        vbox->AddChild(w);
     }
 
     {
         auto w = new DropDownCtrl(parent);
+        w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
         w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, win, _1);
@@ -1019,13 +1037,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticLineEnd = CreateStatic(parent, "Line End:");
-        win->staticLineEnd->SetInsetsPt(8, 0, 0, 0);
-        vbox->AddChild(win->staticLineEnd);
+        auto w = CreateStatic(parent, "Line End:");
+        w->SetInsetsPt(8, 0, 0, 0);
+        win->staticLineEnd = w;
+        vbox->AddChild(w);
     }
 
     {
         auto w = new DropDownCtrl(parent);
+        w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
         w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, win, _1);
@@ -1034,13 +1054,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticIcon = CreateStatic(parent, "Icon:");
-        win->staticIcon->SetInsetsPt(8, 0, 0, 0);
-        vbox->AddChild(win->staticIcon);
+        auto w = CreateStatic(parent, "Icon:");
+        w->SetInsetsPt(8, 0, 0, 0);
+        win->staticIcon = w;
+        vbox->AddChild(w);
     }
 
     {
         auto w = new DropDownCtrl(parent);
+        w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
         w->onSelectionChanged = std::bind(IconSelectionChanged, win, _1);
@@ -1049,8 +1071,10 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticBorder = CreateStatic(parent, "Border:");
-        vbox->AddChild(win->staticBorder);
+        auto w = CreateStatic(parent, "Border:");
+        w->SetInsetsPt(8, 0, 0, 0);
+        win->staticBorder = w;
+        vbox->AddChild(w);
     }
 
     {
@@ -1065,13 +1089,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticColor = CreateStatic(parent, "Color:");
-        win->staticColor->SetInsetsPt(8, 0, 0, 0);
-        vbox->AddChild(win->staticColor);
+        auto w = CreateStatic(parent, "Color:");
+        w->SetInsetsPt(8, 0, 0, 0);
+        win->staticColor = w;
+        vbox->AddChild(w);
     }
 
     {
         auto w = new DropDownCtrl(parent);
+        w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
@@ -1081,13 +1107,15 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticInteriorColor = CreateStatic(parent, "Interior Color:");
-        win->staticInteriorColor->SetInsetsPt(8, 0, 0, 0);
-        vbox->AddChild(win->staticInteriorColor);
+        auto w = CreateStatic(parent, "Interior Color:");
+        w->SetInsetsPt(8, 0, 0, 0);
+        win->staticInteriorColor = w;
+        vbox->AddChild(w);
     }
 
     {
         auto w = new DropDownCtrl(parent);
+        w->SetInsetsPt(4, 0, 0, 0);
         bool ok = w->Create();
         CrashIf(!ok);
         w->SetItemsSeqStrings(gColors);
@@ -1097,8 +1125,9 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticOpacity = CreateStatic(parent, "Opacity:");
-        vbox->AddChild(win->staticOpacity);
+        auto w = CreateStatic(parent, "Opacity:");
+        win->staticOpacity = w;
+        vbox->AddChild(w);
     }
 
     {
@@ -1125,6 +1154,7 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
 
     {
         auto w = new ButtonCtrl(parent);
+        w->SetInsetsPt(8, 0, 0, 0);
         w->SetText("Embed...");
         bool ok = w->Create();
         CrashIf(!ok);
@@ -1135,8 +1165,10 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
 
     {
         auto w = new ButtonCtrl(parent);
-        w->SetInsetsPt(8, 0, 0, 0);
+        w->SetInsetsPt(11, 0, 0, 0);
         w->SetText("Delete annotation");
+        // TODO: doesn't work
+        w->SetTextColor(MkRgb(0xff, 0, 0));
         bool ok = w->Create();
         CrashIf(!ok);
         w->onClicked = std::bind(&ButtonDeleteHandler, win);
@@ -1151,10 +1183,12 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticSaveTip = CreateStatic(parent, "Tip: use Ctrl to save as a new PDF");
-        win->staticSaveTip->SetTextColor(MkRgb(0xcc, 0xcc, 0xcc));
+        auto w = CreateStatic(parent, "Tip: use Ctrl to save as a new PDF");
+        w->SetTextColor(MkRgb(0xcc, 0xcc, 0xcc));
+        w->SetInsetsPt(0, 0, 2, 0);
         // TODO: make invisible until buttonSavePDF is enabled
-        vbox->AddChild(win->staticSaveTip);
+        win->staticSaveTip = w;
+        vbox->AddChild(w);
     }
 
     {

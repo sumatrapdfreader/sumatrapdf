@@ -877,6 +877,7 @@ Size WindowBase::Layout(const Constraints bc) {
     dbglayoutf("WindowBase::Layout() %s ", GetKind());
     LogConstraints(bc, "\n");
 
+
     auto hinset = insets.left + insets.right;
     auto vinset = insets.top + insets.bottom;
     auto innerConstraints = bc.Inset(hinset, vinset);
@@ -892,15 +893,25 @@ Size WindowBase::Layout(const Constraints bc) {
 }
 
 int WindowBase::MinIntrinsicHeight(int) {
+#if 0
     auto vinset = insets.top + insets.bottom;
     Size s = GetIdealSize();
     return s.dy + vinset;
+#else
+    Size s = GetIdealSize();
+    return s.dy;
+#endif
 }
 
 int WindowBase::MinIntrinsicWidth(int) {
+#if 0
     auto hinset = insets.left + insets.right;
     Size s = GetIdealSize();
     return s.dx + hinset;
+#else
+    Size s = GetIdealSize();
+    return s.dx;
+#endif
 }
 
 void WindowBase::SetBounds(Rect bounds) {
