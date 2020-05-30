@@ -1007,6 +1007,9 @@ static inline const char* StrEqWeird(const char* s, const char* toFind) {
 // Returns index of toFind string in strings
 // Returns -1 if string doesn't exist
 int StrToIdx(const char* strings, const char* toFind) {
+    if (!toFind) {
+        return -1;
+    }
     const char* s = strings;
     int idx = 0;
     while (*s) {

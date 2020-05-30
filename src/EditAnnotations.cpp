@@ -179,6 +179,9 @@ struct EditAnnotationsWindow {
     // currently selected annotation
     Annotation* annot = nullptr;
 
+    str::Str currCustomColor;
+    str::Str currCustomInteriorColor;
+
     ~EditAnnotationsWindow();
 };
 
@@ -209,6 +212,7 @@ static void HidePerAnnotControls(EditAnnotationsWindow* win) {
 }
 
 static int FindStringInArray(const char* items, const char* toFind, int valIfNotFound = -1) {
+    int idx = seqstrings::StrToIdx(items, toFind);
     int i = 0;
     while (*items) {
         if (str::Eq(items, toFind)) {
@@ -558,6 +562,28 @@ static void IconSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionCh
     RerenderForWindowInfo(win->tab->win);
 }
 
+static void ItemsFromStringArray(Vec<std::string_view>& items, const char* strings) {
+    while (*strings) {
+        items.Append(strings);
+        strings = seqstrings::SkipStr(strings);
+    }
+}
+
+static void DropDownFillColors(DropDownCtrl* w, COLORREF col, str::Str& customColor) {
+    Vec<std::string_view> items;
+    ItemsFromStringArray(items, gColors);
+    const char* colorName = GetKnownColorName(col);
+    int idx = seqstrings::StrToIdx(gColors, colorName);
+    if (idx == -1) {
+        customColor.Reset();
+        SerializeColorRgb(col, customColor);
+        items.Append(customColor.as_view());
+        idx = items.isize() - 1;
+    }
+    w->SetItems(items);
+    w->SetCurrentSelection(idx);
+}
+
 static void DoColor(EditAnnotationsWindow* win, Annotation* annot) {
     size_t n = dimof(gAnnotsWithColor);
     bool isVisible = IsAnnotationTypeInArray(gAnnotsWithColor, n, annot->Type());
@@ -565,13 +591,7 @@ static void DoColor(EditAnnotationsWindow* win, Annotation* annot) {
         return;
     }
     COLORREF col = annot->Color();
-    win->dropDownColor->SetItemsSeqStrings(gColors);
-    const char* colorName = GetKnownColorName(col);
-    int idx = FindStringInArray(gColors, colorName, 0);
-    if (idx == -1) {
-        // TODO: not a known color name, so add hex version to the list
-    }
-    win->dropDownColor->SetCurrentSelection(idx);
+    DropDownFillColors(win->dropDownColor, col, win->currCustomColor);
     win->staticColor->SetIsVisible(true);
     win->dropDownColor->SetIsVisible(true);
 }
@@ -597,15 +617,9 @@ static void DoInteriorColor(EditAnnotationsWindow* win, Annotation* annot) {
         return;
     }
     COLORREF col = annot->InteriorColor();
-    win->dropDownColor->SetItemsSeqStrings(gColors);
-    const char* colorName = GetKnownColorName(col);
-    int idx = FindStringInArray(gColors, colorName, 0);
-    if (idx == -1) {
-        // TODO: not a known color name, so add hex version to the list
-    }
-    win->dropDownColor->SetCurrentSelection(idx);
-    win->staticColor->SetIsVisible(true);
-    win->dropDownColor->SetIsVisible(true);
+    DropDownFillColors(win->dropDownInteriorColor, col, win->currCustomInteriorColor);
+    win->staticInteriorColor->SetIsVisible(true);
+    win->dropDownInteriorColor->SetIsVisible(true);
 }
 
 static void InteriorColorSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionChangedEvent* ev) {

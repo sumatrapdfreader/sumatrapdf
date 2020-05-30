@@ -24,7 +24,7 @@ DropDownCtrl::DropDownCtrl(HWND parent) : WindowBase(parent) {
 DropDownCtrl::~DropDownCtrl() {
 }
 
-static void setDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
+static void SetDropDownItems(HWND hwnd, Vec<std::string_view>& items) {
     ComboBox_ResetContent(hwnd);
     for (std::string_view s : items) {
         WCHAR* ws = strconv::Utf8ToWstr(s);
@@ -62,7 +62,7 @@ bool DropDownCtrl::Create() {
     if (!ok) {
         return false;
     }
-    setDropDownItems(hwnd, items);
+    SetDropDownItems(hwnd, items);
     SetCurrentSelection(-1);
 
     void* user = this;
@@ -97,7 +97,7 @@ void DropDownCtrl::SetItems(Vec<std::string_view>& newItems) {
     for (std::string_view s : newItems) {
         items.Append(s);
     }
-    setDropDownItems(hwnd, items);
+    SetDropDownItems(hwnd, items);
     SetCurrentSelection(-1);
 }
 

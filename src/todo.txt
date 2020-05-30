@@ -20,29 +20,33 @@ this would simplify the code to build layouts
 - [X] allow changing text alignment
 - [X] allow changing text font
 - [X] change text size
+- [X] change text color
+- [X] change border
+- [X] allow colors that don't match known color names
 
 Annotations:
- - change text color
- - change border
- - change color
- - text language drop-down
- - display opacity
- - display count of quad points
- - display border
- - allow moving some annotations (TEXT)
+ - allow selecting custom color
+ - allow custom colors in TestColors drop-down
+ - change opacity
+ - show count of quad points
+ - delete quad points
+ - allow moving annotations
  - change our text higlight to match PDF i.e. use quad points
- - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection". Maybe add sub-menu with list of colors
- - allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
+ - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".
+   Maybe add sub-menu with list of colors
+ - color drop-down should allow entering arbitrary colors (text box or add color selection dialog)
+ - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
    a dialog box for setting a color. Remember the custom colors in settings for future use.
- - UI ideas: https://getcleanshot.com/
  - mem leak when changing contents of annotation
  - Ctrl doesn't always work, probably need to hook keyboard on a lower level
  - implement StaticCtrl background color
+ - maybe: text language drop-down
  - maybe: add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
  - maybe: add label for showing notification that saved or failed to save. Notification should self-dismiss
    after few seconds
  - maybe: display flags
  - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
+ - UI ideas: https://getcleanshot.com/
 
 ------
 
