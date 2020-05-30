@@ -259,16 +259,22 @@ void DeleteEditAnnotationsWindow(EditAnnotationsWindow* win) {
     delete win;
 }
 
-EditAnnotationsWindow::~EditAnnotationsWindow() {
-    int nAnnots = annotations->isize();
+static void DeleteAnnotations(EditAnnotationsWindow* win) {
+    int nAnnots = win->annotations->isize();
     for (int i = 0; i < nAnnots; i++) {
-        Annotation* a = annotations->at(i);
+        Annotation* a = win->annotations->at(i);
         if (a->pdf) {
             // hacky: only annotations with pdf_annot set belong to us
             delete a;
         }
     }
-    delete annotations;
+    delete win->annotations;
+    win->annotations = nullptr;
+    win->annot = nullptr;
+}
+
+EditAnnotationsWindow::~EditAnnotationsWindow() {
+    DeleteAnnotations(this);
     delete mainWindow;
     delete mainLayout;
     delete lbModel;
@@ -303,6 +309,10 @@ static void WndCloseHandler(EditAnnotationsWindow* win, WindowCloseEvent* ev) {
     win->tab->editAnnotsWindow = nullptr;
     delete win;
 }
+
+extern void ReloadDocument(WindowInfo* win, bool autorefresh);
+static void SetAnnotations(EditAnnotationsWindow* win, TabInfo* tab);
+static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo);
 
 static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
     OPENFILENAME ofn = {0};
@@ -340,8 +350,15 @@ static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
         return;
     }
 
-    EnginePdfSaveUpdated(engine, {});
+    bool ok = EnginePdfSaveUpdated(engine, {});
     // TODO: show a notification if saved or error message if failed to save
+    if (!ok) {
+        return;
+    }
+    ReloadDocument(win->tab->win, false);
+    DeleteAnnotations(win);
+    SetAnnotations(win, win->tab);
+    UpdateUIForSelectedAnnotation(win, -1);
 }
 
 static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* win) {
@@ -712,6 +729,10 @@ static void OpacityChanging(EditAnnotationsWindow* win, TrackbarPosChangingEvent
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo) {
     int annotPageNo = -1;
     win->annot = nullptr;
+    HidePerAnnotControls(win);
+    if (itemNo < 0) {
+        return;
+    }
 
     // get annotation at index itemNo, skipping deleted annotations
     int idx = 0;
@@ -730,7 +751,6 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
         break;
     }
 
-    HidePerAnnotControls(win);
     if (win->annot) {
         DoRect(win, win->annot);
         DoAuthor(win, win->annot);
@@ -1150,12 +1170,7 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     HidePerAnnotControls(win);
 }
 
-void StartEditAnnotations(TabInfo* tab) {
-    if (tab->editAnnotsWindow) {
-        HWND hwnd = tab->editAnnotsWindow->mainWindow->hwnd;
-        BringWindowToTop(hwnd);
-        return;
-    }
+static void SetAnnotations(EditAnnotationsWindow* win, TabInfo* tab) {
     DisplayModel* dm = tab->AsFixed();
     CrashIf(!dm);
     if (!dm) {
@@ -1174,13 +1189,21 @@ void StartEditAnnotations(TabInfo* tab) {
         }
     }
 
-    auto win = new EditAnnotationsWindow();
     win->tab = tab;
     tab->editAnnotsWindow = win;
     win->annotations = annots;
 
+    RebuildAnnotations(win);
+}
+
+void StartEditAnnotations(TabInfo* tab) {
+    if (tab->editAnnotsWindow) {
+        HWND hwnd = tab->editAnnotsWindow->mainWindow->hwnd;
+        BringWindowToTop(hwnd);
+        return;
+    }
+    auto win = new EditAnnotationsWindow();
     auto mainWindow = new Window();
-    // w->isDialog = true;
     HMODULE h = GetModuleHandleW(nullptr);
     LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
     mainWindow->hIcon = LoadIconW(h, iconName);
@@ -1199,8 +1222,9 @@ void StartEditAnnotations(TabInfo* tab) {
 
     win->mainWindow = mainWindow;
     CreateMainLayout(win);
-    RebuildAnnotations(win);
 
+    SetAnnotations(win, tab);
+    
     // size our editor window to be the same height as main window
     int minDy = 720;
     // TODO: this is slightly less that wanted
@@ -1220,6 +1244,4 @@ void StartEditAnnotations(TabInfo* tab) {
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     mainWindow->SetIsVisible(true);
-
-    CrashIf(!ok);
 }
