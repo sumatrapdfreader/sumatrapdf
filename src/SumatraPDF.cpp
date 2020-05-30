@@ -1243,11 +1243,19 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     }
 }
 
-void ReloadDocument(WindowInfo* win, bool autorefresh) {
+void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     // TODO: must disable reload for EngineMulti representing a directory
     TabInfo* tab = win->currentTab;
+
+    // we can't reload while having annotations window open because
+    // that invalidates the mupdf objects that we hold in editAnnotsWindow
+    // TODO: a better approach would be to have a callback that editAnnotsWindow
+    // would register for and re-do its state
+    if (tab->editAnnotsWindow) {
+        return;
+    }
     if (!win->IsDocLoaded()) {
-        if (!autorefresh && tab) {
+        if (!autoRefresh && tab) {
             LoadArgs args(tab->filePath, win);
             args.forceReuse = true;
             LoadDocument(args);
@@ -1261,7 +1269,7 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
     // a refresh event can occur before the file is finished being written,
     // in which case the repair could fail. Instead, if the file is broken,
     // we postpone the reload until the next autorefresh event
-    if (!ctrl && autorefresh) {
+    if (!ctrl && autoRefresh) {
         SetFrameTitleForTab(tab, true);
         win::SetText(win->hwndFrame, tab->frameTitle);
         return;
@@ -3874,7 +3882,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             CloseTab(win, true);
             return;
         case 'r':
-            ReloadDocument(win);
+            ReloadDocument(win, false);
             return;
         case VK_TAB:
             AdvanceFocus(win);
@@ -4263,7 +4271,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_REFRESH:
-            ReloadDocument(win);
+            ReloadDocument(win, false);
             break;
 
         case IDM_SAVEAS_BOOKMARK:

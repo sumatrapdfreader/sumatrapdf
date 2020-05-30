@@ -121,7 +121,7 @@ void SetCurrentLanguageAndRefreshUI(const char* langCode);
 void UpdateDocumentColors();
 void UpdateTabFileDisplayStateForTab(TabInfo* td);
 bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield = false);
-void ReloadDocument(WindowInfo* win, bool autorefresh = false);
+void ReloadDocument(WindowInfo* win, bool autoRefresh);
 void OnMenuViewFullscreen(WindowInfo* win, bool presentation = false);
 void RelayoutWindow(WindowInfo* win);
 

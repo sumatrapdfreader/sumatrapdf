@@ -609,7 +609,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
             LoadArgs args(pdfFile, !newWindow ? win : nullptr);
             win = LoadDocument(args);
         } else if (win && !win->IsDocLoaded()) {
-            ReloadDocument(win);
+            ReloadDocument(win, false);
         }
     } else {
         // check if any opened PDF has sync information for the source file
@@ -678,7 +678,7 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         LoadArgs args(pdfFile, win);
         win = LoadDocument(args);
     } else if (win && !win->IsDocLoaded()) {
-        ReloadDocument(win);
+        ReloadDocument(win, false);
         forceRefresh = 0;
     }
 
@@ -717,7 +717,7 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
         return next;
     }
     if (!win->IsDocLoaded()) {
-        ReloadDocument(win);
+        ReloadDocument(win, false);
         if (!win->IsDocLoaded()) {
             return next;
         }
@@ -754,7 +754,7 @@ static const WCHAR* HandlePageCmd(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
         return next;
     }
     if (!win->IsDocLoaded()) {
-        ReloadDocument(win);
+        ReloadDocument(win, false);
         if (!win->IsDocLoaded()) {
             return next;
         }
@@ -793,7 +793,7 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
         return next;
     }
     if (!win->IsDocLoaded()) {
-        ReloadDocument(win);
+        ReloadDocument(win, false);
         if (!win->IsDocLoaded()) {
             return next;
         }

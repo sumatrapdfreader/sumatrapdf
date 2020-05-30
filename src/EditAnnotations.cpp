@@ -316,6 +316,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
 
 static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
     OPENFILENAME ofn = {0};
+    TabInfo* tab = win->tab;
     EngineBase* engine = win->tab->AsFixed()->GetEngine();
     WCHAR dstFileName[MAX_PATH + 1] = {0};
     if (IsCtrlPressed()) {
@@ -355,9 +356,16 @@ static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
     if (!ok) {
         return;
     }
-    ReloadDocument(win->tab->win, false);
+
+    // TODO: hacky: set tab->editAnnotsWindow to nullptr to
+    // disable a check in ReloadDocuments. Could pass additional argument
+    auto tmpWin = tab->editAnnotsWindow;
+    tab->editAnnotsWindow = nullptr;
+    ReloadDocument(tab->win, false);
+    tab->editAnnotsWindow = tmpWin;
+
     DeleteAnnotations(win);
-    SetAnnotations(win, win->tab);
+    SetAnnotations(win, tab);
     UpdateUIForSelectedAnnotation(win, -1);
 }
 
@@ -725,19 +733,14 @@ static void OpacityChanging(EditAnnotationsWindow* win, TrackbarPosChangingEvent
     RerenderForWindowInfo(win->tab->win);
 }
 
-// TODO: maybe hide all elements first to simplify Do* functions
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo) {
     int annotPageNo = -1;
     win->annot = nullptr;
-    HidePerAnnotControls(win);
-    if (itemNo < 0) {
-        return;
-    }
 
     // get annotation at index itemNo, skipping deleted annotations
     int idx = 0;
     int nAnnots = win->annotations->isize();
-    for (int i = 0; i < nAnnots; i++) {
+    for (int i = 0; itemNo >= 0 && i < nAnnots; i++) {
         auto annot = win->annotations->at(i);
         if (annot->isDeleted) {
             continue;
@@ -751,6 +754,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
         break;
     }
 
+    HidePerAnnotControls(win);
     if (win->annot) {
         DoRect(win, win->annot);
         DoAuthor(win, win->annot);
@@ -1224,7 +1228,7 @@ void StartEditAnnotations(TabInfo* tab) {
     CreateMainLayout(win);
 
     SetAnnotations(win, tab);
-    
+
     // size our editor window to be the same height as main window
     int minDy = 720;
     // TODO: this is slightly less that wanted
