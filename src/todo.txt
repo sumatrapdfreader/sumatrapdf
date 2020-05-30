@@ -29,12 +29,12 @@ this would simplify the code to build layouts
 - [X] edit opacity
 
 Annotations:
+ - save attachment
+ - add attachment
  - allow drawing of ink annotations
  - allow drawing of line
  - allow drawing of polygon
  - allow drawing of polyline
- - save attachment
- - add attachment
  - allow moving annotations
  - change our text higlight to match PDF i.e. use quad points
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".

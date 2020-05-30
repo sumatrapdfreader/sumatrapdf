@@ -59,11 +59,8 @@ static const char *gLineEndingStyles = "None\0Square\0Circle\0Diamond\0OpenArrow
 static const char* gColors = "None\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
 static const char *gFontNames = "Cour\0Helv\0TiRo\0";
 static const char *gFontReadableNames = "Courier\0Helvetica\0TimesRoman\0";
-
-// TODO: change to qTextAlignmentNames?
 static const char* gQuaddingNames = "Left\0Center\0Right\0";
 
-// COLORREF is abgr format
 static COLORREF gColorsValues[] = {
     //0x00000000, /* transparent */
     ColorUnset, /* transparent */
@@ -176,6 +173,9 @@ struct EditAnnotationsWindow {
     StaticCtrl* staticOpacity = nullptr;
     TrackbarCtrl* trackbarOpacity = nullptr;
 
+    ButtonCtrl* buttonSaveAttachment = nullptr;
+    ButtonCtrl* buttonEmbedAttachment = nullptr;
+
     ButtonCtrl* buttonDelete = nullptr;
 
     StaticCtrl* staticSaveTip = nullptr;
@@ -227,6 +227,9 @@ static void HidePerAnnotControls(EditAnnotationsWindow* win) {
 
     win->staticOpacity->SetIsVisible(false);
     win->trackbarOpacity->SetIsVisible(false);
+
+    win->buttonSaveAttachment->SetIsVisible(false);
+    win->buttonEmbedAttachment->SetIsVisible(false);
 
     win->buttonDelete->SetIsVisible(false);
 }
@@ -286,7 +289,7 @@ static void RebuildAnnotations(EditAnnotationsWindow* win) {
         }
         s.Reset();
         s.AppendFmt("page %d, ", annot->pageNo);
-        s.AppendView(AnnotationName(annot->type));
+        s.AppendView(AnnotationReadableName(annot->type));
         model->strings.Append(s.AsView());
     }
 
@@ -687,6 +690,14 @@ static void DoOpacity(EditAnnotationsWindow* win, Annotation* annot) {
     win->trackbarOpacity->SetValue(opacity);
 }
 
+static void DoSaveEmbed(EditAnnotationsWindow* win, Annotation* annot) {
+    if (annot->Type() != AnnotationType::FileAttachment) {
+        return;
+    }
+    win->buttonSaveAttachment->SetIsVisible(true);
+    win->buttonEmbedAttachment->SetIsVisible(true);
+}
+
 static void OpacityChanging(EditAnnotationsWindow* win, TrackbarPosChangingEvent* ev) {
     ev->didHandle = true;
     int opacity = ev->pos;
@@ -741,6 +752,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
         DoInteriorColor(win, win->annot);
 
         DoOpacity(win, win->annot);
+        DoSaveEmbed(win, win->annot);
 
         win->buttonDelete->SetIsVisible(true);
     }
@@ -753,6 +765,18 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
     if (annotPageNo > 0) {
         win->tab->AsFixed()->GoToPage(annotPageNo, false);
     }
+}
+
+static void ButtonSaveAttachment(EditAnnotationsWindow* win) {
+    CrashIf(!win->annot);
+    // TODO: implement me
+    MessageBoxNYI(win->mainWindow->hwnd);
+}
+
+static void ButtonEmbedAttachment(EditAnnotationsWindow* win) {
+    CrashIf(!win->annot);
+    // TODO: implement me
+    MessageBoxNYI(win->mainWindow->hwnd);
 }
 
 static void ButtonDeleteHandler(EditAnnotationsWindow* win) {
@@ -1061,6 +1085,27 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         CrashIf(!ok);
         w->onPosChanging = std::bind(OpacityChanging, win, _1);
         win->trackbarOpacity = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        auto w = new ButtonCtrl(parent);
+        w->SetInsetsPt(8, 0, 0, 0);
+        w->SetText("Save...");
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->onClicked = std::bind(&ButtonSaveAttachment, win);
+        win->buttonSaveAttachment = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        auto w = new ButtonCtrl(parent);
+        w->SetText("Embed...");
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->onClicked = std::bind(&ButtonEmbedAttachment, win);
+        win->buttonEmbedAttachment = w;
         vbox->AddChild(w);
     }
 

@@ -26,19 +26,34 @@ AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
 
 // clang format-off
 // must match the order of enum class AnnotationType
-const char* annotNames =
+static const char* gAnnotNames =
     "Text\0Link\0FreeText\0Line\0Square\0Circle\0Polygon\0PolyLine\0"
     "Highlight\0Underline\0Squiggly\0StrikeOut\0Redact\0Stamp\0"
     "Caret\0Ink\0Popup\0FileAttachment\0Sound\0Movie\0Widget\0"
     "Screen\0PrinterMark\0TrapNet\0Watermark\03D\0";
+static const char* gAnnotReadableNames =
+    "Text\0Link\0Free Text\0Line\0Square\0Circle\0Polygon\0Poly Line\0"
+    "Highlight\0Underline\0Squiggly\0StrikeOut\0Redact\0Stamp\0"
+    "Caret\0Ink\0Popup\0File Attachment\0Sound\0Movie\0Widget\0"
+    "Screen\0Printer Mark\0Trap Net\0Watermark\03D\0";
 // clang format-on
 
 std::string_view AnnotationName(AnnotationType tp) {
     int n = (int)tp;
+    CrashIf(n < -1 || n > (int)AnnotationType::ThreeD);
     if (n < 0) {
         return "Unknown";
     }
-    const char* s = seqstrings::IdxToStr(annotNames, n);
+    const char* s = seqstrings::IdxToStr(gAnnotNames, n);
+    return {s};
+}
+
+std::string_view AnnotationReadableName(AnnotationType tp) {
+    int n = (int)tp;
+    if (n < 0) {
+        return "Unknown";
+    }
+    const char* s = seqstrings::IdxToStr(gAnnotReadableNames, n);
     return {s};
 }
 
