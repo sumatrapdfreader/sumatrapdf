@@ -23,10 +23,10 @@ this would simplify the code to build layouts
 - [X] change text color
 - [X] change border
 - [X] allow colors that don't match known color names
+- [X] allow selecting custom color
+- [X] allow custom colors in TestColors drop-down
 
 Annotations:
- - allow selecting custom color
- - allow custom colors in TestColors drop-down
  - change opacity
  - show count of quad points
  - delete quad points

@@ -179,6 +179,7 @@ struct EditAnnotationsWindow {
     // currently selected annotation
     Annotation* annot = nullptr;
 
+    str::Str currTextColor;
     str::Str currCustomColor;
     str::Str currCustomInteriorColor;
 
@@ -339,6 +340,43 @@ static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* win) {
     win->buttonSavePDF->SetIsEnabled(didChange);
 }
 
+static void ItemsFromSeqstrings(Vec<std::string_view>& items, const char* strings) {
+    while (*strings) {
+        items.Append(strings);
+        strings = seqstrings::SkipStr(strings);
+    }
+}
+
+static void DropDownFillColors(DropDownCtrl* w, COLORREF col, str::Str& customColor) {
+    Vec<std::string_view> items;
+    ItemsFromSeqstrings(items, gColors);
+    const char* colorName = GetKnownColorName(col);
+    int idx = seqstrings::StrToIdx(gColors, colorName);
+    if (idx == -1) {
+        customColor.Reset();
+        SerializeColorRgb(col, customColor);
+        items.Append(customColor.as_view());
+        idx = items.isize() - 1;
+    }
+    w->SetItems(items);
+    w->SetCurrentSelection(idx);
+}
+
+static COLORREF GetDropDownColor(std::string_view sv) {
+    int idx = seqstrings::StrToIdx(gColors, sv.data());
+    if (idx >= 0) {
+        int nMaxColors = (int)dimof(gColorsValues);
+        CrashIf(idx >= nMaxColors);
+        if (idx < nMaxColors) {
+            return gColorsValues[idx];
+        }
+        return ColorUnset;
+    }
+    COLORREF col = ColorUnset;
+    ParseColor(&col, sv);
+    return col;
+}
+
 // TODO: mupdf shows it in 1.6 but not 1.7. Why?
 static bool showRect = false;
 
@@ -478,26 +516,13 @@ static void DoTextColor(EditAnnotationsWindow* win, Annotation* annot) {
         return;
     }
     COLORREF col = annot->DefaultAppearanceTextColor();
-    win->dropDownTextColor->SetItemsSeqStrings(gColors);
-    const char* colorName = GetKnownColorName(col);
-    int idx = FindStringInArray(gColors, colorName, 0);
-    if (idx == -1) {
-        // TODO: not a known color name, so add hex version to the list
-    }
-    win->dropDownTextColor->SetCurrentSelection(idx);
+    DropDownFillColors(win->dropDownTextColor, col, win->currTextColor);
     win->staticTextColor->SetIsVisible(true);
     win->dropDownTextColor->SetIsVisible(true);
 }
 
 static void TextColorSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionChangedEvent* ev) {
-    // get known color name
-    int nItems = (int)dimof(gColorsValues);
-    COLORREF col = ColorUnset;
-    if (ev->idx < nItems) {
-        col = gColorsValues[ev->idx];
-    } else {
-        // TODO: parse color from hex
-    }
+    auto col = GetDropDownColor(ev->item);
     win->annot->SetDefaultAppearanceTextColor(col);
     EnableSaveIfAnnotationsChanged(win);
     RerenderForWindowInfo(win->tab->win);
@@ -562,28 +587,6 @@ static void IconSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionCh
     RerenderForWindowInfo(win->tab->win);
 }
 
-static void ItemsFromStringArray(Vec<std::string_view>& items, const char* strings) {
-    while (*strings) {
-        items.Append(strings);
-        strings = seqstrings::SkipStr(strings);
-    }
-}
-
-static void DropDownFillColors(DropDownCtrl* w, COLORREF col, str::Str& customColor) {
-    Vec<std::string_view> items;
-    ItemsFromStringArray(items, gColors);
-    const char* colorName = GetKnownColorName(col);
-    int idx = seqstrings::StrToIdx(gColors, colorName);
-    if (idx == -1) {
-        customColor.Reset();
-        SerializeColorRgb(col, customColor);
-        items.Append(customColor.as_view());
-        idx = items.isize() - 1;
-    }
-    w->SetItems(items);
-    w->SetCurrentSelection(idx);
-}
-
 static void DoColor(EditAnnotationsWindow* win, Annotation* annot) {
     size_t n = dimof(gAnnotsWithColor);
     bool isVisible = IsAnnotationTypeInArray(gAnnotsWithColor, n, annot->Type());
@@ -597,14 +600,7 @@ static void DoColor(EditAnnotationsWindow* win, Annotation* annot) {
 }
 
 static void ColorSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionChangedEvent* ev) {
-    // get known color name
-    int nItems = (int)dimof(gColorsValues);
-    COLORREF col = ColorUnset;
-    if (ev->idx < nItems) {
-        col = gColorsValues[ev->idx];
-    } else {
-        // TODO: parse color from hex
-    }
+    auto col = GetDropDownColor(ev->item);
     win->annot->SetColor(col);
     EnableSaveIfAnnotationsChanged(win);
     RerenderForWindowInfo(win->tab->win);
@@ -623,14 +619,7 @@ static void DoInteriorColor(EditAnnotationsWindow* win, Annotation* annot) {
 }
 
 static void InteriorColorSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionChangedEvent* ev) {
-    // get known color name
-    int nItems = (int)dimof(gColorsValues);
-    COLORREF col = ColorUnset;
-    if (ev->idx < nItems) {
-        col = gColorsValues[ev->idx];
-    } else {
-        // TODO: parse color from hex
-    }
+    auto col = GetDropDownColor(ev->item);
     win->annot->SetInteriorColor(col);
     EnableSaveIfAnnotationsChanged(win);
     RerenderForWindowInfo(win->tab->win);
