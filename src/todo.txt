@@ -25,9 +25,14 @@ this would simplify the code to build layouts
 - [X] allow colors that don't match known color names
 - [X] allow selecting custom color
 - [X] allow custom colors in TestColors drop-down
+- [X] edit line start and end
 
 Annotations:
- - change opacity
+ - edit opacity
+ - allow drawing of ink annotations
+ - allow drawing of line
+ - allow drawing of polygon
+ - allow drawing of polyline
  - show count of quad points
  - delete quad points
  - allow moving annotations
@@ -39,7 +44,7 @@ Annotations:
    a dialog box for setting a color. Remember the custom colors in settings for future use.
  - mem leak when changing contents of annotation
  - Ctrl doesn't always work, probably need to hook keyboard on a lower level
- - implement StaticCtrl background color
+ - maybe; show colors in a drop-down
  - maybe: text language drop-down
  - maybe: add -dump-annots cmd-line arg that prints out all annotation info from PDF file or dump the info to log / text control
  - maybe: add label for showing notification that saved or failed to save. Notification should self-dismiss

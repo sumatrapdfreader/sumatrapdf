@@ -51,17 +51,12 @@ constexpr int borderWidthMax = 12;
 // clang-format off
 // TODO: more
 static const char* gAnnotationTypes = "Text\0Free Text\0Stamp\0Caret\0Ink\0Square\0Circle\0Line\0Polygon\0";
-
-static const char* gTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
-
 static const char *gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
-
 static const char *gSoundIcons = "Speaker\0Mic\0";
-
+static const char* gTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
 static const char *gStampIcons = "Approved\0AsIs\0Confidential\0Departmental\0Draft\0Experimental\0Expired\0Final\0ForComment\0ForPublicRelease\0NotApproved\0NotForPublicRelease\0Sold\0TopSecret\0";
-
+static const char *gLineEndingStyles = "None\0Square\0Circle\0Diamond\0OpenArrow\0ClosedArrow\0Butt\0ROpenArrow\0RClosedArrow\0Slash\0";
 static const char* gColors = "None\0Aqua\0Black\0Blue\0Fuchsia\0Gray\0Green\0Lime\0Maroon\0Navy\0Olive\0Orange\0Purple\0Red\0Silver\0Teal\0White\0Yellow\0";
-
 static const char *gFontNames = "Cour\0Helv\0TiRo\0";
 static const char *gFontReadableNames = "Courier\0Helvetica\0TimesRoman\0";
 
@@ -125,7 +120,9 @@ AnnotationType gAnnotsWithColor[] = {
 extern void RerenderForWindowInfo(WindowInfo*);
 
 const char* GetKnownColorName(COLORREF c) {
-    // TODO: handle this better?
+    if (c == ColorUnset) {
+        return gColors; // first value is "None" for unset
+    }
     COLORREF c2 = ColorSetAlpha(c, 0xff);
     int n = (int)dimof(gColorsValues);
     for (int i = 1; i < n; i++) {
@@ -151,8 +148,6 @@ struct EditAnnotationsWindow {
     StaticCtrl* staticPopup = nullptr;
     StaticCtrl* staticContents = nullptr;
     EditCtrl* editContents = nullptr;
-    StaticCtrl* staticIcon = nullptr;
-    DropDownCtrl* dropDownIcon = nullptr;
     StaticCtrl* staticTextAlignment = nullptr;
     DropDownCtrl* dropDownTextAlignment = nullptr;
     StaticCtrl* staticTextFont = nullptr;
@@ -161,6 +156,15 @@ struct EditAnnotationsWindow {
     TrackbarCtrl* trackbarTextSize = nullptr;
     StaticCtrl* staticTextColor = nullptr;
     DropDownCtrl* dropDownTextColor = nullptr;
+
+    StaticCtrl* staticLineStart = nullptr;
+    DropDownCtrl* dropDownLineStart = nullptr;
+    StaticCtrl* staticLineEnd = nullptr;
+    DropDownCtrl* dropDownLineEnd = nullptr;
+
+    StaticCtrl* staticIcon = nullptr;
+    DropDownCtrl* dropDownIcon = nullptr;
+    
     StaticCtrl* staticBorder = nullptr;
     TrackbarCtrl* trackbarBorder = nullptr;
     StaticCtrl* staticColor = nullptr;
@@ -193,8 +197,6 @@ static void HidePerAnnotControls(EditAnnotationsWindow* win) {
     win->staticPopup->SetIsVisible(false);
     win->staticContents->SetIsVisible(false);
     win->editContents->SetIsVisible(false);
-    win->staticIcon->SetIsVisible(false);
-    win->dropDownIcon->SetIsVisible(false);
     win->staticTextAlignment->SetIsVisible(false);
     win->dropDownTextAlignment->SetIsVisible(false);
     win->staticTextFont->SetIsVisible(false);
@@ -203,6 +205,15 @@ static void HidePerAnnotControls(EditAnnotationsWindow* win) {
     win->trackbarTextSize->SetIsVisible(false);
     win->staticTextColor->SetIsVisible(false);
     win->dropDownTextColor->SetIsVisible(false);
+
+    win->staticLineStart->SetIsVisible(false);
+    win->dropDownLineStart->SetIsVisible(false);
+    win->staticLineEnd->SetIsVisible(false);
+    win->dropDownLineEnd->SetIsVisible(false);
+
+    win->staticIcon->SetIsVisible(false);
+    win->dropDownIcon->SetIsVisible(false);
+
     win->staticBorder->SetIsVisible(false);
     win->trackbarBorder->SetIsVisible(false);
     win->staticColor->SetIsVisible(false);
@@ -553,6 +564,38 @@ static void BorderWidthChanging(EditAnnotationsWindow* win, TrackbarPosChangingE
     RerenderForWindowInfo(win->tab->win);
 }
 
+static void DoLineStartEnd(EditAnnotationsWindow* win, Annotation* annot) {
+    if (annot->Type() != AnnotationType::Line) {
+        return;
+    }
+    int start = 0;
+    int end = 0;
+    annot->GetLineEndingStyles(&start, &end);
+    win->dropDownLineStart->SetItemsSeqStrings(gLineEndingStyles);
+    win->dropDownLineStart->SetCurrentSelection(start);
+    win->dropDownLineEnd->SetItemsSeqStrings(gLineEndingStyles);
+    win->dropDownLineEnd->SetCurrentSelection(end);
+    win->staticLineStart->SetIsVisible(true);
+    win->dropDownLineStart->SetIsVisible(true);
+    win->staticLineEnd->SetIsVisible(true);
+    win->dropDownLineEnd->SetIsVisible(true);
+}
+
+static void LineStartEndSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionChangedEvent* ev) {
+    int start = 0;
+    int end = 0;
+    win->annot->GetLineEndingStyles(&start, &end);
+    int newVal = ev->idx;
+    if (ev->dropDown == win->dropDownLineStart) {
+        start = newVal;
+    } else {
+        CrashIf(ev->dropDown != win->dropDownLineEnd);
+        end = newVal;
+    }
+    EnableSaveIfAnnotationsChanged(win);
+    RerenderForWindowInfo(win->tab->win);
+}
+
 static void DoIcon(EditAnnotationsWindow* win, Annotation* annot) {
     std::string_view itemName = annot->IconName();
     const char* items = nullptr;
@@ -583,7 +626,6 @@ static void DoIcon(EditAnnotationsWindow* win, Annotation* annot) {
 static void IconSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionChangedEvent* ev) {
     win->annot->SetIconName(ev->item);
     EnableSaveIfAnnotationsChanged(win);
-    // TODO: a better way
     RerenderForWindowInfo(win->tab->win);
 }
 
@@ -659,6 +701,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
         DoTextFont(win, win->annot);
         DoTextSize(win, win->annot);
         DoTextColor(win, win->annot);
+
+        DoLineStartEnd(win, win->annot);
 
         DoIcon(win, win->annot);
 
@@ -819,21 +863,6 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     }
 
     {
-        win->staticIcon = CreateStatic(parent, "Icon:");
-        win->staticIcon->SetInsetsPt(8, 0, 0, 0);
-        vbox->AddChild(win->staticIcon);
-    }
-
-    {
-        auto w = new DropDownCtrl(parent);
-        bool ok = w->Create();
-        CrashIf(!ok);
-        w->onSelectionChanged = std::bind(IconSelectionChanged, win, _1);
-        win->dropDownIcon = w;
-        vbox->AddChild(w);
-    }
-
-    {
         win->staticTextAlignment = CreateStatic(parent, "Text Alignment:");
         vbox->AddChild(win->staticTextAlignment);
     }
@@ -891,6 +920,51 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
         w->SetItemsSeqStrings(gColors);
         w->onSelectionChanged = std::bind(TextColorSelectionChanged, win, _1);
         win->dropDownTextColor = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        win->staticLineStart = CreateStatic(parent, "Line Start:");
+        win->staticLineStart->SetInsetsPt(8, 0, 0, 0);
+        vbox->AddChild(win->staticLineStart);
+    }
+
+    {
+        auto w = new DropDownCtrl(parent);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, win, _1);
+        win->dropDownLineStart = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        win->staticLineEnd = CreateStatic(parent, "Line End:");
+        win->staticLineEnd->SetInsetsPt(8, 0, 0, 0);
+        vbox->AddChild(win->staticLineEnd);
+    }
+
+    {
+        auto w = new DropDownCtrl(parent);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->onSelectionChanged = std::bind(LineStartEndSelectionChanged, win, _1);
+        win->dropDownLineEnd = w;
+        vbox->AddChild(w);
+    }
+
+    {
+        win->staticIcon = CreateStatic(parent, "Icon:");
+        win->staticIcon->SetInsetsPt(8, 0, 0, 0);
+        vbox->AddChild(win->staticIcon);
+    }
+
+    {
+        auto w = new DropDownCtrl(parent);
+        bool ok = w->Create();
+        CrashIf(!ok);
+        w->onSelectionChanged = std::bind(IconSelectionChanged, win, _1);
+        win->dropDownIcon = w;
         vbox->AddChild(w);
     }
 

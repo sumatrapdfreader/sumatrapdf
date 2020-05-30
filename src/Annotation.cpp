@@ -63,6 +63,8 @@ struct AnnotationSmx {
     int textSize = 0;
     COLORREF textColor = ColorUnset;
     int borderWidth = 0;
+    int lineEndingStart = 0;
+    int lineEndingEnd = 0;
 };
 
 struct AnnotationPdf {
@@ -415,6 +417,32 @@ void Annotation::SetDefaultAppearanceTextColor(COLORREF col) {
     pdf_annot_default_appearance(pdf->ctx, pdf->annot, &text_font, &sizeF, textColor);
     ToPdfRgba(col, textColor);
     pdf_set_annot_default_appearance(pdf->ctx, pdf->annot, text_font, sizeF, textColor);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
+    isChanged = true;
+}
+
+void Annotation::GetLineEndingStyles(int* start, int* end) {
+    if (smx) {
+        *start = smx->lineEndingStart;
+        *end = smx->lineEndingEnd;
+        return;
+    }
+    pdf_line_ending leStart = PDF_ANNOT_LE_NONE;
+    pdf_line_ending leEnd = PDF_ANNOT_LE_NONE;
+    pdf_annot_line_ending_styles(pdf->ctx, pdf->annot, &leStart, &leEnd);
+    *start = (int)leStart;
+    *end = (int)leEnd;
+}
+
+void Annotation::SetLineEndingStyles(int start, int end) {
+    if (smx) {
+        smx->lineEndingStart = start;
+        smx->lineEndingEnd = end;
+        return;
+    }
+    pdf_line_ending leStart = (pdf_line_ending)start;
+    pdf_line_ending leEnd = (pdf_line_ending)end;
+    pdf_set_annot_line_ending_styles(pdf->ctx, pdf->annot, leStart, leEnd);
     pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
 }

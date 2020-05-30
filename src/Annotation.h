@@ -91,6 +91,9 @@ struct Annotation {
     COLORREF DefaultAppearanceTextColor();
     void SetDefaultAppearanceTextColor(COLORREF);
 
+    void GetLineEndingStyles(int* start, int* end);
+    void SetLineEndingStyles(int start, int end);
+
     int BorderWidth();
     void SetBorderWidth(int);
 
