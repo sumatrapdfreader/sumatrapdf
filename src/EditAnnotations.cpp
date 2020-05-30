@@ -565,10 +565,23 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
     int annotPageNo = -1;
     AnnotationType annotType = AnnotationType::Unknown;
     win->annot = nullptr;
-    if (itemNo >= 0) {
-        win->annot = win->annotations->at(itemNo);
-        annotPageNo = win->annot->PageNo();
-        annotType = win->annot->Type();
+
+    // get annotation at index itemNo, skipping deleted annotations
+    int idx = 0;
+    int nAnnots = win->annotations->isize();
+    for (int i = 0; i < nAnnots; i++) {
+        auto annot = win->annotations->at(i);
+        if (annot->isDeleted) {
+            continue;
+        }
+        if (idx < itemNo) {
+            ++idx;
+            continue;
+        }
+        win->annot = annot;
+        annotPageNo = annot->PageNo();
+        annotType = annot->Type();
+        break;
     }
 
     DoRect(win, win->annot);
