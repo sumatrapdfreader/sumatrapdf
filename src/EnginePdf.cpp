@@ -74,6 +74,13 @@ pdf_obj* pdf_copy_str_dict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
     return copy;
 }
 
+static int pdf_stream_no(fz_context* ctx, pdf_obj* ref) {
+    pdf_document* doc = pdf_get_indirect_document(ctx, ref);
+    if (doc)
+        return pdf_to_num(ctx, ref);
+    return 0;
+}
+
 // Note: make sure to only call with ctxAccess
 static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
     pdf_obj* dict = pdf_load_name_tree(ctx, doc, PDF_NAME(EmbeddedFiles));
@@ -81,38 +88,35 @@ static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
         return nullptr;
     }
 
-    // TODO: pdf_parse_file_spec() is no longer accessible
-    return nullptr;
-#if 0
-    fz_outline root = {0}, *node = &root;
+    fz_outline root = {0};
+    fz_outline* curr = &root;
     for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
         pdf_obj* name = pdf_dict_get_key(ctx, dict, i);
         pdf_obj* dest = pdf_dict_get_val(ctx, dict, i);
-        auto ef = pdf_dict_get(ctx, dest, PDF_NAME(EF));
-        pdf_obj* embedded = pdf_dict_geta(ctx, ef, PDF_NAME(DOS), PDF_NAME(F));
-        if (!embedded) {
+
+        int is_embedded = pdf_is_embedded_file(ctx, dest);
+        if (is_embedded == 0) {
             continue;
         }
-
-        char* uri = pdf_parse_file_spec(ctx, doc, dest, nullptr);
-        const char* nameStr = pdf_to_name(ctx, name);
-        char* title = fz_strdup(ctx, nameStr);
-        int streamNo = pdf_to_num(ctx, embedded);
+        pdf_obj* fs = pdf_embedded_file_stream(ctx, dest);
+        int streamNo = pdf_stream_no(ctx, fs);
+        const char* nameStr = pdf_embedded_file_name(ctx, dest);
+        if (str::IsEmpty(nameStr)) {
+            continue;
+        }
+        // int streamNo = pdf_to_num(ctx, embedded);
         fz_outline* link = fz_new_outline(ctx);
-
-        link->uri = uri;
-        link->title = title;
+        link->title = fz_strdup(ctx, nameStr);
+        link->uri = fz_strdup(ctx, nameStr); // TODO: maybe make file:// ?
         // TODO: a hack: re-using page as stream number
         // Could construct PageDestination here instead of delaying
         // until BuildToc
         link->page = streamNo;
-
-        node = node->next = link;
+        curr->next = link;
+        curr = link;
     }
     pdf_drop_obj(ctx, dict);
-
     return root.next;
-#endif
 }
 
 struct PageLabelInfo {

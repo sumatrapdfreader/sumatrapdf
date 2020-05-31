@@ -1242,8 +1242,6 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM
     }
 }
 
-///// methods needed for the About/Start screen /////
-
 ///// methods needed for FixedPageUI canvases with loading error /////
 
 static void OnPaintError(WindowInfo* win) {

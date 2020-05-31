@@ -50,4 +50,16 @@ void Post(const std::function<void()>& f) {
     auto func = new std::function<void()>(f);
     PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
 }
+
+void PostOptimized(const std::function<void()>& f) {
+    if (IsGUIThread(FALSE)) {
+        // if we're already on ui thread, execute immediately
+        // faster and easier to debug
+        f();
+        return;
+    }
+    auto func = new std::function<void()>(f);
+    PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
+}
+
 } // namespace uitask

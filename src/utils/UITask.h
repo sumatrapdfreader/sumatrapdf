@@ -11,4 +11,5 @@ void Destroy();
 void DrainQueue();
 
 void Post(const std::function<void()>&);
+void PostOptimized(const std::function<void()>& f);
 } // namespace uitask

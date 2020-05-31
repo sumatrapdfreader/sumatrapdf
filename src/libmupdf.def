@@ -703,6 +703,7 @@ EXPORTS
 	pdf_repair_obj
 	pdf_progressive_advance
 	pdf_drop_document
+	pdf_embedded_file_stream
 
 ; MuXPS exports
 
