@@ -21,3 +21,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Hayashi Takehito
 - Mihai Dragan
 - hldingyetian
+- David Walluscheck
