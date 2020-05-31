@@ -815,7 +815,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
     Point pt;
 
     if (win->mouseAction != MouseAction::Idle) {
-        win->HideInfoTip();
+        win->HideToolTip();
     }
 
     switch (win->mouseAction) {
@@ -844,7 +844,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                     int pageNo = pageEl->GetPageNo();
                     auto r = pageEl->GetRect();
                     Rect rc = dm->CvtToScreen(pageNo, r);
-                    win->ShowInfoTip(text, rc, true);
+                    win->ShowToolTip(text, rc, true);
 
                     bool isLink = pageEl->Is(kindPageElementDest);
                     delete pageEl;
@@ -854,7 +854,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                         return TRUE;
                     }
                 } else {
-                    win->HideInfoTip();
+                    win->HideToolTip();
                 }
                 if (dm->IsOverText(pt)) {
                     SetCursor(IDC_IBEAM);
@@ -863,7 +863,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                 }
                 return TRUE;
             }
-            win->HideInfoTip();
+            win->HideToolTip();
             break;
     }
     return win->presentation ? TRUE : FALSE;
@@ -1182,7 +1182,7 @@ static LRESULT WndProcCanvasChmUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM w
     switch (msg) {
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
-            win->HideInfoTip();
+            win->HideToolTip();
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         default:
@@ -1227,7 +1227,7 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM
     switch (msg) {
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
-            win->HideInfoTip();
+            win->HideToolTip();
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_MOUSEWHEEL:
@@ -1243,7 +1243,6 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM
 }
 
 ///// methods needed for the About/Start screen /////
-
 
 ///// methods needed for FixedPageUI canvases with loading error /////
 
@@ -1272,7 +1271,7 @@ static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPAR
 
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
-            win->HideInfoTip();
+            win->HideToolTip();
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         default:

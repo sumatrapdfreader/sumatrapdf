@@ -127,16 +127,16 @@ static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
     if (GetCursorPosInHwnd(hwnd, pt)) {
         StaticLinkInfo linkInfo;
         if (GetStaticLink(win->staticLinks, pt.x, pt.y, &linkInfo)) {
-            win->ShowInfoTip(linkInfo.infotip, linkInfo.rect);
+            win->ShowToolTip(linkInfo.infotip, linkInfo.rect);
             SetCursor(IDC_HAND);
         } else {
-            win->HideInfoTip();
+            win->HideToolTip();
             SetCursor(IDC_ARROW);
         }
         return TRUE;
     }
 
-    win->HideInfoTip();
+    win->HideToolTip();
     return FALSE;
 }
 

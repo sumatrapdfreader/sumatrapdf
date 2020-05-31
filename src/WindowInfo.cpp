@@ -171,7 +171,7 @@ void WindowInfo::RedrawAll(bool update) {
 void WindowInfo::ChangePresentationMode(PresentationMode mode) {
     presentation = mode;
     if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {
-        HideInfoTip();
+        HideToolTip();
     }
     RedrawAll();
 }
@@ -200,15 +200,15 @@ void WindowInfo::MoveDocBy(int dx, int dy) {
     currentTab->MoveDocBy(dx, dy);
 }
 
-void WindowInfo::ShowInfoTip(const WCHAR* text, Rect& rc, bool multiline) {
+void WindowInfo::ShowToolTip(const WCHAR* text, Rect& rc, bool multiline) {
     if (str::IsEmpty(text)) {
-        HideInfoTip();
+        HideToolTip();
         return;
     }
     infotip->Show(text, rc, multiline);
 }
 
-void WindowInfo::HideInfoTip() {
+void WindowInfo::HideToolTip() {
     infotip->Hide();
 }
 

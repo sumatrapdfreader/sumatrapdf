@@ -220,7 +220,7 @@ bool Reload() {
 
     // TODO: about window doesn't have to be at position 0
     if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
-        gWindows.at(0)->HideInfoTip();
+        gWindows.at(0)->HideToolTip();
         gWindows.at(0)->staticLinks.Reset();
         gWindows.at(0)->RedrawAll(true);
     }

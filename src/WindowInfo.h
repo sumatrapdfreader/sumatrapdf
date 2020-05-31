@@ -240,8 +240,8 @@ class WindowInfo {
     void ToggleZoom();
     void MoveDocBy(int dx, int dy);
 
-    void ShowInfoTip(const WCHAR* text, Rect& rc, bool multiline = false);
-    void HideInfoTip();
+    void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false);
+    void HideToolTip();
     void ShowNotification(const WCHAR* message, int options = NOS_DEFAULT,
                           NotificationGroupId groupId = NG_RESPONSE_TO_ACTION);
 

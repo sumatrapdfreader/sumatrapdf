@@ -877,7 +877,6 @@ Size WindowBase::Layout(const Constraints bc) {
     dbglayoutf("WindowBase::Layout() %s ", GetKind());
     LogConstraints(bc, "\n");
 
-
     auto hinset = insets.left + insets.right;
     auto vinset = insets.top + insets.bottom;
     auto innerConstraints = bc.Inset(hinset, vinset);
