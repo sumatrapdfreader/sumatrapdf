@@ -383,10 +383,12 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 #define IDM_SORT_COLOR                  507
 #define IDM_SAVE_EMBEDDED               508
 #define IDM_OPEN_EMBEDDED               509
+#define IDM_EMBED_SEPARATOR             510
 
 static MenuDef menuDefContext[] = {
     {_TRN("Expand All"),      IDM_EXPAND_ALL,         0 },
     {_TRN("Collapse All"),    IDM_COLLAPSE_ALL,       0 },
+    {SEP_ITEM,                IDM_EMBED_SEPARATOR,    MF_NO_TRANSLATE},
     // TODO: translate
     {"Open Embedded PDF",     IDM_OPEN_EMBEDDED,      0 },
     {"Save Embedded File...", IDM_SAVE_EMBEDDED,      0 },
@@ -674,11 +676,13 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
     if (isEmbeddedFile) {
         auto embeddedName = dest->GetName();
-        bool canOpenEmbedded = (str::FindI(embeddedName, L".pdf") >= 0);
+        const WCHAR* ext = path::GetExtNoFree(embeddedName);
+        bool canOpenEmbedded = str::EqI(ext, L".pdf");
         if (!canOpenEmbedded) {
             win::menu::Remove(popup, IDM_OPEN_EMBEDDED);
         }
     } else {
+        win::menu::Remove(popup, IDM_EMBED_SEPARATOR);
         win::menu::Remove(popup, IDM_SAVE_EMBEDDED);
         win::menu::Remove(popup, IDM_OPEN_EMBEDDED);
     }

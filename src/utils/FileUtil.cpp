@@ -113,6 +113,7 @@ const WCHAR* GetBaseNameNoFree(const WCHAR* path) {
     return end;
 }
 
+// returns extension e.g. ".pdf"
 // do not free, returns pointer inside <path>
 const WCHAR* GetExtNoFree(const WCHAR* path) {
     const WCHAR* ext = path + str::Len(path);
