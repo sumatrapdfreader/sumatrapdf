@@ -369,7 +369,8 @@ class EnginePdf : public EngineBase {
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
 
-    bool SaveUserAnnots(const char* fileName);
+    bool SaveUserAnnots(const char* pathUtf8);
+    std::string_view EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath);
 };
 
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
@@ -567,19 +568,66 @@ const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut) {
 
 // <filePath> should end with embed marks, which is a stream number
 // inside pdf file
-std::span<u8> LoadEmbeddedPDFFile(const WCHAR* filePath) {
-    return {};
+// TODO: provide PasswordUI?
+std::string_view LoadEmbeddedPDFFile(const WCHAR* filePath) {
+    EnginePdf* engine = new EnginePdf();
+    auto res = engine->LoadStreamFromPDFFile(filePath);
+    delete engine;
+    return res;
 }
 
-bool EnginePdf::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
+std::string_view EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
+    int streamNo = -1;
+    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
+    if (streamNo < 0) {
+        return {};
+    }
+    fz_stream* file = nullptr;
+    fz_try(ctx) {
+        file = fz_open_file2(ctx, fnCopy);
+    }
+    fz_catch(ctx) {
+        file = nullptr;
+    }
+
+    if (!LoadFromStream(file, nullptr)) {
+        return {};
+    }
+
+    pdf_document* doc = (pdf_document*)_doc;
+    if (!pdf_obj_num_is_stream(ctx, doc, streamNo)) {
+        return {};
+    }
+
+    fz_buffer* buffer = nullptr;
+    fz_var(buffer);
+    fz_try(ctx) {
+        buffer = pdf_load_stream_number(ctx, doc, streamNo);
+    }
+    fz_catch(ctx) {
+        return {};
+    }
+    auto dataSize = buffer->len;
+    if (dataSize == 0) {
+        return {};
+    }
+    auto data = (const char*)memdup(buffer->data, dataSize);
+    fz_drop_buffer(ctx, buffer);
+
+    fz_drop_document(ctx, _doc);
+    _doc = nullptr;
+    return {data, dataSize};
+}
+
+bool EnginePdf::Load(const WCHAR* filePath, PasswordUI* pwdUI) {
     CrashIf(FileName() || _doc || !ctx);
-    SetFileName(fileName);
+    SetFileName(filePath);
     if (!ctx) {
         return false;
     }
 
     int streamNo = -1;
-    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(fileName, &streamNo);
+    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
 
     fz_stream* file = nullptr;
     fz_try(ctx) {

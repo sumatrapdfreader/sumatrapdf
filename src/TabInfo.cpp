@@ -137,7 +137,7 @@ bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::string_view data) {
     if (fileName) {
         str::BufSet(dstFileName, dimof(dstFileName), fileName);
     }
-    CrashIf(fileName && str::FindChar(fileName, '/'));
+    // CrashIf(fileName && str::FindChar(fileName, '/'));
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling

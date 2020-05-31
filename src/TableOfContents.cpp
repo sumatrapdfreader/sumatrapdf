@@ -23,6 +23,7 @@
 
 #include "Annotation.h"
 #include "EngineBase.h"
+#include "EnginePdf.h"
 #include "EngineManager.h"
 #include "ParseBKM.h"
 
@@ -384,26 +385,26 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 #define IDM_OPEN_EMBEDDED               509
 
 static MenuDef menuDefContext[] = {
-    {_TRN("Expand All"),    IDM_EXPAND_ALL,         0 },
-    {_TRN("Collapse All"),  IDM_COLLAPSE_ALL,       0 },
+    {_TRN("Expand All"),      IDM_EXPAND_ALL,         0 },
+    {_TRN("Collapse All"),    IDM_COLLAPSE_ALL,       0 },
     // TODO: translate
-    {"Save Embedded File...", IDM_SAVE_EMBEDDED,    0 },
-    {"Open Embedded PDF",   IDM_OPEN_EMBEDDED,      0 },
+    {"Open Embedded PDF",     IDM_OPEN_EMBEDDED,      0 },
+    {"Save Embedded File...", IDM_SAVE_EMBEDDED,      0 },
     // note: strings cannot be "" or else items are not there
-    {"add",                 IDM_FAV_ADD,            MF_NO_TRANSLATE},
-    {"del",                 IDM_FAV_DEL,            MF_NO_TRANSLATE},
-    {SEP_ITEM,              IDM_SEPARATOR,          MF_NO_TRANSLATE},
+    {"add",                   IDM_FAV_ADD,            MF_NO_TRANSLATE},
+    {"del",                   IDM_FAV_DEL,            MF_NO_TRANSLATE},
+    {SEP_ITEM,                IDM_SEPARATOR,          MF_NO_TRANSLATE},
     // TODO: translate
-    {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
-    {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
+    {"Export Bookmarks",      IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
+    {"New Bookmarks",         IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
     { 0, 0, 0 },
 };
 
 static MenuDef menuDefSortByTag[] = {
     // TODO: translate
-    {"Tag (small first)",   IDM_SORT_TAG_SMALL_FIRST, 0 },
-    {"Tag (big first)",     IDM_SORT_TAG_BIG_FIRST,   0 },
-    {"Color",               IDM_SORT_COLOR,           0 },
+    {"Tag (small first)",     IDM_SORT_TAG_SMALL_FIRST, 0 },
+    {"Tag (big first)",       IDM_SORT_TAG_BIG_FIRST,   0 },
+    {"Color",                 IDM_SORT_COLOR,           0 },
     { 0, 0, 0 },
 };
 // clang-format on      
@@ -606,10 +607,16 @@ static void OpenEmbeddedFile(TabInfo* tab, PageDestination* dest) {
     }
 }
 
-// offer to save other attachments to a file
-// https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
 static void SaveEmbeddedFile(TabInfo* tab, PageDestination* dest) {
-
+    auto filePath = dest->GetValue();
+    auto data = LoadEmbeddedPDFFile(filePath);
+    int streamNo = -1;
+    AutoFreeWstr dir = path::GetDir(filePath);
+    auto fileName = dest->GetName();
+    AutoFreeWstr dstPath = path::Join(dir, fileName);
+    AutoFreeWstr fileSystemPath = ParseEmbeddedStreamNumber(filePath, &streamNo);
+    SaveDataToFile(tab->win->hwndFrame, dstPath, data);
+    str::Free(data.data());
 }
 
 static void TocContextMenu(ContextMenuEvent* ev) {
@@ -666,8 +673,8 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         }
     }
     if (isEmbeddedFile) {
-        // TODO: this is heuristic, the path is "foo.pdf:${streamNo}"
-        bool canOpenEmbedded = (str::FindI(path, L".pdf") >= 0);
+        auto embeddedName = dest->GetName();
+        bool canOpenEmbedded = (str::FindI(embeddedName, L".pdf") >= 0);
         if (!canOpenEmbedded) {
             win::menu::Remove(popup, IDM_OPEN_EMBEDDED);
         }
