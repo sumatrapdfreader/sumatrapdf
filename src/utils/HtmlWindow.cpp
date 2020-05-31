@@ -212,12 +212,12 @@ HtmlWindow* FindHtmlWindowById(int windowId) {
 static int GenNewWindowId(HtmlWindow* htmlWin) {
     int newWindowId = (int)gHtmlWindows.size();
     gHtmlWindows.Append(htmlWin);
-    AssertCrash(htmlWin == FindHtmlWindowById(newWindowId));
+    CrashIf(htmlWin != FindHtmlWindowById(newWindowId));
     return newWindowId;
 }
 
 static void FreeWindowId(int windowId) {
-    AssertCrash(nullptr != gHtmlWindows.at(windowId));
+    CrashIf(nullptr == gHtmlWindows.at(windowId));
     gHtmlWindows.at(windowId) = nullptr;
 }
 
@@ -457,7 +457,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     // TODO: this now happens due to events happening on HtmlWindow
     // used to take a screenshot, so ignore it. Is there a way
     // to cancel things and not get her?
-    // AssertCrash(win);
+    // CrashIf(!win);
     if (!win)
         return INET_E_OBJECT_NOT_FOUND;
     if (!win->htmlWinCb)
@@ -1515,7 +1515,7 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback* cb)
       userDataBrowserPrev(0),
       canGoBack(false),
       canGoForward(false) {
-    AssertCrash(hwndParent);
+    CrashIf(!hwndParent);
     RegisterInternetProtocolFactory();
     windowId = GenNewWindowId(this);
     htmlSetInProgress = nullptr;
@@ -1550,7 +1550,7 @@ bool HtmlWindow::CreateBrowser() {
     ScopedComQIPtr<IPersistStreamInit> psInit(p);
     if (psInit) {
         hr = psInit->InitNew();
-        AssertCrash(SUCCEEDED(hr));
+        CrashIf(!SUCCEEDED(hr));
     }
 
     hr = p->QueryInterface(&oleInPlaceObject);
@@ -1855,7 +1855,7 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
     int protoWindowId;
     AutoFreeWstr urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
-    AssertCrash(!ok || protoWindowId == windowId);
+    CrashIf(ok && (protoWindowId != windowId));
     bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
     return shouldNavigate;
 }
@@ -1892,7 +1892,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR* url) {
     int protoWindowId;
     AutoFreeWstr urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
-    AssertCrash(!ok || protoWindowId == windowId);
+    CrashIf(ok && (protoWindowId != windowId));
 
     currentURL.Set(urlReal.StealData());
     if (htmlWinCb)

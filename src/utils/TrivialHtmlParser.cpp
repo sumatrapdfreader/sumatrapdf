@@ -255,7 +255,7 @@ HtmlElement* HtmlParser::ParseInPlace(char* s, UINT codepage) {
         }
         if (!tok->IsTag()) {
             // ignore text content
-            AssertCrash(tok->IsText());
+            CrashIf(!tok->IsText());
             continue;
         }
         if (!tok->IsEndTag()) {

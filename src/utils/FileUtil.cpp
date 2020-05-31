@@ -634,7 +634,7 @@ bool WriteFile(const WCHAR* filePath, std::string_view d) {
 
     DWORD size = 0;
     BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
-    AssertCrash(!ok || (dataLen == (size_t)size));
+    CrashIf(ok && (dataLen != (size_t)size));
     return ok && dataLen == (size_t)size;
 }
 

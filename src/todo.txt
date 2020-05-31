@@ -40,6 +40,7 @@ Annotations:
  - allow drawing of polygon
  - allow drawing of polyline
  - allow moving annotations
+ - has_redact
  - change our text higlight to match PDF i.e. use quad points
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".
    Maybe add sub-menu with list of colors

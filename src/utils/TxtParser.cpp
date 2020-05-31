@@ -114,7 +114,7 @@ TxtNode* TxtParser::AllocTxtNode(TxtNode::Type nodeType) {
 }
 
 TxtNode* TxtParser::AllocTxtNodeFromToken(const Token& tok, TxtNode::Type nodeType) {
-    AssertCrash((TxtNode::Type::Text == nodeType) || (TxtNode::Type::Struct == nodeType));
+    CrashIf(!((TxtNode::Type::Text == nodeType) || (TxtNode::Type::Struct == nodeType)));
     TxtNode* node = AllocTxtNode(nodeType);
     node->lineStart = tok.lineStart;
     node->valStart = tok.valStart;
