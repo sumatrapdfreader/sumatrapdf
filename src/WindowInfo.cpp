@@ -241,23 +241,23 @@ bool WindowInfo::CreateUIAProvider() {
     return true;
 }
 
-void LinkHandler::GotoLink(PageDestination* link) {
+void LinkHandler::GotoLink(PageDestination* dest) {
     CrashIf(!owner || owner->linkHandler != this);
-    if (!link || !owner->IsDocLoaded()) {
+    if (!dest || !owner || !owner->IsDocLoaded()) {
         return;
     }
 
     HWND hwndFrame = owner->hwndFrame;
     TabInfo* tab = owner->currentTab;
-    WCHAR* path = link->GetValue();
-    Kind kind = link->Kind();
+    WCHAR* path = dest->GetValue();
+    Kind kind = dest->Kind();
     if (kindDestinationNone == kind) {
         return;
     }
 
     if (kindDestinationScrollTo == kind) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
-        ScrollTo(link);
+        ScrollTo(dest);
         return;
     }
 
@@ -287,25 +287,8 @@ void LinkHandler::GotoLink(PageDestination* link) {
     }
 
     if (kindDestinationLaunchEmbedded == kind) {
-        // open embedded PDF documents in a new window
-        if (!path) {
-            return;
-        }
-
-        if (str::StartsWith(path, tab->filePath.Get())) {
-            WindowInfo* newWin = FindWindowInfoByFile(path, true);
-            if (!newWin) {
-                LoadArgs args(path, owner);
-                newWin = LoadDocument(args);
-            }
-            if (newWin) {
-                newWin->Focus();
-            }
-            return;
-        }
-
-        // offer to save other attachments to a file
-        // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+        // Not handled here. Must use context menu to trigger launching
+        // embedded files
         return;
     }
 
@@ -315,7 +298,7 @@ void LinkHandler::GotoLink(PageDestination* link) {
         }
         // LaunchFile only opens files inside SumatraPDF
         // (except for allowed perceived file types)
-        LaunchFile(path, link);
+        LaunchFile(path, dest);
         return;
     }
 

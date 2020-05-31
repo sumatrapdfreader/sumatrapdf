@@ -521,7 +521,7 @@ EngineBase* EnginePdf::Clone() {
 
 // embedded PDF files have names like "c:/foo.pdf:${pdfStreamNo}"
 // return pointer starting at ":${pdfStream}"
-static const WCHAR* findEmbedMarks(const WCHAR* fileName) {
+static const WCHAR* FindEmbedMarks(const WCHAR* fileName) {
     const WCHAR* start = fileName;
     const WCHAR* end = start + str::Len(start) - 1;
 
@@ -544,6 +544,33 @@ static const WCHAR* findEmbedMarks(const WCHAR* fileName) {
     return nullptr;
 }
 
+// File names ending in :<digits> are interpreted as containing
+// embedded PDF documents (the digits is stream number of the embedded file stream)
+// the caller must free()
+const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut) {
+    int streamNo = -1;
+    WCHAR* path2 = str::Dup(path);
+    WCHAR* streamNoStr = (WCHAR*)FindEmbedMarks(path2);
+    if (streamNoStr) {
+        WCHAR* rest = (WCHAR*)str::Parse(streamNoStr, L":%d", &streamNo);
+        // there shouldn't be any left unparsed data
+        CrashIf(!rest);
+        if (!rest) {
+            streamNo = -1;
+        }
+        // replace ':' with 0 to create a filesystem path
+        *streamNoStr = 0;
+    }
+    *streamNoOut = streamNo;
+    return path2;
+}
+
+// <filePath> should end with embed marks, which is a stream number
+// inside pdf file
+std::span<u8> LoadEmbeddedPDFFile(const WCHAR* filePath) {
+    return {};
+}
+
 bool EnginePdf::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     CrashIf(FileName() || _doc || !ctx);
     SetFileName(fileName);
@@ -551,47 +578,34 @@ bool EnginePdf::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         return false;
     }
 
+    int streamNo = -1;
+    AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(fileName, &streamNo);
+
     fz_stream* file = nullptr;
-    // File names ending in :<digits>:<digits> are interpreted as containing
-    // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
-    AutoFreeWstr fnCopy = str::Dup(fileName);
-    WCHAR* embedMarks = (WCHAR*)findEmbedMarks(fnCopy);
-    if (embedMarks) {
-        *embedMarks = '\0';
-    }
     fz_try(ctx) {
         file = fz_open_file2(ctx, fnCopy);
     }
     fz_catch(ctx) {
         file = nullptr;
     }
-    if (embedMarks) {
-        *embedMarks = ':';
-    }
 
     if (!LoadFromStream(file, pwdUI)) {
         return false;
     }
 
-    if (!embedMarks) {
+    if (streamNo < 0) {
         return FinishLoading();
     }
 
-    int num = -1;
-    embedMarks = (WCHAR*)str::Parse(embedMarks, L":%d", &num);
-    CrashIf(!embedMarks);
-    if (!embedMarks) {
-        return false;
-    }
     pdf_document* doc = (pdf_document*)_doc;
-    if (!pdf_obj_num_is_stream(ctx, doc, num)) {
+    if (!pdf_obj_num_is_stream(ctx, doc, streamNo)) {
         return false;
     }
 
     fz_buffer* buffer = nullptr;
     fz_var(buffer);
     fz_try(ctx) {
-        buffer = pdf_load_stream_number(ctx, doc, num);
+        buffer = pdf_load_stream_number(ctx, doc, streamNo);
         file = fz_open_buffer(ctx, buffer);
     }
     fz_always(ctx) {
@@ -2136,7 +2150,7 @@ bool IsEnginePdfSupportedFile(const WCHAR* fileName, bool sniff) {
         return false;
     }
 
-    return str::EndsWithI(fileName, L".pdf") || findEmbedMarks(fileName);
+    return str::EndsWithI(fileName, L".pdf") || FindEmbedMarks(fileName);
 }
 
 EngineBase* CreateEnginePdfFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {

@@ -122,6 +122,7 @@
 #include <array>
 #include <vector>
 #include <limits>
+#include <span>
 //#include <iostream>
 //#include <locale>
 

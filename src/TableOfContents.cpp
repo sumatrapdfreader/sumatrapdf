@@ -380,10 +380,15 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 #define IDM_SORT_TAG_SMALL_FIRST        505
 #define IDM_SORT_TAG_BIG_FIRST          506
 #define IDM_SORT_COLOR                  507
+#define IDM_SAVE_EMBEDDED               508
+#define IDM_OPEN_EMBEDDED               509
 
 static MenuDef menuDefContext[] = {
     {_TRN("Expand All"),    IDM_EXPAND_ALL,         0 },
     {_TRN("Collapse All"),  IDM_COLLAPSE_ALL,       0 },
+    // TODO: translate
+    {"Save Embedded File...", IDM_SAVE_EMBEDDED,    0 },
+    {"Open Embedded PDF",   IDM_OPEN_EMBEDDED,      0 },
     // note: strings cannot be "" or else items are not there
     {"add",                 IDM_FAV_ADD,            MF_NO_TRANSLATE},
     {"del",                 IDM_FAV_DEL,            MF_NO_TRANSLATE},
@@ -585,6 +590,28 @@ static void SortAndSetTocTree(TabInfo* tab) {
     tab->win->tocTreeCtrl->SetTreeModel(toShow);
 }
 
+static void OpenEmbeddedFile(TabInfo* tab, PageDestination* dest) {
+    auto win = tab->win;
+    WCHAR* path = dest->GetValue();
+    if (!str::StartsWith(path, tab->filePath.Get())) {
+        return;
+    }
+    WindowInfo* newWin = FindWindowInfoByFile(path, true);
+    if (!newWin) {
+        LoadArgs args(path, win);
+        newWin = LoadDocument(args);
+    }
+    if (newWin) {
+        newWin->Focus();
+    }
+}
+
+// offer to save other attachments to a file
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+static void SaveEmbeddedFile(TabInfo* tab, PageDestination* dest) {
+
+}
+
 static void TocContextMenu(ContextMenuEvent* ev) {
     WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
     CrashIf(!win);
@@ -628,12 +655,33 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         }
     }
 
+    bool isEmbeddedFile = false;
+    PageDestination* dest = nullptr;
+    WCHAR* path = nullptr;
+    if (dti->dest) {
+        dest = dti->dest;
+        if (dest) {
+            path = dest->GetValue();
+            isEmbeddedFile = (path != nullptr) && (dest->kind == kindDestinationLaunchEmbedded);
+        }
+    }
+    if (isEmbeddedFile) {
+        // TODO: this is heuristic, the path is "foo.pdf:${streamNo}"
+        bool canOpenEmbedded = (str::FindI(path, L".pdf") >= 0);
+        if (!canOpenEmbedded) {
+            win::menu::Remove(popup, IDM_OPEN_EMBEDDED);
+        }
+    } else {
+        win::menu::Remove(popup, IDM_SAVE_EMBEDDED);
+        win::menu::Remove(popup, IDM_OPEN_EMBEDDED);
+    }
+
     if (!showBookmarksMenu) {
         win::menu::Remove(popup, IDM_SEPARATOR);
         win::menu::Remove(popup, IDM_EXPORT_BOOKMARKS);
         win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
     } else {
-          auto path = win->currentTab->filePath.get();
+        path = win->currentTab->filePath.get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
             // TODO: translate
@@ -711,6 +759,12 @@ static void TocContextMenu(ContextMenuEvent* ev) {
                 tab->tocSort = TocSort::Color;
             }
             SortAndSetTocTree(tab);
+            break;
+        case IDM_SAVE_EMBEDDED:
+            SaveEmbeddedFile(tab, dest);
+            break;
+        case IDM_OPEN_EMBEDDED:
+            OpenEmbeddedFile(tab, dest);
             break;
     }
 }
