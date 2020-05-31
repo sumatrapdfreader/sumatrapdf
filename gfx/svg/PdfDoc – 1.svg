@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="4100" height="4300" viewBox="0 0 4100 4300">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.501" y1="1.997" x2="0.5" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0.586" stop-color="#fff"/>
+      <stop offset="1" stop-color="#727272"/>
+      <stop offset="1" stop-color="#616161"/>
+    </linearGradient>
+    <filter id="Dark_Grey" x="315.002" y="636" width="1849.5" height="1285.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="5" dy="5" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Mid_Grey" x="315.002" y="636" width="1849.5" height="1285.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="5" dy="5" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="1.5" result="blur-2"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur-2"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Dark_Main_Color" x="315.002" y="636" width="1849.5" height="1285.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="5" dy="5" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="1.5" result="blur-3"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur-3"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Main_Color" x="315.002" y="636" width="1850.5" height="1285.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="5" dy="5" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="1.5" result="blur-4"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur-4"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Text" x="484.502" y="793" width="1449.5" height="1742.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="-30" dy="30" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="7.5" result="blur-5"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur-5"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <clipPath id="clip-PdfDoc_1">
+      <rect width="4100" height="4300"/>
+    </clipPath>
+  </defs>
+  <g id="PdfDoc_1" data-name="PdfDoc – 1" clip-path="url(#clip-PdfDoc_1)">
+    <g id="Page" transform="translate(94 93)">
+      <rect id="Shadow_Page_Right" data-name="Shadow Page Right" width="113" height="4026" transform="translate(505 -7)" fill="#616161"/>
+      <rect id="Shadow_Page_Left" data-name="Shadow Page Left" width="113" height="3276" transform="translate(3387 743)" fill="#616161"/>
+      <rect id="Shadow_Page_Bottom" data-name="Shadow Page Bottom" width="113" height="2882" transform="translate(3443.5 3956.5) rotate(90)" fill="#616161"/>
+      <rect id="Shadow_Page_Top" data-name="Shadow Page Top" width="113" height="2120" transform="translate(2699.5 -34.5) rotate(90)" fill="#616161"/>
+      <rect id="Page_Left" data-name="Page Left" width="2117" height="4000" transform="translate(582 -7)" fill="#fff"/>
+      <rect id="Page_Right" data-name="Page Right" width="750" height="3250" transform="translate(2699 743)" fill="#fff"/>
+      <rect id="Bar_10" data-name="Bar 10" width="847" height="150" rx="75" transform="translate(873 3481)" fill="#b1b1b1"/>
+      <rect id="Bar_09" data-name="Bar 09" width="1693" height="150" rx="75" transform="translate(873 3017.01)" fill="#b1b1b1"/>
+      <g id="Bar_08" data-name="Bar 08" transform="translate(2182 2545.491)" fill="#b1b1b1" stroke="#707070" stroke-linejoin="round" stroke-width="1">
+        <rect width="1000" height="150" rx="75" stroke="none"/>
+        <rect x="0.5" y="0.5" width="999" height="149" rx="74.5" fill="none"/>
+      </g>
+      <g id="Bar_07" data-name="Bar 07" transform="translate(873 2545.491)" fill="#b1b1b1" stroke="#707070" stroke-linejoin="round" stroke-width="1">
+        <rect width="1000" height="150" rx="75" stroke="none"/>
+        <rect x="0.5" y="0.5" width="999" height="149" rx="74.5" fill="none"/>
+      </g>
+      <rect id="Bar_06" data-name="Bar 06" width="2339" height="150" rx="75" transform="translate(858 2073.972)" fill="#b1b1b1"/>
+      <rect id="Bar_05" data-name="Bar 05" width="879" height="150" rx="75" transform="translate(2318 1602.452)" fill="#b1b1b1"/>
+      <rect id="Bar_04" data-name="Bar 04" width="515" height="150" rx="75" transform="translate(858 1602.452)" fill="#616161"/>
+      <path id="Bar_03" data-name="Bar 03" d="M75,0H2249a75,75,0,0,1,0,150H75A75,75,0,0,1,75,0Z" transform="translate(873 1130.933)" fill="#b1b1b1"/>
+      <path id="Bar_02" data-name="Bar 02" d="M75,0H1497a75,75,0,0,1,0,150H75A75,75,0,0,1,75,0Z" transform="translate(843 659.414)" fill="#b1b1b1"/>
+      <rect id="Bar_01" data-name="Bar 01" width="660" height="150" rx="75" transform="translate(2200 195)" fill="#b1b1b1"/>
+      <rect id="Bar_05-2" data-name="Bar 05" width="449" height="150" rx="75" transform="translate(2733 3017.452)" fill="#b1b1b1"/>
+      <g id="Bar_08-2" data-name="Bar 08" transform="translate(2002 3481.491)" fill="#c9c9c9" stroke="#707070" stroke-linejoin="round" stroke-width="1">
+        <rect width="1195" height="150" rx="75" stroke="none"/>
+        <rect x="0.5" y="0.5" width="1194" height="149" rx="74.5" fill="none"/>
+      </g>
+      <rect id="Picture" width="982" height="150" rx="75" transform="translate(843 193)" fill="#b1b1b1"/>
+    </g>
+    <g id="Fold" transform="translate(91 83)">
+      <rect id="Shadow_Left" data-name="Shadow Left" width="79" height="787" transform="translate(2651 -2)" fill="#212121"/>
+      <rect id="Shadow_Bottom" data-name="Shadow Bottom" width="776" height="78" transform="translate(2675 731)" fill="#212121"/>
+      <rect id="Shadow_Right" data-name="Shadow Right" width="1059" height="97" transform="translate(2730.067 -23.022) rotate(45)" fill="#616161"/>
+      <path id="Fold-2" data-name="Fold" d="M533,0l533,527H0Z" transform="translate(3078.355 1129.421) rotate(-135)" fill="url(#linear-gradient)"/>
+    </g>
+    <g id="Icon" transform="translate(199.746 385.905)">
+      <path id="Shadow" d="M100,0H1760a80,80,0,0,1,80,80V1266a10,10,0,0,1-10,10H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(79.255 292.096)" fill="#212121"/>
+      <path id="Black" d="M100,0H1760a80,80,0,0,1,80,80V1266a10,10,0,0,1-10,10H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(115.255 250.096)" fill="#212121"/>
+      <g transform="matrix(1, 0, 0, 1, -199.75, -385.9)" filter="url(#Dark_Grey)">
+        <path id="Dark_Grey-2" data-name="Dark Grey" d="M100,0H1760a80,80,0,0,1,80,80v966a230,230,0,0,1-230,230H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(315 636)" fill="#424242"/>
+      </g>
+      <g transform="matrix(1, 0, 0, 1, -199.75, -385.9)" filter="url(#Mid_Grey)">
+        <path id="Mid_Grey-2" data-name="Mid Grey" d="M100,0H1760a80,80,0,0,1,80,80V846a430,430,0,0,1-430,430H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(315 636)" fill="#616161"/>
+      </g>
+      <g transform="matrix(1, 0, 0, 1, -199.75, -385.9)" filter="url(#Dark_Main_Color)">
+        <path id="Dark_Main_Color-2" data-name="Dark Main Color" d="M100,0H1760a80,80,0,0,1,80,80V596a680,680,0,0,1-680,680H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(315 636)" fill="#a59f0c"/>
+      </g>
+      <g transform="matrix(1, 0, 0, 1, -199.75, -385.9)" filter="url(#Main_Color)">
+        <path id="Main_Color-2" data-name="Main Color" d="M100.054,0h1660.9A80.022,80.022,0,0,1,1841,80V276c0,552.285-447.958,1000-1000.543,1000h-740.4A100.027,100.027,0,0,1,0,1176V100A100.027,100.027,0,0,1,100.054,0Z" transform="translate(315 636)" fill="#fff823"/>
+      </g>
+      <g transform="matrix(1, 0, 0, 1, -199.75, -385.9)" filter="url(#Text)">
+        <text id="Text-2" data-name="Text" transform="translate(537 1493)" fill="#212121" font-size="700" font-family="Tahoma-Bold, Tahoma" font-weight="700"><tspan x="0" y="0">PDF</tspan><tspan x="0" y="845"></tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>
