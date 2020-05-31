@@ -794,6 +794,7 @@
     <ClCompile Include="..\src\AppTools.cpp" />
     <ClCompile Include="..\src\AppUtil.cpp" />
     <ClCompile Include="..\src\Canvas.cpp" />
+    <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\Caption.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />

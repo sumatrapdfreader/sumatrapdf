@@ -49,7 +49,7 @@
 #include "Tabs.h"
 #include "Toolbar.h"
 #include "Translations.h"
-#
+
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
 // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
@@ -207,13 +207,13 @@ static void OnDraggingStop(WindowInfo* win, int x, int y, bool aborted) {
     win->MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
-static bool IsDragX(int x1, int x2) {
+bool IsDragX(int x1, int x2) {
     int dx = abs(x1 - x2);
     int dragDx = GetSystemMetrics(SM_CXDRAG);
     return dx > dragDx;
 }
 
-static bool IsDragY(int y1, int y2) {
+bool IsDragY(int y1, int y2) {
     int dy = abs(y1 - y2);
     int dragDy = GetSystemMetrics(SM_CYDRAG);
     return dy > dragDy;
@@ -1244,135 +1244,6 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM
 
 ///// methods needed for the About/Start screen /////
 
-static void OnPaintAbout(WindowInfo* win) {
-    auto t = TimeGet();
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(win->hwndCanvas, &ps);
-
-    auto txtCol = GetAppColor(AppColor::MainWindowText);
-    auto bgCol = GetAppColor(AppColor::MainWindowBg);
-    if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles &&
-        gGlobalPrefs->showStartPage) {
-        DrawStartPage(win, win->buffer->GetDC(), gFileHistory, txtCol, bgCol);
-    } else {
-        DrawAboutPage(win, win->buffer->GetDC());
-    }
-    win->buffer->Flush(hdc);
-
-    EndPaint(win->hwndCanvas, &ps);
-    if (gShowFrameRate) {
-        win->frameRateWnd->ShowFrameRateDur(TimeSinceInMs(t));
-    }
-}
-
-static void OnMouseLeftButtonDownAbout(WindowInfo* win, int x, int y, WPARAM key) {
-    UNUSED(key);
-    // lf("Left button clicked on %d %d", x, y);
-
-    // remember a link under so that on mouse up we only activate
-    // link if mouse up is on the same link as mouse down
-    win->url = GetStaticLink(win->staticLinks, x, y);
-}
-
-static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) {
-    UNUSED(key);
-    SetFocus(win->hwndFrame);
-
-    const WCHAR* url = GetStaticLink(win->staticLinks, x, y);
-    if (url && url == win->url) {
-        if (str::Eq(url, SLINK_OPEN_FILE))
-            SendMessage(win->hwndFrame, WM_COMMAND, IDM_OPEN, 0);
-        else if (str::Eq(url, SLINK_LIST_HIDE)) {
-            gGlobalPrefs->showStartPage = false;
-            win->RedrawAll(true);
-        } else if (str::Eq(url, SLINK_LIST_SHOW)) {
-            gGlobalPrefs->showStartPage = true;
-            win->RedrawAll(true);
-        } else if (!str::StartsWithI(url, L"http:") && !str::StartsWithI(url, L"https:") &&
-                   !str::StartsWithI(url, L"mailto:")) {
-            LoadArgs args(url, win);
-            LoadDocument(args);
-        } else {
-            SumatraLaunchBrowser(url);
-        }
-    }
-    win->url = nullptr;
-}
-
-static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM key) {
-    UNUSED(key);
-    // lf("Right button clicked on %d %d", x, y);
-    SetFocus(win->hwndFrame);
-    win->dragStart = Point(x, y);
-}
-
-static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) {
-    UNUSED(key);
-    int isDragX = IsDragX(x, win->dragStart.x);
-    int isDragY = IsDragY(y, win->dragStart.y);
-    bool didDragMouse = isDragX || isDragY;
-    if (!didDragMouse) {
-        OnAboutContextMenu(win, x, y);
-    }
-}
-
-static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
-    Point pt;
-    if (GetCursorPosInHwnd(hwnd, pt)) {
-        StaticLinkInfo linkInfo;
-        if (GetStaticLink(win->staticLinks, pt.x, pt.y, &linkInfo)) {
-            win->ShowInfoTip(linkInfo.infotip, linkInfo.rect);
-            SetCursor(IDC_HAND);
-        } else {
-            win->HideInfoTip();
-            SetCursor(IDC_ARROW);
-        }
-        return TRUE;
-    }
-
-    win->HideInfoTip();
-    return FALSE;
-}
-
-static LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    switch (msg) {
-        case WM_LBUTTONDOWN:
-            OnMouseLeftButtonDownAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            return 0;
-
-        case WM_LBUTTONUP:
-            OnMouseLeftButtonUpAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            return 0;
-
-        case WM_LBUTTONDBLCLK:
-            OnMouseLeftButtonDownAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            return 0;
-
-        case WM_RBUTTONDOWN:
-            OnMouseRightButtonDownAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            return 0;
-
-        case WM_RBUTTONUP:
-            OnMouseRightButtonUpAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            return 0;
-
-        case WM_SETCURSOR:
-            if (OnSetCursorAbout(win, hwnd))
-                return TRUE;
-            return DefWindowProc(hwnd, msg, wParam, lParam);
-
-        case WM_CONTEXTMENU:
-            OnAboutContextMenu(win, 0, 0);
-            return 0;
-
-        case WM_PAINT:
-            OnPaintAbout(win);
-            return 0;
-
-        default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
-    }
-}
 
 ///// methods needed for FixedPageUI canvases with loading error /////
 

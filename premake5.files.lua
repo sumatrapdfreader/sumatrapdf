@@ -400,6 +400,7 @@ function sumatrapdf_files()
     "AppUtil.*",
     "Caption.*",
     "Canvas.*",
+    "CanvasAboutUI.*",
     "ChmModel.*",
     "CrashHandler.*",
     "DisplayModel.*",
