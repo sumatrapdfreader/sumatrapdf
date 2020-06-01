@@ -217,6 +217,7 @@ func extractVersionFromName(s string) int {
 
 	name = strings.TrimPrefix(name, "RAMicro-prerelease-")
 	name = strings.TrimPrefix(name, "RAMicro-prerel-")
+	name = strings.TrimPrefix(name, "RAMicroPDFViewer-prerel-")
 
 	// TODO: temporary, for old builds in s3
 	name = strings.TrimPrefix(name, "SumatraPDF-prerelase-")

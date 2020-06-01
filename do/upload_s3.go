@@ -49,7 +49,7 @@ func createSumatraLatestJs(buildType string) string {
 		appName = "SumatraPDF"
 	case buildTypeRaMicro:
 		// must match name in spacesUploadBuildMust
-		appName = "RAMicro-prerel"
+		appName = "RAMicroPDFViewer-prerel"
 	default:
 		panicIf(true, "invalid buildType '%s'", buildType)
 	}
