@@ -1200,6 +1200,9 @@ HMENU BuildMenu(WindowInfo* win) {
     }
 
     m = BuildMenuFromMenuDef(menuDefSettings, CreateMenu(), filter);
+    if (gIsRaMicroBuild) {
+        win::menu::Remove(m, IDM_CHANGE_LANGUAGE);
+    }
 #if defined(ENABLE_THEME)
     // Build the themes sub-menu of the settings menu
     MenuDef menuDefTheme[THEME_COUNT + 1];
