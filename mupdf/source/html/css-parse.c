@@ -3,6 +3,8 @@
 
 #include <string.h>
 
+#include "css-properties.h"
+
 struct lexbuf
 {
 	fz_context *ctx;
@@ -83,13 +85,18 @@ static fz_css_condition *fz_new_css_condition(fz_context *ctx, fz_pool *pool, in
 
 static fz_css_property *fz_new_css_property(fz_context *ctx, fz_pool *pool, const char *name, fz_css_value *value, int spec)
 {
-	fz_css_property *prop = fz_pool_alloc(ctx, pool, sizeof *prop);
-	prop->name = fz_pool_strdup(ctx, pool, name);
-	prop->value = value;
-	prop->spec = spec;
-	prop->important = 0;
-	prop->next = NULL;
-	return prop;
+	struct css_property_info *info = css_property_lookup(name, strlen(name));
+	if (info)
+	{
+		fz_css_property *prop = fz_pool_alloc(ctx, pool, sizeof *prop);
+		prop->name = info->key;
+		prop->value = value;
+		prop->spec = spec;
+		prop->important = 0;
+		prop->next = NULL;
+		return prop;
+	}
+	return NULL;
 }
 
 static fz_css_value *fz_new_css_value_x(fz_context *ctx, fz_pool *pool, int type)
@@ -573,7 +580,10 @@ static fz_css_property *parse_declaration(struct lexbuf *buf)
 	expect(buf, ':');
 	white(buf);
 
-	p->value = parse_expr(buf);
+	if (p)
+		p->value = parse_expr(buf);
+	else
+		(void) parse_expr(buf);
 
 	/* !important */
 	if (accept(buf, '!'))
@@ -581,7 +591,8 @@ static fz_css_property *parse_declaration(struct lexbuf *buf)
 		white(buf);
 		if (buf->lookahead != CSS_KEYWORD || strcmp(buf->string, "important"))
 			fz_css_error(buf, "expected keyword 'important' after '!'");
-		p->important = 1;
+		if (p)
+			p->important = 1;
 		next(buf);
 		white(buf);
 	}
@@ -591,14 +602,16 @@ static fz_css_property *parse_declaration(struct lexbuf *buf)
 
 static fz_css_property *parse_declaration_list(struct lexbuf *buf)
 {
-	fz_css_property *head, *tail;
+	fz_css_property *head = NULL, *tail, *p;
 
 	white(buf);
 
 	if (buf->lookahead == '}' || buf->lookahead == EOF)
 		return NULL;
 
-	head = tail = parse_declaration(buf);
+	p = parse_declaration(buf);
+	if (p)
+		head = tail = p;
 
 	while (accept(buf, ';'))
 	{
@@ -606,7 +619,14 @@ static fz_css_property *parse_declaration_list(struct lexbuf *buf)
 
 		if (buf->lookahead != '}' && buf->lookahead != ';' && buf->lookahead != EOF)
 		{
-			tail = tail->next = parse_declaration(buf);
+			p = parse_declaration(buf);
+			if (p)
+			{
+				if (!head)
+					head = tail = p;
+				else
+					tail = tail->next = p;
+			}
 		}
 	}
 
@@ -944,6 +964,16 @@ static fz_css_rule *parse_stylesheet(struct lexbuf *buf, fz_css_rule *chain)
 	}
 
 	return chain ? chain : tail;
+}
+
+const char *fz_css_property_name(int key)
+{
+	const char *name = "unknown";
+	size_t i;
+	for (i = 0; i < nelem(css_property_list); ++i)
+		if (*css_property_list[i].name && css_property_list[i].key == key)
+			name = css_property_list[i].name;
+	return name;
 }
 
 fz_css_property *fz_parse_css_properties(fz_context *ctx, fz_pool *pool, const char *source)

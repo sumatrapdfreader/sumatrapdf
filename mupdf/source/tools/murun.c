@@ -2969,8 +2969,11 @@ static void ffi_new_Image(js_State *J)
 
 	if (js_isuserdata(J, 1, "fz_pixmap")) {
 		fz_pixmap *pixmap = js_touserdata(J, 1, "fz_pixmap");
+		fz_image *mask = NULL;
+		if (js_isuserdata(J, 2, "fz_image"))
+			mask = js_touserdata(J, 2, "fz_image");
 		fz_try(ctx)
-			image = fz_new_image_from_pixmap(ctx, pixmap, NULL);
+			image = fz_new_image_from_pixmap(ctx, pixmap, mask);
 		fz_catch(ctx)
 			rethrow(J);
 	} else {
@@ -6445,7 +6448,7 @@ int murun_main(int argc, char **argv)
 		jsB_propcon(J, "fz_buffer", "Buffer", ffi_new_Buffer, 1);
 		jsB_propcon(J, "fz_document", "Document", ffi_new_Document, 1);
 		jsB_propcon(J, "fz_pixmap", "Pixmap", ffi_new_Pixmap, 3);
-		jsB_propcon(J, "fz_image", "Image", ffi_new_Image, 1);
+		jsB_propcon(J, "fz_image", "Image", ffi_new_Image, 2);
 		jsB_propcon(J, "fz_font", "Font", ffi_new_Font, 2);
 		jsB_propcon(J, "fz_text", "Text", ffi_new_Text, 0);
 		jsB_propcon(J, "fz_path", "Path", ffi_new_Path, 0);

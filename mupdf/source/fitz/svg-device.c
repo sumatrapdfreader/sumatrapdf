@@ -465,7 +465,7 @@ svg_dev_text_span_as_paths_defs(fz_context *ctx, fz_device *dev, fz_text_span *s
 		if (fnt->sentlist[gid].x_off == FLT_MIN)
 		{
 			/* Need to send this one */
-			fz_rect rect;
+			fz_rect rect = fz_empty_rect;
 			fz_path *path;
 			out = start_def(ctx, sdev);
 			fz_write_printf(ctx, out, "<symbol id=\"font_%x_%x\">\n", fnt->id, gid);
@@ -494,6 +494,7 @@ svg_dev_text_span_as_paths_defs(fz_context *ctx, fz_device *dev, fz_text_span *s
 				shift.e = -rect.x0;
 				shift.f = -rect.y0;
 				fz_run_t3_glyph(ctx, span->font, gid, shift, dev);
+				fnt = &sdev->fonts[font_idx]; /* recursion may realloc the font array! */
 			}
 			fz_write_printf(ctx, out, "</symbol>\n");
 			out = end_def(ctx, sdev);

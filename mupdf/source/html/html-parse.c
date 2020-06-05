@@ -675,7 +675,6 @@ generate_boxes(fz_context *ctx,
 	int markup_lang,
 	struct genstate *g)
 {
-	fz_css_match match;
 	fz_html_box *box, *last_top;
 	const char *tag;
 	int display;
@@ -683,13 +682,13 @@ generate_boxes(fz_context *ctx,
 
 	while (node)
 	{
-		match.up = up_match;
-		match.count = 0;
 
 		tag = fz_xml_tag(node);
 		if (tag)
 		{
-			fz_match_css(ctx, &match, g->css, node);
+			fz_css_match match;
+
+			fz_match_css(ctx, &match, up_match, g->css, node);
 
 			display = fz_get_css_match_display(&match);
 
@@ -1360,8 +1359,6 @@ fz_parse_html(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const cha
 		html->layout_h = 0;
 		html->layout_em = 0;
 
-		match.up = NULL;
-		match.count = 0;
 		fz_match_css_at_page(ctx, &match, g.css);
 		fz_apply_css_style(ctx, g.set, &style, &match);
 		html->root->style = fz_css_enlist(ctx, &style, &g.styles, g.pool);

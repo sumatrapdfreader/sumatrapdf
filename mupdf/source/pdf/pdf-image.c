@@ -305,9 +305,7 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 	pdf_obj *imobj = NULL;
 	pdf_obj *dp;
 	fz_buffer *buffer = NULL;
-	pdf_obj *imref = NULL;
 	fz_compressed_buffer *cbuffer;
-	unsigned char digest[16];
 	int i, n;
 
 	/* If we can maintain compression, do so */
@@ -316,12 +314,6 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 	fz_var(pixmap);
 	fz_var(buffer);
 	fz_var(imobj);
-	fz_var(imref);
-
-	/* Check if the same image already exists in this doc. */
-	imref = pdf_find_image_resource(ctx, doc, image, digest);
-	if (imref)
-		return imref;
 
 	imobj = pdf_add_new_dict(ctx, doc, 3);
 	fz_try(ctx)
@@ -557,21 +549,23 @@ unknown_compression:
 
 		if (image->mask)
 		{
-			pdf_dict_put_drop(ctx, imobj, PDF_NAME(SMask), pdf_add_image(ctx, doc, image->mask));
+			if (image->mask->imagemask)
+				pdf_dict_put_drop(ctx, imobj, PDF_NAME(Mask), pdf_add_image(ctx, doc, image->mask));
+			else
+				pdf_dict_put_drop(ctx, imobj, PDF_NAME(SMask), pdf_add_image(ctx, doc, image->mask));
 		}
 
 		pdf_update_stream(ctx, doc, imobj, buffer, 1);
-
-		/* Add ref to our image resource hash table. */
-		imref = pdf_insert_image_resource(ctx, doc, digest, imobj);
 	}
 	fz_always(ctx)
 	{
 		fz_drop_pixmap(ctx, pixmap);
 		fz_drop_buffer(ctx, buffer);
-		pdf_drop_obj(ctx, imobj);
 	}
 	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, imobj);
 		fz_rethrow(ctx);
-	return imref;
+	}
+	return imobj;
 }

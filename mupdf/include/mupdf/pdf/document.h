@@ -374,7 +374,6 @@ struct pdf_document
 	fz_font **type3_fonts;
 
 	struct {
-		fz_hash_table *images;
 		fz_hash_table *fonts;
 	} resources;
 

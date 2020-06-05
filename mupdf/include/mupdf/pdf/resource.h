@@ -19,8 +19,6 @@ enum { PDF_SIMPLE_ENCODING_LATIN, PDF_SIMPLE_ENCODING_GREEK, PDF_SIMPLE_ENCODING
 
 pdf_obj *pdf_find_font_resource(fz_context *ctx, pdf_document *doc, int type, int encoding, fz_font *item, unsigned char md5[16]);
 pdf_obj *pdf_insert_font_resource(fz_context *ctx, pdf_document *doc, unsigned char md5[16], pdf_obj *obj);
-pdf_obj *pdf_find_image_resource(fz_context *ctx, pdf_document *doc, fz_image *item, unsigned char md5[16]);
-pdf_obj *pdf_insert_image_resource(fz_context *ctx, pdf_document *doc, unsigned char md5[16], pdf_obj *obj);
 void pdf_drop_resource_tables(fz_context *ctx, pdf_document *doc);
 
 typedef struct pdf_function pdf_function;

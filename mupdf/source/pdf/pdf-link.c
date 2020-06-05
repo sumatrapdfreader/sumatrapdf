@@ -43,10 +43,8 @@ char *
 pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 {
 	pdf_obj *obj, *pageobj;
-	fz_rect mediabox;
-	fz_matrix pagectm;
 	const char *ld;
-	int page, x, y, h;
+	int page;
 
 	dest = resolve_dest(ctx, doc, dest);
 	if (dest == NULL)
@@ -86,40 +84,45 @@ pdf_parse_link_dest(fz_context *ctx, pdf_document *doc, pdf_obj *dest)
 	obj = pdf_array_get(ctx, dest, 1);
 	if (obj)
 	{
-		/* Link coords use a coordinate space that does not seem to respect Rotate or UserUnit. */
-		/* All we need to do is figure out the page height to flip the coordinate space. */
-		pdf_page_obj_transform(ctx, pageobj, &mediabox, &pagectm);
-		mediabox = fz_transform_rect(mediabox, pagectm);
-		h = mediabox.y1 - mediabox.y0;
+		pdf_obj *xo = NULL;
+		pdf_obj *yo = NULL;
 
 		if (pdf_name_eq(ctx, obj, PDF_NAME(XYZ)))
 		{
-			x = pdf_array_get_int(ctx, dest, 2);
-			y = h - pdf_array_get_int(ctx, dest, 3);
+			xo = pdf_array_get(ctx, dest, 2);
+			yo = pdf_array_get(ctx, dest, 3);
 		}
 		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitR)))
 		{
-			x = pdf_array_get_int(ctx, dest, 2);
-			y = h - pdf_array_get_int(ctx, dest, 5);
+			xo = pdf_array_get(ctx, dest, 2);
+			yo = pdf_array_get(ctx, dest, 5);
 		}
 		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitH)) || pdf_name_eq(ctx, obj, PDF_NAME(FitBH)))
 		{
-			x = 0;
-			y = h - pdf_array_get_int(ctx, dest, 2);
+			yo = pdf_array_get(ctx, dest, 2);
 		}
 		else if (pdf_name_eq(ctx, obj, PDF_NAME(FitV)) || pdf_name_eq(ctx, obj, PDF_NAME(FitBV)))
 		{
-			x = pdf_array_get_int(ctx, dest, 2);
-			y = 0;
+			xo = pdf_array_get(ctx, dest, 2);
 		}
-		else
-		{
-			x = 0;
-			y = 0;
-		}
-		return fz_asprintf(ctx, "#%d,%d,%d", page + 1, x, y);
-	}
 
+		if (xo || yo)
+		{
+			int x, y, h;
+			fz_rect mediabox;
+			fz_matrix pagectm;
+
+			/* Link coords use a coordinate space that does not seem to respect Rotate or UserUnit. */
+			/* All we need to do is figure out the page height to flip the coordinate space. */
+			pdf_page_obj_transform(ctx, pageobj, &mediabox, &pagectm);
+			mediabox = fz_transform_rect(mediabox, pagectm);
+			h = mediabox.y1 - mediabox.y0;
+
+			x = xo ? pdf_to_int(ctx, xo) : 0;
+			y = yo ? h - pdf_to_int(ctx, yo) : 0;
+			return fz_asprintf(ctx, "#%d,%d,%d", page + 1, x, y);
+		}
+	}
 	return fz_asprintf(ctx, "#%d", page + 1);
 }
 

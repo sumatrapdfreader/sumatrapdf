@@ -31,7 +31,7 @@ public final class AndroidDrawDevice extends NativeDevice
 	}
 
 	public static Bitmap drawPage(Page page, Matrix ctm) {
-		RectI fbox = new RectI(page.getBounds().transform(ctm));
+		RectI ibox = new RectI(page.getBounds().transform(ctm));
 		int w = ibox.x1 - ibox.x0;
 		int h = ibox.y1 - ibox.y0;
 		Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);

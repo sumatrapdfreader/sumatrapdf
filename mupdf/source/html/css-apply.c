@@ -6,29 +6,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-static const char *inherit_list[] = {
-	"color",
-	"direction",
-	"font-family",
-	"font-style",
-	"font-variant",
-	"font-weight",
-	"letter-spacing",
-	"line-height",
-	"list-style-image",
-	"list-style-position",
-	"list-style-type",
-	"orphans",
-	"quotes",
-	"text-align",
-	"text-indent",
-	"text-transform",
-	"visibility",
-	"white-space",
-	"widows",
-	"word-spacing",
-};
-
 static const char *border_width_kw[] = {
 	"medium",
 	"thick",
@@ -360,11 +337,11 @@ count_values(fz_css_value *value)
 	return n;
 }
 
-static void add_property(fz_css_match *match, const char *name, fz_css_value *value, int spec);
+static void add_property(fz_css_match *match, int name, fz_css_value *value, int spec);
 
 static void
 add_shorthand_trbl(fz_css_match *match, fz_css_value *value, int spec,
-	const char *name_t, const char *name_r, const char *name_b, const char *name_l)
+	int name_t, int name_r, int name_b, int name_l)
 {
 	int n = count_values(value);
 
@@ -417,35 +394,50 @@ static void
 add_shorthand_margin(fz_css_match *match, fz_css_value *value, int spec)
 {
 	add_shorthand_trbl(match, value, spec,
-		"margin-top", "margin-right", "margin-bottom", "margin-left");
+		PRO_MARGIN_TOP,
+		PRO_MARGIN_RIGHT,
+		PRO_MARGIN_BOTTOM,
+		PRO_MARGIN_LEFT);
 }
 
 static void
 add_shorthand_padding(fz_css_match *match, fz_css_value *value, int spec)
 {
 	add_shorthand_trbl(match, value, spec,
-		"padding-top", "padding-right", "padding-bottom", "padding-left");
+		PRO_PADDING_TOP,
+		PRO_PADDING_RIGHT,
+		PRO_PADDING_BOTTOM,
+		PRO_PADDING_LEFT);
 }
 
 static void
 add_shorthand_border_width(fz_css_match *match, fz_css_value *value, int spec)
 {
 	add_shorthand_trbl(match, value, spec,
-		"border-top-width", "border-right-width", "border-bottom-width", "border-left-width");
+		PRO_BORDER_TOP_WIDTH,
+		PRO_BORDER_RIGHT_WIDTH,
+		PRO_BORDER_BOTTOM_WIDTH,
+		PRO_BORDER_LEFT_WIDTH);
 }
 
 static void
 add_shorthand_border_color(fz_css_match *match, fz_css_value *value, int spec)
 {
 	add_shorthand_trbl(match, value, spec,
-		"border-top-color", "border-right-color", "border-bottom-color", "border-left-color");
+		PRO_BORDER_TOP_COLOR,
+		PRO_BORDER_RIGHT_COLOR,
+		PRO_BORDER_BOTTOM_COLOR,
+		PRO_BORDER_LEFT_COLOR);
 }
 
 static void
 add_shorthand_border_style(fz_css_match *match, fz_css_value *value, int spec)
 {
 	add_shorthand_trbl(match, value, spec,
-		"border-top-style", "border-right-style", "border-bottom-style", "border-left-style");
+		PRO_BORDER_TOP_STYLE,
+		PRO_BORDER_RIGHT_STYLE,
+		PRO_BORDER_BOTTOM_STYLE,
+		PRO_BORDER_LEFT_STYLE);
 }
 
 static void
@@ -455,41 +447,41 @@ add_shorthand_border(fz_css_match *match, fz_css_value *value, int spec, int T, 
 	{
 		if (value->type == CSS_HASH)
 		{
-			if (T) add_property(match, "border-top-color", value, spec);
-			if (R) add_property(match, "border-right-color", value, spec);
-			if (B) add_property(match, "border-bottom-color", value, spec);
-			if (L) add_property(match, "border-left-color", value, spec);
+			if (T) add_property(match, PRO_BORDER_TOP_COLOR, value, spec);
+			if (R) add_property(match, PRO_BORDER_RIGHT_COLOR, value, spec);
+			if (B) add_property(match, PRO_BORDER_BOTTOM_COLOR, value, spec);
+			if (L) add_property(match, PRO_BORDER_LEFT_COLOR, value, spec);
 		}
 		else if (value->type == CSS_KEYWORD)
 		{
 			if (keyword_in_list(value->data, border_width_kw, nelem(border_width_kw)))
 			{
-				if (T) add_property(match, "border-top-width", value, spec);
-				if (R) add_property(match, "border-right-width", value, spec);
-				if (B) add_property(match, "border-bottom-width", value, spec);
-				if (L) add_property(match, "border-left-width", value, spec);
+				if (T) add_property(match, PRO_BORDER_TOP_WIDTH, value, spec);
+				if (R) add_property(match, PRO_BORDER_RIGHT_WIDTH, value, spec);
+				if (B) add_property(match, PRO_BORDER_BOTTOM_WIDTH, value, spec);
+				if (L) add_property(match, PRO_BORDER_LEFT_WIDTH, value, spec);
 			}
 			else if (keyword_in_list(value->data, border_style_kw, nelem(border_style_kw)))
 			{
-				if (T) add_property(match, "border-top-style", value, spec);
-				if (R) add_property(match, "border-right-style", value, spec);
-				if (B) add_property(match, "border-bottom-style", value, spec);
-				if (L) add_property(match, "border-left-style", value, spec);
+				if (T) add_property(match, PRO_BORDER_TOP_STYLE, value, spec);
+				if (R) add_property(match, PRO_BORDER_RIGHT_STYLE, value, spec);
+				if (B) add_property(match, PRO_BORDER_BOTTOM_STYLE, value, spec);
+				if (L) add_property(match, PRO_BORDER_LEFT_STYLE, value, spec);
 			}
 			else if (keyword_in_list(value->data, color_kw, nelem(color_kw)))
 			{
-				if (T) add_property(match, "border-top-color", value, spec);
-				if (R) add_property(match, "border-right-color", value, spec);
-				if (B) add_property(match, "border-bottom-color", value, spec);
-				if (L) add_property(match, "border-left-color", value, spec);
+				if (T) add_property(match, PRO_BORDER_TOP_COLOR, value, spec);
+				if (R) add_property(match, PRO_BORDER_RIGHT_COLOR, value, spec);
+				if (B) add_property(match, PRO_BORDER_BOTTOM_COLOR, value, spec);
+				if (L) add_property(match, PRO_BORDER_LEFT_COLOR, value, spec);
 			}
 		}
 		else
 		{
-			if (T) add_property(match, "border-top-width", value, spec);
-			if (R) add_property(match, "border-right-width", value, spec);
-			if (B) add_property(match, "border-bottom-width", value, spec);
-			if (L) add_property(match, "border-left-width", value, spec);
+			if (T) add_property(match, PRO_BORDER_TOP_WIDTH, value, spec);
+			if (R) add_property(match, PRO_BORDER_RIGHT_WIDTH, value, spec);
+			if (B) add_property(match, PRO_BORDER_BOTTOM_WIDTH, value, spec);
+			if (L) add_property(match, PRO_BORDER_LEFT_WIDTH, value, spec);
 		}
 		value = value->next;
 	}
@@ -504,11 +496,11 @@ add_shorthand_list_style(fz_css_match *match, fz_css_value *value, int spec)
 		{
 			if (keyword_in_list(value->data, list_style_type_kw, nelem(list_style_type_kw)))
 			{
-				add_property(match, "list-style-type", value, spec);
+				add_property(match, PRO_LIST_STYLE_TYPE, value, spec);
 			}
 			else if (keyword_in_list(value->data, list_style_position_kw, nelem(list_style_position_kw)))
 			{
-				add_property(match, "list-style-position", value, spec);
+				add_property(match, PRO_LIST_STYLE_POSITION, value, spec);
 			}
 		}
 		value = value->next;
@@ -516,126 +508,70 @@ add_shorthand_list_style(fz_css_match *match, fz_css_value *value, int spec)
 }
 
 static void
-add_property(fz_css_match *match, const char *name, fz_css_value *value, int spec)
+add_property(fz_css_match *match, int name, fz_css_value *value, int spec)
 {
-	int i;
-
-	if (!strcmp(name, "margin"))
+	/* shorthand expansions: */
+	switch (name)
 	{
+	case PRO_MARGIN:
 		add_shorthand_margin(match, value, spec);
 		return;
-	}
-	if (!strcmp(name, "padding"))
-	{
+	case PRO_PADDING:
 		add_shorthand_padding(match, value, spec);
 		return;
-	}
-	if (!strcmp(name, "border-width"))
-	{
+	case PRO_BORDER_WIDTH:
 		add_shorthand_border_width(match, value, spec);
 		return;
-	}
-	if (!strcmp(name, "border-color"))
-	{
+	case PRO_BORDER_COLOR:
 		add_shorthand_border_color(match, value, spec);
 		return;
-	}
-	if (!strcmp(name, "border-style"))
-	{
+	case PRO_BORDER_STYLE:
 		add_shorthand_border_style(match, value, spec);
 		return;
-	}
-	if (!strcmp(name, "border"))
-	{
+	case PRO_BORDER:
 		add_shorthand_border(match, value, spec, 1, 1, 1, 1);
 		return;
-	}
-	if (!strcmp(name, "border-top"))
-	{
+	case PRO_BORDER_TOP:
 		add_shorthand_border(match, value, spec, 1, 0, 0, 0);
 		return;
-	}
-	if (!strcmp(name, "border-right"))
-	{
+	case PRO_BORDER_RIGHT:
 		add_shorthand_border(match, value, spec, 0, 1, 0, 0);
 		return;
-	}
-	if (!strcmp(name, "border-bottom"))
-	{
+	case PRO_BORDER_BOTTOM:
 		add_shorthand_border(match, value, spec, 0, 0, 1, 0);
 		return;
-	}
-	if (!strcmp(name, "border-left"))
-	{
+	case PRO_BORDER_LEFT:
 		add_shorthand_border(match, value, spec, 0, 0, 0, 1);
 		return;
-	}
-	if (!strcmp(name, "list-style"))
-	{
+	case PRO_LIST_STYLE:
 		add_shorthand_list_style(match, value, spec);
 		return;
-	}
-
-	/* shorthand expansions: */
-	/* TODO: border-color */
-	/* TODO: border-style */
 	/* TODO: font */
-	/* TODO: list-style */
 	/* TODO: background */
-
-	for (i = 0; i < match->count; ++i)
-	{
-		if (!strcmp(match->prop[i].name, name))
-		{
-			if (match->prop[i].spec <= spec)
-			{
-				match->prop[i].value = value;
-				match->prop[i].spec = spec;
-			}
-			return;
-		}
 	}
 
-	if (match->count + 1 >= (int)nelem(match->prop))
+	if (name < NUM_PROPERTIES && match->spec[name] <= spec)
 	{
-		// fz_warn(ctx, "too many css properties");
-		return;
-	}
-
-	match->prop[match->count].name = name;
-	match->prop[match->count].value = value;
-	match->prop[match->count].spec = spec;
-	++match->count;
-}
-
-static void
-sort_properties(fz_css_match *match)
-{
-	int count = match->count;
-	fz_css_match_prop *prop = match->prop;
-	int i, k;
-
-	/* Insertion sort. */
-	for (i = 1; i < count; ++i)
-	{
-		k = i;
-		while (k > 0 && strcmp(prop[k-1].name, prop[k].name) > 0)
-		{
-			fz_css_match_prop save = prop[k-1];
-			prop[k-1] = prop[k];
-			prop[k] = save;
-			--k;
-		}
+		match->value[name] = value;
+		match->spec[name] = spec;
 	}
 }
 
 void
-fz_match_css(fz_context *ctx, fz_css_match *match, fz_css *css, fz_xml *node)
+fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css, fz_xml *node)
 {
 	fz_css_rule *rule;
 	fz_css_selector *sel;
 	fz_css_property *prop;
 	const char *s;
+	int i;
+
+	match->up = up;
+	for (i = 0; i < NUM_PROPERTIES; ++i)
+	{
+		match->spec[i] = -1;
+		match->value[i] = NULL;
+	}
 
 	for (rule = css->rule; rule; rule = rule->next)
 	{
@@ -673,8 +609,6 @@ fz_match_css(fz_context *ctx, fz_css_match *match, fz_css *css, fz_xml *node)
 			}
 		}
 	}
-
-	sort_properties(match); /* speed up subsequent value_from_raw_property lookups */
 }
 
 void
@@ -683,6 +617,14 @@ fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css)
 	fz_css_rule *rule;
 	fz_css_selector *sel;
 	fz_css_property *prop;
+	int i;
+
+	match->up = NULL;
+	for (i = 0; i < NUM_PROPERTIES; ++i)
+	{
+		match->spec[i] = -1;
+		match->value[i] = NULL;
+	}
 
 	for (rule = css->rule; rule; rule = rule->next)
 	{
@@ -698,8 +640,6 @@ fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css)
 			sel = sel->next;
 		}
 	}
-
-	sort_properties(match); /* speed up subsequent value_from_raw_property lookups */
 }
 
 void
@@ -720,11 +660,11 @@ fz_add_css_font_face(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, co
 
 	for (prop = declaration; prop; prop = prop->next)
 	{
-		if (!strcmp(prop->name, "font-family")) family = prop->value->data;
-		if (!strcmp(prop->name, "font-weight")) weight = prop->value->data;
-		if (!strcmp(prop->name, "font-style")) style = prop->value->data;
-		if (!strcmp(prop->name, "font-variant")) variant = prop->value->data;
-		if (!strcmp(prop->name, "src")) src = prop->value->data;
+		if (prop->name == PRO_FONT_FAMILY) family = prop->value->data;
+		if (prop->name == PRO_FONT_WEIGHT) weight = prop->value->data;
+		if (prop->name == PRO_FONT_STYLE) style = prop->value->data;
+		if (prop->name == PRO_FONT_VARIANT) variant = prop->value->data;
+		if (prop->name == PRO_SRC) src = prop->value->data;
 	}
 
 	if (!src)
@@ -796,37 +736,36 @@ fz_add_css_font_faces(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, c
 	}
 }
 
-static fz_css_value *
-value_from_raw_property(fz_css_match *match, const char *name)
+static int
+is_inheritable_property(int name)
 {
-	fz_css_match_prop *prop = match->prop;
-	int l = 0;
-	int r = match->count - 1;
-	while (l <= r)
-	{
-		int m = (l + r) >> 1;
-		int c = strcmp(name, prop[m].name);
-		if (c < 0)
-			r = m - 1;
-		else if (c > 0)
-			l = m + 1;
-		else
-			return prop[m].value;
-	}
-	return NULL;
+	return
+		name == PRO_COLOR ||
+		name == PRO_DIRECTION ||
+		name == PRO_FONT_FAMILY ||
+		name == PRO_FONT_STYLE ||
+		name == PRO_FONT_VARIANT ||
+		name == PRO_FONT_WEIGHT ||
+		name == PRO_LETTER_SPACING ||
+		name == PRO_LINE_HEIGHT ||
+		name == PRO_LIST_STYLE_IMAGE ||
+		name == PRO_LIST_STYLE_POSITION ||
+		name == PRO_LIST_STYLE_TYPE ||
+		name == PRO_ORPHANS ||
+		name == PRO_QUOTES ||
+		name == PRO_TEXT_ALIGN ||
+		name == PRO_TEXT_INDENT ||
+		name == PRO_TEXT_TRANSFORM ||
+		name == PRO_VISIBILITY ||
+		name == PRO_WHITE_SPACE ||
+		name == PRO_WIDOWS ||
+		name == PRO_WORD_SPACING;
 }
 
-/*
- * An optimized version of value_from_property that already knows
- * the property can inherit its value and therefore can avoid
- * further look-ups in the inheritable-properties list.
- */
 static fz_css_value *
-value_from_inheritable_property(fz_css_match *match, const char *name)
+value_from_inheritable_property(fz_css_match *match, int name)
 {
-	fz_css_value *value;
-
-	value = value_from_raw_property(match, name);
+	fz_css_value *value = match->value[name];
 	if (match->up)
 	{
 		if (value && !strcmp(value->data, "inherit"))
@@ -838,28 +777,24 @@ value_from_inheritable_property(fz_css_match *match, const char *name)
 }
 
 static fz_css_value *
-value_from_property(fz_css_match *match, const char *name)
+value_from_property(fz_css_match *match, int name)
 {
-	fz_css_value *value;
-
-	value = value_from_raw_property(match, name);
+	fz_css_value *value = match->value[name];
 	if (match->up)
 	{
 		if (value && !strcmp(value->data, "inherit"))
-			if (strcmp(name, "font-size") != 0) /* never inherit 'font-size' textually */
+			if (name != PRO_FONT_SIZE) /* never inherit 'font-size' textually */
 				return value_from_property(match->up, name);
-		if (!value && keyword_in_list(name, inherit_list, nelem(inherit_list)))
-			/* Call an optimized version that avoids further name checks */
+		if (!value && is_inheritable_property(name))
 			return value_from_inheritable_property(match->up, name);
 	}
 	return value;
 }
 
 static const char *
-string_from_property(fz_css_match *match, const char *name, const char *initial)
+string_from_property(fz_css_match *match, int name, const char *initial)
 {
-	fz_css_value *value;
-	value = value_from_property(match, name);
+	fz_css_value *value = value_from_property(match, name);
 	if (!value)
 		return initial;
 	return value->data;
@@ -971,13 +906,13 @@ number_from_value(fz_css_value *value, float initial, int initial_unit)
 }
 
 static fz_css_number
-number_from_property(fz_css_match *match, const char *property, float initial, int initial_unit)
+number_from_property(fz_css_match *match, int property, float initial, int initial_unit)
 {
 	return number_from_value(value_from_property(match, property), initial, initial_unit);
 }
 
 static fz_css_number
-border_width_from_property(fz_css_match *match, const char *property)
+border_width_from_property(fz_css_match *match, int property)
 {
 	fz_css_value *value = value_from_property(match, property);
 	if (value)
@@ -994,7 +929,7 @@ border_width_from_property(fz_css_match *match, const char *property)
 }
 
 static int
-border_style_from_property(fz_css_match *match, const char *property)
+border_style_from_property(fz_css_match *match, int property)
 {
 	fz_css_value *value = value_from_property(match, property);
 	if (value)
@@ -1170,7 +1105,7 @@ hex_color:
 }
 
 static fz_css_color
-color_from_property(fz_css_match *match, const char *property, fz_css_color initial)
+color_from_property(fz_css_match *match, int property, fz_css_color initial)
 {
 	return color_from_value(value_from_property(match, property), initial);
 }
@@ -1178,7 +1113,7 @@ color_from_property(fz_css_match *match, const char *property, fz_css_color init
 int
 fz_get_css_match_display(fz_css_match *match)
 {
-	fz_css_value *value = value_from_property(match, "display");
+	fz_css_value *value = value_from_property(match, PRO_DISPLAY);
 	if (value)
 	{
 		if (!strcmp(value->data, "none"))
@@ -1204,7 +1139,7 @@ fz_get_css_match_display(fz_css_match *match)
 static int
 white_space_from_property(fz_css_match *match)
 {
-	fz_css_value *value = value_from_property(match, "white-space");
+	fz_css_value *value = value_from_property(match, PRO_WHITE_SPACE);
 	if (value)
 	{
 		if (!strcmp(value->data, "normal")) return WS_NORMAL;
@@ -1219,7 +1154,7 @@ white_space_from_property(fz_css_match *match)
 static int
 visibility_from_property(fz_css_match *match)
 {
-	fz_css_value *value = value_from_property(match, "visibility");
+	fz_css_value *value = value_from_property(match, PRO_VISIBILITY);
 	if (value)
 	{
 		if (!strcmp(value->data, "visible")) return V_VISIBLE;
@@ -1230,7 +1165,7 @@ visibility_from_property(fz_css_match *match)
 }
 
 static int
-page_break_from_property(fz_css_match *match, char *prop)
+page_break_from_property(fz_css_match *match, int prop)
 {
 	fz_css_value *value = value_from_property(match, prop);
 	if (value)
@@ -1270,10 +1205,10 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 
 	style->visibility = visibility_from_property(match);
 	style->white_space = white_space_from_property(match);
-	style->page_break_before = page_break_from_property(match, "page-break-before");
-	style->page_break_after = page_break_from_property(match, "page-break-after");
+	style->page_break_before = page_break_from_property(match, PRO_PAGE_BREAK_BEFORE);
+	style->page_break_after = page_break_from_property(match, PRO_PAGE_BREAK_AFTER);
 
-	value = value_from_property(match, "text-align");
+	value = value_from_property(match, PRO_TEXT_ALIGN);
 	if (value)
 	{
 		if (!strcmp(value->data, "left")) style->text_align = TA_LEFT;
@@ -1282,7 +1217,7 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 		else if (!strcmp(value->data, "justify")) style->text_align = TA_JUSTIFY;
 	}
 
-	value = value_from_property(match, "vertical-align");
+	value = value_from_property(match, PRO_VERTICAL_ALIGN);
 	if (value)
 	{
 		if (!strcmp(value->data, "baseline")) style->vertical_align = VA_BASELINE;
@@ -1294,7 +1229,7 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 		else if (!strcmp(value->data, "text-bottom")) style->vertical_align = VA_TEXT_BOTTOM;
 	}
 
-	value = value_from_property(match, "font-size");
+	value = value_from_property(match, PRO_FONT_SIZE);
 	if (value)
 	{
 		if (!strcmp(value->data, "xx-large")) style->font_size = make_number(1.73f, N_SCALE);
@@ -1313,7 +1248,7 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 		style->font_size = make_number(1, N_SCALE);
 	}
 
-	value = value_from_property(match, "list-style-type");
+	value = value_from_property(match, PRO_LIST_STYLE_TYPE);
 	if (value)
 	{
 		if (!strcmp(value->data, "none")) style->list_style_type = LST_NONE;
@@ -1334,49 +1269,49 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 		else if (!strcmp(value->data, "georgian")) style->list_style_type = LST_GEORGIAN;
 	}
 
-	style->line_height = number_from_property(match, "line-height", 1.2f, N_SCALE);
+	style->line_height = number_from_property(match, PRO_LINE_HEIGHT, 1.2f, N_SCALE);
 
-	style->text_indent = number_from_property(match, "text-indent", 0, N_LENGTH);
+	style->text_indent = number_from_property(match, PRO_TEXT_INDENT, 0, N_LENGTH);
 
-	style->width = number_from_property(match, "width", 0, N_AUTO);
-	style->height = number_from_property(match, "height", 0, N_AUTO);
+	style->width = number_from_property(match, PRO_WIDTH, 0, N_AUTO);
+	style->height = number_from_property(match, PRO_HEIGHT, 0, N_AUTO);
 
-	style->margin[0] = number_from_property(match, "margin-top", 0, N_LENGTH);
-	style->margin[1] = number_from_property(match, "margin-right", 0, N_LENGTH);
-	style->margin[2] = number_from_property(match, "margin-bottom", 0, N_LENGTH);
-	style->margin[3] = number_from_property(match, "margin-left", 0, N_LENGTH);
+	style->margin[0] = number_from_property(match, PRO_MARGIN_TOP, 0, N_LENGTH);
+	style->margin[1] = number_from_property(match, PRO_MARGIN_RIGHT, 0, N_LENGTH);
+	style->margin[2] = number_from_property(match, PRO_MARGIN_BOTTOM, 0, N_LENGTH);
+	style->margin[3] = number_from_property(match, PRO_MARGIN_LEFT, 0, N_LENGTH);
 
-	style->padding[0] = number_from_property(match, "padding-top", 0, N_LENGTH);
-	style->padding[1] = number_from_property(match, "padding-right", 0, N_LENGTH);
-	style->padding[2] = number_from_property(match, "padding-bottom", 0, N_LENGTH);
-	style->padding[3] = number_from_property(match, "padding-left", 0, N_LENGTH);
+	style->padding[0] = number_from_property(match, PRO_PADDING_TOP, 0, N_LENGTH);
+	style->padding[1] = number_from_property(match, PRO_PADDING_RIGHT, 0, N_LENGTH);
+	style->padding[2] = number_from_property(match, PRO_PADDING_BOTTOM, 0, N_LENGTH);
+	style->padding[3] = number_from_property(match, PRO_PADDING_LEFT, 0, N_LENGTH);
 
-	style->color = color_from_property(match, "color", black);
-	style->background_color = color_from_property(match, "background-color", transparent);
+	style->color = color_from_property(match, PRO_COLOR, black);
+	style->background_color = color_from_property(match, PRO_BACKGROUND_COLOR, transparent);
 
-	style->border_style_0 = border_style_from_property(match, "border-top-style");
-	style->border_style_1 = border_style_from_property(match, "border-right-style");
-	style->border_style_2 = border_style_from_property(match, "border-bottom-style");
-	style->border_style_3 = border_style_from_property(match, "border-left-style");
+	style->border_style_0 = border_style_from_property(match, PRO_BORDER_TOP_STYLE);
+	style->border_style_1 = border_style_from_property(match, PRO_BORDER_RIGHT_STYLE);
+	style->border_style_2 = border_style_from_property(match, PRO_BORDER_BOTTOM_STYLE);
+	style->border_style_3 = border_style_from_property(match, PRO_BORDER_LEFT_STYLE);
 
-	style->border_color[0] = color_from_property(match, "border-top-color", style->color);
-	style->border_color[1] = color_from_property(match, "border-right-color", style->color);
-	style->border_color[2] = color_from_property(match, "border-bottom-color", style->color);
-	style->border_color[3] = color_from_property(match, "border-left-color", style->color);
+	style->border_color[0] = color_from_property(match, PRO_BORDER_TOP_COLOR, style->color);
+	style->border_color[1] = color_from_property(match, PRO_BORDER_RIGHT_COLOR, style->color);
+	style->border_color[2] = color_from_property(match, PRO_BORDER_BOTTOM_COLOR, style->color);
+	style->border_color[3] = color_from_property(match, PRO_BORDER_LEFT_COLOR, style->color);
 
-	style->border_width[0] = border_width_from_property(match, "border-top-width");
-	style->border_width[1] = border_width_from_property(match, "border-right-width");
-	style->border_width[2] = border_width_from_property(match, "border-bottom-width");
-	style->border_width[3] = border_width_from_property(match, "border-left-width");
+	style->border_width[0] = border_width_from_property(match, PRO_BORDER_TOP_WIDTH);
+	style->border_width[1] = border_width_from_property(match, PRO_BORDER_RIGHT_WIDTH);
+	style->border_width[2] = border_width_from_property(match, PRO_BORDER_BOTTOM_WIDTH);
+	style->border_width[3] = border_width_from_property(match, PRO_BORDER_LEFT_WIDTH);
 
 	{
-		const char *font_weight = string_from_property(match, "font-weight", "normal");
-		const char *font_style = string_from_property(match, "font-style", "normal");
-		const char *font_variant = string_from_property(match, "font-variant", "normal");
+		const char *font_weight = string_from_property(match, PRO_FONT_WEIGHT, "normal");
+		const char *font_style = string_from_property(match, PRO_FONT_STYLE, "normal");
+		const char *font_variant = string_from_property(match, PRO_FONT_VARIANT, "normal");
 		int is_bold = is_bold_from_font_weight(font_weight);
 		int is_italic = is_italic_from_font_style(font_style);
 		style->small_caps = !strcmp(font_variant, "small-caps");
-		value = value_from_property(match, "font-family");
+		value = value_from_property(match, PRO_FONT_FAMILY);
 		while (value)
 		{
 			if (strcmp(value->data, ",") != 0)
@@ -1597,7 +1532,7 @@ static void print_value(fz_css_value *val)
 
 static void print_property(fz_css_property *prop)
 {
-	printf("\t%s: ", prop->name);
+	printf("\t%s: ", fz_css_property_name(prop->name));
 	print_value(prop->value);
 	if (prop->important)
 		printf(" !important");

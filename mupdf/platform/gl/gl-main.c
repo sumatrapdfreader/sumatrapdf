@@ -180,7 +180,7 @@ static int oldtint = 0, currenttint = 0;
 static int oldinvert = 0, currentinvert = 0;
 static int oldicc = 1, currenticc = 1;
 static int oldaa = 8, currentaa = 8;
-static int oldseparations = 0, currentseparations = 0;
+static int oldseparations = 1, currentseparations = 1;
 static fz_location oldpage = {0,0}, currentpage = {0,0};
 static float oldzoom = DEFRES, currentzoom = DEFRES;
 static float oldrotate = 0, currentrotate = 0;
@@ -214,7 +214,10 @@ static char *get_history_filename(void)
 	static int once = 0;
 	if (!once)
 	{
-		char *home = getenv("HOME");
+		char *home;
+		home = getenv("XDG_CACHE_HOME");
+		if (!home)
+			home = getenv("HOME");
 		if (!home)
 			home = getenv("USERPROFILE");
 		if (!home)
@@ -778,14 +781,14 @@ void load_page(void)
 
 	if (currentseparations)
 	{
-		seps = fz_page_separations(ctx, &page->super);
+		seps = fz_page_separations(ctx, fzpage);
 		if (seps)
 		{
 			int i, n = fz_count_separations(ctx, seps);
 			for (i = 0; i < n; i++)
 				fz_set_separation_behavior(ctx, seps, i, FZ_SEPARATION_COMPOSITE);
 		}
-		else if (fz_page_uses_overprint(ctx, &page->super))
+		else if (fz_page_uses_overprint(ctx, fzpage))
 			seps = fz_new_separations(ctx, 0);
 		else if (fz_document_output_intent(ctx, doc))
 			seps = fz_new_separations(ctx, 0);

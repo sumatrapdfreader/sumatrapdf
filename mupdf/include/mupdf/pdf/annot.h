@@ -244,6 +244,15 @@ pdf_annot *pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type
 void pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot);
 
 /*
+	Edit the associated Popup annotation rectangle.
+
+	Popup annotations are used to store the size and position of the
+	popup box that is used to edit the contents of the markup annotation.
+*/
+void pdf_set_annot_popup(fz_context *ctx, pdf_annot *annot, fz_rect rect);
+fz_rect pdf_annot_popup(fz_context *ctx, pdf_annot *annot);
+
+/*
 	Check to see if an annotation has an ink list.
 */
 int pdf_annot_has_ink_list(fz_context *ctx, pdf_annot *annot);

@@ -10,7 +10,6 @@ typedef struct fz_css_style_splay_s fz_css_style_splay;
 
 typedef struct fz_css_s fz_css;
 typedef struct fz_css_rule_s fz_css_rule;
-typedef struct fz_css_match_prop_s fz_css_match_prop;
 typedef struct fz_css_match_s fz_css_match;
 typedef struct fz_css_style_s fz_css_style;
 
@@ -83,7 +82,7 @@ struct fz_css_condition_s
 
 struct fz_css_property_s
 {
-	char *name;
+	int name;
 	fz_css_value *value;
 	short spec;
 	short important;
@@ -98,18 +97,80 @@ struct fz_css_value_s
 	fz_css_value *next;
 };
 
-struct fz_css_match_prop_s
+enum
 {
-	const char *name; /* not owned */
-	fz_css_value *value; /* not owned */
-	int spec;
+	PRO_BACKGROUND_COLOR,
+	PRO_BORDER_BOTTOM_COLOR,
+	PRO_BORDER_BOTTOM_STYLE,
+	PRO_BORDER_BOTTOM_WIDTH,
+	PRO_BORDER_LEFT_COLOR,
+	PRO_BORDER_LEFT_STYLE,
+	PRO_BORDER_LEFT_WIDTH,
+	PRO_BORDER_RIGHT_COLOR,
+	PRO_BORDER_RIGHT_STYLE,
+	PRO_BORDER_RIGHT_WIDTH,
+	PRO_BORDER_TOP_COLOR,
+	PRO_BORDER_TOP_STYLE,
+	PRO_BORDER_TOP_WIDTH,
+	PRO_COLOR,
+	PRO_DIRECTION,
+	PRO_DISPLAY,
+	PRO_FONT_FAMILY,
+	PRO_FONT_SIZE,
+	PRO_FONT_STYLE,
+	PRO_FONT_VARIANT,
+	PRO_FONT_WEIGHT,
+	PRO_HEIGHT,
+	PRO_LETTER_SPACING,
+	PRO_LINE_HEIGHT,
+	PRO_LIST_STYLE_IMAGE,
+	PRO_LIST_STYLE_POSITION,
+	PRO_LIST_STYLE_TYPE,
+	PRO_MARGIN_BOTTOM,
+	PRO_MARGIN_LEFT,
+	PRO_MARGIN_RIGHT,
+	PRO_MARGIN_TOP,
+	PRO_ORPHANS,
+	PRO_PADDING_BOTTOM,
+	PRO_PADDING_LEFT,
+	PRO_PADDING_RIGHT,
+	PRO_PADDING_TOP,
+	PRO_PAGE_BREAK_AFTER,
+	PRO_PAGE_BREAK_BEFORE,
+	PRO_QUOTES,
+	PRO_SRC,
+	PRO_TEXT_ALIGN,
+	PRO_TEXT_INDENT,
+	PRO_TEXT_TRANSFORM,
+	PRO_VERTICAL_ALIGN,
+	PRO_VISIBILITY,
+	PRO_WHITE_SPACE,
+	PRO_WIDOWS,
+	PRO_WIDTH,
+	PRO_WORD_SPACING,
+
+	/* Number of real properties. */
+	NUM_PROPERTIES,
+
+	/* Short-hand properties (always expanded when applied, never used as is): */
+	PRO_BORDER,
+	PRO_BORDER_BOTTOM,
+	PRO_BORDER_COLOR,
+	PRO_BORDER_LEFT,
+	PRO_BORDER_RIGHT,
+	PRO_BORDER_STYLE,
+	PRO_BORDER_TOP,
+	PRO_BORDER_WIDTH,
+	PRO_LIST_STYLE,
+	PRO_MARGIN,
+	PRO_PADDING,
 };
 
 struct fz_css_match_s
 {
 	fz_css_match *up;
-	int count;
-	fz_css_match_prop prop[64];
+	short spec[NUM_PROPERTIES];
+	fz_css_value *value[NUM_PROPERTIES];
 };
 
 enum { DIS_NONE, DIS_BLOCK, DIS_INLINE, DIS_LIST_ITEM, DIS_INLINE_BLOCK, DIS_TABLE, DIS_TABLE_ROW, DIS_TABLE_CELL };
@@ -289,8 +350,9 @@ void fz_parse_css(fz_context *ctx, fz_css *css, const char *source, const char *
 fz_css_property *fz_parse_css_properties(fz_context *ctx, fz_pool *pool, const char *source);
 void fz_drop_css(fz_context *ctx, fz_css *css);
 void fz_debug_css(fz_context *ctx, fz_css *css);
+const char *fz_css_property_name(int name);
 
-void fz_match_css(fz_context *ctx, fz_css_match *match, fz_css *css, fz_xml *node);
+void fz_match_css(fz_context *ctx, fz_css_match *match, fz_css_match *up, fz_css *css, fz_xml *node);
 void fz_match_css_at_page(fz_context *ctx, fz_css_match *match, fz_css *css);
 
 int fz_get_css_match_display(fz_css_match *node);

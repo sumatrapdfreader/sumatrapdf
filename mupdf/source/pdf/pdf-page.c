@@ -691,16 +691,7 @@ static void
 find_seps(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_obj *clearme)
 {
 	int i, n;
-	pdf_obj *nameobj;
-
-	/* Indexed and DeviceN may have cyclic references */
-	if (pdf_is_indirect(ctx, obj))
-	{
-		if (pdf_mark_obj(ctx, obj))
-			return; /* already been here */
-		/* remember to clear this colorspace dictionary at the end */
-		pdf_array_push(ctx, clearme, obj);
-	}
+	pdf_obj *nameobj, *cols;
 
 	nameobj = pdf_array_get(ctx, obj, 0);
 	if (pdf_name_eq(ctx, nameobj, PDF_NAME(Separation)))
@@ -744,13 +735,29 @@ find_seps(fz_context *ctx, fz_separations **seps, pdf_obj *obj, pdf_obj *clearme
 	}
 	else if (pdf_name_eq(ctx, nameobj, PDF_NAME(Indexed)))
 	{
+		if (pdf_is_indirect(ctx, obj))
+		{
+			if (pdf_mark_obj(ctx, obj))
+				return; /* already been here */
+			/* remember to clear this colorspace dictionary at the end */
+			pdf_array_push(ctx, clearme, obj);
+		}
+
 		find_seps(ctx, seps, pdf_array_get(ctx, obj, 1), clearme);
 	}
 	else if (pdf_name_eq(ctx, nameobj, PDF_NAME(DeviceN)))
 	{
+		if (pdf_is_indirect(ctx, obj))
+		{
+			if (pdf_mark_obj(ctx, obj))
+				return; /* already been here */
+			/* remember to clear this colorspace dictionary at the end */
+			pdf_array_push(ctx, clearme, obj);
+		}
+
 		/* If the separation colorants exists for this DeviceN color space
 		 * add those prior to our search for DeviceN color */
-		pdf_obj *cols = pdf_dict_get(ctx, pdf_array_get(ctx, obj, 4), PDF_NAME(Colorants));
+		cols = pdf_dict_get(ctx, pdf_array_get(ctx, obj, 4), PDF_NAME(Colorants));
 		n = pdf_dict_len(ctx, cols);
 		for (i = 0; i < n; i++)
 			find_seps(ctx, seps, pdf_dict_get_val(ctx, cols, i), clearme);
