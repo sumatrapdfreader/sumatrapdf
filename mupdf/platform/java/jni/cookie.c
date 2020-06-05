@@ -5,9 +5,8 @@ FUN(Cookie_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_cookie *cookie = from_Cookie_safe(env, self);
-
 	if (!ctx || !cookie) return;
-
+	(*env)->SetLongField(env, self, fid_Cookie_pointer, 0);
 	fz_free(ctx, cookie);
 }
 

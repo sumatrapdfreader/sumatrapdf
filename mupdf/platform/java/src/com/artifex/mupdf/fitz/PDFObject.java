@@ -14,6 +14,10 @@ public class PDFObject implements Iterable<PDFObject>
 
 	protected native void finalize();
 
+	public void destroy() {
+		finalize();
+	}
+
 	private PDFObject(long p) {
 		pointer = p;
 	}

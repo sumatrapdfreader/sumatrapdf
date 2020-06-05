@@ -7,6 +7,7 @@ public class PDFDocument extends Document
 	}
 
 	private static native long newNative();
+	protected native void finalize();
 
 	protected PDFDocument(long p) {
 		super(p);

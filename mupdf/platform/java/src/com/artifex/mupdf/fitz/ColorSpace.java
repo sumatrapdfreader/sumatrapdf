@@ -12,7 +12,6 @@ public class ColorSpace
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private ColorSpace(long p) {

@@ -12,7 +12,6 @@ public class PDFGraftMap
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	public native PDFObject graftObject(PDFObject obj);

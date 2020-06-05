@@ -12,7 +12,6 @@ public class Pixmap
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private native long newNative(ColorSpace cs, int x, int y, int w, int h, boolean alpha);
@@ -69,6 +68,7 @@ public class Pixmap
 	public native void invert();
 	public native void invertLuminance();
 	public native void gamma(float gamma);
+	public native void tint(int black, int white);
 
 	public Rect getBounds() {
 		int x = getX();

@@ -18,7 +18,6 @@ public class StructuredText
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private StructuredText(long p) {

@@ -14,7 +14,6 @@ public class PDFAnnotation
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	protected PDFAnnotation(long p) {

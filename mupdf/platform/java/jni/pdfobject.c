@@ -5,9 +5,8 @@ FUN(PDFObject_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_obj *obj = from_PDFObject_safe(env, self);
-
 	if (!ctx || !obj) return;
-
+	(*env)->SetLongField(env, self, fid_PDFObject_pointer, 0);
 	pdf_drop_obj(ctx, obj);
 }
 

@@ -8,11 +8,17 @@ public abstract class PKCS7Signer
 
 	private long pointer;
 
-	protected PKCS7Signer() {
-		pointer = newNative(this);
+	protected native void finalize();
+
+	public void destroy() {
+		finalize();
 	}
 
 	private native long newNative(PKCS7Signer signer);
+
+	protected PKCS7Signer() {
+		pointer = newNative(this);
+	}
 
 	public abstract PKCS7DesignatedName name();
 	public abstract byte[] sign(FitzInputStream stm);

@@ -5,9 +5,8 @@ FUN(Font_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_font *font = from_Font_safe(env, self);
-
 	if (!ctx || !font) return;
-
+	(*env)->SetLongField(env, self, fid_Font_pointer, 0);
 	fz_drop_font(ctx, font);
 }
 

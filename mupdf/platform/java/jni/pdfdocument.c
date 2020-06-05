@@ -59,14 +59,11 @@ FUN(PDFDocument_finalize)(JNIEnv *env, jobject self)
 	fz_context *ctx = get_context(env);
 	pdf_document *pdf = from_PDFDocument_safe(env, self);
 	void *data = NULL;
-
 	if (!ctx || !pdf) return;
-
 	data = pdf_get_doc_event_callback_data(ctx, pdf);
 	if (data)
 		(*env)->DeleteGlobalRef(env, data);
-
-	fz_drop_document(ctx, &pdf->super);
+	FUN(Document_finalize)(env, self); /* Call super.finalize() */
 }
 
 JNIEXPORT jint JNICALL
@@ -433,6 +430,7 @@ FUN(PDFDocument_graftObject)(JNIEnv *env, jobject self, jobject jobj)
 
 	if (!ctx || !dst) return NULL;
 	if (!dst) return jni_throw_arg(env, "dst must not be null"), NULL;
+	if (!obj) return jni_throw_arg(env, "object must not be null"), NULL;
 
 	fz_try(ctx)
 		obj = pdf_graft_object(ctx, dst, obj);
@@ -715,6 +713,9 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 	fz_var(out);
 	fz_var(stream);
 	fz_var(array);
+
+	if (!ctx || !pdf) return;
+	if (!stream) return jni_throw_arg(env, "stream must not be null");
 
 	if (joptions)
 	{

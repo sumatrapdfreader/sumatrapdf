@@ -12,7 +12,6 @@ public class DocumentWriter
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private native long newNativeDocumentWriter(String filename, String format, String options);

@@ -1,16 +1,5 @@
 /* PDFWidget interface */
 
-JNIEXPORT void JNICALL
-FUN(PDFWidget_finalize)(JNIEnv *env, jobject self)
-{
-	fz_context *ctx = get_context(env);
-	pdf_widget *widget = from_PDFWidget_safe(env, self);
-
-	if (!ctx || !widget) return;
-
-	pdf_drop_annot(ctx, widget);
-}
-
 JNIEXPORT jstring JNICALL
 FUN(PDFWidget_getValue)(JNIEnv *env, jobject self)
 {
@@ -33,18 +22,20 @@ FUN(PDFWidget_setTextValue)(JNIEnv *env, jobject self, jstring jval)
 {
 	fz_context *ctx = get_context(env);
 	pdf_widget *widget = from_PDFWidget_safe(env, self);
-	const char *val;
+	const char *val = NULL;
 	jboolean accepted = JNI_FALSE;
 
 	if (!ctx || !widget) return JNI_FALSE;
 
-	val = (*env)->GetStringUTFChars(env, jval, NULL);
+	if (jval)
+		val = (*env)->GetStringUTFChars(env, jval, NULL);
 
 	fz_var(accepted);
 	fz_try(ctx)
 		accepted = pdf_set_text_field_value(ctx, widget, val);
 	fz_always(ctx)
-		(*env)->ReleaseStringUTFChars(env, jval, val);
+		if (jval)
+			(*env)->ReleaseStringUTFChars(env, jval, val);
 	fz_catch(ctx)
 		return jni_rethrow(env, ctx), JNI_FALSE;
 
@@ -56,18 +47,20 @@ FUN(PDFWidget_setChoiceValue)(JNIEnv *env, jobject self, jstring jval)
 {
 	fz_context *ctx = get_context(env);
 	pdf_widget *widget = from_PDFWidget_safe(env, self);
-	const char *val;
+	const char *val = NULL;
 	jboolean accepted = JNI_FALSE;
 
 	if (!ctx || !widget) return JNI_FALSE;
 
-	val = (*env)->GetStringUTFChars(env, jval, NULL);
+	if (jval)
+		val = (*env)->GetStringUTFChars(env, jval, NULL);
 
 	fz_var(accepted);
 	fz_try(ctx)
 		accepted = pdf_set_choice_field_value(ctx, widget, val);
 	fz_always(ctx)
-		(*env)->ReleaseStringUTFChars(env, jval, val);
+		if (jval)
+			(*env)->ReleaseStringUTFChars(env, jval, val);
 	fz_catch(ctx)
 		return jni_rethrow(env, ctx), JNI_FALSE;
 
@@ -79,18 +72,20 @@ FUN(PDFWidget_setValue)(JNIEnv *env, jobject self, jstring jval)
 {
 	fz_context *ctx = get_context(env);
 	pdf_widget *widget = from_PDFWidget_safe(env, self);
-	const char *val;
+	const char *val = NULL;
 	jboolean accepted = JNI_FALSE;
 
 	if (!ctx || !widget) return JNI_FALSE;
 
-	val = (*env)->GetStringUTFChars(env, jval, NULL);
+	if (jval)
+		val = (*env)->GetStringUTFChars(env, jval, NULL);
 
 	fz_var(accepted);
 	fz_try(ctx)
 		accepted = pdf_set_field_value(ctx, widget->page->doc, widget->obj, (char *)val, widget->ignore_trigger_events);
 	fz_always(ctx)
-		(*env)->ReleaseStringUTFChars(env, jval, val);
+		if (jval)
+			(*env)->ReleaseStringUTFChars(env, jval, val);
 	fz_catch(ctx)
 		return jni_rethrow(env, ctx), JNI_FALSE;
 
@@ -387,6 +382,7 @@ FUN(PDFWidget_sign)(JNIEnv *env, jobject self, jobject signer)
 	pdf_pkcs7_signer *pkcs7signer = from_PKCS7Signer_safe(env, signer);
 
 	if (!ctx || !widget || !pdf) return JNI_FALSE;
+	if (!pkcs7signer) return jni_throw_arg(env, "signer must not be null"), JNI_FALSE;
 
 	fz_try(ctx)
 		pdf_sign_signature(ctx, widget, pkcs7signer);

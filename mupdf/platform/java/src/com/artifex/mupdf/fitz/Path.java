@@ -12,7 +12,6 @@ public class Path implements PathWalker
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private native long newNative();

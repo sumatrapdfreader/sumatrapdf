@@ -12,7 +12,6 @@ public class Shade
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private Shade(long p) {

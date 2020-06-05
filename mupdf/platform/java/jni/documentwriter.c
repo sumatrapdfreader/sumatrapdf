@@ -5,9 +5,8 @@ FUN(DocumentWriter_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_document_writer *wri = from_DocumentWriter_safe(env, self);
-
 	if (!ctx || !wri) return;
-
+	(*env)->SetLongField(env, self, fid_DocumentWriter_pointer, 0);
 	fz_drop_document_writer(ctx, wri);
 }
 

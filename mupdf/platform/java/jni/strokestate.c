@@ -5,9 +5,8 @@ FUN(StrokeState_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_stroke_state *stroke = from_StrokeState_safe(env, self);
-
 	if (!ctx || !stroke) return;
-
+	(*env)->SetLongField(env, self, fid_StrokeState_pointer, 0);
 	fz_drop_stroke_state(ctx, stroke);
 }
 

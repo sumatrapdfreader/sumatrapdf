@@ -5,9 +5,8 @@ FUN(Text_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_text *text = from_Text_safe(env, self);
-
 	if (!ctx || !text) return;
-
+	(*env)->SetLongField(env, self, fid_Text_pointer, 0);
 	fz_drop_text(ctx, text);
 }
 

@@ -25,6 +25,12 @@ public abstract class PKCS7Verifier
 
 	private long pointer;
 
+	protected native void finalize();
+
+	public void destroy() {
+		finalize();
+	}
+
 	private native long newNative(PKCS7Verifier verifier);
 
 	protected PKCS7Verifier() {

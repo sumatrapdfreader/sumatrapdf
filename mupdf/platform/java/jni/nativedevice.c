@@ -76,6 +76,9 @@ FUN(NativeDevice_finalize)(JNIEnv *env, jobject self)
 		fz_drop_pixmap(ctx, ninfo->pixmap);
 		fz_free(ctx, ninfo);
 	}
+
+	(*env)->SetLongField(env, self, fid_NativeDevice_nativeInfo, 0);
+	(*env)->SetObjectField(env, self, fid_NativeDevice_nativeResource, NULL);
 }
 
 JNIEXPORT void JNICALL

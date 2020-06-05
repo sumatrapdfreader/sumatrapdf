@@ -22,7 +22,6 @@ public class StrokeState
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private native long newNative(int startCap, int dashCap, int endCap, int lineJoin, float lineWidth, float miterLimit,

@@ -184,9 +184,8 @@ FUN(Document_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_document *doc = from_Document_safe(env, self);
-
 	if (!ctx || !doc) return;
-
+	(*env)->SetLongField(env, self, fid_Document_pointer, 0);
 	fz_drop_document(ctx, doc);
 
 	/* This is a reasonable place to call Memento. */

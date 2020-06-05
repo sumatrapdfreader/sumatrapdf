@@ -135,9 +135,8 @@ FUN(FitzInputStream_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_stream *stm = from_FitzInputStream_safe(env, self);
-
 	if (!ctx || !stm) return;
-
+	(*env)->SetLongField(env, self, fid_FitzInputStream_pointer, 0);
 	fz_drop_stream(ctx, stm);
 }
 

@@ -5,9 +5,8 @@ FUN(Path_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_path *path = from_Path_safe(env, self);
-
 	if (!ctx || !path) return;
-
+	(*env)->SetLongField(env, self, fid_Path_pointer, 0);
 	fz_drop_path(ctx, path);
 }
 

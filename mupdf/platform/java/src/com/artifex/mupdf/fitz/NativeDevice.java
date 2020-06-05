@@ -12,9 +12,7 @@ public class NativeDevice extends Device
 	protected native void finalize();
 
 	public void destroy() {
-		super.destroy();
-		nativeInfo = 0;
-		nativeResource = null;
+		finalize();
 	}
 
 	protected NativeDevice(long p) {

@@ -112,9 +112,7 @@ FUN(PKCS7Verifier_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	java_pkcs7_verifier *verifier = from_PKCS7Verifier_safe(env, self);
-
 	if (!ctx || !verifier) return;
-
+	(*env)->SetLongField(env, self, fid_PKCS7Verifier_pointer, 0);
 	pdf_drop_verifier(ctx, &verifier->base);
-	(*env)->SetLongField(env, self, fid_PKCS7Verifier_pointer, (jlong) NULL);
 }

@@ -416,8 +416,7 @@ FUN(Device_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_device *dev = from_Device_safe(env, self);
-
 	if (!ctx || !dev) return;
-
+	(*env)->SetLongField(env, self, fid_Device_pointer, 0);
 	fz_drop_device(ctx, dev);
 }

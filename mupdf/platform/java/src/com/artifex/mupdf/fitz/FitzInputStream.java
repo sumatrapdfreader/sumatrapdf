@@ -17,7 +17,6 @@ public class FitzInputStream extends InputStream
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private FitzInputStream(long p) {

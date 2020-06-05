@@ -55,9 +55,8 @@ FUN(DisplayList_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_display_list *list = from_DisplayList_safe(env, self);
-
 	if (!ctx || !list) return;
-
+	(*env)->SetLongField(env, self, fid_DisplayList_pointer, 0);
 	fz_drop_display_list(ctx, list);
 }
 

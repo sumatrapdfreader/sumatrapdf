@@ -12,7 +12,6 @@ public class Buffer
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private native long newNativeBuffer(int n);

@@ -17,7 +17,6 @@ public class Document
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	protected Document(long p) {

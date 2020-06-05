@@ -209,6 +209,30 @@ JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_Context_initNative
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Context_emptyStore
   (JNIEnv *, jclass);
 
+/*
+ * Class:     com_artifex_mupdf_fitz_Context
+ * Method:    enableICC
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Context_enableICC
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_Context
+ * Method:    disableICC
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Context_disableICC
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_Context
+ * Method:    setAntiAliasLevel
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Context_setAntiAliasLevel
+  (JNIEnv *, jclass, jint);
+
 #ifdef __cplusplus
 }
 #endif
@@ -1758,6 +1782,14 @@ JNIEXPORT jlong JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_newNative
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    finalize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_finalize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
  * Method:    findPage
  * Signature: (I)Lcom/artifex/mupdf/fitz/PDFObject;
  */
@@ -2951,6 +2983,14 @@ extern "C" {
 #endif
 /*
  * Class:     com_artifex_mupdf_fitz_PKCS7Signer
+ * Method:    finalize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PKCS7Signer_finalize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PKCS7Signer
  * Method:    newNative
  * Signature: (Lcom/artifex/mupdf/fitz/PKCS7Signer;)J
  */
@@ -2986,6 +3026,14 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PKCS7Verifier_PKCS7VerifierNotTrusted 6L
 #undef com_artifex_mupdf_fitz_PKCS7Verifier_PKCS7VerifierUnknown
 #define com_artifex_mupdf_fitz_PKCS7Verifier_PKCS7VerifierUnknown -1L
+/*
+ * Class:     com_artifex_mupdf_fitz_PKCS7Verifier
+ * Method:    finalize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PKCS7Verifier_finalize
+  (JNIEnv *, jobject);
+
 /*
  * Class:     com_artifex_mupdf_fitz_PKCS7Verifier
  * Method:    newNative
@@ -3408,6 +3456,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Pixmap_invertLuminance
  */
 JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Pixmap_gamma
   (JNIEnv *, jobject, jfloat);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_Pixmap
+ * Method:    tint
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_Pixmap_tint
+  (JNIEnv *, jobject, jint, jint);
 
 #ifdef __cplusplus
 }

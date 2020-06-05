@@ -12,7 +12,6 @@ public class Text implements TextWalker
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private native long newNative();

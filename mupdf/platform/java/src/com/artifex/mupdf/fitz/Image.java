@@ -12,7 +12,6 @@ public class Image
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	private native long newNativeFromPixmap(Pixmap pixmap);

@@ -5,9 +5,8 @@ FUN(StructuredText_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_stext_page *text = from_StructuredText_safe(env, self);
-
 	if (!ctx || !text) return;
-
+	(*env)->SetLongField(env, self, fid_StructuredText_pointer, 0);
 	fz_drop_stext_page(ctx, text);
 }
 

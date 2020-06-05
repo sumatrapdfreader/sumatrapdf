@@ -237,9 +237,7 @@ FUN(PKCS7Signer_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_pkcs7_signer *signer = from_PKCS7Signer_safe(env, self);
-
 	if (!ctx || !signer) return;
-
-	signer_drop(ctx, signer);
-	(*env)->SetLongField(env, self, fid_PKCS7Signer_pointer, (jlong)NULL);
+	(*env)->SetLongField(env, self, fid_PKCS7Signer_pointer, 0);
+	pdf_drop_signer(ctx, signer);
 }

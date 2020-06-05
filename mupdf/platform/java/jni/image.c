@@ -5,9 +5,8 @@ FUN(Image_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_image *image = from_Image_safe(env, self);
-
 	if (!ctx || !image) return;
-
+	(*env)->SetLongField(env, self, fid_Image_pointer, 0);
 	fz_drop_image(ctx, image);
 }
 

@@ -12,7 +12,6 @@ public class Page
 
 	public void destroy() {
 		finalize();
-		pointer = 0;
 	}
 
 	protected Page(long p) {

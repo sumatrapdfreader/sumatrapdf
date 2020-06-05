@@ -8,6 +8,7 @@ FUN(DisplayListDevice_newNative)(JNIEnv *env, jclass cls, jobject jlist)
 	fz_device *device = NULL;
 
 	if (!ctx) return 0;
+	if (!list) return jni_throw_arg(env, "list must not be null"), 0;
 
 	fz_var(device);
 

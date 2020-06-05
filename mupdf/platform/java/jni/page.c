@@ -5,9 +5,8 @@ FUN(Page_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_page *page = from_Page_safe(env, self);
-
 	if (!ctx || !page) return;
-
+	(*env)->SetLongField(env, self, fid_Page_pointer, 0);
 	fz_drop_page(ctx, page);
 }
 

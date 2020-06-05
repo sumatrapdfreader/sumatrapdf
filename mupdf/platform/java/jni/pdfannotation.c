@@ -5,9 +5,8 @@ FUN(PDFAnnotation_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation_safe(env, self);
-
 	if (!ctx || !annot) return;
-
+	(*env)->SetLongField(env, self, fid_PDFAnnotation_pointer, 0);
 	pdf_drop_annot(ctx, annot);
 }
 
@@ -159,7 +158,7 @@ FUN(PDFAnnotation_setContents)(JNIEnv *env, jobject self, jstring jcontents)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation(env, self);
-	const char *contents = NULL;
+	const char *contents = "";
 
 	if (!ctx || !annot) return;
 	if (jcontents)
@@ -199,7 +198,7 @@ FUN(PDFAnnotation_setAuthor)(JNIEnv *env, jobject self, jstring jauthor)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation(env, self);
-	const char *author = NULL;
+	const char *author = "";
 
 	if (!ctx || !annot) return;
 	if (jauthor)
@@ -369,11 +368,12 @@ FUN(PDFAnnotation_setColor)(JNIEnv *env, jobject self, jobject jcolor)
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation(env, self);
 	float color[4];
-	int n;
+	int n = 0;
 
 	if (!ctx || !annot) return;
 	if (!from_jfloatArray(env, color, nelem(color), jcolor)) return;
-	n = (*env)->GetArrayLength(env, jcolor);
+	if (jcolor)
+		n = (*env)->GetArrayLength(env, jcolor);
 
 	fz_try(ctx)
 		pdf_set_annot_color(ctx, annot, n, color);
@@ -412,11 +412,12 @@ FUN(PDFAnnotation_setInteriorColor)(JNIEnv *env, jobject self, jobject jcolor)
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation(env, self);
 	float color[4];
-	int n;
+	int n = 0;
 
 	if (!ctx || !annot) return;
 	if (!from_jfloatArray(env, color, nelem(color), jcolor)) return;
-	n = (*env)->GetArrayLength(env, jcolor);
+	if (jcolor)
+		n = (*env)->GetArrayLength(env, jcolor);
 
 	fz_try(ctx)
 		pdf_set_annot_interior_color(ctx, annot, n, color);
