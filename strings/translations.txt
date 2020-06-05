@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-58559fa4be83f7e4f46a3b0a16c9d6008899216a
+571ba81273775f2302b9765372d97cb09936e6a9
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3814,6 +3814,7 @@ uk:Додати %s сторінку до закладок з іменем(нео
 uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 :Add page %s to favorites\tCtrl+B
+ar: إلى المفضلة %s إضافة الصفحة\tCtrl+B
 az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
 bg:Добави страница %s към любимите\tCtrl+B
 br:Adicionar página %s aos favoritos\tCtrl+B
@@ -11709,6 +11710,7 @@ uk:Змінено:
 uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window\tCtrl+N
+ar:نافذة جديدة&/Ctrl+N
 az:Yeni pə&ncərə\tCtrl+N
 bg:Нов &прозорец\tCtrl+N
 br:Novo &window\tCtrl+N
@@ -15960,6 +15962,7 @@ uk:Найбільш часто читані
 uz:Tez-tez o'qiladiganlarni ko'rsatish
 vn:Hiện Đọc thường xuyên
 :Show in &folder
+ar:إظهار في &المجلد
 az:Qovlu&qda göstər
 bg:Покажи в &папка
 br:Mostrar na &pasta
