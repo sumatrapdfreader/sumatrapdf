@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-571ba81273775f2302b9765372d97cb09936e6a9
+293243eb6b04af6825649a376d9a0125be5ad3f1
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3695,7 +3695,7 @@ bs:Dodaj stranicu %s u favorite
 by:Дадаць старонку %s у лепшыя закладкі
 ca-xv:Afegeix la pàgina %s als preferits
 ca:Afegeix la pàgina %s als preferits
-cn:添加第 %s 页到收藏夹
+cn:将第 %s 页添加到收藏夹
 co:Aghjunghje a pagina %s à i favuriti
 cy:Ychwanegu tudalen %s i'r Ffefrynnau
 cz:Přidat stránku %s k oblíbeným...
@@ -4188,7 +4188,7 @@ bs:Da li ste sigurni da želite deinstalirati SumatraPDF?
 by:Вы сапраўды ўпэўнены, что трэба знішчыць SumatraPDF?
 ca-xv:Esteu segur de voler desinstal·lar el SumatraPDF?
 ca:Segur que voleu desinstal·lar el SumatraPDF?
-cn:你确实要卸载 SumatraPDF 吗？
+cn:您确定要卸载 SumatraPDF 吗？
 co:Site sicuru di vulè disinstallà SumatraPDF ?
 cy:Ydych chi'n siŵr eich bod am ddadosod SumatraPDF
 cz:Opravdu chcete odinstalovat SumatraPDF?
@@ -18477,7 +18477,7 @@ bs:[Uočena promjena; osvježavam] %s
 by:[Выяўлены змены; адбываецца абнаўленне] %s
 ca-xv:[S'han detectat canvis; s'està actualitzant] %s
 ca:[S'han detectat canvis; s'està actualitzant] %s
-cn:[已检测更改，正在更新] %s
+cn:[已检测到更改，正在更新] %s
 co:[Cambiamenti abbentati ; attualizazione] %s
 cy:[Wedi canfod newidiadau: adnewyddu] %s
 cz:[Zjištěna změna; probíhá aktualizace] %s
