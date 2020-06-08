@@ -667,7 +667,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     bool isEmbeddedFile = false;
     PageDestination* dest = nullptr;
     WCHAR* path = nullptr;
-    if (dti->dest) {
+    if (dti && dti->dest) {
         dest = dti->dest;
         if (dest) {
             path = dest->GetValue();
