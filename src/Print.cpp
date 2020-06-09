@@ -150,7 +150,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             }
         }
     }
-    AssertCrash(total > 0);
+    CrashIf(total <= 0);
     if (0 == total) {
         return false;
     }
@@ -620,7 +620,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         PRINTPAGERANGE pr = {1, (DWORD)dm->PageCount()};
         ranges.Append(pr);
     } else {
-        AssertCrash(pd.nPageRanges > 0);
+        CrashIf(pd.nPageRanges <= 0);
         for (DWORD i = 0; i < pd.nPageRanges; i++) {
             ranges.Append(pd.lpPageRanges[i]);
         }

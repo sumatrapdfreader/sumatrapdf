@@ -314,7 +314,7 @@ static void FindEndTask(WindowInfo* win, FindThreadData* ftd, TextSel* textSel, 
 
 static DWORD WINAPI FindThread(LPVOID data) {
     FindThreadData* ftd = (FindThreadData*)data;
-    AssertCrash(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed());
+    CrashIf(!(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed()));
     WindowInfo* win = ftd->win;
     DisplayModel* dm = win->AsFixed();
 

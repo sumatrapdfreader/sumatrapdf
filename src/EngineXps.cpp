@@ -360,10 +360,11 @@ EngineBase* EngineXps::Clone() {
 }
 
 bool EngineXps::Load(const WCHAR* fileName) {
-    AssertCrash(!FileName() && !_doc && !_docStream && ctx);
+    CrashIf(!(!FileName() && !_doc && !_docStream && ctx));
     SetFileName(fileName);
-    if (!ctx)
+    if (!ctx) {
         return false;
+    }
 
     if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
@@ -384,9 +385,10 @@ bool EngineXps::Load(const WCHAR* fileName) {
 }
 
 bool EngineXps::Load(IStream* stream) {
-    AssertCrash(!_doc && !_docStream && ctx);
-    if (!ctx)
+    CrashIf(!(!_doc && !_docStream && ctx));
+    if (!ctx) {
         return false;
+    }
 
     fz_stream* stm = nullptr;
     fz_try(ctx) {

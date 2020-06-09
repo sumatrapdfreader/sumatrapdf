@@ -45,7 +45,7 @@ struct PdfsyncPoint {
 class Pdfsync : public Synchronizer {
   public:
     Pdfsync(const WCHAR* syncfilename, EngineBase* engine) : Synchronizer(syncfilename), engine(engine) {
-        AssertCrash(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
+        CrashIf(!str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
     }
 
     int DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) override;
@@ -68,7 +68,7 @@ class SyncTex : public Synchronizer {
   public:
     SyncTex(const WCHAR* syncfilename, EngineBase* engine)
         : Synchronizer(syncfilename), engine(engine), scanner(nullptr) {
-        AssertCrash(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
+        CrashIf(!str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
     }
     virtual ~SyncTex() {
         synctex_scanner_free(scanner);
@@ -370,9 +370,10 @@ int Pdfsync::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* li
     cmp.record = selected_record;
     PdfsyncLine* found =
         (PdfsyncLine*)bsearch(&cmp, lines.LendData(), lines.size(), sizeof(PdfsyncLine), cmpLineRecords);
-    AssertCrash(found);
-    if (!found)
+    CrashIf(!found);
+    if (!found) {
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
+    }
 
     filename.SetCopy(srcfiles.at(found->file));
     *line = found->line;
@@ -545,19 +546,22 @@ TryAgainAnsi:
 
 int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) {
     if (IsIndexDiscarded()) {
-        if (RebuildIndex() != PDFSYNCERR_SUCCESS)
+        if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+        }
     }
-    AssertCrash(this->scanner);
+    CrashIf(!this->scanner);
 
     AutoFreeWstr srcfilepath;
     // convert the source file to an absolute path
-    if (PathIsRelative(srcfilename))
+    if (PathIsRelative(srcfilename)) {
         srcfilepath.Set(PrependDir(srcfilename));
-    else
+    } else {
         srcfilepath.SetCopy(srcfilename);
-    if (!srcfilepath)
+    }
+    if (!srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
+    }
 
     bool isUtf8 = true;
     const char* mb_srcfilepath = strconv::WstrToUtf8(srcfilepath).data();

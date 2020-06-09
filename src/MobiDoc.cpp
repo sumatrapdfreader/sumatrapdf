@@ -317,10 +317,11 @@ bool HuffDicDecompressor::Decompress(uint8_t* src, size_t srcSize, str::Str& dst
 bool HuffDicDecompressor::SetHuffData(uint8_t* huffData, size_t huffDataLen) {
     // for now catch cases where we don't have both big endian and little endian
     // versions of the data
-    AssertCrash(kHuffRecordLen == huffDataLen);
+    CrashIf(kHuffRecordLen != huffDataLen);
     // but conservatively assume we only need big endian version
-    if (huffDataLen < kHuffRecordMinLen)
+    if (huffDataLen < kHuffRecordMinLen) {
         return false;
+    }
 
     ByteOrderDecoder d(huffData, huffDataLen, ByteOrderDecoder::BigEndian);
     HuffHeader huffHdr;
@@ -332,16 +333,20 @@ bool HuffDicDecompressor::SetHuffData(uint8_t* huffData, size_t huffDataLen) {
     huffHdr.baseTableLEOffset = d.UInt32();
     CrashIf(d.Offset() != kHuffHeaderLen);
 
-    if (!str::EqN(huffHdr.id, "HUFF", 4))
+    if (!str::EqN(huffHdr.id, "HUFF", 4)) {
         return false;
+    }
 
     CrashIf(huffHdr.hdrLen != kHuffHeaderLen);
-    if (huffHdr.hdrLen != kHuffHeaderLen)
+    if (huffHdr.hdrLen != kHuffHeaderLen) {
         return false;
-    if (huffHdr.cacheOffset != kHuffHeaderLen)
+    }
+    if (huffHdr.cacheOffset != kHuffHeaderLen) {
         return false;
-    if (huffHdr.baseTableOffset != huffHdr.cacheOffset + kCacheDataLen)
+    }
+    if (huffHdr.baseTableOffset != huffHdr.cacheOffset + kCacheDataLen) {
         return false;
+    }
     // we conservatively use the big-endian version of the data,
     for (int i = 0; i < kCacheItemCount; i++) {
         cacheTable[i] = d.UInt32();
