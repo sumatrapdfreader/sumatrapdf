@@ -30,7 +30,7 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (EditCtrl*)user;
     CrashIf(ev->msg != WM_COMMAND);
 
-    auto code = HIWORD(ev->wparam);
+    auto code = HIWORD(ev->wp);
     if (EN_CHANGE == code && w->onTextChanged) {
         EditTextChangedEvent a;
         CopyWndEvent cp(&a, ev);
@@ -46,12 +46,12 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
 static void Handle_WM_CTLCOLOREDIT(void* user, WndEvent* ev) {
     auto w = (EditCtrl*)user;
     CrashIf(ev->msg != WM_CTLCOLOREDIT);
-    HWND hwndCtrl = (HWND)ev->lparam;
+    HWND hwndCtrl = (HWND)ev->lp;
     CrashIf(hwndCtrl != w->hwnd);
     if (w->bgBrush == nullptr) {
         return;
     }
-    HDC hdc = (HDC)ev->wparam;
+    HDC hdc = (HDC)ev->wp;
     // SetBkColor(hdc, w->bgCol);
     SetBkMode(hdc, TRANSPARENT);
     if (w->textColor != ColorUnset) {

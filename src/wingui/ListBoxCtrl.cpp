@@ -69,7 +69,7 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (ListBoxCtrl*)user;
     UINT msg = ev->msg;
     CrashIf(msg != WM_COMMAND);
-    WPARAM wp = ev->wparam;
+    WPARAM wp = ev->wp;
     auto code = HIWORD(wp);
     if (code == LBN_SELCHANGE && w->onSelectionChanged) {
         DispatchSelectionChanged(w, ev);

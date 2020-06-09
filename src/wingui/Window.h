@@ -9,8 +9,8 @@ struct WndEvent {
     // args sent to WndProc
     HWND hwnd = nullptr;
     UINT msg = 0;
-    WPARAM wparam = 0;
-    LPARAM lparam = 0;
+    WPARAM wp = 0;
+    LPARAM lp = 0;
 
     // indicate if we handled the message and the result (if handled)
     bool didHandle = false;
@@ -30,16 +30,16 @@ bool HandleRegisteredMessages(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRESULT
         n.w = w;       \
         n.hwnd = hwnd; \
         n.msg = msg;   \
-        n.wparam = wp; \
-        n.lparam = lp; \
+        n.wp = wp;     \
+        n.lp = lp;     \
     }
 
 #define SetWndEventSimple(n) \
     {                        \
         n.hwnd = hwnd;       \
         n.msg = msg;         \
-        n.wparam = wp;       \
-        n.lparam = lp;       \
+        n.wp = wp;           \
+        n.lp = lp;           \
     }
 
 struct CopyWndEvent {

@@ -199,8 +199,8 @@ CopyWndEvent::CopyWndEvent(WndEvent* dst, WndEvent* src) {
     this->src = src;
     dst->hwnd = src->hwnd;
     dst->msg = src->msg;
-    dst->lparam = src->lparam;
-    dst->wparam = src->wparam;
+    dst->lp = src->lp;
+    dst->wp = src->wp;
     dst->w = src->w;
 }
 
@@ -552,8 +552,8 @@ void Handle_WM_CONTEXTMENU(WindowBase* w, WndEvent* ev) {
     ContextMenuEvent cmev;
     CopyWndEvent cpev(&cmev, ev);
     cmev.w = w;
-    cmev.mouseGlobal.x = GET_X_LPARAM(ev->lparam);
-    cmev.mouseGlobal.y = GET_Y_LPARAM(ev->lparam);
+    cmev.mouseGlobal.x = GET_X_LPARAM(ev->lp);
+    cmev.mouseGlobal.y = GET_Y_LPARAM(ev->lp);
     POINT pt{cmev.mouseGlobal.x, cmev.mouseGlobal.y};
     if (pt.x != -1) {
         MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);

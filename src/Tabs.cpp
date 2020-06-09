@@ -808,8 +808,8 @@ void TabsOnCloseWindow(WindowInfo* win) {
 
 // On tab selection, we save the data for the tab which is losing selection and
 // load the data of the selected tab into the WindowInfo.
-LRESULT TabsOnNotify(WindowInfo* win, LPARAM lparam, int tab1, int tab2) {
-    LPNMHDR data = (LPNMHDR)lparam;
+LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
+    LPNMHDR data = (LPNMHDR)lp;
     int current;
 
     switch (data->code) {

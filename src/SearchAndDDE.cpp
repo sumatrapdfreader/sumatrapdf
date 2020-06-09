@@ -556,12 +556,12 @@ void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, UINT line, 
 
 // DDE commands handling
 
-LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam) {
+LRESULT OnDDEInitiate(HWND hwnd, WPARAM wp, LPARAM lp) {
     ATOM aServer = GlobalAddAtom(PDFSYNC_DDE_SERVICE);
     ATOM aTopic = GlobalAddAtom(PDFSYNC_DDE_TOPIC);
 
-    if (LOWORD(lparam) == aServer && HIWORD(lparam) == aTopic) {
-        SendMessage((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
+    if (LOWORD(lp) == aServer && HIWORD(lp) == aTopic) {
+        SendMessage((HWND)wp, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
     } else {
         GlobalDeleteAtom(aServer);
         GlobalDeleteAtom(aTopic);
@@ -860,9 +860,9 @@ static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
     }
 }
 
-LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam) {
+LRESULT OnDDExecute(HWND hwnd, WPARAM wp, LPARAM lp) {
     UINT_PTR lo = 0, hi = 0;
-    if (!UnpackDDElParam(WM_DDE_EXECUTE, lparam, &lo, &hi)) {
+    if (!UnpackDDElParam(WM_DDE_EXECUTE, lp, &lo, &hi)) {
         return 0;
     }
 
@@ -873,7 +873,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     }
 
     AutoFreeWstr cmd;
-    if (IsWindowUnicode((HWND)wparam)) {
+    if (IsWindowUnicode((HWND)wp)) {
         cmd = str::Dup((WCHAR*)command);
     } else {
         cmd = strconv::FromAnsi((const char*)command);
@@ -881,22 +881,22 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     HandleDdeCmds(hwnd, cmd, ack);
     GlobalUnlock((HGLOBAL)hi);
 
-    lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, *(WORD*)&ack, hi);
-    PostMessage((HWND)wparam, WM_DDE_ACK, (WPARAM)hwnd, lparam);
+    lp = ReuseDDElParam(lp, WM_DDE_EXECUTE, WM_DDE_ACK, *(WORD*)&ack, hi);
+    PostMessage((HWND)wp, WM_DDE_ACK, (WPARAM)hwnd, lp);
     return 0;
 }
 
-LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam) {
-    UNUSED(lparam);
+LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, LPARAM lp) {
+    UNUSED(lp);
     // Respond with another WM_DDE_TERMINATE message
-    PostMessage((HWND)wparam, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
+    PostMessage((HWND)wp, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
     return 0;
 }
 
-LRESULT OnCopyData(HWND hwnd, WPARAM wparam, LPARAM lparam) {
+LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
     UNUSED(hwnd);
-    COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lparam;
-    if (!cds || cds->dwData != 0x44646557 /* DdeW */ || wparam) {
+    COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
+    if (!cds || cds->dwData != 0x44646557 /* DdeW */ || wp) {
         return FALSE;
     }
 

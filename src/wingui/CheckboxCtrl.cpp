@@ -36,7 +36,7 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (CheckboxCtrl*)user;
     UINT msg = ev->msg;
     CrashIf(msg != WM_COMMAND);
-    WPARAM wp = ev->wparam;
+    WPARAM wp = ev->wp;
     auto code = HIWORD(wp);
     if (code == BN_CLICKED) {
         if (w->onCheckStateChanged) {

@@ -39,8 +39,8 @@ static void Handle_WM_VHSCROLL(void* user, WndEvent* ev) {
 
     CrashIf(GetParent(w->hwnd) != (HWND)ev->hwnd);
 
-    int pos = (int)HIWORD(ev->wparam);
-    int code = (int)LOWORD(ev->wparam);
+    int pos = (int)HIWORD(ev->wp);
+    int code = (int)LOWORD(ev->wp);
     switch (code) {
         case TB_THUMBPOSITION:
         case TB_THUMBTRACK:

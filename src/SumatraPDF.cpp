@@ -3594,7 +3594,7 @@ static bool ChmForwardKey(WPARAM key) {
     return false;
 }
 
-bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield) {
+bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         // black/white screen is disabled on any unmodified key press in FrameOnChar
         return true;
@@ -3658,7 +3658,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield
 
     if (isChm) {
         if (ChmForwardKey(key)) {
-            win->AsChm()->PassUIMsg(WM_KEYDOWN, key, lparam);
+            win->AsChm()->PassUIMsg(WM_KEYDOWN, key, lp);
             return true;
         }
     }

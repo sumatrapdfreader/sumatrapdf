@@ -96,8 +96,8 @@ static void DispatchMouseDuringDrag(void* user, WndEvent* ev) {
         if (!w->isDragging) {
             return;
         }
-        int x = GET_X_LPARAM(ev->lparam);
-        int y = GET_Y_LPARAM(ev->lparam);
+        int x = GET_X_LPARAM(ev->lp);
+        int y = GET_Y_LPARAM(ev->lp);
         DragMove(w, x, y);
         ev->didHandle = true;
         return;
@@ -218,7 +218,7 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
 
     TreeCtrl* w = (TreeCtrl*)user;
     ev->w = w;
-    LPARAM lp = ev->lparam;
+    LPARAM lp = ev->lp;
 
     CrashIf(GetParent(w->hwnd) != (HWND)ev->hwnd);
 
@@ -446,10 +446,10 @@ static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
 void TreeCtrl::WndProc(WndEvent* ev) {
     HWND hwnd = ev->hwnd;
     UINT msg = ev->msg;
-    WPARAM wp = ev->wparam;
-    LPARAM lp = ev->lparam;
+    WPARAM wp = ev->wp;
+    LPARAM lp = ev->lp;
 
-    // dbgLogMsg("tree:", hwnd, msg, wp, ev->lparam);
+    // dbgLogMsg("tree:", hwnd, msg, wp, ev->lp);
 
     TreeCtrl* w = this;
     CrashIf(w->hwnd != (HWND)hwnd);

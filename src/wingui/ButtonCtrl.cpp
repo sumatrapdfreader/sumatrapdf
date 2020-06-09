@@ -26,7 +26,7 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (ButtonCtrl*)user;
     UINT msg = ev->msg;
     CrashIf(msg != WM_COMMAND);
-    WPARAM wp = ev->wparam;
+    WPARAM wp = ev->wp;
 
     ev->result = 0;
     auto code = HIWORD(wp);
