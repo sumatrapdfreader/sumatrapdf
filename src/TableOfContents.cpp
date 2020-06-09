@@ -1143,7 +1143,7 @@ void CreateToc(WindowInfo* win) {
     treeCtrl->onTreeSelectionChanged = TocTreeSelectionChanged;
     treeCtrl->onTreeKeyDown = TocTreeKeyDown;
 
-    bool ok = treeCtrl->Create(L"TOC");
+    bool ok = treeCtrl->Create();
     CrashIf(!ok);
     win->tocTreeCtrl = treeCtrl;
     SubclassToc(win);

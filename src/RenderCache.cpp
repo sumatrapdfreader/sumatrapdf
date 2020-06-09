@@ -30,8 +30,7 @@
 // define to view the tile boundaries
 #undef SHOW_TILE_LAYOUT
 
-RenderCache::RenderCache() {
-    maxTileSize = {GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)};
+RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)}) {
     isRemoteSession = GetSystemMetrics(SM_REMOTESESSION);
     textColor = WIN_COL_BLACK;
     backgroundColor = WIN_COL_WHITE;

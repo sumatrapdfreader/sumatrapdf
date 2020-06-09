@@ -335,6 +335,7 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
         CopyWndEvent cp(&a, ev);
         a.treeCtrl = w;
         a.treeItem = w->GetTreeItemByHandle(nmtv->itemNew.hItem);
+        a.isExpanded = isExpanded;
         w->onTreeItemExpanded(&a);
         return;
     }
@@ -497,13 +498,9 @@ TreeCtrl::TreeCtrl(HWND p) : WindowBase(p) {
     initialSize = {48, 120};
 }
 
-bool TreeCtrl::Create(const WCHAR* title) {
+bool TreeCtrl::Create() {
     if (!supportDragDrop) {
         dwStyle |= TVS_DISABLEDRAGDROP;
-    }
-
-    if (!title) {
-        title = L"";
     }
 
     bool ok = WindowBase::Create();

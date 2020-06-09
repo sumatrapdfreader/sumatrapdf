@@ -818,7 +818,7 @@ void CreateFavorites(WindowInfo* win) {
     treeCtrl->onTreeSelectionChanged = FavTreeSelectionChanged;
     treeCtrl->onTreeKeyDown = TocTreeKeyDown;
 
-    bool ok = treeCtrl->Create(L"Fav");
+    bool ok = treeCtrl->Create();
     CrashIf(!ok);
 
     win->favTreeCtrl = treeCtrl;

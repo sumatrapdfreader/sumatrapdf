@@ -437,7 +437,6 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         BeginPaint(hwnd, &ps);
         auto bgBrush = w->backgroundColorBrush;
         if (bgBrush != nullptr) {
-            RECT rc = GetClientRect(hwnd);
             FillRect(ps.hdc, &ps.rcPaint, bgBrush);
         }
         EndPaint(hwnd, &ps);

@@ -121,12 +121,6 @@ void LayoutTabs(TabsCtrl* ctrl) {
     int padRight = PADDING_RIGHT;
     DpiScale(priv->hwnd, padLeft, padRight);
 
-    // position y of title text and 'x' circle
-    long titleY = 0;
-    if (dy > priv->fontDy) {
-        titleY = (dy - priv->fontDy) / 2;
-    }
-
     long closeButtonDy = (priv->fontMetrics.tmAscent / 2) + DpiScale(priv->hwnd, 1);
     long closeButtonY = (dy - closeButtonDy) / 2;
     if (closeButtonY < 0) {
@@ -139,7 +133,8 @@ void LayoutTabs(TabsCtrl* ctrl) {
         x += padLeft;
 
         auto sz = ti->titleSize;
-        titleY = 0;
+        // position y of title text and 'x' circle
+        long titleY = 0;
         if (dy > sz.cy) {
             titleY = (dy - sz.cy) / 2;
         }

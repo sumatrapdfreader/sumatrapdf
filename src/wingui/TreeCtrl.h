@@ -186,7 +186,7 @@ struct TreeCtrl : WindowBase {
     TreeItem* GetItemAt(int x, int y);
     bool IsExpanded(TreeItem*);
 
-    bool Create(const WCHAR* title);
+    bool Create() override;
 
     void SetBackgroundColor(COLORREF);
     void SetTextColor(COLORREF);

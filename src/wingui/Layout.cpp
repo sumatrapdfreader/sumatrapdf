@@ -285,10 +285,9 @@ bool IsPadding(ILayout* l) {
     return IsLayoutOfKind(l, paddingKind);
 }
 
-Padding::Padding(ILayout* childIn, const Insets& insetsIn) {
+Padding::Padding(ILayout* childIn, const Insets& insetsIn) : insets(insetsIn) {
     kind = paddingKind;
     child = childIn;
-    insets = insetsIn;
 }
 
 Padding::~Padding() {

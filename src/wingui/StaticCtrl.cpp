@@ -25,9 +25,10 @@ StaticCtrl::~StaticCtrl() {
 }
 
 static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
-    auto w = (StaticCtrl*)user;
-    UINT msg = ev->msg;
-    CrashIf(msg != WM_COMMAND);
+    UNUSED(user);
+    //auto w = (StaticCtrl*)user;
+    CrashIf(ev->msg != WM_COMMAND);
+    // TODO: implement me
 }
 
 // static

@@ -31,14 +31,13 @@ std::string_view ListBoxModelStrings::Item(int i) {
     return strings.at(i);
 }
 
-ListBoxCtrl::ListBoxCtrl(HWND p) : WindowBase(p) {
+ListBoxCtrl::ListBoxCtrl(HWND p) : WindowBase(p), idealSize({DpiScale(p, 120), DpiScale(p, 32)}) {
     kind = kindListBox;
     dwExStyle = 0;
     dwStyle = WS_CHILD | WS_BORDER | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
     dwStyle |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
     winClass = L"LISTBOX";
     ctrlID = 0;
-    idealSize = {DpiScale(p, 120), DpiScale(p, 32)};
 }
 
 ListBoxCtrl::~ListBoxCtrl() {

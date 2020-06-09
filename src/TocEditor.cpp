@@ -833,7 +833,7 @@ static void CreateMainLayout(TocEditorWindow* win) {
     tree->onTreeItemDragStartEnd = std::bind(&TocEditorWindow::TreeItemDragStartEnd, win, _1);
     tree->onContextMenu = std::bind(&TocEditorWindow::TreeContextMenu, win, _1);
 
-    bool ok = tree->Create(L"tree");
+    bool ok = tree->Create();
     CrashIf(!ok);
 
     win->labelInfo = new StaticCtrl(hwnd);
