@@ -8,9 +8,9 @@
 #include "utils/UtAssert.h"
 
 struct JsonValue {
-    const char* path;
-    json::DataType type;
-    const char* value;
+    const char* path = nullptr;
+    json::DataType type = json::Type_String;
+    const char* value = nullptr;
 
     JsonValue() : path(nullptr), value(nullptr) {
     }

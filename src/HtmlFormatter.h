@@ -126,9 +126,9 @@ struct StyleRule {
 };
 
 struct DrawStyle {
-    mui::CachedFont* font;
-    AlignAttr align;
-    bool dirRtl;
+    mui::CachedFont* font = nullptr;
+    AlignAttr align = Align_NotFound;
+    bool dirRtl = false;
 };
 
 class HtmlPage {
@@ -257,60 +257,60 @@ class HtmlFormatter {
     void DumpLineDebugInfo();
 
     // constant during layout process
-    float pageDx;
-    float pageDy;
-    float lineSpacing;
-    float spaceDx;
-    Graphics* gfx; // for measuring text
+    float pageDx = 0;
+    float pageDy = 0;
+    float lineSpacing = 0;
+    float spaceDx = 0;
+    Graphics* gfx = nullptr; // for measuring text
     AutoFreeWstr defaultFontName;
-    float defaultFontSize;
-    Allocator* textAllocator;
-    mui::ITextRender* textMeasure;
+    float defaultFontSize = 0;
+    Allocator* textAllocator = nullptr;
+    mui::ITextRender* textMeasure = nullptr;
 
     // style stack of the current line
     Vec<DrawStyle> styleStack;
     // style for the start of the next page
     DrawStyle nextPageStyle;
     // current position in a page
-    float currX, currY;
+    float currX = 0, currY = 0;
     // remembered when we start a new line, used when we actually
     // layout a line
-    float currLineTopPadding;
+    float currLineTopPadding = 0;
     // number of nested lists for indenting whole paragraphs
-    int listDepth;
+    int listDepth = 0;
     // set if newlines are not to be ignored
-    bool preFormatted;
+    bool preFormatted = false;
     // set if the reading direction is RTL
-    bool dirRtl;
+    bool dirRtl = false;
     // list of currently opened tags for auto-closing when needed
     Vec<HtmlTag> tagNesting;
-    bool keepTagNesting;
+    bool keepTagNesting = false;
     // set from CSS and to be checked by the individual tag handlers
     Vec<StyleRule> styleRules;
 
     // isntructions for the current line
     Vec<DrawInstr> currLineInstr;
     // reparse point of the first instructions in a current line
-    ptrdiff_t currLineReparseIdx;
-    HtmlPage* currPage;
+    ptrdiff_t currLineReparseIdx = 0;
+    HtmlPage* currPage = nullptr;
 
     // for tracking whether we're currently inside <a> tag
-    size_t currLinkIdx;
+    size_t currLinkIdx = 0;
 
     // reparse point for the current HtmlToken
-    ptrdiff_t currReparseIdx;
+    ptrdiff_t currReparseIdx = 0;
 
-    HtmlPullParser* htmlParser;
+    HtmlPullParser* htmlParser = nullptr;
 
     // list of pages that we've created but haven't yet sent to client
     Vec<HtmlPage*> pagesToSend;
 
-    bool finishedParsing;
+    bool finishedParsing = false;
     // number of pages generated so far, approximate. Only used
     // for detection of cover image duplicates in mobi formatting
-    int pageCount;
+    int pageCount = 0;
 
-    WCHAR buf[512];
+    WCHAR buf[512]{};
 
   public:
     explicit HtmlFormatter(HtmlFormatterArgs* args);

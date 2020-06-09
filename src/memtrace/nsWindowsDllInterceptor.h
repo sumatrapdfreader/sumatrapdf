@@ -173,10 +173,10 @@ protected:
   const static int kPageSize = 4096;
   const static int kHookSize = 128;
 
-  HMODULE mModule;
-  byteptr_t mHookPage;
-  int mMaxHooks;
-  int mCurHooks;
+  HMODULE mModule = nullptr;
+  byteptr_t mHookPage = 0;
+  int mMaxHooks = 0;
+  int mCurHooks = 0;
 
   byteptr_t CreateTrampoline(void *origFunction,
            intptr_t dest)

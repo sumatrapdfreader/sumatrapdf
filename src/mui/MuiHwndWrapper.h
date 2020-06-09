@@ -9,19 +9,19 @@ class EventMgr;
 // for this HWND. In your message loop you must call
 // HwndWrapper::evtMgr->OnMessage()
 class HwndWrapper : public Control {
-    bool layoutRequested;
-    bool markedForRepaint;
-    bool firstLayout;
+    bool layoutRequested = false;
+    bool markedForRepaint = false;
+    bool firstLayout = true;
 
   public:
-    Painter* painter;
-    EventMgr* evtMgr;
+    Painter* painter = nullptr;
+    EventMgr* evtMgr = nullptr;
     // size the window to fit the size of the content on first layout
-    bool sizeToFit;
+    bool sizeToFit = false;
     // center the content within the window. Incompatible with sizeToFit
-    bool centerContent;
+    bool centerContent = false;
 
-    FrameRateWnd* frameRateWnd;
+    FrameRateWnd* frameRateWnd = nullptr;
 
     HwndWrapper(HWND hwnd = nullptr);
     virtual ~HwndWrapper();

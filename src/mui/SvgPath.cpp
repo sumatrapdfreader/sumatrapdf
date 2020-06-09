@@ -107,14 +107,16 @@ enum class PathInstr {
 static char* instructions = "MmLlHhVvCcSsQqTtAaZz";
 
 struct SvgPathInstr {
-    SvgPathInstr(PathInstr type) : type(type) {
+    SvgPathInstr(PathInstr type) {
+        this->type = type;
     }
 
     PathInstr type;
     // the meaning of values depends on InstrType. We could be more safe
     // by giving them symbolic names but this gives us simpler parsing
-    float v[6];
-    bool largeArc, sweep;
+    float v[6]{};
+    bool largeArc = false;
+    bool sweep = false;
 };
 
 static PathInstr GetInstructionType(char c) {

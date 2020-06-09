@@ -160,19 +160,7 @@ void StyleRule::Merge(StyleRule& source) {
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     : pageDx(args->pageDx),
       pageDy(args->pageDy),
-      textAllocator(args->textAllocator),
-      currLineReparseIdx(0),
-      currX(0),
-      currY(0),
-      currLineTopPadding(0),
-      currLinkIdx(0),
-      listDepth(0),
-      preFormatted(false),
-      dirRtl(false),
-      currPage(nullptr),
-      finishedParsing(false),
-      pageCount(0),
-      keepTagNesting(false) {
+      textAllocator(args->textAllocator) {
     currReparseIdx = args->reparseIdx;
     htmlParser = new HtmlPullParser(args->htmlStr.data(), args->htmlStr.size());
     htmlParser->SetCurrPosOff(currReparseIdx);

@@ -23,13 +23,13 @@ class IatHook {
     bool unHook();
 
   private:
-    std::string_view m_dllName;
-    std::string_view m_apiName;
-    std::wstring m_moduleName;
+    std::string_view m_dllName{};
+    std::string_view m_apiName{};
+    std::wstring m_moduleName{};
 
-    uint64_t m_fnCallback;
-    uint64_t m_origFunc;
-    uint64_t* m_userOrigVar;
+    uint64_t m_fnCallback = 0;
+    uint64_t m_origFunc = 0;
+    uint64_t* m_userOrigVar = 0;
 
-    bool m_hooked;
+    bool m_hooked = false;
 };

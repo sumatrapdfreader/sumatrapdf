@@ -12,16 +12,10 @@
 
 namespace mui {
 
-HwndWrapper::HwndWrapper(HWND hwnd)
-    : painter(nullptr),
-      evtMgr(nullptr),
-      layoutRequested(false),
-      firstLayout(true),
-      sizeToFit(false),
-      centerContent(false),
-      markedForRepaint(false) {
-    if (hwnd)
+HwndWrapper::HwndWrapper(HWND hwnd) {
+    if (hwnd) {
         SetHwnd(hwnd);
+    }
 }
 
 HwndWrapper::~HwndWrapper() {
