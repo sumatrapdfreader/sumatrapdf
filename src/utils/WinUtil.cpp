@@ -2137,3 +2137,8 @@ void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
     Rect r = ShiftRectToWorkArea(rHwnd, true);
     SetWindowPos(hwnd, 0, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
+
+void TbSetButtonInfo(HWND hwnd, WPARAM buttonId, TBBUTTONINFO* info) {
+    auto res = SendMessageW(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)info);
+    CrashIf(0 == res);
+}

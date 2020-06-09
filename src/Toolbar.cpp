@@ -127,30 +127,23 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
 }
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
-    TBBUTTON tbButton = {0};
-    tbButton.idCommand = gToolbarButtons[i].cmdId;
+    TBBUTTON info = {0};
+    info.idCommand = gToolbarButtons[i].cmdId;
     if (TbIsSeparator(gToolbarButtons[i])) {
-        tbButton.fsStyle = TBSTYLE_SEP;
+        info.fsStyle = TBSTYLE_SEP;
     } else {
-        tbButton.iBitmap = gToolbarButtons[i].bmpIndex;
-        tbButton.fsState = TBSTATE_ENABLED;
-        tbButton.fsStyle = TBSTYLE_BUTTON;
-        tbButton.iString = (INT_PTR)trans::GetTranslation(gToolbarButtons[i].toolTip);
+        info.iBitmap = gToolbarButtons[i].bmpIndex;
+        info.fsState = TBSTATE_ENABLED;
+        info.fsStyle = TBSTYLE_BUTTON;
+        info.iString = (INT_PTR)trans::GetTranslation(gToolbarButtons[i].toolTip);
     }
-    return tbButton;
-}
-
-static void BuildTBBUTTONINFO(TBBUTTONINFO& info, const WCHAR* txt) {
-    info.cbSize = sizeof(TBBUTTONINFO);
-    info.dwMask = TBIF_TEXT | TBIF_BYINDEX;
-    info.pszText = (WCHAR*)txt;
+    return info;
 }
 
 // Set toolbar button tooltips taking current language into account.
 void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win) {
-    TBBUTTONINFO buttonInfo;
+    TBBUTTONINFO binfo{};
     HWND hwnd = win->hwndToolbar;
-    LRESULT res;
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         WPARAM buttonId = (WPARAM)i;
         const char* txt = gToolbarButtons[i].toolTip;
@@ -158,9 +151,10 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo* win) {
             continue;
         }
         const WCHAR* translation = trans::GetTranslation(txt);
-        BuildTBBUTTONINFO(buttonInfo, translation);
-        res = SendMessage(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)&buttonInfo);
-        CrashIf(0 == res);
+        binfo.cbSize = sizeof(TBBUTTONINFO);
+        binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
+        binfo.pszText = (WCHAR*)translation;
+        TbSetButtonInfo(hwnd, buttonId, &binfo);
     }
 }
 
@@ -313,8 +307,15 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 
     LRESULT ret = CallWindowProc(DefWndProcFindBox, hwnd, msg, wp, lp);
 
-    if (WM_CHAR == msg || WM_PASTE == msg || WM_CUT == msg || WM_CLEAR == msg || WM_UNDO == msg || WM_KEYUP == msg) {
-        ToolbarUpdateStateForWindow(win, false);
+    switch (msg) {
+        case WM_CHAR:
+        case WM_PASTE:
+        case WM_CUT:
+        case WM_CLEAR:
+        case WM_UNDO:
+        case WM_KEYUP:
+            ToolbarUpdateStateForWindow(win, false);
+            break;
     }
 
     return ret;
@@ -361,7 +362,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
     bi.cx = (WORD)(size.dx + findWndRect.dx + 12);
-    SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_FIND_FIRST, (LPARAM)&bi);
+    TbSetButtonInfo(win->hwndToolbar, IDM_FIND_FIRST, &bi);
 }
 
 void UpdateToolbarState(WindowInfo* win) {
@@ -396,17 +397,16 @@ void UpdateToolbarState(WindowInfo* win) {
 }
 
 #define TOOLBAR_MIN_ICON_SIZE 16
-#define FIND_BOX_WIDTH 160
 
 static void CreateFindBox(WindowInfo* win) {
-    int boxWidth = DpiScale(win->hwndFrame, FIND_BOX_WIDTH);
+    int findBoxDx = DpiScale(win->hwndFrame, 160);
     int minIconSize = DpiScale(win->hwndFrame, TOOLBAR_MIN_ICON_SIZE);
-    HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", WS_VISIBLE | WS_CHILD, 0, 1, boxWidth,
+    HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", WS_VISIBLE | WS_CHILD, 0, 1, findBoxDx,
                                  minIconSize + 4, win->hwndToolbar, (HMENU)0, GetModuleHandle(nullptr), nullptr);
 
-    HWND find = CreateWindowEx(0, WC_EDIT, L"", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL, 0, 1,
-                               boxWidth - 2 * GetSystemMetrics(SM_CXEDGE), minIconSize + 2, win->hwndToolbar, (HMENU)0,
-                               GetModuleHandle(nullptr), nullptr);
+    int dx = findBoxDx - 2 * GetSystemMetrics(SM_CXEDGE);
+    HWND find = CreateWindowEx(0, WC_EDIT, L"", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL, 0, 1, dx, minIconSize + 2,
+                               win->hwndToolbar, (HMENU)0, GetModuleHandle(nullptr), nullptr);
 
     HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD, 0, 1, 0, 0, win->hwndToolbar, (HMENU)0,
                                 GetModuleHandle(nullptr), nullptr);
@@ -489,9 +489,9 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     Rect pageWndRect = WindowRect(win->hwndPageBg);
 
     RECT r{};
-    SendMessage(win->hwndToolbar, TB_GETRECT, IDM_PRINT, (LPARAM)&r);
-    int pos_x = r.right + 10;
-    int pos_y = (r.bottom - pageWndRect.dy) / 2;
+    SendMessageW(win->hwndToolbar, TB_GETRECT, IDM_PRINT, (LPARAM)&r);
+    int currX = r.right + DpiScale(win->hwndFrame, 10);
+    int currY = (r.bottom - pageWndRect.dy) / 2;
 
     WCHAR* buf;
     Size size2;
@@ -518,22 +518,28 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     free(buf);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
-    MoveWindow(win->hwndPageText, pos_x, (pageWndRect.dy - size.dy + 1) / 2 + pos_y, size.dx, size.dy, FALSE);
+    int x = currX;
+    int y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
+    MoveWindow(win->hwndPageText, currX, y, size.dx, size.dy, FALSE);
     if (IsUIRightToLeft()) {
-        pos_x += size2.dx - DpiScale(win->hwndFrame, TB_TEXT_PADDING_RIGHT);
+        currX += size2.dx - DpiScale(win->hwndFrame, TB_TEXT_PADDING_RIGHT);
     }
-    MoveWindow(win->hwndPageBg, pos_x + size.dx, pos_y, pageWndRect.dx, pageWndRect.dy, FALSE);
-    MoveWindow(win->hwndPageBox, pos_x + size.dx + padding, (pageWndRect.dy - size.dy + 1) / 2 + pos_y,
-               pageWndRect.dx - 2 * padding, size.dy, FALSE);
+    x = currX + size.dx;
+    y = currY;
+    MoveWindow(win->hwndPageBg, x, y, pageWndRect.dx, pageWndRect.dy, FALSE);
+    x = currX + size.dx + padding;
+    y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
+    int dx = pageWndRect.dx - 2 * padding;
+    MoveWindow(win->hwndPageBox, x, y, dx, size.dy, FALSE);
     // in right-to-left layout, the total comes "before" the current page number
     if (IsUIRightToLeft()) {
-        pos_x -= size2.dx;
-        int x = pos_x + size.dx;
-        int y = (pageWndRect.dy - size.dy + 1) / 2 + pos_y;
+        currX -= size2.dx;
+        x = currX + size.dx;
+        y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
         MoveWindow(win->hwndPageTotal, x, y, size2.dx, size.dy, FALSE);
     } else {
-        int x = pos_x + size.dx + pageWndRect.dx;
-        int y = (pageWndRect.dy - size.dy + 1) / 2 + pos_y;
+        x = currX + size.dx + pageWndRect.dx;
+        y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
         MoveWindow(win->hwndPageTotal, x, y, size2.dx, size.dy, FALSE);
     }
 
@@ -544,7 +550,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     size2.dx += size.dx + pageWndRect.dx + 12;
     if (bi.cx != size2.dx || !updateOnly) {
         bi.cx = (WORD)size2.dx;
-        SendMessage(win->hwndToolbar, TB_SETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
+        TbSetButtonInfo(win->hwndToolbar, IDM_GOTO_PAGE, &bi);
     } else {
         Rect rc = ClientRect(win->hwndPageTotal);
         rc = MapRectToWindow(rc, win->hwndPageTotal, win->hwndToolbar);
@@ -589,9 +595,6 @@ static void CreatePageBox(WindowInfo* win) {
 
     UpdateToolbarPageText(win, -1);
 }
-
-#define WS_REBAR \
-    (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
 // Sometimes scaled icons show up with purple background. Here's what I was able to piece together.
 // When icons not scaled, we don't ask for DIB section (the original behavior of the code)
@@ -719,10 +722,8 @@ void CreateToolbar(WindowInfo* win) {
     LRESULT exstyle = SendMessage(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
     SendMessageW(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
-    bool ok = SendMessageW(hwndToolbar, TB_ADDBUTTONS, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
-    if (!ok) {
-        DbgOutLastError();
-    }
+    BOOL ok = SendMessageW(hwndToolbar, TB_ADDBUTTONS, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
+    CrashIf(!ok);
 
     RECT rc;
     LRESULT res = SendMessageW(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
@@ -730,18 +731,19 @@ void CreateToolbar(WindowInfo* win) {
         rc.left = rc.right = rc.top = rc.bottom = 0;
     }
 
-    DWORD dwStyle = WS_REBAR | WS_VISIBLE;
+    DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | RBS_BANDBORDERS;
+    dwStyle |= CCS_NODIVIDER | CCS_NOPARENTALIGN | WS_VISIBLE;
     win->hwndReBar = CreateWindowExW(WS_EX_TOOLWINDOW, REBARCLASSNAME, nullptr, dwStyle, 0, 0, 0, 0, hwndParent,
                                      (HMENU)IDC_REBAR, hinst, nullptr);
 
-    REBARINFO rbi;
+    REBARINFO rbi{};
     rbi.cbSize = sizeof(REBARINFO);
     rbi.fMask = 0;
     rbi.himl = (HIMAGELIST) nullptr;
     SendMessage(win->hwndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
 
-    REBARBANDINFO rbBand;
-    rbBand.cbSize = sizeof(REBARBANDINFO);
+    REBARBANDINFOW rbBand{};
+    rbBand.cbSize = sizeof(REBARBANDINFOW);
     rbBand.fMask = /*RBBIM_COLORS | RBBIM_TEXT | RBBIM_BACKGROUND | */
         RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE /*| RBBIM_SIZE*/;
     rbBand.fStyle = /*RBBS_CHILDEDGE |*/ /* RBBS_BREAK |*/ RBBS_FIXEDSIZE /*| RBBS_GRIPPERALWAYS*/;

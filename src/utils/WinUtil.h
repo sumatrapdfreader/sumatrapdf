@@ -263,3 +263,5 @@ void HwndSetFont(HWND, HFONT);
 HFONT HwndGetFont(HWND);
 Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
+
+void TbSetButtonInfo(HWND hwnd, WPARAM buttonId, TBBUTTONINFO* info);
