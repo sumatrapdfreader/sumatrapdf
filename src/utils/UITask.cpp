@@ -12,14 +12,14 @@ static HWND gTaskDispatchHwnd = nullptr;
 #define UITASK_CLASS_NAME L"UITask_Wnd_Class"
 #define WM_EXECUTE_TASK (WM_USER + 104)
 
-static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     if (WM_EXECUTE_TASK == msg) {
         auto func = (std::function<void()>*)lParam;
         (*func)();
         delete func;
         return 0;
     }
-    return DefWindowProc(hwnd, msg, wParam, lParam);
+    return DefWindowProc(hwnd, msg, wp, lParam);
 }
 
 void Initialize() {

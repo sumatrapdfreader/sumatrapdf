@@ -64,7 +64,7 @@ struct Dialog_GetPassword_Data {
     bool* remember;        /* remember the password (encrypted) or ask again? */
 };
 
-static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     Dialog_GetPassword_Data* data;
 
     //[ ACCESSKEY_GROUP Password Dialog
@@ -90,7 +90,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wPar
 
     switch (msg) {
         case WM_COMMAND:
-            switch (LOWORD(wParam)) {
+            switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     CrashIf(!data);
@@ -135,7 +135,7 @@ struct Dialog_GoToPage_Data {
     WCHAR* newPageLabel;        // page number entered by user
 };
 
-static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     HWND editPageNo;
     Dialog_GoToPage_Data* data;
 
@@ -167,7 +167,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 
     switch (msg) {
         case WM_COMMAND:
-            switch (LOWORD(wParam)) {
+            switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_GoToPage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     CrashIf(!data);
@@ -206,14 +206,14 @@ struct Dialog_Find_Data {
     WNDPROC editWndProc;
 };
 
-static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    ExtendedEditWndProc(hwnd, msg, wParam, lParam);
+static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+    ExtendedEditWndProc(hwnd, msg, wp, lParam);
 
     Dialog_Find_Data* data = (Dialog_Find_Data*)GetWindowLongPtr(GetParent(hwnd), GWLP_USERDATA);
-    return CallWindowProc(data->editWndProc, hwnd, msg, wParam, lParam);
+    return CallWindowProc(data->editWndProc, hwnd, msg, wp, lParam);
 }
 
-static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     Dialog_Find_Data* data;
 
     switch (msg) {
@@ -242,7 +242,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPA
             return FALSE;
         //] ACCESSKEY_GROUP Find Dialog
         case WM_COMMAND:
-            switch (LOWORD(wParam)) {
+            switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_Find_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     CrashIf(!data);
@@ -282,7 +282,7 @@ struct Dialog_PdfAssociate_Data {
     bool dontAskAgain;
 };
 
-static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     Dialog_PdfAssociate_Data* data;
 
     //[ ACCESSKEY_GROUP Associate Dialog
@@ -308,7 +308,7 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wPa
             data = (Dialog_PdfAssociate_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             CrashIf(!data);
             data->dontAskAgain = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DONT_ASK_ME_AGAIN));
-            switch (LOWORD(wParam)) {
+            switch (LOWORD(wp)) {
                 case IDOK:
                     EndDialog(hDlg, IDYES);
                     return TRUE;
@@ -344,7 +344,7 @@ struct Dialog_ChangeLanguage_Data {
     const char* langCode;
 };
 
-static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     Dialog_ChangeLanguage_Data* data;
     HWND langList;
 
@@ -388,8 +388,8 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         case WM_COMMAND:
             data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             CrashIf(!data);
-            if (HIWORD(wParam) == LBN_DBLCLK) {
-                CrashIf(IDC_CHANGE_LANG_LANG_LIST != LOWORD(wParam));
+            if (HIWORD(wp) == LBN_DBLCLK) {
+                CrashIf(IDC_CHANGE_LANG_LANG_LIST != LOWORD(wp));
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                 CrashIf(langList != (HWND)lParam);
                 int langIdx = (int)ListBox_GetCurSel(langList);
@@ -397,7 +397,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                 EndDialog(hDlg, IDOK);
                 return FALSE;
             }
-            switch (LOWORD(wParam)) {
+            switch (LOWORD(wp)) {
                 case IDOK: {
                     langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                     int langIdx = ListBox_GetCurSel(langList);
@@ -434,7 +434,7 @@ struct Dialog_NewVersion_Data {
     bool skipThisVersion;
 };
 
-static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     Dialog_NewVersion_Data* data;
     WCHAR* txt;
 
@@ -469,7 +469,7 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wPara
             data = (Dialog_NewVersion_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             CrashIf(!data);
             data->skipThisVersion = false;
-            switch (LOWORD(wParam)) {
+            switch (LOWORD(wp)) {
                 case IDOK:
                     if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SKIP_THIS_VERSION))
                         data->skipThisVersion = true;
@@ -584,7 +584,7 @@ struct Dialog_CustomZoom_Data {
     bool forChm;
 };
 
-static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     Dialog_CustomZoom_Data* data;
 
     switch (msg) {
@@ -607,7 +607,7 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wPara
             //] ACCESSKEY_GROUP Zoom Dialog
 
         case WM_COMMAND:
-            switch (LOWORD(wParam)) {
+            switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_CustomZoom_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     CrashIf(!data);
@@ -658,7 +658,7 @@ static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
     MoveWindow(hDlg, dlgRc.x, dlgRc.y, dlgRc.dx, dlgRc.dy - shrink, TRUE);
 }
 
-static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     GlobalPrefs* prefs;
 
     switch (msg) {
@@ -748,7 +748,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             //] ACCESSKEY_GROUP Settings Dialog
 
         case WM_COMMAND:
-            switch (LOWORD(wParam)) {
+            switch (LOWORD(wp)) {
                 case IDOK:
                     prefs = (GlobalPrefs*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     CrashIf(!prefs);
@@ -812,7 +812,7 @@ INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs) {
 #define ID_APPLY_NOW 0x3021
 #endif
 
-static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     Print_Advanced_Data* data;
 
     switch (msg) {
@@ -866,7 +866,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
             break;
 
         case WM_COMMAND:
-            switch (LOWORD(wParam)) {
+            switch (LOWORD(wp)) {
                 case IDC_PRINT_RANGE_ALL:
                 case IDC_PRINT_RANGE_EVEN:
                 case IDC_PRINT_RANGE_ODD:
@@ -905,7 +905,7 @@ struct Dialog_AddFav_Data {
     WCHAR* favName;
 };
 
-static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
     if (WM_INITDIALOG == msg) {
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lParam;
         CrashIf(!data);
@@ -927,14 +927,15 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam, L
     if (WM_COMMAND == msg) {
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
         CrashIf(!data);
-        WORD cmd = LOWORD(wParam);
+        WORD cmd = LOWORD(wp);
         if (IDOK == cmd) {
             AutoFreeWstr name(win::GetText(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT)));
             str::TrimWS(name, str::TrimOpt::Both);
-            if (!str::IsEmpty(name.Get()))
+            if (!str::IsEmpty(name.Get())) {
                 data->favName = name.StealData();
-            else
+            } else {
                 data->favName = nullptr;
+            }
             EndDialog(hDlg, IDOK);
             return TRUE;
         } else if (IDCANCEL == cmd) {

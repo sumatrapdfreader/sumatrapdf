@@ -298,17 +298,17 @@ static void CopyAboutInfoToClipboard(HWND hwnd) {
     CopyTextToClipboard(info.LendData());
 }
 
-static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     if (mainWnd) {
         bool wasHandled;
-        LRESULT res = mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
+        LRESULT res = mainWnd->evtMgr->OnMessage(msg, wp, lParam, wasHandled);
         if (wasHandled)
             return res;
     }
 
     switch (msg) {
         case WM_CHAR:
-            if (VK_ESCAPE == wParam)
+            if (VK_ESCAPE == wp)
                 DestroyWindow(hwnd);
             break;
 
@@ -317,7 +317,7 @@ static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             break;
 
         case WM_COMMAND:
-            if (IDM_COPY_SELECTION == LOWORD(wParam))
+            if (IDM_COPY_SELECTION == LOWORD(wp))
                 CopyAboutInfoToClipboard(hwnd);
             break;
 
@@ -326,7 +326,7 @@ static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             break;
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
     return 0;
 }

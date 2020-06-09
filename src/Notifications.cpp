@@ -245,14 +245,14 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     EndPaint(hwnd, &ps);
 }
 
-static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     NotificationWnd* wnd = (NotificationWnd*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (WM_ERASEBKGND == msg) {
         // do nothing, helps to avoid flicker
         return TRUE;
     }
 
-    if (WM_TIMER == msg && TIMEOUT_TIMER_ID == wParam) {
+    if (WM_TIMER == msg && TIMEOUT_TIMER_ID == wp) {
         if (wnd->wndRemovedCb)
             wnd->wndRemovedCb(wnd);
         else
@@ -283,7 +283,7 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wParam, 
         }
     }
 
-    return DefWindowProc(hwnd, msg, wParam, lParam);
+    return DefWindowProc(hwnd, msg, wp, lParam);
 }
 
 static void RegisterNotificationsWndClass() {

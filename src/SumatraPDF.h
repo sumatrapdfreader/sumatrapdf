@@ -173,4 +173,4 @@ void RebuildMenuBarForWindow(WindowInfo* win);
 void UpdateCheckAsync(WindowInfo* win, bool autoCheck);
 void DeleteWindowInfo(WindowInfo* win);
 
-LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam);

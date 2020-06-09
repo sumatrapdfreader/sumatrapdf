@@ -140,32 +140,34 @@ static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
     return FALSE;
 }
 
-LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+    int x = GET_X_LPARAM(lParam);
+    int y = GET_Y_LPARAM(lParam);
     switch (msg) {
         case WM_LBUTTONDOWN:
-            OnMouseLeftButtonDownAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseLeftButtonDownAbout(win, x, y, wp);
             return 0;
 
         case WM_LBUTTONUP:
-            OnMouseLeftButtonUpAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseLeftButtonUpAbout(win, x, y, wp);
             return 0;
 
         case WM_LBUTTONDBLCLK:
-            OnMouseLeftButtonDownAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseLeftButtonDownAbout(win, x, y, wp);
             return 0;
 
         case WM_RBUTTONDOWN:
-            OnMouseRightButtonDownAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseRightButtonDownAbout(win, x, y, wp);
             return 0;
 
         case WM_RBUTTONUP:
-            OnMouseRightButtonUpAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseRightButtonUpAbout(win, x, y, wp);
             return 0;
 
         case WM_SETCURSOR:
             if (OnSetCursorAbout(win, hwnd))
                 return TRUE;
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
 
         case WM_CONTEXTMENU:
             OnAboutContextMenu(win, 0, 0);
@@ -176,6 +178,6 @@ LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, 
             return 0;
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
 }

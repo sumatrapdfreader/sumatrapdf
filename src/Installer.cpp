@@ -676,8 +676,8 @@ static void OnButtonBrowse() {
     gTextboxInstDir->SetFocus();
 }
 
-static bool InstallerOnWmCommand(WPARAM wParam) {
-    switch (LOWORD(wParam)) {
+static bool InstallerOnWmCommand(WPARAM wp) {
+    switch (LOWORD(wp)) {
         case IDCANCEL:
             OnButtonExit();
             break;

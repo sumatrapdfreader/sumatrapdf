@@ -58,7 +58,7 @@ class ChmModel : public Controller {
     void FindInCurrentPage();
     void SelectAll();
     void CopySelection();
-    LRESULT PassUIMsg(UINT msg, WPARAM wParam, LPARAM lParam);
+    LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lParam);
 
     // for HtmlWindowCallback (called through htmlWindowCb)
     bool OnBeforeNavigate(const WCHAR* url, bool newWindow);

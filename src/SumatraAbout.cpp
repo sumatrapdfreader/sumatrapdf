@@ -474,7 +474,7 @@ static void DeleteInfotip() {
     gAboutTooltip = nullptr;
 }
 
-LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     const WCHAR* url;
     Point pt;
 
@@ -501,7 +501,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
             }
             DeleteInfotip();
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
 
         case WM_LBUTTONDOWN:
             gClickedURL = GetStaticLink(gLinkInfo, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -515,12 +515,12 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_CHAR:
-            if (VK_ESCAPE == wParam)
+            if (VK_ESCAPE == wp)
                 DestroyWindow(hwnd);
             break;
 
         case WM_COMMAND:
-            if (IDM_COPY_SELECTION == LOWORD(wParam))
+            if (IDM_COPY_SELECTION == LOWORD(wp))
                 CopyAboutInfoToClipboard(hwnd);
             break;
 
@@ -531,7 +531,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
     return 0;
 }

@@ -611,8 +611,8 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
     CopyTextToClipboard(lines.LendData());
 }
 
-static void PropertiesOnCommand(HWND hwnd, WPARAM wParam) {
-    switch (LOWORD(wParam)) {
+static void PropertiesOnCommand(HWND hwnd, WPARAM wp) {
+    switch (LOWORD(wp)) {
         case IDM_COPY_SELECTION:
             CopyPropertiesToClipboard(hwnd);
             break;
@@ -634,7 +634,7 @@ static void PropertiesOnCommand(HWND hwnd, WPARAM wParam) {
     }
 }
 
-LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     PropertiesLayout* pl;
 
     switch (msg) {
@@ -650,8 +650,9 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             break;
 
         case WM_CHAR:
-            if (VK_ESCAPE == wParam)
+            if (VK_ESCAPE == wp) {
                 DestroyWindow(hwnd);
+            }
             break;
 
         case WM_DESTROY:
@@ -662,12 +663,12 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             break;
 
         case WM_COMMAND:
-            PropertiesOnCommand(hwnd, wParam);
+            PropertiesOnCommand(hwnd, wp);
             break;
 
         /* TODO: handle mouse move/down/up so that links work (?) */
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
     return 0;
 }

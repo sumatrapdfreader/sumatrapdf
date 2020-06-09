@@ -2799,7 +2799,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
 
 #if 0
 // code adapted from https://support.microsoft.com/kb/131462/en-us
-static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wp, LPARAM lParam)
 {
     switch (uiMsg) {
     case WM_INITDIALOG:
@@ -4178,12 +4178,12 @@ extern void SetDebugPaint(bool);
 extern bool IsDebugPaint();
 } // namespace mui
 
-static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    int wmId = LOWORD(wParam);
+static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+    int wmId = LOWORD(wp);
 
     if (wmId >= 0xF000) {
         // handle system menu messages for the Window menu (needed for Tabs in Titlebar)
-        return SendMessage(hwnd, WM_SYSCOMMAND, wParam, lParam);
+        return SendMessage(hwnd, WM_SYSCOMMAND, wp, lParam);
     }
 
     // check if the menuId belongs to an entry in the list of
@@ -4212,14 +4212,14 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
         UpdateDocumentColors(); // update document colors
         RedrawWindow(win->hwndFrame, nullptr, nullptr,
                      RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN); // paint new theme
-        UpdateDocumentColors();            // doing this a second time ensures the frequently read documents are updated
-        UpdateAppMenu(win, (HMENU)wParam); // update the radio buttons
-        prefs::Save();                     // save new preferences
+        UpdateDocumentColors();        // doing this a second time ensures the frequently read documents are updated
+        UpdateAppMenu(win, (HMENU)wp); // update the radio buttons
+        prefs::Save();                 // save new preferences
     }
 #endif
 
     if (!win) {
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        return DefWindowProc(hwnd, msg, wp, lParam);
     }
 
     if (!win->IsAboutWindow() && IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST) {
@@ -4598,7 +4598,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
 
     return 0;

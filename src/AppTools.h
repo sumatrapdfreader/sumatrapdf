@@ -11,7 +11,7 @@ bool IsExeAssociatedWithPdfExtension();
 
 WCHAR* AutoDetectInverseSearchCommands(HWND);
 
-bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam);
 
 void EnsureAreaVisibility(Rect& rect);
 Rect GetDefaultWindowPos();

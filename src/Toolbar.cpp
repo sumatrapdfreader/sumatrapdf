@@ -235,12 +235,12 @@ static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR* fileName, INT resource
 }
 
 static WNDPROC DefWndProcToolbar = nullptr;
-static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     if (WM_CTLCOLORSTATIC == msg) {
         HWND hStatic = (HWND)lParam;
         WindowInfo* win = FindWindowInfoByHwnd(hStatic);
         if ((win && win->hwndFindBg != hStatic && win->hwndPageBg != hStatic) || theme::IsAppThemed()) {
-            HDC hdc = (HDC)wParam;
+            HDC hdc = (HDC)wp;
 #if defined(USE_THEME_COLORS)
             SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
             SetBkColor(hdc, GetCurrentTheme()->mainWindow.backgroundColor);
@@ -259,24 +259,24 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wParam, LPARA
         HWND hEdit = (HWND)lParam;
         WindowInfo* win = FindWindowInfoByHwnd(hEdit);
         // "find as you type"
-        if (EN_UPDATE == HIWORD(wParam) && hEdit == win->hwndFindBox && gGlobalPrefs->showToolbar) {
+        if (EN_UPDATE == HIWORD(wp) && hEdit == win->hwndFindBox && gGlobalPrefs->showToolbar) {
             FindTextOnThread(win, TextSearchDirection::Forward, false);
         }
     }
-    return CallWindowProc(DefWndProcToolbar, hwnd, msg, wParam, lParam);
+    return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lParam);
 }
 
 static WNDPROC DefWndProcFindBox = nullptr;
-static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win || !win->IsDocLoaded()) {
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        return DefWindowProc(hwnd, msg, wp, lParam);
     }
 
-    if (ExtendedEditWndProc(hwnd, msg, wParam, lParam)) {
+    if (ExtendedEditWndProc(hwnd, msg, wp, lParam)) {
         // select the whole find box on a non-selecting click
     } else if (WM_CHAR == msg) {
-        switch (wParam) {
+        switch (wp) {
             case VK_ESCAPE:
                 if (win->findThread) {
                     AbortFinding(win, false);
@@ -306,15 +306,14 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             Edit_SetRectNoPaint(hwnd, &r);
         }
     } else if (WM_KEYDOWN == msg) {
-        if (FrameOnKeydown(win, wParam, lParam, true)) {
+        if (FrameOnKeydown(win, wp, lParam, true)) {
             return 0;
         }
     }
 
-    LRESULT ret = CallWindowProc(DefWndProcFindBox, hwnd, msg, wParam, lParam);
+    LRESULT ret = CallWindowProc(DefWndProcFindBox, hwnd, msg, wp, lParam);
 
-    if (WM_CHAR == msg || WM_PASTE == msg || WM_CUT == msg || WM_CLEAR == msg || WM_UNDO == msg ||
-        WM_KEYUP == msg) {
+    if (WM_CHAR == msg || WM_PASTE == msg || WM_CUT == msg || WM_CLEAR == msg || WM_UNDO == msg || WM_KEYUP == msg) {
         ToolbarUpdateStateForWindow(win, false);
     }
 
@@ -432,15 +431,15 @@ static void CreateFindBox(WindowInfo* win) {
 }
 
 static WNDPROC DefWndProcPageBox = nullptr;
-static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win || !win->IsDocLoaded())
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        return DefWindowProc(hwnd, msg, wp, lParam);
 
-    if (ExtendedEditWndProc(hwnd, msg, wParam, lParam)) {
+    if (ExtendedEditWndProc(hwnd, msg, wp, lParam)) {
         // select the whole page box on a non-selecting click
     } else if (WM_CHAR == msg) {
-        switch (wParam) {
+        switch (wp) {
             case VK_RETURN: {
                 AutoFreeWstr buf(win::GetText(win->hwndPageBox));
                 int newPageNo = win->ctrl->GetPageByLabel(buf);
@@ -469,11 +468,11 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             Edit_SetRectNoPaint(hwnd, &r);
         }
     } else if (WM_KEYDOWN == msg) {
-        if (FrameOnKeydown(win, wParam, lParam, true))
+        if (FrameOnKeydown(win, wp, lParam, true))
             return 0;
     }
 
-    return CallWindowProc(DefWndProcPageBox, hwnd, msg, wParam, lParam);
+    return CallWindowProc(DefWndProcPageBox, hwnd, msg, wp, lParam);
 }
 
 #define PAGE_BOX_WIDTH 40

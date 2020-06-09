@@ -333,8 +333,8 @@ void OnUninstallationFinished() {
     CloseHandle(hThread);
 }
 
-static bool UninstallerOnWmCommand(WPARAM wParam) {
-    switch (LOWORD(wParam)) {
+static bool UninstallerOnWmCommand(WPARAM wp) {
+    switch (LOWORD(wp)) {
         case IDCANCEL:
             OnButtonExit();
             break;

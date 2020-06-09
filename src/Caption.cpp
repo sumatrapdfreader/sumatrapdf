@@ -206,14 +206,14 @@ void DeleteCaption(CaptionInfo* caption) {
     delete caption;
 }
 
-static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
     switch (msg) {
         case WM_COMMAND:
-            if (win && BN_CLICKED == HIWORD(wParam)) {
+            if (win && BN_CLICKED == HIWORD(wp)) {
                 WPARAM cmd;
-                WORD button = LOWORD(wParam) - BTN_ID_FIRST;
+                WORD button = LOWORD(wp) - BTN_ID_FIRST;
                 switch (button) {
                     case CB_MINIMIZE:
                         cmd = SC_MINIMIZE;
@@ -257,7 +257,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             break;
 
         case WM_TIMER:
-            if (wParam == DO_NOT_REOPEN_MENU_TIMER_ID) {
+            if (wp == DO_NOT_REOPEN_MENU_TIMER_ID) {
                 KillTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID);
             }
             break;
@@ -273,7 +273,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 
         case WM_ERASEBKGND:
             if (win) {
-                PaintCaptionBackground((HDC)wParam, win, true);
+                PaintCaptionBackground((HDC)wp, win, true);
             }
             return TRUE;
 
@@ -300,7 +300,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             break;
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
     return 0;
 }
@@ -316,13 +316,13 @@ void OpenSystemMenu(WindowInfo* win) {
 }
 
 static WNDPROC DefWndProcButton = nullptr;
-static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     int index = (int)GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
 
     switch (msg) {
         case WM_MOUSEMOVE: {
-            if (CB_SYSTEM_MENU == index && (wParam & MK_LBUTTON)) {
+            if (CB_SYSTEM_MENU == index && (wp & MK_LBUTTON)) {
                 ReleaseCapture();
                 // Trigger system move, there will be no WM_LBUTTONUP event for the button
                 SendMessage(win->hwndFrame, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
@@ -360,7 +360,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             if (CB_MENU == index) {
                 PostMessage(hwnd, WM_LBUTTONUP, 0, lParam);
             }
-            return CallWindowProc(DefWndProcButton, hwnd, msg, wParam, lParam);
+            return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lParam);
 
         case WM_RBUTTONUP:
         case WM_LBUTTONUP:
@@ -379,12 +379,12 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         case WM_KEYDOWN:
             if (CB_MENU == index && win && !win->caption->isMenuOpen &&
-                (VK_RETURN == wParam || VK_SPACE == wParam || VK_UP == wParam || VK_DOWN == wParam)) {
+                (VK_RETURN == wp || VK_SPACE == wp || VK_UP == wp || VK_DOWN == wp)) {
                 PostMessage(hwnd, BM_CLICK, 0, 0);
             }
-            return CallWindowProc(DefWndProcButton, hwnd, msg, wParam, lParam);
+            return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lParam);
     }
-    return CallWindowProc(DefWndProcButton, hwnd, msg, wParam, lParam);
+    return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lParam);
 }
 
 void CreateCaption(WindowInfo* win) {
@@ -661,11 +661,11 @@ static void DrawFrame(HWND hwnd, COLORREF color, bool drawEdge = true) {
 // (can be static because there can only be one menu active at a time)
 static WCHAR gMenuAccelPressed = 0;
 
-LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, bool* callDef, WindowInfo* win) {
+LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam, bool* callDef, WindowInfo* win) {
     if (dwm::IsCompositionEnabled()) {
         // Pass the messages to DwmDefWindowProc first. It serves the hit testing for the buttons.
         LRESULT res;
-        if (dwm::DefWindowProc_(hwnd, msg, wParam, lParam, &res)) {
+        if (dwm::DefWindowProc_(hwnd, msg, wp, lParam, &res)) {
             *callDef = false;
             return res;
         }
@@ -688,17 +688,17 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 Rect rc = ClientRect(hwnd);
                 rc.dy = win->extendedFrameHeight;
                 HRGN extendedFrameRegion = CreateRectRgn(rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy);
-                int newRegionComplexity = ExtSelectClipRgn((HDC)wParam, extendedFrameRegion, RGN_AND);
+                int newRegionComplexity = ExtSelectClipRgn((HDC)wp, extendedFrameRegion, RGN_AND);
                 DeleteObject(extendedFrameRegion);
                 if (newRegionComplexity == NULLREGION) {
                     return TRUE;
                 }
             }
-                return DefWindowProc(hwnd, msg, wParam, lParam);
+                return DefWindowProc(hwnd, msg, wp, lParam);
 
             case WM_SIZE:
                 // Extend the translucent frame in the client area.
-                if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED) {
+                if (wp == SIZE_MAXIMIZED || wp == SIZE_RESTORED) {
                     int frameThickness = 0;
                     if (win::HasFrameThickness(hwnd)) {
                         frameThickness = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
@@ -720,7 +720,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 break;
 
             case WM_NCACTIVATE:
-                win->caption->UpdateColors((bool)wParam);
+                win->caption->UpdateColors((bool)wp);
                 if (!IsIconic(hwnd)) {
                     UINT flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
                     RedrawWindow(win->hwndCaption, nullptr, nullptr, flags);
@@ -730,7 +730,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     } else {
         switch (msg) {
             case WM_SETTINGCHANGE:
-                if (wParam == SPI_SETNONCLIENTMETRICS)
+                if (wp == SPI_SETNONCLIENTMETRICS)
                     RelayoutCaption(win);
                 break;
 
@@ -740,9 +740,9 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 return 0;
 
             case WM_NCACTIVATE:
-                win->caption->UpdateColors((bool)wParam);
+                win->caption->UpdateColors((bool)wp);
                 for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++)
-                    win->caption->btn[i].inactive = wParam == FALSE;
+                    win->caption->btn[i].inactive = wp == FALSE;
                 if (!IsIconic(hwnd)) {
                     DrawFrame(hwnd, win->caption->bgColor);
                     UINT flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
@@ -767,7 +767,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                     // in the caption's area when processing these mesages.
                     // TODO: can't such drawing be prevented by handling WM_(NC)PAINT instead?
                     SetWindowStyle(hwnd, WS_VISIBLE, false);
-                    LRESULT res = DefWindowProc(hwnd, msg, wParam, lParam);
+                    LRESULT res = DefWindowProc(hwnd, msg, wp, lParam);
                     SetWindowStyle(hwnd, WS_VISIBLE, true);
                     *callDef = false;
                     return res;
@@ -780,10 +780,10 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     switch (msg) {
         case WM_NCCALCSIZE: {
             // In order to have custom caption, we have to include its area in the client rectangle.
-            RECT* r = wParam == TRUE ? &((NCCALCSIZE_PARAMS*)lParam)->rgrc[0] : (RECT*)lParam;
+            RECT* r = wp == TRUE ? &((NCCALCSIZE_PARAMS*)lParam)->rgrc[0] : (RECT*)lParam;
             RECT rWindow = *r;
             // Let DefWindowProc calculate the client rectangle.
-            DefWindowProc(hwnd, msg, wParam, lParam);
+            DefWindowProc(hwnd, msg, wp, lParam);
             RECT rClient = *r;
             // Modify the client rectangle to include the caption's area.
             if (dwm::IsCompositionEnabled()) {
@@ -816,7 +816,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
         case WM_NCRBUTTONUP:
             // Prepare and show the system menu.
-            if (wParam == HTCAPTION) {
+            if (wp == HTCAPTION) {
                 HMENU menu = GetUpdatedSystemMenu(hwnd, true);
                 UINT flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
                 if (GetSystemMetrics(SM_MENUDROPALIGNMENT)) {
@@ -832,7 +832,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             break;
 
         case WM_SYSCOMMAND:
-            if (wParam == SC_KEYMENU) {
+            if (wp == SC_KEYMENU) {
                 // Show the "menu bar" (and the desired submenu)
                 gMenuAccelPressed = (WCHAR)lParam;
                 if (' ' == gMenuAccelPressed) {

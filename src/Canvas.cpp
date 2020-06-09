@@ -73,7 +73,7 @@ void UpdateDeltaPerLine() {
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
-static void OnVScroll(WindowInfo* win, WPARAM wParam) {
+static void OnVScroll(WindowInfo* win, WPARAM wp) {
     CrashIf(!win->AsFixed());
 
     SCROLLINFO si = {0};
@@ -89,7 +89,7 @@ static void OnVScroll(WindowInfo* win, WPARAM wParam) {
         lineHeight = 1;
     }
 
-    USHORT msg = LOWORD(wParam);
+    USHORT msg = LOWORD(wp);
     switch (msg) {
         case SB_TOP:
             si.nPos = si.nMin;
@@ -133,7 +133,7 @@ static void OnVScroll(WindowInfo* win, WPARAM wParam) {
     }
 }
 
-static void OnHScroll(WindowInfo* win, WPARAM wParam) {
+static void OnHScroll(WindowInfo* win, WPARAM wp) {
     CrashIf(!win->AsFixed());
 
     SCROLLINFO si = {0};
@@ -142,7 +142,7 @@ static void OnHScroll(WindowInfo* win, WPARAM wParam) {
     GetScrollInfo(win->hwndCanvas, SB_HORZ, &si);
 
     int currPos = si.nPos;
-    USHORT msg = LOWORD(wParam);
+    USHORT msg = LOWORD(wp);
     switch (msg) {
         case SB_LEFT:
             si.nPos = si.nMin;
@@ -869,22 +869,22 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
     return win->presentation ? TRUE : FALSE;
 }
 
-static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lParam) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win->tocVisible && IsCursorOverWindow(win->tocTreeCtrl->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         gWheelMsgRedirect = true;
-        LRESULT res = SendMessage(win->tocTreeCtrl->hwnd, msg, wParam, lParam);
+        LRESULT res = SendMessage(win->tocTreeCtrl->hwnd, msg, wp, lParam);
         gWheelMsgRedirect = false;
         return res;
     }
 
-    short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+    short delta = GET_WHEEL_DELTA_WPARAM(wp);
 
     // Note: not all mouse drivers correctly report the Ctrl key's state
-    if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON)) {
+    if ((LOWORD(wp) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wp) & MK_RBUTTON)) {
         Point pt;
         GetCursorPosInHwnd(win->hwndCanvas, pt);
 
@@ -893,7 +893,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wParam, LPAR
         UpdateToolbarState(win);
 
         // don't show the context menu when zooming with the right mouse-button down
-        if ((LOWORD(wParam) & MK_RBUTTON)) {
+        if ((LOWORD(wp) & MK_RBUTTON)) {
             win->dragStartPending = false;
         }
 
@@ -914,7 +914,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wParam, LPAR
         return 0;
     }
 
-    bool horizontal = (LOWORD(wParam) & MK_SHIFT) || IsShiftPressed();
+    bool horizontal = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
     if (horizontal) {
         gSuppressAltKey = true;
     }
@@ -936,7 +936,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wParam, LPAR
 
     // alt while scrolling will scroll by half a page per tick
     // usefull for browsing long files
-    if ((LOWORD(wParam) & MK_ALT) || IsAltPressed()) {
+    if ((LOWORD(wp) & MK_ALT) || IsAltPressed()) {
         SendMessage(win->hwndCanvas, WM_VSCROLL, (delta > 0) ? SB_HPAGEUP : SB_HPAGEDOWN, 0);
         return 0;
     }
@@ -973,19 +973,19 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wParam, LPAR
     return 0;
 }
 
-static LRESULT CanvasOnMouseHWheel(WindowInfo* win, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CanvasOnMouseHWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lParam) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win->tocVisible && IsCursorOverWindow(win->tocTreeCtrl->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEHWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         gWheelMsgRedirect = true;
-        LRESULT res = SendMessage(win->tocTreeCtrl->hwnd, msg, wParam, lParam);
+        LRESULT res = SendMessage(win->tocTreeCtrl->hwnd, msg, wp, lParam);
         gWheelMsgRedirect = false;
         return res;
     }
 
-    short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+    short delta = GET_WHEEL_DELTA_WPARAM(wp);
     win->wheelAccumDelta += delta;
 
     while (win->wheelAccumDelta >= gDeltaPerLine) {
@@ -1005,9 +1005,9 @@ static u32 LowerU64(ULONGLONG v) {
     return res;
 }
 
-static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lParam) {
     if (!touch::SupportsGestures()) {
-        return DefWindowProc(win->hwndFrame, msg, wParam, lParam);
+        return DefWindowProc(win->hwndFrame, msg, wp, lParam);
     }
 
     HGESTUREINFO hgi = (HGESTUREINFO)lParam;
@@ -1102,98 +1102,100 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wParam, LPARAM lParam
     return 0;
 }
 
-static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    // dbgLogMsg("canvas:", hwnd, msg, wParam, lParam);
+static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+    // dbgLogMsg("canvas:", hwnd, msg, wp, lParam);
 
+    int x = GET_X_LPARAM(lParam);
+    int y = GET_Y_LPARAM(lParam);
     switch (msg) {
         case WM_PAINT:
             OnPaintDocument(win);
             return 0;
 
         case WM_MOUSEMOVE:
-            OnMouseMove(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseMove(win, x, y, wp);
             return 0;
 
         case WM_LBUTTONDOWN:
-            OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseLeftButtonDown(win, x, y, wp);
             return 0;
 
         case WM_LBUTTONUP:
-            OnMouseLeftButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseLeftButtonUp(win, x, y, wp);
             return 0;
 
         case WM_LBUTTONDBLCLK:
-            OnMouseLeftButtonDblClk(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseLeftButtonDblClk(win, x, y, wp);
             return 0;
 
         case WM_MBUTTONDOWN:
             SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
             // TODO: Create window that shows location of initial click for reference
-            OnMouseMiddleButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseMiddleButtonDown(win, x, y, wp);
             return 0;
 
         case WM_RBUTTONDOWN:
-            OnMouseRightButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseRightButtonDown(win, x, y, wp);
             return 0;
 
         case WM_RBUTTONUP:
-            OnMouseRightButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseRightButtonUp(win, x, y, wp);
             return 0;
 
         case WM_RBUTTONDBLCLK:
-            OnMouseRightButtonDblClick(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            OnMouseRightButtonDblClick(win, x, y, wp);
             return 0;
 
         case WM_VSCROLL:
-            OnVScroll(win, wParam);
+            OnVScroll(win, wp);
             return 0;
 
         case WM_HSCROLL:
-            OnHScroll(win, wParam);
+            OnHScroll(win, wp);
             return 0;
 
         case WM_MOUSEWHEEL:
-            return CanvasOnMouseWheel(win, msg, wParam, lParam);
+            return CanvasOnMouseWheel(win, msg, wp, lParam);
 
         case WM_MOUSEHWHEEL:
-            return CanvasOnMouseHWheel(win, msg, wParam, lParam);
+            return CanvasOnMouseHWheel(win, msg, wp, lParam);
 
         case WM_SETCURSOR:
             if (OnSetCursor(win, hwnd)) {
                 return TRUE;
             }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
 
         case WM_CONTEXTMENU:
             OnWindowContextMenu(win, 0, 0);
             return 0;
 
         case WM_GESTURE:
-            return OnGesture(win, msg, wParam, lParam);
+            return OnGesture(win, msg, wp, lParam);
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
 }
 
 ///// methods needed for ChmUI canvases (should be subclassed by HtmlHwnd) /////
 
-static LRESULT WndProcCanvasChmUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT WndProcCanvasChmUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     switch (msg) {
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
             win->HideToolTip();
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
 }
 
 ///// methods needed for EbookUI canvases /////
 
 // NO_INLINE to help in debugging https://github.com/sumatrapdfreader/sumatrapdf/issues/292
-static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo* win, UINT msg, WPARAM wParam, LPARAM lParam) {
+static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lParam) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win->tocVisible && IsCursorOverWindow(win->tocTreeCtrl->hwnd)) {
         // Note: hwndTocTree's window procedure doesn't always handle
@@ -1202,13 +1204,13 @@ static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo* win, UINT msg, WPAR
         LRESULT res = 0;
         if (!gWheelMsgRedirect) {
             gWheelMsgRedirect = true;
-            res = SendMessage(win->tocTreeCtrl->hwnd, msg, wParam, lParam);
+            res = SendMessage(win->tocTreeCtrl->hwnd, msg, wp, lParam);
             gWheelMsgRedirect = false;
         }
         return res;
     }
 
-    short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+    short delta = GET_WHEEL_DELTA_WPARAM(wp);
     if (delta > 0) {
         win->ctrl->GoToPrevPage();
     } else {
@@ -1217,9 +1219,9 @@ static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo* win, UINT msg, WPAR
     return 0;
 }
 
-static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     bool wasHandled;
-    LRESULT res = win->AsEbook()->HandleMessage(msg, wParam, lParam, wasHandled);
+    LRESULT res = win->AsEbook()->HandleMessage(msg, wp, lParam, wasHandled);
     if (wasHandled) {
         return res;
     }
@@ -1228,17 +1230,17 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
             win->HideToolTip();
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
 
         case WM_MOUSEWHEEL:
         case WM_MOUSEHWHEEL:
-            return CanvasOnMouseWheelEbook(win, msg, wParam, lParam);
+            return CanvasOnMouseWheelEbook(win, msg, wp, lParam);
 
         case WM_GESTURE:
-            return OnGesture(win, msg, wParam, lParam);
+            return OnGesture(win, msg, wp, lParam);
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
 }
 
@@ -1261,7 +1263,7 @@ static void OnPaintError(WindowInfo* win) {
     EndPaint(win->hwndCanvas, &ps);
 }
 
-static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     switch (msg) {
         case WM_PAINT:
             OnPaintError(win);
@@ -1270,10 +1272,10 @@ static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPAR
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
             win->HideToolTip();
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wp, lParam);
     }
 }
 

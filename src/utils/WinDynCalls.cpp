@@ -175,11 +175,11 @@ HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS* pMarInset) {
     return DynDwmExtendFrameIntoClientArea(hwnd, pMarInset);
 }
 
-BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT* plResult) {
+BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam, LRESULT* plResult) {
     if (!DynDwmDefWindowProc) {
         return FALSE;
     }
-    return DynDwmDefWindowProc(hwnd, msg, wParam, lParam, plResult);
+    return DynDwmDefWindowProc(hwnd, msg, wp, lParam, plResult);
 }
 
 HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute) {

@@ -147,21 +147,21 @@ void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
 
 // Actual window procedure that will handle saving window size/position and moving
 // the controls whilst the window sizes.
-static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
     DialogData* pdd = (DialogData*)GetProp(hwnd, DIALOG_DATA_PROPERTY);
     if (!pdd)
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        return DefWindowProc(hwnd, msg, wp, lParam);
 
     switch (msg) {
         case WM_ERASEBKGND: {
-            LRESULT lr = CallWindowProc(pdd->wndProc, hwnd, msg, wParam, lParam);
-            pdd->DrawGripper((HDC)wParam);
+            LRESULT lr = CallWindowProc(pdd->wndProc, hwnd, msg, wp, lParam);
+            pdd->DrawGripper((HDC)wp);
             return lr;
         }
 
         case WM_SIZE: {
-            if (wParam != SIZE_MINIMIZED) {
-                pdd->bMaximised = wParam == SIZE_MAXIMIZED;
+            if (wp != SIZE_MINIMIZED) {
+                pdd->bMaximised = wp == SIZE_MAXIMIZED;
                 UpdateWindowSize(pdd, LOWORD(lParam), HIWORD(lParam), hwnd);
             }
         } break;
@@ -184,9 +184,9 @@ static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
         case WM_DESTROY: {
             WNDPROC wndProc = pdd->wndProc;
             delete pdd;
-            return CallWindowProc(wndProc, hwnd, msg, wParam, lParam);
+            return CallWindowProc(wndProc, hwnd, msg, wp, lParam);
         }
     }
 
-    return CallWindowProc(pdd->wndProc, hwnd, msg, wParam, lParam);
+    return CallWindowProc(pdd->wndProc, hwnd, msg, wp, lParam);
 }
