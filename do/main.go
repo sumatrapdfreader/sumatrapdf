@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -21,6 +23,16 @@ func regenPremake() {
 		cmd := exec.Command(premakePath, "vs2019")
 		u.RunCmdLoggedMust(cmd)
 	}
+}
+
+func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) string {
+	f, err := os.Create(path)
+	panicIfErr(err)
+	defer f.Close()
+
+	cmd.Stdout = io.MultiWriter(f, os.Stdout)
+	cmd.Stderr = io.MultiWriter(f, os.Stderr)
+	return u.RunCmdMust(cmd)
 }
 
 func runCppCheck(all bool) {
@@ -46,7 +58,8 @@ func runCppCheck(all bool) {
 	}
 	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	cmd = exec.Command("cppcheck", args...)
-	u.RunCmdLoggedMust(cmd)
+	runCmdShowProgressAndLog(cmd, "cppcheck.out.txt")
+	logf("\nLogged output to 'cppcheck.out.txt'\n")
 }
 
 func main() {

@@ -96,7 +96,7 @@ class EbookFormattingThread : public ThreadBase {
     ControllerCallback* cb = nullptr;
 
     // state used during layout process
-    HtmlPage* pages[EbookFormattingData::MAX_PAGES];
+    HtmlPage* pages[EbookFormattingData::MAX_PAGES]{};
     int pageCount = 0;
 
     // we want to send 2 pages after reparseIdx as soon as we have them,

@@ -25,7 +25,7 @@ class ChmModel : public Controller {
     void Navigate(int dir) override;
 
     // view settings
-    void SetDisplayMode(DisplayMode mode, bool keepContinuous = false);
+    void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
     DisplayMode GetDisplayMode() const override;
     void SetPresentationMode(bool enable) override;
     void SetZoomVirtual(float zoom, Point* fixPt) override;
