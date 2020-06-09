@@ -206,7 +206,11 @@ static MenuDef menuDefContext[] = {
 // clang-format on
 
 static bool RemoveIt(TreeCtrl* treeCtrl, TocItem* ti) {
-    TocItem* parent = ti ? ti->parent : nullptr;
+    SubmitCrashIf(!ti);
+    if (!ti) {
+        return false;
+    }
+    TocItem* parent = ti->parent;
     if (parent && parent->child == ti) {
         parent->child = ti->next;
         ti->next = nullptr;
