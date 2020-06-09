@@ -195,7 +195,7 @@ func setBuildConfigDaily() {
 	panicIf(preRelVer == "")
 	s += fmt.Sprintf("#define PRE_RELEASE_VER %s\n", preRelVer)
 	s += "#define IS_DAILY_BUILD 1\n"
-	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
+	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 0644)
 	panicIfErr(err)
 }
 
@@ -203,14 +203,14 @@ func setBuildConfigPreRelease() {
 	s := getBuildConfigCommon()
 	preRelVer := getPreReleaseVer()
 	s += fmt.Sprintf("#define PRE_RELEASE_VER %s\n", preRelVer)
-	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
+	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 0644)
 	panicIfErr(err)
 }
 
 func setBuildConfigRelease() {
 	s := getBuildConfigCommon()
 	s += "#define SUMATRA_UPDATE_INFO_URL L\"https://www.sumatrapdfreader.org/update-check-rel.txt\"\n"
-	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
+	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 0644)
 	panicIfErr(err)
 }
 
