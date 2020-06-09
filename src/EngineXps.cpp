@@ -929,7 +929,10 @@ TocItem* EngineXps::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
             root = item;
             curr = item;
         } else {
-            curr->next = item;
+            CrashIf(!curr);
+            if (curr) {
+                curr->next = item;
+            }
             curr = item;
         }
 

@@ -40,11 +40,12 @@ func runCppCheck(all bool) {
 	// "-I", winSdkIncludeDir
 	// "-D__RPCNDR_H_VERSION__=440"
 
+	args := []string{"--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-DPRE_RELEASE_VER=3.3", "-q", "-v"}
 	if all {
-		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-q", "-v", "--enable=style", "--suppress=constParameter", "--suppress=cstyleCast", "--suppress=useStlAlgorithm", "--suppress=noExplicitConstructor", "--suppress=variableScope", "--suppress=memsetClassFloat", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
-	} else {
-		cmd = exec.Command("cppcheck", "--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-q", "-v", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
+		args = append(args, "--enable=style", "--suppress=constParameter", "--suppress=cstyleCast", "--suppress=useStlAlgorithm", "--suppress=noExplicitConstructor", "--suppress=variableScope", "--suppress=memsetClassFloat")
 	}
+	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
+	cmd = exec.Command("cppcheck", args...)
 	u.RunCmdLoggedMust(cmd)
 }
 
