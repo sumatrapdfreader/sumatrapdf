@@ -2138,7 +2138,35 @@ void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, 0, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-void TbSetButtonInfo(HWND hwnd, WPARAM buttonId, TBBUTTONINFO* info) {
+void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
     auto res = SendMessageW(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)info);
     CrashIf(0 == res);
+}
+
+void TbGetPadding(HWND hwnd, int* padX, int* padY) {
+    DWORD res = (DWORD)SendMessageW(hwnd, TB_GETPADDING, 0, 0);
+    *padX = (int)LOWORD(res);
+    *padY = (int)HIWORD(res);
+}
+
+void TbSetPadding(HWND hwnd, int padX, int padY) {
+    LPARAM lp = MAKELPARAM(padX, padY);
+    auto res = SendMessageW(hwnd, TB_SETPADDING, 0, lp);
+    CrashIf(0 == res);
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/controls/tb-getrect
+void TbGetRect(HWND hwnd, int buttonId, RECT* rc) {
+    auto res = SendMessageW(hwnd, TB_GETRECT, buttonId, (LPARAM)rc);
+    CrashIf(res == 0);
+}
+
+void TbGetMetrics(HWND hwnd, TBMETRICS* metrics) {
+    LPARAM lp = (LPARAM)metrics;
+    SendMessageW(hwnd, TB_GETMETRICS, 0, lp);
+}
+
+void TbSetMetrics(HWND hwnd, TBMETRICS* metrics) {
+    LPARAM lp = (LPARAM)metrics;
+    SendMessageW(hwnd, TB_SETMETRICS, 0, lp);
 }

@@ -32,11 +32,17 @@
 #include "Toolbar.h"
 #include "Translations.h"
 #include "SvgIcons.h"
-#
+#include "SumatraConfig.h"
+
 // TODO: experimenting with matching toolbar colors with theme
 // Doesn't work, probably have to implement a custom toolbar control
 // where we draw everything ourselves.
 // #define USE_THEME_COLORS 1
+
+static int cxButtonSpacing = 4;
+
+// distance between label and edit field
+constexpr int TB_TEXT_PADDING_RIGHT = 6;
 
 struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */
@@ -67,7 +73,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
 
-inline bool TbIsSeparator(ToolbarButtonInfo& tbi) {
+static bool TbIsSeparator(ToolbarButtonInfo& tbi) {
     return tbi.bmpIndex < 0;
 }
 
@@ -321,9 +327,6 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return ret;
 }
 
-// distance between label and edit field
-constexpr int TB_TEXT_PADDING_RIGHT = 6;
-
 void UpdateToolbarFindText(WindowInfo* win) {
     bool showUI = NeedsFindUI(win);
     win::SetVisibility(win->hwndFindText, showUI);
@@ -339,12 +342,13 @@ void UpdateToolbarFindText(WindowInfo* win) {
     Rect findWndRect = WindowRect(win->hwndFindBg);
 
     RECT r{};
-    SendMessage(win->hwndToolbar, TB_GETRECT, IDT_VIEW_ZOOMIN, (LPARAM)&r);
-    int currX = r.right + 10;
+    TbGetRect(win->hwndToolbar, IDT_VIEW_ZOOMIN, &r);
+    int currX = r.right + DpiScale(win->hwndToolbar, 10);
     int currY = (r.bottom - findWndRect.dy) / 2;
 
     Size size = TextSizeInHwnd(win->hwndFindText, text);
     size.dx += DpiScale(win->hwndFrame, TB_TEXT_PADDING_RIGHT);
+    size.dx += DpiScale(win->hwndFrame, cxButtonSpacing);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
     int x = currX;
@@ -485,6 +489,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     }
     Size size = TextSizeInHwnd(win->hwndPageText, text);
     size.dx += DpiScale(win->hwndFrame, TB_TEXT_PADDING_RIGHT);
+    size.dx += DpiScale(win->hwndFrame, cxButtonSpacing);
 
     Rect pageWndRect = WindowRect(win->hwndPageBg);
 
@@ -500,6 +505,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
         buf = win::GetText(win->hwndPageTotal);
         size2 = ClientRect(win->hwndPageTotal).Size();
         size2.dx -= DpiScale(win->hwndFrame, TB_TEXT_PADDING_RIGHT);
+        size2.dx -= DpiScale(win->hwndFrame, cxButtonSpacing);
     } else if (!pageCount) {
         buf = str::Dup(L"");
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
@@ -515,6 +521,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf);
     }
     size2.dx += DpiScale(win->hwndFrame, TB_TEXT_PADDING_RIGHT);
+    size2.dx += DpiScale(win->hwndFrame, cxButtonSpacing);
     free(buf);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
@@ -522,7 +529,9 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     int y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
     MoveWindow(win->hwndPageText, currX, y, size.dx, size.dy, FALSE);
     if (IsUIRightToLeft()) {
-        currX += size2.dx - DpiScale(win->hwndFrame, TB_TEXT_PADDING_RIGHT);
+        currX += size2.dx;
+        currX -= DpiScale(win->hwndFrame, TB_TEXT_PADDING_RIGHT);
+        currX -= DpiScale(win->hwndFrame, cxButtonSpacing);
     }
     x = currX + size.dx;
     y = currY;
@@ -637,6 +646,9 @@ void LogBitmapInfo(HBITMAP hbmp) {
 }
 
 void CreateToolbar(WindowInfo* win) {
+    if (!gIsRaMicroBuild) {
+        cxButtonSpacing = 0;
+    }
     HINSTANCE hinst = GetModuleHandle(nullptr);
     HWND hwndParent = win->hwndFrame;
     DWORD style = WS_CHILD | WS_CLIPSIBLINGS | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
@@ -718,6 +730,17 @@ void CreateToolbar(WindowInfo* win) {
         }
     }
     SendMessageW(hwndToolbar, TB_SETIMAGELIST, 0, (LPARAM)himl);
+
+    TBMETRICS tbMetrics{};
+    tbMetrics.cbSize = sizeof(tbMetrics);
+    // tbMetrics.dwMask = TBMF_PAD;
+    tbMetrics.dwMask = TBMF_BUTTONSPACING;
+    TbGetMetrics(hwndToolbar, &tbMetrics);
+    tbMetrics.cxPad += DpiScale(win->hwndFrame, 14);
+    tbMetrics.cyPad += DpiScale(win->hwndFrame, 2);
+    tbMetrics.cxButtonSpacing += DpiScale(win->hwndFrame, cxButtonSpacing);
+    // tbMetrics.cyButtonSpacing += DpiScale(win->hwndFrame, 4);
+    TbSetMetrics(hwndToolbar, &tbMetrics);
 
     LRESULT exstyle = SendMessage(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;

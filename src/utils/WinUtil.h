@@ -264,4 +264,9 @@ HFONT HwndGetFont(HWND);
 Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
 
-void TbSetButtonInfo(HWND hwnd, WPARAM buttonId, TBBUTTONINFO* info);
+void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info);
+void TbGetPadding(HWND, int* padX, int* padY);
+void TbSetPadding(HWND, int padX, int padY);
+void TbGetMetrics(HWND hwnd, TBMETRICS* metrics);
+void TbSetMetrics(HWND hwnd, TBMETRICS* metrics);
+void TbGetRect(HWND hwnd, int buttonId, RECT* rc);
