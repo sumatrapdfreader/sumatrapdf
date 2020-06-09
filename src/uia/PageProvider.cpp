@@ -34,7 +34,8 @@ SumatraUIAutomationPageProvider::SumatraUIAutomationPageProvider(int pageNum, HW
     // root->AddRef(); Don't add refs to our parent & owner.
 }
 
-SumatraUIAutomationPageProvider::~SumatraUIAutomationPageProvider() {}
+SumatraUIAutomationPageProvider::~SumatraUIAutomationPageProvider() {
+}
 
 int SumatraUIAutomationPageProvider::GetPageNum() const {
     return pageNum;

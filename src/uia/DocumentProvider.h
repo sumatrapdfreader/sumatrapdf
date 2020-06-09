@@ -9,19 +9,18 @@ class SumatraUIAutomationTextRange;
 class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment,
                                             public IRawElementProviderSimple,
                                             public ITextProvider,
-                                            public IAccIdentity 
-{
-    LONG                                refCount;
-    HWND                                canvasHwnd;
-    SumatraUIAutomationProvider*        root;
-    bool                                released;
+                                            public IAccIdentity {
+    LONG refCount;
+    HWND canvasHwnd;
+    SumatraUIAutomationProvider* root;
+    bool released;
 
-    SumatraUIAutomationPageProvider*    child_first;
-    SumatraUIAutomationPageProvider*    child_last;
+    SumatraUIAutomationPageProvider* child_first;
+    SumatraUIAutomationPageProvider* child_last;
 
-    DisplayModel*                       dm;
+    DisplayModel* dm;
 
-public:
+  public:
     SumatraUIAutomationDocumentProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root);
     ~SumatraUIAutomationDocumentProvider();
 
@@ -37,32 +36,32 @@ public:
     SumatraUIAutomationPageProvider* GetLastPage();
 
     // IUnknown
-    HRESULT STDMETHODCALLTYPE QueryInterface(const IID &,void **);
-    ULONG   STDMETHODCALLTYPE AddRef(void);
-    ULONG   STDMETHODCALLTYPE Release(void);
-    
+    HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);
+    ULONG STDMETHODCALLTYPE AddRef(void);
+    ULONG STDMETHODCALLTYPE Release(void);
+
     // IRawElementProviderFragment
-    HRESULT STDMETHODCALLTYPE Navigate(enum NavigateDirection direction, IRawElementProviderFragment **pRetVal);
-    HRESULT STDMETHODCALLTYPE GetRuntimeId(SAFEARRAY **pRetVal);
-    HRESULT STDMETHODCALLTYPE GetEmbeddedFragmentRoots(SAFEARRAY **pRetVal);
+    HRESULT STDMETHODCALLTYPE Navigate(enum NavigateDirection direction, IRawElementProviderFragment** pRetVal);
+    HRESULT STDMETHODCALLTYPE GetRuntimeId(SAFEARRAY** pRetVal);
+    HRESULT STDMETHODCALLTYPE GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal);
     HRESULT STDMETHODCALLTYPE SetFocus(void);
-    HRESULT STDMETHODCALLTYPE get_BoundingRectangle(struct UiaRect *pRetVal);
-    HRESULT STDMETHODCALLTYPE get_FragmentRoot(IRawElementProviderFragmentRoot **pRetVal);
+    HRESULT STDMETHODCALLTYPE get_BoundingRectangle(struct UiaRect* pRetVal);
+    HRESULT STDMETHODCALLTYPE get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal);
 
     // IRawElementProviderSimple
-    HRESULT STDMETHODCALLTYPE GetPatternProvider(PATTERNID patternId,IUnknown **pRetVal);
-    HRESULT STDMETHODCALLTYPE GetPropertyValue(PROPERTYID propertyId,VARIANT *pRetVal);
-    HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(IRawElementProviderSimple **pRetVal);
-    HRESULT STDMETHODCALLTYPE get_ProviderOptions(ProviderOptions *pRetVal);
-    
+    HRESULT STDMETHODCALLTYPE GetPatternProvider(PATTERNID patternId, IUnknown** pRetVal);
+    HRESULT STDMETHODCALLTYPE GetPropertyValue(PROPERTYID propertyId, VARIANT* pRetVal);
+    HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(IRawElementProviderSimple** pRetVal);
+    HRESULT STDMETHODCALLTYPE get_ProviderOptions(ProviderOptions* pRetVal);
+
     // ITextProvider
-    HRESULT STDMETHODCALLTYPE GetSelection(SAFEARRAY * *pRetVal);
-    HRESULT STDMETHODCALLTYPE GetVisibleRanges(SAFEARRAY * *pRetVal);
-    HRESULT STDMETHODCALLTYPE RangeFromChild(IRawElementProviderSimple *childElement, ITextRangeProvider **pRetVal);
-    HRESULT STDMETHODCALLTYPE RangeFromPoint( struct UiaPoint point, ITextRangeProvider **pRetVal);
-    HRESULT STDMETHODCALLTYPE get_DocumentRange(  ITextRangeProvider **pRetVal);
-    HRESULT STDMETHODCALLTYPE get_SupportedTextSelection( enum SupportedTextSelection *pRetVal);
+    HRESULT STDMETHODCALLTYPE GetSelection(SAFEARRAY** pRetVal);
+    HRESULT STDMETHODCALLTYPE GetVisibleRanges(SAFEARRAY** pRetVal);
+    HRESULT STDMETHODCALLTYPE RangeFromChild(IRawElementProviderSimple* childElement, ITextRangeProvider** pRetVal);
+    HRESULT STDMETHODCALLTYPE RangeFromPoint(struct UiaPoint point, ITextRangeProvider** pRetVal);
+    HRESULT STDMETHODCALLTYPE get_DocumentRange(ITextRangeProvider** pRetVal);
+    HRESULT STDMETHODCALLTYPE get_SupportedTextSelection(enum SupportedTextSelection* pRetVal);
 
     // IAccIdentity
-    HRESULT STDMETHODCALLTYPE GetIdentityString(DWORD dwIDChild, BYTE **ppIDString, DWORD *pdwIDStringLen);
+    HRESULT STDMETHODCALLTYPE GetIdentityString(DWORD dwIDChild, BYTE** ppIDString, DWORD* pdwIDStringLen);
 };

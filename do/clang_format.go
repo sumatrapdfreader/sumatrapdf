@@ -49,6 +49,8 @@ func clangFormatFiles() {
 		`src\utils\tests\*.h`,
 		`src\wingui\*.cpp`,
 		`src\wingui\*.h`,
+		`src\uia\*.cpp`,
+		`src\uia\*.h`,
 		`src\tools\*.cpp`,
 		`src\tools\*.h`,
 		`ext\mupdf_load_system_font.c`,
