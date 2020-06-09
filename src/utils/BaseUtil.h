@@ -285,15 +285,6 @@ inline void DebugCrashIfFunc(bool cond) {
         SendCrashIfFunc(cond, #cond); \
     } while (0)
 
-// AssertCrash is like assert() but crashes like CrashIf()
-// It's meant to make converting assert() easier (converting to
-// CrashIf() requires inverting the condition, which can introduce bugs)
-#define AssertCrash(cond)        \
-    do {                         \
-        __analysis_assume(cond); \
-        CrashIfFunc(!(cond));    \
-    } while (0)
-
 #if !OS_WIN
 void ZeroMemory(void* p, size_t len);
 #endif

@@ -89,18 +89,18 @@ bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const {
 }
 
 DisplayModel* SumatraUIAutomationDocumentProvider::GetDM() {
-    AssertCrash(IsDocumentLoaded());
-    AssertCrash(dm);
+    CrashIf(!IsDocumentLoaded());
+    CrashIf(!dm);
     return dm;
 }
 
 SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetFirstPage() {
-    AssertCrash(IsDocumentLoaded());
+    CrashIf(!IsDocumentLoaded());
     return child_first;
 }
 
 SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetLastPage() {
-    AssertCrash(IsDocumentLoaded());
+    CrashIf(!IsDocumentLoaded());
     return child_last;
 }
 

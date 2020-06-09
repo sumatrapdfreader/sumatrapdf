@@ -343,7 +343,7 @@ static bool SetupPluginMode(Flags& i) {
         gPluginURL = i.fileNames.at(0);
     }
 
-    AssertCrash(i.fileNames.size() == 1);
+    CrashIf(i.fileNames.size() != 1);
     while (i.fileNames.size() > 1) {
         free(i.fileNames.Pop());
     }

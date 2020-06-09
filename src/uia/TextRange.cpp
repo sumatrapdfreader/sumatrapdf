@@ -91,8 +91,8 @@ bool SumatraUIAutomationTextRange::IsEmptyRange() const {
 }
 
 int SumatraUIAutomationTextRange::GetPageGlyphCount(int pageNum) {
-    AssertCrash(document->IsDocumentLoaded());
-    AssertCrash(pageNum > 0);
+    CrashIf(!document->IsDocumentLoaded());
+    CrashIf(pageNum <= 0);
 
     int pageLen;
     document->GetDM()->textCache->GetTextForPage(pageNum, &pageLen);
@@ -100,7 +100,7 @@ int SumatraUIAutomationTextRange::GetPageGlyphCount(int pageNum) {
 }
 
 int SumatraUIAutomationTextRange::GetPageCount() {
-    AssertCrash(document->IsDocumentLoaded());
+    CrashIf(!document->IsDocumentLoaded());
 
     return document->GetDM()->PageCount();
 }

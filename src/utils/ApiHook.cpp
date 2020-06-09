@@ -54,7 +54,7 @@ class MemoryProtector {
 
 static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::string_view& dllName,
                                               const std::string_view& apiName) {
-    AssertCrash(moduleBase != nullptr);
+    CrashIf(moduleBase == nullptr);
     if (moduleBase == nullptr)
         return nullptr;
 
@@ -157,7 +157,7 @@ IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiNam
 }
 
 bool IatHook::hook() {
-    AssertCrash(m_userOrigVar != nullptr);
+    CrashIf(m_userOrigVar == nullptr);
     IMAGE_THUNK_DATA* pThunk = FindIatThunk(m_dllName, m_apiName);
     if (pThunk == nullptr)
         return false;
@@ -172,8 +172,8 @@ bool IatHook::hook() {
 }
 
 bool IatHook::unHook() {
-    AssertCrash(m_userOrigVar != nullptr);
-    AssertCrash(m_hooked);
+    CrashIf(m_userOrigVar == nullptr);
+    CrashIf(!m_hooked);
     if (!m_hooked)
         return false;
 

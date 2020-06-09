@@ -28,9 +28,8 @@ SumatraUIAutomationProvider::~SumatraUIAutomationProvider()
     startpage = nullptr;
 }
 
-void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel *dm)
-{
-    AssertCrash(!document);
+void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel *dm) {
+    CrashIf(document);
 
     document = new SumatraUIAutomationDocumentProvider(canvasHwnd, this);
     document->LoadDocument(dm);

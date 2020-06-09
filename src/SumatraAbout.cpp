@@ -338,12 +338,14 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
         el->leftPos.dx = txtSize.cx;
         el->leftPos.dy = txtSize.cy;
 
-        if (el == &gAboutLayoutInfo[0])
+        if (el == &gAboutLayoutInfo[0]) {
             leftDy = el->leftPos.dy;
-        else
-            AssertCrash(leftDy == el->leftPos.dy);
-        if (leftLargestDx < el->leftPos.dx)
+        } else {
+            CrashIf(leftDy != el->leftPos.dy);
+        }
+        if (leftLargestDx < el->leftPos.dx) {
             leftLargestDx = el->leftPos.dx;
+        }
     }
 
     /* calculate right text dimensions */
@@ -354,19 +356,22 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
         SIZE txtSize;
         size_t txtLen = str::Len(el->rightTxt);
 #ifdef GIT_COMMIT_ID
-        if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR))
+        if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR)) {
             txtLen -= str::Len(GIT_COMMIT_ID_STR) - 7;
+        }
 #endif
         GetTextExtentPoint32W(hdc, el->rightTxt, (int)txtLen, &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 
-        if (el == &gAboutLayoutInfo[0])
+        if (el == &gAboutLayoutInfo[0]) {
             rightDy = el->rightPos.dy;
-        else
-            AssertCrash(rightDy == el->rightPos.dy);
-        if (rightLargestDx < el->rightPos.dx)
+        } else {
+            CrashIf(rightDy != el->rightPos.dy);
+        }
+        if (rightLargestDx < el->rightPos.dx) {
             rightLargestDx = el->rightPos.dx;
+        }
     }
 
     /* calculate total dimension and position */
@@ -480,7 +485,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     switch (msg) {
         case WM_CREATE:
-            AssertCrash(!gHwndAbout);
+            CrashIf(gHwndAbout);
             break;
 
         case WM_ERASEBKGND:
@@ -526,7 +531,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_DESTROY:
             DeleteInfotip();
-            AssertCrash(gHwndAbout);
+            CrashIf(!gHwndAbout);
             gHwndAbout = nullptr;
             break;
 

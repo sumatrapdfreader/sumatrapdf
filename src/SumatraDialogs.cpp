@@ -962,7 +962,7 @@ bool Dialog_AddFavorite(HWND hwnd, const WCHAR* pageNo, AutoFreeWstr& favName) {
         return false;
     }
 
-    AssertCrash(data.favName != favName || !data.favName);
+    CrashIf(!(data.favName != favName || !data.favName));
     favName.Set(data.favName);
     return true;
 }

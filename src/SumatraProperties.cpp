@@ -370,7 +370,7 @@ static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, Rect* 
         lineCount++;
     }
 
-    AssertCrash(lineCount > 0 && textDy > 0);
+    CrashIf(!(lineCount > 0 && textDy > 0));
     int totalDx = leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX + rightMaxDx;
 
     int totalDy = 4;
