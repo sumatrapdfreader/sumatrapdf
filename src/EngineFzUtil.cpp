@@ -80,18 +80,20 @@ WCHAR* pdf_clean_string(WCHAR* s) {
 fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation) {
     fz_matrix ctm = fz_pre_scale(fz_rotate((float)rotation), zoom, zoom);
 
-    AssertCrash(0 == mediabox.x0 && 0 == mediabox.y0);
+    CrashIf(0 != mediabox.x0 || 0 != mediabox.y0);
     rotation = (rotation + 360) % 360;
-    if (90 == rotation)
+    if (90 == rotation) {
         ctm = fz_pre_translate(ctm, 0, -mediabox.y1);
-    else if (180 == rotation)
+    } else if (180 == rotation) {
         ctm = fz_pre_translate(ctm, -mediabox.x1, -mediabox.y1);
-    else if (270 == rotation)
+    } else if (270 == rotation) {
         ctm = fz_pre_translate(ctm, -mediabox.x1, 0);
+    }
 
-    AssertCrash(fz_matrix_expansion(ctm) > 0);
-    if (fz_matrix_expansion(ctm) == 0)
+    CrashIf(fz_matrix_expansion(ctm) <= 0);
+    if (fz_matrix_expansion(ctm) == 0) {
         return fz_identity;
+    }
 
     return ctm;
 }

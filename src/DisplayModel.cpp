@@ -368,9 +368,10 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         row.dx += pageSpacing.dx * (columns - 1);
     }
 
-    AssertCrash(!RectD(PointD(), row).IsEmpty());
-    if (RectD(PointD(), row).IsEmpty())
+    CrashIf(RectD(PointD(), row).IsEmpty());
+    if (RectD(PointD(), row).IsEmpty()) {
         return 0;
+    }
 
     int areaForPagesDx = viewPort.dx - windowMargin.left - windowMargin.right;
     int areaForPagesDy = viewPort.dy - windowMargin.top - windowMargin.bottom;
@@ -379,8 +380,9 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
 
     float zoomX = areaForPagesDx / (float)row.dx;
     float zoomY = areaForPagesDy / (float)row.dy;
-    if (zoomX < zoomY || ZOOM_FIT_WIDTH == zoomVirtual)
+    if (zoomX < zoomY || ZOOM_FIT_WIDTH == zoomVirtual) {
         return zoomX;
+    }
     return zoomY;
 }
 
@@ -575,7 +577,7 @@ RestartLayout:
         pageInfo->pos = pos;
 
         pageInARow++;
-        AssertCrash(pageInARow <= columns);
+        CrashIf(pageInARow > columns);
         if (pageInARow == columns) {
             /* starting next row */
             currPosY += rowMaxPageDy + pageSpacing.dy;
@@ -660,7 +662,7 @@ RestartLayout:
         CrashIf(pageInARow >= dimof(columnMaxWidth));
         pageOffX += columnMaxWidth[pageInARow] + pageSpacing.dx;
         ++pageInARow;
-        AssertCrash(pageOffX >= 0 && pageInfo->pos.x >= 0);
+        CrashIf(!(pageOffX >= 0 && pageInfo->pos.x >= 0));
 
         if (pageInARow == columns) {
             pageOffX = offX + windowMargin.left;
@@ -692,8 +694,8 @@ RestartLayout:
 }
 
 void DisplayModel::ChangeStartPage(int newStartPage) {
-    AssertCrash(ValidPageNo(newStartPage));
-    AssertCrash(!IsContinuous(GetDisplayMode()));
+    CrashIf(!ValidPageNo(newStartPage));
+    CrashIf(IsContinuous(GetDisplayMode()));
 
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
     startPage = newStartPage;
@@ -754,7 +756,7 @@ int DisplayModel::GetPageNoByPoint(Point pt) {
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo* pageInfo = GetPageInfo(pageNo);
-        AssertCrash(0.0 == pageInfo->visibleRatio || pageInfo->shown);
+        CrashIf(!(0.0 == pageInfo->visibleRatio || pageInfo->shown));
         if (!pageInfo->shown) {
             continue;
         }
@@ -1213,7 +1215,7 @@ bool DisplayModel::GoToFirstPage() {
             return false;
         }
     } else {
-        AssertCrash(PageShown(startPage));
+        CrashIf(!PageShown(startPage));
         if (1 == startPage) {
             /* we're on a first page already */
             return false;
@@ -1261,9 +1263,10 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
     int newPageNo;
     int currPageNo;
 
-    AssertCrash(0 != dy);
-    if (0 == dy)
+    CrashIf(0 == dy);
+    if (0 == dy) {
         return;
+    }
 
     int newYOff = currYOff;
 
@@ -1271,11 +1274,12 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
         if ((dy < 0) && (0 == currYOff)) {
             if (startPage > 1) {
                 newPageNo = startPage - 1;
-                AssertCrash(ValidPageNo(newPageNo));
+                CrashIf(!ValidPageNo(newPageNo));
                 pageInfo = GetPageInfo(newPageNo);
                 newYOff = pageInfo->pos.dy - viewPort.dy;
-                if (newYOff < 0)
+                if (newYOff < 0) {
                     newYOff = 0; /* TODO: center instead? */
+                }
                 GoToPrevPage(newYOff);
                 return;
             }
@@ -1416,10 +1420,11 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
             }
         }
         // skip Fit Width if it results in the same value as Fit Page (same as when zooming in)
-        if (newZoom + FUZZ < widthZoom && widthZoom < currZoom - FUZZ && widthZoom != pageZoom)
+        if (newZoom + FUZZ < widthZoom && widthZoom < currZoom - FUZZ && widthZoom != pageZoom) {
             newZoom = ZOOM_FIT_WIDTH;
-        else if (newZoom + FUZZ < pageZoom && pageZoom < currZoom - FUZZ)
+        } else if (newZoom + FUZZ < pageZoom && pageZoom < currZoom - FUZZ) {
             newZoom = ZOOM_FIT_PAGE;
+        }
     }
 
     return newZoom;
@@ -1427,9 +1432,10 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
 
 void DisplayModel::RotateBy(int newRotation) {
     newRotation = NormalizeRotation(newRotation);
-    AssertCrash(0 != newRotation);
-    if (0 == newRotation)
+    CrashIf(0 == newRotation);
+    if (0 == newRotation) {
         return;
+    }
     newRotation = NormalizeRotation(newRotation + rotation);
 
     int currPageNo = CurrentPageNo();
