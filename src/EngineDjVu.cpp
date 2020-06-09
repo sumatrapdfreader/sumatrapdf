@@ -92,8 +92,8 @@ static PageDestination* newDjVuDestination(const char* link) {
 
     if (!res->kind) {
         logf("unsupported djvu link: '%s'\n", link);
-        CrashIf(!res->kind);
     }
+    CrashIf(!res->kind);
 
     res->kind = kindDestinationNone;
     return res;

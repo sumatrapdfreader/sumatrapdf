@@ -155,12 +155,8 @@ static void createMainLayout(EditTitleWindow* win) {
     if (nPages > 0) {
         {
             auto w = new StaticCtrl(parent);
-            if (nPages == 0) {
-                w->SetText("&Page");
-            } else {
-                AutoFreeStr pageStr = str::Format("&Page (1-%d)", nPages);
-                w->SetText(pageStr.as_view());
-            }
+            AutoFreeStr pageStr = str::Format("&Page (1-%d)", nPages);
+            w->SetText(pageStr.as_view());
             w->Create();
             vbox->AddChild(w);
         }

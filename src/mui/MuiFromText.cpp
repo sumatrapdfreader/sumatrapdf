@@ -456,10 +456,11 @@ bool MuiFromText(ParsedMui& res, const std::string_view& str) {
     TxtParser parser;
     parser.SetToParse(str);
     bool ok = ParseTxt(parser);
-    if (!ok)
-        return false;
-    ParseMuiDefinition(GetRootArray(&parser), res);
     CrashIf(!ok);
+    if (!ok) {
+        return false;
+    }
+    ParseMuiDefinition(GetRootArray(&parser), res);
     return ok;
 }
 

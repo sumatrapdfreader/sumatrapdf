@@ -72,7 +72,6 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
     if (!path) {
         return;
     }
-    CrashIf(!link); // /analyze claims that this could happen - it really can't
     auto k = link->Kind();
     // TODO: TocItem from Chm contain other types
     // we probably shouldn't set TocItem::dest there
