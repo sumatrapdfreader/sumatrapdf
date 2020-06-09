@@ -555,7 +555,9 @@ IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd) {
 }
 
 bool IsKeyPressed(int key) {
-    return GetKeyState(key) & 0x8000 ? true : false;
+    SHORT state = GetKeyState(key);
+    SHORT isDown = state & 0x8000;
+    return isDown ? true : false;
 }
 
 bool IsShiftPressed() {
