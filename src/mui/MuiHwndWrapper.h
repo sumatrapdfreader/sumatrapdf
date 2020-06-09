@@ -38,8 +38,8 @@ class HwndWrapper : public Control {
     void OnPaint(HWND hwnd);
 
     // ILayout
-    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
-    virtual void Arrange(const Gdiplus::Rect finalRect);
+    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    void Arrange(const Gdiplus::Rect finalRect) override;
 
     void TopLevelLayout();
 

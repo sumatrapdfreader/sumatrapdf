@@ -34,6 +34,8 @@
 #include "SvgIcons.h"
 #include "SumatraConfig.h"
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
+
 // TODO: experimenting with matching toolbar colors with theme
 // Doesn't work, probably have to implement a custom toolbar control
 // where we draw everything ourselves.

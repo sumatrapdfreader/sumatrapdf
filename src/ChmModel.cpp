@@ -342,7 +342,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         }
     }
 
-    virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
+    void Visit(const WCHAR* name, const WCHAR* url, int level) override {
         int pageNo = CreatePageNoForURL(url);
         name = Allocator::StrDup(allocator, name);
         url = Allocator::StrDup(allocator, url);

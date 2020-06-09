@@ -148,8 +148,8 @@ class SumatraLogo : public Control {
     }
     virtual ~SumatraLogo() {
     }
-    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
-    virtual void Paint(Graphics* gfx, int offX, int offY);
+    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    void Paint(Graphics* gfx, int offX, int offY) override;
 };
 
 Gdiplus::Size SumatraLogo::Measure(const Gdiplus::Size availableSize) {

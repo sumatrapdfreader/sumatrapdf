@@ -41,5 +41,5 @@ struct SplitterCtrl : public Window {
     SplitterCtrl(HWND parent);
     ~SplitterCtrl() override;
 
-    bool Create();
+    bool Create() override;
 };

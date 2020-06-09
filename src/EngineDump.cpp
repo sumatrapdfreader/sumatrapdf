@@ -452,8 +452,8 @@ class PasswordHolder : public PasswordUI {
   public:
     explicit PasswordHolder(const WCHAR* password) : password(password) {
     }
-    virtual WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
-                               bool* saveKey) {
+    WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
+                       bool* saveKey) override {
         UNUSED(fileName);
         UNUSED(fileDigest);
         UNUSED(decryptionKeyOut);

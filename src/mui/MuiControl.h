@@ -39,9 +39,9 @@ class Control : public ILayout {
     virtual void Paint(Graphics* gfx, int offX, int offY);
 
     // ILayout
-    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
-    virtual void Arrange(const Gdiplus::Rect finalRect);
-    virtual Gdiplus::Size DesiredSize();
+    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    void Arrange(const Gdiplus::Rect finalRect) override;
+    Gdiplus::Size DesiredSize() override;
 
     // mouse enter/leave are used e.g. by a button to change the look when mouse
     // is over them. The intention is that in response to those a window should

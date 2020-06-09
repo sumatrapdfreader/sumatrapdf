@@ -243,7 +243,7 @@ public:
     CPdfPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_PDF_PREVIEW_CLSID) { }
 
 protected:
-    virtual EngineBase *LoadEngine(IStream *stream);
+    EngineBase *LoadEngine(IStream *stream) override;
 };
 
 #ifdef BUILD_XPS_PREVIEW

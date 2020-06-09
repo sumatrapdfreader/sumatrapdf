@@ -579,32 +579,32 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextP
         }
     };
     class CharEndPointMover : public EndPointMover {
-        bool NextEndpoint() const {
+        bool NextEndpoint() const override {
             (*target_glyph)++;
             return true;
         }
-        bool PrevEndpoint() const {
+        bool PrevEndpoint() const override {
             (*target_glyph)--;
             return true;
         }
     };
     class WordEndPointMover : public EndPointMover {
-        bool NextEndpoint() const {
+        bool NextEndpoint() const override {
             (*target_glyph) = target->FindNextWordEndpoint(*target_page, *target_glyph, true);
             return true;
         }
-        bool PrevEndpoint() const {
+        bool PrevEndpoint() const override {
             (*target_glyph) = target->FindPreviousWordEndpoint(*target_page, *target_glyph, true);
             (*target_glyph)--;
             return true;
         }
     };
     class LineEndPointMover : public EndPointMover {
-        bool NextEndpoint() const {
+        bool NextEndpoint() const override {
             (*target_glyph) = target->FindNextLineEndpoint(*target_page, *target_glyph, true);
             return true;
         }
-        bool PrevEndpoint() const {
+        bool PrevEndpoint() const override {
             (*target_glyph) = target->FindPreviousLineEndpoint(*target_page, *target_glyph, true);
             (*target_glyph)--;
             return true;

@@ -11,8 +11,8 @@ class MobiFormatter : public HtmlFormatter {
     MobiDoc* doc;
 
     void HandleSpacing_Mobi(HtmlToken* t);
-    virtual void HandleTagImg(HtmlToken* t);
-    virtual void HandleHtmlTag(HtmlToken* t);
+    void HandleTagImg(HtmlToken* t) override;
+    void HandleHtmlTag(HtmlToken* t) override;
 
   public:
     MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc);
@@ -23,11 +23,11 @@ class MobiFormatter : public HtmlFormatter {
 class EpubDoc;
 
 class EpubFormatter : public HtmlFormatter {
-    virtual void HandleTagImg(HtmlToken* t);
-    virtual void HandleTagPagebreak(HtmlToken* t);
-    virtual void HandleTagLink(HtmlToken* t);
-    virtual void HandleHtmlTag(HtmlToken* t);
-    virtual bool IgnoreText();
+    void HandleTagImg(HtmlToken* t) override;
+    void HandleTagPagebreak(HtmlToken* t) override;
+    void HandleTagLink(HtmlToken* t) override;
+    void HandleHtmlTag(HtmlToken* t) override;
+    bool IgnoreText() override;
 
     void HandleTagSvgImage(HtmlToken* t);
 
@@ -48,11 +48,11 @@ class Fb2Formatter : public HtmlFormatter {
     int section;
     int titleCount;
 
-    virtual void HandleTagImg(HtmlToken* t);
+    void HandleTagImg(HtmlToken* t) override;
     void HandleTagAsHtml(HtmlToken* t, const char* name);
-    virtual void HandleHtmlTag(HtmlToken* t);
+    void HandleHtmlTag(HtmlToken* t) override;
 
-    virtual bool IgnoreText() {
+    bool IgnoreText() override {
         return false;
     }
 
@@ -68,8 +68,8 @@ class HtmlDoc;
 
 class HtmlFileFormatter : public HtmlFormatter {
   protected:
-    virtual void HandleTagImg(HtmlToken* t);
-    virtual void HandleTagLink(HtmlToken* t);
+    void HandleTagImg(HtmlToken* t) override;
+    void HandleTagLink(HtmlToken* t) override;
 
     HtmlDoc* htmlDoc;
 
@@ -82,7 +82,7 @@ class HtmlFileFormatter : public HtmlFormatter {
 
 class TxtFormatter : public HtmlFormatter {
   protected:
-    virtual void HandleTagPagebreak(HtmlToken* t) {
+    void HandleTagPagebreak(HtmlToken* t) override {
         UNUSED(t);
         ForceNewPage();
     }

@@ -35,11 +35,11 @@ class ScrollBar : public Control {
     ScrollBar(int onOverDy = 12, int inactiveDy = 5);
     ~ScrollBar() {
     }
-    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
-    virtual void NotifyMouseEnter();
-    virtual void NotifyMouseLeave();
+    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    void Paint(Graphics* gfx, int offX, int offY) override;
 
-    virtual void Paint(Graphics* gfx, int offX, int offY);
+    void NotifyMouseEnter() override;
+    void NotifyMouseLeave() override;
 
     void SetFilled(float perc);
     float GetPercAt(int x);

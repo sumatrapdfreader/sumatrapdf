@@ -379,13 +379,13 @@ class FilesProvider : public TestFileProvider {
     virtual ~FilesProvider() {
     }
 
-    virtual WCHAR* NextFile() {
+    WCHAR* NextFile() override {
         if (provided >= files.size())
             return nullptr;
         return str::Dup(files.at(provided++));
     }
 
-    virtual void Restart() {
+    void Restart() override {
         provided = 0;
     }
 };
@@ -403,8 +403,8 @@ class DirFileProvider : public TestFileProvider {
   public:
     DirFileProvider(const WCHAR* path, const WCHAR* filter);
     virtual ~DirFileProvider();
-    virtual WCHAR* NextFile();
-    virtual void Restart();
+    WCHAR* NextFile() override;
+    void Restart() override;
 };
 
 DirFileProvider::DirFileProvider(const WCHAR* path, const WCHAR* filter) {

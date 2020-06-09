@@ -45,9 +45,9 @@ class PageControl : public Control {
     Gdiplus::Size GetDrawableSize() const;
     DrawInstr* GetLinkAt(int x, int y) const;
 
-    virtual void Paint(Graphics* gfx, int offX, int offY);
+    void Paint(Graphics* gfx, int offX, int offY) override;
 
-    virtual void NotifyMouseMove(int x, int y);
+    void NotifyMouseMove(int x, int y) override;
 };
 
 // PagesLayout is for 2 controls separated with a space:
@@ -71,12 +71,12 @@ class PagesLayout : public ILayout {
     }
     virtual ~PagesLayout() {
     }
-    virtual Gdiplus::Size DesiredSize() {
+    Gdiplus::Size DesiredSize() override {
         return desiredSize;
     }
 
-    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
-    virtual void Arrange(const Gdiplus::Rect finalRect);
+    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    void Arrange(const Gdiplus::Rect finalRect) override;
 
     PageControl* GetPage1() const {
         return page1;

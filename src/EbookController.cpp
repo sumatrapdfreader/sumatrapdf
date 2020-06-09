@@ -114,7 +114,7 @@ class EbookFormattingThread : public ThreadBase {
     virtual ~EbookFormattingThread();
 
     // ThreadBase
-    virtual void Run();
+    void Run() override;
 };
 
 EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs* args, EbookController* ctrl, int reparseIdx,
@@ -787,7 +787,7 @@ class EbookTocCollector : public EbookTocVisitor {
         this->ctrl = ctrl;
     }
 
-    virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
+    void Visit(const WCHAR* name, const WCHAR* url, int level) override {
         TocItem* item = nullptr;
         // TODO: set parent for newEbookTocDest()
         if (!url) {

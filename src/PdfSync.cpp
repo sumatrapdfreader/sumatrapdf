@@ -48,8 +48,8 @@ class Pdfsync : public Synchronizer {
         AssertCrash(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
     }
 
-    virtual int DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col);
-    virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects);
+    int DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) override;
+    int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) override;
 
   private:
     int RebuildIndex();
@@ -74,8 +74,8 @@ class SyncTex : public Synchronizer {
         synctex_scanner_free(scanner);
     }
 
-    virtual int DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col);
-    virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects);
+    int DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) override;
+    int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<Rect>& rects) override;
 
   private:
     int RebuildIndex();

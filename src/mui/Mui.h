@@ -104,7 +104,7 @@ class WndInputWantedFilter : public WndFilter {
     }
     virtual ~WndInputWantedFilter() {
     }
-    virtual bool Matches(Control* c, int offX, int offY) {
+    bool Matches(Control* c, int offX, int offY) override {
         if ((c->wantedInputBits & wantedInputMask) != 0) {
             Gdiplus::Rect r = Gdiplus::Rect(offX, offY, c->pos.Width, c->pos.Height);
             return r.Contains(x, y);

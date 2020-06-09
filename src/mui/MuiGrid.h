@@ -90,12 +90,12 @@ class Grid : public Control {
     Grid& Add(CellData&);
 
     // Control
-    virtual void Paint(Graphics* gfx, int offX, int offY);
+    void Paint(Graphics* gfx, int offX, int offY) override;
 
     // ILayout
-    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
-    virtual Gdiplus::Size DesiredSize() {
+    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    Gdiplus::Size DesiredSize() override {
         return desiredSize;
     }
-    virtual void Arrange(const Gdiplus::Rect finalRect);
+    void Arrange(const Gdiplus::Rect finalRect) override;
 };

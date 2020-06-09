@@ -25,7 +25,7 @@ struct TrackbarCtrl : WindowBase {
     TrackbarCtrl(HWND parent);
     ~TrackbarCtrl();
 
-    bool Create();
+    bool Create() override;
 
     Size GetIdealSize() override;
     void SetRange(int min, int max);

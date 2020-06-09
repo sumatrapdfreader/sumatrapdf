@@ -1331,9 +1331,9 @@ class ChmDataCache {
 
 class ChmFormatter : public HtmlFormatter {
   protected:
-    virtual void HandleTagImg(HtmlToken* t);
-    virtual void HandleTagPagebreak(HtmlToken* t);
-    virtual void HandleTagLink(HtmlToken* t);
+    void HandleTagImg(HtmlToken* t) override;
+    void HandleTagPagebreak(HtmlToken* t) override;
+    void HandleTagLink(HtmlToken* t) override;
 
     ChmDataCache* chmDoc = nullptr;
     AutoFree pagePath;
@@ -1440,7 +1440,7 @@ class EngineChm : public EngineEbook {
 
     bool Load(const WCHAR* fileName);
 
-    virtual PageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo);
+    PageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
 };
 
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
@@ -1523,7 +1523,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         return html.StealData();
     }
 
-    virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
+    void Visit(const WCHAR* name, const WCHAR* url, int level) override {
         UNUSED(name);
         UNUSED(level);
         if (!url || url::IsAbsolute(url)) {
@@ -1686,7 +1686,7 @@ class EngineHtml : public EngineEbook {
 
     bool Load(const WCHAR* fileName);
 
-    virtual PageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo);
+    PageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
 };
 
 bool EngineHtml::Load(const WCHAR* fileName) {

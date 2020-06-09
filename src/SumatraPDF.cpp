@@ -676,7 +676,7 @@ class ThumbnailRenderingTask : public RenderingCallback {
     ~ThumbnailRenderingTask() {
     }
 
-    virtual void Callback(RenderedBitmap* bmp) {
+    void Callback(RenderedBitmap* bmp) override {
         saveThumbnail(bmp);
         delete this;
     }

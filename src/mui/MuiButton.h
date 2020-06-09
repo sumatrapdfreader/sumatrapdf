@@ -20,11 +20,11 @@ class Button : public Control {
 
     void RecalculateSize(bool repaintIfSizeDidntChange);
 
-    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
-    virtual void Paint(Graphics* gfx, int offX, int offY);
+    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    void Paint(Graphics* gfx, int offX, int offY) override;
 
-    virtual void NotifyMouseEnter();
-    virtual void NotifyMouseLeave();
+    void NotifyMouseEnter() override;
+    void NotifyMouseLeave() override;
 
     void SetDefaultStyle(Style* style);
     void SetMouseOverStyle(Style* style);
@@ -54,11 +54,11 @@ class ButtonVector : public Control {
 
     void RecalculateSize(bool repaintIfSizeDidntChange);
 
-    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
-    virtual void Paint(Graphics* gfx, int offX, int offY);
+    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    void Paint(Graphics* gfx, int offX, int offY) override;
 
-    virtual void NotifyMouseEnter();
-    virtual void NotifyMouseLeave();
+    void NotifyMouseEnter() override;
+    void NotifyMouseLeave() override;
 
     void SetDefaultStyle(Style* style);
     void SetMouseOverStyle(Style* style);

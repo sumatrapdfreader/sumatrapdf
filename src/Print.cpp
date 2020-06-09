@@ -399,7 +399,7 @@ class PrintThreadData : public ProgressUpdateUI {
         RemoveNotification(wnd);
     }
 
-    virtual void UpdateProgress(int current, int total) {
+    void UpdateProgress(int current, int total) override {
         uitask::Post([=] {
             if (WindowInfoStillValid(win) && win->notifications->Contains(wnd)) {
                 wnd->UpdateProgress(current, total);
@@ -407,7 +407,7 @@ class PrintThreadData : public ProgressUpdateUI {
         });
     }
 
-    virtual bool WasCanceled() {
+    bool WasCanceled() override {
         return isCanceled || !WindowInfoStillValid(win) || win->printCanceled;
     }
 
