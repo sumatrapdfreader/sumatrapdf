@@ -108,16 +108,16 @@ struct DrawInstr {
 class CssPullParser;
 
 struct StyleRule {
-    HtmlTag tag;
-    uint32_t classHash;
+    HtmlTag tag = Tag_NotFound;
+    uint32_t classHash = 0;
 
     enum Unit { px, pt, em, inherit };
 
-    float textIndent;
-    Unit textIndentUnit;
-    AlignAttr textAlign;
+    float textIndent = 0;
+    Unit textIndentUnit = inherit;
+    AlignAttr textAlign = Align_NotFound;
 
-    StyleRule();
+    StyleRule() = default;
 
     void Merge(StyleRule& source);
 

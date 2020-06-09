@@ -99,14 +99,13 @@ class TextRenderGdiplus : public ITextRender {
     Gdiplus::RectF (*measureAlgo)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
 
     // We don't own gfx and currFont
-    Gdiplus::Graphics* gfx;
-    CachedFont* currFont;
-    Gdiplus::Color textColor;
-    Gdiplus::Brush* textColorBrush;
-    WCHAR txtConvBuf[512];
+    Gdiplus::Graphics* gfx = nullptr;
+    CachedFont* currFont = nullptr;
+    Gdiplus::Color textColor{};
+    Gdiplus::Brush* textColorBrush = nullptr;
+    WCHAR txtConvBuf[512]{};
 
-    TextRenderGdiplus() : gfx(nullptr), currFont(nullptr), textColorBrush(nullptr), textColor(0, 0, 0, 0) {
-    }
+    TextRenderGdiplus() = default;
 
   public:
     static TextRenderGdiplus* Create(Gdiplus::Graphics* gfx,
@@ -138,28 +137,20 @@ class TextRenderGdiplus : public ITextRender {
 // Note: this is not meant to be used, just exists so that I can see
 // perf compared to other TextRender* implementations
 class TextRenderHdc : public ITextRender {
-    BITMAPINFO bmi;
+    BITMAPINFO bmi{};
 
-    HDC hdc;
-    HBITMAP bmp;
-    void* bmpData;
+    HDC hdc = nullptr;
+    HBITMAP bmp = nullptr;
+    void* bmpData = nullptr;
 
     // We don't own gfx and currFont
-    Gdiplus::Graphics* gfx;
-    CachedFont* currFont;
-    Gdiplus::Color textColor;
-    Gdiplus::Color textBgColor;
-    WCHAR txtConvBuf[512];
+    Gdiplus::Graphics* gfx = nullptr;
+    CachedFont* currFont = nullptr;
+    Gdiplus::Color textColor{};
+    Gdiplus::Color textBgColor{};
+    WCHAR txtConvBuf[512]{};
 
-    TextRenderHdc()
-        : hdc(nullptr),
-          bmp(nullptr),
-          bmpData(nullptr),
-          currFont(nullptr),
-          textColor(0, 0, 0, 0),
-          textBgColor(0, 0, 0, 0) {
-        ZeroMemory(&bmi, sizeof(bmi));
-    }
+    TextRenderHdc() = default;
 
   public:
     static TextRenderHdc* Create(Gdiplus::Graphics* gfx, int dx, int dy);
