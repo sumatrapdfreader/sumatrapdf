@@ -713,7 +713,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetChecked(popup, IDM_FAV_TOGGLE, gGlobalPrefs->showFavorites);
 
     bool supportsAnnotations = false;
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    EngineBase* engine = dm->GetEngine();
     if (engine) {
         supportsAnnotations = engine->supportsAnnotations;
     }

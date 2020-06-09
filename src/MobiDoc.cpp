@@ -127,7 +127,7 @@ static_assert(kMobiHeaderLen == sizeof(MobiHeader), "wrong size of MobiHeader st
 static bool PalmdocUncompress(const char* src, size_t srcLen, str::Str& dst) {
     const char* srcEnd = src + srcLen;
     while (src < srcEnd) {
-        uint8_t c = (uint8_t)*src++;
+        u8 c = (u8)*src++;
         if ((c >= 1) && (c <= 8)) {
             if (src + c > srcEnd)
                 return false;
@@ -139,21 +139,19 @@ static bool PalmdocUncompress(const char* src, size_t srcLen, str::Str& dst) {
             if (src + 1 > srcEnd) {
                 return false;
             }
-            uint16_t c2 = (c << 8) | (uint8_t)*src++;
-            uint16_t back = (c2 >> 3) & 0x07ff;
+            u16 c2 = (c << 8) | (u8)*src++;
+            u16 back = (c2 >> 3) & 0x07ff;
             if (back > dst.size() || 0 == back) {
                 return false;
             }
-            for (uint8_t n = (c2 & 7) + 3; n > 0; n--) {
+            for (u8 n = (c2 & 7) + 3; n > 0; n--) {
                 char ctmp = dst.at(dst.size() - back);
                 dst.AppendChar(ctmp);
             }
-        } else if (c >= 192) {
+        } else {
+            // c >= 192
             dst.AppendChar(' ');
             dst.AppendChar((char)(c ^ 0x80));
-        } else {
-            CrashIf(true);
-            return false;
         }
     }
 

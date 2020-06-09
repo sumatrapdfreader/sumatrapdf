@@ -158,9 +158,7 @@ void StyleRule::Merge(StyleRule& source) {
 }
 
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
-    : pageDx(args->pageDx),
-      pageDy(args->pageDy),
-      textAllocator(args->textAllocator) {
+    : pageDx(args->pageDx), pageDy(args->pageDy), textAllocator(args->textAllocator) {
     currReparseIdx = args->reparseIdx;
     htmlParser = new HtmlPullParser(args->htmlStr.data(), args->htmlStr.size());
     htmlParser->SetCurrPosOff(currReparseIdx);
@@ -1386,7 +1384,6 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         } else if (DrawInstrType::LinkEnd == i.type) {
             // TODO: set text color back again
         } else if ((DrawInstrType::ElasticSpace == i.type) || (DrawInstrType::FixedSpace == i.type) ||
-                   (DrawInstrType::String == i.type) || (DrawInstrType::RtlString == i.type) ||
                    (DrawInstrType::SetFont == i.type) || (DrawInstrType::Anchor == i.type)) {
             // ignore
         } else {

@@ -420,10 +420,10 @@ static COLORREF GetDropDownColor(std::string_view sv) {
 }
 
 // TODO: mupdf shows it in 1.6 but not 1.7. Why?
-static bool showRect = false;
+bool gShowRect = false;
 
 static void DoRect(EditAnnotationsWindow* win, Annotation* annot) {
-    if (!showRect) {
+    if (!gShowRect) {
         return;
     }
     str::Str s;

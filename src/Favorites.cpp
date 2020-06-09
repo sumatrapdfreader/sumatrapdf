@@ -726,7 +726,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     TreeCtrl* treeCtrl = (TreeCtrl*)ev->w;
     CrashIf(!IsTreeKind(treeCtrl->kind));
     HWND hwnd = treeCtrl->hwnd;
-    //WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    // WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
     POINT pt{};
     TreeItem* ti = GetOrSelectTreeItemAtPos(ev, pt);

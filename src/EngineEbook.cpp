@@ -219,7 +219,8 @@ bool EngineEbook::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
         return false;
     }
     AutoFreeWstr path = strconv::Utf8ToWstr(copyFileName);
-    return fileName ? CopyFileW(fileName, path, FALSE) : false;
+    auto res = CopyFileW(fileName, path, FALSE);
+    return res != 0;
 }
 
 // make RenderCache request larger tiles than per default
