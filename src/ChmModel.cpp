@@ -176,10 +176,10 @@ void ChmModel::CopySelection() {
     }
 }
 
-LRESULT ChmModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lParam) {
+LRESULT ChmModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) {
     if (!htmlWindow)
         return 0;
-    return htmlWindow->SendMsg(msg, wp, lParam);
+    return htmlWindow->SendMsg(msg, wp, lp);
 }
 
 void ChmModel::DisplayPage(const WCHAR* pageUrl) {

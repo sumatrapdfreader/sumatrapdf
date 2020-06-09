@@ -210,8 +210,8 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled) {
     }
 
     if (WM_SIZE == msg) {
-        // int dx = LOWORD(lParam);
-        // int dy = HIWORD(lParam);
+        // int dx = LOWORD(lp);
+        // int dy = HIWORD(lp);
         wndRoot->RequestLayout();
         return 0;
     }

@@ -2799,14 +2799,14 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
 
 #if 0
 // code adapted from https://support.microsoft.com/kb/131462/en-us
-static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wp, LPARAM lParam)
+static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wp, LPARAM lp)
 {
     switch (uiMsg) {
     case WM_INITDIALOG:
-        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)lParam);
+        SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)lp);
         break;
     case WM_NOTIFY:
-        if (((LPOFNOTIFY)lParam)->hdr.code == CDN_SELCHANGE) {
+        if (((LPOFNOTIFY)lp)->hdr.code == CDN_SELCHANGE) {
             LPOPENFILENAME lpofn = (LPOPENFILENAME)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             // make sure that the filename buffer is large enough to hold
             // all the selected filenames
@@ -4178,12 +4178,12 @@ extern void SetDebugPaint(bool);
 extern bool IsDebugPaint();
 } // namespace mui
 
-static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int wmId = LOWORD(wp);
 
     if (wmId >= 0xF000) {
         // handle system menu messages for the Window menu (needed for Tabs in Titlebar)
-        return SendMessage(hwnd, WM_SYSCOMMAND, wp, lParam);
+        return SendMessage(hwnd, WM_SYSCOMMAND, wp, lp);
     }
 
     // check if the menuId belongs to an entry in the list of
@@ -4219,7 +4219,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 #endif
 
     if (!win) {
-        return DefWindowProc(hwnd, msg, wp, lParam);
+        return DefWindowProc(hwnd, msg, wp, lp);
     }
 
     if (!win->IsAboutWindow() && IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST) {
@@ -4598,7 +4598,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         default:
-            return DefWindowProc(hwnd, msg, wp, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
     }
 
     return 0;

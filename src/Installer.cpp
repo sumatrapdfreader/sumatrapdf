@@ -592,7 +592,7 @@ static void OnButtonOptions() {
     gButtonOptions->SetFocus();
 }
 
-static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData) {
+static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lpData) {
     switch (msg) {
         case BFFM_INITIALIZED:
             if (!str::IsEmpty((WCHAR*)lpData)) {
@@ -603,9 +603,9 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
         // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
         case BFFM_SELCHANGED: {
             WCHAR path[MAX_PATH];
-            if (SHGetPathFromIDList((LPITEMIDLIST)lParam, path) && dir::Exists(path)) {
+            if (SHGetPathFromIDList((LPITEMIDLIST)lp, path) && dir::Exists(path)) {
                 SHFILEINFO sfi = {0};
-                SHGetFileInfo((LPCWSTR)lParam, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
+                SHGetFileInfo((LPCWSTR)lp, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
                 if (!(sfi.dwAttributes & SFGAO_LINK)) {
                     break;
                 }

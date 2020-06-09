@@ -1454,15 +1454,15 @@ static HWND GetBrowserControlHwnd(HWND hwndControlParent) {
 }
 
 // WndProc of the window that is a parent hwnd of embedded browser control.
-static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     HtmlWindow* win = (HtmlWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (!win)
-        return DefWindowProc(hwnd, msg, wp, lParam);
+        return DefWindowProc(hwnd, msg, wp, lp);
 
     switch (msg) {
         case WM_SIZE:
             if (SIZE_MINIMIZED != wp) {
-                win->OnSize(Size(LOWORD(lParam), HIWORD(lParam)));
+                win->OnSize(Size(LOWORD(lp), HIWORD(lp)));
                 return 0;
             }
             break;
@@ -1479,13 +1479,13 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lPa
             break;
 
         case WM_DROPFILES:
-            return CallWindowProc(win->wndProcBrowserPrev, hwnd, msg, wp, lParam);
+            return CallWindowProc(win->wndProcBrowserPrev, hwnd, msg, wp, lp);
 
         case WM_VSCROLL:
-            win->SendMsg(msg, wp, lParam);
+            win->SendMsg(msg, wp, lp);
             return 0;
     }
-    return DefWindowProc(hwnd, msg, wp, lParam);
+    return DefWindowProc(hwnd, msg, wp, lp);
 }
 
 void HtmlWindow::SubclassHwnd() {

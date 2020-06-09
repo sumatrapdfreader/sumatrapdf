@@ -124,17 +124,21 @@ void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
         Rect rect = MapRectToWindow(WindowRect(hwndChild), HWND_DESKTOP, hwnd);
 
         // Adjust the window horizontally
-        if (psd->uSizeInfo & DS_MoveX)
+        if (psd->uSizeInfo & DS_MoveX) {
             rect.x += nDeltaX;
+        }
         // Adjust the window vertically
-        if (psd->uSizeInfo & DS_MoveY)
+        if (psd->uSizeInfo & DS_MoveY) {
             rect.y += nDeltaY;
+        }
         // Size the window horizontally
-        if (psd->uSizeInfo & DS_SizeX)
+        if (psd->uSizeInfo & DS_SizeX) {
             rect.dx += nDeltaX;
+        }
         // Size the window vertically
-        if (psd->uSizeInfo & DS_SizeY)
+        if (psd->uSizeInfo & DS_SizeY) {
             rect.dy += nDeltaY;
+        }
 
         DeferWindowPos(hdwp, hwndChild, nullptr, rect.x, rect.y, rect.dx, rect.dy, SWP_NOACTIVATE | SWP_NOZORDER);
     }
@@ -147,14 +151,14 @@ void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
 
 // Actual window procedure that will handle saving window size/position and moving
 // the controls whilst the window sizes.
-static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     DialogData* pdd = (DialogData*)GetProp(hwnd, DIALOG_DATA_PROPERTY);
     if (!pdd)
-        return DefWindowProc(hwnd, msg, wp, lParam);
+        return DefWindowProc(hwnd, msg, wp, lp);
 
     switch (msg) {
         case WM_ERASEBKGND: {
-            LRESULT lr = CallWindowProc(pdd->wndProc, hwnd, msg, wp, lParam);
+            LRESULT lr = CallWindowProc(pdd->wndProc, hwnd, msg, wp, lp);
             pdd->DrawGripper((HDC)wp);
             return lr;
         }
@@ -162,13 +166,13 @@ static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam
         case WM_SIZE: {
             if (wp != SIZE_MINIMIZED) {
                 pdd->bMaximised = wp == SIZE_MAXIMIZED;
-                UpdateWindowSize(pdd, LOWORD(lParam), HIWORD(lParam), hwnd);
+                UpdateWindowSize(pdd, LOWORD(lp), HIWORD(lp), hwnd);
             }
         } break;
 
         case WM_NCHITTEST: {
             // If the gripper is enabled then perform a simple hit test on our gripper area.
-            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
+            POINT pt = {LOWORD(lp), HIWORD(lp)};
             ScreenToClient(hwnd, &pt);
             if (pdd->InsideGripper(Point(pt.x, pt.y)))
                 return HTBOTTOMRIGHT;
@@ -176,7 +180,7 @@ static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam
 
         case WM_GETMINMAXINFO: {
             // Our opportunity to say that we do not want the dialog to grow or shrink any more.
-            LPMINMAXINFO lpmmi = (LPMINMAXINFO)lParam;
+            LPMINMAXINFO lpmmi = (LPMINMAXINFO)lp;
             lpmmi->ptMinTrackSize = pdd->ptSmallest;
         }
             return 0;
@@ -184,9 +188,9 @@ static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam
         case WM_DESTROY: {
             WNDPROC wndProc = pdd->wndProc;
             delete pdd;
-            return CallWindowProc(wndProc, hwnd, msg, wp, lParam);
+            return CallWindowProc(wndProc, hwnd, msg, wp, lp);
         }
     }
 
-    return CallWindowProc(pdd->wndProc, hwnd, msg, wp, lParam);
+    return CallWindowProc(pdd->wndProc, hwnd, msg, wp, lp);
 }

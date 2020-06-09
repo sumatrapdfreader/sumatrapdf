@@ -903,12 +903,12 @@ void EbookController::SetViewPortSize(Size size) {
     ctrls->mainWnd->RequestLayout();
 }
 
-LRESULT EbookController::HandleMessage(UINT msg, WPARAM wp, LPARAM lParam, bool& wasHandled) {
+LRESULT EbookController::HandleMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled) {
     if (!handleMsgs) {
         wasHandled = false;
         return 0;
     }
-    return ctrls->mainWnd->evtMgr->OnMessage(msg, wp, lParam, wasHandled);
+    return ctrls->mainWnd->evtMgr->OnMessage(msg, wp, lp, wasHandled);
 }
 
 // TODO: also needs to update for font name/size changes, but it's more complicated

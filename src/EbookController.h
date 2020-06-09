@@ -83,7 +83,7 @@ class EbookController : public Controller {
     DocType GetDocType() const {
         return doc.Type();
     }
-    LRESULT HandleMessage(UINT msg, WPARAM wp, LPARAM lParam, bool& wasHandled);
+    LRESULT HandleMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled);
     void EnableMessageHandling(bool enable) {
         handleMsgs = enable;
     }

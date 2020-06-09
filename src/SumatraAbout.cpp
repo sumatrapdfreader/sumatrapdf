@@ -474,7 +474,7 @@ static void DeleteInfotip() {
     gAboutTooltip = nullptr;
 }
 
-LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     const WCHAR* url;
     Point pt;
 
@@ -501,14 +501,14 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
                 }
             }
             DeleteInfotip();
-            return DefWindowProc(hwnd, msg, wp, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_LBUTTONDOWN:
-            gClickedURL = GetStaticLink(gLinkInfo, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            gClickedURL = GetStaticLink(gLinkInfo, GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
             break;
 
         case WM_LBUTTONUP:
-            url = GetStaticLink(gLinkInfo, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            url = GetStaticLink(gLinkInfo, GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
             if (url && url == gClickedURL) {
                 SumatraLaunchBrowser(url);
             }
@@ -531,7 +531,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
             break;
 
         default:
-            return DefWindowProc(hwnd, msg, wp, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
     }
     return 0;
 }

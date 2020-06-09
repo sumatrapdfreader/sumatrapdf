@@ -634,7 +634,7 @@ static void PropertiesOnCommand(HWND hwnd, WPARAM wp) {
     }
 }
 
-LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     PropertiesLayout* pl;
 
     switch (msg) {
@@ -668,7 +668,7 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam
 
         /* TODO: handle mouse move/down/up so that links work (?) */
         default:
-            return DefWindowProc(hwnd, msg, wp, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
     }
     return 0;
 }

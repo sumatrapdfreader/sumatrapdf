@@ -64,12 +64,12 @@ struct Dialog_GetPassword_Data {
     bool* remember;        /* remember the password (encrypted) or ask again? */
 };
 
-static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_GetPassword_Data* data;
 
     //[ ACCESSKEY_GROUP Password Dialog
     if (WM_INITDIALOG == msg) {
-        data = (Dialog_GetPassword_Data*)lParam;
+        data = (Dialog_GetPassword_Data*)lp;
         win::SetText(hDlg, _TR("Enter password"));
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
@@ -135,13 +135,13 @@ struct Dialog_GoToPage_Data {
     WCHAR* newPageLabel;        // page number entered by user
 };
 
-static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     HWND editPageNo;
     Dialog_GoToPage_Data* data;
 
     //[ ACCESSKEY_GROUP GoTo Page Dialog
     if (WM_INITDIALOG == msg) {
-        data = (Dialog_GoToPage_Data*)lParam;
+        data = (Dialog_GoToPage_Data*)lp;
         CrashIf(!data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win::SetText(hDlg, _TR("Go to page"));
@@ -206,20 +206,20 @@ struct Dialog_Find_Data {
     WNDPROC editWndProc;
 };
 
-static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
-    ExtendedEditWndProc(hwnd, msg, wp, lParam);
+static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    ExtendedEditWndProc(hwnd, msg, wp, lp);
 
     Dialog_Find_Data* data = (Dialog_Find_Data*)GetWindowLongPtr(GetParent(hwnd), GWLP_USERDATA);
-    return CallWindowProc(data->editWndProc, hwnd, msg, wp, lParam);
+    return CallWindowProc(data->editWndProc, hwnd, msg, wp, lp);
 }
 
-static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_Find_Data* data;
 
     switch (msg) {
         case WM_INITDIALOG:
             //[ ACCESSKEY_GROUP Find Dialog
-            data = (Dialog_Find_Data*)lParam;
+            data = (Dialog_Find_Data*)lp;
             CrashIf(!data);
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
 
@@ -282,12 +282,12 @@ struct Dialog_PdfAssociate_Data {
     bool dontAskAgain;
 };
 
-static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_PdfAssociate_Data* data;
 
     //[ ACCESSKEY_GROUP Associate Dialog
     if (WM_INITDIALOG == msg) {
-        data = (Dialog_PdfAssociate_Data*)lParam;
+        data = (Dialog_PdfAssociate_Data*)lp;
         CrashIf(!data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win::SetText(hDlg, _TR("Associate with PDF files?"));
@@ -344,7 +344,7 @@ struct Dialog_ChangeLanguage_Data {
     const char* langCode;
 };
 
-static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_ChangeLanguage_Data* data;
     HWND langList;
 
@@ -356,7 +356,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         DIALOG_SIZER_END()
         DialogSizer_Set(hDlg, sz, TRUE);
 
-        data = (Dialog_ChangeLanguage_Data*)lParam;
+        data = (Dialog_ChangeLanguage_Data*)lp;
         CrashIf(!data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         // for non-latin languages this depends on the correct fonts being installed,
@@ -391,7 +391,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
             if (HIWORD(wp) == LBN_DBLCLK) {
                 CrashIf(IDC_CHANGE_LANG_LANG_LIST != LOWORD(wp));
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-                CrashIf(langList != (HWND)lParam);
+                CrashIf(langList != (HWND)lp);
                 int langIdx = (int)ListBox_GetCurSel(langList);
                 data->langCode = trans::GetLangCodeByIdx(langIdx);
                 EndDialog(hDlg, IDOK);
@@ -434,13 +434,13 @@ struct Dialog_NewVersion_Data {
     bool skipThisVersion;
 };
 
-static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_NewVersion_Data* data;
     WCHAR* txt;
 
     //[ ACCESSKEY_GROUP New Version Dialog
     if (WM_INITDIALOG == msg) {
-        data = (Dialog_NewVersion_Data*)lParam;
+        data = (Dialog_NewVersion_Data*)lp;
         CrashIf(!data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win::SetText(hDlg, _TR("SumatraPDF Update"));
@@ -584,13 +584,13 @@ struct Dialog_CustomZoom_Data {
     bool forChm;
 };
 
-static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_CustomZoom_Data* data;
 
     switch (msg) {
         case WM_INITDIALOG:
             //[ ACCESSKEY_GROUP Zoom Dialog
-            data = (Dialog_CustomZoom_Data*)lParam;
+            data = (Dialog_CustomZoom_Data*)lp;
             CrashIf(!data);
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
 
@@ -658,13 +658,13 @@ static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
     MoveWindow(hDlg, dlgRc.x, dlgRc.y, dlgRc.dx, dlgRc.dy - shrink, TRUE);
 }
 
-static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     GlobalPrefs* prefs;
 
     switch (msg) {
         //[ ACCESSKEY_GROUP Settings Dialog
         case WM_INITDIALOG:
-            prefs = (GlobalPrefs*)lParam;
+            prefs = (GlobalPrefs*)lp;
             CrashIf(!prefs);
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)prefs);
 
@@ -812,13 +812,13 @@ INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs) {
 #define ID_APPLY_NOW 0x3021
 #endif
 
-static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Print_Advanced_Data* data;
 
     switch (msg) {
         //[ ACCESSKEY_GROUP Advanced Print Tab
         case WM_INITDIALOG:
-            data = (Print_Advanced_Data*)((PROPSHEETPAGE*)lParam)->lParam;
+            data = (Print_Advanced_Data*)((PROPSHEETPAGE*)lp)->lParam;
             CrashIf(!data);
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
 
@@ -846,7 +846,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             //] ACCESSKEY_GROUP Advanced Print Tab
 
         case WM_NOTIFY:
-            if (((LPNMHDR)lParam)->code == PSN_APPLY) {
+            if (((LPNMHDR)lp)->code == PSN_APPLY) {
                 data = (Print_Advanced_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                 CrashIf(!data);
                 if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_EVEN))
@@ -905,9 +905,9 @@ struct Dialog_AddFav_Data {
     WCHAR* favName;
 };
 
-static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lParam) {
+static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_INITDIALOG == msg) {
-        Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lParam;
+        Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lp;
         CrashIf(!data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win::SetText(hDlg, _TR("Add Favorite"));

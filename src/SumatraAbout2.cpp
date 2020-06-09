@@ -298,10 +298,10 @@ static void CopyAboutInfoToClipboard(HWND hwnd) {
     CopyTextToClipboard(info.LendData());
 }
 
-static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (mainWnd) {
         bool wasHandled;
-        LRESULT res = mainWnd->evtMgr->OnMessage(msg, wp, lParam, wasHandled);
+        LRESULT res = mainWnd->evtMgr->OnMessage(msg, wp, lp, wasHandled);
         if (wasHandled)
             return res;
     }
@@ -326,7 +326,7 @@ static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wp, LPARAM lPa
             break;
 
         default:
-            return DefWindowProc(hwnd, msg, wp, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
     }
     return 0;
 }

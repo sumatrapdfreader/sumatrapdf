@@ -287,7 +287,7 @@ static LRESULT OnDestroy(HWND hwnd) {
     return 0;
 }
 
-static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_PAINT:
             return OnPaint(hwnd);
@@ -307,7 +307,7 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lP
             UpdateWindow(hwnd);
             return 0;
         default:
-            return DefWindowProc(hwnd, msg, wp, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
     }
 }
 

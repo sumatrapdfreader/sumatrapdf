@@ -20,10 +20,10 @@ struct PluginStartData {
 
 // in order to host SumatraPDF as a plugin, create a (child) window and
 // handle the following messages for it:
-LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CREATE == msg) {
         // run SumatraPDF.exe with the -plugin command line argument
-        PluginStartData* data = (PluginStartData*)((CREATESTRUCT*)lParam)->lpCreateParams;
+        PluginStartData* data = (PluginStartData*)((CREATESTRUCT*)lp)->lpCreateParams;
         AutoFreeWstr cmdLine(str::Format(L"-plugin %d \"%s\"", hwnd, data->filePath));
         if (data->fileOriginUrl) {
             cmdLine.Set(str::Format(L"-plugin \"%s\" %d \"%s\"", data->fileOriginUrl, hwnd, data->filePath));
@@ -42,7 +42,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lPar
     } else if (WM_COPYDATA == msg) {
         // handle a URL to open externally (or prevent it)
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
-        COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lParam;
+        COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
         if (cds && 0x4C5255 /* URL */ == cds->dwData && (HWND)wp == hChild) {
             AutoFreeWstr url(strconv::Utf8ToWstr((const char*)cds->lpData));
             ShellExecute(hChild, L"open", url, nullptr, nullptr, SW_SHOW);
@@ -72,7 +72,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lPar
         PostQuitMessage(0);
     }
 
-    return DefWindowProc(hwnd, msg, wp, lParam);
+    return DefWindowProc(hwnd, msg, wp, lp);
 }
 
 WCHAR* GetSumatraExePath() {

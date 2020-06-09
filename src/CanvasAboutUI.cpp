@@ -140,9 +140,9 @@ static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
     return FALSE;
 }
 
-LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
-    int x = GET_X_LPARAM(lParam);
-    int y = GET_Y_LPARAM(lParam);
+LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    int x = GET_X_LPARAM(lp);
+    int y = GET_Y_LPARAM(lp);
     switch (msg) {
         case WM_LBUTTONDOWN:
             OnMouseLeftButtonDownAbout(win, x, y, wp);
@@ -167,7 +167,7 @@ LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
         case WM_SETCURSOR:
             if (OnSetCursorAbout(win, hwnd))
                 return TRUE;
-            return DefWindowProc(hwnd, msg, wp, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_CONTEXTMENU:
             OnAboutContextMenu(win, 0, 0);
@@ -178,6 +178,6 @@ LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             return 0;
 
         default:
-            return DefWindowProc(hwnd, msg, wp, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
     }
 }

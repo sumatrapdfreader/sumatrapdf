@@ -206,7 +206,7 @@ void DeleteCaption(CaptionInfo* caption) {
     delete caption;
 }
 
-static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
     switch (msg) {
@@ -240,13 +240,13 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lP
                         HWND hMenuButton = win->caption->btn[CB_MENU].hwnd;
                         Rect wr = WindowRect(hMenuButton);
                         win->caption->isMenuOpen = true;
-                        if (!lParam) {
+                        if (!lp) {
                             // if the WM_COMMAND message was sent as a result of keyboard command
                             InvalidateRgn(hMenuButton, nullptr, FALSE);
                         }
                         MenuBarAsPopupMenu(win, wr.x, wr.y + wr.dy);
                         win->caption->isMenuOpen = false;
-                        if (!lParam) {
+                        if (!lp) {
                             InvalidateRgn(hMenuButton, nullptr, FALSE);
                         }
                         SetTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID, DO_NOT_REOPEN_MENU_DELAY_IN_MS, nullptr);
@@ -279,7 +279,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lP
 
         case WM_DRAWITEM:
             if (win) {
-                DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lParam;
+                DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lp;
                 int index = dis->CtlID - BTN_ID_FIRST;
                 if (CB_MENU == index && win->caption->isMenuOpen) {
                     dis->itemState |= ODS_SELECTED;
@@ -300,7 +300,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lP
             break;
 
         default:
-            return DefWindowProc(hwnd, msg, wp, lParam);
+            return DefWindowProc(hwnd, msg, wp, lp);
     }
     return 0;
 }
@@ -316,7 +316,7 @@ void OpenSystemMenu(WindowInfo* win) {
 }
 
 static WNDPROC DefWndProcButton = nullptr;
-static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     int index = (int)GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
 
@@ -329,8 +329,8 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lPa
                 return 0;
             } else {
                 Rect rc = ClientRect(hwnd);
-                int x = GET_X_LPARAM(lParam);
-                int y = GET_Y_LPARAM(lParam);
+                int x = GET_X_LPARAM(lp);
+                int y = GET_Y_LPARAM(lp);
                 if (!rc.Contains(Point(x, y))) {
                     ReleaseCapture();
                     return 0;
@@ -358,9 +358,9 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lPa
 
         case WM_LBUTTONDOWN:
             if (CB_MENU == index) {
-                PostMessage(hwnd, WM_LBUTTONUP, 0, lParam);
+                PostMessage(hwnd, WM_LBUTTONUP, 0, lp);
             }
-            return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lParam);
+            return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lp);
 
         case WM_RBUTTONUP:
         case WM_LBUTTONUP:
@@ -382,9 +382,9 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lPa
                 (VK_RETURN == wp || VK_SPACE == wp || VK_UP == wp || VK_DOWN == wp)) {
                 PostMessage(hwnd, BM_CLICK, 0, 0);
             }
-            return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lParam);
+            return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lp);
     }
-    return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lParam);
+    return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lp);
 }
 
 void CreateCaption(WindowInfo* win) {
@@ -661,11 +661,11 @@ static void DrawFrame(HWND hwnd, COLORREF color, bool drawEdge = true) {
 // (can be static because there can only be one menu active at a time)
 static WCHAR gMenuAccelPressed = 0;
 
-LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam, bool* callDef, WindowInfo* win) {
+LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* callDef, WindowInfo* win) {
     if (dwm::IsCompositionEnabled()) {
         // Pass the messages to DwmDefWindowProc first. It serves the hit testing for the buttons.
         LRESULT res;
-        if (dwm::DefWindowProc_(hwnd, msg, wp, lParam, &res)) {
+        if (dwm::DefWindowProc_(hwnd, msg, wp, lp, &res)) {
             *callDef = false;
             return res;
         }
@@ -694,7 +694,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam, bo
                     return TRUE;
                 }
             }
-                return DefWindowProc(hwnd, msg, wp, lParam);
+                return DefWindowProc(hwnd, msg, wp, lp);
 
             case WM_SIZE:
                 // Extend the translucent frame in the client area.
@@ -767,7 +767,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam, bo
                     // in the caption's area when processing these mesages.
                     // TODO: can't such drawing be prevented by handling WM_(NC)PAINT instead?
                     SetWindowStyle(hwnd, WS_VISIBLE, false);
-                    LRESULT res = DefWindowProc(hwnd, msg, wp, lParam);
+                    LRESULT res = DefWindowProc(hwnd, msg, wp, lp);
                     SetWindowStyle(hwnd, WS_VISIBLE, true);
                     *callDef = false;
                     return res;
@@ -780,10 +780,10 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam, bo
     switch (msg) {
         case WM_NCCALCSIZE: {
             // In order to have custom caption, we have to include its area in the client rectangle.
-            RECT* r = wp == TRUE ? &((NCCALCSIZE_PARAMS*)lParam)->rgrc[0] : (RECT*)lParam;
+            RECT* r = wp == TRUE ? &((NCCALCSIZE_PARAMS*)lp)->rgrc[0] : (RECT*)lp;
             RECT rWindow = *r;
             // Let DefWindowProc calculate the client rectangle.
-            DefWindowProc(hwnd, msg, wp, lParam);
+            DefWindowProc(hwnd, msg, wp, lp);
             RECT rClient = *r;
             // Modify the client rectangle to include the caption's area.
             if (dwm::IsCompositionEnabled()) {
@@ -802,7 +802,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam, bo
 
         case WM_NCHITTEST: {
             // Provide hit testing for the caption.
-            Point pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            Point pt(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
             Rect rClient = MapRectToWindow(ClientRect(hwnd), hwnd, HWND_DESKTOP);
             Rect rCaption = WindowRect(win->hwndCaption);
             if (rClient.Contains(pt) && pt.y < rCaption.y + rCaption.dy) {
@@ -822,7 +822,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam, bo
                 if (GetSystemMetrics(SM_MENUDROPALIGNMENT)) {
                     flags |= TPM_RIGHTALIGN;
                 }
-                WPARAM cmd = TrackPopupMenu(menu, flags, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hwnd, nullptr);
+                WPARAM cmd = TrackPopupMenu(menu, flags, GET_X_LPARAM(lp), GET_Y_LPARAM(lp), 0, hwnd, nullptr);
                 if (cmd) {
                     PostMessage(hwnd, WM_SYSCOMMAND, cmd, 0);
                 }
@@ -834,7 +834,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam, bo
         case WM_SYSCOMMAND:
             if (wp == SC_KEYMENU) {
                 // Show the "menu bar" (and the desired submenu)
-                gMenuAccelPressed = (WCHAR)lParam;
+                gMenuAccelPressed = (WCHAR)lp;
                 if (' ' == gMenuAccelPressed) {
                     // TODO: this is probably not needed anymore after we removed &Window sub-menu
                     // and added app icon

@@ -245,7 +245,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     EndPaint(hwnd, &ps);
 }
 
-static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lParam) {
+static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     NotificationWnd* wnd = (NotificationWnd*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (WM_ERASEBKGND == msg) {
         // do nothing, helps to avoid flicker
@@ -253,10 +253,11 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
     }
 
     if (WM_TIMER == msg && TIMEOUT_TIMER_ID == wp) {
-        if (wnd->wndRemovedCb)
+        if (wnd->wndRemovedCb) {
             wnd->wndRemovedCb(wnd);
-        else
+        } else {
             delete wnd;
+        }
         return 0;
     }
 
@@ -274,16 +275,18 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
     }
 
     if (WM_LBUTTONUP == msg && wnd->hasCancel) {
-        if (GetCancelRect(hwnd).Contains(Point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
-            if (wnd->wndRemovedCb)
+        Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+        if (GetCancelRect(hwnd).Contains(pt)) {
+            if (wnd->wndRemovedCb) {
                 wnd->wndRemovedCb(wnd);
-            else
+            } else {
                 delete wnd;
+            }
             return 0;
         }
     }
 
-    return DefWindowProc(hwnd, msg, wp, lParam);
+    return DefWindowProc(hwnd, msg, wp, lp);
 }
 
 static void RegisterNotificationsWndClass() {
