@@ -415,12 +415,12 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
 // selects all text in an edit box if it's selected either
 // through a keyboard shortcut or a non-selecting mouse click
 // (or responds to Ctrl+Backspace as nowadays expected)
-bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     UNUSED(lParam);
 
     static bool delayFocus = false;
 
-    switch (message) {
+    switch (msg) {
         case WM_LBUTTONDOWN:
             delayFocus = !IsFocused(hwnd);
             return true;

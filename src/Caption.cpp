@@ -206,10 +206,10 @@ void DeleteCaption(CaptionInfo* caption) {
     delete caption;
 }
 
-static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
-    switch (message) {
+    switch (msg) {
         case WM_COMMAND:
             if (win && BN_CLICKED == HIWORD(wParam)) {
                 WPARAM cmd;
@@ -300,7 +300,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, L
             break;
 
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
@@ -316,11 +316,11 @@ void OpenSystemMenu(WindowInfo* win) {
 }
 
 static WNDPROC DefWndProcButton = nullptr;
-static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     int index = (int)GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
 
-    switch (message) {
+    switch (msg) {
         case WM_MOUSEMOVE: {
             if (CB_SYSTEM_MENU == index && (wParam & MK_LBUTTON)) {
                 ReleaseCapture();
@@ -360,7 +360,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
             if (CB_MENU == index) {
                 PostMessage(hwnd, WM_LBUTTONUP, 0, lParam);
             }
-            return CallWindowProc(DefWndProcButton, hwnd, message, wParam, lParam);
+            return CallWindowProc(DefWndProcButton, hwnd, msg, wParam, lParam);
 
         case WM_RBUTTONUP:
         case WM_LBUTTONUP:
@@ -382,9 +382,9 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
                 (VK_RETURN == wParam || VK_SPACE == wParam || VK_UP == wParam || VK_DOWN == wParam)) {
                 PostMessage(hwnd, BM_CLICK, 0, 0);
             }
-            return CallWindowProc(DefWndProcButton, hwnd, message, wParam, lParam);
+            return CallWindowProc(DefWndProcButton, hwnd, msg, wParam, lParam);
     }
-    return CallWindowProc(DefWndProcButton, hwnd, message, wParam, lParam);
+    return CallWindowProc(DefWndProcButton, hwnd, msg, wParam, lParam);
 }
 
 void CreateCaption(WindowInfo* win) {

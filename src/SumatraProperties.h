@@ -8,4 +8,4 @@ PaperFormat GetPaperFormat(SizeD size);
 
 void OnMenuProperties(WindowInfo* win);
 void DeletePropertiesWindow(HWND hwndParent);
-LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

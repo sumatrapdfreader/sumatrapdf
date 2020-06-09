@@ -634,10 +634,10 @@ static void PropertiesOnCommand(HWND hwnd, WPARAM wParam) {
     }
 }
 
-LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     PropertiesLayout* pl;
 
-    switch (message) {
+    switch (msg) {
         case WM_CREATE:
             break;
 
@@ -667,7 +667,7 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
         /* TODO: handle mouse move/down/up so that links work (?) */
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }

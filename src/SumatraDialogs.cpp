@@ -206,11 +206,11 @@ struct Dialog_Find_Data {
     WNDPROC editWndProc;
 };
 
-static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
-    ExtendedEditWndProc(hwnd, message, wParam, lParam);
+static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    ExtendedEditWndProc(hwnd, msg, wParam, lParam);
 
     Dialog_Find_Data* data = (Dialog_Find_Data*)GetWindowLongPtr(GetParent(hwnd), GWLP_USERDATA);
-    return CallWindowProc(data->editWndProc, hwnd, message, wParam, lParam);
+    return CallWindowProc(data->editWndProc, hwnd, msg, wParam, lParam);
 }
 
 static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam) {

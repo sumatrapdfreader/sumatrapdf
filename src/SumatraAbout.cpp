@@ -474,11 +474,11 @@ static void DeleteInfotip() {
     gAboutTooltip = nullptr;
 }
 
-LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     const WCHAR* url;
     Point pt;
 
-    switch (message) {
+    switch (msg) {
         case WM_CREATE:
             AssertCrash(!gHwndAbout);
             break;
@@ -501,7 +501,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
                 }
             }
             DeleteInfotip();
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_LBUTTONDOWN:
             gClickedURL = GetStaticLink(gLinkInfo, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -531,7 +531,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             break;
 
         default:
-            return DefWindowProc(hwnd, message, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
