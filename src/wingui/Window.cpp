@@ -46,6 +46,10 @@ struct HwndMsgHandler {
 VecSegmented<HwndMsgHandler> gHwndMsgHandlers;
 
 static void ClearHwndMsgHandler(HwndMsgHandler* h) {
+    CrashIf(!h);
+    if (!h) {
+        return;
+    }
     h->hwnd = nullptr;
     h->msg = 0;
     h->user = nullptr;
@@ -87,7 +91,6 @@ void RegisterHandlerForMessage(HWND hwnd, UINT msg, void (*handler)(void* user, 
 
 void UnregisterHandlerForMessage(HWND hwnd, UINT msg) {
     auto h = FindHandlerForHwndAndMsg(hwnd, msg, false);
-    CrashIf(!h);
     ClearHwndMsgHandler(h);
 }
 
