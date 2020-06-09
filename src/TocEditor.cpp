@@ -206,7 +206,7 @@ static MenuDef menuDefContext[] = {
 // clang-format on
 
 static bool RemoveIt(TreeCtrl* treeCtrl, TocItem* ti) {
-    TocItem* parent = ti->parent;
+    TocItem* parent = ti ? ti->parent : nullptr;
     if (parent && parent->child == ti) {
         parent->child = ti->next;
         ti->next = nullptr;
@@ -254,6 +254,10 @@ static void EnsureExpanded(TocItem* ti) {
 }
 
 void TocEditorWindow::RemoveTocItem(TocItem* ti, bool alsoDelete) {
+    CrashIf(!ti);
+    if (!ti) {
+        return;
+    }
     EnsureExpanded(ti->parent);
 
     bool ok = RemoveIt(treeCtrl, ti);

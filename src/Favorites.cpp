@@ -291,6 +291,10 @@ static WCHAR* FavCompactReadableName(DisplayState* fav, Favorite* fn, bool isCur
 }
 
 static void AppendFavMenuItems(HMENU m, DisplayState* f, UINT& idx, bool combined, bool isCurrent) {
+    CrashIf(!f);
+    if (!f) {
+        return;
+    }
     for (size_t i = 0; i < f->favorites->size(); i++) {
         if (i >= MAX_FAV_MENUS) {
             return;
