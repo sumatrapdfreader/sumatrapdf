@@ -723,7 +723,6 @@ static void OnCreateWindow(HWND hwnd) {
     AutoFreeWstr defaultViewer(GetDefaultPdfViewer());
     const WCHAR* appName = GetAppName();
     BOOL hasOtherViewer = !str::EqI(defaultViewer, appName);
-    BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
     // only show this checkbox if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
@@ -745,6 +744,7 @@ static void OnCreateWindow(HWND hwnd) {
     }
 
 #if ENABLE_REGISTER_DEFAULT
+    BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
     // only show the checbox if Sumatra is not already a default viewer.
     // the alternative (disabling the checkbox) is more confusing
     if (!isSumatraDefaultViewer) {
@@ -765,7 +765,7 @@ static void OnCreateWindow(HWND hwnd) {
     btnSize.dx += DpiScale(hwnd, 4);
     gButtonBrowseDir = CreateDefaultButtonCtrl(hwnd, s);
     gButtonBrowseDir->onClicked = OnButtonBrowse;
-    btnSize = gButtonBrowseDir->GetIdealSize();
+    //btnSize = gButtonBrowseDir->GetIdealSize();
     x = r.dx - WINDOW_MARGIN - btnSize2.dx;
     SetWindowPos(gButtonBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);

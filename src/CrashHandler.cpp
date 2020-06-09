@@ -285,6 +285,9 @@ void SubmitCrashInfo() {
     dbglogf(L"SubmitCrashInfo: gSymbolPathW: '%s'\n", gSymbolPathW);
 
     bool ok = CrashHandlerDownloadSymbols();
+    if (!ok) {
+        dbglog("SubmitCrashInfo(): CrashHandlerDownloadSymbols() failed\n");
+    }
 
     char* s = nullptr;
     size_t size = 0;

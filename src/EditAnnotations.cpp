@@ -236,15 +236,10 @@ static void HidePerAnnotControls(EditAnnotationsWindow* win) {
 
 static int FindStringInArray(const char* items, const char* toFind, int valIfNotFound = -1) {
     int idx = seqstrings::StrToIdx(items, toFind);
-    int i = 0;
-    while (*items) {
-        if (str::Eq(items, toFind)) {
-            return i;
-        }
-        i++;
-        items = seqstrings::SkipStr(items);
+    if (idx < 0) {
+        idx = valIfNotFound;
     }
-    return valIfNotFound;
+    return idx;
 }
 
 static bool IsAnnotationTypeInArray(AnnotationType* arr, size_t arrSize, AnnotationType toFind) {

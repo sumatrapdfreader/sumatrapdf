@@ -331,7 +331,7 @@ static DocumentProperty propsToCopy[] = {
 // clang-format on
 
 bool PdfCreator::CopyProperties(EngineBase* engine) {
-    bool ok = true;
+    bool ok;
     for (int i = 0; i < dimof(propsToCopy); i++) {
         AutoFreeWstr value = engine->GetProperty(propsToCopy[i]);
         if (value) {

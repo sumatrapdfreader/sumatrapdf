@@ -12,6 +12,8 @@
 #include "utils/TrivialHtmlParser.h"
 #include "utils/TxtParser.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
+
 // rendering engines
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
@@ -191,10 +193,13 @@ Gdiplus::Size PageControl::GetDrawableSize() const {
     Padding pad = cachedStyle->padding;
     s.Width -= (pad.left + pad.right);
     s.Height -= (pad.top + pad.bottom);
-    if ((s.Width <= 0) || (s.Height <= 0))
+    if ((s.Width <= 0) || (s.Height <= 0)) {
         return Gdiplus::Size();
+    }
     return s;
 }
+
+bool gLogEbook = false;
 
 void PageControl::Paint(Graphics* gfx, int offX, int offY) {
     CrashIf(!IsVisible());
@@ -210,8 +215,9 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
     }
     double durFill = TimeSinceInMs(timerFill);
 
-    if (!page)
+    if (!page) {
         return;
+    }
 
     // during resize the page we currently show might be bigger than
     // our area. To avoid drawing outside our area we clip
@@ -242,7 +248,9 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
     delete textRender;
 
     double durAll = TimeSinceInMs(timerAll);
-    // logf("all: %.2f, fill: %.2f, draw html: %.2f\n", durAll, durFill, durDraw);
+    if (gLogEbook) {
+        logf("all: %.2f, fill: %.2f, draw html: %.2f\n", durAll, durFill, durDraw);
+    }
 }
 
 Control* CreatePageControl(TxtNode* structDef) {
@@ -252,8 +260,9 @@ Control* CreatePageControl(TxtNode* structDef) {
     Style* style = StyleByName(def->style);
     c->SetStyle(style);
 
-    if (def->name)
+    if (def->name) {
         c->SetName(def->name);
+    }
 
     FreeEbookPageDef(def);
     return c;
@@ -267,8 +276,9 @@ ILayout* CreatePagesLayout(ParsedMui* parsedMui, TxtNode* structDef) {
     PageControl* page2 = static_cast<PageControl*>(FindControlNamed(*parsedMui, def->page2));
     CrashIf(!page1 || !page2);
     PagesLayout* layout = new PagesLayout(page1, page2, def->spaceDx);
-    if (def->name)
+    if (def->name) {
         layout->SetName(def->name);
+    }
     FreePagesLayoutDef(def);
     return layout;
 }

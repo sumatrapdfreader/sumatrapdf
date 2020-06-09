@@ -238,7 +238,6 @@ char* ChmDoc::ResolveTopicID(unsigned int id) {
 
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
-            size_t stringsLen = 0;
             auto stringsData = GetData("/#STRINGS");
             AutoFree stringsDataFree = stringsData;
             return GetCharZ(stringsData, br.DWordLE(off + 4));
