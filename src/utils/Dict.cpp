@@ -41,10 +41,10 @@ class HasherComparator {
 };
 
 class StrKeyHasherComparator : public HasherComparator {
-    virtual size_t Hash(uintptr_t key) {
+    size_t Hash(uintptr_t key) override {
         return MurmurHash2((const void*)key, str::Len((const char*)key));
     }
-    virtual bool Equal(uintptr_t k1, uintptr_t k2) {
+    bool Equal(uintptr_t k1, uintptr_t k2) override {
         const char* s1 = (const char*)k1;
         const char* s2 = (const char*)k2;
         return str::Eq(s1, s2);
@@ -52,11 +52,11 @@ class StrKeyHasherComparator : public HasherComparator {
 };
 
 class WStrKeyHasherComparator : public HasherComparator {
-    virtual size_t Hash(uintptr_t key) {
+    size_t Hash(uintptr_t key) override {
         size_t cbLen = str::Len((const WCHAR*)key) * sizeof(WCHAR);
         return MurmurHash2((const void*)key, cbLen);
     }
-    virtual bool Equal(uintptr_t k1, uintptr_t k2) {
+    bool Equal(uintptr_t k1, uintptr_t k2) override {
         const WCHAR* s1 = (const WCHAR*)k1;
         const WCHAR* s2 = (const WCHAR*)k2;
         return str::Eq(s1, s2);

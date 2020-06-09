@@ -59,7 +59,6 @@ static void DispatchSelectionChanged(ListBoxCtrl* w, WndEvent* ev) {
     CopyWndEvent cp(&a, ev);
     a.listBox = w;
     a.idx = w->GetCurrentSelection();
-    std::string_view s;
     if (a.idx >= 0 && a.idx < w->model->ItemsCount()) {
         a.item = w->model->Item(a.idx);
     }

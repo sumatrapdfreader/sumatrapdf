@@ -38,7 +38,6 @@ static void DispatchSelectionChanged(DropDownCtrl* w, WndEvent* ev) {
     CopyWndEvent cp(&a, ev);
     a.dropDown = w;
     a.idx = w->GetCurrentSelection();
-    std::string_view s;
     if (a.idx >= 0 && a.idx < (int)w->items.size()) {
         a.item = w->items.at(a.idx);
     }
