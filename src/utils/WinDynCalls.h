@@ -32,7 +32,7 @@ The intent is to standardize how we do it.
 #define API_DECLARATION(name) extern Sig_##name Dyn##name;
 
 #define API_DECLARATION2(name)            \
-    typedef decltype(##name)* Sig_##name; \
+    typedef decltype(name)* Sig_##name; \
     extern Sig_##name Dyn##name;
 
 // ntdll.dll
