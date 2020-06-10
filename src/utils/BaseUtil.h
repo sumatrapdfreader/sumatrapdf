@@ -327,7 +327,7 @@ inline T limitValue(T val, T min, T max) {
 // return true if adding n to val overflows. Only valid for n > 0
 template <typename T>
 inline bool addOverflows(T val, T n) {
-    CrashIf(n <= 0);
+    CrashIf(!(n > 0));
     T res = val + n;
     return val > res;
 }

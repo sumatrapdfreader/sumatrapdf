@@ -141,13 +141,14 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
 static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
     auto origLine = line; // save for debugging
 
-    *indentOut = sv::ParseIndent(line);
-    if (*indentOut < 0) {
+    int n = sv::ParseIndent(line);
+    if (n < 0) {
         return nullptr;
     }
+    *indentOut = n
 
-    // first item on the line is a title
-    str::Str title;
+        // first item on the line is a title
+        str::Str title;
     bool ok = sv::ParseMaybeQuoted(line, title, false);
     TocItem* res = new TocItem();
     res->title = strconv::Utf8ToWstr(title.as_view());

@@ -321,13 +321,17 @@ static int cmpLineRecords(const void* a, const void* b) {
 }
 
 int Pdfsync::DocToSource(UINT pageNo, Point pt, AutoFreeWstr& filename, UINT* line, UINT* col) {
-    if (IsIndexDiscarded())
-        if (RebuildIndex() != PDFSYNCERR_SUCCESS)
+    if (IsIndexDiscarded()) {
+        if (RebuildIndex() != PDFSYNCERR_SUCCESS) {
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+        }
+    }
 
     // find the entry in the index corresponding to this page
-    if (pageNo <= 0 || pageNo >= sheetIndex.size() || pageNo > (UINT)engine->PageCount())
+    UINT nPages = (UINT)engine->PageCount();
+    if (pageNo == 0 || pageNo >= sheetIndex.size() || pageNo > nPages) {
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
+    }
 
     // PdfSync coordinates are y-inversed
     Rect mbox = engine->PageMediabox(pageNo).Round();
