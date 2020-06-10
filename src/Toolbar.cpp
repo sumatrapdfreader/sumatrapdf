@@ -529,7 +529,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     int padding = GetSystemMetrics(SM_CXEDGE);
     int x = currX;
     int y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
-    MoveWindow(win->hwndPageText, currX, y, size.dx, size.dy, FALSE);
+    MoveWindow(win->hwndPageText, x, y, size.dx, size.dy, FALSE);
     if (IsUIRightToLeft()) {
         currX += size2.dx;
         currX -= DpiScale(win->hwndFrame, TB_TEXT_PADDING_RIGHT);
