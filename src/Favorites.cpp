@@ -807,7 +807,7 @@ void CreateFavorites(WindowInfo* win) {
     l->Create(win->hwndFavBox, IDC_FAV_LABEL_WITH_CLOSE);
     win->favLabelWithClose = l;
     l->SetPaddingXY(2, 2);
-    l->SetFont(GetDefaultGuiFont());
+    l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
     TreeCtrl* treeCtrl = new TreeCtrl(win->hwndFavBox);
