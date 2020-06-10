@@ -203,29 +203,6 @@ void NoDllHijacking() {
     }
 }
 
-// As of the Windows 10.0.17134.0 SDK, this struct and ProcessImageLoadPolicy are defined in winnt.h.
-#if !defined(NTDDI_WIN10_RS4)
-#pragma warning(push)
-//  C4201: nonstandard extension used: nameless struct/union
-#pragma warning(disable : 4201)
-// https://msdn.microsoft.com/en-us/library/windows/desktop/mt706245(v=vs.85).aspx
-typedef struct _PROCESS_MITIGATION_IMAGE_LOAD_POLICY {
-    union {
-        DWORD Flags;
-        struct {
-            DWORD NoRemoteImages : 1;
-            DWORD NoLowMandatoryLabelImages : 1;
-            DWORD PreferSystem32Images : 1;
-            DWORD ReservedFlags : 29;
-        };
-    };
-} PROCESS_MITIGATION_IMAGE_LOAD_POLICY, *PPROCESS_MITIGATION_IMAGE_LOAD_POLICY;
-#pragma warning(pop)
-
-// https://msdn.microsoft.com/en-us/library/windows/desktop/hh871470(v=vs.85).aspx
-constexpr int ProcessImageLoadPolicy = 10;
-#endif
-
 // https://github.com/videolan/vlc/blob/8663561d3f71595ebf116f17279a495b67cac713/bin/winvlc.c#L84
 // https://msdn.microsoft.com/en-us/library/windows/desktop/hh769088(v=vs.85).aspx
 // Note: dlls we explicitly link to (like version.dll) get loaded before main is called
