@@ -122,7 +122,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled) {
     Vec<CtrlAndOffset> windows;
     Control* c;
 
-    uint16_t wantedInputMask = bit::FromBit<uint16_t>(Control::WantsMouseOverBit);
+    u16 wantedInputMask = bit::FromBit<u16>(Control::WantsMouseOverBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count) {
         if (currOver) {
@@ -144,7 +144,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled) {
         }
     }
 
-    wantedInputMask = bit::FromBit<uint16_t>(Control::WantsMouseMoveBit);
+    wantedInputMask = bit::FromBit<u16>(Control::WantsMouseMoveBit);
     count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
     if (0 == count)
         return 0;
@@ -161,7 +161,7 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled) {
     UNUSED(keys);
     UNUSED(wasHandled);
     Vec<CtrlAndOffset> controls;
-    uint16_t wantedInputMask = bit::FromBit<uint16_t>(Control::WantsMouseClickBit);
+    u16 wantedInputMask = bit::FromBit<u16>(Control::WantsMouseClickBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &controls);
     if (0 == count)
         return 0;

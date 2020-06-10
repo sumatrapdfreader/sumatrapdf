@@ -97,10 +97,10 @@ class WndFilter {
 
 class WndInputWantedFilter : public WndFilter {
     int x, y;
-    uint16_t wantedInputMask;
+    u16 wantedInputMask;
 
   public:
-    WndInputWantedFilter(int x, int y, uint16_t wantedInputMask) : x(x), y(y), wantedInputMask(wantedInputMask) {
+    WndInputWantedFilter(int x, int y, u16 wantedInputMask) : x(x), y(y), wantedInputMask(wantedInputMask) {
     }
     virtual ~WndInputWantedFilter() {
     }
@@ -117,7 +117,7 @@ void Initialize();
 void Destroy();
 void SetDebugPaint(bool debug);
 bool IsDebugPaint();
-size_t CollectWindowsAt(Control* wndRoot, int x, int y, uint16_t wantedInputMask, Vec<CtrlAndOffset>* ctrls);
+size_t CollectWindowsAt(Control* wndRoot, int x, int y, u16 wantedInputMask, Vec<CtrlAndOffset>* ctrls);
 void CollectWindowsBreathFirst(Control* c, int offX, int offY, WndFilter* wndFilter, Vec<CtrlAndOffset>* ctrls);
 void RequestRepaint(Control* c, const Gdiplus::Rect* r1 = nullptr, const Gdiplus::Rect* r2 = nullptr);
 void RequestLayout(Control* c);

@@ -11,7 +11,7 @@ namespace mui {
 
 Button::Button(const WCHAR* s, Style* def, Style* mouseOver) {
     text = nullptr;
-    wantedInputBits = (uint16_t)-1; // wants everything
+    wantedInputBits = (u16)-1; // wants everything
     styleDefault = def;
     styleMouseOver = mouseOver;
     SetStyle(styleDefault);
@@ -161,7 +161,7 @@ void Button::Paint(Graphics* gfx, int offX, int offY) {
 }
 
 ButtonVector::ButtonVector() {
-    wantedInputBits = (uint16_t)-1; // wants everything
+    wantedInputBits = (u16)-1; // wants everything
     styleDefault = nullptr;
     styleMouseOver = nullptr;
     graphicsPath = nullptr;
@@ -169,7 +169,7 @@ ButtonVector::ButtonVector() {
 }
 
 ButtonVector::ButtonVector(GraphicsPath* gp) {
-    wantedInputBits = (uint16_t)-1; // wants everything
+    wantedInputBits = (u16)-1; // wants everything
     styleDefault = nullptr;
     styleMouseOver = nullptr;
     graphicsPath = nullptr;

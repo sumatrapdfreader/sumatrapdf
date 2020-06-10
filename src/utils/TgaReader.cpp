@@ -36,11 +36,11 @@ struct TgaHeader {
     u8 idLength;
     u8 cmapType;
     u8 imageType;
-    uint16_t cmapFirstEntry;
-    uint16_t cmapLength;
+    u16 cmapFirstEntry;
+    u16 cmapLength;
     u8 cmapBitDepth;
-    uint16_t offsetX, offsetY;
-    uint16_t width, height;
+    u16 offsetX, offsetY;
+    u16 width, height;
     u8 bitDepth;
     u8 flags;
 };
@@ -52,13 +52,13 @@ struct TgaFooter {
 };
 
 struct TgaExtArea {
-    uint16_t size;
+    u16 size;
     char author[41];
     char comments[4][81];
-    uint16_t dateTime[6];
+    u16 dateTime[6];
     u8 fields_14_to_15[47];
     char progName[41];
-    uint16_t progVersion;
+    u16 progVersion;
     char progVersionC;
     uint32_t fields_18_to_23[6];
     u8 alphaType;
@@ -70,11 +70,11 @@ static_assert(sizeof(TgaHeader) == 18, "wrong size of TgaHeader structure");
 static_assert(sizeof(TgaFooter) == 26, "wrong size of TgaFooter structure");
 static_assert(sizeof(TgaExtArea) == 495, "wrong size of TgaExtArea structure");
 
-static uint16_t readLE16(u8* data) {
+static u16 readLE16(u8* data) {
     return data[0] | (data[1] << 8);
 }
 
-static uint16_t convLE(uint16_t x) {
+static u16 convLE(u16 x) {
     u8* data = (u8*)&x;
     return readLE16(data);
 }
@@ -257,7 +257,7 @@ static inline void CopyPixel(char* dst, const char* src, int n) {
         case 3:
             dst[2] = src[2]; // fall through
         case 2:
-            *(uint16_t*)dst = *(uint16_t*)src;
+            *(u16*)dst = *(u16*)src;
             break;
         case 4:
             *(uint32_t*)dst = *(uint32_t*)src;

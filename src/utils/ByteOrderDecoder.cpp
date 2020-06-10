@@ -4,11 +4,11 @@
 #include "utils/BaseUtil.h"
 #include "utils/ByteOrderDecoder.h"
 
-uint16_t UInt16BE(const u8* d) {
+u16 UInt16BE(const u8* d) {
     return d[1] | (d[0] << 8);
 }
 
-uint16_t UInt16LE(const u8* d) {
+u16 UInt16LE(const u8* d) {
     return d[0] | (d[1] << 8);
 }
 
@@ -40,8 +40,8 @@ u8 ByteOrderDecoder::UInt8() {
     return *curr++;
 }
 
-uint16_t ByteOrderDecoder::UInt16() {
-    uint16_t v;
+u16 ByteOrderDecoder::UInt16() {
+    u16 v;
     if (left < sizeof(v)) {
         ok = false;
     }

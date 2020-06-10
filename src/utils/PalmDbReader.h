@@ -6,8 +6,8 @@
 struct PdbHeader {
     /* 31 chars + 1 null terminator */
     char name[32] = {0};
-    uint16_t attributes = 0;
-    uint16_t version = 0;
+    u16 attributes = 0;
+    u16 version = 0;
     uint32_t createTime = 0;
     uint32_t modifyTime = 0;
     uint32_t backupTime = 0;
@@ -18,7 +18,7 @@ struct PdbHeader {
     char typeCreator[8 + 1] = {0};
     uint32_t idSeed = 0;
     uint32_t nextRecordList = 0;
-    uint16_t numRecords = 0;
+    u16 numRecords = 0;
 };
 
 struct PdbRecordHeader {

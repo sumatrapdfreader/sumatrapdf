@@ -16,7 +16,7 @@ class ByteOrderDecoder {
         return (char)UInt8();
     }
 
-    uint16_t UInt16();
+    u16 UInt16();
     int16_t Int16() {
         return (int16_t)UInt16();
     }
@@ -52,7 +52,7 @@ class ByteOrderDecoder {
 };
 
 // decode a given piece of memory
-uint16_t UInt16BE(const u8* d);
-uint16_t UInt16LE(const u8* d);
+u16 UInt16BE(const u8* d);
+u16 UInt16LE(const u8* d);
 uint32_t UInt32BE(const u8* d);
 uint32_t UInt32LE(const u8* d);

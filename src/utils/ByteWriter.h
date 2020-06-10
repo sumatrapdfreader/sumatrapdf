@@ -39,7 +39,7 @@ class ByteWriter {
         return true;
     }
 
-    bool Write16(uint16_t val) {
+    bool Write16(u16 val) {
         u8 b1 = val & 0xFF;
         u8 b2 = (val >> 8) & 0xFF;
         if (isLE) {

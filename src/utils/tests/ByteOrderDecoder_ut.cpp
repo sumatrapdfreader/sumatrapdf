@@ -16,7 +16,7 @@ void ByteOrderTests() {
                           0xff, 0xff, 0xfe, 0x02, 0x00, 'a',  'b',  'c'};
 
     {
-        uint16_t vu16;
+        u16 vu16;
         uint32_t vu32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::LittleEndian);
@@ -59,7 +59,7 @@ void ByteOrderTests() {
     }
 
     {
-        uint16_t vu16;
+        u16 vu16;
         uint32_t vu32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::BigEndian);

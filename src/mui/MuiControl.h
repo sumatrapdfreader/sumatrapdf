@@ -71,8 +71,8 @@ class Control : public ILayout {
     void MapMyToRootPos(int& x, int& y) const;
     void MapRootToMyPos(int& x, int& y) const;
 
-    uint16_t wantedInputBits; // WndWantedInputBits
-    uint16_t stateBits;       // WndStateBits
+    u16 wantedInputBits; // WndWantedInputBits
+    u16 stateBits;       // WndStateBits
     // windows with bigger z-order are painted on top, 0 is default
     int16_t zOrder;
 

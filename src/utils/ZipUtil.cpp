@@ -105,13 +105,13 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
         return false;
 
     size_t fileOffset = bytesWritten;
-    uint16_t flags = (1 << 11); // filename is UTF-8
+    u16 flags = (1 << 11); // filename is UTF-8
     uInt crc = crc32(0, (const Bytef*)data, (uInt)size);
     size_t namelen = str::Len(nameUtf8);
     if (namelen >= UINT16_MAX)
         return false;
 
-    uint16_t method = Z_DEFLATED;
+    u16 method = Z_DEFLATED;
     uLongf compressedSize = (uint32_t)size;
     AutoFree compressed((char*)malloc(size));
     if (!compressed)
@@ -133,7 +133,7 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     local.Write32(crc);
     local.Write32(compressedSize);
     local.Write32((uint32_t)size);
-    local.Write16((uint16_t)namelen);
+    local.Write16((u16)namelen);
     local.Write16(0); // extra field length
 
     bool ok = WriteData(localHeader, sizeof(localHeader)) && WriteData(nameUtf8, namelen) &&
@@ -149,7 +149,7 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     central.Write32(crc);
     central.Write32(compressedSize);
     central.Write32((uint32_t)size);
-    central.Write16((uint16_t)namelen);
+    central.Write16((u16)namelen);
     central.Write16(0); // extra field length
     central.Write16(0); // file comment length
     central.Write16(0); // disk number
@@ -219,8 +219,8 @@ bool ZipCreator::Finish() {
     eocd.Write32(0x06054B50); // signature
     eocd.Write16(0);          // disk number
     eocd.Write16(0);          // disk number of central directory
-    eocd.Write16((uint16_t)fileCount);
-    eocd.Write16((uint16_t)fileCount);
+    eocd.Write16((u16)fileCount);
+    eocd.Write16((u16)fileCount);
     eocd.Write32((uint32_t)centraldir.size());
     eocd.Write32((uint32_t)bytesWritten);
     eocd.Write16(0); // comment len

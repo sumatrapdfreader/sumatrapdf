@@ -52,8 +52,8 @@ struct FieldInfo {
 };
 
 struct StructInfo {
-    uint16_t structSize = 0;
-    uint16_t fieldCount = 0;
+    u16 structSize = 0;
+    u16 fieldCount = 0;
     const FieldInfo* fields = nullptr;
     // one string of fieldCount zero-terminated names of all fields
     // in the order of fields

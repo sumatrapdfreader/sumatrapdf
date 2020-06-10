@@ -26,7 +26,7 @@ class ByteReader {
                 case 'w':
                     if (off + idx + 2 > len || idx + 2 > size)
                         return false;
-                    *(uint16_t*)((u8*)strct + idx) = Word(off + idx, isBE);
+                    *(u16*)((u8*)strct + idx) = Word(off + idx, isBE);
                     idx += 2;
                     break;
                 case 'd':
@@ -66,17 +66,17 @@ class ByteReader {
         return 0;
     }
 
-    uint16_t WordLE(size_t off) const {
+    u16 WordLE(size_t off) const {
         if (off + 2 <= len)
             return d[off] | (d[off + 1] << 8);
         return 0;
     }
-    uint16_t WordBE(size_t off) const {
+    u16 WordBE(size_t off) const {
         if (off + 2 <= len)
             return (d[off] << 8) | d[off + 1];
         return 0;
     }
-    uint16_t Word(size_t off, bool isBE) const {
+    u16 Word(size_t off, bool isBE) const {
         return isBE ? WordBE(off) : WordLE(off);
     }
 

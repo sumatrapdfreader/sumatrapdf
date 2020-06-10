@@ -92,8 +92,8 @@ static bool WriteStructUInt(u8* p, Type type, uint64_t val) {
     if (TYPE_U16 == type) {
         if (val > 0xffff)
             return false;
-        uint16_t v = (uint16_t)val;
-        uint16_t* vp = (uint16_t*)p;
+        u16 v = (u16)val;
+        u16* vp = (u16*)p;
         *vp = v;
         return true;
     }
@@ -157,7 +157,7 @@ static int64_t ReadStructInt(const u8* p, Type type) {
 
 static uint64_t ReadStructUInt(const u8* p, Type type) {
     if (TYPE_U16 == type) {
-        uint16_t* vp = (uint16_t*)p;
+        u16* vp = (u16*)p;
         return (uint64_t)*vp;
     }
     if ((TYPE_U32 == type) || (TYPE_COLOR == type)) {
@@ -324,7 +324,7 @@ static TxtNode* StructNodeFromTextNode(DecodeState& ds, TxtNode* txtNode, const 
     CrashIf(!txtNode->IsText());
     str::Slice slice(txtNode->valStart, txtNode->valEnd);
     TxtNode* node = ds.parser.AllocTxtNode(TxtNode::Type::Struct);
-    uint16_t fieldNo = 0;
+    u16 fieldNo = 0;
     char* fieldName = (char*)structDef->fieldNames;
     TxtNode* child;
     for (;;) {

@@ -8,8 +8,8 @@ namespace sertxt {
 struct FieldMetadata;
 
 typedef struct {
-    uint16_t size;
-    uint16_t nFields;
+    u16 size;
+    u16 nFields;
     const char* fieldNames;
     const FieldMetadata* fields;
 } StructMetadata;
@@ -39,7 +39,7 @@ typedef enum {
 // information about a single field
 struct FieldMetadata {
     // offset of the value from the beginning of the struct
-    uint16_t offset;
+    u16 offset;
     Type type;
     // StructMetadata * for TYP_ARRAY and TYPE_STRUCT_PT
     // otherwise default value for this field
