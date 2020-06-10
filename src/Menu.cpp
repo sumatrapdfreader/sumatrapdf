@@ -221,6 +221,7 @@ static MenuDef menuDefHelp[] = {
 
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
+    { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
     { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
@@ -1205,6 +1206,7 @@ HMENU BuildMenu(WindowInfo* win) {
     m = BuildMenuFromMenuDef(menuDefSettings, CreateMenu(), filter);
     if (gIsRaMicroBuild) {
         win::menu::Remove(m, IDM_CHANGE_LANGUAGE);
+        win::menu::Remove(m, IDM_ADVANCED_OPTIONS);
     }
 #if defined(ENABLE_THEME)
     // Build the themes sub-menu of the settings menu
@@ -1229,6 +1231,9 @@ HMENU BuildMenu(WindowInfo* win) {
 
     if (gShowDebugMenu) {
         m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
+        if (!gIsRaMicroBuild) {
+            win::menu::Remove(m, IDM_ADVANCED_OPTIONS);
+        }
 
         if (!gIsDebugBuild) {
             RemoveMenu(m, IDM_DEBUG_TEST_APP, MF_BYCOMMAND);
