@@ -923,7 +923,7 @@ void HtmlFormatter::HandleTagPre(HtmlToken* t) {
 }
 
 StyleRule* HtmlFormatter::FindStyleRule(HtmlTag tag, const char* clazz, size_t clazzLen) {
-    uint32_t classHash = clazz ? MurmurHash2(clazz, clazzLen) : 0;
+    u32 classHash = clazz ? MurmurHash2(clazz, clazzLen) : 0;
     for (size_t i = 0; i < styleRules.size(); i++) {
         StyleRule& rule = styleRules.at(i);
         if (tag == rule.tag && classHash == rule.classHash)

@@ -109,7 +109,7 @@ class CssPullParser;
 
 struct StyleRule {
     HtmlTag tag = Tag_NotFound;
-    uint32_t classHash = 0;
+    u32 classHash = 0;
 
     enum Unit { px, pt, em, inherit };
 

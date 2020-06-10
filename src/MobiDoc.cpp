@@ -38,17 +38,17 @@ constexpr size_t kInvalidSize = (size_t)-1;
 #define ENCRYPTION_NEW 2
 
 struct PalmDocHeader {
-    uint16_t compressionType = 0;
-    uint16_t reserved1 = 0;
-    uint32_t uncompressedDocSize = 0;
-    uint16_t recordsCount = 0;
-    uint16_t maxRecSize = 0; // usually (always?) 4096
+    u16 compressionType = 0;
+    u16 reserved1 = 0;
+    u32 uncompressedDocSize = 0;
+    u16 recordsCount = 0;
+    u16 maxRecSize = 0; // usually (always?) 4096
     // if it's palmdoc, we have currPos, if mobi, encrType/reserved2
     union {
-        uint32_t currPos = 0;
+        u32 currPos = 0;
         struct {
-            uint16_t encrType;
-            uint16_t reserved2;
+            u16 encrType;
+            u16 reserved2;
         } mobi;
     };
 };
@@ -75,47 +75,47 @@ static void DecodePalmDocHeader(const char* buf, PalmDocHeader* hdr) {
 #define kMobiHeaderMinLen 116
 struct MobiHeader {
     char id[4];
-    uint32_t hdrLen; // including 4 id bytes
-    uint32_t type;
-    uint32_t textEncoding;
-    uint32_t uniqueId;
-    uint32_t mobiFormatVersion;
-    uint32_t ortographicIdxRec; // -1 if no ortographics index
-    uint32_t inflectionIdxRec;
-    uint32_t namesIdxRec;
-    uint32_t keysIdxRec;
-    uint32_t extraIdx0Rec;
-    uint32_t extraIdx1Rec;
-    uint32_t extraIdx2Rec;
-    uint32_t extraIdx3Rec;
-    uint32_t extraIdx4Rec;
-    uint32_t extraIdx5Rec;
-    uint32_t firstNonBookRec;
-    uint32_t fullNameOffset; // offset in record 0
-    uint32_t fullNameLen;
+    u32 hdrLen; // including 4 id bytes
+    u32 type;
+    u32 textEncoding;
+    u32 uniqueId;
+    u32 mobiFormatVersion;
+    u32 ortographicIdxRec; // -1 if no ortographics index
+    u32 inflectionIdxRec;
+    u32 namesIdxRec;
+    u32 keysIdxRec;
+    u32 extraIdx0Rec;
+    u32 extraIdx1Rec;
+    u32 extraIdx2Rec;
+    u32 extraIdx3Rec;
+    u32 extraIdx4Rec;
+    u32 extraIdx5Rec;
+    u32 firstNonBookRec;
+    u32 fullNameOffset; // offset in record 0
+    u32 fullNameLen;
     // Low byte is main language e.g. 09 = English,
     // next byte is dialect, 08 = British, 04 = US.
     // Thus US English is 1033, UK English is 2057
-    uint32_t locale;
-    uint32_t inputDictLanguage;
-    uint32_t outputDictLanguage;
-    uint32_t minRequiredMobiFormatVersion;
-    uint32_t imageFirstRec;
-    uint32_t huffmanFirstRec;
-    uint32_t huffmanRecCount;
-    uint32_t huffmanTableOffset;
-    uint32_t huffmanTableLen;
-    uint32_t exthFlags; // bitfield. if bit 6 (0x40) is set => there's an EXTH record
+    u32 locale;
+    u32 inputDictLanguage;
+    u32 outputDictLanguage;
+    u32 minRequiredMobiFormatVersion;
+    u32 imageFirstRec;
+    u32 huffmanFirstRec;
+    u32 huffmanRecCount;
+    u32 huffmanTableOffset;
+    u32 huffmanTableLen;
+    u32 exthFlags; // bitfield. if bit 6 (0x40) is set => there's an EXTH record
     char reserved1[32];
-    uint32_t drmOffset;       // -1 if no drm info
-    uint32_t drmEntriesCount; // -1 if no drm
-    uint32_t drmSize;
-    uint32_t drmFlags;
+    u32 drmOffset;       // -1 if no drm info
+    u32 drmEntriesCount; // -1 if no drm
+    u32 drmSize;
+    u32 drmFlags;
     char reserved2[62];
     // A set of binary flags, some of which indicate extra data at the end of each text block.
     // This only seems to be valid for Mobipocket format version 5 and 6 (and higher?), when
     // the header length is 228 (0xE4) or 232 (0xE8).
-    uint16_t extraDataFlags;
+    u16 extraDataFlags;
     int32_t indxRec;
 };
 
@@ -161,32 +161,32 @@ static bool PalmdocUncompress(const char* src, size_t srcLen, str::Str& dst) {
 #define kHuffHeaderLen 24
 struct HuffHeader {
     char id[4];      // "HUFF"
-    uint32_t hdrLen; // should be 24
+    u32 hdrLen; // should be 24
     // offset of 256 4-byte elements of cache data, in big endian
-    uint32_t cacheOffset; // should be 24 as well
+    u32 cacheOffset; // should be 24 as well
     // offset of 64 4-byte elements of base table data, in big endian
-    uint32_t baseTableOffset; // should be 24 + 1024
+    u32 baseTableOffset; // should be 24 + 1024
     // like cacheOffset except data is in little endian
-    uint32_t cacheLEOffset; // should be 24 + 1024 + 256
+    u32 cacheLEOffset; // should be 24 + 1024 + 256
     // like baseTableOffset except data is in little endian
-    uint32_t baseTableLEOffset; // should be 24 + 1024 + 256 + 1024
+    u32 baseTableLEOffset; // should be 24 + 1024 + 256 + 1024
 };
 static_assert(kHuffHeaderLen == sizeof(HuffHeader), "wrong size of HuffHeader structure");
 
 #define kCdicHeaderLen 16
 struct CdicHeader {
     char id[4];      // "CIDC"
-    uint32_t hdrLen; // should be 16
-    uint32_t unknown;
-    uint32_t codeLen;
+    u32 hdrLen; // should be 16
+    u32 unknown;
+    u32 codeLen;
 };
 
 static_assert(kCdicHeaderLen == sizeof(CdicHeader), "wrong size of CdicHeader structure");
 
 #define kCacheItemCount 256
-#define kCacheDataLen (kCacheItemCount * sizeof(uint32_t))
+#define kCacheDataLen (kCacheItemCount * sizeof(u32))
 #define kBaseTableItemCount 64
-#define kBaseTableDataLen (kBaseTableItemCount * sizeof(uint32_t))
+#define kBaseTableDataLen (kBaseTableItemCount * sizeof(u32))
 
 #define kHuffRecordMinLen (kHuffHeaderLen + kCacheDataLen + kBaseTableDataLen)
 #define kHuffRecordLen (kHuffHeaderLen + 2 * kCacheDataLen + 2 * kBaseTableDataLen)
@@ -194,46 +194,46 @@ static_assert(kCdicHeaderLen == sizeof(CdicHeader), "wrong size of CdicHeader st
 #define kCdicsMax 32
 
 class HuffDicDecompressor {
-    uint32_t cacheTable[kCacheItemCount] = {};
-    uint32_t baseTable[kBaseTableItemCount] = {};
+    u32 cacheTable[kCacheItemCount] = {};
+    u32 baseTable[kBaseTableItemCount] = {};
 
     size_t dictsCount = 0;
     // owned by the creator (in our case: by the PdbReader)
-    uint8_t* dicts[kCdicsMax] = {};
-    uint32_t dictSize[kCdicsMax] = {};
+    u8* dicts[kCdicsMax] = {};
+    u32 dictSize[kCdicsMax] = {};
 
-    uint32_t codeLength = 0;
+    u32 codeLength = 0;
 
-    Vec<uint32_t> recursionGuard;
+    Vec<u32> recursionGuard;
 
   public:
     HuffDicDecompressor();
 
-    bool SetHuffData(uint8_t* huffData, size_t huffDataLen);
-    bool AddCdicData(uint8_t* cdicData, uint32_t cdicDataLen);
-    bool Decompress(uint8_t* src, size_t octets, str::Str& dst);
-    bool DecodeOne(uint32_t code, str::Str& dst);
+    bool SetHuffData(u8* huffData, size_t huffDataLen);
+    bool AddCdicData(u8* cdicData, u32 cdicDataLen);
+    bool Decompress(u8* src, size_t octets, str::Str& dst);
+    bool DecodeOne(u32 code, str::Str& dst);
 };
 
 HuffDicDecompressor::HuffDicDecompressor() : codeLength(0), dictsCount(0) {
 }
 
-bool HuffDicDecompressor::DecodeOne(uint32_t code, str::Str& dst) {
-    uint16_t dict = (uint16_t)(code >> codeLength);
+bool HuffDicDecompressor::DecodeOne(u32 code, str::Str& dst) {
+    u16 dict = (u16)(code >> codeLength);
     if (dict >= dictsCount) {
         logf("invalid dict value\n");
         return false;
     }
     code &= ((1 << (codeLength)) - 1);
-    uint16_t offset = UInt16BE(dicts[dict] + code * 2);
+    u16 offset = UInt16BE(dicts[dict] + code * 2);
 
-    if ((uint32_t)offset + 2 > dictSize[dict]) {
+    if ((u32)offset + 2 > dictSize[dict]) {
         logf("invalid offset\n");
         return false;
     }
-    uint16_t symLen = UInt16BE(dicts[dict] + offset);
-    uint8_t* p = dicts[dict] + offset + 2;
-    if ((uint32_t)(symLen & 0x7fff) > dictSize[dict] - offset - 2) {
+    u16 symLen = UInt16BE(dicts[dict] + offset);
+    u8* p = dicts[dict] + offset + 2;
+    if ((u32)(symLen & 0x7fff) > dictSize[dict] - offset - 2) {
         logf("invalid symLen\n");
         return false;
     }
@@ -259,9 +259,9 @@ bool HuffDicDecompressor::DecodeOne(uint32_t code, str::Str& dst) {
     return true;
 }
 
-bool HuffDicDecompressor::Decompress(uint8_t* src, size_t srcSize, str::Str& dst) {
-    uint32_t bitsConsumed = 0;
-    uint32_t bits = 0;
+bool HuffDicDecompressor::Decompress(u8* src, size_t srcSize, str::Str& dst) {
+    u32 bitsConsumed = 0;
+    u32 bits = 0;
 
     BitReader br(src, srcSize);
 
@@ -277,19 +277,19 @@ bool HuffDicDecompressor::Decompress(uint8_t* src, size_t srcSize, str::Str& dst
         bits = br.Peek(32);
         if (br.BitsLeft() < 8 && 0 == bits)
             break;
-        uint32_t v = cacheTable[bits >> 24];
-        uint32_t codeLen = v & 0x1f;
+        u32 v = cacheTable[bits >> 24];
+        u32 codeLen = v & 0x1f;
         if (!codeLen) {
             logf("corrupted table, zero code len\n");
             return false;
         }
         bool isTerminal = (v & 0x80) != 0;
 
-        uint32_t code;
+        u32 code;
         if (isTerminal) {
             code = (v >> 8) - (bits >> (32 - codeLen));
         } else {
-            uint32_t baseVal;
+            u32 baseVal;
             codeLen -= 1;
             do {
                 codeLen++;
@@ -314,7 +314,7 @@ bool HuffDicDecompressor::Decompress(uint8_t* src, size_t srcSize, str::Str& dst
     return true;
 }
 
-bool HuffDicDecompressor::SetHuffData(uint8_t* huffData, size_t huffDataLen) {
+bool HuffDicDecompressor::SetHuffData(u8* huffData, size_t huffDataLen) {
     // for now catch cases where we don't have both big endian and little endian
     // versions of the data
     CrashIf(kHuffRecordLen != huffDataLen);
@@ -358,15 +358,15 @@ bool HuffDicDecompressor::SetHuffData(uint8_t* huffData, size_t huffDataLen) {
     return true;
 }
 
-bool HuffDicDecompressor::AddCdicData(uint8_t* cdicData, uint32_t cdicDataLen) {
+bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
     if (dictsCount >= kCdicsMax)
         return false;
     if (cdicDataLen < kCdicHeaderLen)
         return false;
     if (!str::EqN("CDIC", (char*)cdicData, 4))
         return false;
-    uint32_t hdrLen = UInt32BE(cdicData + 4);
-    uint32_t codeLen = UInt32BE(cdicData + 12);
+    u32 hdrLen = UInt32BE(cdicData + 4);
+    u32 codeLen = UInt32BE(cdicData + 12);
     if (0 == codeLength) {
         codeLength = codeLen;
     } else {
@@ -376,9 +376,9 @@ bool HuffDicDecompressor::AddCdicData(uint8_t* cdicData, uint32_t cdicDataLen) {
     CrashIf(hdrLen != kCdicHeaderLen);
     if (hdrLen != kCdicHeaderLen)
         return false;
-    uint32_t size = cdicDataLen - hdrLen;
+    u32 size = cdicDataLen - hdrLen;
 
-    uint32_t maxSize = 1 << codeLength;
+    u32 maxSize = 1 << codeLength;
     if (maxSize >= size)
         return false;
     dicts[dictsCount] = cdicData + hdrLen;
@@ -389,7 +389,7 @@ bool HuffDicDecompressor::AddCdicData(uint8_t* cdicData, uint32_t cdicDataLen) {
 
 static void DecodeMobiDocHeader(const char* buf, MobiHeader* hdr) {
     memset(hdr, 0, sizeof(MobiHeader));
-    hdr->drmEntriesCount = (uint32_t)-1;
+    hdr->drmEntriesCount = (u32)-1;
 
     ByteOrderDecoder d(buf, kMobiHeaderLen, ByteOrderDecoder::BigEndian);
     d.Bytes(hdr->id, 4);
@@ -537,7 +537,7 @@ bool MobiDoc::ParseHeader() {
         logf("MobiHeader.id is not 'MOBI'\n");
         return false;
     }
-    if (mobiHdr.drmEntriesCount != (uint32_t)-1) {
+    if (mobiHdr.drmEntriesCount != (u32)-1) {
         logf("DRM is unsupported\n");
         // load an empty document and display a warning
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
@@ -564,7 +564,7 @@ bool MobiDoc::ParseHeader() {
 
     bool hasExtraFlags = (mobiHdr.hdrLen >= 228); // TODO: also only if mobiFormatVersion >= 5?
     if (hasExtraFlags) {
-        uint16_t flags = mobiHdr.extraDataFlags;
+        u16 flags = mobiHdr.extraDataFlags;
         multibyte = ((flags & 1) != 0);
         while (flags > 1) {
             if (0 != (flags & 2)) {
@@ -584,7 +584,7 @@ bool MobiDoc::ParseHeader() {
         }
         CrashIf(nullptr != huffDic);
         huffDic = new HuffDicDecompressor();
-        if (!huffDic->SetHuffData((uint8_t*)recData, huffRecSize)) {
+        if (!huffDic->SetHuffData((u8*)recData, huffRecSize)) {
             return false;
         }
         size_t cdicsCount = mobiHdr.huffmanRecCount - 1;
@@ -599,17 +599,17 @@ bool MobiDoc::ParseHeader() {
             if (!recData) {
                 return false;
             }
-            if (huffRecSize > (uint32_t)-1) {
+            if (huffRecSize > (u32)-1) {
                 return false;
             }
-            if (!huffDic->AddCdicData((uint8_t*)recData, (uint32_t)huffRecSize)) {
+            if (!huffDic->AddCdicData((u8*)recData, (u32)huffRecSize)) {
                 return false;
             }
         }
     }
 
     if ((mobiHdr.exthFlags & 0x40)) {
-        uint32_t offset = kPalmDocHeaderLen + mobiHdr.hdrLen;
+        u32 offset = kPalmDocHeaderLen + mobiHdr.hdrLen;
         DecodeExthHeader(firstRecData + offset, recSize - offset);
     }
 
@@ -624,18 +624,18 @@ bool MobiDoc::DecodeExthHeader(const char* data, size_t dataLen) {
 
     ByteOrderDecoder d(data, dataLen, ByteOrderDecoder::BigEndian);
     d.Skip(4);
-    uint32_t hdrLen = d.UInt32();
-    uint32_t count = d.UInt32();
+    u32 hdrLen = d.UInt32();
+    u32 count = d.UInt32();
     if (hdrLen > dataLen) {
         return false;
     }
 
-    for (uint32_t i = 0; i < count; i++) {
+    for (u32 i = 0; i < count; i++) {
         if (d.Offset() > dataLen - 8) {
             return false;
         }
-        uint32_t type = d.UInt32();
-        uint32_t length = d.UInt32();
+        u32 type = d.UInt32();
+        u32 length = d.UInt32();
         if (length < 8 || length > dataLen - d.Offset() + 8) {
             return false;
         }
@@ -686,14 +686,14 @@ bool MobiDoc::DecodeExthHeader(const char* data, size_t dataLen) {
 #define SRCS_REC 0x53524353 // 'SRCS'
 #define VIDE_REC 0x56494445 // 'VIDE'
 
-static bool IsEofRecord(uint8_t* data, size_t dataLen) {
+static bool IsEofRecord(u8* data, size_t dataLen) {
     return (4 == dataLen) && (EOF_REC == UInt32BE(data));
 }
 
-static bool KnownNonImageRec(uint8_t* data, size_t dataLen) {
+static bool KnownNonImageRec(u8* data, size_t dataLen) {
     if (dataLen < 4)
         return false;
-    uint32_t sig = UInt32BE(data);
+    u32 sig = UInt32BE(data);
 
     if (FLIS_REC == sig)
         return true;
@@ -724,9 +724,9 @@ bool MobiDoc::LoadImage(size_t imageNo) {
     size_t imgDataLen = rec.size();
     if (!imgData || (0 == imgDataLen))
         return true;
-    if (IsEofRecord((uint8_t*)imgData, imgDataLen))
+    if (IsEofRecord((u8*)imgData, imgDataLen))
         return false;
-    if (KnownNonImageRec((uint8_t*)imgData, imgDataLen))
+    if (KnownNonImageRec((u8*)imgData, imgDataLen))
         return true;
     if (!KnownImageFormat(imgData, imgDataLen)) {
         logf("MobiDoc::LoadImage: unknown image format\n");
@@ -778,9 +778,9 @@ static size_t GetRealRecordSize(const u8* recData, size_t recLen, size_t trailer
         if (recLen < 4) {
             return kInvalidSize;
         }
-        uint32_t n = 0;
+        u32 n = 0;
         for (size_t j = 0; j < 4; j++) {
-            uint8_t v = recData[recLen - 4 + j];
+            u8 v = recData[recLen - 4 + j];
             if (0 != (v & 0x80)) {
                 n = 0;
             }
@@ -796,7 +796,7 @@ static size_t GetRealRecordSize(const u8* recData, size_t recLen, size_t trailer
         if (0 == recLen) {
             return kInvalidSize;
         }
-        uint8_t n = (recData[recLen - 1] & 3) + 1;
+        u8 n = (recData[recLen - 1] & 3) + 1;
         if (n > recLen) {
             return kInvalidSize;
         }
@@ -831,7 +831,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut) {
         return ok;
     }
     if (COMPRESSION_HUFF == compressionType && huffDic) {
-        bool ok = huffDic->Decompress((uint8_t*)recData, recSize, strOut);
+        bool ok = huffDic->Decompress((u8*)recData, recSize, strOut);
         if (!ok) {
             logf("HuffDic decompression failed\n");
         }

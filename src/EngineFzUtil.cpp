@@ -274,8 +274,8 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
 
     unsigned char* dest = bmpData;
     unsigned char* source = pixmap->samples;
-    uint32_t* palette = (uint32_t*)bmi.Get()->bmiColors;
-    BYTE grayIdxs[256] = {0};
+    u32* palette = (u32*)bmi.Get()->bmiColors;
+    u8 grayIdxs[256] = {0};
 
     int paletteSize = 0;
     RGBQUAD c;
@@ -291,9 +291,9 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
             int k;
             bool isGray = c.rgbRed == c.rgbGreen && c.rgbRed == c.rgbBlue;
             if (isGray) {
-                k = grayIdxs[c.rgbRed] || palette[0] == *(uint32_t*)&c ? grayIdxs[c.rgbRed] : paletteSize;
+                k = grayIdxs[c.rgbRed] || palette[0] == *(u32*)&c ? grayIdxs[c.rgbRed] : paletteSize;
             } else {
-                for (k = 0; k < paletteSize && palette[k] != *(uint32_t*)&c; k++)
+                for (k = 0; k < paletteSize && palette[k] != *(u32*)&c; k++)
                     ;
             }
             /* add it to the palette if it isn't in there and if there's still space left */
@@ -305,7 +305,7 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
                 if (isGray) {
                     grayIdxs[c.rgbRed] = (BYTE)k;
                 }
-                palette[k] = *(uint32_t*)&c;
+                palette[k] = *(u32*)&c;
             }
             /* 8-bit data consists of indices into the color palette */
             *dest++ = k;

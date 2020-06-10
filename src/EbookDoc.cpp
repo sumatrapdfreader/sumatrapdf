@@ -1365,14 +1365,14 @@ static char* DecompressTcrText(const char* data, size_t dataLen) {
             return str::Dup(data);
         }
         dict[n] = curr;
-        curr += 1 + (uint8_t)*curr;
+        curr += 1 + (u8)*curr;
     }
 
     str::Str text(dataLen * 2);
     text.allowFailure = true;
     for (; curr < end; curr++) {
-        const char* entry = dict[(uint8_t)*curr];
-        bool ok = text.Append(entry + 1, (uint8_t)*entry);
+        const char* entry = dict[(u8)*curr];
+        bool ok = text.Append(entry + 1, (u8)*entry);
         if (!ok) {
             return nullptr;
         }

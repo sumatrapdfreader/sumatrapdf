@@ -411,7 +411,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
     // (allows independent side-by-side installations)
     AutoFreeWstr exePath = GetExePath();
     str::ToLowerInPlace(exePath);
-    uint32_t hash = MurmurHash2(exePath, str::Len(exePath) * sizeof(WCHAR));
+    u32 hash = MurmurHash2(exePath, str::Len(exePath) * sizeof(WCHAR));
     AutoFreeWstr mapId = str::Format(L"SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;

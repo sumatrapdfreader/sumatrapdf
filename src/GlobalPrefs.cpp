@@ -51,7 +51,7 @@ char* SerializeGlobalPrefs(GlobalPrefs* gp, const char* prevData, size_t* sizeOu
             ds->useDefaultState = true;
         }
         // prevent unnecessary settings from being written out
-        uint16_t fieldCount = 0;
+        u16 fieldCount = 0;
         while (++fieldCount <= dimof(gFileStateFields)) {
             // count the number of fields up to and including useDefaultState
             if (gFileStateFields[fieldCount - 1].offset == offsetof(FileState, useDefaultState)) {
