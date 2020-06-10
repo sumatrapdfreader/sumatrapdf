@@ -243,7 +243,7 @@ class EngineDjVu : public EngineBase {
     RenderedBitmap* RenderPage(RenderPageArgs&) override;
 
     PointD TransformPoint(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false);
-    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -798,7 +798,7 @@ PointD EngineDjVu::TransformPoint(PointD pt, int pageNo, float zoom, int rotatio
     return res;
 }
 
-RectD EngineDjVu::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineDjVu::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
     PointD TL = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
     PointD BR = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
     return RectD::FromXY(TL, BR);

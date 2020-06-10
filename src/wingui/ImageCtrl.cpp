@@ -55,6 +55,7 @@ static void OnImageCtrlPaint(ImageCtrl* w, COLORREF bgCol) {
     // TODO: allow for different image positioning (center, fit, fit-preserve-ratio)
 
     Gdiplus::Status ok = g.DrawImage(w->bmp, rcp, 0, 0, dx, dy, UnitPixel, &imgAttrs);
+    CrashIf(ok != Gdiplus::Status::Ok);
     EndPaint(w->hwnd, &ps);
 }
 

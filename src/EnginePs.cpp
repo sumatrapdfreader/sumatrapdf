@@ -268,7 +268,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->RenderPage(args);
     }
 
-    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
+    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 

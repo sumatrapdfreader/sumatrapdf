@@ -96,7 +96,7 @@ class EngineImages : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -234,20 +234,22 @@ void EngineImages::GetTransform(Matrix& m, int pageNo, float zoom, int rotation)
     GetBaseTransform(m, PageMediabox(pageNo).ToGdipRectF(), zoom, rotation);
 }
 
-RectD EngineImages::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineImages::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
     PointF pts[2] = {PointF((float)rect.x, (float)rect.y),
                      PointF((float)(rect.x + rect.dx), (float)(rect.y + rect.dy))};
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);
-    if (inverse)
+    if (inverse) {
         m.Invert();
+    }
     m.TransformPoints(pts, 2);
-    rect = RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+    RectD res = RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
     // try to undo rounding errors caused by a rotation
     // (necessary correction determined by experimentation)
-    if (rotation != 0)
-        rect.Inflate(-0.01, -0.01);
-    return rect;
+    if (rotation != 0) {
+        res.Inflate(-0.01, -0.01);
+    }
+    return res;
 }
 
 static PageElement* newImageElement(ImagePage* page) {

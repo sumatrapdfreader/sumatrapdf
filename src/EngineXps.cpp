@@ -199,7 +199,7 @@ class EngineXps : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -600,7 +600,7 @@ RectD EngineXps::PageContentBox(int pageNo, RenderTarget target) {
     return rect2.Intersect(mediabox);
 }
 
-RectD EngineXps::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineXps::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
     fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse) {
         ctm = fz_invert_matrix(ctm);

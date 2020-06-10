@@ -317,7 +317,7 @@ class EngineBase {
     // applies zoom and rotation to a point in user/page space converting
     // it into device/screen space - or in the inverse direction
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) = 0;
+    virtual RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) = 0;
 
     // returns the binary data for the current file
     // (e.g. for saving again when the file has already been deleted)

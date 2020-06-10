@@ -305,7 +305,7 @@ class EnginePdf : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -1194,7 +1194,7 @@ RectD EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
     return rect2.Intersect(mediabox);
 }
 
-RectD EnginePdf::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EnginePdf::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
     if (zoom <= 0) {
         char* name = str::Dup("");
         const WCHAR* nameW = FileName();

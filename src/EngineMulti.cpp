@@ -51,7 +51,7 @@ class EngineMulti : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -127,7 +127,7 @@ RenderedBitmap* EngineMulti::RenderPage(RenderPageArgs& args) {
     return e->RenderPage(args);
 }
 
-RectD EngineMulti::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineMulti::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
     EngineBase* e = PageToEngine(pageNo);
     return e->Transform(rect, pageNo, zoom, rotation, inverse);
 }

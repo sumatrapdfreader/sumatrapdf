@@ -87,7 +87,7 @@ class EngineEbook : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::string_view GetFileData() override;
 
@@ -272,7 +272,7 @@ bool EngineEbook::ExtractPageAnchors() {
     return true;
 }
 
-RectD EngineEbook::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectD EngineEbook::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
     UNUSED(pageNo);
     geomutil::RectT<float> rcF = rect.Convert<float>();
     auto p1 = PointF(rcF.x, rcF.y);

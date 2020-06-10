@@ -20,6 +20,9 @@ class ZipCreator {
     ZipCreator(ISequentialStream* stream);
     ~ZipCreator();
 
+    ZipCreator(ZipCreator const&) = delete;
+    ZipCreator& operator=(ZipCreator const&) = delete;
+
     bool AddFile(const WCHAR* filePath, const WCHAR* nameInZip = nullptr);
     bool AddFileFromDir(const WCHAR* filePath, const WCHAR* dir);
     bool AddDir(const WCHAR* dirPath, bool recursive = false);
