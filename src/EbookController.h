@@ -19,7 +19,7 @@ using namespace mui;
 
 class EbookController : public Controller {
   public:
-    EbookController(Doc doc, EbookControls* ctrls, ControllerCallback* cb);
+    EbookController(const Doc& doc, EbookControls* ctrls, ControllerCallback* cb);
     ~EbookController() override;
 
     const WCHAR* FilePath() const override {
@@ -97,7 +97,7 @@ class EbookController : public Controller {
     int CurrentTocPageNo() const;
 
     // call StartLayouting before using this EbookController
-    static EbookController* Create(Doc doc, HWND hwnd, ControllerCallback* cb, FrameRateWnd*);
+    static EbookController* Create(const Doc& doc, HWND hwnd, ControllerCallback* cb, FrameRateWnd*);
 
     static void DeleteEbookFormattingData(EbookFormattingData* data);
 
@@ -159,4 +159,4 @@ class EbookController : public Controller {
     void ClickedPage2(Control* c, int x, int y);
 };
 
-HtmlFormatterArgs* CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator* textAllocator = nullptr);
+HtmlFormatterArgs* CreateFormatterArgsDoc(const Doc& doc, int dx, int dy, Allocator* textAllocator = nullptr);

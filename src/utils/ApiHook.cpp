@@ -111,7 +111,7 @@ static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::strin
 }
 
 static IMAGE_THUNK_DATA* FindIatThunk(const std::string_view& dllName, const std::string_view& apiName,
-                                      const std::wstring moduleName = L"") {
+                                      const std::wstring& moduleName = L"") {
 #if defined(_WIN64)
     PEB* peb = (PPEB)__readgsqword(0x60);
 #else

@@ -44,7 +44,7 @@ static float GetFontSize() {
     return fontSize;
 }
 
-HtmlFormatterArgs* CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator* textAllocator) {
+HtmlFormatterArgs* CreateFormatterArgsDoc(const Doc& doc, int dx, int dy, Allocator* textAllocator) {
     HtmlFormatterArgs* args = CreateFormatterDefaultArgs(dx, dy, textAllocator);
     args->htmlStr = doc.GetHtmlData();
     args->SetFontName(GetFontName());
@@ -109,7 +109,7 @@ class EbookFormattingThread : public ThreadBase {
     void SendPagesIfNecessary(bool force, bool finished);
     bool Format();
 
-    EbookFormattingThread(Doc doc, HtmlFormatterArgs* args, EbookController* ctrl, int reparseIdx,
+    EbookFormattingThread(const Doc& doc, HtmlFormatterArgs* args, EbookController* ctrl, int reparseIdx,
                           ControllerCallback* cb);
     virtual ~EbookFormattingThread();
 
@@ -117,8 +117,8 @@ class EbookFormattingThread : public ThreadBase {
     void Run() override;
 };
 
-EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs* args, EbookController* ctrl, int reparseIdx,
-                                             ControllerCallback* cb) {
+EbookFormattingThread::EbookFormattingThread(const Doc& doc, HtmlFormatterArgs* args, EbookController* ctrl,
+                                             int reparseIdx, ControllerCallback* cb) {
     this->doc = doc;
     this->cb = cb;
     this->controller = ctrl;
@@ -205,7 +205,7 @@ static void DeletePages(Vec<HtmlPage*>** toDeletePtr) {
     *toDeletePtr = nullptr;
 }
 
-EbookController::EbookController(Doc doc, EbookControls* ctrls, ControllerCallback* cb)
+EbookController::EbookController(const Doc& doc, EbookControls* ctrls, ControllerCallback* cb)
     : Controller(cb), pageSize(0, 0) {
     this->doc = doc;
     this->ctrls = ctrls;
@@ -631,7 +631,7 @@ static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, Size pageSize, Size b
     return new RenderedBitmap(hbmp, bmpSize);
 }
 
-static RenderedBitmap* ThumbFromCoverPage(Doc doc, Size size) {
+static RenderedBitmap* ThumbFromCoverPage(const Doc& doc, Size size) {
     ImageData* coverImage = doc.GetCoverImage();
     if (!coverImage) {
         return nullptr;
@@ -985,7 +985,8 @@ void EbookController::CopyNavHistory(EbookController& orig) {
     navHistoryIdx = orig.navHistoryIdx;
 }
 
-EbookController* EbookController::Create(Doc doc, HWND hwnd, ControllerCallback* cb, FrameRateWnd* frameRateWnd) {
+EbookController* EbookController::Create(const Doc& doc, HWND hwnd, ControllerCallback* cb,
+                                         FrameRateWnd* frameRateWnd) {
     EbookControls* ctrls = CreateEbookControls(hwnd, frameRateWnd);
     if (!ctrls) {
         return nullptr;
