@@ -248,8 +248,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Bookmarks\tF12"),         IDM_VIEW_BOOKMARKS,         0                 },
     { _TRN("Show &Toolbar\tF8"),            IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             IDM_SAVE_ANNOTATIONS_SMX,   MF_REQ_DISK_ACCESS },
-    // TODO: translate
-    { "Edit Annotations",                   IDM_EDIT_ANNOTATIONS, MF_REQ_DISK_ACCESS },
+    { _TR_TODON("Edit Annotations"),        IDM_EDIT_ANNOTATIONS,       MF_REQ_DISK_ACCESS },
     {"New Bookmarks",                       IDM_NEW_BOOKMARKS,          MF_NO_TRANSLATE},
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
@@ -684,8 +683,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         auto path = tab->filePath.get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
-            // TODO: translate
-            win::menu::SetText(popup, IDM_NEW_BOOKMARKS, L"Edit Bookmarks");
+            win::menu::SetText(popup, IDM_NEW_BOOKMARKS, _TR_TODO("Edit Bookmarks"));
         }
     }
 

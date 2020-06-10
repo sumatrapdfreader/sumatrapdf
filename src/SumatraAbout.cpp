@@ -814,8 +814,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
 
     if (!gIsRaMicroBuild) {
-        // TODO: translate
-        rect = DrawSupportLink(win->hwndCanvas, hdc, L"Support SumatraPDF");
+        rect = DrawSupportLink(win->hwndCanvas, hdc, _TR_TODO("Support SumatraPDF"));
         win->staticLinks.Append(StaticLinkInfo(rect, URL_SUPPORT_SUMATRA));
     }
 }

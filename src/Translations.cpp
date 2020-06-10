@@ -272,5 +272,5 @@ void Destroy() {
 } // namespace trans
 
 const WCHAR* _TR(const char* s) {
-   return trans::GetTranslation(s);
+    return trans::GetTranslation(s);
 }

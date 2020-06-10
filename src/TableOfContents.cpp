@@ -385,27 +385,24 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 #define IDM_EMBED_SEPARATOR             510
 
 static MenuDef menuDefContext[] = {
-    {_TRN("Expand All"),      IDM_EXPAND_ALL,         0 },
-    {_TRN("Collapse All"),    IDM_COLLAPSE_ALL,       0 },
-    {SEP_ITEM,                IDM_EMBED_SEPARATOR,    MF_NO_TRANSLATE},
-    // TODO: translate
-    {"Open Embedded PDF",     IDM_OPEN_EMBEDDED,      0 },
-    {"Save Embedded File...", IDM_SAVE_EMBEDDED,      0 },
+    {_TRN("Expand All"),                 IDM_EXPAND_ALL,         0 },
+    {_TRN("Collapse All"),               IDM_COLLAPSE_ALL,       0 },
+    {SEP_ITEM,                           IDM_EMBED_SEPARATOR,    MF_NO_TRANSLATE},
+    {_TR_TODON("Open Embedded PDF"),     IDM_OPEN_EMBEDDED,      0 },
+    {_TR_TODON("Save Embedded File..."), IDM_SAVE_EMBEDDED,      0 },
     // note: strings cannot be "" or else items are not there
-    {"add",                   IDM_FAV_ADD,            MF_NO_TRANSLATE},
-    {"del",                   IDM_FAV_DEL,            MF_NO_TRANSLATE},
-    {SEP_ITEM,                IDM_SEPARATOR,          MF_NO_TRANSLATE},
-    // TODO: translate
-    {"Export Bookmarks",      IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
-    {"New Bookmarks",         IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
+    {"add",                              IDM_FAV_ADD,            MF_NO_TRANSLATE},
+    {"del",                              IDM_FAV_DEL,            MF_NO_TRANSLATE},
+    {SEP_ITEM,                           IDM_SEPARATOR,          MF_NO_TRANSLATE},
+    {_TR_TODON("Export Bookmarks"),      IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
+    {_TR_TODON("New Bookmarks"),         IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
     { 0, 0, 0 },
 };
 
 static MenuDef menuDefSortByTag[] = {
-    // TODO: translate
-    {"Tag (small first)",     IDM_SORT_TAG_SMALL_FIRST, 0 },
-    {"Tag (big first)",       IDM_SORT_TAG_BIG_FIRST,   0 },
-    {"Color",                 IDM_SORT_COLOR,           0 },
+    {_TR_TODON("Tag (small first)"),     IDM_SORT_TAG_SMALL_FIRST, 0 },
+    {_TR_TODON("Tag (big first)"),       IDM_SORT_TAG_BIG_FIRST,   0 },
+    {_TR_TODON("Color"),                 IDM_SORT_COLOR,           0 },
     { 0, 0, 0 },
 };
 // clang-format on      
@@ -643,8 +640,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     if (showBookmarksMenu) {
         HMENU popupSort = BuildMenuFromMenuDef(menuDefSortByTag, CreatePopupMenu());
         UINT flags = MF_BYCOMMAND | MF_ENABLED | MF_POPUP;
-        // TODO: translate
-        InsertMenuW(popup, 0, flags, (UINT_PTR)popupSort, L"Sort By");
+        InsertMenuW(popup, 0, flags, (UINT_PTR)popupSort, _TR_TODO("Sort By"));
 
         win::menu::SetChecked(popupSort, IDM_SORT_TAG_SMALL_FIRST, false);
         win::menu::SetChecked(popupSort, IDM_SORT_TAG_BIG_FIRST, false);
@@ -694,8 +690,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         path = win->currentTab->filePath.get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
-            // TODO: translate
-            win::menu::SetText(popup, IDM_NEW_BOOKMARKS, L"Edit Bookmarks");
+            win::menu::SetText(popup, IDM_NEW_BOOKMARKS, _TR_TODO("Edit Bookmarks"));
         }
     }
 

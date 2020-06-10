@@ -194,13 +194,12 @@ static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
 #define IDM_ADD_PDF_SIBLING 105
 
 static MenuDef menuDefContext[] = {
-    // TODO: translate
-    {"Edit",                    IDM_EDIT, 0},
-    {"Add sibling",             IDM_ADD_SIBLING, 0},
-    {"Add child",               IDM_ADD_CHILD, 0},
-    {"Add PDF as a child",      IDM_ADD_PDF_CHILD, 0},
-    {"Add PDF as a sibling",    IDM_ADD_PDF_SIBLING, 0},
-    {"Remove Item",             IDM_REMOVE, 0},
+    {_TR_TODON("Edit"),                    IDM_EDIT, 0},
+    {_TR_TODON("Add sibling"),             IDM_ADD_SIBLING, 0},
+    {_TR_TODON("Add child"),               IDM_ADD_CHILD, 0},
+    {_TR_TODON("Add PDF as a child"),      IDM_ADD_PDF_CHILD, 0},
+    {_TR_TODON("Add PDF as a sibling"),    IDM_ADD_PDF_SIBLING, 0},
+    {_TR_TODON("Remove Item"),             IDM_REMOVE, 0},
     { 0, 0, 0 },
 };
 // clang-format on
