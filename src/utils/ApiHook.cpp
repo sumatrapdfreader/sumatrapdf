@@ -32,7 +32,7 @@ inline int my_wide_stricmp(const wchar_t* a, const wchar_t* b) {
 
 class MemoryProtector {
   public:
-    MemoryProtector(const uint64_t address, const uint64_t length, const DWORD prot) {
+    MemoryProtector(const u64 address, const u64 length, const DWORD prot) {
         m_address = address;
         m_length = length;
         isGood = VirtualProtect((char*)address, (SIZE_T)length, prot, &m_origProtection) != 0;
@@ -47,8 +47,8 @@ class MemoryProtector {
 
     DWORD m_origProtection = 0;
 
-    uint64_t m_address = 0;
-    uint64_t m_length = 0;
+    u64 m_address = 0;
+    u64 m_length = 0;
     bool isGood = false;
 };
 
@@ -143,12 +143,12 @@ static IMAGE_THUNK_DATA* FindIatThunk(const std::string_view& dllName, const std
 }
 
 IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiName, const char* fnCallback,
-                 uint64_t* userOrigVar, const std::wstring& moduleName)
-    : IatHook(dllName, apiName, (uint64_t)fnCallback, userOrigVar, moduleName) {
+                 u64* userOrigVar, const std::wstring& moduleName)
+    : IatHook(dllName, apiName, (u64)fnCallback, userOrigVar, moduleName) {
 }
 
-IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiName, const uint64_t fnCallback,
-                 uint64_t* userOrigVar, const std::wstring& moduleName)
+IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiName, const u64 fnCallback,
+                 u64* userOrigVar, const std::wstring& moduleName)
     : m_moduleName(moduleName),
       m_dllName(dllName),
       m_apiName(apiName),
@@ -163,8 +163,8 @@ bool IatHook::hook() {
         return false;
 
     // IAT is by default a writeable section
-    MemoryProtector prot((uint64_t)&pThunk->u1.Function, sizeof(uintptr_t), PAGE_READWRITE);
-    m_origFunc = (uint64_t)pThunk->u1.Function;
+    MemoryProtector prot((u64)&pThunk->u1.Function, sizeof(uintptr_t), PAGE_READWRITE);
+    m_origFunc = (u64)pThunk->u1.Function;
     pThunk->u1.Function = (uintptr_t)m_fnCallback;
     m_hooked = true;
     *m_userOrigVar = m_origFunc;
@@ -181,7 +181,7 @@ bool IatHook::unHook() {
     if (pThunk == nullptr)
         return false;
 
-    MemoryProtector prot((uint64_t)&pThunk->u1.Function, sizeof(uintptr_t), PAGE_READWRITE);
+    MemoryProtector prot((u64)&pThunk->u1.Function, sizeof(uintptr_t), PAGE_READWRITE);
     pThunk->u1.Function = (uintptr_t)m_origFunc;
     m_hooked = false;
     *m_userOrigVar = NULL;

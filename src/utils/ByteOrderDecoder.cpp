@@ -78,8 +78,8 @@ u32 ByteOrderDecoder::UInt32() {
     return v;
 }
 
-uint64_t ByteOrderDecoder::UInt64() {
-    uint64_t v;
+u64 ByteOrderDecoder::UInt64() {
+    u64 v;
     if (left < sizeof(v)) {
         ok = false;
     }
@@ -88,7 +88,7 @@ uint64_t ByteOrderDecoder::UInt64() {
     }
 
     v = UInt32();
-    uint64_t v2 = UInt32();
+    u64 v2 = UInt32();
     if (LittleEndian == byteOrder) {
         return v | (v2 << 32);
     }

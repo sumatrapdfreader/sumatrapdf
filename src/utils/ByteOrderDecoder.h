@@ -26,7 +26,7 @@ class ByteOrderDecoder {
         return (int32_t)UInt32();
     }
 
-    uint64_t UInt64();
+    u64 UInt64();
     int64_t Int64() {
         return (int64_t)UInt64();
     }

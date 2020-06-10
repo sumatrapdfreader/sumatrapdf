@@ -88,7 +88,7 @@ static void WriteStructBool(u8* p, bool val) {
         *bp = false;
 }
 
-static bool WriteStructUInt(u8* p, Type type, uint64_t val) {
+static bool WriteStructUInt(u8* p, Type type, u64 val) {
     if (TYPE_U16 == type) {
         if (val > 0xffff)
             return false;
@@ -108,7 +108,7 @@ static bool WriteStructUInt(u8* p, Type type, uint64_t val) {
     }
 
     if (TYPE_U64 == type) {
-        uint64_t* vp = (uint64_t*)p;
+        u64* vp = (u64*)p;
         *vp = val;
         return true;
     }
@@ -155,17 +155,17 @@ static int64_t ReadStructInt(const u8* p, Type type) {
     return 0;
 }
 
-static uint64_t ReadStructUInt(const u8* p, Type type) {
+static u64 ReadStructUInt(const u8* p, Type type) {
     if (TYPE_U16 == type) {
         u16* vp = (u16*)p;
-        return (uint64_t)*vp;
+        return (u64)*vp;
     }
     if ((TYPE_U32 == type) || (TYPE_COLOR == type)) {
         u32* vp = (u32*)p;
-        return (uint64_t)*vp;
+        return (u64)*vp;
     }
     if (TYPE_U64 == type) {
-        uint64_t* vp = (uint64_t*)p;
+        u64* vp = (u64*)p;
         return *vp;
     }
     CrashIf(true);
@@ -190,11 +190,11 @@ class DecodeState {
     }
 };
 
-static bool ParseUInt(char* s, char* e, uint64_t* nOut) {
+static bool ParseUInt(char* s, char* e, u64* nOut) {
     str::TrimWsEnd(s, e);
     int d;
-    uint64_t n = 0;
-    uint64_t prev = 0;
+    u64 n = 0;
+    u64 prev = 0;
     while (s < e) {
         d = *s - '0';
         if (d < 0 || d > 9)
@@ -221,7 +221,7 @@ static bool ParseInt(char* s, char* e, int64_t* iOut) {
         neg = true;
         s++;
     }
-    uint64_t u;
+    u64 u;
     if (!ParseUInt(s, e, &u))
         return false;
 #if 0 // TODO:: why is this missing?
@@ -414,7 +414,7 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
     }
 
     if (IsUnsignedIntType(type)) {
-        uint64_t n;
+        u64 n;
         ok = ParseUInt(node->valStart, node->valEnd, &n);
         if (ok) {
             ok = WriteStructUInt(structDataPtr, type, n);
@@ -621,7 +621,7 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
         bool b = ReadStructBool(data);
         AppendKeyVal(es, fieldName, b ? "true" : "false");
     } else if (TYPE_COLOR == type) {
-        uint64_t u = ReadStructUInt(data, type);
+        u64 u = ReadStructUInt(data, type);
         COLORREF c = (COLORREF)u;
         int r = (int)((u8)(c & 0xff));
         int g = (int)((u8)((c >> 8) & 0xff));
@@ -633,7 +633,7 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
             val.AppendFmt("#%02x%02x%02x", r, g, b);
         AppendKeyVal(es, fieldName, val.Get());
     } else if (IsUnsignedIntType(type)) {
-        uint64_t u = ReadStructUInt(data, type);
+        u64 u = ReadStructUInt(data, type);
         // val.AppendFmt("%" PRIu64, u);
         val.AppendFmt("%I64u", u);
         AppendKeyVal(es, fieldName, val.Get());

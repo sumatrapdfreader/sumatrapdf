@@ -16,9 +16,9 @@
 class IatHook {
   public:
     IatHook(const std::string_view& dllName, const std::string_view& apiName, const char* fnCallback,
-            uint64_t* userOrigVar, const std::wstring& moduleName);
-    IatHook(const std::string_view& dllName, const std::string_view& apiName, const uint64_t fnCallback,
-            uint64_t* userOrigVar, const std::wstring& moduleName);
+            u64* userOrigVar, const std::wstring& moduleName);
+    IatHook(const std::string_view& dllName, const std::string_view& apiName, const u64 fnCallback,
+            u64* userOrigVar, const std::wstring& moduleName);
     bool hook();
     bool unHook();
 
@@ -27,9 +27,9 @@ class IatHook {
     std::string_view m_apiName{};
     std::wstring m_moduleName{};
 
-    uint64_t m_fnCallback = 0;
-    uint64_t m_origFunc = 0;
-    uint64_t* m_userOrigVar = 0;
+    u64 m_fnCallback = 0;
+    u64 m_origFunc = 0;
+    u64* m_userOrigVar = 0;
 
     bool m_hooked = false;
 };

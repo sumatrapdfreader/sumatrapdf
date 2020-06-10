@@ -38,7 +38,7 @@ class ByteReader {
                 case 'q':
                     if (off + idx + 8 > len || idx + 8 > size)
                         return false;
-                    *(uint64_t*)((u8*)strct + idx) = QWord(off + idx, isBE);
+                    *(u64*)((u8*)strct + idx) = QWord(off + idx, isBE);
                     idx += 8;
                     break;
                 default:
@@ -94,17 +94,17 @@ class ByteReader {
         return isBE ? DWordBE(off) : DWordLE(off);
     }
 
-    uint64_t QWordLE(size_t off) const {
+    u64 QWordLE(size_t off) const {
         if (off + 8 <= len)
-            return DWordLE(off) | ((uint64_t)DWordLE(off + 4) << 32);
+            return DWordLE(off) | ((u64)DWordLE(off + 4) << 32);
         return 0;
     }
-    uint64_t QWordBE(size_t off) const {
+    u64 QWordBE(size_t off) const {
         if (off + 8 <= len)
-            return ((uint64_t)DWordBE(off) << 32) | DWordBE(off + 4);
+            return ((u64)DWordBE(off) << 32) | DWordBE(off + 4);
         return 0;
     }
-    uint64_t QWord(size_t off, bool isBE) const {
+    u64 QWord(size_t off, bool isBE) const {
         return isBE ? QWordBE(off) : QWordLE(off);
     }
 
