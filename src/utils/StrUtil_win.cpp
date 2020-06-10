@@ -128,18 +128,18 @@ bool EndsWithI(const WCHAR* txt, const WCHAR* end) {
 }
 
 const WCHAR* FindChar(const WCHAR* str, WCHAR c) {
-    return wcschr(str, c);
+    return (const WCHAR*)wcschr(str, c);
 }
 
 WCHAR* FindChar(WCHAR* str, WCHAR c) {
-    return wcschr(str, c);
+    return (WCHAR*)wcschr(str, c);
 }
 
 const WCHAR* FindCharLast(const WCHAR* str, WCHAR c) {
-    return wcsrchr(str, c);
+    return (const WCHAR*)wcsrchr(str, c);
 }
 
-WCHAR* FindCharLast(WCHAR* str, WCHAR c) {
+WCHAR* FindCharLast(WCHAR* str, const WCHAR c) {
     return wcsrchr(str, c);
 }
 
