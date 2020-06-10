@@ -614,6 +614,11 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
     AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
+    int fontSize = 24;
+    if (gIsRaMicroBuild) {
+        fontSize = 20;
+    }
+    AutoDeleteFont fontFrequentlyRead(CreateSimpleFont(hdc, L"MS Shell Dlg", fontSize));
     AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
 
     ScopedSelectObject font(hdc, fontSumatraTxt);
@@ -652,29 +657,31 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     Vec<DisplayState*> list;
     fileHistory.GetFrequencyOrder(list);
 
-    int width = limitValue((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) /
-                               (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
-                           1, DOCLIST_MAX_THUMBNAILS_X);
-    int height = std::min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) /
-                              (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
-                          FILE_HISTORY_MAX_FREQUENT / width);
-    Point offset(rc.x + DOCLIST_MARGIN_LEFT +
-                     (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT -
-                      DOCLIST_MARGIN_RIGHT) /
-                         2,
-                 rc.y + DOCLIST_MARGIN_TOP);
-    if (offset.x < ABOUT_INNER_PADDING)
+    int dx = (rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) /
+             (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X);
+    int width = limitValue(dx, 1, DOCLIST_MAX_THUMBNAILS_X);
+    int dy = (rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) /
+             (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y);
+    int height = std::min(dy, FILE_HISTORY_MAX_FREQUENT / width);
+    int x = rc.x + DOCLIST_MARGIN_LEFT +
+            (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT -
+             DOCLIST_MARGIN_RIGHT) /
+                2;
+    Point offset(x, rc.y + DOCLIST_MARGIN_TOP);
+    if (offset.x < ABOUT_INNER_PADDING) {
         offset.x = ABOUT_INNER_PADDING;
-    else if (list.size() == 0)
+    } else if (list.size() == 0) {
         offset.x = DOCLIST_MARGIN_LEFT;
+    }
 
-    SelectObject(hdc, fontSumatraTxt);
+    SelectObject(hdc, fontFrequentlyRead);
     SIZE txtSize;
     const WCHAR* txt = _TR("Frequently Read");
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     Rect headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
-    if (isRtl)
+    if (isRtl) {
         headerRect.x = rc.dx - offset.x - headerRect.dx;
+    }
     rTmp = headerRect.ToRECT();
     DrawText(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
 
@@ -721,22 +728,22 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
             int iconSpace = DpiScale(win->hwndFrame, 20);
             Rect rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
-            if (isRtl)
+            if (isRtl) {
                 rect.x -= iconSpace;
+            }
             rTmp = rect.ToRECT();
             DrawText(hdc, path::GetBaseNameNoFree(state->filePath), -1, &rTmp,
                      DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
             // this crashes asan build in windows code
             // see https://codeeval.dev/gist/bc761bb1ef1cce04e6a1d65e9d30201b
-#if !defined(ASAN_BUILD)
-            SHFILEINFO sfi = {0};
-            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi),
-                                                        SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
-            ImageList_Draw(himl, sfi.iIcon, hdc, isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x,
-                           rect.y, ILD_TRANSPARENT);
-#endif
-
+            if (!gIsAsanBuild) {
+                SHFILEINFO sfi = {0};
+                UINT flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
+                HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(state->filePath, 0, &sfi, sizeof(sfi), flags);
+                x = isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x;
+                ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
+            }
             win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
         }
     }
@@ -754,15 +761,17 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     Rect rectIcon(offset.x, rc.y, 0, 0);
     ImageList_GetIconSize(himl, &rectIcon.dx, &rectIcon.dy);
     rectIcon.y += (rc.dy - rectIcon.dy) / 2;
-    if (isRtl)
+    if (isRtl) {
         rectIcon.x = rc.dx - offset.x - rectIcon.dx;
+    }
     ImageList_Draw(himl, 0 /* index of Open icon */, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
 
     txt = _TR("Open a document...");
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     Rect rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
-    if (isRtl)
+    if (isRtl) {
         rect.x = rectIcon.x - rect.dx - 3;
+    }
     rTmp = rect.ToRECT();
     DrawText(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
     PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
