@@ -15,10 +15,10 @@
 
 class IatHook {
   public:
-    IatHook(const std::string_view& dllName, const std::string_view& apiName, const char* fnCallback,
-            u64* userOrigVar, const std::wstring& moduleName);
-    IatHook(const std::string_view& dllName, const std::string_view& apiName, const u64 fnCallback,
-            u64* userOrigVar, const std::wstring& moduleName);
+    IatHook(const std::string_view& dllName, const std::string_view& apiName, const char* fnCallback, u64* userOrigVar,
+            const std::wstring& moduleName);
+    IatHook(const std::string_view& dllName, const std::string_view& apiName, const u64 fnCallback, u64* userOrigVar,
+            const std::wstring& moduleName);
     bool hook();
     bool unHook();
 

@@ -87,8 +87,8 @@ void ByteOrderTests() {
     }
 
     {
-        int16_t v16;
-        int32_t v32;
+        i16 v16;
+        i32 v32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::LittleEndian);
         v16 = d.Int16();
@@ -115,8 +115,8 @@ void ByteOrderTests() {
     }
 
     {
-        int16_t v16;
-        int32_t v32;
+        i16 v16;
+        i32 v32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::BigEndian);
         v16 = d.Int16();

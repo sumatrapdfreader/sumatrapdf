@@ -58,12 +58,12 @@ static bool IsUnsignedIntType(Type type) {
     return ((TYPE_U16 == type) || (TYPE_U32 == type) || (TYPE_U64 == type));
 }
 
-static bool WriteStructInt(u8* p, Type type, int64_t val) {
+static bool WriteStructInt(u8* p, Type type, i64 val) {
     if (TYPE_I16 == type) {
         if (val > 0xffff)
             return false;
-        int16_t v = (int16_t)val;
-        int16_t* vp = (int16_t*)p;
+        i16 v = (i16)val;
+        i16* vp = (i16*)p;
         *vp = v;
         return true;
     }
@@ -71,8 +71,8 @@ static bool WriteStructInt(u8* p, Type type, int64_t val) {
     if (TYPE_I32 == type) {
         if (val > 0xffffffff)
             return false;
-        int32_t v = (int32_t)val;
-        int32_t* vp = (int32_t*)p;
+        i32 v = (i32)val;
+        i32* vp = (i32*)p;
         *vp = v;
         return true;
     }
@@ -142,14 +142,14 @@ static bool ReadStructBool(const u8* p) {
     return *bp;
 }
 
-static int64_t ReadStructInt(const u8* p, Type type) {
+static i64 ReadStructInt(const u8* p, Type type) {
     if (TYPE_I16 == type) {
-        int16_t* vp = (int16_t*)p;
-        return (int64_t)*vp;
+        i16* vp = (i16*)p;
+        return (i64)*vp;
     }
     if (TYPE_I32 == type) {
-        int32_t* vp = (int32_t*)p;
-        return (int64_t)*vp;
+        i32* vp = (i32*)p;
+        return (i64)*vp;
     }
     CrashIf(true);
     return 0;
@@ -212,7 +212,7 @@ static bool ParseUInt(char* s, char* e, u64* nOut) {
     return true;
 }
 
-static bool ParseInt(char* s, char* e, int64_t* iOut) {
+static bool ParseInt(char* s, char* e, i64* iOut) {
     if (s >= e)
         return false;
 
@@ -228,7 +228,7 @@ static bool ParseInt(char* s, char* e, int64_t* iOut) {
     if (u > MAXLONG64)
         return false;
 #endif
-    int64_t i = (int64_t)u;
+    i64 i = (i64)u;
     if (neg)
         i = -i;
     *iOut = i;
@@ -264,7 +264,7 @@ static bool ParseBool(char* s, char* e, bool* bOut) {
         *bOut = false;
         return true;
     }
-    int64_t i;
+    i64 i;
     if (!ParseInt(s, e, &i))
         return false;
     if (0 == i) {
@@ -423,7 +423,7 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
     }
 
     if (IsSignedIntType(type)) {
-        int64_t n;
+        i64 n;
         ok = ParseInt(node->valStart, node->valEnd, &n);
         if (ok) {
             ok = WriteStructInt(structDataPtr, type, n);
@@ -638,7 +638,7 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
         val.AppendFmt("%I64u", u);
         AppendKeyVal(es, fieldName, val.Get());
     } else if (IsSignedIntType(type)) {
-        int64_t i = ReadStructInt(data, type);
+        i64 i = ReadStructInt(data, type);
         // val.AppendFmt("%" PRIi64, u);
         val.AppendFmt("%I64d", i);
         AppendKeyVal(es, fieldName, val.Get());

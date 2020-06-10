@@ -15,11 +15,11 @@ class MultiFormatArchive {
     struct FileInfo {
         size_t fileId;
         std::string_view name;
-        int64_t fileTime; // this is typedef'ed as time64_t in unrar.h
+        i64 fileTime; // this is typedef'ed as time64_t in unrar.h
         size_t fileSizeUncompressed;
 
         // internal use
-        int64_t filePos;
+        i64 filePos;
 
 #if OS_WIN
         FILETIME GetWinFileTime() const;

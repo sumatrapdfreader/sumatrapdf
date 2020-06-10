@@ -24,8 +24,7 @@
 #define STR4i(s) (STR3i(s) | (lower((s)[3]) << 24))
 
 HtmlTag FindHtmlTag(const char* name, size_t len) {
-    u32 key =
-        0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
+    u32 key = 0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {
         case CS1('a'):
             return Tag_A;
@@ -283,8 +282,7 @@ bool IsInlineTag(HtmlTag item) {
 }
 
 AlignAttr FindAlignAttr(const char* name, size_t len) {
-    u32 key =
-        0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
+    u32 key = 0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {
         case CS4('c', 'e', 'n', 't'):
             if (6 == len && CS2('e', 'r') == STR2i(name + 4))
@@ -1772,8 +1770,7 @@ u32 FindHtmlEntityRune(const char* name, size_t len) {
 }
 
 CssProp FindCssProp(const char* name, size_t len) {
-    u32 key =
-        0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
+    u32 key = 0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {
         case CS4('c', 'o', 'l', 'o'):
             if (5 == len && CS1('r') == STR1i(name + 4))

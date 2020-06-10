@@ -74,7 +74,7 @@ class Control : public ILayout {
     u16 wantedInputBits; // WndWantedInputBits
     u16 stateBits;       // WndStateBits
     // windows with bigger z-order are painted on top, 0 is default
-    int16_t zOrder;
+    i16 zOrder;
 
     ILayout* layout;
     Control* parent;

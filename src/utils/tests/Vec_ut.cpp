@@ -114,7 +114,7 @@ static void StrListTest() {
 
 static size_t VecTestAppendFmt() {
     str::Str v(256);
-    int64_t val = 1;
+    i64 val = 1;
     for (int i = 0; i < 10000; i++) {
         v.AppendFmt("i%" PRId64 "e", val);
         val = (val * 3) / 2; // somewhat exponential growth

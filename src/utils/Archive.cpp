@@ -407,7 +407,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
         i->fileId = fileId;
         i->fileSizeUncompressed = (size_t)rarHeader.UnpSize;
         i->filePos = 0;
-        i->fileTime = (int64_t)rarHeader.FileTime;
+        i->fileTime = (i64)rarHeader.FileTime;
         i->name = Allocator::AllocString(&allocator_, name.Get());
         fileInfos_.Append(i);
 

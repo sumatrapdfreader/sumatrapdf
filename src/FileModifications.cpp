@@ -170,7 +170,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
     data.AppendFmt("[@%s]\r\n", "meta");
     data.AppendFmt("version = %s\r\n", SMX_CURR_VERSION);
     AutoFreeStr path = strconv::WstrToUtf8(filePath);
-    int64_t size = file::GetSize(path.as_view());
+    i64 size = file::GetSize(path.as_view());
     if (0 <= size && size <= UINT_MAX) {
         data.AppendFmt("filesize = %u\r\n", (UINT)size);
     }

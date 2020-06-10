@@ -7,7 +7,7 @@ struct PagesLayoutDef {
     const char* name;
     const char* page1;
     const char* page2;
-    int32_t spaceDx;
+    i32 spaceDx;
 };
 
 extern const StructMetadata gPagesLayoutDefMetadata;

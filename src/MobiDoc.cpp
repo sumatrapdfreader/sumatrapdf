@@ -116,7 +116,7 @@ struct MobiHeader {
     // This only seems to be valid for Mobipocket format version 5 and 6 (and higher?), when
     // the header length is 228 (0xE4) or 232 (0xE8).
     u16 extraDataFlags;
-    int32_t indxRec;
+    i32 indxRec;
 };
 
 static_assert(kMobiHeaderLen == sizeof(MobiHeader), "wrong size of MobiHeader structure");
