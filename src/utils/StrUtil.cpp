@@ -408,18 +408,18 @@ bool IsWs(char c) {
     return false;
 }
 
-const char* FindChar(const char* str, const char c) {
+const char* FindChar(const char* str, char c) {
     return strchr(str, c);
 }
 
-char* FindChar(char* str, const char c) {
+char* FindChar(char* str, char c) {
     return strchr(str, c);
 }
 
-const char* FindCharLast(const char* str, const char c) {
+const char* FindCharLast(const char* str, char c) {
     return strrchr(str, c);
 }
-char* FindCharLast(char* str, const char c) {
+char* FindCharLast(char* str, char c) {
     return strrchr(str, c);
 }
 

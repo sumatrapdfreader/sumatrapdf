@@ -127,19 +127,19 @@ bool EndsWithI(const WCHAR* txt, const WCHAR* end) {
     return str::EqI(txt + txtLen - endLen, end);
 }
 
-const WCHAR* FindChar(const WCHAR* str, const WCHAR c) {
+const WCHAR* FindChar(const WCHAR* str, WCHAR c) {
     return wcschr(str, c);
 }
 
-WCHAR* FindChar(WCHAR* str, const WCHAR c) {
+WCHAR* FindChar(WCHAR* str, WCHAR c) {
     return wcschr(str, c);
 }
 
-const WCHAR* FindCharLast(const WCHAR* str, const WCHAR c) {
+const WCHAR* FindCharLast(const WCHAR* str, WCHAR c) {
     return wcsrchr(str, c);
 }
 
-WCHAR* FindCharLast(WCHAR* str, const WCHAR c) {
+WCHAR* FindCharLast(WCHAR* str, WCHAR c) {
     return wcsrchr(str, c);
 }
 

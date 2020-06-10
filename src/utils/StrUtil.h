@@ -77,10 +77,10 @@ bool IsDigit(char c);
 bool IsWs(char c);
 bool IsAlNum(char c);
 
-const char* FindChar(const char* str, const char c);
-char* FindChar(char* str, const char c);
-const char* FindCharLast(const char* str, const char c);
-char* FindCharLast(char* str, const char c);
+const char* FindChar(const char* str, char c);
+char* FindChar(char* str, char c);
+const char* FindCharLast(const char* str, char c);
+char* FindCharLast(char* str, char c);
 const char* Find(const char* str, const char* find);
 const char* FindI(const char* str, const char* find);
 
@@ -91,10 +91,10 @@ char* FmtV(const char* fmt, va_list args);
 char* Format(const char* fmt, ...);
 
 #if OS_WIN
-const WCHAR* FindChar(const WCHAR* str, const WCHAR c);
-WCHAR* FindChar(WCHAR* str, const WCHAR c);
-const WCHAR* FindCharLast(const WCHAR* str, const WCHAR c);
-WCHAR* FindCharLast(WCHAR* str, const WCHAR c);
+const WCHAR* FindChar(const WCHAR* str, WCHAR c);
+WCHAR* FindChar(WCHAR* str, WCHAR c);
+const WCHAR* FindCharLast(const WCHAR* str, WCHAR c);
+WCHAR* FindCharLast(WCHAR* str, WCHAR c);
 const WCHAR* Find(const WCHAR* str, const WCHAR* find);
 
 const WCHAR* FindI(const WCHAR* str, const WCHAR* find);

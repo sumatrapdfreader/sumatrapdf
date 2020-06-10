@@ -1044,8 +1044,7 @@ int GetSizeOfDefaultGuiFont() {
     return res;
 }
 
-DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect)
-    : hTarget(hwnd), rect(rect) {
+DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect) : hTarget(hwnd), rect(rect) {
     hdcCanvas = ::GetDC(hwnd);
 
     if (rect.IsEmpty()) {
