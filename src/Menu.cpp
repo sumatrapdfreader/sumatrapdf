@@ -846,7 +846,10 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     }
 
     win::menu::Empty(menu);
-    BuildMenuFromMenuDef(menuDefFile, menu, filter);
+    HMENU m = BuildMenuFromMenuDef(menuDefFile, menu, filter);
+    if (gIsRaMicroBuild) {
+        win::menu::Remove(m, IDM_OPEN_FOLDER);
+    }
     AppendRecentFilesToMenu(menu);
     AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
 
