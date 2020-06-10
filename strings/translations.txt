@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-293243eb6b04af6825649a376d9a0125be5ad3f1
+1a2a4fcac9d746d36c234f8814c90be245a48188
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -8155,7 +8155,7 @@ bs:F&avoriti
 by:З&акладкі
 ca-xv:P&referits
 ca:Pr&eferits
-cn:收藏(&A)
+cn:收藏夹(&A)
 co:&Favuriti
 cy:&Ffefrynnau
 cz:&Oblíbené položky
@@ -14650,7 +14650,7 @@ bs:Ukloni iz favorita
 by:Выдаліць з лепшых закладак
 ca-xv:Suprimeix dels preferits
 ca:Suprimeix dels preferits
-cn:自收藏删除
+cn:自收藏夹删除
 co:&Caccià da i favuriti
 cy:Tynnu o'r ffefrynnau
 cz:Odebrat z oblíbených
@@ -14711,7 +14711,7 @@ bs:Ukloni stranicu %s iz favorita
 by:Выдаліць старонку %s з лепшых закладак
 ca-xv:Suprimeix la pàgina %s dels preferits
 ca:Suprimeix la pàgina %s dels preferits
-cn:从收藏中删除第 %s 页
+cn:从收藏夹中删除第 %s 页
 co:Caccià a pagina %s da i favuriti
 cy:Tynnu tudalen %s o'r ffefrynnau
 cz:Odebrat stránku %s z oblíbených
@@ -15849,7 +15849,7 @@ bs:Prikaži favorite
 by:Паказаць лепшыя закладкі
 ca-xv:Mostra els preferits
 ca:Mostra els preferits
-cn:显示收藏
+cn:显示收藏夹
 co:Affissà i favuriti
 cy:Dangos Ffefrynnau
 cz:Zobrazit oblíbené položky
