@@ -20,7 +20,7 @@ void Destroy();
 } // namespace trans
 
 // _TR() marks strings that need to be translated
-#define _TR(x) trans::GetTranslation(x)
+const WCHAR* _TR(const char* s);
 
 // _TRN() marks strings that need to be translated but are used in a context
 // that doesn't allow calling Trans::GetTranslation() (e.g. when used as part

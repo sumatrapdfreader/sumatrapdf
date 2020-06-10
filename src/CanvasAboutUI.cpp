@@ -80,26 +80,39 @@ static void OnMouseLeftButtonDownAbout(WindowInfo* win, int x, int y, WPARAM key
     win->url = GetStaticLink(win->staticLinks, x, y);
 }
 
+static bool IsLink(const WCHAR* url) {
+    if (str::StartsWithI(url, L"http:")) {
+        return true;
+    }
+    if (str::StartsWithI(url, L"https:")) {
+        return true;
+    }
+    if (str::StartsWithI(url, L"mailto:")) {
+        return true;
+    }
+    return false;
+}
+
 static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) {
     UNUSED(key);
     SetFocus(win->hwndFrame);
 
     const WCHAR* url = GetStaticLink(win->staticLinks, x, y);
     if (url && url == win->url) {
-        if (str::Eq(url, SLINK_OPEN_FILE))
+        if (str::Eq(url, SLINK_OPEN_FILE)) {
             SendMessage(win->hwndFrame, WM_COMMAND, IDM_OPEN, 0);
-        else if (str::Eq(url, SLINK_LIST_HIDE)) {
+        } else if (str::Eq(url, SLINK_LIST_HIDE)) {
             gGlobalPrefs->showStartPage = false;
             win->RedrawAll(true);
         } else if (str::Eq(url, SLINK_LIST_SHOW)) {
             gGlobalPrefs->showStartPage = true;
             win->RedrawAll(true);
-        } else if (!str::StartsWithI(url, L"http:") && !str::StartsWithI(url, L"https:") &&
-                   !str::StartsWithI(url, L"mailto:")) {
+        } else if (IsLink(url)) {
+            SumatraLaunchBrowser(url);
+        } else {
+            // assume it's a document
             LoadArgs args(url, win);
             LoadDocument(args);
-        } else {
-            SumatraLaunchBrowser(url);
         }
     }
     win->url = nullptr;

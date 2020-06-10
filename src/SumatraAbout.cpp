@@ -37,13 +37,13 @@
 #define ABOUT_LINE_OUTER_SIZE 1
 #endif
 #define ABOUT_LINE_SEP_SIZE 1
-#define ABOUT_LEFT_RIGHT_SPACE_DX 8
-#define ABOUT_MARGIN_DX 10
-#define ABOUT_BOX_MARGIN_DY 6
+#define ABOUT_LEFT_RIGHT_SPACE_DX DpiScale(8)
+#define ABOUT_MARGIN_DX DpiScale(10)
+#define ABOUT_BOX_MARGIN_DY DpiScale(6)
 #define ABOUT_BORDER_COL RGB(0, 0, 0)
-#define ABOUT_TXT_DY 6
-#define ABOUT_RECT_PADDING 8
-#define ABOUT_INNER_PADDING 6
+#define ABOUT_TXT_DY DpiScale(6)
+#define ABOUT_RECT_PADDING DpiScale(8)
+#define ABOUT_INNER_PADDING DpiScale(8)
 
 #define ABOUT_CLASS_NAME L"SUMATRA_PDF_ABOUT"
 
@@ -69,6 +69,7 @@
 #define URL_LICENSE L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
 #define URL_AUTHORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
 #define URL_TRANSLATORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"
+#define URL_SUPPORT_SUMATRA L"https://www.sumatrapdfreader.org/backers.html"
 
 #define LAYOUT_LTR 0
 
@@ -203,8 +204,9 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, Rect rect) {
     SelectObject(hdc, oldFont);
 }
 
-static Rect DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
-    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+// draw on the bottom right
+static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 16));
     auto col = GetAppColor(AppColor::MainWindowLink);
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
     ScopedSelectObject font(hdc, fontLeftTxt);
@@ -215,10 +217,37 @@ static Rect DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
 
     SIZE txtSize;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    Rect rect(rc.dx - txtSize.cx - ABOUT_INNER_PADDING, rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx,
-              txtSize.cy);
-    if (IsUIRightToLeft())
-        rect.x = ABOUT_INNER_PADDING;
+    int x = rc.dx - txtSize.cx - ABOUT_INNER_PADDING;
+    int y = rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING;
+    Rect rect(x, y, txtSize.cx, txtSize.cy);
+    RECT rTmp = rect.ToRECT();
+    DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
+    {
+        ScopedSelectObject pen(hdc, penLinkLine);
+        PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
+    }
+
+    // make the click target larger
+    rect.Inflate(ABOUT_INNER_PADDING, ABOUT_INNER_PADDING);
+    return rect;
+}
+
+// draw on the bottom left
+static Rect DrawSupportLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 16));
+    auto col = GetAppColor(AppColor::MainWindowLink);
+    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
+    ScopedSelectObject font(hdc, fontLeftTxt);
+
+    SetTextColor(hdc, col);
+    SetBkMode(hdc, TRANSPARENT);
+    Rect rc = ClientRect(hwnd);
+
+    SIZE txtSize;
+    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
+    int y = rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING;
+    Rect rect(ABOUT_INNER_PADDING, y, txtSize.cx, txtSize.cy);
+
     RECT rTmp = rect.ToRECT();
     DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
@@ -383,8 +412,9 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     minRect.dx += 2 * ABOUT_LINE_OUTER_SIZE + 2 * ABOUT_MARGIN_DX;
 
     minRect.dy = headerSize.dy;
-    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++)
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         minRect.dy += rightDy + ABOUT_TXT_DY;
+    }
     minRect.dy += 2 * ABOUT_LINE_OUTER_SIZE + 4;
 
     Rect rc = ClientRect(hwnd);
@@ -588,7 +618,7 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
     UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
     if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
-        Rect rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
+        Rect rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
         win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }
 }
@@ -780,6 +810,12 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     rect.Inflate(10, 10);
     win->staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
 
-    rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
+    rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
     win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
+
+    if (!gIsRaMicroBuild) {
+        // TODO: translate
+        rect = DrawSupportLink(win->hwndCanvas, hdc, L"Support SumatraPDF");
+        win->staticLinks.Append(StaticLinkInfo(rect, URL_SUPPORT_SUMATRA));
+    }
 }
