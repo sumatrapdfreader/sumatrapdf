@@ -179,11 +179,11 @@ class PageRenderer {
         delete pr->abortCookie;
         pr->abortCookie = nullptr;
 
-        HANDLE thread = pr->thread;
+        HANDLE th = pr->thread;
         pr->thread = nullptr;
         PostMessage(pr->hwnd, UWM_PAINT_AGAIN, 0, 0);
 
-        CloseHandle(thread);
+        CloseHandle(th);
         return 0;
     }
 };

@@ -362,12 +362,12 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 }
 
 class PrintThreadData : public ProgressUpdateUI {
+  public:
     NotificationWnd* wnd = nullptr;
     AbortCookieManager cookie;
     bool isCanceled = false;
     WindowInfo* win = nullptr;
 
-  public:
     PrintData* data = nullptr;
     HANDLE thread = nullptr; // close the print thread handle after execution
 
@@ -410,34 +410,34 @@ class PrintThreadData : public ProgressUpdateUI {
     bool WasCanceled() override {
         return isCanceled || !WindowInfoStillValid(win) || win->printCanceled;
     }
-
-    static DWORD WINAPI PrintThread(LPVOID data) {
-        PrintThreadData* threadData = (PrintThreadData*)data;
-        WindowInfo* win = threadData->win;
-        // wait for PrintToDeviceOnThread to return so that we
-        // close the correct handle to the current printing thread
-        while (!win->printThread) {
-            Sleep(1);
-        }
-
-        HANDLE thread = threadData->thread = win->printThread;
-        PrintToDevice(*threadData->data, threadData, &threadData->cookie);
-
-        uitask::Post([=] {
-            if (WindowInfoStillValid(win) && thread == win->printThread) {
-                win->printThread = nullptr;
-            }
-            delete threadData;
-        });
-        return 0;
-    }
 };
+
+static DWORD WINAPI PrintThread(LPVOID data) {
+    PrintThreadData* threadData = (PrintThreadData*)data;
+    WindowInfo* win = threadData->win;
+    // wait for PrintToDeviceOnThread to return so that we
+    // close the correct handle to the current printing thread
+    while (!win->printThread) {
+        Sleep(1);
+    }
+
+    HANDLE thread = threadData->thread = win->printThread;
+    PrintToDevice(*threadData->data, threadData, &threadData->cookie);
+
+    uitask::Post([=] {
+        if (WindowInfoStillValid(win) && thread == win->printThread) {
+            win->printThread = nullptr;
+        }
+        delete threadData;
+    });
+    return 0;
+}
 
 static void PrintToDeviceOnThread(WindowInfo* win, PrintData* data) {
     CrashIf(win->printThread);
     PrintThreadData* threadData = new PrintThreadData(win, data);
     win->printThread = nullptr;
-    win->printThread = CreateThread(nullptr, 0, PrintThreadData::PrintThread, threadData, 0, nullptr);
+    win->printThread = CreateThread(nullptr, 0, PrintThread, threadData, 0, nullptr);
 }
 
 void AbortPrinting(WindowInfo* win) {
