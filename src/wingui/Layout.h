@@ -7,9 +7,9 @@ const int Inf = std::numeric_limits<int>::max();
 
 RECT RectToRECT(const Rect);
 
-int clamp(int v, int vmin, int vmax);
-int scale(int v, i64 num, i64 den);
-int guardInf(int a, int b);
+int Clamp(int v, int vmin, int vmax);
+int Scale(int v, i64 num, i64 den);
+int GuardInf(int a, int b);
 
 struct Constraints {
     Size min{};

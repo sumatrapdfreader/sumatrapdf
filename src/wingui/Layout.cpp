@@ -66,7 +66,7 @@ RECT RectToRECT(const Rect r) {
     return RECT{left, top, right, bottom};
 }
 
-int clamp(int v, int vmin, int vmax) {
+int Clamp(int v, int vmin, int vmax) {
     if (v > vmax) {
         return vmax;
     }
@@ -76,12 +76,12 @@ int clamp(int v, int vmin, int vmax) {
     return v;
 }
 
-int scale(int v, i64 num, i64 den) {
+int Scale(int v, i64 num, i64 den) {
     i64 res = (i64(v) * num) / den;
     return int(res);
 }
 
-int guardInf(int a, int b) {
+int GuardInf(int a, int b) {
     if (a == Inf) {
         return Inf;
     }
@@ -121,8 +121,8 @@ Constraints TightHeight(int height) {
 }
 
 Size Constraints::Constrain(Size size) const {
-    int w = clamp(size.dx, min.dx, max.dx);
-    int h = clamp(size.dy, min.dy, max.dy);
+    int w = Clamp(size.dx, min.dx, max.dx);
+    int h = Clamp(size.dy, min.dy, max.dy);
     return Size{w, h};
 }
 
@@ -136,21 +136,21 @@ Size Constraints::ConstrainAndAttemptToPreserveAspectRatio(const Size size) cons
 
     if (width > max.dx) {
         width = max.dx;
-        height = scale(width, size.dy, size.dx);
+        height = Scale(width, size.dy, size.dx);
     }
     if (height > max.dy) {
         height = max.dy;
-        width = scale(height, size.dx, size.dy);
+        width = Scale(height, size.dx, size.dy);
     }
 
     if (width < min.dx) {
         width = min.dx;
-        height = scale(width, size.dy, size.dx);
+        height = Scale(width, size.dy, size.dx);
     }
 
     if (height < min.dy) {
         height = min.dy;
-        width = scale(height, size.dx, size.dy);
+        width = Scale(height, size.dx, size.dy);
     }
 
     Size c{width, height};
@@ -158,11 +158,11 @@ Size Constraints::ConstrainAndAttemptToPreserveAspectRatio(const Size size) cons
 }
 
 int Constraints::ConstrainHeight(int height) const {
-    return clamp(height, min.dy, max.dy);
+    return Clamp(height, min.dy, max.dy);
 }
 
 int Constraints::ConstrainWidth(int width) const {
-    return clamp(width, min.dx, max.dx);
+    return Clamp(width, min.dx, max.dx);
 }
 
 bool Constraints::HasBoundedHeight() const {
@@ -183,15 +183,15 @@ bool Constraints::HasTightHeight() const {
 
 Constraints Constraints::Inset(int width, int height) const {
     int minw = min.dx;
-    int deflatedMinWidth = guardInf(minw, std::max(0, minw - width));
+    int deflatedMinWidth = GuardInf(minw, std::max(0, minw - width));
     int minh = min.dy;
-    int deflatedMinHeight = guardInf(minh, std::max(0, minh - height));
+    int deflatedMinHeight = GuardInf(minh, std::max(0, minh - height));
     Size min{deflatedMinWidth, deflatedMinHeight};
     int maxw = max.dx;
     int maxh = max.dy;
     Size max{
-        std::max(deflatedMinWidth, guardInf(maxw, maxw - width)),
-        std::max(deflatedMinHeight, guardInf(maxh, maxh - height)),
+        std::max(deflatedMinWidth, GuardInf(maxw, maxw - width)),
+        std::max(deflatedMinHeight, GuardInf(maxh, maxh - height)),
     };
     return Constraints{min, max};
 }
@@ -231,16 +231,16 @@ Constraints Constraints::LoosenWidth() const {
 
 Constraints Constraints::Tighten(Size size) const {
     Constraints bc = *this;
-    bc.min.dx = clamp(size.dx, bc.min.dx, bc.max.dx);
+    bc.min.dx = Clamp(size.dx, bc.min.dx, bc.max.dx);
     bc.max.dx = bc.min.dx;
-    bc.min.dy = clamp(size.dy, bc.min.dy, bc.max.dy);
+    bc.min.dy = Clamp(size.dy, bc.min.dy, bc.max.dy);
     bc.max.dy = bc.min.dy;
     return bc;
 }
 
 Constraints Constraints::TightenHeight(int height) const {
     Constraints bc = *this;
-    bc.min.dy = clamp(height, bc.min.dy, bc.max.dy);
+    bc.min.dy = Clamp(height, bc.min.dy, bc.max.dy);
     bc.max.dy = bc.min.dy;
     return bc;
 }
@@ -248,7 +248,7 @@ Constraints Constraints::TightenHeight(int height) const {
 Constraints Constraints::TightenWidth(int width) const {
     Constraints bc = *this;
 
-    bc.min.dx = clamp(width, bc.min.dx, bc.max.dx);
+    bc.min.dx = Clamp(width, bc.min.dx, bc.max.dx);
     bc.max.dx = bc.min.dx;
     return bc;
 }
@@ -371,11 +371,11 @@ int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
 }
 
 // TODO: remove calculateVGap() and calculateHGap()
-static int calculateVGap(ILayout*, ILayout*) {
+static int CalculateVGap(ILayout*, ILayout*) {
     return 0;
 }
 
-static int calculateHGap(ILayout*, ILayout*) {
+static int CalculateHGap(ILayout*, ILayout*) {
     return 0;
 }
 
@@ -395,8 +395,8 @@ Size VBox::Layout(const Constraints bc) {
 
     if (alignMain == MainAxisAlign::Homogeneous) {
         auto count = (i64)NonCollapsedChildrenCount();
-        auto gap = calculateVGap(nullptr, nullptr);
-        cbc.TightenHeight(scale(cbc.max.dy, 1, count) - scale(gap, count - 1, count));
+        auto gap = CalculateVGap(nullptr, nullptr);
+        cbc.TightenHeight(Scale(cbc.max.dy, 1, count) - Scale(gap, count - 1, count));
     } else {
         cbc.min.dy = 0;
         cbc.max.dy = Inf;
@@ -423,9 +423,9 @@ Size VBox::Layout(const Constraints bc) {
         // Determine what gap needs to be inserted between the elements.
         if (i > 0) {
             if (IsPacked(alignMain)) {
-                height += calculateVGap(previous, v.layout);
+                height += CalculateVGap(previous, v.layout);
             } else {
-                height += calculateVGap(nullptr, nullptr);
+                height += CalculateVGap(nullptr, nullptr);
             }
         }
         previous = v.layout;
@@ -451,7 +451,7 @@ Size VBox::Layout(const Constraints bc) {
             for (auto& v : children) {
                 if (v.flex > 0) {
                     auto oldHeight = v.size.dy;
-                    auto extra = scale(extraHeight, v.flex, totalFlex);
+                    auto extra = Scale(extraHeight, v.flex, totalFlex);
                     auto fbc = cbc.TightenHeight(v.size.dy + extra);
                     auto size = v.layout->Layout(fbc);
                     v.size = size;
@@ -473,7 +473,7 @@ int VBox::MinIntrinsicWidth(int height) {
         return 0;
     }
     if (alignMain == MainAxisAlign::Homogeneous) {
-        height = guardInf(height, scale(height, 1, i64(n)));
+        height = GuardInf(height, Scale(height, 1, i64(n)));
         auto size = children[0].layout->MinIntrinsicWidth(height);
         for (int i = 1; i < n; i++) {
             auto& v = children[i];
@@ -500,7 +500,7 @@ int VBox::MinIntrinsicHeight(int width) {
         for (int i = 1; i < n; i++) {
             auto& v = children[i];
             // Add the preferred gap between this pair of widgets
-            size += calculateVGap(previous, v.layout);
+            size += CalculateVGap(previous, v.layout);
             previous = v.layout;
             // Find minimum size for this widget, and update
             size += v.layout->MinIntrinsicHeight(width);
@@ -515,8 +515,8 @@ int VBox::MinIntrinsicHeight(int width) {
         }
 
         // Add a minimum gap between the controls.
-        auto vgap = calculateVGap(nullptr, nullptr);
-        size = scale(size, i64(n), 1) + scale(vgap, i64(n) - 1, 1);
+        auto vgap = CalculateVGap(nullptr, nullptr);
+        size = Scale(size, i64(n), 1) + Scale(vgap, i64(n) - 1, 1);
         return size;
     }
 
@@ -526,11 +526,11 @@ int VBox::MinIntrinsicHeight(int width) {
     }
 
     // Add a minimum gap between the controls.
-    auto vgap = calculateVGap(nullptr, nullptr);
+    auto vgap = CalculateVGap(nullptr, nullptr);
     if (alignMain == MainAxisAlign::SpaceBetween) {
-        size += scale(vgap, i64(n) - 1, 1);
+        size += Scale(vgap, i64(n) - 1, 1);
     } else {
-        size += scale(vgap, i64(n) + 1, 1);
+        size += Scale(vgap, i64(n) + 1, 1);
     }
 
     return size;
@@ -546,14 +546,14 @@ void VBox::SetBounds(Rect bounds) {
     dbglayoutf("VBox:SetBounds() %d,%d - %d, %d %d children\n", bounds.x, bounds.y, bounds.dx, bounds.dy, n);
 
     if (alignMain == MainAxisAlign::Homogeneous) {
-        auto gap = calculateVGap(nullptr, nullptr);
+        auto gap = CalculateVGap(nullptr, nullptr);
         auto dy = bounds.Dy() + gap;
         auto count = i64(n);
 
         for (int i = 0; i < n; i++) {
             auto& v = children[i];
-            auto y1 = bounds.y + scale(dy, i, count);
-            auto y2 = bounds.y + scale(dy, i + 1, count) - gap;
+            auto y1 = bounds.y + Scale(dy, i, count);
+            auto y2 = bounds.y + Scale(dy, i + 1, count) - gap;
             SetBoundsForChild(i, v.layout, bounds.x, y1, bounds.Right(), y2);
         }
         return;
@@ -576,16 +576,16 @@ void VBox::SetBounds(Rect bounds) {
                 break;
             case MainAxisAlign::SpaceAround: {
                 int l = (bounds.Dy() - totalHeight);
-                extraGap = scale(l, 1, i64(n) + 1);
+                extraGap = Scale(l, 1, i64(n) + 1);
                 bounds.y += extraGap;
-                extraGap += calculateVGap(nullptr, nullptr);
+                extraGap += CalculateVGap(nullptr, nullptr);
                 break;
             }
             case MainAxisAlign::SpaceBetween:
                 if (n > 1) {
                     int l = (bounds.Dy() - totalHeight);
-                    extraGap = scale(l, 1, i64(n) - 1);
-                    extraGap += calculateVGap(nullptr, nullptr);
+                    extraGap = Scale(l, 1, i64(n) - 1);
+                    extraGap += CalculateVGap(nullptr, nullptr);
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
@@ -605,7 +605,7 @@ void VBox::SetBounds(Rect bounds) {
         }
         if (IsPacked(alignMain)) {
             if (i > 0) {
-                posY += calculateVGap(previous, v.layout);
+                posY += CalculateVGap(previous, v.layout);
             }
             previous = v.layout;
         }
@@ -698,9 +698,9 @@ Size HBox::Layout(const Constraints bc) {
     auto cbc = bc;
     if (alignMain == MainAxisAlign::Homogeneous) {
         auto count = (i64)NonCollapsedChildrenCount();
-        auto gap = calculateHGap(nullptr, nullptr);
+        auto gap = CalculateHGap(nullptr, nullptr);
         auto maxw = cbc.max.dx;
-        cbc.TightenWidth(scale(maxw, 1, count) - scale(gap, count - 1, count));
+        cbc.TightenWidth(Scale(maxw, 1, count) - Scale(gap, count - 1, count));
     } else {
         cbc.min.dx = 0;
         cbc.max.dx = Inf;
@@ -727,9 +727,9 @@ Size HBox::Layout(const Constraints bc) {
         // Determine what gap needs to be inserted between the elements.
         if (i > 0) {
             if (IsPacked(alignMain)) {
-                width += calculateHGap(previous, v.layout);
+                width += CalculateHGap(previous, v.layout);
             } else {
-                width += calculateHGap(nullptr, nullptr);
+                width += CalculateHGap(nullptr, nullptr);
             }
         }
         previous = v.layout;
@@ -759,7 +759,7 @@ Size HBox::Layout(const Constraints bc) {
             }
             auto oldWidth = v.size.dx;
             auto nw = v.size.dx + extraWidth;
-            auto fbc = cbc.TightenWidth(scale(nw, v.flex, totalFlex));
+            auto fbc = cbc.TightenWidth(Scale(nw, v.flex, totalFlex));
             auto size = v.layout->Layout(fbc);
             v.size = size;
             totalWidth += size.dx - oldWidth;
@@ -779,7 +779,7 @@ int HBox::MinIntrinsicHeight(int width) {
     }
 
     if (alignMain == MainAxisAlign::Homogeneous) {
-        width = guardInf(width, scale(width, 1, i64(n)));
+        width = GuardInf(width, Scale(width, 1, i64(n)));
         auto size = children[0].layout->MinIntrinsicHeight(width);
         for (int i = 1; i < n; i++) {
             auto v = children[i];
@@ -826,8 +826,8 @@ int HBox::MinIntrinsicWidth(int height) {
         }
 
         // Add a minimum gap between the controls.
-        auto hgap = calculateHGap(nullptr, nullptr);
-        size = scale(size, i64(n), 1) + scale(hgap, i64(n) - 1, 1);
+        auto hgap = CalculateHGap(nullptr, nullptr);
+        size = Scale(size, i64(n), 1) + Scale(hgap, i64(n) - 1, 1);
         return size;
     }
 
@@ -840,11 +840,11 @@ int HBox::MinIntrinsicWidth(int height) {
     }
 
     // Add a minimum gap between the controls.
-    auto hgap = calculateHGap(nullptr, nullptr);
+    auto hgap = CalculateHGap(nullptr, nullptr);
     if (alignMain == MainAxisAlign::SpaceBetween) {
-        size += scale(hgap, i64(n) - 1, 1);
+        size += Scale(hgap, i64(n) - 1, 1);
     } else {
-        size += scale(hgap, i64(n) + 1, 1);
+        size += Scale(hgap, i64(n) + 1, 1);
     }
 
     return size;
@@ -859,14 +859,14 @@ void HBox::SetBounds(Rect bounds) {
     }
 
     if (alignMain == MainAxisAlign::Homogeneous) {
-        auto gap = calculateHGap(nullptr, nullptr);
+        auto gap = CalculateHGap(nullptr, nullptr);
         auto dx = bounds.Dx() + gap;
         auto count = i64(n);
 
         for (int i = 0; i < n; i++) {
             auto v = children[i].layout;
-            auto x1 = bounds.x + scale(dx, i, count);
-            auto x2 = bounds.x + scale(dx, i + 1, count) - gap;
+            auto x1 = bounds.x + Scale(dx, i, count);
+            auto x2 = bounds.x + Scale(dx, i + 1, count) - gap;
             SetBoundsForChild(i, v, x1, bounds.y, x2, bounds.Bottom());
         }
         return;
@@ -889,15 +889,15 @@ void HBox::SetBounds(Rect bounds) {
                 break;
             case MainAxisAlign::SpaceAround: {
                 auto eg = (bounds.Dx() - totalWidth);
-                extraGap = scale(eg, 1, i64(n) + 1);
+                extraGap = Scale(eg, 1, i64(n) + 1);
                 bounds.x += extraGap;
-                extraGap += calculateHGap(nullptr, nullptr);
+                extraGap += CalculateHGap(nullptr, nullptr);
             } break;
             case MainAxisAlign::SpaceBetween:
                 if (n > 1) {
                     auto eg = (bounds.Dx() - totalWidth);
-                    extraGap = scale(eg, 1, i64(n) - 1);
-                    extraGap += calculateHGap(nullptr, nullptr);
+                    extraGap = Scale(eg, 1, i64(n) - 1);
+                    extraGap += CalculateHGap(nullptr, nullptr);
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
@@ -914,7 +914,7 @@ void HBox::SetBounds(Rect bounds) {
         auto& v = children[i];
         if (IsPacked(alignMain)) {
             if (i > 0) {
-                posX += calculateHGap(previous, v.layout);
+                posX += CalculateHGap(previous, v.layout);
             }
             previous = v.layout;
         }
@@ -1024,11 +1024,11 @@ void Align::SetBounds(Rect bounds) {
     int cw = childSize.dx;
     i64 twm = AlignStart - AlignEnd;
     i64 tw = AlignEnd - AlignStart;
-    int x = scale(bminx, HAlign - AlignEnd, twm) + scale(bmaxx - cw, HAlign - AlignStart, tw);
+    int x = Scale(bminx, HAlign - AlignEnd, twm) + Scale(bmaxx - cw, HAlign - AlignStart, tw);
     int ch = childSize.dy;
     int bminy = bounds.y;
     int bmaxy = bounds.Bottom();
-    int y = scale(bminy, VAlign - AlignEnd, twm) + scale(bmaxy - ch, VAlign - AlignStart, tw);
+    int y = Scale(bminy, VAlign - AlignEnd, twm) + Scale(bmaxy - ch, VAlign - AlignStart, tw);
     Rect b{Point{x, y}, Point{x + cw, y + ch}};
     Child->SetBounds(b);
 }
