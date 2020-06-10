@@ -267,22 +267,22 @@ size_t RoundToPowerOf2(size_t size) {
  * 2. It will not produce the same results on little-endian and big-endian
  *    machines.
  */
-static uint32_t hash_function_seed = 5381;
+static u32 hash_function_seed = 5381;
 
-uint32_t MurmurHash2(const void* key, size_t len) {
+u32 MurmurHash2(const void* key, size_t len) {
     /* 'm' and 'r' are mixing constants generated offline.
      They're not really 'magic', they just happen to work well.  */
-    const uint32_t m = 0x5bd1e995;
+    const u32 m = 0x5bd1e995;
     const int r = 24;
 
     /* Initialize the hash to a 'random' value */
-    uint32_t h = hash_function_seed ^ (uint32_t)len;
+    u32 h = hash_function_seed ^ (u32)len;
 
     /* Mix 4 bytes at a time into the hash */
     const u8* data = (const u8*)key;
 
     while (len >= 4) {
-        uint32_t k = *(uint32_t*)data;
+        u32 k = *(u32*)data;
 
         k *= m;
         k ^= k >> r;

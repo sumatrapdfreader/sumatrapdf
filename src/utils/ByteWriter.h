@@ -48,7 +48,7 @@ class ByteWriter {
         return Write8x2(b2, b1);
     }
 
-    bool Write32(uint32_t val) {
+    bool Write32(u32 val) {
         u8 b1 = val & 0xFF;
         u8 b2 = (val >> 8) & 0xFF;
         u8 b3 = (val >> 16) & 0xFF;
@@ -60,8 +60,8 @@ class ByteWriter {
     }
 
     bool Write64(uint64_t val) {
-        uint32_t v1 = val & 0xFFFFFFFF;
-        uint32_t v2 = (val >> 32) & 0xFFFFFFFF;
+        u32 v1 = val & 0xFFFFFFFF;
+        u32 v2 = (val >> 32) & 0xFFFFFFFF;
         if (isLE) {
             return Write32(v1) && Write32(v2);
         }

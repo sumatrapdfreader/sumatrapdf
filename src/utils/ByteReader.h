@@ -32,7 +32,7 @@ class ByteReader {
                 case 'd':
                     if (off + idx + 4 > len || idx + 4 > size)
                         return false;
-                    *(uint32_t*)((u8*)strct + idx) = DWord(off + idx, isBE);
+                    *(u32*)((u8*)strct + idx) = DWord(off + idx, isBE);
                     idx += 4;
                     break;
                 case 'q':
@@ -80,17 +80,17 @@ class ByteReader {
         return isBE ? WordBE(off) : WordLE(off);
     }
 
-    uint32_t DWordLE(size_t off) const {
+    u32 DWordLE(size_t off) const {
         if (off + 4 <= len)
             return d[off] | (d[off + 1] << 8) | (d[off + 2] << 16) | (d[off + 3] << 24);
         return 0;
     }
-    uint32_t DWordBE(size_t off) const {
+    u32 DWordBE(size_t off) const {
         if (off + 4 <= len)
             return (d[off] << 24) | (d[off + 1] << 16) | (d[off + 2] << 8) | d[off + 3];
         return 0;
     }
-    uint32_t DWord(size_t off, bool isBE) const {
+    u32 DWord(size_t off, bool isBE) const {
         return isBE ? DWordBE(off) : DWordLE(off);
     }
 

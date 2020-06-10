@@ -5,9 +5,9 @@ namespace lzma {
 
 struct FileInfo {
     // public data
-    uint32_t compressedSize;
-    uint32_t uncompressedSize;
-    uint32_t uncompressedCrc32;
+    u32 compressedSize;
+    u32 uncompressedSize;
+    u32 uncompressedCrc32;
     FILETIME ftModified;
     const char* name;
     const char* compressedData;

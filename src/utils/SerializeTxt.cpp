@@ -101,8 +101,8 @@ static bool WriteStructUInt(u8* p, Type type, uint64_t val) {
     if ((TYPE_U32 == type) || (TYPE_COLOR == type)) {
         if (val > 0xffffffff)
             return false;
-        uint32_t v = (uint32_t)val;
-        uint32_t* vp = (uint32_t*)p;
+        u32 v = (u32)val;
+        u32* vp = (u32*)p;
         *vp = v;
         return true;
     }
@@ -161,7 +161,7 @@ static uint64_t ReadStructUInt(const u8* p, Type type) {
         return (uint64_t)*vp;
     }
     if ((TYPE_U32 == type) || (TYPE_COLOR == type)) {
-        uint32_t* vp = (uint32_t*)p;
+        u32* vp = (u32*)p;
         return (uint64_t)*vp;
     }
     if (TYPE_U64 == type) {

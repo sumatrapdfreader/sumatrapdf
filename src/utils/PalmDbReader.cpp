@@ -68,7 +68,7 @@ bool PdbReader::ParseHeader() {
         recHdr.offset = dec.UInt32();
         recHdr.flags = dec.UInt8();
         dec.Bytes(recHdr.uniqueID, dimof(recHdr.uniqueID));
-        uint32_t off = recHdr.offset;
+        u32 off = recHdr.offset;
         if ((off < minOffset) || (off > maxOffset)) {
             return false;
         }
@@ -79,9 +79,9 @@ bool PdbReader::ParseHeader() {
     }
 
     // validate offsets
-    uint32_t prevOff = recInfos[0].offset;
+    u32 prevOff = recInfos[0].offset;
     for (size_t i = 1; i < nRecs - 1; i++) {
-        uint32_t off = recInfos[i].offset;
+        u32 off = recInfos[i].offset;
         if (prevOff > off) {
             return false;
         }

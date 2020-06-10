@@ -7,7 +7,7 @@ class BitReader {
   public:
     BitReader(u8* data, size_t len);
     ~BitReader();
-    uint32_t Peek(size_t bitsCount);
+    u32 Peek(size_t bitsCount);
     size_t BitsLeft();
     bool Eat(size_t bitsCount);
 

@@ -17,7 +17,7 @@ void ByteOrderTests() {
 
     {
         u16 vu16;
-        uint32_t vu32;
+        u32 vu32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::LittleEndian);
         utassert(0 == d.Offset());
@@ -60,7 +60,7 @@ void ByteOrderTests() {
 
     {
         u16 vu16;
-        uint32_t vu32;
+        u32 vu32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::BigEndian);
         vu16 = d.UInt16();

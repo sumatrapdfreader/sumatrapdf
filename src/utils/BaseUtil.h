@@ -336,7 +336,7 @@ void* memdup(const void* data, size_t len);
 bool memeq(const void* s1, const void* s2, size_t len);
 
 size_t RoundToPowerOf2(size_t size);
-uint32_t MurmurHash2(const void* key, size_t len);
+u32 MurmurHash2(const void* key, size_t len);
 
 size_t RoundUp(size_t n, size_t rounding);
 int RoundUp(int n, int rounding);

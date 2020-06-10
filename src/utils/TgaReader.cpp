@@ -46,8 +46,8 @@ struct TgaHeader {
 };
 
 struct TgaFooter {
-    uint32_t extAreaOffset;
-    uint32_t devAreaOffset;
+    u32 extAreaOffset;
+    u32 devAreaOffset;
     char signature[18];
 };
 
@@ -60,7 +60,7 @@ struct TgaExtArea {
     char progName[41];
     u16 progVersion;
     char progVersionC;
-    uint32_t fields_18_to_23[6];
+    u32 fields_18_to_23[6];
     u8 alphaType;
 };
 
@@ -79,11 +79,11 @@ static u16 convLE(u16 x) {
     return readLE16(data);
 }
 
-static uint32_t readLE32(u8* data) {
+static u32 readLE32(u8* data) {
     return data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
 }
 
-static uint32_t convLE(uint32_t x) {
+static u32 convLE(u32 x) {
     u8* data = (u8*)&x;
     return readLE32(data);
 }
@@ -260,7 +260,7 @@ static inline void CopyPixel(char* dst, const char* src, int n) {
             *(u16*)dst = *(u16*)src;
             break;
         case 4:
-            *(uint32_t*)dst = *(uint32_t*)src;
+            *(u32*)dst = *(u32*)src;
             break;
         default:
             CrashIf(true);

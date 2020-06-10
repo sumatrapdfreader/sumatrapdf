@@ -84,7 +84,7 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
                         lzma::FileInfo* fi = nullptr) {
     size_t nameLen = str::Len(inArchiveName);
     CrashIf(nameLen > UINT32_MAX - 25);
-    uint32_t headerSize = 25 + (uint32_t)nameLen;
+    u32 headerSize = 25 + (u32)nameLen;
     FILETIME ft = file::GetModificationTime(filePath);
     if (fi && FileTimeEq(ft, fi->ftModified)) {
     ReusePrevious:
@@ -104,7 +104,7 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
         fprintf(stderr, "Failed to read \"%S\" for compression\n", filePath);
         return false;
     }
-    uint32_t fileDataCrc = crc32(0, (const u8*)fileData.data, (uint32_t)fileData.size());
+    u32 fileDataCrc = crc32(0, (const u8*)fileData.data, (u32)fileData.size());
     if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileData.size())
         goto ReusePrevious;
 
@@ -117,8 +117,8 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
 
     ByteWriter meta = MakeByteWriterLE(data.AppendBlanks(24), 24);
     meta.Write32(headerSize);
-    meta.Write32((uint32_t)compressedSize);
-    meta.Write32((uint32_t)fileData.size());
+    meta.Write32((u32)compressedSize);
+    meta.Write32((u32)fileData.size());
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
@@ -142,7 +142,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
 
     ByteWriter lzsaHeader = MakeByteWriterLE(data.AppendBlanks(8), 8);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
-    lzsaHeader.Write32((uint32_t)(files.size() - skipFiles));
+    lzsaHeader.Write32((u32)(files.size() - skipFiles));
 
     for (size_t i = skipFiles; i < files.size(); i++) {
         AutoFreeWstr filePath(str::Dup(files.at(i)));
@@ -169,7 +169,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
             return false;
     }
 
-    uint32_t headerCrc32 = crc32(0, (const u8*)data.Get(), (uint32_t)data.size());
+    u32 headerCrc32 = crc32(0, (const u8*)data.Get(), (u32)data.size());
     MakeByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
     if (!data.Append(content.Get(), content.size()))
         return false;

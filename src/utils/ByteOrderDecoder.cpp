@@ -12,11 +12,11 @@ u16 UInt16LE(const u8* d) {
     return d[0] | (d[1] << 8);
 }
 
-uint32_t UInt32BE(const u8* d) {
+u32 UInt32BE(const u8* d) {
     return d[3] | (d[2] << 8) | (d[1] << 16) | (d[0] << 24);
 }
 
-uint32_t UInt32LE(const u8* d) {
+u32 UInt32LE(const u8* d) {
     return d[0] | (d[1] << 8) | (d[2] << 16) | (d[3] << 24);
 }
 
@@ -59,8 +59,8 @@ u16 ByteOrderDecoder::UInt16() {
     return v;
 }
 
-uint32_t ByteOrderDecoder::UInt32() {
-    uint32_t v;
+u32 ByteOrderDecoder::UInt32() {
+    u32 v;
     if (left < sizeof(v)) {
         ok = false;
     }

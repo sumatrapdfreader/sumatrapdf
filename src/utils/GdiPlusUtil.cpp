@@ -565,8 +565,8 @@ Gdiplus::Size BitmapSizeFromData(const char* data, size_t len) {
             if (len >= 32) {
                 size_t ix = 0;
                 while (ix < len - 32) {
-                    uint32_t lbox = r.DWordBE(ix);
-                    uint32_t tbox = r.DWordBE(ix + 4);
+                    u32 lbox = r.DWordBE(ix);
+                    u32 tbox = r.DWordBE(ix + 4);
                     if (0x6A703268 /* jp2h */ == tbox) {
                         ix += 8;
                         if (r.DWordBE(ix) == 24 && r.DWordBE(ix + 4) == 0x69686472 /* ihdr */) {

@@ -41,12 +41,12 @@ struct ISzAllocatorAlloc : ISzAlloc {
 
 /* code adapted from https://gnunet.org/svn/gnunet/src/util/crypto_crc.c (public domain) */
 static bool crc_table_ready = false;
-static uint32_t crc_table[256];
+static u32 crc_table[256];
 
-uint32_t lzma_crc32(uint32_t crc32, const unsigned char* data, size_t data_len) {
+u32 lzma_crc32(u32 crc32, const unsigned char* data, size_t data_len) {
     if (!crc_table_ready) {
-        uint32_t i, j;
-        uint32_t h = 1;
+        u32 i, j;
+        u32 h = 1;
         crc_table[0] = 0;
         for (i = 128; i; i >>= 1) {
             h = (h >> 1) ^ ((h & 1) ? 0xEDB88320 : 0);
@@ -145,29 +145,29 @@ bool ParseSimpleArchive(const char* archiveHeader, size_t dataLen, SimpleArchive
     if (dataLen < HEADER_START_SIZE) {
         return false;
     }
-    if (dataLen > (uint32_t)-1) {
+    if (dataLen > (u32)-1) {
         return false;
     }
 
     ByteOrderDecoder br(archiveHeader, dataLen, ByteOrderDecoder::LittleEndian);
-    uint32_t magic_id = br.UInt32();
+    u32 magic_id = br.UInt32();
     if (magic_id != LZMA_MAGIC_ID) {
         return false;
     }
 
-    uint32_t filesCount = br.UInt32();
+    u32 filesCount = br.UInt32();
     archiveOut->filesCount = filesCount;
     if (filesCount > dimof(archiveOut->files)) {
         return false;
     }
 
     FileInfo* fi;
-    for (uint32_t i = 0; i < filesCount; i++) {
+    for (u32 i = 0; i < filesCount; i++) {
         if (br.Offset() + FILE_ENTRY_MIN_SIZE > dataLen) {
             return false;
         }
 
-        uint32_t fileHeaderSize = br.UInt32();
+        u32 fileHeaderSize = br.UInt32();
         if (fileHeaderSize < FILE_ENTRY_MIN_SIZE || fileHeaderSize > 1024) {
             return false;
         }
@@ -193,13 +193,13 @@ bool ParseSimpleArchive(const char* archiveHeader, size_t dataLen, SimpleArchive
     }
 
     size_t headerSize = br.Offset();
-    uint32_t headerCrc32 = br.UInt32();
-    uint32_t realCrc = lzma_crc32(0, (const u8*)archiveHeader, (uint32_t)headerSize);
+    u32 headerCrc32 = br.UInt32();
+    u32 realCrc = lzma_crc32(0, (const u8*)archiveHeader, (u32)headerSize);
     if (headerCrc32 != realCrc) {
         return false;
     }
 
-    for (uint32_t i = 0; i < filesCount; i++) {
+    for (u32 i = 0; i < filesCount; i++) {
         fi = &archiveOut->files[i];
         // overflow check
         if (fi->compressedSize > dataLen || br.Offset() + fi->compressedSize > dataLen) {
@@ -240,7 +240,7 @@ char* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
         return nullptr;
     }
 
-    uint32_t realCrc = lzma_crc32(0, (const u8*)uncompressed, fi->uncompressedSize);
+    u32 realCrc = lzma_crc32(0, (const u8*)uncompressed, fi->uncompressedSize);
     if (realCrc != fi->uncompressedCrc32) {
         Allocator::Free(allocator, uncompressed);
         return nullptr;

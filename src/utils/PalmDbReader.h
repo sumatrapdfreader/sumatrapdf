@@ -8,21 +8,21 @@ struct PdbHeader {
     char name[32] = {0};
     u16 attributes = 0;
     u16 version = 0;
-    uint32_t createTime = 0;
-    uint32_t modifyTime = 0;
-    uint32_t backupTime = 0;
-    uint32_t modificationNumber = 0;
-    uint32_t appInfoID = 0;
-    uint32_t sortInfoID = 0;
+    u32 createTime = 0;
+    u32 modifyTime = 0;
+    u32 backupTime = 0;
+    u32 modificationNumber = 0;
+    u32 appInfoID = 0;
+    u32 sortInfoID = 0;
     // 8 bytes in the file +1 for zero termination
     char typeCreator[8 + 1] = {0};
-    uint32_t idSeed = 0;
-    uint32_t nextRecordList = 0;
+    u32 idSeed = 0;
+    u32 nextRecordList = 0;
     u16 numRecords = 0;
 };
 
 struct PdbRecordHeader {
-    uint32_t offset = 0;
+    u32 offset = 0;
     u8 flags = 0; // deleted, dirty, busy, secret, category
     char uniqueID[3] = {0};
 };

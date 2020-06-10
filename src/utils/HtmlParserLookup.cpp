@@ -24,7 +24,7 @@
 #define STR4i(s) (STR3i(s) | (lower((s)[3]) << 24))
 
 HtmlTag FindHtmlTag(const char* name, size_t len) {
-    uint32_t key =
+    u32 key =
         0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {
         case CS1('a'):
@@ -283,7 +283,7 @@ bool IsInlineTag(HtmlTag item) {
 }
 
 AlignAttr FindAlignAttr(const char* name, size_t len) {
-    uint32_t key =
+    u32 key =
         0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {
         case CS4('c', 'e', 'n', 't'):
@@ -310,8 +310,8 @@ AlignAttr FindAlignAttr(const char* name, size_t len) {
 // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
 // and http://www.w3.org/TR/MathML2/bycodes.html
 
-uint32_t FindHtmlEntityRune(const char* name, size_t len) {
-    uint32_t key = 0 == len ? 0 : 1 == len ? STR1(name) : 2 == len ? STR2(name) : 3 == len ? STR3(name) : STR4(name);
+u32 FindHtmlEntityRune(const char* name, size_t len) {
+    u32 key = 0 == len ? 0 : 1 == len ? STR1(name) : 2 == len ? STR2(name) : 3 == len ? STR3(name) : STR4(name);
     switch (key) {
         case CS4('A', 'E', 'l', 'i'):
             if (5 == len && CS1('g') == STR1(name + 4))
@@ -1768,11 +1768,11 @@ uint32_t FindHtmlEntityRune(const char* name, size_t len) {
                 return 8204;
             break;
     }
-    return (uint32_t)-1;
+    return (u32)-1;
 }
 
 CssProp FindCssProp(const char* name, size_t len) {
-    uint32_t key =
+    u32 key =
         0 == len ? 0 : 1 == len ? STR1i(name) : 2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
     switch (key) {
         case CS4('c', 'o', 'l', 'o'):

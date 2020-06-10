@@ -78,14 +78,14 @@ bool ZipCreator::WriteData(const void* data, size_t size) {
     return true;
 }
 
-static uint32_t zip_compress(void* dst, uint32_t dstlen, const void* src, uint32_t srclen) {
+static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
     z_stream stream = {0};
     stream.next_in = (Bytef*)src;
     stream.avail_in = srclen;
     stream.next_out = (Bytef*)dst;
     stream.avail_out = dstlen;
 
-    uint32_t newdstlen = 0;
+    u32 newdstlen = 0;
     int err = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
     if (err != Z_OK)
         return 0;
@@ -98,7 +98,7 @@ static uint32_t zip_compress(void* dst, uint32_t dstlen, const void* src, uint32
     return newdstlen;
 }
 
-bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size, uint32_t dosdate) {
+bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size, u32 dosdate) {
     CrashIf(size >= UINT32_MAX);
     CrashIf(str::Len(nameUtf8) >= UINT16_MAX);
     if (size >= UINT32_MAX)
@@ -112,15 +112,15 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
         return false;
 
     u16 method = Z_DEFLATED;
-    uLongf compressedSize = (uint32_t)size;
+    uLongf compressedSize = (u32)size;
     AutoFree compressed((char*)malloc(size));
     if (!compressed)
         return false;
-    compressedSize = zip_compress(compressed, (uint32_t)size, data, (uint32_t)size);
+    compressedSize = zip_compress(compressed, (u32)size, data, (u32)size);
     if (!compressedSize) {
         method = 0; // Store
         memcpy(compressed.Get(), data, size);
-        compressedSize = (uint32_t)size;
+        compressedSize = (u32)size;
     }
 
     char localHeader[30];
@@ -132,7 +132,7 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     local.Write32(dosdate);
     local.Write32(crc);
     local.Write32(compressedSize);
-    local.Write32((uint32_t)size);
+    local.Write32((u32)size);
     local.Write16((u16)namelen);
     local.Write16(0); // extra field length
 
@@ -148,14 +148,14 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     central.Write32(dosdate);
     central.Write32(crc);
     central.Write32(compressedSize);
-    central.Write32((uint32_t)size);
+    central.Write32((u32)size);
     central.Write16((u16)namelen);
     central.Write16(0); // extra field length
     central.Write16(0); // file comment length
     central.Write16(0); // disk number
     central.Write16(0); // internal file attributes
     central.Write32(0); // external file attributes
-    central.Write32((uint32_t)fileOffset);
+    central.Write32((u32)fileOffset);
     centraldir.Append(nameUtf8, namelen);
 
     fileCount++;
@@ -169,7 +169,7 @@ bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
         return false;
     }
 
-    uint32_t dosdatetime = 0;
+    u32 dosdatetime = 0;
     FILETIME ft = file::GetModificationTime(filePath);
     if (ft.dwLowDateTime || ft.dwHighDateTime) {
         FILETIME ftLocal;
@@ -221,8 +221,8 @@ bool ZipCreator::Finish() {
     eocd.Write16(0);          // disk number of central directory
     eocd.Write16((u16)fileCount);
     eocd.Write16((u16)fileCount);
-    eocd.Write32((uint32_t)centraldir.size());
-    eocd.Write32((uint32_t)bytesWritten);
+    eocd.Write32((u32)centraldir.size());
+    eocd.Write32((u32)bytesWritten);
     eocd.Write16(0); // comment len
 
     return WriteData(centraldir.Get(), centraldir.size()) && WriteData(endOfCentralDir, sizeof(endOfCentralDir));

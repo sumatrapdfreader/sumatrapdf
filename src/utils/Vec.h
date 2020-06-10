@@ -665,9 +665,9 @@ class WStrVec : public Vec<WCHAR*> {
 class WStrList {
     struct Item {
         WCHAR* string;
-        uint32_t hash;
+        u32 hash;
 
-        explicit Item(WCHAR* string = nullptr, uint32_t hash = 0) : string(string), hash(hash) {
+        explicit Item(WCHAR* string = nullptr, u32 hash = 0) : string(string), hash(hash) {
         }
     };
 
@@ -679,7 +679,7 @@ class WStrList {
     // mostly ASCII and should be treated case independently
     // TODO: I'm guessing would be much faster when done as MurmuserHash2I()
     // with lower-casing done in-line, without the need to allocate memory for the copy
-    static uint32_t GetQuickHashI(const WCHAR* str) {
+    static u32 GetQuickHashI(const WCHAR* str) {
         size_t len = str::Len(str);
         AutoFree data(AllocArray<char>(len));
         WCHAR c;
@@ -719,7 +719,7 @@ class WStrList {
     }
 
     int Find(const WCHAR* str, size_t startAt = 0) const {
-        uint32_t hash = GetQuickHashI(str);
+        u32 hash = GetQuickHashI(str);
         Item* item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::Eq(item[i].string, str))
@@ -729,7 +729,7 @@ class WStrList {
     }
 
     int FindI(const WCHAR* str, size_t startAt = 0) const {
-        uint32_t hash = GetQuickHashI(str);
+        u32 hash = GetQuickHashI(str);
         Item* item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::EqI(item[i].string, str))

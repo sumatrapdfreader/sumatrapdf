@@ -13,7 +13,7 @@ class ZipCreator {
     size_t fileCount;
 
     bool WriteData(const void* data, size_t size);
-    bool AddFileData(const char* nameUtf8, const void* data, size_t size, uint32_t dosdate = 0);
+    bool AddFileData(const char* nameUtf8, const void* data, size_t size, u32 dosdate = 0);
 
   public:
     ZipCreator(const WCHAR* zipFilePath);
