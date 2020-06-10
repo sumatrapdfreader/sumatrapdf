@@ -54,7 +54,21 @@ func runCppCheck(all bool) {
 
 	args := []string{"--platform=win64", "-DWIN32", "-D_WIN32", "-D_MSC_VER=1800", "-D_M_X64", "-DIFACEMETHODIMP_(x)=x", "-DSTDAPI_(x)=x", "-DPRE_RELEASE_VER=3.3", "-q", "-v"}
 	if all {
-		args = append(args, "--enable=style", "--suppress=constParameter", "--suppress=cstyleCast", "--suppress=useStlAlgorithm", "--suppress=noExplicitConstructor", "--suppress=variableScope", "--suppress=memsetClassFloat", "--suppress=ignoredReturnValue")
+		args = append(args, "--enable=style")
+		args = append(args, "--suppress=constParameter")
+		// they are just fine
+		args = append(args, "--suppress=cstyleCast")
+		// we minimize use of STL
+		args = append(args, "--suppress=useStlAlgorithm")
+		// trying to make them explicit has cascading side-effects
+		args = append(args, "--suppress=noExplicitConstructor")
+		args = append(args, "--suppress=variableScope")
+		args = append(args, "--suppress=memsetClassFloat")
+		// mostly from log() calls
+		args = append(args, "--suppress=ignoredReturnValue")
+		// complains about: char* x; float* y = (float*)x;
+		// all false positives, can't write in a way that doesn't trigger warning
+		args = append(args, "--suppress=invalidPointerCast")
 	}
 	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	cmd = exec.Command("cppcheck", args...)

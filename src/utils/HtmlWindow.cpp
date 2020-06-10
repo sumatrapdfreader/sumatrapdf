@@ -1762,11 +1762,13 @@ void HtmlWindow::SetHtml(const char* s, size_t len, const WCHAR* url) {
 // http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla#BUFFER
 // https://github.com/ReneNyffenegger/development_misc/blob/master/windows/mshtml/HTMLWindow.cpp#L143
 void HtmlWindow::SetHtmlReal(const char* s, size_t len) {
-    if (-1 == len)
+    if (-1 == len) {
         len = str::Len(s);
+    }
 
-    if (htmlContent)
+    if (htmlContent) {
         htmlContent->Release();
+    }
     htmlContent = new HtmlMoniker();
     htmlContent->SetHtml(s, len);
     AutoFreeWstr baseUrl(str::Format(HW_PROTO_PREFIX L"://%d/", windowId));
@@ -1774,18 +1776,22 @@ void HtmlWindow::SetHtmlReal(const char* s, size_t len) {
 
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
-    if (FAILED(hr) || !docDispatch)
+    if (FAILED(hr) || !docDispatch) {
         return;
+    }
 
     ScopedComQIPtr<IHTMLDocument2> doc(docDispatch);
-    if (!doc)
+    if (!doc) {
         return;
+    }
 
     ScopedComQIPtr<IPersistMoniker> perstMon(doc);
-    if (!perstMon)
+    if (!perstMon) {
         return;
+    }
     ScopedComQIPtr<IMoniker> htmlMon(htmlContent);
     hr = perstMon->Load(TRUE, htmlMon, nullptr, STGM_READ);
+    CrashIf(FAILED(hr));
 }
 
 // http://stackoverflow.com/questions/9778206/how-i-can-get-information-about-the-scrollbars-of-an-webbrowser-control-instance
@@ -1795,24 +1801,29 @@ void HtmlWindow::SetHtmlReal(const char* s, size_t len) {
 void HtmlWindow::SetScrollbarToAuto() {
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
-    if (FAILED(hr) || !docDispatch)
+    if (FAILED(hr) || !docDispatch) {
         return;
+    }
 
     ScopedComQIPtr<IHTMLDocument2> doc2(docDispatch);
-    if (!doc2)
+    if (!doc2) {
         return;
+    }
 
     ScopedComPtr<IHTMLElement> bodyElement;
     hr = doc2->get_body(&bodyElement);
-    if (FAILED(hr) || !bodyElement)
+    if (FAILED(hr) || !bodyElement) {
         return;
+    }
 
     ScopedComQIPtr<IHTMLBodyElement> body(bodyElement);
-    if (!body)
+    if (!body) {
         return;
+    }
 
     BSTR s = SysAllocString(L"auto");
     hr = body->put_scroll(s);
+    CrashIf(FAILED(hr));
     SysFreeString(s);
 }
 
