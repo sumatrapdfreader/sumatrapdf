@@ -45,9 +45,9 @@ class ByteOrderDecoder {
   protected:
     bool ok;
     ByteOrder byteOrder;
-    const uint8_t* data;
+    const u8* data;
 
-    const uint8_t* curr;
+    const u8* curr;
     size_t left;
 };
 

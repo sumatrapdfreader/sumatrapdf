@@ -20,9 +20,9 @@ inline EbookPageDef* DeserializeEbookPageDef(TxtNode* root) {
 }
 
 inline std::string_view SerializeEbookPageDef(EbookPageDef* val) {
-    return Serialize((const uint8_t*)val, &gEbookPageDefMetadata);
+    return Serialize((const u8*)val, &gEbookPageDefMetadata);
 }
 
 inline void FreeEbookPageDef(EbookPageDef* val) {
-    FreeStruct((uint8_t*)val, &gEbookPageDefMetadata);
+    FreeStruct((u8*)val, &gEbookPageDefMetadata);
 }

@@ -23,7 +23,7 @@ struct PdbHeader {
 
 struct PdbRecordHeader {
     uint32_t offset = 0;
-    uint8_t flags = 0; // deleted, dirty, busy, secret, category
+    u8 flags = 0; // deleted, dirty, busy, secret, category
     char uniqueID[3] = {0};
 };
 

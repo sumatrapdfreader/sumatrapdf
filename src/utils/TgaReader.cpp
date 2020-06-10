@@ -33,16 +33,16 @@ enum ImageAlpha {
 #include <pshpack1.h>
 
 struct TgaHeader {
-    uint8_t idLength;
-    uint8_t cmapType;
-    uint8_t imageType;
+    u8 idLength;
+    u8 cmapType;
+    u8 imageType;
     uint16_t cmapFirstEntry;
     uint16_t cmapLength;
-    uint8_t cmapBitDepth;
+    u8 cmapBitDepth;
     uint16_t offsetX, offsetY;
     uint16_t width, height;
-    uint8_t bitDepth;
-    uint8_t flags;
+    u8 bitDepth;
+    u8 flags;
 };
 
 struct TgaFooter {
@@ -56,12 +56,12 @@ struct TgaExtArea {
     char author[41];
     char comments[4][81];
     uint16_t dateTime[6];
-    uint8_t fields_14_to_15[47];
+    u8 fields_14_to_15[47];
     char progName[41];
     uint16_t progVersion;
     char progVersionC;
     uint32_t fields_18_to_23[6];
-    uint8_t alphaType;
+    u8 alphaType;
 };
 
 #include <poppack.h>
@@ -282,7 +282,7 @@ static void ReadPixel(ReadState& s, char* dst) {
     switch (s.type) {
         case Type_Palette:
         case Type_Palette_RLE:
-            idx = ((uint8_t)s.data[0] | (2 == s.n ? ((uint8_t)s.data[1] << 8) : 0)) - s.cmap.firstEntry;
+            idx = ((u8)s.data[0] | (2 == s.n ? ((u8)s.data[1] << 8) : 0)) - s.cmap.firstEntry;
             if (0 <= idx && idx < s.cmap.length)
                 CopyPixel(dst, s.cmap.data + idx * s.cmap.n, s.cmap.n);
             break;

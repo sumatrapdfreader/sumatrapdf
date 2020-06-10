@@ -22,9 +22,9 @@ inline PagesLayoutDef* DeserializePagesLayoutDef(TxtNode* root) {
 }
 
 inline std::string_view SerializePagesLayoutDef(PagesLayoutDef* val) {
-    return Serialize((const uint8_t*)val, &gPagesLayoutDefMetadata);
+    return Serialize((const u8*)val, &gPagesLayoutDefMetadata);
 }
 
 inline void FreePagesLayoutDef(PagesLayoutDef* val) {
-    FreeStruct((uint8_t*)val, &gPagesLayoutDefMetadata);
+    FreeStruct((u8*)val, &gPagesLayoutDefMetadata);
 }

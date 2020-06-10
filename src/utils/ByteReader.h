@@ -20,25 +20,25 @@ class ByteReader {
                 case 'b':
                     if (off + idx + 1 > len || idx + 1 > size)
                         return false;
-                    *(uint8_t*)((uint8_t*)strct + idx) = Byte(off + idx);
+                    *(u8*)((u8*)strct + idx) = Byte(off + idx);
                     idx += 1;
                     break;
                 case 'w':
                     if (off + idx + 2 > len || idx + 2 > size)
                         return false;
-                    *(uint16_t*)((uint8_t*)strct + idx) = Word(off + idx, isBE);
+                    *(uint16_t*)((u8*)strct + idx) = Word(off + idx, isBE);
                     idx += 2;
                     break;
                 case 'd':
                     if (off + idx + 4 > len || idx + 4 > size)
                         return false;
-                    *(uint32_t*)((uint8_t*)strct + idx) = DWord(off + idx, isBE);
+                    *(uint32_t*)((u8*)strct + idx) = DWord(off + idx, isBE);
                     idx += 4;
                     break;
                 case 'q':
                     if (off + idx + 8 > len || idx + 8 > size)
                         return false;
-                    *(uint64_t*)((uint8_t*)strct + idx) = QWord(off + idx, isBE);
+                    *(uint64_t*)((u8*)strct + idx) = QWord(off + idx, isBE);
                     idx += 8;
                     break;
                 default:
@@ -55,12 +55,12 @@ class ByteReader {
         d = (const u8*)data.data();
         len = data.size();
     }
-    ByteReader(const char* data, size_t len) : d((const uint8_t*)data), len(len) {
+    ByteReader(const char* data, size_t len) : d((const u8*)data), len(len) {
     }
-    ByteReader(const unsigned char* data, size_t len) : d((const uint8_t*)data), len(len) {
+    ByteReader(const unsigned char* data, size_t len) : d((const u8*)data), len(len) {
     }
 
-    uint8_t Byte(size_t off) const {
+    u8 Byte(size_t off) const {
         if (off < len)
             return d[off];
         return 0;
@@ -108,7 +108,7 @@ class ByteReader {
         return isBE ? QWordBE(off) : QWordLE(off);
     }
 
-    const char* Find(size_t off, uint8_t byte) const {
+    const char* Find(size_t off, u8 byte) const {
         if (off >= len)
             return nullptr;
         return (const char*)memchr(d + off, byte, len - off);

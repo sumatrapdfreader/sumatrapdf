@@ -160,7 +160,7 @@ static bool PalmdocUncompress(const char* src, size_t srcLen, str::Str& dst) {
 
 #define kHuffHeaderLen 24
 struct HuffHeader {
-    char id[4];      // "HUFF"
+    char id[4]; // "HUFF"
     u32 hdrLen; // should be 24
     // offset of 256 4-byte elements of cache data, in big endian
     u32 cacheOffset; // should be 24 as well
@@ -175,7 +175,7 @@ static_assert(kHuffHeaderLen == sizeof(HuffHeader), "wrong size of HuffHeader st
 
 #define kCdicHeaderLen 16
 struct CdicHeader {
-    char id[4];      // "CIDC"
+    char id[4]; // "CIDC"
     u32 hdrLen; // should be 16
     u32 unknown;
     u32 codeLen;

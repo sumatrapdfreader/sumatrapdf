@@ -2,12 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 class ByteWriter {
-    uint8_t* dst;
-    uint8_t* end;
+    u8* dst;
+    u8* end;
     bool isLE;
 
   public:
-    ByteWriter(uint8_t* dst, size_t bytesLeft, bool isLE) : dst(dst), isLE(isLE) {
+    ByteWriter(u8* dst, size_t bytesLeft, bool isLE) : dst(dst), isLE(isLE) {
         end = dst + bytesLeft;
     }
 
@@ -22,7 +22,7 @@ class ByteWriter {
         return end - dst;
     }
 
-    bool Write8(uint8_t b) {
+    bool Write8(u8 b) {
         if (Left() < 1) {
             return false;
         }
@@ -30,7 +30,7 @@ class ByteWriter {
         return true;
     }
 
-    bool Write8x2(uint8_t b1, uint8_t b2) {
+    bool Write8x2(u8 b1, u8 b2) {
         if (Left() < 2) {
             return false;
         }
@@ -40,8 +40,8 @@ class ByteWriter {
     }
 
     bool Write16(uint16_t val) {
-        uint8_t b1 = val & 0xFF;
-        uint8_t b2 = (val >> 8) & 0xFF;
+        u8 b1 = val & 0xFF;
+        u8 b2 = (val >> 8) & 0xFF;
         if (isLE) {
             return Write8x2(b1, b2);
         }
@@ -49,10 +49,10 @@ class ByteWriter {
     }
 
     bool Write32(uint32_t val) {
-        uint8_t b1 = val & 0xFF;
-        uint8_t b2 = (val >> 8) & 0xFF;
-        uint8_t b3 = (val >> 16) & 0xFF;
-        uint8_t b4 = (val >> 24) & 0xFF;
+        u8 b1 = val & 0xFF;
+        u8 b2 = (val >> 8) & 0xFF;
+        u8 b3 = (val >> 16) & 0xFF;
+        u8 b4 = (val >> 24) & 0xFF;
         if (isLE) {
             return Write8x2(b1, b2) && Write8x2(b3, b4);
         }
@@ -70,17 +70,17 @@ class ByteWriter {
 };
 
 ByteWriter MakeByteWriterLE(unsigned char* dst, size_t len) {
-    return ByteWriter((uint8_t*)dst, len, true);
+    return ByteWriter((u8*)dst, len, true);
 }
 
 ByteWriter MakeByteWriterLE(char* dst, size_t len) {
-    return ByteWriter((uint8_t*)dst, len, true);
+    return ByteWriter((u8*)dst, len, true);
 }
 
 ByteWriter MakeByteWriterBE(unsigned char* dst, size_t len) {
-    return ByteWriter((uint8_t*)dst, len, false);
+    return ByteWriter((u8*)dst, len, false);
 }
 
 ByteWriter MakeByteWriterBE(char* dst, size_t len) {
-    return ByteWriter((uint8_t*)dst, len, false);
+    return ByteWriter((u8*)dst, len, false);
 }

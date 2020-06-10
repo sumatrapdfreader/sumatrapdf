@@ -279,7 +279,7 @@ uint32_t MurmurHash2(const void* key, size_t len) {
     uint32_t h = hash_function_seed ^ (uint32_t)len;
 
     /* Mix 4 bytes at a time into the hash */
-    const uint8_t* data = (const uint8_t*)key;
+    const u8* data = (const u8*)key;
 
     while (len >= 4) {
         uint32_t k = *(uint32_t*)data;

@@ -76,9 +76,9 @@ static bool Decompress(const char* compressed, size_t compressedSize, char* unco
         return false;
     }
 
-    uint8_t usesX86Filter = compressed[0];
+    u8 usesX86Filter = compressed[0];
     // handle stored data
-    if (usesX86Filter == (uint8_t)-1) {
+    if (usesX86Filter == (u8)-1) {
         if (uncompressedSize != compressedSize - 1) {
             return false;
         }
@@ -194,7 +194,7 @@ bool ParseSimpleArchive(const char* archiveHeader, size_t dataLen, SimpleArchive
 
     size_t headerSize = br.Offset();
     uint32_t headerCrc32 = br.UInt32();
-    uint32_t realCrc = lzma_crc32(0, (const uint8_t*)archiveHeader, (uint32_t)headerSize);
+    uint32_t realCrc = lzma_crc32(0, (const u8*)archiveHeader, (uint32_t)headerSize);
     if (headerCrc32 != realCrc) {
         return false;
     }
@@ -240,7 +240,7 @@ char* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
         return nullptr;
     }
 
-    uint32_t realCrc = lzma_crc32(0, (const uint8_t*)uncompressed, fi->uncompressedSize);
+    uint32_t realCrc = lzma_crc32(0, (const u8*)uncompressed, fi->uncompressedSize);
     if (realCrc != fi->uncompressedCrc32) {
         Allocator::Free(allocator, uncompressed);
         return nullptr;

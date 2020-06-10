@@ -7,14 +7,14 @@
 // Bit reader is a streaming reader of bits from underlying memory data
 
 // data has to be valid for the lifetime of this class
-BitReader::BitReader(uint8_t* data, size_t len) : data(data), dataLen(len), currBitPos(0) {
+BitReader::BitReader(u8* data, size_t len) : data(data), dataLen(len), currBitPos(0) {
     bitsCount = len * 8;
 }
 
 BitReader::~BitReader() {
 }
 
-uint8_t BitReader::GetByte(size_t pos) {
+u8 BitReader::GetByte(size_t pos) {
     if (pos >= dataLen) {
         return 0;
     }

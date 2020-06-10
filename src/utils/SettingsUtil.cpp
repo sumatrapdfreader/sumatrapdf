@@ -182,8 +182,8 @@ bool IsCompactable(const StructInfo* info) {
 static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
               "compact array code can't be simplified if int, float and colorref are of different sizes");
 
-static bool SerializeField(str::Str& out, const uint8_t* base, const FieldInfo& field) {
-    const uint8_t* fieldPtr = base + field.offset;
+static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field) {
+    const u8* fieldPtr = base + field.offset;
     AutoFree value;
     COLORREF c;
 
@@ -243,7 +243,7 @@ static bool SerializeField(str::Str& out, const uint8_t* base, const FieldInfo& 
                     Type_IntArray == field.type ? Type_Int : Type_FloatArray == field.type ? Type_Float : Type_Color;
                 if (i > 0)
                     out.AppendChar(' ');
-                SerializeField(out, (const uint8_t*)&(*(Vec<int>**)fieldPtr)->at(i), info);
+                SerializeField(out, (const u8*)&(*(Vec<int>**)fieldPtr)->at(i), info);
             }
             // prevent empty arrays from being replaced with the defaults
             return (*(Vec<int>**)fieldPtr)->size() > 0 || field.value != 0;
@@ -274,8 +274,8 @@ static bool parseBool(const char* value) {
     return i != 0;
 }
 
-static void DeserializeField(const FieldInfo& field, uint8_t* base, const char* value) {
-    uint8_t* fieldPtr = base + field.offset;
+static void DeserializeField(const FieldInfo& field, u8* base, const char* value) {
+    u8* fieldPtr = base + field.offset;
 
     char** strPtr = (char**)fieldPtr;
     WCHAR** wstrPtr = (WCHAR**)fieldPtr;
@@ -356,7 +356,7 @@ static void DeserializeField(const FieldInfo& field, uint8_t* base, const char* 
                 FieldInfo info = {0};
                 info.type =
                     Type_IntArray == field.type ? Type_Int : Type_FloatArray == field.type ? Type_Float : Type_Color;
-                DeserializeField(info, (uint8_t*)(*(Vec<int>**)fieldPtr)->AppendBlanks(1), value);
+                DeserializeField(info, (u8*)(*(Vec<int>**)fieldPtr)->AppendBlanks(1), value);
                 for (; *value && !str::IsWs(*value); value++)
                     ;
                 for (; str::IsWs(*value); value++)
@@ -423,7 +423,7 @@ static void SerializeUnknownFields(str::Str& out, SquareTreeNode* node, int inde
 
 static void SerializeStructRec(str::Str& out, const StructInfo* info, const void* data, SquareTreeNode* prevNode,
                                int indent = 0) {
-    const uint8_t* base = (const uint8_t*)data;
+    const u8* base = (const u8*)data;
     const char* fieldName = info->fieldNames;
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
@@ -480,14 +480,14 @@ static void SerializeStructRec(str::Str& out, const StructInfo* info, const void
     SerializeUnknownFields(out, prevNode, indent);
 }
 
-static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, uint8_t* base, bool useDefaults) {
+static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, u8* base, bool useDefaults) {
     if (!base)
-        base = AllocArray<uint8_t>(info->structSize);
+        base = AllocArray<u8>(info->structSize);
 
     const char* fieldName = info->fieldNames;
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
-        uint8_t* fieldPtr = base + field.offset;
+        u8* fieldPtr = base + field.offset;
         if (Type_Struct == field.type || Type_Prerelease == field.type) {
             SquareTreeNode* child = node ? node->GetChild(fieldName) : nullptr;
 #if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
@@ -532,13 +532,13 @@ char* SerializeStruct(const StructInfo* info, const void* strct, const char* pre
 
 void* DeserializeStruct(const StructInfo* info, const char* data, void* strct) {
     SquareTree sqt(data);
-    return DeserializeStructRec(info, sqt.root, (uint8_t*)strct, !strct);
+    return DeserializeStructRec(info, sqt.root, (u8*)strct, !strct);
 }
 
-static void FreeStructData(const StructInfo* info, uint8_t* base) {
+static void FreeStructData(const StructInfo* info, u8* base) {
     for (size_t i = 0; i < info->fieldCount; i++) {
         const FieldInfo& field = info->fields[i];
-        uint8_t* fieldPtr = base + field.offset;
+        u8* fieldPtr = base + field.offset;
         if (Type_Struct == field.type || Type_Prerelease == field.type) {
             FreeStructData(GetSubstruct(field), fieldPtr);
         } else if (Type_Array == field.type) {
@@ -557,6 +557,6 @@ static void FreeStructData(const StructInfo* info, uint8_t* base) {
 
 void FreeStruct(const StructInfo* info, void* strct) {
     if (strct)
-        FreeStructData(info, (uint8_t*)strct);
+        FreeStructData(info, (u8*)strct);
     free(strct);
 }

@@ -50,7 +50,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
         LzmaEncProps_Init(&props);
 
         // always apply the BCJ filter for speed (else two or three compression passes would be required)
-        ScopedMem<uint8_t> bcj_enc(AllocArray<uint8_t>(uncompressedSize));
+        ScopedMem<u8> bcj_enc(AllocArray<u8>(uncompressedSize));
         if (bcj_enc) {
             memcpy(bcj_enc, uncompressed, uncompressedSize);
             UInt32 x86State;
@@ -72,7 +72,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
     if (lzma_size <= uncompressedSize) {
         *compressedSize = lzma_size;
     } else {
-        compressed[0] = (uint8_t)-1;
+        compressed[0] = (u8)-1;
         memcpy(compressed + 1, uncompressed, uncompressedSize);
         *compressedSize = uncompressedSize + 1;
     }
@@ -169,7 +169,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
             return false;
     }
 
-    uint32_t headerCrc32 = crc32(0, (const uint8_t*)data.Get(), (uint32_t)data.size());
+    uint32_t headerCrc32 = crc32(0, (const u8*)data.Get(), (uint32_t)data.size());
     MakeByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
     if (!data.Append(content.Get(), content.size()))
         return false;
