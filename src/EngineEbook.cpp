@@ -557,7 +557,7 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(PageElement* el) {
     int pageNo = el->pageNo;
     int idx = el->imageID;
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
-    DrawInstr& i = pageInstrs->at(idx);
+    const DrawInstr& i = pageInstrs->at(idx);
     CrashIf(i.type != DrawInstrType::Image);
     return getImageFromData(i.img);
 }

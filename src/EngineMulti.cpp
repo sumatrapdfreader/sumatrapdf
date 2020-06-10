@@ -85,7 +85,7 @@ class EngineMulti : public EngineBase {
 };
 
 EngineBase* EngineMulti::PageToEngine(int& pageNo) const {
-    EnginePage& ep = pageToEngine[pageNo - 1];
+    const EnginePage& ep = pageToEngine[pageNo - 1];
     pageNo = ep.pageNoInEngine;
     return ep.engine;
 }

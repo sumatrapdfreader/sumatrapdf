@@ -183,15 +183,16 @@ const WCHAR* ToSafeString(AutoFreeWstr& s);
 
 } // namespace win
 
-class DoubleBuffer {
+struct DoubleBuffer {
     HWND hTarget = nullptr;
     HDC hdcCanvas = nullptr;
     HDC hdcBuffer = nullptr;
     HBITMAP doubleBuffer = nullptr;
     Rect rect{};
 
-  public:
     DoubleBuffer(HWND hwnd, Rect rect);
+    DoubleBuffer(const DoubleBuffer&) = delete;
+    DoubleBuffer& operator=(const DoubleBuffer&) = delete;
     ~DoubleBuffer();
 
     HDC GetDC() const;

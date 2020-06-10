@@ -1045,19 +1045,22 @@ int GetSizeOfDefaultGuiFont() {
 }
 
 DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect)
-    : hTarget(hwnd), rect(rect), hdcBuffer(nullptr), doubleBuffer(nullptr) {
+    : hTarget(hwnd), rect(rect) {
     hdcCanvas = ::GetDC(hwnd);
 
-    if (rect.IsEmpty())
+    if (rect.IsEmpty()) {
         return;
+    }
 
     doubleBuffer = CreateCompatibleBitmap(hdcCanvas, rect.dx, rect.dy);
-    if (!doubleBuffer)
+    if (!doubleBuffer) {
         return;
+    }
 
     hdcBuffer = CreateCompatibleDC(hdcCanvas);
-    if (!hdcBuffer)
+    if (!hdcBuffer) {
         return;
+    }
 
     if (rect.x != 0 || rect.y != 0) {
         SetGraphicsMode(hdcBuffer, GM_ADVANCED);
@@ -1827,10 +1830,20 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
 std::string_view LoadDataResource(int resId) {
     HRSRC resSrc = FindResource(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
     CrashIf(!resSrc);
+    if (!resSrc) {
+        return {};
+    }
     HGLOBAL res = LoadResource(nullptr, resSrc);
     CrashIf(!res);
+    if (!res) {
+        return {};
+    }
     DWORD size = SizeofResource(nullptr, resSrc);
     const char* resData = (const char*)LockResource(res);
+    CrashIf(!resData);
+    if (!resData) {
+        return {};
+    }
     char* s = str::DupN(resData, size);
     UnlockResource(res);
     return {s, size};
