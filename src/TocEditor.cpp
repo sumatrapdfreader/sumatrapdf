@@ -1002,7 +1002,6 @@ void StartTocEditorForWindowInfo(WindowInfo* win) {
             // TODO: show error message box
             return;
         }
-        args->bookmarks = vbkm;
     } else {
         TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
         TocItem* rootCopy = nullptr;

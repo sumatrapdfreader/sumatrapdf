@@ -1525,27 +1525,32 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback* cb)
 bool HtmlWindow::CreateBrowser() {
     HRESULT hr;
     ScopedComPtr<IUnknown> p;
-    if (!p.Create(CLSID_WebBrowser))
+    if (!p.Create(CLSID_WebBrowser)) {
         return false;
+    }
     hr = p->QueryInterface(&viewObject);
-    if (FAILED(hr))
+    if (FAILED(hr)) {
         return false;
+    }
     hr = p->QueryInterface(&oleObject);
-    if (FAILED(hr))
+    if (FAILED(hr)) {
         return false;
+    }
 
     DWORD status;
     hr = oleObject->GetMiscStatus(DVASPECT_CONTENT, &status);
-    if (FAILED(hr))
+    if (FAILED(hr)) {
         return false;
+    }
     bool setClientSiteFirst = 0 != (status & OLEMISC_SETCLIENTSITEFIRST);
     bool invisibleAtRuntime = 0 != (status & OLEMISC_INVISIBLEATRUNTIME);
 
     FrameSite* fs = new FrameSite(this);
     ScopedComPtr<IUnknown> fsScope(fs);
 
-    if (setClientSiteFirst)
+    if (setClientSiteFirst) {
         oleObject->SetClientSite(fs->oleClientSite);
+    }
 
     ScopedComQIPtr<IPersistStreamInit> psInit(p);
     if (psInit) {
@@ -1554,11 +1559,13 @@ bool HtmlWindow::CreateBrowser() {
     }
 
     hr = p->QueryInterface(&oleInPlaceObject);
-    if (FAILED(hr))
+    if (FAILED(hr)) {
         return false;
+    }
     hr = oleInPlaceObject->GetWindow(&oleObjectHwnd);
-    if (FAILED(hr))
+    if (FAILED(hr)) {
         return false;
+    }
 
     ::SetActiveWindow(oleObjectHwnd);
     RECT rc = ClientRect(hwndParent).ToRECT();
@@ -1566,25 +1573,32 @@ bool HtmlWindow::CreateBrowser() {
     oleInPlaceObject->SetObjectRects(&rc, &rc);
     if (!invisibleAtRuntime) {
         hr = oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, nullptr, fs->oleClientSite, 0, hwndParent, &rc);
+        if (FAILED(hr)) {
+            return false;
+        }
 #if 0 // is this necessary?
         hr = oleObject->DoVerb(OLEIVERB_SHOW, 0, fs->oleClientSite, 0,
                 hwnd, &rc);
 #endif
     }
 
-    if (!setClientSiteFirst)
+    if (!setClientSiteFirst) {
         oleObject->SetClientSite(fs->oleClientSite);
+    }
 
     hr = p->QueryInterface(&webBrowser);
-    if (FAILED(hr))
+    if (FAILED(hr)) {
         return false;
+    }
 
     ScopedComQIPtr<IConnectionPointContainer> cpContainer(p);
-    if (!cpContainer)
+    if (!cpContainer) {
         return false;
+    }
     hr = cpContainer->FindConnectionPoint(DIID_DWebBrowserEvents2, &connectionPoint);
-    if (FAILED(hr))
+    if (FAILED(hr)) {
         return false;
+    }
     connectionPoint->Advise(fs->hwDWebBrowserEvents2, &adviseCookie);
 
     // TODO: disallow accessing any random url?
