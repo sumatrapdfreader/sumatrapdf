@@ -183,26 +183,31 @@ static bool ExtractSignature(const char* hexSignature, const void* data, size_t&
     // verify hexSignature format - must be either
     // * a string starting with "sha1:" followed by the signature (and optionally whitespace and further content)
     // * nullptr, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
-    if (str::StartsWith(hexSignature, "sha1:"))
+    if (str::StartsWith(hexSignature, "sha1:")) {
         hexSignature += 5;
-    else if (!hexSignature) {
-        if (dataLen < 20 || memchr(data, 0, dataLen))
+    } else if (!hexSignature) {
+        if (dataLen < 20 || memchr(data, 0, dataLen)) {
             return false;
+        }
         const char* lastLine = (const char*)data + dataLen - 1;
-        while (lastLine > data && *(lastLine - 1) != '\n')
+        while (lastLine > data && *(lastLine - 1) != '\n') {
             lastLine--;
-        if (lastLine == data || !str::Find(lastLine, " Signature sha1:"))
+        }
+        if (lastLine == data || !str::Find(lastLine, " Signature sha1:")) {
             return false;
+        }
         dataLen = lastLine - (const char*)data;
         hexSignature = str::Find(lastLine, " Signature sha1:") + 16;
-    } else
+    } else {
         return false;
+    }
 
     Vec<BYTE> signatureBytes;
     for (const char* c = hexSignature; *c && !str::IsWs(*c); c += 2) {
-        int val;
-        if (1 != sscanf_s(c, "%02x", &val))
+        unsigned int val;
+        if (1 != sscanf_s(c, "%02x", &val)) {
             return false;
+        }
         signatureBytes.Append((BYTE)val);
     }
     signatureLen = signatureBytes.size();
@@ -237,9 +242,11 @@ bool VerifySHA1Signature(const void* data, size_t dataLen, const char* hexSignat
 #undef Check
 
 CleanUp:
-    if (hHash)
+    if (hHash) {
         CryptDestroyHash(hHash);
-    if (hProv)
+    }
+    if (hProv) {
         CryptReleaseContext(hProv, 0);
+    }
     return ok;
 }

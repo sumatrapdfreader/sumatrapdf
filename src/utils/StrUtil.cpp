@@ -629,10 +629,11 @@ size_t RemoveChars(char* str, const char* toRemove) {
     char* dst = str;
     while (*str) {
         char c = *str++;
-        if (!str::FindChar(toRemove, c))
+        if (!str::FindChar(toRemove, c)) {
             *dst++ = c;
-        else
+        } else {
             ++removed;
+        }
     }
     *dst = '\0';
     return removed;
@@ -659,8 +660,9 @@ size_t BufAppend(char* dst, size_t dstCchSize, const char* s) {
     CrashAlwaysIf(0 == dstCchSize);
 
     size_t currDstCchLen = str::Len(dst);
-    if (currDstCchLen + 1 >= dstCchSize)
+    if (currDstCchLen + 1 >= dstCchSize) {
         return 0;
+    }
     size_t left = dstCchSize - currDstCchLen - 1;
     size_t srcCchSize = str::Len(s);
     size_t toCopy = std::min(left, srcCchSize);
@@ -675,8 +677,9 @@ size_t BufAppend(char* dst, size_t dstCchSize, const char* s) {
 char* MemToHex(const unsigned char* buf, size_t len) {
     /* 2 hex chars per byte, +1 for terminating 0 */
     char* ret = AllocArray<char>(2 * len + 1);
-    if (!ret)
+    if (!ret) {
         return nullptr;
+    }
     char* dst = ret;
     for (; len > 0; len--) {
         sprintf_s(dst, 3, "%02x", *buf++);
@@ -691,9 +694,10 @@ char* MemToHex(const unsigned char* buf, size_t len) {
    hex string. */
 bool HexToMem(const char* s, unsigned char* buf, size_t bufLen) {
     for (; bufLen > 0; bufLen--) {
-        int c;
-        if (1 != sscanf_s(s, "%02x", &c))
+        unsigned int c;
+        if (1 != sscanf_s(s, "%02x", &c)) {
             return false;
+        }
         s += 2;
         *buf++ = (unsigned char)c;
     }
@@ -702,8 +706,9 @@ bool HexToMem(const char* s, unsigned char* buf, size_t bufLen) {
 
 static char* ExtractUntil(const char* pos, char c, const char** endOut) {
     *endOut = FindChar(pos, c);
-    if (!*endOut)
+    if (!*endOut) {
         return nullptr;
+    }
     return str::DupN(pos, *endOut - pos);
 }
 
@@ -715,8 +720,9 @@ static const char* ParseLimitedNumber(const char* str, const char* format, const
         char limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((size_t)width + 1, dimof(limited)), str);
         const char* end = Parse(limited, f2, valueOut);
-        if (end && !*end)
+        if (end && !*end) {
             *endOut = str + width;
+        }
     }
     return endF;
 }
