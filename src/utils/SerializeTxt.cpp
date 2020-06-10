@@ -58,63 +58,70 @@ static bool IsUnsignedIntType(Type type) {
     return ((TYPE_U16 == type) || (TYPE_U32 == type) || (TYPE_U64 == type));
 }
 
-static bool WriteStructInt(u8* p, Type type, i64 val) {
+static void WriteStructInt(u8* p, Type type, i64 val) {
     if (TYPE_I16 == type) {
-        if (val > 0xffff)
-            return false;
+        if (val > 0xffff) {
+            CrashIf(true);
+            return;
+        }
         i16 v = (i16)val;
         i16* vp = (i16*)p;
         *vp = v;
-        return true;
+        return;
     }
 
     if (TYPE_I32 == type) {
-        if (val > 0xffffffff)
-            return false;
+        if (val > 0xffffffff) {
+            CrashIf(true);
+            return;
+        }
         i32 v = (i32)val;
         i32* vp = (i32*)p;
         *vp = v;
-        return true;
+        return;
     }
     CrashIf(true);
-    return false;
 }
 
 static void WriteStructBool(u8* p, bool val) {
     bool* bp = (bool*)p;
-    if (val)
+    if (val) {
         *bp = true;
-    else
+    } else {
         *bp = false;
+    }
 }
 
-static bool WriteStructUInt(u8* p, Type type, u64 val) {
+static void WriteStructUInt(u8* p, Type type, u64 val) {
     if (TYPE_U16 == type) {
-        if (val > 0xffff)
-            return false;
+        if (val > 0xffff) {
+            CrashIf(true);
+            return;
+        }
         u16 v = (u16)val;
         u16* vp = (u16*)p;
         *vp = v;
-        return true;
+        return;
     }
 
     if ((TYPE_U32 == type) || (TYPE_COLOR == type)) {
-        if (val > 0xffffffff)
-            return false;
+        if (val > 0xffffffff) {
+            CrashIf(true);
+            return;
+        }
         u32 v = (u32)val;
         u32* vp = (u32*)p;
         *vp = v;
-        return true;
+        return;
     }
 
     if (TYPE_U64 == type) {
         u64* vp = (u64*)p;
         *vp = val;
-        return true;
+        return;
     }
 
     CrashIf(true);
-    return false;
 }
 
 static void WriteStructPtrVal(u8* p, void* val) {
@@ -224,10 +231,8 @@ static bool ParseInt(char* s, char* e, i64* iOut) {
     u64 u;
     if (!ParseUInt(s, e, &u))
         return false;
-#if 0 // TODO:: why is this missing?
     if (u > MAXLONG64)
         return false;
-#endif
     i64 i = (i64)u;
     if (neg)
         i = -i;
@@ -417,7 +422,7 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
         u64 n;
         ok = ParseUInt(node->valStart, node->valEnd, &n);
         if (ok) {
-            ok = WriteStructUInt(structDataPtr, type, n);
+            WriteStructUInt(structDataPtr, type, n);
         }
         return true;
     }
@@ -426,7 +431,7 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
         i64 n;
         ok = ParseInt(node->valStart, node->valEnd, &n);
         if (ok) {
-            ok = WriteStructInt(structDataPtr, type, n);
+            WriteStructInt(structDataPtr, type, n);
         }
         return true;
     }
@@ -489,9 +494,10 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
 }
 
 static u8* DeserializeRec(DecodeState& ds, TxtNode* firstNode, const StructMetadata* def) {
-    bool ok = true;
-    if (!firstNode)
+    bool ok;
+    if (!firstNode) {
         return nullptr;
+    }
 
     u8* res = AllocArray<u8>(def->size);
     const StructMetadata** defPtr = (const StructMetadata**)res;

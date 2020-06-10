@@ -82,6 +82,8 @@ struct StaticLinkInfo {
 class WindowInfo {
   public:
     explicit WindowInfo(HWND hwnd);
+    WindowInfo(const WindowInfo&) = delete;
+    WindowInfo& operator=(const WindowInfo&) = delete;
     ~WindowInfo();
 
     // TODO: error windows currently have

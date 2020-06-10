@@ -392,7 +392,6 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
     PageDestination* remoteLink = nullptr;
     if (link) {
         remoteLink = clonePageDestination(link);
-        link = nullptr;
     }
     AutoDelete deleteRemoteLink(remoteLink);
 
