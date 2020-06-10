@@ -118,9 +118,11 @@ bool IsRtl(HWND hwnd);
 void SetRtl(HWND hwnd, bool isRtl);
 
 Rect ChildPosWithinParent(HWND);
+
+int GetSizeOfDefaultGuiFont();
 HFONT GetDefaultGuiFont();
 HFONT GetDefaultGuiFont(bool bold, bool italic);
-long GetDefaultGuiFontSize();
+HFONT GetDefaultGuiFontOfSize(int size);
 
 IStream* CreateStreamFromData(std::string_view);
 std::string_view GetDataFromStream(IStream* stream, HRESULT* resOpt);

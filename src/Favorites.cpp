@@ -818,6 +818,12 @@ void CreateFavorites(WindowInfo* win) {
     treeCtrl->onTreeSelectionChanged = FavTreeSelectionChanged;
     treeCtrl->onTreeKeyDown = TocTreeKeyDown;
 
+    // TODO: only for ramicro?
+    int fntSize = GetSizeOfDefaultGuiFont();
+    HFONT fnt = GetDefaultGuiFontOfSize(fntSize + 2);
+    // TODO: leaks font?
+    treeCtrl->SetFont(fnt);
+
     bool ok = treeCtrl->Create();
     CrashIf(!ok);
 

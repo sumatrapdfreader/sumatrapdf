@@ -119,7 +119,7 @@ static BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
 
     g_hwnd = hwnd;
 
-    long fontDy = GetDefaultGuiFontSize();
+    int fontDy = GetSizeOfDefaultGuiFont();
     RECT tabsPos = MakeRect(8, 8, 320, fontDy + 8);
     g_tabsCtrl = AllocTabsCtrl(hwnd, tabsPos);
     g_tabsCtrl->onTabSelected = OnTabSelected;

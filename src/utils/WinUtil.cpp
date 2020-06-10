@@ -986,6 +986,7 @@ Rect ChildPosWithinParent(HWND hwnd) {
     return rc;
 }
 
+// don't delete the font
 HFONT GetDefaultGuiFont() {
     if (gDefaultGuiFont) {
         return gDefaultGuiFont;
@@ -993,8 +994,17 @@ HFONT GetDefaultGuiFont() {
     NONCLIENTMETRICS ncm = {0};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
+    gDefaultGuiFont = CreateFontIndirectW(&ncm.lfMessageFont);
     return gDefaultGuiFont;
+}
+
+HFONT GetDefaultGuiFontOfSize(int size) {
+    NONCLIENTMETRICS ncm = {0};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    ncm.lfMessageFont.lfHeight = -size;
+    HFONT fnt = CreateFontIndirectW(&ncm.lfMessageFont);
+    return fnt;
 }
 
 // TODO: lfUnderline? lfStrikeOut?
@@ -1025,11 +1035,13 @@ HFONT GetDefaultGuiFont(bool bold, bool italic) {
     return *dest;
 }
 
-long GetDefaultGuiFontSize() {
+int GetSizeOfDefaultGuiFont() {
     NONCLIENTMETRICS ncm = {0};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    return -ncm.lfMessageFont.lfHeight;
+    int res = -ncm.lfMessageFont.lfHeight;
+    CrashIf(res <= 0);
+    return res;
 }
 
 DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect)
