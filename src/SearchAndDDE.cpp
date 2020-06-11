@@ -608,7 +608,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
         if (newWindow || !win) {
             LoadArgs args(pdfFile, !newWindow ? win : nullptr);
             win = LoadDocument(args);
-        } else if (win && !win->IsDocLoaded()) {
+        } else if (!win->IsDocLoaded()) {
             ReloadDocument(win, false);
         }
     } else {
@@ -677,7 +677,7 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
     if (newWindow || !win) {
         LoadArgs args(pdfFile, win);
         win = LoadDocument(args);
-    } else if (win && !win->IsDocLoaded()) {
+    } else if (!win->IsDocLoaded()) {
         ReloadDocument(win, false);
         forceRefresh = 0;
     }
@@ -831,10 +831,7 @@ static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
     }
 
     while (!str::IsEmpty(cmd)) {
-        const WCHAR* nextCmd = nullptr;
-        if (!nextCmd) {
-            nextCmd = HandleSyncCmd(cmd, ack);
-        }
+        const WCHAR* nextCmd = HandleSyncCmd(cmd, ack);
         if (!nextCmd) {
             nextCmd = HandleOpenCmd(cmd, ack);
         }

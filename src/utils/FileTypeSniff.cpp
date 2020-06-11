@@ -88,6 +88,9 @@ static Kind GetKindByFileExt(const WCHAR* path) {
         return nullptr;
     }
     CrashIf(idx >= (int)dimof(gExtsKind));
+    if (idx >= (int)dimof(gExtsKind)) {
+        return nullptr;
+    }
     return gExtsKind[idx];
 }
 

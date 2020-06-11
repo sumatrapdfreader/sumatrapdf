@@ -237,9 +237,11 @@ int Pdfsync::RebuildIndex() {
 
     // parse data
     UINT maxPageNo = engine->PageCount();
-    while ((line = Advance0Line(line, dataEnd)) != nullptr) {
-        if (!line)
+    while (true) {
+        line = Advance0Line(line, dataEnd);
+        if (!line) {
             break;
+        }
         switch (*line) {
             case 'l':
                 psline.file = filestack.Last();

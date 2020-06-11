@@ -135,7 +135,7 @@ static bool PalmdocUncompress(const char* src, size_t srcLen, str::Str& dst) {
             src += c;
         } else if (c < 128) {
             dst.AppendChar((char)c);
-        } else if ((c >= 128) && (c < 192)) {
+        } else if (c < 192) {
             if (src + 1 > srcEnd) {
                 return false;
             }
@@ -314,6 +314,16 @@ bool HuffDicDecompressor::Decompress(u8* src, size_t srcSize, str::Str& dst) {
     return true;
 }
 
+static void ReadHuffReader(HuffHeader& huffHdr, ByteOrderDecoder& d) {
+    d.Bytes(huffHdr.id, 4);
+    huffHdr.hdrLen = d.UInt32();
+    huffHdr.cacheOffset = d.UInt32();
+    huffHdr.baseTableOffset = d.UInt32();
+    huffHdr.cacheLEOffset = d.UInt32();
+    huffHdr.baseTableLEOffset = d.UInt32();
+    CrashIf(d.Offset() != kHuffHeaderLen);
+}
+
 bool HuffDicDecompressor::SetHuffData(u8* huffData, size_t huffDataLen) {
     // for now catch cases where we don't have both big endian and little endian
     // versions of the data
@@ -325,13 +335,7 @@ bool HuffDicDecompressor::SetHuffData(u8* huffData, size_t huffDataLen) {
 
     ByteOrderDecoder d(huffData, huffDataLen, ByteOrderDecoder::BigEndian);
     HuffHeader huffHdr;
-    d.Bytes(huffHdr.id, 4);
-    huffHdr.hdrLen = d.UInt32();
-    huffHdr.cacheOffset = d.UInt32();
-    huffHdr.baseTableOffset = d.UInt32();
-    huffHdr.cacheLEOffset = d.UInt32();
-    huffHdr.baseTableLEOffset = d.UInt32();
-    CrashIf(d.Offset() != kHuffHeaderLen);
+    ReadHuffReader(huffHdr, d);
 
     if (!str::EqN(huffHdr.id, "HUFF", 4)) {
         return false;

@@ -275,7 +275,7 @@ static TocTree* parseVbkm(std::string_view sv) {
     // this line should be "title: $title"
     auto title = sv::ParseValueOfKey(sv, "title", true);
     if (!title.ok) {
-        return false;
+        return nullptr;
     }
 #endif
     size_t indent = 0;
@@ -289,7 +289,7 @@ static TocTree* parseVbkm(std::string_view sv) {
         if (nPagesV.ok) {
             str::Parse(nPagesV.val, "%d", &nPages);
             if (nPages == 0) {
-                return false;
+                return nullptr;
             }
         }
 
