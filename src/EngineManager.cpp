@@ -164,20 +164,22 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         if (IsPsEngineAvailable()) {
             engine = CreatePsEngineFromFile(path);
         }
-    }
-
-    if (enableChmEngine) {
+    } else if (enableChmEngine) {
         if (kind == kindFileChm) {
             engine = CreateChmEngineFromFile(path);
         }
     }
 
+    if (!enableEngineEbooks) {
+        return engine;
+    }
+
+    if (kind == kindFileEpub) {
+        engine = CreateEpubEngineFromFile(path);
+    }
+
     return engine;
     /*
-        } else if (!enableEngineEbooks) {
-            // don't try to create any of the below ebook engines
-        } else if (IsEpubEngineSupportedFile(path, sniff)) {
-            engine = CreateEpubEngineFromFile(path);
         } else if (IsFb2EngineSupportedFile(path, sniff)) {
             engine = CreateFb2EngineFromFile(path);
         } else if (IsMobiEngineSupportedFile(path, sniff)) {
@@ -194,7 +196,6 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
 
 EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine, bool enableEngineEbooks) {
     CrashIf(!path);
-
     Kind kind = FileTypeFromFileName(path);
     EngineBase* engine = CreateEngineForKind(kind, path, pwdUI, enableChmEngine, enableEngineEbooks);
     if (engine) {

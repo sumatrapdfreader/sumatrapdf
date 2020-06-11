@@ -249,11 +249,11 @@ HtmlFormatter* Doc::CreateFormatter(HtmlFormatterArgs* args) const {
 
 Doc Doc::CreateFromFile(const WCHAR* filePath) {
     Doc doc;
-    if (EpubDoc::IsSupportedFile(filePath)) {
+    if (EpubDoc::IsSupportedFile(filePath, true)) {
         doc = Doc(EpubDoc::CreateFromFile(filePath));
-    } else if (Fb2Doc::IsSupportedFile(filePath)) {
+    } else if (Fb2Doc::IsSupportedFile(filePath, true)) {
         doc = Doc(Fb2Doc::CreateFromFile(filePath));
-    } else if (MobiDoc::IsSupportedFile(filePath)) {
+    } else if (MobiDoc::IsSupportedFile(filePath, true)) {
         doc = Doc(MobiDoc::CreateFromFile(filePath));
         // MobiDoc is also used for loading PalmDoc - don't expose that to Doc users, though
         if (doc.mobiDoc && doc.mobiDoc->GetDocType() != PdbDocType::Mobipocket) {
@@ -274,13 +274,24 @@ Doc Doc::CreateFromFile(const WCHAR* filePath) {
         doc.error = DocError::Unknown;
         doc.filePath.SetCopy(filePath);
     } else {
-        CrashIf(!Doc::IsSupportedFile(filePath));
+        CrashIf(!Doc::IsSupportedFile(filePath, true));
     }
     CrashIf(!doc.generic && !doc.IsNone());
     return doc;
 }
 
 bool Doc::IsSupportedFile(const WCHAR* filePath, bool sniff) {
-    return EpubDoc::IsSupportedFile(filePath, sniff) || Fb2Doc::IsSupportedFile(filePath, sniff) ||
-           MobiDoc::IsSupportedFile(filePath, sniff) || PalmDoc::IsSupportedFile(filePath, sniff);
+    if (EpubDoc::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (Fb2Doc::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (MobiDoc::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (PalmDoc::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    return false;
 }

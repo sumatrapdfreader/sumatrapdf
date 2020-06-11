@@ -706,11 +706,8 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     return ParseNavToc(tocData, tocDataLen, pagePath.Get(), visitor);
 }
 
-bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (!sniff) {
-        return str::EndsWithI(fileName, L".epub");
-    }
-    AutoDelete<MultiFormatArchive> archive = OpenZipArchive(fileName, true);
+bool IsEpubFile(const WCHAR* path) {
+    AutoDelete<MultiFormatArchive> archive = OpenZipArchive(path, true);
     if (!archive.get()) {
         return false;
     }
@@ -731,14 +728,23 @@ bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     /* cf. http://forums.fofou.org/sumatrapdf/topic?id=2599331
     if (!str::Eq(zip.GetFileName(0), L"mimetype"))
         return false; */
-    return str::Eq(mimetype.data, "application/epub+zip") ||
-           // also open renamed .ibooks files
-           // cf. http://en.wikipedia.org/wiki/IBooks#Formats
-           str::Eq(mimetype.data, "application/x-ibooks+zip");
+    if (str::Eq(mimetype.data, "application/epub+zip")) {
+        return true;
+    }
+    // also open renamed .ibooks files
+    // cf. http://en.wikipedia.org/wiki/IBooks#Formats
+    return str::Eq(mimetype.data, "application/x-ibooks+zip");
 }
 
-EpubDoc* EpubDoc::CreateFromFile(const WCHAR* fileName) {
-    EpubDoc* doc = new EpubDoc(fileName);
+bool EpubDoc::IsSupportedFile(const WCHAR* path, bool sniff) {
+    if (sniff) {
+        return IsEpubFile(path);
+    }
+    return str::EndsWithI(path, L".epub");
+}
+
+EpubDoc* EpubDoc::CreateFromFile(const WCHAR* path) {
+    EpubDoc* doc = new EpubDoc(path);
     if (!doc || !doc->Load()) {
         delete doc;
         return nullptr;

@@ -15,6 +15,7 @@ extern bool IsEngineMultiFileName(const WCHAR* path);
 extern bool IsXpsArchive(const WCHAR* path);
 extern bool IsDjVuFileName(const WCHAR* path);
 extern bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff);
+extern bool IsEpubFile(const WCHAR* path);
 
 // TODO: replace with an enum class FileKind { Unknown, PDF, ... };
 Kind kindFilePDF = "filePDF";
@@ -44,6 +45,7 @@ Kind kindFile7Z = "file7Z";
 Kind kindFileTar = "fileTar";
 Kind kindFileFb2 = "fileFb2";
 Kind kindFileDir = "fileDir";
+Kind kindFileEpub = "fileEpub";
 
 // .fb2.zip etc. must be first so that it isn't classified as .zip
 static const char* gFileExts =
@@ -77,6 +79,7 @@ static const char* gFileExts =
     ".hdp\0"
     ".wdp\0"
     ".webp\0"
+    ".epub\0"
     ".jp2\0"
     "\0";
 
@@ -84,7 +87,7 @@ static Kind gExtsKind[] = {
     kindFileFb2, kindFilePS,  kindFilePS,  kindFilePS,   kindFileVbkm, kindFileFb2,  kindFileCbz,  kindFileCbr,
     kindFileCb7, kindFileCbt, kindFileZip, kindFileRar,  kindFile7Z,   kindFileTar,  kindFilePDF,  kindFileXps,
     kindFileXps, kindFileChm, kindFilePng, kindFileJpeg, kindFileJpeg, kindFileGif,  kindFileTiff, kindFileTiff,
-    kindFileBmp, kindFileTga, kindFileJxr, kindFileHdp,  kindFileWdp,  kindFileWebp, kindFileJp2,
+    kindFileBmp, kindFileTga, kindFileJxr, kindFileHdp,  kindFileWdp,  kindFileWebp, kindFileEpub, kindFileJp2,
 };
 
 static Kind GetKindByFileExt(const WCHAR* path) {
@@ -148,7 +151,7 @@ bool IsCbxEngineKind(Kind kind) {
     V("Rar!\x1A\x07\x01\x00", kindFileRar) \
     V("7z\xBC\xAF\x27\x1C", kindFile7Z)    \
     V("PK\x03\x04", kindFileZip)           \
-    V("ITSF", kindFileChm)                     \
+    V("ITSF", kindFileChm)                 \
     V("AT&T", kindFileDjVu)
 
 struct FileSig {
@@ -211,7 +214,11 @@ Kind SniffFileType(const WCHAR* path) {
     CrashIf(!path);
 
     if (path::IsDirectory(path)) {
-        // TODO: should this check the content of directory?
+        AutoFreeWstr mimetypePath(path::Join(path, L"mimetype"));
+        if (file::StartsWith(mimetypePath, "application/epub+zip")) {
+            return kindFileEpub;
+        }
+        // TODO: check the content of directory for more types?
         return nullptr;
     }
 
@@ -225,6 +232,9 @@ Kind SniffFileType(const WCHAR* path) {
     if (res == kindFileZip) {
         if (IsXpsArchive(path)) {
             res = kindFileXps;
+        }
+        if (IsEpubFile(path)) {
+            res = kindFileEpub;
         }
     }
     return res;
