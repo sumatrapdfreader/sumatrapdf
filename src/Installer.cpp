@@ -720,10 +720,6 @@ static void OnCreateWindow(HWND hwnd) {
     // build options controls going from the bottom
     y -= (staticDy + WINDOW_MARGIN);
 
-    AutoFreeWstr defaultViewer(GetDefaultPdfViewer());
-    const WCHAR* appName = GetAppName();
-    BOOL hasOtherViewer = !str::EqI(defaultViewer, appName);
-
     // only show this checkbox if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
     if (IsProcessAndOsArchSame()) {
@@ -744,6 +740,10 @@ static void OnCreateWindow(HWND hwnd) {
     }
 
 #if ENABLE_REGISTER_DEFAULT
+    AutoFreeWstr defaultViewer(GetDefaultPdfViewer());
+    const WCHAR* appName = GetAppName();
+    BOOL hasOtherViewer = !str::EqI(defaultViewer, appName);
+
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
     // only show the checbox if Sumatra is not already a default viewer.
     // the alternative (disabling the checkbox) is more confusing

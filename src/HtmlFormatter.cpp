@@ -804,9 +804,16 @@ void HtmlFormatter::HandleTagP(HtmlToken* t, bool isDiv) {
             align = GetAlignAttr(t, align);
         }
         if (rule.textIndentUnit != StyleRule::inherit && rule.textIndent > 0) {
-            float factor = rule.textIndentUnit == StyleRule::em
-                               ? CurrFont()->GetSize()
-                               : rule.textIndentUnit == StyleRule::pt ? 1 /* TODO: take DPI into account */ : 1;
+            float factor = CurrFont()->GetSize();
+            if (rule.textIndentUnit != StyleRule::em) {
+                factor = 1;
+#if 0
+                if (rule.textIndentUnit == StyleRule::pt) {
+                    /* TODO: take DPI into account */
+                    factor = 1;
+                }
+#endif
+            }
             indent = rule.textIndent * factor;
         }
 
@@ -1322,7 +1329,6 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
     // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
     // draw, so first draw text and then paint everything else
     textDraw->SetTextColor(textColor);
-    Status status = Ok;
     auto t = TimeGet();
     textDraw->Lock();
     for (DrawInstr& i : *drawInstructions) {
@@ -1341,9 +1347,12 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
             break;
     }
     textDraw->Unlock();
-    double dur = TimeSinceInMs(t);
-    // logf("DrawHtmlPage: textDraw %.2f ms\n", dur);
+    if (false) {
+        double dur = TimeSinceInMs(t);
+        logf("DrawHtmlPage: textDraw %.2f ms\n", dur);
+    }
 
+    Status status;
     for (DrawInstr& i : *drawInstructions) {
         RectF bbox = i.bbox;
         bbox.X += offX;

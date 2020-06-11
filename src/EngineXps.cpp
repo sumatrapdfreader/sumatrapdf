@@ -11,6 +11,7 @@ extern "C" {
 #include "utils/Archive.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "utils/TrivialHtmlParser.h"
@@ -998,8 +999,6 @@ bool IsXpsDirectory(const WCHAR* path) {
     AutoFreeWstr relsPath(path::Join(path, L"_rels\\.rels"));
     return file::Exists(relsPath) || dir::Exists(relsPath);
 }
-
-#include "utils/FileTypeSniff.h"
 
 bool IsXpsFileName(const WCHAR* path) {
     Kind kind = FileTypeFromFileName(path);
