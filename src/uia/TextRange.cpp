@@ -751,6 +751,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL alig
     if (!document->IsDocumentLoaded())
         return E_FAIL;
 
+#if 0
     // extract target location
     int target_page, target_idx;
     if (IsNullRange()) {
@@ -763,6 +764,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL alig
         target_page = endPage;
         target_idx = endGlyph;
     }
+#endif
 
     // TODO: Scroll to target_page, target_idx
     // document->GetDM()->ScrollYTo()

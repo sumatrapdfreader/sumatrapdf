@@ -175,7 +175,7 @@ static void CreateMainLayout(HWND hwnd) {
 
     {
         auto l = CreateCheckbox(hwnd, "checkbox one");
-        auto elInfo = vbox->AddChild(l, 0);
+        vbox->AddChild(l, 0);
     }
 
     {

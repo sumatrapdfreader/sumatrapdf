@@ -184,20 +184,22 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
         fprintf(stderr, msg "\n", __VA_ARGS__); \
         return errorStep;                       \
     }                                           \
-    errorStep++
 
 int mainVerify(const WCHAR* archivePath) {
     int errorStep = 1;
     AutoFree fileData(file::ReadFile(archivePath));
     FailIf(!fileData.data, "Failed to read \"%S\"", archivePath);
+    errorStep++;
 
     lzma::SimpleArchive lzsa;
     bool ok = lzma::ParseSimpleArchive(fileData.data, fileData.size(), &lzsa);
     FailIf(!ok, "\"%S\" is no valid LzSA file", archivePath);
+    errorStep++;
 
     for (int i = 0; i < lzsa.filesCount; i++) {
         AutoFree data(lzma::GetFileDataByIdx(&lzsa, i, nullptr));
         FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name);
+        errorStep++;
     }
 
     printf("Verified all %d archive entries\n", lzsa.filesCount);
@@ -223,6 +225,7 @@ int main(int argc, char** argv) {
 
     FailIf(args.size() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]",
            path::GetBaseNameNoFree(args.at(0)));
+    errorStep++;
 
     bool ok = lzsa::CreateArchive(args.at(1), args, 2);
     FailIf(!ok, "Failed to create \"%S\"", args.at(1));

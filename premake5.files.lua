@@ -12,6 +12,7 @@ function makelzsa_files()
   files_in_dir("src/utils", {
     "BaseUtil.*",
     "ByteOrderDecoder.*",
+    "ByteWriter.*",
     "ColorUtil.*",
     "CmdLineParser.*",
     "Dpi.*",

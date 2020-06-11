@@ -15,6 +15,9 @@
     <ClInclude Include="..\src\utils\ByteOrderDecoder.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\ByteWriter.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\CmdLineParser.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -57,6 +60,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\ByteWriter.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\CmdLineParser.cpp">
