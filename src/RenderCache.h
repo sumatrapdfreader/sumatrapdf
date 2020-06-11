@@ -105,6 +105,8 @@ class RenderCache {
     COLORREF backgroundColor = 0;
 
     RenderCache();
+    RenderCache(RenderCache const&) = delete;
+    RenderCache& operator=(RenderCache const&) = delete;
     ~RenderCache();
 
     void RequestRendering(DisplayModel* dm, int pageNo);

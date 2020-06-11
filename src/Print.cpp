@@ -382,6 +382,14 @@ class PrintThreadData : public ProgressUpdateUI {
         // multiple printing notifications could coexist between tabs
         win->notifications->Add(wnd, 0);
     }
+    PrintThreadData(PrintThreadData const&) = delete;
+    PrintThreadData& operator=(PrintThreadData const&) = delete;
+
+    ~PrintThreadData() {
+        CloseHandle(thread);
+        delete data;
+        RemoveNotification(wnd);
+    }
 
     // called when printing has been canceled
     void RemoveNotification(NotificationWnd* wnd) {
@@ -391,12 +399,6 @@ class PrintThreadData : public ProgressUpdateUI {
         if (WindowInfoStillValid(win)) {
             win->notifications->RemoveNotification(wnd);
         }
-    }
-
-    ~PrintThreadData() {
-        CloseHandle(thread);
-        delete data;
-        RemoveNotification(wnd);
     }
 
     void UpdateProgress(int current, int total) override {

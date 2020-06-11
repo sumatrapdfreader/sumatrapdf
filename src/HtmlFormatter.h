@@ -314,6 +314,8 @@ class HtmlFormatter {
 
   public:
     explicit HtmlFormatter(HtmlFormatterArgs* args);
+    HtmlFormatter(HtmlFormatter const&) = delete;
+    HtmlFormatter& operator=(HtmlFormatter const&) = delete;
     virtual ~HtmlFormatter();
 
     HtmlPage* Next(bool skipEmptyPages = true);

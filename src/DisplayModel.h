@@ -69,6 +69,9 @@ class Synchronizer;
 class DisplayModel : public Controller {
   public:
     DisplayModel(EngineBase* engine, ControllerCallback* cb);
+    DisplayModel(DisplayModel const&) = delete;
+    DisplayModel& operator=(DisplayModel const&) = delete;
+
     ~DisplayModel();
 
     // meta data
