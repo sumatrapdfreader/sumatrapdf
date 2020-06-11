@@ -18,11 +18,6 @@ extern "C" {
 // 3 is for absolute worst case of WCHAR* where last char was partially written
 #define ZERO_PADDING_COUNT 3
 
-// for debugging of unrar.dll fallback, if set to true we'll try to
-// open .rar files using unrar.dll (otherwise it only happens if unarr
-// fails to open
-static bool tryUnrarDllFirst = true;
-
 #if OS_WIN
 FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
     FILETIME ft = {(DWORD)-1, (DWORD)-1};
@@ -41,7 +36,7 @@ bool MultiFormatArchive::Open(ar_stream* data, const char* archivePath) {
     if (!data) {
         return false;
     }
-    if ((format == Format::Rar) && archivePath && tryUnrarDllFirst) {
+    if ((format == Format::Rar) && archivePath) {
         bool ok = OpenUnrarFallback(archivePath);
         if (ok) {
             return true;
