@@ -9,7 +9,8 @@
 
 // TODO: move those functions here
 extern bool IsPdfFileName(const WCHAR* path);
-extern bool IfPdfFileContent(std::span<u8> d);
+extern bool IsPdfFileContent(std::span<u8> d);
+extern bool IsPSFileContent(std::span<u8> d);
 extern bool IsEngineMultiFileName(const WCHAR* path);
 extern bool IsXpsArchive(const WCHAR* path);
 extern bool IsDjVuFileName(const WCHAR* path);
@@ -17,6 +18,7 @@ extern bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff);
 
 // TODO: replace with an enum class FileKind { Unknown, PDF, ... };
 Kind kindFilePDF = "filePDF";
+Kind kindFilePS = "filePS";
 Kind kindFileVbkm = "fileVbkm";
 Kind kindFileXps = "fileXPS";
 Kind kindFileDjVu = "fileDjVu";
@@ -43,7 +45,12 @@ Kind kindFileTar = "fileTar";
 Kind kindFileFb2 = "fileFb2";
 Kind kindFileDir = "fileDir";
 
+// .fb2.zip etc. must be first so that it isn't classified as .zip
 static const char* gFileExts =
+    ".fb2.zip\0"
+    ".ps.gz\0"
+    ".ps\0"
+    ".eps\0"
     ".vbkm\0"
     ".fb2\0"
     ".cbz\0"
@@ -70,9 +77,12 @@ static const char* gFileExts =
     ".hdp\0"
     ".wdp\0"
     ".webp\0"
-    ".jp2\0";
+    ".jp2\0"
+    "\0";
 
 static Kind gExtsKind[] = {
+    kindFileFb2,
+    kindFilePS, kindFilePS,kindFilePS,
     kindFileVbkm, kindFileFb2,  kindFileCbz,  kindFileCbr, kindFileCb7,  kindFileCbt,  kindFileZip,
     kindFileRar,  kindFile7Z,   kindFileTar,  kindFilePDF, kindFileXps,  kindFileXps,  kindFileChm,
     kindFilePng,  kindFileJpeg, kindFileJpeg, kindFileGif, kindFileTiff, kindFileTiff, kindFileBmp,
@@ -81,17 +91,21 @@ static Kind gExtsKind[] = {
 
 static Kind GetKindByFileExt(const WCHAR* path) {
     AutoFree pathA = strconv::WstrToUtf8(path);
-    const char* ext = path::GetExtNoFree(pathA);
-    AutoFree extLower = str::ToLower(ext);
-    int idx = seqstrings::StrToIdx(gFileExts, extLower);
-    if (idx < 0) {
-        return nullptr;
+    int idx = 0;
+    const char* curr = gFileExts;
+    while (curr && *curr) {
+        if (str::EndsWithI(pathA.Get(), curr)) {
+            int n =(int)dimof(gExtsKind);
+            CrashIf(idx >= n);
+            if (idx >= n) {
+                return nullptr;
+            }
+            return gExtsKind[idx];
+        }
+        curr = seqstrings::SkipStr(curr);
+        idx++;
     }
-    CrashIf(idx >= (int)dimof(gExtsKind));
-    if (idx >= (int)dimof(gExtsKind)) {
-        return nullptr;
-    }
-    return gExtsKind[idx];
+    return nullptr;
 }
 
 static bool gDidCheckExtsMatch = false;
@@ -151,12 +165,14 @@ static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
 #undef MK_SIG
 
 // detect file type based on file content
+// we don't support sniffing kindFileVbkm
 Kind SniffFileTypeFromData(std::span<u8> d) {
-    if (IfPdfFileContent(d)) {
+    if (IsPdfFileContent(d)) {
         return kindFilePDF;
     }
-    // we don't support sniffing kindFileVbkm
-
+    if (IsPSFileContent(d)) {
+        return kindFilePS;
+    }
     u8* data = d.data();
     size_t len = d.size();
     ImgFormat fmt = GfxFormatFromData(d);
@@ -200,8 +216,9 @@ Kind SniffFileType(const WCHAR* path) {
         return nullptr;
     }
 
-    char buf[1024] = {0};
-    int n = file::ReadN(path, buf, dimof(buf));
+    // +1 for zero-termination
+    char buf[2048+1] = {0};
+    int n = file::ReadN(path, buf, dimof(buf)-1);
     if (n <= 0) {
         return nullptr;
     }
@@ -222,10 +239,6 @@ Kind FileTypeFromFileName(const WCHAR* path) {
     }
     if (path::IsDirectory(path)) {
         return kindFileDir;
-    }
-    // must be called before GetKindByFileExt() as that will detect. zip
-    if (str::EndsWithI(path, L".fb2.zip")) {
-        return kindFileFb2;
     }
     Kind res = GetKindByFileExt(path);
     if (res != nullptr) {

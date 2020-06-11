@@ -3,6 +3,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 extern Kind kindFilePDF;
+extern Kind kindFilePS;
 extern Kind kindFileMulti;
 extern Kind kindFileXps;
 extern Kind kindFileDjVu;

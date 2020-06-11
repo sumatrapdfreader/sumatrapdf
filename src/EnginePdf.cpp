@@ -2194,7 +2194,7 @@ bool IsPdfFileName(const WCHAR* path) {
 }
 
 // PDF files have %PDF-${ver} somewhere in the beginning of the file
-bool IfPdfFileContent(std::span<u8> d) {
+bool IsPdfFileContent(std::span<u8> d) {
     if (d.size() < 8) {
         return false;
     }
@@ -2222,7 +2222,7 @@ bool IsEnginePdfSupportedFile(const WCHAR* path, bool sniff) {
         if (n < 5) {
             return false;
         }
-        return IfPdfFileContent({(u8*)header, (size_t)n});
+        return IsPdfFileContent({(u8*)header, (size_t)n});
     }
     return IsPdfFileName(path);
 }

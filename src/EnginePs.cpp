@@ -379,22 +379,45 @@ bool IsPsEngineAvailable() {
     return gswin32c.Get() != nullptr;
 }
 
+bool IsPSFileContent(std::span<u8> d) {
+    char* header = (char*)d.data();
+    size_t n = d.size();
+    if (n < 64) {
+        return false;
+    }
+    // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
+    if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
+        DWORD psStart = ByteReader(d).DWordLE(4);
+        return psStart >= n - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
+    }
+    if (str::StartsWith(header, "%!PS-Adobe-")) {
+        return true;
+    }
+    // PJL (Printer Job Language) files containing Postscript data
+    // https://developers.hp.com/system/files/PJL_Technical_Reference_Manual.pdf
+    bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
+    if (isPJL) {
+        // TODO: use something else other than str::Find() so that it works even if header is not null-terminated
+        const char* hdr = str::Find(header, "\n%!PS-Adobe-");
+        if (!hdr) {
+            isPJL = false;
+        }
+    }
+    return isPJL;
+}
+
 bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (!IsPsEngineAvailable()) {
         return false;
     }
-
     if (sniff) {
-        char header[2048];
-        file::ReadN(fileName, header, sizeof(header) - 1);
-        if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
-            // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
-            DWORD psStart = ByteReader(header, sizeof(header)).DWordLE(4);
-            return psStart >= sizeof(header) - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
+        // +1 for zero-termination
+        char header[2048+1] = {0};
+        int n = file::ReadN(fileName, header, sizeof(header));
+        if (n <= 0) {
+            return false;
         }
-        return str::StartsWith(header, "%!") ||
-               // also sniff PJL (Printer Job Language) files containing Postscript data
-               str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find((char*)header, "\n%!PS-Adobe-");
+        return IsPSFileContent({(u8*)header, (size_t)n});
     }
 
     return str::EndsWithI(fileName, L".ps") || str::EndsWithI(fileName, L".ps.gz") || str::EndsWithI(fileName, L".eps");

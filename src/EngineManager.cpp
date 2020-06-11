@@ -151,7 +151,8 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         if (IsXpsDirectory(path)) {
             engine = CreateXpsEngineFromFile(path);
         }
-        if (false && !engine && gIsRaMicroBuild) {
+        // in ra-micro builds, prioritize opening folders as multiple PDFs
+        if (!engine && gIsRaMicroBuild) {
             engine = CreateEngineMultiFromFile(path, pwdUI);
         }
         if (!engine) {
@@ -159,12 +160,15 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         }
     } else if (IsCbxEngineKind(kind)) {
         engine = CreateCbxEngineFromFile(path);
+    } else if (kind == kindFilePS) {
+        if (IsPsEngineAvailable()) {
+            engine = CreatePsEngineFromFile(path);
+        }
+
     }
 
     return engine;
     /*
-        } else if (IsPsEngineSupportedFile(path, sniff)) {
-            engine = CreatePsEngineFromFile(path);
         } else if (enableChmEngine && IsChmEngineSupportedFile(path, sniff)) {
             engine = CreateChmEngineFromFile(path);
         } else if (!enableEngineEbooks) {

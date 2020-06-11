@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 bool IsPdfFileName(const WCHAR* path);
-bool IfPdfFileContent(std::span<u8> d);
+bool IsPdfFileContent(std::span<u8> d);
 
 bool IsEnginePdfSupportedFile(const WCHAR* path, bool sniff = false);
 EngineBase* CreateEnginePdfFromFile(const WCHAR* path, PasswordUI* pwdUI = nullptr);
