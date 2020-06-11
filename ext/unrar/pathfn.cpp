@@ -170,14 +170,17 @@ int GetPathDisk(const wchar *Path)
 void AddEndSlash(wchar *Path,size_t MaxLength)
 {
   size_t Length=wcslen(Path);
-  if (Length>0 && Path[Length-1]!=CPATHDIVIDER)
-    wcsncatz(Path,SPATHDIVIDER,MaxLength);
+  if (Length>0 && Path[Length-1]!=CPATHDIVIDER && Length+1<MaxLength)
+  {
+    Path[Length]=CPATHDIVIDER;
+    Path[Length+1]=0;
+  }
 }
 
 
 void MakeName(const wchar *Path,const wchar *Name,wchar *Pathname,size_t MaxSize)
 {
-  // 'Name' and 'Pathname' can point to same memory area. This is why we use
+  // 'Path', 'Name' and 'Pathname' can point to same memory area. So we use
   // the temporary buffer instead of constructing the name in 'Pathname'.
   wchar OutName[NM];
   wcsncpyz(OutName,Path,ASIZE(OutName));

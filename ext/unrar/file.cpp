@@ -401,7 +401,7 @@ int File::Read(void *Data,size_t Size)
     }
     break;
   }
-  return ReadSize;
+  return ReadSize; // It can return -1 only if AllowExceptions is disabled.
 }
 
 
@@ -684,9 +684,11 @@ void File::GetOpenFileTime(RarTime *ft)
 
 int64 File::FileLength()
 {
-  SaveFilePos SavePos(*this);
+  int64 SavePos=Tell();
   Seek(0,SEEK_END);
-  return Tell();
+  int64 Length=Tell();
+  Seek(SavePos,SEEK_SET);
+  return Length;
 }
 
 

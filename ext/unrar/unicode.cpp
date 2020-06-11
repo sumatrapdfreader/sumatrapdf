@@ -654,3 +654,5 @@ char* SupportDBCS::strrchrd(const char *s, int c)
   return((char *)found);
 }
 #endif
+
+

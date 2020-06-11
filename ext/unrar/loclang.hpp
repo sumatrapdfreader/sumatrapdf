@@ -359,6 +359,7 @@
 #define   MNewerRAR          L"\nYou may need a newer version of RAR."
 #define   MUnkEncMethod      L"\nUnknown encryption method in %s"
 #define   MWrongPassword     L"\nThe specified password is incorrect."
+#define   MWrongFilePassword L"\nIncorrect password for %s"
 #define   MAreaDamaged       L"\nCorrupt %d bytes at %08x %08x"
 #define   MBlocksRecovered   L"\n%u blocks are recovered, %u blocks are relocated"
 #define   MRRDamaged         L"\nRecovery record is corrupt."
@@ -378,3 +379,4 @@
 #define   MNeedAdmin         L"\nYou may need to run RAR as administrator"
 #define   MDictOutMem        L"\nNot enough memory for %d MB compression dictionary, changed to %d MB."
 #define   MUseSmalllerDict   L"\nPlease use a smaller compression dictionary."
+#define   MOpenErrAtime      L"\nYou may need to remove -tsp switch to open this file."

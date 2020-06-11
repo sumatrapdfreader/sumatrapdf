@@ -37,6 +37,7 @@ class Archive:public File
     void UnexpEndArcMsg();
     void BrokenHeaderMsg();
     void UnkEncVerMsg(const wchar *Name,const wchar *Info);
+    bool DoGetComment(Array<wchar> *CmtData);
     bool ReadCommentData(Array<wchar> *CmtData);
 
 #if !defined(RAR_NOCRYPT)

@@ -39,7 +39,6 @@
 #include "filestr.hpp"
 #include "find.hpp"
 #include "scantree.hpp"
-#include "savepos.hpp"
 #include "getbits.hpp"
 #include "rdwrfn.hpp"
 #ifdef USE_QOPEN

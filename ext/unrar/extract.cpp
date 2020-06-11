@@ -40,6 +40,8 @@ void CmdExtract::DoExtract()
   {
     if (Cmd->ManualPassword)
       Cmd->Password.Clean(); // Clean user entered password before processing next archive.
+  
+    ReconstructDone=false; // Must be reset here, not in ExtractArchiveInit().
     while (true)
     {
       EXTRACT_ARC_CODE Code=ExtractArchive();
@@ -93,7 +95,6 @@ void CmdExtract::ExtractArchiveInit(Archive &Arc)
 
   PrevProcessed=false;
   AllMatchesExact=true;
-  ReconstructDone=false;
   AnySolidDataUnpackedWell=false;
 
   StartTime.SetCurrentTime();
@@ -479,13 +480,13 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
         {
           // This message is used by Android GUI to reset cached passwords.
           // Update appropriate code if changed.
-          uiMsg(UIERROR_BADPSW,ArcFileName);
+          uiMsg(UIERROR_BADPSW,Arc.FileName,ArcFileName);
         }
         else // For passwords entered manually.
         {
           // This message is used by Android GUI and Windows GUI and SFX to
           // reset cached passwords. Update appropriate code if changed.
-          uiMsg(UIWAIT_BADPSW,ArcFileName);
+          uiMsg(UIWAIT_BADPSW,Arc.FileName,ArcFileName);
           Cmd->Password.Clean();
 
           // Avoid new requests for unrar.dll to prevent the infinite loop

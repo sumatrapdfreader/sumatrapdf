@@ -63,4 +63,5 @@ inline void InitDBCS() {gdbcs.Init();}
 inline void copychrd(char *dest,const char *src) {*dest=*src;}
 #endif
 
+
 #endif

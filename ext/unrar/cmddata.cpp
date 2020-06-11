@@ -953,7 +953,6 @@ void CommandData::ProcessCommand()
     case 'X':
     case 'E':
     case 'T':
-    case 'I':
       {
         CmdExtract Extract(this);
         Extract.DoExtract();

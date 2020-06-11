@@ -2,6 +2,8 @@
 
 
 
+
+
 #ifndef RARDLL
 const wchar *St(MSGID StringId)
 {

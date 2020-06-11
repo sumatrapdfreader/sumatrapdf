@@ -158,6 +158,7 @@ void ErrorHandler::OpenErrorMsg(const wchar *FileName)
 
 void ErrorHandler::OpenErrorMsg(const wchar *ArcName,const wchar *FileName)
 {
+  Wait(); // Keep GUI responsive if many files cannot be opened when archiving.
   uiMsg(UIERROR_FILEOPEN,ArcName,FileName);
   SysErrMsg();
   SetErrorCode(RARX_OPEN);

@@ -53,5 +53,5 @@ mujs            1.0.6      Apr 4, 2019
 ../mupdf        trunk
   https://github.com/ArtifexSoftware/mupdf/commit/c27c17d7bb7bb0ea768724d6dbf9133764c02dd2
 
-UnRAR           5.8.4
+UnRAR           5.9.3
   https://www.rarlab.com/rar_add.htm

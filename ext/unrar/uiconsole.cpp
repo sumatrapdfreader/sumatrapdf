@@ -99,6 +99,8 @@ void uiMsgStore::Msg()
       Log(Str[0],St(MDataBadCRC),Str[1],Str[0]);
       break;
     case UIERROR_BADPSW:
+      Log(Str[0],St(MWrongFilePassword),Str[1]);
+      break;
     case UIWAIT_BADPSW:
       Log(Str[0],St(MWrongPassword));
       break;
