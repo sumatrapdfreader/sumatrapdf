@@ -14,7 +14,7 @@ enum class ImgFormat {
     JP2,
 };
 
-ImgFormat GfxFormatFromData(const u8* data, size_t len);
+ImgFormat GfxFormatFromData(std::span<u8>);
 
 typedef Gdiplus::RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
 

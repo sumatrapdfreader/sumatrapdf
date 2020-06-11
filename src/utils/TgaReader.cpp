@@ -164,7 +164,9 @@ static ImageAlpha GetAlphaType(const u8* data, size_t len) {
 }
 
 // checks whether this could be data for a TGA image
-bool HasSignature(const u8* data, size_t len) {
+bool HasSignature(std::span<u8> d) {
+    size_t len = d.size();
+    const u8* data = (const u8*)d.data();
     if (HasVersion2Footer(data, len))
         return true;
     // fall back to checking for values that would be valid for a TGA image

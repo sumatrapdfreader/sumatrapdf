@@ -321,11 +321,12 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-ImgFormat GfxFormatFromData(const u8* data, size_t len) {
-    if (!data || len < 12) {
+ImgFormat GfxFormatFromData(std::span<u8> d) {
+    if (d.empty() || d.size() < 12) {
         return ImgFormat::Unknown;
     }
     // check the most common formats first
+    char* data = (char*)d.data();
     if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
         return ImgFormat::PNG;
     }
@@ -341,13 +342,13 @@ ImgFormat GfxFormatFromData(const u8* data, size_t len) {
     if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4)) {
         return ImgFormat::TIFF;
     }
-    if (tga::HasSignature(data, len)) {
+    if (tga::HasSignature(d)) {
         return ImgFormat::TGA;
     }
     if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4)) {
         return ImgFormat::JXR;
     }
-    if (webp::HasSignature(data, len)) {
+    if (webp::HasSignature(d)) {
         return ImgFormat::WebP;
     }
     if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
@@ -357,7 +358,8 @@ ImgFormat GfxFormatFromData(const u8* data, size_t len) {
 }
 
 const WCHAR* GfxFileExtFromData(const u8* data, size_t len) {
-    switch (GfxFormatFromData(data, len)) {
+    auto fmt = GfxFormatFromData({(u8*)data, len});
+    switch (fmt) {
         case ImgFormat::BMP:
             return L".bmp";
         case ImgFormat::GIF:
@@ -383,7 +385,7 @@ const WCHAR* GfxFileExtFromData(const u8* data, size_t len) {
 
 // Windows' JPEG codec doesn't support arithmetic coding
 static bool JpegUsesArithmeticCoding(const u8* data, size_t len) {
-    CrashIf(GfxFormatFromData(data, len) != ImgFormat::JPEG);
+    CrashIf(GfxFormatFromData({(u8*)data, len}) != ImgFormat::JPEG);
 
     ByteReader r(data, len);
     for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF; ix += r.WordBE(ix + 2) + 2) {
@@ -398,7 +400,7 @@ static bool JpegUsesArithmeticCoding(const u8* data, size_t len) {
 // Windows' PNG codec fails to handle an edge case, resulting in
 // an infinite loop (cf. http://cxsecurity.com/issue/WLB-2014080021 )
 static bool PngRequiresPresetDict(const u8* data, size_t len) {
-    CrashIf(GfxFormatFromData(data, len) != ImgFormat::PNG);
+    CrashIf(GfxFormatFromData({(u8*)data, len}) != ImgFormat::PNG);
 
     ByteReader r(data, len);
     for (size_t ix = 8; ix + 12 < len && r.DWordBE(ix) < len - ix - 12; ix += r.DWordBE(ix) + 12) {
@@ -413,7 +415,7 @@ static bool PngRequiresPresetDict(const u8* data, size_t len) {
 }
 
 bool IsGdiPlusNativeFormat(const u8* data, size_t len) {
-    ImgFormat fmt = GfxFormatFromData(data, len);
+    ImgFormat fmt = GfxFormatFromData({(u8*)data, len});
     return ImgFormat::BMP == fmt || ImgFormat::GIF == fmt || ImgFormat::TIFF == fmt ||
            (ImgFormat::JPEG == fmt && !JpegUsesArithmeticCoding(data, len)) ||
            (ImgFormat::PNG == fmt && !PngRequiresPresetDict(data, len));
@@ -421,7 +423,7 @@ bool IsGdiPlusNativeFormat(const u8* data, size_t len) {
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap* BitmapFromData(const u8* data, size_t len) {
-    ImgFormat format = GfxFormatFromData(data, len);
+    ImgFormat format = GfxFormatFromData({(u8*)data, len});
     if (ImgFormat::TGA == format) {
         return tga::ImageFromData(data, len);
     }
@@ -464,7 +466,7 @@ Bitmap* BitmapFromData(const u8* data, size_t len) {
 Gdiplus::Size BitmapSizeFromData(const u8* data, size_t len) {
     Gdiplus::Size result;
     ByteReader r(data, len);
-    switch (GfxFormatFromData(data, len)) {
+    switch (GfxFormatFromData({(u8*)data, len})) {
         case ImgFormat::BMP:
             if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
                 BITMAPINFOHEADER bmi;

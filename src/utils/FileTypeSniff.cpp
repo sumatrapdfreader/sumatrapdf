@@ -32,7 +32,7 @@ Kind kindFileJp2 = "fileJp2";
 Kind SniffFileType(std::span<u8> d) {
     u8* data = d.data();
     size_t len = d.size();
-    ImgFormat fmt = GfxFormatFromData(data, len);
+    ImgFormat fmt = GfxFormatFromData(d);
     switch (fmt) {
         case ImgFormat::BMP:
             return kindFileBmp;
