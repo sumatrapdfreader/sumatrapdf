@@ -29,7 +29,7 @@ Notes on targets:
 
 Flags: https://github.com/google/sanitizers/wiki/SanitizerCommonFlags
 Can be set with env variable:
-* `ASAN_OPTIONS=allocator_may_return_null=1:verbosity=1:check_malloc_usable_size=false:suppressions="C:\Users\kjk\src\sumatrapdf\asan.supp"`
+* `ASAN_OPTIONS=halt_on_error=0:allocator_may_return_null=1:verbosity=2:check_malloc_usable_size=false:print_suppressions=true:suppressions="C:\Users\kjk\src\sumatrapdf\asan.supp"`
 
 In Visual Studio, this is in  `Debugging`, `Environment` section.
 
