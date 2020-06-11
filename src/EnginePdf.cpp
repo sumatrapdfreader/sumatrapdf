@@ -2168,12 +2168,12 @@ int EnginePdf::GetAnnotations(Vec<Annotation*>* annotsOut) {
     return nAnnots;
 }
 
-EngineBase* EnginePdf::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-    if (str::IsEmpty(fileName)) {
+EngineBase* EnginePdf::CreateFromFile(const WCHAR* path, PasswordUI* pwdUI) {
+    if (str::IsEmpty(path)) {
         return nullptr;
     }
     EnginePdf* engine = new EnginePdf();
-    if (!engine->Load(fileName, pwdUI)) {
+    if (!engine->Load(path, pwdUI)) {
         delete engine;
         return nullptr;
     }
@@ -2189,23 +2189,30 @@ EngineBase* EnginePdf::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
     return engine;
 }
 
-bool IsEnginePdfSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (sniff) {
-        char header[1024] = {0};
-        file::ReadN(fileName, header, sizeof(header));
-
-        for (int i = 0; i < sizeof(header) - 4; i++) {
-            if (str::EqN(header + i, "%PDF", 4))
-                return true;
-        }
-        return false;
-    }
-
-    return str::EndsWithI(fileName, L".pdf") || FindEmbedMarks(fileName);
+bool IsPdfFileName(const WCHAR* path) {
+    return str::EndsWithI(path, L".pdf") || FindEmbedMarks(path);
 }
 
-EngineBase* CreateEnginePdfFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-    return EnginePdf::CreateFromFile(fileName, pwdUI);
+bool IfPdfFileContent(std::span<u8> d) {
+    int n = (int)d.size();
+    char* header = (char*)d.data();
+    for (int i = 0; i < n - 4; i++) {
+        if (str::EqN(header + i, "%PDF", 4))
+            return true;
+    }
+    return false;
+}
+
+bool IsEnginePdfSupportedFile(const WCHAR* path, bool sniff) {
+    if (sniff) {
+        char header[1024] = {0};
+        file::ReadN(path, header, sizeof(header));
+    }
+    return IsPdfFileName(path);
+}
+
+EngineBase* CreateEnginePdfFromFile(const WCHAR* path, PasswordUI* pwdUI) {
+    return EnginePdf::CreateFromFile(path, pwdUI);
 }
 
 EngineBase* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI) {

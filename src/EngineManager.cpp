@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/FileTypeSniff.h"
 
 #include "wingui/TreeModel.h"
 
@@ -20,32 +21,32 @@
 
 namespace EngineManager {
 
-bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEngineEbooks) {
-    if (IsEnginePdfSupportedFile(filePath, sniff)) {
+bool IsSupportedFile(const WCHAR* path, bool sniff, bool enableEngineEbooks) {
+    if (IsEnginePdfSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsEngineMultiSupportedFile(filePath, sniff)) {
+    if (IsEngineMultiSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsXpsEngineSupportedFile(filePath, sniff)) {
+    if (IsXpsEngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsDjVuEngineSupportedFile(filePath, sniff)) {
+    if (IsDjVuEngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsImageDirEngineSupportedFile(filePath, sniff)) {
+    if (IsImageDirEngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsCbxEngineSupportedFile(filePath, sniff)) {
+    if (IsCbxEngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsEnginePdfSupportedFile(filePath, sniff)) {
+    if (IsEnginePdfSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsPsEngineSupportedFile(filePath, sniff)) {
+    if (IsPsEngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsChmEngineSupportedFile(filePath, sniff)) {
+    if (IsChmEngineSupportedFile(path, sniff)) {
         return true;
     }
 
@@ -53,65 +54,66 @@ bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEngineEbooks)
         return false;
     }
 
-    if (IsEpubEngineSupportedFile(filePath, sniff)) {
+    if (IsEpubEngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsFb2EngineSupportedFile(filePath, sniff)) {
+    if (IsFb2EngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsMobiEngineSupportedFile(filePath, sniff)) {
+    if (IsMobiEngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsPdbEngineSupportedFile(filePath, sniff)) {
+    if (IsPdbEngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsHtmlEngineSupportedFile(filePath, sniff)) {
+    if (IsHtmlEngineSupportedFile(path, sniff)) {
         return true;
     }
-    if (IsTxtEngineSupportedFile(filePath, sniff)) {
+    if (IsTxtEngineSupportedFile(path, sniff)) {
         return true;
     }
     return false;
 }
 
-EngineBase* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableChmEngine, bool enableEngineEbooks) {
-    CrashIf(!filePath);
+static EngineBase* CreateEngineOld(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine,
+                                   bool enableEngineEbooks) {
+    CrashIf(!path);
 
     EngineBase* engine = nullptr;
     bool sniff = false;
 RetrySniffing:
-    if (IsEnginePdfSupportedFile(filePath, sniff)) {
-        engine = CreateEnginePdfFromFile(filePath, pwdUI);
-    } else if (IsEngineMultiSupportedFile(filePath, sniff)) {
-        engine = CreateEngineMultiFromFile(filePath, pwdUI);
-    } else if (IsXpsEngineSupportedFile(filePath, sniff)) {
-        engine = CreateXpsEngineFromFile(filePath);
-    } else if (IsDjVuEngineSupportedFile(filePath, sniff)) {
-        engine = CreateDjVuEngineFromFile(filePath);
-    } else if (IsImageEngineSupportedFile(filePath, sniff)) {
-        engine = CreateImageEngineFromFile(filePath);
-    } else if (IsImageDirEngineSupportedFile(filePath, sniff)) {
-        engine = CreateImageDirEngineFromFile(filePath);
-    } else if (IsCbxEngineSupportedFile(filePath, sniff)) {
-        engine = CreateCbxEngineFromFile(filePath);
-    } else if (IsPsEngineSupportedFile(filePath, sniff)) {
-        engine = CreatePsEngineFromFile(filePath);
-    } else if (enableChmEngine && IsChmEngineSupportedFile(filePath, sniff)) {
-        engine = CreateChmEngineFromFile(filePath);
+    if (IsEnginePdfSupportedFile(path, sniff)) {
+        engine = CreateEnginePdfFromFile(path, pwdUI);
+    } else if (IsEngineMultiSupportedFile(path, sniff)) {
+        engine = CreateEngineMultiFromFile(path, pwdUI);
+    } else if (IsXpsEngineSupportedFile(path, sniff)) {
+        engine = CreateXpsEngineFromFile(path);
+    } else if (IsDjVuEngineSupportedFile(path, sniff)) {
+        engine = CreateDjVuEngineFromFile(path);
+    } else if (IsImageEngineSupportedFile(path, sniff)) {
+        engine = CreateImageEngineFromFile(path);
+    } else if (IsImageDirEngineSupportedFile(path, sniff)) {
+        engine = CreateImageDirEngineFromFile(path);
+    } else if (IsCbxEngineSupportedFile(path, sniff)) {
+        engine = CreateCbxEngineFromFile(path);
+    } else if (IsPsEngineSupportedFile(path, sniff)) {
+        engine = CreatePsEngineFromFile(path);
+    } else if (enableChmEngine && IsChmEngineSupportedFile(path, sniff)) {
+        engine = CreateChmEngineFromFile(path);
     } else if (!enableEngineEbooks) {
         // don't try to create any of the below ebook engines
-    } else if (IsEpubEngineSupportedFile(filePath, sniff)) {
-        engine = CreateEpubEngineFromFile(filePath);
-    } else if (IsFb2EngineSupportedFile(filePath, sniff)) {
-        engine = CreateFb2EngineFromFile(filePath);
-    } else if (IsMobiEngineSupportedFile(filePath, sniff)) {
-        engine = CreateMobiEngineFromFile(filePath);
-    } else if (IsPdbEngineSupportedFile(filePath, sniff)) {
-        engine = CreatePdbEngineFromFile(filePath);
-    } else if (IsHtmlEngineSupportedFile(filePath, sniff)) {
-        engine = CreateHtmlEngineFromFile(filePath);
-    } else if (IsTxtEngineSupportedFile(filePath, sniff)) {
-        engine = CreateTxtEngineFromFile(filePath);
+    } else if (IsEpubEngineSupportedFile(path, sniff)) {
+        engine = CreateEpubEngineFromFile(path);
+    } else if (IsFb2EngineSupportedFile(path, sniff)) {
+        engine = CreateFb2EngineFromFile(path);
+    } else if (IsMobiEngineSupportedFile(path, sniff)) {
+        engine = CreateMobiEngineFromFile(path);
+    } else if (IsPdbEngineSupportedFile(path, sniff)) {
+        engine = CreatePdbEngineFromFile(path);
+    } else if (IsHtmlEngineSupportedFile(path, sniff)) {
+        engine = CreateHtmlEngineFromFile(path);
+    } else if (IsTxtEngineSupportedFile(path, sniff)) {
+        engine = CreateTxtEngineFromFile(path);
     }
 
     if (engine) {
@@ -124,7 +126,75 @@ RetrySniffing:
         goto RetrySniffing;
     }
 
-    // CrashIf(engine && !IsSupportedFile(filePath, sniff, enableEngineEbooks));
+    // CrashIf(engine && !IsSupportedFile(path, sniff, enableEngineEbooks));
+    return engine;
+}
+
+static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine,
+                                       bool enableEngineEbooks) {
+    if (!kind) {
+        return nullptr;
+    }
+    EngineBase* engine = nullptr;
+    if (kind == kindFilePDF) {
+        engine = CreateEnginePdfFromFile(path, pwdUI);
+    }
+    return engine;
+    /*
+        if (IsEnginePdfSupportedFile(filePath, sniff)) {
+        } else if (IsEngineMultiSupportedFile(filePath, sniff)) {
+            engine = CreateEngineMultiFromFile(filePath, pwdUI);
+        } else if (IsXpsEngineSupportedFile(filePath, sniff)) {
+            engine = CreateXpsEngineFromFile(filePath);
+        } else if (IsDjVuEngineSupportedFile(filePath, sniff)) {
+            engine = CreateDjVuEngineFromFile(filePath);
+        } else if (IsImageEngineSupportedFile(filePath, sniff)) {
+            engine = CreateImageEngineFromFile(filePath);
+        } else if (IsImageDirEngineSupportedFile(filePath, sniff)) {
+            engine = CreateImageDirEngineFromFile(filePath);
+        } else if (IsCbxEngineSupportedFile(filePath, sniff)) {
+            engine = CreateCbxEngineFromFile(filePath);
+        } else if (IsPsEngineSupportedFile(filePath, sniff)) {
+            engine = CreatePsEngineFromFile(filePath);
+        } else if (enableChmEngine && IsChmEngineSupportedFile(filePath, sniff)) {
+            engine = CreateChmEngineFromFile(filePath);
+        } else if (!enableEngineEbooks) {
+            // don't try to create any of the below ebook engines
+        } else if (IsEpubEngineSupportedFile(filePath, sniff)) {
+            engine = CreateEpubEngineFromFile(filePath);
+        } else if (IsFb2EngineSupportedFile(filePath, sniff)) {
+            engine = CreateFb2EngineFromFile(filePath);
+        } else if (IsMobiEngineSupportedFile(filePath, sniff)) {
+            engine = CreateMobiEngineFromFile(filePath);
+        } else if (IsPdbEngineSupportedFile(filePath, sniff)) {
+            engine = CreatePdbEngineFromFile(filePath);
+        } else if (IsHtmlEngineSupportedFile(filePath, sniff)) {
+            engine = CreateHtmlEngineFromFile(filePath);
+        } else if (IsTxtEngineSupportedFile(filePath, sniff)) {
+            engine = CreateTxtEngineFromFile(filePath);
+        }
+    */
+}
+
+EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEngine, bool enableEngineEbooks) {
+    CrashIf(!path);
+
+    Kind kind = FileTypeFromFileName(path);
+    EngineBase* engine = CreateEngineForKind(kind, path, pwdUI, enableChmEngine, enableEngineEbooks);
+    if (engine) {
+        return engine;
+    }
+
+    // retry if the type based
+    Kind newKind = SniffFileType(path);
+    if (kind != newKind) {
+        engine = CreateEngineForKind(newKind, path, pwdUI, enableChmEngine, enableEngineEbooks);
+    }
+    if (engine) {
+        return engine;
+    }
+    // TODO: fallback to the old path
+    engine = CreateEngineOld(path, pwdUI, enableChmEngine, enableEngineEbooks);
     return engine;
 }
 

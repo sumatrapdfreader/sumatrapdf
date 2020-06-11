@@ -7,9 +7,10 @@
 #include "utils/GdiplusUtil.h"
 #include "utils/FileTypeSniff.h"
 
+// TODO: replace with an enum class FileKind { Unknown, PDF, ... };
+Kind kindFilePDF = "filePDF";
 Kind kindFileZip = "fileZip";
 Kind kindFileRar = "fileRar";
-
 Kind kindFileBmp = "fileBmp";
 Kind kindFilePng = "filePng";
 Kind kindFileJpeg = "fileJpeg";
@@ -29,7 +30,15 @@ Kind kindFileJp2 = "fileJp2";
 #define ZIP_SIG "PK\x03\x04"
 #define ZIP_SIG_LEN (dimof(ZIP_SIG) - 1)
 
+extern bool IsPdfFileName(const WCHAR* path);
+extern bool IfPdfFileContent(std::span<u8> d);
+
+// detect file type based on file content
 Kind SniffFileType(std::span<u8> d) {
+    if (IfPdfFileContent(d)) {
+        return kindFilePDF;
+    }
+
     u8* data = d.data();
     size_t len = d.size();
     ImgFormat fmt = GfxFormatFromData(d);
@@ -65,19 +74,25 @@ Kind SniffFileType(std::span<u8> d) {
     return nullptr;
 }
 
-Kind SniffFileType(SniffedFile* f) {
-    if (f->wasSniffed) {
-        return f->kind;
-    }
-    f->wasSniffed = true;
-
-    CrashIf(!f->filePath);
-    char buf[64] = {0};
-    int n = file::ReadN(f->filePath, buf, dimof(buf));
+// detect file type based on file content
+Kind SniffFileType(const WCHAR* path) {
+    CrashIf(!path);
+    char buf[1024] = {0};
+    int n = file::ReadN(path, buf, dimof(buf));
     if (n <= 0) {
-        f->wasError = true;
         return nullptr;
     }
-    f->kind = SniffFileType({(u8*)buf, (size_t)n});
-    return f->kind;
+    auto res = SniffFileType({(u8*)buf, (size_t)n});
+    return res;
+}
+
+Kind FileTypeFromFileName(const WCHAR* path) {
+    if (!path) {
+        return nullptr;
+    }
+    if (IsPdfFileName(path)) {
+        return kindFilePDF;
+    }
+
+    return nullptr;
 }

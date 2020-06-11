@@ -2,9 +2,9 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+extern Kind kindFilePDF;
 extern Kind kindFileZip;
 extern Kind kindFileRar;
-
 extern Kind kindFileBmp;
 extern Kind kindFileGif;
 extern Kind kindFileJpeg;
@@ -15,16 +15,6 @@ extern Kind kindFileTiff;
 extern Kind kindFileWebp;
 extern Kind kindFileJp2;
 
-struct SniffedFile {
-    AutoFreeWstr filePath;
-    bool wasSniffed = false;
-    bool wasError = false;
-    Kind kind = nullptr;
-
-    SniffedFile() = default;
-    ~SniffedFile() = default;
-};
-
-// detect file type based on file content
 Kind SniffFileType(std::span<u8> d);
-Kind SniffFileType(SniffedFile*);
+Kind SniffFileType(const WCHAR* filePath);
+Kind FileTypeFromFileName(const WCHAR*);
