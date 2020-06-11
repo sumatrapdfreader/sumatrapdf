@@ -4,6 +4,7 @@
 // this is a minimal example for how to use SumatraPDF in plugin mode
 
 #include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
 #include "utils/CmdLineParser.h"
 #include "utils/FileUtil.h"
 
@@ -33,7 +34,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         // resize the SumatraPDF window
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
         if (hChild) {
-            ClientRect rcClient(hwnd);
+            Rect rcClient = ClientRect(hwnd);
             MoveWindow(hChild, rcClient.x, rcClient.y, rcClient.dx, rcClient.dy, FALSE);
         } else {
             InvalidateRect(hwnd, nullptr, TRUE);

@@ -55,6 +55,8 @@ static const char* gFileExts =
     ".eps\0"
     ".vbkm\0"
     ".fb2\0"
+    ".fb2z\0"
+    ".zfb2\0"
     ".cbz\0"
     ".cbr\0"
     ".cb7\0"
@@ -84,7 +86,7 @@ static const char* gFileExts =
     "\0";
 
 static Kind gExtsKind[] = {
-    kindFileFb2, kindFilePS,  kindFilePS,  kindFilePS,   kindFileVbkm, kindFileFb2,  kindFileCbz,  kindFileCbr,
+    kindFileFb2, kindFilePS,  kindFilePS,  kindFilePS,   kindFileVbkm, kindFileFb2, kindFileFb2, kindFileFb2,  kindFileCbz,  kindFileCbr,
     kindFileCb7, kindFileCbt, kindFileZip, kindFileRar,  kindFile7Z,   kindFileTar,  kindFilePDF,  kindFileXps,
     kindFileXps, kindFileChm, kindFilePng, kindFileJpeg, kindFileJpeg, kindFileGif,  kindFileTiff, kindFileTiff,
     kindFileBmp, kindFileTga, kindFileJxr, kindFileHdp,  kindFileWdp,  kindFileWebp, kindFileEpub, kindFileJp2,
@@ -109,12 +111,14 @@ static Kind GetKindByFileExt(const WCHAR* path) {
     return nullptr;
 }
 
-static bool gDidCheckExtsMatch = false;
-static void CheckExtsMatch() {
-    if (!gDidCheckExtsMatch) {
-        CrashAlwaysIf(kindFileJp2 != GetKindByFileExt(L"foo.JP2"));
-        gDidCheckExtsMatch = true;
+// ensure gFileExts and gExtsKind match
+static bool gDidVerifyExtsMatch = false;
+static void VerifyExtsMatch() {
+    if (gDidVerifyExtsMatch) {
+        return;
     }
+    CrashAlwaysIf(kindFileJp2 != GetKindByFileExt(L"foo.JP2"));
+    gDidVerifyExtsMatch = true;
 }
 
 static Kind imageEngineKinds[] = {
@@ -175,6 +179,7 @@ Kind SniffFileTypeFromData(std::span<u8> d) {
     if (IsPSFileContent(d)) {
         return kindFilePS;
     }
+    // TODO: sniff .fb2 content
     u8* data = d.data();
     size_t len = d.size();
     ImgFormat fmt = GfxFormatFromData(d);
@@ -298,7 +303,7 @@ Kind SniffFileType(const WCHAR* path) {
 }
 
 Kind FileTypeFromFileName(const WCHAR* path) {
-    CheckExtsMatch();
+    VerifyExtsMatch();
 
     if (!path) {
         return nullptr;

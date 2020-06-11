@@ -27,6 +27,7 @@ extern Kind kindFileJp2;
 extern Kind kindFileDir;
 extern Kind kindFileCbt;
 extern Kind kindFileTar;
+extern Kind kindFileFb2;
 extern Kind kindFileEpub;
 
 Kind SniffFileTypeFromData(std::span<u8> d);

@@ -1011,15 +1011,15 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool Fb2Doc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool Fb2Doc::IsSupportedFile(const WCHAR* path, bool sniff) {
     UNUSED(sniff);
-    // TODO: implement sniffing
-    return str::EndsWithI(fileName, L".fb2") || str::EndsWithI(fileName, L".fb2z") ||
-           str::EndsWithI(fileName, L".zfb2") || str::EndsWithI(fileName, L".fb2.zip");
+    // we have no sniffing so always look at file name
+    Kind kind = FileTypeFromFileName(path);
+    return kind = kindFileFb2;
 }
 
-Fb2Doc* Fb2Doc::CreateFromFile(const WCHAR* fileName) {
-    Fb2Doc* doc = new Fb2Doc(fileName);
+Fb2Doc* Fb2Doc::CreateFromFile(const WCHAR* path) {
+    Fb2Doc* doc = new Fb2Doc(path);
     if (!doc || !doc->Load()) {
         delete doc;
         return nullptr;
@@ -1038,7 +1038,7 @@ Fb2Doc* Fb2Doc::CreateFromStream(IStream* stream) {
 
 /* ********** PalmDOC (and TealDoc) ********** */
 
-PalmDoc::PalmDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {
+PalmDoc::PalmDoc(const WCHAR* path) : fileName(str::Dup(path)) {
 }
 
 PalmDoc::~PalmDoc() {

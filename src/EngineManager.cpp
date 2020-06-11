@@ -176,12 +176,12 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
 
     if (kind == kindFileEpub) {
         engine = CreateEpubEngineFromFile(path);
-    }
+    } else if (kind == kindFileFb2) {
+        engine = CreateFb2EngineFromFile(path);
+   }
 
     return engine;
     /*
-        } else if (IsFb2EngineSupportedFile(path, sniff)) {
-            engine = CreateFb2EngineFromFile(path);
         } else if (IsMobiEngineSupportedFile(path, sniff)) {
             engine = CreateMobiEngineFromFile(path);
         } else if (IsPdbEngineSupportedFile(path, sniff)) {
