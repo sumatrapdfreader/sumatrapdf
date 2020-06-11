@@ -131,9 +131,9 @@ static Rect ExtractDSCPageSize(const WCHAR* fileName) {
     return Rect();
 }
 
-static EngineBase* ps2pdf(const WCHAR* fileName) {
+static EngineBase* ps2pdf(const WCHAR* path) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
-    AutoFreeWstr shortPath(path::ShortPath(fileName));
+    AutoFreeWstr shortPath(path::ShortPath(path));
     AutoFreeWstr tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     AutoFreeWstr gswin32c(GetGhostscriptPath());
@@ -143,7 +143,7 @@ static EngineBase* ps2pdf(const WCHAR* fileName) {
 
     // try to help Ghostscript determine the intended page size
     AutoFreeWstr psSetup;
-    Rect page = ExtractDSCPageSize(fileName);
+    Rect page = ExtractDSCPageSize(path);
     if (!page.IsEmpty()) {
         psSetup = str::Format(L" << /PageSize [%i %i] >> setpagedevice", page.dx, page.dy);
     }

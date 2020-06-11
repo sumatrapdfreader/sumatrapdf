@@ -469,7 +469,7 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = _pages[pageNo - 1];
     // TODO: not sure what failIfBusy is supposed to do
-    if (pageInfo && pageInfo->page || failIfBusy) {
+    if (pageInfo->page || failIfBusy) {
         return pageInfo;
     }
 
@@ -999,12 +999,14 @@ bool IsXpsDirectory(const WCHAR* path) {
     return file::Exists(relsPath) || dir::Exists(relsPath);
 }
 
+#include "utils/FileTypeSniff.h"
+
 bool IsXpsFileName(const WCHAR* path) {
-    if (str::EndsWithI(path, L".xps") || str::EndsWithI(path, L".oxps")) {
+    Kind kind = FileTypeFromFileName(path);
+    if (kind == kindFileXps) {
         return true;
     }
     return IsXpsDirectory(path);
-    return false;
 }
 
 // check if a given file is a likely a .zip archive containing XPS

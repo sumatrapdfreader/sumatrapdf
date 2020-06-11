@@ -1218,9 +1218,11 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation*>* annots, fz_devic
                 fz_lineto(ctx, path, arect.BR().x, arect.BR().y - 0.5f);
                 stroke = fz_new_stroke_state_with_dash_len(ctx, 2);
                 CrashIf(!stroke);
-                stroke->linewidth = 0.5f;
-                stroke->dash_list[stroke->dash_len++] = 1;
-                stroke->dash_list[stroke->dash_len++] = 1;
+                if (stroke) {
+                    stroke->linewidth = 0.5f;
+                    stroke->dash_list[stroke->dash_len++] = 1;
+                    stroke->dash_list[stroke->dash_len++] = 1;
+                }
                 break;
             default:
                 CrashIf(true);

@@ -11,7 +11,6 @@
 extern bool IsPdfFileName(const WCHAR* path);
 extern bool IfPdfFileContent(std::span<u8> d);
 extern bool IsEngineMultiFileName(const WCHAR* path);
-extern bool IsXpsFileName(const WCHAR* path);
 extern bool IsXpsArchive(const WCHAR* path);
 extern bool IsDjVuFileName(const WCHAR* path);
 extern bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff);
@@ -90,6 +89,14 @@ static Kind GetKindByFileExt(const WCHAR* path) {
     }
     CrashIf(idx >= (int)dimof(gExtsKind));
     return gExtsKind[idx];
+}
+
+static bool gDidCheckExtsMatch = false;
+static void CheckExtsMatch() {
+    if (!gDidCheckExtsMatch) {
+        CrashAlwaysIf(kindFileJp2 != GetKindByFileExt(L"foo.JP2"));
+        gDidCheckExtsMatch = true;
+    }
 }
 
 static Kind imageEngineKinds[] = {
@@ -205,6 +212,8 @@ Kind SniffFileType(const WCHAR* path) {
 }
 
 Kind FileTypeFromFileName(const WCHAR* path) {
+    CheckExtsMatch();
+
     if (!path) {
         return nullptr;
     }
