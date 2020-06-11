@@ -30,3 +30,4 @@ artifacts/
 .idea/
 src/.vscode
 tools/pdfjs/coverage/
+cppcheck.out.txt
