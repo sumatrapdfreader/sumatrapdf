@@ -647,6 +647,8 @@ void LogBitmapInfo(HBITMAP hbmp) {
     }
 }
 
+bool useSvg = true;
+
 void CreateToolbar(WindowInfo* win) {
     if (!gIsRaMicroBuild) {
         cxButtonSpacing = 0;
@@ -667,7 +669,6 @@ void CreateToolbar(WindowInfo* win) {
     int dpi = DpiGet(win->hwndFrame);
 
     HBITMAP hbmp = nullptr;
-    bool useSvg = true;
 
     Size size{-1, -1};
     if (useSvg) {
@@ -711,11 +712,11 @@ void CreateToolbar(WindowInfo* win) {
         mask = RGB(0xff, 0xff, 0xff);
     }
     int amres = ImageList_AddMasked(himl, hbmp, mask);
-    int nImages = ImageList_GetImageCount(himl);
-#if 0
-    dbglogf("res: %d, nImages: %d\n", amres, nImages);
-    LogBitmapInfo(hbmp);
-#endif
+    if (false) {
+        int nImages = ImageList_GetImageCount(himl);
+        dbglogf("res: %d, nImages: %d\n", amres, nImages);
+        LogBitmapInfo(hbmp);
+    }
     DeleteObject(hbmp);
 
     // in Plugin mode, replace the Open with a Save As button

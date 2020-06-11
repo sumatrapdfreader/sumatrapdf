@@ -90,10 +90,12 @@ CachedFont* GetCachedFont(const WCHAR* name, float size, FontStyle style) {
 
     Font* font = ::new Font(name, size, style);
     CrashIf(!font);
-    if (!font) {
+    if (font->GetLastStatus() != Status::Ok) {
+        delete font;
         // fall back to the default font, if a desired font can't be created
         font = ::new Font(L"Times New Roman", size, style);
-        if (!font) {
+        if (font->GetLastStatus() != Status::Ok) {
+            delete font;
             return gFontCache;
         }
     }
