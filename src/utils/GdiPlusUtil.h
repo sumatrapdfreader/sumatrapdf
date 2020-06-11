@@ -30,7 +30,7 @@ Gdiplus::RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* 
 
 void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation);
 
-const WCHAR* GfxFileExtFromData(const u8* data, size_t len);
+const WCHAR* GfxFileExtFromData(std::span<u8>);
 bool IsGdiPlusNativeFormat(const u8* data, size_t len);
 Gdiplus::Bitmap* BitmapFromData(const u8* data, size_t len);
 Gdiplus::Size BitmapSizeFromData(const u8* data, size_t len);
@@ -42,6 +42,7 @@ struct ImageData {
     size_t len = 0;
 
     size_t size() const;
+    std::span<u8> as_span() const;
 };
 
 struct ImageData2 {

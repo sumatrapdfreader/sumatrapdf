@@ -357,8 +357,8 @@ ImgFormat GfxFormatFromData(std::span<u8> d) {
     return ImgFormat::Unknown;
 }
 
-const WCHAR* GfxFileExtFromData(const u8* data, size_t len) {
-    auto fmt = GfxFormatFromData({(u8*)data, len});
+const WCHAR* GfxFileExtFromData(std::span<u8> d) {
+    auto fmt = GfxFormatFromData(d);
     switch (fmt) {
         case ImgFormat::BMP:
             return L".bmp";
@@ -618,4 +618,8 @@ CLSID GetEncoderClsid(const WCHAR* format) {
 
 size_t ImageData::size() const {
     return len;
+}
+
+std::span<u8> ImageData::as_span() const {
+    return {(u8*)data, len};
 }

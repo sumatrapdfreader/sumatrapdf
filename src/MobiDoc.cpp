@@ -709,7 +709,7 @@ static bool KnownNonImageRec(const u8* data, size_t dataLen) {
 }
 
 static bool KnownImageFormat(const u8* data, size_t dataLen) {
-    return nullptr != GfxFileExtFromData(data, dataLen);
+    return nullptr != GfxFileExtFromData({(u8*)data, dataLen});
 }
 
 // return false if we should stop loading images (because we

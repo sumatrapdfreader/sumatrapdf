@@ -298,8 +298,9 @@ class HW_IInternetProtocolInfo : public IInternetProtocolInfo {
 ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release() {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res)
+    if (0 == res) {
         delete this;
+    }
     return res;
 }
 
@@ -369,8 +370,9 @@ class HW_IInternetProtocol : public IInternetProtocol {
 ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release() {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res)
+    if (0 == res) {
         delete this;
+    }
     return res;
 }
 
@@ -393,8 +395,9 @@ static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeWstr* url
 // caller must free() the result
 static WCHAR* MimeFromUrl(const WCHAR* url, const WCHAR* imgExt = nullptr) {
     const WCHAR* ext = str::FindCharLast(url, '.');
-    if (!ext)
+    if (!ext) {
         return str::Dup(DEFAULT_MIME_TYPE);
+    }
 
     if (str::FindChar(ext, ';')) {
         // some CHM documents use (image) URLs that are followed by
@@ -417,8 +420,9 @@ static WCHAR* MimeFromUrl(const WCHAR* url, const WCHAR* imgExt = nullptr) {
             // trust an image's data more than its extension
             if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) && str::StartsWith(mimeTypes[i].mimetype, L"image/")) {
                 for (int j = 0; j < dimof(mimeTypes); j++) {
-                    if (str::Eq(imgExt, mimeTypes[j].ext))
+                    if (str::Eq(imgExt, mimeTypes[j].ext)) {
                         return str::Dup(mimeTypes[j].mimetype);
+                    }
                 }
             }
             return str::Dup(mimeTypes[i].mimetype);
@@ -426,8 +430,9 @@ static WCHAR* MimeFromUrl(const WCHAR* url, const WCHAR* imgExt = nullptr) {
     }
 
     AutoFreeWstr contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"Content Type"));
-    if (contentType)
+    if (contentType) {
         return contentType.StealData();
+    }
 
     return str::Dup(DEFAULT_MIME_TYPE);
 }
@@ -446,8 +451,9 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     int htmlWindowId;
     AutoFreeWstr urlRest;
     bool ok = ParseProtoUrl(szUrl, &htmlWindowId, &urlRest);
-    if (!ok)
+    if (!ok) {
         return INET_E_INVALID_URL;
+    }
 
     pIProtSink->ReportProgress(BINDSTATUS_FINDINGRESOURCE, urlRest);
     pIProtSink->ReportProgress(BINDSTATUS_CONNECTING, urlRest);
@@ -458,16 +464,18 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     // used to take a screenshot, so ignore it. Is there a way
     // to cancel things and not get her?
     // CrashIf(!win);
-    if (!win)
+    if (!win) {
         return INET_E_OBJECT_NOT_FOUND;
-    if (!win->htmlWinCb)
+    }
+    if (!win->htmlWinCb) {
         return INET_E_OBJECT_NOT_FOUND;
+    }
     data = win->htmlWinCb->GetDataForUrl(urlRest);
     if (data.empty()) {
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
-    const WCHAR* imgExt = GfxFileExtFromData((const u8*)data.data(), data.size());
+    const WCHAR* imgExt = GfxFileExtFromData({(u8*)data.data(), data.size()});
     AutoFreeWstr mime(MimeFromUrl(urlRest, imgExt));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
 #ifdef _WIN64

@@ -451,9 +451,9 @@ bool EngineImage::LoadSingleFile(const WCHAR* file) {
     SetFileName(file);
 
     AutoFree data = file::ReadFile(file);
-    fileExt = GfxFileExtFromData((u8*)data.data, data.size());
+    fileExt = GfxFileExtFromData(data.as_span());
     defaultFileExt = fileExt;
-    image = BitmapFromData((const u8*)data.data, data.size());
+    image = BitmapFromData((const u8*)data.data, data.len);
     return FinishLoading();
 }
 
@@ -466,7 +466,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
 
     u8 header[18];
     if (ReadDataFromStream(stream, header, sizeof(header))) {
-        fileExt = GfxFileExtFromData(header, sizeof(header));
+        fileExt = GfxFileExtFromData({header, sizeof(header)});
     }
     if (!fileExt) {
         return false;
@@ -662,7 +662,7 @@ bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         char header[32] = {0};
         file::ReadN(fileName, header, sizeof(header));
-        const WCHAR* ext2 = GfxFileExtFromData((const u8*)header, sizeof(header));
+        const WCHAR* ext2 = GfxFileExtFromData({(u8*)header, sizeof(header)});
         if (ext2 != nullptr) {
             ext = ext2;
         }

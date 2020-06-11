@@ -128,9 +128,10 @@ static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
 
 static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ImageData* img) {
     // it's valid to not have image data at a given index
-    if (!img || !img->data)
+    if (!img || !img->data) {
         return;
-    const WCHAR* ext = GfxFileExtFromData((const u8*)img->data, img->len);
+    }
+    const WCHAR* ext = GfxFileExtFromData(img->as_span());
     CrashAlwaysIf(!ext);
     AutoFreeWstr fileName(str::Format(L"%s_img_%d%s", filePathBase, imgNo, ext));
     file::WriteFile(fileName.Get(), {img->data, img->len});
