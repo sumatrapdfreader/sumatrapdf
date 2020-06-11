@@ -2193,12 +2193,24 @@ bool IsPdfFileName(const WCHAR* path) {
     return str::EndsWithI(path, L".pdf") || FindEmbedMarks(path);
 }
 
+// PDF files have %PDF-${ver} somewhere in the beginning of the file
 bool IfPdfFileContent(std::span<u8> d) {
-    int n = (int)d.size();
-    char* header = (char*)d.data();
-    for (int i = 0; i < n - 4; i++) {
-        if (str::EqN(header + i, "%PDF", 4))
+    if (d.size() < 8) {
+        return false;
+    }
+    int n = (int)d.size() - 5;
+    char* data = (char*)d.data();
+    char* end = data + n;
+    while (data < end) {
+        size_t nLeft = end - data;
+        data = (char*)std::memchr(data, '%', nLeft);
+        if (!data) {
+            return false;
+        }
+        if (str::EqN(data, "%PDF-", 5)) {
             return true;
+        }
+        ++data;
     }
     return false;
 }
@@ -2206,7 +2218,11 @@ bool IfPdfFileContent(std::span<u8> d) {
 bool IsEnginePdfSupportedFile(const WCHAR* path, bool sniff) {
     if (sniff) {
         char header[1024] = {0};
-        file::ReadN(path, header, sizeof(header));
+        int n = file::ReadN(path, header, sizeof(header));
+        if (n < 5) {
+            return false;
+        }
+        return IfPdfFileContent({(u8*)header, (size_t)n});
     }
     return IsPdfFileName(path);
 }
