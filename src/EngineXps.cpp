@@ -993,18 +993,23 @@ EngineBase* EngineXps::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-bool IsXpsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (!sniff) {
-        return str::EndsWithI(fileName, L".xps") || str::EndsWithI(fileName, L".oxps");
+bool IsXpsFileName(const WCHAR* path) {
+    if (str::EndsWithI(path, L".xps") || str::EndsWithI(path, L".oxps")) {
+        return true;
     }
 
-    if (dir::Exists(fileName)) {
+    if (dir::Exists(path)) {
         // allow opening uncompressed XPS files as well
-        AutoFreeWstr relsPath(path::Join(fileName, L"_rels\\.rels"));
+        AutoFreeWstr relsPath(path::Join(path, L"_rels\\.rels"));
         return file::Exists(relsPath) || dir::Exists(relsPath);
     }
+    return false;
+}
 
-    MultiFormatArchive* archive = OpenZipArchive(fileName, true);
+// check if a given file is a likely a .zip archive containing XPS
+// document
+bool IsXpsArchive(const WCHAR* path) {
+    MultiFormatArchive* archive = OpenZipArchive(path, true);
     if (!archive) {
         return false;
     }
@@ -1014,6 +1019,13 @@ bool IsXpsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
                archive->GetFileId("_rels/.rels/[0].last.piece") != (size_t)-1;
     delete archive;
     return res;
+}
+
+bool IsXpsEngineSupportedFile(const WCHAR* path, bool sniff) {
+    if (!sniff) {
+        return IsXpsFileName(path);
+    }
+    return IsXpsArchive(path);
 }
 
 EngineBase* CreateXpsEngineFromFile(const WCHAR* fileName) {

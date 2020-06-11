@@ -7,9 +7,17 @@
 #include "utils/GdiplusUtil.h"
 #include "utils/FileTypeSniff.h"
 
+// TODO: move those functions here
+extern bool IsPdfFileName(const WCHAR* path);
+extern bool IfPdfFileContent(std::span<u8> d);
+extern bool IsEngineMultiFileName(const WCHAR* path);
+extern bool IsXpsFileName(const WCHAR* path);
+extern bool IsXpsArchive(const WCHAR* path);
+
 // TODO: replace with an enum class FileKind { Unknown, PDF, ... };
 Kind kindFilePDF = "filePDF";
 Kind kindFileMulti = "fileMulti";
+Kind kindFileXps = "fileXPS";
 Kind kindFileZip = "fileZip";
 Kind kindFileRar = "fileRar";
 Kind kindFileBmp = "fileBmp";
@@ -31,13 +39,8 @@ Kind kindFileJp2 = "fileJp2";
 #define ZIP_SIG "PK\x03\x04"
 #define ZIP_SIG_LEN (dimof(ZIP_SIG) - 1)
 
-extern bool IsPdfFileName(const WCHAR* path);
-extern bool IfPdfFileContent(std::span<u8> d);
-
-extern bool IsEngineMultiFileName(const WCHAR* path);
-
 // detect file type based on file content
-Kind SniffFileType(std::span<u8> d) {
+Kind SniffFileTypeFromData(std::span<u8> d) {
     if (IfPdfFileContent(d)) {
         return kindFilePDF;
     }
@@ -86,7 +89,12 @@ Kind SniffFileType(const WCHAR* path) {
     if (n <= 0) {
         return nullptr;
     }
-    auto res = SniffFileType({(u8*)buf, (size_t)n});
+    auto res = SniffFileTypeFromData({(u8*)buf, (size_t)n});
+    if (res == kindFileZip) {
+        if (IsXpsArchive(path)) {
+            res = kindFileXps;
+        }
+    }
     return res;
 }
 
@@ -97,6 +105,11 @@ Kind FileTypeFromFileName(const WCHAR* path) {
     if (IsPdfFileName(path)) {
         return kindFilePDF;
     }
+    if (IsXpsFileName(path)) {
+        return kindFileXps;
+    }
+
+    // must be at the end, as it opens any folder as .vbkm
     if (IsEngineMultiFileName(path)) {
         return kindFileMulti;
     }

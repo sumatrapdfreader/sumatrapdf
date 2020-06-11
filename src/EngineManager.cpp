@@ -138,15 +138,14 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     EngineBase* engine = nullptr;
     if (kind == kindFilePDF) {
         engine = CreateEnginePdfFromFile(path, pwdUI);
-    }
-    if (kind == kindFileMulti) {
+    } else if (kind == kindFileMulti) {
         engine = CreateEngineMultiFromFile(path, pwdUI);
+    } else if (kind == kindFileXps) {
+        engine = CreateXpsEngineFromFile(path);
     }
 
     return engine;
     /*
-        } else if (IsXpsEngineSupportedFile(path, sniff)) {
-            engine = CreateXpsEngineFromFile(path);
         } else if (IsDjVuEngineSupportedFile(path, sniff)) {
             engine = CreateDjVuEngineFromFile(path);
         } else if (IsImageEngineSupportedFile(path, sniff)) {

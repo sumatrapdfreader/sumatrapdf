@@ -4,6 +4,7 @@
 
 extern Kind kindFilePDF;
 extern Kind kindFileMulti;
+extern Kind kindFileXps;
 extern Kind kindFileZip;
 extern Kind kindFileRar;
 extern Kind kindFileBmp;
@@ -16,6 +17,6 @@ extern Kind kindFileTiff;
 extern Kind kindFileWebp;
 extern Kind kindFileJp2;
 
-Kind SniffFileType(std::span<u8> d);
+Kind SniffFileTypeFromData(std::span<u8> d);
 Kind SniffFileType(const WCHAR* filePath);
 Kind FileTypeFromFileName(const WCHAR*);
