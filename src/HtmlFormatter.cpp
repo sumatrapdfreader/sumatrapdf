@@ -571,7 +571,7 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
 
 bool HtmlFormatter::EmitImage(ImageData* img) {
     CrashIf(!img->data);
-    Gdiplus::Size imgSize = BitmapSizeFromData(img->data, img->len);
+    Gdiplus::Size imgSize = BitmapSizeFromData((const u8*)img->data, img->len);
     if (imgSize.Empty())
         return false;
 
@@ -1361,7 +1361,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
             CrashIf(status != Ok);
         } else if (DrawInstrType::Image == i.type) {
             // TODO: cache the bitmap somewhere (?)
-            Bitmap* bmp = BitmapFromData(i.img.data, i.img.len);
+            Bitmap* bmp = BitmapFromData((const u8*)i.img.data, i.img.len);
             if (bmp) {
                 status = g->DrawImage(bmp, bbox, 0, 0, (float)bmp->GetWidth(), (float)bmp->GetHeight(), UnitPixel);
                 // GDI+ sometimes seems to succeed in loading an image because it lazily decodes it

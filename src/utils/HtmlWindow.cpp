@@ -467,7 +467,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
         return INET_E_DATA_NOT_AVAILABLE;
     }
 
-    const WCHAR* imgExt = GfxFileExtFromData(data.data(), data.size());
+    const WCHAR* imgExt = GfxFileExtFromData((const u8*)data.data(), data.size());
     AutoFreeWstr mime(MimeFromUrl(urlRest, imgExt));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
 #ifdef _WIN64
@@ -1378,7 +1378,7 @@ HRESULT HtmlMoniker::SetHtml(const char* s, size_t len) {
     if (htmlStream) {
         htmlStream->Release();
     }
-    htmlStream = CreateStreamFromData({htmlData, len});
+    htmlStream = CreateStreamFromData({(u8*)htmlData, len});
     return S_OK;
 }
 

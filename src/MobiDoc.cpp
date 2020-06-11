@@ -686,31 +686,29 @@ bool MobiDoc::DecodeExthHeader(const char* data, size_t dataLen) {
 #define SRCS_REC 0x53524353 // 'SRCS'
 #define VIDE_REC 0x56494445 // 'VIDE'
 
-static bool IsEofRecord(u8* data, size_t dataLen) {
+static bool IsEofRecord(const u8* data, size_t dataLen) {
     return (4 == dataLen) && (EOF_REC == UInt32BE(data));
 }
 
-static bool KnownNonImageRec(u8* data, size_t dataLen) {
-    if (dataLen < 4)
+static bool KnownNonImageRec(const u8* data, size_t dataLen) {
+    if (dataLen < 4) {
         return false;
+    }
     u32 sig = UInt32BE(data);
 
-    if (FLIS_REC == sig)
-        return true;
-    if (FCIS_REC == sig)
-        return true;
-    if (FDST_REC == sig)
-        return true;
-    if (DATP_REC == sig)
-        return true;
-    if (SRCS_REC == sig)
-        return true;
-    if (VIDE_REC == sig)
-        return true;
+    switch (sig) {
+        case FLIS_REC:
+        case FCIS_REC:
+        case FDST_REC:
+        case DATP_REC:
+        case SRCS_REC:
+        case VIDE_REC:
+            return true;
+    }
     return false;
 }
 
-static bool KnownImageFormat(const char* data, size_t dataLen) {
+static bool KnownImageFormat(const u8* data, size_t dataLen) {
     return nullptr != GfxFileExtFromData(data, dataLen);
 }
 
@@ -720,7 +718,7 @@ bool MobiDoc::LoadImage(size_t imageNo) {
     size_t imageRec = imageFirstRec + imageNo;
 
     std::string_view rec = pdbReader->GetRecord(imageRec);
-    const char* imgData = rec.data();
+    const u8* imgData = (const u8*)rec.data();
     size_t imgDataLen = rec.size();
     if (!imgData || (0 == imgDataLen))
         return true;

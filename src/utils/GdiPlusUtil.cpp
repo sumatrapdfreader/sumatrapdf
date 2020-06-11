@@ -321,7 +321,7 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-ImgFormat GfxFormatFromData(const char* data, size_t len) {
+ImgFormat GfxFormatFromData(const u8* data, size_t len) {
     if (!data || len < 12) {
         return ImgFormat::Unknown;
     }
@@ -356,7 +356,7 @@ ImgFormat GfxFormatFromData(const char* data, size_t len) {
     return ImgFormat::Unknown;
 }
 
-const WCHAR* GfxFileExtFromData(const char* data, size_t len) {
+const WCHAR* GfxFileExtFromData(const u8* data, size_t len) {
     switch (GfxFormatFromData(data, len)) {
         case ImgFormat::BMP:
             return L".bmp";
@@ -382,7 +382,7 @@ const WCHAR* GfxFileExtFromData(const char* data, size_t len) {
 }
 
 // Windows' JPEG codec doesn't support arithmetic coding
-static bool JpegUsesArithmeticCoding(const char* data, size_t len) {
+static bool JpegUsesArithmeticCoding(const u8* data, size_t len) {
     CrashIf(GfxFormatFromData(data, len) != ImgFormat::JPEG);
 
     ByteReader r(data, len);
@@ -397,7 +397,7 @@ static bool JpegUsesArithmeticCoding(const char* data, size_t len) {
 
 // Windows' PNG codec fails to handle an edge case, resulting in
 // an infinite loop (cf. http://cxsecurity.com/issue/WLB-2014080021 )
-static bool PngRequiresPresetDict(const char* data, size_t len) {
+static bool PngRequiresPresetDict(const u8* data, size_t len) {
     CrashIf(GfxFormatFromData(data, len) != ImgFormat::PNG);
 
     ByteReader r(data, len);
@@ -412,7 +412,7 @@ static bool PngRequiresPresetDict(const char* data, size_t len) {
     return false;
 }
 
-bool IsGdiPlusNativeFormat(const char* data, size_t len) {
+bool IsGdiPlusNativeFormat(const u8* data, size_t len) {
     ImgFormat fmt = GfxFormatFromData(data, len);
     return ImgFormat::BMP == fmt || ImgFormat::GIF == fmt || ImgFormat::TIFF == fmt ||
            (ImgFormat::JPEG == fmt && !JpegUsesArithmeticCoding(data, len)) ||
@@ -420,7 +420,7 @@ bool IsGdiPlusNativeFormat(const char* data, size_t len) {
 }
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
-Bitmap* BitmapFromData(const char* data, size_t len) {
+Bitmap* BitmapFromData(const u8* data, size_t len) {
     ImgFormat format = GfxFormatFromData(data, len);
     if (ImgFormat::TGA == format) {
         return tga::ImageFromData(data, len);
@@ -438,7 +438,7 @@ Bitmap* BitmapFromData(const char* data, size_t len) {
         return nullptr;
     }
 
-    auto strm = CreateStreamFromData({data, len});
+    auto strm = CreateStreamFromData({(u8*)data, len});
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return nullptr;
@@ -461,7 +461,7 @@ Bitmap* BitmapFromData(const char* data, size_t len) {
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Gdiplus::Size BitmapSizeFromData(const char* data, size_t len) {
+Gdiplus::Size BitmapSizeFromData(const u8* data, size_t len) {
     Gdiplus::Size result;
     ByteReader r(data, len);
     switch (GfxFormatFromData(data, len)) {
@@ -490,13 +490,13 @@ Gdiplus::Size BitmapSizeFromData(const char* data, size_t len) {
                     } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xF9)
                         ix += 8;
                     else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFE) {
-                        const char* commentEnd = r.Find(ix + 2, 0x00);
+                        const u8* commentEnd = r.Find(ix + 2, 0x00);
                         ix = commentEnd ? commentEnd - data + 1 : len;
                     } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0x01 && ix + 15 < len) {
-                        const char* textDataEnd = r.Find(ix + 15, 0x00);
+                        const u8* textDataEnd = r.Find(ix + 15, 0x00);
                         ix = textDataEnd ? textDataEnd - data + 1 : len;
                     } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFF && ix + 14 < len) {
-                        const char* applicationDataEnd = r.Find(ix + 14, 0x00);
+                        const u8* applicationDataEnd = r.Find(ix + 14, 0x00);
                         ix = applicationDataEnd ? applicationDataEnd - data + 1 : len;
                     } else
                         break;

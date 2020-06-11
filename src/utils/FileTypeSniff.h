@@ -26,5 +26,5 @@ struct SniffedFile {
 };
 
 // detect file type based on file content
-Kind SniffFileType(std::string_view d);
+Kind SniffFileType(std::span<u8> d);
 Kind SniffFileType(SniffedFile*);

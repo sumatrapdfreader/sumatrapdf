@@ -130,7 +130,7 @@ static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ImageData* im
     // it's valid to not have image data at a given index
     if (!img || !img->data)
         return;
-    const WCHAR* ext = GfxFileExtFromData(img->data, img->len);
+    const WCHAR* ext = GfxFileExtFromData((const u8*)img->data, img->len);
     CrashAlwaysIf(!ext);
     AutoFreeWstr fileName(str::Format(L"%s_img_%d%s", filePathBase, imgNo, ext));
     file::WriteFile(fileName.Get(), {img->data, img->len});

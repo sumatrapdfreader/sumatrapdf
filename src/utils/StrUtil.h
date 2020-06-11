@@ -32,8 +32,9 @@ bool EqIS(const char* s1, const char* s2);
 bool EqN(const char* s1, const char* s2, size_t len);
 bool EqNI(const char* s1, const char* s2, size_t len);
 bool IsEmpty(const char* s);
-bool StartsWith(const char* str, const char* txt);
-bool StartsWith(std::string_view s, const char* txt);
+bool StartsWith(const char* str, const char* prefix);
+bool StartsWith(const u8* str, const char* prefix);
+bool StartsWith(std::string_view s, const char* prefix);
 
 #if OS_WIN
 size_t Len(const WCHAR*);
@@ -46,10 +47,10 @@ bool EqIS(const WCHAR*, const WCHAR*);
 bool EqN(const WCHAR*, const WCHAR*, size_t);
 bool EqNI(const WCHAR*, const WCHAR*, size_t);
 bool IsEmpty(const WCHAR*);
-bool StartsWith(const WCHAR* str, const WCHAR* txt);
+bool StartsWith(const WCHAR* str, const WCHAR* prefix);
 #endif
 
-bool StartsWithI(const char* str, const char* txt);
+bool StartsWithI(const char* str, const char* prefix);
 bool EndsWith(const char* txt, const char* end);
 bool EndsWithI(const char* txt, const char* end);
 bool EqNIx(const char* s, size_t len, const char* s2);

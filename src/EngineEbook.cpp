@@ -543,7 +543,7 @@ Vec<PageElement*>* EngineEbook::GetElements(int pageNo) {
 
 static RenderedBitmap* getImageFromData(ImageData id) {
     HBITMAP hbmp;
-    Bitmap* bmp = BitmapFromData(id.data, id.len);
+    Bitmap* bmp = BitmapFromData((const u8*)id.data, id.len);
     if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
         delete bmp;
         return nullptr;

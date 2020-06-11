@@ -14,7 +14,7 @@ enum class ImgFormat {
     JP2,
 };
 
-ImgFormat GfxFormatFromData(const char* data, size_t len);
+ImgFormat GfxFormatFromData(const u8* data, size_t len);
 
 typedef Gdiplus::RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
 
@@ -30,10 +30,10 @@ Gdiplus::RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* 
 
 void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation);
 
-const WCHAR* GfxFileExtFromData(const char* data, size_t len);
-bool IsGdiPlusNativeFormat(const char* data, size_t len);
-Gdiplus::Bitmap* BitmapFromData(const char* data, size_t len);
-Gdiplus::Size BitmapSizeFromData(const char* data, size_t len);
+const WCHAR* GfxFileExtFromData(const u8* data, size_t len);
+bool IsGdiPlusNativeFormat(const u8* data, size_t len);
+Gdiplus::Bitmap* BitmapFromData(const u8* data, size_t len);
+Gdiplus::Size BitmapSizeFromData(const u8* data, size_t len);
 CLSID GetEncoderClsid(const WCHAR* format);
 
 // TODO: for the lack of a better place

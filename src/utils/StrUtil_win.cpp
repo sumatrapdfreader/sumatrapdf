@@ -94,17 +94,17 @@ bool IsEmpty(const WCHAR* s) {
     return !s || (0 == *s);
 }
 
-bool StartsWith(const WCHAR* str, const WCHAR* txt) {
-    return EqN(str, txt, Len(txt));
+bool StartsWith(const WCHAR* str, const WCHAR* prefix) {
+    return EqN(str, prefix, Len(prefix));
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
-bool StartsWithI(const WCHAR* str, const WCHAR* txt) {
-    if (str == txt)
+bool StartsWithI(const WCHAR* str, const WCHAR* prefix) {
+    if (str == prefix)
         return true;
-    if (!str || !txt)
+    if (!str || !prefix)
         return false;
-    return 0 == _wcsnicmp(str, txt, str::Len(txt));
+    return 0 == _wcsnicmp(str, prefix, str::Len(prefix));
 }
 
 bool EndsWith(const WCHAR* txt, const WCHAR* end) {

@@ -228,27 +228,31 @@ bool IsEmpty(const char* s) {
     return !s || (0 == *s);
 }
 
-bool StartsWith(const char* s, const char* txt) {
-    return EqN(s, txt, Len(txt));
+bool StartsWith(const char* s, const char* prefix) {
+    return EqN(s, prefix, Len(prefix));
 }
 
-bool StartsWith(std::string_view s, const char* txt) {
-    size_t n = Len(txt);
+bool StartsWith(const u8* str, const char* prefix) {
+    return StartsWith((const char*)str, prefix);
+}
+
+bool StartsWith(std::string_view s, const char* prefix) {
+    size_t n = Len(prefix);
     if (n > s.size()) {
         return false;
     }
-    return EqN(s.data(), txt, n);
+    return EqN(s.data(), prefix, n);
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
-bool StartsWithI(const char* s, const char* txt) {
-    if (s == txt) {
+bool StartsWithI(const char* s, const char* prefix) {
+    if (s == prefix) {
         return true;
     }
-    if (!s || !txt) {
+    if (!s || !prefix) {
         return false;
     }
-    return 0 == _strnicmp(s, txt, str::Len(txt));
+    return 0 == _strnicmp(s, prefix, str::Len(prefix));
 }
 
 bool Contains(std::string_view s, const char* txt) {

@@ -1186,7 +1186,7 @@ HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
     return CreateFontIndirectW(&lf);
 }
 
-IStream* CreateStreamFromData(std::string_view d) {
+IStream* CreateStreamFromData(std::span<u8> d) {
     if (d.empty()) {
         return nullptr;
     }

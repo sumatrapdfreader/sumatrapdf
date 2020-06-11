@@ -107,7 +107,8 @@
     "xlocbuf": "cpp",
     "xlocmes": "cpp",
     "xlocmon": "cpp",
-    "xloctime": "cpp"
+    "xloctime": "cpp",
+    "span": "cpp"
   },
   "C_Cpp.loggingLevel": "Debug"
 }

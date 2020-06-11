@@ -20,7 +20,7 @@ extern "C" {
 
 namespace fitz {
 
-static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
+static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int len) {
     int w = 0, h = 0, xres = 0, yres = 0;
     fz_colorspace* cs = nullptr;
     fz_stream* stm = nullptr;
@@ -29,8 +29,8 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int
     fz_var(stm);
 
     fz_try(ctx) {
-        fz_load_jpeg_info(ctx, (unsigned char*)data, len, &w, &h, &xres, &yres, &cs);
-        stm = fz_open_memory(ctx, (unsigned char*)data, len);
+        fz_load_jpeg_info(ctx, data, len, &w, &h, &xres, &yres, &cs);
+        stm = fz_open_memory(ctx, data, len);
         stm = fz_open_dctd(ctx, stm, -1, 0, nullptr);
     }
     fz_catch(ctx) {
@@ -128,7 +128,7 @@ fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds
     return cvt;
 }
 
-static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
+static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int len) {
     fz_pixmap* pix = nullptr;
     fz_pixmap* pix_argb = nullptr;
 
@@ -136,7 +136,7 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int 
     fz_var(pix_argb);
 
     fz_try(ctx) {
-        pix = fz_load_jpx(ctx, (unsigned char*)data, len, nullptr);
+        pix = fz_load_jpx(ctx, data, len, nullptr);
     }
     fz_catch(ctx) {
         return nullptr;
@@ -183,7 +183,7 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int 
     return bmp.Clone(0, 0, w, h, pixelFormat);
 }
 
-Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
+Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
     if (len > INT_MAX || len < 12)
         return nullptr;
 
@@ -207,7 +207,7 @@ Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
 #else
 
 namespace fitz {
-Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
+Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
     UNUSED(data);
     UNUSED(len);
     return nullptr;

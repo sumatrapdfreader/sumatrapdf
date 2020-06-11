@@ -11,17 +11,17 @@
 namespace webp {
 
 // checks whether this could be data for a WebP image
-bool HasSignature(const char* data, size_t len) {
+bool HasSignature(const u8* data, size_t len) {
     return len > 12 && str::StartsWith(data, "RIFF") && str::StartsWith(data + 8, "WEBP");
 }
 
-Gdiplus::Size SizeFromData(const char* data, size_t len) {
+Gdiplus::Size SizeFromData(const u8* data, size_t len) {
     Gdiplus::Size size;
     WebPGetInfo((const u8*)data, len, &size.Width, &size.Height);
     return size;
 }
 
-Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
+Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
     int w, h;
     if (!WebPGetInfo((const u8*)data, len, &w, &h))
         return nullptr;
@@ -45,17 +45,17 @@ Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
 #else
 
 namespace webp {
-bool HasSignature(const char* data, size_t len) {
+bool HasSignature(const u8* data, size_t len) {
     UNUSED(data);
     UNUSED(len);
     return false;
 }
-Gdiplus::Size SizeFromData(const char* data, size_t len) {
+Gdiplus::Size SizeFromData(const u8* data, size_t len) {
     UNUSED(data);
     UNUSED(len);
     return Gdiplus::Size();
 }
-Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
+Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
     UNUSED(data);
     UNUSED(len);
     return nullptr;

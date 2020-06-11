@@ -88,7 +88,7 @@ static u32 convLE(u32 x) {
     return readLE32(data);
 }
 
-static bool HasVersion2Footer(const char* data, size_t len) {
+static bool HasVersion2Footer(const u8* data, size_t len) {
     if (len < sizeof(TgaHeader) + sizeof(TgaFooter)) {
         return false;
     }
@@ -96,7 +96,7 @@ static bool HasVersion2Footer(const char* data, size_t len) {
     return str::EqN(footerLE->signature, TGA_FOOTER_SIGNATURE, sizeof(footerLE->signature));
 }
 
-static const TgaExtArea* GetExtAreaPtr(const char* data, size_t len) {
+static const TgaExtArea* GetExtAreaPtr(const u8* data, size_t len) {
     if (!HasVersion2Footer(data, len)) {
         return nullptr;
     }
@@ -148,7 +148,7 @@ static Gdiplus::PixelFormat GetPixelFormat(const TgaHeader* headerLE, ImageAlpha
     return 0;
 }
 
-static ImageAlpha GetAlphaType(const char* data, size_t len) {
+static ImageAlpha GetAlphaType(const u8* data, size_t len) {
     const TgaExtArea* extAreaLE = GetExtAreaPtr(data, len);
     if (!extAreaLE)
         return Alpha_Normal;
@@ -164,7 +164,7 @@ static ImageAlpha GetAlphaType(const char* data, size_t len) {
 }
 
 // checks whether this could be data for a TGA image
-bool HasSignature(const char* data, size_t len) {
+bool HasSignature(const u8* data, size_t len) {
     if (HasVersion2Footer(data, len))
         return true;
     // fall back to checking for values that would be valid for a TGA image
@@ -198,7 +198,7 @@ static bool IsFieldSet(const char* field, size_t len, bool isBinary = false) {
     return false;
 }
 
-static void CopyMetadata(const char* data, size_t len, Gdiplus::Bitmap* bmp) {
+static void CopyMetadata(const u8* data, size_t len, Gdiplus::Bitmap* bmp) {
     const TgaExtArea* extAreaLE = GetExtAreaPtr(data, len);
     if (!extAreaLE)
         return;
@@ -236,8 +236,8 @@ static void CopyMetadata(const char* data, size_t len, Gdiplus::Bitmap* bmp) {
 }
 
 struct ReadState {
-    const char* data;
-    const char* end;
+    const u8* data;
+    const u8* end;
     ImageType type;
     int n;
     bool isRLE;
@@ -246,13 +246,13 @@ struct ReadState {
     struct {
         int firstEntry;
         int length;
-        const char* data;
+        const u8* data;
         int n;
     } cmap;
     bool failed;
 };
 
-static inline void CopyPixel(char* dst, const char* src, int n) {
+static inline void CopyPixel(u8* dst, const u8* src, int n) {
     switch (n) {
         case 3:
             dst[2] = src[2]; // fall through
@@ -267,7 +267,7 @@ static inline void CopyPixel(char* dst, const char* src, int n) {
     }
 }
 
-static void ReadPixel(ReadState& s, char* dst) {
+static void ReadPixel(ReadState& s, u8* dst) {
     if (s.isRLE && 0 == s.repeat && s.data < s.end) {
         s.repeat = (*s.data & 0x7F) + 1;
         s.repeatSame = (*s.data & 0x80);
@@ -300,7 +300,7 @@ static void ReadPixel(ReadState& s, char* dst) {
         s.data += s.n;
 }
 
-Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
+Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
     if (len < sizeof(TgaHeader))
         return nullptr;
 
@@ -336,7 +336,7 @@ Gdiplus::Bitmap* ImageFromData(const char* data, size_t len) {
     if (ok != Gdiplus::Ok)
         return nullptr;
     for (int y = 0; y < h; y++) {
-        char* rowOut = (char*)bmpData.Scan0 + bmpData.Stride * (invertY ? y : h - 1 - y);
+        u8* rowOut = (u8*)bmpData.Scan0 + bmpData.Stride * (invertY ? y : h - 1 - y);
         for (int x = 0; x < w; x++) {
             ReadPixel(s, rowOut + n * (invertX ? w - 1 - x : x));
         }

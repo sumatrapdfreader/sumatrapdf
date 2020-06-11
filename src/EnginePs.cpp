@@ -187,7 +187,7 @@ static EngineBase* ps2pdf(const WCHAR* fileName) {
         return nullptr;
     }
 
-    auto strm = CreateStreamFromData(pdfData.as_view());
+    auto strm = CreateStreamFromData(pdfData.as_span());
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return nullptr;

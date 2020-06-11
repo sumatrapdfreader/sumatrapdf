@@ -636,7 +636,7 @@ static RenderedBitmap* ThumbFromCoverPage(const Doc& doc, Size size) {
     if (!coverImage) {
         return nullptr;
     }
-    Bitmap* coverBmp = BitmapFromData(coverImage->data, coverImage->len);
+    Bitmap* coverBmp = BitmapFromData((const u8*)coverImage->data, coverImage->len);
     if (!coverBmp) {
         return nullptr;
     }

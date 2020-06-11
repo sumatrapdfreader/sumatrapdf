@@ -29,8 +29,8 @@ Kind kindFileJp2 = "fileJp2";
 #define ZIP_SIG "PK\x03\x04"
 #define ZIP_SIG_LEN (dimof(ZIP_SIG) - 1)
 
-Kind SniffFileType(std::string_view d) {
-    const char* data = d.data();
+Kind SniffFileType(std::span<u8> d) {
+    u8* data = d.data();
     size_t len = d.size();
     ImgFormat fmt = GfxFormatFromData(data, len);
     switch (fmt) {
@@ -53,13 +53,13 @@ Kind SniffFileType(std::string_view d) {
         case ImgFormat::JP2:
             return kindFileJp2;
     }
-    if (str::EqN(data, ZIP_SIG, ZIP_SIG_LEN)) {
+    if (memeq(data, ZIP_SIG, ZIP_SIG_LEN)) {
         return kindFileZip;
     }
-    if (str::EqN(data, RAR_SIG, RAR_SIG_LEN)) {
+    if (memeq(data, RAR_SIG, RAR_SIG_LEN)) {
         return kindFileRar;
     }
-    if (str::EqN(data, RAR5_SIG, RAR5_SIG_LEN)) {
+    if (memeq(data, RAR5_SIG, RAR5_SIG_LEN)) {
         return kindFileRar;
     }
     return nullptr;
@@ -78,6 +78,6 @@ Kind SniffFileType(SniffedFile* f) {
         f->wasError = true;
         return nullptr;
     }
-    f->kind = SniffFileType({(char*)buf, (size_t)n});
+    f->kind = SniffFileType({(u8*)buf, (size_t)n});
     return f->kind;
 }

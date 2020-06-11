@@ -108,10 +108,10 @@ class ByteReader {
         return isBE ? QWordBE(off) : QWordLE(off);
     }
 
-    const char* Find(size_t off, u8 byte) const {
+    const u8* Find(size_t off, u8 byte) const {
         if (off >= len)
             return nullptr;
-        return (const char*)memchr(d + off, byte, len - off);
+        return (const u8*)memchr(d + off, byte, len - off);
     }
 
     bool UnpackLE(void* strct, size_t size, const char* format, size_t off = 0) const {

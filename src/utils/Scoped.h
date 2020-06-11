@@ -180,6 +180,10 @@ struct AutoFree {
         return {data, len};
     }
 
+    [[nodiscard]] std::span<u8> as_span() {
+        return {(u8*)data, len};
+    }
+
     void Reset() {
         free(data);
         data = nullptr;

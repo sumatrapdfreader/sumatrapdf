@@ -451,9 +451,9 @@ bool EngineImage::LoadSingleFile(const WCHAR* file) {
     SetFileName(file);
 
     AutoFree data = file::ReadFile(file);
-    fileExt = GfxFileExtFromData(data.data, data.size());
+    fileExt = GfxFileExtFromData((u8*)data.data, data.size());
     defaultFileExt = fileExt;
-    image = BitmapFromData(data.data, data.size());
+    image = BitmapFromData((const u8*)data.data, data.size());
     return FinishLoading();
 }
 
@@ -464,7 +464,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     fileStream = stream;
     fileStream->AddRef();
 
-    char header[18];
+    u8 header[18];
     if (ReadDataFromStream(stream, header, sizeof(header))) {
         fileExt = GfxFileExtFromData(header, sizeof(header));
     }
@@ -475,10 +475,10 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     defaultFileExt = fileExt;
 
     AutoFree data = GetDataFromStream(stream, nullptr);
-    if (IsGdiPlusNativeFormat(data.data, data.size())) {
+    if (IsGdiPlusNativeFormat((const u8*)data.data, data.size())) {
         image = Bitmap::FromStream(stream);
     } else {
-        image = BitmapFromData(data.data, data.size());
+        image = BitmapFromData((const u8*)data.data, data.size());
     }
 
     return FinishLoading();
@@ -662,7 +662,7 @@ bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         char header[32] = {0};
         file::ReadN(fileName, header, sizeof(header));
-        const WCHAR* ext2 = GfxFileExtFromData(header, sizeof(header));
+        const WCHAR* ext2 = GfxFileExtFromData((const u8*)header, sizeof(header));
         if (ext2 != nullptr) {
             ext = ext2;
         }
@@ -831,18 +831,18 @@ bool EngineImageDir::SaveFileAs(const char* copyFileName, bool includeUserAnnots
 }
 
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
-    AutoFree bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
+    AutoFree bmpData = file::ReadFile(pageFileNames.at(pageNo - 1));
     if (bmpData.data) {
         deleteAfterUse = true;
-        return BitmapFromData(bmpData.data, bmpData.size());
+        return BitmapFromData((const u8*)bmpData.data, bmpData.size());
     }
     return nullptr;
 }
 
 RectD EngineImageDir::LoadMediabox(int pageNo) {
-    AutoFree bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
+    AutoFree bmpData = file::ReadFile(pageFileNames.at(pageNo - 1));
     if (bmpData.data) {
-        Gdiplus::Size size = BitmapSizeFromData(bmpData.data, bmpData.size());
+        Gdiplus::Size size = BitmapSizeFromData((const u8*)bmpData.data, bmpData.size());
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();
@@ -1254,7 +1254,7 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     ImageData img = GetImageData(pageNo);
     if (img.data) {
         deleteAfterUse = true;
-        return BitmapFromData(img.data, img.size());
+        return BitmapFromData((const u8*)img.data, img.size());
     }
     return nullptr;
 }
@@ -1270,7 +1270,7 @@ RectD EngineCbx::LoadMediabox(int pageNo) {
 
     ImageData img = GetImageData(pageNo);
     if (img.data) {
-        Gdiplus::Size size = BitmapSizeFromData(img.data, img.size());
+        Gdiplus::Size size = BitmapSizeFromData((const u8*)img.data, img.size());
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();

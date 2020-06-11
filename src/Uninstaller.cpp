@@ -804,7 +804,7 @@ static Gdiplus::Bitmap* LoadRaMicroSplash() {
     if (d.empty()) {
         return nullptr;
     }
-    return BitmapFromData(d.data(), d.size());
+    return BitmapFromData((const u8*)d.data(), d.size());
 }
 
 static bool CreateRaMicroUninstallerWindow() {
