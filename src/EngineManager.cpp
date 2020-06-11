@@ -142,12 +142,12 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         engine = CreateEngineMultiFromFile(path, pwdUI);
     } else if (kind == kindFileXps) {
         engine = CreateXpsEngineFromFile(path);
+    } else if (kind == kindFileDjVu) {
+        engine = CreateDjVuEngineFromFile(path);
     }
 
     return engine;
     /*
-        } else if (IsDjVuEngineSupportedFile(path, sniff)) {
-            engine = CreateDjVuEngineFromFile(path);
         } else if (IsImageEngineSupportedFile(path, sniff)) {
             engine = CreateImageEngineFromFile(path);
         } else if (IsImageDirEngineSupportedFile(path, sniff)) {

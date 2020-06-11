@@ -1179,9 +1179,9 @@ int EngineDjVu::GetPageByLabel(const WCHAR* label) const {
     return EngineBase::GetPageByLabel(label);
 }
 
-EngineBase* EngineDjVu::CreateFromFile(const WCHAR* fileName) {
+EngineBase* EngineDjVu::CreateFromFile(const WCHAR* path) {
     EngineDjVu* engine = new EngineDjVu();
-    if (!engine->Load(fileName)) {
+    if (!engine->Load(path)) {
         delete engine;
         return nullptr;
     }
@@ -1197,16 +1197,19 @@ EngineBase* EngineDjVu::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-bool IsDjVuEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (sniff) {
-        return file::StartsWith(fileName, "AT&T");
-    }
-
-    return str::EndsWithI(fileName, L".djvu");
+bool IsDjVuFileName(const WCHAR* path) {
+    return str::EndsWithI(path, L".djvu");
 }
 
-EngineBase* CreateDjVuEngineFromFile(const WCHAR* fileName) {
-    return EngineDjVu::CreateFromFile(fileName);
+bool IsDjVuEngineSupportedFile(const WCHAR* path, bool sniff) {
+    if (sniff) {
+        return file::StartsWith(path, "AT&T");
+    }
+    return IsDjVuFileName(path);
+}
+
+EngineBase* CreateDjVuEngineFromFile(const WCHAR* path) {
+    return EngineDjVu::CreateFromFile(path);
 }
 
 EngineBase* CreateDjVuEngineFromStream(IStream* stream) {

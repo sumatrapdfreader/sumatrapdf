@@ -13,12 +13,15 @@ extern bool IfPdfFileContent(std::span<u8> d);
 extern bool IsEngineMultiFileName(const WCHAR* path);
 extern bool IsXpsFileName(const WCHAR* path);
 extern bool IsXpsArchive(const WCHAR* path);
+extern bool IsDjVuFileName(const WCHAR* path);
 
 // TODO: replace with an enum class FileKind { Unknown, PDF, ... };
 Kind kindFilePDF = "filePDF";
 Kind kindFileMulti = "fileMulti";
 Kind kindFileXps = "fileXPS";
+Kind kindFileDjVu = "fileDjVu";
 Kind kindFileZip = "fileZip";
+Kind kindFile7Z = "file7Z";
 Kind kindFileRar = "fileRar";
 Kind kindFileBmp = "fileBmp";
 Kind kindFilePng = "filePng";
@@ -30,14 +33,24 @@ Kind kindFileTiff = "fileTiff";
 Kind kindFileWebp = "fileTWebp";
 Kind kindFileJp2 = "fileJp2";
 
-#define RAR_SIG "Rar!\x1A\x07\x00"
-#define RAR_SIG_LEN (dimof(RAR_SIG) - 1)
-#define RAR5_SIG "Rar!\x1A\x07\x01\x00"
-#define RAR5_SIG_LEN (dimof(RAR5_SIG) - 1)
-#define SEVEN_ZIP_SIG "7z\xBC\xAF\x27\x1C"
-#define SEVEN_ZIP_SIG_LEN (dimof(SEVEN_ZIP_SIG) - 1)
-#define ZIP_SIG "PK\x03\x04"
-#define ZIP_SIG_LEN (dimof(ZIP_SIG) - 1)
+#define FILE_SIGS(V)                       \
+    V("Rar!\x1A\x07\x00", kindFileRar)     \
+    V("Rar!\x1A\x07\x01\x00", kindFileRar) \
+    V("7z\xBC\xAF\x27\x1C", kindFile7Z)    \
+    V("PK\x03\x04", kindFileZip)           \
+    V("AT&T", kindFileDjVu)
+
+struct FileSigInfo {
+    const char* sig;
+    size_t sigLen;
+    Kind kind;
+};
+
+#define MK_SIG(SIG, KIND) {SIG, sizeof(SIG) - 1, KIND},
+
+FileSigInfo gFileSigs[] = {FILE_SIGS(MK_SIG)};
+
+#undef MK_SIG
 
 // detect file type based on file content
 Kind SniffFileTypeFromData(std::span<u8> d) {
@@ -69,14 +82,13 @@ Kind SniffFileTypeFromData(std::span<u8> d) {
         case ImgFormat::JP2:
             return kindFileJp2;
     }
-    if (memeq(data, ZIP_SIG, ZIP_SIG_LEN)) {
-        return kindFileZip;
-    }
-    if (memeq(data, RAR_SIG, RAR_SIG_LEN)) {
-        return kindFileRar;
-    }
-    if (memeq(data, RAR5_SIG, RAR5_SIG_LEN)) {
-        return kindFileRar;
+    int n = (int)dimof(gFileSigs);
+    for (int i = 0; i < n; i++) {
+        const char* sig = gFileSigs[i].sig;
+        size_t sigLen = gFileSigs[i].sigLen;
+        if (memeq(data, sig, sigLen)) {
+            return gFileSigs[i].kind;
+        }
     }
     return nullptr;
 }
@@ -107,6 +119,9 @@ Kind FileTypeFromFileName(const WCHAR* path) {
     }
     if (IsXpsFileName(path)) {
         return kindFileXps;
+    }
+    if (IsDjVuFileName(path)) {
+        return kindFileDjVu;
     }
 
     // must be at the end, as it opens any folder as .vbkm

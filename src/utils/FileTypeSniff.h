@@ -5,7 +5,9 @@
 extern Kind kindFilePDF;
 extern Kind kindFileMulti;
 extern Kind kindFileXps;
+extern Kind kindFileDjVu;
 extern Kind kindFileZip;
+extern Kind kindFile7Z;
 extern Kind kindFileRar;
 extern Kind kindFileBmp;
 extern Kind kindFileGif;
