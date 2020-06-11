@@ -369,6 +369,9 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     str::Str path = strconv::WstrToUtf8(tab->filePath);
     path.Append(".bkm");
     bool ok = ExportBookmarksToFile(tocTree, "", path.c_str());
+    if (!ok) {
+        log("ExportBookmarsToFile() failed\n");
+    }
     ShowExportedBookmarksMsg(path.c_str());
 }
 
@@ -608,18 +611,19 @@ static void OpenEmbeddedFile(TabInfo* tab, PageDestination* dest) {
 static void SaveEmbeddedFile(TabInfo* tab, PageDestination* dest) {
     auto filePath = dest->GetValue();
     auto data = LoadEmbeddedPDFFile(filePath);
-    int streamNo = -1;
     AutoFreeWstr dir = path::GetDir(filePath);
     auto fileName = dest->GetName();
     AutoFreeWstr dstPath = path::Join(dir, fileName);
+#if 0 // TODO: why did I have it here?
+    int streamNo = -1;
     AutoFreeWstr fileSystemPath = ParseEmbeddedStreamNumber(filePath, &streamNo);
+#endif
     SaveDataToFile(tab->win->hwndFrame, dstPath, data);
     str::Free(data.data());
 }
 
 static void TocContextMenu(ContextMenuEvent* ev) {
     WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
-    CrashIf(!win);
     const WCHAR* filePath = win->ctrl->FilePath();
 
     POINT pt{};
@@ -664,10 +668,8 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     WCHAR* path = nullptr;
     if (dti && dti->dest) {
         dest = dti->dest;
-        if (dest) {
-            path = dest->GetValue();
-            isEmbeddedFile = (path != nullptr) && (dest->kind == kindDestinationLaunchEmbedded);
-        }
+        path = dest->GetValue();
+        isEmbeddedFile = (path != nullptr) && (dest->kind == kindDestinationLaunchEmbedded);
     }
     if (isEmbeddedFile) {
         auto embeddedName = dest->GetName();
@@ -775,9 +777,8 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 }
 
 static void AltBookmarksChanged(TabInfo* tab, int n, std::string_view s) {
-    WindowInfo* win = tab->win;
     if (n == 0) {
-        tab->currToc = tab->ctrl->GetToc();        
+        tab->currToc = tab->ctrl->GetToc();
     } else {
         tab->currToc = tab->altBookmarks[0]->tree;
     }
@@ -924,7 +925,6 @@ void OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
     ev->result = CDRF_DODEFAULT;
     ev->didHandle = true;
 
-    TreeCtrl* w = ev->treeCtrl;
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     NMCUSTOMDRAW* cd = &(tvcd->nmcd);
     if (cd->dwDrawStage == CDDS_PREPAINT) {
@@ -936,7 +936,6 @@ void OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
         // called before drawing each item
         TocItem* tocItem = (TocItem*)ev->treeItem;
-        ;
         if (!tocItem) {
             return;
         }
@@ -981,7 +980,6 @@ void TocTreeKeyDown(TreeKeyDownEvent* ev) {
     ev->result = 1;
 
     WindowInfo* win = FindWindowInfoByHwnd(ev->hwnd);
-    CrashIf(!win);
     if (win->tabsVisible && IsCtrlPressed()) {
         TabsOnCtrlTab(win, IsShiftPressed());
         return;
@@ -1062,7 +1060,6 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 }
 
 static void SubclassToc(WindowInfo* win) {
-    TreeCtrl* tree = win->tocTreeCtrl;
     HWND hwndTocBox = win->hwndTocBox;
 
     if (win->tocBoxSubclassId == 0) {
