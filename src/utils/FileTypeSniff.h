@@ -34,3 +34,4 @@ Kind SniffFileType(const WCHAR* filePath);
 Kind FileTypeFromFileName(const WCHAR*);
 bool IsImageEngineKind(Kind);
 bool IsCbxEngineKind(Kind);
+bool IsPSFileContent(std::span<u8> d);

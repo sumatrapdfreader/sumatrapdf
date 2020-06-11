@@ -5,12 +5,12 @@
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
 #include "utils/GdiplusUtil.h"
+#include "utils/ByteReader.h"
 #include "utils/FileTypeSniff.h"
 
 // TODO: move those functions here
 extern bool IsPdfFileName(const WCHAR* path);
 extern bool IsPdfFileContent(std::span<u8> d);
-extern bool IsPSFileContent(std::span<u8> d);
 extern bool IsEngineMultiFileName(const WCHAR* path);
 extern bool IsXpsArchive(const WCHAR* path);
 extern bool IsDjVuFileName(const WCHAR* path);
@@ -207,6 +207,33 @@ Kind SniffFileTypeFromData(std::span<u8> d) {
         }
     }
     return nullptr;
+}
+
+bool IsPSFileContent(std::span<u8> d) {
+    char* header = (char*)d.data();
+    size_t n = d.size();
+    if (n < 64) {
+        return false;
+    }
+    // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
+    if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
+        DWORD psStart = ByteReader(d).DWordLE(4);
+        return psStart >= n - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
+    }
+    if (str::StartsWith(header, "%!PS-Adobe-")) {
+        return true;
+    }
+    // PJL (Printer Job Language) files containing Postscript data
+    // https://developers.hp.com/system/files/PJL_Technical_Reference_Manual.pdf
+    bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
+    if (isPJL) {
+        // TODO: use something else other than str::Find() so that it works even if header is not null-terminated
+        const char* hdr = str::Find(header, "\n%!PS-Adobe-");
+        if (!hdr) {
+            isPJL = false;
+        }
+    }
+    return isPJL;
 }
 
 // detect file type based on file content

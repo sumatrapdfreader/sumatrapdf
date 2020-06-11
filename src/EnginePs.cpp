@@ -6,6 +6,7 @@
 #include "utils/ByteReader.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/WinUtil.h"
 #include "utils/Log.h"
 
@@ -379,48 +380,21 @@ bool IsPsEngineAvailable() {
     return gswin32c.Get() != nullptr;
 }
 
-bool IsPSFileContent(std::span<u8> d) {
-    char* header = (char*)d.data();
-    size_t n = d.size();
-    if (n < 64) {
-        return false;
-    }
-    // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
-    if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
-        DWORD psStart = ByteReader(d).DWordLE(4);
-        return psStart >= n - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
-    }
-    if (str::StartsWith(header, "%!PS-Adobe-")) {
-        return true;
-    }
-    // PJL (Printer Job Language) files containing Postscript data
-    // https://developers.hp.com/system/files/PJL_Technical_Reference_Manual.pdf
-    bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
-    if (isPJL) {
-        // TODO: use something else other than str::Find() so that it works even if header is not null-terminated
-        const char* hdr = str::Find(header, "\n%!PS-Adobe-");
-        if (!hdr) {
-            isPJL = false;
-        }
-    }
-    return isPJL;
-}
-
-bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsPsEngineSupportedFile(const WCHAR* path, bool sniff) {
     if (!IsPsEngineAvailable()) {
         return false;
     }
     if (sniff) {
         // +1 for zero-termination
         char header[2048 + 1] = {0};
-        int n = file::ReadN(fileName, header, sizeof(header));
+        int n = file::ReadN(path, header, sizeof(header));
         if (n <= 0) {
             return false;
         }
         return IsPSFileContent({(u8*)header, (size_t)n});
     }
-
-    return str::EndsWithI(fileName, L".ps") || str::EndsWithI(fileName, L".ps.gz") || str::EndsWithI(fileName, L".eps");
+    Kind kind = SniffFileType(path);
+    return kind == kindFilePS;
 }
 
 EngineBase* CreatePsEngineFromFile(const WCHAR* fileName) {
