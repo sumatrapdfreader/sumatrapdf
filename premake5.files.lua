@@ -485,6 +485,7 @@ function utils_files()
     "BitReader.*",
     "BuildConfig.h",
     "ByteOrderDecoder.*",
+    "ByteReader.*",
     "ByteWriter.*",
     "CmdLineParser.*",
     "ColorUtil.*",
