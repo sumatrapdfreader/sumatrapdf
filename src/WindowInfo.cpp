@@ -369,7 +369,7 @@ void LinkHandler::GotoLink(PageDestination* dest) {
 
 void LinkHandler::ScrollTo(PageDestination* dest) {
     CrashIf(!owner || owner->linkHandler != this);
-    if (!dest || !owner->IsDocLoaded()) {
+    if (!dest || !owner || !owner->IsDocLoaded()) {
         return;
     }
 

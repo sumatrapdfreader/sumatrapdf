@@ -366,17 +366,7 @@ Exit:
 
 // asan build crashes in UnRAR code
 // see https://codeeval.dev/gist/801ad556960e59be41690d0c2fa7cba0
-#if defined(ASAN_BUILD)
-static bool disableUnrarFallback = true;
-#else
-static bool disableUnrarFallback = false;
-#endif
-
 bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
-    if (disableUnrarFallback) {
-        return false;
-    }
-
     if (!rarPathUtf) {
         return false;
     }

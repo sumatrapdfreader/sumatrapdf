@@ -27,11 +27,18 @@ Notes on targets:
 
 ### Asan notes
 
-Flags: https://github.com/google/sanitizers/wiki/SanitizerCommonFlags
+Flags:
+* https://github.com/google/sanitizers/wiki/SanitizerCommonFlags
+* https://github.com/google/sanitizers/wiki/AddressSanitizerFlags
+
 Can be set with env variable:
 * `ASAN_OPTIONS=halt_on_error=0:allocator_may_return_null=1:verbosity=2:check_malloc_usable_size=false:print_suppressions=true:suppressions="C:\Users\kjk\src\sumatrapdf\asan.supp"`
 
 In Visual Studio, this is in  `Debugging`, `Environment` section.
+
+Note:
+* as of VS 16.6.2 `ASAN_OPTIONS=detect_leaks=1` (i.e. memory leaks) doesn't work.
+  Unix version relies on tcmalloc so this might never work
 
 Supressing issues: https://clang.llvm.org/docs/AddressSanitizer.html#issue-suppression
 Note: I couldn't get supressing to work.
