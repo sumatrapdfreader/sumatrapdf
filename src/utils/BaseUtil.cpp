@@ -190,6 +190,9 @@ void* PoolAllocator::At(int i) {
         curr = curr->next;
     }
     CrashIf(!curr);
+    if (!curr) {
+        return nullptr;
+    }
     CrashIf(i >= curr->nAllocs);
     i32* index = (i32*)curr->end;
     // elements are in reverse
