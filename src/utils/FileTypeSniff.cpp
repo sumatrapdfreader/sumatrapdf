@@ -6,6 +6,7 @@
 #include "utils/FileUtil.h"
 #include "utils/GdiplusUtil.h"
 #include "utils/ByteReader.h"
+#include "utils/Archive.h"
 #include "utils/FileTypeSniff.h"
 
 // TODO: move those functions here
@@ -15,7 +16,6 @@ extern bool IsEngineMultiFileName(const WCHAR* path);
 extern bool IsXpsArchive(const WCHAR* path);
 extern bool IsDjVuFileName(const WCHAR* path);
 extern bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff);
-extern bool IsEpubFile(const WCHAR* path);
 
 // TODO: replace with an enum class FileKind { Unknown, PDF, ... };
 Kind kindFilePDF = "filePDF";
@@ -234,6 +234,36 @@ bool IsPSFileContent(std::span<u8> d) {
         }
     }
     return isPJL;
+}
+
+bool IsEpubFile(const WCHAR* path) {
+    AutoDelete<MultiFormatArchive> archive = OpenZipArchive(path, true);
+    if (!archive.get()) {
+        return false;
+    }
+    AutoFree mimetype(archive->GetFileDataByName("mimetype"));
+    if (!mimetype.data) {
+        return false;
+    }
+    char* d = mimetype.data;
+    // trailing whitespace is allowed for the mimetype file
+    for (size_t i = mimetype.size(); i > 0; i--) {
+        if (!str::IsWs(d[i - 1])) {
+            break;
+        }
+        d[i - 1] = '\0';
+    }
+    // a proper EPUB document has a "mimetype" file with content
+    // "application/epub+zip" as the first entry in its ZIP structure
+    /* cf. http://forums.fofou.org/sumatrapdf/topic?id=2599331
+    if (!str::Eq(zip.GetFileName(0), L"mimetype"))
+        return false; */
+    if (str::Eq(mimetype.data, "application/epub+zip")) {
+        return true;
+    }
+    // also open renamed .ibooks files
+    // cf. http://en.wikipedia.org/wiki/IBooks#Formats
+    return str::Eq(mimetype.data, "application/x-ibooks+zip");
 }
 
 // detect file type based on file content

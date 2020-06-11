@@ -6,6 +6,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\MiniMui.h">
       <Filter>mui</Filter>
     </ClInclude>
@@ -15,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\EngineDump.cpp" />
+    <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\mui\MiniMui.cpp">
       <Filter>mui</Filter>
     </ClCompile>

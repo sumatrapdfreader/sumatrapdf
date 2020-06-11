@@ -35,3 +35,4 @@ Kind FileTypeFromFileName(const WCHAR*);
 bool IsImageEngineKind(Kind);
 bool IsCbxEngineKind(Kind);
 bool IsPSFileContent(std::span<u8> d);
+bool IsEpubFile(const WCHAR* path);

@@ -924,6 +924,7 @@ end
 function engine_dump_files()
   files_in_dir("src", {
     "EngineDump.cpp",
+    "SumatraConfig.*",
     "mui/MiniMui.*",
     "mui/TextRender.*"
   })
