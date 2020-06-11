@@ -248,6 +248,9 @@
     <ClCompile Include="..\src\utils\ByteReader.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\ByteWriter.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\CmdLineParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>

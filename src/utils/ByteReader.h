@@ -2,8 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct ByteReader {
-    const u8* d;
-    size_t len;
+    const u8* d = nullptr;
+    size_t len = 0;
 
     // Unpacks a structure from the data according to the given format
     // e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
