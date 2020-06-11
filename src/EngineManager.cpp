@@ -157,12 +157,12 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         if (!engine) {
             engine = CreateImageDirEngineFromFile(path);
         }
+    } else if (IsCbxEngineKind(kind)) {
+        engine = CreateCbxEngineFromFile(path);
     }
 
     return engine;
     /*
-        } else if (IsCbxEngineSupportedFile(path, sniff)) {
-            engine = CreateCbxEngineFromFile(path);
         } else if (IsPsEngineSupportedFile(path, sniff)) {
             engine = CreatePsEngineFromFile(path);
         } else if (enableChmEngine && IsChmEngineSupportedFile(path, sniff)) {

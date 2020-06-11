@@ -97,15 +97,28 @@ static Kind imageEngineKinds[] = {
     kindFileJxr, kindFileHdp,  kindFileWdp, kindFileWebp, kindFileJp2,
 };
 
-bool IsImageEngineKind(Kind kind) {
-    int n = dimof(imageEngineKinds);
-    for (int i = 0; i < n; i++) {
-        Kind k = imageEngineKinds[i];
+static bool KindInArray(Kind* kinds, int nKinds, Kind kind) {
+    for (int i = 0; i < nKinds; i++) {
+        Kind k = kinds[i];
         if (k == kind) {
             return true;
         }
     }
     return false;
+}
+
+bool IsImageEngineKind(Kind kind) {
+    int n = dimof(imageEngineKinds);
+    return KindInArray(imageEngineKinds, n, kind);
+}
+
+static Kind cbxKinds[] = {
+    kindFileCbz, kindFileCbr, kindFileCb7, kindFileCbt, kindFileZip, kindFileRar, kindFile7Z, kindFileTar,
+};
+
+bool IsCbxEngineKind(Kind kind) {
+    int n = dimof(cbxKinds);
+    return KindInArray(cbxKinds, n, kind);
 }
 
 #define FILE_SIGS(V)                       \

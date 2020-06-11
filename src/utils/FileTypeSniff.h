@@ -29,3 +29,4 @@ Kind SniffFileTypeFromData(std::span<u8> d);
 Kind SniffFileType(const WCHAR* filePath);
 Kind FileTypeFromFileName(const WCHAR*);
 bool IsImageEngineKind(Kind);
+bool IsCbxEngineKind(Kind);
