@@ -6,6 +6,7 @@
 #include "utils/ScopedWin.h"
 
 #include "utils/FileUtil.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
@@ -1276,57 +1277,34 @@ RectD EngineCbx::LoadMediabox(int pageNo) {
     return RectD();
 }
 
-#define RAR_SIGNATURE "Rar!\x1A\x07\x00"
-#define RAR_SIGNATURE_LEN 7
-#define RAR5_SIGNATURE "Rar!\x1A\x07\x01\x00"
-#define RAR5_SIGNATURE_LEN 8
-
 EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
-    if (str::EndsWithI(path, L".cbz") || str::EndsWithI(path, L".zip") || file::StartsWithN(path, "PK\x03\x04", 4)) {
-        auto* archive = OpenZipArchive(path, false);
-        if (!archive) {
-            return nullptr;
-        }
-        auto* engine = new EngineCbx(archive);
-        if (engine->LoadFromFile(path)) {
-            return engine;
-        }
-        delete engine;
+    // we sniff the type from content first because the
+    // files can be mis-named e.g. .cbr archive with .cbz ext
+    Kind kind = SniffFileType(path);
+    MultiFormatArchive* archive = nullptr;
+    if (kind == kindFileZip) {
+        archive = OpenZipArchive(path, false);
+    } else if (kind == kindFileRar) {
+        archive = OpenRarArchive(path);
+    } else if (kind == kindFile7Z) {
+        archive = Open7zArchive(path);
     }
-    // also try again if a .cbz or .zip file failed to load, it might
-    // just have been misnamed (which apparently happens occasionally)
-    if (str::EndsWithI(path, L".cbr") || str::EndsWithI(path, L".rar") ||
-        file::StartsWithN(path, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
-        file::StartsWithN(path, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN)) {
-        auto* archive = OpenRarArchive(path);
-        if (archive) {
-            auto* engine = new EngineCbx(archive);
-            if (engine->LoadFromFile(path)) {
-                return engine;
-            }
-            delete engine;
+
+    if (!archive) {
+        kind = FileTypeFromFileName(path);
+        if (kind == kindFileCbt || kind == kindFileTar) {
+            archive = OpenTarArchive(path);
         }
     }
-    if (str::EndsWithI(path, L".cb7") || str::EndsWithI(path, L".7z") || file::StartsWith(path, "7z\xBC\xAF\x27\x1C")) {
-        MultiFormatArchive* archive = Open7zArchive(path);
-        if (archive) {
-            auto* engine = new EngineCbx(archive);
-            if (engine->LoadFromFile(path)) {
-                return engine;
-            }
-            delete engine;
-        }
+    if (!archive) {
+        return nullptr;
     }
-    if (str::EndsWithI(path, L".cbt") || str::EndsWithI(path, L".tar")) {
-        MultiFormatArchive* archive = OpenTarArchive(path);
-        if (archive) {
-            auto* engine = new EngineCbx(archive);
-            if (engine->LoadFromFile(path)) {
-                return engine;
-            }
-            delete engine;
-        }
+
+    auto* engine = new EngineCbx(archive);
+    if (engine->LoadFromFile(path)) {
+        return engine;
     }
+    delete engine;
     return nullptr;
 }
 
@@ -1370,24 +1348,20 @@ EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
     return nullptr;
 }
 
-static const char* cbxExts = ".cbz\0.cbr\0.cb7\0.cbt\0.zip\0.rar\0.7z\0.tar\0";
-
 bool IsCbxEngineSupportedFile(const WCHAR* path, bool sniff) {
+    Kind kind;
     if (sniff) {
         // we don't also sniff for ZIP files, as these could also
         // be broken XPS files for which failure is expected
         // TODO: add TAR format sniffing
-        return file::StartsWithN(path, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
-               file::StartsWithN(path, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN) ||
-               file::StartsWith(path, "7z\xBC\xAF\x27\x1C");
+        kind = SniffFileType(path);
+        if (kind == kindFileRar || kind == kindFile7Z) {
+            return true;
+        }
     }
-    if (str::EndsWithI(path, L".fb2.zip")) {
-        return false;
-    }
-    const WCHAR* ext = path::GetExtNoFree(path);
-    AutoFreeWstr extLower = str::ToLower(ext);
-    int idx = seqstrings::StrToIdx(cbxExts, extLower);
-    return idx >= 0;
+    kind = FileTypeFromFileName(path);
+    bool res = IsCbxEngineKind(kind);
+    return res;
 }
 
 EngineBase* CreateCbxEngineFromFile(const WCHAR* path) {

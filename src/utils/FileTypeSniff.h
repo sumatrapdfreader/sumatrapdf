@@ -24,6 +24,8 @@ extern Kind kindFileWdp;
 extern Kind kindFileWebp;
 extern Kind kindFileJp2;
 extern Kind kindFileDir;
+extern Kind kindFileCbt;
+extern Kind kindFileTar;
 
 Kind SniffFileTypeFromData(std::span<u8> d);
 Kind SniffFileType(const WCHAR* filePath);
