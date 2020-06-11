@@ -180,14 +180,27 @@ bool AttrInfo::NameIs(const char* s) const {
     return str::EqNIx(name, nameLen, s);
 }
 
+// return true if nameToCheck is the same as s after skipping namespace preifix
+static bool IsNameWithNS(const char* s, size_t sLen, const char* nameToCheck) {
+    const char* sRealStart = s;
+    size_t len = sLen;
+    // skip (potential) namespace prefix i.e. "foo:bar" = "bar"
+    const char* tmp = (const char*)memchr(s, ':', len);
+    if (tmp) {
+        sRealStart = tmp + 1;
+        size_t prefixLen = sRealStart - s;
+        CrashIf(prefixLen > len);
+        len -= prefixLen;
+    }
+    return str::EqNIx(sRealStart, len, nameToCheck);
+}
+
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "xlink:href" with name="href" and any value of attrNS)
 // TODO: add proper namespace support
-bool AttrInfo::NameIsNS(const char* s, const char* ns) const {
+bool AttrInfo::NameIsNS(const char* nameToCheck, const char* ns) const {
     CrashIf(!ns);
-    const char* nameStart = (const char*)memchr(name, ':', nameLen);
-    nameStart = nameStart ? nameStart + 1 : name;
-    return str::EqNIx(nameStart, nameLen - (nameStart - name), s);
+    return IsNameWithNS(name, nameLen, nameToCheck);
 }
 
 bool AttrInfo::ValIs(const char* s) const {
@@ -213,21 +226,20 @@ void HtmlToken::SetText(const char* new_s, const char* end) {
 void HtmlToken::SetError(ParsingError err, const char* errContext) {
     type = Error;
     error = err;
-    s = errContext;
+    this->s = errContext;
 }
 
-bool HtmlToken::NameIs(const char* name) const {
-    return (str::Len(name) == nLen) && str::StartsWithI(s, name);
+bool HtmlToken::NameIs(const char* nameToFind) const {
+    return (str::Len(nameToFind) == nLen) && str::StartsWithI(s, nameToFind);
 }
 
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "opf:content" with name="content" and any value of ns)
 // TODO: add proper namespace support
-bool HtmlToken::NameIsNS(const char* name, const char* ns) const {
+bool HtmlToken::NameIsNS(const char* nameToCheck, const char* ns) const {
     CrashIf(!ns);
-    const char* nameStart = (const char*)memchr(s, ':', nLen);
-    nameStart = nameStart ? nameStart + 1 : s;
-    return str::EqNIx(nameStart, nLen - (nameStart - s), name);
+    // nLen is 'nameLen' i.e. first nLen characters of s is a name
+    return IsNameWithNS(s, nLen, nameToCheck);
 }
 
 // reparse point is an address within html that we can

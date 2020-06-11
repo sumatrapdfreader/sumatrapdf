@@ -314,7 +314,7 @@ class TabPainter {
 
             // paint "x"'s circle
             iterator.NextMarker(&shape);
-            //bool closeCircleEnabled = true;
+            // bool closeCircleEnabled = true;
             if ((xClicked == i || xHighlighted == i) /*&& closeCircleEnabled*/) {
                 br.SetColor(GdiRgbFromCOLORREF(circleColor));
                 gfx.FillPath(&br, &shape);
