@@ -993,16 +993,17 @@ EngineBase* EngineXps::CreateFromStream(IStream* stream) {
     return engine;
 }
 
+bool IsXpsDirectory(const WCHAR* path) {
+    // allow opening uncompressed XPS files as well
+    AutoFreeWstr relsPath(path::Join(path, L"_rels\\.rels"));
+    return file::Exists(relsPath) || dir::Exists(relsPath);
+}
+
 bool IsXpsFileName(const WCHAR* path) {
     if (str::EndsWithI(path, L".xps") || str::EndsWithI(path, L".oxps")) {
         return true;
     }
-
-    if (dir::Exists(path)) {
-        // allow opening uncompressed XPS files as well
-        AutoFreeWstr relsPath(path::Join(path, L"_rels\\.rels"));
-        return file::Exists(relsPath) || dir::Exists(relsPath);
-    }
+    return IsXpsDirectory(path);
     return false;
 }
 

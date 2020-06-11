@@ -1281,49 +1281,47 @@ RectD EngineCbx::LoadMediabox(int pageNo) {
 #define RAR5_SIGNATURE "Rar!\x1A\x07\x01\x00"
 #define RAR5_SIGNATURE_LEN 8
 
-EngineBase* EngineCbx::CreateFromFile(const WCHAR* fileName) {
-    if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
-        file::StartsWithN(fileName, "PK\x03\x04", 4)) {
-        auto* archive = OpenZipArchive(fileName, false);
+EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
+    if (str::EndsWithI(path, L".cbz") || str::EndsWithI(path, L".zip") || file::StartsWithN(path, "PK\x03\x04", 4)) {
+        auto* archive = OpenZipArchive(path, false);
         if (!archive) {
             return nullptr;
         }
         auto* engine = new EngineCbx(archive);
-        if (engine->LoadFromFile(fileName)) {
+        if (engine->LoadFromFile(path)) {
             return engine;
         }
         delete engine;
     }
     // also try again if a .cbz or .zip file failed to load, it might
     // just have been misnamed (which apparently happens occasionally)
-    if (str::EndsWithI(fileName, L".cbr") || str::EndsWithI(fileName, L".rar") ||
-        file::StartsWithN(fileName, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
-        file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN)) {
-        auto* archive = OpenRarArchive(fileName);
+    if (str::EndsWithI(path, L".cbr") || str::EndsWithI(path, L".rar") ||
+        file::StartsWithN(path, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
+        file::StartsWithN(path, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN)) {
+        auto* archive = OpenRarArchive(path);
         if (archive) {
             auto* engine = new EngineCbx(archive);
-            if (engine->LoadFromFile(fileName)) {
+            if (engine->LoadFromFile(path)) {
                 return engine;
             }
             delete engine;
         }
     }
-    if (str::EndsWithI(fileName, L".cb7") || str::EndsWithI(fileName, L".7z") ||
-        file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C")) {
-        MultiFormatArchive* archive = Open7zArchive(fileName);
+    if (str::EndsWithI(path, L".cb7") || str::EndsWithI(path, L".7z") || file::StartsWith(path, "7z\xBC\xAF\x27\x1C")) {
+        MultiFormatArchive* archive = Open7zArchive(path);
         if (archive) {
             auto* engine = new EngineCbx(archive);
-            if (engine->LoadFromFile(fileName)) {
+            if (engine->LoadFromFile(path)) {
                 return engine;
             }
             delete engine;
         }
     }
-    if (str::EndsWithI(fileName, L".cbt") || str::EndsWithI(fileName, L".tar")) {
-        MultiFormatArchive* archive = OpenTarArchive(fileName);
+    if (str::EndsWithI(path, L".cbt") || str::EndsWithI(path, L".tar")) {
+        MultiFormatArchive* archive = OpenTarArchive(path);
         if (archive) {
             auto* engine = new EngineCbx(archive);
-            if (engine->LoadFromFile(fileName)) {
+            if (engine->LoadFromFile(path)) {
                 return engine;
             }
             delete engine;
@@ -1374,26 +1372,26 @@ EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
 
 static const char* cbxExts = ".cbz\0.cbr\0.cb7\0.cbt\0.zip\0.rar\0.7z\0.tar\0";
 
-bool IsCbxEngineSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsCbxEngineSupportedFile(const WCHAR* path, bool sniff) {
     if (sniff) {
         // we don't also sniff for ZIP files, as these could also
         // be broken XPS files for which failure is expected
         // TODO: add TAR format sniffing
-        return file::StartsWithN(fileName, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
-               file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN) ||
-               file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C");
+        return file::StartsWithN(path, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
+               file::StartsWithN(path, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN) ||
+               file::StartsWith(path, "7z\xBC\xAF\x27\x1C");
     }
-    if (str::EndsWithI(fileName, L".fb2.zip")) {
+    if (str::EndsWithI(path, L".fb2.zip")) {
         return false;
     }
-    const WCHAR* ext = path::GetExtNoFree(fileName);
+    const WCHAR* ext = path::GetExtNoFree(path);
     AutoFreeWstr extLower = str::ToLower(ext);
     int idx = seqstrings::StrToIdx(cbxExts, extLower);
     return idx >= 0;
 }
 
-EngineBase* CreateCbxEngineFromFile(const WCHAR* fileName) {
-    return EngineCbx::CreateFromFile(fileName);
+EngineBase* CreateCbxEngineFromFile(const WCHAR* path) {
+    return EngineCbx::CreateFromFile(path);
 }
 
 EngineBase* CreateCbxEngineFromStream(IStream* stream) {

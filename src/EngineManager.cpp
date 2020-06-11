@@ -8,6 +8,7 @@
 
 #include "wingui/TreeModel.h"
 
+#include "SumatraConfig.h"
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineDjVu.h"
@@ -138,20 +139,28 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
     EngineBase* engine = nullptr;
     if (kind == kindFilePDF) {
         engine = CreateEnginePdfFromFile(path, pwdUI);
-    } else if (kind == kindFileMulti) {
+    } else if (kind == kindFileVbkm) {
         engine = CreateEngineMultiFromFile(path, pwdUI);
     } else if (kind == kindFileXps) {
         engine = CreateXpsEngineFromFile(path);
     } else if (kind == kindFileDjVu) {
         engine = CreateDjVuEngineFromFile(path);
+    } else if (IsImageEngineKind(kind)) {
+        engine = CreateImageEngineFromFile(path);
+    } else if (kind == kindFileDir) {
+        if (IsXpsDirectory(path)) {
+            engine = CreateXpsEngineFromFile(path);
+        }
+        if (false && !engine && gIsRaMicroBuild) {
+            engine = CreateEngineMultiFromFile(path, pwdUI);
+        }
+        if (!engine) {
+            engine = CreateImageDirEngineFromFile(path);
+        }
     }
 
     return engine;
     /*
-        } else if (IsImageEngineSupportedFile(path, sniff)) {
-            engine = CreateImageEngineFromFile(path);
-        } else if (IsImageDirEngineSupportedFile(path, sniff)) {
-            engine = CreateImageDirEngineFromFile(path);
         } else if (IsCbxEngineSupportedFile(path, sniff)) {
             engine = CreateCbxEngineFromFile(path);
         } else if (IsPsEngineSupportedFile(path, sniff)) {
