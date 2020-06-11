@@ -21,6 +21,7 @@ extern "C" {
 #include "AppColors.h"
 #include "wingui/TreeModel.h"
 
+#include "SumatraConfig.h"
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
@@ -505,14 +506,8 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     return true;
 }
 
-#include "SumatraConfig.h"
-
-bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (sniff) {
-        // we don't support sniffing
-        return false;
-    }
-    if (str::EndsWithI(fileName, L".vbkm")) {
+bool IsEngineMultiFileName(const WCHAR* path) {
+    if (str::EndsWithI(path, L".vbkm")) {
         return true;
     }
 
@@ -523,22 +518,30 @@ bool IsEngineMultiSupportedFile(const WCHAR* fileName, bool sniff) {
     // -folder-open-all (show all files we support in toc)
     if (gIsRaMicroBuild) {
         // for 'Open Folder' functionality
-        if (path::IsDirectory(fileName)) {
+        if (path::IsDirectory(path)) {
             return true;
         }
     }
     return false;
 }
 
-EngineBase* CreateEngineMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-    if (str::IsEmpty(fileName)) {
+bool IsEngineMultiSupportedFile(const WCHAR* path, bool sniff) {
+    if (sniff) {
+        // we don't support sniffing
+        return false;
+    }
+    return IsEngineMultiFileName(path);
+}
+
+EngineBase* CreateEngineMultiFromFile(const WCHAR* path, PasswordUI* pwdUI) {
+    if (str::IsEmpty(path)) {
         return nullptr;
     }
-    if (path::IsDirectory(fileName)) {
-        return CreateEngineMultiFromDirectory(fileName);
+    if (path::IsDirectory(path)) {
+        return CreateEngineMultiFromDirectory(path);
     }
     EngineMulti* engine = new EngineMulti();
-    if (!engine->Load(fileName, pwdUI)) {
+    if (!engine->Load(path, pwdUI)) {
         delete engine;
         return nullptr;
     }

@@ -9,6 +9,7 @@
 
 // TODO: replace with an enum class FileKind { Unknown, PDF, ... };
 Kind kindFilePDF = "filePDF";
+Kind kindFileMulti = "fileMulti";
 Kind kindFileZip = "fileZip";
 Kind kindFileRar = "fileRar";
 Kind kindFileBmp = "fileBmp";
@@ -33,11 +34,14 @@ Kind kindFileJp2 = "fileJp2";
 extern bool IsPdfFileName(const WCHAR* path);
 extern bool IfPdfFileContent(std::span<u8> d);
 
+extern bool IsEngineMultiFileName(const WCHAR* path);
+
 // detect file type based on file content
 Kind SniffFileType(std::span<u8> d) {
     if (IfPdfFileContent(d)) {
         return kindFilePDF;
     }
+    // we don't support sniffing kindFileMulti
 
     u8* data = d.data();
     size_t len = d.size();
@@ -92,6 +96,9 @@ Kind FileTypeFromFileName(const WCHAR* path) {
     }
     if (IsPdfFileName(path)) {
         return kindFilePDF;
+    }
+    if (IsEngineMultiFileName(path)) {
+        return kindFileMulti;
     }
 
     return nullptr;

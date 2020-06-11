@@ -3,6 +3,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 extern Kind kindFilePDF;
+extern Kind kindFileMulti;
 extern Kind kindFileZip;
 extern Kind kindFileRar;
 extern Kind kindFileBmp;
