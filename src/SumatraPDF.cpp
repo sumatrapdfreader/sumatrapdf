@@ -546,12 +546,12 @@ static void UpdateSidebarDisplayState(TabInfo* tab, DisplayState* ds) {
 }
 
 void UpdateTabFileDisplayStateForTab(TabInfo* tab) {
-    WindowInfo* win = tab->win;
-    // TODO: this is called multiple times for each tab
-    RememberDefaultWindowPosition(win);
     if (!tab || !tab->ctrl) {
         return;
     }
+    WindowInfo* win = tab->win;
+    // TODO: this is called multiple times for each tab
+    RememberDefaultWindowPosition(win);
     DisplayState* ds = gFileHistory.Find(tab->filePath, nullptr);
     if (!ds) {
         return;
@@ -1251,11 +1251,11 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
     // that invalidates the mupdf objects that we hold in editAnnotsWindow
     // TODO: a better approach would be to have a callback that editAnnotsWindow
     // would register for and re-do its state
-    if (tab->editAnnotsWindow) {
+    if (!tab || tab->editAnnotsWindow) {
         return;
     }
     if (!win->IsDocLoaded()) {
-        if (!autoRefresh && tab) {
+        if (!autoRefresh) {
             LoadArgs args(tab->filePath, win);
             args.forceReuse = true;
             LoadDocument(args);
@@ -1718,12 +1718,14 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         return win;
     }
 
+#if 0 // TODO: can't happen because of earlier check. figure out why it's here or delete
     if (!ctrl) {
         if (gFileHistory.MarkFileInexistent(fullPath)) {
             prefs::Save();
         }
         return win;
     }
+#endif
 
     auto currTab = win->currentTab;
     AutoFree path = strconv::WstrToUtf8(currTab->filePath);
@@ -1765,10 +1767,6 @@ void LoadModelIntoTab(TabInfo* tab) {
         return;
     }
     WindowInfo* win = tab->win;
-    if (!tab) {
-        return;
-    }
-
     CloseDocumentInTab(win, true);
 
     win->currentTab = tab;
@@ -4018,7 +4016,6 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
     SplitterCtrl* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    CrashIf(!win);
     bool done = ev->done;
 
     Point pcur;
@@ -4046,7 +4043,6 @@ static void OnFavSplitterMove(SplitterMoveEvent* ev) {
     SplitterCtrl* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    CrashIf(!win);
     bool done = ev->done;
 
     Point pcur;
