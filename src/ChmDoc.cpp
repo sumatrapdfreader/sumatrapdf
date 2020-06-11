@@ -114,7 +114,7 @@ static char* GetCharZ(std::span<u8> d, size_t off) {
 void ChmDoc::ParseWindowsData() {
     AutoFree windowsData = GetData("/#WINDOWS");
     auto stringsData = GetData("/#STRINGS");
-    AutoFree stringsDataFree = stringsData;
+    AutoFree stringsDataFree(stringsData);
     if (windowsData.empty() || stringsData.empty()) {
         return;
     }
@@ -239,8 +239,9 @@ char* ChmDoc::ResolveTopicID(unsigned int id) {
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
             auto stringsData = GetData("/#STRINGS");
-            AutoFree stringsDataFree = stringsData;
-            return GetCharZ(stringsData, br.DWordLE(off + 4));
+            auto res = GetCharZ(stringsData, br.DWordLE(off + 4));
+            str::Free(stringsData);
+            return res;
         }
     }
     return nullptr;
