@@ -74,8 +74,6 @@ class Grid : public Control {
     int* maxColWidth;
     int* maxRowHeight;
 
-    Gdiplus::Size desiredSize; // calculated in Measure()
-
     void RebuildCellDataIfNeeded();
     Cell* GetCell(int row, int col) const;
     Gdiplus::Point GetCellPos(int row, int col) const;

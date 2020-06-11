@@ -1047,7 +1047,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         viewPort.x = scrollX + pageInfo->pos.x - windowMargin.left;
     } else if (-1 != scrollX) {
         viewPort.x = scrollX;
-    } else if (-1 == scrollX && 1 == pageNo && IsBookView(GetDisplayMode())) {
+    } else if (1 == pageNo && IsBookView(GetDisplayMode())) {
         // make sure to not display the blank space beside the first page in cover mode
         viewPort.x = pageInfo->pos.x - windowMargin.left;
     } else if (viewPort.x >= pageInfo->pos.x + pageInfo->pos.dx) {
