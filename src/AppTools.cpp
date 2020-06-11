@@ -615,7 +615,7 @@ const WCHAR* ExractUnrarDll() {
 
     HGLOBAL res = 0;
     auto h = GetModuleHandle(nullptr);
-    auto resName = MAKEINTRESOURCEW(1);
+    WCHAR* resName = MAKEINTRESOURCEW(1);
     HRSRC resSrc = FindResourceW(h, resName, RT_RCDATA);
     if (!resSrc) {
         return nullptr;

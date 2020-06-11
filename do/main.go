@@ -69,6 +69,9 @@ func runCppCheck(all bool) {
 		// complains about: char* x; float* y = (float*)x;
 		// all false positives, can't write in a way that doesn't trigger warning
 		args = append(args, "--suppress=invalidPointerCast")
+		// all false postives, gets confused by MAKEINTRESOURCEW() and wcschr
+		// using auto can fix MAKEINTRESOURCEW(), casting wcschr but it's just silly
+		args = append(args, "--suppress=AssignmentIntegerToAddress")
 	}
 	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	cmd = exec.Command("cppcheck", args...)

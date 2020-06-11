@@ -175,7 +175,7 @@ static bool RegisterWinClass() {
     ATOM atom;
 
     HMODULE h = GetModuleHandleW(nullptr);
-    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcFrame);
     wcex.hIcon = LoadIconW(h, iconName);
     CrashIf(!wcex.hIcon);

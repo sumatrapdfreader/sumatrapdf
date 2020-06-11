@@ -2052,8 +2052,8 @@ Size ButtonGetIdealSize(HWND hwnd) {
 }
 
 std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
-    auto h = GetModuleHandle(nullptr);
-    auto name = MAKEINTRESOURCEW(id);
+    auto h = GetModuleHandleW(nullptr);
+    WCHAR* name = MAKEINTRESOURCEW(id);
     HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
     if (!resSrc) {
         return {nullptr, 0, 0};

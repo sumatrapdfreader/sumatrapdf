@@ -446,10 +446,10 @@ static bool RegisterWinClass() {
 
     FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
     auto h = GetModuleHandle(nullptr);
-    auto iconName = MAKEINTRESOURCEW(GetAppIconID());
-    wcex.hIcon = LoadIcon(h, iconName);
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+    wcex.hIcon = LoadIconW(h, iconName);
 
-    ATOM atom = RegisterClassEx(&wcex);
+    ATOM atom = RegisterClassExW(&wcex);
     CrashIf(!atom);
     return atom != 0;
 }
@@ -809,7 +809,7 @@ static Gdiplus::Bitmap* LoadRaMicroSplash() {
 
 static bool CreateRaMicroUninstallerWindow() {
     HMODULE h = GetModuleHandleW(nullptr);
-    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     HICON hIcon = LoadIconW(h, iconName);
 
     auto win = new RaMicroUninstallerWindow();

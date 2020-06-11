@@ -904,11 +904,11 @@ static bool RegisterWinClass() {
     WNDCLASSEX wcex{};
 
     FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
-    auto h = GetModuleHandle(nullptr);
-    auto resName = MAKEINTRESOURCEW(GetAppIconID());
-    wcex.hIcon = LoadIcon(h, resName);
+    auto h = GetModuleHandleW(nullptr);
+    WCHAR* resName = MAKEINTRESOURCEW(GetAppIconID());
+    wcex.hIcon = LoadIconW(h, resName);
 
-    ATOM atom = RegisterClassEx(&wcex);
+    ATOM atom = RegisterClassExW(&wcex);
     CrashIf(!atom);
     return atom != 0;
 }
@@ -1248,7 +1248,7 @@ static Gdiplus::Bitmap* LoadRaMicroSplash() {
 
 static bool CreateRaMicroInstallerWindow() {
     HMODULE h = GetModuleHandleW(nullptr);
-    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     HICON hIcon = LoadIconW(h, iconName);
 
     auto win = new RaMicroInstallerWindow();

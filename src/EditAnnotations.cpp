@@ -1238,7 +1238,7 @@ void StartEditAnnotations(TabInfo* tab) {
     auto win = new EditAnnotationsWindow();
     auto mainWindow = new Window();
     HMODULE h = GetModuleHandleW(nullptr);
-    LPCWSTR iconName = MAKEINTRESOURCEW(GetAppIconID());
+    WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     mainWindow->hIcon = LoadIconW(h, iconName);
 
     mainWindow->isDialog = true;

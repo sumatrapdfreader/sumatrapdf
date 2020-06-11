@@ -4844,7 +4844,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 bool IsDllBuild() {
-    HRSRC resSrc = FindResourceW(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
+    HRSRC resSrc = FindResourceW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
     return resSrc != nullptr;
 }
 
