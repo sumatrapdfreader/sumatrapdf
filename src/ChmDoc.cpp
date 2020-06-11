@@ -6,6 +6,7 @@
 #include <chm_lib.h>
 #include "utils/ByteReader.h"
 #include "utils/FileUtil.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/TrivialHtmlParser.h"
 #include "utils/ScopedWin.h"
@@ -547,16 +548,19 @@ bool ChmDoc::ParseIndex(EbookTocVisitor* visitor) {
     return ParseTocOrIndex(visitor, indexPath, true);
 }
 
-bool ChmDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (sniff)
-        return file::StartsWith(fileName, "ITSF");
-
-    return str::EndsWithI(fileName, L".chm");
+bool ChmDoc::IsSupportedFile(const WCHAR* path, bool sniff) {
+    Kind kind = nullptr;
+    if (sniff) {
+        kind = SniffFileType(path);
+    } else {
+        kind = FileTypeFromFileName(path);
+    }
+    return kind == kindFileChm;
 }
 
-ChmDoc* ChmDoc::CreateFromFile(const WCHAR* fileName) {
+ChmDoc* ChmDoc::CreateFromFile(const WCHAR* path) {
     ChmDoc* doc = new ChmDoc();
-    if (!doc || !doc->Load(fileName)) {
+    if (!doc || !doc->Load(path)) {
         delete doc;
         return nullptr;
     }

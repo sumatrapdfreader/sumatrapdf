@@ -164,13 +164,16 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         if (IsPsEngineAvailable()) {
             engine = CreatePsEngineFromFile(path);
         }
+    }
 
+    if (enableChmEngine) {
+        if (kind == kindFileChm) {
+            engine = CreateChmEngineFromFile(path);
+        }
     }
 
     return engine;
     /*
-        } else if (enableChmEngine && IsChmEngineSupportedFile(path, sniff)) {
-            engine = CreateChmEngineFromFile(path);
         } else if (!enableEngineEbooks) {
             // don't try to create any of the below ebook engines
         } else if (IsEpubEngineSupportedFile(path, sniff)) {

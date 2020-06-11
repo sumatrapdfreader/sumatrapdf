@@ -412,7 +412,7 @@ bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     }
     if (sniff) {
         // +1 for zero-termination
-        char header[2048+1] = {0};
+        char header[2048 + 1] = {0};
         int n = file::ReadN(fileName, header, sizeof(header));
         if (n <= 0) {
             return false;

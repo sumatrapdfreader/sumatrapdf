@@ -81,12 +81,10 @@ static const char* gFileExts =
     "\0";
 
 static Kind gExtsKind[] = {
-    kindFileFb2,
-    kindFilePS, kindFilePS,kindFilePS,
-    kindFileVbkm, kindFileFb2,  kindFileCbz,  kindFileCbr, kindFileCb7,  kindFileCbt,  kindFileZip,
-    kindFileRar,  kindFile7Z,   kindFileTar,  kindFilePDF, kindFileXps,  kindFileXps,  kindFileChm,
-    kindFilePng,  kindFileJpeg, kindFileJpeg, kindFileGif, kindFileTiff, kindFileTiff, kindFileBmp,
-    kindFileTga,  kindFileJxr,  kindFileHdp,  kindFileWdp, kindFileWebp, kindFileJp2,
+    kindFileFb2, kindFilePS,  kindFilePS,  kindFilePS,   kindFileVbkm, kindFileFb2,  kindFileCbz,  kindFileCbr,
+    kindFileCb7, kindFileCbt, kindFileZip, kindFileRar,  kindFile7Z,   kindFileTar,  kindFilePDF,  kindFileXps,
+    kindFileXps, kindFileChm, kindFilePng, kindFileJpeg, kindFileJpeg, kindFileGif,  kindFileTiff, kindFileTiff,
+    kindFileBmp, kindFileTga, kindFileJxr, kindFileHdp,  kindFileWdp,  kindFileWebp, kindFileJp2,
 };
 
 static Kind GetKindByFileExt(const WCHAR* path) {
@@ -95,7 +93,7 @@ static Kind GetKindByFileExt(const WCHAR* path) {
     const char* curr = gFileExts;
     while (curr && *curr) {
         if (str::EndsWithI(pathA.Get(), curr)) {
-            int n =(int)dimof(gExtsKind);
+            int n = (int)dimof(gExtsKind);
             CrashIf(idx >= n);
             if (idx >= n) {
                 return nullptr;
@@ -150,6 +148,7 @@ bool IsCbxEngineKind(Kind kind) {
     V("Rar!\x1A\x07\x01\x00", kindFileRar) \
     V("7z\xBC\xAF\x27\x1C", kindFile7Z)    \
     V("PK\x03\x04", kindFileZip)           \
+    V("ITSF", kindFileChm)                     \
     V("AT&T", kindFileDjVu)
 
 struct FileSig {
@@ -217,8 +216,8 @@ Kind SniffFileType(const WCHAR* path) {
     }
 
     // +1 for zero-termination
-    char buf[2048+1] = {0};
-    int n = file::ReadN(path, buf, dimof(buf)-1);
+    char buf[2048 + 1] = {0};
+    int n = file::ReadN(path, buf, dimof(buf) - 1);
     if (n <= 0) {
         return nullptr;
     }
