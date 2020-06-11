@@ -765,15 +765,13 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             DrawText(hdc, path::GetBaseNameNoFree(state->filePath), -1, &rTmp,
                      DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
-            // this crashes asan build in windows code
+            // note: this crashes asan build in windows code
             // see https://codeeval.dev/gist/bc761bb1ef1cce04e6a1d65e9d30201b
-            if (!gIsAsanBuild) {
-                SHFILEINFO sfi = {0};
-                UINT flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-                HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(state->filePath, 0, &sfi, sizeof(sfi), flags);
-                x = isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x;
-                ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
-            }
+            SHFILEINFO sfi = {0};
+            UINT flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
+            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(state->filePath, 0, &sfi, sizeof(sfi), flags);
+            x = isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x;
+            ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
             win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
         }
     }

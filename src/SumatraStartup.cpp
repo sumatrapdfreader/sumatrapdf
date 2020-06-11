@@ -987,13 +987,11 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         !restoreSession && i.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
 
     // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
-    if (!gIsAsanBuild) {
-        if (showStartPage) {
-            // make the shell prepare the image list, so that it's ready when the first window's loaded
-            SHFILEINFOW sfi = {0};
-            UINT flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-            SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flags);
-        }
+    if (showStartPage) {
+        // make the shell prepare the image list, so that it's ready when the first window's loaded
+        SHFILEINFOW sfi = {0};
+        UINT flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
+        SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flags);
     }
 
     WindowInfo* win = nullptr;
@@ -1156,6 +1154,12 @@ Exit:
 
     delete gLogBuf;
     delete gLogAllocator;
+
+    if (gIsAsanBuild) {
+        // TODO: crashes in wild places without this
+        // Note: ::ExitProcess(0) also crashes
+        ::TerminateProcess(GetCurrentProcess(), 0);
+    }
 
     if (gIsDebugBuild) {
         // output leaks after all destructors of static objects have run
