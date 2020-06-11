@@ -309,6 +309,10 @@ void Free(const char* s) {
     free((void*)s);
 }
 
+void Free(const u8* s) {
+    free((void*)s);
+}
+
 void ReplacePtr(char** s, const char* snew) {
     free(*s);
     *s = str::Dup(snew);

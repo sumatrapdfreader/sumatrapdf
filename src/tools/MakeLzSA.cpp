@@ -183,7 +183,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     if (cond) {                                 \
         fprintf(stderr, msg "\n", __VA_ARGS__); \
         return errorStep;                       \
-    }                                           \
+    }
 
 int mainVerify(const WCHAR* archivePath) {
     int errorStep = 1;

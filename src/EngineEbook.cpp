@@ -1324,7 +1324,7 @@ class ChmDataCache {
         return &images.Last().base;
     }
 
-    std::string_view GetFileData(const char* relPath, const char* pagePath) {
+    std::span<u8> GetFileData(const char* relPath, const char* pagePath) {
         AutoFree url(NormalizeURL(relPath, pagePath));
         return doc->GetData(url);
     }

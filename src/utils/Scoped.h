@@ -119,6 +119,11 @@ struct AutoFree {
         len = s.size();
     }
 
+    AutoFree(std::span<u8> s) {
+        data = (char*)s.data();
+        len = s.size();
+    }
+
     void Set(const char* newPtr) {
         free(data);
         data = (char*)newPtr;

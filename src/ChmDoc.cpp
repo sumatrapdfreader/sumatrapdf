@@ -39,7 +39,7 @@ bool ChmDoc::HasData(const char* fileName) {
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-std::string_view ChmDoc::GetData(const char* fileNameIn) {
+std::span<u8> ChmDoc::GetData(const char* fileNameIn) {
     AutoFree fileName;
     if (!str::StartsWith(fileNameIn, "/")) {
         fileName = str::Join("/", fileNameIn);
@@ -67,11 +67,11 @@ std::string_view ChmDoc::GetData(const char* fileNameIn) {
     }
 
     // +1 for 0 terminator for C string compatibility
-    char* data = AllocArray<char>(len + 1);
+    u8* data = AllocArray<u8>(len + 1);
     if (!data) {
         return {};
     }
-    if (!chm_retrieve_object(chmHandle, &info, (u8*)data, 0, len)) {
+    if (!chm_retrieve_object(chmHandle, &info, data, 0, len)) {
         return {};
     }
 
@@ -96,18 +96,18 @@ WCHAR* ChmDoc::ToStr(const char* text) {
     return strconv::FromCodePage(text, codepage);
 }
 
-static char* GetCharZ(std::string_view sv, size_t off) {
-    const char* data = sv.data();
-    size_t len = sv.size();
+static char* GetCharZ(std::span<u8> d, size_t off) {
+    u8* data = d.data();
+    size_t len = d.size();
     if (off >= len) {
         return nullptr;
     }
     CrashIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
-    const char* str = data + off;
-    if (str::IsEmpty(str)) {
+    u8* str = data + off;
+    if (str::IsEmpty((const char*)str)) {
         return nullptr;
     }
-    return str::Dup(str);
+    return str::Dup((const char*)str);
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS

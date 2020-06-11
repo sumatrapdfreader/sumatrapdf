@@ -10,6 +10,7 @@ struct ByteReader {
     bool Unpack(void* strct, size_t size, const char* format, size_t off, bool isBE) const;
 
     ByteReader(std::string_view data);
+    ByteReader(std::span<u8> data);
     ByteReader(const char* data, size_t len);
     ByteReader(const unsigned char* data, size_t len);
 

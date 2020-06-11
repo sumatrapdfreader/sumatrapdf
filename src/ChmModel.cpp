@@ -605,7 +605,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     Size size;
     onBitmapRenderedCb saveThumbnail;
     AutoFreeWstr homeUrl;
-    Vec<std::string_view> data;
+    Vec<std::span<u8>> data;
     CRITICAL_SECTION docAccess;
 
   public:
@@ -622,8 +622,8 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         delete hw;
         DestroyWindow(hwnd);
         delete doc;
-        for (auto&& sv : data) {
-            str::Free(sv.data());
+        for (auto&& d : data) {
+            str::Free(d.data());
         }
         LeaveCriticalSection(&docAccess);
         DeleteCriticalSection(&docAccess);
@@ -642,6 +642,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         UNUSED(url);
         return !newWindow;
     }
+
     void OnDocumentComplete(const WCHAR* url) override {
         if (url && *url == '/') {
             url++;
@@ -657,16 +658,19 @@ class ChmThumbnailTask : public HtmlWindowCallback {
             uitask::Post([=] { delete this; });
         }
     }
+
     void OnLButtonDown() override {
     }
+
     std::string_view GetDataForUrl(const WCHAR* url) override {
         ScopedCritSec scope(&docAccess);
         AutoFreeWstr plainUrl(url::GetFullPath(url));
         AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
         auto d = doc->GetData(urlUtf8.Get());
         data.Append(d);
-        return d;
+        return {(const char*)d.data(), d.size()};
     }
+
     void DownloadData(const WCHAR* url, std::string_view data) override {
         UNUSED(url);
         UNUSED(data);

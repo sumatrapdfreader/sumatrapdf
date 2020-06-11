@@ -56,11 +56,12 @@ bool EndsWithI(const char* txt, const char* end);
 bool EqNIx(const char* s, size_t len, const char* s2);
 
 char* DupN(const char* s, size_t lenCch);
-char* Dup(const std::string_view sv);
-char* ToLowerInPlace(char* s);
-char* ToLower(const char* s);
+char* Dup(const std::string_view);
+char* ToLowerInPlace(char*);
+char* ToLower(const char*);
 
-void Free(const char* s);
+void Free(const char*);
+void Free(const u8*);
 
 #if OS_WIN
 bool StartsWithI(const WCHAR* str, const WCHAR* txt);

@@ -23,7 +23,7 @@ struct ChmDoc {
     ~ChmDoc();
 
     bool HasData(const char* fileName);
-    std::string_view GetData(const char* fileName);
+    std::span<u8> GetData(const char* fileName);
     char* ResolveTopicID(unsigned int id);
 
     char* ToUtf8(const unsigned char* text, UINT overrideCP = 0);
