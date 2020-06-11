@@ -314,8 +314,8 @@ class TabPainter {
 
             // paint "x"'s circle
             iterator.NextMarker(&shape);
-            bool closeCircleEnabled = true;
-            if ((xClicked == i || xHighlighted == i) && closeCircleEnabled) {
+            //bool closeCircleEnabled = true;
+            if ((xClicked == i || xHighlighted == i) /*&& closeCircleEnabled*/) {
                 br.SetColor(GdiRgbFromCOLORREF(circleColor));
                 gfx.FillPath(&br, &shape);
             }
@@ -705,7 +705,6 @@ void SaveCurrentTabInfo(WindowInfo* win) {
     CrashIf(win->currentTab != win->tabs.at(current));
 
     TabInfo* tab = win->currentTab;
-    CrashIf(!tab);
     if (win->tocLoaded) {
         TocTree* tocTree = tab->ctrl->GetToc();
         UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, tocTree);

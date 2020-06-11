@@ -357,7 +357,6 @@ static bool CanRemoveTocItem(TreeCtrl* treeCtrl, TocItem* ti) {
 // TODO: simplify and verify is correct
 static bool CanAddPdfAsChild(TocItem* tocItem) {
     bool canAddPdfChild = true;
-    bool canAddPdfSibling = true;
     TocItem* ti = tocItem;
     while (ti) {
         // if ti is a n-th sibling of a file node, this sets it to file node
@@ -369,8 +368,6 @@ static bool CanAddPdfAsChild(TocItem* tocItem) {
             // can't add as a child if this node or any parent
             // represents PDF file
             canAddPdfChild = false;
-            // can't add as sibling if any parent represents PDF file
-            canAddPdfSibling = (ti == tocItem);
             break;
         }
         ti = ti->parent;
@@ -380,7 +377,6 @@ static bool CanAddPdfAsChild(TocItem* tocItem) {
 
 // TODO: simplify and verify is correct
 static bool CanAddPdfAsSibling(TocItem* tocItem) {
-    bool canAddPdfChild = true;
     bool canAddPdfSibling = true;
     TocItem* ti = tocItem;
     while (ti) {
@@ -390,9 +386,6 @@ static bool CanAddPdfAsSibling(TocItem* tocItem) {
             ti = ti->parent->child;
         }
         if (ti->engineFilePath != nullptr) {
-            // can't add as a child if this node or any parent
-            // represents PDF file
-            canAddPdfChild = false;
             // can't add as sibling if any parent represents PDF file
             canAddPdfSibling = (ti == tocItem);
             break;
