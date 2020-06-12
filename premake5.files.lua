@@ -935,33 +935,29 @@ function pdf_preview_files()
     "PdfPreview.*",
     "PdfPreviewDll.cpp",
   })
-  files {
-    "src/utils/LogDbg.*",
-    "src/MUPDF_Exports.cpp",
-    "src/Annotation.*",
-    "src/EngineBase.*",
-    "src/EngineFzUtil.*",
-    "src/EnginePdf.*",
-    "src/EngineXps.*"
-  }
 
-  filter {"configurations:Debug"}
-    files_in_dir("src", {
-      "utils/PalmDbReader.*",
-      "mui/MiniMui.*",
-      "mui/TextRender.*",
-      "ChmDoc.*",
-      "EbookDoc.*",
-      "EngineEbook.*",
-      "EngineDjVu.*",
-      "EngineImages.*",
-      "EbookFormatter.*",
-      "HtmlFormatter.*",
-      "MobiDoc.*",
-      "PdfCreator.*",
-      "SumatraConfig.*",
-    })
-  filter {}
+  files_in_dir("src", {
+    "utils/LogDbg.*",
+    "utils/PalmDbReader.*",
+    "mui/MiniMui.*",
+    "mui/TextRender.*",
+    "MUPDF_Exports.cpp",
+    "Annotation.*",
+    "EngineBase.*",
+    "EngineFzUtil.*",
+    "EnginePdf.*",
+    "EngineXps.*",
+    "ChmDoc.*",
+    "EbookDoc.*",
+    "EngineEbook.*",
+    "EngineDjVu.*",
+    "EngineImages.*",
+    "EbookFormatter.*",
+    "HtmlFormatter.*",
+    "MobiDoc.*",
+    "PdfCreator.*",
+    "SumatraConfig.*",
+  })
 end
 
 function pdf_filter_files()
@@ -971,15 +967,16 @@ function pdf_filter_files()
     "CPdfFilter.*",
     "FilterBase.h",
   })
-  files {
-    "src/utils/LogDbg.*",
-    "src/MUPDF_Exports.cpp",
-    "src/Annotation.*",
-    "src/EngineBase.*",
-    "src/EngineFzUtil.*",
-    "src/EnginePdf.*",
-    "src/EngineXps.*"
-  }
+  files_in_dir("src", {
+    "utils/LogDbg.*",
+    "utils/PalmDbReader.*",
+    "MUPDF_Exports.cpp",
+    "Annotation.*",
+    "EngineBase.*",
+    "EngineFzUtil.*",
+    "EnginePdf.*",
+    "EngineXps.*"
+  })
 
   filter {"configurations:Debug"}
     files_in_dir("src/ifilter", {
