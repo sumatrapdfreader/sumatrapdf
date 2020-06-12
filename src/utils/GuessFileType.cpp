@@ -245,6 +245,19 @@ static Kind PalmOrMobiType(std::span<u8> d) {
 // detect file type based on file content
 // we don't support sniffing kindFileVbkm
 static Kind GuessFileTypeFromContent(std::span<u8> d) {
+    // TODO: sniff .fb2 content
+    u8* data = d.data();
+    size_t len = d.size();
+    int n = (int)dimof(gFileSigs);
+
+    for (int i = 0; i < n; i++) {
+        const char* sig = gFileSigs[i].sig;
+        size_t sigLen = gFileSigs[i].sigLen;
+        if (memeq(data, sig, sigLen)) {
+            return gFileSigs[i].kind;
+        }
+    }
+
     if (IsPdfFileContent(d)) {
         return kindFilePDF;
     }
@@ -256,9 +269,6 @@ static Kind GuessFileTypeFromContent(std::span<u8> d) {
         return kind;
     }
 
-    // TODO: sniff .fb2 content
-    u8* data = d.data();
-    size_t len = d.size();
     ImgFormat fmt = GfxFormatFromData(d);
     switch (fmt) {
         case ImgFormat::BMP:
@@ -279,14 +289,6 @@ static Kind GuessFileTypeFromContent(std::span<u8> d) {
             return kindFileWebp;
         case ImgFormat::JP2:
             return kindFileJp2;
-    }
-    int n = (int)dimof(gFileSigs);
-    for (int i = 0; i < n; i++) {
-        const char* sig = gFileSigs[i].sig;
-        size_t sigLen = gFileSigs[i].sigLen;
-        if (memeq(data, sig, sigLen)) {
-            return gFileSigs[i].kind;
-        }
     }
     return nullptr;
 }

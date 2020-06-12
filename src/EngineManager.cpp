@@ -72,7 +72,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         engine = CreateEnginePdfFromFile(path, pwdUI);
     } else if (kind == kindFileVbkm) {
         engine = CreateEngineMultiFromFile(path, pwdUI);
-    } else if (IsXpsEngineSupportedFileType(kindFileXps)) {
+    } else if (IsXpsEngineSupportedFileType(kind)) {
         engine = CreateXpsEngineFromFile(path);
     } else if (kind == kindFileDjVu) {
         engine = CreateDjVuEngineFromFile(path);
