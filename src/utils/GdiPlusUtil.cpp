@@ -455,10 +455,12 @@ Bitmap* BitmapFromData(const u8* data, size_t len) {
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Gdiplus::Size BitmapSizeFromData(const u8* data, size_t len) {
+Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
     Gdiplus::Size result;
-    ByteReader r(data, len);
-    switch (GfxFormatFromData({(u8*)data, len})) {
+    ByteReader r(d);
+    size_t len = d.size();
+    u8* data = d.data();
+    switch (GfxFormatFromData(d)) {
         case ImgFormat::BMP:
             if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
                 BITMAPINFOHEADER bmi;

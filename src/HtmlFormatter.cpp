@@ -571,7 +571,7 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
 
 bool HtmlFormatter::EmitImage(ImageData* img) {
     CrashIf(!img->data);
-    Gdiplus::Size imgSize = BitmapSizeFromData((const u8*)img->data, img->len);
+    Gdiplus::Size imgSize = BitmapSizeFromData(img->as_span());
     if (imgSize.Empty())
         return false;
 

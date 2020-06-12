@@ -33,7 +33,7 @@ void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, i
 const WCHAR* GfxFileExtFromData(std::span<u8>);
 bool IsGdiPlusNativeFormat(const u8* data, size_t len);
 Gdiplus::Bitmap* BitmapFromData(const u8* data, size_t len);
-Gdiplus::Size BitmapSizeFromData(const u8* data, size_t len);
+Gdiplus::Size BitmapSizeFromData(std::span<u8>);
 CLSID GetEncoderClsid(const WCHAR* format);
 
 // TODO: for the lack of a better place
