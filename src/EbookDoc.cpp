@@ -1015,7 +1015,7 @@ bool Fb2Doc::IsSupportedFile(const WCHAR* path, bool sniff) {
     UNUSED(sniff);
     // we have no sniffing so always look at file name
     Kind kind = FileTypeFromFileName(path);
-    return kind = kindFileFb2;
+    return kind == kindFileFb2;
 }
 
 Fb2Doc* Fb2Doc::CreateFromFile(const WCHAR* path) {

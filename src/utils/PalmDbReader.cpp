@@ -11,6 +11,11 @@
 // size of PdbRecordHeader
 #define kPdbRecordHeaderLen 8
 
+// stuff for mobi format
+#define MOBI_TYPE_CREATOR "BOOKMOBI"
+#define PALMDOC_TYPE_CREATOR "TEXtREAd"
+#define TEALDOC_TYPE_CREATOR "TEXtTlDc"
+
 // Takes ownership of d
 bool PdbReader::Parse(std::string_view d) {
     data = d.data();
@@ -150,3 +155,13 @@ PdbReader* PdbReader::CreateFromStream(IStream* stream) {
     return CreateFromData(data);
 }
 #endif
+
+PdbDocType GetPdbDocType(const char* typeCreator) {
+    if (str::Eq(typeCreator, MOBI_TYPE_CREATOR))
+        return PdbDocType::Mobipocket;
+    if (str::Eq(typeCreator, PALMDOC_TYPE_CREATOR))
+        return PdbDocType::PalmDoc;
+    if (str::Eq(typeCreator, TEALDOC_TYPE_CREATOR))
+        return PdbDocType::TealDoc;
+    return PdbDocType::Unknown;
+}

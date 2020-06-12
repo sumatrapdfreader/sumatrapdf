@@ -4,8 +4,6 @@
 class HuffDicDecompressor;
 class PdbReader;
 
-enum class PdbDocType { Unknown, Mobipocket, PalmDoc, TealDoc };
-
 class MobiDoc {
     WCHAR* fileName = nullptr;
 

@@ -7,6 +7,7 @@
 #include "utils/GdiplusUtil.h"
 #include "utils/ByteReader.h"
 #include "utils/Archive.h"
+#include "utils/PalmDbReader.h"
 #include "utils/FileTypeSniff.h"
 
 // TODO: move those functions here
@@ -46,6 +47,7 @@ Kind kindFileTar = "fileTar";
 Kind kindFileFb2 = "fileFb2";
 Kind kindFileDir = "fileDir";
 Kind kindFileEpub = "fileEpub";
+Kind kindFileMobi = "fileMobi";
 
 // .fb2.zip etc. must be first so that it isn't classified as .zip
 static const char* gFileExts =
@@ -82,14 +84,20 @@ static const char* gFileExts =
     ".wdp\0"
     ".webp\0"
     ".epub\0"
+    ".mobi\0"
+    ".prc\0"
+    ".azw\0"
+    ".azw1\0"
+    ".azw3\0"
     ".jp2\0"
     "\0";
 
 static Kind gExtsKind[] = {
-    kindFileFb2, kindFilePS,  kindFilePS,  kindFilePS,   kindFileVbkm, kindFileFb2, kindFileFb2, kindFileFb2,  kindFileCbz,  kindFileCbr,
-    kindFileCb7, kindFileCbt, kindFileZip, kindFileRar,  kindFile7Z,   kindFileTar,  kindFilePDF,  kindFileXps,
-    kindFileXps, kindFileChm, kindFilePng, kindFileJpeg, kindFileJpeg, kindFileGif,  kindFileTiff, kindFileTiff,
-    kindFileBmp, kindFileTga, kindFileJxr, kindFileHdp,  kindFileWdp,  kindFileWebp, kindFileEpub, kindFileJp2,
+    kindFileFb2,  kindFilePS,   kindFilePS,   kindFilePS,   kindFileVbkm, kindFileFb2,  kindFileFb2,  kindFileFb2,
+    kindFileCbz,  kindFileCbr,  kindFileCb7,  kindFileCbt,  kindFileZip,  kindFileRar,  kindFile7Z,   kindFileTar,
+    kindFilePDF,  kindFileXps,  kindFileXps,  kindFileChm,  kindFilePng,  kindFileJpeg, kindFileJpeg, kindFileGif,
+    kindFileTiff, kindFileTiff, kindFileBmp,  kindFileTga,  kindFileJxr,  kindFileHdp,  kindFileWdp,  kindFileWebp,
+    kindFileEpub, kindFileMobi, kindFileMobi, kindFileMobi, kindFileMobi, kindFileMobi, kindFileJp2,
 };
 
 static Kind GetKindByFileExt(const WCHAR* path) {
@@ -271,6 +279,19 @@ bool IsEpubFile(const WCHAR* path) {
     return str::Eq(mimetype.data, "application/x-ibooks+zip");
 }
 
+bool IsMobiFile(const WCHAR* path) {
+    PdbReader pdbReader;
+    auto data = file::ReadFile(path);
+    if (!pdbReader.Parse(data)) {
+        return false;
+    }
+    // in most cases, we're only interested in Mobipocket files
+    // (PalmDoc uses MobiDoc for loading other formats based on MOBI,
+    // but implements sniffing itself in PalmDoc::IsSupportedFile)
+    PdbDocType kind = GetPdbDocType(pdbReader.GetDbType());
+    return PdbDocType::Mobipocket == kind;
+}
+
 // detect file type based on file content
 Kind SniffFileType(const WCHAR* path) {
     CrashIf(!path);
@@ -297,6 +318,11 @@ Kind SniffFileType(const WCHAR* path) {
         }
         if (IsEpubFile(path)) {
             res = kindFileEpub;
+        }
+    }
+    if (!res) {
+        if (IsMobiFile(path)) {
+            res = kindFileMobi;
         }
     }
     return res;

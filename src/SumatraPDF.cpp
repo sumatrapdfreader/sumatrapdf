@@ -923,8 +923,44 @@ static NO_INLINE void VerifyController(Controller* ctrl, const WCHAR* path) {
     str::Free(s2);
 }
 
-static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pwdUI, WindowInfo* win) {
-    logf(L"CreateControllerForFile: '%s'\n", filePath);
+static Controller* CreateForChm(const WCHAR* path, PasswordUI* pwdUI, WindowInfo* win) {
+    bool isChm = ChmModel::IsSupportedFile(path, false) || ChmModel::IsSupportedFile(path, true);
+    if (!isChm) {
+        return nullptr;
+    }
+    ChmModel* chmModel = ChmModel::Create(path, win->cbHandler);
+    if (!chmModel) {
+        return nullptr;
+    }
+    // make sure that MSHTML can't be used as a potential exploit
+    // vector through another browser and our plugin (which doesn't
+    // advertise itself for Chm documents but could be tricked into
+    // loading one nonetheless); note: this crash should never happen,
+    // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
+    CrashAlwaysIf(gPluginMode);
+    // if CLSID_WebBrowser isn't available, fall back on ChmEngine
+    Controller* ctrl = nullptr;
+    if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
+        delete chmModel;
+        EngineBase* engine = EngineManager::CreateEngine(path, pwdUI, true);
+        if (!engine) {
+            return nullptr;
+        }
+        CrashIf(engine->kind != kindEngineChm);
+        ctrl = new DisplayModel(engine, win->cbHandler);
+        CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
+    } else {
+        // another ChmModel might still be active
+        chmModel->RemoveParentHwnd();
+        ctrl = chmModel;
+    }
+    CrashIf(ctrl && (!ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook()));
+    VerifyController(ctrl, path);
+    return ctrl;
+}
+
+static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI, WindowInfo* win) {
+    logf(L"CreateControllerForFile: '%s'\n", path);
     if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
     }
@@ -935,55 +971,32 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
     bool ebookInFixedUI = gGlobalPrefs->ebookUI.useFixedPageUI;
 
     // TODO: sniff file content only once
-    EngineBase* engine = EngineManager::CreateEngine(filePath, pwdUI, chmInFixedUI, ebookInFixedUI);
+    EngineBase* engine = EngineManager::CreateEngine(path, pwdUI, chmInFixedUI, ebookInFixedUI);
 
     if (engine) {
         ctrl = new DisplayModel(engine, win->cbHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
-        VerifyController(ctrl, filePath);
+        VerifyController(ctrl, path);
         return ctrl;
     }
-    if (!chmInFixedUI && ChmModel::IsSupportedFile(filePath, true)) {
-        ChmModel* chmModel = ChmModel::Create(filePath, win->cbHandler);
-        if (!chmModel) {
-            return nullptr;
-        }
-        // make sure that MSHTML can't be used as a potential exploit
-        // vector through another browser and our plugin (which doesn't
-        // advertise itself for Chm documents but could be tricked into
-        // loading one nonetheless); note: this crash should never happen,
-        // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
-        CrashAlwaysIf(gPluginMode);
-        // if CLSID_WebBrowser isn't available, fall back on ChmEngine
-        if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
-            delete chmModel;
-            engine = EngineManager::CreateEngine(filePath, pwdUI, true);
-            if (!engine) {
-                return nullptr;
-            }
-            CrashIf(engine->kind != kindEngineChm);
-            ctrl = new DisplayModel(engine, win->cbHandler);
-            CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
-        } else {
-            // another ChmModel might still be active
-            chmModel->RemoveParentHwnd();
-            ctrl = chmModel;
-        }
-        CrashIf(ctrl && (!ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook()));
-        VerifyController(ctrl, filePath);
-        return ctrl;
+    if (!chmInFixedUI) {
+        ctrl = CreateForChm(path, pwdUI, win);
     }
 
-    if (!ebookInFixedUI && Doc::IsSupportedFile(filePath, true)) {
-        Doc doc = Doc::CreateFromFile(filePath);
-        if (doc.IsDocLoaded()) {
-            ctrl = EbookController::Create(doc, win->hwndCanvas, win->cbHandler, win->frameRateWnd);
-        }
-        CrashIf(ctrl && (!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm()));
-        VerifyController(ctrl, filePath);
-        return ctrl;
+    if (ebookInFixedUI) {
+        return nullptr;
     }
-    return nullptr;
+    bool isEbook = Doc::IsSupportedFile(path, false) || Doc::IsSupportedFile(path, true);
+    if (!isEbook) {
+        return nullptr;
+    }
+    Doc doc = Doc::CreateFromFile(path);
+    if (doc.IsDocLoaded()) {
+        ctrl = EbookController::Create(doc, win->hwndCanvas, win->cbHandler, win->frameRateWnd);
+    }
+    CrashIf(ctrl && (!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm()));
+    VerifyController(ctrl, path);
+    return ctrl;
 }
 
 static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {

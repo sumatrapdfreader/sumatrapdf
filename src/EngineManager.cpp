@@ -178,17 +178,19 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         engine = CreateEpubEngineFromFile(path);
     } else if (kind == kindFileFb2) {
         engine = CreateFb2EngineFromFile(path);
-   }
+    } else if (kind == kindFileMobi) {
+        engine = CreateMobiEngineFromFile(path);
+    }
 
     return engine;
     /*
-        } else if (IsMobiEngineSupportedFile(path, sniff)) {
-            engine = CreateMobiEngineFromFile(path);
-        } else if (IsPdbEngineSupportedFile(path, sniff)) {
+        else if (IsPdbEngineSupportedFile(path, sniff)) {
             engine = CreatePdbEngineFromFile(path);
-        } else if (IsHtmlEngineSupportedFile(path, sniff)) {
+        }
+        else if (IsHtmlEngineSupportedFile(path, sniff)) {
             engine = CreateHtmlEngineFromFile(path);
-        } else if (IsTxtEngineSupportedFile(path, sniff)) {
+        }
+        else if (IsTxtEngineSupportedFile(path, sniff)) {
             engine = CreateTxtEngineFromFile(path);
         }
     */

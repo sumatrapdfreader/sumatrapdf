@@ -6,6 +6,7 @@
 #include "utils/ByteOrderDecoder.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
@@ -23,11 +24,6 @@
 constexpr size_t kInvalidSize = (size_t)-1;
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
-
-#define MOBI_TYPE_CREATOR "BOOKMOBI"
-#define PALMDOC_TYPE_CREATOR "TEXtREAd"
-#define TEALDOC_TYPE_CREATOR "TEXtTlDc"
-
 #define COMPRESSION_NONE 1
 #define COMPRESSION_PALM 2
 #define COMPRESSION_HUFF 17480
@@ -446,16 +442,6 @@ static void DecodeMobiDocHeader(const char* buf, MobiHeader* hdr) {
         CrashIf(kMobiHeaderLen != d.Offset());
     } else
         CrashIf(kMobiHeaderLen - 4 != d.Offset());
-}
-
-static PdbDocType GetPdbDocType(const char* typeCreator) {
-    if (str::Eq(typeCreator, MOBI_TYPE_CREATOR))
-        return PdbDocType::Mobipocket;
-    if (str::Eq(typeCreator, PALMDOC_TYPE_CREATOR))
-        return PdbDocType::PalmDoc;
-    if (str::Eq(typeCreator, TEALDOC_TYPE_CREATOR))
-        return PdbDocType::TealDoc;
-    return PdbDocType::Unknown;
 }
 
 static bool IsValidCompression(int comprType) {
@@ -984,26 +970,14 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool MobiDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool MobiDoc::IsSupportedFile(const WCHAR* path, bool sniff) {
+    Kind kind;
     if (!sniff) {
-        bool isMobi = str::EndsWithI(fileName, L".mobi");
-        bool isPrc = str::EndsWithI(fileName, L".prc");
-        bool isAzw = str::EndsWith(fileName, L".azw");
-        bool isAzw1 = str::EndsWith(fileName, L".azw1");
-        bool isAzw3 = str::EndsWith(fileName, L".azw3");
-        return isMobi || isPrc || isAzw || isAzw1 || isAzw3;
+        kind = FileTypeFromFileName(path);
+    } else {
+        kind = SniffFileType(path);
     }
-
-    PdbReader pdbReader;
-    auto data = file::ReadFile(fileName);
-    if (!pdbReader.Parse(data)) {
-        return false;
-    }
-    // in most cases, we're only interested in Mobipocket files
-    // (PalmDoc uses MobiDoc for loading other formats based on MOBI,
-    // but implements sniffing itself in PalmDoc::IsSupportedFile)
-    PdbDocType kind = GetPdbDocType(pdbReader.GetDbType());
-    return PdbDocType::Mobipocket == kind;
+    return kind == kindFileMobi;
 }
 
 MobiDoc* MobiDoc::CreateFromFile(const WCHAR* fileName) {

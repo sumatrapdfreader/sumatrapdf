@@ -29,6 +29,7 @@ extern Kind kindFileCbt;
 extern Kind kindFileTar;
 extern Kind kindFileFb2;
 extern Kind kindFileEpub;
+extern Kind kindFileMobi;
 
 Kind SniffFileTypeFromData(std::span<u8> d);
 Kind SniffFileType(const WCHAR* filePath);
@@ -37,3 +38,4 @@ bool IsImageEngineKind(Kind);
 bool IsCbxEngineKind(Kind);
 bool IsPSFileContent(std::span<u8> d);
 bool IsEpubFile(const WCHAR* path);
+bool IsMobiFile(const WCHAR* path);

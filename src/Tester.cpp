@@ -11,6 +11,8 @@
 #include "utils/CryptoUtil.h"
 #include "utils/DirIter.h"
 #include "utils/FileUtil.h"
+#include "utils/FileTypeSniff.h"
+#include "utils/PalmDbReader.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPrettyPrint.h"
@@ -196,25 +198,24 @@ static void MobiTestFile(const WCHAR* filePath) {
     delete mobiDoc;
 }
 
-static bool IsMobiFile(const WCHAR* f) {
-    return str::EndsWithI(f, L".mobi") || str::EndsWithI(f, L".azw") || str::EndsWithI(f, L".azw1") ||
-           str::EndsWithI(f, L".prc");
-}
-
 static void MobiTestDir(WCHAR* dir) {
     wprintf(L"Testing mobi files in '%s'\n", dir);
     DirIter di(dir, true);
-    for (const WCHAR* p = di.First(); p; p = di.Next()) {
-        if (IsMobiFile(p))
-            MobiTestFile(p);
+    for (const WCHAR* path = di.First(); path; path = di.Next()) {
+        Kind kind = FileTypeFromFileName(path);
+        if (kind == kindFileMobi) {
+            MobiTestFile(path);
+        }
     }
 }
 
 static void MobiTest(WCHAR* dirOrFile) {
-    if (file::Exists(dirOrFile) && IsMobiFile(dirOrFile))
+    Kind kind = FileTypeFromFileName(dirOrFile);
+    if (file::Exists(dirOrFile) && kind == kindFileMobi) {
         MobiTestFile(dirOrFile);
-    else
+    } else if (path::IsDirectory(dirOrFile)) {
         MobiTestDir(dirOrFile);
+    }
 }
 
 // we assume this is called from main sumatradirectory, e.g. as:

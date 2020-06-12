@@ -58,3 +58,7 @@ class PdbReader {
     static PdbReader* CreateFromStream(IStream* stream);
 #endif
 };
+
+// stuff for mobi format
+enum class PdbDocType { Unknown, Mobipocket, PalmDoc, TealDoc };
+PdbDocType GetPdbDocType(const char* typeCreator);
