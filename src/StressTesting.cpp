@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/DirIter.h"
 #include "utils/FileUtil.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlWindow.h"
@@ -121,10 +122,6 @@ void BenchEbookLayout(const WCHAR* filePath) {
         logf(L"Error: file doesn't exist");
         return;
     }
-    if (!Doc::IsSupportedFile(filePath)) {
-        logf(L"Error: not an ebook file");
-        return;
-    }
     auto t = TimeGet();
     Doc doc = Doc::CreateFromFile(filePath);
     if (doc.LoadingFailed()) {
@@ -178,12 +175,16 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     // using all text rendering methods, so that we can compare and find
     // docs that take a long time to load
 
-    if (Doc::IsSupportedFile(filePath) && !gGlobalPrefs->ebookUI.useFixedPageUI) {
+    Kind kind = GuessFileType(filePath, true);
+    if (!kind) {
+        return;
+    }
+    if (Doc::IsSupportedFileType(kind) && !gGlobalPrefs->ebookUI.useFixedPageUI) {
         BenchEbookLayout(filePath);
         return;
     }
 
-    if (ChmModel::IsSupportedFile(filePath) && !gGlobalPrefs->chmUI.useFixedPageUI) {
+    if (ChmModel::IsSupportedFileType(kind) && !gGlobalPrefs->chmUI.useFixedPageUI) {
         BenchChmLoadOnly(filePath);
         return;
     }
@@ -226,11 +227,14 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     logf(L"Finished (in %.2f ms): %s", TimeSinceInMs(total), filePath);
 }
 
-static bool IsFileToBench(const WCHAR* fileName) {
-    if (EngineManager::IsSupportedFile(fileName))
+static bool IsFileToBench(const WCHAR* path) {
+    Kind kind = GuessFileType(path, true);
+    if (EngineManager::IsSupportedFileType(kind, true)) {
         return true;
-    if (Doc::IsSupportedFile(fileName))
+    }
+    if (Doc::IsSupportedFileType(kind)) {
         return true;
+    }
     return false;
 }
 
@@ -270,7 +274,11 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     if (filter && !path::Match(path::GetBaseNameNoFree(filePath), filter)) {
         return false;
     }
-    if (EngineManager::IsSupportedFile(filePath) || Doc::IsSupportedFile(filePath)) {
+    Kind kind = GuessFileType(filePath, false);
+    if (!kind) {
+        return false;
+    }
+    if (EngineManager::IsSupportedFileType(kind, true) || Doc::IsSupportedFileType(kind)) {
         return true;
     }
     if (!filter) {
@@ -278,7 +286,14 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     }
     // sniff the file's content if it matches the filter but
     // doesn't have a known extension
-    return EngineManager::IsSupportedFile(filePath, true) || Doc::IsSupportedFile(filePath, true);
+    Kind kindSniffed = GuessFileType(filePath, true);
+    if (!kindSniffed || kindSniffed == kind) {
+        return false;
+    }
+    if (EngineManager::IsSupportedFileType(kindSniffed, true)) {
+        return true;
+    }
+    return Doc::IsSupportedFileType(kindSniffed);
 }
 
 static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR* dirPath, const WCHAR* filter, WStrVec& paths) {

@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/Archive.h"
 #include "utils/PalmDbReader.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
@@ -248,50 +249,43 @@ HtmlFormatter* Doc::CreateFormatter(HtmlFormatterArgs* args) const {
     }
 }
 
-Doc Doc::CreateFromFile(const WCHAR* filePath) {
+Doc Doc::CreateFromFile(const WCHAR* path) {
     Doc doc;
-    if (EpubDoc::IsSupportedFile(filePath, true)) {
-        doc = Doc(EpubDoc::CreateFromFile(filePath));
-    } else if (Fb2Doc::IsSupportedFile(filePath, true)) {
-        doc = Doc(Fb2Doc::CreateFromFile(filePath));
-    } else if (MobiDoc::IsSupportedFile(filePath, true)) {
-        doc = Doc(MobiDoc::CreateFromFile(filePath));
-        // MobiDoc is also used for loading PalmDoc - don't expose that to Doc users, though
-        if (doc.mobiDoc && doc.mobiDoc->GetDocType() != PdbDocType::Mobipocket) {
-            doc.Delete();
-            // .prc files can be both MobiDoc or PalmDoc
-            if (PalmDoc::IsSupportedFile(filePath)) {
-                doc = Doc(PalmDoc::CreateFromFile(filePath));
-            }
-        }
-    } else if (PalmDoc::IsSupportedFile(filePath)) {
-        doc = Doc(PalmDoc::CreateFromFile(filePath));
+    Kind kind = GuessFileType(path, true);
+    if (EpubDoc::IsSupportedFileType(kind)) {
+        doc = Doc(EpubDoc::CreateFromFile(path));
+    } else if (Fb2Doc::IsSupportedFileType(kind)) {
+        doc = Doc(Fb2Doc::CreateFromFile(path));
+    } else if (MobiDoc::IsSupportedFileType(kind)) {
+        doc = Doc(MobiDoc::CreateFromFile(path));
+    } else if (PalmDoc::IsSupportedFileType(kind)) {
+        doc = Doc(PalmDoc::CreateFromFile(path));
+    } else {
+        doc.error = DocError::NotSupported;
     }
 
     // if failed to load and more specific error message hasn't been
     // set above, set a generic error message
     if (doc.IsNone()) {
-        CrashIf(doc.error != DocError::None);
+        CrashIf(!((doc.error == DocError::None) || (doc.error == DocError::NotSupported)));
         doc.error = DocError::Unknown;
-        doc.filePath.SetCopy(filePath);
-    } else {
-        CrashIf(!Doc::IsSupportedFile(filePath, true));
+        doc.filePath.SetCopy(path);
     }
     CrashIf(!doc.generic && !doc.IsNone());
     return doc;
 }
 
-bool Doc::IsSupportedFile(const WCHAR* filePath, bool sniff) {
-    if (EpubDoc::IsSupportedFile(filePath, sniff)) {
+bool Doc::IsSupportedFileType(Kind kind) {
+    if (EpubDoc::IsSupportedFileType(kind)) {
         return true;
     }
-    if (Fb2Doc::IsSupportedFile(filePath, sniff)) {
+    if (Fb2Doc::IsSupportedFileType(kind)) {
         return true;
     }
-    if (MobiDoc::IsSupportedFile(filePath, sniff)) {
+    if (MobiDoc::IsSupportedFileType(kind)) {
         return true;
     }
-    if (PalmDoc::IsSupportedFile(filePath, sniff)) {
+    if (PalmDoc::IsSupportedFileType(kind)) {
         return true;
     }
     return false;

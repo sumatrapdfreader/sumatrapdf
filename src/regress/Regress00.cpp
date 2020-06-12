@@ -8,7 +8,8 @@ static void RegressTestEpubLoading(const WCHAR *fileName)
 {
     WCHAR *filePath = path::Join(TestFilesDir(), fileName);
     VerifyFileExists(filePath);
-    CrashAlwaysIf(!EpubDoc::IsSupportedFile(filePath));
+    Kind kind = GuessFileType(filePath, true);
+    CrashAlwaysIf(!EpubDoc::IsSupportedFileType(kind));
     EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
     CrashAlwaysIf(!doc);
     delete doc;
@@ -31,7 +32,8 @@ static void Regress00()
 {
     WCHAR *filePath = path::Join(TestFilesDir(), L"epub\\widget-figure-gallery-20120405.epub");
     VerifyFileExists(filePath);
-    CrashAlwaysIf(!EpubDoc::IsSupportedFile(filePath));
+    Kind kind = GuessFileType(filePath, true);
+    CrashAlwaysIf(!EpubDoc::IsSupportedFileType(kind));
     EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
     CrashAlwaysIf(!doc);
 

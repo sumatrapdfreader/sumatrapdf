@@ -648,31 +648,14 @@ EngineBase* EngineImage::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-static const char* imageExtensions =
-    ".png\0.jpg\0.jpeg\0.gif\0.tif\0.tiff\0.bmp\0.tga\0.jxr\0.hdp\0.wdp\0.webp\0.jp2\0";
+static Kind imageEngineKinds[] = {
+    kindFilePng, kindFileJpeg, kindFileGif, kindFileTiff, kindFileBmp, kindFileTga,
+    kindFileJxr, kindFileHdp,  kindFileWdp, kindFileWebp, kindFileJp2,
+};
 
-bool IsImageEngineSupportedFile(const char* fileName) {
-    const char* ext = path::GetExtNoFree(fileName);
-    AutoFree extLower = str::ToLower(ext);
-    int idx = seqstrings::StrToIdx(imageExtensions, extLower);
-    return idx >= 0;
-}
-
-bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    const WCHAR* ext = path::GetExtNoFree(fileName);
-    if (sniff) {
-        char header[32] = {0};
-        file::ReadN(fileName, header, sizeof(header));
-        const WCHAR* ext2 = GfxFileExtFromData({(u8*)header, sizeof(header)});
-        if (ext2 != nullptr) {
-            ext = ext2;
-        }
-    }
-    if (str::Len(ext) == 0) {
-        return false;
-    }
-    AutoFree fileNameA = strconv::WstrToUtf8(fileName);
-    return IsImageEngineSupportedFile(fileNameA);
+bool IsImageEngineSupportedFileType(Kind kind) {
+    int n = dimof(imageEngineKinds);
+    return KindInArray(imageEngineKinds, n, kind);
 }
 
 EngineBase* CreateImageEngineFromFile(const WCHAR* fileName) {
@@ -741,6 +724,7 @@ bool EngineImageDir::LoadImageDir(const WCHAR* dirName) {
 
     AutoFreeWstr pattern(path::Join(dirName, L"*"));
 
+    // TODO: use DirIter?
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
     if (INVALID_HANDLE_VALUE == hfind) {
@@ -749,7 +733,8 @@ bool EngineImageDir::LoadImageDir(const WCHAR* dirName) {
 
     do {
         if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            if (IsImageEngineSupportedFile(fdata.cFileName)) {
+            Kind kind = GuessFileTypeFromName(fdata.cFileName);
+            if (IsImageEngineSupportedFileType(kind)) {
                 pageFileNames.Append(path::Join(dirName, fdata.cFileName));
             }
         }
@@ -1046,7 +1031,9 @@ bool EngineCbx::FinishLoading() {
             return false;
         }
 
-        if (IsImageEngineSupportedFile(fileName) &&
+        AutoFreeWstr fileNameW = strconv::Utf8ToWstr(fileName);
+        Kind kind = GuessFileTypeFromName(fileNameW);
+        if (IsImageEngineSupportedFileType(kind) &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseNameNoFree(fileName), ".")) {
             pageFiles.Append(fileInfo);
@@ -1280,7 +1267,7 @@ RectD EngineCbx::LoadMediabox(int pageNo) {
 EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
-    Kind kind = SniffFileType(path);
+    Kind kind = GuessFileTypeFromContent(path);
     MultiFormatArchive* archive = nullptr;
     if (kind == kindFileZip) {
         archive = OpenZipArchive(path, false);
@@ -1291,7 +1278,7 @@ EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {
     }
 
     if (!archive) {
-        kind = FileTypeFromFileName(path);
+        kind = GuessFileTypeFromName(path);
         if (kind == kindFileCbt || kind == kindFileTar) {
             archive = OpenTarArchive(path);
         }
@@ -1348,20 +1335,13 @@ EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
     return nullptr;
 }
 
-bool IsCbxEngineSupportedFile(const WCHAR* path, bool sniff) {
-    Kind kind;
-    if (sniff) {
-        // we don't also sniff for ZIP files, as these could also
-        // be broken XPS files for which failure is expected
-        // TODO: add TAR format sniffing
-        kind = SniffFileType(path);
-        if (kind == kindFileRar || kind == kindFile7Z) {
-            return true;
-        }
-    }
-    kind = FileTypeFromFileName(path);
-    bool res = IsCbxEngineKind(kind);
-    return res;
+static Kind cbxKinds[] = {
+    kindFileCbz, kindFileCbr, kindFileCb7, kindFileCbt, kindFileZip, kindFileRar, kindFile7Z, kindFileTar,
+};
+
+bool IsCbxEngineSupportedFileType(Kind kind) {
+    int n = dimof(cbxKinds);
+    return KindInArray(cbxKinds, n, kind);
 }
 
 EngineBase* CreateCbxEngineFromFile(const WCHAR* path) {

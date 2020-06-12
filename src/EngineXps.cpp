@@ -1001,7 +1001,7 @@ bool IsXpsDirectory(const WCHAR* path) {
 }
 
 bool IsXpsFileName(const WCHAR* path) {
-    Kind kind = FileTypeFromFileName(path);
+    Kind kind = GuessFileTypeFromName(path);
     if (kind == kindFileXps) {
         return true;
     }

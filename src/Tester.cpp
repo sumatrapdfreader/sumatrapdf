@@ -202,7 +202,7 @@ static void MobiTestDir(WCHAR* dir) {
     wprintf(L"Testing mobi files in '%s'\n", dir);
     DirIter di(dir, true);
     for (const WCHAR* path = di.First(); path; path = di.Next()) {
-        Kind kind = FileTypeFromFileName(path);
+        Kind kind = GuessFileTypeFromName(path);
         if (kind == kindFileMobi) {
             MobiTestFile(path);
         }
@@ -210,7 +210,7 @@ static void MobiTestDir(WCHAR* dir) {
 }
 
 static void MobiTest(WCHAR* dirOrFile) {
-    Kind kind = FileTypeFromFileName(dirOrFile);
+    Kind kind = GuessFileTypeFromName(dirOrFile);
     if (file::Exists(dirOrFile) && kind == kindFileMobi) {
         MobiTestFile(dirOrFile);
     } else if (path::IsDirectory(dirOrFile)) {

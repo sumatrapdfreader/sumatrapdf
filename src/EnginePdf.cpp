@@ -10,6 +10,7 @@ extern "C" {
 #include "utils/Archive.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "utils/TrivialHtmlParser.h"
@@ -520,38 +521,13 @@ EngineBase* EnginePdf::Clone() {
     return clone;
 }
 
-// embedded PDF files have names like "c:/foo.pdf:${pdfStreamNo}"
-// return pointer starting at ":${pdfStream}"
-static const WCHAR* FindEmbedMarks(const WCHAR* fileName) {
-    const WCHAR* start = fileName;
-    const WCHAR* end = start + str::Len(start) - 1;
-
-    int nDigits = 0;
-    while (end > start) {
-        WCHAR c = *end;
-        if (c == ':') {
-            if (nDigits > 0) {
-                return end;
-            }
-            // it was just ':' at the end
-            return nullptr;
-        }
-        if (!str::IsDigit(c)) {
-            return nullptr;
-        }
-        nDigits++;
-        end--;
-    }
-    return nullptr;
-}
-
 // File names ending in :<digits> are interpreted as containing
 // embedded PDF documents (the digits is stream number of the embedded file stream)
 // the caller must free()
 const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut) {
     int streamNo = -1;
     WCHAR* path2 = str::Dup(path);
-    WCHAR* streamNoStr = (WCHAR*)FindEmbedMarks(path2);
+    WCHAR* streamNoStr = (WCHAR*)FindEmbeddedPdfFileStreamNo(path2);
     if (streamNoStr) {
         WCHAR* rest = (WCHAR*)str::Parse(streamNoStr, L":%d", &streamNo);
         // there shouldn't be any left unparsed data
@@ -2189,42 +2165,9 @@ EngineBase* EnginePdf::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
     return engine;
 }
 
-bool IsPdfFileName(const WCHAR* path) {
-    return str::EndsWithI(path, L".pdf") || FindEmbedMarks(path);
-}
-
-// PDF files have %PDF-${ver} somewhere in the beginning of the file
-bool IsPdfFileContent(std::span<u8> d) {
-    if (d.size() < 8) {
-        return false;
-    }
-    int n = (int)d.size() - 5;
-    char* data = (char*)d.data();
-    char* end = data + n;
-    while (data < end) {
-        size_t nLeft = end - data;
-        data = (char*)std::memchr(data, '%', nLeft);
-        if (!data) {
-            return false;
-        }
-        if (str::EqN(data, "%PDF-", 5)) {
-            return true;
-        }
-        ++data;
-    }
-    return false;
-}
-
 bool IsEnginePdfSupportedFile(const WCHAR* path, bool sniff) {
-    if (sniff) {
-        char header[1024] = {0};
-        int n = file::ReadN(path, header, sizeof(header));
-        if (n < 5) {
-            return false;
-        }
-        return IsPdfFileContent({(u8*)header, (size_t)n});
-    }
-    return IsPdfFileName(path);
+    Kind kind = GuessFileType(path, sniff);
+    return kind == kindFilePDF;
 }
 
 EngineBase* CreateEnginePdfFromFile(const WCHAR* path, PasswordUI* pwdUI) {

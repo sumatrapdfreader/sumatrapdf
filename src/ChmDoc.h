@@ -38,6 +38,6 @@ struct ChmDoc {
     bool HasIndex() const;
     bool ParseIndex(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
+    static bool IsSupportedFileType(Kind);
     static ChmDoc* CreateFromFile(const WCHAR* fileName);
 };

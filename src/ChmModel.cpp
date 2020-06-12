@@ -710,8 +710,8 @@ void ChmModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnai
     thumbnailTask->CreateThumbnail(hw);
 }
 
-bool ChmModel::IsSupportedFile(const WCHAR* fileName, bool sniff) {
-    return ChmDoc::IsSupportedFile(fileName, sniff);
+bool ChmModel::IsSupportedFileType(Kind kind) {
+    return ChmDoc::IsSupportedFileType(kind);
 }
 
 ChmModel* ChmModel::Create(const WCHAR* fileName, ControllerCallback* cb) {

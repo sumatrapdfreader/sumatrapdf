@@ -9,6 +9,7 @@
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/FileWatcher.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HttpUtil.h"
 #include "utils/SquareTreeParser.h"
@@ -924,7 +925,9 @@ static NO_INLINE void VerifyController(Controller* ctrl, const WCHAR* path) {
 }
 
 static Controller* CreateForChm(const WCHAR* path, PasswordUI* pwdUI, WindowInfo* win) {
-    bool isChm = ChmModel::IsSupportedFile(path, false) || ChmModel::IsSupportedFile(path, true);
+    Kind kind = GuessFileType(path, true);
+
+    bool isChm = ChmModel::IsSupportedFileType(kind);
     if (!isChm) {
         return nullptr;
     }
@@ -979,22 +982,26 @@ static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI,
         VerifyController(ctrl, path);
         return ctrl;
     }
+
     if (!chmInFixedUI) {
         ctrl = CreateForChm(path, pwdUI, win);
+        if (ctrl) {
+            return ctrl;
+        }
     }
 
     if (ebookInFixedUI) {
         return nullptr;
     }
-    bool isEbook = Doc::IsSupportedFile(path, false) || Doc::IsSupportedFile(path, true);
-    if (!isEbook) {
+    Doc doc = Doc::CreateFromFile(path);
+    if (!doc.IsDocLoaded()) {
         return nullptr;
     }
-    Doc doc = Doc::CreateFromFile(path);
-    if (doc.IsDocLoaded()) {
-        ctrl = EbookController::Create(doc, win->hwndCanvas, win->cbHandler, win->frameRateWnd);
+    ctrl = EbookController::Create(doc, win->hwndCanvas, win->cbHandler, win->frameRateWnd);
+    if (!ctrl) {
+        return nullptr;
     }
-    CrashIf(ctrl && (!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm()));
+    CrashIf(!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm());
     VerifyController(ctrl, path);
     return ctrl;
 }
@@ -1057,12 +1064,13 @@ static void UpdateUiForCurrentTab(WindowInfo* win) {
     SetWindowStyle(win->hwndPageBox, ES_NUMBER, onlyNumbers);
 }
 
-static bool showTocByDefault(const WCHAR* filePath) {
+static bool showTocByDefault(const WCHAR* path) {
     if (!gGlobalPrefs->showToc) {
         return false;
     }
     // we don't want to show toc by default for comic book files
-    bool showByDefault = !IsCbxEngineSupportedFile(filePath);
+    Kind kind = GuessFileTypeFromName(path);
+    bool showByDefault = !IsCbxEngineSupportedFileType(kind);
     return showByDefault;
 }
 
@@ -3057,8 +3065,10 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
 
     // remove unsupported files that have never been successfully loaded
     for (size_t i = files.size(); i > 0; i--) {
-        if (!EngineManager::IsSupportedFile(files.at(i - 1), false, gGlobalPrefs->ebookUI.useFixedPageUI) &&
-            !Doc::IsSupportedFile(files.at(i - 1)) && !gFileHistory.Find(files.at(i - 1), nullptr)) {
+        WCHAR* path = files.at(i - 1);
+        Kind kind = GuessFileTypeFromName(path);
+        if (!EngineManager::IsSupportedFileType(kind, gGlobalPrefs->ebookUI.useFixedPageUI) &&
+            !Doc::IsSupportedFileType(kind) && !gFileHistory.Find(path, nullptr)) {
             free(files.PopAt(i - 1));
         }
     }

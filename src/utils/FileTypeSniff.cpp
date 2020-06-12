@@ -12,11 +12,9 @@
 
 // TODO: move those functions here
 extern bool IsPdfFileName(const WCHAR* path);
-extern bool IsPdfFileContent(std::span<u8> d);
 extern bool IsEngineMultiFileName(const WCHAR* path);
 extern bool IsXpsArchive(const WCHAR* path);
 extern bool IsDjVuFileName(const WCHAR* path);
-extern bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff);
 
 // TODO: replace with an enum class FileKind { Unknown, PDF, ... };
 Kind kindFilePDF = "filePDF";
@@ -48,11 +46,25 @@ Kind kindFileFb2 = "fileFb2";
 Kind kindFileDir = "fileDir";
 Kind kindFileEpub = "fileEpub";
 Kind kindFileMobi = "fileMobi";
+Kind kindFilePalmDoc = "filePalmDoc";
+Kind kindFileHTML = "fileHTML";
+Kind kindFileTxt = "fileTxt";
+
+// http://en.wikipedia.org/wiki/.nfo
+// http://en.wikipedia.org/wiki/FILE_ID.DIZ
+// http://en.wikipedia.org/wiki/Read.me
+// http://www.cix.co.uk/~gidds/Software/TCR.html
 
 // .fb2.zip etc. must be first so that it isn't classified as .zip
 static const char* gFileExts =
     ".fb2.zip\0"
     ".ps.gz\0"
+    "file_id.diz\0"
+    "Read.me\0"
+    ".txt\0"
+    ".log\0"
+    ".nfo\0"
+    ".tcr\0"
     ".ps\0"
     ".eps\0"
     ".vbkm\0"
@@ -89,15 +101,23 @@ static const char* gFileExts =
     ".azw\0"
     ".azw1\0"
     ".azw3\0"
+    ".pdb\0"
+    ".prc\0"
+    ".html\0"
+    ".htm\0"
+    ".xhtml\0"
     ".jp2\0"
     "\0";
 
 static Kind gExtsKind[] = {
-    kindFileFb2,  kindFilePS,   kindFilePS,   kindFilePS,   kindFileVbkm, kindFileFb2,  kindFileFb2,  kindFileFb2,
-    kindFileCbz,  kindFileCbr,  kindFileCb7,  kindFileCbt,  kindFileZip,  kindFileRar,  kindFile7Z,   kindFileTar,
-    kindFilePDF,  kindFileXps,  kindFileXps,  kindFileChm,  kindFilePng,  kindFileJpeg, kindFileJpeg, kindFileGif,
-    kindFileTiff, kindFileTiff, kindFileBmp,  kindFileTga,  kindFileJxr,  kindFileHdp,  kindFileWdp,  kindFileWebp,
-    kindFileEpub, kindFileMobi, kindFileMobi, kindFileMobi, kindFileMobi, kindFileMobi, kindFileJp2,
+    kindFileFb2,  kindFilePS,   kindFileTxt,     kindFileTxt,     kindFileTxt,  kindFileTxt,  kindFileTxt,
+    kindFileTxt,  kindFilePS,   kindFilePS,      kindFileVbkm,    kindFileFb2,  kindFileFb2,  kindFileFb2,
+    kindFileCbz,  kindFileCbr,  kindFileCb7,     kindFileCbt,     kindFileZip,  kindFileRar,  kindFile7Z,
+    kindFileTar,  kindFilePDF,  kindFileXps,     kindFileXps,     kindFileChm,  kindFilePng,  kindFileJpeg,
+    kindFileJpeg, kindFileGif,  kindFileTiff,    kindFileTiff,    kindFileBmp,  kindFileTga,  kindFileJxr,
+    kindFileHdp,  kindFileWdp,  kindFileWebp,    kindFileEpub,    kindFileMobi, kindFileMobi, kindFileMobi,
+    kindFileMobi, kindFileMobi, kindFilePalmDoc, kindFilePalmDoc, kindFileHTML, kindFileHTML, kindFileHTML,
+    kindFileJp2,
 };
 
 static Kind GetKindByFileExt(const WCHAR* path) {
@@ -129,12 +149,7 @@ static void VerifyExtsMatch() {
     gDidVerifyExtsMatch = true;
 }
 
-static Kind imageEngineKinds[] = {
-    kindFilePng, kindFileJpeg, kindFileGif, kindFileTiff, kindFileBmp, kindFileTga,
-    kindFileJxr, kindFileHdp,  kindFileWdp, kindFileWebp, kindFileJp2,
-};
-
-static bool KindInArray(Kind* kinds, int nKinds, Kind kind) {
+bool KindInArray(Kind* kinds, int nKinds, Kind kind) {
     for (int i = 0; i < nKinds; i++) {
         Kind k = kinds[i];
         if (k == kind) {
@@ -142,20 +157,6 @@ static bool KindInArray(Kind* kinds, int nKinds, Kind kind) {
         }
     }
     return false;
-}
-
-bool IsImageEngineKind(Kind kind) {
-    int n = dimof(imageEngineKinds);
-    return KindInArray(imageEngineKinds, n, kind);
-}
-
-static Kind cbxKinds[] = {
-    kindFileCbz, kindFileCbr, kindFileCb7, kindFileCbt, kindFileZip, kindFileRar, kindFile7Z, kindFileTar,
-};
-
-bool IsCbxEngineKind(Kind kind) {
-    int n = dimof(cbxKinds);
-    return KindInArray(cbxKinds, n, kind);
 }
 
 #define FILE_SIGS(V)                       \
@@ -178,9 +179,58 @@ static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
 
 #undef MK_SIG
 
+// PDF files have %PDF-${ver} somewhere in the beginning of the file
+static bool IsPdfFileContent(std::span<u8> d) {
+    if (d.size() < 8) {
+        return false;
+    }
+    int n = (int)d.size() - 5;
+    char* data = (char*)d.data();
+    char* end = data + n;
+    while (data < end) {
+        size_t nLeft = end - data;
+        data = (char*)std::memchr(data, '%', nLeft);
+        if (!data) {
+            return false;
+        }
+        if (str::EqN(data, "%PDF-", 5)) {
+            return true;
+        }
+        ++data;
+    }
+    return false;
+}
+
+static bool IsPSFileContent(std::span<u8> d) {
+    char* header = (char*)d.data();
+    size_t n = d.size();
+    if (n < 64) {
+        return false;
+    }
+    // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
+    if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
+        DWORD psStart = ByteReader(d).DWordLE(4);
+        return psStart >= n - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
+    }
+    if (str::StartsWith(header, "%!PS-Adobe-")) {
+        return true;
+    }
+    // PJL (Printer Job Language) files containing Postscript data
+    // https://developers.hp.com/system/files/PJL_Technical_Reference_Manual.pdf
+    bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
+    if (isPJL) {
+        // TODO: use something else other than str::Find() so that it works even if header is not null-terminated
+        const char* hdr = str::Find(header, "\n%!PS-Adobe-");
+        if (!hdr) {
+            isPJL = false;
+        }
+    }
+    return isPJL;
+}
+
 // detect file type based on file content
 // we don't support sniffing kindFileVbkm
-Kind SniffFileTypeFromData(std::span<u8> d) {
+static Kind GuessFileTypeFromContent(std::span<u8> d) {
     if (IsPdfFileContent(d)) {
         return kindFilePDF;
     }
@@ -222,34 +272,7 @@ Kind SniffFileTypeFromData(std::span<u8> d) {
     return nullptr;
 }
 
-bool IsPSFileContent(std::span<u8> d) {
-    char* header = (char*)d.data();
-    size_t n = d.size();
-    if (n < 64) {
-        return false;
-    }
-    // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
-    if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
-        DWORD psStart = ByteReader(d).DWordLE(4);
-        return psStart >= n - 12 || str::StartsWith(header + psStart, "%!PS-Adobe-");
-    }
-    if (str::StartsWith(header, "%!PS-Adobe-")) {
-        return true;
-    }
-    // PJL (Printer Job Language) files containing Postscript data
-    // https://developers.hp.com/system/files/PJL_Technical_Reference_Manual.pdf
-    bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
-    if (isPJL) {
-        // TODO: use something else other than str::Find() so that it works even if header is not null-terminated
-        const char* hdr = str::Find(header, "\n%!PS-Adobe-");
-        if (!hdr) {
-            isPJL = false;
-        }
-    }
-    return isPJL;
-}
-
-bool IsEpubFile(const WCHAR* path) {
+static bool IsEpubFile(const WCHAR* path) {
     AutoDelete<MultiFormatArchive> archive = OpenZipArchive(path, true);
     if (!archive.get()) {
         return false;
@@ -279,21 +302,26 @@ bool IsEpubFile(const WCHAR* path) {
     return str::Eq(mimetype.data, "application/x-ibooks+zip");
 }
 
-bool IsMobiFile(const WCHAR* path) {
+// TODO: don't use PdbReader
+static Kind PalmOrMobiType(const WCHAR* path) {
     PdbReader pdbReader;
     auto data = file::ReadFile(path);
     if (!pdbReader.Parse(data)) {
         return false;
     }
-    // in most cases, we're only interested in Mobipocket files
-    // (PalmDoc uses MobiDoc for loading other formats based on MOBI,
-    // but implements sniffing itself in PalmDoc::IsSupportedFile)
     PdbDocType kind = GetPdbDocType(pdbReader.GetDbType());
-    return PdbDocType::Mobipocket == kind;
+    switch (kind) {
+        case PdbDocType::Mobipocket:
+            return kindFileMobi;
+        case PdbDocType::PalmDoc:
+        case PdbDocType::TealDoc:
+            return kindFilePalmDoc;
+    }
+    return nullptr;
 }
 
 // detect file type based on file content
-Kind SniffFileType(const WCHAR* path) {
+Kind GuessFileTypeFromContent(const WCHAR* path) {
     CrashIf(!path);
 
     if (path::IsDirectory(path)) {
@@ -311,7 +339,7 @@ Kind SniffFileType(const WCHAR* path) {
     if (n <= 0) {
         return nullptr;
     }
-    auto res = SniffFileTypeFromData({(u8*)buf, (size_t)n});
+    auto res = GuessFileTypeFromContent({(u8*)buf, (size_t)n});
     if (res == kindFileZip) {
         if (IsXpsArchive(path)) {
             res = kindFileXps;
@@ -321,14 +349,37 @@ Kind SniffFileType(const WCHAR* path) {
         }
     }
     if (!res) {
-        if (IsMobiFile(path)) {
-            res = kindFileMobi;
-        }
+        res = PalmOrMobiType(path);
     }
     return res;
 }
 
-Kind FileTypeFromFileName(const WCHAR* path) {
+// embedded PDF files have names like "c:/foo.pdf:${pdfStreamNo}"
+// return pointer starting at ":${pdfStream}"
+const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path) {
+    const WCHAR* start = path;
+    const WCHAR* end = start + str::Len(start) - 1;
+
+    int nDigits = 0;
+    while (end > start) {
+        WCHAR c = *end;
+        if (c == ':') {
+            if (nDigits > 0) {
+                return end;
+            }
+            // it was just ':' at the end
+            return nullptr;
+        }
+        if (!str::IsDigit(c)) {
+            return nullptr;
+        }
+        nDigits++;
+        end--;
+    }
+    return nullptr;
+}
+
+Kind GuessFileTypeFromName(const WCHAR* path) {
     VerifyExtsMatch();
 
     if (!path) {
@@ -342,11 +393,23 @@ Kind FileTypeFromFileName(const WCHAR* path) {
         return res;
     }
 
-    // those are cases that cannot be decided just by
-    // looking at extension
-    if (IsPdfFileName(path)) {
+    // cases that cannot be decided just by looking at file extension
+    if (FindEmbeddedPdfFileStreamNo(path) != nullptr) {
         return kindFilePDF;
     }
 
     return nullptr;
+}
+
+Kind GuessFileType(const WCHAR* path, bool sniff) {
+    if (sniff) {
+        Kind kind = GuessFileTypeFromContent(path);
+        if (kind) {
+            return kind;
+        }
+        // for some file types we don't have sniffing so fall back to
+        // guess from file name
+        return GuessFileTypeFromName(path);
+    }
+    return GuessFileTypeFromName(path);
 }

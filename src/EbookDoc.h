@@ -54,7 +54,8 @@ class EpubDoc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
+    static bool IsSupportedFileType(Kind kind);
+
     static EpubDoc* CreateFromFile(const WCHAR* fileName);
     static EpubDoc* CreateFromStream(IStream* stream);
 };
@@ -97,7 +98,8 @@ class Fb2Doc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
+    static bool IsSupportedFileType(Kind kind);
+
     static Fb2Doc* CreateFromFile(const WCHAR* fileName);
     static Fb2Doc* CreateFromStream(IStream* stream);
 };
@@ -125,7 +127,7 @@ class PalmDoc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
+    static bool IsSupportedFileType(Kind kind);
     static PalmDoc* CreateFromFile(const WCHAR* fileName);
 };
 
@@ -153,7 +155,7 @@ class HtmlDoc {
     WCHAR* GetProperty(DocumentProperty prop) const;
     const WCHAR* GetFileName() const;
 
-    static bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
+    static bool IsSupportedFileType(Kind kind);
     static HtmlDoc* CreateFromFile(const WCHAR* fileName);
 };
 
@@ -178,6 +180,6 @@ class TxtDoc {
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
+    static bool IsSupportedFileType(Kind kind);
     static TxtDoc* CreateFromFile(const WCHAR* fileName);
 };

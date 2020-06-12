@@ -18,7 +18,7 @@ class HtmlFormatter;
 class HtmlFormatterArgs;
 
 enum class DocType { None, Epub, Fb2, Mobi, Pdb };
-enum class DocError { None, Unknown };
+enum class DocError { None, Unknown, NotSupported };
 
 class Doc {
   protected:
@@ -89,6 +89,6 @@ class Doc {
     bool ParseToc(EbookTocVisitor* visitor) const;
     HtmlFormatter* CreateFormatter(HtmlFormatterArgs* args) const;
 
+    static bool IsSupportedFileType(Kind kind);
     static Doc CreateFromFile(const WCHAR* filePath);
-    static bool IsSupportedFile(const WCHAR* filePath, bool sniff = false);
 };

@@ -384,16 +384,7 @@ bool IsPsEngineSupportedFile(const WCHAR* path, bool sniff) {
     if (!IsPsEngineAvailable()) {
         return false;
     }
-    if (sniff) {
-        // +1 for zero-termination
-        char header[2048 + 1] = {0};
-        int n = file::ReadN(path, header, sizeof(header));
-        if (n <= 0) {
-            return false;
-        }
-        return IsPSFileContent({(u8*)header, (size_t)n});
-    }
-    Kind kind = SniffFileType(path);
+    Kind kind = GuessFileType(path, sniff);
     return kind == kindFilePS;
 }
 

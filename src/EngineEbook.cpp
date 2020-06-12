@@ -896,14 +896,6 @@ EngineBase* EngineEpub::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-bool IsEpubEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (sniff && dir::Exists(fileName)) {
-        AutoFreeWstr mimetypePath(path::Join(fileName, L"mimetype"));
-        return file::StartsWith(mimetypePath, "application/epub+zip");
-    }
-    return EpubDoc::IsSupportedFile(fileName, sniff);
-}
-
 EngineBase* CreateEpubEngineFromFile(const WCHAR* fileName) {
     return EngineEpub::CreateFromFile(fileName);
 }
@@ -1018,10 +1010,6 @@ EngineBase* EngineFb2::CreateFromStream(IStream* stream) {
         return nullptr;
     }
     return engine;
-}
-
-bool IsFb2EngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    return Fb2Doc::IsSupportedFile(fileName, sniff);
 }
 
 EngineBase* CreateFb2EngineFromFile(const WCHAR* fileName) {
@@ -1176,10 +1164,6 @@ EngineBase* EngineMobi::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-bool IsMobiEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    return MobiDoc::IsSupportedFile(fileName, sniff);
-}
-
 EngineBase* CreateMobiEngineFromFile(const WCHAR* fileName) {
     return EngineMobi::CreateFromFile(fileName);
 }
@@ -1268,10 +1252,6 @@ EngineBase* EnginePdb::CreateFromFile(const WCHAR* fileName) {
         return nullptr;
     }
     return engine;
-}
-
-bool IsPdbEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    return PalmDoc::IsSupportedFile(fileName, sniff);
 }
 
 EngineBase* CreatePdbEngineFromFile(const WCHAR* fileName) {
@@ -1647,10 +1627,6 @@ EngineBase* EngineChm::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-bool IsChmEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    return ChmDoc::IsSupportedFile(fileName, sniff);
-}
-
 EngineBase* CreateChmEngineFromFile(const WCHAR* fileName) {
     return EngineChm::CreateFromFile(fileName);
 }
@@ -1753,10 +1729,6 @@ EngineBase* EngineHtml::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-bool IsHtmlEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    return HtmlDoc::IsSupportedFile(fileName, sniff);
-}
-
 EngineBase* CreateHtmlEngineFromFile(const WCHAR* fileName) {
     return EngineHtml::CreateFromFile(fileName);
 }
@@ -1855,10 +1827,6 @@ EngineBase* EngineTxt::CreateFromFile(const WCHAR* fileName) {
         return nullptr;
     }
     return engine;
-}
-
-bool IsTxtEngineSupportedFile(const WCHAR* fileName, bool sniff) {
-    return TxtDoc::IsSupportedFile(fileName, sniff);
 }
 
 EngineBase* CreateTxtEngineFromFile(const WCHAR* fileName) {

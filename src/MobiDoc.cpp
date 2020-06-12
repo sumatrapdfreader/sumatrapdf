@@ -970,13 +970,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool MobiDoc::IsSupportedFile(const WCHAR* path, bool sniff) {
-    Kind kind;
-    if (!sniff) {
-        kind = FileTypeFromFileName(path);
-    } else {
-        kind = SniffFileType(path);
-    }
+bool MobiDoc::IsSupportedFileType(Kind kind) {
     return kind == kindFileMobi;
 }
 

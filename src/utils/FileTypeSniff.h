@@ -4,14 +4,18 @@
 
 extern Kind kindFilePDF;
 extern Kind kindFilePS;
-extern Kind kindFileMulti;
 extern Kind kindFileXps;
 extern Kind kindFileDjVu;
 extern Kind kindFileChm;
+
 extern Kind kindFileZip;
-extern Kind kindFile7Z;
+extern Kind kindFileCbz;
+extern Kind kindFileCbr;
 extern Kind kindFileRar;
-extern Kind kindFileVbkm;
+extern Kind kindFile7Z;
+extern Kind kindFileCb7;
+extern Kind kindFileTar;
+extern Kind kindFileCbt;
 
 extern Kind kindFilePng;
 extern Kind kindFileJpeg;
@@ -24,18 +28,21 @@ extern Kind kindFileHdp;
 extern Kind kindFileWdp;
 extern Kind kindFileWebp;
 extern Kind kindFileJp2;
-extern Kind kindFileDir;
-extern Kind kindFileCbt;
-extern Kind kindFileTar;
+
 extern Kind kindFileFb2;
 extern Kind kindFileEpub;
 extern Kind kindFileMobi;
+extern Kind kindFilePalmDoc;
+extern Kind kindFileHTML;
+extern Kind kindFileTxt;
 
-Kind SniffFileTypeFromData(std::span<u8> d);
-Kind SniffFileType(const WCHAR* filePath);
-Kind FileTypeFromFileName(const WCHAR*);
-bool IsImageEngineKind(Kind);
-bool IsCbxEngineKind(Kind);
-bool IsPSFileContent(std::span<u8> d);
-bool IsEpubFile(const WCHAR* path);
-bool IsMobiFile(const WCHAR* path);
+extern Kind kindFileVbkm;
+extern Kind kindFileDir;
+
+const WCHAR* FindEmbeddedPdfFileStreamNo(const WCHAR* path);
+
+Kind GuessFileTypeFromContent(const WCHAR* path);
+Kind GuessFileTypeFromName(const WCHAR*);
+Kind GuessFileType(const WCHAR* path, bool fromContent);
+
+bool KindInArray(Kind* kinds, int nKinds, Kind kind);

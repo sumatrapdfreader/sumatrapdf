@@ -22,6 +22,7 @@ To write new regression test:
 #include "utils/DbgHelpDyn.h"
 #include "utils/DirIter.h"
 #include "utils/FileUtil.h"
+#include "utils/FileTypeSniff.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "mui/Mui.h"

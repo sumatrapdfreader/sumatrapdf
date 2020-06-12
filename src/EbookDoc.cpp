@@ -707,11 +707,8 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     return ParseNavToc(tocData, tocDataLen, pagePath.Get(), visitor);
 }
 
-bool EpubDoc::IsSupportedFile(const WCHAR* path, bool sniff) {
-    if (sniff) {
-        return IsEpubFile(path);
-    }
-    return str::EndsWithI(path, L".epub");
+bool EpubDoc::IsSupportedFileType(Kind kind) {
+    return kind == kindFileEpub;
 }
 
 EpubDoc* EpubDoc::CreateFromFile(const WCHAR* path) {
@@ -1011,10 +1008,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool Fb2Doc::IsSupportedFile(const WCHAR* path, bool sniff) {
-    UNUSED(sniff);
-    // we have no sniffing so always look at file name
-    Kind kind = FileTypeFromFileName(path);
+bool Fb2Doc::IsSupportedFileType(Kind kind) {
     return kind == kindFileFb2;
 }
 
@@ -1182,25 +1176,12 @@ bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool PalmDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (!sniff) {
-        bool isPdb = str::EndsWithI(fileName, L".pdb");
-        bool isPrc = str::EndsWithI(fileName, L".prc");
-        return isPdb || isPrc;
-    }
-
-    PdbReader pdbReader;
-    auto data = file::ReadFile(fileName);
-    if (!pdbReader.Parse(data)) {
-        return false;
-    }
-
-    const char* kind = pdbReader.GetDbType();
-    return str::Eq(kind, "TEXtREAd") || str::Eq(kind, "TEXtTlDc");
+bool PalmDoc::IsSupportedFileType(Kind kind) {
+    return kind == kindFilePalmDoc;
 }
 
-PalmDoc* PalmDoc::CreateFromFile(const WCHAR* fileName) {
-    PalmDoc* doc = new PalmDoc(fileName);
+PalmDoc* PalmDoc::CreateFromFile(const WCHAR* path) {
+    PalmDoc* doc = new PalmDoc(path);
     if (!doc || !doc->Load()) {
         delete doc;
         return nullptr;
@@ -1210,7 +1191,7 @@ PalmDoc* PalmDoc::CreateFromFile(const WCHAR* fileName) {
 
 /* ********** Plain HTML ********** */
 
-HtmlDoc::HtmlDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {
+HtmlDoc::HtmlDoc(const WCHAR* path) : fileName(str::Dup(path)) {
 }
 
 HtmlDoc::~HtmlDoc() {
@@ -1308,10 +1289,8 @@ const WCHAR* HtmlDoc::GetFileName() const {
     return fileName;
 }
 
-bool HtmlDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
-    UNUSED(sniff);
-    return str::EndsWithI(fileName, L".html") || str::EndsWithI(fileName, L".htm") ||
-           str::EndsWithI(fileName, L".xhtml");
+bool HtmlDoc::IsSupportedFileType(Kind kind) {
+    return kind == kindFilePalmDoc;
 }
 
 HtmlDoc* HtmlDoc::CreateFromFile(const WCHAR* fileName) {
@@ -1580,17 +1559,8 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
     return true;
 }
 
-bool TxtDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
-    UNUSED(sniff);
-    return str::EndsWithI(fileName, L".txt") || str::EndsWithI(fileName, L".log") ||
-           // http://en.wikipedia.org/wiki/.nfo
-           str::EndsWithI(fileName, L".nfo") ||
-           // http://en.wikipedia.org/wiki/FILE_ID.DIZ
-           str::EndsWithI(fileName, L"\\file_id.diz") ||
-           // http://en.wikipedia.org/wiki/Read.me
-           str::EndsWithI(fileName, L"\\Read.me") ||
-           // http://www.cix.co.uk/~gidds/Software/TCR.html
-           str::EndsWithI(fileName, L".tcr");
+bool TxtDoc::IsSupportedFileType(Kind kind) {
+    return kind == kindFileTxt;
 }
 
 TxtDoc* TxtDoc::CreateFromFile(const WCHAR* fileName) {

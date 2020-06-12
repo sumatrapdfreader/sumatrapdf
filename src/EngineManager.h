@@ -3,7 +3,8 @@
 
 namespace EngineManager {
 
-bool IsSupportedFile(const WCHAR* filePath, bool sniff = false, bool enableEngineEbooks = true);
+bool IsSupportedFileType(Kind kind, bool enableEngineEbooks);
+
 EngineBase* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI = nullptr, bool enableChmEngine = true,
                          bool enableEngineEbooks = true);
 } // namespace EngineManager

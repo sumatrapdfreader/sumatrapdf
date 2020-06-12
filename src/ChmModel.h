@@ -45,7 +45,6 @@ class ChmModel : public Controller {
     // for quick type determination and type-safe casting
     ChmModel* AsChm() override;
 
-    static bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
     static ChmModel* Create(const WCHAR* fileName, ControllerCallback* cb = nullptr);
 
   public:
@@ -66,6 +65,8 @@ class ChmModel : public Controller {
     void OnLButtonDown();
     std::string_view GetDataForUrl(const WCHAR* url);
     void DownloadData(const WCHAR* url, std::string_view data);
+
+    static bool IsSupportedFileType(Kind);
 
   protected:
     AutoFreeWstr fileName;

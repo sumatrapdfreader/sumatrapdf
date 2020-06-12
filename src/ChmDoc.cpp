@@ -548,13 +548,7 @@ bool ChmDoc::ParseIndex(EbookTocVisitor* visitor) {
     return ParseTocOrIndex(visitor, indexPath, true);
 }
 
-bool ChmDoc::IsSupportedFile(const WCHAR* path, bool sniff) {
-    Kind kind = nullptr;
-    if (sniff) {
-        kind = SniffFileType(path);
-    } else {
-        kind = FileTypeFromFileName(path);
-    }
+bool ChmDoc::IsSupportedFileType(Kind kind) {
     return kind == kindFileChm;
 }
 

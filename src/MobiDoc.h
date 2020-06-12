@@ -64,7 +64,7 @@ class MobiDoc {
     bool HasToc();
     bool ParseToc(EbookTocVisitor* visitor);
 
-    static bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
+    static bool IsSupportedFileType(Kind);
     static MobiDoc* CreateFromFile(const WCHAR* fileName);
     static MobiDoc* CreateFromStream(IStream* stream);
 };
