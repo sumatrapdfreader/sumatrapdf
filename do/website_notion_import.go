@@ -208,7 +208,7 @@ func (c *HTMLConverter) RenderPage(block *notionapi.Block) bool {
 		c.conv.Printf(`</div>`)
 		c.conv.Printf(`<hr>`)
 		uri := "https://notion.so/" + notionapi.ToNoDashID(block.ID)
-		c.conv.Printf(`<center><a href="%s" class="suggest-change">suggest change to this page</a></center>`, uri)
+		c.conv.Printf(`<center><a href="%s" target="_blank" class="suggest-change">suggest change to this page</a></center>`, uri)
 		return true
 	}
 

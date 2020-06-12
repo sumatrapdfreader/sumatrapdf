@@ -1,4 +1,4 @@
-2200 1591214282838 httpcache-v1
+2200 1592003230074 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
@@ -74,7 +74,7 @@ Response:+2000
     }
   ]
 }
-106230 1591214282840 httpcache-v1
+106378 1592003230076 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -87,7 +87,7 @@ Body:+152
   "pageId": "fed36a56-24d4-43fe-9f7b-e0e410ecd715",
   "verticalColumns": false
 }
-Response:+105988
+Response:+106136
 {
   "cursor": {
     "stack": []
@@ -198,6 +198,7 @@ Response:+105988
             "938de138-6e72-4da5-97f2-52abbe98dfce",
             "3031aa8a-1feb-45fb-89a7-bcb021d1234d",
             "d501cc69-2b90-43e4-931b-48a20e5b8510",
+            "2e25891e-1bc8-4c8d-9ec6-b620a4819634",
             "91968948-5271-4507-a2d7-056d10d74980",
             "a996fae6-4609-4ee3-9627-ca2a4ac63045",
             "b8522818-c4f1-4e88-9878-97c055d46b83",
@@ -243,7 +244,7 @@ Response:+105988
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1588811520000,
+          "last_edited_time": 1592002860000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -253,8 +254,10 @@ Response:+105988
               ]
             ]
           },
+          "shard_id": 913143,
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 15
+          "version": 21
         }
       },
       "15eb2979-c4e4-4782-9647-3898d3ce81fa": {
@@ -2717,7 +2720,7 @@ Response:+105988
           "mobile_onboarding_completed": true,
           "onboarding_completed": true,
           "profile_photo": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/2dcaa66c-7674-4ff6-9924-601785b63561/head-bw-640x960.png",
-          "version": 315
+          "version": 317
         }
       }
     },
@@ -2764,9 +2767,9 @@ Response:+105988
               "user_id": "bb760e2d-d679-4b64-b2a9-03005b21870a"
             }
           ],
-          "plan_type": "team",
+          "plan_type": "personal",
           "shard_id": 913143,
-          "version": 258
+          "version": 260
         }
       }
     }
