@@ -163,6 +163,7 @@ bool KindInArray(Kind* kinds, int nKinds, Kind kind) {
     V(0x3c, "BOOKMOBI", kindFileMobi)                   \
     V(0x3c, "TEXtREAd", kindFilePalmDoc)                \
     V(0x3c, "TEXtTlDc", kindFilePalmDoc)                \
+    V(0x3c, "DataPlkr", kindFilePalmDoc)                \
     V(0, "\x89PNG\x0D\x0A\x1A\x0A", kindFilePng)        \
     V(0, "\xFF\xD8", kindFileJpeg)                      \
     V(0, "GIF87a", kindFileGif)                         \
@@ -229,7 +230,7 @@ static bool IsPSFileContent(std::span<u8> d) {
     bool isPJL = str::StartsWith(header, "\x1B%-12345X@PJL");
     if (isPJL) {
         // TODO: use something else other than str::Find() so that it works even if header is not null-terminated
-        const char* hdr = str::Find(header, "\n%!PS-Adobe-");
+        const char* hdr = str::Find(header, "%!PS-Adobe-");
         if (!hdr) {
             isPJL = false;
         }

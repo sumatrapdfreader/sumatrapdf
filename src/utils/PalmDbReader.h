@@ -5,6 +5,7 @@
 #define MOBI_TYPE_CREATOR "BOOKMOBI"
 #define PALMDOC_TYPE_CREATOR "TEXtREAd"
 #define TEALDOC_TYPE_CREATOR "TEXtTlDc"
+#define PLUCKER_TYPE_CREATOR "DataPlkr"
 
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
 // http://wiki.mobileread.com/wiki/PDB
@@ -65,5 +66,5 @@ class PdbReader {
 };
 
 // stuff for mobi format
-enum class PdbDocType { Unknown, Mobipocket, PalmDoc, TealDoc };
+enum class PdbDocType { Unknown, Mobipocket, PalmDoc, TealDoc, Plucker };
 PdbDocType GetPdbDocType(const char* typeCreator);

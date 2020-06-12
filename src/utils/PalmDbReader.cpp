@@ -152,11 +152,17 @@ PdbReader* PdbReader::CreateFromStream(IStream* stream) {
 #endif
 
 PdbDocType GetPdbDocType(const char* typeCreator) {
-    if (str::Eq(typeCreator, MOBI_TYPE_CREATOR))
+    if (memeq(typeCreator, MOBI_TYPE_CREATOR, 8)) {
         return PdbDocType::Mobipocket;
-    if (str::Eq(typeCreator, PALMDOC_TYPE_CREATOR))
+    }
+    if (memeq(typeCreator, PALMDOC_TYPE_CREATOR, 8)) {
         return PdbDocType::PalmDoc;
-    if (str::Eq(typeCreator, TEALDOC_TYPE_CREATOR))
+    }
+    if (memeq(typeCreator, TEALDOC_TYPE_CREATOR, 8)) {
         return PdbDocType::TealDoc;
+    }
+    if (memeq(typeCreator, PLUCKER_TYPE_CREATOR, 8)) {
+        return PdbDocType::Plucker;
+    }
     return PdbDocType::Unknown;
 }

@@ -1119,11 +1119,19 @@ static const char* HandleTealDocTag(str::Str& builder, WStrVec& tocEntries, cons
 
 bool PalmDoc::Load() {
     MobiDoc* mobiDoc = MobiDoc::CreateFromFile(fileName);
-    if (!mobiDoc)
+    if (!mobiDoc) {
         return false;
-    if (PdbDocType::PalmDoc != mobiDoc->GetDocType() && PdbDocType::TealDoc != mobiDoc->GetDocType()) {
-        delete mobiDoc;
-        return false;
+    }
+    auto docType = mobiDoc->GetDocType();
+    switch (docType) {
+        case PdbDocType::PalmDoc:
+        case PdbDocType::TealDoc:
+        case PdbDocType::Plucker:
+            // no-op
+            break;
+        default:
+            delete mobiDoc;
+            return false;
     }
 
     const std::string_view text = mobiDoc->GetHtmlData();
