@@ -11,7 +11,7 @@ extern "C" {
 #include "utils/Archive.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
-#include "utils/FileTypeSniff.h"
+#include "utils/GuessFileType.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "utils/TrivialHtmlParser.h"

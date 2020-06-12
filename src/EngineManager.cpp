@@ -4,7 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/FileTypeSniff.h"
+#include "utils/GuessFileType.h"
 
 #include "wingui/TreeModel.h"
 

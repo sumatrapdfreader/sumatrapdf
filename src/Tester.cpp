@@ -11,7 +11,7 @@
 #include "utils/CryptoUtil.h"
 #include "utils/DirIter.h"
 #include "utils/FileUtil.h"
-#include "utils/FileTypeSniff.h"
+#include "utils/GuessFileType.h"
 #include "utils/PalmDbReader.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"

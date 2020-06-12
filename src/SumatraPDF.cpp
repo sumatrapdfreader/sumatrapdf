@@ -9,7 +9,7 @@
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/FileWatcher.h"
-#include "utils/FileTypeSniff.h"
+#include "utils/GuessFileType.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HttpUtil.h"
 #include "utils/SquareTreeParser.h"

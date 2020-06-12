@@ -57,9 +57,6 @@
     <ClInclude Include="..\src\utils\Dpi.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\FileTypeSniff.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\FileUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -70,6 +67,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\GdiPlusUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\GuessFileType.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\HtmlParserLookup.h">
@@ -275,9 +275,6 @@
     <ClCompile Include="..\src\utils\Dpi.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\FileTypeSniff.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\FileUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -288,6 +285,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\GdiPlusUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\GuessFileType.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\HtmlParserLookup.cpp">

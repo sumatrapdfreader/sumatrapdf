@@ -496,7 +496,7 @@ function utils_files()
     "Dict.*",
     "DirIter.*",
     "Dpi.*",
-    "FileTypeSniff.*",
+    "GuessFileType.*",
     "FileUtil.*",
     "FileWatcher.*",
     "FzImgReader.*",

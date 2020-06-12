@@ -8,7 +8,7 @@
 #include "utils/ByteReader.h"
 #include "utils/Archive.h"
 #include "utils/PalmDbReader.h"
-#include "utils/FileTypeSniff.h"
+#include "utils/GuessFileType.h"
 
 // TODO: move those functions here
 extern bool IsPdfFileName(const WCHAR* path);

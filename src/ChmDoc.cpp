@@ -6,7 +6,7 @@
 #include <chm_lib.h>
 #include "utils/ByteReader.h"
 #include "utils/FileUtil.h"
-#include "utils/FileTypeSniff.h"
+#include "utils/GuessFileType.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/TrivialHtmlParser.h"
 #include "utils/ScopedWin.h"
