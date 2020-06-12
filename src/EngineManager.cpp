@@ -74,7 +74,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         engine = CreateEngineMultiFromFile(path, pwdUI);
     } else if (IsXpsEngineSupportedFileType(kind)) {
         engine = CreateXpsEngineFromFile(path);
-    } else if (kind == kindFileDjVu) {
+    } else if (IsDjVuEngineSupportedFileType(kind)) {
         engine = CreateDjVuEngineFromFile(path);
     } else if (IsImageEngineSupportedFileType(kind)) {
         engine = CreateImageEngineFromFile(path);
@@ -97,14 +97,10 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         }
     } else if (IsCbxEngineSupportedFileType(kind)) {
         engine = CreateCbxEngineFromFile(path);
-    } else if (kind == kindFilePS) {
-        if (IsPsEngineAvailable()) {
-            engine = CreatePsEngineFromFile(path);
-        }
-    } else if (enableChmEngine) {
-        if (kind == kindFileChm) {
-            engine = CreateChmEngineFromFile(path);
-        }
+    } else if (IsPsEngineSupportedFileType(kind)) {
+        engine = CreatePsEngineFromFile(path);
+    } else if (enableChmEngine && (kind == kindFileChm)) {
+        engine = CreateChmEngineFromFile(path);
     }
 
     if (!enableEngineEbooks) {

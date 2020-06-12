@@ -6,11 +6,9 @@
 #include "utils/FileUtil.h"
 #include "utils/GdiplusUtil.h"
 #include "utils/ByteReader.h"
-#include "utils/PalmDbReader.h"
 #include "utils/Archive.h"
 #include "utils/GuessFileType.h"
 
-// TODO: replace with an enum class FileKind { Unknown, PDF, ... };
 Kind kindFilePDF = "filePDF";
 Kind kindFilePS = "filePS";
 Kind kindFileVbkm = "fileVbkm";
@@ -39,6 +37,7 @@ Kind kindFileTar = "fileTar";
 Kind kindFileFb2 = "fileFb2";
 Kind kindFileDir = "fileDir";
 Kind kindFileEpub = "fileEpub";
+// TODO: introduce kindFileTealDoc?
 Kind kindFileMobi = "fileMobi";
 Kind kindFilePalmDoc = "filePalmDoc";
 Kind kindFileHTML = "fileHTML";
@@ -154,24 +153,61 @@ bool KindInArray(Kind* kinds, int nKinds, Kind kind) {
     return false;
 }
 
-#define FILE_SIGS(V)                       \
-    V("Rar!\x1A\x07\x00", kindFileRar)     \
-    V("Rar!\x1A\x07\x01\x00", kindFileRar) \
-    V("7z\xBC\xAF\x27\x1C", kindFile7Z)    \
-    V("PK\x03\x04", kindFileZip)           \
-    V("ITSF", kindFileChm)                 \
-    V("AT&T", kindFileDjVu)
+#define FILE_SIGS(V)                                \
+    V(0, "Rar!\x1A\x07\x00", kindFileRar)           \
+    V(0, "Rar!\x1A\x07\x01\x00", kindFileRar)       \
+    V(0, "7z\xBC\xAF\x27\x1C", kindFile7Z)          \
+    V(0, "PK\x03\x04", kindFileZip)                 \
+    V(0, "ITSF", kindFileChm)                       \
+    V(0x3c, "BOOKMOBI", kindFileMobi)               \
+    V(0x3c, "TEXtREAd", kindFilePalmDoc)      \
+    V(0x3c, "TEXtTlDc", kindFilePalmDoc)            \
+    V(0, "AT&T", kindFileDjVu)
 
+// TODO: use this and remove GfxFormatFromData
+/*
+    // check the most common formats first
+    char* data = (char*)d.data();
+    if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
+        return ImgFormat::PNG;
+    }
+    if (str::StartsWith(data, "\xFF\xD8")) {
+        return ImgFormat::JPEG;
+    }
+    if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a")) {
+        return ImgFormat::GIF;
+    }
+    if (str::StartsWith(data, "BM")) {
+        return ImgFormat::BMP;
+    }
+    if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4)) {
+        return ImgFormat::TIFF;
+    }
+    if (tga::HasSignature(d)) {
+        return ImgFormat::TGA;
+    }
+    if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4)) {
+        return ImgFormat::JXR;
+    }
+    if (webp::HasSignature(d)) {
+        return ImgFormat::WebP;
+    }
+    if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
+        return ImgFormat::JP2;
+    }
+*/
+
+// a file signaure is a sequence of bytes at a specific
+// offset in the file
 struct FileSig {
+    size_t offset;
     const char* sig;
     size_t sigLen;
     Kind kind;
 };
 
-#define MK_SIG(SIG, KIND) {SIG, sizeof(SIG) - 1, KIND},
-
+#define MK_SIG(OFF, SIG, KIND) {OFF, SIG, sizeof(SIG) - 1, KIND},
 static FileSig gFileSigs[] = {FILE_SIGS(MK_SIG)};
-
 #undef MK_SIG
 
 // PDF files have %PDF-${ver} somewhere in the beginning of the file
@@ -223,25 +259,6 @@ static bool IsPSFileContent(std::span<u8> d) {
     return isPJL;
 }
 
-static Kind PalmOrMobiType(std::span<u8> d) {
-    if (d.size() < sizeof(PdbHeader)) {
-        return nullptr;
-    }
-    size_t off = 0x3c;
-    char* s = (char*)d.data() + off;
-    if (memeq(s, MOBI_TYPE_CREATOR, 8)) {
-        return kindFileMobi;
-    }
-    // TODO: introduce kindFileTealDoc?
-    if (memeq(s, PALMDOC_TYPE_CREATOR, 8)) {
-        return kindFilePalmDoc;
-    }
-    if (memeq(s, TEALDOC_TYPE_CREATOR, 8)) {
-        return kindFilePalmDoc;
-    }
-    return nullptr;
-}
-
 // detect file type based on file content
 // we don't support sniffing kindFileVbkm
 static Kind GuessFileTypeFromContent(std::span<u8> d) {
@@ -252,8 +269,11 @@ static Kind GuessFileTypeFromContent(std::span<u8> d) {
 
     for (int i = 0; i < n; i++) {
         const char* sig = gFileSigs[i].sig;
+        size_t off = gFileSigs[i].offset;
+        u8* d = data + off;
         size_t sigLen = gFileSigs[i].sigLen;
-        if (memeq(data, sig, sigLen)) {
+        size_t sigMaxLen = off + sigLen;
+        if ((len > sigMaxLen) && memeq(d, sig, sigLen)) {
             return gFileSigs[i].kind;
         }
     }
@@ -263,10 +283,6 @@ static Kind GuessFileTypeFromContent(std::span<u8> d) {
     }
     if (IsPSFileContent(d)) {
         return kindFilePS;
-    }
-    Kind kind = PalmOrMobiType(d);
-    if (kind != nullptr) {
-        return kind;
     }
 
     ImgFormat fmt = GfxFormatFromData(d);
