@@ -635,6 +635,20 @@ WCHAR* GetFileName(const WCHAR* url) {
 
 namespace seqstrings {
 
+// advance to next string
+// return nullptr if end of strings
+const WCHAR* SkipStr(const WCHAR* s) {
+    // empty string marks the end, means idx was too high
+    if (!*s) {
+        return nullptr;
+    }
+    // skip past next '\0' char
+    while (*s) {
+        s++;
+    }
+    return s + 1;
+}
+
 // Returns nullptr if s is the same as toFind
 // If they are not equal, returns end of s + 1
 static inline const char* StrEqWeird(const char* s, const WCHAR* toFind) {
@@ -664,8 +678,8 @@ static inline const char* StrEqWeird(const char* s, const WCHAR* toFind) {
 // optimization: allows finding WCHAR strings in char * strings array
 // without the need to convert first
 // returns -1 if toFind doesn't exist in strings, or its index if exists
-int StrToIdx(const char* strings, const WCHAR* toFind) {
-    const char* s = strings;
+int StrToIdx(const char* strs, const WCHAR* toFind) {
+    const char* s = strs;
     int idx = 0;
     while (*s) {
         s = StrEqWeird(s, toFind);
@@ -674,6 +688,21 @@ int StrToIdx(const char* strings, const WCHAR* toFind) {
         ++idx;
     }
     return -1;
+}
+
+// Given an index in the "array" of sequentially laid out strings,
+// returns a strings at that index.
+const WCHAR* IdxToStr(const WCHAR* strs, int idx) {
+    CrashIf(idx < 0);
+    const WCHAR* s = strs;
+    while (idx > 0) {
+        s = SkipStr(s);
+        if (!s) {
+            return nullptr;
+        }
+        --idx;
+    }
+    return s;
 }
 
 } // namespace seqstrings

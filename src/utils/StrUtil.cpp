@@ -976,7 +976,7 @@ void DecodeInPlace(char* url) {
 namespace seqstrings {
 
 // advance to next string
-// return false if end of strings
+// return nullptr if end of strings
 const char* SkipStr(const char* s) {
     // empty string marks the end, means idx was too high
     if (!*s) {
@@ -1020,11 +1020,11 @@ static inline const char* StrEqWeird(const char* s, const char* toFind) {
 // out sequentially in memory, terminated with a 0-length string
 // Returns index of toFind string in strings
 // Returns -1 if string doesn't exist
-int StrToIdx(const char* strings, const char* toFind) {
+int StrToIdx(const char* strs, const char* toFind) {
     if (!toFind) {
         return -1;
     }
-    const char* s = strings;
+    const char* s = strs;
     int idx = 0;
     while (*s) {
         s = StrEqWeird(s, toFind);
@@ -1037,9 +1037,9 @@ int StrToIdx(const char* strings, const char* toFind) {
 
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
-const char* IdxToStr(const char* strings, int idx) {
+const char* IdxToStr(const char* strs, int idx) {
     CrashIf(idx < 0);
-    const char* s = strings;
+    const char* s = strs;
     while (idx > 0) {
         s = SkipStr(s);
         if (!s) {

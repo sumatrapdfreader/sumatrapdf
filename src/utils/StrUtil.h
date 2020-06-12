@@ -169,11 +169,12 @@ WCHAR* GetFileName(const WCHAR* url);
 namespace seqstrings {
 char* SkipStr(char* s);
 const char* SkipStr(const char* s);
-int StrToIdx(const char* strings, const char* toFind);
-const char* IdxToStr(const char* strings, int idx);
+int StrToIdx(const char* strs, const char* toFind);
+const char* IdxToStr(const char* strs, int idx);
 
 #if OS_WIN
-int StrToIdx(const char* strings, const WCHAR* toFind);
+int StrToIdx(const char* strs, const WCHAR* toFind);
+const WCHAR* IdxToStr(const WCHAR* strs, int idx);
 #endif
 } // namespace seqstrings
 

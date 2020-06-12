@@ -240,7 +240,7 @@ static bool IsPSFileContent(std::span<u8> d) {
 
 // detect file type based on file content
 // we don't support sniffing kindFileVbkm
-static Kind GuessFileTypeFromContent(std::span<u8> d) {
+Kind GuessFileTypeFromContent(std::span<u8> d) {
     // TODO: sniff .fb2 content
     u8* data = d.data();
     size_t len = d.size();

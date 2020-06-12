@@ -321,66 +321,58 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
+#include "utils/GuessFileType.h"
+
+static const Kind gImageKinds[] = {
+    kindFilePng, kindFileJpeg, kindFileGif,  kindFileBmp, kindFileTiff,
+    kindFileTga, kindFileJxr,  kindFileWebp, kindFileJp2,
+};
+
+static const ImgFormat gImageFormats[] = {
+    ImgFormat::PNG, ImgFormat::JPEG, ImgFormat::GIF,  ImgFormat::BMP, ImgFormat::TIFF,
+    ImgFormat::TGA, ImgFormat::JXR,  ImgFormat::WebP, ImgFormat::JP2,
+};
+
+static const WCHAR* gImageFormatExts =
+    L".png\0"
+    L".jpg\0"
+    L".gif\0"
+    L".bmp\0"
+    L".tif\0"
+    L".tga\0"
+    L".jxr\0"
+    L".webp\0"
+    L".jp2\0"
+    L"\0";
+
+static_assert(dimof(gImageKinds) == dimof(gImageFormats));
+
+static int FindImageKindIdx(Kind kind) {
+    int n = (int)dimof(gImageKinds);
+    for (int i = 0; i < n; i++) {
+        if (kind == gImageKinds[i]) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 ImgFormat GfxFormatFromData(std::span<u8> d) {
-    if (d.empty() || d.size() < 12) {
-        return ImgFormat::Unknown;
-    }
-    // check the most common formats first
-    char* data = (char*)d.data();
-    if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
-        return ImgFormat::PNG;
-    }
-    if (str::StartsWith(data, "\xFF\xD8")) {
-        return ImgFormat::JPEG;
-    }
-    if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a")) {
-        return ImgFormat::GIF;
-    }
-    if (str::StartsWith(data, "BM")) {
-        return ImgFormat::BMP;
-    }
-    if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4)) {
-        return ImgFormat::TIFF;
-    }
-    if (tga::HasSignature(d)) {
-        return ImgFormat::TGA;
-    }
-    if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4)) {
-        return ImgFormat::JXR;
-    }
-    if (webp::HasSignature(d)) {
-        return ImgFormat::WebP;
-    }
-    if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
-        return ImgFormat::JP2;
+    Kind kind = GuessFileTypeFromContent(d);
+    int idx = FindImageKindIdx(kind);
+    if (idx >= 0) {
+        return gImageFormats[idx];
     }
     return ImgFormat::Unknown;
 }
 
 const WCHAR* GfxFileExtFromData(std::span<u8> d) {
-    auto fmt = GfxFormatFromData(d);
-    switch (fmt) {
-        case ImgFormat::BMP:
-            return L".bmp";
-        case ImgFormat::GIF:
-            return L".gif";
-        case ImgFormat::JPEG:
-            return L".jpg";
-        case ImgFormat::JXR:
-            return L".jxr";
-        case ImgFormat::PNG:
-            return L".png";
-        case ImgFormat::TGA:
-            return L".tga";
-        case ImgFormat::TIFF:
-            return L".tif";
-        case ImgFormat::WebP:
-            return L".webp";
-        case ImgFormat::JP2:
-            return L".jp2";
-        default:
-            return nullptr;
+    Kind kind = GuessFileTypeFromContent(d);
+    int idx = FindImageKindIdx(kind);
+    if (idx >= 0) {
+        return seqstrings::IdxToStr(gImageFormatExts, idx);
     }
+    return nullptr;
 }
 
 // Windows' JPEG codec doesn't support arithmetic coding
