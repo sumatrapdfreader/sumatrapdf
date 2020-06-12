@@ -406,8 +406,10 @@ static bool PngRequiresPresetDict(const u8* data, size_t len) {
     return false;
 }
 
-bool IsGdiPlusNativeFormat(const u8* data, size_t len) {
-    ImgFormat fmt = GfxFormatFromData({(u8*)data, len});
+bool IsGdiPlusNativeFormat(std::span<u8> d) {
+    ImgFormat fmt = GfxFormatFromData(d);
+    size_t len = d.size();
+    u8* data = d.data();
     return ImgFormat::BMP == fmt || ImgFormat::GIF == fmt || ImgFormat::TIFF == fmt ||
            (ImgFormat::JPEG == fmt && !JpegUsesArithmeticCoding(data, len)) ||
            (ImgFormat::PNG == fmt && !PngRequiresPresetDict(data, len));

@@ -476,7 +476,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     defaultFileExt = fileExt;
 
     AutoFree data = GetDataFromStream(stream, nullptr);
-    if (IsGdiPlusNativeFormat((const u8*)data.data, data.size())) {
+    if (IsGdiPlusNativeFormat(data.as_span())) {
         image = Bitmap::FromStream(stream);
     } else {
         image = BitmapFromData((const u8*)data.data, data.size());
