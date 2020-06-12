@@ -4,9 +4,10 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
-#include "utils/GdiplusUtil.h"
 #include "utils/ByteReader.h"
 #include "utils/Archive.h"
+#include "utils/TgaReader.h"
+#include "utils/WebpReader.h"
 #include "utils/GuessFileType.h"
 
 Kind kindFilePDF = "filePDF";
@@ -153,49 +154,26 @@ bool KindInArray(Kind* kinds, int nKinds, Kind kind) {
     return false;
 }
 
-#define FILE_SIGS(V)                                \
-    V(0, "Rar!\x1A\x07\x00", kindFileRar)           \
-    V(0, "Rar!\x1A\x07\x01\x00", kindFileRar)       \
-    V(0, "7z\xBC\xAF\x27\x1C", kindFile7Z)          \
-    V(0, "PK\x03\x04", kindFileZip)                 \
-    V(0, "ITSF", kindFileChm)                       \
-    V(0x3c, "BOOKMOBI", kindFileMobi)               \
-    V(0x3c, "TEXtREAd", kindFilePalmDoc)      \
-    V(0x3c, "TEXtTlDc", kindFilePalmDoc)            \
+#define FILE_SIGS(V)                                    \
+    V(0, "Rar!\x1A\x07\x00", kindFileRar)               \
+    V(0, "Rar!\x1A\x07\x01\x00", kindFileRar)           \
+    V(0, "7z\xBC\xAF\x27\x1C", kindFile7Z)              \
+    V(0, "PK\x03\x04", kindFileZip)                     \
+    V(0, "ITSF", kindFileChm)                           \
+    V(0x3c, "BOOKMOBI", kindFileMobi)                   \
+    V(0x3c, "TEXtREAd", kindFilePalmDoc)                \
+    V(0x3c, "TEXtTlDc", kindFilePalmDoc)                \
+    V(0, "\x89PNG\x0D\x0A\x1A\x0A", kindFilePng)        \
+    V(0, "\xFF\xD8", kindFileJpeg)                      \
+    V(0, "GIF87a", kindFileGif)                         \
+    V(0, "GIF89a", kindFileGif)                         \
+    V(0, "BM", kindFileBmp)                             \
+    V(0, "MM\x00\x2A", kindFileTiff)                    \
+    V(0, "II\x2A\x00", kindFileTiff)                    \
+    V(0, "II\xBC\x01", kindFileJxr)                     \
+    V(0, "II\xBC\x00", kindFileJxr)                     \
+    V(0, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", kindFileJp2) \
     V(0, "AT&T", kindFileDjVu)
-
-// TODO: use this and remove GfxFormatFromData
-/*
-    // check the most common formats first
-    char* data = (char*)d.data();
-    if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A")) {
-        return ImgFormat::PNG;
-    }
-    if (str::StartsWith(data, "\xFF\xD8")) {
-        return ImgFormat::JPEG;
-    }
-    if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a")) {
-        return ImgFormat::GIF;
-    }
-    if (str::StartsWith(data, "BM")) {
-        return ImgFormat::BMP;
-    }
-    if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4)) {
-        return ImgFormat::TIFF;
-    }
-    if (tga::HasSignature(d)) {
-        return ImgFormat::TGA;
-    }
-    if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4)) {
-        return ImgFormat::JXR;
-    }
-    if (webp::HasSignature(d)) {
-        return ImgFormat::WebP;
-    }
-    if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
-        return ImgFormat::JP2;
-    }
-*/
 
 // a file signaure is a sequence of bytes at a specific
 // offset in the file
@@ -284,27 +262,11 @@ static Kind GuessFileTypeFromContent(std::span<u8> d) {
     if (IsPSFileContent(d)) {
         return kindFilePS;
     }
-
-    ImgFormat fmt = GfxFormatFromData(d);
-    switch (fmt) {
-        case ImgFormat::BMP:
-            return kindFileBmp;
-        case ImgFormat::GIF:
-            return kindFileGif;
-        case ImgFormat::JPEG:
-            return kindFileJpeg;
-        case ImgFormat::JXR:
-            return kindFileJxr;
-        case ImgFormat::PNG:
-            return kindFilePng;
-        case ImgFormat::TGA:
-            return kindFileTga;
-        case ImgFormat::TIFF:
-            return kindFileTiff;
-        case ImgFormat::WebP:
-            return kindFileWebp;
-        case ImgFormat::JP2:
-            return kindFileJp2;
+    if (tga::HasSignature(d)) {
+        return kindFileTga;
+    }
+    if (webp::HasSignature(d)) {
+        return kindFileWebp;
     }
     return nullptr;
 }
