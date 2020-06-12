@@ -10,6 +10,7 @@ extern "C" {
 #include "utils/Archive.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+#include "utils/GuessFileType.h"
 #include "utils/DirIter.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
@@ -506,31 +507,8 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     return true;
 }
 
-bool IsEngineMultiFileName(const WCHAR* path) {
-    if (str::EndsWithI(path, L".vbkm")) {
-        return true;
-    }
-
-    // TODO: in 3.1.2 we open folder of images (IsImageDirEngineSupportedFile)
-    // To avoid changing behavior, we open pdfs only in ramicro build
-    // this should be controlled via cmd-line flag e.g. -folder-open-pdf
-    // Then we could have more options, like -folder-open-images (default)
-    // -folder-open-all (show all files we support in toc)
-    if (gIsRaMicroBuild) {
-        // for 'Open Folder' functionality
-        if (path::IsDirectory(path)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool IsEngineMultiSupportedFile(const WCHAR* path, bool sniff) {
-    if (sniff) {
-        // we don't support sniffing
-        return false;
-    }
-    return IsEngineMultiFileName(path);
+bool IsEngineMultiSupportedFileType(Kind kind) {
+    return kind == kindFileVbkm;
 }
 
 EngineBase* CreateEngineMultiFromFile(const WCHAR* path, PasswordUI* pwdUI) {

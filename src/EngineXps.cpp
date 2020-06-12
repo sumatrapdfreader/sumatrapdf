@@ -1000,34 +1000,8 @@ bool IsXpsDirectory(const WCHAR* path) {
     return file::Exists(relsPath) || dir::Exists(relsPath);
 }
 
-bool IsXpsFileName(const WCHAR* path) {
-    Kind kind = GuessFileTypeFromName(path);
-    if (kind == kindFileXps) {
-        return true;
-    }
-    return IsXpsDirectory(path);
-}
-
-// check if a given file is a likely a .zip archive containing XPS
-// document
-bool IsXpsArchive(const WCHAR* path) {
-    MultiFormatArchive* archive = OpenZipArchive(path, true);
-    if (!archive) {
-        return false;
-    }
-
-    bool res = archive->GetFileId("_rels/.rels") != (size_t)-1 ||
-               archive->GetFileId("_rels/.rels/[0].piece") != (size_t)-1 ||
-               archive->GetFileId("_rels/.rels/[0].last.piece") != (size_t)-1;
-    delete archive;
-    return res;
-}
-
-bool IsXpsEngineSupportedFile(const WCHAR* path, bool sniff) {
-    if (!sniff) {
-        return IsXpsFileName(path);
-    }
-    return IsXpsArchive(path);
+bool IsXpsEngineSupportedFileType(Kind kind) {
+    return kind == kindFileXps;
 }
 
 EngineBase* CreateXpsEngineFromFile(const WCHAR* fileName) {

@@ -6,15 +6,9 @@
 #include "utils/FileUtil.h"
 #include "utils/GdiplusUtil.h"
 #include "utils/ByteReader.h"
-#include "utils/Archive.h"
 #include "utils/PalmDbReader.h"
+#include "utils/Archive.h"
 #include "utils/GuessFileType.h"
-
-// TODO: move those functions here
-extern bool IsPdfFileName(const WCHAR* path);
-extern bool IsEngineMultiFileName(const WCHAR* path);
-extern bool IsXpsArchive(const WCHAR* path);
-extern bool IsDjVuFileName(const WCHAR* path);
 
 // TODO: replace with an enum class FileKind { Unknown, PDF, ... };
 Kind kindFilePDF = "filePDF";
@@ -106,6 +100,7 @@ static const char* gFileExts =
     ".html\0"
     ".htm\0"
     ".xhtml\0"
+    ".djvu\0"
     ".jp2\0"
     "\0";
 
@@ -117,7 +112,7 @@ static Kind gExtsKind[] = {
     kindFileJpeg, kindFileGif,  kindFileTiff,    kindFileTiff,    kindFileBmp,  kindFileTga,  kindFileJxr,
     kindFileHdp,  kindFileWdp,  kindFileWebp,    kindFileEpub,    kindFileMobi, kindFileMobi, kindFileMobi,
     kindFileMobi, kindFileMobi, kindFilePalmDoc, kindFilePalmDoc, kindFileHTML, kindFileHTML, kindFileHTML,
-    kindFileJp2,
+    kindFileDjVu, kindFileJp2,
 };
 
 static Kind GetKindByFileExt(const WCHAR* path) {
@@ -228,6 +223,25 @@ static bool IsPSFileContent(std::span<u8> d) {
     return isPJL;
 }
 
+static Kind PalmOrMobiType(std::span<u8> d) {
+    if (d.size() < sizeof(PdbHeader)) {
+        return nullptr;
+    }
+    size_t off = 0x3c;
+    char* s = (char*)d.data() + off;
+    if (memeq(s, MOBI_TYPE_CREATOR, 8)) {
+        return kindFileMobi;
+    }
+    // TODO: introduce kindFileTealDoc?
+    if (memeq(s, PALMDOC_TYPE_CREATOR, 8)) {
+        return kindFilePalmDoc;
+    }
+    if (memeq(s, TEALDOC_TYPE_CREATOR, 8)) {
+        return kindFilePalmDoc;
+    }
+    return nullptr;
+}
+
 // detect file type based on file content
 // we don't support sniffing kindFileVbkm
 static Kind GuessFileTypeFromContent(std::span<u8> d) {
@@ -237,6 +251,11 @@ static Kind GuessFileTypeFromContent(std::span<u8> d) {
     if (IsPSFileContent(d)) {
         return kindFilePS;
     }
+    Kind kind = PalmOrMobiType(d);
+    if (kind != nullptr) {
+        return kind;
+    }
+
     // TODO: sniff .fb2 content
     u8* data = d.data();
     size_t len = d.size();
@@ -302,22 +321,19 @@ static bool IsEpubFile(const WCHAR* path) {
     return str::Eq(mimetype.data, "application/x-ibooks+zip");
 }
 
-// TODO: don't use PdbReader
-static Kind PalmOrMobiType(const WCHAR* path) {
-    PdbReader pdbReader;
-    auto data = file::ReadFile(path);
-    if (!pdbReader.Parse(data)) {
+// check if a given file is a likely a .zip archive containing XPS
+// document
+static bool IsXpsArchive(const WCHAR* path) {
+    MultiFormatArchive* archive = OpenZipArchive(path, true);
+    if (!archive) {
         return false;
     }
-    PdbDocType kind = GetPdbDocType(pdbReader.GetDbType());
-    switch (kind) {
-        case PdbDocType::Mobipocket:
-            return kindFileMobi;
-        case PdbDocType::PalmDoc:
-        case PdbDocType::TealDoc:
-            return kindFilePalmDoc;
-    }
-    return nullptr;
+
+    bool res = archive->GetFileId("_rels/.rels") != (size_t)-1 ||
+               archive->GetFileId("_rels/.rels/[0].piece") != (size_t)-1 ||
+               archive->GetFileId("_rels/.rels/[0].last.piece") != (size_t)-1;
+    delete archive;
+    return res;
 }
 
 // detect file type based on file content
@@ -347,9 +363,6 @@ Kind GuessFileTypeFromContent(const WCHAR* path) {
         if (IsEpubFile(path)) {
             res = kindFileEpub;
         }
-    }
-    if (!res) {
-        res = PalmOrMobiType(path);
     }
     return res;
 }

@@ -550,7 +550,7 @@ int main(int argc, char** argv) {
 
     PasswordHolder pwdUI(password);
     EngineBase* engine = EngineManager::CreateEngine(filePath, &pwdUI);
-#ifdef DEBUG
+#if 0
     bool isEngineDjVu = IsOfKind(engine, kindEngineDjVu);
     bool couldLeak = isEngineDjVu || IsDjVuEngineSupportedFile(filePath) || IsDjVuEngineSupportedFile(filePath, true);
     if (!couldLeak) {

@@ -11,11 +11,6 @@
 // size of PdbRecordHeader
 #define kPdbRecordHeaderLen 8
 
-// stuff for mobi format
-#define MOBI_TYPE_CREATOR "BOOKMOBI"
-#define PALMDOC_TYPE_CREATOR "TEXtREAd"
-#define TEALDOC_TYPE_CREATOR "TEXtTlDc"
-
 // Takes ownership of d
 bool PdbReader::Parse(std::string_view d) {
     data = d.data();

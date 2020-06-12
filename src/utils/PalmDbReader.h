@@ -1,6 +1,11 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// values for typeCreator
+#define MOBI_TYPE_CREATOR "BOOKMOBI"
+#define PALMDOC_TYPE_CREATOR "TEXtREAd"
+#define TEALDOC_TYPE_CREATOR "TEXtTlDc"
+
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
 // http://wiki.mobileread.com/wiki/PDB
 struct PdbHeader {

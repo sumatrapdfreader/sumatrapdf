@@ -380,11 +380,10 @@ bool IsPsEngineAvailable() {
     return gswin32c.Get() != nullptr;
 }
 
-bool IsPsEngineSupportedFile(const WCHAR* path, bool sniff) {
+bool IsPsEngineSupportedFileType(Kind kind) {
     if (!IsPsEngineAvailable()) {
         return false;
     }
-    Kind kind = GuessFileType(path, sniff);
     return kind == kindFilePS;
 }
 

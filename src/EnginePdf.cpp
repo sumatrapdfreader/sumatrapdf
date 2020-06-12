@@ -2165,8 +2165,7 @@ EngineBase* EnginePdf::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
     return engine;
 }
 
-bool IsEnginePdfSupportedFile(const WCHAR* path, bool sniff) {
-    Kind kind = GuessFileType(path, sniff);
+bool IsPdfEngineSupportedFileType(Kind kind) {
     return kind == kindFilePDF;
 }
 

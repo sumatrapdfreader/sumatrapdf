@@ -23,13 +23,13 @@
 namespace EngineManager {
 
 bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
-    if (kind == kindFilePDF) {
+    if (IsPdfEngineSupportedFileType(kind)) {
         return true;
     } else if (kind == kindFileVbkm) {
         return true;
-    } else if (kind == kindFileXps) {
+    } else if (IsXpsEngineSupportedFileType(kind)) {
         return true;
-    } else if (kind == kindFileDjVu) {
+    } else if (IsDjVuEngineSupportedFileType(kind)) {
         return true;
     } else if (IsImageEngineSupportedFileType(kind)) {
         return true;
@@ -38,8 +38,8 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
         return false;
     } else if (IsCbxEngineSupportedFileType(kind)) {
         return true;
-    } else if (kind == kindFilePS) {
-        return IsPsEngineAvailable();
+    } else if (IsPsEngineSupportedFileType(kind)) {
+        return true;
     }
 
     if (!enableEngineEbooks) {
@@ -72,7 +72,7 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         engine = CreateEnginePdfFromFile(path, pwdUI);
     } else if (kind == kindFileVbkm) {
         engine = CreateEngineMultiFromFile(path, pwdUI);
-    } else if (kind == kindFileXps) {
+    } else if (IsXpsEngineSupportedFileType(kindFileXps)) {
         engine = CreateXpsEngineFromFile(path);
     } else if (kind == kindFileDjVu) {
         engine = CreateDjVuEngineFromFile(path);
@@ -83,6 +83,12 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
             engine = CreateXpsEngineFromFile(path);
         }
         // in ra-micro builds, prioritize opening folders as multiple PDFs
+        // for 'Open Folder' functionality
+        // TODO: in 3.1.2 we open folder of images (IsImageDirEngineSupportedFile)
+        // To avoid changing behavior, we open pdfs only in ramicro build
+        // this should be controlled via cmd-line flag e.g. -folder-open-pdf
+        // Then we could have more options, like -folder-open-images (default)
+        // -folder-open-all (show all files we support in toc)
         if (!engine && gIsRaMicroBuild) {
             engine = CreateEngineMultiFromFile(path, pwdUI);
         }

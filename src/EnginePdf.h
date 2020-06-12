@@ -1,10 +1,7 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-bool IsPdfFileName(const WCHAR* path);
-bool IsPdfFileContent(std::span<u8> d);
-
-bool IsEnginePdfSupportedFile(const WCHAR* path, bool sniff = false);
+bool IsPdfEngineSupportedFileType(Kind);
 EngineBase* CreateEnginePdfFromFile(const WCHAR* path, PasswordUI* pwdUI = nullptr);
 EngineBase* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI = nullptr);
 

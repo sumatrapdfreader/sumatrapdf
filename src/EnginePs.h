@@ -2,5 +2,5 @@
    License: GPLv3 */
 
 bool IsPsEngineAvailable();
-bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
+bool IsPsEngineSupportedFileType(Kind);
 EngineBase* CreatePsEngineFromFile(const WCHAR* fileName);

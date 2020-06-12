@@ -2,6 +2,6 @@
    License: GPLv3 */
 
 void CleanupDjVuEngine();
-bool IsDjVuEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
+bool IsDjVuEngineSupportedFileType(Kind kind);
 EngineBase* CreateDjVuEngineFromFile(const WCHAR* fileName);
 EngineBase* CreateDjVuEngineFromStream(IStream* stream);

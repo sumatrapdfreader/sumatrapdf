@@ -10,6 +10,7 @@
 #include <miniexp.h>
 #include "utils/ByteReader.h"
 #include "utils/FileUtil.h"
+#include "utils/GuessFileType.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/Log.h"
@@ -1197,15 +1198,8 @@ EngineBase* EngineDjVu::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-bool IsDjVuFileName(const WCHAR* path) {
-    return str::EndsWithI(path, L".djvu");
-}
-
-bool IsDjVuEngineSupportedFile(const WCHAR* path, bool sniff) {
-    if (sniff) {
-        return file::StartsWith(path, "AT&T");
-    }
-    return IsDjVuFileName(path);
+bool IsDjVuEngineSupportedFileType(Kind kind) {
+    return kind == kindFileDjVu;
 }
 
 EngineBase* CreateDjVuEngineFromFile(const WCHAR* path) {
