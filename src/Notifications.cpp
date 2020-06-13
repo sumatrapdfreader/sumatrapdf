@@ -189,7 +189,9 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     RECT rTmp = rect.ToRECT();
 
     Graphics graphics(hdc);
-    auto col = GetAppColor(AppColor::NotificationsBg);
+    COLORREF col = GetAppColor(AppColor::NotificationsBg);
+    // COLORREF col = MkRgb(0xff, 0xff, 0x5c);
+    // COLORREF col = MkGray(0xff);
     SolidBrush br(GdiRgbFromCOLORREF(col));
     graphics.FillRectangle(&br, Gdiplus::Rect(0, 0, rTmp.right - rTmp.left, rTmp.bottom - rTmp.top));
 
@@ -311,7 +313,7 @@ bool Notifications::Contains(NotificationWnd* wnd) const {
     return wnds.Contains(wnd);
 }
 
-int Notifications::GetWndX(NotificationWnd* wnd) {
+int GetWndX(Notifications* notifs, NotificationWnd* wnd) {
     Rect rect = WindowRect(wnd->hwnd);
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd));
     return rect.x;
@@ -321,7 +323,7 @@ void Notifications::MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
     Rect rect = WindowRect(fix->hwnd);
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd));
     UINT flags = SWP_NOSIZE | SWP_NOZORDER;
-    auto x = GetWndX(move);
+    auto x = GetWndX(this, move);
     int y = rect.y + rect.dy + TOP_LEFT_MARGIN;
     SetWindowPos(move->hwnd, nullptr, x, y, 0, 0, flags);
 }
@@ -344,7 +346,7 @@ void Notifications::Remove(NotificationWnd* wnd) {
     if (isFirst) {
         auto* first = wnds[0];
         UINT flags = SWP_NOSIZE | SWP_NOZORDER;
-        auto x = GetWndX(first);
+        auto x = GetWndX(this, first);
         SetWindowPos(first->hwnd, nullptr, x, TOP_LEFT_MARGIN, 0, 0, flags);
     }
     for (int i = pos; i < n; i++) {

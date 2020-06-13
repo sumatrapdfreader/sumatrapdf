@@ -41,13 +41,6 @@ enum class MouseAction {
 extern NotificationGroupId NG_CURSOR_POS_HELPER;
 extern NotificationGroupId NG_RESPONSE_TO_ACTION;
 
-enum NotificationOptions {
-    NOS_DEFAULT = 0, // timeout after 3 seconds, no highlight
-    NOS_PERSIST = (1 << 0),
-    NOS_HIGHLIGHT = (1 << 1),
-    NOS_WARNING = NOS_PERSIST | NOS_HIGHLIGHT,
-};
-
 // clang-format off
 enum PresentationMode {
     PM_DISABLED = 0,
