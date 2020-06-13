@@ -327,7 +327,7 @@ void LinkHandler::GotoLink(PageDestination* dest) {
     }
 
     if (kindDestinationFindDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, IDM_FIND_FIRST, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::FindFirst, 0);
         return;
     }
 
@@ -347,7 +347,7 @@ void LinkHandler::GotoLink(PageDestination* dest) {
     }
 
     if (kindDestinationGoToPageDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, IDM_GOTO_PAGE, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::GoToPage, 0);
         return;
     }
 

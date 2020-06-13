@@ -4269,10 +4269,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     auto* ctrl = win->ctrl;
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
-        case IDM_NEW_WINDOW:
+        case (int)Cmd::NewWindow:
             OnMenuNewWindow();
             break;
-        case IDM_DUPLICATE_IN_NEW_WINDOW:
+        case (int)Cmd::DuplicateInNewWindow:
             OnDuplicateInNewWindow(win);
             break;
         case (int)Cmd::Open:
@@ -4408,31 +4408,31 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleTocBox(win);
             break;
 
-        case IDM_GOTO_NEXT_PAGE:
+        case (int)Cmd::GoToNextPage:
             if (win->IsDocLoaded()) {
                 ctrl->GoToNextPage();
             }
             break;
 
-        case IDM_GOTO_PREV_PAGE:
+        case (int)Cmd::GoToPrevPage:
             if (win->IsDocLoaded()) {
                 ctrl->GoToPrevPage();
             }
             break;
 
-        case IDM_GOTO_FIRST_PAGE:
+        case (int)Cmd::GoToFirstPage:
             if (win->IsDocLoaded()) {
                 ctrl->GoToFirstPage();
             }
             break;
 
-        case IDM_GOTO_LAST_PAGE:
+        case (int)Cmd::GoToLastPage:
             if (win->IsDocLoaded()) {
                 ctrl->GoToLastPage();
             }
             break;
 
-        case IDM_GOTO_PAGE:
+        case (int)Cmd::GoToPage:
             OnMenuGoToPage(win);
             break;
 
@@ -4456,19 +4456,19 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case IDM_FIND_FIRST:
+        case (int)Cmd::FindFirst:
             OnMenuFind(win);
             break;
 
-        case IDM_FIND_NEXT:
+        case (int)Cmd::FindNext:
             OnMenuFindNext(win);
             break;
 
-        case IDM_FIND_PREV:
+        case (int)Cmd::FindPrev:
             OnMenuFindPrev(win);
             break;
 
-        case IDM_FIND_MATCH:
+        case (int)Cmd::FindMatch:
             OnMenuFindMatchCase(win);
             break;
 
@@ -4720,19 +4720,19 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TRUE so as to not make them bubble up further
             switch (GET_APPCOMMAND_LPARAM(lp)) {
                 case APPCOMMAND_BROWSER_BACKWARD:
-                    SendMessageW(hwnd, WM_COMMAND, IDM_GOTO_NAV_BACK, 0);
+                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)IDM_GOTO_NAV_BACK, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FORWARD:
-                    SendMessageW(hwnd, WM_COMMAND, IDM_GOTO_NAV_FORWARD, 0);
+                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)IDM_GOTO_NAV_FORWARD, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_REFRESH:
                     SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::Refresh, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_SEARCH:
-                    SendMessageW(hwnd, WM_COMMAND, IDM_FIND_FIRST, 0);
+                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::FindFirst, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FAVORITES:
-                    SendMessageW(hwnd, WM_COMMAND, (int)Cmd::ViewBookmarks, 0);
+                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::ViewBookmarks, 0);
                     return TRUE;
             }
             return DefWindowProc(hwnd, msg, wp, lp);

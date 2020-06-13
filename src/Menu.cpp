@@ -84,7 +84,7 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
 // clang-format off
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
-    { _TRN("New &window\tCtrl+N"),          (UINT)IDM_NEW_WINDOW,             MF_REQ_DISK_ACCESS },
+    { _TRN("New &window\tCtrl+N"),          (UINT)Cmd::NewWindow,             MF_REQ_DISK_ACCESS },
     { _TRN("&Open...\tCtrl+O"),             (UINT)Cmd::Open,                   MF_REQ_DISK_ACCESS },
     { "Open Folder",                        (UINT)Cmd::OpenFolder,            MF_REQ_DISK_ACCESS | MF_RAMICRO_ONLY },
     { _TRN("&Close\tCtrl+W"),               (UINT)Cmd::Close,                  MF_REQ_DISK_ACCESS },
@@ -146,16 +146,16 @@ static MenuDef menuDefView[] = {
 
 //[ ACCESSKEY_GROUP GoTo Menu
 static MenuDef menuDefGoTo[] = {
-    { _TRN("&Next Page\tRight Arrow"),      (UINT)IDM_GOTO_NEXT_PAGE,         0 },
-    { _TRN("&Previous Page\tLeft Arrow"),   (UINT)IDM_GOTO_PREV_PAGE,         0 },
-    { _TRN("&First Page\tHome"),            (UINT)IDM_GOTO_FIRST_PAGE,        0 },
-    { _TRN("&Last Page\tEnd"),              (UINT)IDM_GOTO_LAST_PAGE,         0 },
-    { _TRN("Pa&ge...\tCtrl+G"),             (UINT)IDM_GOTO_PAGE,              0 },
+    { _TRN("&Next Page\tRight Arrow"),      (UINT)Cmd::GoToNextPage,         0 },
+    { _TRN("&Previous Page\tLeft Arrow"),   (UINT)Cmd::GoToPrevPage,         0 },
+    { _TRN("&First Page\tHome"),            (UINT)Cmd::GoToFirstPage,        0 },
+    { _TRN("&Last Page\tEnd"),              (UINT)Cmd::GoToLastPage,         0 },
+    { _TRN("Pa&ge...\tCtrl+G"),             (UINT)Cmd::GoToPage,              0 },
     { SEP_ITEM,                             0,                          0 },
     { _TRN("&Back\tAlt+Left Arrow"),        (UINT)IDM_GOTO_NAV_BACK,          0 },
     { _TRN("F&orward\tAlt+Right Arrow"),    (UINT)IDM_GOTO_NAV_FORWARD,       0 },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Fin&d...\tCtrl+F"),             (UINT)IDM_FIND_FIRST,             MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Fin&d...\tCtrl+F"),             (UINT)Cmd::FindFirst,             MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP GoTo Menu
@@ -238,9 +238,9 @@ static MenuDef menuDefDebug[] = {
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
     { _TRN("&Copy Selection"),              (UINT)Cmd::CopySelection,         MF_REQ_ALLOW_COPY },
-    { _TRN("Copy &Link Address"),           (UINT)IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
-    { _TRN("Copy Co&mment"),                (UINT)IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
-    { _TRN("Copy &Image"),                  (UINT)IDM_COPY_IMAGE,             MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Link Address"),           (UINT)Cmd::CopyLinkTarget,       MF_REQ_ALLOW_COPY },
+    { _TRN("Copy Co&mment"),                (UINT)Cmd::CopyComment,           MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Image"),                  (UINT)Cmd::CopyImage,             MF_REQ_ALLOW_COPY },
     { _TRN("Select &All"),                  (UINT)Cmd::SelectAll,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
@@ -509,14 +509,14 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     static UINT menusToDisableIfNoDocument[] = {
         (UINT)Cmd::ViewRotateLeft,
         (UINT)Cmd::ViewRotateRight,
-        (UINT)IDM_GOTO_NEXT_PAGE,
-        (UINT)IDM_GOTO_PREV_PAGE,
-        (UINT)IDM_GOTO_FIRST_PAGE,
-        (UINT)IDM_GOTO_LAST_PAGE,
+        (UINT)Cmd::GoToNextPage,
+        (UINT)Cmd::GoToPrevPage,
+        (UINT)Cmd::GoToFirstPage,
+        (UINT)Cmd::GoToLastPage,
         (UINT)IDM_GOTO_NAV_BACK,
         (UINT)IDM_GOTO_NAV_FORWARD,
-        (UINT)IDM_GOTO_PAGE,
-        (UINT)IDM_FIND_FIRST,
+        (UINT)Cmd::GoToPage,
+        (UINT)Cmd::FindFirst,
         (UINT)Cmd::SaveAs,
         (UINT)Cmd::SaveAsBookmark,
         (UINT)Cmd::SendByEmail,
@@ -589,7 +589,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (engine) {
-        win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !engine->IsImageCollection());
+        win::menu::SetEnabled(win->menu, (UINT)Cmd::FindFirst, !engine->IsImageCollection());
     }
 
     if (win->IsDocLoaded() && !fileExists) {
@@ -690,13 +690,13 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
 
     if (!pageEl || pageEl->kind != kindPageElementDest || !value) {
-        win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
+        win::menu::Remove(popup, (UINT)Cmd::CopyLinkTarget);
     }
     if (!pageEl || pageEl->kind != kindPageElementComment || !value) {
-        win::menu::Remove(popup, IDM_COPY_COMMENT);
+        win::menu::Remove(popup, (UINT)Cmd::CopyComment);
     }
     if (!pageEl || pageEl->kind != kindPageElementImage) {
-        win::menu::Remove(popup, IDM_COPY_IMAGE);
+        win::menu::Remove(popup, (UINT)Cmd::CopyImage);
     }
 
     bool isFullScreen = win->isFullScreen || win->presentation;
@@ -782,12 +782,12 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case IDM_EDIT_ANNOTATIONS:
             StartEditAnnotations(tab);
             break;
-        case IDM_COPY_LINK_TARGET:
-        case IDM_COPY_COMMENT:
+        case (UINT)Cmd::CopyLinkTarget:
+        case (UINT)Cmd::CopyComment:
             CopyTextToClipboard(value);
             break;
 
-        case IDM_COPY_IMAGE:
+        case (UINT)Cmd::CopyImage:
             if (pageEl) {
                 RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
                 if (bmp) {

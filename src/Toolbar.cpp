@@ -60,18 +60,18 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     // the Open button is replaced with a Save As button in Plugin mode:
     //  { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_REQ_DISK_ACCESS },
     {1, (int)Cmd::Print, _TRN("Print"), MF_REQ_PRINTER_ACCESS},
-    {-1, IDM_GOTO_PAGE, nullptr, 0},
-    {2, IDM_GOTO_PREV_PAGE, _TRN("Previous Page"), 0},
-    {3, IDM_GOTO_NEXT_PAGE, _TRN("Next Page"), 0},
+    {-1, (int)Cmd::GoToPage, nullptr, 0},
+    {2, (int)Cmd::GoToPrevPage, _TRN("Previous Page"), 0},
+    {3, (int)Cmd::GoToNextPage, _TRN("Next Page"), 0},
     {-1, 0, nullptr, 0},
     {4, IDT_VIEW_FIT_WIDTH, _TRN("Fit Width and Show Pages Continuously"), 0},
     {5, IDT_VIEW_FIT_PAGE, _TRN("Fit a Single Page"), 0},
     {6, IDT_VIEW_ZOOMOUT, _TRN("Zoom Out"), 0},
     {7, IDT_VIEW_ZOOMIN, _TRN("Zoom In"), 0},
-    {-1, IDM_FIND_FIRST, nullptr, 0},
-    {8, IDM_FIND_PREV, _TRN("Find Previous"), 0},
-    {9, IDM_FIND_NEXT, _TRN("Find Next"), 0},
-    {10, IDM_FIND_MATCH, _TRN("Match Case"), 0},
+    {-1, (int)Cmd::FindFirst, nullptr, 0},
+    {8, (int)Cmd::FindPrev, _TRN("Find Previous"), 0},
+    {9, (int)Cmd::FindNext, _TRN("Find Next"), 0},
+    {10, (int)Cmd::FindMatch, _TRN("Match Case"), 0},
 };
 
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
@@ -86,10 +86,10 @@ static bool IsVisibleToolbarButton(WindowInfo* win, int buttonNo) {
         case IDT_VIEW_FIT_PAGE:
             return !win->AsChm();
 
-        case IDM_FIND_FIRST:
-        case IDM_FIND_NEXT:
-        case IDM_FIND_PREV:
-        case IDM_FIND_MATCH:
+        case (int)Cmd::FindFirst:
+        case (int)Cmd::FindNext:
+        case (int)Cmd::FindPrev:
+        case (int)Cmd::FindMatch:
             return NeedsFindUI(win);
 
         default:
@@ -120,14 +120,14 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
             return !win->AsFixed() || win->AsFixed()->GetEngine()->AllowsPrinting();
 #endif
 
-        case IDM_FIND_NEXT:
-        case IDM_FIND_PREV:
+        case (int)Cmd::FindNext:
+        case (int)Cmd::FindPrev:
             // TODO: Update on whether there's more to find, not just on whether there is text.
             return win::GetTextLen(win->hwndFindBox) > 0;
 
-        case IDM_GOTO_NEXT_PAGE:
+        case (int)Cmd::GoToNextPage:
             return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
-        case IDM_GOTO_PREV_PAGE:
+        case (int)Cmd::GoToPrevPage:
             return win->ctrl->CurrentPageNo() > 1;
 
         default:
@@ -369,7 +369,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
     bi.cx = (WORD)(size.dx + findWndRect.dx + 12);
-    TbSetButtonInfo(win->hwndToolbar, IDM_FIND_FIRST, &bi);
+    TbSetButtonInfo(win->hwndToolbar, (int)Cmd::FindFirst, &bi);
 }
 
 void UpdateToolbarState(WindowInfo* win) {
@@ -558,11 +558,11 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    SendMessageW(win->hwndToolbar, TB_GETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
+    SendMessageW(win->hwndToolbar, TB_GETBUTTONINFO, (WPARAM)Cmd::GoToPage, (LPARAM)&bi);
     size2.dx += size.dx + pageWndRect.dx + 12;
     if (bi.cx != size2.dx || !updateOnly) {
         bi.cx = (WORD)size2.dx;
-        TbSetButtonInfo(win->hwndToolbar, IDM_GOTO_PAGE, &bi);
+        TbSetButtonInfo(win->hwndToolbar, (int)Cmd::GoToPage, &bi);
     } else {
         Rect rc = ClientRect(win->hwndPageTotal);
         rc = MapRectToWindow(rc, win->hwndPageTotal, win->hwndToolbar);
@@ -729,7 +729,7 @@ void CreateToolbar(WindowInfo* win) {
     }
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         tbButtons[i] = TbButtonFromButtonInfo(i);
-        if (gToolbarButtons[i].cmdId == IDM_FIND_MATCH) {
+        if (gToolbarButtons[i].cmdId == (int)Cmd::FindMatch) {
             tbButtons[i].fsStyle = BTNS_CHECK;
         }
     }
