@@ -362,7 +362,7 @@ void LinkHandler::GotoLink(PageDestination* dest) {
     }
 
     if (kindDestinationZoomToDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::ZoomCustom, 0);
         return;
     }
 

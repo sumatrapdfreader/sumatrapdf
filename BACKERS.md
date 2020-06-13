@@ -23,3 +23,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - hldingyetian
 - David Walluscheck
 - Roger Bratseth
+- Victor Soli

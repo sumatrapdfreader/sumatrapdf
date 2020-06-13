@@ -4334,27 +4334,26 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case IDM_ZOOM_6400:
-        case IDM_ZOOM_3200:
-        case IDM_ZOOM_1600:
-        case IDM_ZOOM_800:
-        case IDM_ZOOM_400:
-        case IDM_ZOOM_200:
-        case IDM_ZOOM_150:
-        case IDM_ZOOM_125:
-        case IDM_ZOOM_100:
-        case IDM_ZOOM_50:
-        case IDM_ZOOM_25:
-        case IDM_ZOOM_12_5:
-        case IDM_ZOOM_8_33:
-        case IDM_ZOOM_FIT_PAGE:
-        case IDM_ZOOM_FIT_WIDTH:
-        case IDM_ZOOM_FIT_CONTENT:
-        case IDM_ZOOM_ACTUAL_SIZE:
+        case (int)Cmd::Zoom6400:
+        case (int)Cmd::Zoom3200:
+        case (int)Cmd::Zoom1600:
+        case (int)Cmd::Zoom800:
+        case (int)Cmd::Zoom400:
+        case (int)Cmd::Zoom200:
+        case (int)Cmd::Zoom150:
+        case (int)Cmd::Zoom125:
+        case (int)Cmd::Zoom100:
+        case (int)Cmd::Zoom50:
+        case (int)Cmd::Zoom25:
+        case (int)Cmd::Zoom12_5:
+        case (int)Cmd::Zoom8_33:
+        case (int)Cmd::ZoomFitPage:
+        case (int)Cmd::ZoomFitWidth:
+        case (int)Cmd::ZoomFitContent:
+        case (int)Cmd::ZoomActualSize:
             OnMenuZoom(win, wmId);
             break;
-
-        case IDM_ZOOM_CUSTOM:
+        case (int)Cmd::ZoomCustom:
             OnMenuCustomZoom(win);
             break;
 
@@ -4382,11 +4381,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuViewShowHideToolbar();
             break;
 
-        case IDM_SAVE_ANNOTATIONS_SMX:
+        case (int)Cmd::SaveAnnotationsSmx:
             OnMenuSaveAnnotationsToSmx(win);
             break;
 
-        case IDM_EDIT_ANNOTATIONS:
+        case (int)Cmd::EditAnnotations:
             StartEditAnnotations(win->currentTab);
             break;
 
@@ -4488,7 +4487,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             SumatraLaunchBrowser(WEBSITE_MANUAL_URL);
             break;
 
-        case IDM_CONTRIBUTE_TRANSLATION:
+        case (int)Cmd::ContributeTranslation:
             SumatraLaunchBrowser(WEBSITE_TRANSLATIONS_URL);
             break;
 
@@ -4512,23 +4511,23 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuAdvancedOptions();
             break;
 
-        case IDM_VIEW_WITH_ACROBAT:
+        case (int)Cmd::ViewWithAcrobat:
             ViewWithAcrobat(win->currentTab);
             break;
 
-        case IDM_VIEW_WITH_FOXIT:
+        case (int)Cmd::ViewWithFoxIt:
             ViewWithFoxit(win->currentTab);
             break;
 
-        case IDM_VIEW_WITH_PDF_XCHANGE:
+        case (int)Cmd::ViewWithPdfXchange:
             ViewWithPDFXChange(win->currentTab);
             break;
 
-        case IDM_VIEW_WITH_XPS_VIEWER:
+        case (int)Cmd::ViewWithXpsViewer:
             ViewWithXPSViewer(win->currentTab);
             break;
 
-        case IDM_VIEW_WITH_HTML_HELP:
+        case (int)Cmd::ViewWithHtmlHelp:
             ViewWithHtmlHelp(win->currentTab);
             break;
 

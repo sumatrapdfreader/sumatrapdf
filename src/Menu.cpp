@@ -44,9 +44,10 @@
 #include "EditAnnotations.h"
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
-//       IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continuous range!
-static_assert((int)Cmd::ViewLayoutLast - (int)Cmd::ViewLayoutFirst == 4, "view layout ids are not in a continuous range");
-static_assert(IDM_ZOOM_LAST - IDM_ZOOM_FIRST == 17, "zoom ids are not in a continuous range");
+//       Cmd::ZoomFIT_PAGE - Cmd::ZoomCUSTOM must be in a continuous range!
+static_assert((int)Cmd::ViewLayoutLast - (int)Cmd::ViewLayoutFirst == 4,
+              "view layout ids are not in a continuous range");
+static_assert((int)Cmd::ZoomLast - (int)Cmd::ZoomFirst == 17, "zoom ids are not in a continuous range");
 
 bool gAddCrashMeMenu = false;
 
@@ -102,13 +103,13 @@ static MenuDef menuDefFile[] = {
     { _TRN("&Print...\tCtrl+P"),            (UINT)Cmd::Print,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
 //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
-    { _TRN("Open in &Adobe Reader"),        (UINT)IDM_VIEW_WITH_ACROBAT,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open in &Foxit Reader"),        (UINT)IDM_VIEW_WITH_FOXIT,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open &in PDF-XChange"),         (UINT)IDM_VIEW_WITH_PDF_XCHANGE,  MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Adobe Reader"),        (UINT)Cmd::ViewWithAcrobat,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Foxit Reader"),        (UINT)Cmd::ViewWithFoxIt,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open &in PDF-XChange"),         (UINT)Cmd::ViewWithPdfXchange,  MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft XPS-Viewer"),(UINT)IDM_VIEW_WITH_XPS_VIEWER,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft XPS-Viewer"),(UINT)Cmd::ViewWithXpsViewer,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft HTML Help"), (UINT)IDM_VIEW_WITH_HTML_HELP,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft HTML Help"), (UINT)Cmd::ViewWithHtmlHelp,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //] ACCESSKEY_ALTERNATIVE
     // further entries are added if specified in gGlobalPrefs.vecCommandLine
     { _TRN("Send by &E-mail..."),           (UINT)Cmd::SendByEmail,          MF_REQ_DISK_ACCESS },
@@ -163,25 +164,25 @@ static MenuDef menuDefGoTo[] = {
 //[ ACCESSKEY_GROUP Zoom Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefZoom[] = {
-    { _TRN("Fit &Page\tCtrl+0"),            (UINT)IDM_ZOOM_FIT_PAGE,          MF_NOT_FOR_CHM },
-    { _TRN("&Actual Size\tCtrl+1"),         (UINT)IDM_ZOOM_ACTUAL_SIZE,       MF_NOT_FOR_CHM },
-    { _TRN("Fit &Width\tCtrl+2"),           (UINT)IDM_ZOOM_FIT_WIDTH,         MF_NOT_FOR_CHM },
-    { _TRN("Fit &Content\tCtrl+3"),         (UINT)IDM_ZOOM_FIT_CONTENT,       MF_NOT_FOR_CHM },
-    { _TRN("Custom &Zoom...\tCtrl+Y"),      (UINT)IDM_ZOOM_CUSTOM,            0 },
+    { _TRN("Fit &Page\tCtrl+0"),            (UINT)Cmd::ZoomFitPage,          MF_NOT_FOR_CHM },
+    { _TRN("&Actual Size\tCtrl+1"),         (UINT)Cmd::ZoomActualSize,       MF_NOT_FOR_CHM },
+    { _TRN("Fit &Width\tCtrl+2"),           (UINT)Cmd::ZoomFitWidth,         MF_NOT_FOR_CHM },
+    { _TRN("Fit &Content\tCtrl+3"),         (UINT)Cmd::ZoomFitContent,       MF_NOT_FOR_CHM },
+    { _TRN("Custom &Zoom...\tCtrl+Y"),      (UINT)Cmd::ZoomCustom,            0 },
     { SEP_ITEM,                             0,                          0 },
-    { "6400%",                              (UINT)IDM_ZOOM_6400,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "3200%",                              (UINT)IDM_ZOOM_3200,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "1600%",                              (UINT)IDM_ZOOM_1600,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "800%",                               (UINT)IDM_ZOOM_800,               MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "400%",                               (UINT)IDM_ZOOM_400,               MF_NO_TRANSLATE },
-    { "200%",                               (UINT)IDM_ZOOM_200,               MF_NO_TRANSLATE },
-    { "150%",                               (UINT)IDM_ZOOM_150,               MF_NO_TRANSLATE },
-    { "125%",                               (UINT)IDM_ZOOM_125,               MF_NO_TRANSLATE },
-    { "100%",                               (UINT)IDM_ZOOM_100,               MF_NO_TRANSLATE },
-    { "50%",                                (UINT)IDM_ZOOM_50,                MF_NO_TRANSLATE },
-    { "25%",                                (UINT)IDM_ZOOM_25,                MF_NO_TRANSLATE },
-    { "12.5%",                              (UINT)IDM_ZOOM_12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "8.33%",                              (UINT)IDM_ZOOM_8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "6400%",                              (UINT)Cmd::Zoom6400,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "3200%",                              (UINT)Cmd::Zoom3200,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "1600%",                              (UINT)Cmd::Zoom1600,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "800%",                               (UINT)Cmd::Zoom800,               MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "400%",                               (UINT)Cmd::Zoom400,               MF_NO_TRANSLATE },
+    { "200%",                               (UINT)Cmd::Zoom200,               MF_NO_TRANSLATE },
+    { "150%",                               (UINT)Cmd::Zoom150,               MF_NO_TRANSLATE },
+    { "125%",                               (UINT)Cmd::Zoom125,               MF_NO_TRANSLATE },
+    { "100%",                               (UINT)Cmd::Zoom100,               MF_NO_TRANSLATE },
+    { "50%",                                (UINT)Cmd::Zoom50,                MF_NO_TRANSLATE },
+    { "25%",                                (UINT)Cmd::Zoom25,                MF_NO_TRANSLATE },
+    { "12.5%",                              (UINT)Cmd::Zoom12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "8.33%",                              (UINT)Cmd::Zoom8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Zoom Menu
@@ -249,8 +250,8 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Favorites"),              (UINT)IDM_FAV_TOGGLE,             0                 },
     { _TRN("Show &Bookmarks\tF12"),         (UINT)Cmd::ViewBookmarks,         0                 },
     { _TRN("Show &Toolbar\tF8"),            (UINT)Cmd::ViewShowHideToolbar, MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Save Annotations"),             (UINT)IDM_SAVE_ANNOTATIONS_SMX,   MF_REQ_DISK_ACCESS },
-    { _TR_TODON("Edit Annotations"),        (UINT)IDM_EDIT_ANNOTATIONS,       MF_REQ_DISK_ACCESS },
+    { _TRN("Save Annotations"),             (UINT)Cmd::SaveAnnotationsSmx,   MF_REQ_DISK_ACCESS },
+    { _TR_TODON("Edit Annotations"),        (UINT)Cmd::EditAnnotations,       MF_REQ_DISK_ACCESS },
     {"New Bookmarks",                       (UINT)IDM_NEW_BOOKMARKS,          MF_NO_TRANSLATE},
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  (UINT)Cmd::SaveAs,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
@@ -263,10 +264,10 @@ static MenuDef menuDefContext[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
-    { _TRN("&Open Document"),               IDM_OPEN_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS },
-    { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { _TRN("&Open Document"),               (UINT)Cmd::OpenSelectedDocument, MF_REQ_DISK_ACCESS },
+    { _TRN("&Pin Document"),                (UINT)Cmd::PinSelectedDocument,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
-    { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { _TRN("&Remove Document"),             (UINT)Cmd::ForgetSelectedDocument, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Start)
@@ -402,37 +403,38 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
 
 // clang-format off
 static struct {
-    unsigned short itemId;
+    uint itemId;
     float zoom;
 } gZoomMenuIds[] = {
-    { IDM_ZOOM_6400,        6400.0 },
-    { IDM_ZOOM_3200,        3200.0 },
-    { IDM_ZOOM_1600,        1600.0 },
-    { IDM_ZOOM_800,         800.0  },
-    { IDM_ZOOM_400,         400.0  },
-    { IDM_ZOOM_200,         200.0  },
-    { IDM_ZOOM_150,         150.0  },
-    { IDM_ZOOM_125,         125.0  },
-    { IDM_ZOOM_100,         100.0  },
-    { IDM_ZOOM_50,          50.0   },
-    { IDM_ZOOM_25,          25.0   },
-    { IDM_ZOOM_12_5,        12.5   },
-    { IDM_ZOOM_8_33,        8.33f  },
-    { IDM_ZOOM_CUSTOM,      0      },
-    { IDM_ZOOM_FIT_PAGE,    ZOOM_FIT_PAGE    },
-    { IDM_ZOOM_FIT_WIDTH,   ZOOM_FIT_WIDTH   },
-    { IDM_ZOOM_FIT_CONTENT, ZOOM_FIT_CONTENT },
-    { IDM_ZOOM_ACTUAL_SIZE, ZOOM_ACTUAL_SIZE },
+    { (uint)Cmd::Zoom6400,        6400.0 },
+    { (uint)Cmd::Zoom3200,        3200.0 },
+    { (uint)Cmd::Zoom1600,        1600.0 },
+    { (uint)Cmd::Zoom800,         800.0  },
+    { (uint)Cmd::Zoom400,         400.0  },
+    { (uint)Cmd::Zoom200,         200.0  },
+    { (uint)Cmd::Zoom150,         150.0  },
+    { (uint)Cmd::Zoom125,         125.0  },
+    { (uint)Cmd::Zoom100,         100.0  },
+    { (uint)Cmd::Zoom50,          50.0   },
+    { (uint)Cmd::Zoom25,          25.0   },
+    { (uint)Cmd::Zoom12_5,        12.5   },
+    { (uint)Cmd::Zoom8_33,        8.33f  },
+    { (uint)Cmd::ZoomCustom,      0      },
+    { (uint)Cmd::ZoomFitPage,    ZOOM_FIT_PAGE    },
+    { (uint)Cmd::ZoomFitWidth,   ZOOM_FIT_WIDTH   },
+    { (uint)Cmd::ZoomFitContent, ZOOM_FIT_CONTENT },
+    { (uint)Cmd::ZoomActualSize, ZOOM_ACTUAL_SIZE },
 };
 // clang-format on
 
 UINT MenuIdFromVirtualZoom(float virtualZoom) {
-    for (int i = 0; i < dimof(gZoomMenuIds); i++) {
+    int n = (int)dimof(gZoomMenuIds);
+    for (int i = 0; i < n; i++) {
         if (virtualZoom == gZoomMenuIds[i].zoom) {
-            return gZoomMenuIds[i].itemId;
+            return (UINT)gZoomMenuIds[i].itemId;
         }
     }
-    return IDM_ZOOM_CUSTOM;
+    return (UINT)Cmd::ZoomCustom;
 }
 
 static float ZoomMenuItemToZoom(UINT menuItemId) {
@@ -446,18 +448,18 @@ static float ZoomMenuItemToZoom(UINT menuItemId) {
 }
 
 static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom) {
-    CrashIf((IDM_ZOOM_FIRST > menuItemId) || (menuItemId > IDM_ZOOM_LAST));
+    CrashIf(((UINT)Cmd::ZoomFirst > menuItemId) || (menuItemId > (UINT)Cmd::ZoomLast));
 
     for (int i = 0; i < dimof(gZoomMenuIds); i++) {
         win::menu::SetEnabled(m, gZoomMenuIds[i].itemId, canZoom);
     }
 
-    if (IDM_ZOOM_100 == menuItemId) {
-        menuItemId = IDM_ZOOM_ACTUAL_SIZE;
+    if ((UINT)Cmd::Zoom100 == menuItemId) {
+        menuItemId = (UINT)Cmd::ZoomActualSize;
     }
-    CheckMenuRadioItem(m, IDM_ZOOM_FIRST, IDM_ZOOM_LAST, menuItemId, MF_BYCOMMAND);
-    if (IDM_ZOOM_ACTUAL_SIZE == menuItemId) {
-        CheckMenuRadioItem(m, IDM_ZOOM_100, IDM_ZOOM_100, IDM_ZOOM_100, MF_BYCOMMAND);
+    CheckMenuRadioItem(m, (UINT)Cmd::ZoomFirst, (UINT)Cmd::ZoomLast, menuItemId, MF_BYCOMMAND);
+    if ((UINT)Cmd::ZoomActualSize == menuItemId) {
+        CheckMenuRadioItem(m, (UINT)Cmd::Zoom100, (UINT)Cmd::Zoom100, (UINT)Cmd::Zoom100, MF_BYCOMMAND);
     }
 }
 
@@ -524,9 +526,9 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
         (UINT)Cmd::CopySelection,
         (UINT)Cmd::Properties,
         (UINT)Cmd::ViewPresentationMode,
-        (UINT)IDM_VIEW_WITH_ACROBAT,
-        (UINT)IDM_VIEW_WITH_FOXIT,
-        (UINT)IDM_VIEW_WITH_PDF_XCHANGE,
+        (UINT)Cmd::ViewWithAcrobat,
+        (UINT)Cmd::ViewWithFoxIt,
+        (UINT)Cmd::ViewWithPdfXchange,
         (UINT)IDM_RENAME_FILE,
         (UINT)Cmd::ShowInFolder,
         (UINT)IDM_DEBUG_ANNOTATION,
@@ -536,8 +538,8 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     };
     // this list coincides with menusToEnableIfBrokenPDF
     static UINT menusToDisableIfDirectory[] = {
-        (UINT)IDM_RENAME_FILE,     (UINT)Cmd::SendByEmail,         (UINT)IDM_VIEW_WITH_ACROBAT,
-        (UINT)IDM_VIEW_WITH_FOXIT, (UINT)IDM_VIEW_WITH_PDF_XCHANGE, (UINT)Cmd::ShowInFolder,
+        (UINT)IDM_RENAME_FILE,    (UINT)Cmd::SendByEmail,        (UINT)Cmd::ViewWithAcrobat,
+        (UINT)Cmd::ViewWithFoxIt, (UINT)Cmd::ViewWithPdfXchange, (UINT)Cmd::ShowInFolder,
     };
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
 
@@ -626,7 +628,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, CreatePopupMenu());
-    win::menu::SetChecked(popup, IDM_PIN_SELECTED_DOCUMENT, state->isPinned);
+    win::menu::SetChecked(popup, (UINT)Cmd::PinSelectedDocument, state->isPinned);
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     MarkMenuOwnerDraw(popup);
@@ -634,20 +636,20 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
-    if (IDM_OPEN_SELECTED_DOCUMENT == cmd) {
+    if ((UINT)Cmd::OpenSelectedDocument == cmd) {
         LoadArgs args(filePath, win);
         LoadDocument(args);
         return;
     }
 
-    if (IDM_PIN_SELECTED_DOCUMENT == cmd) {
+    if ((UINT)Cmd::PinSelectedDocument == cmd) {
         state->isPinned = !state->isPinned;
         win->HideToolTip();
         win->RedrawAll(true);
         return;
     }
 
-    if (IDM_FORGET_SELECTED_DOCUMENT == cmd) {
+    if ((UINT)Cmd::ForgetSelectedDocument == cmd) {
         if (state->favorites->size() > 0) {
             // just hide documents with favorites
             gFileHistory.MarkFileInexistent(state->filePath, true);
@@ -723,9 +725,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         supportsAnnotations = false;
     }
     if (!supportsAnnotations) {
-        win::menu::Remove(popup, IDM_SAVE_ANNOTATIONS_SMX);
+        win::menu::Remove(popup, (UINT)Cmd::SaveAnnotationsSmx);
     } else {
-        win::menu::SetEnabled(popup, IDM_SAVE_ANNOTATIONS_SMX, dm->HasUnsavedAnnots());
+        win::menu::SetEnabled(popup, (UINT)Cmd::SaveAnnotationsSmx, dm->HasUnsavedAnnots());
     }
 
     int pageNo = dm->GetPageNoByPoint({x, y});
@@ -775,11 +777,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case IDM_FAV_TOGGLE:
         case (UINT)Cmd::Properties:
         case (UINT)Cmd::ViewShowHideToolbar:
-        case IDM_SAVE_ANNOTATIONS_SMX:
+        case (UINT)Cmd::SaveAnnotationsSmx:
         case IDM_NEW_BOOKMARKS:
             SendMessageW(win->hwndFrame, WM_COMMAND, cmd, 0);
             break;
-        case IDM_EDIT_ANNOTATIONS:
+        case (UINT)Cmd::EditAnnotations:
             StartEditAnnotations(tab);
             break;
         case (UINT)Cmd::CopyLinkTarget:
@@ -864,19 +866,19 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
 
     // Also suppress PDF specific items for non-PDF documents
     if (!CouldBePDFDoc(tab) || !CanViewWithAcrobat()) {
-        win::menu::Remove(menu, IDM_VIEW_WITH_ACROBAT);
+        win::menu::Remove(menu, (UINT)Cmd::ViewWithAcrobat);
     }
     if (!CouldBePDFDoc(tab) || !CanViewWithFoxit()) {
-        win::menu::Remove(menu, IDM_VIEW_WITH_FOXIT);
+        win::menu::Remove(menu, (UINT)Cmd::ViewWithFoxIt);
     }
     if (!CouldBePDFDoc(tab) || !CanViewWithPDFXChange()) {
-        win::menu::Remove(menu, IDM_VIEW_WITH_PDF_XCHANGE);
+        win::menu::Remove(menu, (UINT)Cmd::ViewWithPdfXchange);
     }
     if (!CanViewWithXPSViewer(tab)) {
-        win::menu::Remove(menu, IDM_VIEW_WITH_XPS_VIEWER);
+        win::menu::Remove(menu, (UINT)Cmd::ViewWithXpsViewer);
     }
     if (!CanViewWithHtmlHelp(tab)) {
-        win::menu::Remove(menu, IDM_VIEW_WITH_HTML_HELP);
+        win::menu::Remove(menu, (UINT)Cmd::ViewWithHtmlHelp);
     }
 
     bool supportsAnnotations = false;
@@ -890,9 +892,9 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
         supportsAnnotations = false;
     }
     if (!supportsAnnotations) {
-        win::menu::Remove(menu, IDM_SAVE_ANNOTATIONS_SMX);
+        win::menu::Remove(menu, (UINT)Cmd::SaveAnnotationsSmx);
     } else {
-        win::menu::SetEnabled(menu, IDM_SAVE_ANNOTATIONS_SMX, dm && dm->HasUnsavedAnnots());
+        win::menu::SetEnabled(menu, (UINT)Cmd::SaveAnnotationsSmx, dm && dm->HasUnsavedAnnots());
     }
 }
 

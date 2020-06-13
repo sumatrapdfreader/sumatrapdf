@@ -132,7 +132,6 @@ enum class Cmd {
     AdvancedOptions,
     NewBookmarks,
 
-    // TODO: rename to IDM_*
     ViewZoomIn,
     ViewZoomOut,
     ToolbarViewFitWidth, // TODO: replace with ViewFitWidth,
@@ -165,37 +164,6 @@ enum class Cmd {
 };
 
 enum {
-    IDM_SAVE_ANNOTATIONS_SMX,
-    IDM_EDIT_ANNOTATIONS,
-    IDM_ZOOM_FIT_PAGE,
-    IDM_ZOOM_FIRST = IDM_ZOOM_FIT_PAGE,
-    IDM_ZOOM_ACTUAL_SIZE,
-    IDM_ZOOM_FIT_WIDTH,
-    IDM_ZOOM_6400,
-    IDM_ZOOM_3200,
-    IDM_ZOOM_1600,
-    IDM_ZOOM_800,
-    IDM_ZOOM_400,
-    IDM_ZOOM_200,
-    IDM_ZOOM_150,
-    IDM_ZOOM_125,
-    IDM_ZOOM_100,
-    IDM_ZOOM_50,
-    IDM_ZOOM_25,
-    IDM_ZOOM_12_5,
-    IDM_ZOOM_8_33,
-    IDM_ZOOM_FIT_CONTENT,
-    IDM_ZOOM_CUSTOM,
-    IDM_ZOOM_LAST = IDM_ZOOM_CUSTOM,
-    IDM_CONTRIBUTE_TRANSLATION,
-    IDM_VIEW_WITH_ACROBAT,
-    IDM_VIEW_WITH_FOXIT,
-    IDM_VIEW_WITH_PDF_XCHANGE,
-    IDM_VIEW_WITH_XPS_VIEWER,
-    IDM_VIEW_WITH_HTML_HELP,
-    IDM_OPEN_SELECTED_DOCUMENT,
-    IDM_PIN_SELECTED_DOCUMENT,
-    IDM_FORGET_SELECTED_DOCUMENT,
     /* a range for "external viewers" setting */
     IDM_OPEN_WITH_EXTERNAL_FIRST,
     IDM_OPEN_WITH_EXTERNAL_LAST = IDM_OPEN_WITH_EXTERNAL_FIRST + 20,
@@ -253,6 +221,6 @@ enum {
     // TODO: rename to IDM_*
     IDT_VIEW_ZOOMIN,
     IDT_VIEW_ZOOMOUT,
-    IDT_VIEW_FIT_WIDTH, // TODO: replace with IDM_ZOOM_FIT_WIDTH
-    IDT_VIEW_FIT_PAGE,  // TOOD: replace with IDM_ZOOM_FIT_PAGE
+    IDT_VIEW_FIT_WIDTH, // TODO: replace with Cmd::ZoomFIT_WIDTH
+    IDT_VIEW_FIT_PAGE,  // TOOD: replace with Cmd::ZoomFIT_PAGE
 };

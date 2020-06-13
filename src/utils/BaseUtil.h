@@ -133,6 +133,7 @@ typedef int32_t i32;
 typedef uint32_t u32;
 typedef int64_t i64;
 typedef uint64_t u64;
+typedef unsigned int uint;
 
 // TODO: don't use INT_MAX and UINT_MAX
 #ifndef INT_MAX
