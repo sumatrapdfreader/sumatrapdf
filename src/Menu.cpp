@@ -45,7 +45,7 @@
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continuous range!
-static_assert(IDM_VIEW_LAYOUT_LAST - IDM_VIEW_LAYOUT_FIRST == 4, "view layout ids are not in a continuous range");
+static_assert((int)Cmd::ViewLayoutLast - (int)Cmd::ViewLayoutFirst == 4, "view layout ids are not in a continuous range");
 static_assert(IDM_ZOOM_LAST - IDM_ZOOM_FIRST == 17, "zoom ids are not in a continuous range");
 
 bool gAddCrashMeMenu = false;
@@ -57,27 +57,27 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
         displayMode = win->ctrl->GetDisplayMode();
     }
 
-    for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++) {
+    for (int id = (int)Cmd::ViewLayoutFirst; id <= (int)Cmd::ViewLayoutLast; id++) {
         win::menu::SetEnabled(win->menu, id, enabled);
     }
 
     UINT id = 0;
     if (IsSingle(displayMode)) {
-        id = IDM_VIEW_SINGLE_PAGE;
+        id = (UINT)Cmd::ViewSinglePage;
     } else if (IsFacing(displayMode)) {
-        id = IDM_VIEW_FACING;
+        id = (UINT)Cmd::ViewFacing;
     } else if (IsBookView(displayMode)) {
-        id = IDM_VIEW_BOOK;
+        id = (UINT)Cmd::ViewBook;
     } else {
         CrashIf(win->ctrl || DM_AUTOMATIC != displayMode);
     }
 
-    CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
-    win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
+    CheckMenuRadioItem(win->menu, (UINT)Cmd::ViewLayoutFirst, (UINT)Cmd::ViewLayoutLast, id, MF_BYCOMMAND);
+    win::menu::SetChecked(win->menu, (UINT)Cmd::ViewContinuous, IsContinuous(displayMode));
 
     if (win->currentTab && win->currentTab->GetEngineType() == kindEngineComicBooks) {
         bool mangaMode = win->AsFixed()->GetDisplayR2L();
-        win::menu::SetChecked(win->menu, IDM_VIEW_MANGA_MODE, mangaMode);
+        win::menu::SetChecked(win->menu, (UINT)Cmd::ViewMangaMode, mangaMode);
     }
 }
 
@@ -122,12 +122,12 @@ static MenuDef menuDefFile[] = {
 
 //[ ACCESSKEY_GROUP View Menu
 static MenuDef menuDefView[] = {
-    { _TRN("&Single Page\tCtrl+6"),         (UINT)IDM_VIEW_SINGLE_PAGE,       MF_NOT_FOR_CHM },
-    { _TRN("&Facing\tCtrl+7"),              (UINT)IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
-    { _TRN("&Book View\tCtrl+8"),           (UINT)IDM_VIEW_BOOK,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Show &Pages Continuously"),     (UINT)IDM_VIEW_CONTINUOUS,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Single Page\tCtrl+6"),         (UINT)Cmd::ViewSinglePage,       MF_NOT_FOR_CHM },
+    { _TRN("&Facing\tCtrl+7"),              (UINT)Cmd::ViewFacing,            MF_NOT_FOR_CHM },
+    { _TRN("&Book View\tCtrl+8"),           (UINT)Cmd::ViewBook,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show &Pages Continuously"),     (UINT)Cmd::ViewContinuous,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
-    { _TRN("Man&ga Mode"),                  (UINT)IDM_VIEW_MANGA_MODE,        MF_CBX_ONLY },
+    { _TRN("Man&ga Mode"),                  (UINT)Cmd::ViewMangaMode,        MF_CBX_ONLY },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
     { _TRN("Rotate &Left\tCtrl+Shift+-"),   (UINT)IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Rotate &Right\tCtrl+Shift++"),  (UINT)IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },

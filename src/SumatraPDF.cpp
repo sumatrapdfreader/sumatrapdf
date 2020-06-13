@@ -4358,23 +4358,23 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuCustomZoom(win);
             break;
 
-        case IDM_VIEW_SINGLE_PAGE:
+        case (int)Cmd::ViewSinglePage:
             SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
             break;
 
-        case IDM_VIEW_FACING:
+        case (int)Cmd::ViewFacing:
             SwitchToDisplayMode(win, DM_FACING, true);
             break;
 
-        case IDM_VIEW_BOOK:
+        case (int)Cmd::ViewBook:
             SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
             break;
 
-        case IDM_VIEW_CONTINUOUS:
+        case (int)Cmd::ViewContinuous:
             OnMenuViewContinuous(win);
             break;
 
-        case IDM_VIEW_MANGA_MODE:
+        case (int)Cmd::ViewMangaMode:
             OnMenuViewMangaMode(win);
             break;
 
