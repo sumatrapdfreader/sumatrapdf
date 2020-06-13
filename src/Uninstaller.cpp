@@ -298,7 +298,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
 
     log("UninstallerThread finished\n");
     if (!gCli->silent) {
-        PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
+        PostMessageW(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     }
     return 0;
 }
@@ -781,7 +781,7 @@ void RaMicroUninstallerWindow::CloseHandler(WindowCloseEvent* ev) {
 
 void onRaMicroUninstallerFinished() {
     // called on a background thread
-    PostMessage(gRaMicroUninstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
+    PostMessageW(gRaMicroUninstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
 }
 
 void RaMicroUninstallerWindow::SizeHandler(SizeEvent* ev) {
@@ -796,7 +796,7 @@ void RaMicroUninstallerWindow::SizeHandler(SizeEvent* ev) {
 
 void onRaMicroUnistallerFinished() {
     // called on a background thread
-    PostMessage(gRaMicroUninstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
+    PostMessageW(gRaMicroUninstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
 }
 
 static Gdiplus::Bitmap* LoadRaMicroSplash() {

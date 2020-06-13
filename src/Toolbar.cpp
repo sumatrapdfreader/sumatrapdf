@@ -56,10 +56,10 @@ struct ToolbarButtonInfo {
 };
 
 static ToolbarButtonInfo gToolbarButtons[] = {
-    {0, IDM_OPEN, _TRN("Open"), MF_REQ_DISK_ACCESS},
+    {0, (int)Cmd::Open, _TRN("Open"), MF_REQ_DISK_ACCESS},
     // the Open button is replaced with a Save As button in Plugin mode:
     //  { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_REQ_DISK_ACCESS },
-    {1, IDM_PRINT, _TRN("Print"), MF_REQ_PRINTER_ACCESS},
+    {1, (int)Cmd::Print, _TRN("Print"), MF_REQ_PRINTER_ACCESS},
     {-1, IDM_GOTO_PAGE, nullptr, 0},
     {2, IDM_GOTO_PREV_PAGE, _TRN("Previous Page"), 0},
     {3, IDM_GOTO_NEXT_PAGE, _TRN("Next Page"), 0},
@@ -107,16 +107,16 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
 
     // If no file open, only enable open button
     if (!win->IsDocLoaded()) {
-        return IDM_OPEN == cmdId;
+        return (int)Cmd::Open == cmdId;
     }
 
     switch (cmdId) {
-        case IDM_OPEN:
+        case (int)Cmd::Open:
             // opening different files isn't allowed in plugin mode
             return !gPluginMode;
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-        case IDM_PRINT:
+        case (int)Cmd::Print:
             return !win->AsFixed() || win->AsFixed()->GetEngine()->AllowsPrinting();
 #endif
 
@@ -497,7 +497,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     Rect pageWndRect = WindowRect(win->hwndPageBg);
 
     RECT r{};
-    SendMessageW(win->hwndToolbar, TB_GETRECT, IDM_PRINT, (LPARAM)&r);
+    SendMessageW(win->hwndToolbar, TB_GETRECT, (WPARAM)Cmd::Print, (LPARAM)&r);
     int currX = r.right + DpiScale(win->hwndFrame, 10);
     int currY = (r.bottom - pageWndRect.dy) / 2;
 
@@ -723,7 +723,7 @@ void CreateToolbar(WindowInfo* win) {
     // in Plugin mode, replace the Open with a Save As button
     if (gPluginMode && size.dx / size.dy == 13) {
         gToolbarButtons[0].bmpIndex = 12;
-        gToolbarButtons[0].cmdId = IDM_SAVEAS;
+        gToolbarButtons[0].cmdId = (int)Cmd::SaveAs;
         gToolbarButtons[0].toolTip = _TRN("Save As");
         gToolbarButtons[0].flags = MF_REQ_DISK_ACCESS;
     }

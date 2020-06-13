@@ -175,6 +175,8 @@ namespace menu {
 void SetChecked(HMENU m, UINT id, bool isChecked);
 bool SetEnabled(HMENU m, UINT id, bool isEnabled);
 void Remove(HMENU m, UINT id);
+// TODO: this doesn't recognize enum Cmd, why?
+//void Remove(HMENU m, enum Cmd id);
 void Empty(HMENU m);
 void SetText(HMENU m, UINT id, WCHAR* s);
 const WCHAR* ToSafeString(AutoFreeWstr& s);

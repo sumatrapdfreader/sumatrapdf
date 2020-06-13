@@ -531,7 +531,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
             return HTTRANSPARENT;
 
         case WM_MOUSELEAVE:
-            PostMessage(hwnd, WM_MOUSEMOVE, 0xFF, 0);
+            PostMessageW(hwnd, WM_MOUSEMOVE, 0xFF, 0);
             return 0;
 
         case WM_MOUSEMOVE: {

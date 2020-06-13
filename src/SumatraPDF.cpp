@@ -4275,14 +4275,14 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         case IDM_DUPLICATE_IN_NEW_WINDOW:
             OnDuplicateInNewWindow(win);
             break;
-        case IDM_OPEN:
+        case (int)Cmd::Open:
             OnMenuOpen(win);
             break;
-        case IDM_OPEN_FOLDER:
+        case (int)Cmd::OpenFolder:
             OnMenuOpenFolder(win);
             break;
 
-        case IDM_SAVEAS:
+        case (int)Cmd::SaveAs:
             OnMenuSaveAs(win);
             break;
 
@@ -4290,27 +4290,27 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuRenameFile(win);
             break;
 
-        case IDM_SHOW_IN_FOLDER:
+        case (int)Cmd::ShowInFolder:
             OnMenuShowInFolder(win);
             break;
 
-        case IDM_PRINT:
+        case (int)Cmd::Print:
             OnMenuPrint(win);
             break;
 
-        case IDM_CLOSE:
+        case (int)Cmd::Close:
             CloseTab(win);
             break;
 
-        case IDM_EXIT:
+        case (int)Cmd::Exit:
             OnMenuExit();
             break;
 
-        case IDM_REFRESH:
+        case (int)Cmd::Refresh:
             ReloadDocument(win, false);
             break;
 
-        case IDM_SAVEAS_BOOKMARK:
+        case (int)Cmd::SaveAsBookmark:
             OnMenuSaveBookmark(win);
             break;
 
@@ -4532,11 +4532,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             ViewWithHtmlHelp(win->currentTab);
             break;
 
-        case IDM_SEND_BY_EMAIL:
+        case (int)Cmd::SendByEmail:
             SendAsEmailAttachment(win->currentTab, win->hwndFrame);
             break;
 
-        case IDM_PROPERTIES:
+        case (int)Cmd::Properties:
             OnMenuProperties(win);
             break;
 
@@ -4726,7 +4726,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     SendMessage(hwnd, WM_COMMAND, IDM_GOTO_NAV_FORWARD, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_REFRESH:
-                    SendMessage(hwnd, WM_COMMAND, IDM_REFRESH, 0);
+                    SendMessage(hwnd, WM_COMMAND, (WPARAM)Cmd::Refresh, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_SEARCH:
                     SendMessage(hwnd, WM_COMMAND, IDM_FIND_FIRST, 0);

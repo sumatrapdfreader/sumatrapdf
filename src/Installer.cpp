@@ -439,7 +439,7 @@ Error:
     if (gHwndFrame) {
         if (!gCli->silent) {
             Sleep(500); // allow a glimpse of the completed progress bar before hiding it
-            PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
+            PostMessageW(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
         }
     }
     return 0;
@@ -542,7 +542,7 @@ static void OnInstallationFinished() {
 
     if (gAutoUpdate && success) {
         // click the Start button
-        PostMessage(gHwndFrame, WM_COMMAND, IDOK, 0);
+        PostMessageW(gHwndFrame, WM_COMMAND, IDOK, 0);
     }
 }
 
@@ -795,7 +795,7 @@ static void OnCreateWindow(HWND hwnd) {
 
     if (gAutoUpdate) {
         // click the Install button
-        PostMessage(hwnd, WM_COMMAND, IDOK, 0);
+        PostMessageW(hwnd, WM_COMMAND, IDOK, 0);
     }
 }
 //] ACCESSKEY_GROUP Installer
@@ -1235,7 +1235,7 @@ void RaMicroInstallerWindow::SizeHandler(SizeEvent* ev) {
 
 void onRaMicroInstallerFinished() {
     // called on a background thread
-    PostMessage(gRaMicroInstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
+    PostMessageW(gRaMicroInstallerWindow->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
 }
 
 static Gdiplus::Bitmap* LoadRaMicroSplash() {

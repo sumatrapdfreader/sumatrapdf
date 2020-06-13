@@ -233,7 +233,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
                         break;
                 }
                 if (cmd) {
-                    PostMessage(win->hwndFrame, WM_SYSCOMMAND, cmd, 0);
+                    PostMessageW(win->hwndFrame, WM_SYSCOMMAND, cmd, 0);
                 }
 
                 if (button == CB_MENU) {
@@ -359,7 +359,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
         case WM_LBUTTONDOWN:
             if (CB_MENU == index) {
-                PostMessage(hwnd, WM_LBUTTONUP, 0, lp);
+                PostMessageW(hwnd, WM_LBUTTONUP, 0, lp);
             }
             return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lp);
 
@@ -374,14 +374,14 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
         case WM_LBUTTONDBLCLK:
             if (CB_SYSTEM_MENU == index) {
-                PostMessage(win->hwndFrame, WM_SYSCOMMAND, SC_CLOSE, 0);
+                PostMessageW(win->hwndFrame, WM_SYSCOMMAND, SC_CLOSE, 0);
             }
             break;
 
         case WM_KEYDOWN:
             if (CB_MENU == index && win && !win->caption->isMenuOpen &&
                 (VK_RETURN == wp || VK_SPACE == wp || VK_UP == wp || VK_DOWN == wp)) {
-                PostMessage(hwnd, BM_CLICK, 0, 0);
+                PostMessageW(hwnd, BM_CLICK, 0, 0);
             }
             return CallWindowProc(DefWndProcButton, hwnd, msg, wp, lp);
     }
@@ -825,7 +825,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
                 }
                 WPARAM cmd = TrackPopupMenu(menu, flags, GET_X_LPARAM(lp), GET_Y_LPARAM(lp), 0, hwnd, nullptr);
                 if (cmd) {
-                    PostMessage(hwnd, WM_SYSCOMMAND, cmd, 0);
+                    PostMessageW(hwnd, WM_SYSCOMMAND, cmd, 0);
                 }
                 *callDef = false;
                 return 0;
@@ -844,7 +844,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
                         gMenuAccelPressed = *(str::FindChar(_TR("&Window"), '&') + 1);
                     }
                 }
-                PostMessage(win->hwndCaption, WM_COMMAND, MAKELONG(BTN_ID_FIRST + CB_MENU, BN_CLICKED), 0);
+                PostMessageW(win->hwndCaption, WM_COMMAND, MAKELONG(BTN_ID_FIRST + CB_MENU, BN_CLICKED), 0);
                 *callDef = false;
                 return 0;
             }
@@ -858,9 +858,9 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
                     if ('a' <= gMenuAccelPressed && gMenuAccelPressed <= 'z')
                         gMenuAccelPressed -= 'a' - 'A';
                     if ('A' <= gMenuAccelPressed && gMenuAccelPressed <= 'Z')
-                        PostMessage(hMenu, WM_KEYDOWN, gMenuAccelPressed, 0);
+                        PostMessageW(hMenu, WM_KEYDOWN, gMenuAccelPressed, 0);
                     else
-                        PostMessage(hMenu, WM_CHAR, gMenuAccelPressed, 0);
+                        PostMessageW(hMenu, WM_CHAR, gMenuAccelPressed, 0);
                 }
                 gMenuAccelPressed = 0;
             }

@@ -84,78 +84,78 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
 // clang-format off
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
-    { _TRN("New &window\tCtrl+N"),          IDM_NEW_WINDOW,             MF_REQ_DISK_ACCESS },
-    { _TRN("&Open...\tCtrl+O"),             IDM_OPEN,                   MF_REQ_DISK_ACCESS },
-    { "Open Folder",                        IDM_OPEN_FOLDER,            MF_REQ_DISK_ACCESS | MF_RAMICRO_ONLY },
-    { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
-    { _TRN("Show in &folder"),              IDM_SHOW_IN_FOLDER,         MF_REQ_DISK_ACCESS },
-    { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
-    { _TRN("Save Annotations"),             IDM_SAVE_ANNOTATIONS_SMX,   MF_REQ_DISK_ACCESS },
+    { _TRN("New &window\tCtrl+N"),          (UINT)IDM_NEW_WINDOW,             MF_REQ_DISK_ACCESS },
+    { _TRN("&Open...\tCtrl+O"),             (UINT)Cmd::Open,                   MF_REQ_DISK_ACCESS },
+    { "Open Folder",                        (UINT)Cmd::OpenFolder,            MF_REQ_DISK_ACCESS | MF_RAMICRO_ONLY },
+    { _TRN("&Close\tCtrl+W"),               (UINT)Cmd::Close,                  MF_REQ_DISK_ACCESS },
+    { _TRN("Show in &folder"),              (UINT)Cmd::ShowInFolder,         MF_REQ_DISK_ACCESS },
+    { _TRN("&Save As...\tCtrl+S"),          (UINT)Cmd::SaveAs,                 MF_REQ_DISK_ACCESS },
+    { _TRN("Save Annotations"),             (UINT)Cmd::SaveAnnotationsSmx,   MF_REQ_DISK_ACCESS },
  //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
-    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Save S&hortcut...\tCtrl+Shift+S"), (UINT)IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
 #else
-    { _TRN("Re&name...\tF2"),               IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS },
+    { _TRN("Re&name...\tF2"),               (UINT)IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS },
 #endif
 //] ACCESSKEY_ALTERNATIVE
-    { _TRN("&Print...\tCtrl+P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Print...\tCtrl+P"),            (UINT)Cmd::Print,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
 //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
-    { _TRN("Open in &Adobe Reader"),        IDM_VIEW_WITH_ACROBAT,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open in &Foxit Reader"),        IDM_VIEW_WITH_FOXIT,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open &in PDF-XChange"),         IDM_VIEW_WITH_PDF_XCHANGE,  MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Adobe Reader"),        (UINT)IDM_VIEW_WITH_ACROBAT,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Foxit Reader"),        (UINT)IDM_VIEW_WITH_FOXIT,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open &in PDF-XChange"),         (UINT)IDM_VIEW_WITH_PDF_XCHANGE,  MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft XPS-Viewer"),IDM_VIEW_WITH_XPS_VIEWER,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft XPS-Viewer"),(UINT)IDM_VIEW_WITH_XPS_VIEWER,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft HTML Help"), IDM_VIEW_WITH_HTML_HELP,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft HTML Help"), (UINT)IDM_VIEW_WITH_HTML_HELP,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //] ACCESSKEY_ALTERNATIVE
     // further entries are added if specified in gGlobalPrefs.vecCommandLine
-    { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS },
+    { _TRN("Send by &E-mail..."),           (UINT)Cmd::SendByEmail,          MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
+    { _TRN("P&roperties\tCtrl+D"),          (UINT)Cmd::Properties,             0 },
     { SEP_ITEM,                             0,                          0 },
-    { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 },
+    { _TRN("E&xit\tCtrl+Q"),                (UINT)Cmd::Exit,                   0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP File Menu
 
 //[ ACCESSKEY_GROUP View Menu
 static MenuDef menuDefView[] = {
-    { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       MF_NOT_FOR_CHM },
-    { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
-    { _TRN("&Book View\tCtrl+8"),           IDM_VIEW_BOOK,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Show &Pages Continuously"),     IDM_VIEW_CONTINUOUS,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Single Page\tCtrl+6"),         (UINT)IDM_VIEW_SINGLE_PAGE,       MF_NOT_FOR_CHM },
+    { _TRN("&Facing\tCtrl+7"),              (UINT)IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
+    { _TRN("&Book View\tCtrl+8"),           (UINT)IDM_VIEW_BOOK,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show &Pages Continuously"),     (UINT)IDM_VIEW_CONTINUOUS,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
-    { _TRN("Man&ga Mode"),                  IDM_VIEW_MANGA_MODE,        MF_CBX_ONLY },
+    { _TRN("Man&ga Mode"),                  (UINT)IDM_VIEW_MANGA_MODE,        MF_CBX_ONLY },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
-    { _TRN("Rotate &Left\tCtrl+Shift+-"),   IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Rotate &Right\tCtrl+Shift++"),  IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Rotate &Left\tCtrl+Shift+-"),   (UINT)IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Rotate &Right\tCtrl+Shift++"),  (UINT)IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Pr&esentation\tF5"),            IDM_VIEW_PRESENTATION_MODE, MF_REQ_FULLSCREEN | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("F&ullscreen\tF11"),             IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
+    { _TRN("Pr&esentation\tF5"),            (UINT)IDM_VIEW_PRESENTATION_MODE, MF_REQ_FULLSCREEN | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("F&ullscreen\tF11"),             (UINT)IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
     { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },
-    { _TRN("Show Book&marks\tF12"),         IDM_VIEW_BOOKMARKS,         0 },
-    { _TRN("Show &Toolbar\tF8"),            IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show Book&marks\tF12"),         (UINT)IDM_VIEW_BOOKMARKS,         0 },
+    { _TRN("Show &Toolbar\tF8"),            (UINT)IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Select &All\tCtrl+A"),          (UINT)IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Copy Selection\tCtrl+C"),      (UINT)IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP View Menu
 
 //[ ACCESSKEY_GROUP GoTo Menu
 static MenuDef menuDefGoTo[] = {
-    { _TRN("&Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,         0 },
-    { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0 },
-    { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0 },
-    { _TRN("&Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,         0 },
-    { _TRN("Pa&ge...\tCtrl+G"),             IDM_GOTO_PAGE,              0 },
+    { _TRN("&Next Page\tRight Arrow"),      (UINT)IDM_GOTO_NEXT_PAGE,         0 },
+    { _TRN("&Previous Page\tLeft Arrow"),   (UINT)IDM_GOTO_PREV_PAGE,         0 },
+    { _TRN("&First Page\tHome"),            (UINT)IDM_GOTO_FIRST_PAGE,        0 },
+    { _TRN("&Last Page\tEnd"),              (UINT)IDM_GOTO_LAST_PAGE,         0 },
+    { _TRN("Pa&ge...\tCtrl+G"),             (UINT)IDM_GOTO_PAGE,              0 },
     { SEP_ITEM,                             0,                          0 },
-    { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          0 },
-    { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       0 },
+    { _TRN("&Back\tAlt+Left Arrow"),        (UINT)IDM_GOTO_NAV_BACK,          0 },
+    { _TRN("F&orward\tAlt+Right Arrow"),    (UINT)IDM_GOTO_NAV_FORWARD,       0 },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Fin&d...\tCtrl+F"),             (UINT)IDM_FIND_FIRST,             MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP GoTo Menu
@@ -163,25 +163,25 @@ static MenuDef menuDefGoTo[] = {
 //[ ACCESSKEY_GROUP Zoom Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefZoom[] = {
-    { _TRN("Fit &Page\tCtrl+0"),            IDM_ZOOM_FIT_PAGE,          MF_NOT_FOR_CHM },
-    { _TRN("&Actual Size\tCtrl+1"),         IDM_ZOOM_ACTUAL_SIZE,       MF_NOT_FOR_CHM },
-    { _TRN("Fit &Width\tCtrl+2"),           IDM_ZOOM_FIT_WIDTH,         MF_NOT_FOR_CHM },
-    { _TRN("Fit &Content\tCtrl+3"),         IDM_ZOOM_FIT_CONTENT,       MF_NOT_FOR_CHM },
-    { _TRN("Custom &Zoom...\tCtrl+Y"),      IDM_ZOOM_CUSTOM,            0 },
+    { _TRN("Fit &Page\tCtrl+0"),            (UINT)IDM_ZOOM_FIT_PAGE,          MF_NOT_FOR_CHM },
+    { _TRN("&Actual Size\tCtrl+1"),         (UINT)IDM_ZOOM_ACTUAL_SIZE,       MF_NOT_FOR_CHM },
+    { _TRN("Fit &Width\tCtrl+2"),           (UINT)IDM_ZOOM_FIT_WIDTH,         MF_NOT_FOR_CHM },
+    { _TRN("Fit &Content\tCtrl+3"),         (UINT)IDM_ZOOM_FIT_CONTENT,       MF_NOT_FOR_CHM },
+    { _TRN("Custom &Zoom...\tCtrl+Y"),      (UINT)IDM_ZOOM_CUSTOM,            0 },
     { SEP_ITEM,                             0,                          0 },
-    { "6400%",                              IDM_ZOOM_6400,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "3200%",                              IDM_ZOOM_3200,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "1600%",                              IDM_ZOOM_1600,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "800%",                               IDM_ZOOM_800,               MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "400%",                               IDM_ZOOM_400,               MF_NO_TRANSLATE },
-    { "200%",                               IDM_ZOOM_200,               MF_NO_TRANSLATE },
-    { "150%",                               IDM_ZOOM_150,               MF_NO_TRANSLATE },
-    { "125%",                               IDM_ZOOM_125,               MF_NO_TRANSLATE },
-    { "100%",                               IDM_ZOOM_100,               MF_NO_TRANSLATE },
-    { "50%",                                IDM_ZOOM_50,                MF_NO_TRANSLATE },
-    { "25%",                                IDM_ZOOM_25,                MF_NO_TRANSLATE },
-    { "12.5%",                              IDM_ZOOM_12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "8.33%",                              IDM_ZOOM_8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "6400%",                              (UINT)IDM_ZOOM_6400,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "3200%",                              (UINT)IDM_ZOOM_3200,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "1600%",                              (UINT)IDM_ZOOM_1600,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "800%",                               (UINT)IDM_ZOOM_800,               MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "400%",                               (UINT)IDM_ZOOM_400,               MF_NO_TRANSLATE },
+    { "200%",                               (UINT)IDM_ZOOM_200,               MF_NO_TRANSLATE },
+    { "150%",                               (UINT)IDM_ZOOM_150,               MF_NO_TRANSLATE },
+    { "125%",                               (UINT)IDM_ZOOM_125,               MF_NO_TRANSLATE },
+    { "100%",                               (UINT)IDM_ZOOM_100,               MF_NO_TRANSLATE },
+    { "50%",                                (UINT)IDM_ZOOM_50,                MF_NO_TRANSLATE },
+    { "25%",                                (UINT)IDM_ZOOM_25,                MF_NO_TRANSLATE },
+    { "12.5%",                              (UINT)IDM_ZOOM_12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "8.33%",                              (UINT)IDM_ZOOM_8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Zoom Menu
@@ -237,26 +237,26 @@ static MenuDef menuDefDebug[] = {
 //[ ACCESSKEY_GROUP Context Menu (Content)
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
-    { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
-    { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
-    { _TRN("Copy Co&mment"),                IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
-    { _TRN("Copy &Image"),                  IDM_COPY_IMAGE,             MF_REQ_ALLOW_COPY },
-    { _TRN("Select &All"),                  IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
+    { _TRN("&Copy Selection"),              (UINT)IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Link Address"),           (UINT)IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
+    { _TRN("Copy Co&mment"),                (UINT)IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Image"),                  (UINT)IDM_COPY_IMAGE,             MF_REQ_ALLOW_COPY },
+    { _TRN("Select &All"),                  (UINT)IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
-    {"add",                                 IDM_FAV_ADD,                MF_NO_TRANSLATE   },
-    {"del",                                 IDM_FAV_DEL,                MF_NO_TRANSLATE   },
-    { _TRN("Show &Favorites"),              IDM_FAV_TOGGLE,             0                 },
-    { _TRN("Show &Bookmarks\tF12"),         IDM_VIEW_BOOKMARKS,         0                 },
-    { _TRN("Show &Toolbar\tF8"),            IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Save Annotations"),             IDM_SAVE_ANNOTATIONS_SMX,   MF_REQ_DISK_ACCESS },
-    { _TR_TODON("Edit Annotations"),        IDM_EDIT_ANNOTATIONS,       MF_REQ_DISK_ACCESS },
-    {"New Bookmarks",                       IDM_NEW_BOOKMARKS,          MF_NO_TRANSLATE},
+    {"add",                                 (UINT)IDM_FAV_ADD,                MF_NO_TRANSLATE   },
+    {"del",                                 (UINT)IDM_FAV_DEL,                MF_NO_TRANSLATE   },
+    { _TRN("Show &Favorites"),              (UINT)IDM_FAV_TOGGLE,             0                 },
+    { _TRN("Show &Bookmarks\tF12"),         (UINT)IDM_VIEW_BOOKMARKS,         0                 },
+    { _TRN("Show &Toolbar\tF8"),            (UINT)IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Save Annotations"),             (UINT)IDM_SAVE_ANNOTATIONS_SMX,   MF_REQ_DISK_ACCESS },
+    { _TR_TODON("Edit Annotations"),        (UINT)IDM_EDIT_ANNOTATIONS,       MF_REQ_DISK_ACCESS },
+    {"New Bookmarks",                       (UINT)IDM_NEW_BOOKMARKS,          MF_NO_TRANSLATE},
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
-    { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
-    { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
-    { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
-    { _TRN("E&xit Fullscreen"),             IDM_EXIT_FULLSCREEN,        0 },
+    { _TRN("&Save As..."),                  (UINT)Cmd::SaveAs,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
+    { _TRN("&Print..."),                    (UINT)Cmd::Print,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
+    { _TRN("P&roperties"),                  (UINT)Cmd::Properties,             MF_PLUGIN_MODE_ONLY },
+    { _TRN("E&xit Fullscreen"),             (UINT)Cmd::ExitFullScreen,        0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
@@ -337,7 +337,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, UINT index) {
     menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     UINT flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
-    InsertMenuW(menuFile, IDM_EXIT, flags, menuId, menuString);
+    InsertMenuW(menuFile, (UINT)Cmd::Exit, flags, menuId, menuString);
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {
@@ -355,7 +355,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
     }
 
     if (i > 0) {
-        InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
+        InsertMenu(m, (UINT)Cmd::Exit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
     }
 }
 
@@ -392,7 +392,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
 
         AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.get() : name));
         UINT menuId = IDM_OPEN_WITH_EXTERNAL_FIRST + count;
-        InsertMenu(menuFile, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
+        InsertMenuW(menuFile, (UINT)Cmd::SendByEmail, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {
             win::menu::SetEnabled(menuFile, menuId, false);
         }
@@ -479,7 +479,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
 #endif
 
     int idx;
-    for (idx = 0; idx < dimof(menuDefFile) && menuDefFile[idx].id != IDM_PRINT; idx++) {
+    for (idx = 0; idx < dimof(menuDefFile) && menuDefFile[idx].id != (UINT)Cmd::Print; idx++) {
         // do nothing
     }
     if (idx < dimof(menuDefFile)) {
@@ -488,11 +488,11 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
             printItem = _TR("&Print... (denied)");
         }
         if (!filePrintAllowed || !disableOnly) {
-            ModifyMenu(menu, IDM_PRINT, MF_BYCOMMAND | MF_STRING, IDM_PRINT, printItem);
+            ModifyMenuW(menu, (UINT)Cmd::Print, MF_BYCOMMAND | MF_STRING, (UINT_PTR)Cmd::Print, printItem);
         }
     }
 
-    win::menu::SetEnabled(menu, IDM_PRINT, filePrintEnabled && filePrintAllowed);
+    win::menu::SetEnabled(menu, (UINT)Cmd::Print, filePrintEnabled && filePrintAllowed);
 }
 
 static bool IsFileCloseMenuEnabled() {
@@ -507,37 +507,37 @@ static bool IsFileCloseMenuEnabled() {
 static void MenuUpdateStateForWindow(WindowInfo* win) {
     // those menu items will be disabled if no document is opened, enabled otherwise
     static UINT menusToDisableIfNoDocument[] = {
-        IDM_VIEW_ROTATE_LEFT,
-        IDM_VIEW_ROTATE_RIGHT,
-        IDM_GOTO_NEXT_PAGE,
-        IDM_GOTO_PREV_PAGE,
-        IDM_GOTO_FIRST_PAGE,
-        IDM_GOTO_LAST_PAGE,
-        IDM_GOTO_NAV_BACK,
-        IDM_GOTO_NAV_FORWARD,
-        IDM_GOTO_PAGE,
-        IDM_FIND_FIRST,
-        IDM_SAVEAS,
-        IDM_SAVEAS_BOOKMARK,
-        IDM_SEND_BY_EMAIL,
-        IDM_SELECT_ALL,
-        IDM_COPY_SELECTION,
-        IDM_PROPERTIES,
-        IDM_VIEW_PRESENTATION_MODE,
-        IDM_VIEW_WITH_ACROBAT,
-        IDM_VIEW_WITH_FOXIT,
-        IDM_VIEW_WITH_PDF_XCHANGE,
-        IDM_RENAME_FILE,
-        IDM_SHOW_IN_FOLDER,
-        IDM_DEBUG_ANNOTATION,
+        (UINT)IDM_VIEW_ROTATE_LEFT,
+        (UINT)IDM_VIEW_ROTATE_RIGHT,
+        (UINT)IDM_GOTO_NEXT_PAGE,
+        (UINT)IDM_GOTO_PREV_PAGE,
+        (UINT)IDM_GOTO_FIRST_PAGE,
+        (UINT)IDM_GOTO_LAST_PAGE,
+        (UINT)IDM_GOTO_NAV_BACK,
+        (UINT)IDM_GOTO_NAV_FORWARD,
+        (UINT)IDM_GOTO_PAGE,
+        (UINT)IDM_FIND_FIRST,
+        (UINT)Cmd::SaveAs,
+        (UINT)Cmd::SaveAsBookmark,
+        (UINT)Cmd::SendByEmail,
+        (UINT)IDM_SELECT_ALL,
+        (UINT)IDM_COPY_SELECTION,
+        (UINT)Cmd::Properties,
+        (UINT)IDM_VIEW_PRESENTATION_MODE,
+        (UINT)IDM_VIEW_WITH_ACROBAT,
+        (UINT)IDM_VIEW_WITH_FOXIT,
+        (UINT)IDM_VIEW_WITH_PDF_XCHANGE,
+        (UINT)IDM_RENAME_FILE,
+        (UINT)Cmd::ShowInFolder,
+        (UINT)IDM_DEBUG_ANNOTATION,
         // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
         // are removed instead of disabled (and can remain enabled
         // for broken XPS/CHM documents)
     };
     // this list coincides with menusToEnableIfBrokenPDF
     static UINT menusToDisableIfDirectory[] = {
-        IDM_RENAME_FILE,     IDM_SEND_BY_EMAIL,         IDM_VIEW_WITH_ACROBAT,
-        IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, IDM_SHOW_IN_FOLDER,
+        (UINT)IDM_RENAME_FILE,     (UINT)Cmd::SendByEmail,         (UINT)IDM_VIEW_WITH_ACROBAT,
+        (UINT)IDM_VIEW_WITH_FOXIT, (UINT)IDM_VIEW_WITH_PDF_XCHANGE, (UINT)Cmd::ShowInFolder,
     };
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
 
@@ -550,7 +550,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
 
     // TODO: happens with UseTabs = false with .pdf files
     SubmitCrashIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
-    win::menu::SetEnabled(win->menu, IDM_CLOSE, IsFileCloseMenuEnabled());
+    win::menu::SetEnabled(win->menu, (UINT)Cmd::Close, IsFileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win->menu);
 
@@ -701,7 +701,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     bool isFullScreen = win->isFullScreen || win->presentation;
     if (!isFullScreen) {
-        win::menu::Remove(popup, IDM_EXIT_FULLSCREEN);
+        win::menu::Remove(popup, (UINT)Cmd::ExitFullScreen);
     }
     if (!tab->selectionOnPage) {
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
@@ -769,11 +769,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     switch (cmd) {
         case IDM_COPY_SELECTION:
         case IDM_SELECT_ALL:
-        case IDM_SAVEAS:
-        case IDM_PRINT:
+        case (UINT)Cmd::SaveAs:
+        case (UINT)Cmd::Print:
         case IDM_VIEW_BOOKMARKS:
         case IDM_FAV_TOGGLE:
-        case IDM_PROPERTIES:
+        case (UINT)Cmd::Properties:
         case IDM_VIEW_SHOW_HIDE_TOOLBAR:
         case IDM_SAVE_ANNOTATIONS_SMX:
         case IDM_NEW_BOOKMARKS:
@@ -802,7 +802,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case IDM_FAV_DEL:
             DelFavorite(filePath, pageNo);
             break;
-        case IDM_EXIT_FULLSCREEN:
+        case (UINT)Cmd::ExitFullScreen:
             ExitFullScreen(win);
             break;
     }
@@ -849,7 +849,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     win::menu::Empty(menu);
     HMENU m = BuildMenuFromMenuDef(menuDefFile, menu, filter);
     if (gIsRaMicroBuild) {
-        win::menu::Remove(m, IDM_OPEN_FOLDER);
+        win::menu::Remove(m, (UINT)Cmd::OpenFolder);
     }
     AppendRecentFilesToMenu(menu);
     AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
@@ -859,7 +859,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
     if (!CanSendAsEmailAttachment()) {
-        win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
+        win::menu::Remove(menu, (UINT)Cmd::SendByEmail);
     }
 
     // Also suppress PDF specific items for non-PDF documents

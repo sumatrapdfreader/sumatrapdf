@@ -984,7 +984,7 @@ static void TocTreeMsgFilter(WndEvent* ev) {
         case WM_SIZE:
         case WM_HSCROLL:
             // Repaint the ToC so that RelayoutTocItem is called for all items
-            PostMessage(hwnd, WM_APP_REPAINT_TOC, 0, 0);
+            PostMessageW(hwnd, WM_APP_REPAINT_TOC, 0, 0);
             break;
         case WM_APP_REPAINT_TOC:
             InvalidateRect(hwnd, nullptr, TRUE);

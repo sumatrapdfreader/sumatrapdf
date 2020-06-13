@@ -429,7 +429,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (delayFocus) {
                 DWORD sel = Edit_GetSel(hwnd);
                 if (LOWORD(sel) == HIWORD(sel))
-                    PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+                    PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
                 delayFocus = false;
             }
             return true;
@@ -439,7 +439,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_SETFOCUS:
             if (!delayFocus)
-                PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+                PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
             return true;
 
         case UWM_DELAYED_SET_FOCUS:
@@ -449,7 +449,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_KEYDOWN:
             if (VK_BACK != wp || !IsCtrlPressed() || IsShiftPressed())
                 return false;
-            PostMessage(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
+            PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
             return true;
 
         case UWM_DELAYED_CTRL_BACK: {

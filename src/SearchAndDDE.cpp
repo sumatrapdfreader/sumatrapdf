@@ -880,14 +880,14 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wp, LPARAM lp) {
     GlobalUnlock((HGLOBAL)hi);
 
     lp = ReuseDDElParam(lp, WM_DDE_EXECUTE, WM_DDE_ACK, *(WORD*)&ack, hi);
-    PostMessage((HWND)wp, WM_DDE_ACK, (WPARAM)hwnd, lp);
+    PostMessageW((HWND)wp, WM_DDE_ACK, (WPARAM)hwnd, lp);
     return 0;
 }
 
 LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, LPARAM lp) {
     UNUSED(lp);
     // Respond with another WM_DDE_TERMINATE message
-    PostMessage((HWND)wp, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
+    PostMessageW((HWND)wp, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
     return 0;
 }
 

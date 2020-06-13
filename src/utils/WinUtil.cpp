@@ -10,6 +10,8 @@
 #include "utils/FileUtil.h"
 #include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
+// TODO: move function that need Cmd to ResourceIds.h
+#include "ResourceIds.h"
 
 #include "utils/Log.h"
 
@@ -1134,6 +1136,12 @@ bool SetEnabled(HMENU m, UINT id, bool isEnabled) {
 void Remove(HMENU m, UINT id) {
     RemoveMenu(m, id, MF_BYCOMMAND);
 }
+
+// TODO: this doesn't work, why?
+void Remove(HMENU m, Cmd id) {
+    Remove(m, (UINT)id);
+}
+
 void Empty(HMENU m) {
     while (RemoveMenu(m, 0, MF_BYPOSITION))
         ;

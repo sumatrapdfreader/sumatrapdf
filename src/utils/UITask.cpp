@@ -48,7 +48,7 @@ void Destroy() {
 
 void Post(const std::function<void()>& f) {
     auto func = new std::function<void()>(f);
-    PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
+    PostMessageW(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
 }
 
 void PostOptimized(const std::function<void()>& f) {
@@ -59,7 +59,7 @@ void PostOptimized(const std::function<void()>& f) {
         return;
     }
     auto func = new std::function<void()>(f);
-    PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
+    PostMessageW(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
 }
 
 } // namespace uitask
