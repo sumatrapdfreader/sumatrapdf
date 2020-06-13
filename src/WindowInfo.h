@@ -3,7 +3,7 @@
 
 struct DoubleBuffer;
 class LinkHandler;
-class Notifications;
+struct Notifications;
 class StressTest;
 class SumatraUIAutomationProvider;
 class FrameRateWnd;

@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/Dpi.h"
 #include "AppColors.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
@@ -12,10 +13,10 @@ extern bool IsUIRightToLeft(); // SumatraPDF.h
 
 #define NOTIFICATION_WND_CLASS_NAME L"SUMATRA_PDF_NOTIFICATION_WINDOW"
 
-constexpr int PROGRESS_WIDTH = 188;
-constexpr int PROGRESS_HEIGHT = 5;
-constexpr int PADDING = 6;
-constexpr int TOP_LEFT_MARGIN = 8;
+#define PROGRESS_WIDTH DpiScale(188)
+#define PROGRESS_HEIGHT DpiScale(5)
+#define PADDING DpiScale(6)
+#define TOP_LEFT_MARGIN DpiScale(8)
 constexpr int TIMEOUT_TIMER_ID = 1;
 
 static void RegisterNotificationsWndClass();
@@ -300,6 +301,14 @@ static void RegisterNotificationsWndClass() {
     wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);
+}
+
+Notifications::~Notifications() {
+    DeleteVecMembers(wnds);
+}
+
+bool Notifications::Contains(NotificationWnd* wnd) const {
+    return wnds.Contains(wnd);
 }
 
 int Notifications::GetWndX(NotificationWnd* wnd) {

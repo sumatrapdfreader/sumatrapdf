@@ -394,6 +394,7 @@ files {
 
 function sumatrapdf_files()
   files_in_dir("src", {
+    "Accelerators.*",
     "Actions.*",
     "AppColors.*",
     "AppPrefs.*",

@@ -134,6 +134,7 @@
 #define IDM_DEBUG_DOWNLOAD_SYMBOLS      630
 #define IDM_DEBUG_TEST_APP              631
 #define IDM_ADVANCED_OPTIONS            632
+#define IDM_DEBUG_SHOW_NOTIF            633
 #define IDM_NEW_BOOKMARKS               634
 
 #define IDM_FAV_FIRST                   700
@@ -228,7 +229,6 @@
 
 #define IDD_RAMICRO_SPLASH              3061
 
-#define IDC_SUMATRAPDF                  4000
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

@@ -30,6 +30,7 @@
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/TreeModel.h"
 
+#include "Accelerators.h"
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineManager.h"
@@ -487,7 +488,8 @@ static bool RegisterForPdfExtentions(HWND hwnd) {
 }
 
 static int RunMessageLoop() {
-    HACCEL accTable = LoadAccelerators(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_SUMATRAPDF));
+    HACCEL accTable = CreateSumatraAcceleratorTable();
+
     MSG msg = {0};
 
     while (GetMessage(&msg, nullptr, 0, 0)) {

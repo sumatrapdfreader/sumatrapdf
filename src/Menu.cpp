@@ -228,6 +228,7 @@ static MenuDef menuDefDebug[] = {
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
     { "Download symbols",                   IDM_DEBUG_DOWNLOAD_SYMBOLS, MF_NO_TRANSLATE },
     { "Test app",                           IDM_DEBUG_TEST_APP,         MF_NO_TRANSLATE },
+    { "Show notification",                  IDM_DEBUG_SHOW_NOTIF,       MF_NO_TRANSLATE },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Debug Menu

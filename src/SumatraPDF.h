@@ -77,7 +77,7 @@ class Controller;
 class Favorites;
 struct FileHistory;
 class WindowInfo;
-class NotificationWnd;
+struct NotificationWnd;
 class RenderCache;
 struct TabInfo;
 struct LabelWithCloseWnd;

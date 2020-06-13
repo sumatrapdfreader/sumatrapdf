@@ -744,6 +744,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\Actions.h" />
     <ClInclude Include="..\src\AppColors.h" />
     <ClInclude Include="..\src\AppPrefs.h" />
@@ -824,6 +825,7 @@
   <ItemGroup>
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c" />
+    <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\Actions.cpp" />
     <ClCompile Include="..\src\AppColors.cpp" />
     <ClCompile Include="..\src\AppPrefs.cpp" />
