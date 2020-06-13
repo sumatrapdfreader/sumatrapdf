@@ -25,38 +25,38 @@ const lowestCrashingBuildToShow = 12064
 
 const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
 
-type CrashVersion struct {
+type crashVersion struct {
 	Main         string
 	Build        int
 	IsPreRelease bool
 	Is64bit      bool
 }
 
-type CrashLine struct {
+type crashLine struct {
 	Text string
 	URL  string
 }
 
-type CrashInfo struct {
+type crashInfo struct {
 	N                int
 	Day              string // yy-mm-dd format
 	Version          string
-	Ver              *CrashVersion
+	Ver              *crashVersion
 	GitSha1          string
 	CrashFile        string
 	OS               string
 	CrashLines       []string
-	CrashLinesLinked []CrashLine
+	CrashLinesLinked []crashLine
 	crashLinesAll    string
 	ExceptionInfo    []string
 	exceptionInfoAll string
 	path             string
 }
 
-func symbolicateCrashLine(s string, gitSha1 string) CrashLine {
+func symbolicateCrashLine(s string, gitSha1 string) crashLine {
 	parts := strings.SplitN(s, " ", 4)
 	if len(parts) < 2 {
-		return CrashLine{
+		return crashLine{
 			Text: s,
 		}
 	}
@@ -81,14 +81,14 @@ func symbolicateCrashLine(s string, gitSha1 string) CrashLine {
 			uri = "https://github.com/sumatrapdfreader/sumatrapdf/blob/" + gitSha1 + "/" + filePath + "#L" + line
 		}
 	}
-	res := CrashLine{
+	res := crashLine{
 		Text: text,
 		URL:  uri,
 	}
 	return res
 }
 
-func symbolicateCrashInfoLines(ci *CrashInfo) {
+func symbolicateCrashInfoLines(ci *crashInfo) {
 	for _, s := range ci.CrashLines {
 		cl := symbolicateCrashLine(s, ci.GitSha1)
 		ci.CrashLinesLinked = append(ci.CrashLinesLinked, cl)
@@ -104,11 +104,11 @@ produces:
 	isPreRelease: true
 	is64bit: tru
 */
-func parseCrashVersion(line string) *CrashVersion {
+func parseCrashVersion(line string) *crashVersion {
 	s := strings.TrimPrefix(line, "Ver: ")
 	s = strings.TrimSpace(s)
 	parts := strings.Split(s, " ")
-	res := &CrashVersion{}
+	res := &crashVersion{}
 	v := parts[0] // 3.2.11495
 	for _, s = range parts[1:] {
 		if s == "pre-release" {
@@ -150,11 +150,11 @@ func removeEmptyLines(a []string) []string {
 	return res
 }
 
-func parseCrash(d []byte) *CrashInfo {
+func parseCrash(d []byte) *crashInfo {
 	d = u.NormalizeNewlines(d)
 	s := string(d)
 	lines := strings.Split(s, "\n")
-	res := &CrashInfo{}
+	res := &crashInfo{}
 	var tmpLines []string
 	inExceptionInfo := false
 	inCrashLines := false
@@ -240,7 +240,7 @@ func dayFromPath(path string) string {
 	return strings.Join(parts, "-")
 }
 
-func parseCrashFile(path string) *CrashInfo {
+func parseCrashFile(path string) *crashInfo {
 	d := u.ReadFileMust(path)
 	ci := parseCrash(d)
 	ci.Day = dayFromPath(path)
@@ -248,7 +248,7 @@ func parseCrashFile(path string) *CrashInfo {
 	return ci
 }
 
-func isCreateThumbnailCrash(ci *CrashInfo) bool {
+func isCreateThumbnailCrash(ci *crashInfo) bool {
 	s := ci.crashLinesAll
 	if strings.Contains(s, "!CreateThumbnailForFile+0x1ff") {
 		return true
@@ -259,7 +259,7 @@ func isCreateThumbnailCrash(ci *CrashInfo) bool {
 	return false
 }
 
-func shouldShowCrash(ci *CrashInfo) bool {
+func shouldShowCrash(ci *crashInfo) bool {
 	build := ci.Ver.Build
 	// filter out outdated builds
 	if build > 0 && build < lowestCrashingBuildToShow {
@@ -276,13 +276,13 @@ var (
 	nNotShownCrashes = 0
 )
 
-func loadCrashes() []*CrashInfo {
+func loadCrashes() []*crashInfo {
 	dataDir := crashesDataDir()
 	nTotalCrashes = 0
 	logf("loadCrashes: data dir: '%s'", dataDir)
 	timeStart := time.Now()
 	defer logf("  finsished in %s, crashes: %d\n", time.Since(timeStart), nTotalCrashes)
-	var res []*CrashInfo
+	var res []*crashInfo
 	fn := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -477,9 +477,9 @@ func previewCrashes() {
 	showCrashesWeb()
 }
 
-var crashesCached []*CrashInfo
+var crashesCached []*crashInfo
 
-func getCrashesCached() []*CrashInfo {
+func getCrashesCached() []*crashInfo {
 	if crashesCached == nil {
 		crashesCached = loadCrashes()
 		for i := 0; i < len(crashesCached); i++ {

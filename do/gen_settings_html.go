@@ -351,7 +351,7 @@ func genLangsHTML() {
 }
 
 func genSettingsHTML() {
-	prefs := GlobalPrefsStruct
+	prefs := globalPrefsStruct
 	inside := genStruct(prefs, "", false)
 	s := strings.Replace(tmplHTML, "%INSIDE%", inside, -1)
 	s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)

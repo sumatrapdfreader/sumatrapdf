@@ -36,31 +36,31 @@ type accessGroup struct {
 	altGroup   []string
 }
 
-func extract_accesskey_groups(path string) map[string]*accessGroup {
+func extractAccesskeyGroups(path string) map[string]*accessGroup {
 	lines, err := u.ReadLinesFromFile(path)
 	must(err)
 
 	groups := map[string]*accessGroup{}
-	group_name := ""
+	groupName := ""
 	var group *accessGroup
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if isGroupStartOrEnd(line) {
-			new_name := line[20:]
+			newName := line[20:]
 			if line[2] == '[' {
 				// start of new group
-				panicIf(group != nil, "Group '%s' doesn't end before group '%s' starts", group_name, new_name)
-				group_name = new_name
-				group = groups[group_name]
+				panicIf(group != nil, "Group '%s' doesn't end before group '%s' starts", groupName, newName)
+				groupName = newName
+				group = groups[groupName]
 				if group == nil {
 					group = &accessGroup{}
-					groups[group_name] = group
+					groups[groupName] = group
 				}
 			} else {
 				// end of group
-				panicIf(group == nil, "Unexpected group end ('%s')", new_name)
-				panicIf(group_name != new_name, "Group end mismatch: '%s' != '%s'", new_name, group_name)
+				panicIf(group == nil, "Unexpected group end ('%s')", newName)
+				panicIf(groupName != newName, "Group end mismatch: '%s' != '%s'", newName, groupName)
 				group = nil
 			}
 		} else if isAltGroupStartOrEnd(line) {
@@ -116,13 +116,13 @@ func isAlnum(s string) bool {
 	return false
 }
 
-func detect_accesskey_clashes(groups map[string]*accessGroup, translations map[string][]*Translation) {
+func detectAccesskeyClashes(groups map[string]*accessGroup, translations map[string][]*Translation) {
 	for _, lang := range g_langs {
 		fmt.Printf("Accesskey issues for '%s'", lang[1])
 		fmt.Printf("%s'\n", strMult("=", 23+len(lang[1])))
 		warnings := []string{}
 		for name, group := range groups {
-			used_keys := map[string]string{}
+			usedKeys := map[string]string{}
 			duplicates := map[string]bool{}
 			alternates := map[string][]string{}
 
@@ -161,7 +161,7 @@ func detect_accesskey_clashes(groups map[string]*accessGroup, translations map[s
 					warnings = append(warnings, s)
 				}
 				key := strings.ToUpper(string(trans[ix+1]))
-				if _, ok := used_keys[key]; ok {
+				if _, ok := usedKeys[key]; ok {
 					/*
 						if None in alternates[key] or get_alternate_ix(strings[0], string) in alternates[key]:
 							duplicates.append((key, trans))
@@ -173,7 +173,7 @@ func detect_accesskey_clashes(groups map[string]*accessGroup, translations map[s
 						s := fmt.Sprintf("WARNING: Access key '%s' might not work on all keyboards (\"%s\")", key, trans)
 						warnings = append(warnings, s)
 					}
-					used_keys[key] = trans
+					usedKeys[key] = trans
 					//alternates[key].append(get_alternate_ix(strings[0], string))
 				}
 			}
@@ -235,11 +235,11 @@ func checkAccessKeys() {
 	cFiles := getFilesToProcess()
 	var allGroups map[string]*accessGroup
 	for _, file := range cFiles {
-		group := extract_accesskey_groups(file)
+		group := extractAccesskeyGroups(file)
 		printGroups(file, group)
 		allGroups = updateGroups(allGroups, group)
 	}
 	d := u.ReadFileMust(lastDownloadFilePath())
 	translations := parseTranslations(string(d))
-	detect_accesskey_clashes(allGroups, translations)
+	detectAccesskeyClashes(allGroups, translations)
 }

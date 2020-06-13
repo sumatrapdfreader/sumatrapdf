@@ -10,6 +10,7 @@ import (
 
 // generates C code from struct definitions
 
+// Type represents a type definition
 type Type struct {
 	Name  string
 	Ctype string
@@ -140,38 +141,38 @@ func (f *Field) cdefault(built map[string]int) string {
 	return ""
 }
 
-func (self *Field) initDefault() string {
+func (f *Field) initDefault() string {
 	commentChar := ""
-	if self.Type == Bool {
+	if f.Type == Bool {
 		// "true" or "false", happens to be the same in C++ as in Go
-		return fmt.Sprintf("%s = %v", self.Name, self.Default)
+		return fmt.Sprintf("%s = %v", f.Name, f.Default)
 	}
-	if self.Type == Color {
-		col := self.Default.(uint32)
-		return fmt.Sprintf("%s = #%02x%02x%02x", self.Name, col&0xFF, (col>>8)&0xFF, (col>>16)&0xFF)
+	if f.Type == Color {
+		col := f.Default.(uint32)
+		return fmt.Sprintf("%s = #%02x%02x%02x", f.Name, col&0xFF, (col>>8)&0xFF, (col>>16)&0xFF)
 	}
-	if self.Type == Float {
+	if f.Type == Float {
 		// converting float to intptr_t rounds the value
-		return fmt.Sprintf(`%s = %v`, self.Name, self.Default)
+		return fmt.Sprintf(`%s = %v`, f.Name, f.Default)
 	}
-	if self.Type == Int {
-		return fmt.Sprintf("%s = %d", self.Name, self.Default)
+	if f.Type == Int {
+		return fmt.Sprintf("%s = %d", f.Name, f.Default)
 	}
-	if self.Type == String {
-		if self.Default != nil {
-			return fmt.Sprintf(`%s = %s`, self.Name, self.Default)
+	if f.Type == String {
+		if f.Default != nil {
+			return fmt.Sprintf(`%s = %s`, f.Name, f.Default)
 		}
-		return fmt.Sprintf(`%s %s =`, commentChar, self.Name)
+		return fmt.Sprintf(`%s %s =`, commentChar, f.Name)
 	}
-	if self.Type == Utf8String {
-		if self.Default != nil {
-			return fmt.Sprintf(`%s = %s`, self.Name, self.Default)
+	if f.Type == Utf8String {
+		if f.Default != nil {
+			return fmt.Sprintf(`%s = %s`, f.Name, f.Default)
 		}
-		return fmt.Sprintf(`%s %s =`, commentChar, self.Name)
+		return fmt.Sprintf(`%s %s =`, commentChar, f.Name)
 	}
-	typeName := self.Type.Name
+	typeName := f.Type.Name
 	if typeName == "Compact" {
-		fields := self.Default.([]*Field)
+		fields := f.Default.([]*Field)
 		var vals []string
 		for _, field := range fields {
 			v := field.initDefault()
@@ -179,20 +180,20 @@ func (self *Field) initDefault() string {
 			vals = append(vals, parts[1])
 		}
 		v := strings.Join(vals, " ")
-		return fmt.Sprintf("%s = %s", self.Name, v)
+		return fmt.Sprintf("%s = %s", f.Name, v)
 	}
 	switch typeName {
 	case "ColorArray", "FloatArray", "IntArray":
-		if self.Default != nil {
-			return fmt.Sprintf("%s = %v", self.Name, self.Default)
+		if f.Default != nil {
+			return fmt.Sprintf("%s = %v", f.Name, f.Default)
 		}
-		return fmt.Sprintf("%s %s =", commentChar, self.Name)
+		return fmt.Sprintf("%s %s =", commentChar, f.Name)
 	}
 	if typeName == "StringArray" {
-		if self.Default != nil {
-			return fmt.Sprintf("%s = %v", self.Name, self.Default)
+		if f.Default != nil {
+			return fmt.Sprintf("%s = %v", f.Name, f.Default)
 		}
-		return fmt.Sprintf("%s %s =", commentChar, self.Name)
+		return fmt.Sprintf("%s %s =", commentChar, f.Name)
 	}
 	panicIf(true)
 	return ""
@@ -283,28 +284,28 @@ func mkRGB(r uint32, g uint32, b uint32) uint32 {
 // ##### setting definitions for SumatraPDF #####
 
 var (
-	WindowPos = []*Field{
+	windowPos = []*Field{
 		mkField("X", Int, 0, "y coordinate"),
 		mkField("Y", Int, 0, "y coordinate"),
 		mkField("Dx", Int, 0, "width"),
 		mkField("Dy", Int, 0, "height"),
 	}
 
-	ScrollPos = []*Field{
+	scrollPos = []*Field{
 		mkField("X", Int, 0, "x coordinate"),
 		mkField("Y", Int, 0, "y coordinate"),
 	}
 
-	FileTime = []*Field{
+	fileTime = []*Field{
 		mkField("DwHighDateTime", Int, 0, ""),
 		mkField("DwLowDateTime", Int, 0, ""),
 	}
 
-	PrinterDefaults = []*Field{
+	printerDefaults = []*Field{
 		mkField("PrintScale", Utf8String, "shrink", "default value for scaling (shrink, fit, none)"),
 	}
 
-	ForwardSearch = []*Field{
+	forwardSearch = []*Field{
 		mkField("HighlightOffset", Int, 0,
 			"when set to a positive value, the forward search highlight style will "+
 				"be changed to a rectangle at the left of the page (with the indicated "+
@@ -318,35 +319,35 @@ var (
 				"(instead of fading away immediately)"),
 	}
 
-	WindowMargin_FixedPageUI = []*Field{
+	windowMarginFixedPageUI = []*Field{
 		mkField("Top", Int, 2, "size of the top margin between window and document"),
 		mkField("Right", Int, 4, "size of the right margin between window and document"),
 		mkField("Bottom", Int, 2, "size of the bottom margin between window and document"),
 		mkField("Left", Int, 4, "size of the left margin between window and document"),
 	}
 
-	WindowMargin_ComicBookUI = []*Field{
+	windowMarginComicBookUI = []*Field{
 		mkField("Top", Int, 0, "size of the top margin between window and document"),
 		mkField("Right", Int, 0, "size of the right margin between window and document"),
 		mkField("Bottom", Int, 0, "size of the bottom margin between window and document"),
 		mkField("Left", Int, 0, "size of the left margin between window and document"),
 	}
 
-	PageSpacing = []*Field{
+	pageSpacing = []*Field{
 		mkField("Dx", Int, 4, "horizontal difference"),
 		mkField("Dy", Int, 4, "vertical difference"),
 	}
 
-	FixedPageUI = []*Field{
+	fixedPageUI = []*Field{
 		mkField("TextColor", Color, mkRGB(0x00, 0x00, 0x00),
 			"color value with which black (text) will be substituted"),
 		mkField("BackgroundColor", Color, mkRGB(0xFF, 0xFF, 0xFF),
 			"color value with which white (background) will be substituted"),
 		mkField("SelectionColor", Color, mkRGB(0xF5, 0xFC, 0x0C),
 			"color value for the text selection rectangle (also used to highlight found text)").setVersion("2.4"),
-		mkCompactStruct("WindowMargin", WindowMargin_FixedPageUI,
+		mkCompactStruct("WindowMargin", windowMarginFixedPageUI,
 			"top, right, bottom and left margin (in that order) between window and document"),
-		mkCompactStruct("PageSpacing", PageSpacing,
+		mkCompactStruct("PageSpacing", pageSpacing,
 			"horizontal and vertical distance between two pages in facing and book view modes").setStructName("Size"),
 		mkCompactArray("GradientColors", Color, nil, // "#2828aa #28aa28 #aa2828",
 			"colors to use for the gradient from top to bottom (stops will be inserted "+
@@ -358,7 +359,7 @@ var (
 			"if true, TextColor and BackgroundColor will be temporarily swapped").setInternal(),
 	}
 
-	EbookUI = []*Field{
+	ebookUI = []*Field{
 		// default serif font, a different font is used for monospaced text (currently always "Courier New")
 		mkField("FontName", String, "Georgia", "name of the font. takes effect after re-opening the document"),
 		mkField("FontSize", Float, 12.5, "size of the font. takes effect after re-opening the document"),
@@ -369,21 +370,21 @@ var (
 				"(enables printing and searching, disables automatic reflow)"),
 	}
 
-	ComicBookUI = []*Field{
-		mkCompactStruct("WindowMargin", WindowMargin_ComicBookUI,
+	comicBookUI = []*Field{
+		mkCompactStruct("WindowMargin", windowMarginComicBookUI,
 			"top, right, bottom and left margin (in that order) between window and document"),
-		mkCompactStruct("PageSpacing", PageSpacing,
+		mkCompactStruct("PageSpacing", pageSpacing,
 			"horizontal and vertical distance between two pages in facing and book view modes").setStructName("Size"),
 		mkField("CbxMangaMode", Bool, false,
 			"if true, default to displaying Comic Book files in manga mode (from right to left if showing 2 pages at a time)"),
 	}
 
-	ChmUI = []*Field{
+	chmUI = []*Field{
 		mkField("UseFixedPageUI", Bool, false,
 			"if true, the UI used for PDF documents will be used for CHM documents as well"),
 	}
 
-	ExternalViewer = []*Field{
+	externalViewer = []*Field{
 		mkField("CommandLine", String, nil,
 			"command line with which to call the external viewer, may contain "+
 				"%p for page number and \"%1\" for the file name (add quotation "+
@@ -394,7 +395,7 @@ var (
 			"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
 	}
 
-	AnnotationDefaults = []*Field{
+	annotationDefaults = []*Field{
 		mkField("HighlightColor", Color, mkRGB(0xFF, 0xFF, 0x60),
 			"color used for the highlight tool (in prerelease builds, the current selection "+
 				"can be converted into a highlight annotation by pressing the 'h' key)"),
@@ -403,7 +404,7 @@ var (
 				"else they're always saved to an external .smx file"),
 	}
 
-	Favorite = []*Field{
+	favorite = []*Field{
 		mkField("Name", String, nil,
 			"name of this favorite as shown in the menu"),
 		mkField("PageNo", Int, 0,
@@ -414,10 +415,10 @@ var (
 			"id of this favorite in the menu (assigned by AppendFavMenuItems)").setInternal(),
 	}
 
-	FileSettings = []*Field{
+	fileSettings = []*Field{
 		mkField("FilePath", String, nil,
 			"path of the document"),
-		mkArray("Favorites", Favorite,
+		mkArray("Favorites", favorite,
 			"Values which are persisted for bookmarks/favorites"),
 		mkField("IsPinned", Bool, false,
 			"a document can be \"pinned\" to the Frequently Read list so that it "+
@@ -442,7 +443,7 @@ var (
 			"how pages should be laid out for this document, needs to be synchronized with "+
 				"DefaultDisplayMode after deserialization and before serialization").setDoc("layout of pages. valid values: automatic, single page, facing, book view, " +
 			"continuous, continuous facing, continuous book view"),
-		mkCompactStruct("ScrollPos", ScrollPos,
+		mkCompactStruct("ScrollPos", scrollPos,
 			"how far this document has been scrolled (in x and y direction)").setStructName("Point"),
 		mkField("PageNo", Int, 1,
 			"number of the last read page"),
@@ -453,7 +454,7 @@ var (
 		mkField("WindowState", Int, 0,
 			"state of the window. 1 is normal, 2 is maximized, "+
 				"3 is fullscreen, 4 is minimized"),
-		mkCompactStruct("WindowPos", WindowPos,
+		mkCompactStruct("WindowPos", windowPos,
 			"default position (can be on any monitor)").setStructName("Rect"),
 		mkField("ShowToc", Bool, true,
 			"if true, we show table of contents (Bookmarks) sidebar if it's present "+
@@ -482,7 +483,7 @@ var (
 	// list of fields which aren't serialized when UseDefaultState is set
 	rememberedDisplayState = []string{"DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"}
 
-	TabState = []*Field{
+	tabState = []*Field{
 		mkField("FilePath", String, nil,
 			"path of the document"),
 		mkField("DisplayMode", String, "automatic",
@@ -493,7 +494,7 @@ var (
 			"same as FileStates -> Zoom"),
 		mkField("Rotation", Int, 0,
 			"same as FileStates -> Rotation"),
-		mkCompactStruct("ScrollPos", ScrollPos,
+		mkCompactStruct("ScrollPos", scrollPos,
 			"how far this document has been scrolled (in x and y direction)").setStructName("Point"),
 		mkField("ShowToc", Bool, true,
 			"if true, the table of contents was shown when the document was closed"),
@@ -501,17 +502,17 @@ var (
 			"same as FileStates -> TocState"),
 	}
 
-	SessionData = []*Field{
-		mkArray("TabStates", TabState,
+	sessionData = []*Field{
+		mkArray("TabStates", tabState,
 			"a subset of FileState required for restoring the state of a single tab "+
 				"(required for handling documents being opened twice)").setDoc("data required for restoring the view state of a single tab"),
 		mkField("TabIndex", Int, 1, "index of the currently selected tab (1-based)"),
 		mkField("WindowState", Int, 0, "same as FileState -> WindowState"),
-		mkCompactStruct("WindowPos", WindowPos, "default position (can be on any monitor)").setStructName("Rect"),
+		mkCompactStruct("WindowPos", windowPos, "default position (can be on any monitor)").setStructName("Rect"),
 		mkField("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)"),
 	}
 
-	GlobalPrefs = []*Field{
+	globalPrefs = []*Field{
 		mkComment(""),
 		mkEmptyLine(),
 
@@ -532,15 +533,15 @@ var (
 			"maximum width of a single tab"),
 		mkEmptyLine(),
 
-		mkStruct("FixedPageUI", FixedPageUI,
+		mkStruct("FixedPageUI", fixedPageUI,
 			"customization options for PDF, XPS, DjVu and PostScript UI").setExpert(),
-		mkStruct("EbookUI", EbookUI,
+		mkStruct("EbookUI", ebookUI,
 			"customization options for eBooks (EPUB, Mobi, FictionBook) UI. If UseFixedPageUI is true, FixedPageUI settings apply instead").setExpert(),
-		mkStruct("ComicBookUI", ComicBookUI,
+		mkStruct("ComicBookUI", comicBookUI,
 			"customization options for Comic Book and images UI").setExpert(),
-		mkStruct("ChmUI", ChmUI,
+		mkStruct("ChmUI", chmUI,
 			"customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead").setExpert(),
-		mkArray("ExternalViewers", ExternalViewer,
+		mkArray("ExternalViewers", externalViewer,
 			"list of additional external viewers for various file types "+
 				"(can have multiple entries for the same format)").setExpert(),
 		mkField("ShowMenubar", Bool, true,
@@ -561,12 +562,12 @@ var (
 		mkEmptyLine(),
 
 		// the below prefs apply only to FixedPageUI and ComicBookUI (so far)
-		mkStruct("PrinterDefaults", PrinterDefaults,
+		mkStruct("PrinterDefaults", printerDefaults,
 			"these override the default settings in the Print dialog").setExpert(),
-		mkStruct("ForwardSearch", ForwardSearch,
+		mkStruct("ForwardSearch", forwardSearch,
 			"customization options for how we show forward search results (used from "+
 				"LaTeX editors)").setExpert(),
-		mkStruct("AnnotationDefaults", AnnotationDefaults,
+		mkStruct("AnnotationDefaults", annotationDefaults,
 			"default values for user added annotations in FixedPageUI documents "+
 				"(preliminary and still subject to change)").setExpert().setPreRelease(),
 		mkCompactArray("DefaultPasswords", String, nil,
@@ -610,7 +611,7 @@ var (
 		mkField("WindowState", Int, 1,
 			"default state of new windows (same as the last closed)").setDoc("default state of the window. 1 is normal, 2 is maximized, " +
 			"3 is fullscreen, 4 is minimized"),
-		mkCompactStruct("WindowPos", WindowPos,
+		mkCompactStruct("WindowPos", windowPos,
 			"default position (can be on any monitor)").setStructName("Rect").setDoc("default position (x, y) and size (width, height) of the window"),
 		mkField("ShowToc", Bool, true,
 			"if true, we show table of contents (Bookmarks) sidebar if it's present "+
@@ -627,20 +628,20 @@ var (
 		mkEmptyLine(),
 
 		// file history and favorites
-		mkArray("FileStates", FileSettings,
+		mkArray("FileStates", fileSettings,
 			"information about opened files (in most recently used order)"),
-		mkArray("SessionData", SessionData,
+		mkArray("SessionData", sessionData,
 			"state of the last session, usage depends on RestoreSession").setVersion("3.1"),
 		mkCompactArray("ReopenOnce", String, nil,
 			"a list of paths for files to be reopened at the next start "+
 				"or the string \"SessionData\" if this data is saved in SessionData "+
 				"(needed for auto-updating)").setDoc("data required for reloading documents after an auto-update").setVersion("3.0"),
-		mkCompactStruct("TimeOfLastUpdateCheck", FileTime,
+		mkCompactStruct("TimeOfLastUpdateCheck", fileTime,
 			"timestamp of the last update check").setStructName("FILETIME").setDoc("data required to determine when SumatraPDF last checked for updates"),
 		mkField("OpenCountWeek", Int, 0,
 			"week count since 2011-01-01 needed to \"age\" openCount values in file history").setDoc("value required to determine recency for the OpenCount value in FileStates"),
 		// non-serialized fields
-		mkCompactStruct("LastPrefUpdate", FileTime,
+		mkCompactStruct("LastPrefUpdate", fileTime,
 			"modification time of the preferences file when it was last read").setStructName("FILETIME").setInternal(),
 		mkField("DefaultDisplayModeEnum", &Type{"", "DisplayMode"}, "DM_AUTOMATIC",
 			"value of DefaultDisplayMode for internal usage").setInternal(),
@@ -650,13 +651,13 @@ var (
 		mkComment("Settings after this line have not been recognized by the current version"),
 	}
 
-	GlobalPrefsStruct = mkStruct("GlobalPrefs", GlobalPrefs,
+	globalPrefsStruct = mkStruct("GlobalPrefs", globalPrefs,
 		"Most values on this structure can be updated through the UI and are persisted "+
 			"in SumatraPDF-settings.txt")
 )
 
 // limit comment lines to 72 chars
-func FormatComment(comment string, start string) []string {
+func formatComment(comment string, start string) []string {
 	var lines []string
 	parts := strings.Split(comment, " ")
 	line := start
@@ -673,7 +674,7 @@ func FormatComment(comment string, start string) []string {
 	return lines
 }
 
-func FormatArrayLines(data [][]string) []string {
+func formatArrayLines(data [][]string) []string {
 	var lines []string
 	for _, ld := range data {
 		s := fmt.Sprintf("\t{ %s, %s, %s },", ld[0], ld[1], ld[2])
@@ -682,12 +683,12 @@ func FormatArrayLines(data [][]string) []string {
 	return lines
 }
 
-func BuildStruct(struc *Field, built map[string]int) string {
+func buildStruct(struc *Field, built map[string]int) string {
 	lines := []string{}
 	required := []string{}
 	var s string
 	if struc.Comment != "" {
-		comments := FormatComment(struc.Comment, "//")
+		comments := formatComment(struc.Comment, "//")
 		lines = append(lines, comments...)
 	}
 	s = fmt.Sprintf("struct %s {", struc.StructName)
@@ -697,7 +698,7 @@ func BuildStruct(struc *Field, built map[string]int) string {
 		if field.isComment() {
 			continue
 		}
-		comments := FormatComment(field.Comment, "\t//")
+		comments := formatComment(field.Comment, "\t//")
 		lines = append(lines, comments...)
 		s = fmt.Sprintf("\t%s %s;", field.Type.Ctype, field.CName)
 		lines = append(lines, s)
@@ -706,7 +707,7 @@ func BuildStruct(struc *Field, built map[string]int) string {
 			name := field.Name
 			if name == field.StructName || name == field.StructName+"s" {
 				if _, ok := built[name]; !ok {
-					s = BuildStruct(field, built)
+					s = buildStruct(field, built)
 					required = append(required, s)
 					required = append(required, "")
 					built[name]++
@@ -721,7 +722,7 @@ func BuildStruct(struc *Field, built map[string]int) string {
 	return s1 + s2
 }
 
-func BuildMetaData(struc *Field, built map[string]int) string {
+func buildMetaData(struc *Field, built map[string]int) string {
 	var lines, names []string
 	var data [][]string
 	suffix := ""
@@ -749,7 +750,7 @@ func BuildMetaData(struc *Field, built map[string]int) string {
 		names = append(names, field.Name)
 		switch field.Type.Name {
 		case "Struct", "Prerelease", "Compact", "Array":
-			sublines := BuildMetaData(field, built) // TODO: pass built?
+			sublines := buildMetaData(field, built) // TODO: pass built?
 			lines = append(lines, sublines)
 			lines = append(lines, "")
 			built[field.StructName]++
@@ -761,7 +762,7 @@ func BuildMetaData(struc *Field, built map[string]int) string {
 	}
 	s = fmt.Sprintf("static const FieldInfo g%sFields[] = {", fullName)
 	lines = append(lines, s)
-	dataLines := FormatArrayLines(data)
+	dataLines := formatArrayLines(data)
 	lines = append(lines, dataLines...)
 	lines = append(lines, "};")
 	// gFileStateInfo isn't const so that the number of fields can be changed at runtime (cf. UseDefaultState)
@@ -775,7 +776,7 @@ func BuildMetaData(struc *Field, built map[string]int) string {
 	return strings.Join(lines, "\n")
 }
 
-const SettingsStructsHeader = `// !!!!! This file is auto-generated by do/gen_settings_structs.go
+const settingsStructsHeader = `// !!!!! This file is auto-generated by do/gen_settings_structs.go
 
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 (see COPYING) */
@@ -807,10 +808,10 @@ typedef struct FileState DisplayState;
 
 func genSettingsStruct() string {
 	built := map[string]int{}
-	structDef := BuildStruct(GlobalPrefsStruct, built)
-	structMetaData := BuildMetaData(GlobalPrefsStruct, map[string]int{})
+	structDef := buildStruct(globalPrefsStruct, built)
+	structMetaData := buildMetaData(globalPrefsStruct, map[string]int{})
 
-	content := SettingsStructsHeader
+	content := settingsStructsHeader
 	content = strings.Replace(content, "{{structDef}}", structDef, -1)
 	content = strings.Replace(content, "{{structMetadata}}", structMetaData, -1)
 	return content
@@ -819,7 +820,7 @@ func genSettingsStruct() string {
 func genAndSaveSettingsStructs() {
 	helpURI := fmt.Sprintf("For documentation, see https://www.sumatrapdfreader.org/settings/settings%s.html", extractSumatraVersionMust())
 
-	GlobalPrefs[0].Comment = helpURI
+	globalPrefs[0].Comment = helpURI
 
 	s := genSettingsStruct()
 

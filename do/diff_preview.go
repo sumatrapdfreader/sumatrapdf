@@ -26,9 +26,13 @@ var (
 )
 
 const (
+	// Modified represents a modified git status line
 	Modified = iota
+	// Added represents a added git status line
 	Added
+	// Deleted represents a deleted git status line
 	Deleted
+	// NotCheckedIn represents a not checked in git status line
 	NotCheckedIn
 )
 
