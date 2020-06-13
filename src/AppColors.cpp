@@ -49,7 +49,7 @@
 #define COL_WINDOW_BG RGB(0x99, 0x99, 0x99)
 #endif
 
-static COLORREF rgb_to_bgr(COLORREF rgb) {
+static COLORREF RgbToBgr(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
 }
 
@@ -167,7 +167,8 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
     }
 
     if (col == AppColor::NotificationsBg) {
-        return GetAppColor(AppColor::MainWindowBg);
+        return MkGray(0xff);
+        // return GetAppColor(AppColor::MainWindowBg);
     }
 
     if (col == AppColor::NotificationsText) {
@@ -175,7 +176,7 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
     }
 
     if (col == AppColor::NotificationsHighlightBg) {
-        return rgb_to_bgr(0x3399ff);
+        return RgbToBgr(0x3399ff);
     }
 
     if (col == AppColor::NotificationsHighlightText) {
@@ -200,7 +201,7 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
     }
 
     if (col == AppColor::TabSelectedCloseCircle) {
-        return rgb_to_bgr(0xC13535);
+        return RgbToBgr(0xC13535);
     }
 
     if (col == AppColor::TabBackgroundBg) {

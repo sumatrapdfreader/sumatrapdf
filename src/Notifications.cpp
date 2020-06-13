@@ -17,18 +17,27 @@ extern bool IsUIRightToLeft(); // SumatraPDF.h
 #define PROGRESS_HEIGHT DpiScale(5)
 #define PADDING DpiScale(6)
 #define TOP_LEFT_MARGIN DpiScale(8)
+#define CLOSE_LEFT_MARGIN DpiScale(32)
+
 constexpr int TIMEOUT_TIMER_ID = 1;
 
 static void RegisterNotificationsWndClass();
 
-static Rect GetCancelRect(HWND hwnd) {
-    return Rect(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
+static Rect GetCloseRect(HWND hwnd) {
+    int n = DpiScale(16);
+    Rect r = ClientRect(hwnd);
+    int x = r.dx - n - PADDING;
+    // int y = PADDING;
+    int y = (r.dy / 2) - (n / 2);
+    int dx = n;
+    int dy = n;
+    return Rect(x, y, dx, dy);
 }
 
 NotificationWnd::NotificationWnd(HWND parent, int timeoutInMS) {
     this->parent = parent;
     this->timeoutInMS = timeoutInMS;
-    this->hasCancel = (0 == timeoutInMS);
+    this->hasClose = (0 == timeoutInMS);
 }
 
 NotificationWnd::~NotificationWnd() {
@@ -48,9 +57,9 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
     ReleaseDC(wnd->hwnd, hdc);
 
     Rect rMsg = Rect::FromRECT(rc);
-    if (wnd->hasCancel) {
-        rMsg.dy = std::max(rMsg.dy, 16);
-        rMsg.dx += 20;
+    if (wnd->hasClose) {
+        rMsg.dy = std::max(rMsg.dy, DpiScale(16));
+        rMsg.dx += CLOSE_LEFT_MARGIN;
     }
     rMsg.Inflate(PADDING, PADDING);
 
@@ -87,7 +96,7 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
 
 bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     if (progressMsg != nullptr) {
-        this->hasCancel = true;
+        this->hasClose = true;
         this->hasProgress = true;
         this->progressMsg = str::Dup(progressMsg);
     }
@@ -131,7 +140,7 @@ void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool 
     win::SetText(this->hwnd, message);
     this->highlight = highlight;
     if (timeoutInMS != 0) {
-        this->hasCancel = false;
+        this->hasClose = false;
     }
     DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
     SetWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
@@ -212,15 +221,15 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     if (wnd->hasProgress) {
         rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
     }
-    if (wnd->hasCancel) {
-        rectMsg.dx -= 20;
+    if (wnd->hasClose) {
+        rectMsg.dx -= CLOSE_LEFT_MARGIN;
     }
     AutoFreeWstr text(win::GetText(hwnd));
     rTmp = rectMsg.ToRECT();
     DrawText(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
 
-    if (wnd->hasCancel) {
-        rTmp = GetCancelRect(hwnd).ToRECT();
+    if (wnd->hasClose) {
+        rTmp = GetCloseRect(hwnd).ToRECT();
         DrawFrameControl(hdc, &rTmp, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
     }
 
@@ -269,17 +278,17 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
         return 0;
     }
 
-    if (WM_SETCURSOR == msg && wnd->hasCancel) {
+    if (WM_SETCURSOR == msg && wnd->hasClose) {
         Point pt;
-        if (GetCursorPosInHwnd(hwnd, pt) && GetCancelRect(hwnd).Contains(pt)) {
+        if (GetCursorPosInHwnd(hwnd, pt) && GetCloseRect(hwnd).Contains(pt)) {
             SetCursor(IDC_HAND);
             return TRUE;
         }
     }
 
-    if (WM_LBUTTONUP == msg && wnd->hasCancel) {
+    if (WM_LBUTTONUP == msg && wnd->hasClose) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
-        if (GetCancelRect(hwnd).Contains(pt)) {
+        if (GetCloseRect(hwnd).Contains(pt)) {
             if (wnd->wndRemovedCb) {
                 wnd->wndRemovedCb(wnd);
             } else {

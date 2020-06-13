@@ -21,7 +21,7 @@ struct NotificationWnd : public ProgressUpdateUI {
     HWND hwnd = nullptr;
     int timeoutInMS = 0; // 0 means no timeout
     bool hasProgress = false;
-    bool hasCancel = false;
+    bool hasClose = false;
 
     HFONT font = nullptr;
     bool highlight = false;

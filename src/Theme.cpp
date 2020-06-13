@@ -14,7 +14,7 @@ You can also use methods like AdjustLightness2 to modify existing colors. If you
 color in multiple themes, you may want to define it in the color definitions section.This
 makes themes easier to modify and update.
 
-Note: Colors are in format 0xBBGGRR, recommended to use rgb_to_bgr
+Note: Colors are in format 0xBBGGRR, recommended to use RgbToBgr
 */
 
 // temporarily (?) disabled
@@ -33,7 +33,7 @@ Note: Colors are in format 0xBBGGRR, recommended to use rgb_to_bgr
 #define COL_WHITEISH 0xEBEBF9
 
 // Theme definition helper functions
-static COLORREF rgb_to_bgr(COLORREF rgb) {
+static COLORREF RgbToBgr(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
 }
 
@@ -45,16 +45,16 @@ Theme g_themeLight = {
     // Main window theme
     {
         // Main Background Color
-        rgb_to_bgr(0xF2F2F2),
+        RgbToBgr(0xF2F2F2),
         // Main Text Color
         COL_BLACK,
         // Main Link Color
-        rgb_to_bgr(0x0020A0)
+        RgbToBgr(0x0020A0)
     },
     // Document style
     {
         // Canvas Color
-        rgb_to_bgr(0x999999),
+        RgbToBgr(0x999999),
         // Background Color
         COL_WHITE,
         // Text color
@@ -67,7 +67,7 @@ Theme g_themeLight = {
         // Current style
         {
             // Background color
-            rgb_to_bgr(0xFfFfFf),
+            RgbToBgr(0xFfFfFf),
             // Text color
             COL_BLACK,
             // Default close style
@@ -75,7 +75,7 @@ Theme g_themeLight = {
                 // X color
                 AdjustLightness2(g_themeLight.tab.current.backgroundColor, -60),
                 // Circle color
-                rgb_to_bgr(0xC13535)
+                RgbToBgr(0xC13535)
             }
         },
         // Background style
@@ -122,7 +122,7 @@ Theme g_themeLight = {
         // Text color
         g_themeLight.mainWindow.textColor,
         // Highlight color
-        rgb_to_bgr(0x3399FF),
+        RgbToBgr(0x3399FF),
         // Highlight text color
         COL_WHITE,
         // Progress bar color
@@ -136,16 +136,16 @@ Theme g_themeDark = {
     // Main window theme
     {
         // Main Background Color
-        rgb_to_bgr(0x263238),
+        RgbToBgr(0x263238),
         // Main Text Color
         COL_WHITE,
         // Main Link Color
-        rgb_to_bgr(0x80CBAD)
+        RgbToBgr(0x80CBAD)
     },
     // Document style
     {
         // Canvas Color
-        rgb_to_bgr(0x1E272C),
+        RgbToBgr(0x1E272C),
         // Background Color
         g_themeDark.mainWindow.backgroundColor,
         // Text color
@@ -158,13 +158,13 @@ Theme g_themeDark = {
         // Current style
         {
             // Background color
-            rgb_to_bgr(0x009688),
+            RgbToBgr(0x009688),
             // Text color
             COL_WHITE,
             // Default close style
             {
                 // X color
-                rgb_to_bgr(0x99D5CF)
+                RgbToBgr(0x99D5CF)
             }
         },
         // Background style
@@ -204,7 +204,7 @@ Theme g_themeDark = {
         // Text color
         g_themeDark.mainWindow.textColor,
         // Highlight color
-        AdjustLightness2(rgb_to_bgr(0x33434B), 10),
+        AdjustLightness2(RgbToBgr(0x33434B), 10),
         // Highlight text color
         g_themeDark.mainWindow.textColor,
         // Progress bar color
@@ -218,16 +218,16 @@ Theme g_themeDarker = {
     // Main window theme
     {
         // Main Background Color
-        rgb_to_bgr(0x2D2D30),
+        RgbToBgr(0x2D2D30),
         // Main Text Color
         COL_WHITE,
         // Main Link Color
-        rgb_to_bgr(0x3081D4)
+        RgbToBgr(0x3081D4)
     },
     // Document style
     {
         // Canvas Color
-        rgb_to_bgr(0x1E1E1E),
+        RgbToBgr(0x1E1E1E),
         // Background Color
         g_themeDarker.mainWindow.backgroundColor,
         // Text color
@@ -240,13 +240,13 @@ Theme g_themeDarker = {
         // Current style
         {
             // Background color
-            rgb_to_bgr(0x007ACC),
+            RgbToBgr(0x007ACC),
             // Text color
             COL_WHITE,
             // Default close style
             {
                 // X color
-                rgb_to_bgr(0xD0E6F5),
+                RgbToBgr(0xD0E6F5),
                 // Circle color
                 COL_BLACK
             }
@@ -254,7 +254,7 @@ Theme g_themeDarker = {
         // Background style
         {
             // Background color
-            rgb_to_bgr(0xEAEAEA),
+            RgbToBgr(0xEAEAEA),
             // Text color
             COL_BLACK,
             // Default close style
@@ -268,7 +268,7 @@ Theme g_themeDarker = {
         // Highlighted style
         {
             // Background color
-            rgb_to_bgr(0x1C97EA),
+            RgbToBgr(0x1C97EA),
             // Text color
             COL_WHITE,
             // Default close style
@@ -295,7 +295,7 @@ Theme g_themeDarker = {
         // Text color
         g_themeDarker.mainWindow.textColor,
         // Highlight color
-        AdjustLightness2(rgb_to_bgr(0x3E3E42), 10),
+        AdjustLightness2(RgbToBgr(0x3E3E42), 10),
         // Highlight text color
         g_themeDarker.mainWindow.textColor,
         // Progress bar color

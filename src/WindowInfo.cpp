@@ -213,7 +213,7 @@ void WindowInfo::HideToolTip() {
     infotip->Hide();
 }
 
-void WindowInfo::ShowNotification(const WCHAR* msg, int options, NotificationGroupId groupId) {
+NotificationWnd* WindowInfo::ShowNotification(const WCHAR* msg, int options, NotificationGroupId groupId) {
     int timeoutMS = (options & NOS_PERSIST) ? 0 : 3000;
     bool highlight = (options & NOS_HIGHLIGHT);
 
@@ -225,6 +225,7 @@ void WindowInfo::ShowNotification(const WCHAR* msg, int options, NotificationGro
     }
     wnd->Create(msg, nullptr);
     notifications->Add(wnd, groupId);
+    return wnd;
 }
 
 bool WindowInfo::CreateUIAProvider() {
