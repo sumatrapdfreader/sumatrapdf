@@ -49,6 +49,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
+#include "ResourceIds.h"
 #include "Flags.h"
 #include "AppPrefs.h"
 #include "AppTools.h"

@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "resource.h"
+#include "ResourceIds.h"
 
 //#define CTRL (FCONTROL | FVIRTKEY)
 //#define SHIFT_CTRL (FSHIFT | FCONTROL | FVIRTKEY)

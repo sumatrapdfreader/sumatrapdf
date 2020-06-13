@@ -10,6 +10,7 @@
 
 #include "SumatraPDF.h"
 #include "resource.h"
+#include "ResourceIds.h"
 #include "AppTools.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"

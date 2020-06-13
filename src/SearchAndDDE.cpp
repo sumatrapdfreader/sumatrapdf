@@ -32,6 +32,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
+#include "ResourceIds.h"
 #include "AppTools.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"

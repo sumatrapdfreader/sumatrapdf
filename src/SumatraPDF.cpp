@@ -59,6 +59,7 @@
 #include "TabInfo.h"
 #include "TocEditor.h"
 #include "resource.h"
+#include "ResourceIds.h"
 #include "Flags.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
@@ -4275,7 +4276,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnDuplicateInNewWindow(win);
             break;
         case IDM_OPEN:
-        case IDT_FILE_OPEN:
             OnMenuOpen(win);
             break;
         case IDM_OPEN_FOLDER:
@@ -4294,13 +4294,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuShowInFolder(win);
             break;
 
-        case IDT_FILE_PRINT:
         case IDM_PRINT:
             OnMenuPrint(win);
             break;
 
         case IDM_CLOSE:
-        case IDT_FILE_EXIT:
             CloseTab(win);
             break;
 

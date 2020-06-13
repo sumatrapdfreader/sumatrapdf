@@ -24,6 +24,7 @@
 #include "EngineManager.h"
 
 #include "resource.h"
+#include "ResourceIds.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SettingsStructs.h"
@@ -186,13 +187,6 @@ static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
 }
 
 // clang-format off
-#define IDM_EDIT            100
-#define IDM_ADD_SIBLING     101
-#define IDM_ADD_CHILD       102
-#define IDM_REMOVE          103
-#define IDM_ADD_PDF_CHILD   104
-#define IDM_ADD_PDF_SIBLING 105
-
 static MenuDef menuDefContext[] = {
     {_TR_TODON("Edit"),                    IDM_EDIT, 0},
     {_TR_TODON("Add sibling"),             IDM_ADD_SIBLING, 0},

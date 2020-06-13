@@ -39,6 +39,7 @@
 #include "TabInfo.h"
 #include "TableOfContents.h"
 #include "resource.h"
+#include "ResourceIds.h"
 #include "Caption.h"
 #include "Selection.h"
 #include "StressTesting.h"

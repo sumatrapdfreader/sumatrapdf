@@ -40,6 +40,7 @@
 #include "Favorites.h"
 #include "TabInfo.h"
 #include "resource.h"
+#include "ResourceIds.h"
 #include "AppTools.h"
 #include "TableOfContents.h"
 #include "Translations.h"
@@ -376,17 +377,6 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 }
 
 // clang-format off
-#define IDM_EXPAND_ALL                  500
-#define IDM_COLLAPSE_ALL                501
-#define IDM_EXPORT_BOOKMARKS            502
-#define IDM_SEPARATOR                   504
-#define IDM_SORT_TAG_SMALL_FIRST        505
-#define IDM_SORT_TAG_BIG_FIRST          506
-#define IDM_SORT_COLOR                  507
-#define IDM_SAVE_EMBEDDED               508
-#define IDM_OPEN_EMBEDDED               509
-#define IDM_EMBED_SEPARATOR             510
-
 static MenuDef menuDefContext[] = {
     {_TRN("Expand All"),                 IDM_EXPAND_ALL,         0 },
     {_TRN("Collapse All"),               IDM_COLLAPSE_ALL,       0 },

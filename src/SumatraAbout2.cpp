@@ -10,6 +10,7 @@
 
 #include "SumatraConfig.h"
 #include "resource.h"
+#include "ResourceIds.h"
 #include "SumatraAbout2.h"
 #include "Translations.h"
 #include "Version.h"
