@@ -10,12 +10,12 @@ struct ChmDoc {
     AutoFree indexPath;
     AutoFree homePath;
     AutoFree creator;
-    UINT codepage = 0;
+    uint codepage = 0;
 
     void ParseWindowsData();
     bool ParseSystemData();
     bool ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex);
-    void FixPathCodepage(AutoFree& path, UINT& fileCP);
+    void FixPathCodepage(AutoFree& path, uint& fileCP);
 
     bool Load(const WCHAR* fileName);
 
@@ -26,7 +26,7 @@ struct ChmDoc {
     std::span<u8> GetData(const char* fileName);
     char* ResolveTopicID(unsigned int id);
 
-    char* ToUtf8(const unsigned char* text, UINT overrideCP = 0);
+    char* ToUtf8(const unsigned char* text, uint overrideCP = 0);
     WCHAR* ToStr(const char* text);
 
     WCHAR* GetProperty(DocumentProperty prop);

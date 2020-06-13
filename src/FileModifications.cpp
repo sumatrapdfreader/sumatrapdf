@@ -172,7 +172,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
     AutoFreeStr path = strconv::WstrToUtf8(filePath);
     i64 size = file::GetSize(path.as_view());
     if (0 <= size && size <= UINT_MAX) {
-        data.AppendFmt("filesize = %u\r\n", (UINT)size);
+        data.AppendFmt("filesize = %u\r\n", (uint)size);
     }
 
     {

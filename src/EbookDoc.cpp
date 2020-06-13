@@ -23,7 +23,7 @@
 
 // tries to extract an encoding from <?xml encoding="..."?>
 // returns CP_ACP on failure
-static UINT GetCodepageFromPI(const char* xmlPI) {
+static uint GetCodepageFromPI(const char* xmlPI) {
     if (!str::StartsWith(xmlPI, "<?xml"))
         return CP_ACP;
     const char* xmlPIEnd = str::Find(xmlPI, "?>");
@@ -39,7 +39,7 @@ static UINT GetCodepageFromPI(const char* xmlPI) {
     AutoFree encoding(str::DupN(enc->val, enc->valLen));
     struct {
         const char* namePart;
-        UINT codePage;
+        uint codePage;
     } encodings[] = {
         {"UTF", CP_UTF8}, {"utf", CP_UTF8}, {"1252", 1252}, {"1251", 1251},
         // TODO: any other commonly used codepages?
@@ -90,7 +90,7 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
     }
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
-    UINT codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
+    uint codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
     if (CP_ACP == codePage && IsValidUtf8(s))
         return str::Dup(s);
     if (CP_ACP == codePage)
@@ -1042,7 +1042,7 @@ PalmDoc::~PalmDoc() {
 
 // cf. http://wiki.mobileread.com/wiki/TealDoc
 static const char* HandleTealDocTag(str::Str& builder, WStrVec& tocEntries, const char* text, size_t len,
-                                    UINT codePage) {
+                                    uint codePage) {
     UNUSED(codePage);
     if (len < 9) {
     Fallback:
@@ -1135,7 +1135,7 @@ bool PalmDoc::Load() {
     }
 
     const std::string_view text = mobiDoc->GetHtmlData();
-    UINT codePage = GuessTextCodepage(text.data(), text.size(), CP_ACP);
+    uint codePage = GuessTextCodepage(text.data(), text.size(), CP_ACP);
     AutoFree textUtf8(strconv::ToMultiByte(text.data(), codePage, CP_UTF8));
 
     const char* start = textUtf8.Get();

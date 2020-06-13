@@ -71,7 +71,7 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
     }
 
     // adjust the window to fit the message (only shrink the window when there's no progress bar)
-    UINT flags = SWP_NOMOVE | SWP_NOZORDER;
+    uint flags = SWP_NOMOVE | SWP_NOZORDER;
     if (!wnd->hasProgress) {
         SetWindowPos(wnd->hwnd, nullptr, 0, 0, rMsg.dx, rMsg.dy, flags);
     } else if (init) {
@@ -331,7 +331,7 @@ int GetWndX(Notifications* notifs, NotificationWnd* wnd) {
 void Notifications::MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
     Rect rect = WindowRect(fix->hwnd);
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd));
-    UINT flags = SWP_NOSIZE | SWP_NOZORDER;
+    uint flags = SWP_NOSIZE | SWP_NOZORDER;
     auto x = GetWndX(this, move);
     int y = rect.y + rect.dy + TOP_LEFT_MARGIN;
     SetWindowPos(move->hwnd, nullptr, x, y, 0, 0, flags);
@@ -354,7 +354,7 @@ void Notifications::Remove(NotificationWnd* wnd) {
     // visually testing notifications
     if (isFirst) {
         auto* first = wnds[0];
-        UINT flags = SWP_NOSIZE | SWP_NOZORDER;
+        uint flags = SWP_NOSIZE | SWP_NOZORDER;
         auto x = GetWndX(this, first);
         SetWindowPos(first->hwnd, nullptr, x, TOP_LEFT_MARGIN, 0, 0, flags);
     }
@@ -428,7 +428,7 @@ void Notifications::Relayout() {
         } else {
             rect.x = TOP_LEFT_MARGIN;
         }
-        UINT flags = SWP_NOSIZE | SWP_NOZORDER;
+        uint flags = SWP_NOSIZE | SWP_NOZORDER;
         SetWindowPos(wnd->hwnd, nullptr, rect.x, rect.y, 0, 0, flags);
     }
 }

@@ -499,7 +499,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     return true;
 }
 
-UINT RenderCache::GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile) {
+uint RenderCache::GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile) {
     ScopedCritSec scope(&requestAccess);
 
     if (curReq && curReq->pageNo == pageNo && curReq->dm == dm && curReq->tile == tile) {
@@ -660,11 +660,11 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
 
 // TODO: conceptually, RenderCache is not the right place for code that paints
 //       (this is the only place that knows about Tiles, though)
-UINT RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
+uint RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
                             bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement) {
     float zoom = dm->GetZoomReal(pageNo);
     BitmapCacheEntry* entry = Find(dm, pageNo, dm->GetRotation(), zoom, &tile);
-    UINT renderDelay = 0;
+    uint renderDelay = 0;
 
     if (!entry) {
         if (!isRemoteSession) {
@@ -743,7 +743,7 @@ static int cmpTilePosition(const void* a, const void* b) {
     return ta->res != tb->res ? ta->res - tb->res : ta->row != tb->row ? ta->row - tb->row : ta->col - tb->col;
 }
 
-UINT RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo,
+uint RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo,
                         bool* renderOutOfDateCue) {
     CrashIf(!pageInfo->shown || 0.0 == pageInfo->visibleRatio);
 
@@ -783,7 +783,7 @@ UINT RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, Page
 
     Vec<TilePosition> queue;
     queue.Append(TilePosition(0, 0, 0));
-    UINT renderDelayMin = RENDER_DELAY_UNDEFINED;
+    uint renderDelayMin = RENDER_DELAY_UNDEFINED;
     bool neededScaling = false;
 
     while (queue.size() > 0) {
@@ -801,7 +801,7 @@ UINT RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, Page
         }
 
         bool isTargetRes = tile.res == targetRes;
-        UINT renderDelay = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, isTargetRes, renderOutOfDateCue,
+        uint renderDelay = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, isTargetRes, renderOutOfDateCue,
                                      isTargetRes ? &neededScaling : nullptr);
         if (!(isTargetRes && 0 == renderDelay) && tile.res < maxRes) {
             queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2));

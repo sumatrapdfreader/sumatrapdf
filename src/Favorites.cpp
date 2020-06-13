@@ -291,7 +291,7 @@ static WCHAR* FavCompactReadableName(DisplayState* fav, Favorite* fn, bool isCur
     return str::Format(L"%s : %s", fp, rn.Get());
 }
 
-static void AppendFavMenuItems(HMENU m, DisplayState* f, UINT& idx, bool combined, bool isCurrent) {
+static void AppendFavMenuItems(HMENU m, DisplayState* f, int& idx, bool combined, bool isCurrent) {
     CrashIf(!f);
     if (!f) {
         return;
@@ -367,7 +367,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
     AppendMenu(m, MF_SEPARATOR, 0, nullptr);
 
     gFavorites.ResetMenuIds();
-    UINT menuId = CmdFavFirst;
+    int menuId = CmdFavFirst;
 
     size_t menusCount = filePathsSorted.size();
     if (menusCount > MAX_FAV_MENUS) {
@@ -743,7 +743,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     }
     HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, CreatePopupMenu());
     MarkMenuOwnerDraw(popup);
-    UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
+    uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);

@@ -76,7 +76,7 @@ static WCHAR* GetPDFXChangePath() {
 static WCHAR* GetXPSViewerPath() {
     // the XPS-Viewer seems to always be installed into %WINDIR%\system32
     WCHAR buffer[MAX_PATH];
-    UINT res = GetSystemDirectory(buffer, dimof(buffer));
+    uint res = GetSystemDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer)) {
         return nullptr;
     }
@@ -105,7 +105,7 @@ static WCHAR* GetXPSViewerPath() {
 static WCHAR* GetHtmlHelpPath() {
     // the Html Help viewer seems to be installed either into %WINDIR% or %WINDIR%\system32
     WCHAR buffer[MAX_PATH];
-    UINT res = GetWindowsDirectory(buffer, dimof(buffer));
+    uint res = GetWindowsDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer)) {
         return nullptr;
     }

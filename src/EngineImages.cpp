@@ -516,7 +516,7 @@ bool EngineImage::FinishLoading() {
 
 static WCHAR* GetImageProperty(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     WCHAR* value = nullptr;
-    UINT size = bmp->GetPropertyItemSize(id);
+    uint size = bmp->GetPropertyItemSize(id);
     PropertyItem* item = (PropertyItem*)malloc(size);
     Status ok = item ? bmp->GetPropertyItem(id, size, item) : OutOfMemory;
     if (Ok != ok) {
@@ -562,7 +562,7 @@ Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     // extract other frames from multi-page TIFFs and animated GIFs
     CrashIf(!str::Eq(fileExt, L".tif") && !str::Eq(fileExt, L".gif"));
     const GUID* frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
-    UINT frameCount = image->GetFrameCount(frameDimension);
+    uint frameCount = image->GetFrameCount(frameDimension);
     CrashIf((unsigned int)pageNo > frameCount);
     Bitmap* frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!frame) {

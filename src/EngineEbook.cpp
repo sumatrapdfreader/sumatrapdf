@@ -1425,7 +1425,7 @@ class EngineChm : public EngineEbook {
 };
 
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
-static UINT ExtractHttpCharset(const char* html, size_t htmlLen) {
+static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
     if (!strstr(html, "charset=")) {
         return 0;
     }
@@ -1448,7 +1448,7 @@ static UINT ExtractHttpCharset(const char* html, size_t htmlLen) {
 
         static struct {
             const char* name;
-            UINT codepage;
+            uint codepage;
         } codepages[] = {
             {"ISO-8859-1", 1252},  {"Latin1", 1252},   {"CP1252", 1252},   {"Windows-1252", 1252},
             {"ISO-8859-2", 28592}, {"Latin2", 28592},  {"CP1251", 1251},   {"Windows-1251", 1251},

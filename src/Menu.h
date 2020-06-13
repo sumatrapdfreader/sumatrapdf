@@ -15,8 +15,8 @@ struct MenuDef {
 struct MenuOwnerDrawInfo {
     const WCHAR* text = nullptr;
     // copy of MENUITEMINFO fields
-    UINT fType = 0;
-    UINT fState = 0;
+    uint fType = 0;
+    uint fState = 0;
     HBITMAP hbmpChecked = nullptr;
     HBITMAP hbmpUnchecked = nullptr;
     HBITMAP hbmpItem = nullptr;
@@ -34,8 +34,8 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], HMENU menu, int flagFilter = 0);
 HMENU BuildMenu(WindowInfo* win);
 void OnWindowContextMenu(WindowInfo* win, int x, int y);
 void OnAboutContextMenu(WindowInfo* win, int x, int y);
-void OnMenuZoom(WindowInfo* win, UINT menuId);
+void OnMenuZoom(WindowInfo* win, int menuId);
 void OnMenuCustomZoom(WindowInfo* win);
-UINT MenuIdFromVirtualZoom(float virtualZoom);
+int MenuIdFromVirtualZoom(float virtualZoom);
 void UpdateAppMenu(WindowInfo* win, HMENU m);
 void ShowHideMenuBar(WindowInfo* win, bool showTemporarily = false);

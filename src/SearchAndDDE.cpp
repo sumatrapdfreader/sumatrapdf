@@ -454,7 +454,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
 
     Point pt = dm->CvtFromScreen(Point(x, y), pageNo).ToInt();
     AutoFreeWstr srcfilepath;
-    UINT line, col;
+    uint line, col;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
         win->ShowNotification(_TR("No synchronization info at this position"));
@@ -499,7 +499,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, UINT line, UINT col, UINT ret, UINT page,
+void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, uint col, uint ret, uint page,
                              Vec<Rect>& rects) {
     UNUSED(col);
     CrashIf(!win->AsFixed());

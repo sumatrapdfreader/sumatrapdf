@@ -1,8 +1,8 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define RENDER_DELAY_UNDEFINED ((UINT)-1)
-#define RENDER_DELAY_FAILED ((UINT)-2)
+#define RENDER_DELAY_UNDEFINED ((uint)-1)
+#define RENDER_DELAY_FAILED ((uint)-2)
 #define INVALID_TILE_RES ((USHORT)-1)
 
 #define MAX_PAGE_REQUESTS 8
@@ -121,7 +121,7 @@ class RenderCache {
     // returns how much time in ms has past since the most recent rendering
     // request for the visible part of the page if nothing at all could be
     // painted, 0 if something has been painted and RENDER_DELAY_FAILED on failure
-    UINT Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo, bool* renderOutOfDateCue);
+    uint Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo, bool* renderOutOfDateCue);
 
     /* Interface for page rendering thread */
     HANDLE startRendering = nullptr;
@@ -137,7 +137,7 @@ class RenderCache {
     bool IsRenderQueueFull() const {
         return requestCount == MAX_PAGE_REQUESTS;
     }
-    UINT GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
+    uint GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile = nullptr,
                 RectD* pageRect = nullptr, RenderingCallback* callback = nullptr);
@@ -154,6 +154,6 @@ class RenderCache {
         FreePage();
     }
 
-    UINT PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
+    uint PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
                    bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);
 };

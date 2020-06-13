@@ -79,7 +79,7 @@ std::span<u8> ChmDoc::GetData(const char* fileNameIn) {
     return {data, len};
 }
 
-char* ChmDoc::ToUtf8(const u8* text, UINT overrideCP) {
+char* ChmDoc::ToUtf8(const u8* text, uint overrideCP) {
     const char* s = (char*)text;
     if (str::StartsWith(s, UTF8_BOM)) {
         return str::Dup(s + 3);
@@ -154,11 +154,11 @@ void ChmDoc::ParseWindowsData() {
 
 #define CP_CHM_DEFAULT 1252
 
-static UINT LcidToCodepage(DWORD lcid) {
+static uint LcidToCodepage(DWORD lcid) {
     // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
     static struct {
         DWORD lcid;
-        UINT codepage;
+        uint codepage;
     } lcidToCodepage[] = {
         {1025, 1256}, {2052, 936},  {1028, 950},  {1029, 1250}, {1032, 1253}, {1037, 1255}, {1038, 1250}, {1041, 932},
         {1042, 949},  {1045, 1250}, {1049, 1251}, {1051, 1250}, {1060, 1250}, {1055, 1254}, {1026, 1251}, {4, 936},
@@ -246,7 +246,7 @@ char* ChmDoc::ResolveTopicID(unsigned int id) {
     return nullptr;
 }
 
-void ChmDoc::FixPathCodepage(AutoFree& path, UINT& fileCP) {
+void ChmDoc::FixPathCodepage(AutoFree& path, uint& fileCP) {
     if (!path || HasData(path)) {
         return;
     }
@@ -275,7 +275,7 @@ bool ChmDoc::Load(const WCHAR* fileName) {
         return false;
     }
 
-    UINT fileCodepage = codepage;
+    uint fileCodepage = codepage;
     char header[24] = {0};
     int n = file::ReadN(fileName, header, sizeof(header));
     if (n < (int)sizeof(header)) {
@@ -354,7 +354,7 @@ Vec<char*>* ChmDoc::GetAllPaths() {
 <li>
   ... siblings ...
 */
-static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp, int level) {
+static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, int level) {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     AutoFreeWstr name, local;
@@ -401,7 +401,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp, 
 <li>
   ... siblings ...
 */
-static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp, int level) {
+static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, int level) {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     WStrVec references;
@@ -450,7 +450,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp
     return true;
 }
 
-static void WalkChmTocOrIndex(EbookTocVisitor* visitor, HtmlElement* list, UINT cp, bool isIndex, int level = 1) {
+static void WalkChmTocOrIndex(EbookTocVisitor* visitor, HtmlElement* list, uint cp, bool isIndex, int level = 1) {
     CrashIf(Tag_Ul != list->tag);
 
     // some broken ToCs wrap every <li> into its own <ul>
@@ -481,7 +481,7 @@ static void WalkChmTocOrIndex(EbookTocVisitor* visitor, HtmlElement* list, UINT 
 }
 
 // ignores any <ul><li> list structure and just extracts a linear list of <object type="text/sitemap">...</object>
-static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, HtmlParser& p, UINT cp, bool isIndex) {
+static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, HtmlParser& p, uint cp, bool isIndex) {
     bool hadOne = false;
 
     HtmlElement* el = p.FindElementByName("body");
@@ -509,7 +509,7 @@ bool ChmDoc::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool is
     const char* html = htmlData.Get();
 
     HtmlParser p;
-    UINT cp = codepage;
+    uint cp = codepage;
     // detect UTF-8 content by BOM
     if (str::StartsWith(html, UTF8_BOM)) {
         html += 3;

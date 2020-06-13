@@ -556,7 +556,7 @@ static void EnableAndShow(WindowBase* w, bool enable) {
 static Size SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s) {
     b->SetText(s);
     Size size = b->GetIdealSize();
-    UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED;
+    uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED;
     SetWindowPos(b->hwnd, nullptr, 0, 0, size.dx, size.dy, flags);
     return size;
 }
@@ -703,7 +703,7 @@ static void OnCreateWindow(HWND hwnd) {
     btnSize = gButtonOptions->GetIdealSize();
     int x = WINDOW_MARGIN;
     int y = r.dy - btnSize.dy - WINDOW_MARGIN;
-    UINT flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW;
+    uint flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW;
     SetWindowPos(gButtonOptions->hwnd, nullptr, x, y, 0, 0, flags);
 
     gButtonDy = btnSize.dy;
@@ -1045,7 +1045,7 @@ int RunInstaller(Flags* cli) {
         char* msg =
             "You're installing 32-bit SumatraPDF on 64-bit OS. Are you sure?\nPress 'Ok' to proceed.\nPress 'Cancel' "
             "to download 64-bit version.";
-        UINT flags = MB_ICONERROR | MB_OK | MB_OKCANCEL;
+        uint flags = MB_ICONERROR | MB_OK | MB_OKCANCEL;
         flags |= MB_SETFOREGROUND | MB_TOPMOST;
         int res = MessageBoxA(nullptr, msg, "SumatraPDF Installer", flags);
         if (IDCANCEL == res) {
