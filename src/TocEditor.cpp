@@ -188,12 +188,12 @@ static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
 
 // clang-format off
 static MenuDef menuDefContext[] = {
-    {_TR_TODON("Edit"),                    IDM_EDIT, 0},
-    {_TR_TODON("Add sibling"),             IDM_ADD_SIBLING, 0},
-    {_TR_TODON("Add child"),               IDM_ADD_CHILD, 0},
-    {_TR_TODON("Add PDF as a child"),      IDM_ADD_PDF_CHILD, 0},
-    {_TR_TODON("Add PDF as a sibling"),    IDM_ADD_PDF_SIBLING, 0},
-    {_TR_TODON("Remove Item"),             IDM_REMOVE, 0},
+    {_TR_TODON("Edit"),                    (uint)Cmd::Edit, 0},
+    {_TR_TODON("Add sibling"),             (uint)Cmd::AddSibling, 0},
+    {_TR_TODON("Add child"),               (uint)Cmd::AddChild, 0},
+    {_TR_TODON("Add PDF as a child"),      (uint)Cmd::AddPdfChild, 0},
+    {_TR_TODON("Add PDF as a sibling"),    (uint)Cmd::AddPdfSibling, 0},
+    {_TR_TODON("Remove Item"),             (uint)Cmd::Remove, 0},
     { 0, 0, 0 },
 };
 // clang-format on
@@ -477,30 +477,30 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
     if (!CanRemoveTocItem(treeCtrl, selectedTocItem)) {
-        win::menu::SetEnabled(popup, IDM_REMOVE, false);
+        win::menu::SetEnabled(popup, (uint)Cmd::Remove, false);
     }
 
     bool canAddPdfChild = CanAddPdfAsChild(selectedTocItem);
     bool canAddPdfSibling = CanAddPdfAsSibling(selectedTocItem);
 
     if (!canAddPdfChild) {
-        win::menu::SetEnabled(popup, IDM_ADD_PDF_CHILD, false);
+        win::menu::SetEnabled(popup, (uint)Cmd::AddPdfChild, false);
     }
     if (!canAddPdfSibling) {
-        win::menu::SetEnabled(popup, IDM_ADD_PDF_SIBLING, false);
+        win::menu::SetEnabled(popup, (uint)Cmd::AddPdfSibling, false);
     }
 
     MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
-    INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
+    int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
     switch (cmd) {
-        case IDM_EDIT:
+        case (int)Cmd::Edit:
             StartEditTocItem(mainWindow->hwnd, treeCtrl, selectedTocItem);
             break;
-        case IDM_ADD_SIBLING:
-        case IDM_ADD_CHILD: {
+        case (int)Cmd::AddSibling:
+        case (int)Cmd::AddChild: {
             TocEditArgs* editArgs = new TocEditArgs();
             TocItem* fileParent = FindFileParentItem(selectedTocItem);
             if (fileParent) {
@@ -512,9 +512,9 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
                     // was cancelled or invalid
                     return;
                 }
-                if (cmd == IDM_ADD_SIBLING) {
+                if (cmd == (int)Cmd::AddSibling) {
                     selectedTocItem->AddSibling(ti);
-                } else if (cmd == IDM_ADD_CHILD) {
+                } else if (cmd == (int)Cmd::AddChild) {
                     selectedTocItem->AddChild(ti);
                 } else {
                     CrashMe();
@@ -523,13 +523,13 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
                 UpdateTreeModel();
             });
         } break;
-        case IDM_ADD_PDF_CHILD:
+        case (int)Cmd::AddPdfChild:
             AddPdfAsChild(selectedTocItem);
             break;
-        case IDM_ADD_PDF_SIBLING:
+        case (int)Cmd::AddPdfSibling:
             AddPdfAsSibling(selectedTocItem);
             break;
-        case IDM_REMOVE:
+        case (int)Cmd::Remove:
             RemoveTocItem(selectedTocItem, true);
             break;
     }

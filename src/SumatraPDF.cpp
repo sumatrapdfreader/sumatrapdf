@@ -4399,7 +4399,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case IDM_CHANGE_LANGUAGE:
+        case (int)Cmd::ChangeLanguage:
             OnMenuChangeLanguage(win->hwndFrame);
             break;
 
@@ -4479,11 +4479,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuFindSel(win, TextSearchDirection::Backward);
             break;
 
-        case IDM_VISIT_WEBSITE:
+        case (int)Cmd::VisitWebsite:
             SumatraLaunchBrowser(WEBSITE_MAIN_URL);
             break;
 
-        case IDM_MANUAL:
+        case (int)Cmd::Manual:
             SumatraLaunchBrowser(WEBSITE_MANUAL_URL);
             break;
 
@@ -4491,7 +4491,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             SumatraLaunchBrowser(WEBSITE_TRANSLATIONS_URL);
             break;
 
-        case IDM_ABOUT:
+        case (int)Cmd::About:
 #ifdef ENABLE_ALTERNATIVE_ABOUT_DIALOG
             OnMenuAbout2();
 #else
@@ -4499,11 +4499,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 #endif
             break;
 
-        case IDM_CHECK_UPDATE:
+        case (int)Cmd::CheckUpdate:
             UpdateCheckAsync(win, false);
             break;
 
-        case IDM_OPTIONS:
+        case (int)Cmd::Options:
             OnMenuOptions(win);
             break;
 

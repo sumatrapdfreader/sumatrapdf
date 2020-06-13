@@ -189,13 +189,13 @@ static MenuDef menuDefZoom[] = {
 
 //[ ACCESSKEY_GROUP Settings Menu
 static MenuDef menuDefSettings[] = {
-    { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0 },
+    { _TRN("Change Language"),              (UINT)Cmd::ChangeLanguage,        0 },
 #if 0
-    { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_REQ_DISK_ACCESS },
+    { _TRN("Contribute Translation"),       (UINT)IDM_CONTRIBUTE_TRANSLATION, MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
 #endif
-    { _TRN("&Options..."),                  IDM_OPTIONS,                MF_REQ_PREF_ACCESS },
-    { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
+    { _TRN("&Options..."),                  (UINT)Cmd::Options,                MF_REQ_PREF_ACCESS },
+    { _TRN("&Advanced Options..."),         (UINT)Cmd::AdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Settings Menu
@@ -203,34 +203,34 @@ static MenuDef menuDefSettings[] = {
 //[ ACCESSKEY_GROUP Favorites Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 MenuDef menuDefFavorites[] = {
-    { _TRN("Add to favorites"),             IDM_FAV_ADD,                0 },
-    { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 },
-    { _TRN("Show Favorites"),               IDM_FAV_TOGGLE,             MF_REQ_DISK_ACCESS },
+    { _TRN("Add to favorites"),             (UINT)IDM_FAV_ADD,                0 },
+    { _TRN("Remove from favorites"),        (UINT)IDM_FAV_DEL,                0 },
+    { _TRN("Show Favorites"),               (UINT)IDM_FAV_TOGGLE,             MF_REQ_DISK_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Favorites Menu
 
 //[ ACCESSKEY_GROUP Help Menu
 static MenuDef menuDefHelp[] = {
-    { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_REQ_DISK_ACCESS },
-    { _TRN("&Manual"),                      IDM_MANUAL,                 MF_REQ_DISK_ACCESS },
-    { _TRN("Check for &Updates"),           IDM_CHECK_UPDATE,           MF_REQ_INET_ACCESS },
+    { _TRN("Visit &Website"),               (UINT)Cmd::VisitWebsite,          MF_REQ_DISK_ACCESS },
+    { _TRN("&Manual"),                      (UINT)Cmd::Manual,                 MF_REQ_DISK_ACCESS },
+    { _TRN("Check for &Updates"),           (UINT)Cmd::CheckUpdate,           MF_REQ_INET_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("&About"),                       IDM_ABOUT,                  0 },
+    { _TRN("&About"),                       (UINT)Cmd::About,                  0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Help Menu
 
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
-    { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
-    { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
-    { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
-    { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
-    { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
-    { "Download symbols",                   IDM_DEBUG_DOWNLOAD_SYMBOLS, MF_NO_TRANSLATE },
-    { "Test app",                           IDM_DEBUG_TEST_APP,         MF_NO_TRANSLATE },
-    { "Show notification",                  IDM_DEBUG_SHOW_NOTIF,       MF_NO_TRANSLATE },
+    { _TRN("&Advanced Options..."),         (UINT)IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
+    { "Highlight links",                    (UINT)IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
+    { "Toggle ebook UI",                    (UINT)IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
+    { "Mui debug paint",                    (UINT)IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
+    { "Annotation from Selection",          (UINT)IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
+    { "Download symbols",                   (UINT)IDM_DEBUG_DOWNLOAD_SYMBOLS, MF_NO_TRANSLATE },
+    { "Test app",                           (UINT)IDM_DEBUG_TEST_APP,         MF_NO_TRANSLATE },
+    { "Show notification",                  (UINT)IDM_DEBUG_SHOW_NOTIF,       MF_NO_TRANSLATE },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Debug Menu
@@ -1207,7 +1207,7 @@ HMENU BuildMenu(WindowInfo* win) {
 
     m = BuildMenuFromMenuDef(menuDefSettings, CreateMenu(), filter);
     if (gIsRaMicroBuild) {
-        win::menu::Remove(m, IDM_CHANGE_LANGUAGE);
+        win::menu::Remove(m, (uint)Cmd::ChangeLanguage);
         win::menu::Remove(m, IDM_ADVANCED_OPTIONS);
     }
 #if defined(ENABLE_THEME)
