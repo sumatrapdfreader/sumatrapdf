@@ -97,7 +97,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("Save S&hortcut...\tCtrl+Shift+S"), (UINT)IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
 #else
-    { _TRN("Re&name...\tF2"),               (UINT)IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS },
+    { _TRN("Re&name...\tF2"),               (UINT)Cmd::RenameFile,            MF_REQ_DISK_ACCESS },
 #endif
 //] ACCESSKEY_ALTERNATIVE
     { _TRN("&Print...\tCtrl+P"),            (UINT)Cmd::Print,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
@@ -153,8 +153,8 @@ static MenuDef menuDefGoTo[] = {
     { _TRN("&Last Page\tEnd"),              (UINT)Cmd::GoToLastPage,         0 },
     { _TRN("Pa&ge...\tCtrl+G"),             (UINT)Cmd::GoToPage,              0 },
     { SEP_ITEM,                             0,                          0 },
-    { _TRN("&Back\tAlt+Left Arrow"),        (UINT)IDM_GOTO_NAV_BACK,          0 },
-    { _TRN("F&orward\tAlt+Right Arrow"),    (UINT)IDM_GOTO_NAV_FORWARD,       0 },
+    { _TRN("&Back\tAlt+Left Arrow"),        (UINT)Cmd::GoToNavBack,          0 },
+    { _TRN("F&orward\tAlt+Right Arrow"),    (UINT)Cmd::GoToNavForward,       0 },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
     { _TRN("Fin&d...\tCtrl+F"),             (UINT)Cmd::FindFirst,             MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
@@ -203,9 +203,9 @@ static MenuDef menuDefSettings[] = {
 //[ ACCESSKEY_GROUP Favorites Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 MenuDef menuDefFavorites[] = {
-    { _TRN("Add to favorites"),             (UINT)IDM_FAV_ADD,                0 },
-    { _TRN("Remove from favorites"),        (UINT)IDM_FAV_DEL,                0 },
-    { _TRN("Show Favorites"),               (UINT)IDM_FAV_TOGGLE,             MF_REQ_DISK_ACCESS },
+    { _TRN("Add to favorites"),             (UINT)Cmd::FavAdd,                0 },
+    { _TRN("Remove from favorites"),        (UINT)Cmd::FavDel,                0 },
+    { _TRN("Show Favorites"),               (UINT)Cmd::FavToggle,             MF_REQ_DISK_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Favorites Menu
@@ -223,14 +223,14 @@ static MenuDef menuDefHelp[] = {
 
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
-    { _TRN("&Advanced Options..."),         (UINT)IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
-    { "Highlight links",                    (UINT)IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
-    { "Toggle ebook UI",                    (UINT)IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
-    { "Mui debug paint",                    (UINT)IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
-    { "Annotation from Selection",          (UINT)IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
-    { "Download symbols",                   (UINT)IDM_DEBUG_DOWNLOAD_SYMBOLS, MF_NO_TRANSLATE },
-    { "Test app",                           (UINT)IDM_DEBUG_TEST_APP,         MF_NO_TRANSLATE },
-    { "Show notification",                  (UINT)IDM_DEBUG_SHOW_NOTIF,       MF_NO_TRANSLATE },
+    { _TRN("&Advanced Options..."),         (UINT)Cmd::AdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
+    { "Highlight links",                    (UINT)Cmd::DebugShowLinks,       MF_NO_TRANSLATE },
+    { "Toggle ebook UI",                    (UINT)Cmd::DebugEbookUI,         MF_NO_TRANSLATE },
+    { "Mui debug paint",                    (UINT)Cmd::DebugMui,              MF_NO_TRANSLATE },
+    { "Annotation from Selection",          (UINT)Cmd::DebugAnnotations,       MF_NO_TRANSLATE },
+    { "Download symbols",                   (UINT)Cmd::DebugDownloadSymbols, MF_NO_TRANSLATE },
+    { "Test app",                           (UINT)Cmd::DebugTestApp,         MF_NO_TRANSLATE },
+    { "Show notification",                  (UINT)Cmd::DebugShowNotif,       MF_NO_TRANSLATE },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Debug Menu
@@ -239,24 +239,24 @@ static MenuDef menuDefDebug[] = {
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
     { _TRN("&Copy Selection"),              (UINT)Cmd::CopySelection,         MF_REQ_ALLOW_COPY },
-    { _TRN("Copy &Link Address"),           (UINT)Cmd::CopyLinkTarget,       MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Link Address"),           (UINT)Cmd::CopyLinkTarget,        MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                (UINT)Cmd::CopyComment,           MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Image"),                  (UINT)Cmd::CopyImage,             MF_REQ_ALLOW_COPY },
     { _TRN("Select &All"),                  (UINT)Cmd::SelectAll,             MF_REQ_ALLOW_COPY },
-    { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
+    { SEP_ITEM,                             0,                                MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
-    {"add",                                 (UINT)IDM_FAV_ADD,                MF_NO_TRANSLATE   },
-    {"del",                                 (UINT)IDM_FAV_DEL,                MF_NO_TRANSLATE   },
-    { _TRN("Show &Favorites"),              (UINT)IDM_FAV_TOGGLE,             0                 },
+    {"add",                                 (UINT)Cmd::FavAdd,                MF_NO_TRANSLATE   },
+    {"del",                                 (UINT)Cmd::FavDel,                MF_NO_TRANSLATE   },
+    { _TRN("Show &Favorites"),              (UINT)Cmd::FavToggle,             0                 },
     { _TRN("Show &Bookmarks\tF12"),         (UINT)Cmd::ViewBookmarks,         0                 },
-    { _TRN("Show &Toolbar\tF8"),            (UINT)Cmd::ViewShowHideToolbar, MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Save Annotations"),             (UINT)Cmd::SaveAnnotationsSmx,   MF_REQ_DISK_ACCESS },
+    { _TRN("Show &Toolbar\tF8"),            (UINT)Cmd::ViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Save Annotations"),             (UINT)Cmd::SaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
     { _TR_TODON("Edit Annotations"),        (UINT)Cmd::EditAnnotations,       MF_REQ_DISK_ACCESS },
-    {"New Bookmarks",                       (UINT)IDM_NEW_BOOKMARKS,          MF_NO_TRANSLATE},
-    { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
-    { _TRN("&Save As..."),                  (UINT)Cmd::SaveAs,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
-    { _TRN("&Print..."),                    (UINT)Cmd::Print,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
-    { _TRN("P&roperties"),                  (UINT)Cmd::Properties,             MF_PLUGIN_MODE_ONLY },
+    {"New Bookmarks",                       (UINT)Cmd::NewBookmarks,          MF_NO_TRANSLATE},
+    { SEP_ITEM,                             0,                                MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
+    { _TRN("&Save As..."),                  (UINT)Cmd::SaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
+    { _TRN("&Print..."),                    (UINT)Cmd::Print,                 MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
+    { _TRN("P&roperties"),                  (UINT)Cmd::Properties,            MF_PLUGIN_MODE_ONLY },
     { _TRN("E&xit Fullscreen"),             (UINT)Cmd::ExitFullScreen,        0 },
     { 0, 0, 0 },
 };
@@ -515,8 +515,8 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
         (UINT)Cmd::GoToPrevPage,
         (UINT)Cmd::GoToFirstPage,
         (UINT)Cmd::GoToLastPage,
-        (UINT)IDM_GOTO_NAV_BACK,
-        (UINT)IDM_GOTO_NAV_FORWARD,
+        (UINT)Cmd::GoToNavBack,
+        (UINT)Cmd::GoToNavForward,
         (UINT)Cmd::GoToPage,
         (UINT)Cmd::FindFirst,
         (UINT)Cmd::SaveAs,
@@ -529,16 +529,16 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
         (UINT)Cmd::ViewWithAcrobat,
         (UINT)Cmd::ViewWithFoxIt,
         (UINT)Cmd::ViewWithPdfXchange,
-        (UINT)IDM_RENAME_FILE,
+        (UINT)Cmd::RenameFile,
         (UINT)Cmd::ShowInFolder,
-        (UINT)IDM_DEBUG_ANNOTATION,
+        (UINT)Cmd::DebugAnnotations,
         // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
         // are removed instead of disabled (and can remain enabled
         // for broken XPS/CHM documents)
     };
     // this list coincides with menusToEnableIfBrokenPDF
     static UINT menusToDisableIfDirectory[] = {
-        (UINT)IDM_RENAME_FILE,    (UINT)Cmd::SendByEmail,        (UINT)Cmd::ViewWithAcrobat,
+        (UINT)Cmd::RenameFile, (UINT)Cmd::SendByEmail,        (UINT)Cmd::ViewWithAcrobat,
         (UINT)Cmd::ViewWithFoxIt, (UINT)Cmd::ViewWithPdfXchange, (UINT)Cmd::ShowInFolder,
     };
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
@@ -563,14 +563,14 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->showToc;
     win::menu::SetChecked(win->menu, (UINT)Cmd::ViewBookmarks, checked);
 
-    win::menu::SetChecked(win->menu, IDM_FAV_TOGGLE, gGlobalPrefs->showFavorites);
+    win::menu::SetChecked(win->menu, (UINT)Cmd::FavToggle, gGlobalPrefs->showFavorites);
     win::menu::SetChecked(win->menu, (UINT)Cmd::ViewShowHideToolbar, gGlobalPrefs->showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
     if (win->IsDocLoaded() && tab) {
-        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, tab->ctrl->CanNavigate(-1));
-        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, tab->ctrl->CanNavigate(1));
+        win::menu::SetEnabled(win->menu, (UINT)Cmd::GoToNavBack, tab->ctrl->CanNavigate(-1));
+        win::menu::SetEnabled(win->menu, (UINT)Cmd::GoToNavForward, tab->ctrl->CanNavigate(1));
     }
 
     // TODO: is this check too expensive?
@@ -595,7 +595,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     }
 
     if (win->IsDocLoaded() && !fileExists) {
-        win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
+        win::menu::SetEnabled(win->menu, (UINT)Cmd::RenameFile, false);
     }
 
 #if defined(ENABLE_THEME)
@@ -603,10 +603,10 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
                        IDM_CHANGE_THEME_FIRST + GetCurrentThemeIndex(), MF_BYCOMMAND);
 #endif
 
-    win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
-    win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
-    win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
-    win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION,
+    win::menu::SetChecked(win->menu, (UINT)Cmd::DebugShowLinks, gDebugShowLinks);
+    win::menu::SetChecked(win->menu, (UINT)Cmd::DebugEbookUI, gGlobalPrefs->ebookUI.useFixedPageUI);
+    win::menu::SetChecked(win->menu, (UINT)Cmd::DebugMui, mui::IsDebugPaint());
+    win::menu::SetEnabled(win->menu, (UINT)Cmd::DebugAnnotations,
                           tab && tab->selectionOnPage && win->showSelection && engine && engine->supportsAnnotations);
 }
 
@@ -682,12 +682,12 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(win);
     if (!showBookmarksMenu) {
-        win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
+        win::menu::Remove(popup, (UINT)Cmd::NewBookmarks);
     } else {
         auto path = tab->filePath.get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
-            win::menu::SetText(popup, IDM_NEW_BOOKMARKS, _TR_TODO("Edit Bookmarks"));
+            win::menu::SetText(popup, (UINT)Cmd::NewBookmarks, _TR_TODO("Edit Bookmarks"));
         }
     }
 
@@ -712,8 +712,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetEnabled(popup, (UINT)Cmd::ViewBookmarks, win->ctrl->HacToc());
     win::menu::SetChecked(popup, (UINT)Cmd::ViewBookmarks, win->tocVisible);
 
-    win::menu::SetEnabled(popup, IDM_FAV_TOGGLE, HasFavorites());
-    win::menu::SetChecked(popup, IDM_FAV_TOGGLE, gGlobalPrefs->showFavorites);
+    win::menu::SetEnabled(popup, (UINT)Cmd::FavToggle, HasFavorites());
+    win::menu::SetChecked(popup, (UINT)Cmd::FavToggle, gGlobalPrefs->showFavorites);
 
     bool supportsAnnotations = false;
     EngineBase* engine = dm->GetEngine();
@@ -736,23 +736,23 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
-            win::menu::Remove(popup, IDM_FAV_ADD);
+            win::menu::Remove(popup, (UINT)Cmd::FavAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Remove page %s from favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, IDM_FAV_DEL, s);
+            win::menu::SetText(popup, (UINT)Cmd::FavDel, s);
         } else {
-            win::menu::Remove(popup, IDM_FAV_DEL);
+            win::menu::Remove(popup, (UINT)Cmd::FavDel);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Add page %s to favorites\tCtrl+B");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, IDM_FAV_ADD, s);
+            win::menu::SetText(popup, (UINT)Cmd::FavAdd, s);
         }
     } else {
-        win::menu::Remove(popup, IDM_FAV_ADD);
-        win::menu::Remove(popup, IDM_FAV_DEL);
+        win::menu::Remove(popup, (UINT)Cmd::FavAdd);
+        win::menu::Remove(popup, (UINT)Cmd::FavDel);
     }
 
     // if toolbar is not shown, add option to show it
@@ -774,11 +774,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case (UINT)Cmd::SaveAs:
         case (UINT)Cmd::Print:
         case (UINT)Cmd::ViewBookmarks:
-        case IDM_FAV_TOGGLE:
+        case (UINT)Cmd::FavToggle:
         case (UINT)Cmd::Properties:
         case (UINT)Cmd::ViewShowHideToolbar:
         case (UINT)Cmd::SaveAnnotationsSmx:
-        case IDM_NEW_BOOKMARKS:
+        case (UINT)Cmd::NewBookmarks:
             SendMessageW(win->hwndFrame, WM_COMMAND, cmd, 0);
             break;
         case (UINT)Cmd::EditAnnotations:
@@ -798,10 +798,10 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
                 delete bmp;
             }
             break;
-        case IDM_FAV_ADD:
+        case (UINT)Cmd::FavAdd:
             AddFavoriteForCurrentPage(win);
             break;
-        case IDM_FAV_DEL:
+        case (UINT)Cmd::FavDel:
             DelFavorite(filePath, pageNo);
             break;
         case (UINT)Cmd::ExitFullScreen:
@@ -1208,7 +1208,7 @@ HMENU BuildMenu(WindowInfo* win) {
     m = BuildMenuFromMenuDef(menuDefSettings, CreateMenu(), filter);
     if (gIsRaMicroBuild) {
         win::menu::Remove(m, (uint)Cmd::ChangeLanguage);
-        win::menu::Remove(m, IDM_ADVANCED_OPTIONS);
+        win::menu::Remove(m, (UINT)Cmd::AdvancedOptions);
     }
 #if defined(ENABLE_THEME)
     // Build the themes sub-menu of the settings menu
@@ -1234,16 +1234,16 @@ HMENU BuildMenu(WindowInfo* win) {
     if (gShowDebugMenu) {
         m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
         if (!gIsRaMicroBuild) {
-            win::menu::Remove(m, IDM_ADVANCED_OPTIONS);
+            win::menu::Remove(m, (UINT)Cmd::AdvancedOptions);
         }
 
         if (!gIsDebugBuild) {
-            RemoveMenu(m, IDM_DEBUG_TEST_APP, MF_BYCOMMAND);
+            RemoveMenu(m, (UINT)Cmd::DebugTestApp, MF_BYCOMMAND);
         }
 
         if (gAddCrashMeMenu) {
             AppendMenu(m, MF_SEPARATOR, 0, nullptr);
-            AppendMenuA(m, MF_STRING, (UINT_PTR)IDM_DEBUG_CRASH_ME, "Crash me");
+            AppendMenuA(m, MF_STRING, (UINT_PTR)(UINT)Cmd::DebugCrashMe, "Crash me");
         }
 
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");

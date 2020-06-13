@@ -3756,7 +3756,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
 #ifdef DEBUG
     } else if (VK_F1 == key && win->AsEbook()) {
         // TODO: this was in EbookWindow - is it still needed?
-        SendMessageW(win->hwndFrame, WM_COMMAND, IDM_DEBUG_MUI, 0);
+        SendMessageW(win->hwndFrame, WM_COMMAND, (UINT)Cmd::DebugMui, 0);
 #endif
     } else {
         return false;
@@ -4286,7 +4286,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuSaveAs(win);
             break;
 
-        case IDM_RENAME_FILE:
+        case (int)Cmd::RenameFile:
             OnMenuRenameFile(win);
             break;
 
@@ -4389,7 +4389,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             StartEditAnnotations(win->currentTab);
             break;
 
-        case IDM_NEW_BOOKMARKS:
+        case (int)Cmd::NewBookmarks:
             StartTocEditorForWindowInfo(win);
             break;
 
@@ -4471,11 +4471,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuFindMatchCase(win);
             break;
 
-        case IDM_FIND_NEXT_SEL:
+        case (int)Cmd::FindNextSel:
             OnMenuFindSel(win, TextSearchDirection::Forward);
             break;
 
-        case IDM_FIND_PREV_SEL:
+        case (int)Cmd::FindPrevSel:
             OnMenuFindSel(win, TextSearchDirection::Backward);
             break;
 
@@ -4507,7 +4507,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuOptions(win);
             break;
 
-        case IDM_ADVANCED_OPTIONS:
+        case (int)Cmd::AdvancedOptions:
             OnMenuAdvancedOptions();
             break;
 
@@ -4539,7 +4539,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuProperties(win);
             break;
 
-        case IDM_MOVE_FRAME_FOCUS:
+        case (int)Cmd::MoveFrameFocus:
             if (!IsFocused(win->hwndFrame)) {
                 SetFocus(win->hwndFrame);
             } else if (win->tocVisible) {
@@ -4547,13 +4547,13 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case IDM_GOTO_NAV_BACK:
+        case (int)Cmd::GoToNavBack:
             if (win->IsDocLoaded()) {
                 ctrl->Navigate(-1);
             }
             break;
 
-        case IDM_GOTO_NAV_FORWARD:
+        case (int)Cmd::GoToNavForward:
             if (win->IsDocLoaded()) {
                 ctrl->Navigate(1);
             }
@@ -4578,62 +4578,62 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnSelectAll(win);
             break;
 
-        case IDM_DEBUG_SHOW_LINKS:
+        case (int)Cmd::DebugShowLinks:
             gDebugShowLinks = !gDebugShowLinks;
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }
             break;
 
-        case IDM_DEBUG_EBOOK_UI:
+        case (int)Cmd::DebugEbookUI:
             gGlobalPrefs->ebookUI.useFixedPageUI = !gGlobalPrefs->ebookUI.useFixedPageUI;
             // use the same setting to also toggle the CHM UI
             gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
             break;
 
-        case IDM_DEBUG_DOWNLOAD_SYMBOLS:
+        case (int)Cmd::DebugDownloadSymbols:
             DownloadDebugSymbols();
             break;
 
-        case IDM_DEBUG_MUI: {
+        case (int)Cmd::DebugMui: {
             mui::SetDebugPaint(!mui::IsDebugPaint());
             bool isChecked = !mui::IsDebugPaint();
             HMENU m = GetMenu(win->hwndFrame);
-            win::menu::SetChecked(m, IDM_DEBUG_MUI, isChecked);
+            win::menu::SetChecked(m, (int)Cmd::DebugMui, isChecked);
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }
         } break;
 
-        case IDM_DEBUG_ANNOTATION:
+        case (int)Cmd::DebugAnnotations:
             FrameOnChar(win, 'h');
             break;
 
-        case IDM_DEBUG_TEST_APP:
+        case (int)Cmd::DebugTestApp:
             extern void TestApp(HINSTANCE hInstance);
             TestApp(GetModuleHandle(nullptr));
             break;
-        case IDM_DEBUG_SHOW_NOTIF: {
+        case (int)Cmd::DebugShowNotif: {
             auto wnd = win->ShowNotification(L"This is a notification", NOS_PERSIST);
             // TODO: this notification covers previous
             // win->ShowNotification(L"This is a second notification\nMy friend.");
         } break;
 
-        case IDM_DEBUG_CRASH_ME:
+        case (int)Cmd::DebugCrashMe:
             CrashMe();
             break;
 
-        case IDM_FAV_ADD:
+        case (int)Cmd::FavAdd:
             AddFavoriteForCurrentPage(win);
             break;
 
-        case IDM_FAV_DEL:
+        case (int)Cmd::FavDel:
             if (win->IsDocLoaded()) {
                 DelFavorite(ctrl->FilePath(), win->currPageNo);
             }
             break;
 
-        case IDM_FAV_TOGGLE:
+        case (int)Cmd::FavToggle:
             ToggleFavorites(win);
             break;
 
@@ -4719,10 +4719,10 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TRUE so as to not make them bubble up further
             switch (GET_APPCOMMAND_LPARAM(lp)) {
                 case APPCOMMAND_BROWSER_BACKWARD:
-                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)IDM_GOTO_NAV_BACK, 0);
+                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::GoToNavBack, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FORWARD:
-                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)IDM_GOTO_NAV_FORWARD, 0);
+                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::GoToNavForward, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_REFRESH:
                     SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::Refresh, 0);

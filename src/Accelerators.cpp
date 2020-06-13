@@ -11,7 +11,7 @@
 // TODO: should FVIRTKEY be set for chars like 'A'
 ACCEL gAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'A', (WORD)Cmd::SelectAll},
-    {FCONTROL | FVIRTKEY, 'B', (WORD)IDM_FAV_ADD},
+    {FCONTROL | FVIRTKEY, 'B', (WORD)Cmd::FavAdd},
     {FCONTROL | FVIRTKEY, 'C', (WORD)Cmd::CopySelection},
     {FCONTROL | FVIRTKEY, 'D', (WORD)Cmd::Properties},
     {FCONTROL | FVIRTKEY, 'F', (WORD)Cmd::FindFirst},
@@ -46,14 +46,14 @@ ACCEL gAccelerators[] = {
     {FCONTROL | FVIRTKEY, VK_OEM_PLUS, (WORD)IDT_VIEW_ZOOMIN},
     {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_PLUS, (WORD)Cmd::ViewRotateRight},
     {FCONTROL | FVIRTKEY, VK_INSERT, (WORD)Cmd::CopySelection},
-    {FVIRTKEY, VK_F2, (WORD)IDM_RENAME_FILE},
+    {FVIRTKEY, VK_F2, (WORD)Cmd::RenameFile},
     {FVIRTKEY, VK_F3, (WORD)Cmd::FindNext},
     {FSHIFT | FVIRTKEY, VK_F3, (WORD)Cmd::FindPrev},
-    {FCONTROL | FVIRTKEY, VK_F3, (WORD)IDM_FIND_NEXT_SEL},
-    {FSHIFT | FCONTROL | FVIRTKEY, VK_F3, (WORD)IDM_FIND_PREV_SEL},
+    {FCONTROL | FVIRTKEY, VK_F3, (WORD)Cmd::FindNextSel},
+    {FSHIFT | FCONTROL | FVIRTKEY, VK_F3, (WORD)Cmd::FindPrevSel},
     {FCONTROL | FVIRTKEY, VK_F4, (WORD)Cmd::Close},
     {FVIRTKEY, VK_F5, (WORD)Cmd::ViewPresentationMode},
-    {FVIRTKEY, VK_F6, (WORD)IDM_MOVE_FRAME_FOCUS},
+    {FVIRTKEY, VK_F6, (WORD)Cmd::MoveFrameFocus},
     {FVIRTKEY, VK_F8, (WORD)Cmd::ViewShowHideToolbar},
 
     {FVIRTKEY, VK_F9, (WORD)Cmd::ViewShowHideMenuBar},
@@ -64,8 +64,8 @@ ACCEL gAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, VK_SUBTRACT, (WORD)Cmd::ViewRotateLeft},
     {FCONTROL | FVIRTKEY, VK_OEM_MINUS, (WORD)IDT_VIEW_ZOOMOUT},
     {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_MINUS, (WORD)Cmd::ViewRotateLeft},
-    {FALT | FVIRTKEY, VK_LEFT, (WORD)IDM_GOTO_NAV_BACK},
-    {FALT | FVIRTKEY, VK_RIGHT, (WORD)IDM_GOTO_NAV_FORWARD},
+    {FALT | FVIRTKEY, VK_LEFT, (WORD)Cmd::GoToNavBack},
+    {FALT | FVIRTKEY, VK_RIGHT, (WORD)Cmd::GoToNavForward},
 };
 
 HACCEL CreateSumatraAcceleratorTable() {

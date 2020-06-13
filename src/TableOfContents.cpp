@@ -384,11 +384,11 @@ static MenuDef menuDefContext[] = {
     {_TR_TODON("Open Embedded PDF"),     (uint)Cmd::OpenEmbedded,      0 },
     {_TR_TODON("Save Embedded File..."), (uint)Cmd::SaveEmbedded,      0 },
     // note: strings cannot be "" or else items are not there
-    {"add",                              IDM_FAV_ADD,            MF_NO_TRANSLATE},
-    {"del",                              IDM_FAV_DEL,            MF_NO_TRANSLATE},
+    {"add",                              (uint)Cmd::FavAdd,            MF_NO_TRANSLATE},
+    {"del",                              (uint)Cmd::FavDel,            MF_NO_TRANSLATE},
     {SEP_ITEM,                           (uint)Cmd::Separator,          MF_NO_TRANSLATE},
     {_TR_TODON("Export Bookmarks"),      (uint)Cmd::ExportBookmarks,   MF_NO_TRANSLATE},
-    {_TR_TODON("New Bookmarks"),         IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
+    {_TR_TODON("New Bookmarks"),         (uint)Cmd::NewBookmarks,      MF_NO_TRANSLATE},
     { 0, 0, 0 },
 };
 
@@ -690,23 +690,23 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
-            win::menu::Remove(popup, IDM_FAV_ADD);
+            win::menu::Remove(popup, (uint)Cmd::FavAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Remove page %s from favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, IDM_FAV_DEL, s);
+            win::menu::SetText(popup, (uint)Cmd::FavDel, s);
         } else {
-            win::menu::Remove(popup, IDM_FAV_DEL);
+            win::menu::Remove(popup, (uint)Cmd::FavDel);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Add page %s to favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, IDM_FAV_ADD, s);
+            win::menu::SetText(popup, (uint)Cmd::FavAdd, s);
         }
     } else {
-        win::menu::Remove(popup, IDM_FAV_ADD);
-        win::menu::Remove(popup, IDM_FAV_DEL);
+        win::menu::Remove(popup, (uint)Cmd::FavAdd);
+        win::menu::Remove(popup, (uint)Cmd::FavDel);
     }
 
     MarkMenuOwnerDraw(popup);
@@ -727,10 +727,10 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         case (int)Cmd::CollapseAll:
             win->tocTreeCtrl->CollapseAll();
             break;
-        case IDM_FAV_ADD:
+        case (uint)Cmd::FavAdd:
             AddFavoriteFromToc(win, dti);
             break;
-        case IDM_FAV_DEL:
+        case (uint)Cmd::FavDel:
             DelFavorite(filePath, pageNo);
             break;
         case (int)Cmd::SortTagBigFirst:
