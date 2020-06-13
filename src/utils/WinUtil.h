@@ -172,13 +172,13 @@ bool HasFrameThickness(HWND hwnd);
 bool HasCaption(HWND hwnd);
 
 namespace menu {
-void SetChecked(HMENU m, UINT id, bool isChecked);
-bool SetEnabled(HMENU m, UINT id, bool isEnabled);
-void Remove(HMENU m, UINT id);
+void SetChecked(HMENU m, int id, bool isChecked);
+bool SetEnabled(HMENU m, int id, bool isEnabled);
+void Remove(HMENU m, int id);
 // TODO: this doesn't recognize enum Cmd, why?
 //void Remove(HMENU m, enum Cmd id);
 void Empty(HMENU m);
-void SetText(HMENU m, UINT id, WCHAR* s);
+void SetText(HMENU m, int id, WCHAR* s);
 const WCHAR* ToSafeString(AutoFreeWstr& s);
 
 } // namespace menu

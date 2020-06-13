@@ -7,7 +7,7 @@ extern bool gAddCrashMeMenu;
 
 struct MenuDef {
     const char* title = nullptr;
-    UINT id = 0;
+    int id = 0;
     int flags = 0;
 };
 

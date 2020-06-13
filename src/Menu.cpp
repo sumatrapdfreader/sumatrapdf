@@ -1256,7 +1256,10 @@ HMENU BuildMenu(WindowInfo* win) {
 
 void UpdateAppMenu(WindowInfo* win, HMENU m) {
     CrashIf(!win);
-    UINT id = GetMenuItemID(m, 0);
+    if (!win) {
+        return;
+    }
+    int id = (int)GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id) {
         RebuildFileMenu(win->currentTab, m);
     } else if (id == menuDefFavorites[0].id) {

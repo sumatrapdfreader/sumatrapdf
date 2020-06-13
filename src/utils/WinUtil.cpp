@@ -1111,7 +1111,7 @@ void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int
 }
 
 void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint) {
-    UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+    uint uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
     if (!bRepaint)
         uFlags |= SWP_NOREDRAW;
     this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
@@ -1124,17 +1124,20 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
 namespace win {
 namespace menu {
 
-void SetChecked(HMENU m, UINT id, bool isChecked) {
-    CheckMenuItem(m, id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
+void SetChecked(HMENU m, int id, bool isChecked) {
+    CrashIf(id < 0);
+    CheckMenuItem(m, (uint)id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
 }
 
-bool SetEnabled(HMENU m, UINT id, bool isEnabled) {
-    BOOL ret = EnableMenuItem(m, id, MF_BYCOMMAND | (isEnabled ? MF_ENABLED : MF_GRAYED));
+bool SetEnabled(HMENU m, int id, bool isEnabled) {
+    CrashIf(id < 0);
+    BOOL ret = EnableMenuItem(m, (uint)id, MF_BYCOMMAND | (isEnabled ? MF_ENABLED : MF_GRAYED));
     return ret != -1;
 }
 
-void Remove(HMENU m, UINT id) {
-    RemoveMenu(m, id, MF_BYCOMMAND);
+void Remove(HMENU m, int id) {
+    CrashIf(id < 0);
+    RemoveMenu(m, (uint)id, MF_BYCOMMAND);
 }
 
 void Empty(HMENU m) {
@@ -1143,13 +1146,14 @@ void Empty(HMENU m) {
     }
 }
 
-void SetText(HMENU m, UINT id, WCHAR* s) {
+void SetText(HMENU m, int id, WCHAR* s) {
+    CrashIf(id < 0);
     MENUITEMINFOW mii = {0};
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STRING;
     mii.fType = MFT_STRING;
     mii.dwTypeData = s;
-    mii.cch = (UINT)str::Len(s);
+    mii.cch = (uint)str::Len(s);
     BOOL ok = SetMenuItemInfoW(m, id, FALSE, &mii);
     CrashIf(!ok);
 }
