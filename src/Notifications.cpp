@@ -37,6 +37,54 @@ NotificationWnd::~NotificationWnd() {
     str::Free(this->progressMsg);
 }
 
+static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, bool init) {
+    // compute the length of the message
+    RECT rc = ClientRect(wnd->hwnd).ToRECT();
+
+    HDC hdc = GetDC(wnd->hwnd);
+    HFONT oldfnt = SelectFont(hdc, wnd->font);
+    DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX);
+    SelectFont(hdc, oldfnt);
+    ReleaseDC(wnd->hwnd, hdc);
+
+    Rect rMsg = Rect::FromRECT(rc);
+    if (wnd->hasCancel) {
+        rMsg.dy = std::max(rMsg.dy, 16);
+        rMsg.dx += 20;
+    }
+    rMsg.Inflate(PADDING, PADDING);
+
+    if (wnd->shrinkLimit < 1.0f) {
+        Rect rcOrig = ClientRect(wnd->hwnd);
+        if (rMsg.dx < rcOrig.dx && rMsg.dx > rcOrig.dx * wnd->shrinkLimit) {
+            rMsg.dx = rcOrig.dx;
+        }
+    }
+
+    // adjust the window to fit the message (only shrink the window when there's no progress bar)
+    UINT flags = SWP_NOMOVE | SWP_NOZORDER;
+    if (!wnd->hasProgress) {
+        SetWindowPos(wnd->hwnd, nullptr, 0, 0, rMsg.dx, rMsg.dy, flags);
+    } else if (init) {
+        Rect r = WindowRect(wnd->hwnd);
+        r.dx = std::max(wnd->progressWidth + 2 * PADDING, rMsg.dx);
+        r.dy = rMsg.dy + PROGRESS_HEIGHT + PADDING / 2;
+        SetWindowPos(wnd->hwnd, nullptr, 0, 0, r.dx, r.dy, flags);
+    } else if (rMsg.dx > wnd->progressWidth + 2 * PADDING) {
+        SetWindowPos(wnd->hwnd, nullptr, 0, 0, rMsg.dx, WindowRect(wnd->hwnd).dy, flags);
+    }
+
+    // move the window to the right for a right-to-left layout
+    if (IsUIRightToLeft()) {
+        HWND parent = GetParent(wnd->hwnd);
+        Rect r = MapRectToWindow(WindowRect(wnd->hwnd), HWND_DESKTOP, parent);
+        int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
+        r.x = WindowRect(parent).dx - r.dx - TOP_LEFT_MARGIN - cxVScroll;
+        flags = SWP_NOSIZE | SWP_NOZORDER;
+        SetWindowPos(wnd->hwnd, nullptr, r.x, r.y, 0, 0, flags);
+    }
+}
+
 bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     if (progressMsg != nullptr) {
         this->hasCancel = true;
@@ -70,61 +118,13 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
     // TODO: this is suspicious. Why CS_DROPSHADOW is mixed with WS_EX_LAYOUTRTL ?
     SetWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
-    UpdateWindowPosition(msg, true);
+    UpdateWindowPosition(this, msg, true);
     ShowWindow(this->hwnd, SW_SHOW);
 
     if (this->timeoutInMS != 0) {
         SetTimer(this->hwnd, TIMEOUT_TIMER_ID, this->timeoutInMS, nullptr);
     }
     return true;
-}
-
-void NotificationWnd::UpdateWindowPosition(const WCHAR* message, bool init) {
-    // compute the length of the message
-    RECT rc = ClientRect(this->hwnd).ToRECT();
-
-    HDC hdc = GetDC(this->hwnd);
-    HFONT oldfnt = SelectFont(hdc, font);
-    DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX);
-    SelectFont(hdc, oldfnt);
-    ReleaseDC(this->hwnd, hdc);
-
-    Rect rMsg = Rect::FromRECT(rc);
-    if (this->hasCancel) {
-        rMsg.dy = std::max(rMsg.dy, 16);
-        rMsg.dx += 20;
-    }
-    rMsg.Inflate(PADDING, PADDING);
-
-    if (this->shrinkLimit < 1.0f) {
-        Rect rcOrig = ClientRect(this->hwnd);
-        if (rMsg.dx < rcOrig.dx && rMsg.dx > rcOrig.dx * shrinkLimit) {
-            rMsg.dx = rcOrig.dx;
-        }
-    }
-
-    // adjust the window to fit the message (only shrink the window when there's no progress bar)
-    UINT flags = SWP_NOMOVE | SWP_NOZORDER;
-    if (!this->hasProgress) {
-        SetWindowPos(this->hwnd, nullptr, 0, 0, rMsg.dx, rMsg.dy, flags);
-    } else if (init) {
-        Rect r = WindowRect(this->hwnd);
-        r.dx = std::max(progressWidth + 2 * PADDING, rMsg.dx);
-        r.dy = rMsg.dy + PROGRESS_HEIGHT + PADDING / 2;
-        SetWindowPos(this->hwnd, nullptr, 0, 0, r.dx, r.dy, flags);
-    } else if (rMsg.dx > progressWidth + 2 * PADDING) {
-        SetWindowPos(this->hwnd, nullptr, 0, 0, rMsg.dx, WindowRect(this->hwnd).dy, flags);
-    }
-
-    // move the window to the right for a right-to-left layout
-    if (IsUIRightToLeft()) {
-        HWND parent = GetParent(this->hwnd);
-        Rect r = MapRectToWindow(WindowRect(this->hwnd), HWND_DESKTOP, parent);
-        int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
-        r.x = WindowRect(parent).dx - r.dx - TOP_LEFT_MARGIN - cxVScroll;
-        flags = SWP_NOSIZE | SWP_NOZORDER;
-        SetWindowPos(this->hwnd, nullptr, r.x, r.y, 0, 0, flags);
-    }
 }
 
 void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool highlight) {
@@ -135,7 +135,7 @@ void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool 
     }
     DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
     SetWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
-    this->UpdateWindowPosition(message, false);
+    UpdateWindowPosition(this, message, false);
     InvalidateRect(this->hwnd, nullptr, TRUE);
     if (timeoutInMS != 0) {
         SetTimer(this->hwnd, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);

@@ -34,7 +34,6 @@ struct NotificationWnd : public ProgressUpdateUI {
     WCHAR* progressMsg = nullptr; // must contain two %d (for current and total)
 
     bool Create(const WCHAR* msg, const WCHAR* progressMsg);
-    void UpdateWindowPosition(const WCHAR* message, bool init);
 
     NotificationGroupId groupId = nullptr; // for use by Notifications
 
