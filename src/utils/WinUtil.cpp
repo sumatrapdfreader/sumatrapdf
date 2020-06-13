@@ -783,7 +783,7 @@ Size TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
     /* GetWindowDC() returns dc with default state, so we have to first set
        window's current font into dc */
     if (font == nullptr) {
-        font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
     }
     HGDIOBJ prev = SelectObject(dc, font);
     GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
@@ -801,7 +801,7 @@ SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
     /* GetWindowDC() returns dc with default state, so we have to first set
     window's current font into dc */
     if (font == nullptr) {
-        font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
     }
     HGDIOBJ prev = SelectObject(dc, font);
     GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
@@ -1402,7 +1402,7 @@ WCHAR* GetText(HWND hwnd) {
     WCHAR* txt = AllocArray<WCHAR>(cchTxtLen + 1);
     if (nullptr == txt)
         return nullptr;
-    SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
+    SendMessageW(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
     return txt;
 }
@@ -1413,7 +1413,7 @@ str::Str GetTextUtf8(HWND hwnd) {
     if (nullptr == txt) {
         return str::Str();
     }
-    SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
+    SendMessageW(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
     AutoFree od = strconv::WstrToUtf8(txt, cchTxtLen);
     str::Str res(od.as_view());
@@ -1421,11 +1421,11 @@ str::Str GetTextUtf8(HWND hwnd) {
 }
 
 size_t GetTextLen(HWND hwnd) {
-    return (size_t)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
+    return (size_t)SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
 }
 
 void SetText(HWND hwnd, const WCHAR* txt) {
-    SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
+    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
 }
 
 void SetVisibility(HWND hwnd, bool visible) {
@@ -2143,7 +2143,7 @@ Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
     /* GetWindowDC() returns dc with default state, so we have to first set
        window's current font into dc */
     if (font == nullptr) {
-        font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
     }
     HGDIOBJ prev = SelectObject(dc, font);
 

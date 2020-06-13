@@ -176,14 +176,14 @@ void ToolbarUpdateStateForWindow(WindowInfo* win, bool showHide) {
         auto& tb = gToolbarButtons[i];
         if (showHide) {
             BOOL hide = !IsVisibleToolbarButton(win, i);
-            SendMessage(hwnd, TB_HIDEBUTTON, tb.cmdId, hide);
+            SendMessageW(hwnd, TB_HIDEBUTTON, tb.cmdId, hide);
         }
         if (TbIsSeparator(tb)) {
             continue;
         }
 
         LPARAM buttonState = IsToolbarButtonEnabled(win, i) ? enabled : disabled;
-        SendMessage(hwnd, TB_ENABLEBUTTON, tb.cmdId, buttonState);
+        SendMessageW(hwnd, TB_ENABLEBUTTON, tb.cmdId, buttonState);
     }
 
     // Find labels may have to be repositioned if some
@@ -377,7 +377,7 @@ void UpdateToolbarState(WindowInfo* win) {
         return;
     }
     HWND hwnd = win->hwndToolbar;
-    WORD state = (WORD)SendMessage(hwnd, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
+    WORD state = (WORD)SendMessageW(hwnd, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
     DisplayMode dm = win->ctrl->GetDisplayMode();
     float zoomVirtual = win->ctrl->GetZoomVirtual();
     if (dm == DM_CONTINUOUS && zoomVirtual == ZOOM_FIT_WIDTH) {
@@ -385,17 +385,17 @@ void UpdateToolbarState(WindowInfo* win) {
     } else {
         state &= ~TBSTATE_CHECKED;
     }
-    SendMessage(hwnd, TB_SETSTATE, IDT_VIEW_FIT_WIDTH, state);
+    SendMessageW(hwnd, TB_SETSTATE, IDT_VIEW_FIT_WIDTH, state);
 
     bool isChecked = (state & TBSTATE_CHECKED);
 
-    state = (WORD)SendMessage(hwnd, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
+    state = (WORD)SendMessageW(hwnd, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
     if (dm == DM_SINGLE_PAGE && zoomVirtual == ZOOM_FIT_PAGE) {
         state |= TBSTATE_CHECKED;
     } else {
         state &= ~TBSTATE_CHECKED;
     }
-    SendMessage(hwnd, TB_SETSTATE, IDT_VIEW_FIT_PAGE, state);
+    SendMessageW(hwnd, TB_SETSTATE, IDT_VIEW_FIT_PAGE, state);
 
     isChecked |= (state & TBSTATE_CHECKED);
     if (!isChecked) {
@@ -558,7 +558,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    SendMessage(win->hwndToolbar, TB_GETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
+    SendMessageW(win->hwndToolbar, TB_GETBUTTONINFO, IDM_GOTO_PAGE, (LPARAM)&bi);
     size2.dx += size.dx + pageWndRect.dx + 12;
     if (bi.cx != size2.dx || !updateOnly) {
         bi.cx = (WORD)size2.dx;
@@ -662,7 +662,7 @@ void CreateToolbar(WindowInfo* win) {
     HMENU cmd = (HMENU)IDC_TOOLBAR;
     HWND hwndToolbar = CreateWindowExW(0, cls, nullptr, style, 0, 0, 0, 0, hwndParent, cmd, hinst, nullptr);
     win->hwndToolbar = hwndToolbar;
-    SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+    SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
     ShowWindow(hwndToolbar, SW_SHOW);
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
@@ -746,7 +746,7 @@ void CreateToolbar(WindowInfo* win) {
     // tbMetrics.cyButtonSpacing += DpiScale(win->hwndFrame, 4);
     TbSetMetrics(hwndToolbar, &tbMetrics);
 
-    LRESULT exstyle = SendMessage(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
+    LRESULT exstyle = SendMessageW(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
     SendMessageW(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
     BOOL ok = SendMessageW(hwndToolbar, TB_ADDBUTTONS, TOOLBAR_BUTTONS_COUNT, (LPARAM)tbButtons);
@@ -767,7 +767,7 @@ void CreateToolbar(WindowInfo* win) {
     rbi.cbSize = sizeof(REBARINFO);
     rbi.fMask = 0;
     rbi.himl = (HIMAGELIST) nullptr;
-    SendMessage(win->hwndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
+    SendMessageW(win->hwndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
 
     REBARBANDINFOW rbBand{};
     rbBand.cbSize = sizeof(REBARBANDINFOW);
@@ -783,7 +783,7 @@ void CreateToolbar(WindowInfo* win) {
     rbBand.cxMinChild = (rc.right - rc.left) * TOOLBAR_BUTTONS_COUNT;
     rbBand.cyMinChild = (rc.bottom - rc.top) + 2 * rc.top;
     rbBand.cx = 0;
-    SendMessage(win->hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+    SendMessageW(win->hwndReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
     SetWindowPos(win->hwndReBar, nullptr, 0, 0, 0, 0, SWP_NOZORDER);
 

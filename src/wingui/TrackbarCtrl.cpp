@@ -105,13 +105,13 @@ void TrackbarCtrl::SetRange(int min, int max) {
     rangeMax = max;
     WPARAM redraw = (WPARAM)TRUE;
     LPARAM range = (LPARAM)MAKELONG(min, max);
-    SendMessage(hwnd, TBM_SETRANGE, redraw, range);
+    SendMessageW(hwnd, TBM_SETRANGE, redraw, range);
 }
 
 void TrackbarCtrl::SetValue(int pos) {
     WPARAM redraw = (WPARAM)TRUE;
     LPARAM p = (LPARAM)pos;
-    SendMessage(hwnd, TBM_SETPOS, redraw, p);
+    SendMessageW(hwnd, TBM_SETPOS, redraw, p);
 }
 
 int TrackbarCtrl::GetValue() {

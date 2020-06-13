@@ -54,7 +54,7 @@ static void DragMove(TreeCtrl* w, int xCur, int yCur) {
 
     if (htiTarget != nullptr) {
         // TODO: don't know which is better
-        SendMessage(w->hwnd, TVM_SELECTITEM, TVGN_DROPHILITE, (LPARAM)htiTarget);
+        SendMessageW(w->hwnd, TVM_SELECTITEM, TVGN_DROPHILITE, (LPARAM)htiTarget);
         // TreeView_SelectDropTarget(hwnd, htiTarget);
     }
     ImageList_DragShowNolock(TRUE);
@@ -596,9 +596,9 @@ void TreeCtrl::Clear() {
     insertedItems.Reset();
 
     HWND hwnd = this->hwnd;
-    ::SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+    ::SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
     TreeView_DeleteAllItems(hwnd);
-    SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+    SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
     UINT flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     ::RedrawWindow(hwnd, nullptr, nullptr, flags);
 }

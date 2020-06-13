@@ -98,7 +98,7 @@ static CheckboxCtrl* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChec
 }
 
 static void OnButtonExit() {
-    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
+    SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
 static void CreateButtonExit(HWND hwndParent) {
@@ -596,7 +596,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
     switch (msg) {
         case BFFM_INITIALIZED:
             if (!str::IsEmpty((WCHAR*)lpData)) {
-                SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+                SendMessageW(hwnd, BFFM_SETSELECTION, TRUE, lpData);
             }
             break;
 

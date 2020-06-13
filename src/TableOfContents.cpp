@@ -1075,7 +1075,7 @@ void TocTreeMouseWheelHandler(MouseWheelEvent* ev) {
     // scroll the canvas if the cursor isn't over the ToC tree
     if (!IsCursorOverWindow(ev->hwnd)) {
         ev->didHandle = true;
-        ev->result = SendMessage(win->hwndCanvas, ev->msg, ev->wp, ev->lp);
+        ev->result = SendMessageW(win->hwndCanvas, ev->msg, ev->wp, ev->lp);
     }
 }
 

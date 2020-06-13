@@ -713,14 +713,14 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 }
                 // Find the index of the active command line
                 LRESULT ind =
-                    SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cmdLine);
+                    SendMessageW(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cmdLine);
                 if (CB_ERR == ind) {
                     // if no existing command was selected then set the user custom command in the combo
                     ComboBox_AddItemData(GetDlgItem(hDlg, IDC_CMDLINE), cmdLine);
                     SetDlgItemText(hDlg, IDC_CMDLINE, cmdLine);
                 } else {
                     // select the active command
-                    SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_SETCURSEL, (WPARAM)ind, 0);
+                    SendMessageW(GetDlgItem(hDlg, IDC_CMDLINE), CB_SETCURSEL, (WPARAM)ind, 0);
                 }
             } else {
                 RemoveDialogItem(hDlg, IDC_SECTION_INVERSESEARCH, IDC_SECTION_ADVANCED);
@@ -775,7 +775,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     if (IsExeAssociatedWithPdfExtension()) {
                         SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your default PDF reader"));
                         EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
-                        SendMessage(hDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hDlg, IDOK), TRUE);
+                        SendMessageW(hDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hDlg, IDOK), TRUE);
                     } else {
                         SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER,
                                        _TR("SumatraPDF should now be your default PDF reader"));

@@ -467,7 +467,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             for (; selStart > 0 && !str::IsWs(text[selStart - 1]); selStart--)
                 ;
             Edit_SetSel(hwnd, selStart, selEnd);
-            SendMessage(hwnd, WM_CLEAR, 0, 0);
+            SendMessageW(hwnd, WM_CLEAR, 0, 0);
         }
             return true;
 

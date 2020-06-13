@@ -57,7 +57,7 @@ static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
 
 static void OnButtonExit() {
-    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
+    SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
 static void CreateButtonExit(HWND hwndParent) {

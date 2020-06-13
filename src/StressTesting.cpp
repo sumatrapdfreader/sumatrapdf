@@ -623,7 +623,7 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
             // try to provoke a crash in RenderCache cleanup code
             Rect rect = ClientRect(win->hwndFrame);
             rect.Inflate(rand() % 10, rand() % 10);
-            SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+            SendMessageW(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
             if (win->AsFixed())
                 win->cbHandler->RequestRendering(1);
             win->RepaintAsync();
@@ -706,7 +706,7 @@ bool StressTest::GoToNextPage() {
         rect.dy += deltaY;
         if (rect.dy < 300)
             rect.dy += (abs(deltaY) * 3);
-        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+        SendMessageW(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
     }
     return true;
 }

@@ -234,7 +234,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
             if (win->mouseAction == MouseAction::Idle) {
                 SetCursor(IDC_ARROW);
             } else {
-                SendMessage(win->hwndCanvas, WM_SETCURSOR, 0, 0);
+                SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
             }
             SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, nullptr);
         }
@@ -877,7 +877,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         gWheelMsgRedirect = true;
-        LRESULT res = SendMessage(win->tocTreeCtrl->hwnd, msg, wp, lp);
+        LRESULT res = SendMessageW(win->tocTreeCtrl->hwnd, msg, wp, lp);
         gWheelMsgRedirect = false;
         return res;
     }
@@ -938,7 +938,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
     // alt while scrolling will scroll by half a page per tick
     // usefull for browsing long files
     if ((LOWORD(wp) & MK_ALT) || IsAltPressed()) {
-        SendMessage(win->hwndCanvas, WM_VSCROLL, (delta > 0) ? SB_HPAGEUP : SB_HPAGEDOWN, 0);
+        SendMessageW(win->hwndCanvas, WM_VSCROLL, (delta > 0) ? SB_HPAGEUP : SB_HPAGEDOWN, 0);
         return 0;
     }
 
@@ -947,17 +947,17 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM l
 
     while (win->wheelAccumDelta >= gDeltaPerLine) {
         if (horizontal) {
-            SendMessage(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
+            SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
         } else {
-            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
         }
         win->wheelAccumDelta -= gDeltaPerLine;
     }
     while (win->wheelAccumDelta <= -gDeltaPerLine) {
         if (horizontal) {
-            SendMessage(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+            SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
         } else {
-            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
         }
         win->wheelAccumDelta += gDeltaPerLine;
     }
@@ -981,7 +981,7 @@ static LRESULT CanvasOnMouseHWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM 
         //       WM_MOUSEHWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         gWheelMsgRedirect = true;
-        LRESULT res = SendMessage(win->tocTreeCtrl->hwnd, msg, wp, lp);
+        LRESULT res = SendMessageW(win->tocTreeCtrl->hwnd, msg, wp, lp);
         gWheelMsgRedirect = false;
         return res;
     }
@@ -990,11 +990,11 @@ static LRESULT CanvasOnMouseHWheel(WindowInfo* win, UINT msg, WPARAM wp, LPARAM 
     win->wheelAccumDelta += delta;
 
     while (win->wheelAccumDelta >= gDeltaPerLine) {
-        SendMessage(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+        SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
         win->wheelAccumDelta -= gDeltaPerLine;
     }
     while (win->wheelAccumDelta <= -gDeltaPerLine) {
-        SendMessage(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
+        SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
         win->wheelAccumDelta += gDeltaPerLine;
     }
 
@@ -1205,7 +1205,7 @@ static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo* win, UINT msg, WPAR
         LRESULT res = 0;
         if (!gWheelMsgRedirect) {
             gWheelMsgRedirect = true;
-            res = SendMessage(win->tocTreeCtrl->hwnd, msg, wp, lp);
+            res = SendMessageW(win->tocTreeCtrl->hwnd, msg, wp, lp);
             gWheelMsgRedirect = false;
         }
         return res;

@@ -1956,7 +1956,7 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject* dataObj) {
 
     HDROP hDrop = (HDROP)GlobalLock(stg.hGlobal);
     if (hDrop) {
-        SendMessage(hwndParent, WM_DROPFILES, (WPARAM)hDrop, 1);
+        SendMessageW(hwndParent, WM_DROPFILES, (WPARAM)hDrop, 1);
         GlobalUnlock(stg.hGlobal);
     }
     ReleaseStgMedium(&stg);
@@ -1965,7 +1965,7 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject* dataObj) {
 
 LRESULT HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
     HWND hwndBrowser = GetBrowserControlHwnd(hwndParent);
-    return SendMessage(hwndBrowser, msg, wp, lp);
+    return SendMessageW(hwndBrowser, msg, wp, lp);
 }
 
 FrameSite::FrameSite(HtmlWindow* win) {

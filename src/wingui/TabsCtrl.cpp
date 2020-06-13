@@ -106,8 +106,8 @@ static HWND CreateTooltipForRect(HWND parent, const WCHAR* s, RECT& r) {
     ti.hinst = h;
     ti.lpszText = (WCHAR*)s;
     ti.rect = r;
-    SendMessage(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
-    SendMessage(hwnd, TTM_ACTIVATE, TRUE, 0);
+    SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
+    SendMessageW(hwnd, TTM_ACTIVATE, TRUE, 0);
     return hwnd;
 }
 

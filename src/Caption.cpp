@@ -326,7 +326,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
             if (CB_SYSTEM_MENU == index && (wp & MK_LBUTTON)) {
                 ReleaseCapture();
                 // Trigger system move, there will be no WM_LBUTTONUP event for the button
-                SendMessage(win->hwndFrame, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+                SendMessageW(win->hwndFrame, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
                 return 0;
             } else {
                 Rect rc = ClientRect(hwnd);
@@ -602,7 +602,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc) {
     POINT pt = {0, 0};
     MapWindowPoints(hwnd, parent, &pt, 1);
     SetViewportOrgEx(hdc, -pt.x, -pt.y, &pt);
-    SendMessage(parent, WM_ERASEBKGND, (WPARAM)hdc, 0);
+    SendMessageW(parent, WM_ERASEBKGND, (WPARAM)hdc, 0);
     SetViewportOrgEx(hdc, pt.x, pt.y, nullptr);
 }
 
@@ -883,7 +883,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
             Rect cr = ClientRect(hwnd);
             SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
             if (ClientRect(hwnd) == cr) {
-                SendMessage(hwnd, WM_SIZE, 0, MAKELONG(cr.dx, cr.dy));
+                SendMessageW(hwnd, WM_SIZE, 0, MAKELONG(cr.dx, cr.dy));
             }
             *callDef = false;
             return 0;

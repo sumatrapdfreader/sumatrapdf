@@ -777,7 +777,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case IDM_VIEW_SHOW_HIDE_TOOLBAR:
         case IDM_SAVE_ANNOTATIONS_SMX:
         case IDM_NEW_BOOKMARKS:
-            SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
+            SendMessageW(win->hwndFrame, WM_COMMAND, cmd, 0);
             break;
         case IDM_EDIT_ANNOTATIONS:
             StartEditAnnotations(tab);

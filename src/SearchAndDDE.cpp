@@ -91,7 +91,7 @@ void OnMenuFind(WindowInfo* win) {
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
         if (IsFocused(win->hwndFindBox)) {
-            SendMessage(win->hwndFindBox, WM_SETFOCUS, 0, 0);
+            SendMessageW(win->hwndFindBox, WM_SETFOCUS, 0, 0);
         } else {
             SetFocus(win->hwndFindBox);
         }
@@ -99,7 +99,7 @@ void OnMenuFind(WindowInfo* win) {
     }
 
     AutoFreeWstr previousFind(win::GetText(win->hwndFindBox));
-    WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
+    WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
     AutoFreeWstr findString(Dialog_Find(win->hwndFrame, previousFind, &matchCase));
@@ -117,7 +117,7 @@ void OnMenuFind(WindowInfo* win) {
         } else {
             state &= ~TBSTATE_CHECKED;
         }
-        SendMessage(win->hwndToolbar, TB_SETSTATE, IDM_FIND_MATCH, state);
+        SendMessageW(win->hwndToolbar, TB_SETSTATE, IDM_FIND_MATCH, state);
         dm->textSearch->SetSensitive(matchCase);
     }
 
@@ -128,7 +128,7 @@ void OnMenuFindNext(WindowInfo* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0)) {
+    if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0)) {
         FindTextOnThread(win, TextSearchDirection::Forward, true);
     }
 }
@@ -137,7 +137,7 @@ void OnMenuFindPrev(WindowInfo* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0)) {
+    if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0)) {
         FindTextOnThread(win, TextSearchDirection::Backward, true);
     }
 }
@@ -146,7 +146,7 @@ void OnMenuFindMatchCase(WindowInfo* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
+    WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     win->AsFixed()->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
     Edit_SetModify(win->hwndFindBox, TRUE);
 }
@@ -244,17 +244,17 @@ struct FindThreadData : public ProgressUpdateUI {
             win->notifications->Add(wnd, NG_FIND_PROGRESS);
         }
 
-        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
-        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
-        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, disable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, disable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, disable);
     }
 
     void HideUI(bool success, bool loopedAround) {
         LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
-        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
-        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
-        SendMessage(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_PREV, enable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_NEXT, enable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, IDM_FIND_MATCH, enable);
 
         if (!win->notifications->Contains(wnd)) {
             /* our notification has been replaced or closed (or never created) */;
@@ -562,7 +562,7 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wp, LPARAM lp) {
     ATOM aTopic = GlobalAddAtom(PDFSYNC_DDE_TOPIC);
 
     if (LOWORD(lp) == aServer && HIWORD(lp) == aTopic) {
-        SendMessage((HWND)wp, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
+        SendMessageW((HWND)wp, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
     } else {
         GlobalDeleteAtom(aServer);
         GlobalDeleteAtom(aTopic);

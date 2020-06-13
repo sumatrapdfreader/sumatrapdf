@@ -279,7 +279,7 @@ bool SumatraLaunchBrowser(const WCHAR* url) {
             return false;
         }
         COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlUtf8.size() + 1, urlUtf8.Get()};
-        return SendMessage(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
+        return SendMessageW(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
     if (!HasPermission(Perm_DiskAccess)) {
@@ -618,7 +618,7 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     SetCaptionButtonsRtl(win->caption, isRTL);
 
     // TODO: why isn't SetWindowPos(..., SWP_FRAMECHANGED) enough?
-    SendMessage(win->hwndFrame, WM_DWMCOMPOSITIONCHANGED, 0, 0);
+    SendMessageW(win->hwndFrame, WM_DWMCOMPOSITIONCHANGED, 0, 0);
     RelayoutCaption(win);
     // TODO: make tab bar RTL aware
     // SetRtl(win->hwndTabBar, isRTL);
@@ -632,10 +632,10 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     if (tocVisible || favVisible) {
         SetSidebarVisibility(win, tocVisible, favVisible);
         if (tocVisible) {
-            SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
+            SendMessageW(win->hwndTocBox, WM_SIZE, 0, 0);
         }
         if (favVisible) {
-            SendMessage(win->hwndFavBox, WM_SIZE, 0, 0);
+            SendMessageW(win->hwndFavBox, WM_SIZE, 0, 0);
         }
     }
 }
@@ -1526,7 +1526,7 @@ void DeleteWindowInfo(WindowInfo* win) {
 
     gWindows.Remove(win);
 
-    ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
+    ImageList_Destroy((HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
     DragAcceptFiles(win->hwndCanvas, FALSE);
 
     CrashIf(win->findThread && WaitForSingleObject(win->findThread, 0) == WAIT_TIMEOUT);
@@ -3396,7 +3396,7 @@ static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuous
 
 static void FocusPageNoEdit(HWND hwndPageBox) {
     if (IsFocused(hwndPageBox)) {
-        SendMessage(hwndPageBox, WM_SETFOCUS, 0, 0);
+        SendMessageW(hwndPageBox, WM_SETFOCUS, 0, 0);
     } else {
         SetFocus(hwndPageBox);
     }
@@ -3673,7 +3673,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
     if (isPageUp) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
-            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
         }
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
             win->ctrl->GoToPrevPage(true);
@@ -3689,7 +3689,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
     if (isPageDown) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
-            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
         }
         if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
             win->ctrl->GoToNextPage();
@@ -3707,13 +3707,13 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
 
     if (VK_UP == key) {
         if (dm && dm->NeedVScroll()) {
-            SendMessage(win->hwndCanvas, WM_VSCROLL, isShift ? SB_HPAGEUP : SB_LINEUP, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, isShift ? SB_HPAGEUP : SB_LINEUP, 0);
         } else {
             win->ctrl->GoToPrevPage(true);
         }
     } else if (VK_DOWN == key) {
         if (dm && dm->NeedVScroll()) {
-            SendMessage(win->hwndCanvas, WM_VSCROLL, isShift ? SB_HPAGEDOWN : SB_LINEDOWN, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, isShift ? SB_HPAGEDOWN : SB_LINEDOWN, 0);
         } else {
             win->ctrl->GoToNextPage();
         }
@@ -3725,20 +3725,20 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         win->ctrl->GoToFirstPage();
     } else if (VK_END == key && isCtrl) {
         if (!win->ctrl->GoToLastPage()) {
-            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
         }
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
     } else if (VK_LEFT == key) {
         if (dm && dm->NeedHScroll() && !isCtrl) {
-            SendMessage(win->hwndCanvas, WM_HSCROLL, isShift ? SB_PAGELEFT : SB_LINELEFT, 0);
+            SendMessageW(win->hwndCanvas, WM_HSCROLL, isShift ? SB_PAGELEFT : SB_LINELEFT, 0);
         } else {
             win->ctrl->GoToPrevPage();
         }
     } else if (VK_RIGHT == key) {
         if (dm && dm->NeedHScroll() && !isCtrl) {
-            SendMessage(win->hwndCanvas, WM_HSCROLL, isShift ? SB_PAGERIGHT : SB_LINERIGHT, 0);
+            SendMessageW(win->hwndCanvas, WM_HSCROLL, isShift ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         } else {
             win->ctrl->GoToNextPage();
         }
@@ -3746,7 +3746,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         win->ctrl->GoToFirstPage();
     } else if (VK_END == key) {
         if (!win->ctrl->GoToLastPage()) {
-            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
+            SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
         }
     } else if (VK_MULTIPLY == key && dm) {
         dm->RotateBy(90);
@@ -3756,7 +3756,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
 #ifdef DEBUG
     } else if (VK_F1 == key && win->AsEbook()) {
         // TODO: this was in EbookWindow - is it still needed?
-        SendMessage(win->hwndFrame, WM_COMMAND, IDM_DEBUG_MUI, 0);
+        SendMessageW(win->hwndFrame, WM_COMMAND, IDM_DEBUG_MUI, 0);
 #endif
     } else {
         return false;
@@ -4222,7 +4222,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     if (wmId >= 0xF000) {
         // handle system menu messages for the Window menu (needed for Tabs in Titlebar)
-        return SendMessage(hwnd, WM_SYSCOMMAND, wp, lp);
+        return SendMessageW(hwnd, WM_SYSCOMMAND, wp, lp);
     }
 
     // check if the menuId belongs to an entry in the list of
@@ -4563,7 +4563,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         case IDM_COPY_SELECTION:
             // Don't break the shortcut for text boxes
             if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
-                SendMessage(GetFocus(), WM_COPY, 0, 0);
+                SendMessageW(GetFocus(), WM_COPY, 0, 0);
             } else if (!HasPermission(Perm_CopySelection)) {
                 break;
             } else if (win->AsChm()) {
@@ -4720,19 +4720,19 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TRUE so as to not make them bubble up further
             switch (GET_APPCOMMAND_LPARAM(lp)) {
                 case APPCOMMAND_BROWSER_BACKWARD:
-                    SendMessage(hwnd, WM_COMMAND, IDM_GOTO_NAV_BACK, 0);
+                    SendMessageW(hwnd, WM_COMMAND, IDM_GOTO_NAV_BACK, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FORWARD:
-                    SendMessage(hwnd, WM_COMMAND, IDM_GOTO_NAV_FORWARD, 0);
+                    SendMessageW(hwnd, WM_COMMAND, IDM_GOTO_NAV_FORWARD, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_REFRESH:
-                    SendMessage(hwnd, WM_COMMAND, (WPARAM)Cmd::Refresh, 0);
+                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::Refresh, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_SEARCH:
-                    SendMessage(hwnd, WM_COMMAND, IDM_FIND_FIRST, 0);
+                    SendMessageW(hwnd, WM_COMMAND, IDM_FIND_FIRST, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FAVORITES:
-                    SendMessage(hwnd, WM_COMMAND, IDM_VIEW_BOOKMARKS, 0);
+                    SendMessageW(hwnd, WM_COMMAND, IDM_VIEW_BOOKMARKS, 0);
                     return TRUE;
             }
             return DefWindowProc(hwnd, msg, wp, lp);
@@ -4785,7 +4785,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             int x = GET_X_LPARAM(lp);
             int y = GET_Y_LPARAM(lp);
             if (win && (x == -1) && (y == -1) && !IsFocused(win->tocTreeCtrl->hwnd))
-                return SendMessage(win->hwndCanvas, WM_CONTEXTMENU, wp, lp);
+                return SendMessageW(win->hwndCanvas, WM_CONTEXTMENU, wp, lp);
             return DefWindowProc(hwnd, msg, wp, lp);
         }
 
@@ -4823,7 +4823,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
             // never receives WM_MOUSEWHEEL messages)
-            return SendMessage(win->hwndCanvas, msg, wp, lp);
+            return SendMessageW(win->hwndCanvas, msg, wp, lp);
 
         case WM_CLOSE:
             if (MayCloseWindow(win)) {

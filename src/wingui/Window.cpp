@@ -615,11 +615,11 @@ bool WindowBase::Create() {
 }
 
 void WindowBase::SuspendRedraw() {
-    SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+    SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
 }
 
 void WindowBase::ResumeRedraw() {
-    SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+    SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
 }
 
 void WindowBase::SetFocus() {
@@ -866,7 +866,7 @@ void Window::SetTitle(std::string_view title) {
 }
 
 void Window::Close() {
-    ::SendMessage(hwnd, WM_CLOSE, 0, 0);
+    ::SendMessageW(hwnd, WM_CLOSE, 0, 0);
 }
 
 // if only top given, set them all to top

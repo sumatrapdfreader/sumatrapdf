@@ -26,7 +26,7 @@ static void CreateInfotipForLink(HWND hwndParent, const WCHAR* url, RECT pos) {
     ti.lpszText = (WCHAR*)url;
     ti.rect = pos;
 
-    SendMessage(gHwndControlTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+    SendMessageW(gHwndControlTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
 }
 
 static void ClearInfotip(HWND hwndParent) {
@@ -37,7 +37,7 @@ static void ClearInfotip(HWND hwndParent) {
     ti.cbSize = sizeof(ti);
     ti.hwnd = hwndParent;
 
-    SendMessage(gHwndControlTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
+    SendMessageW(gHwndControlTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
     DestroyWindow(gHwndControlTooltip);
     gHwndControlTooltip = nullptr;
 }

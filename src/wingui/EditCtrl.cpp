@@ -169,7 +169,7 @@ Size EditCtrl::GetIdealSize() {
     dy = dy * idealSizeLines;
     // dbglogf("EditCtrl::GetIdealSize: dx=%d, dy=%d\n", (int)dx, (int)dy);
 
-    LRESULT margins = SendMessage(hwnd, EM_GETMARGINS, 0, 0);
+    LRESULT margins = SendMessageW(hwnd, EM_GETMARGINS, 0, 0);
     int lm = (int)LOWORD(margins);
     int rm = (int)HIWORD(margins);
     dx += lm + rm;
