@@ -1099,6 +1099,8 @@ void TocTreeCharHandler(CharEvent* ev) {
     ev->didHandle = true;
 }
 
+extern  HFONT GetTreeFont();
+
 void CreateToc(WindowInfo* win) {
     HMODULE hmod = GetModuleHandle(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
@@ -1111,6 +1113,7 @@ void CreateToc(WindowInfo* win) {
     win->tocLabelWithClose = l;
     l->SetPaddingXY(2, 2);
     // TODO: only ramicro?
+    // TODO: use the same font size as in GetTreeFont()?
     l->SetFont(GetDefaultGuiFont(true, false));
     // label is set in UpdateToolbarSidebarText()
 
@@ -1126,10 +1129,8 @@ void CreateToc(WindowInfo* win) {
     treeCtrl->onTreeSelectionChanged = TocTreeSelectionChanged;
     treeCtrl->onTreeKeyDown = TocTreeKeyDown;
 
-    // TODO: only for ramicro?
-    int fntSize = GetSizeOfDefaultGuiFont();
-    HFONT fnt = GetDefaultGuiFontOfSize(fntSize + 2);
     // TODO: leaks font?
+    HFONT fnt = GetTreeFont();
     treeCtrl->SetFont(fnt);
 
     bool ok = treeCtrl->Create();

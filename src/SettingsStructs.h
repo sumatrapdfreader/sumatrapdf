@@ -366,6 +366,9 @@ struct GlobalPrefs {
     // if both favorites and bookmarks parts of sidebar are visible, this
     // is the height of bookmarks (table of contents) part
     int tocDy;
+    // font size for bookmarks and favorites tree views. 0 means Windows
+    // default
+    int treeFontSize;
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
@@ -633,6 +636,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showToc), Type_Bool, true},
     {offsetof(GlobalPrefs, sidebarDx), Type_Int, 0},
     {offsetof(GlobalPrefs, tocDy), Type_Int, 0},
+    {offsetof(GlobalPrefs, treeFontSize), Type_Int, 0},
     {offsetof(GlobalPrefs, showStartPage), Type_Bool, true},
     {offsetof(GlobalPrefs, useTabs), Type_Bool, true},
     {(size_t)-1, Type_Comment, 0},
@@ -645,13 +649,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, Type_Comment, (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 54, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 55, gGlobalPrefsFields,
     "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0FixedPageUI\0EbookUI"
     "\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncr"
     "ement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePer"
     "Document\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0Versio"
     "nToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Window"
-    "State\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce\0TimeOf"
-    "LastUpdateCheck\0OpenCountWeek\0\0"};
+    "State\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0Reop"
+    "enOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif

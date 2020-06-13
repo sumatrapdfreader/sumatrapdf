@@ -20,6 +20,7 @@
 #include "EngineBase.h"
 #include "EngineManager.h"
 
+#include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "FileHistory.h"
@@ -801,6 +802,21 @@ extern void TocTreeCharHandler(CharEvent* ev);
 extern void TocTreeMouseWheelHandler(MouseWheelEvent* ev);
 extern void TocTreeKeyDown(TreeKeyDownEvent* ev);
 
+HFONT GetTreeFont() {
+    int fntSize = GetSizeOfDefaultGuiFont();
+    if (gIsRaMicroBuild) {
+        fntSize += 2;
+    } else {
+        int fntSizeUser = gGlobalPrefs->treeFontSize;
+        if (fntSizeUser > 5) {
+            fntSize = fntSizeUser;
+        }
+    }
+    HFONT fnt = GetDefaultGuiFontOfSize(fntSize);
+    CrashIf(!fnt);
+    return fnt;
+}
+
 void CreateFavorites(WindowInfo* win) {
     HMODULE h = GetModuleHandleW(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
@@ -822,10 +838,8 @@ void CreateFavorites(WindowInfo* win) {
     treeCtrl->onTreeSelectionChanged = FavTreeSelectionChanged;
     treeCtrl->onTreeKeyDown = TocTreeKeyDown;
 
-    // TODO: only for ramicro?
-    int fntSize = GetSizeOfDefaultGuiFont();
-    HFONT fnt = GetDefaultGuiFontOfSize(fntSize + 2);
     // TODO: leaks font?
+    HFONT fnt = GetTreeFont();
     treeCtrl->SetFont(fnt);
 
     bool ok = treeCtrl->Create();
