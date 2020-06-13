@@ -310,10 +310,6 @@ func mkLang(name string, code string) *Lang {
 	}
 }
 
-func settingsDir() string {
-	return filepath.Join("docs", "settings")
-}
-
 func websiteSettingsDir() string {
 	return filepath.Join("website", "settings")
 }
@@ -350,10 +346,7 @@ func genLangsHTML() {
 	// TODO: possibly remove
 	//s = strings.Replace(s, "&#39;", "'", -1)
 
-	path := filepath.Join(settingsDir(), langsFileName())
-	u.WriteFileMust(path, []byte(s))
-
-	path = filepath.Join(websiteSettingsDir(), langsFileName())
+	path := filepath.Join(websiteSettingsDir(), langsFileName())
 	u.WriteFileMust(path, []byte(s))
 }
 
@@ -368,9 +361,6 @@ func genSettingsHTML() {
 	// TODO: possibly remove
 	//s = strings.Replace(s, "&#39;", "'", -1)
 
-	path := filepath.Join(settingsDir(), settingsFileName())
-	u.WriteFileMust(path, []byte(s))
-
-	path = filepath.Join(websiteSettingsDir(), settingsFileName())
+	path := filepath.Join(websiteSettingsDir(), settingsFileName())
 	u.WriteFileMust(path, []byte(s))
 }

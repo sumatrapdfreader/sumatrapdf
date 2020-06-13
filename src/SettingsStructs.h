@@ -402,18 +402,18 @@ static const FieldInfo gWindowMarginFields[] = {
 };
 static const StructInfo gWindowMarginInfo = {sizeof(WindowMargin), 4, gWindowMarginFields, "Top\0Right\0Bottom\0Left"};
 
-static const FieldInfo gSizeIFields[] = {
+static const FieldInfo gSizeFields[] = {
     {offsetof(Size, dx), Type_Int, 4},
     {offsetof(Size, dy), Type_Int, 4},
 };
-static const StructInfo gSizeIInfo = {sizeof(Size), 2, gSizeIFields, "Dx\0Dy"};
+static const StructInfo gSizeInfo = {sizeof(Size), 2, gSizeFields, "Dx\0Dy"};
 
 static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, textColor), Type_Color, 0x000000},
     {offsetof(FixedPageUI, backgroundColor), Type_Color, 0xffffff},
     {offsetof(FixedPageUI, selectionColor), Type_Color, 0x0cfcf5},
     {offsetof(FixedPageUI, windowMargin), Type_Compact, (intptr_t)&gWindowMarginInfo},
-    {offsetof(FixedPageUI, pageSpacing), Type_Compact, (intptr_t)&gSizeIInfo},
+    {offsetof(FixedPageUI, pageSpacing), Type_Compact, (intptr_t)&gSizeInfo},
     {offsetof(FixedPageUI, gradientColors), Type_ColorArray, 0},
 };
 static const StructInfo gFixedPageUIInfo = {
@@ -439,15 +439,15 @@ static const FieldInfo gWindowMargin_1_Fields[] = {
 static const StructInfo gWindowMargin_1_Info = {sizeof(WindowMargin), 4, gWindowMargin_1_Fields,
                                                 "Top\0Right\0Bottom\0Left"};
 
-static const FieldInfo gSizeI_1_Fields[] = {
+static const FieldInfo gSize_1_Fields[] = {
     {offsetof(Size, dx), Type_Int, 4},
     {offsetof(Size, dy), Type_Int, 4},
 };
-static const StructInfo gSizeI_1_Info = {sizeof(Size), 2, gSizeI_1_Fields, "Dx\0Dy"};
+static const StructInfo gSize_1_Info = {sizeof(Size), 2, gSize_1_Fields, "Dx\0Dy"};
 
 static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, windowMargin), Type_Compact, (intptr_t)&gWindowMargin_1_Info},
-    {offsetof(ComicBookUI, pageSpacing), Type_Compact, (intptr_t)&gSizeI_1_Info},
+    {offsetof(ComicBookUI, pageSpacing), Type_Compact, (intptr_t)&gSize_1_Info},
     {offsetof(ComicBookUI, cbxMangaMode), Type_Bool, false},
 };
 static const StructInfo gComicBookUIInfo = {sizeof(ComicBookUI), 3, gComicBookUIFields,
@@ -487,13 +487,13 @@ static const FieldInfo gAnnotationDefaultsFields[] = {
 static const StructInfo gAnnotationDefaultsInfo = {sizeof(AnnotationDefaults), 2, gAnnotationDefaultsFields,
                                                    "HighlightColor\0SaveIntoDocument"};
 
-static const FieldInfo gRectIFields[] = {
+static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), Type_Int, 0},
     {offsetof(Rect, y), Type_Int, 0},
     {offsetof(Rect, dx), Type_Int, 0},
     {offsetof(Rect, dy), Type_Int, 0},
 };
-static const StructInfo gRectIInfo = {sizeof(Rect), 4, gRectIFields, "X\0Y\0Dx\0Dy"};
+static const StructInfo gRectInfo = {sizeof(Rect), 4, gRectFields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFavoriteFields[] = {
     {offsetof(Favorite, name), Type_String, 0},
@@ -502,19 +502,19 @@ static const FieldInfo gFavoriteFields[] = {
 };
 static const StructInfo gFavoriteInfo = {sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel"};
 
-static const FieldInfo gPointIFields[] = {
+static const FieldInfo gPointFields[] = {
     {offsetof(Point, x), Type_Int, 0},
     {offsetof(Point, y), Type_Int, 0},
 };
-static const StructInfo gPointIInfo = {sizeof(Point), 2, gPointIFields, "X\0Y"};
+static const StructInfo gPointInfo = {sizeof(Point), 2, gPointFields, "X\0Y"};
 
-static const FieldInfo gRectI_1_Fields[] = {
+static const FieldInfo gRect_1_Fields[] = {
     {offsetof(Rect, x), Type_Int, 0},
     {offsetof(Rect, y), Type_Int, 0},
     {offsetof(Rect, dx), Type_Int, 0},
     {offsetof(Rect, dy), Type_Int, 0},
 };
-static const StructInfo gRectI_1_Info = {sizeof(Rect), 4, gRectI_1_Fields, "X\0Y\0Dx\0Dy"};
+static const StructInfo gRect_1_Info = {sizeof(Rect), 4, gRect_1_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, filePath), Type_String, 0},
@@ -525,12 +525,12 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, decryptionKey), Type_Utf8String, 0},
     {offsetof(FileState, useDefaultState), Type_Bool, false},
     {offsetof(FileState, displayMode), Type_String, (intptr_t)L"automatic"},
-    {offsetof(FileState, scrollPos), Type_Compact, (intptr_t)&gPointIInfo},
+    {offsetof(FileState, scrollPos), Type_Compact, (intptr_t)&gPointInfo},
     {offsetof(FileState, pageNo), Type_Int, 1},
     {offsetof(FileState, zoom), Type_Utf8String, (intptr_t) "fit page"},
     {offsetof(FileState, rotation), Type_Int, 0},
     {offsetof(FileState, windowState), Type_Int, 0},
-    {offsetof(FileState, windowPos), Type_Compact, (intptr_t)&gRectI_1_Info},
+    {offsetof(FileState, windowPos), Type_Compact, (intptr_t)&gRect_1_Info},
     {offsetof(FileState, showToc), Type_Bool, true},
     {offsetof(FileState, sidebarDx), Type_Int, 0},
     {offsetof(FileState, displayR2L), Type_Bool, false},
@@ -542,11 +542,11 @@ static StructInfo gFileStateInfo = {
     "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageN"
     "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState"};
 
-static const FieldInfo gPointI_1_Fields[] = {
+static const FieldInfo gPoint_1_Fields[] = {
     {offsetof(Point, x), Type_Int, 0},
     {offsetof(Point, y), Type_Int, 0},
 };
-static const StructInfo gPointI_1_Info = {sizeof(Point), 2, gPointI_1_Fields, "X\0Y"};
+static const StructInfo gPoint_1_Info = {sizeof(Point), 2, gPoint_1_Fields, "X\0Y"};
 
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), Type_String, 0},
@@ -554,26 +554,26 @@ static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, pageNo), Type_Int, 1},
     {offsetof(TabState, zoom), Type_Utf8String, (intptr_t) "fit page"},
     {offsetof(TabState, rotation), Type_Int, 0},
-    {offsetof(TabState, scrollPos), Type_Compact, (intptr_t)&gPointI_1_Info},
+    {offsetof(TabState, scrollPos), Type_Compact, (intptr_t)&gPoint_1_Info},
     {offsetof(TabState, showToc), Type_Bool, true},
     {offsetof(TabState, tocState), Type_IntArray, 0},
 };
 static const StructInfo gTabStateInfo = {sizeof(TabState), 8, gTabStateFields,
                                          "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState"};
 
-static const FieldInfo gRectI_2_Fields[] = {
+static const FieldInfo gRect_2_Fields[] = {
     {offsetof(Rect, x), Type_Int, 0},
     {offsetof(Rect, y), Type_Int, 0},
     {offsetof(Rect, dx), Type_Int, 0},
     {offsetof(Rect, dy), Type_Int, 0},
 };
-static const StructInfo gRectI_2_Info = {sizeof(Rect), 4, gRectI_2_Fields, "X\0Y\0Dx\0Dy"};
+static const StructInfo gRect_2_Info = {sizeof(Rect), 4, gRect_2_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gSessionDataFields[] = {
     {offsetof(SessionData, tabStates), Type_Array, (intptr_t)&gTabStateInfo},
     {offsetof(SessionData, tabIndex), Type_Int, 1},
     {offsetof(SessionData, windowState), Type_Int, 0},
-    {offsetof(SessionData, windowPos), Type_Compact, (intptr_t)&gRectI_2_Info},
+    {offsetof(SessionData, windowPos), Type_Compact, (intptr_t)&gRect_2_Info},
     {offsetof(SessionData, sidebarDx), Type_Int, 0},
 };
 static const StructInfo gSessionDataInfo = {sizeof(SessionData), 5, gSessionDataFields,
@@ -629,7 +629,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, defaultDisplayMode), Type_String, (intptr_t)L"automatic"},
     {offsetof(GlobalPrefs, defaultZoom), Type_Utf8String, (intptr_t) "fit page"},
     {offsetof(GlobalPrefs, windowState), Type_Int, 1},
-    {offsetof(GlobalPrefs, windowPos), Type_Compact, (intptr_t)&gRectIInfo},
+    {offsetof(GlobalPrefs, windowPos), Type_Compact, (intptr_t)&gRectInfo},
     {offsetof(GlobalPrefs, showToc), Type_Bool, true},
     {offsetof(GlobalPrefs, sidebarDx), Type_Int, 0},
     {offsetof(GlobalPrefs, tocDy), Type_Int, 0},

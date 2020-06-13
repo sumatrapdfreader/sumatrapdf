@@ -347,7 +347,7 @@ var (
 		mkCompactStruct("WindowMargin", WindowMargin_FixedPageUI,
 			"top, right, bottom and left margin (in that order) between window and document"),
 		mkCompactStruct("PageSpacing", PageSpacing,
-			"horizontal and vertical distance between two pages in facing and book view modes").setStructName("SizeI"),
+			"horizontal and vertical distance between two pages in facing and book view modes").setStructName("Size"),
 		mkCompactArray("GradientColors", Color, nil, // "#2828aa #28aa28 #aa2828",
 			"colors to use for the gradient from top to bottom (stops will be inserted "+
 				"at regular intervals throughout the document); currently only up to three "+
@@ -373,7 +373,7 @@ var (
 		mkCompactStruct("WindowMargin", WindowMargin_ComicBookUI,
 			"top, right, bottom and left margin (in that order) between window and document"),
 		mkCompactStruct("PageSpacing", PageSpacing,
-			"horizontal and vertical distance between two pages in facing and book view modes").setStructName("SizeI"),
+			"horizontal and vertical distance between two pages in facing and book view modes").setStructName("Size"),
 		mkField("CbxMangaMode", Bool, false,
 			"if true, default to displaying Comic Book files in manga mode (from right to left if showing 2 pages at a time)"),
 	}
@@ -443,7 +443,7 @@ var (
 				"DefaultDisplayMode after deserialization and before serialization").setDoc("layout of pages. valid values: automatic, single page, facing, book view, " +
 			"continuous, continuous facing, continuous book view"),
 		mkCompactStruct("ScrollPos", ScrollPos,
-			"how far this document has been scrolled (in x and y direction)").setStructName("PointI"),
+			"how far this document has been scrolled (in x and y direction)").setStructName("Point"),
 		mkField("PageNo", Int, 1,
 			"number of the last read page"),
 		mkField("Zoom", Utf8String, "fit page",
@@ -454,7 +454,7 @@ var (
 			"state of the window. 1 is normal, 2 is maximized, "+
 				"3 is fullscreen, 4 is minimized"),
 		mkCompactStruct("WindowPos", WindowPos,
-			"default position (can be on any monitor)").setStructName("RectI"),
+			"default position (can be on any monitor)").setStructName("Rect"),
 		mkField("ShowToc", Bool, true,
 			"if true, we show table of contents (Bookmarks) sidebar if it's present "+
 				"in the document"),
@@ -494,7 +494,7 @@ var (
 		mkField("Rotation", Int, 0,
 			"same as FileStates -> Rotation"),
 		mkCompactStruct("ScrollPos", ScrollPos,
-			"how far this document has been scrolled (in x and y direction)").setStructName("PointI"),
+			"how far this document has been scrolled (in x and y direction)").setStructName("Point"),
 		mkField("ShowToc", Bool, true,
 			"if true, the table of contents was shown when the document was closed"),
 		mkCompactArray("TocState", Int, nil,
@@ -507,7 +507,7 @@ var (
 				"(required for handling documents being opened twice)").setDoc("data required for restoring the view state of a single tab"),
 		mkField("TabIndex", Int, 1, "index of the currently selected tab (1-based)"),
 		mkField("WindowState", Int, 0, "same as FileState -> WindowState"),
-		mkCompactStruct("WindowPos", WindowPos, "default position (can be on any monitor)").setStructName("RectI"),
+		mkCompactStruct("WindowPos", WindowPos, "default position (can be on any monitor)").setStructName("Rect"),
 		mkField("SidebarDx", Int, 0, "width of favorites/bookmarks sidebar (if shown)"),
 	}
 
@@ -611,7 +611,7 @@ var (
 			"default state of new windows (same as the last closed)").setDoc("default state of the window. 1 is normal, 2 is maximized, " +
 			"3 is fullscreen, 4 is minimized"),
 		mkCompactStruct("WindowPos", WindowPos,
-			"default position (can be on any monitor)").setStructName("RectI").setDoc("default position (x, y) and size (width, height) of the window"),
+			"default position (can be on any monitor)").setStructName("Rect").setDoc("default position (x, y) and size (width, height) of the window"),
 		mkField("ShowToc", Bool, true,
 			"if true, we show table of contents (Bookmarks) sidebar if it's present "+
 				"in the document"),
