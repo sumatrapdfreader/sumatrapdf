@@ -11,7 +11,7 @@
 #include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 // TODO: move function that need Cmd to ResourceIds.h
-#include "ResourceIds.h"
+#include "Commands.h"
 
 #include "utils/Log.h"
 

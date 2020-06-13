@@ -26,7 +26,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "AppTools.h"
 #include "Menu.h"
 #include "SearchAndDDE.h"

@@ -40,7 +40,7 @@
 #include "Favorites.h"
 #include "TabInfo.h"
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "AppTools.h"
 #include "TableOfContents.h"
 #include "Translations.h"

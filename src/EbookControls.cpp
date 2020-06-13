@@ -20,7 +20,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "EbookControls.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"

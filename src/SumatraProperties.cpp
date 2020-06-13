@@ -20,7 +20,7 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "SumatraProperties.h"
 #include "Translations.h"
 

@@ -26,7 +26,7 @@
 #include "SumatraConfig.h"
 #include "WindowInfo.h"
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "FileThumbnails.h"
 #include "SumatraAbout.h"
 #include "Translations.h"

@@ -39,7 +39,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "Canvas.h"
 #include "Caption.h"
 #include "Menu.h"

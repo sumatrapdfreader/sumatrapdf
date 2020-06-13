@@ -24,7 +24,7 @@
 #include "EngineManager.h"
 
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SettingsStructs.h"

@@ -17,7 +17,7 @@ extern "C" {
 #include "wingui/TreeModel.h"
 
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "Translations.h"
 
 #include "Annotation.h"

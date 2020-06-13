@@ -15,7 +15,7 @@
 #include "Tabs.h"
 #include "Translations.h"
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "Menu.h"
 
 // using namespace Gdiplus;

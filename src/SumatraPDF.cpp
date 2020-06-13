@@ -59,7 +59,7 @@
 #include "TabInfo.h"
 #include "TocEditor.h"
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "Flags.h"
 #include "AppPrefs.h"
 #include "AppTools.h"

@@ -4,7 +4,7 @@
 #include "utils/BaseUtil.h"
 
 #include "resource.h"
-#include "ResourceIds.h"
+#include "Commands.h"
 #include "Version.h"
 #include "SumatraConfig.h"
 
