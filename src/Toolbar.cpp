@@ -56,22 +56,22 @@ struct ToolbarButtonInfo {
 };
 
 static ToolbarButtonInfo gToolbarButtons[] = {
-    {0, (int)Cmd::Open, _TRN("Open"), MF_REQ_DISK_ACCESS},
+    {0, CmdOpen, _TRN("Open"), MF_REQ_DISK_ACCESS},
     // the Open button is replaced with a Save As button in Plugin mode:
     //  { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_REQ_DISK_ACCESS },
-    {1, (int)Cmd::Print, _TRN("Print"), MF_REQ_PRINTER_ACCESS},
-    {-1, (int)Cmd::GoToPage, nullptr, 0},
-    {2, (int)Cmd::GoToPrevPage, _TRN("Previous Page"), 0},
-    {3, (int)Cmd::GoToNextPage, _TRN("Next Page"), 0},
+    {1, CmdPrint, _TRN("Print"), MF_REQ_PRINTER_ACCESS},
+    {-1, CmdGoToPage, nullptr, 0},
+    {2, CmdGoToPrevPage, _TRN("Previous Page"), 0},
+    {3, CmdGoToNextPage, _TRN("Next Page"), 0},
     {-1, 0, nullptr, 0},
-    {4, (int)Cmd::ToolbarViewFitWidth, _TRN("Fit Width and Show Pages Continuously"), 0},
-    {5, (int)Cmd::ToolbarViewFitPage, _TRN("Fit a Single Page"), 0},
-    {6, (int)Cmd::ViewZoomOut, _TRN("Zoom Out"), 0},
-    {7, (int)Cmd::ViewZoomIn, _TRN("Zoom In"), 0},
-    {-1, (int)Cmd::FindFirst, nullptr, 0},
-    {8, (int)Cmd::FindPrev, _TRN("Find Previous"), 0},
-    {9, (int)Cmd::FindNext, _TRN("Find Next"), 0},
-    {10, (int)Cmd::FindMatch, _TRN("Match Case"), 0},
+    {4, CmdToolbarViewFitWidth, _TRN("Fit Width and Show Pages Continuously"), 0},
+    {5, CmdToolbarViewFitPage, _TRN("Fit a Single Page"), 0},
+    {6, CmdViewZoomOut, _TRN("Zoom Out"), 0},
+    {7, CmdViewZoomIn, _TRN("Zoom In"), 0},
+    {-1, CmdFindFirst, nullptr, 0},
+    {8, CmdFindPrev, _TRN("Find Previous"), 0},
+    {9, CmdFindNext, _TRN("Find Next"), 0},
+    {10, CmdFindMatch, _TRN("Match Case"), 0},
 };
 
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)
@@ -82,14 +82,14 @@ static bool TbIsSeparator(ToolbarButtonInfo& tbi) {
 
 static bool IsVisibleToolbarButton(WindowInfo* win, int buttonNo) {
     switch (gToolbarButtons[buttonNo].cmdId) {
-        case (int)Cmd::ToolbarViewFitWidth:
-        case (int)Cmd::ToolbarViewFitPage:
+        case CmdToolbarViewFitWidth:
+        case CmdToolbarViewFitPage:
             return !win->AsChm();
 
-        case (int)Cmd::FindFirst:
-        case (int)Cmd::FindNext:
-        case (int)Cmd::FindPrev:
-        case (int)Cmd::FindMatch:
+        case CmdFindFirst:
+        case CmdFindNext:
+        case CmdFindPrev:
+        case CmdFindMatch:
             return NeedsFindUI(win);
 
         default:
@@ -107,27 +107,27 @@ static bool IsToolbarButtonEnabled(WindowInfo* win, int buttonNo) {
 
     // If no file open, only enable open button
     if (!win->IsDocLoaded()) {
-        return (int)Cmd::Open == cmdId;
+        return CmdOpen == cmdId;
     }
 
     switch (cmdId) {
-        case (int)Cmd::Open:
+        case CmdOpen:
             // opening different files isn't allowed in plugin mode
             return !gPluginMode;
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-        case (int)Cmd::Print:
+        case CmdPrint:
             return !win->AsFixed() || win->AsFixed()->GetEngine()->AllowsPrinting();
 #endif
 
-        case (int)Cmd::FindNext:
-        case (int)Cmd::FindPrev:
+        case CmdFindNext:
+        case CmdFindPrev:
             // TODO: Update on whether there's more to find, not just on whether there is text.
             return win::GetTextLen(win->hwndFindBox) > 0;
 
-        case (int)Cmd::GoToNextPage:
+        case CmdGoToNextPage:
             return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
-        case (int)Cmd::GoToPrevPage:
+        case CmdGoToPrevPage:
             return win->ctrl->CurrentPageNo() > 1;
 
         default:
@@ -345,7 +345,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
     Rect findWndRect = WindowRect(win->hwndFindBg);
 
     RECT r{};
-    TbGetRect(win->hwndToolbar, (int)Cmd::ViewZoomIn, &r);
+    TbGetRect(win->hwndToolbar, CmdViewZoomIn, &r);
     int currX = r.right + DpiScale(win->hwndToolbar, 10);
     int currY = (r.bottom - findWndRect.dy) / 2;
 
@@ -369,7 +369,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
     bi.cx = (WORD)(size.dx + findWndRect.dx + 12);
-    TbSetButtonInfo(win->hwndToolbar, (int)Cmd::FindFirst, &bi);
+    TbSetButtonInfo(win->hwndToolbar, CmdFindFirst, &bi);
 }
 
 void UpdateToolbarState(WindowInfo* win) {
@@ -377,7 +377,7 @@ void UpdateToolbarState(WindowInfo* win) {
         return;
     }
     HWND hwnd = win->hwndToolbar;
-    WORD state = (WORD)SendMessageW(hwnd, TB_GETSTATE, (int)Cmd::ToolbarViewFitWidth, 0);
+    WORD state = (WORD)SendMessageW(hwnd, TB_GETSTATE, CmdToolbarViewFitWidth, 0);
     DisplayMode dm = win->ctrl->GetDisplayMode();
     float zoomVirtual = win->ctrl->GetZoomVirtual();
     if (dm == DM_CONTINUOUS && zoomVirtual == ZOOM_FIT_WIDTH) {
@@ -385,17 +385,17 @@ void UpdateToolbarState(WindowInfo* win) {
     } else {
         state &= ~TBSTATE_CHECKED;
     }
-    SendMessageW(hwnd, TB_SETSTATE, (int)Cmd::ToolbarViewFitWidth, state);
+    SendMessageW(hwnd, TB_SETSTATE, CmdToolbarViewFitWidth, state);
 
     bool isChecked = (state & TBSTATE_CHECKED);
 
-    state = (WORD)SendMessageW(hwnd, TB_GETSTATE, (int)Cmd::ToolbarViewFitPage, 0);
+    state = (WORD)SendMessageW(hwnd, TB_GETSTATE, CmdToolbarViewFitPage, 0);
     if (dm == DM_SINGLE_PAGE && zoomVirtual == ZOOM_FIT_PAGE) {
         state |= TBSTATE_CHECKED;
     } else {
         state &= ~TBSTATE_CHECKED;
     }
-    SendMessageW(hwnd, TB_SETSTATE, (int)Cmd::ToolbarViewFitPage, state);
+    SendMessageW(hwnd, TB_SETSTATE, CmdToolbarViewFitPage, state);
 
     isChecked |= (state & TBSTATE_CHECKED);
     if (!isChecked) {
@@ -497,7 +497,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     Rect pageWndRect = WindowRect(win->hwndPageBg);
 
     RECT r{};
-    SendMessageW(win->hwndToolbar, TB_GETRECT, (WPARAM)Cmd::Print, (LPARAM)&r);
+    SendMessageW(win->hwndToolbar, TB_GETRECT, CmdPrint, (LPARAM)&r);
     int currX = r.right + DpiScale(win->hwndFrame, 10);
     int currY = (r.bottom - pageWndRect.dy) / 2;
 
@@ -558,11 +558,11 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_SIZE;
-    SendMessageW(win->hwndToolbar, TB_GETBUTTONINFO, (WPARAM)Cmd::GoToPage, (LPARAM)&bi);
+    SendMessageW(win->hwndToolbar, TB_GETBUTTONINFO, CmdGoToPage, (LPARAM)&bi);
     size2.dx += size.dx + pageWndRect.dx + 12;
     if (bi.cx != size2.dx || !updateOnly) {
         bi.cx = (WORD)size2.dx;
-        TbSetButtonInfo(win->hwndToolbar, (int)Cmd::GoToPage, &bi);
+        TbSetButtonInfo(win->hwndToolbar, CmdGoToPage, &bi);
     } else {
         Rect rc = ClientRect(win->hwndPageTotal);
         rc = MapRectToWindow(rc, win->hwndPageTotal, win->hwndToolbar);
@@ -723,13 +723,13 @@ void CreateToolbar(WindowInfo* win) {
     // in Plugin mode, replace the Open with a Save As button
     if (gPluginMode && size.dx / size.dy == 13) {
         gToolbarButtons[0].bmpIndex = 12;
-        gToolbarButtons[0].cmdId = (int)Cmd::SaveAs;
+        gToolbarButtons[0].cmdId = CmdSaveAs;
         gToolbarButtons[0].toolTip = _TRN("Save As");
         gToolbarButtons[0].flags = MF_REQ_DISK_ACCESS;
     }
     for (int i = 0; i < TOOLBAR_BUTTONS_COUNT; i++) {
         tbButtons[i] = TbButtonFromButtonInfo(i);
-        if (gToolbarButtons[i].cmdId == (int)Cmd::FindMatch) {
+        if (gToolbarButtons[i].cmdId == CmdFindMatch) {
             tbButtons[i].fsStyle = BTNS_CHECK;
         }
     }

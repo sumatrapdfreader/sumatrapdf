@@ -44,10 +44,10 @@
 #include "EditAnnotations.h"
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
-//       Cmd::ZoomFIT_PAGE - Cmd::ZoomCUSTOM must be in a continuous range!
-static_assert((int)Cmd::ViewLayoutLast - (int)Cmd::ViewLayoutFirst == 4,
+//       CmdZoomFIT_PAGE - CmdZoomCUSTOM must be in a continuous range!
+static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4,
               "view layout ids are not in a continuous range");
-static_assert((int)Cmd::ZoomLast - (int)Cmd::ZoomFirst == 17, "zoom ids are not in a continuous range");
+static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuous range");
 
 bool gAddCrashMeMenu = false;
 
@@ -58,105 +58,105 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
         displayMode = win->ctrl->GetDisplayMode();
     }
 
-    for (int id = (int)Cmd::ViewLayoutFirst; id <= (int)Cmd::ViewLayoutLast; id++) {
+    for (int id = CmdViewLayoutFirst; id <= CmdViewLayoutLast; id++) {
         win::menu::SetEnabled(win->menu, id, enabled);
     }
 
     UINT id = 0;
     if (IsSingle(displayMode)) {
-        id = (UINT)Cmd::ViewSinglePage;
+        id = CmdViewSinglePage;
     } else if (IsFacing(displayMode)) {
-        id = (UINT)Cmd::ViewFacing;
+        id = CmdViewFacing;
     } else if (IsBookView(displayMode)) {
-        id = (UINT)Cmd::ViewBook;
+        id = CmdViewBook;
     } else {
         CrashIf(win->ctrl || DM_AUTOMATIC != displayMode);
     }
 
-    CheckMenuRadioItem(win->menu, (UINT)Cmd::ViewLayoutFirst, (UINT)Cmd::ViewLayoutLast, id, MF_BYCOMMAND);
-    win::menu::SetChecked(win->menu, (UINT)Cmd::ViewContinuous, IsContinuous(displayMode));
+    CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);
+    win::menu::SetChecked(win->menu, CmdViewContinuous, IsContinuous(displayMode));
 
     if (win->currentTab && win->currentTab->GetEngineType() == kindEngineComicBooks) {
         bool mangaMode = win->AsFixed()->GetDisplayR2L();
-        win::menu::SetChecked(win->menu, (UINT)Cmd::ViewMangaMode, mangaMode);
+        win::menu::SetChecked(win->menu, CmdViewMangaMode, mangaMode);
     }
 }
 
 // clang-format off
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
-    { _TRN("New &window\tCtrl+N"),          (UINT)Cmd::NewWindow,             MF_REQ_DISK_ACCESS },
-    { _TRN("&Open...\tCtrl+O"),             (UINT)Cmd::Open,                   MF_REQ_DISK_ACCESS },
-    { "Open Folder",                        (UINT)Cmd::OpenFolder,            MF_REQ_DISK_ACCESS | MF_RAMICRO_ONLY },
-    { _TRN("&Close\tCtrl+W"),               (UINT)Cmd::Close,                  MF_REQ_DISK_ACCESS },
-    { _TRN("Show in &folder"),              (UINT)Cmd::ShowInFolder,         MF_REQ_DISK_ACCESS },
-    { _TRN("&Save As...\tCtrl+S"),          (UINT)Cmd::SaveAs,                 MF_REQ_DISK_ACCESS },
-    { _TRN("Save Annotations"),             (UINT)Cmd::SaveAnnotationsSmx,   MF_REQ_DISK_ACCESS },
+    { _TRN("New &window\tCtrl+N"),          CmdNewWindow,             MF_REQ_DISK_ACCESS },
+    { _TRN("&Open...\tCtrl+O"),             CmdOpen,                   MF_REQ_DISK_ACCESS },
+    { "Open Folder",                        CmdOpenFolder,            MF_REQ_DISK_ACCESS | MF_RAMICRO_ONLY },
+    { _TRN("&Close\tCtrl+W"),               CmdClose,                  MF_REQ_DISK_ACCESS },
+    { _TRN("Show in &folder"),              CmdShowInFolder,         MF_REQ_DISK_ACCESS },
+    { _TRN("&Save As...\tCtrl+S"),          CmdSaveAs,                 MF_REQ_DISK_ACCESS },
+    { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,   MF_REQ_DISK_ACCESS },
  //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
     { _TRN("Save S&hortcut...\tCtrl+Shift+S"), (UINT)IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
 #else
-    { _TRN("Re&name...\tF2"),               (UINT)Cmd::RenameFile,            MF_REQ_DISK_ACCESS },
+    { _TRN("Re&name...\tF2"),               CmdRenameFile,            MF_REQ_DISK_ACCESS },
 #endif
 //] ACCESSKEY_ALTERNATIVE
-    { _TRN("&Print...\tCtrl+P"),            (UINT)Cmd::Print,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Print...\tCtrl+P"),            CmdPrint,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
 //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
-    { _TRN("Open in &Adobe Reader"),        (UINT)Cmd::ViewWithAcrobat,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open in &Foxit Reader"),        (UINT)Cmd::ViewWithFoxIt,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open &in PDF-XChange"),         (UINT)Cmd::ViewWithPdfXchange,  MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Adobe Reader"),        CmdViewWithAcrobat,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Foxit Reader"),        CmdViewWithFoxIt,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open &in PDF-XChange"),         CmdViewWithPdfXchange,  MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft XPS-Viewer"),(UINT)Cmd::ViewWithXpsViewer,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft XPS-Viewer"),CmdViewWithXpsViewer,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft HTML Help"), (UINT)Cmd::ViewWithHtmlHelp,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft HTML Help"), CmdViewWithHtmlHelp,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //] ACCESSKEY_ALTERNATIVE
     // further entries are added if specified in gGlobalPrefs.vecCommandLine
-    { _TRN("Send by &E-mail..."),           (UINT)Cmd::SendByEmail,          MF_REQ_DISK_ACCESS },
+    { _TRN("Send by &E-mail..."),           CmdSendByEmail,          MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("P&roperties\tCtrl+D"),          (UINT)Cmd::Properties,             0 },
+    { _TRN("P&roperties\tCtrl+D"),          CmdProperties,             0 },
     { SEP_ITEM,                             0,                          0 },
-    { _TRN("E&xit\tCtrl+Q"),                (UINT)Cmd::Exit,                   0 },
+    { _TRN("E&xit\tCtrl+Q"),                CmdExit,                   0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP File Menu
 
 //[ ACCESSKEY_GROUP View Menu
 static MenuDef menuDefView[] = {
-    { _TRN("&Single Page\tCtrl+6"),         (UINT)Cmd::ViewSinglePage,        MF_NOT_FOR_CHM },
-    { _TRN("&Facing\tCtrl+7"),              (UINT)Cmd::ViewFacing,            MF_NOT_FOR_CHM },
-    { _TRN("&Book View\tCtrl+8"),           (UINT)Cmd::ViewBook,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Show &Pages Continuously"),     (UINT)Cmd::ViewContinuous,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Single Page\tCtrl+6"),         CmdViewSinglePage,        MF_NOT_FOR_CHM },
+    { _TRN("&Facing\tCtrl+7"),              CmdViewFacing,            MF_NOT_FOR_CHM },
+    { _TRN("&Book View\tCtrl+8"),           CmdViewBook,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show &Pages Continuously"),     CmdViewContinuous,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
-    { _TRN("Man&ga Mode"),                  (UINT)Cmd::ViewMangaMode,         MF_CBX_ONLY },
+    { _TRN("Man&ga Mode"),                  CmdViewMangaMode,         MF_CBX_ONLY },
     { SEP_ITEM,                             0,                                MF_NOT_FOR_CHM },
-    { _TRN("Rotate &Left\tCtrl+Shift+-"),   (UINT)Cmd::ViewRotateLeft,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Rotate &Right\tCtrl+Shift++"),  (UINT)Cmd::ViewRotateRight,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Rotate &Left\tCtrl+Shift+-"),   CmdViewRotateLeft,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Rotate &Right\tCtrl+Shift++"),  CmdViewRotateRight,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                                MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Pr&esentation\tF5"),            (UINT)Cmd::ViewPresentationMode,  MF_REQ_FULLSCREEN | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("F&ullscreen\tF11"),             (UINT)Cmd::ViewFullScreen,        MF_REQ_FULLSCREEN },
+    { _TRN("Pr&esentation\tF5"),            CmdViewPresentationMode,  MF_REQ_FULLSCREEN | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("F&ullscreen\tF11"),             CmdViewFullScreen,        MF_REQ_FULLSCREEN },
     { SEP_ITEM,                             0,                                MF_REQ_FULLSCREEN },
-    { _TRN("Show Book&marks\tF12"),         (UINT)Cmd::ViewBookmarks,         0 },
-    { _TRN("Show &Toolbar\tF8"),            (UINT)Cmd::ViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show Book&marks\tF12"),         CmdViewBookmarks,         0 },
+    { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                                MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Select &All\tCtrl+A"),          (UINT)Cmd::SelectAll,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Copy Selection\tCtrl+C"),      (UINT)Cmd::CopySelection,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Select &All\tCtrl+A"),          CmdSelectAll,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Copy Selection\tCtrl+C"),      CmdCopySelection,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP View Menu
 
 //[ ACCESSKEY_GROUP GoTo Menu
 static MenuDef menuDefGoTo[] = {
-    { _TRN("&Next Page\tRight Arrow"),      (UINT)Cmd::GoToNextPage,         0 },
-    { _TRN("&Previous Page\tLeft Arrow"),   (UINT)Cmd::GoToPrevPage,         0 },
-    { _TRN("&First Page\tHome"),            (UINT)Cmd::GoToFirstPage,        0 },
-    { _TRN("&Last Page\tEnd"),              (UINT)Cmd::GoToLastPage,         0 },
-    { _TRN("Pa&ge...\tCtrl+G"),             (UINT)Cmd::GoToPage,              0 },
+    { _TRN("&Next Page\tRight Arrow"),      CmdGoToNextPage,         0 },
+    { _TRN("&Previous Page\tLeft Arrow"),   CmdGoToPrevPage,         0 },
+    { _TRN("&First Page\tHome"),            CmdGoToFirstPage,        0 },
+    { _TRN("&Last Page\tEnd"),              CmdGoToLastPage,         0 },
+    { _TRN("Pa&ge...\tCtrl+G"),             CmdGoToPage,              0 },
     { SEP_ITEM,                             0,                          0 },
-    { _TRN("&Back\tAlt+Left Arrow"),        (UINT)Cmd::GoToNavBack,          0 },
-    { _TRN("F&orward\tAlt+Right Arrow"),    (UINT)Cmd::GoToNavForward,       0 },
+    { _TRN("&Back\tAlt+Left Arrow"),        CmdGoToNavBack,          0 },
+    { _TRN("F&orward\tAlt+Right Arrow"),    CmdGoToNavForward,       0 },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Fin&d...\tCtrl+F"),             (UINT)Cmd::FindFirst,             MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Fin&d...\tCtrl+F"),             CmdFindFirst,             MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP GoTo Menu
@@ -164,38 +164,38 @@ static MenuDef menuDefGoTo[] = {
 //[ ACCESSKEY_GROUP Zoom Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefZoom[] = {
-    { _TRN("Fit &Page\tCtrl+0"),            (UINT)Cmd::ZoomFitPage,          MF_NOT_FOR_CHM },
-    { _TRN("&Actual Size\tCtrl+1"),         (UINT)Cmd::ZoomActualSize,       MF_NOT_FOR_CHM },
-    { _TRN("Fit &Width\tCtrl+2"),           (UINT)Cmd::ZoomFitWidth,         MF_NOT_FOR_CHM },
-    { _TRN("Fit &Content\tCtrl+3"),         (UINT)Cmd::ZoomFitContent,       MF_NOT_FOR_CHM },
-    { _TRN("Custom &Zoom...\tCtrl+Y"),      (UINT)Cmd::ZoomCustom,            0 },
+    { _TRN("Fit &Page\tCtrl+0"),            CmdZoomFitPage,          MF_NOT_FOR_CHM },
+    { _TRN("&Actual Size\tCtrl+1"),         CmdZoomActualSize,       MF_NOT_FOR_CHM },
+    { _TRN("Fit &Width\tCtrl+2"),           CmdZoomFitWidth,         MF_NOT_FOR_CHM },
+    { _TRN("Fit &Content\tCtrl+3"),         CmdZoomFitContent,       MF_NOT_FOR_CHM },
+    { _TRN("Custom &Zoom...\tCtrl+Y"),      CmdZoomCustom,            0 },
     { SEP_ITEM,                             0,                          0 },
-    { "6400%",                              (UINT)Cmd::Zoom6400,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "3200%",                              (UINT)Cmd::Zoom3200,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "1600%",                              (UINT)Cmd::Zoom1600,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "800%",                               (UINT)Cmd::Zoom800,               MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "400%",                               (UINT)Cmd::Zoom400,               MF_NO_TRANSLATE },
-    { "200%",                               (UINT)Cmd::Zoom200,               MF_NO_TRANSLATE },
-    { "150%",                               (UINT)Cmd::Zoom150,               MF_NO_TRANSLATE },
-    { "125%",                               (UINT)Cmd::Zoom125,               MF_NO_TRANSLATE },
-    { "100%",                               (UINT)Cmd::Zoom100,               MF_NO_TRANSLATE },
-    { "50%",                                (UINT)Cmd::Zoom50,                MF_NO_TRANSLATE },
-    { "25%",                                (UINT)Cmd::Zoom25,                MF_NO_TRANSLATE },
-    { "12.5%",                              (UINT)Cmd::Zoom12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "8.33%",                              (UINT)Cmd::Zoom8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "6400%",                              CmdZoom6400,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "3200%",                              CmdZoom3200,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "1600%",                              CmdZoom1600,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "800%",                               CmdZoom800,               MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "400%",                               CmdZoom400,               MF_NO_TRANSLATE },
+    { "200%",                               CmdZoom200,               MF_NO_TRANSLATE },
+    { "150%",                               CmdZoom150,               MF_NO_TRANSLATE },
+    { "125%",                               CmdZoom125,               MF_NO_TRANSLATE },
+    { "100%",                               CmdZoom100,               MF_NO_TRANSLATE },
+    { "50%",                                CmdZoom50,                MF_NO_TRANSLATE },
+    { "25%",                                CmdZoom25,                MF_NO_TRANSLATE },
+    { "12.5%",                              CmdZoom12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "8.33%",                              CmdZoom8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Zoom Menu
 
 //[ ACCESSKEY_GROUP Settings Menu
 static MenuDef menuDefSettings[] = {
-    { _TRN("Change Language"),              (UINT)Cmd::ChangeLanguage,        0 },
+    { _TRN("Change Language"),              CmdChangeLanguage,        0 },
 #if 0
     { _TRN("Contribute Translation"),       (UINT)IDM_CONTRIBUTE_TRANSLATION, MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
 #endif
-    { _TRN("&Options..."),                  (UINT)Cmd::Options,                MF_REQ_PREF_ACCESS },
-    { _TRN("&Advanced Options..."),         (UINT)Cmd::AdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
+    { _TRN("&Options..."),                  CmdOptions,                MF_REQ_PREF_ACCESS },
+    { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Settings Menu
@@ -203,34 +203,34 @@ static MenuDef menuDefSettings[] = {
 //[ ACCESSKEY_GROUP Favorites Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 MenuDef menuDefFavorites[] = {
-    { _TRN("Add to favorites"),             (UINT)Cmd::FavAdd,                0 },
-    { _TRN("Remove from favorites"),        (UINT)Cmd::FavDel,                0 },
-    { _TRN("Show Favorites"),               (UINT)Cmd::FavToggle,             MF_REQ_DISK_ACCESS },
+    { _TRN("Add to favorites"),             CmdFavAdd,                0 },
+    { _TRN("Remove from favorites"),        CmdFavDel,                0 },
+    { _TRN("Show Favorites"),               CmdFavToggle,             MF_REQ_DISK_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Favorites Menu
 
 //[ ACCESSKEY_GROUP Help Menu
 static MenuDef menuDefHelp[] = {
-    { _TRN("Visit &Website"),               (UINT)Cmd::VisitWebsite,          MF_REQ_DISK_ACCESS },
-    { _TRN("&Manual"),                      (UINT)Cmd::Manual,                 MF_REQ_DISK_ACCESS },
-    { _TRN("Check for &Updates"),           (UINT)Cmd::CheckUpdate,           MF_REQ_INET_ACCESS },
+    { _TRN("Visit &Website"),               CmdVisitWebsite,          MF_REQ_DISK_ACCESS },
+    { _TRN("&Manual"),                      CmdManual,                 MF_REQ_DISK_ACCESS },
+    { _TRN("Check for &Updates"),           CmdCheckUpdate,           MF_REQ_INET_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("&About"),                       (UINT)Cmd::About,                  0 },
+    { _TRN("&About"),                       CmdAbout,                  0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Help Menu
 
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
-    { _TRN("&Advanced Options..."),         (UINT)Cmd::AdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
-    { "Highlight links",                    (UINT)Cmd::DebugShowLinks,       MF_NO_TRANSLATE },
-    { "Toggle ebook UI",                    (UINT)Cmd::DebugEbookUI,         MF_NO_TRANSLATE },
-    { "Mui debug paint",                    (UINT)Cmd::DebugMui,              MF_NO_TRANSLATE },
-    { "Annotation from Selection",          (UINT)Cmd::DebugAnnotations,       MF_NO_TRANSLATE },
-    { "Download symbols",                   (UINT)Cmd::DebugDownloadSymbols, MF_NO_TRANSLATE },
-    { "Test app",                           (UINT)Cmd::DebugTestApp,         MF_NO_TRANSLATE },
-    { "Show notification",                  (UINT)Cmd::DebugShowNotif,       MF_NO_TRANSLATE },
+    { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
+    { "Highlight links",                    CmdDebugShowLinks,       MF_NO_TRANSLATE },
+    { "Toggle ebook UI",                    CmdDebugEbookUI,         MF_NO_TRANSLATE },
+    { "Mui debug paint",                    CmdDebugMui,              MF_NO_TRANSLATE },
+    { "Annotation from Selection",          CmdDebugAnnotations,       MF_NO_TRANSLATE },
+    { "Download symbols",                   CmdDebugDownloadSymbols, MF_NO_TRANSLATE },
+    { "Test app",                           CmdDebugTestApp,         MF_NO_TRANSLATE },
+    { "Show notification",                  CmdDebugShowNotif,       MF_NO_TRANSLATE },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Debug Menu
@@ -238,36 +238,36 @@ static MenuDef menuDefDebug[] = {
 //[ ACCESSKEY_GROUP Context Menu (Content)
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
-    { _TRN("&Copy Selection"),              (UINT)Cmd::CopySelection,         MF_REQ_ALLOW_COPY },
-    { _TRN("Copy &Link Address"),           (UINT)Cmd::CopyLinkTarget,        MF_REQ_ALLOW_COPY },
-    { _TRN("Copy Co&mment"),                (UINT)Cmd::CopyComment,           MF_REQ_ALLOW_COPY },
-    { _TRN("Copy &Image"),                  (UINT)Cmd::CopyImage,             MF_REQ_ALLOW_COPY },
-    { _TRN("Select &All"),                  (UINT)Cmd::SelectAll,             MF_REQ_ALLOW_COPY },
+    { _TRN("&Copy Selection"),              CmdCopySelection,         MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Link Address"),           CmdCopyLinkTarget,        MF_REQ_ALLOW_COPY },
+    { _TRN("Copy Co&mment"),                CmdCopyComment,           MF_REQ_ALLOW_COPY },
+    { _TRN("Copy &Image"),                  CmdCopyImage,             MF_REQ_ALLOW_COPY },
+    { _TRN("Select &All"),                  CmdSelectAll,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                                MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
-    {"add",                                 (UINT)Cmd::FavAdd,                MF_NO_TRANSLATE   },
-    {"del",                                 (UINT)Cmd::FavDel,                MF_NO_TRANSLATE   },
-    { _TRN("Show &Favorites"),              (UINT)Cmd::FavToggle,             0                 },
-    { _TRN("Show &Bookmarks\tF12"),         (UINT)Cmd::ViewBookmarks,         0                 },
-    { _TRN("Show &Toolbar\tF8"),            (UINT)Cmd::ViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Save Annotations"),             (UINT)Cmd::SaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
-    { _TR_TODON("Edit Annotations"),        (UINT)Cmd::EditAnnotations,       MF_REQ_DISK_ACCESS },
-    {"New Bookmarks",                       (UINT)Cmd::NewBookmarks,          MF_NO_TRANSLATE},
+    {"add",                                 CmdFavAdd,                MF_NO_TRANSLATE   },
+    {"del",                                 CmdFavDel,                MF_NO_TRANSLATE   },
+    { _TRN("Show &Favorites"),              CmdFavToggle,             0                 },
+    { _TRN("Show &Bookmarks\tF12"),         CmdViewBookmarks,         0                 },
+    { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
+    { _TR_TODON("Edit Annotations"),        CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
+    {"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE},
     { SEP_ITEM,                             0,                                MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
-    { _TRN("&Save As..."),                  (UINT)Cmd::SaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
-    { _TRN("&Print..."),                    (UINT)Cmd::Print,                 MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
-    { _TRN("P&roperties"),                  (UINT)Cmd::Properties,            MF_PLUGIN_MODE_ONLY },
-    { _TRN("E&xit Fullscreen"),             (UINT)Cmd::ExitFullScreen,        0 },
+    { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
+    { _TRN("&Print..."),                    CmdPrint,                 MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
+    { _TRN("P&roperties"),                  CmdProperties,            MF_PLUGIN_MODE_ONLY },
+    { _TRN("E&xit Fullscreen"),             CmdExitFullScreen,        0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
 
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
-    { _TRN("&Open Document"),               (UINT)Cmd::OpenSelectedDocument, MF_REQ_DISK_ACCESS },
-    { _TRN("&Pin Document"),                (UINT)Cmd::PinSelectedDocument,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { _TRN("&Open Document"),               CmdOpenSelectedDocument, MF_REQ_DISK_ACCESS },
+    { _TRN("&Pin Document"),                CmdPinSelectedDocument,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
-    { _TRN("&Remove Document"),             (UINT)Cmd::ForgetSelectedDocument, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { _TRN("&Remove Document"),             CmdForgetSelectedDocument, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Start)
@@ -336,9 +336,9 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, UINT index) {
     auto fileName = win::menu::ToSafeString(menuString);
     int menuIdx = (int)((index + 1) % 10);
     menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
-    UINT menuId = (UINT)Cmd::FileHistoryFirst + index;
+    UINT menuId = CmdFileHistoryFirst + index;
     UINT flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
-    InsertMenuW(menuFile, (UINT)Cmd::Exit, flags, menuId, menuString);
+    InsertMenuW(menuFile, CmdExit, flags, menuId, menuString);
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {
@@ -356,7 +356,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
     }
 
     if (i > 0) {
-        InsertMenu(m, (UINT)Cmd::Exit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
+        InsertMenu(m, CmdExit, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
     }
 }
 
@@ -368,7 +368,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         return;
     }
 
-    int maxEntries = (int)Cmd::OpenWithExternalLast - (int)Cmd::OpenWithExternalFirst + 1;
+    int maxEntries = CmdOpenWithExternalLast - CmdOpenWithExternalFirst + 1;
     int count = 0;
     for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && count < maxEntries; i++) {
         ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
@@ -392,8 +392,8 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         }
 
         AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.get() : name));
-        UINT menuId = (UINT)Cmd::OpenWithExternalFirst + count;
-        InsertMenuW(menuFile, (UINT)Cmd::SendByEmail, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
+        UINT menuId = CmdOpenWithExternalFirst + count;
+        InsertMenuW(menuFile, CmdSendByEmail, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {
             win::menu::SetEnabled(menuFile, menuId, false);
         }
@@ -406,24 +406,24 @@ static struct {
     uint itemId;
     float zoom;
 } gZoomMenuIds[] = {
-    { (uint)Cmd::Zoom6400,        6400.0 },
-    { (uint)Cmd::Zoom3200,        3200.0 },
-    { (uint)Cmd::Zoom1600,        1600.0 },
-    { (uint)Cmd::Zoom800,         800.0  },
-    { (uint)Cmd::Zoom400,         400.0  },
-    { (uint)Cmd::Zoom200,         200.0  },
-    { (uint)Cmd::Zoom150,         150.0  },
-    { (uint)Cmd::Zoom125,         125.0  },
-    { (uint)Cmd::Zoom100,         100.0  },
-    { (uint)Cmd::Zoom50,          50.0   },
-    { (uint)Cmd::Zoom25,          25.0   },
-    { (uint)Cmd::Zoom12_5,        12.5   },
-    { (uint)Cmd::Zoom8_33,        8.33f  },
-    { (uint)Cmd::ZoomCustom,      0      },
-    { (uint)Cmd::ZoomFitPage,    ZOOM_FIT_PAGE    },
-    { (uint)Cmd::ZoomFitWidth,   ZOOM_FIT_WIDTH   },
-    { (uint)Cmd::ZoomFitContent, ZOOM_FIT_CONTENT },
-    { (uint)Cmd::ZoomActualSize, ZOOM_ACTUAL_SIZE },
+    { CmdZoom6400,        6400.0 },
+    { CmdZoom3200,        3200.0 },
+    { CmdZoom1600,        1600.0 },
+    { CmdZoom800,         800.0  },
+    { CmdZoom400,         400.0  },
+    { CmdZoom200,         200.0  },
+    { CmdZoom150,         150.0  },
+    { CmdZoom125,         125.0  },
+    { CmdZoom100,         100.0  },
+    { CmdZoom50,          50.0   },
+    { CmdZoom25,          25.0   },
+    { CmdZoom12_5,        12.5   },
+    { CmdZoom8_33,        8.33f  },
+    { CmdZoomCustom,      0      },
+    { CmdZoomFitPage,    ZOOM_FIT_PAGE    },
+    { CmdZoomFitWidth,   ZOOM_FIT_WIDTH   },
+    { CmdZoomFitContent, ZOOM_FIT_CONTENT },
+    { CmdZoomActualSize, ZOOM_ACTUAL_SIZE },
 };
 // clang-format on
 
@@ -434,7 +434,7 @@ UINT MenuIdFromVirtualZoom(float virtualZoom) {
             return (UINT)gZoomMenuIds[i].itemId;
         }
     }
-    return (UINT)Cmd::ZoomCustom;
+    return CmdZoomCustom;
 }
 
 static float ZoomMenuItemToZoom(UINT menuItemId) {
@@ -448,18 +448,18 @@ static float ZoomMenuItemToZoom(UINT menuItemId) {
 }
 
 static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom) {
-    CrashIf(((UINT)Cmd::ZoomFirst > menuItemId) || (menuItemId > (UINT)Cmd::ZoomLast));
+    CrashIf((CmdZoomFirst > menuItemId) || (menuItemId > CmdZoomLast));
 
     for (int i = 0; i < dimof(gZoomMenuIds); i++) {
         win::menu::SetEnabled(m, gZoomMenuIds[i].itemId, canZoom);
     }
 
-    if ((UINT)Cmd::Zoom100 == menuItemId) {
-        menuItemId = (UINT)Cmd::ZoomActualSize;
+    if (CmdZoom100 == menuItemId) {
+        menuItemId = CmdZoomActualSize;
     }
-    CheckMenuRadioItem(m, (UINT)Cmd::ZoomFirst, (UINT)Cmd::ZoomLast, menuItemId, MF_BYCOMMAND);
-    if ((UINT)Cmd::ZoomActualSize == menuItemId) {
-        CheckMenuRadioItem(m, (UINT)Cmd::Zoom100, (UINT)Cmd::Zoom100, (UINT)Cmd::Zoom100, MF_BYCOMMAND);
+    CheckMenuRadioItem(m, CmdZoomFirst, CmdZoomLast, menuItemId, MF_BYCOMMAND);
+    if (CmdZoomActualSize == menuItemId) {
+        CheckMenuRadioItem(m, CmdZoom100, CmdZoom100, CmdZoom100, MF_BYCOMMAND);
     }
 }
 
@@ -481,7 +481,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
 #endif
 
     int idx;
-    for (idx = 0; idx < dimof(menuDefFile) && menuDefFile[idx].id != (UINT)Cmd::Print; idx++) {
+    for (idx = 0; idx < dimof(menuDefFile) && menuDefFile[idx].id != CmdPrint; idx++) {
         // do nothing
     }
     if (idx < dimof(menuDefFile)) {
@@ -490,11 +490,11 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
             printItem = _TR("&Print... (denied)");
         }
         if (!filePrintAllowed || !disableOnly) {
-            ModifyMenuW(menu, (UINT)Cmd::Print, MF_BYCOMMAND | MF_STRING, (UINT_PTR)Cmd::Print, printItem);
+            ModifyMenuW(menu, CmdPrint, MF_BYCOMMAND | MF_STRING, (UINT_PTR)CmdPrint, printItem);
         }
     }
 
-    win::menu::SetEnabled(menu, (UINT)Cmd::Print, filePrintEnabled && filePrintAllowed);
+    win::menu::SetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
 }
 
 static bool IsFileCloseMenuEnabled() {
@@ -509,37 +509,37 @@ static bool IsFileCloseMenuEnabled() {
 static void MenuUpdateStateForWindow(WindowInfo* win) {
     // those menu items will be disabled if no document is opened, enabled otherwise
     static UINT menusToDisableIfNoDocument[] = {
-        (UINT)Cmd::ViewRotateLeft,
-        (UINT)Cmd::ViewRotateRight,
-        (UINT)Cmd::GoToNextPage,
-        (UINT)Cmd::GoToPrevPage,
-        (UINT)Cmd::GoToFirstPage,
-        (UINT)Cmd::GoToLastPage,
-        (UINT)Cmd::GoToNavBack,
-        (UINT)Cmd::GoToNavForward,
-        (UINT)Cmd::GoToPage,
-        (UINT)Cmd::FindFirst,
-        (UINT)Cmd::SaveAs,
-        (UINT)Cmd::SaveAsBookmark,
-        (UINT)Cmd::SendByEmail,
-        (UINT)Cmd::SelectAll,
-        (UINT)Cmd::CopySelection,
-        (UINT)Cmd::Properties,
-        (UINT)Cmd::ViewPresentationMode,
-        (UINT)Cmd::ViewWithAcrobat,
-        (UINT)Cmd::ViewWithFoxIt,
-        (UINT)Cmd::ViewWithPdfXchange,
-        (UINT)Cmd::RenameFile,
-        (UINT)Cmd::ShowInFolder,
-        (UINT)Cmd::DebugAnnotations,
+        CmdViewRotateLeft,
+        CmdViewRotateRight,
+        CmdGoToNextPage,
+        CmdGoToPrevPage,
+        CmdGoToFirstPage,
+        CmdGoToLastPage,
+        CmdGoToNavBack,
+        CmdGoToNavForward,
+        CmdGoToPage,
+        CmdFindFirst,
+        CmdSaveAs,
+        CmdSaveAsBookmark,
+        CmdSendByEmail,
+        CmdSelectAll,
+        CmdCopySelection,
+        CmdProperties,
+        CmdViewPresentationMode,
+        CmdViewWithAcrobat,
+        CmdViewWithFoxIt,
+        CmdViewWithPdfXchange,
+        CmdRenameFile,
+        CmdShowInFolder,
+        CmdDebugAnnotations,
         // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
         // are removed instead of disabled (and can remain enabled
         // for broken XPS/CHM documents)
     };
     // this list coincides with menusToEnableIfBrokenPDF
     static UINT menusToDisableIfDirectory[] = {
-        (UINT)Cmd::RenameFile, (UINT)Cmd::SendByEmail,        (UINT)Cmd::ViewWithAcrobat,
-        (UINT)Cmd::ViewWithFoxIt, (UINT)Cmd::ViewWithPdfXchange, (UINT)Cmd::ShowInFolder,
+        CmdRenameFile, CmdSendByEmail,        CmdViewWithAcrobat,
+        CmdViewWithFoxIt, CmdViewWithPdfXchange, CmdShowInFolder,
     };
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
 
@@ -552,25 +552,25 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
 
     // TODO: happens with UseTabs = false with .pdf files
     SubmitCrashIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
-    win::menu::SetEnabled(win->menu, (UINT)Cmd::Close, IsFileCloseMenuEnabled());
+    win::menu::SetEnabled(win->menu, CmdClose, IsFileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win->menu);
 
     bool enabled = win->IsDocLoaded() && tab && tab->ctrl->HacToc();
-    win::menu::SetEnabled(win->menu, (UINT)Cmd::ViewBookmarks, enabled);
+    win::menu::SetEnabled(win->menu, CmdViewBookmarks, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
     bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->showToc;
-    win::menu::SetChecked(win->menu, (UINT)Cmd::ViewBookmarks, checked);
+    win::menu::SetChecked(win->menu, CmdViewBookmarks, checked);
 
-    win::menu::SetChecked(win->menu, (UINT)Cmd::FavToggle, gGlobalPrefs->showFavorites);
-    win::menu::SetChecked(win->menu, (UINT)Cmd::ViewShowHideToolbar, gGlobalPrefs->showToolbar);
+    win::menu::SetChecked(win->menu, CmdFavToggle, gGlobalPrefs->showFavorites);
+    win::menu::SetChecked(win->menu, CmdViewShowHideToolbar, gGlobalPrefs->showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
     if (win->IsDocLoaded() && tab) {
-        win::menu::SetEnabled(win->menu, (UINT)Cmd::GoToNavBack, tab->ctrl->CanNavigate(-1));
-        win::menu::SetEnabled(win->menu, (UINT)Cmd::GoToNavForward, tab->ctrl->CanNavigate(1));
+        win::menu::SetEnabled(win->menu, CmdGoToNavBack, tab->ctrl->CanNavigate(-1));
+        win::menu::SetEnabled(win->menu, CmdGoToNavForward, tab->ctrl->CanNavigate(1));
     }
 
     // TODO: is this check too expensive?
@@ -591,11 +591,11 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (engine) {
-        win::menu::SetEnabled(win->menu, (UINT)Cmd::FindFirst, !engine->IsImageCollection());
+        win::menu::SetEnabled(win->menu, CmdFindFirst, !engine->IsImageCollection());
     }
 
     if (win->IsDocLoaded() && !fileExists) {
-        win::menu::SetEnabled(win->menu, (UINT)Cmd::RenameFile, false);
+        win::menu::SetEnabled(win->menu, CmdRenameFile, false);
     }
 
 #if defined(ENABLE_THEME)
@@ -603,10 +603,10 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
                        IDM_CHANGE_THEME_FIRST + GetCurrentThemeIndex(), MF_BYCOMMAND);
 #endif
 
-    win::menu::SetChecked(win->menu, (UINT)Cmd::DebugShowLinks, gDebugShowLinks);
-    win::menu::SetChecked(win->menu, (UINT)Cmd::DebugEbookUI, gGlobalPrefs->ebookUI.useFixedPageUI);
-    win::menu::SetChecked(win->menu, (UINT)Cmd::DebugMui, mui::IsDebugPaint());
-    win::menu::SetEnabled(win->menu, (UINT)Cmd::DebugAnnotations,
+    win::menu::SetChecked(win->menu, CmdDebugShowLinks, gDebugShowLinks);
+    win::menu::SetChecked(win->menu, CmdDebugEbookUI, gGlobalPrefs->ebookUI.useFixedPageUI);
+    win::menu::SetChecked(win->menu, CmdDebugMui, mui::IsDebugPaint());
+    win::menu::SetEnabled(win->menu, CmdDebugAnnotations,
                           tab && tab->selectionOnPage && win->showSelection && engine && engine->supportsAnnotations);
 }
 
@@ -628,7 +628,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, CreatePopupMenu());
-    win::menu::SetChecked(popup, (UINT)Cmd::PinSelectedDocument, state->isPinned);
+    win::menu::SetChecked(popup, CmdPinSelectedDocument, state->isPinned);
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     MarkMenuOwnerDraw(popup);
@@ -636,20 +636,20 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
-    if ((UINT)Cmd::OpenSelectedDocument == cmd) {
+    if (CmdOpenSelectedDocument == cmd) {
         LoadArgs args(filePath, win);
         LoadDocument(args);
         return;
     }
 
-    if ((UINT)Cmd::PinSelectedDocument == cmd) {
+    if (CmdPinSelectedDocument == cmd) {
         state->isPinned = !state->isPinned;
         win->HideToolTip();
         win->RedrawAll(true);
         return;
     }
 
-    if ((UINT)Cmd::ForgetSelectedDocument == cmd) {
+    if (CmdForgetSelectedDocument == cmd) {
         if (state->favorites->size() > 0) {
             // just hide documents with favorites
             gFileHistory.MarkFileInexistent(state->filePath, true);
@@ -682,38 +682,38 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(win);
     if (!showBookmarksMenu) {
-        win::menu::Remove(popup, (UINT)Cmd::NewBookmarks);
+        win::menu::Remove(popup, CmdNewBookmarks);
     } else {
         auto path = tab->filePath.get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
-            win::menu::SetText(popup, (UINT)Cmd::NewBookmarks, _TR_TODO("Edit Bookmarks"));
+            win::menu::SetText(popup, CmdNewBookmarks, _TR_TODO("Edit Bookmarks"));
         }
     }
 
     if (!pageEl || pageEl->kind != kindPageElementDest || !value) {
-        win::menu::Remove(popup, (UINT)Cmd::CopyLinkTarget);
+        win::menu::Remove(popup, CmdCopyLinkTarget);
     }
     if (!pageEl || pageEl->kind != kindPageElementComment || !value) {
-        win::menu::Remove(popup, (UINT)Cmd::CopyComment);
+        win::menu::Remove(popup, CmdCopyComment);
     }
     if (!pageEl || pageEl->kind != kindPageElementImage) {
-        win::menu::Remove(popup, (UINT)Cmd::CopyImage);
+        win::menu::Remove(popup, CmdCopyImage);
     }
 
     bool isFullScreen = win->isFullScreen || win->presentation;
     if (!isFullScreen) {
-        win::menu::Remove(popup, (UINT)Cmd::ExitFullScreen);
+        win::menu::Remove(popup, CmdExitFullScreen);
     }
     if (!tab->selectionOnPage) {
-        win::menu::SetEnabled(popup, (UINT)Cmd::CopySelection, false);
+        win::menu::SetEnabled(popup, CmdCopySelection, false);
     }
     MenuUpdatePrintItem(win, popup, true);
-    win::menu::SetEnabled(popup, (UINT)Cmd::ViewBookmarks, win->ctrl->HacToc());
-    win::menu::SetChecked(popup, (UINT)Cmd::ViewBookmarks, win->tocVisible);
+    win::menu::SetEnabled(popup, CmdViewBookmarks, win->ctrl->HacToc());
+    win::menu::SetChecked(popup, CmdViewBookmarks, win->tocVisible);
 
-    win::menu::SetEnabled(popup, (UINT)Cmd::FavToggle, HasFavorites());
-    win::menu::SetChecked(popup, (UINT)Cmd::FavToggle, gGlobalPrefs->showFavorites);
+    win::menu::SetEnabled(popup, CmdFavToggle, HasFavorites());
+    win::menu::SetChecked(popup, CmdFavToggle, gGlobalPrefs->showFavorites);
 
     bool supportsAnnotations = false;
     EngineBase* engine = dm->GetEngine();
@@ -725,9 +725,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         supportsAnnotations = false;
     }
     if (!supportsAnnotations) {
-        win::menu::Remove(popup, (UINT)Cmd::SaveAnnotationsSmx);
+        win::menu::Remove(popup, CmdSaveAnnotationsSmx);
     } else {
-        win::menu::SetEnabled(popup, (UINT)Cmd::SaveAnnotationsSmx, dm->HasUnsavedAnnots());
+        win::menu::SetEnabled(popup, CmdSaveAnnotationsSmx, dm->HasUnsavedAnnots());
     }
 
     int pageNo = dm->GetPageNoByPoint({x, y});
@@ -736,28 +736,28 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
-            win::menu::Remove(popup, (UINT)Cmd::FavAdd);
+            win::menu::Remove(popup, CmdFavAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Remove page %s from favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, (UINT)Cmd::FavDel, s);
+            win::menu::SetText(popup, CmdFavDel, s);
         } else {
-            win::menu::Remove(popup, (UINT)Cmd::FavDel);
+            win::menu::Remove(popup, CmdFavDel);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Add page %s to favorites\tCtrl+B");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, (UINT)Cmd::FavAdd, s);
+            win::menu::SetText(popup, CmdFavAdd, s);
         }
     } else {
-        win::menu::Remove(popup, (UINT)Cmd::FavAdd);
-        win::menu::Remove(popup, (UINT)Cmd::FavDel);
+        win::menu::Remove(popup, CmdFavAdd);
+        win::menu::Remove(popup, CmdFavDel);
     }
 
     // if toolbar is not shown, add option to show it
     if (gGlobalPrefs->showToolbar) {
-        win::menu::Remove(popup, (UINT)Cmd::ViewShowHideToolbar);
+        win::menu::Remove(popup, CmdViewShowHideToolbar);
     }
 
     POINT pt = {x, y};
@@ -769,27 +769,27 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DestroyMenu(popup);
 
     switch (cmd) {
-        case (UINT)Cmd::CopySelection:
-        case (UINT)Cmd::SelectAll:
-        case (UINT)Cmd::SaveAs:
-        case (UINT)Cmd::Print:
-        case (UINT)Cmd::ViewBookmarks:
-        case (UINT)Cmd::FavToggle:
-        case (UINT)Cmd::Properties:
-        case (UINT)Cmd::ViewShowHideToolbar:
-        case (UINT)Cmd::SaveAnnotationsSmx:
-        case (UINT)Cmd::NewBookmarks:
+        case CmdCopySelection:
+        case CmdSelectAll:
+        case CmdSaveAs:
+        case CmdPrint:
+        case CmdViewBookmarks:
+        case CmdFavToggle:
+        case CmdProperties:
+        case CmdViewShowHideToolbar:
+        case CmdSaveAnnotationsSmx:
+        case CmdNewBookmarks:
             SendMessageW(win->hwndFrame, WM_COMMAND, cmd, 0);
             break;
-        case (UINT)Cmd::EditAnnotations:
+        case CmdEditAnnotations:
             StartEditAnnotations(tab);
             break;
-        case (UINT)Cmd::CopyLinkTarget:
-        case (UINT)Cmd::CopyComment:
+        case CmdCopyLinkTarget:
+        case CmdCopyComment:
             CopyTextToClipboard(value);
             break;
 
-        case (UINT)Cmd::CopyImage:
+        case CmdCopyImage:
             if (pageEl) {
                 RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
                 if (bmp) {
@@ -798,13 +798,13 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
                 delete bmp;
             }
             break;
-        case (UINT)Cmd::FavAdd:
+        case CmdFavAdd:
             AddFavoriteForCurrentPage(win);
             break;
-        case (UINT)Cmd::FavDel:
+        case CmdFavDel:
             DelFavorite(filePath, pageNo);
             break;
-        case (UINT)Cmd::ExitFullScreen:
+        case CmdExitFullScreen:
             ExitFullScreen(win);
             break;
     }
@@ -851,7 +851,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     win::menu::Empty(menu);
     HMENU m = BuildMenuFromMenuDef(menuDefFile, menu, filter);
     if (gIsRaMicroBuild) {
-        win::menu::Remove(m, (UINT)Cmd::OpenFolder);
+        win::menu::Remove(m, CmdOpenFolder);
     }
     AppendRecentFilesToMenu(menu);
     AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
@@ -861,24 +861,24 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
     if (!CanSendAsEmailAttachment()) {
-        win::menu::Remove(menu, (UINT)Cmd::SendByEmail);
+        win::menu::Remove(menu, CmdSendByEmail);
     }
 
     // Also suppress PDF specific items for non-PDF documents
     if (!CouldBePDFDoc(tab) || !CanViewWithAcrobat()) {
-        win::menu::Remove(menu, (UINT)Cmd::ViewWithAcrobat);
+        win::menu::Remove(menu, CmdViewWithAcrobat);
     }
     if (!CouldBePDFDoc(tab) || !CanViewWithFoxit()) {
-        win::menu::Remove(menu, (UINT)Cmd::ViewWithFoxIt);
+        win::menu::Remove(menu, CmdViewWithFoxIt);
     }
     if (!CouldBePDFDoc(tab) || !CanViewWithPDFXChange()) {
-        win::menu::Remove(menu, (UINT)Cmd::ViewWithPdfXchange);
+        win::menu::Remove(menu, CmdViewWithPdfXchange);
     }
     if (!CanViewWithXPSViewer(tab)) {
-        win::menu::Remove(menu, (UINT)Cmd::ViewWithXpsViewer);
+        win::menu::Remove(menu, CmdViewWithXpsViewer);
     }
     if (!CanViewWithHtmlHelp(tab)) {
-        win::menu::Remove(menu, (UINT)Cmd::ViewWithHtmlHelp);
+        win::menu::Remove(menu, CmdViewWithHtmlHelp);
     }
 
     bool supportsAnnotations = false;
@@ -892,9 +892,9 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
         supportsAnnotations = false;
     }
     if (!supportsAnnotations) {
-        win::menu::Remove(menu, (UINT)Cmd::SaveAnnotationsSmx);
+        win::menu::Remove(menu, CmdSaveAnnotationsSmx);
     } else {
-        win::menu::SetEnabled(menu, (UINT)Cmd::SaveAnnotationsSmx, dm && dm->HasUnsavedAnnots());
+        win::menu::SetEnabled(menu, CmdSaveAnnotationsSmx, dm && dm->HasUnsavedAnnots());
     }
 }
 
@@ -1207,8 +1207,8 @@ HMENU BuildMenu(WindowInfo* win) {
 
     m = BuildMenuFromMenuDef(menuDefSettings, CreateMenu(), filter);
     if (gIsRaMicroBuild) {
-        win::menu::Remove(m, (uint)Cmd::ChangeLanguage);
-        win::menu::Remove(m, (UINT)Cmd::AdvancedOptions);
+        win::menu::Remove(m, CmdChangeLanguage);
+        win::menu::Remove(m, CmdAdvancedOptions);
     }
 #if defined(ENABLE_THEME)
     // Build the themes sub-menu of the settings menu
@@ -1234,16 +1234,16 @@ HMENU BuildMenu(WindowInfo* win) {
     if (gShowDebugMenu) {
         m = BuildMenuFromMenuDef(menuDefDebug, CreateMenu(), filter);
         if (!gIsRaMicroBuild) {
-            win::menu::Remove(m, (UINT)Cmd::AdvancedOptions);
+            win::menu::Remove(m, CmdAdvancedOptions);
         }
 
         if (!gIsDebugBuild) {
-            RemoveMenu(m, (UINT)Cmd::DebugTestApp, MF_BYCOMMAND);
+            RemoveMenu(m, CmdDebugTestApp, MF_BYCOMMAND);
         }
 
         if (gAddCrashMeMenu) {
             AppendMenu(m, MF_SEPARATOR, 0, nullptr);
-            AppendMenuA(m, MF_STRING, (UINT_PTR)(UINT)Cmd::DebugCrashMe, "Crash me");
+            AppendMenuA(m, MF_STRING, (UINT_PTR)CmdDebugCrashMe, "Crash me");
         }
 
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");

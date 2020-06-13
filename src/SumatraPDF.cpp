@@ -3756,7 +3756,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
 #ifdef DEBUG
     } else if (VK_F1 == key && win->AsEbook()) {
         // TODO: this was in EbookWindow - is it still needed?
-        SendMessageW(win->hwndFrame, WM_COMMAND, (UINT)Cmd::DebugMui, 0);
+        SendMessageW(win->hwndFrame, WM_COMMAND, CmdDebugMui, 0);
 #endif
     } else {
         return false;
@@ -4227,8 +4227,8 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     // check if the menuId belongs to an entry in the list of
     // recently opened files and load the referenced file if it does
-    if ((wmId >= (int)Cmd::FileHistoryFirst) && (wmId <= (int)Cmd::FileHistoryLast)) {
-        DisplayState* state = gFileHistory.Get(wmId - (int)Cmd::FileHistoryFirst);
+    if ((wmId >= CmdFileHistoryFirst) && (wmId <= CmdFileHistoryLast)) {
+        DisplayState* state = gFileHistory.Get(wmId - CmdFileHistoryFirst);
         if (state && HasPermission(Perm_DiskAccess)) {
             LoadArgs args(state->filePath, win);
             LoadDocument(args);
@@ -4237,8 +4237,8 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
 
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
-    static_assert((int)Cmd::FavLast - (int)Cmd::FavFirst == 200, "wrong number of favorite menu ids");
-    if ((wmId >= (int)Cmd::FavFirst) && (wmId <= (int)Cmd::FavLast)) {
+    static_assert(CmdFavLast - CmdFavFirst == 200, "wrong number of favorite menu ids");
+    if ((wmId >= CmdFavFirst) && (wmId <= CmdFavLast)) {
         GoToFavoriteByMenuId(win, wmId);
     }
 
@@ -4261,238 +4261,238 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    if (!win->IsAboutWindow() && (int)Cmd::OpenWithExternalFirst <= wmId &&
-        wmId <= (int)Cmd::OpenWithExternalLast) {
-        ViewWithExternalViewer(win->currentTab, wmId - (int)Cmd::OpenWithExternalFirst);
+    if (!win->IsAboutWindow() && CmdOpenWithExternalFirst <= wmId &&
+        wmId <= CmdOpenWithExternalLast) {
+        ViewWithExternalViewer(win->currentTab, wmId - CmdOpenWithExternalFirst);
         return 0;
     }
 
     auto* ctrl = win->ctrl;
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
-        case (int)Cmd::NewWindow:
+        case CmdNewWindow:
             OnMenuNewWindow();
             break;
-        case (int)Cmd::DuplicateInNewWindow:
+        case CmdDuplicateInNewWindow:
             OnDuplicateInNewWindow(win);
             break;
-        case (int)Cmd::Open:
+        case CmdOpen:
             OnMenuOpen(win);
             break;
-        case (int)Cmd::OpenFolder:
+        case CmdOpenFolder:
             OnMenuOpenFolder(win);
             break;
 
-        case (int)Cmd::SaveAs:
+        case CmdSaveAs:
             OnMenuSaveAs(win);
             break;
 
-        case (int)Cmd::RenameFile:
+        case CmdRenameFile:
             OnMenuRenameFile(win);
             break;
 
-        case (int)Cmd::ShowInFolder:
+        case CmdShowInFolder:
             OnMenuShowInFolder(win);
             break;
 
-        case (int)Cmd::Print:
+        case CmdPrint:
             OnMenuPrint(win);
             break;
 
-        case (int)Cmd::Close:
+        case CmdClose:
             CloseTab(win);
             break;
 
-        case (int)Cmd::Exit:
+        case CmdExit:
             OnMenuExit();
             break;
 
-        case (int)Cmd::Refresh:
+        case CmdRefresh:
             ReloadDocument(win, false);
             break;
 
-        case (int)Cmd::SaveAsBookmark:
+        case CmdSaveAsBookmark:
             OnMenuSaveBookmark(win);
             break;
 
-        case (int)Cmd::ToolbarViewFitWidth:
+        case CmdToolbarViewFitWidth:
             ChangeZoomLevel(win, ZOOM_FIT_WIDTH, true);
             break;
 
-        case (int)Cmd::ToolbarViewFitPage:
+        case CmdToolbarViewFitPage:
             ChangeZoomLevel(win, ZOOM_FIT_PAGE, false);
             break;
 
-        case (int)Cmd::ViewZoomIn:
+        case CmdViewZoomIn:
             if (win->IsDocLoaded()) {
                 ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
             }
             break;
 
-        case (int)Cmd::ViewZoomOut:
+        case CmdViewZoomOut:
             if (win->IsDocLoaded()) {
                 ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
             }
             break;
 
-        case (int)Cmd::Zoom6400:
-        case (int)Cmd::Zoom3200:
-        case (int)Cmd::Zoom1600:
-        case (int)Cmd::Zoom800:
-        case (int)Cmd::Zoom400:
-        case (int)Cmd::Zoom200:
-        case (int)Cmd::Zoom150:
-        case (int)Cmd::Zoom125:
-        case (int)Cmd::Zoom100:
-        case (int)Cmd::Zoom50:
-        case (int)Cmd::Zoom25:
-        case (int)Cmd::Zoom12_5:
-        case (int)Cmd::Zoom8_33:
-        case (int)Cmd::ZoomFitPage:
-        case (int)Cmd::ZoomFitWidth:
-        case (int)Cmd::ZoomFitContent:
-        case (int)Cmd::ZoomActualSize:
+        case CmdZoom6400:
+        case CmdZoom3200:
+        case CmdZoom1600:
+        case CmdZoom800:
+        case CmdZoom400:
+        case CmdZoom200:
+        case CmdZoom150:
+        case CmdZoom125:
+        case CmdZoom100:
+        case CmdZoom50:
+        case CmdZoom25:
+        case CmdZoom12_5:
+        case CmdZoom8_33:
+        case CmdZoomFitPage:
+        case CmdZoomFitWidth:
+        case CmdZoomFitContent:
+        case CmdZoomActualSize:
             OnMenuZoom(win, wmId);
             break;
-        case (int)Cmd::ZoomCustom:
+        case CmdZoomCustom:
             OnMenuCustomZoom(win);
             break;
 
-        case (int)Cmd::ViewSinglePage:
+        case CmdViewSinglePage:
             SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
             break;
 
-        case (int)Cmd::ViewFacing:
+        case CmdViewFacing:
             SwitchToDisplayMode(win, DM_FACING, true);
             break;
 
-        case (int)Cmd::ViewBook:
+        case CmdViewBook:
             SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
             break;
 
-        case (int)Cmd::ViewContinuous:
+        case CmdViewContinuous:
             OnMenuViewContinuous(win);
             break;
 
-        case (int)Cmd::ViewMangaMode:
+        case CmdViewMangaMode:
             OnMenuViewMangaMode(win);
             break;
 
-        case (int)Cmd::ViewShowHideToolbar:
+        case CmdViewShowHideToolbar:
             OnMenuViewShowHideToolbar();
             break;
 
-        case (int)Cmd::SaveAnnotationsSmx:
+        case CmdSaveAnnotationsSmx:
             OnMenuSaveAnnotationsToSmx(win);
             break;
 
-        case (int)Cmd::EditAnnotations:
+        case CmdEditAnnotations:
             StartEditAnnotations(win->currentTab);
             break;
 
-        case (int)Cmd::NewBookmarks:
+        case CmdNewBookmarks:
             StartTocEditorForWindowInfo(win);
             break;
 
-        case (int)Cmd::ViewShowHideMenuBar:
+        case CmdViewShowHideMenuBar:
             if (!win->tabsInTitlebar) {
                 ShowHideMenuBar(win);
             }
             break;
 
-        case (int)Cmd::ChangeLanguage:
+        case CmdChangeLanguage:
             OnMenuChangeLanguage(win->hwndFrame);
             break;
 
-        case (int)Cmd::ViewBookmarks:
+        case CmdViewBookmarks:
             ToggleTocBox(win);
             break;
 
-        case (int)Cmd::GoToNextPage:
+        case CmdGoToNextPage:
             if (win->IsDocLoaded()) {
                 ctrl->GoToNextPage();
             }
             break;
 
-        case (int)Cmd::GoToPrevPage:
+        case CmdGoToPrevPage:
             if (win->IsDocLoaded()) {
                 ctrl->GoToPrevPage();
             }
             break;
 
-        case (int)Cmd::GoToFirstPage:
+        case CmdGoToFirstPage:
             if (win->IsDocLoaded()) {
                 ctrl->GoToFirstPage();
             }
             break;
 
-        case (int)Cmd::GoToLastPage:
+        case CmdGoToLastPage:
             if (win->IsDocLoaded()) {
                 ctrl->GoToLastPage();
             }
             break;
 
-        case (int)Cmd::GoToPage:
+        case CmdGoToPage:
             OnMenuGoToPage(win);
             break;
 
-        case (int)Cmd::ViewPresentationMode:
+        case CmdViewPresentationMode:
             OnMenuViewPresentation(win);
             break;
 
-        case (int)Cmd::ViewFullScreen:
+        case CmdViewFullScreen:
             OnMenuViewFullscreen(win);
             break;
 
-        case (int)Cmd::ViewRotateLeft:
+        case CmdViewRotateLeft:
             if (win->AsFixed()) {
                 win->AsFixed()->RotateBy(-90);
             }
             break;
 
-        case (int)Cmd::ViewRotateRight:
+        case CmdViewRotateRight:
             if (win->AsFixed()) {
                 win->AsFixed()->RotateBy(90);
             }
             break;
 
-        case (int)Cmd::FindFirst:
+        case CmdFindFirst:
             OnMenuFind(win);
             break;
 
-        case (int)Cmd::FindNext:
+        case CmdFindNext:
             OnMenuFindNext(win);
             break;
 
-        case (int)Cmd::FindPrev:
+        case CmdFindPrev:
             OnMenuFindPrev(win);
             break;
 
-        case (int)Cmd::FindMatch:
+        case CmdFindMatch:
             OnMenuFindMatchCase(win);
             break;
 
-        case (int)Cmd::FindNextSel:
+        case CmdFindNextSel:
             OnMenuFindSel(win, TextSearchDirection::Forward);
             break;
 
-        case (int)Cmd::FindPrevSel:
+        case CmdFindPrevSel:
             OnMenuFindSel(win, TextSearchDirection::Backward);
             break;
 
-        case (int)Cmd::VisitWebsite:
+        case CmdVisitWebsite:
             SumatraLaunchBrowser(WEBSITE_MAIN_URL);
             break;
 
-        case (int)Cmd::Manual:
+        case CmdManual:
             SumatraLaunchBrowser(WEBSITE_MANUAL_URL);
             break;
 
-        case (int)Cmd::ContributeTranslation:
+        case CmdContributeTranslation:
             SumatraLaunchBrowser(WEBSITE_TRANSLATIONS_URL);
             break;
 
-        case (int)Cmd::About:
+        case CmdAbout:
 #ifdef ENABLE_ALTERNATIVE_ABOUT_DIALOG
             OnMenuAbout2();
 #else
@@ -4500,47 +4500,47 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 #endif
             break;
 
-        case (int)Cmd::CheckUpdate:
+        case CmdCheckUpdate:
             UpdateCheckAsync(win, false);
             break;
 
-        case (int)Cmd::Options:
+        case CmdOptions:
             OnMenuOptions(win);
             break;
 
-        case (int)Cmd::AdvancedOptions:
+        case CmdAdvancedOptions:
             OnMenuAdvancedOptions();
             break;
 
-        case (int)Cmd::ViewWithAcrobat:
+        case CmdViewWithAcrobat:
             ViewWithAcrobat(win->currentTab);
             break;
 
-        case (int)Cmd::ViewWithFoxIt:
+        case CmdViewWithFoxIt:
             ViewWithFoxit(win->currentTab);
             break;
 
-        case (int)Cmd::ViewWithPdfXchange:
+        case CmdViewWithPdfXchange:
             ViewWithPDFXChange(win->currentTab);
             break;
 
-        case (int)Cmd::ViewWithXpsViewer:
+        case CmdViewWithXpsViewer:
             ViewWithXPSViewer(win->currentTab);
             break;
 
-        case (int)Cmd::ViewWithHtmlHelp:
+        case CmdViewWithHtmlHelp:
             ViewWithHtmlHelp(win->currentTab);
             break;
 
-        case (int)Cmd::SendByEmail:
+        case CmdSendByEmail:
             SendAsEmailAttachment(win->currentTab, win->hwndFrame);
             break;
 
-        case (int)Cmd::Properties:
+        case CmdProperties:
             OnMenuProperties(win);
             break;
 
-        case (int)Cmd::MoveFrameFocus:
+        case CmdMoveFrameFocus:
             if (!IsFocused(win->hwndFrame)) {
                 SetFocus(win->hwndFrame);
             } else if (win->tocVisible) {
@@ -4548,19 +4548,19 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case (int)Cmd::GoToNavBack:
+        case CmdGoToNavBack:
             if (win->IsDocLoaded()) {
                 ctrl->Navigate(-1);
             }
             break;
 
-        case (int)Cmd::GoToNavForward:
+        case CmdGoToNavForward:
             if (win->IsDocLoaded()) {
                 ctrl->Navigate(1);
             }
             break;
 
-        case (int)Cmd::CopySelection:
+        case CmdCopySelection:
             // Don't break the shortcut for text boxes
             if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
                 SendMessageW(GetFocus(), WM_COPY, 0, 0);
@@ -4575,66 +4575,66 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case (int)Cmd::SelectAll:
+        case CmdSelectAll:
             OnSelectAll(win);
             break;
 
-        case (int)Cmd::DebugShowLinks:
+        case CmdDebugShowLinks:
             gDebugShowLinks = !gDebugShowLinks;
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }
             break;
 
-        case (int)Cmd::DebugEbookUI:
+        case CmdDebugEbookUI:
             gGlobalPrefs->ebookUI.useFixedPageUI = !gGlobalPrefs->ebookUI.useFixedPageUI;
             // use the same setting to also toggle the CHM UI
             gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
             break;
 
-        case (int)Cmd::DebugDownloadSymbols:
+        case CmdDebugDownloadSymbols:
             DownloadDebugSymbols();
             break;
 
-        case (int)Cmd::DebugMui: {
+        case CmdDebugMui: {
             mui::SetDebugPaint(!mui::IsDebugPaint());
             bool isChecked = !mui::IsDebugPaint();
             HMENU m = GetMenu(win->hwndFrame);
-            win::menu::SetChecked(m, (int)Cmd::DebugMui, isChecked);
+            win::menu::SetChecked(m, CmdDebugMui, isChecked);
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
             }
         } break;
 
-        case (int)Cmd::DebugAnnotations:
+        case CmdDebugAnnotations:
             FrameOnChar(win, 'h');
             break;
 
-        case (int)Cmd::DebugTestApp:
+        case CmdDebugTestApp:
             extern void TestApp(HINSTANCE hInstance);
             TestApp(GetModuleHandle(nullptr));
             break;
-        case (int)Cmd::DebugShowNotif: {
+        case CmdDebugShowNotif: {
             auto wnd = win->ShowNotification(L"This is a notification", NOS_PERSIST);
             // TODO: this notification covers previous
             // win->ShowNotification(L"This is a second notification\nMy friend.");
         } break;
 
-        case (int)Cmd::DebugCrashMe:
+        case CmdDebugCrashMe:
             CrashMe();
             break;
 
-        case (int)Cmd::FavAdd:
+        case CmdFavAdd:
             AddFavoriteForCurrentPage(win);
             break;
 
-        case (int)Cmd::FavDel:
+        case CmdFavDel:
             if (win->IsDocLoaded()) {
                 DelFavorite(ctrl->FilePath(), win->currPageNo);
             }
             break;
 
-        case (int)Cmd::FavToggle:
+        case CmdFavToggle:
             ToggleFavorites(win);
             break;
 
@@ -4720,19 +4720,19 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TRUE so as to not make them bubble up further
             switch (GET_APPCOMMAND_LPARAM(lp)) {
                 case APPCOMMAND_BROWSER_BACKWARD:
-                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::GoToNavBack, 0);
+                    SendMessageW(hwnd, WM_COMMAND, CmdGoToNavBack, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FORWARD:
-                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::GoToNavForward, 0);
+                    SendMessageW(hwnd, WM_COMMAND, CmdGoToNavForward, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_REFRESH:
-                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::Refresh, 0);
+                    SendMessageW(hwnd, WM_COMMAND, CmdRefresh, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_SEARCH:
-                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::FindFirst, 0);
+                    SendMessageW(hwnd, WM_COMMAND, CmdFindFirst, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FAVORITES:
-                    SendMessageW(hwnd, WM_COMMAND, (WPARAM)Cmd::ViewBookmarks, 0);
+                    SendMessageW(hwnd, WM_COMMAND, CmdViewBookmarks, 0);
                     return TRUE;
             }
             return DefWindowProc(hwnd, msg, wp, lp);

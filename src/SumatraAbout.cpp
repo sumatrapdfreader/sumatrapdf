@@ -556,7 +556,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_COMMAND:
-            if ((WORD)(UINT)Cmd::CopySelection == LOWORD(wp))
+            if (CmdCopySelection == LOWORD(wp))
                 CopyAboutInfoToClipboard(hwnd);
             break;
 

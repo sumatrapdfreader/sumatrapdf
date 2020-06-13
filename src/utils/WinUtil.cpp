@@ -1137,14 +1137,10 @@ void Remove(HMENU m, UINT id) {
     RemoveMenu(m, id, MF_BYCOMMAND);
 }
 
-// TODO: this doesn't work, why?
-void Remove(HMENU m, Cmd id) {
-    Remove(m, (UINT)id);
-}
-
 void Empty(HMENU m) {
-    while (RemoveMenu(m, 0, MF_BYPOSITION))
-        ;
+    while (RemoveMenu(m, 0, MF_BYPOSITION)) {
+        // no-op
+    }
 }
 
 void SetText(HMENU m, UINT id, WCHAR* s) {

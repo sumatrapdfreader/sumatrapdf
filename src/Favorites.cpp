@@ -255,7 +255,7 @@ void Favorites::RemoveAllForFile(const WCHAR* filePath) {
 
 // clang-format off
 MenuDef menuDefFavContext[] = {
-    {_TRN("Remove from favorites"), (uint)Cmd::FavDel, 0},
+    {_TRN("Remove from favorites"), CmdFavDel, 0},
     { 0, 0, 0 }
 };
 // clang-format on
@@ -367,7 +367,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
     AppendMenu(m, MF_SEPARATOR, 0, nullptr);
 
     gFavorites.ResetMenuIds();
-    UINT menuId = (UINT)Cmd::FavFirst;
+    UINT menuId = CmdFavFirst;
 
     size_t menusCount = filePathsSorted.size();
     if (menusCount > MAX_FAV_MENUS) {
@@ -409,24 +409,24 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
 //   enable "add" menu item and disable "remove" menu item
 void RebuildFavMenu(WindowInfo* win, HMENU menu) {
     if (!win->IsDocLoaded()) {
-        win::menu::SetEnabled(menu, (uint)Cmd::FavAdd, false);
-        win::menu::SetEnabled(menu, (uint)Cmd::FavDel, false);
+        win::menu::SetEnabled(menu, CmdFavAdd, false);
+        win::menu::SetEnabled(menu, CmdFavDel, false);
         AppendFavMenus(menu, nullptr);
     } else {
         AutoFreeWstr label(win->ctrl->GetPageLabel(win->currPageNo));
         bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->FilePath(), win->currPageNo);
         if (isBookmarked) {
-            win::menu::SetEnabled(menu, (uint)Cmd::FavAdd, false);
+            win::menu::SetEnabled(menu, CmdFavAdd, false);
             AutoFreeWstr s(str::Format(_TR("Remove page %s from favorites"), label.Get()));
-            win::menu::SetText(menu, (uint)Cmd::FavDel, s);
+            win::menu::SetText(menu, CmdFavDel, s);
         } else {
-            win::menu::SetEnabled(menu, (uint)Cmd::FavDel, false);
+            win::menu::SetEnabled(menu, CmdFavDel, false);
             AutoFreeWstr s(str::Format(_TR("Add page %s to favorites\tCtrl+B"), label.Get()));
-            win::menu::SetText(menu, (uint)Cmd::FavAdd, s);
+            win::menu::SetText(menu, CmdFavAdd, s);
         }
         AppendFavMenus(menu, win->ctrl->FilePath());
     }
-    win::menu::SetEnabled(menu, (uint)Cmd::FavToggle, HasFavorites());
+    win::menu::SetEnabled(menu, CmdFavToggle, HasFavorites());
 }
 
 void ToggleFavorites(WindowInfo* win) {
@@ -752,7 +752,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     // so that we can do destructive operations without asking for permission via
     // invasive model dialog boxes but also allow reverting them if were done
     // by mistake
-    if ((int)Cmd::FavDel == cmd) {
+    if (CmdFavDel == cmd) {
         RememberFavTreeExpansionStateForAllWindows();
         FavTreeItem* fti = (FavTreeItem*)ti;
         Favorite* toDelete = fti->favorite;

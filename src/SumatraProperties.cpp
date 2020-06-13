@@ -615,11 +615,11 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
 static void PropertiesOnCommand(HWND hwnd, WPARAM wp) {
     auto cmd = LOWORD(wp);
     switch (cmd) {
-        case (WORD)Cmd::CopySelection:
+        case CmdCopySelection:
             CopyPropertiesToClipboard(hwnd);
             break;
 
-        case (WORD)Cmd::Properties:
+        case CmdProperties:
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
             // make a repeated Ctrl+D display some extended properties
             // TODO: expose this through a UI button or similar

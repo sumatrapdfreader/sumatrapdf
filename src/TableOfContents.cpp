@@ -378,24 +378,24 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 
 // clang-format off
 static MenuDef menuDefContext[] = {
-    {_TRN("Expand All"),                 (uint)Cmd::ExpandAll,         0 },
-    {_TRN("Collapse All"),               (uint)Cmd::CollapseAll,       0 },
-    {SEP_ITEM,                           (uint)Cmd::EmbedSeparator,    MF_NO_TRANSLATE},
-    {_TR_TODON("Open Embedded PDF"),     (uint)Cmd::OpenEmbedded,      0 },
-    {_TR_TODON("Save Embedded File..."), (uint)Cmd::SaveEmbedded,      0 },
+    {_TRN("Expand All"),                 CmdExpandAll,         0 },
+    {_TRN("Collapse All"),               CmdCollapseAll,       0 },
+    {SEP_ITEM,                           CmdSeparatorEmbed,    MF_NO_TRANSLATE},
+    {_TR_TODON("Open Embedded PDF"),     CmdOpenEmbedded,      0 },
+    {_TR_TODON("Save Embedded File..."), CmdSaveEmbedded,      0 },
     // note: strings cannot be "" or else items are not there
-    {"add",                              (uint)Cmd::FavAdd,            MF_NO_TRANSLATE},
-    {"del",                              (uint)Cmd::FavDel,            MF_NO_TRANSLATE},
-    {SEP_ITEM,                           (uint)Cmd::Separator,          MF_NO_TRANSLATE},
-    {_TR_TODON("Export Bookmarks"),      (uint)Cmd::ExportBookmarks,   MF_NO_TRANSLATE},
-    {_TR_TODON("New Bookmarks"),         (uint)Cmd::NewBookmarks,      MF_NO_TRANSLATE},
+    {"add",                              CmdFavAdd,            MF_NO_TRANSLATE},
+    {"del",                              CmdFavDel,            MF_NO_TRANSLATE},
+    {SEP_ITEM,                           CmdSeparator,         MF_NO_TRANSLATE},
+    {_TR_TODON("Export Bookmarks"),      CmdExportBookmarks,   MF_NO_TRANSLATE},
+    {_TR_TODON("New Bookmarks"),         CmdNewBookmarks,      MF_NO_TRANSLATE},
     { 0, 0, 0 },
 };
 
 static MenuDef menuDefSortByTag[] = {
-    {_TR_TODON("Tag (small first)"),     (uint)Cmd::SortTagSmallFirst, 0 },
-    {_TR_TODON("Tag (big first)"),       (uint)Cmd::SortTagBigFirst,   0 },
-    {_TR_TODON("Color"),                 (uint)Cmd::SortColor,           0 },
+    {_TR_TODON("Tag (small first)"),     CmdSortTagSmallFirst, 0 },
+    {_TR_TODON("Tag (big first)"),       CmdSortTagBigFirst,   0 },
+    {_TR_TODON("Color"),                 CmdSortColor,           0 },
     { 0, 0, 0 },
 };
 // clang-format on      
@@ -636,19 +636,19 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         UINT flags = MF_BYCOMMAND | MF_ENABLED | MF_POPUP;
         InsertMenuW(popup, 0, flags, (UINT_PTR)popupSort, _TR_TODO("Sort By"));
 
-        win::menu::SetChecked(popupSort, (uint)Cmd::SortTagSmallFirst, false);
-        win::menu::SetChecked(popupSort, (uint)Cmd::SortTagBigFirst, false);
-        win::menu::SetChecked(popupSort, (uint)Cmd::SortColor, false);
+        win::menu::SetChecked(popupSort, CmdSortTagSmallFirst, false);
+        win::menu::SetChecked(popupSort, CmdSortTagBigFirst, false);
+        win::menu::SetChecked(popupSort, CmdSortColor, false);
 
         switch (tab->tocSort) {
             case TocSort::TagBigFirst:
-                win::menu::SetChecked(popupSort, (uint)Cmd::SortTagBigFirst, true);
+                win::menu::SetChecked(popupSort, CmdSortTagBigFirst, true);
                 break;
             case TocSort::TagSmallFirst:
-                win::menu::SetChecked(popupSort, (uint)Cmd::SortTagSmallFirst, true);
+                win::menu::SetChecked(popupSort, CmdSortTagSmallFirst, true);
                 break;
             case TocSort::Color:
-                win::menu::SetChecked(popupSort, (uint)Cmd::SortColor, true);
+                win::menu::SetChecked(popupSort, CmdSortColor, true);
                 break;
         }
     }
@@ -666,23 +666,23 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         const WCHAR* ext = path::GetExtNoFree(embeddedName);
         bool canOpenEmbedded = str::EqI(ext, L".pdf");
         if (!canOpenEmbedded) {
-            win::menu::Remove(popup, (uint)Cmd::OpenEmbedded);
+            win::menu::Remove(popup, CmdOpenEmbedded);
         }
     } else {
-        win::menu::Remove(popup, (uint)Cmd::EmbedSeparator);
-        win::menu::Remove(popup, (uint)Cmd::SaveEmbedded);
-        win::menu::Remove(popup, (uint)Cmd::OpenEmbedded);
+        win::menu::Remove(popup, CmdSeparatorEmbed);
+        win::menu::Remove(popup, CmdSaveEmbedded);
+        win::menu::Remove(popup, CmdOpenEmbedded);
     }
 
     if (!showBookmarksMenu) {
-        win::menu::Remove(popup, (uint)Cmd::Separator);
-        win::menu::Remove(popup, (uint)Cmd::ExportBookmarks);
-        win::menu::Remove(popup, (uint)Cmd::NewBookmarks);
+        win::menu::Remove(popup, CmdSeparator);
+        win::menu::Remove(popup, CmdExportBookmarks);
+        win::menu::Remove(popup, CmdNewBookmarks);
     } else {
         path = win->currentTab->filePath.get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
-            win::menu::SetText(popup, (uint)Cmd::NewBookmarks, _TR_TODO("Edit Bookmarks"));
+            win::menu::SetText(popup, CmdNewBookmarks, _TR_TODO("Edit Bookmarks"));
         }
     }
 
@@ -690,23 +690,23 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
-            win::menu::Remove(popup, (uint)Cmd::FavAdd);
+            win::menu::Remove(popup, CmdFavAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Remove page %s from favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, (uint)Cmd::FavDel, s);
+            win::menu::SetText(popup, CmdFavDel, s);
         } else {
-            win::menu::Remove(popup, (uint)Cmd::FavDel);
+            win::menu::Remove(popup, CmdFavDel);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Add page %s to favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, (uint)Cmd::FavAdd, s);
+            win::menu::SetText(popup, CmdFavAdd, s);
         }
     } else {
-        win::menu::Remove(popup, (uint)Cmd::FavAdd);
-        win::menu::Remove(popup, (uint)Cmd::FavDel);
+        win::menu::Remove(popup, CmdFavAdd);
+        win::menu::Remove(popup, CmdFavDel);
     }
 
     MarkMenuOwnerDraw(popup);
@@ -715,25 +715,25 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
     switch (cmd) {
-        case (int)Cmd::ExportBookmarks:
+        case CmdExportBookmarks:
             ExportBookmarksFromTab(tab);
             break;
-        case (int)Cmd::NewBookmarks:
+        case CmdNewBookmarks:
             StartTocEditorForWindowInfo(win);
             break;
-        case (int)Cmd::ExpandAll:
+        case CmdExpandAll:
             win->tocTreeCtrl->ExpandAll();
             break;
-        case (int)Cmd::CollapseAll:
+        case CmdCollapseAll:
             win->tocTreeCtrl->CollapseAll();
             break;
-        case (uint)Cmd::FavAdd:
+        case CmdFavAdd:
             AddFavoriteFromToc(win, dti);
             break;
-        case (uint)Cmd::FavDel:
+        case CmdFavDel:
             DelFavorite(filePath, pageNo);
             break;
-        case (int)Cmd::SortTagBigFirst:
+        case CmdSortTagBigFirst:
             if (tab->tocSort == TocSort::TagBigFirst) {
                 tab->tocSort = TocSort::None;
             } else {
@@ -741,7 +741,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             }
             SortAndSetTocTree(tab);
             break;
-        case (int)Cmd::SortTagSmallFirst:
+        case CmdSortTagSmallFirst:
             if (tab->tocSort == TocSort::TagSmallFirst) {
                 tab->tocSort = TocSort::None;
             } else {
@@ -749,7 +749,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             }
             SortAndSetTocTree(tab);
             break;
-        case (int)Cmd::SortColor:
+        case CmdSortColor:
             if (tab->tocSort == TocSort::Color) {
                 tab->tocSort = TocSort::None;
             } else {
@@ -757,10 +757,10 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             }
             SortAndSetTocTree(tab);
             break;
-        case (int)Cmd::SaveEmbedded:
+        case CmdSaveEmbedded:
             SaveEmbeddedFile(tab, dest);
             break;
-        case (int)Cmd::OpenEmbedded:
+        case CmdOpenEmbedded:
             OpenEmbeddedFile(tab, dest);
             break;
     }

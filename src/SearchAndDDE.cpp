@@ -99,7 +99,7 @@ void OnMenuFind(WindowInfo* win) {
     }
 
     AutoFreeWstr previousFind(win::GetText(win->hwndFindBox));
-    WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, (UINT)Cmd::FindMatch, 0);
+    WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, CmdFindMatch, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
     AutoFreeWstr findString(Dialog_Find(win->hwndFrame, previousFind, &matchCase));
@@ -117,7 +117,7 @@ void OnMenuFind(WindowInfo* win) {
         } else {
             state &= ~TBSTATE_CHECKED;
         }
-        SendMessageW(win->hwndToolbar, TB_SETSTATE, (UINT)Cmd::FindMatch, state);
+        SendMessageW(win->hwndToolbar, TB_SETSTATE, CmdFindMatch, state);
         dm->textSearch->SetSensitive(matchCase);
     }
 
@@ -128,7 +128,7 @@ void OnMenuFindNext(WindowInfo* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, (UINT)Cmd::FindNext, 0)) {
+    if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, CmdFindNext, 0)) {
         FindTextOnThread(win, TextSearchDirection::Forward, true);
     }
 }
@@ -137,7 +137,7 @@ void OnMenuFindPrev(WindowInfo* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, (UINT)Cmd::FindPrev, 0)) {
+    if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, CmdFindPrev, 0)) {
         FindTextOnThread(win, TextSearchDirection::Backward, true);
     }
 }
@@ -146,7 +146,7 @@ void OnMenuFindMatchCase(WindowInfo* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
-    WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, (UINT)Cmd::FindMatch, 0);
+    WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, CmdFindMatch, 0);
     win->AsFixed()->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
     Edit_SetModify(win->hwndFindBox, TRUE);
 }
@@ -244,17 +244,17 @@ struct FindThreadData : public ProgressUpdateUI {
             win->notifications->Add(wnd, NG_FIND_PROGRESS);
         }
 
-        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, (WPARAM)Cmd::FindPrev, disable);
-        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, (WPARAM)Cmd::FindNext, disable);
-        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, (WPARAM)Cmd::FindMatch, disable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindPrev, disable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindNext, disable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindMatch, disable);
     }
 
     void HideUI(bool success, bool loopedAround) {
         LPARAM enable = (LPARAM)MAKELONG(1, 0);
 
-        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, (WPARAM)Cmd::FindPrev, enable);
-        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, (WPARAM)Cmd::FindNext, enable);
-        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, (WPARAM)Cmd::FindMatch, enable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindPrev, enable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindNext, enable);
+        SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindMatch, enable);
 
         if (!win->notifications->Contains(wnd)) {
             /* our notification has been replaced or closed (or never created) */;

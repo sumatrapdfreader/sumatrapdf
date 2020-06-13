@@ -327,12 +327,12 @@ void LinkHandler::GotoLink(PageDestination* dest) {
     }
 
     if (kindDestinationFindDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::FindFirst, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, CmdFindFirst, 0);
         return;
     }
 
     if (kindDestinationFullScreen == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::ViewPresentationMode, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, CmdViewPresentationMode, 0);
         return;
     }
 
@@ -347,22 +347,22 @@ void LinkHandler::GotoLink(PageDestination* dest) {
     }
 
     if (kindDestinationGoToPageDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::GoToPage, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, CmdGoToPage, 0);
         return;
     }
 
     if (kindDestinationPrintDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::Print, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, CmdPrint, 0);
         return;
     }
 
     if (kindDestinationSaveAsDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::SaveAs, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, CmdSaveAs, 0);
         return;
     }
 
     if (kindDestinationZoomToDialog == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::ZoomCustom, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, CmdZoomCustom, 0);
         return;
     }
 
