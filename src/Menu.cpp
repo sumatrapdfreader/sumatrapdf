@@ -122,24 +122,24 @@ static MenuDef menuDefFile[] = {
 
 //[ ACCESSKEY_GROUP View Menu
 static MenuDef menuDefView[] = {
-    { _TRN("&Single Page\tCtrl+6"),         (UINT)Cmd::ViewSinglePage,       MF_NOT_FOR_CHM },
+    { _TRN("&Single Page\tCtrl+6"),         (UINT)Cmd::ViewSinglePage,        MF_NOT_FOR_CHM },
     { _TRN("&Facing\tCtrl+7"),              (UINT)Cmd::ViewFacing,            MF_NOT_FOR_CHM },
     { _TRN("&Book View\tCtrl+8"),           (UINT)Cmd::ViewBook,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Show &Pages Continuously"),     (UINT)Cmd::ViewContinuous,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
-    { _TRN("Man&ga Mode"),                  (UINT)Cmd::ViewMangaMode,        MF_CBX_ONLY },
-    { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
-    { _TRN("Rotate &Left\tCtrl+Shift+-"),   (UINT)IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Rotate &Right\tCtrl+Shift++"),  (UINT)IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Pr&esentation\tF5"),            (UINT)IDM_VIEW_PRESENTATION_MODE, MF_REQ_FULLSCREEN | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("F&ullscreen\tF11"),             (UINT)IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
-    { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },
-    { _TRN("Show Book&marks\tF12"),         (UINT)IDM_VIEW_BOOKMARKS,         0 },
-    { _TRN("Show &Toolbar\tF8"),            (UINT)IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
-    { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Select &All\tCtrl+A"),          (UINT)IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Copy Selection\tCtrl+C"),      (UINT)IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Man&ga Mode"),                  (UINT)Cmd::ViewMangaMode,         MF_CBX_ONLY },
+    { SEP_ITEM,                             0,                                MF_NOT_FOR_CHM },
+    { _TRN("Rotate &Left\tCtrl+Shift+-"),   (UINT)Cmd::ViewRotateLeft,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Rotate &Right\tCtrl+Shift++"),  (UINT)Cmd::ViewRotateRight,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                                MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Pr&esentation\tF5"),            (UINT)Cmd::ViewPresentationMode,  MF_REQ_FULLSCREEN | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("F&ullscreen\tF11"),             (UINT)Cmd::ViewFullScreen,        MF_REQ_FULLSCREEN },
+    { SEP_ITEM,                             0,                                MF_REQ_FULLSCREEN },
+    { _TRN("Show Book&marks\tF12"),         (UINT)Cmd::ViewBookmarks,         0 },
+    { _TRN("Show &Toolbar\tF8"),            (UINT)Cmd::ViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                                MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Select &All\tCtrl+A"),          (UINT)Cmd::SelectAll,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Copy Selection\tCtrl+C"),      (UINT)Cmd::CopySelection,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP View Menu
@@ -237,18 +237,18 @@ static MenuDef menuDefDebug[] = {
 //[ ACCESSKEY_GROUP Context Menu (Content)
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
-    { _TRN("&Copy Selection"),              (UINT)IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
+    { _TRN("&Copy Selection"),              (UINT)Cmd::CopySelection,         MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Link Address"),           (UINT)IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                (UINT)IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Image"),                  (UINT)IDM_COPY_IMAGE,             MF_REQ_ALLOW_COPY },
-    { _TRN("Select &All"),                  (UINT)IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
+    { _TRN("Select &All"),                  (UINT)Cmd::SelectAll,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
     {"add",                                 (UINT)IDM_FAV_ADD,                MF_NO_TRANSLATE   },
     {"del",                                 (UINT)IDM_FAV_DEL,                MF_NO_TRANSLATE   },
     { _TRN("Show &Favorites"),              (UINT)IDM_FAV_TOGGLE,             0                 },
-    { _TRN("Show &Bookmarks\tF12"),         (UINT)IDM_VIEW_BOOKMARKS,         0                 },
-    { _TRN("Show &Toolbar\tF8"),            (UINT)IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show &Bookmarks\tF12"),         (UINT)Cmd::ViewBookmarks,         0                 },
+    { _TRN("Show &Toolbar\tF8"),            (UINT)Cmd::ViewShowHideToolbar, MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             (UINT)IDM_SAVE_ANNOTATIONS_SMX,   MF_REQ_DISK_ACCESS },
     { _TR_TODON("Edit Annotations"),        (UINT)IDM_EDIT_ANNOTATIONS,       MF_REQ_DISK_ACCESS },
     {"New Bookmarks",                       (UINT)IDM_NEW_BOOKMARKS,          MF_NO_TRANSLATE},
@@ -507,8 +507,8 @@ static bool IsFileCloseMenuEnabled() {
 static void MenuUpdateStateForWindow(WindowInfo* win) {
     // those menu items will be disabled if no document is opened, enabled otherwise
     static UINT menusToDisableIfNoDocument[] = {
-        (UINT)IDM_VIEW_ROTATE_LEFT,
-        (UINT)IDM_VIEW_ROTATE_RIGHT,
+        (UINT)Cmd::ViewRotateLeft,
+        (UINT)Cmd::ViewRotateRight,
         (UINT)IDM_GOTO_NEXT_PAGE,
         (UINT)IDM_GOTO_PREV_PAGE,
         (UINT)IDM_GOTO_FIRST_PAGE,
@@ -520,10 +520,10 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
         (UINT)Cmd::SaveAs,
         (UINT)Cmd::SaveAsBookmark,
         (UINT)Cmd::SendByEmail,
-        (UINT)IDM_SELECT_ALL,
-        (UINT)IDM_COPY_SELECTION,
+        (UINT)Cmd::SelectAll,
+        (UINT)Cmd::CopySelection,
         (UINT)Cmd::Properties,
-        (UINT)IDM_VIEW_PRESENTATION_MODE,
+        (UINT)Cmd::ViewPresentationMode,
         (UINT)IDM_VIEW_WITH_ACROBAT,
         (UINT)IDM_VIEW_WITH_FOXIT,
         (UINT)IDM_VIEW_WITH_PDF_XCHANGE,
@@ -555,14 +555,14 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     MenuUpdatePrintItem(win, win->menu);
 
     bool enabled = win->IsDocLoaded() && tab && tab->ctrl->HacToc();
-    win::menu::SetEnabled(win->menu, IDM_VIEW_BOOKMARKS, enabled);
+    win::menu::SetEnabled(win->menu, (UINT)Cmd::ViewBookmarks, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
     bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->showToc;
-    win::menu::SetChecked(win->menu, IDM_VIEW_BOOKMARKS, checked);
+    win::menu::SetChecked(win->menu, (UINT)Cmd::ViewBookmarks, checked);
 
     win::menu::SetChecked(win->menu, IDM_FAV_TOGGLE, gGlobalPrefs->showFavorites);
-    win::menu::SetChecked(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs->showToolbar);
+    win::menu::SetChecked(win->menu, (UINT)Cmd::ViewShowHideToolbar, gGlobalPrefs->showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
@@ -704,11 +704,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         win::menu::Remove(popup, (UINT)Cmd::ExitFullScreen);
     }
     if (!tab->selectionOnPage) {
-        win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
+        win::menu::SetEnabled(popup, (UINT)Cmd::CopySelection, false);
     }
     MenuUpdatePrintItem(win, popup, true);
-    win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->ctrl->HacToc());
-    win::menu::SetChecked(popup, IDM_VIEW_BOOKMARKS, win->tocVisible);
+    win::menu::SetEnabled(popup, (UINT)Cmd::ViewBookmarks, win->ctrl->HacToc());
+    win::menu::SetChecked(popup, (UINT)Cmd::ViewBookmarks, win->tocVisible);
 
     win::menu::SetEnabled(popup, IDM_FAV_TOGGLE, HasFavorites());
     win::menu::SetChecked(popup, IDM_FAV_TOGGLE, gGlobalPrefs->showFavorites);
@@ -755,7 +755,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     // if toolbar is not shown, add option to show it
     if (gGlobalPrefs->showToolbar) {
-        win::menu::Remove(popup, IDM_VIEW_SHOW_HIDE_TOOLBAR);
+        win::menu::Remove(popup, (UINT)Cmd::ViewShowHideToolbar);
     }
 
     POINT pt = {x, y};
@@ -767,14 +767,14 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DestroyMenu(popup);
 
     switch (cmd) {
-        case IDM_COPY_SELECTION:
-        case IDM_SELECT_ALL:
+        case (UINT)Cmd::CopySelection:
+        case (UINT)Cmd::SelectAll:
         case (UINT)Cmd::SaveAs:
         case (UINT)Cmd::Print:
-        case IDM_VIEW_BOOKMARKS:
+        case (UINT)Cmd::ViewBookmarks:
         case IDM_FAV_TOGGLE:
         case (UINT)Cmd::Properties:
-        case IDM_VIEW_SHOW_HIDE_TOOLBAR:
+        case (UINT)Cmd::ViewShowHideToolbar:
         case IDM_SAVE_ANNOTATIONS_SMX:
         case IDM_NEW_BOOKMARKS:
             SendMessageW(win->hwndFrame, WM_COMMAND, cmd, 0);

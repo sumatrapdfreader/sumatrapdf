@@ -615,7 +615,7 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
 static void PropertiesOnCommand(HWND hwnd, WPARAM wp) {
     auto cmd = LOWORD(wp);
     switch (cmd) {
-        case IDM_COPY_SELECTION:
+        case (WORD)Cmd::CopySelection:
             CopyPropertiesToClipboard(hwnd);
             break;
 

@@ -27,7 +27,7 @@ enum class Cmd {
     ViewFullScreen,
     ViewPresentationMode,
     ViewShowHideToolbar,
-    ViewSHowHIdeMenuBar,
+    ViewShowHideMenuBar,
 
     CopySelection,
     SelectAll,
@@ -165,15 +165,6 @@ enum class Cmd {
 };
 
 enum {
-    IDM_VIEW_ROTATE_LEFT,
-    IDM_VIEW_ROTATE_RIGHT,
-    IDM_VIEW_BOOKMARKS,
-    IDM_VIEW_PRESENTATION_MODE,
-    IDM_VIEW_SHOW_HIDE_TOOLBAR,
-    IDM_COPY_SELECTION,
-    IDM_VIEW_FULLSCREEN,
-    IDM_SELECT_ALL,
-    IDM_VIEW_SHOW_HIDE_MENUBAR,
     IDM_NEW_WINDOW,
     IDM_DUPLICATE_IN_NEW_WINDOW,
     IDM_COPY_IMAGE,

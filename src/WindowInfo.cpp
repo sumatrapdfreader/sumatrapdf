@@ -332,7 +332,7 @@ void LinkHandler::GotoLink(PageDestination* dest) {
     }
 
     if (kindDestinationFullScreen == kind) {
-        PostMessageW(hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
+        PostMessageW(hwndFrame, WM_COMMAND, (WPARAM)Cmd::ViewPresentationMode, 0);
         return;
     }
 

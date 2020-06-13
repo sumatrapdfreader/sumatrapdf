@@ -4378,7 +4378,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuViewMangaMode(win);
             break;
 
-        case IDM_VIEW_SHOW_HIDE_TOOLBAR:
+        case (int)Cmd::ViewShowHideToolbar:
             OnMenuViewShowHideToolbar();
             break;
 
@@ -4394,7 +4394,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             StartTocEditorForWindowInfo(win);
             break;
 
-        case IDM_VIEW_SHOW_HIDE_MENUBAR:
+        case (int)Cmd::ViewShowHideMenuBar:
             if (!win->tabsInTitlebar) {
                 ShowHideMenuBar(win);
             }
@@ -4404,7 +4404,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuChangeLanguage(win->hwndFrame);
             break;
 
-        case IDM_VIEW_BOOKMARKS:
+        case (int)Cmd::ViewBookmarks:
             ToggleTocBox(win);
             break;
 
@@ -4436,21 +4436,21 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuGoToPage(win);
             break;
 
-        case IDM_VIEW_PRESENTATION_MODE:
+        case (int)Cmd::ViewPresentationMode:
             OnMenuViewPresentation(win);
             break;
 
-        case IDM_VIEW_FULLSCREEN:
+        case (int)Cmd::ViewFullScreen:
             OnMenuViewFullscreen(win);
             break;
 
-        case IDM_VIEW_ROTATE_LEFT:
+        case (int)Cmd::ViewRotateLeft:
             if (win->AsFixed()) {
                 win->AsFixed()->RotateBy(-90);
             }
             break;
 
-        case IDM_VIEW_ROTATE_RIGHT:
+        case (int)Cmd::ViewRotateRight:
             if (win->AsFixed()) {
                 win->AsFixed()->RotateBy(90);
             }
@@ -4560,7 +4560,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case IDM_COPY_SELECTION:
+        case (int)Cmd::CopySelection:
             // Don't break the shortcut for text boxes
             if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
                 SendMessageW(GetFocus(), WM_COPY, 0, 0);
@@ -4575,7 +4575,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
-        case IDM_SELECT_ALL:
+        case (int)Cmd::SelectAll:
             OnSelectAll(win);
             break;
 
@@ -4732,7 +4732,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     SendMessageW(hwnd, WM_COMMAND, IDM_FIND_FIRST, 0);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FAVORITES:
-                    SendMessageW(hwnd, WM_COMMAND, IDM_VIEW_BOOKMARKS, 0);
+                    SendMessageW(hwnd, WM_COMMAND, (int)Cmd::ViewBookmarks, 0);
                     return TRUE;
             }
             return DefWindowProc(hwnd, msg, wp, lp);
