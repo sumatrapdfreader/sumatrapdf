@@ -367,7 +367,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
     AppendMenu(m, MF_SEPARATOR, 0, nullptr);
 
     gFavorites.ResetMenuIds();
-    UINT menuId = IDM_FAV_FIRST;
+    UINT menuId = (UINT)Cmd::FavFirst;
 
     size_t menusCount = filePathsSorted.size();
     if (menusCount > MAX_FAV_MENUS) {

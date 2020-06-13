@@ -4227,8 +4227,8 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     // check if the menuId belongs to an entry in the list of
     // recently opened files and load the referenced file if it does
-    if ((wmId >= IDM_FILE_HISTORY_FIRST) && (wmId <= IDM_FILE_HISTORY_LAST)) {
-        DisplayState* state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
+    if ((wmId >= (int)Cmd::FileHistoryFirst) && (wmId <= (int)Cmd::FileHistoryLast)) {
+        DisplayState* state = gFileHistory.Get(wmId - (int)Cmd::FileHistoryFirst);
         if (state && HasPermission(Perm_DiskAccess)) {
             LoadArgs args(state->filePath, win);
             LoadDocument(args);
@@ -4237,8 +4237,8 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
 
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
-    static_assert(IDM_FAV_LAST - IDM_FAV_FIRST == 200, "wrong number of favorite menu ids");
-    if ((wmId >= IDM_FAV_FIRST) && (wmId <= IDM_FAV_LAST)) {
+    static_assert((int)Cmd::FavLast - (int)Cmd::FavFirst == 200, "wrong number of favorite menu ids");
+    if ((wmId >= (int)Cmd::FavFirst) && (wmId <= (int)Cmd::FavLast)) {
         GoToFavoriteByMenuId(win, wmId);
     }
 
@@ -4261,8 +4261,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    if (!win->IsAboutWindow() && IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST) {
-        ViewWithExternalViewer(win->currentTab, wmId - IDM_OPEN_WITH_EXTERNAL_FIRST);
+    if (!win->IsAboutWindow() && (int)Cmd::OpenWithExternalFirst <= wmId &&
+        wmId <= (int)Cmd::OpenWithExternalLast) {
+        ViewWithExternalViewer(win->currentTab, wmId - (int)Cmd::OpenWithExternalFirst);
         return 0;
     }
 
@@ -4314,21 +4315,21 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuSaveBookmark(win);
             break;
 
-        case IDT_VIEW_FIT_WIDTH:
+        case (int)Cmd::ToolbarViewFitWidth:
             ChangeZoomLevel(win, ZOOM_FIT_WIDTH, true);
             break;
 
-        case IDT_VIEW_FIT_PAGE:
+        case (int)Cmd::ToolbarViewFitPage:
             ChangeZoomLevel(win, ZOOM_FIT_PAGE, false);
             break;
 
-        case IDT_VIEW_ZOOMIN:
+        case (int)Cmd::ViewZoomIn:
             if (win->IsDocLoaded()) {
                 ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
             }
             break;
 
-        case IDT_VIEW_ZOOMOUT:
+        case (int)Cmd::ViewZoomOut:
             if (win->IsDocLoaded()) {
                 ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
             }

@@ -64,10 +64,10 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {2, (int)Cmd::GoToPrevPage, _TRN("Previous Page"), 0},
     {3, (int)Cmd::GoToNextPage, _TRN("Next Page"), 0},
     {-1, 0, nullptr, 0},
-    {4, IDT_VIEW_FIT_WIDTH, _TRN("Fit Width and Show Pages Continuously"), 0},
-    {5, IDT_VIEW_FIT_PAGE, _TRN("Fit a Single Page"), 0},
-    {6, IDT_VIEW_ZOOMOUT, _TRN("Zoom Out"), 0},
-    {7, IDT_VIEW_ZOOMIN, _TRN("Zoom In"), 0},
+    {4, (int)Cmd::ToolbarViewFitWidth, _TRN("Fit Width and Show Pages Continuously"), 0},
+    {5, (int)Cmd::ToolbarViewFitPage, _TRN("Fit a Single Page"), 0},
+    {6, (int)Cmd::ViewZoomOut, _TRN("Zoom Out"), 0},
+    {7, (int)Cmd::ViewZoomIn, _TRN("Zoom In"), 0},
     {-1, (int)Cmd::FindFirst, nullptr, 0},
     {8, (int)Cmd::FindPrev, _TRN("Find Previous"), 0},
     {9, (int)Cmd::FindNext, _TRN("Find Next"), 0},
@@ -82,8 +82,8 @@ static bool TbIsSeparator(ToolbarButtonInfo& tbi) {
 
 static bool IsVisibleToolbarButton(WindowInfo* win, int buttonNo) {
     switch (gToolbarButtons[buttonNo].cmdId) {
-        case IDT_VIEW_FIT_WIDTH:
-        case IDT_VIEW_FIT_PAGE:
+        case (int)Cmd::ToolbarViewFitWidth:
+        case (int)Cmd::ToolbarViewFitPage:
             return !win->AsChm();
 
         case (int)Cmd::FindFirst:
@@ -345,7 +345,7 @@ void UpdateToolbarFindText(WindowInfo* win) {
     Rect findWndRect = WindowRect(win->hwndFindBg);
 
     RECT r{};
-    TbGetRect(win->hwndToolbar, IDT_VIEW_ZOOMIN, &r);
+    TbGetRect(win->hwndToolbar, (int)Cmd::ViewZoomIn, &r);
     int currX = r.right + DpiScale(win->hwndToolbar, 10);
     int currY = (r.bottom - findWndRect.dy) / 2;
 
@@ -377,7 +377,7 @@ void UpdateToolbarState(WindowInfo* win) {
         return;
     }
     HWND hwnd = win->hwndToolbar;
-    WORD state = (WORD)SendMessageW(hwnd, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
+    WORD state = (WORD)SendMessageW(hwnd, TB_GETSTATE, (int)Cmd::ToolbarViewFitWidth, 0);
     DisplayMode dm = win->ctrl->GetDisplayMode();
     float zoomVirtual = win->ctrl->GetZoomVirtual();
     if (dm == DM_CONTINUOUS && zoomVirtual == ZOOM_FIT_WIDTH) {
@@ -385,17 +385,17 @@ void UpdateToolbarState(WindowInfo* win) {
     } else {
         state &= ~TBSTATE_CHECKED;
     }
-    SendMessageW(hwnd, TB_SETSTATE, IDT_VIEW_FIT_WIDTH, state);
+    SendMessageW(hwnd, TB_SETSTATE, (int)Cmd::ToolbarViewFitWidth, state);
 
     bool isChecked = (state & TBSTATE_CHECKED);
 
-    state = (WORD)SendMessageW(hwnd, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
+    state = (WORD)SendMessageW(hwnd, TB_GETSTATE, (int)Cmd::ToolbarViewFitPage, 0);
     if (dm == DM_SINGLE_PAGE && zoomVirtual == ZOOM_FIT_PAGE) {
         state |= TBSTATE_CHECKED;
     } else {
         state &= ~TBSTATE_CHECKED;
     }
-    SendMessageW(hwnd, TB_SETSTATE, IDT_VIEW_FIT_PAGE, state);
+    SendMessageW(hwnd, TB_SETSTATE, (int)Cmd::ToolbarViewFitPage, state);
 
     isChecked |= (state & TBSTATE_CHECKED);
     if (!isChecked) {

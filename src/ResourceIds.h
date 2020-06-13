@@ -163,21 +163,3 @@ enum class Cmd {
     ZoomFirst = ZoomFitPage,
     ZoomLast = ZoomCustom,
 };
-
-enum {
-    /* a range for "external viewers" setting */
-    IDM_OPEN_WITH_EXTERNAL_FIRST,
-    IDM_OPEN_WITH_EXTERNAL_LAST = IDM_OPEN_WITH_EXTERNAL_FIRST + 20,
-    /* a range for file history */
-    IDM_FILE_HISTORY_FIRST,
-    IDM_FILE_HISTORY_LAST = IDM_FILE_HISTORY_FIRST + 20,
-    IDM_FAV_FIRST,
-    IDM_FAV_LAST = IDM_FAV_FIRST + 200,
-    IDM_CHANGE_THEME_FIRST,
-    IDM_CHANGE_THEME_LAST,
-    // TODO: rename to IDM_*
-    IDT_VIEW_ZOOMIN,
-    IDT_VIEW_ZOOMOUT,
-    IDT_VIEW_FIT_WIDTH, // TODO: replace with Cmd::ZoomFIT_WIDTH
-    IDT_VIEW_FIT_PAGE,  // TOOD: replace with Cmd::ZoomFIT_PAGE
-};

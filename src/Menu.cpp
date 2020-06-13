@@ -336,7 +336,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, UINT index) {
     auto fileName = win::menu::ToSafeString(menuString);
     int menuIdx = (int)((index + 1) % 10);
     menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
-    UINT menuId = IDM_FILE_HISTORY_FIRST + index;
+    UINT menuId = (UINT)Cmd::FileHistoryFirst + index;
     UINT flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
     InsertMenuW(menuFile, (UINT)Cmd::Exit, flags, menuId, menuString);
 }
@@ -368,7 +368,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         return;
     }
 
-    const int maxEntries = IDM_OPEN_WITH_EXTERNAL_LAST - IDM_OPEN_WITH_EXTERNAL_FIRST + 1;
+    int maxEntries = (int)Cmd::OpenWithExternalLast - (int)Cmd::OpenWithExternalFirst + 1;
     int count = 0;
     for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && count < maxEntries; i++) {
         ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
@@ -392,7 +392,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         }
 
         AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.get() : name));
-        UINT menuId = IDM_OPEN_WITH_EXTERNAL_FIRST + count;
+        UINT menuId = (UINT)Cmd::OpenWithExternalFirst + count;
         InsertMenuW(menuFile, (UINT)Cmd::SendByEmail, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {
             win::menu::SetEnabled(menuFile, menuId, false);
