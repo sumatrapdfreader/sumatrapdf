@@ -10,7 +10,7 @@ import (
 	"github.com/kjk/u"
 )
 
-const html_tmpl = `<!doctype html>
+const tmplHTML = `<!doctype html>
 
 <html>
 <head>
@@ -115,7 +115,7 @@ For example #ff0000 means red color. You can use <a href="https://galactic.ink/s
 </html>
 `
 
-const langs_html_tmpl = `<!doctype html>
+const tmplLangsHTML = `<!doctype html>
 
 <html>
 <head>
@@ -179,57 +179,57 @@ of <code>UiLanguage</code> setting in <a href="settings%VER%.html">settings file
 </html>
 `
 
-var indent_str = "    "
+var indentStr = "    "
 
-func extract_url(s string) []string {
+func extractURL(s string) []string {
 	if !strings.HasSuffix(s, ")") {
 		return []string{s}
 	}
-	word_end := strings.Index(s, "]")
-	panicIf(word_end == -1)
-	word := s[:word_end]
-	panicIf(s[word_end+1] != '(')
-	url := s[word_end+2 : len(s)-1]
+	wordEnd := strings.Index(s, "]")
+	panicIf(wordEnd == -1)
+	word := s[:wordEnd]
+	panicIf(s[wordEnd+1] != '(')
+	url := s[wordEnd+2 : len(s)-1]
 	return []string{word, url}
 }
 
-func cgi_escape(s string) string {
+func cgiEscape(s string) string {
 	return html.EscapeString(s)
 }
 
-func gen_comment(comment string, field_id string, start string, first bool) string {
-	line_len := 100
+func genComment(comment string, fieldID string, start string, first bool) string {
+	lineLen := 100
 	s := "\n"
 	if first {
 		s = ""
 	}
-	s = s + start + fmt.Sprintf(`<span class="cm" id="%s">`, field_id)
-	left := line_len - len(start)
+	s = s + start + fmt.Sprintf(`<span class="cm" id="%s">`, fieldID)
+	left := lineLen - len(start)
 	// [foo](bar.html) is turned into <a href="bar.html">foo</a>
-	href_text := ""
-	comment = cgi_escape(comment)
+	hrefText := ""
+	comment = cgiEscape(comment)
 	words := strings.Split(comment, " ")
 	for _, word := range words {
 		if word[0] == '[' {
-			word_url := extract_url(word[1:])
-			if len(word_url) == 2 {
-				s += fmt.Sprintf(`<a href="%s">%s</a>`, word_url[1], word_url[0])
+			wordURL := extractURL(word[1:])
+			if len(wordURL) == 2 {
+				s += fmt.Sprintf(`<a href="%s">%s</a>`, wordURL[1], wordURL[0])
 				continue
 			}
-			href_text = word_url[0]
+			hrefText = wordURL[0]
 			continue
-		} else if href_text != "" {
-			word_url := extract_url(word)
-			href_text = href_text + " " + word_url[0]
-			if len(word_url) == 2 {
-				s += fmt.Sprintf(`<a href="%s">%s</a> `, word_url[1], href_text)
-				href_text = ""
+		} else if hrefText != "" {
+			wordURL := extractURL(word)
+			hrefText = hrefText + " " + wordURL[0]
+			if len(wordURL) == 2 {
+				s += fmt.Sprintf(`<a href="%s">%s</a> `, wordURL[1], hrefText)
+				hrefText = ""
 			}
 			continue
 		}
 		if left < len(word) {
 			s = rstrip(s) + "\n" + start
-			left = line_len - len(start)
+			left = lineLen - len(start)
 		}
 		word += " "
 		left -= len(word)
@@ -253,64 +253,64 @@ func rstrip(s string) string {
 	return strings.TrimRight(s, " \n\r\t")
 }
 
-func gen_struct(struc *Field, indent string, prerelease bool) string {
+func genStruct(struc *Field, indent string, isPreRelease bool) string {
 	var lines []string
 	first := true
-	inside_expert := false
+	insideExpert := false
 
 	fields := struc.Default.([]*Field)
 	for _, field := range fields {
-		if field.Internal || field.isComment() || (!prerelease && field.PreRelease) {
+		if field.Internal || field.isComment() || (!isPreRelease && field.PreRelease) {
 			continue
 		}
-		start_idx := len(lines)
+		startIdx := len(lines)
 		comment := field.DocComment
 		if field.Version != "2.3" {
 			comment += fmt.Sprintf(" (introduced in version %s)", field.Version)
 		}
 
-		field_id := field.Name
+		fieldID := field.Name
 		if indent != "" {
-			field_id = struc.Name + "_" + field.Name
+			fieldID = struc.Name + "_" + field.Name
 		}
-		s := gen_comment(comment, field_id, indent, first)
+		s := genComment(comment, fieldID, indent, first)
 		lines = append(lines, s)
 
 		if field.Type.Name == "Array" {
-			indent2 := indent + indent_str[:len(indent_str)/2]
+			indent2 := indent + indentStr[:len(indentStr)/2]
 			start := fmt.Sprintf("%s%s [\n%s[", indent, field.Name, indent2)
 			end := fmt.Sprintf("%s]\n%s]", indent2, indent)
-			inside := gen_struct(field, indent+indent_str, prerelease)
+			inside := genStruct(field, indent+indentStr, isPreRelease)
 			lines = append(lines, start, inside, end)
 		} else if field.Type.Name == "Struct" {
 			start := fmt.Sprintf("%s%s [", indent, field.Name)
 			end := fmt.Sprintf("%s]", indent)
-			inside := gen_struct(field, indent+indent_str, prerelease)
+			inside := genStruct(field, indent+indentStr, isPreRelease)
 			lines = append(lines, start, inside, end)
 		} else {
-			s = field.inidefault()
+			s = field.initDefault()
 			s = lstrip(s)
 			lines = append(lines, indent+s)
 		}
 		first = false
-		if field.Expert && !inside_expert {
-			lines[start_idx] = `<div>` + lines[start_idx]
-		} else if !field.Expert && inside_expert {
-			lines[start_idx] = `</div>` + lines[start_idx]
+		if field.Expert && !insideExpert {
+			lines[startIdx] = `<div>` + lines[startIdx]
+		} else if !field.Expert && insideExpert {
+			lines[startIdx] = `</div>` + lines[startIdx]
 		}
-		inside_expert = field.Expert
+		insideExpert = field.Expert
 	}
 	return strings.Join(lines, "\n")
 }
 
-func MkLang(name string, code string) *Lang {
+func mkLang(name string, code string) *Lang {
 	return &Lang{
 		name: name,
 		code: code,
 	}
 }
 
-func settings_dir() string {
+func settingsDir() string {
 	return filepath.Join("docs", "settings")
 }
 
@@ -318,20 +318,20 @@ func websiteSettingsDir() string {
 	return filepath.Join("website", "settings")
 }
 
-func langs_file_name() string {
+func langsFileName() string {
 	ver := extractSumatraVersionMust()
 	return fmt.Sprintf("langs%s.html", ver)
 }
 
-func settings_file_name() string {
+func settingsFileName() string {
 	ver := extractSumatraVersionMust()
 	return fmt.Sprintf("settings%s.html", ver)
 }
 
-func gen_langs_html() {
+func genLangsHTML() {
 	var langs []*Lang
 	for _, el := range g_langs {
-		langs = append(langs, MkLang(el[1], el[0]))
+		langs = append(langs, mkLang(el[1], el[0]))
 	}
 	sort.Slice(langs, func(i, j int) bool {
 		return langs[i].name < langs[j].name
@@ -342,35 +342,35 @@ func gen_langs_html() {
 		lines = append(lines, s)
 	}
 	inside := strings.Join(lines, "\n")
-	s := strings.Replace(langs_html_tmpl, "%INSIDE%", inside, -1)
+	s := strings.Replace(tmplLangsHTML, "%INSIDE%", inside, -1)
 	s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
-	s = strings.Replace(s, "settings.html", settings_file_name(), -1)
+	s = strings.Replace(s, "settings.html", settingsFileName(), -1)
 	s = strings.Replace(s, "\n", "\r\n", -1)
 	// undo html escaping that differs from Python
 	// TODO: possibly remove
 	//s = strings.Replace(s, "&#39;", "'", -1)
 
-	path := filepath.Join(settings_dir(), langs_file_name())
+	path := filepath.Join(settingsDir(), langsFileName())
 	u.WriteFileMust(path, []byte(s))
 
-	path = filepath.Join(websiteSettingsDir(), langs_file_name())
+	path = filepath.Join(websiteSettingsDir(), langsFileName())
 	u.WriteFileMust(path, []byte(s))
 }
 
-func gen_settings_html() {
+func genSettingsHTML() {
 	prefs := GlobalPrefsStruct
-	inside := gen_struct(prefs, "", false)
-	s := strings.Replace(html_tmpl, "%INSIDE%", inside, -1)
+	inside := genStruct(prefs, "", false)
+	s := strings.Replace(tmplHTML, "%INSIDE%", inside, -1)
 	s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
-	s = strings.Replace(s, "langs.html", langs_file_name(), -1)
+	s = strings.Replace(s, "langs.html", langsFileName(), -1)
 	s = strings.Replace(s, "\n", "\r\n", -1)
 	// undo html escaping that differs from Python
 	// TODO: possibly remove
 	//s = strings.Replace(s, "&#39;", "'", -1)
 
-	path := filepath.Join(settings_dir(), settings_file_name())
+	path := filepath.Join(settingsDir(), settingsFileName())
 	u.WriteFileMust(path, []byte(s))
 
-	path = filepath.Join(websiteSettingsDir(), settings_file_name())
+	path = filepath.Join(websiteSettingsDir(), settingsFileName())
 	u.WriteFileMust(path, []byte(s))
 }
