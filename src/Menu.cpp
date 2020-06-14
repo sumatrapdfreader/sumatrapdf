@@ -250,8 +250,8 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Bookmarks\tF12"),         CmdViewBookmarks,         0                 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
-    { _TR_TODON("Edit Annotations"),        CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
     {"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE },
+    { _TR_TODON("Edit Annotations"),        CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                        MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    CmdPrint,                 MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
@@ -664,17 +664,21 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 }
 
+// TODO: return false in fullscreen
 static bool ShouldShowCreateAnnotationMenu(TabInfo* tab, int x, int y) {
-    UNUSED(x);
-    UNUSED(y);
-
-    auto path = tab->filePath.get();
-    // TODO: check by DisplayModel
-    if (str::EndsWithI(path, L".pdf")) {
-        return true;
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm) {
+        return false;
     }
-    // TODO: only if x/y is on a page
-    return false;
+    Kind engineType = dm->GetEngineType();
+    if (engineType != kindEnginePdf) {
+        return false;
+    }
+    int pageNo = dm->GetPageNoByPoint(Point{x, y});
+    if (pageNo < 0) {
+        return false;
+    }
+    return true;
 }
 
 void OnWindowContextMenu(WindowInfo* win, int x, int y) {
