@@ -4614,7 +4614,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             TestApp(GetModuleHandle(nullptr));
             break;
         case CmdDebugShowNotif: {
-            auto wnd = win->ShowNotification(L"This is a notification", NOS_PERSIST);
+            auto wnd = win->ShowNotification(L"This is a notification", NOS_WARNING);
             // TODO: this notification covers previous
             // win->ShowNotification(L"This is a second notification\nMy friend.");
         } break;

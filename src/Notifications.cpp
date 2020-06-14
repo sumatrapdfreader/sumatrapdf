@@ -197,24 +197,22 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
 
     RECT rTmp = rect.ToRECT();
 
+    COLORREF colBg = GetAppColor(AppColor::NotificationsBg);
+    COLORREF colTxt = GetAppColor(AppColor::NotificationsText);
+    if (wnd->highlight) {
+        colBg = GetAppColor(AppColor::NotificationsHighlightBg);
+        colTxt = GetAppColor(AppColor::NotificationsHighlightText);
+    }
+    // COLORREF colBg = MkRgb(0xff, 0xff, 0x5c);
+    // COLORREF colBg = MkGray(0xff);
+
     Graphics graphics(hdc);
-    COLORREF col = GetAppColor(AppColor::NotificationsBg);
-    // COLORREF col = MkRgb(0xff, 0xff, 0x5c);
-    // COLORREF col = MkGray(0xff);
-    SolidBrush br(GdiRgbFromCOLORREF(col));
+
+    SolidBrush br(GdiRgbFromCOLORREF(colBg));
     graphics.FillRectangle(&br, Gdiplus::Rect(0, 0, rTmp.right - rTmp.left, rTmp.bottom - rTmp.top));
 
-    if (wnd->highlight) {
-        SetBkMode(hdc, OPAQUE);
-        col = GetAppColor(AppColor::NotificationsHighlightText);
-        SetTextColor(hdc, col);
-        col = GetAppColor(AppColor::NotificationsHighlightBg);
-        SetBkColor(hdc, col);
-    } else {
-        SetBkMode(hdc, TRANSPARENT);
-        col = GetAppColor(AppColor::NotificationsText);
-        SetTextColor(hdc, col);
-    }
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, colTxt);
 
     rect.Inflate(-PADDING, -PADDING);
     Rect rectMsg = rect;
@@ -238,7 +236,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
         rect.y += rectMsg.dy + PADDING / 2;
         rect.dy = PROGRESS_HEIGHT;
 
-        col = GetAppColor(AppColor::NotifcationsProgress);
+        COLORREF col = GetAppColor(AppColor::NotifcationsProgress);
         Pen pen(GdiRgbFromCOLORREF(col));
         graphics.DrawRectangle(&pen, Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy));
 
