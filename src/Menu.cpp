@@ -759,7 +759,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdViewShowHideToolbar:
         case CmdSaveAnnotationsSmx:
         case CmdNewBookmarks:
-            SendMessageW(win->hwndFrame, WM_COMMAND, cmd, 0);
+            HwndSendCommand(win->hwndFrame, cmd);
             break;
         case CmdEditAnnotations:
             StartEditAnnotations(tab);

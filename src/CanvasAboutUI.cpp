@@ -101,7 +101,7 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) 
     const WCHAR* url = GetStaticLink(win->staticLinks, x, y);
     if (url && url == win->url) {
         if (str::Eq(url, SLINK_OPEN_FILE)) {
-            SendMessageW(win->hwndFrame, WM_COMMAND, CmdOpen, 0);
+            HwndSendCommand(win->hwndFrame, CmdOpen);
         } else if (str::Eq(url, SLINK_LIST_HIDE)) {
             gGlobalPrefs->showStartPage = false;
             win->RedrawAll(true);

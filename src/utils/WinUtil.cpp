@@ -2172,6 +2172,10 @@ void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, 0, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+void HwndSendCommand(HWND hwnd, int cmdId) {
+    SendMessageW(hwnd, WM_COMMAND, (WPARAM)cmdId, 0);
+}
+
 void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
     auto res = SendMessageW(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)info);
     CrashIf(0 == res);

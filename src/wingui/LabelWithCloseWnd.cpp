@@ -181,7 +181,7 @@ static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LP
     if (WM_LBUTTONUP == msg) {
         if (IsMouseOverClose(w)) {
             HWND parent = GetParent(w->hwnd);
-            SendMessageW(parent, WM_COMMAND, w->cmd, 0);
+            HwndSendCommand(parent, w->cmd);
         }
         return 0;
     }

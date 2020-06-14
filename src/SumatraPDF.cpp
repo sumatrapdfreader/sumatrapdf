@@ -3756,7 +3756,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
 #ifdef DEBUG
     } else if (VK_F1 == key && win->AsEbook()) {
         // TODO: this was in EbookWindow - is it still needed?
-        SendMessageW(win->hwndFrame, WM_COMMAND, CmdDebugMui, 0);
+        HwndSendCommand(win->hwndFrame, CmdDebugMui);
 #endif
     } else {
         return false;
@@ -4719,19 +4719,19 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TRUE so as to not make them bubble up further
             switch (GET_APPCOMMAND_LPARAM(lp)) {
                 case APPCOMMAND_BROWSER_BACKWARD:
-                    SendMessageW(hwnd, WM_COMMAND, CmdGoToNavBack, 0);
+                    HwndSendCommand(hwnd, CmdGoToNavBack);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FORWARD:
-                    SendMessageW(hwnd, WM_COMMAND, CmdGoToNavForward, 0);
+                    HwndSendCommand(hwnd, CmdGoToNavForward);
                     return TRUE;
                 case APPCOMMAND_BROWSER_REFRESH:
-                    SendMessageW(hwnd, WM_COMMAND, CmdRefresh, 0);
+                    HwndSendCommand(hwnd, CmdRefresh);
                     return TRUE;
                 case APPCOMMAND_BROWSER_SEARCH:
-                    SendMessageW(hwnd, WM_COMMAND, CmdFindFirst, 0);
+                    HwndSendCommand(hwnd, CmdFindFirst);
                     return TRUE;
                 case APPCOMMAND_BROWSER_FAVORITES:
-                    SendMessageW(hwnd, WM_COMMAND, CmdViewBookmarks, 0);
+                    HwndSendCommand(hwnd, CmdViewBookmarks);
                     return TRUE;
             }
             return DefWindowProc(hwnd, msg, wp, lp);

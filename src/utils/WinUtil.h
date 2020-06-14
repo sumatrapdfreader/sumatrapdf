@@ -268,6 +268,7 @@ void HwndSetFont(HWND, HFONT);
 HFONT HwndGetFont(HWND);
 Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font);
 void HwndPositionToTheRightOf(HWND hwnd, HWND hwndRelative);
+void HwndSendCommand(HWND hwnd, int cmdId);
 
 void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info);
 void TbGetPadding(HWND, int* padX, int* padY);
