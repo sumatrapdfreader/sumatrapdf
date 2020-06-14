@@ -125,8 +125,8 @@ HFONT GetDefaultGuiFont(bool bold, bool italic);
 HFONT GetDefaultGuiFontOfSize(int size);
 
 IStream* CreateStreamFromData(std::span<u8>);
-std::string_view GetDataFromStream(IStream* stream, HRESULT* resOpt);
-std::string_view GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
+std::span<u8> GetDataFromStream(IStream* stream, HRESULT* resOpt);
+std::span<u8> GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);
 uint GuessTextCodepage(const char* data, size_t len, uint defVal = CP_ACP);
 WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form);
@@ -256,7 +256,7 @@ bool TrackMouseLeave(HWND);
 void TriggerRepaint(HWND);
 HINSTANCE GetInstance();
 Size ButtonGetIdealSize(HWND hwnd);
-std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id);
+std::tuple<const u8*, DWORD, HGLOBAL> LockDataResource(int id);
 bool IsValidDelayType(int type);
 
 void HwndDpiAdjust(HWND, float* x, float* y);

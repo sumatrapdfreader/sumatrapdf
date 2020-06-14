@@ -1250,7 +1250,7 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     return S_OK;
 }
 
-std::string_view GetDataFromStream(IStream* stream, HRESULT* resOpt) {
+std::span<u8> GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     void* data = nullptr;
     ULONG size = 0;
     HRESULT res = GetDataFromStream(stream, &data, &size);
@@ -1261,10 +1261,10 @@ std::string_view GetDataFromStream(IStream* stream, HRESULT* resOpt) {
         free(data);
         return {};
     }
-    return {(char*)data, (size_t)size};
+    return {(u8*)data, (size_t)size};
 }
 
-std::string_view GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
+std::span<u8> GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
     if (stream) {
         return GetDataFromStream(stream, nullptr);
     }
@@ -2059,7 +2059,7 @@ Size ButtonGetIdealSize(HWND hwnd) {
     return res;
 }
 
-std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
+std::tuple<const u8*, DWORD, HGLOBAL> LockDataResource(int id) {
     auto h = GetModuleHandleW(nullptr);
     WCHAR* name = MAKEINTRESOURCEW(id);
     HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
@@ -2071,7 +2071,7 @@ std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
         return {nullptr, 0, 0};
     }
 
-    auto* data = (const char*)LockResource(res);
+    auto* data = (const u8*)LockResource(res);
     DWORD dataSize = SizeofResource(nullptr, resSrc);
     return {data, dataSize, res};
 }

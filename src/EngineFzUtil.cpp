@@ -214,7 +214,7 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     return stm;
 }
 
-std::string_view fz_extract_stream_data(fz_context* ctx, fz_stream* stream) {
+std::span<u8> fz_extract_stream_data(fz_context* ctx, fz_stream* stream) {
     fz_seek(ctx, stream, 0, 2);
     i64 fileLen = fz_tell(ctx, stream);
     fz_seek(ctx, stream, 0, 0);
@@ -229,7 +229,7 @@ std::string_view fz_extract_stream_data(fz_context* ctx, fz_stream* stream) {
         return {};
     }
     // this was allocated inside mupdf, make a copy that can be free()d
-    char* res = (char*)memdup(data, size);
+    u8* res = (u8*)memdup(data, size);
     fz_free(ctx, data);
     return {res, size};
 }

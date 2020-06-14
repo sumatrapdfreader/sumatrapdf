@@ -456,7 +456,7 @@ FILE* OpenFILE(const char* path) {
 #endif
 }
 
-std::string_view ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
+std::span<u8> ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
     strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
@@ -494,7 +494,7 @@ std::string_view ReadFileWithAllocator(const char* filePath, Allocator* allocato
     }
 
     fclose(fp);
-    return {d, size};
+    return {(u8*)d, size};
 Error:
     fclose(fp);
     Allocator::Free(allocator, (void*)d);
@@ -502,11 +502,11 @@ Error:
 #endif
 }
 
-std::string_view ReadFile(std::string_view path) {
+std::span<u8> ReadFile(std::string_view path) {
     return ReadFileWithAllocator(path.data(), nullptr);
 }
 
-std::string_view ReadFile(const WCHAR* filePath) {
+std::span<u8> ReadFile(const WCHAR* filePath) {
     AutoFree path = strconv::WstrToUtf8(filePath);
     return ReadFileWithAllocator(path.data, nullptr);
 }
@@ -599,7 +599,7 @@ i64 GetSize(std::string_view filePath) {
     return size.QuadPart;
 }
 
-std::string_view ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
+std::span<u8> ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
     AutoFree pathUtf8 = strconv::WstrToUtf8(path);
     return ReadFileWithAllocator(pathUtf8.data, allocator);
 }

@@ -273,7 +273,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 
-    std::string_view GetFileData() override {
+    std::span<u8> GetFileData() override {
         const WCHAR* fileName = FileName();
         return file::ReadFile(fileName);
     }

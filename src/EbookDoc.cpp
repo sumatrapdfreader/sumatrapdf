@@ -488,8 +488,8 @@ void EpubDoc::ParseMetadata(const char* content) {
     }
 }
 
-std::string_view EpubDoc::GetHtmlData() const {
-    return htmlData.AsView();
+std::span<u8> EpubDoc::GetHtmlData() const {
+    return htmlData.AsSpan();
 }
 
 ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
@@ -553,7 +553,7 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     return nullptr;
 }
 
-std::string_view EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
+std::span<u8> EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
     if (!pagePath) {
         CrashIf(true);
         return {};
@@ -694,7 +694,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
         ScopedCritSec scope(&zipAccess);
         auto res = zip->GetFileDataByName(tocPath);
         tocDataLen = res.size();
-        tocData.Set(res.data());
+        tocData.Set(res);
     }
     if (!tocData) {
         return false;
@@ -750,7 +750,7 @@ Fb2Doc::~Fb2Doc() {
         stream->Release();
 }
 
-static std::string_view loadFromFile(Fb2Doc* doc) {
+static std::span<u8> loadFromFile(Fb2Doc* doc) {
     MultiFormatArchive* archive = OpenZipArchive(doc->fileName, false);
     if (!archive) {
         return file::ReadFile(doc->fileName);
@@ -771,7 +771,7 @@ static std::string_view loadFromFile(Fb2Doc* doc) {
         return archive->GetFileDataById(0);
     }
 
-    std::string_view data;
+    std::span<u8> data;
     // if the ZIP file contains more than one file, we try to be rather
     // restrictive in what we accept in order not to accidentally accept
     // too many archives which only contain FB2 files among others:
@@ -789,7 +789,7 @@ static std::string_view loadFromFile(Fb2Doc* doc) {
     return data;
 }
 
-static std::string_view loadFromStream(Fb2Doc* doc) {
+static std::span<u8> loadFromStream(Fb2Doc* doc) {
     auto stream = doc->stream;
     MultiFormatArchive* archive = OpenZipArchive(stream, false);
     if (!archive) {
@@ -926,13 +926,13 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     images.Append(data);
 }
 
-std::string_view Fb2Doc::GetXmlData() const {
-    return {xmlData.Get(), xmlData.size()};
+std::span<u8> Fb2Doc::GetXmlData() const {
+    return {(u8*)xmlData.Get(), xmlData.size()};
 }
 
 const char* Fb2Doc::GetXmlData(size_t* lenOut) const {
     *lenOut = xmlData.size();
-    return xmlData.Get();
+    return (const char*)xmlData.Get();
 }
 
 size_t Fb2Doc::GetXmlDataSize() const {
@@ -1134,9 +1134,9 @@ bool PalmDoc::Load() {
             return false;
     }
 
-    const std::string_view text = mobiDoc->GetHtmlData();
-    uint codePage = GuessTextCodepage(text.data(), text.size(), CP_ACP);
-    AutoFree textUtf8(strconv::ToMultiByte(text.data(), codePage, CP_UTF8));
+    std::span<u8> text = mobiDoc->GetHtmlData();
+    uint codePage = GuessTextCodepage((const char*)text.data(), text.size(), CP_ACP);
+    AutoFree textUtf8(strconv::ToMultiByte((const char*)text.data(), codePage, CP_UTF8));
 
     const char* start = textUtf8.Get();
     const char* end = start + textUtf8.size();
@@ -1159,8 +1159,8 @@ bool PalmDoc::Load() {
     return true;
 }
 
-std::string_view PalmDoc::GetHtmlData() const {
-    return htmlData.AsView();
+std::span<u8> PalmDoc::GetHtmlData() const {
+    return htmlData.AsSpan();
 }
 
 WCHAR* PalmDoc::GetProperty(DocumentProperty prop) const {
@@ -1246,8 +1246,8 @@ bool HtmlDoc::Load() {
     return true;
 }
 
-std::string_view HtmlDoc::GetHtmlData() {
-    return htmlData.as_view();
+std::span<u8> HtmlDoc::GetHtmlData() {
+    return htmlData.as_span();
 }
 
 ImageData* HtmlDoc::GetImageData(const char* fileName) {
@@ -1272,14 +1272,15 @@ ImageData* HtmlDoc::GetImageData(const char* fileName) {
     return &images.Last().base;
 }
 
-std::string_view HtmlDoc::GetFileData(const char* relPath) {
+std::span<u8> HtmlDoc::GetFileData(const char* relPath) {
     AutoFree url(NormalizeURL(relPath, pagePath));
     return LoadURL(url);
 }
 
-std::string_view HtmlDoc::LoadURL(const char* url) {
+std::span<u8> HtmlDoc::LoadURL(const char* url) {
     if (str::StartsWith(url, "data:")) {
-        return DecodeDataURI(url);
+        auto res = DecodeDataURI(url);
+        return ToSpan(res);
     }
     if (str::FindChar(url, ':')) {
         return {};
@@ -1516,8 +1517,8 @@ bool TxtDoc::Load() {
     return true;
 }
 
-std::string_view TxtDoc::GetHtmlData() const {
-    return htmlData.AsView();
+std::span<u8> TxtDoc::GetHtmlData() const {
+    return htmlData.AsSpan();
 }
 
 WCHAR* TxtDoc::GetProperty(DocumentProperty prop) const {

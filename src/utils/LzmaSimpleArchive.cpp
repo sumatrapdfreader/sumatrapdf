@@ -70,7 +70,7 @@ u32 lzma_crc32(u32 crc32, const unsigned char* data, size_t data_len) {
 #define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
 
 // the first compressed byte indicates whether compression is LZMA (0), LZMA+BJC (1) or none (-1)
-static bool Decompress(const char* compressed, size_t compressedSize, char* uncompressed, size_t uncompressedSize,
+static bool Decompress(const u8* compressed, size_t compressedSize, char* uncompressed, size_t uncompressedSize,
                        Allocator* allocator) {
     if (compressedSize < 1) {
         return false;
@@ -141,7 +141,7 @@ Integers are little-endian.
 // 4 * u32 + FILETIME + name
 #define FILE_ENTRY_MIN_SIZE (4 * 4 + 8 + 1)
 
-bool ParseSimpleArchive(const char* archiveHeader, size_t dataLen, SimpleArchive* archiveOut) {
+bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* archiveOut) {
     if (dataLen < HEADER_START_SIZE) {
         return false;
     }
@@ -181,7 +181,7 @@ bool ParseSimpleArchive(const char* archiveHeader, size_t dataLen, SimpleArchive
         fi->uncompressedCrc32 = br.UInt32();
         fi->ftModified.dwLowDateTime = br.UInt32();
         fi->ftModified.dwHighDateTime = br.UInt32();
-        fi->name = archiveHeader + br.Offset();
+        fi->name = (char*)archiveHeader + br.Offset();
         br.Skip(fileHeaderSize - FILE_ENTRY_MIN_SIZE);
         if (br.Char() != '\0') {
             return false;

@@ -173,7 +173,7 @@ WCHAR* Doc::GetProperty(DocumentProperty prop) const {
     }
 }
 
-std::string_view Doc::GetHtmlData() const {
+std::span<u8> Doc::GetHtmlData() const {
     switch (type) {
         case DocType::Epub:
             return epubDoc->GetHtmlData();
@@ -186,7 +186,7 @@ std::string_view Doc::GetHtmlData() const {
             return palmDoc->GetHtmlData();
         default:
             CrashIf(true);
-            return nullptr;
+            return {};
     }
 }
 

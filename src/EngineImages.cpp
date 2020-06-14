@@ -99,7 +99,7 @@ class EngineImages : public EngineBase {
 
     RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::string_view GetFileData() override;
+    std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override {
         UNUSED(pageNo);
@@ -309,7 +309,7 @@ RenderedBitmap* EngineImages::GetImageForPageElement(PageElement* pel) {
     return new RenderedBitmap(hbmp, s);
 }
 
-std::string_view EngineImages::GetFileData() {
+std::span<u8> EngineImages::GetFileData() {
     return GetStreamOrFileData(fileStream.Get(), FileName());
 }
 
@@ -690,7 +690,7 @@ class EngineImageDir : public EngineImages {
         return nullptr;
     }
 
-    std::string_view GetFileData() override {
+    std::span<u8> GetFileData() override {
         return {};
     }
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -1085,7 +1085,7 @@ bool EngineCbx::FinishLoading() {
 
     for (int i = 0; i < pageCount; i++) {
         size_t fileId = files[i]->fileId;
-        std::string_view sv = cbxFile->GetFileDataById(fileId);
+        std::span<u8> sv = cbxFile->GetFileDataById(fileId);
         ImageData img;
         img.data = (char*)sv.data();
         img.len = sv.size();

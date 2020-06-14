@@ -42,10 +42,10 @@ class EpubDoc {
     explicit EpubDoc(IStream* stream);
     ~EpubDoc();
 
-    std::string_view GetHtmlData() const;
+    std::span<u8> GetHtmlData() const;
 
     ImageData* GetImageData(const char* id, const char* pagePath);
-    std::string_view GetFileData(const char* relPath, const char* pagePath);
+    std::span<u8> GetFileData(const char* relPath, const char* pagePath);
 
     WCHAR* GetProperty(DocumentProperty prop) const;
     const WCHAR* GetFileName() const;
@@ -83,7 +83,7 @@ class Fb2Doc {
     explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
 
-    std::string_view Fb2Doc::GetXmlData() const;
+    std::span<u8> Fb2Doc::GetXmlData() const;
     // TODO: remove those
     const char* GetXmlData(size_t* lenOut) const;
     size_t GetXmlDataSize() const;
@@ -119,7 +119,7 @@ class PalmDoc {
     explicit PalmDoc(const WCHAR* fileName);
     ~PalmDoc();
 
-    std::string_view PalmDoc::GetHtmlData() const;
+    std::span<u8> PalmDoc::GetHtmlData() const;
 
     WCHAR* GetProperty(DocumentProperty prop) const;
     const WCHAR* GetFileName() const;
@@ -141,16 +141,16 @@ class HtmlDoc {
     PropertyMap props;
 
     bool Load();
-    std::string_view LoadURL(const char* url);
+    std::span<u8> LoadURL(const char* url);
 
   public:
     explicit HtmlDoc(const WCHAR* fileName);
     ~HtmlDoc();
 
-    std::string_view HtmlDoc::GetHtmlData();
+    std::span<u8> HtmlDoc::GetHtmlData();
 
     ImageData* GetImageData(const char* id);
-    std::string_view GetFileData(const char* relPath);
+    std::span<u8> GetFileData(const char* relPath);
 
     WCHAR* GetProperty(DocumentProperty prop) const;
     const WCHAR* GetFileName() const;
@@ -171,7 +171,7 @@ class TxtDoc {
   public:
     explicit TxtDoc(const WCHAR* fileName);
 
-    std::string_view TxtDoc::GetHtmlData() const;
+    std::span<u8> GetHtmlData() const;
 
     WCHAR* GetProperty(DocumentProperty prop) const;
     const WCHAR* GetFileName() const;

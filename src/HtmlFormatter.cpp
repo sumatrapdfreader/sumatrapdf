@@ -160,7 +160,7 @@ void StyleRule::Merge(StyleRule& source) {
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     : pageDx(args->pageDx), pageDy(args->pageDy), textAllocator(args->textAllocator) {
     currReparseIdx = args->reparseIdx;
-    htmlParser = new HtmlPullParser(args->htmlStr.data(), args->htmlStr.size());
+    htmlParser = new HtmlPullParser((const char*)args->htmlStr.data(), args->htmlStr.size());
     htmlParser->SetCurrPosOff(currReparseIdx);
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 

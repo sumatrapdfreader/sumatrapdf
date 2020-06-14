@@ -47,7 +47,7 @@ class MobiDoc {
 
     ~MobiDoc();
 
-    std::string_view GetHtmlData() const;
+    std::span<u8> GetHtmlData() const;
     size_t GetHtmlDataSize() const {
         return doc->size();
     }

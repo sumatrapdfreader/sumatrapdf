@@ -547,6 +547,10 @@ class FixedArray {
     }
 };
 
+static inline std::span<u8> ToSpan(std::string_view d) {
+    return {(u8*)d.data(), d.size()};
+}
+
 /*
 Poor-man's manual dynamic typing.
 Identity of an object is an address of a unique, global string.

@@ -172,7 +172,7 @@ class HtmlFormatterArgs {
 
     mui::TextRenderMethod textRenderMethod = mui::TextRenderMethodGdiplus;
 
-    std::string_view htmlStr;
+    std::span<u8> htmlStr;
 
     // we start parsing from htmlStr + reparseIdx
     int reparseIdx = 0;

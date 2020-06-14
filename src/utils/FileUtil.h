@@ -40,18 +40,18 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
 namespace file {
 
 FILE* OpenFILE(const char* path);
-std::string_view ReadFileWithAllocator(const char* path, Allocator*);
+std::span<u8> ReadFileWithAllocator(const char* path, Allocator*);
 bool WriteFile(const char* path, std::string_view);
 
-std::string_view ReadFile(std::string_view path);
+std::span<u8> ReadFile(std::string_view path);
 
 bool Exists(std::string_view path);
 
 #if OS_WIN
 FILE* OpenFILE(const WCHAR* path);
 bool Exists(const WCHAR* path);
-std::string_view ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
-std::string_view ReadFile(const WCHAR* filePath);
+std::span<u8> ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
+std::span<u8> ReadFile(const WCHAR* filePath);
 
 i64 GetSize(std::string_view path);
 

@@ -10,7 +10,7 @@ struct FileInfo {
     u32 uncompressedCrc32;
     FILETIME ftModified;
     const char* name;
-    const char* compressedData;
+    const u8* compressedData;
 };
 
 // Note: good enough for our purposes, can be expanded when needed
@@ -21,7 +21,7 @@ struct SimpleArchive {
     FileInfo files[MAX_LZMA_ARCHIVE_FILES];
 };
 
-bool ParseSimpleArchive(const char* archiveHeader, size_t dataLen, SimpleArchive* archiveOut);
+bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* archiveOut);
 int GetIdxFromName(SimpleArchive* archive, const char* name);
 char* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator);
 char* GetFileDataByName(SimpleArchive* archive, const char* fileName, Allocator* allocator);

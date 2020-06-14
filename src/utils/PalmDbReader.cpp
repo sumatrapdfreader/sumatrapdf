@@ -141,15 +141,13 @@ PdbReader* PdbReader::CreateFromFile(const char* path) {
 #include "WinUtil.h"
 
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
-    std::string_view d = file::ReadFile(filePath);
-    std::span<u8> ds = {(u8*)d.data(), d.size()};
-    return CreateFromData(ds);
+    std::span<u8> d = file::ReadFile(filePath);
+    return CreateFromData(d);
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
-    std::string_view d = GetDataFromStream(stream, nullptr);
-    std::span<u8> ds = {(u8*)d.data(), d.size()};
-    return CreateFromData(ds);
+    std::span<u8> d = GetDataFromStream(stream, nullptr);
+    return CreateFromData(d);
 }
 #endif
 

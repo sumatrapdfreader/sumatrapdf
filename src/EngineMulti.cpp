@@ -55,7 +55,7 @@ class EngineMulti : public EngineBase {
 
     RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::string_view GetFileData() override;
+    std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
     WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
@@ -134,7 +134,7 @@ RectD EngineMulti::Transform(const RectD& rect, int pageNo, float zoom, int rota
     return e->Transform(rect, pageNo, zoom, rotation, inverse);
 }
 
-std::string_view EngineMulti::GetFileData() {
+std::span<u8> EngineMulti::GetFileData() {
     return {};
 }
 

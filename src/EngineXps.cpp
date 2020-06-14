@@ -202,7 +202,7 @@ class EngineXps : public EngineBase {
 
     RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::string_view GetFileData() override;
+    std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
     bool HasClipOptimizations(int pageNo) override;
@@ -688,8 +688,8 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
     return bitmap;
 }
 
-std::string_view EngineXps::GetFileData() {
-    std::string_view res;
+std::span<u8> EngineXps::GetFileData() {
+    std::span<u8> res;
     ScopedCritSec scope(ctxAccess);
 
     fz_var(res);

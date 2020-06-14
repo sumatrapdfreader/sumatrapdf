@@ -130,6 +130,12 @@ struct AutoFree {
         len = str::Len(data);
     }
 
+    void Set(std::span<u8> d) {
+        free(data);
+        data = (char*)d.data();
+        len = d.size();
+    }
+
     void SetCopy(const char* newPtr) {
         free(data);
         data = nullptr;
@@ -185,7 +191,15 @@ struct AutoFree {
         return {data, len};
     }
 
+    [[nodiscard]] std::string_view AsView() {
+        return {data, len};
+    }
+
     [[nodiscard]] std::span<u8> as_span() {
+        return {(u8*)data, len};
+    }
+
+    [[nodiscard]] std::span<u8> AsSpan() {
         return {(u8*)data, len};
     }
 

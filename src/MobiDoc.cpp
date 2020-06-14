@@ -878,8 +878,11 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
     return true;
 }
 
-std::string_view MobiDoc::GetHtmlData() const {
-    return doc ? doc->AsView() : std::string_view();
+std::span<u8> MobiDoc::GetHtmlData() const {
+    if (doc) {
+        return doc->AsSpan();
+    }
+    return {};
 }
 
 WCHAR* MobiDoc::GetProperty(DocumentProperty prop) {

@@ -470,6 +470,10 @@ class Str : public Vec<char> {
         return {Get(), size()};
     }
 
+    std::span<u8> AsSpan() const {
+        return {(u8*)Get(), size()};
+    }
+
     std::string_view as_view() const {
         return {Get(), size()};
     }
@@ -501,7 +505,6 @@ class Str : public Vec<char> {
     bool Append(const u8* src, size_t size = -1) {
         return this->Append((const char*)src, size);
     }
-
 
     bool AppendView(const std::string_view sv) {
         if (sv.empty()) {

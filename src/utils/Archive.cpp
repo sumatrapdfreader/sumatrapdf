@@ -93,18 +93,18 @@ size_t MultiFormatArchive::GetFileId(const char* fileName) {
 }
 
 #if OS_WIN
-std::string_view MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
+std::span<u8> MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
     AutoFree fileNameUtf8 = strconv::WstrToUtf8(fileName);
     return GetFileDataByName(fileNameUtf8);
 }
 #endif
 
-std::string_view MultiFormatArchive::GetFileDataByName(const char* fileName) {
+std::span<u8> MultiFormatArchive::GetFileDataByName(const char* fileName) {
     size_t fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);
 }
 
-std::string_view MultiFormatArchive::GetFileDataById(size_t fileId) {
+std::span<u8> MultiFormatArchive::GetFileDataById(size_t fileId) {
     if (fileId == (size_t)-1) {
         return {};
     }
@@ -129,7 +129,7 @@ std::string_view MultiFormatArchive::GetFileDataById(size_t fileId) {
     if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         return {};
     }
-    char* data = AllocArray<char>(size + ZERO_PADDING_COUNT);
+    u8* data = AllocArray<u8>(size + ZERO_PADDING_COUNT);
     if (!data) {
         return {};
     }
@@ -305,7 +305,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
     }
 }
 
-std::string_view MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
+std::span<u8> MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     CrashIf(!rarFilePath_);
 
     AutoFreeWstr rarPath = strconv::Utf8ToWstr(rarFilePath_);
@@ -356,7 +356,7 @@ Exit:
         free(data);
         return {};
     }
-    return {data, size};
+    return {(u8*)data, size};
 }
 
 // asan build crashes in UnRAR code

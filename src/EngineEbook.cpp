@@ -89,7 +89,7 @@ class EngineEbook : public EngineBase {
 
     RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::string_view GetFileData() override;
+    std::span<u8> GetFileData() override;
 
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
@@ -204,7 +204,7 @@ RectD EngineEbook::PageContentBox(int pageNo, RenderTarget target) {
     return mbox;
 }
 
-std::string_view EngineEbook::GetFileData() {
+std::span<u8> EngineEbook::GetFileData() {
     const WCHAR* fileName = FileName();
     if (!fileName) {
         return {};
@@ -744,7 +744,7 @@ class EngineEpub : public EngineEbook {
     virtual ~EngineEpub();
     EngineBase* Clone() override;
 
-    std::string_view GetFileData() override;
+    std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
 
     WCHAR* GetProperty(DocumentProperty prop) override {
@@ -841,7 +841,7 @@ bool EngineEpub::FinishLoading() {
     return pageCount > 0;
 }
 
-std::string_view EngineEpub::GetFileData() {
+std::span<u8> EngineEpub::GetFileData() {
     const WCHAR* fileName = FileName();
     return GetStreamOrFileData(stream, fileName);
 }
@@ -1108,9 +1108,9 @@ PageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
     }
     CrashIf(pageNo < 1 || pageNo > PageCount());
 
-    const std::string_view htmlData = doc->GetHtmlData();
+    const std::span<u8> htmlData = doc->GetHtmlData();
     size_t htmlLen = htmlData.size();
-    const char* start = htmlData.data();
+    const char* start = (const char*)htmlData.data();
     if ((size_t)filePos > htmlLen) {
         return nullptr;
     }
@@ -1278,8 +1278,8 @@ class ChmDataCache {
         }
     }
 
-    std::string_view GetHtmlData() {
-        return html.as_view();
+    std::span<u8> GetHtmlData() {
+        return html.as_span();
     }
 
     ImageData* GetImageData(const char* id, const char* pagePath) {

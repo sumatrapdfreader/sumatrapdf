@@ -308,7 +308,7 @@ class EnginePdf : public EngineBase {
 
     RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::string_view GetFileData() override;
+    std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
     WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
@@ -1733,8 +1733,8 @@ WCHAR* EnginePdf::GetProperty(DocumentProperty prop) {
     return nullptr;
 };
 
-std::string_view EnginePdf::GetFileData() {
-    std::string_view res;
+std::span<u8> EnginePdf::GetFileData() {
+    std::span<u8> res;
     ScopedCritSec scope(ctxAccess);
 
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);

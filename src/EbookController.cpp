@@ -126,7 +126,7 @@ EbookFormattingThread::EbookFormattingThread(const Doc& doc, HtmlFormatterArgs* 
     this->formatterArgs = args;
     this->reparseIdx = reparseIdx;
     CrashIf(reparseIdx < 0);
-    CrashIf(!(doc.IsDocLoaded() || (doc.IsNone() && (nullptr != args->htmlStr))));
+    CrashIf(!(doc.IsDocLoaded() || (doc.IsNone() && (!args->htmlStr.empty()))));
 }
 
 EbookFormattingThread::~EbookFormattingThread() {
@@ -707,7 +707,7 @@ void EbookController::ExtractPageAnchors() {
     AutoFreeWstr epubPagePath;
     int fb2TitleCount = 0;
     auto data = doc.GetHtmlData();
-    HtmlPullParser parser(data.data(), data.size());
+    HtmlPullParser parser((const char*)data.data(), data.size());
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag()) {
