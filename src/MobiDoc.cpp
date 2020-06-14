@@ -676,15 +676,15 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
 #define SRCS_REC 0x53524353 // 'SRCS'
 #define VIDE_REC 0x56494445 // 'VIDE'
 
-static bool IsEofRecord(const u8* data, size_t dataLen) {
-    return (4 == dataLen) && (EOF_REC == UInt32BE(data));
+static bool IsEofRecord(std::span<u8> d) {
+    return (4 == d.size()) && (EOF_REC == UInt32BE(d.data()));
 }
 
-static bool KnownNonImageRec(const u8* data, size_t dataLen) {
-    if (dataLen < 4) {
+static bool KnownNonImageRec(std::span<u8> d) {
+    if (d.size() < 4) {
         return false;
     }
-    u32 sig = UInt32BE(data);
+    u32 sig = UInt32BE(d.data());
 
     switch (sig) {
         case FLIS_REC:
@@ -698,8 +698,8 @@ static bool KnownNonImageRec(const u8* data, size_t dataLen) {
     return false;
 }
 
-static bool KnownImageFormat(const u8* data, size_t dataLen) {
-    return ImgFormat::Unknown != GfxFormatFromData({(u8*)data, dataLen});
+static bool KnownImageFormat(std::span<u8>d) {
+    return ImgFormat::Unknown != GfxFormatFromData(d);
 }
 
 // return false if we should stop loading images (because we
@@ -708,22 +708,21 @@ bool MobiDoc::LoadImage(size_t imageNo) {
     size_t imageRec = imageFirstRec + imageNo;
 
     std::span<u8> rec = pdbReader->GetRecord(imageRec);
-    const u8* imgData = (const u8*)rec.data();
-    size_t imgDataLen = rec.size();
-    if (!imgData || (0 == imgDataLen))
-        return true;
-    if (IsEofRecord((u8*)imgData, imgDataLen))
+    if (rec.empty()) {
         return false;
-    if (KnownNonImageRec((u8*)imgData, imgDataLen))
+    }
+    if (IsEofRecord(rec)) {
+        return false;
+    }
+    if (KnownNonImageRec(rec)) {
         return true;
-    if (!KnownImageFormat(imgData, imgDataLen)) {
+    }
+    if (!KnownImageFormat(rec)) {
         logf("MobiDoc::LoadImage: unknown image format\n");
         return true;
     }
-    images[imageNo].data = (char*)imgData;
-    if (!images[imageNo].data)
-        return false;
-    images[imageNo].len = imgDataLen;
+    images[imageNo].data = (char*)rec.data();
+    images[imageNo].len = rec.size();
     return true;
 }
 
