@@ -11,5 +11,5 @@ struct TocEditorArgs {
 };
 
 void StartTocEditor(TocEditorArgs*);
-void StartTocEditorForWindowInfo(WindowInfo* win);
-bool IsTocEditorEnabledForWindowInfo(WindowInfo* win);
+void StartTocEditorForWindowInfo(WindowInfo*);
+bool IsTocEditorEnabledForWindowInfo(TabInfo*);

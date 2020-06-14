@@ -1008,11 +1008,11 @@ void StartTocEditorForWindowInfo(WindowInfo* win) {
     StartTocEditor(args);
 }
 
-bool IsTocEditorEnabledForWindowInfo(WindowInfo* win) {
+bool IsTocEditorEnabledForWindowInfo(TabInfo* tab) {
     if (!gWithTocEditor) {
         return false;
     }
-    auto path = win->currentTab->filePath.get();
+    auto path = tab->filePath.get();
     if (str::EndsWithI(path, L".vbkm")) {
         return true;
     }

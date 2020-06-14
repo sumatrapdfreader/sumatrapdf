@@ -278,6 +278,7 @@ static MenuDef menuDefCreateAnnot[] = {
     { _TR_TODON("Squiggly"), CmdCreateAnnotSquiggly, 0 },
     { _TR_TODON("File Attachment"), CmdCreateAnnotFileAttachment, 0 },
     { _TR_TODON("Redact"), CmdCreateAnnotRedact, 0 },
+    { 0, 0, 0 },
 };
  
 //[ ACCESSKEY_GROUP Context Menu (Start)
@@ -663,6 +664,19 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 }
 
+static bool ShouldShowCreateAnnotationMenu(TabInfo* tab, int x, int y) {
+    UNUSED(x);
+    UNUSED(y);
+
+    auto path = tab->filePath.get();
+    // TODO: check by DisplayModel
+    if (str::EndsWithI(path, L".pdf")) {
+        return true;
+    }
+    // TODO: only if x/y is on a page
+    return false;
+}
+
 void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
@@ -679,7 +693,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
-    bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(win);
+    bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(tab);
     if (!showBookmarksMenu) {
         win::menu::Remove(popup, CmdNewBookmarks);
     } else {
@@ -688,6 +702,13 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
             win::menu::SetText(popup, CmdNewBookmarks, _TR_TODO("Edit Bookmarks"));
         }
+    }
+
+    bool showCreateAnnotations = ShouldShowCreateAnnotationMenu(tab, x, y);
+    if (showCreateAnnotations) {
+        HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefCreateAnnot, CreatePopupMenu());
+        uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
+        InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR_TODO("Create Annotation"));
     }
 
     if (!pageEl || pageEl->kind != kindPageElementDest || !value) {

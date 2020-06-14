@@ -628,7 +628,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 
     TabInfo* tab = win->currentTab;
-    bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(win);
+    bool showBookmarksMenu = IsTocEditorEnabledForWindowInfo(tab);
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu());
 
     if (showBookmarksMenu) {

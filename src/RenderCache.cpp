@@ -661,7 +661,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
 // TODO: conceptually, RenderCache is not the right place for code that paints
 //       (this is the only place that knows about Tiles, though)
 int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
-                            bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement) {
+                           bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement) {
     float zoom = dm->GetZoomReal(pageNo);
     BitmapCacheEntry* entry = Find(dm, pageNo, dm->GetRotation(), zoom, &tile);
     int renderDelay = 0;
@@ -744,7 +744,7 @@ static int cmpTilePosition(const void* a, const void* b) {
 }
 
 int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo,
-                        bool* renderOutOfDateCue) {
+                       bool* renderOutOfDateCue) {
     CrashIf(!pageInfo->shown || 0.0 == pageInfo->visibleRatio);
 
 #if 0
@@ -802,7 +802,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
 
         bool isTargetRes = tile.res == targetRes;
         int renderDelay = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, isTargetRes, renderOutOfDateCue,
-                                     isTargetRes ? &neededScaling : nullptr);
+                                    isTargetRes ? &neededScaling : nullptr);
         if (!(isTargetRes && 0 == renderDelay) && tile.res < maxRes) {
             queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2));
             queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2 + 1));
