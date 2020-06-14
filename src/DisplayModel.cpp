@@ -84,6 +84,122 @@ int NormalizeRotation(int rotation) {
     return rotation;
 }
 
+ScrollState::ScrollState(int page, double x, double y) : page(page), x(x), y(y) {
+}
+
+bool ScrollState::operator==(const ScrollState& other) const {
+    return page == other.page && x == other.x && y == other.y;
+}
+
+const WCHAR* DisplayModel::FilePath() const {
+    return engine->FileName();
+}
+const WCHAR* DisplayModel::DefaultFileExt() const {
+    return engine->defaultFileExt;
+}
+int DisplayModel::PageCount() const {
+    return engine->PageCount();
+}
+WCHAR* DisplayModel::GetProperty(DocumentProperty prop) {
+    return engine->GetProperty(prop);
+}
+
+void DisplayModel::GoToPage(int pageNo, bool addNavPoint) {
+    GoToPage(pageNo, 0, addNavPoint);
+}
+
+DisplayMode DisplayModel::GetDisplayMode() const {
+    return displayMode;
+}
+
+TocTree* DisplayModel::GetToc() {
+    if (!engine) {
+        return nullptr;
+    }
+    return engine->GetToc();
+}
+
+PageDestination* DisplayModel::GetNamedDest(const WCHAR* name) {
+    return engine->GetNamedDest(name);
+}
+
+void DisplayModel::CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) {
+    cb->RenderThumbnail(this, size, saveThumbnail);
+}
+
+// page labels (optional)
+bool DisplayModel::HasPageLabels() const {
+    return engine->HasPageLabels();
+}
+
+WCHAR* DisplayModel::GetPageLabel(int pageNo) const {
+    return engine->GetPageLabel(pageNo);
+}
+
+int DisplayModel::GetPageByLabel(const WCHAR* label) const {
+    return engine->GetPageByLabel(label);
+}
+
+// common shortcuts
+bool DisplayModel::ValidPageNo(int pageNo) const {
+    return 1 <= pageNo && pageNo <= engine->PageCount();
+}
+
+bool DisplayModel::GoToPrevPage(bool toBottom) {
+    return GoToPrevPage(toBottom ? -1 : 0);
+}
+
+DisplayModel* DisplayModel::AsFixed() {
+    return this;
+}
+
+EngineBase* DisplayModel::GetEngine() const {
+    return engine;
+}
+
+Kind DisplayModel::GetEngineType() const {
+    if (!engine) {
+        return nullptr;
+    }
+    return engine->kind;
+}
+
+int DisplayModel::GetRotation() const {
+    return rotation;
+}
+
+Rect DisplayModel::GetViewPort() const {
+    return viewPort;
+}
+
+bool DisplayModel::NeedHScroll() const {
+    return viewPort.dy < totalViewPortSize.dy;
+}
+
+bool DisplayModel::NeedVScroll() const {
+    return viewPort.dx < totalViewPortSize.dx;
+}
+
+Size DisplayModel::GetCanvasSize() const {
+    return canvasSize;
+}
+
+void DisplayModel::SetDisplayR2L(bool r2l) {
+    displayR2L = r2l;
+}
+
+bool DisplayModel::GetDisplayR2L() const {
+    return displayR2L;
+}
+
+void DisplayModel::RepaintDisplay() {
+    cb->Repaint();
+}
+
+bool DisplayModel::GetPresentationMode() const {
+    return presentationMode;
+}
+
 void DisplayModel::GetDisplayState(DisplayState* ds) {
     if (!ds->filePath || !str::EqI(ds->filePath, engine->FileName()))
         str::ReplacePtr(&ds->filePath, engine->FileName());

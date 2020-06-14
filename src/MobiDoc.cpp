@@ -698,7 +698,7 @@ static bool KnownNonImageRec(std::span<u8> d) {
     return false;
 }
 
-static bool KnownImageFormat(std::span<u8>d) {
+static bool KnownImageFormat(std::span<u8> d) {
     return ImgFormat::Unknown != GfxFormatFromData(d);
 }
 

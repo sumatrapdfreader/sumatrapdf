@@ -41,11 +41,8 @@ struct PageInfo {
 /* coordinates are in user space units (per page) */
 struct ScrollState {
     ScrollState() = default;
-    explicit ScrollState(int page, double x, double y) : page(page), x(x), y(y) {
-    }
-    bool operator==(const ScrollState& other) const {
-        return page == other.page && x == other.x && y == other.y;
-    }
+    explicit ScrollState(int page, double x, double y);
+    bool operator==(const ScrollState& other) const;
 
     int page = 0;
     double x = 0;
@@ -75,32 +72,20 @@ class DisplayModel : public Controller {
     ~DisplayModel();
 
     // meta data
-    const WCHAR* FilePath() const override {
-        return engine->FileName();
-    }
-    const WCHAR* DefaultFileExt() const override {
-        return engine->defaultFileExt;
-    }
-    int PageCount() const override {
-        return engine->PageCount();
-    }
-    WCHAR* GetProperty(DocumentProperty prop) override {
-        return engine->GetProperty(prop);
-    }
+    const WCHAR* FilePath() const override;
+    const WCHAR* DefaultFileExt() const override;
+    int PageCount() const override;
+    WCHAR* GetProperty(DocumentProperty prop) override;
 
     // page navigation (stateful)
     int CurrentPageNo() const override;
-    void GoToPage(int pageNo, bool addNavPoint) override {
-        GoToPage(pageNo, 0, addNavPoint);
-    }
+    void GoToPage(int pageNo, bool addNavPoint) override;
     bool CanNavigate(int dir) const override;
     void Navigate(int dir) override;
 
     // view settings
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
-    DisplayMode GetDisplayMode() const override {
-        return displayMode;
-    }
+    DisplayMode GetDisplayMode() const override;
     void SetPresentationMode(bool enable) override;
     void SetZoomVirtual(float zoom, Point* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
@@ -108,62 +93,34 @@ class DisplayModel : public Controller {
     void SetViewPortSize(Size size) override;
 
     // table of contents
-    TocTree* GetToc() override {
-        if (!engine) {
-            return nullptr;
-        }
-        return engine->GetToc();
-    }
+    TocTree* GetToc() override;
     void ScrollToLink(PageDestination* dest) override;
-    PageDestination* GetNamedDest(const WCHAR* name) override {
-        return engine->GetNamedDest(name);
-    }
+    PageDestination* GetNamedDest(const WCHAR* name) override;
 
     void GetDisplayState(DisplayState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
-    void CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) override {
-        cb->RenderThumbnail(this, size, saveThumbnail);
-    }
+    void CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) override;
 
     // page labels (optional)
-    bool HasPageLabels() const override {
-        return engine->HasPageLabels();
-    }
-    WCHAR* GetPageLabel(int pageNo) const override {
-        return engine->GetPageLabel(pageNo);
-    }
-    int GetPageByLabel(const WCHAR* label) const override {
-        return engine->GetPageByLabel(label);
-    }
+    bool HasPageLabels() const override;
+    WCHAR* GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const WCHAR* label) const override;
 
     // common shortcuts
-    bool ValidPageNo(int pageNo) const override {
-        return 1 <= pageNo && pageNo <= engine->PageCount();
-    }
+    bool ValidPageNo(int pageNo) const override;
     bool GoToNextPage() override;
-    bool GoToPrevPage(bool toBottom = false) override {
-        return GoToPrevPage(toBottom ? -1 : 0);
-    }
+    bool GoToPrevPage(bool toBottom = false) override;
     bool GoToFirstPage() override;
     bool GoToLastPage() override;
 
     // for quick type determination and type-safe casting
-    DisplayModel* AsFixed() override {
-        return this;
-    }
+    DisplayModel* AsFixed() override;
 
   public:
     // the following is specific to DisplayModel
 
-    EngineBase* GetEngine() const {
-        return engine;
-    }
-    Kind GetEngineType() const {
-        if (!engine) {
-            return nullptr;
-        }
-        return engine->kind;
-    }
+    EngineBase* GetEngine() const;
+    Kind GetEngineType() const;
 
     // controller-specific data (easier to save here than on WindowInfo)
     Kind engineType = nullptr;
@@ -180,24 +137,14 @@ class DisplayModel : public Controller {
     PageInfo* GetPageInfo(int pageNo) const;
 
     /* current rotation selected by user */
-    int GetRotation() const {
-        return rotation;
-    }
+    int GetRotation() const;
     float GetZoomReal(int pageNo) const;
     void Relayout(float zoomVirtual, int rotation);
 
-    Rect GetViewPort() const {
-        return viewPort;
-    }
-    bool NeedHScroll() const {
-        return viewPort.dy < totalViewPortSize.dy;
-    }
-    bool NeedVScroll() const {
-        return viewPort.dx < totalViewPortSize.dx;
-    }
-    Size GetCanvasSize() const {
-        return canvasSize;
-    }
+    Rect GetViewPort() const;
+    bool NeedHScroll() const;
+    bool NeedVScroll() const;
+    Size GetCanvasSize() const;
 
     bool PageShown(int pageNo) const;
     bool PageVisible(int pageNo) const;
@@ -235,25 +182,17 @@ class DisplayModel : public Controller {
     void CopyNavHistory(DisplayModel& orig);
 
     void SetInitialViewSettings(DisplayMode displayMode, int newStartPage, Size viewPort, int screenDPI);
-    void SetDisplayR2L(bool r2l) {
-        displayR2L = r2l;
-    }
-    bool GetDisplayR2L() const {
-        return displayR2L;
-    }
+    void SetDisplayR2L(bool r2l);
+    bool GetDisplayR2L() const;
 
     bool ShouldCacheRendering(int pageNo);
     // called when we decide that the display needs to be redrawn
-    void RepaintDisplay() {
-        cb->Repaint();
-    }
+    void RepaintDisplay();
 
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool dontRenderFlag = false;
 
-    bool GetPresentationMode() const {
-        return presentationMode;
-    }
+    bool GetPresentationMode() const;
 
   protected:
     void BuildPagesInfo();

@@ -2053,7 +2053,8 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (!hasUpdate) {
         /* if automated => don't notify that there is no new version */
         if (!silent) {
-            MessageBoxW(hParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST);
+            uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
+            MessageBoxW(hParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), flags);
         }
         return 0;
     }
