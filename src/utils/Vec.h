@@ -498,6 +498,11 @@ class Str : public Vec<char> {
         return Vec<char>::Append(src, size);
     }
 
+    bool Append(const u8* src, size_t size = -1) {
+        return this->Append((const char*)src, size);
+    }
+
+
     bool AppendView(const std::string_view sv) {
         if (sv.empty()) {
             return true;

@@ -51,7 +51,7 @@ struct PalmDocHeader {
 #define kPalmDocHeaderLen 16
 
 // http://wiki.mobileread.com/wiki/MOBI#PalmDOC_Header
-static void DecodePalmDocHeader(const char* buf, PalmDocHeader* hdr) {
+static void DecodePalmDocHeader(const u8* buf, PalmDocHeader* hdr) {
     ByteOrderDecoder d(buf, kPalmDocHeaderLen, ByteOrderDecoder::BigEndian);
     hdr->compressionType = d.UInt16();
     hdr->reserved1 = d.UInt16();
@@ -120,10 +120,10 @@ static_assert(kMobiHeaderLen == sizeof(MobiHeader), "wrong size of MobiHeader st
 // Uncompress source data compressed with PalmDoc compression into a buffer.
 // http://wiki.mobileread.com/wiki/PalmDOC#Format
 // Returns false on decoding errors
-static bool PalmdocUncompress(const char* src, size_t srcLen, str::Str& dst) {
-    const char* srcEnd = src + srcLen;
+static bool PalmdocUncompress(const u8* src, size_t srcLen, str::Str& dst) {
+    const u8* srcEnd = src + srcLen;
     while (src < srcEnd) {
-        u8 c = (u8)*src++;
+        u8 c = *src++;
         if ((c >= 1) && (c <= 8)) {
             if (src + c > srcEnd)
                 return false;
@@ -387,7 +387,7 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
     return true;
 }
 
-static void DecodeMobiDocHeader(const char* buf, MobiHeader* hdr) {
+static void DecodeMobiDocHeader(const u8* buf, MobiHeader* hdr) {
     memset(hdr, 0, sizeof(MobiHeader));
     hdr->drmEntriesCount = (u32)-1;
 
@@ -480,8 +480,8 @@ bool MobiDoc::ParseHeader() {
         return false;
     }
 
-    std::string_view rec = pdbReader->GetRecord(0);
-    const char* firstRecData = rec.data();
+    std::span<u8> rec = pdbReader->GetRecord(0);
+    u8* firstRecData = rec.data();
     size_t recSize = rec.size();
     if (!firstRecData || recSize < kPalmDocHeaderLen) {
         log("failed to read record 0\n");
@@ -568,7 +568,7 @@ bool MobiDoc::ParseHeader() {
         CrashIf(PdbDocType::Mobipocket != docType);
         rec = pdbReader->GetRecord(mobiHdr.huffmanFirstRec);
         size_t huffRecSize = rec.size();
-        const char* recData = rec.data();
+        u8* recData = rec.data();
         if (!recData) {
             return false;
         }
@@ -607,8 +607,8 @@ bool MobiDoc::ParseHeader() {
     return true;
 }
 
-bool MobiDoc::DecodeExthHeader(const char* data, size_t dataLen) {
-    if (dataLen < 12 || !str::EqN(data, "EXTH", 4)) {
+bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
+    if (dataLen < 12 || !memeq(data, "EXTH", 4)) {
         return false;
     }
 
@@ -660,7 +660,7 @@ bool MobiDoc::DecodeExthHeader(const char* data, size_t dataLen) {
             default:
                 continue;
         }
-        prop.value = str::DupN(data + d.Offset() - length + 8, length - 8);
+        prop.value = str::DupN((char*)(data + d.Offset() - length + 8), length - 8);
         if (prop.value)
             props.Append(prop);
     }
@@ -707,7 +707,7 @@ static bool KnownImageFormat(const u8* data, size_t dataLen) {
 bool MobiDoc::LoadImage(size_t imageNo) {
     size_t imageRec = imageFirstRec + imageNo;
 
-    std::string_view rec = pdbReader->GetRecord(imageRec);
+    std::span<u8> rec = pdbReader->GetRecord(imageRec);
     const u8* imgData = (const u8*)rec.data();
     size_t imgDataLen = rec.size();
     if (!imgData || (0 == imgDataLen))
@@ -797,8 +797,8 @@ static size_t GetRealRecordSize(const u8* recData, size_t recLen, size_t trailer
 // Load a given record of a document into strOut, uncompressing if necessary.
 // Returns false if error.
 bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut) {
-    std::string_view rec = pdbReader->GetRecord(recNo);
-    const char* recData = rec.data();
+    std::span<u8> rec = pdbReader->GetRecord(recNo);
+    u8* recData = rec.data();
     if (nullptr == recData) {
         return false;
     }
@@ -808,7 +808,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut) {
     }
 
     if (COMPRESSION_NONE == compressionType) {
-        strOut.Append(recData, recSize);
+        strOut.Append((const char*)recData, recSize);
         return true;
     }
     if (COMPRESSION_PALM == compressionType) {

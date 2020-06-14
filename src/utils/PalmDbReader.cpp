@@ -12,7 +12,7 @@
 #define kPdbRecordHeaderLen 8
 
 // Takes ownership of d
-bool PdbReader::Parse(std::string_view d) {
+bool PdbReader::Parse(std::span<u8> d) {
     data = d.data();
     dataSize = d.size();
     if (!ParseHeader()) {
@@ -103,7 +103,7 @@ size_t PdbReader::GetRecordCount() {
 }
 
 // don't free, memory is owned by us
-std::string_view PdbReader::GetRecord(size_t recNo) {
+std::span<u8> PdbReader::GetRecord(size_t recNo) {
     size_t nRecs = recInfos.size();
     CrashIf(recNo >= nRecs);
     if (recNo >= nRecs) {
@@ -116,10 +116,10 @@ std::string_view PdbReader::GetRecord(size_t recNo) {
     }
     CrashIf(off > nextOff);
     size_t size = nextOff - off;
-    return {data + off, size};
+    return {(u8*)data + off, size};
 }
 
-PdbReader* PdbReader::CreateFromData(std::string_view d) {
+PdbReader* PdbReader::CreateFromData(std::span<u8> d) {
     if (d.empty()) {
         return nullptr;
     }
@@ -131,10 +131,10 @@ PdbReader* PdbReader::CreateFromData(std::string_view d) {
     return reader;
 }
 
-PdbReader* PdbReader::CreateFromFile(const char* filePath) {
-    std::string_view path(filePath);
+PdbReader* PdbReader::CreateFromFile(const char* path) {
     auto d = file::ReadFile(path);
-    return CreateFromData(d);
+    std::span<u8> ds = {(u8*)d.data(), d.size()};
+    return CreateFromData(ds);
 }
 
 #if OS_WIN
@@ -142,12 +142,14 @@ PdbReader* PdbReader::CreateFromFile(const char* filePath) {
 
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
     std::string_view d = file::ReadFile(filePath);
-    return CreateFromData(d);
+    std::span<u8> ds = {(u8*)d.data(), d.size()};
+    return CreateFromData(ds);
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
-    std::string_view data = GetDataFromStream(stream, nullptr);
-    return CreateFromData(data);
+    std::string_view d = GetDataFromStream(stream, nullptr);
+    std::span<u8> ds = {(u8*)d.data(), d.size()};
+    return CreateFromData(ds);
 }
 #endif
 

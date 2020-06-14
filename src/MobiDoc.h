@@ -38,7 +38,7 @@ class MobiDoc {
     void LoadImages();
     bool LoadImage(size_t imageNo);
     bool LoadDocument(PdbReader* pdbReader);
-    bool DecodeExthHeader(const char* data, size_t dataLen);
+    bool DecodeExthHeader(const u8* data, size_t dataLen);
 
   public:
     str::Str* doc = nullptr;
