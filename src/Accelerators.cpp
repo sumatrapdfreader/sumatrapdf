@@ -11,7 +11,7 @@
 // TODO: should FVIRTKEY be set for chars like 'A'
 ACCEL gAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'A', CmdSelectAll},
-    {FCONTROL | FVIRTKEY, 'B', CmdFavAdd},
+    {FCONTROL | FVIRTKEY, 'B', CmdFavoriteAdd},
     {FCONTROL | FVIRTKEY, 'C', CmdCopySelection},
     {FCONTROL | FVIRTKEY, 'D', CmdProperties},
     {FCONTROL | FVIRTKEY, 'F', CmdFindFirst},

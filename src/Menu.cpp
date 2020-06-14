@@ -102,13 +102,13 @@ static MenuDef menuDefFile[] = {
     { _TRN("&Print...\tCtrl+P"),            CmdPrint,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                         MF_REQ_DISK_ACCESS },
 //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
-    { _TRN("Open in &Adobe Reader"),        CmdViewWithAcrobat,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open in &Foxit Reader"),        CmdViewWithFoxIt,          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open &in PDF-XChange"),         CmdViewWithPdfXchange,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Adobe Reader"),        CmdOpenWithAcrobat,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Foxit Reader"),        CmdOpenWithFoxIt,          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open &in PDF-XChange"),         CmdOpenWithPdfXchange,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft XPS-Viewer"),CmdViewWithXpsViewer,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft XPS-Viewer"),CmdOpenWithXpsViewer,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft HTML Help"), CmdViewWithHtmlHelp,       MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Microsoft HTML Help"), CmdOpenWithHtmlHelp,       MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 //] ACCESSKEY_ALTERNATIVE
     // further entries are added if specified in gGlobalPrefs.vecCommandLine
     { _TRN("Send by &E-mail..."),           CmdSendByEmail,            MF_REQ_DISK_ACCESS },
@@ -202,9 +202,9 @@ static MenuDef menuDefSettings[] = {
 //[ ACCESSKEY_GROUP Favorites Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 MenuDef menuDefFavorites[] = {
-    { _TRN("Add to favorites"),             CmdFavAdd,                0 },
-    { _TRN("Remove from favorites"),        CmdFavDel,                0 },
-    { _TRN("Show Favorites"),               CmdFavToggle,             MF_REQ_DISK_ACCESS },
+    { _TRN("Add to favorites"),             CmdFavoriteAdd,                0 },
+    { _TRN("Remove from favorites"),        CmdFavoriteDel,                0 },
+    { _TRN("Show Favorites"),               CmdFavoriteToggle,             MF_REQ_DISK_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Favorites Menu
@@ -244,9 +244,9 @@ static MenuDef menuDefContext[] = {
     { _TRN("Select &All"),                  CmdSelectAll,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                        MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
-    {"add",                                 CmdFavAdd,                MF_NO_TRANSLATE   },
-    {"del",                                 CmdFavDel,                MF_NO_TRANSLATE   },
-    { _TRN("Show &Favorites"),              CmdFavToggle,             0                 },
+    {"add",                                 CmdFavoriteAdd,                MF_NO_TRANSLATE   },
+    {"del",                                 CmdFavoriteDel,                MF_NO_TRANSLATE   },
+    { _TRN("Show &Favorites"),              CmdFavoriteToggle,             0                 },
     { _TRN("Show &Bookmarks\tF12"),         CmdViewBookmarks,         0                 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
@@ -511,7 +511,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
         CmdViewRotateLeft, CmdViewRotateRight,      CmdGoToNextPage,     CmdGoToPrevPage,  CmdGoToFirstPage,
         CmdGoToLastPage,   CmdGoToNavBack,          CmdGoToNavForward,   CmdGoToPage,      CmdFindFirst,
         CmdSaveAs,         CmdSaveAsBookmark,       CmdSendByEmail,      CmdSelectAll,     CmdCopySelection,
-        CmdProperties,     CmdViewPresentationMode, CmdViewWithAcrobat,  CmdViewWithFoxIt, CmdViewWithPdfXchange,
+        CmdProperties,     CmdViewPresentationMode, CmdOpenWithAcrobat,  CmdOpenWithFoxIt, CmdOpenWithPdfXchange,
         CmdRenameFile,     CmdShowInFolder,         CmdDebugAnnotations,
         // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
         // are removed instead of disabled (and can remain enabled
@@ -519,7 +519,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     };
     // this list coincides with menusToEnableIfBrokenPDF
     static int menusToDisableIfDirectory[] = {
-        CmdRenameFile, CmdSendByEmail, CmdViewWithAcrobat, CmdViewWithFoxIt, CmdViewWithPdfXchange, CmdShowInFolder,
+        CmdRenameFile, CmdSendByEmail, CmdOpenWithAcrobat, CmdOpenWithFoxIt, CmdOpenWithPdfXchange, CmdShowInFolder,
     };
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
 
@@ -543,7 +543,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->showToc;
     win::menu::SetChecked(win->menu, CmdViewBookmarks, checked);
 
-    win::menu::SetChecked(win->menu, CmdFavToggle, gGlobalPrefs->showFavorites);
+    win::menu::SetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
     win::menu::SetChecked(win->menu, CmdViewShowHideToolbar, gGlobalPrefs->showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
@@ -692,8 +692,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetEnabled(popup, CmdViewBookmarks, win->ctrl->HacToc());
     win::menu::SetChecked(popup, CmdViewBookmarks, win->tocVisible);
 
-    win::menu::SetEnabled(popup, CmdFavToggle, HasFavorites());
-    win::menu::SetChecked(popup, CmdFavToggle, gGlobalPrefs->showFavorites);
+    win::menu::SetEnabled(popup, CmdFavoriteToggle, HasFavorites());
+    win::menu::SetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
 
     bool supportsAnnotations = false;
     EngineBase* engine = dm->GetEngine();
@@ -716,23 +716,23 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
-            win::menu::Remove(popup, CmdFavAdd);
+            win::menu::Remove(popup, CmdFavoriteAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Remove page %s from favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, CmdFavDel, s);
+            win::menu::SetText(popup, CmdFavoriteDel, s);
         } else {
-            win::menu::Remove(popup, CmdFavDel);
+            win::menu::Remove(popup, CmdFavoriteDel);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Add page %s to favorites\tCtrl+B");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, CmdFavAdd, s);
+            win::menu::SetText(popup, CmdFavoriteAdd, s);
         }
     } else {
-        win::menu::Remove(popup, CmdFavAdd);
-        win::menu::Remove(popup, CmdFavDel);
+        win::menu::Remove(popup, CmdFavoriteAdd);
+        win::menu::Remove(popup, CmdFavoriteDel);
     }
 
     // if toolbar is not shown, add option to show it
@@ -754,7 +754,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdSaveAs:
         case CmdPrint:
         case CmdViewBookmarks:
-        case CmdFavToggle:
+        case CmdFavoriteToggle:
         case CmdProperties:
         case CmdViewShowHideToolbar:
         case CmdSaveAnnotationsSmx:
@@ -778,10 +778,10 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
                 delete bmp;
             }
             break;
-        case CmdFavAdd:
+        case CmdFavoriteAdd:
             AddFavoriteForCurrentPage(win);
             break;
-        case CmdFavDel:
+        case CmdFavoriteDel:
             DelFavorite(filePath, pageNo);
             break;
         case CmdExitFullScreen:
@@ -846,19 +846,19 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
 
     // Also suppress PDF specific items for non-PDF documents
     if (!CouldBePDFDoc(tab) || !CanViewWithAcrobat()) {
-        win::menu::Remove(menu, CmdViewWithAcrobat);
+        win::menu::Remove(menu, CmdOpenWithAcrobat);
     }
     if (!CouldBePDFDoc(tab) || !CanViewWithFoxit()) {
-        win::menu::Remove(menu, CmdViewWithFoxIt);
+        win::menu::Remove(menu, CmdOpenWithFoxIt);
     }
     if (!CouldBePDFDoc(tab) || !CanViewWithPDFXChange()) {
-        win::menu::Remove(menu, CmdViewWithPdfXchange);
+        win::menu::Remove(menu, CmdOpenWithPdfXchange);
     }
     if (!CanViewWithXPSViewer(tab)) {
-        win::menu::Remove(menu, CmdViewWithXpsViewer);
+        win::menu::Remove(menu, CmdOpenWithXpsViewer);
     }
     if (!CanViewWithHtmlHelp(tab)) {
-        win::menu::Remove(menu, CmdViewWithHtmlHelp);
+        win::menu::Remove(menu, CmdOpenWithHtmlHelp);
     }
 
     bool supportsAnnotations = false;

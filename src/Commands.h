@@ -72,11 +72,11 @@
     V(ZoomFitWidthAndContinous, "Zoom: Fit Width And Continous")  \
     V(ZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page") \
     V(ContributeTranslation, "Contribute Translation")            \
-    V(ViewWithAcrobat, "Open With Adobe Acrobat")                 \
-    V(ViewWithFoxIt, "Open With FoxIt")                           \
-    V(ViewWithPdfXchange, "Open With PdfXchange")                 \
-    V(ViewWithXpsViewer, "Open With Xps Viewer")                  \
-    V(ViewWithHtmlHelp, "Open With HTML Help")                    \
+    V(OpenWithAcrobat, "Open With Adobe Acrobat")                 \
+    V(OpenWithFoxIt, "Open With FoxIt")                           \
+    V(OpenWithPdfXchange, "Open With PdfXchange")                 \
+    V(OpenWithXpsViewer, "Open With Xps Viewer")                  \
+    V(OpenWithHtmlHelp, "Open With HTML Help")                    \
     V(OpenSelectedDocument, "Open Selected Document")             \
     V(PinSelectedDocument, "Pin Selected Document")               \
     V(ForgetSelectedDocument, "Forget Selected Document")         \
@@ -92,8 +92,8 @@
     V(SortTagSmallFirst, "Sort By Tag, Small First")              \
     V(SortTagBigFirst, "Sort By Tag, Big First")                  \
     V(SortColor, "Sort By Color")                                 \
-    V(SaveEmbedded, "Save Embedded")                              \
-    V(OpenEmbedded, "Open Embedde")                               \
+    V(SaveEmbeddedFile, "Save Embedded File...")                  \
+    V(OpenEmbeddedPDF, "Open Embedded PDF")                       \
     V(Options, "Options...")                                      \
     V(AdvancedOptions, "Advanced Options...")                     \
     V(ChangeLanguage, "Change Language...")                       \
@@ -102,11 +102,11 @@
     V(HelpVisitWebsite, "Help: SumatraPDF Website")               \
     V(HelpAbout, "Help: About SumatraPDF")                        \
     V(MoveFrameFocus, "Move Frame Focus")                         \
-    V(FavAdd, "Favorites: Add")                                   \
-    V(FavDel, "Favorites: Delete")                                \
-    V(FavToggle, "Favorites: Toggle")                             \
-    V(FavShow, "Favorites: Show")                                 \
-    V(FavHide, "Favorites: Hide")                                 \
+    V(FavoriteAdd, "Favorites: Add")                              \
+    V(FavoriteDel, "Favorites: Delete")                           \
+    V(FavoriteToggle, "Favorites: Toggle")                        \
+    V(FavoriteShow, "Favorites: Show")                            \
+    V(FavoriteHide, "Favorites: Hide")                            \
     V(DebugShowLinks, "Deubg: Show Links")                        \
     V(DebugCrashMe, "Debug: Crash Me")                            \
     V(DebugEbookUI, "Debug: Toggle Ebook UI")                     \
@@ -135,8 +135,8 @@ enum {
     CmdFileHistoryLast = CmdFileHistoryFirst + 20,
 
     /* range for favorites */
-    CmdFavFirst,
-    CmdFavLast = CmdFavFirst + 200,
+    CmdFavoriteFirst,
+    CmdFavoriteLast = CmdFavoriteFirst + 200,
 
     /* range for themes. We don't have themes yet. */
     CmdThemeFirst,

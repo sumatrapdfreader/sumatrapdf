@@ -4237,8 +4237,8 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
 
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
-    static_assert(CmdFavLast - CmdFavFirst == 200, "wrong number of favorite menu ids");
-    if ((wmId >= CmdFavFirst) && (wmId <= CmdFavLast)) {
+    static_assert(CmdFavoriteLast - CmdFavoriteFirst == 200, "wrong number of favorite menu ids");
+    if ((wmId >= CmdFavoriteFirst) && (wmId <= CmdFavoriteLast)) {
         GoToFavoriteByMenuId(win, wmId);
     }
 
@@ -4511,23 +4511,23 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuAdvancedOptions();
             break;
 
-        case CmdViewWithAcrobat:
+        case CmdOpenWithAcrobat:
             ViewWithAcrobat(win->currentTab);
             break;
 
-        case CmdViewWithFoxIt:
+        case CmdOpenWithFoxIt:
             ViewWithFoxit(win->currentTab);
             break;
 
-        case CmdViewWithPdfXchange:
+        case CmdOpenWithPdfXchange:
             ViewWithPDFXChange(win->currentTab);
             break;
 
-        case CmdViewWithXpsViewer:
+        case CmdOpenWithXpsViewer:
             ViewWithXPSViewer(win->currentTab);
             break;
 
-        case CmdViewWithHtmlHelp:
+        case CmdOpenWithHtmlHelp:
             ViewWithHtmlHelp(win->currentTab);
             break;
 
@@ -4623,17 +4623,17 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             CrashMe();
             break;
 
-        case CmdFavAdd:
+        case CmdFavoriteAdd:
             AddFavoriteForCurrentPage(win);
             break;
 
-        case CmdFavDel:
+        case CmdFavoriteDel:
             if (win->IsDocLoaded()) {
                 DelFavorite(ctrl->FilePath(), win->currPageNo);
             }
             break;
 
-        case CmdFavToggle:
+        case CmdFavoriteToggle:
             ToggleFavorites(win);
             break;
 

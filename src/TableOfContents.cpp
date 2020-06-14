@@ -381,11 +381,11 @@ static MenuDef menuDefContext[] = {
     {_TRN("Expand All"),                 CmdExpandAll,         0 },
     {_TRN("Collapse All"),               CmdCollapseAll,       0 },
     {SEP_ITEM,                           CmdSeparatorEmbed,    MF_NO_TRANSLATE},
-    {_TR_TODON("Open Embedded PDF"),     CmdOpenEmbedded,      0 },
-    {_TR_TODON("Save Embedded File..."), CmdSaveEmbedded,      0 },
+    {_TR_TODON("Open Embedded PDF"),     CmdOpenEmbeddedPDF,      0 },
+    {_TR_TODON("Save Embedded File..."), CmdSaveEmbeddedFile,      0 },
     // note: strings cannot be "" or else items are not there
-    {"add",                              CmdFavAdd,            MF_NO_TRANSLATE},
-    {"del",                              CmdFavDel,            MF_NO_TRANSLATE},
+    {"add",                              CmdFavoriteAdd,            MF_NO_TRANSLATE},
+    {"del",                              CmdFavoriteDel,            MF_NO_TRANSLATE},
     {SEP_ITEM,                           CmdSeparator,         MF_NO_TRANSLATE},
     {_TR_TODON("Export Bookmarks"),      CmdExportBookmarks,   MF_NO_TRANSLATE},
     {_TR_TODON("New Bookmarks"),         CmdNewBookmarks,      MF_NO_TRANSLATE},
@@ -666,12 +666,12 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         const WCHAR* ext = path::GetExtNoFree(embeddedName);
         bool canOpenEmbedded = str::EqI(ext, L".pdf");
         if (!canOpenEmbedded) {
-            win::menu::Remove(popup, CmdOpenEmbedded);
+            win::menu::Remove(popup, CmdOpenEmbeddedPDF);
         }
     } else {
         win::menu::Remove(popup, CmdSeparatorEmbed);
-        win::menu::Remove(popup, CmdSaveEmbedded);
-        win::menu::Remove(popup, CmdOpenEmbedded);
+        win::menu::Remove(popup, CmdSaveEmbeddedFile);
+        win::menu::Remove(popup, CmdOpenEmbeddedPDF);
     }
 
     if (!showBookmarksMenu) {
@@ -690,23 +690,23 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
-            win::menu::Remove(popup, CmdFavAdd);
+            win::menu::Remove(popup, CmdFavoriteAdd);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Remove page %s from favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, CmdFavDel, s);
+            win::menu::SetText(popup, CmdFavoriteDel, s);
         } else {
-            win::menu::Remove(popup, CmdFavDel);
+            win::menu::Remove(popup, CmdFavoriteDel);
 
             // %s and not %d because re-using translation from RebuildFavMenu()
             auto tr = _TR("Add page %s to favorites");
             AutoFreeWstr s = str::Format(tr, pageLabel.Get());
-            win::menu::SetText(popup, CmdFavAdd, s);
+            win::menu::SetText(popup, CmdFavoriteAdd, s);
         }
     } else {
-        win::menu::Remove(popup, CmdFavAdd);
-        win::menu::Remove(popup, CmdFavDel);
+        win::menu::Remove(popup, CmdFavoriteAdd);
+        win::menu::Remove(popup, CmdFavoriteDel);
     }
 
     MarkMenuOwnerDraw(popup);
@@ -727,10 +727,10 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         case CmdCollapseAll:
             win->tocTreeCtrl->CollapseAll();
             break;
-        case CmdFavAdd:
+        case CmdFavoriteAdd:
             AddFavoriteFromToc(win, dti);
             break;
-        case CmdFavDel:
+        case CmdFavoriteDel:
             DelFavorite(filePath, pageNo);
             break;
         case CmdSortTagBigFirst:
@@ -757,10 +757,10 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             }
             SortAndSetTocTree(tab);
             break;
-        case CmdSaveEmbedded:
+        case CmdSaveEmbeddedFile:
             SaveEmbeddedFile(tab, dest);
             break;
-        case CmdOpenEmbedded:
+        case CmdOpenEmbeddedPDF:
             OpenEmbeddedFile(tab, dest);
             break;
     }
