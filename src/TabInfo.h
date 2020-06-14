@@ -59,4 +59,4 @@ struct TabInfo {
     void ToggleZoom();
 };
 
-bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::string_view data);
+bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::span<u8> data);

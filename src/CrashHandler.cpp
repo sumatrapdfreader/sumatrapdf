@@ -131,7 +131,7 @@ static void SaveCrashInfo(char* s, size_t size) {
     if (!gCrashFilePath) {
         return;
     }
-    file::WriteFile(gCrashFilePath, {s, size});
+    file::WriteFile(gCrashFilePath, {(u8*)s, size});
 }
 
 static void SendCrashInfo(char* s, size_t size) {
@@ -175,7 +175,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, char* dstDir,
         lzma::FileInfo* fi = &(archive.files[i]);
         const char* name = fi->name;
         dbglogf("ExtractSymbols: file %d is '%s'\n", i, name);
-        char* uncompressed = GetFileDataByIdx(&archive, i, allocator);
+        u8* uncompressed = GetFileDataByIdx(&archive, i, allocator);
         if (!uncompressed) {
             return false;
         }
@@ -183,7 +183,7 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, char* dstDir,
         if (!filePath) {
             return false;
         }
-        std::string_view d = {uncompressed, fi->uncompressedSize};
+        std::span<u8> d = {uncompressed, fi->uncompressedSize};
         ok = file::WriteFile(filePath, d);
 
         Allocator::Free(allocator, filePath);

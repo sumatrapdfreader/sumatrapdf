@@ -170,7 +170,7 @@ bool Save() {
         return true;
     }
 
-    bool ok = file::WriteFile(path.get(), prefsData.AsView());
+    bool ok = file::WriteFile(path.get(), prefsData.AsSpan());
     if (!ok) {
         return false;
     }

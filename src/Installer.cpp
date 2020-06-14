@@ -108,7 +108,7 @@ static void CreateButtonExit(HWND hwndParent) {
 
 bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
     lzma::FileInfo* fi;
-    char* uncompressed;
+    u8* uncompressed;
 
     int nFiles = archive->filesCount;
 
@@ -124,7 +124,7 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
         AutoFreeWstr fileName = strconv::Utf8ToWstr(fi->name);
         AutoFreeWstr filePath = path::Join(destDir, fileName);
 
-        std::string_view d = {uncompressed, fi->uncompressedSize};
+        std::span<u8> d = {uncompressed, fi->uncompressedSize};
         bool ok = file::WriteFile(filePath, d);
         free(uncompressed);
 

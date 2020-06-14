@@ -595,7 +595,7 @@ static void InitSelfDelete() {
 
     AutoFreeWstr scriptPath = GetSelfDeleteBatchPathInTemp();
     AutoFreeStr scriptPathA = strconv::WstrToUtf8(scriptPath.AsView());
-    bool ok = file::WriteFile(scriptPathA, script.AsView());
+    bool ok = file::WriteFile(scriptPathA, script.AsSpan());
     if (!ok) {
         logf("Failed to write '%s'\n", scriptPathA.Get());
         return;

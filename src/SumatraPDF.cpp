@@ -701,7 +701,7 @@ class ControllerCallbackHandler : public ControllerCallback {
         win->linkHandler->GotoLink(dest);
     }
     void FocusFrame(bool always) override;
-    void SaveDownload(const WCHAR* url, std::string_view data) override;
+    void SaveDownload(const WCHAR* url, std::span<u8> data) override;
     void HandleLayoutedPages(EbookController* ctrl, EbookFormattingData* data) override;
     void RequestDelayedLayout(int delay) override;
 };
@@ -789,7 +789,7 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
     }
 }
 
-void ControllerCallbackHandler::SaveDownload(const WCHAR* url, std::string_view data) {
+void ControllerCallbackHandler::SaveDownload(const WCHAR* url, std::span<u8> data) {
     AutoFreeWstr fileName(url::GetFileName(url));
     // LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
     SaveDataToFile(win->hwndFrame, fileName, data);
@@ -2601,7 +2601,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
 
         AutoFree textUTF8 = strconv::WstrToUtf8(text.LendData());
         AutoFree textUTF8BOM = str::Join(UTF8_BOM, textUTF8.Get());
-        ok = file::WriteFile(realDstFileName, textUTF8BOM.AsView());
+        ok = file::WriteFile(realDstFileName, textUTF8BOM.AsSpan());
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         AutoFreeWstr producerName = str::Join(GetAppName(), L" ", CURR_VERSION_STR);

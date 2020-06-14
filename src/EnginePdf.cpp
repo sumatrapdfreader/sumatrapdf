@@ -371,7 +371,7 @@ class EnginePdf : public EngineBase {
     bool IsLinearizedFile();
 
     bool SaveUserAnnots(const char* pathUtf8);
-    std::string_view EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath);
+    std::span<u8> EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath);
 };
 
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
@@ -545,14 +545,14 @@ const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut) {
 // <filePath> should end with embed marks, which is a stream number
 // inside pdf file
 // TODO: provide PasswordUI?
-std::string_view LoadEmbeddedPDFFile(const WCHAR* filePath) {
+std::span<u8> LoadEmbeddedPDFFile(const WCHAR* filePath) {
     EnginePdf* engine = new EnginePdf();
     auto res = engine->LoadStreamFromPDFFile(filePath);
     delete engine;
     return res;
 }
 
-std::string_view EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
+std::span<u8> EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
     int streamNo = -1;
     AutoFreeWstr fnCopy = ParseEmbeddedStreamNumber(filePath, &streamNo);
     if (streamNo < 0) {
@@ -587,7 +587,7 @@ std::string_view EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath) {
     if (dataSize == 0) {
         return {};
     }
-    auto data = (const char*)memdup(buffer->data, dataSize);
+    auto data = (u8*)memdup(buffer->data, dataSize);
     fz_drop_buffer(ctx, buffer);
 
     fz_drop_document(ctx, _doc);
@@ -1762,7 +1762,7 @@ bool EnginePdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
-        bool ok = file::WriteFile(dstPath, d.AsView());
+        bool ok = file::WriteFile(dstPath, d.AsSpan());
         if (ok) {
             return !includeUserAnnots || SaveUserAnnots(copyFileName);
         }

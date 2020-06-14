@@ -511,7 +511,7 @@ std::span<u8> ReadFile(const WCHAR* filePath) {
     return ReadFileWithAllocator(path.data, nullptr);
 }
 
-bool WriteFile(const char* filePath, std::string_view d) {
+bool WriteFile(const char* filePath, std::span<u8> d) {
 #if OS_WIN
     WCHAR buf[512];
     strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
@@ -621,7 +621,7 @@ int ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
     return (int)nRead;
 }
 
-bool WriteFile(const WCHAR* filePath, std::string_view d) {
+bool WriteFile(const WCHAR* filePath, std::span<u8> d) {
     const void* data = d.data();
     size_t dataLen = d.size();
     DWORD access = GENERIC_WRITE;

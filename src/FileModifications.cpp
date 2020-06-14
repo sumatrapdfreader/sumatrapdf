@@ -213,7 +213,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
     }
     data.RemoveAt(data.size() - 2, 2);
 
-    return file::WriteFile(modificationsPath, data.AsView());
+    return file::WriteFile(modificationsPath, data.AsSpan());
 }
 
 bool IsModificationsFile(const WCHAR* filePath) {

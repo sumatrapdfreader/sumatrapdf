@@ -404,7 +404,7 @@ bool ExportBookmarksToFile(TocTree* bookmarks, const char* name, const char* bkm
     }
     s.AppendFmt("name: %s\n", name);
     SerializeBookmarksRec(bookmarks->root, 0, s);
-    return file::WriteFile(bkmPath, s.AsView());
+    return file::WriteFile(bkmPath, s.AsSpan());
 }
 
 bool ParseVbkmFile(std::string_view sv, VbkmFile& vbkm) {

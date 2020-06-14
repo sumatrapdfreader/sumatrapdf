@@ -68,10 +68,10 @@ class HtmlWindowHandler : public HtmlWindowCallback {
     void OnLButtonDown() override {
         cm->OnLButtonDown();
     }
-    std::string_view GetDataForUrl(const WCHAR* url) override {
+    std::span<u8> GetDataForUrl(const WCHAR* url) override {
         return cm->GetDataForUrl(url);
     }
-    void DownloadData(const WCHAR* url, std::string_view data) override {
+    void DownloadData(const WCHAR* url, std::span<u8> data) override {
         cm->DownloadData(url, data);
     }
 };
@@ -444,7 +444,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
 }
 
 // Load and cache data for a given url inside CHM file.
-std::string_view ChmModel::GetDataForUrl(const WCHAR* url) {
+std::span<u8> ChmModel::GetDataForUrl(const WCHAR* url) {
     ScopedCritSec scope(&docAccess);
     AutoFreeWstr plainUrl(url::GetFullPath(url));
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
@@ -458,10 +458,10 @@ std::string_view ChmModel::GetDataForUrl(const WCHAR* url) {
         }
         urlDataCache.Append(e);
     }
-    return e->data.AsView();
+    return e->data.AsSpan();
 }
 
-void ChmModel::DownloadData(const WCHAR* url, std::string_view data) {
+void ChmModel::DownloadData(const WCHAR* url, std::span<u8> data) {
     if (cb) {
         cb->SaveDownload(url, data);
     }
@@ -662,16 +662,16 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     void OnLButtonDown() override {
     }
 
-    std::string_view GetDataForUrl(const WCHAR* url) override {
+    std::span<u8> GetDataForUrl(const WCHAR* url) override {
         ScopedCritSec scope(&docAccess);
         AutoFreeWstr plainUrl(url::GetFullPath(url));
         AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
         auto d = doc->GetData(urlUtf8.Get());
         data.Append(d);
-        return {(const char*)d.data(), d.size()};
+        return d;
     }
 
-    void DownloadData(const WCHAR* url, std::string_view data) override {
+    void DownloadData(const WCHAR* url, std::span<u8> data) override {
         UNUSED(url);
         UNUSED(data);
     }

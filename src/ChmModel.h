@@ -63,8 +63,8 @@ class ChmModel : public Controller {
     bool OnBeforeNavigate(const WCHAR* url, bool newWindow);
     void OnDocumentComplete(const WCHAR* url);
     void OnLButtonDown();
-    std::string_view GetDataForUrl(const WCHAR* url);
-    void DownloadData(const WCHAR* url, std::string_view data);
+    std::span<u8> GetDataForUrl(const WCHAR* url);
+    void DownloadData(const WCHAR* url, std::span<u8> data);
 
     static bool IsSupportedFileType(Kind);
 

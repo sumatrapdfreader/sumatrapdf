@@ -716,7 +716,7 @@ bool EngineXps::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
-        bool ok = file::WriteFile(dstPath, d.AsView());
+        bool ok = file::WriteFile(dstPath, d.AsSpan());
         if (ok) {
             return true;
         }

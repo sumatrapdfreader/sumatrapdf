@@ -814,7 +814,7 @@ bool EngineDjVu::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     AutoFreeWstr path = strconv::Utf8ToWstr(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(path, d.AsView());
+        bool ok = !d.empty() && file::WriteFile(path, d.AsSpan());
         if (ok) {
             return true;
         }

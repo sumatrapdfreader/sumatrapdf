@@ -70,7 +70,7 @@ u32 lzma_crc32(u32 crc32, const unsigned char* data, size_t data_len) {
 #define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
 
 // the first compressed byte indicates whether compression is LZMA (0), LZMA+BJC (1) or none (-1)
-static bool Decompress(const u8* compressed, size_t compressedSize, char* uncompressed, size_t uncompressedSize,
+static bool Decompress(const u8* compressed, size_t compressedSize, u8* uncompressed, size_t uncompressedSize,
                        Allocator* allocator) {
     if (compressedSize < 1) {
         return false;
@@ -222,14 +222,14 @@ int GetIdxFromName(SimpleArchive* archive, const char* fileName) {
     return -1;
 }
 
-char* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
+u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
     if (idx >= archive->filesCount) {
         return nullptr;
     }
 
     FileInfo* fi = &archive->files[idx];
 
-    char* uncompressed = (char*)Allocator::Alloc(allocator, fi->uncompressedSize);
+    u8* uncompressed = (u8*)Allocator::Alloc(allocator, fi->uncompressedSize);
     if (!uncompressed) {
         return nullptr;
     }
@@ -249,7 +249,7 @@ char* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
     return uncompressed;
 }
 
-char* GetFileDataByName(SimpleArchive* archive, const char* fileName, Allocator* allocator) {
+u8* GetFileDataByName(SimpleArchive* archive, const char* fileName, Allocator* allocator) {
     int idx = GetIdxFromName(archive, fileName);
     if (-1 != idx) {
         return GetFileDataByIdx(archive, idx, allocator);
@@ -260,7 +260,7 @@ char* GetFileDataByName(SimpleArchive* archive, const char* fileName, Allocator*
 static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir, Allocator* allocator) {
     FileInfo* fi = &archive->files[idx];
 
-    char* uncompressed = GetFileDataByIdx(archive, idx, allocator);
+    u8* uncompressed = GetFileDataByIdx(archive, idx, allocator);
     if (!uncompressed) {
         return false;
     }
@@ -268,7 +268,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir
     bool ok = false;
     char* filePath = path::JoinUtf(dstDir, fi->name, allocator);
     if (filePath) {
-        std::string_view d = {uncompressed, fi->uncompressedSize};
+        std::span<u8> d = {(u8*)uncompressed, fi->uncompressedSize};
         ok = file::WriteFile(filePath, d);
     }
 

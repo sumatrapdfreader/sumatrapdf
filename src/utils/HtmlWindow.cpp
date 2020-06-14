@@ -363,7 +363,7 @@ class HW_IInternetProtocol : public IInternetProtocol {
 
     // those are filled in Start() and represent data to be sent
     // for a given url
-    std::string_view data{};
+    std::span<u8> data{};
     size_t dataCurrPos = 0;
 };
 
@@ -500,7 +500,7 @@ STDMETHODIMP HW_IInternetProtocol::Read(void* pv, ULONG cb, ULONG* pcbRead) {
     if (toRead > dataAvail) {
         toRead = (ULONG)dataAvail;
     }
-    const char* dataToRead = data.data() + dataCurrPos;
+    u8* dataToRead = data.data() + dataCurrPos;
     memcpy(pv, dataToRead, toRead);
     dataCurrPos += toRead;
     *pcbRead = toRead;

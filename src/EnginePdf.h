@@ -6,5 +6,5 @@ EngineBase* CreateEnginePdfFromFile(const WCHAR* path, PasswordUI* pwdUI = nullp
 EngineBase* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI = nullptr);
 
 bool EnginePdfSaveUpdated(EngineBase*, std::string_view path);
-std::string_view LoadEmbeddedPDFFile(const WCHAR* path);
+std::span<u8> LoadEmbeddedPDFFile(const WCHAR* path);
 const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut);

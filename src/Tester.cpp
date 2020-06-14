@@ -117,15 +117,16 @@ static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
 
     AutoFreeWstr outFile(str::Join(filePathBase, L"_pp.html"));
 
-    const std::span<u8> htmlData = mb->GetHtmlData();
+    std::span<u8> htmlData = mb->GetHtmlData();
+
     size_t htmlLen = htmlData.size();
     const char* html = (const char*)htmlData.data();
-    size_t ppHtmlLen;
+    size_t ppHtmlLen = 0;
     char* ppHtml = PrettyPrintHtml(html, htmlLen, ppHtmlLen);
-    file::WriteFile(outFile.Get(), {ppHtml, ppHtmlLen});
+    file::WriteFile(outFile.Get(), {(u8*)ppHtml, ppHtmlLen});
 
     outFile.Set(str::Join(filePathBase, L".html"));
-    file::WriteFile(outFile.Get(), {html, htmlLen});
+    file::WriteFile(outFile.Get(), htmlData);
 }
 
 static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ImageData* img) {
@@ -136,7 +137,7 @@ static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ImageData* im
     const WCHAR* ext = GfxFileExtFromData(img->AsSpan());
     CrashAlwaysIf(!ext);
     AutoFreeWstr fileName(str::Format(L"%s_img_%d%s", filePathBase, imgNo, ext));
-    file::WriteFile(fileName.Get(), {img->data, img->len});
+    file::WriteFile(fileName.Get(), img->AsSpan());
 }
 
 static void MobiSaveImages(const WCHAR* filePathBase, MobiDoc* mb) {
