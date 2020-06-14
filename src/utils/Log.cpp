@@ -70,7 +70,7 @@ void logf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFree s = str::FmtV(fmt, args);
-    log(s.as_view());
+    log(s.AsView());
     va_end(args);
 }
 
@@ -88,7 +88,7 @@ void log(const WCHAR* s) {
         return;
     }
     AutoFree tmp = strconv::WstrToUtf8(s);
-    auto sv = tmp.as_view();
+    auto sv = tmp.AsView();
     log(sv);
 }
 

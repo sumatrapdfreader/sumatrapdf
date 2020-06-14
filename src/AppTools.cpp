@@ -518,7 +518,7 @@ void SaveCallstackLogs() {
         return;
     }
     AutoFreeWstr filePath(AppGenDataFilename(L"callstacks.txt"));
-    file::WriteFile(filePath.Get(), s.as_view());
+    file::WriteFile(filePath.Get(), s.AsView());
 }
 
 // TODO: this can be used for extracting other data
@@ -548,7 +548,7 @@ static const WCHAR* Md5OfAppExe() {
     CalcMD5DigestWin(d.data, d.size(), md5);
 
     AutoFree md5HexA(_MemToHex(&md5));
-    AutoFreeWstr md5Hex = strconv::Utf8ToWchar(md5HexA.as_view());
+    AutoFreeWstr md5Hex = strconv::Utf8ToWchar(md5HexA.AsView());
 
     return md5Hex.StealData();
 }

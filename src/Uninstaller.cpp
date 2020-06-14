@@ -594,8 +594,8 @@ static void InitSelfDelete() {
     script.Append("(goto) 2>nul & del \"%~f0\"\r\n");
 
     AutoFreeWstr scriptPath = GetSelfDeleteBatchPathInTemp();
-    AutoFreeStr scriptPathA = strconv::WstrToUtf8(scriptPath.as_view());
-    bool ok = file::WriteFile(scriptPathA, script.as_view());
+    AutoFreeStr scriptPathA = strconv::WstrToUtf8(scriptPath.AsView());
+    bool ok = file::WriteFile(scriptPathA, script.AsView());
     if (!ok) {
         logf("Failed to write '%s'\n", scriptPathA.Get());
         return;

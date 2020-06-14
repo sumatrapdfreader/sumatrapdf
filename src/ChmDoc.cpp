@@ -232,7 +232,7 @@ bool ChmDoc::ParseSystemData() {
 char* ChmDoc::ResolveTopicID(unsigned int id) {
     AutoFree ivbData = GetData("/#IVB");
     size_t ivbLen = ivbData.size();
-    ByteReader br(ivbData.as_view());
+    ByteReader br(ivbData.AsView());
     if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {
         return nullptr;
     }

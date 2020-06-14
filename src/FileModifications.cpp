@@ -170,7 +170,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
     data.AppendFmt("[@%s]\r\n", "meta");
     data.AppendFmt("version = %s\r\n", SMX_CURR_VERSION);
     AutoFreeStr path = strconv::WstrToUtf8(filePath);
-    i64 size = file::GetSize(path.as_view());
+    i64 size = file::GetSize(path.AsView());
     if (0 <= size && size <= UINT_MAX) {
         data.AppendFmt("filesize = %u\r\n", (uint)size);
     }
@@ -213,7 +213,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
     }
     data.RemoveAt(data.size() - 2, 2);
 
-    return file::WriteFile(modificationsPath, data.as_view());
+    return file::WriteFile(modificationsPath, data.AsView());
 }
 
 bool IsModificationsFile(const WCHAR* filePath) {

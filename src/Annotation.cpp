@@ -148,7 +148,7 @@ RectD Annotation::Rect() const {
 
 std::string_view Annotation::Author() {
     if (smx) {
-        return smx->author.as_view();
+        return smx->author.AsView();
     }
     const char* s = pdf_annot_author(pdf->ctx, pdf->annot);
     if (str::IsStringEmptyOrWhiteSpaceOnly(s)) {
@@ -187,7 +187,7 @@ bool Annotation::SetQuadding(int newQuadding) {
 
 std::string_view Annotation::Contents() {
     if (smx) {
-        return smx->contents.as_view();
+        return smx->contents.AsView();
     }
     // TODO: cache during creation?
     const char* s = pdf_annot_contents(pdf->ctx, pdf->annot);
@@ -253,7 +253,7 @@ time_t Annotation::ModificationDate() {
 // return empty() if no icon
 std::string_view Annotation::IconName() {
     if (smx) {
-        return smx->iconName.as_view();
+        return smx->iconName.AsView();
     }
     bool hasIcon = pdf_annot_has_icon_name(pdf->ctx, pdf->annot);
     if (!hasIcon) {
@@ -358,7 +358,7 @@ bool Annotation::SetInteriorColor(COLORREF c) {
 
 std::string_view Annotation::DefaultAppearanceTextFont() {
     if (smx) {
-        return smx->textFont.as_view();
+        return smx->textFont.AsView();
     }
 
     const char* fontName;

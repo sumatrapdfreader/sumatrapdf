@@ -168,10 +168,10 @@ bool CollectFilesFromDirectory(std::string_view dir, VecStr& files,
             AutoFreeStr filePath = path::JoinUtf(dir.data(), name.get(), nullptr);
             bool matches = true;
             if (fileMatchesFn) {
-                matches = fileMatchesFn(filePath.as_view());
+                matches = fileMatchesFn(filePath.AsView());
             }
             if (matches) {
-                files.Append(filePath.as_view());
+                files.Append(filePath.AsView());
             }
         }
     } while (FindNextFileW(hfind, &fdata));

@@ -1762,7 +1762,7 @@ bool EnginePdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
-        bool ok = file::WriteFile(dstPath, d.as_view());
+        bool ok = file::WriteFile(dstPath, d.AsView());
         if (ok) {
             return !includeUserAnnots || SaveUserAnnots(copyFileName);
         }

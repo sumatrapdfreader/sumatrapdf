@@ -379,10 +379,6 @@ class WStr : public Vec<WCHAR> {
         return {this->Get(), this->size()};
     }
 
-    std::wstring_view as_view() const {
-        return {this->Get(), this->size()};
-    }
-
     void Append(const WCHAR* src, size_t size = -1) {
         if ((size_t)-1 == size) {
             size = Len(src);
@@ -472,10 +468,6 @@ class Str : public Vec<char> {
 
     std::span<u8> AsSpan() const {
         return {(u8*)Get(), size()};
-    }
-
-    std::string_view as_view() const {
-        return {Get(), size()};
     }
 
     char* c_str() const {

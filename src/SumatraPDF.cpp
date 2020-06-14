@@ -2601,7 +2601,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
 
         AutoFree textUTF8 = strconv::WstrToUtf8(text.LendData());
         AutoFree textUTF8BOM = str::Join(UTF8_BOM, textUTF8.Get());
-        ok = file::WriteFile(realDstFileName, textUTF8BOM.as_view());
+        ok = file::WriteFile(realDstFileName, textUTF8BOM.AsView());
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         AutoFreeWstr producerName = str::Join(GetAppName(), L" ", CURR_VERSION_STR);

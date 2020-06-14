@@ -123,7 +123,7 @@ void TocEditorWindow::UpdateTreeModel() {
 }
 
 static void SetTocItemFromTocEditArgs(TocItem* ti, TocEditArgs* args) {
-    std::string_view newTitle = args->title.as_view();
+    std::string_view newTitle = args->title.AsView();
     str::Free(ti->title);
     ti->title = strconv::Utf8ToWstr(newTitle);
     ti->pageNo = args->page;
@@ -724,7 +724,7 @@ void TocEditorWindow::SaveAsVirtual() {
     char* patha = nullptr;
     if (IsShiftPressed() && isVbkm) {
         // when SHIFT is pressed write without asking for a file
-        patha = (char*)strconv::WstrToUtf8(pathw.as_view()).data();
+        patha = (char*)strconv::WstrToUtf8(pathw.AsView()).data();
     } else {
         WCHAR dstFileName[MAX_PATH]{0};
         str::BufSet(&(dstFileName[0]), dimof(dstFileName), pathw.Get());

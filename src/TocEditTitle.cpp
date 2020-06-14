@@ -146,7 +146,7 @@ static void createMainLayout(EditTitleWindow* win) {
         w->dwStyle |= WS_GROUP;
         win->editTitle = w;
         w->SetCueText("Title");
-        w->SetText(win->args->title.as_view());
+        w->SetText(win->args->title.AsView());
         w->Create();
         vbox->AddChild(w);
     }
@@ -156,7 +156,7 @@ static void createMainLayout(EditTitleWindow* win) {
         {
             auto w = new StaticCtrl(parent);
             AutoFreeStr pageStr = str::Format("&Page (1-%d)", nPages);
-            w->SetText(pageStr.as_view());
+            w->SetText(pageStr.AsView());
             w->Create();
             vbox->AddChild(w);
         }
@@ -169,7 +169,7 @@ static void createMainLayout(EditTitleWindow* win) {
             int nPage = win->args->page;
             if (nPage != 0) {
                 AutoFreeStr pageStr = str::Format("%d", nPage);
-                w->SetText(pageStr.as_view());
+                w->SetText(pageStr.AsView());
             }
             vbox->AddChild(w);
         }
@@ -211,7 +211,7 @@ static void createMainLayout(EditTitleWindow* win) {
             SerializeColor(win->args->color, colorStr);
         }
 
-        w->SetText(colorStr.as_view());
+        w->SetText(colorStr.AsView());
         vbox->AddChild(w);
     }
 

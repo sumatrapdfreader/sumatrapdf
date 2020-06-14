@@ -169,7 +169,7 @@ void* fz_memdup(fz_context* ctx, void* p, size_t size) {
 fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     fz_stream* stm = nullptr;
     AutoFreeStr path = strconv::WstrToUtf8(filePath);
-    i64 fileSize = file::GetSize(path.as_view());
+    i64 fileSize = file::GetSize(path.AsView());
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < MAX_MEMORY_FILE_SIZE) {

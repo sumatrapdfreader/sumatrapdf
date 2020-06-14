@@ -458,7 +458,7 @@ std::string_view ChmModel::GetDataForUrl(const WCHAR* url) {
         }
         urlDataCache.Append(e);
     }
-    return e->data.as_view();
+    return e->data.AsView();
 }
 
 void ChmModel::DownloadData(const WCHAR* url, std::string_view data) {

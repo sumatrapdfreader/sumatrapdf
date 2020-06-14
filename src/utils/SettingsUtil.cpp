@@ -318,7 +318,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             free(*wstrPtr);
             if (value) {
                 AutoFree tmp = UnescapeStr(value);
-                *wstrPtr = strconv::Utf8ToWstr(tmp.as_view());
+                *wstrPtr = strconv::Utf8ToWstr(tmp.AsView());
             } else {
                 *wstrPtr = str::Dup((const WCHAR*)field.value);
             }

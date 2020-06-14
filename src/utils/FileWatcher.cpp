@@ -113,7 +113,7 @@ static void GetFileState(const WCHAR* filePath, FileState* fs) {
     // So I'm sticking with lastWriteTime
     fs->time = file::GetModificationTime(filePath);
     AutoFreeStr path = strconv::WstrToUtf8(filePath);
-    fs->size = file::GetSize(path.as_view());
+    fs->size = file::GetSize(path.AsView());
 }
 
 static bool FileStateEq(FileState* fs1, FileState* fs2) {

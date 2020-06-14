@@ -187,10 +187,6 @@ struct AutoFree {
         return (data == nullptr) || (len == 0);
     }
 
-    [[nodiscard]] std::string_view as_view() {
-        return {data, len};
-    }
-
     [[nodiscard]] std::string_view AsView() {
         return {data, len};
     }
@@ -309,7 +305,7 @@ struct AutoFreeWstr {
         return (data == nullptr) || (size() == 0);
     }
 
-    std::wstring_view as_view() {
+    std::wstring_view AsView() {
         size_t sz = str::Len(data);
         return {data, sz};
     }

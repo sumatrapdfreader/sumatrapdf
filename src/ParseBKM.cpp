@@ -36,7 +36,7 @@ VbkmFile::~VbkmFile() {
 
 static std::string_view readFileNormalized(std::string_view path) {
     AutoFree d = file::ReadFile(path);
-    return sv::NormalizeNewlines(d.as_view());
+    return sv::NormalizeNewlines(d.AsView());
 }
 
 static void SerializeKeyVal(char* key, WCHAR* val, str::Str& s) {
@@ -46,7 +46,7 @@ static void SerializeKeyVal(char* key, WCHAR* val, str::Str& s) {
     }
     s.AppendFmt(" %s:", key);
     AutoFree str = strconv::WstrToUtf8(val);
-    sv::AppendMaybeQuoted(str.as_view(), s);
+    sv::AppendMaybeQuoted(str.AsView(), s);
 }
 
 static void SerializeDest(PageDestination* dest, str::Str& s) {
@@ -95,7 +95,7 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
         s.AppendView(indentStr);
         WCHAR* title = node->Text();
         AutoFree titleA = strconv::WstrToUtf8(title);
-        sv::AppendMaybeQuoted(titleA.as_view(), s);
+        sv::AppendMaybeQuoted(titleA.AsView(), s);
         auto flags = node->fontFlags;
         str::Str fontVal;
         if (bit::IsSet(flags, fontBitItalic)) {
@@ -109,7 +109,7 @@ static void SerializeBookmarksRec(TocItem* node, int level, str::Str& s) {
         }
         if (fontVal.size() > 0) {
             s.Append(" font:");
-            s.AppendView(fontVal.as_view());
+            s.AppendView(fontVal.AsView());
         }
         if (node->color != ColorUnset) {
             s.Append(" color:");
@@ -151,7 +151,7 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
     str::Str title;
     bool ok = sv::ParseMaybeQuoted(line, title, false);
     TocItem* res = new TocItem();
-    res->title = strconv::Utf8ToWstr(title.as_view());
+    res->title = strconv::Utf8ToWstr(title.AsView());
     PageDestination* dest = nullptr;
 
     // parse meta-data and page destination
@@ -371,12 +371,12 @@ bool LoadAlterenativeBookmarks(std::string_view baseFileName, VbkmFile& vbkm) {
     str::Str path = baseFileName;
     path.Append(".bkm");
 
-    AutoFree d = readFileNormalized(path.as_view());
+    AutoFree d = readFileNormalized(path.AsView());
     if (d.empty()) {
         return false;
     }
 
-    std::string_view sv = d.as_view();
+    std::string_view sv = d.AsView();
     ParsedKV ver = sv::ParseValueOfKey(sv, "version", true);
     if (!ver.ok) {
         return false;
@@ -404,7 +404,7 @@ bool ExportBookmarksToFile(TocTree* bookmarks, const char* name, const char* bkm
     }
     s.AppendFmt("name: %s\n", name);
     SerializeBookmarksRec(bookmarks->root, 0, s);
-    return file::WriteFile(bkmPath, s.as_view());
+    return file::WriteFile(bkmPath, s.AsView());
 }
 
 bool ParseVbkmFile(std::string_view sv, VbkmFile& vbkm) {
@@ -429,7 +429,7 @@ bool ParseVbkmFile(std::string_view sv, VbkmFile& vbkm) {
 
 bool LoadVbkmFile(const char* filePath, VbkmFile& vbkm) {
     AutoFree d = readFileNormalized(filePath);
-    std::string_view sv = d.as_view();
+    std::string_view sv = d.AsView();
     bool ok = ParseVbkmFile(sv, vbkm);
     return ok;
 }

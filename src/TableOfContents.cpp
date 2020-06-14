@@ -778,7 +778,7 @@ static void AltBookmarksChanged(TabInfo* tab, int n, std::string_view s) {
 // TODO: temporary
 static bool LoadAlterenativeBookmarks(const WCHAR* baseFileName, VbkmFile& vbkm) {
     AutoFreeStr tmp = strconv::WstrToUtf8(baseFileName);
-    return LoadAlterenativeBookmarks(tmp.as_view(), vbkm);
+    return LoadAlterenativeBookmarks(tmp.AsView(), vbkm);
 }
 
 static bool ShouldCustomDraw(WindowInfo* win) {

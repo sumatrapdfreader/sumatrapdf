@@ -396,7 +396,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
         AutoFreeWstr txtFilePath(str::Format(renderPath, 0));
         AutoFree textUTF8 = strconv::WstrToUtf8(text.Get());
         AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
-        return file::WriteFile(txtFilePath, textUTF8BOM.as_view());
+        return file::WriteFile(txtFilePath, textUTF8BOM.AsView());
     }
 
     if (str::EndsWithI(renderPath, L".pdf")) {
@@ -431,7 +431,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             size_t bmpDataLen;
             AutoFree bmpData((char*)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
             if (!bmpData.empty()) {
-                file::WriteFile(pageBmpPath, bmpData.as_view());
+                file::WriteFile(pageBmpPath, bmpData.AsView());
             }
         } else { // render as TGA for all other file extensions
             size_t tgaDataLen;

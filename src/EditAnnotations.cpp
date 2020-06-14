@@ -340,7 +340,7 @@ static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
             return;
         }
         AutoFreeStr dstFilePath = strconv::WstrToUtf8(dstFileName);
-        EnginePdfSaveUpdated(engine, dstFilePath.as_view());
+        EnginePdfSaveUpdated(engine, dstFilePath.AsView());
         // TODO: show a notification if saved or error message if failed to save
         return;
     }
@@ -396,7 +396,7 @@ static void DropDownFillColors(DropDownCtrl* w, COLORREF col, str::Str& customCo
     if (idx == -1) {
         customColor.Reset();
         SerializeColorRgb(col, customColor);
-        items.Append(customColor.as_view());
+        items.Append(customColor.AsView());
         idx = items.isize() - 1;
     }
     w->SetItems(items);
@@ -432,7 +432,7 @@ static void DoRect(EditAnnotationsWindow* win, Annotation* annot) {
     int dx = (int)rect.Dx();
     int dy = (int)rect.Dy();
     s.AppendFmt("Rect: %d %d %d %d", x, y, dx, dy);
-    win->staticRect->SetText(s.as_view());
+    win->staticRect->SetText(s.AsView());
     win->staticRect->SetIsVisible(true);
 }
 
@@ -443,7 +443,7 @@ static void DoAuthor(EditAnnotationsWindow* win, Annotation* annot) {
     }
     str::Str s;
     s.AppendFmt("Author: %s", annot->Author().data());
-    win->staticAuthor->SetText(s.as_view());
+    win->staticAuthor->SetText(s.AsView());
     win->staticAuthor->SetIsVisible(true);
 }
 
@@ -462,7 +462,7 @@ static void DoModificationDate(EditAnnotationsWindow* win, Annotation* annot) {
     str::Str s;
     s.Append("Date: ");
     AppendPdfDate(s, annot->ModificationDate());
-    win->staticModificationDate->SetText(s.as_view());
+    win->staticModificationDate->SetText(s.AsView());
     win->staticModificationDate->SetIsVisible(true);
 }
 
@@ -473,7 +473,7 @@ static void DoPopup(EditAnnotationsWindow* win, Annotation* annot) {
     }
     str::Str s;
     s.AppendFmt("Popup: %d 0 R", popupId);
-    win->staticPopup->SetText(s.as_view());
+    win->staticPopup->SetText(s.AsView());
     win->staticPopup->SetIsVisible(true);
 }
 
@@ -481,7 +481,7 @@ static void DoContents(EditAnnotationsWindow* win, Annotation* annot) {
     str::Str s = annot->Contents();
     // TODO: don't replace if already is "\r\n"
     s.Replace("\n", "\r\n");
-    win->editContents->SetText(s.as_view());
+    win->editContents->SetText(s.AsView());
     win->staticContents->SetIsVisible(true);
     win->editContents->SetIsVisible(true);
 }
@@ -535,7 +535,7 @@ static void DoTextSize(EditAnnotationsWindow* win, Annotation* annot) {
     }
     int fontSize = annot->DefaultAppearanceTextSize();
     AutoFreeStr s = str::Format("Text Size: %d", fontSize);
-    win->staticTextSize->SetText(s.as_view());
+    win->staticTextSize->SetText(s.AsView());
     win->annot->SetDefaultAppearanceTextSize(fontSize);
     win->trackbarTextSize->SetValue(fontSize);
     win->staticTextSize->SetIsVisible(true);
@@ -547,7 +547,7 @@ static void TextFontSizeChanging(EditAnnotationsWindow* win, TrackbarPosChanging
     int fontSize = ev->pos;
     win->annot->SetDefaultAppearanceTextSize(fontSize);
     AutoFreeStr s = str::Format("Text Size: %d", fontSize);
-    win->staticTextSize->SetText(s.as_view());
+    win->staticTextSize->SetText(s.AsView());
     EnableSaveIfAnnotationsChanged(win);
     RerenderForWindowInfo(win->tab->win);
 }
@@ -578,7 +578,7 @@ static void DoBorder(EditAnnotationsWindow* win, Annotation* annot) {
     int borderWidth = annot->BorderWidth();
     borderWidth = std::clamp(borderWidth, borderWidthMin, borderWidthMax);
     AutoFreeStr s = str::Format("Border: %d", borderWidth);
-    win->staticBorder->SetText(s.as_view());
+    win->staticBorder->SetText(s.AsView());
     win->trackbarBorder->SetValue(borderWidth);
     win->staticBorder->SetIsVisible(true);
     win->trackbarBorder->SetIsVisible(true);
@@ -589,7 +589,7 @@ static void BorderWidthChanging(EditAnnotationsWindow* win, TrackbarPosChangingE
     int borderWidth = ev->pos;
     win->annot->SetBorderWidth(borderWidth);
     AutoFreeStr s = str::Format("Border: %d", borderWidth);
-    win->staticBorder->SetText(s.as_view());
+    win->staticBorder->SetText(s.AsView());
     EnableSaveIfAnnotationsChanged(win);
     RerenderForWindowInfo(win->tab->win);
 }
@@ -703,7 +703,7 @@ static void DoOpacity(EditAnnotationsWindow* win, Annotation* annot) {
     }
     int opacity = win->annot->Opacity();
     AutoFreeStr s = str::Format("Opacity: %d", opacity);
-    win->staticOpacity->SetText(s.as_view());
+    win->staticOpacity->SetText(s.AsView());
     win->staticOpacity->SetIsVisible(true);
     win->trackbarOpacity->SetIsVisible(true);
     win->trackbarOpacity->SetValue(opacity);
@@ -722,7 +722,7 @@ static void OpacityChanging(EditAnnotationsWindow* win, TrackbarPosChangingEvent
     int opacity = ev->pos;
     win->annot->SetOpacity(opacity);
     AutoFreeStr s = str::Format("Opacity: %d", opacity);
-    win->staticOpacity->SetText(s.as_view());
+    win->staticOpacity->SetText(s.AsView());
     EnableSaveIfAnnotationsChanged(win);
     RerenderForWindowInfo(win->tab->win);
 }

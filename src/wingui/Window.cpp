@@ -718,7 +718,7 @@ HICON WindowBase::GetIcon() const {
 
 void WindowBase::SetText(const WCHAR* s) {
     AutoFree str = strconv::WstrToUtf8(s);
-    SetText(str.as_view());
+    SetText(str.AsView());
 }
 
 void WindowBase::SetText(std::string_view sv) {
@@ -730,7 +730,7 @@ void WindowBase::SetText(std::string_view sv) {
 
 std::string_view WindowBase::GetText() {
     text = win::GetTextUtf8(hwnd);
-    return text.as_view();
+    return text.AsView();
 }
 
 void WindowBase::SetTextColor(COLORREF col) {
@@ -840,7 +840,7 @@ bool Window::Create() {
     if (initialSize.dy > 0) {
         dy = initialSize.dy;
     }
-    AutoFreeWstr title = strconv::Utf8ToWstr(this->text.as_view());
+    AutoFreeWstr title = strconv::Utf8ToWstr(this->text.AsView());
     HINSTANCE hinst = GetInstance();
     hwnd = CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);
     CrashIf(!hwnd);

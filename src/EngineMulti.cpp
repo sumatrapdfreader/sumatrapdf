@@ -334,7 +334,7 @@ std::string_view FindEnginePath(std::string_view vbkmPath, std::string_view engi
     AutoFreeStr dir = path::GetDir(vbkmPath);
     const char* engineFileName = path::GetBaseNameNoFree(engineFilePath.data());
     AutoFreeStr path = path::JoinUtf(dir, engineFileName, nullptr);
-    if (file::Exists(path.as_view())) {
+    if (file::Exists(path.AsView())) {
         std::string_view res = path.release();
         return res;
     }
@@ -479,11 +479,11 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         }
 
         EngineBase* engine = nullptr;
-        AutoFreeStr path = FindEnginePath(filePath.as_view(), ti->engineFilePath);
+        AutoFreeStr path = FindEnginePath(filePath.AsView(), ti->engineFilePath);
         if (path.empty()) {
             return false;
         }
-        AutoFreeWstr pathW = strconv::Utf8ToWstr(path.as_view());
+        AutoFreeWstr pathW = strconv::Utf8ToWstr(path.AsView());
         engine = CreateEngine(pathW, nullptr);
         if (!engine) {
             return false;
@@ -542,7 +542,7 @@ EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
     };
     VecStr files;
     AutoFreeStr dir = strconv::WstrToUtf8(dirW);
-    bool ok = CollectFilesFromDirectory(dir.as_view(), files, isValidFunc);
+    bool ok = CollectFilesFromDirectory(dir.AsView(), files, isValidFunc);
     if (!ok) {
         // TODO: show error message
         return nullptr;
@@ -551,7 +551,7 @@ EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
         // TODO: show error message
         return nullptr;
     }
-    EngineBase* engine = CreateEngineMultiFromFiles(dir.as_view(), files);
+    EngineBase* engine = CreateEngineMultiFromFiles(dir.AsView(), files);
     if (!engine) {
         // TODO: show error message
         return nullptr;

@@ -174,7 +174,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     if (!data.Append(content.Get(), content.size()))
         return false;
 
-    return file::WriteFile(archivePath, data.as_view());
+    return file::WriteFile(archivePath, data.AsView());
 }
 
 } // namespace lzsa

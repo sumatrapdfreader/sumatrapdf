@@ -35,7 +35,7 @@ enum class Tab {
 
 static str::WStr wstrFromUtf8(const str::Str& str) {
     AutoFreeWstr s = strconv::Utf8ToWstr(str.c_str());
-    return str::WStr(s.as_view());
+    return str::WStr(s.AsView());
 }
 
 TabItem::TabItem(const std::string_view title, const std::string_view toolTip) {

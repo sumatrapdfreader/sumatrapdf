@@ -474,7 +474,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     layoutData->AddProperty(_TR("PDF Optimizations:"), str);
 
     AutoFreeStr path = strconv::WstrToUtf8(ctrl->FilePath());
-    i64 fileSize = file::GetSize(path.as_view());
+    i64 fileSize = file::GetSize(path.AsView());
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();
         AutoFree d = engine->GetFileData();
