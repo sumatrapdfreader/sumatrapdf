@@ -1,19 +1,45 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#define COMMANDS(V)                              \
-    V(Open, "Open File...")                      \
-    V(OpenFolder, "Open Folder...")              \
-    V(Close, "Close Document")                   \
-    V(SaveAs, "Save File As...")                 \
-    V(Print, "Print Document...")                \
-    V(ShowInFolder, "Show File In Folder...")    \
-    V(Exit, "Exit Application")                  \
-    V(Refresh, "Reload Document")                \
-    V(SaveAsBookmark, "Save As Bookmark...")     \
-    V(SendByEmail, "Send Document By Email...")  \
-    V(Properties, "Show Document Properties...") \
-    V(ExitFullScreen, "Exit FullScreen")
+#define COMMANDS(V)                                        \
+    V(Open, "Open File...")                                \
+    V(OpenFolder, "Open Folder...")                        \
+    V(Close, "Close Document")                             \
+    V(SaveAs, "Save File As...")                           \
+    V(Print, "Print Document...")                          \
+    V(ShowInFolder, "Show File In Folder...")              \
+    V(Exit, "Exit Application")                            \
+    V(Refresh, "Reload Document")                          \
+    V(SaveAsBookmark, "Save As Bookmark...")               \
+    V(SendByEmail, "Send Document By Email...")            \
+    V(Properties, "Show Document Properties...")           \
+    V(ExitFullScreen, "Exit FullScreen")                   \
+    V(ViewSinglePage, "View: Single Page")                 \
+    V(ViewFacing, "View: Facing")                          \
+    V(ViewBook, "View: Book")                              \
+    V(ViewContinuous, "View: Continuous")                  \
+    V(ViewMangaMode, "View: Manga Mode")                   \
+    V(ViewRotateLeft, "View: Rotate Left")                 \
+    V(ViewRotateRight, "View: Rotate Right")               \
+    V(ViewBookmarks, "View: Bookmarks")                    \
+    V(ViewFullScreen, "View: FullScreen")                  \
+    V(ViewPresentationMode, "View: Presentation Mode")     \
+    V(ViewShowHideToolbar, "View: Toogle Toolbar")         \
+    V(ViewShowHideMenuBar, "View: Toggle Menu Bar")        \
+    V(CopySelection, "Copy Selection")                     \
+    V(SelectAll, "Select All")                             \
+    V(NewWindow, "Open New Window")                        \
+    V(DuplicateInNewWindow, "Open Document In New Window") \
+    V(CopyImage, "Copy Image")                             \
+    V(CopyLinkTarget, "Copy Link Target")                  \
+    V(CopyComment, "Copy Comment")                         \
+    V(GoToNextPage, "Go to Next Page")                     \
+    V(GoToPrevPage, "Go to Previous Page")                 \
+    V(GoToFirstPage, "Go to First Page")                   \
+    V(GoToLastPage, "Go to Last Page")                     \
+    V(GoToPage, "Go to Page...")                           \
+    V(GoToNavBack, "Navigate: Back")                       \
+    V(GoToNavForward, "Navigate: Forward")
 
 #define DEF_CMD(id, s) Cmd##id,
 
@@ -24,38 +50,7 @@ enum {
 
     COMMANDS(DEF_CMD)
 
-        CmdViewSinglePage, // alias: ViewLayoutFirst
-    CmdViewFacing,
-    CmdViewBook,
-    CmdViewContinuous,
-    CmdViewMangaMode, // alias: ViewLayoutLast
-
-    CmdViewRotateLeft,
-    CmdViewRotateRight,
-    CmdViewBookmarks,
-    CmdViewFullScreen,
-    CmdViewPresentationMode,
-    CmdViewShowHideToolbar,
-    CmdViewShowHideMenuBar,
-
-    CmdCopySelection,
-    CmdSelectAll,
-
-    CmdNewWindow,
-    CmdDuplicateInNewWindow,
-    CmdCopyImage,
-    CmdCopyLinkTarget,
-    CmdCopyComment,
-
-    CmdGoToNextPage,
-    CmdGoToPrevPage,
-    CmdGoToFirstPage,
-    CmdGoToLastPage,
-    CmdGoToPage,
-    CmdGoToNavBack,
-    CmdGoToNavForward,
-
-    CmdFindFirst,
+        CmdFindFirst,
     CmdFindNext,
     CmdFindPrev,
     CmdFindMatch,
