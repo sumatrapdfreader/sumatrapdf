@@ -12,7 +12,7 @@
 
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 
 // TODO(port)
 // extern "C" void fz_redirect_dll_io_to_console();
@@ -39,7 +39,7 @@ void TestRenderPage(const Flags& i) {
     for (auto fileName : files) {
         AutoFree fileNameUtf(strconv::WstrToUtf8(fileName));
         printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileNameUtf.Get(), zoom);
-        auto engine = EngineManager::CreateEngine(fileName);
+        auto engine = CreateEngine(fileName);
         if (engine == nullptr) {
             printf("failed to create engine\n");
             continue;
@@ -87,7 +87,7 @@ void TestExtractPage(const Flags& ci) {
     }
     for (auto fileName : files) {
         AutoFree fileNameUtf(strconv::WstrToUtf8(fileName));
-        auto engine = EngineManager::CreateEngine(fileName);
+        auto engine = CreateEngine(fileName);
         if (engine == nullptr) {
             printf("failed to create engine for file '%s'\n", fileNameUtf.Get());
             continue;

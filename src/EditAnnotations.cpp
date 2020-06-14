@@ -30,7 +30,7 @@ extern "C" {
 #include "EngineBase.h"
 #include "EnginePdf.h"
 #include "EngineMulti.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 
 #include "Translations.h"
 #include "SumatraConfig.h"

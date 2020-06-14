@@ -15,7 +15,7 @@
 
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 
 #include "SettingsStructs.h"
 #include "Controller.h"
@@ -244,14 +244,14 @@ static MenuDef menuDefContext[] = {
     { _TRN("Select &All"),                  CmdSelectAll,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                        MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
-    {"add",                                 CmdFavoriteAdd,                MF_NO_TRANSLATE   },
-    {"del",                                 CmdFavoriteDel,                MF_NO_TRANSLATE   },
-    { _TRN("Show &Favorites"),              CmdFavoriteToggle,             0                 },
+    {"add",                                 CmdFavoriteAdd,           MF_NO_TRANSLATE   },
+    {"del",                                 CmdFavoriteDel,           MF_NO_TRANSLATE   },
+    { _TRN("Show &Favorites"),              CmdFavoriteToggle,        0                 },
     { _TRN("Show &Bookmarks\tF12"),         CmdViewBookmarks,         0                 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
     { _TR_TODON("Edit Annotations"),        CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
-    {"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE},
+    {"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE },
     { SEP_ITEM,                             0,                        MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    CmdPrint,                 MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },

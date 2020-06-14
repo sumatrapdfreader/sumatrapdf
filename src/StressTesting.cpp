@@ -18,7 +18,7 @@
 
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
@@ -193,7 +193,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     logf(L"Starting: %s", filePath);
 
     auto t = TimeGet();
-    EngineBase* engine = EngineManager::CreateEngine(filePath);
+    EngineBase* engine = CreateEngine(filePath);
     if (!engine) {
         logf(L"Error: failed to load %s", filePath);
         return;
@@ -229,7 +229,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
 
 static bool IsFileToBench(const WCHAR* path) {
     Kind kind = GuessFileType(path, true);
-    if (EngineManager::IsSupportedFileType(kind, true)) {
+    if (IsSupportedFileType(kind, true)) {
         return true;
     }
     if (Doc::IsSupportedFileType(kind)) {
@@ -278,7 +278,7 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     if (!kind) {
         return false;
     }
-    if (EngineManager::IsSupportedFileType(kind, true) || Doc::IsSupportedFileType(kind)) {
+    if (IsSupportedFileType(kind, true) || Doc::IsSupportedFileType(kind)) {
         return true;
     }
     if (!filter) {
@@ -290,7 +290,7 @@ static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter
     if (!kindSniffed || kindSniffed == kind) {
         return false;
     }
-    if (EngineManager::IsSupportedFileType(kindSniffed, true)) {
+    if (IsSupportedFileType(kindSniffed, true)) {
         return true;
     }
     return Doc::IsSupportedFileType(kindSniffed);

@@ -18,9 +18,7 @@
 #include "EnginePs.h"
 #include "EngineXps.h"
 #include "EngineMulti.h"
-#include "EngineManager.h"
-
-namespace EngineManager {
+#include "EngineCreate.h"
 
 bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     if (IsPdfEngineSupportedFileType(kind)) {
@@ -140,5 +138,3 @@ EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEng
     }
     return engine;
 }
-
-} // namespace EngineManager

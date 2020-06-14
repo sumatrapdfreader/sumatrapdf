@@ -26,7 +26,7 @@ extern "C" {
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 #include "ParseBKM.h"
 #include "EngineMulti.h"
 
@@ -370,7 +370,7 @@ bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
     for (int i = 0; i < n; i++) {
         std::string_view path = files.at(i);
         AutoFreeWstr pathW = strconv::Utf8ToWstr(path);
-        EngineBase* engine = EngineManager::CreateEngine(pathW);
+        EngineBase* engine = CreateEngine(pathW);
         if (!engine) {
             continue;
         }
@@ -484,7 +484,7 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
             return false;
         }
         AutoFreeWstr pathW = strconv::Utf8ToWstr(path.as_view());
-        engine = EngineManager::CreateEngine(pathW, nullptr);
+        engine = CreateEngine(pathW, nullptr);
         if (!engine) {
             return false;
         }

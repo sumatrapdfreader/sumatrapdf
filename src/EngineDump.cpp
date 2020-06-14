@@ -15,7 +15,7 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineDjVu.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 #include "FileModifications.h"
 #include "PdfCreator.h"
 
@@ -549,7 +549,7 @@ int main(int argc, char** argv) {
     }
 
     PasswordHolder pwdUI(password);
-    EngineBase* engine = EngineManager::CreateEngine(filePath, &pwdUI);
+    EngineBase* engine = CreateEngine(filePath, &pwdUI);
 #if 0
     bool isEngineDjVu = IsOfKind(engine, kindEngineDjVu);
     bool couldLeak = isEngineDjVu || IsDjVuEngineSupportedFile(filePath) || IsDjVuEngineSupportedFile(filePath, true);

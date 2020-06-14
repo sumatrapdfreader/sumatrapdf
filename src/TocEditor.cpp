@@ -21,7 +21,7 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineMulti.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 
 #include "resource.h"
 #include "Commands.h"
@@ -294,7 +294,7 @@ static EngineBase* ChooosePdfFile() {
     }
     WCHAR* filePath = ofn.lpstrFile;
 
-    EngineBase* engine = EngineManager::CreateEngine(filePath);
+    EngineBase* engine = CreateEngine(filePath);
     if (!engine) {
         ShowErrorMessage("Failed to open a file!");
         return nullptr;
@@ -424,7 +424,7 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
         return;
     }
 
-    EngineBase* engine = EngineManager::CreateEngine(filePath, nullptr);
+    EngineBase* engine = CreateEngine(filePath, nullptr);
 #if 0
     AutoFreeStr path = strconv::WstrToUtf8(filePath);
     logf("Dropped file: '%s' at (%d, %d) on item: 0x%x, engine: 0x%x\n", path.get(), pt.x, pt.y, ti, engine);

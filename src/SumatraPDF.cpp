@@ -34,7 +34,7 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EnginePs.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 #include "EngineMulti.h"
 #include "EngineImages.h"
 #include "Doc.h"
@@ -942,7 +942,7 @@ static Controller* CreateForChm(const WCHAR* path, PasswordUI* pwdUI, WindowInfo
     Controller* ctrl = nullptr;
     if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
         delete chmModel;
-        EngineBase* engine = EngineManager::CreateEngine(path, pwdUI, true);
+        EngineBase* engine = CreateEngine(path, pwdUI, true);
         if (!engine) {
             return nullptr;
         }
@@ -971,7 +971,7 @@ static Controller* CreateControllerForFile(const WCHAR* path, PasswordUI* pwdUI,
     bool ebookInFixedUI = gGlobalPrefs->ebookUI.useFixedPageUI;
 
     // TODO: sniff file content only once
-    EngineBase* engine = EngineManager::CreateEngine(path, pwdUI, chmInFixedUI, ebookInFixedUI);
+    EngineBase* engine = CreateEngine(path, pwdUI, chmInFixedUI, ebookInFixedUI);
 
     if (engine) {
         ctrl = new DisplayModel(engine, win->cbHandler);
@@ -3064,8 +3064,8 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
     for (size_t i = files.size(); i > 0; i--) {
         WCHAR* path = files.at(i - 1);
         Kind kind = GuessFileTypeFromName(path);
-        if (!EngineManager::IsSupportedFileType(kind, gGlobalPrefs->ebookUI.useFixedPageUI) &&
-            !Doc::IsSupportedFileType(kind) && !gFileHistory.Find(path, nullptr)) {
+        if (!IsSupportedFileType(kind, gGlobalPrefs->ebookUI.useFixedPageUI) && !Doc::IsSupportedFileType(kind) &&
+            !gFileHistory.Find(path, nullptr)) {
             free(files.PopAt(i - 1));
         }
     }

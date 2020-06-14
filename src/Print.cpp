@@ -12,7 +12,7 @@
 
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 
 #include "SettingsStructs.h"
 #include "Controller.h"
@@ -919,7 +919,7 @@ Exit:
 bool PrintFile(const WCHAR* fileName, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     logf(L"PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
     WCHAR* fileName2 = path::Normalize(fileName);
-    EngineBase* engine = EngineManager::CreateEngine(fileName2);
+    EngineBase* engine = CreateEngine(fileName2);
     if (!engine) {
         if (displayErrors) {
             WCHAR* msg = str::Format(L"Couldn't open file '%s' for printing", fileName);

@@ -18,7 +18,7 @@
 
 #include "Annotation.h"
 #include "EngineBase.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 
 #include "SumatraConfig.h"
 #include "SettingsStructs.h"

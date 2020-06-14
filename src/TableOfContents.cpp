@@ -24,7 +24,7 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EnginePdf.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 #include "ParseBKM.h"
 
 #include "SumatraConfig.h"

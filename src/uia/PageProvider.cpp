@@ -13,7 +13,7 @@
 #include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "EngineManager.h"
+#include "EngineCreate.h"
 #include "DisplayModel.h"
 #include "uia/PageProvider.h"
 #include "uia/Constants.h"
