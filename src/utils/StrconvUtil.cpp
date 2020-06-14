@@ -29,7 +29,7 @@ size_t WcharToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOutSize) {
     return res;
 }
 
-std::string_view WstrToCodePage(const WCHAR* txt, UINT codePage, int cchTxtLen) {
+std::string_view WstrToCodePage(const WCHAR* txt, uint codePage, int cchTxtLen) {
     CrashIf(!txt);
     if (!txt) {
         return {};
@@ -49,7 +49,7 @@ std::string_view WstrToCodePage(const WCHAR* txt, UINT codePage, int cchTxtLen) 
 }
 
 /* Caller needs to free() the result */
-WCHAR* ToWideChar(const char* src, UINT codePage, int cbSrcLen) {
+WCHAR* ToWideChar(const char* src, uint codePage, int cbSrcLen) {
     CrashIf(!src);
     if (!src) {
         return nullptr;
@@ -67,7 +67,7 @@ WCHAR* ToWideChar(const char* src, UINT codePage, int cbSrcLen) {
     return res;
 }
 
-std::string_view ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
+std::string_view ToMultiByte(const char* src, uint codePageSrc, uint codePageDest) {
     CrashIf(!src);
     if (!src) {
         return {};
@@ -125,14 +125,14 @@ std::string_view UnknownToUtf8(const std::string_view& txt) {
     return strconv::WstrToUtf8(uni.Get());
 }
 
-size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp) {
+size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, uint cp) {
     return WideCharToMultiByte(cp, 0, s, -1, buf, cbBufSize, nullptr, nullptr);
 }
-size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, UINT cp) {
+size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, uint cp) {
     return MultiByteToWideChar(cp, 0, s, -1, buf, cchBufSize);
 }
 
-WCHAR* FromCodePage(const char* src, UINT cp) {
+WCHAR* FromCodePage(const char* src, uint cp) {
     return ToWideChar(src, cp);
 }
 

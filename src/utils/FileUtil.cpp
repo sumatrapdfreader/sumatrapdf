@@ -341,7 +341,7 @@ bool HasVariableDriveLetter(const WCHAR* path) {
         return false;
     }
 
-    UINT driveType = GetDriveType(root);
+    uint driveType = GetDriveType(root);
     switch (driveType) {
         case DRIVE_REMOVABLE:
         case DRIVE_CDROM:
@@ -356,7 +356,7 @@ bool IsOnFixedDrive(const WCHAR* path) {
         return false;
     }
 
-    UINT type;
+    uint type;
     WCHAR root[MAX_PATH];
     if (GetVolumePathName(path, root, dimof(root))) {
         type = GetDriveType(root);
@@ -741,7 +741,7 @@ bool RemoveAll(const WCHAR* dir) {
     AutoFreeWstr path = AllocArray<WCHAR>(n);
     str::BufSet(path, n, dir);
     FILEOP_FLAGS flags = FOF_NO_UI;
-    UINT op = FO_DELETE;
+    uint op = FO_DELETE;
     SHFILEOPSTRUCTW shfo = {nullptr, op, path, nullptr, flags, FALSE, nullptr, nullptr};
     int res = SHFileOperationW(&shfo);
     return res == 0;

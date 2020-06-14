@@ -52,7 +52,7 @@ public:
     }
 
     // IThumbnailProvider
-    IFACEMETHODIMP GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha);
+    IFACEMETHODIMP GetThumbnail(uint cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha);
 
     // IInitializeWithStream
     IFACEMETHODIMP Initialize(IStream *pStm, DWORD grfMode) {
@@ -232,7 +232,7 @@ protected:
     Rect       m_rcParent;
     // for IExtractImage2
     const WCHAR*m_clsid;
-    UINT        m_extractCx;
+    uint        m_extractCx;
     FILETIME    m_dateStamp;
 
     virtual EngineBase *LoadEngine(IStream *stream) = 0;

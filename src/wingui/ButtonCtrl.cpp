@@ -24,7 +24,7 @@ ButtonCtrl::~ButtonCtrl() {
 
 static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (ButtonCtrl*)user;
-    UINT msg = ev->msg;
+    uint msg = ev->msg;
     CrashIf(msg != WM_COMMAND);
     WPARAM wp = ev->wp;
 
@@ -64,7 +64,7 @@ Size ButtonCtrl::GetIdealSize() {
 Size ButtonCtrl::SetTextAndResize(const WCHAR* s) {
     win::SetText(this->hwnd, s);
     Size size = this->GetIdealSize();
-    UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
+    uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
     SetWindowPos(this->hwnd, nullptr, 0, 0, size.dx, size.dy, flags);
     return size;
 }

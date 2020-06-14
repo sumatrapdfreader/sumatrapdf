@@ -292,7 +292,7 @@ static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& i, bool isF
         dm->SetScrollState(ss);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
-        UINT page;
+        uint page;
         Vec<Rect> rects;
         AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));
         int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
@@ -993,7 +993,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     if (showStartPage) {
         // make the shell prepare the image list, so that it's ready when the first window's loaded
         SHFILEINFOW sfi = {0};
-        UINT flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
+        uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
         SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flags);
     }
 

@@ -359,7 +359,7 @@ void ShowExportedBookmarksMsg(const char* path) {
     msg.AppendFmt("Exported bookmarks to file %s", path);
     str::Str caption;
     caption.Append("Exported bookmarks");
-    UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
+    uint type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
     MessageBoxA(nullptr, msg.Get(), caption.Get(), type);
 }
 
@@ -633,7 +633,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
     if (showBookmarksMenu) {
         HMENU popupSort = BuildMenuFromMenuDef(menuDefSortByTag, CreatePopupMenu());
-        UINT flags = MF_BYCOMMAND | MF_ENABLED | MF_POPUP;
+        uint flags = MF_BYCOMMAND | MF_ENABLED | MF_POPUP;
         InsertMenuW(popup, 0, flags, (UINT_PTR)popupSort, _TR_TODO("Sort By"));
 
         win::menu::SetChecked(popupSort, CmdSortTagSmallFirst, false);
@@ -710,7 +710,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 
     MarkMenuOwnerDraw(popup);
-    UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
+    uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
@@ -877,7 +877,7 @@ void LoadTocTree(WindowInfo* win) {
         treeCtrl->onTreeItemCustomDraw = OnTocCustomDraw;
     }
     LayoutTreeContainer(win->tocLabelWithClose, win->altBookmarks, win->tocTreeCtrl->hwnd);
-    // UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    // uint fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     // RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
 

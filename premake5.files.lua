@@ -404,6 +404,7 @@ function sumatrapdf_files()
     "Canvas.*",
     "CanvasAboutUI.*",
     "ChmModel.*",
+    "Commands.*",
     "CrashHandler.*",
     "DisplayModel.*",
     "Doc.*",

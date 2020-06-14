@@ -736,7 +736,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         }
 
         bool renderOutOfDateCue = false;
-        UINT renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
+        uint renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
             AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
@@ -1282,17 +1282,17 @@ static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPAR
 
 ///// methods needed for all types of canvas /////
 
-void WindowInfo::RepaintAsync(UINT delay) {
+void WindowInfo::RepaintAsync(int delayInMs) {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    uitask::Post([this, delay] {
+    uitask::Post([this, delayInMs] {
         if (!WindowInfoStillValid(this)) {
             return;
         }
-        if (!delay) {
+        if (!delayInMs) {
             WndProcCanvas(hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
         } else if (!delayedRepaintTimer) {
-            delayedRepaintTimer = SetTimer(this->hwndCanvas, REPAINT_TIMER_ID, delay, nullptr);
+            delayedRepaintTimer = SetTimer(this->hwndCanvas, REPAINT_TIMER_ID, (uint)delayInMs, nullptr);
         }
     });
 }

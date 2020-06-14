@@ -60,7 +60,7 @@ static void OnImageCtrlPaint(ImageCtrl* w, COLORREF bgCol) {
 }
 
 static void ImageCtrlWndProc(WndEvent* ev) {
-    UINT msg = ev->msg;
+    uint msg = ev->msg;
     if (WM_ERASEBKGND == msg) {
         ev->didHandle = true;
         // do nothing, helps to avoid flicker
@@ -101,7 +101,7 @@ bool ImageCtrl::Create() {
 }
 
 Size ImageCtrl::GetIdealSize() {
-    UINT dx = bmp->GetWidth();
-    UINT dy = bmp->GetHeight();
+    uint dx = bmp->GetWidth();
+    uint dy = bmp->GetHeight();
     return Size{(int)dx, (int)dy};
 }

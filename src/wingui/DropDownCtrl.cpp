@@ -46,7 +46,7 @@ static void DispatchSelectionChanged(DropDownCtrl* w, WndEvent* ev) {
 
 static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (DropDownCtrl*)user;
-    UINT msg = ev->msg;
+    uint msg = ev->msg;
     CrashIf(msg != WM_COMMAND);
     WPARAM wp = ev->wp;
     auto code = HIWORD(wp);

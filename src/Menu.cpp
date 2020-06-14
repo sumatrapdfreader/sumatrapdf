@@ -261,6 +261,25 @@ static MenuDef menuDefContext[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
 
+static MenuDef menuDefCreateAnnot[] = {
+    { _TR_TODON("Text"), CmdCreateAnnotText, 0 },
+    { _TR_TODON("Free Text"), CmdCreateAnnotFreeText, 0 },
+    { _TR_TODON("Stamp"), CmdCreateAnnotStamp, 0 },
+    { _TR_TODON("Caret"), CmdCreateAnnotCaret, 0 },
+    { _TR_TODON("Ink"), CmdCreateAnnotInk, 0 },
+    { _TR_TODON("Square"), CmdCreateAnnotSquare, 0 },
+    { _TR_TODON("Circle"), CmdCreateAnnotCircle, 0 },
+    { _TR_TODON("Line"), CmdCreateAnnotLine, 0 },
+    { _TR_TODON("Polygon"), CmdCreateAnnotPolygon, 0 },
+    { _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, 0 },
+    { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, 0 },
+    { _TR_TODON("Underline"), CmdCreateAnnotUnderline, 0 },
+    { _TR_TODON("Strike Out"), CmdCreateAnnotStrikeOut, 0 },
+    { _TR_TODON("Squiggly"), CmdCreateAnnotSquiggly, 0 },
+    { _TR_TODON("File Attachment"), CmdCreateAnnotFileAttachment, 0 },
+    { _TR_TODON("Redact"), CmdCreateAnnotRedact, 0 },
+};
+ 
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               CmdOpenSelectedDocument,   MF_REQ_DISK_ACCESS },

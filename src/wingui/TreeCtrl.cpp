@@ -88,7 +88,7 @@ static void DragEnd(TreeCtrl* w) {
 static void DispatchMouseDuringDrag(void* user, WndEvent* ev) {
     auto w = (TreeCtrl*)user;
     ev->w = w;
-    UINT msg = ev->msg;
+    uint msg = ev->msg;
 
     CrashIf(!w->isDragging);
 
@@ -145,7 +145,7 @@ static void DragStart(TreeCtrl* w, NMTREEVIEWW* nmtv) {
     w->isDragging = true;
 }
 
-static void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree) {
+static void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree) {
     while (hItem) {
         TreeView_Expand(hTree, hItem, flag);
         HTREEITEM child = TreeView_GetChild(hTree, hItem);
@@ -192,7 +192,7 @@ static void TreeViewToggle(TreeCtrl* tree, HTREEITEM hItem, bool recursive) {
     if (!item) {
         return;
     }
-    UINT flag = TVE_EXPAND;
+    uint flag = TVE_EXPAND;
     bool isExpanded = bitmask::IsSet(item->state, TVIS_EXPANDED);
     if (isExpanded) {
         flag = TVE_COLLAPSE;
@@ -204,15 +204,15 @@ static void TreeViewToggle(TreeCtrl* tree, HTREEITEM hItem, bool recursive) {
     }
 }
 
-static void SetTreeItemState(UINT uState, TreeItemState& state) {
+static void SetTreeItemState(uint uState, TreeItemState& state) {
     state.isExpanded = bitmask::IsSet(uState, TVIS_EXPANDED);
     state.isSelected = bitmask::IsSet(uState, TVIS_SELECTED);
-    UINT n = (uState >> 12) - 1;
+    uint n = (uState >> 12) - 1;
     state.isChecked = n != 0;
 }
 
 static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
-    UINT msg = ev->msg;
+    uint msg = ev->msg;
 
     CrashIf(msg != WM_NOTIFY);
 
@@ -599,7 +599,7 @@ void TreeCtrl::Clear() {
     ::SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
     TreeView_DeleteAllItems(hwnd);
     SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
-    UINT flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     ::RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
@@ -659,11 +659,11 @@ TreeItem* TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
 }
 
 void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes) {
-    UINT mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
+    uint mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
     tvitem->mask = mask;
 
-    UINT stateMask = TVIS_EXPANDED;
-    UINT state = 0;
+    uint stateMask = TVIS_EXPANDED;
+    uint state = 0;
     if (ti->IsExpanded()) {
         state = TVIS_EXPANDED;
     }
@@ -671,8 +671,8 @@ void FillTVITEM(TVITEMEXW* tvitem, TreeItem* ti, bool withCheckboxes) {
     if (withCheckboxes) {
         stateMask |= TVIS_STATEIMAGEMASK;
         bool isChecked = ti->IsChecked();
-        UINT imgIdx = isChecked ? 2 : 1;
-        UINT imgState = INDEXTOSTATEIMAGEMASK(imgIdx);
+        uint imgIdx = isChecked ? 2 : 1;
+        uint imgState = INDEXTOSTATEIMAGEMASK(imgIdx);
         state |= imgState;
     }
 
@@ -752,7 +752,7 @@ void TreeCtrl::SetTreeModel(TreeModel* tm) {
     PopulateTree(this, tm);
     ResumeRedraw();
 
-    UINT flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 

@@ -28,7 +28,7 @@ TrackbarCtrl::TrackbarCtrl(HWND p) : WindowBase(p) {
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-hscroll--trackbar-
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
 static void Handle_WM_VHSCROLL(void* user, WndEvent* ev) {
-    UINT msg = ev->msg;
+    uint msg = ev->msg;
     CrashIf(!((msg == WM_VSCROLL) || (msg == WM_HSCROLL)));
 
     TrackbarCtrl* w = (TrackbarCtrl*)user;

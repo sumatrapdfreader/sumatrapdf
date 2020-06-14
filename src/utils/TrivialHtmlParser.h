@@ -25,7 +25,7 @@ struct HtmlElement {
     char* name; // name is nullptr whenever tag != Tag_NotFound
     HtmlAttr* firstAttr;
     HtmlElement *up, *down, *next;
-    UINT codepage;
+    uint codepage;
 
     bool NameIs(const char* name) const;
     bool NameIsNS(const char* name, const char* ns) const;
@@ -43,7 +43,7 @@ class HtmlParser {
     // by the caller
     bool freeHtml;
     // the codepage used for converting text to Unicode
-    UINT codepage;
+    uint codepage;
 
     size_t elementsCount;
     size_t attributesCount;

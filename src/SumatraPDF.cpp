@@ -407,7 +407,7 @@ WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
 WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab) {
     for (WindowInfo* win : gWindows) {
         Vec<Rect> rects;
-        UINT page;
+        uint page;
         auto dm = win->AsFixed();
         if (dm && dm->pdfSync && dm->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
@@ -563,14 +563,14 @@ bool IsUIRightToLeft() {
     return trans::IsCurrLangRtl();
 }
 
-UINT MbRtlReadingMaybe() {
+uint MbRtlReadingMaybe() {
     if (IsUIRightToLeft())
         return MB_RTLREADING;
     return 0;
 }
 
 void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
-    UINT type = MB_OK | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
+    uint type = MB_OK | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
     if (!title)
         title = _TR("Warning");
     MessageBox(hwnd, msg, title, type);
@@ -847,7 +847,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
 
         if (ZOOM_FIT_PAGE != dm->GetZoomVirtual()) {
             // keep the top/bottom 5% of the previous page visible after paging down/up
-            si.nPage = (UINT)(si.nPage * 0.95);
+            si.nPage = (uint)(si.nPage * 0.95);
             si.nMax -= viewPort.dy - si.nPage;
         }
     }
@@ -3473,7 +3473,7 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
     ShowWindow(win->hwndCaption, SW_HIDE);
 
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
-    UINT flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
+    uint flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
     SetWindowPos(win->hwndFrame, nullptr, rect.x, rect.y, rect.dx, rect.dy, flags);
 
     if (presentation) {
@@ -3526,7 +3526,7 @@ void ExitFullScreen(WindowInfo* win) {
 
     Rect cr = ClientRect(win->hwndFrame);
     SetWindowLong(win->hwndFrame, GWL_STYLE, win->nonFullScreenWindowStyle);
-    UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
+    uint flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
     SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, flags);
     MoveWindow(win->hwndFrame, win->nonFullScreenFrameRect);
     // TODO: this CrashIf() fires in pre-release e.g. 64011
@@ -3899,7 +3899,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
 
     if (key >= 0x100 && info && !IsCtrlPressed() && !IsAltPressed()) {
         // determine the intended keypress by scan code for non-Latin keyboard layouts
-        UINT vk = MapVirtualKeyW((info >> 16) & 0xFF, MAPVK_VSC_TO_VK);
+        uint vk = MapVirtualKeyW((info >> 16) & 0xFF, MAPVK_VSC_TO_VK);
         if ('A' <= vk && vk <= 'Z') {
             key = vk;
         }
@@ -4936,7 +4936,7 @@ void ShowCrashHandlerMessage() {
 #endif
 
     char* msg = "We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.";
-    UINT flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
+    uint flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
     flags |= MB_SETFOREGROUND | MB_TOPMOST;
 
     int res = MessageBoxA(nullptr, msg, "SumatraPDF crashed", flags);
@@ -4975,7 +4975,7 @@ static void DownloadDebugSymbols() {
     } else {
         msg = str::Dup("Failed to download symbols.");
     }
-    UINT flags = MB_ICONINFORMATION | MB_OK | MbRtlReadingMaybe();
+    uint flags = MB_ICONINFORMATION | MB_OK | MbRtlReadingMaybe();
     MessageBoxA(nullptr, msg, "Downloading symbols", flags);
 
     free(msg);

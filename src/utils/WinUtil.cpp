@@ -582,7 +582,7 @@ DWORD GetFileVersion(const WCHAR* path) {
 
     if (versionInfo && GetFileVersionInfo(path, 0, size, versionInfo)) {
         VS_FIXEDFILEINFO* fileInfo;
-        UINT len;
+        uint len;
         if (VerQueryValue(versionInfo, L"\\", (LPVOID*)&fileInfo, &len)) {
             fileVersion = fileInfo->dwFileVersionMS;
         }
@@ -763,7 +763,7 @@ void PaintLine(HDC hdc, const Rect& rect) {
 void DrawCenteredText(HDC hdc, const Rect& r, const WCHAR* txt, bool isRTL) {
     SetBkMode(hdc, TRANSPARENT);
     RECT tmpRect = r.ToRECT();
-    UINT format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+    uint format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
     if (isRTL) {
         format |= DT_RTLREADING;
     }
@@ -1106,7 +1106,7 @@ void DeferWinPosHelper::End() {
     }
 }
 
-void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, UINT uFlags) {
+void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags) {
     hdwp = ::DeferWindowPos(hdwp, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
 }
 
@@ -1294,7 +1294,7 @@ bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset
     return SUCCEEDED(res) && read == len;
 }
 
-UINT GuessTextCodepage(const char* data, size_t len, UINT defVal) {
+uint GuessTextCodepage(const char* data, size_t len, uint defVal) {
     // try to guess the codepage
     ScopedComPtr<IMultiLanguage2> pMLang;
     if (!pMLang.Create(CLSID_CMultiLanguage))
@@ -1593,8 +1593,8 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
         RGBQUAD palette[256];
         HDC hDC = CreateCompatibleDC(nullptr);
         DeleteObject(SelectObject(hDC, hbmp));
-        UINT num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
-        for (UINT i = 0; i < num; i++) {
+        uint num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
+        for (uint i = 0; i < num; i++) {
             palette[i].rgbRed = (u8)(base[2] + mul255(palette[i].rgbRed, diff[2]));
             palette[i].rgbGreen = (u8)(base[1] + mul255(palette[i].rgbGreen, diff[1]));
             palette[i].rgbBlue = (u8)(base[0] + mul255(palette[i].rgbBlue, diff[0]));
@@ -1758,7 +1758,7 @@ BOOL SafeCloseHandle(HANDLE* h) {
 void RunNonElevated(const WCHAR* exePath) {
     AutoFreeWstr cmd, explorerPath;
     WCHAR buf[MAX_PATH] = {0};
-    UINT res = GetWindowsDirectory(buf, dimof(buf));
+    uint res = GetWindowsDirectory(buf, dimof(buf));
     if (0 == res || res >= dimof(buf)) {
         goto Run;
     }
@@ -1807,7 +1807,7 @@ void ResizeWindow(HWND hwnd, int dx, int dy) {
 }
 
 void MessageBoxWarningSimple(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
-    UINT type = MB_OK | MB_ICONEXCLAMATION;
+    uint type = MB_OK | MB_ICONEXCLAMATION;
     if (!title) {
         title = L"Warning";
     }
@@ -1874,7 +1874,7 @@ bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
     HSZ hszServer = nullptr, hszTopic = nullptr;
     HCONV hconv = nullptr;
     bool ok = false;
-    UINT result = 0;
+    uint result = 0;
     DWORD cbLen = 0;
     HDDEDATA answer;
 
@@ -2148,7 +2148,7 @@ Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
     HGDIOBJ prev = SelectObject(dc, font);
 
     RECT r{};
-    UINT fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
+    uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
     DrawTextExW(dc, (WCHAR*)txt, (int)txtLen, &r, fmt, nullptr);
     SelectObject(dc, prev);
     ReleaseDC(hwnd, dc);

@@ -160,7 +160,7 @@ struct LoadArgs {
 WindowInfo* LoadDocument(LoadArgs& args);
 WindowInfo* CreateAndShowWindowInfo(SessionData* data = nullptr);
 
-UINT MbRtlReadingMaybe();
+uint MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title = nullptr);
 void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd);
 bool DocumentPathExists(const WCHAR* path);

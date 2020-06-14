@@ -581,7 +581,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
         if (rc.x + rc.dx > rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING)
             rc.dx = rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING - rc.x;
         rTmp = rc.ToRECT();
-        UINT format = DT_LEFT | DT_NOPREFIX | (el->isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);
+        uint format = DT_LEFT | DT_NOPREFIX | (el->isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);
         DrawText(hdc, txt, -1, &rTmp, format);
     }
 

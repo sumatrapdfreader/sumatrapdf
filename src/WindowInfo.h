@@ -226,7 +226,7 @@ class WindowInfo {
     void UpdateCanvasSize();
     Size GetViewPortSize();
     void RedrawAll(bool update = false);
-    void RepaintAsync(UINT delay = 0);
+    void RepaintAsync(int delay = 0);
 
     void ChangePresentationMode(PresentationMode mode);
 

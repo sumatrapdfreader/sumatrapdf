@@ -171,10 +171,10 @@ void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) {
     CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
     int x = (int)bb.X;
     int y = (int)bb.Y;
-    UINT opts = ETO_OPAQUE;
+    uint opts = ETO_OPAQUE;
     if (isRtl)
         opts = opts | ETO_RTLREADING;
-    ExtTextOut(hdcGfxLocked, x, y, opts, nullptr, s, (UINT)sLen, nullptr);
+    ExtTextOut(hdcGfxLocked, x, y, opts, nullptr, s, (uint)sLen, nullptr);
 #endif
 }
 
@@ -256,10 +256,10 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, RectF& bb, bool
 #if 0
     TextOut(memHdc, 0, 0, s, sLen);
 #else
-    UINT opts = 0; // ETO_OPAQUE;
+    uint opts = 0; // ETO_OPAQUE;
     if (isRtl)
         opts = opts | ETO_RTLREADING;
-    ExtTextOut(memHdc, 0, 0, opts, nullptr, s, (UINT)sLen, nullptr);
+    ExtTextOut(memHdc, 0, 0, opts, nullptr, s, (uint)sLen, nullptr);
 #endif
 
     BLENDFUNCTION bf = {};
@@ -438,14 +438,14 @@ void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) {
     CrashIf(!hdc);
     int x = (int)bb.X;
     int y = (int)bb.Y;
-    UINT opts = ETO_OPAQUE;
+    uint opts = ETO_OPAQUE;
 #if 0
     if (isRtl)
         opts = opts | ETO_RTLREADING;
 #else
     UNUSED(isRtl);
 #endif
-    ExtTextOut(hdc, x, y, opts, nullptr, s, (UINT)sLen, nullptr);
+    ExtTextOut(hdc, x, y, opts, nullptr, s, (uint)sLen, nullptr);
 }
 
 TextRenderHdc::~TextRenderHdc() {

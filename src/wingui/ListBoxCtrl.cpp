@@ -66,7 +66,7 @@ static void DispatchSelectionChanged(ListBoxCtrl* w, WndEvent* ev) {
 
 static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
     auto w = (ListBoxCtrl*)user;
-    UINT msg = ev->msg;
+    uint msg = ev->msg;
     CrashIf(msg != WM_COMMAND);
     WPARAM wp = ev->wp;
     auto code = HIWORD(wp);

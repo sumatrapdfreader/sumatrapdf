@@ -73,7 +73,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
 
     int x = DpiScale(w->hwnd, w->padX);
     int y = DpiScale(w->hwnd, w->padY);
-    UINT opts = ETO_OPAQUE;
+    uint opts = ETO_OPAQUE;
     if (IsRtl(w->hwnd)) {
         opts = opts | ETO_RTLREADING;
     }
@@ -86,7 +86,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     SetBkColor(hdc, w->bgCol);
 
     WCHAR* s = win::GetText(w->hwnd);
-    ExtTextOut(hdc, x, y, opts, nullptr, s, (UINT)str::Len(s), nullptr);
+    ExtTextOut(hdc, x, y, opts, nullptr, s, (uint)str::Len(s), nullptr);
     free(s);
 
     // Text might be too long and invade close button area. We just re-paint

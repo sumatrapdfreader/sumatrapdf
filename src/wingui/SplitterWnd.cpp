@@ -95,7 +95,7 @@ SplitterCtrl::~SplitterCtrl() {
 }
 
 static void SplitterCtrlWndProc(WndEvent* ev) {
-    UINT msg = ev->msg;
+    uint msg = ev->msg;
     if (WM_ERASEBKGND == msg) {
         ev->didHandle = true;
         // TODO: should this be FALSE?

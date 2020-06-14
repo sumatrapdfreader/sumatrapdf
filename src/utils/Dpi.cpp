@@ -37,7 +37,7 @@ always call GetDpiXY() ?
 
 static HWND gLastHwndParent = nullptr;
 static HWND gLastHwnd = nullptr;
-static UINT gLastDpi = 0;
+static uint gLastDpi = 0;
 
 void DpiReset() {
     gLastHwndParent = nullptr;
@@ -53,7 +53,7 @@ int DpiGetForHwnd(HWND hwnd) {
         if (hwnd == HWND_DESKTOP) {
             hwnd = GetDesktopWindow();
         }
-        UINT dpi = DynGetDpiForWindow(hwnd);
+        uint dpi = DynGetDpiForWindow(hwnd);
         // returns 0 for HWND_DESKTOP,
         if (dpi > 0) {
             CrashIf(dpi < 72);
@@ -63,7 +63,7 @@ int DpiGetForHwnd(HWND hwnd) {
 
 #if 0
     // TODO: only available in 8.1
-    UINT dpiX = 96, dpiY = 96;
+    uint dpiX = 96, dpiY = 96;
     HMONITOR h = MonitorFromWindow(hwnd, 0);
     if (h != nullptr ) {
         HRESULT hr = GetDpiForMonitor(h, 0 /* MDT_Effective_DPI */, &dpiX, &dpiY);

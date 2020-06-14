@@ -212,7 +212,7 @@ static void Paint(TabsCtrl* ctrl) {
     FillRect(hdc, &rc, brush);
 
     ScopedSelectFont f(hdc, priv->font);
-    UINT opts = ETO_OPAQUE;
+    uint opts = ETO_OPAQUE;
 
     int padLeft = PADDING_LEFT;
     DpiScale(priv->hwnd, padLeft);
@@ -260,7 +260,7 @@ static void Paint(TabsCtrl* ctrl) {
         int x = pos.x;
         int y = pos.y;
         const WCHAR* s = ti->title.c_str();
-        UINT sLen = (UINT)ti->title.size();
+        uint sLen = (uint)ti->title.size();
         ExtTextOutW(hdc, x, y, opts, nullptr, s, sLen, nullptr);
 
         if (paintClose) {

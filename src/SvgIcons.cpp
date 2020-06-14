@@ -263,7 +263,7 @@ HBITMAP CreateBitmapFromPixmap(fz_pixmap* pixmap) {
     HANDLE hFile = INVALID_HANDLE_VALUE;
     DWORD fl = PAGE_READWRITE;
     HANDLE hMap = CreateFileMappingW(hFile, nullptr, fl, 0, imgSize, nullptr);
-    UINT usage = DIB_RGB_COLORS;
+    uint usage = DIB_RGB_COLORS;
     HBITMAP hbmp = CreateDIBSection(nullptr, bmi, usage, &data, hMap, 0);
     if (data) {
         u8* samples = pixmap->samples;

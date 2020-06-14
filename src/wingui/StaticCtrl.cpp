@@ -34,7 +34,7 @@ static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
 // static
 void Handle_WM_CTLCOLORSTATIC(void* user, WndEvent* ev) {
     auto w = (StaticCtrl*)user;
-    UINT msg = ev->msg;
+    uint msg = ev->msg;
     CrashIf(msg != WM_CTLCOLORSTATIC);
     HDC hdc = (HDC)ev->wp;
     if (w->textColor != ColorUnset) {

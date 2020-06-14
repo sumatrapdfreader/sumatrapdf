@@ -491,7 +491,7 @@ void TocEditorWindow::TreeContextMenu(ContextMenuEvent* ev) {
     }
 
     MarkMenuOwnerDraw(popup);
-    UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
+    uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, hwnd, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
@@ -695,7 +695,7 @@ static void ShowSavedAsPdfMsg(const char* path) {
     msg.AppendFmt("Saved as PDF file %s", path);
     str::Str caption;
     caption.Append("Saved as PDF");
-    UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
+    uint type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
     MessageBoxA(nullptr, msg.Get(), caption.Get(), type);
 }
 

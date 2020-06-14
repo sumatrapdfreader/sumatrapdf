@@ -302,7 +302,7 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     HR(pConverter->Initialize(srcFrame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone, nullptr, 0.f,
                               WICBitmapPaletteTypeCustom));
 
-    UINT w, h;
+    uint w, h;
     HR(pConverter->GetSize(&w, &h));
     double xres, yres;
     HR(pConverter->GetResolution(&xres, &yres));
@@ -596,7 +596,7 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
 
 CLSID GetEncoderClsid(const WCHAR* format) {
     CLSID null = {0};
-    UINT numEncoders, size;
+    uint numEncoders, size;
     Status ok = Gdiplus::GetImageEncodersSize(&numEncoders, &size);
     if (ok != Ok || 0 == size)
         return null;
@@ -604,7 +604,7 @@ CLSID GetEncoderClsid(const WCHAR* format) {
     if (!codecInfo)
         return null;
     GetImageEncoders(numEncoders, size, codecInfo);
-    for (UINT j = 0; j < numEncoders; j++) {
+    for (uint j = 0; j < numEncoders; j++) {
         if (str::Eq(codecInfo[j].MimeType, format)) {
             return codecInfo[j].Clsid;
         }

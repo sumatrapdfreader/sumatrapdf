@@ -324,17 +324,17 @@ char* getWinMessageName(UINT msg) {
 
 // we might want to not show frequently posted messages
 // clang-format off
-UINT gToIgnore[] = {
+uint gMsgToIgnore[] = {
     WM_NCHITTEST,
     WM_SETCURSOR,
     WM_MOUSEMOVE,
 };
 // clang-format on
 
-static bool shouldIgnoreMsg(UINT msg) {
-    int n = (int)dimof(gToIgnore);
+static bool shouldIgnoreMsg(uint msg) {
+    int n = (int)dimof(gMsgToIgnore);
     for (int i = 0; i < n; i++) {
-        if (gToIgnore[i] == msg) {
+        if (gMsgToIgnore[i] == msg) {
             return true;
         }
     }

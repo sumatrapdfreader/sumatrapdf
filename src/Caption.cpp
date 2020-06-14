@@ -312,7 +312,7 @@ void OpenSystemMenu(WindowInfo* win) {
     RECT rc;
     GetWindowRect(hwndSysMenu, &rc);
 
-    UINT flags = 0;
+    uint flags = 0;
     TrackPopupMenuEx(systemMenu, flags, rc.left, rc.bottom, win->hwndFrame, nullptr);
 }
 
@@ -492,7 +492,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
     DoubleBuffer buffer(item->hwndItem, rButton);
     HDC memDC = buffer.GetDC();
 
-    UINT button = item->CtlID - BTN_ID_FIRST;
+    int button = item->CtlID - BTN_ID_FIRST;
     ButtonInfo* bi = &win->caption->btn[button];
     Rect rc(rButton);
     rc.x += bi->margins.left;
@@ -501,7 +501,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
     rc.dy -= bi->margins.top + bi->margins.bottom;
 
     int partId = 0, stateId;
-    UINT state = (UINT)-1;
+    uint state = (uint)-1;
     switch (button) {
         case CB_MINIMIZE:
             partId = WP_MINBUTTON;
@@ -723,7 +723,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
             case WM_NCACTIVATE:
                 win->caption->UpdateColors((bool)wp);
                 if (!IsIconic(hwnd)) {
-                    UINT flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
+                    uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
                     RedrawWindow(win->hwndCaption, nullptr, nullptr, flags);
                 }
                 break;
@@ -746,7 +746,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
                     win->caption->btn[i].inactive = wp == FALSE;
                 if (!IsIconic(hwnd)) {
                     DrawFrame(hwnd, win->caption->bgColor);
-                    UINT flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
+                    uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
                     RedrawWindow(win->hwndCaption, nullptr, nullptr, flags);
                     *callDef = false;
                     return TRUE;
@@ -819,7 +819,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
             // Prepare and show the system menu.
             if (wp == HTCAPTION) {
                 HMENU menu = GetUpdatedSystemMenu(hwnd, true);
-                UINT flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
+                uint flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
                 if (GetSystemMetrics(SM_MENUDROPALIGNMENT)) {
                     flags |= TPM_RIGHTALIGN;
                 }
@@ -873,7 +873,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
         case WM_DWMCOLORIZATIONCOLORCHANGED:
             win->caption->UpdateColors(hwnd == GetForegroundWindow());
             if (!IsIconic(hwnd)) {
-                UINT flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
+                uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
                 RedrawWindow(win->hwndCaption, nullptr, nullptr, flags);
             }
             break;

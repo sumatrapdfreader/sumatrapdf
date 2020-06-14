@@ -13,9 +13,9 @@ namespace mui {
 static bool BitmapNotBigEnough(Bitmap* bmp, int dx, int dy) {
     if (nullptr == bmp)
         return true;
-    if (bmp->GetWidth() < (UINT)dx)
+    if (bmp->GetWidth() < (uint)dx)
         return true;
-    if (bmp->GetHeight() < (UINT)dy)
+    if (bmp->GetHeight() < (uint)dy)
         return true;
     return false;
 }

@@ -631,7 +631,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     }
 
     ack.fAck = 1;
-    UINT page;
+    uint page;
     Vec<Rect> rects;
     int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
     ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
@@ -741,7 +741,7 @@ static const WCHAR* HandlePageCmd(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
     UNUSED(hwnd);
 
     AutoFreeWstr pdfFile;
-    UINT page = 0;
+    uint page = 0;
     const WCHAR* next = str::Parse(cmd, L"[GotoPage(\"%S\",%u)]", &pdfFile, &page);
     if (!next) {
         return nullptr;

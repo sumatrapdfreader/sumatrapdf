@@ -227,7 +227,7 @@ void UpdateFindbox(WindowInfo* win) {
 
 static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR* fileName, INT resourceId, bool useDibSection) {
     AutoFreeWstr path(AppGenDataFilename(fileName));
-    UINT flags = useDibSection ? LR_CREATEDIBSECTION : 0;
+    uint flags = useDibSection ? LR_CREATEDIBSECTION : 0;
     if (path) {
         HBITMAP hBmp = (HBITMAP)LoadImageW(nullptr, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | flags);
         if (hBmp) {
@@ -699,7 +699,7 @@ void CreateToolbar(WindowInfo* win) {
             size.dx *= scaleX;
             size.dy *= scaleY;
 
-            UINT flags = LR_COPYDELETEORG;
+            uint flags = LR_COPYDELETEORG;
             if (useDibSection) {
                 flags |= LR_CREATEDIBSECTION;
             }

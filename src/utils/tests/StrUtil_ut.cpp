@@ -266,7 +266,7 @@ void StrTest() {
 
     str = L"[Open(\"filename.pdf\",0,1,0)]";
     {
-        UINT u1 = 0;
+        uint u1 = 0;
         WCHAR* str1 = nullptr;
         const WCHAR* end = str::Parse(str, L"[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
         utassert(end && !*end);
@@ -275,7 +275,7 @@ void StrTest() {
     }
 
     {
-        UINT u1 = 0;
+        uint u1 = 0;
         AutoFreeWstr str1;
         const WCHAR* end = str::Parse(str, L"[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
         utassert(end && !*end);

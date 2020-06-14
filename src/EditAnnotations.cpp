@@ -49,7 +49,6 @@ constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
 
 // clang-format off
-// TODO: more
 static const char* gAnnotationTypes = "Text\0Free Text\0Stamp\0Caret\0Ink\0Square\0Circle\0Line\0Polygon\0";
 static const char *gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
 static const char *gSoundIcons = "Speaker\0Mic\0";

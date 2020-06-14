@@ -23,7 +23,7 @@ DBGHELP_API_LIST(API_DECLARATION)
 static HMODULE SafeLoadLibrary(const char* dllNameA) {
     AutoFreeWstr dllName = strconv::Utf8ToWstr(dllNameA);
     WCHAR dllPath[MAX_PATH];
-    UINT res = GetSystemDirectoryW(dllPath, dimof(dllPath));
+    uint res = GetSystemDirectoryW(dllPath, dimof(dllPath));
     if (!res || res >= dimof(dllPath)) {
         return nullptr;
     }
