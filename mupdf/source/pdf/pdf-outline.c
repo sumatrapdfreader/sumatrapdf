@@ -20,7 +20,7 @@ pdf_parse_color(fz_context *ctx, pdf_obj *arr, float *color)
 		obj = pdf_array_get(ctx, arr, i);
 		color[i] = pdf_to_real(ctx, obj);
 	}
-	return 1;
+	return n;
 }
 
 static fz_outline *
