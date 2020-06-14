@@ -138,9 +138,6 @@
     <ClInclude Include="..\src\SumatraAbout.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SumatraAbout2.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SumatraDialogs.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -381,9 +378,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SumatraAbout.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SumatraAbout2.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SumatraConfig.cpp">

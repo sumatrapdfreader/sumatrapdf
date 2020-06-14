@@ -441,7 +441,6 @@ function sumatrapdf_files()
     "SumatraStartup.cpp",
     "SumatraConfig.cpp",
     "SumatraAbout.*",
-    "SumatraAbout2.*",
     "SumatraDialogs.*",
     "SumatraProperties.*",
     "StressTesting.*",

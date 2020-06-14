@@ -75,11 +75,7 @@
 #include "SearchAndDDE.h"
 #include "Selection.h"
 #include "StressTesting.h"
-#ifdef ENABLE_ALTERNATIVE_ABOUT_DIALOG
-#include "SumatraAbout2.h"
-#else
 #include "SumatraAbout.h"
-#endif
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "TableOfContents.h"
@@ -4492,11 +4488,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdHelpAbout:
-#ifdef ENABLE_ALTERNATIVE_ABOUT_DIALOG
-            OnMenuAbout2();
-#else
             OnMenuAbout();
-#endif
             break;
 
         case CmdCheckUpdate:
