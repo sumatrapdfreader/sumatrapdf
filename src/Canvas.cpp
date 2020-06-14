@@ -1182,6 +1182,12 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WP
         case WM_GESTURE:
             return OnGesture(win, msg, wp, lp);
 
+        case WM_NCPAINT:
+            if (gGlobalPrefs->hideScrollbars) {
+                ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+            }
+            return TRUE;
+
         default:
             return DefWindowProc(hwnd, msg, wp, lp);
     }

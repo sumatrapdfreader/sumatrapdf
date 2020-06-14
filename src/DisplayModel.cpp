@@ -185,11 +185,11 @@ Rect DisplayModel::GetViewPort() const {
 }
 
 bool DisplayModel::NeedHScroll() const {
-    return viewPort.dy < totalViewPortSize.dy;
+    return viewPort.dx < canvasSize.dx;
 }
 
 bool DisplayModel::NeedVScroll() const {
-    return viewPort.dx < totalViewPortSize.dx;
+    return viewPort.dy < canvasSize.dy;
 }
 
 Size DisplayModel::GetCanvasSize() const {
@@ -696,8 +696,11 @@ RestartLayout:
         }
         pos.y = currPosY;
 
-        // restart the layout if we detect we need to show scrollbars
-        if (!needVScroll && viewPort.dy < currPosY + rowMaxPageDy) {
+        // restart the layout if we detect we need to show scrollbars, skip if
+        //   scrollbars are being hidden or if `needVScroll` has already been
+        //   set to true (i.e., the block has been processed)
+        if ((!gGlobalPrefs->hideScrollbars) && (!needVScroll)
+                && viewPort.dy < currPosY + rowMaxPageDy) {
             needVScroll = true;
             viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
             goto RestartLayout;
@@ -711,9 +714,13 @@ RestartLayout:
             columnMaxWidth[pageInARow] = pos.dx;
         }
 
-        if (!needHScroll && viewPort.dx < windowMargin.left + columnMaxWidth[0] +
-                                              (columns == 2 ? pageSpacing.dx + columnMaxWidth[1] : 0) +
-                                              windowMargin.right) {
+        // restart the layout if we detect we need to show scrollbars, skip if
+        //   scrollbars are being hidden or if `needHScroll` has already been
+        //   set to true (i.e., the block has been processed)
+        if ((!gGlobalPrefs->hideScrollbars) && (!needHScroll)
+                && viewPort.dx < windowMargin.left + columnMaxWidth[0]
+                + (columns == 2 ? pageSpacing.dx + columnMaxWidth[1] : 0)
+                + windowMargin.right) {
             needHScroll = true;
             viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
             goto RestartLayout;
@@ -738,7 +745,8 @@ RestartLayout:
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
     const int canvasDy = currPosY + windowMargin.bottom - pageSpacing.dy;
-    if (!needVScroll && canvasDy > viewPort.dy) {
+    if ((!gGlobalPrefs->hideScrollbars) && (!needVScroll)
+            && canvasDy > viewPort.dy) {
         needVScroll = true;
         viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
         goto RestartLayout;
@@ -757,7 +765,8 @@ RestartLayout:
     // (there are some edge cases we can't catch in the above loop)
     int canvasDx = windowMargin.left + columnMaxWidth[0] + (columns == 2 ? pageSpacing.dx + columnMaxWidth[1] : 0) +
                    windowMargin.right;
-    if (!needHScroll && canvasDx > viewPort.dx) {
+    if ((!gGlobalPrefs->hideScrollbars) && (!needHScroll)
+            && canvasDx > viewPort.dx) {
         needHScroll = true;
         viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
         goto RestartLayout;
