@@ -177,9 +177,8 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
 
     if (col == AppColor::NotificationsHighlightBg) {
         // yellow-ish background
-        //return MkRgb(0xff, 0xee, 0x70);
+        // return MkRgb(0xff, 0xee, 0x70);
         return RgbToCOLORREF(0xFFEE70);
-        
     }
 
     if (col == AppColor::NotificationsHighlightText) {
