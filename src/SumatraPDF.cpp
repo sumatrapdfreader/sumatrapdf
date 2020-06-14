@@ -4479,11 +4479,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuFindSel(win, TextSearchDirection::Backward);
             break;
 
-        case CmdVisitWebsite:
+        case CmdHelpVisitWebsite:
             SumatraLaunchBrowser(WEBSITE_MAIN_URL);
             break;
 
-        case CmdOpenManualInBrowser:
+        case CmdHelpOpenManualInBrowser:
             SumatraLaunchBrowser(WEBSITE_MANUAL_URL);
             break;
 
@@ -4491,7 +4491,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             SumatraLaunchBrowser(WEBSITE_TRANSLATIONS_URL);
             break;
 
-        case CmdAbout:
+        case CmdHelpAbout:
 #ifdef ENABLE_ALTERNATIVE_ABOUT_DIALOG
             OnMenuAbout2();
 #else

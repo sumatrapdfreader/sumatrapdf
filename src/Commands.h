@@ -67,7 +67,7 @@
     V(Zoom8_33, "Zoom: 8.33%")                                    \
     V(ZoomFitContent, "Zoom: Fit Content")                        \
     V(ZoomCustom, "Zoom: Custom...")                              \
-    V(ZoomIn, "Zoom In")                                        \
+    V(ZoomIn, "Zoom In")                                          \
     V(ZoomOut, "Zoom Out")                                        \
     V(ZoomFitWidthAndContinous, "Zoom: Fit Width And Continous")  \
     V(ZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page") \
@@ -80,13 +80,12 @@
     V(OpenSelectedDocument, "Open Selected Document")             \
     V(PinSelectedDocument, "Pin Selected Document")               \
     V(ForgetSelectedDocument, "Forget Selected Document")         \
-    V(Edit, "Edit")                                               \
-    V(AddSibling, "Add Sibling")                                  \
-    V(AddChild, "Add Child")                                      \
-    V(Remove, "Remove")                                           \
-    V(AddPdfChild, "Add PDF Child")                               \
-    V(AddPdfSibling, "Add PDF Sibling")                           \
-    V(VisitWebsite, "Help: SumatraPDF Website")                   \
+    V(TocEditorStart, "Table of contents: Start Editing")         \
+    V(TocEditorAddSibling, "Add Sibling")                         \
+    V(TocEditorAddChild, "Add Child")                             \
+    V(TocEditorRemoveItem, "Remove")                              \
+    V(TocEditorAddPdfChild, "Add PDF Child")                      \
+    V(TocEditorAddPdfSibling, "Add PDF Sibling")                  \
     V(ExpandAll, "Expand All")                                    \
     V(CollapseAll, "Collapse All")                                \
     V(ExportBookmarks, "Export Bookmarks")                        \
@@ -95,12 +94,13 @@
     V(SortColor, "Sort By Color")                                 \
     V(SaveEmbedded, "Save Embedded")                              \
     V(OpenEmbedded, "Open Embedde")                               \
-    V(About, "Help: About SumatraPDF")                            \
     V(Options, "Options...")                                      \
     V(AdvancedOptions, "Advanced Options...")                     \
     V(ChangeLanguage, "Change Language...")                       \
     V(CheckUpdate, "Check For Update")                            \
-    V(OpenManualInBrowser, "Help: Manual")                        \
+    V(HelpOpenManualInBrowser, "Help: Manual")                    \
+    V(HelpVisitWebsite, "Help: SumatraPDF Website")               \
+    V(HelpAbout, "Help: About SumatraPDF")                        \
     V(MoveFrameFocus, "Move Frame Focus")                         \
     V(FavAdd, "Favorites: Add")                                   \
     V(FavDel, "Favorites: Delete")                                \

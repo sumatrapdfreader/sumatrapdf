@@ -113,9 +113,9 @@ static MenuDef menuDefFile[] = {
     // further entries are added if specified in gGlobalPrefs.vecCommandLine
     { _TRN("Send by &E-mail..."),           CmdSendByEmail,            MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                         MF_REQ_DISK_ACCESS },
-    { _TRN("P&roperties\tCtrl+D"),          CmdProperties,              0 },
-    { SEP_ITEM,                             0,                          0 },
-    { _TRN("E&xit\tCtrl+Q"),                CmdExit,                    0 },
+    { _TRN("P&roperties\tCtrl+D"),          CmdProperties,             0 },
+    { SEP_ITEM,                             0,                         0 },
+    { _TRN("E&xit\tCtrl+Q"),                CmdExit,                   0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP File Menu
@@ -128,16 +128,16 @@ static MenuDef menuDefView[] = {
     { _TRN("Show &Pages Continuously"),     CmdViewContinuous,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
     { _TRN("Man&ga Mode"),                  CmdViewMangaMode,         MF_CBX_ONLY },
-    { SEP_ITEM,                             0,                                MF_NOT_FOR_CHM },
+    { SEP_ITEM,                             0,                        MF_NOT_FOR_CHM },
     { _TRN("Rotate &Left\tCtrl+Shift+-"),   CmdViewRotateLeft,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Rotate &Right\tCtrl+Shift++"),  CmdViewRotateRight,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { SEP_ITEM,                             0,                                MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Pr&esentation\tF5"),            CmdViewPresentationMode,  MF_REQ_FULLSCREEN | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("F&ullscreen\tF11"),             CmdViewFullScreen,        MF_REQ_FULLSCREEN },
-    { SEP_ITEM,                             0,                                MF_REQ_FULLSCREEN },
+    { SEP_ITEM,                             0,                        MF_REQ_FULLSCREEN },
     { _TRN("Show Book&marks\tF12"),         CmdViewBookmarks,         0 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
-    { SEP_ITEM,                             0,                                MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                        MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),          CmdSelectAll,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Copy Selection\tCtrl+C"),      CmdCopySelection,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
@@ -150,12 +150,12 @@ static MenuDef menuDefGoTo[] = {
     { _TRN("&Previous Page\tLeft Arrow"),   CmdGoToPrevPage,         0 },
     { _TRN("&First Page\tHome"),            CmdGoToFirstPage,        0 },
     { _TRN("&Last Page\tEnd"),              CmdGoToLastPage,         0 },
-    { _TRN("Pa&ge...\tCtrl+G"),             CmdGoToPage,              0 },
-    { SEP_ITEM,                             0,                          0 },
+    { _TRN("Pa&ge...\tCtrl+G"),             CmdGoToPage,             0 },
+    { SEP_ITEM,                             0,                       0 },
     { _TRN("&Back\tAlt+Left Arrow"),        CmdGoToNavBack,          0 },
     { _TRN("F&orward\tAlt+Right Arrow"),    CmdGoToNavForward,       0 },
-    { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Fin&d...\tCtrl+F"),             CmdFindFirst,             MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                       MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Fin&d...\tCtrl+F"),             CmdFindFirst,            MF_NOT_FOR_EBOOK_UI },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP GoTo Menu
@@ -167,21 +167,21 @@ static MenuDef menuDefZoom[] = {
     { _TRN("&Actual Size\tCtrl+1"),         CmdZoomActualSize,       MF_NOT_FOR_CHM },
     { _TRN("Fit &Width\tCtrl+2"),           CmdZoomFitWidth,         MF_NOT_FOR_CHM },
     { _TRN("Fit &Content\tCtrl+3"),         CmdZoomFitContent,       MF_NOT_FOR_CHM },
-    { _TRN("Custom &Zoom...\tCtrl+Y"),      CmdZoomCustom,            0 },
-    { SEP_ITEM,                             0,                          0 },
-    { "6400%",                              CmdZoom6400,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "3200%",                              CmdZoom3200,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "1600%",                              CmdZoom1600,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "800%",                               CmdZoom800,               MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "400%",                               CmdZoom400,               MF_NO_TRANSLATE },
-    { "200%",                               CmdZoom200,               MF_NO_TRANSLATE },
-    { "150%",                               CmdZoom150,               MF_NO_TRANSLATE },
-    { "125%",                               CmdZoom125,               MF_NO_TRANSLATE },
-    { "100%",                               CmdZoom100,               MF_NO_TRANSLATE },
-    { "50%",                                CmdZoom50,                MF_NO_TRANSLATE },
-    { "25%",                                CmdZoom25,                MF_NO_TRANSLATE },
-    { "12.5%",                              CmdZoom12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
-    { "8.33%",                              CmdZoom8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { _TRN("Custom &Zoom...\tCtrl+Y"),      CmdZoomCustom,           0 },
+    { SEP_ITEM,                             0,                       0 },
+    { "6400%",                              CmdZoom6400,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "3200%",                              CmdZoom3200,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "1600%",                              CmdZoom1600,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "800%",                               CmdZoom800,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "400%",                               CmdZoom400,              MF_NO_TRANSLATE },
+    { "200%",                               CmdZoom200,              MF_NO_TRANSLATE },
+    { "150%",                               CmdZoom150,              MF_NO_TRANSLATE },
+    { "125%",                               CmdZoom125,              MF_NO_TRANSLATE },
+    { "100%",                               CmdZoom100,              MF_NO_TRANSLATE },
+    { "50%",                                CmdZoom50,               MF_NO_TRANSLATE },
+    { "25%",                                CmdZoom25,               MF_NO_TRANSLATE },
+    { "12.5%",                              CmdZoom12_5,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { "8.33%",                              CmdZoom8_33,             MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Zoom Menu
@@ -191,9 +191,9 @@ static MenuDef menuDefSettings[] = {
     { _TRN("Change Language"),              CmdChangeLanguage,        0 },
 #if 0
     { _TRN("Contribute Translation"),       CmdContributeTranslation, MF_REQ_DISK_ACCESS },
-    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
+    { SEP_ITEM,                             0,                        MF_REQ_DISK_ACCESS },
 #endif
-    { _TRN("&Options..."),                  CmdOptions,                MF_REQ_PREF_ACCESS },
+    { _TRN("&Options..."),                  CmdOptions,               MF_REQ_PREF_ACCESS },
     { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
     { 0, 0, 0 },
 };
@@ -211,11 +211,11 @@ MenuDef menuDefFavorites[] = {
 
 //[ ACCESSKEY_GROUP Help Menu
 static MenuDef menuDefHelp[] = {
-    { _TRN("Visit &Website"),               CmdVisitWebsite,          MF_REQ_DISK_ACCESS },
-    { _TRN("&Manual"),                      CmdOpenManualInBrowser,                 MF_REQ_DISK_ACCESS },
-    { _TRN("Check for &Updates"),           CmdCheckUpdate,           MF_REQ_INET_ACCESS },
-    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
-    { _TRN("&About"),                       CmdAbout,                  0 },
+    { _TRN("Visit &Website"),               CmdHelpVisitWebsite,          MF_REQ_DISK_ACCESS },
+    { _TRN("&Manual"),                      CmdHelpOpenManualInBrowser,   MF_REQ_DISK_ACCESS },
+    { _TRN("Check for &Updates"),           CmdCheckUpdate,               MF_REQ_INET_ACCESS },
+    { SEP_ITEM,                             0,                            MF_REQ_DISK_ACCESS },
+    { _TRN("&About"),                       CmdHelpAbout,                 0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Help Menu
@@ -223,13 +223,13 @@ static MenuDef menuDefHelp[] = {
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
     { _TRN("&Advanced Options..."),         CmdAdvancedOptions,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
-    { "Highlight links",                    CmdDebugShowLinks,       MF_NO_TRANSLATE },
-    { "Toggle ebook UI",                    CmdDebugEbookUI,         MF_NO_TRANSLATE },
+    { "Highlight links",                    CmdDebugShowLinks,        MF_NO_TRANSLATE },
+    { "Toggle ebook UI",                    CmdDebugEbookUI,          MF_NO_TRANSLATE },
     { "Mui debug paint",                    CmdDebugMui,              MF_NO_TRANSLATE },
-    { "Annotation from Selection",          CmdDebugAnnotations,       MF_NO_TRANSLATE },
-    { "Download symbols",                   CmdDebugDownloadSymbols, MF_NO_TRANSLATE },
-    { "Test app",                           CmdDebugTestApp,         MF_NO_TRANSLATE },
-    { "Show notification",                  CmdDebugShowNotif,       MF_NO_TRANSLATE },
+    { "Annotation from Selection",          CmdDebugAnnotations,      MF_NO_TRANSLATE },
+    { "Download symbols",                   CmdDebugDownloadSymbols,  MF_NO_TRANSLATE },
+    { "Test app",                           CmdDebugTestApp,          MF_NO_TRANSLATE },
+    { "Show notification",                  CmdDebugShowNotif,        MF_NO_TRANSLATE },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Debug Menu
@@ -242,7 +242,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("Copy Co&mment"),                CmdCopyComment,           MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Image"),                  CmdCopyImage,             MF_REQ_ALLOW_COPY },
     { _TRN("Select &All"),                  CmdSelectAll,             MF_REQ_ALLOW_COPY },
-    { SEP_ITEM,                             0,                                MF_REQ_ALLOW_COPY },
+    { SEP_ITEM,                             0,                        MF_REQ_ALLOW_COPY },
     // note: strings cannot be "" or else items are not there
     {"add",                                 CmdFavAdd,                MF_NO_TRANSLATE   },
     {"del",                                 CmdFavDel,                MF_NO_TRANSLATE   },
@@ -252,7 +252,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
     { _TR_TODON("Edit Annotations"),        CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
     {"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE},
-    { SEP_ITEM,                             0,                                MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
+    { SEP_ITEM,                             0,                        MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    CmdPrint,                 MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
     { _TRN("P&roperties"),                  CmdProperties,            MF_PLUGIN_MODE_ONLY },
@@ -263,9 +263,9 @@ static MenuDef menuDefContext[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
-    { _TRN("&Open Document"),               CmdOpenSelectedDocument, MF_REQ_DISK_ACCESS },
-    { _TRN("&Pin Document"),                CmdPinSelectedDocument,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
-    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { _TRN("&Open Document"),               CmdOpenSelectedDocument,   MF_REQ_DISK_ACCESS },
+    { _TRN("&Pin Document"),                CmdPinSelectedDocument,    MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { SEP_ITEM,                             0,                         MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { _TRN("&Remove Document"),             CmdForgetSelectedDocument, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { 0, 0, 0 },
 };
