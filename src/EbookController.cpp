@@ -707,7 +707,7 @@ void EbookController::ExtractPageAnchors() {
     AutoFreeWstr epubPagePath;
     int fb2TitleCount = 0;
     auto data = doc.GetHtmlData();
-    HtmlPullParser parser((const char*)data.data(), data.size());
+    HtmlPullParser parser(data);
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag()) {

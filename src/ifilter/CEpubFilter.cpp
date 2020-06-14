@@ -71,10 +71,9 @@ static bool IsoDateParse(const WCHAR* isoDate, SYSTEMTIME* timeOut) {
 static WCHAR* ExtractHtmlText(EpubDoc* doc) {
     auto d = doc->GetHtmlData();
     size_t len = d.size();
-    const char* data = d.data();
 
     str::Str text(len / 2);
-    HtmlPullParser p(data, len);
+    HtmlPullParser p(d);
     HtmlToken* t;
     Vec<HtmlTag> tagNesting;
     while ((t = p.Next()) != nullptr && !t->IsError()) {

@@ -57,6 +57,22 @@ Fixes:
 
 ------
 
+std::span<u8> and other small refactoring:
+- GetXmlData
+- SaveCrashInfo
+- GetCallstacks
+- HandleTealDocTag
+- ParseComicInfoXml
+- HtmlParser::ParseInPlace
+- BitmapFromData()
+- HtmlMoniker::SetHtml()
+- EngineImageDir::LoadImageDir use DirIter
+- change SizeFromData to return Size, not Gdiplus::Size
+- change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
+- SerializeBitmap
+- PrettyPrintHtml
+------
+
 possible refactorings:
 - create DisplayMode.h, move DisplayMode from SettingsStruct.h and some stuff from GlobalPrefs.h
 - rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()

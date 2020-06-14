@@ -823,7 +823,7 @@ bool Fb2Doc::Load() {
     }
     data.TakeOwnershipOf(tmp);
 
-    HtmlPullParser parser(data.Get(), data.size());
+    HtmlPullParser parser(data.AsSpan());
     HtmlToken* tok;
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     const char* bodyStart = nullptr;
@@ -1221,7 +1221,7 @@ bool HtmlDoc::Load() {
     pagePath.Set(strconv::WstrToUtf8(fileName).data());
     str::TransChars(pagePath, "\\", "/");
 
-    HtmlPullParser parser(htmlData, str::Len(htmlData));
+    HtmlPullParser parser(htmlData.AsSpan());
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
            (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {

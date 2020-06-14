@@ -900,7 +900,7 @@ bool MobiDoc::HasToc() {
     docTocIndex = doc->size(); // no ToC
 
     // search for <reference type=toc filepos=\d+/>
-    HtmlPullParser parser(doc->Get(), doc->size());
+    HtmlPullParser parser(doc->AsSpan());
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag() || !tok->NameIs("reference")) {
