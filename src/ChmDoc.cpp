@@ -240,7 +240,7 @@ char* ChmDoc::ResolveTopicID(unsigned int id) {
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
             AutoFree stringsData(GetData("/#STRINGS"));
-            return GetCharZ(stringsData.as_span(), br.DWordLE(off + 4));
+            return GetCharZ(stringsData.AsSpan(), br.DWordLE(off + 4));
         }
     }
     return nullptr;

@@ -41,7 +41,7 @@ HRESULT CEpubFilter::OnInit() {
         return res;
     }
 
-    auto strm = CreateStreamFromData(data.as_span());
+    auto strm = CreateStreamFromData(data.AsSpan());
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return E_FAIL;

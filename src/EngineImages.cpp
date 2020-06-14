@@ -452,7 +452,7 @@ bool EngineImage::LoadSingleFile(const WCHAR* file) {
     SetFileName(file);
 
     AutoFree data = file::ReadFile(file);
-    fileExt = GfxFileExtFromData(data.as_span());
+    fileExt = GfxFileExtFromData(data.AsSpan());
     defaultFileExt = fileExt;
     image = BitmapFromData((const u8*)data.data, data.len);
     return FinishLoading();
@@ -476,7 +476,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     defaultFileExt = fileExt;
 
     AutoFree data = GetDataFromStream(stream, nullptr);
-    if (IsGdiPlusNativeFormat(data.as_span())) {
+    if (IsGdiPlusNativeFormat(data.AsSpan())) {
         image = Bitmap::FromStream(stream);
     } else {
         image = BitmapFromData((const u8*)data.data, data.size());
@@ -1259,7 +1259,7 @@ RectD EngineCbx::LoadMediabox(int pageNo) {
 
     ImageData img = GetImageData(pageNo);
     if (img.data) {
-        Gdiplus::Size size = BitmapSizeFromData(img.as_span());
+        Gdiplus::Size size = BitmapSizeFromData(img.AsSpan());
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();

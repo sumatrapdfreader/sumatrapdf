@@ -616,6 +616,6 @@ size_t ImageData::size() const {
     return len;
 }
 
-std::span<u8> ImageData::as_span() const {
+std::span<u8> ImageData::AsSpan() const {
     return {(u8*)data, len};
 }

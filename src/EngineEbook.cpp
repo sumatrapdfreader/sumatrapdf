@@ -1279,7 +1279,7 @@ class ChmDataCache {
     }
 
     std::span<u8> GetHtmlData() {
-        return html.as_span();
+        return html.AsSpan();
     }
 
     ImageData* GetImageData(const char* id, const char* pagePath) {

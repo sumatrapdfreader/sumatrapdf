@@ -42,7 +42,7 @@ struct ImageData {
     size_t len = 0;
 
     size_t size() const;
-    std::span<u8> as_span() const;
+    std::span<u8> AsSpan() const;
 };
 
 struct ImageData2 {

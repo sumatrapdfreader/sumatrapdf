@@ -1247,7 +1247,7 @@ bool HtmlDoc::Load() {
 }
 
 std::span<u8> HtmlDoc::GetHtmlData() {
-    return htmlData.as_span();
+    return htmlData.AsSpan();
 }
 
 ImageData* HtmlDoc::GetImageData(const char* fileName) {
