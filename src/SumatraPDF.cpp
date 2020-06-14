@@ -4261,8 +4261,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    if (!win->IsAboutWindow() && CmdOpenWithExternalFirst <= wmId &&
-        wmId <= CmdOpenWithExternalLast) {
+    if (!win->IsAboutWindow() && CmdOpenWithExternalFirst <= wmId && wmId <= CmdOpenWithExternalLast) {
         ViewWithExternalViewer(win->currentTab, wmId - CmdOpenWithExternalFirst);
         return 0;
     }
@@ -4315,21 +4314,21 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuSaveBookmark(win);
             break;
 
-        case CmdToolbarViewFitWidth:
+        case CmdZoomFitWidthAndContinous:
             ChangeZoomLevel(win, ZOOM_FIT_WIDTH, true);
             break;
 
-        case CmdToolbarViewFitPage:
+        case CmdZoomFitPageAndSinglePage:
             ChangeZoomLevel(win, ZOOM_FIT_PAGE, false);
             break;
 
-        case CmdViewZoomIn:
+        case CmdZoomIn:
             if (win->IsDocLoaded()) {
                 ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
             }
             break;
 
-        case CmdViewZoomOut:
+        case CmdZoomOut:
             if (win->IsDocLoaded()) {
                 ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
             }
@@ -4484,7 +4483,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             SumatraLaunchBrowser(WEBSITE_MAIN_URL);
             break;
 
-        case CmdManual:
+        case CmdOpenManualInBrowser:
             SumatraLaunchBrowser(WEBSITE_MANUAL_URL);
             break;
 

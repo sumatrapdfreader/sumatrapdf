@@ -45,8 +45,7 @@
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       CmdZoomFIT_PAGE - CmdZoomCUSTOM must be in a continuous range!
-static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4,
-              "view layout ids are not in a continuous range");
+static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are not in a continuous range");
 static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuous range");
 
 bool gAddCrashMeMenu = false;
@@ -213,7 +212,7 @@ MenuDef menuDefFavorites[] = {
 //[ ACCESSKEY_GROUP Help Menu
 static MenuDef menuDefHelp[] = {
     { _TRN("Visit &Website"),               CmdVisitWebsite,          MF_REQ_DISK_ACCESS },
-    { _TRN("&Manual"),                      CmdManual,                 MF_REQ_DISK_ACCESS },
+    { _TRN("&Manual"),                      CmdOpenManualInBrowser,                 MF_REQ_DISK_ACCESS },
     { _TRN("Check for &Updates"),           CmdCheckUpdate,           MF_REQ_INET_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("&About"),                       CmdAbout,                  0 },
@@ -509,37 +508,18 @@ static bool IsFileCloseMenuEnabled() {
 static void MenuUpdateStateForWindow(WindowInfo* win) {
     // those menu items will be disabled if no document is opened, enabled otherwise
     static int menusToDisableIfNoDocument[] = {
-        CmdViewRotateLeft,
-        CmdViewRotateRight,
-        CmdGoToNextPage,
-        CmdGoToPrevPage,
-        CmdGoToFirstPage,
-        CmdGoToLastPage,
-        CmdGoToNavBack,
-        CmdGoToNavForward,
-        CmdGoToPage,
-        CmdFindFirst,
-        CmdSaveAs,
-        CmdSaveAsBookmark,
-        CmdSendByEmail,
-        CmdSelectAll,
-        CmdCopySelection,
-        CmdProperties,
-        CmdViewPresentationMode,
-        CmdViewWithAcrobat,
-        CmdViewWithFoxIt,
-        CmdViewWithPdfXchange,
-        CmdRenameFile,
-        CmdShowInFolder,
-        CmdDebugAnnotations,
+        CmdViewRotateLeft, CmdViewRotateRight,      CmdGoToNextPage,     CmdGoToPrevPage,  CmdGoToFirstPage,
+        CmdGoToLastPage,   CmdGoToNavBack,          CmdGoToNavForward,   CmdGoToPage,      CmdFindFirst,
+        CmdSaveAs,         CmdSaveAsBookmark,       CmdSendByEmail,      CmdSelectAll,     CmdCopySelection,
+        CmdProperties,     CmdViewPresentationMode, CmdViewWithAcrobat,  CmdViewWithFoxIt, CmdViewWithPdfXchange,
+        CmdRenameFile,     CmdShowInFolder,         CmdDebugAnnotations,
         // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
         // are removed instead of disabled (and can remain enabled
         // for broken XPS/CHM documents)
     };
     // this list coincides with menusToEnableIfBrokenPDF
     static int menusToDisableIfDirectory[] = {
-        CmdRenameFile, CmdSendByEmail,        CmdViewWithAcrobat,
-        CmdViewWithFoxIt, CmdViewWithPdfXchange, CmdShowInFolder,
+        CmdRenameFile, CmdSendByEmail, CmdViewWithAcrobat, CmdViewWithFoxIt, CmdViewWithPdfXchange, CmdShowInFolder,
     };
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
 

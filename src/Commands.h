@@ -1,24 +1,30 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#define COMMANDS(V)                              \
+    V(Open, "Open File...")                      \
+    V(OpenFolder, "Open Folder...")              \
+    V(Close, "Close Document")                   \
+    V(SaveAs, "Save File As...")                 \
+    V(Print, "Print Document...")                \
+    V(ShowInFolder, "Show File In Folder...")    \
+    V(Exit, "Exit Application")                  \
+    V(Refresh, "Reload Document")                \
+    V(SaveAsBookmark, "Save As Bookmark...")     \
+    V(SendByEmail, "Send Document By Email...")  \
+    V(Properties, "Show Document Properties...") \
+    V(ExitFullScreen, "Exit FullScreen")
+
+#define DEF_CMD(id, s) Cmd##id,
+
 enum {
-    CmdSeparator = 400,
+    CmdFirst = 200,
+    CmdSeparator = CmdFirst,
     CmdSeparatorEmbed,
 
-    CmdOpen,
-    CmdOpenFolder,
-    CmdClose,
-    CmdSaveAs,
-    CmdPrint,
-    CmdShowInFolder,
-    CmdExit,
-    CmdRefresh,
-    CmdSaveAsBookmark,
-    CmdSendByEmail,
-    CmdProperties,
-    CmdExitFullScreen,
+    COMMANDS(DEF_CMD)
 
-    CmdViewSinglePage, // alias: ViewLayoutFirst
+        CmdViewSinglePage, // alias: ViewLayoutFirst
     CmdViewFacing,
     CmdViewBook,
     CmdViewContinuous,
@@ -77,6 +83,11 @@ enum {
     CmdZoomFitContent,
     CmdZoomCustom, // alias: ZoomLast
 
+    CmdZoomIn,
+    CmdZoomOut,
+    CmdZoomFitWidthAndContinous,
+    CmdZoomFitPageAndSinglePage,
+
     CmdContributeTranslation,
 
     CmdViewWithAcrobat,
@@ -109,9 +120,10 @@ enum {
 
     CmdAbout,
     CmdOptions,
+    CmdAdvancedOptions,
     CmdChangeLanguage,
     CmdCheckUpdate,
-    CmdManual,
+    CmdOpenManualInBrowser,
 
     CmdMoveFrameFocus,
 
@@ -124,7 +136,6 @@ enum {
 
     CmdDebugShowLinks,
     CmdDebugCrashMe,
-    CmdLoadMobiSample,
     CmdDebugEbookUI,
     CmdDebugAnnotations,
     CmdDebugDownloadSymbols,
@@ -132,13 +143,7 @@ enum {
     CmdDebugShowNotif,
     CmdDebugMui,
 
-    CmdAdvancedOptions,
     CmdNewBookmarks,
-
-    CmdViewZoomIn,
-    CmdViewZoomOut,
-    CmdToolbarViewFitWidth, // TODO: replace with ZoomFitWidth,
-    CmdToolbarViewFitPage,  // TODO: replace with ZoomFitPage
 
     /* a range for "external viewers" setting */
     CmdOpenWithExternalFirst,
@@ -156,6 +161,8 @@ enum {
     CmdThemeFirst,
     CmdThemeLast,
 
+    CmdLast = CmdThemeLast,
+
     // aliases, at the end to not mess ordering
     CmdViewLayoutFirst = CmdViewSinglePage,
     CmdViewLayoutLast = CmdViewMangaMode,
@@ -163,3 +170,5 @@ enum {
     CmdZoomFirst = CmdZoomFitPage,
     CmdZoomLast = CmdZoomCustom,
 };
+
+#undef DEF_CMD

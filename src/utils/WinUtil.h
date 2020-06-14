@@ -176,7 +176,7 @@ void SetChecked(HMENU m, int id, bool isChecked);
 bool SetEnabled(HMENU m, int id, bool isEnabled);
 void Remove(HMENU m, int id);
 // TODO: this doesn't recognize enum Cmd, why?
-//void Remove(HMENU m, enum Cmd id);
+// void Remove(HMENU m, enum Cmd id);
 void Empty(HMENU m);
 void SetText(HMENU m, int id, WCHAR* s);
 const WCHAR* ToSafeString(AutoFreeWstr& s);
