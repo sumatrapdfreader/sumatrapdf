@@ -39,6 +39,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/StaticCtrl.h"
 
 #include "SumatraConfig.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"

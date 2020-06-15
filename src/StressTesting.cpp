@@ -23,6 +23,7 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 #include "Doc.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"

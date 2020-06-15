@@ -5,6 +5,7 @@
 #include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "AppColors.h"
 #include "ProgressUpdateUI.h"

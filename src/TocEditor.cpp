@@ -27,6 +27,7 @@
 #include "Commands.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "WindowInfo.h"

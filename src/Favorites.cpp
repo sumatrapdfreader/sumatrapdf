@@ -21,6 +21,7 @@
 #include "EngineCreate.h"
 
 #include "SumatraConfig.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "FileHistory.h"

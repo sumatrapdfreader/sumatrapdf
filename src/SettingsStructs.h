@@ -3,18 +3,6 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 (see COPYING) */
 
-enum DisplayMode {
-    // automatic means: the continuous form of single page, facing or
-    // book view - depending on the document's desired PageLayout
-    DM_AUTOMATIC,
-    DM_SINGLE_PAGE,
-    DM_FACING,
-    DM_BOOK_VIEW,
-    DM_CONTINUOUS,
-    DM_CONTINUOUS_FACING,
-    DM_CONTINUOUS_BOOK_VIEW,
-};
-
 class RenderedBitmap;
 
 typedef struct FileState DisplayState;

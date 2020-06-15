@@ -12,6 +12,7 @@
 
 #include "Annotation.h"
 #include "EngineBase.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 

@@ -34,6 +34,7 @@
 
 #include "AppPrefs.h"
 #include "SumatraConfig.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "AppUtil.h"

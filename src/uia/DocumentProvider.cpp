@@ -11,6 +11,7 @@
 
 #include "Annotation.h"
 #include "EngineBase.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "EngineCreate.h"

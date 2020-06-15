@@ -40,6 +40,7 @@
 #include "Doc.h"
 #include "FileModifications.h"
 #include "PdfCreator.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"

@@ -14,6 +14,7 @@
 #include "EngineEbook.h"
 
 #include "SumatraConfig.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"

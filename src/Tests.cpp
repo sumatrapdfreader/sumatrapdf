@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"

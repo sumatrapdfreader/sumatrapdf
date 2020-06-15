@@ -6,6 +6,7 @@
 #include "utils/WinUtil.h"
 #include "utils/Log.h"
 
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"

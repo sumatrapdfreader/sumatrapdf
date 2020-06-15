@@ -34,6 +34,7 @@ extern "C" {
 
 #include "Translations.h"
 #include "SumatraConfig.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"

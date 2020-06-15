@@ -24,6 +24,7 @@
 #include "HtmlFormatter.h"
 #include "Doc.h"
 
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "EbookController.h"

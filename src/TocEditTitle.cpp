@@ -25,6 +25,7 @@
 
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "WindowInfo.h"
 #include "ParseBKM.h"

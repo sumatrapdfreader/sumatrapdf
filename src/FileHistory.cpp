@@ -9,6 +9,7 @@ License: GPLv3 */
 
 #include "Annotation.h"
 #include "EngineBase.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"

@@ -13,6 +13,7 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"

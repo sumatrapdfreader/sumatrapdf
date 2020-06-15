@@ -14,6 +14,7 @@
 #include "EbookBase.h"
 #include "ChmDoc.h"
 
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"

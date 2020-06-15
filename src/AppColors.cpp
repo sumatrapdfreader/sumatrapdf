@@ -4,6 +4,7 @@
 #include "utils/ColorUtil.h"
 #include "utils/WinUtil.h"
 
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "AppColors.h"

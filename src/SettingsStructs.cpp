@@ -5,6 +5,7 @@
 #include "utils/FileUtil.h"
 #include "utils/Log.h"
 
+#include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 
