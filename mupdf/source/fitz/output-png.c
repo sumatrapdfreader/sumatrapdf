@@ -282,6 +282,14 @@ png_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band_st
 		else
 		{
 			err = deflate(&writer->stream, Z_FINISH);
+			if (err == Z_OK)
+			{
+				/* more output space needed, try again */
+				writer->cdata = Memento_label(fz_realloc(ctx, writer->cdata, writer->csize << 2), "realloc png_write_cdata");
+				writer->csize <<= 2;
+				continue;
+			}
+
 			if (err != Z_STREAM_END)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "compression error %d", err);
 		}
