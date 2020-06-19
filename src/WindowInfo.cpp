@@ -172,6 +172,16 @@ void WindowInfo::RedrawAll(bool update) {
     }
 }
 
+void WindowInfo::RedrawAllIncludingNonClient(bool update) {
+    InvalidateRect(this->hwndCanvas, nullptr, false);
+    if (this->AsEbook()) {
+        this->AsEbook()->RequestRepaint();
+    }
+    if (update) {
+        RedrawWindow(this->hwndCanvas, NULL, NULL, RDW_FRAME | RDW_INVALIDATE);
+    }
+}
+
 void WindowInfo::ChangePresentationMode(PresentationMode mode) {
     presentation = mode;
     if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {

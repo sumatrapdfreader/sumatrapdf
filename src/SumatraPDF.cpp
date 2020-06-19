@@ -2168,19 +2168,31 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
 }
 
 // re-render the document currently displayed in this window
-void WindowInfoRerender(WindowInfo* win) {
+void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea = FALSE) {
     if (!win->AsFixed()) {
         return;
     }
     DisplayModel* dm = win->AsFixed();
     gRenderCache.CancelRendering(dm);
     gRenderCache.KeepForDisplayModel(dm, dm);
-    win->RedrawAll(true);
+    if (includeNonClientArea) {
+        win->RedrawAllIncludingNonClient(true);
+    } else {
+        win->RedrawAll(true);
+    }
 }
 
 static void RerenderEverything() {
     for (auto* win : gWindows) {
         WindowInfoRerender(win);
+    }
+}
+
+static void RerenderFixedPage() {
+    for (auto* win : gWindows) {
+        if (win->AsFixed()) {
+            WindowInfoRerender(win, TRUE);
+        }
     }
 }
 
@@ -2203,6 +2215,28 @@ void UpdateDocumentColors() {
     gRenderCache.textColor = text;
     gRenderCache.backgroundColor = bg;
     RerenderEverything();
+}
+
+void UpdateFixedPageScrollbarsVisibility() {
+    bool hideScrollbars = gGlobalPrefs->fixedPageUI.hideScrollbars;
+    bool scrollbarsVisible = FALSE; // assume no scrollbars by default
+
+    // iterate through each fixed page window to check whether scrollbars are shown
+    for (auto* win : gWindows) {
+        if (auto* pdfWin = win->AsFixed()) {
+            scrollbarsVisible = pdfWin->vScrollbarShown() || pdfWin->hScrollbarShown();
+            if (scrollbarsVisible) {
+                break;
+            }
+        }
+    }
+
+    bool rerenderRequired = (hideScrollbars && scrollbarsVisible)
+                            || (!hideScrollbars && !scrollbarsVisible);
+    if (!rerenderRequired) {
+        return;
+    }
+    RerenderFixedPage();
 }
 
 static void OnMenuExit() {

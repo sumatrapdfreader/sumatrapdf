@@ -113,7 +113,7 @@ AnnotationType gAnnotsWithColor[] = {
 // clang-format on
 
 // in SumatraPDF.cpp
-extern void WindowInfoRerender(WindowInfo*);
+extern void WindowInfoRerender(WindowInfo*, bool = FALSE);
 
 const char* GetKnownColorName(COLORREF c) {
     if (c == ColorUnset) {

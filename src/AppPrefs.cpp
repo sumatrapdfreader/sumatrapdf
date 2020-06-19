@@ -239,6 +239,7 @@ bool Reload() {
     }
 
     UpdateDocumentColors();
+    UpdateFixedPageScrollbarsVisibility();
     return true;
 }
 
