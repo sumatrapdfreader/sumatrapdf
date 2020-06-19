@@ -224,6 +224,7 @@ struct WindowInfo {
     void UpdateCanvasSize();
     Size GetViewPortSize();
     void RedrawAll(bool update = false);
+    void RedrawAllIncludingNonClient(bool update = false);
 
     void ChangePresentationMode(PresentationMode mode);
 

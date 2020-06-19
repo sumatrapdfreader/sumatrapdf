@@ -119,6 +119,7 @@ void AdvanceFocus(WindowInfo* win);
 bool WindowInfoStillValid(WindowInfo* win);
 void SetCurrentLanguageAndRefreshUI(const char* langCode);
 void UpdateDocumentColors();
+void UpdateFixedPageScrollbarsVisibility();
 void UpdateTabFileDisplayStateForTab(TabInfo* tab);
 bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield = false);
 void ReloadDocument(WindowInfo* win, bool autoRefresh);

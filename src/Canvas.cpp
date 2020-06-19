@@ -1182,12 +1182,24 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WP
         case WM_GESTURE:
             return OnGesture(win, msg, wp, lp);
 
-        case WM_NCPAINT:
-            if (gGlobalPrefs->hideScrollbars) {
-                ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+        case WM_NCPAINT: {
+            // check whether scrolling is required in the horizontal and/or vertical axes
+            int requiredScrollAxes = -1;
+            if (win->AsFixed()->NeedHScroll() && win->AsFixed()->NeedVScroll()) {
+                requiredScrollAxes = SB_BOTH;
+            } else if (win->AsFixed()->NeedHScroll()) {
+                requiredScrollAxes = SB_HORZ;
+            } else if (win->AsFixed()->NeedVScroll()) {
+                requiredScrollAxes = SB_VERT;
             }
-            return TRUE;
 
+            if (requiredScrollAxes != -1) {
+                ShowScrollBar(win->hwndCanvas, requiredScrollAxes, !gGlobalPrefs->fixedPageUI.hideScrollbars);
+            }
+
+            // allow default processing to continue
+            return DefWindowProc(hwnd, msg, wp, lp);
+        }
         default:
             return DefWindowProc(hwnd, msg, wp, lp);
     }
@@ -1318,7 +1330,7 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
         case REPAINT_TIMER_ID:
             win->delayedRepaintTimer = 0;
             KillTimer(hwnd, REPAINT_TIMER_ID);
-            win->RedrawAll();
+            win->RedrawAllIncludingNonClient(TRUE);
             break;
 
         case SMOOTHSCROLL_TIMER_ID:

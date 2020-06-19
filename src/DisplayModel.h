@@ -135,6 +135,8 @@ struct DisplayModel : public Controller {
     void Relayout(float zoomVirtual, int rotation);
 
     Rect GetViewPort() const;
+    bool hScrollbarShown() const;
+    bool vScrollbarShown() const;
     bool NeedHScroll() const;
     bool NeedVScroll() const;
     Size GetCanvasSize() const;
