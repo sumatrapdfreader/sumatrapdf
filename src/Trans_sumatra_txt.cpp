@@ -15055,7 +15055,7 @@ const char * gTranslations_sl =
   "&Skr\304\215i strani na podro\304\215je tiskanja (\304\215e potrebno)\0"\
   "&Enostransko\tCtrl+6\0"\
   "&Presko\304\215i to razli\304\215ico\0"\
-  "\0"\
+  "&Tema\0"\
   "&Uporabi izvirno velikost strani\0"\
   "&Pogled\0"\
   "&Okno\0"\
@@ -15066,7 +15066,7 @@ const char * gTranslations_sl =
   "O programu SumatraPDF\0"\
   "Dodaj Priljubljene\0"\
   "Dodaj stran %s med priljubljene\0"\
-  "\0"\
+  "Dodaj stran %s med priljubljene\tCtrl+B\0"\
   "Dodaj stran %s med priljubljene z (neobveznim) imenom:\0"\
   "Dodaj med priljubljene\0"\
   "Napredno\0"\
@@ -15092,7 +15092,7 @@ const char * gTranslations_sl =
   "Spremeni jezik (Change Language)\0"\
   "&Preveri za posodobitve\0"\
   "Zapri\0"\
-  "\0"\
+  "Strni vse\0"\
   "\0"\
   "Zdru\305\276ljivost\0"\
   "Nepretrgano\0"\
@@ -15118,8 +15118,8 @@ const char * gTranslations_sl =
   "Trenutna datoteka\0"\
   "Polo\305\276aj kurzorja:\0"\
   "Pove\304\215ava po &meri \342\200\246\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Temna\0"\
+  "Temnej\305\241a\0"\
   "&Privzeta postavitev:\0"\
   "Pri&vzeta pove\304\215ava:\0"\
   "Glavnega bralnika PDF ni mogo\304\215e spremeniti v prenosnem na\304\215inu\0"\
@@ -15133,7 +15133,7 @@ const char * gTranslations_sl =
   "Vnesite geslo za %s\0"\
   "Vnesite ukazno vrstico, ki se bo izvedla, ko boste dvokliknili na PDF dokument:\0"\
   "Napaka pri nalaganju %s\0"\
-  "\0"\
+  "Raz\305\241iri vse\0"\
   "Priljubljeni\0"\
   "Naprej\tAlt+Desna pu\305\241\304\215ica\0"\
   "Celozaslonsko\tCtrl+Shift+L\0"\
@@ -15181,7 +15181,7 @@ const char * gTranslations_sl =
   "\0"\
   "Naj Windows Desktop Search i\305\241\304\215e PDF dokumente\0"\
   "Naj Windows prikazuje predogled PDF dokumentov\0"\
-  "\0"\
+  "Svetla\0"\
   "\0"\
   "Naj bo SumatraPDF privezti program za datoteke PDF?\0"\
   "SumatraPDF naj bo privzeti bralnik PDF\0"\
@@ -15189,7 +15189,7 @@ const char * gTranslations_sl =
   "Razlikuj med velikimi/malimi \304\215rkami\0"\
   "Mobi dokumenti\0"\
   "Spremenjeno:\0"\
-  "\0"\
+  "Novo okno\tCtrl+N\0"\
   "Na voljo je nova razli\304\215ica %s. Jo \305\276elite prenesti?\0"\
   "Naslednja stran\0"\
   "Ni zadetkov\0"\
@@ -15240,7 +15240,7 @@ const char * gTranslations_sl =
   "Preimenuj v\0"\
   "Zasukaj v levo\tCtrl+Shift+-\0"\
   "Zasukaj v desno\tCtrl+Shift++\0"\
-  "\0"\
+  "Shrani pripombe\0"\
   "Shrani kot \342\200\246\0"\
   "S&hrani bli\305\276njico \342\200\246\tCtrl+Shift+S\0"\
   "Preiskovanje strani %d od %d \342\200\246\0"\
@@ -15251,14 +15251,14 @@ const char * gTranslations_sl =
   "Izbor:\0"\
   "Po\305\241lji po &E-po\305\241ti \342\200\246\0"\
   "Nastavi obratno iskanje ukazne vrstice\0"\
-  "\0"\
-  "\0"\
+  "Poka\305\276i zaznamke\tF12\0"\
+  "Poka\305\276i priljubljene\0"\
   "&Prika\305\276i strani nepretrgano\0"\
   "Poka\305\276i orodno vrstico\0"\
-  "\0"\
+  "Poka\305\276i zazna&mke\tF12\0"\
   "Prika\305\276i Priljubljene\0"\
   "Prika\305\276i pogosto brane\0"\
-  "\0"\
+  "Poka\305\276i v mapi\0"\
   "Poka\305\276i podokno z &zaznamki, \304\215e so na voljo\0"\
   "Enostransko\0"\
   "Oprostite, to se ne bi smelo zgoditi!\n\nPritisnite 'Prekli\304\215i', \304\215e \305\276elite pomagati pri dolo\304\215itvi vzroka za sesutje.\0"\

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1a2a4fcac9d746d36c234f8814c90be245a48188
+f3a4a11b5281abdaef6a2d465749d52849fd53f7
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3084,6 +3084,7 @@ pt:&Tema
 ru:&Тема
 si:&තේමා
 sk:&Téma
+sl:&Tema
 sp-rs:Tema
 sq:&Motivi
 sr-rs:Тема
@@ -3836,6 +3837,7 @@ nl:Pagina %s toevoegen aan favorieten\tCtrl+B
 pl:Dodaj stronę %s do ulubionych\tCtrl+B
 pt:Adicionar página %s aos favoritos\tCtrl+B
 ru:Добавить страницу %s в избранные\tCtrl+B
+sl:Dodaj stran %s med priljubljene\tCtrl+B
 th:เพิ่มหน้า %s ไปยังรายการโปรด Ctrl+B
 tw:將第 %s 頁加入到最愛\tCtrl+B
 uk:Додати %s сторінку до закладок\tCtrl+B
@@ -5479,6 +5481,7 @@ nl:Alle Samenvouwen
 pl:Zwiń wszystko
 pt:Recolher tudo
 ru:Свернуть все
+sl:Strni vse
 th:ยุบทั้งหมด
 tw:全部折叠(&C)
 uk:Згорнути всі
@@ -7197,6 +7200,7 @@ ro:Intunecat
 ru:Темная
 si:අදුරු
 sk:Tmavý
+sl:Temna
 sp-rs:Tamno
 sq:I errët
 sr-rs:Тамно
@@ -7251,6 +7255,7 @@ ro:Mai Intunecat
 ru:Более темная
 si:වඩා අදුරු
 sk:Tmavší
+sl:Temnejša
 sp-rs:Tamnije
 sq:Më i errët
 sr-rs:Тамније
@@ -8142,6 +8147,7 @@ nl:Alle Uitvouwen
 pl:Rozwiń wszystko
 pt:Expandir tudo
 ru:Развернуть все
+sl:Razširi vse
 th:ขยายทั้งหมด
 tw:全部展開
 uk:Розгорнути всі
@@ -11229,6 +11235,7 @@ pt:Claro
 ru:Светлая
 si:ආලෝකමත්
 sk:Svetlý
+sl:Svetla
 sp-rs:Svetlo
 sq:I çelët
 sr-rs:Светло
@@ -11733,6 +11740,7 @@ nl:Nieuw venster\tCrtl+N
 pl:Nowe &okno\tCtrl+N
 pt:Nova &janela\tCtrl+N
 ru:Новое о&кно\tCtrl+N
+sl:Novo okno\tCtrl+N
 th:เปิด &หน้าต่างใหม่ Ctrl+N
 tr:Yeni &pencere\tCtrl+N
 tw:新建視窗(&W)\tCtrl+N
@@ -14991,6 +14999,7 @@ nl:Aantekeningen Opslaan
 pl:Zapisz adnotacje
 pt:Guardar anotações
 ru:Сохранить аннотации
+sl:Shrani pripombe
 th:บันทึกคำอธิบายประกอบ
 tw:儲存注釋
 uk:Зберегти аннотації
@@ -15654,6 +15663,7 @@ nl:Toon Bladwijzers\tF12
 pl:Pokaż za&kładki\tF12
 pt:Mostrar &marcadores\tF12
 ru:Показать за&кладки\tF12
+sl:Pokaži zaznamke\tF12
 th:แสดง &บุ๊กมาร์ก F12
 tw:顯示書籤(&B)\tF12
 :Show &Favorites
@@ -15678,6 +15688,7 @@ nl:Toon &Favorieten
 pl:Pokaż &ulubione
 pt:Mostrar &favoritos
 ru:Показать «И&збранное»
+sl:Pokaži priljubljene
 th:แสดง &รายการโปรด
 tw:顯示最愛(&F)
 :Show &Pages Continuously
@@ -15836,6 +15847,7 @@ nl:Toon Blad&wijzers\tF12
 pl:Pokaż za&kładki\tF12
 pt:Mostrar &marcadores\tF12
 ru:Показать зак&ладки\tF12
+sl:Pokaži zazna&mke\tF12
 th:แสดง &บุ๊กมาร์ก F12
 tw:顯示書籤(&M)\tF12
 :Show Favorites
@@ -15985,6 +15997,7 @@ nl:Toon in &map
 pl:Pokaż w &folderze
 pt:Mostrar na &pasta
 ru:Показать в п&апке
+sl:Pokaži v mapi
 th:แสดงใน &โฟลเดอร์
 tw:打開所在資料夾(&F)
 :Show the &bookmarks sidebar when available
