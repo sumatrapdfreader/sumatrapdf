@@ -314,7 +314,7 @@ fz_new_icc_link(fz_context *ctx,
 	}
 	fz_catch(ctx)
 	{
-		cmsDeleteTransform(GLO link);
+		cmsDeleteTransform(GLO transform);
 		fz_rethrow(ctx);
 	}
 	return link;

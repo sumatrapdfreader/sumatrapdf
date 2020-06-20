@@ -973,6 +973,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 					else
 						DEBUG_THREADS(("Worker %d not processing anything\n", i));
 					fz_drop_pixmap(ctx, workers[i].pix);
+					workers[i].pix = NULL;
 				}
 			}
 			else
