@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f3a4a11b5281abdaef6a2d465749d52849fd53f7
+c9df541a78479fd269d5d859de687fce44fbefc1
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3059,6 +3059,7 @@ cy:&Thema
 cz:&Téma
 de:Anwendungs&stil
 dk:Tema
+el:&Θέμα
 es:&Tema
 et:&Kujundus
 eu:&Azalgaia
@@ -3824,6 +3825,7 @@ ca:Afegeix la pàgina %s als preferits\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
 co:Aghjunghje a &pagina %s à i favuriti\tCtrl+B
 de:Seite %s zu Favoriten hinzufügen\tStrg+B
+el:Προσθήκη της σελίδας %s στα αγαπημένα\tCtrl+B
 es:Añadir página %s a favoritos\tCtrl+B
 fr:Ajouter cette page aux %s favoris\tCtrl+B
 ga:Cuir leathanach %s leis na ceanáin\tCtrl+B
@@ -5468,6 +5470,7 @@ cn:全部折叠(&C)
 co:Piegà tuttu
 cz:Sbalit vše
 de:Alles zuklappen
+el:Σύμπτυξη όλων
 es:Ocultar Todo
 fr:Tout réduire
 ga:Laghdaigh Gach
@@ -7172,6 +7175,7 @@ cy:Tywyll
 cz:Tmavý
 de:Dunkel
 dk:Mørk
+el:Σκοτεινό
 es:Oscuro
 et:Tume
 eu:Iluna
@@ -7227,6 +7231,7 @@ cy:Tywyllach
 cz:Tmavší
 de:Dunkler
 dk:Mørkere
+el:Σκοτεινότερο
 es:Más oscuro
 et:Tumedam
 eu:Ilunagoa
@@ -8134,6 +8139,7 @@ cn:全部展开
 co:Spiegà tuttu
 cz:Rozbalit vše
 de:Alles aufklappen
+el:Ανάπτυξη Όλων
 es:Expandir Todo
 fr:Tout développer
 ga:Leathnaigh Gach
@@ -11210,6 +11216,7 @@ cy:Golau
 cz:Světlý
 de:Hell
 dk:Lys
+el:Φωτεινό
 es:Claro
 et:Hele
 eu:Argia
@@ -11727,6 +11734,7 @@ cn:新建窗口(&W)\tCtrl+N
 co:No&va finestra\tCtrl+N
 cz:Nové &okno\tCtrl+N
 de:Neues Fenster\tStrg+N
+el:Νέο &παράθυρο\tCtrl+N
 es:Nueva &ventana\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
@@ -14986,6 +14994,7 @@ ca:Desa les anotacions
 cn:保存注释
 co:Arregistrà l’ann&utazioni
 de:Anmerkungen speichern
+el:Αποθήκευση Επισημάνσεων
 es:Guardar Notas
 fr:Sauvegarder les annotations
 ga:Taisc na Nótaí
@@ -15650,6 +15659,7 @@ ca:Mostra els &marcadors\tF12
 cn:显示书签(&B)\tF12
 co:Affissà l’&indette\tF12
 de:Lesezeichen anzeigen\tF12
+el:Εμφάνιση &Σελιδοδεικτών\tF12
 es:Mostrar Marcadores\tF12
 fr:Afficher les &signets\tF12
 ga:Taispeáin na &Leabharmharcanna\tF12
@@ -15675,6 +15685,7 @@ ca:Mostra els &preferits
 cn:显示收藏夹(&F)
 co:Affissà i &favuriti
 de:&Favoriten anzeigen
+el:Εμφάνιση &Αγαπημένων
 es:Mostrar &Favoritos
 fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
@@ -15834,6 +15845,7 @@ ca:Mostra les &marcadors\tF12
 cn:显示书签(&M)\tF12
 co:Affissà l’&indette\tF12
 de:Lesezeichen anzeigen\tF12
+el:Εμφάνιση Σελιδο&δεικτών\tF12
 es:Mostrar Mar&cadores\tF12
 fr:Afficher les &marque-pages\tF12
 ga:Taispeáin na Leabhar&mharcanna\tF12
@@ -15984,6 +15996,7 @@ cn:打开所在文件夹(&F)
 co:Affissà in u car&tulare
 cz:Zobrazit ve &složce
 de:Dokument-&Ordner öffnen
+el:Εμφάνιση στον &φάκελο
 es:Mostrar en &Carpeta
 fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
