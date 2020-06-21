@@ -1276,7 +1276,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
 }
 
 PageElement* EnginePdf::GetElementAtPos(int pageNo, PointD pt) {
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    FzPageInfo* pageInfo = GetFzPageInfoFast(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
 

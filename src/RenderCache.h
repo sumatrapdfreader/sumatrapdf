@@ -1,8 +1,9 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define RENDER_DELAY_UNDEFINED (-1)
-#define RENDER_DELAY_FAILED (-2)
+constexpr int RENDER_DELAY_FAILED = std::numeric_limits<int>::max() - 1;
+constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 2;
+
 #define INVALID_TILE_RES ((USHORT)-1)
 
 #define MAX_PAGE_REQUESTS 8

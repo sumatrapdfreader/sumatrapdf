@@ -739,7 +739,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         bool renderOutOfDateCue = false;
         int renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
-        if (renderDelay) {
+        if (renderDelay != 0) {
             AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             auto col = GetAppColor(AppColor::MainWindowText);

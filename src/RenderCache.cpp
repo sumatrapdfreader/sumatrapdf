@@ -28,8 +28,7 @@
    due to insufficient (GDI) memory. */
 #define CONSERVE_MEMORY
 
-// define to view the tile boundaries
-#undef SHOW_TILE_LAYOUT
+bool gShowTileLayout = false;
 
 RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)}) {
     isRemoteSession = GetSystemMetrics(SM_REMOTESESSION);
@@ -720,12 +719,12 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
         SelectObject(bmpDC, prevBmp);
         DeleteDC(bmpDC);
 
-#ifdef SHOW_TILE_LAYOUT
-        HPEN pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0xff, 0x00));
-        HGDIOBJ oldPen = SelectObject(hdc, pen);
-        PaintRect(hdc, bounds);
-        DeletePen(SelectObject(hdc, oldPen));
-#endif
+        if (gShowTileLayout) {
+            HPEN pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0xff, 0x00));
+            HGDIOBJ oldPen = SelectObject(hdc, pen);
+            PaintRect(hdc, bounds);
+            DeletePen(SelectObject(hdc, oldPen));
+        }
     }
 
     if (entry->outOfDate) {
@@ -810,7 +809,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
             queue.Append(TilePosition(tile.res + 1, tile.row * 2 + 1, tile.col * 2));
             queue.Append(TilePosition(tile.res + 1, tile.row * 2 + 1, tile.col * 2 + 1));
         }
-        if (isTargetRes && renderDelay > 0) {
+        if (isTargetRes && renderDelay != 0) {
             neededScaling = true;
         }
         renderDelayMin = std::min(renderDelay, renderDelayMin);
