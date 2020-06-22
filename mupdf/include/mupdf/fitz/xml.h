@@ -74,6 +74,13 @@ char *fz_xml_tag(fz_xml *item);
 char *fz_xml_att(fz_xml *item, const char *att);
 
 /**
+	Return the value of an attribute of an XML node.
+	If the first attribute doesn't exist, try the second.
+	NULL if neither attribute exists.
+*/
+char *fz_xml_att_alt(fz_xml *item, const char *one, const char *two);
+
+/**
 	Check for a matching attribute on an XML node.
 
 	If the node has the requested attribute (name), and the value

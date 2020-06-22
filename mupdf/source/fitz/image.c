@@ -111,6 +111,7 @@ fz_needs_reap_image_key(fz_context *ctx, void *key_)
 
 static const fz_store_type fz_image_store_type =
 {
+	"fz_image",
 	fz_make_hash_image_key,
 	fz_keep_image_key,
 	fz_drop_image_key,

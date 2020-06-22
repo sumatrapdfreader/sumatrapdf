@@ -120,10 +120,6 @@ do_hash_insert(fz_context *ctx, fz_hash_table *table, const void *key, void *val
 		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 		{
 			/* This is legal, but should rarely happen. */
-			if (val != ents[pos].val)
-				fz_warn(ctx, "assert: overwrite hash slot with different value!");
-			else
-				fz_warn(ctx, "assert: overwrite hash slot with same value");
 			return ents[pos].val;
 		}
 

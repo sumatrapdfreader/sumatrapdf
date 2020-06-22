@@ -52,6 +52,7 @@ pdf_format_key(fz_context *ctx, char *s, size_t n, void *key_)
 
 static const fz_store_type pdf_obj_store_type =
 {
+	"pdf_obj",
 	pdf_make_hash_key,
 	pdf_keep_key,
 	pdf_drop_key,

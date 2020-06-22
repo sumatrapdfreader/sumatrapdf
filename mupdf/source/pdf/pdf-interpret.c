@@ -547,6 +547,18 @@ pdf_process_end(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 		proc->op_END(ctx, proc);
 }
 
+static int is_known_bad_word(const char *word)
+{
+	switch (*word)
+	{
+	case 'I': return !strcmp(word, "Infinity");
+	case 'N': return !strcmp(word, "NaN");
+	case 'i': return !strcmp(word, "inf");
+	case 'n': return !strcmp(word, "nan");
+	}
+	return 0;
+}
+
 #define A(a) (a)
 #define B(a,b) (a | b << 8)
 #define C(a,b,c) (a | b << 8 | c << 16)
@@ -574,7 +586,12 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 	{
 	default:
 		if (!csi->xbalance)
-			fz_throw(ctx, FZ_ERROR_SYNTAX, "unknown keyword: '%s'", word);
+		{
+			if (is_known_bad_word(word))
+				fz_throw(ctx, FZ_ERROR_MINOR, "unknown keyword: '%s'", word);
+			else
+				fz_throw(ctx, FZ_ERROR_SYNTAX, "unknown keyword: '%s'", word);
+		}
 		break;
 
 	/* general graphics state */

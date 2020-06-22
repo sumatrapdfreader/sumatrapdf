@@ -212,7 +212,7 @@ lex_number(fz_context *ctx, fz_stream *f, pdf_lexbuf *buf, int c)
 end:
 	*s = '\0';
 	if (isbad)
-		return PDF_TOK_ERROR;
+		return PDF_TOK_KEYWORD;
 	if (isreal)
 	{
 		/* We'd like to use the fastest possible atof

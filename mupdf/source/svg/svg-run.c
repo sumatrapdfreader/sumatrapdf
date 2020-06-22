@@ -1129,7 +1129,7 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
 {
 	svg_state local_state = *inherit_state;
 
-	char *xlink_href_att = fz_xml_att(root, "xlink:href");
+	char *href_att = fz_xml_att_alt(root, "xlink:href", "href");
 	char *x_att = fz_xml_att(root, "x");
 	char *y_att = fz_xml_att(root, "y");
 
@@ -1148,9 +1148,9 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
 
 	local_state.transform = fz_concat(fz_translate(x, y), local_state.transform);
 
-	if (xlink_href_att && xlink_href_att[0] == '#')
+	if (href_att && href_att[0] == '#')
 	{
-		fz_xml *linked = fz_tree_lookup(ctx, doc->idmap, xlink_href_att + 1);
+		fz_xml *linked = fz_tree_lookup(ctx, doc->idmap, href_att + 1);
 		if (linked)
 		{
 			if (fz_xml_is_tag(linked, "symbol"))
@@ -1174,7 +1174,7 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, 
 	static const char *jpeg_uri = "data:image/jpeg;base64,";
 	static const char *png_uri = "data:image/png;base64,";
 
-	char *href_att = fz_xml_att(root, "xlink:href");
+	char *href_att = fz_xml_att_alt(root, "xlink:href", "href");
 	char *x_att = fz_xml_att(root, "x");
 	char *y_att = fz_xml_att(root, "y");
 	char *w_att = fz_xml_att(root, "width");

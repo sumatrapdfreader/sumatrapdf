@@ -477,6 +477,7 @@ fz_store_item(fz_context *ctx, void *key, void *val_, size_t itemsize, const fz_
 		{
 			/* There was one there already! Take a new reference
 			 * to the existing one, and drop our current one. */
+			fz_warn(ctx, "found duplicate %s in the store", type->name);
 			touch(store, existing);
 			if (existing->val->refs > 0)
 			{

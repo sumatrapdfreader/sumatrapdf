@@ -225,6 +225,7 @@ typedef struct
 */
 typedef struct
 {
+	const char *name;
 	int (*make_hash_key)(fz_context *ctx, fz_store_hash *hash, void *key);
 	void *(*keep_key)(fz_context *ctx, void *key);
 	void (*drop_key)(fz_context *ctx, void *key);

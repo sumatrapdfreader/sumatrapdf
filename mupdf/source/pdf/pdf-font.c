@@ -954,6 +954,7 @@ static int hail_mary_store_key; /* Dummy */
 
 static const fz_store_type hail_mary_store_type =
 {
+	"hail-mary",
 	hail_mary_make_hash_key,
 	hail_mary_keep_key,
 	hail_mary_drop_key,

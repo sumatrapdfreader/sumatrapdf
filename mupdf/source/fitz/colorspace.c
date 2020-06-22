@@ -773,6 +773,7 @@ fz_make_hash_link_key(fz_context *ctx, fz_store_hash *hash, void *key_)
 
 static fz_store_type fz_link_store_type =
 {
+	"fz_icc_link",
 	fz_make_hash_link_key,
 	fz_keep_link_key,
 	fz_drop_link_key,

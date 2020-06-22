@@ -396,6 +396,8 @@ static fz_image *load_html_image(fz_context *ctx, fz_archive *zip, const char *b
 			buf = fz_new_buffer_from_base64(ctx, src+23, 0);
 		else if (!strncmp(src, "data:image/png;base64,", 22))
 			buf = fz_new_buffer_from_base64(ctx, src+22, 0);
+		else if (!strncmp(src, "data:image/gif;base64,", 22))
+			buf = fz_new_buffer_from_base64(ctx, src+22, 0);
 		else
 		{
 			fz_strlcpy(path, base_uri, sizeof path);
@@ -1583,6 +1585,7 @@ fz_format_html_key(fz_context *ctx, char *s, size_t n, void *key_)
 
 static const fz_store_type fz_html_store_type =
 {
+	"fz_html",
 	fz_make_hash_html_key,
 	fz_keep_html_key,
 	fz_drop_html_key,
