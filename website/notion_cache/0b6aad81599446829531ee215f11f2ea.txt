@@ -1,4 +1,4 @@
-1904 1592003231100 httpcache-v1
+1904 1592867164316 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+110
@@ -45,7 +45,7 @@ Response:+1704
         "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
         "last_edited_by_table": "notion_user",
-        "last_edited_time": 1588087440000,
+        "last_edited_time": 1592854260000,
         "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
         "parent_table": "block",
         "properties": {
@@ -56,12 +56,12 @@ Response:+1704
           ]
         },
         "type": "page",
-        "version": 12
+        "version": 14
       }
     }
   ]
 }
-41534 1592003231102 httpcache-v1
+45911 1592867164318 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/loadPageChunk
 Body:+152
@@ -74,7 +74,7 @@ Body:+152
   "pageId": "0b6aad81-5994-4682-9531-ee215f11f2ea",
   "verticalColumns": false
 }
-Response:+41293
+Response:+45670
 {
   "cursor": {
     "stack": []
@@ -113,7 +113,7 @@ Response:+41293
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1588087440000,
+          "last_edited_time": 1592854260000,
           "parent_id": "87f714d1-cb35-4924-80e6-14fdb538870b",
           "parent_table": "block",
           "properties": {
@@ -123,8 +123,10 @@ Response:+41293
               ]
             ]
           },
+          "shard_id": 913143,
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "page",
-          "version": 12
+          "version": 14
         }
       },
       "0bab2c6c-7ba9-4a45-9b85-6e1315973906": {
@@ -203,24 +205,27 @@ Response:+41293
           "created_by_table": "notion_user",
           "created_time": 1492320842656,
           "discussions": [
-            "fa44a429-5bed-4907-8efb-163e0ed49908"
+            "fa44a429-5bed-4907-8efb-163e0ed49908",
+            "66a2964c-fbb3-4763-b497-63620ec1bf3c"
           ],
           "id": "17941d19-fbb7-4723-a33f-a47dee57dd41",
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1588027080000,
+          "last_edited_time": 1592854200000,
           "parent_id": "0b6aad81-5994-4682-9531-ee215f11f2ea",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "comic book files: .cbz, .cbr, .cbt, .cb7z"
+                "comic book files: .cbz, .cbr, .cbt, .cb7"
               ]
             ]
           },
+          "shard_id": 913143,
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
-          "version": 4
+          "version": 10
         }
       },
       "204715b9-e1ca-4e8a-b3c7-15743e5bbcf2": {
@@ -339,13 +344,14 @@ Response:+41293
           "created_by_table": "notion_user",
           "created_time": 1492320842656,
           "discussions": [
-            "def07291-c150-4dfc-9729-5695e12987f7"
+            "def07291-c150-4dfc-9729-5695e12987f7",
+            "f2968211-f2a8-4aa5-bc48-8d6bff69ac35"
           ],
           "id": "58ecfa05-c1cb-4d16-8f06-28b0e9553d95",
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
-          "last_edited_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
+          "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1587949020000,
+          "last_edited_time": 1592854260000,
           "parent_id": "0b6aad81-5994-4682-9531-ee215f11f2ea",
           "parent_table": "block",
           "properties": {
@@ -363,12 +369,14 @@ Response:+41293
                 ]
               ],
               [
-                " is installed, we support PostScript (.ps, .eps) files."
+                " is installed, we support PostScript (.ps, .eps) and PJL (Printer Job Language) files."
               ]
             ]
           },
+          "shard_id": 913143,
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "text",
-          "version": 8
+          "version": 18
         }
       },
       "5e49c14a-0550-4592-aa12-9e52de328907": {
@@ -672,22 +680,27 @@ Response:+41293
           "created_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "created_by_table": "notion_user",
           "created_time": 1492320842656,
+          "discussions": [
+            "4c8e616a-4d0c-4cce-bd2c-0104213d9fe3"
+          ],
           "id": "dd46eea0-43b4-485f-87f1-8358fe32138b",
           "last_edited_by": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_id": "bb760e2d-d679-4b64-b2a9-03005b21870a",
           "last_edited_by_table": "notion_user",
-          "last_edited_time": 1492320842656,
+          "last_edited_time": 1592854260000,
           "parent_id": "9ca1cb4e-e8f8-4fc6-a93c-057ca6eea760",
           "parent_table": "block",
           "properties": {
             "title": [
               [
-                "Fiction Wise (.fb2, .fb2z, .zfb2)"
+                "FictionBook (.fb2, .fb2z, .zfb2)"
               ]
             ]
           },
+          "shard_id": 913143,
+          "space_id": "bc202e06-6caa-4e3f-81eb-f226ab5deef7",
           "type": "bulleted_list",
-          "version": 0
+          "version": 18
         }
       },
       "fb459433-1613-4ea1-8635-61c8ab414ab3": {
@@ -796,6 +809,25 @@ Response:+41293
           "version": 9
         }
       },
+      "1c62c402-bb18-4a6d-b4e9-864907edb442": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
+          "created_by_table": "notion_user",
+          "created_time": 1592439180000,
+          "id": "1c62c402-bb18-4a6d-b4e9-864907edb442",
+          "last_edited_time": 1592439180000,
+          "parent_id": "f2968211-f2a8-4aa5-bc48-8d6bff69ac35",
+          "parent_table": "discussion",
+          "text": [
+            [
+              "and PJL (Printer Job Language) files"
+            ]
+          ],
+          "version": 5
+        }
+      },
       "234eb51d-8510-4fed-b053-49932829fc3a": {
         "role": "editor",
         "value": {
@@ -832,6 +864,25 @@ Response:+41293
             ]
           ],
           "version": 9
+        }
+      },
+      "285a98bf-2c79-4433-9042-114666b9e3f2": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
+          "created_by_table": "notion_user",
+          "created_time": 1592439060000,
+          "id": "285a98bf-2c79-4433-9042-114666b9e3f2",
+          "last_edited_time": 1592439060000,
+          "parent_id": "66a2964c-fbb3-4763-b497-63620ec1bf3c",
+          "parent_table": "discussion",
+          "text": [
+            [
+              "CB 7zip is .cb7 (as per guesstype) not .cb7z as shown here"
+            ]
+          ],
+          "version": 5
         }
       },
       "767a3f8f-5d23-47cf-94dd-699b8cde5760": {
@@ -948,6 +999,25 @@ Response:+41293
           "version": 11
         }
       },
+      "bf488840-0a11-43c1-8303-f050acb13a77": {
+        "role": "editor",
+        "value": {
+          "alive": true,
+          "created_by_id": "9620efc3-92fd-41c3-979b-31cdde370e62",
+          "created_by_table": "notion_user",
+          "created_time": 1592439300000,
+          "id": "bf488840-0a11-43c1-8303-f050acb13a77",
+          "last_edited_time": 1592439300000,
+          "parent_id": "4c8e616a-4d0c-4cce-bd2c-0104213d9fe3",
+          "parent_table": "discussion",
+          "text": [
+            [
+              "FictionBook (not B\u0026N FictionWise mixed formats which is now defunct)"
+            ]
+          ],
+          "version": 5
+        }
+      },
       "c58970b5-b886-4ab6-92d9-6661435d5a51": {
         "role": "editor",
         "value": {
@@ -1007,6 +1077,24 @@ Response:+41293
       }
     },
     "discussion": {
+      "4c8e616a-4d0c-4cce-bd2c-0104213d9fe3": {
+        "role": "editor",
+        "value": {
+          "comments": [
+            "bf488840-0a11-43c1-8303-f050acb13a77"
+          ],
+          "context": [
+            [
+              "Fiction Wise (.fb2, .fb2z, .zfb2)"
+            ]
+          ],
+          "id": "4c8e616a-4d0c-4cce-bd2c-0104213d9fe3",
+          "parent_id": "dd46eea0-43b4-485f-87f1-8358fe32138b",
+          "parent_table": "block",
+          "resolved": true,
+          "version": 2
+        }
+      },
       "50fc88a9-ead7-4758-8458-ac8171e3be7b": {
         "role": "editor",
         "value": {
@@ -1043,6 +1131,24 @@ Response:+41293
           "parent_table": "block",
           "resolved": true,
           "version": 5
+        }
+      },
+      "66a2964c-fbb3-4763-b497-63620ec1bf3c": {
+        "role": "editor",
+        "value": {
+          "comments": [
+            "285a98bf-2c79-4433-9042-114666b9e3f2"
+          ],
+          "context": [
+            [
+              "comic book files: .cbz, .cbr, .cbt, .cb7z"
+            ]
+          ],
+          "id": "66a2964c-fbb3-4763-b497-63620ec1bf3c",
+          "parent_id": "17941d19-fbb7-4723-a33f-a47dee57dd41",
+          "parent_table": "block",
+          "resolved": true,
+          "version": 2
         }
       },
       "76f7a075-cb76-4038-bd7b-79fe6d4be1e8": {
@@ -1143,6 +1249,36 @@ Response:+41293
           "version": 2
         }
       },
+      "f2968211-f2a8-4aa5-bc48-8d6bff69ac35": {
+        "role": "editor",
+        "value": {
+          "comments": [
+            "1c62c402-bb18-4a6d-b4e9-864907edb442"
+          ],
+          "context": [
+            [
+              "If "
+            ],
+            [
+              "Ghostscript",
+              [
+                [
+                  "a",
+                  "https://ghostscript.com/"
+                ]
+              ]
+            ],
+            [
+              " is installed, we support PostScript (.ps, .eps) files."
+            ]
+          ],
+          "id": "f2968211-f2a8-4aa5-bc48-8d6bff69ac35",
+          "parent_id": "58ecfa05-c1cb-4d16-8f06-28b0e9553d95",
+          "parent_table": "block",
+          "resolved": true,
+          "version": 2
+        }
+      },
       "fa44a429-5bed-4907-8efb-163e0ed49908": {
         "role": "editor",
         "value": {
@@ -1186,7 +1322,7 @@ Response:+41293
           "mobile_onboarding_completed": true,
           "onboarding_completed": true,
           "profile_photo": "https://s3-us-west-2.amazonaws.com/public.notion-static.com/2dcaa66c-7674-4ff6-9924-601785b63561/head-bw-640x960.png",
-          "version": 317
+          "version": 319
         }
       }
     },
@@ -1241,7 +1377,7 @@ Response:+41293
     }
   }
 }
-48795 1592003231104 httpcache-v1
+48795 1592867164318 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1606
@@ -2482,7 +2618,7 @@ Response:+47097
     }
   ]
 }
-27521 1592003231104 httpcache-v1
+27521 1592867164319 httpcache-v1
 Method: POST
 URL: https://www.notion.so/api/v3/getRecordValues
 Body:+1518
