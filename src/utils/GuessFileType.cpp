@@ -249,10 +249,10 @@ Kind GuessFileTypeFromContent(std::span<u8> d) {
     for (int i = 0; i < n; i++) {
         const char* sig = gFileSigs[i].sig;
         size_t off = gFileSigs[i].offset;
-        u8* d = data + off;
         size_t sigLen = gFileSigs[i].sigLen;
         size_t sigMaxLen = off + sigLen;
-        if ((len > sigMaxLen) && memeq(d, sig, sigLen)) {
+        u8* dat = data + off;
+        if ((len > sigMaxLen) && memeq(dat, sig, sigLen)) {
             return gFileSigs[i].kind;
         }
     }

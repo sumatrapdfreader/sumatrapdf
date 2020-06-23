@@ -297,9 +297,13 @@ static void CacheStyleFromStruct(TxtNode* def) {
     CrashIf(!def->IsStructWithName("style"));
     TxtNode* nameNode = TxtChildNodeWithKey(def, "name");
     CrashIf(!nameNode); // must have name or else no way to refer to it
-    AutoFree tmp(nameNode->ValDup());
-    if (StyleByName(tmp))
+    if (!nameNode) {
         return;
+    }
+    AutoFree tmp(nameNode->ValDup());
+    if (StyleByName(tmp)) {
+        return;
+    }
 
     Style* style = new Style();
     for (TxtNode* node = def->firstChild; node != nullptr; node = node->sibling) {

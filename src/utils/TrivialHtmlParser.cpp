@@ -37,7 +37,7 @@ bool HtmlElement::NameIsNS(const char* name, const char* ns) const {
     if (!nameStart) {
         return NameIs(name);
     }
-    nameStart = nameStart ? nameStart + 1 : this->name;
+    ++nameStart;
     return str::EqI(nameStart, name);
 }
 

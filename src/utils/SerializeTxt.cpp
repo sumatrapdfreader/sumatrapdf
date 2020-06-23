@@ -19,8 +19,9 @@ static const StructMetadata* GetStructDef(const FieldMetadata* fieldDef) {
 // or was created by application code in a way that observes our rule: each
 // struct and string was separately allocated with malloc()
 void FreeStruct(u8* structStart, const StructMetadata* def) {
-    if (!structStart)
+    if (!structStart) {
         return;
+    }
     Type type;
     const FieldMetadata* fieldDef = nullptr;
     for (int i = 0; i < def->nFields; i++) {
@@ -35,7 +36,7 @@ void FreeStruct(u8* structStart, const StructMetadata* def) {
             Vec<u8*>** vecPtr = (Vec<u8*>**)data;
             Vec<u8*>* vec = *vecPtr;
             CrashIf(!vec);
-            for (size_t j = 0; j < vec->size(); j++) {
+            for (size_t j = 0; vec && j < vec->size(); j++) {
                 FreeStruct(vec->at(j), GetStructDef(fieldDef));
             }
             delete vec;

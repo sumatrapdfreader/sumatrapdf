@@ -39,6 +39,9 @@ static void Regress00()
 
     PoolAllocator textAllocator;
     HtmlFormatterArgs *args = CreateFormatterDefaultArgs(820, 920, &textAllocator);
+    if (!args) {
+        return;
+    }
     args->htmlStr = doc->GetHtmlData();
     HtmlPage *pages[3];
     HtmlFormatter *formatter = new EpubFormatter(args, doc);

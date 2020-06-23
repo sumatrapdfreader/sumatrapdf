@@ -290,6 +290,9 @@ void SetMainWndBgCol(EbookControls* ctrls) {
 
     Style* styleMainWnd = StyleByName("styleMainWnd");
     CrashIf(!styleMainWnd);
+    if (!styleMainWnd) {
+        return;
+    }
     u8 r, g, b;
     UnpackRgb(bgColor, r, g, b);
     u8 rt, gt, bt;
