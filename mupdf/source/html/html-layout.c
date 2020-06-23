@@ -900,161 +900,165 @@ fz_layout_html(fz_context *ctx, fz_html *html, float w, float h, float em)
 static void draw_flow_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf)
 {
 	fz_html_flow *node;
-	fz_text *text;
+	fz_text *text = NULL;
 	fz_matrix trm;
 	float color[3];
-	float prev_color[3];
+	float prev_color[3] = { 0, 0, 0 };
+
+	fz_var(text);
 
 	/* FIXME: HB_DIRECTION_TTB? */
 
-	text = NULL;
-	prev_color[0] = 0;
-	prev_color[1] = 0;
-	prev_color[2] = 0;
-
-	for (node = box->flow_head; node; node = node->next)
+	fz_try(ctx)
 	{
-		const fz_css_style *style = node->box->style;
-
-		if (node->type == FLOW_IMAGE)
+		for (node = box->flow_head; node; node = node->next)
 		{
-			if (node->y >= page_bot || node->y + node->h <= page_top)
-				continue;
-		}
-		else
-		{
-			if (node->y > page_bot || node->y < page_top)
-				continue;
-		}
+			const fz_css_style *style = node->box->style;
 
-		if (node->type == FLOW_WORD || node->type == FLOW_SPACE || node->type == FLOW_SHYPHEN)
-		{
-			string_walker walker;
-			const char *s;
-			float x, y;
+			if (node->type == FLOW_IMAGE)
+			{
+				if (node->y >= page_bot || node->y + node->h <= page_top)
+					continue;
+			}
+			else
+			{
+				if (node->y > page_bot || node->y < page_top)
+					continue;
+			}
 
-			if (node->type == FLOW_SPACE && node->breaks_line)
-				continue;
-			if (node->type == FLOW_SHYPHEN && !node->breaks_line)
-				continue;
-			if (style->visibility != V_VISIBLE)
-				continue;
+			if (node->type == FLOW_WORD || node->type == FLOW_SPACE || node->type == FLOW_SHYPHEN)
+			{
+				string_walker walker;
+				const char *s;
+				float x, y;
 
-			color[0] = style->color.r / 255.0f;
-			color[1] = style->color.g / 255.0f;
-			color[2] = style->color.b / 255.0f;
+				if (node->type == FLOW_SPACE && node->breaks_line)
+					continue;
+				if (node->type == FLOW_SHYPHEN && !node->breaks_line)
+					continue;
+				if (style->visibility != V_VISIBLE)
+					continue;
 
-			if (color[0] != prev_color[0] || color[1] != prev_color[1] || color[2] != prev_color[2])
+				color[0] = style->color.r / 255.0f;
+				color[1] = style->color.g / 255.0f;
+				color[2] = style->color.b / 255.0f;
+
+				if (color[0] != prev_color[0] || color[1] != prev_color[1] || color[2] != prev_color[2])
+				{
+					if (text)
+					{
+						fz_fill_text(ctx, dev, text, ctm, fz_device_rgb(ctx), prev_color, 1, fz_default_color_params);
+						fz_drop_text(ctx, text);
+						text = NULL;
+					}
+					prev_color[0] = color[0];
+					prev_color[1] = color[1];
+					prev_color[2] = color[2];
+				}
+
+				if (!text)
+					text = fz_new_text(ctx);
+
+				if (node->bidi_level & 1)
+					x = node->x + node->w;
+				else
+					x = node->x;
+				y = node->y;
+
+				trm.a = node->box->em;
+				trm.b = 0;
+				trm.c = 0;
+				trm.d = -node->box->em;
+				trm.e = x;
+				trm.f = y - page_top;
+
+				s = get_node_text(ctx, node);
+				init_string_walker(ctx, &walker, hb_buf, node->bidi_level & 1, style->font, node->script, node->markup_lang, style->small_caps, s);
+				while (walk_string(&walker))
+				{
+					float node_scale = node->box->em / walker.scale;
+					unsigned int i;
+					uint32_t k;
+					int c, n;
+
+					/* Flatten advance and offset into offset array. */
+					int x_advance = 0;
+					int y_advance = 0;
+					for (i = 0; i < walker.glyph_count; ++i)
+					{
+						walker.glyph_pos[i].x_offset += x_advance;
+						walker.glyph_pos[i].y_offset += y_advance;
+						x_advance += walker.glyph_pos[i].x_advance;
+						y_advance += walker.glyph_pos[i].y_advance;
+					}
+
+					if (node->bidi_level & 1)
+						x -= x_advance * node_scale;
+
+					/* Walk characters to find glyph clusters */
+					k = 0;
+					while (walker.start + k < walker.end)
+					{
+						n = fz_chartorune(&c, walker.start + k);
+
+						for (i = 0; i < walker.glyph_count; ++i)
+						{
+							if (walker.glyph_info[i].cluster == k)
+							{
+								trm.e = x + walker.glyph_pos[i].x_offset * node_scale;
+								trm.f = y - walker.glyph_pos[i].y_offset * node_scale - page_top;
+								fz_show_glyph(ctx, text, walker.font, trm,
+										walker.glyph_info[i].codepoint, c,
+										0, node->bidi_level, box->markup_dir, node->markup_lang);
+								c = -1; /* for subsequent glyphs in x-to-many mappings */
+							}
+						}
+
+						/* no glyph found (many-to-many or many-to-one mapping) */
+						if (c != -1)
+						{
+							fz_show_glyph(ctx, text, walker.font, trm,
+									-1, c,
+									0, node->bidi_level, box->markup_dir, node->markup_lang);
+						}
+
+						k += n;
+					}
+
+					if ((node->bidi_level & 1) == 0)
+						x += x_advance * node_scale;
+
+					y += y_advance * node_scale;
+				}
+			}
+			else if (node->type == FLOW_IMAGE)
 			{
 				if (text)
 				{
-					fz_fill_text(ctx, dev, text, ctm, fz_device_rgb(ctx), prev_color, 1, fz_default_color_params);
+					fz_fill_text(ctx, dev, text, ctm, fz_device_rgb(ctx), color, 1, fz_default_color_params);
 					fz_drop_text(ctx, text);
 					text = NULL;
 				}
-				prev_color[0] = color[0];
-				prev_color[1] = color[1];
-				prev_color[2] = color[2];
-			}
-
-			if (!text)
-				text = fz_new_text(ctx);
-
-			if (node->bidi_level & 1)
-				x = node->x + node->w;
-			else
-				x = node->x;
-			y = node->y;
-
-			trm.a = node->box->em;
-			trm.b = 0;
-			trm.c = 0;
-			trm.d = -node->box->em;
-			trm.e = x;
-			trm.f = y - page_top;
-
-			s = get_node_text(ctx, node);
-			init_string_walker(ctx, &walker, hb_buf, node->bidi_level & 1, style->font, node->script, node->markup_lang, style->small_caps, s);
-			while (walk_string(&walker))
-			{
-				float node_scale = node->box->em / walker.scale;
-				unsigned int i;
-				uint32_t k;
-				int c, n;
-
-				/* Flatten advance and offset into offset array. */
-				int x_advance = 0;
-				int y_advance = 0;
-				for (i = 0; i < walker.glyph_count; ++i)
+				if (style->visibility == V_VISIBLE)
 				{
-					walker.glyph_pos[i].x_offset += x_advance;
-					walker.glyph_pos[i].y_offset += y_advance;
-					x_advance += walker.glyph_pos[i].x_advance;
-					y_advance += walker.glyph_pos[i].y_advance;
+					fz_matrix itm = fz_pre_translate(ctm, node->x, node->y - page_top);
+					itm = fz_pre_scale(itm, node->w, node->h);
+					fz_fill_image(ctx, dev, node->content.image, itm, 1, fz_default_color_params);
 				}
-
-				if (node->bidi_level & 1)
-					x -= x_advance * node_scale;
-
-				/* Walk characters to find glyph clusters */
-				k = 0;
-				while (walker.start + k < walker.end)
-				{
-					n = fz_chartorune(&c, walker.start + k);
-
-					for (i = 0; i < walker.glyph_count; ++i)
-					{
-						if (walker.glyph_info[i].cluster == k)
-						{
-							trm.e = x + walker.glyph_pos[i].x_offset * node_scale;
-							trm.f = y - walker.glyph_pos[i].y_offset * node_scale - page_top;
-							fz_show_glyph(ctx, text, walker.font, trm,
-									walker.glyph_info[i].codepoint, c,
-									0, node->bidi_level, box->markup_dir, node->markup_lang);
-							c = -1; /* for subsequent glyphs in x-to-many mappings */
-						}
-					}
-
-					/* no glyph found (many-to-many or many-to-one mapping) */
-					if (c != -1)
-					{
-						fz_show_glyph(ctx, text, walker.font, trm,
-								-1, c,
-								0, node->bidi_level, box->markup_dir, node->markup_lang);
-					}
-
-					k += n;
-				}
-
-				if ((node->bidi_level & 1) == 0)
-					x += x_advance * node_scale;
-
-				y += y_advance * node_scale;
 			}
 		}
-		else if (node->type == FLOW_IMAGE)
+
+		if (text)
 		{
-			if (text)
-			{
-				fz_fill_text(ctx, dev, text, ctm, fz_device_rgb(ctx), color, 1, fz_default_color_params);
-				fz_drop_text(ctx, text);
-				text = NULL;
-			}
-			if (style->visibility == V_VISIBLE)
-			{
-				fz_matrix itm = fz_pre_translate(ctm, node->x, node->y - page_top);
-				itm = fz_pre_scale(itm, node->w, node->h);
-				fz_fill_image(ctx, dev, node->content.image, itm, 1, fz_default_color_params);
-			}
+			fz_fill_text(ctx, dev, text, ctm, fz_device_rgb(ctx), color, 1, fz_default_color_params);
+			fz_drop_text(ctx, text);
+			text = NULL;
 		}
 	}
-
-	if (text)
-	{
-		fz_fill_text(ctx, dev, text, ctm, fz_device_rgb(ctx), color, 1, fz_default_color_params);
+	fz_always(ctx)
 		fz_drop_text(ctx, text);
-		text = NULL;
-	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void draw_rect(fz_context *ctx, fz_device *dev, fz_matrix ctm, float page_top, fz_css_color color, float x0, float y0, float x1, float y1)

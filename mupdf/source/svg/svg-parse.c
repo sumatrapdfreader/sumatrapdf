@@ -294,3 +294,40 @@ svg_parse_enum_from_style(fz_context *ctx, svg_document *doc, const char *style,
 	}
 	return value;
 }
+
+char *
+svg_parse_string_from_style(fz_context *ctx, svg_document *doc, const char *style, const char *att,
+	char *buf, int buf_size, const char *value)
+{
+	char *end, *p, quote;
+	if (style)
+	{
+		p = strstr(style, att);
+		if (p)
+		{
+			int n = strlen(att);
+			if (p[n] == ':')
+			{
+				p += n + 1;
+				while (*p && svg_is_whitespace(*p))
+					++p;
+				quote = *p;
+				if (quote == '\'' || quote == '"')
+				{
+					fz_strlcpy(buf, p+1, buf_size);
+					end = strchr(buf, quote);
+				}
+				else
+				{
+					fz_strlcpy(buf, p, buf_size);
+					end = strchr(buf, ';');
+				}
+				if (end)
+					*end = 0;
+				return buf;
+			}
+		}
+	}
+	fz_strlcpy(buf, value, buf_size);
+	return buf;
+}

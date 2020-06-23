@@ -20,6 +20,8 @@ float svg_parse_number(const char *str, float min, float max, float inherit);
 float svg_parse_number_from_style(fz_context *ctx, svg_document *doc, const char *string, const char *name, float number);
 int svg_parse_enum_from_style(fz_context *ctx, svg_document *doc, const char *style, const char *att,
 	int ecount, const char *etable[], int value);
+char *svg_parse_string_from_style(fz_context *ctx, svg_document *doc, const char *style, const char *att,
+	char *buf, int buf_size, const char *value);
 
 /*
 	Return length/coordinate in points.

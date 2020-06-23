@@ -295,7 +295,7 @@ static fz_buffer *read_zip_entry(fz_context *ctx, fz_archive *arch, const char *
 	fz_zip_archive *zip = (fz_zip_archive *) arch;
 	fz_stream *file = zip->super.file;
 	fz_buffer *ubuf;
-	unsigned char *cbuf;
+	unsigned char *cbuf = NULL;
 	int method;
 	z_stream z;
 	int code;

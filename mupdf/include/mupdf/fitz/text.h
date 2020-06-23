@@ -125,16 +125,24 @@ void fz_show_glyph(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm,
 
 	bidi_level: The bidirectional level for this glyph.
 
-	markup_dir: The direction of the text as specified in the
-	markup.
+	markup_dir: The direction of the text as specified in the markup.
 
 	language: The language in use (if known, 0 otherwise)
-	(e.g. FZ_LANG_zh_Hans).
+		(e.g. FZ_LANG_zh_Hans).
 
 	Returns the transform updated with the advance width of the
 	string.
 */
 fz_matrix fz_show_string(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, const char *s, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language language);
+
+/**
+	Measure the advance width of a UTF8 string should it be added to a text object.
+
+	This uses the same layout algorithms as fz_show_string, and can be used
+	to calculate text alignment adjustments.
+*/
+fz_matrix
+fz_measure_string(fz_context *ctx, fz_font *user_font, fz_matrix trm, const char *s, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language language);
 
 /**
 	Find the bounds of a given text object.

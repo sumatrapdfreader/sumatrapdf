@@ -31,6 +31,11 @@ typedef struct svg_state
 	int stroke_is_set;
 	float stroke_color[3];
 	float stroke_opacity;
+
+	const char *font_family;
+	int is_bold;
+	int is_italic;
+	int text_anchor;
 } svg_state;
 
 static void svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state);
@@ -925,7 +930,6 @@ svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *st
 	char *transform_att = fz_xml_att(node, "transform");
 
 	char *font_size_att = fz_xml_att(node, "font-size");
-	// TODO: all font stuff
 
 	char *style_att = fz_xml_att(node, "style");
 
@@ -966,6 +970,10 @@ svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *st
 	if (font_size_att)
 	{
 		state->fontsize = svg_parse_length(font_size_att, state->fontsize, state->fontsize);
+	}
+	else
+	{
+		state->fontsize = svg_parse_number_from_style(ctx, doc, style_att, "font-size", state->fontsize);
 	}
 
 	if (opacity_att)
@@ -1068,6 +1076,67 @@ svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *st
 	else
 	{
 		stroke->miterlimit = svg_parse_number_from_style(ctx, doc, style_att, "stroke-miterlimit", 4);
+	}
+}
+
+static void
+svg_parse_font_attributes(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state, char *buf, int buf_size)
+{
+	char *style_att = fz_xml_att(node, "style");
+	char *font_family_att = fz_xml_att(node, "font-family");
+	char *font_weight_att = fz_xml_att(node, "font-weight");
+	char *font_style_att = fz_xml_att(node, "font-style");
+	char *text_anchor_att = fz_xml_att(node, "text-anchor");
+
+	if (font_family_att)
+		fz_strlcpy(buf, font_family_att, buf_size);
+	else
+		svg_parse_string_from_style(ctx, doc, style_att, "font-family", buf, buf_size, state->font_family);
+	state->font_family = buf;
+
+	if (font_weight_att)
+	{
+		state->is_bold = atoi(font_weight_att) > 400;
+		if (!strcmp(font_weight_att, "bold")) state->is_bold = 1;
+		if (!strcmp(font_weight_att, "bolder")) state->is_bold = 1;
+	}
+	else
+	{
+		static const char *is_bold_table[] = {
+			"normal", "100", "200", "300", "400", "bold", "bolder", "500", "600", "700", "800", "900"
+		};
+		state->is_bold = svg_parse_enum_from_style(ctx, doc, style_att, "font-weight",
+			nelem(is_bold_table), is_bold_table, state->is_bold ? 5 : 0) >= 5;
+	}
+
+	if (font_style_att)
+	{
+		state->is_italic = 0;
+		if (!strcmp(font_style_att, "italic")) state->is_italic = 1;
+		if (!strcmp(font_style_att, "oblique")) state->is_italic = 1;
+	}
+	else
+	{
+		static const char *is_italic_table[] = {
+			"normal", "italic", "oblique"
+		};
+		state->is_italic = svg_parse_enum_from_style(ctx, doc, style_att, "font-style",
+			nelem(is_italic_table), is_italic_table, state->is_italic) >= 1;
+	}
+
+	if (text_anchor_att)
+	{
+		state->text_anchor = 0;
+		if (!strcmp(text_anchor_att, "middle")) state->text_anchor = 1;
+		if (!strcmp(text_anchor_att, "end")) state->text_anchor = 2;
+	}
+	else
+	{
+		static const char *text_anchor_table[] = {
+			"start", "middle", "end"
+		};
+		state->text_anchor = svg_parse_enum_from_style(ctx, doc, style_att, "text-anchor",
+			nelem(text_anchor_table), text_anchor_table, state->text_anchor);
 	}
 }
 
@@ -1257,6 +1326,174 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, 
 	}
 }
 
+static fz_font *
+svg_load_font(fz_context *ctx, const svg_state *state)
+{
+	int bold = state->is_bold;
+	int italic = state->is_italic;
+	int mono = 0;
+	int serif = 1;
+
+	/* scan font-family property for common fallback names */
+
+	if (!mono && strstr(state->font_family, "monospace")) mono = 1;
+	if (!mono && strstr(state->font_family, "Courier")) mono = 1;
+
+	if (serif && strstr(state->font_family, "sans-serif")) serif = 0;
+	if (serif && strstr(state->font_family, "Arial")) serif = 0;
+	if (serif && strstr(state->font_family, "Helvetica")) serif = 0;
+
+	if (mono) {
+		if (bold) {
+			if (italic) return fz_new_base14_font(ctx, "Courier-BoldOblique");
+			else return fz_new_base14_font(ctx, "Courier-Bold");
+		} else {
+			if (italic) return fz_new_base14_font(ctx, "Courier-Oblique");
+			else return fz_new_base14_font(ctx, "Courier");
+		}
+	} else if (serif) {
+		if (bold) {
+			if (italic) return fz_new_base14_font(ctx, "Times-BoldItalic");
+			else return fz_new_base14_font(ctx, "Times-Bold");
+		} else {
+			if (italic) return fz_new_base14_font(ctx, "Times-Italic");
+			else return fz_new_base14_font(ctx, "Times-Roman");
+		}
+	} else {
+		if (bold) {
+			if (italic) return fz_new_base14_font(ctx, "Helvetica-BoldOblique");
+			else return fz_new_base14_font(ctx, "Helvetica-Bold");
+		} else {
+			if (italic) return fz_new_base14_font(ctx, "Helvetica-Oblique");
+			else return fz_new_base14_font(ctx, "Helvetica");
+		}
+	}
+}
+
+static fz_matrix
+svg_run_text_string(fz_context *ctx, fz_device *dev, fz_matrix trm, const char *s, const svg_state *state)
+{
+	fz_font *font = NULL;
+	fz_text *text = NULL;
+
+	fz_var(font);
+	fz_var(text);
+
+	fz_try(ctx)
+	{
+		font = svg_load_font(ctx, state);
+		text = fz_new_text(ctx);
+
+		if (state->text_anchor > 0)
+		{
+			fz_matrix adv = fz_measure_string(ctx, font, trm, s, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
+			if (state->text_anchor == 1)
+				trm.e -= (adv.e - trm.e) / 2;
+			else if (state->text_anchor == 2)
+				trm.e -= (adv.e - trm.e);
+		}
+
+		trm = fz_show_string(ctx, text, font, trm, s, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
+
+		if (state->fill_is_set)
+			fz_fill_text(ctx, dev, text,
+				state->transform,
+				fz_device_rgb(ctx), state->fill_color,
+				state->opacity,
+				fz_default_color_params);
+		if (state->stroke_is_set)
+			fz_stroke_text(ctx, dev, text,
+				&state->stroke,
+				state->transform,
+				fz_device_rgb(ctx), state->stroke_color,
+				state->opacity,
+				fz_default_color_params);
+		if (!state->fill_is_set && !state->stroke_is_set)
+			fz_ignore_text(ctx, dev, text, state->transform);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_text(ctx, text);
+		fz_drop_font(ctx, font);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return trm;
+}
+
+static void
+svg_collapse_whitespace(char *start, int is_first, int is_last)
+{
+	int c, last_c = (is_first ? ' ' : 0);
+	char *s, *p;
+	s = p = start;
+	while ((c = *s++) != 0)
+	{
+		if (c == '\n' || c == '\r')
+			continue;
+		if (c == '\t')
+			c = ' ';
+		if (c == ' ' && last_c == ' ')
+			continue;
+		*p++ = last_c = c;
+	}
+	if (is_last && p > start && p[-1] == ' ')
+		--p;
+	*p = 0;
+}
+
+static fz_matrix
+svg_run_text(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *inherit_state,
+	float x, float y, int is_first, int is_last)
+{
+	svg_state local_state = *inherit_state;
+	char font_family[100];
+	fz_xml *node;
+	fz_matrix trm;
+	int cif, cil;
+	char *text;
+
+	char *x_att = fz_xml_att(root, "x");
+	char *y_att = fz_xml_att(root, "y");
+	char *dx_att = fz_xml_att(root, "dx");
+	char *dy_att = fz_xml_att(root, "dy");
+
+	svg_parse_common(ctx, doc, root, &local_state);
+	svg_parse_font_attributes(ctx, doc, root, &local_state, font_family, sizeof font_family);
+
+	trm = fz_scale(local_state.fontsize, -local_state.fontsize);
+	trm.e = x;
+	trm.f = y;
+
+	if (x_att) trm.e = svg_parse_length(x_att, local_state.viewbox_w, local_state.fontsize);
+	if (y_att) trm.f = svg_parse_length(y_att, local_state.viewbox_h, local_state.fontsize);
+
+	if (dx_att) trm.e += svg_parse_length(dx_att, local_state.viewbox_w, local_state.fontsize);
+	if (dy_att) trm.f += svg_parse_length(dy_att, local_state.viewbox_h, local_state.fontsize);
+
+	cif = is_first;
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
+	{
+		cil = is_last && !fz_xml_next(node);
+		text = fz_xml_text(node);
+		if (text)
+		{
+			svg_collapse_whitespace(text, cif, cil);
+			trm = svg_run_text_string(ctx, dev, trm, text, &local_state);
+		}
+		else if (fz_xml_is_tag(node, "tspan"))
+			trm = svg_run_text(ctx, dev, doc, node, &local_state, trm.e, trm.f, cif, cil);
+		else if (fz_xml_is_tag(node, "textPath"))
+			trm = svg_run_text(ctx, dev, doc, node, &local_state, trm.e, trm.f, cif, cil);
+		cif = 0;
+	}
+
+	return trm;
+}
+
 static void
 svg_run_element(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *state)
 {
@@ -1297,16 +1534,8 @@ svg_run_element(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root
 	else if (fz_xml_is_tag(root, "image"))
 		svg_run_image(ctx, dev, doc, root, state);
 
-#if 0
 	else if (fz_xml_is_tag(root, "text"))
-		svg_run_text(ctx, dev, doc, root);
-	else if (fz_xml_is_tag(root, "tspan"))
-		svg_run_text_span(ctx, dev, doc, root);
-	else if (fz_xml_is_tag(root, "tref"))
-		svg_run_text_ref(ctx, dev, doc, root);
-	else if (fz_xml_is_tag(root, "textPath"))
-		svg_run_text_path(ctx, dev, doc, root);
-#endif
+		svg_run_text(ctx, dev, doc, root, state, 0, 0, 1, 1);
 
 	else
 	{
@@ -1394,6 +1623,11 @@ svg_run_document(fz_context *ctx, svg_document *doc, fz_xml *root, fz_device *de
 	state.stroke_color[1] = 0;
 	state.stroke_color[2] = 0;
 	state.stroke_opacity = 1;
+
+	state.font_family = "serif";
+	state.is_bold = 0;
+	state.is_italic = 0;
+	state.text_anchor = 0;
 
 	svg_run_svg(ctx, dev, doc, root, &state);
 }
