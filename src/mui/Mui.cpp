@@ -69,8 +69,9 @@ HwndWrapper* GetRootHwndWnd(const Control* c) {
     while (c->parent) {
         c = c->parent;
     }
-    if (!c->hwndParent)
+    if (!c->hwndParent) {
         return nullptr;
+    }
     return (HwndWrapper*)c;
 }
 
@@ -78,14 +79,16 @@ HwndWrapper* GetRootHwndWnd(const Control* c) {
 // this window
 HWND GetHwndParent(const Control* c) {
     HwndWrapper* wHwnd = GetRootHwndWnd(c);
-    if (wHwnd)
+    if (wHwnd) {
         return wHwnd->hwndParent;
+    }
     return nullptr;
 }
 
 void CollectWindowsBreathFirst(Control* c, int offX, int offY, WndFilter* wndFilter, Vec<CtrlAndOffset>* ctrls) {
-    if (wndFilter->skipInvisibleSubtrees && !c->IsVisible())
+    if (wndFilter->skipInvisibleSubtrees && !c->IsVisible()) {
         return;
+    }
 
     offX += c->pos.X;
     offY += c->pos.Y;
@@ -116,8 +119,9 @@ size_t CollectWindowsAt(Control* wndRoot, int x, int y, u16 wantedInputMask, Vec
 }
 
 static void DrawLine(Graphics* gfx, const Gdiplus::Point& p1, const Gdiplus::Point& p2, float width, Brush* br) {
-    if (0 == width)
+    if (0 == width) {
         return;
+    }
     Pen p(br, width);
     gfx->DrawLine(&p, p1, p2);
 }
@@ -173,8 +177,9 @@ static void InvalidateAtOff(HWND hwnd, const Gdiplus::Rect* r, int offX, int off
 void RequestRepaint(Control* c, const Gdiplus::Rect* r1, const Gdiplus::Rect* r2) {
     // we might be called when the control hasn't yet been
     // placed in the window hierarchy
-    if (!c->parent && !c->hwndParent)
+    if (!c->parent && !c->hwndParent) {
         return;
+    }
 
     Gdiplus::Rect wRect(0, 0, c->pos.Width, c->pos.Height);
 
@@ -186,8 +191,9 @@ void RequestRepaint(Control* c, const Gdiplus::Rect* r1, const Gdiplus::Rect* r2
     HWND hwnd = c->hwndParent;
     CrashIf(!hwnd);
     HwndWrapper* wnd = GetRootHwndWnd(c);
-    if (wnd)
+    if (wnd) {
         wnd->MarkForRepaint();
+    }
 
     // if we have r1 or r2, invalidate those, else invalidate w
     bool didInvalidate = false;
@@ -201,15 +207,17 @@ void RequestRepaint(Control* c, const Gdiplus::Rect* r1, const Gdiplus::Rect* r2
         didInvalidate = true;
     }
 
-    if (didInvalidate)
+    if (didInvalidate) {
         return;
+    }
 
     InvalidateAtOff(hwnd, &wRect, offX, offY);
 }
 
 void RequestLayout(Control* c) {
     HwndWrapper* wnd = GetRootHwndWnd(c);
-    if (wnd)
+    if (wnd) {
         wnd->RequestLayout();
+    }
 }
 } // namespace mui
