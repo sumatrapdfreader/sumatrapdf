@@ -496,7 +496,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Move(enum TextUnit unit,
 
     if (count > 0) {
         for (int i = 0; i < count; ++i) {
-            int sub_moved;
+            int sub_moved = 0;
             this->MoveEndpointByUnit(TextPatternRangeEndpoint_End, unit, 1, &sub_moved);
 
             // Move end first, other will succeed if this succeeds
@@ -509,7 +509,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Move(enum TextUnit unit,
         }
     } else if (count < 0) {
         for (int i = 0; i < -count; ++i) {
-            int sub_moved;
+            int sub_moved = 0;
             this->MoveEndpointByUnit(TextPatternRangeEndpoint_Start, unit, -1, &sub_moved);
 
             // Move start first, other will succeed if this succeeds

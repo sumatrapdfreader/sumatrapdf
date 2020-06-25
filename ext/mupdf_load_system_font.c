@@ -218,7 +218,7 @@ static void grow_system_font_list(fz_context* ctx, pdf_fontlistMS* fl) {
 
     // use realloc/free for the fontmap, since the list can
     // remain in memory even with all fz_contexts destroyed
-    newitems = realloc(fl->fontmap, newcap * sizeof(sys_font_info));
+    newitems = (sys_font_info*)realloc(fl->fontmap, newcap * sizeof(sys_font_info));
     if (!newitems)
         fz_throw(ctx, FZ_ERROR_GENERIC, "OOM in grow_system_font_list");
     memset(newitems + fl->cap, 0, sizeof(sys_font_info) * (newcap - fl->cap));

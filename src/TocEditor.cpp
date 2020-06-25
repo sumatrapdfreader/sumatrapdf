@@ -439,7 +439,7 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
         delete engine;
     };
 
-    TocItem* fileToc = (TocItem*)treeCtrl->treeModel->RootAt(0);
+    // TocItem* fileToc = (TocItem*)treeCtrl->treeModel->RootAt(0);
 
     // didn't drop on an existing itme: add as a last sibling
     if (ti == nullptr) {

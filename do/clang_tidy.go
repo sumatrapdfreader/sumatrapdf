@@ -41,6 +41,12 @@ src/uia
 src/ifilter
 src/previewer
 
+Fix warnings:
+* clang-analyzer-deadcode.DeadStores
+* clang-analyzer-cplusplus.NewDeleteLeaks
+* clang-diagnostic-pragma-pack
+* clang-analyzer-unix.Malloc
+
 TODO fixes:
 modernize-raw-string-literal
 modernize-pass-by-value
@@ -53,14 +59,13 @@ modernize-use-override
 modernize-use-nullptr
 modernize-use-auto
 modernize-use-nodiscard
-
 */
 
 const clangTidyLogFile = "clangtidy.out.txt"
 
 func clangTidyFile(path string) {
 	args := []string{
-		"--checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value",
+		"--checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value,-clang-diagnostic-ignored-pragma-optimize",
 		"-extra-arg=-std=c++20",
 		"", // file
 		"--",
