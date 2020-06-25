@@ -49,10 +49,11 @@ u16 ByteOrderDecoder::UInt16() {
         return 0;
     }
 
-    if (LittleEndian == byteOrder)
+    if (LittleEndian == byteOrder) {
         v = UInt16LE(curr);
-    else
+    } else {
         v = UInt16BE(curr);
+    }
 
     left -= sizeof(v);
     curr += sizeof(v);
@@ -68,10 +69,11 @@ u32 ByteOrderDecoder::UInt32() {
         return 0;
     }
 
-    if (LittleEndian == byteOrder)
+    if (LittleEndian == byteOrder) {
         v = UInt32LE(curr);
-    else
+    } else {
         v = UInt32BE(curr);
+    }
 
     left -= sizeof(v);
     curr += sizeof(v);

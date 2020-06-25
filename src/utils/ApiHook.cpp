@@ -55,8 +55,9 @@ class MemoryProtector {
 static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::string_view& dllName,
                                               const std::string_view& apiName) {
     CrashIf(moduleBase == nullptr);
-    if (moduleBase == nullptr)
+    if (moduleBase == nullptr) {
         return nullptr;
+    }
 
     IMAGE_DOS_HEADER* pDos = (IMAGE_DOS_HEADER*)moduleBase;
     IMAGE_NT_HEADERS* pNT = RVA2VA(IMAGE_NT_HEADERS*, moduleBase, pDos->e_lfanew);
@@ -73,8 +74,9 @@ static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::strin
     // import entry with null fields marks end
     for (uint_fast16_t i = 0; pImports[i].Name != NULL; i++) {
         const char* s = RVA2VA(PCHAR, moduleBase, pImports[i].Name);
-        if (my_narrow_stricmp(s, dllName.data()) != 0)
+        if (my_narrow_stricmp(s, dllName.data()) != 0) {
             continue;
+        }
 
         // Original holds the API Names
         PIMAGE_THUNK_DATA pOriginalThunk =
@@ -99,8 +101,9 @@ static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::strin
                 (IMAGE_IMPORT_BY_NAME*)RVA2VA(uintptr_t, moduleBase, pOriginalThunk->u1.AddressOfData);
 
             auto name = (const char*)(&pImport->Name[0]);
-            if (my_narrow_stricmp(name, apiName.data()) != 0)
+            if (my_narrow_stricmp(name, apiName.data()) != 0) {
                 continue;
+            }
 
             return pThunk;
         }
@@ -128,12 +131,14 @@ static IMAGE_THUNK_DATA* FindIatThunk(const std::string_view& dllName, const std
         std::wstring baseModuleName(dte->BaseDllName.Buffer, dte->BaseDllName.Length / sizeof(wchar_t));
 
         // try all modules if none given, otherwise only try specified
-        if (!moduleName.empty() && (my_wide_stricmp(baseModuleName.c_str(), moduleName.c_str()) != 0))
+        if (!moduleName.empty() && (my_wide_stricmp(baseModuleName.c_str(), moduleName.c_str()) != 0)) {
             continue;
+        }
 
         pThunk = FindIatThunkInModule(dte->DllBase, dllName, apiName);
-        if (pThunk != nullptr)
+        if (pThunk != nullptr) {
             return pThunk;
+        }
     }
 
     if (pThunk == nullptr) {
@@ -159,8 +164,9 @@ IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiNam
 bool IatHook::hook() {
     CrashIf(m_userOrigVar == nullptr);
     IMAGE_THUNK_DATA* pThunk = FindIatThunk(m_dllName, m_apiName);
-    if (pThunk == nullptr)
+    if (pThunk == nullptr) {
         return false;
+    }
 
     // IAT is by default a writeable section
     MemoryProtector prot((u64)&pThunk->u1.Function, sizeof(uintptr_t), PAGE_READWRITE);
@@ -174,12 +180,14 @@ bool IatHook::hook() {
 bool IatHook::unHook() {
     CrashIf(m_userOrigVar == nullptr);
     CrashIf(!m_hooked);
-    if (!m_hooked)
+    if (!m_hooked) {
         return false;
+    }
 
     IMAGE_THUNK_DATA* pThunk = FindIatThunk(m_dllName, m_apiName);
-    if (pThunk == nullptr)
+    if (pThunk == nullptr) {
         return false;
+    }
 
     MemoryProtector prot((u64)&pThunk->u1.Function, sizeof(uintptr_t), PAGE_READWRITE);
     pThunk->u1.Function = (uintptr_t)m_origFunc;

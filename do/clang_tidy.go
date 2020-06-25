@@ -22,7 +22,60 @@ https://www.labri.fr/perso/fleury/posts/programming/using-clang-tidy-and-clang-f
 ad-hoc execution:
 clang-tidy.exe --checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value -extra-arg=-std=c++20 .\src\*.cpp -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00
 
-clang-tidy src/mui/*.cpp -fix -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00
+ls src\utils\*.cpp | select Name
+
+clang-tidy src/utils/ByteOrderDecoder.cpp -fix -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/unarr -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00
+*/
+
+/*
+src\utils:
+
+ByteOrderDecoder.cpp
+ByteReader.cpp
+ByteWriter.cpp
+CmdLineParser.cpp
+ColorUtil.cpp
+CryptoUtil.cpp
+CssParser.cpp
+DbgHelpDyn.cpp
+Dict.cpp
+DirIter.cpp
+Dpi.cpp
+FileUtil.cpp
+FileWatcher.cpp
+FzImgReader.cpp
+GdiPlusUtil.cpp
+GuessFileType.cpp
+HtmlParserLookup.cpp
+HtmlPrettyPrint.cpp
+HtmlPullParser.cpp
+HtmlWindow.cpp
+HttpUtil.cpp
+JsonParser.cpp
+Log.cpp
+LogDbg.cpp
+LzmaSimpleArchive.cpp
+PalmDbReader.cpp
+RegistryPaths.cpp
+SerializeTxt.cpp
+SettingsUtil.cpp
+SquareTreeParser.cpp
+StrconvUtil.cpp
+StrFormat.cpp
+StringViewUtil.cpp
+StrSlice.cpp
+StrUtil.cpp
+StrUtil_win.cpp
+TgaReader.cpp
+ThreadUtil.cpp
+TrivialHtmlParser.cpp
+TxtParser.cpp
+UITask.cpp
+UtAssert.cpp
+WebpReader.cpp
+WinDynCalls.cpp
+WinUtil.cpp
+ZipUtil.cpp
 */
 
 const clangTidyLogFile = "clangtidy.out.txt"
