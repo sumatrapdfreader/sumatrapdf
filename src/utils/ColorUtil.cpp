@@ -209,8 +209,9 @@ COLORREF AdjustLightness(COLORREF c, float factor) {
 COLORREF AdjustLightness2(COLORREF c, float units) {
     float lightness = GetLightness(c);
     units = limitValue(units, -lightness, 255.0f - lightness);
-    if (0.0f == lightness)
+    if (0.0f == lightness) {
         return RGB(BYTE(units + 0.5f), BYTE(units + 0.5f), BYTE(units + 0.5f));
+    }
     return AdjustLightness(c, 1.0f + units / lightness);
 }
 

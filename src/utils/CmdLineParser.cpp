@@ -12,17 +12,20 @@
 // * an even number of backslashes followed by either a backslash and a quotation
 //   mark or just a quotation mark is collapsed into half as many backslashes
 void ParseCmdLine(const WCHAR* cmdLine, WStrVec& out, int maxParts) {
-    if (!cmdLine)
+    if (!cmdLine) {
         return;
+    }
 
     str::WStr arg(MAX_PATH / 2);
     const WCHAR* s;
 
     while (--maxParts != 0) {
-        while (str::IsWs(*cmdLine))
+        while (str::IsWs(*cmdLine)) {
             cmdLine++;
-        if (!*cmdLine)
+        }
+        if (!*cmdLine) {
             break;
+        }
 
         bool insideQuotes = false;
         for (; *cmdLine; cmdLine++) {
@@ -34,11 +37,13 @@ void ParseCmdLine(const WCHAR* cmdLine, WStrVec& out, int maxParts) {
                 break;
             }
             if ('\\' == *cmdLine) {
-                for (s = cmdLine + 1; '\\' == *s; s++)
+                for (s = cmdLine + 1; '\\' == *s; s++) {
                     ;
+                }
                 // backslashes escape only when followed by a quotation mark
-                if ('"' == *s)
+                if ('"' == *s) {
                     cmdLine++;
+                }
             }
             arg.Append(*cmdLine);
         }
@@ -46,9 +51,11 @@ void ParseCmdLine(const WCHAR* cmdLine, WStrVec& out, int maxParts) {
     }
 
     if (*cmdLine) {
-        while (str::IsWs(*cmdLine))
+        while (str::IsWs(*cmdLine)) {
             cmdLine++;
-        if (*cmdLine)
+        }
+        if (*cmdLine) {
             out.Append(str::Dup(cmdLine));
+        }
     }
 }

@@ -24,17 +24,12 @@ clang-tidy.exe --checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unuse
 
 ls src\utils\*.cpp | select Name
 
-clang-tidy src/utils/ByteOrderDecoder.cpp -fix -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/unarr -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00
+clang-tidy src/utils/ColorUtil.cpp -fix -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/unarr -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00
 */
 
 /*
 src\utils:
 
-ByteOrderDecoder.cpp
-ByteReader.cpp
-ByteWriter.cpp
-CmdLineParser.cpp
-ColorUtil.cpp
 CryptoUtil.cpp
 CssParser.cpp
 DbgHelpDyn.cpp
