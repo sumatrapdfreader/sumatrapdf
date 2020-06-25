@@ -27,16 +27,39 @@ clang-tidy.exe --checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unuse
 
 ls src\utils\*.cpp | select Name
 
-clang-tidy src/wingui/*.cpp -fix -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00
+clang-tidy src/SumatraPDF.cpp -fix -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00
+
+Error while processing C:\Users\kjk\src\sumatrapdf\src\SumatraPDF.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\SumatraProperties.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\SumatraStartup.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\SvgIcons.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\TabInfo.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\TableOfContents.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\Tabs.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\Tester.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\Tests.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\TextSearch.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\TextSelection.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\Theme.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\TocEditor.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\TocEditTitle.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\Toolbar.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\Translations.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\Trans_sumatra_txt.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\Uninstaller.cpp.
+Error while processing C:\Users\kjk\src\sumatrapdf\src\UnitTests.cpp.
 */
 
 /*
-done: src/mui
-
-TODO: src
-TODO: src/wingui
-
+Done:
+src/wingui
 src\utils:
+
+
+TODO:
+src
+src/mui
+
 */
 
 const clangTidyLogFile = "clangtidy.out.txt"

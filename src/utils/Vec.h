@@ -367,9 +367,15 @@ class WStr : public Vec<WCHAR> {
         this->allocator = allocator;
     }
 
-    WStr(std::wstring_view s) {
-        AppendView(s);
+    WStr(std::wstring_view sv) {
+        AppendView(sv);
     }
+
+    WStr(const WCHAR* s) {
+        std::wstring_view sv{s};
+        AppendView(sv);
+    }
+
 
     void Append(WCHAR c) {
         InsertAt(len, c);
