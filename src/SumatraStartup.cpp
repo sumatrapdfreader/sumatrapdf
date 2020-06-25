@@ -972,6 +972,15 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         hPrevWnd = FindPrevInstWindow(&hMutex);
     }
     if (hPrevWnd) {
+        DWORD otherProcId = 1;
+        GetWindowThreadProcessId(hPrevWnd, &otherProcId);
+        if (!CanTalkToProcess(otherProcId)) {
+            // TODO: maybe just launch another instance. The problem with that
+            // is that they'll fight for settings file which might cause corruption
+            auto msg = "SumatraPDF is running as admin and we can't open files from non-admin process";
+            MessageBoxA(nullptr, msg, "Error", MB_OK | MB_ICONERROR);
+            goto Exit;
+        }
         size_t nFiles = i.fileNames.size();
         for (size_t n = 0; n < nFiles; n++) {
             OpenUsingDde(hPrevWnd, i.fileNames.at(n), i, 0 == n);

@@ -639,29 +639,45 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
 }
 
 // return true if the app is running in elevated (as admin)
-bool IsRunningElevated() {
-    BOOL fIsRunAsAdmin = FALSE;
-    PSID pAdministratorsGroup = NULL;
+// TODO: on Vista+ use GetTokenInformation linked
+// https://social.msdn.microsoft.com/Forums/vstudio/en-US/f64ff4cb-d21b-4d72-b513-fb8eb39f4a3a/how-to-determine-if-a-user-that-created-a-process-doesnt-belong-to-administrators-group?forum=windowssecurity
+bool IsProcessRunningElevated(DWORD procId) {
+    BOOL isAdmin = FALSE;
+    PSID administratorsGroup = NULL;
 
-    // Allocate and initialize a SID of the administrators group.
+    // Allocate and initialize a SID of the administrators group
     SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
-    if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0,
-                                  0, &pAdministratorsGroup)) {
+    DWORD sub1 = SECURITY_BUILTIN_DOMAIN_RID;
+    DWORD sub2 = DOMAIN_ALIAS_RID_ADMINS;
+    if (!AllocateAndInitializeSid(&NtAuthority, 2, sub1, sub2, 0, 0, 0, 0, 0, 0, &administratorsGroup)) {
         goto Cleanup;
     }
 
     // Determine whether the SID of administrators group is enabled in
-    // the primary access token of the process.
-    if (!CheckTokenMembership(NULL, pAdministratorsGroup, &fIsRunAsAdmin)) {
+    // the primary access token of the process
+    if (!CheckTokenMembership(nullptr, administratorsGroup, &isAdmin)) {
         goto Cleanup;
     }
 
 Cleanup:
-    if (pAdministratorsGroup) {
-        FreeSid(pAdministratorsGroup);
+    if (administratorsGroup) {
+        FreeSid(administratorsGroup);
     }
+    return tobool(isAdmin);
+}
 
-    return !!fIsRunAsAdmin;
+// We assume that if OpenProcess() works, we are at the same or greater
+// elevation level
+// I tried to run IsProcessRunningElevated() on 2 processes but this didn't
+// work if we're not elevated and other process is (because we can't OpenProcess())
+bool CanTalkToProcess(DWORD procId) {
+    BOOL inheritHandle = FALSE;
+    HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION, inheritHandle, procId);
+    if (hProc) {
+        CloseHandle(hProc);
+        return true;
+    }
+    return false;
 }
 
 bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline) {

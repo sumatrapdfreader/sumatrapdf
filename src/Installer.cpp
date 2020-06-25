@@ -1013,7 +1013,7 @@ static void RelaunchElevatedIfNotDebug() {
         // elevation in debug build
         return;
     }
-    if (IsRunningElevated()) {
+    if (IsProcessRunningElevated()) {
         log("Already running elevated\n");
         return;
     }

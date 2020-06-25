@@ -47,7 +47,6 @@ src/previewer
 Fix warnings:
 * clang-analyzer-deadcode.DeadStores
 * clang-analyzer-cplusplus.NewDeleteLeaks
-* clang-diagnostic-pragma-pack
 * clang-analyzer-unix.Malloc
 
 TODO fixes:
@@ -82,7 +81,7 @@ const clangTidyLogFile = "clangtidy.out.txt"
 
 func clangTidyFile(path string) {
 	args := []string{
-		"--checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value,-clang-diagnostic-ignored-pragma-optimize",
+		"--checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value,-clang-diagnostic-ignored-pragma-optimize,-clang-diagnostic-pragma-pack",
 		"-extra-arg=-std=c++20",
 		"", // file
 		"--",

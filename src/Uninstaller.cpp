@@ -545,7 +545,7 @@ static void RelaunchElevatedFromTempDirectory(Flags* cli) {
     AutoFreeWstr installerTempPath = GetUninstallerPathInTemp();
     AutoFreeWstr ownPath = GetExePath();
     if (str::EqI(installerTempPath, ownPath)) {
-        if (IsRunningElevated()) {
+        if (IsProcessRunningElevated()) {
             log("Already running elevated and from temp dir\n");
             return;
         }
