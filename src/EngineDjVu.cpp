@@ -655,8 +655,8 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
 
     int topToBottom = TRUE;
     ddjvu_format_set_row_order(fmt, topToBottom);
-    ddjvu_rect_t prect = {full.x, full.y, full.dx, full.dy};
-    ddjvu_rect_t rrect = {screen.x, 2 * full.y - screen.y + full.dy - screen.dy, screen.dx, screen.dy};
+    ddjvu_rect_t prect = {full.x, full.y, (uint)full.dx, (uint)full.dy};
+    ddjvu_rect_t rrect = {screen.x, 2 * full.y - screen.y + full.dy - screen.dy, (uint)screen.dx, (uint)screen.dy};
 
     RenderedBitmap* bmp = nullptr;
     size_t bytesPerPixel = isBitonal ? 1 : 3;
@@ -711,7 +711,8 @@ RectD EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
     ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
     double zoom = std::min(std::min(250.0 / pageRc.dx, 250.0 / pageRc.dy), 1.0);
     Rect full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
-    ddjvu_rect_t prect = {full.x, full.y, full.dx, full.dy}, rrect = prect;
+    ddjvu_rect_t prect = {full.x, full.y, (uint)full.dx, (uint)full.dy};
+    ddjvu_rect_t rrect = prect;
 
     AutoFree bmpData = AllocArray<char>(full.dx * full.dy + 1);
     if (!bmpData) {

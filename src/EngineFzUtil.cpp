@@ -103,7 +103,7 @@ struct istream_filter {
     unsigned char buf[4096];
 };
 
-extern "C" static int next_istream(fz_context* ctx, fz_stream* stm, size_t max) {
+extern "C" int next_istream(fz_context* ctx, fz_stream* stm, size_t max) {
     UNUSED(max);
     istream_filter* state = (istream_filter*)stm->state;
     ULONG cbRead = sizeof(state->buf);
@@ -117,7 +117,7 @@ extern "C" static int next_istream(fz_context* ctx, fz_stream* stm, size_t max) 
     return cbRead > 0 ? *stm->rp++ : EOF;
 }
 
-extern "C" static void seek_istream(fz_context* ctx, fz_stream* stm, i64 offset, int whence) {
+extern "C" void seek_istream(fz_context* ctx, fz_stream* stm, i64 offset, int whence) {
     istream_filter* state = (istream_filter*)stm->state;
     LARGE_INTEGER off;
     ULARGE_INTEGER n;
@@ -131,7 +131,7 @@ extern "C" static void seek_istream(fz_context* ctx, fz_stream* stm, i64 offset,
     stm->rp = stm->wp = state->buf;
 }
 
-extern "C" static void drop_istream(fz_context* ctx, void* state_) {
+extern "C" void drop_istream(fz_context* ctx, void* state_) {
     istream_filter* state = (istream_filter*)state_;
     state->stream->Release();
     fz_free(ctx, state);

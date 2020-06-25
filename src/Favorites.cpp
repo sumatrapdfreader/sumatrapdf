@@ -275,7 +275,7 @@ bool HasFavorites() {
 // caller has to free() the result
 static WCHAR* FavReadableName(Favorite* fn) {
     AutoFreeWstr plainLabel(str::Format(L"%d", fn->pageNo));
-    const WCHAR* label = fn->pageLabel ? fn->pageLabel : plainLabel;
+    const WCHAR* label = fn->pageLabel ? fn->pageLabel : plainLabel.Get();
     if (fn->name) {
         AutoFreeWstr pageNo(str::Format(_TR("(page %s)"), label));
         return str::Join(fn->name, L" ", pageNo);

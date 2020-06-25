@@ -15,14 +15,16 @@ class DialogData {
         // Given an array of dialog item structures determine how many of them there
         // are by scanning along them until we reach the last.
         nItemCount = 0;
-        for (const DialogSizerSizingItem* psi = psd; psi->uSizeInfo != 0xFFFFFFFF; psi++)
+        for (const DialogSizerSizingItem* psi = psd; psi->uSizeInfo != 0xFFFFFFFF; psi++) {
             nItemCount++;
+        }
 
         // Copy all of the user controls etc. for later, this way the user can quite happily
         // let the structure go out of scope.
         this->psd = (DialogSizerSizingItem*)memdup((void*)psd, nItemCount * sizeof(DialogSizerSizingItem));
-        if (!this->psd)
+        if (!this->psd) {
             nItemCount = 0;
+        }
 
         // Store some sizes etc. for later.
         Rect rectWnd = WindowRect(hwnd);
@@ -56,8 +58,9 @@ class DialogData {
     bool bMaximised;
 
     void UpdateGripper() {
-        if (!bShowSizingGrip)
+        if (!bShowSizingGrip) {
             return;
+        }
 
         Rect rcOld = rcGrip;
         UpdateGripperRect();
@@ -153,8 +156,9 @@ void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
 // the controls whilst the window sizes.
 static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     DialogData* pdd = (DialogData*)GetProp(hwnd, DIALOG_DATA_PROPERTY);
-    if (!pdd)
+    if (!pdd) {
         return DefWindowProc(hwnd, msg, wp, lp);
+    }
 
     switch (msg) {
         case WM_ERASEBKGND: {
@@ -174,8 +178,9 @@ static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // If the gripper is enabled then perform a simple hit test on our gripper area.
             POINT pt = {LOWORD(lp), HIWORD(lp)};
             ScreenToClient(hwnd, &pt);
-            if (pdd->InsideGripper(Point(pt.x, pt.y)))
+            if (pdd->InsideGripper(Point(pt.x, pt.y))) {
                 return HTBOTTOMRIGHT;
+            }
         } break;
 
         case WM_GETMINMAXINFO: {

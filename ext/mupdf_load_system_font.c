@@ -118,8 +118,8 @@ static inline ULONG BEtoHl(ULONG x) {
 /* A little bit more sophisticated name matching so that e.g. "EurostileExtended"
    matches "EurostileExtended-Roman" or "Tahoma-Bold,Bold" matches "Tahoma-Bold" */
 static int lookup_compare(const void* elem1, const void* elem2) {
-    const char* val1 = elem1;
-    const char* val2 = elem2;
+    const char* val1 = (const char*)elem1;
+    const char* val2 = (const char*)elem2;
     int len1 = strlen(val1);
     int len2 = strlen(val2);
 
@@ -149,7 +149,7 @@ static int str_ends_with(const char* str, const char* end) {
 }
 
 static sys_font_info* pdf_find_windows_font_path(const char* fontname) {
-    return bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(sys_font_info), lookup_compare);
+    return (sys_font_info*)bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(sys_font_info), lookup_compare);
 }
 
 /* source and dest can be same */
@@ -488,7 +488,7 @@ static void create_system_font_list(fz_context* ctx) {
 #endif
 
     // sort the font list, so that it can be searched binarily
-    qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(sys_font_info), _stricmp);
+    qsort((void*)fontlistMS.fontmap, (size_t)fontlistMS.len, sizeof(sys_font_info), _stricmp);
 
 #ifdef DEBUG
     // allow to overwrite system fonts for debugging purposes
@@ -614,7 +614,7 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
     // fourth, try to separate style from basename for prestyled fonts (e.g. "ArialBold")
     if (!found && !comma && (str_ends_with(fontname, "Bold") || str_ends_with(fontname, "Italic"))) {
         int styleLen = str_ends_with(fontname, "Bold") ? 4 : str_ends_with(fontname, "BoldItalic") ? 10 : 6;
-        fontname = fz_resize_array(ctx, fontname, strlen(fontname) + 2, sizeof(char));
+        fontname = (char*)fz_resize_array(ctx, fontname, strlen(fontname) + 2, sizeof(char));
         comma = fontname + strlen(fontname) - styleLen;
         memmove(comma + 1, comma, styleLen + 1);
         *comma = '-';
@@ -652,7 +652,7 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
         if (!buffer) {
             return NULL;
         }
-        cached_font* f = malloc(sizeof(cached_font));
+        cached_font* f = (cached_font*)malloc(sizeof(cached_font));
         f->fi = found;
         f->ctx = ctx;
         f->buffer = buffer;

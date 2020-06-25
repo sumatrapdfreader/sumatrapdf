@@ -427,8 +427,9 @@ static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
     } else if (VK_DIVIDE == wp) {
         if (IsShiftPressed()) {
             HTREEITEM root = TreeView_GetRoot(hwnd);
-            if (!TreeView_GetNextSibling(hwnd, root))
+            if (!TreeView_GetNextSibling(hwnd, root)) {
                 root = TreeView_GetChild(hwnd, root);
+            }
             TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE, false);
         } else {
             TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
