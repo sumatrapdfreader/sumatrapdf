@@ -40,8 +40,9 @@ class CClassFactory : public IClassFactory {
 
     IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
-        if (cRef == 0)
+        if (cRef == 0) {
             delete this;
+        }
         return cRef;
     }
 
@@ -55,29 +56,32 @@ class CClassFactory : public IClassFactory {
         ScopedComPtr<IFilter> pFilter;
 
         CLSID clsid;
-        if (SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        if (SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new CPdfFilter(&g_lRefCount);
 #ifdef BUILD_TEX_IFILTER
-        else if (SUCCEEDED(CLSIDFromString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        } else if (SUCCEEDED(CLSIDFromString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new CTeXFilter(&g_lRefCount);
 #endif
 #ifdef BUILD_EPUB_IFILTER
-        else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        } else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pFilter = new CEpubFilter(&g_lRefCount);
 #endif
-        else
+        } else {
             return E_NOINTERFACE;
-        if (!pFilter)
+        }
+        if (!pFilter) {
             return E_OUTOFMEMORY;
+        }
 
         return pFilter->QueryInterface(riid, ppv);
     }
 
     IFACEMETHODIMP LockServer(BOOL bLock) {
-        if (bLock)
+        if (bLock) {
             InterlockedIncrement(&g_lRefCount);
-        else
+        } else {
             InterlockedDecrement(&g_lRefCount);
+        }
         return S_OK;
     }
 
@@ -119,8 +123,9 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
 
 STDAPI DllRegisterServer() {
     AutoFreeWstr dllPath(path::GetPathOfFileInAppDir());
-    if (!dllPath)
+    if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());
+    }
 
     struct {
         WCHAR *key, *value, *data;

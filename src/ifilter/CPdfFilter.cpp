@@ -56,8 +56,9 @@ HRESULT CPdfFilter::OnInit() {
 static bool PdfDateParse(const WCHAR* pdfDate, SYSTEMTIME* timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (str::StartsWith(pdfDate, L"D:"))
+    if (str::StartsWith(pdfDate, L"D:")) {
         pdfDate += 2;
+    }
     return str::Parse(pdfDate,
                       L"%4d%2d%2d"
                       L"%2d%2d%2d",
@@ -87,8 +88,9 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue& chunkValue) {
         case STATE_PDF_TITLE:
             m_state = STATE_PDF_DATE;
             str.Set(m_pdfEngine->GetProperty(DocumentProperty::Title));
-            if (!str)
+            if (!str) {
                 str.Set(m_pdfEngine->GetProperty(DocumentProperty::Subject));
+            }
             if (!str::IsEmpty(str.Get())) {
                 chunkValue.SetTextValue(PKEY_Title, str);
                 return S_OK;
@@ -98,8 +100,9 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue& chunkValue) {
         case STATE_PDF_DATE:
             m_state = STATE_PDF_CONTENT;
             str.Set(m_pdfEngine->GetProperty(DocumentProperty::ModificationDate));
-            if (!str)
+            if (!str) {
                 str.Set(m_pdfEngine->GetProperty(DocumentProperty::CreationDate));
+            }
             if (!str::IsEmpty(str.Get())) {
                 SYSTEMTIME systime;
                 FILETIME filetime;

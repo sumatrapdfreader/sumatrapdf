@@ -39,14 +39,16 @@ HRESULT CTeXFilter::OnInit() {
 
 // appends a new line, if the last character isn't one already
 static inline void addsingleNL(WCHAR* base, WCHAR** cur) {
-    if (*cur > base && *(*cur - 1) != '\n')
+    if (*cur > base && *(*cur - 1) != '\n') {
         *(*cur)++ = '\n';
+    }
 }
 
 // appends a space, if the last character isn't one already
 static inline void addsinglespace(WCHAR* base, WCHAR** cur) {
-    if (*cur > base && !str::IsWs(*(*cur - 1)))
+    if (*cur > base && !str::IsWs(*(*cur - 1))) {
         *(*cur)++ = ' ';
+    }
 }
 
 // extracts a text block contained within a pair of braces
@@ -78,8 +80,9 @@ WCHAR* CTeXFilter::ExtractBracedBlock() {
                         *rptr++ = '-';
                         addsinglespace(result, &rptr);
                     }
-                    for (; iscmdchar(*m_pPtr); m_pPtr++)
+                    for (; iscmdchar(*m_pPtr); m_pPtr++) {
                         ;
+                    }
                     skipspace(m_pPtr);
                     // ignore command parameters in brackets
                     if (*m_pPtr == '[' && wcschr(m_pPtr, ']')) {
@@ -124,8 +127,9 @@ WCHAR* CTeXFilter::ExtractBracedBlock() {
                     m_pPtr += 2;
                     break;
                 }
-                if (*m_pPtr != '"')
+                if (*m_pPtr != '"') {
                     break;
+                }
                 m_pPtr++;
                 /* fall through */
             case '"':
@@ -163,13 +167,15 @@ WCHAR* CTeXFilter::ExtractBracedBlock() {
                 break;
             case '}':
                 m_iDepth--;
-                if (*m_pPtr == '{')
+                if (*m_pPtr == '{') {
                     addsinglespace(result, &rptr);
+                }
                 break;
             case '[':
                 // ignore command parameters in brackets
-                if (wcschr(m_pPtr, ']') && wcschr(m_pPtr, ']') < wcschr(m_pPtr, '\n'))
+                if (wcschr(m_pPtr, ']') && wcschr(m_pPtr, ']') < wcschr(m_pPtr, '\n')) {
                     m_pPtr = wcschr(m_pPtr, ']') + 1;
+                }
                 break;
             case '%':
                 skipcomment(m_pPtr);
@@ -199,8 +205,9 @@ WCHAR* CTeXFilter::ExtractBracedBlock() {
         }
     }
 
-    if (*m_pPtr == '}')
+    if (*m_pPtr == '}') {
         m_pPtr++;
+    }
     *rptr = '\0';
     return result;
 }
@@ -232,12 +239,14 @@ ContinueParsing:
                     case '\\':
                         if (iscmdchar(*m_pPtr)) {
                             start = m_pPtr;
-                            for (end = start; iscmdchar(*m_pPtr); m_pPtr++, end++)
+                            for (end = start; iscmdchar(*m_pPtr); m_pPtr++, end++) {
                                 ;
+                            }
                             break;
                         }
-                        if (*m_pPtr)
+                        if (*m_pPtr) {
                             m_pPtr++;
+                        }
                         break;
                     case '{':
                         ExtractBracedBlock();
@@ -247,11 +256,13 @@ ContinueParsing:
                         break;
                 }
             }
-            if (!start)
+            if (!start) {
                 goto ContinueParsing;
+            }
             skipspace(m_pPtr);
-            if (*m_pPtr != '{')
+            if (*m_pPtr != '{') {
                 goto ContinueParsing;
+            }
             m_pPtr++;
 
             if (!wcsncmp(start, L"author", end - start) || !wcsncmp(start, L"title", end - start)) {
@@ -259,8 +270,9 @@ ContinueParsing:
                 return S_OK;
             }
 
-            if (!wcsncmp(start, L"begin", end - start) && str::Eq(ExtractBracedBlock(), L"document"))
+            if (!wcsncmp(start, L"begin", end - start) && str::Eq(ExtractBracedBlock(), L"document")) {
                 m_state = STATE_TEX_CONTENT;
+            }
             goto ContinueParsing;
         case STATE_TEX_CONTENT:
             chunkValue.SetTextValue(PKEY_Search_Contents, ExtractBracedBlock(), CHUNK_TEXT);
