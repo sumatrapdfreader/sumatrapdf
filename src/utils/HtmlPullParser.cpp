@@ -36,7 +36,7 @@ bool SkipUntil(const char*& s, const char* end, char c) {
     return *s == c;
 }
 
-bool SkipUntil(const char*& s, const char* end, char* term) {
+bool SkipUntil(const char*& s, const char* end, const char* term) {
     size_t len = str::Len(term);
     for (; s < end; s++) {
         if (s + len <= end && str::StartsWith(s, term))

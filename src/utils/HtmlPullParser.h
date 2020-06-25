@@ -109,7 +109,7 @@ class HtmlPullParser {
 bool SkipWs(const char*& s, const char* end);
 bool SkipNonWs(const char*& s, const char* end);
 bool SkipUntil(const char*& s, const char* end, char c);
-bool SkipUntil(const char*& s, const char* end, char* term);
+bool SkipUntil(const char*& s, const char* end, const char* term);
 bool IsSpaceOnly(const char* s, const char* end);
 
 int HtmlEntityNameToRune(const char* name, size_t nameLen);

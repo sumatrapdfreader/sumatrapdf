@@ -177,7 +177,7 @@ WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
     if (IsSep(*fileName)) {
         fileName++;
     }
-    WCHAR* sepStr = nullptr;
+    const WCHAR* sepStr = nullptr;
     if (!IsSep(path[str::Len(path) - 1])) {
         sepStr = L"\\";
     }

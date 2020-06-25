@@ -78,8 +78,8 @@ typedef struct {
 } FONT_COLLECTION;
 
 static struct {
-    char* name;
-    char* pattern;
+    const char* name;
+    const char* pattern;
 } baseSubstitutes[] = {
     {"Courier", "CourierNewPSMT"},
     {"Courier-Bold", "CourierNewPS-BoldMT"},

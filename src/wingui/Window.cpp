@@ -364,7 +364,7 @@ static LRESULT wndBaseProcDispatch(WindowBase* w, HWND hwnd, UINT msg, WPARAM wp
 }
 
 static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    // char* msgName = getWinMessageName(msg);
+    // auto msgName = GetWinMessageName(msg);
     // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, wp);
 
     if (WM_NCCREATE == msg) {
@@ -449,7 +449,7 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         return res;
     }
     res = DefWindowProcW(hwnd, msg, wp, lp);
-    // char* msgName = getWinMessageName(msg);
+    // auto msgName = GetWinMessageName(msg);
     // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x, res: 0x%x\n", hwnd, msg, msgName, wp, res);
     return res;
 }

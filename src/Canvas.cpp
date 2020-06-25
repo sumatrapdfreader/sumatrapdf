@@ -1105,7 +1105,7 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    // dbgLogMsg("canvas:", hwnd, msg, wp, lp);
+    // DbgLogMsg("canvas:", hwnd, msg, wp, lp);
 
     int x = GET_X_LPARAM(lp);
     int y = GET_Y_LPARAM(lp);

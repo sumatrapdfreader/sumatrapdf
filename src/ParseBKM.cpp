@@ -19,7 +19,7 @@
 
 // Version of .bkm and .vbkm files. Allows us to change the mind
 // TODO: this is provisional version while in development
-constexpr char* kBkmVersion = "998";
+constexpr const char* kBkmVersion = "998";
 
 static Kind kindTocItem = "bkmTreeItem";
 
@@ -39,7 +39,7 @@ static std::string_view readFileNormalized(std::string_view path) {
     return sv::NormalizeNewlines(d.AsView());
 }
 
-static void SerializeKeyVal(char* key, WCHAR* val, str::Str& s) {
+static void SerializeKeyVal(const char* key, const WCHAR* val, str::Str& s) {
     CrashIf(!key);
     if (!val) {
         return;

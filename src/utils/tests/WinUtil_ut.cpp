@@ -12,7 +12,7 @@ void WinUtilTest() {
     ScopedCom comScope;
 
     {
-        char* string = "abcde";
+        const char* string = "abcde";
         size_t stringSize = 5;
         auto strm = CreateStreamFromData({(u8*)string, stringSize});
         ScopedComPtr<IStream> stream(strm);
@@ -22,7 +22,7 @@ void WinUtilTest() {
     }
 
     {
-        WCHAR* string = L"abcde";
+        const WCHAR* string = L"abcde";
         size_t stringSize = 10;
         auto strm = CreateStreamFromData({(u8*)string, stringSize});
         ScopedComPtr<IStream> stream(strm);

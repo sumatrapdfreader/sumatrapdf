@@ -185,7 +185,7 @@ static void ParseUntilTest() {
 
 void StrTest() {
     WCHAR buf[32];
-    WCHAR* str = L"a string";
+    const WCHAR* str = L"a string";
     utassert(str::Len(str) == 8);
     utassert(str::Eq(str, L"a string") && str::Eq(str, str));
     utassert(!str::Eq(str, nullptr) && !str::Eq(str, L"A String"));

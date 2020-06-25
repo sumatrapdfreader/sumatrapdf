@@ -23,7 +23,7 @@
 
 namespace dbghelp {
 
-static char* ExceptionNameFromCode(DWORD excCode) {
+static const char* ExceptionNameFromCode(DWORD excCode) {
 #define EXC(x)          \
     case EXCEPTION_##x: \
         return #x;

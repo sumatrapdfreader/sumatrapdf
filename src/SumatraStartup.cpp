@@ -508,7 +508,7 @@ static int RunMessageLoop() {
 
         HWND hwndDialog = GetCurrentModelessDialog();
         if (hwndDialog && IsDialogMessage(hwndDialog, &msg)) {
-            // dbgLogMsg("dialog: ", msg.hwnd, msg.message, msg.wParam, msg.lParam);
+            // DbgLogMsg("dialog: ", msg.hwnd, msg.message, msg.wParam, msg.lParam);
             continue;
         }
         TranslateMessage(&msg);

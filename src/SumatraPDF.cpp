@@ -4648,7 +4648,7 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
 LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
-    // dbgLogMsg("frame:", hwnd, msg, wp, lp);
+    // DbgLogMsg("frame:", hwnd, msg, wp, lp);
     if (win && win->tabsInTitlebar) {
         bool callDefault = true;
         LRESULT res = CustomCaptionFrameProc(hwnd, msg, wp, lp, &callDefault, win);

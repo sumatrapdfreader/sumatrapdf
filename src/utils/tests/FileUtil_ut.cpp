@@ -8,7 +8,7 @@
 #include "utils/UtAssert.h"
 
 void FileUtilTest() {
-    WCHAR* path1 = L"C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
+    const WCHAR* path1 = L"C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
 
     const WCHAR* baseName = path::GetBaseNameNoFree(path1);
     utassert(str::Eq(baseName, L"SumatraPDF.exe"));

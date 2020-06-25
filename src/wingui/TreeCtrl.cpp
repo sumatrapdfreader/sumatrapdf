@@ -450,7 +450,7 @@ void TreeCtrl::WndProc(WndEvent* ev) {
     WPARAM wp = ev->wp;
     LPARAM lp = ev->lp;
 
-    // dbgLogMsg("tree:", hwnd, msg, wp, ev->lp);
+    // DbgLogMsg("tree:", hwnd, msg, wp, ev->lp);
 
     TreeCtrl* w = this;
     CrashIf(w->hwnd != (HWND)hwnd);

@@ -8,7 +8,7 @@ extern "C" {
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/GdiplusUtil.h"
+#include "utils/GdiPlusUtil.h"
 #include "utils/Log.h"
 
 #include "wingui/TreeModel.h"

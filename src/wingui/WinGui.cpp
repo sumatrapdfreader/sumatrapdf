@@ -15,7 +15,7 @@ License: Simplified BSD (see COPYING.BSD) */
 
 struct WinMsgWithName {
     UINT msg;
-    char* name;
+    const char* name;
 };
 
 #define dm(n) \
@@ -313,7 +313,7 @@ static WinMsgWithName gWinMessageNames[] = {
 };
 #undef dm
 
-char* getWinMessageName(UINT msg) {
+const char* GetWinMessageName(UINT msg) {
     for (size_t i = 0; i < dimof(gWinMessageNames); i++) {
         if (gWinMessageNames[i].msg == msg) {
             return gWinMessageNames[i].name;
@@ -331,7 +331,7 @@ uint gMsgToIgnore[] = {
 };
 // clang-format on
 
-static bool shouldIgnoreMsg(uint msg) {
+static bool ShouldIgnoreMsg(uint msg) {
     int n = (int)dimof(gMsgToIgnore);
     for (int i = 0; i < n; i++) {
         if (gMsgToIgnore[i] == msg) {
@@ -341,12 +341,12 @@ static bool shouldIgnoreMsg(uint msg) {
     return false;
 }
 
-void dbgLogMsg(char* prefix, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (shouldIgnoreMsg(msg)) {
+void DbgLogMsg(const char* prefix, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (ShouldIgnoreMsg(msg)) {
         return;
     }
 
-    char* msgName = getWinMessageName(msg);
+    auto msgName = GetWinMessageName(msg);
     if (!prefix) {
         prefix = "";
     }

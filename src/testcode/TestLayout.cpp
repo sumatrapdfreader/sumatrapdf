@@ -210,7 +210,7 @@ static void CreateMainLayout(HWND hwnd) {
 }
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    //dbgLogMsg("tl", hwnd, msg, wp, lp);
+    //DbgLogMsg("tl", hwnd, msg, wp, lp);
 
     LRESULT res = 0;
     if (HandleRegisteredMessages(hwnd, msg, wp, lp, res)) {

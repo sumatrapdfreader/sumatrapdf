@@ -81,7 +81,7 @@ static void ImageCtrlWndProc(WndEvent* ev) {
     }
 
     // HWND hwnd = ev->hwnd;
-    // char* msgName = getWinMessageName(msg);
+    // auto msgName = GetWinMessageName(msg);
     // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x\n", hwnd, msg, msgName, ev->wp);
 }
 
