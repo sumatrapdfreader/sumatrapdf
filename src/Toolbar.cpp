@@ -427,8 +427,9 @@ static void CreateFindBox(WindowInfo* win) {
     }
     SetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC, (LONG_PTR)WndProcToolbar);
 
-    if (!DefWndProcFindBox)
+    if (!DefWndProcFindBox) {
         DefWndProcFindBox = (WNDPROC)GetWindowLongPtr(find, GWLP_WNDPROC);
+    }
     SetWindowLongPtr(find, GWLP_WNDPROC, (LONG_PTR)WndProcFindBox);
 
     win->hwndFindText = label;
@@ -441,8 +442,9 @@ static void CreateFindBox(WindowInfo* win) {
 static WNDPROC DefWndProcPageBox = nullptr;
 static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    if (!win || !win->IsDocLoaded())
+    if (!win || !win->IsDocLoaded()) {
         return DefWindowProc(hwnd, msg, wp, lp);
+    }
 
     if (ExtendedEditWndProc(hwnd, msg, wp, lp)) {
         // select the whole page box on a non-selecting click

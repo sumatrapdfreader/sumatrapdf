@@ -70,8 +70,9 @@ static const WCHAR* FindOrAddMissingTranslation(const char* s) {
             return gMissingTranslations[i].translation;
         }
     }
-    if (gMissingTranslationsCount >= dimof(gMissingTranslations))
+    if (gMissingTranslationsCount >= dimof(gMissingTranslations)) {
         return L"missing translation";
+    }
 
     gMissingTranslations[gMissingTranslationsCount].s = s;
     const WCHAR* res = strconv::Utf8ToWstr(s);
@@ -97,8 +98,9 @@ static WCHAR** GetTransCacheForLang(int langIdx) {
     if (langIdx == EN_RTL_IDX)
         langIdx = 0;
 #endif
-    if (!gLangsTransCache[langIdx])
+    if (!gLangsTransCache[langIdx]) {
         gLangsTransCache[langIdx] = AllocArray<WCHAR*>(gStringsCount);
+    }
     return gLangsTransCache[langIdx];
 }
 
@@ -130,10 +132,11 @@ static void BuildStringsIndexForLang(int langIdx) {
 
     const char* s = GetTranslationsForLang(langIdx);
     for (int i = 0; i < gStringsCount; i++) {
-        if (0 == *s)
+        if (0 == *s) {
             gCurrLangStrings[i] = nullptr;
-        else
+        } else {
             gCurrLangStrings[i] = s;
+        }
         // advance to the next string
         while (*s) {
             ++s;
@@ -211,16 +214,18 @@ const char* DetectUserLang() {
     LANGID langId = GetUserDefaultUILanguage();
     // try the exact match
     for (int i = 0; i < gLangsCount; i++) {
-        if (langId == langIds[i])
+        if (langId == langIds[i]) {
             return GetLangCodeByIdx(i);
+        }
     }
 
     // see if we have a translation in a language that has the same
     // primary id as user's language and neutral sublang
     LANGID userLangIdNeutral = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
     for (int i = 0; i < gLangsCount; i++) {
-        if (userLangIdNeutral == langIds[i])
+        if (userLangIdNeutral == langIds[i]) {
             return GetLangCodeByIdx(i);
+        }
     }
 
     return "en";
@@ -230,8 +235,9 @@ static int GetEnglishStringIndex(const char* txt) {
     const char** origStrings = GetOriginalStrings();
     for (int idx = 0; idx < gStringsCount; idx++) {
         const char* s = origStrings[idx];
-        if (str::Eq(s, txt))
+        if (str::Eq(s, txt)) {
             return idx;
+        }
     }
     return -1;
 }

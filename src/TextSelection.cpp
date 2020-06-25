@@ -99,10 +99,12 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
     int result = -1;
 
     for (int i = 0; i < textLen; i++) {
-        if (!coords[i].x && !coords[i].dx)
+        if (!coords[i].x && !coords[i].dx) {
             continue;
-        if (overGlyph && !coords[i].Contains(pti))
+        }
+        if (overGlyph && !coords[i].Contains(pti)) {
             continue;
+        }
 
         unsigned int dist = distSq((int)x - coords[i].x - coords[i].dx / 2, (int)y - coords[i].y - coords[i].dy / 2);
         if (dist < maxDist) {
@@ -117,8 +119,9 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
         }
     }
 
-    if (-1 == result)
+    if (-1 == result) {
         return 0;
+    }
     CrashIf(result < 0 || result >= textLen);
 
     // the result indexes the first glyph to be selected in a forward selection
@@ -127,8 +130,9 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
     if (pt.x > bbox.x + 0.5 * bbox.dx) {
         result++;
         // for some (DjVu) documents, all glyphs of a word share the same bbox
-        while (result < textLen && coords[result - 1] == coords[result])
+        while (result < textLen && coords[result - 1] == coords[result]) {
             result++;
+        }
     }
     CrashIf(result > 0 && result < textLen && coords[result] == coords[result - 1]);
 
@@ -200,10 +204,12 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     Point pt = PointD(x, y).ToInt();
     // when over the right half of a glyph, FindClosestGlyph returns the
     // index of the next glyph, in which case glyphIx must be decremented
-    if (glyphIx == textLen || !coords[glyphIx].Contains(pt))
+    if (glyphIx == textLen || !coords[glyphIx].Contains(pt)) {
         glyphIx--;
-    if (-1 == glyphIx)
+    }
+    if (-1 == glyphIx) {
         return false;
+    }
     return coords[glyphIx].Contains(pt);
 }
 
@@ -218,8 +224,9 @@ void TextSelection::StartAt(int pageNo, int glyphIx) {
 }
 
 void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
-    if (startPage == -1 || startGlyph == -1)
+    if (startPage == -1 || startGlyph == -1) {
         return;
+    }
 
     endPage = pageNo;
     endGlyph = glyphIx;
@@ -233,8 +240,9 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
     int fromPage = std::min(startPage, endPage), toPage = std::max(startPage, endPage);
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
-    if (fromPage == toPage && fromGlyph > toGlyph)
+    if (fromPage == toPage && fromGlyph > toGlyph) {
         std::swap(fromGlyph, toGlyph);
+    }
 
     for (int page = fromPage; page <= toPage; page++) {
         int textLen;
@@ -242,8 +250,9 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
 
         int glyph = page == fromPage ? fromGlyph : 0;
         int length = (page == toPage ? toGlyph : textLen) - glyph;
-        if (length > 0)
+        if (length > 0) {
             FillResultRects(page, glyph, length);
+        }
     }
 }
 
@@ -253,14 +262,16 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     const WCHAR* text = textCache->GetTextForPage(pageNo, &textLen);
 
     for (; ix > 0; ix--) {
-        if (!isWordChar(text[ix - 1]))
+        if (!isWordChar(text[ix - 1])) {
             break;
+        }
     }
     StartAt(pageNo, ix);
 
     for (; ix < textLen; ix++) {
-        if (!isWordChar(text[ix]))
+        if (!isWordChar(text[ix])) {
             break;
+        }
     }
     SelectUpTo(pageNo, ix);
 }
@@ -282,8 +293,9 @@ WCHAR* TextSelection::ExtractText(const WCHAR* lineSep) {
         textCache->GetTextForPage(page, &textLen);
         int glyph = page == fromPage ? fromGlyph : 0;
         int length = (page == toPage ? toGlyph : textLen) - glyph;
-        if (length > 0)
+        if (length > 0) {
             FillResultRects(page, glyph, length, &lines);
+        }
     }
 
     return lines.Join(lineSep);
@@ -294,6 +306,7 @@ void TextSelection::GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, in
     *toPage = std::max(startPage, endPage);
     *fromGlyph = (*fromPage == endPage ? endGlyph : startGlyph);
     *toGlyph = (*fromPage == endPage ? startGlyph : endGlyph);
-    if (*fromPage == *toPage && *fromGlyph > *toGlyph)
+    if (*fromPage == *toPage && *fromGlyph > *toGlyph) {
         std::swap(*fromGlyph, *toGlyph);
+    }
 }

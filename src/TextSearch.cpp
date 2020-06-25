@@ -45,12 +45,14 @@ void TextSearch::SetText(const WCHAR* text) {
     this->matchWordStart = text[0] == ' ' && text[1] != ' ';
     this->matchWordEnd = str::EndsWith(text, L" ") && !str::EndsWith(text, L"  ");
 
-    if (text[0] == ' ')
+    if (text[0] == ' ') {
         text++;
+    }
 
     // don't reset anything if the search text hasn't changed at all
-    if (str::Eq(this->lastText, text))
+    if (str::Eq(this->lastText, text)) {
         return;
+    }
 
     this->Clear();
     this->lastText = str::Dup(text);
@@ -59,22 +61,26 @@ void TextSearch::SetText(const WCHAR* text) {
     // extract anchor string (the first word or the first symbol) for faster searching
     if (isnoncjkwordchar(*text)) {
         const WCHAR* end;
-        for (end = text; isnoncjkwordchar(*end); end++)
+        for (end = text; isnoncjkwordchar(*end); end++) {
             ;
+        }
         anchor = str::DupN(text, end - text);
     }
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
     // cf. http://forums.fofou.org/sumatrapdf/topic?id=2432337
-    else if (*text == '-' || *text == '\'' || *text == '"')
+    else if (*text == '-' || *text == '\'' || *text == '"') {
         anchor = nullptr;
-    else
+    } else {
         anchor = str::DupN(text, 1);
+    }
 
-    if (str::Len(this->findText) >= INT_MAX)
+    if (str::Len(this->findText) >= INT_MAX) {
         this->findText[(unsigned)INT_MAX - 1] = '\0';
-    if (str::EndsWith(this->findText, L" "))
+    }
+    if (str::EndsWith(this->findText, L" ")) {
         this->findText[str::Len(this->findText) - 1] = '\0';
+    }
 
     markAllPagesNonSkip(pagesToSkip);
 }
@@ -90,8 +96,9 @@ void TextSearch::SetSensitive(bool sensitive) {
 
 void TextSearch::SetDirection(TextSearchDirection direction) {
     bool forward = TextSearchDirection::Forward == direction;
-    if (forward == this->forward)
+    if (forward == this->forward) {
         return;
+    }
     this->forward = forward;
     if (findText) {
         int n = (int)str::Len(findText);
@@ -125,35 +132,39 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
     const WCHAR* currentPageText = pageText;
     bool lookingAtWs;
 
-    if (matchWordStart && start > pageText && isWordChar(start[-1]) && isWordChar(start[0]))
+    if (matchWordStart && start > pageText && isWordChar(start[-1]) && isWordChar(start[0])) {
         return notFound;
+    }
 
-    if (!match)
+    if (!match) {
         return notFound;
+    }
 
     while (*match) {
-        if (!*end)
+        if (!*end) {
             return notFound;
+        }
         /* Going from page n to page n+1 is a space, too.*/
         lookingAtWs = (!*end && (currentPage < nPages)) || str::IsWs(*end);
-        if (caseSensitive ? *match == *end : CharLower((LPWSTR)LOWORD(*match)) == CharLower((LPWSTR)LOWORD(*end)))
+        if (caseSensitive ? *match == *end : CharLower((LPWSTR)LOWORD(*match)) == CharLower((LPWSTR)LOWORD(*end))) {
             /* characters are identical */;
-        else if (str::IsWs(*match) && lookingAtWs)
+        } else if (str::IsWs(*match) && lookingAtWs) {
             /* treat all whitespace as identical and end of page as whitespace.
                The end of the document is NOT seen as whitespace */
             ;
-        // TODO: Adobe Reader seems to have a more extensive list of
-        //       normalizations - is there an easier way?
-        else if (*match == '-' && (0x2010 <= *end && *end <= 0x2014))
+            // TODO: Adobe Reader seems to have a more extensive list of
+            //       normalizations - is there an easier way?
+        } else if (*match == '-' && (0x2010 <= *end && *end <= 0x2014)) {
             /* make HYPHEN-MINUS also match HYPHEN, NON-BREAKING HYPHEN,
                FIGURE DASH, EN DASH and EM DASH (but not the other way around) */
             ;
-        else if (*match == '\'' && (0x2018 <= *end && *end <= 0x201b))
+        } else if (*match == '\'' && (0x2018 <= *end && *end <= 0x201b)) {
             /* make APOSTROPHE also match LEFT/RIGHT SINGLE QUOTATION MARK */;
-        else if (*match == '"' && (0x201c <= *end && *end <= 0x201f))
+        } else if (*match == '"' && (0x201c <= *end && *end <= 0x201f)) {
             /* make QUOTATION MARK also match LEFT/RIGHT DOUBLE QUOTATION MARK */;
-        else
+        } else {
             return notFound;
+        }
         match++;
         // We might get here either ...
         if (*end) {
@@ -180,8 +191,9 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
             }
         }
     }
-    if (matchWordEnd && end > currentPageText && isWordChar(end[-1]) && isWordChar(end[0]))
+    if (matchWordEnd && end > currentPageText && isWordChar(end[-1]) && isWordChar(end[0])) {
         return notFound;
+    }
 
     int off = (int)(end - currentPageText);
     return {currentPage, off};
@@ -189,16 +201,19 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
 
 static const WCHAR* GetNextIndex(const WCHAR* base, int offset, bool forward) {
     const WCHAR* c = base + offset + (forward ? 0 : -1);
-    if (c < base || !*c)
+    if (c < base || !*c) {
         return nullptr;
+    }
     return c;
 }
 
 bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyph) {
-    if (str::IsEmpty(findText))
+    if (str::IsEmpty(findText)) {
         return false;
-    if (!pageNo)
+    }
+    if (!pageNo) {
         pageNo = findPage;
+    }
     // According to my analysis of 69912675c766b6325f38036913dcf0505a00be36, when we
     // get here with pageNo != 0 the findText has already been set so I didn't add
     // a findText = textCache->GetData(findPage) here.
@@ -219,8 +234,9 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
         } else {
             found = StrRStrI(pageText, pageText + findIndex, anchor);
         }
-        if (!found)
+        if (!found) {
             return false;
+        }
         findIndex = (int)(found - pageText) + (forward ? 1 : 0);
         fg = MatchEnd(found);
     } while (fg.page <= 0);
@@ -232,8 +248,9 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     findIndex = forward ? fg.offset : offset;
 
     // try again if the found text is completely outside the page's mediabox
-    if (result.len == 0)
+    if (result.len == 0) {
         return FindTextInPage(pageNo, finalGlyph);
+    }
 
     if (finalGlyph) {
         *finalGlyph = fg;
@@ -242,8 +259,9 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
 }
 
 bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI* tracker) {
-    if (str::IsEmpty(findText))
+    if (str::IsEmpty(findText)) {
         return false;
+    }
 
     int next = forward ? 1 : -1;
     while (1 <= pageNo && pageNo <= nPages && (!tracker || !tracker->WasCanceled())) {
@@ -289,15 +307,17 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI* tracker) {
 TextSel* TextSearch::FindFirst(int page, const WCHAR* text, ProgressUpdateUI* tracker) {
     SetText(text);
 
-    if (FindStartingAtPage(page, tracker))
+    if (FindStartingAtPage(page, tracker)) {
         return &result;
+    }
     return nullptr;
 }
 
 TextSel* TextSearch::FindNext(ProgressUpdateUI* tracker) {
     CrashIf(!findText);
-    if (!findText)
+    if (!findText) {
         return nullptr;
+    }
 
     if (tracker) {
         if (tracker->WasCanceled()) {

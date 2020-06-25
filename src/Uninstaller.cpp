@@ -424,8 +424,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_COMMAND:
             handled = UninstallerOnWmCommand(wp);
-            if (!handled)
+            if (!handled) {
                 return DefWindowProc(hwnd, msg, wp, lp);
+            }
             break;
 
         case WM_APP_INSTALLATION_FINISHED:
@@ -459,8 +460,9 @@ static BOOL InstanceInit() {
     InitInstallerUninstaller();
 
     CreateMainWindow();
-    if (!gHwndFrame)
+    if (!gHwndFrame) {
         return FALSE;
+    }
 
     SetDefaultMsg();
 
