@@ -799,8 +799,8 @@ bool EnginePdf::FinishLoading() {
     // this does the job of pdf_bound_page but without doing pdf_load_page()
     // TODO: time pdf_load_page(), maybe it's not slow?
     for (int i = 0; i < pageCount; i++) {
-        fz_rect mbox;
-        fz_matrix page_ctm;
+        fz_rect mbox{};
+        fz_matrix page_ctm{};
 
         fz_try(ctx) {
             pdf_obj* pageref = pdf_lookup_page_obj(ctx, doc, i);
