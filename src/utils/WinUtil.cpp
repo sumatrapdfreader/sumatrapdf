@@ -232,8 +232,9 @@ TryAgainWOW64:
         if (ERROR_SUCCESS == res) {
             val = AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1);
             res = RegQueryValueEx(hKey, valName, nullptr, nullptr, (LPBYTE)val, &valLen);
-            if (ERROR_SUCCESS != res)
+            if (ERROR_SUCCESS != res) {
                 str::ReplacePtr(&val, nullptr);
+            }
         }
         RegCloseKey(hKey);
     }
@@ -291,8 +292,9 @@ bool WriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWOR
 bool CreateRegKey(HKEY keySub, const WCHAR* keyName) {
     HKEY hKey;
     LSTATUS res = RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
-    if (res != ERROR_SUCCESS)
+    if (res != ERROR_SUCCESS) {
         return false;
+    }
     RegCloseKey(hKey);
     return true;
 }
@@ -305,8 +307,9 @@ bool CreateRegKey(HKEY keySub, const WCHAR* keyName) {
 static void ResetRegKeyAcl(HKEY keySub, const WCHAR* keyName) {
     HKEY hKey;
     LONG res = RegOpenKeyEx(keySub, keyName, 0, WRITE_DAC, &hKey);
-    if (ERROR_SUCCESS != res)
+    if (ERROR_SUCCESS != res) {
         return;
+    }
     SECURITY_DESCRIPTOR secdesc;
     InitializeSecurityDescriptor(&secdesc, SECURITY_DESCRIPTOR_REVISION);
     SetSecurityDescriptorDacl(&secdesc, TRUE, nullptr, TRUE);
@@ -1112,8 +1115,9 @@ void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int
 
 void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint) {
     uint uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
-    if (!bRepaint)
+    if (!bRepaint) {
         uFlags |= SWP_NOREDRAW;
+    }
     this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
 }
 
@@ -1219,22 +1223,26 @@ IStream* CreateStreamFromData(std::span<u8> d) {
 }
 
 static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
-    if (!stream)
+    if (!stream) {
         return E_INVALIDARG;
+    }
 
     STATSTG stat;
     HRESULT res = stream->Stat(&stat, STATFLAG_NONAME);
-    if (FAILED(res))
+    if (FAILED(res)) {
         return res;
-    if (stat.cbSize.HighPart > 0 || stat.cbSize.LowPart > UINT_MAX - sizeof(WCHAR) - 1)
+    }
+    if (stat.cbSize.HighPart > 0 || stat.cbSize.LowPart > UINT_MAX - sizeof(WCHAR) - 1) {
         return E_OUTOFMEMORY;
+    }
 
     ULONG n = stat.cbSize.LowPart;
     // zero-terminate the stream's content, so that it could be
     // used directly as either a char* or a WCHAR* string
     char* d = AllocArray<char>(n + sizeof(WCHAR) + 1);
-    if (!d)
+    if (!d) {
         return E_OUTOFMEMORY;
+    }
 
     ULONG read;
     LARGE_INTEGER zero = {0};
@@ -1278,14 +1286,16 @@ bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset
     LARGE_INTEGER off;
     off.QuadPart = offset;
     HRESULT res = stream->Seek(off, STREAM_SEEK_SET, nullptr);
-    if (FAILED(res))
+    if (FAILED(res)) {
         return false;
+    }
     ULONG read;
 #ifdef _WIN64
     for (; len > ULONG_MAX; len -= ULONG_MAX) {
         res = stream->Read(buffer, ULONG_MAX, &read);
-        if (FAILED(res) || read != ULONG_MAX)
+        if (FAILED(res) || read != ULONG_MAX) {
             return false;
+        }
         len -= ULONG_MAX;
         buffer = (char*)buffer + ULONG_MAX;
     }
@@ -1297,15 +1307,17 @@ bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset
 uint GuessTextCodepage(const char* data, size_t len, uint defVal) {
     // try to guess the codepage
     ScopedComPtr<IMultiLanguage2> pMLang;
-    if (!pMLang.Create(CLSID_CMultiLanguage))
+    if (!pMLang.Create(CLSID_CMultiLanguage)) {
         return defVal;
+    }
 
     int ilen = std::min((int)len, INT_MAX);
     int count = 1;
     DetectEncodingInfo info = {0};
     HRESULT hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char*)data, &ilen, &info, &count);
-    if (FAILED(hr) || count != 1)
+    if (FAILED(hr) || count != 1) {
         return defVal;
+    }
     return info.nCodePage;
 }
 
@@ -1314,15 +1326,17 @@ WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form) {
         return nullptr;
     }
     int sizeEst = DynNormalizeString(form, str, -1, nullptr, 0);
-    if (sizeEst <= 0)
+    if (sizeEst <= 0) {
         return nullptr;
+    }
     // according to MSDN the estimate may be off somewhat:
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
     sizeEst = sizeEst * 3 / 2 + 1;
     AutoFreeWstr res(AllocArray<WCHAR>(sizeEst));
     sizeEst = DynNormalizeString(form, str, -1, res, sizeEst);
-    if (sizeEst <= 0)
+    if (sizeEst <= 0) {
         return nullptr;
+    }
     return res.StealData();
 }
 
@@ -1390,8 +1404,9 @@ bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args) {
 namespace win {
 
 void ToForeground(HWND hwnd) {
-    if (IsIconic(hwnd))
+    if (IsIconic(hwnd)) {
         ShowWindow(hwnd, SW_RESTORE);
+    }
     SetForegroundWindow(hwnd);
 }
 
@@ -1400,8 +1415,9 @@ caller needs to free() the result */
 WCHAR* GetText(HWND hwnd) {
     size_t cchTxtLen = GetTextLen(hwnd);
     WCHAR* txt = AllocArray<WCHAR>(cchTxtLen + 1);
-    if (nullptr == txt)
+    if (nullptr == txt) {
         return nullptr;
+    }
     SendMessageW(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
     return txt;
@@ -1545,8 +1561,9 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
 }
 
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
-    if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE)
+    if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE) {
         return;
+    }
 
     // color order in DIB is blue-green-red-alpha
     byte rt, gt, bt;
@@ -1599,8 +1616,9 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
             palette[i].rgbGreen = (u8)(base[1] + mul255(palette[i].rgbGreen, diff[1]));
             palette[i].rgbBlue = (u8)(base[0] + mul255(palette[i].rgbBlue, diff[0]));
         }
-        if (num > 0)
+        if (num > 0) {
             SetDIBColorTable(hDC, 0, num, palette);
+        }
         DeleteDC(hDC);
         return;
     }
@@ -1637,8 +1655,9 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
     DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
     DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
     unsigned char* bmpData = AllocArray<unsigned char>(bmpBytes);
-    if (!bmpData)
+    if (!bmpData) {
         return nullptr;
+    }
 
     BITMAPINFO* bmi = (BITMAPINFO*)(bmpData + sizeof(BITMAPFILEHEADER));
     bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
@@ -1660,8 +1679,9 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
     }
     ReleaseDC(nullptr, hDC);
 
-    if (bmpBytesOut)
+    if (bmpBytesOut) {
         *bmpBytesOut = bmpBytes;
+    }
     return bmpData;
 }
 
@@ -1677,9 +1697,10 @@ HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping) {
     bmi.bmiHeader.biSizeImage = size.dx * 4 * size.dy;
 
     void* data = nullptr;
-    if (hDataMapping && !*hDataMapping)
+    if (hDataMapping && !*hDataMapping) {
         *hDataMapping =
             CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmi.bmiHeader.biSizeImage, nullptr);
+    }
     return CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hDataMapping ? *hDataMapping : nullptr, 0);
 }
 
@@ -1783,8 +1804,9 @@ void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu) {
     DWORD style = wi.dwStyle;
     DWORD exStyle = wi.dwExStyle;
     AdjustWindowRectEx(&r, style, hasMenu, exStyle);
-    if ((dx == RectDx(wi.rcClient)) && (dy == RectDy(wi.rcClient)))
+    if ((dx == RectDx(wi.rcClient)) && (dy == RectDy(wi.rcClient))) {
         return;
+    }
 
     dx = RectDx(r);
     dy = RectDy(r);
@@ -1879,22 +1901,27 @@ bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
     HDDEDATA answer;
 
     CrashIf(str::Len(command) >= INT_MAX - 1);
-    if (str::Len(command) >= INT_MAX - 1)
+    if (str::Len(command) >= INT_MAX - 1) {
         return false;
+    }
 
     result = DdeInitialize(&inst, DdeCallback, APPCMD_CLIENTONLY, 0);
-    if (result != DMLERR_NO_ERROR)
+    if (result != DMLERR_NO_ERROR) {
         return false;
+    }
 
     hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
-    if (!hszServer)
+    if (!hszServer) {
         goto Exit;
+    }
     hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
-    if (!hszTopic)
+    if (!hszTopic) {
         goto Exit;
+    }
     hconv = DdeConnect(inst, hszServer, hszTopic, nullptr);
-    if (!hconv)
+    if (!hconv) {
         goto Exit;
+    }
 
     cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
     answer = DdeClientTransaction((BYTE*)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
@@ -1904,12 +1931,15 @@ bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
     }
 
 Exit:
-    if (hconv)
+    if (hconv) {
         DdeDisconnect(hconv);
-    if (hszTopic)
+    }
+    if (hszTopic) {
         DdeFreeStringHandle(inst, hszTopic);
-    if (hszServer)
+    }
+    if (hszServer) {
         DdeFreeStringHandle(inst, hszServer);
+    }
     DdeUninitialize(inst);
 
     return ok;

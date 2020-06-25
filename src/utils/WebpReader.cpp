@@ -27,17 +27,20 @@ Gdiplus::Size SizeFromData(const u8* data, size_t len) {
 
 Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
     int w, h;
-    if (!WebPGetInfo((const u8*)data, len, &w, &h))
+    if (!WebPGetInfo((const u8*)data, len, &w, &h)) {
         return nullptr;
+    }
 
     Gdiplus::Bitmap bmp(w, h, PixelFormat32bppARGB);
     Gdiplus::Rect bmpRect(0, 0, w, h);
     Gdiplus::BitmapData bmpData;
     Gdiplus::Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
-    if (ok != Gdiplus::Ok)
+    if (ok != Gdiplus::Ok) {
         return nullptr;
-    if (!WebPDecodeBGRAInto((const u8*)data, len, (u8*)bmpData.Scan0, bmpData.Stride * h, bmpData.Stride))
+    }
+    if (!WebPDecodeBGRAInto((const u8*)data, len, (u8*)bmpData.Scan0, bmpData.Stride * h, bmpData.Stride)) {
         return nullptr;
+    }
     bmp.UnlockBits(&bmpData);
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)

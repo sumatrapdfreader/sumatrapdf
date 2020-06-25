@@ -39,8 +39,9 @@ class FileWriteStream : public ISequentialStream {
     }
     IFACEMETHODIMP_(ULONG) Release() {
         LONG newCount = InterlockedDecrement(&refCount);
-        if (newCount == 0)
+        if (newCount == 0) {
             delete this;
+        }
         return newCount;
     }
     // ISequentialStream
@@ -72,8 +73,9 @@ ZipCreator::~ZipCreator() {
 bool ZipCreator::WriteData(const void* data, size_t size) {
     ULONG written = 0;
     HRESULT res = stream->Write(data, (ULONG)size, &written);
-    if (FAILED(res) || written != size)
+    if (FAILED(res) || written != size) {
         return false;
+    }
     bytesWritten += written;
     return true;
 }
@@ -87,35 +89,41 @@ static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
 
     u32 newdstlen = 0;
     int err = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
-    if (err != Z_OK)
+    if (err != Z_OK) {
         return 0;
+    }
     err = deflate(&stream, Z_FINISH);
-    if (Z_STREAM_END == err)
+    if (Z_STREAM_END == err) {
         newdstlen = stream.total_out;
+    }
     err = deflateEnd(&stream);
-    if (err != Z_OK)
+    if (err != Z_OK) {
         return 0;
+    }
     return newdstlen;
 }
 
 bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size, u32 dosdate) {
     CrashIf(size >= UINT32_MAX);
     CrashIf(str::Len(nameUtf8) >= UINT16_MAX);
-    if (size >= UINT32_MAX)
+    if (size >= UINT32_MAX) {
         return false;
+    }
 
     size_t fileOffset = bytesWritten;
     u16 flags = (1 << 11); // filename is UTF-8
     uInt crc = crc32(0, (const Bytef*)data, (uInt)size);
     size_t namelen = str::Len(nameUtf8);
-    if (namelen >= UINT16_MAX)
+    if (namelen >= UINT16_MAX) {
         return false;
+    }
 
     u16 method = Z_DEFLATED;
     uLongf compressedSize = (u32)size;
     AutoFree compressed((char*)malloc(size));
-    if (!compressed)
+    if (!compressed) {
         return false;
+    }
     compressedSize = zip_compress(compressed, (u32)size, data, (u32)size);
     if (!compressedSize) {
         method = 0; // Store
@@ -191,19 +199,22 @@ bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
 
 // we use the filePath relative to dir as the zip name
 bool ZipCreator::AddFileFromDir(const WCHAR* filePath, const WCHAR* dir) {
-    if (str::IsEmpty(dir) || !str::StartsWith(filePath, dir))
+    if (str::IsEmpty(dir) || !str::StartsWith(filePath, dir)) {
         return false;
+    }
     const WCHAR* nameInZip = filePath + str::Len(dir) + 1;
-    if (!path::IsSep(nameInZip[-1]))
+    if (!path::IsSep(nameInZip[-1])) {
         return false;
+    }
     return AddFile(filePath, nameInZip);
 }
 
 bool ZipCreator::AddDir(const WCHAR* dirPath, bool recursive) {
     DirIter di(dirPath, recursive);
     for (const WCHAR* filePath = di.First(); filePath; filePath = di.Next()) {
-        if (!AddFileFromDir(filePath, dirPath))
+        if (!AddFileFromDir(filePath, dirPath)) {
             return false;
+        }
     }
     return true;
 }
@@ -211,8 +222,9 @@ bool ZipCreator::AddDir(const WCHAR* dirPath, bool recursive) {
 bool ZipCreator::Finish() {
     CrashIf(bytesWritten >= UINT32_MAX);
     CrashIf(fileCount >= UINT16_MAX);
-    if (bytesWritten >= UINT32_MAX || fileCount >= UINT16_MAX)
+    if (bytesWritten >= UINT32_MAX || fileCount >= UINT16_MAX) {
         return false;
+    }
 
     char endOfCentralDir[22];
     ByteWriter eocd = MakeByteWriterLE(endOfCentralDir, sizeof(endOfCentralDir));
@@ -229,18 +241,22 @@ bool ZipCreator::Finish() {
 }
 
 IStream* OpenDirAsZipStream(const WCHAR* dirPath, bool recursive) {
-    if (!dir::Exists(dirPath))
+    if (!dir::Exists(dirPath)) {
         return nullptr;
+    }
 
     ScopedComPtr<IStream> stream;
-    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream)))
+    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
         return nullptr;
+    }
 
     ZipCreator zc(stream);
-    if (!zc.AddDir(dirPath, recursive))
+    if (!zc.AddDir(dirPath, recursive)) {
         return nullptr;
-    if (!zc.Finish())
+    }
+    if (!zc.Finish()) {
         return nullptr;
+    }
 
     stream->AddRef();
     return stream;
