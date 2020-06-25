@@ -27,9 +27,9 @@ clang-tidy.exe --checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unuse
 
 ls src\utils\*.cpp | select Name
 
-clang-tidy src/*.cpp -fix -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00 -DBUILD_TEX_IFILTER -DBUILD_EPUB_IFILTER
+clang-tidy src/Accelerators.cpp -fix --header-filter=src/ -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00 -DBUILD_TEX_IFILTER -DBUILD_EPUB_IFILTER
 
-clang-tidy src/ifilter/*.h -fix -checks="-*,modernize-use-default-member-init" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00 -DBUILD_TEX_IFILTER -DBUILD_EPUB_IFILTER
+clang-tidy src/ifilter/*.h -fix --header-filter=src/ -checks="-*,modernize-use-default-member-init" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00 -DBUILD_TEX_IFILTER -DBUILD_EPUB_IFILTER
 
 */
 
@@ -48,6 +48,89 @@ Fix warnings:
 * clang-analyzer-cplusplus.NewDeleteLeaks
 * clang-diagnostic-pragma-pack
 * clang-analyzer-unix.Malloc
+
+.cpp
+Actions.cpp
+Annotation.cpp
+AppColors.cpp
+AppPrefs.cpp
+AppTools.cpp
+AppUtil.cpp
+Canvas.cpp
+CanvasAboutUI.cpp
+Caption.cpp
+ChmDoc.cpp
+ChmModel.cpp
+CrashHandler.cpp
+DisplayModel.cpp
+Doc.cpp
+EbookController.cpp
+EbookControls.cpp
+EbookDoc.cpp
+EbookFormatter.cpp
+EditAnnotations.cpp
+EngineBase.cpp
+EngineCreate.cpp
+EngineDjVu.cpp
+EngineDump.cpp
+EngineEbook.cpp
+EngineFzUtil.cpp
+EngineImages.cpp
+EngineMulti.cpp
+EnginePdf.cpp
+EnginePs.cpp
+EngineXps.cpp
+ExternalViewers.cpp
+Favorites.cpp
+FileHistory.cpp
+FileModifications.cpp
+FileThumbnails.cpp
+Flags.cpp
+GetDocumentOutlines.cpp
+GlobalPrefs.cpp
+HtmlFormatter.cpp
+Installer.cpp
+InstUninstCommon.cpp
+Menu.cpp
+MobiDoc.cpp
+MuiEbookPageDef.cpp
+MuPDF_Exports.cpp
+no_op_for_premake.cpp
+Notifications.cpp
+PagesLayoutDef.cpp
+ParseBKM.cpp
+PdfCreator.cpp
+PdfSync.cpp
+Print.cpp
+RenderCache.cpp
+SaveAsPdf.cpp
+SearchAndDDE.cpp
+Selection.cpp
+SettingsStructs.cpp
+StressTesting.cpp
+SumatraAbout.cpp
+SumatraConfig.cpp
+SumatraDialogs.cpp
+SumatraPDF.cpp
+SumatraProperties.cpp
+SumatraStartup.cpp
+SvgIcons.cpp
+TabInfo.cpp
+TableOfContents.cpp
+Tabs.cpp
+Tester.cpp
+Tests.cpp
+TextSearch.cpp
+TextSelection.cpp
+Theme.cpp
+TocEditor.cpp
+TocEditTitle.cpp
+Toolbar.cpp
+Trans_sumatra_txt.cpp
+Translations.cpp
+Uninstaller.cpp
+UnitTests.cpp
+WindowInfo.cpp
 
 TODO fixes:
 modernize-use-default-member-init

@@ -581,8 +581,9 @@ class WStrVec : public Vec<WCHAR*> {
     WStrVec(const WStrVec& orig) : Vec(orig) {
         // make sure not to share string pointers between StrVecs
         for (size_t i = 0; i < len; i++) {
-            if (at(i))
+            if (at(i)) {
                 at(i) = str::Dup(at(i));
+            }
         }
     }
     ~WStrVec() {
@@ -594,8 +595,9 @@ class WStrVec : public Vec<WCHAR*> {
             FreeMembers();
             Vec::operator=(that);
             for (size_t i = 0; i < that.len; i++) {
-                if (at(i))
+                if (at(i)) {
                     at(i) = str::Dup(at(i));
+                }
             }
         }
         return *this;
@@ -610,8 +612,9 @@ class WStrVec : public Vec<WCHAR*> {
         size_t jointLen = str::Len(joint);
         for (size_t i = 0; i < len; i++) {
             WCHAR* s = at(i);
-            if (i > 0 && jointLen > 0)
+            if (i > 0 && jointLen > 0) {
                 tmp.Append(joint, jointLen);
+            }
             tmp.Append(s);
         }
         return tmp.StealData();
@@ -620,8 +623,9 @@ class WStrVec : public Vec<WCHAR*> {
     int Find(const WCHAR* s, int startAt = 0) const {
         for (int i = startAt; i < (int)len; i++) {
             WCHAR* item = at(i);
-            if (str::Eq(s, item))
+            if (str::Eq(s, item)) {
                 return i;
+            }
         }
         return -1;
     }
@@ -633,8 +637,9 @@ class WStrVec : public Vec<WCHAR*> {
     int FindI(const WCHAR* s, size_t startAt = 0) const {
         for (size_t i = startAt; i < len; i++) {
             WCHAR* item = at(i);
-            if (str::EqI(s, item))
+            if (str::EqI(s, item)) {
                 return (int)i;
+            }
         }
         return -1;
     }
@@ -648,12 +653,14 @@ class WStrVec : public Vec<WCHAR*> {
         const WCHAR* next;
 
         while ((next = str::Find(s, separator)) != nullptr) {
-            if (!collapse || next > s)
+            if (!collapse || next > s) {
                 Append(str::DupN(s, next - s));
+            }
             s = next + str::Len(separator);
         }
-        if (!collapse || *s)
+        if (!collapse || *s) {
             Append(str::Dup(s));
+        }
 
         return len - start;
     }
@@ -739,8 +746,9 @@ class WStrList {
         u32 hash = GetQuickHashI(str);
         Item* item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
-            if (item[i].hash == hash && str::Eq(item[i].string, str))
+            if (item[i].hash == hash && str::Eq(item[i].string, str)) {
                 return (int)i;
+            }
         }
         return -1;
     }
@@ -749,8 +757,9 @@ class WStrList {
         u32 hash = GetQuickHashI(str);
         Item* item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
-            if (item[i].hash == hash && str::EqI(item[i].string, str))
+            if (item[i].hash == hash && str::EqI(item[i].string, str)) {
                 return (int)i;
+            }
         }
         return -1;
     }
