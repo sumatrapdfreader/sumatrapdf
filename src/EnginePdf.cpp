@@ -93,7 +93,6 @@ static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
     fz_outline root = {0};
     fz_outline* curr = &root;
     for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
-        pdf_obj* name = pdf_dict_get_key(ctx, dict, i);
         pdf_obj* dest = pdf_dict_get_val(ctx, dict, i);
 
         int is_embedded = pdf_is_embedded_file(ctx, dest);

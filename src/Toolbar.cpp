@@ -715,8 +715,10 @@ void CreateToolbar(WindowInfo* win) {
     if (useSvg) {
         mask = RGB(0xff, 0xff, 0xff);
     }
-    int amres = ImageList_AddMasked(himl, hbmp, mask);
-    if (false) {
+    if (true) {
+        ImageList_AddMasked(himl, hbmp, mask);
+    } else {
+        int amres = ImageList_AddMasked(himl, hbmp, mask);
         int nImages = ImageList_GetImageCount(himl);
         dbglogf("res: %d, nImages: %d\n", amres, nImages);
         LogBitmapInfo(hbmp);

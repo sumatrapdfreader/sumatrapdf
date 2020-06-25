@@ -472,7 +472,7 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
-    FzPageInfo* pageInfo = _pages[pageNo - 1];
+    FzPageInfo* pageInfo = _pages[pageIdx];
     // TODO: not sure what failIfBusy is supposed to do
     if (pageInfo->page || failIfBusy) {
         return pageInfo;
@@ -484,7 +484,7 @@ FzPageInfo* EngineXps::GetFzPageInfo(int pageNo, bool failIfBusy) {
     // was loaded in LoadFromStream
     fz_var(page);
     fz_try(ctx) {
-        page = fz_load_page(ctx, _doc, pageNo - 1);
+        page = fz_load_page(ctx, _doc, pageIdx);
         pageInfo->page = page;
     }
     fz_catch(ctx) {
@@ -927,6 +927,7 @@ TocItem* EngineXps::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         item->fontFlags = outline->flags;
+        item->pageNo = pageNo;
 
         if (outline->down) {
             item->child = BuildTocTree(item, outline->down, idCounter);

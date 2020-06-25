@@ -109,9 +109,9 @@ class ScopedFile {
     }
 };
 
-static Rect ExtractDSCPageSize(const WCHAR* fileName) {
+static Rect ExtractDSCPageSize(const WCHAR* path) {
     char header[1024] = {0};
-    int n = file::ReadN(fileName, header, sizeof(header) - 1);
+    file::ReadN(path, header, sizeof(header) - 1);
     if (!str::StartsWith((char*)header, "%!PS-Adobe-")) {
         return Rect();
     }

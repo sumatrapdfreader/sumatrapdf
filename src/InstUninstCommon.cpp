@@ -256,7 +256,6 @@ static bool IsProcessUsingFiles(DWORD procId, WCHAR* file1, WCHAR* file2) {
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
         WCHAR* exePath = mod.szExePath;
-        const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
         if (file1 && path::IsSame(file1, exePath)) {
             return true;
         }
