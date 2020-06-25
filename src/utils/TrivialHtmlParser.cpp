@@ -44,8 +44,9 @@ bool HtmlElement::NameIsNS(const char* name, const char* ns) const {
 HtmlElement* HtmlElement::GetChildByTag(HtmlTag tag, int idx) const {
     for (HtmlElement* el = down; el; el = el->next) {
         if (tag == el->tag) {
-            if (0 == idx)
+            if (0 == idx) {
                 return el;
+            }
             idx--;
         }
     }
@@ -53,8 +54,9 @@ HtmlElement* HtmlElement::GetChildByTag(HtmlTag tag, int idx) const {
 }
 
 static WCHAR IntToChar(int codepoint) {
-    if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(WCHAR))))
+    if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(WCHAR)))) {
         return '?';
+    }
     return (WCHAR)codepoint;
 }
 
@@ -92,8 +94,9 @@ WCHAR* DecodeHtmlEntitites(const char* string, uint codepage) {
         if (-1 != rune) {
             *dst++ = IntToChar(rune);
             src = entityEnd;
-            if (*src == ';')
+            if (*src == ';') {
                 ++src;
+            }
         } else {
             *dst++ = '&';
         }
@@ -146,8 +149,9 @@ HtmlAttr* HtmlParser::AllocAttr(char* name, HtmlAttr* next) {
 // caller needs to free() the result
 WCHAR* HtmlElement::GetAttribute(const char* name) const {
     for (HtmlAttr* attr = firstAttr; attr; attr = attr->next) {
-        if (str::EqI(attr->name, name))
+        if (str::EqI(attr->name, name)) {
             return DecodeHtmlEntitites(attr->val, codepage);
+        }
     }
     return nullptr;
 }
@@ -169,8 +173,9 @@ HtmlElement* HtmlParser::FindParent(HtmlToken* tok) {
     if (Tag_Li == tok->tag) {
         // make a list item the child of the closest list
         for (HtmlElement* el = currElement; el; el = el->up) {
-            if (Tag_Ul == el->tag || Tag_Ol == el->tag)
+            if (Tag_Ul == el->tag || Tag_Ol == el->tag) {
                 return el;
+            }
         }
     }
 
@@ -187,8 +192,9 @@ void HtmlParser::StartTag(HtmlToken* tok) {
 
     HtmlElement* parent = FindParent(tok);
     currElement = AllocElement(tok->tag, tagName, parent);
-    if (nullptr == rootElement)
+    if (nullptr == rootElement) {
         rootElement = currElement;
+    }
 
     if (!parent) {
         // if this isn't the root tag, this tag
@@ -233,8 +239,9 @@ void HtmlParser::AppendAttr(char* name, char* value) {
 // Parse s in place i.e. we assume we can modify it. Must be 0-terminated.
 // The caller owns the memory for s.
 HtmlElement* HtmlParser::ParseInPlace(char* s, uint codepage) {
-    if (this->html)
+    if (this->html) {
         Reset();
+    }
     this->html = s;
     this->codepage = codepage;
 
@@ -299,13 +306,16 @@ HtmlElement* HtmlParser::FindElementByName(const char* name, HtmlElement* from) 
 
 HtmlElement* HtmlParser::FindElementByNameNS(const char* name, const char* ns, HtmlElement* from) {
     HtmlElement* el = from ? from : rootElement;
-    if (from)
+    if (from) {
         goto FindNext;
-    if (!el)
+    }
+    if (!el) {
         return nullptr;
+    }
 CheckNext:
-    if (el->NameIs(name) || ns && el->NameIsNS(name, ns))
+    if (el->NameIs(name) || ns && el->NameIsNS(name, ns)) {
         return el;
+    }
 FindNext:
     if (el->down) {
         el = el->down;

@@ -31,28 +31,34 @@ WCHAR* Dup(const WCHAR* s) {
 
 // return true if s1 == s2, case sensitive
 bool Eq(const WCHAR* s1, const WCHAR* s2) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
     return 0 == wcscmp(s1, s2);
 }
 
 // return true if s1 == s2, case insensitive
 bool EqI(const WCHAR* s1, const WCHAR* s2) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
     return 0 == _wcsicmp(s1, s2);
 }
 
 // compares two strings ignoring case and whitespace
 bool EqIS(const WCHAR* s1, const WCHAR* s2) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
 
     while (*s1 && *s2) {
         // skip whitespace
@@ -63,8 +69,9 @@ bool EqIS(const WCHAR* s1, const WCHAR* s2) {
             // do nothing
         }
 
-        if (towlower(*s1) != towlower(*s2))
+        if (towlower(*s1) != towlower(*s2)) {
             return false;
+        }
         if (*s1) {
             s1++;
             s2++;
@@ -75,18 +82,22 @@ bool EqIS(const WCHAR* s1, const WCHAR* s2) {
 }
 
 bool EqN(const WCHAR* s1, const WCHAR* s2, size_t len) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
     return 0 == wcsncmp(s1, s2, len);
 }
 
 bool EqNI(const WCHAR* s1, const WCHAR* s2, size_t len) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
     return 0 == _wcsnicmp(s1, s2, len);
 }
 
@@ -100,30 +111,36 @@ bool StartsWith(const WCHAR* str, const WCHAR* prefix) {
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const WCHAR* str, const WCHAR* prefix) {
-    if (str == prefix)
+    if (str == prefix) {
         return true;
-    if (!str || !prefix)
+    }
+    if (!str || !prefix) {
         return false;
+    }
     return 0 == _wcsnicmp(str, prefix, str::Len(prefix));
 }
 
 bool EndsWith(const WCHAR* txt, const WCHAR* end) {
-    if (!txt || !end)
+    if (!txt || !end) {
         return false;
+    }
     size_t txtLen = str::Len(txt);
     size_t endLen = str::Len(end);
-    if (endLen > txtLen)
+    if (endLen > txtLen) {
         return false;
+    }
     return str::Eq(txt + txtLen - endLen, end);
 }
 
 bool EndsWithI(const WCHAR* txt, const WCHAR* end) {
-    if (!txt || !end)
+    if (!txt || !end) {
         return false;
+    }
     size_t txtLen = str::Len(txt);
     size_t endLen = str::Len(end);
-    if (endLen > txtLen)
+    if (endLen > txtLen) {
         return false;
+    }
     return str::EqI(txt + txtLen - endLen, end);
 }
 
@@ -148,12 +165,14 @@ const WCHAR* Find(const WCHAR* str, const WCHAR* find) {
 }
 
 const WCHAR* FindI(const WCHAR* s, const WCHAR* toFind) {
-    if (!s || !toFind)
+    if (!s || !toFind) {
         return nullptr;
+    }
 
     WCHAR first = towlower(*toFind);
-    if (!first)
+    if (!first) {
         return s;
+    }
     while (*s) {
         WCHAR c = towlower(*s);
         if (c == first) {
@@ -186,11 +205,13 @@ WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
 }
 
 WCHAR* DupN(const WCHAR* s, size_t lenCch) {
-    if (!s)
+    if (!s) {
         return nullptr;
+    }
     WCHAR* res = (WCHAR*)memdup((void*)s, (lenCch + 1) * sizeof(WCHAR));
-    if (res)
+    if (res) {
         res[lenCch] = 0;
+    }
     return res;
 }
 
@@ -210,8 +231,9 @@ WCHAR* ToLower(const WCHAR* s) {
 bool BufFmtV(WCHAR* buf, size_t bufCchSize, const WCHAR* fmt, va_list args) {
     int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
     buf[bufCchSize - 1] = 0;
-    if ((count >= 0) && ((size_t)count < bufCchSize))
+    if ((count >= 0) && ((size_t)count < bufCchSize)) {
         return true;
+    }
     return false;
 }
 
@@ -224,18 +246,22 @@ WCHAR* FmtV(const WCHAR* fmt, va_list args) {
         //       but doesn't correctly set errno, either, so there's no way of telling
         //       the failures apart
         int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
-        if ((count >= 0) && ((size_t)count < bufCchSize))
+        if ((count >= 0) && ((size_t)count < bufCchSize)) {
             break;
+        }
         // always grow the buffer exponentially (cf. TODO above)
-        if (buf != message)
+        if (buf != message) {
             free(buf);
+        }
         bufCchSize = bufCchSize / 2 * 3;
         buf = AllocArray<WCHAR>(bufCchSize);
-        if (!buf)
+        if (!buf) {
             break;
+        }
     }
-    if (buf == message)
+    if (buf == message) {
         buf = str::Dup(message);
+    }
 
     return buf;
 }
@@ -291,8 +317,9 @@ size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars) {
 
 // free() the result
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith) {
-    if (!s || str::IsEmpty(toReplace) || !replaceWith)
+    if (!s || str::IsEmpty(toReplace) || !replaceWith) {
         return nullptr;
+    }
 
     str::WStr result(str::Len(s));
     size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
@@ -323,8 +350,9 @@ size_t NormalizeWS(WCHAR* str) {
         }
     }
 
-    if (dst > str && IsWs(*(dst - 1)))
+    if (dst > str && IsWs(*(dst - 1))) {
         dst--;
+    }
     *dst = '\0';
 
     return src - dst;
@@ -335,10 +363,11 @@ size_t RemoveChars(WCHAR* str, const WCHAR* toRemove) {
     WCHAR* dst = str;
     while (*str) {
         WCHAR c = *str++;
-        if (!str::FindChar(toRemove, c))
+        if (!str::FindChar(toRemove, c)) {
             *dst++ = c;
-        else
+        } else {
             ++removed;
+        }
     }
     *dst = '\0';
     return removed;
@@ -359,8 +388,9 @@ size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
     CrashAlwaysIf(0 == dstCchSize);
 
     size_t currDstCchLen = str::Len(dst);
-    if (currDstCchLen + 1 >= dstCchSize)
+    if (currDstCchLen + 1 >= dstCchSize) {
         return 0;
+    }
     size_t left = dstCchSize - currDstCchLen - 1;
     size_t srcCchSize = str::Len(s);
     size_t toCopy = std::min(left, srcCchSize);
@@ -375,20 +405,23 @@ size_t BufAppend(WCHAR* dst, size_t dstCchSize, const WCHAR* s) {
 // Caller needs to free() the result.
 WCHAR* FormatNumWithThousandSep(size_t num, LCID locale) {
     WCHAR thousandSep[4] = {0};
-    if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep)))
+    if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep))) {
         str::BufSet(thousandSep, dimof(thousandSep), L",");
+    }
     AutoFreeWstr buf(str::Format(L"%Iu", num));
 
     size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
     WCHAR* res = AllocArray<WCHAR>(resLen);
-    if (!res)
+    if (!res) {
         return nullptr;
+    }
     WCHAR* next = res;
     int i = 3 - (str::Len(buf) % 3);
     for (const WCHAR* src = buf; *src;) {
         *next++ = *src++;
-        if (*src && i == 2)
+        if (*src && i == 2) {
             next += str::BufSet(next, resLen - (next - res), thousandSep);
+        }
         i = (i + 1) % 3;
     }
     *next = '\0';
@@ -403,21 +436,24 @@ WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
 
     AutoFreeWstr tmp(FormatNumWithThousandSep(num / 100, locale));
     WCHAR decimal[4];
-    if (!GetLocaleInfo(locale, LOCALE_SDECIMAL, decimal, dimof(decimal)))
+    if (!GetLocaleInfo(locale, LOCALE_SDECIMAL, decimal, dimof(decimal))) {
         str::BufSet(decimal, dimof(decimal), L".");
+    }
 
     // always add between one and two decimals after the point
     AutoFreeWstr buf(str::Format(L"%s%s%02d", tmp.Get(), decimal, num % 100));
-    if (str::EndsWith(buf, L"0"))
+    if (str::EndsWith(buf, L"0")) {
         buf[str::Len(buf) - 1] = '\0';
+    }
 
     return buf.StealData();
 }
 
 // cf. http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
 WCHAR* FormatRomanNumeral(int number) {
-    if (number < 1)
+    if (number < 1) {
         return nullptr;
+    }
 
     static struct {
         int value;
@@ -465,8 +501,9 @@ int CmpNatural(const WCHAR* a, const WCHAR* b) {
         }
         // if two strings are identical when ignoring case, leading zeroes and
         // whitespace, compare them traditionally for a stable sort order
-        if (!*a && !*b)
+        if (!*a && !*b) {
             return wcscmp(aStart, bStart);
+        }
         if (str::IsDigit(*a) && str::IsDigit(*b)) {
             // ignore leading zeroes
             for (; '0' == *a; a++) {
@@ -478,29 +515,33 @@ int CmpNatural(const WCHAR* a, const WCHAR* b) {
             // compare the two numbers as (positive) integers
             for (diff = 0; str::IsDigit(*a) || str::IsDigit(*b); a++, b++) {
                 // if either *a or *b isn't a number, they differ in magnitude
-                if (!str::IsDigit(*a))
+                if (!str::IsDigit(*a)) {
                     return -1;
-                if (!str::IsDigit(*b))
+                }
+                if (!str::IsDigit(*b)) {
                     return 1;
+                }
                 // remember the difference for when the numbers are of the same magnitude
-                if (0 == diff)
+                if (0 == diff) {
                     diff = *a - *b;
+                }
             }
             // neither *a nor *b is a digit, so continue with them (unless diff != 0)
             a--;
             b--;
         }
         // sort letters case-insensitively
-        else if (iswalnum(*a) && iswalnum(*b))
+        else if (iswalnum(*a) && iswalnum(*b)) {
             diff = towlower(*a) - towlower(*b);
-        // sort special characters before text and numbers
-        else if (iswalnum(*a))
+            // sort special characters before text and numbers
+        } else if (iswalnum(*a)) {
             return 1;
-        else if (iswalnum(*b))
+        } else if (iswalnum(*b)) {
             return -1;
-        // sort special characters by ASCII code
-        else
+            // sort special characters by ASCII code
+        } else {
             diff = *a - *b;
+        }
     }
 
     return diff;
@@ -514,70 +555,78 @@ static const WCHAR* ParseLimitedNumber(const WCHAR* str, const WCHAR* format, co
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
         str::BufSet(limited, std::min((size_t)width + 1, dimof(limited)), str);
         const WCHAR* end = Parse(limited, f2, valueOut);
-        if (end && !*end)
+        if (end && !*end) {
             *endOut = str + width;
+        }
     }
     return endF;
 }
 
 static WCHAR* ExtractUntil(const WCHAR* pos, WCHAR c, const WCHAR** endOut) {
     *endOut = FindChar(pos, c);
-    if (!*endOut)
+    if (!*endOut) {
         return nullptr;
+    }
     return str::DupN(pos, *endOut - pos);
 }
 
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...) {
-    if (!str)
+    if (!str) {
         return nullptr;
+    }
     va_list args;
     va_start(args, format);
     for (const WCHAR* f = format; *f; f++) {
         if (*f != '%') {
-            if (*f != *str)
+            if (*f != *str) {
                 goto Failure;
+            }
             str++;
             continue;
         }
         f++;
 
         const WCHAR* end = nullptr;
-        if ('u' == *f)
+        if ('u' == *f) {
             *va_arg(args, unsigned int*) = wcstoul(str, (WCHAR**)&end, 10);
-        else if ('d' == *f)
+        } else if ('d' == *f) {
             *va_arg(args, int*) = wcstol(str, (WCHAR**)&end, 10);
-        else if ('x' == *f)
+        } else if ('x' == *f) {
             *va_arg(args, unsigned int*) = wcstoul(str, (WCHAR**)&end, 16);
-        else if ('f' == *f)
+        } else if ('f' == *f) {
             *va_arg(args, float*) = (float)wcstod(str, (WCHAR**)&end);
-        else if ('c' == *f)
+        } else if ('c' == *f) {
             *va_arg(args, WCHAR*) = *str, end = str + 1;
-        else if ('s' == *f)
+        } else if ('s' == *f) {
             *va_arg(args, WCHAR**) = ExtractUntil(str, *(f + 1), &end);
-        else if ('S' == *f)
+        } else if ('S' == *f) {
             va_arg(args, AutoFreeWstr*)->Set(ExtractUntil(str, *(f + 1), &end));
-        else if ('$' == *f && !*str)
+        } else if ('$' == *f && !*str) {
             continue; // don't fail, if we're indeed at the end of the string
-        else if ('%' == *f && *f == *str)
+        } else if ('%' == *f && *f == *str) {
             end = str + 1;
-        else if (' ' == *f && str::IsWs(*str))
+        } else if (' ' == *f && str::IsWs(*str)) {
             end = str + 1;
-        else if ('_' == *f) {
-            if (!str::IsWs(*str))
+        } else if ('_' == *f) {
+            if (!str::IsWs(*str)) {
                 continue; // don't fail, if there's no whitespace at all
+            }
             for (end = str + 1; str::IsWs(*end); end++) {
                 // do nothing
             }
         } else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
-            if (*str != *++f)
+            if (*str != *++f) {
                 continue;
+            }
             end = str + 1;
-        } else if (str::IsDigit(*f))
+        } else if (str::IsDigit(*f)) {
             f = ParseLimitedNumber(str, f, &end, va_arg(args, void*)) - 1;
-        if (!end || end == str)
+        }
+        if (!end || end == str) {
             goto Failure;
+        }
         str = end;
     }
     va_end(args);
@@ -622,11 +671,13 @@ WCHAR* GetFileName(const WCHAR* url) {
     str::TransChars(path, L"#?", L"\0\0");
     WCHAR* base = path + str::Len(path);
     for (; base > path; base--) {
-        if ('/' == base[-1] || '\\' == base[-1])
+        if ('/' == base[-1] || '\\' == base[-1]) {
             break;
+        }
     }
-    if (str::IsEmpty(base))
+    if (str::IsEmpty(base)) {
         return nullptr;
+    }
     DecodeInPlace(base);
     return str::Dup(base);
 }
@@ -657,13 +708,15 @@ static inline const char* StrEqWeird(const char* s, const WCHAR* toFind) {
     for (;;) {
         c = *s++;
         if (0 == c) {
-            if (0 == *toFind)
+            if (0 == *toFind) {
                 return nullptr;
+            }
             return s;
         }
         wc = *toFind++;
-        if (wc > 255)
+        if (wc > 255) {
             return nullptr;
+        }
         c2 = (char)wc;
         if (c != c2) {
             while (*s) {
@@ -683,8 +736,9 @@ int StrToIdx(const char* strs, const WCHAR* toFind) {
     int idx = 0;
     while (*s) {
         s = StrEqWeird(s, toFind);
-        if (nullptr == s)
+        if (nullptr == s) {
             return idx;
+        }
         ++idx;
     }
     return -1;

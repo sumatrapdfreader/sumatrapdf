@@ -215,14 +215,16 @@ static bool ParseStructStart(TxtParser& parser) {
     slice.SkipWsUntilNewline();
     // "foo  =  [  "
     //          ^
-    if ('[' != slice.CurrChar())
+    if ('[' != slice.CurrChar()) {
         return false;
+    }
     slice.Skip(1);
     slice.SkipWsUntilNewline();
     // "foo  =  [  "
     //             ^
-    if (!(slice.Finished() || ('\n' == slice.CurrChar())))
+    if (!(slice.Finished() || ('\n' == slice.CurrChar()))) {
         return false;
+    }
 
     Token& tok = parser.tok;
     tok.type = Token::Type::StructStart;
@@ -255,8 +257,9 @@ static bool ParseKey(TxtParser& parser) {
         keyEnd--;
     } else {
         slice.SkipWsUntilNewline();
-        if ('=' != slice.CurrChar())
+        if ('=' != slice.CurrChar()) {
             return false;
+        }
         // "foo  =  bar"
         //       ^
         slice.Skip(1);
@@ -315,8 +318,9 @@ Again:
         return;
     }
 
-    if (ParseStructStart(parser))
+    if (ParseStructStart(parser)) {
         return;
+    }
 
     tok.type = Token::Type::String;
     ParseKey(parser);
@@ -327,8 +331,9 @@ Again:
     char* origEnd = slice.curr;
     char* valEnd = UnescapeLineInPlace(origEnd, slice.end, parser.escapeChar);
     CrashIf((origEnd < slice.end) && (*origEnd != '\n'));
-    if (valEnd < slice.end)
+    if (valEnd < slice.end) {
         *valEnd = 0;
+    }
     tok.valEnd = valEnd;
 
     slice.curr = origEnd;

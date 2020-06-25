@@ -117,41 +117,52 @@ static const TgaExtArea* GetExtAreaPtr(const u8* data, size_t len) {
 static Gdiplus::PixelFormat GetPixelFormat(const TgaHeader* headerLE, ImageAlpha aType = Alpha_Normal) {
     int bits;
     if (Type_Palette == headerLE->imageType || Type_Palette_RLE == headerLE->imageType) {
-        if (1 != headerLE->cmapType || 8 != headerLE->bitDepth && 16 != headerLE->bitDepth)
+        if (1 != headerLE->cmapType || 8 != headerLE->bitDepth && 16 != headerLE->bitDepth) {
             return 0;
+        }
         bits = headerLE->cmapBitDepth;
     } else if (Type_Truecolor == headerLE->imageType || Type_Truecolor_RLE == headerLE->imageType) {
         bits = headerLE->bitDepth;
     } else if (Type_Grayscale == headerLE->imageType || Type_Grayscale_RLE == headerLE->imageType) {
-        if (8 != headerLE->bitDepth || (headerLE->flags & Flag_Alpha))
+        if (8 != headerLE->bitDepth || (headerLE->flags & Flag_Alpha)) {
             return 0;
+        }
         // using a non-indexed format so that we don't have to bother with a palette
         return PixelFormat24bppRGB;
-    } else
+    } else {
         return 0;
+    }
 
     int alphaBits = (headerLE->flags & Flag_Alpha);
-    if (15 == bits && 0 == alphaBits)
+    if (15 == bits && 0 == alphaBits) {
         return PixelFormat16bppRGB555;
-    if (16 == bits && (0 == alphaBits || Alpha_Ignore == aType))
+    }
+    if (16 == bits && (0 == alphaBits || Alpha_Ignore == aType)) {
         return PixelFormat16bppRGB555;
-    if (16 == bits && 1 == alphaBits)
+    }
+    if (16 == bits && 1 == alphaBits) {
         return PixelFormat16bppARGB1555;
-    if (24 == bits && 0 == alphaBits)
+    }
+    if (24 == bits && 0 == alphaBits) {
         return PixelFormat24bppRGB;
-    if (32 == bits && (0 == alphaBits || Alpha_Ignore == aType))
+    }
+    if (32 == bits && (0 == alphaBits || Alpha_Ignore == aType)) {
         return PixelFormat32bppRGB;
-    if (32 == bits && 8 == alphaBits && Alpha_Normal == aType)
+    }
+    if (32 == bits && 8 == alphaBits && Alpha_Normal == aType) {
         return PixelFormat32bppARGB;
-    if (32 == bits && 8 == alphaBits && Alpha_Premultiplied == aType)
+    }
+    if (32 == bits && 8 == alphaBits && Alpha_Premultiplied == aType) {
         return PixelFormat32bppPARGB;
+    }
     return 0;
 }
 
 static ImageAlpha GetAlphaType(const u8* data, size_t len) {
     const TgaExtArea* extAreaLE = GetExtAreaPtr(data, len);
-    if (!extAreaLE)
+    if (!extAreaLE) {
         return Alpha_Normal;
+    }
 
     switch (extAreaLE->alphaType) {
         case Alpha_Normal:
@@ -167,18 +178,23 @@ static ImageAlpha GetAlphaType(const u8* data, size_t len) {
 bool HasSignature(std::span<u8> d) {
     size_t len = d.size();
     const u8* data = (const u8*)d.data();
-    if (HasVersion2Footer(data, len))
+    if (HasVersion2Footer(data, len)) {
         return true;
+    }
     // fall back to checking for values that would be valid for a TGA image
-    if (len < sizeof(TgaHeader))
+    if (len < sizeof(TgaHeader)) {
         return false;
+    }
     const TgaHeader* headerLE = (const TgaHeader*)data;
-    if (headerLE->cmapType != 0 && headerLE->cmapType != 1)
+    if (headerLE->cmapType != 0 && headerLE->cmapType != 1) {
         return false;
-    if ((headerLE->flags & Flag_Reserved))
+    }
+    if ((headerLE->flags & Flag_Reserved)) {
         return false;
-    if (!GetPixelFormat(headerLE))
+    }
+    if (!GetPixelFormat(headerLE)) {
         return false;
+    }
     return true;
 }
 
@@ -194,16 +210,18 @@ static void SetImageProperty(Gdiplus::Bitmap* bmp, PROPID id, const char* asciiV
 
 static bool IsFieldSet(const char* field, size_t len, bool isBinary = false) {
     for (size_t i = 0; i < len; i++) {
-        if (field[i] && (isBinary || field[i] != ' '))
+        if (field[i] && (isBinary || field[i] != ' ')) {
             return isBinary || '\0' == field[len - 1];
+        }
     }
     return false;
 }
 
 static void CopyMetadata(const u8* data, size_t len, Gdiplus::Bitmap* bmp) {
     const TgaExtArea* extAreaLE = GetExtAreaPtr(data, len);
-    if (!extAreaLE)
+    if (!extAreaLE) {
         return;
+    }
 
     if (IsFieldSet(extAreaLE->author, sizeof(extAreaLE->author))) {
         SetImageProperty(bmp, PropertyTagArtist, extAreaLE->author);
@@ -285,8 +303,9 @@ static void ReadPixel(ReadState& s, u8* dst) {
         case Type_Palette:
         case Type_Palette_RLE:
             idx = ((u8)s.data[0] | (2 == s.n ? ((u8)s.data[1] << 8) : 0)) - s.cmap.firstEntry;
-            if (0 <= idx && idx < s.cmap.length)
+            if (0 <= idx && idx < s.cmap.length) {
                 CopyPixel(dst, s.cmap.data + idx * s.cmap.n, s.cmap.n);
+            }
             break;
         case Type_Truecolor:
         case Type_Truecolor_RLE:
@@ -298,13 +317,15 @@ static void ReadPixel(ReadState& s, u8* dst) {
             break;
     }
 
-    if (!s.isRLE || 0 == --s.repeat || !s.repeatSame)
+    if (!s.isRLE || 0 == --s.repeat || !s.repeatSame) {
         s.data += s.n;
+    }
 }
 
 Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
-    if (len < sizeof(TgaHeader))
+    if (len < sizeof(TgaHeader)) {
         return nullptr;
+    }
 
     ReadState s = {0};
     const TgaHeader* headerLE = (const TgaHeader*)data;
@@ -322,8 +343,9 @@ Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
     s.isRLE = headerLE->imageType >= 8;
 
     Gdiplus::PixelFormat format = GetPixelFormat(headerLE, GetAlphaType(data, len));
-    if (!format)
+    if (!format) {
         return nullptr;
+    }
 
     int w = convLE(headerLE->width);
     int h = convLE(headerLE->height);
@@ -335,8 +357,9 @@ Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
     Gdiplus::Rect bmpRect(0, 0, w, h);
     Gdiplus::BitmapData bmpData;
     Gdiplus::Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, format, &bmpData);
-    if (ok != Gdiplus::Ok)
+    if (ok != Gdiplus::Ok) {
         return nullptr;
+    }
     for (int y = 0; y < h; y++) {
         u8* rowOut = (u8*)bmpData.Scan0 + bmpData.Stride * (invertY ? y : h - 1 - y);
         for (int x = 0; x < w; x++) {
@@ -344,8 +367,9 @@ Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
         }
     }
     bmp.UnlockBits(&bmpData);
-    if (s.failed)
+    if (s.failed) {
         return nullptr;
+    }
     CopyMetadata(data, len, &bmp);
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, format);
@@ -358,15 +382,17 @@ inline bool memeq3(const char* pix1, const char* pix2) {
 unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-    if ((ULONG)bmpInfo.bmWidth > USHRT_MAX || (ULONG)bmpInfo.bmHeight > USHRT_MAX)
+    if ((ULONG)bmpInfo.bmWidth > USHRT_MAX || (ULONG)bmpInfo.bmHeight > USHRT_MAX) {
         return 0;
+    }
 
     WORD w = (WORD)bmpInfo.bmWidth;
     WORD h = (WORD)bmpInfo.bmHeight;
     int stride = ((w * 3 + 3) / 4) * 4;
     AutoFree bmpData((char*)malloc(stride * h));
-    if (!bmpData)
+    if (!bmpData) {
         return nullptr;
+    }
 
     BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -407,8 +433,9 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
                 while (i + j < w && j <= 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3)) {
                     j++;
                 }
-                if (i + j < w || j > 128)
+                if (i + j < w || j > 128) {
                     j--;
+                }
                 tgaData.AppendChar((char)(j - 1));
                 tgaData.Append(line + i * 3, j * 3);
             }
@@ -427,8 +454,9 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
         tgaData.Append((char*)&footerLE, sizeof(footerLE));
     }
 
-    if (bmpBytesOut)
+    if (bmpBytesOut) {
         *bmpBytesOut = tgaData.size();
+    }
     return (unsigned char*)tgaData.StealData();
 }
 } // namespace tga

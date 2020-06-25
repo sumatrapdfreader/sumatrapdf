@@ -73,45 +73,55 @@ static bool isLegalUTF8(const u8* source, int length) {
             return false;
         /* Everything else falls through when "true"... */
         case 4:
-            if ((a = (*--srcptr)) < 0x80 || a > 0xBF)
+            if ((a = (*--srcptr)) < 0x80 || a > 0xBF) {
                 return false;
+            }
         case 3:
-            if ((a = (*--srcptr)) < 0x80 || a > 0xBF)
+            if ((a = (*--srcptr)) < 0x80 || a > 0xBF) {
                 return false;
+            }
         case 2:
-            if ((a = (*--srcptr)) > 0xBF)
+            if ((a = (*--srcptr)) > 0xBF) {
                 return false;
+            }
 
             switch (*source) {
                 /* no fall-through in this inner switch */
                 case 0xE0:
-                    if (a < 0xA0)
+                    if (a < 0xA0) {
                         return false;
+                    }
                     break;
                 case 0xED:
-                    if (a > 0x9F)
+                    if (a > 0x9F) {
                         return false;
+                    }
                     break;
                 case 0xF0:
-                    if (a < 0x90)
+                    if (a < 0x90) {
                         return false;
+                    }
                     break;
                 case 0xF4:
-                    if (a > 0x8F)
+                    if (a > 0x8F) {
                         return false;
+                    }
                     break;
                 default:
-                    if (a < 0x80)
+                    if (a < 0x80) {
                         return false;
+                    }
             }
 
         case 1:
-            if (*source >= 0x80 && *source < 0xC2)
+            if (*source >= 0x80 && *source < 0xC2) {
                 return false;
+            }
     }
 
-    if (*source > 0xF4)
+    if (*source > 0xF4) {
         return false;
+    }
 
     return true;
 }
@@ -124,8 +134,9 @@ static bool isLegalUTF8(const u8* source, int length) {
  */
 bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
     int n = trailingBytesForUTF8[*source] + 1;
-    if (source + n > sourceEnd)
+    if (source + n > sourceEnd) {
         return false;
+    }
     return isLegalUTF8(source, n);
 }
 
@@ -136,8 +147,9 @@ bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd) {
 bool isLegalUTF8String(const u8** source, const u8* sourceEnd) {
     while (*source != sourceEnd) {
         int n = trailingBytesForUTF8[**source] + 1;
-        if (n > sourceEnd - *source || !isLegalUTF8(*source, n))
+        if (n > sourceEnd - *source || !isLegalUTF8(*source, n)) {
             return false;
+        }
         *source += n;
     }
     return true;
@@ -157,10 +169,12 @@ char* Dup(const char* s) {
 
 // return true if s1 == s2, case sensitive
 bool Eq(const char* s1, const char* s2) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
     return 0 == strcmp(s1, s2);
 }
 
@@ -174,19 +188,23 @@ bool EqI(std::string_view s1, const char* s2) {
 
 // return true if s1 == s2, case insensitive
 bool EqI(const char* s1, const char* s2) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
     return 0 == _stricmp(s1, s2);
 }
 
 // compares two strings ignoring case and whitespace
 bool EqIS(const char* s1, const char* s2) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
 
     while (*s1 && *s2) {
         // skip whitespace
@@ -197,8 +215,9 @@ bool EqIS(const char* s1, const char* s2) {
             // do nothing
         }
 
-        if (tolower(*s1) != tolower(*s2))
+        if (tolower(*s1) != tolower(*s2)) {
             return false;
+        }
         if (*s1) {
             s1++;
             s2++;
@@ -209,18 +228,22 @@ bool EqIS(const char* s1, const char* s2) {
 }
 
 bool EqN(const char* s1, const char* s2, size_t len) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
     return 0 == strncmp(s1, s2, len);
 }
 
 bool EqNI(const char* s1, const char* s2, size_t len) {
-    if (s1 == s2)
+    if (s1 == s2) {
         return true;
-    if (!s1 || !s2)
+    }
+    if (!s1 || !s2) {
         return false;
+    }
     return 0 == _strnicmp(s1, s2, len);
 }
 
@@ -263,22 +286,26 @@ bool Contains(std::string_view s, const char* txt) {
 }
 
 bool EndsWith(const char* txt, const char* end) {
-    if (!txt || !end)
+    if (!txt || !end) {
         return false;
+    }
     size_t txtLen = str::Len(txt);
     size_t endLen = str::Len(end);
-    if (endLen > txtLen)
+    if (endLen > txtLen) {
         return false;
+    }
     return str::Eq(txt + txtLen - endLen, end);
 }
 
 bool EndsWithI(const char* txt, const char* end) {
-    if (!txt || !end)
+    if (!txt || !end) {
         return false;
+    }
     size_t txtLen = str::Len(txt);
     size_t endLen = str::Len(end);
-    if (endLen > txtLen)
+    if (endLen > txtLen) {
         return false;
+    }
     return str::EqI(txt + txtLen - endLen, end);
 }
 
@@ -287,12 +314,14 @@ bool EqNIx(const char* s, size_t len, const char* s2) {
 }
 
 const char* FindI(const char* s, const char* toFind) {
-    if (!s || !toFind)
+    if (!s || !toFind) {
         return nullptr;
+    }
 
     char first = (char)tolower(*toFind);
-    if (!first)
+    if (!first) {
         return s;
+    }
     while (*s) {
         char c = (char)tolower(*s);
         if (c == first) {
@@ -760,8 +789,9 @@ static const char* ParseLimitedNumber(const char* str, const char* format, const
 static const char* ParseV(const char* str, const char* format, va_list args) {
     for (const char* f = format; *f; f++) {
         if (*f != '%') {
-            if (*f != *str)
+            if (*f != *str) {
                 return nullptr;
+            }
             str++;
             continue;
         }
@@ -778,9 +808,9 @@ static const char* ParseV(const char* str, const char* format, va_list args) {
             *va_arg(args, float*) = (float)strtod(str, (char**)&end);
         } else if ('g' == *f) {
             *va_arg(args, float*) = (float)strtod(str, (char**)&end);
-        } else if ('c' == *f)
+        } else if ('c' == *f) {
             *va_arg(args, char*) = *str, end = str + 1;
-        else if ('s' == *f) {
+        } else if ('s' == *f) {
             *va_arg(args, char**) = ExtractUntil(str, *(f + 1), &end);
         } else if ('S' == *f) {
             va_arg(args, AutoFree*)->Set(ExtractUntil(str, *(f + 1), &end));
@@ -816,8 +846,9 @@ static const char* ParseV(const char* str, const char* format, va_list args) {
 }
 
 const char* Parse(const char* str, const char* fmt, ...) {
-    if (!str || !fmt)
+    if (!str || !fmt) {
         return nullptr;
+    }
 
     va_list args;
     va_start(args, fmt);
@@ -832,23 +863,27 @@ const char* Parse(const char* str, size_t len, const char* fmt, ...) {
     char buf[128] = {0};
     char* s = buf;
 
-    if (!str || !fmt)
+    if (!str || !fmt) {
         return nullptr;
+    }
 
-    if (len < dimof(buf))
+    if (len < dimof(buf)) {
         memcpy(buf, str, len);
-    else
+    } else {
         s = DupN(str, len);
+    }
 
     va_list args;
     va_start(args, fmt);
     const char* res = ParseV(s, fmt, args);
     va_end(args);
 
-    if (res)
+    if (res) {
         res = str + (res - s);
-    if (s != buf)
+    }
+    if (s != buf) {
         free(s);
+    }
     return res;
 }
 
@@ -903,13 +938,16 @@ int CmpNatural(const char* a, const char* b) {
             // compare the two numbers as (positive) integers
             for (diff = 0; str::IsDigit(*a) || str::IsDigit(*b); a++, b++) {
                 // if either *a or *b isn't a number, they differ in magnitude
-                if (!str::IsDigit(*a))
+                if (!str::IsDigit(*a)) {
                     return -1;
-                if (!str::IsDigit(*b))
+                }
+                if (!str::IsDigit(*b)) {
                     return 1;
+                }
                 // remember the difference for when the numbers are of the same magnitude
-                if (0 == diff)
+                if (0 == diff) {
                     diff = *a - *b;
+                }
             }
             // neither *a nor *b is a digit, so continue with them (unless diff != 0)
             a--;
@@ -1028,8 +1066,9 @@ int StrToIdx(const char* strs, const char* toFind) {
     int idx = 0;
     while (*s) {
         s = StrEqWeird(s, toFind);
-        if (nullptr == s)
+        if (nullptr == s) {
             return idx;
+        }
         ++idx;
     }
     return -1;
