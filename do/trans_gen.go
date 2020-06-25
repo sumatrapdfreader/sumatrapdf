@@ -400,7 +400,7 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 	// print_stats(langs)
 }
 
-func genCCode(stringsDict map[string][]*Translation, strings2 []*StringWithPath) {
+func genCCode(stringsDict map[string][]*Translation, strings2 []*stringWithPath) {
 	for _, dir := range dirsToProcess {
 		dirToCheck := filepath.Base(dir)
 		var keys []string

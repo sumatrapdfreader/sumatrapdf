@@ -55,7 +55,7 @@ func uploadStringsIfChanged() {
 	// needs to have upload secret to protect apptranslator.org server from abuse
 	// TODO: we used to have a check if svn is up-to-date
 	// should we restore it for git?
-	a1 := extract_strings_from_c_files()
+	a1 := extractStringsFromCFiles()
 	a := extractJustStrings(a1)
 	sort.Strings(a)
 	s := "AppTranslator strings\n" + strings.Join(a, "\n")
