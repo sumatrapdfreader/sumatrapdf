@@ -197,7 +197,7 @@ char (&DimofSizeHelper(T (&array)[N]))[N];
 inline void CrashMe() {
     char* p = nullptr;
     // cppcheck-suppress nullPointer
-    *p = 0;
+    *p = 0; // NOLINT
 }
 #if COMPILER_MSVC
 #pragma warning(pop)

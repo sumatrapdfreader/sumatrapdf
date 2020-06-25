@@ -393,7 +393,7 @@ static void GetOsVersion(str::Str& s) {
     // see: https://msdn.microsoft.com/en-us/library/windows/desktop/dn424972(v=vs.85).aspx
     // starting with Windows 8.1, GetVersionEx will report a wrong version number
     // unless the OS's GUID has been explicitly added to the compatibility manifest
-    BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
+    BOOL ok = GetVersionExW((OSVERSIONINFO*)&ver); // NOLINT
 #pragma warning(pop)
     if (!ok) {
         return;

@@ -25,19 +25,24 @@ func regenPremake() {
 	}
 }
 
-func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) string {
-	f, err := os.Create(path)
+func openForAppend(name string) (*os.File, error) {
+	return os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+}
+
+func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) error {
+	f, err := openForAppend(path)
 	panicIfErr(err)
 	defer f.Close()
 
 	cmd.Stdout = io.MultiWriter(f, os.Stdout)
 	cmd.Stderr = io.MultiWriter(f, os.Stderr)
-	return u.RunCmdMust(cmd)
+	fmt.Printf("> %s\n", u.FmtCmdShort(*cmd))
+	return cmd.Run()
 }
 
-func runClangTidy() {
-
-}
+const (
+	cppcheckLogFile = "cppcheck.out.txt"
+)
 
 func runCppCheck(all bool) {
 	// -q : quiet, doesn't print progress report
@@ -79,8 +84,10 @@ func runCppCheck(all bool) {
 	}
 	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	cmd = exec.Command("cppcheck", args...)
-	runCmdShowProgressAndLog(cmd, "cppcheck.out.txt")
-	logf("\nLogged output to 'cppcheck.out.txt'\n")
+	os.Remove(cppcheckLogFile)
+	err := runCmdShowProgressAndLog(cmd, cppcheckLogFile)
+	must(err)
+	logf("\nLogged output to '%s'\n", cppcheckLogFile)
 }
 
 func main() {
