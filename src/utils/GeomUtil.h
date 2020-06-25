@@ -127,10 +127,12 @@ struct RectT {
     }
 
     static RectT FromXY(T xs, T ys, T xe, T ye) {
-        if (xs > xe)
+        if (xs > xe) {
             std::swap(xs, xe);
-        if (ys > ye)
+        }
+        if (ys > ye) {
             std::swap(ys, ye);
+        }
         return RectT(xs, ys, xe - xs, ye - ys);
     }
     static RectT FromXY(PointT<T> TL, PointT<T> BR) {
@@ -183,8 +185,9 @@ struct RectT {
         T _dy = std::min(this->y + this->dy, other.y + other.dy) - _y;
 
         /* return an empty rectangle if the dimensions aren't positive */
-        if (_dx <= 0 || _dy <= 0)
+        if (_dx <= 0 || _dy <= 0) {
             return RectT();
+        }
         return RectT(_x, _y, _dx, _dy);
     }
 
