@@ -138,8 +138,9 @@ class TabPainter {
     // Generates a GraphicsPath, which is used for painting the tab, etc.
     bool Reshape(int dx, int dy) {
         dx--;
-        if (width == dx && height == dy)
+        if (width == dx && height == dy) {
             return false;
+        }
         width = dx;
         height = dy;
 
@@ -187,21 +188,24 @@ class TabPainter {
             gfx.TransformPoints(Gdiplus::CoordinateSpaceWorld, Gdiplus::CoordinateSpaceDevice, &pt, 1);
             if (shape.IsVisible(pt, &gfx)) {
                 iterator.NextMarker(&shape);
-                if (inXbutton)
+                if (inXbutton) {
                     *inXbutton = shape.IsVisible(pt, &gfx) ? true : false;
+                }
                 return i;
             }
             gfx.TranslateTransform(float(width + 1), 0.0f);
         }
-        if (inXbutton)
+        if (inXbutton) {
             *inXbutton = false;
+        }
         return -1;
     }
 
     // Invalidates the tab's region in the client area.
     void Invalidate(int index) {
-        if (index < 0)
+        if (index < 0) {
             return;
+        }
 
         Graphics gfx(hwnd);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
@@ -267,8 +271,9 @@ class TabPainter {
             gfx.ResetTransform();
             gfx.TranslateTransform(1.f + (float)(width + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
 
-            if (!gfx.IsVisible(0, 0, width + 1, height + 1))
+            if (!gfx.IsVisible(0, 0, width + 1, height + 1)) {
                 continue;
+            }
 
             // Get the correct colors based on the state and the current theme
             COLORREF bgCol = GetAppColor(AppColor::TabBackgroundBg);
@@ -368,18 +373,20 @@ static void SetTabTitle(TabInfo* tab) {
 }
 
 static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
-    if (tab1 == tab2 || tab1 < 0 || tab2 < 0)
+    if (tab1 == tab2 || tab1 < 0 || tab2 < 0) {
         return;
+    }
 
     std::swap(win->tabs.at(tab1), win->tabs.at(tab2));
     SetTabTitle(win->tabs.at(tab1));
     SetTabTitle(win->tabs.at(tab2));
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    if (tab1 == current)
+    if (tab1 == current) {
         TabCtrl_SetCurSel(win->hwndTabBar, tab2);
-    else if (tab2 == current)
+    } else if (tab2 == current) {
         TabCtrl_SetCurSel(win->hwndTabBar, tab1);
+    }
 }
 
 static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
@@ -414,8 +421,9 @@ static LRESULT CALLBACK TabBarParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 
     if (msg == WM_NOTIFY && wp == IDC_TABBAR) {
         WindowInfo* win = (WindowInfo*)dwRefData;
-        if (win)
+        if (win) {
             return TabsOnNotify(win, lp);
+        }
     }
 
     return DefSubclassProc(hwnd, msg, wp, lp);
@@ -450,8 +458,9 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
             tcs = (LPTCITEM)lp;
             CrashIf(!(TCIF_TEXT & tcs->mask));
             tab->Insert(index, tcs->pszText);
-            if (index <= tab->selectedTabIdx)
+            if (index <= tab->selectedTabIdx) {
                 tab->selectedTabIdx++;
+            }
             tab->xClicked = -1;
             InvalidateRgn(hwnd, nullptr, FALSE);
             UpdateWindow(hwnd);
@@ -566,8 +575,9 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
                 tab->Invalidate(tab->xHighlighted);
                 tab->xHighlighted = xHl;
             }
-            if (!inX)
+            if (!inX) {
                 tab->xClicked = -1;
+            }
         }
             return 0;
 
@@ -641,15 +651,17 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
             buffer.Flush(hdc);
 
             ValidateRect(hwnd, nullptr);
-            if (!wp)
+            if (!wp) {
                 EndPaint(hwnd, &ps);
+            }
             return 0;
         }
 
         case WM_SIZE: {
             WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-            if (win)
+            if (win) {
                 UpdateTabWidth(win);
+            }
         } break;
     }
 
@@ -697,8 +709,9 @@ static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
 // Must be called when the active tab is losing selection.
 // This happens when a new document is loaded or when another tab is selected.
 void SaveCurrentTabInfo(WindowInfo* win) {
-    if (!win)
+    if (!win) {
         return;
+    }
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     if (-1 == current) {
@@ -757,8 +770,9 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
 void TabsOnChangedDoc(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
     CrashIf(!tab != !win->tabs.size());
-    if (!tab)
+    if (!tab) {
         return;
+    }
 
     CrashIf(win->tabs.Find(tab) != TabCtrl_GetCurSel(win->hwndTabBar));
     VerifyTabInfo(win, tab);
@@ -781,8 +795,9 @@ static void RemoveTab(WindowInfo* win, int idx) {
 
 // Called when we're closing a document
 void TabsOnCloseDoc(WindowInfo* win) {
-    if (win->tabs.size() == 0)
+    if (win->tabs.size() == 0) {
         return;
+    }
 
     /* if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->HasUnsavedAnnots) {
         // TODO: warn about unsaved changes

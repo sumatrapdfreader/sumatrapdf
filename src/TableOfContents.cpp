@@ -330,8 +330,9 @@ static bool isRightToLeftChar(WCHAR c) {
 }
 
 static void GetLeftRightCounts(TocItem* node, int& l2r, int& r2l) {
-    if (!node)
+    if (!node) {
         return;
+    }
     if (node->title) {
         for (const WCHAR* c = node->title; *c; c++) {
             if (isLeftToRightChar(*c)) {

@@ -467,19 +467,22 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, unsigned char* fileDig
     *saveKey = false;
 
     // try the list of default passwords before asking the user
-    if (pwdIdx < gGlobalPrefs->defaultPasswords->size())
+    if (pwdIdx < gGlobalPrefs->defaultPasswords->size()) {
         return str::Dup(gGlobalPrefs->defaultPasswords->at(pwdIdx++));
+    }
 
-    if (IsStressTesting())
+    if (IsStressTesting()) {
         return nullptr;
+    }
 
     // extract the filename from the URL in plugin mode instead
     // of using the more confusing temporary filename
     AutoFreeWstr urlName;
     if (gPluginMode) {
         urlName.Set(url::GetFileName(gPluginURL));
-        if (urlName)
+        if (urlName) {
             fileName = urlName;
+        }
     }
     fileName = path::GetBaseNameNoFree(fileName);
 
@@ -565,15 +568,17 @@ bool IsUIRightToLeft() {
 }
 
 uint MbRtlReadingMaybe() {
-    if (IsUIRightToLeft())
+    if (IsUIRightToLeft()) {
         return MB_RTLREADING;
+    }
     return 0;
 }
 
 void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
     uint type = MB_OK | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
-    if (!title)
+    if (!title) {
         title = _TR("Warning");
+    }
     MessageBox(hwnd, msg, title, type);
 }
 
@@ -582,13 +587,15 @@ void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
 static void UpdateWindowRtlLayout(WindowInfo* win) {
     bool isRTL = IsUIRightToLeft();
     bool wasRTL = (GetWindowLongW(win->hwndFrame, GWL_EXSTYLE) & WS_EX_LAYOUTRTL) != 0;
-    if (wasRTL == isRTL)
+    if (wasRTL == isRTL) {
         return;
+    }
 
     bool tocVisible = win->tocVisible;
     bool favVisible = gGlobalPrefs->showFavorites;
-    if (tocVisible || favVisible)
+    if (tocVisible || favVisible) {
         SetSidebarVisibility(win, false, false);
+    }
 
     // https://www.microsoft.com/middleeast/msdn/mirror.aspx
     SetRtl(win->hwndFrame, isRTL);
@@ -649,18 +656,21 @@ void RebuildMenuBarForWindow(WindowInfo* win) {
 
 static bool ShouldSaveThumbnail(DisplayState& ds) {
     // don't create thumbnails if we won't be needing them at all
-    if (!HasPermission(Perm_SavePreferences))
+    if (!HasPermission(Perm_SavePreferences)) {
         return false;
+    }
 
     // don't create thumbnails for files that won't need them anytime soon
     Vec<DisplayState*> list;
     gFileHistory.GetFrequencyOrder(list);
     int idx = list.Find(&ds);
-    if (idx < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= idx)
+    if (idx < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= idx) {
         return false;
+    }
 
-    if (HasThumbnail(ds))
+    if (HasThumbnail(ds)) {
         return false;
+    }
     return true;
 }
 
@@ -1150,8 +1160,9 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
             }
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?
-            if (tab->GetEngineType() == kindEngineComicBooks || tab->GetEngineType() == kindEngineImageDir)
+            if (tab->GetEngineType() == kindEngineComicBooks || tab->GetEngineType() == kindEngineImageDir) {
                 dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
+            }
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath())) {
                 gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed(), dm);
                 dm->CopyNavHistory(*prevCtrl->AsFixed());
@@ -1225,8 +1236,9 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
-        if (PDFSYNCERR_SUCCESS == res)
+        if (PDFSYNCERR_SUCCESS == res) {
             gGlobalPrefs->enableTeXEnhancements = true;
+        }
     }
 
     bool shouldPlace = args.isNewWindow || args.placeWindow && state;
@@ -1567,8 +1579,9 @@ static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
 // document path is either a file or a directory
 // (when browsing images inside directory).
 bool DocumentPathExists(const WCHAR* path) {
-    if (file::Exists(path) || dir::Exists(path))
+    if (file::Exists(path) || dir::Exists(path)) {
         return true;
+    }
     if (str::FindChar(path + 2, ':')) {
         // remove information needed for pointing at embedded documents
         // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
@@ -1881,10 +1894,12 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
 enum class MeasurementUnit { pt, mm, in };
 
 static WCHAR* FormatCursorPosition(EngineBase* engine, PointD pt, MeasurementUnit unit) {
-    if (pt.x < 0)
+    if (pt.x < 0) {
         pt.x = 0;
-    if (pt.y < 0)
+    }
+    if (pt.y < 0) {
         pt.y = 0;
+    }
     pt.x /= engine->GetFileDPI();
     pt.y /= engine->GetFileDPI();
 
@@ -1907,10 +1922,12 @@ static WCHAR* FormatCursorPosition(EngineBase* engine, PointD pt, MeasurementUni
     AutoFreeWstr yPos(str::FormatFloatWithThousandSep(pt.y * factor));
     if (unit != MeasurementUnit::in) {
         // use similar precision for all units
-        if (str::IsDigit(xPos[str::Len(xPos) - 2]))
+        if (str::IsDigit(xPos[str::Len(xPos) - 2])) {
             xPos[str::Len(xPos) - 1] = '\0';
-        if (str::IsDigit(yPos[str::Len(yPos) - 2]))
+        }
+        if (str::IsDigit(yPos[str::Len(yPos) - 2])) {
             yPos[str::Len(yPos) - 1] = '\0';
+        }
     }
     return str::Format(L"%s x %s %s", xPos.Get(), yPos.Get(), unitName);
 }
@@ -2217,8 +2234,9 @@ static void OnMenuExit() {
 // the UI disabling afterwards anyway)
 static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteModel) {
     bool wasntFixed = !win->AsFixed();
-    if (win->AsChm())
+    if (win->AsChm()) {
         win->AsChm()->RemoveParentHwnd();
+    }
     ClearTocBox(win);
     AbortFinding(win, true);
     delete win->linkOnLastButtonDown;
@@ -2303,8 +2321,9 @@ bool MayCloseWindow(WindowInfo* win) {
     if (win->printThread && !win->printCanceled && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT) {
         int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"),
                              _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
-        if (IDNO == res)
+        if (IDNO == res) {
             return false;
+        }
     }
 
     return true;
@@ -2391,11 +2410,11 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
 static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
     // TODO: add a way to get Engine from Controller and use engine->kind
     Kind type = nullptr;
-    if (ctrl->AsFixed())
+    if (ctrl->AsFixed()) {
         type = ctrl->AsFixed()->engineType;
-    else if (ctrl->AsChm())
+    } else if (ctrl->AsChm()) {
         type = kindEngineChm;
-    else if (ctrl->AsEbook()) {
+    } else if (ctrl->AsEbook()) {
         switch (ctrl->AsEbook()->GetDocType()) {
             case DocType::Epub:
                 type = kindEngineEpub;
@@ -3460,8 +3479,9 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
     }
 
     long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
-    if (!presentation || !win->isFullScreen)
+    if (!presentation || !win->isFullScreen) {
         win->nonFullScreenWindowStyle = ws;
+    }
     // remove window styles that add to non-client area
     ws &= ~(WS_CAPTION | WS_THICKFRAME);
     ws |= WS_MAXIMIZE;
@@ -4753,8 +4773,9 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_SYSCHAR:
-            if (win && FrameOnSysChar(win, wp))
+            if (win && FrameOnSysChar(win, wp)) {
                 return 0;
+            }
             return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_SYSCOMMAND:
@@ -4777,8 +4798,9 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // handled as expected)
             int x = GET_X_LPARAM(lp);
             int y = GET_Y_LPARAM(lp);
-            if (win && (x == -1) && (y == -1) && !IsFocused(win->tocTreeCtrl->hwnd))
+            if (win && (x == -1) && (y == -1) && !IsFocused(win->tocTreeCtrl->hwnd)) {
                 return SendMessageW(win->hwndCanvas, WM_CONTEXTMENU, wp, lp);
+            }
             return DefWindowProc(hwnd, msg, wp, lp);
         }
 
@@ -4845,8 +4867,9 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
 
         case WM_DDE_INITIATE:
-            if (gPluginMode)
+            if (gPluginMode) {
                 break;
+            }
             return OnDDEInitiate(hwnd, wp, lp);
         case WM_DDE_EXECUTE:
             return OnDDExecute(hwnd, wp, lp);

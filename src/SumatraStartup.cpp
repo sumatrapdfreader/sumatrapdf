@@ -106,8 +106,9 @@ static FileExistenceChecker* gFileExistenceChecker = nullptr;
 void FileExistenceChecker::GetFilePathsToCheck() {
     DisplayState* state;
     for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)) != nullptr; i++) {
-        if (!state->isMissing)
+        if (!state->isMissing) {
             paths.Append(str::Dup(state->filePath));
+        }
     }
     // add missing paths from the list of most frequently opened documents
     Vec<DisplayState*> frequencyList;
@@ -115,8 +116,9 @@ void FileExistenceChecker::GetFilePathsToCheck() {
     size_t iMax = std::min<size_t>(2 * FILE_HISTORY_MAX_FREQUENT, frequencyList.size());
     for (size_t i = 0; i < iMax; i++) {
         state = frequencyList.at(i);
-        if (!paths.Contains(state->filePath))
+        if (!paths.Contains(state->filePath)) {
             paths.Append(str::Dup(state->filePath));
+        }
     }
 }
 
@@ -389,12 +391,13 @@ static bool SetupPluginMode(Flags& i) {
         for (size_t k = 0; k < parts.size(); k++) {
             WCHAR* part = parts.at(k);
             int pageNo;
-            if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo))
+            if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo)) {
                 i.pageNumber = pageNo;
-            else if (str::StartsWithI(part, L"nameddest=") && part[10])
+            } else if (str::StartsWithI(part, L"nameddest=") && part[10]) {
                 i.destName = str::Dup(part + 10);
-            else if (!str::FindChar(part, '=') && part[0])
+            } else if (!str::FindChar(part, '=') && part[0]) {
                 i.destName = str::Dup(part);
+            }
         }
     }
     return true;
@@ -470,11 +473,13 @@ Error:
 // Registering happens either through the Installer or the Options dialog;
 // here we just make sure that we're still registered
 static bool RegisterForPdfExtentions(HWND hwnd) {
-    if (IsRunningInPortableMode() || !HasPermission(Perm_RegistryAccess) || gPluginMode)
+    if (IsRunningInPortableMode() || !HasPermission(Perm_RegistryAccess) || gPluginMode) {
         return false;
+    }
 
-    if (IsExeAssociatedWithPdfExtension())
+    if (IsExeAssociatedWithPdfExtension()) {
         return true;
+    }
 
     /* Ask user for permission, unless he previously said he doesn't want to
        see this dialog */
@@ -483,8 +488,9 @@ static bool RegisterForPdfExtentions(HWND hwnd) {
         str::ReplacePtr(&gGlobalPrefs->associatedExtensions, IDYES == result ? L".pdf" : nullptr);
     }
     // for now, .pdf is the only choice
-    if (!str::EqI(gGlobalPrefs->associatedExtensions, L".pdf"))
+    if (!str::EqI(gGlobalPrefs->associatedExtensions, L".pdf")) {
         return false;
+    }
 
     AssociateExeWithPdfExtension();
     return true;
@@ -914,8 +920,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     if (i.pathsToBenchmark.size() > 0) {
         BenchFileOrDir(i.pathsToBenchmark);
-        if (i.showConsole)
+        if (i.showConsole) {
             system("pause");
+        }
     }
 
     if (i.exitImmediately) {
@@ -947,8 +954,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         // print only the first one
         for (size_t n = 0; n < i.fileNames.size(); n++) {
             bool ok = PrintFile(i.fileNames.at(n), i.printerName, !i.silent, i.printSettings);
-            if (!ok)
+            if (!ok) {
                 retCode++;
+            }
         }
         --retCode; // was 1 if no print failures, turn 1 into 0
         goto Exit;

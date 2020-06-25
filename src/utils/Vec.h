@@ -376,7 +376,6 @@ class WStr : public Vec<WCHAR> {
         AppendView(sv);
     }
 
-
     void Append(WCHAR c) {
         InsertAt(len, c);
     }

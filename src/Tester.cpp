@@ -190,10 +190,12 @@ static void MobiTestFile(const WCHAR* filePath) {
         WCHAR* ext = (WCHAR*)str::FindCharLast(filePathBase.Get(), '.');
         *ext = 0;
 
-        if (gSaveHtml)
+        if (gSaveHtml) {
             MobiSaveHtml(filePathBase, mobiDoc);
-        if (gSaveImages)
+        }
+        if (gSaveImages) {
             MobiSaveImages(filePathBase, mobiDoc);
+        }
     }
 
     delete mobiDoc;
@@ -260,8 +262,9 @@ int TesterMain() {
     while (i < argv.size()) {
         if (str::Eq(argv[i], L"-mobi")) {
             ++i;
-            if (i == argv.size())
+            if (i == argv.size()) {
                 return Usage();
+            }
             mobiTest = true;
             dirOrFile = argv[i];
             ++i;
