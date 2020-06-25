@@ -107,7 +107,6 @@ func runClangTidy() {
 		`src\uia\*.cpp`,
 		`src\uia\*.h`,
 		`src\tools\*.cpp`,
-		`src\tools\*.h`,
 		`ext\mupdf_load_system_font.c`,
 	}
 
@@ -117,6 +116,7 @@ func runClangTidy() {
 			"Version.h",
 			"Trans_sumatra_txt.cpp",
 			"Trans_installer_txt.cpp",
+			"signfile.cpp",
 		}
 		s = strings.ToLower(s)
 

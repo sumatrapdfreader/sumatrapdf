@@ -838,7 +838,7 @@ static void AppendNewline(str::WStr& extracted, Vec<Rect>& coords, const WCHAR* 
 }
 
 bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>& coords) {
-    WCHAR* lineSep = L"\n";
+    const WCHAR* lineSep = L"\n";
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type)) {
         return false;

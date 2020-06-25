@@ -89,9 +89,9 @@ class xps_doc_props {
     AutoFreeWstr modification_date;
 };
 
-static fz_xml_doc* xps_open_and_parse(fz_context* ctx, xps_document* doc, char* path) {
+static fz_xml_doc* xps_open_and_parse(fz_context* ctx, xps_document* doc, const char* path) {
     fz_xml_doc* root = nullptr;
-    xps_part* part = xps_read_part(ctx, doc, path);
+    xps_part* part = xps_read_part(ctx, doc, (char*)path);
 
     int preserve_white = 0;
     int for_html = 0;
@@ -148,7 +148,9 @@ xps_doc_props* xps_extract_doc_props(fz_context* ctx, xps_document* xpsdoc) {
         if (fz_xml_is_tag(item, "Relationship") && str::Eq(fz_xml_att(item, "Type"), REL_CORE_PROPERTIES) &&
             fz_xml_att(item, "Target")) {
             char path[1024];
-            xps_resolve_url(ctx, xpsdoc, path, "", fz_xml_att(item, "Target"), nelem(path));
+            char empty[1] = {0};
+            char* attr = fz_xml_att(item, "Target");
+            xps_resolve_url(ctx, xpsdoc, path, empty, attr, nelem(path));
             fz_drop_xml(ctx, xmldoc);
             xmldoc = xps_open_and_parse(ctx, xpsdoc, path);
             root = fz_xml_root(xmldoc);
