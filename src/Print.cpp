@@ -182,8 +182,9 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     float py = (float)GetDeviceCaps(hdc, LOGPIXELSY);
     float dpiFactor = std::min(px / fileDPI, py / fileDPI);
     bool bPrintPortrait = paperSize.dx < paperSize.dy;
-    if (pd.devMode && (pd.devMode.Get()->dmFields & DM_ORIENTATION))
+    if (pd.devMode && (pd.devMode.Get()->dmFields & DM_ORIENTATION)) {
         bPrintPortrait = DMORIENT_PORTRAIT == pd.devMode.Get()->dmOrientation;
+    }
     if (pd.advData.rotation == PrintRotationAdv::Portrait) {
         bPrintPortrait = true;
     } else if (pd.advData.rotation == PrintRotationAdv::Landscape) {
@@ -309,8 +310,9 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                                          std::min((float)paperSize.dx / pSize.dx, (float)paperSize.dy / pSize.dy)));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
-                if (PrintScaleAdv::Shrink == pd.advData.scale && dpiFactor < zoom)
+                if (PrintScaleAdv::Shrink == pd.advData.scale && dpiFactor < zoom) {
                     zoom = dpiFactor;
+                }
                 // center the page on the physical paper
                 offset.x += (int)(paperSize.dx - pSize.dx * zoom) / 2;
                 offset.y += (int)(paperSize.dy - pSize.dy * zoom) / 2;

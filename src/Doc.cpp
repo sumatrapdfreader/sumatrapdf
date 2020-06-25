@@ -70,32 +70,36 @@ void Doc::Delete() {
 
 Doc::Doc(EpubDoc* doc) {
     Clear();
-    if (doc == nullptr)
+    if (doc == nullptr) {
         return;
+    }
     type = DocType::Epub;
     epubDoc = doc;
 }
 
 Doc::Doc(Fb2Doc* doc) {
     Clear();
-    if (doc == nullptr)
+    if (doc == nullptr) {
         return;
+    }
     type = DocType::Fb2;
     fb2Doc = doc;
 }
 
 Doc::Doc(MobiDoc* doc) {
     Clear();
-    if (doc == nullptr)
+    if (doc == nullptr) {
         return;
+    }
     type = DocType::Mobi;
     mobiDoc = doc;
 }
 
 Doc::Doc(PalmDoc* doc) {
     Clear();
-    if (doc == nullptr)
+    if (doc == nullptr) {
         return;
+    }
     type = DocType::Pdb;
     palmDoc = doc;
 }

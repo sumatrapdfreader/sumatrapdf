@@ -87,8 +87,9 @@ void SetAppDataPath(const WCHAR* path) {
 /* Generate the full path for a filename used by the app in the userdata path. */
 /* Caller needs to free() the result. */
 WCHAR* AppGenDataFilename(const WCHAR* fileName) {
-    if (!fileName)
+    if (!fileName) {
         return nullptr;
+    }
 
     if (gAppDataDir && dir::Exists(gAppDataDir)) {
         return path::Join(gAppDataDir, fileName);
@@ -374,13 +375,15 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
             // remove file part
             AutoFreeWstr dir(path::GetDir(path));
             exePath.Set(path::Join(dir, editor_rules[i].BinaryFilename));
-        } else if (editor_rules[i].Type == BinaryDir)
+        } else if (editor_rules[i].Type == BinaryDir) {
             exePath.Set(path::Join(path, editor_rules[i].BinaryFilename));
-        else // if (editor_rules[i].Type == BinaryPath)
+        } else { // if (editor_rules[i].Type == BinaryPath)
             exePath.Set(path.StealData());
+        }
         // don't show duplicate entries
-        if (foundExes.FindI(exePath) != -1)
+        if (foundExes.FindI(exePath) != -1) {
             continue;
+        }
         // don't show inexistent paths (and don't try again for them)
         if (!file::Exists(exePath)) {
             foundExes.Append(exePath.StealData());
@@ -395,16 +398,18 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
         }
 
         ComboBox_AddString(hwndCombo, editorCmd);
-        if (!firstEditor)
+        if (!firstEditor) {
             firstEditor = editorCmd.StealData();
+        }
         foundExes.Append(exePath.StealData());
     }
 
     // Fall back to notepad as a default handler
     if (!firstEditor) {
         firstEditor = str::Dup(L"notepad %f");
-        if (hwndCombo)
+        if (hwndCombo) {
             ComboBox_AddString(hwndCombo, firstEditor);
+        }
     }
     return firstEditor;
 }
@@ -428,8 +433,9 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_LBUTTONUP:
             if (delayFocus) {
                 DWORD sel = Edit_GetSel(hwnd);
-                if (LOWORD(sel) == HIWORD(sel))
+                if (LOWORD(sel) == HIWORD(sel)) {
                     PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+                }
                 delayFocus = false;
             }
             return true;
@@ -438,8 +444,9 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return false; // for easier debugging (make setting a breakpoint possible)
 
         case WM_SETFOCUS:
-            if (!delayFocus)
+            if (!delayFocus) {
                 PostMessageW(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);
+            }
             return true;
 
         case UWM_DELAYED_SET_FOCUS:
@@ -447,8 +454,9 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return true;
 
         case WM_KEYDOWN:
-            if (VK_BACK != wp || !IsCtrlPressed() || IsShiftPressed())
+            if (VK_BACK != wp || !IsCtrlPressed() || IsShiftPressed()) {
                 return false;
+            }
             PostMessageW(hwnd, UWM_DELAYED_CTRL_BACK, 0, 0);
             return true;
 
@@ -462,10 +470,12 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 selStart = selEnd = selStart - 1;
             }
             // remove the previous word (and any spacing after it)
-            for (; selStart > 0 && str::IsWs(text[selStart - 1]); selStart--)
+            for (; selStart > 0 && str::IsWs(text[selStart - 1]); selStart--) {
                 ;
-            for (; selStart > 0 && !str::IsWs(text[selStart - 1]); selStart--)
+            }
+            for (; selStart > 0 && !str::IsWs(text[selStart - 1]); selStart--) {
                 ;
+            }
             Edit_SetSel(hwnd, selStart, selEnd);
             SendMessageW(hwnd, WM_CLEAR, 0, 0);
         }
@@ -487,17 +497,20 @@ void EnsureAreaVisibility(Rect& r) {
     Rect work = GetWorkAreaRect(r);
 
     // make sure that the window is neither too small nor bigger than the monitor
-    if (r.dx < MIN_WIN_DX || r.dx > work.dx)
+    if (r.dx < MIN_WIN_DX || r.dx > work.dx) {
         r.dx = std::min((int)((double)work.dy * DEF_PAGE_RATIO), work.dx);
-    if (r.dy < MIN_WIN_DY || r.dy > work.dy)
+    }
+    if (r.dy < MIN_WIN_DY || r.dy > work.dy) {
         r.dy = work.dy;
+    }
 
     // check whether the lower half of the window's title bar is
     // inside a visible working area
     int captionDy = GetSystemMetrics(SM_CYCAPTION);
     Rect halfCaption(r.x, r.y + captionDy / 2, r.dx, captionDy / 2);
-    if (halfCaption.Intersect(work).IsEmpty())
+    if (halfCaption.Intersect(work).IsEmpty()) {
         r = Rect(work.TL(), r.Size());
+    }
 }
 
 Rect GetDefaultWindowPos() {

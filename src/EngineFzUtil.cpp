@@ -46,8 +46,9 @@ bool fz_is_pt_in_rect(fz_rect rect, fz_point pt) {
 }
 
 float fz_calc_overlap(fz_rect r1, fz_rect r2) {
-    if (fz_is_empty_rect(r1))
+    if (fz_is_empty_rect(r1)) {
         return 0.0f;
+    }
     fz_rect isect = fz_intersect_rect(r1, r2);
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
@@ -108,8 +109,9 @@ extern "C" int next_istream(fz_context* ctx, fz_stream* stm, size_t max) {
     istream_filter* state = (istream_filter*)stm->state;
     ULONG cbRead = sizeof(state->buf);
     HRESULT res = state->stream->Read(state->buf, sizeof(state->buf), &cbRead);
-    if (FAILED(res))
+    if (FAILED(res)) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "IStream read error: %x", res);
+    }
     stm->rp = state->buf;
     stm->wp = stm->rp + cbRead;
     stm->pos += cbRead;
@@ -123,10 +125,12 @@ extern "C" void seek_istream(fz_context* ctx, fz_stream* stm, i64 offset, int wh
     ULARGE_INTEGER n;
     off.QuadPart = offset;
     HRESULT res = state->stream->Seek(off, whence, &n);
-    if (FAILED(res))
+    if (FAILED(res)) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
-    if (n.HighPart != 0 || n.LowPart > INT_MAX)
+    }
+    if (n.HighPart != 0 || n.LowPart > INT_MAX) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "documents beyond 2GB aren't supported");
+    }
     stm->pos = n.LowPart;
     stm->rp = stm->wp = state->buf;
 }
@@ -267,8 +271,9 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
     int h = pixmap->h;
     int rows8 = ((w + 3) / 4) * 4;
     unsigned char* bmpData = (unsigned char*)calloc(rows8, h);
-    if (!bmpData)
+    if (!bmpData) {
         return nullptr;
+    }
 
     ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)));
 
@@ -293,8 +298,9 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
             if (isGray) {
                 k = grayIdxs[c.rgbRed] || palette[0] == *(u32*)&c ? grayIdxs[c.rgbRed] : paletteSize;
             } else {
-                for (k = 0; k < paletteSize && palette[k] != *(u32*)&c; k++)
+                for (k = 0; k < paletteSize && palette[k] != *(u32*)&c; k++) {
                     ;
+                }
             }
             /* add it to the palette if it isn't in there and if there's still space left */
             if (k == paletteSize) {
@@ -340,8 +346,9 @@ fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds
                               fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha) {
     fz_pixmap* cvt;
 
-    if (!ds && !keep_alpha)
+    if (!ds && !keep_alpha) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "cannot both throw away and keep alpha");
+    }
 
     cvt = fz_new_pixmap(ctx, ds, pix->w, pix->h, pix->seps, keep_alpha);
 
@@ -349,10 +356,11 @@ fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds
     cvt->yres = pix->yres;
     cvt->x = pix->x;
     cvt->y = pix->y;
-    if (pix->flags & FZ_PIXMAP_FLAG_INTERPOLATE)
+    if (pix->flags & FZ_PIXMAP_FLAG_INTERPOLATE) {
         cvt->flags |= FZ_PIXMAP_FLAG_INTERPOLATE;
-    else
+    } else {
         cvt->flags &= ~FZ_PIXMAP_FLAG_INTERPOLATE;
+    }
 
     fz_try(ctx) {
         fz_convert_pixmap_samples(ctx, pix, cvt, prf, default_cs, color_params, 1);
@@ -530,8 +538,9 @@ WCHAR* fz_text_page_to_str(fz_stext_page* text, Rect** coordsOut) {
 
 // copy of fz_is_external_link without ctx
 int is_external_link(const char* uri) {
-    while (*uri >= 'a' && *uri <= 'z')
+    while (*uri >= 'a' && *uri <= 'z') {
         ++uri;
+    }
     return uri[0] == ':';
 }
 
@@ -544,10 +553,12 @@ int resolve_link(const char* uri, float* xp, float* yp) {
             const char* x = strchr(uri, ',');
             const char* y = strrchr(uri, ',');
             if (x && y) {
-                if (xp)
+                if (xp) {
                     *xp = fz_atoi(x + 1);
-                if (yp)
+                }
+                if (yp) {
                     *yp = fz_atoi(y + 1);
+                }
             }
         }
         return page;
@@ -633,8 +644,9 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
 
     // update the link URL for all partial links
     list->links.at(lastIx) = str::Dup(uri);
-    for (size_t i = lastIx + 1; i < list->coords.size(); i++)
+    for (size_t i = lastIx + 1; i < list->coords.size(); i++) {
         list->links.Append(str::Dup(uri));
+    }
 
     return end;
 }
@@ -659,17 +671,22 @@ static const WCHAR* LinkifyFindEmail(const WCHAR* pageText, const WCHAR* at) {
 
 static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
     const WCHAR* end;
-    for (end = start; IsEmailUsernameChar(*end); end++)
+    for (end = start; IsEmailUsernameChar(*end); end++) {
         ;
-    if (end == start || *end != '@' || !IsEmailDomainChar(*(end + 1)))
+    }
+    if (end == start || *end != '@' || !IsEmailDomainChar(*(end + 1))) {
         return nullptr;
-    for (end++; IsEmailDomainChar(*end); end++)
+    }
+    for (end++; IsEmailDomainChar(*end); end++) {
         ;
-    if ('.' != *end || !IsEmailDomainChar(*(end + 1)))
+    }
+    if ('.' != *end || !IsEmailDomainChar(*(end + 1))) {
         return nullptr;
+    }
     do {
-        for (end++; IsEmailDomainChar(*end); end++)
+        for (end++; IsEmailDomainChar(*end); end++) {
             ;
+        }
     } while ('.' == *end && IsEmailDomainChar(*(end + 1)));
     return end;
 }
@@ -689,8 +706,9 @@ LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
             const WCHAR* email = LinkifyFindEmail(pageText, start);
             end = email ? LinkifyEmailAddress(email) : nullptr;
             protocol = L"mailto:";
-            if (end != nullptr)
+            if (end != nullptr) {
                 start = email;
+            }
         } else if (start > pageText && ('/' == start[-1] || iswalnum(start[-1]))) {
             // hyperlinks must not be preceded by a slash (indicates a different protocol)
             // or an alphanumeric character (indicates part of a different protocol)
@@ -702,21 +720,24 @@ LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
             multiline = LinkifyCheckMultiline(pageText, end, coords);
             protocol = L"http://";
             // ignore www. links without a top-level domain
-            if (end - start <= 4 || !multiline && (!wcschr(start + 5, '.') || wcschr(start + 5, '.') >= end))
+            if (end - start <= 4 || !multiline && (!wcschr(start + 5, '.') || wcschr(start + 5, '.') >= end)) {
                 end = nullptr;
+            }
         } else if ('m' == *start && str::StartsWith(start, L"mailto:")) {
             end = LinkifyEmailAddress(start + 7);
         }
-        if (!end)
+        if (!end) {
             continue;
+        }
 
         AutoFreeWstr part(str::DupN(start, end - start));
         WCHAR* uri = protocol ? str::Join(protocol, part) : part.StealData();
         list->links.Append(uri);
         Rect bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(RectD_to_fz_rect(bbox.Convert<double>()));
-        if (multiline)
+        if (multiline) {
             end = LinkifyMultilineText(list, pageText, start, end + 1, coords);
+        }
 
         start = end;
     }
@@ -1268,8 +1289,9 @@ void fz_run_page_transparency(fz_context* ctx, Vec<Annotation*>* annots, fz_devi
     }
     if (!endGroup) {
         fz_begin_group(ctx, dev, cliprect, nullptr, 1, 0, 0, 1);
-    } else
+    } else {
         fz_end_group(ctx, dev);
+    }
 }
 
 void fz_find_image_positions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext) {

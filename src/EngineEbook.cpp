@@ -240,8 +240,9 @@ void EngineEbook::GetTransform(Matrix& m, float zoom, int rotation) {
 
 Vec<DrawInstr>* EngineEbook::GetHtmlPage(int pageNo) {
     CrashIf(pageNo < 1 || PageCount() < pageNo);
-    if (pageNo < 1 || PageCount() < pageNo)
+    if (pageNo < 1 || PageCount() < pageNo) {
         return nullptr;
+    }
     return &pages->at(pageNo - 1)->instructions;
 }
 
@@ -453,8 +454,9 @@ WCHAR* EngineEbook::ExtractPageText(int pageNo, Rect** coordsOut) {
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
-                    for (size_t k = 0; k < len; k++)
+                    for (size_t k = 0; k < len; k++) {
                         coords.Append(Rect((int)(bbox.x + k * cwidth), bbox.y, (int)cwidth, bbox.dy));
+                    }
                 }
                 break;
             case DrawInstrType::RtlString:
@@ -476,8 +478,9 @@ WCHAR* EngineEbook::ExtractPageText(int pageNo, Rect** coordsOut) {
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
-                    for (size_t k = 0; k < len; k++)
+                    for (size_t k = 0; k < len; k++) {
                         coords.Append(Rect((int)(bbox.x + (len - k - 1) * cwidth), bbox.y, (int)cwidth, bbox.dy));
+                    }
                 }
                 break;
             case DrawInstrType::ElasticSpace:
@@ -564,16 +567,20 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(PageElement* el) {
 
 PageElement* EngineEbook::GetElementAtPos(int pageNo, PointD pt) {
     Vec<PageElement*>* els = GetElements(pageNo);
-    if (!els)
+    if (!els) {
         return nullptr;
+    }
 
     PageElement* el = nullptr;
-    for (size_t i = 0; i < els->size() && !el; i++)
-        if (els->at(i)->GetRect().Contains(pt))
+    for (size_t i = 0; i < els->size() && !el; i++) {
+        if (els->at(i)->GetRect().Contains(pt)) {
             el = els->at(i);
+        }
+    }
 
-    if (el)
+    if (el) {
         els->Remove(el);
+    }
     DeleteVecMembers(*els);
     delete els;
 
@@ -609,8 +616,9 @@ PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
     for (size_t i = 0; i < anchors.size(); i++) {
         PageAnchor* anchor = &anchors.at(i);
         if (baseAnchor) {
-            if (anchor->instr == baseAnchor)
+            if (anchor->instr == baseAnchor) {
                 baseAnchor = nullptr;
+            }
             continue;
         }
         // note: at least CHM treats URLs as case-independent
@@ -639,12 +647,14 @@ WCHAR* EngineEbook::ExtractFontList() {
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
-        if (!pageInstrs)
+        if (!pageInstrs) {
             continue;
+        }
 
         for (DrawInstr& i : *pageInstrs) {
-            if (DrawInstrType::SetFont != i.type || seenFonts.Contains(i.font))
+            if (DrawInstrType::SetFont != i.type || seenFonts.Contains(i.font)) {
                 continue;
+            }
             seenFonts.Append(i.font);
 
             FontFamily family;
@@ -654,17 +664,20 @@ WCHAR* EngineEbook::ExtractFontList() {
                 continue;
             }
             Status ok = i.font->font->GetFamily(&family);
-            if (ok != Ok)
+            if (ok != Ok) {
                 continue;
+            }
             WCHAR fontName[LF_FACESIZE];
             ok = family.GetFamilyName(fontName);
-            if (ok != Ok || fonts.FindI(fontName) != -1)
+            if (ok != Ok || fonts.FindI(fontName) != -1) {
                 continue;
+            }
             fonts.Append(str::Dup(fontName));
         }
     }
-    if (fonts.size() == 0)
+    if (fonts.size() == 0) {
         return nullptr;
+    }
 
     fonts.SortNatural();
     return fonts.Join(L"\n");
@@ -678,11 +691,12 @@ static void AppendTocItem(TocItem*& root, TocItem* item, int level) {
     // find the last child at each level, until finding the parent of the new item
     TocItem* r2 = root;
     while (--level > 0) {
-        for (; r2->next; r2 = r2->next)
+        for (; r2->next; r2 = r2->next) {
             ;
-        if (r2->child)
+        }
+        if (r2->child) {
             r2 = r2->child;
-        else {
+        } else {
             r2->child = item;
             return;
         }

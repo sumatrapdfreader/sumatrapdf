@@ -409,8 +409,9 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     Rect minRect;
     minRect.dx =
         ABOUT_LEFT_RIGHT_SPACE_DX + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
-    if (minRect.dx < headerSize.dx)
+    if (minRect.dx < headerSize.dx) {
         minRect.dx = headerSize.dx;
+    }
     minRect.dx += 2 * ABOUT_LINE_OUTER_SIZE + 2 * ABOUT_MARGIN_DX;
 
     minRect.dy = headerSize.dy;
@@ -423,8 +424,9 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     minRect.x = (rc.dx - minRect.dx) / 2;
     minRect.y = (rc.dy - minRect.dy) / 2;
 
-    if (rect)
+    if (rect) {
         *rect = minRect;
+    }
 
     /* calculate text positions */
     int linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
@@ -552,13 +554,15 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_CHAR:
-            if (VK_ESCAPE == wp)
+            if (VK_ESCAPE == wp) {
                 DestroyWindow(hwnd);
+            }
             break;
 
         case WM_COMMAND:
-            if (CmdCopySelection == LOWORD(wp))
+            if (CmdCopySelection == LOWORD(wp)) {
                 CopyAboutInfoToClipboard(hwnd);
+            }
             break;
 
         case WM_DESTROY:
@@ -591,8 +595,9 @@ void OnMenuAbout() {
     gHwndAbout =
         CreateWindow(ABOUT_CLASS_NAME, ABOUT_WIN_TITLE, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT,
                      CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
-    if (!gHwndAbout)
+    if (!gHwndAbout) {
         return;
+    }
 
     SetRtl(gHwndAbout, IsUIRightToLeft());
 
@@ -732,11 +737,13 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
             Rect page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
                       offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), THUMBNAIL_DX, THUMBNAIL_DY);
-            if (isRtl)
+            if (isRtl) {
                 page.x = rc.dx - page.x - page.dx;
+            }
             bool loadOk = true;
-            if (!state->thumbnail)
+            if (!state->thumbnail) {
                 loadOk = LoadThumbnail(*state);
+            }
             if (loadOk && state->thumbnail) {
                 Size thumbSize = state->thumbnail->Size();
                 if (thumbSize.dx != THUMBNAIL_DX || thumbSize.dy != THUMBNAIL_DY) {

@@ -55,12 +55,14 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
     for (int pageNo = dm->GetEngine()->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo* pageInfo = dm->GetPageInfo(pageNo);
         CrashIf(!(!pageInfo || 0.0 == pageInfo->visibleRatio || pageInfo->shown));
-        if (!pageInfo || !pageInfo->shown)
+        if (!pageInfo || !pageInfo->shown) {
             continue;
+        }
 
         Rect intersect = rect.Intersect(pageInfo->pageOnScreen);
-        if (intersect.IsEmpty())
+        if (intersect.IsEmpty()) {
             continue;
+        }
 
         /* selection intersects with a page <pageNo> on the screen */
         RectD isectD = dm->CvtFromScreen(intersect, pageNo);
@@ -113,8 +115,9 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
     screenRc.Inflate(margin, margin);
     for (size_t i = 0; i < rects.size(); i++) {
         Rect rc = rects.at(i).Intersect(screenRc);
-        if (!rc.IsEmpty())
+        if (!rc.IsEmpty()) {
             path.AddRectangle(rc.ToGdipRect());
+        }
     }
 
     // fill path (and draw optional outline margin)
@@ -163,8 +166,9 @@ void PaintSelection(WindowInfo* win, HDC hdc) {
         }
 
         CrashIf(!win->currentTab->selectionOnPage);
-        if (!win->currentTab->selectionOnPage)
+        if (!win->currentTab->selectionOnPage) {
             return;
+        }
 
         for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
             rects.Append(sel.GetRect(win->AsFixed()));
@@ -175,8 +179,9 @@ void PaintSelection(WindowInfo* win, HDC hdc) {
 }
 
 void UpdateTextSelection(WindowInfo* win, bool select) {
-    if (!win->AsFixed())
+    if (!win->AsFixed()) {
         return;
+    }
 
     DisplayModel* dm = win->AsFixed();
     if (select) {
@@ -191,8 +196,9 @@ void UpdateTextSelection(WindowInfo* win, bool select) {
     win->currentTab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
     win->showSelection = win->currentTab->selectionOnPage != nullptr;
 
-    if (win->uia_provider)
+    if (win->uia_provider) {
         win->uia_provider->OnSelectionChanged();
+    }
 }
 
 void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relative) {
@@ -244,24 +250,28 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
 }
 
 void CopySelectionToClipboard(WindowInfo* win) {
-    if (!win->currentTab || !win->currentTab->selectionOnPage)
+    if (!win->currentTab || !win->currentTab->selectionOnPage) {
         return;
+    }
     CrashIf(win->currentTab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
-    if (win->currentTab->selectionOnPage->size() == 0)
+    if (win->currentTab->selectionOnPage->size() == 0) {
         return;
+    }
     CrashIf(!win->AsFixed());
-    if (!win->AsFixed())
+    if (!win->AsFixed()) {
         return;
+    }
 
-    if (!OpenClipboard(nullptr))
+    if (!OpenClipboard(nullptr)) {
         return;
+    }
     EmptyClipboard();
 
     DisplayModel* dm = win->AsFixed();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (!dm->GetEngine()->AllowsCopyingText())
+    if (!dm->GetEngine()->AllowsCopyingText()) {
         win->ShowNotification(_TR("Copying text was denied (copying as image only)"));
-    else
+    } else
 #endif
         if (!dm->GetEngine()->IsImageCollection()) {
         AutoFreeWstr selText;
@@ -319,17 +329,20 @@ void OnSelectAll(WindowInfo* win, bool textOnly) {
         win->AsChm()->SelectAll();
         return;
     }
-    if (!win->AsFixed())
+    if (!win->AsFixed()) {
         return;
+    }
 
     DisplayModel* dm = win->AsFixed();
     if (textOnly) {
         int pageNo;
-        for (pageNo = 1; !dm->GetPageInfo(pageNo)->shown; pageNo++)
+        for (pageNo = 1; !dm->GetPageInfo(pageNo)->shown; pageNo++) {
             ;
+        }
         dm->textSelection->StartAt(pageNo, 0);
-        for (pageNo = win->ctrl->PageCount(); !dm->GetPageInfo(pageNo)->shown; pageNo--)
+        for (pageNo = win->ctrl->PageCount(); !dm->GetPageInfo(pageNo)->shown; pageNo--) {
             ;
+        }
         dm->textSelection->SelectUpTo(pageNo, -1);
         win->selectionRect = Rect::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         UpdateTextSelection(win);
@@ -354,14 +367,16 @@ bool NeedsSelectionEdgeAutoscroll(WindowInfo* win, int x, int y) {
 void OnSelectionEdgeAutoscroll(WindowInfo* win, int x, int y) {
     int dx = 0, dy = 0;
 
-    if (x < SELECT_AUTOSCROLL_AREA_WIDTH)
+    if (x < SELECT_AUTOSCROLL_AREA_WIDTH) {
         dx = -SELECT_AUTOSCROLL_STEP_LENGTH;
-    else if (x > win->canvasRc.dx - SELECT_AUTOSCROLL_AREA_WIDTH)
+    } else if (x > win->canvasRc.dx - SELECT_AUTOSCROLL_AREA_WIDTH) {
         dx = SELECT_AUTOSCROLL_STEP_LENGTH;
-    if (y < SELECT_AUTOSCROLL_AREA_WIDTH)
+    }
+    if (y < SELECT_AUTOSCROLL_AREA_WIDTH) {
         dy = -SELECT_AUTOSCROLL_STEP_LENGTH;
-    else if (y > win->canvasRc.dy - SELECT_AUTOSCROLL_AREA_WIDTH)
+    } else if (y > win->canvasRc.dy - SELECT_AUTOSCROLL_AREA_WIDTH) {
         dy = SELECT_AUTOSCROLL_STEP_LENGTH;
+    }
 
     CrashIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
     if (dx != 0 || dy != 0) {
@@ -408,19 +423,21 @@ void OnSelectionStart(WindowInfo* win, int x, int y, WPARAM key) {
 }
 
 void OnSelectionStop(WindowInfo* win, int x, int y, bool aborted) {
-    if (GetCapture() == win->hwndCanvas)
+    if (GetCapture() == win->hwndCanvas) {
         ReleaseCapture();
+    }
     KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
 
     // update the text selection before changing the selectionRect
-    if (MouseAction::SelectingText == win->mouseAction)
+    if (MouseAction::SelectingText == win->mouseAction) {
         UpdateTextSelection(win);
+    }
 
     win->selectionRect = Rect::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
-    if (aborted ||
-        (MouseAction::Selecting == win->mouseAction ? win->selectionRect.IsEmpty() : !win->currentTab->selectionOnPage))
+    if (aborted || (MouseAction::Selecting == win->mouseAction ? win->selectionRect.IsEmpty()
+                                                               : !win->currentTab->selectionOnPage)) {
         DeleteOldSelectionInfo(win, true);
-    else if (win->mouseAction == MouseAction::Selecting) {
+    } else if (win->mouseAction == MouseAction::Selecting) {
         win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
         win->showSelection = win->currentTab->selectionOnPage != nullptr;
     }

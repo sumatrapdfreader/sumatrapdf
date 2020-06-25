@@ -209,8 +209,9 @@ static DWORD GetDirSize(const WCHAR* dir) {
     WIN32_FIND_DATA findData;
 
     HANDLE h = FindFirstFile(dirPattern, &findData);
-    if (h == INVALID_HANDLE_VALUE)
+    if (h == INVALID_HANDLE_VALUE) {
         return 0;
+    }
 
     DWORD totalSize = 0;
     do {

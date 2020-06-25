@@ -77,8 +77,9 @@ pdf_obj* pdf_copy_str_dict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
 
 static int pdf_stream_no(fz_context* ctx, pdf_obj* ref) {
     pdf_document* doc = pdf_get_indirect_document(ctx, ref);
-    if (doc)
+    if (doc) {
         return pdf_to_num(ctx, ref);
+    }
     return 0;
 }
 
@@ -752,10 +753,11 @@ static PageLayoutType GetPreferredLayout(fz_context* ctx, pdf_document* doc) {
 
     fz_try(ctx) {
         const char* name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
-        if (str::EndsWith(name, "Right"))
+        if (str::EndsWith(name, "Right")) {
             layout = Layout_Book;
-        else if (str::StartsWith(name, "Two"))
+        } else if (str::StartsWith(name, "Two")) {
             layout = Layout_Facing;
+        }
     }
     fz_catch(ctx) {
     }
@@ -763,8 +765,9 @@ static PageLayoutType GetPreferredLayout(fz_context* ctx, pdf_document* doc) {
     fz_try(ctx) {
         pdf_obj* prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
         const char* direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
-        if (str::Eq(direction, "R2L"))
+        if (str::Eq(direction, "R2L")) {
             layout = (PageLayoutType)(layout | Layout_R2L);
+        }
     }
     fz_catch(ctx) {
     }
@@ -869,8 +872,9 @@ bool EnginePdf::FinishLoading() {
             for (int i = 0; i < n; i++) {
                 pdf_obj* intent = pdf_dict_gets(ctx, pdf_array_get(ctx, intents, i), "S");
                 if (pdf_is_name(ctx, intent) && !pdf_is_indirect(ctx, intent) &&
-                    str::StartsWith(pdf_to_name(ctx, intent), "GTS_PDF"))
+                    str::StartsWith(pdf_to_name(ctx, intent), "GTS_PDF")) {
                     pdf_array_push(ctx, list, intent);
+                }
             }
             pdf_dict_puts_drop(ctx, _info, "OutputIntents", list);
         }
@@ -1450,11 +1454,13 @@ bool EnginePdf::IsLinearizedFile() {
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
     fz_seek(ctx, doc->file, 0, 0);
     int tok = pdf_lex(ctx, doc->file, &doc->lexbuf.base);
-    if (tok != PDF_TOK_INT)
+    if (tok != PDF_TOK_INT) {
         return false;
+    }
     int num = doc->lexbuf.base.i;
-    if (num < 0 || num >= pdf_xref_len(ctx, doc))
+    if (num < 0 || num >= pdf_xref_len(ctx, doc)) {
         return false;
+    }
     // check whether it's a linearization dictionary
     fz_try(ctx) {
         pdf_cache_object(ctx, doc, num);
@@ -1463,14 +1469,17 @@ bool EnginePdf::IsLinearizedFile() {
         return false;
     }
     pdf_obj* obj = pdf_get_xref_entry(ctx, doc, num)->obj;
-    if (!pdf_is_dict(ctx, obj))
+    if (!pdf_is_dict(ctx, obj)) {
         return false;
+    }
     // /Linearized format must be version 1.0
-    if (pdf_to_real(ctx, pdf_dict_gets(ctx, obj, "Linearized")) != 1.0f)
+    if (pdf_to_real(ctx, pdf_dict_gets(ctx, obj, "Linearized")) != 1.0f) {
         return false;
+    }
     // /L must be the exact file size
-    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "L")) != doc->file_size)
+    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "L")) != doc->file_size) {
         return false;
+    }
 
     // /O must be the object number of the first page
     // TODO(port): at this point we don't have _pages loaded yet. for now always return false here
@@ -1510,8 +1519,9 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
     pdf_obj* fonts = pdf_dict_gets(ctx, res, "Font");
     for (int k = 0; k < pdf_dict_len(ctx, fonts); k++) {
         pdf_obj* font = pdf_resolve_indirect(ctx, pdf_dict_get_val(ctx, fonts, k));
-        if (font && !fontList.Contains(font))
+        if (font && !fontList.Contains(font)) {
             fontList.Append(font);
+        }
     }
     // also extract fonts for all XObjects (recursively)
     pdf_obj* xobjs = pdf_dict_gets(ctx, res, "XObject");
@@ -1573,8 +1583,9 @@ WCHAR* EnginePdf::ExtractFontList() {
         fz_try(ctx) {
             pdf_obj* font = fontList.at(i);
             pdf_obj* font2 = pdf_array_get(ctx, pdf_dict_gets(ctx, font, "DescendantFonts"), 0);
-            if (!font2)
+            if (!font2) {
                 font2 = font;
+            }
 
             name = pdf_to_name(ctx, pdf_dict_getsa(ctx, font2, "BaseFont", "Name"));
             bool needAnonName = str::IsEmpty(name);
@@ -1588,29 +1599,34 @@ WCHAR* EnginePdf::ExtractFontList() {
             }
             embedded = false;
             pdf_obj* desc = pdf_dict_gets(ctx, font2, "FontDescriptor");
-            if (desc && (pdf_dict_gets(ctx, desc, "FontFile") || pdf_dict_getsa(ctx, desc, "FontFile2", "FontFile3")))
+            if (desc && (pdf_dict_gets(ctx, desc, "FontFile") || pdf_dict_getsa(ctx, desc, "FontFile2", "FontFile3"))) {
                 embedded = true;
-            if (embedded && str::Len(name) > 7 && name[6] == '+')
+            }
+            if (embedded && str::Len(name) > 7 && name[6] == '+') {
                 name += 7;
+            }
 
             type = pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Subtype"));
             if (font2 != font) {
                 const char* type2 = pdf_to_name(ctx, pdf_dict_gets(ctx, font2, "Subtype"));
-                if (str::Eq(type2, "CIDFontType0"))
+                if (str::Eq(type2, "CIDFontType0")) {
                     type = "Type1 (CID)";
-                else if (str::Eq(type2, "CIDFontType2"))
+                } else if (str::Eq(type2, "CIDFontType2")) {
                     type = "TrueType (CID)";
+                }
             }
-            if (str::Eq(type, "Type3"))
+            if (str::Eq(type, "Type3")) {
                 embedded = pdf_dict_gets(ctx, font2, "CharProcs") != nullptr;
+            }
 
             encoding = pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Encoding"));
-            if (str::Eq(encoding, "WinAnsiEncoding"))
+            if (str::Eq(encoding, "WinAnsiEncoding")) {
                 encoding = "Ansi";
-            else if (str::Eq(encoding, "MacRomanEncoding"))
+            } else if (str::Eq(encoding, "MacRomanEncoding")) {
                 encoding = "Roman";
-            else if (str::Eq(encoding, "MacExpertEncoding"))
+            } else if (str::Eq(encoding, "MacExpertEncoding")) {
                 encoding = "Expert";
+            }
         }
         fz_catch(ctx) {
             continue;

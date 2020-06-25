@@ -55,8 +55,9 @@ DisplayMode ToDisplayMode(const WCHAR* s, DisplayMode defVal) {
     IS_STR_ENUM(DM_CONTINUOUS_FACING);
     IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
     // for consistency ("continuous" is used instead in the settings instead for brevity)
-    if (str::EqIS(s, L"continuous single page"))
+    if (str::EqIS(s, L"continuous single page")) {
         return DM_CONTINUOUS;
+    }
     return defVal;
 }
 
@@ -64,8 +65,9 @@ DisplayMode ToDisplayMode(const WCHAR* s, DisplayMode defVal) {
 
 void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140) {
     float prevZoom = *dst ? ToZoom(*dst, INVALID_ZOOM) : INVALID_ZOOM;
-    if (prevZoom == zoom)
+    if (prevZoom == zoom) {
         return;
+    }
     if (!IsValidZoom(zoom) && stateForIssue2140) {
         // TODO: does issue 2140 still occur?
         logf("Invalid ds->zoom: %g\n", zoom);
@@ -79,26 +81,31 @@ void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140) {
     }
     CrashIf(!IsValidZoom(zoom));
     free(*dst);
-    if (ZOOM_FIT_PAGE == zoom)
+    if (ZOOM_FIT_PAGE == zoom) {
         *dst = str::Dup("fit page");
-    else if (ZOOM_FIT_WIDTH == zoom)
+    } else if (ZOOM_FIT_WIDTH == zoom) {
         *dst = str::Dup("fit width");
-    else if (ZOOM_FIT_CONTENT == zoom)
+    } else if (ZOOM_FIT_CONTENT == zoom) {
         *dst = str::Dup("fit content");
-    else
+    } else {
         *dst = str::Format("%g", zoom);
+    }
 }
 
 float ToZoom(const char* s, float defVal) {
-    if (str::EqIS(s, "fit page"))
+    if (str::EqIS(s, "fit page")) {
         return ZOOM_FIT_PAGE;
-    if (str::EqIS(s, "fit width"))
+    }
+    if (str::EqIS(s, "fit width")) {
         return ZOOM_FIT_WIDTH;
-    if (str::EqIS(s, "fit content"))
+    }
+    if (str::EqIS(s, "fit content")) {
         return ZOOM_FIT_CONTENT;
+    }
     float zoom;
-    if (str::Parse(s, "%f", &zoom) && IsValidZoom(zoom))
+    if (str::Parse(s, "%f", &zoom) && IsValidZoom(zoom)) {
         return zoom;
+    }
     return defVal;
 }
 

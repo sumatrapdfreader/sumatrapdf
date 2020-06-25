@@ -555,8 +555,9 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
                 case AnnotationType::Underline:
                 case AnnotationType::StrikeOut:
                     arect = RectD(rect.x, rect.BR().y, rect.dx, 0);
-                    if (AnnotationType::StrikeOut == annot->type)
+                    if (AnnotationType::StrikeOut == annot->type) {
                         arect.y -= rect.dy / 2;
+                    }
                     arect = Transform(arect, pageNo, zoom, rotation);
                     arect.Offset(-screen.x, -screen.y);
                     {
@@ -927,8 +928,9 @@ WCHAR* EngineDjVu::ExtractPageText(int pageNo, Rect** coordsOut) {
             gDjVuContext->SpinMessageLoop();
         }
         float dpiFactor = 1.0;
-        if (DDJVU_JOB_OK == status)
+        if (DDJVU_JOB_OK == status) {
             dpiFactor = GetFileDPI() / info.dpi;
+        }
 
         // TODO: the coordinates aren't completely correct yet
         Rect page = PageMediabox(pageNo).Round();
@@ -1010,20 +1012,24 @@ Vec<PageElement*>* EngineDjVu::GetElements(int pageNo) {
         }
 
         area = miniexp_cdr(area);
-        if (!miniexp_numberp(miniexp_car(area)))
+        if (!miniexp_numberp(miniexp_car(area))) {
             continue;
+        }
         int x = miniexp_to_int(miniexp_car(area));
         area = miniexp_cdr(area);
-        if (!miniexp_numberp(miniexp_car(area)))
+        if (!miniexp_numberp(miniexp_car(area))) {
             continue;
+        }
         int y = miniexp_to_int(miniexp_car(area));
         area = miniexp_cdr(area);
-        if (!miniexp_numberp(miniexp_car(area)))
+        if (!miniexp_numberp(miniexp_car(area))) {
             continue;
+        }
         int w = miniexp_to_int(miniexp_car(area));
         area = miniexp_cdr(area);
-        if (!miniexp_numberp(miniexp_car(area)))
+        if (!miniexp_numberp(miniexp_car(area))) {
             continue;
+        }
         int h = miniexp_to_int(miniexp_car(area));
         area = miniexp_cdr(area);
         if (dpiFactor != 1.0) {

@@ -450,8 +450,9 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     }
 
     int pageNo = dm->GetPageNoByPoint(Point(x, y));
-    if (!tab->ctrl->ValidPageNo(pageNo))
+    if (!tab->ctrl->ValidPageNo(pageNo)) {
         return false;
+    }
 
     Point pt = dm->CvtFromScreen(Point(x, y), pageNo).ToInt();
     AutoFreeWstr srcfilepath;
@@ -467,8 +468,9 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         // the PDF document (which happens if all files are moved together)
         AutoFreeWstr altsrcpath(path::GetDir(tab->filePath));
         altsrcpath.Set(path::Join(altsrcpath, path::GetBaseNameNoFree(srcfilepath)));
-        if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath))
+        if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath)) {
             srcfilepath.Set(altsrcpath.StealData());
+        }
     }
 
     WCHAR* inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
@@ -478,23 +480,28 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     }
 
     AutoFreeWstr cmdline;
-    if (inverseSearch)
+    if (inverseSearch) {
         cmdline.Set(dm->pdfSync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
+    }
     if (!str::IsEmpty(cmdline.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
         AutoFreeWstr appDir(GetExePath());
-        if (appDir)
+        if (appDir) {
             appDir.Set(path::GetDir(appDir));
+        }
         AutoCloseHandle process(LaunchProcess(cmdline, appDir));
-        if (!process)
+        if (!process) {
             win->ShowNotification(
                 _TR("Cannot start inverse search command. Please check the command line in the settings."));
-    } else if (gGlobalPrefs->enableTeXEnhancements)
+        }
+    } else if (gGlobalPrefs->enableTeXEnhancements) {
         win->ShowNotification(
             _TR("Cannot start inverse search command. Please check the command line in the settings."));
+    }
 
-    if (inverseSearch != gGlobalPrefs->inverseSearchCmdLine)
+    if (inverseSearch != gGlobalPrefs->inverseSearchCmdLine) {
         free(inverseSearch);
+    }
 
     return true;
 }
@@ -513,8 +520,9 @@ void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, 
         win->fwdSearchMark.page = page;
         win->fwdSearchMark.show = true;
         win->fwdSearchMark.hideStep = 0;
-        if (!gGlobalPrefs->forwardSearch.highlightPermanent)
+        if (!gGlobalPrefs->forwardSearch.highlightPermanent) {
             SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, nullptr);
+        }
 
         // Scroll to show the overall highlighted zone
         int pageNo = page;
@@ -536,24 +544,26 @@ void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, 
     }
 
     AutoFreeWstr buf;
-    if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND)
+    if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND) {
         win->ShowNotification(_TR("No synchronization file found"));
-    else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
+    } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
         win->ShowNotification(_TR("Synchronization file cannot be opened"));
-    else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
+    } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
         buf.Set(str::Format(_TR("Page number %u inexistant"), page));
-    else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
+    } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
         win->ShowNotification(_TR("No synchronization info at this position"));
-    else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
+    } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
         buf.Set(str::Format(_TR("Unknown source file (%s)"), fileName));
-    else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
+    } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
         buf.Set(str::Format(_TR("Source file %s has no synchronization point"), fileName));
-    else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE)
+    } else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE) {
         buf.Set(str::Format(_TR("No result found around line %u in file %s"), line, fileName));
-    else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
+    } else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) {
         buf.Set(str::Format(_TR("No result found around line %u in file %s"), line, fileName));
-    if (buf)
+    }
+    if (buf) {
         win->ShowNotification(buf);
+    }
 }
 
 // DDE commands handling
@@ -585,17 +595,19 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
     const WCHAR* next = str::Parse(cmd, L"[ForwardSearch(\"%S\",%? \"%S\",%u,%u)]", &pdfFile, &srcFile, &line, &col);
-    if (!next)
+    if (!next) {
         next = str::Parse(cmd, L"[ForwardSearch(\"%S\",%? \"%S\",%u,%u,%u,%u)]", &pdfFile, &srcFile, &line, &col,
                           &newWindow, &setFocus);
+    }
     // allow to omit the pdffile path, so that editors don't have to know about
     // multi-file projects (requires that the PDF has already been opened)
     if (!next) {
         pdfFile.Reset();
         next = str::Parse(cmd, L"[ForwardSearch(\"%S\",%u,%u)]", &srcFile, &line, &col);
-        if (!next)
+        if (!next) {
             next =
                 str::Parse(cmd, L"[ForwardSearch(\"%S\",%u,%u,%u,%u)]", &srcFile, &line, &col, &newWindow, &setFocus);
+        }
     }
 
     if (!next) {
@@ -762,8 +774,9 @@ static const WCHAR* HandlePageCmd(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
         }
     }
 
-    if (!win->ctrl->ValidPageNo(page))
+    if (!win->ctrl->ValidPageNo(page)) {
         return next;
+    }
 
     win->ctrl->GoToPage(page, true);
     ack.fAck = 1;

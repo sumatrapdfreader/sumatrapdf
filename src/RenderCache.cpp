@@ -575,23 +575,28 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel* dm, int pageNo, TilePo
         PageRenderRequest* req = &(requests[i]);
         bool shouldRemove = req->dm == dm && (pageNo == INVALID_PAGE_NO || req->pageNo == pageNo) &&
                             (!tile || req->tile.res != tile->res || !IsTileVisible(dm, req->pageNo, *tile, 0.5));
-        if (i != curPos)
+        if (i != curPos) {
             requests[curPos] = requests[i];
+        }
         if (shouldRemove) {
-            if (req->renderCb)
+            if (req->renderCb) {
                 req->renderCb->Callback();
+            }
             requestCount--;
-        } else
+        } else {
             curPos++;
+        }
     }
 }
 
 void RenderCache::AbortCurrentRequest() {
     ScopedCritSec scope(&requestAccess);
-    if (!curReq)
+    if (!curReq) {
         return;
-    if (curReq->abortCookie)
+    }
+    if (curReq->abortCookie) {
         curReq->abortCookie->Abort();
+    }
     curReq->abort = true;
 }
 

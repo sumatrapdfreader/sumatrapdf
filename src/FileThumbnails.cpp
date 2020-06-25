@@ -54,19 +54,22 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     AutoFreeWstr thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
-    if (!thumbsPath)
+    if (!thumbsPath) {
         return;
+    }
     AutoFreeWstr pattern(path::Join(thumbsPath, L"*.png"));
 
     WStrVec files;
     WIN32_FIND_DATA fdata;
 
     HANDLE hfind = FindFirstFile(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind)
+    if (INVALID_HANDLE_VALUE == hfind) {
         return;
+    }
     do {
-        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             files.Append(str::Dup(fdata.cFileName));
+        }
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
@@ -74,8 +77,9 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     fileHistory.GetFrequencyOrder(list);
     for (size_t i = 0; i < list.size() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
         AutoFreeWstr bmpPath(GetThumbnailPath(list.at(i)->filePath));
-        if (!bmpPath)
+        if (!bmpPath) {
             continue;
+        }
         int idx = files.Find(path::GetBaseNameNoFree(bmpPath));
         if (idx != -1) {
             CrashIf(idx < 0 || files.size() <= (size_t)idx);

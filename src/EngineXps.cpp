@@ -165,16 +165,17 @@ xps_doc_props* xps_extract_doc_props(fz_context* ctx, xps_document* xpsdoc) {
     xps_doc_props* props = new xps_doc_props();
 
     for (fz_xml* item = fz_xml_down(root); item; item = fz_xml_next(item)) {
-        if (fz_xml_is_tag(item, /*"dc:"*/ "title") && !props->title)
+        if (fz_xml_is_tag(item, /*"dc:"*/ "title") && !props->title) {
             props->title.Set(xps_get_core_prop(ctx, item));
-        else if (fz_xml_is_tag(item, /*"dc:"*/ "creator") && !props->author)
+        } else if (fz_xml_is_tag(item, /*"dc:"*/ "creator") && !props->author) {
             props->author.Set(xps_get_core_prop(ctx, item));
-        else if (fz_xml_is_tag(item, /*"dc:"*/ "subject") && !props->subject)
+        } else if (fz_xml_is_tag(item, /*"dc:"*/ "subject") && !props->subject) {
             props->subject.Set(xps_get_core_prop(ctx, item));
-        else if (fz_xml_is_tag(item, /*"dcterms:"*/ "created") && !props->creation_date)
+        } else if (fz_xml_is_tag(item, /*"dcterms:"*/ "created") && !props->creation_date) {
             props->creation_date.Set(xps_get_core_prop(ctx, item));
-        else if (fz_xml_is_tag(item, /*"dcterms:"*/ "modified") && !props->modification_date)
+        } else if (fz_xml_is_tag(item, /*"dcterms:"*/ "modified") && !props->modification_date) {
             props->modification_date.Set(xps_get_core_prop(ctx, item));
+        }
     }
     fz_drop_xml(ctx, xmldoc);
 
@@ -370,8 +371,9 @@ bool EngineXps::Load(const WCHAR* fileName) {
     if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
         ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
-        if (!zipStream)
+        if (!zipStream) {
             return false;
+        }
         return Load(zipStream);
     }
 

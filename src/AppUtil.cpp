@@ -21,14 +21,18 @@ bool IsValidProgramVersion(const char* txt) {
     }
 
     for (; *txt; txt++) {
-        if (str::IsDigit(*txt))
+        if (str::IsDigit(*txt)) {
             continue;
-        if (*txt == '.' && str::IsDigit(*(txt + 1)))
+        }
+        if (*txt == '.' && str::IsDigit(*(txt + 1))) {
             continue;
-        if (*txt == '\r' && *(txt + 1) == '\n')
+        }
+        if (*txt == '\r' && *(txt + 1) == '\n') {
             continue;
-        if (*txt == '\n' && !*(txt + 1))
+        }
+        if (*txt == '\n' && !*(txt + 1)) {
             continue;
+        }
         return false;
     }
 

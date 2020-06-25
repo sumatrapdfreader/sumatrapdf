@@ -123,8 +123,9 @@ EbookController* WindowInfo::AsEbook() const {
 // about a potential change of available canvas size
 void WindowInfo::UpdateCanvasSize() {
     Rect rc = ClientRect(hwndCanvas);
-    if (buffer && canvasRc == rc)
+    if (buffer && canvasRc == rc) {
         return;
+    }
     canvasRc = rc;
 
     // create a new output buffer and notify the model
@@ -141,8 +142,9 @@ void WindowInfo::UpdateCanvasSize() {
     }
 
     // keep the notifications visible (only needed for right-to-left layouts)
-    if (IsUIRightToLeft())
+    if (IsUIRightToLeft()) {
         notifications->Relayout();
+    }
 }
 
 Size WindowInfo::GetViewPortSize() {
@@ -453,13 +455,15 @@ static WCHAR* NormalizeFuzzy(const WCHAR* str) {
 }
 
 static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially = false) {
-    if (!partially)
+    if (!partially) {
         return str::Eq(s1, s2);
+    }
 
     // only match at the start of a word (at the beginning and after a space)
     for (const WCHAR* last = s1; (last = str::Find(last, s2)) != nullptr; last++) {
-        if (last == s1 || *(last - 1) == ' ')
+        if (last == s1 || *(last - 1) == ' ') {
             return true;
+        }
     }
     return false;
 }
@@ -469,11 +473,13 @@ static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially = false)
 PageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, bool partially) {
     for (; item; item = item->next) {
         AutoFreeWstr fuzTitle(NormalizeFuzzy(item->title));
-        if (MatchFuzzy(fuzTitle, name, partially))
+        if (MatchFuzzy(fuzTitle, name, partially)) {
             return item->GetPageDestination();
+        }
         PageDestination* dest = FindTocItem(item->child, name, partially);
-        if (dest)
+        if (dest) {
             return dest;
+        }
     }
     return nullptr;
 }
@@ -481,8 +487,9 @@ PageDestination* LinkHandler::FindTocItem(TocItem* item, const WCHAR* name, bool
 void LinkHandler::GotoNamedDest(const WCHAR* name) {
     CrashIf(!owner || owner->linkHandler != this);
     Controller* ctrl = owner->ctrl;
-    if (!ctrl)
+    if (!ctrl) {
         return;
+    }
 
     // Match order:
     // 1. Exact match on internal destination name
@@ -499,8 +506,9 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
         TocItem* root = docTree->root;
         AutoFreeWstr fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName);
-        if (!dest)
+        if (!dest) {
             dest = FindTocItem(root, fuzName, true);
+        }
         if (dest) {
             ScrollTo(dest);
             hasDest = true;
@@ -508,8 +516,9 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
     }
     if (!hasDest && ctrl->HasPageLabels()) {
         int pageNo = ctrl->GetPageByLabel(name);
-        if (ctrl->ValidPageNo(pageNo))
+        if (ctrl->ValidPageNo(pageNo)) {
             ctrl->GoToPage(pageNo, true);
+        }
     }
 }
 

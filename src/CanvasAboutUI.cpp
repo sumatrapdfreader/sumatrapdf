@@ -180,8 +180,9 @@ LRESULT WndProcCanvasAbout(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             return 0;
 
         case WM_SETCURSOR:
-            if (OnSetCursorAbout(win, hwnd))
+            if (OnSetCursorAbout(win, hwnd)) {
                 return TRUE;
+            }
             return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_CONTEXTMENU:

@@ -364,8 +364,9 @@ const pdf_write_options pdf_default_write_options2 = {
 };
 
 bool PdfCreator::SaveToFile(const char* filePath) {
-    if (!ctx || !doc)
+    if (!ctx || !doc) {
         return false;
+    }
 
     if (gPdfProducer) {
         SetProperty(DocumentProperty::PdfProducer, gPdfProducer);

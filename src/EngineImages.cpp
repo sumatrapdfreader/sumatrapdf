@@ -772,8 +772,9 @@ int EngineImageDir::GetPageByLabel(const WCHAR* label) const {
         const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(i));
         const WCHAR* fileExt = path::GetExtNoFree(fileName);
         if (str::StartsWithI(fileName, label) &&
-            (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0'))
+            (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0')) {
             return (int)i + 1;
+        }
     }
 
     return EngineBase::GetPageByLabel(label);
@@ -1164,26 +1165,26 @@ void EngineCbx::ParseComicInfoXml(const char* xmlData) {
 // extract ComicBookInfo metadata
 // cf. http://code.google.com/p/comicbookinfo/
 bool EngineCbx::Visit(const char* path, const char* value, json::DataType type) {
-    if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
+    if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title")) {
         propTitle.Set(strconv::Utf8ToWstr(value));
-    else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear"))
+    } else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear")) {
         propDate.Set(str::Format(L"%s/%d", propDate ? propDate.Get() : L"", atoi(value)));
-    else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth"))
+    } else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth")) {
         propDate.Set(str::Format(L"%d%s", atoi(value), propDate ? propDate.Get() : L""));
-    else if (json::Type_String == type && str::Eq(path, "/appID"))
+    } else if (json::Type_String == type && str::Eq(path, "/appID")) {
         propCreator.Set(strconv::Utf8ToWstr(value));
-    else if (json::Type_String == type && str::Eq(path, "/lastModified"))
+    } else if (json::Type_String == type && str::Eq(path, "/lastModified")) {
         propModDate.Set(strconv::Utf8ToWstr(value));
-    else if (json::Type_String == type && str::Eq(path, "/X-summary"))
+    } else if (json::Type_String == type && str::Eq(path, "/X-summary")) {
         propSummary.Set(strconv::Utf8ToWstr(value));
-    else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
+    } else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
         int idx = -1;
         const char* prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
-            if (json::Type_String == type && str::Eq(prop, "person"))
+            if (json::Type_String == type && str::Eq(prop, "person")) {
                 propAuthorTmp.Set(strconv::Utf8ToWstr(value));
-            else if (json::Type_Bool == type && str::Eq(prop, "primary") && propAuthorTmp &&
-                     !propAuthors.Contains(propAuthorTmp)) {
+            } else if (json::Type_Bool == type && str::Eq(prop, "primary") && propAuthorTmp &&
+                       !propAuthors.Contains(propAuthorTmp)) {
                 propAuthors.Append(propAuthorTmp.StealData());
             }
         }

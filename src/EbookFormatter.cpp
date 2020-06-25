@@ -25,18 +25,21 @@
 
 MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc) : HtmlFormatter(args), doc(doc) {
     bool fromBeginning = (0 == args->reparseIdx);
-    if (!doc || !fromBeginning)
+    if (!doc || !fromBeginning) {
         return;
+    }
 
     ImageData* img = doc->GetCoverImage();
-    if (!img)
+    if (!img) {
         return;
+    }
 
     // TODO: vertically center the cover image?
     EmitImage(img);
     // only add a new page if the image isn't broken
-    if (currLineInstr.size() > 0)
+    if (currLineInstr.size() > 0) {
         ForceNewPage();
+    }
 }
 
 // parses size in the form "1em" or "3pt". To interpret ems we need emInPoints
@@ -60,8 +63,9 @@ static float ParseSizeAsPixels(const char* s, size_t len, float emInPoints) {
 }
 
 void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {
-    if (!t->IsStartTag())
+    if (!t->IsStartTag()) {
         return;
+    }
 
     // best I can tell, in mobi <p width="1em" height="3pt> means that
     // the first line of the paragrap is indented by 1em and there's
@@ -90,8 +94,9 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken* t) {
 // global record)
 void MobiFormatter::HandleTagImg(HtmlToken* t) {
     // we allow formatting raw html which can't require doc
-    if (!doc)
+    if (!doc) {
         return;
+    }
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("recindex");
     if (attr) {
@@ -101,8 +106,9 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
             needAlt = !img || !EmitImage(img);
         }
     }
-    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
         HandleText(attr->val, attr->valLen);
+    }
 }
 
 void MobiFormatter::HandleHtmlTag(HtmlToken* t) {
@@ -116,8 +122,9 @@ void MobiFormatter::HandleHtmlTag(HtmlToken* t) {
     } else if (Tag_A == t->tag) {
         HandleAnchorAttr(t);
         // handle internal and external links (prefer internal ones)
-        if (!HandleTagA(t, "filepos"))
+        if (!HandleTagA(t, "filepos")) {
             HandleTagA(t);
+        }
     } else if (Tag_Hr == t->tag) {
         // imitating Kindle: hr is proceeded by an empty line
         FlushCurrLine(false);
@@ -132,8 +139,9 @@ void MobiFormatter::HandleHtmlTag(HtmlToken* t) {
 
 void EpubFormatter::HandleTagImg(HtmlToken* t) {
     CrashIf(!epubDoc);
-    if (t->IsEndTag())
+    if (t->IsEndTag()) {
         return;
+    }
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
@@ -142,14 +150,16 @@ void EpubFormatter::HandleTagImg(HtmlToken* t) {
         ImageData* img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
-    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
         HandleText(attr->val, attr->valLen);
+    }
 }
 
 void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
     AttrInfo* attr = t->GetAttrByName("page_path");
-    if (!attr || pagePath)
+    if (!attr || pagePath) {
         ForceNewPage();
+    }
     if (attr) {
         RectF bbox(0, currY, pageDx, 0);
         currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
@@ -161,17 +171,21 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
 
 void EpubFormatter::HandleTagLink(HtmlToken* t) {
     CrashIf(!epubDoc);
-    if (t->IsEndTag())
+    if (t->IsEndTag()) {
         return;
+    }
     AttrInfo* attr = t->GetAttrByName("rel");
-    if (!attr || !attr->ValIs("stylesheet"))
+    if (!attr || !attr->ValIs("stylesheet")) {
         return;
+    }
     attr = t->GetAttrByName("type");
-    if (attr && !attr->ValIs("text/css"))
+    if (attr && !attr->ValIs("text/css")) {
         return;
+    }
     attr = t->GetAttrByName("href");
-    if (!attr)
+    if (!attr) {
         return;
+    }
 
     AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
@@ -208,14 +222,16 @@ void EpubFormatter::HandleHtmlTag(HtmlToken* t) {
         UpdateTagNesting(t);
         return;
     }
-    if (0 == hiddenDepth && t->IsStartTag() && t->GetAttrByName("hidden"))
+    if (0 == hiddenDepth && t->IsStartTag() && t->GetAttrByName("hidden")) {
         hiddenDepth = tagNesting.size() + 1;
-    if (hiddenDepth > 0)
+    }
+    if (hiddenDepth > 0) {
         UpdateTagNesting(t);
-    else if (Tag_Image == t->tag || Tag_Svg_Image == t->tag)
+    } else if (Tag_Image == t->tag || Tag_Svg_Image == t->tag) {
         HandleTagSvgImage(t);
-    else
+    } else {
         HtmlFormatter::HandleHtmlTag(t);
+    }
 }
 
 bool EpubFormatter::IgnoreText() {
@@ -226,26 +242,30 @@ bool EpubFormatter::IgnoreText() {
 
 Fb2Formatter::Fb2Formatter(HtmlFormatterArgs* args, Fb2Doc* doc)
     : HtmlFormatter(args), fb2Doc(doc), section(1), titleCount(0) {
-    if (args->reparseIdx != 0)
+    if (args->reparseIdx != 0) {
         return;
+    }
     ImageData* cover = doc->GetCoverImage();
-    if (!cover)
+    if (!cover) {
         return;
+    }
     EmitImage(cover);
     // render larger images alone on the cover page,
     // smaller images just separated by a horizontal line
-    if (0 == currLineInstr.size())
+    if (0 == currLineInstr.size()) {
         /* the image was broken */;
-    else if (currLineInstr.Last().bbox.Height > args->pageDy / 2)
+    } else if (currLineInstr.Last().bbox.Height > args->pageDy / 2) {
         ForceNewPage();
-    else
+    } else {
         EmitHr();
+    }
 }
 
 void Fb2Formatter::HandleTagImg(HtmlToken* t) {
     CrashIf(!fb2Doc);
-    if (t->IsEndTag())
+    if (t->IsEndTag()) {
         return;
+    }
     ImageData* img = nullptr;
     AttrInfo* attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
@@ -253,8 +273,9 @@ void Fb2Formatter::HandleTagImg(HtmlToken* t) {
         url::DecodeInPlace(src);
         img = fb2Doc->GetImageData(src);
     }
-    if (img)
+    if (img) {
         EmitImage(img);
+    }
 }
 
 void Fb2Formatter::HandleTagAsHtml(HtmlToken* t, const char* name) {
@@ -278,42 +299,47 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
             currPage->instructions.Append(DrawInstr::Anchor(link, str::Len(link), RectF(0, currY, pageDx, 0)));
         }
     } else if (Tag_Section == t->tag) {
-        if (t->IsStartTag())
+        if (t->IsStartTag()) {
             section++;
-        else if (t->IsEndTag() && section > 1)
+        } else if (t->IsEndTag() && section > 1) {
             section--;
+        }
         FlushCurrLine(true);
         HandleAnchorAttr(t);
     } else if (Tag_P == t->tag) {
-        if (!tagNesting.Contains(Tag_Title))
+        if (!tagNesting.Contains(Tag_Title)) {
             HtmlFormatter::HandleHtmlTag(t);
+        }
     } else if (Tag_Image == t->tag) {
         HandleTagImg(t);
         HandleAnchorAttr(t);
     } else if (Tag_A == t->tag) {
         HandleTagA(t, "href", "http://www.w3.org/1999/xlink");
         HandleAnchorAttr(t, true);
-    } else if (Tag_Pagebreak == t->tag)
+    } else if (Tag_Pagebreak == t->tag) {
         ForceNewPage();
-    else if (Tag_Strong == t->tag)
+    } else if (Tag_Strong == t->tag) {
         HandleTagAsHtml(t, "b");
-    else if (t->NameIs("emphasis"))
+    } else if (t->NameIs("emphasis")) {
         HandleTagAsHtml(t, "i");
-    else if (t->NameIs("epigraph"))
+    } else if (t->NameIs("epigraph")) {
         HandleTagAsHtml(t, "blockquote");
-    else if (t->NameIs("empty-line")) {
-        if (!t->IsEndTag())
+    } else if (t->NameIs("empty-line")) {
+        if (!t->IsEndTag()) {
             EmitParagraph(0);
-    } else if (t->NameIs("stylesheet"))
+        }
+    } else if (t->NameIs("stylesheet")) {
         HandleTagAsHtml(t, "style");
+    }
 }
 
 /* standalone HTML-specific formatting methods */
 
 void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
     CrashIf(!htmlDoc);
-    if (t->IsEndTag())
+    if (t->IsEndTag()) {
         return;
+    }
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
@@ -322,23 +348,28 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
         ImageData* img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);
     }
-    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr) {
         HandleText(attr->val, attr->valLen);
+    }
 }
 
 void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
     CrashIf(!htmlDoc);
-    if (t->IsEndTag())
+    if (t->IsEndTag()) {
         return;
+    }
     AttrInfo* attr = t->GetAttrByName("rel");
-    if (!attr || !attr->ValIs("stylesheet"))
+    if (!attr || !attr->ValIs("stylesheet")) {
         return;
+    }
     attr = t->GetAttrByName("type");
-    if (attr && !attr->ValIs("text/css"))
+    if (attr && !attr->ValIs("text/css")) {
         return;
+    }
     attr = t->GetAttrByName("href");
-    if (!attr)
+    if (!attr) {
         return;
+    }
 
     AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);

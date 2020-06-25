@@ -159,8 +159,9 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
     }
     // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
     int pageNo = dest->GetPageNo();
-    if (pageNo <= 0 || pageNo > engine->PageCount())
+    if (pageNo <= 0 || pageNo > engine->PageCount()) {
         return nullptr;
+    }
     RectD rect = dest->GetRect();
     if (rect.IsEmpty()) {
         PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
@@ -391,8 +392,9 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             text.AppendAndFree(engine->ExtractPageText(pageNo, nullptr));
         }
         text.Replace(L"\n", L"\r\n");
-        if (silent)
+        if (silent) {
             return true;
+        }
         AutoFreeWstr txtFilePath(str::Format(renderPath, 0));
         AutoFree textUTF8 = strconv::WstrToUtf8(text.Get());
         AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
@@ -416,8 +418,9 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
         RenderPageArgs args(pageNo, zoom, 0);
         RenderedBitmap* bmp = engine->RenderPage(args);
         success &= bmp != nullptr;
-        if (!bmp && !silent)
+        if (!bmp && !silent) {
             ErrOut("Error: Failed to render page %d for %s!", pageNo, engine->FileName());
+        }
         if (!bmp || silent) {
             delete bmp;
             continue;
@@ -484,16 +487,14 @@ int main(int argc, char** argv) {
     WCHAR* renderPath = nullptr;
     float renderZoom = 1.f;
     bool loadOnly = false, silent = false;
-#ifdef DEBUG
     int breakAlloc = 0;
-#endif
 
     for (size_t i = 1; i < argList.size(); i++) {
-        if (str::Eq(argList.at(i), L"-pwd") && i + 1 < argList.size() && !password)
+        if (str::Eq(argList.at(i), L"-pwd") && i + 1 < argList.size() && !password) {
             password = argList.at(++i);
-        else if (str::Eq(argList.at(i), L"-quick"))
+        } else if (str::Eq(argList.at(i), L"-quick")) {
             fullDump = false;
-        else if (str::Eq(argList.at(i), L"-render") && i + 1 < argList.size() && !renderPath) {
+        } else if (str::Eq(argList.at(i), L"-render") && i + 1 < argList.size() && !renderPath) {
             // optional zoom argument (e.g. -render 50% file.pdf)
             float zoom;
             if (i + 2 < argList.size() && str::Parse(argList.at(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
@@ -501,35 +502,34 @@ int main(int argc, char** argv) {
                 i++;
             }
             renderPath = argList.at(++i);
-        }
-        // -loadonly and -silent are only meant for profiling
-        else if (str::Eq(argList.at(i), L"-loadonly"))
+        } else if (str::Eq(argList.at(i), L"-loadonly")) {
+            // -loadonly and -silent are only meant for profiling
             loadOnly = true;
-        else if (str::Eq(argList.at(i), L"-silent"))
+        } else if (str::Eq(argList.at(i), L"-silent")) {
             silent = true;
-        // -full is for backward compatibility
-        else if (str::Eq(argList.at(i), L"-full"))
+        } else if (str::Eq(argList.at(i), L"-full")) {
+            // -full is for backward compatibility
             fullDump = true;
-#ifdef DEBUG
-        else if (str::Eq(argList.at(i), L"-breakalloc") && i + 1 < argList.size())
+        } else if (str::Eq(argList.at(i), L"-breakalloc") && i + 1 < argList.size()) {
             breakAlloc = _wtoi(argList.at(++i));
-#endif
-        else if (!filePath)
+        } else if (!filePath) {
             filePath.SetCopy(argList.at(i));
-        else
+        } else {
             goto Usage;
+        }
     }
-    if (!filePath)
+    if (!filePath) {
         goto Usage;
+    }
 
-#ifdef DEBUG
     if (breakAlloc) {
+#ifdef DEBUG
         _CrtSetBreakAlloc(breakAlloc);
         if (!IsDebuggerPresent())
             MessageBox(nullptr, L"Keep your debugger ready for the allocation breakpoint...", L"EngineDump",
                        MB_ICONINFORMATION);
-    }
 #endif
+    }
     if (silent) {
         FILE* nul;
         freopen_s(&nul, "NUL", "w", stdout);

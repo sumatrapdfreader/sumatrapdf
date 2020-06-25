@@ -639,8 +639,9 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) 
 
 static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
     CrashIf(!win->AsFixed());
-    if (!win->AsFixed())
+    if (!win->AsFixed()) {
         return;
+    }
     DisplayModel* dm = win->AsFixed();
 
     bool isImage = dm->GetEngine()->IsImageCollection();
@@ -1047,14 +1048,16 @@ static LRESULT OnGesture(WindowInfo* win, UINT msg, WPARAM wp, LPARAM lp) {
                     abs(deltaX) > abs(deltaY)) {
                     // Switch pages once we hit inertia in a horizontal direction (only in
                     // non-continuous modes, cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/9 )
-                    if (deltaX < 0)
+                    if (deltaX < 0) {
                         win->ctrl->GoToPrevPage();
-                    else if (deltaX > 0)
+                    } else if (deltaX > 0) {
                         win->ctrl->GoToNextPage();
+                    }
                     // When we switch pages, go back to the initial scroll position
                     // and prevent further pan movement caused by the inertia
-                    if (win->AsFixed())
+                    if (win->AsFixed()) {
                         win->AsFixed()->ScrollXTo(win->touchState.panScrollOrigX);
+                    }
                     win->touchState.panStarted = false;
                 } else if (win->AsFixed()) {
                     // Pan/Scroll

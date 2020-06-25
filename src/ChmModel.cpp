@@ -178,8 +178,9 @@ void ChmModel::CopySelection() {
 }
 
 LRESULT ChmModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) {
-    if (!htmlWindow)
+    if (!htmlWindow) {
         return 0;
+    }
     return htmlWindow->SendMsg(msg, wp, lp);
 }
 
@@ -314,8 +315,9 @@ class ChmTocBuilder : public EbookTocVisitor {
     // toc tree and considering each unique html page in toc tree
     // as a page
     int CreatePageNoForURL(const WCHAR* url) {
-        if (!url || IsExternalUrl(url))
+        if (!url || IsExternalUrl(url)) {
             return 0;
+        }
 
         AutoFreeWstr plainUrl(url::GetFullPath(url));
         int pageNo = (int)pages->size() + 1;

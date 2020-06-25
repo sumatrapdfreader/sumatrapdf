@@ -152,8 +152,9 @@ void PageControl::SetPage(HtmlPage* newPage) {
 }
 
 DrawInstr* PageControl::GetLinkAt(int x, int y) const {
-    if (!page)
+    if (!page) {
         return nullptr;
+    }
 
     PointF pt((float)(x - cachedStyle->padding.left), (float)(y - cachedStyle->padding.top));
     for (DrawInstr& i : page->instructions) {

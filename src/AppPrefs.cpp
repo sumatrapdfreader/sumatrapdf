@@ -252,8 +252,9 @@ void schedulePrefsReload() {
 }
 
 void RegisterForFileChanges() {
-    if (!HasPermission(Perm_SavePreferences))
+    if (!HasPermission(Perm_SavePreferences)) {
         return;
+    }
 
     CrashIf(gWatchedSettingsFile); // only call me once
     AutoFreeWstr path = GetSettingsPath();

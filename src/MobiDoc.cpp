@@ -125,8 +125,9 @@ static bool PalmdocUncompress(const u8* src, size_t srcLen, str::Str& dst) {
     while (src < srcEnd) {
         u8 c = *src++;
         if ((c >= 1) && (c <= 8)) {
-            if (src + c > srcEnd)
+            if (src + c > srcEnd) {
                 return false;
+            }
             dst.Append(src, c);
             src += c;
         } else if (c < 128) {
@@ -267,12 +268,14 @@ bool HuffDicDecompressor::Decompress(u8* src, size_t srcSize, str::Str& dst) {
             return false;
         }
         br.Eat(bitsConsumed);
-        if (0 == br.BitsLeft())
+        if (0 == br.BitsLeft()) {
             break;
+        }
 
         bits = br.Peek(32);
-        if (br.BitsLeft() < 8 && 0 == bits)
+        if (br.BitsLeft() < 8 && 0 == bits) {
             break;
+        }
         u32 v = cacheTable[bits >> 24];
         u32 codeLen = v & 0x1f;
         if (!codeLen) {
@@ -299,8 +302,9 @@ bool HuffDicDecompressor::Decompress(u8* src, size_t srcSize, str::Str& dst) {
             code = baseTable[codeLen * 2 - 1] - (bits >> (32 - codeLen));
         }
 
-        if (!DecodeOne(code, dst))
+        if (!DecodeOne(code, dst)) {
             return false;
+        }
         bitsConsumed = codeLen;
     }
 
@@ -359,12 +363,15 @@ bool HuffDicDecompressor::SetHuffData(u8* huffData, size_t huffDataLen) {
 }
 
 bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
-    if (dictsCount >= kCdicsMax)
+    if (dictsCount >= kCdicsMax) {
         return false;
-    if (cdicDataLen < kCdicHeaderLen)
+    }
+    if (cdicDataLen < kCdicHeaderLen) {
         return false;
-    if (!str::EqN("CDIC", (char*)cdicData, 4))
+    }
+    if (!str::EqN("CDIC", (char*)cdicData, 4)) {
         return false;
+    }
     u32 hdrLen = UInt32BE(cdicData + 4);
     u32 codeLen = UInt32BE(cdicData + 12);
     if (0 == codeLength) {
@@ -374,13 +381,15 @@ bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
         codeLength = std::min(codeLength, codeLen);
     }
     CrashIf(hdrLen != kCdicHeaderLen);
-    if (hdrLen != kCdicHeaderLen)
+    if (hdrLen != kCdicHeaderLen) {
         return false;
+    }
     u32 size = cdicDataLen - hdrLen;
 
     u32 maxSize = 1 << codeLength;
-    if (maxSize >= size)
+    if (maxSize >= size) {
         return false;
+    }
     dicts[dictsCount] = cdicData + hdrLen;
     dictSize[dictsCount] = size;
     ++dictsCount;
@@ -423,8 +432,9 @@ static void DecodeMobiDocHeader(const u8* buf, MobiHeader* hdr) {
     hdr->exthFlags = d.UInt32();
     CrashIf(kMobiHeaderMinLen != d.Offset());
 
-    if (hdr->hdrLen < kMobiHeaderMinLen + 48)
+    if (hdr->hdrLen < kMobiHeaderMinLen + 48) {
         return;
+    }
 
     d.Bytes(hdr->reserved1, 32);
     hdr->drmOffset = d.UInt32();
@@ -432,16 +442,18 @@ static void DecodeMobiDocHeader(const u8* buf, MobiHeader* hdr) {
     hdr->drmSize = d.UInt32();
     hdr->drmFlags = d.UInt32();
 
-    if (hdr->hdrLen < 228) // magic number at which extraDataFlags becomes valid
+    if (hdr->hdrLen < 228) { // magic number at which extraDataFlags becomes valid
         return;
+    }
 
     d.Bytes(hdr->reserved2, 62);
     hdr->extraDataFlags = d.UInt16();
     if (hdr->hdrLen >= 232) {
         hdr->indxRec = d.UInt32();
         CrashIf(kMobiHeaderLen != d.Offset());
-    } else
+    } else {
         CrashIf(kMobiHeaderLen - 4 != d.Offset());
+    }
 }
 
 static bool IsValidCompression(int comprType) {
@@ -544,8 +556,9 @@ bool MobiDoc::ParseHeader() {
         if (0 == imageFirstRec) {
             // I don't think this should ever happen but I've seen it
             imagesCount = 0;
-        } else
+        } else {
             imagesCount = pdbReader->GetRecordCount() - imageFirstRec;
+        }
     }
     if (kPalmDocHeaderLen + mobiHdr.hdrLen > recSize) {
         logf("MobiHeader too big\n");
@@ -661,8 +674,9 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
                 continue;
         }
         prop.value = str::DupN((char*)(data + d.Offset() - length + 8), length - 8);
-        if (prop.value)
+        if (prop.value) {
             props.Append(prop);
+        }
     }
 
     return true;
@@ -727,12 +741,14 @@ bool MobiDoc::LoadImage(size_t imageNo) {
 }
 
 void MobiDoc::LoadImages() {
-    if (0 == imagesCount)
+    if (0 == imagesCount) {
         return;
+    }
     images = AllocArray<ImageData>(imagesCount);
     for (size_t i = 0; i < imagesCount; i++) {
-        if (!LoadImage(i))
+        if (!LoadImage(i)) {
             return;
+        }
     }
 }
 
@@ -741,20 +757,24 @@ void MobiDoc::LoadImages() {
 // returns nullptr if there is no image (e.g. it's not a format we
 // recognize)
 ImageData* MobiDoc::GetImage(size_t imgRecIndex) const {
-    if ((imgRecIndex > imagesCount) || (imgRecIndex < 1))
+    if ((imgRecIndex > imagesCount) || (imgRecIndex < 1)) {
         return nullptr;
+    }
     --imgRecIndex;
-    if (!images[imgRecIndex].data || (0 == images[imgRecIndex].len))
+    if (!images[imgRecIndex].data || (0 == images[imgRecIndex].len)) {
         return nullptr;
+    }
     return &images[imgRecIndex];
 }
 
 ImageData* MobiDoc::GetCoverImage() {
-    if (!coverImageRec || coverImageRec < imageFirstRec)
+    if (!coverImageRec || coverImageRec < imageFirstRec) {
         return nullptr;
+    }
     size_t imageNo = coverImageRec - imageFirstRec;
-    if (imageNo >= imagesCount || !images[imageNo].data)
+    if (imageNo >= imagesCount || !images[imageNo].data) {
         return nullptr;
+    }
     return &images[imageNo];
 }
 
@@ -907,8 +927,9 @@ bool MobiDoc::HasToc() {
             continue;
         }
         AttrInfo* attr = tok->GetAttrByName("type");
-        if (!attr)
+        if (!attr) {
             continue;
+        }
         AutoFreeWstr val(strconv::FromHtmlUtf8(attr->val, attr->valLen));
         attr = tok->GetAttrByName("filepos");
         if (!str::EqI(val, L"toc") || !attr) {
@@ -940,20 +961,23 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (itemLink && tok->IsText()) {
             AutoFreeWstr linkText(strconv::FromHtmlUtf8(tok->s, tok->sLen));
-            if (itemText)
+            if (itemText) {
                 itemText.Set(str::Join(itemText, L" ", linkText));
-            else
+            } else {
                 itemText.Set(linkText.StealData());
-        } else if (!tok->IsTag())
+            }
+        } else if (!tok->IsTag()) {
             continue;
-        else if (Tag_Mbp_Pagebreak == tok->tag)
+        } else if (Tag_Mbp_Pagebreak == tok->tag) {
             break;
-        else if (!itemLink && tok->IsStartTag() && Tag_A == tok->tag) {
+        } else if (!itemLink && tok->IsStartTag() && Tag_A == tok->tag) {
             AttrInfo* attr = tok->GetAttrByName("filepos");
-            if (!attr)
+            if (!attr) {
                 attr = tok->GetAttrByName("href");
-            if (attr)
+            }
+            if (attr) {
                 itemLink.Set(strconv::FromHtmlUtf8(attr->val, attr->valLen));
+            }
         } else if (itemLink && tok->IsEndTag() && Tag_A == tok->tag) {
             if (!itemText) {
                 itemLink.Reset();
@@ -963,10 +987,11 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
             itemText.Reset();
             itemLink.Reset();
         } else if (Tag_Blockquote == tok->tag || Tag_Ul == tok->tag || Tag_Ol == tok->tag) {
-            if (tok->IsStartTag())
+            if (tok->IsStartTag()) {
                 itemLevel++;
-            else if (tok->IsEndTag() && itemLevel > 0)
+            } else if (tok->IsEndTag() && itemLevel > 0) {
                 itemLevel--;
+            }
         }
     }
     return true;

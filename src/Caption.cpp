@@ -166,8 +166,9 @@ void CaptionInfo::UpdateColors(bool activeWindow) {
         ReadRegDWORD(HKEY_CURRENT_USER, REG_DWM, L"ColorizationColor", colorizationColor)) {
         BYTE A, R, G, B, white;
         A = BYTE((colorizationColor >> 24) & 0xff);
-        if (!activeWindow)
+        if (!activeWindow) {
             A = (BYTE)floor(A / ACTIVE_INACTIVE_ALPHA_RATIO + 0.5f);
+        }
         R = BYTE((colorizationColor >> 16) & 0xff);
         G = BYTE((colorizationColor >> 8) & 0xff);
         B = BYTE(colorizationColor & 0xff);
@@ -531,10 +532,11 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
     } else if (ODS_DISABLED & item->itemState) {
         stateId = CBS_DISABLED;
         state |= DFCS_INACTIVE;
-    } else if (ODS_INACTIVE & item->itemState)
+    } else if (ODS_INACTIVE & item->itemState) {
         stateId = CBS_INACTIVE;
-    else
+    } else {
         stateId = CBS_NORMAL;
+    }
 
     // draw system button
     if (partId) {
@@ -732,8 +734,9 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
     } else {
         switch (msg) {
             case WM_SETTINGCHANGE:
-                if (wp == SPI_SETNONCLIENTMETRICS)
+                if (wp == SPI_SETNONCLIENTMETRICS) {
                     RelayoutCaption(win);
+                }
                 break;
 
             case WM_NCPAINT:
@@ -743,8 +746,9 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
 
             case WM_NCACTIVATE:
                 win->caption->UpdateColors((bool)wp);
-                for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++)
+                for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
                     win->caption->btn[i].inactive = wp == FALSE;
+                }
                 if (!IsIconic(hwnd)) {
                     DrawFrame(hwnd, win->caption->bgColor);
                     uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN;
@@ -856,12 +860,14 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
                 // poorly documented hack: find the menu window and send it the accelerator key
                 HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr);
                 if (hMenu) {
-                    if ('a' <= gMenuAccelPressed && gMenuAccelPressed <= 'z')
+                    if ('a' <= gMenuAccelPressed && gMenuAccelPressed <= 'z') {
                         gMenuAccelPressed -= 'a' - 'A';
-                    if ('A' <= gMenuAccelPressed && gMenuAccelPressed <= 'Z')
+                    }
+                    if ('A' <= gMenuAccelPressed && gMenuAccelPressed <= 'Z') {
                         PostMessageW(hMenu, WM_KEYDOWN, gMenuAccelPressed, 0);
-                    else
+                    } else {
                         PostMessageW(hMenu, WM_CHAR, gMenuAccelPressed, 0);
+                    }
                 }
                 gMenuAccelPressed = 0;
             }

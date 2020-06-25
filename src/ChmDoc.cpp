@@ -194,31 +194,37 @@ bool ChmDoc::ParseSystemData() {
         WORD type = r.WordLE(off);
         switch (type) {
             case 0:
-                if (!tocPath)
+                if (!tocPath) {
                     tocPath.Set(GetCharZ(data, off + 4));
+                }
                 break;
             case 1:
-                if (!indexPath)
+                if (!indexPath) {
                     indexPath.Set(GetCharZ(data, off + 4));
+                }
                 break;
             case 2:
-                if (!homePath)
+                if (!homePath) {
                     homePath.Set(GetCharZ(data, off + 4));
+                }
                 break;
             case 3:
-                if (!title)
+                if (!title) {
                     title.Set(GetCharZ(data, off + 4));
+                }
                 break;
             case 4:
-                if (!codepage && len >= 4)
+                if (!codepage && len >= 4) {
                     codepage = LcidToCodepage(r.DWordLE(off + 4));
+                }
                 break;
             case 6:
                 // compiled file - ignore
                 break;
             case 9:
-                if (!creator)
+                if (!creator) {
                     creator.Set(GetCharZ(data, off + 4));
+                }
                 break;
             case 16:
                 // default font - ignore
@@ -456,26 +462,31 @@ static void WalkChmTocOrIndex(EbookTocVisitor* visitor, HtmlElement* list, uint 
     // some broken ToCs wrap every <li> into its own <ul>
     for (; list && Tag_Ul == list->tag; list = list->next) {
         for (HtmlElement* el = list->down; el; el = el->next) {
-            if (Tag_Li != el->tag)
+            if (Tag_Li != el->tag) {
                 continue; // ignore unexpected elements
+            }
 
             bool valid;
             HtmlElement* elObj = el->GetChildByTag(Tag_Object);
-            if (!elObj)
+            if (!elObj) {
                 valid = false;
-            else if (isIndex)
+            } else if (isIndex) {
                 valid = VisitChmIndexItem(visitor, elObj, cp, level);
-            else
+            } else {
                 valid = VisitChmTocItem(visitor, elObj, cp, level);
-            if (!valid)
+            }
+            if (!valid) {
                 continue; // skip incomplete elements and all their children
+            }
 
             HtmlElement* nested = el->GetChildByTag(Tag_Ul);
             // some broken ToCs have the <ul> follow right *after* a <li>
-            if (!nested && el->next && Tag_Ul == el->next->tag)
+            if (!nested && el->next && Tag_Ul == el->next->tag) {
                 nested = el->next;
-            if (nested)
+            }
+            if (nested) {
                 WalkChmTocOrIndex(visitor, nested, cp, isIndex, level + 1);
+            }
         }
     }
 }
@@ -487,12 +498,14 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, HtmlParser& p, uin
     HtmlElement* el = p.FindElementByName("body");
     while ((el = p.FindElementByName("object", el)) != nullptr) {
         AutoFreeWstr type(el->GetAttribute("type"));
-        if (!str::EqI(type, L"text/sitemap"))
+        if (!str::EqI(type, L"text/sitemap")) {
             continue;
-        if (isIndex)
+        }
+        if (isIndex) {
             hadOne |= VisitChmIndexItem(visitor, el, cp, 1);
-        else
+        } else {
             hadOne |= VisitChmTocItem(visitor, el, cp, 1);
+        }
     }
 
     return hadOne;

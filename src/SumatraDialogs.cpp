@@ -32,19 +32,22 @@ struct DLGTEMPLATEEX {
 // cf. http://www.ureader.com/msg/1484387.aspx
 static DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
     HRSRC dialogRC = FindResource(nullptr, MAKEINTRESOURCE(dlgId), RT_DIALOG);
-    if (!dialogRC)
+    if (!dialogRC) {
         return nullptr;
+    }
     HGLOBAL dlgTemplate = LoadResource(nullptr, dialogRC);
-    if (!dlgTemplate)
+    if (!dlgTemplate) {
         return nullptr;
+    }
     void* origDlgTemplate = LockResource(dlgTemplate);
     size_t size = SizeofResource(nullptr, dialogRC);
 
     DLGTEMPLATE* rtlDlgTemplate = (DLGTEMPLATE*)memdup(origDlgTemplate, size);
-    if (rtlDlgTemplate->style == MAKELONG(0x0001, 0xFFFF))
+    if (rtlDlgTemplate->style == MAKELONG(0x0001, 0xFFFF)) {
         ((DLGTEMPLATEEX*)rtlDlgTemplate)->exStyle |= WS_EX_LAYOUTRTL;
-    else
+    } else {
         rtlDlgTemplate->dwExtendedStyle |= WS_EX_LAYOUTRTL;
+    }
     UnlockResource(dlgTemplate);
 
     return rtlDlgTemplate;
@@ -52,8 +55,9 @@ static DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
 
 // creates a dialog box that dynamically gets a right-to-left layout if needed
 static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM data) {
-    if (!IsUIRightToLeft())
+    if (!IsUIRightToLeft()) {
         return DialogBoxParam(nullptr, MAKEINTRESOURCE(dlgId), parent, DlgProc, data);
+    }
 
     ScopedMem<DLGTEMPLATE> rtlDlgTemplate(GetRtLDlgTemplate(dlgId));
     return DialogBoxIndirectParam(nullptr, rtlDlgTemplate, parent, DlgProc, data);
@@ -96,8 +100,9 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
                 case IDOK:
                     data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
                     data->pwdOut = win::GetText(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
-                    if (data->remember)
+                    if (data->remember) {
                         *data->remember = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_PASSWORD);
+                    }
                     EndDialog(hDlg, IDOK);
                     return TRUE;
 
@@ -147,8 +152,9 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
         win::SetText(hDlg, _TR("Go to page"));
 
         editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
-        if (!data->onlyNumeric)
+        if (!data->onlyNumeric) {
             SetWindowLong(editPageNo, GWL_STYLE, GetWindowLong(editPageNo, GWL_STYLE) & ~ES_NUMBER);
+        }
         CrashIf(!data->currPageLabel);
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, data->currPageLabel);
         AutoFreeWstr totalCount(str::Format(_TR("(of %d)"), data->pageCount));
@@ -227,8 +233,9 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             SetDlgItemText(hDlg, IDC_FIND_NEXT_HINT, _TR("Hint: Use the F3 key for finding again"));
             SetDlgItemText(hDlg, IDOK, _TR("Find"));
             SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
-            if (data->searchTerm)
+            if (data->searchTerm) {
                 SetDlgItemText(hDlg, IDC_FIND_EDIT, data->searchTerm);
+            }
             data->searchTerm = nullptr;
             CheckDlgButton(hDlg, IDC_MATCH_CASE, data->matchCase ? BST_CHECKED : BST_UNCHECKED);
             data->editWndProc = (WNDPROC)SetWindowLongPtr(GetDlgItem(hDlg, IDC_FIND_EDIT), GWLP_WNDPROC,
@@ -266,11 +273,13 @@ WCHAR* Dialog_Find(HWND hwnd, const WCHAR* previousSearch, bool* matchCase) {
     data.matchCase = matchCase ? *matchCase : false;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FIND, hwnd, Dialog_Find_Proc, (LPARAM)&data);
-    if (res != IDOK)
+    if (res != IDOK) {
         return nullptr;
+    }
 
-    if (matchCase)
+    if (matchCase) {
         *matchCase = data.matchCase;
+    }
     return data.searchTerm;
 }
 
@@ -412,8 +421,9 @@ const char* Dialog_ChangeLanguge(HWND hwnd, const char* currLangCode) {
     data.langCode = currLangCode;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_CHANGE_LANGUAGE, hwnd, Dialog_ChangeLanguage_Proc, (LPARAM)&data);
-    if (IDCANCEL == res)
+    if (IDCANCEL == res) {
         return nullptr;
+    }
     return data.langCode;
 }
 
@@ -459,14 +469,16 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wp, L
             data->skipThisVersion = false;
             switch (LOWORD(wp)) {
                 case IDOK:
-                    if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SKIP_THIS_VERSION))
+                    if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SKIP_THIS_VERSION)) {
                         data->skipThisVersion = true;
+                    }
                     EndDialog(hDlg, IDYES);
                     return TRUE;
 
                 case IDCANCEL:
-                    if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SKIP_THIS_VERSION))
+                    if (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SKIP_THIS_VERSION)) {
                         data->skipThisVersion = true;
+                    }
                     EndDialog(hDlg, IDNO);
                     return TRUE;
 
@@ -486,8 +498,9 @@ INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const WCHAR* currentVersion, const
     data.skipThisVersion = false;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_NEW_VERSION, hwnd, Dialog_NewVersion_Proc, (LPARAM)&data);
-    if (skipThisVersion)
+    if (skipThisVersion) {
         *skipThisVersion = data.skipThisVersion;
+    }
 
     return res;
 }
@@ -535,8 +548,9 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
     int first = forChm ? 7 : 0;
     int last = forChm ? dimof(gItemZoom) - 2 : dimof(gItemZoom);
     for (int i = first; i < last; i++) {
-        if (gItemZoom[i] == currZoom)
+        if (gItemZoom[i] == currZoom) {
             SendDlgItemMessage(hDlg, idComboBox, CB_SETCURSEL, i - first, 0);
+        }
     }
 
     if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
@@ -553,14 +567,17 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float
     if (idx == -1) {
         AutoFreeWstr customZoom(win::GetText(GetDlgItem(hDlg, idComboBox)));
         float zoom = (float)_wtof(customZoom);
-        if (zoom > 0)
+        if (zoom > 0) {
             newZoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
+        }
     } else {
-        if (forChm)
+        if (forChm) {
             idx += 7;
+        }
 
-        if (0 != gItemZoom[idx])
+        if (0 != gItemZoom[idx]) {
             newZoom = gItemZoom[idx];
+        }
     }
 
     return newZoom;
@@ -615,8 +632,9 @@ bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut) {
     data.forChm = forChm;
     data.zoomArg = *currZoomInOut;
     INT_PTR res = CreateDialogBox(IDD_DIALOG_CUSTOM_ZOOM, hwnd, Dialog_CustomZoom_Proc, (LPARAM)&data);
-    if (res == IDCANCEL)
+    if (res == IDCANCEL) {
         return false;
+    }
 
     *currZoomInOut = data.zoomResult;
     return true;
@@ -632,12 +650,13 @@ static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
     // move items below up, shrink container items and hide contained items
     for (HWND item = GetWindow(hDlg, GW_CHILD); item; item = GetWindow(item, GW_HWNDNEXT)) {
         Rect rc = MapRectToWindow(WindowRect(item), HWND_DESKTOP, hDlg);
-        if (rc.y >= itemRc.y + itemRc.dy) // below
+        if (rc.y >= itemRc.y + itemRc.dy) { // below
             MoveWindow(item, rc.x, rc.y - shrink, rc.dx, rc.dy, TRUE);
-        else if (rc.Intersect(itemRc) == rc) // contained (or self)
+        } else if (rc.Intersect(itemRc) == rc) { // contained (or self)
             ShowWindow(item, SW_HIDE);
-        else if (itemRc.Intersect(rc) == itemRc) // container
+        } else if (itemRc.Intersect(rc) == itemRc) { // container
             MoveWindow(item, rc.x, rc.y, rc.dx, rc.dy - shrink, TRUE);
+        }
     }
     // shrink the dialog
     Rect dlgRc = WindowRect(hDlg);
@@ -770,8 +789,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     return TRUE;
 
                 case IDC_SET_DEFAULT_READER:
-                    if (!HasPermission(Perm_RegistryAccess))
+                    if (!HasPermission(Perm_RegistryAccess)) {
                         return TRUE;
+                    }
                     AssociateExeWithPdfExtension();
                     if (IsExeAssociatedWithPdfExtension()) {
                         SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your default PDF reader"));
@@ -831,18 +851,20 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
         case WM_NOTIFY:
             if (((LPNMHDR)lp)->code == PSN_APPLY) {
                 data = (Print_Advanced_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_EVEN))
+                if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_EVEN)) {
                     data->range = PrintRangeAdv::Even;
-                else if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_ODD))
+                } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_ODD)) {
                     data->range = PrintRangeAdv::Odd;
-                else
+                } else {
                     data->range = PrintRangeAdv::All;
-                if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_FIT))
+                }
+                if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_FIT)) {
                     data->scale = PrintScaleAdv::Fit;
-                else if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_SHRINK))
+                } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_SHRINK)) {
                     data->scale = PrintScaleAdv::Shrink;
-                else
+                } else {
                     data->scale = PrintScaleAdv::None;
+                }
                 return TRUE;
             }
             break;
