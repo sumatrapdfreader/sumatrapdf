@@ -20,8 +20,9 @@ void CalcMD5Digest(const unsigned char* data, size_t byteCount, unsigned char di
     fz_md5 md5;
     fz_md5_init(&md5);
 #ifdef _WIN64
-    for (; byteCount > UINT_MAX; data += UINT_MAX, byteCount -= UINT_MAX)
+    for (; byteCount > UINT_MAX; data += UINT_MAX, byteCount -= UINT_MAX) {
         fz_md5_update(&md5, data, UINT_MAX);
+    }
 #endif
     fz_md5_update(&md5, data, (unsigned int)byteCount);
     fz_md5_final(&md5, digest);
@@ -31,8 +32,9 @@ void CalcSHA2Digest(const unsigned char* data, size_t byteCount, unsigned char d
     fz_sha256 sha2;
     fz_sha256_init(&sha2);
 #ifdef _WIN64
-    for (; byteCount > UINT_MAX; data += UINT_MAX, byteCount -= UINT_MAX)
+    for (; byteCount > UINT_MAX; data += UINT_MAX, byteCount -= UINT_MAX) {
         fz_sha256_update(&sha2, data, UINT_MAX);
+    }
 #endif
     fz_sha256_update(&sha2, data, (unsigned int)byteCount);
     fz_sha256_final(&sha2, digest);
@@ -80,8 +82,9 @@ void CalcMD5DigestWin(const void* data, size_t byteCount, unsigned char digest[1
 
     // http://stackoverflow.com/questions/9794745/ms-cryptoapi-doesnt-work-on-windows-xp-with-cryptacquirecontext
     BOOL ok = CryptAcquireContext(&hProv, nullptr, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    if (!ok)
+    if (!ok) {
         ok = CryptAcquireContext(&hProv, nullptr, MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+    }
 
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash);

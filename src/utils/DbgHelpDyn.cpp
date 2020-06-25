@@ -133,8 +133,9 @@ bool HasSymbols() {
 // the library (needed in crash dump where we re-initialize dbghelp.dll after
 // downloading symbols)
 bool Initialize(const WCHAR* symPathW, bool force) {
-    if (gSymInitializeOk && !force)
+    if (gSymInitializeOk && !force) {
         return true;
+    }
 
     bool needsCleanup = gSymInitializeOk;
 
@@ -143,16 +144,18 @@ bool Initialize(const WCHAR* symPathW, bool force) {
         return false;
     }
 
-    if (needsCleanup)
+    if (needsCleanup) {
         DynSymCleanup(GetCurrentProcess());
+    }
 
     if (DynSymInitializeW) {
         gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), symPathW, TRUE);
     } else {
         // SymInitializeW() is not present on some XP systems
         char symPathA[MAX_PATH];
-        if (0 != strconv::ToCodePageBuf(symPathA, dimof(symPathA), symPathW, CP_ACP))
+        if (0 != strconv::ToCodePageBuf(symPathA, dimof(symPathA), symPathW, CP_ACP)) {
             gSymInitializeOk = DynSymInitialize(GetCurrentProcess(), symPathA, TRUE);
+        }
     }
 
     if (!gSymInitializeOk) {
@@ -172,13 +175,15 @@ bool Initialize(const WCHAR* symPathW, bool force) {
 static BOOL CALLBACK OpenMiniDumpCallback(void* param, PMINIDUMP_CALLBACK_INPUT input,
                                           PMINIDUMP_CALLBACK_OUTPUT output) {
     UNUSED(param);
-    if (!input || !output)
+    if (!input || !output) {
         return FALSE;
+    }
 
     switch (input->CallbackType) {
         case ModuleCallback:
-            if (!(output->ModuleWriteFlags & ModuleReferencedByMemory))
+            if (!(output->ModuleWriteFlags & ModuleReferencedByMemory)) {
                 output->ModuleWriteFlags &= ~ModuleWriteModule;
+            }
             return TRUE;
         case IncludeModuleCallback:
         case IncludeThreadCallback:
@@ -191,18 +196,21 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* param, PMINIDUMP_CALLBACK_INPUT 
 }
 
 void WriteMiniDump(const WCHAR* crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump) {
-    if (!Initialize(nullptr, false) || !DynMiniDumpWriteDump)
+    if (!Initialize(nullptr, false) || !DynMiniDumpWriteDump) {
         return;
+    }
 
     HANDLE hFile = CreateFile(crashDumpFilePath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
                               FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
-    if (INVALID_HANDLE_VALUE == hFile)
+    if (INVALID_HANDLE_VALUE == hFile) {
         return;
+    }
 
     MINIDUMP_TYPE type = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory);
-    if (fullDump)
+    if (fullDump) {
         type =
             (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
+    }
     MINIDUMP_CALLBACK_INFORMATION mci = {OpenMiniDumpCallback, nullptr};
 
     DynMiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, type, mei, nullptr, &mci);
@@ -212,15 +220,18 @@ void WriteMiniDump(const WCHAR* crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATIO
 
 static bool GetAddrInfo(void* addr, char* module, DWORD moduleLen, DWORD& sectionOut, DWORD_PTR& offsetOut) {
     MEMORY_BASIC_INFORMATION mbi;
-    if (0 == VirtualQuery(addr, &mbi, sizeof(mbi)))
+    if (0 == VirtualQuery(addr, &mbi, sizeof(mbi))) {
         return false;
+    }
 
     HMODULE hMod = (HMODULE)mbi.AllocationBase;
-    if (0 == hMod)
+    if (0 == hMod) {
         return false;
+    }
 
-    if (!GetModuleFileNameA(hMod, module, moduleLen))
+    if (!GetModuleFileNameA(hMod, module, moduleLen)) {
         return false;
+    }
     module[moduleLen - 1] = '\0';
 
     PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)mbi.AllocationBase;
@@ -231,10 +242,11 @@ static bool GetAddrInfo(void* addr, char* module, DWORD moduleLen, DWORD& sectio
     for (unsigned int i = 0; i < pNtHeader->FileHeader.NumberOfSections; i++) {
         DWORD_PTR startAddr = section->VirtualAddress;
         DWORD_PTR endAddr = startAddr;
-        if (section->SizeOfRawData > section->Misc.VirtualSize)
+        if (section->SizeOfRawData > section->Misc.VirtualSize) {
             endAddr += section->SizeOfRawData;
-        else
+        } else {
             section->Misc.VirtualSize;
+        }
 
         if (lAddr >= startAddr && lAddr <= endAddr) {
             sectionOut = i + 1;
@@ -264,8 +276,9 @@ static void GetAddressInfo(str::Str& s, DWORD64 addr) {
     DWORD64 symDisp = 0;
     char* symName = nullptr;
     BOOL ok = DynSymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
-    if (ok)
+    if (ok) {
         symName = &(symInfo->Name[0]);
+    }
 
     char module[MAX_PATH] = {0};
     DWORD section;
@@ -303,12 +316,14 @@ static bool GetStackFrameInfo(str::Str& s, STACKFRAME64* stackFrame, CONTEXT* ct
 #endif
     BOOL ok = DynStackWalk64(machineType, GetCurrentProcess(), hThread, stackFrame, ctx, nullptr,
                              DynSymFunctionTableAccess64, DynSymGetModuleBase64, nullptr);
-    if (!ok)
+    if (!ok) {
         return false;
+    }
 
     DWORD64 addr = stackFrame->AddrPC.Offset;
-    if (0 == addr)
+    if (0 == addr) {
         return true;
+    }
     if (addr == stackFrame->AddrReturn.Offset) {
         s.Append("GetStackFrameInfo(): addr == stackFrame->AddrReturn.Offset");
         return false;
@@ -342,8 +357,9 @@ static bool GetCallstack(str::Str& s, CONTEXT& ctx, HANDLE hThread) {
     int framesCount = 0;
     static const int maxFrames = 32;
     while (framesCount < maxFrames) {
-        if (!GetStackFrameInfo(s, &stackFrame, &ctx, hThread))
+        if (!GetStackFrameInfo(s, &stackFrame, &ctx, hThread)) {
             break;
+        }
         framesCount++;
     }
     if (0 == framesCount) {
@@ -354,8 +370,9 @@ static bool GetCallstack(str::Str& s, CONTEXT& ctx, HANDLE hThread) {
 }
 
 void GetThreadCallstack(str::Str& s, DWORD threadId) {
-    if (threadId == GetCurrentThreadId())
+    if (threadId == GetCurrentThreadId()) {
         return;
+    }
 
     s.AppendFmt("\r\nThread: %x\r\n", threadId);
 
@@ -373,10 +390,11 @@ void GetThreadCallstack(str::Str& s, DWORD threadId) {
         CONTEXT ctx = {0};
         ctx.ContextFlags = CONTEXT_FULL;
         BOOL ok = GetThreadContext(hThread, &ctx);
-        if (ok)
+        if (ok) {
             GetCallstack(s, ctx, hThread);
-        else
+        } else {
             s.Append("Failed to GetThreadContext()\r\n");
+        }
 
         ResumeThread(hThread);
     }
@@ -394,11 +412,13 @@ void GetThreadCallstack(str::Str& s, DWORD threadId) {
 #pragma warning(disable : 4748)
 __declspec(noinline) bool GetCurrentThreadCallstack(str::Str& s) {
     // not available under Win2000
-    if (!DynRtlCaptureContext)
+    if (!DynRtlCaptureContext) {
         return false;
+    }
 
-    if (!Initialize(nullptr, false))
+    if (!Initialize(nullptr, false)) {
         return false;
+    }
 
     CONTEXT ctx;
     DynRtlCaptureContext(&ctx);
@@ -420,8 +440,9 @@ void FreeCallstackLogs() {
 }
 
 char* GetCallstacks() {
-    if (!gCallstackLogs)
+    if (!gCallstackLogs) {
         return nullptr;
+    }
     return str::Dup(gCallstackLogs->Get());
 }
 
@@ -439,8 +460,9 @@ void LogCallstack() {
 
 void GetAllThreadsCallstacks(str::Str& s) {
     HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-    if (threadSnap == INVALID_HANDLE_VALUE)
+    if (threadSnap == INVALID_HANDLE_VALUE) {
         return;
+    }
 
     THREADENTRY32 te32;
     te32.dwSize = sizeof(THREADENTRY32);
@@ -448,8 +470,9 @@ void GetAllThreadsCallstacks(str::Str& s) {
     DWORD pid = GetCurrentProcessId();
     BOOL ok = Thread32First(threadSnap, &te32);
     while (ok) {
-        if (te32.th32OwnerProcessID == pid)
+        if (te32.th32OwnerProcessID == pid) {
             GetThreadCallstack(s, te32.th32ThreadID);
+        }
         ok = Thread32Next(threadSnap, &te32);
     }
 
@@ -458,8 +481,9 @@ void GetAllThreadsCallstacks(str::Str& s) {
 #pragma warning(pop)
 
 void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
-    if (!excPointers)
+    if (!excPointers) {
         return;
+    }
     EXCEPTION_RECORD* excRecord = excPointers->ExceptionRecord;
     DWORD excCode = excRecord->ExceptionCode;
     s.AppendFmt("Exception: %08X %s\r\n", (int)excCode, ExceptionNameFromCode(excCode));

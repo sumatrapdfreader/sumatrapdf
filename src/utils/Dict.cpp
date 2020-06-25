@@ -132,8 +132,9 @@ static void HashTableResize(HashTable* h, HasherComparator* hc) {
 static inline void HashTableResizeIfNeeded(HashTable* h, HasherComparator* hc) {
     // per http://stackoverflow.com/questions/1603712/when-should-i-do-rehashing-of-entire-hash-table/1604428#1604428
     // when using collision chaining, load factor can be 150%
-    if (h->nUsed < (h->nEntries * 3) / 2)
+    if (h->nUsed < (h->nEntries * 3) / 2) {
         return;
+    }
     HashTableResize(h, hc);
 }
 
@@ -146,12 +147,14 @@ static HashTableEntry* GetOrCreateEntry(HashTable* h, HasherComparator* hc, uint
     HashTableEntry* e = h->entries[pos];
     newEntry = false;
     while (e) {
-        if (hc->Equal(key, e->key))
+        if (hc->Equal(key, e->key)) {
             return e;
+        }
         e = e->next;
     }
-    if (!shouldCreate)
+    if (!shouldCreate) {
         return nullptr;
+    }
 
     if (h->freeList) {
         e = h->freeList;
@@ -162,8 +165,9 @@ static HashTableEntry* GetOrCreateEntry(HashTable* h, HasherComparator* hc, uint
     e->next = h->entries[pos];
     h->entries[pos] = e;
     h->nUsed++;
-    if (e->next != nullptr)
+    if (e->next != nullptr) {
         h->nCollisions++;
+    }
     newEntry = true;
     return e;
 }
@@ -173,12 +177,14 @@ static bool RemoveEntry(HashTable* h, HasherComparator* hc, uintptr_t key, uintp
     size_t pos = hash % h->nEntries;
     HashTableEntry* e = h->entries[pos];
     while (e) {
-        if (hc->Equal(key, e->key))
+        if (hc->Equal(key, e->key)) {
             break;
+        }
         e = e->next;
     }
-    if (!e)
+    if (!e) {
         return false;
+    }
 
     // remove the the entry from the list
     HashTableEntry* e2 = h->entries[pos];
@@ -226,16 +232,19 @@ bool MapStrToInt::Insert(const char* key, int val, int* existingValOut, const ch
     bool newEntry;
     HashTableEntry* e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &allocator, newEntry);
     if (!newEntry) {
-        if (existingValOut)
+        if (existingValOut) {
             *existingValOut = (int)e->val;
-        if (existingKeyOut)
+        }
+        if (existingKeyOut) {
             *existingKeyOut = (const char*)e->key;
+        }
         return false;
     }
     e->key = (intptr_t)Allocator::StrDup(&allocator, key);
     e->val = (intptr_t)val;
-    if (existingKeyOut)
+    if (existingKeyOut) {
         *existingKeyOut = (const char*)e->key;
+    }
 
     HashTableResizeIfNeeded(h, &gStrKeyHasherComparator);
     return true;
@@ -244,8 +253,9 @@ bool MapStrToInt::Insert(const char* key, int val, int* existingValOut, const ch
 bool MapStrToInt::Remove(const char* key, int* removedValOut) {
     uintptr_t removedVal;
     bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &removedVal);
-    if (removed && removedValOut)
+    if (removed && removedValOut) {
         *removedValOut = (int)removedVal;
+    }
     return removed;
 }
 
@@ -253,8 +263,9 @@ bool MapStrToInt::Get(const char* key, int* valOut) {
     StrKeyHasherComparator hc;
     bool newEntry;
     HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
-    if (!e)
+    if (!e) {
         return false;
+    }
     *valOut = (int)e->val;
     return true;
 }
@@ -277,8 +288,9 @@ bool MapWStrToInt::Insert(const WCHAR* key, int val, int* prevVal) {
     bool newEntry;
     HashTableEntry* e = GetOrCreateEntry(h, &gWStrKeyHasherComparator, (uintptr_t)key, &allocator, newEntry);
     if (!newEntry) {
-        if (prevVal)
+        if (prevVal) {
             *prevVal = (int)e->val;
+        }
         return false;
     }
     e->key = (intptr_t)Allocator::StrDup(&allocator, key);
@@ -291,8 +303,9 @@ bool MapWStrToInt::Insert(const WCHAR* key, int val, int* prevVal) {
 bool MapWStrToInt::Remove(const WCHAR* key, int* removedValOut) {
     uintptr_t removedVal;
     bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &removedVal);
-    if (removed && removedValOut)
+    if (removed && removedValOut) {
         *removedValOut = (int)removedVal;
+    }
     return removed;
 }
 
@@ -300,8 +313,9 @@ bool MapWStrToInt::Get(const WCHAR* key, int* valOut) {
     WStrKeyHasherComparator hc;
     bool newEntry;
     HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
-    if (!e)
+    if (!e) {
         return false;
+    }
     *valOut = (int)e->val;
     return true;
 }
@@ -314,13 +328,15 @@ int StringInterner::Intern(const char* s, bool* alreadyPresent) {
     const char* internedString;
     bool inserted = strToInt.Insert(s, idx, &idx, &internedString);
     if (!inserted) {
-        if (alreadyPresent)
+        if (alreadyPresent) {
             *alreadyPresent = true;
+        }
         return idx;
     }
 
     intToStr.Append(internedString);
-    if (alreadyPresent)
+    if (alreadyPresent) {
         *alreadyPresent = false;
+    }
     return idx;
 }
