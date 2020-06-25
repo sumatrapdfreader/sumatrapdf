@@ -768,10 +768,10 @@ EpubDoc* EpubDoc::CreateFromStream(IStream* stream) {
 const char* FB2_MAIN_NS = "http://www.gribuser.ru/xml/fictionbook/2.0";
 const char* FB2_XLINK_NS = "http://www.w3.org/1999/xlink";
 
-Fb2Doc::Fb2Doc(const WCHAR* fileName) : fileName(str::Dup(fileName)), stream(nullptr), isZipped(false), hasToc(false) {
+Fb2Doc::Fb2Doc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {
 }
 
-Fb2Doc::Fb2Doc(IStream* stream) : fileName(nullptr), stream(stream), isZipped(false), hasToc(false) {
+Fb2Doc::Fb2Doc(IStream* stream) : fileName(nullptr), stream(stream) {
     stream->AddRef();
 }
 

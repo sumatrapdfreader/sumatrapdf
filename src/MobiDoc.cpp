@@ -212,7 +212,7 @@ class HuffDicDecompressor {
     bool DecodeOne(u32 code, str::Str& dst);
 };
 
-HuffDicDecompressor::HuffDicDecompressor() : codeLength(0), dictsCount(0) {
+HuffDicDecompressor::HuffDicDecompressor() {
 }
 
 bool HuffDicDecompressor::DecodeOne(u32 code, str::Str& dst) {

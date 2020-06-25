@@ -69,8 +69,8 @@ struct PageAnchor {
 
 class EbookAbortCookie : public AbortCookie {
   public:
-    bool abort;
-    EbookAbortCookie() : abort(false) {
+    bool abort{false};
+    EbookAbortCookie() {
     }
     void Abort() override {
         abort = true;

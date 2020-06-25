@@ -55,7 +55,7 @@ class PropertyEl {
 
 class PropertiesLayout : public Vec<PropertyEl*> {
   public:
-    PropertiesLayout() : hwnd(nullptr), hwndParent(nullptr) {
+    PropertiesLayout() {
     }
     ~PropertiesLayout() {
         DeleteVecMembers(*this);
@@ -78,8 +78,8 @@ class PropertiesLayout : public Vec<PropertyEl*> {
         return false;
     }
 
-    HWND hwnd;
-    HWND hwndParent;
+    HWND hwnd{nullptr};
+    HWND hwndParent{nullptr};
 };
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
