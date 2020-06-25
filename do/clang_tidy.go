@@ -40,6 +40,20 @@ src/uia
 
 src/ifilter
 src/previewer
+
+TODO fixes:
+modernize-raw-string-literal
+modernize-pass-by-value
+modernize-loop-convert
+modernize-deprecated-headers
+modernize-concat-nested-namespaces
+modernize-avoid-c-arrays
+modernize-avoid-bind
+modernize-use-override
+modernize-use-nullptr
+modernize-use-auto
+modernize-use-nodiscard
+
 */
 
 const clangTidyLogFile = "clangtidy.out.txt"

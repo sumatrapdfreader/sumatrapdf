@@ -37,14 +37,14 @@ class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment,
 
     // IUnknown
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);
-    ULONG STDMETHODCALLTYPE AddRef(void);
-    ULONG STDMETHODCALLTYPE Release(void);
+    ULONG STDMETHODCALLTYPE AddRef();
+    ULONG STDMETHODCALLTYPE Release();
 
     // IRawElementProviderFragment
     HRESULT STDMETHODCALLTYPE Navigate(enum NavigateDirection direction, IRawElementProviderFragment** pRetVal);
     HRESULT STDMETHODCALLTYPE GetRuntimeId(SAFEARRAY** pRetVal);
     HRESULT STDMETHODCALLTYPE GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal);
-    HRESULT STDMETHODCALLTYPE SetFocus(void);
+    HRESULT STDMETHODCALLTYPE SetFocus();
     HRESULT STDMETHODCALLTYPE get_BoundingRectangle(struct UiaRect* pRetVal);
     HRESULT STDMETHODCALLTYPE get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal);
 

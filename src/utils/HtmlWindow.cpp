@@ -1272,8 +1272,8 @@ class HtmlMoniker : public IMoniker {
   public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject);
-    ULONG STDMETHODCALLTYPE AddRef(void);
-    ULONG STDMETHODCALLTYPE Release(void);
+    ULONG STDMETHODCALLTYPE AddRef();
+    ULONG STDMETHODCALLTYPE Release();
 
     // IMoniker
     STDMETHODIMP BindToStorage(IBindCtx* pbc, IMoniker* pmkToLeft, REFIID riid, void** ppvObj);

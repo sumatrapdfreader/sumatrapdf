@@ -213,11 +213,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::QueryInterface(REFIID ri
     return QISearch(this, qit, riid, ppv);
 }
 
-ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::AddRef(void) {
+ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::AddRef() {
     return InterlockedIncrement(&refCount);
 }
 
-ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::Release(void) {
+ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::Release() {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
     if (0 == res) {
@@ -769,7 +769,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByRange(Text
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Select(void) {
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Select() {
     if (!document->IsDocumentLoaded()) {
         return E_FAIL;
     }
@@ -785,11 +785,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Select(void) {
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::AddToSelection(void) {
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::AddToSelection() {
     return E_FAIL;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::RemoveFromSelection(void) {
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::RemoveFromSelection() {
     return E_FAIL;
 }
 

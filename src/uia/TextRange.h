@@ -47,8 +47,8 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
 
     // IUnknown
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);
-    ULONG STDMETHODCALLTYPE AddRef(void);
-    ULONG STDMETHODCALLTYPE Release(void);
+    ULONG STDMETHODCALLTYPE AddRef();
+    ULONG STDMETHODCALLTYPE Release();
 
     // ITextRangeProvider
     HRESULT STDMETHODCALLTYPE Clone(ITextRangeProvider** clonedRange);
@@ -68,9 +68,9 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
                                                  int* moved);
     HRESULT STDMETHODCALLTYPE MoveEndpointByRange(TextPatternRangeEndpoint srcEndPoint, ITextRangeProvider* range,
                                                   TextPatternRangeEndpoint targetEndPoint);
-    HRESULT STDMETHODCALLTYPE Select(void);
-    HRESULT STDMETHODCALLTYPE AddToSelection(void);
-    HRESULT STDMETHODCALLTYPE RemoveFromSelection(void);
+    HRESULT STDMETHODCALLTYPE Select();
+    HRESULT STDMETHODCALLTYPE AddToSelection();
+    HRESULT STDMETHODCALLTYPE RemoveFromSelection();
     HRESULT STDMETHODCALLTYPE ScrollIntoView(BOOL alignToTop);
     HRESULT STDMETHODCALLTYPE GetChildren(SAFEARRAY** children);
 };

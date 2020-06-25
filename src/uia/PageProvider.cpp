@@ -58,11 +58,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::QueryInterface(REFIID
     return QISearch(this, qit, riid, ppv);
 }
 
-ULONG STDMETHODCALLTYPE SumatraUIAutomationPageProvider::AddRef(void) {
+ULONG STDMETHODCALLTYPE SumatraUIAutomationPageProvider::AddRef() {
     return InterlockedIncrement(&refCount);
 }
 
-ULONG STDMETHODCALLTYPE SumatraUIAutomationPageProvider::Release(void) {
+ULONG STDMETHODCALLTYPE SumatraUIAutomationPageProvider::Release() {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
     if (0 == res) {
@@ -132,7 +132,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetEmbeddedFragmentRo
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::SetFocus(void) {
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::SetFocus() {
     return S_OK;
 }
 
