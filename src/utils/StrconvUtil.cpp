@@ -21,8 +21,9 @@ size_t Utf8ToWcharBuf(const char* s, size_t cbLen, WCHAR* bufOut, size_t cchBufO
 size_t WcharToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOutSize) {
     CrashIf(!bufOut || (0 == cbBufOutSize));
     int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, -1, nullptr, 0, nullptr, nullptr);
-    if ((size_t)cbConverted >= cbBufOutSize)
+    if ((size_t)cbConverted >= cbBufOutSize) {
         cbConverted = (int)cbBufOutSize - 1;
+    }
     int res = WideCharToMultiByte(CP_UTF8, 0, s, (int)str::Len(s), bufOut, cbConverted, nullptr, nullptr);
     CrashIf(res > cbConverted);
     bufOut[res] = '\0';

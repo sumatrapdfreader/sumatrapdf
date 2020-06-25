@@ -53,13 +53,15 @@ separators is always ignored.
 */
 
 static inline char* SkipWs(char* s, bool stopAtLineEnd = false) {
-    for (; str::IsWs(*s) && (!stopAtLineEnd || *s != '\n'); s++)
+    for (; str::IsWs(*s) && (!stopAtLineEnd || *s != '\n'); s++) {
         ;
+    }
     return s;
 }
 static inline char* SkipWsRev(char* begin, char* s) {
-    for (; s > begin && str::IsWs(*(s - 1)); s--)
+    for (; s > begin && str::IsWs(*(s - 1)); s--) {
         ;
+    }
     return s;
 }
 
@@ -68,20 +70,23 @@ static char* SkipWsAndComments(char* s) {
         s = SkipWs(s);
         if ('#' == *s || ';' == *s) {
             // skip entire comment line
-            for (; *s && *s != '\n'; s++)
+            for (; *s && *s != '\n'; s++) {
                 ;
+            }
         }
     } while (str::IsWs(*s));
     return s;
 }
 
 static bool IsBracketLine(char* s) {
-    if (*s != '[')
+    if (*s != '[') {
         return false;
+    }
     // the line may only contain whitespace and a comment
     for (s++; *s && *s != '\n' && *s != '#' && *s != ';'; s++) {
-        if (!str::IsWs(*s))
+        if (!str::IsWs(*s)) {
             return false;
+        }
     }
     return true;
 }
@@ -89,8 +94,9 @@ static bool IsBracketLine(char* s) {
 SquareTreeNode::~SquareTreeNode() {
     for (size_t i = 0; i < data.size(); i++) {
         DataItem& item = data.at(i);
-        if (item.isChild)
+        if (item.isChild) {
             delete item.value.child;
+        }
     }
 }
 
@@ -98,8 +104,9 @@ const char* SquareTreeNode::GetValue(const char* key, size_t* startIdx) const {
     for (size_t i = startIdx ? *startIdx : 0; i < data.size(); i++) {
         DataItem& item = data.at(i);
         if (str::EqI(key, item.key) && !item.isChild) {
-            if (startIdx)
+            if (startIdx) {
                 *startIdx = i + 1;
+            }
             return item.value.str;
         }
     }
@@ -110,8 +117,9 @@ SquareTreeNode* SquareTreeNode::GetChild(const char* key, size_t* startIdx) cons
     for (size_t i = startIdx ? *startIdx : 0; i < data.size(); i++) {
         DataItem& item = data.at(i);
         if (str::EqI(key, item.key) && item.isChild) {
-            if (startIdx)
+            if (startIdx) {
                 *startIdx = i + 1;
+            }
             return item.value.child;
         }
     }
@@ -126,12 +134,15 @@ static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) 
         // where the value is either a string (separated by '=' or ':')
         // or a list of child nodes (if the key is followed by '[' alone)
         char* key = data;
-        for (data = key; *data && *data != '=' && *data != ':' && *data != '[' && *data != ']' && *data != '\n'; data++)
+        for (data = key; *data && *data != '=' && *data != ':' && *data != '[' && *data != ']' && *data != '\n';
+             data++) {
             ;
+        }
         if (!*data || '\n' == *data) {
             // use first whitespace as a fallback separator
-            for (data = key; *data && !str::IsWs(*data); data++)
+            for (data = key; *data && !str::IsWs(*data); data++) {
                 ;
+            }
         }
         char* separator = data;
         if (*data && *data != '\n') {
@@ -140,8 +151,9 @@ static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) 
         }
         char* value = data;
         // skip to the end of the line
-        for (; *data && *data != '\n'; data++)
+        for (; *data && *data != '\n'; data++) {
             ;
+        }
         if (IsBracketLine(separator) ||
             // also tolerate "key \n [ \n ... \n ]" (else the key
             // gets an empty value and the child node an empty key)
@@ -159,8 +171,9 @@ static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) 
         } else if (']' == *key) {
             // finish parsing child node
             data = key + 1;
-            if (!isTopLevel)
+            if (!isTopLevel) {
                 return node;
+            }
             // ignore superfluous closing square brackets instead of
             // ignoring all content following them
         } else if ('[' == *key && ']' == SkipWsRev(value, data)[-1]) {
@@ -182,8 +195,9 @@ static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) 
             *SkipWsRev(key, separator) = '\0';
             *SkipWsRev(value, data) = '\0';
             node->data.Append(SquareTreeNode::DataItem(key, value));
-            if (hasMoreLines)
+            if (hasMoreLines) {
                 data++;
+            }
         }
     }
 

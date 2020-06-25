@@ -205,8 +205,9 @@ static bool ParseUInt(char* s, char* e, u64* nOut) {
     u64 prev = 0;
     while (s < e) {
         d = *s - '0';
-        if (d < 0 || d > 9)
+        if (d < 0 || d > 9) {
             return false;
+        }
         n = n * 10 + d;
         if (n < prev) {
             // on overflow return 0
@@ -221,8 +222,9 @@ static bool ParseUInt(char* s, char* e, u64* nOut) {
 }
 
 static bool ParseInt(char* s, char* e, i64* iOut) {
-    if (s >= e)
+    if (s >= e) {
         return false;
+    }
 
     bool neg = false;
     if ('-' == *s) {
@@ -230,13 +232,16 @@ static bool ParseInt(char* s, char* e, i64* iOut) {
         s++;
     }
     u64 u;
-    if (!ParseUInt(s, e, &u))
+    if (!ParseUInt(s, e, &u)) {
         return false;
-    if (u > MAXLONG64)
+    }
+    if (u > MAXLONG64) {
         return false;
+    }
     i64 i = (i64)u;
-    if (neg)
+    if (neg) {
         i = -i;
+    }
     *iOut = i;
     return true;
 }
@@ -271,8 +276,9 @@ static bool ParseBool(char* s, char* e, bool* bOut) {
         return true;
     }
     i64 i;
-    if (!ParseInt(s, e, &i))
+    if (!ParseInt(s, e, &i)) {
         return false;
+    }
     if (0 == i) {
         *bOut = false;
         return true;
@@ -293,8 +299,9 @@ static bool ParseFloat(char* s, char* e, float* f) {
 static u8* DeserializeRec(DecodeState& ds, TxtNode* firstNode, const StructMetadata* def);
 
 static TxtNode* FindNode(TxtNode* curr, const char* name, size_t nameLen) {
-    if (!curr)
+    if (!curr) {
         return nullptr;
+    }
 
     char* nodeName;
     size_t nodeNameLen;
@@ -304,8 +311,9 @@ static TxtNode* FindNode(TxtNode* curr, const char* name, size_t nameLen) {
         if (child->IsText() || child->IsStruct()) {
             nodeName = child->keyStart;
             nodeNameLen = child->keyEnd - nodeName;
-            if (nameLen == nodeNameLen && str::EqNI(name, nodeName, nameLen))
+            if (nameLen == nodeNameLen && str::EqNI(name, nodeName, nameLen)) {
                 return child;
+            }
         }
         if (child->IsText()) {
             continue;
@@ -371,8 +379,9 @@ static u8* DecodeStruct(DecodeState& ds, const FieldMetadata* fieldDef, TxtNode*
     if (isCompact && node->IsText()) {
         d = DeserializeCompact(ds, node, GetStructDef(fieldDef));
     } else {
-        if (node->IsStruct())
+        if (node->IsStruct()) {
             d = DeserializeRec(ds, node, GetStructDef(fieldDef));
+        }
     }
     return d;
 }
@@ -470,8 +479,9 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
     if (TYPE_FLOAT == type) {
         float f;
         ok = ParseFloat(node->valStart, node->valEnd, &f);
-        if (ok)
+        if (ok) {
             WriteStructFloat(structDataPtr, f);
+        }
     }
 
     if (TYPE_ARRAY == type) {
@@ -550,18 +560,20 @@ static void AppendVal(const char* val, char escapeChar, bool compact, str::Str& 
     char escaped = 0;
     while (*s) {
         char c = *s++;
-        if (escapeChar == c)
+        if (escapeChar == c) {
             escaped = escapeChar;
-        else if (']' == c)
+        } else if (']' == c) {
             escaped = ']';
-        else if ('[' == c)
+        } else if ('[' == c) {
             escaped = '[';
-        else if ('\n' == c)
+        } else if ('\n' == c) {
             escaped = 'n';
-        else if ('\r' == c)
+        } else if ('\r' == c) {
             escaped = 'r';
-        if (0 == escaped)
+        }
+        if (0 == escaped) {
             continue;
+        }
 
         size_t len = s - start - 1;
         res.Append(start, len);
@@ -614,11 +626,13 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
     str::Str& res = es.res;
 
     Type type = fieldDef->type;
-    if ((type & TYPE_NO_STORE_MASK) != 0)
+    if ((type & TYPE_NO_STORE_MASK) != 0) {
         return;
+    }
 
-    if (!structStart)
+    if (!structStart) {
         return;
+    }
 
     bool isCompact = ((type & TYPE_STORE_COMPACT_MASK) != 0);
     type = (Type)(type & TYPE_MASK);
@@ -634,10 +648,11 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
         int g = (int)((u8)((c >> 8) & 0xff));
         int b = (int)((u8)((c >> 16) & 0xff));
         int a = (int)((u8)((c >> 24) & 0xff));
-        if (a > 0)
+        if (a > 0) {
             val.AppendFmt("#%02x%02x%02x%02x", a, r, g, b);
-        else
+        } else {
             val.AppendFmt("#%02x%02x%02x", r, g, b);
+        }
         AppendKeyVal(es, fieldName, val.Get());
     } else if (IsUnsignedIntType(type)) {
         u64 u = ReadStructUInt(data, type);
@@ -655,8 +670,9 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
         AppendKeyVal(es, fieldName, val.Get());
     } else if (TYPE_STR == type) {
         char* s = (char*)ReadStructPtr(data);
-        if (s)
+        if (s) {
             AppendKeyVal(es, fieldName, s);
+        }
     } else if (TYPE_WSTR == type) {
         WCHAR* s = (WCHAR*)ReadStructPtr(data);
         if (s) {
@@ -666,10 +682,11 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
     } else if (TYPE_STRUCT_PTR == type) {
         AppendNest(res, es.nest);
         res.Append(fieldName);
-        if (isCompact)
+        if (isCompact) {
             res.Append(":");
-        else
+        } else {
             res.Append(" [" NL);
+        }
         const u8* structStart2 = (const u8*)ReadStructPtr(data);
         ++es.nest;
         // compact status only lives for one structure, so this is enough
