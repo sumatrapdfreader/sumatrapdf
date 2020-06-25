@@ -3,5 +3,5 @@
 
 void CleanupDjVuEngine();
 bool IsDjVuEngineSupportedFileType(Kind kind);
-EngineBase* CreateDjVuEngineFromFile(const WCHAR* fileName);
+EngineBase* CreateDjVuEngineFromFile(const WCHAR* path);
 EngineBase* CreateDjVuEngineFromStream(IStream* stream);

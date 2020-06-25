@@ -208,7 +208,7 @@ class HuffDicDecompressor {
 
     bool SetHuffData(u8* huffData, size_t huffDataLen);
     bool AddCdicData(u8* cdicData, u32 cdicDataLen);
-    bool Decompress(u8* src, size_t octets, str::Str& dst);
+    bool Decompress(u8* src, size_t srcSize, str::Str& dst);
     bool DecodeOne(u32 code, str::Str& dst);
 };
 

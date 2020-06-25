@@ -35,7 +35,7 @@ class ChmModel : public Controller {
 
     // table of contents
     TocTree* GetToc() override;
-    void ScrollToLink(PageDestination* dest) override;
+    void ScrollToLink(PageDestination* link) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 
     void GetDisplayState(DisplayState* ds) override;

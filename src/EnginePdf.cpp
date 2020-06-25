@@ -331,7 +331,7 @@ class EnginePdf : public EngineBase {
 
     int GetAnnotations(Vec<Annotation*>* annotsOut) override;
 
-    static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
+    static EngineBase* CreateFromFile(const WCHAR* path, PasswordUI* pwdUI);
     static EngineBase* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
 
     // make sure to never ask for pagesAccess in an ctxAccess
@@ -341,7 +341,7 @@ class EnginePdf : public EngineBase {
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
-    RenderedBitmap* GetPageImage(int pageNo, RectD rect, int imageIx);
+    RenderedBitmap* GetPageImage(int pageNo, RectD rect, int imageIdx);
 
     fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;
@@ -355,7 +355,7 @@ class EnginePdf : public EngineBase {
 
     TocTree* tocTree = nullptr;
 
-    bool Load(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
+    bool Load(const WCHAR* filePath, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
     // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
@@ -366,7 +366,7 @@ class EnginePdf : public EngineBase {
     FzPageInfo* GetFzPageInfo(int pageNo, bool loadQuick);
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation);
-    TocItem* BuildTocTree(TocItem* parent, fz_outline* entry, int& idCounter, bool isAttachment);
+    TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
     void MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo);
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();

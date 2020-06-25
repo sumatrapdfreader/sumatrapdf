@@ -39,5 +39,5 @@ struct ChmDoc {
     bool ParseIndex(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind);
-    static ChmDoc* CreateFromFile(const WCHAR* fileName);
+    static ChmDoc* CreateFromFile(const WCHAR* path);
 };

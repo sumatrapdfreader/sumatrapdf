@@ -129,7 +129,7 @@ class RenderCache {
 
     bool ClearCurrentRequest();
     bool GetNextRequest(PageRenderRequest* req);
-    void Add(PageRenderRequest& req, RenderedBitmap* bitmap);
+    void Add(PageRenderRequest& req, RenderedBitmap* bmp);
 
     USHORT GetTileRes(DisplayModel* dm, int pageNo);
     USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
@@ -141,7 +141,7 @@ class RenderCache {
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile = nullptr,
-                RectD* pageRect = nullptr, RenderingCallback* callback = nullptr);
+                RectD* pageRect = nullptr, RenderingCallback* renderCb = nullptr);
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = INVALID_PAGE_NO, TilePosition* tile = nullptr);
     void AbortCurrentRequest();
 

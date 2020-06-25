@@ -262,8 +262,8 @@ class EngineXps : public EngineBase {
         return fz_create_view_ctm(r, zoom, rotation);
     }
 
-    TocItem* BuildTocTree(TocItem* parent, fz_outline* entry, int& idCounter);
-    RenderedBitmap* GetPageImage(int pageNo, RectD rect, int imageIx);
+    TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter);
+    RenderedBitmap* GetPageImage(int pageNo, RectD rect, int imageIdx);
     WCHAR* ExtractFontList();
 };
 

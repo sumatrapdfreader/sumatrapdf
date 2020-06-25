@@ -242,7 +242,7 @@ class HtmlFormatter {
     }
     void SetFont(const WCHAR* fontName, FontStyle fs, float fontSize = -1);
     void SetFontBasedOn(mui::CachedFont* origFont, FontStyle fs, float fontSize = -1);
-    void ChangeFontStyle(FontStyle fs, bool isStart);
+    void ChangeFontStyle(FontStyle fs, bool addStyle);
     void SetAlignment(AlignAttr align);
     void RevertStyleChange();
 
@@ -322,7 +322,7 @@ class HtmlFormatter {
     Vec<HtmlPage*>* FormatAllPages(bool skipEmptyPages = true);
 };
 
-void DrawHtmlPage(Graphics* g, mui::ITextRender* textRender, Vec<DrawInstr>* drawInstructions, float offX, float offY,
+void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
                   bool showBbox, Color textColor, bool* abortCookie = nullptr);
 
 mui::TextRenderMethod GetTextRenderMethod();

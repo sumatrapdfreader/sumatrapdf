@@ -265,7 +265,7 @@ class EngineDjVu : public EngineBase {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const WCHAR* path);
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
@@ -1031,7 +1031,7 @@ Vec<PageElement*>* EngineDjVu::GetElements(int pageNo) {
             continue;
         }
         int h = miniexp_to_int(miniexp_car(area));
-        area = miniexp_cdr(area);
+        // area = miniexp_cdr(area); // TODO: dead store, why was it here?
         if (dpiFactor != 1.0) {
             x = (int)(x * dpiFactor);
             w = (int)(w * dpiFactor);

@@ -89,7 +89,7 @@ class EbookController : public Controller {
     }
     void UpdateDocumentColors();
     void RequestRepaint();
-    void HandlePagesFromEbookLayout(EbookFormattingData* ebookLayout);
+    void HandlePagesFromEbookLayout(EbookFormattingData* ft);
     void TriggerLayout();
     void StartLayouting(int startReparseIdxArg = -1, DisplayMode displayMode = DM_AUTOMATIC);
     int ResolvePageAnchor(const WCHAR* id);

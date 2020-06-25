@@ -891,7 +891,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     // json::ValueVisitor
     bool Visit(const char* path, const char* value, json::DataType type) override;
 
-    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const WCHAR* path);
     static EngineBase* CreateFromStream(IStream* stream);
 
     // an image for each page

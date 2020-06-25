@@ -388,7 +388,6 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
 
     /* BGRA is a GDI compatible format */
     fz_try(ctx) {
-        fz_irect bbox = fz_pixmap_bbox(ctx, pixmap);
         fz_colorspace* csdest = fz_device_bgr(ctx);
         fz_color_params cp = fz_default_color_params;
         bgrPixmap = fz_convert_pixmap2(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
@@ -405,7 +404,6 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     int h = bgrPixmap->h;
     int n = bgrPixmap->n;
     int imgSize = bgrPixmap->stride * h;
-    int imgSize2 = w * h * n;
     int bitsCount = n * 8;
 
     BITMAPINFOHEADER* bmih = &bmi.Get()->bmiHeader;

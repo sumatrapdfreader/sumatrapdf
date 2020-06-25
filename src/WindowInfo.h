@@ -237,7 +237,7 @@ class WindowInfo {
 
     void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false);
     void HideToolTip();
-    NotificationWnd* ShowNotification(const WCHAR* message, int options = NOS_DEFAULT,
+    NotificationWnd* ShowNotification(const WCHAR* msg, int options = NOS_DEFAULT,
                                       NotificationGroupId groupId = NG_RESPONSE_TO_ACTION);
 
     bool CreateUIAProvider();
@@ -254,7 +254,7 @@ class LinkHandler {
     explicit LinkHandler(WindowInfo* win) : owner(win) {
     }
 
-    void GotoLink(PageDestination* link);
+    void GotoLink(PageDestination* dest);
     void GotoNamedDest(const WCHAR* name);
 };
 

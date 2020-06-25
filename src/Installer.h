@@ -62,7 +62,7 @@ void NotifyFailed(const WCHAR* msg);
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);
 void SetDefaultMsg();
 
-int KillProcessesWithModule(const WCHAR* processPath, bool waitUntilTerminated);
+int KillProcessesWithModule(const WCHAR* modulePath, bool waitUntilTerminated);
 
 const WCHAR** GetSupportedExts();
 

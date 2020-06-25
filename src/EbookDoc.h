@@ -44,7 +44,7 @@ class EpubDoc {
 
     std::span<u8> GetHtmlData() const;
 
-    ImageData* GetImageData(const char* id, const char* pagePath);
+    ImageData* GetImageData(const char* fileName, const char* pagePath);
     std::span<u8> GetFileData(const char* relPath, const char* pagePath);
 
     WCHAR* GetProperty(DocumentProperty prop) const;
@@ -56,7 +56,7 @@ class EpubDoc {
 
     static bool IsSupportedFileType(Kind kind);
 
-    static EpubDoc* CreateFromFile(const WCHAR* fileName);
+    static EpubDoc* CreateFromFile(const WCHAR* path);
     static EpubDoc* CreateFromStream(IStream* stream);
 };
 
@@ -88,7 +88,7 @@ class Fb2Doc {
     const char* GetXmlData(size_t* lenOut) const;
     size_t GetXmlDataSize() const;
 
-    ImageData* GetImageData(const char* id);
+    ImageData* GetImageData(const char* fileName);
     ImageData* GetCoverImage();
 
     WCHAR* GetProperty(DocumentProperty prop) const;
@@ -100,7 +100,7 @@ class Fb2Doc {
 
     static bool IsSupportedFileType(Kind kind);
 
-    static Fb2Doc* CreateFromFile(const WCHAR* fileName);
+    static Fb2Doc* CreateFromFile(const WCHAR* path);
     static Fb2Doc* CreateFromStream(IStream* stream);
 };
 
@@ -116,7 +116,7 @@ class PalmDoc {
     bool Load();
 
   public:
-    explicit PalmDoc(const WCHAR* fileName);
+    explicit PalmDoc(const WCHAR* path);
     ~PalmDoc();
 
     std::span<u8> PalmDoc::GetHtmlData() const;
@@ -128,7 +128,7 @@ class PalmDoc {
     bool ParseToc(EbookTocVisitor* visitor);
 
     static bool IsSupportedFileType(Kind kind);
-    static PalmDoc* CreateFromFile(const WCHAR* fileName);
+    static PalmDoc* CreateFromFile(const WCHAR* path);
 };
 
 /* ********** Plain HTML ********** */
@@ -144,12 +144,12 @@ class HtmlDoc {
     std::span<u8> LoadURL(const char* url);
 
   public:
-    explicit HtmlDoc(const WCHAR* fileName);
+    explicit HtmlDoc(const WCHAR* path);
     ~HtmlDoc();
 
     std::span<u8> HtmlDoc::GetHtmlData();
 
-    ImageData* GetImageData(const char* id);
+    ImageData* GetImageData(const char* fileName);
     std::span<u8> GetFileData(const char* relPath);
 
     WCHAR* GetProperty(DocumentProperty prop) const;

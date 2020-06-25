@@ -9,5 +9,5 @@ bool IsImageDirEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
 EngineBase* CreateImageDirEngineFromFile(const WCHAR* fileName);
 
 bool IsCbxEngineSupportedFileType(Kind kind);
-EngineBase* CreateCbxEngineFromFile(const WCHAR* fileName);
+EngineBase* CreateCbxEngineFromFile(const WCHAR* path);
 EngineBase* CreateCbxEngineFromStream(IStream* stream);
