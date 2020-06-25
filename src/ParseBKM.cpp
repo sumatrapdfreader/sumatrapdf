@@ -150,6 +150,9 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
     // first item on the line is a title
     str::Str title;
     bool ok = sv::ParseMaybeQuoted(line, title, false);
+    if (!ok) {
+        return nullptr;
+    }
     TocItem* res = new TocItem();
     res->title = strconv::Utf8ToWstr(title.AsView());
     PageDestination* dest = nullptr;

@@ -371,7 +371,7 @@ class EnginePdf : public EngineBase {
     bool IsLinearizedFile();
 
     bool SaveUserAnnots(const char* pathUtf8);
-    std::span<u8> EnginePdf::LoadStreamFromPDFFile(const WCHAR* filePath);
+    std::span<u8> LoadStreamFromPDFFile(const WCHAR* filePath);
 };
 
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336

@@ -262,6 +262,7 @@ static MenuDef menuDefContext[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Content)
 
+//[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefCreateAnnot[] = {
     { _TR_TODON("Text"), CmdCreateAnnotText, 0 },
     { _TR_TODON("Free Text"), CmdCreateAnnotFreeText, 0 },
@@ -281,7 +282,17 @@ static MenuDef menuDefCreateAnnot[] = {
     { _TR_TODON("Redact"), CmdCreateAnnotRedact, 0 },
     { 0, 0, 0 },
 };
- 
+//] ACCESSKEY_GROUP Context Menu (Start)
+
+//[ ACCESSKEY_GROUP Context Menu (Start)
+static MenuDef menuDefCreateAnnotRaMicro[] = {
+    { _TR_TODON("Text"), CmdCreateAnnotText, 0 },
+    { _TR_TODON("Free Text"), CmdCreateAnnotFreeText, 0 },
+    { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, 0 },
+    { 0, 0, 0 },
+};
+//] ACCESSKEY_GROUP Context Menu (Start)
+
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               CmdOpenSelectedDocument,   MF_REQ_DISK_ACCESS },
@@ -711,7 +722,11 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
 
     bool showCreateAnnotations = ShouldShowCreateAnnotationMenu(tab, x, y);
     if (showCreateAnnotations) {
-        HMENU popupCreateAnnot = BuildMenuFromMenuDef(menuDefCreateAnnot, CreatePopupMenu());
+        MenuDef* mdef = menuDefCreateAnnot;
+        if (gIsRaMicroBuild) {
+            mdef = menuDefCreateAnnotRaMicro;
+        }
+        HMENU popupCreateAnnot = BuildMenuFromMenuDef(mdef, CreatePopupMenu());
         uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
         InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR_TODO("Create Annotation"));
     }

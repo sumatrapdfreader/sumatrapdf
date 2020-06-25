@@ -349,7 +349,7 @@ EngineBase* EngineXps::Clone() {
     // but mupdf removed ability to clone fz_stream
     const WCHAR* path = FileName();
     if (!path) {
-        return false;
+        return nullptr;
     }
 
     EngineXps* clone = new EngineXps();

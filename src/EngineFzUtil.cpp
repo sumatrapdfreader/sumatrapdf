@@ -1158,7 +1158,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
 
     LinkRectList* list = LinkifyText(pageText, coords);
     free(pageText);
-    fz_page* page = pageInfo->page;
+    //fz_page* page = pageInfo->page;
 
     for (size_t i = 0; i < list->links.size(); i++) {
         fz_rect bbox = list->coords.at(i);

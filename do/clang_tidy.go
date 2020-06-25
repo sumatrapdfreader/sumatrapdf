@@ -48,6 +48,7 @@ Fix warnings:
 * clang-analyzer-deadcode.DeadStores
 * clang-analyzer-cplusplus.NewDeleteLeaks
 * clang-analyzer-unix.Malloc
+* clang-analyzer-core.uninitialized.Assign
 
 TODO fixes:
 modernize-use-default-member-init
