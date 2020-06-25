@@ -18,9 +18,13 @@ long g_lRefCount = 0;
 
 class CClassFactory : public IClassFactory {
   public:
-    CClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { InterlockedIncrement(&g_lRefCount); }
+    CClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
+        InterlockedIncrement(&g_lRefCount);
+    }
 
-    ~CClassFactory() { InterlockedDecrement(&g_lRefCount); }
+    ~CClassFactory() {
+        InterlockedDecrement(&g_lRefCount);
+    }
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
@@ -29,7 +33,9 @@ class CClassFactory : public IClassFactory {
         return QISearch(this, qit, riid, ppv);
     }
 
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_lRef); }
+    IFACEMETHODIMP_(ULONG) AddRef() {
+        return InterlockedIncrement(&m_lRef);
+    }
 
     IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
@@ -198,7 +204,7 @@ STDAPI DllRegisterServer() {
     dbglog("PdfPreview: DllRegisterServer\n");
     AutoFreeWstr dllPath = path::GetPathOfFileInAppDir();
     if (!dllPath) {
-        return HRESULT_FROM_WIN32(GetLastError());        
+        return HRESULT_FROM_WIN32(GetLastError());
     }
 
 #define WriteOrFail_(key, value, data)                     \
