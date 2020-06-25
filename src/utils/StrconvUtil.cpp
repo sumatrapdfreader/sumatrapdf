@@ -156,28 +156,37 @@ std::string_view WstrToAnsi(const WCHAR* src) {
     return WstrToCodePage(src, CP_ACP);
 }
 
-StackWstrToUtf8::StackWstrToUtf8(std::wstring_view sv) {
-    buf[0] = 0;
-    if (sv.empty()) {
+static void Set(StackWstrToUtf8* o, const WCHAR* s, int cch) {
+    o->buf[0] = 0;
+    if (!s || cch == 0) {
         return;
     }
-    int cch = (int)sv.size();
-    const WCHAR* s = sv.data();
-    int cbBufSize = (int)sizeof(buf) - 1; // -1 for terminating zero
-    int res = WideCharToMultiByte(CP_UTF8, 0, s, cch, buf, cbBufSize, nullptr, nullptr);
+
+    int cbBufSize = (int)sizeof(o->buf) - 1; // -1 for terminating zero
+    int res = WideCharToMultiByte(CP_UTF8, 0, s, cch, o->buf, cbBufSize, nullptr, nullptr);
     if (res > 0) {
-        buf[res] = 0;
+        o->buf[res] = 0;
         return;
     }
 
     // the buffer wasn't big enough, so measure how much we need and allocate
     int cbNeeded = WideCharToMultiByte(CP_UTF8, 0, s, cch, nullptr, 0, nullptr, nullptr);
-    overflow = AllocArray<char>((size_t)cbNeeded + 1); // +1 for terminating 0
-    if (!overflow) {
+    o->overflow = AllocArray<char>((size_t)cbNeeded + 1); // +1 for terminating 0
+    if (!o->overflow) {
         return;
     }
-    res = WideCharToMultiByte(CP_UTF8, 0, s, cch, overflow, cbNeeded, nullptr, nullptr);
+    res = WideCharToMultiByte(CP_UTF8, 0, s, cch, o->overflow, cbNeeded, nullptr, nullptr);
     CrashIf(res != cbNeeded);
+}
+
+StackWstrToUtf8::StackWstrToUtf8(const WCHAR* s) {
+    int n = (int)str::Len(s);
+    Set(this, s, n);
+}
+
+StackWstrToUtf8::StackWstrToUtf8(std::wstring_view sv) {
+    int cch = (int)sv.size();
+    Set(this, sv.data(), cch);
 }
 
 char* StackWstrToUtf8::Get() const {

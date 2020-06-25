@@ -29,6 +29,7 @@ struct StackWstrToUtf8 {
     char* overflow = nullptr;
 
     StackWstrToUtf8(std::wstring_view);
+    StackWstrToUtf8(const WCHAR*);
     StackWstrToUtf8& operator=(const StackWstrToUtf8&) = delete;
     ~StackWstrToUtf8();
     char* Get() const;
