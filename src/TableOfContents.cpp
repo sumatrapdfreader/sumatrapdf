@@ -101,7 +101,7 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
 
     if (kindDestinationLaunchEmbedded == k) {
         AutoFreeWstr tmp = str::Format(_TR("Attachment: %s"), path);
-        infotip.Append(tmp.get());
+        infotip.Append(tmp.Get());
     } else {
         infotip.Append(path);
     }
@@ -680,7 +680,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         win::menu::Remove(popup, CmdExportBookmarks);
         win::menu::Remove(popup, CmdNewBookmarks);
     } else {
-        path = win->currentTab->filePath.get();
+        path = win->currentTab->filePath.Get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
             win::menu::SetText(popup, CmdNewBookmarks, _TR_TODO("Edit Bookmarks"));

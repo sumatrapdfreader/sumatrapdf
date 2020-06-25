@@ -428,7 +428,7 @@ void TocEditorWindow::DropFilesHandler(DropFilesEvent* ev) {
     EngineBase* engine = CreateEngine(filePath, nullptr);
 #if 0
     AutoFreeStr path = strconv::WstrToUtf8(filePath);
-    logf("Dropped file: '%s' at (%d, %d) on item: 0x%x, engine: 0x%x\n", path.get(), pt.x, pt.y, ti, engine);
+    logf("Dropped file: '%s' at (%d, %d) on item: 0x%x, engine: 0x%x\n", path.Get(), pt.x, pt.y, ti, engine);
 #endif
 
     if (!engine) {
@@ -589,7 +589,7 @@ void TocEditorWindow::TreeItemDragStartEnd(TreeItemDraggeddEvent* ev) {
     bool addAsSibling = !IsShiftPressed();
     AutoFreeStr srcTitle = strconv::WstrToUtf8(src->title);
     AutoFreeStr dstTitle = strconv::WstrToUtf8(dst->title);
-    dbglogf("TreeItemDragged: dragged: %s on: %s. Add as: %s\n", srcTitle.get(), dstTitle.get(),
+    dbglogf("TreeItemDragged: dragged: %s on: %s. Add as: %s\n", srcTitle.Get(), dstTitle.Get(),
             addAsSibling ? "sibling" : "child");
 
     // entries inside a single PDF cannot be moved outside of it
@@ -706,14 +706,14 @@ void TocEditorWindow::SaveAsPdf() {
         return;
     }
     TocTree* tree = (TocTree*)treeCtrl->treeModel;
-    bool ok = SaveVirtualAsPdf(tree->root, (char*)path.get());
+    bool ok = SaveVirtualAsPdf(tree->root, (char*)path.Get());
     if (ok) {
-        ShowSavedAsPdfMsg(path.get());
+        ShowSavedAsPdfMsg(path.Get());
     }
 }
 
 void TocEditorWindow::SaveAsVirtual() {
-    str::WStr pathw = tocArgs->filePath.get();
+    str::WStr pathw = tocArgs->filePath.Get();
 
     bool isVbkm = str::EndsWithI(pathw.Get(), L".vbkm");
     // if the source was .vbkm file, we over-write it by default
@@ -902,7 +902,7 @@ void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoEvent* ev) {
         if (ti->engineFilePath) {
             const char* name = path::GetBaseNameNoFree(ti->engineFilePath);
             AutoFreeWstr nameW = strconv::Utf8ToWstr(name);
-            s = str::Format(L"%s [file: %s, pages %d-%d]", ti->title, nameW.get(), sno, eno);
+            s = str::Format(L"%s [file: %s, pages %d-%d]", ti->title, nameW.Get(), sno, eno);
         } else {
             s = str::Format(L"%s [pages %d-%d]", ti->title, sno, eno);
         }
@@ -910,7 +910,7 @@ void TocEditorWindow::GetDispInfoHandler(TreeGetDispInfoEvent* ev) {
         if (ti->engineFilePath) {
             const char* name = path::GetBaseNameNoFree(ti->engineFilePath);
             AutoFreeWstr nameW = strconv::Utf8ToWstr(name);
-            s = str::Format(L"%s [file: %s, page %d]", ti->title, nameW.get(), sno);
+            s = str::Format(L"%s [file: %s, page %d]", ti->title, nameW.Get(), sno);
         } else {
             s = str::Format(L"%s [page %d]", ti->title, sno);
         }
@@ -1013,7 +1013,7 @@ bool IsTocEditorEnabledForWindowInfo(TabInfo* tab) {
     if (!gWithTocEditor) {
         return false;
     }
-    auto path = tab->filePath.get();
+    auto path = tab->filePath.Get();
     if (str::EndsWithI(path, L".vbkm")) {
         return true;
     }

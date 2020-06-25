@@ -276,7 +276,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
     // adapted from EnginePdf::GetProperty
     static struct {
         DocumentProperty prop;
-        char* name;
+        const char* name;
     } pdfPropNames[] = {
         {DocumentProperty::Title, "Title"},
         {DocumentProperty::Author, "Author"},
@@ -309,7 +309,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
         }
 
         // TODO: not sure if pdf_new_text_string() handles utf8
-        pdf_obj* valobj = pdf_new_text_string(ctx, val.get());
+        pdf_obj* valobj = pdf_new_text_string(ctx, val.Get());
         pdf_dict_puts_drop(ctx, info, name, valobj);
     }
     fz_catch(ctx) {

@@ -1023,14 +1023,14 @@ static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
     }
 
     if (!IsUIRightToLeft()) {
-        tab->frameTitle.Set(str::Format(L"%s %s- %s", titlePath, docTitle.get(), SUMATRA_WINDOW_TITLE));
+        tab->frameTitle.Set(str::Format(L"%s %s- %s", titlePath, docTitle.Get(), SUMATRA_WINDOW_TITLE));
     } else {
         // explicitly revert the title, so that filenames aren't garbled
-        tab->frameTitle.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle.get(), titlePath));
+        tab->frameTitle.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle.Get(), titlePath));
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
-        tab->frameTitle.Set(str::Format(_TR("[Changes detected; refreshing] %s"), tab->frameTitle.get()));
+        tab->frameTitle.Set(str::Format(_TR("[Changes detected; refreshing] %s"), tab->frameTitle.Get()));
     }
 }
 
@@ -1268,7 +1268,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     AutoFreeWstr unsupported(win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures));
     if (unsupported) {
         unsupported.Set(str::Format(_TR("This document uses unsupported features (%s) and might not render properly"),
-                                    unsupported.get()));
+                                    unsupported.Get()));
         win->ShowNotification(unsupported, NOS_WARNING, NG_PERSISTENT_WARNING);
     }
 
@@ -1624,7 +1624,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     WindowInfo* win = args.win;
     {
         AutoFree path = strconv::WstrToUtf8(fullPath);
-        logf("LoadDocument: '%s', tid=%d\n", path.get(), threadID);
+        logf("LoadDocument: '%s', tid=%d\n", path.Get(), threadID);
     }
 
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
@@ -1642,7 +1642,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
     if (failEarly) {
-        AutoFreeWstr msg(str::Format(_TR("File %s not found"), fullPath.get()));
+        AutoFreeWstr msg(str::Format(_TR("File %s not found"), fullPath.Get()));
         win->ShowNotification(msg, NOS_HIGHLIGHT);
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
@@ -1701,7 +1701,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (!ctrl) {
         // TODO: same message as in Canvas.cpp to not introduce
         // new translation. Find a better message e.g. why failed.
-        WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath.get());
+        WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath.Get());
         win->ShowNotification(msg, NOS_HIGHLIGHT);
         str::Free(msg);
         ShowWindow(win->hwndFrame, SW_SHOW);
@@ -1742,7 +1742,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     } else {
         win->currentTab->filePath.SetCopy(fullPath);
         AutoFree path = strconv::WstrToUtf8(fullPath);
-        logf("LoadDocument: forceReuse, set win->currentTab (0x%p) filePath to '%s'\n", win->currentTab, path.get());
+        logf("LoadDocument: forceReuse, set win->currentTab (0x%p) filePath to '%s'\n", win->currentTab, path.Get());
     }
 
     args.fileName = fullPath;
@@ -1767,7 +1767,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
 
     auto currTab = win->currentTab;
     AutoFree path = strconv::WstrToUtf8(currTab->filePath);
-    logf("LoadDocument: after LoadDocIntoCurrentTab win->currentTab is 0x%p, path: '%s'\n", currTab, path.get());
+    logf("LoadDocument: after LoadDocIntoCurrentTab win->currentTab is 0x%p, path: '%s'\n", currTab, path.Get());
 
     // TODO: figure why we hit this.
     // happens when opening 3 files via "Open With"
@@ -1868,7 +1868,7 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
     AutoFreeWstr pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, win->ctrl->PageCount()));
     if (win->ctrl->HasPageLabels()) {
         AutoFreeWstr label(win->ctrl->GetPageLabel(pageNo));
-        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label.get(), pageNo, win->ctrl->PageCount()));
+        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label.Get(), pageNo, win->ctrl->PageCount()));
     }
     if (!wnd) {
         int options = IsShiftPressed() ? NOS_PERSIST : NOS_DEFAULT;
@@ -1912,7 +1912,7 @@ static WCHAR* FormatCursorPosition(EngineBase* engine, PointD pt, MeasurementUni
         if (str::IsDigit(yPos[str::Len(yPos) - 2]))
             yPos[str::Len(yPos) - 1] = '\0';
     }
-    return str::Format(L"%s x %s %s", xPos.get(), yPos.get(), unitName);
+    return str::Format(L"%s x %s %s", xPos.Get(), yPos.Get(), unitName);
 }
 
 void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd) {
@@ -1944,9 +1944,9 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
         selStr.Set(FormatCursorPosition(engine, pt, unit));
     }
 
-    AutoFreeWstr posInfo(str::Format(L"%s %s", _TR("Cursor position:"), posStr.get()));
+    AutoFreeWstr posInfo(str::Format(L"%s %s", _TR("Cursor position:"), posStr.Get()));
     if (selStr) {
-        posInfo.Set(str::Format(L"%s - %s %s", posInfo.get(), _TR("Selection:"), selStr.get()));
+        posInfo.Set(str::Format(L"%s - %s %s", posInfo.Get(), _TR("Selection:"), selStr.Get()));
     }
     if (!wnd) {
         win->ShowNotification(posInfo, NOS_PERSIST, NG_CURSOR_POS_HELPER);
@@ -2482,7 +2482,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     if (gPluginMode) {
         urlName.Set(url::GetFileName(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        srcFileName = urlName ? urlName.get() : L"filename";
+        srcFileName = urlName ? urlName.Get() : L"filename";
     }
 
     CrashIf(!srcFileName);
@@ -2654,7 +2654,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     if (!ok) {
         const WCHAR* msg = _TR("Failed to save a file");
         if (errorMsg) {
-            msg = errorMsg.get();
+            msg = errorMsg.Get();
         }
         MessageBoxWarning(win->hwndFrame, msg);
     }
@@ -2684,7 +2684,7 @@ static void OnMenuShowInFolder(WindowInfo* win) {
         return;
     }
 
-    WCHAR* process = L"explorer.exe";
+    const WCHAR* process = L"explorer.exe";
     AutoFreeWstr args = str::Format(L"/select,\"%s\"", srcFileName);
     CreateProcessHelper(process, args);
 }
@@ -2827,10 +2827,10 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
 
     AutoFreeWstr exePath = GetExePath();
     AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
-                                    viewMode, ZoomVirtual.get(), (int)ss.x, (int)ss.y);
+                                    viewMode, ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeWstr label = ctrl->GetPageLabel(ss.page);
     const WCHAR* srcFileName = path::GetBaseNameNoFree(ctrl->FilePath());
-    AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), label.get(), srcFileName);
+    AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), label.Get(), srcFileName);
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
 
@@ -2897,7 +2897,7 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
 }
 
 // TODO: similar to Installer.cpp
-static bool BrowseForFolder(HWND hwnd, WCHAR* initialFolder, WCHAR* caption, WCHAR* buf, DWORD cchBufSize) {
+static bool BrowseForFolder(HWND hwnd, const WCHAR* initialFolder, const WCHAR* caption, WCHAR* buf, DWORD cchBufSize) {
     if (buf == nullptr || cchBufSize < MAX_PATH) {
         return false;
     }
@@ -2913,7 +2913,7 @@ static bool BrowseForFolder(HWND hwnd, WCHAR* initialFolder, WCHAR* caption, WCH
     if (!pidlFolder) {
         return false;
     }
-    BOOL ok = SHGetPathFromIDList(pidlFolder, buf);
+    BOOL ok = SHGetPathFromIDListW(pidlFolder, buf);
     if (!ok) {
         return false;
     }
@@ -3290,7 +3290,7 @@ static void OnMenuAdvancedOptions() {
     AutoFreeWstr path = prefs::GetSettingsPath();
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
-    LaunchFile(path.get(), nullptr, L"open");
+    LaunchFile(path.Get(), nullptr, L"open");
 }
 
 static void OnMenuOptions(HWND hwnd) {
@@ -4937,7 +4937,7 @@ void ShowCrashHandlerMessage() {
     }
 #endif
 
-    char* msg = "We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.";
+    const char* msg = "We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.";
     uint flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
     flags |= MB_SETFOREGROUND | MB_TOPMOST;
 

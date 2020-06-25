@@ -430,7 +430,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
                     AutoFree basePath(str::DupN(di.str.s, di.str.len));
                     AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
                     AutoFree absPath(NormalizeURL(relPath, basePath));
-                    url.Set(strconv::Utf8ToWstr(absPath.get()));
+                    url.Set(strconv::Utf8ToWstr(absPath.Get()));
                     j = 0; // done
                     break;
                 }
@@ -720,7 +720,7 @@ void EbookController::ExtractPageAnchors() {
         }
         if (attr) {
             AutoFreeWstr id = strconv::Utf8ToWstr({attr->val, attr->valLen});
-            pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath.get() : L"", id.Get()));
+            pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath.Get() : L"", id.Get()));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
         // update EPUB page paths and create an anchor per chapter

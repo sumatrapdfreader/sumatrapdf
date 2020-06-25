@@ -237,7 +237,7 @@ void PropertyMap::Set(DocumentProperty prop, char* valueUtf8, bool replace) {
 WCHAR* PropertyMap::Get(DocumentProperty prop) const {
     int idx = Find(prop);
     if (idx >= 0 && values[idx]) {
-        return strconv::Utf8ToWstr(values[idx].get());
+        return strconv::Utf8ToWstr(values[idx].Get());
     }
     return nullptr;
 }
@@ -622,7 +622,7 @@ bool EpubDoc::ParseNavToc(const char* data, size_t dataLen, const char* pagePath
             if (!text) {
                 continue;
             }
-            AutoFreeWstr itemText(strconv::Utf8ToWstr(text.get()));
+            AutoFreeWstr itemText(strconv::Utf8ToWstr(text.Get()));
             str::NormalizeWS(itemText);
             AutoFreeWstr itemSrc;
             if (href) {

@@ -216,7 +216,7 @@ void StrTest() {
     {
         AutoFreeWstr large(AllocArray<WCHAR>(2000));
         memset(large, 0x11, 1998);
-        str = str::Format(L"%s", large.get());
+        str = str::Format(L"%s", large.Get());
         utassert(str::Eq(str, large));
         free(str);
     }
@@ -526,7 +526,7 @@ void StrTest() {
 
     {
         AutoFree tmp = strconv::ToMultiByte("abc", 9876, 123456);
-        utassert(!tmp.get());
+        utassert(!tmp.Get());
     }
     {
         AutoFree tmp = strconv::WstrToCodePage(L"abc", 98765);

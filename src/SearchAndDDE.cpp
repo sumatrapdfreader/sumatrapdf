@@ -829,7 +829,7 @@ static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
 
     {
         AutoFree tmp = strconv::WstrToUtf8(cmd);
-        logf("HandleDdeCmds: '%s'\n", tmp.get());
+        logf("HandleDdeCmds: '%s'\n", tmp.Get());
     }
 
     while (!str::IsEmpty(cmd)) {
@@ -854,7 +854,7 @@ static void HandleDdeCmds(HWND hwnd, const WCHAR* cmd, DDEACK& ack) {
 
         {
             AutoFree tmp = strconv::WstrToUtf8(cmd);
-            logf("HandleDdeCmds: cmd='%s'\n", tmp.get());
+            logf("HandleDdeCmds: cmd='%s'\n", tmp.Get());
         }
     }
 }

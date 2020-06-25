@@ -1034,7 +1034,7 @@ Vec<PageElement*>* EngineDjVu::GetElements(int pageNo) {
         Rect rect(x, page.dy - y - h, w, h);
 
         AutoFree link = ResolveNamedDest(urlUtf8);
-        const char* tmp = link.get();
+        const char* tmp = link.Get();
         if (!tmp) {
             tmp = urlUtf8;
         }

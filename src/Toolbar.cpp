@@ -226,7 +226,7 @@ void UpdateFindbox(WindowInfo* win) {
     }
 }
 
-static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR* fileName, INT resourceId, bool useDibSection) {
+static HBITMAP LoadExternalBitmap(HINSTANCE hInst, const WCHAR* fileName, INT resourceId, bool useDibSection) {
     AutoFreeWstr path(AppGenDataFilename(fileName));
     uint flags = useDibSection ? LR_CREATEDIBSECTION : 0;
     if (path) {
@@ -779,7 +779,7 @@ void CreateToolbar(WindowInfo* win) {
         rbBand.fStyle |= RBBS_CHILDEDGE;
     }
     rbBand.hbmBack = nullptr;
-    rbBand.lpText = L"Toolbar";
+    rbBand.lpText = L"Toolbar"; // NOLINT
     rbBand.hwndChild = hwndToolbar;
     rbBand.cxMinChild = (rc.right - rc.left) * TOOLBAR_BUTTONS_COUNT;
     rbBand.cyMinChild = (rc.bottom - rc.top) + 2 * rc.top;

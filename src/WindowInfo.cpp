@@ -419,7 +419,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath.get()));
+            AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath.Get()));
             owner->ShowNotification(msg, NOS_HIGHLIGHT);
         }
         return;

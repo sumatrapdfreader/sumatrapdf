@@ -300,17 +300,17 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\DefaultIcon");
         ok &= WriteRegStr(hkey, key, nullptr, iconPath);
     }
-    AutoFreeWstr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath.get());
+    AutoFreeWstr cmdPath = str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get());
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Open\\Command");
         ok &= WriteRegStr(hkey, key, nullptr, cmdPath);
     }
-    AutoFreeWstr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.get());
+    AutoFreeWstr printPath = str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.Get());
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\Print\\Command");
         ok &= WriteRegStr(hkey, key, nullptr, printPath);
     }
-    AutoFreeWstr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.get());
+    AutoFreeWstr printToPath = str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.Get());
     {
         AutoFreeWstr key = str::Join(REG_CLASSES_APPS, L"\\Shell\\PrintTo\\Command");
         ok &= WriteRegStr(hkey, key, nullptr, printToPath);
@@ -808,7 +808,7 @@ static void CreateMainWindow() {
     if (trans::IsCurrLangRtl()) {
         exStyle = WS_EX_LAYOUTRTL;
     }
-    WCHAR* winCls = INSTALLER_FRAME_CLASS_NAME;
+    const WCHAR* winCls = INSTALLER_FRAME_CLASS_NAME;
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
     int dx = DpiScale(INSTALLER_WIN_DX);
@@ -1043,7 +1043,7 @@ int RunInstaller(Flags* cli) {
 
     if (!gCli->silent && !IsProcessAndOsArchSame()) {
         logf("Mismatch of the OS and executable arch\n");
-        char* msg =
+        const char* msg =
             "You're installing 32-bit SumatraPDF on 64-bit OS. Are you sure?\nPress 'Ok' to proceed.\nPress 'Cancel' "
             "to download 64-bit version.";
         uint flags = MB_ICONERROR | MB_OK | MB_OKCANCEL;

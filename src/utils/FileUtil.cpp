@@ -669,7 +669,7 @@ bool StartsWithN(const WCHAR* filePath, const char* s, size_t len) {
         return false;
     }
 
-    if (!ReadN(filePath, buf.get(), len)) {
+    if (!ReadN(filePath, buf.Get(), len)) {
         return false;
     }
     return memeq(buf, s, len);

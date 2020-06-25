@@ -411,7 +411,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             *(WCHAR*)path::GetExtNoFree(appName) = '\0';
         }
 
-        AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.get() : name));
+        AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.Get() : name));
         uint menuId = CmdOpenWithExternalFirst + count;
         InsertMenuW(menuFile, CmdSendByEmail, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {
@@ -702,7 +702,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     if (!showBookmarksMenu) {
         win::menu::Remove(popup, CmdNewBookmarks);
     } else {
-        auto path = tab->filePath.get();
+        auto path = tab->filePath.Get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
             win::menu::SetText(popup, CmdNewBookmarks, _TR_TODO("Edit Bookmarks"));

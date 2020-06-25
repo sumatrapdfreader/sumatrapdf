@@ -477,7 +477,7 @@ static size_t GetAllMatchingFiles(const WCHAR* dir, const WCHAR* filter, WStrVec
 
         AutoFreeWstr path(dirsToVisit.PopAt(0));
         CollectStressTestSupportedFilesFromDirectory(path, filter, files);
-        AutoFreeWstr pattern(str::Format(L"%s\\*", path.get()));
+        AutoFreeWstr pattern(str::Format(L"%s\\*", path.Get()));
         CollectPathsFromDirectory(pattern, dirsToVisit, true);
     }
     return files.size();
@@ -574,7 +574,7 @@ void StressTest::Finished(bool success) {
     if (success) {
         int secs = SecsSinceSystemTime(stressStartTime);
         AutoFreeWstr tm(FormatTime(secs));
-        AutoFreeWstr s(str::Format(L"Stress test complete, rendered %d files in %s", filesCount, tm.get()));
+        AutoFreeWstr s(str::Format(L"Stress test complete, rendered %d files in %s", filesCount, tm.Get()));
         win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
     }
 
@@ -660,7 +660,7 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
 
     int secs = SecsSinceSystemTime(stressStartTime);
     AutoFreeWstr tm(FormatTime(secs));
-    AutoFreeWstr s(str::Format(L"File %d: %s, time: %s", filesCount, fileName, tm.get()));
+    AutoFreeWstr s(str::Format(L"File %d: %s, time: %s", filesCount, fileName, tm.Get()));
     win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
 
     return true;

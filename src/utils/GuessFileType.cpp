@@ -274,7 +274,7 @@ Kind GuessFileTypeFromContent(std::span<u8> d) {
 
 static bool IsEpubFile(const WCHAR* path) {
     AutoDelete<MultiFormatArchive> archive = OpenZipArchive(path, true);
-    if (!archive.get()) {
+    if (!archive.Get()) {
         return false;
     }
     AutoFree mimetype(archive->GetFileDataByName("mimetype"));

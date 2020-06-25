@@ -40,7 +40,7 @@ static AutoFreeWstr gDefaultFontName;
 static float gDefaultFontSize = 10.f;
 
 static const WCHAR* GetDefaultFontName() {
-    return gDefaultFontName.get() ? gDefaultFontName.get() : L"Georgia";
+    return gDefaultFontName.Get() ? gDefaultFontName.Get() : L"Georgia";
 }
 
 static float GetDefaultFontSize() {
@@ -509,7 +509,7 @@ PageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
         AutoFree basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
         AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
         AutoFree absPath(NormalizeURL(relPath, basePath));
-        url.Set(strconv::Utf8ToWstr(absPath.get()));
+        url.Set(strconv::Utf8ToWstr(absPath.Get()));
     }
 
     PageDestination* dest = GetNamedDest(url);
@@ -1564,7 +1564,7 @@ PageDestination* EngineChm::GetNamedDest(const WCHAR* name) {
     if (str::Parse(name, L"%u%$", &topicID)) {
         AutoFree urlUtf8(doc->ResolveTopicID(topicID));
         if (urlUtf8) {
-            AutoFreeWstr url = strconv::Utf8ToWstr(urlUtf8.get());
+            AutoFreeWstr url = strconv::Utf8ToWstr(urlUtf8.Get());
             dest = EngineEbook::GetNamedDest(url);
         }
     }

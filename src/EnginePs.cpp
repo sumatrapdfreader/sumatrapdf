@@ -157,9 +157,9 @@ static EngineBase* ps2pdf(const WCHAR* path) {
 
     {
         const char* fileName = path::GetBaseNameNoFree(__FILE__);
-        AutoFree gswin = strconv::WstrToUtf8(gswin32c.get());
+        AutoFree gswin = strconv::WstrToUtf8(gswin32c.Get());
         AutoFree tmpFileName = strconv::WstrToUtf8(path::GetBaseNameNoFree(tmpFile));
-        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin.get(), tmpFileName.get());
+        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin.Get(), tmpFileName.Get());
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds

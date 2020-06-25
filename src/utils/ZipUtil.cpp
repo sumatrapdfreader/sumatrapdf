@@ -184,9 +184,9 @@ bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
     }
 
     AutoFree nameUtf8 = strconv::WstrToUtf8(nameInZip);
-    str::TransChars(nameUtf8.get(), "\\", "/");
+    str::TransChars(nameUtf8.Get(), "\\", "/");
 
-    return AddFileData(nameUtf8.get(), fileData.get(), fileData.size(), dosdatetime);
+    return AddFileData(nameUtf8.Get(), fileData.Get(), fileData.size(), dosdatetime);
 }
 
 // we use the filePath relative to dir as the zip name

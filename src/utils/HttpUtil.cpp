@@ -259,8 +259,8 @@ static bool  HttpGet(const char *url, HttpRsp *rspOut) {
 void HttpGetAsync(const char *url, const std::function<void(HttpRsp *)> &f) {
     std::thread t([=] {
         auto rsp = new HttpRsp;
-        HttpGet(url, rsp.get());
-        f(rsp.get());
+        HttpGet(url, rsp.Get());
+        f(rsp.Get());
     });
     t.detach();
 }

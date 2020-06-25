@@ -68,7 +68,7 @@ bool ListAsDefaultProgramPreWin10(const WCHAR* exeName, const WCHAR* extensions[
     for (int i = 0; nullptr != extensions[i]; i++) {
         const WCHAR* ext = extensions[i];
         AutoFreeWstr name = str::Join(L"Software\\Classes\\", ext, openWithVal);
-        ok &= CreateRegKey(hkey, name.get());
+        ok &= CreateRegKey(hkey, name.Get());
     }
     return ok;
 }

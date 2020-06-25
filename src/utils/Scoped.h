@@ -88,7 +88,7 @@ struct AutoDelete {
         return o;
     }
 
-    T* get() const {
+    T* Get() const {
         return o;
     }
 };
@@ -261,10 +261,6 @@ struct AutoFreeWstr {
     AutoFreeWstr& operator=(const AutoFreeWstr& other) = delete;
     AutoFreeWstr& operator=(const AutoFreeWstr&& other) = delete;
 #endif
-
-    WCHAR* get() const {
-        return data;
-    }
 
     WCHAR* Get() const {
         return data;

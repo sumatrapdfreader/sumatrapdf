@@ -558,7 +558,7 @@ static void SetCloseProcessMsg() {
             procNames.Set(str::Join(procNames, L" and ", name));
         }
     }
-    AutoFreeWstr s = str::Format(_TR("Please close %s to proceed!"), procNames.get());
+    AutoFreeWstr s = str::Format(_TR("Please close %s to proceed!"), procNames.Get());
     SetMsg(s, COLOR_MSG_FAILED);
 }
 
@@ -659,7 +659,7 @@ static void RandomizeLetters()
 #endif
 
 static void SetLettersSumatraUpTo(int n) {
-    char* s = "SUMATRAPDF";
+    const char* s = "SUMATRAPDF";
     for (int i = 0; i < dimof(gLetters); i++) {
         if (i < n) {
             gLetters[i].c = s[i];
@@ -812,7 +812,7 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     float x2 = 15;
     float y2 = -34;
 
-    WCHAR* ver_s = L"v" CURR_VERSION_STR;
+    const WCHAR* ver_s = L"v" CURR_VERSION_STR;
 #if DRAW_TEXT_SHADOW
     SolidBrush b1(Color(0, 0, 0));
     g.DrawString(ver_s, -1, fVer, PointF(x2 - 2, y2 - 1), &b1);

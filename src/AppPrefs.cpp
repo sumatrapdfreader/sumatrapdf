@@ -67,7 +67,7 @@ bool Load() {
     CrashIf(gGlobalPrefs);
 
     AutoFreeWstr path = GetSettingsPath();
-    AutoFree prefsData = file::ReadFile(path.get());
+    AutoFree prefsData = file::ReadFile(path.Get());
 
     gGlobalPrefs = NewGlobalPrefs(prefsData.data);
     CrashAlwaysIf(!gGlobalPrefs);
@@ -97,7 +97,7 @@ bool Load() {
         // guess the ui language on first start
         str::ReplacePtr(&gprefs->uiLanguage, trans::DetectUserLang());
     }
-    gprefs->lastPrefUpdate = file::GetModificationTime(path.get());
+    gprefs->lastPrefUpdate = file::GetModificationTime(path.Get());
     gprefs->defaultDisplayModeEnum = conv::ToDisplayMode(gprefs->defaultDisplayMode, DM_AUTOMATIC);
     gprefs->defaultZoomFloat = conv::ToZoom(gprefs->defaultZoom, ZOOM_ACTUAL_SIZE);
     CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
@@ -124,7 +124,7 @@ bool Load() {
     gFileHistory.UpdateStatesSource(gprefs->fileStates);
     SetDefaultEbookFont(gprefs->ebookUI.fontName, gprefs->ebookUI.fontSize);
 
-    if (!file::Exists(path.get())) {
+    if (!file::Exists(path.Get())) {
         Save();
     }
     return true;
@@ -167,15 +167,15 @@ bool Save() {
     }
 
     // only save if anything's changed at all
-    if (prevPrefsData.size() == prefsDataSize && str::Eq(prefsData.get(), prevPrefsData.data)) {
+    if (prevPrefsData.size() == prefsDataSize && str::Eq(prefsData.Get(), prevPrefsData.data)) {
         return true;
     }
 
-    bool ok = file::WriteFile(path.get(), prefsData.AsSpan());
+    bool ok = file::WriteFile(path.Get(), prefsData.AsSpan());
     if (!ok) {
         return false;
     }
-    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path.get());
+    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path.Get());
     return true;
 }
 
@@ -226,7 +226,7 @@ bool Reload() {
         gWindows.at(0)->RedrawAll(true);
     }
 
-    if (!str::Eq(uiLanguage.get(), gGlobalPrefs->uiLanguage)) {
+    if (!str::Eq(uiLanguage.Get(), gGlobalPrefs->uiLanguage)) {
         SetCurrentLanguageAndRefreshUI(gGlobalPrefs->uiLanguage);
     }
 

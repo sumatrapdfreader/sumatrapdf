@@ -1071,7 +1071,7 @@ bool EngineCbx::FinishLoading() {
     for (int i = 0; i < pageCount; i++) {
         std::string_view fname = pageFiles[i]->name;
         AutoFreeWstr name = strconv::Utf8ToWstr(fname);
-        const WCHAR* baseName = path::GetBaseNameNoFree(name.get());
+        const WCHAR* baseName = path::GetBaseNameNoFree(name.Get());
         TocItem* ti = new TocItem(nullptr, baseName, i + 1);
         if (root == nullptr) {
             root = ti;
@@ -1167,9 +1167,9 @@ bool EngineCbx::Visit(const char* path, const char* value, json::DataType type) 
     if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
         propTitle.Set(strconv::Utf8ToWstr(value));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear"))
-        propDate.Set(str::Format(L"%s/%d", propDate ? propDate.get() : L"", atoi(value)));
+        propDate.Set(str::Format(L"%s/%d", propDate ? propDate.Get() : L"", atoi(value)));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth"))
-        propDate.Set(str::Format(L"%d%s", atoi(value), propDate ? propDate.get() : L""));
+        propDate.Set(str::Format(L"%d%s", atoi(value), propDate ? propDate.Get() : L""));
     else if (json::Type_String == type && str::Eq(path, "/appID"))
         propCreator.Set(strconv::Utf8ToWstr(value));
     else if (json::Type_String == type && str::Eq(path, "/lastModified"))

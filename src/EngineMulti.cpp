@@ -460,7 +460,7 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
 
 bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     AutoFreeStr filePath = strconv::WstrToUtf8(fileName);
-    bool ok = LoadVbkmFile(filePath.get(), vbkm);
+    bool ok = LoadVbkmFile(filePath.Get(), vbkm);
     if (!ok) {
         return false;
     }

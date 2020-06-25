@@ -53,7 +53,7 @@ timestamp = 2013-03-10T05:43:21Z
 #define SMX_FILE_EXT L".smx"
 #define SMX_CURR_VERSION CURR_VERSION_STRA
 
-static char* PageAnnotTypeToString(AnnotationType typ) {
+static const char* PageAnnotTypeToString(AnnotationType typ) {
     switch (typ) {
         case AnnotationType::Highlight:
             return "highlight";
@@ -149,7 +149,7 @@ Vec<Annotation*>* LoadFileModifications(const WCHAR* filePath) {
     if (data.empty()) {
         return nullptr;
     }
-    return ParseFileModifications(data.get());
+    return ParseFileModifications(data.Get());
 }
 
 bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
@@ -194,7 +194,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
         if (annot->isDeleted) {
             continue;
         }
-        char* s = PageAnnotTypeToString(annot->type);
+        const char* s = PageAnnotTypeToString(annot->type);
         if (str::IsEmpty(s)) {
             continue;
         }

@@ -906,7 +906,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
     }
     win->currentTab = win->tabs.at(tabIndex);
     AutoFree path = strconv::WstrToUtf8(win->currentTab->filePath);
-    logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.get());
+    logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.Get());
     int prevIndex = TabCtrl_SetCurSel(win->hwndTabBar, tabIndex);
     if (prevIndex != -1) {
         ntd.code = TCN_SELCHANGE;

@@ -104,7 +104,7 @@ enum class PathInstr {
 };
 
 // the order must match order of PathInstr enums
-static char* instructions = "MmLlHhVvCcSsQqTtAaZz";
+static const char* svgInstructions = "MmLlHhVvCcSsQqTtAaZz";
 
 struct SvgPathInstr {
     SvgPathInstr(PathInstr type) {
@@ -120,11 +120,11 @@ struct SvgPathInstr {
 };
 
 static PathInstr GetInstructionType(char c) {
-    const char* pos = str::FindChar(instructions, c);
+    const char* pos = str::FindChar(svgInstructions, c);
     if (!pos) {
         return PathInstr::Unknown;
     }
-    return (PathInstr)(pos - instructions);
+    return (PathInstr)(pos - svgInstructions);
 }
 
 static const char* skipWs(const char* s) {

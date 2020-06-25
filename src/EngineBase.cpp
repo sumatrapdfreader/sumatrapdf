@@ -523,7 +523,7 @@ char* EngineBase::GetDecryptionKey() const {
 }
 
 const WCHAR* EngineBase::FileName() const {
-    return fileNameBase.get();
+    return fileNameBase.Get();
 }
 
 RenderedBitmap* EngineBase::GetImageForPageElement(PageElement*) {

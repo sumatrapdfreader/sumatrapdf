@@ -1146,13 +1146,13 @@ void Empty(HMENU m) {
     }
 }
 
-void SetText(HMENU m, int id, WCHAR* s) {
+void SetText(HMENU m, int id, const WCHAR* s) {
     CrashIf(id < 0);
     MENUITEMINFOW mii = {0};
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STRING;
     mii.fType = MFT_STRING;
-    mii.dwTypeData = s;
+    mii.dwTypeData = (WCHAR*)s;
     mii.cch = (uint)str::Len(s);
     BOOL ok = SetMenuItemInfoW(m, id, FALSE, &mii);
     CrashIf(!ok);
@@ -1768,7 +1768,7 @@ void RunNonElevated(const WCHAR* exePath) {
     }
     cmd.Set(str::Format(L"\"%s\" \"%s\"", explorerPath.Get(), exePath));
 Run:
-    HANDLE h = LaunchProcess(cmd ? cmd.get() : exePath);
+    HANDLE h = LaunchProcess(cmd ? cmd.Get() : exePath);
     SafeCloseHandle(&h);
 }
 
@@ -2089,14 +2089,11 @@ bool IsValidDelayType(int type) {
 
 void HwndSetText(HWND hwnd, std::string_view s) {
     // can be called before a window is created
-    if (!hwnd) {
-        return;
-    }
-    if (s.empty()) {
+    if (!hwnd || s.empty()) {
         return;
     }
     AutoFreeWstr ws = strconv::Utf8ToWstr(s);
-    win::SetText(hwnd, ws);
+    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws.Get());
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-seticon

@@ -407,7 +407,7 @@ WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
         str::BufSet(decimal, dimof(decimal), L".");
 
     // always add between one and two decimals after the point
-    AutoFreeWstr buf(str::Format(L"%s%s%02d", tmp.get(), decimal, num % 100));
+    AutoFreeWstr buf(str::Format(L"%s%s%02d", tmp.Get(), decimal, num % 100));
     if (str::EndsWith(buf, L"0"))
         buf[str::Len(buf) - 1] = '\0';
 

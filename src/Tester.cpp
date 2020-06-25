@@ -84,7 +84,7 @@ CalcMD5DigestWin: 2.605000 ms
 diff: 0.929000
 */
 
-static void BenchMD5Size(void* data, size_t dataSize, char* desc) {
+static void BenchMD5Size(void* data, size_t dataSize, const char* desc) {
     unsigned char d1[16], d2[16];
     auto t1 = TimeGet();
     CalcMD5Digest((unsigned char*)data, dataSize, d1);
@@ -183,7 +183,7 @@ static void MobiTestFile(const WCHAR* filePath) {
         // construct a base name for extracted html/image files in the form
         // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
         // remove the file extension
-        WCHAR* dir = MOBI_SAVE_DIR;
+        const WCHAR* dir = MOBI_SAVE_DIR;
         dir::CreateAll(dir);
         AutoFreeWstr fileName(str::Dup(path::GetBaseNameNoFree(filePath)));
         AutoFreeWstr filePathBase(path::Join(dir, fileName));
@@ -222,7 +222,7 @@ static void MobiTest(WCHAR* dirOrFile) {
 // we assume this is called from main sumatradirectory, e.g. as:
 // ./obj-dbg/tester.exe, so we use the known files
 void ZipCreateTest() {
-    WCHAR* zipFileName = L"tester-tmp.zip";
+    const WCHAR* zipFileName = L"tester-tmp.zip";
     file::Delete(zipFileName);
     ZipCreator zc(zipFileName);
     auto ok = zc.AddFile(L"premake5.lua");
