@@ -196,10 +196,12 @@ struct RectT {
     }
 
     RectT Union(RectT other) const {
-        if (this->dx <= 0 && this->dy <= 0)
+        if (this->dx <= 0 && this->dy <= 0) {
             return other;
-        if (other.dx <= 0 && other.dy <= 0)
+        }
+        if (other.dx <= 0 && other.dy <= 0) {
             return *this;
+        }
 
         /* The union starts with the smaller of the start coordinates
            and ends with the larger of the end coordinates */

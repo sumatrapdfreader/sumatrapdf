@@ -14,8 +14,9 @@ class ILayout {
   public:
     AutoFree name;
     void SetName(const char* n) {
-        if (n)
+        if (n) {
             name.SetCopy(n);
+        }
     }
     bool IsNamed(const char* s) const {
         return str::EqI(name.Get(), s);
