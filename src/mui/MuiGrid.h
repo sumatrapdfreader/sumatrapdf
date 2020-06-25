@@ -7,24 +7,17 @@
 class Grid : public Control {
   public:
     struct CellData {
-        Control* el;
-        CachedStyle* cachedStyle;
-        int row, col;
-        int colSpan;
+        Control* el{nullptr};
+        CachedStyle* cachedStyle{nullptr};
+        int row{0}, col{0};
+        int colSpan{1};
         // cell of the grid can be bigger than the element.
         // vertAlign and horizAlign define how the element
         // is laid out within the cell
         ElAlignData vertAlign;
         ElAlignData horizAlign;
 
-        CellData()
-            : el(nullptr),
-              cachedStyle(nullptr),
-              row(0),
-              col(0),
-              colSpan(1),
-              vertAlign(GetElAlignTop()),
-              horizAlign(GetElAlignLeft()) {
+        CellData() : vertAlign(GetElAlignTop()), horizAlign(GetElAlignLeft()) {
         }
 
         CellData(const CellData& other)

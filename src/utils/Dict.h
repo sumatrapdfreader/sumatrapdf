@@ -56,7 +56,7 @@ class StringInterner {
     Vec<const char*> intToStr;
 
   public:
-    StringInterner() : nInternCalls(0) {
+    StringInterner() {
     }
 
     int Intern(const char* s, bool* alreadyPresent = nullptr);
@@ -67,5 +67,5 @@ class StringInterner {
         return intToStr.at(n);
     }
 
-    int nInternCalls; // so we know how effective interning is
+    int nInternCalls{0}; // so we know how effective interning is
 };

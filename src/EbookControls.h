@@ -30,8 +30,8 @@ struct DrawInstr;
 // control that shows a single ebook page
 // TODO: move to a separate file
 class PageControl : public Control {
-    HtmlPage* page;
-    int cursorX, cursorY;
+    HtmlPage* page{nullptr};
+    int cursorX{-1}, cursorY{-1};
 
   public:
     PageControl();

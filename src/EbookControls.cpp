@@ -135,7 +135,7 @@ VerticalLayout [
 ]
 )data";
 
-PageControl::PageControl() : page(nullptr), cursorX(-1), cursorY(-1) {
+PageControl::PageControl() {
     bit::Set(wantedInputBits, WantsMouseMoveBit, WantsMouseClickBit);
 }
 

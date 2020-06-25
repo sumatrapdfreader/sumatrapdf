@@ -79,9 +79,9 @@ struct CtrlAndOffset {
 
 class WndFilter {
   public:
-    bool skipInvisibleSubtrees;
+    bool skipInvisibleSubtrees{true};
 
-    WndFilter() : skipInvisibleSubtrees(true) {
+    WndFilter() {
     }
 
     virtual ~WndFilter() {
