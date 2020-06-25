@@ -279,7 +279,6 @@ class CPdfPreview : public PreviewBase {
     EngineBase* LoadEngine(IStream* stream) override;
 };
 
-#ifdef BUILD_XPS_PREVIEW
 class CXpsPreview : public PreviewBase {
   public:
     CXpsPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_XPS_PREVIEW_CLSID) {
@@ -288,9 +287,7 @@ class CXpsPreview : public PreviewBase {
   protected:
     virtual EngineBase* LoadEngine(IStream* stream);
 };
-#endif
 
-#ifdef BUILD_DJVU_PREVIEW
 class CDjVuPreview : public PreviewBase {
   public:
     CDjVuPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_DJVU_PREVIEW_CLSID) {
@@ -300,9 +297,7 @@ class CDjVuPreview : public PreviewBase {
   protected:
     virtual EngineBase* LoadEngine(IStream* stream);
 };
-#endif
 
-#ifdef BUILD_EPUB_PREVIEW
 class CEpubPreview : public PreviewBase {
   public:
     CEpubPreview(long* plRefCount);
@@ -311,9 +306,7 @@ class CEpubPreview : public PreviewBase {
   protected:
     virtual EngineBase* LoadEngine(IStream* stream);
 };
-#endif
 
-#ifdef BUILD_FB2_PREVIEW
 class CFb2Preview : public PreviewBase {
   public:
     CFb2Preview(long* plRefCount);
@@ -322,9 +315,7 @@ class CFb2Preview : public PreviewBase {
   protected:
     virtual EngineBase* LoadEngine(IStream* stream);
 };
-#endif
 
-#ifdef BUILD_MOBI_PREVIEW
 class CMobiPreview : public PreviewBase {
   public:
     CMobiPreview(long* plRefCount);
@@ -333,9 +324,7 @@ class CMobiPreview : public PreviewBase {
   protected:
     virtual EngineBase* LoadEngine(IStream* stream);
 };
-#endif
 
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
 class CCbxPreview : public PreviewBase {
   public:
     CCbxPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_CBX_PREVIEW_CLSID) {
@@ -345,9 +334,7 @@ class CCbxPreview : public PreviewBase {
   protected:
     virtual EngineBase* LoadEngine(IStream* stream);
 };
-#endif
 
-#ifdef BUILD_TGA_PREVIEW
 class CTgaPreview : public PreviewBase {
   public:
     CTgaPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_TGA_PREVIEW_CLSID) {
@@ -357,4 +344,3 @@ class CTgaPreview : public PreviewBase {
   protected:
     virtual EngineBase* LoadEngine(IStream* stream);
 };
-#endif

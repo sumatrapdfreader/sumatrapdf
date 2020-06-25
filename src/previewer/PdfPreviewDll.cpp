@@ -16,6 +16,48 @@
 
 long g_lRefCount = 0;
 
+#ifdef BUILD_XPS_PREVIEW
+static bool gBuildXpsPreview = true;
+#else
+static bool gBuildXpsPreview = false;
+#endif
+
+#ifdef BUILD_DJVU_PREVIEW
+static bool gBuildDjVuPreview = true;
+#else
+static bool gBuildDjVuPreview = false;
+#endif
+
+#ifdef BUILD_EPUB_PREVIEW
+static bool gBuildEpubPreview = true;
+#else
+static bool gBuildEpubPreview = false;
+#endif
+
+#ifdef BUILD_FB2_PREVIEW
+static bool gBuildFb2Preview = true;
+#else
+static bool gBuildFb2Preview = false;
+#endif
+
+#ifdef BUILD_MOBI_PREVIEW
+static bool gBuildMobiPreview = true;
+#else
+static bool gBuildMobiPreview = false;
+#endif
+
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
+static bool gBuildCbxPreview = true;
+#else
+static bool gBuildCbxPreview = false;
+#endif
+
+#ifdef BUILD_TGA_PREVIEW
+static bool gBuildTgaPreview = true;
+#else
+static bool gBuildTgaPreview = false;
+#endif
+
 class CClassFactory : public IClassFactory {
   public:
     CClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) {
@@ -59,34 +101,27 @@ class CClassFactory : public IClassFactory {
         CLSID clsid;
         if (SUCCEEDED(CLSIDFromString(SZ_PDF_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pObject = new CPdfPreview(&g_lRefCount);
-#ifdef BUILD_XPS_PREVIEW
-            else if (SUCCEEDED(CLSIDFromString(SZ_XPS_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) pObject =
-                new CXpsPreview(&g_lRefCount);
-#endif
-#ifdef BUILD_DJVU_PREVIEW
-            else if (SUCCEEDED(CLSIDFromString(SZ_DJVU_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-                pObject = new CDjVuPreview(&g_lRefCount);
-#endif
-#ifdef BUILD_EPUB_PREVIEW
-            else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-                pObject = new CEpubPreview(&g_lRefCount);
-#endif
-#ifdef BUILD_FB2_PREVIEW
-            else if (SUCCEEDED(CLSIDFromString(SZ_FB2_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) pObject =
-                new CFb2Preview(&g_lRefCount);
-#endif
-#ifdef BUILD_MOBI_PREVIEW
-            else if (SUCCEEDED(CLSIDFromString(SZ_MOBI_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-                pObject = new CMobiPreview(&g_lRefCount);
-#endif
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
-            else if (SUCCEEDED(CLSIDFromString(SZ_CBX_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) pObject =
-                new CCbxPreview(&g_lRefCount);
-#endif
-#ifdef BUILD_TGA_PREVIEW
-            else if (SUCCEEDED(CLSIDFromString(SZ_TGA_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) pObject =
-                new CTgaPreview(&g_lRefCount);
-#endif
+        } else if (gBuildXpsPreview && SUCCEEDED(CLSIDFromString(SZ_XPS_PREVIEW_CLSID, &clsid)) &&
+                   IsEqualCLSID(m_clsid, clsid)) {
+            pObject = new CXpsPreview(&g_lRefCount);
+        } else if (gBuildDjVuPreview && SUCCEEDED(CLSIDFromString(SZ_DJVU_PREVIEW_CLSID, &clsid)) &&
+                   IsEqualCLSID(m_clsid, clsid)) {
+            pObject = new CDjVuPreview(&g_lRefCount);
+        } else if (gBuildEpubPreview && SUCCEEDED(CLSIDFromString(SZ_EPUB_PREVIEW_CLSID, &clsid)) &&
+                   IsEqualCLSID(m_clsid, clsid)) {
+            pObject = new CEpubPreview(&g_lRefCount);
+        } else if (gBuildFb2Preview && SUCCEEDED(CLSIDFromString(SZ_FB2_PREVIEW_CLSID, &clsid)) &&
+                   IsEqualCLSID(m_clsid, clsid)) {
+            pObject = new CFb2Preview(&g_lRefCount);
+        } else if (gBuildMobiPreview && SUCCEEDED(CLSIDFromString(SZ_MOBI_PREVIEW_CLSID, &clsid)) &&
+                   IsEqualCLSID(m_clsid, clsid)) {
+            pObject = new CMobiPreview(&g_lRefCount);
+        } else if (gBuildCbxPreview && SUCCEEDED(CLSIDFromString(SZ_CBX_PREVIEW_CLSID, &clsid)) &&
+                   IsEqualCLSID(m_clsid, clsid)) {
+            pObject = new CCbxPreview(&g_lRefCount);
+        } else if (gBuildTgaPreview && SUCCEEDED(CLSIDFromString(SZ_TGA_PREVIEW_CLSID, &clsid)) &&
+                   IsEqualCLSID(m_clsid, clsid)) {
+            pObject = new CTgaPreview(&g_lRefCount);
         } else {
             return E_NOINTERFACE;
         }

@@ -206,19 +206,19 @@ void StrTest() {
 
     str = str::Dup(buf);
     utassert(str::Eq(str, buf));
-    free(str);
+    str::Free(str);
     str = str::DupN(buf, 4);
     utassert(str::Eq(str, L"a st"));
-    free(str);
+    str::Free(str);
     str = str::Format(L"%s", buf);
     utassert(str::Eq(str, buf));
-    free(str);
+    str::Free(str);
     {
         AutoFreeWstr large(AllocArray<WCHAR>(2000));
         memset(large, 0x11, 1998);
         str = str::Format(L"%s", large.Get());
         utassert(str::Eq(str, large));
-        free(str);
+        str::Free(str);
     }
 #if 0
     // TODO: this test slows down DEBUG builds significantly
@@ -229,13 +229,13 @@ void StrTest() {
 #endif
     str = str::Join(buf, buf);
     utassert(str::Len(str) == 2 * str::Len(buf));
-    free(str);
+    str::Free(str);
     str = str::Join(nullptr, L"ab");
     utassert(str::Eq(str, L"ab"));
-    free(str);
+    str::Free(str);
     str = str::Join(L"\uFDEF", L"\uFFFF");
     utassert(str::Eq(str, L"\uFDEF\uFFFF"));
-    free(str);
+    str::Free(str);
 
     str::BufSet(buf, dimof(buf), L"abc\1efg\1");
     size_t count = str::TransChars(buf, L"ace", L"ACE");
@@ -387,7 +387,7 @@ void StrTest() {
     utassert(str::Eq(strA.Get(), TEST_STRING));
     str = strconv::FromAnsi(strA.Get());
     utassert(str::Eq(str, TEXT(TEST_STRING)));
-    free(str);
+    str::Free(str);
 #undef TEST_STRING
 
     utassert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));

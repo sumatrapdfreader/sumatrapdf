@@ -12,14 +12,9 @@
 #include "EngineBase.h"
 #include "EnginePdf.h"
 #include "EngineXps.h"
-#if defined(BUILD_EPUB_PREVIEW) || defined(BUILD_FB2_PREVIEW) || defined(BUILD_MOBI_PREVIEW)
 #include "mui/MiniMui.h"
 #include "EngineEbook.h"
-#endif
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || \
-    defined(BUILD_CBT_PREVIEW) || defined(BUILD_TGA_PREVIEW)
 #include "EngineImages.h"
-#endif
 #include "PdfPreview.h"
 #include "PdfPreviewBase.h"
 
@@ -358,21 +353,15 @@ EngineBase* CPdfPreview::LoadEngine(IStream* stream) {
     return CreateEnginePdfFromStream(stream);
 }
 
-#ifdef BUILD_XPS_PREVIEW
 EngineBase* CXpsPreview::LoadEngine(IStream* stream) {
     return CreateXpsEngineFromStream(stream);
 }
-#endif
 
-#ifdef BUILD_DJVU_PREVIEW
 #include "EngineDjVu.h"
 
 EngineBase* CDjVuPreview::LoadEngine(IStream* stream) {
     return CreateDjVuEngineFromStream(stream);
 }
-#endif
-
-#ifdef BUILD_EPUB_PREVIEW
 
 CEpubPreview::CEpubPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID) {
     m_gdiScope = new ScopedGdiPlus();
@@ -386,9 +375,6 @@ CEpubPreview::~CEpubPreview() {
 EngineBase* CEpubPreview::LoadEngine(IStream* stream) {
     return CreateEpubEngineFromStream(stream);
 }
-#endif
-
-#ifdef BUILD_FB2_PREVIEW
 
 CFb2Preview::CFb2Preview(long* plRefCount) : PreviewBase(plRefCount, SZ_FB2_PREVIEW_CLSID) {
     m_gdiScope = new ScopedGdiPlus();
@@ -402,9 +388,6 @@ CFb2Preview::~CFb2Preview() {
 EngineBase* CFb2Preview::LoadEngine(IStream* stream) {
     return CreateFb2EngineFromStream(stream);
 }
-#endif
-
-#ifdef BUILD_MOBI_PREVIEW
 
 CMobiPreview::CMobiPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_MOBI_PREVIEW_CLSID) {
     m_gdiScope = new ScopedGdiPlus();
@@ -418,18 +401,11 @@ CMobiPreview::~CMobiPreview() {
 EngineBase* CMobiPreview::LoadEngine(IStream* stream) {
     return CreateMobiEngineFromStream(stream);
 }
-#endif
-
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
 
 EngineBase* CCbxPreview::LoadEngine(IStream* stream) {
     return CreateCbxEngineFromStream(stream);
 }
-#endif
-
-#ifdef BUILD_TGA_PREVIEW
 
 EngineBase* CTgaPreview::LoadEngine(IStream* stream) {
     return CreateImageEngineFromStream(stream);
 }
-#endif

@@ -134,7 +134,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     AutoFree prevData(file::ReadFile(archivePath));
     size_t prevDataLen = prevData.size();
     lzma::SimpleArchive prevArchive;
-    if (!lzma::ParseSimpleArchive(prevData.data, prevDataLen, &prevArchive))
+    if (!lzma::ParseSimpleArchive((const u8*)prevData.data, prevDataLen, &prevArchive))
         prevArchive.filesCount = 0;
 
     str::Str data;
@@ -174,7 +174,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     if (!data.Append(content.Get(), content.size()))
         return false;
 
-    return file::WriteFile(archivePath, data.AsView());
+    return file::WriteFile(archivePath, data.AsSpan());
 }
 
 } // namespace lzsa
@@ -192,7 +192,7 @@ int mainVerify(const WCHAR* archivePath) {
     errorStep++;
 
     lzma::SimpleArchive lzsa;
-    bool ok = lzma::ParseSimpleArchive(fileData.data, fileData.size(), &lzsa);
+    bool ok = lzma::ParseSimpleArchive((const u8*)fileData.data, fileData.size(), &lzsa);
     FailIf(!ok, "\"%S\" is no valid LzSA file", archivePath);
     errorStep++;
 
