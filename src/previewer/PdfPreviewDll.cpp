@@ -39,8 +39,9 @@ class CClassFactory : public IClassFactory {
 
     IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
-        if (cRef == 0)
+        if (cRef == 0) {
             delete this;
+        }
         return cRef;
     }
 
@@ -49,44 +50,46 @@ class CClassFactory : public IClassFactory {
         dbglog("PdfPreview: CreateInstance()\n");
 
         *ppv = nullptr;
-        if (punkOuter)
+        if (punkOuter) {
             return CLASS_E_NOAGGREGATION;
+        }
 
         ScopedComPtr<IInitializeWithStream> pObject;
 
         CLSID clsid;
-        if (SUCCEEDED(CLSIDFromString(SZ_PDF_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        if (SUCCEEDED(CLSIDFromString(SZ_PDF_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
             pObject = new CPdfPreview(&g_lRefCount);
 #ifdef BUILD_XPS_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(SZ_XPS_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new CXpsPreview(&g_lRefCount);
+            else if (SUCCEEDED(CLSIDFromString(SZ_XPS_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) pObject =
+                new CXpsPreview(&g_lRefCount);
 #endif
 #ifdef BUILD_DJVU_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(SZ_DJVU_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new CDjVuPreview(&g_lRefCount);
+            else if (SUCCEEDED(CLSIDFromString(SZ_DJVU_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+                pObject = new CDjVuPreview(&g_lRefCount);
 #endif
 #ifdef BUILD_EPUB_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new CEpubPreview(&g_lRefCount);
+            else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+                pObject = new CEpubPreview(&g_lRefCount);
 #endif
 #ifdef BUILD_FB2_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(SZ_FB2_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new CFb2Preview(&g_lRefCount);
+            else if (SUCCEEDED(CLSIDFromString(SZ_FB2_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) pObject =
+                new CFb2Preview(&g_lRefCount);
 #endif
 #ifdef BUILD_MOBI_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(SZ_MOBI_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new CMobiPreview(&g_lRefCount);
+            else if (SUCCEEDED(CLSIDFromString(SZ_MOBI_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+                pObject = new CMobiPreview(&g_lRefCount);
 #endif
 #if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
-        else if (SUCCEEDED(CLSIDFromString(SZ_CBX_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new CCbxPreview(&g_lRefCount);
+            else if (SUCCEEDED(CLSIDFromString(SZ_CBX_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) pObject =
+                new CCbxPreview(&g_lRefCount);
 #endif
 #ifdef BUILD_TGA_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(SZ_TGA_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new CTgaPreview(&g_lRefCount);
+            else if (SUCCEEDED(CLSIDFromString(SZ_TGA_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid)) pObject =
+                new CTgaPreview(&g_lRefCount);
 #endif
-        else
+        } else {
             return E_NOINTERFACE;
+        }
 
         if (!pObject) {
             return E_OUTOFMEMORY;
