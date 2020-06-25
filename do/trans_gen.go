@@ -368,46 +368,46 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 		s := fmt.Sprintf("  %s", cEscape(t))
 		lines = append(lines, s)
 	}
-	original_strings := strings.Join(lines, ",\n")
-	logf("orignal_strings: %d bytes\n", len(original_strings))
-	langs_count := len(langs)
-	translations_count := len(keys)
+	originalStrings := strings.Join(lines, ",\n")
+	logf("orignal_strings: %d bytes\n", len(originalStrings))
+	langsCount := len(langs)
+	translationsCount := len(keys)
 
 	v2 := struct {
-		Orignal_strings    string
-		Langs_count        int
-		Translations_count int
-		Translations       string
-		Langcodes          string
-		Langnames          string
-		Langids            string
-		Islangrtl          string
+		OrignalStrings    string
+		LangsCount        int
+		TranslationsCount int
+		Translations      string
+		Langcodes         string
+		Langnames         string
+		Langids           string
+		Islangrtl         string
 	}{
-		Orignal_strings:    original_strings,
-		Langs_count:        langs_count,
-		Translations_count: translations_count,
-		Translations:       translations,
-		Langcodes:          langcodes,
-		Langnames:          langnames,
-		Langids:            langids,
-		Islangrtl:          islangrtl,
+		OrignalStrings:    originalStrings,
+		LangsCount:        langsCount,
+		TranslationsCount: translationsCount,
+		Translations:      translations,
+		Langcodes:         langcodes,
+		Langnames:         langnames,
+		Langids:           langids,
+		Islangrtl:         islangrtl,
 	}
 	path := filepath.Join(dirName, fileNameFromDirName(dirName))
-	file_content := evalTmpl(compactCTmpl, v2)
-	logf("file_content: path: %s, file size: %d\n", path, len(file_content))
-	u.WriteFileMust(path, []byte(file_content))
+	fileContent := evalTmpl(compactCTmpl, v2)
+	logf("file_content: path: %s, file size: %d\n", path, len(fileContent))
+	u.WriteFileMust(path, []byte(fileContent))
 	printIncompleteLangs(dirName)
 	// print_stats(langs)
 }
 
-func gen_c_code(strings_dict map[string][]*Translation, strings2 []*StringWithPath) {
+func genCCode(stringsDict map[string][]*Translation, strings2 []*StringWithPath) {
 	for _, dir := range dirsToProcess {
 		dirToCheck := filepath.Base(dir)
 		var keys []string
 		for _, el := range strings2 {
 			if el.Dir == dirToCheck {
 				s := el.Text
-				if _, ok := strings_dict[s]; ok {
+				if _, ok := stringsDict[s]; ok {
 					keys = append(keys, s)
 				}
 			}
@@ -418,7 +418,7 @@ func gen_c_code(strings_dict map[string][]*Translation, strings2 []*StringWithPa
 			b := strings.Replace(keys[j], `\t`, "\t", -1)
 			return a < b
 		})
-		genCCodeForDir(strings_dict, keys, dir)
+		genCCodeForDir(stringsDict, keys, dir)
 	}
 }
 

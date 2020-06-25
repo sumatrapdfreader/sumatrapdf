@@ -117,7 +117,7 @@ func isAlnum(s string) bool {
 }
 
 func detectAccesskeyClashes(groups map[string]*accessGroup, translations map[string][]*Translation) {
-	for _, lang := range g_langs {
+	for _, lang := range gLangs {
 		fmt.Printf("Accesskey issues for '%s'", lang[1])
 		fmt.Printf("%s'\n", strMult("=", 23+len(lang[1])))
 		warnings := []string{}

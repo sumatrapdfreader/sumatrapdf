@@ -151,7 +151,7 @@ func parseTranslations(s string) map[string][]*Translation {
 	return res
 }
 
-func should_translate(path string) bool {
+func shouldTranslate(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	return ext == ".cpp"
 }
@@ -167,7 +167,7 @@ func getFilesToProcess() []string {
 		must(err)
 		for _, f := range files {
 			path := filepath.Join(dir, f.Name())
-			if should_translate(path) {
+			if shouldTranslate(path) {
 				res = append(res, path)
 			}
 		}
@@ -176,19 +176,19 @@ func getFilesToProcess() []string {
 }
 
 var (
-	TRANSLATION_PATTERN = regexp.MustCompile(`\b_TRN?\("(.*?)"\)`)
+	translationPattern = regexp.MustCompile(`\b_TRN?\("(.*?)"\)`)
 )
 
 func extractTranslations(s string) []string {
 	var res []string
-	a := TRANSLATION_PATTERN.FindAllStringSubmatch(s, -1)
+	a := translationPattern.FindAllStringSubmatch(s, -1)
 	for _, el := range a {
 		res = append(res, el[1])
 	}
 	return res
 }
 
-func extract_strings_from_c_file(path string) []string {
+func extractStringsFromCFile(path string) []string {
 	d := u.ReadFileMust(path)
 	return extractTranslations(string(d))
 }
@@ -205,12 +205,12 @@ func uniquifyStrings(a []string) []string {
 	return res
 }
 
-func extract_strings_from_c_files_no_paths() []string {
+func extractStringsFromCFilesNoPaths() []string {
 	filesToProcess := getFilesToProcess()
 	logf("Files to process: %d\n", len(filesToProcess))
 	var res []string
 	for _, path := range filesToProcess {
-		a := extract_strings_from_c_file(path)
+		a := extractStringsFromCFile(path)
 		res = append(res, a...)
 	}
 	res = uniquifyStrings(res)
@@ -218,20 +218,20 @@ func extract_strings_from_c_files_no_paths() []string {
 	return res
 }
 
-type StringWithPath struct {
+type stringWithPath struct {
 	Text string
 	Path string
 	Dir  string
 }
 
-func extract_strings_from_c_files() []*StringWithPath {
+func extractStringsFromCFiles() []*stringWithPath {
 	filesToProcess := getFilesToProcess()
 	logf("Files to process: %d\n", len(filesToProcess))
-	var res []*StringWithPath
+	var res []*stringWithPath
 	for _, path := range filesToProcess {
-		a := extract_strings_from_c_file(path)
+		a := extractStringsFromCFile(path)
 		for _, s := range a {
-			swp := &StringWithPath{
+			swp := &stringWithPath{
 				Text: s,
 				Path: path,
 				Dir:  filepath.Base(filepath.Dir(path)),
@@ -243,7 +243,7 @@ func extract_strings_from_c_files() []*StringWithPath {
 	return res
 }
 
-func extractJustStrings(a []*StringWithPath) []string {
+func extractJustStrings(a []*stringWithPath) []string {
 	var res []string
 	for _, el := range a {
 		res = append(res, el.Text)
@@ -252,7 +252,7 @@ func extractJustStrings(a []*StringWithPath) []string {
 	return res
 }
 
-func dump_missing_per_language(strings []string, strings_dict map[string][]*Translation, dump_strings bool) map[string]bool {
+func dumpMissingPerLanguage(strings []string, stringsDict map[string][]*Translation, dumpStrings bool) map[string]bool {
 	/*
 	   untranslated_dict = {}
 	   for lang in get_lang_list(strings_dict):
@@ -276,46 +276,46 @@ func dump_missing_per_language(strings []string, strings_dict map[string][]*Tran
 	return nil
 }
 
-func get_untranslated_as_list(untranslated_dict map[string]bool) []string {
+func getUntranslatedAsList(untranslatedDict map[string]bool) []string {
 	var a []string
-	for s := range untranslated_dict {
+	for s := range untranslatedDict {
 		a = append(a, s)
 	}
 	return uniquifyStrings(a)
 }
 
-func generate_code(s string) {
+func generateCode(s string) {
 	fmt.Print("generate_code\n")
-	strings_dict := parseTranslations(s)
-	logf("%d strings\n", len(strings_dict))
+	stringsDict := parseTranslations(s)
+	logf("%d strings\n", len(stringsDict))
 
-	strings := extract_strings_from_c_files()
-	strings_list := extractJustStrings(strings)
+	strings := extractStringsFromCFiles()
+	stringsList := extractJustStrings(strings)
 
 	// remove obsolete strings from the server
 	var obsolete []string
-	for s := range strings_dict {
-		if !u.StringInSlice(strings_list, s) {
+	for s := range stringsDict {
+		if !u.StringInSlice(stringsList, s) {
 			obsolete = append(obsolete, s)
-			delete(strings_dict, s)
+			delete(stringsDict, s)
 		}
 	}
 	if len(obsolete) > 0 {
 		logf("Removed %d obsolete strings\n", len(obsolete))
 	}
 
-	untranslated_dict := dump_missing_per_language(strings_list, strings_dict, false)
-	untranslated := get_untranslated_as_list(untranslated_dict)
+	untranslatedDict := dumpMissingPerLanguage(stringsList, stringsDict, false)
+	untranslated := getUntranslatedAsList(untranslatedDict)
 	if len(untranslated) > 0 {
 		logf("%d untranslated\n", len(untranslated))
 		// add untranslated
 		for _, s := range untranslated {
-			if _, ok := strings_dict[s]; !ok {
-				strings_dict[s] = []*Translation{}
+			if _, ok := stringsDict[s]; !ok {
+				stringsDict[s] = []*Translation{}
 			}
 		}
 	}
-	gen_c_code(strings_dict, strings)
+	genCCode(stringsDict, strings)
 }
 
 func downloadAndUpdateTranslationsIfChanged() bool {
@@ -332,7 +332,7 @@ func downloadAndUpdateTranslationsIfChanged() bool {
 	}
 	panicIf(!validSha1(sha1), "Bad reponse, invalid sha1 on second line: '%s'", sha1)
 	logf("Translation data size: %d\n", len(s))
-	generate_code(s)
+	generateCode(s)
 	saveLastDownload(d)
 	return true
 }
@@ -346,5 +346,5 @@ func downloadTranslationsMain() {
 
 func regenerateLangs() {
 	d := u.ReadFileMust(lastDownloadFilePath())
-	generate_code(string(d))
+	generateCode(string(d))
 }

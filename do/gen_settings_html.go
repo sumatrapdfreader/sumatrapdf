@@ -326,7 +326,7 @@ func settingsFileName() string {
 
 func genLangsHTML() {
 	var langs []*Lang
-	for _, el := range g_langs {
+	for _, el := range gLangs {
 		langs = append(langs, mkLang(el[1], el[0]))
 	}
 	sort.Slice(langs, func(i, j int) bool {
