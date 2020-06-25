@@ -27,7 +27,7 @@ clang-tidy.exe --checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unuse
 
 ls src\utils\*.cpp | select Name
 
-clang-tidy src/utils/LzmaSimpleArchive.cpp -fix -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00
+clang-tidy src/uia/DocumentProvider.cpp -fix -checks="-*,readability-braces-around-statements" -extra-arg=-std=c++20 -- -I mupdf/include -I src -I src/utils -I src/wingui -I ext/WDL -I ext/CHMLib/src -I ext/libdjvu -I ext/zlib -I ext/synctex -I ext/unarr -I ext/lzma/C -I ext/libwebp/src -I ext/freetype/include -DUNICODE -DWIN32 -D_WIN32 -D_CRT_SECURE_NO_WARNINGS -DWINVER=0x0a00 -D_WIN32_WINNT=0x0a00
 */
 
 /*
@@ -37,27 +37,9 @@ src/wingui
 src/utils
 src/mui
 
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\PalmDbReader.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\RegistryPaths.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\SerializeTxt.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\SettingsUtil.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\SquareTreeParser.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\StrconvUtil.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\StrFormat.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\StringViewUtil.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\StrSlice.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\StrUtil.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\StrUtil_win.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\TgaReader.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\ThreadUtil.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\TrivialHtmlParser.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\TxtParser.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\UITask.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\UtAssert.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\WebpReader.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\WinDynCalls.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\WinUtil.cpp.
-Error while processing C:\Users\kjk\src\sumatrapdf\src\utils\ZipUtil.cpp.
+src/uia
+src/ifilter
+src/previewer
 */
 
 const clangTidyLogFile = "clangtidy.out.txt"

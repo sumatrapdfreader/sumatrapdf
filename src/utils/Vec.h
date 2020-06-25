@@ -84,8 +84,9 @@ class Vec {
     }
 
     void FreeEls() {
-        if (els != buf)
+        if (els != buf) {
             Allocator::Free(allocator, els);
+        }
     }
 
   public:
@@ -131,6 +132,17 @@ class Vec {
 
     [[nodiscard]] T& operator[](size_t idx) const {
         CrashIf(idx >= len);
+        return els[idx];
+    }
+
+    [[nodiscard]] T& operator[](long idx) const {
+        CrashIf(idx < 0);
+        CrashIf((size_t)idx >= len);
+        return els[idx];
+    }
+
+    [[nodiscard]] T& operator[](ULONG idx) const {
+        CrashIf((size_t)idx >= len);
         return els[idx];
     }
 
