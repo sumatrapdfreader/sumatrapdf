@@ -22,7 +22,7 @@ func readFile(path string) string {
 
 func uploadStringsToServer(strs string, secret string) {
 	fmt.Printf("Uploading strings to the server...\n")
-	uri := fmt.Sprintf("%s/uploadstrings", TRANSLATION_SERVER)
+	uri := fmt.Sprintf("%s/uploadstrings", translationServer)
 
 	data := url.Values{}
 	data.Set("strings", strs)

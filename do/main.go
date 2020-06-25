@@ -35,6 +35,10 @@ func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) string {
 	return u.RunCmdMust(cmd)
 }
 
+func runClangTidy() {
+
+}
+
 func runCppCheck(all bool) {
 	// -q : quiet, doesn't print progress report
 	// -v : prints more info about the error
@@ -98,8 +102,6 @@ func main() {
 		flgBuildReleaseFast        bool
 		flgBuildRelease32Fast      bool
 		flgSmoke                   bool
-		flgClangFormat             bool
-		flgFormat                  bool
 		flgWc                      bool
 		flgDownloadTranslations    bool
 		flgRegenerateTranslattions bool
@@ -117,8 +119,10 @@ func main() {
 		flgWebsiteImportNotion     bool
 		flgWebsiteImportAndDeploy  bool
 		flgNoCache                 bool
+		flgClangFormat             bool
 		flgCppCheck                bool
 		flgCppCheckAll             bool
+		flgClangTidy               bool
 		flgDiff                    bool
 		flgGenStructs              bool
 		flgUpdateVer               string
@@ -138,7 +142,6 @@ func main() {
 		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
 		flag.BoolVar(&flgClangFormat, "clang-format", false, "format source files with clang-format")
-		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
 		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
@@ -158,6 +161,7 @@ func main() {
 		flag.BoolVar(&flgNoCache, "no-cache", false, "if true, notion import ignores cache")
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
 		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
+		flag.BoolVar(&flgClangTidy, "clang-tidy", false, "run clang-tidy (must be installed)")
 		flag.BoolVar(&flgDiff, "diff", false, "preview diff using winmerge")
 		flag.BoolVar(&flgGenStructs, "gen-structs", false, "re-generate src/SettingsStructs.h")
 		flag.StringVar(&flgUpdateVer, "update-auto-update-ver", "", "update version used for auto-update checks")
@@ -230,7 +234,7 @@ func main() {
 		return
 	}
 
-	if flgClangFormat || flgFormat {
+	if flgClangFormat {
 		clangFormatFiles()
 		return
 	}
@@ -242,6 +246,11 @@ func main() {
 
 	if flgCppCheck || flgCppCheckAll {
 		runCppCheck(flgCppCheckAll)
+		return
+	}
+
+	if flgClangTidy {
+		runClangTidy()
 		return
 	}
 
