@@ -80,9 +80,10 @@ readability-string-compare
 
 const clangTidyLogFile = "clangtidy.out.txt"
 
+// TODO: maybe re-enable clang-diagnostic-switch, for now it's too many false positives
 func clangTidyFile(path string) {
 	args := []string{
-		"--checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value,-clang-diagnostic-ignored-pragma-optimize,-clang-diagnostic-pragma-pack",
+		"--checks=-clang-diagnostic-microsoft-goto,-clang-diagnostic-unused-value,-clang-diagnostic-ignored-pragma-optimize,-clang-diagnostic-pragma-pack,-clang-diagnostic-switch",
 		"-extra-arg=-std=c++20",
 		"", // file
 		"--",
