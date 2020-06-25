@@ -10,8 +10,9 @@ namespace mui {
 
 float PercFromInt(int total, int n) {
     CrashIf(n > total);
-    if (0 == total)
+    if (0 == total) {
         return 0.f;
+    }
     return (float)n / (float)total;
 }
 
@@ -31,23 +32,27 @@ Gdiplus::Size ScrollBar::Measure(const Gdiplus::Size availableSize) {
     // dy is bigger of inactiveDy and onHoverDy but
     // smaller than availableSize.Height
     int dy = inactiveDy;
-    if (onOverDy > dy)
+    if (onOverDy > dy) {
         dy = onOverDy;
-    if (dy > availableSize.Height)
+    }
+    if (dy > availableSize.Height) {
         dy = availableSize.Height;
+    }
 
     desiredSize.Height = dy;
     return desiredSize;
 }
 
 void ScrollBar::NotifyMouseEnter() {
-    if (inactiveDy != onOverDy)
+    if (inactiveDy != onOverDy) {
         RequestRepaint(this);
+    }
 }
 
 void ScrollBar::NotifyMouseLeave() {
-    if (inactiveDy != onOverDy)
+    if (inactiveDy != onOverDy) {
         RequestRepaint(this);
+    }
 }
 
 void ScrollBar::SetFilled(float perc) {
@@ -55,8 +60,9 @@ void ScrollBar::SetFilled(float perc) {
     int prev = IntFromPerc(pos.Width, filledPerc);
     int curr = IntFromPerc(pos.Width, perc);
     filledPerc = perc;
-    if (prev != curr)
+    if (prev != curr) {
         RequestRepaint(this);
+    }
 }
 
 float ScrollBar::GetPercAt(int x) {
@@ -69,16 +75,18 @@ void ScrollBar::Paint(Graphics* gfx, int offX, int offY) {
     CachedStyle* s = cachedStyle;
 
     int dy = inactiveDy;
-    if (IsMouseOver())
+    if (IsMouseOver()) {
         dy = onOverDy;
+    }
 
     Gdiplus::Rect r(offX, offY + pos.Height - dy, pos.Width, dy);
     Brush* br = BrushFromColorData(s->bgColor, r);
     gfx->FillRectangle(br, r);
 
     int filledDx = IntFromPerc(pos.Width, filledPerc);
-    if (0 == filledDx)
+    if (0 == filledDx) {
         return;
+    }
 
     r.Width = filledDx;
     br = BrushFromColorData(s->color, r);

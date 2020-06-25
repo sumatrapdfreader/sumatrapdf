@@ -172,8 +172,9 @@ void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) {
     int x = (int)bb.X;
     int y = (int)bb.Y;
     uint opts = ETO_OPAQUE;
-    if (isRtl)
+    if (isRtl) {
         opts = opts | ETO_RTLREADING;
+    }
     ExtTextOut(hdcGfxLocked, x, y, opts, nullptr, s, (uint)sLen, nullptr);
 #endif
 }
@@ -193,10 +194,12 @@ void TextRenderGdi::FreeMemBmp() {
 
 void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
     // set minimums for less allocations
-    if (dx < 128)
+    if (dx < 128) {
         dx = 128;
-    if (dy < 48)
+    }
+    if (dy < 48) {
         dy = 48;
+    }
 
     if (dx <= memBmpDx && dy <= memBmpDy) {
         ZeroMemory(memBmpData, memBmpDx * memBmpDy * 4);
@@ -218,8 +221,9 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
     bmi.bmiHeader.biSizeImage = dx * dy * 4; // doesn't seem necessary?
 
     memBmp = CreateDIBSection(memHdc, &bmi, DIB_RGB_COLORS, &memBmpData, nullptr, 0);
-    if (!memBmp)
+    if (!memBmp) {
         return;
+    }
 
     ZeroMemory(memBmpData, memBmpDx * memBmpDy * 4);
 
@@ -257,8 +261,9 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, RectF& bb, bool
     TextOut(memHdc, 0, 0, s, sLen);
 #else
     uint opts = 0; // ETO_OPAQUE;
-    if (isRtl)
+    if (isRtl) {
         opts = opts | ETO_RTLREADING;
+    }
     ExtTextOut(memHdc, 0, 0, opts, nullptr, s, (uint)sLen, nullptr);
 #endif
 
@@ -280,10 +285,11 @@ TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx,
     TextRenderGdiplus* res = new TextRenderGdiplus();
     res->gfx = gfx;
     res->currFont = nullptr;
-    if (nullptr == measureAlgo)
+    if (nullptr == measureAlgo) {
         res->measureAlgo = MeasureTextAccurate;
-    else
+    } else {
         res->measureAlgo = measureAlgo;
+    }
     // default to red to make mistakes stand out
     res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
     return res;
@@ -483,29 +489,33 @@ ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, in
 // calls, so it's not that bad
 size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, float dx) {
     RectF r = textMeasure->Measure(s, len);
-    if (r.Width <= dx)
+    if (r.Width <= dx) {
         return len;
+    }
     // make the best guess of the length that fits
     size_t n = (size_t)((dx / r.Width) * (float)len);
     CrashIf(n > len);
     r = textMeasure->Measure(s, n);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
-    if (r.Width > dx)
+    if (r.Width > dx) {
         dir = -1; // decreasing length
+    }
     while (n > 1) {
         n += dir;
         r = textMeasure->Measure(s, n);
         if (1 == dir) {
             // if advancing length, we know that previous string did fit, so if
             // the new one doesn't fit, the previous length was the right one
-            if (r.Width > dx)
+            if (r.Width > dx) {
                 return n - 1;
+            }
         } else {
             // if decreasing length, we know that previous string didn't fit, so if
             // the one one fits, it's of the correct length
-            if (r.Width < dx)
+            if (r.Width < dx) {
                 return n;
+            }
         }
     }
     // even a single char is longer than available space

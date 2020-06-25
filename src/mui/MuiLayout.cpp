@@ -26,10 +26,12 @@ Gdiplus::Size DirectionalLayout::Measure(const Gdiplus::Size availableSize) {
 
 static int CalcScaledClippedSize(int size, float scale, int selfSize) {
     int scaledSize = selfSize;
-    if (SizeSelf != scale)
+    if (SizeSelf != scale) {
         scaledSize = (int)((float)size * scale);
-    if (scaledSize > size)
+    }
+    if (scaledSize > size) {
         scaledSize = size;
+    }
     return scaledSize;
 }
 
@@ -46,20 +48,22 @@ static void RedistributeSizes(Vec<SizeInfo>& sizes, int totalSize) {
     int remainingSpace = totalSize;
 
     for (SizeInfo& si : sizes) {
-        if (SizeSelf == si.scale)
+        if (SizeSelf == si.scale) {
             remainingSpace -= si.size;
-        else
+        } else {
             toDistributeTotal += si.scale;
+        }
     }
 
     int pos = 0;
     for (SizeInfo& si : sizes) {
-        if (SizeSelf == si.scale)
+        if (SizeSelf == si.scale) {
             si.finalSize = si.size;
-        else if (remainingSpace > 0 && toDistributeTotal != 0.f)
+        } else if (remainingSpace > 0 && toDistributeTotal != 0.f) {
             si.finalSize = (int)(((float)remainingSpace * si.scale) / toDistributeTotal);
-        else
+        } else {
             si.finalSize = 0;
+        }
         si.finalPos = pos;
         pos += si.finalSize;
     }

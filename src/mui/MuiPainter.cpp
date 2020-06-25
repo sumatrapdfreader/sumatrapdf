@@ -11,12 +11,15 @@
 namespace mui {
 
 static bool BitmapNotBigEnough(Bitmap* bmp, int dx, int dy) {
-    if (nullptr == bmp)
+    if (nullptr == bmp) {
         return true;
-    if (bmp->GetWidth() < (uint)dx)
+    }
+    if (bmp->GetWidth() < (uint)dx) {
         return true;
-    if (bmp->GetHeight() < (uint)dy)
+    }
+    if (bmp->GetHeight() < (uint)dy) {
         return true;
+    }
     return false;
 }
 
@@ -64,8 +67,9 @@ static void PaintWindowsInZOrder(Graphics* g, Control* c) {
         i16 minUnpaintedZOrder = MY_INT16_MAX;
         for (CtrlAndOffset& coff : toPaint) {
             i16 zOrder = coff.c->zOrder;
-            if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder))
+            if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder)) {
                 minUnpaintedZOrder = zOrder;
+            }
         }
         for (CtrlAndOffset& coff : toPaint) {
             if (minUnpaintedZOrder == coff.c->zOrder) {
@@ -77,8 +81,9 @@ static void PaintWindowsInZOrder(Graphics* g, Control* c) {
                 ++paintedCount;
             }
         }
-        if (paintedCount == toPaint.size())
+        if (paintedCount == toPaint.size()) {
             return;
+        }
         CrashIf(paintedCount > toPaint.size());
         lastPaintedZOrder = minUnpaintedZOrder;
     }

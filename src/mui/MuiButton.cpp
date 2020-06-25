@@ -25,15 +25,17 @@ Button::~Button() {
 void Button::NotifyMouseEnter() {
     Control::NotifyMouseEnter();
     bool changed = SetStyle(styleMouseOver);
-    if (changed)
+    if (changed) {
         RecalculateSize(true);
+    }
 }
 
 void Button::NotifyMouseLeave() {
     Control::NotifyMouseLeave();
     bool changed = SetStyle(styleDefault);
-    if (changed)
+    if (changed) {
         RecalculateSize(true);
+    }
 }
 
 // Update desired size of the button. If the size changes, trigger layout
@@ -78,10 +80,11 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
     desiredSize.Height += CeilI(fontDy);
     FreeGraphicsForMeasureText(gfx);
 
-    if (!prevSize.Equals(desiredSize))
+    if (!prevSize.Equals(desiredSize)) {
         RequestLayout(this);
-    else if (repaintIfSizeDidntChange)
+    } else if (repaintIfSizeDidntChange) {
         RequestRepaint(this);
+    }
 }
 
 void Button::SetText(const WCHAR* s) {
@@ -99,10 +102,11 @@ Gdiplus::Size Button::Measure(const Gdiplus::Size availableSize) {
 }
 
 void Button::UpdateAfterStyleChange() {
-    if (IsMouseOver())
+    if (IsMouseOver()) {
         SetStyle(styleMouseOver);
-    else
+    } else {
         SetStyle(styleDefault);
+    }
 
     RecalculateSize(true);
 }
@@ -127,10 +131,12 @@ void Button::SetMouseOverStyle(Style* style) {
 // a container and alignment, calculates the position of
 // element within the container.
 static int AlignedOffset(int containerDx, int elDx, AlignAttr align) {
-    if (Align_Left == align)
+    if (Align_Left == align) {
         return 0;
-    if (Align_Right == align)
+    }
+    if (Align_Right == align) {
         return containerDx - elDx;
+    }
     // Align_Center or Align_Justify
     return (containerDx - elDx) / 2;
 }
@@ -146,8 +152,9 @@ void Button::Paint(Graphics* gfx, int offX, int offY) {
 
     Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
     DrawBorder(gfx, r, s);
-    if (str::IsEmpty(text))
+    if (str::IsEmpty(text)) {
         return;
+    }
 
     Padding pad = s->padding;
     int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, s->textAlign);
@@ -184,15 +191,17 @@ ButtonVector::~ButtonVector() {
 void ButtonVector::NotifyMouseEnter() {
     Control::NotifyMouseEnter();
     bool changed = SetStyle(styleMouseOver);
-    if (changed)
+    if (changed) {
         RecalculateSize(true);
+    }
 }
 
 void ButtonVector::NotifyMouseLeave() {
     Control::NotifyMouseLeave();
     bool changed = SetStyle(styleDefault);
-    if (changed)
+    if (changed) {
         RecalculateSize(true);
+    }
 }
 
 void ButtonVector::SetGraphicsPath(GraphicsPath* gp) {
@@ -223,10 +232,11 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
     desiredSize.Width += bbox.Width;
     desiredSize.Height += bbox.Height;
 
-    if (!prevSize.Equals(desiredSize))
+    if (!prevSize.Equals(desiredSize)) {
         RequestLayout(this);
-    else if (repaintIfSizeDidntChange)
+    } else if (repaintIfSizeDidntChange) {
         RequestRepaint(this);
+    }
 }
 
 Gdiplus::Size ButtonVector::Measure(const Gdiplus::Size availableSize) {
@@ -246,8 +256,9 @@ void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
 
     Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
     DrawBorder(gfx, r, s);
-    if (!graphicsPath)
+    if (!graphicsPath) {
         return;
+    }
 
     // graphicsPath bbox can have non-zero X,Y
     Gdiplus::Rect gpBbox;
@@ -256,10 +267,11 @@ void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
     Pen pen(brStroke, s->strokeWidth);
     pen.SetMiterLimit(1.f);
     pen.SetAlignment(PenAlignmentInset);
-    if (0.f == s->strokeWidth)
+    if (0.f == s->strokeWidth) {
         graphicsPath->GetBounds(&gpBbox);
-    else
+    } else {
         graphicsPath->GetBounds(&gpBbox, nullptr, &pen);
+    }
 
     // calculate the position of graphics path within given button position, size
     // and desired vertical/horizontal alignment.
@@ -278,17 +290,19 @@ void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
     m.Translate((float)x, (float)y);
     tmp->Transform(&m);
     gfx->FillPath(brFill, tmp);
-    if (0.f != s->strokeWidth)
+    if (0.f != s->strokeWidth) {
         gfx->DrawPath(&pen, tmp);
+    }
 
     delete tmp;
 }
 
 void ButtonVector::UpdateAfterStyleChange() {
-    if (IsMouseOver())
+    if (IsMouseOver()) {
         SetStyle(styleMouseOver);
-    else
+    } else {
         SetStyle(styleDefault);
+    }
 
     RecalculateSize(true);
 }

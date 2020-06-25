@@ -145,8 +145,9 @@ void Initialize() {
 }
 
 void Destroy() {
-    if (InterlockedDecrement(&gMiniMuiRefCount) != 0)
+    if (InterlockedDecrement(&gMiniMuiRefCount) != 0) {
         return;
+    }
 
     delete gFontCache;
     gFontCache = nullptr;

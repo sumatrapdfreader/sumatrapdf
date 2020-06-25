@@ -11,8 +11,9 @@ namespace mui {
 static HWND gHwndControlTooltip = nullptr;
 
 static void CreateInfotipForLink(HWND hwndParent, const WCHAR* url, RECT pos) {
-    if (gHwndControlTooltip)
+    if (gHwndControlTooltip) {
         return;
+    }
 
     HINSTANCE hinst = GetModuleHandle(nullptr);
     gHwndControlTooltip =
@@ -30,8 +31,9 @@ static void CreateInfotipForLink(HWND hwndParent, const WCHAR* url, RECT pos) {
 }
 
 static void ClearInfotip(HWND hwndParent) {
-    if (!gHwndControlTooltip)
+    if (!gHwndControlTooltip) {
         return;
+    }
 
     TOOLINFO ti = {0};
     ti.cbSize = sizeof(ti);
@@ -59,16 +61,18 @@ Control::Control(Control* newParent) {
     namedEventClick = nullptr;
     SetStyle(nullptr);
     pos = Gdiplus::Rect();
-    if (newParent)
+    if (newParent) {
         SetParent(newParent);
+    }
 }
 
 void Control::SetToolTip(const WCHAR* toolTip) {
     str::ReplacePtr(&this->toolTip, toolTip);
-    if (nullptr == toolTip)
+    if (nullptr == toolTip) {
         wantedInputBits &= WantsMouseOverBit;
-    else
+    } else {
         wantedInputBits |= WantsMouseOverBit;
+    }
 }
 
 void Control::SetNamedEventClick(const char* s) {
@@ -134,26 +138,29 @@ bool Control::IsVisible() const {
 }
 
 void Control::SetIsMouseOver(bool isOver) {
-    if (isOver)
+    if (isOver) {
         bit::Set(stateBits, MouseOverBit);
-    else
+    } else {
         bit::Clear(stateBits, MouseOverBit);
+    }
 }
 
 void Control::AddChild(Control* c, int pos) {
     CrashIf(nullptr == c);
-    if ((pos < 0) || (pos >= (int)children.size()))
+    if ((pos < 0) || (pos >= (int)children.size())) {
         children.Append(c);
-    else
+    } else {
         children.InsertAt(pos, c);
+    }
     c->SetParent(this);
 }
 
 void Control::AddChild(Control* c1, Control* c2, Control* c3) {
     AddChild(c1);
     AddChild(c2);
-    if (c3)
+    if (c3) {
         AddChild(c3);
+    }
 }
 
 Gdiplus::Size Control::Measure(const Gdiplus::Size availableSize) {
@@ -192,8 +199,9 @@ void Control::Arrange(const Gdiplus::Rect finalRect) {
 }
 
 void Control::Show() {
-    if (IsVisible())
+    if (IsVisible()) {
         return; // perf: avoid unnecessary repaints
+    }
     bit::Clear(stateBits, IsHiddenBit);
     // showing/hiding controls might affect layout, so we need
     // to re-do layout.
@@ -202,16 +210,18 @@ void Control::Show() {
 }
 
 void Control::Hide() {
-    if (!IsVisible())
+    if (!IsVisible()) {
         return;
+    }
     RequestRepaint(this); // request repaint before hiding, to trigger repaint
     bit::Set(stateBits, IsHiddenBit);
     RequestLayout(this);
 }
 
 void Control::SetPosition(const Gdiplus::Rect& p) {
-    if (p.Equals(pos))
+    if (p.Equals(pos)) {
         return; // perf optimization
+    }
     bool sizeChanged = (p.Width != pos.Width) || (p.Height != pos.Height);
     // when changing position we need to invalidate both
     // before and after position
@@ -223,8 +233,9 @@ void Control::SetPosition(const Gdiplus::Rect& p) {
     p2.Inflate(1, 1);
     RequestRepaint(this, &p1, &p2);
     pos = p;
-    if (!sizeChanged)
+    if (!sizeChanged) {
         return;
+    }
     HwndWrapper* hwnd = GetRootHwndWnd(this);
     hwnd->evtMgr->NotifySizeChanged(this, p.Width, p.Height);
 }
@@ -234,8 +245,9 @@ void Control::MapMyToRootPos(int& x, int& y) const {
     x += pos.X;
     y += pos.Y;
     const Control* c = this;
-    if (c->parent)
+    if (c->parent) {
         c = c->parent;
+    }
     while (c && !c->hwndParent) {
         x += c->pos.X;
         y += c->pos.Y;
@@ -273,10 +285,12 @@ bool Control::SetStyle(Style* style) {
     bool changed;
     CachedStyle* currStyle = cachedStyle;
     cachedStyle = CacheStyle(style, &changed);
-    if (currStyle != cachedStyle)
+    if (currStyle != cachedStyle) {
         changed = true;
-    if (changed)
+    }
+    if (changed) {
         RequestRepaint(this);
+    }
     return changed;
 }
 } // namespace mui

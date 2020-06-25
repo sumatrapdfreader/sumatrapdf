@@ -236,11 +236,13 @@ ARGB ParseCssColor(const char* color) {
 
     // a bit too relaxed, but by skipping 0x and #
     // we'll easily parse all variations of hex-encoded values
-    if (color[0] == '0' && color[1] == 'x')
+    if (color[0] == '0' && color[1] == 'x') {
         color += 2;
+    }
 
-    if (*color == '#')
+    if (*color == '#') {
         ++color;
+    }
 
     // parse: #rgb, 0xrgb, rgb (which is a shortcut for #rrggbb)
     if (str::Parse(color, "%1x%1x%1x%$", &r, &g, &b)) {
@@ -274,11 +276,13 @@ ARGB ParseCssColor(const char* color) {
 }
 
 bool ColorData::operator==(const ColorData& other) const {
-    if (type != other.type)
+    if (type != other.type) {
         return false;
+    }
 
-    if (ColorSolid == type)
+    if (ColorSolid == type) {
         return solid.color == other.solid.color;
+    }
 
     if (ColorGradientLinear == type) {
         return (gradientLinear.mode == other.gradientLinear.mode) &&
@@ -310,21 +314,22 @@ int ElAlignData::CalcOffset(int elSize, int containerSize) const {
 }
 
 void Prop::Free() {
-    if (PropFontName == type)
+    if (PropFontName == type) {
         free(fontName);
-    else if (PropStyleName == type)
+    } else if (PropStyleName == type) {
         free(styleName);
-    else if (IsColorProp(type) && (ColorSolid == color.type))
+    } else if (IsColorProp(type) && (ColorSolid == color.type)) {
         ::delete color.solid.cachedBrush;
-    else if (IsColorProp(type) && (ColorGradientLinear == color.type)) {
+    } else if (IsColorProp(type) && (ColorGradientLinear == color.type)) {
         ::delete color.gradientLinear.cachedBrush;
         ::delete color.gradientLinear.rect;
     }
 }
 
 bool Prop::Eq(const Prop* other) const {
-    if (type != other->type)
+    if (type != other->type) {
         return false;
+    }
 
     switch (type) {
         case PropStyleName:
@@ -341,14 +346,17 @@ bool Prop::Eq(const Prop* other) const {
             return textAlign == other->textAlign;
     }
 
-    if (IsColorProp(type))
+    if (IsColorProp(type)) {
         return color == other->color;
+    }
 
-    if (IsWidthProp(type))
+    if (IsWidthProp(type)) {
         return width == other->width;
+    }
 
-    if (IsAlignProp(type))
+    if (IsAlignProp(type)) {
         return elAlign == other->elAlign;
+    }
 
     CrashIf(true);
     return false;
@@ -356,8 +364,9 @@ bool Prop::Eq(const Prop* other) const {
 
 static Prop* FindExistingProp(Prop* prop) {
     for (Prop* p : *gAllProps) {
-        if (p->Eq(prop))
+        if (p->Eq(prop)) {
             return p;
+        }
     }
     return nullptr;
 }
@@ -438,8 +447,9 @@ Prop* Prop::AllocColorSolid(PropType type, ARGB color) {
     Prop* res = UniqifyProp(p);
     CrashIf(res->color.type != ColorSolid);
     CrashIf(res->color.solid.color != color);
-    if (!res->color.solid.cachedBrush)
+    if (!res->color.solid.cachedBrush) {
         res->color.solid.cachedBrush = ::new SolidBrush(color);
+    }
     return res;
 }
 
@@ -497,8 +507,9 @@ void Style::Set(Prop* prop) {
     CrashIf(!prop);
     Prop*& p = props.FindEl([&](Prop* p2) { return p2->type == prop->type; });
     if (p) {
-        if (!prop->Eq(p))
+        if (!prop->Eq(p)) {
             ++gen;
+        }
         p = prop;
         return;
     }
@@ -538,8 +549,9 @@ void Style::SetBorderColor(ARGB color) {
 
 static bool FoundAllProps(Prop** props) {
     for (size_t i = 0; i < (size_t)PropsCount; i++) {
-        if (!props[i])
+        if (!props[i]) {
             return false;
+        }
     }
     return true;
 }
@@ -555,8 +567,9 @@ static bool GetAllProps(Style* style, Prop** props) {
     while (style) {
         for (Prop* p : style->props) {
             // PropStyleName is not inheritable
-            if ((PropStyleName == p->type) && inherited)
+            if ((PropStyleName == p->type) && inherited) {
                 continue;
+            }
             int propIdx = (int)p->type;
             CrashIf(propIdx >= (int)PropsCount);
             bool didSet = false;
@@ -564,8 +577,9 @@ static bool GetAllProps(Style* style, Prop** props) {
                 props[propIdx] = p;
                 didSet = true;
             }
-            if (didSet && FoundAllProps(props))
+            if (didSet && FoundAllProps(props)) {
                 return true;
+            }
         }
         style = style->GetInheritsFrom();
         inherited = true;
@@ -574,8 +588,9 @@ static bool GetAllProps(Style* style, Prop** props) {
 }
 
 static size_t GetStyleId(Style* style) {
-    if (!style)
+    if (!style) {
         return 0;
+    }
     return style->GetIdentity();
 }
 
@@ -587,8 +602,9 @@ static size_t GetStyleId(Style* style) {
 // If it exists and didn't change, we return cached entry.
 CachedStyle* CacheStyle(Style* style, bool* changedOut) {
     bool changedTmp;
-    if (!changedOut)
+    if (!changedOut) {
         changedOut = &changedTmp;
+    }
     *changedOut = false;
 
     ScopedMuiCritSec muiCs;
@@ -606,8 +622,9 @@ CachedStyle* CacheStyle(Style* style, bool* changedOut) {
 
     *changedOut = true;
     Prop* props[PropsCount] = {0};
-    if (!GetAllProps(style, props))
+    if (!GetAllProps(style, props)) {
         GetAllProps(gStyleDefault, props);
+    }
     for (size_t i = 0; i < dimof(props); i++) {
         CrashIf(!props[i]);
     }
@@ -651,8 +668,9 @@ CachedStyle* CachedStyleByName(const char* name) {
         return nullptr;
     }
     for (StyleCacheEntry* e : *gStyleCache) {
-        if (str::Eq(e->cachedStyle.styleName, name))
+        if (str::Eq(e->cachedStyle.styleName, name)) {
             return &e->cachedStyle;
+        }
     }
     return nullptr;
 }

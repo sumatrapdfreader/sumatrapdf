@@ -48,8 +48,9 @@ Gdiplus::Point Grid::GetCellPos(int row, int col) const {
 // if there were elements added/removed from the grid,
 // we need to rebuild info about cells
 void Grid::RebuildCellDataIfNeeded() {
-    if (!dirty)
+    if (!dirty) {
         return;
+    }
 
     // calculate how many columns and rows we need and build 2d cells
     // array, a cell for each column/row
@@ -58,10 +59,12 @@ void Grid::RebuildCellDataIfNeeded() {
 
     for (Grid::CellData& d : els) {
         int maxCols = d.col + d.colSpan;
-        if (maxCols > cols)
+        if (maxCols > cols) {
             cols = maxCols;
-        if (d.row >= rows)
+        }
+        if (d.row >= rows) {
             rows = d.row + 1;
+        }
     }
 
     free(cells);
@@ -105,8 +108,9 @@ void Grid::Paint(Graphics* gfx, int offX, int offY) {
     DrawBorder(gfx, r, s);
 
     for (Grid::CellData& d : els) {
-        if (!d.cachedStyle)
+        if (!d.cachedStyle) {
             continue;
+        }
 
         Gdiplus::Rect cellRect(GetCellBbox(&d));
         cellRect.X += offX;
@@ -128,8 +132,9 @@ Gdiplus::Size Grid::Measure(const Gdiplus::Size availableSize) {
         cell->desiredSize.Width = 0;
         cell->desiredSize.Height = 0;
         el = d.el;
-        if (!el->IsVisible())
+        if (!el->IsVisible()) {
             continue;
+        }
 
         // calculate max dx of each column (dx of widest cell in the row)
         //  and max dy of each row (dy of tallest cell in the column)
@@ -140,19 +145,22 @@ Gdiplus::Size Grid::Measure(const Gdiplus::Size availableSize) {
         cell->desiredSize = el->DesiredSize();
         // if a cell spans multiple columns, we don't count its size here
         if (d.colSpan == 1) {
-            if (cell->desiredSize.Width > maxColWidth[d.col])
+            if (cell->desiredSize.Width > maxColWidth[d.col]) {
                 maxColWidth[d.col] = cell->desiredSize.Width;
+            }
         }
-        if (cell->desiredSize.Height > maxRowHeight[d.row])
+        if (cell->desiredSize.Height > maxRowHeight[d.row]) {
             maxRowHeight[d.row] = cell->desiredSize.Height;
+        }
     }
 
     // account for cells with colSpan > 1. If cell.dx > total dx
     // of columns it spans, we widen the columns by equally
     // re-distributing the difference among columns
     for (Grid::CellData& d : els) {
-        if (d.colSpan == 1)
+        if (d.colSpan == 1) {
             continue;
+        }
         cell = GetCell(d.row, d.col);
 
         int totalDx = 0;
@@ -165,8 +173,9 @@ Gdiplus::Size Grid::Measure(const Gdiplus::Size availableSize) {
             int rest = diff % d.colSpan;
             // note: we could try to redistribute rest for ideal sizing instead of
             // over-sizing but not sure if that would matter in practice
-            if (rest > 0)
+            if (rest > 0) {
                 diffPerCol += 1;
+            }
             CrashIf(diffPerCol * d.colSpan < diff);
             for (int i = d.col; i < d.col + d.colSpan; i++) {
                 maxColWidth[i] += diffPerCol;

@@ -65,8 +65,9 @@ void EventMgr::RemoveEventsForControl(Control* c) {
 
 ControlEvents* EventMgr::EventsForControl(Control* c) {
     for (EventHandler& h : eventHandlers) {
-        if (h.ctrlSource == c)
+        if (h.ctrlSource == c) {
             return h.events;
+        }
     }
     ControlEvents* events = new ControlEvents();
     EventHandler eh = {c, events};
@@ -76,8 +77,9 @@ ControlEvents* EventMgr::EventsForControl(Control* c) {
 
 NamedEvents* EventMgr::EventsForName(const char* name) {
     for (NamedEventHandler& h : namedEventHandlers) {
-        if (str::EqI(h.name, name))
+        if (str::EqI(h.name, name)) {
             return h.namedEvents;
+        }
     }
     NamedEvents* namedEvents = new NamedEvents();
     NamedEventHandler eh = {str::Dup(name), namedEvents};
@@ -87,8 +89,9 @@ NamedEvents* EventMgr::EventsForName(const char* name) {
 
 void EventMgr::NotifyNamedEventClicked(Control* c, int x, int y) {
     const char* name = c->namedEventClick;
-    if (!name)
+    if (!name) {
         return;
+    }
     for (NamedEventHandler& h : namedEventHandlers) {
         if (str::EqI(h.name, name)) {
             h.namedEvents->Clicked(c, x, y);
@@ -146,8 +149,9 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled) {
 
     wantedInputMask = bit::FromBit<u16>(Control::WantsMouseMoveBit);
     count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &windows);
-    if (0 == count)
+    if (0 == count) {
         return 0;
+    }
     c = windows.Last().c;
     c->MapRootToMyPos(x, y);
     c->NotifyMouseMove(x, y);
@@ -163,8 +167,9 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled) {
     Vec<CtrlAndOffset> controls;
     u16 wantedInputMask = bit::FromBit<u16>(Control::WantsMouseClickBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &controls);
-    if (0 == count)
+    if (0 == count) {
         return 0;
+    }
     // TODO: should this take z-order into account?
     Control* c = controls.Last().c;
     c->MapRootToMyPos(x, y);
@@ -220,8 +225,9 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wp, LPARAM lp, bool& wasHandled) {
 
     if (WM_SETCURSOR == msg) {
         POINT pt;
-        if (GetCursorPos(&pt) && ScreenToClient(wndRoot->hwndParent, &pt))
+        if (GetCursorPos(&pt) && ScreenToClient(wndRoot->hwndParent, &pt)) {
             return OnSetCursor(pt.x, pt.y, wasHandled);
+        }
         return 0;
     }
 

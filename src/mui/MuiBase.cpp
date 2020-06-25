@@ -83,11 +83,13 @@ bool GraphicsCacheEntry::Create() {
     // using a small bitmap under assumption that Graphics used only
     // for measuring text doesn't need the actual bitmap
     bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
-    if (!bmp)
+    if (!bmp) {
         return false;
+    }
     gfx = ::new Graphics((Image*)bmp);
-    if (!gfx)
+    if (!gfx) {
         return false;
+    }
     InitGraphicsMode(gfx);
     return true;
 }
@@ -117,10 +119,12 @@ void DestroyBase() {
 }
 
 bool CachedFont::SameAs(const WCHAR* otherName, float otherSizePt, FontStyle otherStyle) const {
-    if (sizePt != otherSizePt)
+    if (sizePt != otherSizePt) {
         return false;
-    if (style != otherStyle)
+    }
+    if (style != otherStyle) {
         return false;
+    }
     return str::Eq(name, otherName);
 }
 
@@ -186,8 +190,9 @@ Graphics* AllocGraphicsForMeasureText() {
     GraphicsCacheEntry ce;
     ce.Create();
     gGraphicsCache->Append(ce);
-    if (gGraphicsCache->size() < 64)
+    if (gGraphicsCache->size() < 64) {
         return ce.gfx;
+    }
 
     // try to limit the size of cache by evicting the oldest entries, but don't remove
     // first (for ui thread) or last (one we just added) entries
