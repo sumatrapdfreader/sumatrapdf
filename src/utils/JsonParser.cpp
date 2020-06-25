@@ -7,14 +7,16 @@
 namespace json {
 
 static inline const char* SkipWS(const char* s) {
-    while (str::IsWs(*s))
+    while (str::IsWs(*s)) {
         s++;
+    }
     return s;
 }
 
 static inline const char* SkipDigits(const char* s) {
-    while (str::IsDigit(*s))
+    while (str::IsDigit(*s)) {
         s++;
+    }
     return s;
 }
 
@@ -32,8 +34,9 @@ static const char* ParseValue(ParseArgs& args, const char* data);
 
 static const char* ExtractString(str::Str& string, const char* data) {
     while (*++data) {
-        if ('"' == *data)
+        if ('"' == *data) {
             return data + 1;
+        }
         if ('\\' != *data) {
             string.AppendChar(*data);
             continue;
@@ -81,35 +84,41 @@ static const char* ExtractString(str::Str& string, const char* data) {
 static const char* ParseString(ParseArgs& args, const char* data) {
     str::Str string;
     data = ExtractString(string, data);
-    if (data)
+    if (data) {
         args.canceled = !args.visitor->Visit(args.path.Get(), string.Get(), Type_String);
+    }
     return data;
 }
 
 static const char* ParseNumber(ParseArgs& args, const char* data) {
     const char* start = data;
     // integer part
-    if ('-' == *data)
+    if ('-' == *data) {
         data++;
-    if ('0' == *data)
+    }
+    if ('0' == *data) {
         data++;
-    else if (str::IsDigit(*data))
+    } else if (str::IsDigit(*data)) {
         data = SkipDigits(data + 1);
-    else
+    } else {
         return nullptr;
+    }
     // fractional part
-    if ('.' == *data)
+    if ('.' == *data) {
         data = SkipDigits(data + 1);
+    }
     // magnitude
     if ('e' == *data || 'E' == *data) {
         data++;
-        if ('+' == *data || '-' == *data)
+        if ('+' == *data || '-' == *data) {
             data++;
+        }
         data = SkipDigits(data + 1);
     }
     // validity check
-    if (!str::IsDigit(*(data - 1)) || str::IsDigit(*data))
+    if (!str::IsDigit(*(data - 1)) || str::IsDigit(*data)) {
         return nullptr;
+    }
 
     char* number = str::DupN(start, data - start);
     args.canceled = !args.visitor->Visit(args.path.Get(), number, Type_Number);
@@ -119,61 +128,73 @@ static const char* ParseNumber(ParseArgs& args, const char* data) {
 
 static const char* ParseObject(ParseArgs& args, const char* data) {
     data = SkipWS(data + 1);
-    if ('}' == *data)
+    if ('}' == *data) {
         return data + 1;
+    }
 
     size_t pathIdx = args.path.size();
     for (;;) {
         data = SkipWS(data);
-        if ('"' != *data)
+        if ('"' != *data) {
             return nullptr;
+        }
         args.path.AppendChar('/');
         data = ExtractString(args.path, data);
-        if (!data)
+        if (!data) {
             return nullptr;
+        }
         data = SkipWS(data);
-        if (':' != *data)
+        if (':' != *data) {
             return nullptr;
+        }
 
         data = ParseValue(args, data + 1);
-        if (args.canceled || !data)
+        if (args.canceled || !data) {
             return data;
+        }
         args.path.RemoveAt(pathIdx, args.path.size() - pathIdx);
 
         data = SkipWS(data);
-        if ('}' == *data)
+        if ('}' == *data) {
             return data + 1;
-        if (',' != *data)
+        }
+        if (',' != *data) {
             return nullptr;
+        }
         data++;
     }
 }
 
 static const char* ParseArray(ParseArgs& args, const char* data) {
     data = SkipWS(data + 1);
-    if (']' == *data)
+    if (']' == *data) {
         return data + 1;
+    }
 
     size_t pathIdx = args.path.size();
     for (int idx = 0;; idx++) {
         args.path.AppendFmt("[%d]", idx);
         data = ParseValue(args, data);
-        if (args.canceled || !data)
+        if (args.canceled || !data) {
             return data;
+        }
         args.path.RemoveAt(pathIdx, args.path.size() - pathIdx);
 
         data = SkipWS(data);
-        if (']' == *data)
+        if (']' == *data) {
             return data + 1;
-        if (',' != *data)
+        }
+        if (',' != *data) {
             return nullptr;
+        }
         data++;
     }
 }
 
 static const char* ParseKeyword(ParseArgs& args, const char* data, const char* keyword, DataType type) {
-    if (!str::StartsWith(data, keyword))
+    if (!str::StartsWith(data, keyword)) {
         return nullptr;
+    }
     args.canceled = !args.visitor->Visit(args.path.Get(), keyword, type);
     return data + str::Len(keyword);
 }
@@ -212,11 +233,13 @@ static const char* ParseValue(ParseArgs& args, const char* data) {
 
 bool Parse(const char* data, ValueVisitor* visitor) {
     ParseArgs args(visitor);
-    if (str::StartsWith(data, UTF8_BOM))
+    if (str::StartsWith(data, UTF8_BOM)) {
         data += 3;
+    }
     const char* end = ParseValue(args, data);
-    if (!end)
+    if (!end) {
         return false;
+    }
     return args.canceled || !*SkipWS(end);
 }
 

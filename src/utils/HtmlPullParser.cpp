@@ -19,11 +19,13 @@ int HtmlEntityNameToRune(const char* name, size_t nameLen) {
 // returns -1 if didn't find
 int HtmlEntityNameToRune(const WCHAR* name, size_t nameLen) {
     char asciiName[MAX_ENTITY_NAME_LEN];
-    if (nameLen > MAX_ENTITY_NAME_LEN)
+    if (nameLen > MAX_ENTITY_NAME_LEN) {
         return -1;
+    }
     for (size_t i = 0; i < nameLen; i++) {
-        if (name[i] > 127)
+        if (name[i] > 127) {
             return -1;
+        }
         asciiName[i] = (char)name[i];
     }
     return FindHtmlEntityRune(asciiName, nameLen);
@@ -39,8 +41,9 @@ bool SkipUntil(const char*& s, const char* end, char c) {
 bool SkipUntil(const char*& s, const char* end, const char* term) {
     size_t len = str::Len(term);
     for (; s < end; s++) {
-        if (s + len <= end && str::StartsWith(s, term))
+        if (s + len <= end && str::StartsWith(s, term)) {
             return true;
+        }
     }
     return false;
 }
@@ -86,8 +89,9 @@ bool IsSpaceOnly(const char* s, const char* end) {
 }
 
 void MemAppend(char*& dst, const char* s, size_t len) {
-    if (0 == len)
+    if (0 == len) {
         return;
+    }
     memcpy(dst, s, len);
     dst += len;
 }
@@ -98,22 +102,27 @@ void MemAppend(char*& dst, const char* s, size_t len) {
 // returns a pointer to the first character after the entity
 const char* ResolveHtmlEntity(const char* s, size_t len, int& rune) {
     const char* entEnd = str::Parse(s, len, "#%d%?;", &rune);
-    if (entEnd)
+    if (entEnd) {
         return entEnd;
+    }
     entEnd = str::Parse(s, len, "#x%x%?;", &rune);
-    if (entEnd)
+    if (entEnd) {
         return entEnd;
+    }
 
     // go to the end of a potential named entity
-    for (entEnd = s; entEnd < s + len && isalnum((unsigned char)*entEnd); entEnd++)
+    for (entEnd = s; entEnd < s + len && isalnum((unsigned char)*entEnd); entEnd++) {
         ;
+    }
     if (entEnd != s) {
         rune = HtmlEntityNameToRune(s, entEnd - s);
-        if (-1 == rune)
+        if (-1 == rune) {
             return nullptr;
+        }
         // skip the trailing colon - if there is one
-        if (entEnd < s + len && *entEnd == ';')
+        if (entEnd < s + len && *entEnd == ';') {
             entEnd++;
+        }
         return entEnd;
     }
 
@@ -135,8 +144,9 @@ const char* ResolveHtmlEntities(const char* s, const char* end, Allocator* alloc
     for (;;) {
         bool found = SkipUntil(curr, end, '&');
         if (!found) {
-            if (!res)
+            if (!res) {
                 return s;
+            }
             // copy the remaining string
             MemAppend(dst, s, end - s);
             break;
@@ -171,8 +181,9 @@ const char* ResolveHtmlEntities(const char* s, const char* end, Allocator* alloc
 // convenience function for the above that always allocates
 char* ResolveHtmlEntities(const char* s, size_t len) {
     const char* tmp = ResolveHtmlEntities(s, s + len, nullptr);
-    if (tmp == s)
+    if (tmp == s) {
         return str::DupN(s, len);
+    }
     return (char*)tmp;
 }
 
@@ -245,12 +256,15 @@ bool HtmlToken::NameIsNS(const char* nameToCheck, const char* ns) const {
 // reparse point is an address within html that we can
 // can feed to HtmlPullParser() to start parsing from that point
 const char* HtmlToken::GetReparsePoint() const {
-    if (IsStartTag() || IsEmptyElementEndTag())
+    if (IsStartTag() || IsEmptyElementEndTag()) {
         return s - 1;
-    if (IsEndTag())
+    }
+    if (IsEndTag()) {
         return s - 2;
-    if (IsText())
+    }
+    if (IsText()) {
         return s;
+    }
     CrashIf(true); // don't call us on error tokens
     return nullptr;
 }
@@ -258,8 +272,9 @@ const char* HtmlToken::GetReparsePoint() const {
 AttrInfo* HtmlToken::GetAttrByName(const char* name) {
     nextAttr = nullptr; // start from the beginning
     for (AttrInfo* a = NextAttr(); a; a = NextAttr()) {
-        if (a->NameIs(name))
+        if (a->NameIs(name)) {
             return a;
+        }
     }
     return nullptr;
 }
@@ -267,8 +282,9 @@ AttrInfo* HtmlToken::GetAttrByName(const char* name) {
 AttrInfo* HtmlToken::GetAttrByNameNS(const char* name, const char* attrNS) {
     nextAttr = nullptr; // start from the beginning
     for (AttrInfo* a = NextAttr(); a; a = NextAttr()) {
-        if (a->NameIsNS(name, attrNS))
+        if (a->NameIsNS(name, attrNS)) {
             return a;
+        }
     }
     return nullptr;
 }
@@ -279,8 +295,9 @@ AttrInfo* HtmlToken::GetAttrByNameNS(const char* name, const char* attrNS) {
 AttrInfo* HtmlToken::NextAttr() {
     // start after the last attribute found (or the beginning)
     const char* curr = nextAttr;
-    if (!curr)
+    if (!curr) {
         curr = s + nLen;
+    }
     const char* end = s + sLen;
 
     // parse attribute name
@@ -293,8 +310,9 @@ AttrInfo* HtmlToken::NextAttr() {
     attrInfo.name = curr;
     SkipName(curr, end);
     attrInfo.nameLen = curr - attrInfo.name;
-    if (0 == attrInfo.nameLen)
+    if (0 == attrInfo.nameLen) {
         goto NoNextAttr;
+    }
     SkipWs(curr, end);
     if ((curr == end) || ('=' != *curr)) {
         // attributes without values get their names as value in HTML
@@ -315,8 +333,9 @@ AttrInfo* HtmlToken::NextAttr() {
         // attribute with quoted value
         ++curr;
         attrInfo.val = curr;
-        if (!SkipUntil(curr, end, *(curr - 1)))
+        if (!SkipUntil(curr, end, *(curr - 1))) {
             goto NoNextAttr;
+        }
         attrInfo.valLen = curr - attrInfo.val;
         ++curr;
     } else {
@@ -341,8 +360,9 @@ static bool SkipUntilTagEnd(const char*& s, const char* end) {
             return true;
         }
         if (('\'' == c) || ('"' == c)) {
-            if (!SkipUntil(s, end, c))
+            if (!SkipUntil(s, end, c)) {
                 return false;
+            }
             ++s;
         }
     }
@@ -351,8 +371,9 @@ static bool SkipUntilTagEnd(const char*& s, const char* end) {
 
 // Returns next part of html or nullptr if finished
 HtmlToken* HtmlPullParser::Next() {
-    if (currPos >= end)
+    if (currPos >= end) {
         return nullptr;
+    }
 
 Next:
     const char* start = currPos;
