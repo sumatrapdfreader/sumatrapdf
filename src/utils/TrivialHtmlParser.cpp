@@ -107,15 +107,8 @@ WCHAR* DecodeHtmlEntitites(const char* string, uint codepage) {
 }
 
 HtmlParser::HtmlParser()
-    : html(nullptr),
-      freeHtml(false),
-      rootElement(nullptr),
-      currElement(nullptr),
-      elementsCount(0),
-      attributesCount(0),
-      codepage(CP_ACP),
-      error(ErrParsingNoError),
-      errorContext(nullptr) {
+
+{
 }
 
 HtmlParser::~HtmlParser() {

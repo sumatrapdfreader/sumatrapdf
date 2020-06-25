@@ -38,18 +38,18 @@ class HtmlParser {
     PoolAllocator allocator;
 
     // text to parse. It can be changed.
-    char* html;
+    char* html{nullptr};
     // true if s was allocated by ourselves, false if managed
     // by the caller
-    bool freeHtml;
+    bool freeHtml{false};
     // the codepage used for converting text to Unicode
-    uint codepage;
+    uint codepage{CP_ACP};
 
-    size_t elementsCount;
-    size_t attributesCount;
+    size_t elementsCount{0};
+    size_t attributesCount{0};
 
-    HtmlElement* rootElement;
-    HtmlElement* currElement;
+    HtmlElement* rootElement{nullptr};
+    HtmlElement* currElement{nullptr};
 
     HtmlElement* AllocElement(HtmlTag tag, char* name, HtmlElement* parent);
     HtmlAttr* AllocAttr(char* name, HtmlAttr* next);
@@ -67,8 +67,8 @@ class HtmlParser {
     void Reset();
 
   public:
-    HtmlParseError error;     // parsing error, a static string
-    const char* errorContext; // pointer within html showing which part we failed to parse
+    HtmlParseError error{ErrParsingNoError}; // parsing error, a static string
+    const char* errorContext{nullptr};       // pointer within html showing which part we failed to parse
 
     HtmlParser();
     ~HtmlParser();

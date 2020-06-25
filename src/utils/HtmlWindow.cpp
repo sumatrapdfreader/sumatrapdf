@@ -232,7 +232,7 @@ static const GUID CLSID_HW_IInternetProtocol = {0xf1ec293f,
 
 class HW_IInternetProtocolInfo : public IInternetProtocolInfo {
   public:
-    HW_IInternetProtocolInfo() : refCount(1) {
+    HW_IInternetProtocolInfo() {
     }
 
   protected:
@@ -292,7 +292,7 @@ class HW_IInternetProtocolInfo : public IInternetProtocolInfo {
     }
 
   protected:
-    LONG refCount;
+    LONG refCount{1};
 };
 
 ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release() {
@@ -519,7 +519,7 @@ class HW_IInternetProtocolFactory : public IClassFactory {
     }
 
   public:
-    HW_IInternetProtocolFactory() : refCount(1) {
+    HW_IInternetProtocolFactory() {
     }
 
     // IUnknown
@@ -537,7 +537,7 @@ class HW_IInternetProtocolFactory : public IClassFactory {
     }
 
   protected:
-    LONG refCount;
+    LONG refCount{1};
 };
 
 STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release() {
@@ -1161,10 +1161,10 @@ IDownloadManager : public IUnknown {
 #endif
 
 class HW_IDownloadManager : public IDownloadManager {
-    LONG refCount;
+    LONG refCount{1};
 
   public:
-    HW_IDownloadManager() : refCount(1) {
+    HW_IDownloadManager() {
     }
     ~HW_IDownloadManager() {
     }
@@ -1372,15 +1372,15 @@ class HtmlMoniker : public IMoniker {
     }
 
   private:
-    LONG refCount;
+    LONG refCount{1};
 
-    char* htmlData;
-    IStream* htmlStream;
+    char* htmlData{nullptr};
+    IStream* htmlStream{nullptr};
 
-    WCHAR* baseUrl;
+    WCHAR* baseUrl{nullptr};
 };
 
-HtmlMoniker::HtmlMoniker() : refCount(1), htmlData(nullptr), htmlStream(nullptr), baseUrl(nullptr) {
+HtmlMoniker::HtmlMoniker() {
 }
 
 HtmlMoniker::~HtmlMoniker() {
