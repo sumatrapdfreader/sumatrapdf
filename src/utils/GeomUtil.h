@@ -164,14 +164,18 @@ struct RectT {
     }
 
     bool Contains(PointT<T> pt) const {
-        if (pt.x < this->x)
+        if (pt.x < this->x) {
             return false;
-        if (pt.x > this->x + this->dx)
+        }
+        if (pt.x > this->x + this->dx) {
             return false;
-        if (pt.y < this->y)
+        }
+        if (pt.y < this->y) {
             return false;
-        if (pt.y > this->y + this->dy)
+        }
+        if (pt.y > this->y + this->dy) {
             return false;
+        }
         return true;
     }
 

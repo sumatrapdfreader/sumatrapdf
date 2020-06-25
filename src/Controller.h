@@ -99,27 +99,31 @@ class Controller {
         return 1 <= pageNo && pageNo <= PageCount();
     }
     virtual bool GoToNextPage() {
-        if (CurrentPageNo() == PageCount())
+        if (CurrentPageNo() == PageCount()) {
             return false;
+        }
         GoToPage(CurrentPageNo() + 1, false);
         return true;
     }
     virtual bool GoToPrevPage(bool toBottom = false) {
         UNUSED(toBottom);
-        if (CurrentPageNo() == 1)
+        if (CurrentPageNo() == 1) {
             return false;
+        }
         GoToPage(CurrentPageNo() - 1, false);
         return true;
     }
     virtual bool GoToFirstPage() {
-        if (CurrentPageNo() == 1)
+        if (CurrentPageNo() == 1) {
             return false;
+        }
         GoToPage(1, true);
         return true;
     }
     virtual bool GoToLastPage() {
-        if (CurrentPageNo() == PageCount())
+        if (CurrentPageNo() == PageCount()) {
             return false;
+        }
         GoToPage(PageCount(), true);
         return true;
     }
