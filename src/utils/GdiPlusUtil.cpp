@@ -94,8 +94,9 @@ RectF MeasureTextAccurate2(Graphics* g, Font* f, const WCHAR* s, int len) {
     float totalDx = 0;
     for (int i = 0; i < len; i++) {
         r[i].GetBounds(&bbox, g);
-        if (bbox.Height > maxDy)
+        if (bbox.Height > maxDy) {
             maxDy = bbox.Height;
+        }
         totalDx += bbox.Width;
     }
     bbox.Width = totalDx;
@@ -134,8 +135,9 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
     }
     RectF bbox;
     r.GetBounds(&bbox, g);
-    if (bbox.Width != 0)
+    if (bbox.Width != 0) {
         bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float)len);
+    }
     return bbox;
 }
 
@@ -234,13 +236,15 @@ size_t StringLenForWidth(Graphics* g, Font* f, const WCHAR* s, size_t len, float
         if (1 == dir) {
             // if advancing length, we know that previous string did fit, so if
             // the new one doesn't fit, the previous length was the right one
-            if (r.Width > dx)
+            if (r.Width > dx) {
                 return n - 1;
+            }
         } else {
             // if decreasing length, we know that previous string didn't fit, so if
             // the one one fits, it's of the correct length
-            if (r.Width < dx)
+            if (r.Width < dx) {
                 return n;
+            }
         }
     }
 }
@@ -267,18 +271,20 @@ float GetSpaceDx(Graphics* g, Font* f, TextMeasureAlgorithm algo) {
 
 void GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation) {
     rotation = rotation % 360;
-    if (rotation < 0)
+    if (rotation < 0) {
         rotation = rotation + 360;
-    if (90 == rotation)
+    }
+    if (90 == rotation) {
         m.Translate(0, -pageRect.Height, MatrixOrderAppend);
-    else if (180 == rotation)
+    } else if (180 == rotation) {
         m.Translate(-pageRect.Width, -pageRect.Height, MatrixOrderAppend);
-    else if (270 == rotation)
+    } else if (270 == rotation) {
         m.Translate(-pageRect.Width, 0, MatrixOrderAppend);
-    else if (0 == rotation)
+    } else if (0 == rotation) {
         m.Translate(0, 0, MatrixOrderAppend);
-    else
+    } else {
         CrashIf(true);
+    }
 
     m.Scale(zoom, zoom, MatrixOrderAppend);
     m.Rotate((float)rotation, MatrixOrderAppend);
@@ -291,8 +297,9 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     if (FAILED(hr)) \
         return nullptr;
     ScopedComPtr<IWICImagingFactory> pFactory;
-    if (!pFactory.Create(CLSID_WICImagingFactory))
+    if (!pFactory.Create(CLSID_WICImagingFactory)) {
         return nullptr;
+    }
     ScopedComPtr<IWICBitmapDecoder> pDecoder;
     HR(pFactory->CreateDecoderFromStream(stream, nullptr, WICDecodeMetadataCacheOnDemand, &pDecoder));
     ScopedComPtr<IWICBitmapFrameDecode> srcFrame;
@@ -310,8 +317,9 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     Gdiplus::Rect bmpRect(0, 0, w, h);
     BitmapData bmpData;
     Status ok = bmp.LockBits(&bmpRect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
-    if (ok != Ok)
+    if (ok != Ok) {
         return nullptr;
+    }
     HR(pConverter->CopyPixels(nullptr, bmpData.Stride, bmpData.Stride * h, (BYTE*)bmpData.Scan0));
     bmp.UnlockBits(&bmpData);
     bmp.SetResolution((float)xres, (float)yres);
@@ -478,16 +486,17 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
                 // "logical screen" size which is sometimes too large
                 size_t ix = 13;
                 // skip the global color table
-                if ((r.Byte(10) & 0x80))
+                if ((r.Byte(10) & 0x80)) {
                     ix += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
+                }
                 while (ix + 8 < len) {
                     if (r.Byte(ix) == 0x2C) {
                         result.Width = r.WordLE(ix + 5);
                         result.Height = r.WordLE(ix + 7);
                         break;
-                    } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xF9)
+                    } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xF9) {
                         ix += 8;
-                    else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFE) {
+                    } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFE) {
                         const u8* commentEnd = r.Find(ix + 2, 0x00);
                         ix = commentEnd ? commentEnd - data + 1 : len;
                     } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0x01 && ix + 15 < len) {
@@ -496,8 +505,9 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
                     } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFF && ix + 14 < len) {
                         const u8* applicationDataEnd = r.Find(ix + 14, 0x00);
                         ix = applicationDataEnd ? applicationDataEnd - data + 1 : len;
-                    } else
+                    } else {
                         break;
+                    }
                 }
             }
             break;
@@ -522,20 +532,21 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
                 WORD count = idx <= len - 2 ? r.Word(idx, isBE) : 0;
                 for (idx += 2; count > 0 && idx <= len - 12; count--, idx += 12) {
                     WORD tag = r.Word(idx, isBE), type = r.Word(idx + 2, isBE);
-                    if (r.DWord(idx + 4, isBE) != 1)
+                    if (r.DWord(idx + 4, isBE) != 1) {
                         continue;
-                    else if (WIDTH == tag && 4 == type)
+                    } else if (WIDTH == tag && 4 == type) {
                         result.Width = r.DWord(idx + 8, isBE);
-                    else if (WIDTH == tag && 3 == type)
+                    } else if (WIDTH == tag && 3 == type) {
                         result.Width = r.Word(idx + 8, isBE);
-                    else if (WIDTH == tag && 1 == type)
+                    } else if (WIDTH == tag && 1 == type) {
                         result.Width = r.Byte(idx + 8);
-                    else if (HEIGHT == tag && 4 == type)
+                    } else if (HEIGHT == tag && 4 == type) {
                         result.Height = r.DWord(idx + 8, isBE);
-                    else if (HEIGHT == tag && 3 == type)
+                    } else if (HEIGHT == tag && 3 == type) {
                         result.Height = r.Word(idx + 8, isBE);
-                    else if (HEIGHT == tag && 1 == type)
+                    } else if (HEIGHT == tag && 1 == type) {
                         result.Height = r.Byte(idx + 8);
+                    }
                 }
             }
             break;
@@ -586,8 +597,9 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
         // let GDI+ extract the image size if we've failed
         // (currently happens for animated GIF)
         Bitmap* bmp = BitmapFromData(data, len);
-        if (bmp)
+        if (bmp) {
             result = Gdiplus::Size(bmp->GetWidth(), bmp->GetHeight());
+        }
         delete bmp;
     }
 
@@ -598,11 +610,13 @@ CLSID GetEncoderClsid(const WCHAR* format) {
     CLSID null = {0};
     uint numEncoders, size;
     Status ok = Gdiplus::GetImageEncodersSize(&numEncoders, &size);
-    if (ok != Ok || 0 == size)
+    if (ok != Ok || 0 == size) {
         return null;
+    }
     ScopedMem<Gdiplus::ImageCodecInfo> codecInfo((Gdiplus::ImageCodecInfo*)malloc(size));
-    if (!codecInfo)
+    if (!codecInfo) {
         return null;
+    }
     GetImageEncoders(numEncoders, size, codecInfo);
     for (uint j = 0; j < numEncoders; j++) {
         if (str::Eq(codecInfo[j].MimeType, format)) {

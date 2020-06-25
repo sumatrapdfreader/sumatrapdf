@@ -69,8 +69,9 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
             unsigned char* line = (unsigned char*)bmpData.Scan0 + y * bmpData.Stride;
             for (int x = 0; x < w; x++) {
                 int read = fz_read(ctx, stm, line, cs->n);
-                if (read != cs->n)
+                if (read != cs->n) {
                     fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for image");
+                }
                 if (3 == cs->n) { // RGB -> BGR
                     std::swap(line[0], line[2]);
                     line += 3;
@@ -78,8 +79,9 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
                     line[1] = line[2] = line[0];
                     line += 3;
                 } else if (4 == cs->n) { // CMYK color inversion
-                    for (int k = 0; k < 4; k++)
+                    for (int k = 0; k < 4; k++) {
                         line[k] = 255 - line[k];
+                    }
                     line += 4;
                 }
             }
@@ -103,8 +105,9 @@ fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds
                               fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha) {
     fz_pixmap* cvt;
 
-    if (!ds && !keep_alpha)
+    if (!ds && !keep_alpha) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "cannot both throw away and keep alpha");
+    }
 
     cvt = fz_new_pixmap(ctx, ds, pix->w, pix->h, pix->seps, keep_alpha);
 
@@ -112,10 +115,11 @@ fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds
     cvt->yres = pix->yres;
     cvt->x = pix->x;
     cvt->y = pix->y;
-    if (pix->flags & FZ_PIXMAP_FLAG_INTERPOLATE)
+    if (pix->flags & FZ_PIXMAP_FLAG_INTERPOLATE) {
         cvt->flags |= FZ_PIXMAP_FLAG_INTERPOLATE;
-    else
+    } else {
         cvt->flags &= ~FZ_PIXMAP_FLAG_INTERPOLATE;
+    }
 
     fz_try(ctx) {
         fz_convert_pixmap_samples(ctx, pix, cvt, prf, default_cs, color_params, 1);
@@ -184,18 +188,21 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int le
 }
 
 Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
-    if (len > INT_MAX || len < 12)
+    if (len > INT_MAX || len < 12) {
         return nullptr;
+    }
 
     fz_context* ctx = fz_new_context(nullptr, nullptr, 0);
-    if (!ctx)
+    if (!ctx) {
         return nullptr;
+    }
 
     Gdiplus::Bitmap* result = nullptr;
-    if (str::StartsWith(data, "\xFF\xD8"))
+    if (str::StartsWith(data, "\xFF\xD8")) {
         result = ImageFromJpegData(ctx, data, (int)len);
-    else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12))
+    } else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12)) {
         result = ImageFromJp2Data(ctx, data, (int)len);
+    }
 
     fz_drop_context(ctx);
 

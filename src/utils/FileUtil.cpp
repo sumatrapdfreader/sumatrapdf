@@ -374,8 +374,9 @@ static bool MatchWildcardsRec(const WCHAR* fileName, const WCHAR* filter) {
             return AtEndOf(fileName);
         case '*':
             filter++;
-            while (!AtEndOf(fileName) && !MatchWildcardsRec(fileName, filter))
+            while (!AtEndOf(fileName) && !MatchWildcardsRec(fileName, filter)) {
                 fileName++;
+            }
             return !AtEndOf(fileName) || AtEndOf(filter) || *filter == ';';
         case '?':
             return !AtEndOf(fileName) && MatchWildcardsRec(fileName + 1, filter + 1);
