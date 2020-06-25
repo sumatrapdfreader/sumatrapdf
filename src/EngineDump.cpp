@@ -21,7 +21,7 @@
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
-static void Out1(char* msg) {
+static void Out1(const char* msg) {
     printf("%s", msg);
 }
 

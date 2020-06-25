@@ -38,7 +38,7 @@
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
-#include "Resource.h"
+#include "resource.h"
 #include "Version.h"
 #include "Installer.h"
 

@@ -49,8 +49,7 @@ static bool gDisableSymbolsDownload = false;
 
 // Get url for file with symbols. Caller needs to free().
 static WCHAR* BuildSymbolsUrl() {
-    WCHAR* urlBase = nullptr;
-    WCHAR* ver = nullptr;
+    const WCHAR* urlBase = nullptr;
     if (gIsDailyBuild) {
         // daily is also pre-release, just stored under a different url
         urlBase = DLURLBASE "daily/SumatraPDF-prerel-" TEXT(QM(PRE_RELEASE_VER));
@@ -62,7 +61,7 @@ static WCHAR* BuildSymbolsUrl() {
             urlBase = DLURLBASE "rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
         }
     }
-    WCHAR* is64 = IsProcess64() ? L"-64" : L"";
+    const WCHAR* is64 = IsProcess64() ? L"-64" : L"";
     return str::Format(L"%s%s.pdb.lzsa", urlBase, is64);
 }
 

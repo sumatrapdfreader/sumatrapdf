@@ -17,7 +17,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <io.h>
 #include "utils/FileUtil.h"
 #include "Translations.h"
-#include "Resource.h"
+#include "resource.h"
 #include "utils/Timer.h"
 #include "Version.h"
 #include "utils/WinUtil.h"

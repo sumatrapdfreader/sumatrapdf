@@ -14,5 +14,5 @@ enum class Actions {
 
 };
 
-Action* GetActionByClass(enum class Actions action);
+Action* GetActionByClass(enum Actions action);
 Action* GetActionByName(const char* name);

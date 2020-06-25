@@ -9,7 +9,7 @@
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/Wingui.h"
+#include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/LabelWithCloseWnd.h"

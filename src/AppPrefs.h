@@ -11,7 +11,7 @@ enum {
 
 namespace prefs {
 
-WCHAR* GetSettingsFileNameNoFree();
+const WCHAR* GetSettingsFileNameNoFree();
 WCHAR* GetSettingsPath();
 
 bool Load();

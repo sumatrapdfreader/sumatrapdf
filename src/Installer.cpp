@@ -39,7 +39,7 @@
 #include "GlobalPrefs.h"
 #include "AppUtil.h"
 #include "Flags.h"
-#include "Resource.h"
+#include "resource.h"
 #include "Version.h"
 #include "Installer.h"
 
@@ -168,7 +168,7 @@ static void CopySettingsFile() {
     AutoFreeWstr dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
 
     const WCHAR* appName = GetAppName();
-    WCHAR* prefsFileName = prefs::GetSettingsFileNameNoFree();
+    const WCHAR* prefsFileName = prefs::GetSettingsFileNameNoFree();
     AutoFreeWstr srcPath = path::Join(srcDir.data, appName, prefsFileName);
     AutoFreeWstr dstPath = path::Join(dstDir.data, appName, prefsFileName);
 

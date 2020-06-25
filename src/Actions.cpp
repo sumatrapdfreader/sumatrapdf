@@ -7,7 +7,7 @@
 
 VecSegmented<Action> gActions;
 
-Action* GetActionByClass(enum class Actions action) {
+Action* GetActionByClass(enum Actions action) {
     return gActions.AtPtr((int)action);
 }
 
