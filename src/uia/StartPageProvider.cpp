@@ -32,15 +32,17 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::AddRef(void) {
 ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Release(void) {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res)
+    if (0 == res) {
         delete this;
+    }
     return res;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Navigate(enum NavigateDirection direction,
                                                                          IRawElementProviderFragment** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     *pRetVal = nullptr;
     // no siblings, no children
@@ -57,12 +59,14 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Navigate(enum Na
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetRuntimeId(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     SAFEARRAY* psa = SafeArrayCreateVector(VT_I4, 0, 2);
-    if (!psa)
+    if (!psa) {
         return E_OUTOFMEMORY;
+    }
 
     // RuntimeID magic, use hwnd to differentiate providers of different windows
     int rId[] = {(int)canvasHwnd, SUMATRA_UIA_STARTPAGE_RUNTIME_ID};
@@ -76,8 +80,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetRuntimeId(SAF
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     // no other roots => return nullptr
     *pRetVal = nullptr;
@@ -95,8 +100,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_BoundingRect
 
 HRESULT STDMETHODCALLTYPE
 SumatraUIAutomationStartPageProvider::get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     *pRetVal = root;
     root->AddRef();
@@ -124,15 +130,17 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPropertyValue
 
 HRESULT STDMETHODCALLTYPE
 SumatraUIAutomationStartPageProvider::get_HostRawElementProvider(IRawElementProviderSimple** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
     *pRetVal = nullptr;
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_ProviderOptions(ProviderOptions* pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
     *pRetVal = ProviderOptions_ServerSideProvider;
     return S_OK;
 }

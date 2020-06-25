@@ -44,8 +44,9 @@ void SumatraUIAutomationProvider::OnDocumentUnload() {
 }
 
 void SumatraUIAutomationProvider::OnSelectionChanged() {
-    if (document)
+    if (document) {
         UiaRaiseAutomationEvent(document, UIA_Text_TextSelectionChangedEventId);
+    }
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(REFIID riid, void** ppv) {
@@ -63,8 +64,9 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::AddRef(void) {
 ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::Release(void) {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res)
+    if (0 == res) {
         delete this;
+    }
     return res;
 }
 
@@ -75,8 +77,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPatternProvider(PATTER
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPropertyValue(PROPERTYID propertyId, VARIANT* pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     if (propertyId == UIA_NamePropertyId) {
         pRetVal->vt = VT_BSTR;
@@ -105,16 +108,18 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_HostRawElementProvide
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_ProviderOptions(ProviderOptions* pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
     *pRetVal = ProviderOptions_ServerSideProvider;
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::Navigate(enum NavigateDirection direction,
                                                                 IRawElementProviderFragment** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     *pRetVal = nullptr;
     // no siblings, no parent
@@ -123,13 +128,15 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::Navigate(enum NavigateDir
         return S_OK;
     } else if (direction == NavigateDirection_FirstChild || direction == NavigateDirection_LastChild) {
         // return document content element, or the start page element
-        if (document)
+        if (document) {
             *pRetVal = document;
-        else
+        } else {
             *pRetVal = startpage;
+        }
 
-        if (*pRetVal)
+        if (*pRetVal) {
             (*pRetVal)->AddRef();
+        }
         return S_OK;
     } else {
         return E_INVALIDARG;
@@ -137,8 +144,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::Navigate(enum NavigateDir
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetRuntimeId(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     // top-level elements should return nullptr
     *pRetVal = nullptr;
@@ -146,8 +154,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetRuntimeId(SAFEARRAY** 
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     // no other roots => return nullptr
     *pRetVal = nullptr;
@@ -159,8 +168,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::SetFocus(void) {
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_BoundingRectangle(struct UiaRect* pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     // return Bounding Rect of the Canvas area
     RECT canvas_rect;
@@ -175,8 +185,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_BoundingRectangle(str
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     *pRetVal = this;
     (*pRetVal)->AddRef();
@@ -185,31 +196,36 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_FragmentRoot(IRawElem
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::ElementProviderFromPoint(double x, double y,
                                                                                 IRawElementProviderFragment** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     *pRetVal = this->GetElementFromPoint(x, y, this);
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetFocus(IRawElementProviderFragment** pRetVal) {
-    if (pRetVal == nullptr)
+    if (pRetVal == nullptr) {
         return E_POINTER;
+    }
 
     // whichever child exists in the tree has the focus
-    if (document)
+    if (document) {
         *pRetVal = document;
-    else
+    } else {
         *pRetVal = startpage;
-    if (*pRetVal)
+    }
+    if (*pRetVal) {
         (*pRetVal)->AddRef();
+    }
     return S_OK;
 }
 
 IRawElementProviderFragment* SumatraUIAutomationProvider::GetElementFromPoint(double x, double y,
                                                                               IRawElementProviderFragment* root) {
-    if (!root)
+    if (!root) {
         return nullptr;
+    }
 
     // check the children
     IRawElementProviderFragment* it;
