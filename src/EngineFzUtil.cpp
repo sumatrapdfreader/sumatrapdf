@@ -947,7 +947,8 @@ static RectD CalcDestRect(fz_link* link, fz_outline* outline) {
     if (is_external_link(uri)) {
         return result;
     }
-    float x, y;
+    float x = 0;
+    float y = 0;
     int pageNo = resolve_link(uri, &x, &y);
     if (pageNo == -1) {
         // SubmitCrashIf(pageNo == -1);

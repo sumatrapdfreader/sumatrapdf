@@ -53,8 +53,9 @@ using Gdiplus::SizeF;
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
 enum class DrawInstrType {
+    Unknown = 0,
     // a piece of text
-    String = 0,
+    String = 1,
     // elastic space takes at least spaceDx pixels but can take more
     // if a line is justified
     ElasticSpace,
@@ -78,7 +79,7 @@ enum class DrawInstrType {
 };
 
 struct DrawInstr {
-    DrawInstrType type;
+    DrawInstrType type{DrawInstrType::Unknown};
     union {
         // info specific to a given instruction
         struct {
@@ -88,7 +89,7 @@ struct DrawInstr {
         mui::CachedFont* font; // InstrSetFont
         ImageData img;         // InstrImage
     };
-    RectF bbox; // common to most instructions
+    RectF bbox{}; // common to most instructions
 
     DrawInstr() {
     }

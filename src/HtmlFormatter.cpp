@@ -1404,7 +1404,9 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
     // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
     // draw, so first draw text and then paint everything else
     textDraw->SetTextColor(textColor);
+#if 0
     auto t = TimeGet();
+#endif
     textDraw->Lock();
     for (DrawInstr& i : *drawInstructions) {
         RectF bbox = i.bbox;
@@ -1423,10 +1425,10 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         }
     }
     textDraw->Unlock();
-    if (false) {
+#if 0
         double dur = TimeSinceInMs(t);
         logf("DrawHtmlPage: textDraw %.2f ms\n", dur);
-    }
+#endif
 
     Status status;
     for (DrawInstr& i : *drawInstructions) {
