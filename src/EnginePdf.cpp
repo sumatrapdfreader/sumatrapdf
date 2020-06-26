@@ -318,9 +318,9 @@ class EnginePdf : public EngineBase {
 
     bool BenchLoadPage(int pageNo) override;
 
-    Vec<PageElement*>* GetElements(int pageNo) override;
-    PageElement* GetElementAtPos(int pageNo, PointD pt) override;
-    RenderedBitmap* GetImageForPageElement(PageElement*) override;
+    Vec<IPageElement*>* GetElements(int pageNo) override;
+    IPageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
@@ -1278,14 +1278,14 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     return bitmap;
 }
 
-PageElement* EnginePdf::GetElementAtPos(int pageNo, PointD pt) {
+IPageElement* EnginePdf::GetElementAtPos(int pageNo, PointD pt) {
     FzPageInfo* pageInfo = GetFzPageInfoFast(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
-Vec<PageElement*>* EnginePdf::GetElements(int pageNo) {
-    auto* pageInfo = GetFzPageInfoFast(pageNo);
-    auto res = new Vec<PageElement*>();
+Vec<IPageElement*>* EnginePdf::GetElements(int pageNo) {
+    auto pageInfo = GetFzPageInfoFast(pageNo);
+    auto res = new Vec<IPageElement*>();
     FzGetElements(res, pageInfo);
     if (res->IsEmpty()) {
         delete res;
@@ -1294,7 +1294,8 @@ Vec<PageElement*>* EnginePdf::GetElements(int pageNo) {
     return res;
 }
 
-RenderedBitmap* EnginePdf::GetImageForPageElement(PageElement* pel) {
+RenderedBitmap* EnginePdf::GetImageForPageElement(IPageElement* ipel) {
+    PageElement* pel = (PageElement*)ipel;
     auto r = pel->rect;
     int pageNo = pel->pageNo;
     int imageID = pel->imageID;
@@ -1319,7 +1320,7 @@ fz_matrix EnginePdf::viewctm(fz_page* page, float zoom, int rotation) {
 }
 
 void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
-    Vec<PageElement*>& comments = pageInfo->comments;
+    Vec<IPageElement*>& comments = pageInfo->comments;
 
     auto page = pageInfo->page;
     if (!page) {

@@ -701,7 +701,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
 
     TabInfo* tab = win->currentTab;
-    PageElement* pageEl = dm->GetElementAtPos({x, y});
+    IPageElement* pageEl = dm->GetElementAtPos({x, y});
     WCHAR* value = nullptr;
     if (pageEl) {
         value = pageEl->GetValue();
@@ -731,13 +731,13 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR_TODO("Create Annotation"));
     }
 
-    if (!pageEl || pageEl->kind_ != kindPageElementDest || !value) {
+    if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
         win::menu::Remove(popup, CmdCopyLinkTarget);
     }
-    if (!pageEl || pageEl->kind_ != kindPageElementComment || !value) {
+    if (!pageEl || !pageEl->Is(kindPageElementComment) || !value) {
         win::menu::Remove(popup, CmdCopyComment);
     }
-    if (!pageEl || pageEl->kind_ != kindPageElementImage) {
+    if (!pageEl || !pageEl->Is(kindPageElementImage)) {
         win::menu::Remove(popup, CmdCopyImage);
     }
 

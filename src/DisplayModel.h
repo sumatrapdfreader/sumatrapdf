@@ -159,7 +159,7 @@ class DisplayModel : public Controller {
 
     WCHAR* GetTextInRegion(int pageNo, RectD region);
     bool IsOverText(Point pt);
-    PageElement* GetElementAtPos(Point pt);
+    IPageElement* GetElementAtPos(Point pt);
 
     int GetPageNoByPoint(Point pt);
     Point CvtToScreen(int pageNo, PointD pt);

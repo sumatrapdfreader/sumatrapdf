@@ -111,8 +111,28 @@ extern Kind kindPageElementDest;
 extern Kind kindPageElementImage;
 extern Kind kindPageElementComment;
 
+struct IPageElement {
+    virtual ~IPageElement(){};
+
+    // the type of this page element
+    bool Is(Kind expectedKind);
+
+    virtual Kind GetKind() = 0;
+    // page this element lives on (0 for elements in a ToC)
+    virtual int GetPageNo() = 0;
+    // rectangle that can be interacted with
+    virtual RectD GetRect() = 0;
+    // string value associated with this element (e.g. displayed in an infotip)
+    // caller must free() the result
+    virtual WCHAR* GetValue() = 0;
+    // if this element is a link, this returns information about the link's destination
+    // (the result is owned by the PageElement and MUST NOT be deleted)
+    virtual PageDestination* AsLink() = 0;
+    virtual IPageElement* Clone() = 0;
+};
+
 // hoverable (and maybe interactable) element on a single page
-struct PageElement {
+struct PageElement : IPageElement {
     Kind kind_ = nullptr;
     int pageNo = 0;
     RectD rect{};
@@ -122,25 +142,17 @@ struct PageElement {
 
     int imageID = 0;
 
-    ~PageElement();
+    ~PageElement() override;
 
-    Kind GetKind();
-
-    // the type of this page element
-    bool Is(Kind expectedKind);
-    // page this element lives on (0 for elements in a ToC)
-    int GetPageNo();
-    // rectangle that can be interacted with
-    RectD GetRect();
-    // string value associated with this element (e.g. displayed in an infotip)
-    // caller must free() the result
-    WCHAR* GetValue();
-    // if this element is a link, this returns information about the link's destination
-    // (the result is owned by the PageElement and MUST NOT be deleted)
-    PageDestination* AsLink();
+    Kind GetKind() override;
+    int GetPageNo() override;
+    RectD GetRect() override;
+    WCHAR* GetValue() override;
+    PageDestination* AsLink() override;
+    IPageElement* Clone() override;
 };
 
-PageElement* clonePageElement(PageElement*);
+IPageElement* clonePageElement(IPageElement*);
 
 // those are the same as F font bitmask in PDF docs
 // for TocItem::fontFlags
@@ -367,10 +379,10 @@ class EngineBase {
 
     // returns a list of all available elements for this page
     // caller must delete the result (including all elements contained in the Vec)
-    virtual Vec<PageElement*>* GetElements(int pageNo) = 0;
+    virtual Vec<IPageElement*>* GetElements(int pageNo) = 0;
     // returns the element at a given point or nullptr if there's none
     // caller must delete the result
-    virtual PageElement* GetElementAtPos(int pageNo, PointD pt) = 0;
+    virtual IPageElement* GetElementAtPos(int pageNo, PointD pt) = 0;
 
     // creates a PageDestination from a name (or nullptr for invalid names)
     // caller must delete the result
@@ -409,7 +421,7 @@ class EngineBase {
     // the name of the file this engine handles
     const WCHAR* FileName() const;
 
-    virtual RenderedBitmap* GetImageForPageElement(PageElement*);
+    virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
 
   protected:
     void SetFileName(const WCHAR* s);

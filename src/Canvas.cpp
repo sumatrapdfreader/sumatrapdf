@@ -305,7 +305,7 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 
     CrashIf(win->linkOnLastButtonDown);
     DisplayModel* dm = win->AsFixed();
-    PageElement* pageEl = dm->GetElementAtPos(Point(x, y));
+    IPageElement* pageEl = dm->GetElementAtPos(Point(x, y));
     if (pageEl && pageEl->Is(kindPageElementDest)) {
         win->linkOnLastButtonDown = pageEl;
     } else {
@@ -352,7 +352,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
 
     PointD ptPage = dm->CvtFromScreen(Point(x, y));
     // TODO: win->linkHandler->GotoLink might spin the event loop
-    PageElement* link = win->linkOnLastButtonDown;
+    IPageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
     win->mouseAction = MouseAction::Idle;
 
@@ -423,7 +423,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
         return;
     }
 
-    PageElement* pageEl = dm->GetElementAtPos(Point(x, y));
+    IPageElement* pageEl = dm->GetElementAtPos(Point(x, y));
     if (pageEl && pageEl->Is(kindPageElementDest)) {
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
@@ -584,7 +584,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
             continue;
         }
 
-        Vec<PageElement*>* els = dm.GetEngine()->GetElements(pageNo);
+        Vec<IPageElement*>* els = dm.GetEngine()->GetElements(pageNo);
         if (!els) {
             continue;
         }
@@ -841,7 +841,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                     return TRUE;
                 }
                 DisplayModel* dm = win->AsFixed();
-                PageElement* pageEl = dm->GetElementAtPos(pt);
+                IPageElement* pageEl = dm->GetElementAtPos(pt);
                 if (pageEl) {
                     WCHAR* text = pageEl->GetValue();
                     int pageNo = pageEl->GetPageNo();

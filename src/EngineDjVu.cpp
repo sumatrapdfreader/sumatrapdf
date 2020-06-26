@@ -256,8 +256,8 @@ class EngineDjVu : public EngineBase {
     // we currently don't load pages lazily, so there's nothing to do here
     bool BenchLoadPage(int pageNo) override;
 
-    Vec<PageElement*>* GetElements(int pageNo) override;
-    PageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    Vec<IPageElement*>* GetElements(int pageNo) override;
+    IPageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
@@ -954,7 +954,7 @@ WCHAR* EngineDjVu::ExtractPageText(int pageNo, Rect** coordsOut) {
     return extracted.StealData();
 }
 
-Vec<PageElement*>* EngineDjVu::GetElements(int pageNo) {
+Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
     CrashIf(pageNo < 1 || pageNo > PageCount());
     if (annos && miniexp_dummy == annos[pageNo - 1]) {
         ScopedCritSec scope(&gDjVuContext->lock);
@@ -968,7 +968,7 @@ Vec<PageElement*>* EngineDjVu::GetElements(int pageNo) {
 
     ScopedCritSec scope(&gDjVuContext->lock);
 
-    Vec<PageElement*>* els = new Vec<PageElement*>();
+    auto els = new Vec<IPageElement*>();
     Rect page = PageMediabox(pageNo).Round();
 
     ddjvu_status_t status;
@@ -1053,8 +1053,8 @@ Vec<PageElement*>* EngineDjVu::GetElements(int pageNo) {
     return els;
 }
 
-PageElement* EngineDjVu::GetElementAtPos(int pageNo, PointD pt) {
-    Vec<PageElement*>* els = GetElements(pageNo);
+IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointD pt) {
+    Vec<IPageElement*>* els = GetElements(pageNo);
     if (!els) {
         return nullptr;
     }
@@ -1063,7 +1063,7 @@ PageElement* EngineDjVu::GetElementAtPos(int pageNo, PointD pt) {
     // in top-to-bottom order, so reverse the list first
     els->Reverse();
 
-    PageElement* el = nullptr;
+    IPageElement* el = nullptr;
     for (size_t i = 0; i < els->size() && !el; i++) {
         if (els->at(i)->GetRect().Contains(pt)) {
             el = els->at(i);

@@ -136,6 +136,11 @@ PageDestination* clonePageDestination(PageDestination* dest) {
     return res;
 }
 
+bool IPageElement::Is(Kind expectedKind) {
+    Kind kind = GetKind();
+    return kind == expectedKind;
+}
+
 PageElement::~PageElement() {
     free(value);
     delete dest;
@@ -143,11 +148,6 @@ PageElement::~PageElement() {
 
 Kind PageElement::GetKind() {
     return kind_;
-}
-
-// the type of this page element
-bool PageElement::Is(Kind expectedKind) {
-    return kind_ == expectedKind;
 }
 
 // page this element lives on (0 for elements in a ToC)
@@ -172,17 +172,21 @@ PageDestination* PageElement::AsLink() {
     return dest;
 }
 
-PageElement* clonePageElement(PageElement* el) {
+IPageElement* PageElement::Clone() {
+    auto* res = new PageElement();
+    res->kind_ = kind_;
+    res->pageNo = pageNo;
+    res->rect = rect;
+    res->value = str::Dup(value);
+    res->dest = clonePageDestination(dest);
+    return res;
+}
+
+IPageElement* clonePageElement(IPageElement* el) {
     if (!el) {
         return nullptr;
     }
-    auto* res = new PageElement();
-    res->kind_ = el->kind_;
-    res->pageNo = el->pageNo;
-    res->rect = el->rect;
-    res->value = str::Dup(el->value);
-    res->dest = clonePageDestination(el->dest);
-    return res;
+    return el->Clone();
 }
 
 Kind kindTocFzOutline = "tocFzOutline";
@@ -530,7 +534,7 @@ const WCHAR* EngineBase::FileName() const {
     return fileNameBase.Get();
 }
 
-RenderedBitmap* EngineBase::GetImageForPageElement(PageElement*) {
+RenderedBitmap* EngineBase::GetImageForPageElement(IPageElement*) {
     CrashMe();
     return nullptr;
 }

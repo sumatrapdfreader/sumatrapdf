@@ -33,9 +33,9 @@ struct FzPageInfo {
     fz_link* links = nullptr;
 
     // auto-detected links
-    Vec<PageElement*> autoLinks;
+    Vec<IPageElement*> autoLinks;
     // comments are made out of annotations
-    Vec<PageElement*> comments;
+    Vec<IPageElement*> comments;
 
     RectD mediabox = {};
     Vec<FitzImagePos> images;
@@ -77,8 +77,8 @@ PageElement* newFzComment(const WCHAR* comment, int pageNo, RectD rect);
 PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx);
 PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline);
 PageDestination* newFzDestination(fz_outline*);
-PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt);
-void FzGetElements(Vec<PageElement*>* els, FzPageInfo* pageInfo);
+IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt);
+void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo);
 PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot);
 void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext);
 void fz_run_page_transparency(fz_context* ctx, Vec<Annotation*>* annots, fz_device* dev, const fz_rect cliprect,

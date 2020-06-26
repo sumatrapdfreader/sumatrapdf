@@ -88,7 +88,7 @@ struct DrawInstr {
             size_t len;
         } str{nullptr, 0};
         mui::CachedFont* font; // InstrSetFont
-        ImageData img;                // InstrImage
+        ImageData img;         // InstrImage
     };
     RectF bbox{}; // common to most instructions
 

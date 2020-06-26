@@ -313,11 +313,11 @@ class EnginePs : public EngineBase {
         return pdfEngine->BenchLoadPage(pageNo);
     }
 
-    Vec<PageElement*>* GetElements(int pageNo) override {
+    Vec<IPageElement*>* GetElements(int pageNo) override {
         return pdfEngine->GetElements(pageNo);
     }
 
-    PageElement* GetElementAtPos(int pageNo, PointD pt) override {
+    IPageElement* GetElementAtPos(int pageNo, PointD pt) override {
         return pdfEngine->GetElementAtPos(pageNo, pt);
     }
 

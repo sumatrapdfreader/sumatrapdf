@@ -211,18 +211,18 @@ class EngineXps : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    RenderedBitmap* GetImageForPageElement(PageElement*) override;
+    RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
     bool BenchLoadPage(int pageNo) override {
         return GetFzPageInfo(pageNo, false) != nullptr;
     }
 
-    Vec<PageElement*>* GetElements(int pageNo) override;
-    PageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    Vec<IPageElement*>* GetElements(int pageNo) override;
+    IPageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
-    void ResolveLinks(Vec<PageElement*>* els, fz_link* links);
+    void ResolveLinks(Vec<IPageElement*>* els, fz_link* links);
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -781,14 +781,14 @@ WCHAR* EngineXps::GetProperty(DocumentProperty prop) {
     }
 };
 
-PageElement* EngineXps::GetElementAtPos(int pageNo, PointD pt) {
+IPageElement* EngineXps::GetElementAtPos(int pageNo, PointD pt) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
 // TODO: probably need to use fz_resolve_link(ctx, _doc, link->uri, &x, &y)
 // in FzGetElements().
-void EngineXps::ResolveLinks(Vec<PageElement*>* els, fz_link* link) {
+void EngineXps::ResolveLinks(Vec<IPageElement*>* els, fz_link* link) {
     float x, y;
     fz_location loc;
     while (link) {
@@ -803,12 +803,12 @@ void EngineXps::ResolveLinks(Vec<PageElement*>* els, fz_link* link) {
     }
 }
 
-Vec<PageElement*>* EngineXps::GetElements(int pageNo) {
+Vec<IPageElement*>* EngineXps::GetElements(int pageNo) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
     if (!pageInfo) {
         return nullptr;
     }
-    auto res = new Vec<PageElement*>();
+    auto res = new Vec<IPageElement*>();
 
 #if 0
     fz_link* links = pageInfo->links;
@@ -829,7 +829,8 @@ Vec<PageElement*>* EngineXps::GetElements(int pageNo) {
     return res;
 }
 
-RenderedBitmap* EngineXps::GetImageForPageElement(PageElement* pel) {
+RenderedBitmap* EngineXps::GetImageForPageElement(IPageElement* ipel) {
+    PageElement* pel = (PageElement*)ipel;
     auto r = pel->rect;
     int pageNo = pel->pageNo;
     int imageID = pel->imageID;

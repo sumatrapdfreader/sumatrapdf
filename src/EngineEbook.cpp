@@ -96,11 +96,11 @@ class EngineEbook : public EngineBase {
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override;
 
-    Vec<PageElement*>* GetElements(int pageNo) override;
-    PageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    Vec<IPageElement*>* GetElements(int pageNo) override;
+    IPageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    RenderedBitmap* GetImageForPageElement(PageElement* el) override;
+    RenderedBitmap* GetImageForPageElement(IPageElement* el) override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -522,8 +522,8 @@ PageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
     return newEbookLink(link, rect, dest, pageNo);
 }
 
-Vec<PageElement*>* EngineEbook::GetElements(int pageNo) {
-    Vec<PageElement*>* els = new Vec<PageElement*>();
+Vec<IPageElement*>* EngineEbook::GetElements(int pageNo) {
+    auto els = new Vec<IPageElement*>();
 
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
     size_t n = pageInstrs->size();
@@ -534,7 +534,7 @@ Vec<PageElement*>* EngineEbook::GetElements(int pageNo) {
             auto el = newImageDataElement(pageNo, box, (int)idx);
             els->Append(el);
         } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmptyArea()) {
-            PageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
+            IPageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
             if (link) {
                 els->Append(link);
             }
@@ -556,7 +556,8 @@ static RenderedBitmap* getImageFromData(ImageData id) {
     return new RenderedBitmap(hbmp, size);
 }
 
-RenderedBitmap* EngineEbook::GetImageForPageElement(PageElement* el) {
+RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
+    PageElement* el = (PageElement*)iel;
     int pageNo = el->pageNo;
     int idx = el->imageID;
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
@@ -565,13 +566,13 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(PageElement* el) {
     return getImageFromData(i.img);
 }
 
-PageElement* EngineEbook::GetElementAtPos(int pageNo, PointD pt) {
-    Vec<PageElement*>* els = GetElements(pageNo);
+IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointD pt) {
+    auto els = GetElements(pageNo);
     if (!els) {
         return nullptr;
     }
 
-    PageElement* el = nullptr;
+    IPageElement* el = nullptr;
     for (size_t i = 0; i < els->size() && !el; i++) {
         if (els->at(i)->GetRect().Contains(pt)) {
             el = els->at(i);

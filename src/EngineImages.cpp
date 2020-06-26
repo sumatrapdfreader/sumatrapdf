@@ -111,10 +111,10 @@ class EngineImages : public EngineBase {
         return false;
     }
 
-    Vec<PageElement*>* GetElements(int pageNo) override;
-    PageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    Vec<IPageElement*>* GetElements(int pageNo) override;
+    IPageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
-    RenderedBitmap* GetImageForPageElement(PageElement*) override;
+    RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
     bool BenchLoadPage(int pageNo) override {
         ImagePage* page = GetPage(pageNo);
@@ -264,7 +264,7 @@ static PageElement* newImageElement(ImagePage* page) {
     return res;
 }
 
-Vec<PageElement*>* EngineImages::GetElements(int pageNo) {
+Vec<IPageElement*>* EngineImages::GetElements(int pageNo) {
     // TODO: this is inefficient because we don't need to
     // decompress the image. just need to know the size
     ImagePage* page = GetPage(pageNo);
@@ -272,14 +272,14 @@ Vec<PageElement*>* EngineImages::GetElements(int pageNo) {
         return nullptr;
     }
 
-    Vec<PageElement*>* els = new Vec<PageElement*>();
+    auto els = new Vec<IPageElement*>();
     auto el = newImageElement(page);
     els->Append(el);
     DropPage(page, false);
     return els;
 }
 
-PageElement* EngineImages::GetElementAtPos(int pageNo, PointD pt) {
+IPageElement* EngineImages::GetElementAtPos(int pageNo, PointD pt) {
     if (!PageMediabox(pageNo).Contains(pt)) {
         return nullptr;
     }
@@ -292,7 +292,8 @@ PageElement* EngineImages::GetElementAtPos(int pageNo, PointD pt) {
     return res;
 }
 
-RenderedBitmap* EngineImages::GetImageForPageElement(PageElement* pel) {
+RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* ipel) {
+    PageElement* pel = (PageElement*)ipel;
     int pageNo = pel->imageID;
     auto page = GetPage(pageNo);
 

@@ -237,11 +237,12 @@ void DumpToc(EngineBase* engine) {
     }
 }
 
-const char* ElementTypeToStr(PageElement* el) {
-    if (!el->kind_) {
-        return "unknown";
+const char* ElementTypeToStr(IPageElement* el) {
+    Kind kind = el->GetKind();
+    if (kind) {
+        return kind;
     }
-    return el->kind_;
+    return "unknown";
 }
 
 const char* PageDestToStr(Kind kind) {
@@ -275,7 +276,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
         }
     }
 
-    Vec<PageElement*>* els = engine->GetElements(pageNo);
+    Vec<IPageElement*>* els = engine->GetElements(pageNo);
     if (els && els->size() > 0) {
         Out1("\t\t<PageElements>\n");
         for (size_t i = 0; i < els->size(); i++) {

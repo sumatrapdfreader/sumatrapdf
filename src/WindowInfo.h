@@ -11,7 +11,7 @@ struct LabelWithCloseWnd;
 struct SplitterCtrl;
 struct CaptionInfo;
 
-struct PageElement;
+struct IPageElement;
 struct PageDestination;
 struct TocItem;
 struct Controller;
@@ -198,7 +198,7 @@ struct WindowInfo {
     bool findCanceled = false;
 
     LinkHandler* linkHandler = nullptr;
-    PageElement* linkOnLastButtonDown = nullptr;
+    IPageElement* linkOnLastButtonDown = nullptr;
     const WCHAR* url = nullptr;
 
     ControllerCallback* cbHandler = nullptr;

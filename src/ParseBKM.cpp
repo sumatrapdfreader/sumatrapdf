@@ -242,14 +242,14 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
         }
 
         if (str::Eq(key, "rect")) {
-            float x=0, y=0, dx=0, dy=0;
+            float x = 0, y = 0, dx = 0, dy = 0;
             str::Parse(val, "%g,%g,%g,%g", &x, &y, &dx, &dy);
             dest->rect = RectD(x, y, dx, dy);
             continue;
         }
 
         if (str::Eq(key, "pos")) {
-            float x=0, y=0;
+            float x = 0, y = 0;
             str::Parse(val, "%g,%g", &x, &y);
             dest->rect = RectD(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
             continue;

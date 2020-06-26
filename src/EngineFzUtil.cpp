@@ -690,7 +690,7 @@ static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
 }
 
 // caller needs to delete the result
-// TODO: return Vec<PageElement*> directly
+// TODO: return Vec<IPageElement*> directly
 LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
     LinkRectList* list = new LinkRectList;
 
@@ -1070,7 +1070,7 @@ PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* 
     return newFzComment(ws, pageNo, rd);
 }
 
-PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt) {
+IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt) {
     if (!pageInfo) {
         return nullptr;
     }
@@ -1085,13 +1085,13 @@ PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt) {
     }
 
     for (auto* pel : pageInfo->autoLinks) {
-        if (pel->rect.Contains(pt)) {
+        if (pel->GetRect().Contains(pt)) {
             return clonePageElement(pel);
         }
     }
 
     for (auto* pel : pageInfo->comments) {
-        if (pel->rect.Contains(pt)) {
+        if (pel->GetRect().Contains(pt)) {
             return clonePageElement(pel);
         }
     }
@@ -1109,7 +1109,7 @@ PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt) {
 
 // TODO: construct this only once per page and change the API
 // to not free the result of GetElements()
-void FzGetElements(Vec<PageElement*>* els, FzPageInfo* pageInfo) {
+void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo) {
     if (!pageInfo) {
         return;
     }
@@ -1128,13 +1128,13 @@ void FzGetElements(Vec<PageElement*>* els, FzPageInfo* pageInfo) {
 
     fz_link* link = pageInfo->links;
     while (link) {
-        auto* el = newFzLink(pageNo, link, nullptr);
+        auto el = newFzLink(pageNo, link, nullptr);
         els->Append(el);
         link = link->next;
     }
 
     for (auto&& pel : pageInfo->autoLinks) {
-        auto* el = clonePageElement(pel);
+        auto el = clonePageElement(pel);
         els->Append(el);
     }
 
@@ -1159,7 +1159,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
 
     LinkRectList* list = LinkifyText(pageText, coords);
     free(pageText);
-    //fz_page* page = pageInfo->page;
+    // fz_page* page = pageInfo->page;
 
     for (size_t i = 0; i < list->links.size(); i++) {
         fz_rect bbox = list->coords.at(i);
