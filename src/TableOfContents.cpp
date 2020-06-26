@@ -404,6 +404,9 @@ static MenuDef menuDefSortByTag[] = {
 
 static void AddFavoriteFromToc(WindowInfo* win, TocItem* dti) {
     int pageNo = 0;
+    if (!dti) {
+        return;
+    }
     if (dti->dest) {
         pageNo = dti->dest->GetPageNo();
     }
@@ -585,6 +588,10 @@ static void SortAndSetTocTree(TabInfo* tab) {
 }
 
 static void OpenEmbeddedFile(TabInfo* tab, PageDestination* dest) {
+    CrashIf(!tab || !dest);
+    if (!tab || !dest) {
+        return;
+    }
     auto win = tab->win;
     WCHAR* path = dest->GetValue();
     if (!str::StartsWith(path, tab->filePath.Get())) {
@@ -601,6 +608,10 @@ static void OpenEmbeddedFile(TabInfo* tab, PageDestination* dest) {
 }
 
 static void SaveEmbeddedFile(TabInfo* tab, PageDestination* dest) {
+    CrashIf(!tab || !dest);
+    if (!tab || !dest) {
+        return;
+    }
     auto filePath = dest->GetValue();
     auto data = LoadEmbeddedPDFFile(filePath);
     AutoFreeWstr dir = path::GetDir(filePath);

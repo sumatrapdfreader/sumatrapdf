@@ -38,8 +38,8 @@ CLSID GetEncoderClsid(const WCHAR* format);
 
 // TODO: for the lack of a better place
 struct ImageData {
-    char* data = nullptr;
-    size_t len = 0;
+    char* data{nullptr};
+    size_t len{0};
 
     size_t size() const;
     std::span<u8> AsSpan() const;

@@ -161,6 +161,8 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
     while (line.size() > 0) {
         ParsedKV kv = sv::ParseKV(line, false);
         if (!kv.ok) {
+            delete res;
+            delete dest;
             return nullptr;
         }
         char* key = kv.key;
@@ -169,6 +171,8 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
         if (str::EqI(key, "font")) {
             if (!val) {
                 logf("parseBookmarksLine: got 'font' without value in line '%s'\n", origLine.data());
+                delete res;
+                delete dest;
                 return nullptr;
             }
             // TODO: for max correctness should split by "," but this works just as well
@@ -199,6 +203,8 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
 
         if (str::EqI(key, "page")) {
             if (!val) {
+                delete res;
+                delete dest;
                 return nullptr;
             }
             str::Parse(val, "%d", &res->pageNo);
@@ -236,14 +242,14 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
         }
 
         if (str::Eq(key, "rect")) {
-            float x, y, dx, dy;
+            float x=0, y=0, dx=0, dy=0;
             str::Parse(val, "%g,%g,%g,%g", &x, &y, &dx, &dy);
             dest->rect = RectD(x, y, dx, dy);
             continue;
         }
 
         if (str::Eq(key, "pos")) {
-            float x, y;
+            float x=0, y=0;
             str::Parse(val, "%g,%g", &x, &y);
             dest->rect = RectD(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
             continue;

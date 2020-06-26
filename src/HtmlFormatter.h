@@ -82,12 +82,13 @@ struct DrawInstr {
     DrawInstrType type{DrawInstrType::Unknown};
     union {
         // info specific to a given instruction
+        // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString
         struct {
             const char* s;
             size_t len;
-        } str;                 // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString
+        } str{nullptr, 0};
         mui::CachedFont* font; // InstrSetFont
-        ImageData img;         // InstrImage
+        ImageData img;                // InstrImage
     };
     RectF bbox{}; // common to most instructions
 

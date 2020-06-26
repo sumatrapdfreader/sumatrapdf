@@ -97,12 +97,18 @@ bool ScrollState::operator==(const ScrollState& other) const {
 const WCHAR* DisplayModel::FilePath() const {
     return engine->FileName();
 }
+
 const WCHAR* DisplayModel::DefaultFileExt() const {
     return engine->defaultFileExt;
 }
+
 int DisplayModel::PageCount() const {
+    if (!engine) {
+        return 0;
+    }
     return engine->PageCount();
 }
+
 WCHAR* DisplayModel::GetProperty(DocumentProperty prop) {
     return engine->GetProperty(prop);
 }
@@ -145,6 +151,9 @@ int DisplayModel::GetPageByLabel(const WCHAR* label) const {
 
 // common shortcuts
 bool DisplayModel::ValidPageNo(int pageNo) const {
+    if (!engine) {
+        return false;
+    }
     return 1 <= pageNo && pageNo <= engine->PageCount();
 }
 
@@ -493,7 +502,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
     } else {
         row = PageSizeAfterRotation(pageNo, fitToContent);
         row.dx *= columns;
-        row.dx += pageSpacing.dx * (columns - 1);
+        row.dx += (double)pageSpacing.dx * (double)(columns - 1);
     }
 
     CrashIf(RectD(PointD(), row).IsEmpty());
