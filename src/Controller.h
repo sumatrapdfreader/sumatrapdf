@@ -3,7 +3,7 @@
 
 struct Controller;
 struct ChmModel;
-class DisplayModel;
+struct DisplayModel;
 struct EbookController;
 struct EbookFormattingData;
 

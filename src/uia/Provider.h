@@ -6,7 +6,7 @@ const int SUMATRA_UIA_DOCUMENT_RUNTIME_ID = 2;
 
 #define SUMATRA_UIA_PAGE_RUNTIME_ID(X) (100 + (X))
 
-class DisplayModel;
+struct DisplayModel;
 class SumatraUIAutomationStartPageProvider;
 class SumatraUIAutomationDocumentProvider;
 

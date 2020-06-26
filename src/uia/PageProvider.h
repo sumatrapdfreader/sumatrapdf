@@ -1,7 +1,7 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-class DisplayModel;
+struct DisplayModel;
 class SumatraUIAutomationDocumentProvider;
 class SumatraUIAutomationPageProvider : public IRawElementProviderFragment,
                                         public IRawElementProviderSimple,

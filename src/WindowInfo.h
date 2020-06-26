@@ -17,7 +17,7 @@ struct TocItem;
 struct Controller;
 struct ControllerCallback;
 struct ChmModel;
-class DisplayModel;
+struct DisplayModel;
 struct EbookController;
 struct TabInfo;
 

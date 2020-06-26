@@ -58,8 +58,7 @@ class Synchronizer;
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
    API and re-displaying things based on new display information */
-class DisplayModel : public Controller {
-  public:
+struct DisplayModel : public Controller {
     DisplayModel(EngineBase* engine, ControllerCallback* cb);
     DisplayModel(DisplayModel const&) = delete;
     DisplayModel& operator=(DisplayModel const&) = delete;
@@ -111,7 +110,6 @@ class DisplayModel : public Controller {
     // for quick type determination and type-safe casting
     DisplayModel* AsFixed() override;
 
-  public:
     // the following is specific to DisplayModel
 
     EngineBase* GetEngine() const;
@@ -189,7 +187,6 @@ class DisplayModel : public Controller {
 
     bool GetPresentationMode() const;
 
-  protected:
     void BuildPagesInfo();
     float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
     SizeD PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
