@@ -1313,7 +1313,7 @@ class ChmDataCache {
         data.base.data = (char*)tmp.data();
         data.base.len = tmp.size();
 
-        data.fileName = url.release();
+        data.fileName = url.Release();
         images.Append(data);
         return &images.Last().base;
     }

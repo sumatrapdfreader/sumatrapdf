@@ -147,7 +147,7 @@ char* NormalizeURL(const char* url, const char* base) {
         }
     }
     *dst = '\0';
-    return norm.release();
+    return norm.Release();
 }
 
 inline char decode64(char c) {
@@ -647,7 +647,7 @@ bool EpubDoc::ParseNavToc(const char* data, size_t dataLen, const char* pagePath
                 if (tok->IsText()) {
                     AutoFree part(str::DupN(tok->s, tok->sLen));
                     if (!text) {
-                        text.Set(part.release());
+                        text.Set(part.Release());
                     } else {
                         text.Set(str::Join(text, part));
                     }
@@ -900,14 +900,14 @@ bool Fb2Doc::Load() {
                     if (docAuthor) {
                         docAuthor.Set(str::Join(docAuthor, " ", author));
                     } else {
-                        docAuthor.Set(author.release());
+                        docAuthor.Set(author.Release());
                     }
                 }
             }
             if (docAuthor) {
                 str::NormalizeWS(docAuthor);
                 if (!str::IsEmpty(docAuthor.Get())) {
-                    props.Set(DocumentProperty::Author, docAuthor.release(), inTitleInfo != 0);
+                    props.Set(DocumentProperty::Author, docAuthor.Release(), inTitleInfo != 0);
                 }
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("date", FB2_MAIN_NS)) {
@@ -1326,7 +1326,7 @@ ImageData* HtmlDoc::GetImageData(const char* fileName) {
     }
     data.base.data = (char*)urlData.data();
     data.base.len = urlData.size();
-    data.fileName = url.release();
+    data.fileName = url.Release();
     images.Append(data);
     return &images.Last().base;
 }

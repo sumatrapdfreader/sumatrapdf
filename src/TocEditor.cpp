@@ -1002,7 +1002,7 @@ void StartTocEditorForWindowInfo(WindowInfo* win) {
         newRoot->child = rootCopy;
         newRoot->pageNo = 1; // default to first page in the PDF
         newRoot->nPages = tab->ctrl->PageCount();
-        newRoot->engineFilePath = filePath.release();
+        newRoot->engineFilePath = filePath.Release();
         vbkm->tree = new TocTree(newRoot);
     }
     args->bookmarks = vbkm;

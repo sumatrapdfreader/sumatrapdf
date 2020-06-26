@@ -259,12 +259,12 @@ void ChmDoc::FixPathCodepage(AutoFree& path, uint& fileCP) {
 
     AutoFree utf8Path(ToUtf8((unsigned char*)path.Get()));
     if (HasData(utf8Path)) {
-        path.Set(utf8Path.release());
+        path.Set(utf8Path.Release());
         fileCP = codepage;
     } else if (fileCP != codepage) {
         utf8Path.Set(ToUtf8((unsigned char*)path.Get(), fileCP));
         if (HasData(utf8Path)) {
-            path.Set(utf8Path.release());
+            path.Set(utf8Path.Release());
             codepage = fileCP;
         }
     }

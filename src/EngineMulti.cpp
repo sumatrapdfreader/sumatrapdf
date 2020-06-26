@@ -335,7 +335,7 @@ std::string_view FindEnginePath(std::string_view vbkmPath, std::string_view engi
     const char* engineFileName = path::GetBaseNameNoFree(engineFilePath.data());
     AutoFreeStr path = path::JoinUtf(dir, engineFileName, nullptr);
     if (file::Exists(path.AsView())) {
-        std::string_view res = path.release();
+        std::string_view res = path.Release();
         return res;
     }
     return {};

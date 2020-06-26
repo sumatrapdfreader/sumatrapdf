@@ -22,9 +22,6 @@ class ScopedMem {
     T* Get() const {
         return ptr;
     }
-    T* get() const {
-        return ptr;
-    }
     T* StealData() {
         T* tmp = ptr;
         ptr = nullptr;
@@ -165,10 +162,6 @@ struct AutoFree {
     // AutoFree& operator=(const AutoFree& other) = delete;
     // AutoFree& operator=(const AutoFree&& other) = delete;
 
-    [[nodiscard]] char* get() const {
-        return data;
-    }
-
     [[nodiscard]] char* Get() const {
         return data;
     }
@@ -201,7 +194,7 @@ struct AutoFree {
         len = 0;
     }
 
-    [[nodiscard]] char* release() {
+    [[nodiscard]] char* Release() {
         char* res = data;
         data = nullptr;
         len = 0;
