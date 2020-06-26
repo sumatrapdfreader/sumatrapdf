@@ -336,10 +336,11 @@ const char* ChmDoc::GetHomePath() {
 
 static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, void* data) {
     UNUSED(chmHandle);
-    if (info->path) {
-        Vec<char*>* paths = (Vec<char*>*)data;
-        paths->Append(str::Dup(info->path));
+    if (str::IsEmpty(info->path)) {
+        return CHM_ENUMERATOR_CONTINUE;
     }
+    Vec<char*>* paths = (Vec<char*>*)data;
+    paths->Append(str::Dup(info->path));
     return CHM_ENUMERATOR_CONTINUE;
 }
 
