@@ -4,22 +4,21 @@
 struct DoubleBuffer;
 struct LinkHandler;
 struct Notifications;
-class StressTest;
+struct StressTest;
 class SumatraUIAutomationProvider;
-class FrameRateWnd;
+struct FrameRateWnd;
 struct LabelWithCloseWnd;
-class SplitterWnd;
 struct SplitterCtrl;
 struct CaptionInfo;
 
 struct PageElement;
 struct PageDestination;
 struct TocItem;
-class Controller;
-class ControllerCallback;
-class ChmModel;
+struct Controller;
+struct ControllerCallback;
+struct ChmModel;
 class DisplayModel;
-class EbookController;
+struct EbookController;
 struct TabInfo;
 
 struct TreeCtrl;

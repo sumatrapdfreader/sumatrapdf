@@ -497,7 +497,7 @@ static size_t GetAllMatchingFiles(const WCHAR* dir, const WCHAR* filter, WStrVec
 a human advancing one page at a time. This is mostly to run through a large number
 of PDFs before a release to make sure we're crash proof. */
 
-class StressTest {
+struct StressTest {
     WindowInfo* win;
     LARGE_INTEGER currPageRenderTime;
     int currPage;
@@ -524,7 +524,6 @@ class StressTest {
     void TickTimer();
     void Finished(bool success);
 
-  public:
     StressTest(WindowInfo* win, bool exitWhenDone)
         : win(win),
           currPage(0),

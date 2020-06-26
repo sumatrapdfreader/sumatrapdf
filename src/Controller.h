@@ -1,16 +1,15 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-class Controller;
-class ChmModel;
+struct Controller;
+struct ChmModel;
 class DisplayModel;
-class EbookController;
+struct EbookController;
 struct EbookFormattingData;
 
 typedef std::function<void(RenderedBitmap*)> onBitmapRenderedCb;
 
-class ControllerCallback {
-  public:
+struct ControllerCallback {
     virtual ~ControllerCallback() {
     }
     // tell the UI to show the pageNo as current page (which also syncs
@@ -37,11 +36,9 @@ class ControllerCallback {
     virtual void RequestDelayedLayout(int delay) = 0;
 };
 
-class Controller {
-  protected:
+struct Controller {
     ControllerCallback* cb;
 
-  public:
     explicit Controller(ControllerCallback* cb) : cb(cb) {
         CrashIf(!cb);
     }

@@ -7,7 +7,7 @@ void BenchFileOrDir(WStrVec& pathsToBench);
 bool IsStressTesting();
 void BenchEbookLayout(WCHAR* filePath);
 
-class Flags;
+struct Flags;
 struct WindowInfo;
 
 void StartStressTest(Flags* i, WindowInfo* win);

@@ -4,9 +4,9 @@
 struct DrawInstr;
 struct EbookControls;
 struct EbookFormattingData;
-class FrameRateWnd;
+struct FrameRateWnd;
 
-class EbookController;
+struct EbookController;
 class EbookFormattingThread;
 class HtmlFormatter;
 class HtmlFormatterArgs;
@@ -17,8 +17,7 @@ class Control;
 }
 using namespace mui;
 
-class EbookController : public Controller {
-  public:
+struct EbookController : Controller {
     EbookController(const Doc& doc, EbookControls* ctrls, ControllerCallback* cb);
     ~EbookController() override;
 
@@ -77,7 +76,6 @@ class EbookController : public Controller {
         return this;
     }
 
-  public:
     // the following is specific to EbookController
 
     DocType GetDocType() const {
@@ -101,7 +99,6 @@ class EbookController : public Controller {
 
     static void DeleteEbookFormattingData(EbookFormattingData* data);
 
-  protected:
     EbookControls* ctrls = nullptr;
 
     TocTree* tocTree = nullptr;

@@ -7,8 +7,7 @@ class HtmlWindow;
 class HtmlWindowCallback;
 struct ChmCacheEntry;
 
-class ChmModel : public Controller {
-  public:
+struct ChmModel : Controller {
     explicit ChmModel(ControllerCallback* cb);
     ~ChmModel() override;
 
@@ -47,7 +46,6 @@ class ChmModel : public Controller {
 
     static ChmModel* Create(const WCHAR* fileName, ControllerCallback* cb = nullptr);
 
-  public:
     // the following is specific to ChmModel
 
     bool SetParentHwnd(HWND hwnd);
@@ -68,7 +66,6 @@ class ChmModel : public Controller {
 
     static bool IsSupportedFileType(Kind);
 
-  protected:
     AutoFreeWstr fileName;
     ChmDoc* doc = nullptr;
     TocTree* tocTree = nullptr;

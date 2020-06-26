@@ -7,8 +7,7 @@ struct PageRange {
     int end = INT_MAX;
 };
 
-class Flags {
-  public:
+struct Flags {
     WStrVec fileNames;
     // pathsToBenchmark contain 2 strings per each file to benchmark:
     // - name of the file to benchmark

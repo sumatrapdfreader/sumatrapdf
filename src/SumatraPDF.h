@@ -73,7 +73,7 @@ enum MenuToolbarFlags {
 #define RIGHT_TXT_FONT L"Arial Black"
 #define RIGHT_TXT_FONT_SIZE 12
 
-class Controller;
+struct Controller;
 class Favorites;
 struct FileHistory;
 struct WindowInfo;

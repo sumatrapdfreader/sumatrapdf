@@ -691,7 +691,7 @@ class ThumbnailRenderingTask : public RenderingCallback {
     }
 };
 
-class ControllerCallbackHandler : public ControllerCallback {
+struct ControllerCallbackHandler : ControllerCallback {
     WindowInfo* win;
 
   public:
