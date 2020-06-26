@@ -977,7 +977,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         if (!CanTalkToProcess(otherProcId)) {
             // TODO: maybe just launch another instance. The problem with that
             // is that they'll fight for settings file which might cause corruption
-            auto msg = "SumatraPDF is running as admin and we can't open files from non-admin process";
+            auto msg = "SumatraPDF is running as admin and cannot open files from a non-admin process";
             MessageBoxA(nullptr, msg, "Error", MB_OK | MB_ICONERROR);
             goto Exit;
         }
