@@ -814,9 +814,44 @@ static void OnPaintDocument(WindowInfo* win) {
     }
 }
 
-static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
+static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     Point pt;
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !GetCursor() || !GetCursorPosInHwnd(hwnd, pt)) {
+        win->HideToolTip();
+        return FALSE;
+    }
+    if (win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
+        SetCursor(IDC_CROSS);
+        return TRUE;
+    }
+    if (dm->IsOverText(pt)) {
+        SetCursor(IDC_IBEAM);
+    } else {
+        SetCursor(IDC_ARROW);
+    }
+    IPageElement* pageEl = dm->GetElementAtPos(pt);
+    if (!pageEl) {
+        win->HideToolTip();
+        return FALSE;
+    }
+    WCHAR* text = pageEl->GetValue();
+    int pageNo = pageEl->GetPageNo();
+    auto r = pageEl->GetRect();
+    Rect rc = dm->CvtToScreen(pageNo, r);
+    win->ShowToolTip(text, rc, true);
 
+    bool isLink = pageEl->Is(kindPageElementDest);
+    delete pageEl;
+
+    if (isLink) {
+        SetCursor(IDC_HAND);
+    }
+    return TRUE;
+}
+
+static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
+    CrashIf(win->hwndCanvas != hwnd);
     if (win->mouseAction != MouseAction::Idle) {
         win->HideToolTip();
     }
@@ -835,39 +870,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
         case MouseAction::Selecting:
             break;
         case MouseAction::Idle:
-            if (GetCursor() && GetCursorPosInHwnd(hwnd, pt) && win->AsFixed()) {
-                if (win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
-                    SetCursor(IDC_CROSS);
-                    return TRUE;
-                }
-                DisplayModel* dm = win->AsFixed();
-                IPageElement* pageEl = dm->GetElementAtPos(pt);
-                if (pageEl) {
-                    WCHAR* text = pageEl->GetValue();
-                    int pageNo = pageEl->GetPageNo();
-                    auto r = pageEl->GetRect();
-                    Rect rc = dm->CvtToScreen(pageNo, r);
-                    win->ShowToolTip(text, rc, true);
-
-                    bool isLink = pageEl->Is(kindPageElementDest);
-                    delete pageEl;
-
-                    if (isLink) {
-                        SetCursor(IDC_HAND);
-                        return TRUE;
-                    }
-                } else {
-                    win->HideToolTip();
-                }
-                if (dm->IsOverText(pt)) {
-                    SetCursor(IDC_IBEAM);
-                } else {
-                    SetCursor(IDC_ARROW);
-                }
-                return TRUE;
-            }
-            win->HideToolTip();
-            break;
+            return OnSetCursorMouseIdle(win, hwnd);
     }
     return win->presentation ? TRUE : FALSE;
 }
