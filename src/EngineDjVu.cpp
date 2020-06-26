@@ -108,7 +108,7 @@ static PageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const c
     if (!str::IsEmpty(comment)) {
         res->value = strconv::Utf8ToWstr(comment);
     }
-    res->kind = kindPageElementDest;
+    res->kind_ = kindPageElementDest;
     if (!str::IsEmpty(comment)) {
         res->value = strconv::Utf8ToWstr(comment);
     } else {

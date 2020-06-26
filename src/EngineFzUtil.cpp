@@ -1011,7 +1011,7 @@ PageDestination* newFzDestination(fz_outline* outline) {
 
 PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
     auto res = new PageElement();
-    res->kind = kindPageElementDest;
+    res->kind_ = kindPageElementDest;
 
     res->pageNo = pageNo;
     if (link) {
@@ -1033,7 +1033,7 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
 
 PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
     auto res = new PageElement();
-    res->kind = kindPageElementImage;
+    res->kind_ = kindPageElementImage;
     res->pageNo = pageNo;
     res->rect = fz_rect_to_RectD(rect);
     res->imageID = (int)imageIdx;
@@ -1048,7 +1048,7 @@ TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestinatio
 
 PageElement* newFzComment(const WCHAR* comment, int pageNo, RectD rect) {
     auto res = new PageElement();
-    res->kind = kindPageElementComment;
+    res->kind_ = kindPageElementComment;
     res->pageNo = pageNo;
     res->rect = rect;
     res->value = str::Dup(comment);
@@ -1180,7 +1180,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
 
         // TODO: those leak on xps
         PageElement* pel = new PageElement();
-        pel->kind = kindPageElementDest;
+        pel->kind_ = kindPageElementDest;
         pel->dest = new PageDestination();
         pel->dest->kind = kindDestinationLaunchURL;
         pel->dest->pageNo = 0;

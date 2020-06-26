@@ -731,13 +731,13 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR_TODO("Create Annotation"));
     }
 
-    if (!pageEl || pageEl->kind != kindPageElementDest || !value) {
+    if (!pageEl || pageEl->kind_ != kindPageElementDest || !value) {
         win::menu::Remove(popup, CmdCopyLinkTarget);
     }
-    if (!pageEl || pageEl->kind != kindPageElementComment || !value) {
+    if (!pageEl || pageEl->kind_ != kindPageElementComment || !value) {
         win::menu::Remove(popup, CmdCopyComment);
     }
-    if (!pageEl || pageEl->kind != kindPageElementImage) {
+    if (!pageEl || pageEl->kind_ != kindPageElementImage) {
         win::menu::Remove(popup, CmdCopyImage);
     }
 

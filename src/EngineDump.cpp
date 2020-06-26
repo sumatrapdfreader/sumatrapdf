@@ -238,10 +238,10 @@ void DumpToc(EngineBase* engine) {
 }
 
 const char* ElementTypeToStr(PageElement* el) {
-    if (!el->kind) {
+    if (!el->kind_) {
         return "unknown";
     }
-    return el->kind;
+    return el->kind_;
 }
 
 const char* PageDestToStr(Kind kind) {

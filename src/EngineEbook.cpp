@@ -132,7 +132,7 @@ static PageElement* newEbookLink(DrawInstr* link, Rect rect, PageDestination* de
     auto res = new PageElement();
     res->pageNo = pageNo;
 
-    res->kind = kindPageElementDest;
+    res->kind_ = kindPageElementDest;
     res->rect = rect.Convert<double>();
 
     if (!dest || showUrl) {
@@ -153,7 +153,7 @@ static PageElement* newEbookLink(DrawInstr* link, Rect rect, PageDestination* de
 
 static PageElement* newImageDataElement(int pageNo, Rect bbox, int imageID) {
     auto res = new PageElement();
-    res->kind = kindPageElementImage;
+    res->kind_ = kindPageElementImage;
     res->pageNo = pageNo;
     res->rect = bbox.Convert<double>();
     res->imageID = imageID;

@@ -113,7 +113,7 @@ extern Kind kindPageElementComment;
 
 // hoverable (and maybe interactable) element on a single page
 struct PageElement {
-    Kind kind = nullptr;
+    Kind kind_ = nullptr;
     int pageNo = 0;
     RectD rect{};
     WCHAR* value = nullptr;
@@ -123,15 +123,18 @@ struct PageElement {
     int imageID = 0;
 
     ~PageElement();
+
+    Kind GetKind();
+
     // the type of this page element
-    bool Is(Kind expectedKind) const;
+    bool Is(Kind expectedKind);
     // page this element lives on (0 for elements in a ToC)
-    int GetPageNo() const;
+    int GetPageNo();
     // rectangle that can be interacted with
-    RectD GetRect() const;
+    RectD GetRect();
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
-    WCHAR* GetValue() const;
+    WCHAR* GetValue();
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
     PageDestination* AsLink();

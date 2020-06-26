@@ -1350,7 +1350,7 @@ void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
             dbglogf("attachement: %s\n", attname);
 
             PageElement* el = new PageElement();
-            el->kind = kindPageElementDest;
+            el->kind_ = kindPageElementDest;
             el->pageNo = pageNo;
             el->rect = fz_rect_to_RectD(rect);
             el->value = strconv::Utf8ToWstr(attname);

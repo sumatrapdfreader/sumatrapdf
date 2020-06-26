@@ -141,24 +141,28 @@ PageElement::~PageElement() {
     delete dest;
 }
 
+Kind PageElement::GetKind() {
+    return kind_;
+}
+
 // the type of this page element
-bool PageElement::Is(Kind expectedKind) const {
-    return kind == expectedKind;
+bool PageElement::Is(Kind expectedKind) {
+    return kind_ == expectedKind;
 }
 
 // page this element lives on (0 for elements in a ToC)
-int PageElement::GetPageNo() const {
+int PageElement::GetPageNo() {
     return pageNo;
 }
 
 // rectangle that can be interacted with
-RectD PageElement::GetRect() const {
+RectD PageElement::GetRect() {
     return rect;
 }
 
 // string value associated with this element (e.g. displayed in an infotip)
 // caller must free() the result
-WCHAR* PageElement::GetValue() const {
+WCHAR* PageElement::GetValue() {
     return value;
 }
 
@@ -173,7 +177,7 @@ PageElement* clonePageElement(PageElement* el) {
         return nullptr;
     }
     auto* res = new PageElement();
-    res->kind = el->kind;
+    res->kind_ = el->kind_;
     res->pageNo = el->pageNo;
     res->rect = el->rect;
     res->value = str::Dup(el->value);

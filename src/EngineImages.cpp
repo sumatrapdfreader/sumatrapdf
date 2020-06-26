@@ -255,7 +255,7 @@ RectD EngineImages::Transform(const RectD& rect, int pageNo, float zoom, int rot
 
 static PageElement* newImageElement(ImagePage* page) {
     auto res = new PageElement();
-    res->kind = kindPageElementImage;
+    res->kind_ = kindPageElementImage;
     res->pageNo = page->pageNo;
     int dx = page->bmp->GetWidth();
     int dy = page->bmp->GetHeight();
