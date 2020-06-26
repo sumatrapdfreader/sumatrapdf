@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 struct DoubleBuffer;
-class LinkHandler;
+struct LinkHandler;
 struct Notifications;
 class StressTest;
 class SumatraUIAutomationProvider;
@@ -12,8 +12,8 @@ class SplitterWnd;
 struct SplitterCtrl;
 struct CaptionInfo;
 
-class PageElement;
-class PageDestination;
+struct PageElement;
+struct PageDestination;
 struct TocItem;
 class Controller;
 class ControllerCallback;
@@ -72,8 +72,7 @@ struct StaticLinkInfo {
 
 /* Describes information related to one window with (optional) a document
    on the screen */
-class WindowInfo {
-  public:
+struct WindowInfo {
     explicit WindowInfo(HWND hwnd);
     WindowInfo(const WindowInfo&) = delete;
     WindowInfo& operator=(const WindowInfo&) = delete;
@@ -243,15 +242,15 @@ class WindowInfo {
     bool CreateUIAProvider();
 };
 
-class LinkHandler {
-    WindowInfo* owner;
+struct LinkHandler {
+    WindowInfo* owner{nullptr};
 
     void ScrollTo(PageDestination* dest);
     void LaunchFile(const WCHAR* path, PageDestination* link);
     PageDestination* FindTocItem(TocItem* item, const WCHAR* name, bool partially = false);
 
-  public:
-    explicit LinkHandler(WindowInfo* win) : owner(win) {
+    explicit LinkHandler(WindowInfo* win) {
+        owner = win;
     }
 
     void GotoLink(PageDestination* dest);

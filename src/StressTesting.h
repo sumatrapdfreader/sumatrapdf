@@ -8,7 +8,7 @@ bool IsStressTesting();
 void BenchEbookLayout(WCHAR* filePath);
 
 class Flags;
-class WindowInfo;
+struct WindowInfo;
 
 void StartStressTest(Flags* i, WindowInfo* win);
 

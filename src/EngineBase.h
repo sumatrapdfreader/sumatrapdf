@@ -79,8 +79,7 @@ extern Kind kindDestinationZoomToDialog;
 Kind resolveDestKind(char* s);
 
 // a link destination
-class PageDestination {
-  public:
+struct PageDestination {
     Kind kind = nullptr;
     int pageNo = 0;
     RectD rect{};
@@ -113,8 +112,7 @@ extern Kind kindPageElementImage;
 extern Kind kindPageElementComment;
 
 // hoverable (and maybe interactable) element on a single page
-class PageElement {
-  public:
+struct PageElement {
     Kind kind = nullptr;
     int pageNo = 0;
     RectD rect{};
