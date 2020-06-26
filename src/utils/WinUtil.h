@@ -90,7 +90,7 @@ bool LaunchBrowser(const WCHAR* url);
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir = nullptr, DWORD flags = 0);
 bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args);
 bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
-bool IsProcessRunningElevated(DWORD procId = 0);
+bool IsProcessRunningElevated();
 bool CanTalkToProcess(DWORD procId);
 
 void PaintRect(HDC, const Rect&);

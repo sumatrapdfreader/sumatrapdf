@@ -641,7 +641,7 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
 // return true if the app is running in elevated (as admin)
 // TODO: on Vista+ use GetTokenInformation linked
 // https://social.msdn.microsoft.com/Forums/vstudio/en-US/f64ff4cb-d21b-4d72-b513-fb8eb39f4a3a/how-to-determine-if-a-user-that-created-a-process-doesnt-belong-to-administrators-group?forum=windowssecurity
-bool IsProcessRunningElevated(DWORD procId) {
+bool IsProcessRunningElevated() {
     BOOL isAdmin = FALSE;
     PSID administratorsGroup = NULL;
 
