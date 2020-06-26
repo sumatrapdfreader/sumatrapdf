@@ -18,6 +18,7 @@
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
 // ui
+#include "DisplayMode.h"
 #include "SumatraPDF.h"
 #include "resource.h"
 #include "Commands.h"

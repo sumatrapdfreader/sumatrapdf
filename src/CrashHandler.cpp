@@ -17,6 +17,7 @@
 #include "utils/LogDbg.h"
 #include "utils/Log.h"
 
+#include "DisplayMode.h"
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "CrashHandler.h"

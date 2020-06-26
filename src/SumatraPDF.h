@@ -172,5 +172,6 @@ void GetEbookUiColors(COLORREF& text, COLORREF& bg);
 void RebuildMenuBarForWindow(WindowInfo* win);
 void UpdateCheckAsync(WindowInfo* win, bool autoCheck);
 void DeleteWindowInfo(WindowInfo* win);
+void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous = false);
 
 LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
