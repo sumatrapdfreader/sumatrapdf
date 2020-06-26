@@ -682,7 +682,7 @@ void CreateTabbar(WindowInfo* win) {
     TabPainter* tp = new TabPainter(hwndTabBar, tabSize);
     SetWindowLongPtr(hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
 
-    SetWindowFont(hwndTabBar, GetDefaultGuiFont(), FALSE);
+    SetWindowFont(hwndTabBar, GetDefaultGuiFont(), FALSE); // NOLINT
     TabCtrl_SetItemSize(hwndTabBar, tabSize.dx, tabSize.dy);
 
     win->hwndTabBar = hwndTabBar;

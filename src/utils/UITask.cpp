@@ -49,7 +49,7 @@ void Destroy() {
 void Post(const std::function<void()>& f) {
     auto func = new std::function<void()>(f);
     PostMessageW(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
-}
+} // NOLINT
 
 void PostOptimized(const std::function<void()>& f) {
     if (IsGUIThread(FALSE)) {
@@ -60,6 +60,6 @@ void PostOptimized(const std::function<void()>& f) {
     }
     auto func = new std::function<void()>(f);
     PostMessageW(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
-}
+} // NOLINT
 
 } // namespace uitask

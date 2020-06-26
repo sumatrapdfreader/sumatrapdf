@@ -177,15 +177,19 @@ Key = Value";
     FreeStruct(&gSutStructInfo, data);
 
     data = (SutStruct*)DeserializeStruct(&gSutStructInfo, nullptr);
-    utassert(data && data->boolean && 0xffcc9933 == data->color);
+    utassert(data);
+    if (!data) {
+        return;
+    }
+    utassert(data->boolean && 0xffcc9933 == data->color);
     utassert(-3.14f == data->floatingPoint && 27 == data->integer);
     utassert(str::Eq(data->string, L"String") && !data->nullString && str::Eq(data->escapedString, L"$\nstring "));
     utassert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String &&
              str::Eq(data->escapedUtf8String, "$\nstring "));
     utassert(data->intArray && 3 == data->intArray->size() && 1 == data->intArray->at(0));
-    utassert(2 == data->intArray->at(1) && -3 == data->intArray->at(2));
-    utassert(3 == data->strArray->size() && 0 == data->emptyStrArray->size());
-    utassert(str::Eq(data->strArray->at(0), L"one") && str::Eq(data->strArray->at(1), L"two three") &&
+    utassert(data->intArray && 2 == data->intArray->at(1) && -3 == data->intArray->at(2));
+    utassert(data->strArray && data->emptyStrArray && 3 == data->strArray->size() && 0 == data->emptyStrArray->size());
+    utassert(data->strArray && str::Eq(data->strArray->at(0), L"one") && str::Eq(data->strArray->at(1), L"two three") &&
              str::Eq(data->strArray->at(2), L""));
     utassert(Point(111, 222) == data->point);
     utassert(data->sutStructItems && 0 == data->sutStructItems->size());

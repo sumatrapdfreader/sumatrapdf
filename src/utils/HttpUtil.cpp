@@ -242,7 +242,7 @@ void HttpGetAsync(const WCHAR* url, const std::function<void(HttpRsp*)>& f) {
     // rsp is owned and deleted by f callback
     HttpRsp* rsp = new HttpRsp;
     rsp->url.SetCopy(url);
-    RunAsync([rsp, f] {
+    RunAsync([rsp, f] { // NOLINT
         HttpGet(rsp->url, rsp);
         f(rsp);
     });

@@ -123,6 +123,26 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     forward = true;
 }
 
+static WCHAR CharToLower2(WCHAR c) {
+    WCHAR buf[1] = {c};
+    CharLowerBuffW(buf, 1);
+    return buf[0];
+}
+
+static inline WCHAR CharToLower(WCHAR c) {
+    // fast path that hopefully will be inlined
+    if (c >= 'a' && c <= 'z') {
+        return c;
+    }
+    if (c >= '0' && c <= '9') {
+        return c;
+    }
+    if (c >= 'A' && c <= 'Z') {
+        return c + 32;
+    }
+    return CharToLower2(c);
+}
+
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
 TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
@@ -146,7 +166,15 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
         }
         /* Going from page n to page n+1 is a space, too.*/
         lookingAtWs = (!*end && (currentPage < nPages)) || str::IsWs(*end);
-        if (caseSensitive ? *match == *end : CharLower((LPWSTR)LOWORD(*match)) == CharLower((LPWSTR)LOWORD(*end))) {
+        bool isMatch = false;
+        if (caseSensitive) {
+            isMatch = *match == *end;
+        } else {
+            WCHAR matchLower = CharToLower(*match);
+            WCHAR matchEnd = CharToLower(*end);
+            isMatch = matchLower == matchEnd;
+        }
+        if (isMatch) {
             /* characters are identical */;
         } else if (str::IsWs(*match) && lookingAtWs) {
             /* treat all whitespace as identical and end of page as whitespace.

@@ -77,6 +77,9 @@ int Clamp(int v, int vmin, int vmax) {
 }
 
 int Scale(int v, i64 num, i64 den) {
+    if (den == 0) {
+        return 0;
+    }
     i64 res = (i64(v) * num) / den;
     return int(res);
 }

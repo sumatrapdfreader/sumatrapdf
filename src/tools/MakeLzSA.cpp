@@ -110,10 +110,12 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
 
     size_t compressedSize = fileData.size() + 1;
     AutoFree compressed((char*)malloc(compressedSize));
-    if (!compressed)
+    if (!compressed.Get()) {
         return false;
-    if (!Compress(fileData.data, fileData.size(), compressed, &compressedSize))
+    }
+    if (!Compress(fileData.data, fileData.size(), compressed, &compressedSize)) {
         return false;
+    }
 
     ByteWriter meta = MakeByteWriterLE(data.AppendBlanks(24), 24);
     meta.Write32(headerSize);

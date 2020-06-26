@@ -987,6 +987,7 @@ void StartTocEditorForWindowInfo(WindowInfo* win) {
         bool ok = LoadVbkmFile(filePath, *vbkm);
         if (!ok) {
             // TODO: show error message box
+            delete args;
             return;
         }
     } else {

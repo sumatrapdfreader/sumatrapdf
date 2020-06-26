@@ -1214,7 +1214,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     // caused by showing/hiding UI elements happends
     if (win->AsFixed()) {
         win->AsFixed()->Relayout(zoomVirtual, rotation);
-    } else if (win && win->IsDocLoaded()) {
+    } else if (win && win->ctrl && win->IsDocLoaded()) {
         win->ctrl->SetZoomVirtual(zoomVirtual, nullptr);
     }
 

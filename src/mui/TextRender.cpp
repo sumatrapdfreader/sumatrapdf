@@ -380,7 +380,10 @@ TextRenderHdc* TextRenderHdc::Create(Graphics* gfx, int dx, int dy) {
         return nullptr;
     }
 
-    ZeroMemory(res->bmpData, dx * dy * 4);
+    if (res->bmpData) {
+        size_t n = (size_t)dx * (size_t)dy * 4;
+        ZeroMemory(res->bmpData, n);
+    }
     SelectObject(res->hdc, res->bmp);
 
     // default to red to make mistakes stand out
