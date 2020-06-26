@@ -238,6 +238,10 @@ void DisplayModel::GetDisplayState(DisplayState* ds) {
 
 SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
     PageInfo* pageInfo = GetPageInfo(pageNo);
+    CrashIf(!pageInfo);
+    if (!pageInfo) {
+        return {};
+    }
     if (fitToContent && pageInfo->contentBox.IsEmpty()) {
         pageInfo->contentBox = engine->PageContentBox(pageNo);
         if (pageInfo->contentBox.IsEmpty()) {
