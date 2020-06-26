@@ -265,7 +265,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
             win->selectionRect.dx = x - win->selectionRect.x;
             win->selectionRect.dy = y - win->selectionRect.y;
             OnSelectionEdgeAutoscroll(win, x, y);
-            win->RepaintAsync();
+            RepaintAsync(win, 0);
             break;
         case MouseAction::Dragging:
         case MouseAction::DraggingRight:
@@ -371,7 +371,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
             tab->selectionOnPage =
                 SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
             win->showSelection = tab->selectionOnPage != nullptr;
-            win->RepaintAsync();
+            RepaintAsync(win, 0);
         }
         SetCursor(IDC_ARROW);
         win->linkHandler->GotoLink(dest);
@@ -381,7 +381,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     } else if (win->fwdSearchMark.show && gGlobalPrefs->forwardSearch.highlightPermanent) {
         /* if there's a permanent forward search mark, hide it */
         win->fwdSearchMark.show = false;
-        win->RepaintAsync();
+        RepaintAsync(win, 0);
     } else if (PM_ENABLED == win->presentation) {
         /* in presentation mode, change pages on left/right-clicks */
         if ((key & MK_SHIFT)) {
@@ -418,7 +418,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
             PointD pt = dm->CvtFromScreen(Point(x, y), pageNo);
             dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
             UpdateTextSelection(win, false);
-            win->RepaintAsync();
+            RepaintAsync(win, 0);
         }
         return;
     }
@@ -434,7 +434,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
         DeleteOldSelectionInfo(win, true);
         win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
         win->showSelection = win->currentTab->selectionOnPage != nullptr;
-        win->RepaintAsync();
+        RepaintAsync(win, 0);
     }
     delete pageEl;
 }
@@ -747,7 +747,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
             SetTextColor(hdc, col);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {
-                    win->RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
+                    RepaintAsync(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 } else {
                     DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."), IsUIRightToLeft());
                 }
@@ -1289,17 +1289,17 @@ static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPAR
 
 ///// methods needed for all types of canvas /////
 
-void WindowInfo::RepaintAsync(int delayInMs) {
+void RepaintAsync(WindowInfo* win, int delayInMs) {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    uitask::Post([this, delayInMs] {
-        if (!WindowInfoStillValid(this)) {
+    uitask::Post([win, delayInMs] {
+        if (!WindowInfoStillValid(win)) {
             return;
         }
         if (!delayInMs) {
-            WndProcCanvas(hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
-        } else if (!delayedRepaintTimer) {
-            delayedRepaintTimer = SetTimer(this->hwndCanvas, REPAINT_TIMER_ID, (uint)delayInMs, nullptr);
+            WndProcCanvas(win->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
+        } else if (!win->delayedRepaintTimer) {
+            win->delayedRepaintTimer = SetTimer(win->hwndCanvas, REPAINT_TIMER_ID, (uint)delayInMs, nullptr);
         }
     });
 }
@@ -1343,9 +1343,9 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
             } else if (win->fwdSearchMark.hideStep >= HIDE_FWDSRCHMARK_STEPS) {
                 KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
                 win->fwdSearchMark.show = false;
-                win->RepaintAsync();
+                RepaintAsync(win, 0);
             } else {
-                win->RepaintAsync();
+                RepaintAsync(win, 0);
             }
             break;
 

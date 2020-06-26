@@ -701,7 +701,7 @@ struct ControllerCallbackHandler : ControllerCallback {
     }
 
     void Repaint() override {
-        win->RepaintAsync();
+        RepaintAsync(win, 0);
     }
     void PageNoChanged(Controller* ctrl, int pageNo) override;
     void UpdateScrollbars(Size canvas) override;

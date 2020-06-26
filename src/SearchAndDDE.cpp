@@ -190,12 +190,12 @@ static void ShowSearchResult(WindowInfo* win, TextSel* result, bool addNavPt) {
     dm->textSelection->CopySelection(dm->textSearch);
     UpdateTextSelection(win, false);
     dm->ShowResultRectToScreen(result);
-    win->RepaintAsync();
+    RepaintAsync(win, 0);
 }
 
 void ClearSearchResult(WindowInfo* win) {
     DeleteOldSelectionInfo(win, true);
-    win->RepaintAsync();
+    RepaintAsync(win, 0);
 }
 
 static void UpdateFindStatusTask(WindowInfo* win, NotificationWnd* wnd, int current, int total) {
@@ -535,7 +535,7 @@ void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, uint line, 
             win->ctrl->GoToPage(page, true);
         }
         if (!dm->ShowResultRectToScreen(&res)) {
-            win->RepaintAsync();
+            RepaintAsync(win, 0);
         }
         if (IsIconic(win->hwndFrame)) {
             ShowWindowAsync(win->hwndFrame, SW_RESTORE);

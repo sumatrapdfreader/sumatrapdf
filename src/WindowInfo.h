@@ -224,7 +224,6 @@ struct WindowInfo {
     void UpdateCanvasSize();
     Size GetViewPortSize();
     void RedrawAll(bool update = false);
-    void RepaintAsync(int delay = 0);
 
     void ChangePresentationMode(PresentationMode mode);
 
@@ -259,3 +258,4 @@ struct LinkHandler {
 // TODO: this belongs in SumatraPDF.h but introduces a dependency on SettingsStructs.h
 void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous = false);
 void UpdateTreeCtrlColors(WindowInfo* win);
+void RepaintAsync(WindowInfo* win, int delay);

@@ -644,7 +644,7 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
             if (win->AsFixed()) {
                 win->cbHandler->RequestRendering(1);
             }
-            win->RepaintAsync();
+            RepaintAsync(win, 0);
         }
 
         WindowInfo* toClose = win;
