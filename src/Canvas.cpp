@@ -569,22 +569,22 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
 #endif
 
 /* debug code to visualize links (can block while rendering) */
-static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
+static void DebugShowLinks(DisplayModel* dm, HDC hdc) {
     if (!gDebugShowLinks) {
         return;
     }
 
-    Rect viewPortRect(Point(), dm.GetViewPort().Size());
+    Rect viewPortRect(Point(), dm->GetViewPort().Size());
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
-    for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
-        PageInfo* pageInfo = dm.GetPageInfo(pageNo);
+    for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
+        PageInfo* pageInfo = dm->GetPageInfo(pageNo);
         if (!pageInfo || !pageInfo->shown || 0.0 == pageInfo->visibleRatio) {
             continue;
         }
 
-        Vec<IPageElement*>* els = dm.GetEngine()->GetElements(pageNo);
+        Vec<IPageElement*>* els = dm->GetEngine()->GetElements(pageNo);
         if (!els) {
             continue;
         }
@@ -593,7 +593,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
             if (els->at(i)->Is(kindPageElementImage)) {
                 continue;
             }
-            Rect rect = dm.CvtToScreen(pageNo, els->at(i)->GetRect());
+            Rect rect = dm->CvtToScreen(pageNo, els->at(i)->GetRect());
             Rect isect = viewPortRect.Intersect(rect);
             if (!isect.IsEmpty()) {
                 PaintRect(hdc, isect);
@@ -605,19 +605,19 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
 
     DeletePen(SelectObject(hdc, oldPen));
 
-    if (dm.GetZoomVirtual() == ZOOM_FIT_CONTENT) {
+    if (dm->GetZoomVirtual() == ZOOM_FIT_CONTENT) {
         // also display the content box when fitting content
         pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
         oldPen = SelectObject(hdc, pen);
 
-        for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
-            PageInfo* pageInfo = dm.GetPageInfo(pageNo);
+        for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
+            PageInfo* pageInfo = dm->GetPageInfo(pageNo);
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio) {
                 continue;
             }
 
-            auto cbbox = dm.GetEngine()->PageContentBox(pageNo);
-            Rect rect = dm.CvtToScreen(pageNo, cbbox);
+            auto cbbox = dm->GetEngine()->PageContentBox(pageNo);
+            Rect rect = dm->CvtToScreen(pageNo, cbbox);
             PaintRect(hdc, rect);
         }
 
@@ -764,18 +764,19 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         }
 
         HDC bmpDC = CreateCompatibleDC(hdc);
-        if (bmpDC) {
-            SelectObject(bmpDC, gBitmapReloadingCue);
-            int size = DpiScale(win->hwndFrame, 16);
-            int cx = std::min(bounds.dx, 2 * size);
-            int cy = std::min(bounds.dy, 2 * size);
-            int x = bounds.x + bounds.dx - std::min((cx + size) / 2, cx);
-            int y = bounds.y + std::max((cy - size) / 2, 0);
-            int dxDest = std::min(cx, size);
-            int dyDest = std::min(cy, size);
-            StretchBlt(hdc, x, y, dxDest, dyDest, bmpDC, 0, 0, 16, 16, SRCCOPY);
-            DeleteDC(bmpDC);
+        if (!bmpDC) {
+            continue;
         }
+        SelectObject(bmpDC, gBitmapReloadingCue);
+        int size = DpiScale(win->hwndFrame, 16);
+        int cx = std::min(bounds.dx, 2 * size);
+        int cy = std::min(bounds.dy, 2 * size);
+        int x = bounds.x + bounds.dx - std::min((cx + size) / 2, cx);
+        int y = bounds.y + std::max((cy - size) / 2, 0);
+        int dxDest = std::min(cx, size);
+        int dyDest = std::min(cy, size);
+        StretchBlt(hdc, x, y, dxDest, dyDest, bmpDC, 0, 0, 16, 16, SRCCOPY);
+        DeleteDC(bmpDC);
     }
 
     if (win->showSelection) {
@@ -787,7 +788,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
     }
 
     if (!rendering) {
-        DebugShowLinks(*dm, hdc);
+        DebugShowLinks(dm, hdc);
     }
 }
 
