@@ -33,8 +33,8 @@ class ITextRender {
     virtual void Lock() = 0;
     virtual void Unlock() = 0;
 
-    virtual void Draw(const char* s, size_t sLen, RectF& bb, bool isRtl) = 0;
-    virtual void Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) = 0;
+    virtual void Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) = 0;
+    virtual void Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) = 0;
 
     virtual ~ITextRender(){};
 
@@ -85,11 +85,11 @@ class TextRenderGdi : public ITextRender {
     void Lock() override;
     void Unlock() override;
 
-    void Draw(const char* s, size_t sLen, RectF& bb, bool isRtl) override;
-    void Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) override;
+    void Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) override;
+    void Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) override;
 
-    void DrawTransparent(const char* s, size_t sLen, RectF& bb, bool isRtl);
-    void DrawTransparent(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl);
+    void DrawTransparent(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl);
+    void DrawTransparent(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl);
 
     ~TextRenderGdi() override;
 };
@@ -128,8 +128,8 @@ class TextRenderGdiplus : public ITextRender {
     void Unlock() override {
     }
 
-    void Draw(const char* s, size_t sLen, RectF& bb, bool isRtl) override;
-    void Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) override;
+    void Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) override;
+    void Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) override;
 
     ~TextRenderGdiplus() override;
 };
@@ -167,8 +167,8 @@ class TextRenderHdc : public ITextRender {
     void Lock() override;
     void Unlock() override;
 
-    void Draw(const char* s, size_t sLen, RectF& bb, bool isRtl) override;
-    void Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) override;
+    void Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) override;
+    void Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) override;
 
     ~TextRenderHdc() override;
 };

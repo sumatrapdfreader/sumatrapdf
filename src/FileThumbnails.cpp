@@ -124,10 +124,6 @@ using Gdiplus::StringFormatFlagsDirectionRightToLeft;
 using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 
-using Gdiplus::PointF;
-using Gdiplus::RectF;
-using Gdiplus::SizeF;
-
 static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
     AutoFree data(file::ReadFile(filePath));
     if (!data.data) {

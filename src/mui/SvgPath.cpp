@@ -73,9 +73,6 @@ using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
-using Gdiplus::PointF;
-using Gdiplus::RectF;
-using Gdiplus::SizeF;
 namespace svg {
 
 enum class PathInstr {
@@ -198,16 +195,16 @@ static bool ParseSvgPathData(const char* s, VecSegmented<SvgPathInstr>& instr) {
     return true;
 }
 
-static void RelPointToAbs(const PointF& lastEnd, float* xy) {
+static void RelPointToAbs(const Gdiplus::PointF& lastEnd, float* xy) {
     xy[0] = lastEnd.X + xy[0];
     xy[1] = lastEnd.Y + xy[1];
 }
 
-static void RelXToAbs(const PointF& lastEnd, float* x) {
+static void RelXToAbs(const Gdiplus::PointF& lastEnd, float* x) {
     *x = lastEnd.X + *x;
 }
 
-static void RelYToAbs(const PointF& lastEnd, float* y) {
+static void RelYToAbs(const Gdiplus::PointF& lastEnd, float* y) {
     *y = lastEnd.Y + *y;
 }
 
@@ -217,7 +214,7 @@ GraphicsPath* GraphicsPathFromPathData(const char* s) {
         return nullptr;
     }
     GraphicsPath* gp = ::new GraphicsPath();
-    PointF prevEnd(0.f, 0.f);
+    Gdiplus::PointF prevEnd(0.f, 0.f);
     for (SvgPathInstr* i : instr) {
         PathInstr type = i->type;
 
@@ -239,20 +236,20 @@ GraphicsPath* GraphicsPathFromPathData(const char* s) {
         }
 
         if (PathInstr::MoveAbs == type) {
-            PointF p(i->v[0], i->v[1]);
+            Gdiplus::PointF p(i->v[0], i->v[1]);
             prevEnd = p;
             gp->StartFigure();
         } else if (PathInstr::LineToAbs == type) {
-            PointF p(i->v[0], i->v[1]);
+            Gdiplus::PointF p(i->v[0], i->v[1]);
             gp->AddLine(prevEnd, p);
             prevEnd = p;
         } else if (PathInstr::HLineAbs == type) {
-            PointF p(prevEnd);
+            Gdiplus::PointF p(prevEnd);
             p.X = i->v[0];
             gp->AddLine(prevEnd, p);
             prevEnd = p;
         } else if (PathInstr::VLineAbs == type) {
-            PointF p(prevEnd);
+            Gdiplus::PointF p(prevEnd);
             p.Y = i->v[0];
             gp->AddLine(prevEnd, p);
             prevEnd = p;

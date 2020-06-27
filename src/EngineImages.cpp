@@ -63,10 +63,6 @@ using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 using Gdiplus::WrapModeTileFlipXY;
 
-using Gdiplus::PointF;
-using Gdiplus::RectF;
-using Gdiplus::SizeF;
-
 Kind kindEngineImage = "engineImage";
 Kind kindEngineImageDir = "engineImageDir";
 Kind kindEngineComicBooks = "engineComicBooks";
@@ -236,8 +232,8 @@ void EngineImages::GetTransform(Matrix& m, int pageNo, float zoom, int rotation)
 }
 
 RectFl EngineImages::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
-    PointF pts[2] = {PointF((float)rect.x, (float)rect.y),
-                     PointF((float)(rect.x + rect.dx), (float)(rect.y + rect.dy))};
+    Gdiplus::PointF pts[2] = {Gdiplus::PointF((float)rect.x, (float)rect.y),
+                              Gdiplus::PointF((float)(rect.x + rect.dx), (float)(rect.y + rect.dy))};
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);
     if (inverse) {

@@ -161,7 +161,7 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
         ForceNewPage();
     }
     if (attr) {
-        RectF bbox(0, currY, pageDx, 0);
+        Gdiplus::RectF bbox(0, currY, pageDx, 0);
         currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
         pagePath.Set(str::DupN(attr->val, attr->valLen));
         // reset CSS style rules for the new document
@@ -296,7 +296,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         if (!isSubtitle && t->IsStartTag()) {
             char* link = (char*)Allocator::Alloc(textAllocator, 24);
             sprintf_s(link, 24, FB2_TOC_ENTRY_MARK "%d", ++titleCount);
-            currPage->instructions.Append(DrawInstr::Anchor(link, str::Len(link), RectF(0, currY, pageDx, 0)));
+            currPage->instructions.Append(DrawInstr::Anchor(link, str::Len(link), Gdiplus::RectF(0, currY, pageDx, 0)));
         }
     } else if (Tag_Section == t->tag) {
         if (t->IsStartTag()) {

@@ -122,7 +122,7 @@ struct ColorDataGradientLinear {
     LinearGradientMode mode;
     ARGB startColor;
     ARGB endColor;
-    RectF* rect;
+    Gdiplus::RectF* rect;
     LinearGradientBrush* cachedBrush;
 };
 
@@ -264,7 +264,7 @@ CachedStyle* CachedStyleByName(const char* name);
 Style* StyleByName(const char* name);
 
 Brush* BrushFromColorData(ColorData* color, const Gdiplus::Rect& r);
-Brush* BrushFromColorData(ColorData* color, const RectF& r);
+Brush* BrushFromColorData(ColorData* color, const Gdiplus::RectF& r);
 
 ARGB ParseCssColor(const char* color);
 Gdiplus::Size GetBorderAndPaddingSize(CachedStyle* s);

@@ -110,14 +110,14 @@ float TextRenderGdi::GetCurrFontLineSpacing() {
 #endif
 }
 
-RectF TextRenderGdi::Measure(const WCHAR* s, size_t sLen) {
+Gdiplus::RectF TextRenderGdi::Measure(const WCHAR* s, size_t sLen) {
     SIZE txtSize;
     GetTextExtentPoint32W(hdcForTextMeasure, s, (int)sLen, &txtSize);
-    RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
+    Gdiplus::RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
     return res;
 }
 
-RectF TextRenderGdi::Measure(const char* s, size_t sLen) {
+Gdiplus::RectF TextRenderGdi::Measure(const char* s, size_t sLen) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Measure(txtConvBuf, strLen);
 }
@@ -164,7 +164,7 @@ void TextRenderGdi::Unlock() {
     hdcGfxLocked = nullptr;
 }
 
-void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
@@ -179,7 +179,7 @@ void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) {
 #endif
 }
 
-void TextRenderGdi::Draw(const char* s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderGdi::Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
@@ -240,7 +240,7 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
 // TODO: I would like to figure out a way to draw text without the need to Lock()/Unlock()
 // maybe draw to in-memory bitmap, convert to Graphics bitmap and blit that bitmap to
 // Graphics object
-void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
     CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
 
     int x = (int)bb.X;
@@ -275,13 +275,13 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, RectF& bb, bool
     AlphaBlend(hdcGfxLocked, x, y, dx, dy, memHdc, 0, 0, dx, dy, bf);
 }
 
-void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return DrawTransparent(txtConvBuf, strLen, bb, isRtl);
 }
 
-TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx,
-                                             RectF (*measureAlgo)(Graphics* g, Font* f, const WCHAR* s, int len)) {
+TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx, Gdiplus::RectF (*measureAlgo)(Graphics* g, Font* f,
+                                                                                          const WCHAR* s, int len)) {
     TextRenderGdiplus* res = new TextRenderGdiplus();
     res->gfx = gfx;
     res->currFont = nullptr;
@@ -304,12 +304,12 @@ float TextRenderGdiplus::GetCurrFontLineSpacing() {
     return currFont->font->GetHeight(gfx);
 }
 
-RectF TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
+Gdiplus::RectF TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
     CrashIf(!currFont);
     return MeasureText(gfx, currFont->font, s, sLen, measureAlgo);
 }
 
-RectF TextRenderGdiplus::Measure(const char* s, size_t sLen) {
+Gdiplus::RectF TextRenderGdiplus::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return MeasureText(gfx, currFont->font, txtConvBuf, strLen, measureAlgo);
@@ -328,8 +328,8 @@ void TextRenderGdiplus::SetTextColor(Gdiplus::Color col) {
     textColorBrush = ::new SolidBrush(col);
 }
 
-void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) {
-    PointF pos;
+void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
+    Gdiplus::PointF pos;
     bb.GetLocation(&pos);
     if (!isRtl) {
         gfx->DrawString(s, (INT)sLen, currFont->font, pos, nullptr, textColorBrush);
@@ -341,7 +341,7 @@ void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl)
     }
 }
 
-void TextRenderGdiplus::Draw(const char* s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderGdiplus::Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     Draw(txtConvBuf, strLen, bb, isRtl);
 }
@@ -434,16 +434,16 @@ Gdiplus::RectF TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
     SIZE txtSize;
     CrashIf(!hdc);
     GetTextExtentPoint32W(hdc, s, (int)sLen, &txtSize);
-    RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
+    Gdiplus::RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
     return res;
 }
 
-void TextRenderHdc::Draw(const char* s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderHdc::Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
-void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
     CrashIf(!hdc);
     int x = (int)bb.X;
     int y = (int)bb.Y;
@@ -491,7 +491,7 @@ ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, in
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
 size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, float dx) {
-    RectF r = textMeasure->Measure(s, len);
+    Gdiplus::RectF r = textMeasure->Measure(s, len);
     if (r.Width <= dx) {
         return len;
     }
@@ -528,7 +528,7 @@ size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, f
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
 float GetSpaceDx(ITextRender* textMeasure) {
-    RectF bbox;
+    Gdiplus::RectF bbox;
 #if 0
     bbox = textMeasure->Measure(L" ", 1, algo);
     float spaceDx1 = bbox.Width;

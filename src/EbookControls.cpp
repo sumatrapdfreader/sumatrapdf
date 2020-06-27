@@ -157,7 +157,7 @@ DrawInstr* PageControl::GetLinkAt(int x, int y) const {
         return nullptr;
     }
 
-    PointF pt((float)(x - cachedStyle->padding.left), (float)(y - cachedStyle->padding.top));
+    Gdiplus::PointF pt((float)(x - cachedStyle->padding.left), (float)(y - cachedStyle->padding.top));
     for (DrawInstr& i : page->instructions) {
         if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmptyArea() && i.bbox.Contains(pt)) {
             return &i;

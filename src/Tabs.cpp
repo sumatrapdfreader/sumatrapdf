@@ -82,10 +82,6 @@ using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
-using Gdiplus::PointF;
-using Gdiplus::RectF;
-using Gdiplus::SizeF;
-
 #define DEFAULT_CURRENT_BG_COL (COLORREF) - 1
 
 #define T_CLOSING (TCN_LAST + 1)
@@ -260,7 +256,7 @@ class TabPainter {
 
         Font f(hdc, GetDefaultGuiFont());
         // TODO: adjust these constant values for DPI?
-        RectF layout((float)DpiScale(hwnd, 3), 1.0f, float(width - DpiScale(hwnd, 20)), (float)height);
+        Gdiplus::RectF layout((float)DpiScale(hwnd, 3), 1.0f, float(width - DpiScale(hwnd, 20)), (float)height);
         StringFormat sf(StringFormat::GenericDefault());
         sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
         sf.SetLineAlignment(StringAlignmentCenter);

@@ -276,9 +276,9 @@ bool EngineEbook::ExtractPageAnchors() {
 RectFl EngineEbook::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
     UNUSED(pageNo);
     geomutil::RectT<float> rcF = rect.Convert<float>();
-    auto p1 = PointF(rcF.x, rcF.y);
-    auto p2 = PointF(rcF.x + rcF.dx, rcF.y + rcF.dy);
-    PointF pts[2] = {p1, p2};
+    auto p1 = Gdiplus::PointF(rcF.x, rcF.y);
+    auto p2 = Gdiplus::PointF(rcF.x + rcF.dx, rcF.y + rcF.dy);
+    Gdiplus::PointF pts[2] = {p1, p2};
     Matrix m;
     GetTransform(m, zoom, rotation);
     if (inverse) {
@@ -298,8 +298,8 @@ static void DrawAnnotationHighlight(Graphics& g, Annotation* annot) {
 static void DrawAnnotationUnderline(Graphics& g, Annotation* annot) {
     RectFl rect = annot->Rect();
     auto color = annot->Color();
-    auto p1 = PointF((float)rect.x, (float)rect.BR().y);
-    auto p2 = PointF((float)rect.BR().x, p1.Y);
+    auto p1 = Gdiplus::PointF((float)rect.x, (float)rect.BR().y);
+    auto p2 = Gdiplus::PointF((float)rect.BR().x, p1.Y);
     {
         Pen tmpPen(FromColor(color));
         g.DrawLine(&tmpPen, p1, p2);
@@ -309,8 +309,8 @@ static void DrawAnnotationUnderline(Graphics& g, Annotation* annot) {
 static void DrawAnnotationStrikeOut(Graphics& g, Annotation* annot) {
     RectFl rect = annot->Rect();
     auto color = annot->Color();
-    auto p1 = PointF((float)rect.x, (float)rect.y + (float)rect.dy / 2);
-    auto p2 = PointF((float)rect.BR().x, p1.Y);
+    auto p1 = Gdiplus::PointF((float)rect.x, (float)rect.y + (float)rect.dy / 2);
+    auto p2 = Gdiplus::PointF((float)rect.BR().x, p1.Y);
     {
         Pen tmpPen(FromColor(color));
         g.DrawLine(&tmpPen, p1, p2);
@@ -324,8 +324,8 @@ static void DrawAnnotationSquiggly(Graphics& g, Annotation* annot) {
     float dash[2] = {2, 2};
     p.SetDashPattern(dash, dimof(dash));
     p.SetDashOffset(1);
-    auto p1 = PointF((float)rect.x, (float)rect.BR().y - 0.25f);
-    auto p2 = PointF((float)rect.BR().x, p1.Y);
+    auto p1 = Gdiplus::PointF((float)rect.x, (float)rect.BR().y - 0.25f);
+    auto p2 = Gdiplus::PointF((float)rect.BR().x, p1.Y);
     g.DrawLine(&p, p1, p2);
     p.SetDashOffset(3);
     p1.Y += 0.5f;
@@ -343,7 +343,7 @@ static void DrawAnnotations(Graphics& g, Vec<Annotation*>* annots, int pageNo) {
         if (annot->pageNo != pageNo) {
             continue;
         }
-        PointF p1, p2;
+        Gdiplus::PointF p1, p2;
         switch (annot->type) {
             case AnnotationType::Highlight:
                 DrawAnnotationHighlight(g, annot);
@@ -1363,7 +1363,7 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
         ForceNewPage();
     }
     if (attr) {
-        RectF bbox(0, currY, pageDx, 0);
+        Gdiplus::RectF bbox(0, currY, pageDx, 0);
         currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
         pagePath.Set(str::DupN(attr->val, attr->valLen));
         // reset CSS style rules for the new document

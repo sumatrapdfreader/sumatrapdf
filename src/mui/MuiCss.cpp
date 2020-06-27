@@ -50,10 +50,6 @@ using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
-using Gdiplus::PointF;
-using Gdiplus::RectF;
-using Gdiplus::SizeF;
-
 /*
 A css-like way to style controls/windows.
 
@@ -468,7 +464,7 @@ Prop* Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     p.color.gradientLinear.startColor = startColor;
     p.color.gradientLinear.endColor = endColor;
 
-    p.color.gradientLinear.rect = ::new RectF();
+    p.color.gradientLinear.rect = ::new Gdiplus::RectF();
     p.color.gradientLinear.cachedBrush = nullptr;
     return UniqifyProp(p);
 }
@@ -687,7 +683,7 @@ Style* StyleByName(const char* name) {
     return nullptr;
 }
 
-Brush* BrushFromColorData(ColorData* color, const RectF& r) {
+Brush* BrushFromColorData(ColorData* color, const Gdiplus::RectF& r) {
     if (ColorSolid == color->type) {
         return color->solid.cachedBrush;
     }
@@ -709,7 +705,7 @@ Brush* BrushFromColorData(ColorData* color, const RectF& r) {
 }
 
 Brush* BrushFromColorData(ColorData* color, const Gdiplus::Rect& r) {
-    return BrushFromColorData(color, RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
+    return BrushFromColorData(color, Gdiplus::RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
 }
 
 static void AddBorders(int& dx, int& dy, CachedStyle* s) {

@@ -55,7 +55,7 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
 
     textDx = 0;
     float fontDy = font->GetHeight(gfx);
-    RectF bbox;
+    Gdiplus::RectF bbox;
     if (text) {
         bbox = MeasureText(gfx, font, text);
         textDx = CeilI(bbox.Width);
@@ -146,7 +146,7 @@ void Button::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedStyle* s = cachedStyle;
 
-    RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
+    Gdiplus::RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
@@ -164,7 +164,7 @@ void Button::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedFont* cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
     Font* font = cachedFont->font;
-    gfx->DrawString(text, (int)str::Len(text), font, PointF((float)x, (float)y), nullptr, brColor);
+    gfx->DrawString(text, (int)str::Len(text), font, Gdiplus::PointF((float)x, (float)y), nullptr, brColor);
 }
 
 ButtonVector::ButtonVector() {
@@ -250,7 +250,7 @@ void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedStyle* s = cachedStyle;
 
-    RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
+    Gdiplus::RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 

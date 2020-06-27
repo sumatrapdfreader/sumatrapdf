@@ -69,7 +69,7 @@ bool ValidReparseIdx(ptrdiff_t idx, HtmlPullParser* parser) {
     return true;
 }
 
-DrawInstr DrawInstr::Str(const char* s, size_t len, RectF bbox, bool rtl) {
+DrawInstr DrawInstr::Str(const char* s, size_t len, Gdiplus::RectF bbox, bool rtl) {
     DrawInstr di(rtl ? DrawInstrType::RtlString : DrawInstrType::String, bbox);
     di.str.s = s;
     di.str.len = len;
@@ -88,7 +88,7 @@ DrawInstr DrawInstr::FixedSpace(float dx) {
     return di;
 }
 
-DrawInstr DrawInstr::Image(char* data, size_t len, RectF bbox) {
+DrawInstr DrawInstr::Image(char* data, size_t len, Gdiplus::RectF bbox) {
     DrawInstr di(DrawInstrType::Image);
     di.img.data = data;
     di.img.len = len;
@@ -103,7 +103,7 @@ DrawInstr DrawInstr::LinkStart(const char* s, size_t len) {
     return di;
 }
 
-DrawInstr DrawInstr::Anchor(const char* s, size_t len, RectF bbox) {
+DrawInstr DrawInstr::Anchor(const char* s, size_t len, Gdiplus::RectF bbox) {
     DrawInstr di(DrawInstrType::Anchor);
     di.str.s = s;
     di.str.len = len;
@@ -455,14 +455,14 @@ void HtmlFormatter::JustifyCurrLine(AlignAttr align) {
     }
 }
 
-static RectF RectFUnion(RectF& r1, RectF& r2) {
+static Gdiplus::RectF RectFUnion(Gdiplus::RectF& r1, Gdiplus::RectF& r2) {
     if (r2.IsEmptyArea()) {
         return r1;
     }
     if (r1.IsEmptyArea()) {
         return r2;
     }
-    RectF ru;
+    Gdiplus::RectF ru;
     ru.Union(ru, r1, r2);
     return ru;
 }
@@ -602,7 +602,7 @@ bool HtmlFormatter::EmitImage(ImageData* img) {
         return false;
     }
 
-    SizeF newSize((float)imgSize.Width, (float)imgSize.Height);
+    Gdiplus::SizeF newSize((float)imgSize.Width, (float)imgSize.Height);
     // move overly large images to a new line (if they don't fit entirely)
     if (!IsCurrLineEmpty() && (currX + newSize.Width > pageDx || currY + newSize.Height > pageDy)) {
         FlushCurrLine(false);
@@ -629,7 +629,7 @@ bool HtmlFormatter::EmitImage(ImageData* img) {
         }
     }
 
-    RectF bbox(PointF(currX, 0), newSize);
+    Gdiplus::RectF bbox(Gdiplus::PointF(currX, 0), newSize);
     AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
     currX += bbox.Width;
 
@@ -641,7 +641,7 @@ void HtmlFormatter::EmitHr() {
     // hr creates an implicit paragraph break
     FlushCurrLine(true);
     CrashIf(NewLineX() != currX);
-    RectF bbox(0.f, 0.f, pageDx, lineSpacing);
+    Gdiplus::RectF bbox(0.f, 0.f, pageDx, lineSpacing);
     AppendInstr(DrawInstr(DrawInstrType::Line, bbox));
     FlushCurrLine(true);
 }
@@ -733,7 +733,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             break;
         }
         textMeasure->SetFont(CurrFont());
-        RectF bbox = textMeasure->Measure(buf, strLen);
+        Gdiplus::RectF bbox = textMeasure->Measure(buf, strLen);
         if (bbox.Width <= pageDx - currX) {
             AppendInstr(DrawInstr::Str(s, end - s, bbox, dirRtl));
             currX += bbox.Width;
@@ -797,7 +797,7 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
     }
 
     // TODO: make anchors more specific than the top of the current line?
-    RectF bbox(0, currY, pageDx, 0);
+    Gdiplus::RectF bbox(0, currY, pageDx, 0);
     // append at the start of the line to prevent the anchor
     // from being flushed to the next page (with wrong currY value)
     currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
@@ -1409,7 +1409,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
 #endif
     textDraw->Lock();
     for (DrawInstr& i : *drawInstructions) {
-        RectF bbox = i.bbox;
+        Gdiplus::RectF bbox = i.bbox;
         bbox.X += offX;
         bbox.Y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
@@ -1432,14 +1432,14 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
 
     Status status;
     for (DrawInstr& i : *drawInstructions) {
-        RectF bbox = i.bbox;
+        Gdiplus::RectF bbox = i.bbox;
         bbox.X += offX;
         bbox.Y += offY;
         if (DrawInstrType::Line == i.type) {
             // hr is a line drawn in the middle of bounding box
             float y = floorf(bbox.Y + bbox.Height / 2.f + 0.5f);
-            PointF p1(bbox.X, y);
-            PointF p2(bbox.X + bbox.Width, y);
+            Gdiplus::PointF p1(bbox.X, y);
+            Gdiplus::PointF p2(bbox.X + bbox.Width, y);
             if (showBbox) {
                 status = g->DrawRectangle(&debugPen, bbox);
                 CrashIf(status != Ok);
@@ -1458,8 +1458,8 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
         } else if (DrawInstrType::LinkStart == i.type) {
             // TODO: set text color to blue
             float y = floorf(bbox.Y + bbox.Height + 0.5f);
-            PointF p1(bbox.X, y);
-            PointF p2(bbox.X + bbox.Width, y);
+            Gdiplus::PointF p1(bbox.X, y);
+            Gdiplus::PointF p2(bbox.X + bbox.Width, y);
             Pen linkPen(textColor);
             status = g->DrawLine(&linkPen, p1, p2);
             CrashIf(status != Ok);

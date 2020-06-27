@@ -51,10 +51,6 @@ using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 using Gdiplus::WrapModeTileFlipXY;
 
-using Gdiplus::PointF;
-using Gdiplus::RectF;
-using Gdiplus::SizeF;
-
 #include "MuiBase.h"
 #include "TextRender.h"
 #include "MuiCss.h"
