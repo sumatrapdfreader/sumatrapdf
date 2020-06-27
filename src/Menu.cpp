@@ -269,12 +269,12 @@ static MenuDef menuDefCreateAnnot[] = {
     { _TR_TODON("Free Text"), CmdCreateAnnotFreeText, 0 },
     { _TR_TODON("Stamp"), CmdCreateAnnotStamp, 0 },
     { _TR_TODON("Caret"), CmdCreateAnnotCaret, 0 },
-    { _TR_TODON("Ink"), CmdCreateAnnotInk, 0 },
+    //{ _TR_TODON("Ink"), CmdCreateAnnotInk, 0 },
     { _TR_TODON("Square"), CmdCreateAnnotSquare, 0 },
     { _TR_TODON("Circle"), CmdCreateAnnotCircle, 0 },
     { _TR_TODON("Line"), CmdCreateAnnotLine, 0 },
-    { _TR_TODON("Polygon"), CmdCreateAnnotPolygon, 0 },
-    { _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, 0 },
+    //{ _TR_TODON("Polygon"), CmdCreateAnnotPolygon, 0 },
+    //{ _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, 0 },
     { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, 0 },
     { _TR_TODON("Underline"), CmdCreateAnnotUnderline, 0 },
     { _TR_TODON("Strike Out"), CmdCreateAnnotStrikeOut, 0 },
@@ -733,6 +733,16 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         HMENU popupCreateAnnot = BuildMenuFromMenuDef(mdef, CreatePopupMenu());
         uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
         InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR_TODO("Create Annotation"));
+
+        // TODO: disable those if no selection
+        bool isTextSelection = false;
+        if (!isTextSelection) {
+            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotHighlight, false);
+            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotUnderline, false);
+            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotStrikeOut, false);
+            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotSquiggly, false);
+            win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotRedact, false);
+        }
     }
 
     if (!pageEl || !pageEl->Is(kindPageElementDest) || !value) {
@@ -864,14 +874,18 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdCreateAnnotFreeText:
         case CmdCreateAnnotStamp:
         case CmdCreateAnnotCaret:
+        case CmdCreateAnnotSquare: {
             Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, ptOnPage);
             RerenderForWindowInfo(win);
             StartEditAnnotations(win->currentTab, annot);
             delete annot;
+        } break;
+        case CmdCreateAnnotInk:
+        case CmdCreateAnnotPolyLine:
+            // TODO: implement me
             break;
     }
     /*
-        { _TR_TODON("Ink"), CmdCreateAnnotInk, 0 },
         { _TR_TODON("Square"), CmdCreateAnnotSquare, 0 },
         { _TR_TODON("Circle"), CmdCreateAnnotCircle, 0 },
         { _TR_TODON("Line"), CmdCreateAnnotLine, 0 },

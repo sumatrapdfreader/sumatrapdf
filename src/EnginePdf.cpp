@@ -2223,6 +2223,7 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
         case AnnotationType::FreeText:
         case AnnotationType::Stamp:
         case AnnotationType::Caret:
+        case AnnotationType::Square:
             fz_rect trect = pdf_annot_rect(ctx, annot);
             float dx = trect.x1 - trect.x0;
             trect.x0 = pos.x;
