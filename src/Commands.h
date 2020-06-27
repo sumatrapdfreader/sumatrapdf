@@ -132,7 +132,7 @@
     V(CreateAnnotStamp, "Create Stamp Annotation")                    \
     V(CreateAnnotCaret, "Create Caret Annotation")                    \
     V(CreateAnnotInk, "Create Ink Annotation")                        \
-    V(CreateAnnotPopup, "Create Popup Annotation")                        \
+    V(CreateAnnotPopup, "Create Popup Annotation")                    \
     V(CreateAnnotFileAttachment, "Create File Attachment Annotation") \
     V(LastCommand, "")
 

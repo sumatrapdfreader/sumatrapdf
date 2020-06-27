@@ -2224,7 +2224,7 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
         case AnnotationType::Stamp:
         case AnnotationType::Caret:
         case AnnotationType::Square:
-        case AnnotationType::Circle:
+        case AnnotationType::Circle: {
             fz_rect trect = pdf_annot_rect(ctx, annot);
             float dx = trect.x1 - trect.x0;
             trect.x0 = pos.x;
@@ -2233,7 +2233,12 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
             trect.y0 = pos.y;
             trect.y1 = trect.y0 + dy;
             pdf_set_annot_rect(ctx, annot, trect);
-            break;
+        } break;
+        case AnnotationType::Line: {
+            fz_point a{pos.x, pos.y};
+            fz_point b{pos.x + 100, pos.y + 50};
+            pdf_set_annot_line(ctx, annot, a, b);
+        } break;
     }
     if (typ == AnnotationType::FreeText) {
         pdf_set_annot_contents(ctx, annot, "This is a text...");

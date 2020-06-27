@@ -875,6 +875,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdCreateAnnotStamp:
         case CmdCreateAnnotCaret:
         case CmdCreateAnnotSquare:
+        case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle: {
             Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, ptOnPage);
             RerenderForWindowInfo(win);
@@ -888,14 +889,17 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     }
     /*
         { _TR_TODON("Line"), CmdCreateAnnotLine, 0 },
-        { _TR_TODON("Polygon"), CmdCreateAnnotPolygon, 0 },
-        { _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, 0 },
         { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, 0 },
         { _TR_TODON("Underline"), CmdCreateAnnotUnderline, 0 },
         { _TR_TODON("Strike Out"), CmdCreateAnnotStrikeOut, 0 },
         { _TR_TODON("Squiggly"), CmdCreateAnnotSquiggly, 0 },
         { _TR_TODON("File Attachment"), CmdCreateAnnotFileAttachment, 0 },
         { _TR_TODON("Redact"), CmdCreateAnnotRedact, 0 },
+    */
+    // TODO: those require creating
+    /*
+        { _TR_TODON("Polygon"), CmdCreateAnnotPolygon, 0 },
+        { _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, 0 },
     */
 
     delete pageEl;
