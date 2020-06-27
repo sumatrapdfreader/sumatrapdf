@@ -117,21 +117,37 @@
     V(DebugMui, "Debug: Mui")                                         \
     V(NewBookmarks, "New Bookmarks")                                  \
     V(CreateAnnotText, "Create Text Annotation")                      \
+    V(CreateAnnotLink, "Create Link Annotation")                      \
     V(CreateAnnotFreeText, "Create  Free Text Annotation")            \
-    V(CreateAnnotStamp, "Create Stamp Annotation")                    \
-    V(CreateAnnotCaret, "Create Caret Annotation")                    \
-    V(CreateAnnotInk, "Create Ink Annotation")                        \
+    V(CreateAnnotLine, "Create Line Annotation")                      \
     V(CreateAnnotSquare, "Create Square Annotation")                  \
     V(CreateAnnotCircle, "Create Circle Annotation")                  \
-    V(CreateAnnotLine, "Create Line Annotation")                      \
     V(CreateAnnotPolygon, "Create Polygon Annotation")                \
     V(CreateAnnotPolyLine, "Create Poly Line Annotation")             \
     V(CreateAnnotHighlight, "Create Highlight Annotation")            \
     V(CreateAnnotUnderline, "Create Underline Annotation")            \
-    V(CreateAnnotStrikeOut, "Create Strike Out Annotation")           \
     V(CreateAnnotSquiggly, "Create Squiggly Annotation")              \
+    V(CreateAnnotStrikeOut, "Create Strike Out Annotation")           \
+    V(CreateAnnotRedact, "Create Redact Annotation")                  \
+    V(CreateAnnotStamp, "Create Stamp Annotation")                    \
+    V(CreateAnnotCaret, "Create Caret Annotation")                    \
+    V(CreateAnnotInk, "Create Ink Annotation")                        \
+    V(CreateAnnotPopup, "Create Popup Annotation")                        \
     V(CreateAnnotFileAttachment, "Create File Attachment Annotation") \
-    V(CreateAnnotRedact, "Create Redact Annotation")
+    V(LastCommand, "")
+
+// order of CreateAnnot* must be the same as enum AnnotationType
+/*
+    TOOD: maybe add commands for those annotations
+    Sound,
+    Movie,
+    Widget,
+    Screen,
+    PrinterMark,
+    TrapNet,
+    Watermark,
+    ThreeD,
+*/
 
 #define DEF_CMD(id, s) Cmd##id,
 
