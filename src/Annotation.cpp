@@ -94,6 +94,9 @@ bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
     if (a1 == a2) {
         return true;
     }
+    if (a1->pdf && a2->pdf) {
+        return a1->pdf->annot == a2->pdf->annot;
+    }
     // TODO: fix me
     CrashIf(false);
     if (a1->type != a2->type) {

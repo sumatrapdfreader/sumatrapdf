@@ -4,8 +4,7 @@
 extern "C" struct pdf_annot;
 extern "C" struct fz_context;
 
-// for fast conversions, must match the order of the above enum
-// (from mupdf annot.h)
+// for fast conversions, must match the order of pdf_annot_type enum in annot.h
 enum class AnnotationType {
     Text,
     Link,

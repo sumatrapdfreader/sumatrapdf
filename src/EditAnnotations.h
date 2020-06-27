@@ -3,5 +3,5 @@
 
 struct EditAnnotationsWindow;
 
-void StartEditAnnotations(TabInfo* tab);
+void StartEditAnnotations(TabInfo* tab, Annotation* annot);
 void DeleteEditAnnotationsWindow(EditAnnotationsWindow*);

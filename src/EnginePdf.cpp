@@ -1995,15 +1995,15 @@ const pdf_write_options pdf_default_write_options2 = {
 // annotations).
 // if filePath is not given, we save under the same name
 // TODO: if the file is locked, this might fail.
-bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view filePath) {
+bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view path) {
     CrashIf(!engine);
     if (!engine) {
         return false;
     }
     EnginePdf* enginePdf = (EnginePdf*)engine;
     strconv::StackWstrToUtf8 currPath = engine->FileName();
-    if (filePath.empty()) {
-        filePath = {currPath.Get()};
+    if (path.empty()) {
+        path = {currPath.Get()};
     }
     fz_context* ctx = enginePdf->ctx;
     pdf_document* doc = pdf_document_from_fz_document(ctx, enginePdf->_doc);
@@ -2020,11 +2020,11 @@ bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view filePath) {
 
     bool ok = true;
     fz_try(ctx) {
-        pdf_save_document(ctx, doc, filePath.data(), &save_opts);
+        pdf_save_document(ctx, doc, path.data(), &save_opts);
     }
     fz_catch(ctx) {
         const char* errMsg = fz_caught_message(enginePdf->ctx);
-        logf("Pdf save of '%s' failed with '%s'\n", filePath.data(), errMsg);
+        logf("Pdf save of '%s' failed with '%s'\n", path.data(), errMsg);
         // TODO: show error message
         ok = false;
     }
@@ -2191,4 +2191,47 @@ EngineBase* CreateEnginePdfFromFile(const WCHAR* path, PasswordUI* pwdUI) {
 
 EngineBase* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI) {
     return EnginePdf::CreateFromStream(stream, pwdUI);
+}
+
+static const char* getuser(void) {
+    const char* u;
+    u = getenv("USER");
+    if (!u)
+        u = getenv("USERNAME");
+    if (!u)
+        u = "user";
+    return u;
+}
+
+Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointD pos) {
+    CrashIf(engine->kind != kindEnginePdf);
+    EnginePdf* enginePdf = (EnginePdf*)engine;
+    fz_context* ctx = enginePdf->ctx;
+
+    auto pageInfo = enginePdf->GetFzPageInfo(pageNo, true);
+    auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
+    enum pdf_annot_type atyp = (enum pdf_annot_type)typ;
+    auto annot = pdf_create_annot(ctx, page, atyp);
+
+    pdf_set_annot_modification_date(ctx, annot, time(NULL));
+    if (pdf_annot_has_author(ctx, annot)) {
+        pdf_set_annot_author(ctx, annot, getuser());
+    }
+
+    switch (typ) {
+        case AnnotationType::Text:
+            fz_rect trect = pdf_annot_rect(ctx, annot);
+            float dx = trect.x1 - trect.x0;
+            trect.x0 = pos.x;
+            trect.x1 = trect.x0 + dx;
+            float dy = trect.y1 - trect.y0;
+            trect.y0 = pos.y;
+            trect.y1 = trect.y0 + dy;
+            pdf_set_annot_rect(ctx, annot, trect);
+            break;
+    }
+
+    pdf_update_appearance(ctx, annot);
+    auto res = MakeAnnotationPdf(ctx, page, annot, pageNo);
+    return res;
 }

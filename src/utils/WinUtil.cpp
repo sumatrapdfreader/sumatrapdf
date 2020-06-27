@@ -2133,12 +2133,16 @@ bool IsValidDelayType(int type) {
     return false;
 }
 
-void HwndSetText(HWND hwnd, std::string_view s) {
+void HwndSetText(HWND hwnd, std::string_view sv) {
     // can be called before a window is created
-    if (!hwnd || s.empty()) {
+    if (!hwnd) {
         return;
     }
-    AutoFreeWstr ws = strconv::Utf8ToWstr(s);
+    if (sv.empty()) {
+        SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)L"");
+        return;
+    }
+    AutoFreeWstr ws = strconv::Utf8ToWstr(sv);
     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws.Get());
 }
 

@@ -803,10 +803,10 @@ static void ButtonDeleteHandler(EditAnnotationsWindow* win) {
     win->annot->Delete();
     RebuildAnnotations(win);
     UpdateUIForSelectedAnnotation(win, -1);
+    RerenderForWindowInfo(win->tab->win);
 }
 
 static void ListBoxSelectionChanged(EditAnnotationsWindow* win, ListBoxSelectionChangedEvent* ev) {
-    // TODO: finish me
     int itemNo = ev->idx;
     UpdateUIForSelectedAnnotation(win, itemNo);
 }
@@ -1229,8 +1229,29 @@ static void SetAnnotations(EditAnnotationsWindow* win, TabInfo* tab) {
     RebuildAnnotations(win);
 }
 
-void StartEditAnnotations(TabInfo* tab) {
+static bool SelectAnnotationInListBox(EditAnnotationsWindow* win, Annotation* annot) {
+    if (!annot) {
+        win->listBox->SetCurrentSelection(-1);
+        return false;
+    }
+    int n = win->annotations->isize();
+    for (int i = 0; i < n; i++) {
+        Annotation* a = win->annotations->at(i);
+        if (IsAnnotationEq(a, annot)) {
+            win->listBox->SetCurrentSelection(i);
+            UpdateUIForSelectedAnnotation(win, i);
+            return true;
+        }
+    }
+    return false;
+}
+
+void StartEditAnnotations(TabInfo* tab, Annotation* selectedAnnot) {
     if (tab->editAnnotsWindow) {
+        if (selectedAnnot) {
+            RebuildAnnotations(tab->editAnnotsWindow);
+            SelectAnnotationInListBox(tab->editAnnotsWindow, selectedAnnot);
+        }
         HWND hwnd = tab->editAnnotsWindow->mainWindow->hwnd;
         BringWindowToTop(hwnd);
         return;
@@ -1273,6 +1294,7 @@ void StartEditAnnotations(TabInfo* tab) {
     }
     LayoutAndSizeToContent(win->mainLayout, 520, minDy, mainWindow->hwnd);
     HwndPositionToTheRightOf(mainWindow->hwnd, tab->win->hwndFrame);
+    SelectAnnotationInListBox(win, selectedAnnot);
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered

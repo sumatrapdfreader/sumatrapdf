@@ -4404,7 +4404,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdEditAnnotations:
-            StartEditAnnotations(win->currentTab);
+            StartEditAnnotations(win->currentTab, nullptr);
             break;
 
         case CmdNewBookmarks:

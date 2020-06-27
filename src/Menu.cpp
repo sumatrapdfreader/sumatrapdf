@@ -16,6 +16,7 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
+#include "EnginePdf.h"
 
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
@@ -693,6 +694,9 @@ static bool ShouldShowCreateAnnotationMenu(TabInfo* tab, int x, int y) {
     return true;
 }
 
+// in SumatraPDF.cpp
+extern void RerenderForWindowInfo(WindowInfo*);
+
 void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
@@ -755,22 +759,29 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     win::menu::SetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
 
-    bool supportsAnnotations = false;
+    bool showCreateAnnotation = false;
     EngineBase* engine = dm->GetEngine();
     if (engine) {
-        supportsAnnotations = engine->supportsAnnotations;
+        showCreateAnnotation = engine->supportsAnnotations;
     }
+    int pageNo = dm->GetPageNoByPoint(Point{x, y});
+    PointD ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNo);
+    if (showCreateAnnotation) {
+        if (pageNo <= 0) {
+            showCreateAnnotation = false;
+        }
+    }
+
     bool canDoAnnotations = gIsDebugBuild || gIsPreReleaseBuild || gIsDailyBuild;
     if (!canDoAnnotations) {
-        supportsAnnotations = false;
+        showCreateAnnotation = false;
     }
-    if (!supportsAnnotations) {
+    if (!showCreateAnnotation) {
         win::menu::Remove(popup, CmdSaveAnnotationsSmx);
     } else {
         win::menu::SetEnabled(popup, CmdSaveAnnotationsSmx, dm->HasUnsavedAnnots());
     }
 
-    int pageNo = dm->GetPageNoByPoint({x, y});
     const WCHAR* filePath = win->ctrl->FilePath();
     if (pageNo > 0) {
         AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
@@ -822,7 +833,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             HwndSendCommand(win->hwndFrame, cmd);
             break;
         case CmdEditAnnotations:
-            StartEditAnnotations(tab);
+            StartEditAnnotations(tab, nullptr);
             break;
         case CmdCopyLinkTarget:
         case CmdCopyComment:
@@ -847,7 +858,31 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdExitFullScreen:
             ExitFullScreen(win);
             break;
+        case CmdCreateAnnotText:
+            Annotation* annot = EnginePdfCreateAnnotation(engine, AnnotationType::Text, pageNo, ptOnPage);
+            RerenderForWindowInfo(win);
+            StartEditAnnotations(win->currentTab, annot);
+            delete annot;
+            break;
     }
+    /*
+        { _TR_TODON("Text"), CmdCreateAnnotText, 0 },
+        { _TR_TODON("Free Text"), CmdCreateAnnotFreeText, 0 },
+        { _TR_TODON("Stamp"), CmdCreateAnnotStamp, 0 },
+        { _TR_TODON("Caret"), CmdCreateAnnotCaret, 0 },
+        { _TR_TODON("Ink"), CmdCreateAnnotInk, 0 },
+        { _TR_TODON("Square"), CmdCreateAnnotSquare, 0 },
+        { _TR_TODON("Circle"), CmdCreateAnnotCircle, 0 },
+        { _TR_TODON("Line"), CmdCreateAnnotLine, 0 },
+        { _TR_TODON("Polygon"), CmdCreateAnnotPolygon, 0 },
+        { _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, 0 },
+        { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, 0 },
+        { _TR_TODON("Underline"), CmdCreateAnnotUnderline, 0 },
+        { _TR_TODON("Strike Out"), CmdCreateAnnotStrikeOut, 0 },
+        { _TR_TODON("Squiggly"), CmdCreateAnnotSquiggly, 0 },
+        { _TR_TODON("File Attachment"), CmdCreateAnnotFileAttachment, 0 },
+        { _TR_TODON("Redact"), CmdCreateAnnotRedact, 0 },
+    */
 
     delete pageEl;
 }
