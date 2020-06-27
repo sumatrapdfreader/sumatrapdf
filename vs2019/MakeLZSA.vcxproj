@@ -628,6 +628,7 @@
     <ClInclude Include="..\src\utils\ColorUtil.h" />
     <ClInclude Include="..\src\utils\Dpi.h" />
     <ClInclude Include="..\src\utils\FileUtil.h" />
+    <ClInclude Include="..\src\utils\GeomUtil.h" />
     <ClInclude Include="..\src\utils\Log.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\utils\StrUtil.h" />
@@ -645,6 +646,7 @@
     <ClCompile Include="..\src\utils\ColorUtil.cpp" />
     <ClCompile Include="..\src\utils\Dpi.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
+    <ClCompile Include="..\src\utils\GeomUtil.cpp" />
     <ClCompile Include="..\src\utils\Log.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />

@@ -17,6 +17,7 @@ function makelzsa_files()
     "CmdLineParser.*",
     "Dpi.*",
     "FileUtil.*",
+    "GeomUtil.*",
     "LzmaSimpleArchive.*",
     "StrconvUtil.*",
     "StringViewUtil.*",

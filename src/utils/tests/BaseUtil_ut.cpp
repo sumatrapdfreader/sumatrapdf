@@ -7,16 +7,13 @@
 #include "utils/UtAssert.h"
 
 static void GeomTest() {
-    PointFl ptD(12.4, -13.6);
-    utassert(ptD.x == 12.4 && ptD.y == -13.6);
+    PointFl ptD(12.4f, -13.6f);
+    utassert(ptD.x == 12.4f && ptD.y == -13.6f);
     Point ptI = ptD.ToInt();
     utassert(ptI.x == 12 && ptI.y == -14);
-    ptD = ptI.Convert<float>();
-    utassert(PointFl(12, -14) == ptD);
-    utassert(PointFl(12.4, -13.6) != ptD);
 
-    SizeFl szD(7.7, -3.3);
-    utassert(szD.dx == 7.7 && szD.dy == -3.3);
+    SizeFl szD(7.7f, -3.3f);
+    utassert(szD.dx == 7.7f && szD.dy == -3.3f);
     Size szI = szD.ToInt();
     utassert(szI.dx == 8 && szI.dy == -3);
     szD = szI.Convert<float>();
