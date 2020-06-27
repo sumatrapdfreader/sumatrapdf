@@ -719,7 +719,7 @@ struct ControllerCallbackHandler : ControllerCallback {
 
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb& saveThumbnail) {
     auto engine = dm->GetEngine();
-    RectD pageRect = engine->PageMediabox(1);
+    RectFl pageRect = engine->PageMediabox(1);
     if (pageRect.IsEmpty()) {
         // saveThumbnail must always be called for clean-up code
         saveThumbnail(nullptr);
@@ -1893,7 +1893,7 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
 
 enum class MeasurementUnit { pt, mm, in };
 
-static WCHAR* FormatCursorPosition(EngineBase* engine, PointD pt, MeasurementUnit unit) {
+static WCHAR* FormatCursorPosition(EngineBase* engine, PointFl pt, MeasurementUnit unit) {
     if (pt.x < 0) {
         pt.x = 0;
     }
@@ -1954,10 +1954,10 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
 
     CrashIf(!win->AsFixed());
     EngineBase* engine = win->AsFixed()->GetEngine();
-    PointD pt = win->AsFixed()->CvtFromScreen(pos);
+    PointFl pt = win->AsFixed()->CvtFromScreen(pos);
     AutoFreeWstr posStr(FormatCursorPosition(engine, pt, unit)), selStr;
     if (!win->selectionMeasure.IsEmpty()) {
-        pt = PointD(win->selectionMeasure.dx, win->selectionMeasure.dy);
+        pt = PointFl(win->selectionMeasure.dx, win->selectionMeasure.dy);
         selStr.Set(FormatCursorPosition(engine, pt, unit));
     }
 

@@ -40,7 +40,7 @@ static bool IsPageLink(const char* link) {
 //   http://example.net/#hyperlink
 static PageDestination* newDjVuDestination(const char* link) {
     auto res = new PageDestination();
-    res->rect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    res->rect = RectFl(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
 
     if (str::IsEmpty(link)) {
         res->kind = kindDestinationNone;
@@ -102,7 +102,7 @@ static PageDestination* newDjVuDestination(const char* link) {
 
 static PageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const char* comment) {
     auto res = new PageElement();
-    res->rect = rect.Convert<double>();
+    res->rect = rect.Convert<float>();
     res->pageNo = pageNo;
     res->dest = newDjVuDestination(link);
     if (!str::IsEmpty(comment)) {
@@ -238,13 +238,13 @@ class EngineDjVu : public EngineBase {
     virtual ~EngineDjVu();
     EngineBase* Clone() override;
 
-    RectD PageMediabox(int pageNo) override;
-    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectFl PageMediabox(int pageNo) override;
+    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs&) override;
 
-    PointD TransformPoint(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false);
-    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    PointFl TransformPoint(PointFl pt, int pageNo, float zoom, int rotation, bool inverse = false);
+    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -257,7 +257,7 @@ class EngineDjVu : public EngineBase {
     bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
@@ -271,7 +271,7 @@ class EngineDjVu : public EngineBase {
   protected:
     IStream* stream = nullptr;
 
-    RectD* mediaboxes = nullptr;
+    RectFl* mediaboxes = nullptr;
 
     ddjvu_document_t* doc = nullptr;
     miniexp_t outline = miniexp_nil;
@@ -337,7 +337,7 @@ EngineBase* EngineDjVu::Clone() {
     return nullptr;
 }
 
-RectD EngineDjVu::PageMediabox(int pageNo) {
+RectFl EngineDjVu::PageMediabox(int pageNo) {
     CrashIf(pageNo < 1 || pageNo > pageCount);
     return mediaboxes[pageNo - 1];
 }
@@ -471,7 +471,7 @@ bool EngineDjVu::FinishLoading() {
         return false;
     }
 
-    mediaboxes = AllocArray<RectD>(pageCount);
+    mediaboxes = AllocArray<RectFl>(pageCount);
     bool ok = LoadMediaboxes();
     if (!ok) {
         // fall back to the slower but safer way to extract page mediaboxes
@@ -482,9 +482,9 @@ bool EngineDjVu::FinishLoading() {
                 gDjVuContext->SpinMessageLoop();
             }
             if (DDJVU_JOB_OK == status) {
-                double dx = info.width * GetFileDPI() / info.dpi;
-                double dy = info.height * GetFileDPI() / info.dpi;
-                mediaboxes[i] = RectD(0, 0, dx, dy);
+                float dx = (float)info.width * GetFileDPI() / (float)info.dpi;
+                float dy = (float)info.height * GetFileDPI() / (float)info.dpi;
+                mediaboxes[i] = RectFl(0, 0, dx, dy);
             }
         }
     }
@@ -541,12 +541,12 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
             if (annot->pageNo != pageNo) {
                 continue;
             }
-            RectD rect = annot->Rect();
-            RectD arect;
+            RectFl rect = annot->Rect();
+            RectFl arect;
             switch (annot->type) {
                 case AnnotationType::Highlight:
                     arect = Transform(rect, pageNo, zoom, rotation);
-                    arect.Offset(-screen.x, -screen.y);
+                    arect.Offset((float)-screen.x, (float)-screen.y);
                     {
                         SolidBrush tmpBrush(Unblend(annot->Color(), 119));
                         g.FillRectangle(&tmpBrush, arect.ToGdipRectF());
@@ -554,12 +554,12 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
                     break;
                 case AnnotationType::Underline:
                 case AnnotationType::StrikeOut:
-                    arect = RectD(rect.x, rect.BR().y, rect.dx, 0);
+                    arect = RectFl(rect.x, rect.BR().y, rect.dx, 0);
                     if (AnnotationType::StrikeOut == annot->type) {
                         arect.y -= rect.dy / 2;
                     }
                     arect = Transform(arect, pageNo, zoom, rotation);
-                    arect.Offset(-screen.x, -screen.y);
+                    arect.Offset((float)-screen.x, (float)-screen.y);
                     {
                         Pen tmpPen(FromColor(annot->Color()), zoom);
                         g.DrawLine(&tmpPen, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
@@ -570,12 +570,12 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
                     float dash[2] = {2, 2};
                     p.SetDashPattern(dash, dimof(dash));
                     p.SetDashOffset(1);
-                    arect = Transform(RectD(rect.x, rect.BR().y - 0.25f, rect.dx, 0), pageNo, zoom, rotation);
-                    arect.Offset(-screen.x, -screen.y);
+                    arect = Transform(RectFl(rect.x, rect.BR().y - 0.25f, rect.dx, 0), pageNo, zoom, rotation);
+                    arect.Offset((float)-screen.x, (float)-screen.y);
                     g.DrawLine(&p, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                     p.SetDashOffset(3);
-                    arect = Transform(RectD(rect.x, rect.BR().y + 0.25f, rect.dx, 0), pageNo, zoom, rotation);
-                    arect.Offset(-screen.x, -screen.y);
+                    arect = Transform(RectFl(rect.x, rect.BR().y + 0.25f, rect.dx, 0), pageNo, zoom, rotation);
+                    arect.Offset((float)-screen.x, (float)-screen.y);
                     g.DrawLine(&p, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                 } break;
             }
@@ -626,7 +626,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     auto zoom = args.zoom;
     auto pageNo = args.pageNo;
     auto rotation = args.rotation;
-    RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
+    RectFl pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     Rect full = Transform(PageMediabox(pageNo), pageNo, zoom, rotation).Round();
     screen = full.Intersect(screen);
@@ -683,11 +683,11 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     return bmp;
 }
 
-RectD EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
+RectFl EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
     ScopedCritSec scope(&gDjVuContext->lock);
 
-    RectD pageRc = PageMediabox(pageNo);
+    RectFl pageRc = PageMediabox(pageNo);
     ddjvu_page_t* page = ddjvu_page_create_by_pageno(doc, pageNo - 1);
     if (!page) {
         return pageRc;
@@ -710,8 +710,8 @@ RectD EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
     };
 
     ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
-    double zoom = std::min(std::min(250.0 / pageRc.dx, 250.0 / pageRc.dy), 1.0);
-    Rect full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
+    float zoom = std::min(std::min(250.0f / pageRc.dx, 250.0f / pageRc.dy), 1.0f);
+    Rect full = RectFl(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
     ddjvu_rect_t prect = {full.x, full.y, (uint)full.dx, (uint)full.dy};
     ddjvu_rect_t rrect = prect;
 
@@ -726,7 +726,7 @@ RectD EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
     }
 
     // determine the content box by counting white pixels from the edges
-    RectD content(full.dx, -1, 0, 0);
+    RectFl content((float)full.dx, -1, 0, 0);
     for (int y = 0; y < full.dy; y++) {
         int x;
         for (x = 0; x < full.dx && bmpData[y * full.dx + x] == '\xFF'; x++) {
@@ -735,7 +735,7 @@ RectD EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
         if (x < full.dx) {
             // narrow the left margin down (if necessary)
             if (x < content.x) {
-                content.x = x;
+                content.x = (float)x;
             }
             // narrow the right margin down (if necessary)
             for (x = full.dx - 1; x > content.x + content.dx && bmpData[y * full.dx + x] == '\xFF'; x--) {
@@ -746,7 +746,7 @@ RectD EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
             }
             // narrow either the top or the bottom margin down
             if (content.y == -1) {
-                content.y = y;
+                content.y = (float)y;
             } else {
                 content.dy = y - content.y + 1;
             }
@@ -758,19 +758,19 @@ RectD EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
         content.dx /= zoom;
         content.y /= zoom;
         content.dy /= zoom;
-        pageRc = content.Round().Convert<double>();
+        pageRc = content.Round().Convert<float>();
     }
 
     return pageRc;
 }
 
-PointD EngineDjVu::TransformPoint(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
+PointFl EngineDjVu::TransformPoint(PointFl pt, int pageNo, float zoom, int rotation, bool inverse) {
     CrashIf(zoom <= 0);
     if (zoom <= 0) {
         return pt;
     }
 
-    SizeD page = PageMediabox(pageNo).Size();
+    SizeFl page = PageMediabox(pageNo).Size();
 
     if (inverse) {
         // transform the page size to get a correct frame of reference
@@ -788,23 +788,23 @@ PointD EngineDjVu::TransformPoint(PointD pt, int pageNo, float zoom, int rotatio
     while (rotation < 0) {
         rotation += 360;
     }
-    PointD res = pt; // for rotation == 0
+    PointFl res = pt; // for rotation == 0
     if (90 == rotation) {
-        res = PointD(page.dy - pt.y, pt.x);
+        res = PointFl(page.dy - pt.y, pt.x);
     } else if (180 == rotation) {
-        res = PointD(page.dx - pt.x, page.dy - pt.y);
+        res = PointFl(page.dx - pt.x, page.dy - pt.y);
     } else if (270 == rotation) {
-        res = PointD(pt.y, page.dx - pt.x);
+        res = PointFl(pt.y, page.dx - pt.x);
     }
     res.x *= zoom;
     res.y *= zoom;
     return res;
 }
 
-RectD EngineDjVu::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
-    PointD TL = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
-    PointD BR = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
-    return RectD::FromXY(TL, BR);
+RectFl EngineDjVu::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
+    PointFl TL = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
+    PointFl BR = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
+    return RectFl::FromXY(TL, BR);
 }
 
 std::span<u8> EngineDjVu::GetFileData() {
@@ -1053,7 +1053,7 @@ Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
     return els;
 }
 
-IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointD pt) {
+IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointFl pt) {
     Vec<IPageElement*>* els = GetElements(pageNo);
     if (!els) {
         return nullptr;

@@ -424,7 +424,7 @@ static void DoRect(EditAnnotationsWindow* win, Annotation* annot) {
         return;
     }
     str::Str s;
-    RectD rect = annot->Rect();
+    RectFl rect = annot->Rect();
     int x = (int)rect.x;
     int y = (int)rect.y;
     int dx = (int)rect.Dx();

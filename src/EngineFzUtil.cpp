@@ -32,17 +32,17 @@ extern "C" {
 // so that their content can be loaded on demand in order to preserve memory
 #define MAX_MEMORY_FILE_SIZE (32 * 1024 * 1024)
 
-RectD fz_rect_to_RectD(fz_rect rect) {
-    return RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
+RectFl fz_rect_to_RectD(fz_rect rect) {
+    return RectFl::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
-fz_rect RectD_to_fz_rect(RectD rect) {
+fz_rect RectD_to_fz_rect(RectFl rect) {
     fz_rect result = {(float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy)};
     return result;
 }
 
 bool fz_is_pt_in_rect(fz_rect rect, fz_point pt) {
-    return fz_rect_to_RectD(rect).Contains(PointD(pt.x, pt.y));
+    return fz_rect_to_RectD(rect).Contains(PointFl(pt.x, pt.y));
 }
 
 float fz_calc_overlap(fz_rect r1, fz_rect r2) {
@@ -635,7 +635,7 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
         AutoFreeWstr part(str::DupN(next, end - next));
         uri.Set(str::Join(uri, part));
         Rect bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
-        list->coords.Append(RectD_to_fz_rect(bbox.Convert<double>()));
+        list->coords.Append(RectD_to_fz_rect(bbox.Convert<float>()));
 
         next = end + 1;
     } while (multiline);
@@ -732,7 +732,7 @@ LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
         WCHAR* uri = protocol ? str::Join(protocol, part) : part.StealData();
         list->links.Append(uri);
         Rect bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
-        list->coords.Append(RectD_to_fz_rect(bbox.Convert<double>()));
+        list->coords.Append(RectD_to_fz_rect(bbox.Convert<float>()));
         if (multiline) {
             end = LinkifyMultilineText(list, pageText, start, end + 1, coords);
         }
@@ -934,8 +934,8 @@ static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
     return 0;
 }
 
-static RectD CalcDestRect(fz_link* link, fz_outline* outline) {
-    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+static RectFl CalcDestRect(fz_link* link, fz_outline* outline) {
+    RectFl result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     char* uri = PdfLinkGetURI(link, outline);
     // TODO: this happens in pdf/ug_logodesign.pdf, there's only outline without
     // pageno. need to investigate
@@ -983,7 +983,7 @@ static RectD CalcDestRect(fz_link* link, fz_outline* outline) {
                (link->ld.gotor.flags &
                 (fz_link_flag_l_valid | fz_link_flag_t_valid | fz_link_flag_r_valid | fz_link_flag_b_valid))) {
         // /FitR link
-        result = RectD::FromXY(lt.x, lt.y, rb.x, rb.y);
+        result = RectFl::FromXY(lt.x, lt.y, rb.x, rb.y);
         // an empty destination rectangle would imply an /XYZ-type link to callers
         if (result.IsEmpty())
             result.dx = result.dy = 0.1;
@@ -1046,7 +1046,7 @@ TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestinatio
     return res;
 }
 
-PageElement* newFzComment(const WCHAR* comment, int pageNo, RectD rect) {
+PageElement* newFzComment(const WCHAR* comment, int pageNo, RectFl rect) {
     auto res = new PageElement();
     res->kind_ = kindPageElementComment;
     res->pageNo = pageNo;
@@ -1066,11 +1066,11 @@ PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* 
         s = label;
     }
     AutoFreeWstr ws = strconv::Utf8ToWstr(s);
-    RectD rd = fz_rect_to_RectD(rect);
+    RectFl rd = fz_rect_to_RectD(rect);
     return newFzComment(ws, pageNo, rd);
 }
 
-IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt) {
+IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointFl pt) {
     if (!pageInfo) {
         return nullptr;
     }
@@ -1205,7 +1205,7 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation*>* annots, fz_devic
         }
         Annotation* annot = annots->at(i);
         // skip annotation if it isn't visible
-        RectD arect = annot->Rect();
+        RectFl arect = annot->Rect();
         fz_rect rect = RectD_to_fz_rect(arect);
         rect = fz_transform_rect(rect, ctm);
         if (fz_is_empty_rect(fz_intersect_rect(rect, cliprect))) {

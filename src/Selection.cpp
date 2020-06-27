@@ -30,12 +30,12 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 
-SelectionOnPage::SelectionOnPage(int pageNo, RectD* rect) {
+SelectionOnPage::SelectionOnPage(int pageNo, RectFl* rect) {
     this->pageNo = pageNo;
     if (rect) {
         this->rect = *rect;
     } else {
-        this->rect = RectD();
+        this->rect = RectFl();
     }
 }
 
@@ -65,7 +65,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
         }
 
         /* selection intersects with a page <pageNo> on the screen */
-        RectD isectD = dm->CvtFromScreen(intersect, pageNo);
+        RectFl isectD = dm->CvtFromScreen(intersect, pageNo);
         sel->Append(SelectionOnPage(pageNo, &isectD));
     }
     sel->Reverse();
@@ -81,7 +81,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
     Vec<SelectionOnPage>* sel = new Vec<SelectionOnPage>(textSel->len);
 
     for (int i = textSel->len - 1; i >= 0; i--) {
-        RectD rect = textSel->rects[i].Convert<double>();
+        RectFl rect = textSel->rects[i].Convert<float>();
         sel->Append(SelectionOnPage(textSel->pages[i], &rect));
     }
     sel->Reverse();
@@ -95,7 +95,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
 
 void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel) {
     win->showSelection = false;
-    win->selectionMeasure = SizeD();
+    win->selectionMeasure = SizeFl();
     TabInfo* tab = win->currentTab;
     if (!tab) {
         return;
@@ -187,7 +187,7 @@ void UpdateTextSelection(WindowInfo* win, bool select) {
     if (select) {
         int pageNo = dm->GetPageNoByPoint(win->selectionRect.BR());
         if (win->ctrl->ValidPageNo(pageNo)) {
-            PointD pt = dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
+            PointFl pt = dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
             dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
         }
     }
@@ -411,7 +411,7 @@ void OnSelectionStart(WindowInfo* win, int x, int y, WPARAM key) {
         DisplayModel* dm = win->AsFixed();
         int pageNo = dm->GetPageNoByPoint(Point(x, y));
         if (dm->ValidPageNo(pageNo)) {
-            PointD pt = dm->CvtFromScreen(Point(x, y), pageNo);
+            PointFl pt = dm->CvtFromScreen(Point(x, y), pageNo);
             dm->textSelection->StartAt(pageNo, pt.x, pt.y);
             win->mouseAction = MouseAction::SelectingText;
         }

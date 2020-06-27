@@ -58,7 +58,7 @@ std::string_view AnnotationReadableName(AnnotationType tp) {
 }
 
 struct AnnotationSmx {
-    RectD rect = {};
+    RectFl rect = {};
     COLORREF color = ColorUnset;
     COLORREF interiorColor = ColorUnset;
 
@@ -139,7 +139,7 @@ int Annotation::PageNo() const {
     return pageNo;
 }
 
-RectD Annotation::Rect() const {
+RectFl Annotation::Rect() const {
     if (smx) {
         return smx->rect;
     }
@@ -529,7 +529,7 @@ Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot,
     return res;
 }
 
-Annotation* MakeAnnotationSmx(AnnotationType type, int pageNo, RectD rect, COLORREF col) {
+Annotation* MakeAnnotationSmx(AnnotationType type, int pageNo, RectFl rect, COLORREF col) {
     AnnotationSmx* smx = new AnnotationSmx();
     smx->rect = rect;
     smx->color = col;

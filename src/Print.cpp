@@ -101,8 +101,8 @@ class AbortCookieManager {
     }
 };
 
-static RectD BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
-    RectD bounds;
+static RectFl BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
+    RectFl bounds;
     for (size_t i = 0; i < sel.size(); i++) {
         if (sel.at(i).pageNo == pageNo) {
             bounds = bounds.Union(sel.at(i).rect);
@@ -193,7 +193,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 
     if (pd.sel.size() > 0) {
         for (int pageNo = 1; pageNo <= engine.PageCount(); pageNo++) {
-            RectD bounds = BoundSelectionOnPage(pd.sel, pageNo);
+            RectFl bounds = BoundSelectionOnPage(pd.sel, pageNo);
             if (bounds.IsEmpty()) {
                 continue;
             }
@@ -219,7 +219,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                     continue;
                 }
 
-                RectD* clipRegion = &pd.sel.at(i).rect;
+                RectFl* clipRegion = &pd.sel.at(i).rect;
                 Point offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
                 if (pd.advData.scale != PrintScaleAdv::None) {
                     // center the selection on the physical paper
@@ -303,7 +303,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             if (pd.advData.scale != PrintScaleAdv::None) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
-                RectD rect = engine.PageContentBox(pageNo, RenderTarget::Print);
+                RectFl rect = engine.PageContentBox(pageNo, RenderTarget::Print);
                 geomutil::RectT<float> cbox = engine.Transform(rect, pageNo, 1.0, rotation).Convert<float>();
                 zoom = std::min((float)printable.dx / cbox.dx,
                                 std::min((float)printable.dy / cbox.dy,
@@ -675,8 +675,8 @@ Exit:
 }
 
 static short GetPaperSize(EngineBase* engine) {
-    RectD mediabox = engine->PageMediabox(1);
-    SizeD size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
+    RectFl mediabox = engine->PageMediabox(1);
+    SizeFl size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
 
     switch (GetPaperFormat(size)) {
         case PaperFormat::A2:

@@ -48,12 +48,12 @@ class EngineMulti : public EngineBase {
     virtual ~EngineMulti();
     EngineBase* Clone() override;
 
-    RectD PageMediabox(int pageNo) override;
-    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectFl PageMediabox(int pageNo) override;
+    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -66,7 +66,7 @@ class EngineMulti : public EngineBase {
     bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
@@ -114,12 +114,12 @@ EngineBase* EngineMulti::Clone() {
     return CreateEngineMultiFromFile(fileName, nullptr);
 }
 
-RectD EngineMulti::PageMediabox(int pageNo) {
+RectFl EngineMulti::PageMediabox(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->PageMediabox(pageNo);
 }
 
-RectD EngineMulti::PageContentBox(int pageNo, RenderTarget target) {
+RectFl EngineMulti::PageContentBox(int pageNo, RenderTarget target) {
     EngineBase* e = PageToEngine(pageNo);
     return e->PageContentBox(pageNo, target);
 }
@@ -129,7 +129,7 @@ RenderedBitmap* EngineMulti::RenderPage(RenderPageArgs& args) {
     return e->RenderPage(args);
 }
 
-RectD EngineMulti::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectFl EngineMulti::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
     EngineBase* e = PageToEngine(pageNo);
     return e->Transform(rect, pageNo, zoom, rotation, inverse);
 }
@@ -170,7 +170,7 @@ Vec<IPageElement*>* EngineMulti::GetElements(int pageNo) {
     return e->GetElements(pageNo);
 }
 
-IPageElement* EngineMulti::GetElementAtPos(int pageNo, PointD pt) {
+IPageElement* EngineMulti::GetElementAtPos(int pageNo, PointFl pt) {
     EngineBase* e = PageToEngine(pageNo);
     return e->GetElementAtPos(pageNo, pt);
 }

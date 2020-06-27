@@ -350,7 +350,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
         }
     }
 
-    PointD ptPage = dm->CvtFromScreen(Point(x, y));
+    PointFl ptPage = dm->CvtFromScreen(Point(x, y));
     // TODO: win->linkHandler->GotoLink might spin the event loop
     IPageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
@@ -415,7 +415,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
     if (dm->IsOverText(Point(x, y))) {
         int pageNo = dm->GetPageNoByPoint(Point(x, y));
         if (win->ctrl->ValidPageNo(pageNo)) {
-            PointD pt = dm->CvtFromScreen(Point(x, y), pageNo);
+            PointFl pt = dm->CvtFromScreen(Point(x, y), pageNo);
             dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
             UpdateTextSelection(win, false);
             RepaintAsync(win, 0);

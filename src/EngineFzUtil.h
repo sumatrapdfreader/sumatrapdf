@@ -37,7 +37,7 @@ struct FzPageInfo {
     // comments are made out of annotations
     Vec<IPageElement*> comments;
 
-    RectD mediabox = {};
+    RectFl mediabox = {};
     Vec<FitzImagePos> images;
 
     // if false, only loaded page (fast)
@@ -50,8 +50,8 @@ struct LinkRectList {
     Vec<fz_rect> coords;
 };
 
-fz_rect RectD_to_fz_rect(RectD rect);
-RectD fz_rect_to_RectD(fz_rect rect);
+fz_rect RectD_to_fz_rect(RectFl rect);
+RectFl fz_rect_to_RectD(fz_rect rect);
 fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation);
 
 bool fz_is_pt_in_rect(fz_rect rect, fz_point pt);
@@ -73,11 +73,11 @@ LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords);
 int is_external_link(const char* uri);
 int resolve_link(const char* uri, float* xp, float* yp);
 TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestination* dest);
-PageElement* newFzComment(const WCHAR* comment, int pageNo, RectD rect);
+PageElement* newFzComment(const WCHAR* comment, int pageNo, RectFl rect);
 PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx);
 PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline);
 PageDestination* newFzDestination(fz_outline*);
-IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt);
+IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointFl pt);
 void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo);
 PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot);
 void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext);

@@ -267,13 +267,13 @@ struct RectT {
 
 } // namespace geomutil
 
+typedef geomutil::PointT<int> Point;
 typedef geomutil::SizeT<int> Size;
 typedef geomutil::RectT<int> Rect;
-typedef geomutil::PointT<int> Point;
 
-typedef geomutil::SizeT<double> SizeD;
-typedef geomutil::PointT<double> PointD;
-typedef geomutil::RectT<double> RectD;
+typedef geomutil::PointT<float> PointFl;
+typedef geomutil::SizeT<float> SizeFl;
+typedef geomutil::RectT<float> RectFl;
 
 inline SIZE ToSIZE(Size s) {
     return {s.dx, s.dy};

@@ -257,11 +257,11 @@ class EnginePs : public EngineBase {
         return clone;
     }
 
-    RectD PageMediabox(int pageNo) override {
+    RectFl PageMediabox(int pageNo) override {
         return pdfEngine->PageMediabox(pageNo);
     }
 
-    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
+    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
         return pdfEngine->PageContentBox(pageNo, target);
     }
 
@@ -269,7 +269,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->RenderPage(args);
     }
 
-    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
+    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 
@@ -317,7 +317,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetElements(pageNo);
     }
 
-    IPageElement* GetElementAtPos(int pageNo, PointD pt) override {
+    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override {
         return pdfEngine->GetElementAtPos(pageNo, pt);
     }
 

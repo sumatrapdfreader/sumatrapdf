@@ -58,7 +58,7 @@ struct Annotation {
 
     AnnotationType Type() const;
     int PageNo() const;
-    RectD Rect() const;
+    RectFl Rect() const;
 
     COLORREF Color(); // ColorUnset if no color
     bool SetColor(COLORREF);
@@ -102,7 +102,7 @@ struct Annotation {
     void Delete();
 };
 
-Annotation* MakeAnnotationSmx(AnnotationType, int pageNo, RectD, COLORREF);
+Annotation* MakeAnnotationSmx(AnnotationType, int pageNo, RectFl, COLORREF);
 
 std::string_view AnnotationName(AnnotationType);
 std::string_view AnnotationReadableName(AnnotationType);

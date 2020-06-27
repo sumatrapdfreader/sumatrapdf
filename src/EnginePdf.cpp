@@ -301,12 +301,12 @@ class EnginePdf : public EngineBase {
     ~EnginePdf() override;
     EngineBase* Clone() override;
 
-    RectD PageMediabox(int pageNo) override;
-    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectFl PageMediabox(int pageNo) override;
+    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -319,7 +319,7 @@ class EnginePdf : public EngineBase {
     bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
@@ -340,7 +340,7 @@ class EnginePdf : public EngineBase {
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
-    RenderedBitmap* GetPageImage(int pageNo, RectD rect, int imageIdx);
+    RenderedBitmap* GetPageImage(int pageNo, RectFl rect, int imageIdx);
 
     fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;
@@ -1052,7 +1052,7 @@ PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
     float x, y;
     int pageNo = resolve_link(uri, &x, &y);
 
-    RectD r{x, y, 0, 0};
+    RectFl r{x, y, 0, 0};
     pageDest = newSimpleDest(pageNo, r);
     fz_free(ctx, uri);
     return pageDest;
@@ -1127,12 +1127,12 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     return pageInfo;
 }
 
-RectD EnginePdf::PageMediabox(int pageNo) {
+RectFl EnginePdf::PageMediabox(int pageNo) {
     FzPageInfo* pi = _pages[pageNo - 1];
     return pi->mediabox;
 }
 
-RectD EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
+RectFl EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
 
     ScopedCritSec scope(ctxAccess);
@@ -1147,7 +1147,7 @@ RectD EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
     fz_var(dev);
     fz_var(list);
 
-    RectD mediabox = pageInfo->mediabox;
+    RectFl mediabox = pageInfo->mediabox;
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, pageInfo->page);
@@ -1169,11 +1169,11 @@ RectD EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
         return mediabox;
     }
 
-    RectD rect2 = fz_rect_to_RectD(rect);
+    RectFl rect2 = fz_rect_to_RectD(rect);
     return rect2.Intersect(mediabox);
 }
 
-RectD EnginePdf::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectFl EnginePdf::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
     if (zoom <= 0) {
         char* name = str::Dup("");
         const WCHAR* nameW = FileName();
@@ -1278,7 +1278,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     return bitmap;
 }
 
-IPageElement* EnginePdf::GetElementAtPos(int pageNo, PointD pt) {
+IPageElement* EnginePdf::GetElementAtPos(int pageNo, PointFl pt) {
     FzPageInfo* pageInfo = GetFzPageInfoFast(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
@@ -1384,7 +1384,7 @@ void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
     comments.Reverse();
 }
 
-RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectD rect, int imageIdx) {
+RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectFl rect, int imageIdx) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     if (!pageInfo->page) {
         return nullptr;
@@ -2203,7 +2203,7 @@ static const char* getuser(void) {
     return u;
 }
 
-Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointD pos) {
+Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointFl pos) {
     CrashIf(engine->kind != kindEnginePdf);
     EnginePdf* enginePdf = (EnginePdf*)engine;
     fz_context* ctx = enginePdf->ctx;

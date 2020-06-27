@@ -162,9 +162,9 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
     if (pageNo <= 0 || pageNo > engine->PageCount()) {
         return nullptr;
     }
-    RectD rect = dest->GetRect();
+    RectFl rect = dest->GetRect();
     if (rect.IsEmpty()) {
-        PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
+        PointFl pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
         return str::Format("Point=\"%.0f %.0f\"", pt.x, pt.y);
     }
     if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
@@ -172,7 +172,7 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
         return str::Format("Rect=\"%d %d %d %d\"", rc.x, rc.y, rc.dx, rc.dy);
     }
     if (rect.y != DEST_USE_DEFAULT) {
-        PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
+        PointFl pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
         return str::Format("Point=\"x %.0f\"", pt.y);
     }
     return nullptr;
@@ -280,7 +280,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     if (els && els->size() > 0) {
         Out1("\t\t<PageElements>\n");
         for (size_t i = 0; i < els->size(); i++) {
-            RectD rect = els->at(i)->GetRect();
+            RectFl rect = els->at(i)->GetRect();
             Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", ElementTypeToStr(els->at(i)),
                 rect.x, rect.y, rect.dx, rect.dy);
             PageDestination* dest = els->at(i)->AsLink();
@@ -315,15 +315,15 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
 }
 
 void DumpThumbnail(EngineBase* engine) {
-    RectD rect = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
+    RectFl rect = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     if (rect.IsEmpty()) {
         Out1("\t<Thumbnail />\n");
         return;
     }
 
     float zoom = std::min(128 / (float)rect.dx, 128 / (float)rect.dy) - 0.001f;
-    Rect thumb = RectD(0, 0, rect.dx * zoom, rect.dy * zoom).Round();
-    rect = engine->Transform(thumb.Convert<double>(), 1, zoom, 0, true);
+    Rect thumb = RectFl(0, 0, rect.dx * zoom, rect.dy * zoom).Round();
+    rect = engine->Transform(thumb.Convert<float>(), 1, zoom, 0, true);
     RenderPageArgs args(1, zoom, 0, &rect);
     RenderedBitmap* bmp = engine->RenderPage(args);
     if (!bmp) {

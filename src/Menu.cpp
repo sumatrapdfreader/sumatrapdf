@@ -775,7 +775,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         showCreateAnnotation = engine->supportsAnnotations;
     }
     int pageNo = dm->GetPageNoByPoint(Point{x, y});
-    PointD ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNo);
+    PointFl ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNo);
     if (showCreateAnnotation) {
         if (pageNo <= 0) {
             showCreateAnnotation = false;

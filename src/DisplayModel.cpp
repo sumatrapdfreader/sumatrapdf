@@ -227,7 +227,7 @@ void DisplayModel::GetDisplayState(DisplayState* ds) {
     ds->pageNo = ss.page;
     ds->scrollPos = Point();
     if (!presentationMode) {
-        ds->scrollPos = PointD(ss.x, ss.y).ToInt();
+        ds->scrollPos = PointFl(ss.x, ss.y).ToInt();
     }
     ds->rotation = rotation;
     ds->displayR2L = displayR2L;
@@ -236,7 +236,7 @@ void DisplayModel::GetDisplayState(DisplayState* ds) {
     ds->decryptionKey = engine->GetDecryptionKey();
 }
 
-SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
+SizeFl DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     CrashIf(!pageInfo);
     if (!pageInfo) {
@@ -249,7 +249,7 @@ SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
         }
     }
 
-    RectD box = fitToContent ? pageInfo->contentBox : pageInfo->page;
+    RectFl box = fitToContent ? pageInfo->contentBox : pageInfo->page;
     return engine->Transform(box, pageNo, 1.0, rotation).Size();
 }
 
@@ -374,12 +374,12 @@ void DisplayModel::BuildPagesInfo() {
     int pageCount = PageCount();
     pagesInfo = AllocArray<PageInfo>(pageCount);
 
-    RectD defaultRect;
+    RectFl defaultRect;
     float fileDPI = engine->GetFileDPI();
     if (0 == GetMeasurementSystem()) {
-        defaultRect = RectD(0, 0, 21.0 / 2.54 * fileDPI, 29.7 / 2.54 * fileDPI);
+        defaultRect = RectFl(0, 0, 21.0 / 2.54 * fileDPI, 29.7 / 2.54 * fileDPI);
     } else {
-        defaultRect = RectD(0, 0, 8.5 * fileDPI, 11 * fileDPI);
+        defaultRect = RectFl(0, 0, 8.5 * fileDPI, 11 * fileDPI);
     }
 
     int columns = ColumnsFromDisplayMode(displayMode);
@@ -476,7 +476,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         return zoomVirtual * 0.01f * dpiFactor;
     }
 
-    SizeD row;
+    SizeFl row;
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
 
     bool fitToContent = (ZOOM_FIT_CONTENT == zoomVirtual);
@@ -485,15 +485,15 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         // (i.e. don't crop inner margins but just the left-most, right-most, etc.)
         int first = FirstPageInARowNo(pageNo, columns, IsBookView(GetDisplayMode()));
         int last = LastPageInARowNo(pageNo, columns, IsBookView(GetDisplayMode()), PageCount());
-        RectD box;
+        RectFl box;
         for (int i = first; i <= last; i++) {
             PageInfo* pageInfo = GetPageInfo(i);
             if (pageInfo->contentBox.IsEmpty()) {
                 pageInfo->contentBox = engine->PageContentBox(i);
             }
 
-            RectD pageBox = engine->Transform(pageInfo->page, i, 1.0, rotation);
-            RectD contentBox = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
+            RectFl pageBox = engine->Transform(pageInfo->page, i, 1.0, rotation);
+            RectFl contentBox = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
             if (contentBox.IsEmpty()) {
                 contentBox = pageBox;
             }
@@ -509,8 +509,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         row.dx += (double)pageSpacing.dx * (double)(columns - 1);
     }
 
-    CrashIf(RectD(PointD(), row).IsEmpty());
-    if (RectD(PointD(), row).IsEmpty()) {
+    CrashIf(RectFl(PointFl(), row).IsEmpty());
+    if (RectFl(PointFl(), row).IsEmpty()) {
         return 0;
     }
 
@@ -684,7 +684,7 @@ RestartLayout:
             CrashIf(0.0 != pageInfo->visibleRatio);
             continue;
         }
-        SizeD pageSize = PageSizeAfterRotation(pageNo);
+        SizeFl pageSize = PageSizeAfterRotation(pageNo);
         Rect pos;
         // don't add the full 0.5 for rounding to account for precision errors
         float zoom = GetZoomReal(pageNo);
@@ -945,7 +945,7 @@ int DisplayModel::GetPageNextToPoint(Point pt) {
     return closest;
 }
 
-Point DisplayModel::CvtToScreen(int pageNo, PointD pt) {
+Point DisplayModel::CvtToScreen(int pageNo, PointFl pt) {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     SubmitCrashIf(!pageInfo);
     if (!pageInfo) {
@@ -957,7 +957,7 @@ Point DisplayModel::CvtToScreen(int pageNo, PointD pt) {
     if (zoom == 0) {
         zoom = zoomReal;
     }
-    PointD p = engine->Transform(pt, pageNo, zoom, rotation);
+    PointFl p = engine->Transform(pt, pageNo, zoom, rotation);
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
     p.x += 0.499 + r.x;
@@ -966,13 +966,13 @@ Point DisplayModel::CvtToScreen(int pageNo, PointD pt) {
     return p.ToInt();
 }
 
-Rect DisplayModel::CvtToScreen(int pageNo, RectD r) {
+Rect DisplayModel::CvtToScreen(int pageNo, RectFl r) {
     Point TL = CvtToScreen(pageNo, r.TL());
     Point BR = CvtToScreen(pageNo, r.BR());
     return Rect::FromXY(TL, BR);
 }
 
-PointD DisplayModel::CvtFromScreen(Point pt, int pageNo) {
+PointFl DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     if (!ValidPageNo(pageNo)) {
         pageNo = GetPageNextToPoint(pt);
     }
@@ -980,12 +980,12 @@ PointD DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     const PageInfo* pageInfo = GetPageInfo(pageNo);
     CrashIf(!pageInfo);
     if (!pageInfo) {
-        return PointD();
+        return PointFl();
     }
 
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
-    PointD p = PointD(pt.x - 0.499 - r.x, pt.y - 0.499 - r.y);
+    PointFl p = PointFl(pt.x - 0.499 - r.x, pt.y - 0.499 - r.y);
     float zoom = pageInfo->zoomReal;
     // TODO: must be a better way
     if (zoom == 0) {
@@ -994,14 +994,14 @@ PointD DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     return engine->Transform(p, pageNo, zoom, rotation, true);
 }
 
-RectD DisplayModel::CvtFromScreen(Rect r, int pageNo) {
+RectFl DisplayModel::CvtFromScreen(Rect r, int pageNo) {
     if (!ValidPageNo(pageNo)) {
         pageNo = GetPageNextToPoint(r.TL());
     }
 
-    PointD TL = CvtFromScreen(r.TL(), pageNo);
-    PointD BR = CvtFromScreen(r.BR(), pageNo);
-    return RectD::FromXY(TL, BR);
+    PointFl TL = CvtFromScreen(r.TL(), pageNo);
+    PointFl BR = CvtFromScreen(r.BR(), pageNo);
+    return RectFl::FromXY(TL, BR);
 }
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
@@ -1016,7 +1016,7 @@ IPageElement* DisplayModel::GetElementAtPos(Point pt) {
         return nullptr;
     }
 
-    PointD pos = CvtFromScreen(pt, pageNo);
+    PointFl pos = CvtFromScreen(pt, pageNo);
     return engine->GetElementAtPos(pageNo, pos);
 }
 
@@ -1034,7 +1034,7 @@ bool DisplayModel::IsOverText(Point pt) {
         return false;
     }
 
-    PointD pos = CvtFromScreen(pt, pageNo);
+    PointFl pos = CvtFromScreen(pt, pageNo);
     return textSelection->IsOverGlyph(pageNo, pos.x, pos.y);
 }
 
@@ -1116,8 +1116,8 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
     }
 }
 
-RectD DisplayModel::GetContentBox(int pageNo) {
-    RectD cbox{};
+RectFl DisplayModel::GetContentBox(int pageNo) {
+    RectFl cbox{};
     // we cache the contentBox
     PageInfo* pageInfo = GetPageInfo(pageNo);
     if (pageInfo->contentBox.IsEmpty()) {
@@ -1135,7 +1135,7 @@ RectD DisplayModel::GetContentBox(int pageNo) {
 /* get the (screen) coordinates of the point where a page's actual
    content begins (relative to the page's top left corner) */
 Point DisplayModel::GetContentStart(int pageNo) {
-    RectD contentBox = GetContentBox(pageNo);
+    RectFl contentBox = GetContentBox(pageNo);
     if (contentBox.IsEmpty()) {
         return Point(0, 0);
     }
@@ -1483,7 +1483,7 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
     ScrollState ss = GetScrollState();
 
     int centerPage = -1;
-    PointD centerPt;
+    PointFl centerPt;
     if (fixPt) {
         centerPage = GetPageNoByPoint(*fixPt);
         if (ValidPageNo(centerPage)) {
@@ -1611,7 +1611,7 @@ void DisplayModel::RotateBy(int newRotation) {
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * into a newly allocated buffer (which the caller needs to free()). */
-WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectD region) {
+WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectFl region) {
     Rect* coords;
     const WCHAR* pageText = textCache->GetTextForPage(pageNo, nullptr, &coords);
     if (str::IsEmpty(pageText)) {
@@ -1643,7 +1643,7 @@ bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
 
     Rect extremes;
     for (int i = 0; i < res->len; i++) {
-        Rect rc = CvtToScreen(res->pages[i], res->rects[i].Convert<double>());
+        Rect rc = CvtToScreen(res->pages[i], res->rects[i].Convert<float>());
         extremes = extremes.Union(rc);
     }
 
@@ -1702,7 +1702,7 @@ ScrollState DisplayModel::GetScrollState() {
     Rect screen(Point(), viewPort.Size());
     Rect pageVis = pageInfo->pageOnScreen.Intersect(screen);
     state.page = GetPageNextToPoint(pageVis.TL());
-    PointD ptD = CvtFromScreen(pageVis.TL(), state.page);
+    PointFl ptD = CvtFromScreen(pageVis.TL(), state.page);
 
     // Remember to show the margin, if it's currently visible
     if (pageInfo->pageOnScreen.x <= 0) {
@@ -1723,7 +1723,7 @@ void DisplayModel::SetScrollState(ScrollState state) {
         return;
     }
 
-    PointD newPtD(std::max(state.x, (double)0), std::max(state.y, (double)0));
+    PointFl newPtD(std::max(state.x, (double)0), std::max(state.y, (double)0));
     Point newPt = CvtToScreen(state.page, newPtD);
 
     // Also show the margins, if this has been requested
@@ -1818,13 +1818,13 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
     CrashIf(!dest || dest->GetPageNo() <= 0);
 
     Point scroll(-1, 0);
-    RectD rect = dest->GetRect();
+    RectFl rect = dest->GetRect();
     int pageNo = dest->GetPageNo();
 
     if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
         // PDF: /XYZ top left
         // scroll to rect.TL()
-        PointD scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
+        PointFl scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
         scroll = scrollD.ToInt();
 
         // default values for the coordinates mean: keep the current position
@@ -1837,14 +1837,14 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
         }
     } else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top
-        RectD rectD = engine->Transform(rect, pageNo, zoomReal, rotation);
+        RectFl rectD = engine->Transform(rect, pageNo, zoomReal, rotation);
         scroll = rectD.TL().ToInt();
 
         // Rect<float> rectF = _engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();
         // zoom = 100.0f * std::min(viewPort.dx / rectF.dx, viewPort.dy / rectF.dy);
     } else if (rect.y != DEST_USE_DEFAULT) {
         // PDF: /FitH top  or  /FitBH top
-        PointD scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
+        PointFl scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
         scroll.y = scrollD.ToInt().y;
         // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH
     }

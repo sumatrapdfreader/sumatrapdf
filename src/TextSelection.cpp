@@ -91,7 +91,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
     int textLen;
     Rect* coords;
     textCache->GetTextForPage(pageNo, &textLen, &coords);
-    PointD pt = PointD(x, y);
+    PointFl pt = PointFl(x, y);
 
     unsigned int maxDist = UINT_MAX;
     Point pti = pt.ToInt();
@@ -125,7 +125,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
     CrashIf(result < 0 || result >= textLen);
 
     // the result indexes the first glyph to be selected in a forward selection
-    RectD bbox = engine->Transform(coords[result].Convert<double>(), pageNo, 1.0, 0);
+    RectFl bbox = engine->Transform(coords[result].Convert<float>(), pageNo, 1.0, 0);
     pt = engine->Transform(pt, pageNo, 1.0, 0);
     if (pt.x > bbox.x + 0.5 * bbox.dx) {
         result++;
@@ -201,7 +201,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     textCache->GetTextForPage(pageNo, &textLen, &coords);
 
     int glyphIx = FindClosestGlyph(pageNo, x, y);
-    Point pt = PointD(x, y).ToInt();
+    Point pt = PointFl(x, y).ToInt();
     // when over the right half of a glyph, FindClosestGlyph returns the
     // index of the next glyph, in which case glyphIx must be decremented
     if (glyphIx == textLen || !coords[glyphIx].Contains(pt)) {

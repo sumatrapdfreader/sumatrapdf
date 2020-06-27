@@ -7,23 +7,23 @@
 #include "utils/UtAssert.h"
 
 static void GeomTest() {
-    PointD ptD(12.4, -13.6);
+    PointFl ptD(12.4, -13.6);
     utassert(ptD.x == 12.4 && ptD.y == -13.6);
     Point ptI = ptD.ToInt();
     utassert(ptI.x == 12 && ptI.y == -14);
-    ptD = ptI.Convert<double>();
-    utassert(PointD(12, -14) == ptD);
-    utassert(PointD(12.4, -13.6) != ptD);
+    ptD = ptI.Convert<float>();
+    utassert(PointFl(12, -14) == ptD);
+    utassert(PointFl(12.4, -13.6) != ptD);
 
-    SizeD szD(7.7, -3.3);
+    SizeFl szD(7.7, -3.3);
     utassert(szD.dx == 7.7 && szD.dy == -3.3);
     Size szI = szD.ToInt();
     utassert(szI.dx == 8 && szI.dy == -3);
-    szD = szI.Convert<double>();
-    utassert(SizeD(8, -3) == szD);
+    szD = szI.Convert<float>();
+    utassert(SizeFl(8, -3) == szD);
 
     utassert(!szD.IsEmpty() && !szI.IsEmpty());
-    utassert(Size().IsEmpty() && SizeD().IsEmpty());
+    utassert(Size().IsEmpty() && SizeFl().IsEmpty());
 
     struct SRIData {
         int x1s, x1e, y1s, y1e;

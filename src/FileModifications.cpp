@@ -136,7 +136,7 @@ static Vec<Annotation*>* ParseFileModifications(const char* data) {
             opacity = 1.0f;
         }
         color = MkRgba((u8)r, (u8)g, (u8)b, (u8)(255 * opacity));
-        auto annot = MakeAnnotationSmx(type, pageNo, rect.Convert<double>(), color);
+        auto annot = MakeAnnotationSmx(type, pageNo, rect.Convert<float>(), color);
         res->Append(annot);
     }
 
@@ -200,7 +200,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<Annotation*>* annots) {
         }
         data.AppendFmt("[%s]\r\n", s);
         data.AppendFmt("page = %d\r\n", annot->pageNo);
-        RectD rect = annot->Rect();
+        RectFl rect = annot->Rect();
         data.AppendFmt("rect = %g %g %g %g\r\n", rect.x, rect.y, rect.dx, rect.dy);
         data.AppendFmt("color = ");
         SerializeColorRgb(annot->Color(), data);

@@ -82,12 +82,12 @@ class EngineEbook : public EngineBase {
     EngineEbook();
     virtual ~EngineEbook();
 
-    RectD PageMediabox(int pageNo) override;
-    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectFl PageMediabox(int pageNo) override;
+    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectD Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
 
@@ -97,7 +97,7 @@ class EngineEbook : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     RenderedBitmap* GetImageForPageElement(IPageElement* el) override;
@@ -115,7 +115,7 @@ class EngineEbook : public EngineBase {
     // TODO: still needed?
     CRITICAL_SECTION pagesAccess;
     // page dimensions can vary between filetypes
-    RectD pageRect;
+    RectFl pageRect;
     float pageBorder;
 
     void GetTransform(Matrix& m, float zoom, int rotation);
@@ -133,7 +133,7 @@ static PageElement* newEbookLink(DrawInstr* link, Rect rect, PageDestination* de
     res->pageNo = pageNo;
 
     res->kind_ = kindPageElementDest;
-    res->rect = rect.Convert<double>();
+    res->rect = rect.Convert<float>();
 
     if (!dest || showUrl) {
         res->value = strconv::FromHtmlUtf8(link->str.s, link->str.len);
@@ -145,7 +145,7 @@ static PageElement* newEbookLink(DrawInstr* link, Rect rect, PageDestination* de
         // TODO: not sure about this
         dest->value = str::Dup(res->value);
         dest->pageNo = 0;
-        dest->rect = rect.Convert<double>();
+        dest->rect = rect.Convert<float>();
     }
     res->dest = dest;
     return res;
@@ -155,7 +155,7 @@ static PageElement* newImageDataElement(int pageNo, Rect bbox, int imageID) {
     auto res = new PageElement();
     res->kind_ = kindPageElementImage;
     res->pageNo = pageNo;
-    res->rect = bbox.Convert<double>();
+    res->rect = bbox.Convert<float>();
     res->imageID = imageID;
     return res;
 }
@@ -174,7 +174,7 @@ EngineEbook::EngineEbook() {
     supportsAnnotationsForSaving = false;
     pageCount = 0;
     // "B Format" paperback
-    pageRect = RectD(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI());
+    pageRect = RectFl(0, 0, 5.12f * GetFileDPI(), 7.8f * GetFileDPI());
     pageBorder = 0.4f * GetFileDPI();
     preferredLayout = Layout_Book;
     InitializeCriticalSection(&pagesAccess);
@@ -192,14 +192,14 @@ EngineEbook::~EngineEbook() {
     DeleteCriticalSection(&pagesAccess);
 }
 
-RectD EngineEbook::PageMediabox(int pageNo) {
+RectFl EngineEbook::PageMediabox(int pageNo) {
     UNUSED(pageNo);
     return pageRect;
 }
 
-RectD EngineEbook::PageContentBox(int pageNo, RenderTarget target) {
+RectFl EngineEbook::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
-    RectD mbox = PageMediabox(pageNo);
+    RectFl mbox = PageMediabox(pageNo);
     mbox.Inflate(-pageBorder, -pageBorder);
     return mbox;
 }
@@ -273,7 +273,7 @@ bool EngineEbook::ExtractPageAnchors() {
     return true;
 }
 
-RectD EngineEbook::Transform(const RectD& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectFl EngineEbook::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
     UNUSED(pageNo);
     geomutil::RectT<float> rcF = rect.Convert<float>();
     auto p1 = PointF(rcF.x, rcF.y);
@@ -285,18 +285,18 @@ RectD EngineEbook::Transform(const RectD& rect, int pageNo, float zoom, int rota
         m.Invert();
     }
     m.TransformPoints(pts, 2);
-    return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+    return RectFl::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
 static void DrawAnnotationHighlight(Graphics& g, Annotation* annot) {
-    RectD rect = annot->Rect();
+    RectFl rect = annot->Rect();
     auto color = annot->Color();
     SolidBrush tmpBrush(Unblend(color, 119));
     g.FillRectangle(&tmpBrush, rect.ToGdipRectF());
 }
 
 static void DrawAnnotationUnderline(Graphics& g, Annotation* annot) {
-    RectD rect = annot->Rect();
+    RectFl rect = annot->Rect();
     auto color = annot->Color();
     auto p1 = PointF((float)rect.x, (float)rect.BR().y);
     auto p2 = PointF((float)rect.BR().x, p1.Y);
@@ -307,7 +307,7 @@ static void DrawAnnotationUnderline(Graphics& g, Annotation* annot) {
 }
 
 static void DrawAnnotationStrikeOut(Graphics& g, Annotation* annot) {
-    RectD rect = annot->Rect();
+    RectFl rect = annot->Rect();
     auto color = annot->Color();
     auto p1 = PointF((float)rect.x, (float)rect.y + (float)rect.dy / 2);
     auto p2 = PointF((float)rect.BR().x, p1.Y);
@@ -318,7 +318,7 @@ static void DrawAnnotationStrikeOut(Graphics& g, Annotation* annot) {
 }
 
 static void DrawAnnotationSquiggly(Graphics& g, Annotation* annot) {
-    RectD rect = annot->Rect();
+    RectFl rect = annot->Rect();
     auto color = annot->Color();
     Pen p(FromColor(color), 0.5f);
     float dash[2] = {2, 2};
@@ -367,7 +367,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     auto rotation = args.rotation;
     auto pageRect = args.pageRect;
 
-    RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
+    RectFl pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     Point screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
@@ -566,7 +566,7 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
     return getImageFromData(i.img);
 }
 
-IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointD pt) {
+IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointFl pt) {
     auto els = GetElements(pageNo);
     if (!els) {
         return nullptr;
@@ -624,7 +624,7 @@ PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
         }
         // note: at least CHM treats URLs as case-independent
         if (id_len == anchor->instr->str.len && str::EqNI(id, anchor->instr->str.s, id_len)) {
-            RectD rect(0, anchor->instr->bbox.Y + pageBorder, pageRect.dx, 10);
+            RectFl rect(0, anchor->instr->bbox.Y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
             return newSimpleDest(anchor->pageNo, rect);
         }
@@ -632,7 +632,7 @@ PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
 
     // don't fail if an ID doesn't exist in a merged document
     if (basePageNo != 0) {
-        RectD rect(0, pageBorder, pageRect.dx, 10);
+        RectFl rect(0, pageBorder, pageRect.dx, 10);
         rect.Inflate(-pageBorder, 0);
         return newSimpleDest(basePageNo, rect);
     }
@@ -731,7 +731,7 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
     if (!url) {
         dest = nullptr;
     } else if (url::IsAbsolute(url)) {
-        dest = newSimpleDest(0, RectD(), str::Dup(url));
+        dest = newSimpleDest(0, RectFl(), str::Dup(url));
     } else {
         dest = engine->GetNamedDest(url);
         if (!dest && str::FindChar(url, '%')) {
@@ -1142,7 +1142,7 @@ PageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
             break;
         }
     }
-    RectD rect(0, currY + pageBorder, pageRect.dx, 10);
+    RectFl rect(0, currY + pageBorder, pageRect.dx, 10);
     rect.Inflate(-pageBorder, 0);
     return newSimpleDest(pageNo, rect);
 }
@@ -1403,7 +1403,7 @@ class EngineChm : public EngineEbook {
   public:
     EngineChm() : EngineEbook() {
         // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
+        pageRect = RectFl(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         kind = kindEngineChm;
         defaultFileExt = L".chm";
     }
@@ -1653,7 +1653,7 @@ class EngineHtml : public EngineEbook {
   public:
     EngineHtml() : EngineEbook() {
         // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
+        pageRect = RectFl(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         defaultFileExt = L".html";
     }
     virtual ~EngineHtml() {
@@ -1755,7 +1755,7 @@ class EngineTxt : public EngineEbook {
     EngineTxt() : EngineEbook() {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
+        pageRect = RectFl(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         defaultFileExt = L".txt";
     }
     virtual ~EngineTxt() {
@@ -1801,7 +1801,7 @@ bool EngineTxt::Load(const WCHAR* fileName) {
 
     if (doc->IsRFC()) {
         // RFCs are targeted at letter size pages
-        pageRect = RectD(0, 0, 8.5 * GetFileDPI(), 11 * GetFileDPI());
+        pageRect = RectFl(0, 0, 8.5f * GetFileDPI(), 11.f * GetFileDPI());
     }
 
     HtmlFormatterArgs args;

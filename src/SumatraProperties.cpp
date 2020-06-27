@@ -221,35 +221,35 @@ static WCHAR* FormatFileSize(size_t size) {
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
 }
 
-PaperFormat GetPaperFormat(SizeD size) {
-    SizeD sizeP = size.dx < size.dy ? size : SizeD(size.dy, size.dx);
+PaperFormat GetPaperFormat(SizeFl size) {
+    SizeFl sizeP = size.dx < size.dy ? size : SizeFl(size.dy, size.dx);
     // common ISO 216 formats (metric)
-    if (limitValue(sizeP.dx, 16.53, 16.55) == sizeP.dx && limitValue(sizeP.dy, 23.38, 23.40) == sizeP.dy) {
+    if (limitValue(sizeP.dx, 16.53f, 16.55f) == sizeP.dx && limitValue(sizeP.dy, 23.38f, 23.40f) == sizeP.dy) {
         return PaperFormat::A2;
     }
-    if (limitValue(sizeP.dx, 11.68, 11.70) == sizeP.dx && limitValue(sizeP.dy, 16.53, 16.55) == sizeP.dy) {
+    if (limitValue(sizeP.dx, 11.68f, 11.70f) == sizeP.dx && limitValue(sizeP.dy, 16.53f, 16.55f) == sizeP.dy) {
         return PaperFormat::A3;
     }
-    if (limitValue(sizeP.dx, 8.26, 8.28) == sizeP.dx && limitValue(sizeP.dy, 11.68, 11.70) == sizeP.dy) {
+    if (limitValue(sizeP.dx, 8.26f, 8.28f) == sizeP.dx && limitValue(sizeP.dy, 11.68f, 11.70f) == sizeP.dy) {
         return PaperFormat::A4;
     }
-    if (limitValue(sizeP.dx, 5.82, 5.85) == sizeP.dx && limitValue(sizeP.dy, 8.26, 8.28) == sizeP.dy) {
+    if (limitValue(sizeP.dx, 5.82f, 5.85f) == sizeP.dx && limitValue(sizeP.dy, 8.26f, 8.28f) == sizeP.dy) {
         return PaperFormat::A5;
     }
-    if (limitValue(sizeP.dx, 4.08, 4.10) == sizeP.dx && limitValue(sizeP.dy, 5.82, 5.85) == sizeP.dy) {
+    if (limitValue(sizeP.dx, 4.08f, 4.10f) == sizeP.dx && limitValue(sizeP.dy, 5.82f, 5.85f) == sizeP.dy) {
         return PaperFormat::A6;
     }
     // common US/ANSI formats (imperial)
-    if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 10.99, 11.01) == sizeP.dy) {
+    if (limitValue(sizeP.dx, 8.49f, 8.51f) == sizeP.dx && limitValue(sizeP.dy, 10.99f, 11.01f) == sizeP.dy) {
         return PaperFormat::Letter;
     }
-    if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 13.99, 14.01) == sizeP.dy) {
+    if (limitValue(sizeP.dx, 8.49f, 8.51f) == sizeP.dx && limitValue(sizeP.dy, 13.99f, 14.01f) == sizeP.dy) {
         return PaperFormat::Legal;
     }
-    if (limitValue(sizeP.dx, 10.99, 11.01) == sizeP.dx && limitValue(sizeP.dy, 16.99, 17.01) == sizeP.dy) {
+    if (limitValue(sizeP.dx, 10.99f, 11.01f) == sizeP.dx && limitValue(sizeP.dy, 16.99f, 17.01f) == sizeP.dy) {
         return PaperFormat::Tabloid;
     }
-    if (limitValue(sizeP.dx, 5.49, 5.51) == sizeP.dx && limitValue(sizeP.dy, 8.49, 8.51) == sizeP.dy) {
+    if (limitValue(sizeP.dx, 5.49f, 5.51f) == sizeP.dx && limitValue(sizeP.dy, 8.49f, 8.51f) == sizeP.dy) {
         return PaperFormat::Statement;
     }
     return PaperFormat::Other;
@@ -258,8 +258,8 @@ PaperFormat GetPaperFormat(SizeD size) {
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 // Caller needs to free the result
 static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
-    RectD mediabox = engine->PageMediabox(pageNo);
-    SizeD size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
+    RectFl mediabox = engine->PageMediabox(pageNo);
+    SizeFl size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
 
     const WCHAR* formatName = L"";
     switch (GetPaperFormat(size)) {

@@ -171,7 +171,7 @@ struct WindowInfo {
     // selection rectangle in screen coordinates (only needed while selecting)
     Rect selectionRect;
     // size of the current rectangular selection in document units
-    SizeD selectionMeasure;
+    SizeFl selectionMeasure;
 
     // a list of static links (mainly used for About and Frequently Read pages)
     Vec<StaticLinkInfo> staticLinks;

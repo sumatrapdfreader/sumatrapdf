@@ -7,10 +7,10 @@
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
     /* data that is constant for a given page. page size in document units */
-    RectD page{};
+    RectFl page{};
 
     /* data that is calculated when needed. actual content size within a page (View target) */
-    RectD contentBox{};
+    RectFl contentBox{};
 
     /* data that needs to be set before DisplayModel::Relayout().
        Determines whether a given page should be shown on the screen. */
@@ -155,15 +155,15 @@ struct DisplayModel : public Controller {
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
     void RotateBy(int rotation);
 
-    WCHAR* GetTextInRegion(int pageNo, RectD region);
+    WCHAR* GetTextInRegion(int pageNo, RectFl region);
     bool IsOverText(Point pt);
     IPageElement* GetElementAtPos(Point pt);
 
     int GetPageNoByPoint(Point pt);
-    Point CvtToScreen(int pageNo, PointD pt);
-    Rect CvtToScreen(int pageNo, RectD r);
-    PointD CvtFromScreen(Point pt, int pageNo = INVALID_PAGE_NO);
-    RectD CvtFromScreen(Rect r, int pageNo = INVALID_PAGE_NO);
+    Point CvtToScreen(int pageNo, PointFl pt);
+    Rect CvtToScreen(int pageNo, RectFl r);
+    PointFl CvtFromScreen(Point pt, int pageNo = INVALID_PAGE_NO);
+    RectFl CvtFromScreen(Rect r, int pageNo = INVALID_PAGE_NO);
 
     bool ShowResultRectToScreen(TextSel* res);
 
@@ -189,13 +189,13 @@ struct DisplayModel : public Controller {
 
     void BuildPagesInfo();
     float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
-    SizeD PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
+    SizeFl PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
     void ChangeStartPage(int startPage);
     Point GetContentStart(int pageNo);
     void RecalcVisibleParts();
     void RenderVisibleParts();
     void AddNavPoint();
-    RectD GetContentBox(int pageNo);
+    RectFl GetContentBox(int pageNo);
     void CalcZoomReal(float zoomVirtual);
     void GoToPage(int pageNo, int scrollY, bool addNavPt = false, int scrollX = -1);
     bool GoToPrevPage(int scrollY);
