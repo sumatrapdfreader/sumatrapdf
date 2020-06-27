@@ -874,7 +874,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdCreateAnnotFreeText:
         case CmdCreateAnnotStamp:
         case CmdCreateAnnotCaret:
-        case CmdCreateAnnotSquare: {
+        case CmdCreateAnnotSquare:
+        case CmdCreateAnnotCircle: {
             Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, ptOnPage);
             RerenderForWindowInfo(win);
             StartEditAnnotations(win->currentTab, annot);
@@ -886,8 +887,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             break;
     }
     /*
-        { _TR_TODON("Square"), CmdCreateAnnotSquare, 0 },
-        { _TR_TODON("Circle"), CmdCreateAnnotCircle, 0 },
         { _TR_TODON("Line"), CmdCreateAnnotLine, 0 },
         { _TR_TODON("Polygon"), CmdCreateAnnotPolygon, 0 },
         { _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, 0 },
