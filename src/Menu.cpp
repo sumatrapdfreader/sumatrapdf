@@ -695,7 +695,7 @@ static bool ShouldShowCreateAnnotationMenu(TabInfo* tab, int x, int y) {
 }
 
 // in SumatraPDF.cpp
-extern void RerenderForWindowInfo(WindowInfo*);
+extern void WindowInfoRerender(WindowInfo*);
 
 void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
@@ -878,7 +878,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle: {
             Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, ptOnPage);
-            RerenderForWindowInfo(win);
+            WindowInfoRerender(win);
             StartEditAnnotations(win->currentTab, annot);
             delete annot;
         } break;

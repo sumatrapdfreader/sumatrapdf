@@ -113,7 +113,7 @@ AnnotationType gAnnotsWithColor[] = {
 // clang-format on
 
 // in SumatraPDF.cpp
-extern void RerenderForWindowInfo(WindowInfo*);
+extern void WindowInfoRerender(WindowInfo*);
 
 const char* GetKnownColorName(COLORREF c) {
     if (c == ColorUnset) {
@@ -500,7 +500,7 @@ static void TextAlignmentSelectionChanged(EditAnnotationsWindow* win, DropDownSe
     int newQuadding = ev->idx;
     win->annot->SetQuadding(newQuadding);
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void DoTextFont(EditAnnotationsWindow* win, Annotation* annot) {
@@ -524,7 +524,7 @@ static void TextFontSelectionChanged(EditAnnotationsWindow* win, DropDownSelecti
     const char* font = seqstrings::IdxToStr(gFontNames, ev->idx);
     win->annot->SetDefaultAppearanceTextFont(font);
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void DoTextSize(EditAnnotationsWindow* win, Annotation* annot) {
@@ -547,7 +547,7 @@ static void TextFontSizeChanging(EditAnnotationsWindow* win, TrackbarPosChanging
     AutoFreeStr s = str::Format("Text Size: %d", fontSize);
     win->staticTextSize->SetText(s.AsView());
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void DoTextColor(EditAnnotationsWindow* win, Annotation* annot) {
@@ -564,7 +564,7 @@ static void TextColorSelectionChanged(EditAnnotationsWindow* win, DropDownSelect
     auto col = GetDropDownColor(ev->item);
     win->annot->SetDefaultAppearanceTextColor(col);
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void DoBorder(EditAnnotationsWindow* win, Annotation* annot) {
@@ -589,7 +589,7 @@ static void BorderWidthChanging(EditAnnotationsWindow* win, TrackbarPosChangingE
     AutoFreeStr s = str::Format("Border: %d", borderWidth);
     win->staticBorder->SetText(s.AsView());
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void DoLineStartEnd(EditAnnotationsWindow* win, Annotation* annot) {
@@ -621,7 +621,7 @@ static void LineStartEndSelectionChanged(EditAnnotationsWindow* win, DropDownSel
         end = newVal;
     }
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void DoIcon(EditAnnotationsWindow* win, Annotation* annot) {
@@ -654,7 +654,7 @@ static void DoIcon(EditAnnotationsWindow* win, Annotation* annot) {
 static void IconSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionChangedEvent* ev) {
     win->annot->SetIconName(ev->item);
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void DoColor(EditAnnotationsWindow* win, Annotation* annot) {
@@ -673,7 +673,7 @@ static void ColorSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionC
     auto col = GetDropDownColor(ev->item);
     win->annot->SetColor(col);
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void DoInteriorColor(EditAnnotationsWindow* win, Annotation* annot) {
@@ -692,7 +692,7 @@ static void InteriorColorSelectionChanged(EditAnnotationsWindow* win, DropDownSe
     auto col = GetDropDownColor(ev->item);
     win->annot->SetInteriorColor(col);
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void DoOpacity(EditAnnotationsWindow* win, Annotation* annot) {
@@ -722,7 +722,7 @@ static void OpacityChanging(EditAnnotationsWindow* win, TrackbarPosChangingEvent
     AutoFreeStr s = str::Format("Opacity: %d", opacity);
     win->staticOpacity->SetText(s.AsView());
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo) {
@@ -800,7 +800,7 @@ static void ButtonDeleteHandler(EditAnnotationsWindow* win) {
     win->annot->Delete();
     RebuildAnnotations(win);
     UpdateUIForSelectedAnnotation(win, -1);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void ListBoxSelectionChanged(EditAnnotationsWindow* win, ListBoxSelectionChangedEvent* ev) {
@@ -814,7 +814,7 @@ static void ContentsChanged(EditAnnotationsWindow* win, EditTextChangedEvent* ev
     ev->didHandle = true;
     win->annot->SetContents(ev->text);
     EnableSaveIfAnnotationsChanged(win);
-    RerenderForWindowInfo(win->tab->win);
+    WindowInfoRerender(win->tab->win);
 }
 
 static void WndSizeHandler(EditAnnotationsWindow* win, SizeEvent* ev) {

@@ -2170,7 +2170,7 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
 }
 
 // re-render the document currently displayed in this window
-void RerenderForWindowInfo(WindowInfo* win) {
+void WindowInfoRerender(WindowInfo* win) {
     if (!win->AsFixed()) {
         return;
     }
@@ -2182,7 +2182,7 @@ void RerenderForWindowInfo(WindowInfo* win) {
 
 static void RerenderEverything() {
     for (auto* win : gWindows) {
-        RerenderForWindowInfo(win);
+        WindowInfoRerender(win);
     }
 }
 
@@ -3859,7 +3859,7 @@ static void OnFrameKeyB(WindowInfo* win) {
     }
 }
 
-static void MakeAnnotationFromSelection(TabInfo* tab) {
+void MakeAnnotationFromSelection(TabInfo* tab) {
     bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
     if (!annotsEnabled) {
         return;
@@ -3899,6 +3899,46 @@ static void MakeAnnotationFromSelection(TabInfo* tab) {
     }
     engine->SetUserAnnotations(dm->userAnnots);
     ClearSearchResult(win); // causes invalidated tiles to be rerendered
+}
+
+void MakeAnnotationFromSelection2(TabInfo* tab, AnnotationType* annotType) {
+    bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
+    if (!annotsEnabled) {
+        return;
+    }
+
+    // converts current selection to annotation (or back to regular text
+    // if it's already an annotation)
+    DisplayModel* dm = tab->win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    auto engine = dm->GetEngine();
+    if (!engine) {
+        return;
+    }
+    if (engine->kind != kindEnginePdf) {
+        return;
+    }
+
+    WindowInfo* win = tab->win;
+    bool ok = engine->supportsAnnotations && win->showSelection && tab->selectionOnPage;
+    if (!ok) {
+        return;
+    }
+
+    Vec<Annotation*>* annots = dm->userAnnots;
+    for (SelectionOnPage& sel : *tab->selectionOnPage) {
+        COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
+        c = ColorSetAlpha(c, 0xcc);
+        auto annot = MakeAnnotationSmx(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
+        annot->isChanged = true;
+        annots->Append(annot);
+        gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
+    }
+    engine->SetUserAnnotations(dm->userAnnots);
+    DeleteOldSelectionInfo(win, true);
+    WindowInfoRerender(win);
 }
 
 static void OnFrameKeyM(WindowInfo* win) {

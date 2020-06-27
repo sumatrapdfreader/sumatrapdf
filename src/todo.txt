@@ -1,8 +1,13 @@
 Annotations:
+ - change text selection to use fz_snap_selection and fz_highlight_selection
+   - should fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1596
+   - dump stext to figure out what's going on
+  - replace RectD with RectF and PointD with PointF
+ - finish MakeAnnotationFromSelection2 which builds quads, like do_edit_quad_points
+   in gl-annotate.c
+  - no need to redraw when changing contents of most annotations (hard to pull off in current code)
  - save attachment
  - add attachment
- - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1596
-  - dump stext to figure out what's going on
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
  - test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)

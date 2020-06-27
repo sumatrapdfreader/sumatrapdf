@@ -106,8 +106,9 @@ class Vec {
         els = buf;
         Reset();
         EnsureCap(orig.cap);
+        len = orig.len;
         // using memcpy, as Vec only supports POD types
-        memcpy(els, orig.els, sizeof(T) * (len = orig.len));
+        memcpy(els, orig.els, sizeof(T) * (orig.len));
     }
 
     // this frees all elements and clears the array.

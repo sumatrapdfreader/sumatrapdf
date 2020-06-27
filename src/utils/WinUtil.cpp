@@ -1447,9 +1447,9 @@ str::Str GetTextUtf8(HWND hwnd) {
     }
     SendMessageW(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
-    AutoFree od = strconv::WstrToUtf8(txt, cchTxtLen);
-    str::Str res(od.AsView());
-    return res;
+    AutoFreeStr od = strconv::WstrToUtf8(txt, cchTxtLen);
+    free(txt);
+    return {od.AsView()};
 }
 
 size_t GetTextLen(HWND hwnd) {
