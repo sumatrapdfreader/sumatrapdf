@@ -110,14 +110,14 @@ float TextRenderGdi::GetCurrFontLineSpacing() {
 #endif
 }
 
-Gdiplus::RectF TextRenderGdi::Measure(const WCHAR* s, size_t sLen) {
+RectFl TextRenderGdi::Measure(const WCHAR* s, size_t sLen) {
     SIZE txtSize;
     GetTextExtentPoint32W(hdcForTextMeasure, s, (int)sLen, &txtSize);
-    Gdiplus::RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
+    RectFl res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
     return res;
 }
 
-Gdiplus::RectF TextRenderGdi::Measure(const char* s, size_t sLen) {
+RectFl TextRenderGdi::Measure(const char* s, size_t sLen) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Measure(txtConvBuf, strLen);
 }
@@ -280,8 +280,7 @@ void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, Gdiplus::RectF& 
     return DrawTransparent(txtConvBuf, strLen, bb, isRtl);
 }
 
-TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx, Gdiplus::RectF (*measureAlgo)(Graphics* g, Font* f,
-                                                                                          const WCHAR* s, int len)) {
+TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx, TextMeasureAlgorithm measureAlgo) {
     TextRenderGdiplus* res = new TextRenderGdiplus();
     res->gfx = gfx;
     res->currFont = nullptr;
@@ -304,12 +303,12 @@ float TextRenderGdiplus::GetCurrFontLineSpacing() {
     return currFont->font->GetHeight(gfx);
 }
 
-Gdiplus::RectF TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
+RectFl TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
     CrashIf(!currFont);
     return MeasureText(gfx, currFont->font, s, sLen, measureAlgo);
 }
 
-Gdiplus::RectF TextRenderGdiplus::Measure(const char* s, size_t sLen) {
+RectFl TextRenderGdiplus::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return MeasureText(gfx, currFont->font, txtConvBuf, strLen, measureAlgo);
@@ -423,18 +422,18 @@ float TextRenderHdc::GetCurrFontLineSpacing() {
     return currFont->font->GetHeight(gfx);
 }
 
-Gdiplus::RectF TextRenderHdc::Measure(const char* s, size_t sLen) {
+RectFl TextRenderHdc::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
     CrashIf(!hdc);
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Measure(txtConvBuf, strLen);
 }
 
-Gdiplus::RectF TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
+RectFl TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
     SIZE txtSize;
     CrashIf(!hdc);
     GetTextExtentPoint32W(hdc, s, (int)sLen, &txtSize);
-    Gdiplus::RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
+    RectFl res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
     return res;
 }
 
@@ -491,14 +490,14 @@ ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, in
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
 size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, float dx) {
-    Gdiplus::RectF r = textMeasure->Measure(s, len);
+    Gdiplus::RectF r = textMeasure->Measure(s, len).ToGdipRectF();
     if (r.Width <= dx) {
         return len;
     }
     // make the best guess of the length that fits
     size_t n = (size_t)((dx / r.Width) * (float)len);
     CrashIf(n > len);
-    r = textMeasure->Measure(s, n);
+    r = textMeasure->Measure(s, n).ToGdipRectF();
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
     if (r.Width > dx) {
@@ -506,7 +505,7 @@ size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, f
     }
     while (n > 1) {
         n += dir;
-        r = textMeasure->Measure(s, n);
+        r = textMeasure->Measure(s, n).ToGdipRectF();
         if (1 == dir) {
             // if advancing length, we know that previous string did fit, so if
             // the new one doesn't fit, the previous length was the right one
@@ -528,7 +527,7 @@ size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, f
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
 float GetSpaceDx(ITextRender* textMeasure) {
-    Gdiplus::RectF bbox;
+    RectFl bbox;
 #if 0
     bbox = textMeasure->Measure(L" ", 1, algo);
     float spaceDx1 = bbox.Width;
@@ -537,9 +536,9 @@ float GetSpaceDx(ITextRender* textMeasure) {
     // this method seems to return (much) smaller size that measuring
     // the space itself
     bbox = textMeasure->Measure(L"wa", 2);
-    float l1 = bbox.Width;
+    float l1 = bbox.dx;
     bbox = textMeasure->Measure(L"w a", 3);
-    float l2 = bbox.Width;
+    float l2 = bbox.dx;
     float spaceDx2 = l2 - l1;
     return spaceDx2;
 #endif

@@ -4,6 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/BitManip.h"
 #include "utils/HtmlParserLookup.h"
+#include "utils/GdiPlusUtil.h"
+
 #include "Mui.h"
 
 namespace mui {

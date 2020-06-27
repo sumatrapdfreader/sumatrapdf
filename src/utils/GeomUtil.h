@@ -89,6 +89,13 @@ struct RectT {
         dy = r.bottom - r.top;
     }
 
+    RectT(const Gdiplus::RectF r) {
+        x = r.X;
+        y = r.Y;
+        dx = r.Width;
+        dy = r.Height;
+    }
+
     RectT(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) {
     }
 
@@ -251,8 +258,7 @@ struct RectT {
         return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
     }
     Gdiplus::RectF ToGdipRectF() const {
-        RectT<float> rectF(this->Convert<float>());
-        return Gdiplus::RectF(rectF.x, rectF.y, rectF.dx, rectF.dy);
+        return Gdiplus::RectF((T)x, (T)y, (T)dx, (T)dy);
     }
 #endif
 #endif

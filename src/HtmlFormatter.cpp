@@ -733,7 +733,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             break;
         }
         textMeasure->SetFont(CurrFont());
-        Gdiplus::RectF bbox = textMeasure->Measure(buf, strLen);
+        Gdiplus::RectF bbox = textMeasure->Measure(buf, strLen).ToGdipRectF();
         if (bbox.Width <= pageDx - currX) {
             AppendInstr(DrawInstr::Str(s, end - s, bbox, dirRtl));
             currX += bbox.Width;
@@ -769,7 +769,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
         }
 
         textMeasure->SetFont(CurrFont());
-        bbox = textMeasure->Measure(buf, lenThatFits);
+        bbox = textMeasure->Measure(buf, lenThatFits).ToGdipRectF();
         CrashIf(bbox.Width > pageDx);
         // s is UTF-8 and buf is UTF-16, so one
         // WCHAR doesn't always equal one char

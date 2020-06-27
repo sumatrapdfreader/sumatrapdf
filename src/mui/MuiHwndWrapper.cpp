@@ -6,6 +6,7 @@
 #include "utils/WinUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/Log.h"
+#include "utils/GdiPlusUtil.h"
 
 #include "Mui.h"
 #include "wingui/FrameRateWnd.h"

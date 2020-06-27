@@ -8,6 +8,7 @@
 #include "utils/HtmlParserLookup.h"
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
+#include "utils/GdiPlusUtil.h"
 #include "mui/Mui.h"
 #include "utils/WinUtil.h"
 

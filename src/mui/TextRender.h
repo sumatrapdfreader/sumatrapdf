@@ -23,8 +23,8 @@ class ITextRender {
 
     virtual float GetCurrFontLineSpacing() = 0;
 
-    virtual Gdiplus::RectF Measure(const char* s, size_t sLen) = 0;
-    virtual Gdiplus::RectF Measure(const WCHAR* s, size_t sLen) = 0;
+    virtual RectFl Measure(const char* s, size_t sLen) = 0;
+    virtual RectFl Measure(const WCHAR* s, size_t sLen) = 0;
 
     // GDI+ calls cannot be done if we called Graphics::GetHDC(). However, getting/releasing
     // hdc is very expensive and kills performance if we do it for every Draw(). So we add
@@ -79,8 +79,8 @@ class TextRenderGdi : public ITextRender {
 
     float GetCurrFontLineSpacing() override;
 
-    Gdiplus::RectF Measure(const char* s, size_t sLen) override;
-    Gdiplus::RectF Measure(const WCHAR* s, size_t sLen) override;
+    RectFl Measure(const char* s, size_t sLen) override;
+    RectFl Measure(const WCHAR* s, size_t sLen) override;
 
     void Lock() override;
     void Unlock() override;
@@ -96,7 +96,7 @@ class TextRenderGdi : public ITextRender {
 
 class TextRenderGdiplus : public ITextRender {
   private:
-    Gdiplus::RectF (*measureAlgo)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
+    TextMeasureAlgorithm measureAlgo;
 
     // We don't own gfx and currFont
     Gdiplus::Graphics* gfx = nullptr;
@@ -108,9 +108,7 @@ class TextRenderGdiplus : public ITextRender {
     TextRenderGdiplus() = default;
 
   public:
-    static TextRenderGdiplus* Create(Gdiplus::Graphics* gfx,
-                                     Gdiplus::RectF (*measureAlgo)(Gdiplus::Graphics* g, Gdiplus::Font* f,
-                                                                   const WCHAR* s, int len) = nullptr);
+    static TextRenderGdiplus* Create(Gdiplus::Graphics* gfx, TextMeasureAlgorithm measureAlgo = nullptr);
 
     void SetFont(CachedFont* font) override;
     void SetTextColor(Gdiplus::Color col) override;
@@ -120,8 +118,8 @@ class TextRenderGdiplus : public ITextRender {
 
     float GetCurrFontLineSpacing() override;
 
-    Gdiplus::RectF Measure(const char* s, size_t sLen) override;
-    Gdiplus::RectF Measure(const WCHAR* s, size_t sLen) override;
+    RectFl Measure(const char* s, size_t sLen) override;
+    RectFl Measure(const WCHAR* s, size_t sLen) override;
 
     void Lock() override {
     }
@@ -161,8 +159,8 @@ class TextRenderHdc : public ITextRender {
 
     float GetCurrFontLineSpacing() override;
 
-    Gdiplus::RectF Measure(const char* s, size_t sLen) override;
-    Gdiplus::RectF Measure(const WCHAR* s, size_t sLen) override;
+    RectFl Measure(const char* s, size_t sLen) override;
+    RectFl Measure(const WCHAR* s, size_t sLen) override;
 
     void Lock() override;
     void Unlock() override;

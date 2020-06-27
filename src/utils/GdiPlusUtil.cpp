@@ -65,7 +65,7 @@ using Gdiplus::Win32Error;
 // Get width of each character and add them up.
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still
 // underreports the width
-Gdiplus::RectF MeasureTextAccurate2(Graphics* g, Font* f, const WCHAR* s, int len) {
+RectFl MeasureTextAccurate2(Graphics* g, Font* f, const WCHAR* s, int len) {
     CrashIf(0 >= len);
     FixedArray<Region, 1024> regionBuf(len);
     Region* r = regionBuf.Get();
@@ -93,7 +93,7 @@ Gdiplus::RectF MeasureTextAccurate2(Graphics* g, Font* f, const WCHAR* s, int le
     }
     bbox.Width = totalDx;
     bbox.Height = maxDy;
-    return bbox;
+    return RectFl{bbox};
 }
 
 // note: gdi+ seems to under-report the width, the longer the text, the
@@ -102,9 +102,9 @@ Gdiplus::RectF MeasureTextAccurate2(Graphics* g, Font* f, const WCHAR* s, int le
 #define PER_STR_DX_ADJUST 1.f
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
-Gdiplus::RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
+RectFl MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
     if (0 == len) {
-        return Gdiplus::RectF(0, 0, 0, 0); // TODO: should set height to font's height
+        return RectFl(0, 0, 0, 0); // TODO: should set height to font's height
     }
     // note: frankly, I don't see a difference between those StringFormat variations
     StringFormat sf(StringFormat::GenericTypographic());
@@ -130,18 +130,18 @@ Gdiplus::RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len
     if (bbox.Width != 0) {
         bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float)len);
     }
-    return bbox;
+    return RectFl{bbox};
 }
 
 // this usually reports size that is too large
-Gdiplus::RectF MeasureTextStandard(Graphics* g, Font* f, const WCHAR* s, int len) {
+RectFl MeasureTextStandard(Graphics* g, Font* f, const WCHAR* s, int len) {
     Gdiplus::RectF bbox;
     Gdiplus::PointF pz(0, 0);
     g->MeasureString(s, len, f, pz, &bbox);
-    return bbox;
+    return RectFl{bbox};
 }
 
-Gdiplus::RectF MeasureTextQuick(Graphics* g, Font* f, const WCHAR* s, int len) {
+RectFl MeasureTextQuick(Graphics* g, Font* f, const WCHAR* s, int len) {
     CrashIf(0 >= len);
 
     static Vec<Font*> fontCache;
@@ -184,10 +184,10 @@ Gdiplus::RectF MeasureTextQuick(Graphics* g, Font* f, const WCHAR* s, int len) {
         bbox.Width *= (1.0f - correct / len) * 0.99f;
     }
     bbox.Height *= 0.95f;
-    return bbox;
+    return RectFl{bbox};
 }
 
-Gdiplus::RectF MeasureText(Graphics* g, Font* f, const WCHAR* s, size_t len, TextMeasureAlgorithm algo) {
+RectFl MeasureText(Graphics* g, Font* f, const WCHAR* s, size_t len, TextMeasureAlgorithm algo) {
     // TODO: ideally we should not be here with len == 0. This
     // might indicate a problem with fromatter code. See internals-en.epub
     // for a repro
@@ -198,7 +198,7 @@ Gdiplus::RectF MeasureText(Graphics* g, Font* f, const WCHAR* s, size_t len, Tex
     if (algo) {
         return algo(g, f, s, (int)len);
     }
-    Gdiplus::RectF bbox = MeasureTextAccurate(g, f, s, static_cast<int>(len));
+    auto bbox = MeasureTextAccurate(g, f, s, static_cast<int>(len));
     return bbox;
 }
 
@@ -209,17 +209,17 @@ Gdiplus::RectF MeasureText(Graphics* g, Font* f, const WCHAR* s, size_t len, Tex
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
 size_t StringLenForWidth(Graphics* g, Font* f, const WCHAR* s, size_t len, float dx, TextMeasureAlgorithm algo) {
-    Gdiplus::RectF r = MeasureText(g, f, s, len, algo);
-    if (r.Width <= dx) {
+    auto r = MeasureText(g, f, s, len, algo);
+    if (r.dx <= dx) {
         return len;
     }
     // make the best guess of the length that fits
-    size_t n = (size_t)((dx / r.Width) * (float)len);
+    size_t n = (size_t)((dx / r.dx) * (float)len);
     CrashIf((0 == n) || (n > len));
     r = MeasureText(g, f, s, n, algo);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
-    if (r.Width > dx) {
+    if (r.dx > dx) {
         dir = -1; // decreasing length
     }
     for (;;) {
@@ -228,13 +228,13 @@ size_t StringLenForWidth(Graphics* g, Font* f, const WCHAR* s, size_t len, float
         if (1 == dir) {
             // if advancing length, we know that previous string did fit, so if
             // the new one doesn't fit, the previous length was the right one
-            if (r.Width > dx) {
+            if (r.dx > dx) {
                 return n - 1;
             }
         } else {
             // if decreasing length, we know that previous string didn't fit, so if
             // the one one fits, it's of the correct length
-            if (r.Width < dx) {
+            if (r.dx < dx) {
                 return n;
             }
         }
@@ -244,18 +244,18 @@ size_t StringLenForWidth(Graphics* g, Font* f, const WCHAR* s, size_t len, float
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
 float GetSpaceDx(Graphics* g, Font* f, TextMeasureAlgorithm algo) {
-    Gdiplus::RectF bbox;
+    RectFl bbox;
 #if 0
     bbox = MeasureText(g, f, L" ", 1, algo);
-    float spaceDx1 = bbox.Width;
+    float spaceDx1 = bbox.dx;
     return spaceDx1;
 #else
     // this method seems to return (much) smaller size that measuring
     // the space itself
     bbox = MeasureText(g, f, L"wa", 2, algo);
-    float l1 = bbox.Width;
+    float l1 = bbox.dx;
     bbox = MeasureText(g, f, L"w a", 3, algo);
-    float l2 = bbox.Width;
+    float l2 = bbox.dx;
     float spaceDx2 = l2 - l1;
     return spaceDx2;
 #endif

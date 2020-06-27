@@ -10,6 +10,7 @@
 #include "utils/FileUtil.h"
 #include "utils/FileWatcher.h"
 #include "utils/HtmlParserLookup.h"
+#include "utils/GdiPlusUtil.h"
 #include "mui/Mui.h"
 #include "utils/SquareTreeParser.h"
 #include "utils/ThreadUtil.h"

@@ -4,8 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/Log.h"
 #include "utils/HtmlParserLookup.h"
-#include "Mui.h"
 #include "utils/GdiPlusUtil.h"
+#include "Mui.h"
 
 namespace mui {
 
@@ -57,7 +57,7 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
     float fontDy = font->GetHeight(gfx);
     Gdiplus::RectF bbox;
     if (text) {
-        bbox = MeasureText(gfx, font, text);
+        bbox = MeasureText(gfx, font, text).ToGdipRectF();
         textDx = CeilI(bbox.Width);
         // I theorize that bbox shouldn't be bigger than fontDy. However, in practice
         // it is (e.g. for Lucida Grande and text "Page: 0 / 0", bbox.Dy is 19.00

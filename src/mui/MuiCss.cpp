@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/VecSegmented.h"
 #include "utils/HtmlParserLookup.h"
+#include "utils/GdiPlusUtil.h"
 #include "Mui.h"
 
 // using namespace Gdiplus;
