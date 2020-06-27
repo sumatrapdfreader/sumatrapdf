@@ -50,7 +50,6 @@ constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
 
 // clang-format off
-static const char* gAnnotationTypes = "Text\0Free Text\0Stamp\0Caret\0Ink\0Square\0Circle\0Line\0Polygon\0";
 static const char *gFileAttachmentUcons = "Graph\0Paperclip\0PushPin\0Tag\0";
 static const char *gSoundIcons = "Speaker\0Mic\0";
 static const char* gTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
@@ -135,8 +134,6 @@ struct EditAnnotationsWindow {
     TabInfo* tab = nullptr;
     Window* mainWindow = nullptr;
     LayoutBase* mainLayout = nullptr;
-
-    DropDownCtrl* dropDownAdd = nullptr;
 
     ListBoxCtrl* listBox = nullptr;
     StaticCtrl* staticRect = nullptr;
@@ -811,12 +808,6 @@ static void ListBoxSelectionChanged(EditAnnotationsWindow* win, ListBoxSelection
     UpdateUIForSelectedAnnotation(win, itemNo);
 }
 
-static void DropDownAddSelectionChanged(EditAnnotationsWindow* win, DropDownSelectionChangedEvent* ev) {
-    UNUSED(ev);
-    // TODO: implement me
-    MessageBoxNYI(win->mainWindow->hwnd);
-}
-
 // TODO: text changes are not immediately reflected in tooltip
 // TODO: there seems to be a leak
 static void ContentsChanged(EditAnnotationsWindow* win, EditTextChangedEvent* ev) {
@@ -872,17 +863,6 @@ static void CreateMainLayout(EditAnnotationsWindow* win) {
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
-
-    {
-        auto w = new DropDownCtrl(parent);
-        bool ok = w->Create();
-        CrashIf(!ok);
-        w->SetItemsSeqStrings(gAnnotationTypes);
-        w->SetCueBanner("Add annotation...");
-        w->onSelectionChanged = std::bind(DropDownAddSelectionChanged, win, _1);
-        win->dropDownAdd = w;
-        vbox->AddChild(w);
-    }
 
     {
         auto w = new ListBoxCtrl(parent);
@@ -1264,6 +1244,7 @@ void StartEditAnnotations(TabInfo* tab, Annotation* selectedAnnot) {
 
     mainWindow->isDialog = true;
     mainWindow->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    mainWindow->SetText(_TR_TODO("Annotations"));
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
     // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
