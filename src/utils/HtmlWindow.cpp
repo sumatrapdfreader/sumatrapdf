@@ -1695,7 +1695,7 @@ void HtmlWindow::OnSize(Size size) {
     }
 
     if (oleInPlaceObject) {
-        RECT r = Rect(Point(), size).ToRECT();
+        RECT r = Rect({}, size).ToRECT();
         oleInPlaceObject->SetObjectRects(&r, &r);
     }
 }

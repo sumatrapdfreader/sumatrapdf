@@ -845,7 +845,7 @@ bool IsCursorOverWindow(HWND hwnd) {
     POINT pt;
     GetCursorPos(&pt);
     Rect rcWnd = WindowRect(hwnd);
-    return rcWnd.Contains(Point(pt.x, pt.y));
+    return rcWnd.Contains({pt.x, pt.y});
 }
 
 bool GetCursorPosInHwnd(HWND hwnd, Point& posOut) {
@@ -856,7 +856,7 @@ bool GetCursorPosInHwnd(HWND hwnd, Point& posOut) {
     if (!ScreenToClient(hwnd, &pt)) {
         return false;
     }
-    posOut = Point(pt.x, pt.y);
+    posOut = {pt.x, pt.y};
     return true;
 }
 

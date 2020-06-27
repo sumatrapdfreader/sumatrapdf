@@ -273,13 +273,35 @@ struct RectT {
 
 } // namespace geomutil
 
-typedef geomutil::PointT<int> Point;
 typedef geomutil::SizeT<int> Size;
 typedef geomutil::RectT<int> Rect;
 
 typedef geomutil::PointT<float> PointFl;
 typedef geomutil::SizeT<float> SizeFl;
 typedef geomutil::RectT<float> RectFl;
+
+struct Point {
+    int x{0};
+    int y{0};
+
+    Point() = default;
+    Point(int x, int y);
+
+    // TODO: rename to IsEmpty()
+    bool empty();
+    bool operator==(const Point& other);
+    bool operator!=(const Point& other);
+
+    // TODO: temporary, until we convert RectT to Rect/RectF
+    Point(geomutil::PointT<int> p) : x(p.x), y(p.y) {
+    }
+    operator geomutil::PointT<int>() const {
+        return geomutil::PointT<int>(x, y);
+    };
+    geomutil::PointT<int> ToPointT() {
+        return geomutil::PointT<int>(x, y);
+    }
+};
 
 inline SIZE ToSIZE(Size s) {
     return {s.dx, s.dy};

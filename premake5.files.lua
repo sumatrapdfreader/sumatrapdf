@@ -497,6 +497,7 @@ function utils_files()
     "Dict.*",
     "DirIter.*",
     "Dpi.*",
+    "GeomUtil.*",
     "GuessFileType.*",
     "FileUtil.*",
     "FileWatcher.*",

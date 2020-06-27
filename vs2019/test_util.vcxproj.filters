@@ -149,6 +149,9 @@
     <ClCompile Include="..\src\utils\FileUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\GeomUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\HtmlParserLookup.cpp">
       <Filter>utils</Filter>
     </ClCompile>

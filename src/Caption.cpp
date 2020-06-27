@@ -803,7 +803,9 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* 
 
         case WM_NCHITTEST: {
             // Provide hit testing for the caption.
-            Point pt(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+            int x = GET_X_LPARAM(lp);
+            int y = GET_Y_LPARAM(lp);
+            Point pt{x, y};
             Rect rClient = MapRectToWindow(ClientRect(hwnd), hwnd, HWND_DESKTOP);
             Rect rCaption = WindowRect(win->hwndCaption);
             if (rClient.Contains(pt) && pt.y < rCaption.y + rCaption.dy) {
