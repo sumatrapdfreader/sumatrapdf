@@ -2220,6 +2220,7 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
 
     switch (typ) {
         case AnnotationType::Text:
+        case AnnotationType::FreeText:
             fz_rect trect = pdf_annot_rect(ctx, annot);
             float dx = trect.x1 - trect.x0;
             trect.x0 = pos.x;
@@ -2229,6 +2230,10 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
             trect.y1 = trect.y0 + dy;
             pdf_set_annot_rect(ctx, annot, trect);
             break;
+    }
+    if (typ == AnnotationType::FreeText) {
+        pdf_set_annot_contents(ctx, annot, "This is a text...");
+        pdf_set_annot_border(ctx, annot, 1);
     }
 
     pdf_update_appearance(ctx, annot);

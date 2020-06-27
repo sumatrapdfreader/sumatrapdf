@@ -310,7 +310,11 @@ bool Annotation::SetColor(COLORREF c) {
                 }
             }
         }
-        pdf_set_annot_color(pdf->ctx, pdf->annot, newN, newColor);
+        if (c == ColorUnset) {
+            pdf_set_annot_color(pdf->ctx, pdf->annot, 0, newColor);
+        } else {
+            pdf_set_annot_color(pdf->ctx, pdf->annot, newN, newColor);
+        }
         pdf_update_appearance(pdf->ctx, pdf->annot);
     }
     if (didChange) {

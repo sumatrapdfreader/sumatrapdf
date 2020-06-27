@@ -819,6 +819,15 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
+    AnnotationType annotType = AnnotationType::Unknown;
+    switch (cmd) {
+        case CmdCreateAnnotText:
+            annotType = AnnotationType::Text;
+            break;
+        case CmdCreateAnnotFreeText:
+            annotType = AnnotationType::FreeText;
+            break;
+    }
     switch (cmd) {
         case CmdCopySelection:
         case CmdSelectAll:
@@ -859,15 +868,14 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             ExitFullScreen(win);
             break;
         case CmdCreateAnnotText:
-            Annotation* annot = EnginePdfCreateAnnotation(engine, AnnotationType::Text, pageNo, ptOnPage);
+        case CmdCreateAnnotFreeText:
+            Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, ptOnPage);
             RerenderForWindowInfo(win);
             StartEditAnnotations(win->currentTab, annot);
             delete annot;
             break;
     }
     /*
-        { _TR_TODON("Text"), CmdCreateAnnotText, 0 },
-        { _TR_TODON("Free Text"), CmdCreateAnnotFreeText, 0 },
         { _TR_TODON("Stamp"), CmdCreateAnnotStamp, 0 },
         { _TR_TODON("Caret"), CmdCreateAnnotCaret, 0 },
         { _TR_TODON("Ink"), CmdCreateAnnotInk, 0 },
