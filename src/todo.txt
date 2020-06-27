@@ -23,7 +23,6 @@ Annotations:
  - color drop-down should allow entering arbitrary colors (text box or add color selection dialog)
  - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
    a dialog box for setting a color. Remember the custom colors in settings for future use.
- - mem leak when changing contents of annotation
  - Ctrl doesn't always work, probably need to hook keyboard on a lower level
  - maybe; show colors in a drop-down
  - maybe: text language drop-down

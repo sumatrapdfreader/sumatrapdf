@@ -128,7 +128,7 @@ static WStrVec gProcessesToClose;
 // clang-format off
 const WCHAR* gSupportedExtsSumatra[] = {
     L".pdf",  L".xps",  L".oxps", L".cbz",  L".cbr",  L".cb7", L".cbt",
-    L".djvu", L".chm", L".mobi", L".epub", L".azw",  L".azw3", L"azw4",
+    L".djvu", L".chm", L".mobi", L".epub", L".azw",  L".azw3", L".azw4",
     L".fb2", L".fb2z", L".prc",  L".tif", L".tiff", L".jp2",  L".png",
     L".jpg",  L".jpeg", L".tga", L".gif",  nullptr
 };
