@@ -40,7 +40,8 @@ void Painter::PaintBackground(Graphics* g, Gdiplus::Rect r) {
     // at the top if I don't do this
     r.Inflate(1, 1);
     ColorData* bgColor = wnd->cachedStyle->bgColor;
-    Brush* br = BrushFromColorData(bgColor, r);
+    auto rf = RectToRectF(r);
+    Brush* br = BrushFromColorData(bgColor, rf);
     g->FillRectangle(br, r);
 }
 

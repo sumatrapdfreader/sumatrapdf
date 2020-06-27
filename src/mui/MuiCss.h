@@ -263,7 +263,6 @@ CachedStyle* CacheStyle(Style* style, bool* changedOut);
 CachedStyle* CachedStyleByName(const char* name);
 Style* StyleByName(const char* name);
 
-Brush* BrushFromColorData(ColorData* color, const Gdiplus::Rect& r);
 Brush* BrushFromColorData(ColorData* color, const Gdiplus::RectF& r);
 
 ARGB ParseCssColor(const char* color);

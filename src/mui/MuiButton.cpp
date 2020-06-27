@@ -217,7 +217,7 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
     CachedStyle* s = cachedStyle;
     desiredSize = GetBorderAndPaddingSize(s);
 
-    Gdiplus::Rect bbox;
+    Gdiplus::RectF bbox;
     Brush* brStroke = BrushFromColorData(s->stroke, bbox);
     if (0.f == s->strokeWidth) {
         graphicsPath->GetBounds(&bbox);

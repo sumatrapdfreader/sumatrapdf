@@ -16,6 +16,8 @@ enum class ImgFormat {
 
 ImgFormat GfxFormatFromData(std::span<u8>);
 
+Gdiplus::RectF RectToRectF(const Gdiplus::Rect r);
+
 typedef RectFl (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);
 
 RectFl MeasureTextAccurate(Gdiplus::Graphics* g, Gdiplus::Font* f, const WCHAR* s, int len);

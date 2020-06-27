@@ -62,6 +62,10 @@ using Gdiplus::TextRenderingHintClearTypeGridFit;
 using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
+Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
+    return Gdiplus::RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height);
+}
+
 // Get width of each character and add them up.
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still
 // underreports the width

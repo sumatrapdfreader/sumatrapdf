@@ -63,8 +63,9 @@ bool IsDebugPaint() {
     return gDebugPaint;
 }
 
-#define RECTFromRect(r) \
-    { r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom() }
+static RECT RECTFromRect(Gdiplus::Rect r) {
+    return {r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom()};
+}
 
 HwndWrapper* GetRootHwndWnd(const Control* c) {
     while (c->parent) {
@@ -131,13 +132,14 @@ void DrawBorder(Graphics* gfx, const Gdiplus::Rect r, CachedStyle* s) {
     Gdiplus::Point p1, p2;
     float width;
 
+    Gdiplus::RectF rf = RectToRectF(r);
     // top
     p1.X = r.X;
     p1.Y = r.Y;
     p2.X = r.X + r.Width;
     p2.Y = p1.Y;
     width = s->borderWidth.top;
-    Brush* br = BrushFromColorData(s->borderColors.top, r);
+    Brush* br = BrushFromColorData(s->borderColors.top, rf);
     DrawLine(gfx, p1, p2, width, br);
 
     // right
@@ -145,7 +147,7 @@ void DrawBorder(Graphics* gfx, const Gdiplus::Rect r, CachedStyle* s) {
     p2.X = p1.X;
     p2.Y = p1.Y + r.Height;
     width = s->borderWidth.right;
-    br = BrushFromColorData(s->borderColors.right, r);
+    br = BrushFromColorData(s->borderColors.right, rf);
     DrawLine(gfx, p1, p2, width, br);
 
     // bottom
@@ -153,7 +155,7 @@ void DrawBorder(Graphics* gfx, const Gdiplus::Rect r, CachedStyle* s) {
     p2.X = r.X;
     p2.Y = p1.Y;
     width = s->borderWidth.bottom;
-    br = BrushFromColorData(s->borderColors.bottom, r);
+    br = BrushFromColorData(s->borderColors.bottom, rf);
     DrawLine(gfx, p1, p2, width, br);
 
     // left
@@ -161,12 +163,12 @@ void DrawBorder(Graphics* gfx, const Gdiplus::Rect r, CachedStyle* s) {
     p2.X = p1.X;
     p2.Y = r.Y;
     width = s->borderWidth.left;
-    br = BrushFromColorData(s->borderColors.left, r);
+    br = BrushFromColorData(s->borderColors.left, rf);
     DrawLine(gfx, p1, p2, width, br);
 }
 
-static void InvalidateAtOff(HWND hwnd, const Gdiplus::Rect* r, int offX, int offY) {
-    RECT rc = RECTFromRect((*r));
+static void InvalidateAtOff(HWND hwnd, const Gdiplus::Rect r, int offX, int offY) {
+    RECT rc = RECTFromRect(r);
     rc.left += offX;
     rc.right += offX;
     rc.top += offY;
@@ -199,12 +201,12 @@ void RequestRepaint(Control* c, const Gdiplus::Rect* r1, const Gdiplus::Rect* r2
     // if we have r1 or r2, invalidate those, else invalidate w
     bool didInvalidate = false;
     if (r1) {
-        InvalidateAtOff(hwnd, r1, offX, offY);
+        InvalidateAtOff(hwnd, *r1, offX, offY);
         didInvalidate = true;
     }
 
     if (r2) {
-        InvalidateAtOff(hwnd, r2, offX, offY);
+        InvalidateAtOff(hwnd, *r2, offX, offY);
         didInvalidate = true;
     }
 
@@ -212,7 +214,7 @@ void RequestRepaint(Control* c, const Gdiplus::Rect* r1, const Gdiplus::Rect* r2
         return;
     }
 
-    InvalidateAtOff(hwnd, &wRect, offX, offY);
+    InvalidateAtOff(hwnd, wRect, offX, offY);
 }
 
 void RequestLayout(Control* c) {

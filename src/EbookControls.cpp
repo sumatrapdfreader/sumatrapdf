@@ -211,7 +211,7 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedStyle* s = cachedStyle;
     auto timerFill = TimeGet();
-    Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
+    Gdiplus::RectF r(offX, offY, pos.Width, pos.Height);
     if (!s->bgColor->IsTransparent()) {
         Brush* br = BrushFromColorData(s->bgColor, r);
         gfx->FillRectangle(br, r);

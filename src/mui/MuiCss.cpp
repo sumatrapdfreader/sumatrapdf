@@ -705,10 +705,6 @@ Brush* BrushFromColorData(ColorData* color, const Gdiplus::RectF& r) {
     return ::new SolidBrush(0);
 }
 
-Brush* BrushFromColorData(ColorData* color, const Gdiplus::Rect& r) {
-    return BrushFromColorData(color, Gdiplus::RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
-}
-
 static void AddBorders(int& dx, int& dy, CachedStyle* s) {
     const BorderWidth& bw = s->borderWidth;
     // note: width is a float, not sure how I should round them
