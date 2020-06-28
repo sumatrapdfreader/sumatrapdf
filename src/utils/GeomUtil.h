@@ -36,6 +36,7 @@ struct Size {
     Size(int dx, int dy);
 
     bool IsEmpty() const;
+
     bool operator==(const Size& other) const;
     bool operator!=(const Size& other) const;
 };
@@ -48,6 +49,7 @@ struct SizeFl {
     SizeFl(float dx, float dy);
 
     bool IsEmpty() const;
+
     bool operator==(const SizeFl& other) const;
     bool operator!=(const SizeFl& other) const;
 };
@@ -62,16 +64,11 @@ struct Rect {
     Rect(const RECT r);
     Rect(const Gdiplus::RectF r);
     Rect(int x, int y, int dx, int dy);
-
     // TODO: why not working if in .cpp? Confused by Size also being a method?
     Rect::Rect(const Point pt, const Size sz) : x(pt.x), y(pt.y), dx(sz.dx), dy(sz.dy) {
     }
     Rect(const Point min, const Point max);
 
-    int Width() const;
-    int Height() const;
-    int Dx() const;
-    int Dy() const;
     bool EqSize(int otherDx, int otherDy) const;
     int Right() const;
     int Bottom() const;
@@ -104,10 +101,7 @@ struct RectFl {
     RectFl(float x, float y, float dx, float dy);
     RectFl(PointFl pt, SizeFl size);
     RectFl(PointFl min, PointFl max);
-    float Width() const;
-    float Height() const;
-    float Dx() const;
-    float Dy() const;
+
     bool EqSize(float otherDx, float otherDy);
     float Right() const;
     float Bottom() const;

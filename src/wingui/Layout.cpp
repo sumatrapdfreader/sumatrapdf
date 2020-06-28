@@ -550,7 +550,7 @@ void VBox::SetBounds(Rect bounds) {
 
     if (alignMain == MainAxisAlign::Homogeneous) {
         auto gap = CalculateVGap(nullptr, nullptr);
-        auto dy = bounds.Dy() + gap;
+        auto dy = bounds.dy + gap;
         auto count = i64(n);
 
         for (int i = 0; i < n; i++) {
@@ -572,13 +572,13 @@ void VBox::SetBounds(Rect bounds) {
                 // Do nothing
                 break;
             case MainAxisAlign::MainCenter:
-                bounds.y += (bounds.Dy() - totalHeight) / 2;
+                bounds.y += (bounds.dy - totalHeight) / 2;
                 break;
             case MainAxisAlign::MainEnd:
                 bounds.y = bounds.Bottom() - totalHeight;
                 break;
             case MainAxisAlign::SpaceAround: {
-                int l = (bounds.Dy() - totalHeight);
+                int l = (bounds.dy - totalHeight);
                 extraGap = Scale(l, 1, i64(n) + 1);
                 bounds.y += extraGap;
                 extraGap += CalculateVGap(nullptr, nullptr);
@@ -586,13 +586,13 @@ void VBox::SetBounds(Rect bounds) {
             }
             case MainAxisAlign::SpaceBetween:
                 if (n > 1) {
-                    int l = (bounds.Dy() - totalHeight);
+                    int l = (bounds.dy - totalHeight);
                     extraGap = Scale(l, 1, i64(n) - 1);
                     extraGap += CalculateVGap(nullptr, nullptr);
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
-                    bounds.y += (bounds.Dy() - totalHeight) / 2;
+                    bounds.y += (bounds.dy - totalHeight) / 2;
                 }
                 break;
         }
@@ -863,7 +863,7 @@ void HBox::SetBounds(Rect bounds) {
 
     if (alignMain == MainAxisAlign::Homogeneous) {
         auto gap = CalculateHGap(nullptr, nullptr);
-        auto dx = bounds.Dx() + gap;
+        auto dx = bounds.dx + gap;
         auto count = i64(n);
 
         for (int i = 0; i < n; i++) {
@@ -885,26 +885,26 @@ void HBox::SetBounds(Rect bounds) {
                 // Do nothing
                 break;
             case MainAxisAlign::MainCenter:
-                bounds.x += (bounds.Dx() - totalWidth) / 2;
+                bounds.x += (bounds.dx - totalWidth) / 2;
                 break;
             case MainAxisAlign::MainEnd:
                 bounds.x = bounds.Right() - totalWidth;
                 break;
             case MainAxisAlign::SpaceAround: {
-                auto eg = (bounds.Dx() - totalWidth);
+                auto eg = (bounds.dx - totalWidth);
                 extraGap = Scale(eg, 1, i64(n) + 1);
                 bounds.x += extraGap;
                 extraGap += CalculateHGap(nullptr, nullptr);
             } break;
             case MainAxisAlign::SpaceBetween:
                 if (n > 1) {
-                    auto eg = (bounds.Dx() - totalWidth);
+                    auto eg = (bounds.dx - totalWidth);
                     extraGap = Scale(eg, 1, i64(n) - 1);
                     extraGap += CalculateHGap(nullptr, nullptr);
                 } else {
                     // There are no controls between which to put the extra space.
                     // The following essentially convert SpaceBetween to SpaceAround
-                    bounds.x += (bounds.Dx() - totalWidth) / 2;
+                    bounds.x += (bounds.dx - totalWidth) / 2;
                 }
                 break;
         }

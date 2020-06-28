@@ -427,8 +427,8 @@ static void DoRect(EditAnnotationsWindow* win, Annotation* annot) {
     RectFl rect = annot->Rect();
     int x = (int)rect.x;
     int y = (int)rect.y;
-    int dx = (int)rect.Dx();
-    int dy = (int)rect.Dy();
+    int dx = (int)rect.dx;
+    int dy = (int)rect.dy;
     s.AppendFmt("Rect: %d %d %d %d", x, y, dx, dy);
     win->staticRect->SetText(s.AsView());
     win->staticRect->SetIsVisible(true);
@@ -775,8 +775,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
 
     // TODO: get from client size
     auto currBounds = win->mainLayout->lastBounds;
-    int dx = currBounds.Dx();
-    int dy = currBounds.Dy();
+    int dx = currBounds.dx;
+    int dy = currBounds.dy;
     LayoutAndSizeToContent(win->mainLayout, dx, dy, win->mainWindow->hwnd);
     if (annotPageNo > 0) {
         win->tab->AsFixed()->GoToPage(annotPageNo, false);
@@ -1265,8 +1265,8 @@ void StartEditAnnotations(TabInfo* tab, Annotation* selectedAnnot) {
     // TODO: this is slightly less that wanted
     HWND hwnd = tab->win->hwndCanvas;
     auto rc = ClientRect(hwnd);
-    if (rc.Dy() > 0) {
-        minDy = rc.Dy();
+    if (rc.dy > 0) {
+        minDy = rc.dy;
         // if it's a tall window, up the number of items in list box
         // from 5 to 14
         if (minDy > 1024) {

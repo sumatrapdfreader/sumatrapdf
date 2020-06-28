@@ -93,22 +93,6 @@ Rect::Rect(int x, int y, int dx, int dy) : x(x), y(y), dx(dx), dy(dy) {
 Rect::Rect(const Point min, const Point max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
 }
 
-int Rect::Width() const {
-    return dx;
-}
-
-int Rect::Height() const {
-    return dy;
-}
-
-int Rect::Dx() const {
-    return dx;
-}
-
-int Rect::Dy() const {
-    return dy;
-}
-
 bool Rect::EqSize(int otherDx, int otherDy) const {
     return (dx == otherDx) && (dy == otherDy);
 }
@@ -252,22 +236,6 @@ RectFl::RectFl(PointFl pt, SizeFl size) : x(pt.x), y(pt.y), dx(size.dx), dy(size
 }
 
 RectFl::RectFl(PointFl min, PointFl max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
-}
-
-float RectFl::Width() const {
-    return dx;
-}
-
-float RectFl::Height() const {
-    return dy;
-}
-
-float RectFl::Dx() const {
-    return dx;
-}
-
-float RectFl::Dy() const {
-    return dy;
 }
 
 bool RectFl::EqSize(float otherDx, float otherDy) {
