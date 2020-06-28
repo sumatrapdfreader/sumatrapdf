@@ -322,13 +322,16 @@ static void ReadPixel(ReadState& s, u8* dst) {
     }
 }
 
-Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
+Gdiplus::Bitmap* ImageFromData(std::span<u8> d) {
+    size_t len = d.size();
+    const u8* data = (const u8*)d.data();
+
     if (len < sizeof(TgaHeader)) {
         return nullptr;
     }
 
     ReadState s = {0};
-    const TgaHeader* headerLE = (const TgaHeader*)data;
+    const TgaHeader* headerLE = (const TgaHeader*)d.data();
     s.data = data + sizeof(TgaHeader) + headerLE->idLength;
     s.end = data + len;
     if (1 == headerLE->cmapType) {

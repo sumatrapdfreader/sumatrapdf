@@ -380,10 +380,11 @@ const WCHAR* GfxFileExtFromData(std::span<u8> d) {
 }
 
 // Windows' JPEG codec doesn't support arithmetic coding
-static bool JpegUsesArithmeticCoding(const u8* data, size_t len) {
-    CrashIf(GfxFormatFromData({(u8*)data, len}) != ImgFormat::JPEG);
+static bool JpegUsesArithmeticCoding(std::span<u8> d) {
+    CrashIf(GfxFormatFromData(d) != ImgFormat::JPEG);
 
-    ByteReader r(data, len);
+    ByteReader r(d);
+    size_t len = d.size();
     for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF; ix += r.WordBE(ix + 2) + 2) {
         if (0xC9 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xCB) {
             // found the start of a frame using arithmetic coding
@@ -395,15 +396,16 @@ static bool JpegUsesArithmeticCoding(const u8* data, size_t len) {
 
 // Windows' PNG codec fails to handle an edge case, resulting in
 // an infinite loop (cf. http://cxsecurity.com/issue/WLB-2014080021 )
-static bool PngRequiresPresetDict(const u8* data, size_t len) {
-    CrashIf(GfxFormatFromData({(u8*)data, len}) != ImgFormat::PNG);
+static bool PngRequiresPresetDict(std::span<u8> d) {
+    CrashIf(GfxFormatFromData(d) != ImgFormat::PNG);
 
-    ByteReader r(data, len);
-    for (size_t ix = 8; ix + 12 < len && r.DWordBE(ix) < len - ix - 12; ix += r.DWordBE(ix) + 12) {
-        if (r.DWordBE(ix + 4) == 0x49444154 /* IDAT */) {
+    ByteReader r(d);
+    size_t len = d.size();
+    for (size_t i = 8; i + 12 < len && r.DWordBE(i) < len - i - 12; i += r.DWordBE(i) + 12) {
+        if (r.DWordBE(i + 4) == 0x49444154 /* IDAT */) {
             // check the zlib header's FDICT flag
             // (even if this image claims not to be zlib compressed!)
-            return (r.Byte(ix + 9) & (1 << 5)) != 0;
+            return (r.Byte(i + 9) & (1 << 5)) != 0;
         }
     }
 
@@ -412,31 +414,29 @@ static bool PngRequiresPresetDict(const u8* data, size_t len) {
 
 bool IsGdiPlusNativeFormat(std::span<u8> d) {
     ImgFormat fmt = GfxFormatFromData(d);
-    size_t len = d.size();
-    u8* data = d.data();
     return ImgFormat::BMP == fmt || ImgFormat::GIF == fmt || ImgFormat::TIFF == fmt ||
-           (ImgFormat::JPEG == fmt && !JpegUsesArithmeticCoding(data, len)) ||
-           (ImgFormat::PNG == fmt && !PngRequiresPresetDict(data, len));
+           (ImgFormat::JPEG == fmt && !JpegUsesArithmeticCoding(d)) ||
+           (ImgFormat::PNG == fmt && !PngRequiresPresetDict(d));
 }
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap* BitmapFromData(std::span<u8> bmpData) {
     const u8* data = (const u8*)bmpData.data();
     size_t len = bmpData.size();
-    ImgFormat format = GfxFormatFromData({(u8*)data, len});
+    ImgFormat format = GfxFormatFromData(bmpData);
     if (ImgFormat::TGA == format) {
-        return tga::ImageFromData(data, len);
+        return tga::ImageFromData(bmpData);
     }
     if (ImgFormat::WebP == format) {
-        return webp::ImageFromData(data, len);
+        return webp::ImageFromData(bmpData);
     }
     if (ImgFormat::JP2 == format) {
-        return fitz::ImageFromData(data, len);
+        return fitz::ImageFromData(bmpData);
     }
-    if (ImgFormat::JPEG == format && JpegUsesArithmeticCoding(data, len)) {
-        return fitz::ImageFromData(data, len);
+    if (ImgFormat::JPEG == format && JpegUsesArithmeticCoding(bmpData)) {
+        return fitz::ImageFromData(bmpData);
     }
-    if (ImgFormat::PNG == format && PngRequiresPresetDict(data, len)) {
+    if (ImgFormat::PNG == format && PngRequiresPresetDict(bmpData)) {
         return nullptr;
     }
 
@@ -457,7 +457,7 @@ Bitmap* BitmapFromData(std::span<u8> bmpData) {
     // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
     if (bmp && ImgFormat::JPEG == format && (0 == bmp->GetWidth() || 0 == bmp->GetHeight())) {
         delete bmp;
-        bmp = fitz::ImageFromData(data, len);
+        bmp = fitz::ImageFromData(bmpData);
     }
     return bmp;
 }
@@ -565,7 +565,7 @@ Size BitmapSizeFromData(std::span<u8> d) {
                 result.dx = r.WordLE(26) & 0x3fff;
                 result.dy = r.WordLE(28) & 0x3fff;
             } else {
-                result = webp::SizeFromData(data, len);
+                result = webp::SizeFromData(d);
             }
             break;
         case ImgFormat::JP2:

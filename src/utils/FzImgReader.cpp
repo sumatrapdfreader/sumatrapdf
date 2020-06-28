@@ -187,7 +187,9 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int le
     return bmp.Clone(0, 0, w, h, pixelFormat);
 }
 
-Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
+Gdiplus::Bitmap* ImageFromData(std::span<u8> d) {
+    const u8* data = (const u8*)d.data();
+    size_t len = d.size();
     if (len > INT_MAX || len < 12) {
         return nullptr;
     }
@@ -214,9 +216,7 @@ Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
 #else
 
 namespace fitz {
-Gdiplus::Bitmap* ImageFromData(const u8* data, size_t len) {
-    UNUSED(data);
-    UNUSED(len);
+Gdiplus::Bitmap* ImageFromData(std::span<u8>) {
     return nullptr;
 }
 } // namespace fitz
