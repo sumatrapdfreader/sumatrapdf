@@ -803,11 +803,11 @@ void onRaMicroUnistallerFinished() {
 }
 
 static Gdiplus::Bitmap* LoadRaMicroSplash() {
-    std::string_view d = LoadDataResource(IDD_RAMICRO_SPLASH);
+    auto d = LoadDataResource(IDD_RAMICRO_SPLASH);
     if (d.empty()) {
         return nullptr;
     }
-    return BitmapFromData((const u8*)d.data(), d.size());
+    return BitmapFromData(d);
 }
 
 static bool CreateRaMicroUninstallerWindow() {

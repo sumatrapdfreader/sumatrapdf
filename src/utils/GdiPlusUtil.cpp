@@ -420,7 +420,9 @@ bool IsGdiPlusNativeFormat(std::span<u8> d) {
 }
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
-Bitmap* BitmapFromData(const u8* data, size_t len) {
+Bitmap* BitmapFromData(std::span<u8> bmpData) {
+    const u8* data = (const u8*)bmpData.data();
+    size_t len = bmpData.size();
     ImgFormat format = GfxFormatFromData({(u8*)data, len});
     if (ImgFormat::TGA == format) {
         return tga::ImageFromData(data, len);
@@ -438,7 +440,7 @@ Bitmap* BitmapFromData(const u8* data, size_t len) {
         return nullptr;
     }
 
-    auto strm = CreateStreamFromData({(u8*)data, len});
+    auto strm = CreateStreamFromData(bmpData);
     ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return nullptr;
@@ -592,7 +594,7 @@ Size BitmapSizeFromData(std::span<u8> d) {
     if (result.IsEmpty()) {
         // let GDI+ extract the image size if we've failed
         // (currently happens for animated GIF)
-        Bitmap* bmp = BitmapFromData(data, len);
+        Bitmap* bmp = BitmapFromData(d);
         if (bmp) {
             result = Size(bmp->GetWidth(), bmp->GetHeight());
         }

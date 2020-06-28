@@ -1241,11 +1241,11 @@ void onRaMicroInstallerFinished() {
 }
 
 static Gdiplus::Bitmap* LoadRaMicroSplash() {
-    std::string_view d = LoadDataResource(IDD_RAMICRO_SPLASH);
+    std::span<u8> d = LoadDataResource(IDD_RAMICRO_SPLASH);
     if (d.empty()) {
         return nullptr;
     }
-    return BitmapFromData((const u8*)d.data(), d.size());
+    return BitmapFromData(d);
 }
 
 static bool CreateRaMicroInstallerWindow() {

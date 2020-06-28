@@ -67,7 +67,10 @@ std::span<u8> and other small refactoring:
 - HandleTealDocTag
 - ParseComicInfoXml
 - HtmlParser::ParseInPlace
-- BitmapFromData()
+- GfxFormatFromData
+- tga::ImageFromData
+- webp::ImageFromData
+- fitz::ImageFromData
 - HtmlMoniker::SetHtml()
 - EngineImageDir::LoadImageDir use DirIter
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)

@@ -451,7 +451,7 @@ bool EngineImage::LoadSingleFile(const WCHAR* file) {
     AutoFree data = file::ReadFile(file);
     fileExt = GfxFileExtFromData(data.AsSpan());
     defaultFileExt = fileExt;
-    image = BitmapFromData((const u8*)data.data, data.len);
+    image = BitmapFromData(data.AsSpan());
     return FinishLoading();
 }
 
@@ -476,7 +476,7 @@ bool EngineImage::LoadFromStream(IStream* stream) {
     if (IsGdiPlusNativeFormat(data.AsSpan())) {
         image = Bitmap::FromStream(stream);
     } else {
-        image = BitmapFromData((const u8*)data.data, data.size());
+        image = BitmapFromData(data.AsSpan());
     }
 
     return FinishLoading();
@@ -818,7 +818,7 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     AutoFree bmpData = file::ReadFile(pageFileNames.at(pageNo - 1));
     if (bmpData.data) {
         deleteAfterUse = true;
-        return BitmapFromData((const u8*)bmpData.data, bmpData.size());
+        return BitmapFromData(bmpData.AsSpan());
     }
     return nullptr;
 }
@@ -1241,7 +1241,7 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     ImageData img = GetImageData(pageNo);
     if (img.data) {
         deleteAfterUse = true;
-        return BitmapFromData((const u8*)img.data, img.size());
+        return BitmapFromData(img.AsSpan());
     }
     return nullptr;
 }

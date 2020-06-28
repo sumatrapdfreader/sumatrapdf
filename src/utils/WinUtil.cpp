@@ -1869,7 +1869,7 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
     urlVar.bstrVal = SysAllocString(s);
 }
 
-std::string_view LoadDataResource(int resId) {
+std::span<u8> LoadDataResource(int resId) {
     HRSRC resSrc = FindResource(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
     CrashIf(!resSrc);
     if (!resSrc) {
@@ -1888,7 +1888,7 @@ std::string_view LoadDataResource(int resId) {
     }
     char* s = str::DupN(resData, size);
     UnlockResource(res);
-    return {s, size};
+    return {(u8*)s, size};
 }
 
 static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
