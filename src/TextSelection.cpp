@@ -83,10 +83,10 @@ void TextSelection::Reset() {
 // returns the index of the glyph closest to the right of the given coordinates
 // (i.e. when over the right half of a glyph, the returned index will be for the
 // glyph following it, which will be the first glyph (not) to be selected)
-int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
+static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     int textLen;
     Rect* coords;
-    textCache->GetTextForPage(pageNo, &textLen, &coords);
+    ts->textCache->GetTextForPage(pageNo, &textLen, &coords);
     PointFl pt = PointFl(x, y);
 
     unsigned int maxDist = UINT_MAX;
@@ -122,8 +122,8 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
     CrashIf(result < 0 || result >= textLen);
 
     // the result indexes the first glyph to be selected in a forward selection
-    RectFl bbox = engine->Transform(ToRectFl(coords[result]), pageNo, 1.0, 0);
-    pt = engine->Transform(pt, pageNo, 1.0, 0);
+    RectFl bbox = ts->engine->Transform(ToRectFl(coords[result]), pageNo, 1.0, 0);
+    pt = ts->engine->Transform(pt, pageNo, 1.0, 0);
     if (pt.x > bbox.x + 0.5 * bbox.dx) {
         result++;
         // for some (DjVu) documents, all glyphs of a word share the same bbox
@@ -136,12 +136,12 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
     return result;
 }
 
-void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* lines) {
+static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, WStrVec* lines=nullptr) {
     int len;
     Rect* coords;
-    const WCHAR* text = textCache->GetTextForPage(pageNo, &len, &coords);
+    const WCHAR* text = ts->textCache->GetTextForPage(pageNo, &len, &coords);
     CrashIf(len < glyph + length);
-    Rect mediabox = engine->PageMediabox(pageNo).Round();
+    Rect mediabox = ts->engine->PageMediabox(pageNo).Round();
     Rect *c = &coords[glyph], *end = c + length;
     while (c < end) {
         // skip line breaks
@@ -169,26 +169,26 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* 
             bbox.dx = c->x - bbox.x;
         }
 
-        int currLen = result.len;
-        int left = result.cap - currLen;
+        int currLen = ts->result.len;
+        int left = ts->result.cap - currLen;
         CrashIf(left < 0);
         if (left == 0) {
-            int newCap = result.cap * 2;
+            int newCap = ts->result.cap * 2;
             if (newCap < 64) {
                 newCap = 64;
             }
-            int* newPages = (int*)realloc(result.pages, sizeof(int) * newCap);
-            Rect* newRects = (Rect*)realloc(result.rects, sizeof(Rect) * newCap);
+            int* newPages = (int*)realloc(ts->result.pages, sizeof(int) * newCap);
+            Rect* newRects = (Rect*)realloc(ts->result.rects, sizeof(Rect) * newCap);
             CrashIf(!newPages);
             CrashIf(!newRects);
-            result.pages = newPages;
-            result.rects = newRects;
-            result.cap = newCap;
+            ts->result.pages = newPages;
+            ts->result.rects = newRects;
+            ts->result.cap = newCap;
         }
 
-        result.pages[currLen] = pageNo;
-        result.rects[currLen] = bbox;
-        result.len++;
+        ts->result.pages[currLen] = pageNo;
+        ts->result.rects[currLen] = bbox;
+        ts->result.len++;
     }
 }
 
@@ -197,7 +197,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     Rect* coords;
     textCache->GetTextForPage(pageNo, &textLen, &coords);
 
-    int glyphIx = FindClosestGlyph(pageNo, x, y);
+    int glyphIx = FindClosestGlyph(this, pageNo, x, y);
     Point pt = ToPoint(PointFl(x, y));
     // when over the right half of a glyph, FindClosestGlyph returns the
     // index of the next glyph, in which case glyphIx must be decremented
@@ -218,6 +218,14 @@ void TextSelection::StartAt(int pageNo, int glyphIx) {
         textCache->GetTextForPage(pageNo, &textLen);
         startGlyph += textLen + 1;
     }
+}
+
+void TextSelection::StartAt(int pageNo, double x, double y) {
+    StartAt(pageNo, FindClosestGlyph(this, pageNo, x, y));
+}
+
+void TextSelection::SelectUpTo(int pageNo, double x, double y) {
+    SelectUpTo(pageNo, FindClosestGlyph(this, pageNo, x, y));
 }
 
 void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
@@ -248,13 +256,13 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
         int glyph = page == fromPage ? fromGlyph : 0;
         int length = (page == toPage ? toGlyph : textLen) - glyph;
         if (length > 0) {
-            FillResultRects(page, glyph, length);
+            FillResultRects(this, page, glyph, length);
         }
     }
 }
 
 void TextSelection::SelectWordAt(int pageNo, double x, double y) {
-    int i = FindClosestGlyph(pageNo, x, y);
+    int i = FindClosestGlyph(this, pageNo, x, y);
     int textLen;
     const WCHAR* text = textCache->GetTextForPage(pageNo, &textLen);
 
@@ -291,7 +299,7 @@ WCHAR* TextSelection::ExtractText(const WCHAR* lineSep) {
         int glyph = page == fromPage ? fromGlyph : 0;
         int length = (page == toPage ? toGlyph : textLen) - glyph;
         if (length > 0) {
-            FillResultRects(page, glyph, length, &lines);
+            FillResultRects(this, page, glyph, length, &lines);
         }
     }
 

@@ -39,18 +39,20 @@ struct TextSel {
 };
 
 struct TextSelection {
+    int startPage{-1}, endPage{-1};
+    int startGlyph{-1}, endGlyph{-1};
+
+    EngineBase* engine{nullptr};
+    DocumentTextCache* textCache{nullptr};
+
     TextSelection(EngineBase* engine, DocumentTextCache* textCache);
     ~TextSelection();
 
     bool IsOverGlyph(int pageNo, double x, double y);
     void StartAt(int pageNo, int glyphIx);
-    void StartAt(int pageNo, double x, double y) {
-        StartAt(pageNo, FindClosestGlyph(pageNo, x, y));
-    }
+    void StartAt(int pageNo, double x, double y);
     void SelectUpTo(int pageNo, int glyphIx);
-    void SelectUpTo(int pageNo, double x, double y) {
-        SelectUpTo(pageNo, FindClosestGlyph(pageNo, x, y));
-    }
+    void SelectUpTo(int pageNo, double x, double y);
     void SelectWordAt(int pageNo, double x, double y);
     void CopySelection(TextSelection* orig);
     WCHAR* ExtractText(const WCHAR* lineSep);
@@ -59,13 +61,4 @@ struct TextSelection {
     TextSel result{};
 
     void GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const;
-
-    int startPage{-1}, endPage{-1};
-    int startGlyph{-1}, endGlyph{-1};
-
-    EngineBase* engine{nullptr};
-    DocumentTextCache* textCache{nullptr};
-
-    int FindClosestGlyph(int pageNo, double x, double y);
-    void FillResultRects(int pageNo, int glyph, int length, WStrVec* lines = nullptr);
 };
