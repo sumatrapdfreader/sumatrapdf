@@ -2,7 +2,6 @@ Annotations:
  - change text selection to use fz_snap_selection and fz_highlight_selection
    - should fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1596
    - dump stext to figure out what's going on
-  - replace RectFl with Gdiplus::RectF and PointFl with Gdiplus::PointF
  - finish MakeAnnotationFromSelection2 which builds quads, like do_edit_quad_points
    in gl-annotate.c
   - no need to redraw when changing contents of most annotations (hard to pull off in current code)
@@ -101,6 +100,7 @@ returning Rect
 - Engine* => Document* rename
 - rewrite file function a sniffer as a single function
 - extract tab code from Tabs.cpp into a tab control
+- see if can do sth. like https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go
 
 ------
 

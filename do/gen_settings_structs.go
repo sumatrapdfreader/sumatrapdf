@@ -794,6 +794,17 @@ typedef struct FileState DisplayState;
 {{structMetadata}}
 
 #endif
+
+namespace prefs {
+	namespace conv {
+	
+	const WCHAR* FromDisplayMode(DisplayMode mode);
+	DisplayMode ToDisplayMode(const WCHAR* s, DisplayMode defVal);
+	void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140 = nullptr);
+	float ToZoom(const char* s, float defVal);
+	
+	}; // namespace conv
+}; // namespace prefs	
 `
 
 func genSettingsStruct() string {

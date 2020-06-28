@@ -16,34 +16,3 @@ void DeleteGlobalPrefs(GlobalPrefs* gp);
 SessionData* NewSessionData();
 TabState* NewTabState(DisplayState* ds);
 void ResetSessionState(Vec<SessionData*>* sessionData);
-
-// TODO: those are actually defined in SettingsStructs.cpp
-namespace prefs {
-namespace conv {
-
-const WCHAR* FromDisplayMode(DisplayMode mode);
-DisplayMode ToDisplayMode(const WCHAR* s, DisplayMode defVal);
-void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140 = nullptr);
-float ToZoom(const char* s, float defVal);
-
-}; // namespace conv
-}; // namespace prefs
-
-// convenience helpers
-inline bool IsSingle(DisplayMode mode) {
-    return DM_SINGLE_PAGE == mode || DM_CONTINUOUS == mode;
-}
-inline bool IsContinuous(DisplayMode mode) {
-    return DM_CONTINUOUS == mode || DM_CONTINUOUS_FACING == mode || DM_CONTINUOUS_BOOK_VIEW == mode;
-}
-inline bool IsFacing(DisplayMode mode) {
-    return DM_FACING == mode || DM_CONTINUOUS_FACING == mode;
-}
-inline bool IsBookView(DisplayMode mode) {
-    return DM_BOOK_VIEW == mode || DM_CONTINUOUS_BOOK_VIEW == mode;
-}
-
-inline bool IsValidZoom(float zoomLevel) {
-    return (ZOOM_MIN - 0.01f <= zoomLevel && zoomLevel <= ZOOM_MAX + 0.01f) || ZOOM_FIT_PAGE == zoomLevel ||
-           ZOOM_FIT_WIDTH == zoomLevel || ZOOM_FIT_CONTENT == zoomLevel;
-}
