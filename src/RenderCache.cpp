@@ -184,7 +184,7 @@ static Rect GetTileRectDevice(EngineBase* engine, int pageNo, int rotation, floa
 
 static RectFl GetTileRectUser(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
     Rect pixelbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
-    return engine->Transform(pixelbox.Convert<float>(), pageNo, zoom, rotation, true);
+    return engine->Transform(ToRectFl(pixelbox), pageNo, zoom, rotation, true);
 }
 
 static Rect GetTileOnScreen(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile,
@@ -766,7 +766,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         float zoom = dm->GetZoomReal(pageNo);
         bounds = pageInfo->pageOnScreen.Intersect(bounds);
 
-        RectFl area = bounds.Convert<float>();
+        RectFl area = ToRectFl(bounds);
         area.Offset(-pageInfo->pageOnScreen.x, -pageInfo->pageOnScreen.y);
         area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
 

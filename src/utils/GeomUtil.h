@@ -3,57 +3,43 @@
 
 // note: include BaseUtil.h instead of including directly
 
-namespace geomutil {
+struct Point {
+    int x{0};
+    int y{0};
 
-template <typename T>
-struct PointT {
-    T x = 0;
-    T y = 0;
-
-    PointT() : x(0), y(0) {
-    }
-    PointT(T x, T y) : x(x), y(y) {
-    }
-
-    template <typename S>
-    PointT<S> Convert() const {
-        return PointT<S>((S)x, (S)y);
-    }
-
-    PointT<int> ToInt() const {
-        return PointT<int>((int)floor(x + 0.5), (int)floor(y + 0.5));
-    }
+    Point() = default;
+    Point(int x, int y);
 
     // TODO: rename to IsEmpty()
-    bool empty() const {
-        return x == 0 && y == 0;
-    }
+    bool empty();
+    bool operator==(const Point& other);
+    bool operator!=(const Point& other);
+};
 
-    bool operator==(const PointT<T>& other) const {
-        return this->x == other.x && this->y == other.y;
-    }
-    bool operator!=(const PointT<T>& other) const {
-        return !this->operator==(other);
+struct PointFl {
+    float x{0};
+    float y{0};
+
+    PointFl() = default;
+
+    PointFl(float x, float y);
+
+    // TODO: rename to IsEmpty()
+    bool empty();
+    bool operator==(const PointFl& other);
+    bool operator!=(const PointFl& other);
+
+    Point ToInt() {
+        return Point{(int)x, (int)y};
     }
 };
 
-template <typename T>
-struct SizeT {
-    T dx = 0;
-    T dy = 0;
+struct Size {
+    int dx{0};
+    int dy{0};
 
-    SizeT() : dx(0), dy(0) {
-    }
-    SizeT(T dx, T dy) : dx(dx), dy(dy) {
-    }
-
-    template <typename S>
-    SizeT<S> Convert() const {
-        return SizeT<S>((S)dx, (S)dy);
-    }
-
-    SizeT<int> ToInt() const {
-        return SizeT<int>((int)floor(dx + 0.5), (int)floor(dy + 0.5));
+    Size() = default;
+    Size(int dx, int dy) : dx(dx), dy(dy) {
     }
 
     bool IsEmpty() const {
@@ -65,102 +51,115 @@ struct SizeT {
         return dx == 0 || dy == 0;
     }
 
-    bool operator==(const SizeT<T>& other) const {
+    bool operator==(const Size& other) const {
         return this->dx == other.dx && this->dy == other.dy;
     }
-    bool operator!=(const SizeT<T>& other) const {
+    bool operator!=(const Size& other) const {
         return !this->operator==(other);
     }
 };
 
-template <typename T>
-struct RectT {
-    T x = 0;
-    T y = 0;
-    T dx = 0;
-    T dy = 0;
+struct SizeFl {
+    float dx{0};
+    float dy{0};
 
-    RectT() = default;
+    SizeFl() = default;
+    SizeFl(float dx, float dy) : dx(dx), dy(dy) {
+    }
 
-    RectT(const RECT r) {
+    Size ToInt() const {
+        return Size((int)floor(dx + 0.5), (int)floor(dy + 0.5));
+    }
+
+    bool IsEmpty() const {
+        return dx == 0 || dy == 0;
+    }
+
+    // TODO: temporary
+    bool empty() const {
+        return dx == 0 || dy == 0;
+    }
+
+    bool operator==(const SizeFl& other) const {
+        return this->dx == other.dx && this->dy == other.dy;
+    }
+
+    bool operator!=(const SizeFl& other) const {
+        return !this->operator==(other);
+    }
+};
+
+struct Rect {
+    int x{0};
+    int y{0};
+    int dx{0};
+    int dy{0};
+
+    Rect() = default;
+
+    Rect(const RECT r) {
         x = r.left;
         y = r.top;
         dx = r.right - r.left;
         dy = r.bottom - r.top;
     }
 
-    RectT(const Gdiplus::RectF r) {
-        x = r.X;
-        y = r.Y;
-        dx = r.Width;
-        dy = r.Height;
+    Rect(const Gdiplus::RectF r) {
+        x = (int)r.X;
+        y = (int)r.Y;
+        dx = (int)r.Width;
+        dy = (int)r.Height;
     }
 
-    RectT(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) {
+    Rect(int x, int y, int dx, int dy) : x(x), y(y), dx(dx), dy(dy) {
     }
 
-    RectT(PointT<T> pt, SizeT<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
+    Rect(Point pt, Size size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
     }
 
-    RectT(PointT<T> min, PointT<T> max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
+    Rect(Point min, Point max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
     }
 
-    T Width() const {
+    int Width() const {
         return dx;
     }
 
-    T Height() const {
+    int Height() const {
         return dy;
     }
 
-    T Dx() const {
+    int Dx() const {
         return dx;
     }
 
-    T Dy() const {
+    int Dy() const {
         return dy;
     }
 
-    bool EqSize(T otherDx, T otherDy) const {
+    bool EqSize(int otherDx, int otherDy) const {
         return (dx == otherDx) && (dy == otherDy);
     }
 
-    T Right() const {
+    int Right() const {
         return x + dx;
     }
 
-    T Bottom() const {
+    int Bottom() const {
         return y + dy;
     }
 
-    static RectT FromXY(T xs, T ys, T xe, T ye) {
+    static Rect FromXY(int xs, int ys, int xe, int ye) {
         if (xs > xe) {
             std::swap(xs, xe);
         }
         if (ys > ye) {
             std::swap(ys, ye);
         }
-        return RectT(xs, ys, xe - xs, ye - ys);
+        return Rect(xs, ys, xe - xs, ye - ys);
     }
-    static RectT FromXY(PointT<T> TL, PointT<T> BR) {
+
+    static Rect FromXY(Point TL, Point BR) {
         return FromXY(TL.x, TL.y, BR.x, BR.y);
-    }
-
-    template <typename S>
-    RectT<S> Convert() const {
-        return RectT<S>((S)x, (S)y, (S)dx, (S)dy);
-    }
-
-    RectT<int> ToInt() const {
-        return RectT<int>((int)floor(x + 0.5), (int)floor(y + 0.5), (int)floor(dx + 0.5), (int)floor(dy + 0.5));
-    }
-    // cf. fz_roundrect in mupdf/fitz/base_geometry.c
-#ifndef FLT_EPSILON
-#define FLT_EPSILON 1.192092896e-07f
-#endif
-    RectT<int> Round() const {
-        return RectT<int>::FromXY((int)floor(x + FLT_EPSILON), (int)floor(y + FLT_EPSILON),
-                                  (int)ceil(x + dx - FLT_EPSILON), (int)ceil(y + dy - FLT_EPSILON));
     }
 
     bool IsEmpty() const {
@@ -170,7 +169,7 @@ struct RectT {
         return dx == 0 || dy == 0;
     }
 
-    bool Contains(PointT<T> pt) const {
+    bool Contains(Point pt) const {
         if (pt.x < this->x) {
             return false;
         }
@@ -187,22 +186,22 @@ struct RectT {
     }
 
     /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
-    RectT Intersect(RectT other) const {
+    Rect Intersect(Rect other) const {
         /* The intersection starts with the larger of the start coordinates
            and ends with the smaller of the end coordinates */
-        T _x = std::max(this->x, other.x);
-        T _y = std::max(this->y, other.y);
-        T _dx = std::min(this->x + this->dx, other.x + other.dx) - _x;
-        T _dy = std::min(this->y + this->dy, other.y + other.dy) - _y;
+        int _x = std::max(this->x, other.x);
+        int _y = std::max(this->y, other.y);
+        int _dx = std::min(this->x + this->dx, other.x + other.dx) - _x;
+        int _dy = std::min(this->y + this->dy, other.y + other.dy) - _y;
 
         /* return an empty rectangle if the dimensions aren't positive */
         if (_dx <= 0 || _dy <= 0) {
-            return RectT();
+            return {};
         }
-        return RectT(_x, _y, _dx, _dy);
+        return {_x, _y, _dx, _dy};
     }
 
-    RectT Union(RectT other) const {
+    Rect Union(Rect other) const {
         if (this->dx <= 0 && this->dy <= 0) {
             return other;
         }
@@ -212,123 +211,271 @@ struct RectT {
 
         /* The union starts with the smaller of the start coordinates
            and ends with the larger of the end coordinates */
-        T _x = std::min(this->x, other.x);
-        T _y = std::min(this->y, other.y);
-        T _dx = std::max(this->x + this->dx, other.x + other.dx) - _x;
-        T _dy = std::max(this->y + this->dy, other.y + other.dy) - _y;
+        int _x = std::min(this->x, other.x);
+        int _y = std::min(this->y, other.y);
+        int _dx = std::max(this->x + this->dx, other.x + other.dx) - _x;
+        int _dy = std::max(this->y + this->dy, other.y + other.dy) - _y;
 
-        return RectT(_x, _y, _dx, _dy);
+        return {_x, _y, _dx, _dy};
     }
 
-    void Offset(T _x, T _y) {
+    void Offset(int _x, int _y) {
         x += _x;
         y += _y;
     }
 
-    void Inflate(T _x, T _y) {
+    void Inflate(int _x, int _y) {
         x -= _x;
         dx += 2 * _x;
         y -= _y;
         dy += 2 * _y;
     }
 
-    PointT<T> TL() const {
-        return PointT<T>(x, y);
+    Point TL() const {
+        return Point(x, y);
     }
-    PointT<T> BR() const {
-        return PointT<T>(x + dx, y + dy);
+
+    Point BR() const {
+        return Point(x + dx, y + dy);
     }
-    SizeT<T> Size() const {
-        return SizeT<T>(dx, dy);
+
+    Size Size() const {
+        return {dx, dy};
     }
 
 #ifdef _WIN32
     RECT ToRECT() const {
-        RectT<int> rectI(this->ToInt());
-        RECT result = {rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy};
-        return result;
+        return {x, y, x + dx, y + dy};
     }
-    static RectT FromRECT(const RECT& rect) {
+
+    static Rect FromRECT(const RECT& rect) {
         return FromXY(rect.left, rect.top, rect.right, rect.bottom);
     }
 
 #if 1 // def GDIPVER, note: GDIPVER not defined in mingw?
-    Gdiplus::Rect ToGdipRect() const {
-        RectT<int> rect(this->ToInt());
-        return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
+    Gdiplus::Rect ToGdipRect() {
+        return Gdiplus::Rect(x, y, dx, dy);
     }
-    Gdiplus::RectF ToGdipRectF() const {
-        return Gdiplus::RectF((T)x, (T)y, (T)dx, (T)dy);
+    Gdiplus::RectF ToGdipRectF() {
+        return Gdiplus::RectF((float)x, (float)y, (float)dx, (float)dy);
     }
 #endif
 #endif
 
-    bool operator==(const RectT<T>& other) const {
+    bool operator==(const Rect& other) const {
         return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
     }
-    bool operator!=(const RectT<T>& other) const {
+    bool operator!=(const Rect& other) const {
         return !this->operator==(other);
     }
 };
 
-} // namespace geomutil
-
-typedef geomutil::SizeT<int> Size;
-typedef geomutil::RectT<int> Rect;
-
-typedef geomutil::SizeT<float> SizeFl;
-typedef geomutil::RectT<float> RectFl;
-
-struct Point {
-    int x{0};
-    int y{0};
-
-    Point() = default;
-    Point(int x, int y);
-
-    // TODO: rename to IsEmpty()
-    bool empty();
-    bool operator==(const Point& other);
-    bool operator!=(const Point& other);
-
-    // TODO: temporary, until we convert RectT to Rect/RectF
-    Point(geomutil::PointT<int> p) : x(p.x), y(p.y) {
-    }
-    operator geomutil::PointT<int>() const {
-        return geomutil::PointT<int>(x, y);
-    };
-    geomutil::PointT<int> ToPointT() {
-        return geomutil::PointT<int>(x, y);
-    }
-};
-
-struct PointFl {
+struct RectFl {
     float x{0};
     float y{0};
+    float dx{0};
+    float dy{0};
 
-    PointFl() = default;
+    RectFl() = default;
 
-    PointFl(float x, float y);
-
-    // TODO: rename to IsEmpty()
-    bool empty();
-    bool operator==(const PointFl& other);
-    bool operator!=(const PointFl& other);
-
-    // TODO: temporary, until we convert RectT to Rect/RectF
-    PointFl(geomutil::PointT<float> p) : x(p.x), y(p.y) {
+    RectFl(const RECT r) {
+        x = (float)r.left;
+        y = (float)r.top;
+        dx = (float)(r.right - r.left);
+        dy = (float)(r.bottom - r.top);
     }
-    operator geomutil::PointT<float>() const {
-        return geomutil::PointT<float>(x, y);
-    };
-    geomutil::PointT<float> ToPointT() {
-        return geomutil::PointT<float>(x, y);
+
+    RectFl(const Gdiplus::RectF r) {
+        x = r.X;
+        y = r.Y;
+        dx = r.Width;
+        dy = r.Height;
     }
-    Point ToInt() {
-        return Point{(int)x, (int)y};
+
+    RectFl(float x, float y, float dx, float dy) : x(x), y(y), dx(dx), dy(dy) {
+    }
+
+    RectFl(PointFl pt, SizeFl size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
+    }
+
+    RectFl(PointFl min, PointFl max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
+    }
+
+    float Width() const {
+        return dx;
+    }
+
+    float Height() const {
+        return dy;
+    }
+
+    float Dx() const {
+        return dx;
+    }
+
+    float Dy() const {
+        return dy;
+    }
+
+    bool EqSize(float otherDx, float otherDy) {
+        return (dx == otherDx) && (dy == otherDy);
+    }
+
+    float Right() const {
+        return x + dx;
+    }
+
+    float Bottom() const {
+        return y + dy;
+    }
+
+    static RectFl FromXY(float xs, float ys, float xe, float ye) {
+        if (xs > xe) {
+            std::swap(xs, xe);
+        }
+        if (ys > ye) {
+            std::swap(ys, ye);
+        }
+        return RectFl(xs, ys, xe - xs, ye - ys);
+    }
+    static RectFl FromXY(PointFl TL, PointFl BR) {
+        return FromXY(TL.x, TL.y, BR.x, BR.y);
+    }
+
+    Rect ToInt() const {
+        return Rect((int)floor(x + 0.5), (int)floor(y + 0.5), (int)floor(dx + 0.5), (int)floor(dy + 0.5));
+    }
+    // cf. fz_roundrect in mupdf/fitz/base_geometry.c
+#ifndef FLT_EPSILON
+#define FLT_EPSILON 1.192092896e-07f
+#endif
+    Rect Round() const {
+        return Rect::FromXY((int)floor(x + FLT_EPSILON), (int)floor(y + FLT_EPSILON), (int)ceil(x + dx - FLT_EPSILON),
+                            (int)ceil(y + dy - FLT_EPSILON));
+    }
+
+    bool IsEmpty() const {
+        return dx == 0 || dy == 0;
+    }
+    bool empty() const {
+        return dx == 0 || dy == 0;
+    }
+
+    bool Contains(PointFl pt) {
+        if (pt.x < this->x) {
+            return false;
+        }
+        if (pt.x > this->x + this->dx) {
+            return false;
+        }
+        if (pt.y < this->y) {
+            return false;
+        }
+        if (pt.y > this->y + this->dy) {
+            return false;
+        }
+        return true;
+    }
+
+    /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
+    RectFl Intersect(RectFl other) {
+        /* The intersection starts with the larger of the start coordinates
+           and ends with the smaller of the end coordinates */
+        float _x = std::max(this->x, other.x);
+        float _y = std::max(this->y, other.y);
+        float _dx = std::min(this->x + this->dx, other.x + other.dx) - _x;
+        float _dy = std::min(this->y + this->dy, other.y + other.dy) - _y;
+
+        /* return an empty rectangle if the dimensions aren't positive */
+        if (_dx <= 0 || _dy <= 0) {
+            return {};
+        }
+        return {_x, _y, _dx, _dy};
+    }
+
+    RectFl Union(RectFl other) {
+        if (this->dx <= 0 && this->dy <= 0) {
+            return other;
+        }
+        if (other.dx <= 0 && other.dy <= 0) {
+            return *this;
+        }
+
+        /* The union starts with the smaller of the start coordinates
+           and ends with the larger of the end coordinates */
+        float _x = std::min(this->x, other.x);
+        float _y = std::min(this->y, other.y);
+        float _dx = std::max(this->x + this->dx, other.x + other.dx) - _x;
+        float _dy = std::max(this->y + this->dy, other.y + other.dy) - _y;
+
+        return {_x, _y, _dx, _dy};
+    }
+
+    void Offset(float _x, float _y) {
+        x += _x;
+        y += _y;
+    }
+
+    void Inflate(float _x, float _y) {
+        x -= _x;
+        dx += 2 * _x;
+        y -= _y;
+        dy += 2 * _y;
+    }
+
+    PointFl TL() const {
+        return {x, y};
+    }
+
+    PointFl BR() const {
+        return {x + dx, y + dy};
+    }
+
+    SizeFl Size() const {
+        return SizeFl(dx, dy);
+    }
+
+#ifdef _WIN32
+    RECT ToRECT() const {
+        Rect rectI(this->ToInt());
+        return {rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy};
+    }
+
+    static RectFl FromRECT(const RECT& rect) {
+        return FromXY((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom);
+    }
+
+#if 1 // def GDIPVER, note: GDIPVER not defined in mingw?
+    Gdiplus::Rect ToGdipRect() const {
+        Rect rect(this->ToInt());
+        return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
+    }
+    Gdiplus::RectF ToGdipRectF() const {
+        return Gdiplus::RectF(x, y, dx, dy);
+    }
+#endif
+#endif
+
+    bool operator==(const RectFl& other) const {
+        return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
+    }
+    bool operator!=(const RectFl& other) const {
+        return !this->operator==(other);
     }
 };
+
+inline PointFl ToPointFl(Point p) {
+    return {(float)p.x, (float)p.y};
+}
+
+inline SizeFl ToSizeFl(Size s) {
+    return {(float)s.dx, (float)s.dy};
+}
 
 inline SIZE ToSIZE(Size s) {
     return {s.dx, s.dy};
+}
+
+inline RectFl ToRectFl(const Rect& r) {
+    return {(float)r.x, (float)r.y, (float)r.dx, (float)r.dy};
 }

@@ -102,7 +102,7 @@ static PageDestination* newDjVuDestination(const char* link) {
 
 static PageElement* newDjVuLink(int pageNo, Rect rect, const char* link, const char* comment) {
     auto res = new PageElement();
-    res->rect = rect.Convert<float>();
+    res->rect = ToRectFl(rect);
     res->pageNo = pageNo;
     res->dest = newDjVuDestination(link);
     if (!str::IsEmpty(comment)) {
@@ -758,7 +758,7 @@ RectFl EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
         content.dx /= zoom;
         content.y /= zoom;
         content.dy /= zoom;
-        pageRc = content.Round().Convert<float>();
+        pageRc = ToRectFl(content.Round());
     }
 
     return pageRc;
@@ -935,9 +935,9 @@ WCHAR* EngineDjVu::ExtractPageText(int pageNo, Rect** coordsOut) {
         // TODO: the coordinates aren't completely correct yet
         Rect page = PageMediabox(pageNo).Round();
         for (size_t i = 0; i < coords.size(); i++) {
-            if (coords.at(i) != Rect()) {
+            if (!coords.at(i).IsEmpty()) {
                 if (dpiFactor != 1.0) {
-                    geomutil::RectT<float> pageF = coords.at(i).Convert<float>();
+                    RectFl pageF = ToRectFl(coords.at(i));
                     pageF.x *= dpiFactor;
                     pageF.dx *= dpiFactor;
                     pageF.y *= dpiFactor;

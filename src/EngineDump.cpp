@@ -323,7 +323,7 @@ void DumpThumbnail(EngineBase* engine) {
 
     float zoom = std::min(128 / (float)rect.dx, 128 / (float)rect.dy) - 0.001f;
     Rect thumb = RectFl(0, 0, rect.dx * zoom, rect.dy * zoom).Round();
-    rect = engine->Transform(thumb.Convert<float>(), 1, zoom, 0, true);
+    rect = engine->Transform(ToRectFl(thumb), 1, zoom, 0, true);
     RenderPageArgs args(1, zoom, 0, &rect);
     RenderedBitmap* bmp = engine->RenderPage(args);
     if (!bmp) {

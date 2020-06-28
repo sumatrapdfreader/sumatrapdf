@@ -16,7 +16,7 @@ static void GeomTest() {
     utassert(szD.dx == 7.7f && szD.dy == -3.3f);
     Size szI = szD.ToInt();
     utassert(szI.dx == 8 && szI.dy == -3);
-    szD = szI.Convert<float>();
+    szD = ToSizeFl(szI);
     utassert(SizeFl(8, -3) == szD);
 
     utassert(!szD.IsEmpty() && !szI.IsEmpty());

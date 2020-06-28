@@ -133,7 +133,7 @@ static PageElement* newEbookLink(DrawInstr* link, Rect rect, PageDestination* de
     res->pageNo = pageNo;
 
     res->kind_ = kindPageElementDest;
-    res->rect = rect.Convert<float>();
+    res->rect = ToRectFl(rect);
 
     if (!dest || showUrl) {
         res->value = strconv::FromHtmlUtf8(link->str.s, link->str.len);
@@ -145,7 +145,7 @@ static PageElement* newEbookLink(DrawInstr* link, Rect rect, PageDestination* de
         // TODO: not sure about this
         dest->value = str::Dup(res->value);
         dest->pageNo = 0;
-        dest->rect = rect.Convert<float>();
+        dest->rect = ToRectFl(rect);
     }
     res->dest = dest;
     return res;
@@ -155,7 +155,7 @@ static PageElement* newImageDataElement(int pageNo, Rect bbox, int imageID) {
     auto res = new PageElement();
     res->kind_ = kindPageElementImage;
     res->pageNo = pageNo;
-    res->rect = bbox.Convert<float>();
+    res->rect = ToRectFl(bbox);
     res->imageID = imageID;
     return res;
 }
@@ -275,7 +275,7 @@ bool EngineEbook::ExtractPageAnchors() {
 
 RectFl EngineEbook::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
     UNUSED(pageNo);
-    geomutil::RectT<float> rcF = rect.Convert<float>();
+    RectFl rcF = rect; // TODO: un-needed conversion
     auto p1 = Gdiplus::PointF(rcF.x, rcF.y);
     auto p2 = Gdiplus::PointF(rcF.x + rcF.dx, rcF.y + rcF.dy);
     Gdiplus::PointF pts[2] = {p1, p2};
@@ -416,7 +416,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
 }
 
 static Rect GetInstrBbox(DrawInstr& instr, float pageBorder) {
-    geomutil::RectT<float> bbox(instr.bbox.X, instr.bbox.Y, instr.bbox.Width, instr.bbox.Height);
+    RectFl bbox(instr.bbox.X, instr.bbox.Y, instr.bbox.Width, instr.bbox.Height);
     bbox.Offset(pageBorder, pageBorder);
     return bbox.Round();
 }

@@ -204,7 +204,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 
             StartPage(hdc);
 
-            geomutil::SizeT<float> bSize = bounds.Size().Convert<float>();
+            SizeFl bSize = bounds.Size();
             float zoom = std::min((float)printable.dx / bSize.dx, (float)printable.dy / bSize.dy);
             // use the correct zoom values, if the page fits otherwise
             // and the user didn't ask for anything else (default setting)
@@ -274,7 +274,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 
             StartPage(hdc);
 
-            geomutil::SizeT<float> pSize = engine.PageMediabox(pageNo).Size().Convert<float>();
+            SizeFl pSize = engine.PageMediabox(pageNo).Size();
             int rotation = 0;
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {
@@ -304,7 +304,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 RectFl rect = engine.PageContentBox(pageNo, RenderTarget::Print);
-                geomutil::RectT<float> cbox = engine.Transform(rect, pageNo, 1.0, rotation).Convert<float>();
+                RectFl cbox = engine.Transform(rect, pageNo, 1.0, rotation);
                 zoom = std::min((float)printable.dx / cbox.dx,
                                 std::min((float)printable.dy / cbox.dy,
                                          std::min((float)paperSize.dx / pSize.dx, (float)paperSize.dy / pSize.dy)));
@@ -317,8 +317,8 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 offset.x += (int)(paperSize.dx - pSize.dx * zoom) / 2;
                 offset.y += (int)(paperSize.dy - pSize.dy * zoom) / 2;
                 // make sure that no content lies in the non-printable paper margins
-                geomutil::RectT<float> onPaper(printable.x + offset.x + cbox.x * zoom,
-                                               printable.y + offset.y + cbox.y * zoom, cbox.dx * zoom, cbox.dy * zoom);
+                RectFl onPaper(printable.x + offset.x + cbox.x * zoom, printable.y + offset.y + cbox.y * zoom,
+                               cbox.dx * zoom, cbox.dy * zoom);
                 if (onPaper.x < printable.x) {
                     offset.x += (int)(printable.x - onPaper.x);
                 } else if (onPaper.BR().x > printable.BR().x) {

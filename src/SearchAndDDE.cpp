@@ -400,7 +400,7 @@ void PaintForwardSearchMark(WindowInfo* win, HDC hdc) {
     Vec<Rect> rects;
     for (size_t i = 0; i < win->fwdSearchMark.rects.size(); i++) {
         Rect rect = win->fwdSearchMark.rects.at(i);
-        rect = dm->CvtToScreen(pageNo, rect.Convert<float>());
+        rect = dm->CvtToScreen(pageNo, ToRectFl(rect));
         if (hiLiOff > 0) {
             float zoom = dm->GetZoomReal(pageNo);
             rect.x = std::max(pageInfo->pageOnScreen.x, 0) + (int)(hiLiOff * zoom);

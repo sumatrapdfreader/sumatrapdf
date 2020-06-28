@@ -113,7 +113,7 @@ static Vec<Annotation*>* ParseFileModifications(const char* data) {
         }
 
         int pageNo;
-        geomutil::RectT<float> rect;
+        RectFl rect;
         COLORREF color;
         float opacity;
         int r, g, b;
@@ -136,7 +136,7 @@ static Vec<Annotation*>* ParseFileModifications(const char* data) {
             opacity = 1.0f;
         }
         color = MkRgba((u8)r, (u8)g, (u8)b, (u8)(255 * opacity));
-        auto annot = MakeAnnotationSmx(type, pageNo, rect.Convert<float>(), color);
+        auto annot = MakeAnnotationSmx(type, pageNo, rect, color);
         res->Append(annot);
     }
 

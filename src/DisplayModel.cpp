@@ -1643,7 +1643,7 @@ bool DisplayModel::ShowResultRectToScreen(TextSel* res) {
 
     Rect extremes;
     for (int i = 0; i < res->len; i++) {
-        Rect rc = CvtToScreen(res->pages[i], res->rects[i].Convert<float>());
+        Rect rc = CvtToScreen(res->pages[i], ToRectFl(res->rects[i]));
         extremes = extremes.Union(rc);
     }
 

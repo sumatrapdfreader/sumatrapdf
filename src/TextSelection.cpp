@@ -125,7 +125,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
     CrashIf(result < 0 || result >= textLen);
 
     // the result indexes the first glyph to be selected in a forward selection
-    RectFl bbox = engine->Transform(coords[result].Convert<float>(), pageNo, 1.0, 0);
+    RectFl bbox = engine->Transform(ToRectFl(coords[result]), pageNo, 1.0, 0);
     pt = engine->Transform(pt, pageNo, 1.0, 0);
     if (pt.x > bbox.x + 0.5 * bbox.dx) {
         result++;

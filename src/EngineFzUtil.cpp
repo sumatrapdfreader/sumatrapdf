@@ -635,7 +635,7 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
         AutoFreeWstr part(str::DupN(next, end - next));
         uri.Set(str::Join(uri, part));
         Rect bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
-        list->coords.Append(RectD_to_fz_rect(bbox.Convert<float>()));
+        list->coords.Append(RectD_to_fz_rect(ToRectFl(bbox)));
 
         next = end + 1;
     } while (multiline);
@@ -732,7 +732,7 @@ LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords) {
         WCHAR* uri = protocol ? str::Join(protocol, part) : part.StealData();
         list->links.Append(uri);
         Rect bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
-        list->coords.Append(RectD_to_fz_rect(bbox.Convert<float>()));
+        list->coords.Append(RectD_to_fz_rect(ToRectFl(bbox)));
         if (multiline) {
             end = LinkifyMultilineText(list, pageText, start, end + 1, coords);
         }
