@@ -235,7 +235,7 @@ bool EngineEbook::BenchLoadPage(int pageNo) {
 }
 
 void EngineEbook::GetTransform(Matrix& m, float zoom, int rotation) {
-    GetBaseTransform(m, pageRect.ToGdipRectF(), zoom, rotation);
+    GetBaseTransform(m, ToGdipRectF(pageRect), zoom, rotation);
 }
 
 Vec<DrawInstr>* EngineEbook::GetHtmlPage(int pageNo) {
@@ -292,7 +292,7 @@ static void DrawAnnotationHighlight(Graphics& g, Annotation* annot) {
     RectFl rect = annot->Rect();
     auto color = annot->Color();
     SolidBrush tmpBrush(Unblend(color, 119));
-    g.FillRectangle(&tmpBrush, rect.ToGdipRectF());
+    g.FillRectangle(&tmpBrush, ToGdipRectF(rect));
 }
 
 static void DrawAnnotationUnderline(Graphics& g, Annotation* annot) {

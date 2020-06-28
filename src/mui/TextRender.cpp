@@ -490,32 +490,32 @@ ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, in
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
 size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, float dx) {
-    Gdiplus::RectF r = textMeasure->Measure(s, len).ToGdipRectF();
-    if (r.Width <= dx) {
+    RectFl r = textMeasure->Measure(s, len);
+    if (r.dx <= dx) {
         return len;
     }
     // make the best guess of the length that fits
-    size_t n = (size_t)((dx / r.Width) * (float)len);
+    size_t n = (size_t)((dx / r.dx) * (float)len);
     CrashIf(n > len);
-    r = textMeasure->Measure(s, n).ToGdipRectF();
+    r = textMeasure->Measure(s, n);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
-    if (r.Width > dx) {
+    if (r.dx > dx) {
         dir = -1; // decreasing length
     }
     while (n > 1) {
         n += dir;
-        r = textMeasure->Measure(s, n).ToGdipRectF();
+        r = textMeasure->Measure(s, n);
         if (1 == dir) {
             // if advancing length, we know that previous string did fit, so if
             // the new one doesn't fit, the previous length was the right one
-            if (r.Width > dx) {
+            if (r.dx > dx) {
                 return n - 1;
             }
         } else {
             // if decreasing length, we know that previous string didn't fit, so if
             // the one one fits, it's of the correct length
-            if (r.Width < dx) {
+            if (r.dx < dx) {
                 return n;
             }
         }

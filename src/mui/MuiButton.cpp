@@ -55,23 +55,23 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
 
     textDx = 0;
     float fontDy = font->GetHeight(gfx);
-    Gdiplus::RectF bbox;
+    RectFl bbox;
     if (text) {
-        bbox = MeasureText(gfx, font, text).ToGdipRectF();
-        textDx = CeilI(bbox.Width);
+        bbox = MeasureText(gfx, font, text);
+        textDx = CeilI(bbox.dx);
         // I theorize that bbox shouldn't be bigger than fontDy. However, in practice
         // it is (e.g. for Lucida Grande and text "Page: 0 / 0", bbox.Dy is 19.00
         // and fontDy is 18.11). I still want to know if the difference gets even bigger
         // than that
         float maxDiff = 1.f;
-        if (bbox.Height > fontDy + maxDiff) {
-            fontDy = bbox.Height;
-            float diff = fontDy + maxDiff - bbox.Height;
+        if (bbox.dy > fontDy + maxDiff) {
+            fontDy = bbox.dy;
+            float diff = fontDy + maxDiff - bbox.dy;
             if (diff < 0) {
                 AutoFree fontName = strconv::WstrToUtf8(s->fontName);
                 AutoFree tmp = strconv::WstrToUtf8(text);
-                logf("fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'\n", fontDy,
-                     bbox.Height, diff, fontName.Get(), tmp.Get());
+                logf("fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'\n", fontDy, bbox.dy,
+                     diff, fontName.Get(), tmp.Get());
                 CrashIf(true);
             }
         }

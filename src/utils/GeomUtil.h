@@ -338,9 +338,6 @@ struct RectFl {
         return FromXY(TL.x, TL.y, BR.x, BR.y);
     }
 
-    Rect ToInt() const {
-        return Rect((int)floor(x + 0.5), (int)floor(y + 0.5), (int)floor(dx + 0.5), (int)floor(dy + 0.5));
-    }
     // cf. fz_roundrect in mupdf/fitz/base_geometry.c
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.192092896e-07f
@@ -436,15 +433,6 @@ struct RectFl {
         return FromXY((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom);
     }
 
-#if 1 // def GDIPVER, note: GDIPVER not defined in mingw?
-    Gdiplus::Rect ToGdipRect() const {
-        Rect rect(this->ToInt());
-        return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
-    }
-    Gdiplus::RectF ToGdipRectF() const {
-        return Gdiplus::RectF(x, y, dx, dy);
-    }
-#endif
 #endif
 
     bool operator==(const RectFl& other) const {
@@ -455,26 +443,12 @@ struct RectFl {
     }
 };
 
-inline Point ToPoint(PointFl p) {
-    return Point{(int)p.x, (int)p.y};
-}
-
-inline PointFl ToPointFl(Point p) {
-    return {(float)p.x, (float)p.y};
-}
-
-inline SizeFl ToSizeFl(Size s) {
-    return {(float)s.dx, (float)s.dy};
-}
-
-inline SIZE ToSIZE(Size s) {
-    return {s.dx, s.dy};
-}
-
-inline RectFl ToRectFl(const Rect& r) {
-    return {(float)r.x, (float)r.y, (float)r.dx, (float)r.dy};
-}
-
-inline RECT ToRECT(const RectFl r) {
-    return {(int)r.x, (int)r.y, (int)(r.x + r.dx), (int)(r.y + r.dy)};
-}
+Point ToPoint(PointFl p);
+PointFl ToPointFl(Point p);
+SizeFl ToSizeFl(Size s);
+SIZE ToSIZE(Size s);
+RectFl ToRectFl(const Rect r);
+RECT ToRECT(const RectFl r);
+Rect ToRect(const RectFl r);
+Gdiplus::Rect ToGdipRect(const RectFl r);
+Gdiplus::RectF ToGdipRectF(const RectFl r);

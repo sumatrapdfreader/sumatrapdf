@@ -549,7 +549,7 @@ void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int
                     arect.Offset((float)-screen.x, (float)-screen.y);
                     {
                         SolidBrush tmpBrush(Unblend(annot->Color(), 119));
-                        g.FillRectangle(&tmpBrush, arect.ToGdipRectF());
+                        g.FillRectangle(&tmpBrush, ToGdipRectF(arect));
                     }
                     break;
                 case AnnotationType::Underline:

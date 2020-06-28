@@ -228,7 +228,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
 }
 
 void EngineImages::GetTransform(Matrix& m, int pageNo, float zoom, int rotation) {
-    GetBaseTransform(m, PageMediabox(pageNo).ToGdipRectF(), zoom, rotation);
+    GetBaseTransform(m, ToGdipRectF(PageMediabox(pageNo)), zoom, rotation);
 }
 
 RectFl EngineImages::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
