@@ -43,9 +43,9 @@ static void HtmlParser01() {
 
 static void HtmlParser05() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(
-        str::ToSpan("<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo "
-        "val=bar></object><ul><li></ul></object></body></Html>"));
+    HtmlElement* root =
+        p.Parse(str::ToSpan("<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo "
+                            "val=bar></object><ul><li></ul></object></body></Html>"));
     utassert(8 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
     utassert(root->NameIs("html"));
@@ -101,8 +101,8 @@ static void HtmlParser03() {
 
 static void HtmlParser02() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(
-        str::ToSpan("<a><b/><c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>"));
+    HtmlElement* root = p.Parse(str::ToSpan(
+        "<a><b/><c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>"));
     utassert(4 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
     utassert(root->NameIs("a"));
@@ -165,7 +165,8 @@ static void HtmlParser08() {
 
 static void HtmlParser09() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />"));
+    HtmlElement* root =
+        p.Parse(str::ToSpan("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />"));
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("root"));
@@ -180,7 +181,8 @@ static void HtmlParser09() {
 
 static void HtmlParser10() {
     HtmlParser p;
-    HtmlElement* root = p.Parse(str::ToSpan("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>"));
+    HtmlElement* root =
+        p.Parse(str::ToSpan("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>"));
     utassert(2 == p.ElementsCount());
     utassert(2 == p.TotalAttrCount());
     utassert(root->NameIs("x:a") && root->NameIsNS("a", "http://example.org/ns/x"));

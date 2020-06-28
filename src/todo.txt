@@ -62,7 +62,6 @@ Fixes:
 ------
 
 std::span<u8> and other small refactoring:
-- SaveCrashInfo
 - GetCallstacks
 - HandleTealDocTag
 - ParseComicInfoXml

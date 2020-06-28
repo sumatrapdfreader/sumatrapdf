@@ -101,7 +101,7 @@ WCHAR* gCrashFilePath = nullptr;
 static MINIDUMP_EXCEPTION_INFORMATION gMei = {0};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
-static char* BuildCrashInfoText(size_t* sizeOut) {
+static std::span<u8> BuildCrashInfoText() {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -123,20 +123,19 @@ static char* BuildCrashInfoText(size_t* sizeOut) {
         s.Append(gSettingsFile);
     }
 
-    *sizeOut = s.size();
-    return s.StealData();
+    return s.StealAsSpan();
 }
 
-static void SaveCrashInfo(char* s, size_t size) {
+static void SaveCrashInfo(std::span<u8> d) {
     if (!gCrashFilePath) {
         return;
     }
-    file::WriteFile(gCrashFilePath, {(u8*)s, size});
+    file::WriteFile(gCrashFilePath, d);
 }
 
-static void SendCrashInfo(char* s, size_t size) {
+static void SendCrashInfo(std::span<u8> d) {
     dbglog("SendCrashInfo()\n");
-    if (str::IsEmpty(s)) {
+    if (d.empty()) {
         return;
     }
 
@@ -144,7 +143,7 @@ static void SendCrashInfo(char* s, size_t size) {
     headers.AppendFmt("Content-Type: text/plain");
 
     str::Str data(16 * 1024, gCrashHandlerAllocator);
-    data.Append(s, size);
+    data.AppendSpan(d);
 
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_PORT, CRASH_SUBMIT_URL, &headers, &data);
 }
@@ -289,16 +288,14 @@ void SubmitCrashInfo() {
         dbglog("SubmitCrashInfo(): CrashHandlerDownloadSymbols() failed\n");
     }
 
-    char* s = nullptr;
-    size_t size = 0;
-    s = BuildCrashInfoText(&size);
-    if (!s) {
+    std::span<u8> d = BuildCrashInfoText();
+    if (d.empty()) {
         dbglog("SubmitCrashInfo(): skipping because !BuildCrashInfoText()\n");
         return;
     }
-    SaveCrashInfo(s, size);
-    SendCrashInfo(s, size);
-    gCrashHandlerAllocator->Free(s);
+    SaveCrashInfo(d);
+    SendCrashInfo(d);
+    gCrashHandlerAllocator->Free((const void*)d.data());
     dbglog("SubmitCrashInfo() finished\n");
 }
 

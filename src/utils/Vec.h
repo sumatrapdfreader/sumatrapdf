@@ -498,6 +498,12 @@ class Str : public Vec<char> {
         return {d, len};
     }
 
+    std::span<u8> StealAsSpan() {
+        size_t len = size();
+        char* d = StealData();
+        return {(u8*)d, len};
+    }
+
     bool AppendChar(char c) {
         return InsertAt(len, c);
     }
@@ -521,6 +527,13 @@ class Str : public Vec<char> {
             return true;
         }
         return this->Append(sv.data(), sv.size());
+    }
+
+    bool AppendSpan(std::span<u8> d) {
+        if (d.empty()) {
+            return true;
+        }
+        return this->Append(d.data(), d.size());
     }
 
     void AppendFmt(const char* fmt, ...) {
