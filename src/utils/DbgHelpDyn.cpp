@@ -439,11 +439,12 @@ void FreeCallstackLogs() {
     gCallstackLogs = nullptr;
 }
 
-char* GetCallstacks() {
+std::span<u8> GetCallstacks() {
     if (!gCallstackLogs) {
-        return nullptr;
+        return {};
     }
-    return str::Dup(gCallstackLogs->Get());
+    char* s = str::Dup(gCallstackLogs->Get());
+    return str::ToSpan(s);
 }
 
 void LogCallstack() {

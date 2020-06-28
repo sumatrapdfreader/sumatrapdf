@@ -62,7 +62,6 @@ Fixes:
 ------
 
 std::span<u8> and other small refactoring:
-- GetCallstacks
 - HandleTealDocTag
 - EngineImageDir::LoadImageDir use DirIter
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
