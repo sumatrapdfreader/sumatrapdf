@@ -106,7 +106,7 @@ struct AutoFree {
         len = str::Len(data);
     }
 
-    AutoFree(const unsigned char* p) {
+    AutoFree(const u8* p) {
         data = (char*)p;
         len = str::Len(data);
     }

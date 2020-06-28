@@ -27,7 +27,7 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     // I'd have liked to also include the file's last modification time
     // in the fingerprint (much quicker than hashing the entire file's
     // content), but that's too expensive for files on slow drives
-    unsigned char digest[16];
+    u8 digest[16];
     // TODO: why is this happening? Seen in crash reports e.g. 35043
     if (!filePath) {
         return nullptr;
@@ -39,7 +39,7 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     if (path::HasVariableDriveLetter(filePath)) {
         pathU.Get()[0] = '?'; // ignore the drive letter, if it might change
     }
-    CalcMD5Digest((unsigned char*)pathU.Get(), str::Len(pathU.Get()), digest);
+    CalcMD5Digest((u8*)pathU.Get(), str::Len(pathU.Get()), digest);
     AutoFree fingerPrint(_MemToHex(&digest));
 
     AutoFreeWstr thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));

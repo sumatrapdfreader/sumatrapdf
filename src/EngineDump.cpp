@@ -331,15 +331,16 @@ void DumpThumbnail(EngineBase* engine) {
         return;
     }
 
-    size_t len;
-    ScopedMem<unsigned char> data(tga::SerializeBitmap(bmp->GetBitmap(), &len));
+    std::span<u8> imgData = tga::SerializeBitmap(bmp->GetBitmap());
+    size_t len = imgData.size();
+    u8* data = imgData.data();
     AutoFree hexData(data ? str::MemToHex(data, len) : nullptr);
     if (hexData) {
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
     } else {
         Out1("\t<Thumbnail />\n");
     }
-
+    str::Free(data);
     delete bmp;
 }
 
@@ -432,17 +433,16 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             CLSID pngEncId = GetEncoderClsid(L"image/png");
             gbmp.Save(pageBmpPath, &pngEncId);
         } else if (str::EndsWithI(pageBmpPath, L".bmp")) {
-            size_t bmpDataLen;
-            AutoFree bmpData((char*)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
-            if (!bmpData.empty()) {
-                file::WriteFile(pageBmpPath, bmpData.AsSpan());
+            std::span<u8> imgData = SerializeBitmap(bmp->GetBitmap());
+            if (!imgData.empty()) {
+                file::WriteFile(pageBmpPath, imgData);
+                str::Free(imgData.data());
             }
         } else { // render as TGA for all other file extensions
-            size_t tgaDataLen;
-            AutoFree tgaData(tga::SerializeBitmap(bmp->GetBitmap(), &tgaDataLen));
-            if (!tgaData.empty()) {
-                std::span<u8> d = {(u8*)tgaData.Get(), tgaDataLen};
-                file::WriteFile(pageBmpPath, d);
+            std::span<u8> imgData = tga::SerializeBitmap(bmp->GetBitmap());
+            if (!imgData.empty()) {
+                file::WriteFile(pageBmpPath, imgData);
+                str::Free(imgData.data());
             }
         }
         delete bmp;
@@ -457,8 +457,7 @@ class PasswordHolder : public PasswordUI {
   public:
     explicit PasswordHolder(const WCHAR* password) : password(password) {
     }
-    WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
-                       bool* saveKey) override {
+    WCHAR* GetPassword(const WCHAR* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override {
         UNUSED(fileName);
         UNUSED(fileDigest);
         UNUSED(decryptionKeyOut);

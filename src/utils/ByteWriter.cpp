@@ -65,7 +65,7 @@ bool ByteWriter::Write64(u64 val) {
     return Write32(v2) && Write32(v1);
 }
 
-ByteWriter MakeByteWriterLE(unsigned char* dst, size_t len) {
+ByteWriter MakeByteWriterLE(u8* dst, size_t len) {
     return ByteWriter((u8*)dst, len, true);
 }
 
@@ -73,7 +73,7 @@ ByteWriter MakeByteWriterLE(char* dst, size_t len) {
     return ByteWriter((u8*)dst, len, true);
 }
 
-ByteWriter MakeByteWriterBE(unsigned char* dst, size_t len) {
+ByteWriter MakeByteWriterBE(u8* dst, size_t len) {
     return ByteWriter((u8*)dst, len, false);
 }
 

@@ -557,7 +557,7 @@ static const WCHAR* Md5OfAppExe() {
         return nullptr;
     }
 
-    unsigned char md5[16] = {0};
+    u8 md5[16] = {0};
     CalcMD5DigestWin(d.data, d.size(), md5);
 
     AutoFree md5HexA(_MemToHex(&md5));

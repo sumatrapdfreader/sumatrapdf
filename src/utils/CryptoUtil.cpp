@@ -16,7 +16,7 @@ extern "C" {
 
 #ifndef NO_LIBMUPDF
 
-void CalcMD5Digest(const unsigned char* data, size_t byteCount, unsigned char digest[16]) {
+void CalcMD5Digest(const u8* data, size_t byteCount, u8 digest[16]) {
     fz_md5 md5;
     fz_md5_init(&md5);
 #ifdef _WIN64
@@ -28,7 +28,7 @@ void CalcMD5Digest(const unsigned char* data, size_t byteCount, unsigned char di
     fz_md5_final(&md5, digest);
 }
 
-void CalcSHA2Digest(const unsigned char* data, size_t byteCount, unsigned char digest[32]) {
+void CalcSHA2Digest(const u8* data, size_t byteCount, u8 digest[32]) {
     fz_sha256 sha2;
     fz_sha256_init(&sha2);
 #ifdef _WIN64
@@ -42,18 +42,18 @@ void CalcSHA2Digest(const unsigned char* data, size_t byteCount, unsigned char d
 
 #else
 
-void CalcMD5Digest(const unsigned char* data, size_t byteCount, unsigned char digest[16]) {
+void CalcMD5Digest(const u8* data, size_t byteCount, u8 digest[16]) {
     CalcMD5DigestWin(data, byteCount, digest);
 }
 
-void CalcSHA2Digest(const unsigned char* data, size_t byteCount, unsigned char digest[32]) {
+void CalcSHA2Digest(const u8* data, size_t byteCount, u8 digest[32]) {
     CalcSha2DigestWin(data, byteCount, digest);
 }
 
 #endif
 
 // Note: this crashes under Win2000, use SHA2 or MD5 instad
-void CalcSHA1Digest(const unsigned char* data, size_t byteCount, unsigned char digest[20]) {
+void CalcSHA1Digest(const u8* data, size_t byteCount, u8 digest[20]) {
     CalcSha1DigestWin(data, byteCount, digest);
 }
 
@@ -76,7 +76,7 @@ void CalcSHA1Digest(const unsigned char* data, size_t byteCount, unsigned char d
 // MD5 digest that uses Windows' CryptoAPI. It's good for code that doesn't already
 // have MD5 code (smaller code) and it's probably faster than most other implementations
 // TODO: could try to use CryptoNG available starting in Vista. But then again, would that be worth it?
-void CalcMD5DigestWin(const void* data, size_t byteCount, unsigned char digest[16]) {
+void CalcMD5DigestWin(const void* data, size_t byteCount, u8 digest[16]) {
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
 
@@ -115,7 +115,7 @@ void CalcMD5DigestWin(const void* data, size_t byteCount, unsigned char digest[1
 // SHA1 digest that uses Windows' CryptoAPI. It's good for code that doesn't already
 // have SHA1 code (smaller code) and it's probably faster than most other implementations
 // TODO: hasn't been tested for corectness
-void CalcSha1DigestWin(const void* data, size_t byteCount, unsigned char digest[20]) {
+void CalcSha1DigestWin(const void* data, size_t byteCount, u8 digest[20]) {
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
 
@@ -146,7 +146,7 @@ void CalcSha1DigestWin(const void* data, size_t byteCount, unsigned char digest[
     CryptReleaseContext(hProv, 0);
 }
 
-void CalcSha2DigestWin(const void* data, size_t byteCount, unsigned char digest[32]) {
+void CalcSha2DigestWin(const void* data, size_t byteCount, u8 digest[32]) {
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
 

@@ -26,7 +26,7 @@ struct ChmDoc {
     std::span<u8> GetData(const char* fileName);
     char* ResolveTopicID(unsigned int id);
 
-    char* ToUtf8(const unsigned char* text, uint overrideCP = 0);
+    char* ToUtf8(const u8* text, uint overrideCP = 0);
     WCHAR* ToStr(const char* text);
 
     WCHAR* GetProperty(DocumentProperty prop);

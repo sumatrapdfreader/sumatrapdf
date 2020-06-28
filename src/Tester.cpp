@@ -85,9 +85,9 @@ diff: 0.929000
 */
 
 static void BenchMD5Size(void* data, size_t dataSize, const char* desc) {
-    unsigned char d1[16], d2[16];
+    u8 d1[16], d2[16];
     auto t1 = TimeGet();
-    CalcMD5Digest((unsigned char*)data, dataSize, d1);
+    CalcMD5Digest((u8*)data, dataSize, d1);
     double dur1 = TimeSinceInMs(t1);
 
     auto t2 = TimeGet();

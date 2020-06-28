@@ -471,15 +471,14 @@ EnginePdf::~EnginePdf() {
 }
 
 class PasswordCloner : public PasswordUI {
-    unsigned char* cryptKey = nullptr;
+    u8* cryptKey = nullptr;
 
   public:
-    explicit PasswordCloner(unsigned char* cryptKey) {
+    explicit PasswordCloner(u8* cryptKey) {
         this->cryptKey = cryptKey;
     }
 
-    WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
-                       bool* saveKey) override {
+    WCHAR* GetPassword(const WCHAR* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override {
         UNUSED(fileName);
         UNUSED(fileDigest);
         memcpy(decryptionKeyOut, cryptKey, 32);
@@ -695,7 +694,7 @@ bool EnginePdf::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         return false;
     }
 
-    unsigned char digest[16 + 32] = {0};
+    u8 digest[16 + 32] = {0};
     pdf_document* doc = (pdf_document*)_doc;
     fz_stream_fingerprint(ctx, doc->file, digest);
 

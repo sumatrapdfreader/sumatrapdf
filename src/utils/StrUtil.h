@@ -125,8 +125,8 @@ size_t RemoveChars(char* str, const char* toRemove);
 size_t BufSet(char* dst, size_t dstCchSize, const char* src);
 size_t BufAppend(char* dst, size_t dstCchSize, const char* s);
 
-char* MemToHex(const unsigned char* buf, size_t len);
-bool HexToMem(const char* s, unsigned char* buf, size_t bufLen);
+char* MemToHex(const u8* buf, size_t len);
+bool HexToMem(const char* s, u8* buf, size_t bufLen);
 
 const char* Parse(const char* str, const char* format, ...);
 const char* Parse(const char* str, size_t len, const char* format, ...);
@@ -178,5 +178,5 @@ const WCHAR* IdxToStr(const WCHAR* strs, int idx);
 #endif
 } // namespace seqstrings
 
-#define _MemToHex(ptr) str::MemToHex((const unsigned char*)(ptr), sizeof(*ptr))
-#define _HexToMem(txt, ptr) str::HexToMem(txt, (unsigned char*)(ptr), sizeof(*ptr))
+#define _MemToHex(ptr) str::MemToHex((const u8*)(ptr), sizeof(*ptr))
+#define _HexToMem(txt, ptr) str::HexToMem(txt, (u8*)(ptr), sizeof(*ptr))

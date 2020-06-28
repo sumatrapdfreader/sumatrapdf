@@ -62,7 +62,7 @@ WCHAR* pdf_clean_string(WCHAR* string);
 
 fz_stream* fz_open_istream(fz_context* ctx, IStream* stream);
 fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath);
-void fz_stream_fingerprint(fz_context* ctx, fz_stream* stm, unsigned char digest[16]);
+void fz_stream_fingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]);
 std::span<u8> fz_extract_stream_data(fz_context* ctx, fz_stream* stream);
 
 RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap);

@@ -64,7 +64,7 @@
 
 class WindowsDllInterceptor
 {
-  typedef unsigned char *byteptr_t;
+  typedef u8 *byteptr_t;
 public:
   WindowsDllInterceptor()
     : mModule(0)
@@ -199,7 +199,7 @@ protected:
       // need to rewrite the displacement argument.
       if (origBytes[nBytes] >= 0x88 && origBytes[nBytes] <= 0x8B) {
         // various MOVs
-        unsigned char b = origBytes[nBytes+1];
+        u8 b = origBytes[nBytes+1];
         if (((b & 0xc0) == 0xc0) ||
             (((b & 0xc0) == 0x00) &&
              ((b & 0x07) != 0x04) && ((b & 0x07) != 0x05)))
@@ -215,7 +215,7 @@ protected:
         }
       } else if (origBytes[nBytes] == 0x83) {
         // ADD|ODR|ADC|SBB|AND|SUB|XOR|CMP r/m, imm8
-        unsigned char b = origBytes[nBytes+1];
+        u8 b = origBytes[nBytes+1];
         if ((b & 0xc0) == 0xc0) {
           // ADD|ODR|ADC|SBB|AND|SUB|XOR|CMP r, imm8
           nBytes += 3;

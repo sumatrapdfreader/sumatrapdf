@@ -711,7 +711,7 @@ size_t BufAppend(char* dst, size_t dstCchSize, const char* s) {
 }
 
 /* Convert binary data in <buf> of size <len> to a hex-encoded string */
-char* MemToHex(const unsigned char* buf, size_t len) {
+char* MemToHex(const u8* buf, size_t len) {
     /* 2 hex chars per byte, +1 for terminating 0 */
     char* ret = AllocArray<char>(2 * len + 1);
     if (!ret) {
@@ -729,14 +729,14 @@ char* MemToHex(const unsigned char* buf, size_t len) {
    binary data pointed by <buf> of max size bufLen.
    Returns false if size of <s> doesn't match bufLen or is not a valid
    hex string. */
-bool HexToMem(const char* s, unsigned char* buf, size_t bufLen) {
+bool HexToMem(const char* s, u8* buf, size_t bufLen) {
     for (; bufLen > 0; bufLen--) {
         unsigned int c;
         if (1 != sscanf_s(s, "%02x", &c)) {
             return false;
         }
         s += 2;
-        *buf++ = (unsigned char)c;
+        *buf++ = (u8)c;
     }
     return *s == '\0';
 }

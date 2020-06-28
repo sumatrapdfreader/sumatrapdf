@@ -66,7 +66,7 @@ static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int l
 
     fz_try(ctx) {
         for (int y = 0; y < h; y++) {
-            unsigned char* line = (unsigned char*)bmpData.Scan0 + y * bmpData.Stride;
+            u8* line = (u8*)bmpData.Scan0 + y * bmpData.Stride;
             for (int x = 0; x < w; x++) {
                 int read = fz_read(ctx, stm, line, cs->n);
                 if (read != cs->n) {
@@ -170,7 +170,7 @@ static Gdiplus::Bitmap* ImageFromJp2Data(fz_context* ctx, const u8* data, int le
         // TODO: could be optimized by creating a bitmap with bmpData.Scan0 as data
         // Or creating Bitmap after a fact with pix_argb->samples
         pix_argb = fz_convert_pixmap2(ctx, pix, csdest, prf, nullptr, colparms, alpha);
-        unsigned char* bmpPixels = (unsigned char*)bmpData.Scan0;
+        u8* bmpPixels = (u8*)bmpData.Scan0;
         size_t dataSize = pix_argb->stride * h;
         memcpy(bmpPixels, pix_argb->samples, dataSize);
     }

@@ -147,7 +147,7 @@ const CssSelector* CssPullParser::NextSelector() {
 
     // parse "*", "el", ".class" and "el.class"
     const char* c = sEnd;
-    for (; c > sel.s && (isalnum((unsigned char)*(c - 1)) || *(c - 1) == '-'); c--) {
+    for (; c > sel.s && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
         ;
     }
     if (c > sel.s && *(c - 1) == '.') {
@@ -155,7 +155,7 @@ const CssSelector* CssPullParser::NextSelector() {
         sel.clazzLen = sEnd - c;
         c--;
     }
-    for (; c > sel.s && (isalnum((unsigned char)*(c - 1)) || *(c - 1) == '-'); c--) {
+    for (; c > sel.s && (isalnum((u8) * (c - 1)) || *(c - 1) == '-'); c--) {
         ;
     }
     if (sel.clazz - 1 == sel.s) {

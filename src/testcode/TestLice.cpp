@@ -124,7 +124,7 @@ static void BlitPixmap(HDC hdc, fz_pixmap* image, int panx, int pany) {
     int image_w = fz_pixmap_width(ctx, image);
     int image_h = fz_pixmap_height(ctx, image);
     int image_n = fz_pixmap_components(ctx, image);
-    unsigned char* samples = fz_pixmap_samples(ctx, image);
+    u8* samples = fz_pixmap_samples(ctx, image);
 
     dibinf->bmiHeader.biWidth = image_w;
     dibinf->bmiHeader.biHeight = -image_h;
@@ -134,9 +134,9 @@ static void BlitPixmap(HDC hdc, fz_pixmap* image, int panx, int pany) {
                           DIB_RGB_COLORS);
     } else if (image_n == 2) {
         size_t i = image_w * (size_t)image_h;
-        unsigned char* color = (u8*)malloc(i * 4);
-        unsigned char* s = samples;
-        unsigned char* d = color;
+        u8* color = (u8*)malloc(i * 4);
+        u8* s = samples;
+        u8* d = color;
         for (; i > 0; i--) {
             d[2] = d[1] = d[0] = *s++;
             d[3] = *s++;
@@ -146,9 +146,9 @@ static void BlitPixmap(HDC hdc, fz_pixmap* image, int panx, int pany) {
         free(color);
     } else if (image_n == 3) {
         size_t i = image_w * (size_t)image_h;
-        unsigned char* color = (u8*)malloc(i * 4);
-        unsigned char* s = samples;
-        unsigned char* d = color;
+        u8* color = (u8*)malloc(i * 4);
+        u8* s = samples;
+        u8* d = color;
         for (; i > 0; i--) {
             d[0] = *s++;
             d[1] = *s++;

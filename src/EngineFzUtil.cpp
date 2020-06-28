@@ -101,7 +101,7 @@ fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation) {
 
 struct istream_filter {
     IStream* stream;
-    unsigned char buf[4096];
+    u8 buf[4096];
 };
 
 extern "C" int next_istream(fz_context* ctx, fz_stream* stm, size_t max) {
@@ -238,7 +238,7 @@ std::span<u8> fz_extract_stream_data(fz_context* ctx, fz_stream* stream) {
     return {res, size};
 }
 
-void fz_stream_fingerprint(fz_context* ctx, fz_stream* stm, unsigned char digest[16]) {
+void fz_stream_fingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]) {
     i64 fileLen = -1;
     fz_buffer* buf = nullptr;
 
@@ -270,15 +270,15 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
     int w = pixmap->w;
     int h = pixmap->h;
     int rows8 = ((w + 3) / 4) * 4;
-    unsigned char* bmpData = (unsigned char*)calloc(rows8, h);
+    u8* bmpData = (u8*)calloc(rows8, h);
     if (!bmpData) {
         return nullptr;
     }
 
     ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)));
 
-    unsigned char* dest = bmpData;
-    unsigned char* source = pixmap->samples;
+    u8* dest = bmpData;
+    u8* source = pixmap->samples;
     u32* palette = (u32*)bmi.Get()->bmiColors;
     u8 grayIdxs[256] = {0};
 

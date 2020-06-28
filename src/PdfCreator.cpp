@@ -65,7 +65,7 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
     int h = size.dy;
     int stride = ((w * 3 + 3) / 4) * 4;
 
-    unsigned char* data = (unsigned char*)fz_malloc(ctx, stride * h);
+    u8* data = (u8*)fz_malloc(ctx, stride * h);
     if (!data) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "render_to_pixmap: failed to allocate %d bytes", (int)stride * h);
     }

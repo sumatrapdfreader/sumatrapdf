@@ -1666,13 +1666,13 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
 // can be deserialized with LoadImage(nullptr, ..., LD_LOADFROMFILE) and its
 // dimensions determined again with GetBitmapSize(...))
-unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
+std::span<u8> SerializeBitmap(HBITMAP hbmp) {
     Size size = GetBitmapSize(hbmp);
     DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
     DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
-    unsigned char* bmpData = AllocArray<unsigned char>(bmpBytes);
+    u8* bmpData = AllocArray<u8>(bmpBytes);
     if (!bmpData) {
-        return nullptr;
+        return {};
     }
 
     BITMAPINFO* bmi = (BITMAPINFO*)(bmpData + sizeof(BITMAPFILEHEADER));
@@ -1695,10 +1695,7 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
     }
     ReleaseDC(nullptr, hDC);
 
-    if (bmpBytesOut) {
-        *bmpBytesOut = bmpBytes;
-    }
-    return bmpData;
+    return {(u8*)bmpData, bmpBytes};
 }
 
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping) {

@@ -202,7 +202,7 @@ int main() {
     QuitIfNot(ok, "%s", "Error: Failed to sign the SHA-1 hash!");
 
     // convert signature to ASCII text
-    hexSignature.Set(str::MemToHex((const unsigned char*)signature.Get(), sigLen));
+    hexSignature.Set(str::MemToHex((const u8*)signature.Get(), sigLen));
     if (inFileCommentSyntax) {
         const char* lf = str::Find(data, "\r\n") || !str::FindChar(data, '\n') ? "\r\n" : "\n";
         data.Set(str::Format("%s%s Signature sha1:%s%s", data, inFileCommentSyntax, hexSignature, lf));

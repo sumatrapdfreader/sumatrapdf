@@ -71,7 +71,7 @@ std::span<u8> and other small refactoring:
 - HtmlMoniker::SetHtml()
 - EngineImageDir::LoadImageDir use DirIter
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
-- SerializeBitmap
+- ImageFromData
 - PrettyPrintHtml
 ------
 
@@ -90,7 +90,6 @@ returning Rect
 - use char* instead of WCHAR* for files in Engines
 - turn LinkSaverUI class into a callback function
 - make SaveFileAsPDF non-virtual ([https://codeeval.dev/gist/23710422979e7a7235db96254afd0681](https://codeeval.dev/gist/23710422979e7a7235db96254afd0681))
-- tga::SerializeBitmap : change to return std::string_view
 - rethink how bitmaps are storied. Preferable store them in sth. similar to fz_pixmap() and just blit when painting, like mupdf viewer. Or make a virtual Blit()
 - ChmDoc -> ChmFile
 - ChmDoc::Load() WCHAR* => std::string_view

@@ -66,7 +66,7 @@ static void extractPageText(EngineBase* engine, int pageNo) {
     int idx = 0;
     while (utf.Get()[idx] != 0) {
         char c = utf.Get()[idx++];
-        printf("%02x ", (unsigned char)c);
+        printf("%02x ", (u8)c);
     }
     printf("'\n");
     free(uni);

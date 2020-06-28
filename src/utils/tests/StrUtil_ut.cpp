@@ -573,7 +573,7 @@ void StrTest() {
 
     {
         for (int c = 0x00; c < 0x100; c++) {
-            utassert(!!isspace((unsigned char)c) == str::IsWs((char)c));
+            utassert(!!isspace((u8)c) == str::IsWs((char)c));
         }
         for (int c = 0x00; c < 0x10000; c++) {
             utassert(!!iswspace((WCHAR)c) == str::IsWs((WCHAR)c));

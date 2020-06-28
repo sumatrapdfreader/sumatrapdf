@@ -12,7 +12,7 @@ struct ByteReader {
     ByteReader(std::string_view data);
     ByteReader(std::span<u8> data);
     ByteReader(const char* data, size_t len);
-    ByteReader(const unsigned char* data, size_t len);
+    ByteReader(const u8* data, size_t len);
 
     u8 Byte(size_t off) const;
     u16 WordLE(size_t off) const;

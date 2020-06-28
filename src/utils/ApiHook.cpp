@@ -11,8 +11,8 @@
 inline int my_narrow_stricmp(const char* a, const char* b) {
     int ca, cb;
     do {
-        ca = (unsigned char)*a++;
-        cb = (unsigned char)*b++;
+        ca = (u8)*a++;
+        cb = (u8)*b++;
         ca = tolower(toupper(ca));
         cb = tolower(toupper(cb));
     } while (ca == cb && ca != '\0');

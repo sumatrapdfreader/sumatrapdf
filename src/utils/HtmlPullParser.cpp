@@ -111,7 +111,7 @@ const char* ResolveHtmlEntity(const char* s, size_t len, int& rune) {
     }
 
     // go to the end of a potential named entity
-    for (entEnd = s; entEnd < s + len && isalnum((unsigned char)*entEnd); entEnd++) {
+    for (entEnd = s; entEnd < s + len && isalnum((u8)*entEnd); entEnd++) {
         ;
     }
     if (entEnd != s) {

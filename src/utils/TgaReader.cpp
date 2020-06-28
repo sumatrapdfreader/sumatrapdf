@@ -379,11 +379,11 @@ inline bool memeq3(const char* pix1, const char* pix2) {
     return *(WORD*)pix1 == *(WORD*)pix2 && pix1[2] == pix2[2];
 }
 
-unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
+std::span<u8> SerializeBitmap(HBITMAP hbmp) {
     BITMAP bmpInfo;
     GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
     if ((ULONG)bmpInfo.bmWidth > USHRT_MAX || (ULONG)bmpInfo.bmHeight > USHRT_MAX) {
-        return 0;
+        return {};
     }
 
     WORD w = (WORD)bmpInfo.bmWidth;
@@ -391,7 +391,7 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
     int stride = ((w * 3 + 3) / 4) * 4;
     AutoFree bmpData((char*)malloc(stride * h));
     if (!bmpData) {
-        return nullptr;
+        return {};
     }
 
     BITMAPINFO bmi = {0};
@@ -405,7 +405,7 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
     HDC hDC = GetDC(nullptr);
     if (!GetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS)) {
         ReleaseDC(nullptr, hDC);
-        return nullptr;
+        return {};
     }
     ReleaseDC(nullptr, hDC);
 
@@ -454,9 +454,7 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
         tgaData.Append((char*)&footerLE, sizeof(footerLE));
     }
 
-    if (bmpBytesOut) {
-        *bmpBytesOut = tgaData.size();
-    }
-    return (unsigned char*)tgaData.StealData();
+    u8* data = (u8*)tgaData.StealData();
+    return {data, tgaData.size()};
 }
 } // namespace tga

@@ -43,7 +43,7 @@ struct ISzAllocatorAlloc : ISzAlloc {
 static bool crc_table_ready = false;
 static u32 crc_table[256];
 
-u32 lzma_crc32(u32 crc32, const unsigned char* data, size_t data_len) {
+u32 lzma_crc32(u32 crc32, const u8* data, size_t data_len) {
     if (!crc_table_ready) {
         u32 i, j;
         u32 h = 1;

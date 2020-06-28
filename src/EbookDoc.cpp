@@ -56,7 +56,7 @@ static uint GetCodepageFromPI(const char* xmlPI) {
 }
 
 static bool IsValidUtf8(const char* string) {
-    for (const unsigned char* s = (const unsigned char*)string; *s; s++) {
+    for (const u8* s = (const u8*)string; *s; s++) {
         int skip;
         if (*s < 0x80) {
             skip = 0;
@@ -173,7 +173,7 @@ static char* Base64Decode(const char* s, size_t sLen, size_t* lenOut) {
     const char* end = s + sLen;
     char* result = AllocArray<char>(sLen * 3 / 4);
     char* curr = result;
-    unsigned char c = 0;
+    u8 c = 0;
     int step = 0;
     for (; s < end && *s != '='; s++) {
         char n = decode64(*s);
@@ -1435,10 +1435,10 @@ static const char* TextFindLinkEnd(str::Str& htmlData, const char* curr, char pr
 inline bool IsEmailUsernameChar(char c) {
     // explicitly excluding the '/' from the list, as it is more
     // often part of a URL or path than of an email address
-    return isalnum((unsigned char)c) || c && str::FindChar(".!#$%&'*+=?^_`{|}~-", c);
+    return isalnum((u8)c) || c && str::FindChar(".!#$%&'*+=?^_`{|}~-", c);
 }
 inline bool IsEmailDomainChar(char c) {
-    return isalnum((unsigned char)c) || '-' == c;
+    return isalnum((u8)c) || '-' == c;
 }
 
 static const char* TextFindEmailEnd(str::Str& htmlData, const char* curr) {
@@ -1495,7 +1495,7 @@ static const char* TextFindEmailEnd(str::Str& htmlData, const char* curr) {
 }
 
 static const char* TextFindRfcEnd(str::Str& htmlData, const char* curr) {
-    if (isalnum((unsigned char)*(curr - 1))) {
+    if (isalnum((u8) * (curr - 1))) {
         return nullptr;
     }
     int rfc;
@@ -1536,7 +1536,7 @@ bool TxtDoc::Load() {
             /* don't check for hyperlinks inside a link */;
         } else if ('@' == *curr) {
             linkEnd = TextFindEmailEnd(htmlData, curr);
-        } else if (curr > d && ('/' == curr[-1] || isalnum((unsigned char)curr[-1]))) {
+        } else if (curr > d && ('/' == curr[-1] || isalnum((u8)curr[-1]))) {
             /* don't check for a link at this position */;
         } else if ('h' == *curr && str::Parse(curr, "http%?s://")) {
             linkEnd = TextFindLinkEnd(htmlData, curr, curr > d ? curr[-1] : ' ');

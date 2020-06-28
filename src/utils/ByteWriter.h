@@ -18,7 +18,7 @@ struct ByteWriter {
     bool Write64(u64 val);
 };
 
-ByteWriter MakeByteWriterLE(unsigned char* dst, size_t len);
+ByteWriter MakeByteWriterLE(u8* dst, size_t len);
 ByteWriter MakeByteWriterLE(char* dst, size_t len);
-ByteWriter MakeByteWriterBE(unsigned char* dst, size_t len);
+ByteWriter MakeByteWriterBE(u8* dst, size_t len);
 ByteWriter MakeByteWriterBE(char* dst, size_t len);

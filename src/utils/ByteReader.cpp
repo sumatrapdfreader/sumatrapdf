@@ -10,9 +10,9 @@ bool ByteReader::Unpack(void* strct, size_t size, const char* format, size_t off
     int repeat = 0;
     size_t idx = 0;
     for (const char* c = format; *c; c++) {
-        if (isdigit((unsigned char)*c)) {
+        if (isdigit((u8)*c)) {
             repeat = atoi(c);
-            for (c++; isdigit((unsigned char)*c); c++) {
+            for (c++; isdigit((u8)*c); c++) {
                 ;
             }
         }
@@ -68,7 +68,7 @@ ByteReader::ByteReader(std::span<u8> data) {
 ByteReader::ByteReader(const char* data, size_t len) : d((const u8*)data), len(len) {
 }
 
-ByteReader::ByteReader(const unsigned char* data, size_t len) : d((const u8*)data), len(len) {
+ByteReader::ByteReader(const u8* data, size_t len) : d((const u8*)data), len(len) {
 }
 
 u8 ByteReader::Byte(size_t off) const {
