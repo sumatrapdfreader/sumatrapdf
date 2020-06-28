@@ -227,7 +227,7 @@ void DisplayModel::GetDisplayState(DisplayState* ds) {
     ds->pageNo = ss.page;
     ds->scrollPos = Point();
     if (!presentationMode) {
-        ds->scrollPos = PointFl(ss.x, ss.y).ToInt();
+        ds->scrollPos = Point((int)ss.x, (int)ss.y);
     }
     ds->rotation = rotation;
     ds->displayR2L = displayR2L;
@@ -963,7 +963,7 @@ Point DisplayModel::CvtToScreen(int pageNo, PointFl pt) {
     p.x += 0.499 + r.x;
     p.y += 0.499 + r.y;
 
-    return p.ToInt();
+    return ToPoint(p);
 }
 
 Rect DisplayModel::CvtToScreen(int pageNo, RectFl r) {
@@ -1139,7 +1139,7 @@ Point DisplayModel::GetContentStart(int pageNo) {
     if (contentBox.IsEmpty()) {
         return Point(0, 0);
     }
-    return contentBox.TL().ToInt();
+    return ToPoint(contentBox.TL());
 }
 
 // TODO: what's GoToPage supposed to do for Facing at 400% zoom?
@@ -1825,7 +1825,7 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
         // PDF: /XYZ top left
         // scroll to rect.TL()
         PointFl scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
-        scroll = scrollD.ToInt();
+        scroll = ToPoint(scrollD);
 
         // default values for the coordinates mean: keep the current position
         if (DEST_USE_DEFAULT == rect.x) {
@@ -1838,14 +1838,14 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
     } else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top
         RectFl rectD = engine->Transform(rect, pageNo, zoomReal, rotation);
-        scroll = rectD.TL().ToInt();
+        scroll = ToPoint(rectD.TL());
 
         // Rect<float> rectF = _engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();
         // zoom = 100.0f * std::min(viewPort.dx / rectF.dx, viewPort.dy / rectF.dy);
     } else if (rect.y != DEST_USE_DEFAULT) {
         // PDF: /FitH top  or  /FitBH top
         PointFl scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
-        scroll.y = scrollD.ToInt().y;
+        scroll.y = (int)scrollD.y;
         // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH
     }
     // else if (Fit || FitV) zoom = ZOOM_FIT_PAGE

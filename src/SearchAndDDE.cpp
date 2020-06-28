@@ -454,7 +454,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         return false;
     }
 
-    Point pt = dm->CvtFromScreen(Point(x, y), pageNo).ToInt();
+    Point pt = ToPoint(dm->CvtFromScreen(Point(x, y), pageNo));
     AutoFreeWstr srcfilepath;
     uint line, col;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);

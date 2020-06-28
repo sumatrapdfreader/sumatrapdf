@@ -11,9 +11,9 @@ struct Point {
     Point(int x, int y);
 
     // TODO: rename to IsEmpty()
-    bool empty();
-    bool operator==(const Point& other);
-    bool operator!=(const Point& other);
+    bool empty() const;
+    bool operator==(const Point& other) const;
+    bool operator!=(const Point& other) const;
 };
 
 struct PointFl {
@@ -25,13 +25,9 @@ struct PointFl {
     PointFl(float x, float y);
 
     // TODO: rename to IsEmpty()
-    bool empty();
-    bool operator==(const PointFl& other);
-    bool operator!=(const PointFl& other);
-
-    Point ToInt() {
-        return Point{(int)x, (int)y};
-    }
+    bool empty() const;
+    bool operator==(const PointFl& other) const;
+    bool operator!=(const PointFl& other) const;
 };
 
 struct Size {
@@ -463,6 +459,10 @@ struct RectFl {
         return !this->operator==(other);
     }
 };
+
+inline Point ToPoint(PointFl p) {
+    return Point{(int)p.x, (int)p.y};
+}
 
 inline PointFl ToPointFl(Point p) {
     return {(float)p.x, (float)p.y};

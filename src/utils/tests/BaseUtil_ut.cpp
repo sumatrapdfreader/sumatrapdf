@@ -9,7 +9,7 @@
 static void GeomTest() {
     PointFl ptD(12.4f, -13.6f);
     utassert(ptD.x == 12.4f && ptD.y == -13.6f);
-    Point ptI = ptD.ToInt();
+    Point ptI = ToPoint(ptD);
     utassert(ptI.x == 12 && ptI.y == -14);
 
     SizeFl szD(7.7f, -3.3f);
