@@ -189,7 +189,7 @@ static LRESULT OnPaint(HWND hwnd) {
     HDC hdc = buffer.GetDC();
     HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
     HBRUSH brushWhite = GetStockBrush(WHITE_BRUSH);
-    RECT rcClient = rect.ToRECT();
+    RECT rcClient = ToRECT(rect);
     FillRect(hdc, &rcClient, brushBg);
 
     PreviewBase* preview = (PreviewBase*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -202,7 +202,7 @@ static LRESULT OnPaint(HWND hwnd) {
             Rect onScreen = RectFl((float)rect.x, (float)rect.y, (float)page.dx * zoom, (float)page.dy * zoom).Round();
             onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
 
-            RECT rcPage = onScreen.ToRECT();
+            RECT rcPage = ToRECT(onScreen);
             FillRect(hdc, &rcPage, brushWhite);
             preview->renderer->Render(hdc, onScreen, pageNo, zoom);
         }

@@ -95,7 +95,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     // size (within reason)
     x = w->closeBtnPos.x - DpiScale(w->hwnd, LABEL_BUTTON_SPACE_DX);
     Rect ri(x, 0, cr.dx - x, cr.dy);
-    RECT r = ri.ToRECT();
+    RECT r = ToRECT(ri);
     FillRect(hdc, &r, br);
 
     DrawCloseButton(hdc, w);

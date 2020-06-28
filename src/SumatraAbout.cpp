@@ -222,7 +222,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     int x = rc.dx - txtSize.cx - ABOUT_INNER_PADDING;
     int y = rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING;
     Rect rect(x, y, txtSize.cx, txtSize.cy);
-    RECT rTmp = rect.ToRECT();
+    RECT rTmp = ToRECT(rect);
     DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
         ScopedSelectObject pen(hdc, penLinkLine);
@@ -250,7 +250,7 @@ static Rect DrawSupportLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     int y = rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING;
     Rect rect(ABOUT_INNER_PADDING, y, txtSize.cx, txtSize.cy);
 
-    RECT rTmp = rect.ToRECT();
+    RECT rTmp = ToRECT(rect);
     DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
         ScopedSelectObject pen(hdc, penLinkLine);
@@ -278,7 +278,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo>& linkIn
     ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     Rect rc = ClientRect(hwnd);
-    RECT rTmp = rc.ToRECT();
+    RECT rTmp = ToRECT(rc);
     col = GetAppColor(AppColor::MainWindowBg);
     ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushAboutBg);
@@ -661,7 +661,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     ScopedSelectObject font(hdc, fontSumatraTxt);
 
     Rect rc = ClientRect(win->hwndCanvas);
-    RECT rTmp = rc.ToRECT();
+    RECT rTmp = ToRECT(rc);
     col = GetAppColor(AppColor::MainWindowBg);
     AutoDeleteBrush brushLogoBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushLogoBg);
@@ -685,7 +685,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
-    rTmp = rc.ToRECT();
+    rTmp = ToRECT(rc);
     col = GetAppColor(AppColor::MainWindowBg);
     ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushAboutBg);
@@ -719,7 +719,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     if (isRtl) {
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
-    rTmp = headerRect.ToRECT();
+    rTmp = ToRECT(headerRect);
     DrawText(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
 
     SelectObject(hdc, fontLeftTxt);
@@ -770,7 +770,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             if (isRtl) {
                 rect.x -= iconSpace;
             }
-            rTmp = rect.ToRECT();
+            rTmp = ToRECT(rect);
             DrawText(hdc, path::GetBaseNameNoFree(state->filePath), -1, &rTmp,
                      DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
@@ -809,7 +809,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     if (isRtl) {
         rect.x = rectIcon.x - rect.dx - 3;
     }
-    rTmp = rect.ToRECT();
+    rTmp = ToRECT(rect);
     DrawText(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
     PaintLine(hdc, Rect(rect.x, rect.y + rect.dy, rect.dx, 0));
     // make the click target larger

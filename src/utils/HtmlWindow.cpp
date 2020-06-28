@@ -1594,7 +1594,7 @@ bool HtmlWindow::CreateBrowser() {
     }
 
     ::SetActiveWindow(oleObjectHwnd);
-    RECT rc = ClientRect(hwndParent).ToRECT();
+    RECT rc = ToRECT(ClientRect(hwndParent));
 
     oleInPlaceObject->SetObjectRects(&rc, &rc);
     if (!invisibleAtRuntime) {
@@ -1695,7 +1695,7 @@ void HtmlWindow::OnSize(Size size) {
     }
 
     if (oleInPlaceObject) {
-        RECT r = Rect({}, size).ToRECT();
+        RECT r = ToRECT(Rect({}, size));
         oleInPlaceObject->SetObjectRects(&r, &r);
     }
 }

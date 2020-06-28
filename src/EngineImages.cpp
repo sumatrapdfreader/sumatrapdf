@@ -201,7 +201,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     Color white(0xFF, 0xFF, 0xFF);
     SolidBrush tmpBrush(white);
-    Gdiplus::Rect screenR(screen.ToGdipRect());
+    Gdiplus::Rect screenR = ToGdipRect(screen);
     screenR.Inflate(1, 1);
     g.FillRectangle(&tmpBrush, screenR);
 
@@ -213,7 +213,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     Rect pageRcI = PageMediabox(pageNo).Round();
     ImageAttributes imgAttrs;
     imgAttrs.SetWrapMode(WrapModeTileFlipXY);
-    Status ok = g.DrawImage(page->bmp, pageRcI.ToGdipRect(), 0, 0, pageRcI.dx, pageRcI.dy, UnitPixel, &imgAttrs);
+    Status ok = g.DrawImage(page->bmp, ToGdipRect(pageRcI), 0, 0, pageRcI.dx, pageRcI.dy, UnitPixel, &imgAttrs);
 
     DropPage(page, false);
     DeleteDC(hDC);

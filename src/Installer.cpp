@@ -588,7 +588,7 @@ static void OnButtonOptions() {
     //] ACCESSKEY_GROUP Installer
 
     Rect rc = ClientRect(gHwndFrame);
-    RECT rcTmp = rc.ToRECT();
+    RECT rcTmp = ToRECT(rc);
     InvalidateRect(gHwndFrame, &rcTmp, TRUE);
 
     gButtonOptions->SetFocus();

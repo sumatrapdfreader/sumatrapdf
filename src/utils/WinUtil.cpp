@@ -90,7 +90,7 @@ Rect WindowRect(HWND hwnd) {
 }
 
 Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
-    RECT rc = rect.ToRECT();
+    RECT rc = ToRECT(rect);
     MapWindowPoints(hwndFrom, hwndTo, (LPPOINT)&rc, 2);
     return Rect::FromRECT(rc);
 }
@@ -729,7 +729,7 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size) {
 
 // returns available area of the screen i.e. screen minus taskbar area
 Rect GetWorkAreaRect(Rect rect) {
-    RECT tmpRect = rect.ToRECT();
+    RECT tmpRect = ToRECT(rect);
     HMONITOR hmon = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi = {0};
     mi.cbSize = sizeof mi;
@@ -781,7 +781,7 @@ void PaintLine(HDC hdc, const Rect& rect) {
 
 void DrawCenteredText(HDC hdc, const Rect& r, const WCHAR* txt, bool isRTL) {
     SetBkMode(hdc, TRANSPARENT);
-    RECT tmpRect = r.ToRECT();
+    RECT tmpRect = ToRECT(r);
     uint format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
     if (isRTL) {
         format |= DT_RTLREADING;

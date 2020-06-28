@@ -48,7 +48,7 @@ NotificationWnd::~NotificationWnd() {
 
 static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, bool init) {
     // compute the length of the message
-    RECT rc = ClientRect(wnd->hwnd).ToRECT();
+    RECT rc = ToRECT(ClientRect(wnd->hwnd));
 
     HDC hdc = GetDC(wnd->hwnd);
     HFONT oldfnt = SelectFont(hdc, wnd->font);
@@ -191,7 +191,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     HDC hdc = buffer.GetDC();
     HFONT oldfnt = SelectFont(hdc, wnd->font);
 
-    RECT rTmp = rect.ToRECT();
+    RECT rTmp = ToRECT(rect);
 
     COLORREF colBg = GetAppColor(AppColor::NotificationsBg);
     COLORREF colTxt = GetAppColor(AppColor::NotificationsText);
@@ -219,11 +219,11 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
         rectMsg.dx -= CLOSE_LEFT_MARGIN;
     }
     AutoFreeWstr text(win::GetText(hwnd));
-    rTmp = rectMsg.ToRECT();
+    rTmp = ToRECT(rectMsg);
     DrawText(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
 
     if (wnd->hasClose) {
-        rTmp = GetCloseRect(hwnd).ToRECT();
+        rTmp = ToRECT(GetCloseRect(hwnd));
         DrawFrameControl(hdc, &rTmp, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
     }
 

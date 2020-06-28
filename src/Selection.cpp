@@ -116,7 +116,7 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
     for (size_t i = 0; i < rects.size(); i++) {
         Rect rc = rects.at(i).Intersect(screenRc);
         if (!rc.IsEmpty()) {
-            path.AddRectangle(rc.ToGdipRect());
+            path.AddRectangle(ToGdipRect(rc));
         }
     }
 

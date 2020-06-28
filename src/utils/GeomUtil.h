@@ -35,24 +35,13 @@ struct Size {
     int dy{0};
 
     Size() = default;
-    Size(int dx, int dy) : dx(dx), dy(dy) {
-    }
+    Size(int dx, int dy);
 
-    bool IsEmpty() const {
-        return dx == 0 || dy == 0;
-    }
-
+    bool IsEmpty() const;
     // TODO: temporary
-    bool empty() const {
-        return dx == 0 || dy == 0;
-    }
-
-    bool operator==(const Size& other) const {
-        return this->dx == other.dx && this->dy == other.dy;
-    }
-    bool operator!=(const Size& other) const {
-        return !this->operator==(other);
-    }
+    bool empty() const;
+    bool operator==(const Size& other) const;
+    bool operator!=(const Size& other) const;
 };
 
 struct SizeFl {
@@ -60,29 +49,13 @@ struct SizeFl {
     float dy{0};
 
     SizeFl() = default;
-    SizeFl(float dx, float dy) : dx(dx), dy(dy) {
-    }
+    SizeFl(float dx, float dy);
 
-    Size ToInt() const {
-        return Size((int)floor(dx + 0.5), (int)floor(dy + 0.5));
-    }
-
-    bool IsEmpty() const {
-        return dx == 0 || dy == 0;
-    }
-
+    bool IsEmpty() const;
     // TODO: temporary
-    bool empty() const {
-        return dx == 0 || dy == 0;
-    }
-
-    bool operator==(const SizeFl& other) const {
-        return this->dx == other.dx && this->dy == other.dy;
-    }
-
-    bool operator!=(const SizeFl& other) const {
-        return !this->operator==(other);
-    }
+    bool empty() const;
+    bool operator==(const SizeFl& other) const;
+    bool operator!=(const SizeFl& other) const;
 };
 
 struct Rect {
@@ -239,24 +212,9 @@ struct Rect {
         return {dx, dy};
     }
 
-#ifdef _WIN32
-    RECT ToRECT() const {
-        return {x, y, x + dx, y + dy};
-    }
-
     static Rect FromRECT(const RECT& rect) {
         return FromXY(rect.left, rect.top, rect.right, rect.bottom);
     }
-
-#if 1 // def GDIPVER, note: GDIPVER not defined in mingw?
-    Gdiplus::Rect ToGdipRect() {
-        return Gdiplus::Rect(x, y, dx, dy);
-    }
-    Gdiplus::RectF ToGdipRectF() {
-        return Gdiplus::RectF((float)x, (float)y, (float)dx, (float)dy);
-    }
-#endif
-#endif
 
     bool operator==(const Rect& other) const {
         return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
@@ -428,12 +386,9 @@ struct RectFl {
         return SizeFl(dx, dy);
     }
 
-#ifdef _WIN32
     static RectFl FromRECT(const RECT& rect) {
         return FromXY((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom);
     }
-
-#endif
 
     bool operator==(const RectFl& other) const {
         return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
@@ -443,11 +398,18 @@ struct RectFl {
     }
 };
 
-Point ToPoint(PointFl p);
-PointFl ToPointFl(Point p);
-SizeFl ToSizeFl(Size s);
-SIZE ToSIZE(Size s);
+PointFl ToPointFl(const Point p);
+Point ToPoint(const PointFl p);
+
+SIZE ToSIZE(const Size s);
+SizeFl ToSizeFl(const Size s);
+Size ToSize(const SizeFl s);
+
 RectFl ToRectFl(const Rect r);
+RECT ToRECT(const Rect r);
+Gdiplus::Rect ToGdipRect(const Rect r);
+Gdiplus::RectF ToGdipRectF(const Rect r);
+
 RECT ToRECT(const RectFl r);
 Rect ToRect(const RectFl r);
 Gdiplus::Rect ToGdipRect(const RectFl r);

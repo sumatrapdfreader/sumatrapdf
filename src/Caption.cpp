@@ -539,7 +539,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
             PaintCaptionBackground(memDC, win, false);
         }
 
-        RECT r = rc.ToRECT();
+        RECT r = ToRECT(rc);
         if (win->caption->theme) {
             theme::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &r, nullptr);
         } else {

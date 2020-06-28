@@ -569,7 +569,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     } else {
         Rect rc = ClientRect(win->hwndPageTotal);
         rc = MapRectToWindow(rc, win->hwndPageTotal, win->hwndToolbar);
-        RECT rTmp = rc.ToRECT();
+        RECT rTmp = ToRECT(rc);
         InvalidateRect(win->hwndToolbar, &rTmp, TRUE);
     }
 }

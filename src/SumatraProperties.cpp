@@ -590,7 +590,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);
 
     Rect rcClient = ClientRect(hwnd);
-    RECT rTmp = rcClient.ToRECT();
+    RECT rTmp = ToRECT(rcClient);
     auto col = GetAppColor(AppColor::MainWindowBg);
     ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushAboutBg);
@@ -603,7 +603,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
     for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl* el = layoutData->at(i);
         const WCHAR* txt = el->leftTxt;
-        rTmp = el->leftPos.ToRECT();
+        rTmp = ToRECT(el->leftPos);
         DrawText(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
     }
 
@@ -616,7 +616,7 @@ static void DrawProperties(HWND hwnd, HDC hdc) {
         if (rc.x + rc.dx > rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING) {
             rc.dx = rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING - rc.x;
         }
-        rTmp = rc.ToRECT();
+        rTmp = ToRECT(rc);
         uint format = DT_LEFT | DT_NOPREFIX | (el->isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);
         DrawText(hdc, txt, -1, &rTmp, format);
     }

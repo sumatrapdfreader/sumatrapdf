@@ -66,7 +66,7 @@ void TooltipCtrl::Show(const WCHAR* text, Rect& rc, bool multiline) {
     ti.hwnd = parent;
     ti.uFlags = TTF_SUBCLASS;
     ti.lpszText = (WCHAR*)text;
-    ti.rect = rc.ToRECT();
+    ti.rect = ToRECT(rc);
     uint msg = isShowing ? TTM_NEWTOOLRECT : TTM_ADDTOOL;
     SendMessageW(hwnd, msg, 0, (LPARAM)&ti);
 

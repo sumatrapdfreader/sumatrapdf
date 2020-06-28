@@ -164,7 +164,7 @@ static HFONT CreateDefaultGuiFont() {
 
 static void InvalidateFrame() {
     Rect rc = ClientRect(gHwndFrame);
-    RECT rcTmp = rc.ToRECT();
+    RECT rcTmp = ToRECT(rc);
     InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }
 
@@ -828,7 +828,7 @@ static void DrawFrame2(Graphics& g, Rect r) {
     Gdiplus::Color bgCol;
     bgCol.SetFromCOLORREF(WIN_BG_COLOR);
     SolidBrush bgBrush(bgCol);
-    Gdiplus::Rect r2(r.ToGdipRect());
+    Gdiplus::Rect r2(ToGdipRect(r));
     r2.Inflate(1, 1);
     g.FillRectangle(&bgBrush, r2);
 

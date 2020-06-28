@@ -382,7 +382,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
 
     Color white(0xFF, 0xFF, 0xFF);
     SolidBrush tmpBrush(white);
-    Gdiplus::Rect screenR(screen.ToGdipRect());
+    Gdiplus::Rect screenR(ToGdipRect(screen));
     screenR.Inflate(1, 1);
     g.FillRectangle(&tmpBrush, screenR);
 

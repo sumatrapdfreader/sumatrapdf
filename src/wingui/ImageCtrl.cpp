@@ -37,7 +37,7 @@ static void OnImageCtrlPaint(ImageCtrl* w, COLORREF bgCol) {
     int dx = RectDx(r);
     int dy = RectDy(r);
     Rect rc{0, 0, dx, dy};
-    Gdiplus::Rect rcp = rc.ToGdipRect();
+    Gdiplus::Rect rcp = ToGdipRect(rc);
 
     Color col(bgCol);
     SolidBrush tmpBrush(col);

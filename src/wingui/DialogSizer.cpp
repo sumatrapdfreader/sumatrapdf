@@ -67,13 +67,13 @@ class DialogData {
         // We also need to invalidate the combined area of the old and new rectangles
         // otherwise we would have trail of grippers when we sized the dialog larger
         // in any axis
-        RECT tmpRect = rcGrip.Union(rcOld).ToRECT();
+        RECT tmpRect = ToRECT(rcGrip.Union(rcOld));
         InvalidateRect(hwnd, &tmpRect, TRUE);
     }
 
     void DrawGripper(HDC hdc) {
         if (bShowSizingGrip && !bMaximised) {
-            RECT tmpRect = rcGrip.ToRECT();
+            RECT tmpRect = ToRECT(rcGrip);
             DrawFrameControl(hdc, &tmpRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
         }
     }

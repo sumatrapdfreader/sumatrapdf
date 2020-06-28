@@ -130,7 +130,7 @@ void Painter::Paint(HWND hwnd, bool isDirty) {
     // sometimes causes flickr
     // See http://www.catch22.net/tuts/flicker for info on win repainting
     if (cacheBmp && !sizeDuringLastPaint.Equals(Gdiplus::Size(r.dx, r.dy))) {
-        PaintBackground(&gDC, r.ToGdipRect());
+        PaintBackground(&gDC, ToGdipRect(r));
         gDC.DrawImage(cacheBmp, 0, 0);
         sizeDuringLastPaint = Gdiplus::Size(r.dx, r.dy);
     }
@@ -153,7 +153,7 @@ void Painter::Paint(HWND hwnd, bool isDirty) {
         InitGraphicsMode(&g);
         g.SetClip(&clip, CombineModeReplace);
 
-        PaintBackground(&g, r.ToGdipRect());
+        PaintBackground(&g, ToGdipRect(r));
         PaintWindowsInZOrder(&g, wnd);
     }
 
