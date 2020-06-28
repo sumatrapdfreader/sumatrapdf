@@ -35,6 +35,7 @@ bool IsEmpty(const char* s);
 bool StartsWith(const char* str, const char* prefix);
 bool StartsWith(const u8* str, const char* prefix);
 bool StartsWith(std::string_view s, const char* prefix);
+std::span<u8> ToSpan(const char* s);
 
 #if OS_WIN
 size_t Len(const WCHAR*);
@@ -57,6 +58,7 @@ bool EqNIx(const char* s, size_t len, const char* s2);
 
 char* DupN(const char* s, size_t lenCch);
 char* Dup(const std::string_view);
+char* DupN(const std::span<u8> d);
 char* ToLowerInPlace(char*);
 char* ToLower(const char*);
 

@@ -229,16 +229,24 @@ void HtmlParser::AppendAttr(char* name, char* value) {
     currElement->firstAttr->val = value;
 }
 
+size_t HtmlParser::ElementsCount() const {
+    return elementsCount;
+}
+
+size_t HtmlParser::TotalAttrCount() const {
+    return attributesCount;
+}
+
 // Parse s in place i.e. we assume we can modify it. Must be 0-terminated.
 // The caller owns the memory for s.
-HtmlElement* HtmlParser::ParseInPlace(char* s, uint codepage) {
+HtmlElement* HtmlParser::ParseInPlace(std::span<u8> d, uint codepage) {
     if (this->html) {
         Reset();
     }
-    this->html = s;
+    this->html = (char*)d.data();
     this->codepage = codepage;
 
-    HtmlPullParser parser(s, strlen(s));
+    HtmlPullParser parser(this->html, d.size());
     HtmlToken* tok;
 
     while ((tok = parser.Next()) != nullptr) {
@@ -282,8 +290,9 @@ HtmlElement* HtmlParser::ParseInPlace(char* s, uint codepage) {
     return rootElement;
 }
 
-HtmlElement* HtmlParser::Parse(const char* s, uint codepage) {
-    HtmlElement* root = ParseInPlace(str::Dup(s), codepage);
+HtmlElement* HtmlParser::Parse(std::span<u8> d, uint codepage) {
+    char* s = str::DupN(d);
+    HtmlElement* root = ParseInPlace(d, codepage);
     freeHtml = true;
     return root;
 }

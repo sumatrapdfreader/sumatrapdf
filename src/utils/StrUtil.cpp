@@ -278,6 +278,11 @@ bool StartsWithI(const char* s, const char* prefix) {
     return 0 == _strnicmp(s, prefix, str::Len(prefix));
 }
 
+std::span<u8> ToSpan(const char* s) {
+    size_t n = str::Len(s);
+    return {(u8*)s, n};
+}
+
 bool Contains(std::string_view s, const char* txt) {
     // TODO: needs to respect s.size()
     const char* p = str::Find(s.data(), txt);
@@ -392,6 +397,10 @@ char* DupN(const char* s, size_t n) {
 
 char* Dup(const std::string_view sv) {
     return DupN(sv.data(), sv.size());
+}
+
+char* DupN(const std::span<u8> d) {
+    return DupN((const char*)d.data(), d.size());
 }
 
 char* ToLowerInPlace(char* s) {

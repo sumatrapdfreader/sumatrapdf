@@ -329,7 +329,7 @@ bool EpubDoc::Load() {
         return false;
     }
     HtmlParser parser;
-    HtmlElement* node = parser.ParseInPlace(container.data);
+    HtmlElement* node = parser.ParseInPlace(container.AsSpan());
     if (!node) {
         return false;
     }
@@ -349,7 +349,7 @@ bool EpubDoc::Load() {
     WStrList encList;
     AutoFree encryption(zip->GetFileDataByName("META-INF/encryption.xml"));
     if (encryption.data) {
-        (void)parser.ParseInPlace(encryption.data);
+        (void)parser.ParseInPlace(encryption.AsSpan());
         HtmlElement* cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
         while (cr) {
             WCHAR* uri = cr->GetAttribute("URI");
@@ -366,7 +366,7 @@ bool EpubDoc::Load() {
         return false;
     }
     ParseMetadata(content.data);
-    node = parser.ParseInPlace(content.data);
+    node = parser.ParseInPlace(content.AsSpan());
     if (!node) {
         return false;
     }
@@ -1616,7 +1616,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
     }
 
     HtmlParser parser;
-    parser.Parse(htmlData.Get(), CP_UTF8);
+    parser.Parse(htmlData.AsSpan(), CP_UTF8);
     HtmlElement* el = nullptr;
     while ((el = parser.FindElementByName("b", el)) != nullptr) {
         AutoFreeWstr title(el->GetAttribute("title"));
