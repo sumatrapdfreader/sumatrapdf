@@ -8,14 +8,14 @@
 Point::Point(int x, int y) : x(x), y(y) {
 }
 
-bool Point::empty()  const{
+bool Point::empty() const {
     return x == 0 && y == 0;
 }
 
-bool Point::operator==(const Point& other)  const{
+bool Point::operator==(const Point& other) const {
     return this->x == other.x && this->y == other.y;
 }
-bool Point::operator!=(const Point& other)  const{
+bool Point::operator!=(const Point& other) const {
     return !this->operator==(other);
 }
 
@@ -24,14 +24,14 @@ bool Point::operator!=(const Point& other)  const{
 PointFl::PointFl(float x, float y) : x(x), y(y) {
 }
 
-bool PointFl::empty()  const{
+bool PointFl::empty() const {
     return x == 0 && y == 0;
 }
 
-bool PointFl::operator==(const PointFl& other)  const{
+bool PointFl::operator==(const PointFl& other) const {
     return this->x == other.x && this->y == other.y;
 }
-bool PointFl::operator!=(const PointFl& other)  const{
+bool PointFl::operator!=(const PointFl& other) const {
     return !this->operator==(other);
 }
 
@@ -234,7 +234,176 @@ bool Rect::operator!=(const Rect& other) const {
     return !this->operator==(other);
 }
 
-// ------------- Rect
+// ------------- RectFl
+
+// cf. fz_roundrect in mupdf/fitz/base_geometry.c
+#ifndef FLT_EPSILON
+#define FLT_EPSILON 1.192092896e-07f
+#endif
+
+RectFl::RectFl(const RECT r) {
+    x = (float)r.left;
+    y = (float)r.top;
+    dx = (float)(r.right - r.left);
+    dy = (float)(r.bottom - r.top);
+}
+
+RectFl::RectFl(const Gdiplus::RectF r) {
+    x = r.X;
+    y = r.Y;
+    dx = r.Width;
+    dy = r.Height;
+}
+
+RectFl::RectFl(float x, float y, float dx, float dy) : x(x), y(y), dx(dx), dy(dy) {
+}
+
+RectFl::RectFl(PointFl pt, SizeFl size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
+}
+
+RectFl::RectFl(PointFl min, PointFl max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
+}
+
+float RectFl::Width() const {
+    return dx;
+}
+
+float RectFl::Height() const {
+    return dy;
+}
+
+float RectFl::Dx() const {
+    return dx;
+}
+
+float RectFl::Dy() const {
+    return dy;
+}
+
+bool RectFl::EqSize(float otherDx, float otherDy) {
+    return (dx == otherDx) && (dy == otherDy);
+}
+
+float RectFl::Right() const {
+    return x + dx;
+}
+
+float RectFl::Bottom() const {
+    return y + dy;
+}
+
+RectFl RectFl::FromXY(float xs, float ys, float xe, float ye) {
+    if (xs > xe) {
+        std::swap(xs, xe);
+    }
+    if (ys > ye) {
+        std::swap(ys, ye);
+    }
+    return RectFl(xs, ys, xe - xs, ye - ys);
+}
+
+RectFl RectFl::FromXY(PointFl TL, PointFl BR) {
+    return FromXY(TL.x, TL.y, BR.x, BR.y);
+}
+
+Rect RectFl::Round() const {
+    return Rect::FromXY((int)floor(x + FLT_EPSILON), (int)floor(y + FLT_EPSILON), (int)ceil(x + dx - FLT_EPSILON),
+                        (int)ceil(y + dy - FLT_EPSILON));
+}
+
+bool RectFl::IsEmpty() const {
+    return dx == 0 || dy == 0;
+}
+
+bool RectFl::empty() const {
+    return dx == 0 || dy == 0;
+}
+
+bool RectFl::Contains(PointFl pt) {
+    if (pt.x < this->x) {
+        return false;
+    }
+    if (pt.x > this->x + this->dx) {
+        return false;
+    }
+    if (pt.y < this->y) {
+        return false;
+    }
+    if (pt.y > this->y + this->dy) {
+        return false;
+    }
+    return true;
+}
+
+/* Returns an empty rectangle if there's no intersection (see IsEmpty). */
+RectFl RectFl::Intersect(RectFl other) {
+    /* The intersection starts with the larger of the start coordinates
+        and ends with the smaller of the end coordinates */
+    float _x = std::max(this->x, other.x);
+    float _y = std::max(this->y, other.y);
+    float _dx = std::min(this->x + this->dx, other.x + other.dx) - _x;
+    float _dy = std::min(this->y + this->dy, other.y + other.dy) - _y;
+
+    /* return an empty rectangle if the dimensions aren't positive */
+    if (_dx <= 0 || _dy <= 0) {
+        return {};
+    }
+    return {_x, _y, _dx, _dy};
+}
+
+RectFl RectFl::Union(RectFl other) {
+    if (this->dx <= 0 && this->dy <= 0) {
+        return other;
+    }
+    if (other.dx <= 0 && other.dy <= 0) {
+        return *this;
+    }
+
+    /* The union starts with the smaller of the start coordinates
+        and ends with the larger of the end coordinates */
+    float _x = std::min(this->x, other.x);
+    float _y = std::min(this->y, other.y);
+    float _dx = std::max(this->x + this->dx, other.x + other.dx) - _x;
+    float _dy = std::max(this->y + this->dy, other.y + other.dy) - _y;
+
+    return {_x, _y, _dx, _dy};
+}
+
+void RectFl::Offset(float _x, float _y) {
+    x += _x;
+    y += _y;
+}
+
+void RectFl::Inflate(float _x, float _y) {
+    x -= _x;
+    dx += 2 * _x;
+    y -= _y;
+    dy += 2 * _y;
+}
+
+PointFl RectFl::TL() const {
+    return {x, y};
+}
+
+PointFl RectFl::BR() const {
+    return {x + dx, y + dy};
+}
+
+SizeFl RectFl::Size() const {
+    return SizeFl(dx, dy);
+}
+
+RectFl RectFl::FromRECT(const RECT& rect) {
+    return FromXY((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom);
+}
+
+bool RectFl::operator==(const RectFl& other) const {
+    return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
+}
+
+bool RectFl::operator!=(const RectFl& other) const {
+    return !this->operator==(other);
+}
 
 // ------------- conversion functions
 
