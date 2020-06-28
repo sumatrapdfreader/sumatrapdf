@@ -53,7 +53,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         // paint an error message (only needed if SumatraPDF couldn't be run)
         PAINTSTRUCT ps;
         HDC hDC = BeginPaint(hwnd, &ps);
-        RECT rcClient = ClientRect(hwnd).ToRECT();
+        RECT rcClient = ToRECT(ClientRect(hwnd));
         HBRUSH brushBg = CreateSolidBrush(0xCCCCCC);
         FillRect(hDC, &rcClient, brushBg);
         LOGFONTW lf = {0};
