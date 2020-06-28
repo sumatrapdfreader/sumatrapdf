@@ -70,7 +70,6 @@ std::span<u8> and other small refactoring:
 - BitmapFromData()
 - HtmlMoniker::SetHtml()
 - EngineImageDir::LoadImageDir use DirIter
-- change SizeFromData to return Size, not Gdiplus::Size
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
 - SerializeBitmap
 - PrettyPrintHtml

@@ -19,9 +19,9 @@ bool HasSignature(std::span<u8> d) {
     return str::StartsWith(data, "RIFF") && str::StartsWith(data + 8, "WEBP");
 }
 
-Gdiplus::Size SizeFromData(const u8* data, size_t len) {
-    Gdiplus::Size size;
-    WebPGetInfo((const u8*)data, len, &size.Width, &size.Height);
+Size SizeFromData(const u8* data, size_t len) {
+    Size size;
+    WebPGetInfo((const u8*)data, len, &size.dx, &size.dy);
     return size;
 }
 
@@ -54,8 +54,8 @@ namespace webp {
 bool HasSignature(std::span<u8>) {
     return false;
 }
-Gdiplus::Size SizeFromData(std::span<u8>) {
-    return Gdiplus::Size();
+Size SizeFromData(std::span<u8>) {
+    return Size();
 }
 Gdiplus::Bitmap* ImageFromData(std::span<u8>) {
     return nullptr;

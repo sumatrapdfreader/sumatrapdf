@@ -461,8 +461,8 @@ Bitmap* BitmapFromData(const u8* data, size_t len) {
 }
 
 // adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
-    Gdiplus::Size result;
+Size BitmapSizeFromData(std::span<u8> d) {
+    Size result;
     ByteReader r(d);
     size_t len = d.size();
     u8* data = d.data();
@@ -472,8 +472,8 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
                 BITMAPINFOHEADER bmi;
                 bool ok = r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER));
                 CrashIf(!ok);
-                result.Width = bmi.biWidth;
-                result.Height = bmi.biHeight;
+                result.dx = bmi.biWidth;
+                result.dy = bmi.biHeight;
             }
             break;
         case ImgFormat::GIF:
@@ -487,8 +487,8 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
                 }
                 while (ix + 8 < len) {
                     if (r.Byte(ix) == 0x2C) {
-                        result.Width = r.WordLE(ix + 5);
-                        result.Height = r.WordLE(ix + 7);
+                        result.dx = r.WordLE(ix + 5);
+                        result.dy = r.WordLE(ix + 7);
                         break;
                     } else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xF9) {
                         ix += 8;
@@ -512,8 +512,8 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
             for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF;) {
                 if (0xC0 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xC3 ||
                     0xC9 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xCB) {
-                    result.Width = r.WordBE(ix + 7);
-                    result.Height = r.WordBE(ix + 5);
+                    result.dx = r.WordBE(ix + 7);
+                    result.dy = r.WordBE(ix + 5);
                 }
                 ix += r.WordBE(ix + 2) + 2;
             }
@@ -531,37 +531,37 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
                     if (r.DWord(idx + 4, isBE) != 1) {
                         continue;
                     } else if (WIDTH == tag && 4 == type) {
-                        result.Width = r.DWord(idx + 8, isBE);
+                        result.dx = r.DWord(idx + 8, isBE);
                     } else if (WIDTH == tag && 3 == type) {
-                        result.Width = r.Word(idx + 8, isBE);
+                        result.dx = r.Word(idx + 8, isBE);
                     } else if (WIDTH == tag && 1 == type) {
-                        result.Width = r.Byte(idx + 8);
+                        result.dx = r.Byte(idx + 8);
                     } else if (HEIGHT == tag && 4 == type) {
-                        result.Height = r.DWord(idx + 8, isBE);
+                        result.dy = r.DWord(idx + 8, isBE);
                     } else if (HEIGHT == tag && 3 == type) {
-                        result.Height = r.Word(idx + 8, isBE);
+                        result.dy = r.Word(idx + 8, isBE);
                     } else if (HEIGHT == tag && 1 == type) {
-                        result.Height = r.Byte(idx + 8);
+                        result.dy = r.Byte(idx + 8);
                     }
                 }
             }
             break;
         case ImgFormat::PNG:
             if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
-                result.Width = r.DWordBE(16);
-                result.Height = r.DWordBE(20);
+                result.dx = r.DWordBE(16);
+                result.dy = r.DWordBE(20);
             }
             break;
         case ImgFormat::TGA:
             if (len >= 16) {
-                result.Width = r.WordLE(12);
-                result.Height = r.WordLE(14);
+                result.dx = r.WordLE(12);
+                result.dy = r.WordLE(14);
             }
             break;
         case ImgFormat::WebP:
             if (len >= 30 && str::StartsWith(data + 12, "VP8 ")) {
-                result.Width = r.WordLE(26) & 0x3fff;
-                result.Height = r.WordLE(28) & 0x3fff;
+                result.dx = r.WordLE(26) & 0x3fff;
+                result.dy = r.WordLE(28) & 0x3fff;
             } else {
                 result = webp::SizeFromData(data, len);
             }
@@ -575,8 +575,8 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
                     if (0x6A703268 /* jp2h */ == tbox) {
                         ix += 8;
                         if (r.DWordBE(ix) == 24 && r.DWordBE(ix + 4) == 0x69686472 /* ihdr */) {
-                            result.Width = r.DWordBE(ix + 16);
-                            result.Height = r.DWordBE(ix + 12);
+                            result.dx = r.DWordBE(ix + 16);
+                            result.dy = r.DWordBE(ix + 12);
                         }
                         break;
                     } else if (lbox != 0 && ix < UINT32_MAX - lbox) {
@@ -589,12 +589,12 @@ Gdiplus::Size BitmapSizeFromData(std::span<u8> d) {
             break;
     }
 
-    if (result.Empty()) {
+    if (result.IsEmpty()) {
         // let GDI+ extract the image size if we've failed
         // (currently happens for animated GIF)
         Bitmap* bmp = BitmapFromData(data, len);
         if (bmp) {
-            result = Gdiplus::Size(bmp->GetWidth(), bmp->GetHeight());
+            result = Size(bmp->GetWidth(), bmp->GetHeight());
         }
         delete bmp;
     }

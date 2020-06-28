@@ -827,8 +827,8 @@ RectFl EngineImageDir::LoadMediabox(int pageNo) {
     AutoFree bmpData = file::ReadFile(pageFileNames.at(pageNo - 1));
     if (bmpData.data) {
         std::span<u8> sp{(u8*)bmpData.data, bmpData.size()};
-        Gdiplus::Size size = BitmapSizeFromData(sp);
-        return RectFl(0, 0, (float)size.Width, (float)size.Height);
+        Size size = BitmapSizeFromData(sp);
+        return RectFl(0, 0, (float)size.dx, (float)size.dy);
     }
     return RectFl();
 }
@@ -1257,8 +1257,8 @@ RectFl EngineCbx::LoadMediabox(int pageNo) {
 
     ImageData img = GetImageData(pageNo);
     if (img.data) {
-        Gdiplus::Size size = BitmapSizeFromData(img.AsSpan());
-        return RectFl(0, 0, (float)size.Width, (float)size.Height);
+        Size size = BitmapSizeFromData(img.AsSpan());
+        return RectFl(0, 0, (float)size.dx, (float)size.dy);
     }
     return RectFl();
 }

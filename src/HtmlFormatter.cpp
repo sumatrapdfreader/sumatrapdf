@@ -595,12 +595,12 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
 
 bool HtmlFormatter::EmitImage(ImageData* img) {
     CrashIf(!img->data);
-    Gdiplus::Size imgSize = BitmapSizeFromData(img->AsSpan());
-    if (imgSize.Empty()) {
+    Size imgSize = BitmapSizeFromData(img->AsSpan());
+    if (imgSize.IsEmpty()) {
         return false;
     }
 
-    SizeFl newSize((float)imgSize.Width, (float)imgSize.Height);
+    SizeFl newSize((float)imgSize.dx, (float)imgSize.dy);
     // move overly large images to a new line (if they don't fit entirely)
     if (!IsCurrLineEmpty() && (currX + newSize.dx > pageDx || currY + newSize.dy > pageDy)) {
         FlushCurrLine(false);
