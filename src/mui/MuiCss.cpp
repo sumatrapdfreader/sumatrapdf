@@ -319,7 +319,6 @@ void Prop::Free() {
         ::delete color.solid.cachedBrush;
     } else if (IsColorProp(type) && (ColorGradientLinear == color.type)) {
         ::delete color.gradientLinear.cachedBrush;
-        ::delete color.gradientLinear.rect;
     }
 }
 
@@ -465,7 +464,7 @@ Prop* Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     p.color.gradientLinear.startColor = startColor;
     p.color.gradientLinear.endColor = endColor;
 
-    p.color.gradientLinear.rect = ::new Gdiplus::RectF();
+    p.color.gradientLinear.rect = {};
     p.color.gradientLinear.cachedBrush = nullptr;
     return UniqifyProp(p);
 }
@@ -684,7 +683,7 @@ Style* StyleByName(const char* name) {
     return nullptr;
 }
 
-Brush* BrushFromColorData(ColorData* color, const Gdiplus::RectF& r) {
+Brush* BrushFromColorData(ColorData* color, const RectFl r) {
     if (ColorSolid == color->type) {
         return color->solid.cachedBrush;
     }
@@ -692,10 +691,11 @@ Brush* BrushFromColorData(ColorData* color, const Gdiplus::RectF& r) {
     if (ColorGradientLinear == color->type) {
         ColorDataGradientLinear* d = &color->gradientLinear;
         LinearGradientBrush* br = d->cachedBrush;
-        if (!br || !r.Equals(*d->rect)) {
+        if (!br || r != d->rect) {
             ::delete br;
-            br = ::new LinearGradientBrush(r, d->startColor, d->endColor, d->mode);
-            *d->rect = r;
+            Gdiplus::RectF rf = ToGdipRectF(r);
+            br = ::new LinearGradientBrush(rf, d->startColor, d->endColor, d->mode);
+            d->rect = r;
             d->cachedBrush = br;
         }
         return br;
