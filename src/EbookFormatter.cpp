@@ -254,7 +254,7 @@ Fb2Formatter::Fb2Formatter(HtmlFormatterArgs* args, Fb2Doc* doc)
     // smaller images just separated by a horizontal line
     if (0 == currLineInstr.size()) {
         /* the image was broken */;
-    } else if (currLineInstr.Last().bbox.Height > args->pageDy / 2) {
+    } else if (currLineInstr.Last().bbox.dy > args->pageDy / 2) {
         ForceNewPage();
     } else {
         EmitHr();

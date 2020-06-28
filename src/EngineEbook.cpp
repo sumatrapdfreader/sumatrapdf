@@ -416,7 +416,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
 }
 
 static Rect GetInstrBbox(DrawInstr& instr, float pageBorder) {
-    RectFl bbox(instr.bbox.X, instr.bbox.Y, instr.bbox.Width, instr.bbox.Height);
+    RectFl bbox(instr.bbox.x, instr.bbox.y, instr.bbox.dx, instr.bbox.dy);
     bbox.Offset(pageBorder, pageBorder);
     return bbox.Round();
 }
@@ -533,7 +533,7 @@ Vec<IPageElement*>* EngineEbook::GetElements(int pageNo) {
             auto box = GetInstrBbox(i, pageBorder);
             auto el = newImageDataElement(pageNo, box, (int)idx);
             els->Append(el);
-        } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmptyArea()) {
+        } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmpty()) {
             IPageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
             if (link) {
                 els->Append(link);
@@ -624,7 +624,7 @@ PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
         }
         // note: at least CHM treats URLs as case-independent
         if (id_len == anchor->instr->str.len && str::EqNI(id, anchor->instr->str.s, id_len)) {
-            RectFl rect(0, anchor->instr->bbox.Y + pageBorder, pageRect.dx, 10);
+            RectFl rect(0, anchor->instr->bbox.y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
             return newSimpleDest(anchor->pageNo, rect);
         }
@@ -1138,7 +1138,7 @@ PageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
     for (DrawInstr& i : *pageInstrs) {
         if ((DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) && i.str.s >= start &&
             i.str.s <= start + htmlLen && i.str.s - start >= filePos) {
-            currY = i.bbox.Y;
+            currY = i.bbox.y;
             break;
         }
     }

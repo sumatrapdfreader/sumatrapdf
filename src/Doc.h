@@ -15,7 +15,7 @@ class PalmDoc;
 struct ImageData;
 class EbookTocVisitor;
 class HtmlFormatter;
-class HtmlFormatterArgs;
+struct HtmlFormatterArgs;
 
 enum class DocType { None, Epub, Fb2, Mobi, Pdb };
 enum class DocError { None, Unknown, NotSupported };

@@ -124,6 +124,7 @@ struct RectFl {
 
 PointFl ToPointFl(const Point p);
 Point ToPoint(const PointFl p);
+Gdiplus::PointF ToGdipPointF(const PointFl p);
 
 SIZE ToSIZE(const Size s);
 SizeFl ToSizeFl(const Size s);

@@ -86,21 +86,21 @@ struct DrawInstr {
         mui::CachedFont* font; // InstrSetFont
         ImageData img;         // InstrImage
     };
-    Gdiplus::RectF bbox{}; // common to most instructions
+    RectFl bbox{}; // common to most instructions
 
     DrawInstr() {
     }
 
-    explicit DrawInstr(DrawInstrType t, Gdiplus::RectF bbox = Gdiplus::RectF()) : type(t), bbox(bbox) {
+    explicit DrawInstr(DrawInstrType t, RectFl bbox = {}) : type(t), bbox(bbox) {
     }
 
     // helper constructors for instructions that need additional arguments
-    static DrawInstr Str(const char* s, size_t len, Gdiplus::RectF bbox, bool rtl = false);
-    static DrawInstr Image(char* data, size_t len, Gdiplus::RectF bbox);
+    static DrawInstr Str(const char* s, size_t len, RectFl bbox, bool rtl = false);
+    static DrawInstr Image(char* data, size_t len, RectFl bbox);
     static DrawInstr SetFont(mui::CachedFont* font);
     static DrawInstr FixedSpace(float dx);
     static DrawInstr LinkStart(const char* s, size_t len);
-    static DrawInstr Anchor(const char* s, size_t len, Gdiplus::RectF bbox);
+    static DrawInstr Anchor(const char* s, size_t len, RectFl bbox);
 };
 
 class CssPullParser;
@@ -129,8 +129,7 @@ struct DrawStyle {
     bool dirRtl = false;
 };
 
-class HtmlPage {
-  public:
+struct HtmlPage {
     explicit HtmlPage(int reparseIdx = 0) : reparseIdx(reparseIdx) {
         instructions.allowFailure = true;
     }
@@ -145,8 +144,7 @@ class HtmlPage {
 };
 
 // just to pack args to HtmlFormatter
-class HtmlFormatterArgs {
-  public:
+struct HtmlFormatterArgs {
     HtmlFormatterArgs() = default;
 
     float pageDx = 0;
@@ -175,7 +173,6 @@ class HtmlFormatterArgs {
     // we start parsing from htmlStr + reparseIdx
     int reparseIdx = 0;
 
-  private:
     AutoFreeWstr fontName;
 };
 

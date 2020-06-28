@@ -4,7 +4,7 @@
 struct FrameRateWnd;
 
 class HtmlFormatter;
-class HtmlFormatterArgs;
+struct HtmlFormatterArgs;
 class PageControl;
 class PagesLayout;
 using namespace mui;
@@ -24,7 +24,7 @@ EbookControls* CreateEbookControls(HWND hwnd, FrameRateWnd*);
 void DestroyEbookControls(EbookControls* ctrls);
 void SetMainWndBgCol(EbookControls* ctrls);
 
-class HtmlPage;
+struct HtmlPage;
 struct DrawInstr;
 
 // control that shows a single ebook page

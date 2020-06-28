@@ -69,7 +69,7 @@ bool ValidReparseIdx(ptrdiff_t idx, HtmlPullParser* parser) {
     return true;
 }
 
-DrawInstr DrawInstr::Str(const char* s, size_t len, Gdiplus::RectF bbox, bool rtl) {
+DrawInstr DrawInstr::Str(const char* s, size_t len, RectFl bbox, bool rtl) {
     DrawInstr di(rtl ? DrawInstrType::RtlString : DrawInstrType::String, bbox);
     di.str.s = s;
     di.str.len = len;
@@ -84,11 +84,11 @@ DrawInstr DrawInstr::SetFont(mui::CachedFont* font) {
 
 DrawInstr DrawInstr::FixedSpace(float dx) {
     DrawInstr di(DrawInstrType::FixedSpace);
-    di.bbox.Width = dx;
+    di.bbox.dx = dx;
     return di;
 }
 
-DrawInstr DrawInstr::Image(char* data, size_t len, Gdiplus::RectF bbox) {
+DrawInstr DrawInstr::Image(char* data, size_t len, RectFl bbox) {
     DrawInstr di(DrawInstrType::Image);
     di.img.data = data;
     di.img.len = len;
@@ -103,7 +103,7 @@ DrawInstr DrawInstr::LinkStart(const char* s, size_t len) {
     return di;
 }
 
-DrawInstr DrawInstr::Anchor(const char* s, size_t len, Gdiplus::RectF bbox) {
+DrawInstr DrawInstr::Anchor(const char* s, size_t len, RectFl bbox) {
     DrawInstr di(DrawInstrType::Anchor);
     di.str.s = s;
     di.str.len = len;
@@ -282,13 +282,13 @@ float HtmlFormatter::CurrLineDx() {
     float dx = NewLineX();
     for (DrawInstr& i : currLineInstr) {
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
-            dx += i.bbox.Width;
+            dx += i.bbox.dx;
         } else if (DrawInstrType::Image == i.type) {
-            dx += i.bbox.Width;
+            dx += i.bbox.dx;
         } else if (DrawInstrType::ElasticSpace == i.type) {
             dx += spaceDx;
         } else if (DrawInstrType::FixedSpace == i.type) {
-            dx += i.bbox.Width;
+            dx += i.bbox.dx;
         }
     }
     return dx;
@@ -299,8 +299,8 @@ float HtmlFormatter::CurrLineDy() {
     float dy = lineSpacing;
     for (DrawInstr& i : currLineInstr) {
         if (IsVisibleDrawInstr(i)) {
-            if (i.bbox.Height > dy) {
-                dy = i.bbox.Height;
+            if (i.bbox.dy > dy) {
+                dy = i.bbox.dy;
             }
         }
     }
@@ -330,20 +330,20 @@ void HtmlFormatter::LayoutLeftStartingAt(float offX) {
     float x = offX + NewLineX();
     for (DrawInstr& i : currLineInstr) {
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type || DrawInstrType::Image == i.type) {
-            i.bbox.X = x;
-            x += i.bbox.Width;
+            i.bbox.x = x;
+            x += i.bbox.dx;
             lastInstr = &i;
             instrCount++;
         } else if (DrawInstrType::ElasticSpace == i.type) {
             x += spaceDx;
         } else if (DrawInstrType::FixedSpace == i.type) {
-            x += i.bbox.Width;
+            x += i.bbox.dx;
         }
     }
 
     // center a single image
     if (instrCount == 1 && DrawInstrType::Image == lastInstr->type) {
-        lastInstr->bbox.X = (pageDx - lastInstr->bbox.Width) / 2.f;
+        lastInstr->bbox.x = (pageDx - lastInstr->bbox.dx) / 2.f;
     }
 }
 
@@ -353,7 +353,7 @@ void HtmlFormatter::LayoutLeftStartingAt(float offX) {
 static void SetYPos(Vec<DrawInstr>& instr, float y) {
     for (DrawInstr& i : instr) {
         if (IsVisibleDrawInstr(i)) {
-            i.bbox.Y = y;
+            i.bbox.y = y;
         }
     }
 }
@@ -402,14 +402,14 @@ void HtmlFormatter::JustifyLineBoth() {
             offX += extraSpaceDx;
         } else if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type ||
                    DrawInstrType::Image == i.type) {
-            i.bbox.X += offX;
+            i.bbox.x += offX;
             lastStr = &i;
         }
     }
     // align the last element perfectly against the right edge in case
     // we've accumulated rounding errors
     if (lastStr) {
-        lastStr->bbox.X = pageDx - lastStr->bbox.Width;
+        lastStr->bbox.x = pageDx - lastStr->bbox.dx;
     }
 }
 
@@ -449,22 +449,20 @@ void HtmlFormatter::JustifyCurrLine(AlignAttr align) {
     if (dirRtl) {
         for (DrawInstr& i : currLineInstr) {
             if (IsVisibleDrawInstr(i)) {
-                i.bbox.X = pageDx - i.bbox.X - i.bbox.Width;
+                i.bbox.x = pageDx - i.bbox.x - i.bbox.dx;
             }
         }
     }
 }
 
-static Gdiplus::RectF RectFUnion(Gdiplus::RectF& r1, Gdiplus::RectF& r2) {
-    if (r2.IsEmptyArea()) {
+static RectFl RectFUnion(RectFl& r1, RectFl& r2) {
+    if (r2.IsEmpty()) {
         return r1;
     }
-    if (r1.IsEmptyArea()) {
+    if (r1.IsEmpty()) {
         return r2;
     }
-    Gdiplus::RectF ru;
-    ru.Union(ru, r1, r2);
-    return ru;
+    return r1.Union(r2);
 }
 
 void HtmlFormatter::UpdateLinkBboxes(HtmlPage* page) {
@@ -585,12 +583,12 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs) {
         if (-1 != imageY) {
             // if another visible item precedes the image,
             // it must be completely above it (previous line)
-            return i.bbox.Y + i.bbox.Height <= imageY;
+            return i.bbox.y + i.bbox.dy <= imageY;
         }
         if (DrawInstrType::Image != i.type) {
             return false;
         }
-        imageY = i.bbox.Y;
+        imageY = i.bbox.y;
     }
     return imageY != -1;
 }
@@ -602,20 +600,20 @@ bool HtmlFormatter::EmitImage(ImageData* img) {
         return false;
     }
 
-    Gdiplus::SizeF newSize((float)imgSize.Width, (float)imgSize.Height);
+    SizeFl newSize((float)imgSize.Width, (float)imgSize.Height);
     // move overly large images to a new line (if they don't fit entirely)
-    if (!IsCurrLineEmpty() && (currX + newSize.Width > pageDx || currY + newSize.Height > pageDy)) {
+    if (!IsCurrLineEmpty() && (currX + newSize.dx > pageDx || currY + newSize.dy > pageDy)) {
         FlushCurrLine(false);
     }
     // move overly large images to a new page
     // (if they don't fit even when scaled down to 75%)
-    float scalePage = std::min((pageDx - currX) / newSize.Width, pageDy / newSize.Height);
-    if (currY > 0 && currY + newSize.Height * std::min(scalePage, 0.75f) > pageDy) {
+    float scalePage = std::min((pageDx - currX) / newSize.dx, pageDy / newSize.dy);
+    if (currY > 0 && currY + newSize.dy * std::min(scalePage, 0.75f) > pageDy) {
         ForceNewPage();
     }
     // if image is bigger than the available space, scale it down
-    if (newSize.Width > pageDx - currX || newSize.Height > pageDy - currY) {
-        float scale = std::min(scalePage, (pageDy - currY) / newSize.Height);
+    if (newSize.dx > pageDx - currX || newSize.dy > pageDy - currY) {
+        float scale = std::min(scalePage, (pageDy - currY) / newSize.dy);
         // scale down images that follow right after a line
         // containing a single image as little as possible,
         // as they might be intended to be of the same size
@@ -624,14 +622,14 @@ bool HtmlFormatter::EmitImage(ImageData* img) {
             scale = scalePage;
         }
         if (scale < 1) {
-            newSize.Width = std::min(newSize.Width * scale, pageDx - currX);
-            newSize.Height = std::min(newSize.Height * scale, pageDy - currY);
+            newSize.dx = std::min(newSize.dx * scale, pageDx - currX);
+            newSize.dy = std::min(newSize.dy * scale, pageDy - currY);
         }
     }
 
-    Gdiplus::RectF bbox(Gdiplus::PointF(currX, 0), newSize);
+    RectFl bbox(PointFl(currX, 0), newSize);
     AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
-    currX += bbox.Width;
+    currX += bbox.dx;
 
     return true;
 }
@@ -641,7 +639,7 @@ void HtmlFormatter::EmitHr() {
     // hr creates an implicit paragraph break
     FlushCurrLine(true);
     CrashIf(NewLineX() != currX);
-    Gdiplus::RectF bbox(0.f, 0.f, pageDx, lineSpacing);
+    RectFl bbox(0.f, 0.f, pageDx, lineSpacing);
     AppendInstr(DrawInstr(DrawInstrType::Line, bbox));
     FlushCurrLine(true);
 }
@@ -733,10 +731,10 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             break;
         }
         textMeasure->SetFont(CurrFont());
-        Gdiplus::RectF bbox = ToGdipRectF(textMeasure->Measure(buf, strLen));
-        if (bbox.Width <= pageDx - currX) {
+        RectFl bbox = textMeasure->Measure(buf, strLen);
+        if (bbox.dx <= pageDx - currX) {
             AppendInstr(DrawInstr::Str(s, end - s, bbox, dirRtl));
-            currX += bbox.Width;
+            currX += bbox.dx;
             break;
         }
         // get len That Fits the remaining space in the line
@@ -770,7 +768,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
 
         textMeasure->SetFont(CurrFont());
         bbox = ToGdipRectF(textMeasure->Measure(buf, lenThatFits));
-        CrashIf(bbox.Width > pageDx);
+        CrashIf(bbox.dx > pageDx);
         // s is UTF-8 and buf is UTF-16, so one
         // WCHAR doesn't always equal one char
         // TODO: this usually fails for non-BMP characters (i.e. hardly ever)
@@ -778,7 +776,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             lenThatFits += buf[i - 1] < 0x80 ? 0 : buf[i - 1] < 0x800 ? 1 : 2;
         }
         AppendInstr(DrawInstr::Str(s, lenThatFits, bbox, dirRtl));
-        currX += bbox.Width;
+        currX += bbox.dx;
         s += lenThatFits;
     }
 }
@@ -797,7 +795,7 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
     }
 
     // TODO: make anchors more specific than the top of the current line?
-    Gdiplus::RectF bbox(0, currY, pageDx, 0);
+    RectFl bbox(0, currY, pageDx, 0);
     // append at the start of the line to prevent the anchor
     // from being flushed to the next page (with wrong currY value)
     currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
@@ -1409,14 +1407,14 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
 #endif
     textDraw->Lock();
     for (DrawInstr& i : *drawInstructions) {
-        Gdiplus::RectF bbox = i.bbox;
-        bbox.X += offX;
-        bbox.Y += offY;
+        RectFl bbox = i.bbox;
+        bbox.x += offX;
+        bbox.y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
             size_t strLen = strconv::Utf8ToWcharBuf(i.str.s, i.str.len, buf, dimof(buf));
             // soft hyphens should not be displayed
             strLen -= str::RemoveChars(buf, L"\xad");
-            textDraw->Draw(buf, strLen, bbox, DrawInstrType::RtlString == i.type);
+            textDraw->Draw(buf, strLen, ToGdipRectF(bbox), DrawInstrType::RtlString == i.type);
         } else if (DrawInstrType::SetFont == i.type) {
             textDraw->SetFont(i.font);
         }
@@ -1432,16 +1430,16 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
 
     Status status;
     for (DrawInstr& i : *drawInstructions) {
-        Gdiplus::RectF bbox = i.bbox;
-        bbox.X += offX;
-        bbox.Y += offY;
+        RectFl bbox = i.bbox;
+        bbox.x += offX;
+        bbox.y += offY;
         if (DrawInstrType::Line == i.type) {
             // hr is a line drawn in the middle of bounding box
-            float y = floorf(bbox.Y + bbox.Height / 2.f + 0.5f);
-            Gdiplus::PointF p1(bbox.X, y);
-            Gdiplus::PointF p2(bbox.X + bbox.Width, y);
+            float y = floorf(bbox.y + bbox.dy / 2.f + 0.5f);
+            Gdiplus::PointF p1(bbox.x, y);
+            Gdiplus::PointF p2(bbox.x + bbox.dx, y);
             if (showBbox) {
-                status = g->DrawRectangle(&debugPen, bbox);
+                status = g->DrawRectangle(&debugPen, ToGdipRectF(bbox));
                 CrashIf(status != Ok);
             }
             status = g->DrawLine(&linePen, p1, p2);
@@ -1450,22 +1448,23 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
             // TODO: cache the bitmap somewhere (?)
             Bitmap* bmp = BitmapFromData((const u8*)i.img.data, i.img.len);
             if (bmp) {
-                status = g->DrawImage(bmp, bbox, 0, 0, (float)bmp->GetWidth(), (float)bmp->GetHeight(), UnitPixel);
+                status = g->DrawImage(bmp, ToGdipRectF(bbox), 0, 0, (float)bmp->GetWidth(), (float)bmp->GetHeight(),
+                                      UnitPixel);
                 // GDI+ sometimes seems to succeed in loading an image because it lazily decodes it
                 CrashIf(status != Ok && status != Win32Error);
             }
             delete bmp;
         } else if (DrawInstrType::LinkStart == i.type) {
             // TODO: set text color to blue
-            float y = floorf(bbox.Y + bbox.Height + 0.5f);
-            Gdiplus::PointF p1(bbox.X, y);
-            Gdiplus::PointF p2(bbox.X + bbox.Width, y);
+            float y = floorf(bbox.y + bbox.dy + 0.5f);
+            Gdiplus::PointF p1(bbox.x, y);
+            Gdiplus::PointF p2(bbox.x + bbox.dx, y);
             Pen linkPen(textColor);
             status = g->DrawLine(&linkPen, p1, p2);
             CrashIf(status != Ok);
         } else if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
             if (showBbox) {
-                status = g->DrawRectangle(&debugPen, bbox);
+                status = g->DrawRectangle(&debugPen, ToGdipRectF(bbox));
                 CrashIf(status != Ok);
             }
         } else if (DrawInstrType::LinkEnd == i.type) {

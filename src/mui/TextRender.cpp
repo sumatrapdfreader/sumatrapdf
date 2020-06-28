@@ -164,13 +164,13 @@ void TextRenderGdi::Unlock() {
     hdcGfxLocked = nullptr;
 }
 
-void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
+void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, const RectFl bb, bool isRtl) {
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
     CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
-    int x = (int)bb.X;
-    int y = (int)bb.Y;
+    int x = (int)bb.x;
+    int y = (int)bb.y;
     uint opts = ETO_OPAQUE;
     if (isRtl) {
         opts = opts | ETO_RTLREADING;
@@ -179,7 +179,7 @@ void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool i
 #endif
 }
 
-void TextRenderGdi::Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
+void TextRenderGdi::Draw(const char* s, size_t sLen, const RectFl bb, bool isRtl) {
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
@@ -240,13 +240,13 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
 // TODO: I would like to figure out a way to draw text without the need to Lock()/Unlock()
 // maybe draw to in-memory bitmap, convert to Graphics bitmap and blit that bitmap to
 // Graphics object
-void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
+void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectFl bb, bool isRtl) {
     CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
 
-    int x = (int)bb.X;
-    int y = (int)bb.Y;
-    int dx = (int)bb.Width;
-    int dy = (int)bb.Height;
+    int x = (int)bb.x;
+    int y = (int)bb.y;
+    int dx = (int)bb.dx;
+    int dy = (int)bb.dy;
 
     CreateClearBmpOfSize(dx, dy);
     // SetBkMode(hdcGfxLocked, 1);
@@ -275,7 +275,7 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, Gdiplus::RectF&
     AlphaBlend(hdcGfxLocked, x, y, dx, dy, memHdc, 0, 0, dx, dy, bf);
 }
 
-void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
+void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, const RectFl bb, bool isRtl) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return DrawTransparent(txtConvBuf, strLen, bb, isRtl);
 }
@@ -327,20 +327,19 @@ void TextRenderGdiplus::SetTextColor(Gdiplus::Color col) {
     textColorBrush = ::new SolidBrush(col);
 }
 
-void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
-    Gdiplus::PointF pos;
-    bb.GetLocation(&pos);
+void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, const RectFl bb, bool isRtl) {
+    Gdiplus::PointF pos = ToGdipPointF(bb.TL());
     if (!isRtl) {
         gfx->DrawString(s, (INT)sLen, currFont->font, pos, nullptr, textColorBrush);
     } else {
         StringFormat rtl;
         rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
-        pos.X += bb.Width;
+        pos.X += bb.dx;
         gfx->DrawString(s, (INT)sLen, currFont->font, pos, &rtl, textColorBrush);
     }
 }
 
-void TextRenderGdiplus::Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
+void TextRenderGdiplus::Draw(const char* s, size_t sLen, const RectFl bb, bool isRtl) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     Draw(txtConvBuf, strLen, bb, isRtl);
 }
@@ -437,15 +436,15 @@ RectFl TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
     return res;
 }
 
-void TextRenderHdc::Draw(const char* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
+void TextRenderHdc::Draw(const char* s, size_t sLen, const RectFl bb, bool isRtl) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
-void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, Gdiplus::RectF& bb, bool isRtl) {
+void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, const RectFl bb, bool isRtl) {
     CrashIf(!hdc);
-    int x = (int)bb.X;
-    int y = (int)bb.Y;
+    int x = (int)bb.x;
+    int y = (int)bb.y;
     uint opts = ETO_OPAQUE;
 #if 0
     if (isRtl)

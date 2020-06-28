@@ -9,8 +9,8 @@ struct FrameRateWnd;
 struct EbookController;
 class EbookFormattingThread;
 class HtmlFormatter;
-class HtmlFormatterArgs;
-class HtmlPage;
+struct HtmlFormatterArgs;
+struct HtmlPage;
 
 namespace mui {
 class Control;
