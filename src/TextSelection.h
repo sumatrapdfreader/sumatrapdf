@@ -1,7 +1,7 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-inline unsigned int distSq(int x, int y) {
+inline uint distSq(int x, int y) {
     return x * x + y * y;
 }
 // underscore is mainly used for programming and is thus considered a word character
@@ -10,16 +10,16 @@ inline bool isWordChar(WCHAR c) {
 }
 
 struct PageText {
-    Rect* coords;
-    WCHAR* text;
-    int len;
+    Rect* coords{nullptr};
+    WCHAR* text{nullptr};
+    int len{0};
 };
 
 struct DocumentTextCache {
-    EngineBase* engine = nullptr;
-    int nPages = 0;
-    PageText* pagesText = nullptr;
-    int debugSize;
+    EngineBase* engine{nullptr};
+    int nPages{0};
+    PageText* pagesText{nullptr};
+    int debugSize{0};
 
     CRITICAL_SECTION access;
 
@@ -32,10 +32,10 @@ struct DocumentTextCache {
 
 // TODO: replace with Vec<TextSel>
 struct TextSel {
-    int len = 0;
-    int cap = 0;
-    int* pages = nullptr;
-    Rect* rects = nullptr;
+    int len{0};
+    int cap{0};
+    int* pages{nullptr};
+    Rect* rects{nullptr};
 };
 
 struct TextSelection {
@@ -56,15 +56,15 @@ struct TextSelection {
     WCHAR* ExtractText(const WCHAR* lineSep);
     void Reset();
 
-    TextSel result;
+    TextSel result{};
 
     void GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const;
 
-    int startPage, endPage;
-    int startGlyph, endGlyph;
+    int startPage{-1}, endPage{-1};
+    int startGlyph{-1}, endGlyph{-1};
 
-    EngineBase* engine;
-    DocumentTextCache* textCache;
+    EngineBase* engine{nullptr};
+    DocumentTextCache* textCache{nullptr};
 
     int FindClosestGlyph(int pageNo, double x, double y);
     void FillResultRects(int pageNo, int glyph, int length, WStrVec* lines = nullptr);

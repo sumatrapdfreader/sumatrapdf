@@ -64,11 +64,7 @@ const WCHAR* DocumentTextCache::GetTextForPage(int pageNo, int* lenOut, Rect** c
     return pageText->text;
 }
 
-TextSelection::TextSelection(EngineBase* engine, DocumentTextCache* textCache)
-    : engine(engine), textCache(textCache), startPage(-1), endPage(-1), startGlyph(-1), endGlyph(-1) {
-    result.len = 0;
-    result.pages = nullptr;
-    result.rects = nullptr;
+TextSelection::TextSelection(EngineBase* engine, DocumentTextCache* textCache) : engine(engine), textCache(textCache) {
 }
 
 TextSelection::~TextSelection() {
@@ -99,20 +95,21 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y) {
     int result = -1;
 
     for (int i = 0; i < textLen; i++) {
-        if (!coords[i].x && !coords[i].dx) {
+        Rect& coord = coords[i];
+        if (!coord.x && !coord.dx) {
             continue;
         }
-        if (overGlyph && !coords[i].Contains(pti)) {
+        if (overGlyph && !coord.Contains(pti)) {
             continue;
         }
 
-        unsigned int dist = distSq((int)x - coords[i].x - coords[i].dx / 2, (int)y - coords[i].y - coords[i].dy / 2);
+        uint dist = distSq((int)x - coord.x - coord.dx / 2, (int)y - coord.y - coord.dy / 2);
         if (dist < maxDist) {
             result = i;
             maxDist = dist;
         }
         // prefer glyphs the cursor is actually over
-        if (!overGlyph && coords[i].Contains(pti)) {
+        if (!overGlyph && coord.Contains(pti)) {
             overGlyph = true;
             result = i;
             maxDist = dist;
@@ -257,23 +254,23 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
 }
 
 void TextSelection::SelectWordAt(int pageNo, double x, double y) {
-    int ix = FindClosestGlyph(pageNo, x, y);
+    int i = FindClosestGlyph(pageNo, x, y);
     int textLen;
     const WCHAR* text = textCache->GetTextForPage(pageNo, &textLen);
 
-    for (; ix > 0; ix--) {
-        if (!isWordChar(text[ix - 1])) {
+    for (; i > 0; i--) {
+        if (!isWordChar(text[i - 1])) {
             break;
         }
     }
-    StartAt(pageNo, ix);
+    StartAt(pageNo, i);
 
-    for (; ix < textLen; ix++) {
-        if (!isWordChar(text[ix])) {
+    for (; i < textLen; i++) {
+        if (!isWordChar(text[i])) {
             break;
         }
     }
-    SelectUpTo(pageNo, ix);
+    SelectUpTo(pageNo, i);
 }
 
 void TextSelection::CopySelection(TextSelection* orig) {
