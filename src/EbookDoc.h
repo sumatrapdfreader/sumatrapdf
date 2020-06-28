@@ -84,9 +84,6 @@ class Fb2Doc {
     ~Fb2Doc();
 
     std::span<u8> Fb2Doc::GetXmlData() const;
-    // TODO: remove those
-    const char* GetXmlData(size_t* lenOut) const;
-    size_t GetXmlDataSize() const;
 
     ImageData* GetImageData(const char* fileName);
     ImageData* GetCoverImage();

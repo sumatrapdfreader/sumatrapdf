@@ -31,6 +31,7 @@ Annotations:
  - maybe: display flags
  - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
  - UI ideas: https://getcleanshot.com/
+ - when closing a pdf file, dialog for unsaved annotations
 
 ------
 
@@ -61,7 +62,6 @@ Fixes:
 ------
 
 std::span<u8> and other small refactoring:
-- GetXmlData
 - SaveCrashInfo
 - GetCallstacks
 - HandleTealDocTag
@@ -77,7 +77,6 @@ std::span<u8> and other small refactoring:
 ------
 
 possible refactorings:
-- create DisplayMode.h, move DisplayMode from SettingsStruct.h and some stuff from GlobalPrefs.h
 - rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()
 - split LoadPage() into LoadPage() and LoadPagePartial()
 returning Rect
@@ -98,7 +97,6 @@ returning Rect
 - ChmDoc::Load() WCHAR* => std::string_view
 - test icons at different sizes (for toolbar they look bad at some sizes; see if it's toolbar or mupdf)
 - Engine* => Document* rename
-- rewrite file function a sniffer as a single function
 - extract tab code from Tabs.cpp into a tab control
 - see if can do sth. like https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go
 

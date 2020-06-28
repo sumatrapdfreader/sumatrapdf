@@ -979,15 +979,6 @@ std::span<u8> Fb2Doc::GetXmlData() const {
     return {(u8*)xmlData.Get(), xmlData.size()};
 }
 
-const char* Fb2Doc::GetXmlData(size_t* lenOut) const {
-    *lenOut = xmlData.size();
-    return (const char*)xmlData.Get();
-}
-
-size_t Fb2Doc::GetXmlDataSize() const {
-    return xmlData.size();
-}
-
 ImageData* Fb2Doc::GetImageData(const char* fileName) {
     for (size_t i = 0; i < images.size(); i++) {
         if (str::Eq(images.at(i).fileName, fileName)) {
@@ -1026,9 +1017,8 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) {
     int titleCount = 0;
     int level = 0;
 
-    size_t xmlLen;
-    const char* xmlData = GetXmlData(&xmlLen);
-    HtmlPullParser parser(xmlData, xmlLen);
+    auto xmlData = GetXmlData();
+    HtmlPullParser parser(xmlData);
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (tok->IsStartTag() && Tag_Section == tok->tag) {
