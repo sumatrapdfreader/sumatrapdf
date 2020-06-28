@@ -248,7 +248,7 @@ class EngineDjVu : public EngineBase {
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
+    PageText ExtractPageText(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
 
     WCHAR* GetProperty(DocumentProperty prop) override;
@@ -897,7 +897,7 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>
     return !item;
 }
 
-WCHAR* EngineDjVu::ExtractPageText(int pageNo, Rect** coordsOut) {
+PageText EngineDjVu::ExtractPageText(int pageNo) {
     const WCHAR* lineSep = L"\n";
     ScopedCritSec scope(&gDjVuContext->lock);
 
@@ -906,7 +906,7 @@ WCHAR* EngineDjVu::ExtractPageText(int pageNo, Rect** coordsOut) {
         gDjVuContext->SpinMessageLoop();
     }
     if (miniexp_nil == pagetext) {
-        return nullptr;
+        return {};
     }
 
     str::WStr extracted;
@@ -914,44 +914,45 @@ WCHAR* EngineDjVu::ExtractPageText(int pageNo, Rect** coordsOut) {
     bool success = ExtractPageText(pagetext, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);
     if (!success) {
-        return nullptr;
+        return {};
     }
     if (extracted.size() > 0 && !str::EndsWith(extracted.Get(), lineSep)) {
         AppendNewline(extracted, coords, lineSep);
     }
 
-    CrashIf(str::Len(extracted.Get()) != coords.size());
-    if (coordsOut) {
-        ddjvu_status_t status;
-        ddjvu_pageinfo_t info;
-        while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
-            gDjVuContext->SpinMessageLoop();
-        }
-        float dpiFactor = 1.0;
-        if (DDJVU_JOB_OK == status) {
-            dpiFactor = GetFileDPI() / info.dpi;
-        }
+    PageText res;
 
-        // TODO: the coordinates aren't completely correct yet
-        Rect page = PageMediabox(pageNo).Round();
-        for (size_t i = 0; i < coords.size(); i++) {
-            if (!coords.at(i).IsEmpty()) {
-                if (dpiFactor != 1.0) {
-                    RectFl pageF = ToRectFl(coords.at(i));
-                    pageF.x *= dpiFactor;
-                    pageF.dx *= dpiFactor;
-                    pageF.y *= dpiFactor;
-                    pageF.dy *= dpiFactor;
-                    coords.at(i) = pageF.Round();
-                }
-                coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
-            }
-        }
-        CrashIf(coords.size() != extracted.size());
-        *coordsOut = coords.StealData();
+    CrashIf(str::Len(extracted.Get()) != coords.size());
+    ddjvu_status_t status;
+    ddjvu_pageinfo_t info;
+    while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
+        gDjVuContext->SpinMessageLoop();
+    }
+    float dpiFactor = 1.0;
+    if (DDJVU_JOB_OK == status) {
+        dpiFactor = GetFileDPI() / info.dpi;
     }
 
-    return extracted.StealData();
+    // TODO: the coordinates aren't completely correct yet
+    Rect page = PageMediabox(pageNo).Round();
+    for (size_t i = 0; i < coords.size(); i++) {
+        if (!coords.at(i).IsEmpty()) {
+            if (dpiFactor != 1.0) {
+                RectFl pageF = ToRectFl(coords.at(i));
+                pageF.x *= dpiFactor;
+                pageF.dx *= dpiFactor;
+                pageF.y *= dpiFactor;
+                pageF.dy *= dpiFactor;
+                coords.at(i) = pageF.Round();
+            }
+            coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
+        }
+    }
+    CrashIf(coords.size() != extracted.size());
+    res.coords = coords.StealData();
+    res.text = extracted.StealData();
+    res.len = (int)extracted.size();
+    return res;
 }
 
 Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {

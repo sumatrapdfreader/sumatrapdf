@@ -12,6 +12,14 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 
+void FreePageText(PageText* pageText) {
+    str::Free(pageText->text);
+    free((void*)pageText->coords);
+    pageText->text = nullptr;
+    pageText->coords = nullptr;
+    pageText->len = 0;
+}
+
 RenderedBitmap::~RenderedBitmap() {
     DeleteObject(hbmp);
 }

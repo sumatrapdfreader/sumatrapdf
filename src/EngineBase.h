@@ -78,6 +78,16 @@ extern Kind kindDestinationZoomToDialog;
 
 Kind resolveDestKind(char* s);
 
+// text on a page
+// a character and its bounding box in page coordinates
+struct PageText {
+    WCHAR* text{nullptr};
+    Rect* coords{nullptr};
+    int len{0}; // number of chars in text and bounding boxes in coords
+};
+
+void FreePageText(PageText*);
+
 // a link destination
 struct PageDestination {
     Kind kind = nullptr;
@@ -347,7 +357,7 @@ class EngineBase {
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
     // caller needs to free() the result and *coordsOut (if coordsOut is non-nullptr)
-    virtual WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) = 0;
+    virtual PageText ExtractPageText(int pageNo) = 0;
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
 

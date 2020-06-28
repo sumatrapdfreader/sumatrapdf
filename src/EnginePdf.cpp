@@ -311,7 +311,7 @@ class EnginePdf : public EngineBase {
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
-    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
+    PageText ExtractPageText(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
@@ -1426,8 +1426,11 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectFl rect, int imageIdx) {
     return bmp;
 }
 
-WCHAR* EnginePdf::ExtractPageText(int pageNo, Rect** coordsOut) {
+PageText EnginePdf::ExtractPageText(int pageNo) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
+    if (!pageInfo) {
+        return {};
+    }
 
     ScopedCritSec scope(ctxAccess);
 
@@ -1440,11 +1443,15 @@ WCHAR* EnginePdf::ExtractPageText(int pageNo, Rect** coordsOut) {
     fz_catch(ctx) {
     }
     if (!stext) {
-        return nullptr;
+        return {};
     }
-    WCHAR* text = fz_text_page_to_str(stext, coordsOut);
+    PageText res;
+    // TODO: convert to return PageText
+    WCHAR* text = fz_text_page_to_str(stext, &res.coords);
     fz_drop_stext_page(ctx, stext);
-    return text;
+    res.text = text;
+    res.len = (int)str::Len(text);
+    return res;
 }
 
 bool EnginePdf::IsLinearizedFile() {

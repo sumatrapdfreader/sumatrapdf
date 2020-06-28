@@ -10,6 +10,14 @@
 #include "EngineBase.h"
 #include "TextSelection.h"
 
+uint distSq(int x, int y) {
+    return x * x + y * y;
+}
+// underscore is mainly used for programming and is thus considered a word character
+bool isWordChar(WCHAR c) {
+    return IsCharAlphaNumeric(c) || c == '_';
+}
+
 DocumentTextCache::DocumentTextCache(EngineBase* engine) : engine(engine) {
     nPages = engine->PageCount();
     pagesText = AllocArray<PageText>(nPages);
@@ -45,12 +53,10 @@ const WCHAR* DocumentTextCache::GetTextForPage(int pageNo, int* lenOut, Rect** c
     PageText* pageText = &pagesText[pageNo - 1];
 
     if (!pageText->text) {
-        pageText->text = engine->ExtractPageText(pageNo, &pageText->coords);
+        *pageText = engine->ExtractPageText(pageNo);
         if (!pageText->text) {
             pageText->text = str::Dup(L"");
             pageText->len = 0;
-        } else {
-            pageText->len = (int)str::Len(pageText->text);
         }
         debugSize += (pageText->len + 1) * (sizeof(WCHAR) + sizeof(Rect));
     }
@@ -136,7 +142,7 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     return result;
 }
 
-static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, WStrVec* lines=nullptr) {
+static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, WStrVec* lines = nullptr) {
     int len;
     Rect* coords;
     const WCHAR* text = ts->textCache->GetTextForPage(pageNo, &len, &coords);

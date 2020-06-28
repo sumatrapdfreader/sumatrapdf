@@ -270,10 +270,14 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     Out1("\t>\n");
 
     if (fullDump) {
-        AutoFree text(Escape(engine->ExtractPageText(pageNo)));
-        if (text.Get()) {
-            Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.Get());
+        PageText pageText = engine->ExtractPageText(pageNo);
+        if (pageText.text != nullptr) {
+            AutoFree text(Escape(pageText.text));
+            if (text.Get()) {
+                Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.Get());
+            }
         }
+        FreePageText(&pageText);
     }
 
     Vec<IPageElement*>* els = engine->GetElements(pageNo);
@@ -391,7 +395,11 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
     if (str::EndsWithI(renderPath, L".txt")) {
         str::WStr text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
-            text.AppendAndFree(engine->ExtractPageText(pageNo, nullptr));
+            PageText pageText = engine->ExtractPageText(pageNo);
+            if (pageText.text != nullptr) {
+                text.Append(pageText.text);
+            }
+            FreePageText(&pageText);
         }
         text.Replace(L"\n", L"\r\n");
         if (silent) {

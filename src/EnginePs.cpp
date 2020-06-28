@@ -291,8 +291,8 @@ class EnginePs : public EngineBase {
         return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
     }
 
-    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override {
-        return pdfEngine->ExtractPageText(pageNo, coordsOut);
+    PageText ExtractPageText(int pageNo) override {
+        return pdfEngine->ExtractPageText(pageNo);
     }
 
     bool HasClipOptimizations(int pageNo) override {

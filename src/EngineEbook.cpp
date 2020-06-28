@@ -92,7 +92,7 @@ class EngineEbook : public EngineBase {
     std::span<u8> GetFileData() override;
 
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
+    PageText ExtractPageText(int pageNo) override;
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override;
 
@@ -421,7 +421,7 @@ static Rect GetInstrBbox(DrawInstr& instr, float pageBorder) {
     return bbox.Round();
 }
 
-WCHAR* EngineEbook::ExtractPageText(int pageNo, Rect** coordsOut) {
+PageText EngineEbook::ExtractPageText(int pageNo) {
     const WCHAR* lineSep = L"\n";
     ScopedCritSec scope(&pagesAccess);
 
@@ -493,12 +493,13 @@ WCHAR* EngineEbook::ExtractPageText(int pageNo, Rect** coordsOut) {
         content.Append(lineSep);
         coords.AppendBlanks(str::Len(lineSep));
     }
+    CrashIf(coords.size() != content.size());
 
-    if (coordsOut) {
-        CrashIf(coords.size() != content.size());
-        *coordsOut = coords.StealData();
-    }
-    return content.StealData();
+    PageText res;
+    res.text = content.StealData();
+    res.coords = coords.StealData();
+    res.len = (int)content.size();
+    return res;
 }
 
 PageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) {

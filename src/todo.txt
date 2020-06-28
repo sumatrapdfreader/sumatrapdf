@@ -61,13 +61,13 @@ Fixes:
 
 ------
 
-std::span<u8> and other small refactoring:
-- HandleTealDocTag
+small refactorings:
 - EngineImageDir::LoadImageDir use DirIter
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
 ------
 
 possible refactorings:
+- change DocumentTextCache::GetTextForPage to return PageText
 - rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()
 - split LoadPage() into LoadPage() and LoadPagePartial()
 returning Rect

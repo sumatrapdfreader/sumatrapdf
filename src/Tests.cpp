@@ -56,9 +56,11 @@ void TestRenderPage(const Flags& i) {
 }
 
 static void extractPageText(EngineBase* engine, int pageNo) {
-    Rect* coordsOut; // not using the result, only to trigger the code path
-    WCHAR* uni = engine->ExtractPageText(pageNo, &coordsOut);
-    str::Replace(uni, L"\n", L"_");
+    PageText pageText = engine->ExtractPageText(pageNo);
+    if (!pageText.text) {
+        return;
+    }
+    AutoFreeWstr uni = str::Replace(pageText.text, L"\n", L"_");
     AutoFree utf = strconv::WstrToUtf8(uni);
     printf("text on page %d: '", pageNo);
     // print characters as hex because I don't know what kind of locale-specific mangling
@@ -69,8 +71,7 @@ static void extractPageText(EngineBase* engine, int pageNo) {
         printf("%02x ", (u8)c);
     }
     printf("'\n");
-    free(uni);
-    free(coordsOut);
+    FreePageText(&pageText);
 }
 
 void TestExtractPage(const Flags& ci) {

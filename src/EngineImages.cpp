@@ -97,10 +97,9 @@ class EngineImages : public EngineBase {
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override {
+    PageText ExtractPageText(int pageNo) override {
         UNUSED(pageNo);
-        UNUSED(coordsOut);
-        return nullptr;
+        return {};
     }
     bool HasClipOptimizations(int pageNo) override {
         UNUSED(pageNo);

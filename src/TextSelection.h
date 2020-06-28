@@ -1,20 +1,6 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-inline uint distSq(int x, int y) {
-    return x * x + y * y;
-}
-// underscore is mainly used for programming and is thus considered a word character
-inline bool isWordChar(WCHAR c) {
-    return IsCharAlphaNumeric(c) || c == '_';
-}
-
-struct PageText {
-    Rect* coords{nullptr};
-    WCHAR* text{nullptr};
-    int len{0};
-};
-
 struct DocumentTextCache {
     EngineBase* engine{nullptr};
     int nPages{0};
@@ -62,3 +48,6 @@ struct TextSelection {
 
     void GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const;
 };
+
+uint distSq(int x, int y);
+bool isWordChar(WCHAR c);

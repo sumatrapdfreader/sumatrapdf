@@ -207,7 +207,7 @@ class EngineXps : public EngineBase {
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, Rect** coordsOut = nullptr) override;
+    PageText ExtractPageText(int pageNo) override;
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
@@ -837,9 +837,12 @@ RenderedBitmap* EngineXps::GetImageForPageElement(IPageElement* ipel) {
     return GetPageImage(pageNo, r, imageID);
 }
 
-WCHAR* EngineXps::ExtractPageText(int pageNo, Rect** coordsOut) {
-    // TODO: optimize by extracting text in GetFzPageInfo()
+PageText EngineXps::ExtractPageText(int pageNo) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    if (!pageInfo) {
+        return {};
+    }
+
     ScopedCritSec scope(ctxAccess);
     fz_stext_page* stext = nullptr;
     fz_var(stext);
@@ -850,11 +853,13 @@ WCHAR* EngineXps::ExtractPageText(int pageNo, Rect** coordsOut) {
     fz_catch(ctx) {
     }
     if (!stext) {
-        return nullptr;
+        return {};
     }
-    WCHAR* content = fz_text_page_to_str(stext, coordsOut);
+    PageText res;
+    res.text = fz_text_page_to_str(stext, &res.coords);
     fz_drop_stext_page(ctx, stext);
-    return content;
+    res.len = (int)str::Len(res.text);
+    return res;
 }
 
 RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectFl rect, int imageIdx) {
