@@ -8,13 +8,14 @@
 Point::Point(int x, int y) : x(x), y(y) {
 }
 
-bool Point::empty() const {
+bool Point::IsEmpty() const {
     return x == 0 && y == 0;
 }
 
 bool Point::operator==(const Point& other) const {
     return this->x == other.x && this->y == other.y;
 }
+
 bool Point::operator!=(const Point& other) const {
     return !this->operator==(other);
 }
@@ -24,13 +25,14 @@ bool Point::operator!=(const Point& other) const {
 PointFl::PointFl(float x, float y) : x(x), y(y) {
 }
 
-bool PointFl::empty() const {
+bool PointFl::IsEmpty() const {
     return x == 0 && y == 0;
 }
 
 bool PointFl::operator==(const PointFl& other) const {
     return this->x == other.x && this->y == other.y;
 }
+
 bool PointFl::operator!=(const PointFl& other) const {
     return !this->operator==(other);
 }
@@ -44,14 +46,10 @@ bool Size::IsEmpty() const {
     return dx == 0 || dy == 0;
 }
 
-// TODO: temporary
-bool Size::empty() const {
-    return dx == 0 || dy == 0;
-}
-
 bool Size::operator==(const Size& other) const {
     return this->dx == other.dx && this->dy == other.dy;
 }
+
 bool Size::operator!=(const Size& other) const {
     return !this->operator==(other);
 }
@@ -62,11 +60,6 @@ SizeFl::SizeFl(float dx, float dy) : dx(dx), dy(dy) {
 }
 
 bool SizeFl::IsEmpty() const {
-    return dx == 0 || dy == 0;
-}
-
-// TODO: temporary
-bool SizeFl::empty() const {
     return dx == 0 || dy == 0;
 }
 
@@ -143,9 +136,6 @@ Rect Rect::FromXY(Point TL, Point BR) {
 }
 
 bool Rect::IsEmpty() const {
-    return dx == 0 || dy == 0;
-}
-bool Rect::empty() const {
     return dx == 0 || dy == 0;
 }
 
@@ -312,10 +302,6 @@ Rect RectFl::Round() const {
 }
 
 bool RectFl::IsEmpty() const {
-    return dx == 0 || dy == 0;
-}
-
-bool RectFl::empty() const {
     return dx == 0 || dy == 0;
 }
 

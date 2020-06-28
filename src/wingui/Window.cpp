@@ -950,7 +950,7 @@ int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
 void PositionCloseTo(WindowBase* w, HWND hwnd) {
     CrashIf(!hwnd);
     Size is = w->initialSize;
-    CrashIf(is.empty());
+    CrashIf(is.IsEmpty());
     RECT r{};
     BOOL ok = GetWindowRect(hwnd, &r);
     CrashIf(!ok);

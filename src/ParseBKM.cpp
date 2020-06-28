@@ -60,7 +60,7 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
     // Note: not serializing dest->pageno because it's redundant with
     // TocItem::pageNo
     RectFl r = dest->rect;
-    if (r.empty()) {
+    if (r.IsEmpty()) {
         return;
     }
     // TODO: using %g is not great, because it's scientific notian 1e6

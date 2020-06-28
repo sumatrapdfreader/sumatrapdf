@@ -10,8 +10,7 @@ struct Point {
     Point() = default;
     Point(int x, int y);
 
-    // TODO: rename to IsEmpty()
-    bool empty() const;
+    bool IsEmpty() const;
     bool operator==(const Point& other) const;
     bool operator!=(const Point& other) const;
 };
@@ -24,8 +23,7 @@ struct PointFl {
 
     PointFl(float x, float y);
 
-    // TODO: rename to IsEmpty()
-    bool empty() const;
+    bool IsEmpty() const;
     bool operator==(const PointFl& other) const;
     bool operator!=(const PointFl& other) const;
 };
@@ -38,8 +36,6 @@ struct Size {
     Size(int dx, int dy);
 
     bool IsEmpty() const;
-    // TODO: temporary
-    bool empty() const;
     bool operator==(const Size& other) const;
     bool operator!=(const Size& other) const;
 };
@@ -52,8 +48,6 @@ struct SizeFl {
     SizeFl(float dx, float dy);
 
     bool IsEmpty() const;
-    // TODO: temporary
-    bool empty() const;
     bool operator==(const SizeFl& other) const;
     bool operator!=(const SizeFl& other) const;
 };
@@ -84,7 +78,6 @@ struct Rect {
     static Rect FromXY(int xs, int ys, int xe, int ye);
     static Rect FromXY(Point TL, Point BR);
     bool IsEmpty() const;
-    bool empty() const;
     bool Contains(Point pt) const;
     Rect Intersect(Rect other) const;
     Rect Union(Rect other) const;
@@ -122,7 +115,6 @@ struct RectFl {
     static RectFl FromXY(PointFl TL, PointFl BR);
     Rect Round() const;
     bool IsEmpty() const;
-    bool empty() const;
     bool Contains(PointFl pt);
     RectFl Intersect(RectFl other);
     RectFl Union(RectFl other);
