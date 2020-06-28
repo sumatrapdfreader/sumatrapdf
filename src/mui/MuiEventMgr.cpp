@@ -33,7 +33,7 @@ EventMgr::~EventMgr() {
 
 // Set minimum size that will be enforced by handling WM_GETMINMAXINFO
 // Default is (0,0), which is unlimited
-void EventMgr::SetMinSize(Gdiplus::Size s) {
+void EventMgr::SetMinSize(Size s) {
     // TODO: need to figure out a way to force resizing
     // respecting those constraints. Could just size manually.
     // Without doing sth., the constraints will only apply
@@ -43,7 +43,7 @@ void EventMgr::SetMinSize(Gdiplus::Size s) {
 
 // Set maximum size that will be enforced by handling WM_GETMINMAXINFO
 // Default is (0,0), which is unlimited
-void EventMgr::SetMaxSize(Gdiplus::Size s) {
+void EventMgr::SetMaxSize(Size s) {
     // TODO: need to figure out a way to force resizing
     // respecting those constraints. Could just size manually.
     // Without doing sth., the constraints will only apply
@@ -186,10 +186,10 @@ static void SetIfNotZero(LONG& l, int i, bool& didSet) {
 }
 
 LRESULT EventMgr::OnGetMinMaxInfo(MINMAXINFO* info, bool& wasHandled) {
-    SetIfNotZero(info->ptMinTrackSize.x, minSize.Width, wasHandled);
-    SetIfNotZero(info->ptMinTrackSize.y, minSize.Height, wasHandled);
-    SetIfNotZero(info->ptMaxTrackSize.x, maxSize.Width, wasHandled);
-    SetIfNotZero(info->ptMaxTrackSize.y, maxSize.Height, wasHandled);
+    SetIfNotZero(info->ptMinTrackSize.x, minSize.dx, wasHandled);
+    SetIfNotZero(info->ptMinTrackSize.y, minSize.dy, wasHandled);
+    SetIfNotZero(info->ptMaxTrackSize.x, maxSize.dx, wasHandled);
+    SetIfNotZero(info->ptMaxTrackSize.y, maxSize.dy, wasHandled);
     return 0;
 }
 

@@ -93,9 +93,9 @@ bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
 bool IsProcessRunningElevated();
 bool CanTalkToProcess(DWORD procId);
 
-void PaintRect(HDC, const Rect&);
-void PaintLine(HDC, const Rect&);
-void DrawCenteredText(HDC hdc, const Rect& r, const WCHAR* txt, bool isRTL = false);
+void PaintRect(HDC, const Rect);
+void PaintLine(HDC, const Rect);
+void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
 SIZE TextSizeInHwnd2(HWND, const WCHAR*, HFONT);

@@ -27,9 +27,9 @@ ScrollBar::ScrollBar(int onOverDy, int inactiveDy) : onOverDy(onOverDy), inactiv
     bit::Set(wantedInputBits, WantsMouseOverBit, WantsMouseClickBit);
 }
 
-Gdiplus::Size ScrollBar::Measure(const Gdiplus::Size availableSize) {
+Size ScrollBar::Measure(const Size availableSize) {
     // dx is max available
-    desiredSize.Width = availableSize.Width;
+    desiredSize.dx = availableSize.dx;
 
     // dy is bigger of inactiveDy and onHoverDy but
     // smaller than availableSize.Height
@@ -37,11 +37,11 @@ Gdiplus::Size ScrollBar::Measure(const Gdiplus::Size availableSize) {
     if (onOverDy > dy) {
         dy = onOverDy;
     }
-    if (dy > availableSize.Height) {
-        dy = availableSize.Height;
+    if (dy > availableSize.dy) {
+        dy = availableSize.dy;
     }
 
-    desiredSize.Height = dy;
+    desiredSize.dy = dy;
     return desiredSize;
 }
 
@@ -59,8 +59,8 @@ void ScrollBar::NotifyMouseLeave() {
 
 void ScrollBar::SetFilled(float perc) {
     CrashIf((perc < 0.f) || (perc > 1.f));
-    int prev = IntFromPerc(pos.Width, filledPerc);
-    int curr = IntFromPerc(pos.Width, perc);
+    int prev = IntFromPerc(pos.dx, filledPerc);
+    int curr = IntFromPerc(pos.dx, perc);
     filledPerc = perc;
     if (prev != curr) {
         RequestRepaint(this);
@@ -68,7 +68,7 @@ void ScrollBar::SetFilled(float perc) {
 }
 
 float ScrollBar::GetPercAt(int x) {
-    return PercFromInt(pos.Width, x);
+    return PercFromInt(pos.dx, x);
 }
 
 void ScrollBar::Paint(Graphics* gfx, int offX, int offY) {
@@ -81,11 +81,11 @@ void ScrollBar::Paint(Graphics* gfx, int offX, int offY) {
         dy = onOverDy;
     }
 
-    Gdiplus::RectF r((float)offX, (float)(offY + pos.Height - dy), (float)pos.Width, (float)dy);
+    Gdiplus::RectF r((float)offX, (float)(offY + pos.dy - dy), (float)pos.dx, (float)dy);
     Brush* br = BrushFromColorData(s->bgColor, r);
     gfx->FillRectangle(br, r);
 
-    int filledDx = IntFromPerc(pos.Width, filledPerc);
+    int filledDx = IntFromPerc(pos.dx, filledPerc);
     if (0 == filledDx) {
         return;
     }

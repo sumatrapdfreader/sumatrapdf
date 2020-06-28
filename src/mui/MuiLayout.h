@@ -22,9 +22,9 @@ class ILayout {
         return str::EqI(name.Get(), s);
     }
     virtual ~ILayout(){};
-    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize) = 0;
-    virtual Gdiplus::Size DesiredSize() = 0;
-    virtual void Arrange(const Gdiplus::Rect finalRect) = 0;
+    virtual Size Measure(const Size availableSize) = 0;
+    virtual Size DesiredSize() = 0;
+    virtual void Arrange(const Rect finalRect) = 0;
 };
 
 #define SizeSelf 666.f
@@ -58,7 +58,7 @@ struct DirectionalLayoutData {
     // data to be used during layout process
 
     // desiredSize of the element after Measure() step
-    Gdiplus::Size desiredSize;
+    Size desiredSize;
 
     DirectionalLayoutData() : alignNonLayoutAxis(GetElAlignCenter()) {
     }
@@ -82,18 +82,18 @@ struct DirectionalLayoutData {
 class DirectionalLayout : public ILayout {
   protected:
     Vec<DirectionalLayoutData> els;
-    Gdiplus::Size desiredSize;
+    Size desiredSize;
 
   public:
     ~DirectionalLayout() override;
-    Gdiplus::Size DesiredSize() override {
+    Size DesiredSize() override {
         return desiredSize;
     }
 
     DirectionalLayout& Add(const DirectionalLayoutData& ld);
 
-    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
-    void Arrange(const Gdiplus::Rect finalRect) override {
+    Size Measure(const Size availableSize) override;
+    void Arrange(const Rect finalRect) override {
         UNUSED(finalRect);
         CrashIf(true);
     }
@@ -104,7 +104,7 @@ class HorizontalLayout : public DirectionalLayout {
     HorizontalLayout() {
     }
 
-    void Arrange(const Gdiplus::Rect finalRect) override;
+    void Arrange(const Rect finalRect) override;
 };
 
 class VerticalLayout : public DirectionalLayout {
@@ -112,5 +112,5 @@ class VerticalLayout : public DirectionalLayout {
     VerticalLayout() {
     }
 
-    void Arrange(const Gdiplus::Rect finalRect) override;
+    void Arrange(const Rect finalRect) override;
 };

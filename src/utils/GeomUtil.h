@@ -37,6 +37,7 @@ struct Size {
 
     bool IsEmpty() const;
 
+    bool Equals(const Size& other) const;
     bool operator==(const Size& other) const;
     bool operator!=(const Size& other) const;
 };
@@ -75,6 +76,7 @@ struct Rect {
     static Rect FromXY(int xs, int ys, int xe, int ye);
     static Rect FromXY(Point TL, Point BR);
     bool IsEmpty() const;
+    bool Contains(int x, int y) const;
     bool Contains(Point pt) const;
     Rect Intersect(Rect other) const;
     Rect Union(Rect other) const;
@@ -84,6 +86,7 @@ struct Rect {
     Point BR() const;
     Size Size() const;
     static Rect FromRECT(const RECT& rect);
+    bool Equals(const Rect& other) const;
     bool operator==(const Rect& other) const;
     bool operator!=(const Rect& other) const;
 };
@@ -123,6 +126,7 @@ struct RectFl {
 };
 
 PointFl ToPointFl(const Point p);
+Gdiplus::Point ToGdipPoint(const Point p);
 Point ToPoint(const PointFl p);
 Gdiplus::PointF ToGdipPointF(const PointFl p);
 
@@ -132,6 +136,7 @@ Size ToSize(const SizeFl s);
 
 RectFl ToRectFl(const Rect r);
 RECT ToRECT(const Rect r);
+RECT RECTFromRect(Gdiplus::Rect r);
 Gdiplus::Rect ToGdipRect(const Rect r);
 Gdiplus::RectF ToGdipRectF(const Rect r);
 

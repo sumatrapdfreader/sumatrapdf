@@ -266,6 +266,6 @@ Style* StyleByName(const char* name);
 Brush* BrushFromColorData(ColorData* color, const RectFl r);
 
 ARGB ParseCssColor(const char* color);
-Gdiplus::Size GetBorderAndPaddingSize(CachedStyle* s);
+Size GetBorderAndPaddingSize(CachedStyle* s);
 
 } // namespace css

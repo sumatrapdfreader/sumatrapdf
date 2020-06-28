@@ -712,12 +712,12 @@ static void AddBorders(int& dx, int& dy, CachedStyle* s) {
     dy += (int)(bw.top + bw.bottom);
 }
 
-Gdiplus::Size GetBorderAndPaddingSize(CachedStyle* s) {
+Size GetBorderAndPaddingSize(CachedStyle* s) {
     Padding pad = s->padding;
     int dx = pad.left + pad.right;
     int dy = pad.top + pad.bottom;
     AddBorders(dx, dy, s);
-    return Gdiplus::Size(dx, dy);
+    return Size(dx, dy);
 }
 
 Style* GetStyleDefault() {

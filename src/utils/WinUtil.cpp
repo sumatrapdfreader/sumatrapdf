@@ -766,7 +766,7 @@ Rect GetVirtualScreenRect() {
     return result;
 }
 
-void PaintRect(HDC hdc, const Rect& rect) {
+void PaintRect(HDC hdc, const Rect rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y + rect.dy - 1);
@@ -774,12 +774,12 @@ void PaintRect(HDC hdc, const Rect& rect) {
     LineTo(hdc, rect.x, rect.y);
 }
 
-void PaintLine(HDC hdc, const Rect& rect) {
+void PaintLine(HDC hdc, const Rect rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
-void DrawCenteredText(HDC hdc, const Rect& r, const WCHAR* txt, bool isRTL) {
+void DrawCenteredText(HDC hdc, const Rect r, const WCHAR* txt, bool isRTL) {
     SetBkMode(hdc, TRANSPARENT);
     RECT tmpRect = ToRECT(r);
     uint format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;

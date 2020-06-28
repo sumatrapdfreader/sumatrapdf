@@ -36,7 +36,7 @@ Grid::Cell* Grid::GetCell(int row, int col) const {
     return &cells[row * cols + col];
 }
 
-Gdiplus::Point Grid::GetCellPos(int row, int col) const {
+Point Grid::GetCellPos(int row, int col) const {
     int x = 0, y = 0;
     for (int c = 0; c < col; c++) {
         x += maxColWidth[c];
@@ -44,7 +44,7 @@ Gdiplus::Point Grid::GetCellPos(int row, int col) const {
     for (int r = 0; r < row; r++) {
         y += maxRowHeight[r];
     }
-    return Gdiplus::Point(x, y);
+    return Point(x, y);
 }
 
 // if there were elements added/removed from the grid,
@@ -83,18 +83,18 @@ void Grid::RebuildCellDataIfNeeded() {
     dirty = false;
 }
 
-Gdiplus::Rect Grid::GetCellBbox(Grid::CellData* d) {
-    Gdiplus::Rect r;
+Rect Grid::GetCellBbox(Grid::CellData* d) {
+    Rect r;
     // TODO: probably add Grid's border to X
-    Gdiplus::Point p(GetCellPos(d->row, d->col));
-    r.X = p.X;
-    r.Y = p.Y;
-    r.Height = maxRowHeight[d->row];
+    Point p(GetCellPos(d->row, d->col));
+    r.x = p.x;
+    r.y = p.y;
+    r.dy = maxRowHeight[d->row];
     int totalDx = 0;
     for (int i = d->col; i < d->col + d->colSpan; i++) {
         totalDx += maxColWidth[i];
     }
-    r.Width = totalDx;
+    r.dx = totalDx;
     return r;
 }
 
@@ -102,11 +102,11 @@ void Grid::Paint(Graphics* gfx, int offX, int offY) {
     CrashIf(!IsVisible());
     CachedStyle* s = cachedStyle;
 
-    Gdiplus::RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
+    Gdiplus::RectF bbox((float)offX, (float)offY, (float)pos.dx, (float)pos.dy);
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
-    Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
+    Rect r(offX, offY, pos.dx, pos.dy);
     DrawBorder(gfx, r, s);
 
     for (Grid::CellData& d : els) {
@@ -114,25 +114,25 @@ void Grid::Paint(Graphics* gfx, int offX, int offY) {
             continue;
         }
 
-        Gdiplus::Rect cellRect(GetCellBbox(&d));
-        cellRect.X += offX;
-        cellRect.Y += offY;
+        Rect cellRect(GetCellBbox(&d));
+        cellRect.x += offX;
+        cellRect.y += offY;
         s = d.cachedStyle;
         DrawBorder(gfx, cellRect, s);
     }
 }
 
-Gdiplus::Size Grid::Measure(const Gdiplus::Size availableSize) {
+Size Grid::Measure(const Size availableSize) {
     RebuildCellDataIfNeeded();
 
-    Gdiplus::Size borderSize(GetBorderAndPaddingSize(cachedStyle));
+    Size borderSize(GetBorderAndPaddingSize(cachedStyle));
 
     Cell* cell;
     Control* el;
     for (Grid::CellData& d : els) {
         cell = GetCell(d.row, d.col);
-        cell->desiredSize.Width = 0;
-        cell->desiredSize.Height = 0;
+        cell->desiredSize.dx = 0;
+        cell->desiredSize.dy = 0;
         el = d.el;
         if (!el->IsVisible()) {
             continue;
@@ -147,12 +147,12 @@ Gdiplus::Size Grid::Measure(const Gdiplus::Size availableSize) {
         cell->desiredSize = el->DesiredSize();
         // if a cell spans multiple columns, we don't count its size here
         if (d.colSpan == 1) {
-            if (cell->desiredSize.Width > maxColWidth[d.col]) {
-                maxColWidth[d.col] = cell->desiredSize.Width;
+            if (cell->desiredSize.dx > maxColWidth[d.col]) {
+                maxColWidth[d.col] = cell->desiredSize.dx;
             }
         }
-        if (cell->desiredSize.Height > maxRowHeight[d.row]) {
-            maxRowHeight[d.row] = cell->desiredSize.Height;
+        if (cell->desiredSize.dy > maxRowHeight[d.row]) {
+            maxRowHeight[d.row] = cell->desiredSize.dy;
         }
     }
 
@@ -169,7 +169,7 @@ Gdiplus::Size Grid::Measure(const Gdiplus::Size availableSize) {
         for (int i = d.col; i < d.col + d.colSpan; i++) {
             totalDx += maxColWidth[i];
         }
-        int diff = cell->desiredSize.Width - totalDx;
+        int diff = cell->desiredSize.dx - totalDx;
         if (diff > 0) {
             int diffPerCol = diff / d.colSpan;
             int rest = diff % d.colSpan;
@@ -194,32 +194,32 @@ Gdiplus::Size Grid::Measure(const Gdiplus::Size availableSize) {
         desiredWidth += maxColWidth[col];
     }
     // TODO: what to do if desired size is more than availableSize?
-    desiredSize.Width = desiredWidth + borderSize.Width;
-    desiredSize.Height = desiredHeight + borderSize.Height;
+    desiredSize.dx = desiredWidth + borderSize.dx;
+    desiredSize.dy = desiredHeight + borderSize.dy;
     return desiredSize;
 }
 
-void Grid::Arrange(const Gdiplus::Rect finalRect) {
+void Grid::Arrange(const Rect finalRect) {
     Cell* cell;
     Control* el;
 
     for (Grid::CellData& d : els) {
         cell = GetCell(d.row, d.col);
         el = d.el;
-        Gdiplus::Point pos(GetCellPos(d.row, d.col));
-        int elDx = el->DesiredSize().Width;
+        Point pos(GetCellPos(d.row, d.col));
+        int elDx = el->DesiredSize().dx;
         int containerDx = 0;
         for (int i = d.col; i < d.col + d.colSpan; i++) {
             containerDx += maxColWidth[i];
         }
 
         int xOff = d.horizAlign.CalcOffset(elDx, containerDx);
-        pos.X += xOff;
-        int elDy = el->DesiredSize().Height;
+        pos.x += xOff;
+        int elDy = el->DesiredSize().dy;
         int containerDy = maxRowHeight[d.row];
         int yOff = d.vertAlign.CalcOffset(elDy, containerDy);
-        pos.Y += yOff;
-        Gdiplus::Rect r(pos, cell->desiredSize);
+        pos.y += yOff;
+        Rect r(pos, cell->desiredSize);
         el->Arrange(r);
     }
     SetPosition(finalRect);

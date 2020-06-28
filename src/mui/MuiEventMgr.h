@@ -24,8 +24,8 @@ class EventMgr {
     // current window over which the mouse is
     Control* currOver;
 
-    Gdiplus::Size minSize;
-    Gdiplus::Size maxSize;
+    Size minSize;
+    Size maxSize;
 
     bool inSizeMove;
 
@@ -65,6 +65,6 @@ class EventMgr {
         return inSizeMove;
     }
 
-    void SetMinSize(Gdiplus::Size s);
-    void SetMaxSize(Gdiplus::Size s);
+    void SetMinSize(Size s);
+    void SetMaxSize(Size s);
 };

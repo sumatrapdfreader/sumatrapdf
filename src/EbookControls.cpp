@@ -190,14 +190,13 @@ void PageControl::NotifyMouseMove(int x, int y) {
 }
 
 // size of the drawable area i.e. size minus padding
-Gdiplus::Size PageControl::GetDrawableSize() const {
-    Gdiplus::Size s;
-    pos.GetSize(&s);
+Size PageControl::GetDrawableSize() const {
+    Size s = pos.Size();
     Padding pad = cachedStyle->padding;
-    s.Width -= (pad.left + pad.right);
-    s.Height -= (pad.top + pad.bottom);
-    if ((s.Width <= 0) || (s.Height <= 0)) {
-        return Gdiplus::Size();
+    s.dx -= (pad.left + pad.right);
+    s.dy -= (pad.top + pad.bottom);
+    if ((s.dx <= 0) || (s.dy <= 0)) {
+        return Size();
     }
     return s;
 }
@@ -211,7 +210,7 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedStyle* s = cachedStyle;
     auto timerFill = TimeGet();
-    Gdiplus::RectF r(offX, offY, pos.Width, pos.Height);
+    Gdiplus::RectF r(offX, offY, pos.dx, pos.dy);
     if (!s->bgColor->IsTransparent()) {
         Brush* br = BrushFromColorData(s->bgColor, r);
         gfx->FillRectangle(br, r);
@@ -238,7 +237,7 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
     Color textColor, bgColor;
     textColor.SetFromCOLORREF(txtCol);
 
-    ITextRender* textRender = CreateTextRender(GetTextRenderMethod(), gfx, pos.Width, pos.Height);
+    ITextRender* textRender = CreateTextRender(GetTextRenderMethod(), gfx, pos.dx, pos.dy);
     // ITextRender *textRender = CreateTextRender(TextRenderMethodHdc, gfx, pos.Width, pos.Height);
 
     bgColor.SetFromCOLORREF(bgCol);
@@ -344,7 +343,7 @@ EbookControls* CreateEbookControls(HWND hwnd, FrameRateWnd* frameRateWnd) {
 
     ctrls->mainWnd = new HwndWrapper(hwnd);
     ctrls->mainWnd->frameRateWnd = frameRateWnd;
-    ctrls->mainWnd->SetMinSize(Gdiplus::Size(320, 200));
+    ctrls->mainWnd->SetMinSize(Size(320, 200));
 
     SetMainWndBgCol(ctrls);
     ctrls->mainWnd->layout = FindLayoutNamed(*muiDef, "mainLayout");
@@ -365,12 +364,12 @@ void DestroyEbookControls(EbookControls* ctrls) {
     delete ctrls;
 }
 
-Gdiplus::Size PagesLayout::Measure(const Gdiplus::Size availableSize) {
+Size PagesLayout::Measure(const Size availableSize) {
     desiredSize = availableSize;
     return desiredSize;
 }
 
-void PagesLayout::Arrange(const Gdiplus::Rect finalRect) {
+void PagesLayout::Arrange(const Rect finalRect) {
     // only page2 can be hidden
     CrashIf(!page1->IsVisible());
 
@@ -382,7 +381,7 @@ void PagesLayout::Arrange(const Gdiplus::Rect finalRect) {
 
     // when both visible, give them equally sized areas
     // with spaceDx between them
-    int dx = finalRect.Width;
+    int dx = finalRect.dx;
     if (page2->IsVisible()) {
         dx = (dx / 2) - spaceDx;
         // protect against excessive spaceDx values
@@ -392,9 +391,9 @@ void PagesLayout::Arrange(const Gdiplus::Rect finalRect) {
             CrashIf(dx < 10);
         }
     }
-    Gdiplus::Rect r = finalRect;
-    r.Width = dx;
+    Rect r = finalRect;
+    r.dx = dx;
     page1->Arrange(r);
-    r.X = r.X + dx + spaceDx;
+    r.x = r.x + dx + spaceDx;
     page2->Arrange(r);
 }

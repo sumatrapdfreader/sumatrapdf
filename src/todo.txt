@@ -86,7 +86,6 @@ returning Rect
 - ChmDoc -> ChmFile
 - ChmDoc::Load() WCHAR* => std::string_view
 - test icons at different sizes (for toolbar they look bad at some sizes; see if it's toolbar or mupdf)
-- Engine* => Document* rename
 - extract tab code from Tabs.cpp into a tab control
 - see if can do sth. like https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go
 

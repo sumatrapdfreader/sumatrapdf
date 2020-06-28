@@ -31,7 +31,8 @@ struct DrawInstr;
 // TODO: move to a separate file
 class PageControl : public Control {
     HtmlPage* page{nullptr};
-    int cursorX{-1}, cursorY{-1};
+    int cursorX{-1};
+    int cursorY{-1};
 
   public:
     PageControl();
@@ -42,7 +43,7 @@ class PageControl : public Control {
         return page;
     }
 
-    Gdiplus::Size GetDrawableSize() const;
+    Size GetDrawableSize() const;
     DrawInstr* GetLinkAt(int x, int y) const;
 
     void Paint(Graphics* gfx, int offX, int offY) override;
@@ -57,7 +58,7 @@ class PageControl : public Control {
 // all the space
 class PagesLayout : public ILayout {
   protected:
-    Gdiplus::Size desiredSize;
+    Size desiredSize;
     PageControl* page1;
     PageControl* page2;
     int spaceDx;
@@ -71,12 +72,12 @@ class PagesLayout : public ILayout {
     }
     virtual ~PagesLayout() {
     }
-    Gdiplus::Size DesiredSize() override {
+    Size DesiredSize() override {
         return desiredSize;
     }
 
-    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
-    void Arrange(const Gdiplus::Rect finalRect) override;
+    Size Measure(const Size availableSize) override;
+    void Arrange(const Rect finalRect) override;
 
     PageControl* GetPage1() const {
         return page1;

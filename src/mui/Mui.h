@@ -102,7 +102,7 @@ class WndInputWantedFilter : public WndFilter {
     }
     bool Matches(Control* c, int offX, int offY) override {
         if ((c->wantedInputBits & wantedInputMask) != 0) {
-            Gdiplus::Rect r = Gdiplus::Rect(offX, offY, c->pos.Width, c->pos.Height);
+            Rect r = Rect(offX, offY, c->pos.dx, c->pos.dy);
             return r.Contains(x, y);
         }
         return false;
@@ -115,9 +115,9 @@ void SetDebugPaint(bool debug);
 bool IsDebugPaint();
 size_t CollectWindowsAt(Control* wndRoot, int x, int y, u16 wantedInputMask, Vec<CtrlAndOffset>* ctrls);
 void CollectWindowsBreathFirst(Control* c, int offX, int offY, WndFilter* wndFilter, Vec<CtrlAndOffset>* ctrls);
-void RequestRepaint(Control* c, const Gdiplus::Rect* r1 = nullptr, const Gdiplus::Rect* r2 = nullptr);
+void RequestRepaint(Control* c, const Rect* r1 = nullptr, const Rect* r2 = nullptr);
 void RequestLayout(Control* c);
-void DrawBorder(Graphics* gfx, const Gdiplus::Rect r, CachedStyle* s);
+void DrawBorder(Graphics* gfx, const Rect r, CachedStyle* s);
 HwndWrapper* GetRootHwndWnd(const Control* c);
 
 } // namespace mui

@@ -49,7 +49,7 @@ class Grid : public Control {
     };
 
     struct Cell {
-        Gdiplus::Size desiredSize;
+        Size desiredSize;
         // TODO: more data
     };
 
@@ -69,8 +69,8 @@ class Grid : public Control {
 
     void RebuildCellDataIfNeeded();
     Cell* GetCell(int row, int col) const;
-    Gdiplus::Point GetCellPos(int row, int col) const;
-    Gdiplus::Rect GetCellBbox(Grid::CellData* d);
+    Point GetCellPos(int row, int col) const;
+    Rect GetCellBbox(Grid::CellData* d);
 
   public:
     Vec<CellData> els;
@@ -84,9 +84,9 @@ class Grid : public Control {
     void Paint(Graphics* gfx, int offX, int offY) override;
 
     // ILayout
-    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
-    Gdiplus::Size DesiredSize() override {
+    Size Measure(const Size availableSize) override;
+    Size DesiredSize() override {
         return desiredSize;
     }
-    void Arrange(const Gdiplus::Rect finalRect) override;
+    void Arrange(const Rect finalRect) override;
 };

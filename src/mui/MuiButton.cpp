@@ -45,7 +45,7 @@ void Button::NotifyMouseLeave() {
 // Note: it might be that for some cases button with no text should collapse
 // in size but we don't have a need for that yet
 void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
-    Gdiplus::Size prevSize = desiredSize;
+    Size prevSize = desiredSize;
 
     desiredSize = GetBorderAndPaddingSize(cachedStyle);
     Graphics* gfx = AllocGraphicsForMeasureText();
@@ -76,8 +76,8 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
             }
         }
     }
-    desiredSize.Width += textDx;
-    desiredSize.Height += CeilI(fontDy);
+    desiredSize.dx += textDx;
+    desiredSize.dy += CeilI(fontDy);
     FreeGraphicsForMeasureText(gfx);
 
     if (!prevSize.Equals(desiredSize)) {
@@ -92,7 +92,7 @@ void Button::SetText(const WCHAR* s) {
     RecalculateSize(true);
 }
 
-Gdiplus::Size Button::Measure(const Gdiplus::Size availableSize) {
+Size Button::Measure(const Size availableSize) {
     UNUSED(availableSize);
     // desiredSize is calculated when we change the
     // text, font or other attributes that influence
@@ -146,18 +146,18 @@ void Button::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedStyle* s = cachedStyle;
 
-    Gdiplus::RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
+    Gdiplus::RectF bbox((float)offX, (float)offY, (float)pos.dx, (float)pos.dy);
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
-    Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
+    Rect r(offX, offY, pos.dx, pos.dy);
     DrawBorder(gfx, r, s);
     if (str::IsEmpty(text)) {
         return;
     }
 
     Padding pad = s->padding;
-    int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, s->textAlign);
+    int alignedOffX = AlignedOffset(pos.dx - pad.left - pad.right, textDx, s->textAlign);
     int x = offX + alignedOffX + pad.left + (int)s->borderWidth.left;
     int y = offY + pad.top + (int)s->borderWidth.top;
     Brush* brColor = BrushFromColorData(s->color, bbox); // restrict bbox to just the text?
@@ -212,7 +212,7 @@ void ButtonVector::SetGraphicsPath(GraphicsPath* gp) {
 
 // TODO: the position still seems a bit off wrt. padding
 void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
-    Gdiplus::Size prevSize = desiredSize;
+    Size prevSize = desiredSize;
 
     CachedStyle* s = cachedStyle;
     desiredSize = GetBorderAndPaddingSize(s);
@@ -229,8 +229,8 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
         pen.SetAlignment(PenAlignmentInset);
         graphicsPath->GetBounds(&bbox, nullptr, &pen);
     }
-    desiredSize.Width += bbox.Width;
-    desiredSize.Height += bbox.Height;
+    desiredSize.dx += bbox.Width;
+    desiredSize.dy += bbox.Height;
 
     if (!prevSize.Equals(desiredSize)) {
         RequestLayout(this);
@@ -239,7 +239,7 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
     }
 }
 
-Gdiplus::Size ButtonVector::Measure(const Gdiplus::Size availableSize) {
+Size ButtonVector::Measure(const Size availableSize) {
     UNUSED(availableSize);
     // do nothing: calculated in RecalculateSize()
     return desiredSize;
@@ -250,11 +250,11 @@ void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
 
     CachedStyle* s = cachedStyle;
 
-    Gdiplus::RectF bbox((float)offX, (float)offY, (float)pos.Width, (float)pos.Height);
+    Gdiplus::RectF bbox((float)offX, (float)offY, (float)pos.dx, (float)pos.dy);
     Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
-    Gdiplus::Rect r(offX, offY, pos.Width, pos.Height);
+    Rect r(offX, offY, pos.dx, pos.dy);
     DrawBorder(gfx, r, s);
     if (!graphicsPath) {
         return;
@@ -277,9 +277,9 @@ void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
     // and desired vertical/horizontal alignment.
     // Note: alignment is calculated against the size after substracting
     // ncSize is the size of the non-client parts i.e. border and padding, on both sides
-    Gdiplus::Size ncSize = GetBorderAndPaddingSize(s);
-    int elOffY = s->vertAlign.CalcOffset(gpBbox.Height, pos.Height - ncSize.Height);
-    int elOffX = s->horizAlign.CalcOffset(gpBbox.Width, pos.Width - ncSize.Width);
+    Size ncSize = GetBorderAndPaddingSize(s);
+    int elOffY = s->vertAlign.CalcOffset(gpBbox.Height, pos.dy - ncSize.dy);
+    int elOffX = s->horizAlign.CalcOffset(gpBbox.Width, pos.dx - ncSize.dx);
 
     int x = offX + elOffX + s->padding.left + (int)s->borderWidth.left + gpBbox.X;
     int y = offY + elOffY + s->padding.top + (int)s->borderWidth.top + gpBbox.Y;

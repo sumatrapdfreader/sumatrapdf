@@ -46,6 +46,10 @@ bool Size::IsEmpty() const {
     return dx == 0 || dy == 0;
 }
 
+bool Size::Equals(const Size& other) const {
+    return this->dx == other.dx && this->dy == other.dy;
+}
+
 bool Size::operator==(const Size& other) const {
     return this->dx == other.dx && this->dy == other.dy;
 }
@@ -123,20 +127,24 @@ bool Rect::IsEmpty() const {
     return dx == 0 || dy == 0;
 }
 
-bool Rect::Contains(Point pt) const {
-    if (pt.x < this->x) {
+bool Rect::Contains(int x, int y) const {
+    if (x < this->x) {
         return false;
     }
-    if (pt.x > this->x + this->dx) {
+    if (x > this->x + this->dx) {
         return false;
     }
-    if (pt.y < this->y) {
+    if (y < this->y) {
         return false;
     }
-    if (pt.y > this->y + this->dy) {
+    if (y > this->y + this->dy) {
         return false;
     }
     return true;
+}
+
+bool Rect::Contains(Point pt) const {
+    return Contains(pt.x, pt.y);
 }
 
 /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
@@ -201,9 +209,14 @@ Rect Rect::FromRECT(const RECT& rect) {
     return FromXY(rect.left, rect.top, rect.right, rect.bottom);
 }
 
+bool Rect::Equals(const Rect& other) const {
+    return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
+}
+
 bool Rect::operator==(const Rect& other) const {
     return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
 }
+
 bool Rect::operator!=(const Rect& other) const {
     return !this->operator==(other);
 }
@@ -365,6 +378,10 @@ PointFl ToPointFl(const Point p) {
     return {(float)p.x, (float)p.y};
 }
 
+Gdiplus::Point ToGdipPoint(const Point p) {
+    return Gdiplus::Point(p.x, p.y);
+}
+
 Point ToPoint(const PointFl p) {
     return Point{(int)p.x, (int)p.y};
 }
@@ -389,6 +406,10 @@ Size ToSize(const SizeFl s) {
 
 RectFl ToRectFl(const Rect r) {
     return {(float)r.x, (float)r.y, (float)r.dx, (float)r.dy};
+}
+
+RECT RECTFromRect(Gdiplus::Rect r) {
+    return {r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom()};
 }
 
 RECT ToRECT(const Rect r) {

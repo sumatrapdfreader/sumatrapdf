@@ -29,7 +29,7 @@ HwndWrapper::~HwndWrapper() {
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void HwndWrapper::SetMinSize(Gdiplus::Size s) {
+void HwndWrapper::SetMinSize(Size s) {
     evtMgr->SetMinSize(s);
 }
 
@@ -38,7 +38,7 @@ void HwndWrapper::SetMinSize(Gdiplus::Size s) {
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void HwndWrapper::SetMaxSize(Gdiplus::Size s) {
+void HwndWrapper::SetMaxSize(Size s) {
     evtMgr->SetMaxSize(s);
 }
 
@@ -49,7 +49,7 @@ void HwndWrapper::SetHwnd(HWND hwnd) {
     painter = new Painter(this);
 }
 
-Gdiplus::Size HwndWrapper::Measure(const Gdiplus::Size availableSize) {
+Size HwndWrapper::Measure(const Size availableSize) {
     if (layout) {
         return layout->Measure(availableSize);
     }
@@ -57,11 +57,11 @@ Gdiplus::Size HwndWrapper::Measure(const Gdiplus::Size availableSize) {
         ILayout* l = children.at(0);
         return l->Measure(availableSize);
     }
-    desiredSize = Gdiplus::Size();
+    desiredSize = Size();
     return desiredSize;
 }
 
-void HwndWrapper::Arrange(const Gdiplus::Rect finalRect) {
+void HwndWrapper::Arrange(const Rect finalRect) {
     if (layout) {
         // might over-write position if our layout knows about us
         layout->Arrange(finalRect);
@@ -78,31 +78,31 @@ void HwndWrapper::Arrange(const Gdiplus::Rect finalRect) {
 void HwndWrapper::TopLevelLayout() {
     CrashIf(!hwndParent);
     Rect rc = ClientRect(hwndParent);
-    Gdiplus::Size availableSize(rc.dx, rc.dy);
+    Size availableSize(rc.dx, rc.dy);
     // lf("(%3d,%3d) HwndWrapper::TopLevelLayout()", rc.dx, rc.dy);
-    Gdiplus::Size s = Measure(availableSize);
+    Size s = Measure(availableSize);
 
     if (firstLayout && sizeToFit) {
         firstLayout = false;
         desiredSize = s;
-        ResizeHwndToClientArea(hwndParent, s.Width, s.Height, false);
+        ResizeHwndToClientArea(hwndParent, s.dx, s.dy, false);
         layoutRequested = false;
         return;
     }
 
     desiredSize = availableSize;
-    Gdiplus::Rect r(0, 0, availableSize.Width, availableSize.Height);
+    Rect r(0, 0, availableSize.dx, availableSize.dy);
     SetPosition(r);
     if (centerContent) {
-        int n = availableSize.Width - s.Width;
+        int n = availableSize.dx - s.dx;
         if (n > 0) {
-            r.X = n / 2;
-            r.Width = s.Width;
+            r.x = n / 2;
+            r.dx = s.dx;
         }
-        n = availableSize.Height - s.Height;
+        n = availableSize.dy - s.dy;
         if (n > 0) {
-            r.Y = n / 2;
-            r.Height = s.Height;
+            r.y = n / 2;
+            r.dy = s.dy;
         }
     }
     Arrange(r);

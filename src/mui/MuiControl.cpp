@@ -61,7 +61,7 @@ Control::Control(Control* newParent) {
     cachedStyle = nullptr;
     namedEventClick = nullptr;
     SetStyle(nullptr);
-    pos = Gdiplus::Rect();
+    pos = Rect();
     if (newParent) {
         SetParent(newParent);
     }
@@ -89,8 +89,8 @@ void Control::NotifyMouseEnter() {
     int x = 0, y = 0;
     MapMyToRootPos(x, y);
     RECT pos = {x, y, 0, 0};
-    pos.right = x + this->pos.Width;
-    pos.bottom = y + this->pos.Height;
+    pos.right = x + this->pos.dx;
+    pos.bottom = y + this->pos.dy;
     CreateInfotipForLink(hwndParent, toolTip, pos);
 }
 
@@ -164,7 +164,7 @@ void Control::AddChild(Control* c1, Control* c2, Control* c3) {
     }
 }
 
-Gdiplus::Size Control::Measure(const Gdiplus::Size availableSize) {
+Size Control::Measure(const Size availableSize) {
     if (layout) {
         return layout->Measure(availableSize);
     }
@@ -172,21 +172,21 @@ Gdiplus::Size Control::Measure(const Gdiplus::Size availableSize) {
         ILayout* l = children.at(0);
         return l->Measure(availableSize);
     }
-    desiredSize = Gdiplus::Size();
+    desiredSize = Size();
     return desiredSize;
 }
 
-Gdiplus::Size Control::DesiredSize() {
+Size Control::DesiredSize() {
     return desiredSize;
 }
 
-void Control::MeasureChildren(Gdiplus::Size availableSize) const {
+void Control::MeasureChildren(Size availableSize) const {
     for (size_t i = 0; i < GetChildCount(); i++) {
         GetChild(i)->Measure(availableSize);
     }
 }
 
-void Control::Arrange(const Gdiplus::Rect finalRect) {
+void Control::Arrange(const Rect finalRect) {
     SetPosition(finalRect);
     if (layout) {
         // might over-write position if our layout knows about us
@@ -219,18 +219,18 @@ void Control::Hide() {
     RequestLayout(this);
 }
 
-void Control::SetPosition(const Gdiplus::Rect& p) {
+void Control::SetPosition(const Rect p) {
     if (p.Equals(pos)) {
         return; // perf optimization
     }
-    bool sizeChanged = (p.Width != pos.Width) || (p.Height != pos.Height);
+    bool sizeChanged = (p.dx != pos.dx) || (p.dy != pos.dy);
     // when changing position we need to invalidate both
     // before and after position
     // TODO: not sure why I need this, but without it there
     // are drawing artifacts
-    Gdiplus::Rect p1(p);
+    Rect p1(p);
     p1.Inflate(1, 1);
-    Gdiplus::Rect p2(pos);
+    Rect p2(pos);
     p2.Inflate(1, 1);
     RequestRepaint(this, &p1, &p2);
     pos = p;
@@ -238,20 +238,20 @@ void Control::SetPosition(const Gdiplus::Rect& p) {
         return;
     }
     HwndWrapper* hwnd = GetRootHwndWnd(this);
-    hwnd->evtMgr->NotifySizeChanged(this, p.Width, p.Height);
+    hwnd->evtMgr->NotifySizeChanged(this, p.dx, p.dy);
 }
 
 void Control::MapMyToRootPos(int& x, int& y) const {
     // calculate the offset of window w within its root window
-    x += pos.X;
-    y += pos.Y;
+    x += pos.x;
+    y += pos.y;
     const Control* c = this;
     if (c->parent) {
         c = c->parent;
     }
     while (c && !c->hwndParent) {
-        x += c->pos.X;
-        y += c->pos.Y;
+        x += c->pos.x;
+        y += c->pos.y;
         c = c->parent;
     }
 }
@@ -259,13 +259,13 @@ void Control::MapMyToRootPos(int& x, int& y) const {
 // convert position (x,y) in coordinates of root window
 // to position in this window's coordinates
 void Control::MapRootToMyPos(int& x, int& y) const {
-    int offX = pos.X;
-    int offY = pos.Y;
+    int offX = pos.x;
+    int offY = pos.y;
     const Control* c = this;
     while (c->parent) {
         c = c->parent;
-        offX += c->pos.X;
-        offY += c->pos.Y;
+        offX += c->pos.x;
+        offY += c->pos.y;
     }
     x -= offX;
     y -= offY;

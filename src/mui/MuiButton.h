@@ -20,7 +20,7 @@ class Button : public Control {
 
     void RecalculateSize(bool repaintIfSizeDidntChange);
 
-    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    Size Measure(const Size availableSize) override;
     void Paint(Graphics* gfx, int offX, int offY) override;
 
     void NotifyMouseEnter() override;
@@ -54,7 +54,7 @@ class ButtonVector : public Control {
 
     void RecalculateSize(bool repaintIfSizeDidntChange);
 
-    Gdiplus::Size Measure(const Gdiplus::Size availableSize) override;
+    Size Measure(const Size availableSize) override;
     void Paint(Graphics* gfx, int offX, int offY) override;
 
     void NotifyMouseEnter() override;
