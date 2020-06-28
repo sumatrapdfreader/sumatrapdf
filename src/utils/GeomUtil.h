@@ -432,11 +432,6 @@ struct RectFl {
     }
 
 #ifdef _WIN32
-    RECT ToRECT() const {
-        Rect rectI(this->ToInt());
-        return {rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy};
-    }
-
     static RectFl FromRECT(const RECT& rect) {
         return FromXY((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom);
     }
@@ -478,4 +473,8 @@ inline SIZE ToSIZE(Size s) {
 
 inline RectFl ToRectFl(const Rect& r) {
     return {(float)r.x, (float)r.y, (float)r.dx, (float)r.dy};
+}
+
+inline RECT ToRECT(const RectFl r) {
+    return {(int)r.x, (int)r.y, (int)(r.x + r.dx), (int)(r.y + r.dy)};
 }
