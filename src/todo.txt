@@ -64,11 +64,8 @@ Fixes:
 std::span<u8> and other small refactoring:
 - GetCallstacks
 - HandleTealDocTag
-- ParseComicInfoXml
-- HtmlMoniker::SetHtml()
 - EngineImageDir::LoadImageDir use DirIter
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
-- PrettyPrintHtml
 ------
 
 possible refactorings:

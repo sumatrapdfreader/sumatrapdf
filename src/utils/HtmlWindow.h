@@ -64,7 +64,7 @@ class HtmlWindow {
     void SubclassHwnd();
     void UnsubclassHwnd();
     void SetScrollbarToAuto();
-    void SetHtmlReal(const char* s, size_t len = -1);
+    void SetHtmlReal(std::span<u8>);
     void FreeHtmlSetInProgressData();
 
   public:
@@ -74,7 +74,7 @@ class HtmlWindow {
     void SetVisible(bool visible);
     void NavigateToUrl(const WCHAR* url);
     void NavigateToDataUrl(const WCHAR* url);
-    void SetHtml(const char* s, size_t len = -1, const WCHAR* url = nullptr);
+    void SetHtml(std::span<u8>, const WCHAR* url = nullptr);
     void GoBack();
     void GoForward();
     void PrintCurrentPage(bool showUI);

@@ -119,11 +119,8 @@ static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
 
     std::span<u8> htmlData = mb->GetHtmlData();
 
-    size_t htmlLen = htmlData.size();
-    const char* html = (const char*)htmlData.data();
-    size_t ppHtmlLen = 0;
-    char* ppHtml = PrettyPrintHtml(html, htmlLen, ppHtmlLen);
-    file::WriteFile(outFile.Get(), {(u8*)ppHtml, ppHtmlLen});
+    std::span<u8> ppHtml = PrettyPrintHtml(htmlData);
+    file::WriteFile(outFile.Get(), ppHtml);
 
     outFile.Set(str::Join(filePathBase, L".html"));
     file::WriteFile(outFile.Get(), htmlData);

@@ -1266,7 +1266,7 @@ class HtmlMoniker : public IMoniker {
     HtmlMoniker();
     virtual ~HtmlMoniker();
 
-    HRESULT SetHtml(const char* s, size_t len);
+    HRESULT SetHtml(std::span<u8>);
     HRESULT SetBaseUrl(const WCHAR* baseUrl);
 
   public:
@@ -1392,13 +1392,13 @@ HtmlMoniker::~HtmlMoniker() {
     free(baseUrl);
 }
 
-HRESULT HtmlMoniker::SetHtml(const char* s, size_t len) {
+HRESULT HtmlMoniker::SetHtml(std::span<u8> d) {
     free(htmlData);
-    htmlData = str::DupN(s, len);
+    htmlData = str::DupN(d);
     if (htmlStream) {
         htmlStream->Release();
     }
-    htmlStream = CreateStreamFromData({(u8*)htmlData, len});
+    htmlStream = CreateStreamFromData({(u8*)htmlData, d.size()});
     return S_OK;
 }
 
@@ -1777,12 +1777,9 @@ void HtmlWindow::NavigateToAboutBlank() {
     NavigateToUrl(L"about:blank");
 }
 
-void HtmlWindow::SetHtml(const char* s, size_t len, const WCHAR* url) {
+void HtmlWindow::SetHtml(std::span<u8> d, const WCHAR* url) {
     FreeHtmlSetInProgressData();
-    if (len == (size_t)-1) {
-        len = str::Len(s);
-    }
-    htmlSetInProgress = str::DupN(s, len);
+    htmlSetInProgress = str::DupN(d);
     htmlSetInProgressUrl = str::Dup(url);
     NavigateToAboutBlank();
     // the real work will happen in OnDocumentComplete()
@@ -1794,16 +1791,12 @@ void HtmlWindow::SetHtml(const char* s, size_t len, const WCHAR* url) {
 // TODO: IHtmlDocument2->write() seems like a simpler method
 // http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla#BUFFER
 // https://github.com/ReneNyffenegger/development_misc/blob/master/windows/mshtml/HTMLWindow.cpp#L143
-void HtmlWindow::SetHtmlReal(const char* s, size_t len) {
-    if (-1 == len) {
-        len = str::Len(s);
-    }
-
+void HtmlWindow::SetHtmlReal(std::span<u8> d) {
     if (htmlContent) {
         htmlContent->Release();
     }
     htmlContent = new HtmlMoniker();
-    htmlContent->SetHtml(s, len);
+    htmlContent->SetHtml(d);
     AutoFreeWstr baseUrl(str::Format(HW_PROTO_PREFIX L"://%d/", windowId));
     htmlContent->SetBaseUrl(baseUrl);
 
@@ -1936,7 +1929,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR* url) {
         if (htmlSetInProgress != nullptr) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
             // which we should ignore?
-            SetHtmlReal(htmlSetInProgress);
+            SetHtmlReal(str::ToSpan(htmlSetInProgress));
             if (htmlWinCb) {
                 if (htmlSetInProgressUrl) {
                     htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
