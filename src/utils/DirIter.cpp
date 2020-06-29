@@ -60,14 +60,12 @@ static bool IsRegularFile(DWORD fileAttr) {
     return true;
 }
 
-#if 0
-static bool IsDirectory(DWORD fileAttr) {
+bool IsDirectory(DWORD fileAttr) {
     if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
         return true;
     }
     return false;
 }
-#endif
 
 // "." and ".." are special
 static bool IsSpecialDir(const WCHAR* s) {

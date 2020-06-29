@@ -35,11 +35,6 @@ Annotations:
 
 ------
 
-Website: add way to share on twitter, facebook, like on AlternativeTo, Slant, Capterra,
-like https://dynalist.io/features/full ("Spread The Word")
-
-------
-
 A system to trigger re-layout when e.g. a button text changes.
 Add a way to register function to be called for a given hwnd.
 WindowBaseLayout() registers for its hwnd and calls Relayout().
@@ -62,8 +57,9 @@ Fixes:
 ------
 
 small refactorings:
-- EngineImageDir::LoadImageDir use DirIter
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
+- use DirIter instead of FindFirstFile in Installer.cpp
+- use DirIter instead of FindFirstFile in FileThumbnails.cpp
 ------
 
 possible refactorings:

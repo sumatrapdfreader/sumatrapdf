@@ -4,3 +4,5 @@ A daily log of changes and commentary. An experiment of sorts.
 
 - adding comments to Commands.h
 - website: add 'Spread the word' section
+- refactor: use DirIter in EngineImageDir::LoadImageDir()
+

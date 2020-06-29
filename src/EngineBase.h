@@ -433,7 +433,7 @@ class EngineBase {
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
 
-  protected:
+    // protected:
     void SetFileName(const WCHAR* s);
 };
 

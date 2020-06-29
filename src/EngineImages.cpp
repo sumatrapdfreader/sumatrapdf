@@ -13,6 +13,7 @@
 #include "utils/JsonParser.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
+#include "utils/DirIter.h"
 #include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
@@ -119,7 +120,7 @@ class EngineImages : public EngineBase {
         return page != nullptr;
     }
 
-  protected:
+    // protected:
     ScopedComPtr<IStream> fileStream;
 
     CRITICAL_SECTION cacheAccess;
@@ -705,8 +706,7 @@ class EngineImageDir : public EngineImages {
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
-  protected:
-    bool LoadImageDir(const WCHAR* dirName);
+    // protected:
 
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectFl LoadMediabox(int pageNo) override;
@@ -715,41 +715,31 @@ class EngineImageDir : public EngineImages {
     TocTree* tocTree = nullptr;
 };
 
-bool EngineImageDir::LoadImageDir(const WCHAR* dirName) {
-    SetFileName(dirName);
+static bool LoadImageDir(EngineImageDir* e, const WCHAR* dir) {
+    e->SetFileName(dir);
 
-    AutoFreeWstr pattern(path::Join(dirName, L"*"));
-
-    // TODO: use DirIter?
-    WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFile(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
-        return false;
-    }
-
-    do {
-        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            Kind kind = GuessFileTypeFromName(fdata.cFileName);
-            if (IsImageEngineSupportedFileType(kind)) {
-                pageFileNames.Append(path::Join(dirName, fdata.cFileName));
-            }
+    DirIter di(dir, false);
+    for (const WCHAR* path = di.First(); path; path = di.Next()) {
+        Kind kind = GuessFileTypeFromName(path);
+        if (IsImageEngineSupportedFileType(kind)) {
+            WCHAR* pathCopy = str::Dup(path);
+            e->pageFileNames.Append(pathCopy);
         }
-    } while (FindNextFile(hfind, &fdata));
-    FindClose(hfind);
+    }
 
-    if (pageFileNames.size() == 0) {
+    if (e->pageFileNames.size() == 0) {
         return false;
     }
-    pageFileNames.SortNatural();
+    e->pageFileNames.SortNatural();
 
-    mediaboxes.AppendBlanks(pageFileNames.size());
-    pageCount = (int)mediaboxes.size();
+    e->mediaboxes.AppendBlanks(e->pageFileNames.size());
+    e->pageCount = (int)e->mediaboxes.size();
 
     // TODO: better handle the case where images have different resolutions
-    ImagePage* page = GetPage(1);
+    ImagePage* page = e->GetPage(1);
     if (page) {
-        fileDPI = page->bmp->GetHorizontalResolution();
-        DropPage(page, false);
+        e->fileDPI = page->bmp->GetHorizontalResolution();
+        e->DropPage(page, false);
     }
     return true;
 }
@@ -759,8 +749,10 @@ WCHAR* EngineImageDir::GetPageLabel(int pageNo) const {
         return EngineBase::GetPageLabel(pageNo);
     }
 
-    const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(pageNo - 1));
-    return str::DupN(fileName, path::GetExtNoFree(fileName) - fileName);
+    const WCHAR* path = pageFileNames.at(pageNo - 1);
+    const WCHAR* fileName = path::GetBaseNameNoFree(path);
+    size_t n = path::GetExtNoFree(fileName) - fileName;
+    return str::DupN(fileName, n);
 }
 
 int EngineImageDir::GetPageByLabel(const WCHAR* label) const {
@@ -850,7 +842,7 @@ bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnno
 EngineBase* EngineImageDir::CreateFromFile(const WCHAR* fileName) {
     CrashIf(!dir::Exists(fileName));
     EngineImageDir* engine = new EngineImageDir();
-    if (!engine->LoadImageDir(fileName)) {
+    if (!LoadImageDir(engine, fileName)) {
         delete engine;
         return nullptr;
     }
