@@ -1,6 +1,11 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+/*
+COMMANDS() define commands.
+A command is represented by a unique number, defined as
+Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
+*/
 #define COMMANDS(V)                                                   \
     V(Open, "Open File...")                                           \
     V(OpenFolder, "Open Folder...")                                   \
@@ -152,6 +157,8 @@
 #define DEF_CMD(id, s) Cmd##id,
 
 enum {
+    // commands are integers sent with WM_COMMAND so start them
+    // at some number higher than 0
     CmdFirst = 200,
     CmdSeparator = CmdFirst,
     CmdSeparatorEmbed,
@@ -172,7 +179,7 @@ enum {
 
     /* range for themes. We don't have themes yet. */
     CmdThemeFirst,
-    CmdThemeLast,
+    CmdThemeLast = CmdThemeFirst + 20,
 
     CmdLast = CmdThemeLast,
 
