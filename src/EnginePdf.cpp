@@ -366,7 +366,6 @@ class EnginePdf : public EngineBase {
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation);
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
-    void MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo);
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
 
@@ -1068,6 +1067,71 @@ FzPageInfo* EnginePdf::GetFzPageInfoFast(int pageNo) {
     return pageInfo;
 }
 
+static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
+    Vec<IPageElement*>& comments = pageInfo->comments;
+
+    auto page = pageInfo->page;
+    if (!page) {
+        return;
+    }
+    auto pdfpage = pdf_page_from_fz_page(ctx, page);
+    int pageNo = pageInfo->pageNo;
+
+    pdf_annot* annot;
+    for (annot = pdf_first_annot(ctx, pdfpage); annot; annot = pdf_next_annot(ctx, annot)) {
+        auto tp = pdf_annot_type(ctx, annot);
+        const char* contents = pdf_annot_contents(ctx, annot); // don't free
+        bool isContentsEmpty = str::IsEmpty(contents);
+        const char* label = pdf_field_label(ctx, annot->obj); // don't free
+        bool isLabelEmpty = str::IsEmpty(label);
+        int flags = pdf_field_flags(ctx, annot->obj);
+
+        if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
+            dbglogf("found file attachment annotation\n");
+
+            pdf_obj* fs = pdf_dict_get(ctx, annot->obj, PDF_NAME(FS));
+            const char* attname = pdf_embedded_file_name(ctx, fs);
+            fz_rect rect = pdf_annot_rect(ctx, annot);
+            if (str::IsEmpty(attname) || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
+                continue;
+            }
+
+            dbglogf("attachement: %s\n", attname);
+
+            PageElement* el = new PageElement();
+            el->kind_ = kindPageElementDest;
+            el->pageNo = pageNo;
+            el->rect = fz_rect_to_RectD(rect);
+            el->value = strconv::Utf8ToWstr(attname);
+            el->dest = new PageDestination();
+            el->dest->kind = kindDestinationLaunchEmbedded;
+            el->dest->value = strconv::Utf8ToWstr(attname);
+            el->dest->pageNo = pageNo;
+            comments.Append(el);
+            // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+            // for saving the attachment to a file
+            // TODO: expose /Contents in addition to the file path
+            continue;
+        }
+
+        if (!isContentsEmpty && tp != PDF_ANNOT_FREE_TEXT) {
+            auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+            comments.Append(comment);
+            continue;
+        }
+
+        if (PDF_ANNOT_WIDGET == tp && !isLabelEmpty) {
+            if (!(flags & PDF_FIELD_IS_READ_ONLY)) {
+                auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+                comments.Append(comment);
+            }
+        }
+    }
+
+    // re-order list into top-to-bottom order (i.e. last-to-first)
+    comments.Reverse();
+}
+
 // Maybe: handle FZ_ERROR_TRYLATER, which can happen when parsing from network.
 // (I don't think we read from network now).
 // Maybe: when loading fully, cache extracted text in FzPageInfo
@@ -1115,7 +1179,7 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     auto links = fz_load_links(ctx, page);
 
     pageInfo->links = FixupPageLinks(links);
-    MakePageElementCommentsFromAnnotations(pageInfo);
+    MakePageElementCommentsFromAnnotations(ctx, pageInfo);
     if (!stext) {
         return pageInfo;
     }
@@ -1316,71 +1380,6 @@ fz_matrix EnginePdf::viewctm(int pageNo, float zoom, int rotation) {
 
 fz_matrix EnginePdf::viewctm(fz_page* page, float zoom, int rotation) {
     return fz_create_view_ctm(fz_bound_page(ctx, page), zoom, rotation);
-}
-
-void EnginePdf::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
-    Vec<IPageElement*>& comments = pageInfo->comments;
-
-    auto page = pageInfo->page;
-    if (!page) {
-        return;
-    }
-    auto pdfpage = pdf_page_from_fz_page(ctx, page);
-    int pageNo = pageInfo->pageNo;
-
-    pdf_annot* annot;
-    for (annot = pdf_first_annot(ctx, pdfpage); annot; annot = pdf_next_annot(ctx, annot)) {
-        auto tp = pdf_annot_type(ctx, annot);
-        const char* contents = pdf_annot_contents(ctx, annot); // don't free
-        bool isContentsEmpty = str::IsEmpty(contents);
-        const char* label = pdf_field_label(ctx, annot->obj); // don't free
-        bool isLabelEmpty = str::IsEmpty(label);
-        int flags = pdf_field_flags(ctx, annot->obj);
-
-        if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
-            dbglogf("found file attachment annotation\n");
-
-            pdf_obj* fs = pdf_dict_get(ctx, annot->obj, PDF_NAME(FS));
-            const char* attname = pdf_embedded_file_name(ctx, fs);
-            fz_rect rect = pdf_annot_rect(ctx, annot);
-            if (str::IsEmpty(attname) || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
-                continue;
-            }
-
-            dbglogf("attachement: %s\n", attname);
-
-            PageElement* el = new PageElement();
-            el->kind_ = kindPageElementDest;
-            el->pageNo = pageNo;
-            el->rect = fz_rect_to_RectD(rect);
-            el->value = strconv::Utf8ToWstr(attname);
-            el->dest = new PageDestination();
-            el->dest->kind = kindDestinationLaunchEmbedded;
-            el->dest->value = strconv::Utf8ToWstr(attname);
-            el->dest->pageNo = pageNo;
-            comments.Append(el);
-            // TODO: need to implement https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-            // for saving the attachment to a file
-            // TODO: expose /Contents in addition to the file path
-            continue;
-        }
-
-        if (!isContentsEmpty && tp != PDF_ANNOT_FREE_TEXT) {
-            auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
-            comments.Append(comment);
-            continue;
-        }
-
-        if (PDF_ANNOT_WIDGET == tp && !isLabelEmpty) {
-            if (!(flags & PDF_FIELD_IS_READ_ONLY)) {
-                auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
-                comments.Append(comment);
-            }
-        }
-    }
-
-    // re-order list into top-to-bottom order (i.e. last-to-first)
-    comments.Reverse();
 }
 
 RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectFl rect, int imageIdx) {
