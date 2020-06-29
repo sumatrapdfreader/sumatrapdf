@@ -876,6 +876,7 @@
     <ClCompile Include="..\src\uia\TextRange.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\log.txt" />
     <None Include="..\src\todo.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -520,6 +520,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\log.txt">
+      <Filter>src</Filter>
+    </None>
     <None Include="..\src\todo.txt">
       <Filter>src</Filter>
     </None>
