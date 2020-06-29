@@ -1121,6 +1121,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     //  c:\windows\system32 is a good directory to use
     ChangeCurrDirToSystem32();
 
+    BringWindowToTop(win->hwndFrame);
+
     retCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);
     CleanUpThumbnailCache(gFileHistory);
