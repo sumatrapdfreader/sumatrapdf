@@ -140,6 +140,7 @@ static MenuDef menuDefView[] = {
     { SEP_ITEM,                             0,                        MF_REQ_FULLSCREEN },
     { _TRN("Show Book&marks\tF12"),         CmdViewBookmarks,         0 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show Scr&ollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                        MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),          CmdSelectAll,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Copy Selection\tCtrl+C"),      CmdCopySelection,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
@@ -252,6 +253,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Favorites"),              CmdFavoriteToggle,        0                 },
     { _TRN("Show &Bookmarks\tF12"),         CmdViewBookmarks,         0                 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show &Scrollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
     {"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE },
     { _TR_TODON("Edit Annotations"),        CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
@@ -579,6 +581,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
 
     win::menu::SetChecked(win->menu, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
     win::menu::SetChecked(win->menu, CmdViewShowHideToolbar, gGlobalPrefs->showToolbar);
+    win::menu::SetChecked(win->menu, CmdViewShowHideScrollbars, !gGlobalPrefs->fixedPageUI.hideScrollbars);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
@@ -767,6 +770,8 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetEnabled(popup, CmdViewBookmarks, win->ctrl->HacToc());
     win::menu::SetChecked(popup, CmdViewBookmarks, win->tocVisible);
 
+    win::menu::SetChecked(popup, CmdViewShowHideScrollbars, !gGlobalPrefs->fixedPageUI.hideScrollbars);
+
     win::menu::SetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     win::menu::SetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
 
@@ -841,6 +846,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdFavoriteToggle:
         case CmdProperties:
         case CmdViewShowHideToolbar:
+        case CmdViewShowHideScrollbars:
         case CmdSaveAnnotationsSmx:
         case CmdNewBookmarks:
             HwndSendCommand(win->hwndFrame, cmd);
