@@ -3336,6 +3336,11 @@ static void OnMenuViewShowHideToolbar() {
     }
 }
 
+static void OnMenuViewShowHideScrollbars() {
+    gGlobalPrefs->fixedPageUI.hideScrollbars = !gGlobalPrefs->fixedPageUI.hideScrollbars;
+    UpdateFixedPageScrollbarsVisibility();
+}
+
 static void OnMenuAdvancedOptions() {
     if (!HasPermission(Perm_DiskAccess) || !HasPermission(Perm_SavePreferences)) {
         return;
@@ -4472,6 +4477,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdViewShowHideToolbar:
             OnMenuViewShowHideToolbar();
+            break;
+
+        case CmdViewShowHideScrollbars:
+            OnMenuViewShowHideScrollbars();
             break;
 
         case CmdSaveAnnotationsSmx:

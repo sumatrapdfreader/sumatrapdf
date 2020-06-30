@@ -26,6 +26,7 @@
     V(ViewFullScreen, "View: FullScreen")                             \
     V(ViewPresentationMode, "View: Presentation Mode")                \
     V(ViewShowHideToolbar, "View: Toogle Toolbar")                    \
+    V(ViewShowHideScrollbars, "View: Toogle Scrollbars")              \
     V(ViewShowHideMenuBar, "View: Toggle Menu Bar")                   \
     V(CopySelection, "Copy Selection")                                \
     V(SelectAll, "Select All")                                        \
