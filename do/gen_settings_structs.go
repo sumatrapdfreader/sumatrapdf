@@ -357,6 +357,8 @@ var (
 				"suggested values: #2828aa #28aa28 #aa2828"),
 		mkField("InvertColors", Bool, false,
 			"if true, TextColor and BackgroundColor will be temporarily swapped").setInternal(),
+		mkField("HideScrollbars", Bool, false,
+			"if true, hides the scrollbars but retain ability to scroll").setInternal(),
 	}
 
 	ebookUI = []*Field{

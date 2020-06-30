@@ -408,11 +408,10 @@ static const FieldInfo gFixedPageUIFields[] = {
     {offsetof(FixedPageUI, windowMargin), Type_Compact, (intptr_t)&gWindowMarginInfo},
     {offsetof(FixedPageUI, pageSpacing), Type_Compact, (intptr_t)&gSizeInfo},
     {offsetof(FixedPageUI, gradientColors), Type_ColorArray, 0},
-    {offsetof(FixedPageUI, hideScrollbars), Type_Bool, false},
 };
 static const StructInfo gFixedPageUIInfo = {
-    sizeof(FixedPageUI), 7, gFixedPageUIFields,
-    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0HideScrollbars"};
+    sizeof(FixedPageUI), 6, gFixedPageUIFields,
+    "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors"};
 
 static const FieldInfo gEbookUIFields[] = {
     {offsetof(EbookUI, fontName), Type_String, (intptr_t)L"Georgia"},
