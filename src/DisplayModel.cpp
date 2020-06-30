@@ -184,11 +184,11 @@ Rect DisplayModel::GetViewPort() const {
     return viewPort;
 }
 
-bool DisplayModel::hScrollbarShown() const {
+bool DisplayModel::IsHScrollbarVisible() const {
     return viewPort.dx < totalViewPortSize.dx;
 }
 
-bool DisplayModel::vScrollbarShown() const {
+bool DisplayModel::IsVScrollbarVisible() const {
     return viewPort.dy < totalViewPortSize.dy;
 }
 

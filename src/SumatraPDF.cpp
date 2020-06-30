@@ -2168,7 +2168,7 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
 }
 
 // re-render the document currently displayed in this window
-void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea = FALSE) {
+void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea = false) {
     if (!win->AsFixed()) {
         return;
     }
@@ -2191,7 +2191,7 @@ static void RerenderEverything() {
 static void RerenderFixedPage() {
     for (auto* win : gWindows) {
         if (win->AsFixed()) {
-            WindowInfoRerender(win, TRUE);
+            WindowInfoRerender(win, true);
         }
     }
 }
@@ -2219,12 +2219,12 @@ void UpdateDocumentColors() {
 
 void UpdateFixedPageScrollbarsVisibility() {
     bool hideScrollbars = gGlobalPrefs->fixedPageUI.hideScrollbars;
-    bool scrollbarsVisible = FALSE; // assume no scrollbars by default
+    bool scrollbarsVisible = false; // assume no scrollbars by default
 
     // iterate through each fixed page window to check whether scrollbars are shown
     for (auto* win : gWindows) {
         if (auto* pdfWin = win->AsFixed()) {
-            scrollbarsVisible = pdfWin->vScrollbarShown() || pdfWin->hScrollbarShown();
+            scrollbarsVisible = pdfWin->IsVScrollbarVisible() || pdfWin->IsHScrollbarVisible();
             if (scrollbarsVisible) {
                 break;
             }
