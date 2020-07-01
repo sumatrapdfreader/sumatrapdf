@@ -51,6 +51,7 @@ ProgramFiles directory (maybe would fix https://github.com/sumatrapdfreader/suma
 Fixes:
 - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state from history)
 - fix memleaks on reading .vbkm file
+- https://github.com/sumatrapdfreader/sumatrapdf/issues/651 : search text box freeze after search / cloes file / open file
 - tweak PositionCloseTo() to run after creation and use actual window position
 - probably VBox and HBox layout need to account for hidden elements
 
