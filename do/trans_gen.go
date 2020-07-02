@@ -121,7 +121,7 @@ const uncompressedTmpl = `
 {{.Translations}}
 
 static const char *gTranslations[LANGS_COUNT] = {
-{{.Translations_refs}}
+{{.TranslationsRefs}}
 };
 
 const char *GetTranslationsForLang(int langIdx) { return gTranslations[langIdx]; }
@@ -136,11 +136,11 @@ const compactCTmpl = `/*
 
 namespace trans {
 
-#define LANGS_COUNT   {{.Langs_count}}
-#define STRINGS_COUNT {{.Translations_count}}
+#define LANGS_COUNT   {{.LangsCount}}
+#define STRINGS_COUNT {{.TranslationsCount}}
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
-{{.Orignal_strings}}
+{{.OriginalStrings}}
 };
 
 const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
@@ -374,7 +374,7 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 	translationsCount := len(keys)
 
 	v2 := struct {
-		OrignalStrings    string
+		OriginalStrings   string
 		LangsCount        int
 		TranslationsCount int
 		Translations      string
@@ -383,7 +383,7 @@ func genCCodeForDir(stringsDict map[string][]*Translation, keys []string, dirNam
 		Langids           string
 		Islangrtl         string
 	}{
-		OrignalStrings:    originalStrings,
+		OriginalStrings:   originalStrings,
 		LangsCount:        langsCount,
 		TranslationsCount: translationsCount,
 		Translations:      translations,
