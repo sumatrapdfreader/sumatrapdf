@@ -471,6 +471,451 @@ class WStr : public Vec<WCHAR> {
     }
 };
 
+#if 1
+class Str {
+  public:
+    Allocator* allocator{nullptr};
+    // don't crash if we run out of memory
+    bool allowFailure{false};
+    size_t len{0};
+    size_t cap{0};
+    size_t capacityHint{0};
+    char* els{nullptr};
+    char buf[16];
+
+    static constexpr size_t kPadding = 1;
+    static constexpr size_t kBufSize = sizeof(buf);
+    static constexpr size_t kElSize = sizeof(char);
+
+  protected:
+    bool EnsureCap(size_t needed) {
+        if (cap >= needed) {
+            return true;
+        }
+
+        size_t newCap = cap * 2;
+        if (needed > newCap) {
+            newCap = needed;
+        }
+        if (newCap < capacityHint) {
+            newCap = capacityHint;
+        }
+
+        size_t newElCount = newCap + kPadding;
+        if (newElCount >= SIZE_MAX / kElSize) {
+            return false;
+        }
+        if (newElCount > INT_MAX) {
+            // limitation of Vec::Find
+            return false;
+        }
+
+        size_t allocSize = newElCount * kElSize;
+        size_t newPadding = allocSize - len * kElSize;
+        char* newEls;
+        if (buf == els) {
+            newEls = (char*)Allocator::MemDup(allocator, buf, len * kElSize, newPadding);
+        } else {
+            newEls = (char*)Allocator::Realloc(allocator, els, allocSize);
+        }
+        if (!newEls) {
+            CrashAlwaysIf(!allowFailure);
+            return false;
+        }
+        els = newEls;
+        memset(els + len, 0, newPadding);
+        cap = newCap;
+        return true;
+    }
+
+    char* MakeSpaceAt(size_t idx, size_t count) {
+        size_t newLen = std::max(len, idx) + count;
+        bool ok = EnsureCap(newLen);
+        if (!ok) {
+            return nullptr;
+        }
+        char* res = &(els[idx]);
+        if (len > idx) {
+            char* src = els + idx;
+            char* dst = els + idx + count;
+            memmove(dst, src, (len - idx) * kElSize);
+        }
+        len = newLen;
+        return res;
+    }
+
+    void FreeEls() {
+        if (els != buf) {
+            Allocator::Free(allocator, els);
+        }
+    }
+
+  public:
+    // allocator is not owned by Vec and must outlive it
+    explicit Str(size_t capHint = 0, Allocator* allocator = nullptr) : capacityHint(capHint), allocator(allocator) {
+        els = buf;
+        Reset();
+    }
+
+    // ensure that a Vec never shares its els buffer with another after a clone/copy
+    // note: we don't inherit allocator as it's not needed for our use cases
+    Str(const Str& orig) {
+        els = buf;
+        Reset();
+        EnsureCap(orig.cap);
+        len = orig.len;
+        // using memcpy, as Vec only supports POD types
+        memcpy(els, orig.els, kElSize * (orig.len));
+    }
+
+    Str(std::string_view s) {
+        els = buf;
+        Reset();
+        AppendView(s);
+    }
+
+    Str& operator=(const Str& that) {
+        if (this == &that) {
+            return *this;
+        }
+        EnsureCap(that.cap);
+        // using memcpy, as Vec only supports POD types
+        memcpy(els, that.els, kElSize * (len = that.len));
+        memset(els + len, 0, kElSize * (cap - len));
+        return *this;
+    }
+
+    ~Str() {
+        FreeEls();
+    }
+
+    [[nodiscard]] char& operator[](size_t idx) const {
+        CrashIf(idx >= len);
+        return els[idx];
+    }
+
+    [[nodiscard]] char& operator[](long idx) const {
+        CrashIf(idx < 0);
+        CrashIf((size_t)idx >= len);
+        return els[idx];
+    }
+
+    [[nodiscard]] char& operator[](ULONG idx) const {
+        CrashIf((size_t)idx >= len);
+        return els[idx];
+    }
+
+    [[nodiscard]] char& operator[](int idx) const {
+        CrashIf(idx < 0);
+        CrashIf((size_t)idx >= len);
+        return els[idx];
+    }
+
+    void Reset() {
+        len = 0;
+        cap = dimof(buf) - kPadding;
+        FreeEls();
+        els = buf;
+        memset(buf, 0, kBufSize);
+    }
+
+    bool SetSize(size_t newSize) {
+        Reset();
+        return MakeSpaceAt(0, newSize);
+    }
+
+    [[nodiscard]] char& at(size_t idx) const {
+        CrashIf(idx >= len);
+        return els[idx];
+    }
+
+    [[nodiscard]] char& at(int idx) const {
+        CrashIf(idx < 0);
+        CrashIf((size_t)idx >= len);
+        return els[idx];
+    }
+
+    [[nodiscard]] size_t size() const {
+        return len;
+    }
+    [[nodiscard]] int isize() const {
+        return (int)len;
+    }
+
+    bool InsertAt(size_t idx, const char& el) {
+        char* p = MakeSpaceAt(idx, 1);
+        if (!p) {
+            return false;
+        }
+        p[0] = el;
+        return true;
+    }
+
+    bool Append(const char& el) {
+        return InsertAt(len, el);
+    }
+
+    bool Append(const char* src, size_t count = -1) {
+        if (-1 == count) {
+            count = str::Len(src);
+        }
+        if (!src || 0 == count) {
+            return true;
+        }
+        char* dst = MakeSpaceAt(len, count);
+        if (!dst) {
+            return false;
+        }
+        memcpy(dst, src, count * kElSize);
+        return true;
+    }
+
+    // appends count blank (i.e. zeroed-out) elements at the end
+    char* AppendBlanks(size_t count) {
+        return MakeSpaceAt(len, count);
+    }
+
+    void RemoveAt(size_t idx, size_t count = 1) {
+        if (len > idx + count) {
+            char* dst = els + idx;
+            char* src = els + idx + count;
+            memmove(dst, src, (len - idx - count) * kElSize);
+        }
+        len -= count;
+        memset(els + len, 0, count * kElSize);
+    }
+
+    void RemoveLast() {
+        if (len == 0) {
+            return;
+        }
+        RemoveAt(len - 1);
+    }
+
+    // This is a fast version of RemoveAt() which replaces the element we're
+    // removing with the last element, copying less memory.
+    // It can only be used if order of elements doesn't matter and elements
+    // can be copied via memcpy()
+    // TODO: could be extend to take number of elements to remove
+    void RemoveAtFast(size_t idx) {
+        CrashIf(idx >= len);
+        if (idx >= len) {
+            return;
+        }
+        char* toRemove = els + idx;
+        char* last = els + len - 1;
+        if (toRemove != last) {
+            memcpy(toRemove, last, kElSize);
+        }
+        memset(last, 0, kElSize);
+        --len;
+    }
+
+    char Pop() {
+        CrashIf(0 == len);
+        char el = at(len - 1);
+        RemoveAtFast(len - 1);
+        return el;
+    }
+
+    char PopAt(size_t idx) {
+        CrashIf(idx >= len);
+        char el = at(idx);
+        RemoveAt(idx);
+        return el;
+    }
+
+    [[nodiscard]] char& Last() const {
+        CrashIf(0 == len);
+        return at(len - 1);
+    }
+
+    // perf hack for using as a buffer: client can get accumulated data
+    // without duplicate allocation. Note: since Vec over-allocates, this
+    // is likely to use more memory than strictly necessary, but in most cases
+    // it doesn't matter
+    [[nodiscard]] char* StealData() {
+        char* res = els;
+        if (els == buf) {
+            res = (char*)Allocator::MemDup(allocator, buf, (len + kPadding) * kElSize);
+        }
+        els = buf;
+        Reset();
+        return res;
+    }
+
+    [[nodiscard]] char* LendData() const {
+        return els;
+    }
+
+    [[nodiscard]] int Find(const char& el, size_t startAt = 0) const {
+        for (size_t i = startAt; i < len; i++) {
+            if (els[i] == el) {
+                return (int)i;
+            }
+        }
+        return -1;
+    }
+
+    [[nodiscard]] bool Contains(const char& el) const {
+        return -1 != Find(el);
+    }
+
+    // returns position of removed element or -1 if not removed
+    int Remove(const char& el) {
+        int i = Find(el);
+        if (-1 == i) {
+            return -1;
+        }
+        RemoveAt(i);
+        return i;
+    }
+
+    void Sort(int (*cmpFunc)(const void* a, const void* b)) {
+        qsort(els, len, kElSize, cmpFunc);
+    }
+
+    void SortTyped(int (*cmpFunc)(const char* a, const char* b)) {
+        auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
+        qsort(els, len, kElSize, cmpFunc2);
+    }
+
+    void Reverse() {
+        for (size_t i = 0; i < len / 2; i++) {
+            std::swap(els[i], els[len - i - 1]);
+        }
+    }
+
+    char& FindEl(const std::function<bool(char&)>& check) {
+        for (size_t i = 0; i < len; i++) {
+            if (check(els[i])) {
+                return els[i];
+            }
+        }
+        return els[len]; // nullptr-sentinel
+    }
+
+    [[nodiscard]] bool IsEmpty() const {
+        return len == 0;
+    }
+
+    // TOOD: replace with IsEmpty()
+    [[nodiscard]] bool empty() const {
+        return len == 0;
+    }
+
+    std::string_view AsView() const {
+        return {Get(), size()};
+    }
+
+    std::span<u8> AsSpan() const {
+        return {(u8*)Get(), size()};
+    }
+
+    char* c_str() const {
+        return els;
+    }
+
+    std::string_view StealAsView() {
+        size_t len = size();
+        char* d = StealData();
+        return {d, len};
+    }
+
+    std::span<u8> StealAsSpan() {
+        size_t len = size();
+        char* d = StealData();
+        return {(u8*)d, len};
+    }
+
+    bool AppendChar(char c) {
+        return InsertAt(len, c);
+    }
+
+    bool Append(const u8* src, size_t size = -1) {
+        return this->Append((const char*)src, size);
+    }
+
+    bool AppendView(const std::string_view sv) {
+        if (sv.empty()) {
+            return true;
+        }
+        return this->Append(sv.data(), sv.size());
+    }
+
+    bool AppendSpan(std::span<u8> d) {
+        if (d.empty()) {
+            return true;
+        }
+        return this->Append(d.data(), d.size());
+    }
+
+    void AppendFmt(const char* fmt, ...) {
+        va_list args;
+        va_start(args, fmt);
+        char* res = FmtV(fmt, args);
+        AppendAndFree(res);
+        va_end(args);
+    }
+
+    bool AppendAndFree(const char* s) {
+        if (!s) {
+            return true;
+        }
+        bool ok = Append(s);
+        str::Free(s);
+        return ok;
+    }
+
+    // returns true if was replaced
+    // TODO: should be a stand-alone function
+    bool Replace(const char* toReplace, const char* replaceWith) {
+        // fast path: nothing to replace
+        if (!str::Find(els, toReplace)) {
+            return false;
+        }
+        char* newStr = str::Replace(els, toReplace, replaceWith);
+        Reset();
+        AppendAndFree(newStr);
+        return true;
+    }
+
+    void Set(std::string_view sv) {
+        Reset();
+        AppendView(sv);
+    }
+
+    char* Get() const {
+        return els;
+    }
+
+    char LastChar() const {
+        auto n = this->len;
+        if (n == 0) {
+            return 0;
+        }
+        return at(n - 1);
+    }
+
+    // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
+    // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
+    typedef char* iterator;
+    typedef const char* const_iterator;
+
+    iterator begin() {
+        return &(els[0]);
+    }
+    const_iterator begin() const {
+        return &(els[0]);
+    }
+    iterator end() {
+        return &(els[len]);
+    }
+    const_iterator end() const {
+        return &(els[len]);
+    }
+};
+#else
 class Str : public Vec<char> {
   public:
     explicit Str(size_t capHint = 0, Allocator* allocator = nullptr) {
@@ -585,6 +1030,7 @@ class Str : public Vec<char> {
         return at(n - 1);
     }
 };
+#endif
 
 } // namespace str
 
