@@ -85,7 +85,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(OpenWithHtmlHelp, "Open With HTML Help")                        \
     V(OpenSelectedDocument, "Open Selected Document")                 \
     V(PinSelectedDocument, "Pin Selected Document")                   \
-    V(ForgetSelectedDocument, "Forget Selected Document")             \
+    V(ForgetSelectedDocument, "Remove Selected Document From History")\
     V(TocEditorStart, "Table of contents: Start Editing")             \
     V(TocEditorAddSibling, "Add Sibling")                             \
     V(TocEditorAddChild, "Add Child")                                 \

@@ -302,7 +302,7 @@ static MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               CmdOpenSelectedDocument,   MF_REQ_DISK_ACCESS },
     { _TRN("&Pin Document"),                CmdPinSelectedDocument,    MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { SEP_ITEM,                             0,                         MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
-    { _TRN("&Remove Document"),             CmdForgetSelectedDocument, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
+    { _TRN("&Remove From History"),         CmdForgetSelectedDocument, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Start)
