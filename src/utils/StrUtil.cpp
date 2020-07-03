@@ -1099,3 +1099,415 @@ const char* IdxToStr(const char* strs, int idx) {
 }
 
 } // namespace seqstrings
+
+namespace str {
+
+bool Str::EnsureCap(size_t needed) {
+    if (cap >= needed) {
+        return true;
+    }
+
+    size_t newCap = cap * 2;
+    if (needed > newCap) {
+        newCap = needed;
+    }
+    if (newCap < capacityHint) {
+        newCap = capacityHint;
+    }
+
+    size_t newElCount = newCap + kPadding;
+    if (newElCount >= SIZE_MAX / kElSize) {
+        return false;
+    }
+    if (newElCount > INT_MAX) {
+        // limitation of Vec::Find
+        return false;
+    }
+
+    size_t allocSize = newElCount * kElSize;
+    size_t newPadding = allocSize - len * kElSize;
+    char* newEls;
+    if (buf == els) {
+        newEls = (char*)Allocator::MemDup(allocator, buf, len * kElSize, newPadding);
+    } else {
+        newEls = (char*)Allocator::Realloc(allocator, els, allocSize);
+    }
+    if (!newEls) {
+        CrashAlwaysIf(!allowFailure);
+        return false;
+    }
+    els = newEls;
+    memset(els + len, 0, newPadding);
+    cap = newCap;
+    return true;
+}
+
+char* Str::MakeSpaceAt(size_t idx, size_t count) {
+    size_t newLen = std::max(len, idx) + count;
+    bool ok = EnsureCap(newLen);
+    if (!ok) {
+        return nullptr;
+    }
+    char* res = &(els[idx]);
+    if (len > idx) {
+        char* src = els + idx;
+        char* dst = els + idx + count;
+        memmove(dst, src, (len - idx) * kElSize);
+    }
+    len = newLen;
+    return res;
+}
+
+void Str::FreeEls() {
+    if (els != buf) {
+        Allocator::Free(allocator, els);
+    }
+}
+
+// allocator is not owned by Vec and must outlive it
+Str::Str(size_t capHint, Allocator* allocator) : capacityHint(capHint), allocator(allocator) {
+    els = buf;
+    Reset();
+}
+
+// ensure that a Vec never shares its els buffer with another after a clone/copy
+// note: we don't inherit allocator as it's not needed for our use cases
+Str::Str(const Str& orig) {
+    els = buf;
+    Reset();
+    EnsureCap(orig.cap);
+    len = orig.len;
+    // using memcpy, as Vec only supports POD types
+    memcpy(els, orig.els, kElSize * (orig.len));
+}
+
+Str::Str(std::string_view s) {
+    els = buf;
+    Reset();
+    AppendView(s);
+}
+
+Str& Str::operator=(const Str& that) {
+    if (this == &that) {
+        return *this;
+    }
+    EnsureCap(that.cap);
+    // using memcpy, as Vec only supports POD types
+    memcpy(els, that.els, kElSize * (len = that.len));
+    memset(els + len, 0, kElSize * (cap - len));
+    return *this;
+}
+
+Str::~Str() {
+    FreeEls();
+}
+
+char& Str::operator[](size_t idx) const {
+    CrashIf(idx >= len);
+    return els[idx];
+}
+
+char& Str::operator[](long idx) const {
+    CrashIf(idx < 0);
+    CrashIf((size_t)idx >= len);
+    return els[idx];
+}
+
+char& Str::operator[](ULONG idx) const {
+    CrashIf((size_t)idx >= len);
+    return els[idx];
+}
+
+char& Str::operator[](int idx) const {
+    CrashIf(idx < 0);
+    CrashIf((size_t)idx >= len);
+    return els[idx];
+}
+
+void Str::Reset() {
+    len = 0;
+    cap = dimof(buf) - kPadding;
+    FreeEls();
+    els = buf;
+    memset(buf, 0, kBufSize);
+}
+
+bool Str::SetSize(size_t newSize) {
+    Reset();
+    return MakeSpaceAt(0, newSize);
+}
+
+char& Str::at(size_t idx) const {
+    CrashIf(idx >= len);
+    return els[idx];
+}
+
+char& Str::at(int idx) const {
+    CrashIf(idx < 0);
+    CrashIf((size_t)idx >= len);
+    return els[idx];
+}
+
+size_t Str::size() const {
+    return len;
+}
+int Str::isize() const {
+    return (int)len;
+}
+
+bool Str::InsertAt(size_t idx, const char& el) {
+    char* p = MakeSpaceAt(idx, 1);
+    if (!p) {
+        return false;
+    }
+    p[0] = el;
+    return true;
+}
+
+bool Str::Append(const char& el) {
+    return InsertAt(len, el);
+}
+
+bool Str::Append(const char* src, size_t count) {
+    if (-1 == count) {
+        count = str::Len(src);
+    }
+    if (!src || 0 == count) {
+        return true;
+    }
+    char* dst = MakeSpaceAt(len, count);
+    if (!dst) {
+        return false;
+    }
+    memcpy(dst, src, count * kElSize);
+    return true;
+}
+
+// appends count blank (i.e. zeroed-out) elements at the end
+char* Str::AppendBlanks(size_t count) {
+    return MakeSpaceAt(len, count);
+}
+
+void Str::RemoveAt(size_t idx, size_t count) {
+    if (len > idx + count) {
+        char* dst = els + idx;
+        char* src = els + idx + count;
+        memmove(dst, src, (len - idx - count) * kElSize);
+    }
+    len -= count;
+    memset(els + len, 0, count * kElSize);
+}
+
+void Str::RemoveLast() {
+    if (len == 0) {
+        return;
+    }
+    RemoveAt(len - 1);
+}
+
+// This is a fast version of RemoveAt() which replaces the element we're
+// removing with the last element, copying less memory.
+// It can only be used if order of elements doesn't matter and elements
+// can be copied via memcpy()
+// TODO: could be extend to take number of elements to remove
+void Str::RemoveAtFast(size_t idx) {
+    CrashIf(idx >= len);
+    if (idx >= len) {
+        return;
+    }
+    char* toRemove = els + idx;
+    char* last = els + len - 1;
+    if (toRemove != last) {
+        memcpy(toRemove, last, kElSize);
+    }
+    memset(last, 0, kElSize);
+    --len;
+}
+
+char Str::Pop() {
+    CrashIf(0 == len);
+    char el = at(len - 1);
+    RemoveAtFast(len - 1);
+    return el;
+}
+
+char Str::PopAt(size_t idx) {
+    CrashIf(idx >= len);
+    char el = at(idx);
+    RemoveAt(idx);
+    return el;
+}
+
+char& Str::Last() const {
+    CrashIf(0 == len);
+    return at(len - 1);
+}
+
+// perf hack for using as a buffer: client can get accumulated data
+// without duplicate allocation. Note: since Vec over-allocates, this
+// is likely to use more memory than strictly necessary, but in most cases
+// it doesn't matter
+char* Str::StealData() {
+    char* res = els;
+    if (els == buf) {
+        res = (char*)Allocator::MemDup(allocator, buf, (len + kPadding) * kElSize);
+    }
+    els = buf;
+    Reset();
+    return res;
+}
+
+char* Str::LendData() const {
+    return els;
+}
+
+int Str::Find(const char& el, size_t startAt) const {
+    for (size_t i = startAt; i < len; i++) {
+        if (els[i] == el) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+bool Str::Contains(const char& el) const {
+    return -1 != Find(el);
+}
+
+// returns position of removed element or -1 if not removed
+int Str::Remove(const char& el) {
+    int i = Find(el);
+    if (-1 == i) {
+        return -1;
+    }
+    RemoveAt(i);
+    return i;
+}
+
+void Str::Sort(int (*cmpFunc)(const void* a, const void* b)) {
+    qsort(els, len, kElSize, cmpFunc);
+}
+
+void Str::SortTyped(int (*cmpFunc)(const char* a, const char* b)) {
+    auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
+    qsort(els, len, kElSize, cmpFunc2);
+}
+
+void Str::Reverse() {
+    for (size_t i = 0; i < len / 2; i++) {
+        std::swap(els[i], els[len - i - 1]);
+    }
+}
+
+char& Str::FindEl(const std::function<bool(char&)>& check) {
+    for (size_t i = 0; i < len; i++) {
+        if (check(els[i])) {
+            return els[i];
+        }
+    }
+    return els[len]; // nullptr-sentinel
+}
+
+bool Str::IsEmpty() const {
+    return len == 0;
+}
+
+// TOOD: replace with IsEmpty()
+bool Str::empty() const {
+    return len == 0;
+}
+
+std::string_view Str::AsView() const {
+    return {Get(), size()};
+}
+
+std::span<u8> Str::AsSpan() const {
+    return {(u8*)Get(), size()};
+}
+
+char* Str::c_str() const {
+    return els;
+}
+
+std::string_view Str::StealAsView() {
+    size_t len = size();
+    char* d = StealData();
+    return {d, len};
+}
+
+std::span<u8> Str::StealAsSpan() {
+    size_t len = size();
+    char* d = StealData();
+    return {(u8*)d, len};
+}
+
+bool Str::AppendChar(char c) {
+    return InsertAt(len, c);
+}
+
+bool Str::Append(const u8* src, size_t size) {
+    return this->Append((const char*)src, size);
+}
+
+bool Str::AppendView(const std::string_view sv) {
+    if (sv.empty()) {
+        return true;
+    }
+    return this->Append(sv.data(), sv.size());
+}
+
+bool Str::AppendSpan(std::span<u8> d) {
+    if (d.empty()) {
+        return true;
+    }
+    return this->Append(d.data(), d.size());
+}
+
+void Str::AppendFmt(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char* res = FmtV(fmt, args);
+    AppendAndFree(res);
+    va_end(args);
+}
+
+bool Str::AppendAndFree(const char* s) {
+    if (!s) {
+        return true;
+    }
+    bool ok = Append(s, str::Len(s));
+    str::Free(s);
+    return ok;
+}
+
+// returns true if was replaced
+// TODO: should be a stand-alone function
+bool Str::Replace(const char* toReplace, const char* replaceWith) {
+    // fast path: nothing to replace
+    if (!str::Find(els, toReplace)) {
+        return false;
+    }
+    char* newStr = str::Replace(els, toReplace, replaceWith);
+    Reset();
+    AppendAndFree(newStr);
+    return true;
+}
+
+void Str::Set(std::string_view sv) {
+    Reset();
+    AppendView(sv);
+}
+
+char* Str::Get() const {
+    return els;
+}
+
+char Str::LastChar() const {
+    auto n = this->len;
+    if (n == 0) {
+        return 0;
+    }
+    return at(n - 1);
+}
+
+} // namespace str

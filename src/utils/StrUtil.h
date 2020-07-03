@@ -182,3 +182,94 @@ const WCHAR* IdxToStr(const WCHAR* strs, int idx);
 
 #define _MemToHex(ptr) str::MemToHex((const u8*)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (u8*)(ptr), sizeof(*ptr))
+
+namespace str {
+struct Str {
+    // allocator is not owned by Vec and must outlive it
+    Allocator* allocator{nullptr};
+    // don't crash if we run out of memory
+    bool allowFailure{false};
+    size_t len{0};
+    size_t cap{0};
+    size_t capacityHint{0};
+    char* els{nullptr};
+    char buf[32];
+
+    static constexpr size_t kPadding = 1;
+    static constexpr size_t kBufSize = sizeof(buf);
+    static constexpr size_t kElSize = sizeof(char);
+
+    bool EnsureCap(size_t needed);
+    char* MakeSpaceAt(size_t idx, size_t count);
+    void FreeEls();
+    explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
+    Str(const Str& orig);
+    Str(std::string_view s);
+    Str& operator=(const Str& that);
+    ~Str();
+    [[nodiscard]] char& operator[](size_t idx) const;
+    [[nodiscard]] char& operator[](long idx) const;
+    [[nodiscard]] char& operator[](ULONG idx) const;
+    [[nodiscard]] char& operator[](int idx) const;
+    void Reset();
+    bool SetSize(size_t newSize);
+    [[nodiscard]] char& at(size_t idx) const;
+    [[nodiscard]] char& at(int idx) const;
+    [[nodiscard]] size_t size() const;
+    [[nodiscard]] int isize() const;
+    bool InsertAt(size_t idx, const char& el);
+    bool Append(const char& el);
+    bool Append(const char* src, size_t count = -1);
+    char* AppendBlanks(size_t count);
+    void RemoveAt(size_t idx, size_t count = 1);
+    void RemoveLast();
+    void RemoveAtFast(size_t idx);
+    char Pop();
+    char PopAt(size_t idx);
+    [[nodiscard]] char& Last() const;
+    [[nodiscard]] char* StealData();
+    [[nodiscard]] char* LendData() const;
+    [[nodiscard]] int Find(const char& el, size_t startAt = 0) const;
+    [[nodiscard]] bool Contains(const char& el) const;
+    int Remove(const char& el);
+    void Sort(int (*cmpFunc)(const void* a, const void* b));
+    void SortTyped(int (*cmpFunc)(const char* a, const char* b));
+    void Reverse();
+    char& FindEl(const std::function<bool(char&)>& check);
+    [[nodiscard]] bool IsEmpty() const;
+    [[nodiscard]] bool empty() const;
+    std::string_view AsView() const;
+    std::span<u8> AsSpan() const;
+    char* c_str() const;
+    std::string_view StealAsView();
+    std::span<u8> StealAsSpan();
+    bool AppendChar(char c);
+    bool Append(const u8* src, size_t size = -1);
+    bool AppendView(const std::string_view sv);
+    bool AppendSpan(std::span<u8> d);
+    void AppendFmt(const char* fmt, ...);
+    bool AppendAndFree(const char* s);
+    bool Replace(const char* toReplace, const char* replaceWith);
+    void Set(std::string_view sv);
+    char* Get() const;
+    char LastChar() const;
+
+    // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
+    // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
+    typedef char* iterator;
+    typedef const char* const_iterator;
+
+    iterator begin() {
+        return &(els[0]);
+    }
+    const_iterator begin() const {
+        return &(els[0]);
+    }
+    iterator end() {
+        return &(els[len]);
+    }
+    const_iterator end() const {
+        return &(els[len]);
+    }
+};
+} // namespace str
