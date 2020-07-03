@@ -1510,4 +1510,401 @@ char Str::LastChar() const {
     return at(n - 1);
 }
 
+// WStr2
+
+bool WStr2::EnsureCap(size_t needed) {
+    if (cap >= needed) {
+        return true;
+    }
+
+    size_t newCap = cap * 2;
+    if (needed > newCap) {
+        newCap = needed;
+    }
+    if (newCap < capacityHint) {
+        newCap = capacityHint;
+    }
+
+    size_t newElCount = newCap + kPadding;
+    if (newElCount >= SIZE_MAX / kElSize) {
+        return false;
+    }
+    if (newElCount > INT_MAX) {
+        // limitation of Vec::Find
+        return false;
+    }
+
+    size_t allocSize = newElCount * kElSize;
+    size_t newPadding = allocSize - len * kElSize;
+    WCHAR* newEls;
+    if (buf == els) {
+        newEls = (WCHAR*)Allocator::MemDup(allocator, buf, len * kElSize, newPadding);
+    } else {
+        newEls = (WCHAR*)Allocator::Realloc(allocator, els, allocSize);
+    }
+    if (!newEls) {
+        CrashAlwaysIf(!allowFailure);
+        return false;
+    }
+    els = newEls;
+    memset(els + len, 0, newPadding);
+    cap = newCap;
+    return true;
+}
+
+WCHAR* WStr2::MakeSpaceAt(size_t idx, size_t count) {
+    size_t newLen = std::max(len, idx) + count;
+    bool ok = EnsureCap(newLen);
+    if (!ok) {
+        return nullptr;
+    }
+    WCHAR* res = &(els[idx]);
+    if (len > idx) {
+        WCHAR* src = els + idx;
+        WCHAR* dst = els + idx + count;
+        memmove(dst, src, (len - idx) * kElSize);
+    }
+    len = newLen;
+    return res;
+}
+
+void WStr2::FreeEls() {
+    if (els != buf) {
+        Allocator::Free(allocator, els);
+    }
+}
+
+// allocator is not owned by Vec and must outlive it
+WStr2::WStr2(size_t capHint, Allocator* allocator) : capacityHint(capHint), allocator(allocator) {
+    els = buf;
+    Reset();
+}
+
+// ensure that a Vec never shares its els buffer with another after a clone/copy
+// note: we don't inherit allocator as it's not needed for our use cases
+WStr2::WStr2(const WStr2& orig) {
+    els = buf;
+    Reset();
+    EnsureCap(orig.cap);
+    len = orig.len;
+    // using memcpy, as Vec only supports POD types
+    memcpy(els, orig.els, kElSize * (orig.len));
+}
+
+WStr2::WStr2(std::wstring_view s) {
+    els = buf;
+    Reset();
+    AppendView(s);
+}
+
+WStr2& WStr2::operator=(const WStr2& that) {
+    if (this == &that) {
+        return *this;
+    }
+    EnsureCap(that.cap);
+    // using memcpy, as Vec only supports POD types
+    memcpy(els, that.els, kElSize * (len = that.len));
+    memset(els + len, 0, kElSize * (cap - len));
+    return *this;
+}
+
+WStr2::~WStr2() {
+    FreeEls();
+}
+
+WCHAR& WStr2::operator[](size_t idx) const {
+    CrashIf(idx >= len);
+    return els[idx];
+}
+
+WCHAR& WStr2::operator[](long idx) const {
+    CrashIf(idx < 0);
+    CrashIf((size_t)idx >= len);
+    return els[idx];
+}
+
+WCHAR& WStr2::operator[](ULONG idx) const {
+    CrashIf((size_t)idx >= len);
+    return els[idx];
+}
+
+WCHAR& WStr2::operator[](int idx) const {
+    CrashIf(idx < 0);
+    CrashIf((size_t)idx >= len);
+    return els[idx];
+}
+
+void WStr2::Reset() {
+    len = 0;
+    cap = dimof(buf) - kPadding;
+    FreeEls();
+    els = buf;
+    memset(buf, 0, kBufSize);
+}
+
+bool WStr2::SetSize(size_t newSize) {
+    Reset();
+    return MakeSpaceAt(0, newSize);
+}
+
+WCHAR& WStr2::at(size_t idx) const {
+    CrashIf(idx >= len);
+    return els[idx];
+}
+
+WCHAR& WStr2::at(int idx) const {
+    CrashIf(idx < 0);
+    CrashIf((size_t)idx >= len);
+    return els[idx];
+}
+
+size_t WStr2::size() const {
+    return len;
+}
+int WStr2::isize() const {
+    return (int)len;
+}
+
+bool WStr2::InsertAt(size_t idx, const WCHAR& el) {
+    WCHAR* p = MakeSpaceAt(idx, 1);
+    if (!p) {
+        return false;
+    }
+    p[0] = el;
+    return true;
+}
+
+bool WStr2::Append(const WCHAR& el) {
+    return InsertAt(len, el);
+}
+
+bool WStr2::Append(const WCHAR* src, size_t count) {
+    if (-1 == count) {
+        count = str::Len(src);
+    }
+    if (!src || 0 == count) {
+        return true;
+    }
+    WCHAR* dst = MakeSpaceAt(len, count);
+    if (!dst) {
+        return false;
+    }
+    memcpy(dst, src, count * kElSize);
+    return true;
+}
+
+// appends count blank (i.e. zeroed-out) elements at the end
+WCHAR* WStr2::AppendBlanks(size_t count) {
+    return MakeSpaceAt(len, count);
+}
+
+void WStr2::RemoveAt(size_t idx, size_t count) {
+    if (len > idx + count) {
+        WCHAR* dst = els + idx;
+        WCHAR* src = els + idx + count;
+        memmove(dst, src, (len - idx - count) * kElSize);
+    }
+    len -= count;
+    memset(els + len, 0, count * kElSize);
+}
+
+void WStr2::RemoveLast() {
+    if (len == 0) {
+        return;
+    }
+    RemoveAt(len - 1);
+}
+
+// This is a fast version of RemoveAt() which replaces the element we're
+// removing with the last element, copying less memory.
+// It can only be used if order of elements doesn't matter and elements
+// can be copied via memcpy()
+// TODO: could be extend to take number of elements to remove
+void WStr2::RemoveAtFast(size_t idx) {
+    CrashIf(idx >= len);
+    if (idx >= len) {
+        return;
+    }
+    WCHAR* toRemove = els + idx;
+    WCHAR* last = els + len - 1;
+    if (toRemove != last) {
+        memcpy(toRemove, last, kElSize);
+    }
+    memset(last, 0, kElSize);
+    --len;
+}
+
+WCHAR WStr2::Pop() {
+    CrashIf(0 == len);
+    WCHAR el = at(len - 1);
+    RemoveAtFast(len - 1);
+    return el;
+}
+
+WCHAR WStr2::PopAt(size_t idx) {
+    CrashIf(idx >= len);
+    WCHAR el = at(idx);
+    RemoveAt(idx);
+    return el;
+}
+
+WCHAR& WStr2::Last() const {
+    CrashIf(0 == len);
+    return at(len - 1);
+}
+
+// perf hack for using as a buffer: client can get accumulated data
+// without duplicate allocation. Note: since Vec over-allocates, this
+// is likely to use more memory than strictly necessary, but in most cases
+// it doesn't matter
+WCHAR* WStr2::StealData() {
+    WCHAR* res = els;
+    if (els == buf) {
+        res = (WCHAR*)Allocator::MemDup(allocator, buf, (len + kPadding) * kElSize);
+    }
+    els = buf;
+    Reset();
+    return res;
+}
+
+WCHAR* WStr2::LendData() const {
+    return els;
+}
+
+int WStr2::Find(const WCHAR& el, size_t startAt) const {
+    for (size_t i = startAt; i < len; i++) {
+        if (els[i] == el) {
+            return (int)i;
+        }
+    }
+    return -1;
+}
+
+bool WStr2::Contains(const WCHAR& el) const {
+    return -1 != Find(el);
+}
+
+// returns position of removed element or -1 if not removed
+int WStr2::Remove(const WCHAR& el) {
+    int i = Find(el);
+    if (-1 == i) {
+        return -1;
+    }
+    RemoveAt(i);
+    return i;
+}
+
+void WStr2::Reverse() {
+    for (size_t i = 0; i < len / 2; i++) {
+        std::swap(els[i], els[len - i - 1]);
+    }
+}
+
+WCHAR& WStr2::FindEl(const std::function<bool(WCHAR&)>& check) {
+    for (size_t i = 0; i < len; i++) {
+        if (check(els[i])) {
+            return els[i];
+        }
+    }
+    return els[len]; // nullptr-sentinel
+}
+
+bool WStr2::IsEmpty() const {
+    return len == 0;
+}
+
+// TOOD: replace with IsEmpty()
+bool WStr2::empty() const {
+    return len == 0;
+}
+
+std::wstring_view WStr2::AsView() const {
+    return {Get(), size()};
+}
+
+std::span<WCHAR> WStr2::AsSpan() const {
+    return {Get(), size()};
+}
+
+WCHAR* WStr2::c_str() const {
+    return els;
+}
+
+std::wstring_view WStr2::StealAsView() {
+    size_t len = size();
+    WCHAR* d = StealData();
+    return {d, len};
+}
+
+std::span<WCHAR> WStr2::StealAsSpan() {
+    size_t len = size();
+    WCHAR* d = StealData();
+    return {d, len};
+}
+
+bool WStr2::AppendChar(WCHAR c) {
+    return InsertAt(len, c);
+}
+
+bool WStr2::AppendView(const std::wstring_view sv) {
+    if (sv.empty()) {
+        return true;
+    }
+    return this->Append(sv.data(), sv.size());
+}
+
+bool WStr2::AppendSpan(std::span<WCHAR> d) {
+    if (d.empty()) {
+        return true;
+    }
+    return this->Append(d.data(), d.size());
+}
+
+void WStr2::AppendFmt(const WCHAR* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    WCHAR* res = FmtV(fmt, args);
+    AppendAndFree(res);
+    va_end(args);
+}
+
+bool WStr2::AppendAndFree(const WCHAR* s) {
+    if (!s) {
+        return true;
+    }
+    bool ok = Append(s, str::Len(s));
+    str::Free(s);
+    return ok;
+}
+
+// returns true if was replaced
+// TODO: should be a stand-alone function
+bool WStr2::Replace(const WCHAR* toReplace, const WCHAR* replaceWith) {
+    // fast path: nothing to replace
+    if (!str::Find(els, toReplace)) {
+        return false;
+    }
+    WCHAR* newStr = str::Replace(els, toReplace, replaceWith);
+    Reset();
+    AppendAndFree(newStr);
+    return true;
+}
+
+void WStr2::Set(std::wstring_view sv) {
+    Reset();
+    AppendView(sv);
+}
+
+WCHAR* WStr2::Get() const {
+    return els;
+}
+
+WCHAR WStr2::LastChar() const {
+    auto n = this->len;
+    if (n == 0) {
+        return 0;
+    }
+    return at(n - 1);
+}
+
 } // namespace str

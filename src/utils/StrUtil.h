@@ -272,4 +272,91 @@ struct Str {
         return &(els[len]);
     }
 };
+
+struct WStr2 {
+    // allocator is not owned by Vec and must outlive it
+    Allocator* allocator{nullptr};
+    // don't crash if we run out of memory
+    bool allowFailure{false};
+    size_t len{0};
+    size_t cap{0};
+    size_t capacityHint{0};
+    WCHAR* els{nullptr};
+    WCHAR buf[32];
+
+    static constexpr size_t kPadding = 2;
+    static constexpr size_t kBufSize = sizeof(buf);
+    static constexpr size_t kElSize = sizeof(WCHAR);
+
+    bool EnsureCap(size_t needed);
+    WCHAR* MakeSpaceAt(size_t idx, size_t count);
+    void FreeEls();
+    explicit WStr2(size_t capHint = 0, Allocator* allocator = nullptr);
+    WStr2(const WStr2& orig);
+    WStr2(std::wstring_view s);
+    WStr2& operator=(const WStr2& that);
+    ~WStr2();
+    [[nodiscard]] WCHAR& operator[](size_t idx) const;
+    [[nodiscard]] WCHAR& operator[](long idx) const;
+    [[nodiscard]] WCHAR& operator[](ULONG idx) const;
+    [[nodiscard]] WCHAR& operator[](int idx) const;
+    void Reset();
+    bool SetSize(size_t newSize);
+    [[nodiscard]] WCHAR& at(size_t idx) const;
+    [[nodiscard]] WCHAR& at(int idx) const;
+    [[nodiscard]] size_t size() const;
+    [[nodiscard]] int isize() const;
+    bool InsertAt(size_t idx, const WCHAR& el);
+    bool Append(const WCHAR& el);
+    bool Append(const WCHAR* src, size_t count = -1);
+    WCHAR* AppendBlanks(size_t count);
+    void RemoveAt(size_t idx, size_t count = 1);
+    void RemoveLast();
+    void RemoveAtFast(size_t idx);
+    WCHAR Pop();
+    WCHAR PopAt(size_t idx);
+    [[nodiscard]] WCHAR& Last() const;
+    [[nodiscard]] WCHAR* StealData();
+    [[nodiscard]] WCHAR* LendData() const;
+    [[nodiscard]] int Find(const WCHAR& el, size_t startAt = 0) const;
+    [[nodiscard]] bool Contains(const WCHAR& el) const;
+    int Remove(const WCHAR& el);
+    void Reverse();
+    WCHAR& FindEl(const std::function<bool(WCHAR&)>& check);
+    [[nodiscard]] bool IsEmpty() const;
+    [[nodiscard]] bool empty() const;
+    std::wstring_view AsView() const;
+    std::span<WCHAR> AsSpan() const;
+    WCHAR* c_str() const;
+    std::wstring_view StealAsView();
+    std::span<WCHAR> StealAsSpan();
+    bool AppendChar(WCHAR c);
+    bool AppendSpan(std::span<WCHAR> d);
+    bool AppendView(const std::wstring_view sv);
+    void AppendFmt(const WCHAR* fmt, ...);
+    bool AppendAndFree(const WCHAR* s);
+    bool Replace(const WCHAR* toReplace, const WCHAR* replaceWith);
+    void Set(std::wstring_view sv);
+    WCHAR* Get() const;
+    WCHAR LastChar() const;
+
+    // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
+    // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
+    typedef WCHAR* iterator;
+    typedef const WCHAR* const_iterator;
+
+    iterator begin() {
+        return &(els[0]);
+    }
+    const_iterator begin() const {
+        return &(els[0]);
+    }
+    iterator end() {
+        return &(els[len]);
+    }
+    const_iterator end() const {
+        return &(els[len]);
+    }
+};
+
 } // namespace str
