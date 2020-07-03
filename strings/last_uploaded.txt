@@ -1,4 +1,5 @@
 AppTranslator strings
+%s installation not found.
 &About
 &Actual Size\tCtrl+1
 &Advanced Options...
@@ -38,7 +39,7 @@ AppTranslator strings
 &Print...\tCtrl+P
 &Remember the password for this document
 &Remember these settings for each document
-&Remove Document
+&Remove From History
 &Save As...
 &Save As...\tCtrl+S
 &Settings
@@ -55,14 +56,20 @@ AppTranslator strings
 (page %s)
 About SumatraPDF
 Add Favorite
+Add PDF as a child
+Add PDF as a sibling
+Add child
 Add page %s to favorites
 Add page %s to favorites with (optional) name:
 Add page %s to favorites\tCtrl+B
+Add sibling
 Add to favorites
 Advanced
 All files
 All supported documents
+Annotations
 Application:
+Are you sure you want to uninstall %s?
 Are you sure you want to uninstall SumatraPDF?
 Associate with PDF files?
 Attachment: %s
@@ -79,10 +86,13 @@ Can't connect to the Internet (error %#x).
 Cancel
 Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
+Caret
 Change Language
 Check for &Updates
+Circle
 Close
 Collapse All
+Color
 Comic books
 Compatibility
 Continuous
@@ -102,9 +112,10 @@ Couldn't install PDF search filter
 Couldn't remove installation directory
 Couldn't render the page
 Couldn't uninstall PDF previewer
-Couldn't uninstall PDF search filter
+Couldn't uninstall Sumatra search filter
 Couldn't uninstall browser plugin
 Couldn't write %s to disk
+Create Annotation
 Created:
 Current file
 Cursor position:
@@ -118,13 +129,18 @@ Denied Permissions:
 DjVu documents
 Document Properties
 Download
+E&xit Fullscreen
 E&xit\tCtrl+Q
 EPUB ebooks
+Edit
+Edit Annotations
+Edit Bookmarks
 Enter password
 Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
 Expand All
+Export Bookmarks
 F&avorites
 F&orward\tAlt+Right Arrow
 F&ullscreen\tF11
@@ -139,6 +155,7 @@ Fast Web View
 Favorites
 FictionBook documents
 File %s not found
+File Attachment
 File Size:
 File:
 Fin&d...\tCtrl+F
@@ -158,13 +175,17 @@ Fonts:
 Formatting the book... %d pages
 Found text at page %s
 Found text at page %s (again)
+Free Text
 Frequently Read
 GB
 Go to page
 Hide &Options
 Hide frequently read
+Highlight
 Hint: Use the F3 key for finding again
 Image files (*.%s)
+Images
+Ink
 Install SumatraPDF
 Install SumatraPDF in &folder:
 Installation failed!
@@ -173,6 +194,7 @@ KB
 Let Windows Desktop Search &search PDF documents
 Let Windows show &previews of PDF documents
 Light
+Line
 MB
 Make SumatraPDF default application for PDF files?
 Make SumatraPDF my default PDF reader
@@ -181,6 +203,7 @@ Match Case
 Mobi documents
 Modified:
 New &window\tCtrl+N
+New Bookmarks
 New version %s is available. Download new version?
 Next Page
 No matches were found
@@ -191,6 +214,7 @@ Number of Pages:
 OK
 Open
 Open &in PDF-XChange
+Open Embedded PDF
 Open a document...
 Open in %s
 Open in &Adobe Reader
@@ -213,6 +237,8 @@ Page:
 PalmDoc documents
 Please close %s to proceed!
 Please wait - rendering...
+Poly Line
+Polygon
 Postscript documents
 Pr&esentation\tF5
 Previous Page
@@ -225,7 +251,9 @@ Printing is still in progress. Abort and start over?
 Printing page %d of %d...
 Printing problem.
 Re&name...\tF2
+Redact
 Remember &opened files
+Remove Item
 Remove from favorites
 Remove page %s from favorites
 Rename To
@@ -233,6 +261,7 @@ Rotate &Left\tCtrl+Shift+-
 Rotate &Right\tCtrl+Shift++
 Save Annotations
 Save As
+Save Embedded File...
 Save S&hortcut...\tCtrl+Shift+S
 Searching %d of %d...
 Select &All
@@ -245,16 +274,23 @@ Set inverse search command-line
 Show &Bookmarks\tF12
 Show &Favorites
 Show &Pages Continuously
+Show &Scrollbars
 Show &Toolbar\tF8
 Show Book&marks\tF12
 Show Favorites
+Show Scr&ollbars
 Show frequently read
 Show in &folder
 Show the &bookmarks sidebar when available
 Single Page
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Sort By
 Source file %s has no synchronization point
+Square
+Squiggly
+Stamp
 Start SumatraPDF
+Strike Out
 Subject:
 SumatraPDF %s Installer
 SumatraPDF %s Uninstaller
@@ -265,14 +301,20 @@ SumatraPDF has been uninstalled.
 SumatraPDF installation not found.
 SumatraPDF is your default PDF reader
 SumatraPDF should now be your default PDF reader
+Support SumatraPDF
 Synchronization file cannot be opened
+Tag (big first)
+Tag (small first)
 Tagged PDF
+Text
 Text documents
+Thank you for choosing RA-MICRO PDF!
 Thank you for choosing SumatraPDF!
 Thank you! SumatraPDF has been installed.
 The installer has been corrupted. Please download it again.\nSorry for the inconvenience!
 This document uses unsupported features (%s) and might not render properly
 Title:
+Underline
 Uninstall SumatraPDF
 Uninstallation failed
 Uninstallation in progress...

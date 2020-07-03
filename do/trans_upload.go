@@ -66,5 +66,5 @@ func uploadStringsIfChanged() {
 	uploadsecret := getTransSecret()
 	uploadStringsToServer(s, uploadsecret)
 	u.WriteFileMust(path, []byte(s))
-	logf("Don't forget to checkin strings/last_uploaded.txt")
+	logf("Don't forget to checkin strings/last_uploaded.txt\n")
 }

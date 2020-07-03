@@ -189,12 +189,12 @@ static void StartEditTocItem(HWND hwnd, TreeCtrl* treeCtrl, TocItem* ti) {
 
 // clang-format off
 static MenuDef menuDefContext[] = {
-    {_TR_TODON("Edit"),                    CmdTocEditorStart, 0},
-    {_TR_TODON("Add sibling"),             CmdTocEditorAddSibling, 0},
-    {_TR_TODON("Add child"),               CmdTocEditorAddChild, 0},
-    {_TR_TODON("Add PDF as a child"),      CmdTocEditorAddPdfChild, 0},
-    {_TR_TODON("Add PDF as a sibling"),    CmdTocEditorAddPdfSibling, 0},
-    {_TR_TODON("Remove Item"),             CmdTocEditorRemoveItem, 0},
+    {_TRN("Edit"),                    CmdTocEditorStart, 0},
+    {_TRN("Add sibling"),             CmdTocEditorAddSibling, 0},
+    {_TRN("Add child"),               CmdTocEditorAddChild, 0},
+    {_TRN("Add PDF as a child"),      CmdTocEditorAddPdfChild, 0},
+    {_TRN("Add PDF as a sibling"),    CmdTocEditorAddPdfSibling, 0},
+    {_TRN("Remove Item"),             CmdTocEditorRemoveItem, 0},
     { 0, 0, 0 },
 };
 // clang-format on

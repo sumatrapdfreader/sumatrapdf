@@ -256,7 +256,7 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Scrollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
     {"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE },
-    { _TR_TODON("Edit Annotations"),        CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
+    { _TRN("Edit Annotations"),        CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                        MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    CmdPrint,                 MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
@@ -268,31 +268,31 @@ static MenuDef menuDefContext[] = {
 
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefCreateAnnot[] = {
-    { _TR_TODON("Text"), CmdCreateAnnotText, 0 },
-    { _TR_TODON("Free Text"), CmdCreateAnnotFreeText, 0 },
-    { _TR_TODON("Stamp"), CmdCreateAnnotStamp, 0 },
-    { _TR_TODON("Caret"), CmdCreateAnnotCaret, 0 },
-    //{ _TR_TODON("Ink"), CmdCreateAnnotInk, 0 },
-    { _TR_TODON("Square"), CmdCreateAnnotSquare, 0 },
-    { _TR_TODON("Circle"), CmdCreateAnnotCircle, 0 },
-    { _TR_TODON("Line"), CmdCreateAnnotLine, 0 },
-    //{ _TR_TODON("Polygon"), CmdCreateAnnotPolygon, 0 },
-    //{ _TR_TODON("Poly Line"), CmdCreateAnnotPolyLine, 0 },
-    { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, 0 },
-    { _TR_TODON("Underline"), CmdCreateAnnotUnderline, 0 },
-    { _TR_TODON("Strike Out"), CmdCreateAnnotStrikeOut, 0 },
-    { _TR_TODON("Squiggly"), CmdCreateAnnotSquiggly, 0 },
-    { _TR_TODON("File Attachment"), CmdCreateAnnotFileAttachment, 0 },
-    { _TR_TODON("Redact"), CmdCreateAnnotRedact, 0 },
+    { _TRN("Text"), CmdCreateAnnotText, 0 },
+    { _TRN("Free Text"), CmdCreateAnnotFreeText, 0 },
+    { _TRN("Stamp"), CmdCreateAnnotStamp, 0 },
+    { _TRN("Caret"), CmdCreateAnnotCaret, 0 },
+    { _TRN("Ink"), CmdCreateAnnotInk, 0 },
+    { _TRN("Square"), CmdCreateAnnotSquare, 0 },
+    { _TRN("Circle"), CmdCreateAnnotCircle, 0 },
+    { _TRN("Line"), CmdCreateAnnotLine, 0 },
+    { _TRN("Polygon"), CmdCreateAnnotPolygon, 0 },
+    { _TRN("Poly Line"), CmdCreateAnnotPolyLine, 0 },
+    { _TRN("Highlight"), CmdCreateAnnotHighlight, 0 },
+    { _TRN("Underline"), CmdCreateAnnotUnderline, 0 },
+    { _TRN("Strike Out"), CmdCreateAnnotStrikeOut, 0 },
+    { _TRN("Squiggly"), CmdCreateAnnotSquiggly, 0 },
+    { _TRN("File Attachment"), CmdCreateAnnotFileAttachment, 0 },
+    { _TRN("Redact"), CmdCreateAnnotRedact, 0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Start)
 
 //[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefCreateAnnotRaMicro[] = {
-    { _TR_TODON("Text"), CmdCreateAnnotText, 0 },
-    { _TR_TODON("Free Text"), CmdCreateAnnotFreeText, 0 },
-    { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, 0 },
+    { _TRN("Text"), CmdCreateAnnotText, 0 },
+    { _TRN("Free Text"), CmdCreateAnnotFreeText, 0 },
+    { _TRN("Highlight"), CmdCreateAnnotHighlight, 0 },
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP Context Menu (Start)
@@ -724,7 +724,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         auto path = tab->filePath.Get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
-            win::menu::SetText(popup, CmdNewBookmarks, _TR_TODO("Edit Bookmarks"));
+            win::menu::SetText(popup, CmdNewBookmarks, _TR("Edit Bookmarks"));
         }
     }
 
@@ -736,7 +736,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         }
         HMENU popupCreateAnnot = BuildMenuFromMenuDef(mdef, CreatePopupMenu());
         uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
-        InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR_TODO("Create Annotation"));
+        InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR("Create Annotation"));
 
         // TODO: disable those if no selection
         bool isTextSelection = false;

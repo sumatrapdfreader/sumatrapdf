@@ -383,21 +383,21 @@ static MenuDef menuDefContext[] = {
     {_TRN("Expand All"),                 CmdExpandAll,         0 },
     {_TRN("Collapse All"),               CmdCollapseAll,       0 },
     {SEP_ITEM,                           CmdSeparatorEmbed,    MF_NO_TRANSLATE},
-    {_TR_TODON("Open Embedded PDF"),     CmdOpenEmbeddedPDF,      0 },
-    {_TR_TODON("Save Embedded File..."), CmdSaveEmbeddedFile,      0 },
+    {_TRN("Open Embedded PDF"),     CmdOpenEmbeddedPDF,      0 },
+    {_TRN("Save Embedded File..."), CmdSaveEmbeddedFile,      0 },
     // note: strings cannot be "" or else items are not there
     {"add",                              CmdFavoriteAdd,            MF_NO_TRANSLATE},
     {"del",                              CmdFavoriteDel,            MF_NO_TRANSLATE},
     {SEP_ITEM,                           CmdSeparator,         MF_NO_TRANSLATE},
-    {_TR_TODON("Export Bookmarks"),      CmdExportBookmarks,   MF_NO_TRANSLATE},
-    {_TR_TODON("New Bookmarks"),         CmdNewBookmarks,      MF_NO_TRANSLATE},
+    {_TRN("Export Bookmarks"),      CmdExportBookmarks,   MF_NO_TRANSLATE},
+    {_TRN("New Bookmarks"),         CmdNewBookmarks,      MF_NO_TRANSLATE},
     { 0, 0, 0 },
 };
 
 static MenuDef menuDefSortByTag[] = {
-    {_TR_TODON("Tag (small first)"),     CmdSortTagSmallFirst, 0 },
-    {_TR_TODON("Tag (big first)"),       CmdSortTagBigFirst,   0 },
-    {_TR_TODON("Color"),                 CmdSortColor,           0 },
+    {_TRN("Tag (small first)"),     CmdSortTagSmallFirst, 0 },
+    {_TRN("Tag (big first)"),       CmdSortTagBigFirst,   0 },
+    {_TRN("Color"),                 CmdSortColor,           0 },
     { 0, 0, 0 },
 };
 // clang-format on      
@@ -647,7 +647,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     if (showBookmarksMenu) {
         HMENU popupSort = BuildMenuFromMenuDef(menuDefSortByTag, CreatePopupMenu());
         uint flags = MF_BYCOMMAND | MF_ENABLED | MF_POPUP;
-        InsertMenuW(popup, 0, flags, (UINT_PTR)popupSort, _TR_TODO("Sort By"));
+        InsertMenuW(popup, 0, flags, (UINT_PTR)popupSort, _TR("Sort By"));
 
         win::menu::SetChecked(popupSort, CmdSortTagSmallFirst, false);
         win::menu::SetChecked(popupSort, CmdSortTagBigFirst, false);
@@ -695,7 +695,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         path = win->currentTab->filePath.Get();
         if (str::EndsWithI(path, L".vbkm")) {
             // for .vbkm change wording from "New Bookmarks" => "Edit Bookmarks"
-            win::menu::SetText(popup, CmdNewBookmarks, _TR_TODO("Edit Bookmarks"));
+            win::menu::SetText(popup, CmdNewBookmarks, _TR("Edit Bookmarks"));
         }
     }
 

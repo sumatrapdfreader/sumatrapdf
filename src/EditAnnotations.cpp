@@ -1244,7 +1244,7 @@ void StartEditAnnotations(TabInfo* tab, Annotation* selectedAnnot) {
 
     mainWindow->isDialog = true;
     mainWindow->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
-    mainWindow->SetText(_TR_TODO("Annotations"));
+    mainWindow->SetText(_TR("Annotations"));
     // PositionCloseTo(w, args->hwndRelatedTo);
     // SIZE winSize = {w->initialSize.dx, w->initialSize.Height};
     // LimitWindowSizeToScreen(args->hwndRelatedTo, winSize);
