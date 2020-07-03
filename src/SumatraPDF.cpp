@@ -2231,8 +2231,7 @@ void UpdateFixedPageScrollbarsVisibility() {
         }
     }
 
-    bool rerenderRequired = (hideScrollbars && scrollbarsVisible)
-                            || (!hideScrollbars && !scrollbarsVisible);
+    bool rerenderRequired = (hideScrollbars && scrollbarsVisible) || (!hideScrollbars && !scrollbarsVisible);
     if (!rerenderRequired) {
         return;
     }

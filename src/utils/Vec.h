@@ -15,16 +15,18 @@ not useful for other types, the code is simpler if we always do it
 template <typename T>
 class Vec {
   public:
-    static const size_t PADDING = 1;
-
-    size_t len = 0;
-    size_t cap = 0;
-    size_t capacityHint = 0;
-    T* els = nullptr;
-    T buf[16];
-    Allocator* allocator = nullptr;
+    Allocator* allocator{nullptr};
     // don't crash if we run out of memory
-    bool allowFailure = false;
+    bool allowFailure{false};
+    size_t len{0};
+    size_t cap{0};
+    size_t capacityHint{0};
+    T* els{nullptr};
+    T buf[16];
+
+    static constexpr size_t kPadding = 1;
+    static constexpr size_t kBufSize = sizeof(buf);
+    static constexpr size_t kElSize = sizeof(T);
 
   protected:
     bool EnsureCap(size_t needed) {
@@ -40,8 +42,8 @@ class Vec {
             newCap = capacityHint;
         }
 
-        size_t newElCount = newCap + PADDING;
-        if (newElCount >= SIZE_MAX / sizeof(T)) {
+        size_t newElCount = newCap + kPadding;
+        if (newElCount >= SIZE_MAX / kElSize) {
             return false;
         }
         if (newElCount > INT_MAX) {
@@ -49,11 +51,11 @@ class Vec {
             return false;
         }
 
-        size_t allocSize = newElCount * sizeof(T);
-        size_t newPadding = allocSize - len * sizeof(T);
+        size_t allocSize = newElCount * kElSize;
+        size_t newPadding = allocSize - len * kElSize;
         T* newEls;
         if (buf == els) {
-            newEls = (T*)Allocator::MemDup(allocator, buf, len * sizeof(T), newPadding);
+            newEls = (T*)Allocator::MemDup(allocator, buf, len * kElSize, newPadding);
         } else {
             newEls = (T*)Allocator::Realloc(allocator, els, allocSize);
         }
@@ -77,7 +79,7 @@ class Vec {
         if (len > idx) {
             T* src = els + idx;
             T* dst = els + idx + count;
-            memmove(dst, src, (len - idx) * sizeof(T));
+            memmove(dst, src, (len - idx) * kElSize);
         }
         len = newLen;
         return res;
@@ -108,7 +110,7 @@ class Vec {
         EnsureCap(orig.cap);
         len = orig.len;
         // using memcpy, as Vec only supports POD types
-        memcpy(els, orig.els, sizeof(T) * (orig.len));
+        memcpy(els, orig.els, kElSize * (orig.len));
     }
 
     // this frees all elements and clears the array.
@@ -125,8 +127,8 @@ class Vec {
         if (this != &that) {
             EnsureCap(that.cap);
             // using memcpy, as Vec only supports POD types
-            memcpy(els, that.els, sizeof(T) * (len = that.len));
-            memset(els + len, 0, sizeof(T) * (cap - len));
+            memcpy(els, that.els, kElSize * (len = that.len));
+            memset(els + len, 0, kElSize * (cap - len));
         }
         return *this;
     }
@@ -155,10 +157,10 @@ class Vec {
 
     void Reset() {
         len = 0;
-        cap = dimof(buf) - PADDING;
+        cap = dimof(buf) - kPadding;
         FreeEls();
         els = buf;
-        memset(buf, 0, sizeof(buf));
+        memset(buf, 0, kBufSize);
     }
 
     bool SetSize(size_t newSize) {
@@ -205,7 +207,7 @@ class Vec {
         if (!dst) {
             return false;
         }
-        memcpy(dst, src, count * sizeof(T));
+        memcpy(dst, src, count * kElSize);
         return true;
     }
 
@@ -218,10 +220,10 @@ class Vec {
         if (len > idx + count) {
             T* dst = els + idx;
             T* src = els + idx + count;
-            memmove(dst, src, (len - idx - count) * sizeof(T));
+            memmove(dst, src, (len - idx - count) * kElSize);
         }
         len -= count;
-        memset(els + len, 0, count * sizeof(T));
+        memset(els + len, 0, count * kElSize);
     }
 
     void RemoveLast() {
@@ -244,9 +246,9 @@ class Vec {
         T* toRemove = els + idx;
         T* last = els + len - 1;
         if (toRemove != last) {
-            memcpy(toRemove, last, sizeof(T));
+            memcpy(toRemove, last, kElSize);
         }
-        memset(last, 0, sizeof(T));
+        memset(last, 0, kElSize);
         --len;
     }
 
@@ -276,7 +278,7 @@ class Vec {
     [[nodiscard]] T* StealData() {
         T* res = els;
         if (els == buf) {
-            res = (T*)Allocator::MemDup(allocator, buf, (len + PADDING) * sizeof(T));
+            res = (T*)Allocator::MemDup(allocator, buf, (len + kPadding) * kElSize);
         }
         els = buf;
         Reset();
@@ -311,12 +313,12 @@ class Vec {
     }
 
     void Sort(int (*cmpFunc)(const void* a, const void* b)) {
-        qsort(els, len, sizeof(T), cmpFunc);
+        qsort(els, len, kElSize, cmpFunc);
     }
 
     void SortTyped(int (*cmpFunc)(const T* a, const T* b)) {
         auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
-        qsort(els, len, sizeof(T), cmpFunc2);
+        qsort(els, len, kElSize, cmpFunc2);
     }
 
     void Reverse() {
