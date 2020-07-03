@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c9df541a78479fd269d5d859de687fce44fbefc1
+22d44dc2b9a0224b17277e2226e8728e084dc836
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2591,67 +2591,6 @@ tw:記憶每個文件的設定值(&R)
 uk:Зберегти налаштування для кожного документа
 uz:&Ushbu parametrlarni har qaysi hujjat uchun eslab qolish
 vn:Nhớ các cài đặt này cho từng tập tin
-:&Remove Document
-am:&Հեռացնել փաստաթուղթը
-ar:&إزالة مستند
-az:Sənədi &sil
-bg:&Премахни документ
-br:&Remover documento
-bs:&Ukloni dokument
-by:Вы&даліць Дакумент
-ca-xv:&Suprimeix el document
-ca:&Suprimeix el document
-cn:删除文件(&R)
-co:&Caccià u ducumentu
-cy:&Tynnu Dogfen
-cz:Odeb&rat dokument
-de:Dokument löschen
-dk:&Fjern dokument
-el:&Απόκρυψη εγγράφου
-es:Elimina&r documento
-et:&Kustuta dokument
-eu:&Kendu Agira
-fa:سند را &حذف کن
-fi:&Poista asiakirja
-fr:&Retirer le document de la liste
-ga:&Bain cáipéis
-gl:&Borrar documento
-he:הסר קובץ
-hi:दस्तावेज़ को &निकालें
-hr:&Ukloni dokument
-hu:&Eltávolítás a listából
-id:&Hapus Dokumen
-it:&Non ricordare documento
-ja:ドキュメントの削除(&R)
-ka:დოკუმენტის &წაშლა
-kr:고정 문서 제거(&R)
-ku:لابردنی بەڵگەنامە&
-lt:Pa&šalinti dokumentą
-lv:&Noņemt dokumentu
-mk:Отстрани документ
-my:&Buang dokumen
-ne:कागजात &हटाउनुहोस्
-nl:Document ve&rwijderen
-nn:&Fjern dokument
-no:&Fjern dokument
-pl:&Usuń dokument
-pt:Remover doc&umento
-ro:Înlătu&ră document
-ru:&Удалить документ
-si:ල‌ේඛනය ඉවත් කරන්න
-sk:&Odobrať dokument
-sl:Odstrani dokument
-sp-rs:Ukloni dokument
-sq:&Heq dokumentin
-sr-rs:Уклони документ
-sv:&Ta bort dokument
-ta:கோப்பை நீக்கு
-th:&ลบเอกสาร
-tr:Belgeyi &Kaldır
-tw:移除此縮圖(&R)
-uk:Видалити документ
-uz:&Hujjatni o'chirish
-vn:Gỡ tập tin xuống
 :&Save As...
 am:&Պահպանել որպես
 ar:&حفظ باسم...
@@ -6715,67 +6654,6 @@ tw:無法解除安裝 PDF 預覽器
 uk:Не вдалося видалити програму попереднього перегляду PDF
 uz:PDF ko'rish vositasini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt bộ xem truớc PDF
-:Couldn't uninstall PDF search filter
-am:Հնարավոր չեղավ հեռացնել PDF որոնման պայմանը
-ar: لا يمكن إلغاء تثبيت تصفية بحث المستندات المحمولة 
-az:PDF axtarış filtrini silmək mümkün olmadı
-bg:Не може да деинсталирате PDF филтър за търсене
-br:Não foi possível desinstalar o filtro de pesquisa para PDF
-bs:Neuspješna deinstalacija filtera za pretragu PDF-ova
-by:Немагчыма знішчыць пошукавы фільтр PDF
-ca-xv:No es pot desinstal·lar el filtre de cerca PDF
-ca:No es pot desinstal·lar el filtre de cerca PDF
-cn:无法卸载 PDF 搜索过滤器
-co:Impussibule di disinstallà u filtru di ricerca di PDF
-cy:Methu dadosod hidl chwilio PDF
-cz:Nelze odinstalovavat vyhledávací PDF filtr
-de:Konnte den PDF-Suchfilter nicht deinstallieren
-dk:Kunne ikke afinstallere PDF-søgefilter
-el:Δε μπόρεσε να γίνει απεγκατάσταση του φίλτρου αναζήτησης PDF
-es:No se pudo desinstalar el filtro de búsqueda PDF
-et:Ei suudetud eemaldada PDF otsingufiltrit
-eu:Ezinezkoa PDF bilaketa iragazkia kentzea
-fa:نمی‌توان فیلتر جستجوی PDF را پاک کرد
-fi:PDF-hakusuodattimen poistaminen epäonnistui
-fr:Impossible de désinstaller le filtre de recherche PDF
-ga:Níorbh fhéidir an scagaire cuardaigh PDF a dhíshuiteáil
-gl:Non se puido desinstalar o filtro de buscas de PDF
-he:הסרת מסנן חיפוש ל- PDF נכשלה.
-hi:पीडीऍफ़ सर्च फ़िल्टर अस्थापित नहीं हो पाया
-hr:Nemoguće deinstalirati PDF filter pretraživnja
-hu:PDF keresési szűrő eltávolítása sikertelen
-id:Gagal menghapus filter pencari PDF
-it:Impossibile disinstallare filtro ricerca PDF
-ja:PDF 検索フィルタをアンインストールできませんでした
-ka:PDF ძიების ფილტრის დეინსტალაცია ვერ მოხერხდა
-kr:PDF 검색 필터를 제거할 수 없습니다.
-ku:ناتوانرێت فرمانی گەڕانی PDF بسڕدرێتەوە
-lt:Nepavyko pašalinti PDF paieškos filtro
-lv:Nevarēja atinstalēt PDF meklēšanas filtru
-mk:Не можам да го избришам филтерот за пребарување на PDF
-my:Tidak dapat memadam penapis carian PDF
-ne:PDF खोज फिल्टर हटाउन सकिएन
-nl:Kon PDF zoek filter niet deïnstalleren
-nn:Kunne ikkje avinstallere PDF-søkjefilteret
-no:Kunne ikke avinstallere PDF søkefilter
-pl:Nie można usunąć filtru przeszukiwania PDF
-pt:Não foi possível desinstalar o filtro de procura
-ro:Nu s-a putut dezinstala filtrul de cautare PDF
-ru:Не удалось удалить фильтр поиска PDF
-si:PDF සෙවුම් පෙරහන ස්ථපනය කිරීමට නොහැකිවිය
-sk:Nie je možné odinštalovať PDF vyhľadávací filter
-sl:Ni bilo mogoče odstraniti filtra za PDF iskanje
-sp-rs:Nemoguće deinstalirati PDF filter pretrage
-sq:Nuk mund të çinstalojë kërkuesin e PDF-ve
-sr-rs:Немогућа деинсталација ПДФ филтер претраге
-sv:Kunde inte avinstallera sökfiltret för PDF:er
-ta:PDF தேடலை நீக்க முடியவில்லை
-th:ไม่สามารถถอนการติดตั้งตัวกรองการค้นหา PDF
-tr:PDF arama filtresi kaldırılamadı
-tw:無法安裝 PDF 搜索過濾器
-uk:Не вдалося видалити фільтр пошуку для PDF
-uz:PDF qidirish filtrini o'chirib bo'lmadi
-vn:Không thể gỡ cài đặt bộ lọc tìm kiếm PDF
 :Couldn't uninstall browser plugin
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
 ar:لا يمكن إلغاء تثبيت متصفح البرنامج المساعد
