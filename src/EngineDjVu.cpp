@@ -949,9 +949,9 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
         }
     }
     CrashIf(coords.size() != extracted.size());
-    res.coords = coords.StealData();
-    res.text = extracted.StealData();
     res.len = (int)extracted.size();
+    res.text = extracted.StealData();
+    res.coords = coords.StealData();
     return res;
 }
 

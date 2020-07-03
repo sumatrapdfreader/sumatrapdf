@@ -496,9 +496,9 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     CrashIf(coords.size() != content.size());
 
     PageText res;
+    res.len = (int)content.size();
     res.text = content.StealData();
     res.coords = coords.StealData();
-    res.len = (int)content.size();
     return res;
 }
 
