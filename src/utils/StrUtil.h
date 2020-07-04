@@ -187,9 +187,8 @@ namespace str {
 struct Str {
     // allocator is not owned by Vec and must outlive it
     Allocator* allocator{nullptr};
-    // TODO: to save space (8 bytes) on 64-bit, use i32 or u32?
-    size_t len{0};
-    size_t cap{0};
+    u32 len{0};
+    u32 cap{0};
     // if true, don't crash if we run out of memory
     bool allowFailure{false}; // TODO: figure out how to store it more efficiently?
     // TODO: to save space (8 bytes), combine els and buf?
@@ -211,12 +210,14 @@ struct Str {
     Str& operator=(const Str& that);
     ~Str();
     [[nodiscard]] char& operator[](size_t idx) const;
+    [[nodiscard]] char& operator[](u32 idx) const;
     [[nodiscard]] char& operator[](long idx) const;
     [[nodiscard]] char& operator[](ULONG idx) const;
     [[nodiscard]] char& operator[](int idx) const;
     void Reset();
     bool SetSize(size_t newSize);
     [[nodiscard]] char& at(size_t idx) const;
+    [[nodiscard]] char& at(u32 idx) const;
     [[nodiscard]] char& at(int idx) const;
     [[nodiscard]] size_t size() const;
     [[nodiscard]] int isize() const;

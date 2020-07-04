@@ -1158,7 +1158,7 @@ static char* EnsureCap(Str* s, size_t needed) {
 
 static char* MakeSpaceAt(Str* s, size_t idx, size_t count) {
     CrashIf(count == 0);
-    size_t newLen = std::max(s->len, idx) + count;
+    u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
     char* buf = EnsureCap(s, newLen);
     if (!buf) {
         return nullptr;
@@ -1239,43 +1239,42 @@ Str::~Str() {
     Free(this);
 }
 
-char& Str::operator[](size_t idx) const {
-    CrashIf(idx >= len);
+char& Str::at(size_t idx) const {
+    CrashIf(idx >= (u32)len);
     return els[idx];
+}
+
+char& Str::at(u32 idx) const {
+    return at((size_t)idx);
+}
+
+char& Str::at(int idx) const {
+    CrashIf(idx < 0);
+    return at((size_t)idx);
+}
+
+char& Str::operator[](size_t idx) const {
+    return at(idx);
 }
 
 char& Str::operator[](long idx) const {
     CrashIf(idx < 0);
-    CrashIf((size_t)idx >= len);
-    return els[idx];
+    return at((size_t)idx);
 }
 
 char& Str::operator[](ULONG idx) const {
-    CrashIf((size_t)idx >= len);
-    return els[idx];
+    return at((size_t)idx);
 }
 
 char& Str::operator[](int idx) const {
     CrashIf(idx < 0);
-    CrashIf((size_t)idx >= len);
-    return els[idx];
+    return at((size_t)idx);
 }
 
 bool Str::SetSize(size_t newSize) {
     Reset();
     char* s = MakeSpaceAt(this, 0, newSize);
     return s != nullptr;
-}
-
-char& Str::at(size_t idx) const {
-    CrashIf(idx >= len);
-    return els[idx];
-}
-
-char& Str::at(int idx) const {
-    CrashIf(idx < 0);
-    CrashIf((size_t)idx >= len);
-    return els[idx];
 }
 
 size_t Str::size() const {

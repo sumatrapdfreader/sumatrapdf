@@ -14,6 +14,9 @@ While I can't fix long compilation times, I can try to keep
 them as fast as possible.
 Also an opportunity to make the API smaller.
 
+Optimized str::Str on 64-bit by changing type of len/cap from
+size_t to u32.
+
 ---
 
 Optimizing Str. Turns out that after de-templatizing the code

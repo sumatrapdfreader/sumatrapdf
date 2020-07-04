@@ -23,10 +23,10 @@ static inline const char* SkipDigits(const char* s) {
 class ParseArgs {
   public:
     str::Str path;
-    bool canceled;
-    ValueVisitor* visitor;
+    bool canceled{false};
+    ValueVisitor* visitor{nullptr};
 
-    explicit ParseArgs(ValueVisitor* visitor) : canceled(false), visitor(visitor) {
+    explicit ParseArgs(ValueVisitor* visitor) : visitor(visitor) {
     }
 };
 

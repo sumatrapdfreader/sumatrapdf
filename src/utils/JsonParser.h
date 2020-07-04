@@ -13,8 +13,8 @@ enum class Type { String, Number, Bool, Null };
 
 // e.g. the following JSON data will lead to two calls:
 // { "key": [false, { "name": "valu\u0065" }] }
-// 1. "/key[0]", "false", Type_Bool
-// 2. "/key[1]/name", "value", Type_String
+// 1. "/key[0]", "false", Type::Bool
+// 2. "/key[1]/name", "value", Type::String
 
 class ValueVisitor {
   public:
