@@ -1123,7 +1123,7 @@ bool Str::EnsureCap(size_t needed) {
     }
 
     size_t newElCount = newCap + kPadding;
-    if (newElCount >= SIZE_MAX / kElSize) {
+    if (newElCount >= SIZE_MAX) {
         return false;
     }
     if (newElCount > INT_MAX) {
@@ -1134,11 +1134,11 @@ bool Str::EnsureCap(size_t needed) {
     nReallocs++;
 #endif
 
-    size_t allocSize = newElCount * kElSize;
-    size_t newPadding = allocSize - len * kElSize;
+    size_t allocSize = newElCount;
+    size_t newPadding = allocSize - len;
     char* newEls;
     if (buf == els) {
-        newEls = (char*)Allocator::MemDup(allocator, buf, len * kElSize, newPadding);
+        newEls = (char*)Allocator::MemDup(allocator, buf, len, newPadding);
     } else {
         newEls = (char*)Allocator::Realloc(allocator, els, allocSize);
     }
@@ -1162,7 +1162,7 @@ char* Str::MakeSpaceAt(size_t idx, size_t count) {
     if (len > idx) {
         char* src = els + idx;
         char* dst = els + idx + count;
-        memmove(dst, src, (len - idx) * kElSize);
+        memmove(dst, src, len - idx);
     }
     len = newLen;
     return res;
@@ -1188,7 +1188,7 @@ Str::Str(const Str& orig) {
     EnsureCap(orig.cap);
     len = orig.len;
     // using memcpy, as Vec only supports POD types
-    memcpy(els, orig.els, kElSize * (orig.len));
+    memcpy(els, orig.els, orig.len);
 }
 
 Str::Str(std::string_view s) {
@@ -1203,8 +1203,8 @@ Str& Str::operator=(const Str& that) {
     }
     EnsureCap(that.cap);
     // using memcpy, as Vec only supports POD types
-    memcpy(els, that.els, kElSize * (len = that.len));
-    memset(els + len, 0, kElSize * (cap - len));
+    memcpy(els, that.els, len = that.len);
+    memset(els + len, 0, cap - len);
     return *this;
 }
 
@@ -1289,7 +1289,7 @@ bool Str::Append(const char* src, size_t count) {
     if (!dst) {
         return false;
     }
-    memcpy(dst, src, count * kElSize);
+    memcpy(dst, src, count);
     return true;
 }
 
@@ -1302,10 +1302,11 @@ void Str::RemoveAt(size_t idx, size_t count) {
     if (len > idx + count) {
         char* dst = els + idx;
         char* src = els + idx + count;
-        memmove(dst, src, (len - idx - count) * kElSize);
+        size_t nToMove = len - idx - count;
+        memmove(dst, src, nToMove);
     }
     len -= count;
-    memset(els + len, 0, count * kElSize);
+    memset(els + len, 0, count);
 }
 
 void Str::RemoveLast() {
@@ -1328,9 +1329,9 @@ void Str::RemoveAtFast(size_t idx) {
     char* toRemove = els + idx;
     char* last = els + len - 1;
     if (toRemove != last) {
-        memcpy(toRemove, last, kElSize);
+        *toRemove = *last;
     }
-    memset(last, 0, kElSize);
+    *last = 0;
     --len;
 }
 
@@ -1360,7 +1361,7 @@ char& Str::Last() const {
 char* Str::StealData() {
     char* res = els;
     if (els == buf) {
-        res = (char*)Allocator::MemDup(allocator, buf, (len + kPadding) * kElSize);
+        res = (char*)Allocator::MemDup(allocator, buf, len + kPadding);
     }
     els = buf;
     Reset();
@@ -1392,15 +1393,6 @@ int Str::Remove(const char& el) {
     }
     RemoveAt(i);
     return i;
-}
-
-void Str::Sort(int (*cmpFunc)(const void* a, const void* b)) {
-    qsort(els, len, kElSize, cmpFunc);
-}
-
-void Str::SortTyped(int (*cmpFunc)(const char* a, const char* b)) {
-    auto cmpFunc2 = (int (*)(const void* a, const void* b))cmpFunc;
-    qsort(els, len, kElSize, cmpFunc2);
 }
 
 void Str::Reverse() {

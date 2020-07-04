@@ -202,7 +202,6 @@ struct Str {
 
     static constexpr size_t kPadding = 1;
     static constexpr size_t kBufSize = sizeof(buf);
-    static constexpr size_t kElSize = sizeof(char);
 
     bool EnsureCap(size_t needed);
     char* MakeSpaceAt(size_t idx, size_t count);
@@ -237,8 +236,6 @@ struct Str {
     [[nodiscard]] int Find(const char& el, size_t startAt = 0) const;
     [[nodiscard]] bool Contains(const char& el) const;
     int Remove(const char& el);
-    void Sort(int (*cmpFunc)(const void* a, const void* b));
-    void SortTyped(int (*cmpFunc)(const char* a, const char* b));
     void Reverse();
     char& FindEl(const std::function<bool(char&)>& check);
     [[nodiscard]] bool IsEmpty() const;
