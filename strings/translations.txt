@@ -1,6 +1,7 @@
 AppTranslator: SumatraPDF
-9563d3475407cdadb5dfb664da32a0914b584d7b
+b539828a5cd40e56580b908c0a150eab888e1d1c
 :%s installation not found.
+cn:未找到 %s 安装。
 pl:Nie znaleziono instalacji %s.
 :&About
 af:&Omtrent
@@ -2594,6 +2595,7 @@ uk:Зберегти налаштування для кожного докуме�
 uz:&Ushbu parametrlarni har qaysi hujjat uchun eslab qolish
 vn:Nhớ các cài đặt này cho từng tập tin
 :&Remove From History
+cn:从历史记录删除(&R)
 pl:&Usuń z historii
 :&Save As...
 am:&Պահպանել որպես
@@ -3630,10 +3632,13 @@ uk:Додати закладку
 uz:Tanlanganlarga qo'shish
 vn:Thêm Ưa thích
 :Add PDF as a child
+cn:将 PDF 添加为子项目
 pl:Dodaj PDF jako potomka
 :Add PDF as a sibling
+cn:将 PDF 添加为同级项目
 pl:Dodaj PDF jako rodzeństwo
 :Add child
+cn:添加子项目
 pl:Dodaj potomka
 :Add page %s to favorites
 am:Ավելացնել %s էջը ընտրյալներին
@@ -3793,6 +3798,7 @@ th:เพิ่มหน้า %s ไปยังรายการโปรด 
 tw:將第 %s 頁加入到最愛\tCtrl+B
 uk:Додати %s сторінку до закладок\tCtrl+B
 :Add sibling
+cn:添加同级项目
 pl:Dodaj rodzeństwo
 :Add to favorites
 am:Ավելացնել ընտրյալներին
@@ -4064,6 +4070,7 @@ uk:Всі документи, що підтримуються
 uz:Hamma qo'llanadigan hujjatlar
 vn:Tất cả các định dạng được hỗ trợ
 :Annotations
+cn:标注
 pl:Adnotacje
 :Application:
 af:Applikasie
@@ -4134,6 +4141,7 @@ uk:Прикладна програма:
 uz:Dastur:
 vn:Ứng dụng:
 :Are you sure you want to uninstall %s?
+cn:您确定要卸载 %s 吗？
 pl:Czy na pewno chcesz odinstalować %s?
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
@@ -5208,6 +5216,7 @@ uk:Неможливо запустити команду зворотнього �
 uz:Qayta qidirish buyrug'i xatosi. Buyruq satri parametrlarini tekshiring.
 vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
 :Caret
+cn:插入号
 pl:Kareta
 :Change Language
 af:Verander Taal (Change Language)
@@ -5350,6 +5359,7 @@ uk:Перевірити, чи є нова версія
 uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Circle
+cn:圆
 pl:Okrąg
 :Close
 am:Փակել
@@ -6678,6 +6688,7 @@ uk:Не вдалося видалити програму попередньог�
 uz:PDF ko'rish vositasini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt bộ xem truớc PDF
 :Couldn't uninstall Sumatra search filter
+cn:无法卸载 Sumatra 搜索过滤器
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 :Couldn't uninstall browser plugin
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
@@ -6801,6 +6812,7 @@ uk:Не вдалося записати %s на диск
 uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Create Annotation
+cn:创建标注
 pl:Utwórz adnotację
 :Created:
 af:Geskep
@@ -7631,7 +7643,8 @@ uk:Завантажити
 uz:Yuklab olish
 vn:Tải xuống
 :E&xit Fullscreen
-pl:W&yjście z trybu pełnoekranowego
+cn:退出全屏(&X)
+pl:W&yjdź z trybu pełnoekranowego
 :E&xit\tCtrl+Q
 af:&Gaan Uit-Q
 am:Փա&կել\tCtrl+Q
@@ -7773,6 +7786,7 @@ vn:Tập tin EPUB
 cn:编辑
 pl:Edytuj
 :Edit Annotations
+cn:编辑标注
 pl:Edytuj adnotacje
 :Edit Bookmarks
 cn:编辑书签
@@ -10228,6 +10242,7 @@ uk:Знайти текст на сторінці %s (знову)
 uz:%s betda matn topildi (qayta)
 vn:Tìm thấy đoạn văn bản tại trang %s (lần nữa)
 :Free Text
+cn:自定义文本
 pl:Dowolny tekst
 :Frequently Read
 am:Հաճախ ընթերցվածներ
@@ -10689,8 +10704,10 @@ uk:Файли зображень (*.%s)
 uz:Rasm fayllari (*.%s)
 vn:Tập tin ảnh (*.%s)
 :Images
+cn:图像
 pl:Obrazy
 :Ink
+cn:墨迹
 pl:Atrament
 :Install SumatraPDF
 af:Installeer SumatraPDF
@@ -11184,6 +11201,7 @@ tw:亮(&L)
 uk:Світла
 vn:Sáng
 :Line
+cn:线条
 pl:Linia
 :MB
 af:MB
@@ -13771,8 +13789,10 @@ uk:Зачекайте - генерується...
 uz:Kutib turing - render qilinmoqda...
 vn:Xin chờ đợi, đang hiện...
 :Poly Line
+cn:折线
 pl:Polilinia
 :Polygon
+cn:多边形
 pl:Wielokąt
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
@@ -14533,6 +14553,7 @@ uk:Перейменувати...\tF2
 uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
 :Redact
+cn:编辑
 pl:Redaguj
 :Remember &opened files
 am:Հիշել &բացված ֆայլերը
@@ -15717,6 +15738,7 @@ uk:Відображати сторінки безперервно
 uz:&Betlarni uzluksiz ko'rsatish
 vn:Xem trang liên tiếp
 :Show &Scrollbars
+cn:显示滚动条(&S)
 pl:Pokaż &paski przewijania
 :Show &Toolbar\tF8
 af:Vertoon Toolbar
@@ -15877,6 +15899,7 @@ uk:Перелік закладок
 uz:Tanlanganlarni ko'rsatish
 vn:Hiện Ưa thích
 :Show Scr&ollbars
+cn:显示滚动条(&O)
 pl:Pokaż p&aski przewijania
 :Show frequently read
 am:Ցուցադրել հաճախակի բացվածները
@@ -16164,6 +16187,7 @@ uk:Вибачте, але це не мало статись!\n\nНатисніт
 uz:Kutilmagan voqea sodir bo'ldi.\n\nUshbu nosozlikni tuzatish uchun bizga yordam bermoqchi bo'lsaniz 'Bekor qilish' tugmasini bosing.
 vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
 :Sort By
+cn:排序
 pl:Sortuj według
 :Source file %s has no synchronization point
 am:%s ֆայլը չունի համաժամեցման կետ
@@ -16230,10 +16254,13 @@ uk:Файл сирцевого коду %s не має точки синхрон
 uz:%s manba faylida sinxronlanish nuqtasi yo'q
 vn:Tập tin nguồn %s không có điểm đồng bộ
 :Square
+cn:矩形
 pl:Kwadrat
 :Squiggly
+cn:波浪线
 pl:Falowanie
 :Stamp
+cn:图章
 pl:Pieczęć
 :Start SumatraPDF
 am:Բացել SumatraPDF-ը
@@ -16297,6 +16324,7 @@ uk:Запустити SumatraPDF
 uz:SumatraPDF ishga tushirish
 vn:Mở SumatraPDF
 :Strike Out
+cn:删除线
 pl:Skreślenie
 :Subject:
 af:Onderwerp
@@ -16986,8 +17014,10 @@ uk:Неможливо відкрити файл синхронізації
 uz:Sinxronlanish faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tag (big first)
+cn:标签 (大的在前)
 pl:Tag (najpierw duży)
 :Tag (small first)
+cn:标签 (小的在前)
 pl:Tag (najpierw mały)
 :Tagged PDF
 am:Կցված PDF
@@ -17051,6 +17081,7 @@ uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text
+cn:文本
 pl:Tekst
 :Text documents
 am:Տեքստային ֆայլեր
