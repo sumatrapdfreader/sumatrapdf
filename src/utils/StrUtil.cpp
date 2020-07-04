@@ -1102,19 +1102,19 @@ const char* IdxToStr(const char* strs, int idx) {
 
 namespace str {
 
-bool Str::EnsureCap(size_t needed) {
-    size_t capacityHint = cap;
+static bool EnsureCap(Str* s, size_t needed) {
+    size_t capacityHint = s->cap;
     // tricky: to save sapce we reuse cap for capacityHint. On first expand
     // cap might be capacityHint
-    if (els == buf && len == 0) {
-        cap = 0;
+    if (s->els == s->buf && s->len == 0) {
+        s->cap = 0;
     }
 
-    if (cap >= needed) {
+    if (s->cap >= needed) {
         return true;
     }
 
-    size_t newCap = cap * 2;
+    size_t newCap = s->cap * 2;
     if (needed > newCap) {
         newCap = needed;
     }
@@ -1122,7 +1122,7 @@ bool Str::EnsureCap(size_t needed) {
         newCap = capacityHint;
     }
 
-    size_t newElCount = newCap + kPadding;
+    size_t newElCount = newCap + Str::kPadding;
     if (newElCount >= SIZE_MAX) {
         return false;
     }
@@ -1131,40 +1131,40 @@ bool Str::EnsureCap(size_t needed) {
     }
 
 #if defined(DEBUG)
-    nReallocs++;
+    s->nReallocs++;
 #endif
 
     size_t allocSize = newElCount;
-    size_t newPadding = allocSize - len;
+    size_t newPadding = allocSize - s->len;
     char* newEls;
-    if (buf == els) {
-        newEls = (char*)Allocator::MemDup(allocator, buf, len, newPadding);
+    if (s->buf == s->els) {
+        newEls = (char*)Allocator::MemDup(s->allocator, s->buf, s->len, newPadding);
     } else {
-        newEls = (char*)Allocator::Realloc(allocator, els, allocSize);
+        newEls = (char*)Allocator::Realloc(s->allocator, s->els, allocSize);
     }
     if (!newEls) {
-        CrashAlwaysIf(!allowFailure);
+        CrashAlwaysIf(!s->allowFailure);
         return false;
     }
-    els = newEls;
-    memset(els + len, 0, newPadding);
-    cap = newCap;
+    s->els = newEls;
+    memset(s->els + s->len, 0, newPadding);
+    s->cap = newCap;
     return true;
 }
 
-char* Str::MakeSpaceAt(size_t idx, size_t count) {
-    size_t newLen = std::max(len, idx) + count;
-    bool ok = EnsureCap(newLen);
+static char* MakeSpaceAt(Str* s, size_t idx, size_t count) {
+    size_t newLen = std::max(s->len, idx) + count;
+    bool ok = EnsureCap(s, newLen);
     if (!ok) {
         return nullptr;
     }
-    char* res = &(els[idx]);
-    if (len > idx) {
-        char* src = els + idx;
-        char* dst = els + idx + count;
-        memmove(dst, src, len - idx);
+    char* res = &(s->els[idx]);
+    if (s->len > idx) {
+        char* src = s->els + idx;
+        char* dst = s->els + idx + count;
+        memmove(dst, src, s->len - idx);
     }
-    len = newLen;
+    s->len = newLen;
     return res;
 }
 
@@ -1185,9 +1185,8 @@ Str::Str(size_t capHint, Allocator* allocator) : cap(capHint), allocator(allocat
 Str::Str(const Str& orig) {
     els = buf;
     Reset();
-    EnsureCap(orig.cap);
+    EnsureCap(this, orig.cap);
     len = orig.len;
-    // using memcpy, as Vec only supports POD types
     memcpy(els, orig.els, orig.len);
 }
 
@@ -1201,7 +1200,7 @@ Str& Str::operator=(const Str& that) {
     if (this == &that) {
         return *this;
     }
-    EnsureCap(that.cap);
+    EnsureCap(this, that.cap);
     // using memcpy, as Vec only supports POD types
     memcpy(els, that.els, len = that.len);
     memset(els + len, 0, cap - len);
@@ -1244,7 +1243,7 @@ void Str::Reset() {
 
 bool Str::SetSize(size_t newSize) {
     Reset();
-    return MakeSpaceAt(0, newSize);
+    return MakeSpaceAt(this, 0, newSize);
 }
 
 char& Str::at(size_t idx) const {
@@ -1266,7 +1265,7 @@ int Str::isize() const {
 }
 
 bool Str::InsertAt(size_t idx, const char& el) {
-    char* p = MakeSpaceAt(idx, 1);
+    char* p = MakeSpaceAt(this, idx, 1);
     if (!p) {
         return false;
     }
@@ -1285,7 +1284,7 @@ bool Str::Append(const char* src, size_t count) {
     if (!src || 0 == count) {
         return true;
     }
-    char* dst = MakeSpaceAt(len, count);
+    char* dst = MakeSpaceAt(this, len, count);
     if (!dst) {
         return false;
     }
@@ -1295,7 +1294,7 @@ bool Str::Append(const char* src, size_t count) {
 
 // appends count blank (i.e. zeroed-out) elements at the end
 char* Str::AppendBlanks(size_t count) {
-    return MakeSpaceAt(len, count);
+    return MakeSpaceAt(this, len, count);
 }
 
 void Str::RemoveAt(size_t idx, size_t count) {

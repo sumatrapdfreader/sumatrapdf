@@ -184,6 +184,20 @@ static void ParseUntilTest() {
 }
 
 void strStrTest() {
+#if 0
+    {
+        // verify that we use buf for initial allocations
+        str::Str str;
+        char* buf = str.Get();
+        str.Append("blah");
+        char* buf2 = str.Get();
+        utassert(buf == buf2);
+        str.Append("lost");
+        buf2 = str.Get();
+        utassert(buf == buf);
+    }
+#endif
+
     {
         // verify that initialCapacity hint works
         str::Str str(1024);

@@ -196,15 +196,15 @@ struct Str {
     char* els{nullptr};
     char buf[32];
 
-#if  defined(DEBUG)
+#if defined(DEBUG)
     int nReallocs{0};
 #endif
 
-    static constexpr size_t kPadding = 1;
+    // for compatibility with C string, the last character is always 0
+    // kPadding is number of bytes needed for terminating character
+    static constexpr size_t kPadding = sizeof(char);
     static constexpr size_t kBufSize = sizeof(buf);
 
-    bool EnsureCap(size_t needed);
-    char* MakeSpaceAt(size_t idx, size_t count);
     void FreeEls();
     explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
     Str(const Str& orig);
