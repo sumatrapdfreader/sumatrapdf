@@ -255,7 +255,9 @@ HtmlFormatter* Doc::CreateFormatter(HtmlFormatterArgs* args) const {
 
 Doc Doc::CreateFromFile(const WCHAR* path) {
     Doc doc;
-    Kind kind = GuessFileType(path, true);
+again:
+    bool sniff = false;
+    Kind kind = GuessFileType(path, sniff);
     if (EpubDoc::IsSupportedFileType(kind)) {
         doc = Doc(EpubDoc::CreateFromFile(path));
     } else if (Fb2Doc::IsSupportedFileType(kind)) {
@@ -266,6 +268,12 @@ Doc Doc::CreateFromFile(const WCHAR* path) {
         doc = Doc(PalmDoc::CreateFromFile(path));
     } else {
         doc.error = DocError::NotSupported;
+    }
+    if (!sniff) {
+        if (doc.IsNone()) {
+            sniff = true;
+            goto again;
+        }
     }
 
     // if failed to load and more specific error message hasn't been
