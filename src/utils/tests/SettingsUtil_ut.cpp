@@ -186,11 +186,18 @@ Key = Value";
     utassert(str::Eq(data->string, L"String") && !data->nullString && str::Eq(data->escapedString, L"$\nstring "));
     utassert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String &&
              str::Eq(data->escapedUtf8String, "$\nstring "));
-    utassert(data->intArray && 3 == data->intArray->size() && 1 == data->intArray->at(0));
-    utassert(data->intArray && 2 == data->intArray->at(1) && -3 == data->intArray->at(2));
-    utassert(data->strArray && data->emptyStrArray && 3 == data->strArray->size() && 0 == data->emptyStrArray->size());
-    utassert(data->strArray && str::Eq(data->strArray->at(0), L"one") && str::Eq(data->strArray->at(1), L"two three") &&
-             str::Eq(data->strArray->at(2), L""));
+    utassert(data->intArray);
+    utassert(3 == data->intArray->size() && 1 == data->intArray->at(0));
+    utassert(2 == data->intArray->at(1) && -3 == data->intArray->at(2));
+    utassert(data->strArray);
+    utassert(data->emptyStrArray);
+    utassert(3 == data->strArray->size());
+    utassert(0 == data->emptyStrArray->size());
+    Vec<WCHAR*>* sa = data->strArray;
+    utassert(str::Eq(sa->at(0), L"one"));
+    utassert(str::Eq(sa->at(1), L"two three"));
+    utassert(str::Eq(sa->at(2), L""));
+
     utassert(Point(111, 222) == data->point);
     utassert(data->sutStructItems && 0 == data->sutStructItems->size());
     FreeStruct(&gSutStructInfo, data);

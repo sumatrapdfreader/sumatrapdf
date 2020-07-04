@@ -187,22 +187,19 @@ namespace str {
 struct Str {
     // allocator is not owned by Vec and must outlive it
     Allocator* allocator{nullptr};
-    u32 len{0};
-    u32 cap{0};
     // TODO: to save space (8 bytes), combine els and buf?
     char* els{nullptr};
+    u32 len{0};
+    u32 cap{0};
     char buf[32];
 
 #if defined(DEBUG)
     int nReallocs{0};
 #endif
 
-    // for compatibility with C string, the last character is always 0
-    // kPadding is number of bytes needed for terminating character
-    static constexpr size_t kPadding = sizeof(char);
-    static constexpr size_t kBufSize = sizeof(buf);
+    static constexpr size_t kBufChars = dimof(buf);
 
-    explicit Str(u32 capHint = 0, Allocator* allocator = nullptr);
+    explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
     Str(const Str& orig);
     Str(std::string_view s);
     Str& operator=(const Str& that);
@@ -220,13 +217,10 @@ struct Str {
 #endif
     [[nodiscard]] size_t size() const;
     [[nodiscard]] int isize() const;
-    bool SetSize(size_t newSize);
     bool InsertAt(size_t idx, char el);
     bool Append(char el);
     bool Append(const char* src, size_t count = -1);
-    char* AppendBlanks(size_t count);
     char RemoveAt(size_t idx, size_t count = 1);
-    char RemoveAtFast(size_t idx);
     char RemoveLast();
     [[nodiscard]] char& Last() const;
     [[nodiscard]] char* StealData();
@@ -277,16 +271,11 @@ struct WStr {
     WCHAR* els{nullptr};
     u32 len{0};
     u32 cap{0};
-    size_t capacityHint{0};
     WCHAR buf[32];
 
-    static constexpr size_t kPadding = 2;
-    static constexpr size_t kBufSize = sizeof(buf);
+    static constexpr size_t kBufChars = dimof(buf);
     static constexpr size_t kElSize = sizeof(WCHAR);
 
-    bool EnsureCap(size_t needed);
-    WCHAR* MakeSpaceAt(size_t idx, size_t count);
-    void FreeEls();
     explicit WStr(size_t capHint = 0, Allocator* allocator = nullptr);
     WStr(const WStr& orig);
     WStr(std::wstring_view s);
@@ -305,13 +294,10 @@ struct WStr {
 #endif
     [[nodiscard]] size_t size() const;
     [[nodiscard]] int isize() const;
-    bool SetSize(size_t newSize);
     bool InsertAt(size_t idx, const WCHAR& el);
     bool Append(const WCHAR& el);
     bool Append(const WCHAR* src, size_t count = -1);
-    WCHAR* AppendBlanks(size_t count);
     WCHAR RemoveAt(size_t idx, size_t count = 1);
-    WCHAR RemoveAtFast(size_t idx);
     WCHAR RemoveLast();
     [[nodiscard]] WCHAR& Last() const;
     [[nodiscard]] WCHAR* StealData();

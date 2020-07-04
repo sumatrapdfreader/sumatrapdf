@@ -1102,11 +1102,16 @@ const char* IdxToStr(const char* strs, int idx) {
 
 namespace str {
 
+// for compatibility with C string, the last character is always 0
+// kPadding is number of characters needed for terminating character
+static constexpr size_t kPadding = 1;
+
 static char* EnsureCap(Str* s, size_t needed) {
-    if (needed + Str::kPadding <= Str::kBufSize) {
-        s->els = s->buf;
+    if (needed + kPadding <= Str::kBufChars) {
+        s->els = s->buf; // TODO: not needed?
         return s->buf;
     }
+
     size_t capacityHint = s->cap;
     // tricky: to save sapce we reuse cap for capacityHint
     if (!s->els || (s->els == s->buf)) {
@@ -1126,23 +1131,19 @@ static char* EnsureCap(Str* s, size_t needed) {
         newCap = capacityHint;
     }
 
-    size_t newElCount = newCap + Str::kPadding;
-    if (newElCount >= SIZE_MAX) {
-        return nullptr;
-    }
-    if (newElCount > INT_MAX) {
-        return nullptr;
-    }
+    size_t newElCount = newCap + kPadding;
 
 #if defined(DEBUG)
     s->nReallocs++;
 #endif
 
     size_t allocSize = newElCount;
-    size_t newPadding = allocSize - s->len;
     char* newEls;
     if (s->buf == s->els) {
-        newEls = (char*)Allocator::MemDup(s->allocator, s->buf, s->len, newPadding);
+        newEls = (char*)Allocator::Alloc(s->allocator, allocSize);
+        if (newEls) {
+            memcpy(newEls, s->buf, s->len + 1);
+        }
     } else {
         newEls = (char*)Allocator::Realloc(s->allocator, s->els, allocSize);
     }
@@ -1151,9 +1152,8 @@ static char* EnsureCap(Str* s, size_t needed) {
         return false;
     }
     s->els = newEls;
-    memset(s->els + s->len, 0, newPadding);
     s->cap = (u32)newCap;
-    return s->els;
+    return newEls;
 }
 
 static char* MakeSpaceAt(Str* s, size_t idx, size_t count) {
@@ -1192,20 +1192,19 @@ void Str::Reset() {
 
 #if defined(DEBUG)
 #define kFillerStr "01234567890123456789012345678901"
-
     // to catch mistakes earlier, fill the buffer with a known string
     constexpr size_t nFiller = sizeof(kFillerStr) - 1;
-    static_assert(nFiller == Str::kBufSize);
-    memcpy(buf, kFillerStr, kBufSize);
+    static_assert(nFiller == Str::kBufChars);
+    memcpy(buf, kFillerStr, kBufChars);
 #endif
-    els[0] = 0;
+    buf[0] = 0;
 }
 
 // allocator is not owned by Vec and must outlive it
-Str::Str(u32 capHint, Allocator* a) {
-    Reset();
-    cap = capHint + Str::kPadding; // + kPadding for terminating 0
+Str::Str(size_t capHint, Allocator* a) {
     allocator = a;
+    Reset();
+    cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
 
 // ensure that a Vec never shares its els buffer with another after a clone/copy
@@ -1215,7 +1214,8 @@ Str::Str(const Str& that) {
     char* s = EnsureCap(this, that.len);
     char* sOrig = that.Get();
     len = that.len;
-    memcpy(s, sOrig, len + Str::kPadding);
+    size_t n = len + kPadding;
+    memcpy(s, sOrig, n);
 }
 
 Str::Str(std::string_view s) {
@@ -1231,7 +1231,8 @@ Str& Str::operator=(const Str& that) {
     char* s = EnsureCap(this, that.len);
     char* sOrig = that.Get();
     len = that.len;
-    memcpy(els, that.els, len + 1);
+    size_t n = len + kPadding;
+    memcpy(s, sOrig, n);
     return *this;
 }
 
@@ -1277,12 +1278,6 @@ char& Str::operator[](u32 idx) const {
 }
 #endif
 
-bool Str::SetSize(size_t newSize) {
-    Reset();
-    char* s = MakeSpaceAt(this, 0, newSize);
-    return s != nullptr;
-}
-
 size_t Str::size() const {
     return len;
 }
@@ -1318,11 +1313,6 @@ bool Str::Append(const char* src, size_t count) {
     return true;
 }
 
-// appends count blank (i.e. zeroed-out) elements at the end
-char* Str::AppendBlanks(size_t count) {
-    return MakeSpaceAt(this, len, count);
-}
-
 char Str::RemoveAt(size_t idx, size_t count) {
     char res = at(idx);
     if (len > idx + count) {
@@ -1333,27 +1323,6 @@ char Str::RemoveAt(size_t idx, size_t count) {
     }
     len -= (u32)count;
     memset(els + len, 0, count);
-    return res;
-}
-
-// This is a fast version of RemoveAt() which replaces the element we're
-// removing with the last element, copying less memory.
-// It can only be used if order of elements doesn't matter and elements
-// can be copied via memcpy()
-// TODO: could be extend to take number of elements to remove
-char Str::RemoveAtFast(size_t idx) {
-    CrashIf(idx >= len);
-    if (idx >= len) {
-        return 0;
-    }
-    char res = at(idx);
-    char* toRemove = els + idx;
-    char* last = els + len - 1;
-    if (toRemove != last) {
-        *toRemove = *last;
-    }
-    *last = 0;
-    --len;
     return res;
 }
 
@@ -1520,12 +1489,24 @@ char Str::LastChar() const {
 
 // WStr
 
-bool WStr::EnsureCap(size_t needed) {
-    if (cap >= needed) {
-        return true;
+static WCHAR* EnsureCap(WStr* s, size_t needed) {
+    if (needed + kPadding <= Str::kBufChars) {
+        s->els = s->buf; // TODO: not needed?
+        return s->buf;
     }
 
-    size_t newCap = cap * 2;
+    size_t capacityHint = s->cap;
+    // tricky: to save sapce we reuse cap for capacityHint
+    if (!s->els || (s->els == s->buf)) {
+        // on first expand cap might be capacityHint
+        s->cap = 0;
+    }
+
+    if (s->cap >= needed) {
+        return s->els;
+    }
+
+    size_t newCap = s->cap * 2;
     if (needed > newCap) {
         newCap = needed;
     }
@@ -1534,72 +1515,87 @@ bool WStr::EnsureCap(size_t needed) {
     }
 
     size_t newElCount = newCap + kPadding;
-    if (newElCount >= SIZE_MAX / kElSize) {
-        return false;
-    }
-    if (newElCount > INT_MAX) {
-        return false;
+
+    size_t allocSize = newElCount * WStr::kElSize;
+    WCHAR* newEls;
+    if (s->buf == s->els) {
+        newEls = (WCHAR*)Allocator::Alloc(s->allocator, allocSize);
+        if (newEls) {
+            memcpy(newEls, s->buf, WStr::kElSize * (s->len + 1));
+        }
+    } else {
+        newEls = (WCHAR*)Allocator::Realloc(s->allocator, s->els, allocSize);
     }
 
-    size_t allocSize = newElCount * kElSize;
-    size_t newPadding = allocSize - len * kElSize;
-    WCHAR* newEls;
-    if (buf == els) {
-        newEls = (WCHAR*)Allocator::MemDup(allocator, buf, len * kElSize, newPadding);
-    } else {
-        newEls = (WCHAR*)Allocator::Realloc(allocator, els, allocSize);
-    }
     if (!newEls) {
         CrashAlwaysIf(!gAllowAllocFailure);
         return false;
     }
-    els = newEls;
-    memset(els + len, 0, newPadding);
-    cap = (u32)newCap;
-    return true;
+    s->els = newEls;
+    s->cap = (u32)newCap;
+    return newEls;
 }
 
-WCHAR* WStr::MakeSpaceAt(size_t idx, size_t count) {
-    u32 newLen = std::max(len, (u32)idx) + (u32)count;
-    bool ok = EnsureCap(newLen);
-    if (!ok) {
+static WCHAR* MakeSpaceAt(WStr* s,size_t idx, size_t count) {
+    CrashIf(count == 0);
+    u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
+    WCHAR* buf = EnsureCap(s, newLen);
+    if (!buf) {
         return nullptr;
     }
-    WCHAR* res = &(els[idx]);
-    if (len > idx) {
-        WCHAR* src = els + idx;
-        WCHAR* dst = els + idx + count;
-        memmove(dst, src, (len - idx) * kElSize);
+    buf[newLen] = 0;
+    WCHAR* res = &(buf[idx]);
+    if (s->len > idx) {
+        WCHAR* src = buf + idx;
+        WCHAR* dst = buf + idx + count;
+        memmove(dst, src, (s->len - idx) * WStr::kElSize);
     }
-    len = newLen;
+    s->len = newLen;
     return res;
 }
 
-void WStr::FreeEls() {
-    if (els != buf) {
-        Allocator::Free(allocator, els);
+static void Free(WStr* s) {
+    if (!s->els || (s->els == s->buf)) {
+        return;
     }
+    Allocator::Free(s->allocator, s->els);
+    s->els = nullptr;
+}
+
+void WStr::Reset() {
+    Free(this);
+    len = 0;
+    cap = 0;
+    els = buf;
+#if defined(DEBUG)
+#define kFillerWStr L"01234567890123456789012345678901"
+    // to catch mistakes earlier, fill the buffer with a known string
+    constexpr size_t nFiller = sizeof(kFillerStr) - 1;
+    static_assert(nFiller == Str::kBufChars);
+    memcpy(buf, kFillerWStr, nFiller * kElSize);
+#endif
+    buf[0] = 0;
 }
 
 // allocator is not owned by Vec and must outlive it
-WStr::WStr(size_t capHint, Allocator* allocator) : capacityHint(capHint), allocator(allocator) {
-    els = buf;
+WStr::WStr(size_t capHint, Allocator* a) {
+    allocator = a;
     Reset();
+    cap = (u32)(capHint + kPadding); // + kPadding for terminating 0
 }
 
 // ensure that a Vec never shares its els buffer with another after a clone/copy
 // note: we don't inherit allocator as it's not needed for our use cases
-WStr::WStr(const WStr& orig) {
-    els = buf;
+WStr::WStr(const WStr& that) {
     Reset();
-    EnsureCap(orig.cap);
-    len = orig.len;
-    // using memcpy, as Vec only supports POD types
-    memcpy(els, orig.els, kElSize * (orig.len));
+    WCHAR* s = EnsureCap(this, that.cap);
+    WCHAR* sOrig = that.Get(); 
+    len = that.len;
+    size_t n = (len + kPadding) * kElSize;
+    memcpy(s, sOrig, n);
 }
 
 WStr::WStr(std::wstring_view s) {
-    els = buf;
     Reset();
     AppendView(s);
 }
@@ -1608,23 +1604,17 @@ WStr& WStr::operator=(const WStr& that) {
     if (this == &that) {
         return *this;
     }
-    EnsureCap(that.cap);
-    // using memcpy, as Vec only supports POD types
-    memcpy(els, that.els, kElSize * (len = that.len));
-    memset(els + len, 0, kElSize * (cap - len));
+    Reset();
+    WCHAR* s = EnsureCap(this, that.cap);
+    WCHAR* sOrig = that.Get();
+    len = that.len;
+    size_t n = (len + kPadding) * kElSize;
+    memcpy(s, sOrig, n);
     return *this;
 }
 
 WStr::~WStr() {
-    FreeEls();
-}
-
-void WStr::Reset() {
-    len = 0;
-    cap = dimof(buf) - kPadding;
-    FreeEls();
-    els = buf;
-    memset(buf, 0, kBufSize);
+    Free(this);
 }
 
 WCHAR& WStr::at(size_t idx) const {
@@ -1665,12 +1655,6 @@ WCHAR& WStr::operator[](u32 idx) const {
 }
 #endif
 
-bool WStr::SetSize(size_t newSize) {
-    Reset();
-    WCHAR* s = MakeSpaceAt(0, newSize);
-    return s != nullptr;
-}
-
 size_t WStr::size() const {
     return len;
 }
@@ -1679,7 +1663,7 @@ int WStr::isize() const {
 }
 
 bool WStr::InsertAt(size_t idx, const WCHAR& el) {
-    WCHAR* p = MakeSpaceAt(idx, 1);
+    WCHAR* p = MakeSpaceAt(this, idx, 1);
     if (!p) {
         return false;
     }
@@ -1698,17 +1682,12 @@ bool WStr::Append(const WCHAR* src, size_t count) {
     if (!src || 0 == count) {
         return true;
     }
-    WCHAR* dst = MakeSpaceAt(len, count);
+    WCHAR* dst = MakeSpaceAt(this, len, count);
     if (!dst) {
         return false;
     }
     memcpy(dst, src, count * kElSize);
     return true;
-}
-
-// appends count blank (i.e. zeroed-out) elements at the end
-WCHAR* WStr::AppendBlanks(size_t count) {
-    return MakeSpaceAt(len, count);
 }
 
 WCHAR WStr::RemoveAt(size_t idx, size_t count) {
@@ -1728,27 +1707,6 @@ WCHAR WStr::RemoveLast() {
         return 0;
     }
     return RemoveAt(len - 1);
-}
-
-// This is a fast version of RemoveAt() which replaces the element we're
-// removing with the last element, copying less memory.
-// It can only be used if order of elements doesn't matter and elements
-// can be copied via memcpy()
-// TODO: could be extend to take number of elements to remove
-WCHAR WStr::RemoveAtFast(size_t idx) {
-    CrashIf(idx >= len);
-    if (idx >= len) {
-        return 0;
-    }
-    WCHAR res = at(idx);
-    WCHAR* toRemove = els + idx;
-    WCHAR* last = els + len - 1;
-    if (toRemove != last) {
-        memcpy(toRemove, last, kElSize);
-    }
-    memset(last, 0, kElSize);
-    --len;
-    return res;
 }
 
 WCHAR& WStr::Last() const {

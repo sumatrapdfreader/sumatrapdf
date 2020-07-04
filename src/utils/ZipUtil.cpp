@@ -147,7 +147,9 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     bool ok = WriteData(localHeader, sizeof(localHeader)) && WriteData(nameUtf8, namelen) &&
               WriteData(compressed, compressedSize);
 
-    ByteWriter central = MakeByteWriterLE(centraldir.AppendBlanks(46), 46);
+    constexpr size_t bufLen = 46;
+    char buf[bufLen];
+    ByteWriter central = MakeByteWriterLE(buf, bufLen);
     central.Write32(0x02014B50); // signature
     central.Write16(20);         // version made by
     central.Write16(20);         // version needed to extract
@@ -164,6 +166,7 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     central.Write16(0); // internal file attributes
     central.Write32(0); // external file attributes
     central.Write32((u32)fileOffset);
+    centraldir.Append(buf, bufLen);
     centraldir.Append(nameUtf8, namelen);
 
     fileCount++;

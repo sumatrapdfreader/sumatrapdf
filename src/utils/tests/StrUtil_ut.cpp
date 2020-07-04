@@ -197,13 +197,13 @@ void strStrTest() {
         str::Eq(buf2, "blahlost");
         utassert(buf == buf);
         str.Reset();
-        for (int i = 0; i < str::Str::kBufSize + 4; i++) {
+        for (int i = 0; i < str::Str::kBufChars + 4; i++) {
             str.AppendChar((char)i);
         }
         buf2 = str.Get();
         // we should have allocated buf on the heap
         utassert(buf != buf2);
-        for (int i = 0; i < str::Str::kBufSize + 4; i++) {
+        for (int i = 0; i < str::Str::kBufChars + 4; i++) {
             char c = str.at(i);
             utassert(c == (char)i);
         }
@@ -225,6 +225,52 @@ void strStrTest() {
         // we've appended 100*10 = 1000 chars, which is less than 1024
         // so Str::buf should be the same as buf
         char* buf2 = str.Get();
+        utassert(buf == buf2);
+    }
+}
+
+void strWStrTest() {
+    {
+        // verify that we use buf for initial allocations
+        str::WStr str;
+        WCHAR* buf = str.Get();
+        str.Append(L"blah");
+        WCHAR* buf2 = str.Get();
+        utassert(buf == buf2);
+        str::Eq(buf2, L"blah");
+        str.Append(L"lost");
+        buf2 = str.Get();
+        str::Eq(buf2, L"blahlost");
+        utassert(buf == buf);
+        str.Reset();
+        for (int i = 0; i < str::Str::kBufChars + 4; i++) {
+            str.AppendChar((WCHAR)i);
+        }
+        buf2 = str.Get();
+        // we should have allocated buf on the heap
+        utassert(buf != buf2);
+        for (int i = 0; i < str::Str::kBufChars + 4; i++) {
+            WCHAR c = str.at(i);
+            utassert(c == (WCHAR)i);
+        }
+    }
+
+    {
+        // verify that initialCapacity hint works
+        str::WStr str(1024);
+        WCHAR* buf = nullptr;
+
+        for (int i = 0; i < 50; i++) {
+            str.Append(L"01234567890123456789");
+            if (i == 2) {
+                // we filled Str::buf (32 bytes) by putting 20 bytes
+                // and allocated heap for 1024 bytes. Remember the
+                buf = str.Get();
+            }
+        }
+        // we've appended 100*10 = 1000 chars, which is less than 1024
+        // so WStr::buf should be the same as buf
+        WCHAR* buf2 = str.Get();
         utassert(buf == buf2);
     }
 }
@@ -647,6 +693,7 @@ void StrTest() {
     }
 
     strStrTest();
+    strWStrTest();
     StrIsDigitTest();
     StrReplaceTest();
     StrSeqTest();

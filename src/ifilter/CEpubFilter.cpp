@@ -98,7 +98,7 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
             }
         } else if (t->IsEndTag()) {
             if (!IsInlineTag(t->tag) && text.size() > 0 && text.Last() == ' ') {
-                text.Pop();
+                text.RemoveLast();
                 text.Append("\r\n");
             }
             // when closing a tag, if the top tag doesn't match but

@@ -86,15 +86,20 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
     CrashIf(nameLen > UINT32_MAX - 25);
     u32 headerSize = 25 + (u32)nameLen;
     FILETIME ft = file::GetModificationTime(filePath);
+
+    constexpr size_t bufSize = 24;
+    char buf[bufSize];
+
     if (fi && FileTimeEq(ft, fi->ftModified)) {
     ReusePrevious:
-        ByteWriter meta = MakeByteWriterLE(data.AppendBlanks(24), 24);
+        ByteWriter meta = MakeByteWriterLE(buf, bufSize);
         meta.Write32(headerSize);
         meta.Write32(fi->compressedSize);
         meta.Write32(fi->uncompressedSize);
         meta.Write32(fi->uncompressedCrc32);
         meta.Write32(ft.dwLowDateTime);
         meta.Write32(ft.dwHighDateTime);
+        data.Append(buf, bufSize);
         data.Append(inArchiveName, nameLen + 1);
         return content.Append(fi->compressedData, fi->compressedSize);
     }
@@ -117,13 +122,14 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
         return false;
     }
 
-    ByteWriter meta = MakeByteWriterLE(data.AppendBlanks(24), 24);
+    ByteWriter meta = MakeByteWriterLE(buf, bufSize);
     meta.Write32(headerSize);
     meta.Write32((u32)compressedSize);
     meta.Write32((u32)fileData.size());
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
+    data.Append(buf, bufSize);
     data.Append(inArchiveName, nameLen + 1);
     return content.Append(compressed, compressedSize);
 }
@@ -142,9 +148,12 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     str::Str data;
     str::Str content;
 
-    ByteWriter lzsaHeader = MakeByteWriterLE(data.AppendBlanks(8), 8);
+    constexpr size_t bufSize = 8;
+    char buf[bufSize];
+    ByteWriter lzsaHeader = MakeByteWriterLE(buf, bufSize);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
     lzsaHeader.Write32((u32)(files.size() - skipFiles));
+    data.Append(buf, bufSize);
 
     for (size_t i = skipFiles; i < files.size(); i++) {
         AutoFreeWstr filePath(str::Dup(files.at(i)));
@@ -172,7 +181,8 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     }
 
     u32 headerCrc32 = crc32(0, (const u8*)data.Get(), (u32)data.size());
-    MakeByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
+    MakeByteWriterLE(buf, 4).Write32(headerCrc32);
+    data.Append(buf, 4);
     if (!data.Append(content.Get(), content.size()))
         return false;
 

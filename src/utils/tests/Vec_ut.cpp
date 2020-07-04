@@ -253,7 +253,7 @@ void VecTest() {
 
         v.Append("lambda");
         utassert(str::Eq(v.LendData(), "lambda"));
-        char c = v.Pop();
+        char c = v.RemoveLast();
         utassert(c == 'a');
         utassert(str::Eq(v.LendData(), "lambd"));
     }

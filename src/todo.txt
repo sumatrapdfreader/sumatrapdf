@@ -49,6 +49,7 @@ ProgramFiles directory (maybe would fix https://github.com/sumatrapdfreader/suma
 ------
 
 Fixes:
+- fix Vec bug (same as Str) where we're not using buf
 - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1466 (-new-window preserves window state from history)
 - fix memleaks on reading .vbkm file
 - https://github.com/sumatrapdfreader/sumatrapdf/issues/651 : search text box freeze after search / cloes file / open file
@@ -61,6 +62,7 @@ small refactorings:
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
 - use DirIter instead of FindFirstFile in Installer.cpp
 - use DirIter instead of FindFirstFile in FileThumbnails.cpp
+- ByteWriter should manage it's own buffer (with a hint)
 ------
 
 possible refactorings:
