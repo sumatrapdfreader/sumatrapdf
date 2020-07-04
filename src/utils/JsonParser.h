@@ -5,7 +5,7 @@
 
 namespace json {
 
-enum DataType { Type_String, Type_Number, Type_Bool, Type_Null };
+enum class Type { String, Number, Bool, Null };
 
 // parsing JSON data will call the ValueVisitor for every
 // primitive data value with a string representation of that
@@ -19,7 +19,7 @@ enum DataType { Type_String, Type_Number, Type_Bool, Type_Null };
 class ValueVisitor {
   public:
     // return false to stop parsing
-    virtual bool Visit(const char* path, const char* value, DataType type) = 0;
+    virtual bool Visit(const char* path, const char* value, Type type) = 0;
     virtual ~ValueVisitor() {
     }
 };

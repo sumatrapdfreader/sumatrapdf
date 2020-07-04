@@ -8,13 +8,12 @@
 #include "utils/UtAssert.h"
 
 struct JsonValue {
-    const char* path = nullptr;
-    json::DataType type = json::Type_String;
-    const char* value = nullptr;
+    const char* path{nullptr};
+    const char* value{nullptr};
+    json::Type type{json::Type::String};
 
-    JsonValue() : path(nullptr), value(nullptr) {
-    }
-    JsonValue(const char* path, const char* value, json::DataType type = json::Type_String)
+    JsonValue() = default;
+    JsonValue(const char* path, const char* value, json::Type type = json::Type::String)
         : path(path), type(type), value(value) {
     }
 };
@@ -31,7 +30,7 @@ class JsonVerifier : public json::ValueVisitor {
         utassert(dataLen == idx);
     }
 
-    virtual bool Visit(const char* path, const char* value, json::DataType type) {
+    virtual bool Visit(const char* path, const char* value, json::Type type) {
         utassert(idx < dataLen);
         const JsonValue& d = data[idx];
         utassert(type == d.type);
@@ -54,26 +53,26 @@ void JsonTest() {
                                              "\\\n\t\xC4\xA3"
                                              "4")},
         // numbers
-        {"123", JsonValue("", "123", json::Type_Number)},
-        {"-99.99", JsonValue("", "-99.99", json::Type_Number)},
-        {"1.2E+15", JsonValue("", "1.2E+15", json::Type_Number)},
-        {"0e-7", JsonValue("", "0e-7", json::Type_Number)},
+        {"123", JsonValue("", "123", json::Type::Number)},
+        {"-99.99", JsonValue("", "-99.99", json::Type::Number)},
+        {"1.2E+15", JsonValue("", "1.2E+15", json::Type::Number)},
+        {"0e-7", JsonValue("", "0e-7", json::Type::Number)},
         // keywords
-        {"true", JsonValue("", "true", json::Type_Bool)},
-        {"false", JsonValue("", "false", json::Type_Bool)},
-        {"null", JsonValue("", "null", json::Type_Null)},
+        {"true", JsonValue("", "true", json::Type::Bool)},
+        {"false", JsonValue("", "false", json::Type::Bool)},
+        {"null", JsonValue("", "null", json::Type::Null)},
         // dictionaries
         {"{\"key\":\"test\"}", JsonValue("/key", "test")},
-        {"{ \"no\" : 123 }", JsonValue("/no", "123", json::Type_Number)},
-        {"{ \"bool\": true }", JsonValue("/bool", "true", json::Type_Bool)},
+        {"{ \"no\" : 123 }", JsonValue("/no", "123", json::Type::Number)},
+        {"{ \"bool\": true }", JsonValue("/bool", "true", json::Type::Bool)},
         {"{}", JsonValue()},
         // arrays
         {"[\"test\"]", JsonValue("[0]", "test")},
-        {"[123]", JsonValue("[0]", "123", json::Type_Number)},
-        {"[ null ]", JsonValue("[0]", "null", json::Type_Null)},
+        {"[123]", JsonValue("[0]", "123", json::Type::Number)},
+        {"[ null ]", JsonValue("[0]", "null", json::Type::Null)},
         {"[]", JsonValue()},
         // combination
-        {"{\"key\":[{\"name\":-987}]}", JsonValue("/key[0]/name", "-987", json::Type_Number)},
+        {"{\"key\":[{\"name\":-987}]}", JsonValue("/key[0]/name", "-987", json::Type::Number)},
     };
 
     for (size_t i = 0; i < dimof(validJsonData); i++) {
@@ -87,11 +86,11 @@ void JsonTest() {
     } invalidJsonData[] = {
         // dictionaries
         {"{\"key\":\"test\"", JsonValue("/key", "test")},
-        {"{ \"no\" : 123, }", JsonValue("/no", "123", json::Type_Number)},
+        {"{ \"no\" : 123, }", JsonValue("/no", "123", json::Type::Number)},
         {"{\"key\":\"test\"]", JsonValue("/key", "test")},
         // arrays
         {"[\"test\"", JsonValue("[0]", "test")},
-        {"[123,]", JsonValue("[0]", "123", json::Type_Number)},
+        {"[123,]", JsonValue("[0]", "123", json::Type::Number)},
         {"[\"test\"}", JsonValue("[0]", "test")},
     };
 
@@ -111,13 +110,13 @@ void JsonTest() {
 
     const JsonValue testData[] = {
         JsonValue("/ComicBookInfo/1.0/title", "Meta data demo"),
-        JsonValue("/ComicBookInfo/1.0/publicationMonth", "4", json::Type_Number),
-        JsonValue("/ComicBookInfo/1.0/publicationYear", "2010", json::Type_Number),
-        JsonValue("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type_Bool),
+        JsonValue("/ComicBookInfo/1.0/publicationMonth", "4", json::Type::Number),
+        JsonValue("/ComicBookInfo/1.0/publicationYear", "2010", json::Type::Number),
+        JsonValue("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type::Bool),
         JsonValue("/ComicBookInfo/1.0/credits[0]/role", "Writer"),
-        JsonValue("/ComicBookInfo/1.0/credits[1]/primary", "false", json::Type_Bool),
+        JsonValue("/ComicBookInfo/1.0/credits[1]/primary", "false", json::Type::Bool),
         JsonValue("/ComicBookInfo/1.0/credits[1]/role", "Publisher"),
-        JsonValue("/ComicBookInfo/1.0/credits[2]", "null", json::Type_Null),
+        JsonValue("/ComicBookInfo/1.0/credits[2]", "null", json::Type::Null),
         JsonValue("/appID", "Test/123"),
     };
     const char* jsonSample =

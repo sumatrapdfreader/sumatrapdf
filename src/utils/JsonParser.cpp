@@ -85,7 +85,9 @@ static const char* ParseString(ParseArgs& args, const char* data) {
     str::Str string;
     data = ExtractString(string, data);
     if (data) {
-        args.canceled = !args.visitor->Visit(args.path.Get(), string.Get(), Type_String);
+        const char* path = args.path.Get();
+        const char* value = string.Get();
+        args.canceled = !args.visitor->Visit(path, value, Type::String);
     }
     return data;
 }
@@ -121,7 +123,8 @@ static const char* ParseNumber(ParseArgs& args, const char* data) {
     }
 
     char* number = str::DupN(start, data - start);
-    args.canceled = !args.visitor->Visit(args.path.Get(), number, Type_Number);
+    const char* path = args.path.Get();
+    args.canceled = !args.visitor->Visit(path, number, Type::Number);
     free(number);
     return data;
 }
@@ -178,7 +181,8 @@ static const char* ParseArray(ParseArgs& args, const char* data) {
         if (args.canceled || !data) {
             return data;
         }
-        args.path.RemoveAt(pathIdx, args.path.size() - pathIdx);
+        size_t n = args.path.size();
+        args.path.RemoveAt(pathIdx, n - pathIdx);
 
         data = SkipWS(data);
         if (']' == *data) {
@@ -191,11 +195,12 @@ static const char* ParseArray(ParseArgs& args, const char* data) {
     }
 }
 
-static const char* ParseKeyword(ParseArgs& args, const char* data, const char* keyword, DataType type) {
+static const char* ParseKeyword(ParseArgs& args, const char* data, const char* keyword, Type type) {
     if (!str::StartsWith(data, keyword)) {
         return nullptr;
     }
-    args.canceled = !args.visitor->Visit(args.path.Get(), keyword, type);
+    const char* path = args.path.Get();
+    args.canceled = !args.visitor->Visit(path, keyword, type);
     return data + str::Len(keyword);
 }
 
@@ -221,11 +226,11 @@ static const char* ParseValue(ParseArgs& args, const char* data) {
         case '[':
             return ParseArray(args, data);
         case 't':
-            return ParseKeyword(args, data, "true", Type_Bool);
+            return ParseKeyword(args, data, "true", Type::Bool);
         case 'f':
-            return ParseKeyword(args, data, "false", Type_Bool);
+            return ParseKeyword(args, data, "false", Type::Bool);
         case 'n':
-            return ParseKeyword(args, data, "null", Type_Null);
+            return ParseKeyword(args, data, "null", Type::Null);
         default:
             return nullptr;
     }
