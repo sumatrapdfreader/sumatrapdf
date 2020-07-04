@@ -21,7 +21,7 @@ static void HtmlAddWithNesting(str::Str* out, HtmlToken* tok, size_t nesting) {
             out->AppendChar('\t');
         }
         if (tok->IsEndTag() && nesting > 0) {
-            out->Pop();
+            out->RemoveLast();
         }
     }
     // output the tag and all its attributes

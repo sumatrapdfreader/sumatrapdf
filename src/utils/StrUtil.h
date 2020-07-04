@@ -202,7 +202,7 @@ struct Str {
     static constexpr size_t kPadding = sizeof(char);
     static constexpr size_t kBufSize = sizeof(buf);
 
-    explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
+    explicit Str(u32 capHint = 0, Allocator* allocator = nullptr);
     Str(const Str& orig);
     Str(std::string_view s);
     Str& operator=(const Str& that);
@@ -225,11 +225,9 @@ struct Str {
     bool Append(char el);
     bool Append(const char* src, size_t count = -1);
     char* AppendBlanks(size_t count);
-    void RemoveAt(size_t idx, size_t count = 1);
-    void RemoveLast();
-    void RemoveAtFast(size_t idx);
-    char Pop();
-    char PopAt(size_t idx);
+    char RemoveAt(size_t idx, size_t count = 1);
+    char RemoveAtFast(size_t idx);
+    char RemoveLast();
     [[nodiscard]] char& Last() const;
     [[nodiscard]] char* StealData();
     [[nodiscard]] char* LendData() const;
@@ -312,11 +310,9 @@ struct WStr {
     bool Append(const WCHAR& el);
     bool Append(const WCHAR* src, size_t count = -1);
     WCHAR* AppendBlanks(size_t count);
-    void RemoveAt(size_t idx, size_t count = 1);
-    void RemoveLast();
-    void RemoveAtFast(size_t idx);
-    WCHAR Pop();
-    WCHAR PopAt(size_t idx);
+    WCHAR RemoveAt(size_t idx, size_t count = 1);
+    WCHAR RemoveAtFast(size_t idx);
+    WCHAR RemoveLast();
     [[nodiscard]] WCHAR& Last() const;
     [[nodiscard]] WCHAR* StealData();
     [[nodiscard]] WCHAR* LendData() const;

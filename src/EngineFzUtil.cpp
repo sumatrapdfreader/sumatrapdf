@@ -486,8 +486,8 @@ static void AddLineSep(str::WStr& s, Vec<Rect>& rects, const WCHAR* lineSep, siz
     }
     // remove trailing spaces
     if (str::IsWs(s.LastChar())) {
-        s.Pop();
-        rects.Pop();
+        s.RemoveLast();
+        rects.RemoveLast();
     }
 
     s.Append(lineSep);

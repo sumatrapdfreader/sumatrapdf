@@ -830,8 +830,8 @@ bool EngineDjVu::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
 
 static void AppendNewline(str::WStr& extracted, Vec<Rect>& coords, const WCHAR* lineSep) {
     if (extracted.size() > 0 && ' ' == extracted.Last()) {
-        extracted.Pop();
-        coords.Pop();
+        extracted.RemoveLast();
+        coords.RemoveLast();
     }
     extracted.Append(lineSep);
     coords.AppendBlanks(str::Len(lineSep));

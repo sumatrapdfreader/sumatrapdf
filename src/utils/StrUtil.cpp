@@ -1152,7 +1152,7 @@ static char* EnsureCap(Str* s, size_t needed) {
     }
     s->els = newEls;
     memset(s->els + s->len, 0, newPadding);
-    s->cap = newCap;
+    s->cap = (u32)newCap;
     return s->els;
 }
 
@@ -1202,7 +1202,7 @@ void Str::Reset() {
 }
 
 // allocator is not owned by Vec and must outlive it
-Str::Str(size_t capHint, Allocator* a) {
+Str::Str(u32 capHint, Allocator* a) {
     Reset();
     cap = capHint + Str::kPadding; // + kPadding for terminating 0
     allocator = a;
@@ -1323,22 +1323,17 @@ char* Str::AppendBlanks(size_t count) {
     return MakeSpaceAt(this, len, count);
 }
 
-void Str::RemoveAt(size_t idx, size_t count) {
+char Str::RemoveAt(size_t idx, size_t count) {
+    char res = at(idx);
     if (len > idx + count) {
         char* dst = els + idx;
         char* src = els + idx + count;
         size_t nToMove = len - idx - count;
         memmove(dst, src, nToMove);
     }
-    len -= count;
+    len -= (u32)count;
     memset(els + len, 0, count);
-}
-
-void Str::RemoveLast() {
-    if (len == 0) {
-        return;
-    }
-    RemoveAt(len - 1);
+    return res;
 }
 
 // This is a fast version of RemoveAt() which replaces the element we're
@@ -1346,11 +1341,12 @@ void Str::RemoveLast() {
 // It can only be used if order of elements doesn't matter and elements
 // can be copied via memcpy()
 // TODO: could be extend to take number of elements to remove
-void Str::RemoveAtFast(size_t idx) {
+char Str::RemoveAtFast(size_t idx) {
     CrashIf(idx >= len);
     if (idx >= len) {
-        return;
+        return 0;
     }
+    char res = at(idx);
     char* toRemove = els + idx;
     char* last = els + len - 1;
     if (toRemove != last) {
@@ -1358,20 +1354,14 @@ void Str::RemoveAtFast(size_t idx) {
     }
     *last = 0;
     --len;
+    return res;
 }
 
-char Str::Pop() {
-    CrashIf(0 == len);
-    char el = at(len - 1);
-    RemoveAtFast(len - 1);
-    return el;
-}
-
-char Str::PopAt(size_t idx) {
-    CrashIf(idx >= len);
-    char el = at(idx);
-    RemoveAt(idx);
-    return el;
+char Str::RemoveLast() {
+    if (len == 0) {
+        return 0;
+    }
+    return RemoveAt(len - 1);
 }
 
 char& Str::Last() const {
@@ -1565,12 +1555,12 @@ bool WStr::EnsureCap(size_t needed) {
     }
     els = newEls;
     memset(els + len, 0, newPadding);
-    cap = newCap;
+    cap = (u32)newCap;
     return true;
 }
 
 WCHAR* WStr::MakeSpaceAt(size_t idx, size_t count) {
-    u32 newLen = std::max(len, (u32)idx) + count;
+    u32 newLen = std::max(len, (u32)idx) + (u32)count;
     bool ok = EnsureCap(newLen);
     if (!ok) {
         return nullptr;
@@ -1721,21 +1711,23 @@ WCHAR* WStr::AppendBlanks(size_t count) {
     return MakeSpaceAt(len, count);
 }
 
-void WStr::RemoveAt(size_t idx, size_t count) {
+WCHAR WStr::RemoveAt(size_t idx, size_t count) {
+    WCHAR res = at(idx);
     if (len > idx + count) {
         WCHAR* dst = els + idx;
         WCHAR* src = els + idx + count;
         memmove(dst, src, (len - idx - count) * kElSize);
     }
-    len -= count;
+    len -= (u32)count;
     memset(els + len, 0, count * kElSize);
+    return res;
 }
 
-void WStr::RemoveLast() {
+WCHAR WStr::RemoveLast() {
     if (len == 0) {
-        return;
+        return 0;
     }
-    RemoveAt(len - 1);
+    return RemoveAt(len - 1);
 }
 
 // This is a fast version of RemoveAt() which replaces the element we're
@@ -1743,11 +1735,12 @@ void WStr::RemoveLast() {
 // It can only be used if order of elements doesn't matter and elements
 // can be copied via memcpy()
 // TODO: could be extend to take number of elements to remove
-void WStr::RemoveAtFast(size_t idx) {
+WCHAR WStr::RemoveAtFast(size_t idx) {
     CrashIf(idx >= len);
     if (idx >= len) {
-        return;
+        return 0;
     }
+    WCHAR res = at(idx);
     WCHAR* toRemove = els + idx;
     WCHAR* last = els + len - 1;
     if (toRemove != last) {
@@ -1755,20 +1748,7 @@ void WStr::RemoveAtFast(size_t idx) {
     }
     memset(last, 0, kElSize);
     --len;
-}
-
-WCHAR WStr::Pop() {
-    CrashIf(0 == len);
-    WCHAR el = at(len - 1);
-    RemoveAtFast(len - 1);
-    return el;
-}
-
-WCHAR WStr::PopAt(size_t idx) {
-    CrashIf(idx >= len);
-    WCHAR el = at(idx);
-    RemoveAt(idx);
-    return el;
+    return res;
 }
 
 WCHAR& WStr::Last() const {
