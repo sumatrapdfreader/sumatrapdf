@@ -1,5 +1,19 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2010-07-03 Fri
+
+De-templetizing WStr implementation. Currently it's a subclass
+of Vec<WCHAR>.
+Yes, duplication of code is bad but so are templates.
+Reading code where you see T instead of WCHAR is significantly
+worse.
+The more stuff there is in .h files, the more code uses
+templates, the longer are compilation times.
+Templated code must be in .h file. 
+While I can't fix long compilation times, I can try to keep
+them as fast as possible.
+Also an opportunity to make the API smaller.
+
 2020-06-29 Mon
 
 - adding comments to Commands.h

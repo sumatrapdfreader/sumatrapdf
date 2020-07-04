@@ -187,11 +187,12 @@ namespace str {
 struct Str {
     // allocator is not owned by Vec and must outlive it
     Allocator* allocator{nullptr};
-    // don't crash if we run out of memory
-    bool allowFailure{false};
     size_t len{0};
     size_t cap{0};
+    // TODO: re-use cap for capacityHint
     size_t capacityHint{0};
+    // don't crash if we run out of memory
+    bool allowFailure{false};
     char* els{nullptr};
     char buf[32];
 
@@ -273,15 +274,15 @@ struct Str {
     }
 };
 
-struct WStr2 {
+struct WStr {
     // allocator is not owned by Vec and must outlive it
     Allocator* allocator{nullptr};
-    // don't crash if we run out of memory
-    bool allowFailure{false};
+    WCHAR* els{nullptr};
     size_t len{0};
     size_t cap{0};
     size_t capacityHint{0};
-    WCHAR* els{nullptr};
+    // don't crash if we run out of memory
+    bool allowFailure{false};
     WCHAR buf[32];
 
     static constexpr size_t kPadding = 2;
@@ -291,11 +292,11 @@ struct WStr2 {
     bool EnsureCap(size_t needed);
     WCHAR* MakeSpaceAt(size_t idx, size_t count);
     void FreeEls();
-    explicit WStr2(size_t capHint = 0, Allocator* allocator = nullptr);
-    WStr2(const WStr2& orig);
-    WStr2(std::wstring_view s);
-    WStr2& operator=(const WStr2& that);
-    ~WStr2();
+    explicit WStr(size_t capHint = 0, Allocator* allocator = nullptr);
+    WStr(const WStr& orig);
+    WStr(std::wstring_view s);
+    WStr& operator=(const WStr& that);
+    ~WStr();
     [[nodiscard]] WCHAR& operator[](size_t idx) const;
     [[nodiscard]] WCHAR& operator[](long idx) const;
     [[nodiscard]] WCHAR& operator[](ULONG idx) const;
@@ -358,5 +359,4 @@ struct WStr2 {
         return &(els[len]);
     }
 };
-
 } // namespace str

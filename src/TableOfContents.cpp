@@ -95,7 +95,7 @@ static void TocCustomizeTooltip(TreeItmGetTooltipEvent* ev) {
 
     if (rcLine.right + 2 < rcLabel.right) {
         str::WStr currInfoTip = ti->Text();
-        infotip.Append(currInfoTip.data());
+        infotip.Append(currInfoTip.Get());
         infotip.Append(L"\r\n");
     }
 
