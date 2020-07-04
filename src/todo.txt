@@ -62,7 +62,6 @@ small refactorings:
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
 - use DirIter instead of FindFirstFile in Installer.cpp
 - use DirIter instead of FindFirstFile in FileThumbnails.cpp
-- ByteWriter should manage it's own buffer (with a hint)
 ------
 
 possible refactorings:

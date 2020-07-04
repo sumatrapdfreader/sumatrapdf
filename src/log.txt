@@ -4,6 +4,9 @@ A daily log of changes and commentary. An experiment of sorts.
 
 Improving WStr the same way as Str, while we're in this area.
 
+make ByteWriter manage it's own buffer. In retrospect it's
+better API than passing a buffer.
+
 2010-07-03 Fri
 
 De-templetizing WStr implementation. Currently it's a subclass

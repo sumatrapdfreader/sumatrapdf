@@ -131,8 +131,8 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
         compressedSize = (u32)size;
     }
 
-    char localHeader[30];
-    ByteWriter local = MakeByteWriterLE(localHeader, sizeof(localHeader));
+    constexpr size_t kHdrSize = 30;
+    ByteWriterLE local(kHdrSize);
     local.Write32(0x04034B50); // signature
     local.Write16(20);         // version needed to extract
     local.Write16(flags);
@@ -143,13 +143,15 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     local.Write32((u32)size);
     local.Write16((u16)namelen);
     local.Write16(0); // extra field length
+    CrashIf(local.d.size() != kHdrSize);
 
-    bool ok = WriteData(localHeader, sizeof(localHeader)) && WriteData(nameUtf8, namelen) &&
-              WriteData(compressed, compressedSize);
+    char* localHeader = local.d.Get();
+    bool ok = WriteData(localHeader, kHdrSize);
+    ok = ok && WriteData(nameUtf8, namelen);
+    ok = ok && WriteData(compressed, compressedSize);
 
-    constexpr size_t bufLen = 46;
-    char buf[bufLen];
-    ByteWriter central = MakeByteWriterLE(buf, bufLen);
+    constexpr size_t kCentralSize = 46;
+    ByteWriterLE central(kCentralSize);
     central.Write32(0x02014B50); // signature
     central.Write16(20);         // version made by
     central.Write16(20);         // version needed to extract
@@ -166,7 +168,9 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     central.Write16(0); // internal file attributes
     central.Write32(0); // external file attributes
     central.Write32((u32)fileOffset);
-    centraldir.Append(buf, bufLen);
+    CrashIf(central.d.size() != kCentralSize);
+
+    centraldir.Append(central.d.Get(), kCentralSize);
     centraldir.Append(nameUtf8, namelen);
 
     fileCount++;
@@ -229,8 +233,8 @@ bool ZipCreator::Finish() {
         return false;
     }
 
-    char endOfCentralDir[22];
-    ByteWriter eocd = MakeByteWriterLE(endOfCentralDir, sizeof(endOfCentralDir));
+    constexpr size_t kDirSize = 22;
+    ByteWriterLE eocd(kDirSize);
     eocd.Write32(0x06054B50); // signature
     eocd.Write16(0);          // disk number
     eocd.Write16(0);          // disk number of central directory
@@ -239,8 +243,11 @@ bool ZipCreator::Finish() {
     eocd.Write32((u32)centraldir.size());
     eocd.Write32((u32)bytesWritten);
     eocd.Write16(0); // comment len
+    CrashIf(eocd.d.size() != kDirSize);
 
-    return WriteData(centraldir.Get(), centraldir.size()) && WriteData(endOfCentralDir, sizeof(endOfCentralDir));
+    bool ok = WriteData(centraldir.Get(), centraldir.size());
+    ok = ok && WriteData(eocd.d.Get(), kDirSize);
+    return ok;
 }
 
 IStream* OpenDirAsZipStream(const WCHAR* dirPath, bool recursive) {

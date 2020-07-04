@@ -2,23 +2,22 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct ByteWriter {
-    u8* dst = nullptr;
-    u8* end = nullptr;
-    bool isLE = false;
+    bool isLE{false};
+    str::Str d;
 
-    ByteWriter(u8* dst, size_t bytesLeft, bool isLE);
-
+    ByteWriter(size_t sizeHint = 0);
     ByteWriter(const ByteWriter& o);
 
-    size_t Left() const;
-    bool Write8(u8 b);
-    bool Write8x2(u8 b1, u8 b2);
-    bool Write16(u16 val);
-    bool Write32(u32 val);
-    bool Write64(u64 val);
+    void Write8(u8 b);
+    void Write8x2(u8 b1, u8 b2);
+    void Write16(u16 val);
+    void Write32(u32 val);
+    void Write64(u64 val);
+
+    size_t Size() const;
+    std::span<u8> AsSpan() const;
 };
 
-ByteWriter MakeByteWriterLE(u8* dst, size_t len);
-ByteWriter MakeByteWriterLE(char* dst, size_t len);
-ByteWriter MakeByteWriterBE(u8* dst, size_t len);
-ByteWriter MakeByteWriterBE(char* dst, size_t len);
+struct ByteWriterLE : ByteWriter {
+    ByteWriterLE(size_t sizeHint = 0);
+};

@@ -1536,7 +1536,7 @@ static WCHAR* EnsureCap(WStr* s, size_t needed) {
     return newEls;
 }
 
-static WCHAR* MakeSpaceAt(WStr* s,size_t idx, size_t count) {
+static WCHAR* MakeSpaceAt(WStr* s, size_t idx, size_t count) {
     CrashIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
     WCHAR* buf = EnsureCap(s, newLen);
@@ -1589,7 +1589,7 @@ WStr::WStr(size_t capHint, Allocator* a) {
 WStr::WStr(const WStr& that) {
     Reset();
     WCHAR* s = EnsureCap(this, that.cap);
-    WCHAR* sOrig = that.Get(); 
+    WCHAR* sOrig = that.Get();
     len = that.len;
     size_t n = (len + kPadding) * kElSize;
     memcpy(s, sOrig, n);

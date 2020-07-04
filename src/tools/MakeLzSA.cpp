@@ -87,19 +87,19 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
     u32 headerSize = 25 + (u32)nameLen;
     FILETIME ft = file::GetModificationTime(filePath);
 
-    constexpr size_t bufSize = 24;
-    char buf[bufSize];
+    constexpr size_t kBufSize = 24;
 
     if (fi && FileTimeEq(ft, fi->ftModified)) {
     ReusePrevious:
-        ByteWriter meta = MakeByteWriterLE(buf, bufSize);
+        ByteWriterLE meta(kBufSize);
         meta.Write32(headerSize);
         meta.Write32(fi->compressedSize);
         meta.Write32(fi->uncompressedSize);
         meta.Write32(fi->uncompressedCrc32);
         meta.Write32(ft.dwLowDateTime);
         meta.Write32(ft.dwHighDateTime);
-        data.Append(buf, bufSize);
+        CrashIf(meta.Size() != kBufSize);
+        data.AppendSpan(meta.AsSpan());
         data.Append(inArchiveName, nameLen + 1);
         return content.Append(fi->compressedData, fi->compressedSize);
     }
@@ -122,14 +122,15 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
         return false;
     }
 
-    ByteWriter meta = MakeByteWriterLE(buf, bufSize);
+    ByteWriterLE meta(kBufSize);
     meta.Write32(headerSize);
     meta.Write32((u32)compressedSize);
     meta.Write32((u32)fileData.size());
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
-    data.Append(buf, bufSize);
+    CrashIf(meta.Size() != kBufSize);
+    data.AppendSpan(meta.AsSpan());
     data.Append(inArchiveName, nameLen + 1);
     return content.Append(compressed, compressedSize);
 }
@@ -148,12 +149,12 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     str::Str data;
     str::Str content;
 
-    constexpr size_t bufSize = 8;
-    char buf[bufSize];
-    ByteWriter lzsaHeader = MakeByteWriterLE(buf, bufSize);
+    constexpr size_t kBufSize = 8;
+    ByteWriterLE lzsaHeader(kBufSize);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
     lzsaHeader.Write32((u32)(files.size() - skipFiles));
-    data.Append(buf, bufSize);
+    CrashIf(lzsaHeader.Size() != kBufSize);
+    data.AppendSpan(lzsaHeader.AsSpan());
 
     for (size_t i = skipFiles; i < files.size(); i++) {
         AutoFreeWstr filePath(str::Dup(files.at(i)));
@@ -181,8 +182,10 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     }
 
     u32 headerCrc32 = crc32(0, (const u8*)data.Get(), (u32)data.size());
-    MakeByteWriterLE(buf, 4).Write32(headerCrc32);
-    data.Append(buf, 4);
+    ByteWriterLE buf(4);
+    buf.Write32(headerCrc32);
+    CrashIf(buf.Size() != 4);
+    data.AppendSpan(buf.AsSpan());
     if (!data.Append(content.Get(), content.size()))
         return false;
 
