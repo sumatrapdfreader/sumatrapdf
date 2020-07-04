@@ -183,6 +183,26 @@ static void ParseUntilTest() {
     }
 }
 
+void strStrTest() {
+    {
+        // verify that initialCapacity hint works
+        str::Str str(1024);
+        char* buf = nullptr;
+
+        for (int i = 0; i < 100; i++) {
+            str.Append("0123456789");
+            if (i == 10) {
+                // we filled Str::buf and allocated heap for 1024 bytes
+                buf = str.Get();
+            }
+        }
+        // we've appended 100*10 = 1000 chars, which is less than 1024
+        // so Str::buf should be the same as buf
+        char* buf2 = str.Get();
+        utassert(buf == buf2);
+    }
+}
+
 void StrTest() {
     WCHAR buf[32];
     const WCHAR* str = L"a string";
@@ -600,6 +620,7 @@ void StrTest() {
         utassert(str::Eq(str::FindI("test", "st"), "st"));
     }
 
+    strStrTest();
     StrIsDigitTest();
     StrReplaceTest();
     StrSeqTest();

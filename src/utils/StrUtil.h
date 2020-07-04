@@ -187,14 +187,18 @@ namespace str {
 struct Str {
     // allocator is not owned by Vec and must outlive it
     Allocator* allocator{nullptr};
+    // TODO: to save space (8 bytes) on 64-bit, use i32 or u32?
     size_t len{0};
     size_t cap{0};
-    // TODO: re-use cap for capacityHint
-    size_t capacityHint{0};
-    // don't crash if we run out of memory
-    bool allowFailure{false};
+    // if true, don't crash if we run out of memory
+    bool allowFailure{false}; // TODO: figure out how to store it more efficiently?
+    // TODO: to save space (8 bytes), combine els and buf?
     char* els{nullptr};
     char buf[32];
+
+#if  defined(DEBUG)
+    int nReallocs{0};
+#endif
 
     static constexpr size_t kPadding = 1;
     static constexpr size_t kBufSize = sizeof(buf);

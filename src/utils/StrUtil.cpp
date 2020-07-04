@@ -1103,6 +1103,13 @@ const char* IdxToStr(const char* strs, int idx) {
 namespace str {
 
 bool Str::EnsureCap(size_t needed) {
+    size_t capacityHint = cap;
+    // tricky: to save sapce we reuse cap for capacityHint. On first expand
+    // cap might be capacityHint
+    if (els == buf && len == 0) {
+        cap = 0;
+    }
+
     if (cap >= needed) {
         return true;
     }
@@ -1120,9 +1127,12 @@ bool Str::EnsureCap(size_t needed) {
         return false;
     }
     if (newElCount > INT_MAX) {
-        // limitation of Vec::Find
         return false;
     }
+
+#if defined(DEBUG)
+    nReallocs++;
+#endif
 
     size_t allocSize = newElCount * kElSize;
     size_t newPadding = allocSize - len * kElSize;
@@ -1165,9 +1175,9 @@ void Str::FreeEls() {
 }
 
 // allocator is not owned by Vec and must outlive it
-Str::Str(size_t capHint, Allocator* allocator) : capacityHint(capHint), allocator(allocator) {
+Str::Str(size_t capHint, Allocator* allocator) : cap(capHint), allocator(allocator) {
+    ZeroMemory(buf, kBufSize);
     els = buf;
-    Reset();
 }
 
 // ensure that a Vec never shares its els buffer with another after a clone/copy
@@ -1530,7 +1540,6 @@ bool WStr::EnsureCap(size_t needed) {
         return false;
     }
     if (newElCount > INT_MAX) {
-        // limitation of Vec::Find
         return false;
     }
 
