@@ -184,7 +184,6 @@ static void ParseUntilTest() {
 }
 
 void strStrTest() {
-#if 0
     {
         // verify that we use buf for initial allocations
         str::Str str;
@@ -192,21 +191,34 @@ void strStrTest() {
         str.Append("blah");
         char* buf2 = str.Get();
         utassert(buf == buf2);
+        str::Eq(buf2, "blah");
         str.Append("lost");
         buf2 = str.Get();
+        str::Eq(buf2, "blahlost");
         utassert(buf == buf);
+        str.Reset();
+        for (int i = 0; i < str::Str::kBufSize + 4; i++) {
+            str.AppendChar((char)i);
+        }
+        buf2 = str.Get();
+        // we should have allocated buf on the heap
+        utassert(buf != buf2);
+        for (int i = 0; i < str::Str::kBufSize + 4; i++) {
+            char c = str.at(i);
+            utassert(c == (char)i);
+        }
     }
-#endif
 
     {
         // verify that initialCapacity hint works
         str::Str str(1024);
         char* buf = nullptr;
 
-        for (int i = 0; i < 100; i++) {
-            str.Append("0123456789");
-            if (i == 10) {
-                // we filled Str::buf and allocated heap for 1024 bytes
+        for (int i = 0; i < 50; i++) {
+            str.Append("01234567890123456789");
+            if (i == 2) {
+                // we filled Str::buf (32 bytes) by putting 20 bytes
+                // and allocated heap for 1024 bytes. Remember the
                 buf = str.Get();
             }
         }

@@ -50,7 +50,8 @@ static bool IsWsText(const char* s, size_t len) {
 }
 
 std::span<u8> PrettyPrintHtml(std::span<u8> d) {
-    str::Str res(d.size());
+    size_t n = d.size();
+    str::Str res(n);
     HtmlPullParser parser(d);
     Vec<HtmlTag> tagNesting;
     HtmlToken* t;

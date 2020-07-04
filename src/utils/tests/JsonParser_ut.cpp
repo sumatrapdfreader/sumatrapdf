@@ -33,9 +33,10 @@ class JsonVerifier : public json::ValueVisitor {
 
     virtual bool Visit(const char* path, const char* value, json::DataType type) {
         utassert(idx < dataLen);
-        utassert(type == data[idx].type);
-        utassert(str::Eq(path, data[idx].path));
-        utassert(str::Eq(value, data[idx].value));
+        const JsonValue& d = data[idx];
+        utassert(type == d.type);
+        utassert(str::Eq(path, d.path));
+        utassert(str::Eq(value, d.value));
 
         idx++;
         return true;

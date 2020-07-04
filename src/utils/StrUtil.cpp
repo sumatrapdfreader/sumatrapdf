@@ -1102,16 +1102,20 @@ const char* IdxToStr(const char* strs, int idx) {
 
 namespace str {
 
-static bool EnsureCap(Str* s, size_t needed) {
+static char* EnsureCap(Str* s, size_t needed) {
+    if (needed + Str::kPadding <= Str::kBufSize) {
+        s->els = s->buf;
+        return s->buf;
+    }
     size_t capacityHint = s->cap;
-    // tricky: to save sapce we reuse cap for capacityHint. On first expand
-    // cap might be capacityHint
-    if (s->els == s->buf && s->len == 0) {
+    // tricky: to save sapce we reuse cap for capacityHint
+    if (!s->els || (s->els == s->buf)) {
+        // on first expand cap might be capacityHint
         s->cap = 0;
     }
 
     if (s->cap >= needed) {
-        return true;
+        return s->els;
     }
 
     size_t newCap = s->cap * 2;
@@ -1124,10 +1128,10 @@ static bool EnsureCap(Str* s, size_t needed) {
 
     size_t newElCount = newCap + Str::kPadding;
     if (newElCount >= SIZE_MAX) {
-        return false;
+        return nullptr;
     }
     if (newElCount > INT_MAX) {
-        return false;
+        return nullptr;
     }
 
 #if defined(DEBUG)
@@ -1149,49 +1153,72 @@ static bool EnsureCap(Str* s, size_t needed) {
     s->els = newEls;
     memset(s->els + s->len, 0, newPadding);
     s->cap = newCap;
-    return true;
+    return s->els;
 }
 
 static char* MakeSpaceAt(Str* s, size_t idx, size_t count) {
+    CrashIf(count == 0);
     size_t newLen = std::max(s->len, idx) + count;
-    bool ok = EnsureCap(s, newLen);
-    if (!ok) {
+    char* buf = EnsureCap(s, newLen);
+    if (!buf) {
         return nullptr;
     }
-    char* res = &(s->els[idx]);
+    buf[newLen] = 0;
+    char* res = &(buf[idx]);
     if (s->len > idx) {
-        char* src = s->els + idx;
-        char* dst = s->els + idx + count;
+        // inserting in the middle of string, have to copy
+        char* src = buf + idx;
+        char* dst = buf + idx + count;
         memmove(dst, src, s->len - idx);
     }
     s->len = newLen;
+    // ZeroMemory(res, count);
     return res;
 }
 
-void Str::FreeEls() {
-    if (els != buf) {
-        Allocator::Free(allocator, els);
+static void Free(Str* s) {
+    if (!s->els || (s->els == s->buf)) {
+        return;
     }
+    Allocator::Free(s->allocator, s->els);
+    s->els = nullptr;
+}
+
+void Str::Reset() {
+    Free(this);
+    len = 0;
+    cap = 0;
+    els = buf;
+
+#if defined(DEBUG)
+#define kFillerStr "01234567890123456789012345678901"
+
+    // to catch mistakes earlier, fill the buffer with a known string
+    constexpr size_t nFiller = sizeof(kFillerStr) - 1;
+    static_assert(nFiller == Str::kBufSize);
+    memcpy(buf, kFillerStr, kBufSize);
+#endif
+    els[0] = 0;
 }
 
 // allocator is not owned by Vec and must outlive it
-Str::Str(size_t capHint, Allocator* allocator) : cap(capHint), allocator(allocator) {
-    ZeroMemory(buf, kBufSize);
-    els = buf;
+Str::Str(size_t capHint, Allocator* a) {
+    Reset();
+    cap = capHint + Str::kPadding; // + kPadding for terminating 0
+    allocator = a;
 }
 
 // ensure that a Vec never shares its els buffer with another after a clone/copy
 // note: we don't inherit allocator as it's not needed for our use cases
-Str::Str(const Str& orig) {
-    els = buf;
+Str::Str(const Str& that) {
     Reset();
-    EnsureCap(this, orig.cap);
-    len = orig.len;
-    memcpy(els, orig.els, orig.len);
+    char* s = EnsureCap(this, that.len);
+    char* sOrig = that.Get();
+    len = that.len;
+    memcpy(s, sOrig, len + Str::kPadding);
 }
 
 Str::Str(std::string_view s) {
-    els = buf;
     Reset();
     AppendView(s);
 }
@@ -1200,15 +1227,16 @@ Str& Str::operator=(const Str& that) {
     if (this == &that) {
         return *this;
     }
-    EnsureCap(this, that.cap);
-    // using memcpy, as Vec only supports POD types
-    memcpy(els, that.els, len = that.len);
-    memset(els + len, 0, cap - len);
+    Reset();
+    char* s = EnsureCap(this, that.len);
+    char* sOrig = that.Get();
+    len = that.len;
+    memcpy(els, that.els, len + 1);
     return *this;
 }
 
 Str::~Str() {
-    FreeEls();
+    Free(this);
 }
 
 char& Str::operator[](size_t idx) const {
@@ -1233,17 +1261,10 @@ char& Str::operator[](int idx) const {
     return els[idx];
 }
 
-void Str::Reset() {
-    len = 0;
-    cap = dimof(buf) - kPadding;
-    FreeEls();
-    els = buf;
-    memset(buf, 0, kBufSize);
-}
-
 bool Str::SetSize(size_t newSize) {
     Reset();
-    return MakeSpaceAt(this, 0, newSize);
+    char* s = MakeSpaceAt(this, 0, newSize);
+    return s != nullptr;
 }
 
 char& Str::at(size_t idx) const {
@@ -1264,7 +1285,7 @@ int Str::isize() const {
     return (int)len;
 }
 
-bool Str::InsertAt(size_t idx, const char& el) {
+bool Str::InsertAt(size_t idx, char el) {
     char* p = MakeSpaceAt(this, idx, 1);
     if (!p) {
         return false;
@@ -1273,7 +1294,7 @@ bool Str::InsertAt(size_t idx, const char& el) {
     return true;
 }
 
-bool Str::Append(const char& el) {
+bool Str::Append(char el) {
     return InsertAt(len, el);
 }
 
@@ -1371,7 +1392,7 @@ char* Str::LendData() const {
     return els;
 }
 
-int Str::Find(const char& el, size_t startAt) const {
+int Str::Find(char el, size_t startAt) const {
     for (size_t i = startAt; i < len; i++) {
         if (els[i] == el) {
             return (int)i;
@@ -1380,12 +1401,12 @@ int Str::Find(const char& el, size_t startAt) const {
     return -1;
 }
 
-bool Str::Contains(const char& el) const {
+bool Str::Contains(char el) const {
     return -1 != Find(el);
 }
 
 // returns position of removed element or -1 if not removed
-int Str::Remove(const char& el) {
+int Str::Remove(char el) {
     int i = Find(el);
     if (-1 == i) {
         return -1;
@@ -1644,7 +1665,8 @@ void WStr::Reset() {
 
 bool WStr::SetSize(size_t newSize) {
     Reset();
-    return MakeSpaceAt(0, newSize);
+    WCHAR* s = MakeSpaceAt(0, newSize);
+    return s != nullptr;
 }
 
 WCHAR& WStr::at(size_t idx) const {

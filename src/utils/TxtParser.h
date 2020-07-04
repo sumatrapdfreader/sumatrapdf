@@ -5,23 +5,24 @@
 
 struct TxtNode {
     enum class Type {
+        Unknown,
         Struct,
         Array,
         Text,
     };
 
-    Type type;
+    Type type{Type::Unknown};
 
     // for storing children, first goes into firstChild and the
     // rest are linked as sibling
-    TxtNode* firstChild;
-    TxtNode* sibling;
+    TxtNode* firstChild{nullptr};
+    TxtNode* sibling{nullptr};
 
-    char* lineStart;
-    char* valStart;
-    char* valEnd;
-    char* keyStart;
-    char* keyEnd;
+    char* lineStart{nullptr};
+    char* valStart{nullptr};
+    char* valEnd{nullptr};
+    char* keyStart{nullptr};
+    char* keyEnd{nullptr};
 
     explicit TxtNode(TxtNode::Type tp);
     TxtNode(const TxtNode& other) = delete;
@@ -51,16 +52,16 @@ struct Token {
         String,      // foo
     };
 
-    Type type = Type::Finished;
+    Type type{Type::Finished};
 
     // TokenString, TokenKeyVal
-    char* lineStart = nullptr;
-    char* valStart = nullptr;
-    char* valEnd = nullptr;
+    char* lineStart{nullptr};
+    char* valStart{nullptr};
+    char* valEnd{nullptr};
 
     // TokenKeyVal
-    char* keyStart = nullptr;
-    char* keyEnd = nullptr;
+    char* keyStart{nullptr};
+    char* keyEnd{nullptr};
 };
 
 struct TxtParser {
@@ -69,8 +70,8 @@ struct TxtParser {
 
     str::Slice toParse;
     Token tok;
-    char escapeChar = SERIALIZE_ESCAPE_CHAR;
-    bool failed = false;
+    char escapeChar{SERIALIZE_ESCAPE_CHAR};
+    bool failed{false};
     Vec<TxtNode*> nodes;
 
     TxtNode* AllocTxtNode(TxtNode::Type);

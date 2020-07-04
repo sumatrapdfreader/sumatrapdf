@@ -205,7 +205,6 @@ struct Str {
     static constexpr size_t kPadding = sizeof(char);
     static constexpr size_t kBufSize = sizeof(buf);
 
-    void FreeEls();
     explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
     Str(const Str& orig);
     Str(std::string_view s);
@@ -221,8 +220,8 @@ struct Str {
     [[nodiscard]] char& at(int idx) const;
     [[nodiscard]] size_t size() const;
     [[nodiscard]] int isize() const;
-    bool InsertAt(size_t idx, const char& el);
-    bool Append(const char& el);
+    bool InsertAt(size_t idx, char el);
+    bool Append(char el);
     bool Append(const char* src, size_t count = -1);
     char* AppendBlanks(size_t count);
     void RemoveAt(size_t idx, size_t count = 1);
@@ -233,9 +232,9 @@ struct Str {
     [[nodiscard]] char& Last() const;
     [[nodiscard]] char* StealData();
     [[nodiscard]] char* LendData() const;
-    [[nodiscard]] int Find(const char& el, size_t startAt = 0) const;
-    [[nodiscard]] bool Contains(const char& el) const;
-    int Remove(const char& el);
+    [[nodiscard]] int Find(char el, size_t startAt = 0) const;
+    [[nodiscard]] bool Contains(char el) const;
+    int Remove(char el);
     void Reverse();
     char& FindEl(const std::function<bool(char&)>& check);
     [[nodiscard]] bool IsEmpty() const;

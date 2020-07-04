@@ -14,6 +14,14 @@ While I can't fix long compilation times, I can try to keep
 them as fast as possible.
 Also an opportunity to make the API smaller.
 
+---
+
+Optimizing Str. Turns out that after de-templatizing the code
+became easier to understand and opportunities for optimizations
+turn up.
+The optimizations are pretty nasty (re-using the same memory for
+more than one purpse) but worth doing for such a fundamental type.
+
 2020-06-29 Mon
 
 - adding comments to Commands.h

@@ -51,6 +51,15 @@ Prefast:
 
 include("premake5.files.lua")
 
+function configAsan()
+  filter "platforms:x32_asan"
+  -- asan-i386.lib
+  -- clang_rt.asan-i386.lib
+  links { "clang_rt.asan-i386.lib" }
+  -- linkoptions { "/WHOLEARCHIVE:asan-i386.lib"}
+  filter {}
+end
+
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleaseAnalyze", }
   platforms { "x32", "x32_asan", "x64", "x64_ramicro" }
@@ -547,6 +556,7 @@ workspace "SumatraPDF"
     disablewarnings { "4838" }
     defines { "NO_LIBMUPDF" }
     includedirs { "src" }
+    configAsan()
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
@@ -648,12 +658,7 @@ workspace "SumatraPDF"
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "windowscodecs", "wininet", "uiautomationcore.lib"
     }
-    filter "platforms:x32_asan"
-      -- asan-i386.lib
-      -- clang_rt.asan-i386.lib
-      links { "clang_rt.asan-i386.lib" }
-      -- linkoptions { "/WHOLEARCHIVE:asan-i386.lib"}
-    filter {}
+    configAsan()
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll" }
