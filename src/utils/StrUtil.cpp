@@ -1147,7 +1147,7 @@ static char* EnsureCap(Str* s, size_t needed) {
         newEls = (char*)Allocator::Realloc(s->allocator, s->els, allocSize);
     }
     if (!newEls) {
-        CrashAlwaysIf(!s->allowFailure);
+        CrashAlwaysIf(!gAllowAllocFailure);
         return false;
     }
     s->els = newEls;
@@ -1563,7 +1563,7 @@ bool WStr::EnsureCap(size_t needed) {
         newEls = (WCHAR*)Allocator::Realloc(allocator, els, allocSize);
     }
     if (!newEls) {
-        CrashAlwaysIf(!allowFailure);
+        CrashAlwaysIf(!gAllowAllocFailure);
         return false;
     }
     els = newEls;

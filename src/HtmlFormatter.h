@@ -107,11 +107,11 @@ class CssPullParser;
 
 struct StyleRule {
     HtmlTag tag = Tag_NotFound;
-    u32 classHash = 0;
+    u32 classHash{0};
 
     enum Unit { px, pt, em, inherit };
 
-    float textIndent = 0;
+    float textIndent{0};
     Unit textIndentUnit = inherit;
     AlignAttr textAlign = Align_NotFound;
 
@@ -124,14 +124,13 @@ struct StyleRule {
 };
 
 struct DrawStyle {
-    mui::CachedFont* font = nullptr;
-    AlignAttr align = Align_NotFound;
-    bool dirRtl = false;
+    mui::CachedFont* font{nullptr};
+    AlignAttr align{Align_NotFound};
+    bool dirRtl{false};
 };
 
 struct HtmlPage {
     explicit HtmlPage(int reparseIdx = 0) : reparseIdx(reparseIdx) {
-        instructions.allowFailure = true;
     }
 
     Vec<DrawInstr> instructions;
@@ -147,8 +146,8 @@ struct HtmlPage {
 struct HtmlFormatterArgs {
     HtmlFormatterArgs() = default;
 
-    float pageDx = 0;
-    float pageDy = 0;
+    float pageDx{0};
+    float pageDy{0};
 
     void SetFontName(const WCHAR* s) {
         fontName.SetCopy(s);
@@ -158,20 +157,20 @@ struct HtmlFormatterArgs {
         return fontName;
     }
 
-    float fontSize = 0;
+    float fontSize{0};
 
     /* Most of the time string DrawInstr point to original html text
        that is read-only and outlives us. Sometimes (e.g. when resolving
        html entities) we need a modified text. This allocator is
        used to allocate this text. */
-    Allocator* textAllocator = nullptr;
+    Allocator* textAllocator{nullptr};
 
     mui::TextRenderMethod textRenderMethod = mui::TextRenderMethodGdiplus;
 
     std::span<u8> htmlStr;
 
     // we start parsing from htmlStr + reparseIdx
-    int reparseIdx = 0;
+    int reparseIdx{0};
 
     AutoFreeWstr fontName;
 };
@@ -252,58 +251,59 @@ class HtmlFormatter {
     void DumpLineDebugInfo();
 
     // constant during layout process
-    float pageDx = 0;
-    float pageDy = 0;
-    float lineSpacing = 0;
-    float spaceDx = 0;
-    Graphics* gfx = nullptr; // for measuring text
+    float pageDx{0};
+    float pageDy{0};
+    float lineSpacing{0};
+    float spaceDx{0};
+    Graphics* gfx{nullptr}; // for measuring text
     AutoFreeWstr defaultFontName;
-    float defaultFontSize = 0;
-    Allocator* textAllocator = nullptr;
-    mui::ITextRender* textMeasure = nullptr;
+    float defaultFontSize{0};
+    Allocator* textAllocator{nullptr};
+    mui::ITextRender* textMeasure{nullptr};
 
     // style stack of the current line
     Vec<DrawStyle> styleStack;
     // style for the start of the next page
     DrawStyle nextPageStyle;
     // current position in a page
-    float currX = 0, currY = 0;
+    float currX{0};
+    float currY{0};
     // remembered when we start a new line, used when we actually
     // layout a line
-    float currLineTopPadding = 0;
+    float currLineTopPadding{0};
     // number of nested lists for indenting whole paragraphs
-    int listDepth = 0;
+    int listDepth{0};
     // set if newlines are not to be ignored
-    bool preFormatted = false;
+    bool preFormatted{false};
     // set if the reading direction is RTL
-    bool dirRtl = false;
+    bool dirRtl{false};
     // list of currently opened tags for auto-closing when needed
     Vec<HtmlTag> tagNesting;
-    bool keepTagNesting = false;
+    bool keepTagNesting{false};
     // set from CSS and to be checked by the individual tag handlers
     Vec<StyleRule> styleRules;
 
     // isntructions for the current line
     Vec<DrawInstr> currLineInstr;
     // reparse point of the first instructions in a current line
-    ptrdiff_t currLineReparseIdx = 0;
-    HtmlPage* currPage = nullptr;
+    ptrdiff_t currLineReparseIdx{0};
+    HtmlPage* currPage{nullptr};
 
     // for tracking whether we're currently inside <a> tag
-    size_t currLinkIdx = 0;
+    size_t currLinkIdx{0};
 
     // reparse point for the current HtmlToken
-    ptrdiff_t currReparseIdx = 0;
+    ptrdiff_t currReparseIdx{0};
 
-    HtmlPullParser* htmlParser = nullptr;
+    HtmlPullParser* htmlParser{nullptr};
 
     // list of pages that we've created but haven't yet sent to client
     Vec<HtmlPage*> pagesToSend;
 
-    bool finishedParsing = false;
+    bool finishedParsing{false};
     // number of pages generated so far, approximate. Only used
     // for detection of cover image duplicates in mobi formatting
-    int pageCount = 0;
+    int pageCount{0};
 
     WCHAR buf[512]{};
 

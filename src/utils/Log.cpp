@@ -33,16 +33,17 @@ void log(std::string_view s) {
 
     gLogMutex.Lock();
 
+    gAllowAllocFailure++;
     if (!gLogBuf) {
         gLogAllocator = new HeapAllocator();
         gLogBuf = new str::Str(32 * 1024, gLogAllocator);
-        gLogBuf->allowFailure = true;
     }
     gLogBuf->Append(s.data(), s.size());
     if (logToStderr) {
         fwrite(s.data(), 1, s.size(), stderr);
         fflush(stderr);
     }
+    gAllowAllocFailure--;
 
     if (logFilePath) {
         auto f = fopen(logFilePath, "a");

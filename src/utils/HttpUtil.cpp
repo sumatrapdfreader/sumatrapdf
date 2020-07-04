@@ -24,8 +24,7 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
-    rspOut->data.allowFailure = true;
-
+    gAllowAllocFailure++;
     rspOut->error = ERROR_SUCCESS;
     HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet) {
@@ -73,6 +72,7 @@ Exit:
     if (hInet) {
         InternetCloseHandle(hInet);
     }
+    gAllowAllocFailure--;
     return HttpRspOk(rspOut);
 
 Error:

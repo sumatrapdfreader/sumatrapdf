@@ -606,6 +606,8 @@ class ExitScopeHelp {
 
 #define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
 
+extern int gAllowAllocFailure;
+
 /* How to use:
 defer { free(tools_filename); };
 defer { fclose(f); };

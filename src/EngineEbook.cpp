@@ -425,10 +425,9 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     const WCHAR* lineSep = L"\n";
     ScopedCritSec scope(&pagesAccess);
 
+    gAllowAllocFailure++;
     str::WStr content;
-    content.allowFailure = true;
     Vec<Rect> coords;
-    coords.allowFailure = true;
     bool insertSpace = false;
 
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
@@ -494,6 +493,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         coords.AppendBlanks(str::Len(lineSep));
     }
     CrashIf(coords.size() != content.size());
+    gAllowAllocFailure--;
 
     PageText res;
     res.len = (int)content.size();
@@ -1483,14 +1483,13 @@ static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
 }
 
 class ChmHtmlCollector : public EbookTocVisitor {
-    ChmDoc* doc = nullptr;
+    ChmDoc* doc{nullptr};
     WStrList added;
     str::Str html;
 
   public:
     explicit ChmHtmlCollector(ChmDoc* doc) : doc(doc) {
         // can be big
-        html.allowFailure = true;
     }
 
     char* GetHtml() {
@@ -1530,6 +1529,10 @@ class ChmHtmlCollector : public EbookTocVisitor {
         if (added.FindI(plainUrl) != -1) {
             return;
         }
+        gAllowAllocFailure++;
+        defer {
+            gAllowAllocFailure--;
+        };
         AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
         AutoFree pageHtml = doc->GetData(urlUtf8.Get());
         if (!pageHtml) {

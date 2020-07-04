@@ -1383,14 +1383,16 @@ static char* DecompressTcrText(const char* data, size_t dataLen) {
     }
 
     str::Str text(dataLen * 2);
-    text.allowFailure = true;
+    gAllowAllocFailure++;
     for (; curr < end; curr++) {
         const char* entry = dict[(u8)*curr];
         bool ok = text.Append(entry + 1, (u8)*entry);
         if (!ok) {
+            gAllowAllocFailure--;
             return nullptr;
         }
     }
+    gAllowAllocFailure--;
 
     return text.StealData();
 }

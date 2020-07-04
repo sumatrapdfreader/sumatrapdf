@@ -16,8 +16,6 @@ template <typename T>
 class Vec {
   public:
     Allocator* allocator{nullptr};
-    // don't crash if we run out of memory
-    bool allowFailure{false};
     size_t len{0};
     size_t cap{0};
     size_t capacityHint{0};
@@ -60,7 +58,7 @@ class Vec {
             newEls = (T*)Allocator::Realloc(allocator, els, allocSize);
         }
         if (!newEls) {
-            CrashAlwaysIf(!allowFailure);
+            CrashAlwaysIf(!gAllowAllocFailure);
             return false;
         }
         els = newEls;
@@ -588,7 +586,6 @@ struct VecStr {
     PoolAllocator allocator;
     VecStrIndex* firstIndex = nullptr;
     VecStrIndex* currIndex = nullptr;
-    bool allowFailure = false;
 
     VecStr() = default;
     ~VecStr() = default;

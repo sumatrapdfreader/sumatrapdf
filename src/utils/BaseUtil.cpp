@@ -3,6 +3,9 @@
 
 #include "utils/BaseUtil.h"
 
+// if > 1 we won't crash when memory allocation fails
+int gAllowAllocFailure = 0;
+
 void* Allocator::Alloc(Allocator* a, size_t size) {
     if (!a) {
         return malloc(size);
@@ -364,7 +367,7 @@ bool VecStr::allocateIndexIfNeeded() {
     allocator.allocAlign = 8;
     VecStrIndex* idx = allocator.AllocStruct<VecStrIndex>();
 
-    if (allowFailure && !idx) {
+    if (gAllowAllocFailure && !idx) {
         return false;
     }
     idx->next = nullptr;

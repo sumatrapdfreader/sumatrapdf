@@ -189,8 +189,6 @@ struct Str {
     Allocator* allocator{nullptr};
     u32 len{0};
     u32 cap{0};
-    // if true, don't crash if we run out of memory
-    bool allowFailure{false}; // TODO: figure out how to store it more efficiently?
     // TODO: to save space (8 bytes), combine els and buf?
     char* els{nullptr};
     char buf[32];
@@ -282,8 +280,6 @@ struct WStr {
     size_t len{0};
     size_t cap{0};
     size_t capacityHint{0};
-    // don't crash if we run out of memory
-    bool allowFailure{false};
     WCHAR buf[32];
 
     static constexpr size_t kPadding = 2;
