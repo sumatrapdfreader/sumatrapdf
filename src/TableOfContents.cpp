@@ -371,11 +371,11 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     TocTree* tocTree = tab->ctrl->GetToc();
     str::Str path = strconv::WstrToUtf8(tab->filePath);
     path.Append(".bkm");
-    bool ok = ExportBookmarksToFile(tocTree, "", path.c_str());
+    bool ok = ExportBookmarksToFile(tocTree, "", path.Get());
     if (!ok) {
         log("ExportBookmarsToFile() failed\n");
     }
-    ShowExportedBookmarksMsg(path.c_str());
+    ShowExportedBookmarksMsg(path.Get());
 }
 
 // clang-format off

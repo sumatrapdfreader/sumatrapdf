@@ -239,10 +239,8 @@ struct Str {
     void Reverse();
     char& FindEl(const std::function<bool(char&)>& check);
     [[nodiscard]] bool IsEmpty() const;
-    [[nodiscard]] bool empty() const;
     std::string_view AsView() const;
     std::span<u8> AsSpan() const;
-    char* c_str() const;
     std::string_view StealAsView();
     std::span<u8> StealAsSpan();
     bool AppendChar(char c);
@@ -328,10 +326,8 @@ struct WStr {
     void Reverse();
     WCHAR& FindEl(const std::function<bool(WCHAR&)>& check);
     [[nodiscard]] bool IsEmpty() const;
-    [[nodiscard]] bool empty() const;
     std::wstring_view AsView() const;
     std::span<WCHAR> AsSpan() const;
-    WCHAR* c_str() const;
     std::wstring_view StealAsView();
     std::span<WCHAR> StealAsSpan();
     bool AppendChar(WCHAR c);

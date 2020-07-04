@@ -51,7 +51,7 @@ void LogConstraints(Constraints c, const char* suffix) {
         LogAppendNum(s, c.max.dy, " ");
     }
     s.AppendView(suffix);
-    dbglayoutf("%s", s.c_str());
+    dbglayoutf("%s", s.Get());
 }
 
 bool IsCollapsed(ILayout* l) {

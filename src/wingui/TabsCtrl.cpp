@@ -34,7 +34,7 @@ enum class Tab {
 };
 
 static str::WStr wstrFromUtf8(const str::Str& str) {
-    AutoFreeWstr s = strconv::Utf8ToWstr(str.c_str());
+    AutoFreeWstr s = strconv::Utf8ToWstr(str.Get());
     return str::WStr(s.AsView());
 }
 
@@ -152,7 +152,7 @@ void LayoutTabs(TabsCtrl* ctrl) {
             if (ti->hwndTooltip) {
                 DestroyWindow(ti->hwndTooltip);
             }
-            ti->hwndTooltip = CreateTooltipForRect(priv->hwnd, ti->toolTip.c_str(), ti->tabRect);
+            ti->hwndTooltip = CreateTooltipForRect(priv->hwnd, ti->toolTip.Get(), ti->tabRect);
         }
     }
     priv->idealSize = MakeSize(x, idealDy);
@@ -259,7 +259,7 @@ static void Paint(TabsCtrl* ctrl) {
         auto pos = ti->titlePos;
         int x = pos.x;
         int y = pos.y;
-        const WCHAR* s = ti->title.c_str();
+        const WCHAR* s = ti->title.Get();
         uint sLen = (uint)ti->title.size();
         ExtTextOutW(hdc, x, y, opts, nullptr, s, sLen, nullptr);
 
@@ -464,7 +464,7 @@ void SetState(TabsCtrl* ctrl, TabsCtrlState* state) {
         ti->titleSize = MakeSize(0, 0);
         if (!tab->title.IsEmpty()) {
             ti->title = wstrFromUtf8(tab->title);
-            const WCHAR* s = ti->title.c_str();
+            const WCHAR* s = ti->title.Get();
             ti->titleSize = TextSizeInHwnd2(priv->hwnd, s, priv->font);
         }
         if (!tab->toolTip.IsEmpty()) {

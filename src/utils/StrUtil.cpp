@@ -1439,21 +1439,12 @@ bool Str::IsEmpty() const {
     return len == 0;
 }
 
-// TOOD: replace with IsEmpty()
-bool Str::empty() const {
-    return len == 0;
-}
-
 std::string_view Str::AsView() const {
     return {Get(), size()};
 }
 
 std::span<u8> Str::AsSpan() const {
     return {(u8*)Get(), size()};
-}
-
-char* Str::c_str() const {
-    return els;
 }
 
 std::string_view Str::StealAsView() {
@@ -1845,21 +1836,12 @@ bool WStr::IsEmpty() const {
     return len == 0;
 }
 
-// TOOD: replace with IsEmpty()
-bool WStr::empty() const {
-    return len == 0;
-}
-
 std::wstring_view WStr::AsView() const {
     return {Get(), size()};
 }
 
 std::span<WCHAR> WStr::AsSpan() const {
     return {Get(), size()};
-}
-
-WCHAR* WStr::c_str() const {
-    return els;
 }
 
 std::wstring_view WStr::StealAsView() {
