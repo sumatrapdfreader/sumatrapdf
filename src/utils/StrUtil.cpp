@@ -1244,10 +1244,6 @@ char& Str::at(size_t idx) const {
     return els[idx];
 }
 
-char& Str::at(u32 idx) const {
-    return at((size_t)idx);
-}
-
 char& Str::at(int idx) const {
     CrashIf(idx < 0);
     return at((size_t)idx);
@@ -1270,6 +1266,16 @@ char& Str::operator[](int idx) const {
     CrashIf(idx < 0);
     return at((size_t)idx);
 }
+
+#if defined(_WIN64)
+char& Str::at(u32 idx) const {
+    return at((size_t)idx);
+}
+
+char& Str::operator[](u32 idx) const {
+    return at((size_t)idx);
+}
+#endif
 
 bool Str::SetSize(size_t newSize) {
     Reset();
@@ -1573,7 +1579,7 @@ bool WStr::EnsureCap(size_t needed) {
 }
 
 WCHAR* WStr::MakeSpaceAt(size_t idx, size_t count) {
-    size_t newLen = std::max(len, idx) + count;
+    u32 newLen = std::max(len, (u32)idx) + count;
     bool ok = EnsureCap(newLen);
     if (!ok) {
         return nullptr;
@@ -1632,40 +1638,12 @@ WStr::~WStr() {
     FreeEls();
 }
 
-WCHAR& WStr::operator[](size_t idx) const {
-    CrashIf(idx >= len);
-    return els[idx];
-}
-
-WCHAR& WStr::operator[](long idx) const {
-    CrashIf(idx < 0);
-    CrashIf((size_t)idx >= len);
-    return els[idx];
-}
-
-WCHAR& WStr::operator[](ULONG idx) const {
-    CrashIf((size_t)idx >= len);
-    return els[idx];
-}
-
-WCHAR& WStr::operator[](int idx) const {
-    CrashIf(idx < 0);
-    CrashIf((size_t)idx >= len);
-    return els[idx];
-}
-
 void WStr::Reset() {
     len = 0;
     cap = dimof(buf) - kPadding;
     FreeEls();
     els = buf;
     memset(buf, 0, kBufSize);
-}
-
-bool WStr::SetSize(size_t newSize) {
-    Reset();
-    WCHAR* s = MakeSpaceAt(0, newSize);
-    return s != nullptr;
 }
 
 WCHAR& WStr::at(size_t idx) const {
@@ -1675,8 +1653,41 @@ WCHAR& WStr::at(size_t idx) const {
 
 WCHAR& WStr::at(int idx) const {
     CrashIf(idx < 0);
-    CrashIf((size_t)idx >= len);
-    return els[idx];
+    return at((size_t)idx);
+}
+
+WCHAR& WStr::operator[](size_t idx) const {
+    return at(idx);
+}
+
+WCHAR& WStr::operator[](long idx) const {
+    CrashIf(idx < 0);
+    return at((size_t)idx);
+}
+
+WCHAR& WStr::operator[](ULONG idx) const {
+    return at((size_t)idx);
+}
+
+WCHAR& WStr::operator[](int idx) const {
+    CrashIf(idx < 0);
+    return at((size_t)idx);
+}
+
+#if defined(_WIN64)
+WCHAR& WStr::at(u32 idx) const {
+    return at((size_t)idx);
+}
+
+WCHAR& WStr::operator[](u32 idx) const {
+    return at((size_t)idx);
+}
+#endif
+
+bool WStr::SetSize(size_t newSize) {
+    Reset();
+    WCHAR* s = MakeSpaceAt(0, newSize);
+    return s != nullptr;
 }
 
 size_t WStr::size() const {

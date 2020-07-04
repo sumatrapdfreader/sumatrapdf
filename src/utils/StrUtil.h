@@ -207,18 +207,20 @@ struct Str {
     Str(std::string_view s);
     Str& operator=(const Str& that);
     ~Str();
+    void Reset();
+    [[nodiscard]] char& at(size_t idx) const;
+    [[nodiscard]] char& at(int idx) const;
     [[nodiscard]] char& operator[](size_t idx) const;
-    [[nodiscard]] char& operator[](u32 idx) const;
     [[nodiscard]] char& operator[](long idx) const;
     [[nodiscard]] char& operator[](ULONG idx) const;
     [[nodiscard]] char& operator[](int idx) const;
-    void Reset();
-    bool SetSize(size_t newSize);
-    [[nodiscard]] char& at(size_t idx) const;
+#if defined(_WIN64)
     [[nodiscard]] char& at(u32 idx) const;
-    [[nodiscard]] char& at(int idx) const;
+    [[nodiscard]] char& operator[](u32 idx) const;
+#endif
     [[nodiscard]] size_t size() const;
     [[nodiscard]] int isize() const;
+    bool SetSize(size_t newSize);
     bool InsertAt(size_t idx, char el);
     bool Append(char el);
     bool Append(const char* src, size_t count = -1);
@@ -277,8 +279,8 @@ struct WStr {
     // allocator is not owned by Vec and must outlive it
     Allocator* allocator{nullptr};
     WCHAR* els{nullptr};
-    size_t len{0};
-    size_t cap{0};
+    u32 len{0};
+    u32 cap{0};
     size_t capacityHint{0};
     WCHAR buf[32];
 
@@ -294,16 +296,20 @@ struct WStr {
     WStr(std::wstring_view s);
     WStr& operator=(const WStr& that);
     ~WStr();
+    void Reset();
+    [[nodiscard]] WCHAR& at(size_t idx) const;
+    [[nodiscard]] WCHAR& at(int idx) const;
     [[nodiscard]] WCHAR& operator[](size_t idx) const;
     [[nodiscard]] WCHAR& operator[](long idx) const;
     [[nodiscard]] WCHAR& operator[](ULONG idx) const;
     [[nodiscard]] WCHAR& operator[](int idx) const;
-    void Reset();
-    bool SetSize(size_t newSize);
-    [[nodiscard]] WCHAR& at(size_t idx) const;
-    [[nodiscard]] WCHAR& at(int idx) const;
+#if defined(_WIN64)
+    [[nodiscard]] WCHAR& at(u32 idx) const;
+    [[nodiscard]] WCHAR& operator[](u32 idx) const;
+#endif
     [[nodiscard]] size_t size() const;
     [[nodiscard]] int isize() const;
+    bool SetSize(size_t newSize);
     bool InsertAt(size_t idx, const WCHAR& el);
     bool Append(const WCHAR& el);
     bool Append(const WCHAR* src, size_t count = -1);
