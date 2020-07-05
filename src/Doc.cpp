@@ -255,8 +255,8 @@ HtmlFormatter* Doc::CreateFormatter(HtmlFormatterArgs* args) const {
 
 Doc Doc::CreateFromFile(const WCHAR* path) {
     Doc doc;
-again:
     bool sniff = false;
+again:
     Kind kind = GuessFileType(path, sniff);
     if (EpubDoc::IsSupportedFileType(kind)) {
         doc = Doc(EpubDoc::CreateFromFile(path));

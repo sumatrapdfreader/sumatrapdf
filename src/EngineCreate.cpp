@@ -18,7 +18,12 @@
 #include "EnginePs.h"
 #include "EngineXps.h"
 #include "EngineMulti.h"
+#include "EngineMupdf.h"
 #include "EngineCreate.h"
+
+// still working on EngineMupdf, so this is an easy way
+// to enable / disable it
+static bool gEnableMupdfEngine = true;
 
 bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     if (IsPdfEngineSupportedFileType(kind)) {
@@ -37,6 +42,8 @@ bool IsSupportedFileType(Kind kind, bool enableEngineEbooks) {
     } else if (IsCbxEngineSupportedFileType(kind)) {
         return true;
     } else if (IsPsEngineSupportedFileType(kind)) {
+        return true;
+    } else if (gEnableMupdfEngine && IsMupdfEngineSupportedFileType(kind)) {
         return true;
     }
 
@@ -99,6 +106,8 @@ static EngineBase* CreateEngineForKind(Kind kind, const WCHAR* path, PasswordUI*
         engine = CreatePsEngineFromFile(path);
     } else if (enableChmEngine && (kind == kindFileChm)) {
         engine = CreateChmEngineFromFile(path);
+    } else if (gEnableMupdfEngine && kind == kindFileEpub) {
+        engine = CreateEngineMupdfFromFile(path);
     }
 
     if (!enableEngineEbooks) {

@@ -29,6 +29,7 @@ extern "C" {
 
 // in mupdf_load_system_font.c
 extern "C" void drop_cached_fonts_for_ctx(fz_context*);
+extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
 Kind kindEnginePdf = "enginePdf";
 
@@ -383,9 +384,6 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
     return engine->SaveEmbedded(saveUI, outline->page);
 }
 #endif
-
-// in mupdf_load_system_font.c
-extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
 static void fz_lock_context_cs(void* user, int lock) {
     EnginePdf* e = (EnginePdf*)user;
