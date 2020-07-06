@@ -1,3 +1,6 @@
+/* copy of mupdf/scripts/freetype/slimftoptions.h */
+/* TODO: use mupdf/scripts/freetype/slimftoptions.h directly */
+
 /* custom ftoption.h which selects the minimum features needed by mupdf */
 
 #include <freetype/config/ftoption.h>
@@ -20,3 +23,6 @@
 #undef T1_CONFIG_OPTION_NO_MM_SUPPORT
 
 #undef CFF_CONFIG_OPTION_OLD_ENGINE
+
+/* Temporary workaround for freetype bug #57519 */
+#define T1_CONFIG_OPTION_OLD_ENGINE 1

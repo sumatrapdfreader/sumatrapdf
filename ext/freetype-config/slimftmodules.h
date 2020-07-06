@@ -1,3 +1,6 @@
+/* copy of mupdf/scripts/freetype/slimftoptions.h */
+/* TODO: use mupdf/scripts/freetype/slimftmodules.h directly */
+
 /* custom ftmodule.h which selects the minimum features required by mupdf */
 
 // FT_USE_MODULE( FT_Module_Class, autofit_module_class )
