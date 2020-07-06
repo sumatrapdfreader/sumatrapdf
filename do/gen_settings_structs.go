@@ -624,7 +624,7 @@ var (
 			"if both favorites and bookmarks parts of sidebar are visible, this is "+
 				"the height of bookmarks (table of contents) part"),
 		mkField("TreeFontSize", Int, 0,
-			"font size for bookmarks and favorites tree views. 0 means Windows default").setPreRelease(),
+			"font size for bookmarks and favorites tree views. 0 means Windows default").setVersion("3.3"),
 		mkField("ShowStartPage", Bool, true,
 			"if true, we show a list of frequently read documents when no document is loaded"),
 		mkField("UseTabs", Bool, true,
