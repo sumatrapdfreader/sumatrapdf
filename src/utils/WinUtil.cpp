@@ -2001,6 +2001,7 @@ static int GetCursorIndex(LPWSTR cursorId) {
     return -1;
 }
 
+#if 0
 static const char* cursorNames =
     "IDC_ARROW\0IDC_BEAM\0IDC_HAND\0IDC_SIZEALL\0IDC_SIZEWE\0IDC_SIZENS\0IDC_NO\0IDC_CROSS\0";
 
@@ -2011,6 +2012,18 @@ static const char* GetCursorName(LPWSTR cursorId) {
     }
     return seqstrings::IdxToStr(cursorNames, i);
 }
+
+static void LogCursor(LPWSTR cursorId) {
+    static int n = 0;
+    const char* name = GetCursorName(cursorId);
+    dbglogf("SetCursor %s 0x%x %d\n", name, (int)(intptr_t)cursorId, n);
+    n++;
+}
+#else
+static void LogCursor(LPWSTR) {
+    // no-op
+}
+#endif
 
 HCURSOR GetCachedCursor(LPWSTR cursorId) {
     int i = GetCursorIndex(cursorId);
@@ -2025,14 +2038,8 @@ HCURSOR GetCachedCursor(LPWSTR cursorId) {
     return cachedCursors[i];
 }
 
-static bool gLogSetCursor = false;
 void SetCursorCached(LPWSTR cursorId) {
-    static int n = 0;
-    if (gLogSetCursor) {
-        const char* name = GetCursorName(cursorId);
-        dbglogf("SetCursor %s 0x%x %d\n", name, (int)(intptr_t)cursorId, n);
-        n++;
-    }
+    LogCursor(cursorId);
     HCURSOR c = GetCachedCursor(cursorId);
     HCURSOR prevCursor = GetCursor();
     if (c == prevCursor) {
