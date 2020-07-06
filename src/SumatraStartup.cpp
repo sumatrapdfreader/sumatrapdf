@@ -308,6 +308,7 @@ static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& i, bool isF
 
 static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
     LoadArgs args(state->filePath, win);
+    args.noSavePrefs = true;
     if (!LoadDocument(args)) {
         return;
     }
@@ -1028,10 +1029,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         }
     }
     ResetSessionState(gGlobalPrefs->sessionData);
-    // prevent the same session from being restored twice
-    if (restoreSession && !(gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs)) {
-        prefs::Save();
-    }
 
     for (const WCHAR* filePath : i.fileNames) {
         if (restoreSession && FindWindowInfoByFile(filePath, false)) {

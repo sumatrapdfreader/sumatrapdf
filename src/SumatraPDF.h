@@ -156,6 +156,9 @@ struct LoadArgs {
     // for internal use
     bool isNewWindow = false;
     bool placeWindow = true;
+    // TODO: this is hacky. I save prefs too frequently. Need to go over
+    // and rationalize all prefs::Save() calls
+    bool noSavePrefs = false;
 };
 
 WindowInfo* LoadDocument(LoadArgs& args);

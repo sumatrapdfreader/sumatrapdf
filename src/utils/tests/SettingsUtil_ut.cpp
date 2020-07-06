@@ -8,8 +8,8 @@
 #include "utils/UtAssert.h"
 
 static const FieldInfo gSutPointIFields[] = {
-    {offsetof(Point, x), Type_Int, 111},
-    {offsetof(Point, y), Type_Int, 222},
+    {offsetof(Point, x), SettingType::Int, 111},
+    {offsetof(Point, y), SettingType::Int, 222},
 };
 static const StructInfo gSutPointIInfo = {sizeof(Point), 2, gSutPointIFields, "X\0Y"};
 
@@ -19,8 +19,8 @@ struct SutStructNested {
 };
 
 static const FieldInfo gSutStructNestedFields[] = {
-    {offsetof(SutStructNested, point), Type_Struct, (intptr_t)&gSutPointIInfo},
-    {offsetof(SutStructNested, colorArray), Type_ColorArray, (intptr_t) "#000000 #ffffff"},
+    {offsetof(SutStructNested, point), SettingType::Struct, (intptr_t)&gSutPointIInfo},
+    {offsetof(SutStructNested, colorArray), SettingType::ColorArray, (intptr_t) "#000000 #ffffff"},
 };
 static const StructInfo gSutStructNestedInfo = {sizeof(SutStructNested), 2, gSutStructNestedFields,
                                                 "Point\0ColorArray"};
@@ -32,9 +32,9 @@ struct SutStructItem {
 };
 
 static const FieldInfo gSutStructItemFields[] = {
-    {offsetof(SutStructItem, compactPoint), Type_Compact, (intptr_t)&gSutPointIInfo},
-    {offsetof(SutStructItem, floatArray), Type_FloatArray, 0},
-    {offsetof(SutStructItem, nested), Type_Struct, (intptr_t)&gSutStructNestedInfo},
+    {offsetof(SutStructItem, compactPoint), SettingType::Compact, (intptr_t)&gSutPointIInfo},
+    {offsetof(SutStructItem, floatArray), SettingType::FloatArray, 0},
+    {offsetof(SutStructItem, nested), SettingType::Struct, (intptr_t)&gSutStructNestedInfo},
 };
 static const StructInfo gSutStructItemInfo = {sizeof(SutStructItem), 3, gSutStructItemFields,
                                               "CompactPoint\0FloatArray\0Nested"};
@@ -60,23 +60,23 @@ struct SutStruct {
 };
 
 static const FieldInfo gSutStructFields[] = {
-    {(size_t)-1, Type_Comment, (intptr_t) "This file will be overwritten - modify at your own risk!\r\n"},
-    {offsetof(SutStruct, boolean), Type_Bool, (intptr_t) true},
-    {offsetof(SutStruct, color), Type_Color, 0xffcc9933},
-    {offsetof(SutStruct, floatingPoint), Type_Float, (intptr_t) "-3.14"},
-    {offsetof(SutStruct, integer), Type_Int, 27},
-    {offsetof(SutStruct, string), Type_String, (intptr_t)L"String"},
-    {offsetof(SutStruct, nullString), Type_String, 0},
-    {offsetof(SutStruct, escapedString), Type_String, (intptr_t)L"$\nstring "},
-    {offsetof(SutStruct, utf8String), Type_Utf8String, (intptr_t) "Utf-8 String"},
-    {offsetof(SutStruct, nullUtf8String), Type_Utf8String, 0},
-    {offsetof(SutStruct, escapedUtf8String), Type_Utf8String, (intptr_t) "$\nstring "},
-    {offsetof(SutStruct, intArray), Type_IntArray, (intptr_t) "1 2 -3"},
-    {offsetof(SutStruct, strArray), Type_StringArray, (intptr_t) "one \"two three\" \"\""},
-    {offsetof(SutStruct, emptyStrArray), Type_StringArray, 0},
-    {offsetof(SutStruct, point), Type_Struct, (intptr_t)&gSutPointIInfo},
-    {(size_t)-1, Type_Comment, 0},
-    {offsetof(SutStruct, sutStructItems), Type_Array, (intptr_t)&gSutStructItemInfo},
+    {(size_t)-1, SettingType::Comment, (intptr_t) "This file will be overwritten - modify at your own risk!\r\n"},
+    {offsetof(SutStruct, boolean), SettingType::Bool, (intptr_t) true},
+    {offsetof(SutStruct, color), SettingType::Color, 0xffcc9933},
+    {offsetof(SutStruct, floatingPoint), SettingType::Float, (intptr_t) "-3.14"},
+    {offsetof(SutStruct, integer), SettingType::Int, 27},
+    {offsetof(SutStruct, string), SettingType::String, (intptr_t)L"String"},
+    {offsetof(SutStruct, nullString), SettingType::String, 0},
+    {offsetof(SutStruct, escapedString), SettingType::String, (intptr_t)L"$\nstring "},
+    {offsetof(SutStruct, utf8String), SettingType::Utf8String, (intptr_t) "Utf-8 String"},
+    {offsetof(SutStruct, nullUtf8String), SettingType::Utf8String, 0},
+    {offsetof(SutStruct, escapedUtf8String), SettingType::Utf8String, (intptr_t) "$\nstring "},
+    {offsetof(SutStruct, intArray), SettingType::IntArray, (intptr_t) "1 2 -3"},
+    {offsetof(SutStruct, strArray), SettingType::StringArray, (intptr_t) "one \"two three\" \"\""},
+    {offsetof(SutStruct, emptyStrArray), SettingType::StringArray, 0},
+    {offsetof(SutStruct, point), SettingType::Struct, (intptr_t)&gSutPointIInfo},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(SutStruct, sutStructItems), SettingType::Array, (intptr_t)&gSutStructItemInfo},
 };
 static const StructInfo gSutStructInfo = {sizeof(SutStruct), 17, gSutStructFields,
                                           "\0Boolean\0Color\0FloatingPoint\0Integer\0String\0NullString\0EscapedString"
@@ -151,7 +151,7 @@ Key = Value";
         if (i < 2) {
             s = unknownOnly;
         }
-        char* reserialized = SerializeStruct(&gSutStructInfo, data, s);
+        char* reserialized = (char*)SerializeStruct(&gSutStructInfo, data, s).data();
         utassert(str::Eq(serialized, reserialized));
         free(reserialized);
         data->internal++;

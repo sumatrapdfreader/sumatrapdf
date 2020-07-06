@@ -498,7 +498,7 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, u8* fileDigest, u8 dec
 
 // update global windowState for next default launch when either
 // no pdf is opened or a document without window dimension information
-static void RememberDefaultWindowPosition(WindowInfo* win) {
+void RememberDefaultWindowPosition(WindowInfo* win) {
     // ignore spurious WM_SIZE and WM_MOVE messages happening during initialization
     if (!IsWindowVisible(win->hwndFrame)) {
         return;
@@ -1306,6 +1306,7 @@ void ReloadDocument(WindowInfo* win, bool autoRefresh) {
         if (!autoRefresh) {
             LoadArgs args(tab->filePath, win);
             args.forceReuse = true;
+            args.noSavePrefs = true;
             LoadDocument(args);
         }
         return;
@@ -1767,15 +1768,6 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         return win;
     }
 
-#if 0 // TODO: can't happen because of earlier check. figure out why it's here or delete
-    if (!ctrl) {
-        if (gFileHistory.MarkFileInexistent(fullPath)) {
-            prefs::Save();
-        }
-        return win;
-    }
-#endif
-
     auto currTab = win->currentTab;
     AutoFree path = strconv::WstrToUtf8(currTab->filePath);
     logf("LoadDocument: after LoadDocIntoCurrentTab win->currentTab is 0x%p, path: '%s'\n", currTab, path.Get());
@@ -1798,7 +1790,9 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         }
         // TODO: this seems to save the state of file that we just opened
         // add a way to skip saving currTab?
-        prefs::Save();
+        if (!args.noSavePrefs) {
+            prefs::Save();
+        }
     }
 
     // Add the file also to Windows' recently used documents (this doesn't
@@ -1983,43 +1977,6 @@ void AssociateExeWithPdfExtension() {
     // Remind the user, when a different application takes over
     str::ReplacePtr(&gGlobalPrefs->associatedExtensions, L".pdf");
     gGlobalPrefs->associateSilently = false;
-}
-
-// TODO: actually restore the session on startup depending on
-//       gGlobalPrefs->restoreSession
-static void RememberSessionState() {
-    if (!gGlobalPrefs->rememberOpenedFiles) {
-        return;
-    }
-
-    ResetSessionState(gGlobalPrefs->sessionData);
-    for (auto* win : gWindows) {
-        if (win->tabs.size() == 0) {
-            continue;
-        }
-        SessionData* data = NewSessionData();
-        for (TabInfo* tab : win->tabs) {
-            DisplayState* ds = NewDisplayState(tab->filePath);
-            if (tab->ctrl) {
-                tab->ctrl->GetDisplayState(ds);
-            }
-            // TODO: pageNo should be good enough, as canvas size is restored as well
-            if (tab->AsEbook() && tab->ctrl) {
-                ds->pageNo = tab->ctrl->CurrentPageNo();
-            }
-            ds->showToc = tab->showToc;
-            *ds->tocState = tab->tocState;
-            data->tabStates->Append(NewTabState(ds));
-            DeleteDisplayState(ds);
-        }
-        data->tabIndex = win->tabs.Find(win->currentTab) + 1;
-        // TODO: allow recording this state without changing gGlobalPrefs
-        RememberDefaultWindowPosition(win);
-        data->windowState = gGlobalPrefs->windowState;
-        data->windowPos = gGlobalPrefs->windowPos;
-        data->sidebarDx = gGlobalPrefs->sidebarDx;
-        gGlobalPrefs->sessionData->Append(data);
-    }
 }
 
 /* The format used for SUMATRA_UPDATE_INFO_URL looks as follows:
@@ -2249,8 +2206,6 @@ static void OnMenuExit() {
         }
     }
 
-    RememberSessionState();
-
     // CloseWindow removes the WindowInfo from gWindows,
     // so use a stable copy for iteration
     Vec<WindowInfo*> toClose = gWindows;
@@ -2327,15 +2282,20 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
         return;
     }
 
+    bool didSavePrefs = false;
     size_t tabCount = win->tabs.size();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (MayCloseWindow(win)) {
             CloseWindow(win, quitIfLast);
+            didSavePrefs = true;
         }
     } else {
         CrashIf(gPluginMode && !gWindows.Contains(win));
         AbortFinding(win, true);
         TabsOnCloseDoc(win);
+    }
+    if (!didSavePrefs) {
+        prefs::Save();
     }
 }
 
@@ -2400,19 +2360,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
     if (!lastWindow || quitIfLast) {
         ShowWindow(win->hwndFrame, SW_HIDE);
     }
-    if (lastWindow) {
-        // don't call RememberSessionState if OnMenuExit already has
-        // also don't remember a single document (unless quitting through Menu -> Exit)
-        if (quitIfLast && gGlobalPrefs->sessionData->size() == 0 && win->tabs.size() > 1) {
-            RememberSessionState();
-        }
-        prefs::Save();
-    } else {
-        // this happens otherwise in prefs::Save
-        for (TabInfo* tab : win->tabs) {
-            UpdateTabFileDisplayStateForTab(tab);
-        }
-    }
+    prefs::Save();
     TabsOnCloseWindow(win);
 
     if (forceClose) {
