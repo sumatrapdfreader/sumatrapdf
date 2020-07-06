@@ -1,25 +1,16 @@
 Annotations:
- - change text selection to use fz_snap_selection and fz_highlight_selection
-   - should fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1596
-   - dump stext to figure out what's going on
  - finish MakeAnnotationFromSelection2 which builds quads, like do_edit_quad_points
    in gl-annotate.c
-  - no need to redraw when changing contents of most annotations (hard to pull off in current code)
+ - change our text higlight to match PDF i.e. use quad points
  - save attachment
  - add attachment
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
  - test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)
- - allow drawing of ink annotations
- - allow drawing of line
- - allow drawing of polygon
- - allow drawing of polyline
  - allow moving annotations
  - has_redact
- - change our text higlight to match PDF i.e. use quad points
  - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".
    Maybe add sub-menu with list of colors
- - color drop-down should allow entering arbitrary colors (text box or add color selection dialog)
  - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
    a dialog box for setting a color. Remember the custom colors in settings for future use.
  - Ctrl doesn't always work, probably need to hook keyboard on a lower level
@@ -32,6 +23,13 @@ Annotations:
  - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
  - UI ideas: https://getcleanshot.com/
  - when closing a pdf file, dialog for unsaved annotations
+ - color drop-down should allow entering arbitrary colors (text box or add color selection dialog)
+ - change text selection to use fz_snap_selection and fz_highlight_selection
+ - allow drawing of ink annotations
+ - allow drawing of line
+ - allow drawing of polygon
+ - allow drawing of polyline
+ - no need to redraw when changing contents of most annotations (hard to pull off in current code)
 
 ------
 

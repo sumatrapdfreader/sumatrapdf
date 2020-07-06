@@ -307,7 +307,7 @@ workspace "SumatraPDF"
       "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
     }
     disablewarnings { "4018", "4244", "4267", "4312", "4996" }
-    includedirs { "ext/freetype/include", "ext/freetype-config" }
+    includedirs { "ext/freetype/include", "mupdf/scripts/freetype" }
     freetype_files()
 
   project "lcms2"

@@ -1,5 +1,11 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2020-07-06 Mon
+
+Fixed a bunch of issues related to bugs in freetype and not
+compiling Sumatra with the exact same freetype options as mupdf.
+Introduced when I updated freetype code.
+
 2020-07-05 Sun
 
 Link to the commit on pre-release and daily build pages.
