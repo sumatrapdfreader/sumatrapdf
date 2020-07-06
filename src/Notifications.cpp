@@ -275,7 +275,7 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
     if (WM_SETCURSOR == msg && wnd->hasClose) {
         Point pt;
         if (GetCursorPosInHwnd(hwnd, pt) && GetCloseRect(hwnd).Contains(pt)) {
-            SetCursor(IDC_HAND);
+            SetCursorCached(IDC_HAND);
             return TRUE;
         }
     }

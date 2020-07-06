@@ -47,7 +47,7 @@ GlobalPrefs* NewGlobalPrefs(const char* data) {
 
 // prevData is used to preserve fields that exists in prevField but not in GlobalPrefs
 std::span<u8> SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData) {
-    if (!prefs-> rememberStatePerDocument || !prefs->rememberOpenedFiles) {
+    if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
         for (DisplayState* ds : *prefs->fileStates) {
             ds->useDefaultState = true;
         }

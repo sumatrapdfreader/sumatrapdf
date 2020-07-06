@@ -5,6 +5,7 @@
 #include "utils/WinDynCalls.h"
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
+#include "utils/LogDbg.h"
 #include "utils/Timer.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
@@ -197,7 +198,7 @@ static void OnDraggingStop(WindowInfo* win, int x, int y, bool aborted) {
     }
 
     if (GetCursor()) {
-        SetCursor(IDC_ARROW);
+        SetCursorCached(IDC_ARROW);
     }
     ReleaseCapture();
 
@@ -225,7 +226,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     UNUSED(flags);
     CrashIf(!win->AsFixed());
 
-    if (win->presentation) {
+    if (win->presentation != PM_DISABLED) {
         if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
             SetCursor((HCURSOR) nullptr);
             return;
@@ -233,7 +234,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
         // shortly display the cursor if the mouse has moved and the cursor is hidden
         if (Point(x, y) != win->dragPrevPos && !GetCursor()) {
             if (win->mouseAction == MouseAction::Idle) {
-                SetCursor(IDC_ARROW);
+                SetCursorCached(IDC_ARROW);
             } else {
                 SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
             }
@@ -258,7 +259,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
             break;
         case MouseAction::SelectingText:
             if (GetCursor()) {
-                SetCursor(IDC_IBEAM);
+                SetCursorCached(IDC_IBEAM);
             }
         /* fall through */
         case MouseAction::Selecting:
@@ -373,7 +374,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
             win->showSelection = tab->selectionOnPage != nullptr;
             RepaintAsync(win, 0);
         }
-        SetCursor(IDC_ARROW);
+        SetCursorCached(IDC_ARROW);
         win->linkHandler->GotoLink(dest);
     } else if (win->showSelection) {
         /* if we had a selection and this was just a click, hide the selection */
@@ -450,7 +451,7 @@ static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
             // record current mouse position, the farther the mouse is moved
             // from this position, the faster we scroll the document
             win->dragStart = Point(x, y);
-            SetCursor(IDC_SIZEALL);
+            SetCursorCached(IDC_SIZEALL);
             break;
 
         case MouseAction::Scrolling:
@@ -823,18 +824,18 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
         return FALSE;
     }
     if (win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
-        SetCursor(IDC_CROSS);
+        SetCursorCached(IDC_CROSS);
         return TRUE;
     }
     if (dm->IsOverText(pt)) {
-        SetCursor(IDC_IBEAM);
+        SetCursorCached(IDC_IBEAM);
     } else {
-        SetCursor(IDC_ARROW);
+        SetCursorCached(IDC_ARROW);
     }
     IPageElement* pageEl = dm->GetElementAtPos(pt);
     if (!pageEl) {
         win->HideToolTip();
-        return FALSE;
+        return TRUE;
     }
     WCHAR* text = pageEl->GetValue();
     int pageNo = pageEl->GetPageNo();
@@ -846,7 +847,7 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     delete pageEl;
 
     if (isLink) {
-        SetCursor(IDC_HAND);
+        SetCursorCached(IDC_HAND);
     }
     return TRUE;
 }
@@ -863,10 +864,10 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
             SetCursor(gCursorDrag);
             return TRUE;
         case MouseAction::Scrolling:
-            SetCursor(IDC_SIZEALL);
+            SetCursorCached(IDC_SIZEALL);
             return TRUE;
         case MouseAction::SelectingText:
-            SetCursor(IDC_IBEAM);
+            SetCursorCached(IDC_IBEAM);
             return TRUE;
         case MouseAction::Selecting:
             break;

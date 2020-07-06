@@ -535,7 +535,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 StaticLinkInfo linkInfo;
                 if (GetStaticLink(gLinkInfo, pt.x, pt.y, &linkInfo)) {
                     CreateInfotipForLink(linkInfo);
-                    SetCursor(IDC_HAND);
+                    SetCursorCached(IDC_HAND);
                     return TRUE;
                 }
             }

@@ -169,7 +169,7 @@ DrawInstr* PageControl::GetLinkAt(int x, int y) const {
 void PageControl::NotifyMouseMove(int x, int y) {
     DrawInstr* link = GetLinkAt(x, y);
     if (!link) {
-        SetCursor(IDC_ARROW);
+        SetCursorCached(IDC_ARROW);
         if (toolTip) {
             Control::NotifyMouseLeave();
             str::ReplacePtr(&toolTip, nullptr);
@@ -177,7 +177,7 @@ void PageControl::NotifyMouseMove(int x, int y) {
         return;
     }
 
-    SetCursor(IDC_HAND);
+    SetCursorCached(IDC_HAND);
     AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (toolTip && (!url::IsAbsolute(url) || !str::Eq(toolTip, url))) {
         Control::NotifyMouseLeave();
@@ -334,7 +334,7 @@ EbookControls* CreateEbookControls(HWND hwnd, FrameRateWnd* frameRateWnd) {
     CrashIf(!ctrls->status);
     ctrls->progress = FindScrollBarNamed(*muiDef, "progressScrollBar");
     CrashIf(!ctrls->progress);
-    ctrls->progress->hCursor = GetCursor(IDC_HAND);
+    ctrls->progress->hCursor = GetCachedCursor(IDC_HAND);
 
     ctrls->topPart = FindLayoutNamed(*muiDef, "top");
     CrashIf(!ctrls->topPart);

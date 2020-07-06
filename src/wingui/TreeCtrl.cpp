@@ -75,7 +75,7 @@ static void DragEnd(TreeCtrl* w) {
     ImageList_EndDrag();
     TreeView_SelectDropTarget(w->hwnd, nullptr);
     ReleaseCapture();
-    SetCursor(IDC_ARROW);
+    SetCursorCached(IDC_ARROW);
     // ShowCursor(TRUE);
     w->isDragging = false;
     w->draggedItem = nullptr;
@@ -140,7 +140,7 @@ static void DragStart(TreeCtrl* w, NMTREEVIEWW* nmtv) {
     }
 
     // ShowCursor(FALSE);
-    SetCursor(IDC_HAND);
+    SetCursorCached(IDC_HAND);
     SetCapture(w->parent);
     w->isDragging = true;
 }

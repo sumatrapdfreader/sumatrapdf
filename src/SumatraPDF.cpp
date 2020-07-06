@@ -3508,7 +3508,7 @@ void ExitFullScreen(WindowInfo* win) {
         }
         // re-enable the auto-hidden cursor
         KillTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID);
-        SetCursor(IDC_ARROW);
+        SetCursorCached(IDC_ARROW);
         // ensure that no ToC is shown when entering presentation mode the next time
         for (TabInfo* tab : win->tabs) {
             tab->showTocPresentation = false;

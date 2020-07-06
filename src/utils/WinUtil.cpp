@@ -14,6 +14,7 @@
 #include "Commands.h"
 
 #include "utils/Log.h"
+#include "utils/LogDbg.h"
 
 static HFONT gDefaultGuiFont = nullptr;
 static HFONT gDefaultGuiFontBold = nullptr;
@@ -66,7 +67,7 @@ void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR* clsName, WNDPROC wndproc) {
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.style = CS_HREDRAW | CS_VREDRAW;
     wcex.hInstance = GetModuleHandle(nullptr);
-    wcex.hCursor = GetCursor(IDC_ARROW);
+    wcex.hCursor = GetCachedCursor(IDC_ARROW);
     wcex.lpszClassName = clsName;
     wcex.lpfnWndProc = wndproc;
 }
@@ -1990,27 +1991,54 @@ static LPWSTR knownCursorIds[] = {IDC_ARROW,  IDC_IBEAM,  IDC_HAND, IDC_SIZEALL,
 
 static HCURSOR cachedCursors[dimof(knownCursorIds)] = {};
 
-HCURSOR GetCursor(LPWSTR id) {
-    int cursorIdx = -1;
-    for (int i = 0; i < dimof(knownCursorIds); i++) {
-        if (id == knownCursorIds[i]) {
-            cursorIdx = i;
-            break;
+static int GetCursorIndex(LPWSTR cursorId) {
+    int n = (int)dimof(knownCursorIds);
+    for (int i = 0; i < n; i++) {
+        if (cursorId == knownCursorIds[i]) {
+            return i;
         }
     }
-    CrashIf(cursorIdx == -1);
-    if (cursorIdx == -1) {
-        return nullptr;
-    }
-    if (nullptr == cachedCursors[cursorIdx]) {
-        cachedCursors[cursorIdx] = LoadCursor(nullptr, id);
-        CrashIf(cachedCursors[cursorIdx] == nullptr);
-    }
-    return cachedCursors[cursorIdx];
+    return -1;
 }
 
-void SetCursor(LPWSTR id) {
-    SetCursor(GetCursor(id));
+static const char* cursorNames =
+    "IDC_ARROW\0IDC_BEAM\0IDC_HAND\0IDC_SIZEALL\0IDC_SIZEWE\0IDC_SIZENS\0IDC_NO\0IDC_CROSS\0";
+
+static const char* GetCursorName(LPWSTR cursorId) {
+    int i = GetCursorIndex(cursorId);
+    if (i == -1) {
+        return "unknown";
+    }
+    return seqstrings::IdxToStr(cursorNames, i);
+}
+
+HCURSOR GetCachedCursor(LPWSTR cursorId) {
+    int i = GetCursorIndex(cursorId);
+    CrashIf(i < 0);
+    if (i < 0) {
+        return nullptr;
+    }
+    if (nullptr == cachedCursors[i]) {
+        cachedCursors[i] = LoadCursor(nullptr, cursorId);
+        CrashIf(cachedCursors[i] == nullptr);
+    }
+    return cachedCursors[i];
+}
+
+static bool gLogSetCursor = false;
+void SetCursorCached(LPWSTR cursorId) {
+    static int n = 0;
+    if (gLogSetCursor) {
+        const char* name = GetCursorName(cursorId);
+        dbglogf("SetCursor %s 0x%x %d\n", name, (int)(intptr_t)cursorId, n);
+        n++;
+    }
+    HCURSOR c = GetCachedCursor(cursorId);
+    HCURSOR prevCursor = GetCursor();
+    if (c == prevCursor) {
+        return;
+    }
+    SetCursor(c);
 }
 
 void DeleteCachedCursors() {

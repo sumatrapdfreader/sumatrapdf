@@ -155,7 +155,7 @@ static void SplitterCtrlWndProc(WndEvent* ev) {
                 DrawResizeLine(w->hwnd, w->brush, w->type, true, true, w->prevResizeLinePos);
             }
         }
-        SetCursor(curId);
+        SetCursorCached(curId);
         ev->didHandle = true;
         return;
     }
