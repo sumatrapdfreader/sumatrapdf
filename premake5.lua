@@ -634,6 +634,9 @@ workspace "SumatraPDF"
     uia_files()
     sumatrapdf_files()
 
+    -- TODO: just remove conditional code as if it was defined
+    defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
+
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
       -- over-ride from cl.exe. Don't know how to disable the warning
@@ -678,6 +681,8 @@ workspace "SumatraPDF"
     mui_files()
     uia_files()
     sumatrapdf_files()
+
+    defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
