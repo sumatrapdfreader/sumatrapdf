@@ -20,6 +20,9 @@ Fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1661
 Another example of broken PDF that can be better handled if we
 relax parsing of PDF (cmap).
 
+Fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/651
+Managing focus is tricky.
+
 2020-07-04 Sat
 
 Improving WStr the same way as Str, while we're in this area.

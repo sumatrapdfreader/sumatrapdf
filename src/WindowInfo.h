@@ -258,3 +258,4 @@ struct LinkHandler {
 
 void UpdateTreeCtrlColors(WindowInfo* win);
 void RepaintAsync(WindowInfo* win, int delay);
+void ClearFindBox(WindowInfo* win);

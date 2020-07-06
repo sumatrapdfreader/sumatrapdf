@@ -2282,6 +2282,8 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
         return;
     }
 
+    ClearFindBox(win);
+
     bool didSavePrefs = false;
     size_t tabCount = win->tabs.size();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {

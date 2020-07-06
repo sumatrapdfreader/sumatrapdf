@@ -586,3 +586,11 @@ void UpdateTreeCtrlColors(WindowInfo* win) {
     // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
     //   and match their colors as well
 }
+
+void ClearFindBox(WindowInfo* win) {
+    HWND hwndFocused = GetFocus();
+    if (hwndFocused == win->hwndFindBox) {
+        SetFocus(win->hwndFrame);
+    }
+    HwndSetText(win->hwndFindBox, "");
+}
