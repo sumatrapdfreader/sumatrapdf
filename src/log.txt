@@ -1,13 +1,33 @@
 A daily log of changes and commentary. An experiment of sorts.
 
-2010-07-04 Sat
+2020-07-05 Sun
+
+Link to the commit on pre-release and daily build pages.
+
+Fixed a long-standing issue of loosing list of opened files
+if Sumatra crashes or get killed by Windows (e.g. due to restart).
+Took so long to fix becaue I believed the code is correct.
+Turns out prefs::Save() was haphzardly used. It's still
+not great but at least this specific error is fixed.
+To be even more robust we should periodically (every 5 min?)
+call prefs::Save(). We only do it after opening and closing a file,
+which means that if we scroll etc., we'll loose this info.
+
+Coding style refactorings: change enum SettingType to enum class,
+change SerializeStruct() and SerializeGlobalPrefs() to return std::span<u8>.
+
+Fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1661
+Another example of broken PDF that can be better handled if we
+relax parsing of PDF (cmap).
+
+2020-07-04 Sat
 
 Improving WStr the same way as Str, while we're in this area.
 
 make ByteWriter manage it's own buffer. In retrospect it's
 better API than passing a buffer.
 
-2010-07-03 Fri
+2020-07-03 Fri
 
 De-templetizing WStr implementation. Currently it's a subclass
 of Vec<WCHAR>.

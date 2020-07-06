@@ -1264,8 +1264,6 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     fz_page* page = pageInfo->page;
     pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);
 
-    int transparency = pdfpage->transparency;
-
     fz_cookie* fzcookie = nullptr;
     FitzAbortCookie* cookie = nullptr;
     if (args.cookie_out) {
@@ -1297,29 +1295,27 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     fz_pixmap* pix = nullptr;
     fz_device* dev = nullptr;
     RenderedBitmap* bitmap = nullptr;
-    fz_display_list* list = nullptr;
 
     fz_var(dev);
     fz_var(pix);
     fz_var(bitmap);
-    fz_var(list);
 
-    Vec<Annotation*> annots = FilterAnnotationsForPage(userAnnots, pageNo);
+    const char* usage = "View";
+    switch (args.target) {
+        case RenderTarget::Print:
+            usage = "Print";
+            break;
+    }
 
     fz_try(ctx) {
-        list = fz_new_display_list_from_page(ctx, page);
         pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
         // initialize with white background
         fz_clear_pixmap_with_value(ctx, pix, 0xff);
-
         // TODO: in printing different style. old code use pdf_run_page_with_usage(), with usage ="View"
         // or "Print". "Export" is not used
         dev = fz_new_draw_device(ctx, fz_identity, pix);
-        // TODO: use fz_infinite_rect instead of cliprect?
-        fz_run_page_transparency(ctx, &annots, dev, cliprect, false, transparency);
-        fz_run_display_list(ctx, list, dev, ctm, cliprect, fzcookie);
-        fz_run_page_transparency(ctx, &annots, dev, cliprect, true, transparency);
-        fz_run_user_page_annots(ctx, &annots, dev, ctm, cliprect, fzcookie);
+        pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
+        pdf_run_page_with_usage(ctx, doc, pdfpage, dev, ctm, usage, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
         fz_close_device(ctx, dev);
     }
@@ -1328,9 +1324,6 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
             fz_drop_device(ctx, dev);
         }
         fz_drop_pixmap(ctx, pix);
-        if (list) {
-            fz_drop_display_list(ctx, list);
-        }
     }
     fz_catch(ctx) {
         delete bitmap;
