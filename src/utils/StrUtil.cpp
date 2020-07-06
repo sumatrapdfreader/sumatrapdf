@@ -182,6 +182,18 @@ bool Eq(std::string_view s1, const char* s2) {
     return EqN(s1.data(), s2, s1.size());
 }
 
+bool Eq(std::span<u8> sp1, std::span<u8> sp2) {
+    if (sp1.size() != sp2.size()) {
+        return false;
+    }
+    if (sp1.empty()) {
+        return true;
+    }
+    const char* s1 = (const char*)sp1.data();
+    const char* s2 = (const char*)sp2.data();
+    return 0 == strcmp(s1, s2);
+}
+
 bool EqI(std::string_view s1, const char* s2) {
     return EqNI(s1.data(), s2, s1.size());
 }

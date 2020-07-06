@@ -45,7 +45,7 @@ GlobalPrefs* NewGlobalPrefs(const char* data) {
     return (GlobalPrefs*)DeserializeStruct(&gGlobalPrefsInfo, data);
 }
 
-std::span<u8> SerializeGlobalPrefs(GlobalPrefs* gp, const char* prevData, size_t* sizeOut) {
+std::span<u8> SerializeGlobalPrefs(GlobalPrefs* gp, const char* prevData) {
     if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles) {
         for (DisplayState* ds : *gp->fileStates) {
             ds->useDefaultState = true;
@@ -62,13 +62,13 @@ std::span<u8> SerializeGlobalPrefs(GlobalPrefs* gp, const char* prevData, size_t
         gFileStateInfo.fieldCount = fieldCount;
     }
 
-    char* serialized = SerializeStruct(&gGlobalPrefsInfo, gp, prevData, sizeOut);
+    std::span<u8> serialized = SerializeStruct(&gGlobalPrefsInfo, gp, prevData);
 
     if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles) {
         gFileStateInfo.fieldCount = dimof(gFileStateFields);
     }
 
-    return {(u8*)serialized, str::Len(serialized)};
+    return serialized;
 }
 
 void DeleteGlobalPrefs(GlobalPrefs* gp) {

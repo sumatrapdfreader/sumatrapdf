@@ -157,21 +157,24 @@ bool Save() {
     if (!path.data) {
         return false;
     }
-    AutoFree prevPrefsData = file::ReadFile(path.data);
-    size_t prefsDataSize = 0;
-    AutoFree prefsData = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData.data, &prefsDataSize);
-
-    CrashIf(!prefsData.data || 0 == prefsDataSize);
-    if (!prefsData.data || 0 == prefsDataSize) {
+    std::span<u8> prevPrefs = file::ReadFile(path.data);
+    const char* prevPrefsData = (char*)prevPrefs.data();
+    std::span<u8> prefs = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData);
+    defer {
+        str::Free(prevPrefs.data());
+        str::Free(prefs.data());
+    };
+    CrashIf(prefs.empty());
+    if (prefs.empty()) {
         return false;
     }
 
     // only save if anything's changed at all
-    if (prevPrefsData.size() == prefsDataSize && str::Eq(prefsData.Get(), prevPrefsData.data)) {
+    if (prevPrefs.size() == prefs.size() && str::Eq(prefs, prevPrefs)) {
         return true;
     }
 
-    bool ok = file::WriteFile(path.Get(), prefsData.AsSpan());
+    bool ok = file::WriteFile(path.Get(), prefs);
     if (!ok) {
         return false;
     }

@@ -26,6 +26,7 @@ char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator)
 
 bool Eq(const char* s1, const char* s2);
 bool Eq(std::string_view s1, const char* s2);
+bool Eq(std::span<u8> sp1, std::span<u8> sp2);
 bool EqI(const char* s1, const char* s2);
 bool EqI(std::string_view s1, const char* s2);
 bool EqIS(const char* s1, const char* s2);

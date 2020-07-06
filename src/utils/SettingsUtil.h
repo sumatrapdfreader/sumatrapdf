@@ -60,7 +60,6 @@ struct StructInfo {
     const char* fieldNames = nullptr;
 };
 
-char* SerializeStruct(const StructInfo* info, const void* strct, const char* prevData = nullptr,
-                      size_t* sizeOut = nullptr);
+std::span<u8> SerializeStruct(const StructInfo* info, const void* strct, const char* prevData = nullptr);
 void* DeserializeStruct(const StructInfo* info, const char* data, void* strct = nullptr);
 void FreeStruct(const StructInfo* info, void* strct);

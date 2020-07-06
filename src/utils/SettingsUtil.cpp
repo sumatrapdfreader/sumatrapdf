@@ -556,15 +556,12 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
     return base;
 }
 
-char* SerializeStruct(const StructInfo* info, const void* strct, const char* prevData, size_t* sizeOut) {
+std::span<u8> SerializeStruct(const StructInfo* info, const void* strct, const char* prevData) {
     str::Str out;
     out.Append(UTF8_BOM);
     SquareTree prevSqt(prevData);
     SerializeStructRec(out, info, strct, prevSqt.root);
-    if (sizeOut) {
-        *sizeOut = out.size();
-    }
-    return out.StealData();
+    return out.StealAsSpan();
 }
 
 void* DeserializeStruct(const StructInfo* info, const char* data, void* strct) {
