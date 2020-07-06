@@ -1,8 +1,9 @@
 AppTranslator: SumatraPDF
-000643d40efb70e9209a2969189133ca293cac11
+d6060e9bcb6825da4b708e0d36f0d53c12c12f7f
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 cn:未找到 %s 安装。
+fr:%s installation non trouvée
 pl:Nie znaleziono instalacji %s.
 :&About
 af:&Omtrent
@@ -2598,6 +2599,7 @@ vn:Nhớ các cài đặt này cho từng tập tin
 :&Remove From History
 am:&Հեռացնել պատմությունից
 cn:从历史记录删除(&R)
+fr:Supprimer de l'historique
 pl:&Usuń z historii
 :&Save As...
 am:&Պահպանել որպես
@@ -4079,6 +4081,7 @@ vn:Tất cả các định dạng được hỗ trợ
 :Annotations
 am:Ծանոթագրություններ
 cn:标注
+fr:Annotations
 pl:Adnotacje
 :Application:
 af:Applikasie
@@ -4151,6 +4154,7 @@ vn:Ứng dụng:
 :Are you sure you want to uninstall %s?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ապատեղադրել %s-ը:
 cn:您确定要卸载 %s 吗？
+fr:Voulez-vous vraiment désinstaller %s ?
 pl:Czy na pewno chcesz odinstalować %s?
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
@@ -5227,6 +5231,7 @@ vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần 
 :Caret
 am:Նշորդ
 cn:插入号
+fr:curseur
 pl:Kareta
 :Change Language
 af:Verander Taal (Change Language)
@@ -5371,6 +5376,7 @@ vn:Kiểm tra cập nhật
 :Circle
 am:Շրջան
 cn:圆
+fr:Cercle
 pl:Okrąg
 :Close
 am:Փակել
@@ -5472,6 +5478,7 @@ uk:Згорнути всі
 :Color
 am:Գույն
 cn:颜色
+fr:Couleur
 pl:Kolor
 :Comic books
 am:Հումորային գրքեր
@@ -6828,6 +6835,7 @@ vn:Không thể ghi %s vào đĩa
 :Create Annotation
 am:Ստեղծել ծանոթագրություն
 cn:创建标注
+fr:Écrire une annotation
 pl:Utwórz adnotację
 :Created:
 af:Geskep
@@ -7660,6 +7668,7 @@ vn:Tải xuống
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 cn:退出全屏(&X)
+fr:&Quitter le mode plein écran
 pl:W&yjdź z trybu pełnoekranowego
 :E&xit\tCtrl+Q
 af:&Gaan Uit-Q
@@ -7801,14 +7810,17 @@ vn:Tập tin EPUB
 :Edit
 am:Խմբագրել
 cn:编辑
+fr:Éditer
 pl:Edytuj
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 cn:编辑标注
+fr:Éditer les annotations
 pl:Edytuj adnotacje
 :Edit Bookmarks
 am:Խմբագրել էջանիշերը
 cn:编辑书签
+fr:Éditer les marque-pages
 pl:Edytuj zakładki
 :Enter password
 af:Tik Wagwoord In
@@ -8109,6 +8121,7 @@ uk:Розгорнути всі
 :Export Bookmarks
 am:Արտահանել էջանիշերը
 cn:导出书签
+fr:Exporter les marque-pages
 pl:Eksportuj zakładki
 :F&avorites
 am:Ը&նտրյալներ
@@ -10730,6 +10743,7 @@ vn:Tập tin ảnh (*.%s)
 :Images
 am:Պատկերներ
 cn:图像
+fr:Images
 pl:Obrazy
 :Ink
 am:Թանաք
@@ -11229,6 +11243,7 @@ vn:Sáng
 :Line
 am:Գիծ
 cn:线条
+fr:Ligne
 pl:Linia
 :MB
 af:MB
@@ -11733,6 +11748,7 @@ tw:新建視窗(&W)\tCtrl+N
 :New Bookmarks
 am:Նոր էջանիշեր
 cn:新建书签
+fr:Nouveaux marque-pages
 pl:Nowe zakładki
 :New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
@@ -13825,6 +13841,7 @@ pl:Polilinia
 :Polygon
 am:Պոլիգոն
 cn:多边形
+fr:Polygone
 pl:Wielokąt
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
@@ -15778,6 +15795,7 @@ vn:Xem trang liên tiếp
 :Show &Scrollbars
 am:Ցուցադրել &ոլորգոտիները
 cn:显示滚动条(&S)
+fr:Afficher les &barres  de défilement
 pl:Pokaż &paski przewijania
 :Show &Toolbar\tF8
 af:Vertoon Toolbar
@@ -15941,6 +15959,7 @@ vn:Hiện Ưa thích
 :Show Scr&ollbars
 am:Ցուցադրել ոլո&րագոտիները
 cn:显示滚动条(&O)
+fr:Afficher les barres de &défilement
 pl:Pokaż p&aski przewijania
 :Show frequently read
 am:Ցուցադրել հաճախակի բացվածները
@@ -16231,6 +16250,7 @@ vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', n�
 :Sort By
 am:Տեսակավորել ըստ՝
 cn:排序
+fr:Classer
 pl:Sortuj według
 :Source file %s has no synchronization point
 am:%s ֆայլը չունի համաժամեցման կետ
@@ -16372,6 +16392,7 @@ vn:Mở SumatraPDF
 :Strike Out
 am:Գծաջնջված
 cn:删除线
+fr:Rayer
 pl:Skreślenie
 :Subject:
 af:Onderwerp
@@ -17133,6 +17154,7 @@ vn:PDF được gắn thẻ
 :Text
 am:Գրվածք
 cn:文本
+fr:Texte
 pl:Tekst
 :Text documents
 am:Տեքստային ֆայլեր
@@ -17201,6 +17223,7 @@ vn:Tập tin văn bản
 :Thank you for choosing RA-MICRO PDF!
 am:Շնորհակալություն RA-MICRO PDF-ը նախընտրելու համար:
 cn:感谢您选择 RA-MICRO PDF！
+fr:Merci d'avoir choisi RA6MICRO PDF !
 pl:Dziękujemy za wybranie RA-MICRO PDF!
 :Thank you for choosing SumatraPDF!
 am:Շնորհակալություն SumatraPDF-ը նախընտրելու համար:
@@ -17510,6 +17533,7 @@ vn:Tựa đề
 :Underline
 am:Ընդգծում
 cn:下划线
+fr:Souligner
 pl:Podkreślenie
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը

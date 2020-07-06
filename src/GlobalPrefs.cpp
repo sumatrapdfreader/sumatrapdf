@@ -45,9 +45,10 @@ GlobalPrefs* NewGlobalPrefs(const char* data) {
     return (GlobalPrefs*)DeserializeStruct(&gGlobalPrefsInfo, data);
 }
 
-std::span<u8> SerializeGlobalPrefs(GlobalPrefs* gp, const char* prevData) {
-    if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles) {
-        for (DisplayState* ds : *gp->fileStates) {
+// prevData is used to preserve fields that exists in prevField but not in GlobalPrefs
+std::span<u8> SerializeGlobalPrefs(GlobalPrefs* prefs, const char* prevData) {
+    if (!prefs-> rememberStatePerDocument || !prefs->rememberOpenedFiles) {
+        for (DisplayState* ds : *prefs->fileStates) {
             ds->useDefaultState = true;
         }
         // prevent unnecessary settings from being written out
@@ -62,9 +63,9 @@ std::span<u8> SerializeGlobalPrefs(GlobalPrefs* gp, const char* prevData) {
         gFileStateInfo.fieldCount = fieldCount;
     }
 
-    std::span<u8> serialized = SerializeStruct(&gGlobalPrefsInfo, gp, prevData);
+    std::span<u8> serialized = SerializeStruct(&gGlobalPrefsInfo, prefs, prevData);
 
-    if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles) {
+    if (!prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles) {
         gFileStateInfo.fieldCount = dimof(gFileStateFields);
     }
 
@@ -101,6 +102,9 @@ TabState* NewTabState(DisplayState* ds) {
 
 void ResetSessionState(Vec<SessionData*>* sessionData) {
     CrashIf(!sessionData);
+    if (!sessionData) {
+        return;
+    }
     for (SessionData* data : *sessionData) {
         FreeStruct(&gSessionDataInfo, data);
     }

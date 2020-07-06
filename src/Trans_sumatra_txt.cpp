@@ -6755,7 +6755,7 @@ const char * gTranslations_fi =
   "tulostetaan asiakirjaa\0";
 
 const char * gTranslations_fr = 
-  "\0"\
+  "%s installation non trouv\303\251e\0"\
   "&\303\200 propos\0"\
   "&Taille r\303\251elle\tCtrl+1\0"\
   "Options &avanc\303\251es\342\200\246\0"\
@@ -6795,7 +6795,7 @@ const char * gTranslations_fr =
   "&Imprimer... (Interdit)\0"\
   "&Se rappeler le mot de passe pour ce document\0"\
   "&Se rappeler ces param\303\250tres pour chaque document\0"\
-  "\0"\
+  "Supprimer de l'historique\0"\
   "&Enregistrer sous...\0"\
   "&Enregistrer sous...\tCtrl+S\0"\
   "&Pr\303\251f\303\251rences\0"\
@@ -6825,7 +6825,7 @@ const char * gTranslations_fr =
   "Tous les documents pris en charge\0"\
   "\0"\
   "Application\302\240:\0"\
-  "\0"\
+  "Voulez-vous vraiment d\303\251sinstaller %s ?\0"\
   "\303\212tes-vous certain de vouloir d\303\251sinstaller SumatraPDF ?\0"\
   "Associer aux fichiers PDF\302\240?\0"\
   "Fichier joint\302\240: %s\0"\
@@ -6842,13 +6842,13 @@ const char * gTranslations_fr =
   "Annuler\0"\
   "Impossible d'imprimer ce fichier\0"\
   "Impossible de lancer le programme configur\303\251 pour la recherche inverse. Veuillez v\303\251rifier la ligne de commande sp\303\251cifi\303\251e dans les options.\0"\
-  "\0"\
+  "curseur\0"\
   "Changer de langue (Change Language)\0"\
   "&V\303\251rifier les mises \303\240 jour\0"\
-  "\0"\
+  "Cercle\0"\
   "Fermer\0"\
   "Tout r\303\251duire\0"\
-  "\0"\
+  "Couleur\0"\
   "Bandes dessin\303\251es\0"\
   "Compatibilit\303\251\0"\
   "Vue continue\0"\
@@ -6871,7 +6871,7 @@ const char * gTranslations_fr =
   "\0"\
   "Impossible de d\303\251sinstalle le plug-in du navigateur\0"\
   "Impossible d'\303\251crire %s sur le disque\0"\
-  "\0"\
+  "\303\211crire une annotation\0"\
   "Cr\303\251\303\251 le\302\240:\0"\
   "Fichier actuel\0"\
   "Position du curseur :\0"\
@@ -6886,17 +6886,17 @@ const char * gTranslations_fr =
   "Propri\303\251t\303\251s du document\0"\
   "T\303\251l\303\251charger\0"\
   "&Quitter\tCtrl+Q\0"\
-  "\0"\
+  "&Quitter le mode plein \303\251cran\0"\
   "Fichiers EPUB\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "\303\211diter\0"\
+  "\303\211diter les annotations\0"\
+  "\303\211diter les marque-pages\0"\
   "Entrer le mot de passe\0"\
   "Entrer le mot de passe pour %s\0"\
   "Entrer la ligne de commande \303\240 ex\303\251cuter lorsque vous double-cliquez sur le document PDF\302\240:\0"\
   "Erreur de chargement de %s\0"\
   "Tout d\303\251velopper\0"\
-  "\0"\
+  "Exporter les marque-pages\0"\
   "Fa&voris\0"\
   "&Avancer\tAlt+->\0"\
   "&Plein \303\251cran\tCtrl+Maj+L\0"\
@@ -6950,7 +6950,7 @@ const char * gTranslations_fr =
   "Permettre \303\240 Windows Desktop Search la recherche de documents PDF\0"\
   "Permettre \303\240 Windows de montrer des a&per\303\247us des documents PDF\0"\
   "Clair\0"\
-  "\0"\
+  "Ligne\0"\
   "Mo\0"\
   "Faire de SumatraPDF l\342\200\231application par d\303\251faut pour les fichiers PDF\302\240?\0"\
   "D\303\251finir SumatraPDF comme lecteur PDF par d\303\251faut\0"\
@@ -6959,7 +6959,7 @@ const char * gTranslations_fr =
   "Fichiers Mobi\0"\
   "Modifi\303\251 le\302\240:\0"\
   "Nouvelle &fen\303\252tre\tCtrl+N\0"\
-  "\0"\
+  "Nouveaux marque-pages\0"\
   "La version %s est disponible. T\303\251l\303\251charger la nouvelle version\302\240?\0"\
   "Page suivante\0"\
   "Aucun r\303\251sultat n'a \303\251t\303\251 trouv\303\251\0"\
@@ -6994,7 +6994,7 @@ const char * gTranslations_fr =
   "Fermez %s pour continuer, s.v.p. !\0"\
   "Patientez s'il vous pla\303\256t (g\303\251n\303\251ration...)\0"\
   "\0"\
-  "\0"\
+  "Polygone\0"\
   "Documents Postscript\0"\
   "P&r\303\251sentation\tCtrl+L\0"\
   "Page pr\303\251c\303\251dente\0"\
@@ -7030,23 +7030,23 @@ const char * gTranslations_fr =
   "Afficher les &signets\tF12\0"\
   "Afficher les &favoris\0"\
   "&Vue continue\0"\
-  "\0"\
+  "Afficher les &barres  de d\303\251filement\0"\
   "Afficher la &barre d'outils\0"\
   "Afficher les &marque-pages\tF12\0"\
   "Voir Favoris\0"\
-  "\0"\
+  "Afficher les barres de &d\303\251filement\0"\
   "Montrer les documents fr\303\251quemment lus\0"\
   "Montrer dans le &dossier\0"\
   "Voir la barre lat\303\251rale des &signets lorsqu'elle est disponible\0"\
   "Une seule page\0"\
   "D\303\251sol\303\251, cela n'aurait pas d\303\273 se produire !\n\n Cliquez sur \"Annuler\" si vous voulez nous aider \303\240 rem\303\251dier \303\240 ce crash\0"\
-  "\0"\
+  "Classer\0"\
   "Le fichier source %s n'a pas de point de synchronisation\0"\
   "\0"\
   "\0"\
   "\0"\
   "Lancer SumatraPDF\0"\
-  "\0"\
+  "Rayer\0"\
   "Objet\302\240:\0"\
   "Installeur de SumatraPDF %s\0"\
   "D\303\251sinstalleur de SumatraPDF %s\0"\
@@ -7062,15 +7062,15 @@ const char * gTranslations_fr =
   "\0"\
   "\0"\
   "PDF balis\303\251\0"\
-  "\0"\
+  "Texte\0"\
   "Documents texte\0"\
-  "\0"\
+  "Merci d'avoir choisi RA6MICRO PDF !\0"\
   "Merci d'avoir choisi SumatraPDF !\0"\
   "Merci ! SumatraPDF a \303\251t\303\251 install\303\251.\0"\
   "L'installeur est corrompu. Veuillez le t\303\251l\303\251charger de nouveau. \nD\303\251sol\303\251 de ce d\303\251sagr\303\251ment !\0"\
   "Ce document utilise des fonctionnalit\303\251s non support\303\251es (%s) et pourrait ne pas s'afficher correctement\0"\
   "Titre\302\240:\0"\
-  "\0"\
+  "Souligner\0"\
   "D\303\251sinstaller SumatraPDF\0"\
   "\303\211chec de la d\303\251sinstallation\0"\
   "D\303\251sinstallation en cours\342\200\246\0"\
