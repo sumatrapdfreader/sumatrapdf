@@ -22,16 +22,19 @@
 		}
 
 		function myInit() {
-			var html, name;
 			$("buildtime").innerHTML = sumBuiltOn;
 
-			name = getName(sumLatestExeZip64);
-			html = "<a href='" + sumLatestExeZip64 + "'>" + name + "</a>";
+			var name = getName(sumLatestExeZip64);
+			var html = "<a href='" + sumLatestExeZip64 + "'>" + name + "</a>";
 			setDlURL("urlexe64", html);
 
 			name = getName(sumLatestInstaller64);
 			html = "<a href='" + sumLatestInstaller64 + "'>" + name + "</a>";
 			setDlURL("urlinstaller64", html);
+
+			var el = $("buildsha1");
+			el.href = "https://github.com/sumatrapdfreader/sumatrapdf/commit/" + sumCommitSha1;
+			el.text = sumCommitSha1;
 		}
 		window.onload = myInit;
 	</script>
@@ -59,7 +62,7 @@
 	</p>
 	<p>They might have bugs not present in official releases.</p>
 
-	<p><b>Latest SumatraPDF daily build, built on <span id="buildtime"></span>:</b></p>
+	<p><b>Latest SumatraPDF daily build, built on <span id="buildtime"></span>, commit <a id="buildsha1"></a>:</b></p>
 
 	<table>
 		<tr>
@@ -77,7 +80,7 @@
 		</tr>
 	</table>
 
-	<div style="font-size: 85%; padding-top: 2em">
+	<div style="font-size: 85%; padding-top: 1em">
 		<p><b>Alternative download location:</b></p>
 		<table>
 			<tr>
@@ -96,6 +99,9 @@
 		</table>
 	</div>
 
+	<div style="padding-top: 1em">
+		You can also try less frequent <a href="https://www.sumatrapdfreader.org/prerelease.html">pre-release builds</a>.
+	</div>
 	<hr>
 	<center><a href="https://www.sumatrapdfreader.org/">SumatraPDF Reader</a></center>
 

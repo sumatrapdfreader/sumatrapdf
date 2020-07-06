@@ -57,7 +57,7 @@ func createSumatraLatestJs(buildType string) string {
 	currDate := time.Now().Format("2006-01-02")
 	tmplText := `
 var sumLatestVer = {{.Ver}};
-var sumCommitSha1 = {{ .Sha1 }};
+var sumCommitSha1 = "{{ .Sha1 }}";
 var sumBuiltOn = "{{.CurrDate}}";
 var sumLatestName = "{{.Prefix}}.exe";
 
