@@ -401,9 +401,6 @@ var (
 		mkField("HighlightColor", Color, mkRGB(0xFF, 0xFF, 0x60),
 			"color used for the highlight tool (in prerelease builds, the current selection "+
 				"can be converted into a highlight annotation by pressing the 'h' key)"),
-		mkField("SaveIntoDocument", Bool, true,
-			"if true, annotations are appended to PDF documents, "+
-				"else they're always saved to an external .smx file"),
 	}
 
 	favorite = []*Field{

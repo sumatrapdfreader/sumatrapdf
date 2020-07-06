@@ -130,9 +130,6 @@ struct AnnotationDefaults {
     // selection can be converted into a highlight annotation by pressing
     // the 'h' key)
     COLORREF highlightColor;
-    // if true, annotations are appended to PDF documents, else they're
-    // always saved to an external .smx file
-    bool saveIntoDocument;
 };
 
 // Values which are persisted for bookmarks/favorites
@@ -475,10 +472,9 @@ static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForward
 
 static const FieldInfo gAnnotationDefaultsFields[] = {
     {offsetof(AnnotationDefaults, highlightColor), SettingType::Color, 0x60ffff},
-    {offsetof(AnnotationDefaults, saveIntoDocument), SettingType::Bool, true},
 };
-static const StructInfo gAnnotationDefaultsInfo = {sizeof(AnnotationDefaults), 2, gAnnotationDefaultsFields,
-                                                   "HighlightColor\0SaveIntoDocument"};
+static const StructInfo gAnnotationDefaultsInfo = {sizeof(AnnotationDefaults), 1, gAnnotationDefaultsFields,
+                                                   "HighlightColor"};
 
 static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},

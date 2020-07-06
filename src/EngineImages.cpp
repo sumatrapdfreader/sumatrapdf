@@ -139,8 +139,6 @@ class EngineImages : public EngineBase {
 EngineImages::EngineImages() {
     kind = kindEngineImage;
 
-    supportsAnnotations = false;
-    supportsAnnotationsForSaving = false;
     preferredLayout = Layout_NonContinuous;
     isImageCollection = true;
 

@@ -38,7 +38,6 @@
 #include "EngineMulti.h"
 #include "EngineImages.h"
 #include "Doc.h"
-#include "FileModifications.h"
 #include "PdfCreator.h"
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
@@ -1165,11 +1164,6 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
                 gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed(), dm);
                 dm->CopyNavHistory(*prevCtrl->AsFixed());
             }
-            // reload user annotations
-            // TODO: are we losing unsaved annotations?
-            auto annots = LoadFileModifications(args.fileName);
-            dm->userAnnots = annots;
-            dm->GetEngine()->SetUserAnnotations(annots);
             // tell UI Automation about content change
             if (win->uia_provider) {
                 win->uia_provider->OnDocumentLoad(dm);
@@ -1702,11 +1696,6 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (args.engine != nullptr) {
         ctrl = CreateControllerForEngine(args.engine, fullPath, &pwdUI, win);
     } else {
-        ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
-    }
-    // don't fail if a user tries to load an SMX file instead
-    if (!ctrl && IsModificationsFile(fullPath)) {
-        *(WCHAR*)path::GetExtNoFree(fullPath) = '\0';
         ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
     }
 
@@ -2444,30 +2433,6 @@ static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
     return true;
 }
 
-static void OnMenuSaveAnnotationsToSmx(WindowInfo* win) {
-    // this could be invoked due to external apps sending the message
-    // so need to validate. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1442
-    DisplayModel* dm = win->AsFixed();
-    if (!dm) {
-        return;
-    }
-    EngineBase* engine = dm->GetEngine();
-    if (!engine->supportsAnnotations) {
-        return;
-    }
-    if (!dm->HasUnsavedAnnots()) {
-        return;
-    }
-
-    const WCHAR* path = engine->FileName();
-    bool ok = SaveFileModifications(path, dm->userAnnots);
-    if (ok) {
-        DeleteVecAnnotations(dm->userAnnots);
-        dm->userAnnots = nullptr;
-        engine->SetUserAnnotations(nullptr);
-    }
-}
-
 static void OnMenuSaveAs(WindowInfo* win) {
     if (!HasPermission(Perm_DiskAccess)) {
         return;
@@ -2589,7 +2554,8 @@ static void OnMenuSaveAs(WindowInfo* win) {
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
-    bool saveAnnotsInDoc = gGlobalPrefs->annotationDefaults.saveIntoDocument;
+    // TODO: just remove it
+    bool saveAnnotsInDoc = true;
     AutoFree pathUtf8(strconv::WstrToUtf8(realDstFileName));
     AutoFreeWstr errorMsg;
     // Extract all text when saving as a plain text file
@@ -2615,14 +2581,11 @@ static void OnMenuSaveAs(WindowInfo* win) {
         if (!ok && gIsDebugBuild) {
             // rendering includes all page annotations
             ok = PdfCreator::RenderToFile(pathUtf8.Get(), engine);
-        } else if (!saveAnnotsInDoc) {
-            // TODO: reload annotations and set as smx
-            SaveFileModifications(realDstFileName, dm->userAnnots);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
         ok = engine->SaveFileAs(pathUtf8.Get(), saveAnnotsInDoc);
-    } else if (saveAnnotsInDoc && engine && engine->supportsAnnotationsForSaving) {
+    } else if (saveAnnotsInDoc && EngineSupportsAnnotations(engine)) {
         // ... as well as files containing annotations ...
         ok = engine->SaveFileAs(pathUtf8.Get(), true);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
@@ -2641,17 +2604,6 @@ static void OnMenuSaveAs(WindowInfo* win) {
                        nullptr, GetLastError(), 0, (LPWSTR)&msgBuf, 0, nullptr)) {
             errorMsg.Set(str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf));
             LocalFree(msgBuf);
-        }
-    }
-    // TODO: reload annotations and set as smx
-    if (ok && dm && dm->HasUnsavedAnnots() && !convertToTXT && !convertToPDF) {
-        if (!saveAnnotsInDoc || !engine || !engine->supportsAnnotationsForSaving) {
-            ok = SaveFileModifications(realDstFileName, dm->userAnnots);
-        }
-        if (ok && path::IsSame(srcFileName, realDstFileName)) {
-            DeleteVecAnnotations(dm->userAnnots);
-            dm->userAnnots = nullptr;
-            dm->GetEngine()->SetUserAnnotations(nullptr);
         }
     }
     if (!ok) {
@@ -3861,71 +3813,13 @@ void MakeAnnotationFromSelection(TabInfo* tab) {
         return;
     }
     auto engine = dm->GetEngine();
-    if (!engine) {
-        return;
-    }
-
+    bool supportsAnnots = EngineSupportsAnnotations(engine);
     WindowInfo* win = tab->win;
-    bool ok = engine->supportsAnnotations && win->showSelection && tab->selectionOnPage;
+    bool ok = supportsAnnots && win->showSelection && tab->selectionOnPage;
     if (!ok) {
         return;
     }
-    // TODO: we probably should construct list of new annotations and replace
-    // existing list with a new one at the end
-    // TODO: we need to support overlapping selections better (merge them into existing
-    // annotation?
-    if (!dm->userAnnots) {
-        dm->userAnnots = new Vec<Annotation*>();
-    }
-    Vec<Annotation*>* annots = dm->userAnnots;
-    for (SelectionOnPage& sel : *tab->selectionOnPage) {
-        COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
-        c = ColorSetAlpha(c, 0xcc);
-        auto annot = MakeAnnotationSmx(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
-        annot->isChanged = true;
-        annots->Append(annot);
-        gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
-    }
-    engine->SetUserAnnotations(dm->userAnnots);
-    ClearSearchResult(win); // causes invalidated tiles to be rerendered
-}
-
-void MakeAnnotationFromSelection2(TabInfo* tab, AnnotationType* annotType) {
-    bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
-    if (!annotsEnabled) {
-        return;
-    }
-
-    // converts current selection to annotation (or back to regular text
-    // if it's already an annotation)
-    DisplayModel* dm = tab->win->AsFixed();
-    if (!dm) {
-        return;
-    }
-    auto engine = dm->GetEngine();
-    if (!engine) {
-        return;
-    }
-    if (engine->kind != kindEnginePdf) {
-        return;
-    }
-
-    WindowInfo* win = tab->win;
-    bool ok = engine->supportsAnnotations && win->showSelection && tab->selectionOnPage;
-    if (!ok) {
-        return;
-    }
-
-    Vec<Annotation*>* annots = dm->userAnnots;
-    for (SelectionOnPage& sel : *tab->selectionOnPage) {
-        COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
-        c = ColorSetAlpha(c, 0xcc);
-        auto annot = MakeAnnotationSmx(AnnotationType::Highlight, sel.pageNo, sel.rect, c);
-        annot->isChanged = true;
-        annots->Append(annot);
-        gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
-    }
-    engine->SetUserAnnotations(dm->userAnnots);
+    // TODO: create annotation
     DeleteOldSelectionInfo(win, true);
     WindowInfoRerender(win);
 }
@@ -4430,10 +4324,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdViewShowHideScrollbars:
             OnMenuViewShowHideScrollbars();
-            break;
-
-        case CmdSaveAnnotationsSmx:
-            OnMenuSaveAnnotationsToSmx(win);
             break;
 
         case CmdEditAnnotations:

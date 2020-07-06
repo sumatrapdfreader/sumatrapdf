@@ -73,18 +73,12 @@ LinkRectList* LinkifyText(const WCHAR* pageText, Rect* coords);
 int is_external_link(const char* uri);
 int resolve_link(const char* uri, float* xp, float* yp);
 TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestination* dest);
-PageElement* newFzComment(const WCHAR* comment, int pageNo, RectFl rect);
 PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx);
 PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline);
 PageDestination* newFzDestination(fz_outline*);
 IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointFl pt);
 void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo);
-PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot);
 void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext);
-void fz_run_page_transparency(fz_context* ctx, Vec<Annotation*>* annots, fz_device* dev, const fz_rect cliprect,
-                              bool endGroup, bool hasTransparency = false);
-void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation*>* annots, fz_device* dev, fz_matrix ctm,
-                             const fz_rect cliprect, fz_cookie* cookie);
 fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
                               fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha);
 fz_image* fz_find_image_at_idx(fz_context* ctx, FzPageInfo* pageInfo, int idx);

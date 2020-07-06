@@ -95,7 +95,7 @@
         undefines { "DEBUG" }
         defines { "NDEBUG" }
 
-        includedirs { "ext/harfbuzz/src/hb-ucdn", "ext/freetype-config", "ext/freetype/include" }
+        includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
         defines {
         "HAVE_FALLBACK=1",
         "HAVE_OT",
@@ -133,7 +133,7 @@
             "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
         }
         disablewarnings { "4018", "4244", "4267", "4312", "4996" }
-        includedirs { "ext/freetype/include", "ext/freetype-config" }
+        includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
         freetype_files()
 
     project "libjpeg-turbo-opt"
@@ -199,13 +199,13 @@
         -- with our build over-rides
 
         includedirs {
-        "ext/freetype-config",  -- TODO: mupdf/scripts/freetype
         "mupdf/include",
         "mupdf/generated",
-        "ext/jbig2dec", 
-        "ext/libjpeg-turbo", 
+        "ext/jbig2dec",
+        "ext/libjpeg-turbo",
         "ext/openjpeg/src/lib/openjp2",
         "ext/zlib",
+        "mupdf/scripts/freetype",
         "ext/freetype/include",
         "ext/mujs",
         "ext/harfbuzz/src",

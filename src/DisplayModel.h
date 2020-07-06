@@ -117,8 +117,6 @@ struct DisplayModel : public Controller {
 
     // controller-specific data (easier to save here than on WindowInfo)
     Kind engineType = nullptr;
-    // loaded from .smx file and added by the user
-    Vec<Annotation*>* userAnnots = nullptr;
 
     Synchronizer* pdfSync = nullptr;
 
@@ -171,8 +169,6 @@ struct DisplayModel : public Controller {
 
     ScrollState GetScrollState();
     void SetScrollState(ScrollState state);
-
-    bool HasUnsavedAnnots();
 
     void CopyNavHistory(DisplayModel& orig);
 

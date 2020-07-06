@@ -600,7 +600,6 @@
     <ClInclude Include="..\src\EnginePdf.h" />
     <ClInclude Include="..\src\EnginePs.h" />
     <ClInclude Include="..\src\EngineXps.h" />
-    <ClInclude Include="..\src\FileModifications.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\ParseBKM.h" />
@@ -624,7 +623,6 @@
     <ClCompile Include="..\src\EnginePdf.cpp" />
     <ClCompile Include="..\src\EnginePs.cpp" />
     <ClCompile Include="..\src\EngineXps.cpp" />
-    <ClCompile Include="..\src\FileModifications.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\ParseBKM.cpp" />

@@ -96,8 +96,6 @@ EngineMulti::EngineMulti() {
     kind = kindEngineMulti;
     defaultFileExt = L".vbkm";
     fileDPI = 72.0f;
-    supportsAnnotations = false;
-    supportsAnnotationsForSaving = false;
 }
 
 EngineMulti::~EngineMulti() {

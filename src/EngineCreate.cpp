@@ -147,3 +147,37 @@ EngineBase* CreateEngine(const WCHAR* path, PasswordUI* pwdUI, bool enableChmEng
     }
     return engine;
 }
+
+bool EngineSupportsAnnotations(EngineBase* engine) {
+    if (!engine) {
+        return false;
+    }
+    Kind kind = engine->kind;
+    if (kind == kindEnginePdf) {
+        return true;
+    }
+    return false;
+}
+
+bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
+    if (!engine) {
+        return false;
+    }
+    Kind kind = engine->kind;
+    if (kind != kindEnginePdf) {
+        return false;
+    }
+    EnginePdfGetAnnotations(engine, annotsOut);
+    return true;
+}
+
+bool EngineHasUnsavedAnnotations(EngineBase* engine) {
+    if (!engine) {
+        return false;
+    }
+    Kind kind = engine->kind;
+    if (kind != kindEnginePdf) {
+        return false;
+    }
+    return EnginePdfHasUnsavedAnnotations(engine);
+}

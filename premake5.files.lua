@@ -572,7 +572,6 @@ function engines_files()
     "ChmDoc.*",
     "EbookDoc.*",
     "EbookFormatter.*",
-    "FileModifications.*",
     "HtmlFormatter.*",
     "MobiDoc.*",
     "ParseBKM.*",

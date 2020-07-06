@@ -93,7 +93,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("&Close\tCtrl+W"),               CmdClose,                  MF_REQ_DISK_ACCESS },
     { _TRN("Show in &folder"),              CmdShowInFolder,           MF_REQ_DISK_ACCESS },
     { _TRN("&Save As...\tCtrl+S"),          CmdSaveAs,                 MF_REQ_DISK_ACCESS },
-    { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,     MF_REQ_DISK_ACCESS },
+    { _TRN("Save Annotations"),             CmdSaveAnnotations,        MF_REQ_DISK_ACCESS },
  //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
     { _TRN("Save S&hortcut...\tCtrl+Shift+S"), Cmd::SaveAsBookmark,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
@@ -254,9 +254,9 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Bookmarks\tF12"),         CmdViewBookmarks,         0                 },
     { _TRN("Show &Toolbar\tF8"),            CmdViewShowHideToolbar,   MF_NOT_FOR_EBOOK_UI },
     { _TRN("Show &Scrollbars"),             CmdViewShowHideScrollbars,MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Save Annotations"),             CmdSaveAnnotationsSmx,    MF_REQ_DISK_ACCESS },
+    { _TRN("Save Annotations"),             CmdSaveAnnotations,       MF_REQ_DISK_ACCESS },
     {"New Bookmarks",                       CmdNewBookmarks,          MF_NO_TRANSLATE },
-    { _TRN("Edit Annotations"),        CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
+    { _TRN("Edit Annotations"),             CmdEditAnnotations,       MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                        MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  CmdSaveAs,                MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    CmdPrint,                 MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
@@ -624,7 +624,7 @@ static void MenuUpdateStateForWindow(WindowInfo* win) {
     win::menu::SetChecked(win->menu, CmdDebugEbookUI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetChecked(win->menu, CmdDebugMui, mui::IsDebugPaint());
     win::menu::SetEnabled(win->menu, CmdDebugAnnotations,
-                          tab && tab->selectionOnPage && win->showSelection && engine && engine->supportsAnnotations);
+                          tab && tab->selectionOnPage && win->showSelection && EngineSupportsAnnotations(engine));
 }
 
 void OnAboutContextMenu(WindowInfo* win, int x, int y) {
@@ -775,11 +775,9 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     win::menu::SetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
 
-    bool showCreateAnnotation = false;
     EngineBase* engine = dm->GetEngine();
-    if (engine) {
-        showCreateAnnotation = engine->supportsAnnotations;
-    }
+    bool showCreateAnnotation = EngineSupportsAnnotations(engine);
+
     int pageNo = dm->GetPageNoByPoint(Point{x, y});
     PointFl ptOnPage = dm->CvtFromScreen(Point{x, y}, pageNo);
     if (showCreateAnnotation) {
@@ -791,11 +789,6 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     bool canDoAnnotations = gIsDebugBuild || gIsPreReleaseBuild || gIsDailyBuild;
     if (!canDoAnnotations) {
         showCreateAnnotation = false;
-    }
-    if (!showCreateAnnotation) {
-        win::menu::Remove(popup, CmdSaveAnnotationsSmx);
-    } else {
-        win::menu::SetEnabled(popup, CmdSaveAnnotationsSmx, dm->HasUnsavedAnnots());
     }
 
     const WCHAR* filePath = win->ctrl->FilePath();
@@ -847,7 +840,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdProperties:
         case CmdViewShowHideToolbar:
         case CmdViewShowHideScrollbars:
-        case CmdSaveAnnotationsSmx:
+        case CmdSaveAnnotations:
         case CmdNewBookmarks:
             HwndSendCommand(win->hwndFrame, cmd);
             break;
@@ -981,20 +974,12 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
         win::menu::Remove(menu, CmdOpenWithHtmlHelp);
     }
 
-    bool supportsAnnotations = false;
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
-    if (engine) {
-        supportsAnnotations = engine->supportsAnnotations;
-    }
+    bool supportsAnnotations = EngineSupportsAnnotations(engine);
     bool canDoAnnotations = gIsDebugBuild || gIsPreReleaseBuild || gIsDailyBuild;
     if (!canDoAnnotations) {
         supportsAnnotations = false;
-    }
-    if (!supportsAnnotations) {
-        win::menu::Remove(menu, CmdSaveAnnotationsSmx);
-    } else {
-        win::menu::SetEnabled(menu, CmdSaveAnnotationsSmx, dm && dm->HasUnsavedAnnots());
     }
 }
 

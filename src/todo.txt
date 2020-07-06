@@ -1,7 +1,6 @@
 Annotations:
- - finish MakeAnnotationFromSelection2 which builds quads, like do_edit_quad_points
+ - fix MakeAnnotationFromSelection which builds quads, like do_edit_quad_points
    in gl-annotate.c
- - change our text higlight to match PDF i.e. use quad points
  - save attachment
  - add attachment
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)

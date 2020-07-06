@@ -290,8 +290,6 @@ EngineXps::EngineXps() {
     kind = kindEngineXps;
     defaultFileExt = L".xps";
     fileDPI = 72.0f;
-    supportsAnnotations = true;
-    supportsAnnotationsForSaving = false;
 
     for (size_t i = 0; i < dimof(mutexes); i++) {
         InitializeCriticalSection(&mutexes[i]);
@@ -359,7 +357,6 @@ EngineBase* EngineXps::Clone() {
         return nullptr;
     }
 
-    clone->SetUserAnnotations(userAnnots);
     return clone;
 }
 
@@ -649,18 +646,13 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
 
     fz_pixmap* pix = nullptr;
     fz_device* dev = nullptr;
-    fz_display_list* list = nullptr;
     RenderedBitmap* bitmap = nullptr;
 
     fz_var(dev);
-    fz_var(list);
     fz_var(pix);
     fz_var(bitmap);
 
-    Vec<Annotation*> pageAnnots = FilterAnnotationsForPage(userAnnots, args.pageNo);
-
     fz_try(ctx) {
-        list = fz_new_display_list_from_page(ctx, page);
         pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
         // initialize with white background
         fz_clear_pixmap_with_value(ctx, pix, 0xff);
@@ -669,19 +661,13 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
         // or "Print". "Export" is not used
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         // TODO: use fz_infinite_rect instead of cliprect?
-        fz_run_page_transparency(ctx, &pageAnnots, dev, cliprect, false, false);
-        fz_run_display_list(ctx, list, dev, ctm, cliprect, fzcookie);
-        fz_run_page_transparency(ctx, &pageAnnots, dev, cliprect, true, false);
-        fz_run_user_page_annots(ctx, &pageAnnots, dev, ctm, cliprect, fzcookie);
+        fz_run_page(ctx, page, dev, ctm, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
         fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
         if (dev) {
             fz_drop_device(ctx, dev);
-        }
-        if (list) {
-            fz_drop_display_list(ctx, list);
         }
         fz_drop_pixmap(ctx, pix);
     }

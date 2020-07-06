@@ -53,7 +53,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(FindMatch, "Find: Match Case")                                   \
     V(FindNextSel, "Find: Next Selection")                             \
     V(FindPrevSel, "Find: Previous Selection")                         \
-    V(SaveAnnotationsSmx, "Save Annotations As .smx")                  \
+    V(SaveAnnotations, "Save Annotations")                             \
     V(EditAnnotations, "Edit Annotations")                             \
     V(ZoomFitPage, "Zoom: Fit Page")                                   \
     V(ZoomActualSize, "Zoom: Actual Size")                             \

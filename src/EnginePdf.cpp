@@ -329,7 +329,7 @@ class EnginePdf : public EngineBase {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    int GetAnnotations(Vec<Annotation*>* annotsOut) override;
+    int GetAnnotations(Vec<Annotation*>* annotsOut);
 
     static EngineBase* CreateFromFile(const WCHAR* path, PasswordUI* pwdUI);
     static EngineBase* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
@@ -370,7 +370,6 @@ class EnginePdf : public EngineBase {
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
 
-    bool SaveUserAnnots(const char* pathUtf8);
     std::span<u8> LoadStreamFromPDFFile(const WCHAR* filePath);
 };
 
@@ -409,8 +408,6 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
 
 EnginePdf::EnginePdf() {
     kind = kindEnginePdf;
-    supportsAnnotations = true;
-    supportsAnnotationsForSaving = true;
     defaultFileExt = L".pdf";
     fileDPI = 72.0f;
 
@@ -511,8 +508,6 @@ EngineBase* EnginePdf::Clone() {
         free(clone->decryptionKey);
         clone->decryptionKey = nullptr;
     }
-
-    clone->SetUserAnnotations(userAnnots);
 
     return clone;
 }
@@ -1063,6 +1058,30 @@ FzPageInfo* EnginePdf::GetFzPageInfoFast(int pageNo) {
         return nullptr;
     }
     return pageInfo;
+}
+
+static PageElement* newFzComment(const WCHAR* comment, int pageNo, RectFl rect) {
+    auto res = new PageElement();
+    res->kind_ = kindPageElementComment;
+    res->pageNo = pageNo;
+    res->rect = rect;
+    res->value = str::Dup(comment);
+    return res;
+}
+
+static PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
+    fz_rect rect = pdf_annot_rect(ctx, annot);
+    auto tp = pdf_annot_type(ctx, annot);
+    const char* contents = pdf_annot_contents(ctx, annot);
+    const char* label = pdf_field_label(ctx, annot->obj);
+    const char* s = contents;
+    // TODO: use separate classes for comments and tooltips?
+    if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
+        s = label;
+    }
+    AutoFreeWstr ws = strconv::Utf8ToWstr(s);
+    RectFl rd = fz_rect_to_RectD(rect);
+    return newFzComment(ws, pageNo, rd);
 }
 
 static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo) {
@@ -1770,14 +1789,13 @@ std::span<u8> EnginePdf::GetFileData() {
     return file::ReadFile(path);
 }
 
+// TODO: proper support for includeUserAnnots or maybe just remove it
 bool EnginePdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
         bool ok = file::WriteFile(dstPath, d.AsSpan());
-        if (ok) {
-            return !includeUserAnnots || SaveUserAnnots(copyFileName);
-        }
+        return ok;
     }
     auto path = FileName();
     if (!path) {
@@ -1787,184 +1805,7 @@ bool EnginePdf::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     if (!ok) {
         return false;
     }
-    // TODO: try to recover when SaveUserAnnots fails?
-    return !includeUserAnnots || SaveUserAnnots(copyFileName);
-}
-
-#if 0
-static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, pdf_obj* page_obj,
-                                           PageAnnotation& annot, pdf_obj* annots) {
-    static const char* obj_dict =
-        "<<\
-    /Type /Annot /Subtype /%s\
-    /Rect [%f %f %f %f]\
-    /C [%f %f %f]\
-    /F %d\
-    /P %d %d R\
-    /QuadPoints %s\
-    /AP << >>\
->>";
-    static const char* obj_quad_tpl = "[%f %f %f %f %f %f %f %f]";
-    static const char* ap_dict =
-        "<< /Type /XObject /Subtype /Form /BBox [0 0 %f %f] /Resources << /ExtGState << /GS << /Type /ExtGState "
-        "/ca "
-        "%.f /AIS false /BM /Multiply >> >> /ProcSet [/PDF] >> >>";
-    static const char* ap_highlight = "q /DeviceRGB cs /GS gs %f %f %f rg 0 0 %f %f re f Q\n";
-    static const char* ap_underline = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 0.5 m %f 0.5 l S Q\n";
-    static const char* ap_strikeout = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 %f m %f %f l S Q\n";
-    static const char* ap_squiggly =
-        "q /DeviceRGB CS %f %f %f RG 0.5 w [1] 1.5 d 0 0.25 m %f 0.25 l S [1] 0.5 d 0 0.75 m %f 0.75 l S Q\n";
-
-    pdf_obj *annot_obj = nullptr, *ap_obj = nullptr;
-    fz_buffer* ap_buf = nullptr;
-
-    fz_var(annot_obj);
-    fz_var(ap_obj);
-    fz_var(ap_buf);
-
-    const char* subtype = PageAnnotType::Highlight == annot.type
-                              ? "Highlight"
-                              : PageAnnotType::Underline == annot.type
-                                    ? "Underline"
-                                    : PageAnnotType::StrikeOut == annot.type
-                                          ? "StrikeOut"
-                                          : PageAnnotType::Squiggly == annot.type ? "Squiggly" : nullptr;
-    CrashIf(!subtype);
-    int rotation = (page->rotate + 360) % 360;
-    CrashIf((rotation % 90) != 0);
-    // convert the annotation's rectangle back to raw user space
-    fz_rect r = RectD_to_fz_rect(annot.rect);
-    fz_matrix invctm = fz_invert_matrix(page->ctm);
-    fz_transform_rect(&r, invctm);
-    double dx = r.x1 - r.x0, dy = r.y1 - r.y0;
-    if ((rotation % 180) == 90)
-        std::swap(dx, dy);
-    float rgb[3] = {annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f};
-    // rotate the QuadPoints to match the page
-    AutoFree quad_tpl;
-    if (0 == rotation)
-        quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0));
-    else if (90 == rotation)
-        quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y0, r.x0, r.y1, r.x1, r.y0, r.x1, r.y1));
-    else if (180 == rotation)
-        quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y0, r.x0, r.y0, r.x1, r.y1, r.x0, r.y1));
-    else // if (270 == rotation)
-        quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
-    AutoFree annot_tpl(str::Format(obj_dict, subtype, r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1],
-                                   rgb[2],                                              // Rect and Color
-                                   F_Print, pdf_to_num(ctx, page_obj), pdf_to_gen(ctx, page_obj), // F and P
-                                   quad_tpl.Get()));
-    AutoFree annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
-    AutoFree annot_ap_stream;
-
-    fz_try(ctx) {
-        annot_obj = pdf_new_obj_from_str(ctx, doc, annot_tpl);
-        // append the annotation to the file
-        pdf_array_push_drop(ctx, annots, pdf_new_ref(doc, annot_obj));
-    }
-    fz_catch(ctx) {
-        pdf_drop_obj(ctx, annot_obj);
-        return false;
-    }
-
-    if (doc->crypt) {
-        // since we don't encrypt the appearance stream, for encrypted documents
-        // the readers will have to synthesize an appearance stream themselves
-        pdf_drop_obj(ctx, annot_obj);
-        return true;
-    }
-
-    fz_try(ctx) {
-        // create the appearance stream (unencrypted) and append it to the file
-        ap_obj = pdf_new_obj_from_str(ctx, doc, annot_ap_dict);
-        switch (annot.type) {
-            case PageAnnotType::Highlight:
-                annot_ap_stream.Set(str::Format(ap_highlight, rgb[0], rgb[1], rgb[2], dx, dy));
-                break;
-            case PageAnnotType::Underline:
-                annot_ap_stream.Set(str::Format(ap_underline, rgb[0], rgb[1], rgb[2], dx));
-                break;
-            case PageAnnotType::StrikeOut:
-                annot_ap_stream.Set(str::Format(ap_strikeout, rgb[0], rgb[1], rgb[2], dy / 2, dx, dy / 2));
-                break;
-            case PageAnnotType::Squiggly:
-                annot_ap_stream.Set(str::Format(ap_squiggly, rgb[0], rgb[1], rgb[2], dx, dx));
-                break;
-        }
-        if (annot.type != PageAnnotType::Highlight)
-            pdf_dict_dels(ctx, pdf_dict_gets(ctx, ap_obj, "Resources"), "ExtGState");
-        if (rotation) {
-            pdf_dict_puts_drop(ctx, ap_obj, "Matrix", pdf_new_matrix(ctx, doc, fz_rotate(rotation)));
-        }
-        ap_buf = fz_new_buffer(ctx, (int)str::Len(annot_ap_stream));
-        memcpy(ap_buf->data, annot_ap_stream, (ap_buf->len = (int)str::Len(annot_ap_stream)));
-        pdf_dict_puts_drop(ctx, ap_obj, "Length", pdf_new_int(ctx, doc, ap_buf->len));
-        // append the appearance stream to the file
-        int num = pdf_create_object(ctx, doc);
-        pdf_update_object(ctx, doc, num, ap_obj);
-        pdf_update_stream(ctx, doc, num, ap_buf);
-        pdf_dict_puts_drop(ctx, pdf_dict_gets(ctx, annot_obj, "AP"), "N", pdf_new_indirect(ctx, doc, num, 0));
-    }
-    fz_always(ctx) {
-        pdf_drop_obj(ctx, ap_obj);
-        fz_drop_buffer(ctx, ap_buf);
-        pdf_drop_obj(ctx, annot_obj);
-    }
-    fz_catch(ctx) { return false; }
     return true;
-}
-#endif
-
-static enum pdf_annot_type PageAnnotTypeToPdf(AnnotationType tp) {
-    switch (tp) {
-        case AnnotationType::Highlight:
-            return PDF_ANNOT_HIGHLIGHT;
-        case AnnotationType::Squiggly:
-            return PDF_ANNOT_SQUIGGLY;
-        case AnnotationType::Underline:
-            return PDF_ANNOT_UNDERLINE;
-        case AnnotationType::StrikeOut:
-            return PDF_ANNOT_SQUIGGLY;
-    }
-    return PDF_ANNOT_UNKNOWN;
-}
-
-static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, Annotation* userAnnot) {
-    enum pdf_annot_type tp = PageAnnotTypeToPdf(userAnnot->Type());
-    pdf_annot* annot = pdf_create_annot(ctx, page, tp);
-
-    fz_rect r = RectD_to_fz_rect(userAnnot->Rect());
-
-    // TODO: not sure if this is needed
-#if 0
-    // rotate the QuadPoints to match the page
-    AutoFree quad_tpl;
-    if (0 == rotation)
-        quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0));
-    else if (90 == rotation)
-        quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y0, r.x0, r.y1, r.x1, r.y0, r.x1, r.y1));
-    else if (180 == rotation)
-        quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y0, r.x0, r.y0, r.x1, r.y1, r.x0, r.y1));
-    else // if (270 == rotation)
-        quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
-#endif
-    fz_quad quad = fz_make_quad(r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0);
-    pdf_add_annot_quad_point(ctx, annot, quad);
-
-    // TODO: not sure if rect is needed for annotations
-    // maybe only for some annotations but not highlight?
-#if 0
-    fz_rect r = RectD_to_fz_rect(userAnnot.rect);
-    pdf_set_annot_rect(ctx, annot, r);
-#endif
-
-    float col[4];
-    ToPdfRgba(userAnnot->Color(), col);
-    pdf_set_annot_color(ctx, annot, 3, col);
-    pdf_set_annot_opacity(ctx, annot, col[3]);
-
-    pdf_set_annot_modification_date(ctx, annot, time(NULL));
-    pdf_update_appearance(ctx, annot);
 }
 
 const pdf_write_options pdf_default_write_options2 = {
@@ -2022,53 +1863,6 @@ bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view path) {
         const char* errMsg = fz_caught_message(enginePdf->ctx);
         logf("Pdf save of '%s' failed with '%s'\n", path.data(), errMsg);
         // TODO: show error message
-        ok = false;
-    }
-    return ok;
-}
-
-bool EnginePdf::SaveUserAnnots(const char* pathUtf8) {
-    if (!userAnnots) {
-        return true;
-    }
-    int n = userAnnots->isize();
-    // TODO: should only count non-deleted annotations
-    if (n == 0) {
-        return true;
-    }
-
-    ScopedCritSec scope1(&pagesAccess);
-    ScopedCritSec scope2(ctxAccess);
-
-    bool ok = true;
-    Vec<Annotation*> pageAnnots;
-    pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
-    int nAdded = 0;
-
-    int nPages = PageCount();
-    fz_try(ctx) {
-        for (int pageNo = 1; pageNo <= nPages; pageNo++) {
-            FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
-            pdf_page* page = pdf_page_from_fz_page(ctx, pageInfo->page);
-
-            pageAnnots = FilterAnnotationsForPage(userAnnots, pageNo);
-            if (pageAnnots.size() == 0) {
-                continue;
-            }
-
-            for (auto&& annot : pageAnnots) {
-                add_user_annotation(ctx, doc, page, annot);
-                nAdded++;
-            }
-        }
-
-        if (nAdded > 0) {
-            pdf_write_options opts = {0};
-            opts.do_incremental = 1;
-            pdf_save_document(ctx, doc, const_cast<char*>(pathUtf8), &opts);
-        }
-    }
-    fz_catch(ctx) {
         ok = false;
     }
     return ok;
@@ -2244,4 +2038,17 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
     pdf_update_appearance(ctx, annot);
     auto res = MakeAnnotationPdf(ctx, page, annot, pageNo);
     return res;
+}
+
+int EnginePdfGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
+    CrashIf(engine->kind != kindEnginePdf);
+    EnginePdf* enginePdf = (EnginePdf*)engine;
+    return enginePdf->GetAnnotations(annotsOut);
+}
+
+bool EnginePdfHasUnsavedAnnotations(EngineBase* engine) {
+    CrashIf(engine->kind != kindEnginePdf);
+    EnginePdf* enginePdf = (EnginePdf*)engine;
+    // TODO: implement me
+    return false;
 }

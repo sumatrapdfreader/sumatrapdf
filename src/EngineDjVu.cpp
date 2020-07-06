@@ -281,7 +281,6 @@ class EngineDjVu : public EngineBase {
     Vec<ddjvu_fileinfo_t> fileInfos;
 
     RenderedBitmap* CreateRenderedBitmap(const char* bmpData, Size size, bool grayscale) const;
-    void DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, Rect screen);
     bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>& coords);
     char* ResolveNamedDest(const char* name);
     TocItem* BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter);
@@ -296,8 +295,6 @@ EngineDjVu::EngineDjVu() {
     defaultFileExt = L".djvu";
     // DPI isn't constant for all pages and thus premultiplied
     fileDPI = 300.0f;
-    supportsAnnotations = true;
-    supportsAnnotationsForSaving = false;
     GetDjVuContext();
 }
 
@@ -518,72 +515,6 @@ bool EngineDjVu::FinishLoading() {
     return true;
 }
 
-void EngineDjVu::DrawUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, Rect screen) {
-    using namespace Gdiplus;
-
-    if (!bmp || !userAnnots || userAnnots->size() == 0) {
-        return;
-    }
-
-    int n = userAnnots->isize();
-    HDC hdc = CreateCompatibleDC(nullptr);
-    {
-        ScopedSelectObject bmpScope(hdc, bmp->GetBitmap());
-        Graphics g(hdc);
-        g.SetCompositingQuality(CompositingQualityHighQuality);
-        g.SetPageUnit(UnitPixel);
-
-        for (int i = 0; i < n; i++) {
-            Annotation* annot = userAnnots->at(i);
-            if (annot->isDeleted) {
-                continue;
-            }
-            if (annot->pageNo != pageNo) {
-                continue;
-            }
-            RectFl rect = annot->Rect();
-            RectFl arect;
-            switch (annot->type) {
-                case AnnotationType::Highlight:
-                    arect = Transform(rect, pageNo, zoom, rotation);
-                    arect.Offset((float)-screen.x, (float)-screen.y);
-                    {
-                        SolidBrush tmpBrush(Unblend(annot->Color(), 119));
-                        g.FillRectangle(&tmpBrush, ToGdipRectF(arect));
-                    }
-                    break;
-                case AnnotationType::Underline:
-                case AnnotationType::StrikeOut:
-                    arect = RectFl(rect.x, rect.BR().y, rect.dx, 0);
-                    if (AnnotationType::StrikeOut == annot->type) {
-                        arect.y -= rect.dy / 2;
-                    }
-                    arect = Transform(arect, pageNo, zoom, rotation);
-                    arect.Offset((float)-screen.x, (float)-screen.y);
-                    {
-                        Pen tmpPen(FromColor(annot->Color()), zoom);
-                        g.DrawLine(&tmpPen, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
-                    }
-                    break;
-                case AnnotationType::Squiggly: {
-                    Pen p(FromColor(annot->Color()), 0.5f * zoom);
-                    float dash[2] = {2, 2};
-                    p.SetDashPattern(dash, dimof(dash));
-                    p.SetDashOffset(1);
-                    arect = Transform(RectFl(rect.x, rect.BR().y - 0.25f, rect.dx, 0), pageNo, zoom, rotation);
-                    arect.Offset((float)-screen.x, (float)-screen.y);
-                    g.DrawLine(&p, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
-                    p.SetDashOffset(3);
-                    arect = Transform(RectFl(rect.x, rect.BR().y + 0.25f, rect.dx, 0), pageNo, zoom, rotation);
-                    arect.Offset((float)-screen.x, (float)-screen.y);
-                    g.DrawLine(&p, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
-                } break;
-            }
-        }
-    }
-    DeleteDC(hdc);
-}
-
 RenderedBitmap* EngineDjVu::CreateRenderedBitmap(const char* bmpData, Size size, bool grayscale) const {
     int stride = ((size.dx * (grayscale ? 1 : 3) + 3) / 4) * 4;
 
@@ -678,7 +609,6 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
         isBitonal = true;
     }
     bmp = CreateRenderedBitmap(bmpData, screen.Size(), isBitonal);
-    DrawUserAnnots(bmp, pageNo, zoom, rotation, screen);
 
     return bmp;
 }

@@ -321,7 +321,6 @@ DisplayModel::~DisplayModel() {
     cb->CleanUp(this);
 
     delete pdfSync;
-    DeleteVecAnnotations(userAnnots);
     delete textSearch;
     delete textSelection;
     delete textCache;
@@ -1875,16 +1874,4 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
         scroll.y = 0; // Adobe Reader never shows the previous page
     }
     GoToPage(pageNo, scroll.y, true, scroll.x);
-}
-
-bool DisplayModel::HasUnsavedAnnots() {
-    if (!userAnnots) {
-        return false;
-    }
-    for (auto& annot : *userAnnots) {
-        if (annot->isChanged) {
-            return true;
-        }
-    }
-    return false;
 }

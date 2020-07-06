@@ -1046,30 +1046,6 @@ TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestinatio
     return res;
 }
 
-PageElement* newFzComment(const WCHAR* comment, int pageNo, RectFl rect) {
-    auto res = new PageElement();
-    res->kind_ = kindPageElementComment;
-    res->pageNo = pageNo;
-    res->rect = rect;
-    res->value = str::Dup(comment);
-    return res;
-}
-
-PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
-    fz_rect rect = pdf_annot_rect(ctx, annot);
-    auto tp = pdf_annot_type(ctx, annot);
-    const char* contents = pdf_annot_contents(ctx, annot);
-    const char* label = pdf_field_label(ctx, annot->obj);
-    const char* s = contents;
-    // TODO: use separate classes for comments and tooltips?
-    if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
-        s = label;
-    }
-    AutoFreeWstr ws = strconv::Utf8ToWstr(s);
-    RectFl rd = fz_rect_to_RectD(rect);
-    return newFzComment(ws, pageNo, rd);
-}
-
 IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointFl pt) {
     if (!pageInfo) {
         return nullptr;
@@ -1191,106 +1167,6 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
     }
     delete list;
     free(coords);
-}
-
-void fz_run_user_page_annots(fz_context* ctx, Vec<Annotation*>* annots, fz_device* dev, fz_matrix ctm,
-                             const fz_rect cliprect, fz_cookie* cookie) {
-    if (!annots) {
-        return;
-    }
-    int n = annots->isize();
-    for (int i = 0; i < n; i++) {
-        if (cookie && cookie->abort) {
-            return;
-        }
-        Annotation* annot = annots->at(i);
-        // skip annotation if it isn't visible
-        RectFl arect = annot->Rect();
-        fz_rect rect = RectD_to_fz_rect(arect);
-        rect = fz_transform_rect(rect, ctm);
-        if (fz_is_empty_rect(fz_intersect_rect(rect, cliprect))) {
-            continue;
-        }
-        // prepare text highlighting path (cf. pdf_create_highlight_annot
-        // and pdf_create_markup_annot in pdf_annot.c)
-        fz_path* path = fz_new_path(ctx);
-        fz_stroke_state* stroke = nullptr;
-        switch (annot->type) {
-            case AnnotationType::Highlight:
-                fz_moveto(ctx, path, arect.TL().x, arect.TL().y);
-                fz_lineto(ctx, path, arect.BR().x, arect.TL().y);
-                fz_lineto(ctx, path, arect.BR().x, arect.BR().y);
-                fz_lineto(ctx, path, arect.TL().x, arect.BR().y);
-                fz_closepath(ctx, path);
-                break;
-            case AnnotationType::Underline:
-                fz_moveto(ctx, path, arect.TL().x, arect.BR().y - 0.25f);
-                fz_lineto(ctx, path, arect.BR().x, arect.BR().y - 0.25f);
-                break;
-            case AnnotationType::StrikeOut:
-                fz_moveto(ctx, path, arect.TL().x, arect.TL().y + arect.dy / 2);
-                fz_lineto(ctx, path, arect.BR().x, arect.TL().y + arect.dy / 2);
-                break;
-            case AnnotationType::Squiggly:
-                fz_moveto(ctx, path, arect.TL().x + 1, arect.BR().y);
-                fz_lineto(ctx, path, arect.BR().x, arect.BR().y);
-                fz_moveto(ctx, path, arect.TL().x, arect.BR().y - 0.5f);
-                fz_lineto(ctx, path, arect.BR().x, arect.BR().y - 0.5f);
-                stroke = fz_new_stroke_state_with_dash_len(ctx, 2);
-                CrashIf(!stroke);
-                if (stroke) {
-                    stroke->linewidth = 0.5f;
-                    stroke->dash_list[stroke->dash_len++] = 1;
-                    stroke->dash_list[stroke->dash_len++] = 1;
-                }
-                break;
-            default:
-                CrashIf(true);
-        }
-        fz_colorspace* cs = fz_device_rgb(ctx);
-        float pdfcolor[4];
-        ToPdfRgba(annot->Color(), pdfcolor);
-        float a = pdfcolor[3];
-        if (AnnotationType::Highlight == annot->type) {
-            // render path with transparency effect
-            fz_begin_group(ctx, dev, rect, nullptr, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
-            fz_fill_path(ctx, dev, path, 0, ctm, cs, pdfcolor, a, fz_default_color_params);
-            fz_end_group(ctx, dev);
-        } else {
-            if (!stroke) {
-                stroke = fz_new_stroke_state(ctx);
-            }
-            fz_stroke_path(ctx, dev, path, stroke, ctm, cs, pdfcolor, 1.0f, fz_default_color_params);
-            fz_drop_stroke_state(ctx, stroke);
-        }
-        fz_drop_path(ctx, path);
-    }
-}
-
-void fz_run_page_transparency(fz_context* ctx, Vec<Annotation*>* annots, fz_device* dev, const fz_rect cliprect,
-                              bool endGroup, bool hasTransparency) {
-    if (!annots) {
-        return;
-    }
-    int n = annots->isize();
-    if (hasTransparency || n == 0) {
-        return;
-    }
-    bool needsTransparency = false;
-    for (int i = 0; i < n; i++) {
-        if (AnnotationType::Highlight == annots->at(i)->type) {
-            needsTransparency = true;
-            break;
-        }
-    }
-    if (!needsTransparency) {
-        return;
-    }
-    if (!endGroup) {
-        fz_begin_group(ctx, dev, cliprect, nullptr, 1, 0, 0, 1);
-    } else {
-        fz_end_group(ctx, dev);
-    }
 }
 
 void fz_find_image_positions(fz_context* ctx, Vec<FitzImagePos>& images, fz_stext_page* stext) {

@@ -22,8 +22,9 @@
 #include "EngineCreate.h"
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "AppColors.h"
+#include "Controller.h"
+#include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
@@ -795,9 +796,14 @@ void TabsOnCloseDoc(WindowInfo* win) {
         return;
     }
 
-    /* if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->HasUnsavedAnnots) {
-        // TODO: warn about unsaved changes
-    } */
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        EngineBase* engine = dm->GetEngine();
+        if (EngineHasUnsavedAnnotations(engine)) {
+            // TODO: warn about unsaved changed
+            logf("File has unsaved changed\n");
+        }
+    }
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     RemoveTab(win, current);

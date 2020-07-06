@@ -57,32 +57,6 @@ std::string_view AnnotationReadableName(AnnotationType tp) {
     return {s};
 }
 
-struct AnnotationSmx {
-    RectFl rect = {};
-    COLORREF color = ColorUnset;
-    COLORREF interiorColor = ColorUnset;
-
-    // flags has the same meaning as mupdf annot.h
-    // TODO: not sure if want to preserve it
-    int flags;
-
-    str::Str contents;
-    str::Str author;
-    int quadding; // aka Text Alignment
-    str::Str iconName;
-
-    time_t creationDate;
-    time_t modificationDate;
-
-    str::Str textFont;
-    int textSize = 0;
-    COLORREF textColor = ColorUnset;
-    int borderWidth = 0;
-    int lineEndingStart = 0;
-    int lineEndingEnd = 0;
-    int opacity;
-};
-
 struct AnnotationPdf {
     // set if constructed from mupdf annotation
     fz_context* ctx = nullptr;
@@ -117,7 +91,6 @@ bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
 }
 
 Annotation::~Annotation() {
-    delete smx;
     delete pdf;
 }
 
@@ -140,9 +113,6 @@ int Annotation::PageNo() const {
 }
 
 RectFl Annotation::Rect() const {
-    if (smx) {
-        return smx->rect;
-    }
     // TODO: cache during creation?
     fz_rect rc = pdf_annot_rect(pdf->ctx, pdf->annot);
     auto rect = fz_rect_to_RectD(rc);
@@ -150,9 +120,6 @@ RectFl Annotation::Rect() const {
 }
 
 std::string_view Annotation::Author() {
-    if (smx) {
-        return smx->author.AsView();
-    }
     const char* s = pdf_annot_author(pdf->ctx, pdf->annot);
     if (str::IsStringEmptyOrWhiteSpaceOnly(s)) {
         return {};
@@ -161,9 +128,6 @@ std::string_view Annotation::Author() {
 }
 
 int Annotation::Quadding() {
-    if (smx) {
-        return smx->quadding;
-    }
     return pdf_annot_quadding(pdf->ctx, pdf->annot);
 }
 
@@ -178,20 +142,13 @@ bool Annotation::SetQuadding(int newQuadding) {
     if (!didChange) {
         return false;
     }
-    if (smx) {
-        smx->quadding = newQuadding;
-    } else {
-        pdf_set_annot_quadding(pdf->ctx, pdf->annot, newQuadding);
-        pdf_update_appearance(pdf->ctx, pdf->annot);
-    }
+    pdf_set_annot_quadding(pdf->ctx, pdf->annot, newQuadding);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
     return true;
 }
 
 std::string_view Annotation::Contents() {
-    if (smx) {
-        return smx->contents.AsView();
-    }
     // TODO: cache during creation?
     const char* s = pdf_annot_contents(pdf->ctx, pdf->annot);
     return s;
@@ -203,32 +160,20 @@ bool Annotation::SetContents(std::string_view sv) {
         return false;
     }
     isChanged = true;
-    if (smx) {
-        smx->contents.Set(sv);
-    } else {
-        pdf_set_annot_contents(pdf->ctx, pdf->annot, sv.data());
-        pdf_update_appearance(pdf->ctx, pdf->annot);
-    }
+    pdf_set_annot_contents(pdf->ctx, pdf->annot, sv.data());
+    pdf_update_appearance(pdf->ctx, pdf->annot);
     return true;
 }
 
 void Annotation::Delete() {
     CrashIf(isDeleted);
-    if (smx) {
-        // no-op
-    } else {
-        pdf_delete_annot(pdf->ctx, pdf->page, pdf->annot);
-    }
+    pdf_delete_annot(pdf->ctx, pdf->page, pdf->annot);
     isDeleted = true;
     isChanged = true; // TODO: not sure I need this
 }
 
 // -1 if not exist
 int Annotation::PopupId() {
-    if (smx) {
-        // not available for smx
-        return -1;
-    }
     pdf_obj* obj = pdf_dict_get(pdf->ctx, pdf->annot->obj, PDF_NAME(Popup));
     if (!obj) {
         return -1;
@@ -238,26 +183,17 @@ int Annotation::PopupId() {
 }
 
 time_t Annotation::CreationDate() {
-    if (smx) {
-        return smx->creationDate;
-    }
     auto res = pdf_annot_creation_date(pdf->ctx, pdf->annot);
     return res;
 }
 
 time_t Annotation::ModificationDate() {
-    if (smx) {
-        return smx->modificationDate;
-    }
     auto res = pdf_annot_modification_date(pdf->ctx, pdf->annot);
     return res;
 }
 
 // return empty() if no icon
 std::string_view Annotation::IconName() {
-    if (smx) {
-        return smx->iconName.AsView();
-    }
     bool hasIcon = pdf_annot_has_icon_name(pdf->ctx, pdf->annot);
     if (!hasIcon) {
         return {};
@@ -268,21 +204,14 @@ std::string_view Annotation::IconName() {
 }
 
 void Annotation::SetIconName(std::string_view iconName) {
-    if (smx) {
-        smx->iconName.Set(iconName);
-    } else {
-        pdf_set_annot_icon_name(pdf->ctx, pdf->annot, iconName.data());
-        pdf_update_appearance(pdf->ctx, pdf->annot);
-    }
+    pdf_set_annot_icon_name(pdf->ctx, pdf->annot, iconName.data());
+    pdf_update_appearance(pdf->ctx, pdf->annot);
     // TODO: only if the value changed
     isChanged = true;
 }
 
 // ColorUnset if no color
 COLORREF Annotation::Color() {
-    if (smx) {
-        return smx->color;
-    }
     float color[4];
     int n;
     pdf_annot_color(pdf->ctx, pdf->annot, &n, color);
@@ -293,30 +222,25 @@ COLORREF Annotation::Color() {
 // return true if color changed
 bool Annotation::SetColor(COLORREF c) {
     bool didChange = false;
-    if (smx) {
-        didChange = smx->color != c;
-        smx->color = c;
-    } else {
-        float color[4];
-        int n;
-        pdf_annot_color(pdf->ctx, pdf->annot, &n, color);
-        float newColor[4];
-        int newN = ToPdfRgba(c, newColor);
-        didChange = (n != newN);
-        if (!didChange) {
-            for (int i = 0; i < n; i++) {
-                if (color[i] != newColor[i]) {
-                    didChange = true;
-                }
+    float color[4];
+    int n;
+    pdf_annot_color(pdf->ctx, pdf->annot, &n, color);
+    float newColor[4];
+    int newN = ToPdfRgba(c, newColor);
+    didChange = (n != newN);
+    if (!didChange) {
+        for (int i = 0; i < n; i++) {
+            if (color[i] != newColor[i]) {
+                didChange = true;
             }
         }
-        if (c == ColorUnset) {
-            pdf_set_annot_color(pdf->ctx, pdf->annot, 0, newColor);
-        } else {
-            pdf_set_annot_color(pdf->ctx, pdf->annot, newN, newColor);
-        }
-        pdf_update_appearance(pdf->ctx, pdf->annot);
     }
+    if (c == ColorUnset) {
+        pdf_set_annot_color(pdf->ctx, pdf->annot, 0, newColor);
+    } else {
+        pdf_set_annot_color(pdf->ctx, pdf->annot, newN, newColor);
+    }
+    pdf_update_appearance(pdf->ctx, pdf->annot);
     if (didChange) {
         isChanged = true;
     }
@@ -325,9 +249,6 @@ bool Annotation::SetColor(COLORREF c) {
 
 // ColorUnset if no color
 COLORREF Annotation::InteriorColor() {
-    if (smx) {
-        return smx->interiorColor;
-    }
     float color[4];
     int n;
     pdf_annot_interior_color(pdf->ctx, pdf->annot, &n, color);
@@ -337,26 +258,21 @@ COLORREF Annotation::InteriorColor() {
 
 bool Annotation::SetInteriorColor(COLORREF c) {
     bool didChange = false;
-    if (smx) {
-        didChange = smx->interiorColor != c;
-        smx->interiorColor = c;
-    } else {
-        float color[4];
-        int n;
-        pdf_annot_interior_color(pdf->ctx, pdf->annot, &n, color);
-        float newColor[4];
-        int newN = ToPdfRgba(c, newColor);
-        didChange = (n != newN);
-        if (!didChange) {
-            for (int i = 0; i < n; i++) {
-                if (color[i] != newColor[i]) {
-                    didChange = true;
-                }
+    float color[4];
+    int n;
+    pdf_annot_interior_color(pdf->ctx, pdf->annot, &n, color);
+    float newColor[4];
+    int newN = ToPdfRgba(c, newColor);
+    didChange = (n != newN);
+    if (!didChange) {
+        for (int i = 0; i < n; i++) {
+            if (color[i] != newColor[i]) {
+                didChange = true;
             }
         }
-        pdf_set_annot_interior_color(pdf->ctx, pdf->annot, newN, newColor);
-        pdf_update_appearance(pdf->ctx, pdf->annot);
     }
+    pdf_set_annot_interior_color(pdf->ctx, pdf->annot, newN, newColor);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
     if (didChange) {
         isChanged = true;
     }
@@ -364,10 +280,6 @@ bool Annotation::SetInteriorColor(COLORREF c) {
 }
 
 std::string_view Annotation::DefaultAppearanceTextFont() {
-    if (smx) {
-        return smx->textFont.AsView();
-    }
-
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -376,10 +288,6 @@ std::string_view Annotation::DefaultAppearanceTextFont() {
 }
 
 void Annotation::SetDefaultAppearanceTextFont(std::string_view sv) {
-    if (smx) {
-        smx->textFont.Set(sv);
-        return;
-    }
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -390,9 +298,6 @@ void Annotation::SetDefaultAppearanceTextFont(std::string_view sv) {
 }
 
 int Annotation::DefaultAppearanceTextSize() {
-    if (smx) {
-        return smx->textSize;
-    }
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -401,12 +306,6 @@ int Annotation::DefaultAppearanceTextSize() {
 }
 
 void Annotation::SetDefaultAppearanceTextSize(int textSize) {
-    if (smx) {
-        CrashIf(true);
-        smx->textSize = textSize;
-        isChanged = true;
-        return;
-    }
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -417,9 +316,6 @@ void Annotation::SetDefaultAppearanceTextSize(int textSize) {
 }
 
 COLORREF Annotation::DefaultAppearanceTextColor() {
-    if (smx) {
-        return smx->textColor;
-    }
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -429,11 +325,6 @@ COLORREF Annotation::DefaultAppearanceTextColor() {
 }
 
 void Annotation::SetDefaultAppearanceTextColor(COLORREF col) {
-    if (smx) {
-        smx->textColor = col;
-        isChanged = true;
-        return;
-    }
     const char* text_font;
     float sizeF;
     float textColor[4];
@@ -445,11 +336,6 @@ void Annotation::SetDefaultAppearanceTextColor(COLORREF col) {
 }
 
 void Annotation::GetLineEndingStyles(int* start, int* end) {
-    if (smx) {
-        *start = smx->lineEndingStart;
-        *end = smx->lineEndingEnd;
-        return;
-    }
     pdf_line_ending leStart = PDF_ANNOT_LE_NONE;
     pdf_line_ending leEnd = PDF_ANNOT_LE_NONE;
     pdf_annot_line_ending_styles(pdf->ctx, pdf->annot, &leStart, &leEnd);
@@ -458,11 +344,6 @@ void Annotation::GetLineEndingStyles(int* start, int* end) {
 }
 
 void Annotation::SetLineEndingStyles(int start, int end) {
-    if (smx) {
-        smx->lineEndingStart = start;
-        smx->lineEndingEnd = end;
-        return;
-    }
     pdf_line_ending leStart = (pdf_line_ending)start;
     pdf_line_ending leEnd = (pdf_line_ending)end;
     pdf_set_annot_line_ending_styles(pdf->ctx, pdf->annot, leStart, leEnd);
@@ -471,27 +352,17 @@ void Annotation::SetLineEndingStyles(int start, int end) {
 }
 
 int Annotation::BorderWidth() {
-    if (smx) {
-        return smx->borderWidth;
-    }
     float res = pdf_annot_border(pdf->ctx, pdf->annot);
     return (int)res;
 }
 
 void Annotation::SetBorderWidth(int newWidth) {
-    if (smx) {
-        smx->borderWidth = newWidth;
-    } else {
-        pdf_set_annot_border(pdf->ctx, pdf->annot, (float)newWidth);
-        pdf_update_appearance(pdf->ctx, pdf->annot);
-    }
+    pdf_set_annot_border(pdf->ctx, pdf->annot, (float)newWidth);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
 }
 
 int Annotation::Opacity() {
-    if (smx) {
-        return smx->opacity;
-    }
     float fopacity = pdf_annot_opacity(pdf->ctx, pdf->annot);
     int res = (int)(fopacity * 255.f);
     return res;
@@ -500,13 +371,9 @@ int Annotation::Opacity() {
 void Annotation::SetOpacity(int newOpacity) {
     CrashIf(newOpacity < 0 || newOpacity > 255);
     newOpacity = std::clamp(newOpacity, 0, 255);
-    if (smx) {
-        smx->opacity = newOpacity;
-    } else {
-        float fopacity = (float)newOpacity / 255.f;
-        pdf_set_annot_opacity(pdf->ctx, pdf->annot, fopacity);
-        pdf_update_appearance(pdf->ctx, pdf->annot);
-    }
+    float fopacity = (float)newOpacity / 255.f;
+    pdf_set_annot_opacity(pdf->ctx, pdf->annot, fopacity);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
 }
 
@@ -526,17 +393,6 @@ Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot,
     res->pageNo = pageNo;
     res->pdf = apdf;
     res->type = typ;
-    return res;
-}
-
-Annotation* MakeAnnotationSmx(AnnotationType type, int pageNo, RectFl rect, COLORREF col) {
-    AnnotationSmx* smx = new AnnotationSmx();
-    smx->rect = rect;
-    smx->color = col;
-    Annotation* res = new Annotation();
-    res->smx = smx;
-    res->type = type;
-    res->pageNo = pageNo;
     return res;
 }
 

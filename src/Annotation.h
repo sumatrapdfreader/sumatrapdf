@@ -35,10 +35,11 @@ enum class AnnotationType {
     Unknown = -1
 };
 
-struct AnnotationSmx;
 struct AnnotationPdf;
 
 // an user annotation on page
+// It abstracts over pdf_annot so that we don't have to
+// inlude mupdf to include Annotation
 struct Annotation {
     // common to both smx and pdf
     AnnotationType type = AnnotationType::Unknown;
@@ -49,8 +50,6 @@ struct Annotation {
     // deleted are not shown but can be undeleted
     bool isDeleted = false;
 
-    // only one of them must be set
-    AnnotationSmx* smx = nullptr;
     AnnotationPdf* pdf = nullptr;
 
     Annotation() = default;
@@ -101,8 +100,6 @@ struct Annotation {
 
     void Delete();
 };
-
-Annotation* MakeAnnotationSmx(AnnotationType, int pageNo, RectFl, COLORREF);
 
 std::string_view AnnotationName(AnnotationType);
 std::string_view AnnotationReadableName(AnnotationType);

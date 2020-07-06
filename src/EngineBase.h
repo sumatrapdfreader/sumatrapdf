@@ -303,19 +303,10 @@ class EngineBase {
     bool isImageCollection = false;
     bool allowsPrinting = true;
     bool allowsCopyingText = true;
-    // TODO: generalize from PageAnnotation to PageModification
-    // whether this engine supports adding user annotations of all available types
-    // (either for rendering or for saving)
-    bool supportsAnnotations = false;
-    bool supportsAnnotationsForSaving = false;
     bool isPasswordProtected = false;
     char* decryptionKey = nullptr;
     bool hasPageLabels = false;
     int pageCount = -1;
-
-    // annotations from .smx file and added by the user
-    // owned by DisplayModel
-    Vec<Annotation*>* userAnnots = nullptr;
 
     // TODO: migrate other engines to use this
     AutoFreeWstr fileNameBase;
@@ -368,13 +359,6 @@ class EngineBase {
 
     // access to various document properties (such as Author, Title, etc.)
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
-
-    // Get annotations saved in the document (only applies to PDF docs)
-    virtual int GetAnnotations(Vec<Annotation*>* annotsOut);
-
-    // informs the engine about annotations the user made so that they can be rendered, etc.
-    // (this call supercedes any prior call to SetUserAnnotations)
-    void SetUserAnnotations(Vec<Annotation*>* annots);
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

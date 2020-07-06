@@ -6,6 +6,14 @@ Fixed a bunch of issues related to bugs in freetype and not
 compiling Sumatra with the exact same freetype options as mupdf.
 Introduced when I updated freetype code.
 
+Removed .smx support. It's a lot of work to add support for all
+PDF annotations (for each annotation type need to write code
+to serialize it, de-serialize it, draw the annotation for
+each engine type).
+It's also sumatra-only and I suppose the majority of people
+just want PDF annotations.
+Might resurrect if there's a lot of requests for it.
+
 2020-07-05 Sun
 
 Link to the commit on pre-release and daily build pages.

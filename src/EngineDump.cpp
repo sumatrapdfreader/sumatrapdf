@@ -16,7 +16,6 @@
 #include "EngineBase.h"
 #include "EngineDjVu.h"
 #include "EngineCreate.h"
-#include "FileModifications.h"
 #include "PdfCreator.h"
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
@@ -573,8 +572,6 @@ int main(int argc, char** argv) {
         ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseNameNoFree(filePath));
         return 1;
     }
-    Vec<Annotation*>* annots = LoadFileModifications(engine->FileName());
-    engine->SetUserAnnotations(annots);
     if (!loadOnly) {
         DumpData(engine, fullDump);
     }
@@ -582,7 +579,6 @@ int main(int argc, char** argv) {
         RenderDocument(engine, renderPath, renderZoom, silent);
     }
     delete engine;
-    DeleteVecAnnotations(annots);
 
     return 0;
 }

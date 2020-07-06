@@ -494,16 +494,6 @@ float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
-int EngineBase::GetAnnotations(Vec<Annotation*>* annotsOut) {
-    // no-op implementation for most file types
-    return 0;
-}
-
-void EngineBase::SetUserAnnotations(Vec<Annotation*>* annots) {
-    // owned by DisplayModel
-    userAnnots = annots;
-}
-
 PageDestination* EngineBase::GetNamedDest(const WCHAR* name) {
     UNUSED(name);
     return nullptr;

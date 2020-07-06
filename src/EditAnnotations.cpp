@@ -1191,16 +1191,7 @@ static void SetAnnotations(EditAnnotationsWindow* win, TabInfo* tab) {
     }
 
     Vec<Annotation*>* annots = new Vec<Annotation*>();
-    // those annotations are owned by us
-    dm->GetEngine()->GetAnnotations(annots);
-
-    // those annotations are owned by DisplayModel
-    // TODO: for uniformity, make a copy of them
-    if (dm->userAnnots) {
-        for (auto a : *dm->userAnnots) {
-            annots->Append(a);
-        }
-    }
+    EngineGetAnnotations(dm->GetEngine(), annots);
 
     win->tab = tab;
     tab->editAnnotsWindow = win;

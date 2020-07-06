@@ -307,7 +307,7 @@ workspace "SumatraPDF"
       "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
     }
     disablewarnings { "4018", "4244", "4267", "4312", "4996" }
-    includedirs { "ext/freetype/include", "mupdf/scripts/freetype" }
+    includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
     freetype_files()
 
   project "lcms2"
@@ -319,7 +319,7 @@ workspace "SumatraPDF"
   project "harfbuzz"
     kind "StaticLib"
     language "C"
-    includedirs { "ext/harfbuzz/src/hb-ucdn", "ext/freetype-config", "ext/freetype/include" }
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
     defines {
       "HAVE_FALLBACK=1",
       "HAVE_OT",
@@ -385,13 +385,13 @@ workspace "SumatraPDF"
     -- with our build over-rides
 
     includedirs {
-      "ext/freetype-config",  -- TODO: mupdf/scripts/freetype
       "mupdf/include",
       "mupdf/generated",
-      "ext/jbig2dec", 
-      "ext/libjpeg-turbo", 
+      "ext/jbig2dec",
+      "ext/libjpeg-turbo",
       "ext/openjpeg/src/lib/openjp2",
       "ext/zlib",
+      "mupdf/scripts/freetype",
       "ext/freetype/include",
       "ext/mujs",
       "ext/harfbuzz/src",
@@ -406,7 +406,7 @@ workspace "SumatraPDF"
           '..\\bin\\nasm.exe -f win32 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
        }
     filter {}
-    
+
     filter {'files:**.asm', 'platforms:x64 or x64_ramicro'}
       buildmessage 'Compiling %{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }

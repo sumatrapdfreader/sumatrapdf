@@ -236,8 +236,6 @@ class EnginePs : public EngineBase {
     EnginePs() {
         kind = kindEnginePostScript;
         defaultFileExt = L".ps";
-        supportsAnnotations = false;
-        supportsAnnotationsForSaving = false;
     }
 
     virtual ~EnginePs() {

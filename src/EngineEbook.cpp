@@ -170,8 +170,6 @@ static TocItem* newEbookTocItem(TocItem* parent, const WCHAR* title, PageDestina
 }
 
 EngineEbook::EngineEbook() {
-    supportsAnnotations = true;
-    supportsAnnotationsForSaving = false;
     pageCount = 0;
     // "B Format" paperback
     pageRect = RectFl(0, 0, 5.12f * GetFileDPI(), 7.8f * GetFileDPI());
@@ -288,79 +286,6 @@ RectFl EngineEbook::Transform(const RectFl& rect, int pageNo, float zoom, int ro
     return RectFl::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-static void DrawAnnotationHighlight(Graphics& g, Annotation* annot) {
-    RectFl rect = annot->Rect();
-    auto color = annot->Color();
-    SolidBrush tmpBrush(Unblend(color, 119));
-    g.FillRectangle(&tmpBrush, ToGdipRectF(rect));
-}
-
-static void DrawAnnotationUnderline(Graphics& g, Annotation* annot) {
-    RectFl rect = annot->Rect();
-    auto color = annot->Color();
-    auto p1 = Gdiplus::PointF((float)rect.x, (float)rect.BR().y);
-    auto p2 = Gdiplus::PointF((float)rect.BR().x, p1.Y);
-    {
-        Pen tmpPen(FromColor(color));
-        g.DrawLine(&tmpPen, p1, p2);
-    }
-}
-
-static void DrawAnnotationStrikeOut(Graphics& g, Annotation* annot) {
-    RectFl rect = annot->Rect();
-    auto color = annot->Color();
-    auto p1 = Gdiplus::PointF((float)rect.x, (float)rect.y + (float)rect.dy / 2);
-    auto p2 = Gdiplus::PointF((float)rect.BR().x, p1.Y);
-    {
-        Pen tmpPen(FromColor(color));
-        g.DrawLine(&tmpPen, p1, p2);
-    }
-}
-
-static void DrawAnnotationSquiggly(Graphics& g, Annotation* annot) {
-    RectFl rect = annot->Rect();
-    auto color = annot->Color();
-    Pen p(FromColor(color), 0.5f);
-    float dash[2] = {2, 2};
-    p.SetDashPattern(dash, dimof(dash));
-    p.SetDashOffset(1);
-    auto p1 = Gdiplus::PointF((float)rect.x, (float)rect.BR().y - 0.25f);
-    auto p2 = Gdiplus::PointF((float)rect.BR().x, p1.Y);
-    g.DrawLine(&p, p1, p2);
-    p.SetDashOffset(3);
-    p1.Y += 0.5f;
-    p2.Y += 0.5f;
-    g.DrawLine(&p, p1, p2);
-}
-
-static void DrawAnnotations(Graphics& g, Vec<Annotation*>* annots, int pageNo) {
-    if (!annots) {
-        return;
-    }
-    int n = annots->isize();
-    for (int i = 0; i < n; i++) {
-        Annotation* annot = annots->at(i);
-        if (annot->pageNo != pageNo) {
-            continue;
-        }
-        Gdiplus::PointF p1, p2;
-        switch (annot->type) {
-            case AnnotationType::Highlight:
-                DrawAnnotationHighlight(g, annot);
-                break;
-            case AnnotationType::Underline:
-                DrawAnnotationUnderline(g, annot);
-                break;
-            case AnnotationType::StrikeOut:
-                DrawAnnotationStrikeOut(g, annot);
-                break;
-            case AnnotationType::Squiggly:
-                DrawAnnotationSquiggly(g, annot);
-                break;
-        }
-    }
-}
-
 RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     auto pageNo = args.pageNo;
     auto zoom = args.zoom;
@@ -402,7 +327,6 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     mui::ITextRender* textDraw = mui::TextRenderGdiplus::Create(&g);
     DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black),
                  cookie ? &cookie->abort : nullptr);
-    DrawAnnotations(g, userAnnots, pageNo);
     delete textDraw;
     DeleteDC(hDC);
 

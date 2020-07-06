@@ -64,8 +64,6 @@ class EngineMupdf : public EngineBase {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    int GetAnnotations(Vec<Annotation*>* annotsOut) override;
-
     static EngineBase* CreateFromFile(const WCHAR* path);
     static EngineBase* CreateFromStream(IStream* stream);
 
@@ -123,7 +121,6 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
 
 EngineMupdf::EngineMupdf() {
     kind = kindEnginePdf;
-    supportsAnnotationsForSaving = true;
     defaultFileExt = L".pdf";
     fileDPI = 72.0f;
 
