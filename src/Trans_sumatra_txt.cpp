@@ -5744,7 +5744,7 @@ const char * gTranslations_dk =
   "udskriver dokument\0";
 
 const char * gTranslations_nl = 
-  "\0"\
+  "%s installatie niet gevonden.\0"\
   "&Over...\0"\
   "&Ware grootte\tCtrl+1\0"\
   "&Geavanceerde Opties...\0"\
@@ -5784,7 +5784,7 @@ const char * gTranslations_nl =
   "Afdrukken... (niet toegestaan)\0"\
   "Wachtwoord onthouden voor dit document\0"\
   "&Bewaar deze instellingen voor elk document\0"\
-  "\0"\
+  "V&erwijder uit Geschiedenis\0"\
   "Op&slaan als...\0"\
   "&Opslaan als...\tCtrl+S\0"\
   "&Instellingen\0"\
@@ -5801,20 +5801,20 @@ const char * gTranslations_nl =
   "(pagina %s)\0"\
   "Over SumatraPDF\0"\
   "Voeg Favoriet toe\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Voeg PDF als child toe\0"\
+  "Voeg PDF als verwant toe\0"\
+  "Child toevoegen\0"\
   "Voeg pagina %s toe aan Favorieten\0"\
   "Pagina %s toevoegen aan favorieten\tCtrl+B\0"\
   "Voeg pagina %s toe aan Favorieten met (optionele) naam:\0"\
-  "\0"\
+  "Voeg verwant toe\0"\
   "Voeg toe aan Favorieten\0"\
   "Geavanceerd\0"\
   "Alle bestanden\0"\
   "Alle ondersteunde documenten\0"\
-  "\0"\
+  "Aantekeningen\0"\
   "Programma:\0"\
-  "\0"\
+  "Weet u zeker dat u %s wilt d\303\251-installeren?\0"\
   "Weet u zeker dat u SumatraPDF wilt verwijderen?\0"\
   "Associ\303\253ren met PDF-bestanden?\0"\
   "Bijlage: %s\0"\
@@ -5831,13 +5831,13 @@ const char * gTranslations_nl =
   "Annuleren\0"\
   "Kan dit bestand niet afdrukken\0"\
   "Kan de omgekeerde zoekopdracht niet starten. Controleer de opdrachtregel in de instellingen.\0"\
-  "\0"\
+  "Merkteken\0"\
   "Taal wijzigen (Change Language)\0"\
   "Controleren op &updates\0"\
-  "\0"\
+  "Cirkel\0"\
   "Sluiten\0"\
   "Alle Samenvouwen\0"\
-  "\0"\
+  "Kleur\0"\
   "Stripboeken\0"\
   "Compatibiliteit\0"\
   "Doorlopend\0"\
@@ -5857,10 +5857,10 @@ const char * gTranslations_nl =
   "Kan installatiemap niet verwijderen\0"\
   "Kan deze pagina niet weergegeven\0"\
   "Kan PDF-previewer niet verwijderen\0"\
-  "\0"\
+  "Kan Sumatra zoekfilter niet verwijderen\0"\
   "Kan browserplugin niet verwijderen\0"\
   "Kon %s niet op schijf wegschrijven\0"\
-  "\0"\
+  "Maak Aantekening\0"\
   "Gemaakt:\0"\
   "Huidig bestand\0"\
   "Cursor positie\0"\
@@ -5875,17 +5875,17 @@ const char * gTranslations_nl =
   "Documenteigenschappen\0"\
   "Downloaden\0"\
   "&Afsluiten\tCtrl+Q\0"\
-  "\0"\
+  "Volledig scherm uit\0"\
   "EPUB-bestanden\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Bewerken\0"\
+  "Bewerk Aantekeningen\0"\
+  "Bewerk Bladwijzers\0"\
   "Wachtwoord invoeren\0"\
   "Wachtwoord invoeren voor %s\0"\
   "Opdracht-regel die gestart moet worden bij het dubbelklikken van een PDF-document:\0"\
   "Fout bij het laden van %s\0"\
   "Alle Uitvouwen\0"\
-  "\0"\
+  "Exporteer Bladwijzers\0"\
   "F&avorieten\0"\
   "Verder\tAlt+->\0"\
   "Volledig scherm\tCtrl+Shift+L\0"\
@@ -5900,7 +5900,7 @@ const char * gTranslations_nl =
   "Favorieten\0"\
   "FictionBookdocumenten\0"\
   "Bestand %s niet gevonden\0"\
-  "\0"\
+  "Bestands Bijlage\0"\
   "Bestandsgrootte\0"\
   "Bestand:\0"\
   "Zoeken...\tCtrl+F\0"\
@@ -5920,17 +5920,17 @@ const char * gTranslations_nl =
   "Boek samenstellen... %d paginas\0"\
   "Tekst gevonden op pagina %s\0"\
   "Tekst gevonden op pagina %s (opnieuw)\0"\
-  "\0"\
+  "Vrije Tekst\0"\
   "Eerder Weergegeven\0"\
   "\0"\
   "Ga naar pagina\0"\
   "Verberg &Opties\0"\
   "'Eerder Weergegeven' verbergen\0"\
-  "\0"\
+  "Markeer\0"\
   "Tip: Gebruik de functietoets F3 om verder te zoeken\0"\
   "Afbeeldingen (*.%s)\0"\
-  "\0"\
-  "\0"\
+  "Afbeeldingen\0"\
+  "Snelkoppeling\0"\
   "Installeer SumatraPDF\0"\
   "Installeer SumatraPDF in &map\0"\
   "Installatie mislukt!\0"\
@@ -5939,7 +5939,7 @@ const char * gTranslations_nl =
   "Laat Windows Bureaublad Zoeker PDF documenten &zoeken\0"\
   "Laat Windows &voorbeelden tonen van PDF documenten\0"\
   "Wit\0"\
-  "\0"\
+  "Regel\0"\
   "\0"\
   "SumatraPDF als standaardlezer van PDF-bestanden instellen?\0"\
   "SumatraPDF als standaard PDF-lezer instellen\0"\
@@ -5948,7 +5948,7 @@ const char * gTranslations_nl =
   "Mobi-documenten\0"\
   "Aangepast:\0"\
   "Nieuw venster\tCrtl+N\0"\
-  "\0"\
+  "Nieuwe Bladwijzers\0"\
   "Nieuwe versie %s is beschikbaar. Wilt u deze downloaden?\0"\
   "Volgende pagina\0"\
   "Geen zoekresultaat gevonden\0"\
@@ -5959,7 +5959,7 @@ const char * gTranslations_nl =
   "\0"\
   "Openen\0"\
   "Openen met PDF-XChange\0"\
-  "\0"\
+  "Open Ingesloten Pdf\0"\
   "Open een document...\0"\
   "\0"\
   "Openen met &Adobe Reader\0"\
@@ -5982,8 +5982,8 @@ const char * gTranslations_nl =
   "PalmDoc documenten\0"\
   "Sluit %s om verder te gaan!\0"\
   "Een ogenblik - weergeven...\0"\
-  "\0"\
-  "\0"\
+  "Poly Regel\0"\
+  "Veelhoek\0"\
   "Postscript documenten\0"\
   "Pr&esentatie\tCtrl+L\0"\
   "Vorige pagina\0"\
@@ -5996,9 +5996,9 @@ const char * gTranslations_nl =
   "Pagina %d van %d afdrukken...\0"\
   "Probleem bij het afdrukken\0"\
   "&Naam wijzigen...\tF2\0"\
-  "\0"\
+  "Redigeren\0"\
   "Onthoud ge&opende bestanden\0"\
-  "\0"\
+  "Verwijder Item\0"\
   "Verwijder uit favorieten\0"\
   "Verwijder pagina %s uit favorieten\0"\
   "Naam wijzigen in\0"\
@@ -6006,7 +6006,7 @@ const char * gTranslations_nl =
   "Rechtsom draaien\tCtrl+Shift++\0"\
   "Aantekeningen Opslaan\0"\
   "Opslaan als\0"\
-  "\0"\
+  "Ingesloten Bestand Opslaan...\0"\
   "Snelkoppeling opslaan...\tCtrl+Shift+S\0"\
   "Zoek %d van %d...\0"\
   "&Alles selecteren\0"\
@@ -6019,23 +6019,23 @@ const char * gTranslations_nl =
   "Toon Bladwijzers\tF12\0"\
   "Toon &Favorieten\0"\
   "Toon pagina's doorlopend\0"\
-  "\0"\
+  "Toon S&chuifbalken\0"\
   "Werkbalk tonen\0"\
   "Toon Blad&wijzers\tF12\0"\
   "Toon Favorieten\0"\
-  "\0"\
+  "Toon Sch&uifbalken\0"\
   "'Eerder Weergegeven' tonen\0"\
   "Toon in &map\0"\
   "Toon de &bladwijzerwerkbalk indien beschikbaar\0"\
   "Enkele pagina\0"\
   "Sorry, dit had niet mogen gebeuren!\n\nDruk 'Annuleren', als je wilt helpen de oorzaak van deze fout te vinden.\0"\
-  "\0"\
+  "Sorteer Op\0"\
   "Bestand %s heeft geen synchronisatiepunt\0"\
+  "Vierkant\0"\
+  "Kronkelig\0"\
+  "Stempel\0"\
   "\0"\
-  "\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Doorhalen\0"\
   "Onderwerp:\0"\
   "SumatraPDF %s installatieprogramma\0"\
   "SumatraPDF %s deinstallatieprogramma\0"\
@@ -6046,20 +6046,20 @@ const char * gTranslations_nl =
   "SumatraPDF-installatie niet gevonden.\0"\
   "SumatraPDF is de standaard PDF-lezer\0"\
   "SumatraPDF zou nu de standaard PDF-lezer moeten zijn\0"\
-  "\0"\
+  "Steun SumatraPDF\0"\
   "Het synchronisatiebestand kan niet worden geopend\0"\
+  "Tag (eerst groot)\0"\
+  "Tag (eerst klein)\0"\
   "\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Tekst\0"\
   "Tekstdocumenten\0"\
-  "\0"\
+  "Dank u voor het kiezen van RA-MICRO PDF!\0"\
   "Dank u om voor SumatraPDF te kiezen!\0"\
   "Dank u! SumatraPDF is geinstalleerd.\0"\
   "Het installatieprogramma is beschadigd. Gelieve het opnieuw te downloaden.\nOnze excuses voor het ongemak!\0"\
   "Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogelijk niet goed weergegeven\0"\
   "Titel:\0"\
-  "\0"\
+  "Onderstrepen\0"\
   "Verwijder SumatraPDF\0"\
   "Verwijderen mislukt\0"\
   "Verwijderen is bezig...\0"\
