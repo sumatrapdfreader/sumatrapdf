@@ -52,7 +52,7 @@ pdf_parse_codespace_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_
 	{
 		tok = pdf_lex(ctx, file, buf);
 
-		if (tok == PDF_TOK_KEYWORD && !strcmp(buf->scratch, "endcodespacerange"))
+		if (tok == PDF_TOK_KEYWORD && !strncmp(buf->scratch, "endcodespacerange", 17))
 			return;
 
 		else if (tok == PDF_TOK_STRING)
