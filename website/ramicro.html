@@ -20,16 +20,19 @@
 		}
 
 		function myInit() {
-			var html, name;
 			$("buildtime").innerHTML = sumBuiltOn;
 
-			name = getName(sumLatestExeZip64);
-			html = "<a href='" + sumLatestExeZip64 + "'>" + name + "</a>";
+			var name = getName(sumLatestExeZip64);
+			var html = "<a href='" + sumLatestExeZip64 + "'>" + name + "</a>";
 			setDlURL("urlexe64", html);
 
 			name = getName(sumLatestInstaller64);
 			html = "<a href='" + sumLatestInstaller64 + "'>" + name + "</a>";
 			setDlURL("urlinstaller64", html);
+
+			var el = $("buildsha1");
+			el.href = "https://github.com/sumatrapdfreader/sumatrapdf/commit/" + sumCommitSha1;
+			el.text = sumCommitSha1;
 		}
 		window.onload = myInit;
 	</script>
@@ -52,7 +55,7 @@
 			<font color="red">RA-Micro builds.</font>
 		</b>
 	</p>
-	<p><b>Latest RA-Micro daily build, built on <span id="buildtime"></span>:</b></p>
+	<p><b>Latest RA-Micro build, built on <span id="buildtime"></span>, commit <a id="buildsha1"></a>:</b></p>
 
 	<table>
 		<tr>
