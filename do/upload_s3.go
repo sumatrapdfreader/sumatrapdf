@@ -57,6 +57,7 @@ func createSumatraLatestJs(buildType string) string {
 	currDate := time.Now().Format("2006-01-02")
 	tmplText := `
 var sumLatestVer = {{.Ver}};
+var sumCommitSha1 = {{ .Sha1 }};
 var sumBuiltOn = "{{.CurrDate}}";
 var sumLatestName = "{{.Prefix}}.exe";
 
@@ -71,9 +72,11 @@ var sumLatestPdb64       = "{{.Host}}/{{.Prefix}}-64.pdb.zip";
 var sumLatestInstaller64 = "{{.Host}}/{{.Prefix}}-64-install.exe";
 `
 	ver := getVerForBuildType(buildType)
+	sha1 := getGitSha1()
 	d := map[string]interface{}{
 		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/" + buildType,
 		"Ver":      ver,
+		"Sha1":     sha1,
 		"CurrDate": currDate,
 		"Prefix":   appName + "-" + ver,
 	}
