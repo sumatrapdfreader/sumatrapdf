@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2401" height="2401" viewBox="0 0 2401 2401">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.501" y1="1.997" x2="0.5" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset="0.586" stop-color="#fff"/>
+      <stop offset="1" stop-color="#727272"/>
+      <stop offset="1" stop-color="#616161"/>
+    </linearGradient>
+    <filter id="Black" x="290" y="582" width="1858" height="1294" filterUnits="userSpaceOnUse">
+      <feOffset dy="3" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-opacity="0.161"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Dark_Grey" x="299" y="588" width="1849.5" height="1285.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="5" dy="5" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="1.5" result="blur-2"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur-2"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Mid_Grey" x="299" y="588" width="1849.5" height="1285.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="5" dy="5" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="1.5" result="blur-3"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur-3"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Dark_Main_Color" x="299" y="588" width="1849.5" height="1285.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="5" dy="5" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="1.5" result="blur-4"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur-4"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Main_Color" x="299" y="588" width="1849.5" height="1285.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="5" dy="5" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="1.5" result="blur-5"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur-5"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <filter id="Text" x="468.5" y="745" width="1449.5" height="1742.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="-30" dy="30" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="7.5" result="blur-6"/>
+      <feFlood flood-opacity="0.349"/>
+      <feComposite operator="in" in2="blur-6"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <clipPath id="clip-pdf-32bit">
+      <rect width="2401" height="2401"/>
+    </clipPath>
+  </defs>
+  <g id="pdf-32bit" clip-path="url(#clip-pdf-32bit)">
+    <g id="Page" transform="translate(361 31.978)">
+      <rect id="Shadow_Page_Left" data-name="Shadow Page Left" width="64" height="2288" transform="translate(0 11.022)" fill="#424242"/>
+      <rect id="Shadow_Page_Right" data-name="Shadow Page Right" width="64" height="1826" transform="translate(1628 487.022)" fill="#424242"/>
+      <rect id="Shadow_Page_Bottom" data-name="Shadow Page Bottom" width="64.197" height="1601.308" transform="translate(1637.951 2266.508) rotate(90)" fill="#424242"/>
+      <rect id="Shadow_Page_Top" data-name="Shadow Page Top" width="64.197" height="1214.308" transform="translate(1250.951 8.508) rotate(90)" fill="#424242"/>
+      <rect id="Shadow_Icon_Right" data-name="Shadow Icon Right" width="123" height="1293" transform="translate(1677 579.022)" fill="#616161"/>
+      <rect id="Page_Left" data-name="Page Left" width="1203" height="2272" transform="translate(48 15.022)" fill="#fff"/>
+      <rect id="Page_Right" data-name="Page Right" width="426" height="1846" transform="translate(1251 441.022)" fill="#fff"/>
+      <g id="Fold" transform="translate(1036.571)">
+        <rect id="Shadow_Left" data-name="Shadow Left" width="45" height="447" transform="translate(185.429 12.022)"/>
+        <rect id="Shadow_Bottom" data-name="Shadow Bottom" width="441" height="45" transform="translate(199.429 428.022)"/>
+        <rect id="Shadow_Right" data-name="Shadow Right" width="601.634" height="55.107" transform="translate(230.364) rotate(45)" fill="#616161"/>
+        <path id="Fold-2" data-name="Fold" d="M302.805,0,605.611,299.4H0Z" transform="translate(428.231 654.72) rotate(-135)" fill="url(#linear-gradient)"/>
+      </g>
+    </g>
+    <g id="Icon" transform="translate(183.745 337.904)">
+      <path id="Shadow" d="M100,0H1760a80,80,0,0,1,80,80V1266a10,10,0,0,1-10,10H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(79.255 292.096)" fill="#212121" opacity="0.1"/>
+      <g transform="matrix(1, 0, 0, 1, -183.75, -337.9)" filter="url(#Black)">
+        <path id="Black-2" data-name="Black" d="M100,0H1760a80,80,0,0,1,80,80V1266a10,10,0,0,1-10,10H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(299 588)" fill="#212121"/>
+      </g>
+      <g transform="matrix(1, 0, 0, 1, -183.75, -337.9)" filter="url(#Dark_Grey)">
+        <path id="Dark_Grey-2" data-name="Dark Grey" d="M100,0H1760a80,80,0,0,1,80,80v966a230,230,0,0,1-230,230H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(299 588)" fill="#424242"/>
+      </g>
+      <g transform="matrix(1, 0, 0, 1, -183.75, -337.9)" filter="url(#Mid_Grey)">
+        <path id="Mid_Grey-2" data-name="Mid Grey" d="M100,0H1760a80,80,0,0,1,80,80V846a430,430,0,0,1-430,430H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(299 588)" fill="#616161"/>
+      </g>
+      <g transform="matrix(1, 0, 0, 1, -183.75, -337.9)" filter="url(#Dark_Main_Color)">
+        <path id="Dark_Main_Color-2" data-name="Dark Main Color" d="M100,0H1760a80,80,0,0,1,80,80V596a680,680,0,0,1-680,680H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(299 588)" fill="#a59f0c"/>
+      </g>
+      <g transform="matrix(1, 0, 0, 1, -183.75, -337.9)" filter="url(#Main_Color)">
+        <path id="Main_Color-2" data-name="Main Color" d="M100,0H1760a80,80,0,0,1,80,80V276c0,552.285-447.715,1000-1000,1000H100A100,100,0,0,1,0,1176V100A100,100,0,0,1,100,0Z" transform="translate(299 588)" fill="#fff823"/>
+      </g>
+      <g transform="matrix(1, 0, 0, 1, -183.75, -337.9)" filter="url(#Text)">
+        <text id="Text-2" data-name="Text" transform="translate(521 1445)" fill="#212121" font-size="700" font-family="Tahoma-Bold, Tahoma" font-weight="700"><tspan x="0" y="0">PDF</tspan><tspan x="0" y="845"></tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>
