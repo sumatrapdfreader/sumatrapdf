@@ -388,147 +388,147 @@ struct GlobalPrefs {
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA
 
 static const FieldInfo gWindowMarginFields[] = {
-    {offsetof(WindowMargin, top), Type_Int, 2},
-    {offsetof(WindowMargin, right), Type_Int, 4},
-    {offsetof(WindowMargin, bottom), Type_Int, 2},
-    {offsetof(WindowMargin, left), Type_Int, 4},
+    {offsetof(WindowMargin, top), SettingType::Int, 2},
+    {offsetof(WindowMargin, right), SettingType::Int, 4},
+    {offsetof(WindowMargin, bottom), SettingType::Int, 2},
+    {offsetof(WindowMargin, left), SettingType::Int, 4},
 };
 static const StructInfo gWindowMarginInfo = {sizeof(WindowMargin), 4, gWindowMarginFields, "Top\0Right\0Bottom\0Left"};
 
 static const FieldInfo gSizeFields[] = {
-    {offsetof(Size, dx), Type_Int, 4},
-    {offsetof(Size, dy), Type_Int, 4},
+    {offsetof(Size, dx), SettingType::Int, 4},
+    {offsetof(Size, dy), SettingType::Int, 4},
 };
 static const StructInfo gSizeInfo = {sizeof(Size), 2, gSizeFields, "Dx\0Dy"};
 
 static const FieldInfo gFixedPageUIFields[] = {
-    {offsetof(FixedPageUI, textColor), Type_Color, 0x000000},
-    {offsetof(FixedPageUI, backgroundColor), Type_Color, 0xffffff},
-    {offsetof(FixedPageUI, selectionColor), Type_Color, 0x0cfcf5},
-    {offsetof(FixedPageUI, windowMargin), Type_Compact, (intptr_t)&gWindowMarginInfo},
-    {offsetof(FixedPageUI, pageSpacing), Type_Compact, (intptr_t)&gSizeInfo},
-    {offsetof(FixedPageUI, gradientColors), Type_ColorArray, 0},
+    {offsetof(FixedPageUI, textColor), SettingType::Color, 0x000000},
+    {offsetof(FixedPageUI, backgroundColor), SettingType::Color, 0xffffff},
+    {offsetof(FixedPageUI, selectionColor), SettingType::Color, 0x0cfcf5},
+    {offsetof(FixedPageUI, windowMargin), SettingType::Compact, (intptr_t)&gWindowMarginInfo},
+    {offsetof(FixedPageUI, pageSpacing), SettingType::Compact, (intptr_t)&gSizeInfo},
+    {offsetof(FixedPageUI, gradientColors), SettingType::ColorArray, 0},
 };
 static const StructInfo gFixedPageUIInfo = {
     sizeof(FixedPageUI), 6, gFixedPageUIFields,
     "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors"};
 
 static const FieldInfo gEbookUIFields[] = {
-    {offsetof(EbookUI, fontName), Type_String, (intptr_t)L"Georgia"},
-    {offsetof(EbookUI, fontSize), Type_Float, (intptr_t) "12.5"},
-    {offsetof(EbookUI, textColor), Type_Color, 0x324b5f},
-    {offsetof(EbookUI, backgroundColor), Type_Color, 0xd9f0fb},
-    {offsetof(EbookUI, useFixedPageUI), Type_Bool, false},
+    {offsetof(EbookUI, fontName), SettingType::String, (intptr_t)L"Georgia"},
+    {offsetof(EbookUI, fontSize), SettingType::Float, (intptr_t) "12.5"},
+    {offsetof(EbookUI, textColor), SettingType::Color, 0x324b5f},
+    {offsetof(EbookUI, backgroundColor), SettingType::Color, 0xd9f0fb},
+    {offsetof(EbookUI, useFixedPageUI), SettingType::Bool, false},
 };
 static const StructInfo gEbookUIInfo = {sizeof(EbookUI), 5, gEbookUIFields,
                                         "FontName\0FontSize\0TextColor\0BackgroundColor\0UseFixedPageUI"};
 
 static const FieldInfo gWindowMargin_1_Fields[] = {
-    {offsetof(WindowMargin, top), Type_Int, 0},
-    {offsetof(WindowMargin, right), Type_Int, 0},
-    {offsetof(WindowMargin, bottom), Type_Int, 0},
-    {offsetof(WindowMargin, left), Type_Int, 0},
+    {offsetof(WindowMargin, top), SettingType::Int, 0},
+    {offsetof(WindowMargin, right), SettingType::Int, 0},
+    {offsetof(WindowMargin, bottom), SettingType::Int, 0},
+    {offsetof(WindowMargin, left), SettingType::Int, 0},
 };
 static const StructInfo gWindowMargin_1_Info = {sizeof(WindowMargin), 4, gWindowMargin_1_Fields,
                                                 "Top\0Right\0Bottom\0Left"};
 
 static const FieldInfo gSize_1_Fields[] = {
-    {offsetof(Size, dx), Type_Int, 4},
-    {offsetof(Size, dy), Type_Int, 4},
+    {offsetof(Size, dx), SettingType::Int, 4},
+    {offsetof(Size, dy), SettingType::Int, 4},
 };
 static const StructInfo gSize_1_Info = {sizeof(Size), 2, gSize_1_Fields, "Dx\0Dy"};
 
 static const FieldInfo gComicBookUIFields[] = {
-    {offsetof(ComicBookUI, windowMargin), Type_Compact, (intptr_t)&gWindowMargin_1_Info},
-    {offsetof(ComicBookUI, pageSpacing), Type_Compact, (intptr_t)&gSize_1_Info},
-    {offsetof(ComicBookUI, cbxMangaMode), Type_Bool, false},
+    {offsetof(ComicBookUI, windowMargin), SettingType::Compact, (intptr_t)&gWindowMargin_1_Info},
+    {offsetof(ComicBookUI, pageSpacing), SettingType::Compact, (intptr_t)&gSize_1_Info},
+    {offsetof(ComicBookUI, cbxMangaMode), SettingType::Bool, false},
 };
 static const StructInfo gComicBookUIInfo = {sizeof(ComicBookUI), 3, gComicBookUIFields,
                                             "WindowMargin\0PageSpacing\0CbxMangaMode"};
 
 static const FieldInfo gChmUIFields[] = {
-    {offsetof(ChmUI, useFixedPageUI), Type_Bool, false},
+    {offsetof(ChmUI, useFixedPageUI), SettingType::Bool, false},
 };
 static const StructInfo gChmUIInfo = {sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI"};
 
 static const FieldInfo gExternalViewerFields[] = {
-    {offsetof(ExternalViewer, commandLine), Type_String, 0},
-    {offsetof(ExternalViewer, name), Type_String, 0},
-    {offsetof(ExternalViewer, filter), Type_String, 0},
+    {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
+    {offsetof(ExternalViewer, name), SettingType::String, 0},
+    {offsetof(ExternalViewer, filter), SettingType::String, 0},
 };
 static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 3, gExternalViewerFields,
                                                "CommandLine\0Name\0Filter"};
 
 static const FieldInfo gPrinterDefaultsFields[] = {
-    {offsetof(PrinterDefaults, printScale), Type_Utf8String, (intptr_t) "shrink"},
+    {offsetof(PrinterDefaults, printScale), SettingType::Utf8String, (intptr_t) "shrink"},
 };
 static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults), 1, gPrinterDefaultsFields, "PrintScale"};
 
 static const FieldInfo gForwardSearchFields[] = {
-    {offsetof(ForwardSearch, highlightOffset), Type_Int, 0},
-    {offsetof(ForwardSearch, highlightWidth), Type_Int, 15},
-    {offsetof(ForwardSearch, highlightColor), Type_Color, 0xff8165},
-    {offsetof(ForwardSearch, highlightPermanent), Type_Bool, false},
+    {offsetof(ForwardSearch, highlightOffset), SettingType::Int, 0},
+    {offsetof(ForwardSearch, highlightWidth), SettingType::Int, 15},
+    {offsetof(ForwardSearch, highlightColor), SettingType::Color, 0xff8165},
+    {offsetof(ForwardSearch, highlightPermanent), SettingType::Bool, false},
 };
 static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForwardSearchFields,
                                               "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent"};
 
 static const FieldInfo gAnnotationDefaultsFields[] = {
-    {offsetof(AnnotationDefaults, highlightColor), Type_Color, 0x60ffff},
-    {offsetof(AnnotationDefaults, saveIntoDocument), Type_Bool, true},
+    {offsetof(AnnotationDefaults, highlightColor), SettingType::Color, 0x60ffff},
+    {offsetof(AnnotationDefaults, saveIntoDocument), SettingType::Bool, true},
 };
 static const StructInfo gAnnotationDefaultsInfo = {sizeof(AnnotationDefaults), 2, gAnnotationDefaultsFields,
                                                    "HighlightColor\0SaveIntoDocument"};
 
 static const FieldInfo gRectFields[] = {
-    {offsetof(Rect, x), Type_Int, 0},
-    {offsetof(Rect, y), Type_Int, 0},
-    {offsetof(Rect, dx), Type_Int, 0},
-    {offsetof(Rect, dy), Type_Int, 0},
+    {offsetof(Rect, x), SettingType::Int, 0},
+    {offsetof(Rect, y), SettingType::Int, 0},
+    {offsetof(Rect, dx), SettingType::Int, 0},
+    {offsetof(Rect, dy), SettingType::Int, 0},
 };
 static const StructInfo gRectInfo = {sizeof(Rect), 4, gRectFields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFavoriteFields[] = {
-    {offsetof(Favorite, name), Type_String, 0},
-    {offsetof(Favorite, pageNo), Type_Int, 0},
-    {offsetof(Favorite, pageLabel), Type_String, 0},
+    {offsetof(Favorite, name), SettingType::String, 0},
+    {offsetof(Favorite, pageNo), SettingType::Int, 0},
+    {offsetof(Favorite, pageLabel), SettingType::String, 0},
 };
 static const StructInfo gFavoriteInfo = {sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel"};
 
 static const FieldInfo gPointFields[] = {
-    {offsetof(Point, x), Type_Int, 0},
-    {offsetof(Point, y), Type_Int, 0},
+    {offsetof(Point, x), SettingType::Int, 0},
+    {offsetof(Point, y), SettingType::Int, 0},
 };
 static const StructInfo gPointInfo = {sizeof(Point), 2, gPointFields, "X\0Y"};
 
 static const FieldInfo gRect_1_Fields[] = {
-    {offsetof(Rect, x), Type_Int, 0},
-    {offsetof(Rect, y), Type_Int, 0},
-    {offsetof(Rect, dx), Type_Int, 0},
-    {offsetof(Rect, dy), Type_Int, 0},
+    {offsetof(Rect, x), SettingType::Int, 0},
+    {offsetof(Rect, y), SettingType::Int, 0},
+    {offsetof(Rect, dx), SettingType::Int, 0},
+    {offsetof(Rect, dy), SettingType::Int, 0},
 };
 static const StructInfo gRect_1_Info = {sizeof(Rect), 4, gRect_1_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gFileStateFields[] = {
-    {offsetof(FileState, filePath), Type_String, 0},
-    {offsetof(FileState, favorites), Type_Array, (intptr_t)&gFavoriteInfo},
-    {offsetof(FileState, isPinned), Type_Bool, false},
-    {offsetof(FileState, isMissing), Type_Bool, false},
-    {offsetof(FileState, openCount), Type_Int, 0},
-    {offsetof(FileState, decryptionKey), Type_Utf8String, 0},
-    {offsetof(FileState, useDefaultState), Type_Bool, false},
-    {offsetof(FileState, displayMode), Type_String, (intptr_t)L"automatic"},
-    {offsetof(FileState, scrollPos), Type_Compact, (intptr_t)&gPointInfo},
-    {offsetof(FileState, pageNo), Type_Int, 1},
-    {offsetof(FileState, zoom), Type_Utf8String, (intptr_t) "fit page"},
-    {offsetof(FileState, rotation), Type_Int, 0},
-    {offsetof(FileState, windowState), Type_Int, 0},
-    {offsetof(FileState, windowPos), Type_Compact, (intptr_t)&gRect_1_Info},
-    {offsetof(FileState, showToc), Type_Bool, true},
-    {offsetof(FileState, sidebarDx), Type_Int, 0},
-    {offsetof(FileState, displayR2L), Type_Bool, false},
-    {offsetof(FileState, reparseIdx), Type_Int, 0},
-    {offsetof(FileState, tocState), Type_IntArray, 0},
+    {offsetof(FileState, filePath), SettingType::String, 0},
+    {offsetof(FileState, favorites), SettingType::Array, (intptr_t)&gFavoriteInfo},
+    {offsetof(FileState, isPinned), SettingType::Bool, false},
+    {offsetof(FileState, isMissing), SettingType::Bool, false},
+    {offsetof(FileState, openCount), SettingType::Int, 0},
+    {offsetof(FileState, decryptionKey), SettingType::Utf8String, 0},
+    {offsetof(FileState, useDefaultState), SettingType::Bool, false},
+    {offsetof(FileState, displayMode), SettingType::String, (intptr_t)L"automatic"},
+    {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointInfo},
+    {offsetof(FileState, pageNo), SettingType::Int, 1},
+    {offsetof(FileState, zoom), SettingType::Utf8String, (intptr_t) "fit page"},
+    {offsetof(FileState, rotation), SettingType::Int, 0},
+    {offsetof(FileState, windowState), SettingType::Int, 0},
+    {offsetof(FileState, windowPos), SettingType::Compact, (intptr_t)&gRect_1_Info},
+    {offsetof(FileState, showToc), SettingType::Bool, true},
+    {offsetof(FileState, sidebarDx), SettingType::Int, 0},
+    {offsetof(FileState, displayR2L), SettingType::Bool, false},
+    {offsetof(FileState, reparseIdx), SettingType::Int, 0},
+    {offsetof(FileState, tocState), SettingType::IntArray, 0},
 };
 static StructInfo gFileStateInfo = {
     sizeof(FileState), 19, gFileStateFields,
@@ -536,107 +536,108 @@ static StructInfo gFileStateInfo = {
     "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState"};
 
 static const FieldInfo gPoint_1_Fields[] = {
-    {offsetof(Point, x), Type_Int, 0},
-    {offsetof(Point, y), Type_Int, 0},
+    {offsetof(Point, x), SettingType::Int, 0},
+    {offsetof(Point, y), SettingType::Int, 0},
 };
 static const StructInfo gPoint_1_Info = {sizeof(Point), 2, gPoint_1_Fields, "X\0Y"};
 
 static const FieldInfo gTabStateFields[] = {
-    {offsetof(TabState, filePath), Type_String, 0},
-    {offsetof(TabState, displayMode), Type_String, (intptr_t)L"automatic"},
-    {offsetof(TabState, pageNo), Type_Int, 1},
-    {offsetof(TabState, zoom), Type_Utf8String, (intptr_t) "fit page"},
-    {offsetof(TabState, rotation), Type_Int, 0},
-    {offsetof(TabState, scrollPos), Type_Compact, (intptr_t)&gPoint_1_Info},
-    {offsetof(TabState, showToc), Type_Bool, true},
-    {offsetof(TabState, tocState), Type_IntArray, 0},
+    {offsetof(TabState, filePath), SettingType::String, 0},
+    {offsetof(TabState, displayMode), SettingType::String, (intptr_t)L"automatic"},
+    {offsetof(TabState, pageNo), SettingType::Int, 1},
+    {offsetof(TabState, zoom), SettingType::Utf8String, (intptr_t) "fit page"},
+    {offsetof(TabState, rotation), SettingType::Int, 0},
+    {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPoint_1_Info},
+    {offsetof(TabState, showToc), SettingType::Bool, true},
+    {offsetof(TabState, tocState), SettingType::IntArray, 0},
 };
 static const StructInfo gTabStateInfo = {sizeof(TabState), 8, gTabStateFields,
                                          "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState"};
 
 static const FieldInfo gRect_2_Fields[] = {
-    {offsetof(Rect, x), Type_Int, 0},
-    {offsetof(Rect, y), Type_Int, 0},
-    {offsetof(Rect, dx), Type_Int, 0},
-    {offsetof(Rect, dy), Type_Int, 0},
+    {offsetof(Rect, x), SettingType::Int, 0},
+    {offsetof(Rect, y), SettingType::Int, 0},
+    {offsetof(Rect, dx), SettingType::Int, 0},
+    {offsetof(Rect, dy), SettingType::Int, 0},
 };
 static const StructInfo gRect_2_Info = {sizeof(Rect), 4, gRect_2_Fields, "X\0Y\0Dx\0Dy"};
 
 static const FieldInfo gSessionDataFields[] = {
-    {offsetof(SessionData, tabStates), Type_Array, (intptr_t)&gTabStateInfo},
-    {offsetof(SessionData, tabIndex), Type_Int, 1},
-    {offsetof(SessionData, windowState), Type_Int, 0},
-    {offsetof(SessionData, windowPos), Type_Compact, (intptr_t)&gRect_2_Info},
-    {offsetof(SessionData, sidebarDx), Type_Int, 0},
+    {offsetof(SessionData, tabStates), SettingType::Array, (intptr_t)&gTabStateInfo},
+    {offsetof(SessionData, tabIndex), SettingType::Int, 1},
+    {offsetof(SessionData, windowState), SettingType::Int, 0},
+    {offsetof(SessionData, windowPos), SettingType::Compact, (intptr_t)&gRect_2_Info},
+    {offsetof(SessionData, sidebarDx), SettingType::Int, 0},
 };
 static const StructInfo gSessionDataInfo = {sizeof(SessionData), 5, gSessionDataFields,
                                             "TabStates\0TabIndex\0WindowState\0WindowPos\0SidebarDx"};
 
 static const FieldInfo gFILETIMEFields[] = {
-    {offsetof(FILETIME, dwHighDateTime), Type_Int, 0},
-    {offsetof(FILETIME, dwLowDateTime), Type_Int, 0},
+    {offsetof(FILETIME, dwHighDateTime), SettingType::Int, 0},
+    {offsetof(FILETIME, dwLowDateTime), SettingType::Int, 0},
 };
 static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "DwHighDateTime\0DwLowDateTime"};
 
 static const FieldInfo gGlobalPrefsFields[] = {
-    {(size_t)-1, Type_Comment,
+    {(size_t)-1, SettingType::Comment,
      (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3.3.html"},
-    {(size_t)-1, Type_Comment, 0},
-    {offsetof(GlobalPrefs, mainWindowBackground), Type_Color, 0x8000f2ff},
-    {offsetof(GlobalPrefs, escToExit), Type_Bool, false},
-    {offsetof(GlobalPrefs, reuseInstance), Type_Bool, false},
-    {offsetof(GlobalPrefs, useSysColors), Type_Bool, false},
-    {offsetof(GlobalPrefs, restoreSession), Type_Bool, true},
-    {offsetof(GlobalPrefs, tabWidth), Type_Int, 300},
-    {(size_t)-1, Type_Comment, 0},
-    {offsetof(GlobalPrefs, fixedPageUI), Type_Struct, (intptr_t)&gFixedPageUIInfo},
-    {offsetof(GlobalPrefs, ebookUI), Type_Struct, (intptr_t)&gEbookUIInfo},
-    {offsetof(GlobalPrefs, comicBookUI), Type_Struct, (intptr_t)&gComicBookUIInfo},
-    {offsetof(GlobalPrefs, chmUI), Type_Struct, (intptr_t)&gChmUIInfo},
-    {offsetof(GlobalPrefs, externalViewers), Type_Array, (intptr_t)&gExternalViewerInfo},
-    {offsetof(GlobalPrefs, showMenubar), Type_Bool, true},
-    {offsetof(GlobalPrefs, reloadModifiedDocuments), Type_Bool, true},
-    {offsetof(GlobalPrefs, fullPathInTitle), Type_Bool, false},
-    {offsetof(GlobalPrefs, zoomLevels), Type_FloatArray,
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, mainWindowBackground), SettingType::Color, 0x8000f2ff},
+    {offsetof(GlobalPrefs, escToExit), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, reuseInstance), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, useSysColors), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, restoreSession), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
+    {offsetof(GlobalPrefs, ebookUI), SettingType::Struct, (intptr_t)&gEbookUIInfo},
+    {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
+    {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
+    {offsetof(GlobalPrefs, externalViewers), SettingType::Array, (intptr_t)&gExternalViewerInfo},
+    {offsetof(GlobalPrefs, showMenubar), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, reloadModifiedDocuments), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, fullPathInTitle), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray,
      (intptr_t) "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 "
                 "6400"},
-    {offsetof(GlobalPrefs, zoomIncrement), Type_Float, (intptr_t) "0"},
-    {(size_t)-1, Type_Comment, 0},
-    {offsetof(GlobalPrefs, printerDefaults), Type_Struct, (intptr_t)&gPrinterDefaultsInfo},
-    {offsetof(GlobalPrefs, forwardSearch), Type_Struct, (intptr_t)&gForwardSearchInfo},
-    {offsetof(GlobalPrefs, annotationDefaults), Type_Prerelease, (intptr_t)&gAnnotationDefaultsInfo},
-    {offsetof(GlobalPrefs, defaultPasswords), Type_StringArray, 0},
-    {offsetof(GlobalPrefs, customScreenDPI), Type_Int, 0},
-    {(size_t)-1, Type_Comment, 0},
-    {offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool, true},
-    {offsetof(GlobalPrefs, uiLanguage), Type_Utf8String, 0},
-    {offsetof(GlobalPrefs, showToolbar), Type_Bool, true},
-    {offsetof(GlobalPrefs, showFavorites), Type_Bool, false},
-    {offsetof(GlobalPrefs, associatedExtensions), Type_String, 0},
-    {offsetof(GlobalPrefs, associateSilently), Type_Bool, false},
-    {offsetof(GlobalPrefs, checkForUpdates), Type_Bool, true},
-    {offsetof(GlobalPrefs, versionToSkip), Type_String, 0},
-    {offsetof(GlobalPrefs, rememberOpenedFiles), Type_Bool, true},
-    {offsetof(GlobalPrefs, inverseSearchCmdLine), Type_String, 0},
-    {offsetof(GlobalPrefs, enableTeXEnhancements), Type_Bool, false},
-    {offsetof(GlobalPrefs, defaultDisplayMode), Type_String, (intptr_t)L"automatic"},
-    {offsetof(GlobalPrefs, defaultZoom), Type_Utf8String, (intptr_t) "fit page"},
-    {offsetof(GlobalPrefs, windowState), Type_Int, 1},
-    {offsetof(GlobalPrefs, windowPos), Type_Compact, (intptr_t)&gRectInfo},
-    {offsetof(GlobalPrefs, showToc), Type_Bool, true},
-    {offsetof(GlobalPrefs, sidebarDx), Type_Int, 0},
-    {offsetof(GlobalPrefs, tocDy), Type_Int, 0},
-    {offsetof(GlobalPrefs, treeFontSize), Type_Int, 0},
-    {offsetof(GlobalPrefs, showStartPage), Type_Bool, true},
-    {offsetof(GlobalPrefs, useTabs), Type_Bool, true},
-    {(size_t)-1, Type_Comment, 0},
-    {offsetof(GlobalPrefs, fileStates), Type_Array, (intptr_t)&gFileStateInfo},
-    {offsetof(GlobalPrefs, sessionData), Type_Array, (intptr_t)&gSessionDataInfo},
-    {offsetof(GlobalPrefs, reopenOnce), Type_StringArray, 0},
-    {offsetof(GlobalPrefs, timeOfLastUpdateCheck), Type_Compact, (intptr_t)&gFILETIMEInfo},
-    {offsetof(GlobalPrefs, openCountWeek), Type_Int, 0},
-    {(size_t)-1, Type_Comment, 0},
-    {(size_t)-1, Type_Comment, (intptr_t) "Settings after this line have not been recognized by the current version"},
+    {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t) "0"},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, printerDefaults), SettingType::Struct, (intptr_t)&gPrinterDefaultsInfo},
+    {offsetof(GlobalPrefs, forwardSearch), SettingType::Struct, (intptr_t)&gForwardSearchInfo},
+    {offsetof(GlobalPrefs, annotationDefaults), SettingType::Prerelease, (intptr_t)&gAnnotationDefaultsInfo},
+    {offsetof(GlobalPrefs, defaultPasswords), SettingType::StringArray, 0},
+    {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, rememberStatePerDocument), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, uiLanguage), SettingType::Utf8String, 0},
+    {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, associatedExtensions), SettingType::String, 0},
+    {offsetof(GlobalPrefs, associateSilently), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, versionToSkip), SettingType::String, 0},
+    {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
+    {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
+    {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t)L"automatic"},
+    {offsetof(GlobalPrefs, defaultZoom), SettingType::Utf8String, (intptr_t) "fit page"},
+    {offsetof(GlobalPrefs, windowState), SettingType::Int, 1},
+    {offsetof(GlobalPrefs, windowPos), SettingType::Compact, (intptr_t)&gRectInfo},
+    {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, tocDy), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
+    {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, fileStates), SettingType::Array, (intptr_t)&gFileStateInfo},
+    {offsetof(GlobalPrefs, sessionData), SettingType::Array, (intptr_t)&gSessionDataInfo},
+    {offsetof(GlobalPrefs, reopenOnce), SettingType::StringArray, 0},
+    {offsetof(GlobalPrefs, timeOfLastUpdateCheck), SettingType::Compact, (intptr_t)&gFILETIMEInfo},
+    {offsetof(GlobalPrefs, openCountWeek), SettingType::Int, 0},
+    {(size_t)-1, SettingType::Comment, 0},
+    {(size_t)-1, SettingType::Comment,
+     (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs), 55, gGlobalPrefsFields,

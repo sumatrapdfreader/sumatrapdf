@@ -180,10 +180,10 @@ static void FreeArray(Vec<void*>* array, const FieldInfo& field) {
 bool IsCompactable(const StructInfo* info) {
     for (size_t i = 0; i < info->fieldCount; i++) {
         switch (info->fields[i].type) {
-            case Type_Bool:
-            case Type_Int:
-            case Type_Float:
-            case Type_Color:
+            case SettingType::Bool:
+            case SettingType::Int:
+            case SettingType::Float:
+            case SettingType::Color:
                 continue;
             default:
                 return false;
@@ -201,20 +201,20 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
     COLORREF c;
 
     switch (field.type) {
-        case Type_Bool:
+        case SettingType::Bool:
             out.Append(*(bool*)fieldPtr ? "true" : "false");
             return true;
-        case Type_Int:
+        case SettingType::Int:
             out.AppendFmt("%d", *(int*)fieldPtr);
             return true;
-        case Type_Float:
+        case SettingType::Float:
             out.AppendFmt("%g", *(float*)fieldPtr);
             return true;
-        case Type_Color:
+        case SettingType::Color:
             c = *(COLORREF*)fieldPtr;
             SerializeColor(c, out);
             return true;
-        case Type_String:
+        case SettingType::String:
             if (!*(const WCHAR**)fieldPtr) {
                 CrashIf(field.value);
                 return false; // skip empty strings
@@ -229,7 +229,7 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
                 EscapeStr(out, value);
             }
             return true;
-        case Type_Utf8String:
+        case SettingType::Utf8String:
             if (!*(const char**)fieldPtr) {
                 CrashIf(field.value);
                 return false; // skip empty strings
@@ -240,7 +240,7 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
                 EscapeStr(out, *(const char**)fieldPtr);
             }
             return true;
-        case Type_Compact:
+        case SettingType::Compact:
             CrashIf(!IsCompactable(GetSubstruct(field)));
             for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
                 if (i > 0) {
@@ -249,13 +249,14 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
                 SerializeField(out, fieldPtr, GetSubstruct(field)->fields[i]);
             }
             return true;
-        case Type_ColorArray:
-        case Type_FloatArray:
-        case Type_IntArray:
+        case SettingType::ColorArray:
+        case SettingType::FloatArray:
+        case SettingType::IntArray:
             for (size_t i = 0; i < (*(Vec<int>**)fieldPtr)->size(); i++) {
                 FieldInfo info = {0};
-                info.type =
-                    Type_IntArray == field.type ? Type_Int : Type_FloatArray == field.type ? Type_Float : Type_Color;
+                info.type = SettingType::IntArray == field.type
+                                ? SettingType::Int
+                                : SettingType::FloatArray == field.type ? SettingType::Float : SettingType::Color;
                 if (i > 0) {
                     out.AppendChar(' ');
                 }
@@ -263,7 +264,7 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
             }
             // prevent empty arrays from being replaced with the defaults
             return (*(Vec<int>**)fieldPtr)->size() > 0 || field.value != 0;
-        case Type_StringArray:
+        case SettingType::StringArray:
             value.Set(SerializeStringArray(*(Vec<WCHAR*>**)fieldPtr));
             if (!NeedsEscaping(value)) {
                 out.Append(value);
@@ -301,7 +302,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
     int* intPtr = (int*)fieldPtr;
 
     switch (field.type) {
-        case Type_Bool:
+        case SettingType::Bool:
             if (value) {
                 *boolPtr = parseBool(value);
             } else {
@@ -309,7 +310,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             }
             break;
 
-        case Type_Int:
+        case SettingType::Int:
             if (value) {
                 *intPtr = ParseInt(value);
             } else {
@@ -317,13 +318,13 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             }
             break;
 
-        case Type_Float: {
+        case SettingType::Float: {
             const char* s = value ? value : (const char*)field.value;
             str::Parse(s, "%f", (float*)fieldPtr);
             break;
         }
 
-        case Type_Color:
+        case SettingType::Color:
             if (!value) {
                 *colPtr = (COLORREF)field.value;
             } else {
@@ -331,7 +332,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             }
             break;
 
-        case Type_String:
+        case SettingType::String:
             free(*wstrPtr);
             if (value) {
                 AutoFree tmp = UnescapeStr(value);
@@ -340,7 +341,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
                 *wstrPtr = str::Dup((const WCHAR*)field.value);
             }
             break;
-        case Type_Utf8String:
+        case SettingType::Utf8String:
             free(*strPtr);
             if (value) {
                 *strPtr = UnescapeStr(value);
@@ -348,7 +349,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
                 *strPtr = str::Dup((const char*)field.value);
             }
             break;
-        case Type_Compact:
+        case SettingType::Compact:
             CrashIf(!IsCompactable(GetSubstruct(field)));
             for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
                 if (value) {
@@ -367,9 +368,9 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
                 }
             }
             break;
-        case Type_ColorArray:
-        case Type_FloatArray:
-        case Type_IntArray:
+        case SettingType::ColorArray:
+        case SettingType::FloatArray:
+        case SettingType::IntArray:
             if (!value) {
                 value = (const char*)field.value;
             }
@@ -377,8 +378,9 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             *(Vec<int>**)fieldPtr = new Vec<int>();
             while (value && *value) {
                 FieldInfo info = {0};
-                info.type =
-                    Type_IntArray == field.type ? Type_Int : Type_FloatArray == field.type ? Type_Float : Type_Color;
+                info.type = SettingType::IntArray == field.type
+                                ? SettingType::Int
+                                : SettingType::FloatArray == field.type ? SettingType::Float : SettingType::Color;
                 DeserializeField(info, (u8*)(*(Vec<int>**)fieldPtr)->AppendBlanks(1), value);
                 for (; *value && !str::IsWs(*value); value++) {
                     ;
@@ -388,7 +390,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
                 }
             }
             break;
-        case Type_StringArray:
+        case SettingType::StringArray:
             FreeStringArray(*(Vec<WCHAR*>**)fieldPtr);
             *(Vec<WCHAR*>**)fieldPtr = new Vec<WCHAR*>();
             if (value) {
@@ -413,12 +415,12 @@ static void MarkFieldKnown(SquareTreeNode* node, const char* fieldName, SettingT
         return;
     }
     size_t off = 0;
-    if (Type_Struct == type || Type_Prerelease == type) {
+    if (SettingType::Struct == type || SettingType::Prerelease == type) {
         if (node->GetChild(fieldName, &off)) {
             delete node->data.at(off - 1).value.child;
             node->data.RemoveAt(off - 1);
         }
-    } else if (Type_Array == type) {
+    } else if (SettingType::Array == type) {
         while (node->GetChild(fieldName, &off)) {
             delete node->data.at(off - 1).value.child;
             node->data.RemoveAt(off - 1);
@@ -458,9 +460,9 @@ static void SerializeStructRec(str::Str& out, const StructInfo* info, const void
         const FieldInfo& field = info->fields[i];
         CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') || str::FindChar(fieldName, '[') ||
                 str::FindChar(fieldName, ']') || NeedsEscaping(fieldName));
-        if (Type_Struct == field.type || Type_Prerelease == field.type) {
+        if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
 #if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
-            if (Type_Prerelease == field.type) {
+            if (SettingType::Prerelease == field.type) {
                 continue;
             }
 #endif
@@ -471,7 +473,7 @@ static void SerializeStructRec(str::Str& out, const StructInfo* info, const void
                                prevNode ? prevNode->GetChild(fieldName) : nullptr, indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
-        } else if (Type_Array == field.type) {
+        } else if (SettingType::Array == field.type) {
             Indent(out, indent);
             out.Append(fieldName);
             out.Append(" [\r\n");
@@ -487,7 +489,7 @@ static void SerializeStructRec(str::Str& out, const StructInfo* info, const void
             }
             Indent(out, indent);
             out.Append("]\r\n");
-        } else if (Type_Comment == field.type) {
+        } else if (SettingType::Comment == field.type) {
             if (field.value) {
                 Indent(out, indent);
                 out.Append("# ");
@@ -520,15 +522,15 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         u8* fieldPtr = base + field.offset;
-        if (Type_Struct == field.type || Type_Prerelease == field.type) {
+        if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
             SquareTreeNode* child = node ? node->GetChild(fieldName) : nullptr;
 #if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
-            if (Type_Prerelease == field.type) {
+            if (SettingType::Prerelease == field.type) {
                 child = nullptr;
             }
 #endif
             DeserializeStructRec(GetSubstruct(field), child, fieldPtr, useDefaults);
-        } else if (Type_Array == field.type) {
+        } else if (SettingType::Array == field.type) {
             SquareTreeNode *parent = node, *child = nullptr;
             if (parent && (child = parent->GetChild(fieldName)) != nullptr &&
                 (0 == child->data.size() || child->GetChild(""))) {
@@ -544,7 +546,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
                 FreeArray(*(Vec<void*>**)fieldPtr, field);
                 *(Vec<void*>**)fieldPtr = array;
             }
-        } else if (field.type != Type_Comment) {
+        } else if (field.type != SettingType::Comment) {
             const char* value = node ? node->GetValue(fieldName) : nullptr;
             if (useDefaults || value) {
                 DeserializeField(field, base, value);
@@ -574,17 +576,18 @@ static void FreeStructData(const StructInfo* info, u8* base) {
     for (size_t i = 0; i < info->fieldCount; i++) {
         const FieldInfo& field = info->fields[i];
         u8* fieldPtr = base + field.offset;
-        if (Type_Struct == field.type || Type_Prerelease == field.type) {
+        if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
             FreeStructData(GetSubstruct(field), fieldPtr);
-        } else if (Type_Array == field.type) {
+        } else if (SettingType::Array == field.type) {
             FreeArray(*(Vec<void*>**)fieldPtr, field);
-        } else if (Type_String == field.type || Type_Utf8String == field.type) {
+        } else if (SettingType::String == field.type || SettingType::Utf8String == field.type) {
             void* m = *((void**)fieldPtr);
             free(m);
-        } else if (Type_ColorArray == field.type || Type_FloatArray == field.type || Type_IntArray == field.type) {
+        } else if (SettingType::ColorArray == field.type || SettingType::FloatArray == field.type ||
+                   SettingType::IntArray == field.type) {
             Vec<int>* v = *((Vec<int>**)fieldPtr);
             delete v;
-        } else if (Type_StringArray == field.type) {
+        } else if (SettingType::StringArray == field.type) {
             FreeStringArray(*(Vec<WCHAR*>**)fieldPtr);
         }
     }

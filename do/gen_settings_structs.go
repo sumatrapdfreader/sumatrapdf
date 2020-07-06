@@ -746,7 +746,7 @@ func buildMetaData(struc *Field, built map[string]int) string {
 		dataLine = append(dataLine, s)
 
 		tpName := field.Type.Name
-		s = fmt.Sprintf("Type_%s", tpName)
+		s = fmt.Sprintf("SettingType::%s", tpName)
 		dataLine = append(dataLine, s)
 		s = field.cdefault(built)
 		dataLine = append(dataLine, s)
