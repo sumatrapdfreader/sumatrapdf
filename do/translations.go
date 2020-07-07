@@ -132,7 +132,7 @@ func parseTranslations(s string) map[string][]*Translation {
 			currTranslations = nil
 		} else {
 			parts := strings.SplitN(l, ":", 2)
-			panicIf(len(parts) != 2)
+			panicIf(len(parts) != 2, "Invalid line: '%s'", l)
 			lang, trans := parts[0], parts[1]
 			tr := &Translation{
 				Text:        currStr,
