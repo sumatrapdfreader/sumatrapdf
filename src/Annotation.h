@@ -70,6 +70,9 @@ struct Annotation {
     int Quadding();
     bool SetQuadding(int);
 
+    void SetQuadPointsAsRect(Vec<RectFl>);
+    Vec<RectFl> GetQuadPointsAsRect();
+
     std::string_view Contents();
     bool SetContents(std::string_view sv);
 

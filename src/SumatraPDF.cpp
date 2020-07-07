@@ -3821,7 +3821,7 @@ bool MakeHiglightAnnotationFromSelection(TabInfo* tab, int pageNo) {
         return false;
     }
     Annotation* annot = EnginePdfCreateAnnotation(engine, AnnotationType::Highlight, pageNo, PointFl{});
-    // TODO: add quadpoints
+    // TODO: add quadpoints from selection and set contents from selected text
     WindowInfoRerender(win);
     StartEditAnnotations(win->currentTab, annot);
     delete annot;

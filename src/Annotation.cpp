@@ -148,6 +148,15 @@ bool Annotation::SetQuadding(int newQuadding) {
     return true;
 }
 
+void Annotation::SetQuadPointsAsRect(Vec<RectFl> rects) {
+    UNUSED(rects);
+}
+
+Vec<RectFl> Annotation::GetQuadPointsAsRect() {
+    Vec<RectFl> res;
+    return res;
+}
+
 std::string_view Annotation::Contents() {
     // TODO: cache during creation?
     const char* s = pdf_annot_contents(pdf->ctx, pdf->annot);
