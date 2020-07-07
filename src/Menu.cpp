@@ -46,6 +46,9 @@
 #include "TocEditor.h"
 #include "EditAnnotations.h"
 
+// SumatraPDF.cpp
+extern void MakeHiglightAnnotationFromSelection(TabInfo* tab);
+
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       CmdZoomFIT_PAGE - CmdZoomCUSTOM must be in a continuous range!
 static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are not in a continuous range");
@@ -738,8 +741,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         uint flags = MF_BYPOSITION | MF_ENABLED | MF_POPUP;
         InsertMenuW(popup, (uint)-1, flags, (UINT_PTR)popupCreateAnnot, _TR("Create Annotation"));
 
-        // TODO: disable those if no selection
-        bool isTextSelection = false;
+        bool isTextSelection = win->showSelection && tab->selectionOnPage;
         if (!isTextSelection) {
             win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotHighlight, false);
             win::menu::SetEnabled(popupCreateAnnot, CmdCreateAnnotUnderline, false);
@@ -882,6 +884,14 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             StartEditAnnotations(win->currentTab, annot);
             delete annot;
         } break;
+        case CmdCreateAnnotHighlight:
+            MakeHiglightAnnotationFromSelection(win->currentTab);
+            break;
+        case CmdCreateAnnotSquiggly:
+        case CmdCreateAnnotStrikeOut:
+        case CmdCreateAnnotUnderline:
+            // TODO: implement me
+            break;
         case CmdCreateAnnotInk:
         case CmdCreateAnnotPolyLine:
             // TODO: implement me

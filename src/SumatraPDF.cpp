@@ -3800,7 +3800,7 @@ static void OnFrameKeyB(WindowInfo* win) {
     }
 }
 
-void MakeAnnotationFromSelection(TabInfo* tab) {
+void MakeHiglightAnnotationFromSelection(TabInfo* tab) {
     bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
     if (!annotsEnabled) {
         return;
@@ -3977,7 +3977,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             OnFrameKeyM(win);
             break;
         case 'a':
-            MakeAnnotationFromSelection(win->currentTab);
+            MakeHiglightAnnotationFromSelection(win->currentTab);
             break;
     }
 }

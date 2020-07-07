@@ -6,141 +6,141 @@ COMMANDS() define commands.
 A command is represented by a unique number, defined as
 Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
 */
-#define COMMANDS(V)                                                    \
-    V(Open, "Open File...")                                            \
-    V(OpenFolder, "Open Folder...")                                    \
-    V(Close, "Close Document")                                         \
-    V(SaveAs, "Save File As...")                                       \
-    V(Print, "Print Document...")                                      \
-    V(ShowInFolder, "Show File In Folder...")                          \
-    V(RenameFile, "Rename File...")                                    \
-    V(Exit, "Exit Application")                                        \
-    V(Refresh, "Reload Document")                                      \
-    V(SaveAsBookmark, "Save As Bookmark...")                           \
-    V(SendByEmail, "Send Document By Email...")                        \
-    V(Properties, "Show Document Properties...")                       \
-    V(ExitFullScreen, "Exit FullScreen")                               \
-    V(ViewSinglePage, "View: Single Page")                             \
-    V(ViewFacing, "View: Facing")                                      \
-    V(ViewBook, "View: Book")                                          \
-    V(ViewContinuous, "View: Continuous")                              \
-    V(ViewMangaMode, "View: Manga Mode")                               \
-    V(ViewRotateLeft, "View: Rotate Left")                             \
-    V(ViewRotateRight, "View: Rotate Right")                           \
-    V(ViewBookmarks, "View: Bookmarks")                                \
-    V(ViewFullScreen, "View: FullScreen")                              \
-    V(ViewPresentationMode, "View: Presentation Mode")                 \
-    V(ViewShowHideToolbar, "View: Toogle Toolbar")                     \
-    V(ViewShowHideScrollbars, "View: Toogle Scrollbars")               \
-    V(ViewShowHideMenuBar, "View: Toggle Menu Bar")                    \
-    V(CopySelection, "Copy Selection")                                 \
-    V(SelectAll, "Select All")                                         \
-    V(NewWindow, "Open New Window")                                    \
-    V(DuplicateInNewWindow, "Open Document In New Window")             \
-    V(CopyImage, "Copy Image")                                         \
-    V(CopyLinkTarget, "Copy Link Target")                              \
-    V(CopyComment, "Copy Comment")                                     \
-    V(GoToNextPage, "Go to Next Page")                                 \
-    V(GoToPrevPage, "Go to Previous Page")                             \
-    V(GoToFirstPage, "Go to First Page")                               \
-    V(GoToLastPage, "Go to Last Page")                                 \
-    V(GoToPage, "Go to Page...")                                       \
-    V(GoToNavBack, "Navigate: Back")                                   \
-    V(GoToNavForward, "Navigate: Forward")                             \
-    V(FindFirst, "Find")                                               \
-    V(FindNext, "Find: Next")                                          \
-    V(FindPrev, "Find: Previous")                                      \
-    V(FindMatch, "Find: Match Case")                                   \
-    V(FindNextSel, "Find: Next Selection")                             \
-    V(FindPrevSel, "Find: Previous Selection")                         \
-    V(SaveAnnotations, "Save Annotations")                             \
-    V(EditAnnotations, "Edit Annotations")                             \
-    V(ZoomFitPage, "Zoom: Fit Page")                                   \
-    V(ZoomActualSize, "Zoom: Actual Size")                             \
-    V(ZoomFitWidth, "Zoom: Fit Width")                                 \
-    V(Zoom6400, "Zoom: 6400%")                                         \
-    V(Zoom3200, "Zoom: 3200%")                                         \
-    V(Zoom1600, "Zoom: 1600%")                                         \
-    V(Zoom800, "Zoom: 800%")                                           \
-    V(Zoom400, "Zoom: 400%")                                           \
-    V(Zoom200, "Zoom: 200%")                                           \
-    V(Zoom150, "Zoom: 150%")                                           \
-    V(Zoom125, "Zoom: 125%")                                           \
-    V(Zoom100, "Zoom: 100%")                                           \
-    V(Zoom50, "Zoom: 50%")                                             \
-    V(Zoom25, "Zoom: 25%")                                             \
-    V(Zoom12_5, "Zoom: 12.5%")                                         \
-    V(Zoom8_33, "Zoom: 8.33%")                                         \
-    V(ZoomFitContent, "Zoom: Fit Content")                             \
-    V(ZoomCustom, "Zoom: Custom...")                                   \
-    V(ZoomIn, "Zoom In")                                               \
-    V(ZoomOut, "Zoom Out")                                             \
-    V(ZoomFitWidthAndContinous, "Zoom: Fit Width And Continous")       \
-    V(ZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page")      \
-    V(ContributeTranslation, "Contribute Translation")                 \
-    V(OpenWithAcrobat, "Open With Adobe Acrobat")                      \
-    V(OpenWithFoxIt, "Open With FoxIt")                                \
-    V(OpenWithPdfXchange, "Open With PdfXchange")                      \
-    V(OpenWithXpsViewer, "Open With Xps Viewer")                       \
-    V(OpenWithHtmlHelp, "Open With HTML Help")                         \
-    V(OpenSelectedDocument, "Open Selected Document")                  \
-    V(PinSelectedDocument, "Pin Selected Document")                    \
-    V(ForgetSelectedDocument, "Remove Selected Document From History") \
-    V(TocEditorStart, "Table of contents: Start Editing")              \
-    V(TocEditorAddSibling, "Add Sibling")                              \
-    V(TocEditorAddChild, "Add Child")                                  \
-    V(TocEditorRemoveItem, "Remove")                                   \
-    V(TocEditorAddPdfChild, "Add PDF Child")                           \
-    V(TocEditorAddPdfSibling, "Add PDF Sibling")                       \
-    V(ExpandAll, "Expand All")                                         \
-    V(CollapseAll, "Collapse All")                                     \
-    V(ExportBookmarks, "Export Bookmarks")                             \
-    V(SortTagSmallFirst, "Sort By Tag, Small First")                   \
-    V(SortTagBigFirst, "Sort By Tag, Big First")                       \
-    V(SortColor, "Sort By Color")                                      \
-    V(SaveEmbeddedFile, "Save Embedded File...")                       \
-    V(OpenEmbeddedPDF, "Open Embedded PDF")                            \
-    V(Options, "Options...")                                           \
-    V(AdvancedOptions, "Advanced Options...")                          \
-    V(ChangeLanguage, "Change Language...")                            \
-    V(CheckUpdate, "Check For Update")                                 \
-    V(HelpOpenManualInBrowser, "Help: Manual")                         \
-    V(HelpVisitWebsite, "Help: SumatraPDF Website")                    \
-    V(HelpAbout, "Help: About SumatraPDF")                             \
-    V(MoveFrameFocus, "Move Frame Focus")                              \
-    V(FavoriteAdd, "Favorites: Add")                                   \
-    V(FavoriteDel, "Favorites: Delete")                                \
-    V(FavoriteToggle, "Favorites: Toggle")                             \
-    V(FavoriteShow, "Favorites: Show")                                 \
-    V(FavoriteHide, "Favorites: Hide")                                 \
-    V(DebugShowLinks, "Deubg: Show Links")                             \
-    V(DebugCrashMe, "Debug: Crash Me")                                 \
-    V(DebugEbookUI, "Debug: Toggle Ebook UI")                          \
-    V(DebugAnnotations, "Debug: Annotations")                          \
-    V(DebugDownloadSymbols, "Debug: Download Symbols")                 \
-    V(DebugTestApp, "Debug: Test App")                                 \
-    V(DebugShowNotif, "Debug: Show Notification")                      \
-    V(DebugMui, "Debug: Mui")                                          \
-    V(NewBookmarks, "New Bookmarks")                                   \
-    V(CreateAnnotText, "Create Text Annotation")                       \
-    V(CreateAnnotLink, "Create Link Annotation")                       \
-    V(CreateAnnotFreeText, "Create  Free Text Annotation")             \
-    V(CreateAnnotLine, "Create Line Annotation")                       \
-    V(CreateAnnotSquare, "Create Square Annotation")                   \
-    V(CreateAnnotCircle, "Create Circle Annotation")                   \
-    V(CreateAnnotPolygon, "Create Polygon Annotation")                 \
-    V(CreateAnnotPolyLine, "Create Poly Line Annotation")              \
-    V(CreateAnnotHighlight, "Create Highlight Annotation")             \
-    V(CreateAnnotUnderline, "Create Underline Annotation")             \
-    V(CreateAnnotSquiggly, "Create Squiggly Annotation")               \
-    V(CreateAnnotStrikeOut, "Create Strike Out Annotation")            \
-    V(CreateAnnotRedact, "Create Redact Annotation")                   \
-    V(CreateAnnotStamp, "Create Stamp Annotation")                     \
-    V(CreateAnnotCaret, "Create Caret Annotation")                     \
-    V(CreateAnnotInk, "Create Ink Annotation")                         \
-    V(CreateAnnotPopup, "Create Popup Annotation")                     \
-    V(CreateAnnotFileAttachment, "Create File Attachment Annotation")  \
-    V(LastCommand, "")
+#define COMMANDS(V)                                                       \
+    V(CmdOpen, "Open File...")                                            \
+    V(CmdOpenFolder, "Open Folder...")                                    \
+    V(CmdClose, "Close Document")                                         \
+    V(CmdSaveAs, "Save File As...")                                       \
+    V(CmdPrint, "Print Document...")                                      \
+    V(CmdShowInFolder, "Show File In Folder...")                          \
+    V(CmdRenameFile, "Rename File...")                                    \
+    V(CmdExit, "Exit Application")                                        \
+    V(CmdRefresh, "Reload Document")                                      \
+    V(CmdSaveAsBookmark, "Save As Bookmark...")                           \
+    V(CmdSendByEmail, "Send Document By Email...")                        \
+    V(CmdProperties, "Show Document Properties...")                       \
+    V(CmdExitFullScreen, "Exit FullScreen")                               \
+    V(CmdViewSinglePage, "View: Single Page")                             \
+    V(CmdViewFacing, "View: Facing")                                      \
+    V(CmdViewBook, "View: Book")                                          \
+    V(CmdViewContinuous, "View: Continuous")                              \
+    V(CmdViewMangaMode, "View: Manga Mode")                               \
+    V(CmdViewRotateLeft, "View: Rotate Left")                             \
+    V(CmdViewRotateRight, "View: Rotate Right")                           \
+    V(CmdViewBookmarks, "View: Bookmarks")                                \
+    V(CmdViewFullScreen, "View: FullScreen")                              \
+    V(CmdViewPresentationMode, "View: Presentation Mode")                 \
+    V(CmdViewShowHideToolbar, "View: Toogle Toolbar")                     \
+    V(CmdViewShowHideScrollbars, "View: Toogle Scrollbars")               \
+    V(CmdViewShowHideMenuBar, "View: Toggle Menu Bar")                    \
+    V(CmdCopySelection, "Copy Selection")                                 \
+    V(CmdSelectAll, "Select All")                                         \
+    V(CmdNewWindow, "Open New Window")                                    \
+    V(CmdDuplicateInNewWindow, "Open Document In New Window")             \
+    V(CmdCopyImage, "Copy Image")                                         \
+    V(CmdCopyLinkTarget, "Copy Link Target")                              \
+    V(CmdCopyComment, "Copy Comment")                                     \
+    V(CmdGoToNextPage, "Go to Next Page")                                 \
+    V(CmdGoToPrevPage, "Go to Previous Page")                             \
+    V(CmdGoToFirstPage, "Go to First Page")                               \
+    V(CmdGoToLastPage, "Go to Last Page")                                 \
+    V(CmdGoToPage, "Go to Page...")                                       \
+    V(CmdGoToNavBack, "Navigate: Back")                                   \
+    V(CmdGoToNavForward, "Navigate: Forward")                             \
+    V(CmdFindFirst, "Find")                                               \
+    V(CmdFindNext, "Find: Next")                                          \
+    V(CmdFindPrev, "Find: Previous")                                      \
+    V(CmdFindMatch, "Find: Match Case")                                   \
+    V(CmdFindNextSel, "Find: Next Selection")                             \
+    V(CmdFindPrevSel, "Find: Previous Selection")                         \
+    V(CmdSaveAnnotations, "Save Annotations")                             \
+    V(CmdEditAnnotations, "Edit Annotations")                             \
+    V(CmdZoomFitPage, "Zoom: Fit Page")                                   \
+    V(CmdZoomActualSize, "Zoom: Actual Size")                             \
+    V(CmdZoomFitWidth, "Zoom: Fit Width")                                 \
+    V(CmdZoom6400, "Zoom: 6400%")                                         \
+    V(CmdZoom3200, "Zoom: 3200%")                                         \
+    V(CmdZoom1600, "Zoom: 1600%")                                         \
+    V(CmdZoom800, "Zoom: 800%")                                           \
+    V(CmdZoom400, "Zoom: 400%")                                           \
+    V(CmdZoom200, "Zoom: 200%")                                           \
+    V(CmdZoom150, "Zoom: 150%")                                           \
+    V(CmdZoom125, "Zoom: 125%")                                           \
+    V(CmdZoom100, "Zoom: 100%")                                           \
+    V(CmdZoom50, "Zoom: 50%")                                             \
+    V(CmdZoom25, "Zoom: 25%")                                             \
+    V(CmdZoom12_5, "Zoom: 12.5%")                                         \
+    V(CmdZoom8_33, "Zoom: 8.33%")                                         \
+    V(CmdZoomFitContent, "Zoom: Fit Content")                             \
+    V(CmdZoomCustom, "Zoom: Custom...")                                   \
+    V(CmdZoomIn, "Zoom In")                                               \
+    V(CmdZoomOut, "Zoom Out")                                             \
+    V(CmdZoomFitWidthAndContinous, "Zoom: Fit Width And Continous")       \
+    V(CmdZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page")      \
+    V(CmdContributeTranslation, "Contribute Translation")                 \
+    V(CmdOpenWithAcrobat, "Open With Adobe Acrobat")                      \
+    V(CmdOpenWithFoxIt, "Open With FoxIt")                                \
+    V(CmdOpenWithPdfXchange, "Open With PdfXchange")                      \
+    V(CmdOpenWithXpsViewer, "Open With Xps Viewer")                       \
+    V(CmdOpenWithHtmlHelp, "Open With HTML Help")                         \
+    V(CmdOpenSelectedDocument, "Open Selected Document")                  \
+    V(CmdPinSelectedDocument, "Pin Selected Document")                    \
+    V(CmdForgetSelectedDocument, "Remove Selected Document From History") \
+    V(CmdTocEditorStart, "Table of contents: Start Editing")              \
+    V(CmdTocEditorAddSibling, "Add Sibling")                              \
+    V(CmdTocEditorAddChild, "Add Child")                                  \
+    V(CmdTocEditorRemoveItem, "Remove")                                   \
+    V(CmdTocEditorAddPdfChild, "Add PDF Child")                           \
+    V(CmdTocEditorAddPdfSibling, "Add PDF Sibling")                       \
+    V(CmdExpandAll, "Expand All")                                         \
+    V(CmdCollapseAll, "Collapse All")                                     \
+    V(CmdExportBookmarks, "Export Bookmarks")                             \
+    V(CmdSortTagSmallFirst, "Sort By Tag, Small First")                   \
+    V(CmdSortTagBigFirst, "Sort By Tag, Big First")                       \
+    V(CmdSortColor, "Sort By Color")                                      \
+    V(CmdSaveEmbeddedFile, "Save Embedded File...")                       \
+    V(CmdOpenEmbeddedPDF, "Open Embedded PDF")                            \
+    V(CmdOptions, "Options...")                                           \
+    V(CmdAdvancedOptions, "Advanced Options...")                          \
+    V(CmdChangeLanguage, "Change Language...")                            \
+    V(CmdCheckUpdate, "Check For Update")                                 \
+    V(CmdHelpOpenManualInBrowser, "Help: Manual")                         \
+    V(CmdHelpVisitWebsite, "Help: SumatraPDF Website")                    \
+    V(CmdHelpAbout, "Help: About SumatraPDF")                             \
+    V(CmdMoveFrameFocus, "Move Frame Focus")                              \
+    V(CmdFavoriteAdd, "Favorites: Add")                                   \
+    V(CmdFavoriteDel, "Favorites: Delete")                                \
+    V(CmdFavoriteToggle, "Favorites: Toggle")                             \
+    V(CmdFavoriteShow, "Favorites: Show")                                 \
+    V(CmdFavoriteHide, "Favorites: Hide")                                 \
+    V(CmdDebugShowLinks, "Deubg: Show Links")                             \
+    V(CmdDebugCrashMe, "Debug: Crash Me")                                 \
+    V(CmdDebugEbookUI, "Debug: Toggle Ebook UI")                          \
+    V(CmdDebugAnnotations, "Debug: Annotations")                          \
+    V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                 \
+    V(CmdDebugTestApp, "Debug: Test App")                                 \
+    V(CmdDebugShowNotif, "Debug: Show Notification")                      \
+    V(CmdDebugMui, "Debug: Mui")                                          \
+    V(CmdNewBookmarks, "New Bookmarks")                                   \
+    V(CmdCreateAnnotText, "Create Text Annotation")                       \
+    V(CmdCreateAnnotLink, "Create Link Annotation")                       \
+    V(CmdCreateAnnotFreeText, "Create  Free Text Annotation")             \
+    V(CmdCreateAnnotLine, "Create Line Annotation")                       \
+    V(CmdCreateAnnotSquare, "Create Square Annotation")                   \
+    V(CmdCreateAnnotCircle, "Create Circle Annotation")                   \
+    V(CmdCreateAnnotPolygon, "Create Polygon Annotation")                 \
+    V(CmdCreateAnnotPolyLine, "Create Poly Line Annotation")              \
+    V(CmdCreateAnnotHighlight, "Create Highlight Annotation")             \
+    V(CmdCreateAnnotUnderline, "Create Underline Annotation")             \
+    V(CmdCreateAnnotSquiggly, "Create Squiggly Annotation")               \
+    V(CmdCreateAnnotStrikeOut, "Create Strike Out Annotation")            \
+    V(CmdCreateAnnotRedact, "Create Redact Annotation")                   \
+    V(CmdCreateAnnotStamp, "Create Stamp Annotation")                     \
+    V(CmdCreateAnnotCaret, "Create Caret Annotation")                     \
+    V(CmdCreateAnnotInk, "Create Ink Annotation")                         \
+    V(CmdCreateAnnotPopup, "Create Popup Annotation")                     \
+    V(CmdCreateAnnotFileAttachment, "Create File Attachment Annotation")  \
+    V(CmdLastCommand, "")
 
 // order of CreateAnnot* must be the same as enum AnnotationType
 /*
@@ -155,7 +155,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     ThreeD,
 */
 
-#define DEF_CMD(id, s) Cmd##id,
+#define DEF_CMD(id, s) id,
 
 enum {
     // commands are integers sent with WM_COMMAND so start them

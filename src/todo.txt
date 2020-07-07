@@ -1,5 +1,5 @@
 Annotations:
- - fix MakeAnnotationFromSelection which builds quads, like do_edit_quad_points
+ - fix MakeHiglightAnnotationFromSelection which builds quads, like do_edit_quad_points
    in gl-annotate.c
  - save attachment
  - add attachment
