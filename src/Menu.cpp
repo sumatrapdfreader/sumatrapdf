@@ -47,7 +47,7 @@
 #include "EditAnnotations.h"
 
 // SumatraPDF.cpp
-extern void MakeHiglightAnnotationFromSelection(TabInfo* tab);
+extern bool MakeHiglightAnnotationFromSelection(TabInfo* tab, int pageNo);
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       CmdZoomFIT_PAGE - CmdZoomCUSTOM must be in a continuous range!
@@ -885,7 +885,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             delete annot;
         } break;
         case CmdCreateAnnotHighlight:
-            MakeHiglightAnnotationFromSelection(win->currentTab);
+            MakeHiglightAnnotationFromSelection(win->currentTab, pageNo);
             break;
         case CmdCreateAnnotSquiggly:
         case CmdCreateAnnotStrikeOut:

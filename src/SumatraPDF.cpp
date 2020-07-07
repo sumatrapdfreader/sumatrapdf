@@ -37,6 +37,7 @@
 #include "EngineCreate.h"
 #include "EngineMulti.h"
 #include "EngineImages.h"
+#include "EnginePdf.h"
 #include "Doc.h"
 #include "PdfCreator.h"
 #include "DisplayMode.h"
@@ -3800,28 +3801,31 @@ static void OnFrameKeyB(WindowInfo* win) {
     }
 }
 
-void MakeHiglightAnnotationFromSelection(TabInfo* tab) {
+bool MakeHiglightAnnotationFromSelection(TabInfo* tab, int pageNo) {
     bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
     if (!annotsEnabled) {
-        return;
+        return false;
     }
 
     // converts current selection to annotation (or back to regular text
     // if it's already an annotation)
     DisplayModel* dm = tab->win->AsFixed();
     if (!dm) {
-        return;
+        return false;
     }
     auto engine = dm->GetEngine();
     bool supportsAnnots = EngineSupportsAnnotations(engine);
     WindowInfo* win = tab->win;
     bool ok = supportsAnnots && win->showSelection && tab->selectionOnPage;
     if (!ok) {
-        return;
+        return false;
     }
-    // TODO: create annotation
-    DeleteOldSelectionInfo(win, true);
+    Annotation* annot = EnginePdfCreateAnnotation(engine, AnnotationType::Highlight, pageNo, PointFl{});
+    // TODO: add quadpoints
     WindowInfoRerender(win);
+    StartEditAnnotations(win->currentTab, annot);
+    delete annot;
+    return true;
 }
 
 static void OnFrameKeyM(WindowInfo* win) {
@@ -3977,7 +3981,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             OnFrameKeyM(win);
             break;
         case 'a':
-            MakeHiglightAnnotationFromSelection(win->currentTab);
+            MakeHiglightAnnotationFromSelection(win->currentTab, win->currPageNo);
             break;
     }
 }
