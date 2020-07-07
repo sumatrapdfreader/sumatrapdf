@@ -330,7 +330,7 @@ bool EngineMupdf::FinishLoading() {
             mbox.y1 = 792;
         }
         FzPageInfo* pageInfo = new FzPageInfo();
-        pageInfo->mediabox = fz_rect_to_RectD(mbox);
+        pageInfo->mediabox = ToRectFl(mbox);
         pageInfo->pageNo = i + 1;
         _pages.Append(pageInfo);
     }

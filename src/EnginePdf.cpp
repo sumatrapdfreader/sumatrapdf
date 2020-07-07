@@ -808,7 +808,7 @@ bool EnginePdf::FinishLoading() {
             mbox.y1 = 792;
         }
         FzPageInfo* pageInfo = new FzPageInfo();
-        pageInfo->mediabox = fz_rect_to_RectD(mbox);
+        pageInfo->mediabox = ToRectFl(mbox);
         pageInfo->pageNo = i + 1;
         _pages.Append(pageInfo);
     }
@@ -1080,7 +1080,7 @@ static PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_
         s = label;
     }
     AutoFreeWstr ws = strconv::Utf8ToWstr(s);
-    RectFl rd = fz_rect_to_RectD(rect);
+    RectFl rd = ToRectFl(rect);
     return newFzComment(ws, pageNo, rd);
 }
 
@@ -1118,7 +1118,7 @@ static void MakePageElementCommentsFromAnnotations(fz_context* ctx, FzPageInfo* 
             PageElement* el = new PageElement();
             el->kind_ = kindPageElementDest;
             el->pageNo = pageNo;
-            el->rect = fz_rect_to_RectD(rect);
+            el->rect = ToRectFl(rect);
             el->value = strconv::Utf8ToWstr(attname);
             el->dest = new PageDestination();
             el->dest->kind = kindDestinationLaunchEmbedded;
@@ -1249,7 +1249,7 @@ RectFl EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
         return mediabox;
     }
 
-    RectFl rect2 = fz_rect_to_RectD(rect);
+    RectFl rect2 = ToRectFl(rect);
     return rect2.Intersect(mediabox);
 }
 
@@ -1270,7 +1270,7 @@ RectFl EnginePdf::Transform(const RectFl& rect, int pageNo, float zoom, int rota
     }
     fz_rect rect2 = RectD_to_fz_rect(rect);
     rect2 = fz_transform_rect(rect2, ctm);
-    return fz_rect_to_RectD(rect2);
+    return ToRectFl(rect2);
 }
 
 RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
@@ -1400,7 +1400,7 @@ RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectFl rect, int imageIdx) {
     auto& images = pageInfo->images;
     bool outOfBounds = imageIdx >= images.isize();
     fz_rect imgRect = images.at(imageIdx).rect;
-    bool badRect = fz_rect_to_RectD(imgRect) != rect;
+    bool badRect = ToRectFl(imgRect) != rect;
     CrashIf(outOfBounds);
     CrashIf(badRect);
     if (outOfBounds || badRect) {

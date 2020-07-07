@@ -51,7 +51,7 @@ struct LinkRectList {
 };
 
 fz_rect RectD_to_fz_rect(RectFl rect);
-RectFl fz_rect_to_RectD(fz_rect rect);
+RectFl ToRectFl(fz_rect rect);
 fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation);
 
 bool fz_is_pt_in_rect(fz_rect rect, fz_point pt);

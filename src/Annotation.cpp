@@ -115,7 +115,7 @@ int Annotation::PageNo() const {
 RectFl Annotation::Rect() const {
     // TODO: cache during creation?
     fz_rect rc = pdf_annot_rect(pdf->ctx, pdf->annot);
-    auto rect = fz_rect_to_RectD(rc);
+    auto rect = ToRectFl(rc);
     return rect;
 }
 

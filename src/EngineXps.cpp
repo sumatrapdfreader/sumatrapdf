@@ -444,7 +444,7 @@ bool EngineXps::LoadFromStream(fz_stream* stm) {
             mbox.x1 = 612;
             mbox.y1 = 792;
         }
-        pageInfo->mediabox = fz_rect_to_RectD(mbox);
+        pageInfo->mediabox = ToRectFl(mbox);
         _pages.Append(pageInfo);
     }
 
@@ -598,7 +598,7 @@ RectFl EngineXps::PageContentBox(int pageNo, RenderTarget target) {
         return mediabox;
     }
 
-    RectFl rect2 = fz_rect_to_RectD(rect);
+    RectFl rect2 = ToRectFl(rect);
     return rect2.Intersect(mediabox);
 }
 
@@ -609,7 +609,7 @@ RectFl EngineXps::Transform(const RectFl& rect, int pageNo, float zoom, int rota
     }
     fz_rect rect2 = RectD_to_fz_rect(rect);
     rect2 = fz_transform_rect(rect2, ctm);
-    return fz_rect_to_RectD(rect2);
+    return ToRectFl(rect2);
 }
 
 RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
@@ -856,7 +856,7 @@ RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectFl rect, int imageIdx) {
 
     Vec<FitzImagePos> positions;
 
-    if (imageIdx >= positions.isize() || fz_rect_to_RectD(positions.at(imageIdx).rect) != rect) {
+    if (imageIdx >= positions.isize() || ToRectFl(positions.at(imageIdx).rect) != rect) {
         CrashIf(true);
         return nullptr;
     }

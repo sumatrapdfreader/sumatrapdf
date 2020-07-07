@@ -32,7 +32,7 @@ extern "C" {
 // so that their content can be loaded on demand in order to preserve memory
 #define MAX_MEMORY_FILE_SIZE (32 * 1024 * 1024)
 
-RectFl fz_rect_to_RectD(fz_rect rect) {
+RectFl ToRectFl(fz_rect rect) {
     return RectFl::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
@@ -42,7 +42,7 @@ fz_rect RectD_to_fz_rect(RectFl rect) {
 }
 
 bool fz_is_pt_in_rect(fz_rect rect, fz_point pt) {
-    return fz_rect_to_RectD(rect).Contains(PointFl(pt.x, pt.y));
+    return ToRectFl(rect).Contains(PointFl(pt.x, pt.y));
 }
 
 float fz_calc_overlap(fz_rect r1, fz_rect r2) {
@@ -445,7 +445,7 @@ static inline int wchars_per_rune(int rune) {
 
 static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<Rect>& rects) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
-    Rect r = fz_rect_to_RectD(bbox).Round();
+    Rect r = ToRectFl(bbox).Round();
 
     int n = wchars_per_rune(c->c);
     if (n == 2) {
@@ -1015,7 +1015,7 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
 
     res->pageNo = pageNo;
     if (link) {
-        res->rect = fz_rect_to_RectD(link->rect);
+        res->rect = ToRectFl(link->rect);
     }
     res->value = CalcValue(link, outline);
 
@@ -1035,7 +1035,7 @@ PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
     auto res = new PageElement();
     res->kind_ = kindPageElementImage;
     res->pageNo = pageNo;
-    res->rect = fz_rect_to_RectD(rect);
+    res->rect = ToRectFl(rect);
     res->imageID = (int)imageIdx;
     return res;
 }
@@ -1162,7 +1162,7 @@ void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext) {
         pel->dest->pageNo = 0;
         pel->dest->value = str::Dup(uri);
         pel->value = str::Dup(uri);
-        pel->rect = fz_rect_to_RectD(bbox);
+        pel->rect = ToRectFl(bbox);
         pageInfo->autoLinks.Append(pel);
     }
     delete list;
