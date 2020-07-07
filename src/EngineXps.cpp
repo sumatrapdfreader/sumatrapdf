@@ -254,7 +254,7 @@ class EngineXps : public EngineBase {
     FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy);
     int GetPageNo(fz_page* page);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
-        const fz_rect tmpRect = RectD_to_fz_rect(PageMediabox(pageNo));
+        const fz_rect tmpRect = To_fz_rect(PageMediabox(pageNo));
         return fz_create_view_ctm(tmpRect, zoom, rotation);
     }
     fz_matrix viewctm(fz_page* page, float zoom, int rotation) {
@@ -607,7 +607,7 @@ RectFl EngineXps::Transform(const RectFl& rect, int pageNo, float zoom, int rota
     if (inverse) {
         ctm = fz_invert_matrix(ctm);
     }
-    fz_rect rect2 = RectD_to_fz_rect(rect);
+    fz_rect rect2 = To_fz_rect(rect);
     rect2 = fz_transform_rect(rect2, ctm);
     return ToRectFl(rect2);
 }
@@ -632,7 +632,7 @@ RenderedBitmap* EngineXps::RenderPage(RenderPageArgs& args) {
 
     fz_rect pRect;
     if (args.pageRect) {
-        pRect = RectD_to_fz_rect(*args.pageRect);
+        pRect = To_fz_rect(*args.pageRect);
     } else {
         // TODO(port): use pageInfo->mediabox?
         pRect = fz_bound_page(ctx, page);
@@ -962,7 +962,7 @@ bool EngineXps::HasClipOptimizations(int pageNo) {
         return false;
     }
 
-    fz_rect mbox = RectD_to_fz_rect(PageMediabox(pageNo));
+    fz_rect mbox = To_fz_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;

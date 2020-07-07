@@ -1268,7 +1268,7 @@ RectFl EnginePdf::Transform(const RectFl& rect, int pageNo, float zoom, int rota
     if (inverse) {
         ctm = fz_invert_matrix(ctm);
     }
-    fz_rect rect2 = RectD_to_fz_rect(rect);
+    fz_rect rect2 = To_fz_rect(rect);
     rect2 = fz_transform_rect(rect2, ctm);
     return ToRectFl(rect2);
 }
@@ -1299,7 +1299,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     auto rotation = args.rotation;
     fz_rect pRect;
     if (pageRect) {
-        pRect = RectD_to_fz_rect(*pageRect);
+        pRect = To_fz_rect(*pageRect);
     } else {
         // TODO(port): use pageInfo->mediabox?
         pRect = fz_bound_page(ctx, page);
@@ -1384,7 +1384,7 @@ bool EnginePdf::BenchLoadPage(int pageNo) {
 }
 
 fz_matrix EnginePdf::viewctm(int pageNo, float zoom, int rotation) {
-    const fz_rect tmpRc = RectD_to_fz_rect(PageMediabox(pageNo));
+    const fz_rect tmpRc = To_fz_rect(PageMediabox(pageNo));
     return fz_create_view_ctm(tmpRc, zoom, rotation);
 }
 
@@ -1897,7 +1897,7 @@ bool EnginePdf::HasClipOptimizations(int pageNo) {
         return false;
     }
 
-    fz_rect mbox = RectD_to_fz_rect(PageMediabox(pageNo));
+    fz_rect mbox = To_fz_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
