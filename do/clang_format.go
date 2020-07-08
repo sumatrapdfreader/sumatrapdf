@@ -3,7 +3,9 @@ package main
 import (
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/kjk/u"
 )
@@ -73,6 +75,8 @@ func clangFormatFiles() {
 		}
 		return false
 	}
+	sem := make(chan bool, runtime.NumCPU())
+	var wg sync.WaitGroup
 	for _, globPattern := range files {
 		paths, err := filepath.Glob(globPattern)
 		must(err)
@@ -80,7 +84,14 @@ func clangFormatFiles() {
 			if isWhiteListed(path) {
 				continue
 			}
-			clangFormatFile(path)
+			sem <- true
+			wg.Add(1)
+			go func(p string) {
+				clangFormatFile(p)
+				wg.Done()
+				<-sem
+			}(path)
 		}
 	}
+	wg.Wait()
 }
