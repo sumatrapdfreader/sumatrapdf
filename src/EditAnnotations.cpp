@@ -1217,11 +1217,14 @@ static bool SelectAnnotationInListBox(EditAnnotationsWindow* win, Annotation* an
     return false;
 }
 
+// takes ownership of selectedAnnot
 void StartEditAnnotations(TabInfo* tab, Annotation* selectedAnnot) {
     if (tab->editAnnotsWindow) {
         if (selectedAnnot) {
-            RebuildAnnotations(tab->editAnnotsWindow);
-            SelectAnnotationInListBox(tab->editAnnotsWindow, selectedAnnot);
+            EditAnnotationsWindow* win = tab->editAnnotsWindow;
+            win->annotations->Append(selectedAnnot);
+            RebuildAnnotations(win);
+            SelectAnnotationInListBox(win, selectedAnnot);
         }
         HWND hwnd = tab->editAnnotsWindow->mainWindow->hwnd;
         BringWindowToTop(hwnd);
@@ -1271,4 +1274,6 @@ void StartEditAnnotations(TabInfo* tab, Annotation* selectedAnnot) {
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     mainWindow->SetIsVisible(true);
+
+    delete selectedAnnot;
 }

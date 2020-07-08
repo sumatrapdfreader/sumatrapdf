@@ -3801,7 +3801,7 @@ static void OnFrameKeyB(WindowInfo* win) {
     }
 }
 
-bool MakeHiglightAnnotationFromSelection(TabInfo* tab, int pageNo) {
+bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType, int pageNo) {
     bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
     if (!annotsEnabled) {
         return false;
@@ -3820,7 +3820,7 @@ bool MakeHiglightAnnotationFromSelection(TabInfo* tab, int pageNo) {
     if (!ok) {
         return false;
     }
-    Annotation* annot = EnginePdfCreateAnnotation(engine, AnnotationType::Highlight, pageNo, PointFl{});
+    Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointFl{});
     Vec<RectFl> rects;
     Vec<SelectionOnPage>* s = tab->selectionOnPage;
     for (auto& sel : *s) {
@@ -3831,7 +3831,6 @@ bool MakeHiglightAnnotationFromSelection(TabInfo* tab, int pageNo) {
     DeleteOldSelectionInfo(win, true);
     WindowInfoRerender(win);
     StartEditAnnotations(win->currentTab, annot);
-    delete annot;
     return true;
 }
 
@@ -3988,7 +3987,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             OnFrameKeyM(win);
             break;
         case 'a':
-            MakeHiglightAnnotationFromSelection(win->currentTab, win->currPageNo);
+            MakeAnnotationFromSelection(win->currentTab, AnnotationType::Highlight, win->currPageNo);
             break;
     }
 }

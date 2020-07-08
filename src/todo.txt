@@ -1,6 +1,4 @@
 Annotations:
- - fix MakeHiglightAnnotationFromSelection which builds quads, like do_edit_quad_points
-   in gl-annotate.c
  - save attachment
  - add attachment
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)

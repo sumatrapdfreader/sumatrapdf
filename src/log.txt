@@ -1,5 +1,10 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2020-07-07 Tue
+
+Added creation of highlight, squiggly, strikeout and underline
+annotations.
+
 2020-07-06 Mon
 
 Fixed a bunch of issues related to bugs in freetype and not
