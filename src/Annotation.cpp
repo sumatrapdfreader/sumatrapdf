@@ -148,12 +148,34 @@ bool Annotation::SetQuadding(int newQuadding) {
     return true;
 }
 
-void Annotation::SetQuadPointsAsRect(Vec<RectFl> rects) {
-    UNUSED(rects);
+void Annotation::SetQuadPointsAsRect(const Vec<RectFl>& rects) {
+    fz_quad quads[1000];
+    int n = rects.size();
+    if (n == 0) {
+        return;
+    }
+    constexpr int kMaxQuads = (int)dimof(quads);
+    for (int i = 0; i < n && i < kMaxQuads; i++) {
+        RectFl rect = rects[i];
+        fz_rect r = To_fz_rect(rect);
+        fz_quad q = fz_quad_from_rect(r);
+        quads[i] = q;
+    }
+    pdf_clear_annot_quad_points(pdf->ctx, pdf->annot);
+    pdf_set_annot_quad_points(pdf->ctx, pdf->annot, n, quads);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
+    isChanged = true;
 }
 
 Vec<RectFl> Annotation::GetQuadPointsAsRect() {
     Vec<RectFl> res;
+    int n = pdf_annot_quad_point_count(pdf->ctx, pdf->annot);
+    for (int i = 0; i < n; i++) {
+        fz_quad q = pdf_annot_quad_point(pdf->ctx, pdf->annot, i);
+        fz_rect r = fz_rect_from_quad(q);
+        RectFl rect =ToRectFl(r);
+        res.Append(rect);
+    }
     return res;
 }
 

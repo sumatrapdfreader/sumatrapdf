@@ -20,7 +20,7 @@ struct SelectionOnPage {
 };
 
 void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel = false);
-void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, BYTE alpha = 0x5f,
+void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha = 0x5f,
                                 int margin = 1);
 void PaintSelection(WindowInfo* win, HDC hdc);
 void UpdateTextSelection(WindowInfo* win, bool select = true);
