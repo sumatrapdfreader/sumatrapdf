@@ -1946,10 +1946,10 @@ static const char* getuser(void) {
 
 Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointFl pos) {
     CrashIf(engine->kind != kindEnginePdf);
-    EnginePdf* enginePdf = (EnginePdf*)engine;
-    fz_context* ctx = enginePdf->ctx;
+    EnginePdf* epdf = (EnginePdf*)engine;
+    fz_context* ctx = epdf->ctx;
 
-    auto pageInfo = enginePdf->GetFzPageInfo(pageNo, true);
+    auto pageInfo = epdf->GetFzPageInfo(pageNo, true);
     auto page = pdf_page_from_fz_page(ctx, pageInfo->page);
     enum pdf_annot_type atyp = (enum pdf_annot_type)typ;
     auto annot = pdf_create_annot(ctx, page, atyp);
@@ -1993,13 +1993,13 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, in
 
 int EnginePdfGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
     CrashIf(engine->kind != kindEnginePdf);
-    EnginePdf* enginePdf = (EnginePdf*)engine;
-    return enginePdf->GetAnnotations(annotsOut);
+    EnginePdf* epdf = (EnginePdf*)engine;
+    return epdf->GetAnnotations(annotsOut);
 }
 
 bool EnginePdfHasUnsavedAnnotations(EngineBase* engine) {
     CrashIf(engine->kind != kindEnginePdf);
-    EnginePdf* enginePdf = (EnginePdf*)engine;
-    // TODO: implement me
-    return false;
+    EnginePdf* epdf = (EnginePdf*)engine;
+    pdf_document* pdfdoc = pdf_document_from_fz_document(epdf->ctx, epdf->_doc);
+    return pdfdoc->dirty;
 }

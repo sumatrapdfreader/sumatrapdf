@@ -9,6 +9,11 @@ Replaced EnginePdf::IsLinearizedFile() with mupdf's pdf_doc_was_linearized.
 It didn't exist when IsLinearizedFile() was written.
 Removing code feels good.
 
+Parallelized doit -clang-format. Go concurrency is a joy.
+
+implement EnginePdfHasUnsavedAnnotations() and bug-fix detection
+of when to show 'Save PDF' button in annotations editor.
+
 2020-07-06 Mon
 
 Fixed a bunch of issues related to bugs in freetype and not

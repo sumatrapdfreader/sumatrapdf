@@ -272,6 +272,21 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
     delete lbModel;
 }
 
+static bool DidAnnotationsChange(EditAnnotationsWindow* win) {
+    EngineBase* engine = win->tab->AsFixed()->GetEngine();
+    return EnginePdfHasUnsavedAnnotations(engine);
+}
+
+static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* win) {
+    bool didChange = DidAnnotationsChange(win);
+    if (didChange) {
+        win->staticSaveTip->SetTextColor(MkRgb(0, 0, 0));
+    } else {
+        win->staticSaveTip->SetTextColor(MkRgb(0xcc, 0xcc, 0xcc));
+    }
+    win->buttonSavePDF->SetIsEnabled(didChange);
+}
+
 static void RebuildAnnotations(EditAnnotationsWindow* win) {
     auto model = new ListBoxModelStrings();
     int n = 0;
@@ -294,6 +309,7 @@ static void RebuildAnnotations(EditAnnotationsWindow* win) {
     win->listBox->SetModel(model);
     delete win->lbModel;
     win->lbModel = model;
+    EnableSaveIfAnnotationsChanged(win);
 }
 
 static void WndCloseHandler(EditAnnotationsWindow* win, WindowCloseEvent* ev) {
@@ -359,24 +375,6 @@ static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
     DeleteAnnotations(win);
     SetAnnotations(win, tab);
     UpdateUIForSelectedAnnotation(win, -1);
-}
-
-static void EnableSaveIfAnnotationsChanged(EditAnnotationsWindow* win) {
-    bool didChange = false;
-    if (win->annotations) {
-        for (auto& annot : *win->annotations) {
-            if (annot->isChanged || annot->isDeleted) {
-                didChange = true;
-                break;
-            }
-        }
-    }
-    if (didChange) {
-        win->staticSaveTip->SetTextColor(MkRgb(0, 0, 0));
-    } else {
-        win->staticSaveTip->SetTextColor(MkRgb(0xcc, 0xcc, 0xcc));
-    }
-    win->buttonSavePDF->SetIsEnabled(didChange);
 }
 
 static void ItemsFromSeqstrings(Vec<std::string_view>& items, const char* strings) {
