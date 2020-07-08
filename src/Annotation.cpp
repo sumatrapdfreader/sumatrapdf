@@ -133,8 +133,8 @@ bool Annotation::SetQuadding(int newQuadding) {
 }
 
 void Annotation::SetQuadPointsAsRect(const Vec<RectFl>& rects) {
-    fz_quad quads[1000];
-    int n = rects.size();
+    fz_quad quads[512];
+    int n = rects.isize();
     if (n == 0) {
         return;
     }
