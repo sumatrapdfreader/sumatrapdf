@@ -368,7 +368,6 @@ class EnginePdf : public EngineBase {
     fz_matrix viewctm(fz_page* page, float zoom, int rotation);
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment);
     WCHAR* ExtractFontList();
-    bool IsLinearizedFile();
 
     std::span<u8> LoadStreamFromPDFFile(const WCHAR* filePath);
 };
@@ -765,6 +764,20 @@ static PageLayoutType GetPreferredLayout(fz_context* ctx, pdf_document* doc) {
     return layout;
 }
 
+static bool IsLinearizedFile(EnginePdf* e) {
+    ScopedCritSec scope(e->ctxAccess);
+
+    pdf_document* doc = pdf_document_from_fz_document(e->ctx, e->_doc);
+    int isLinear = 0;
+    fz_try(e->ctx) {
+        isLinear = pdf_doc_was_linearized(e->ctx, doc);
+    }
+    fz_catch(e->ctx) {
+        isLinear = 0;
+    }
+    return isLinear;
+}
+
 bool EnginePdf::FinishLoading() {
     pageCount = 0;
     fz_try(ctx) {
@@ -845,7 +858,7 @@ bool EnginePdf::FinishLoading() {
             _info = pdf_new_dict(ctx, doc, 4);
         }
         // also remember linearization and tagged states at this point
-        if (IsLinearizedFile()) {
+        if (IsLinearizedFile(this)) {
             pdf_dict_puts_drop(ctx, _info, "Linearized", PDF_TRUE);
         }
         pdf_obj* trailer = pdf_trailer(ctx, doc);
@@ -1461,68 +1474,6 @@ PageText EnginePdf::ExtractPageText(int pageNo) {
     res.text = text;
     res.len = (int)str::Len(text);
     return res;
-}
-
-bool EnginePdf::IsLinearizedFile() {
-    ScopedCritSec scope(ctxAccess);
-    // determine the object number of the very first object in the file
-    pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
-    fz_seek(ctx, doc->file, 0, 0);
-    int tok = pdf_lex(ctx, doc->file, &doc->lexbuf.base);
-    if (tok != PDF_TOK_INT) {
-        return false;
-    }
-    int num = doc->lexbuf.base.i;
-    if (num < 0 || num >= pdf_xref_len(ctx, doc)) {
-        return false;
-    }
-    // check whether it's a linearization dictionary
-    fz_try(ctx) {
-        pdf_cache_object(ctx, doc, num);
-    }
-    fz_catch(ctx) {
-        return false;
-    }
-    pdf_obj* obj = pdf_get_xref_entry(ctx, doc, num)->obj;
-    if (!pdf_is_dict(ctx, obj)) {
-        return false;
-    }
-    // /Linearized format must be version 1.0
-    if (pdf_to_real(ctx, pdf_dict_gets(ctx, obj, "Linearized")) != 1.0f) {
-        return false;
-    }
-    // /L must be the exact file size
-    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "L")) != doc->file_size) {
-        return false;
-    }
-
-    // /O must be the object number of the first page
-    // TODO(port): at this point we don't have _pages loaded yet. for now always return false here
-    auto fzpage = _pages[0]->page;
-    if (!fzpage) {
-        return false;
-    }
-    pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
-
-    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "O")) != pdf_to_num(ctx, page->obj)) {
-        return false;
-    }
-
-    // /N must be the total number of pages
-    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "N")) != PageCount()) {
-        return false;
-    }
-    // /H must be an array and /E and /T must be integers
-    bool ok = pdf_is_array(ctx, pdf_dict_gets(ctx, obj, "H"));
-    if (!ok) {
-        return false;
-    }
-    ok = pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "E"));
-    if (!ok) {
-        return false;
-    }
-    ok = pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "T"));
-    return ok;
 }
 
 static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList) {

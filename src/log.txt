@@ -5,6 +5,10 @@ A daily log of changes and commentary. An experiment of sorts.
 Added creation of highlight, squiggly, strikeout and underline
 annotations.
 
+Replaced EnginePdf::IsLinearizedFile() with mupdf's pdf_doc_was_linearized.
+It didn't exist when IsLinearizedFile() was written.
+Removing code feels good.
+
 2020-07-06 Mon
 
 Fixed a bunch of issues related to bugs in freetype and not
