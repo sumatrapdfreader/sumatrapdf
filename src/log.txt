@@ -19,6 +19,8 @@ update mupdf.
 this was a big one because mupdf switched to using gumbo
 as html/xml parser.
 
+tweak premake definitions
+
 2020-07-06 Mon
 
 Fixed a bunch of issues related to bugs in freetype and not

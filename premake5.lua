@@ -60,6 +60,20 @@ function configAsan()
   filter {}
 end
 
+function regconf()
+  filter "configurations:Debug"
+    defines { "DEBUG" }
+  filter {}
+
+  filter "configurations:Release*"
+    defines { "NDEBUG" }
+    flags {
+      "LinkTimeOptimization",
+    }
+    optimize "On"
+  filter {}
+end
+
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleaseAnalyze", }
   platforms { "x32", "x32_asan", "x64", "x64_ramicro" }
@@ -159,32 +173,20 @@ workspace "SumatraPDF"
   exceptionhandling "Off"
   rtti "Off"
 
-  defines { 
-    "WIN32", 
+  defines {
+    "WIN32",
     "_WIN32",
-    "_CRT_SECURE_NO_WARNINGS",
     -- https://docs.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=vs-2019
     "WINVER=0x0605", -- latest Windows SDK
     "_WIN32_WINNT=0x0603"
   }
-
-  filter "configurations:Debug"
-    defines { "DEBUG" }
-  filter {}
-
-  filter "configurations:Release*"
-    defines { "NDEBUG" }
-    flags {
-      "LinkTimeOptimization",
-    }
-    optimize "On"
-  filter {}
 
   include("premake5.opt.lua")
 
   project "zlib"
     kind "StaticLib"
     language "C"
+    regconf()
     disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
@@ -192,6 +194,7 @@ workspace "SumatraPDF"
   project "unrar"
     kind "StaticLib"
     language "C++"
+    regconf()
     defines { "UNRAR", "RARDLL", "SILENT" }
     disablewarnings { "4100", "4201", "4211", "4244", "4389", "4456", "4459", "4701", "4702", "4706", "4709", "4996" }
     -- unrar uses exception handling in savepos.hpp but I don't want to enable it
@@ -208,7 +211,15 @@ workspace "SumatraPDF"
     kind "StaticLib"
     characterset ("MBCS")
     language "C++"
-    defines { "NEED_JPEG_DECODER", "WINTHREADS=1", "DDJVUAPI=/**/", "MINILISPAPI=/**/", "DEBUGLVL=0" }
+    regconf()
+    defines {
+      "_CRT_SECURE_NO_WARNINGS",
+      "NEED_JPEG_DECODER",
+      "WINTHREADS=1",
+      "DDJVUAPI=/**/",
+      "MINILISPAPI=/**/",
+      "DEBUGLVL=0"
+    }
     filter {"platforms:x32_asan"}
       defines { "DISABLE_MMX" }
     filter{}
@@ -221,6 +232,7 @@ workspace "SumatraPDF"
   project "wdl"
     kind "StaticLib"
     language "C++"
+    regconf()
     includedirs  { "ext/WDL" }
     disablewarnings { "4018", "4100", "4244", "4505", "4456", "4457", "4245", "4505", "4701", "4706", "4996" }
     characterset "MBCS"
@@ -230,6 +242,7 @@ workspace "SumatraPDF"
   project "unarrlib"
     kind "StaticLib"
     language "C"
+    regconf()
     -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
     -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
@@ -242,7 +255,8 @@ workspace "SumatraPDF"
   project "jbig2dec"
     kind "StaticLib"
     language "C"
-    defines { "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
+    regconf()
+    defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
     disablewarnings { "4018", "4100", "4146", "4244", "4267", "4456", "4701" }
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
@@ -251,20 +265,21 @@ workspace "SumatraPDF"
   project "openjpeg"
     kind "StaticLib"
     language "C"
+    regconf()
     disablewarnings { "4100", "4244", "4310" }
-
     -- openjpeg has opj_config_private.h for such over-rides
     -- but we can't change it because we bring openjpeg as submodule
     -- and we can't provide our own in a different directory because
     -- msvc will include the one in ext/openjpeg/src/lib/openjp2 first
     -- because #include "opj_config_private.h" searches current directory first
-    defines { "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
+    defines { "_CRT_SECURE_NO_WARNINGS", "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
 
 
   project "libwebp"
     kind "StaticLib"
     language "C"
+    regconf()
     disablewarnings { "4204", "4244", "4057", "4245", "4310" }
     includedirs { "ext/libwebp" }
     libwebp_files()
@@ -273,6 +288,8 @@ workspace "SumatraPDF"
   project "libjpeg-turbo"
     kind "StaticLib"
     language "C"
+    regconf()
+    defines { "_CRT_SECURE_NO_WARNINGS" }
     disablewarnings { "4018", "4100", "4244", "4245" }
     includedirs { "ext/libjpeg-turbo", "ext/libjpeg-turbo/simd" }
 
@@ -301,6 +318,7 @@ workspace "SumatraPDF"
   project "freetype"
     kind "StaticLib"
     language "C"
+    regconf()
     defines {
       "FT2_BUILD_LIBRARY",
       "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
@@ -313,14 +331,18 @@ workspace "SumatraPDF"
   project "lcms2"
     kind "StaticLib"
     language "C"
+    regconf()
     includedirs { "ext/lcms2/include" }
     lcms2_files()
+
 
   project "harfbuzz"
     kind "StaticLib"
     language "C"
+    regconf()
     includedirs { "ext/harfbuzz/src/hb-ucdn", "mupdf/scripts/freetype", "ext/freetype/include" }
     defines {
+      "_CRT_SECURE_NO_WARNINGS",
       "HAVE_FALLBACK=1",
       "HAVE_OT",
       "HAVE_UCDN",
@@ -338,6 +360,7 @@ workspace "SumatraPDF"
   project "mujs"
     kind "StaticLib"
     language "C"
+    regconf()
     includedirs { "ext/mujs" }
     disablewarnings { "4090", "4100", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
@@ -346,6 +369,7 @@ workspace "SumatraPDF"
   project "chm"
     kind "StaticLib"
     language "C"
+    regconf()
     defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
     files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
@@ -355,6 +379,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     disablewarnings {
       "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457",
       "4701", "4706", "4819", "4838"
@@ -368,7 +393,7 @@ workspace "SumatraPDF"
   project "gumbo"
     kind "StaticLib"
     language "C"
-    undefines { "_CRT_SECURE_NO_WARNINGS" }
+    regconf()
     disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", "4305", "4306", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
@@ -376,7 +401,7 @@ workspace "SumatraPDF"
   project "mupdf"
     kind "StaticLib"
     language "C"
-
+    regconf()
     -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
     -- so we can't double-define it
     defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
@@ -430,6 +455,7 @@ workspace "SumatraPDF"
   project "libmupdf-reg"
     kind "SharedLib"
     language "C"
+    regconf()
     disablewarnings { "4206", "4702" }
     defines { "FZ_ENABLE_SVG" }
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
@@ -451,10 +477,8 @@ workspace "SumatraPDF"
   project "libmupdf"
     kind "SharedLib"
     language "C"
+    optconf()
     disablewarnings { "4206", "4702" }
-    optimize "On"
-    undefines { "DEBUG" }
-    defines { "NDEBUG" }
     defines { "FZ_ENABLE_SVG" }
 
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
@@ -477,7 +501,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
-
+    regconf()
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
       -- over-ride from cl.exe. Don't know how to disable the warning
@@ -548,6 +572,7 @@ workspace "SumatraPDF"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     includedirs { "src", "src/wingui", "mupdf/include" }
     disablewarnings { "4100", "4267", "4457" }
     engine_dump_files()
@@ -561,6 +586,7 @@ workspace "SumatraPDF"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     disablewarnings { "4838" }
     defines { "NO_LIBMUPDF" }
     includedirs { "src" }
@@ -573,6 +599,7 @@ workspace "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     entrypoint "WinMainCRTStartup"
     includedirs { "src" }
     files { "src/tools/plugin-test.cpp" }
@@ -584,6 +611,7 @@ workspace "SumatraPDF"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     makelzsa_files()
     includedirs { "src", "ext/zlib", "ext/lzma/C", "ext/unarr" }
     links { "unarrlib", "zlib" }
@@ -594,6 +622,7 @@ workspace "SumatraPDF"
     kind "SharedLib"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     disablewarnings { "4100", "4838" }
     filter {"configurations:Debug"}
       defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
@@ -608,6 +637,7 @@ workspace "SumatraPDF"
     kind "SharedLib"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     disablewarnings { "4100", "4838" }
     includedirs {
       "src", "src/wingui", "mupdf/include",
@@ -633,6 +663,7 @@ workspace "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include", "ext/WDL" }
@@ -642,7 +673,7 @@ workspace "SumatraPDF"
     uia_files()
     sumatrapdf_files()
 
-    -- TODO: just remove conditional code as if it was defined
+    defines { "_CRT_SECURE_NO_WARNINGS" }
     defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
 
     filter "configurations:ReleaseAnalyze"
@@ -681,6 +712,7 @@ workspace "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     cppdialect "C++latest"
+    regconf()
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include", "ext/WDL" }
@@ -690,6 +722,7 @@ workspace "SumatraPDF"
     uia_files()
     sumatrapdf_files()
 
+    defines { "_CRT_SECURE_NO_WARNINGS" }
     defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
 
     filter "configurations:ReleaseAnalyze"
