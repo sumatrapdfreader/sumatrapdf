@@ -4,106 +4,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <gumbo.h>
+
 /* #define FZ_XML_SEQ */
-
-/* We bend the XML parser slightly when it's reading for HTML.
- * To do this, we use extra knowledge about HTML tags, expressed
- * in the table in a header. */
-
-#define START_OPTIONAL 1
-#define END_OPTIONAL 2
-#define END_FORBIDDEN 4
-#define DEPRECATED 8
-#define DTD_LOOSE 16
-#define DTD_FRAMESET 32
-/* The following values are added by us. */
-/* If a tag can contain nested instances of itself, we
- * mark it as being a container. */
-#define CONTAINER 64
-/* Table tags autoclose each other in complex ways. */
-#define TABLE_SHIFT 7
-#define TABLE_MASK 7
-/* Which level of a table are we? */
-/* 128 * 1 = TABLE
- * 128 * 2 = COLGROUP
- * 128 * 3 = COL
- * 128 * 4 = THEAD/TBODY/TFOOT
- * 128 * 5 = TR
- * 128 * 6 = TD/TH
- * Any table tag, will be autoclosed by the opening of another table tag
- * (within the same container) of a smaller level than it. */
-#define IMPLIES_SHIFT 10
-#define IMPLIES_SHIFT2 17
-#define IMPLIES_SHIFT3 24
-#define IMPLIES_MASK 127
-/* If a tag should always be contained within another one, we
- * indicate this with an 'implies'. TABLE tags never imply
- * out of the current table. */
-
-typedef struct { char tag[16]; int flags; } fz_xml_html_tag_t;
-
-#define HTML_TAG(A,B,C,D,E) fz_xml_html_tag_ ## A
-
-enum
-{
-	fz_xml_html_tag__NONE,
-#include "html-tags.h"
-	, fz_xml_html_tag__NUMTAGS
-};
-
-#define HTML_TAG(A,B,C,D,E) { # A, E | (fz_xml_html_tag_ ## B << IMPLIES_SHIFT) | (fz_xml_html_tag_ ## C << IMPLIES_SHIFT2)  | (fz_xml_html_tag_ ## D << IMPLIES_SHIFT3) }
-
-fz_xml_html_tag_t html_tags[] =
-{
-	{ "", 0 },
-#include "html-tags.h"
-};
-
-/*
-When parsing XML, we assume that all tags are properly terminated.
-i.e. <foo> has </foo>  or <foo />.
-We currently don't check this at all. In fact, we generate an incorrect
-tree if this isn't the case.
-
-For example:
-
-<a><b><c></b><d></d></a>
-
-Will produce:
-  a
-  b
-  cd
-
-Rather than:
-  a
-  bd
-  c
-
-Over the course of a large HTML file, this can lead to HUGE "south easterly" skew
-in the tree.
-
-This happens because (when parsing pure xml) when we hit </d>, we don't check that the tag we are closing is actually a <d>.
-
-So, some heuristics to use when parsing HTML:
-  * When we open a tag 'foo', if we are immediately in another 'foo', then close the first 'foo' first.
-  * When we close a tag 'foo', run up the stack looking for an enclosing 'foo'. If we find one, close
-	everything up to and including that. If we don't find one, don't close anything.
-
-With these heuristics, we get the following for free:
-  * A TD closes any other TD.
-  * A /TR closes and open TD.
-  * A TR closes any open TR.
-
-This leaves problems with:
-  * Nested tables.
-  * Nested divs.
-  * Nested spans.
-
-Tables, divs and spans (let alone nested ones) are problematic anyway. Ignore
-this for now.
-
-We could special case TABLE, DIV and SPAN so appropriate tags don't pop up past them.
-*/
 
 static const struct { const char *name; int c; } html_entities[] = {
 	{"nbsp",160}, {"iexcl",161}, {"cent",162}, {"pound",163},
@@ -173,7 +76,6 @@ struct parser
 	fz_pool *pool;
 	fz_xml *head;
 	int preserve_white;
-	int for_html;
 	int depth;
 #ifdef FZ_XML_SEQ
 	int seq;
@@ -419,7 +321,7 @@ void fz_detach_xml(fz_context *ctx, fz_xml_doc *xml, fz_xml *node)
 	xml->root = node;
 }
 
-static size_t xml_parse_entity(int *c, char *a)
+static size_t xml_parse_entity(int *c, const char *a)
 {
 	char *b;
 	size_t i;
@@ -479,75 +381,30 @@ static inline int iswhite(int c)
 	return c == ' ' || c == '\r' || c == '\n' || c == '\t';
 }
 
-static int
-find_html_tag(const char *tag, size_t len)
-{
-	int low = 0;
-	int high = nelem(html_tags);
-	int mid;
-
-	while (low != high)
-	{
-		int cmp;
-		mid = (low + high)>>1;
-		cmp = strncmp(html_tags[mid].tag, tag, len);
-		if (cmp == 0)
-			cmp = html_tags[mid].tag[len];
-		if (cmp == 0)
-			return mid;
-		if (cmp < 0)
-			low = mid+1;
-		else
-			high = mid;
-	}
-
-	return fz_xml_html_tag__NONE;
-}
-
-static int xml_emit_open_tag(fz_context *ctx, struct parser *parser, char *a, char *b, int is_text)
+static void xml_emit_open_tag(fz_context *ctx, struct parser *parser, const char *a, const char *b, int is_text)
 {
 	fz_xml *head, *tail;
+	const char *ns;
 	size_t size;
-	int autoclose = 0;
 
 	if (is_text)
 		size = offsetof(fz_xml, u.text) + b-a+1;
 	else
+	{
+		/* skip namespace prefix */
+		for (ns = a; ns < b - 1; ++ns)
+			if (*ns == ':')
+				a = ns + 1;
+
 		size = offsetof(fz_xml, u.d.name) + b-a+1;
+	}
 	head = fz_pool_alloc(ctx, parser->pool, size);
 
 	if (is_text)
 		head->down = MAGIC_TEXT;
 	else
 	{
-		if (parser->for_html)
-		{
-			int tag_num;
-
-			/* Lowercase the tag */
-			char *s = head->u.d.name;
-			char *t = a;
-			while (t != b)
-			{
-				char c = *t++;
-				if (c >= 'A' && c <= 'Z')
-					c += 'a' - 'A';
-				*s++ = c;
-			}
-
-			tag_num = find_html_tag(head->u.d.name, b-a);
-			if (tag_num != fz_xml_html_tag__NONE && (html_tags[tag_num].flags & END_FORBIDDEN))
-				autoclose = 1;
-			/* If parsing as HTML, and we see a FictionBook tag, turn off HTML fixups. */
-			if (tag_num == fz_xml_html_tag_fictionbook)
-			{
-				/* Restore original case. */
-				memcpy(head->u.d.name, "FictionBook", 11);
-				parser->for_html = 0;
-			}
-		}
-		else
-			memcpy(head->u.d.name, a, b - a);
+		memcpy(head->u.d.name, a, b - a);
 		head->u.d.name[b - a] = 0;
 		head->u.d.atts = NULL;
 		head->down = NULL;
@@ -576,11 +433,9 @@ static int xml_emit_open_tag(fz_context *ctx, struct parser *parser, char *a, ch
 
 	parser->head = head;
 	parser->depth++;
-
-	return autoclose;
 }
 
-static void xml_emit_att_name(fz_context *ctx, struct parser *parser, char *a, char *b)
+static void xml_emit_att_name(fz_context *ctx, struct parser *parser, const char *a, const char *b)
 {
 	fz_xml *head = parser->head;
 	struct attribute *att;
@@ -595,7 +450,7 @@ static void xml_emit_att_name(fz_context *ctx, struct parser *parser, char *a, c
 	head->u.d.atts = att;
 }
 
-static void xml_emit_att_value(fz_context *ctx, struct parser *parser, char *a, char *b)
+static void xml_emit_att_value(fz_context *ctx, struct parser *parser, const char *a, const char *b)
 {
 	fz_xml *head = parser->head;
 	struct attribute *att = head->u.d.atts;
@@ -624,9 +479,10 @@ static void xml_emit_close_tag(fz_context *ctx, struct parser *parser)
 		parser->head = parser->head->up;
 }
 
-static void xml_emit_text(fz_context *ctx, struct parser *parser, char *a, char *b)
+static void xml_emit_text(fz_context *ctx, struct parser *parser, const char *a, const char *b)
 {
 	fz_xml *head;
+	const char *p;
 	char *s;
 	int c;
 
@@ -637,14 +493,14 @@ static void xml_emit_text(fz_context *ctx, struct parser *parser, char *a, char 
 	/* Skip all-whitespace text nodes */
 	if (!parser->preserve_white)
 	{
-		for (s = a; s < b; s++)
-			if (!iswhite(*s))
+		for (p = a; p < b; p++)
+			if (!iswhite(*p))
 				break;
-		if (s == b)
+		if (p == b)
 			return;
 	}
 
-	(void)xml_emit_open_tag(ctx, parser, a, b, 1);
+	xml_emit_open_tag(ctx, parser, a, b, 1);
 	head = parser->head;
 
 	/* entities are all longer than UTFmax so runetochar is safe */
@@ -663,12 +519,12 @@ static void xml_emit_text(fz_context *ctx, struct parser *parser, char *a, char 
 	xml_emit_close_tag(ctx, parser);
 }
 
-static void xml_emit_cdata(fz_context *ctx, struct parser *parser, char *a, char *b)
+static void xml_emit_cdata(fz_context *ctx, struct parser *parser, const char *a, const char *b)
 {
 	fz_xml *head;
 	char *s;
 
-	(void)xml_emit_open_tag(ctx, parser, a, b, 1);
+	xml_emit_open_tag(ctx, parser, a, b, 1);
 	head = parser->head;
 
 	s = head->u.text;
@@ -679,202 +535,34 @@ static void xml_emit_cdata(fz_context *ctx, struct parser *parser, char *a, char
 	xml_emit_close_tag(ctx, parser);
 }
 
-static int
-pop_to_tag(fz_context *ctx, struct parser *parser, char *mark, char *p)
+static int close_tag(fz_context *ctx, struct parser *parser, const char *mark, const char *p)
 {
-	fz_xml *to, *head;
+	const char *ns, *tag;
 
-	/* Run up from the tag */
-	if (parser->for_html)
-	{
-		for (to = parser->head; to; to = to->up)
-		{
-			char *tag = fz_xml_tag(to);
-			if (tag && fz_strncasecmp(tag, mark, p-mark) == 0 && tag[p-mark] == 0)
-				break; /* Found a matching tag */
-		}
-	}
-	else
-	{
-		for (to = parser->head; to; to = to->up)
-		{
-			char *tag = fz_xml_tag(to);
-			if (tag && strncmp(tag, mark, p-mark) == 0 && tag[p-mark] == 0)
-				break; /* Found a matching tag */
-		}
-	}
-
-	if (to == NULL)
-	{
-		/* We didn't find a matching enclosing tag. Don't close anything. */
-		return 0;
-	}
-
-	/* Pop everything up to and including this tag. */
-	for (head = parser->head; head != to; head = head->up)
-		xml_emit_close_tag(ctx, parser);
-	return 1;
-}
-
-static void
-open_implied(fz_context *ctx, struct parser *parser, int tag)
-{
-	fz_xml *head;
-	int implied, implied2, implied3, tag_num;
-	int table_level;
-
-	if (tag == fz_xml_html_tag__NONE)
-		return;
-
-	implied  = (html_tags[tag].flags >> IMPLIES_SHIFT) & IMPLIES_MASK;
-	implied2 = (html_tags[tag].flags >> IMPLIES_SHIFT2) & IMPLIES_MASK;
-	implied3 = (html_tags[tag].flags >> IMPLIES_SHIFT3) & IMPLIES_MASK;
-	if (implied == fz_xml_html_tag__NONE)
-		return;
-	if (implied2 == fz_xml_html_tag__NONE)
-		implied2 = implied;
-	if (implied3 == fz_xml_html_tag__NONE)
-		implied3 = implied;
-
-	/* So, check to see whether implied{,2,3} is present. */
-	table_level = (html_tags[tag].flags>>TABLE_SHIFT) & TABLE_MASK;
-	if (table_level != 0)
-	{
-		/* Table tag. Autoclose anything within the current TABLE
-		 * with >= table_level. */
-		fz_xml *close_to = NULL;
-		int implied_found = 0;
-		for (head = parser->head; head; head = head->up)
-		{
-			char *parent_tag = fz_xml_tag(head);
-			int level;
-
-			if (parent_tag == NULL)
-				continue;
-			tag_num = find_html_tag(parent_tag, strlen(parent_tag));
-			level = (html_tags[tag_num].flags>>TABLE_SHIFT) & TABLE_MASK;
-			if (level >= table_level)
-				close_to = head;
-			if (tag_num == implied || tag_num == implied2 || tag_num == implied3)
-				implied_found = 1;
-			if (tag_num == fz_xml_html_tag_table)
-				break;
-		}
-		if (close_to)
-		{
-			for (head = parser->head; head; head = head->up)
-			{
-				xml_emit_close_tag(ctx, parser);
-				if (head == close_to)
-					break;
-			}
-		}
-		if (!implied_found)
-		{
-			char *implied_tag = html_tags[implied].tag;
-			open_implied(ctx, parser, implied);
-			xml_emit_open_tag(ctx, parser, implied_tag, implied_tag + strlen(implied_tag), 0);
-		}
-	}
-	else
-	{
-		/* Non table tag. Open by implication. */
-		for (head = parser->head; head; head = head->up)
-		{
-			char *parent_tag = fz_xml_tag(head);
-
-			if (parent_tag == NULL)
-				continue;
-			tag_num = find_html_tag(parent_tag, strlen(parent_tag));
-			if (tag_num == implied || tag_num == implied2 || tag_num == implied3)
-				break;
-		}
-		if (head == NULL)
-		{
-			char *s = html_tags[implied].tag;
-			open_implied(ctx, parser, implied);
-			(void)xml_emit_open_tag(ctx, parser, s, s+strlen(s), 0);
-		}
-	}
-}
-
-/* When we meet a new tag, before we open it, there may be
- * things we should do first... */
-static void
-pre_open_tag(fz_context *ctx, struct parser *parser, char *mark, char *p)
-{
-	fz_xml *head = parser->head;
-	int tag_num;
-
-	if (!parser->for_html)
-		return;
-
-	tag_num = find_html_tag(mark, p-mark);
-
-	if (tag_num == fz_xml_html_tag__NONE)
-		return;
-
-	if ((html_tags[tag_num].flags & CONTAINER) == 0)
-	{
-		/* We aren't a container flag. This means that we should autoclose up to
-		 * any matching tags in the same container. */
-		fz_xml *which;
-		for (which = head; which; which = which->up)
-		{
-			char *tag = fz_xml_tag(which);
-			int tag_num2 = tag ? find_html_tag(tag, strlen(tag)) : fz_xml_html_tag__NONE;
-			if (tag_num == tag_num2)
-			{
-				/* Autoclose everything from head to which inclusive */
-				while (1)
-				{
-					int done = (head == which);
-					xml_emit_close_tag(ctx, parser);
-					head = head->up;
-					if (done)
-						break;
-				}
-				break;
-			}
-			if (html_tags[tag_num2].flags & CONTAINER)
-			{
-				/* Stop searching */
-				break;
-			}
-		}
-	}
-
-	/* Now, autoopen any tags implied by this one. */
-	open_implied(ctx, parser, tag_num);
-}
-
-static char *
-skip_namespace_prefix(char *mark, char *p)
-{
-	char *ns;
-
+	/* skip namespace prefix */
 	for (ns = mark; ns < p - 1; ++ns)
 		if (*ns == ':')
 			mark = ns + 1;
 
-	return mark;
+	tag = fz_xml_tag(parser->head);
+	if (tag && strncmp(tag, mark, p-mark) == 0 && tag[p-mark] == 0)
+	{
+		xml_emit_close_tag(ctx, parser);
+		return 0;
+	}
+	return 1;
 }
 
-static char *xml_parse_document_imp(fz_context *ctx, struct parser *parser, char *p)
+static char *xml_parse_document_imp(fz_context *ctx, struct parser *parser, const char *p)
 {
-	char *mark;
+	const char *mark;
 	int quote;
-	int autoclose;
-	char *q;
 
 parse_text:
 	mark = p;
 	while (*p && *p != '<') ++p;
 	if (*p == '<') {
-		/* skip trailing newline before closing tag */
-		if (p[1] == '/' && mark < p - 1 && p[-1] == '\n')
-			xml_emit_text(ctx, parser, mark, p - 1);
-		else if (mark < p)
+		if (mark < p)
 			xml_emit_text(ctx, parser, mark, p);
 		++p;
 		goto parse_element;
@@ -941,27 +629,20 @@ parse_closing_element:
 	while (iswhite(*p)) ++p;
 	mark = p;
 	while (isname(*p)) ++p;
-	q = p;
+	if (close_tag(ctx, parser, mark, p))
+		return "opening and closing tag mismatch";
 	while (iswhite(*p)) ++p;
 	if (*p != '>')
 		return "syntax error in closing element";
-	mark = skip_namespace_prefix(mark, q);
-	if (pop_to_tag(ctx, parser, mark, q))
-		xml_emit_close_tag(ctx, parser);
 	++p;
 	goto parse_text;
 
 parse_element_name:
 	mark = p;
 	while (isname(*p)) ++p;
-	mark = skip_namespace_prefix(mark, p);
-	pre_open_tag(ctx, parser, mark, p);
-	autoclose = xml_emit_open_tag(ctx, parser, mark, p, 0);
+	xml_emit_open_tag(ctx, parser, mark, p, 0);
 	if (*p == '>') {
-		if (autoclose)
-			xml_emit_close_tag(ctx, parser);
 		++p;
-		if (*p == '\n') ++p; /* must skip linebreak immediately after an opening tag */
 		goto parse_text;
 	}
 	if (p[0] == '/' && p[1] == '>') {
@@ -978,10 +659,7 @@ parse_attributes:
 	if (isname(*p))
 		goto parse_attribute_name;
 	if (*p == '>') {
-		if (autoclose)
-			xml_emit_close_tag(ctx, parser);
 		++p;
-		if (*p == '\n') ++p; /* must skip linebreak immediately after an opening tag */
 		goto parse_text;
 	}
 	if (p[0] == '/' && p[1] == '>') {
@@ -1108,7 +786,7 @@ static char *convert_to_utf8(fz_context *ctx, unsigned char *s, size_t n, int *d
 }
 
 fz_xml_doc *
-fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white, int for_html)
+fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white)
 {
 	struct parser parser;
 	fz_xml_doc *xml = NULL;
@@ -1130,7 +808,6 @@ fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white, int for_html)
 	parser.pool = fz_new_pool(ctx);
 	parser.head = &root;
 	parser.preserve_white = preserve_white;
-	parser.for_html = for_html;
 	parser.depth = 0;
 #ifdef FZ_XML_SEQ
 	parser.seq = 0;
@@ -1142,7 +819,7 @@ fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white, int for_html)
 
 		error = xml_parse_document_imp(ctx, &parser, p);
 		if (error)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "%s", error);
+			fz_throw(ctx, FZ_ERROR_SYNTAX, "%s", error);
 
 		for (node = parser.head; node; node = node->up)
 			node->next = NULL;
@@ -1156,6 +833,161 @@ fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white, int for_html)
 	}
 	fz_always(ctx)
 	{
+		if (dofree)
+			fz_free(ctx, p);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_pool(ctx, parser.pool);
+		fz_rethrow(ctx);
+	}
+
+	return xml;
+}
+
+/*
+	Parse the contents of buffer into a tree of XML nodes, using the HTML5 syntax.
+
+	Gumbo doesn't check for malloc errors. Use our pool allocator and let it longjmp
+	out of Gumbo on allocation errors. At the end (success or fail) we release the
+	pool used for Gumbo's parse tree all at once.
+*/
+
+struct mem_gumbo {
+	fz_context *ctx;
+	fz_pool *pool;
+};
+
+static void *alloc_gumbo(void *ctx, size_t size)
+{
+	struct mem_gumbo *mem = ctx;
+	return fz_pool_alloc(mem->ctx, mem->pool, size);
+}
+
+static void dealloc_gumbo(void *ctx, void *ptr)
+{
+	/* nothing */
+}
+
+static void xml_from_gumbo(fz_context *ctx, struct parser *parser, GumboNode *node)
+{
+	unsigned int i;
+	const char *tag, *end, *sentinel;
+
+	switch (node->type)
+	{
+	case GUMBO_NODE_ELEMENT:
+		if (node->v.element.tag != GUMBO_TAG_UNKNOWN)
+		{
+			tag = gumbo_normalized_tagname(node->v.element.tag);
+			end = tag + strlen(tag);
+		}
+		else
+		{
+			tag = node->v.element.original_tag.data;
+			sentinel = tag + node->v.element.original_tag.length;
+			if (tag[0] == '<')
+				++tag;
+			for (end = tag; end < sentinel; ++end)
+				if (end[0] == '>' || end[0] == '/' || iswhite(end[0]))
+					break;
+		}
+		xml_emit_open_tag(ctx, parser, tag, end, 0);
+		for (i = 0; i < node->v.element.attributes.length; ++i)
+		{
+			GumboAttribute *att = node->v.element.attributes.data[i];
+			xml_emit_att_name(ctx, parser, att->name, att->name+strlen(att->name));
+			xml_emit_att_value(ctx, parser, att->value, att->value+strlen(att->value));
+		}
+		for (i = 0; i < node->v.element.children.length; ++i)
+		{
+			GumboNode *child = node->v.element.children.data[i];
+			xml_from_gumbo(ctx, parser, child);
+		}
+		xml_emit_close_tag(ctx, parser);
+		break;
+
+	case GUMBO_NODE_TEXT:
+	case GUMBO_NODE_CDATA:
+	case GUMBO_NODE_WHITESPACE:
+		xml_emit_text(ctx, parser, node->v.text.text, node->v.text.text+strlen(node->v.text.text));
+		break;
+
+	case GUMBO_NODE_DOCUMENT:
+	case GUMBO_NODE_COMMENT:
+	case GUMBO_NODE_TEMPLATE:
+		break;
+	}
+}
+
+fz_xml_doc *
+fz_parse_xml_from_html5(fz_context *ctx, fz_buffer *buf)
+{
+	struct parser parser;
+	fz_xml_doc *xml = NULL;
+	fz_xml root, *node;
+	char *p = NULL;
+	int dofree = 0;
+	unsigned char *s;
+	size_t n;
+	GumboOutput *soup = NULL;
+	GumboOptions opts;
+	struct mem_gumbo mem;
+
+	fz_var(mem.pool);
+	fz_var(soup);
+	fz_var(dofree);
+	fz_var(p);
+
+	/* ensure we are zero-terminated */
+	fz_terminate_buffer(ctx, buf);
+	n = fz_buffer_storage(ctx, buf, &s);
+
+	mem.ctx = ctx;
+	mem.pool = NULL;
+
+	memset(&root, 0, sizeof(root));
+	parser.pool = fz_new_pool(ctx);
+	parser.head = &root;
+	parser.preserve_white = 1;
+	parser.depth = 0;
+#ifdef FZ_XML_SEQ
+	parser.seq = 0;
+#endif
+
+	fz_try(ctx)
+	{
+		p = convert_to_utf8(ctx, s, n, &dofree);
+
+		mem.pool = fz_new_pool(ctx);
+		memset(&opts, 0, sizeof opts);
+		opts.allocator = alloc_gumbo;
+		opts.deallocator = dealloc_gumbo;
+		opts.userdata = &mem;
+		opts.tab_stop = 8;
+		opts.stop_on_first_error = 0;
+		opts.max_errors = -1;
+		opts.fragment_context = GUMBO_TAG_LAST;
+		opts.fragment_namespace = GUMBO_NAMESPACE_HTML;
+
+		soup = gumbo_parse_with_options(&opts, (const char *)p, strlen(p));
+
+		xml_from_gumbo(ctx, &parser, soup->root);
+
+		for (node = parser.head; node; node = node->up)
+			node->next = NULL;
+		for (node = root.down; node; node = node->next)
+			node->up = NULL;
+
+		xml = fz_pool_alloc(ctx, parser.pool, sizeof *xml);
+		xml->pool = parser.pool;
+		xml->root = root.down;
+	}
+	fz_always(ctx)
+	{
+		if (soup)
+			gumbo_destroy_output(&opts, soup);
+		fz_drop_pool(ctx, mem.pool);
 		if (dofree)
 			fz_free(ctx, p);
 	}

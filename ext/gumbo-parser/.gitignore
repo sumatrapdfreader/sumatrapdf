@@ -1,0 +1,79 @@
+# Compilation artifacts
+*.o
+*.lo
+*.la
+
+# Editor swap files
+*.swp
+*.swo
+*.swn
+
+#emacs editor leftovers
+*.*~
+
+#diff leftovers
+*.orig
+
+# gtest pieces
+gtest
+gtest-1.7.0
+
+# Other build artifacts
+/Debug
+/visualc/Debug
+/visualc/Release
+/visualc/gumbo.sdf
+/visualc/gumbo.opensdf
+/build
+.log
+.sdf
+.opensdf
+.deps
+.dirstamp
+.libs
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+compile
+config.guess
+config.log
+config.status
+config.sub
+configure
+depcomp
+gumbo.pc
+gumbo_test
+gumbo_test.log
+gumbo_test.trs
+install-sh
+libtool
+ltmain.sh
+m4/
+missing
+test-driver
+test-suite.log
+
+# gyp android artifacts
+gumbo_parser.target.mk
+
+# `make dist` artifacts
+/gumbo-[0-9].[0-9].tar.gz
+/gumbo-[0-9].[0-9]/
+
+# Python dist artifacts
+*.pyc
+*.dylib
+dist
+build
+python/gumbo.egg-info
+python/gumbo/libgumbo.so
+
+# Example binaries
+benchmark
+clean_text
+find_links
+get_title
+positions_of_class
+prettyprint
+serialize

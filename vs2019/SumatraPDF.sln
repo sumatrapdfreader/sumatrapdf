@@ -25,6 +25,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freetype", "freetype.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freetype-opt", "freetype-opt.vcxproj", "{29BAC146-151D-51EB-BEA2-89A1AAE41C6E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gumbo", "gumbo.vcxproj", "{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gumbo-opt", "gumbo-opt.vcxproj", "{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "harfbuzz", "harfbuzz.vcxproj", "{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "harfbuzz-opt", "harfbuzz-opt.vcxproj", "{51E9CBBE-3D4C-5B63-E6D1-9319D21327E6}"
@@ -339,6 +343,54 @@ Global
 		{29BAC146-151D-51EB-BEA2-89A1AAE41C6E}.Release|x64.Build.0 = Release|x64
 		{29BAC146-151D-51EB-BEA2-89A1AAE41C6E}.Release|x64_ramicro.ActiveCfg = Release x64_ramicro|x64
 		{29BAC146-151D-51EB-BEA2-89A1AAE41C6E}.Release|x64_ramicro.Build.0 = Release x64_ramicro|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Debug|Win32.Build.0 = Debug|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Debug|x32_asan.ActiveCfg = Debug x32_asan|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Debug|x32_asan.Build.0 = Debug x32_asan|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Debug|x64.ActiveCfg = Debug|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Debug|x64.Build.0 = Debug|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Debug|x64_ramicro.ActiveCfg = Debug x64_ramicro|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Debug|x64_ramicro.Build.0 = Debug x64_ramicro|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.ReleaseAnalyze|Win32.ActiveCfg = ReleaseAnalyze|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.ReleaseAnalyze|Win32.Build.0 = ReleaseAnalyze|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.ReleaseAnalyze|x32_asan.ActiveCfg = ReleaseAnalyze x32_asan|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.ReleaseAnalyze|x32_asan.Build.0 = ReleaseAnalyze x32_asan|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.ReleaseAnalyze|x64.ActiveCfg = ReleaseAnalyze|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.ReleaseAnalyze|x64.Build.0 = ReleaseAnalyze|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.ReleaseAnalyze|x64_ramicro.ActiveCfg = ReleaseAnalyze x64_ramicro|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.ReleaseAnalyze|x64_ramicro.Build.0 = ReleaseAnalyze x64_ramicro|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Release|Win32.ActiveCfg = Release|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Release|Win32.Build.0 = Release|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Release|x32_asan.ActiveCfg = Release x32_asan|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Release|x32_asan.Build.0 = Release x32_asan|Win32
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Release|x64.ActiveCfg = Release|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Release|x64.Build.0 = Release|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Release|x64_ramicro.ActiveCfg = Release x64_ramicro|x64
+		{1FE1880F-8BF5-B0C0-5477-5420C04AADF1}.Release|x64_ramicro.Build.0 = Release x64_ramicro|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Debug|Win32.Build.0 = Debug|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Debug|x32_asan.ActiveCfg = Debug x32_asan|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Debug|x32_asan.Build.0 = Debug x32_asan|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Debug|x64.ActiveCfg = Debug|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Debug|x64.Build.0 = Debug|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Debug|x64_ramicro.ActiveCfg = Debug x64_ramicro|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Debug|x64_ramicro.Build.0 = Debug x64_ramicro|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.ReleaseAnalyze|Win32.ActiveCfg = ReleaseAnalyze|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.ReleaseAnalyze|Win32.Build.0 = ReleaseAnalyze|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.ReleaseAnalyze|x32_asan.ActiveCfg = ReleaseAnalyze x32_asan|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.ReleaseAnalyze|x32_asan.Build.0 = ReleaseAnalyze x32_asan|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.ReleaseAnalyze|x64.ActiveCfg = ReleaseAnalyze|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.ReleaseAnalyze|x64.Build.0 = ReleaseAnalyze|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.ReleaseAnalyze|x64_ramicro.ActiveCfg = ReleaseAnalyze x64_ramicro|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.ReleaseAnalyze|x64_ramicro.Build.0 = ReleaseAnalyze x64_ramicro|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Release|Win32.ActiveCfg = Release|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Release|Win32.Build.0 = Release|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Release|x32_asan.ActiveCfg = Release x32_asan|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Release|x32_asan.Build.0 = Release x32_asan|Win32
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Release|x64.ActiveCfg = Release|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Release|x64.Build.0 = Release|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Release|x64_ramicro.ActiveCfg = Release x64_ramicro|x64
+		{BFEC5C7D-2B57-11F4-7495-C299E03EEF48}.Release|x64_ramicro.Build.0 = Release x64_ramicro|x64
 		{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}.Debug|Win32.Build.0 = Debug|Win32
 		{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}.Debug|x32_asan.ActiveCfg = Debug x32_asan|Win32

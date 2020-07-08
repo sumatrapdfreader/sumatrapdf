@@ -1,4 +1,4 @@
-Project         Version    Date      
+Project         Version    Date
 ----------------------------------
 bzip2           1.0.8      2019-07-21
   http://bzip.org/downloads.html
@@ -55,3 +55,6 @@ mujs            1.0.6      Apr 4, 2019
 
 UnRAR           5.9.3
   https://www.rarlab.com/rar_add.htm
+
+gumbo           0.10.1
+  https://github.com/google/gumbo-parser

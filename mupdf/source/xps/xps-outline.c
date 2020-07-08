@@ -91,7 +91,7 @@ xps_load_document_structure(fz_context *ctx, xps_document *doc, xps_fixdoc *fixd
 	part = xps_read_part(ctx, doc, fixdoc->outline);
 	fz_try(ctx)
 	{
-		xml = fz_parse_xml(ctx, part->data, 0, 0);
+		xml = fz_parse_xml(ctx, part->data, 0);
 		outline = xps_parse_document_structure(ctx, doc, fz_xml_root(xml));
 	}
 	fz_always(ctx)

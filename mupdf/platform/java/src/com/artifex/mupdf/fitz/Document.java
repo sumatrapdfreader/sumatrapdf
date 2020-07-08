@@ -153,6 +153,8 @@ public class Document
 	public int pageNumberFromLocation(Location loc) {
 		int nc = countChapters();
 		int start = 0;
+		if (loc == null)
+			return -1;
 		for (int i = 0; i < nc; ++i) {
 			if (i == loc.chapter)
 				return start + loc.page;
@@ -160,6 +162,8 @@ public class Document
 		}
 		return -1;
 	}
+
+	public native Quad[] search(int chapter, int page, String needle);
 
 	public native Location resolveLink(String uri);
 	public Location resolveLink(Outline link) {
@@ -179,6 +183,13 @@ public class Document
 	public long makeBookmark(Location loc) {
 		return makeBookmark(loc.chapter, loc.page);
 	}
+
+	public static final int PERMISSION_PRINT = (int) 'p';
+	public static final int PERMISSION_COPY = (int) 'c';
+	public static final int PERMISSION_EDIT = (int) 'e';
+	public static final int PERMISSION_ANNOTATE = (int) 'n';
+
+	public native boolean hasPermission(int permission);
 
 	public native boolean isUnencryptedPDF();
 

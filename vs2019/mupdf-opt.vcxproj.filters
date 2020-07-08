@@ -276,9 +276,6 @@
     <ClInclude Include="..\mupdf\source\fitz\glyphlist.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
-    <ClInclude Include="..\mupdf\source\fitz\html-tags.h">
-      <Filter>mupdf\source\fitz</Filter>
-    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\icc34.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>

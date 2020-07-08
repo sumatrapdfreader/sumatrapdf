@@ -355,8 +355,8 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
-    disablewarnings { 
-      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457", 
+    disablewarnings {
+      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457",
       "4701", "4706", "4819", "4838"
     }
     includedirs { "src", "src/wingui" }
@@ -364,6 +364,14 @@ workspace "SumatraPDF"
     engines_files()
     links { "chm" }
 
+
+  project "gumbo"
+    kind "StaticLib"
+    language "C"
+    undefines { "_CRT_SECURE_NO_WARNINGS" }
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", "4305", "4306", "4456", "4701" }
+    includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
+    gumbo_files()
 
   project "mupdf"
     kind "StaticLib"
@@ -396,7 +404,8 @@ workspace "SumatraPDF"
       "ext/mujs",
       "ext/harfbuzz/src",
       "ext/lcms2/include",
-    }
+      "ext/gumbo-parser/src",
+  }
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm
     filter {'files:**.asm', 'platforms:x32 or x32_asan'}
@@ -415,8 +424,7 @@ workspace "SumatraPDF"
       }
     filter {}
     mupdf_files()
-    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs" }
-
+    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs", "gumbo" }
 
   -- regular build with distinct debug / release builds
   project "libmupdf-reg"

@@ -72,7 +72,7 @@ xps_parse_remote_resource_dictionary(fz_context *ctx, xps_document *doc, char *b
 	part = xps_read_part(ctx, doc, part_name);
 	fz_try(ctx)
 	{
-		xml = fz_parse_xml(ctx, part->data, 0, 0);
+		xml = fz_parse_xml(ctx, part->data, 0);
 		if (!fz_xml_is_tag(fz_xml_root(xml), "ResourceDictionary"))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "expected ResourceDictionary element");
 

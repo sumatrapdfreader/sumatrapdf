@@ -168,14 +168,24 @@
     libjpeg_turbo_files()
 
     project "zlib-opt"
-    kind "StaticLib"
-    language "C"
-    optimize "On"
-    undefines { "DEBUG" }
-    defines { "NDEBUG" }
+        kind "StaticLib"
+        language "C"
+        optimize "On"
+        undefines { "DEBUG" }
+        defines { "NDEBUG" }
 
-    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
-    zlib_files()
+        disablewarnings { "4131", "4244", "4245", "4267", "4996" }
+        zlib_files()
+
+    project "gumbo-opt"
+        kind "StaticLib"
+        language "C"
+        optimize "On"
+        undefines { "DEBUG", "_CRT_SECURE_NO_WARNINGS" }
+        defines { "NDEBUG" }
+        disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", "4305", "4306", "4456", "4701" }
+        includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
+        gumbo_files()
 
     project "mupdf-opt"
         kind "StaticLib"
@@ -199,17 +209,18 @@
         -- with our build over-rides
 
         includedirs {
-        "mupdf/include",
-        "mupdf/generated",
-        "ext/jbig2dec",
-        "ext/libjpeg-turbo",
-        "ext/openjpeg/src/lib/openjp2",
-        "ext/zlib",
-        "mupdf/scripts/freetype",
-        "ext/freetype/include",
-        "ext/mujs",
-        "ext/harfbuzz/src",
-        "ext/lcms2/include",
+            "mupdf/include",
+            "mupdf/generated",
+            "ext/jbig2dec",
+            "ext/libjpeg-turbo",
+            "ext/openjpeg/src/lib/openjp2",
+            "ext/zlib",
+            "mupdf/scripts/freetype",
+            "ext/freetype/include",
+            "ext/mujs",
+            "ext/harfbuzz/src",
+            "ext/lcms2/include",
+            "ext/gumbo-parser/src",
         }
         -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
         -- .\mupdf\font_base14.asm
@@ -229,4 +240,4 @@
         }
         filter {}
         mupdf_files()
-        links { "zlib-opt", "libjpeg-turbo-opt", "freetype-opt", "jbig2dec-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "mujs-opt" }
+        links { "zlib-opt", "libjpeg-turbo-opt", "freetype-opt", "jbig2dec-opt", "openjpeg-opt", "lcms2-opt", "harfbuzz-opt", "mujs-opt", "gumbo-opt" }

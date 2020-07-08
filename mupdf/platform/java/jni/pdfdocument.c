@@ -984,3 +984,20 @@ FUN(PDFDocument_wasPureXFA)(JNIEnv *env, jobject self)
 
 	return val;
 }
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFDocument_wasLinearized)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument_safe(env, self);
+	jboolean val = JNI_FALSE;
+
+	if (!ctx || !pdf) return JNI_FALSE;
+
+	fz_try(ctx)
+		val = pdf_doc_was_linearized(ctx, pdf);
+	fz_catch(ctx)
+		return jni_rethrow(env, ctx), JNI_FALSE;
+
+	return val;
+}

@@ -2,6 +2,7 @@
 
 ifeq ($(USE_SYSTEM_LIBS),yes)
   USE_SYSTEM_FREETYPE := yes
+  USE_SYSTEM_GUMBO := yes
   USE_SYSTEM_HARFBUZZ := yes
   USE_SYSTEM_JBIG2DEC := yes
   USE_SYSTEM_JPEGXR := no # not available
@@ -61,6 +62,32 @@ $(OUT)/thirdparty/freetype/%.o: thirdparty/freetype/%.c
 		-DFT_CONFIG_MODULES_H=\"slimftmodules.h\" \
 		-DFT_CONFIG_OPTIONS_H=\"slimftoptions.h\" \
 		-DFT2_BUILD_LIBRARY
+
+endif
+
+# --- GUMBO (HTML5 parser) ---
+
+ifeq ($(USE_SYSTEM_GUMBO),yes)
+  THIRD_CFLAGS += $(SYS_GUMBO_CFLAGS)
+  THIRD_LIBS += $(SYS_GUMBO_LIBS)
+else
+
+THIRD_SRC += thirdparty/gumbo-parser/src/attribute.c
+THIRD_SRC += thirdparty/gumbo-parser/src/char_ref.c
+THIRD_SRC += thirdparty/gumbo-parser/src/error.c
+THIRD_SRC += thirdparty/gumbo-parser/src/parser.c
+THIRD_SRC += thirdparty/gumbo-parser/src/string_buffer.c
+THIRD_SRC += thirdparty/gumbo-parser/src/string_piece.c
+THIRD_SRC += thirdparty/gumbo-parser/src/tag.c
+THIRD_SRC += thirdparty/gumbo-parser/src/tokenizer.c
+THIRD_SRC += thirdparty/gumbo-parser/src/utf8.c
+THIRD_SRC += thirdparty/gumbo-parser/src/util.c
+THIRD_SRC += thirdparty/gumbo-parser/src/vector.c
+
+THIRD_CFLAGS += -Ithirdparty/gumbo-parser/src
+
+$(OUT)/thirdparty/gumbo-parser/%.o: thirdparty/gumbo-parser/%.c
+	$(CC_CMD) -Wno-sign-compare
 
 endif
 

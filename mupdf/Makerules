@@ -112,6 +112,10 @@ else ifeq ($(OS),Linux)
 	SYS_FREETYPE_CFLAGS := $(shell pkg-config --cflags freetype2)
 	SYS_FREETYPE_LIBS := $(shell pkg-config --libs freetype2)
   endif
+  ifeq ($(shell pkg-config --exists gumbo && echo yes),yes)
+	SYS_GUMBO_CFLAGS := $(shell pkg-config --cflags gumbo)
+	SYS_GUMBO_LIBS := $(shell pkg-config --libs gumbo)
+  endif
   ifeq ($(shell pkg-config --exists harfbuzz && echo yes),yes)
 	SYS_HARFBUZZ_CFLAGS := $(shell pkg-config --cflags harfbuzz)
 	SYS_HARFBUZZ_LIBS := $(shell pkg-config --libs harfbuzz)

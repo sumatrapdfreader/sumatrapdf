@@ -1343,7 +1343,7 @@ pdf_parse_xml(fz_context *ctx, pdf_obj *obj)
 	fz_xml_doc *xml = NULL;
 
 	fz_try(ctx)
-		xml = fz_parse_xml(ctx, buf, 0, 0);
+		xml = fz_parse_xml(ctx, buf, 0);
 	fz_always(ctx)
 		fz_drop_buffer(ctx, buf);
 	fz_catch(ctx)

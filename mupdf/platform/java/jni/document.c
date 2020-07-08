@@ -881,3 +881,43 @@ FUN(Document_resolveLink)(JNIEnv *env, jobject self, jstring juri)
 
 	return (*env)->NewObject(env, cls_Location, mid_Location_init, loc.chapter, loc.page, x, y);
 }
+
+JNIEXPORT jboolean JNICALL
+FUN(Document_hasPermission)(JNIEnv *env, jobject self, jint permission)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+	jboolean result = JNI_FALSE;
+
+	fz_try(ctx)
+		result = fz_has_permission(ctx, doc, permission);
+	fz_catch(ctx)
+		return jni_rethrow(env, ctx), JNI_FALSE;
+
+	return result;
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Document_search)(JNIEnv *env, jobject self, jint chapter, jint page, jstring jneedle)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+	fz_quad hits[256];
+	const char *needle = NULL;
+	int n = 0;
+
+	if (!ctx || !page) return NULL;
+	if (!jneedle) return jni_throw_arg(env, "needle must not be null"), NULL;
+
+	needle = (*env)->GetStringUTFChars(env, jneedle, NULL);
+	if (!needle) return 0;
+
+	fz_try(ctx)
+		n = fz_search_chapter_page_number(ctx, doc, chapter, page, needle, hits, nelem(hits));
+	fz_always(ctx)
+		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
+	fz_catch(ctx)
+		return jni_rethrow(env, ctx), NULL;
+
+	return to_QuadArray_safe(ctx, env, hits, n);
+}

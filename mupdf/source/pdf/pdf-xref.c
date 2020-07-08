@@ -2286,13 +2286,13 @@ pdf_update_stream(fz_context *ctx, pdf_document *doc, pdf_obj *obj, fz_buffer *n
 int
 pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, char *buf, int size)
 {
-	if (!strcmp(key, "format"))
+	if (!strcmp(key, FZ_META_FORMAT))
 	{
 		int version = pdf_version(ctx, doc);
 		return (int)fz_snprintf(buf, size, "PDF %d.%d", version/10, version % 10);
 	}
 
-	if (!strcmp(key, "encryption"))
+	if (!strcmp(key, FZ_META_ENCRYPTION))
 	{
 		if (doc->crypt)
 			return (int)fz_snprintf(buf, size, "Standard V%d R%d %d-bit %s",

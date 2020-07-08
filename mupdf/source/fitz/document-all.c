@@ -5,7 +5,9 @@ extern fz_document_handler xps_document_handler;
 extern fz_document_handler svg_document_handler;
 extern fz_document_handler cbz_document_handler;
 extern fz_document_handler img_document_handler;
+extern fz_document_handler fb2_document_handler;
 extern fz_document_handler html_document_handler;
+extern fz_document_handler xhtml_document_handler;
 extern fz_document_handler epub_document_handler;
 
 void fz_register_document_handlers(fz_context *ctx)
@@ -26,7 +28,9 @@ void fz_register_document_handlers(fz_context *ctx)
 	fz_register_document_handler(ctx, &img_document_handler);
 #endif /* FZ_ENABLE_IMG */
 #if FZ_ENABLE_HTML
+	fz_register_document_handler(ctx, &fb2_document_handler);
 	fz_register_document_handler(ctx, &html_document_handler);
+	fz_register_document_handler(ctx, &xhtml_document_handler);
 #endif /* FZ_ENABLE_HTML */
 #if FZ_ENABLE_EPUB
 	fz_register_document_handler(ctx, &epub_document_handler);

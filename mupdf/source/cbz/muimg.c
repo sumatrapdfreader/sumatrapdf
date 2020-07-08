@@ -124,7 +124,7 @@ static int
 img_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, int size)
 {
 	img_document *doc = (img_document*)doc_;
-	if (!strcmp(key, "format"))
+	if (!strcmp(key, FZ_META_FORMAT))
 		return (int)fz_strlcpy(buf, doc->format, size);
 	return -1;
 }

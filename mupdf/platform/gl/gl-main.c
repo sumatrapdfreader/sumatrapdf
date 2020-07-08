@@ -1741,9 +1741,9 @@ static void do_info(void)
 	{
 		int updates = pdf_count_versions(ctx, pdoc);
 
-		if (fz_lookup_metadata(ctx, doc, "info:Creator", buf, sizeof buf) > 0)
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_CREATOR, buf, sizeof buf) > 0)
 			ui_label("PDF Creator: %s", buf);
-		if (fz_lookup_metadata(ctx, doc, "info:Producer", buf, sizeof buf) > 0)
+		if (fz_lookup_metadata(ctx, doc, FZ_META_INFO_PRODUCER, buf, sizeof buf) > 0)
 			ui_label("PDF Producer: %s", buf);
 		buf[0] = 0;
 		if (fz_has_permission(ctx, doc, FZ_PERMISSION_PRINT))

@@ -1058,3 +1058,13 @@ function wdl_files()
     "wndsize.*",
   })
 end
+
+function gumbo_files()
+  files_in_dir("ext/gumbo-parser/src", {
+    "*.c",
+    "*.h",
+  })
+  files_in_dir("ext/gumbo-parser/include", {
+    "*.h",
+  })
+end

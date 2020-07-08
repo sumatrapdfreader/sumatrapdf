@@ -75,6 +75,10 @@ fz_wchar_from_utf8(const char *s)
 		return NULL;
 	while (*s) {
 		s += fz_chartorune(&c, s);
+		/* Truncating c to a wchar_t can be problematic if c
+		 * is 0x10000. */
+		if (c >= 0x10000)
+			c = FZ_REPLACEMENT_CHARACTER;
 		*d++ = c;
 	}
 	*d = 0;

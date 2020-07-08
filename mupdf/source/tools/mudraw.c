@@ -1308,16 +1308,33 @@ typedef struct
 	size_t current;
 	size_t peak;
 	size_t total;
-	size_t limit;
+	size_t allocs;
+	size_t mem_limit;
+	size_t alloc_limit;
 } trace_info;
+
+static void *hit_limit(void *val)
+{
+	return val;
+}
 
 static void *hit_memory_limit(trace_info *info, int is_malloc, size_t oldsize, size_t size)
 {
 	if (is_malloc)
-		printf("Memory limit (%zu) hit upon malloc(%zu) when %zu already allocated.\n", info->limit, size, info->current);
+		printf("Memory limit (%zu) hit upon malloc(%zu) when %zu already allocated.\n", info->mem_limit, size, info->current);
 	else
-		printf("Memory limit (%zu) hit upon realloc(%zu) from %zu bytes when %zu already allocated.\n", info->limit, size, oldsize, info->current);
-	return NULL;
+		printf("Memory limit (%zu) hit upon realloc(%zu) from %zu bytes when %zu already allocated.\n", info->mem_limit, size, oldsize, info->current);
+	return hit_limit(NULL);
+}
+
+
+static void *hit_alloc_limit(trace_info *info, int is_malloc, size_t oldsize, size_t size)
+{
+	if (is_malloc)
+		printf("Allocation limit (%zu) hit upon malloc(%zu) when %zu already allocated.\n", info->alloc_limit, size, info->current);
+	else
+		printf("Allocation limit (%zu) hit upon realloc(%zu) from %zu bytes when %zu already allocated.\n", info->alloc_limit, size, oldsize, info->current);
+	return hit_limit(NULL);
 }
 
 static void *
@@ -1329,8 +1346,10 @@ trace_malloc(void *arg, size_t size)
 		return NULL;
 	if (size > SIZE_MAX - sizeof(trace_header))
 		return NULL;
-	if (info->limit > 0 && size > info->limit - info->current)
+	if (info->mem_limit > 0 && size > info->mem_limit - info->current)
 		return hit_memory_limit(info, 1, 0, size);
+	if (info->alloc_limit > 0 && info->allocs > info->alloc_limit)
+		return hit_alloc_limit(info, 1, 0, size);
 	p = malloc(size + sizeof(trace_header));
 	if (p == NULL)
 		return NULL;
@@ -1339,6 +1358,7 @@ trace_malloc(void *arg, size_t size)
 	info->total += size;
 	if (info->current > info->peak)
 		info->peak = info->current;
+	info->allocs++;
 	return (void *)&p[1];
 }
 
@@ -1371,8 +1391,10 @@ trace_realloc(void *arg, void *p_, size_t size)
 	if (size > SIZE_MAX - sizeof(trace_header))
 		return NULL;
 	oldsize = p[-1].size;
-	if (size > info->limit - info->current + oldsize)
+	if (info->mem_limit > 0 && size > info->mem_limit - info->current + oldsize)
 		return hit_memory_limit(info, 0, oldsize, size);
+	if (info->alloc_limit > 0 && info->allocs > info->alloc_limit)
+		return hit_alloc_limit(info, 0, oldsize, size);
 	p = realloc(&p[-1], size + sizeof(trace_header));
 	if (p == NULL)
 		return NULL;
@@ -1382,6 +1404,7 @@ trace_realloc(void *arg, void *p_, size_t size)
 	if (info->current > info->peak)
 		info->peak = info->current;
 	p[0].size = size;
+	info->allocs++;
 	return &p[1];
 }
 
@@ -1627,7 +1650,7 @@ int mudraw_main(int argc, char **argv)
 	fz_document *doc = NULL;
 	int c;
 	fz_context *ctx;
-	trace_info trace_info = { 0, 0, 0, 0 };
+	trace_info trace_info = { 0, 0, 0, 0, 0, 0 };
 	fz_alloc_context trace_alloc_ctx = { &trace_info, trace_malloc, trace_realloc, trace_free };
 	fz_alloc_context *alloc_ctx = NULL;
 	fz_locks_context *locks = NULL;
@@ -1703,7 +1726,11 @@ int mudraw_main(int argc, char **argv)
 			fprintf(stderr, "Threads not enabled in this build\n");
 			break;
 #endif
-		case 'm': trace_info.limit = fz_atoi64(fz_optarg);
+		case 'm':
+			if (fz_optarg[0] == 's') trace_info.mem_limit = fz_atoi64(&fz_optarg[1]);
+			else if (fz_optarg[0] == 'a') trace_info.alloc_limit = fz_atoi64(&fz_optarg[1]);
+			else trace_info.mem_limit = fz_atoi64(fz_optarg);
+			break;
 		case 'L': lowmemory = 1; break;
 		case 'P':
 #ifndef DISABLE_MUTHREADS
@@ -1754,7 +1781,7 @@ int mudraw_main(int argc, char **argv)
 	}
 #endif
 
-	if (trace_info.limit || showmemory)
+	if (trace_info.mem_limit || trace_info.alloc_limit || showmemory)
 		alloc_ctx = &trace_alloc_ctx;
 
 	if (lowmemory)
@@ -2281,10 +2308,11 @@ int mudraw_main(int argc, char **argv)
 	fin_mudraw_locks();
 #endif /* DISABLE_MUTHREADS */
 
-	if (trace_info.limit || showmemory)
+	if (trace_info.mem_limit || trace_info.alloc_limit || showmemory)
 	{
 		char buf[100];
 		fz_snprintf(buf, sizeof buf, "Memory use total=%zu peak=%zu current=%zu", trace_info.total, trace_info.peak, trace_info.current);
+		fz_snprintf(buf, sizeof buf, "Allocations total=%zu", trace_info.allocs);
 		fprintf(stderr, "%s\n", buf);
 	}
 

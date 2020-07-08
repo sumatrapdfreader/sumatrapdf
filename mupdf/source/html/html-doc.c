@@ -6,6 +6,8 @@
 
 enum { T, R, B, L };
 
+enum { FORMAT_FB2, FORMAT_XHTML, FORMAT_HTML5 };
+
 typedef struct
 {
 	fz_document super;
@@ -151,7 +153,29 @@ htdoc_load_outline(fz_context *ctx, fz_document *doc_)
 }
 
 static int
+fb2doc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, int size)
+{
+	html_document *doc = (html_document*)doc_;
+	if (!strcmp(key, FZ_META_FORMAT))
+		return (int)fz_strlcpy(buf, "FictionBook2", size);
+	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->title)
+		return (int)fz_strlcpy(buf, doc->html->title, size);
+	return -1;
+}
+
+static int
 htdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, int size)
+{
+	html_document *doc = (html_document*)doc_;
+	if (!strcmp(key, FZ_META_FORMAT))
+		return (int)fz_strlcpy(buf, "HTML5", size);
+	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->title)
+		return (int)fz_strlcpy(buf, doc->html->title, size);
+	return -1;
+}
+
+static int
+xhtdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, int size)
 {
 	html_document *doc = (html_document*)doc_;
 	if (!strcmp(key, FZ_META_FORMAT))
@@ -162,7 +186,7 @@ htdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char 
 }
 
 static fz_document *
-htdoc_open_document_with_buffer(fz_context *ctx, const char *dirname, fz_buffer *buf)
+htdoc_open_document_with_buffer(fz_context *ctx, const char *dirname, fz_buffer *buf, int format)
 {
 	html_document *doc = fz_new_derived_document(ctx, html_document);
 	doc->super.drop_document = htdoc_drop_document;
@@ -173,14 +197,24 @@ htdoc_open_document_with_buffer(fz_context *ctx, const char *dirname, fz_buffer 
 	doc->super.lookup_bookmark = htdoc_lookup_bookmark;
 	doc->super.count_pages = htdoc_count_pages;
 	doc->super.load_page = htdoc_load_page;
-	doc->super.lookup_metadata = htdoc_lookup_metadata;
+	switch (format)
+	{
+	case FORMAT_FB2: doc->super.lookup_metadata = fb2doc_lookup_metadata; break;
+	case FORMAT_HTML5: doc->super.lookup_metadata = htdoc_lookup_metadata; break;
+	case FORMAT_XHTML: doc->super.lookup_metadata = xhtdoc_lookup_metadata; break;
+	}
 	doc->super.is_reflowable = 1;
 
 	fz_try(ctx)
 	{
 		doc->zip = fz_open_directory(ctx, dirname);
 		doc->set = fz_new_html_font_set(ctx);
-		doc->html = fz_parse_html(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx));
+		switch (format)
+		{
+		case FORMAT_FB2: doc->html = fz_parse_fb2(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
+		case FORMAT_HTML5: doc->html = fz_parse_html5(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
+		case FORMAT_XHTML: doc->html = fz_parse_xhtml(ctx, doc->set, doc->zip, ".", buf, fz_user_css(ctx)); break;
+		}
 		doc->outline = fz_load_html_outline(ctx, doc->html);
 	}
 	fz_always(ctx)
@@ -197,7 +231,7 @@ htdoc_open_document_with_buffer(fz_context *ctx, const char *dirname, fz_buffer 
 static fz_document *
 htdoc_open_document_with_stream(fz_context *ctx, fz_stream *file)
 {
-	return htdoc_open_document_with_buffer(ctx, ".", fz_read_all(ctx, file, 0));
+	return htdoc_open_document_with_buffer(ctx, ".", fz_read_all(ctx, file, 0), FORMAT_HTML5);
 }
 
 static fz_document *
@@ -205,25 +239,19 @@ htdoc_open_document(fz_context *ctx, const char *filename)
 {
 	char dirname[2048];
 	fz_dirname(dirname, filename, sizeof dirname);
-	return htdoc_open_document_with_buffer(ctx, dirname, fz_read_file(ctx, filename));
+	return htdoc_open_document_with_buffer(ctx, dirname, fz_read_file(ctx, filename), FORMAT_HTML5);
 }
 
 static const char *htdoc_extensions[] =
 {
-	"fb2",
 	"htm",
 	"html",
-	"xhtml",
-	"xml",
 	NULL
 };
 
 static const char *htdoc_mimetypes[] =
 {
-	"application/html+xml",
-	"application/x-fictionbook",
-	"application/xml",
-	"text/xml",
+	"text/html",
 	NULL
 };
 
@@ -236,4 +264,77 @@ fz_document_handler html_document_handler =
 	htdoc_mimetypes,
 	NULL,
 	NULL,
+};
+
+static fz_document *
+xhtdoc_open_document_with_stream(fz_context *ctx, fz_stream *file)
+{
+	return htdoc_open_document_with_buffer(ctx, ".", fz_read_all(ctx, file, 0), FORMAT_XHTML);
+}
+
+static fz_document *
+xhtdoc_open_document(fz_context *ctx, const char *filename)
+{
+	char dirname[2048];
+	fz_dirname(dirname, filename, sizeof dirname);
+	return htdoc_open_document_with_buffer(ctx, dirname, fz_read_file(ctx, filename), FORMAT_XHTML);
+}
+
+static const char *xhtdoc_extensions[] =
+{
+	"xhtml",
+	NULL
+};
+
+static const char *xhtdoc_mimetypes[] =
+{
+	"application/xhtml+xml",
+	NULL
+};
+
+fz_document_handler xhtml_document_handler =
+{
+	NULL,
+	xhtdoc_open_document,
+	xhtdoc_open_document_with_stream,
+	xhtdoc_extensions,
+	xhtdoc_mimetypes
+};
+
+static fz_document *
+fb2doc_open_document_with_stream(fz_context *ctx, fz_stream *file)
+{
+	return htdoc_open_document_with_buffer(ctx, ".", fz_read_all(ctx, file, 0), FORMAT_FB2);
+}
+
+static fz_document *
+fb2doc_open_document(fz_context *ctx, const char *filename)
+{
+	char dirname[2048];
+	fz_dirname(dirname, filename, sizeof dirname);
+	return htdoc_open_document_with_buffer(ctx, dirname, fz_read_file(ctx, filename), FORMAT_FB2);
+}
+
+static const char *fb2doc_extensions[] =
+{
+	"fb2",
+	"xml",
+	NULL
+};
+
+static const char *fb2doc_mimetypes[] =
+{
+	"application/x-fictionbook",
+	"application/xml",
+	"text/xml",
+	NULL
+};
+
+fz_document_handler fb2_document_handler =
+{
+	NULL,
+	fb2doc_open_document,
+	fb2doc_open_document_with_stream,
+	fb2doc_extensions,
+	fb2doc_mimetypes
 };

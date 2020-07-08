@@ -51,13 +51,13 @@ static void writepixmap(fz_pixmap *pix, char *file)
 	if (!pix->colorspace || pix->colorspace->type == FZ_COLORSPACE_GRAY || pix->colorspace->type == FZ_COLORSPACE_RGB)
 	{
 		fz_snprintf(buf, sizeof(buf), "%s.png", file);
-		printf("extracting image %s\n", buf);
+		printf("extracting %s\n", buf);
 		fz_save_pixmap_as_png(ctx, pix, buf);
 	}
 	else
 	{
 		fz_snprintf(buf, sizeof(buf), "%s.pam", file);
-		printf("extracting image %s\n", buf);
+		printf("extracting %s\n", buf);
 		fz_save_pixmap_as_pam(ctx, pix, buf);
 	}
 
@@ -75,7 +75,7 @@ writejpeg(const unsigned char *data, size_t len, const char *file)
 	out = fz_new_output_with_path(ctx, buf, 0);
 	fz_try(ctx)
 	{
-		printf("extracting image %s\n", buf);
+		printf("extracting %s\n", buf);
 		fz_write_data(ctx, out, data, len);
 		fz_close_output(ctx, out);
 	}
@@ -100,7 +100,7 @@ static void saveimage(pdf_obj *ref)
 	{
 		image = pdf_load_image(ctx, doc, ref);
 		cbuf = fz_compressed_image_buffer(ctx, image);
-		fz_snprintf(buf, sizeof(buf), "img-%04d", pdf_to_num(ctx, ref));
+		fz_snprintf(buf, sizeof(buf), "image-%04d", pdf_to_num(ctx, ref));
 		type = cbuf == NULL ? FZ_IMAGE_UNKNOWN : cbuf->params.type;
 
 		if (image->use_colorkey)
@@ -139,19 +139,14 @@ static void saveimage(pdf_obj *ref)
 
 static void savefont(pdf_obj *dict)
 {
-	char namebuf[1024];
+	char namebuf[100];
 	fz_buffer *buf;
 	pdf_obj *stream = NULL;
 	pdf_obj *obj;
 	char *ext = "";
 	fz_output *out;
-	const char *fontname = "font";
 	size_t len;
 	unsigned char *data;
-
-	obj = pdf_dict_get(ctx, dict, PDF_NAME(FontName));
-	if (obj)
-		fontname = pdf_to_name(ctx, obj);
 
 	obj = pdf_dict_get(ctx, dict, PDF_NAME(FontFile));
 	if (obj)
@@ -196,8 +191,8 @@ static void savefont(pdf_obj *dict)
 	len = fz_buffer_storage(ctx, buf, &data);
 	fz_try(ctx)
 	{
-		fz_snprintf(namebuf, sizeof(namebuf), "%s-%04d.%s", fontname, pdf_to_num(ctx, dict), ext);
-		printf("extracting font %s\n", namebuf);
+		fz_snprintf(namebuf, sizeof(namebuf), "font-%04d.%s", pdf_to_num(ctx, dict), ext);
+		printf("extracting %s\n", namebuf);
 		out = fz_new_output_with_path(ctx, namebuf, 0);
 		fz_try(ctx)
 		{

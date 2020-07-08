@@ -46,6 +46,9 @@
     <Filter Include="lcms2">
       <UniqueIdentifier>{44a4f630-4f4c-4243-bd17-5055a0686a68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gumbo-parser">
+      <UniqueIdentifier>{0ab1930f-6f35-4f45-8d7a-70a5846c46ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\thirdparty\libjpeg\jaricom.c">
@@ -572,6 +575,39 @@
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-indic-table.cc">
       <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\attribute.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\char_ref.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\error.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\parser.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\string_buffer.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\string_piece.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\tag.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\tokenizer.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\utf8.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\util.c">
+      <Filter>gumbo-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\gumbo-parser\src\vector.c">
+      <Filter>gumbo-parser</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -290,7 +290,7 @@ xps_parse_metadata(fz_context *ctx, xps_document *doc, xps_part *part, xps_fixdo
 	doc->base_uri = buf;
 	doc->part_uri = part->name;
 
-	xml = fz_parse_xml(ctx, part->data, 0, 0);
+	xml = fz_parse_xml(ctx, part->data, 0);
 	fz_try(ctx)
 	{
 		xps_parse_metadata_imp(ctx, doc, fz_xml_root(xml), fixdoc);
@@ -376,7 +376,7 @@ xps_load_fixed_page(fz_context *ctx, xps_document *doc, xps_fixpage *page)
 	part = xps_read_part(ctx, doc, page->name);
 	fz_try(ctx)
 	{
-		xml = fz_parse_xml(ctx, part->data, 0, 0);
+		xml = fz_parse_xml(ctx, part->data, 0);
 
 		root = fz_xml_root(xml);
 		if (!root)

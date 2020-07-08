@@ -32,7 +32,7 @@ endif
 
 MUPDF_JAR := ../../build/java/libmupdf.jar
 
-default: $(MUPDF_JAVA) $(MUPDF_JAR)
+default: $(MUPDF_JAVA) $(MUPDF_JAR) $(EXAMPLE_JAVA_SOURCES)
 
 MUPDF_CORE := ../../build/java/libmupdf.a ../../build/java/libmupdf-third.a
 ifeq "$(OS)" "Linux"

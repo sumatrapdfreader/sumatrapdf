@@ -94,9 +94,8 @@ static fz_xml_doc* xps_open_and_parse(fz_context* ctx, xps_document* doc, const 
     xps_part* part = xps_read_part(ctx, doc, (char*)path);
 
     int preserve_white = 0;
-    int for_html = 0;
     fz_try(ctx) {
-        root = fz_parse_xml(ctx, part->data, preserve_white, for_html);
+        root = fz_parse_xml(ctx, part->data, preserve_white);
     }
     fz_always(ctx) {
         xps_drop_part(ctx, doc, part);

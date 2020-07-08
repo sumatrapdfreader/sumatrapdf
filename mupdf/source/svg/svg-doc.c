@@ -124,7 +124,7 @@ svg_open_document_with_buffer(fz_context *ctx, fz_buffer *buf, const char *base_
 
 	fz_try(ctx)
 	{
-		doc->xml = fz_parse_xml(ctx, buf, 0, 0);
+		doc->xml = fz_parse_xml(ctx, buf, 0);
 		doc->root = fz_xml_root(doc->xml);
 		svg_build_id_map(ctx, doc, doc->root);
 	}

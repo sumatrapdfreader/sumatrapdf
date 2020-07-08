@@ -131,4 +131,5 @@ public class PDFDocument extends Document
 	public native int countUnsavedVersions();
 	public native int validateChangeHistory();
 	public native boolean wasPureXFA();
+	public native boolean wasLinearized();
 }

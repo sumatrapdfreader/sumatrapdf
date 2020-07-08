@@ -14,6 +14,11 @@ Parallelized doit -clang-format. Go concurrency is a joy.
 implement EnginePdfHasUnsavedAnnotations() and bug-fix detection
 of when to show 'Save PDF' button in annotations editor.
 
+
+update mupdf.
+this was a big one because mupdf switched to using gumbo
+as html/xml parser.
+
 2020-07-06 Mon
 
 Fixed a bunch of issues related to bugs in freetype and not

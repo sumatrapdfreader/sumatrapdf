@@ -15,11 +15,14 @@ typedef struct fz_xml fz_xml;
 	Parse the contents of buffer into a tree of xml nodes.
 
 	preserve_white: whether to keep or delete all-whitespace nodes.
-
-	for_html: enable special html tweaks (auto closing of tags,
-	workarounds for less-than-perfect nesting etc).
 */
-fz_xml_doc *fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white, int for_html);
+fz_xml_doc *fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white);
+
+/**
+	Parse the contents of a buffer into a tree of XML nodes,
+	using the HTML5 parsing algorithm.
+*/
+fz_xml_doc *fz_parse_xml_from_html5(fz_context *ctx, fz_buffer *buf);
 
 /**
 	Free the XML node and all its children and siblings.
