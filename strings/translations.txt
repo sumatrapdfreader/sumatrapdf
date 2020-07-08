@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5aefb43e482237c7c191b83c20f4a730de665cbe
+18985c129a20ea589837709ae1d15804cb09c3bb
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 cn:未找到 %s 安装。
@@ -5268,7 +5268,7 @@ fa:تغییر زبان (Change Language)
 fi:Valitse kieli (Change Language)
 fr:Changer de langue (Change Language)
 fy-nl:Taal kieze (Change Language)
-ga:Athraigh an Teanga
+ga:Athraigh an Teanga (Change Language)
 gl:Cambiar lingua
 he:שנה שפת ממשק (Change language)
 hi:भाषा बदलें (Change Language)

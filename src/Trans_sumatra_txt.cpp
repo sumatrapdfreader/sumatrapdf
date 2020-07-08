@@ -9202,7 +9202,7 @@ const char * gTranslations_ga =
   "N\303\255 f\303\251idir an comhad seo a chl\303\263bhualadh\0"\
   "N\303\255 f\303\251idir ord\303\272 cuardaigh aisiompaithe a thos\303\272. Dearbh\303\241il l\303\255ne an ordaithe sna socruithe.\0"\
   "\0"\
-  "Athraigh an Teanga\0"\
+  "Athraigh an Teanga (Change Language)\0"\
   "Lorg Nuashonruithe\0"\
   "\0"\
   "D\303\272n\0"\
