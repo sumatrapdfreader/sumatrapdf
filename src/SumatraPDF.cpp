@@ -3827,6 +3827,14 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType, int pag
         rects.Append(sel.rect);
     }
     annot->SetQuadPointsAsRect(rects);
+
+    WCHAR* selTxt = GetSelectedText(win, L"\n");
+    if (selTxt) {
+        strconv::StackWstrToUtf8 str(selTxt);
+        annot->SetContents(str.Get());
+        str::Free(selTxt);
+    }
+
     // TODO: set contents from selected text
     DeleteOldSelectionInfo(win, true);
     WindowInfoRerender(win);
@@ -4510,14 +4518,22 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             // Don't break the shortcut for text boxes
             if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
                 SendMessageW(GetFocus(), WM_COPY, 0, 0);
-            } else if (!HasPermission(Perm_CopySelection)) {
                 break;
-            } else if (win->AsChm()) {
+            }
+            if (!HasPermission(Perm_CopySelection)) {
+                break;
+            }
+            if (win->AsChm()) {
                 win->AsChm()->CopySelection();
-            } else if (win->currentTab && win->currentTab->selectionOnPage) {
+                break;
+            }
+            if (win->currentTab && win->currentTab->selectionOnPage) {
                 CopySelectionToClipboard(win);
-            } else if (win->AsFixed()) {
+                break;
+            }
+            if (win->AsFixed()) {
                 win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
+                break;
             }
             break;
 

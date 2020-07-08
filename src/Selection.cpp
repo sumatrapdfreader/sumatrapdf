@@ -22,6 +22,7 @@
 #include "TextSelection.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
+#include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -249,58 +250,67 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
     UpdateToolbarState(win);
 }
 
-void CopySelectionToClipboard(WindowInfo* win) {
+// caller needs to str::Free() the result
+WCHAR* GetSelectedText(WindowInfo* win, const WCHAR* lineSep) {
     if (!win->currentTab || !win->currentTab->selectionOnPage) {
-        return;
+        return nullptr;
     }
-    CrashIf(win->currentTab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
     if (win->currentTab->selectionOnPage->size() == 0) {
-        return;
+        return nullptr;
     }
-    CrashIf(!win->AsFixed());
-    if (!win->AsFixed()) {
-        return;
+    DisplayModel* dm = win->AsFixed();
+    CrashIf(!dm);
+    if (!dm) {
+        return nullptr;
     }
+    if (dm->GetEngine()->IsImageCollection()) {
+        return nullptr;
+    }
+
+    bool isTextSelection = dm->textSelection->result.len > 0;
+    if (isTextSelection) {
+        WCHAR* s = dm->textSelection->ExtractText(lineSep);
+        return s;
+    }
+    WStrVec selections;
+    for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+        WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
+        if (!str::IsEmpty(text)) {
+            selections.Append(text);
+        }
+    }
+    if (selections.size() == 0) {
+        return nullptr;
+    }
+    WCHAR* s = selections.Join(lineSep);
+    return s;
+}
+
+//
+void CopySelectionToClipboard(WindowInfo* win) {
+    CrashIf(win->currentTab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
 
     if (!OpenClipboard(nullptr)) {
         return;
     }
     EmptyClipboard();
 
-    DisplayModel* dm = win->AsFixed();
-#ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (!dm->GetEngine()->AllowsCopyingText()) {
+    WCHAR* selText = nullptr;
+    if (!gDisableDocumentRestrictions && !win->AsFixed()->GetEngine()->AllowsCopyingText()) {
         win->ShowNotification(_TR("Copying text was denied (copying as image only)"));
-    } else
-#endif
-        if (!dm->GetEngine()->IsImageCollection()) {
-        AutoFreeWstr selText;
-        bool isTextSelection = dm->textSelection->result.len > 0;
-        if (isTextSelection) {
-            selText.Set(dm->textSelection->ExtractText(L"\r\n"));
-        } else {
-            WStrVec selections;
-            for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
-                WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
-                if (text) {
-                    selections.Append(text);
-                }
-            }
-            selText.Set(selections.Join());
-        }
-
-        // don't copy empty text
-        if (!str::IsEmpty(selText.Get())) {
-            CopyTextToClipboard(selText, true);
-        }
-
-        if (isTextSelection) {
-            // don't also copy the first line of a text selection as an image
-            CloseClipboard();
-            return;
-        }
+    } else {
+        selText = GetSelectedText(win, L"\r\n");
     }
 
+    // don't copy empty text
+    if (!str::IsEmpty(selText)) {
+        CopyTextToClipboard(selText, true);
+        // don't also copy the first line of a text selection as an image
+        CloseClipboard();
+        return;
+    }
+
+    DisplayModel* dm = win->AsFixed();
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage* selOnPage = &win->currentTab->selectionOnPage->at(0);
     float zoom = dm->GetZoomReal(selOnPage->pageNo);

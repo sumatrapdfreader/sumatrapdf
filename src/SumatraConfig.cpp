@@ -78,6 +78,12 @@ bool gShowDebugMenu = true;
 bool gShowDebugMenu = false;
 #endif
 
+#ifdef DISABLE_DOCUMENT_RESTRICTIONS
+bool gDisableDocumentRestrictions = true;
+#else
+bool gDisableDocumentRestrictions = false;
+#endif
+
 const WCHAR* GetAppName() {
     if (gIsRaMicroBuild) {
         return L"RA-MICRO PDF Viewer";

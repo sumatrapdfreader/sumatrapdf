@@ -71,22 +71,7 @@ bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
     if (a1->pdf && a2->pdf) {
         return a1->pdf->annot == a2->pdf->annot;
     }
-    // TODO: fix me
     CrashIf(false);
-    if (a1->type != a2->type) {
-        return false;
-    }
-    if (a1->pageNo != a2->pageNo) {
-        return false;
-    }
-#if 0
-    if (a1->color != a2->color) {
-        return false;
-    }
-    if (a1->rect != a2->rect) {
-        return false;
-    }
-#endif
     return false;
 }
 
@@ -113,7 +98,6 @@ int Annotation::PageNo() const {
 }
 
 RectFl Annotation::Rect() const {
-    // TODO: cache during creation?
     fz_rect rc = pdf_annot_rect(pdf->ctx, pdf->annot);
     auto rect = ToRectFl(rc);
     return rect;
@@ -173,14 +157,13 @@ Vec<RectFl> Annotation::GetQuadPointsAsRect() {
     for (int i = 0; i < n; i++) {
         fz_quad q = pdf_annot_quad_point(pdf->ctx, pdf->annot, i);
         fz_rect r = fz_rect_from_quad(q);
-        RectFl rect =ToRectFl(r);
+        RectFl rect = ToRectFl(r);
         res.Append(rect);
     }
     return res;
 }
 
 std::string_view Annotation::Contents() {
-    // TODO: cache during creation?
     const char* s = pdf_annot_contents(pdf->ctx, pdf->annot);
     return s;
 }
