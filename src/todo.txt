@@ -1,5 +1,11 @@
 Annotations:
  - allow moving annotations
+  - write DisplayModel::GetAnnotationAtPos(Point)
+  - write EngineGetAnnotationAtPos(Engine, Point)
+  - add annotationOnLastButtonDown for tracking annotation that has been clicked
+  - when drag starts, start moving a rectangle
+  - when Esc, stop draggin
+  - when dropped, update annotation
  - save attachment
  - add attachment
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)

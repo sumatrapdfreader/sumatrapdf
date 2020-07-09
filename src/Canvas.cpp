@@ -311,10 +311,12 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     CrashIf(win->linkOnLastButtonDown);
     DisplayModel* dm = win->AsFixed();
     IPageElement* pageEl = dm->GetElementAtPos(Point(x, y));
-    if (pageEl && pageEl->Is(kindPageElementDest)) {
-        win->linkOnLastButtonDown = pageEl;
-    } else {
-        delete pageEl;
+    if (pageEl) {
+        if (pageEl->Is(kindPageElementDest)) {
+            win->linkOnLastButtonDown = pageEl;
+        } else {
+            delete pageEl;
+        }
     }
     win->dragStartPending = true;
     win->dragStart = Point(x, y);

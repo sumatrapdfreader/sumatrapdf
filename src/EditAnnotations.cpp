@@ -1248,3 +1248,7 @@ void StartEditAnnotations(TabInfo* tab, Annotation* selectedAnnot) {
 
     delete selectedAnnot;
 }
+
+bool IsEditAnnotationsWindowOpen(TabInfo* tab) {
+    return tab->editAnnotsWindow != nullptr;
+}
