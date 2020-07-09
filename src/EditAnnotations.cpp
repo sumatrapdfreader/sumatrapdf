@@ -319,46 +319,19 @@ static void WndCloseHandler(EditAnnotationsWindow* win, WindowCloseEvent* ev) {
 }
 
 extern void ReloadDocument(WindowInfo* win, bool autorefresh);
+extern void SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab);
 static void SetAnnotations(EditAnnotationsWindow* win, TabInfo* tab);
 static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo);
 
 static void ButtonSavePDFHandler(EditAnnotationsWindow* win) {
-    OPENFILENAME ofn = {0};
     TabInfo* tab = win->tab;
-    EngineBase* engine = win->tab->AsFixed()->GetEngine();
-    WCHAR dstFileName[MAX_PATH + 1] = {0};
     if (IsCtrlPressed()) {
-        str::WStr fileFilter(256);
-        fileFilter.Append(_TR("PDF documents"));
-        fileFilter.Append(L"\1*.pdf\1");
-        fileFilter.Append(L"\1*.*\1");
-        str::TransChars(fileFilter.Get(), L"\1", L"\0");
-
-        // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
-        const WCHAR* name = engine->FileName();
-        str::BufSet(dstFileName, dimof(dstFileName), name);
-
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = win->mainWindow->hwnd;
-        ofn.lpstrFile = dstFileName;
-        ofn.nMaxFile = dimof(dstFileName);
-        ofn.lpstrFilter = fileFilter.Get();
-        ofn.nFilterIndex = 1;
-        // ofn.lpstrTitle = _TR("Rename To");
-        // ofn.lpstrInitialDir = initDir;
-        ofn.lpstrDefExt = L".pdf";
-        ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-
-        bool ok = GetSaveFileNameW(&ofn);
-        if (!ok) {
-            return;
-        }
-        AutoFreeStr dstFilePath = strconv::WstrToUtf8(dstFileName);
-        EnginePdfSaveUpdated(engine, dstFilePath.AsView());
+        SaveAnnotationsToMaybeNewPdfFile(tab);
         // TODO: show a notification if saved or error message if failed to save
         return;
     }
 
+    EngineBase* engine = win->tab->AsFixed()->GetEngine();
     bool ok = EnginePdfSaveUpdated(engine, {});
     // TODO: show a notification if saved or error message if failed to save
     if (!ok) {

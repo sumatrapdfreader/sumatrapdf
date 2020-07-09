@@ -577,7 +577,7 @@ void MessageBoxWarning(HWND hwnd, const WCHAR* msg, const WCHAR* title) {
     if (!title) {
         title = _TR("Warning");
     }
-    MessageBox(hwnd, msg, title, type);
+    MessageBoxW(hwnd, msg, title, type);
 }
 
 // updates the layout for a window to either left-to-right or right-to-left
@@ -2263,6 +2263,60 @@ static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteM
     // SetFocus(win->hwndFrame);
 }
 
+void SaveAnnotationsToMaybeNewPdfFile(TabInfo* tab) {
+    WCHAR dstFileName[MAX_PATH + 1] = {0};
+
+    OPENFILENAME ofn = {0};
+    str::WStr fileFilter(256);
+    fileFilter.Append(_TR("PDF documents"));
+    fileFilter.Append(L"\1*.pdf\1");
+    fileFilter.Append(L"\1*.*\1");
+    str::TransChars(fileFilter.Get(), L"\1", L"\0");
+
+    // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
+    EngineBase* engine = tab->AsFixed()->GetEngine();
+    const WCHAR* name = engine->FileName();
+    str::BufSet(dstFileName, dimof(dstFileName), name);
+
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = tab->win->hwndFrame;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = fileFilter.Get();
+    ofn.nFilterIndex = 1;
+    // ofn.lpstrTitle = _TR("Rename To");
+    // ofn.lpstrInitialDir = initDir;
+    ofn.lpstrDefExt = L".pdf";
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+
+    bool ok = GetSaveFileNameW(&ofn);
+    if (!ok) {
+        return;
+    }
+    AutoFreeStr dstFilePath = strconv::WstrToUtf8(dstFileName);
+    EnginePdfSaveUpdated(engine, dstFilePath.AsView());
+}
+
+static void MaybeSaveAnnotations(WindowInfo* win) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    EngineBase* engine = dm->GetEngine();
+    bool confirm = EnginePdfHasUnsavedAnnotations(engine);
+    if (!confirm) {
+        return;
+    }
+    uint type = MB_YESNO | MB_ICONEXCLAMATION | MbRtlReadingMaybe();
+    const WCHAR* title = _TR("Warning");
+    const WCHAR* msg = _TR_TODO("You have unsaved annotations. Save them?");
+    int res = MessageBoxW(win->hwndFrame, msg, title, type);
+    if (res == IDNO) {
+        return;
+    }
+    SaveAnnotationsToMaybeNewPdfFile(win->currentTab);
+}
+
 // closes the current tab, selecting the next one
 // if there's only a single tab left, the window is closed if there
 // are other windows, else the Frequently Read page is displayed
@@ -2273,13 +2327,14 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
     }
 
     ClearFindBox(win);
+    MaybeSaveAnnotations(win);
 
     bool didSavePrefs = false;
     size_t tabCount = win->tabs.size();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (MayCloseWindow(win)) {
             CloseWindow(win, quitIfLast);
-            didSavePrefs = true;
+            didSavePrefs = true; // in CloseWindow()
         }
     } else {
         CrashIf(gPluginMode && !gWindows.Contains(win));

@@ -1,15 +1,11 @@
 Annotations:
+ - allow moving annotations
  - save attachment
  - add attachment
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
  - test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)
- - allow moving annotations
  - has_redact
- - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".
-   Maybe add sub-menu with list of colors
- - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
-   a dialog box for setting a color. Remember the custom colors in settings for future use.
  - Ctrl doesn't always work, probably need to hook keyboard on a lower level
  - maybe; show colors in a drop-down
  - maybe: text language drop-down
@@ -17,9 +13,6 @@ Annotations:
  - maybe: add label for showing notification that saved or failed to save. Notification should self-dismiss
    after few seconds
  - maybe: display flags
- - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
- - UI ideas: https://getcleanshot.com/
- - when closing a pdf file, dialog for unsaved annotations
  - color drop-down should allow entering arbitrary colors (text box or add color selection dialog)
  - change text selection to use fz_snap_selection and fz_highlight_selection
  - allow drawing of ink annotations
@@ -27,6 +20,10 @@ Annotations:
  - allow drawing of polygon
  - allow drawing of polyline
  - no need to redraw when changing contents of most annotations (hard to pull off in current code)
+ - add "Create Highlight annotation" menu item to context menu on selection, after "Copy Selection".
+   Maybe add sub-menu with list of colors
+ - maybe: allow setting custom color of annotation. Add "Custom" drop-down colors entry which would show
+   a dialog box for setting a color. Remember the custom colors in settings for future use.
 
 ------
 
@@ -59,9 +56,12 @@ small refactorings:
 
 possible refactorings:
 - change DocumentTextCache::GetTextForPage to return PageText
+- extract tab code from Tabs.cpp into a tab control
 - rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()
 - split LoadPage() into LoadPage() and LoadPagePartial()
 returning Rect
+ - maybe: use https://devblogs.microsoft.com/oldnewthing/20200515-00/?p=103755 for storing callbacks
+ - UI ideas: https://getcleanshot.com/
 - change how properties are retrieved (in bulk, instead of one-by-one)
 - add arm build (based on https://github.com/ntw-au/sumatrapdf)
 - convert Add Bookmark dialog to new widget / layout system
@@ -77,7 +77,6 @@ returning Rect
 - ChmDoc -> ChmFile
 - ChmDoc::Load() WCHAR* => std::string_view
 - test icons at different sizes (for toolbar they look bad at some sizes; see if it's toolbar or mupdf)
-- extract tab code from Tabs.cpp into a tab control
 - see if can do sth. like https://github.com/apenwarr/fixconsole/blob/master/fixconsole_windows.go
 
 ------

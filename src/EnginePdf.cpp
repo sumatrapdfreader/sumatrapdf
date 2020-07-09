@@ -1998,7 +1998,9 @@ int EnginePdfGetAnnotations(EngineBase* engine, Vec<Annotation*>* annotsOut) {
 }
 
 bool EnginePdfHasUnsavedAnnotations(EngineBase* engine) {
-    CrashIf(engine->kind != kindEnginePdf);
+    if (!engine || engine->kind != kindEnginePdf) {
+        return false;
+    }
     EnginePdf* epdf = (EnginePdf*)engine;
     pdf_document* pdfdoc = pdf_document_from_fz_document(epdf->ctx, epdf->_doc);
     return pdfdoc->dirty;

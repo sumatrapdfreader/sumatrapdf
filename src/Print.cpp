@@ -539,8 +539,10 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
 #endif
 
     if (win->printThread) {
-        int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and start over?"),
-                             _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
+        uint type = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
+        const WCHAR* title = _TR("Printing in progress.");
+        const WCHAR* msg = _TR("Printing is still in progress. Abort and start over?");
+        int res = MessageBox(win->hwndFrame, msg, title, type);
         if (res == IDNO) {
             return;
         }

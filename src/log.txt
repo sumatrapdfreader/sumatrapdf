@@ -1,5 +1,20 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2020-07-08 Wed
+
+Parallelized doit -clang-format. Go concurrency is a joy.
+
+implement EnginePdfHasUnsavedAnnotations() and bug-fix detection
+of when to show 'Save PDF' button in annotations editor.
+
+update mupdf.
+this was a big one because mupdf switched to using gumbo
+as html/xml parser.
+
+tweak premake definitions
+
+ask to save unsaved annotation when closing a pdf file
+
 2020-07-07 Tue
 
 Added creation of highlight, squiggly, strikeout and underline
@@ -8,18 +23,6 @@ annotations.
 Replaced EnginePdf::IsLinearizedFile() with mupdf's pdf_doc_was_linearized.
 It didn't exist when IsLinearizedFile() was written.
 Removing code feels good.
-
-Parallelized doit -clang-format. Go concurrency is a joy.
-
-implement EnginePdfHasUnsavedAnnotations() and bug-fix detection
-of when to show 'Save PDF' button in annotations editor.
-
-
-update mupdf.
-this was a big one because mupdf switched to using gumbo
-as html/xml parser.
-
-tweak premake definitions
 
 2020-07-06 Mon
 
