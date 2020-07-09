@@ -129,12 +129,11 @@ static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM ke
 
 static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) {
     UNUSED(key);
-    int isDragX = IsDragX(x, win->dragStart.x);
-    int isDragY = IsDragY(y, win->dragStart.y);
-    bool didDragMouse = isDragX || isDragY;
-    if (!didDragMouse) {
-        OnAboutContextMenu(win, x, y);
+    int isDrag = IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y);
+    if (!isDrag) {
+        return;
     }
+    OnAboutContextMenu(win, x, y);
 }
 
 static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {

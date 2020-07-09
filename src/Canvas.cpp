@@ -210,16 +210,20 @@ static void OnDraggingStop(WindowInfo* win, int x, int y, bool aborted) {
     win->MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
-bool IsDragX(int x1, int x2) {
+static bool IsDragX(int x1, int x2) {
     int dx = abs(x1 - x2);
     int dragDx = GetSystemMetrics(SM_CXDRAG);
     return dx > dragDx;
 }
 
-bool IsDragY(int y1, int y2) {
+static bool IsDragY(int y1, int y2) {
     int dy = abs(y1 - y2);
     int dragDy = GetSystemMetrics(SM_CYDRAG);
     return dy > dragDy;
+}
+
+bool IsDragXOrY(int x1, int x2, int y1, int y2) {
+    return IsDragX(x1, x2) || IsDragY(y1, y2);
 }
 
 static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
@@ -244,7 +248,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
 
     if (win->dragStartPending) {
         // have we already started a proper drag?
-        if (!IsDragX(x, win->dragStart.x) && !IsDragY(y, win->dragStart.y)) {
+        if (!IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y)) {
             return;
         }
         win->dragStartPending = false;
@@ -341,7 +345,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     }
     CrashIf(MouseAction::Selecting != ma && MouseAction::SelectingText != ma && MouseAction::Dragging != ma);
 
-    bool didDragMouse = !win->dragStartPending || IsDragX(x, win->dragStart.x) || IsDragY(y, win->dragStart.y);
+    bool didDragMouse = !win->dragStartPending || IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
         OnDraggingStop(win, x, y, !didDragMouse);
     } else {
@@ -484,9 +488,8 @@ static void OnMouseRightButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
         return;
     }
 
-    int isDragX = IsDragX(x, win->dragStart.x);
-    int isDragY = IsDragY(y, win->dragStart.y);
-    bool didDragMouse = !win->dragStartPending || isDragX || isDragY;
+    int isDragXOrY = IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y);
+    bool didDragMouse = !win->dragStartPending || isDragXOrY;
     OnDraggingStop(win, x, y, !didDragMouse);
 
     win->mouseAction = MouseAction::Idle;
