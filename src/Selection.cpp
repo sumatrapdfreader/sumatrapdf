@@ -197,8 +197,8 @@ void UpdateTextSelection(WindowInfo* win, bool select) {
     win->currentTab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
     win->showSelection = win->currentTab->selectionOnPage != nullptr;
 
-    if (win->uia_provider) {
-        win->uia_provider->OnSelectionChanged();
+    if (win->uiaProvider) {
+        win->uiaProvider->OnSelectionChanged();
     }
 }
 

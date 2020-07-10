@@ -103,6 +103,13 @@ RectFl Annotation::Rect() const {
     return rect;
 }
 
+void Annotation::SetRect(RectFl r) {
+    fz_rect rc = To_fz_rect(r);
+    pdf_set_annot_rect(pdf->ctx, pdf->annot, rc);
+    pdf_update_appearance(pdf->ctx, pdf->annot);
+    isChanged = true;
+}
+
 std::string_view Annotation::Author() {
     const char* s = pdf_annot_author(pdf->ctx, pdf->annot);
     if (str::IsStringEmptyOrWhiteSpaceOnly(s)) {

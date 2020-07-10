@@ -37,9 +37,10 @@
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "SumatraConfig.h"
-#include "SumatraPDF.h"
-#include "WindowInfo.h"
 #include "TabInfo.h"
+#include "SumatraPDF.h"
+#include "EditAnnotations.h"
+#include "WindowInfo.h"
 #include "resource.h"
 #include "Commands.h"
 #include "Canvas.h"
@@ -183,6 +184,20 @@ static void OnHScroll(WindowInfo* win, WPARAM wp) {
     }
 }
 
+static void DrawMovePattern(WindowInfo* win, Point pt, Size size) {
+    HWND hwnd = win->hwndCanvas;
+    HDC hdc = GetDC(hwnd);
+    auto [x, y] = pt;
+    auto [dx, dy] = size;
+    x += win->annotationBeingMovedOffset.x;
+    y += win->annotationBeingMovedOffset.y;
+    SetBrushOrgEx(hdc, x, y, 0);
+    HBRUSH hbrushOld = (HBRUSH)SelectObject(hdc, win->brMovePattern);
+    PatBlt(hdc, x, y, dx, dy, PATINVERT);
+    SelectObject(hdc, hbrushOld);
+    ReleaseDC(hwnd, hdc);
+}
+
 static void OnDraggingStart(WindowInfo* win, int x, int y, bool right = false) {
     SetCapture(win->hwndCanvas);
     win->mouseAction = right ? MouseAction::DraggingRight : MouseAction::Dragging;
@@ -190,6 +205,38 @@ static void OnDraggingStart(WindowInfo* win, int x, int y, bool right = false) {
     if (GetCursor()) {
         SetCursor(gCursorDrag);
     }
+}
+
+// return true if this was annotation dragging
+static bool StopDraggingAnnotation(WindowInfo* win, int x, int y) {
+    Annotation* annot = win->annotationOnLastButtonDown;
+    if (!annot) {
+        return false;
+    }
+    DrawMovePattern(win, win->dragPrevPos, win->annotationBeingMovedSize);
+
+    DisplayModel* dm = win->AsFixed();
+    x += win->annotationBeingMovedOffset.x;
+    y += win->annotationBeingMovedOffset.y;
+    Point pt{x, y};
+    int pageNo = dm->GetPageNoByPoint(pt);
+    // we can only move annotation within the same page
+    if (pageNo == annot->PageNo()) {
+        Rect rScreen{x, y, 1, 1};
+        RectFl r = dm->CvtFromScreen(rScreen, pageNo);
+        RectFl ar = annot->Rect();
+        r.dx = ar.dx;
+        r.dy = ar.dy;
+        // dbglogf("prev rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", ar.x, ar.y, ar.dx, ar.dy);
+        // dbglogf(" new rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", r.x, r.y, r.dx, r.dy);
+        annot->SetRect(r);
+        WindowInfoRerender(win);
+        StartEditAnnotations(win->currentTab, annot);
+    } else {
+        delete annot;
+    }
+    win->annotationOnLastButtonDown = nullptr;
+    return true;
 }
 
 static void OnDraggingStop(WindowInfo* win, int x, int y, bool aborted) {
@@ -201,6 +248,10 @@ static void OnDraggingStop(WindowInfo* win, int x, int y, bool aborted) {
         SetCursorCached(IDC_ARROW);
     }
     ReleaseCapture();
+
+    if (StopDraggingAnnotation(win, x, y)) {
+        return;
+    }
 
     if (aborted) {
         return;
@@ -247,17 +298,17 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     }
 
     if (win->dragStartPending) {
-        // have we already started a proper drag?
         if (!IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y)) {
             return;
         }
         win->dragStartPending = false;
         delete win->linkOnLastButtonDown;
         win->linkOnLastButtonDown = nullptr;
-        delete win->annotationOnLastButtonDown;
-        win->annotationOnLastButtonDown = nullptr;
     }
 
+    Point prevPos = win->dragPrevPos;
+    Point pos{x, y};
+    Annotation* annot = win->annotationOnLastButtonDown;
     switch (win->mouseAction) {
         case MouseAction::Scrolling:
             win->yScrollSpeed = (y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
@@ -276,11 +327,16 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
             break;
         case MouseAction::Dragging:
         case MouseAction::DraggingRight:
-            win->MoveDocBy(win->dragPrevPos.x - x, win->dragPrevPos.y - y);
+            if (annot) {
+                Size size = win->annotationBeingMovedSize;
+                DrawMovePattern(win, prevPos, size);
+                DrawMovePattern(win, pos, size);
+            } else {
+                win->MoveDocBy(win->dragPrevPos.x - x, win->dragPrevPos.y - y);
+            }
             break;
     }
-    // needed also for detecting cursor movement in presentation mode
-    win->dragPrevPos = Point(x, y);
+    win->dragPrevPos = pos;
 
     NotificationWnd* wnd = win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
     if (!wnd) {
@@ -290,7 +346,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     if (MouseAction::Selecting == win->mouseAction) {
         win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
     }
-    UpdateCursorPositionHelper(win, Point(x, y), wnd);
+    UpdateCursorPositionHelper(win, pos, wnd);
 }
 
 static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
@@ -299,10 +355,20 @@ static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     Point pt{x, y};
 
-    win->annotationOnLastButtonDown = dm->GetAnnotationAtPos(pt);
-    if (win->annotationOnLastButtonDown) {
-        dbglog("has annotation under cursor\n");
+    Annotation* annot = dm->GetAnnotationAtPos(pt);
+    if (annot) {
+        win->annotationOnLastButtonDown = annot;
+        CreateMovePatternLazy(win);
+        RectFl r = annot->Rect();
+        int pageNo = dm->GetPageNoByPoint(pt);
+        Rect rScreen = dm->CvtToScreen(pageNo, r);
+        win->annotationBeingMovedSize = {rScreen.dx, rScreen.dy};
+        int offsetX = rScreen.x - pt.x;
+        int offsetY = rScreen.y - pt.y;
+        win->annotationBeingMovedOffset = Point{offsetX, offsetY};
+        DrawMovePattern(win, pt, win->annotationBeingMovedSize);
     }
+
     IPageElement* pageEl = dm->GetElementAtPos(pt);
     if (pageEl) {
         if (pageEl->Is(kindPageElementDest)) {
@@ -346,7 +412,8 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm_CopySelection);
     bool isOverText = win->AsFixed()->IsOverText(pt);
-    if (!canCopy || (isShift || !isOverText) && !isCtrl) {
+    Annotation* annot = win->annotationOnLastButtonDown;
+    if (annot || !canCopy || (isShift || !isOverText) && !isCtrl) {
         OnDraggingStart(win, x, y);
     } else {
         OnSelectionStart(win, x, y, key);
@@ -362,6 +429,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     }
     CrashIf(MouseAction::Selecting != ma && MouseAction::SelectingText != ma && MouseAction::Dragging != ma);
 
+    // TODO: should IsDragXOrY() ever be true here? We should get mouse move first
     bool didDragMouse = !win->dragStartPending || IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
         OnDraggingStop(win, x, y, !didDragMouse);
@@ -376,24 +444,12 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
 
     PointFl ptPage = dm->CvtFromScreen(Point(x, y));
 
-    Annotation* annot = win->annotationOnLastButtonDown;
-    win->annotationOnLastButtonDown = nullptr;
-    defer {
-        delete annot;
-    };
-
     // TODO: win->linkHandler->GotoLink might spin the event loop
     IPageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
     defer {
         delete link;
     };
-
-    if (annot) {
-        // TODO: move annotation
-        dbglog("dropped annotation\n");
-        return;
-    }
 
     TabInfo* tab = win->currentTab;
     if (didDragMouse) {
@@ -498,8 +554,7 @@ static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     }
 }
 
-static void OnMouseRightButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
-    UNUSED(key);
+static void OnMouseRightButtonDown(WindowInfo* win, int x, int y) {
     // lf("Right button clicked on %d %d", x, y);
     if (MouseAction::Scrolling == win->mouseAction) {
         win->mouseAction = MouseAction::Idle;
@@ -551,7 +606,7 @@ static void OnMouseRightButtonDblClick(WindowInfo* win, int x, int y, WPARAM key
     if (win->presentation && !(key & ~MK_RBUTTON)) {
         // in presentation mode, right clicks turn the page,
         // make two quick right clicks (AKA one double-click) turn two pages
-        OnMouseRightButtonDown(win, x, y, key);
+        OnMouseRightButtonDown(win, x, y);
         return;
     }
 }
@@ -1189,7 +1244,7 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WP
             return 0;
 
         case WM_RBUTTONDOWN:
-            OnMouseRightButtonDown(win, x, y, wp);
+            OnMouseRightButtonDown(win, x, y);
             return 0;
 
         case WM_RBUTTONUP:
@@ -1509,16 +1564,16 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (!win->CreateUIAProvider()) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }
-            // TODO: should win->uia_provider->Release() as in
+            // TODO: should win->uiaProvider->Release() as in
             // http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
             // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
             // Maybe instead of having a single provider per win, we should always create a new one
             // like in this sample:
             // http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
-            // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
+            // currently win->uiaProvider refCount is really out of wack in WindowInfo::~WindowInfo
             // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
             // and since WM_GETOBJECT is called many times, it accumulates
-            return UiaReturnRawElementProvider(hwnd, wp, lp, win->uia_provider);
+            return UiaReturnRawElementProvider(hwnd, wp, lp, win->uiaProvider);
 
         default:
             // TODO: achieve this split through subclassing or different window classes

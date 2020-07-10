@@ -43,6 +43,7 @@ extern "C" {
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "EditAnnotations.h"
+#include "SumatraPDF.h"
 
 using std::placeholders::_1;
 
@@ -111,9 +112,6 @@ AnnotationType gAnnotsWithColor[] = {
     AnnotationType::Squiggly,
 };
 // clang-format on
-
-// in SumatraPDF.cpp
-extern void WindowInfoRerender(WindowInfo*, bool includeNonClientArea = false);
 
 const char* GetKnownColorName(COLORREF c) {
     if (c == ColorUnset) {
@@ -1188,20 +1186,30 @@ static bool SelectAnnotationInListBox(EditAnnotationsWindow* win, Annotation* an
     return false;
 }
 
-// takes ownership of selectedAnnot
-void StartEditAnnotations(TabInfo* tab, Annotation* selectedAnnot) {
-    if (tab->editAnnotsWindow) {
-        if (selectedAnnot) {
-            EditAnnotationsWindow* win = tab->editAnnotsWindow;
-            win->annotations->Append(selectedAnnot);
-            RebuildAnnotations(win);
-            SelectAnnotationInListBox(win, selectedAnnot);
-        }
-        HWND hwnd = tab->editAnnotsWindow->mainWindow->hwnd;
-        BringWindowToTop(hwnd);
+static void AddAnnotationToWindow(EditAnnotationsWindow* win, Annotation* annot) {
+    HWND hwnd = win->mainWindow->hwnd;
+    BringWindowToTop(hwnd);
+    if (!annot) {
         return;
     }
-    auto win = new EditAnnotationsWindow();
+    bool alreadyExists = SelectAnnotationInListBox(win, annot);
+    if (alreadyExists) {
+        delete annot;
+        return;
+    }
+    win->annotations->Append(annot);
+    RebuildAnnotations(win);
+    SelectAnnotationInListBox(win, annot);
+}
+
+// takes ownership of selectedAnnot
+void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
+    EditAnnotationsWindow* win = tab->editAnnotsWindow;
+    if (win) {
+        AddAnnotationToWindow(win, annot);
+        return;
+    }
+    win = new EditAnnotationsWindow();
     auto mainWindow = new Window();
     HMODULE h = GetModuleHandleW(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
@@ -1240,13 +1248,13 @@ void StartEditAnnotations(TabInfo* tab, Annotation* selectedAnnot) {
     }
     LayoutAndSizeToContent(win->mainLayout, 520, minDy, mainWindow->hwnd);
     HwndPositionToTheRightOf(mainWindow->hwnd, tab->win->hwndFrame);
-    SelectAnnotationInListBox(win, selectedAnnot);
+    SelectAnnotationInListBox(win, annot);
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     mainWindow->SetIsVisible(true);
 
-    delete selectedAnnot;
+    delete annot;
 }
 
 bool IsEditAnnotationsWindowOpen(TabInfo* tab) {

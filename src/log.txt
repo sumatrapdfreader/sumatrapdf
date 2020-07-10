@@ -6,6 +6,8 @@ fix regression of not copying rectangular selection as image (fixes #1668)
 
 write DisplayModel::GetAnnotationAtPos(Point) and EngineGetAnnotationAtPos(Engine, Point)
 
+update annotation rect after it's moved
+
 2020-07-08 Wed
 
 Parallelized doit -clang-format. Go concurrency is a joy.

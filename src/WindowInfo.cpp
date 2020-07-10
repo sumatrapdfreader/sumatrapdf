@@ -52,10 +52,20 @@ NotificationGroupId NG_RESPONSE_TO_ACTION = "responseToAction";
 
 WindowInfo::WindowInfo(HWND hwnd) {
     hwndFrame = hwnd;
-    touchState.panStarted = false;
     linkHandler = new LinkHandler(this);
     notifications = new Notifications();
-    fwdSearchMark.show = false;
+}
+
+static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
+
+void CreateMovePatternLazy(WindowInfo* win) {
+    if (win->bmpMovePattern) {
+        return;
+    }
+    win->bmpMovePattern = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
+    CrashIf(!win->bmpMovePattern);
+    win->brMovePattern = CreatePatternBrush(win->bmpMovePattern);
+    CrashIf(!win->brMovePattern);
 }
 
 WindowInfo::~WindowInfo() {
@@ -68,13 +78,16 @@ WindowInfo::~WindowInfo() {
 
     UnsubclassToc(this);
 
+    DeleteObject(brMovePattern);
+    DeleteObject(bmpMovePattern);
+
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere
-    if (uia_provider) {
+    if (uiaProvider) {
         if (AsFixed()) {
-            uia_provider->OnDocumentUnload();
+            uiaProvider->OnDocumentUnload();
         }
-        uia_provider->Release();
+        uiaProvider->Release();
     }
 
     delete linkHandler;
@@ -100,6 +113,13 @@ WindowInfo::~WindowInfo() {
     delete favSplitter;
     free(tocLabelWithClose);
     free(favLabelWithClose);
+}
+
+void ClearMouseState(WindowInfo* win) {
+    delete win->linkOnLastButtonDown;
+    win->linkOnLastButtonDown = nullptr;
+    delete win->annotationOnLastButtonDown;
+    win->annotationOnLastButtonDown = nullptr;
 }
 
 bool WindowInfo::IsAboutWindow() const {
@@ -244,16 +264,16 @@ NotificationWnd* WindowInfo::ShowNotification(const WCHAR* msg, int options, Not
 }
 
 bool WindowInfo::CreateUIAProvider() {
-    if (uia_provider) {
+    if (uiaProvider) {
         return true;
     }
-    uia_provider = new SumatraUIAutomationProvider(this->hwndCanvas);
-    if (!uia_provider) {
+    uiaProvider = new SumatraUIAutomationProvider(this->hwndCanvas);
+    if (!uiaProvider) {
         return false;
     }
     // load data to provider
     if (AsFixed()) {
-        uia_provider->OnDocumentLoad(AsFixed());
+        uiaProvider->OnDocumentLoad(AsFixed());
     }
     return true;
 }

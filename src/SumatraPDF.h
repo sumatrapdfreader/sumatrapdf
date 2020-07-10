@@ -177,5 +177,6 @@ void RebuildMenuBarForWindow(WindowInfo* win);
 void UpdateCheckAsync(WindowInfo* win, bool autoCheck);
 void DeleteWindowInfo(WindowInfo* win);
 void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous = false);
+void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea = false);
 
 LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);

@@ -701,9 +701,6 @@ static bool ShouldShowCreateAnnotationMenu(TabInfo* tab, int x, int y) {
     return true;
 }
 
-// in SumatraPDF.cpp
-extern void WindowInfoRerender(WindowInfo*, bool includeNonClientArea = false);
-
 void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);

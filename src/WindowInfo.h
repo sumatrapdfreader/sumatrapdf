@@ -177,13 +177,13 @@ struct WindowInfo {
     Vec<StaticLinkInfo> staticLinks;
 
     bool isFullScreen{false};
-    PresentationMode presentation = PM_DISABLED;
+    PresentationMode presentation{PM_DISABLED};
     int windowStateBeforePresentation{0};
 
     long nonFullScreenWindowStyle{0};
-    Rect nonFullScreenFrameRect{};
+    Rect nonFullScreenFrameRect;
 
-    Rect canvasRc{};   // size of the canvas (excluding any scroll bars)
+    Rect canvasRc;     // size of the canvas (excluding any scroll bars)
     int currPageNo{0}; // cached value, needed to determine when to auto-update the ToC selection
 
     int wheelAccumDelta{0};
@@ -201,6 +201,10 @@ struct WindowInfo {
     IPageElement* linkOnLastButtonDown{nullptr};
     const WCHAR* urlOnLastButtonDown{nullptr};
     Annotation* annotationOnLastButtonDown{nullptr};
+    Size annotationBeingMovedSize;
+    Point annotationBeingMovedOffset;
+    HBITMAP bmpMovePattern{nullptr};
+    HBRUSH brMovePattern{nullptr};
 
     ControllerCallback* cbHandler{nullptr};
 
@@ -220,7 +224,7 @@ struct WindowInfo {
 
     FrameRateWnd* frameRateWnd{nullptr};
 
-    SumatraUIAutomationProvider* uia_provider{nullptr};
+    SumatraUIAutomationProvider* uiaProvider{nullptr};
 
     void UpdateCanvasSize();
     Size GetViewPortSize();
@@ -257,6 +261,8 @@ struct LinkHandler {
     void GotoNamedDest(const WCHAR* name);
 };
 
-void UpdateTreeCtrlColors(WindowInfo* win);
-void RepaintAsync(WindowInfo* win, int delay);
-void ClearFindBox(WindowInfo* win);
+void UpdateTreeCtrlColors(WindowInfo*);
+void RepaintAsync(WindowInfo*, int delay);
+void ClearFindBox(WindowInfo*);
+void CreateMovePatternLazy(WindowInfo*);
+void ClearMouseState(WindowInfo*);

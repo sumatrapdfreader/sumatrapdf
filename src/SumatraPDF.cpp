@@ -1144,10 +1144,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     // delete them before destroying the whole DisplayModel
     // (same for linkOnLastButtonDown)
     ClearTocBox(win);
-    delete win->linkOnLastButtonDown;
-    win->linkOnLastButtonDown = nullptr;
-    delete win->annotationOnLastButtonDown;
-    win->annotationOnLastButtonDown = nullptr;
+    ClearMouseState(win);
 
     CrashIf(win->IsAboutWindow() || win->IsDocLoaded() != (win->ctrl != nullptr));
     // TODO: https://code.google.com/p/sumatrapdf/issues/detail?id=1570
@@ -1168,8 +1165,8 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
                 dm->CopyNavHistory(*prevCtrl->AsFixed());
             }
             // tell UI Automation about content change
-            if (win->uia_provider) {
-                win->uia_provider->OnDocumentLoad(dm);
+            if (win->uiaProvider) {
+                win->uiaProvider->OnDocumentLoad(dm);
             }
         } else if (win->AsChm()) {
             win->AsChm()->SetParentHwnd(win->hwndCanvas);
@@ -1537,7 +1534,7 @@ void DeleteWindowInfo(WindowInfo* win) {
     CrashIf(win->findThread && WaitForSingleObject(win->findThread, 0) == WAIT_TIMEOUT);
     CrashIf(win->printThread && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT);
 
-    if (win->uia_provider) {
+    if (win->uiaProvider) {
         // tell UIA to release all objects cached in its store
         UiaReturnRawElementProvider(win->hwndCanvas, 0, 0, nullptr);
     }
@@ -1812,9 +1809,9 @@ void LoadModelIntoTab(TabInfo* tab) {
     } else if (win->AsEbook()) {
         // prevent the ebook UI from redrawing before win->RedrawAll at the bottom
         win->AsEbook()->EnableMessageHandling(false);
-    } else if (win->AsFixed() && win->uia_provider) {
+    } else if (win->AsFixed() && win->uiaProvider) {
         // tell UI Automation about content change
-        win->uia_provider->OnDocumentLoad(win->AsFixed());
+        win->uiaProvider->OnDocumentLoad(win->AsFixed());
     }
 
     UpdateUiForCurrentTab(win);
@@ -1845,8 +1842,8 @@ void LoadModelIntoTab(TabInfo* tab) {
     tab->canvasRc = win->canvasRc;
 
     win->showSelection = tab->selectionOnPage != nullptr;
-    if (win->uia_provider) {
-        win->uia_provider->OnSelectionChanged();
+    if (win->uiaProvider) {
+        win->uiaProvider->OnSelectionChanged();
     }
 
     SetFocus(win->hwndFrame);
@@ -2117,7 +2114,7 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
 }
 
 // re-render the document currently displayed in this window
-void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea = false) {
+void WindowInfoRerender(WindowInfo* win, bool includeNonClientArea) {
     if (!win->AsFixed()) {
         return;
     }
@@ -2224,8 +2221,8 @@ static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteM
     win->annotationOnLastButtonDown = nullptr;
 
     win->fwdSearchMark.show = false;
-    if (win->uia_provider) {
-        win->uia_provider->OnDocumentUnload();
+    if (win->uiaProvider) {
+        win->uiaProvider->OnDocumentUnload();
     }
     win->ctrl = nullptr;
     auto currentTab = win->currentTab;

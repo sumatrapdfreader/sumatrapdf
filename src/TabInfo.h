@@ -5,6 +5,7 @@ struct SelectionOnPage;
 struct WatchedFile;
 struct VbkmFile;
 struct EditAnnotationsWindow;
+struct WindowInfo;
 
 enum class TocSort { None, TagSmallFirst, TagBigFirst, Color };
 

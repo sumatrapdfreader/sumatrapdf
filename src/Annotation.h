@@ -57,7 +57,10 @@ struct Annotation {
 
     AnnotationType Type() const;
     int PageNo() const;
+    // note: page no can't be changed
+
     RectFl Rect() const;
+    void SetRect(RectFl);
 
     COLORREF Color(); // ColorUnset if no color
     bool SetColor(COLORREF);
