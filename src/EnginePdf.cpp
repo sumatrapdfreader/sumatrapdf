@@ -2015,12 +2015,20 @@ Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointFl 
     pdf_page* pdfpage = pdf_page_from_fz_page(e->ctx, pi->page);
     pdf_annot* annot = pdf_first_annot(e->ctx, pdfpage);
     fz_point p{pos.x, pos.y};
+
+    // find last annotation that contains this point
+    // they are drawn in order so later annotations
+    // are drawn on top of earlier
+    pdf_annot* matched = nullptr;
     while (annot) {
         fz_rect rc = pdf_annot_rect(e->ctx, annot);
         if (fz_is_point_inside_rect(p, rc)) {
-            return MakeAnnotationPdf(e->ctx, pdfpage, annot, pageNo);
+            matched = annot;
         }
         annot = pdf_next_annot(e->ctx, annot);
+    }
+    if (matched) {
+        return MakeAnnotationPdf(e->ctx, pdfpage, matched, pageNo);
     }
     return nullptr;
 }
