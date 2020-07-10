@@ -1,8 +1,9 @@
 AppTranslator: SumatraPDF
-18985c129a20ea589837709ae1d15804cb09c3bb
+dd2c0227f3b4709e00aceac053f1f0155fb6e201
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 cn:未找到 %s 安装。
+co:Installazione di %s micca trova.
 fr:%s installation non trouvée
 nl:%s installatie niet gevonden.
 pl:Nie znaleziono instalacji %s.
@@ -2600,6 +2601,7 @@ vn:Nhớ các cài đặt này cho từng tập tin
 :&Remove From History
 am:&Հեռացնել պատմությունից
 cn:从历史记录删除(&R)
+co:&Caccià da a crunulogia
 fr:Supprimer de l'historique
 nl:V&erwijder uit Geschiedenis
 pl:&Usuń z historii
@@ -3640,16 +3642,19 @@ vn:Thêm Ưa thích
 :Add PDF as a child
 am:Ավելացնել PDF-ը որպես ենթատարր
 cn:将 PDF 添加为子项目
+co:Aghjunghje un PDF cum’è un zitellu
 nl:Voeg PDF als child toe
 pl:Dodaj PDF jako potomka
 :Add PDF as a sibling
 am:Ավելացնել PDF-ը որպես ժառանգ
 cn:将 PDF 添加为同级项目
+co:Aghjunghje un PDF cum’è un fratellu
 nl:Voeg PDF als verwant toe
 pl:Dodaj PDF jako rodzeństwo
 :Add child
 am:Ավելացնել ենթատարր
 cn:添加子项目
+co:Aghjunghje un zitellu
 nl:Child toevoegen
 pl:Dodaj potomka
 :Add page %s to favorites
@@ -3813,6 +3818,7 @@ uk:Додати %s сторінку до закладок\tCtrl+B
 :Add sibling
 am:Ավելացնել ժառանգ
 cn:添加同级项目
+co:Aghjunghje un fratellu
 nl:Voeg verwant toe
 pl:Dodaj rodzeństwo
 :Add to favorites
@@ -4087,6 +4093,7 @@ vn:Tất cả các định dạng được hỗ trợ
 :Annotations
 am:Ծանոթագրություններ
 cn:标注
+co:Annutazioni
 fr:Annotations
 nl:Aantekeningen
 pl:Adnotacje
@@ -4161,6 +4168,7 @@ vn:Ứng dụng:
 :Are you sure you want to uninstall %s?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ապատեղադրել %s-ը:
 cn:您确定要卸载 %s 吗？
+co:Site sicuru di vulè disinstallà %s ?
 fr:Voulez-vous vraiment désinstaller %s ?
 nl:Weet u zeker dat u %s wilt dé-installeren?
 pl:Czy na pewno chcesz odinstalować %s?
@@ -5239,6 +5247,7 @@ vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần 
 :Caret
 am:Նշորդ
 cn:插入号
+co:Cursore
 fr:curseur
 nl:Merkteken
 pl:Kareta
@@ -5385,6 +5394,7 @@ vn:Kiểm tra cập nhật
 :Circle
 am:Շրջան
 cn:圆
+co:Chjerchju
 fr:Cercle
 nl:Cirkel
 pl:Okrąg
@@ -5488,6 +5498,7 @@ uk:Згорнути всі
 :Color
 am:Գույն
 cn:颜色
+co:Culore
 fr:Couleur
 nl:Kleur
 pl:Kolor
@@ -6721,6 +6732,7 @@ vn:Không thể gỡ cài đặt bộ xem truớc PDF
 :Couldn't uninstall Sumatra search filter
 am:Հնարավոր չեղավ ապատեղադրել Sumatra որոնման զտիչը
 cn:无法卸载 Sumatra 搜索过滤器
+co:Impussibule di disinstallà u filtru di ricerca di Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 :Couldn't uninstall browser plugin
@@ -6847,6 +6859,7 @@ vn:Không thể ghi %s vào đĩa
 :Create Annotation
 am:Ստեղծել ծանոթագրություն
 cn:创建标注
+co:Scrive un’annutazione
 fr:Écrire une annotation
 nl:Maak Aantekening
 pl:Utwórz adnotację
@@ -7681,6 +7694,7 @@ vn:Tải xuống
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 cn:退出全屏(&X)
+co:&Esce di u modu screnu sanu
 fr:&Quitter le mode plein écran
 nl:Volledig scherm uit
 pl:W&yjdź z trybu pełnoekranowego
@@ -7824,18 +7838,21 @@ vn:Tập tin EPUB
 :Edit
 am:Խմբագրել
 cn:编辑
+co:Mudificà
 fr:Éditer
 nl:Bewerken
 pl:Edytuj
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 cn:编辑标注
+co:Mudificà l’annutazioni
 fr:Éditer les annotations
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
 :Edit Bookmarks
 am:Խմբագրել էջանիշերը
 cn:编辑书签
+co:Mudificà l’indette
 fr:Éditer les marque-pages
 nl:Bewerk Bladwijzers
 pl:Edytuj zakładki
@@ -8138,6 +8155,7 @@ uk:Розгорнути всі
 :Export Bookmarks
 am:Արտահանել էջանիշերը
 cn:导出书签
+co:Espurtà l’indette
 fr:Exporter les marque-pages
 nl:Exporteer Bladwijzers
 pl:Eksportuj zakładki
@@ -9026,6 +9044,7 @@ vn:Không tìm thấy tập tin %s
 :File Attachment
 am:Ֆայլի կցորդ
 cn:文件附件
+co:Schedariu attaccatu
 nl:Bestands Bijlage
 pl:Załącznik
 :File Size:
@@ -10298,6 +10317,7 @@ vn:Tìm thấy đoạn văn bản tại trang %s (lần nữa)
 :Free Text
 am:Ազատ գրվածք
 cn:自定义文本
+co:Testu liberu
 nl:Vrije Tekst
 pl:Dowolny tekst
 :Frequently Read
@@ -10634,6 +10654,7 @@ vn:Ẩn Đọc thường xuyên
 :Highlight
 am:Գունանշում
 cn:高亮
+co:Sopralineà
 nl:Markeer
 pl:Wyróżnienie
 :Hint: Use the F3 key for finding again
@@ -10764,12 +10785,14 @@ vn:Tập tin ảnh (*.%s)
 :Images
 am:Պատկերներ
 cn:图像
+co:Fiure
 fr:Images
 nl:Afbeeldingen
 pl:Obrazy
 :Ink
 am:Թանաք
 cn:墨迹
+co:Inchjostru
 nl:Snelkoppeling
 pl:Atrament
 :Install SumatraPDF
@@ -11266,6 +11289,7 @@ vn:Sáng
 :Line
 am:Գիծ
 cn:线条
+co:Linea
 fr:Ligne
 nl:Regel
 pl:Linia
@@ -11772,6 +11796,7 @@ tw:新建視窗(&W)\tCtrl+N
 :New Bookmarks
 am:Նոր էջանիշեր
 cn:新建书签
+co:Nove indette
 fr:Nouveaux marque-pages
 nl:Nieuwe Bladwijzers
 pl:Nowe zakładki
@@ -12446,6 +12471,7 @@ vn:Mở bằng PDF-XChange
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
 cn:打开嵌入 PDF
+co:Apre u PDF incurpuratu
 nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
 :Open a document...
@@ -13863,11 +13889,13 @@ vn:Xin chờ đợi, đang hiện...
 :Poly Line
 am:Բազմագիծ
 cn:折线
+co:Linea tronca
 nl:Poly Regel
 pl:Polilinia
 :Polygon
 am:Պոլիգոն
 cn:多边形
+co:Poligonu
 fr:Polygone
 nl:Veelhoek
 pl:Wielokąt
@@ -14632,6 +14660,7 @@ vn:Đổi tê&n...\tF2
 :Redact
 am:Փոփոխել
 cn:编辑
+co:Redige
 nl:Redigeren
 pl:Redaguj
 :Remember &opened files
@@ -14701,6 +14730,7 @@ vn:Nhớ các tập tin đã mở
 :Remove Item
 am:Հեռացնել միույթը
 cn:移除项目
+co:Caccià l’elementu
 nl:Verwijder Item
 pl:Usuń element
 :Remove from favorites
@@ -15136,6 +15166,7 @@ vn:Lưu thành
 :Save Embedded File...
 am:Պահպանել ներկառուցված ֆայլը...
 cn:保存嵌入文件...
+co:Arregistrà u schedariu incurpuratu…
 nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
 :Save S&hortcut...\tCtrl+Shift+S
@@ -15826,6 +15857,7 @@ vn:Xem trang liên tiếp
 :Show &Scrollbars
 am:Ցուցադրել &ոլորգոտիները
 cn:显示滚动条(&S)
+co:Affissà e barre di &sfilarata
 fr:Afficher les &barres  de défilement
 nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
@@ -15991,6 +16023,7 @@ vn:Hiện Ưa thích
 :Show Scr&ollbars
 am:Ցուցադրել ոլո&րագոտիները
 cn:显示滚动条(&O)
+co:Affissà e &barre di sfilarata
 fr:Afficher les barres de &défilement
 nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
@@ -16283,6 +16316,7 @@ vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', n�
 :Sort By
 am:Տեսակավորել ըստ՝
 cn:排序
+co:Classificà da
 fr:Classer
 nl:Sorteer Op
 pl:Sortuj według
@@ -16353,16 +16387,19 @@ vn:Tập tin nguồn %s không có điểm đồng bộ
 :Square
 am:Քառակուսի
 cn:矩形
+co:Quadratu
 nl:Vierkant
 pl:Kwadrat
 :Squiggly
 am:Ալիքավոր
 cn:波浪线
+co:Undulatu
 nl:Kronkelig
 pl:Falowanie
 :Stamp
 am:Կնիք
 cn:图章
+co:Stampaghjolu
 nl:Stempel
 pl:Pieczęć
 :Start SumatraPDF
@@ -16429,6 +16466,7 @@ vn:Mở SumatraPDF
 :Strike Out
 am:Գծաջնջված
 cn:删除线
+co:Rigà
 fr:Rayer
 nl:Doorhalen
 pl:Skreślenie
@@ -17055,6 +17093,7 @@ vn:SumatraPDF giờ là trình đọc PDF chính của bạn
 :Support SumatraPDF
 am:Աջակցել SumatraPDF-ին
 cn:支持 SumatraPDF
+co:Sustene SumatraPDF
 nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
 :Synchronization file cannot be opened
@@ -17124,11 +17163,13 @@ vn:Không mở được tập tin đồng bộ
 :Tag (big first)
 am:Պիտակ (նախ մեծը)
 cn:标签 (大的在前)
+co:Etichetta (prima maiò)
 nl:Tag (eerst groot)
 pl:Tag (najpierw duży)
 :Tag (small first)
 am:Պիտակ (նախ փոքրը)
 cn:标签 (小的在前)
+co:Etichetta (prima chjuca)
 nl:Tag (eerst klein)
 pl:Tag (najpierw mały)
 :Tagged PDF
@@ -17195,6 +17236,7 @@ vn:PDF được gắn thẻ
 :Text
 am:Գրվածք
 cn:文本
+co:Testu
 fr:Texte
 nl:Tekst
 pl:Tekst
@@ -17265,6 +17307,7 @@ vn:Tập tin văn bản
 :Thank you for choosing RA-MICRO PDF!
 am:Շնորհակալություն RA-MICRO PDF-ը նախընտրելու համար:
 cn:感谢您选择 RA-MICRO PDF！
+co:Vi ringraziemu d’avè sceltu RA-MICRO PDF !
 fr:Merci d'avoir choisi RA6MICRO PDF !
 nl:Dank u voor het kiezen van RA-MICRO PDF!
 pl:Dziękujemy za wybranie RA-MICRO PDF!
@@ -17576,6 +17619,7 @@ vn:Tựa đề
 :Underline
 am:Ընդգծում
 cn:下划线
+co:Sottulineatu
 fr:Souligner
 nl:Onderstrepen
 pl:Podkreślenie

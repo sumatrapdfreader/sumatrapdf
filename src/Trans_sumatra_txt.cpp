@@ -4396,7 +4396,7 @@ const char * gTranslations_tw =
   "\346\255\243\345\234\250\345\210\227\345\215\260\346\226\207\344\273\266\0";
 
 const char * gTranslations_co = 
-  "\0"\
+  "Installazione di %s micca trova.\0"\
   "&Apprupositu\0"\
   "&Dimensione attuale\tCtrl+1\0"\
   "Ozzioni d\342\200\231&espertu\342\200\246\0"\
@@ -4436,7 +4436,7 @@ const char * gTranslations_co =
   "&Stamp\303\240\342\200\246(ricusatu)\0"\
   "Arricurdassi di a &parolla d\342\200\231entrata per stu ducumentu\0"\
   "Arricurdassi di ste &preferenze per ogni ducumentu\0"\
-  "\0"\
+  "&Cacci\303\240 da a crunulogia\0"\
   "Arregistr\303\240 c\303\271 u &nome\342\200\246\0"\
   "Arregistr\303\240 c\303\271 u &nome\342\200\246\tCtrl+S\0"\
   "&Preferenze\0"\
@@ -4453,20 +4453,20 @@ const char * gTranslations_co =
   "(pagina %s)\0"\
   "Apprupositu di SumatraPDF\0"\
   "Aghjunghje \303\240 i favuriti\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Aghjunghje un PDF cum\342\200\231\303\250 un zitellu\0"\
+  "Aghjunghje un PDF cum\342\200\231\303\250 un fratellu\0"\
+  "Aghjunghje un zitellu\0"\
   "Aghjunghje a pagina %s \303\240 i favuriti\0"\
   "Aghjunghje a &pagina %s \303\240 i favuriti\tCtrl+B\0"\
   "Aghjunghje a pagina %s \303\240 i favuriti c\303\271 u nome (ozzionale) :\0"\
-  "\0"\
+  "Aghjunghje un fratellu\0"\
   "Aghjunghje \303\240 i favuriti\0"\
   "Espertu\0"\
   "Tutti i schedarii\0"\
   "Tutti i ducumenti accettati\0"\
-  "\0"\
+  "Annutazioni\0"\
   "Appiecazione :\0"\
-  "\0"\
+  "Site sicuru di vul\303\250 disinstall\303\240 %s ?\0"\
   "Site sicuru di vul\303\250 disinstall\303\240 SumatraPDF ?\0"\
   "Assuci\303\240 c\303\271 schedarii PDF ?\0"\
   "Schedariu liatu : %s\0"\
@@ -4483,13 +4483,13 @@ const char * gTranslations_co =
   "Abbandun\303\240\0"\
   "\303\231n p\303\262 micca stamp\303\240 stu schedariu\0"\
   "\303\231n p\303\262 micca lanci\303\240 a cumanda di ricerca \303\240 l\342\200\231arritrosa. Ci vole \303\240 verific\303\240 a linea di cumanda in e preferenze.\0"\
-  "\0"\
+  "Cursore\0"\
   "Cambi\303\240 di lingua (Change Language)\0"\
   "&Cuntroll\303\240 e nove versioni\0"\
-  "\0"\
+  "Chjerchju\0"\
   "Chjode\0"\
   "Pieg\303\240 tuttu\0"\
-  "\0"\
+  "Culore\0"\
   "Libri comichi\0"\
   "Cumpatibilit\303\240\0"\
   "Vista in cuntinuu\0"\
@@ -4509,10 +4509,10 @@ const char * gTranslations_co =
   "Impussibule di cacci\303\240 u cartulare d\342\200\231installazione\0"\
   "Impussibule di present\303\240 a pagina\0"\
   "Impussibule di disinstall\303\240 u previsualizatore di PDF\0"\
-  "\0"\
+  "Impussibule di disinstall\303\240 u filtru di ricerca di Sumatra\0"\
   "Impussibule di disinstall\303\240 l\342\200\231estensione di u navigatore\0"\
   "Impussibule di scrive %s nant\342\200\231\303\240 u discu\0"\
-  "\0"\
+  "Scrive un\342\200\231annutazione\0"\
   "Creatu :\0"\
   "Schedariu attuale\0"\
   "Pusizione di u cursore :\0"\
@@ -4527,17 +4527,17 @@ const char * gTranslations_co =
   "Prupriet\303\240 di u ducumentu\0"\
   "Scaric\303\240\0"\
   "&Esce\tCtrl+Q\0"\
-  "\0"\
+  "&Esce di u modu screnu sanu\0"\
   "Libri elettronichi EPUB\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Mudific\303\240\0"\
+  "Mudific\303\240 l\342\200\231annutazioni\0"\
+  "Mudific\303\240 l\342\200\231indette\0"\
   "Scrivite a parolla d\342\200\231entrata\0"\
   "Scrivite a parolla d\342\200\231entrata per %s\0"\
   "Scrivite a linea di cumanda \303\240 eseguisce quandu ci h\303\250 un doppiu-cliccu nant\342\200\231\303\240 u ducumentu PDF :\0"\
   "Sbagliu di caricamentu di %s\0"\
   "Spieg\303\240 tuttu\0"\
-  "\0"\
+  "Espurt\303\240 l\342\200\231indette\0"\
   "&Favuriti\0"\
   "&Dopu\tAlt+Fleccia diritta\0"\
   "&Screnu sanu\tF11\0"\
@@ -4552,7 +4552,7 @@ const char * gTranslations_co =
   "Favuriti\0"\
   "Ducumenti FictionBook\0"\
   "Schedariu %s micca trovu\0"\
-  "\0"\
+  "Schedariu attaccatu\0"\
   "Dimensione di schedariu :\0"\
   "Schedariu :\0"\
   "&Circ\303\240\342\200\246\tCtrl+F\0"\
@@ -4572,17 +4572,17 @@ const char * gTranslations_co =
   "Messa in forma di u libru\342\200\246 %d pagine\0"\
   "Testu trovu \303\240 a pagina %s\0"\
   "Testu trovu \303\240 a pagina %s (torna)\0"\
-  "\0"\
+  "Testu liberu\0"\
   "Ducumenti letti aspessu\0"\
   "Go\0"\
   "And\303\240 \303\240 a pagina\0"\
   "Piatt\303\240 l\342\200\231&ozzioni\0"\
   "Piatt\303\240 i ducumenti letti aspessu\0"\
-  "\0"\
+  "Sopraline\303\240\0"\
   "Indiziu : Impieg\303\240 u tastu F3 per circ\303\240 torna\0"\
   "Schedarii di fiura (*.%s)\0"\
-  "\0"\
-  "\0"\
+  "Fiure\0"\
+  "Inchjostru\0"\
   "Install\303\240 SumatraPDF\0"\
   "Install\303\240 SumatraPDF in u &cartulare :\0"\
   "Installazione fiasca !\0"\
@@ -4591,7 +4591,7 @@ const char * gTranslations_co =
   "Permette \303\240 Windows Desktop Search di &ricerc\303\240 in i ducumenti PDF\0"\
   "Permette \303\240 Windows di &previsualiz\303\240 i ducumenti PDF\0"\
   "Chjaru\0"\
-  "\0"\
+  "Linea\0"\
   "Mo\0"\
   "F\303\240 di SumatraPDF l\342\200\231appiecazione predefinita per i schedarii PDF ?\0"\
   "F\303\240 di SumatraPDF u mo lettore PDF predefinitu\0"\
@@ -4600,7 +4600,7 @@ const char * gTranslations_co =
   "Ducumenti Mobi\0"\
   "Mudificatu :\0"\
   "No&va finestra\tCtrl+N\0"\
-  "\0"\
+  "Nove indette\0"\
   "A nova versione %s h\303\250 dispunibule. Scaricalla ?\0"\
   "Pagina seguente\0"\
   "Alcuna occurrenza trova\0"\
@@ -4611,7 +4611,7 @@ const char * gTranslations_co =
   "Vai\0"\
   "Apre\0"\
   "Apre c\303\271 &PDF-XChange\0"\
-  "\0"\
+  "Apre u PDF incurpuratu\0"\
   "Apre un ducumentu\342\200\246\0"\
   "Apre c\303\271 %s\0"\
   "Apre c\303\271 Ad&obe Reader\0"\
@@ -4634,8 +4634,8 @@ const char * gTranslations_co =
   "Ducumenti PalmDoc\0"\
   "Ci vole \303\240 chjode %s per cuntinu\303\240 !\0"\
   "Aspittate per piac\303\250 ; trasfurmazione\342\200\246\0"\
-  "\0"\
-  "\0"\
+  "Linea tronca\0"\
+  "Poligonu\0"\
   "Ducumenti Postscript\0"\
   "&Presentazione\tF5\0"\
   "Pagina precedente\0"\
@@ -4648,9 +4648,9 @@ const char * gTranslations_co =
   "Stampa di a pagina %d di %d\342\200\246\0"\
   "Penseru di stampa.\0"\
   "&Rinum\303\240\342\200\246\tF2\0"\
-  "\0"\
+  "Redige\0"\
   "Arricurdassi di i &schedarii aperti\0"\
-  "\0"\
+  "Cacci\303\240 l\342\200\231elementu\0"\
   "&Cacci\303\240 da i favuriti\0"\
   "Cacci\303\240 a pagina %s da i favuriti\0"\
   "Rinum\303\240 ver di\0"\
@@ -4658,7 +4658,7 @@ const char * gTranslations_co =
   "Gir\303\240 \303\240 &diritta\tCtrl+Maiusc++\0"\
   "Arregistr\303\240 l\342\200\231ann&utazioni\0"\
   "Arregistr\303\240 c\303\271 u nome\0"\
-  "\0"\
+  "Arregistr\303\240 u schedariu incurpuratu\342\200\246\0"\
   "Arregistr\303\240 l\342\200\231&accurtatoghju\342\200\246\tCtrl+Maiusc+S\0"\
   "Ricerc\303\240 %d di %d\342\200\246\0"\
   "&Tuttu selezziun\303\240\0"\
@@ -4671,23 +4671,23 @@ const char * gTranslations_co =
   "Affiss\303\240 l\342\200\231&indette\tF12\0"\
   "Affiss\303\240 i &favuriti\0"\
   "&Vista in cuntinuu\0"\
-  "\0"\
+  "Affiss\303\240 e barre di &sfilarata\0"\
   "Affiss\303\240 a &barra d\342\200\231attrezzi\tF8\0"\
   "Affiss\303\240 l\342\200\231&indette\tF12\0"\
   "Affiss\303\240 i favuriti\0"\
-  "\0"\
+  "Affiss\303\240 e &barre di sfilarata\0"\
   "Affiss\303\240 i ducumenti letti aspessu\0"\
   "Affiss\303\240 in u car&tulare\0"\
   "Affiss\303\240 a &barra laterale di l\342\200\231unghjette s\342\200\231ella h\303\250 dispunibule\0"\
   "Pagina sola\0"\
   "Quessu \303\271n duveria mai accade !\n\nCi vole \303\240 sceglie \302\253 Abbandun\303\240 \302\273 s\342\200\231\303\250 voi vulete aiutacci \303\240 currege a causa di stu penseru.\0"\
-  "\0"\
+  "Classific\303\240 da\0"\
   "U schedariu d\342\200\231urigine %s \303\271n h\303\240 micca di puntu di sincrunizazione\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Quadratu\0"\
+  "Undulatu\0"\
+  "Stampaghjolu\0"\
   "Lanci\303\240 SumatraPDF\0"\
-  "\0"\
+  "Rig\303\240\0"\
   "Sughjettu :\0"\
   "Stalladore di SumatraPDF %s\0"\
   "Disinstalladore di SumatraPDF %s\0"\
@@ -4698,20 +4698,20 @@ const char * gTranslations_co =
   "Installazione di SumatraPDF micca trova.\0"\
   "SumatraPDF h\303\250 u vostru lettore PDF predefinitu\0"\
   "Av\303\240 SumatraPDF duveria esse u vostru lettore PDF predefinitu\0"\
-  "\0"\
+  "Sustene SumatraPDF\0"\
   "U schedariu di sincrunizazione \303\271n p\303\262 micca esse apertu\0"\
-  "\0"\
-  "\0"\
+  "Etichetta (prima mai\303\262)\0"\
+  "Etichetta (prima chjuca)\0"\
   "PDF etichettatu\0"\
-  "\0"\
+  "Testu\0"\
   "Ducumenti di testu\0"\
-  "\0"\
+  "Vi ringraziemu d\342\200\231av\303\250 sceltu RA-MICRO PDF !\0"\
   "Vi ringraziemu d\342\200\231av\303\250 sceltu SumatraPDF !\0"\
   "Vi ringraziemu ! SumatraPDF h\303\250 statu installatu.\0"\
   "U stalladore h\303\250 statu alteratu. Ci vole \303\240 scaricallu torna.\nScusate per stu penseru !\0"\
   "Stu ducumentu impiegheghja funzioni micca accettate (%s) \303\250 u risultatu puderia \303\271n esse cus\303\254 b\303\250\0"\
   "Titulu :\0"\
-  "\0"\
+  "Sottulineatu\0"\
   "Disinstall\303\240 SumatraPDF\0"\
   "Disinstallazione fiasca\0"\
   "Disinstallazione in corsu\342\200\246\0"\
