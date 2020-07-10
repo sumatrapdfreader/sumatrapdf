@@ -11,6 +11,7 @@
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
+#include "Annotation.h"
 #include "WindowInfo.h"
 #include "Caption.h"
 #include "Tabs.h"
