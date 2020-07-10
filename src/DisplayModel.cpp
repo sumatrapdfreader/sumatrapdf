@@ -1032,6 +1032,20 @@ IPageElement* DisplayModel::GetElementAtPos(Point pt) {
     return engine->GetElementAtPos(pageNo, pos);
 }
 
+Annotation* DisplayModel::GetAnnotationAtPos(Point pt) {
+    int pageNo = GetPageNoByPoint(pt);
+    if (!ValidPageNo(pageNo)) {
+        return nullptr;
+    }
+    // only return visible elements (for cursor interaction)
+    if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
+        return nullptr;
+    }
+
+    PointFl pos = CvtFromScreen(pt, pageNo);
+    return EngineGetAnnotationAtPos(engine, pageNo, pos);
+}
+
 // note: returns false for pages that haven't been rendered yet
 bool DisplayModel::IsOverText(Point pt) {
     int pageNo = GetPageNoByPoint(pt);

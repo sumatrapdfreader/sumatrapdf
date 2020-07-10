@@ -1,7 +1,5 @@
 Annotations:
  - allow moving annotations
-  - write DisplayModel::GetAnnotationAtPos(Point)
-  - write EngineGetAnnotationAtPos(Engine, Point)
   - add annotationOnLastButtonDown for tracking annotation that has been clicked
   - when drag starts, start moving a rectangle
   - when Esc, stop draggin
@@ -63,6 +61,7 @@ small refactorings:
 possible refactorings:
 - change DocumentTextCache::GetTextForPage to return PageText
 - extract tab code from Tabs.cpp into a tab control
+- rename PointFl, RectFl, SizeFl -> PointF etc.
 - rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()
 - split LoadPage() into LoadPage() and LoadPagePartial()
 returning Rect

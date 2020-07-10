@@ -6,6 +6,7 @@ EXPORTS
 ; Fitz exports
 
 	; new stuff
+	fz_is_point_inside_rect
 	fz_quad_from_rect
 	fz_do_try
 	fz_do_always

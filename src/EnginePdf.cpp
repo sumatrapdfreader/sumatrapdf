@@ -2005,3 +2005,22 @@ bool EnginePdfHasUnsavedAnnotations(EngineBase* engine) {
     pdf_document* pdfdoc = pdf_document_from_fz_document(epdf->ctx, epdf->_doc);
     return pdfdoc->dirty;
 }
+
+Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointFl pos) {
+    if (!engine || engine->kind != kindEnginePdf) {
+        return nullptr;
+    }
+    EnginePdf* e = (EnginePdf*)engine;
+    auto pi = e->GetFzPageInfo(pageNo, true);
+    pdf_page* pdfpage = pdf_page_from_fz_page(e->ctx, pi->page);
+    pdf_annot* annot = pdf_first_annot(e->ctx, pdfpage);
+    fz_point p{pos.x, pos.y};
+    while (annot) {
+        fz_rect rc = pdf_annot_rect(e->ctx, annot);
+        if (fz_is_point_inside_rect(p, rc)) {
+            return MakeAnnotationPdf(e->ctx, pdfpage, annot, pageNo);
+        }
+        annot = pdf_next_annot(e->ctx, annot);
+    }
+    return nullptr;
+}

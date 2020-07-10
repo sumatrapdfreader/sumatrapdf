@@ -4,6 +4,8 @@ A daily log of changes and commentary. An experiment of sorts.
 
 fix regression of not copying rectangular selection as image (fixes #1668)
 
+write DisplayModel::GetAnnotationAtPos(Point) and EngineGetAnnotationAtPos(Engine, Point)
+
 2020-07-08 Wed
 
 Parallelized doit -clang-format. Go concurrency is a joy.

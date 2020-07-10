@@ -181,3 +181,14 @@ bool EngineHasUnsavedAnnotations(EngineBase* engine) {
     }
     return EnginePdfHasUnsavedAnnotations(engine);
 }
+
+Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointFl pos) {
+    if (!engine) {
+        return nullptr;
+    }
+    Kind kind = engine->kind;
+    if (kind != kindEnginePdf) {
+        return nullptr;
+    }
+    return EnginePdfGetAnnotationAtPos(engine, pageNo, pos);
+}

@@ -11,3 +11,4 @@ Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType type, i
 int EnginePdfGetAnnotations(EngineBase*, Vec<Annotation*>*);
 bool EnginePdfHasUnsavedAnnotations(EngineBase* engine);
 bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view path);
+Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointFl pos);
