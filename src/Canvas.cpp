@@ -485,8 +485,6 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
             tab->ctrl->GoToNextPage();
         }
     }
-
-    delete link;
 }
 
 static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
