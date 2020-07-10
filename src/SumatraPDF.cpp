@@ -1146,6 +1146,8 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     ClearTocBox(win);
     delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
+    delete win->annotationOnLastButtonDown;
+    win->annotationOnLastButtonDown = nullptr;
 
     CrashIf(win->IsAboutWindow() || win->IsDocLoaded() != (win->ctrl != nullptr));
     // TODO: https://code.google.com/p/sumatrapdf/issues/detail?id=1570
@@ -2215,8 +2217,12 @@ static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteM
     }
     ClearTocBox(win);
     AbortFinding(win, true);
+
     delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
+    delete win->annotationOnLastButtonDown;
+    win->annotationOnLastButtonDown = nullptr;
+
     win->fwdSearchMark.show = false;
     if (win->uia_provider) {
         win->uia_provider->OnDocumentUnload();

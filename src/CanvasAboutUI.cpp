@@ -79,7 +79,7 @@ static void OnMouseLeftButtonDownAbout(WindowInfo* win, int x, int y, WPARAM key
 
     // remember a link under so that on mouse up we only activate
     // link if mouse up is on the same link as mouse down
-    win->url = GetStaticLink(win->staticLinks, x, y);
+    win->urlOnLastButtonDown = GetStaticLink(win->staticLinks, x, y);
 }
 
 static bool IsLink(const WCHAR* url) {
@@ -100,24 +100,26 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) 
     SetFocus(win->hwndFrame);
 
     const WCHAR* url = GetStaticLink(win->staticLinks, x, y);
-    if (url && url == win->url) {
-        if (str::Eq(url, SLINK_OPEN_FILE)) {
-            HwndSendCommand(win->hwndFrame, CmdOpen);
-        } else if (str::Eq(url, SLINK_LIST_HIDE)) {
-            gGlobalPrefs->showStartPage = false;
-            win->RedrawAll(true);
-        } else if (str::Eq(url, SLINK_LIST_SHOW)) {
-            gGlobalPrefs->showStartPage = true;
-            win->RedrawAll(true);
-        } else if (IsLink(url)) {
-            SumatraLaunchBrowser(url);
-        } else {
-            // assume it's a document
-            LoadArgs args(url, win);
-            LoadDocument(args);
-        }
+    const WCHAR* prevUrl = win->urlOnLastButtonDown;
+    win->urlOnLastButtonDown = nullptr;
+    if (!url || url != prevUrl) {
+        return;
     }
-    win->url = nullptr;
+    if (str::Eq(url, SLINK_OPEN_FILE)) {
+        HwndSendCommand(win->hwndFrame, CmdOpen);
+    } else if (str::Eq(url, SLINK_LIST_HIDE)) {
+        gGlobalPrefs->showStartPage = false;
+        win->RedrawAll(true);
+    } else if (str::Eq(url, SLINK_LIST_SHOW)) {
+        gGlobalPrefs->showStartPage = true;
+        win->RedrawAll(true);
+    } else if (IsLink(url)) {
+        SumatraLaunchBrowser(url);
+    } else {
+        // assume it's a document
+        LoadArgs args(url, win);
+        LoadDocument(args);
+    }
 }
 
 static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM key) {

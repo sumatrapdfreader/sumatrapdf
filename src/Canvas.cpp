@@ -254,6 +254,8 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
         win->dragStartPending = false;
         delete win->linkOnLastButtonDown;
         win->linkOnLastButtonDown = nullptr;
+        delete win->annotationOnLastButtonDown;
+        win->annotationOnLastButtonDown = nullptr;
     }
 
     switch (win->mouseAction) {
@@ -291,6 +293,26 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     UpdateCursorPositionHelper(win, Point(x, y), wnd);
 }
 
+static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
+    CrashIf(win->linkOnLastButtonDown);
+    CrashIf(win->annotationOnLastButtonDown);
+    DisplayModel* dm = win->AsFixed();
+    Point pt{x, y};
+
+    win->annotationOnLastButtonDown = dm->GetAnnotationAtPos(pt);
+    if (win->annotationOnLastButtonDown) {
+        dbglog("has annotation under cursor\n");
+    }
+    IPageElement* pageEl = dm->GetElementAtPos(pt);
+    if (pageEl) {
+        if (pageEl->Is(kindPageElementDest)) {
+            win->linkOnLastButtonDown = pageEl;
+        } else {
+            delete pageEl;
+        }
+    }
+}
+
 static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (MouseAction::DraggingRight == win->mouseAction) {
@@ -308,18 +330,11 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 
     SetFocus(win->hwndFrame);
 
-    CrashIf(win->linkOnLastButtonDown);
-    DisplayModel* dm = win->AsFixed();
-    IPageElement* pageEl = dm->GetElementAtPos(Point(x, y));
-    if (pageEl) {
-        if (pageEl->Is(kindPageElementDest)) {
-            win->linkOnLastButtonDown = pageEl;
-        } else {
-            delete pageEl;
-        }
-    }
+    SetObjectUnderMouse(win, x, y);
+
     win->dragStartPending = true;
-    win->dragStart = Point(x, y);
+    Point pt{x, y};
+    win->dragStart = pt;
 
     // - without modifiers, clicking on text starts a text selection
     //   and clicking somewhere else starts a drag
@@ -330,7 +345,7 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     bool isShift = IsShiftPressed();
     bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm_CopySelection);
-    bool isOverText = dm->IsOverText(Point(x, y));
+    bool isOverText = win->AsFixed()->IsOverText(pt);
     if (!canCopy || (isShift || !isOverText) && !isCtrl) {
         OnDraggingStart(win, x, y);
     } else {
@@ -357,11 +372,28 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
         }
     }
 
+    win->mouseAction = MouseAction::Idle;
+
     PointFl ptPage = dm->CvtFromScreen(Point(x, y));
+
+    Annotation* annot = win->annotationOnLastButtonDown;
+    win->annotationOnLastButtonDown = nullptr;
+    defer {
+        delete annot;
+    };
+
     // TODO: win->linkHandler->GotoLink might spin the event loop
     IPageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
-    win->mouseAction = MouseAction::Idle;
+    defer {
+        delete link;
+    };
+
+    if (annot) {
+        // TODO: move annotation
+        dbglog("dropped annotation\n");
+        return;
+    }
 
     TabInfo* tab = win->currentTab;
     if (didDragMouse) {
@@ -821,6 +853,14 @@ static void OnPaintDocument(WindowInfo* win) {
     }
 }
 
+static void SetTextOrArrorCursor(DisplayModel* dm, Point pt) {
+    if (dm->IsOverText(pt)) {
+        SetCursorCached(IDC_IBEAM);
+    } else {
+        SetCursorCached(IDC_ARROW);
+    }
+}
+
 static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
     Point pt;
     DisplayModel* dm = win->AsFixed();
@@ -832,13 +872,10 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
         SetCursorCached(IDC_CROSS);
         return TRUE;
     }
-    if (dm->IsOverText(pt)) {
-        SetCursorCached(IDC_IBEAM);
-    } else {
-        SetCursorCached(IDC_ARROW);
-    }
+
     IPageElement* pageEl = dm->GetElementAtPos(pt);
     if (!pageEl) {
+        SetTextOrArrorCursor(dm, pt);
         win->HideToolTip();
         return TRUE;
     }
@@ -853,6 +890,8 @@ static LRESULT OnSetCursorMouseIdle(WindowInfo* win, HWND hwnd) {
 
     if (isLink) {
         SetCursorCached(IDC_HAND);
+    } else {
+        SetTextOrArrorCursor(dm, pt);
     }
     return TRUE;
 }

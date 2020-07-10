@@ -199,8 +199,7 @@ struct WindowInfo {
 
     LinkHandler* linkHandler{nullptr};
     IPageElement* linkOnLastButtonDown{nullptr};
-    const WCHAR* url{nullptr};
-
+    const WCHAR* urlOnLastButtonDown{nullptr};
     Annotation* annotationOnLastButtonDown{nullptr};
 
     ControllerCallback* cbHandler{nullptr};

@@ -62,7 +62,9 @@ WindowInfo::~WindowInfo() {
     FinishStressTest(this);
 
     CrashIf(tabs.size() > 0);
-    CrashIf(ctrl || linkOnLastButtonDown);
+    CrashIf(ctrl);
+    CrashIf(linkOnLastButtonDown);
+    CrashIf(annotationOnLastButtonDown);
 
     UnsubclassToc(this);
 
