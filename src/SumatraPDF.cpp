@@ -3883,14 +3883,14 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType, int pag
     }
     annot->SetQuadPointsAsRect(rects);
 
-    WCHAR* selTxt = GetSelectedText(win, L"\n");
+    bool isTextOnlySelection;
+    WCHAR* selTxt = GetSelectedText(win, L"\n", isTextOnlySelection);
     if (selTxt) {
         strconv::StackWstrToUtf8 str(selTxt);
         annot->SetContents(str.Get());
         str::Free(selTxt);
     }
 
-    // TODO: set contents from selected text
     DeleteOldSelectionInfo(win, true);
     WindowInfoRerender(win);
     StartEditAnnotations(win->currentTab, annot);

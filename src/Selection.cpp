@@ -250,8 +250,10 @@ void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relat
     UpdateToolbarState(win);
 }
 
+// isTextSelectionOut is set to true if this is text-only selection (as opposed to
+// rectangular selection)
 // caller needs to str::Free() the result
-WCHAR* GetSelectedText(WindowInfo* win, const WCHAR* lineSep) {
+WCHAR* GetSelectedText(WindowInfo* win, const WCHAR* lineSep, bool& isTextOnlySelectionOut) {
     if (!win->currentTab || !win->currentTab->selectionOnPage) {
         return nullptr;
     }
@@ -267,8 +269,8 @@ WCHAR* GetSelectedText(WindowInfo* win, const WCHAR* lineSep) {
         return nullptr;
     }
 
-    bool isTextSelection = dm->textSelection->result.len > 0;
-    if (isTextSelection) {
+    isTextOnlySelectionOut = dm->textSelection->result.len > 0;
+    if (isTextOnlySelectionOut) {
         WCHAR* s = dm->textSelection->ExtractText(lineSep);
         return s;
     }
@@ -294,19 +296,24 @@ void CopySelectionToClipboard(WindowInfo* win) {
         return;
     }
     EmptyClipboard();
+    defer {
+        CloseClipboard();
+    };
 
     WCHAR* selText = nullptr;
+    bool isTextOnlySelectionOut = false;
     if (!gDisableDocumentRestrictions && !win->AsFixed()->GetEngine()->AllowsCopyingText()) {
         win->ShowNotification(_TR("Copying text was denied (copying as image only)"));
     } else {
-        selText = GetSelectedText(win, L"\r\n");
+        selText = GetSelectedText(win, L"\r\n", isTextOnlySelectionOut);
     }
 
     // don't copy empty text
     if (!str::IsEmpty(selText)) {
         CopyTextToClipboard(selText, true);
+    }
+    if (isTextOnlySelectionOut) {
         // don't also copy the first line of a text selection as an image
-        CloseClipboard();
         return;
     }
 
@@ -321,8 +328,6 @@ void CopySelectionToClipboard(WindowInfo* win) {
         CopyImageToClipboard(bmp->GetBitmap(), true);
     }
     delete bmp;
-
-    CloseClipboard();
 }
 
 void OnSelectAll(WindowInfo* win, bool textOnly) {
