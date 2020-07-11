@@ -470,10 +470,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
     auto ma = win->mouseAction;
-    if (MouseAction::Idle == ma) {
-        return;
-    }
-    if ((MouseAction::Dragging == ma) && win->dragRightClick) {
+    if (MouseAction::Idle == ma || IsRightDragging(win)) {
         return;
     }
     CrashIf(MouseAction::Selecting != ma && MouseAction::SelectingText != ma && MouseAction::Dragging != ma);
@@ -636,7 +633,7 @@ static void OnMouseRightButtonDown(WindowInfo* win, int x, int y) {
 
 static void OnMouseRightButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     CrashIf(!win->AsFixed());
-    if (IsRightDragging(win)) {
+    if (!IsRightDragging(win)) {
         return;
     }
 
