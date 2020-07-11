@@ -1654,7 +1654,10 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         win->RedrawAll(true);
 
         if (gFileHistory.MarkFileInexistent(fullPath)) {
-            prefs::Save();
+            // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
+            if (!args.noSavePrefs) {
+                prefs::Save();
+            }
             // update the Frequently Read list
             if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
                 gWindows.at(0)->RedrawAll(true);
@@ -1711,7 +1714,10 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         win->RedrawAll(true);
 
         if (gFileHistory.MarkFileInexistent(fullPath)) {
-            prefs::Save();
+            // TODO: handle this better. see https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
+            if (!args.noSavePrefs) {
+                prefs::Save();
+            }
             // update the Frequently Read list
             if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
                 gWindows.at(0)->RedrawAll(true);

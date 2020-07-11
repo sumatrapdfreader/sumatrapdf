@@ -4,6 +4,11 @@ A daily log of changes and commentary. An experiment of sorts.
 
 handle pdf_annot_author() throwing (fixes #1673)
 
+don't crash when trying to restore deleted file (fixes #1674)
+it was a regression from the fix for saving preferences.
+probably not the best fix, should fix the fact that prefs::Save()
+deletes gGlobalPrefs->sessionData while 're iterating on it
+
 2020-07-09 Thu
 
 fix regression of not copying rectangular selection as image (fixes #1668)

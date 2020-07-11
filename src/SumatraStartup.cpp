@@ -1023,6 +1023,11 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         for (SessionData* data : *gGlobalPrefs->sessionData) {
             win = CreateAndShowWindowInfo(data);
             for (TabState* state : *data->tabStates) {
+                // TODO: if prefs::Save() is called, it deletes gGlobalPrefs->sessionData
+                // we're currently iterating (happened e.g. if the file is deleted)
+                // the current fix is to not call prefs::Save() below but maybe there's a better way
+                // maybe make a copy of TabState so that it isn't invalidated
+                // https://github.com/sumatrapdfreader/sumatrapdf/issues/1674
                 RestoreTabOnStartup(win, state);
             }
             TabsSelect(win, data->tabIndex - 1);
