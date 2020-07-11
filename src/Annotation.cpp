@@ -27,15 +27,60 @@ AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
 // clang format-off
 // must match the order of enum class AnnotationType
 static const char* gAnnotNames =
-    "Text\0Link\0FreeText\0Line\0Square\0Circle\0Polygon\0PolyLine\0"
-    "Highlight\0Underline\0Squiggly\0StrikeOut\0Redact\0Stamp\0"
-    "Caret\0Ink\0Popup\0FileAttachment\0Sound\0Movie\0Widget\0"
-    "Screen\0PrinterMark\0TrapNet\0Watermark\03D\0";
+    "Text\0"
+    "Link\0"
+    "FreeText\0"
+    "Line\0"
+    "Square\0"
+    "Circle\0"
+    "Polygon\0"
+    "PolyLine\0"
+    "Highlight\0"
+    "Underline\0"
+    "Squiggly\0"
+    "StrikeOut\0"
+    "Redact\0"
+    "Stamp\0"
+    "Caret\0"
+    "Ink\0"
+    "Popup\0"
+    "FileAttachment\0"
+    "Sound\0"
+    "Movie\0"
+    "Widget\0"
+    "Screen\0"
+    "PrinterMark\0"
+    "TrapNet\0"
+    "Watermark\0"
+    "3D\0";
+
 static const char* gAnnotReadableNames =
-    "Text\0Link\0Free Text\0Line\0Square\0Circle\0Polygon\0Poly Line\0"
-    "Highlight\0Underline\0Squiggly\0StrikeOut\0Redact\0Stamp\0"
-    "Caret\0Ink\0Popup\0File Attachment\0Sound\0Movie\0Widget\0"
-    "Screen\0Printer Mark\0Trap Net\0Watermark\03D\0";
+    "Text\0"
+    "Link\0"
+    "Free Text\0"
+    "Line\0"
+    "Square\0"
+    "Circle\0"
+    "Polygon\0"
+    "Poly Line\0"
+    "Highlight\0"
+    "Underline\0"
+    "Squiggly\0"
+    "StrikeOut\0"
+    "Redact\0"
+    "Stamp\0"
+    "Caret\0"
+    "Ink\0"
+    "Popup\0"
+    "File Attachment\0"
+    "Sound\0"
+    "Movie\0"
+    "Widget\0"
+    "Screen\0"
+    "Printer Mark\0"
+    "Trap Net\0"
+    "Watermark\0"
+    "3D\0";
 // clang format-on
 
 std::string_view AnnotationName(AnnotationType tp) {
@@ -45,6 +90,7 @@ std::string_view AnnotationName(AnnotationType tp) {
         return "Unknown";
     }
     const char* s = seqstrings::IdxToStr(gAnnotNames, n);
+    CrashIf(!s);
     return {s};
 }
 
@@ -54,6 +100,7 @@ std::string_view AnnotationReadableName(AnnotationType tp) {
         return "Unknown";
     }
     const char* s = seqstrings::IdxToStr(gAnnotReadableNames, n);
+    CrashIf(!s);
     return {s};
 }
 
@@ -111,8 +158,16 @@ void Annotation::SetRect(RectFl r) {
 }
 
 std::string_view Annotation::Author() {
-    const char* s = pdf_annot_author(pdf->ctx, pdf->annot);
-    if (str::IsStringEmptyOrWhiteSpaceOnly(s)) {
+    const char* s = nullptr;
+
+    fz_var(s);
+    fz_try(pdf->ctx) {
+        s = pdf_annot_author(pdf->ctx, pdf->annot);
+    }
+    fz_catch(pdf->ctx) {
+        s = nullptr;
+    }
+    if (!s || str::IsStringEmptyOrWhiteSpaceOnly(s)) {
         return {};
     }
     return s;
