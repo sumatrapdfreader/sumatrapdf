@@ -209,12 +209,17 @@ static void StartMouseDrag(WindowInfo* win, int x, int y, bool right = false) {
 }
 
 // return true if this was annotation dragging
-static bool StopDraggingAnnotation(WindowInfo* win, int x, int y) {
+static bool StopDraggingAnnotation(WindowInfo* win, int x, int y, bool aborted) {
     Annotation* annot = win->annotationOnLastButtonDown;
     if (!annot) {
         return false;
     }
     DrawMovePattern(win, win->dragPrevPos, win->annotationBeingMovedSize);
+    if (aborted) {
+        delete annot;
+        win->annotationOnLastButtonDown = nullptr;
+        return true;
+    }
 
     DisplayModel* dm = win->AsFixed();
     x += win->annotationBeingMovedOffset.x;
@@ -250,7 +255,7 @@ static void StopMouseDrag(WindowInfo* win, int x, int y, bool aborted) {
     }
     ReleaseCapture();
 
-    if (StopDraggingAnnotation(win, x, y)) {
+    if (StopDraggingAnnotation(win, x, y, aborted)) {
         return;
     }
 
@@ -262,20 +267,19 @@ static void StopMouseDrag(WindowInfo* win, int x, int y, bool aborted) {
     win->MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
-static bool IsDragX(int x1, int x2) {
+bool IsDrag(int x1, int x2, int y1, int y2) {
     int dx = abs(x1 - x2);
     int dragDx = GetSystemMetrics(SM_CXDRAG);
-    return dx > dragDx;
-}
+    if (dx > dragDx) {
+        return true;
+    }
 
-static bool IsDragY(int y1, int y2) {
     int dy = abs(y1 - y2);
     int dragDy = GetSystemMetrics(SM_CYDRAG);
-    return dy > dragDy;
-}
-
-bool IsDragXOrY(int x1, int x2, int y1, int y2) {
-    return IsDragX(x1, x2) || IsDragY(y1, y2);
+    if (dy > dragDy) {
+        return true;
+    }
+    return false;
 }
 
 static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
@@ -299,7 +303,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     }
 
     if (win->dragStartPending) {
-        if (!IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y)) {
+        if (!IsDrag(x, win->dragStart.x, y, win->dragStart.y)) {
             return;
         }
         win->dragStartPending = false;
@@ -464,8 +468,8 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     }
     CrashIf(MouseAction::Selecting != ma && MouseAction::SelectingText != ma && MouseAction::Dragging != ma);
 
-    // TODO: should IsDragXOrY() ever be true here? We should get mouse move first
-    bool didDragMouse = !win->dragStartPending || IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y);
+    // TODO: should IsDrag() ever be true here? We should get mouse move first
+    bool didDragMouse = !win->dragStartPending || IsDrag(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
         StopMouseDrag(win, x, y, !didDragMouse);
     } else {
@@ -488,12 +492,18 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
 
     TabInfo* tab = win->currentTab;
     if (didDragMouse) {
-        /* pass */;
+        // no-op
+        return;
+    }
+
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         /* return from white/black screens in presentation mode */
-    } else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         win->ChangePresentationMode(PM_ENABLED);
+        return;
+    }
+
+    if (link && link->GetRect().Contains(ptPage)) {
         /* follow an active link */
-    } else if (link && link->GetRect().Contains(ptPage)) {
         PageDestination* dest = link->AsLink();
         // highlight the clicked link (as a reminder of the last action once the user returns)
         if (dest && (kindDestinationLaunchURL == dest->Kind() || kindDestinationLaunchFile == dest->Kind())) {
@@ -505,20 +515,30 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
         }
         SetCursorCached(IDC_ARROW);
         win->linkHandler->GotoLink(dest);
-    } else if (win->showSelection) {
+        return;
+    }
+
+    if (win->showSelection) {
         /* if we had a selection and this was just a click, hide the selection */
         ClearSearchResult(win);
-    } else if (win->fwdSearchMark.show && gGlobalPrefs->forwardSearch.highlightPermanent) {
+        return;
+    }
+
+    if (win->fwdSearchMark.show && gGlobalPrefs->forwardSearch.highlightPermanent) {
         /* if there's a permanent forward search mark, hide it */
         win->fwdSearchMark.show = false;
         RepaintAsync(win, 0);
-    } else if (PM_ENABLED == win->presentation) {
+        return;
+    }
+
+    if (PM_ENABLED == win->presentation) {
         /* in presentation mode, change pages on left/right-clicks */
         if ((key & MK_SHIFT)) {
             tab->ctrl->GoToPrevPage();
         } else {
             tab->ctrl->GoToNextPage();
         }
+        return;
     }
 }
 
@@ -610,7 +630,7 @@ static void OnMouseRightButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
         return;
     }
 
-    int isDragXOrY = IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y);
+    int isDragXOrY = IsDrag(x, win->dragStart.x, y, win->dragStart.y);
     bool didDragMouse = !win->dragStartPending || isDragXOrY;
     StopMouseDrag(win, x, y, !didDragMouse);
 

@@ -131,7 +131,7 @@ static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM ke
 
 static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) {
     UNUSED(key);
-    int isDrag = IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y);
+    int isDrag = IsDrag(x, win->dragStart.x, y, win->dragStart.y);
     if (!isDrag) {
         return;
     }
