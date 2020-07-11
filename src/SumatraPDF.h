@@ -143,22 +143,22 @@ struct LoadArgs {
     }
 
     // we don't own those values
-    EngineBase* engine = nullptr;
-    const WCHAR* fileName = nullptr;
-    WindowInfo* win = nullptr;
+    EngineBase* engine{nullptr};
+    const WCHAR* fileName{nullptr};
+    WindowInfo* win{nullptr};
 
-    bool showWin = true;
-    bool forceReuse = false;
+    bool showWin{true};
+    bool forceReuse{false};
     // over-writes placeWindow and other flags and forces no changing
     // of window location after loading
-    bool noPlaceWindow = false;
+    bool noPlaceWindow{false};
 
     // for internal use
-    bool isNewWindow = false;
-    bool placeWindow = true;
+    bool isNewWindow{false};
+    bool placeWindow{true};
     // TODO: this is hacky. I save prefs too frequently. Need to go over
     // and rationalize all prefs::Save() calls
-    bool noSavePrefs = false;
+    bool noSavePrefs{false};
 };
 
 WindowInfo* LoadDocument(LoadArgs& args);

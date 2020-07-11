@@ -9,6 +9,8 @@ it was a regression from the fix for saving preferences.
 probably not the best fix, should fix the fact that prefs::Save()
 deletes gGlobalPrefs->sessionData while 're iterating on it
 
+limit which annotations can be moved
+
 2020-07-09 Thu
 
 fix regression of not copying rectangular selection as image (fixes #1668)

@@ -2006,7 +2006,22 @@ bool EnginePdfHasUnsavedAnnotations(EngineBase* engine) {
     return pdfdoc->dirty;
 }
 
-Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointFl pos) {
+static bool IsAllowedAnnot(AnnotationType tp, AnnotationType* allowed) {
+    if (!allowed) {
+        return true;
+    }
+    int i = 0;
+    while (allowed[i] != AnnotationType::Unknown) {
+        AnnotationType tp2 = allowed[i];
+        if (tp2 == tp) {
+            return true;
+        }
+        ++i;
+    }
+    return false;
+}
+
+Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointFl pos, AnnotationType* allowedAnnots) {
     if (!engine || engine->kind != kindEnginePdf) {
         return nullptr;
     }
@@ -2021,9 +2036,13 @@ Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointFl 
     // are drawn on top of earlier
     pdf_annot* matched = nullptr;
     while (annot) {
-        fz_rect rc = pdf_annot_rect(e->ctx, annot);
-        if (fz_is_point_inside_rect(p, rc)) {
-            matched = annot;
+        enum pdf_annot_type tp = pdf_annot_type(e->ctx, annot);
+        AnnotationType atp = AnnotationTypeFromPdfAnnot(tp);
+        if (IsAllowedAnnot(atp, allowedAnnots)) {
+            fz_rect rc = pdf_annot_rect(e->ctx, annot);
+            if (fz_is_point_inside_rect(p, rc)) {
+                matched = annot;
+            }
         }
         annot = pdf_next_annot(e->ctx, annot);
     }

@@ -1,5 +1,4 @@
 Annotations:
- - limit which annotations can be moved
  - save attachment
  - add attachment
  - allow cancelling of dragging of the annotation by Esc

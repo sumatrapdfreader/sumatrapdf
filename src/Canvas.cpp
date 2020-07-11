@@ -349,13 +349,45 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     UpdateCursorPositionHelper(win, pos, wnd);
 }
 
+// clang-format off
+static AnnotationType moveableAnnotations[] = {
+    AnnotationType::Text,
+    AnnotationType::Link,
+    AnnotationType::FreeText,
+    AnnotationType::Line,
+    AnnotationType::Square,
+    AnnotationType::Circle,
+    AnnotationType::Polygon,
+    AnnotationType::PolyLine,
+    //AnnotationType::Highlight,
+    //AnnotationType::Underline,
+    //AnnotationType::Squiggly,
+    //AnnotationType::StrikeOut,
+    //AnnotationType::Redact,
+    AnnotationType::Stamp,
+    AnnotationType::Caret,
+    AnnotationType::Ink,
+    AnnotationType::Popup,
+    AnnotationType::FileAttachment,
+    AnnotationType::Sound,
+    AnnotationType::Movie,
+    //AnnotationType::Widget, // TODO: maybe moveble?
+    AnnotationType::Screen,
+    AnnotationType::PrinterMark,
+    AnnotationType::TrapNet,
+    AnnotationType::Watermark,
+    AnnotationType::ThreeD,
+    AnnotationType::Unknown,
+};
+// clang-format on
+
 static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
     CrashIf(win->linkOnLastButtonDown);
     CrashIf(win->annotationOnLastButtonDown);
     DisplayModel* dm = win->AsFixed();
     Point pt{x, y};
 
-    Annotation* annot = dm->GetAnnotationAtPos(pt);
+    Annotation* annot = dm->GetAnnotationAtPos(pt, moveableAnnotations);
     if (annot) {
         win->annotationOnLastButtonDown = annot;
         CreateMovePatternLazy(win);
