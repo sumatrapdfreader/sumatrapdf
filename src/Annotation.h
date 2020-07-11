@@ -42,15 +42,15 @@ struct AnnotationPdf;
 // inlude mupdf to include Annotation
 struct Annotation {
     // common to both smx and pdf
-    AnnotationType type = AnnotationType::Unknown;
-    int pageNo = -1;
+    AnnotationType type{AnnotationType::Unknown};
+    int pageNo{-1};
 
     // either new annotation or has been modified
-    bool isChanged = false;
+    bool isChanged{false};
     // deleted are not shown but can be undeleted
-    bool isDeleted = false;
+    bool isDeleted{false};
 
-    AnnotationPdf* pdf = nullptr;
+    AnnotationPdf* pdf{nullptr};
 
     Annotation() = default;
     ~Annotation();
