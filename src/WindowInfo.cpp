@@ -616,3 +616,10 @@ void ClearFindBox(WindowInfo* win) {
     }
     HwndSetText(win->hwndFindBox, "");
 }
+
+bool IsRightDragging(WindowInfo* win) {
+    if (win->mouseAction != MouseAction::Dragging) {
+        return false;
+    }
+    return win->dragRightClick;
+}

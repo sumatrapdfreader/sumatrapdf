@@ -198,9 +198,10 @@ static void DrawMovePattern(WindowInfo* win, Point pt, Size size) {
     ReleaseDC(hwnd, hdc);
 }
 
-static void OnDraggingStart(WindowInfo* win, int x, int y, bool right = false) {
+static void StartMouseDrag(WindowInfo* win, int x, int y, bool right = false) {
     SetCapture(win->hwndCanvas);
-    win->mouseAction = right ? MouseAction::DraggingRight : MouseAction::Dragging;
+    win->mouseAction = MouseAction::Dragging;
+    win->dragRightClick = right;
     win->dragPrevPos = Point(x, y);
     if (GetCursor()) {
         SetCursor(gCursorDrag);
@@ -239,7 +240,7 @@ static bool StopDraggingAnnotation(WindowInfo* win, int x, int y) {
     return true;
 }
 
-static void OnDraggingStop(WindowInfo* win, int x, int y, bool aborted) {
+static void StopMouseDrag(WindowInfo* win, int x, int y, bool aborted) {
     if (GetCapture() != win->hwndCanvas) {
         return;
     }
@@ -326,7 +327,6 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
             RepaintAsync(win, 0);
             break;
         case MouseAction::Dragging:
-        case MouseAction::DraggingRight:
             if (annot) {
                 Size size = win->annotationBeingMovedSize;
                 DrawMovePattern(win, prevPos, size);
@@ -413,7 +413,7 @@ static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
 
 static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
-    if (MouseAction::DraggingRight == win->mouseAction) {
+    if (IsRightDragging(win)) {
         return;
     }
 
@@ -446,7 +446,7 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     bool isOverText = win->AsFixed()->IsOverText(pt);
     Annotation* annot = win->annotationOnLastButtonDown;
     if (annot || !canCopy || (isShift || !isOverText) && !isCtrl) {
-        OnDraggingStart(win, x, y);
+        StartMouseDrag(win, x, y);
     } else {
         OnSelectionStart(win, x, y, key);
     }
@@ -456,7 +456,10 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
     auto ma = win->mouseAction;
-    if (MouseAction::Idle == ma || MouseAction::DraggingRight == ma) {
+    if (MouseAction::Idle == ma) {
+        return;
+    }
+    if ((MouseAction::Dragging == ma) && win->dragRightClick) {
         return;
     }
     CrashIf(MouseAction::Selecting != ma && MouseAction::SelectingText != ma && MouseAction::Dragging != ma);
@@ -464,7 +467,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     // TODO: should IsDragXOrY() ever be true here? We should get mouse move first
     bool didDragMouse = !win->dragStartPending || IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
-        OnDraggingStop(win, x, y, !didDragMouse);
+        StopMouseDrag(win, x, y, !didDragMouse);
     } else {
         OnSelectionStop(win, x, y, !didDragMouse);
         if (MouseAction::Selecting == ma && win->showSelection) {
@@ -598,18 +601,18 @@ static void OnMouseRightButtonDown(WindowInfo* win, int x, int y) {
     win->dragStartPending = true;
     win->dragStart = Point(x, y);
 
-    OnDraggingStart(win, x, y, true);
+    StartMouseDrag(win, x, y, true);
 }
 
 static void OnMouseRightButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     CrashIf(!win->AsFixed());
-    if (MouseAction::DraggingRight != win->mouseAction) {
+    if (IsRightDragging(win)) {
         return;
     }
 
     int isDragXOrY = IsDragXOrY(x, win->dragStart.x, y, win->dragStart.y);
     bool didDragMouse = !win->dragStartPending || isDragXOrY;
-    OnDraggingStop(win, x, y, !didDragMouse);
+    StopMouseDrag(win, x, y, !didDragMouse);
 
     win->mouseAction = MouseAction::Idle;
 
@@ -989,7 +992,6 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
 
     switch (win->mouseAction) {
         case MouseAction::Dragging:
-        case MouseAction::DraggingRight:
             SetCursor(gCursorDrag);
             return TRUE;
         case MouseAction::Scrolling:
@@ -1328,11 +1330,9 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WP
             }
 
             // allow default processing to continue
-            return DefWindowProc(hwnd, msg, wp, lp);
         }
-        default:
-            return DefWindowProc(hwnd, msg, wp, lp);
     }
+    return DefWindowProc(hwnd, msg, wp, lp);
 }
 
 ///// methods needed for ChmUI canvases (should be subclassed by HtmlHwnd) /////

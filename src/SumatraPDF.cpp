@@ -3665,6 +3665,10 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lp, bool inTextfield) {
         return true;
     }
 
+    if (VK_ESCAPE == key) {
+        // TODO: cancel drag
+    }
+
     bool isCtrl = IsCtrlPressed();
     bool isShift = IsShiftPressed();
 

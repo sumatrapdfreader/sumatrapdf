@@ -30,7 +30,6 @@ struct DropDownCtrl;
 enum class MouseAction {
     Idle = 0,
     Dragging,
-    DraggingRight,
     Selecting,
     Scrolling,
     SelectingText
@@ -151,6 +150,7 @@ struct WindowInfo {
     DoubleBuffer* buffer{nullptr};
 
     MouseAction mouseAction = MouseAction::Idle;
+    bool dragRightClick{false}; // if true, drag was initiated with right mouse click
     bool dragStartPending{false};
 
     /* when dragging the document around, this is previous position of the
@@ -266,3 +266,4 @@ void RepaintAsync(WindowInfo*, int delay);
 void ClearFindBox(WindowInfo*);
 void CreateMovePatternLazy(WindowInfo*);
 void ClearMouseState(WindowInfo*);
+bool IsRightDragging(WindowInfo*);
