@@ -15,6 +15,8 @@ refactor dragging logic a bit
 
 make ESC cancel dragging of an annotation
 
+show rect of selected annotation in annotation editor
+
 2020-07-09 Thu
 
 fix regression of not copying rectangular selection as image (fixes #1668)
