@@ -13,6 +13,8 @@ limit which annotations can be moved
 
 refactor dragging logic a bit
 
+make ESC cancel dragging of an annotation
+
 2020-07-09 Thu
 
 fix regression of not copying rectangular selection as image (fixes #1668)

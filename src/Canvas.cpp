@@ -267,6 +267,16 @@ static void StopMouseDrag(WindowInfo* win, int x, int y, bool aborted) {
     win->MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
+void CancelDrag(WindowInfo* win) {
+    auto pt = win->dragPrevPos;
+    auto [x, y] = pt;
+    StopMouseDrag(win, x, y, true);
+    win->mouseAction = MouseAction::Idle;
+    delete win->linkOnLastButtonDown;
+    win->linkOnLastButtonDown = nullptr;
+    SetCursorCached(IDC_ARROW);
+}
+
 bool IsDrag(int x1, int x2, int y1, int y2) {
     int dx = abs(x1 - x2);
     int dragDx = GetSystemMetrics(SM_CXDRAG);

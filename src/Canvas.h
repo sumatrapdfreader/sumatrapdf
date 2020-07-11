@@ -4,5 +4,6 @@
 void UpdateDeltaPerLine();
 
 LRESULT CALLBACK WndProcCanvas(HWND, UINT, WPARAM, LPARAM);
-LRESULT WndProcCanvasAbout(WindowInfo* win, HWND, UINT, WPARAM, LPARAM);
+LRESULT WndProcCanvasAbout(WindowInfo*, HWND, UINT, WPARAM, LPARAM);
 bool IsDrag(int x1, int x2, int y1, int y2);
+void CancelDrag(WindowInfo*);

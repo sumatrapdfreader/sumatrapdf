@@ -1,7 +1,6 @@
 Annotations:
  - save attachment
  - add attachment
- - allow cancelling of dragging of the annotation by Esc
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
  - test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)
