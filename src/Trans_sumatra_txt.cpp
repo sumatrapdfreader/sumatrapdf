@@ -4512,7 +4512,7 @@ const char * gTranslations_co =
   "Impussibule di disinstall\303\240 u filtru di ricerca di Sumatra\0"\
   "Impussibule di disinstall\303\240 l\342\200\231estensione di u navigatore\0"\
   "Impussibule di scrive %s nant\342\200\231\303\240 u discu\0"\
-  "Scrive un\342\200\231annutazione\0"\
+  "&Scrive un\342\200\231annutazione\0"\
   "Creatu :\0"\
   "Schedariu attuale\0"\
   "Pusizione di u cursore :\0"\
@@ -4530,7 +4530,7 @@ const char * gTranslations_co =
   "&Esce di u modu screnu sanu\0"\
   "Libri elettronichi EPUB\0"\
   "Mudific\303\240\0"\
-  "Mudific\303\240 l\342\200\231annutazioni\0"\
+  "&Mudific\303\240 l\342\200\231annutazioni\0"\
   "Mudific\303\240 l\342\200\231indette\0"\
   "Scrivite a parolla d\342\200\231entrata\0"\
   "Scrivite a parolla d\342\200\231entrata per %s\0"\
@@ -4671,11 +4671,11 @@ const char * gTranslations_co =
   "Affiss\303\240 l\342\200\231&indette\tF12\0"\
   "Affiss\303\240 i &favuriti\0"\
   "&Vista in cuntinuu\0"\
-  "Affiss\303\240 e barre di &sfilarata\0"\
+  "&Affiss\303\240 e barre di sfilarata\0"\
   "Affiss\303\240 a &barra d\342\200\231attrezzi\tF8\0"\
   "Affiss\303\240 l\342\200\231&indette\tF12\0"\
   "Affiss\303\240 i favuriti\0"\
-  "Affiss\303\240 e &barre di sfilarata\0"\
+  "&Affiss\303\240 e barre di sfilarata\0"\
   "Affiss\303\240 i ducumenti letti aspessu\0"\
   "Affiss\303\240 in u car&tulare\0"\
   "Affiss\303\240 a &barra laterale di l\342\200\231unghjette s\342\200\231ella h\303\250 dispunibule\0"\

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-dd2c0227f3b4709e00aceac053f1f0155fb6e201
+b160849d433cdfffddc9a0357daa46aea627a1e4
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 cn:未找到 %s 安装。
@@ -6859,7 +6859,7 @@ vn:Không thể ghi %s vào đĩa
 :Create Annotation
 am:Ստեղծել ծանոթագրություն
 cn:创建标注
-co:Scrive un’annutazione
+co:&Scrive un’annutazione
 fr:Écrire une annotation
 nl:Maak Aantekening
 pl:Utwórz adnotację
@@ -7845,7 +7845,7 @@ pl:Edytuj
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 cn:编辑标注
-co:Mudificà l’annutazioni
+co:&Mudificà l’annutazioni
 fr:Éditer les annotations
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
@@ -15857,7 +15857,7 @@ vn:Xem trang liên tiếp
 :Show &Scrollbars
 am:Ցուցադրել &ոլորգոտիները
 cn:显示滚动条(&S)
-co:Affissà e barre di &sfilarata
+co:&Affissà e barre di sfilarata
 fr:Afficher les &barres  de défilement
 nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
@@ -16023,7 +16023,7 @@ vn:Hiện Ưa thích
 :Show Scr&ollbars
 am:Ցուցադրել ոլո&րագոտիները
 cn:显示滚动条(&O)
-co:Affissà e &barre di sfilarata
+co:&Affissà e barre di sfilarata
 fr:Afficher les barres de &défilement
 nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
