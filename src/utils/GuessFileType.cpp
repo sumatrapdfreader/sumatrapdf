@@ -50,30 +50,29 @@ Kind kindFileTxt = "fileTxt";
 // http://www.cix.co.uk/~gidds/Software/TCR.html
 
 // TODO: should .prc be kindFilePalmDoc instead of kindFileMobi?
+// .zip etc. are at the end so that .fb2.zip etc. is recognized at fb2
 #define DEF_EXT_KIND(V)             \
-    V(".fb2.zip\0", kindFileFb2)    \
-    V(".fb2.zip\0", kindFileFb2)    \
-    V(".ps.gz\0", kindFilePS)       \
-    V("file_id.diz\0", kindFileTxt) \
-    V("Read.me\0", kindFileTxt)     \
     V(".txt\0", kindFileTxt)        \
+    V(".js\0", kindFileTxt)         \
+    V(".json\0", kindFileTxt)       \
+    V(".xml\0", kindFileTxt)        \
     V(".log\0", kindFileTxt)        \
+    V("file_id.diz\0", kindFileTxt) \
+    V("read.me\0", kindFileTxt)     \
     V(".nfo\0", kindFileTxt)        \
     V(".tcr\0", kindFileTxt)        \
     V(".ps\0", kindFilePS)          \
+    V(".ps.gz\0", kindFilePS)       \
     V(".eps\0", kindFilePS)         \
     V(".vbkm\0", kindFileVbkm)      \
     V(".fb2\0", kindFileFb2)        \
     V(".fb2z\0", kindFileFb2)       \
     V(".zfb2\0", kindFileFb2)       \
+    V(".fb2.zip\0", kindFileFb2)    \
     V(".cbz\0", kindFileCbz)        \
     V(".cbr\0", kindFileCbr)        \
     V(".cb7\0", kindFileCb7)        \
     V(".cbt\0", kindFileCbt)        \
-    V(".zip\0", kindFileZip)        \
-    V(".rar\0", kindFileRar)        \
-    V(".7z\0", kindFile7Z)          \
-    V(".tar\0", kindFileTar)        \
     V(".pdf\0", kindFilePDF)        \
     V(".xps\0", kindFileXps)        \
     V(".oxps\0", kindFileXps)       \
@@ -101,7 +100,11 @@ Kind kindFileTxt = "fileTxt";
     V(".htm\0", kindFileHTML)       \
     V(".xhtml\0", kindFileHTML)     \
     V(".djvu\0", kindFileDjVu)      \
-    V(".jp2\0", kindFileJp2)
+    V(".jp2\0", kindFileJp2)        \
+    V(".zip\0", kindFileZip)        \
+    V(".rar\0", kindFileRar)        \
+    V(".7z\0", kindFile7Z)          \
+    V(".tar\0", kindFileTar)
 
 #define EXT(ext, kind) ext
 
