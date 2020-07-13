@@ -1,12 +1,14 @@
 AppTranslator: SumatraPDF
-b160849d433cdfffddc9a0357daa46aea627a1e4
+238e765920215349a4e7d9d595190e691e854fad
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
+az:%s quraşdırmasını tapmaq mümkün olmadı.
 cn:未找到 %s 安装。
 co:Installazione di %s micca trova.
 fr:%s installation non trouvée
 nl:%s installatie niet gevonden.
 pl:Nie znaleziono instalacji %s.
+ru:Не удалось найти установку %s.
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -283,7 +285,7 @@ vn:Tất cả các tr&ang được chọn
 :&Back\tAlt+Left Arrow
 am:&Նախորդը\tAlt+Left Arrow
 ar:للخلف&\tAlt+Left Arrow
-az:&Geri\tAlt+Left Arrow
+az:&Geri\tAlt+Sol ox
 bg:На&зад\tAlt+Лява стрелка
 bn:&ব্যাক\অল্ট+বাম-মুখি অ্যারো 
 br:Voltar\tAlt+<-
@@ -1016,7 +1018,7 @@ vn:Trang đầu\tHome
 :&Fit pages to printable area
 am:&Հարմարեցնել էջերը տպելու համար
 ar:&ملائمة الصفحات لمنطقة الطباعة
-az:Səhifələri çap sa&həsinə sığışdır
+az:&Çap sahəsinə sığışdır
 bg:&Оразмери страниците в полето за отпечатване
 br:Ajustar páginas à área de impressão
 bs:Uklopi stranice na područje za štampu
@@ -1555,7 +1557,7 @@ vn:Phân biệt &HOA-thường
 af:Volgende Bladsy\t->
 am:Հաջորդ էջը\t->
 ar:الصفحة &التالية\t->
-az:&Sonrakı səhifə\tRight Arrow
+az:&Sonrakı səhifə\tSağ ox
 bg:Следва&ща страница\tДясна стрелка
 bn:পরবর্তী পৃষ্ঠা\t->
 br:Página seguinte\t->
@@ -2208,7 +2210,7 @@ vn:Ghim tập tin
 af:Vorige Bladsy\t<-
 am:Նախորդ էջը\t<-
 ar:الصفحة &السابقة\tLeft Arrow
-az:&Əvvəlki səhifə\tLeft Arrow
+az:&Əvvəlki səhifə\tSol ox
 bg:Преди&шна страница\tЛява стрелка
 bn:পূর্ববর্তী পৃষ্ঠা\t<-
 br:Página anterior\t<-
@@ -2600,11 +2602,13 @@ uz:&Ushbu parametrlarni har qaysi hujjat uchun eslab qolish
 vn:Nhớ các cài đặt này cho từng tập tin
 :&Remove From History
 am:&Հեռացնել պատմությունից
+az:Tarixçədən &sil
 cn:从历史记录删除(&R)
 co:&Caccià da a crunulogia
 fr:Supprimer de l'historique
 nl:V&erwijder uit Geschiedenis
 pl:&Usuń z historii
+ru:&Удалить из истории
 :&Save As...
 am:&Պահպանել որպես
 ar:&حفظ باسم...
@@ -3052,7 +3056,7 @@ vn:&Chủ đề
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
-az:Səhifələrin &həqiqi ölçüsü
+az:&Faktiki ölçüyə görə
 bg:Използване на &оригиналните размери на страниците
 br:&Usar tamanhos de página originais
 bs:Koristi &originalne veličine stranica
@@ -3641,22 +3645,28 @@ uz:Tanlanganlarga qo'shish
 vn:Thêm Ưa thích
 :Add PDF as a child
 am:Ավելացնել PDF-ը որպես ենթատարր
+az:PDF-i törəmə element kimi əlavə et
 cn:将 PDF 添加为子项目
 co:Aghjunghje un PDF cum’è un zitellu
 nl:Voeg PDF als child toe
 pl:Dodaj PDF jako potomka
+ru:Добавить PDF как дочерний элемент
 :Add PDF as a sibling
 am:Ավելացնել PDF-ը որպես ժառանգ
+az:PDF-i eynisəviyyəli element kimi əlavə et
 cn:将 PDF 添加为同级项目
 co:Aghjunghje un PDF cum’è un fratellu
 nl:Voeg PDF als verwant toe
 pl:Dodaj PDF jako rodzeństwo
+ru:Добавить PDF как одноуровневый элемент
 :Add child
 am:Ավելացնել ենթատարր
+az:Törəmə element əlavə et
 cn:添加子项目
 co:Aghjunghje un zitellu
 nl:Child toevoegen
 pl:Dodaj potomka
+ru:Добавить дочерний элемент
 :Add page %s to favorites
 am:Ավելացնել %s էջը ընտրյալներին
 ar:الى المفضلة %s اضافة صفحة
@@ -3817,10 +3827,12 @@ tw:將第 %s 頁加入到最愛\tCtrl+B
 uk:Додати %s сторінку до закладок\tCtrl+B
 :Add sibling
 am:Ավելացնել ժառանգ
+az:Eynisəviyyəli element əlavə et
 cn:添加同级项目
 co:Aghjunghje un fratellu
 nl:Voeg verwant toe
 pl:Dodaj rodzeństwo
+ru:Добавить одноуровневый элемент
 :Add to favorites
 am:Ավելացնել ընտրյալներին
 ar:اضافة للمفضلة
@@ -4092,11 +4104,14 @@ uz:Hamma qo'llanadigan hujjatlar
 vn:Tất cả các định dạng được hỗ trợ
 :Annotations
 am:Ծանոթագրություններ
+az:Qeydlər
 cn:标注
 co:Annutazioni
+el:Σχόλια
 fr:Annotations
 nl:Aantekeningen
 pl:Adnotacje
+ru:Аннотации
 :Application:
 af:Applikasie
 am:Ծրագիր՝
@@ -4167,11 +4182,13 @@ uz:Dastur:
 vn:Ứng dụng:
 :Are you sure you want to uninstall %s?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ապատեղադրել %s-ը:
+az:Əminsiniz ki, %s silmək istəyirsiniz?
 cn:您确定要卸载 %s 吗？
 co:Site sicuru di vulè disinstallà %s ?
 fr:Voulez-vous vraiment désinstaller %s ?
 nl:Weet u zeker dat u %s wilt dé-installeren?
 pl:Czy na pewno chcesz odinstalować %s?
+ru:Уверены, что хотите удалить %s?
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ջնջել SumatraPDF-ը:
@@ -4250,7 +4267,7 @@ by:Асацыяваць з PDF-файламі?
 ca-xv:Voleu associar-lo amb els fitxers PDF?
 ca:Voleu associar-lo amb els fitxers PDF?
 cn:设置 PDF 文件关联吗?
-co:Assucià cù schedarii PDF ?
+co:Assucià à i schedarii PDF ?
 cy:Cysylltu gyda ffeiliau PDF?
 cz:Přidružit k PDF souborům?
 de:Mit PDF-Dateien verknüpfen?
@@ -5246,11 +5263,13 @@ uz:Qayta qidirish buyrug'i xatosi. Buyruq satri parametrlarini tekshiring.
 vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
 :Caret
 am:Նշորդ
+az:Kursor
 cn:插入号
 co:Cursore
 fr:curseur
 nl:Merkteken
 pl:Kareta
+ru:Курсор
 :Change Language
 af:Verander Taal (Change Language)
 am:Փոխել լեզուն (Change Language)
@@ -5393,11 +5412,14 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Circle
 am:Շրջան
+az:Dairə
 cn:圆
 co:Chjerchju
+el:Κύκλος
 fr:Cercle
 nl:Cirkel
 pl:Okrąg
+ru:Круг
 :Close
 am:Փակել
 ar:إغلاق
@@ -5474,7 +5496,7 @@ br:Minimizar tudo
 ca-xv:Replega-ho tot
 ca:Replega-ho tot
 cn:全部折叠(&C)
-co:Piegà tuttu
+co:Tuttu piegà
 cz:Sbalit vše
 de:Alles zuklappen
 el:Σύμπτυξη όλων
@@ -5497,11 +5519,14 @@ tw:全部折叠(&C)
 uk:Згорнути всі
 :Color
 am:Գույն
+az:Rəng
 cn:颜色
 co:Culore
+el:Χρώμα
 fr:Couleur
 nl:Kleur
 pl:Kolor
+ru:Цвет
 :Comic books
 am:Հումորային գրքեր
 ar:الكتب الهزلية
@@ -5920,7 +5945,7 @@ by:Кап&іяваць Малюнак
 ca-xv:Copia la &imatge
 ca:Copia la &imatge
 cn:复制图片(&I)
-co:Cupià a &fiura
+co:&Cupià a fiura
 cy:Copïo &Delwedd
 cz:Kopírovat &obrázek
 de:&Bild kopieren
@@ -6731,10 +6756,12 @@ uz:PDF ko'rish vositasini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt bộ xem truớc PDF
 :Couldn't uninstall Sumatra search filter
 am:Հնարավոր չեղավ ապատեղադրել Sumatra որոնման զտիչը
+az:Sumatra axtarış filtrini silmək mümkün olmadı
 cn:无法卸载 Sumatra 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
+ru:Не удалось удалить фильтр поиска Sumatra
 :Couldn't uninstall browser plugin
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
 ar:لا يمكن إلغاء تثبيت متصفح البرنامج المساعد
@@ -6858,11 +6885,14 @@ uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Create Annotation
 am:Ստեղծել ծանոթագրություն
+az:Qeyd düzəlt
 cn:创建标注
 co:&Scrive un’annutazione
+el:Δημιουργία Σχολίου
 fr:Écrire une annotation
 nl:Maak Aantekening
 pl:Utwórz adnotację
+ru:Создать аннотацию
 :Created:
 af:Geskep
 am:Ստեղծված`
@@ -7693,11 +7723,14 @@ uz:Yuklab olish
 vn:Tải xuống
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
+az:Tam ekran rejimindən çı&x
 cn:退出全屏(&X)
 co:&Esce di u modu screnu sanu
+el:Έξοδος από την πλήρη οθόνη
 fr:&Quitter le mode plein écran
 nl:Volledig scherm uit
 pl:W&yjdź z trybu pełnoekranowego
+ru:&Выйти из полноэкранного режима
 :E&xit\tCtrl+Q
 af:&Gaan Uit-Q
 am:Փա&կել\tCtrl+Q
@@ -7837,25 +7870,33 @@ uz:EPUB kitoblari
 vn:Tập tin EPUB
 :Edit
 am:Խմբագրել
+az:Düzəliş et
 cn:编辑
 co:Mudificà
+el:Επεξεργασία
 fr:Éditer
 nl:Bewerken
 pl:Edytuj
+ru:Изменить
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
+az:Qeydlərə düzəliş et
 cn:编辑标注
 co:&Mudificà l’annutazioni
+el:Επεξεργασία Σχολίων
 fr:Éditer les annotations
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
+ru:Редактировать аннотации
 :Edit Bookmarks
 am:Խմբագրել էջանիշերը
+az:Əlfəcinlərə düzəliş et
 cn:编辑书签
 co:Mudificà l’indette
 fr:Éditer les marque-pages
 nl:Bewerk Bladwijzers
 pl:Edytuj zakładki
+ru:Экспорт закладок
 :Enter password
 af:Tik Wagwoord In
 am:Գրեք գաղտնաբառը
@@ -8131,7 +8172,7 @@ br:Expandir tudo
 ca-xv:Desplega-ho tot
 ca:Desplega-ho tot
 cn:全部展开
-co:Spiegà tuttu
+co:Tuttu spiegà
 cz:Rozbalit vše
 de:Alles aufklappen
 el:Ανάπτυξη Όλων
@@ -8154,11 +8195,13 @@ tw:全部展開
 uk:Розгорнути всі
 :Export Bookmarks
 am:Արտահանել էջանիշերը
+az:Əlfəcinləri ixrac et
 cn:导出书签
 co:Espurtà l’indette
 fr:Exporter les marque-pages
 nl:Exporteer Bladwijzers
 pl:Eksportuj zakładki
+ru:Экспорт закладок
 :F&avorites
 am:Ը&նտրյալներ
 ar:المفضلة
@@ -8224,7 +8267,7 @@ vn:Ưa thích
 :F&orward\tAlt+Right Arrow
 am:Առաջ\tAlt+->
 ar:ل&لامام\tAlt+Right Arrow
-az:&İrəli\tAlt+Right Arrow
+az:&İrəli\tAlt+Sağ ox
 bg:Нап&ред\tAlt+Дясна стрелка
 br:Avançar\tAlt+->
 bs:Naprijed\tAlt+->
@@ -9043,10 +9086,12 @@ uz:%s fayli topilmadi
 vn:Không tìm thấy tập tin %s
 :File Attachment
 am:Ֆայլի կցորդ
+az:Qoşma fayl
 cn:文件附件
 co:Schedariu attaccatu
 nl:Bestands Bijlage
 pl:Załącznik
+ru:Вложенный файл
 :File Size:
 am:Ֆայլի չափը՝
 ar:حجم الملف
@@ -10316,10 +10361,12 @@ uz:%s betda matn topildi (qayta)
 vn:Tìm thấy đoạn văn bản tại trang %s (lần nữa)
 :Free Text
 am:Ազատ գրվածք
+az:Sərbəst mətn
 cn:自定义文本
 co:Testu liberu
 nl:Vrije Tekst
 pl:Dowolny tekst
+ru:Произвольный текст
 :Frequently Read
 am:Հաճախ ընթերցվածներ
 ar:الأكثر قراءة
@@ -10653,10 +10700,12 @@ uz:Tez-tez o'qiladiganlarni yashirish
 vn:Ẩn Đọc thường xuyên
 :Highlight
 am:Գունանշում
+az:Seç
 cn:高亮
 co:Sopralineà
 nl:Markeer
 pl:Wyróżnienie
+ru:Выделить
 :Hint: Use the F3 key for finding again
 am:Որոնումը կրկնելու համար օգտագործեք F3 կոճակը
 ar: للبحث مرة أخرى F3 تلميح: استخدام مفتاح
@@ -10784,13 +10833,17 @@ uz:Rasm fayllari (*.%s)
 vn:Tập tin ảnh (*.%s)
 :Images
 am:Պատկերներ
+az:Şəkillər
 cn:图像
 co:Fiure
 fr:Images
 nl:Afbeeldingen
 pl:Obrazy
+ru:Изображения
+tr:Resimler
 :Ink
 am:Թանաք
+az:Mürəkkəb
 cn:墨迹
 co:Inchjostru
 nl:Snelkoppeling
@@ -11288,11 +11341,14 @@ uk:Світла
 vn:Sáng
 :Line
 am:Գիծ
+az:Xətt
 cn:线条
 co:Linea
+el:Γραμμή
 fr:Ligne
 nl:Regel
 pl:Linia
+ru:Линия
 :MB
 af:MB
 am:ՄԲ
@@ -11795,11 +11851,13 @@ tr:Yeni &pencere\tCtrl+N
 tw:新建視窗(&W)\tCtrl+N
 :New Bookmarks
 am:Նոր էջանիշեր
+az:Yeni əlfəcinlər
 cn:新建书签
 co:Nove indette
 fr:Nouveaux marque-pages
 nl:Nieuwe Bladwijzers
 pl:Nowe zakładki
+ru:Новые закладки
 :New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
 am:Հասանելի է նոր՝ %s տարբերակը։ Ներբեռնե՞լ նոր տարբերակը։
@@ -12470,10 +12528,12 @@ uz:PDF-XChangeda ochish
 vn:Mở bằng PDF-XChange
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
+az:İç PDF faylını aç
 cn:打开嵌入 PDF
 co:Apre u PDF incurpuratu
 nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
+ru:Открыть вложенный PDF
 :Open a document...
 am:Բացել փաստաթուղթ...
 ar:فتح مستند...
@@ -13451,7 +13511,7 @@ by:Памер старонкі:
 ca-xv:Mida de pàgina:
 ca:Mida de pàgina:
 cn:页面大小:
-co:Messa à a scala\nDimensioni di a pagina :
+co:Dimensioni di a pagina :
 cy:Maint Tudalen:
 cz:Velikost stránky:
 de:Seitengröße:
@@ -13888,17 +13948,21 @@ uz:Kutib turing - render qilinmoqda...
 vn:Xin chờ đợi, đang hiện...
 :Poly Line
 am:Բազմագիծ
+az:Qırıq xətt
 cn:折线
 co:Linea tronca
 nl:Poly Regel
 pl:Polilinia
+ru:Ломаная
 :Polygon
 am:Պոլիգոն
+az:Çoxbucaqlı
 cn:多边形
 co:Poligonu
 fr:Polygone
 nl:Veelhoek
 pl:Wielokąt
+ru:Многоугольник
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
 ar:وثائق التذييل
@@ -14659,6 +14723,7 @@ uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
 :Redact
 am:Փոփոխել
+az:Düzəliş et
 cn:编辑
 co:Redige
 nl:Redigeren
@@ -14729,10 +14794,12 @@ uz:&Ochilgan fayllarni eslab qolish
 vn:Nhớ các tập tin đã mở
 :Remove Item
 am:Հեռացնել միույթը
+az:Elementi sil
 cn:移除项目
 co:Caccià l’elementu
 nl:Verwijder Item
 pl:Usuń element
+ru:Удалить элемент
 :Remove from favorites
 af:Verwyder van gunstelinge
 am:Հեռացնել ընտրյալներից
@@ -15066,7 +15133,7 @@ vn:Quay phải\tCtrl+Shift++
 :Save Annotations
 am:Պահպանել ծանոթագրությունը
 ar:حفظ الحواشي
-az:Annotasiyaları yadda saxla
+az:Qeydləri yadda saxla
 bg:Запази анотациите
 br:Salvar anotações
 ca-xv:Desa les anotacions
@@ -15165,10 +15232,12 @@ uz:Quyidagicha saqlash
 vn:Lưu thành
 :Save Embedded File...
 am:Պահպանել ներկառուցված ֆայլը...
+az:İç faylı yadda saxla...
 cn:保存嵌入文件...
 co:Arregistrà u schedariu incurpuratu…
 nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
+ru:Сохранить вложенный файл...
 :Save S&hortcut...\tCtrl+Shift+S
 am:Պահպանել պ&իտակը...\tCtrl+Shift+S
 ar:حفظ الاختصار...\tCtrl+Shift+S
@@ -15856,11 +15925,13 @@ uz:&Betlarni uzluksiz ko'rsatish
 vn:Xem trang liên tiếp
 :Show &Scrollbars
 am:Ցուցադրել &ոլորգոտիները
+az:&Sürüşdürmə zolaqlarını göstər
 cn:显示滚动条(&S)
 co:&Affissà e barre di sfilarata
 fr:Afficher les &barres  de défilement
 nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
+ru:&Показать ползунки
 :Show &Toolbar\tF8
 af:Vertoon Toolbar
 am:Ցուցադրել &գործիքները
@@ -15970,7 +16041,7 @@ by:Паказаць лепшыя закладкі
 ca-xv:Mostra els preferits
 ca:Mostra els preferits
 cn:显示收藏夹
-co:Affissà i favuriti
+co:Affissà i &favuriti
 cy:Dangos Ffefrynnau
 cz:Zobrazit oblíbené položky
 de:Favoriten anzeigen
@@ -16022,11 +16093,13 @@ uz:Tanlanganlarni ko'rsatish
 vn:Hiện Ưa thích
 :Show Scr&ollbars
 am:Ցուցադրել ոլո&րագոտիները
+az:Sürüşdürmə &zolaqlarını göstər
 cn:显示滚动条(&O)
 co:&Affissà e barre di sfilarata
 fr:Afficher les barres de &défilement
 nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
+ru:Показать пол&зунки
 :Show frequently read
 am:Ցուցադրել հաճախակի բացվածները
 ar:إظهار الأكثر قراءة
@@ -16262,7 +16335,7 @@ by:Даруйqt, гэтага не павінна было здарыцца!\n\n
 ca-xv:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'este error
 ca:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'aquest error.
 cn:抱歉，本不应该发生的！\n\n如果你希望帮助我们修复这个崩溃问题，请点击'取消'。
-co:Quessu ùn duveria mai accade !\n\nCi vole à sceglie « Abbandunà » s’è voi vulete aiutacci à currege a causa di stu penseru.
+co:Quessu ùn duveria mai accade !\n\nCi vole à sceglie « Abbandunà » s’è voi vulete aiutacci à currege a causa di stu penseru.
 cy:Ymddiheuriadau. Dylai hynny heb fod wedi digwydd!\n\nPwyswch 'Diddymu', os hoffech chi ein cynorthwyo i drwsio achos y gwall.
 cz:To se nemělo stát, omlouváme se.\n\nPokud nám chcete pomoci vyřešit příčinu tohoto pádu, klikněte na tlačítko Storno.
 de:Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte drücken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein möchten.
@@ -16315,11 +16388,14 @@ uz:Kutilmagan voqea sodir bo'ldi.\n\nUshbu nosozlikni tuzatish uchun bizga yorda
 vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
 :Sort By
 am:Տեսակավորել ըստ՝
+az:Sırala
 cn:排序
 co:Classificà da
+el:Ταξινόμηση κατά
 fr:Classer
 nl:Sorteer Op
 pl:Sortuj według
+ru:Сортировать по
 :Source file %s has no synchronization point
 am:%s ֆայլը չունի համաժամեցման կետ
 ar:الملف المصدر %s لم تتم مزامنته عند هذه النقطة
@@ -16386,16 +16462,22 @@ uz:%s manba faylida sinxronlanish nuqtasi yo'q
 vn:Tập tin nguồn %s không có điểm đồng bộ
 :Square
 am:Քառակուսի
+az:Kvadrat
 cn:矩形
 co:Quadratu
+el:Τετράγωνο 
 nl:Vierkant
 pl:Kwadrat
+ru:Квадрат
+tr:Kare
 :Squiggly
 am:Ալիքավոր
+az:Tilda
 cn:波浪线
 co:Undulatu
 nl:Kronkelig
 pl:Falowanie
+ru:Волнистая линия
 :Stamp
 am:Կնիք
 cn:图章
@@ -16470,6 +16552,7 @@ co:Rigà
 fr:Rayer
 nl:Doorhalen
 pl:Skreślenie
+ru:Перечеркнуть
 :Subject:
 af:Onderwerp
 am:Ֆայլը.
@@ -17092,10 +17175,13 @@ uz:SumatraPDF endi andoza PDF ko'rish vositasi bo'ldi
 vn:SumatraPDF giờ là trình đọc PDF chính của bạn
 :Support SumatraPDF
 am:Աջակցել SumatraPDF-ին
+az:SumatraPDF-i dəstəklə
 cn:支持 SumatraPDF
 co:Sustene SumatraPDF
+el:Υποστηρίξτε το SumatraPDF
 nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
+ru:Поддержать SumatraPDF
 :Synchronization file cannot be opened
 am:Հնարավոր չէ բացել համաժամեցման ֆայլը
 ar:لايمكن فتح مزامنة الملف
@@ -17162,12 +17248,14 @@ uz:Sinxronlanish faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tag (big first)
 am:Պիտակ (նախ մեծը)
+az:Teq (əvvəl böyüklər)
 cn:标签 (大的在前)
 co:Etichetta (prima maiò)
 nl:Tag (eerst groot)
 pl:Tag (najpierw duży)
 :Tag (small first)
 am:Պիտակ (նախ փոքրը)
+az:Teq (əvvəl kiçiklər)
 cn:标签 (小的在前)
 co:Etichetta (prima chjuca)
 nl:Tag (eerst klein)
@@ -17235,11 +17323,14 @@ uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text
 am:Գրվածք
+az:Mətn
 cn:文本
 co:Testu
+el:Κείμενο
 fr:Texte
 nl:Tekst
 pl:Tekst
+ru:Текст
 :Text documents
 am:Տեքստային ֆայլեր
 ar:مستندات نصية
@@ -17306,11 +17397,13 @@ uz:Matn hujjatlari
 vn:Tập tin văn bản
 :Thank you for choosing RA-MICRO PDF!
 am:Շնորհակալություն RA-MICRO PDF-ը նախընտրելու համար:
+az:RA-MICRO PDF-i seçdiyiniz üçün təşəkkür edirik!
 cn:感谢您选择 RA-MICRO PDF！
 co:Vi ringraziemu d’avè sceltu RA-MICRO PDF !
 fr:Merci d'avoir choisi RA6MICRO PDF !
 nl:Dank u voor het kiezen van RA-MICRO PDF!
 pl:Dziękujemy za wybranie RA-MICRO PDF!
+ru:Спасибо, что выбрали RA-MICRO PDF!
 :Thank you for choosing SumatraPDF!
 am:Շնորհակալություն SumatraPDF-ը նախընտրելու համար:
 ar:نشكركم لاختياركم مستندات Sumatra المحمولة  
@@ -17618,11 +17711,14 @@ uz:Sarlavha:
 vn:Tựa đề
 :Underline
 am:Ընդգծում
+az:Altdan xətt
 cn:下划线
 co:Sottulineatu
+el:Υπογράμμιση 
 fr:Souligner
 nl:Onderstrepen
 pl:Podkreślenie
+ru:Подчеркнуть
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
 ar:المحمولة Sumatra  الغاء تثبيت مستندات
@@ -17871,7 +17967,7 @@ vn:Không rõ tập tin nguồn (%s)
 :Use &tabs
 am:Ավելացնել &ներդիրներ
 ar:الإستعمال & التبويبات
-az:&Tab-vərəqələrdən istifadə et
+az:&Tab-vərəqlərdən istifadə et
 bg:&Използвай табулатор
 br:Usar &abas
 bs:Koristi &tabove
