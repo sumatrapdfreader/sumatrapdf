@@ -49,71 +49,69 @@ Kind kindFileTxt = "fileTxt";
 // http://en.wikipedia.org/wiki/Read.me
 // http://www.cix.co.uk/~gidds/Software/TCR.html
 
-// .fb2.zip etc. must be first so that it isn't classified as .zip
-static const char* gFileExts =
-    ".fb2.zip\0"
-    ".ps.gz\0"
-    "file_id.diz\0"
-    "Read.me\0"
-    ".txt\0"
-    ".log\0"
-    ".nfo\0"
-    ".tcr\0"
-    ".ps\0"
-    ".eps\0"
-    ".vbkm\0"
-    ".fb2\0"
-    ".fb2z\0"
-    ".zfb2\0"
-    ".cbz\0"
-    ".cbr\0"
-    ".cb7\0"
-    ".cbt\0"
-    ".zip\0"
-    ".rar\0"
-    ".7z\0"
-    ".tar\0"
-    ".pdf\0"
-    ".xps\0"
-    ".oxps\0"
-    ".chm\0"
-    ".png\0"
-    ".jpg\0"
-    ".jpeg\0"
-    ".gif\0"
-    ".tif\0"
-    ".tiff\0"
-    ".bmp\0"
-    ".tga\0"
-    ".jxr\0"
-    ".hdp\0"
-    ".wdp\0"
-    ".webp\0"
-    ".epub\0"
-    ".mobi\0"
-    ".prc\0"
-    ".azw\0"
-    ".azw1\0"
-    ".azw3\0"
-    ".pdb\0"
-    ".prc\0"
-    ".html\0"
-    ".htm\0"
-    ".xhtml\0"
-    ".djvu\0"
-    ".jp2\0"
-    "\0";
+// TODO: should .prc be kindFilePalmDoc instead of kindFileMobi?
+#define DEF_EXT_KIND(V)             \
+    V(".fb2.zip\0", kindFileFb2)    \
+    V(".fb2.zip\0", kindFileFb2)    \
+    V(".ps.gz\0", kindFilePS)       \
+    V("file_id.diz\0", kindFileTxt) \
+    V("Read.me\0", kindFileTxt)     \
+    V(".txt\0", kindFileTxt)        \
+    V(".log\0", kindFileTxt)        \
+    V(".nfo\0", kindFileTxt)        \
+    V(".tcr\0", kindFileTxt)        \
+    V(".ps\0", kindFilePS)          \
+    V(".eps\0", kindFilePS)         \
+    V(".vbkm\0", kindFileVbkm)      \
+    V(".fb2\0", kindFileFb2)        \
+    V(".fb2z\0", kindFileFb2)       \
+    V(".zfb2\0", kindFileFb2)       \
+    V(".cbz\0", kindFileCbz)        \
+    V(".cbr\0", kindFileCbr)        \
+    V(".cb7\0", kindFileCb7)        \
+    V(".cbt\0", kindFileCbt)        \
+    V(".zip\0", kindFileZip)        \
+    V(".rar\0", kindFileRar)        \
+    V(".7z\0", kindFile7Z)          \
+    V(".tar\0", kindFileTar)        \
+    V(".pdf\0", kindFilePDF)        \
+    V(".xps\0", kindFileXps)        \
+    V(".oxps\0", kindFileXps)       \
+    V(".chm\0", kindFileChm)        \
+    V(".png\0", kindFilePng)        \
+    V(".jpg\0", kindFileJpeg)       \
+    V(".jpeg\0", kindFileJpeg)      \
+    V(".gif\0", kindFileGif)        \
+    V(".tif\0", kindFileTiff)       \
+    V(".tiff\0", kindFileTiff)      \
+    V(".bmp\0", kindFileBmp)        \
+    V(".tga\0", kindFileTga)        \
+    V(".jxr\0", kindFileJxr)        \
+    V(".hdp\0", kindFileHdp)        \
+    V(".wdp\0", kindFileWdp)        \
+    V(".webp\0", kindFileWebp)      \
+    V(".epub\0", kindFileEpub)      \
+    V(".mobi\0", kindFileMobi)      \
+    V(".prc\0", kindFileMobi)       \
+    V(".azw\0", kindFileMobi)       \
+    V(".azw1\0", kindFileMobi)      \
+    V(".azw3\0", kindFileMobi)      \
+    V(".pdb\0", kindFilePalmDoc)    \
+    V(".html\0", kindFileHTML)      \
+    V(".htm\0", kindFileHTML)       \
+    V(".xhtml\0", kindFileHTML)     \
+    V(".djvu\0", kindFileDjVu)      \
+    V(".jp2\0", kindFileJp2)
 
-static Kind gExtsKind[] = {
-    kindFileFb2,  kindFilePS,   kindFileTxt,     kindFileTxt,     kindFileTxt,  kindFileTxt,  kindFileTxt,
-    kindFileTxt,  kindFilePS,   kindFilePS,      kindFileVbkm,    kindFileFb2,  kindFileFb2,  kindFileFb2,
-    kindFileCbz,  kindFileCbr,  kindFileCb7,     kindFileCbt,     kindFileZip,  kindFileRar,  kindFile7Z,
-    kindFileTar,  kindFilePDF,  kindFileXps,     kindFileXps,     kindFileChm,  kindFilePng,  kindFileJpeg,
-    kindFileJpeg, kindFileGif,  kindFileTiff,    kindFileTiff,    kindFileBmp,  kindFileTga,  kindFileJxr,
-    kindFileHdp,  kindFileWdp,  kindFileWebp,    kindFileEpub,    kindFileMobi, kindFileMobi, kindFileMobi,
-    kindFileMobi, kindFileMobi, kindFilePalmDoc, kindFilePalmDoc, kindFileHTML, kindFileHTML, kindFileHTML,
-    kindFileDjVu, kindFileJp2,
-};
+#define EXT(ext, kind) ext
+
+// .fb2.zip etc. must be first so that it isn't classified as .zip
+static const char* gFileExts = DEF_EXT_KIND(EXT) "\0";
+#undef EXT
+
+#define KIND(ext, kind) kind,
+static Kind gExtsKind[] = {DEF_EXT_KIND(KIND)};
+#undef KIND
 
 static Kind GetKindByFileExt(const WCHAR* path) {
     AutoFree pathA = strconv::WstrToUtf8(path);
@@ -140,6 +138,7 @@ static void VerifyExtsMatch() {
     if (gDidVerifyExtsMatch) {
         return;
     }
+    CrashAlwaysIf(kindFileEpub != GetKindByFileExt(L"foo.epub"));
     CrashAlwaysIf(kindFileJp2 != GetKindByFileExt(L"foo.JP2"));
     gDidVerifyExtsMatch = true;
 }
