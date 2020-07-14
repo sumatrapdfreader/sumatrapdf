@@ -330,7 +330,7 @@ class EngineBase {
 
     // applies zoom and rotation to a point in user/page space converting
     // it into device/screen space - or in the inverse direction
-    PointFl Transform(PointFl pt, int pageNo, float zoom, int rotation, bool inverse = false);
+    PointF Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse = false);
     virtual RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) = 0;
 
     // returns the binary data for the current file
@@ -376,7 +376,7 @@ class EngineBase {
     virtual Vec<IPageElement*>* GetElements(int pageNo) = 0;
     // returns the element at a given point or nullptr if there's none
     // caller must delete the result
-    virtual IPageElement* GetElementAtPos(int pageNo, PointFl pt) = 0;
+    virtual IPageElement* GetElementAtPos(int pageNo, PointF pt) = 0;
 
     // creates a PageDestination from a name (or nullptr for invalid names)
     // caller must delete the result

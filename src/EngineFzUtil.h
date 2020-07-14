@@ -76,7 +76,7 @@ TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestinatio
 PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx);
 PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline);
 PageDestination* newFzDestination(fz_outline*);
-IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointFl pt);
+IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt);
 void FzGetElements(Vec<IPageElement*>* els, FzPageInfo* pageInfo);
 void FzLinkifyPageText(FzPageInfo* pageInfo, fz_stext_page* stext);
 fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,

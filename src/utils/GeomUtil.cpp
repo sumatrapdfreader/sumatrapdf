@@ -20,20 +20,20 @@ bool Point::operator!=(const Point& other) const {
     return !this->operator==(other);
 }
 
-// ------------- PointFl
+// ------------- PointF
 
-PointFl::PointFl(float x, float y) : x(x), y(y) {
+PointF::PointF(float x, float y) : x(x), y(y) {
 }
 
-bool PointFl::IsEmpty() const {
+bool PointF::IsEmpty() const {
     return x == 0 && y == 0;
 }
 
-bool PointFl::operator==(const PointFl& other) const {
+bool PointF::operator==(const PointF& other) const {
     return this->x == other.x && this->y == other.y;
 }
 
-bool PointFl::operator!=(const PointFl& other) const {
+bool PointF::operator!=(const PointF& other) const {
     return !this->operator==(other);
 }
 
@@ -245,10 +245,10 @@ RectFl::RectFl(const Gdiplus::RectF r) {
 RectFl::RectFl(float x, float y, float dx, float dy) : x(x), y(y), dx(dx), dy(dy) {
 }
 
-RectFl::RectFl(PointFl pt, SizeFl size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
+RectFl::RectFl(PointF pt, SizeFl size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
 }
 
-RectFl::RectFl(PointFl min, PointFl max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
+RectFl::RectFl(PointF min, PointF max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
 }
 
 bool RectFl::EqSize(float otherDx, float otherDy) {
@@ -273,7 +273,7 @@ RectFl RectFl::FromXY(float xs, float ys, float xe, float ye) {
     return RectFl(xs, ys, xe - xs, ye - ys);
 }
 
-RectFl RectFl::FromXY(PointFl TL, PointFl BR) {
+RectFl RectFl::FromXY(PointF TL, PointF BR) {
     return FromXY(TL.x, TL.y, BR.x, BR.y);
 }
 
@@ -286,7 +286,7 @@ bool RectFl::IsEmpty() const {
     return dx == 0 || dy == 0;
 }
 
-bool RectFl::Contains(PointFl pt) {
+bool RectFl::Contains(PointF pt) {
     if (pt.x < this->x) {
         return false;
     }
@@ -348,11 +348,11 @@ void RectFl::Inflate(float _x, float _y) {
     dy += 2 * _y;
 }
 
-PointFl RectFl::TL() const {
+PointF RectFl::TL() const {
     return {x, y};
 }
 
-PointFl RectFl::BR() const {
+PointF RectFl::BR() const {
     return {x + dx, y + dy};
 }
 
@@ -374,7 +374,7 @@ bool RectFl::operator!=(const RectFl& other) const {
 
 // ------------- conversion functions
 
-PointFl ToPointFl(const Point p) {
+PointF ToPointFl(const Point p) {
     return {(float)p.x, (float)p.y};
 }
 
@@ -382,11 +382,11 @@ Gdiplus::Point ToGdipPoint(const Point p) {
     return Gdiplus::Point(p.x, p.y);
 }
 
-Point ToPoint(const PointFl p) {
+Point ToPoint(const PointF p) {
     return Point{(int)p.x, (int)p.y};
 }
 
-Gdiplus::PointF ToGdipPointF(const PointFl p) {
+Gdiplus::PointF ToGdipPointF(const PointF p) {
     return Gdiplus::PointF(p.x, p.y);
 }
 

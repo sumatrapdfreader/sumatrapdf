@@ -188,7 +188,7 @@ void UpdateTextSelection(WindowInfo* win, bool select) {
     if (select) {
         int pageNo = dm->GetPageNoByPoint(win->selectionRect.BR());
         if (win->ctrl->ValidPageNo(pageNo)) {
-            PointFl pt = dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
+            PointF pt = dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
             dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
         }
     }
@@ -426,7 +426,7 @@ void OnSelectionStart(WindowInfo* win, int x, int y, WPARAM key) {
         DisplayModel* dm = win->AsFixed();
         int pageNo = dm->GetPageNoByPoint(Point(x, y));
         if (dm->ValidPageNo(pageNo)) {
-            PointFl pt = dm->CvtFromScreen(Point(x, y), pageNo);
+            PointF pt = dm->CvtFromScreen(Point(x, y), pageNo);
             dm->textSelection->StartAt(pageNo, pt.x, pt.y);
             win->mouseAction = MouseAction::SelectingText;
         }

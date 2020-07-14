@@ -320,7 +320,7 @@ class EnginePdf : public EngineBase {
     bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
@@ -1364,7 +1364,7 @@ RenderedBitmap* EnginePdf::RenderPage(RenderPageArgs& args) {
     return bitmap;
 }
 
-IPageElement* EnginePdf::GetElementAtPos(int pageNo, PointFl pt) {
+IPageElement* EnginePdf::GetElementAtPos(int pageNo, PointF pt) {
     FzPageInfo* pageInfo = GetFzPageInfoFast(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
@@ -1944,7 +1944,7 @@ static const char* getuser(void) {
     return u;
 }
 
-Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointFl pos) {
+Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointF pos) {
     CrashIf(engine->kind != kindEnginePdf);
     EnginePdf* epdf = (EnginePdf*)engine;
     fz_context* ctx = epdf->ctx;
@@ -2021,7 +2021,7 @@ static bool IsAllowedAnnot(AnnotationType tp, AnnotationType* allowed) {
     return false;
 }
 
-Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointFl pos, AnnotationType* allowedAnnots) {
+Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots) {
     if (!engine || engine->kind != kindEnginePdf) {
         return nullptr;
     }

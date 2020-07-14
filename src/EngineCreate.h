@@ -9,4 +9,4 @@ EngineBase* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI = nullptr, boo
 bool EngineSupportsAnnotations(EngineBase*);
 bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>*);
 bool EngineHasUnsavedAnnotations(EngineBase*);
-Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointFl pos, AnnotationType* allowedAnnots);
+Annotation* EngineGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, AnnotationType* allowedAnnots);

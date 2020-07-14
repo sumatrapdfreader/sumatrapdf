@@ -55,7 +55,7 @@ class EngineMupdf : public EngineBase {
     bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;

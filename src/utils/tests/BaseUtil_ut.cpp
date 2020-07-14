@@ -7,7 +7,7 @@
 #include "utils/UtAssert.h"
 
 static void GeomTest() {
-    PointFl ptD(12.4f, -13.6f);
+    PointF ptD(12.4f, -13.6f);
     utassert(ptD.x == 12.4f && ptD.y == -13.6f);
     Point ptI = ToPoint(ptD);
     utassert(ptI.x == 12 && ptI.y == -13);

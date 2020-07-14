@@ -108,7 +108,7 @@ class EngineImages : public EngineBase {
     }
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
 
@@ -273,7 +273,7 @@ Vec<IPageElement*>* EngineImages::GetElements(int pageNo) {
     return els;
 }
 
-IPageElement* EngineImages::GetElementAtPos(int pageNo, PointFl pt) {
+IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
     if (!PageMediabox(pageNo).Contains(pt)) {
         return nullptr;
     }

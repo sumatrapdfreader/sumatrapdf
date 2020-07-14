@@ -163,7 +163,7 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
     }
     RectFl rect = dest->GetRect();
     if (rect.IsEmpty()) {
-        PointFl pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
+        PointF pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
         return str::Format("Point=\"%.0f %.0f\"", pt.x, pt.y);
     }
     if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
@@ -171,7 +171,7 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
         return str::Format("Rect=\"%d %d %d %d\"", rc.x, rc.y, rc.dx, rc.dy);
     }
     if (rect.y != DEST_USE_DEFAULT) {
-        PointFl pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
+        PointF pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
         return str::Format("Point=\"x %.0f\"", pt.y);
     }
     return nullptr;

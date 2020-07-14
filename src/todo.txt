@@ -57,7 +57,7 @@ small refactorings:
 possible refactorings:
 - change DocumentTextCache::GetTextForPage to return PageText
 - extract tab code from Tabs.cpp into a tab control
-- rename PointFl, RectFl, SizeFl -> PointF etc.
+- rename PointF, RectFl, SizeFl -> PointF etc.
 - rename GetFzPageInfo => LoadPage(), GetFzPageInfoFast() => GetFzPageInfo()
 - split LoadPage() into LoadPage() and LoadPagePartial()
 returning Rect

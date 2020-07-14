@@ -42,7 +42,7 @@ fz_rect To_fz_rect(RectFl rect) {
 }
 
 bool fz_is_pt_in_rect(fz_rect rect, fz_point pt) {
-    return ToRectFl(rect).Contains(PointFl(pt.x, pt.y));
+    return ToRectFl(rect).Contains(PointF(pt.x, pt.y));
 }
 
 float fz_calc_overlap(fz_rect r1, fz_rect r2) {
@@ -1046,7 +1046,7 @@ TocItem* newTocItemWithDestination(TocItem* parent, WCHAR* title, PageDestinatio
     return res;
 }
 
-IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointFl pt) {
+IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt) {
     if (!pageInfo) {
         return nullptr;
     }

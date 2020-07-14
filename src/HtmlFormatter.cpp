@@ -627,7 +627,7 @@ bool HtmlFormatter::EmitImage(ImageData* img) {
         }
     }
 
-    RectFl bbox(PointFl(currX, 0), newSize);
+    RectFl bbox(PointF(currX, 0), newSize);
     AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
     currX += bbox.dx;
 

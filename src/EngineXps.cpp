@@ -217,7 +217,7 @@ class EngineXps : public EngineBase {
     }
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
@@ -766,7 +766,7 @@ WCHAR* EngineXps::GetProperty(DocumentProperty prop) {
     }
 };
 
-IPageElement* EngineXps::GetElementAtPos(int pageNo, PointFl pt) {
+IPageElement* EngineXps::GetElementAtPos(int pageNo, PointF pt) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     return FzGetElementAtPos(pageInfo, pt);
 }

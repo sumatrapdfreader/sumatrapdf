@@ -1880,7 +1880,7 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
 
 enum class MeasurementUnit { pt, mm, in };
 
-static WCHAR* FormatCursorPosition(EngineBase* engine, PointFl pt, MeasurementUnit unit) {
+static WCHAR* FormatCursorPosition(EngineBase* engine, PointF pt, MeasurementUnit unit) {
     if (pt.x < 0) {
         pt.x = 0;
     }
@@ -1941,10 +1941,10 @@ void UpdateCursorPositionHelper(WindowInfo* win, Point pos, NotificationWnd* wnd
 
     CrashIf(!win->AsFixed());
     EngineBase* engine = win->AsFixed()->GetEngine();
-    PointFl pt = win->AsFixed()->CvtFromScreen(pos);
+    PointF pt = win->AsFixed()->CvtFromScreen(pos);
     AutoFreeWstr posStr(FormatCursorPosition(engine, pt, unit)), selStr;
     if (!win->selectionMeasure.IsEmpty()) {
-        pt = PointFl(win->selectionMeasure.dx, win->selectionMeasure.dy);
+        pt = PointF(win->selectionMeasure.dx, win->selectionMeasure.dy);
         selStr.Set(FormatCursorPosition(engine, pt, unit));
     }
 
@@ -3889,7 +3889,7 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType, int pag
     if (!ok) {
         return false;
     }
-    Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointFl{});
+    Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointF{});
     Vec<RectFl> rects;
     Vec<SelectionOnPage>* s = tab->selectionOnPage;
     for (auto& sel : *s) {

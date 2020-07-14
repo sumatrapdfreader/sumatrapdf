@@ -97,7 +97,7 @@ class EngineEbook : public EngineBase {
     bool HasClipOptimizations(int pageNo) override;
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     RenderedBitmap* GetImageForPageElement(IPageElement* el) override;
@@ -491,7 +491,7 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
     return getImageFromData(i.img);
 }
 
-IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointFl pt) {
+IPageElement* EngineEbook::GetElementAtPos(int pageNo, PointF pt) {
     auto els = GetElements(pageNo);
     if (!els) {
         return nullptr;

@@ -516,8 +516,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         row.dx += (double)pageSpacing.dx * (double)(columns - 1);
     }
 
-    CrashIf(RectFl(PointFl(), row).IsEmpty());
-    if (RectFl(PointFl(), row).IsEmpty()) {
+    CrashIf(RectFl(PointF(), row).IsEmpty());
+    if (RectFl(PointF(), row).IsEmpty()) {
         return 0;
     }
 
@@ -957,7 +957,7 @@ int DisplayModel::GetPageNextToPoint(Point pt) {
     return closest;
 }
 
-Point DisplayModel::CvtToScreen(int pageNo, PointFl pt) {
+Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     SubmitCrashIf(!pageInfo);
     if (!pageInfo) {
@@ -969,7 +969,7 @@ Point DisplayModel::CvtToScreen(int pageNo, PointFl pt) {
     if (zoom == 0) {
         zoom = zoomReal;
     }
-    PointFl p = engine->Transform(pt, pageNo, zoom, rotation);
+    PointF p = engine->Transform(pt, pageNo, zoom, rotation);
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
     p.x += 0.499 + r.x;
@@ -984,7 +984,7 @@ Rect DisplayModel::CvtToScreen(int pageNo, RectFl r) {
     return Rect::FromXY(TL, BR);
 }
 
-PointFl DisplayModel::CvtFromScreen(Point pt, int pageNo) {
+PointF DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     if (!ValidPageNo(pageNo)) {
         pageNo = GetPageNextToPoint(pt);
     }
@@ -992,12 +992,12 @@ PointFl DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     const PageInfo* pageInfo = GetPageInfo(pageNo);
     CrashIf(!pageInfo);
     if (!pageInfo) {
-        return PointFl();
+        return PointF();
     }
 
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
-    PointFl p = PointFl(pt.x - 0.499 - r.x, pt.y - 0.499 - r.y);
+    PointF p = PointF(pt.x - 0.499 - r.x, pt.y - 0.499 - r.y);
     float zoom = pageInfo->zoomReal;
     // TODO: must be a better way
     if (zoom == 0) {
@@ -1011,8 +1011,8 @@ RectFl DisplayModel::CvtFromScreen(Rect r, int pageNo) {
         pageNo = GetPageNextToPoint(r.TL());
     }
 
-    PointFl TL = CvtFromScreen(r.TL(), pageNo);
-    PointFl BR = CvtFromScreen(r.BR(), pageNo);
+    PointF TL = CvtFromScreen(r.TL(), pageNo);
+    PointF BR = CvtFromScreen(r.BR(), pageNo);
     return RectFl::FromXY(TL, BR);
 }
 
@@ -1028,7 +1028,7 @@ IPageElement* DisplayModel::GetElementAtPos(Point pt) {
         return nullptr;
     }
 
-    PointFl pos = CvtFromScreen(pt, pageNo);
+    PointF pos = CvtFromScreen(pt, pageNo);
     return engine->GetElementAtPos(pageNo, pos);
 }
 
@@ -1042,7 +1042,7 @@ Annotation* DisplayModel::GetAnnotationAtPos(Point pt, AnnotationType* allowedAn
         return nullptr;
     }
 
-    PointFl pos = CvtFromScreen(pt, pageNo);
+    PointF pos = CvtFromScreen(pt, pageNo);
     return EngineGetAnnotationAtPos(engine, pageNo, pos, allowedAnnots);
 }
 
@@ -1060,7 +1060,7 @@ bool DisplayModel::IsOverText(Point pt) {
         return false;
     }
 
-    PointFl pos = CvtFromScreen(pt, pageNo);
+    PointF pos = CvtFromScreen(pt, pageNo);
     return textSelection->IsOverGlyph(pageNo, pos.x, pos.y);
 }
 
@@ -1509,7 +1509,7 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
     ScrollState ss = GetScrollState();
 
     int centerPage = -1;
-    PointFl centerPt;
+    PointF centerPt;
     if (fixPt) {
         centerPage = GetPageNoByPoint(*fixPt);
         if (ValidPageNo(centerPage)) {
@@ -1728,7 +1728,7 @@ ScrollState DisplayModel::GetScrollState() {
     Rect screen(Point(), viewPort.Size());
     Rect pageVis = pageInfo->pageOnScreen.Intersect(screen);
     state.page = GetPageNextToPoint(pageVis.TL());
-    PointFl ptD = CvtFromScreen(pageVis.TL(), state.page);
+    PointF ptD = CvtFromScreen(pageVis.TL(), state.page);
 
     // Remember to show the margin, if it's currently visible
     if (pageInfo->pageOnScreen.x <= 0) {
@@ -1749,7 +1749,7 @@ void DisplayModel::SetScrollState(ScrollState state) {
         return;
     }
 
-    PointFl newPtD(std::max(state.x, (double)0), std::max(state.y, (double)0));
+    PointF newPtD(std::max(state.x, (double)0), std::max(state.y, (double)0));
     Point newPt = CvtToScreen(state.page, newPtD);
 
     // Also show the margins, if this has been requested
@@ -1850,7 +1850,7 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
     if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
         // PDF: /XYZ top left
         // scroll to rect.TL()
-        PointFl scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
+        PointF scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
         scroll = ToPoint(scrollD);
 
         // default values for the coordinates mean: keep the current position
@@ -1870,7 +1870,7 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
         // zoom = 100.0f * std::min(viewPort.dx / rectF.dx, viewPort.dy / rectF.dy);
     } else if (rect.y != DEST_USE_DEFAULT) {
         // PDF: /FitH top  or  /FitBH top
-        PointFl scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
+        PointF scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
         scroll.y = (int)scrollD.y;
         // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH
     }

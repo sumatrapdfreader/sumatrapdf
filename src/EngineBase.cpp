@@ -541,7 +541,7 @@ void EngineBase::SetFileName(const WCHAR* s) {
     fileNameBase.SetCopy(s);
 }
 
-PointFl EngineBase::Transform(PointFl pt, int pageNo, float zoom, int rotation, bool inverse) {
+PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
     RectFl rc = RectFl(pt, SizeFl());
     RectFl rect = Transform(rc, pageNo, zoom, rotation, inverse);
     return rect.TL();

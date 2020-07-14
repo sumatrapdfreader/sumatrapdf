@@ -15,17 +15,17 @@ struct Point {
     bool operator!=(const Point& other) const;
 };
 
-struct PointFl {
+struct PointF {
     float x{0};
     float y{0};
 
-    PointFl() = default;
+    PointF() = default;
 
-    PointFl(float x, float y);
+    PointF(float x, float y);
 
     bool IsEmpty() const;
-    bool operator==(const PointFl& other) const;
-    bool operator!=(const PointFl& other) const;
+    bool operator==(const PointF& other) const;
+    bool operator!=(const PointF& other) const;
 };
 
 struct Size {
@@ -102,33 +102,33 @@ struct RectFl {
     RectFl(const RECT r);
     RectFl(const Gdiplus::RectF r);
     RectFl(float x, float y, float dx, float dy);
-    RectFl(PointFl pt, SizeFl size);
-    RectFl(PointFl min, PointFl max);
+    RectFl(PointF pt, SizeFl size);
+    RectFl(PointF min, PointF max);
 
     bool EqSize(float otherDx, float otherDy);
     float Right() const;
     float Bottom() const;
     static RectFl FromXY(float xs, float ys, float xe, float ye);
-    static RectFl FromXY(PointFl TL, PointFl BR);
+    static RectFl FromXY(PointF TL, PointF BR);
     Rect Round() const;
     bool IsEmpty() const;
-    bool Contains(PointFl pt);
+    bool Contains(PointF pt);
     RectFl Intersect(RectFl other);
     RectFl Union(RectFl other);
     void Offset(float _x, float _y);
     void Inflate(float _x, float _y);
-    PointFl TL() const;
-    PointFl BR() const;
+    PointF TL() const;
+    PointF BR() const;
     SizeFl Size() const;
     static RectFl FromRECT(const RECT& rect);
     bool operator==(const RectFl& other) const;
     bool operator!=(const RectFl& other) const;
 };
 
-PointFl ToPointFl(const Point p);
+PointF ToPointFl(const Point p);
 Gdiplus::Point ToGdipPoint(const Point p);
-Point ToPoint(const PointFl p);
-Gdiplus::PointF ToGdipPointF(const PointFl p);
+Point ToPoint(const PointF p);
+Gdiplus::PointF ToGdipPointF(const PointF p);
 
 SIZE ToSIZE(const Size s);
 SizeFl ToSizeFl(const Size s);

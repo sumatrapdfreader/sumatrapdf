@@ -161,9 +161,9 @@ struct DisplayModel : public Controller {
     Annotation* GetAnnotationAtPos(Point pt, AnnotationType* allowedAnnots);
 
     int GetPageNoByPoint(Point pt);
-    Point CvtToScreen(int pageNo, PointFl pt);
+    Point CvtToScreen(int pageNo, PointF pt);
     Rect CvtToScreen(int pageNo, RectFl r);
-    PointFl CvtFromScreen(Point pt, int pageNo = INVALID_PAGE_NO);
+    PointF CvtFromScreen(Point pt, int pageNo = INVALID_PAGE_NO);
     RectFl CvtFromScreen(Rect r, int pageNo = INVALID_PAGE_NO);
 
     bool ShowResultRectToScreen(TextSel* res);

@@ -243,7 +243,7 @@ class EngineDjVu : public EngineBase {
 
     RenderedBitmap* RenderPage(RenderPageArgs&) override;
 
-    PointFl TransformPoint(PointFl pt, int pageNo, float zoom, int rotation, bool inverse = false);
+    PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse = false);
     RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
@@ -257,7 +257,7 @@ class EngineDjVu : public EngineBase {
     bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*>* GetElements(int pageNo) override;
-    IPageElement* GetElementAtPos(int pageNo, PointFl pt) override;
+    IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     TocTree* GetToc() override;
@@ -694,7 +694,7 @@ RectFl EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
     return pageRc;
 }
 
-PointFl EngineDjVu::TransformPoint(PointFl pt, int pageNo, float zoom, int rotation, bool inverse) {
+PointF EngineDjVu::TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
     CrashIf(zoom <= 0);
     if (zoom <= 0) {
         return pt;
@@ -718,13 +718,13 @@ PointFl EngineDjVu::TransformPoint(PointFl pt, int pageNo, float zoom, int rotat
     while (rotation < 0) {
         rotation += 360;
     }
-    PointFl res = pt; // for rotation == 0
+    PointF res = pt; // for rotation == 0
     if (90 == rotation) {
-        res = PointFl(page.dy - pt.y, pt.x);
+        res = PointF(page.dy - pt.y, pt.x);
     } else if (180 == rotation) {
-        res = PointFl(page.dx - pt.x, page.dy - pt.y);
+        res = PointF(page.dx - pt.x, page.dy - pt.y);
     } else if (270 == rotation) {
-        res = PointFl(pt.y, page.dx - pt.x);
+        res = PointF(pt.y, page.dx - pt.x);
     }
     res.x *= zoom;
     res.y *= zoom;
@@ -732,8 +732,8 @@ PointFl EngineDjVu::TransformPoint(PointFl pt, int pageNo, float zoom, int rotat
 }
 
 RectFl EngineDjVu::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
-    PointFl TL = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
-    PointFl BR = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
+    PointF TL = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
+    PointF BR = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
     return RectFl::FromXY(TL, BR);
 }
 
@@ -984,7 +984,7 @@ Vec<IPageElement*>* EngineDjVu::GetElements(int pageNo) {
     return els;
 }
 
-IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointFl pt) {
+IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointF pt) {
     Vec<IPageElement*>* els = GetElements(pageNo);
     if (!els) {
         return nullptr;

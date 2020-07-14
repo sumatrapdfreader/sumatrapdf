@@ -7,8 +7,8 @@ EngineBase* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI = nullp
 
 std::span<u8> LoadEmbeddedPDFFile(const WCHAR* path);
 const WCHAR* ParseEmbeddedStreamNumber(const WCHAR* path, int* streamNoOut);
-Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType type, int pageNo, PointFl pos);
+Annotation* EnginePdfCreateAnnotation(EngineBase* engine, AnnotationType type, int pageNo, PointF pos);
 int EnginePdfGetAnnotations(EngineBase*, Vec<Annotation*>*);
 bool EnginePdfHasUnsavedAnnotations(EngineBase* engine);
 bool EnginePdfSaveUpdated(EngineBase* engine, std::string_view path);
-Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointFl pos, AnnotationType* allowedAnnots);
+Annotation* EnginePdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, AnnotationType* allowedAnnots);
