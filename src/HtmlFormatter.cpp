@@ -600,7 +600,7 @@ bool HtmlFormatter::EmitImage(ImageData* img) {
         return false;
     }
 
-    SizeFl newSize((float)imgSize.dx, (float)imgSize.dy);
+    SizeF newSize((float)imgSize.dx, (float)imgSize.dy);
     // move overly large images to a new line (if they don't fit entirely)
     if (!IsCurrLineEmpty() && (currX + newSize.dx > pageDx || currY + newSize.dy > pageDy)) {
         FlushCurrLine(false);

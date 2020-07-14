@@ -42,17 +42,17 @@ struct Size {
     bool operator!=(const Size& other) const;
 };
 
-struct SizeFl {
+struct SizeF {
     float dx{0};
     float dy{0};
 
-    SizeFl() = default;
-    SizeFl(float dx, float dy);
+    SizeF() = default;
+    SizeF(float dx, float dy);
 
     bool IsEmpty() const;
 
-    bool operator==(const SizeFl& other) const;
-    bool operator!=(const SizeFl& other) const;
+    bool operator==(const SizeF& other) const;
+    bool operator!=(const SizeF& other) const;
 };
 
 struct Rect {
@@ -102,7 +102,7 @@ struct RectFl {
     RectFl(const RECT r);
     RectFl(const Gdiplus::RectF r);
     RectFl(float x, float y, float dx, float dy);
-    RectFl(PointF pt, SizeFl size);
+    RectFl(PointF pt, SizeF size);
     RectFl(PointF min, PointF max);
 
     bool EqSize(float otherDx, float otherDy);
@@ -119,7 +119,7 @@ struct RectFl {
     void Inflate(float _x, float _y);
     PointF TL() const;
     PointF BR() const;
-    SizeFl Size() const;
+    SizeF Size() const;
     static RectFl FromRECT(const RECT& rect);
     bool operator==(const RectFl& other) const;
     bool operator!=(const RectFl& other) const;
@@ -131,8 +131,8 @@ Point ToPoint(const PointF p);
 Gdiplus::PointF ToGdipPointF(const PointF p);
 
 SIZE ToSIZE(const Size s);
-SizeFl ToSizeFl(const Size s);
-Size ToSize(const SizeFl s);
+SizeF ToSizeFl(const Size s);
+Size ToSize(const SizeF s);
 
 RectFl ToRectFl(const Rect r);
 RECT ToRECT(const Rect r);

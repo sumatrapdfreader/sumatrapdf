@@ -188,7 +188,7 @@ struct DisplayModel : public Controller {
 
     void BuildPagesInfo();
     float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
-    SizeFl PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
+    SizeF PageSizeAfterRotation(int pageNo, bool fitToContent = false) const;
     void ChangeStartPage(int startPage);
     Point GetContentStart(int pageNo);
     void RecalcVisibleParts();

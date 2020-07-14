@@ -58,20 +58,20 @@ bool Size::operator!=(const Size& other) const {
     return !this->operator==(other);
 }
 
-// ------------- SizeFl
+// ------------- SizeF
 
-SizeFl::SizeFl(float dx, float dy) : dx(dx), dy(dy) {
+SizeF::SizeF(float dx, float dy) : dx(dx), dy(dy) {
 }
 
-bool SizeFl::IsEmpty() const {
+bool SizeF::IsEmpty() const {
     return dx == 0 || dy == 0;
 }
 
-bool SizeFl::operator==(const SizeFl& other) const {
+bool SizeF::operator==(const SizeF& other) const {
     return this->dx == other.dx && this->dy == other.dy;
 }
 
-bool SizeFl::operator!=(const SizeFl& other) const {
+bool SizeF::operator!=(const SizeF& other) const {
     return !this->operator==(other);
 }
 
@@ -245,7 +245,7 @@ RectFl::RectFl(const Gdiplus::RectF r) {
 RectFl::RectFl(float x, float y, float dx, float dy) : x(x), y(y), dx(dx), dy(dy) {
 }
 
-RectFl::RectFl(PointF pt, SizeFl size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
+RectFl::RectFl(PointF pt, SizeF size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
 }
 
 RectFl::RectFl(PointF min, PointF max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
@@ -356,8 +356,8 @@ PointF RectFl::BR() const {
     return {x + dx, y + dy};
 }
 
-SizeFl RectFl::Size() const {
-    return SizeFl(dx, dy);
+SizeF RectFl::Size() const {
+    return SizeF(dx, dy);
 }
 
 RectFl RectFl::FromRECT(const RECT& rect) {
@@ -390,7 +390,7 @@ Gdiplus::PointF ToGdipPointF(const PointF p) {
     return Gdiplus::PointF(p.x, p.y);
 }
 
-SizeFl ToSizeFl(const Size s) {
+SizeF ToSizeFl(const Size s) {
     return {(float)s.dx, (float)s.dy};
 }
 
@@ -398,7 +398,7 @@ SIZE ToSIZE(const Size s) {
     return {s.dx, s.dy};
 }
 
-Size ToSize(const SizeFl s) {
+Size ToSize(const SizeF s) {
     int dx = (int)floor(s.dx + 0.5);
     int dy = (int)floor(s.dy + 0.5);
     return Size(dx, dy);

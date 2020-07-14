@@ -96,7 +96,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
 
 void DeleteOldSelectionInfo(WindowInfo* win, bool alsoTextSel) {
     win->showSelection = false;
-    win->selectionMeasure = SizeFl();
+    win->selectionMeasure = SizeF();
     TabInfo* tab = win->currentTab;
     if (!tab) {
         return;

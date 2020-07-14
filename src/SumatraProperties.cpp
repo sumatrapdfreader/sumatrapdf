@@ -221,8 +221,8 @@ static WCHAR* FormatFileSize(size_t size) {
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
 }
 
-PaperFormat GetPaperFormat(SizeFl size) {
-    SizeFl sizeP = size.dx < size.dy ? size : SizeFl(size.dy, size.dx);
+PaperFormat GetPaperFormat(SizeF size) {
+    SizeF sizeP = size.dx < size.dy ? size : SizeF(size.dy, size.dx);
     // common ISO 216 formats (metric)
     if (limitValue(sizeP.dx, 16.53f, 16.55f) == sizeP.dx && limitValue(sizeP.dy, 23.38f, 23.40f) == sizeP.dy) {
         return PaperFormat::A2;
@@ -259,7 +259,7 @@ PaperFormat GetPaperFormat(SizeFl size) {
 // Caller needs to free the result
 static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
     RectFl mediabox = engine->PageMediabox(pageNo);
-    SizeFl size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
+    SizeF size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
 
     const WCHAR* formatName = L"";
     switch (GetPaperFormat(size)) {

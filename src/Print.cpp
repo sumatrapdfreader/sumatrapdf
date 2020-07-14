@@ -204,7 +204,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 
             StartPage(hdc);
 
-            SizeFl bSize = bounds.Size();
+            SizeF bSize = bounds.Size();
             float zoom = std::min((float)printable.dx / bSize.dx, (float)printable.dy / bSize.dy);
             // use the correct zoom values, if the page fits otherwise
             // and the user didn't ask for anything else (default setting)
@@ -274,7 +274,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 
             StartPage(hdc);
 
-            SizeFl pSize = engine.PageMediabox(pageNo).Size();
+            SizeF pSize = engine.PageMediabox(pageNo).Size();
             int rotation = 0;
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {
@@ -678,7 +678,7 @@ Exit:
 
 static short GetPaperSize(EngineBase* engine) {
     RectFl mediabox = engine->PageMediabox(1);
-    SizeFl size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
+    SizeF size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
 
     switch (GetPaperFormat(size)) {
         case PaperFormat::A2:

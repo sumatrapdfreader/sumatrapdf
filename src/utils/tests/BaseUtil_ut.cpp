@@ -12,15 +12,15 @@ static void GeomTest() {
     Point ptI = ToPoint(ptD);
     utassert(ptI.x == 12 && ptI.y == -13);
 
-    SizeFl szD(7.7f, -3.3f);
+    SizeF szD(7.7f, -3.3f);
     utassert(szD.dx == 7.7f && szD.dy == -3.3f);
     Size szI = ToSize(szD);
     utassert(szI.dx == 8 && szI.dy == -3);
     szD = ToSizeFl(szI);
-    utassert(SizeFl(8, -3) == szD);
+    utassert(SizeF(8, -3) == szD);
 
     utassert(!szD.IsEmpty() && !szI.IsEmpty());
-    utassert(Size().IsEmpty() && SizeFl().IsEmpty());
+    utassert(Size().IsEmpty() && SizeF().IsEmpty());
 
     struct SRIData {
         int x1s, x1e, y1s, y1e;

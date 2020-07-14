@@ -244,7 +244,7 @@ void DisplayModel::GetDisplayState(DisplayState* ds) {
     ds->decryptionKey = engine->GetDecryptionKey();
 }
 
-SizeFl DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
+SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     CrashIf(!pageInfo);
     if (!pageInfo) {
@@ -483,7 +483,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         return zoomVirtual * 0.01f * dpiFactor;
     }
 
-    SizeFl row;
+    SizeF row;
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
 
     bool fitToContent = (ZOOM_FIT_CONTENT == zoomVirtual);
@@ -691,7 +691,7 @@ RestartLayout:
             CrashIf(0.0 != pageInfo->visibleRatio);
             continue;
         }
-        SizeFl pageSize = PageSizeAfterRotation(pageNo);
+        SizeF pageSize = PageSizeAfterRotation(pageNo);
         Rect pos;
         // don't add the full 0.5 for rounding to account for precision errors
         float zoom = GetZoomReal(pageNo);

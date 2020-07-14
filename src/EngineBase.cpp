@@ -542,7 +542,7 @@ void EngineBase::SetFileName(const WCHAR* s) {
 }
 
 PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
-    RectFl rc = RectFl(pt, SizeFl());
+    RectFl rc = RectFl(pt, SizeF());
     RectFl rect = Transform(rc, pageNo, zoom, rotation, inverse);
     return rect.TL();
 }

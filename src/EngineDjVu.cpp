@@ -700,7 +700,7 @@ PointF EngineDjVu::TransformPoint(PointF pt, int pageNo, float zoom, int rotatio
         return pt;
     }
 
-    SizeFl page = PageMediabox(pageNo).Size();
+    SizeF page = PageMediabox(pageNo).Size();
 
     if (inverse) {
         // transform the page size to get a correct frame of reference
