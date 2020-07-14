@@ -91,38 +91,38 @@ struct Rect {
     bool operator!=(const Rect& other) const;
 };
 
-struct RectFl {
+struct RectF {
     float x{0};
     float y{0};
     float dx{0};
     float dy{0};
 
-    RectFl() = default;
+    RectF() = default;
 
-    RectFl(const RECT r);
-    RectFl(const Gdiplus::RectF r);
-    RectFl(float x, float y, float dx, float dy);
-    RectFl(PointF pt, SizeF size);
-    RectFl(PointF min, PointF max);
+    RectF(const RECT r);
+    RectF(const Gdiplus::RectF r);
+    RectF(float x, float y, float dx, float dy);
+    RectF(PointF pt, SizeF size);
+    RectF(PointF min, PointF max);
 
     bool EqSize(float otherDx, float otherDy);
     float Right() const;
     float Bottom() const;
-    static RectFl FromXY(float xs, float ys, float xe, float ye);
-    static RectFl FromXY(PointF TL, PointF BR);
+    static RectF FromXY(float xs, float ys, float xe, float ye);
+    static RectF FromXY(PointF TL, PointF BR);
     Rect Round() const;
     bool IsEmpty() const;
     bool Contains(PointF pt);
-    RectFl Intersect(RectFl other);
-    RectFl Union(RectFl other);
+    RectF Intersect(RectF other);
+    RectF Union(RectF other);
     void Offset(float _x, float _y);
     void Inflate(float _x, float _y);
     PointF TL() const;
     PointF BR() const;
     SizeF Size() const;
-    static RectFl FromRECT(const RECT& rect);
-    bool operator==(const RectFl& other) const;
-    bool operator!=(const RectFl& other) const;
+    static RectF FromRECT(const RECT& rect);
+    bool operator==(const RectF& other) const;
+    bool operator!=(const RectF& other) const;
 };
 
 PointF ToPointFl(const Point p);
@@ -134,13 +134,13 @@ SIZE ToSIZE(const Size s);
 SizeF ToSizeFl(const Size s);
 Size ToSize(const SizeF s);
 
-RectFl ToRectFl(const Rect r);
+RectF ToRectFl(const Rect r);
 RECT ToRECT(const Rect r);
 RECT RECTFromRect(Gdiplus::Rect r);
 Gdiplus::Rect ToGdipRect(const Rect r);
 Gdiplus::RectF ToGdipRectF(const Rect r);
 
-RECT ToRECT(const RectFl r);
-Rect ToRect(const RectFl r);
-Gdiplus::Rect ToGdipRect(const RectFl r);
-Gdiplus::RectF ToGdipRectF(const RectFl r);
+RECT ToRECT(const RectF r);
+Rect ToRect(const RectF r);
+Gdiplus::Rect ToGdipRect(const RectF r);
+Gdiplus::RectF ToGdipRectF(const RectF r);

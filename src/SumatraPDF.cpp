@@ -717,7 +717,7 @@ struct ControllerCallbackHandler : ControllerCallback {
 
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb& saveThumbnail) {
     auto engine = dm->GetEngine();
-    RectFl pageRect = engine->PageMediabox(1);
+    RectF pageRect = engine->PageMediabox(1);
     if (pageRect.IsEmpty()) {
         // saveThumbnail must always be called for clean-up code
         saveThumbnail(nullptr);
@@ -3890,7 +3890,7 @@ bool MakeAnnotationFromSelection(TabInfo* tab, AnnotationType annotType, int pag
         return false;
     }
     Annotation* annot = EnginePdfCreateAnnotation(engine, annotType, pageNo, PointF{});
-    Vec<RectFl> rects;
+    Vec<RectF> rects;
     Vec<SelectionOnPage>* s = tab->selectionOnPage;
     for (auto& sel : *s) {
         rects.Append(sel.rect);

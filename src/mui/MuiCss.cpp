@@ -683,7 +683,7 @@ Style* StyleByName(const char* name) {
     return nullptr;
 }
 
-Brush* BrushFromColorData(ColorData* color, const RectFl r) {
+Brush* BrushFromColorData(ColorData* color, const RectF r) {
     if (ColorSolid == color->type) {
         return color->solid.cachedBrush;
     }

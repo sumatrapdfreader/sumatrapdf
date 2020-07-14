@@ -69,7 +69,7 @@ bool ValidReparseIdx(ptrdiff_t idx, HtmlPullParser* parser) {
     return true;
 }
 
-DrawInstr DrawInstr::Str(const char* s, size_t len, RectFl bbox, bool rtl) {
+DrawInstr DrawInstr::Str(const char* s, size_t len, RectF bbox, bool rtl) {
     DrawInstr di(rtl ? DrawInstrType::RtlString : DrawInstrType::String, bbox);
     di.str.s = s;
     di.str.len = len;
@@ -88,7 +88,7 @@ DrawInstr DrawInstr::FixedSpace(float dx) {
     return di;
 }
 
-DrawInstr DrawInstr::Image(char* data, size_t len, RectFl bbox) {
+DrawInstr DrawInstr::Image(char* data, size_t len, RectF bbox) {
     DrawInstr di(DrawInstrType::Image);
     di.img.data = data;
     di.img.len = len;
@@ -103,7 +103,7 @@ DrawInstr DrawInstr::LinkStart(const char* s, size_t len) {
     return di;
 }
 
-DrawInstr DrawInstr::Anchor(const char* s, size_t len, RectFl bbox) {
+DrawInstr DrawInstr::Anchor(const char* s, size_t len, RectF bbox) {
     DrawInstr di(DrawInstrType::Anchor);
     di.str.s = s;
     di.str.len = len;
@@ -455,7 +455,7 @@ void HtmlFormatter::JustifyCurrLine(AlignAttr align) {
     }
 }
 
-static RectFl RectFUnion(RectFl& r1, RectFl& r2) {
+static RectF RectFUnion(RectF& r1, RectF& r2) {
     if (r2.IsEmpty()) {
         return r1;
     }
@@ -627,7 +627,7 @@ bool HtmlFormatter::EmitImage(ImageData* img) {
         }
     }
 
-    RectFl bbox(PointF(currX, 0), newSize);
+    RectF bbox(PointF(currX, 0), newSize);
     AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
     currX += bbox.dx;
 
@@ -639,7 +639,7 @@ void HtmlFormatter::EmitHr() {
     // hr creates an implicit paragraph break
     FlushCurrLine(true);
     CrashIf(NewLineX() != currX);
-    RectFl bbox(0.f, 0.f, pageDx, lineSpacing);
+    RectF bbox(0.f, 0.f, pageDx, lineSpacing);
     AppendInstr(DrawInstr(DrawInstrType::Line, bbox));
     FlushCurrLine(true);
 }
@@ -731,7 +731,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             break;
         }
         textMeasure->SetFont(CurrFont());
-        RectFl bbox = textMeasure->Measure(buf, strLen);
+        RectF bbox = textMeasure->Measure(buf, strLen);
         if (bbox.dx <= pageDx - currX) {
             AppendInstr(DrawInstr::Str(s, end - s, bbox, dirRtl));
             currX += bbox.dx;
@@ -795,7 +795,7 @@ void HtmlFormatter::HandleAnchorAttr(HtmlToken* t, bool idsOnly) {
     }
 
     // TODO: make anchors more specific than the top of the current line?
-    RectFl bbox(0, currY, pageDx, 0);
+    RectF bbox(0, currY, pageDx, 0);
     // append at the start of the line to prevent the anchor
     // from being flushed to the next page (with wrong currY value)
     currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
@@ -1412,7 +1412,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
 #endif
     textDraw->Lock();
     for (DrawInstr& i : *drawInstructions) {
-        RectFl bbox = i.bbox;
+        RectF bbox = i.bbox;
         bbox.x += offX;
         bbox.y += offY;
         if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
@@ -1435,7 +1435,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
 
     Status status;
     for (DrawInstr& i : *drawInstructions) {
-        RectFl bbox = i.bbox;
+        RectF bbox = i.bbox;
         bbox.x += offX;
         bbox.y += offY;
         if (DrawInstrType::Line == i.type) {

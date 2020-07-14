@@ -86,21 +86,21 @@ struct DrawInstr {
         mui::CachedFont* font; // InstrSetFont
         ImageData img;         // InstrImage
     };
-    RectFl bbox{}; // common to most instructions
+    RectF bbox{}; // common to most instructions
 
     DrawInstr() {
     }
 
-    explicit DrawInstr(DrawInstrType t, RectFl bbox = {}) : type(t), bbox(bbox) {
+    explicit DrawInstr(DrawInstrType t, RectF bbox = {}) : type(t), bbox(bbox) {
     }
 
     // helper constructors for instructions that need additional arguments
-    static DrawInstr Str(const char* s, size_t len, RectFl bbox, bool rtl = false);
-    static DrawInstr Image(char* data, size_t len, RectFl bbox);
+    static DrawInstr Str(const char* s, size_t len, RectF bbox, bool rtl = false);
+    static DrawInstr Image(char* data, size_t len, RectF bbox);
     static DrawInstr SetFont(mui::CachedFont* font);
     static DrawInstr FixedSpace(float dx);
     static DrawInstr LinkStart(const char* s, size_t len);
-    static DrawInstr Anchor(const char* s, size_t len, RectFl bbox);
+    static DrawInstr Anchor(const char* s, size_t len, RectF bbox);
 };
 
 class CssPullParser;

@@ -496,9 +496,9 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* pa
             continue;
         }
         firstPage = *page = points.at(i).page;
-        RectFl rc(SYNC_TO_PDF_COORDINATE(points.at(i).x), SYNC_TO_PDF_COORDINATE(points.at(i).y), MARK_SIZE, MARK_SIZE);
+        RectF rc(SYNC_TO_PDF_COORDINATE(points.at(i).x), SYNC_TO_PDF_COORDINATE(points.at(i).y), MARK_SIZE, MARK_SIZE);
         // PdfSync coordinates are y-inversed
-        RectFl mbox = engine->PageMediabox(firstPage);
+        RectF mbox = engine->PageMediabox(firstPage);
         rc.y = mbox.dy - (rc.y + rc.dy);
         rects.Append(rc.Round());
     }
@@ -637,7 +637,7 @@ TryAgainAnsi:
             continue;
         }
 
-        RectFl rc;
+        RectF rc;
         rc.x = synctex_node_box_visible_h(node);
         rc.y = (double)synctex_node_box_visible_v(node) - (double)synctex_node_box_visible_height(node);
         rc.dx = synctex_node_box_visible_width(node),

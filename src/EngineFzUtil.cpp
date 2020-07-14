@@ -32,11 +32,11 @@ extern "C" {
 // so that their content can be loaded on demand in order to preserve memory
 #define MAX_MEMORY_FILE_SIZE (32 * 1024 * 1024)
 
-RectFl ToRectFl(fz_rect rect) {
-    return RectFl::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
+RectF ToRectFl(fz_rect rect) {
+    return RectF::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
-fz_rect To_fz_rect(RectFl rect) {
+fz_rect To_fz_rect(RectF rect) {
     fz_rect result = {(float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy)};
     return result;
 }
@@ -934,8 +934,8 @@ static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
     return 0;
 }
 
-static RectFl CalcDestRect(fz_link* link, fz_outline* outline) {
-    RectFl result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+static RectF CalcDestRect(fz_link* link, fz_outline* outline) {
+    RectF result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     char* uri = PdfLinkGetURI(link, outline);
     // TODO: this happens in pdf/ug_logodesign.pdf, there's only outline without
     // pageno. need to investigate
@@ -983,7 +983,7 @@ static RectFl CalcDestRect(fz_link* link, fz_outline* outline) {
                (link->ld.gotor.flags &
                 (fz_link_flag_l_valid | fz_link_flag_t_valid | fz_link_flag_r_valid | fz_link_flag_b_valid))) {
         // /FitR link
-        result = RectFl::FromXY(lt.x, lt.y, rb.x, rb.y);
+        result = RectF::FromXY(lt.x, lt.y, rb.x, rb.y);
         // an empty destination rectangle would imply an /XYZ-type link to callers
         if (result.IsEmpty())
             result.dx = result.dy = 0.1;

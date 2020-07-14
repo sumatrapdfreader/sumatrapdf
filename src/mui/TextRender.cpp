@@ -110,14 +110,14 @@ float TextRenderGdi::GetCurrFontLineSpacing() {
 #endif
 }
 
-RectFl TextRenderGdi::Measure(const WCHAR* s, size_t sLen) {
+RectF TextRenderGdi::Measure(const WCHAR* s, size_t sLen) {
     SIZE txtSize;
     GetTextExtentPoint32W(hdcForTextMeasure, s, (int)sLen, &txtSize);
-    RectFl res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
+    RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
     return res;
 }
 
-RectFl TextRenderGdi::Measure(const char* s, size_t sLen) {
+RectF TextRenderGdi::Measure(const char* s, size_t sLen) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Measure(txtConvBuf, strLen);
 }
@@ -164,7 +164,7 @@ void TextRenderGdi::Unlock() {
     hdcGfxLocked = nullptr;
 }
 
-void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, const RectFl bb, bool isRtl) {
+void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool isRtl) {
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
@@ -179,7 +179,7 @@ void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, const RectFl bb, bool isRt
 #endif
 }
 
-void TextRenderGdi::Draw(const char* s, size_t sLen, const RectFl bb, bool isRtl) {
+void TextRenderGdi::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
@@ -240,7 +240,7 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
 // TODO: I would like to figure out a way to draw text without the need to Lock()/Unlock()
 // maybe draw to in-memory bitmap, convert to Graphics bitmap and blit that bitmap to
 // Graphics object
-void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectFl bb, bool isRtl) {
+void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectF bb, bool isRtl) {
     CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
 
     int x = (int)bb.x;
@@ -275,7 +275,7 @@ void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectFl bb
     AlphaBlend(hdcGfxLocked, x, y, dx, dy, memHdc, 0, 0, dx, dy, bf);
 }
 
-void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, const RectFl bb, bool isRtl) {
+void TextRenderGdi::DrawTransparent(const char* s, size_t sLen, const RectF bb, bool isRtl) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return DrawTransparent(txtConvBuf, strLen, bb, isRtl);
 }
@@ -303,12 +303,12 @@ float TextRenderGdiplus::GetCurrFontLineSpacing() {
     return currFont->font->GetHeight(gfx);
 }
 
-RectFl TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
+RectF TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
     CrashIf(!currFont);
     return MeasureText(gfx, currFont->font, s, sLen, measureAlgo);
 }
 
-RectFl TextRenderGdiplus::Measure(const char* s, size_t sLen) {
+RectF TextRenderGdiplus::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return MeasureText(gfx, currFont->font, txtConvBuf, strLen, measureAlgo);
@@ -327,7 +327,7 @@ void TextRenderGdiplus::SetTextColor(Gdiplus::Color col) {
     textColorBrush = ::new SolidBrush(col);
 }
 
-void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, const RectFl bb, bool isRtl) {
+void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool isRtl) {
     Gdiplus::PointF pos = ToGdipPointF(bb.TL());
     if (!isRtl) {
         gfx->DrawString(s, (INT)sLen, currFont->font, pos, nullptr, textColorBrush);
@@ -339,7 +339,7 @@ void TextRenderGdiplus::Draw(const WCHAR* s, size_t sLen, const RectFl bb, bool 
     }
 }
 
-void TextRenderGdiplus::Draw(const char* s, size_t sLen, const RectFl bb, bool isRtl) {
+void TextRenderGdiplus::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     Draw(txtConvBuf, strLen, bb, isRtl);
 }
@@ -421,27 +421,27 @@ float TextRenderHdc::GetCurrFontLineSpacing() {
     return currFont->font->GetHeight(gfx);
 }
 
-RectFl TextRenderHdc::Measure(const char* s, size_t sLen) {
+RectF TextRenderHdc::Measure(const char* s, size_t sLen) {
     CrashIf(!currFont);
     CrashIf(!hdc);
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Measure(txtConvBuf, strLen);
 }
 
-RectFl TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
+RectF TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
     SIZE txtSize;
     CrashIf(!hdc);
     GetTextExtentPoint32W(hdc, s, (int)sLen, &txtSize);
-    RectFl res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
+    RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
     return res;
 }
 
-void TextRenderHdc::Draw(const char* s, size_t sLen, const RectFl bb, bool isRtl) {
+void TextRenderHdc::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl) {
     size_t strLen = strconv::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
-void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, const RectFl bb, bool isRtl) {
+void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool isRtl) {
     CrashIf(!hdc);
     int x = (int)bb.x;
     int y = (int)bb.y;
@@ -489,7 +489,7 @@ ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, in
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
 size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, float dx) {
-    RectFl r = textMeasure->Measure(s, len);
+    RectF r = textMeasure->Measure(s, len);
     if (r.dx <= dx) {
         return len;
     }
@@ -526,7 +526,7 @@ size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, f
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
 float GetSpaceDx(ITextRender* textMeasure) {
-    RectFl bbox;
+    RectF bbox;
 #if 0
     bbox = textMeasure->Measure(L" ", 1, algo);
     float spaceDx1 = bbox.Width;

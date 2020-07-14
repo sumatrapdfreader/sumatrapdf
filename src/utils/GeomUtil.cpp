@@ -221,72 +221,72 @@ bool Rect::operator!=(const Rect& other) const {
     return !this->operator==(other);
 }
 
-// ------------- RectFl
+// ------------- RectF
 
 // cf. fz_roundrect in mupdf/fitz/base_geometry.c
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.192092896e-07f
 #endif
 
-RectFl::RectFl(const RECT r) {
+RectF::RectF(const RECT r) {
     x = (float)r.left;
     y = (float)r.top;
     dx = (float)(r.right - r.left);
     dy = (float)(r.bottom - r.top);
 }
 
-RectFl::RectFl(const Gdiplus::RectF r) {
+RectF::RectF(const Gdiplus::RectF r) {
     x = r.X;
     y = r.Y;
     dx = r.Width;
     dy = r.Height;
 }
 
-RectFl::RectFl(float x, float y, float dx, float dy) : x(x), y(y), dx(dx), dy(dy) {
+RectF::RectF(float x, float y, float dx, float dy) : x(x), y(y), dx(dx), dy(dy) {
 }
 
-RectFl::RectFl(PointF pt, SizeF size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
+RectF::RectF(PointF pt, SizeF size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
 }
 
-RectFl::RectFl(PointF min, PointF max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
+RectF::RectF(PointF min, PointF max) : x(min.x), y(min.y), dx(max.x - min.x), dy(max.y - min.y) {
 }
 
-bool RectFl::EqSize(float otherDx, float otherDy) {
+bool RectF::EqSize(float otherDx, float otherDy) {
     return (dx == otherDx) && (dy == otherDy);
 }
 
-float RectFl::Right() const {
+float RectF::Right() const {
     return x + dx;
 }
 
-float RectFl::Bottom() const {
+float RectF::Bottom() const {
     return y + dy;
 }
 
-RectFl RectFl::FromXY(float xs, float ys, float xe, float ye) {
+RectF RectF::FromXY(float xs, float ys, float xe, float ye) {
     if (xs > xe) {
         std::swap(xs, xe);
     }
     if (ys > ye) {
         std::swap(ys, ye);
     }
-    return RectFl(xs, ys, xe - xs, ye - ys);
+    return RectF(xs, ys, xe - xs, ye - ys);
 }
 
-RectFl RectFl::FromXY(PointF TL, PointF BR) {
+RectF RectF::FromXY(PointF TL, PointF BR) {
     return FromXY(TL.x, TL.y, BR.x, BR.y);
 }
 
-Rect RectFl::Round() const {
+Rect RectF::Round() const {
     return Rect::FromXY((int)floor(x + FLT_EPSILON), (int)floor(y + FLT_EPSILON), (int)ceil(x + dx - FLT_EPSILON),
                         (int)ceil(y + dy - FLT_EPSILON));
 }
 
-bool RectFl::IsEmpty() const {
+bool RectF::IsEmpty() const {
     return dx == 0 || dy == 0;
 }
 
-bool RectFl::Contains(PointF pt) {
+bool RectF::Contains(PointF pt) {
     if (pt.x < this->x) {
         return false;
     }
@@ -303,7 +303,7 @@ bool RectFl::Contains(PointF pt) {
 }
 
 /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
-RectFl RectFl::Intersect(RectFl other) {
+RectF RectF::Intersect(RectF other) {
     /* The intersection starts with the larger of the start coordinates
         and ends with the smaller of the end coordinates */
     float _x = std::max(this->x, other.x);
@@ -318,7 +318,7 @@ RectFl RectFl::Intersect(RectFl other) {
     return {_x, _y, _dx, _dy};
 }
 
-RectFl RectFl::Union(RectFl other) {
+RectF RectF::Union(RectF other) {
     if (this->dx <= 0 && this->dy <= 0) {
         return other;
     }
@@ -336,39 +336,39 @@ RectFl RectFl::Union(RectFl other) {
     return {_x, _y, _dx, _dy};
 }
 
-void RectFl::Offset(float _x, float _y) {
+void RectF::Offset(float _x, float _y) {
     x += _x;
     y += _y;
 }
 
-void RectFl::Inflate(float _x, float _y) {
+void RectF::Inflate(float _x, float _y) {
     x -= _x;
     dx += 2 * _x;
     y -= _y;
     dy += 2 * _y;
 }
 
-PointF RectFl::TL() const {
+PointF RectF::TL() const {
     return {x, y};
 }
 
-PointF RectFl::BR() const {
+PointF RectF::BR() const {
     return {x + dx, y + dy};
 }
 
-SizeF RectFl::Size() const {
+SizeF RectF::Size() const {
     return SizeF(dx, dy);
 }
 
-RectFl RectFl::FromRECT(const RECT& rect) {
+RectF RectF::FromRECT(const RECT& rect) {
     return FromXY((float)rect.left, (float)rect.top, (float)rect.right, (float)rect.bottom);
 }
 
-bool RectFl::operator==(const RectFl& other) const {
+bool RectF::operator==(const RectF& other) const {
     return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
 }
 
-bool RectFl::operator!=(const RectFl& other) const {
+bool RectF::operator!=(const RectF& other) const {
     return !this->operator==(other);
 }
 
@@ -404,7 +404,7 @@ Size ToSize(const SizeF s) {
     return Size(dx, dy);
 }
 
-RectFl ToRectFl(const Rect r) {
+RectF ToRectFl(const Rect r) {
     return {(float)r.x, (float)r.y, (float)r.dx, (float)r.dy};
 }
 
@@ -424,11 +424,11 @@ Gdiplus::RectF ToGdipRectF(const Rect r) {
     return Gdiplus::RectF((float)r.x, (float)r.y, (float)r.dx, (float)r.dy);
 }
 
-RECT ToRECT(const RectFl r) {
+RECT ToRECT(const RectF r) {
     return {(int)r.x, (int)r.y, (int)(r.x + r.dx), (int)(r.y + r.dy)};
 }
 
-Rect ToRect(const RectFl r) {
+Rect ToRect(const RectF r) {
     int x = (int)floor(r.x + 0.5);
     int y = (int)floor(r.y + 0.5);
     int dx = (int)floor(r.dx + 0.5);
@@ -436,11 +436,11 @@ Rect ToRect(const RectFl r) {
     return Rect(x, y, dx, dy);
 }
 
-Gdiplus::Rect ToGdipRect(const RectFl r) {
+Gdiplus::Rect ToGdipRect(const RectF r) {
     Rect rect = ToRect(r);
     return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
 }
 
-Gdiplus::RectF ToGdipRectF(const RectFl r) {
+Gdiplus::RectF ToGdipRectF(const RectF r) {
     return Gdiplus::RectF(r.x, r.y, r.dx, r.dy);
 }

@@ -257,7 +257,7 @@ SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
         }
     }
 
-    RectFl box = fitToContent ? pageInfo->contentBox : pageInfo->page;
+    RectF box = fitToContent ? pageInfo->contentBox : pageInfo->page;
     return engine->Transform(box, pageNo, 1.0, rotation).Size();
 }
 
@@ -381,12 +381,12 @@ void DisplayModel::BuildPagesInfo() {
     int pageCount = PageCount();
     pagesInfo = AllocArray<PageInfo>(pageCount);
 
-    RectFl defaultRect;
+    RectF defaultRect;
     float fileDPI = engine->GetFileDPI();
     if (0 == GetMeasurementSystem()) {
-        defaultRect = RectFl(0, 0, 21.0 / 2.54 * fileDPI, 29.7 / 2.54 * fileDPI);
+        defaultRect = RectF(0, 0, 21.0 / 2.54 * fileDPI, 29.7 / 2.54 * fileDPI);
     } else {
-        defaultRect = RectFl(0, 0, 8.5 * fileDPI, 11 * fileDPI);
+        defaultRect = RectF(0, 0, 8.5 * fileDPI, 11 * fileDPI);
     }
 
     int columns = ColumnsFromDisplayMode(displayMode);
@@ -492,15 +492,15 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         // (i.e. don't crop inner margins but just the left-most, right-most, etc.)
         int first = FirstPageInARowNo(pageNo, columns, IsBookView(GetDisplayMode()));
         int last = LastPageInARowNo(pageNo, columns, IsBookView(GetDisplayMode()), PageCount());
-        RectFl box;
+        RectF box;
         for (int i = first; i <= last; i++) {
             PageInfo* pageInfo = GetPageInfo(i);
             if (pageInfo->contentBox.IsEmpty()) {
                 pageInfo->contentBox = engine->PageContentBox(i);
             }
 
-            RectFl pageBox = engine->Transform(pageInfo->page, i, 1.0, rotation);
-            RectFl contentBox = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
+            RectF pageBox = engine->Transform(pageInfo->page, i, 1.0, rotation);
+            RectF contentBox = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
             if (contentBox.IsEmpty()) {
                 contentBox = pageBox;
             }
@@ -516,8 +516,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         row.dx += (double)pageSpacing.dx * (double)(columns - 1);
     }
 
-    CrashIf(RectFl(PointF(), row).IsEmpty());
-    if (RectFl(PointF(), row).IsEmpty()) {
+    CrashIf(RectF(PointF(), row).IsEmpty());
+    if (RectF(PointF(), row).IsEmpty()) {
         return 0;
     }
 
@@ -978,7 +978,7 @@ Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     return ToPoint(p);
 }
 
-Rect DisplayModel::CvtToScreen(int pageNo, RectFl r) {
+Rect DisplayModel::CvtToScreen(int pageNo, RectF r) {
     Point TL = CvtToScreen(pageNo, r.TL());
     Point BR = CvtToScreen(pageNo, r.BR());
     return Rect::FromXY(TL, BR);
@@ -1006,14 +1006,14 @@ PointF DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     return engine->Transform(p, pageNo, zoom, rotation, true);
 }
 
-RectFl DisplayModel::CvtFromScreen(Rect r, int pageNo) {
+RectF DisplayModel::CvtFromScreen(Rect r, int pageNo) {
     if (!ValidPageNo(pageNo)) {
         pageNo = GetPageNextToPoint(r.TL());
     }
 
     PointF TL = CvtFromScreen(r.TL(), pageNo);
     PointF BR = CvtFromScreen(r.BR(), pageNo);
-    return RectFl::FromXY(TL, BR);
+    return RectF::FromXY(TL, BR);
 }
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
@@ -1142,8 +1142,8 @@ void DisplayModel::SetViewPortSize(Size newViewPortSize) {
     }
 }
 
-RectFl DisplayModel::GetContentBox(int pageNo) {
-    RectFl cbox{};
+RectF DisplayModel::GetContentBox(int pageNo) {
+    RectF cbox{};
     // we cache the contentBox
     PageInfo* pageInfo = GetPageInfo(pageNo);
     if (pageInfo->contentBox.IsEmpty()) {
@@ -1161,7 +1161,7 @@ RectFl DisplayModel::GetContentBox(int pageNo) {
 /* get the (screen) coordinates of the point where a page's actual
    content begins (relative to the page's top left corner) */
 Point DisplayModel::GetContentStart(int pageNo) {
-    RectFl contentBox = GetContentBox(pageNo);
+    RectF contentBox = GetContentBox(pageNo);
     if (contentBox.IsEmpty()) {
         return Point(0, 0);
     }
@@ -1637,7 +1637,7 @@ void DisplayModel::RotateBy(int newRotation) {
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * into a newly allocated buffer (which the caller needs to free()). */
-WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectFl region) {
+WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectF region) {
     Rect* coords;
     const WCHAR* pageText = textCache->GetTextForPage(pageNo, nullptr, &coords);
     if (str::IsEmpty(pageText)) {
@@ -1844,7 +1844,7 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
     CrashIf(!dest || dest->GetPageNo() <= 0);
 
     Point scroll(-1, 0);
-    RectFl rect = dest->GetRect();
+    RectF rect = dest->GetRect();
     int pageNo = dest->GetPageNo();
 
     if (rect.IsEmpty() || (rect.dx == DEST_USE_DEFAULT && rect.dy == DEST_USE_DEFAULT)) {
@@ -1863,7 +1863,7 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
         }
     } else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top
-        RectFl rectD = engine->Transform(rect, pageNo, zoomReal, rotation);
+        RectF rectD = engine->Transform(rect, pageNo, zoomReal, rotation);
         scroll = ToPoint(rectD.TL());
 
         // Rect<float> rectF = _engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();

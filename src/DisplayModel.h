@@ -7,10 +7,10 @@
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
     /* data that is constant for a given page. page size in document units */
-    RectFl page{};
+    RectF page{};
 
     /* data that is calculated when needed. actual content size within a page (View target) */
-    RectFl contentBox{};
+    RectF contentBox{};
 
     /* data that needs to be set before DisplayModel::Relayout().
        Determines whether a given page should be shown on the screen. */
@@ -155,16 +155,16 @@ struct DisplayModel : public Controller {
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
     void RotateBy(int rotation);
 
-    WCHAR* GetTextInRegion(int pageNo, RectFl region);
+    WCHAR* GetTextInRegion(int pageNo, RectF region);
     bool IsOverText(Point pt);
     IPageElement* GetElementAtPos(Point pt);
     Annotation* GetAnnotationAtPos(Point pt, AnnotationType* allowedAnnots);
 
     int GetPageNoByPoint(Point pt);
     Point CvtToScreen(int pageNo, PointF pt);
-    Rect CvtToScreen(int pageNo, RectFl r);
+    Rect CvtToScreen(int pageNo, RectF r);
     PointF CvtFromScreen(Point pt, int pageNo = INVALID_PAGE_NO);
-    RectFl CvtFromScreen(Rect r, int pageNo = INVALID_PAGE_NO);
+    RectF CvtFromScreen(Rect r, int pageNo = INVALID_PAGE_NO);
 
     bool ShowResultRectToScreen(TextSel* res);
 
@@ -194,7 +194,7 @@ struct DisplayModel : public Controller {
     void RecalcVisibleParts();
     void RenderVisibleParts();
     void AddNavPoint();
-    RectFl GetContentBox(int pageNo);
+    RectF GetContentBox(int pageNo);
     void CalcZoomReal(float zoomVirtual);
     void GoToPage(int pageNo, int scrollY, bool addNavPt = false, int scrollX = -1);
     bool GoToPrevPage(int scrollY);

@@ -103,7 +103,7 @@ int PageDestination::GetPageNo() const {
 }
 
 // rectangle of the destination on the above returned page
-RectFl PageDestination::GetRect() const {
+RectF PageDestination::GetRect() const {
     return rect;
 }
 
@@ -118,7 +118,7 @@ WCHAR* PageDestination::GetName() const {
     return name;
 }
 
-PageDestination* newSimpleDest(int pageNo, RectFl rect, const WCHAR* value) {
+PageDestination* newSimpleDest(int pageNo, RectF rect, const WCHAR* value) {
     auto res = new PageDestination();
     res->pageNo = pageNo;
     res->rect = rect;
@@ -164,7 +164,7 @@ int PageElement::GetPageNo() {
 }
 
 // rectangle that can be interacted with
-RectFl PageElement::GetRect() {
+RectF PageElement::GetRect() {
     return rect;
 }
 
@@ -448,7 +448,7 @@ void SetTocTreeParents(TocItem* treeRoot) {
     VisitTocTreeWithParent(treeRoot, setTocItemParent);
 }
 
-RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectFl* pageRect, RenderTarget target,
+RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectF* pageRect, RenderTarget target,
                                AbortCookie** cookie_out) {
     this->pageNo = pageNo;
     this->zoom = zoom;
@@ -467,7 +467,7 @@ int EngineBase::PageCount() const {
     return pageCount;
 }
 
-RectFl EngineBase::PageContentBox(int pageNo, RenderTarget target) {
+RectF EngineBase::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
     return PageMediabox(pageNo);
 }
@@ -542,7 +542,7 @@ void EngineBase::SetFileName(const WCHAR* s) {
 }
 
 PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
-    RectFl rc = RectFl(pt, SizeF());
-    RectFl rect = Transform(rc, pageNo, zoom, rotation, inverse);
+    RectF rc = RectF(pt, SizeF());
+    RectF rect = Transform(rc, pageNo, zoom, rotation, inverse);
     return rect.TL();
 }

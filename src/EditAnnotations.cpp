@@ -393,7 +393,7 @@ static void DoRect(EditAnnotationsWindow* win, Annotation* annot) {
         return;
     }
     str::Str s;
-    RectFl rect = annot->Rect();
+    RectF rect = annot->Rect();
     int x = (int)rect.x;
     int y = (int)rect.y;
     int dx = (int)rect.dx;

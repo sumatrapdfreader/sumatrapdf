@@ -40,7 +40,7 @@ static bool IsPageLink(const char* link) {
 //   http://example.net/#hyperlink
 static PageDestination* newDjVuDestination(const char* link) {
     auto res = new PageDestination();
-    res->rect = RectFl(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    res->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
 
     if (str::IsEmpty(link)) {
         res->kind = kindDestinationNone;
@@ -238,13 +238,13 @@ class EngineDjVu : public EngineBase {
     virtual ~EngineDjVu();
     EngineBase* Clone() override;
 
-    RectFl PageMediabox(int pageNo) override;
-    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectF PageMediabox(int pageNo) override;
+    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs&) override;
 
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse = false);
-    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -271,7 +271,7 @@ class EngineDjVu : public EngineBase {
   protected:
     IStream* stream = nullptr;
 
-    RectFl* mediaboxes = nullptr;
+    RectF* mediaboxes = nullptr;
 
     ddjvu_document_t* doc = nullptr;
     miniexp_t outline = miniexp_nil;
@@ -334,7 +334,7 @@ EngineBase* EngineDjVu::Clone() {
     return nullptr;
 }
 
-RectFl EngineDjVu::PageMediabox(int pageNo) {
+RectF EngineDjVu::PageMediabox(int pageNo) {
     CrashIf(pageNo < 1 || pageNo > pageCount);
     return mediaboxes[pageNo - 1];
 }
@@ -468,7 +468,7 @@ bool EngineDjVu::FinishLoading() {
         return false;
     }
 
-    mediaboxes = AllocArray<RectFl>(pageCount);
+    mediaboxes = AllocArray<RectF>(pageCount);
     bool ok = LoadMediaboxes();
     if (!ok) {
         // fall back to the slower but safer way to extract page mediaboxes
@@ -481,7 +481,7 @@ bool EngineDjVu::FinishLoading() {
             if (DDJVU_JOB_OK == status) {
                 float dx = (float)info.width * GetFileDPI() / (float)info.dpi;
                 float dy = (float)info.height * GetFileDPI() / (float)info.dpi;
-                mediaboxes[i] = RectFl(0, 0, dx, dy);
+                mediaboxes[i] = RectF(0, 0, dx, dy);
             }
         }
     }
@@ -557,7 +557,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     auto zoom = args.zoom;
     auto pageNo = args.pageNo;
     auto rotation = args.rotation;
-    RectFl pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
+    RectF pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     Rect full = Transform(PageMediabox(pageNo), pageNo, zoom, rotation).Round();
     screen = full.Intersect(screen);
@@ -613,11 +613,11 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     return bmp;
 }
 
-RectFl EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
+RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
     ScopedCritSec scope(&gDjVuContext->lock);
 
-    RectFl pageRc = PageMediabox(pageNo);
+    RectF pageRc = PageMediabox(pageNo);
     ddjvu_page_t* page = ddjvu_page_create_by_pageno(doc, pageNo - 1);
     if (!page) {
         return pageRc;
@@ -641,7 +641,7 @@ RectFl EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
 
     ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
     float zoom = std::min(std::min(250.0f / pageRc.dx, 250.0f / pageRc.dy), 1.0f);
-    Rect full = RectFl(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
+    Rect full = RectF(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
     ddjvu_rect_t prect = {full.x, full.y, (uint)full.dx, (uint)full.dy};
     ddjvu_rect_t rrect = prect;
 
@@ -656,7 +656,7 @@ RectFl EngineDjVu::PageContentBox(int pageNo, RenderTarget target) {
     }
 
     // determine the content box by counting white pixels from the edges
-    RectFl content((float)full.dx, -1, 0, 0);
+    RectF content((float)full.dx, -1, 0, 0);
     for (int y = 0; y < full.dy; y++) {
         int x;
         for (x = 0; x < full.dx && bmpData[y * full.dx + x] == '\xFF'; x++) {
@@ -731,10 +731,10 @@ PointF EngineDjVu::TransformPoint(PointF pt, int pageNo, float zoom, int rotatio
     return res;
 }
 
-RectFl EngineDjVu::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectF EngineDjVu::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     PointF TL = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
     PointF BR = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
-    return RectFl::FromXY(TL, BR);
+    return RectF::FromXY(TL, BR);
 }
 
 std::span<u8> EngineDjVu::GetFileData() {
@@ -868,7 +868,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     for (size_t i = 0; i < coords.size(); i++) {
         if (!coords.at(i).IsEmpty()) {
             if (dpiFactor != 1.0) {
-                RectFl pageF = ToRectFl(coords.at(i));
+                RectF pageF = ToRectFl(coords.at(i));
                 pageF.x *= dpiFactor;
                 pageF.dx *= dpiFactor;
                 pageF.y *= dpiFactor;

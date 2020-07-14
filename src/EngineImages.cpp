@@ -90,11 +90,11 @@ class EngineImages : public EngineBase {
     EngineImages();
     virtual ~EngineImages();
 
-    RectFl PageMediabox(int pageNo) override;
+    RectF PageMediabox(int pageNo) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -125,12 +125,12 @@ class EngineImages : public EngineBase {
 
     CRITICAL_SECTION cacheAccess;
     Vec<ImagePage*> pageCache;
-    Vec<RectFl> mediaboxes;
+    Vec<RectF> mediaboxes;
 
     void GetTransform(Matrix& m, int pageNo, float zoom, int rotation);
 
     virtual Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) = 0;
-    virtual RectFl LoadMediabox(int pageNo) = 0;
+    virtual RectF LoadMediabox(int pageNo) = 0;
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
     void DropPage(ImagePage* page, bool forceRemove);
@@ -156,7 +156,7 @@ EngineImages::~EngineImages() {
     DeleteCriticalSection(&cacheAccess);
 }
 
-RectFl EngineImages::PageMediabox(int pageNo) {
+RectF EngineImages::PageMediabox(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > pageCount));
     int n = pageNo - 1;
     if (mediaboxes.at(n).IsEmpty()) {
@@ -182,7 +182,7 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
         logf("EngineImages::RenderPage() in %.2f\n", dur);
     };
 
-    RectFl pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
+    RectF pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     Point screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
@@ -229,7 +229,7 @@ void EngineImages::GetTransform(Matrix& m, int pageNo, float zoom, int rotation)
     GetBaseTransform(m, ToGdipRectF(PageMediabox(pageNo)), zoom, rotation);
 }
 
-RectFl EngineImages::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectF EngineImages::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     Gdiplus::PointF pts[2] = {Gdiplus::PointF((float)rect.x, (float)rect.y),
                               Gdiplus::PointF((float)(rect.x + rect.dx), (float)(rect.y + rect.dy))};
     Matrix m;
@@ -238,7 +238,7 @@ RectFl EngineImages::Transform(const RectFl& rect, int pageNo, float zoom, int r
         m.Invert();
     }
     m.TransformPoints(pts, 2);
-    RectFl res = RectFl::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+    RectF res = RectF::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
     // try to undo rounding errors caused by a rotation
     // (necessary correction determined by experimentation)
     if (rotation != 0) {
@@ -253,7 +253,7 @@ static PageElement* newImageElement(ImagePage* page) {
     res->pageNo = page->pageNo;
     int dx = page->bmp->GetWidth();
     int dy = page->bmp->GetHeight();
-    res->rect = RectFl(0, 0, (float)dx, (float)dy);
+    res->rect = RectF(0, 0, (float)dx, (float)dy);
     res->imageID = page->pageNo;
     return res;
 }
@@ -409,7 +409,7 @@ class EngineImage : public EngineImages {
     bool FinishLoading();
 
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
-    RectFl LoadMediabox(int pageNo) override;
+    RectF LoadMediabox(int pageNo) override;
 };
 
 EngineImage::EngineImage() {
@@ -486,7 +486,7 @@ bool EngineImage::FinishLoading() {
     }
     fileDPI = image->GetHorizontalResolution();
 
-    mediaboxes.Append(RectFl(0, 0, (float)image->GetWidth(), (float)image->GetHeight()));
+    mediaboxes.Append(RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight()));
     CrashIf(mediaboxes.size() != 1);
 
     // extract all frames from multi-page TIFFs and animated GIFs
@@ -572,21 +572,21 @@ Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     return frame;
 }
 
-RectFl EngineImage::LoadMediabox(int pageNo) {
+RectF EngineImage::LoadMediabox(int pageNo) {
     if (1 == pageNo) {
-        return RectFl(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
+        return RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
     }
 
     // fill the cache to prevent the first few frames from being unpacked twice
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
-        RectFl mbox(0, 0, (float)page->bmp->GetWidth(), (float)page->bmp->GetHeight());
+        RectF mbox(0, 0, (float)page->bmp->GetWidth(), (float)page->bmp->GetHeight());
         DropPage(page, false);
         return mbox;
     }
 
     CrashIf(!str::Eq(fileExt, L".tif") && !str::Eq(fileExt, L".gif"));
-    RectFl mbox = RectFl(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
+    RectF mbox = RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
     Bitmap* frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!frame) {
         return mbox;
@@ -594,7 +594,7 @@ RectFl EngineImage::LoadMediabox(int pageNo) {
     const GUID* frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
     Status ok = frame->SelectActiveFrame(frameDimension, pageNo - 1);
     if (Ok == ok) {
-        mbox = RectFl(0, 0, (float)frame->GetWidth(), (float)frame->GetHeight());
+        mbox = RectF(0, 0, (float)frame->GetWidth(), (float)frame->GetHeight());
     }
     delete frame;
     return mbox;
@@ -707,7 +707,7 @@ class EngineImageDir : public EngineImages {
     // protected:
 
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
-    RectFl LoadMediabox(int pageNo) override;
+    RectF LoadMediabox(int pageNo) override;
 
     WStrVec pageFileNames;
     TocTree* tocTree = nullptr;
@@ -812,14 +812,14 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     return nullptr;
 }
 
-RectFl EngineImageDir::LoadMediabox(int pageNo) {
+RectF EngineImageDir::LoadMediabox(int pageNo) {
     AutoFree bmpData = file::ReadFile(pageFileNames.at(pageNo - 1));
     if (bmpData.data) {
         std::span<u8> sp{(u8*)bmpData.data, bmpData.size()};
         Size size = BitmapSizeFromData(sp);
-        return RectFl(0, 0, (float)size.dx, (float)size.dy);
+        return RectF(0, 0, (float)size.dx, (float)size.dy);
     }
-    return RectFl();
+    return RectF();
 }
 
 bool EngineImageDir::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots) {
@@ -885,7 +885,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
 
   protected:
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
-    RectFl LoadMediabox(int pageNo) override;
+    RectF LoadMediabox(int pageNo) override;
 
     bool LoadFromFile(const WCHAR* fileName);
     bool LoadFromStream(IStream* stream);
@@ -1235,11 +1235,11 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     return nullptr;
 }
 
-RectFl EngineCbx::LoadMediabox(int pageNo) {
+RectF EngineCbx::LoadMediabox(int pageNo) {
     // fill the cache to prevent the first few images from being unpacked twice
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
-        RectFl mbox(0, 0, (float)page->bmp->GetWidth(), (float)page->bmp->GetHeight());
+        RectF mbox(0, 0, (float)page->bmp->GetWidth(), (float)page->bmp->GetHeight());
         DropPage(page, false);
         return mbox;
     }
@@ -1247,9 +1247,9 @@ RectFl EngineCbx::LoadMediabox(int pageNo) {
     ImageData img = GetImageData(pageNo);
     if (img.data) {
         Size size = BitmapSizeFromData(img.AsSpan());
-        return RectFl(0, 0, (float)size.dx, (float)size.dy);
+        return RectF(0, 0, (float)size.dx, (float)size.dy);
     }
-    return RectFl();
+    return RectF();
 }
 
 EngineBase* EngineCbx::CreateFromFile(const WCHAR* path) {

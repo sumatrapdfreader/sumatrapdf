@@ -162,9 +162,9 @@ void RenderCache::Add(PageRenderRequest& req, RenderedBitmap* bmp) {
     cacheCount++;
 }
 
-static RectFl GetTileRect(RectFl pagerect, TilePosition tile) {
+static RectF GetTileRect(RectF pagerect, TilePosition tile) {
     CrashIf(tile.res > 30);
-    RectFl rect;
+    RectF rect;
     rect.dx = pagerect.dx / (1ULL << tile.res);
     rect.dy = pagerect.dy / (1ULL << tile.res);
     rect.x = pagerect.x + tile.col * rect.dx;
@@ -174,15 +174,15 @@ static RectFl GetTileRect(RectFl pagerect, TilePosition tile) {
 
 // get the coordinates of a specific tile
 static Rect GetTileRectDevice(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
-    RectFl mediabox = engine->PageMediabox(pageNo);
+    RectF mediabox = engine->PageMediabox(pageNo);
     if (tile.res > 0 && tile.res != INVALID_TILE_RES) {
         mediabox = GetTileRect(mediabox, tile);
     }
-    RectFl pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
+    RectF pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
     return pixelbox.Round();
 }
 
-static RectFl GetTileRectUser(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
+static RectF GetTileRectUser(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
     Rect pixelbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
     return engine->Transform(ToRectFl(pixelbox), pageNo, zoom, rotation, true);
 }
@@ -271,7 +271,7 @@ void RenderCache::KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm) 
 }
 
 // marks all tiles containing rect of pageNo as out of date
-void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectFl rect) {
+void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectF rect) {
     ScopedCritSec scopeReq(&requestAccess);
 
     ClearQueueForDisplayModel(dm, pageNo);
@@ -281,7 +281,7 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectFl rect) {
 
     ScopedCritSec scopeCache(&cacheAccess);
 
-    RectFl mediabox = dm->GetEngine()->PageMediabox(pageNo);
+    RectF mediabox = dm->GetEngine()->PageMediabox(pageNo);
     for (int i = 0; i < cacheCount; i++) {
         auto e = cache[i];
         if (e->dm == dm && e->pageNo == pageNo && !GetTileRect(mediabox, e->tile).Intersect(rect).IsEmpty()) {
@@ -294,12 +294,12 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectFl rect) {
 // determine the count of tiles required for a page at a given zoom level
 USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) {
     auto engine = dm->GetEngine();
-    RectFl mediabox = engine->PageMediabox(pageNo);
+    RectF mediabox = engine->PageMediabox(pageNo);
     float zoom = dm->GetZoomReal(pageNo);
     float zoomVirt = dm->GetZoomVirtual();
     Rect viewPort = dm->GetViewPort();
     int rotation = dm->GetRotation();
-    RectFl pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
+    RectF pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
 
     float factorW = (float)pixelbox.dx / (maxTileSize.dx + 1);
     float factorH = (float)pixelbox.dy / (maxTileSize.dy + 1);
@@ -438,7 +438,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
     Render(dm, pageNo, rotation, zoom, &tile);
 }
 
-void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectFl pageRect,
+void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
                          RenderingCallback& callback) {
     bool ok = Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, &callback);
     if (!ok) {
@@ -446,7 +446,7 @@ void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     }
 }
 
-bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectFl* pageRect,
+bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
                          RenderingCallback* renderCb) {
     CrashIf(!dm);
     if (!dm || dm->dontRenderFlag) {
@@ -766,7 +766,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         float zoom = dm->GetZoomReal(pageNo);
         bounds = pageInfo->pageOnScreen.Intersect(bounds);
 
-        RectFl area = ToRectFl(bounds);
+        RectF area = ToRectFl(bounds);
         area.Offset(-pageInfo->pageOnScreen.x, -pageInfo->pageOnScreen.y);
         area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
 

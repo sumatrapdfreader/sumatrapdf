@@ -92,7 +92,7 @@ void FreePageText(PageText*);
 struct PageDestination {
     Kind kind = nullptr;
     int pageNo = 0;
-    RectFl rect{};
+    RectF rect{};
     WCHAR* value = nullptr;
     WCHAR* name = nullptr;
 
@@ -103,7 +103,7 @@ struct PageDestination {
     // page the destination points to (0 for external destinations such as URLs)
     int GetPageNo() const;
     // rectangle of the destination on the above returned page
-    RectFl GetRect() const;
+    RectF GetRect() const;
     // string value associated with the destination (e.g. a path or a URL)
     WCHAR* GetValue() const;
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
@@ -111,7 +111,7 @@ struct PageDestination {
     WCHAR* GetName() const;
 };
 
-PageDestination* newSimpleDest(int pageNo, RectFl rect, const WCHAR* value = nullptr);
+PageDestination* newSimpleDest(int pageNo, RectF rect, const WCHAR* value = nullptr);
 PageDestination* clonePageDestination(PageDestination* dest);
 
 // use in PageDestination::GetDestRect for values that don't matter
@@ -131,7 +131,7 @@ struct IPageElement {
     // page this element lives on (0 for elements in a ToC)
     virtual int GetPageNo() = 0;
     // rectangle that can be interacted with
-    virtual RectFl GetRect() = 0;
+    virtual RectF GetRect() = 0;
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
     virtual WCHAR* GetValue() = 0;
@@ -145,7 +145,7 @@ struct IPageElement {
 struct PageElement : IPageElement {
     Kind kind_ = nullptr;
     int pageNo = 0;
-    RectFl rect{};
+    RectF rect{};
     WCHAR* value = nullptr;
     // only set if kindPageElementDest
     PageDestination* dest = nullptr;
@@ -156,7 +156,7 @@ struct PageElement : IPageElement {
 
     Kind GetKind() override;
     int GetPageNo() override;
-    RectFl GetRect() override;
+    RectF GetRect() override;
     WCHAR* GetValue() override;
     PageDestination* AsLink() override;
     IPageElement* Clone() override;
@@ -284,11 +284,11 @@ struct RenderPageArgs {
     float zoom = 0;
     int rotation = 0;
     /* if nullptr: defaults to the page's mediabox */
-    RectFl* pageRect = nullptr;
+    RectF* pageRect = nullptr;
     RenderTarget target = RenderTarget::View;
     AbortCookie** cookie_out = nullptr;
 
-    RenderPageArgs(int pageNo, float zoom, int rotation, RectFl* pageRect = nullptr,
+    RenderPageArgs(int pageNo, float zoom, int rotation, RectF* pageRect = nullptr,
                    RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr);
 };
 
@@ -318,11 +318,11 @@ class EngineBase {
     // number of pages the loaded document contains
     int PageCount() const;
 
-    // the box containing the visible page content (usually RectFl(0, 0, pageWidth, pageHeight))
-    virtual RectFl PageMediabox(int pageNo) = 0;
+    // the box containing the visible page content (usually RectF(0, 0, pageWidth, pageHeight))
+    virtual RectF PageMediabox(int pageNo) = 0;
     // the box inside PageMediabox that actually contains any relevant content
     // (used for auto-cropping in Fit Content mode, can be PageMediabox)
-    virtual RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View);
+    virtual RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View);
 
     // renders a page into a cacheable RenderedBitmap
     // (*cookie_out must be deleted after the call returns)
@@ -331,7 +331,7 @@ class EngineBase {
     // applies zoom and rotation to a point in user/page space converting
     // it into device/screen space - or in the inverse direction
     PointF Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse = false);
-    virtual RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) = 0;
+    virtual RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) = 0;
 
     // returns the binary data for the current file
     // (e.g. for saving again when the file has already been deleted)

@@ -121,7 +121,7 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
     // some creators however fail to do so and only indicate
     // the page size in a DSC BoundingBox comment.
     char* nl = (char*)header;
-    RectFl bbox;
+    RectF bbox;
     while ((nl = strchr(nl + 1, '\n')) != nullptr && '%' == nl[1]) {
         if (str::StartsWith(nl + 1, "%%BoundingBox:") &&
             str::Parse(nl + 1, "%%%%BoundingBox: 0 0 %f %f% ", &bbox.dx, &bbox.dy)) {
@@ -255,11 +255,11 @@ class EnginePs : public EngineBase {
         return clone;
     }
 
-    RectFl PageMediabox(int pageNo) override {
+    RectF PageMediabox(int pageNo) override {
         return pdfEngine->PageMediabox(pageNo);
     }
 
-    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
+    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
         return pdfEngine->PageContentBox(pageNo, target);
     }
 
@@ -267,7 +267,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->RenderPage(args);
     }
 
-    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
+    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 

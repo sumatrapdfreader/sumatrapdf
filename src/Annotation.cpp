@@ -144,13 +144,13 @@ int Annotation::PageNo() const {
     return pageNo;
 }
 
-RectFl Annotation::Rect() const {
+RectF Annotation::Rect() const {
     fz_rect rc = pdf_annot_rect(pdf->ctx, pdf->annot);
     auto rect = ToRectFl(rc);
     return rect;
 }
 
-void Annotation::SetRect(RectFl r) {
+void Annotation::SetRect(RectF r) {
     fz_rect rc = To_fz_rect(r);
     pdf_set_annot_rect(pdf->ctx, pdf->annot, rc);
     pdf_update_appearance(pdf->ctx, pdf->annot);
@@ -194,7 +194,7 @@ bool Annotation::SetQuadding(int newQuadding) {
     return true;
 }
 
-void Annotation::SetQuadPointsAsRect(const Vec<RectFl>& rects) {
+void Annotation::SetQuadPointsAsRect(const Vec<RectF>& rects) {
     fz_quad quads[512];
     int n = rects.isize();
     if (n == 0) {
@@ -202,7 +202,7 @@ void Annotation::SetQuadPointsAsRect(const Vec<RectFl>& rects) {
     }
     constexpr int kMaxQuads = (int)dimof(quads);
     for (int i = 0; i < n && i < kMaxQuads; i++) {
-        RectFl rect = rects[i];
+        RectF rect = rects[i];
         fz_rect r = To_fz_rect(rect);
         fz_quad q = fz_quad_from_rect(r);
         quads[i] = q;
@@ -213,13 +213,13 @@ void Annotation::SetQuadPointsAsRect(const Vec<RectFl>& rects) {
     isChanged = true;
 }
 
-Vec<RectFl> Annotation::GetQuadPointsAsRect() {
-    Vec<RectFl> res;
+Vec<RectF> Annotation::GetQuadPointsAsRect() {
+    Vec<RectF> res;
     int n = pdf_annot_quad_point_count(pdf->ctx, pdf->annot);
     for (int i = 0; i < n; i++) {
         fz_quad q = pdf_annot_quad_point(pdf->ctx, pdf->annot, i);
         fz_rect r = fz_rect_from_quad(q);
-        RectFl rect = ToRectFl(r);
+        RectF rect = ToRectFl(r);
         res.Append(rect);
     }
     return res;

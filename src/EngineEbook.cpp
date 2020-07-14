@@ -82,12 +82,12 @@ class EngineEbook : public EngineBase {
     EngineEbook();
     virtual ~EngineEbook();
 
-    RectFl PageMediabox(int pageNo) override;
-    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectF PageMediabox(int pageNo) override;
+    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
 
@@ -115,7 +115,7 @@ class EngineEbook : public EngineBase {
     // TODO: still needed?
     CRITICAL_SECTION pagesAccess;
     // page dimensions can vary between filetypes
-    RectFl pageRect;
+    RectF pageRect;
     float pageBorder;
 
     void GetTransform(Matrix& m, float zoom, int rotation);
@@ -172,7 +172,7 @@ static TocItem* newEbookTocItem(TocItem* parent, const WCHAR* title, PageDestina
 EngineEbook::EngineEbook() {
     pageCount = 0;
     // "B Format" paperback
-    pageRect = RectFl(0, 0, 5.12f * GetFileDPI(), 7.8f * GetFileDPI());
+    pageRect = RectF(0, 0, 5.12f * GetFileDPI(), 7.8f * GetFileDPI());
     pageBorder = 0.4f * GetFileDPI();
     preferredLayout = Layout_Book;
     InitializeCriticalSection(&pagesAccess);
@@ -190,14 +190,14 @@ EngineEbook::~EngineEbook() {
     DeleteCriticalSection(&pagesAccess);
 }
 
-RectFl EngineEbook::PageMediabox(int pageNo) {
+RectF EngineEbook::PageMediabox(int pageNo) {
     UNUSED(pageNo);
     return pageRect;
 }
 
-RectFl EngineEbook::PageContentBox(int pageNo, RenderTarget target) {
+RectF EngineEbook::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
-    RectFl mbox = PageMediabox(pageNo);
+    RectF mbox = PageMediabox(pageNo);
     mbox.Inflate(-pageBorder, -pageBorder);
     return mbox;
 }
@@ -271,9 +271,9 @@ bool EngineEbook::ExtractPageAnchors() {
     return true;
 }
 
-RectFl EngineEbook::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectF EngineEbook::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     UNUSED(pageNo);
-    RectFl rcF = rect; // TODO: un-needed conversion
+    RectF rcF = rect; // TODO: un-needed conversion
     auto p1 = Gdiplus::PointF(rcF.x, rcF.y);
     auto p2 = Gdiplus::PointF(rcF.x + rcF.dx, rcF.y + rcF.dy);
     Gdiplus::PointF pts[2] = {p1, p2};
@@ -283,7 +283,7 @@ RectFl EngineEbook::Transform(const RectFl& rect, int pageNo, float zoom, int ro
         m.Invert();
     }
     m.TransformPoints(pts, 2);
-    return RectFl::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+    return RectF::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
 RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
@@ -292,7 +292,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     auto rotation = args.rotation;
     auto pageRect = args.pageRect;
 
-    RectFl pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
+    RectF pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     Point screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
@@ -340,7 +340,7 @@ RenderedBitmap* EngineEbook::RenderPage(RenderPageArgs& args) {
 }
 
 static Rect GetInstrBbox(DrawInstr& instr, float pageBorder) {
-    RectFl bbox(instr.bbox.x, instr.bbox.y, instr.bbox.dx, instr.bbox.dy);
+    RectF bbox(instr.bbox.x, instr.bbox.y, instr.bbox.dx, instr.bbox.dy);
     bbox.Offset(pageBorder, pageBorder);
     return bbox.Round();
 }
@@ -549,7 +549,7 @@ PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
         }
         // note: at least CHM treats URLs as case-independent
         if (id_len == anchor->instr->str.len && str::EqNI(id, anchor->instr->str.s, id_len)) {
-            RectFl rect(0, anchor->instr->bbox.y + pageBorder, pageRect.dx, 10);
+            RectF rect(0, anchor->instr->bbox.y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
             return newSimpleDest(anchor->pageNo, rect);
         }
@@ -557,7 +557,7 @@ PageDestination* EngineEbook::GetNamedDest(const WCHAR* name) {
 
     // don't fail if an ID doesn't exist in a merged document
     if (basePageNo != 0) {
-        RectFl rect(0, pageBorder, pageRect.dx, 10);
+        RectF rect(0, pageBorder, pageRect.dx, 10);
         rect.Inflate(-pageBorder, 0);
         return newSimpleDest(basePageNo, rect);
     }
@@ -656,7 +656,7 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
     if (!url) {
         dest = nullptr;
     } else if (url::IsAbsolute(url)) {
-        dest = newSimpleDest(0, RectFl(), str::Dup(url));
+        dest = newSimpleDest(0, RectF(), str::Dup(url));
     } else {
         dest = engine->GetNamedDest(url);
         if (!dest && str::FindChar(url, '%')) {
@@ -1067,7 +1067,7 @@ PageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
             break;
         }
     }
-    RectFl rect(0, currY + pageBorder, pageRect.dx, 10);
+    RectF rect(0, currY + pageBorder, pageRect.dx, 10);
     rect.Inflate(-pageBorder, 0);
     return newSimpleDest(pageNo, rect);
 }
@@ -1328,7 +1328,7 @@ class EngineChm : public EngineEbook {
   public:
     EngineChm() : EngineEbook() {
         // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectFl(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
+        pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         kind = kindEngineChm;
         defaultFileExt = L".chm";
     }
@@ -1581,7 +1581,7 @@ class EngineHtml : public EngineEbook {
   public:
     EngineHtml() : EngineEbook() {
         // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectFl(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
+        pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         defaultFileExt = L".html";
     }
     virtual ~EngineHtml() {
@@ -1683,7 +1683,7 @@ class EngineTxt : public EngineEbook {
     EngineTxt() : EngineEbook() {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectFl(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
+        pageRect = RectF(0, 0, 8.27f * GetFileDPI(), 11.693f * GetFileDPI());
         defaultFileExt = L".txt";
     }
     virtual ~EngineTxt() {
@@ -1729,7 +1729,7 @@ bool EngineTxt::Load(const WCHAR* fileName) {
 
     if (doc->IsRFC()) {
         // RFCs are targeted at letter size pages
-        pageRect = RectFl(0, 0, 8.5f * GetFileDPI(), 11.f * GetFileDPI());
+        pageRect = RectF(0, 0, 8.5f * GetFileDPI(), 11.f * GetFileDPI());
     }
 
     HtmlFormatterArgs args;

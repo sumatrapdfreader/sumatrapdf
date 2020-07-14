@@ -41,7 +41,7 @@ static TocItem* newChmTocItem(TocItem* parent, const WCHAR* title, int pageNo, c
     }
     CrashIf(!dest->kind);
 
-    dest->rect = RectFl(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    dest->rect = RectF(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     res->dest = dest;
     return res;
 }

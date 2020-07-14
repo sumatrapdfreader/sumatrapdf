@@ -48,12 +48,12 @@ class EngineMulti : public EngineBase {
     virtual ~EngineMulti();
     EngineBase* Clone() override;
 
-    RectFl PageMediabox(int pageNo) override;
-    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectF PageMediabox(int pageNo) override;
+    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -112,12 +112,12 @@ EngineBase* EngineMulti::Clone() {
     return CreateEngineMultiFromFile(fileName, nullptr);
 }
 
-RectFl EngineMulti::PageMediabox(int pageNo) {
+RectF EngineMulti::PageMediabox(int pageNo) {
     EngineBase* e = PageToEngine(pageNo);
     return e->PageMediabox(pageNo);
 }
 
-RectFl EngineMulti::PageContentBox(int pageNo, RenderTarget target) {
+RectF EngineMulti::PageContentBox(int pageNo, RenderTarget target) {
     EngineBase* e = PageToEngine(pageNo);
     return e->PageContentBox(pageNo, target);
 }
@@ -127,7 +127,7 @@ RenderedBitmap* EngineMulti::RenderPage(RenderPageArgs& args) {
     return e->RenderPage(args);
 }
 
-RectFl EngineMulti::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectF EngineMulti::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     EngineBase* e = PageToEngine(pageNo);
     return e->Transform(rect, pageNo, zoom, rotation, inverse);
 }

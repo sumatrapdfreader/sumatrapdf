@@ -59,8 +59,8 @@ struct Annotation {
     int PageNo() const;
     // note: page no can't be changed
 
-    RectFl Rect() const;
-    void SetRect(RectFl);
+    RectF Rect() const;
+    void SetRect(RectF);
 
     COLORREF Color(); // ColorUnset if no color
     bool SetColor(COLORREF);
@@ -73,8 +73,8 @@ struct Annotation {
     int Quadding();
     bool SetQuadding(int);
 
-    void SetQuadPointsAsRect(const Vec<RectFl>&);
-    Vec<RectFl> GetQuadPointsAsRect();
+    void SetQuadPointsAsRect(const Vec<RectF>&);
+    Vec<RectF> GetQuadPointsAsRect();
 
     std::string_view Contents();
     bool SetContents(std::string_view sv);

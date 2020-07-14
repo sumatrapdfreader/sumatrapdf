@@ -31,12 +31,12 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 
-SelectionOnPage::SelectionOnPage(int pageNo, RectFl* rect) {
+SelectionOnPage::SelectionOnPage(int pageNo, RectF* rect) {
     this->pageNo = pageNo;
     if (rect) {
         this->rect = *rect;
     } else {
-        this->rect = RectFl();
+        this->rect = RectF();
     }
 }
 
@@ -66,7 +66,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
         }
 
         /* selection intersects with a page <pageNo> on the screen */
-        RectFl isectD = dm->CvtFromScreen(intersect, pageNo);
+        RectF isectD = dm->CvtFromScreen(intersect, pageNo);
         sel->Append(SelectionOnPage(pageNo, &isectD));
     }
     sel->Reverse();
@@ -82,7 +82,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromTextSelect(TextSel* textSel) {
     Vec<SelectionOnPage>* sel = new Vec<SelectionOnPage>(textSel->len);
 
     for (int i = textSel->len - 1; i >= 0; i--) {
-        RectFl rect = ToRectFl(textSel->rects[i]);
+        RectF rect = ToRectFl(textSel->rects[i]);
         sel->Append(SelectionOnPage(textSel->pages[i], &rect));
     }
     sel->Reverse();

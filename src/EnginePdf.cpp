@@ -302,12 +302,12 @@ class EnginePdf : public EngineBase {
     ~EnginePdf() override;
     EngineBase* Clone() override;
 
-    RectFl PageMediabox(int pageNo) override;
-    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectF PageMediabox(int pageNo) override;
+    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -341,7 +341,7 @@ class EnginePdf : public EngineBase {
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
-    RenderedBitmap* GetPageImage(int pageNo, RectFl rect, int imageIdx);
+    RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
 
     fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;
@@ -1056,7 +1056,7 @@ PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
     float x, y;
     int pageNo = resolve_link(uri, &x, &y);
 
-    RectFl r{x, y, 0, 0};
+    RectF r{x, y, 0, 0};
     pageDest = newSimpleDest(pageNo, r);
     fz_free(ctx, uri);
     return pageDest;
@@ -1073,7 +1073,7 @@ FzPageInfo* EnginePdf::GetFzPageInfoFast(int pageNo) {
     return pageInfo;
 }
 
-static PageElement* newFzComment(const WCHAR* comment, int pageNo, RectFl rect) {
+static PageElement* newFzComment(const WCHAR* comment, int pageNo, RectF rect) {
     auto res = new PageElement();
     res->kind_ = kindPageElementComment;
     res->pageNo = pageNo;
@@ -1093,7 +1093,7 @@ static PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_
         s = label;
     }
     AutoFreeWstr ws = strconv::Utf8ToWstr(s);
-    RectFl rd = ToRectFl(rect);
+    RectF rd = ToRectFl(rect);
     return newFzComment(ws, pageNo, rd);
 }
 
@@ -1220,12 +1220,12 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool loadQuick) {
     return pageInfo;
 }
 
-RectFl EnginePdf::PageMediabox(int pageNo) {
+RectF EnginePdf::PageMediabox(int pageNo) {
     FzPageInfo* pi = _pages[pageNo - 1];
     return pi->mediabox;
 }
 
-RectFl EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
+RectF EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
 
     ScopedCritSec scope(ctxAccess);
@@ -1240,7 +1240,7 @@ RectFl EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
     fz_var(dev);
     fz_var(list);
 
-    RectFl mediabox = pageInfo->mediabox;
+    RectF mediabox = pageInfo->mediabox;
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, pageInfo->page);
@@ -1262,11 +1262,11 @@ RectFl EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
         return mediabox;
     }
 
-    RectFl rect2 = ToRectFl(rect);
+    RectF rect2 = ToRectFl(rect);
     return rect2.Intersect(mediabox);
 }
 
-RectFl EnginePdf::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectF EnginePdf::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     if (zoom <= 0) {
         char* name = str::Dup("");
         const WCHAR* nameW = FileName();
@@ -1405,7 +1405,7 @@ fz_matrix EnginePdf::viewctm(fz_page* page, float zoom, int rotation) {
     return fz_create_view_ctm(fz_bound_page(ctx, page), zoom, rotation);
 }
 
-RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectFl rect, int imageIdx) {
+RenderedBitmap* EnginePdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     if (!pageInfo->page) {
         return nullptr;

@@ -59,7 +59,7 @@ static void SerializeDest(PageDestination* dest, str::Str& s) {
     SerializeKeyVal("destvalue", dest->GetValue(), s);
     // Note: not serializing dest->pageno because it's redundant with
     // TocItem::pageNo
-    RectFl r = dest->rect;
+    RectF r = dest->rect;
     if (r.IsEmpty()) {
         return;
     }
@@ -244,14 +244,14 @@ static TocItem* parseTocLine(std::string_view line, size_t* indentOut) {
         if (str::Eq(key, "rect")) {
             float x = 0, y = 0, dx = 0, dy = 0;
             str::Parse(val, "%g,%g,%g,%g", &x, &y, &dx, &dy);
-            dest->rect = RectFl(x, y, dx, dy);
+            dest->rect = RectF(x, y, dx, dy);
             continue;
         }
 
         if (str::Eq(key, "pos")) {
             float x = 0, y = 0;
             str::Parse(val, "%g,%g", &x, &y);
-            dest->rect = RectFl(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+            dest->rect = RectF(x, y, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
             continue;
         }
     }

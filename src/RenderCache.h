@@ -76,7 +76,7 @@ struct PageRenderRequest {
     float zoom = 0.f;
     TilePosition tile;
 
-    RectFl pageRect; // calculated from TilePosition
+    RectF pageRect; // calculated from TilePosition
     bool abort = false;
     AbortCookie* abortCookie = nullptr;
     DWORD timestamp = 0;
@@ -111,14 +111,14 @@ class RenderCache {
     ~RenderCache();
 
     void RequestRendering(DisplayModel* dm, int pageNo);
-    void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectFl pageRect, RenderingCallback& callback);
+    void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect, RenderingCallback& callback);
     void CancelRendering(DisplayModel* dm);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = INVALID_ZOOM, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm) {
         FreePage(dm);
     }
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);
-    void Invalidate(DisplayModel* dm, int pageNo, RectFl rect);
+    void Invalidate(DisplayModel* dm, int pageNo, RectF rect);
     // returns how much time in ms has past since the most recent rendering
     // request for the visible part of the page if nothing at all could be
     // painted, 0 if something has been painted and RENDER_DELAY_FAILED on failure
@@ -141,7 +141,7 @@ class RenderCache {
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile = nullptr,
-                RectFl* pageRect = nullptr, RenderingCallback* renderCb = nullptr);
+                RectF* pageRect = nullptr, RenderingCallback* renderCb = nullptr);
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = INVALID_PAGE_NO, TilePosition* tile = nullptr);
     void AbortCurrentRequest();
 

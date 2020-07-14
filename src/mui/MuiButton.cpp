@@ -55,7 +55,7 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
 
     textDx = 0;
     float fontDy = font->GetHeight(gfx);
-    RectFl bbox;
+    RectF bbox;
     if (text) {
         bbox = MeasureText(gfx, font, text);
         textDx = CeilI(bbox.dx);

@@ -197,12 +197,12 @@ class EngineXps : public EngineBase {
     virtual ~EngineXps();
     EngineBase* Clone() override;
 
-    RectFl PageMediabox(int pageNo) override;
-    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectF PageMediabox(int pageNo) override;
+    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -262,7 +262,7 @@ class EngineXps : public EngineBase {
     }
 
     TocItem* BuildTocTree(TocItem* parent, fz_outline* outline, int& idCounter);
-    RenderedBitmap* GetPageImage(int pageNo, RectFl rect, int imageIdx);
+    RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
     WCHAR* ExtractFontList();
 };
 
@@ -554,12 +554,12 @@ int EngineXps::GetPageNo(fz_page* page) {
     return 0;
 }
 
-RectFl EngineXps::PageMediabox(int pageNo) {
+RectF EngineXps::PageMediabox(int pageNo) {
     FzPageInfo* pi = _pages[pageNo - 1];
     return pi->mediabox;
 }
 
-RectFl EngineXps::PageContentBox(int pageNo, RenderTarget target) {
+RectF EngineXps::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
 
@@ -575,7 +575,7 @@ RectFl EngineXps::PageContentBox(int pageNo, RenderTarget target) {
     fz_var(dev);
     fz_var(list);
 
-    RectFl mediabox = pageInfo->mediabox;
+    RectF mediabox = pageInfo->mediabox;
 
     fz_try(ctx) {
         dev = fz_new_bbox_device(ctx, &rect);
@@ -597,11 +597,11 @@ RectFl EngineXps::PageContentBox(int pageNo, RenderTarget target) {
         return mediabox;
     }
 
-    RectFl rect2 = ToRectFl(rect);
+    RectF rect2 = ToRectFl(rect);
     return rect2.Intersect(mediabox);
 }
 
-RectFl EngineXps::Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse) {
+RectF EngineXps::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse) {
         ctm = fz_invert_matrix(ctm);
@@ -847,7 +847,7 @@ PageText EngineXps::ExtractPageText(int pageNo) {
     return res;
 }
 
-RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectFl rect, int imageIdx) {
+RenderedBitmap* EngineXps::GetPageImage(int pageNo, RectF rect, int imageIdx) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
     if (!pageInfo->page) {
         return nullptr;
@@ -890,7 +890,7 @@ PageDestination* EngineXps::GetNamedDest(const WCHAR* nameW) {
     xps_target* dest = doc->target;
     while (dest) {
         if (str::EndsWithI(dest->name, name)) {
-            return newSimpleDest(dest->page + 1, RectFl{});
+            return newSimpleDest(dest->page + 1, RectF{});
         }
         dest = dest->next;
     }

@@ -38,12 +38,12 @@ class EngineMupdf : public EngineBase {
     ~EngineMupdf() override;
     EngineBase* Clone() override;
 
-    RectFl PageMediabox(int pageNo) override;
-    RectFl PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    RectF PageMediabox(int pageNo) override;
+    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderPage(RenderPageArgs& args) override;
 
-    RectFl Transform(const RectFl& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     std::span<u8> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -74,7 +74,7 @@ class EngineMupdf : public EngineBase {
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
-    RenderedBitmap* GetPageImage(int pageNo, RectFl rect, int imageIdx);
+    RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);
 
     fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;

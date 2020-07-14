@@ -26,9 +26,9 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
 
     dbglogf("PdfPreview: PreviewBase::GetThumbnail(cx=%d)\n", (int)cx);
 
-    RectFl page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
+    RectF page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
-    Rect thumb = RectFl(0, 0, page.dx * zoom, page.dy * zoom).Round();
+    Rect thumb = RectF(0, 0, page.dx * zoom, page.dy * zoom).Round();
 
     BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -120,14 +120,14 @@ class PageRenderer {
         DeleteCriticalSection(&currAccess);
     }
 
-    RectFl GetPageRect(int pageNo) {
+    RectF GetPageRect(int pageNo) {
         if (preventRecursion) {
-            return RectFl();
+            return RectF();
         }
 
         preventRecursion = true;
         // assume that any engine methods could lead to a seek
-        RectFl bbox = engine->PageMediabox(pageNo);
+        RectF bbox = engine->PageMediabox(pageNo);
         bbox = engine->Transform(bbox, pageNo, 1.0, 0);
         preventRecursion = false;
         return bbox;
@@ -195,11 +195,11 @@ static LRESULT OnPaint(HWND hwnd) {
     PreviewBase* preview = (PreviewBase*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (preview && preview->renderer) {
         int pageNo = GetScrollPos(hwnd, SB_VERT);
-        RectFl page = preview->renderer->GetPageRect(pageNo);
+        RectF page = preview->renderer->GetPageRect(pageNo);
         if (!page.IsEmpty()) {
             rect.Inflate(-PREVIEW_MARGIN, -PREVIEW_MARGIN);
             float zoom = (float)std::min(rect.dx / page.dx, rect.dy / page.dy) - 0.001f;
-            Rect onScreen = RectFl((float)rect.x, (float)rect.y, (float)page.dx * zoom, (float)page.dy * zoom).Round();
+            Rect onScreen = RectF((float)rect.x, (float)rect.y, (float)page.dx * zoom, (float)page.dy * zoom).Round();
             onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
 
             RECT rcPage = ToRECT(onScreen);

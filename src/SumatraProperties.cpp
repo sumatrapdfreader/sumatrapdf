@@ -258,7 +258,7 @@ PaperFormat GetPaperFormat(SizeF size) {
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 // Caller needs to free the result
 static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
-    RectFl mediabox = engine->PageMediabox(pageNo);
+    RectF mediabox = engine->PageMediabox(pageNo);
     SizeF size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
 
     const WCHAR* formatName = L"";

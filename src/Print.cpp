@@ -101,8 +101,8 @@ class AbortCookieManager {
     }
 };
 
-static RectFl BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
-    RectFl bounds;
+static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
+    RectF bounds;
     for (size_t i = 0; i < sel.size(); i++) {
         if (sel.at(i).pageNo == pageNo) {
             bounds = bounds.Union(sel.at(i).rect);
@@ -193,7 +193,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 
     if (pd.sel.size() > 0) {
         for (int pageNo = 1; pageNo <= engine.PageCount(); pageNo++) {
-            RectFl bounds = BoundSelectionOnPage(pd.sel, pageNo);
+            RectF bounds = BoundSelectionOnPage(pd.sel, pageNo);
             if (bounds.IsEmpty()) {
                 continue;
             }
@@ -219,7 +219,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                     continue;
                 }
 
-                RectFl* clipRegion = &pd.sel.at(i).rect;
+                RectF* clipRegion = &pd.sel.at(i).rect;
                 Point offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
                 if (pd.advData.scale != PrintScaleAdv::None) {
                     // center the selection on the physical paper
@@ -303,8 +303,8 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             if (pd.advData.scale != PrintScaleAdv::None) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
-                RectFl rect = engine.PageContentBox(pageNo, RenderTarget::Print);
-                RectFl cbox = engine.Transform(rect, pageNo, 1.0, rotation);
+                RectF rect = engine.PageContentBox(pageNo, RenderTarget::Print);
+                RectF cbox = engine.Transform(rect, pageNo, 1.0, rotation);
                 zoom = std::min((float)printable.dx / cbox.dx,
                                 std::min((float)printable.dy / cbox.dy,
                                          std::min((float)paperSize.dx / pSize.dx, (float)paperSize.dy / pSize.dy)));
@@ -317,7 +317,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 offset.x += (int)(paperSize.dx - pSize.dx * zoom) / 2;
                 offset.y += (int)(paperSize.dy - pSize.dy * zoom) / 2;
                 // make sure that no content lies in the non-printable paper margins
-                RectFl onPaper(printable.x + offset.x + cbox.x * zoom, printable.y + offset.y + cbox.y * zoom,
+                RectF onPaper(printable.x + offset.x + cbox.x * zoom, printable.y + offset.y + cbox.y * zoom,
                                cbox.dx * zoom, cbox.dy * zoom);
                 if (onPaper.x < printable.x) {
                     offset.x += (int)(printable.x - onPaper.x);
@@ -677,7 +677,7 @@ Exit:
 }
 
 static short GetPaperSize(EngineBase* engine) {
-    RectFl mediabox = engine->PageMediabox(1);
+    RectF mediabox = engine->PageMediabox(1);
     SizeF size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
 
     switch (GetPaperFormat(size)) {

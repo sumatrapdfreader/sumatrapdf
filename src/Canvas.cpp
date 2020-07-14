@@ -229,8 +229,8 @@ static bool StopDraggingAnnotation(WindowInfo* win, int x, int y, bool aborted) 
     // we can only move annotation within the same page
     if (pageNo == annot->PageNo()) {
         Rect rScreen{x, y, 1, 1};
-        RectFl r = dm->CvtFromScreen(rScreen, pageNo);
-        RectFl ar = annot->Rect();
+        RectF r = dm->CvtFromScreen(rScreen, pageNo);
+        RectF ar = annot->Rect();
         r.dx = ar.dx;
         r.dy = ar.dy;
         // dbglogf("prev rect: x=%.2f, y=%.2f, dx=%.2f, dy=%.2f\n", ar.x, ar.y, ar.dx, ar.dy);
@@ -405,7 +405,7 @@ static void SetObjectUnderMouse(WindowInfo* win, int x, int y) {
     if (annot) {
         win->annotationOnLastButtonDown = annot;
         CreateMovePatternLazy(win);
-        RectFl r = annot->Rect();
+        RectF r = annot->Rect();
         int pageNo = dm->GetPageNoByPoint(pt);
         Rect rScreen = dm->CvtToScreen(pageNo, r);
         win->annotationBeingMovedSize = {rScreen.dx, rScreen.dy};

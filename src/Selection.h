@@ -7,10 +7,10 @@
 
 /* Represents selected area on given page */
 struct SelectionOnPage {
-    explicit SelectionOnPage(int pageNo = 0, RectFl* rect = nullptr);
+    explicit SelectionOnPage(int pageNo = 0, RectF* rect = nullptr);
 
     int pageNo;  // page this selection is on
-    RectFl rect; // position of selection rectangle on page (in page coordinates)
+    RectF rect; // position of selection rectangle on page (in page coordinates)
 
     // position of selection rectangle in the view port
     Rect GetRect(DisplayModel* dm);
