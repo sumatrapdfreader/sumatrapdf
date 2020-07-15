@@ -9,7 +9,7 @@
 struct SelectionOnPage {
     explicit SelectionOnPage(int pageNo = 0, RectF* rect = nullptr);
 
-    int pageNo;  // page this selection is on
+    int pageNo; // page this selection is on
     RectF rect; // position of selection rectangle on page (in page coordinates)
 
     // position of selection rectangle in the view port

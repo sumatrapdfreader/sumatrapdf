@@ -318,7 +318,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 offset.y += (int)(paperSize.dy - pSize.dy * zoom) / 2;
                 // make sure that no content lies in the non-printable paper margins
                 RectF onPaper(printable.x + offset.x + cbox.x * zoom, printable.y + offset.y + cbox.y * zoom,
-                               cbox.dx * zoom, cbox.dy * zoom);
+                              cbox.dx * zoom, cbox.dy * zoom);
                 if (onPaper.x < printable.x) {
                     offset.x += (int)(printable.x - onPaper.x);
                 } else if (onPaper.BR().x > printable.BR().x) {

@@ -350,6 +350,10 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     ScopedCritSec scope(&pagesAccess);
 
     gAllowAllocFailure++;
+    defer {
+        gAllowAllocFailure--;
+    };
+
     str::WStr content;
     Vec<Rect> coords;
     bool insertSpace = false;
@@ -417,7 +421,6 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         coords.AppendBlanks(str::Len(lineSep));
     }
     CrashIf(coords.size() != content.size());
-    gAllowAllocFailure--;
 
     PageText res;
     res.len = (int)content.size();
