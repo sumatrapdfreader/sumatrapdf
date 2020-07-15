@@ -513,14 +513,23 @@ fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int number)
 {
 	fz_page *page;
 
+	if (doc == NULL)
+		return NULL;
+
 	fz_ensure_layout(ctx, doc);
 
-	if (doc)
+	/* Protect modifications to the page list to cope with
+	 * destruction of pages on other threads. */
+	fz_lock(ctx, FZ_LOCK_ALLOC);
 		for (page = doc->open; page; page = page->next)
 			if (page->chapter == chapter && page->number == number)
+		{
+			fz_unlock(ctx, FZ_LOCK_ALLOC);
 				return fz_keep_page(ctx, page);
+		}
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
 
-	if (doc && doc->load_page)
+	if (doc->load_page)
 	{
 		page = doc->load_page(ctx, doc, chapter, number);
 		page->chapter = chapter;
@@ -529,10 +538,12 @@ fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int number)
 		/* Insert new page at the head of the list of open pages. */
 		if (!page->incomplete)
 		{
+			fz_lock(ctx, FZ_LOCK_ALLOC);
 			if ((page->next = doc->open) != NULL)
 				doc->open->prev = &page->next;
 			doc->open = page;
 			page->prev = &doc->open;
+			fz_unlock(ctx, FZ_LOCK_ALLOC);
 		}
 		return page;
 	}
@@ -638,10 +649,12 @@ fz_drop_page(fz_context *ctx, fz_page *page)
 	if (fz_drop_imp(ctx, page, &page->refs))
 	{
 		/* Remove page from the list of open pages */
+		fz_lock(ctx, FZ_LOCK_ALLOC);
 		if (page->next != NULL)
 			page->next->prev = page->prev;
 		if (page->prev != NULL)
 			*page->prev = page->next;
+		fz_unlock(ctx, FZ_LOCK_ALLOC);
 
 		if (page->drop_page)
 			page->drop_page(ctx, page);
