@@ -3676,7 +3676,7 @@ static paintfn_t *
 fz_paint_affine_color_near_spots(int da, int sa, int fa, int fb, int dn, int sn, int alpha, const fz_overprint * FZ_RESTRICT eop)
 {
 	if (fz_overprint_required(eop))
-		return paint_affine_color_near_N_op;
+		return da ? paint_affine_color_near_da_N_op : paint_affine_color_near_N_op;
 	return da ? paint_affine_color_near_da_N : paint_affine_color_near_N;
 }
 #endif /* FZ_ENABLE_SPOT_RENDERING */

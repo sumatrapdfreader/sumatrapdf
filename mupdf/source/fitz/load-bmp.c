@@ -753,7 +753,7 @@ bmp_read_color_profile(fz_context *ctx, struct info *info, const unsigned char *
 	if (info->colorspacetype == 0)
 	{
 		float matrix[9] = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
-		float wp[3] = { 0.95047, 1.0, 1.08883 }; /* D65 white point */
+		float wp[3] = { 0.95047f, 1.0f, 1.08883f }; /* D65 white point */
 		float bp[3] = { 0, 0, 0 };
 		float gamma[3] = { 1, 1, 1 };
 		int i;
@@ -781,7 +781,7 @@ bmp_read_color_profile(fz_context *ctx, struct info *info, const unsigned char *
 		fz_buffer *profile;
 		fz_colorspace *cs;
 
-		if (end - begin < info->profileoffset + info->profilesize)
+		if ((uint32_t)(end - begin) < info->profileoffset + info->profilesize)
 		{
 			fz_warn(ctx, "ignoring truncated color profile in bmp image");
 			return NULL;
@@ -942,7 +942,7 @@ bmp_read_info_header(fz_context *ctx, struct info *info, const unsigned char *be
 
 	if (!is_win_bmp(info) && !is_os2_bmp(info))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown header version (%u) in bmp image", info->version);
-	if (end - p < size)
+	if ((uint32_t)(end - p) < size)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in info header in bmp image");
 
 	/* default compression */
@@ -1070,7 +1070,7 @@ bmp_read_image(fz_context *ctx, struct info *info, const unsigned char *begin, c
 		p = bmp_read_color_masks(ctx, info, begin, end, p);
 
 	/* clamp bitmap offset to buffer size */
-	if (end - begin < info->bitmapoffset)
+	if ((uint32_t)(end - begin) < info->bitmapoffset)
 		info->bitmapoffset = end - begin;
 
 	info->xres = DPM_TO_DPI(info->xres);
@@ -1147,18 +1147,18 @@ bmp_read_image(fz_context *ctx, struct info *info, const unsigned char *begin, c
 		return NULL;
 
 	/* bitmap cannot begin before headers have ended */
-	if (p - begin < info->bitmapoffset)
+	if ((uint32_t)(p - begin) < info->bitmapoffset)
 		p = begin + info->bitmapoffset;
 
 	if (is_win_bmp(info) && info->compression == BI_JPEG)
 	{
-		if (end - p < info->bitmapsize)
+		if ((uint32_t)(end - p) < info->bitmapsize)
 			fz_warn(ctx, "premature end in jpeg image embedded in bmp image");
 		return fz_load_jpeg(ctx, p, end - p);
 	}
 	else if (is_win_bmp(info) && info->compression == BI_PNG)
 	{
-		if (end - p < info->bitmapsize)
+		if ((uint32_t)(end - p) < info->bitmapsize)
 			fz_warn(ctx, "premature end in png image embedded in bmp image");
 		return fz_load_png(ctx, p, end - p);
 	}

@@ -7,6 +7,9 @@
 [submodule "thirdparty/freetype"]
 	path = thirdparty/freetype
 	url = ../thirdparty-freetype2.git
+[submodule "thirdparty/gumbo-parser"]
+	path = thirdparty/gumbo-parser
+	url = ../thirdparty-gumbo-parser.git
 [submodule "thirdparty/harfbuzz"]
 	path = thirdparty/harfbuzz
 	url = ../thirdparty-harfbuzz.git
