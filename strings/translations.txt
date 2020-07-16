@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-238e765920215349a4e7d9d595190e691e854fad
+d3d325f0314e4588d7393bdcc89f430c5218e42a
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -7887,7 +7887,7 @@ el:Επεξεργασία Σχολίων
 fr:Éditer les annotations
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
-ru:Редактировать аннотации
+ru:Изменить аннотации
 :Edit Bookmarks
 am:Խմբագրել էջանիշերը
 az:Əlfəcinlərə düzəliş et
@@ -7896,7 +7896,7 @@ co:Mudificà l’indette
 fr:Éditer les marque-pages
 nl:Bewerk Bladwijzers
 pl:Edytuj zakładki
-ru:Экспорт закладок
+ru:Изменить закладки
 :Enter password
 af:Tik Wagwoord In
 am:Գրեք գաղտնաբառը
@@ -10361,7 +10361,7 @@ uz:%s betda matn topildi (qayta)
 vn:Tìm thấy đoạn văn bản tại trang %s (lần nữa)
 :Free Text
 am:Ազատ գրվածք
-az:Sərbəst mətn
+az:İxtiyari mətn
 cn:自定义文本
 co:Testu liberu
 nl:Vrije Tekst
@@ -10705,7 +10705,7 @@ cn:高亮
 co:Sopralineà
 nl:Markeer
 pl:Wyróżnienie
-ru:Выделить
+ru:Выделение
 :Hint: Use the F3 key for finding again
 am:Որոնումը կրկնելու համար օգտագործեք F3 կոճակը
 ar: للبحث مرة أخرى F3 تلميح: استخدام مفتاح
@@ -10848,6 +10848,7 @@ cn:墨迹
 co:Inchjostru
 nl:Snelkoppeling
 pl:Atrament
+ru:Чернила
 :Install SumatraPDF
 af:Installeer SumatraPDF
 am:Տեղակայել SumatraPDF-ը
@@ -16472,7 +16473,7 @@ ru:Квадрат
 tr:Kare
 :Squiggly
 am:Ալիքավոր
-az:Tilda
+az:Dalğalı xətt
 cn:波浪线
 co:Undulatu
 nl:Kronkelig
@@ -16480,10 +16481,12 @@ pl:Falowanie
 ru:Волнистая линия
 :Stamp
 am:Կնիք
+az:Möhür
 cn:图章
 co:Stampaghjolu
 nl:Stempel
 pl:Pieczęć
+ru:Печать
 :Start SumatraPDF
 am:Բացել SumatraPDF-ը
 ar:بدء تشغيل مستندات Sumatra  المحمولة
@@ -16547,12 +16550,13 @@ uz:SumatraPDF ishga tushirish
 vn:Mở SumatraPDF
 :Strike Out
 am:Գծաջնջված
+az:Üstdən xətt
 cn:删除线
 co:Rigà
 fr:Rayer
 nl:Doorhalen
 pl:Skreślenie
-ru:Перечеркнуть
+ru:Перечёркивание
 :Subject:
 af:Onderwerp
 am:Ֆայլը.
@@ -17253,6 +17257,7 @@ cn:标签 (大的在前)
 co:Etichetta (prima maiò)
 nl:Tag (eerst groot)
 pl:Tag (najpierw duży)
+ru:Разметка (сначала большие)
 :Tag (small first)
 am:Պիտակ (նախ փոքրը)
 az:Teq (əvvəl kiçiklər)
@@ -17260,6 +17265,7 @@ cn:标签 (小的在前)
 co:Etichetta (prima chjuca)
 nl:Tag (eerst klein)
 pl:Tag (najpierw mały)
+ru:Разметка (сначала маленькие)
 :Tagged PDF
 am:Կցված PDF
 ar:المستندات المحمولة موسومة
@@ -17718,7 +17724,7 @@ el:Υπογράμμιση
 fr:Souligner
 nl:Onderstrepen
 pl:Podkreślenie
-ru:Подчеркнуть
+ru:Подчёркивание
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
 ar:المحمولة Sumatra  الغاء تثبيت مستندات
