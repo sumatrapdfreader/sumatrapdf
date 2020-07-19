@@ -748,7 +748,14 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
     int dy = currBounds.dy;
     LayoutAndSizeToContent(win->mainLayout, dx, dy, win->mainWindow->hwnd);
     if (annotPageNo > 0) {
-        win->tab->AsFixed()->GoToPage(annotPageNo, false);
+        DisplayModel* dm = win->tab->AsFixed();
+        int nPages = dm->PageCount();
+        if (annotPageNo > nPages) {
+            // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1701
+            logf("UpdateUIForSelectedAnnotation: invalid annotPageNo (%d), should be <= than nPages (%d)\n",
+                 annotPageNo, nPages);
+        }
+        dm->GoToPage(annotPageNo, false);
     }
 }
 
