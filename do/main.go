@@ -133,6 +133,7 @@ func main() {
 		flgDiff                    bool
 		flgGenStructs              bool
 		flgUpdateVer               string
+		flgSkipTranslationVerify   bool
 	)
 
 	{
@@ -310,6 +311,7 @@ func main() {
 		if shouldSignAndUpload() {
 			failIfNoCertPwd()
 		}
+		flgSkipTranslationVerify = true
 		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
