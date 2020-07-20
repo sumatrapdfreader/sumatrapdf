@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	flgNoCleanCheck bool
-	flgUpload       bool
+	flgNoCleanCheck          bool
+	flgUpload                bool
+	flgSkipTranslationVerify bool
 )
 
 func regenPremake() {
@@ -133,7 +134,6 @@ func main() {
 		flgDiff                    bool
 		flgGenStructs              bool
 		flgUpdateVer               string
-		flgSkipTranslationVerify   bool
 	)
 
 	{
