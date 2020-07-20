@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d3d325f0314e4588d7393bdcc89f430c5218e42a
+52f9b7c7a7f0baf96c83cc9e8cc0183fccc596fe
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -9,6 +9,7 @@ fr:%s installation non trouvée
 nl:%s installatie niet gevonden.
 pl:Nie znaleziono instalacji %s.
 ru:Не удалось найти установку %s.
+vn:Không tìm thấy bản cài đặt đặt %s.
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3825,6 +3826,7 @@ sl:Dodaj stran %s med priljubljene\tCtrl+B
 th:เพิ่มหน้า %s ไปยังรายการโปรด Ctrl+B
 tw:將第 %s 頁加入到最愛\tCtrl+B
 uk:Додати %s сторінку до закладок\tCtrl+B
+vn:Thêm trang %s vào mục ưa thích\tCtrl+B
 :Add sibling
 am:Ավելացնել ժառանգ
 az:Eynisəviyyəli element əlavə et
@@ -4189,6 +4191,7 @@ fr:Voulez-vous vraiment désinstaller %s ?
 nl:Weet u zeker dat u %s wilt dé-installeren?
 pl:Czy na pewno chcesz odinstalować %s?
 ru:Уверены, что хотите удалить %s?
+vn:Bạn có chắc chắn muốn gỡ cài đặt %s?
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ջնջել SumatraPDF-ը:
@@ -5527,6 +5530,7 @@ fr:Couleur
 nl:Kleur
 pl:Kolor
 ru:Цвет
+vn:Tô màu
 :Comic books
 am:Հումորային գրքեր
 ar:الكتب الهزلية
@@ -6762,6 +6766,7 @@ co:Impussibule di disinstallà u filtru di ricerca di Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 ru:Не удалось удалить фильтр поиска Sumatra
+vn:Không thể gỡ cài đặt bộ lọc tìm kiếm Sumatra
 :Couldn't uninstall browser plugin
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
 ar:لا يمكن إلغاء تثبيت متصفح البرنامج المساعد
@@ -7731,6 +7736,7 @@ fr:&Quitter le mode plein écran
 nl:Volledig scherm uit
 pl:W&yjdź z trybu pełnoekranowego
 ru:&Выйти из полноэкранного режима
+vn:Thoát khỏi chế độ Toàn màn hình
 :E&xit\tCtrl+Q
 af:&Gaan Uit-Q
 am:Փա&կել\tCtrl+Q
@@ -7897,6 +7903,7 @@ fr:Éditer les marque-pages
 nl:Bewerk Bladwijzers
 pl:Edytuj zakładki
 ru:Изменить закладки
+vn:Sửa Dấu trang
 :Enter password
 af:Tik Wagwoord In
 am:Գրեք գաղտնաբառը
@@ -9092,6 +9099,7 @@ co:Schedariu attaccatu
 nl:Bestands Bijlage
 pl:Załącznik
 ru:Вложенный файл
+vn:Tệp đính kèm
 :File Size:
 am:Ֆայլի չափը՝
 ar:حجم الملف
@@ -11850,6 +11858,7 @@ sl:Novo okno\tCtrl+N
 th:เปิด &หน้าต่างใหม่ Ctrl+N
 tr:Yeni &pencere\tCtrl+N
 tw:新建視窗(&W)\tCtrl+N
+vn:Mở cửa sổ mới\tCtrl+N
 :New Bookmarks
 am:Նոր էջանիշեր
 az:Yeni əlfəcinlər
@@ -11859,6 +11868,7 @@ fr:Nouveaux marque-pages
 nl:Nieuwe Bladwijzers
 pl:Nowe zakładki
 ru:Новые закладки
+vn:Thêm Dấu trang mới
 :New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
 am:Հասանելի է նոր՝ %s տարբերակը։ Ներբեռնե՞լ նոր տարբերակը։
@@ -15860,6 +15870,7 @@ ru:Показать «И&збранное»
 sl:Pokaži priljubljene
 th:แสดง &รายการโปรด
 tw:顯示最愛(&F)
+vn:Hiện mục Ưa thích
 :Show &Pages Continuously
 am:Էջերը &ցուցադրել շարունակական
 ar:اظهار الصفحات باستمرار
@@ -15933,6 +15944,7 @@ fr:Afficher les &barres  de défilement
 nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
 ru:&Показать ползунки
+vn:Hiện &Thanh cuộn
 :Show &Toolbar\tF8
 af:Vertoon Toolbar
 am:Ցուցադրել &գործիքները
@@ -16397,6 +16409,7 @@ fr:Classer
 nl:Sorteer Op
 pl:Sortuj według
 ru:Сортировать по
+vn:Sắp xếp theo
 :Source file %s has no synchronization point
 am:%s ֆայլը չունի համաժամեցման կետ
 ar:الملف المصدر %s لم تتم مزامنته عند هذه النقطة
@@ -16557,6 +16570,7 @@ fr:Rayer
 nl:Doorhalen
 pl:Skreślenie
 ru:Перечёркивание
+vn:Gạch ngang từ
 :Subject:
 af:Onderwerp
 am:Ֆայլը.
@@ -17186,6 +17200,7 @@ el:Υποστηρίξτε το SumatraPDF
 nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
 ru:Поддержать SumatraPDF
+vn:Hỗ trợ SumatraPDF
 :Synchronization file cannot be opened
 am:Հնարավոր չէ բացել համաժամեցման ֆայլը
 ar:لايمكن فتح مزامنة الملف
@@ -17725,6 +17740,7 @@ fr:Souligner
 nl:Onderstrepen
 pl:Podkreślenie
 ru:Подчёркивание
+vn:Gạch chân
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
 ar:المحمولة Sumatra  الغاء تثبيت مستندات
