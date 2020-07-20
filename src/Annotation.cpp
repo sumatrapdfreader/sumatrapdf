@@ -105,8 +105,10 @@ std::string_view AnnotationReadableName(AnnotationType tp) {
 }
 
 struct AnnotationPdf {
-    // set if constructed from mupdf annotation
     fz_context* ctx = nullptr;
+    // must protect mupdf calls because we might be e.g. rendering
+    // a page in a separate thread
+    CRITICAL_SECTION* ctxAccess = nullptr;
     pdf_page* page = nullptr;
     pdf_annot* annot = nullptr;
 };
@@ -145,12 +147,16 @@ int Annotation::PageNo() const {
 }
 
 RectF Annotation::Rect() const {
+    ScopedCritSec cs(pdf->ctxAccess);
+
     fz_rect rc = pdf_annot_rect(pdf->ctx, pdf->annot);
     auto rect = ToRectFl(rc);
     return rect;
 }
 
 void Annotation::SetRect(RectF r) {
+    ScopedCritSec cs(pdf->ctxAccess);
+
     fz_rect rc = To_fz_rect(r);
     pdf_set_annot_rect(pdf->ctx, pdf->annot, rc);
     pdf_update_appearance(pdf->ctx, pdf->annot);
@@ -158,6 +164,8 @@ void Annotation::SetRect(RectF r) {
 }
 
 std::string_view Annotation::Author() {
+    ScopedCritSec cs(pdf->ctxAccess);
+
     const char* s = nullptr;
 
     fz_var(s);
@@ -174,6 +182,7 @@ std::string_view Annotation::Author() {
 }
 
 int Annotation::Quadding() {
+    ScopedCritSec cs(pdf->ctxAccess);
     return pdf_annot_quadding(pdf->ctx, pdf->annot);
 }
 
@@ -183,6 +192,7 @@ static bool IsValidQuadding(int i) {
 
 // return true if changed
 bool Annotation::SetQuadding(int newQuadding) {
+    ScopedCritSec cs(pdf->ctxAccess);
     CrashIf(!IsValidQuadding(newQuadding));
     bool didChange = Quadding() != newQuadding;
     if (!didChange) {
@@ -195,6 +205,7 @@ bool Annotation::SetQuadding(int newQuadding) {
 }
 
 void Annotation::SetQuadPointsAsRect(const Vec<RectF>& rects) {
+    ScopedCritSec cs(pdf->ctxAccess);
     fz_quad quads[512];
     int n = rects.isize();
     if (n == 0) {
@@ -214,6 +225,7 @@ void Annotation::SetQuadPointsAsRect(const Vec<RectF>& rects) {
 }
 
 Vec<RectF> Annotation::GetQuadPointsAsRect() {
+    ScopedCritSec cs(pdf->ctxAccess);
     Vec<RectF> res;
     int n = pdf_annot_quad_point_count(pdf->ctx, pdf->annot);
     for (int i = 0; i < n; i++) {
@@ -226,6 +238,7 @@ Vec<RectF> Annotation::GetQuadPointsAsRect() {
 }
 
 std::string_view Annotation::Contents() {
+    ScopedCritSec cs(pdf->ctxAccess);
     const char* s = pdf_annot_contents(pdf->ctx, pdf->annot);
     return s;
 }
@@ -236,6 +249,7 @@ bool Annotation::SetContents(std::string_view sv) {
         return false;
     }
     isChanged = true;
+    ScopedCritSec cs(pdf->ctxAccess);
     pdf_set_annot_contents(pdf->ctx, pdf->annot, sv.data());
     pdf_update_appearance(pdf->ctx, pdf->annot);
     return true;
@@ -243,6 +257,7 @@ bool Annotation::SetContents(std::string_view sv) {
 
 void Annotation::Delete() {
     CrashIf(isDeleted);
+    ScopedCritSec cs(pdf->ctxAccess);
     pdf_delete_annot(pdf->ctx, pdf->page, pdf->annot);
     isDeleted = true;
     isChanged = true; // TODO: not sure I need this
@@ -250,6 +265,7 @@ void Annotation::Delete() {
 
 // -1 if not exist
 int Annotation::PopupId() {
+    ScopedCritSec cs(pdf->ctxAccess);
     pdf_obj* obj = pdf_dict_get(pdf->ctx, pdf->annot->obj, PDF_NAME(Popup));
     if (!obj) {
         return -1;
@@ -259,17 +275,20 @@ int Annotation::PopupId() {
 }
 
 time_t Annotation::CreationDate() {
+    ScopedCritSec cs(pdf->ctxAccess);
     auto res = pdf_annot_creation_date(pdf->ctx, pdf->annot);
     return res;
 }
 
 time_t Annotation::ModificationDate() {
+    ScopedCritSec cs(pdf->ctxAccess);
     auto res = pdf_annot_modification_date(pdf->ctx, pdf->annot);
     return res;
 }
 
 // return empty() if no icon
 std::string_view Annotation::IconName() {
+    ScopedCritSec cs(pdf->ctxAccess);
     bool hasIcon = pdf_annot_has_icon_name(pdf->ctx, pdf->annot);
     if (!hasIcon) {
         return {};
@@ -280,6 +299,7 @@ std::string_view Annotation::IconName() {
 }
 
 void Annotation::SetIconName(std::string_view iconName) {
+    ScopedCritSec cs(pdf->ctxAccess);
     pdf_set_annot_icon_name(pdf->ctx, pdf->annot, iconName.data());
     pdf_update_appearance(pdf->ctx, pdf->annot);
     // TODO: only if the value changed
@@ -288,6 +308,7 @@ void Annotation::SetIconName(std::string_view iconName) {
 
 // ColorUnset if no color
 COLORREF Annotation::Color() {
+    ScopedCritSec cs(pdf->ctxAccess);
     float color[4];
     int n;
     pdf_annot_color(pdf->ctx, pdf->annot, &n, color);
@@ -297,6 +318,7 @@ COLORREF Annotation::Color() {
 
 // return true if color changed
 bool Annotation::SetColor(COLORREF c) {
+    ScopedCritSec cs(pdf->ctxAccess);
     bool didChange = false;
     float color[4];
     int n;
@@ -325,6 +347,7 @@ bool Annotation::SetColor(COLORREF c) {
 
 // ColorUnset if no color
 COLORREF Annotation::InteriorColor() {
+    ScopedCritSec cs(pdf->ctxAccess);
     float color[4];
     int n;
     pdf_annot_interior_color(pdf->ctx, pdf->annot, &n, color);
@@ -333,6 +356,7 @@ COLORREF Annotation::InteriorColor() {
 }
 
 bool Annotation::SetInteriorColor(COLORREF c) {
+    ScopedCritSec cs(pdf->ctxAccess);
     bool didChange = false;
     float color[4];
     int n;
@@ -356,6 +380,7 @@ bool Annotation::SetInteriorColor(COLORREF c) {
 }
 
 std::string_view Annotation::DefaultAppearanceTextFont() {
+    ScopedCritSec cs(pdf->ctxAccess);
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -364,6 +389,7 @@ std::string_view Annotation::DefaultAppearanceTextFont() {
 }
 
 void Annotation::SetDefaultAppearanceTextFont(std::string_view sv) {
+    ScopedCritSec cs(pdf->ctxAccess);
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -374,6 +400,7 @@ void Annotation::SetDefaultAppearanceTextFont(std::string_view sv) {
 }
 
 int Annotation::DefaultAppearanceTextSize() {
+    ScopedCritSec cs(pdf->ctxAccess);
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -382,6 +409,7 @@ int Annotation::DefaultAppearanceTextSize() {
 }
 
 void Annotation::SetDefaultAppearanceTextSize(int textSize) {
+    ScopedCritSec cs(pdf->ctxAccess);
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -392,6 +420,7 @@ void Annotation::SetDefaultAppearanceTextSize(int textSize) {
 }
 
 COLORREF Annotation::DefaultAppearanceTextColor() {
+    ScopedCritSec cs(pdf->ctxAccess);
     const char* fontName;
     float sizeF;
     float textColor[3];
@@ -401,6 +430,7 @@ COLORREF Annotation::DefaultAppearanceTextColor() {
 }
 
 void Annotation::SetDefaultAppearanceTextColor(COLORREF col) {
+    ScopedCritSec cs(pdf->ctxAccess);
     const char* text_font;
     float sizeF;
     float textColor[4];
@@ -412,6 +442,7 @@ void Annotation::SetDefaultAppearanceTextColor(COLORREF col) {
 }
 
 void Annotation::GetLineEndingStyles(int* start, int* end) {
+    ScopedCritSec cs(pdf->ctxAccess);
     pdf_line_ending leStart = PDF_ANNOT_LE_NONE;
     pdf_line_ending leEnd = PDF_ANNOT_LE_NONE;
     pdf_annot_line_ending_styles(pdf->ctx, pdf->annot, &leStart, &leEnd);
@@ -420,6 +451,7 @@ void Annotation::GetLineEndingStyles(int* start, int* end) {
 }
 
 void Annotation::SetLineEndingStyles(int start, int end) {
+    ScopedCritSec cs(pdf->ctxAccess);
     pdf_line_ending leStart = (pdf_line_ending)start;
     pdf_line_ending leEnd = (pdf_line_ending)end;
     pdf_set_annot_line_ending_styles(pdf->ctx, pdf->annot, leStart, leEnd);
@@ -428,32 +460,40 @@ void Annotation::SetLineEndingStyles(int start, int end) {
 }
 
 int Annotation::BorderWidth() {
+    ScopedCritSec cs(pdf->ctxAccess);
     float res = pdf_annot_border(pdf->ctx, pdf->annot);
     return (int)res;
 }
 
 void Annotation::SetBorderWidth(int newWidth) {
+    ScopedCritSec cs(pdf->ctxAccess);
     pdf_set_annot_border(pdf->ctx, pdf->annot, (float)newWidth);
     pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
 }
 
 int Annotation::Opacity() {
+    ScopedCritSec cs(pdf->ctxAccess);
     float fopacity = pdf_annot_opacity(pdf->ctx, pdf->annot);
     int res = (int)(fopacity * 255.f);
     return res;
 }
 
 void Annotation::SetOpacity(int newOpacity) {
+    ScopedCritSec cs(pdf->ctxAccess);
     CrashIf(newOpacity < 0 || newOpacity > 255);
     newOpacity = std::clamp(newOpacity, 0, 255);
     float fopacity = (float)newOpacity / 255.f;
+
     pdf_set_annot_opacity(pdf->ctx, pdf->annot, fopacity);
     pdf_update_appearance(pdf->ctx, pdf->annot);
     isChanged = true;
 }
 
-Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot, int pageNo) {
+Annotation* MakeAnnotationPdf(CRITICAL_SECTION* ctxAccess, fz_context* ctx, pdf_page* page, pdf_annot* annot,
+                              int pageNo) {
+    ScopedCritSec cs(ctxAccess);
+
     auto tp = pdf_annot_type(ctx, annot);
     AnnotationType typ = AnnotationTypeFromPdfAnnot(tp);
     if (typ == AnnotationType::Unknown) {
@@ -461,6 +501,7 @@ Annotation* MakeAnnotationPdf(fz_context* ctx, pdf_page* page, pdf_annot* annot,
         return nullptr;
     }
     AnnotationPdf* apdf = new AnnotationPdf();
+    apdf->ctxAccess = ctxAccess;
     apdf->ctx = ctx;
     apdf->annot = annot;
     apdf->page = page;
