@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-52f9b7c7a7f0baf96c83cc9e8cc0183fccc596fe
+ed59539857926568138e0aff36681e211dbddccd
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -3736,7 +3736,7 @@ vn:Thêm trang %s vào Ưa thích
 :Add page %s to favorites with (optional) name:
 am:Ավելացնել %s էջը ընտրյալներին հետևյալ անվամբ`
 ar:(الى المفضلة مع  اسم (إختياري %s اضافة صفحة:
-az:%s. səhifəni bu (istənilən) adla seçilmişlərə əlavə et:
+az:%s. səhifəni bu (ixtiyari) adla seçilmişlərə əlavə et:
 bg:Добавяне на страница %s към любимите с име (по избор):
 bn:%s পেইজটাকে প্রিয়তে যোগ করুন নাম সহ (ইচ্ছাকৃত) 
 br:Adicionar página %s aos favoritos com outro nome (opcional):
@@ -10717,7 +10717,7 @@ ru:Выделение
 :Hint: Use the F3 key for finding again
 am:Որոնումը կրկնելու համար օգտագործեք F3 կոճակը
 ar: للبحث مرة أخرى F3 تلميح: استخدام مفتاح
-az:Təkrar axtarış üçün F3 düyməsinə basın
+az:Məsləhət: Təkrar axtarış üçün F3 düyməsinə basın
 bg:Съвет: Използвайте F3 за повторно търсене
 br:Dica: tecle F3 para achar a próxima ocorrência
 bs:Pomoć: upotrijebite tipku F3 za ponovnu pretragu
@@ -15752,7 +15752,7 @@ vn:Gửi qua &email...
 af:Stel Die Teenoorgestelde Soek Command-Line
 am:Նշել որոնման հրամանների տողը
 ar:أمر البحث عن نص باتجاه معاكس
-az:Tərs axtarış komandasını təyin etmək
+az:Tərs axtarış komandasını təyin et
 bg:Въведи параметри за обратно търсене
 bn:সমাদেশ-পংক্তিতে বিলোম অনুসন্ধান নির্ধারণ করুন
 br:Configurar pesquisa inversa
@@ -18723,7 +18723,7 @@ vn:Thu nhỏ
 :Zoom factor
 am:Չափի գործակիցը
 ar:عامل التكبير/التصغير
-az:Miqyas
+az:Miqyas əmsalı
 bg:Коефициент на увеличение
 bn:বিবর্ধক অনুপাত
 br:Proporção de zoom
