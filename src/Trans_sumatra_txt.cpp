@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   59
+#define LANGS_COUNT   60
 #define STRINGS_COUNT 335
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -4394,6 +4394,343 @@ const char * gTranslations_tw =
   "[\345\267\262\345\201\265\346\270\254\350\256\212\346\233\264\357\274\214\346\255\243\345\234\250\346\233\264\346\226\260] %s\0"\
   "\346\255\243\345\234\250\350\244\207\350\243\275\346\226\207\345\255\227\0"\
   "\346\255\243\345\234\250\345\210\227\345\215\260\346\226\207\344\273\266\0";
+
+const char * gTranslations_kw = 
+  "\0"\
+  "&A-dro dhe...\0"\
+  "&Braster gwir\tCtrl+1\0"\
+  "Settyansow &avonsys...\0"\
+  "Pub folen dewisys\0"\
+  "War-lergh\tAlt+<-\0"\
+  "&Gwel-lyver\tCtrl+8\0"\
+  "&Degea\tCtrl+W\0"\
+  "&Kopia Dewis\0"\
+  "Dasskrifa Dewis\tCtrl+C\0"\
+  "&Na wovyn orthiv arta\0"\
+  "\0"\
+  "&A-dal\tCtrl+7\0"\
+  "&Restren\0"\
+  "&Kavos pyth:\0"\
+  "Kynsa Folen\tHome\0"\
+  "\0"\
+  "&Mos dhe\0"\
+  "&Mos dhe folen:\0"\
+  "&Gweres\0"\
+  "Diwettha folen\tEnd\0"\
+  "&Brasheans:\0"\
+  "&Kowethlyver\0"\
+  "An &Keth kas\0"\
+  "Nessa Folen\t->\0"\
+  "&Na\0"\
+  "&Na, meur ras\0"\
+  "\0"\
+  "\0"\
+  "&Ygor...\tCtrl+O\0"\
+  "&Dewisyow\0"\
+  "&Etholyow...\0"\
+  "&Ger-tremena:\0"\
+  "\0"\
+  "Folen kyns\t<-\0"\
+  "&Pryntya...\0"\
+  "&Pryntya\tCtrl+P\0"\
+  "\0"\
+  "\0"\
+  "Gwitha an etholy&ow ma rag pub restren\0"\
+  "\0"\
+  "&Gwitha Avel...\0"\
+  "&Gwitha avel...\tCtrl+S\0"\
+  "&Settyansow\0"\
+  "\0"\
+  "\0"\
+  "&Tremena an versyon ma\0"\
+  "&Thema\0"\
+  "\0"\
+  "&Gweles\0"\
+  "&Fenester\0"\
+  "&Ya\0"\
+  "&Zoum\0"\
+  "(a %d)\0"\
+  "(%s folen)\0"\
+  "A-dro dhe SumatraPDF\0"\
+  "Keworra gwella\0"\
+  "Keworra PDF avel flogh\0"\
+  "Keworra PDF avel hwor\0"\
+  "Keworra flogh\0"\
+  "Keworra folen %s dhe daklow drudh\0"\
+  "Keworra folen %s dhe daklow drudh\tCtrl+B\0"\
+  "Keworra folen %s dhe daklow drudh gans hanow (dewisel):\0"\
+  "Keworra hwor\0"\
+  "Keworra dhe daklow drudh\0"\
+  "Avonsys\0"\
+  "Pub restren\0"\
+  "Pub skriven skoodhys\0"\
+  "Notenyans\0"\
+  "Towlen:\0"\
+  "Os ta sur bos hwans dhis dilea %s?\0"\
+  "Os ta sur bos hwans dhis dilea SumatraPDF?\0"\
+  "Keskelmi orth restrennow PDF?\0"\
+  "Stagell: %s\0"\
+  "Awtour:\0"\
+  "Awtomatek\0"\
+  "Checkya rag nowythyansow yn awtomatek\0"\
+  "Gwel-lyver\0"\
+  "Folennotya Skochfordhow\0"\
+  "Folennotya skochfordhow dhe folen %s a %s\0"\
+  "Folennotennow\0"\
+  "Baytys\0"\
+  "Skrivennow CHM\0"\
+  "Ny yllir junya dhe'n kesrosweyth (gwall %#x).\0"\
+  "Hedhi\0"\
+  "Ny yllir pryntya an restren ma\0"\
+  "Ny yllir dalleth arhadow gorthhwilas.  Check an linen arhadow y'n settyansow mar pleg.\0"\
+  "To byghan\0"\
+  "Chanjya yeth (Change Language)\0"\
+  "&Checkya rag versyon nowyth\0"\
+  "Kylgh\0"\
+  "Degea\0"\
+  "\0"\
+  "Liw\0"\
+  "Bondys Delinys\0"\
+  "Kesplegadewder\0"\
+  "Heb aswa\0"\
+  "Gwel-lyver heb aswa\0"\
+  "A-dal heb aswa\0"\
+  "Keworra treylyans\0"\
+  "Kopia &Skeusen\0"\
+  "Kopia Trigva &Kevren\0"\
+  "Kopia Ka&mpol\0"\
+  "Ny yllir kopia an tekst (ow kopia avel skeusen hepken)\0"\
+  "Gwirpryntyans:\0"\
+  "\0"\
+  "\0"\
+  "Ny yllys darbari pryntyer\0"\
+  "\0"\
+  "\0"\
+  "\0"\
+  "Ny yllys rendra folen\0"\
+  "\0"\
+  "\0"\
+  "\0"\
+  "\0"\
+  "Gwruthyl Notenyans\0"\
+  "Gwrys:\0"\
+  "Restren a-lemmyn\0"\
+  "Le resor:\0"\
+  "&Zoum arbennik...\tCtrl+Y\0"\
+  "Tewl\0"\
+  "Tewlla\0"\
+  "&Delinyans savonek:\0"\
+  "&Zoum savonek:\0"\
+  "Ny yll an pennredyer PDF bos chanjyes yn modh porthadow\0"\
+  "Kumyasow Neghys:\0"\
+  "Skrivennow DjVu\0"\
+  "Gnasow Skriven\0"\
+  "Iskarga\0"\
+  "&Degea\tCtrl+Q\0"\
+  "\0"\
+  "E-lyvrow EPUB\0"\
+  "Golegi\0"\
+  "Golegi notenyans\0"\
+  "Golegi Folennotennow\0"\
+  "Ri ger-tremena\0"\
+  "Ri ger-tremena rag %s\0"\
+  "\0"\
+  "Gwall karga %s\0"\
+  "Lesa Oll\0"\
+  "Esperthi Folennotennow\0"\
+  "T&aklow drudh\0"\
+  "Yn-rag\tAlt+->\0"\
+  "Skrin Leun\tCtrl+Shift+L\0"\
+  "A-dal\0"\
+  "\0"\
+  "\0"\
+  "\0"\
+  "Gwithyans restren a fyllis\0"\
+  "\0"\
+  "\0"\
+  "Gwel Wias Skav\0"\
+  "Taklow drudh\0"\
+  "Skrivennow FictionBook\0"\
+  "\0"\
+  "Stagel Restren\0"\
+  "Braster Restren:\0"\
+  "Restren:\0"\
+  "Kavos...\tCtrl+F\0"\
+  "Kavos\0"\
+  "Kavos Nessa\0"\
+  "Kavos Kyns\0"\
+  "Kavos:\0"\
+  "Desedha &Dalgh\tCtrl+3\0"\
+  "Desedha &Folen\tCtrl+0\0"\
+  "&Desedha Les\tCtrl+2\0"\
+  "Desedha Dalgh\0"\
+  "Desedha Folen\0"\
+  "Desedha Les\0"\
+  "\0"\
+  "Desedha Folen Unnik\0"\
+  "Fontys:\0"\
+  "Ow furvasa an lyver... %d folen\0"\
+  "Tekst kevys war folen %s\0"\
+  "\0"\
+  "Tekst Rydh\0"\
+  "\0"\
+  "\0"\
+  "Mos dhe folen\0"\
+  "Kudha Settyans&ow\0"\
+  "\0"\
+  "Golowboyntya\0"\
+  "Hynt: Devnydhya alhwedhen F3 rag daskavos\0"\
+  "Restrennow skeusen (*.%s)\0"\
+  "Skeusennow\0"\
+  "Ynk\0"\
+  "Lea SumatraPDF\0"\
+  "Lea SumatraPDF yn &restren:\0"\
+  "Ynstallyans fyllys!\0"\
+  "Ow lea...\0"\
+  "\0"\
+  "\0"\
+  "\0"\
+  "Golow\0"\
+  "Linen\0"\
+  "\0"\
+  "Gul SumatraPDF towlen savonek rag restrennow PDF?\0"\
+  "Gwra SumatraPDF ow fennredyer PDF\0"\
+  "Modh Man&ga\0"\
+  "An keth kas\0"\
+  "Restrennow Mobi\0"\
+  "Chanjys:\0"\
+  "&Fenester nowydh\tCtrl+N\0"\
+  "Folennotennow Nowydh\0"\
+  "Versyon nowyth %s yw parys. Iskarga versyon nowyth?\0"\
+  "Nessa Folen\0"\
+  "Ny veu keyvys par vyth\0"\
+  "Ny veu kevys sywyans vyth a-dro dhe linen %u y'n restren %s\0"\
+  "Ny veu kevys restren gettermynegi vyth\0"\
+  "Ny veu kevys derivadow kettermynegi y'n le ma\0"\
+  "Niver a Folennow:\0"\
+  "Da lowr\0"\
+  "Ygeri\0"\
+  "Ygeri yn PDF-XChange\0"\
+  "Ygeri PDF Neythys\0"\
+  "Ygeri restren...\0"\
+  "Ygeri yn %s\0"\
+  "Ygeri yn &Adobe Reader\0"\
+  "Ygeri yn &Foxit Reader\0"\
+  "Ygeri yn Microsoft HTML Help\0"\
+  "Ygeri yn Microsoft XPS-Viewer\0"\
+  "&Gnasow\0"\
+  "&Gnasow\tCtrl+D\0"\
+  "Restren PDF\0"\
+  "Gwellheans PDF\0"\
+  "Askorrer PDF:\0"\
+  "Versyon PDF:\0"\
+  "Restrennow PDF\0"\
+  "Folen...\tCtrl+G\0"\
+  "Folen %s\0"\
+  "Braster Folen:\0"\
+  "Nyns eus folen %u\0"\
+  "\0"\
+  "Folen:\0"\
+  "Skrivennow PalmDoc\0"\
+  "Gwra degea %s dhe besya, mar pleg!\0"\
+  "Gortos, mar pleg - ow rendra...\0"\
+  "Lieslinen\0"\
+  "Liestuek\0"\
+  "Skrivennow Postscript\0"\
+  "\0"\
+  "Folen kyns\0"\
+  "Pryntya\0"\
+  "\0"\
+  "\0"\
+  "Ow pryntya...\0"\
+  "\0"\
+  "\0"\
+  "\0"\
+  "Kaletter ow pryntya\0"\
+  "Dashe&nwel...\tF2\0"\
+  "\0"\
+  "Kovhe restrennow ygerys\0"\
+  "Removya Tra\0"\
+  "\0"\
+  "\0"\
+  "Dashenwel Dhe\0"\
+  "Treylya a-gledh\tCtrl+Shift+-\0"\
+  "Treylya a-dhyhow\tCtrl+Shift++\0"\
+  "Gwitha Notennow\0"\
+  "Gwitha avel\0"\
+  "Gwitha Restren Neythys...\0"\
+  "Gwitha S&kochfordh\tCtrl+Shift+S\0"\
+  "Ow hwilas %d a %d...\0"\
+  "Dewis &Oll\0"\
+  "Dewis &Oll|tCtrl+A\0"\
+  "Dewis dalgh gans Ctrl+boton-logosen kledh\0"\
+  "Dewis an restren le may fynnydh lea SumatraPDF:\0"\
+  "Dewis:\0"\
+  "Danvon der &e-bost...\0"\
+  "Settya linen-arhadow gorthhwilas\0"\
+  "Diskwedhes &Folennotennow\tF12\0"\
+  "Diskwedhes &Taklow Drudh\0"\
+  "Diskwedhes folennow heb aswa\0"\
+  "Diskwedhes &Skrolvarrys\0"\
+  "Diskwedhes toulvar\0"\
+  "Diskwedhes Folen&notennow\tF12\0"\
+  "Diskwedhes Taklow Drudh\0"\
+  "Diskwedhes Skr&olvarrys\0"\
+  "Diskwedhes redys yn fenowgh\0"\
+  "Diskwedhes yn &restren\0"\
+  "Diskwedhes &amalvar an lyververkyow mars eus onan\0"\
+  "Unn folen hepken\0"\
+  "\0"\
+  "\0"\
+  "Nyns eus poynt kettermynegi vyth y'n restren %s\0"\
+  "Pedrek\0"\
+  "\0"\
+  "Stampa\0"\
+  "Dalleth SumatraPDF\0"\
+  "Treuslinya\0"\
+  "Testen:\0"\
+  "\0"\
+  "\0"\
+  "Etholyow SumatraPDF\0"\
+  "Nowedhi SumatraPDF\0"\
+  "\0"\
+  "\0"\
+  "\0"\
+  "SumatraPDF yw dha bennredyer PDF\0"\
+  "Alemma rag y fydh SumatraPDF dha bennredyer PDF\0"\
+  "Skoodhya SumatraPDF\0"\
+  "Ny yllir ygeri an restren gettermynegi\0"\
+  "Tagg (meur kynsa)\0"\
+  "Tagg (byghan kynsa)\0"\
+  "PDF Taggys\0"\
+  "Tekst\0"\
+  "Restrennow tekst\0"\
+  "Meur ras a dhewis RA-MICRO PDF!\0"\
+  "Meur ras a dhewis SumatraPDF!\0"\
+  "Meur ras! SumatraPDF a veu leys.\0"\
+  "\0"\
+  "\0"\
+  "Titel:\0"\
+  "\0"\
+  "Dilea SumatraPDF\0"\
+  "Dileans a fyllis\0"\
+  "Dileans ow pos gwrys...\0"\
+  "Restren-bennfenten anaswonnys (%s)\0"\
+  "Usya &tabbys\0"\
+  "Usya SumatraPDF avel redyer PDF a dhefowt\0"\
+  "Gwel\0"\
+  "&Mos dhe'n wiasva\0"\
+  "Gwarnyans\0"\
+  "Skrivennow XPS\0"\
+  "Yma'n versyon nowyttha genes.\0"\
+  "Yma versyon %s genes\0"\
+  "Zoumya\0"\
+  "Zoumya a-bervedh\0"\
+  "Zoumya dhe-ves\0"\
+  "Faktor-zoum\0"\
+  "[Nowythyansow kevys; owth arnowytha] %s\0"\
+  "ow kopia tekst\0"\
+  "ow pryntya skriven\0";
 
 const char * gTranslations_co = 
   "Installazione di %s micca trova.\0"\
@@ -19912,6 +20249,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ca_xv, 
   gTranslations_cn, 
   gTranslations_tw, 
+  gTranslations_kw, 
   gTranslations_co, 
   gTranslations_hr, 
   gTranslations_cz, 
@@ -19976,6 +20314,7 @@ const char *gLangCodes =   "en\0" \
   "ca-xv\0" \
   "cn\0" \
   "tw\0" \
+  "kw\0" \
   "co\0" \
   "hr\0" \
   "cz\0" \
@@ -20036,6 +20375,7 @@ const char *gLangNames =   "English\0" \
   "Catalan-Valencian (Catal\303\240-Valenci\303\240)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)\0" \
+  "Cornish (Kernewek)\0" \
   "Corsican (Corsu)\0" \
   "Croatian (Hrvatski)\0" \
   "Czech (\304\214e\305\241tina)\0" \
@@ -20108,6 +20448,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   (LANGID)-1,
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL),
+  (LANGID)-1,
   _LANGID(LANG_CORSICAN),
   _LANGID(LANG_CROATIAN),
   _LANGID(LANG_CZECH),
@@ -20159,7 +20500,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (24 == idx) || (31 == idx) || (39 == idx);
+  return (2 == idx) || (25 == idx) || (32 == idx) || (40 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

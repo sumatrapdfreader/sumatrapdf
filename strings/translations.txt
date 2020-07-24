@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ed59539857926568138e0aff36681e211dbddccd
+c6eed9ece6b59afed88131798485da671674874a
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -387,6 +387,7 @@ jv:&Tampilan Buku\tCtrl+8
 ka:&წიგნის რეჟიმი\tCtrl+8
 kr:책처럼 보기(&B)\tCtrl+8
 ku:شێوازی پەرتووک&\tCtrl+8
+kw:&Gwel-lyver\tCtrl+8
 lt:Knyga\tCtrl+8
 lv:&Grāmatas skats\tCtrl+8
 mk:Книга\tCtrl+8
@@ -520,6 +521,7 @@ ja:選択範囲をコピー(&C)
 ka:მონიშნულის &კოპირება
 kr:선택한 부분 복사(&C)
 ku:لەبەرگرتنەوەی دیاریکراو&
+kw:&Kopia Dewis
 lt:&Kopijuoti pažymėtą sritį
 lv:&Kopēt atlasi
 mk:&Копирај селекција
@@ -782,6 +784,7 @@ ja:見返し表示(&F)\tCtrl+7
 ka:&ურთიერთ-საპირისპიროდ\tCtrl+7
 kr:두 페이지씩(&F)\tCtrl+7
 ku:&ڕووکار\tCtrl+7
+kw:&A-dal\tCtrl+7
 lt:&Du puslapiai\tCtrl+7
 lv:&Divas lappuses\tCtrl+7
 mk:Две страници\tCtrl+7
@@ -1991,6 +1994,7 @@ ja:オプション(&O)
 ka:&ვარიანტები
 kr:옵션(&O)
 ku:هەڵبژاردنەکان&
+kw:&Dewisyow
 lt:&Nuostatos
 lv:&Opcijas
 mk:&Опции
@@ -2314,6 +2318,7 @@ jv:&Nyithak
 ka:&ამობეჭდვა...
 kr:인쇄(&P)...
 ku:چاپکردن...&
+kw:&Pryntya...
 lt:&Spausdinti...
 lv:&Drukāt...
 mk:&Печати...
@@ -2646,6 +2651,7 @@ jv:&Simpen Dadi...
 ka:შენახვა &როგორც...
 kr:다른 이름으로 저장(&S)...
 ku:پاراستن وەکو...&
+kw:&Gwitha Avel...
 lt:Į&rašyti kaip...
 lv:&Saglabāt kā...
 mk:&Зачувај како...
@@ -3032,6 +3038,7 @@ id:Tema
 it:&Tema
 ja:配色テーマ(&T)
 kr:테마(&T)
+kw:&Thema
 lt:&Išvaizda
 lv:&Dizains
 ne:&थिम
@@ -3219,6 +3226,7 @@ it:&Finestra
 ja:ウィンドウ(&W)
 kr:창(&W)
 ku:&پەنجەرە
+kw:&Fenester
 lt:&Langas
 lv:&Logs
 mk:&Прозорец
@@ -3479,6 +3487,7 @@ ja:(ページ %s)
 ka:(გვერდი %s)
 kr:(%s 페이지)
 ku:(پەڕە %s)
+kw:(%s folen)
 lt:(%s psl.)
 lv:(%s lappuse)
 mk:(страница %s)
@@ -3649,6 +3658,7 @@ am:Ավելացնել PDF-ը որպես ենթատարր
 az:PDF-i törəmə element kimi əlavə et
 cn:将 PDF 添加为子项目
 co:Aghjunghje un PDF cum’è un zitellu
+kw:Keworra PDF avel flogh
 nl:Voeg PDF als child toe
 pl:Dodaj PDF jako potomka
 ru:Добавить PDF как дочерний элемент
@@ -3657,6 +3667,7 @@ am:Ավելացնել PDF-ը որպես ժառանգ
 az:PDF-i eynisəviyyəli element kimi əlavə et
 cn:将 PDF 添加为同级项目
 co:Aghjunghje un PDF cum’è un fratellu
+kw:Keworra PDF avel hwor
 nl:Voeg PDF als verwant toe
 pl:Dodaj PDF jako rodzeństwo
 ru:Добавить PDF как одноуровневый элемент
@@ -3665,6 +3676,7 @@ am:Ավելացնել ենթատարր
 az:Törəmə element əlavə et
 cn:添加子项目
 co:Aghjunghje un zitellu
+kw:Keworra flogh
 nl:Child toevoegen
 pl:Dodaj potomka
 ru:Добавить дочерний элемент
@@ -3705,6 +3717,7 @@ jv:Nambah kaca %s ning favorit
 ka:%s გვერდის რჩეულებში დამატება
 kr:%s 페이지를 즐겨찾기에 추가
 ku:بۆ پەسەندەکان %s زیادکردنی پەڕەی
+kw:Keworra folen %s dhe daklow drudh
 lt:Sukurti žymą į %s puslapį
 lv:Pievienot %s lappusi izlasei
 mk:Додај страница %s во омилени
@@ -3770,6 +3783,7 @@ jv:Nambah kaca %s ning favorit nganggo jeneng (opsional):
 ka:%s გვერდის დამატება რჩეულებში (არასავალდებულო) სახელწოდებით:
 kr:%s 페이지의 즐겨찾기 이름을 입력하세요. (선택 사항) :
 ku:(بۆ پەسەندەکان بەناوی (ئارەزوومەندانە %s زیادکردنی پەڕەی :
+kw:Keworra folen %s dhe daklow drudh gans hanow (dewisel):
 lt:Sukurti žymą į %s puslapį, suteikiant jai šį pavadinimą (neprivalomas):
 lv:Pievienot %s lappusi izlasei ar (neobligātu) nosaukumu:
 mk:Додај страница %s во омилени со име по избор:
@@ -3817,6 +3831,7 @@ hr:Dodaj stranicu %s u favorite\tCtrl+B
 id:Tambah halaman %s ke favorit\tCtrl+B
 it:Aggiungi pagina %s ai preferiti\tCtrl+B
 ja:ページ %s をお気に入りに追加\tCtrl+B
+kw:Keworra folen %s dhe daklow drudh\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
 pl:Dodaj stronę %s do ulubionych\tCtrl+B
@@ -3832,6 +3847,7 @@ am:Ավելացնել ժառանգ
 az:Eynisəviyyəli element əlavə et
 cn:添加同级项目
 co:Aghjunghje un fratellu
+kw:Keworra hwor
 nl:Voeg verwant toe
 pl:Dodaj rodzeństwo
 ru:Добавить одноуровневый элемент
@@ -3872,6 +3888,7 @@ jv:Nambah ning favorit
 ka:რჩეულებში დამატება
 kr:즐겨찾기에 추가
 ku:زیادکردن بۆ پەسەندەکان
+kw:Keworra dhe daklow drudh
 lt:Sukurti žymą
 lv:Pievienot izlasei
 mk:Додај во омилени
@@ -3940,7 +3957,7 @@ jv:Terusan
 ka:დამატებითი
 kr:고급
 ku:پەرەسەندوو
-kw:Avonsyes
+kw:Avonsys
 lt:Kitos
 lv:Papildu
 mk:Напредни
@@ -4076,6 +4093,7 @@ jv:Kabeh dokumen sing didhukung
 ka:ყველა მხარდაჭერილი დოკუმენტი
 kr:지원하는 모든 문서
 ku:هەموو بەڵگەنامە گونجاوەکان
+kw:Pub skriven skoodhys
 lt:Visų palaikomų tipų dokumentai
 lv:Visi atbalstītie dokumenti
 mk:Сите поддражни документи
@@ -4111,6 +4129,7 @@ cn:标注
 co:Annutazioni
 el:Σχόλια
 fr:Annotations
+kw:Notenyans
 nl:Aantekeningen
 pl:Adnotacje
 ru:Аннотации
@@ -4188,6 +4207,7 @@ az:Əminsiniz ki, %s silmək istəyirsiniz?
 cn:您确定要卸载 %s 吗？
 co:Site sicuru di vulè disinstallà %s ?
 fr:Voulez-vous vraiment désinstaller %s ?
+kw:Os ta sur bos hwans dhis dilea %s?
 nl:Weet u zeker dat u %s wilt dé-installeren?
 pl:Czy na pewno chcesz odinstalować %s?
 ru:Уверены, что хотите удалить %s?
@@ -4229,6 +4249,7 @@ ja:SumatraPDFを本当にアンインストールしますか？
 jv:Apa panjenengan yakin arep mbusak instalasi SumatraPDF?
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
+kw:Os ta sur bos hwans dhis dilea SumatraPDF?
 lt:Ar tikrai norite pašalinti SumatraPDF?
 lv:Vai jūs esat pārliecināti, ka vēlaties atinstalēt SumatraPDF?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
@@ -4707,6 +4728,7 @@ jv:Shortcut Tandha Buku
 ka:მალსახმობები
 kr:책갈피 바로가기
 ku:نیشانەکردنی کورتە ئایکۆنەکان
+kw:Folennotya Skochfordhow
 lt:Žymių nuorodos
 lv:Grāmatzīmju saīsnes
 mk:Кратенки од обележувачи
@@ -4769,6 +4791,7 @@ ja:ページ %s、ファイル %s に対するショートカットをブック�
 ka:%s-იდან %s გვერდის მალსახმობის ჩანიშვნა
 kr:%s / %s 페이지에 책갈피 바로가기
 ku:%s لە %s نیشانەکردنی کورتەئایکۆن بۆ پەڕە
+kw:Folennotya skochfordhow dhe folen %s a %s
 lt:Žymės nuoroda į puslapį %s iš %s
 lv:Grāmatzīmju saīsne uz %s lappusi no %s
 mk:Кратенки од обележувачи за страница %s од %s
@@ -4834,6 +4857,7 @@ jv:Tandha Buku
 ka:სანიშნები
 kr:책갈피
 ku:نیشانەکراوەکان
+kw:Folennotennow
 lt:Žymės
 lv:Grāmatzīmes
 mk:Обележувачи
@@ -4969,6 +4993,7 @@ jv:Dokumen CHM
 ka:CHM დოკუმენტები
 kr:CHM 문서
 ku:CHM بەڵگەنامەکانی جۆری
+kw:Skrivennow CHM
 lt:CHM dokumentai
 lv:CHM dokumenti
 mk:CHM-документи
@@ -5033,6 +5058,7 @@ jv:Ora iso konek internet (error %#x).
 ka:ინტერნეტთან დაკავშირება ვერ მოხერხდა (შეცდომა %#x).
 kr:인터넷에 접속할 수 없습니다. (%#x 오류)
 ku:.(%#x ناتوانرێت پەیوەندی بکرێت بە ئینتەرنێتەوە (هەڵەی
+kw:Ny yllir junya dhe'n kesrosweyth (gwall %#x).
 lt:Ryšys su internetu nutrūko (klaida %#x).
 lv:Nevar izveidot savienojumu ar internetu (kļūda %#x).
 mk:Не можам да се поврзам на Интернет (грешка %#x).
@@ -5270,6 +5296,7 @@ az:Kursor
 cn:插入号
 co:Cursore
 fr:curseur
+kw:To byghan
 nl:Merkteken
 pl:Kareta
 ru:Курсор
@@ -5420,6 +5447,7 @@ cn:圆
 co:Chjerchju
 el:Κύκλος
 fr:Cercle
+kw:Kylgh
 nl:Cirkel
 pl:Okrąg
 ru:Круг
@@ -5527,6 +5555,7 @@ cn:颜色
 co:Culore
 el:Χρώμα
 fr:Couleur
+kw:Liw
 nl:Kleur
 pl:Kolor
 ru:Цвет
@@ -5568,6 +5597,7 @@ jv:Buku komik
 ka:კომიქსები
 kr:만화 책
 ku:پەرتووکی کۆمیدی
+kw:Bondys Delinys
 lt:Komiksų knygelės
 lv:Komiksu grāmatas
 mk:Стрипови
@@ -5632,6 +5662,7 @@ jv:Kompatibilitas
 ka:თავსებადობა
 kr:호환성
 ku:گونجاو
+kw:Kesplegadewder
 lt:Suderinamumas
 lv:Saderība
 mk:Компатибилност
@@ -5974,6 +6005,7 @@ jv:Nyalin &Gambar
 ka:სურათის &კოპირება
 kr:이미지 복사(&I)
 ku:لەبەرگرتنەوەی &وێنە
+kw:Kopia &Skeusen
 lt:Kopijuoti &paveikslą
 lv:Kopēt &attēlu
 mk:Копирај &слика
@@ -6038,6 +6070,7 @@ ja:リンク先のアドレスをコピー(&L)
 ka:&ბმულის კოპირება
 kr:링크 주소 복사(&L)
 ku:لەبەرگرتنەوەی &ناونیشانی بەستەر
+kw:Kopia Trigva &Kevren
 lt:Kopijuoti &saito adresą
 lv:Kopēt &saites adresi
 mk:Копирај ја адресата на &врската
@@ -6102,6 +6135,7 @@ ja:コメントをコピー(&M)
 ka:კო&მენტარის კოპირება
 kr:주석(설명) 복사(&M)
 ku:لەبەرگرتنەوەی لێد&وانەکان
+kw:Kopia Ka&mpol
 lt:Kopijuoti ko&mentarą
 lv:Kopēt &komentāru
 mk:Копирај коментар
@@ -6167,6 +6201,7 @@ jv:Nyalin teks dibatalno (mung iso nyalin gambar)
 ka:ტექსტის კოპირება აკრძალულია (კოპირდება როგორც სურათი)
 kr:문구 복사가 거부됐습니다. (이미지만 복사합니다.)
 ku:(لەبەرگرتنەوەی دەق ڕەتکرایەوە (تەنها لەبەرگرتنەوەی وێنە
+kw:Ny yllir kopia an tekst (ow kopia avel skeusen hepken)
 lt:Teksto kopijavimas uždraustas (kopijuojamas tik ekrano vaizdas)
 lv:Teksta kopēšana ir liegta (kopē tikai kā attēlu)
 mk:Копирањето на текстот беше одбиено (копирање само во вид на слика)
@@ -6895,6 +6930,7 @@ cn:创建标注
 co:&Scrive un’annutazione
 el:Δημιουργία Σχολίου
 fr:Écrire une annotation
+kw:Gwruthyl Notenyans
 nl:Maak Aantekening
 pl:Utwórz adnotację
 ru:Создать аннотацию
@@ -7070,6 +7106,7 @@ jv:Posisi kursor:
 ka:კურსორის პოზიცია:
 kr:커서 위치:
 ku:شوێنی نیشانەی ماوس:
+kw:Le resor:
 lt:Žymeklio pozicija:
 lv:Kursora pozīcija:
 mk:Местоположба на покажувач:
@@ -7193,6 +7230,7 @@ it:Scuro
 ja:濃色
 jv:Peteng
 kr:어두운
+kw:Tewl
 lt:Tamsi
 lv:Tumšs
 ne:गाढ़ा
@@ -7249,6 +7287,7 @@ it:Più scuro
 ja:黒
 jv:Luwih Peteng
 kr:더 어두운
+kw:Tewlla
 lt:Tamsesnė
 lv:Tumšāks
 ne:अझै गाढ़ा
@@ -7569,6 +7608,7 @@ jv:DjVu dokumen
 ka:DjVu დოკუმენტები
 kr:DjVu 문서
 ku:DjVu بەڵگەنامەکانی
+kw:Skrivennow DjVu
 lt:DjVu dokumentai
 lv:DjVu dokumenti
 mk:DjVu-документи
@@ -7632,6 +7672,7 @@ ja:ドキュメントのプロパティ
 ka:დოკუმენტის თვისებები
 kr:문서 속성
 ku:تایبەتمەندییەکانی بەڵگەنامە
+kw:Gnasow Skriven
 lt:Dokumento savybės
 lv:Dokumenta rekvizīti
 mk:Својства на документ
@@ -7881,6 +7922,7 @@ cn:编辑
 co:Mudificà
 el:Επεξεργασία
 fr:Éditer
+kw:Golegi
 nl:Bewerken
 pl:Edytuj
 ru:Изменить
@@ -7891,6 +7933,7 @@ cn:编辑标注
 co:&Mudificà l’annutazioni
 el:Επεξεργασία Σχολίων
 fr:Éditer les annotations
+kw:Golegi notenyans
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
 ru:Изменить аннотации
@@ -7900,6 +7943,7 @@ az:Əlfəcinlərə düzəliş et
 cn:编辑书签
 co:Mudificà l’indette
 fr:Éditer les marque-pages
+kw:Golegi Folennotennow
 nl:Bewerk Bladwijzers
 pl:Edytuj zakładki
 ru:Изменить закладки
@@ -8144,6 +8188,7 @@ jv:Error loading %s
 ka:ჩატვირთვის შეცდომა %s
 kr:%s (을)를 불러오는 중에 오류가 발생했습니다!
 ku:%s هەڵە ڕوویدا لە کردنەوەی
+kw:Gwall karga %s
 lt:Nepavyko įkelti %s
 lv:%s ielādes kļūda
 mk:Грешка при вчитување %s
@@ -8191,6 +8236,7 @@ hr:Proširi sve
 id:Buka Semua
 it:Espandi tutto
 ja:すべて展開
+kw:Lesa Oll
 lv:Izvērst visu
 nl:Alle Uitvouwen
 pl:Rozwiń wszystko
@@ -8206,6 +8252,7 @@ az:Əlfəcinləri ixrac et
 cn:导出书签
 co:Espurtà l’indette
 fr:Exporter les marque-pages
+kw:Esperthi Folennotennow
 nl:Exporteer Bladwijzers
 pl:Eksportuj zakładki
 ru:Экспорт закладок
@@ -8244,6 +8291,7 @@ ja:お気に入り(&A)
 ka:&რჩეულები
 kr:즐겨찾기(&A)
 ku:پە&سەندەکان
+kw:T&aklow drudh
 lt:&Parankiniai
 lv:Grāmat&zīmes
 mk:Омилени
@@ -8876,6 +8924,7 @@ it:Vista web veloce
 ja:高速ウェブ表示
 kr:빠른 웹 보기
 ku:شێوازی پیشاندانی خێرای ماڵپەر
+kw:Gwel Wias Skav
 lt:Greita peržiūra tinkle
 lv:Ātrais tīmekļa skats
 mk:Брз веб-преглед
@@ -8939,6 +8988,7 @@ jv:Favorit
 ka:რჩეულები
 kr:즐겨찾기
 ku:پەسەندەکان
+kw:Taklow drudh
 lt:Parankiniai
 lv:Grāmatzīmes
 mk:Омилени
@@ -9002,6 +9052,7 @@ ja:フィクション文章
 ka:FictionBook დოკუმენტები
 kr:FictionBook 문서
 ku:FictionBook بەڵگەنامەکانی
+kw:Skrivennow FictionBook
 lt:FictionBook dokumentai
 lv:FictionBook dokumenti
 mk:Документи на FictionBook
@@ -9096,6 +9147,7 @@ am:Ֆայլի կցորդ
 az:Qoşma fayl
 cn:文件附件
 co:Schedariu attaccatu
+kw:Stagel Restren
 nl:Bestands Bijlage
 pl:Załącznik
 ru:Вложенный файл
@@ -9622,6 +9674,7 @@ ja:内容に合わせる(&C)\tCtrl+3
 ka:&შიგთავსის მიხედვით\tCtrl+3
 kr:내용에 맞춤(&C)\tCtrl+3
 ku:گونجاندنی &پێکهاتە\tCtrl+3
+kw:Desedha &Dalgh\tCtrl+3
 lt:Visas puslapio &turinys\tCtrl+3
 lv:Ietilpināt &saturu\tCtrl+3
 mk:Прилагоди на &содржина\tCtrl+3
@@ -9825,6 +9878,7 @@ jv:Pas Isi
 ka:შიგთავსის მიხედვით
 kr:내용에 맞춤
 ku:گونجاندنی پێکهاتە
+kw:Desedha Dalgh
 lt:Visas puslapio turinys
 lv:Ietilpināt saturu
 mk:Прилагоди на содржина
@@ -10090,6 +10144,7 @@ ja:単一のページに合わせる
 ka:გვერდის მორგება ფანჯრის ზომაზე
 kr:한 페이지 맞춤
 ku:گونجاندنی یەک پەڕە
+kw:Desedha Folen Unnik
 lt:Visas puslapis
 lv:Ietilpināt vienā lappusē
 mk:Прилагоди на поединечна страница
@@ -10154,6 +10209,7 @@ ja:フォント:
 ka:შრიფტები
 kr:글꼴:
 ku:فۆنت:
+kw:Fontys:
 lt:Šriftai
 lv:Fonti:
 mk:Букви:
@@ -10216,6 +10272,7 @@ it:Formattazione del libro... %d pagine
 ja:製本中… %d ページ
 kr:%d 페이지 읽어들이는 중...
 ku:پەڕە %d  فۆڕماتکردنی پەڕەکانی پەرتووک ...
+kw:Ow furvasa an lyver... %d folen
 lt:Knyga formatuojama... %d puslapiai
 lv:Grāmatas formatēšana... %d lappuses
 mk:Ја форматирам книгата... %d страници
@@ -10372,6 +10429,7 @@ am:Ազատ գրվածք
 az:İxtiyari mətn
 cn:自定义文本
 co:Testu liberu
+kw:Tekst Rydh
 nl:Vrije Tekst
 pl:Dowolny tekst
 ru:Произвольный текст
@@ -10711,6 +10769,7 @@ am:Գունանշում
 az:Seç
 cn:高亮
 co:Sopralineà
+kw:Golowboyntya
 nl:Markeer
 pl:Wyróżnienie
 ru:Выделение
@@ -10813,6 +10872,7 @@ ja:画像ファイル (*.%s)
 ka:ნახატი ფაილები (*.%s)
 kr:이미지 파일 (*.%s)
 ku:(*.%s) فایلە وێنەییەکان
+kw:Restrennow skeusen (*.%s)
 lt:Grafiniai failai (*.%s)
 lv:Attēlu faili (*.%s)
 mk:Слики (*.%s)
@@ -10845,6 +10905,7 @@ az:Şəkillər
 cn:图像
 co:Fiure
 fr:Images
+kw:Skeusennow
 nl:Afbeeldingen
 pl:Obrazy
 ru:Изображения
@@ -10854,6 +10915,7 @@ am:Թանաք
 az:Mürəkkəb
 cn:墨迹
 co:Inchjostru
+kw:Ynk
 nl:Snelkoppeling
 pl:Atrament
 ru:Чернила
@@ -10895,6 +10957,7 @@ jv:Install SumatraPDF
 ka:SumatraPDF-ის ინსტალაცია
 kr:SumatraPDF 설치
 ku:دابەزاندنی SumatraPDF
+kw:Lea SumatraPDF
 lt:Įdiegti SumatraPDF
 lv:Instalēt SumatraPDF
 mk:Инсталирај SumatraPDF
@@ -10956,6 +11019,7 @@ jv:Install SumatraPDF ning &folder:
 ka:SumatraPDF-ის ინსტალაცია &საქაღალდეში:
 kr:SumatraPDF 설치 폴더(&F):
 ku:لە فۆڵدەری SumatraPDF دابەزاندنی:
+kw:Lea SumatraPDF yn &restren:
 lt:Įdiegti SumatraPDF į &katalogą:
 lv:Instalēt SumatraPDF &mapē:
 mk:Инсталирај SumatraPDF во &папка:
@@ -11080,6 +11144,7 @@ jv:Lagi proses instalasi...
 ka:მიმდინარეობს ინსტალაცია...
 kr:설치하는 중...
 ku:دابەزاندن لە ئەنجامداندایە...
+kw:Ow lea...
 lt:Vyksta programos įdiegimas...
 lv:Notiek instalēšana...
 mk:Инсталирањето е во тек...
@@ -11326,6 +11391,7 @@ id:Terang
 it:Leggero
 ja:淡色
 kr:밝은
+kw:Golow
 lt:Šviesi
 lv:Gaišs
 ne:हल्का
@@ -11355,6 +11421,7 @@ cn:线条
 co:Linea
 el:Γραμμή
 fr:Ligne
+kw:Linen
 nl:Regel
 pl:Linia
 ru:Линия
@@ -11601,6 +11668,7 @@ ja:漫画モード(&G)
 ka:მან&გას რეჟიმი
 kr:만화 방식(&G)
 ku:Man&ga شێوازی
+kw:Modh Man&ga
 lt:Man&ga režimas
 lv:&Manga režīms
 mk:Режим за Man&ga
@@ -11849,6 +11917,7 @@ hr:&Novi prozor\tCtrl+N
 id:&Jendela Baru\tCtrl+N
 it:Nuova &fiestra\tCtrl+N
 ja:新しいウィンドウ (&W)\tCtrl+N
+kw:&Fenester nowydh\tCtrl+N
 lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
 pl:Nowe &okno\tCtrl+N
@@ -11865,6 +11934,7 @@ az:Yeni əlfəcinlər
 cn:新建书签
 co:Nove indette
 fr:Nouveaux marque-pages
+kw:Folennotennow Nowydh
 nl:Nieuwe Bladwijzers
 pl:Nowe zakładki
 ru:Новые закладки
@@ -12304,6 +12374,7 @@ jv:Jumlah Halaman:
 ka:გვერდების რაოდენობა:
 kr:페이지 수:
 ku:ژمارەی پەڕەکان:
+kw:Niver a Folennow:
 lt:Puslapių skaičius:
 lv:Lappušu skaits:
 mk:Број на страници:
@@ -12542,6 +12613,7 @@ am:Բացել ներկառուցված PDF-ը
 az:İç PDF faylını aç
 cn:打开嵌入 PDF
 co:Apre u PDF incurpuratu
+kw:Ygeri PDF Neythys
 nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
 ru:Открыть вложенный PDF
@@ -12644,6 +12716,7 @@ jv:Mbukak ning %s
 ka:%s-ში გახსნა
 kr:%s(으)로 열기
 ku:کردنەوە لە %s
+kw:Ygeri yn %s
 lt:Atidaryti su %s
 lv:Atvērt ar %s
 mk:Отвори во %s
@@ -12963,6 +13036,7 @@ ja:プロパティ(&R)
 ka:&თვისებები...
 kr:속성(&R)
 ku:تایبە&تمەندییەکان
+kw:&Gnasow
 lt:&Savybės
 lv:&Rekvizīti
 mk:&Својства
@@ -13026,6 +13100,7 @@ ja:プロパティ(&R)\tCtrl+D
 ka:&თვისებები...\tCtrl+D
 kr:속성(&R)\tCtrl+D
 ku:تا&یبەتمەندییەکان\tCtrl+D
+kw:&Gnasow\tCtrl+D
 lt:&Savybės\tCtrl+D
 lv:&Rekvizīti\tCtrl+D
 mk:С&војства...\tCtrl+D
@@ -13156,6 +13231,7 @@ ja:PDF 最適化:
 ka:PDF-ის ოპტიმიზაციის ხერხები:
 kr:PDF 최적화:
 ku:PDF ڕێکخستنی:
+kw:Gwellheans PDF
 lt:PDF optimizacijos:
 lv:PDF optimizācija:
 mk:Оптимизации за PDF:
@@ -13218,6 +13294,7 @@ ja:PDF 出力:
 ka:PDF-ის მწარმოებელი:
 kr:PDF 제작자:
 ku:PDF بەرهەمهێنەری:
+kw:Askorrer PDF:
 lt:PDF leidėjas:
 lv:PDF veidotājs:
 mk:PDF-генератор:
@@ -13283,6 +13360,7 @@ jv:Versi PDF
 ka:PDF-ის ვერსია:
 kr:PDF 버전:
 ku::PDF وەشانی
+kw:Versyon PDF:
 lt:PDF versija:
 lv:PDF versija:
 mk:Верзија на PDF:
@@ -13807,6 +13885,7 @@ ja:PalmDoc ドキュメント
 ka:PalmDoc დოკუმენტები
 kr:PalmDoc 문서
 ku:بەڵگە نامەکانی PalmDoc
+kw:Skrivennow PalmDoc
 lt:PalmDoc dokumentai
 lv:PalmDoc dokumenti
 mk:документи на PalmDoc
@@ -13866,6 +13945,7 @@ ja:%s を閉じてください
 ka:გასაგრძელებლად, გთხოვთ, დაუხუროთ %s!
 kr:진행하려면, %s (을)를 닫으세요!
 ku:تکایە %s دابخە بۆ بەردەوامبون!
+kw:Gwra degea %s dhe besya, mar pleg!
 lt:Norėdami tęsti, uždarykite %s!
 lv:Lai turpinātu, lūdzu, aizveriet %s!
 mk:Ве молам затворете го %s, за да продолжите!
@@ -13962,6 +14042,7 @@ am:Բազմագիծ
 az:Qırıq xətt
 cn:折线
 co:Linea tronca
+kw:Lieslinen
 nl:Poly Regel
 pl:Polilinia
 ru:Ломаная
@@ -13971,6 +14052,7 @@ az:Çoxbucaqlı
 cn:多边形
 co:Poligonu
 fr:Polygone
+kw:Liestuek
 nl:Veelhoek
 pl:Wielokąt
 ru:Многоугольник
@@ -14009,6 +14091,7 @@ ja:PostScript ドキュメント
 ka:Postscript დოკუმენტები
 kr:Postscript 문서
 ku:Postscript بەڵگەنامەنکانی
+kw:Skrivennow Postscript
 lt:„PostScript“ dokumentai
 lv:PostScript dokumenti
 mk:Postscript-документи
@@ -14204,6 +14287,7 @@ jv:Nyithak
 ka:ამობეჭდვა
 kr:인쇄
 ku:چاپکردن
+kw:Pryntya
 lt:Spausdinti
 lv:Drukāt
 mk:Печати
@@ -14392,6 +14476,7 @@ jv:Lagi nyithak.
 ka:მიმდინარეობს ბეჭდვა.
 kr:인쇄 작업 중입니다.
 ku:چاپکردن لە ئەنجامداندایە
+kw:Ow pryntya...
 lt:Vyksta spausdinimas
 lv:Notiek drukāšana.
 mk:Печатењето е во тек.
@@ -14808,6 +14893,7 @@ am:Հեռացնել միույթը
 az:Elementi sil
 cn:移除项目
 co:Caccià l’elementu
+kw:Removya Tra
 nl:Verwijder Item
 pl:Usuń element
 ru:Удалить элемент
@@ -14972,6 +15058,7 @@ ja:名前の変更名
 jv:Ganti Jeneng Dadi
 kr:바꿀 이름
 ku:گۆڕینی ناو بۆ
+kw:Dashenwel Dhe
 lt:Pervadinti į
 lv:Pārdēvēt uz
 mk:Преименувај во
@@ -15161,6 +15248,7 @@ hr:Spremi pribilješke
 id:Simpan Catatan
 it:Salva annotazioni
 ja:注釈を保存
+kw:Gwitha Notennow
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
 pl:Zapisz adnotacje
@@ -15246,6 +15334,7 @@ am:Պահպանել ներկառուցված ֆայլը...
 az:İç faylı yadda saxla...
 cn:保存嵌入文件...
 co:Arregistrà u schedariu incurpuratu…
+kw:Gwitha Restren Neythys...
 nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
 ru:Сохранить вложенный файл...
@@ -15284,6 +15373,7 @@ ja:ショートカットを作成(&H)...\tCtrl+Shift+S
 ka:&ჩანიშვნა…\tCtrl+Shift+S
 kr:바로가기 저장(&H)...\tCtrl+Shift+S
 ku:پاراستنی کورتە&ئایکۆن...\tCtrl+Shift+S
+kw:Gwitha S&kochfordh\tCtrl+Shift+S
 lt:Išsaugoti N&uorodą...\tCtrl+Shift+S
 lv:Saglabāt saīs&ni....\tCtrl+Shift+S
 mk:Зачувај &кратенка...\tCtrl+Shift+S
@@ -15410,6 +15500,7 @@ ja:すべて選択(&A)
 ka:ყ&ველას მონიშვნა
 kr:모두 선택(&A)
 ku:دیاریکردنی &هەمووی
+kw:Dewis &Oll
 lt:Pažymėti &viską
 lv:Atlasīt &visu
 mk:Избери сè
@@ -15472,6 +15563,7 @@ ja:すべて選択(&A)\tCtrl+A
 ka:ყ&ველას მონიშვნა\tCtrl+A
 kr:모두 선택(&A)\tCtrl+A
 ku:دیاریکردنی &هەمووی\tCtrl+A
+kw:Dewis &Oll|tCtrl+A
 lt:Pažymėti &viską\tCtrl+A
 lv:Atlasīt &visu\tCtrl+A
 mk:Избери сè\tCtrl+A
@@ -15597,6 +15689,7 @@ it:Seleziona la cartella dove installare SumatraPDF:
 ja:インストール先ディレクトリの選択:
 kr:SumatraPDF를 설치할 폴더 선택:
 ku::SumatraPDF فۆڵدەرێک دیاریبکە بۆ دابەزاندنی
+kw:Dewis an restren le may fynnydh lea SumatraPDF:
 lt:Pasirinkite kur diegti SumatraPDF:
 lv:Atlasiet mapi, kurā ir jāinstalē SumatraPDF
 mk:Изберете ја папката каде што треба да се инсталира SumatraPDF:
@@ -15658,6 +15751,7 @@ it:Selezione
 ja:Selection:
 kr:선택:
 ku:دیاریکراو:
+kw:Dewis:
 lt:Pasirinkimas:
 lv:Atlase:
 mk:Селекција:
@@ -15835,6 +15929,7 @@ hr:Prikaži &oznake\tF12
 id:Tampilkan &Markah\tF12
 it:Visualizza &Segnalibri\tF12
 ja:ブックマークを表示(&B)\tF12
+kw:Diskwedhes &Folennotennow\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
 pl:Pokaż za&kładki\tF12
@@ -15862,6 +15957,7 @@ hr:Prikaži &favorite
 id:Tampilkan &Favorit
 it:Visualizza &Preferiti
 ja:お気に入りを表示(&F)
+kw:Diskwedhes &Taklow Drudh
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
 pl:Pokaż &ulubione
@@ -15941,6 +16037,7 @@ az:&Sürüşdürmə zolaqlarını göstər
 cn:显示滚动条(&S)
 co:&Affissà e barre di sfilarata
 fr:Afficher les &barres  de défilement
+kw:Diskwedhes &Skrolvarrys
 nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
 ru:&Показать ползунки
@@ -16034,6 +16131,7 @@ hr:Prikaži oznake\tF12
 id:Tampilkan &Markah\tF12
 it:Visualizza Segna&libri\tF12
 ja:ブックマークを表示 (&M)\tF12
+kw:Diskwedhes Folen&notennow\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
 pl:Pokaż za&kładki\tF12
@@ -16078,6 +16176,7 @@ ja:お気に入りの表示
 ka:რჩეულების ჩვენება
 kr:즐겨찾기 보이기
 ku:پیشاندانی پەسەندەکان
+kw:Diskwedhes Taklow Drudh
 lt:Rodyti parankinius
 lv:Rādīt &izlasi
 mk:Прикажи омилени
@@ -16110,6 +16209,7 @@ az:Sürüşdürmə &zolaqlarını göstər
 cn:显示滚动条(&O)
 co:&Affissà e barre di sfilarata
 fr:Afficher les barres de &défilement
+kw:Diskwedhes Skr&olvarrys
 nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
 ru:Показать пол&зунки
@@ -16148,6 +16248,7 @@ ja:よく読むファイル一覧を表示
 ka:ხშირად წაკითხულების ჩვენება
 kr:최근에 읽은 파일 보이기
 ku:پیشاندانی زۆرترین خوێنراوەکان
+kw:Diskwedhes redys yn fenowgh
 lt:Rodyti dažniausiai skaitomus
 lv:Rādīt bieži lasītos
 mk:Прикажи често читани
@@ -16195,6 +16296,7 @@ hr:Prikaži u mapi
 id:Tampilkan dalam &folder
 it:Visualizza nella &cartella
 ja:フォルダを表示(&F)
+kw:Diskwedhes yn &restren
 lv:Rādīt &mapē
 nl:Toon in &map
 pl:Pokaż w &folderze
@@ -16480,6 +16582,7 @@ az:Kvadrat
 cn:矩形
 co:Quadratu
 el:Τετράγωνο 
+kw:Pedrek
 nl:Vierkant
 pl:Kwadrat
 ru:Квадрат
@@ -16497,6 +16600,7 @@ am:Կնիք
 az:Möhür
 cn:图章
 co:Stampaghjolu
+kw:Stampa
 nl:Stempel
 pl:Pieczęć
 ru:Печать
@@ -16535,6 +16639,7 @@ ja:SumatraPDFを実行
 ka:SumatraPDF-ის გაშვება
 kr:SumatraPDF 시작
 ku:SumatraPDF دەستپێکردنی
+kw:Dalleth SumatraPDF
 lt:Paleisti SumatraPDF
 lv:Palaist SumatraPDF
 mk:Стартувај SumatraPDF
@@ -16567,6 +16672,7 @@ az:Üstdən xətt
 cn:删除线
 co:Rigà
 fr:Rayer
+kw:Treuslinya
 nl:Doorhalen
 pl:Skreślenie
 ru:Перечёркивание
@@ -16608,6 +16714,7 @@ ja:題名:
 ka:თემა:
 kr:주제:
 ku:سەردێڕ:
+kw:Testen:
 lt:Tema:
 lv:Tēma:
 mk:Предмет:
@@ -16855,6 +16962,7 @@ ja:SumatraPDF の更新
 ka:SumatraPDF-ის განახლება
 kr:SumatraPDF 업데이트
 ku:نوێکردنەوەی SumatraPDF
+kw:Nowedhi SumatraPDF
 lt:„SumatraPDF“ naujinimas
 lv:SumatraPDF atjaunināšana
 mk:Надградување на SumatraPDF
@@ -17197,6 +17305,7 @@ az:SumatraPDF-i dəstəklə
 cn:支持 SumatraPDF
 co:Sustene SumatraPDF
 el:Υποστηρίξτε το SumatraPDF
+kw:Skoodhya SumatraPDF
 nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
 ru:Поддержать SumatraPDF
@@ -17270,6 +17379,7 @@ am:Պիտակ (նախ մեծը)
 az:Teq (əvvəl böyüklər)
 cn:标签 (大的在前)
 co:Etichetta (prima maiò)
+kw:Tagg (meur kynsa)
 nl:Tag (eerst groot)
 pl:Tag (najpierw duży)
 ru:Разметка (сначала большие)
@@ -17278,6 +17388,7 @@ am:Պիտակ (նախ փոքրը)
 az:Teq (əvvəl kiçiklər)
 cn:标签 (小的在前)
 co:Etichetta (prima chjuca)
+kw:Tagg (byghan kynsa)
 nl:Tag (eerst klein)
 pl:Tag (najpierw mały)
 ru:Разметка (сначала маленькие)
@@ -17316,6 +17427,7 @@ it:PDF marcati
 ja:タグ付き PDF
 kr:태그있는 PDF
 ku:ە دیاریکراوەکان PDF
+kw:PDF Taggys
 lt:Pažymėtas PDF
 lv:Atzīmēts PDF
 mk:Означен PDF
@@ -17349,6 +17461,7 @@ cn:文本
 co:Testu
 el:Κείμενο
 fr:Texte
+kw:Tekst
 nl:Tekst
 pl:Tekst
 ru:Текст
@@ -17422,6 +17535,7 @@ az:RA-MICRO PDF-i seçdiyiniz üçün təşəkkür edirik!
 cn:感谢您选择 RA-MICRO PDF！
 co:Vi ringraziemu d’avè sceltu RA-MICRO PDF !
 fr:Merci d'avoir choisi RA6MICRO PDF !
+kw:Meur ras a dhewis RA-MICRO PDF!
 nl:Dank u voor het kiezen van RA-MICRO PDF!
 pl:Dziękujemy za wybranie RA-MICRO PDF!
 ru:Спасибо, что выбрали RA-MICRO PDF!
@@ -17461,6 +17575,7 @@ ja:SumatraPDF を選んで頂きありがとうございます！
 ka:გმადლობთ, რომ აირჩიეთ SumatraPDF!
 kr:SumatraPDF를 선택해 주셔서 고마워요!
 ku:سوپاس بۆ هەڵبژاردنی !SumatraPDF
+kw:Meur ras a dhewis SumatraPDF!
 lt:Ačiū, kad pasirinkote SumatraPDF!
 lv:Pateicamies par SumatraPDF izvēlēšanos!
 mk:Ви благодарам што го одбравте SumatraPDF!
@@ -17521,6 +17636,7 @@ ja:ありがとう！SumatraPDF はインストールされました。
 ka:გმადლობთ! SumatraPDF დაინსტალირდა.
 kr:야호! SumatraPDF가 설치됐습니다.
 ku:سوپاس! SumatraPDF دابەزێنرا.
+kw:Meur ras! SumatraPDF a veu leys.
 lt:Ačiū! SumatraPDF buvo įdiegta.
 lv:Paldies! SumatraPDF ir instalēta.
 mk:Ви благодарам! SumatraPDF е успешно инсталиран.
@@ -17701,6 +17817,7 @@ jv:Judul
 ka:სათაური:
 kr:제목:
 ku:ناونیشان:
+kw:Titel:
 lt:Pavadinimas:
 lv:Nosaukums:
 mk:Наслов:
@@ -17775,6 +17892,7 @@ ja:SumatraPDFをアンインストール
 ka:SumatraPDF-ის დეინსტალაცია
 kr:SumatraPDF 제거
 ku:سڕینەوەی SumatraPDF
+kw:Dilea SumatraPDF
 lt:Pašalinti SumatraPDF
 lv:Atinstalēt SumatraPDF
 mk:Избриши SumatraPDF
@@ -17836,6 +17954,7 @@ ja:アンインストールに失敗
 ka:დეინსტალაცია ვერ მოხერხდა
 kr:제거 실패
 ku:سڕینەوە سەرکەوتو نەبوو
+kw:Dileans a fyllis
 lt:Programos šalinimas nepavyko
 lv:Atinstalēšana neizdevās
 mk:Бришењето не успеа
@@ -17896,6 +18015,7 @@ ja:アンインストール中…
 ka:მიმდინარეობს დეინსტალაცია...
 kr:제거하는 중...
 ku:سڕینەوە لە ئەنجامداندایە...
+kw:Dileans ow pos gwrys...
 lt:Vyksta programos šalinimas...
 lv:Notiek atinstalēšana...
 mk:Бришењето е во тек...
@@ -18020,6 +18140,7 @@ ja:タブを使う(&t)
 ka:ჩა&ნართების გამოყენება
 kr:탭 사용(&T)
 ku:بەکارهێنان &شریتەکان
+kw:Usya &tabbys
 lt:Naudoti k&orteles
 lv:Lietot &cilnes
 mk:Користи &табови
@@ -18079,6 +18200,7 @@ ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしま�
 ka:SumatraPDF-ის &ნაგულისხმევ PDF-ის წამკითხველად გაყენება
 kr:SumatraPDF를 기본 PDF 리더로 사용(&D)
 ku:وەکو خوێنەرەوەی &سەرەکی PDF SumatraPDF بەکارهێنانی
+kw:Usya SumatraPDF avel redyer PDF a dhefowt
 lt:Naudoti SumatraPDF kaip &numatytąją PDF peržiūros programą
 lv:Izmantot SumatraPDF kā &noklusējuma PDF lasītāju
 mk:Користи го SumatraPDF како &основен читач на PDF
@@ -18349,6 +18471,7 @@ ja:XPS ドキュメント
 ka:XPS დოკუმენტები
 kr:XPS 문서
 ku:XPS بەڵگەنامەکانی
+kw:Skrivennow XPS
 lt:XPS dokumentai
 lv:XPS dokumenti
 mk:XPS-документи
@@ -18888,6 +19011,7 @@ jv:nyalin text
 ka:ტექსტი კოპირდება
 kr:문구 복사하는 중...
 ku:لەبەرگرتنەوەی دەق
+kw:ow kopia tekst
 lt:kopijuojamas tekstas
 lv:teksta kopēšana
 mk:копирам текст
@@ -18951,6 +19075,7 @@ ja:印刷するドキュメント
 ka:დოკუმენტი იბეჭდება
 kr:문서 인쇄
 ku:چاپکردنی بەڵگەنامە
+kw:ow pryntya skriven
 lt:spausdinamas dokumentas
 lv:dokumenta drukāšana
 mk:печатам документ
