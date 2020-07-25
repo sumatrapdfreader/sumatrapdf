@@ -4396,7 +4396,7 @@ const char * gTranslations_tw =
   "\346\255\243\345\234\250\345\210\227\345\215\260\346\226\207\344\273\266\0";
 
 const char * gTranslations_kw = 
-  "\0"\
+  "Ny gevir leans %s.\0"\
   "&A-dro dhe...\0"\
   "&Braster gwir\tCtrl+1\0"\
   "Settyansow &avonsys...\0"\
@@ -4407,12 +4407,12 @@ const char * gTranslations_kw =
   "&Kopia Dewis\0"\
   "Dasskrifa Dewis\tCtrl+C\0"\
   "&Na wovyn orthiv arta\0"\
-  "\0"\
+  "Folennow &parow hepken\0"\
   "&A-dal\tCtrl+7\0"\
   "&Restren\0"\
   "&Kavos pyth:\0"\
   "Kynsa Folen\tHome\0"\
-  "\0"\
+  "&Desedha folennow dhe arenebedh pryntyadow\0"\
   "&Mos dhe\0"\
   "&Mos dhe folen:\0"\
   "&Gweres\0"\
@@ -4423,28 +4423,28 @@ const char * gTranslations_kw =
   "Nessa Folen\t->\0"\
   "&Na\0"\
   "&Na, meur ras\0"\
-  "\0"\
-  "\0"\
+  "Folennow &dibarow hepken\0"\
+  "&Ygeri Skriven\0"\
   "&Ygor...\tCtrl+O\0"\
   "&Dewisyow\0"\
   "&Etholyow...\0"\
   "&Ger-tremena:\0"\
-  "\0"\
+  "&Pynna Skriven\0"\
   "Folen kyns\t<-\0"\
   "&Pryntya...\0"\
   "&Pryntya\tCtrl+P\0"\
-  "\0"\
-  "\0"\
+  "&Pryntya... (neghys)\0"\
+  "&Perthi kov a'n ger tremena rag an skriven ma\0"\
   "Gwitha an etholy&ow ma rag pub restren\0"\
-  "\0"\
+  "&Removya A Istori\0"\
   "&Gwitha Avel...\0"\
   "&Gwitha avel...\tCtrl+S\0"\
   "&Settyansow\0"\
-  "\0"\
-  "\0"\
+  "&Lehe folennow dhe arenebedh pryntyadow (mars yw res)\0"\
+  "&Folen Unnik\tCtrl+6\0"\
   "&Tremena an versyon ma\0"\
   "&Thema\0"\
-  "\0"\
+  "&Usya braster folen wreydhek\0"\
   "&Gweles\0"\
   "&Fenester\0"\
   "&Ya\0"\
@@ -4452,7 +4452,7 @@ const char * gTranslations_kw =
   "(a %d)\0"\
   "(%s folen)\0"\
   "A-dro dhe SumatraPDF\0"\
-  "Keworra gwella\0"\
+  "Keworra Tra Drudh\0"\
   "Keworra PDF avel flogh\0"\
   "Keworra PDF avel hwor\0"\
   "Keworra flogh\0"\
@@ -4466,8 +4466,8 @@ const char * gTranslations_kw =
   "Pub skriven skoodhys\0"\
   "Notenyans\0"\
   "Towlen:\0"\
-  "Os ta sur bos hwans dhis dilea %s?\0"\
-  "Os ta sur bos hwans dhis dilea SumatraPDF?\0"\
+  "Os ta sur bos hwans dhis anlea %s?\0"\
+  "Os ta sur bos hwans dhis anlea SumatraPDF?\0"\
   "Keskelmi orth restrennow PDF?\0"\
   "Stagell: %s\0"\
   "Awtour:\0"\
@@ -4488,7 +4488,7 @@ const char * gTranslations_kw =
   "&Checkya rag versyon nowyth\0"\
   "Kylgh\0"\
   "Degea\0"\
-  "\0"\
+  "Byghanhe Oll\0"\
   "Liw\0"\
   "Bondys Delinys\0"\
   "Kesplegadewder\0"\
@@ -4501,17 +4501,17 @@ const char * gTranslations_kw =
   "Kopia Ka&mpol\0"\
   "Ny yllir kopia an tekst (ow kopia avel skeusen hepken)\0"\
   "Gwirpryntyans:\0"\
-  "\0"\
-  "\0"\
+  "Ny yllir kavos gnasow an pryntyer\0"\
+  "Ny yllir gwruthyl an arayel leans\0"\
   "Ny yllys darbari pryntyer\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Ny yllir lea ragweler PDF\0"\
+  "Ny yllir lea sythel hwilas PDF\0"\
+  "Ny yllir removya arayel leans\0"\
   "Ny yllys rendra folen\0"\
-  "\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Ny yllir anlea ragweler PDF\0"\
+  "Ny yllir anlea sythel hwilas Sumatra\0"\
+  "Ny yllir lea ebilyans peurel\0"\
+  "Ny yllir skrifa %s dhe'n disk\0"\
   "Gwruthyl Notenyans\0"\
   "Gwrys:\0"\
   "Restren a-lemmyn\0"\
@@ -4527,14 +4527,14 @@ const char * gTranslations_kw =
   "Gnasow Skriven\0"\
   "Iskarga\0"\
   "&Degea\tCtrl+Q\0"\
-  "\0"\
+  "Kwytya Skrin-leun\0"\
   "E-lyvrow EPUB\0"\
   "Golegi\0"\
   "Golegi notenyans\0"\
   "Golegi Folennotennow\0"\
   "Ri ger-tremena\0"\
   "Ri ger-tremena rag %s\0"\
-  "\0"\
+  "Enter an linen-gorhemmyn dhe'y elwel pan wre'ta klyck dewblek war an skriven PDF:\0"\
   "Gwall karga %s\0"\
   "Lesa Oll\0"\
   "Esperthi Folennotennow\0"\
@@ -4542,16 +4542,16 @@ const char * gTranslations_kw =
   "Yn-rag\tAlt+->\0"\
   "Skrin Leun\tCtrl+Shift+L\0"\
   "A-dal\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Dilea alwedhow kovskrifva anleell\0"\
+  "Kovskrifa avel towlen dhefowt gans Win 10 a fyllis\0"\
+  "Dashenwel an restren a fyllis!\0"\
   "Gwithyans restren a fyllis\0"\
-  "\0"\
-  "\0"\
+  "Skrifa kedhlow ystynnyans restren ynstynnys dhe'n govskrifva a fyllis\0"\
+  "Skrifa an kedhlow anleans dhe'n govskrifva a fyllis!\0"\
   "Gwel Wias Skav\0"\
   "Taklow drudh\0"\
   "Skrivennow FictionBook\0"\
-  "\0"\
+  "Ny gevir restren %s\0"\
   "Stagel Restren\0"\
   "Braster Restren:\0"\
   "Restren:\0"\
@@ -4566,18 +4566,18 @@ const char * gTranslations_kw =
   "Desedha Dalgh\0"\
   "Desedha Folen\0"\
   "Desedha Les\0"\
-  "\0"\
+  "Desedha Les ha Diskwedhes Folennow Heb Aswa\0"\
   "Desedha Folen Unnik\0"\
   "Fontys:\0"\
   "Ow furvasa an lyver... %d folen\0"\
   "Tekst kevys war folen %s\0"\
-  "\0"\
+  "Y hevir tekst orth folen %s (arta)\0"\
   "Tekst Rydh\0"\
-  "\0"\
+  "Redys yn Fenowgh\0"\
   "\0"\
   "Mos dhe folen\0"\
   "Kudha Settyans&ow\0"\
-  "\0"\
+  "Kudha redys yn fenowgh\0"\
   "Golowboyntya\0"\
   "Hynt: Devnydhya alhwedhen F3 rag daskavos\0"\
   "Restrennow skeusen (*.%s)\0"\
@@ -4588,8 +4588,8 @@ const char * gTranslations_kw =
   "Ynstallyans fyllys!\0"\
   "Ow lea...\0"\
   "\0"\
-  "\0"\
-  "\0"\
+  "Gasa Windows Desktop Search dhe &hwilas skrivennow PDF\0"\
+  "Gasa Windows dhe dhiskwedhes &ragwelyow a skrivennow PDF\0"\
   "Golow\0"\
   "Linen\0"\
   "\0"\
@@ -4629,7 +4629,7 @@ const char * gTranslations_kw =
   "Folen %s\0"\
   "Braster Folen:\0"\
   "Nyns eus folen %u\0"\
-  "\0"\
+  "Skeylyans an folen\0"\
   "Folen:\0"\
   "Skrivennow PalmDoc\0"\
   "Gwra degea %s dhe besya, mar pleg!\0"\
@@ -4637,22 +4637,22 @@ const char * gTranslations_kw =
   "Lieslinen\0"\
   "Liestuek\0"\
   "Skrivennow Postscript\0"\
-  "\0"\
+  "Pr&esentyans\tF5\0"\
   "Folen kyns\0"\
   "Pryntya\0"\
-  "\0"\
-  "\0"\
+  "Res pryntya\0"\
+  "Nyns eus pryntyer gans an hanow na\0"\
   "Ow pryntya...\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Ow pryntya hwath. Astel ha kwytya?\0"\
+  "Ow pryntya hwath. Astel ha dastalleth?\0"\
+  "Ow pryntya folen %d a %d...\0"\
   "Kaletter ow pryntya\0"\
   "Dashe&nwel...\tF2\0"\
-  "\0"\
+  "Redaktya\0"\
   "Kovhe restrennow ygerys\0"\
   "Removya Tra\0"\
-  "\0"\
-  "\0"\
+  "Removya a daklow drudh\0"\
+  "Removya folen %s a daklow drudh\0"\
   "Dashenwel Dhe\0"\
   "Treylya a-gledh\tCtrl+Shift+-\0"\
   "Treylya a-dhyhow\tCtrl+Shift++\0"\
@@ -4680,22 +4680,22 @@ const char * gTranslations_kw =
   "Diskwedhes yn &restren\0"\
   "Diskwedhes &amalvar an lyververkyow mars eus onan\0"\
   "Unn folen hepken\0"\
-  "\0"\
-  "\0"\
+  "Drog yw genen, ny dalvia dhe henna hwarvos!\n\nGwra gweskel 'Hedhi', mars eus hwans dhis agan gweres dhe ewnhe skila an droglam.\0"\
+  "Digemyska Gans\0"\
   "Nyns eus poynt kettermynegi vyth y'n restren %s\0"\
   "Pedrek\0"\
-  "\0"\
+  "Igam-ogam\0"\
   "Stampa\0"\
   "Dalleth SumatraPDF\0"\
   "Treuslinya\0"\
   "Testen:\0"\
-  "\0"\
-  "\0"\
+  "Leell %s SumatraPDF\0"\
+  "Anleell %s SumatraPDF\0"\
   "Etholyow SumatraPDF\0"\
   "Nowedhi SumatraPDF\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "SumatraPDF a hedhas distowgh\0"\
+  "SumatraPDF a veu anleys\0"\
+  "Ny yllir trovya leans SumatraPDF.\0"\
   "SumatraPDF yw dha bennredyer PDF\0"\
   "Alemma rag y fydh SumatraPDF dha bennredyer PDF\0"\
   "Skoodhya SumatraPDF\0"\
@@ -4708,13 +4708,13 @@ const char * gTranslations_kw =
   "Meur ras a dhewis RA-MICRO PDF!\0"\
   "Meur ras a dhewis SumatraPDF!\0"\
   "Meur ras! SumatraPDF a veu leys.\0"\
-  "\0"\
-  "\0"\
+  "An leans re beu legrys, Gwra y iskarga arta.\nDrog yw genen a'n ankombrynsi!\0"\
+  "An skriven ma a us nasyow anskoodhys (%s) hag yth yw possybyl na wra hi rendra yn ta\0"\
   "Titel:\0"\
-  "\0"\
-  "Dilea SumatraPDF\0"\
-  "Dileans a fyllis\0"\
-  "Dileans ow pos gwrys...\0"\
+  "Islinya\0"\
+  "Anlea SumatraPDF\0"\
+  "Anleans a fyllis\0"\
+  "Anleans ow pos gwrys...\0"\
   "Restren-bennfenten anaswonnys (%s)\0"\
   "Usya &tabbys\0"\
   "Usya SumatraPDF avel redyer PDF a dhefowt\0"\

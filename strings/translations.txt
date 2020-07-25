@@ -1,11 +1,12 @@
 AppTranslator: SumatraPDF
-c6eed9ece6b59afed88131798485da671674874a
+19fd11c42cd964791e4ef06009213312347fbefa
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
 cn:未找到 %s 安装。
 co:Installazione di %s micca trova.
 fr:%s installation non trouvée
+kw:Ny gevir leans %s.
 nl:%s installatie niet gevonden.
 pl:Nie znaleziono instalacji %s.
 ru:Не удалось найти установку %s.
@@ -722,6 +723,7 @@ jv:&mung kaca genep
 ka:მხოლოდ &ლუწი გვერდები
 kr:짝수 페이지만(&E)
 ku:تەنها پەڕە جووتەکان&
+kw:Folennow &parow hepken
 lt:Tik &lyginiai puslapiai
 lv:Tikai &pāra lappuses
 mk:Само &парни страници
@@ -1054,6 +1056,7 @@ ja:ページを印刷可能領域に合わせる(&F)
 ka:გვერდების ბეჭდვად არეში &განთავსება
 kr:인쇄 영역에 페이지 맞추기(&F)
 ku:گونجاندنی پەڕەکان بۆ شوێنی چاپکردن&
+kw:&Desedha folennow dhe arenebedh pryntyadow
 lt:Pritaikyti puslapių dydį prie spausdinamo ploto
 lv:Ietilpināt lappuses &apdrukājamā zonā
 mk:&Прилагоди страници на зона за печатење
@@ -1798,6 +1801,7 @@ jv:&mung kaca ganjil
 ka:მხოლოდ &კენტი გვერდები
 kr:홀수 페이지만(&O)
 ku:تەنها پەڕە تاکەکان&
+kw:Folennow &dibarow hepken
 lt:&Tik nelyginiai puslapiai
 lv:Tikai &nepāra lappuses
 mk:Само &непарни страници
@@ -1861,6 +1865,7 @@ ja:ドキュメントを開く(&O)
 ka:&დოკუმენტის გახსნა
 kr:문서 열기(&O)
 ku:کردنەوەی بەڵگەنامە&
+kw:&Ygeri Skriven
 lt:&Atverti dokumentą
 lv:&Atvērt dokumentu
 mk:Отвори документ
@@ -2185,6 +2190,7 @@ ja:ドキュメントをピンする&(P)
 ka:დოკუმენიტს &მიმაგრება
 kr:문서 고정(&P)
 ku:دیاریکردنی بەڵگەنامە&
+kw:&Pynna Skriven
 lt:Pasi&žymėti dokumentą
 lv:&Piespraust dokumentu
 mk:Закачи документ
@@ -2382,6 +2388,7 @@ jv:&Nyithak... (dibatalno)
 ka:&ამობეჭდვა... (გაუქმდა)
 kr:인쇄(&P)... (거부됨)
 ku:(چاپکردن... (ڕەتکرایەوە&
+kw:&Pryntya... (neghys)
 lt:&Spausdinti... (neprieinama)
 lv:&Drukāt... (liegts)
 mk:&Печати... (denied)
@@ -2515,6 +2522,7 @@ ja:このドキュメントのパスワードを記憶する(&R)
 ka:ამ დოკუმენტისთვის პაროლის და&მახსოვრება
 kr:이 문서의 비밀번호 기억(&R)
 ku:بیرخستنەوەی تێپەڕە ووشە بۆ ئەم بەڵگەنامەیە&
+kw:&Perthi kov a'n ger tremena rag an skriven ma
 lt:Įsiminti šio dokumento &slaptažodį
 lv:&Atcerēties šī dokumenta paroli
 mk:&Запомни ја лозинката за овој документ
@@ -2612,6 +2620,7 @@ az:Tarixçədən &sil
 cn:从历史记录删除(&R)
 co:&Caccià da a crunulogia
 fr:Supprimer de l'historique
+kw:&Removya A Istori
 nl:V&erwijder uit Geschiedenis
 pl:&Usuń z historii
 ru:&Удалить из истории
@@ -2850,6 +2859,7 @@ ja:必要な場合はページを印刷可能領域に縮小する(&S)
 ka:გვერდების შემცირება ბეჭდვად არეში ჩასატევად (თუ საჭიროა)
 kr:(필요한 경우,) 인쇄 영역에 맞춰 페이지 축소(&S)
 ku:(کورتکردنەوەی پەڕەکان بۆ شوێنی چاپکردن (ئەگەر پێویست بوو&
+kw:&Lehe folennow dhe arenebedh pryntyadow (mars yw res)
 lt:&Sumažinti puslapių dydį iki spausdinamo ploto (jei reikia)
 lv:&Samazināt lappuses līdz apdrukājamai zonai (ja ir nepieciešams)
 mk:&Намали страници според зона за печатење (ако е потребно)
@@ -2912,6 +2922,7 @@ ja:単一ページ(&S)\tCtrl+6
 ka:&თითო გვერდად\tCtrl+6
 kr:한 페이지씩(&S)\tCtrl+6
 ku:پەڕەی تاک&\tCtrl+6
+kw:&Folen Unnik\tCtrl+6
 lt:&Vienas puslapis\tCtrl+6
 lv:&Viena lappuse\tCtrl+6
 mk:Единечна страница\tCtrl+6
@@ -3096,6 +3107,7 @@ ja:元のページ サイズを使用する(&U)
 ka:&გვერდების ორიგინალი ზომის გამოყენება
 kr:원래 페이지 크기 사용(&U)
 ku:بەکارهێنانی قەبارەی ڕاستەقینەی پەڕەکان&
+kw:&Usya braster folen wreydhek
 lt:Na&udoti originalius puslapių dydžius
 lv:&Lietot sākotnējos lappušu izmērus\n
 mk:&Користи оригинални димензии на страници
@@ -3622,7 +3634,7 @@ jv:Nambah Favorit
 ka:რჩეულებში დამატება
 kr:즐겨찾기 추가.
 ku:زیادکردنی بۆ لیستی پەسەندەکان
-kw:Keworra gwella
+kw:Keworra Tra Drudh
 lt:Sukurti žymą
 lv:Pievienošana izlasei
 mk:Додај омилен
@@ -4207,7 +4219,7 @@ az:Əminsiniz ki, %s silmək istəyirsiniz?
 cn:您确定要卸载 %s 吗？
 co:Site sicuru di vulè disinstallà %s ?
 fr:Voulez-vous vraiment désinstaller %s ?
-kw:Os ta sur bos hwans dhis dilea %s?
+kw:Os ta sur bos hwans dhis anlea %s?
 nl:Weet u zeker dat u %s wilt dé-installeren?
 pl:Czy na pewno chcesz odinstalować %s?
 ru:Уверены, что хотите удалить %s?
@@ -4249,7 +4261,7 @@ ja:SumatraPDFを本当にアンインストールしますか？
 jv:Apa panjenengan yakin arep mbusak instalasi SumatraPDF?
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
-kw:Os ta sur bos hwans dhis dilea SumatraPDF?
+kw:Os ta sur bos hwans dhis anlea SumatraPDF?
 lt:Ar tikrai norite pašalinti SumatraPDF?
 lv:Vai jūs esat pārliecināti, ka vēlaties atinstalēt SumatraPDF?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
@@ -5539,6 +5551,7 @@ hr:Sažmi sve
 id:Tutup Semua
 it:Comprimi tutto
 ja:すべて折り畳む
+kw:Byghanhe Oll
 lv:Sakļaut visu
 nl:Alle Samenvouwen
 pl:Zwiń wszystko
@@ -6331,6 +6344,7 @@ ja:プリンターのプロパティを開けませんでした
 ka:პრინტერის თვისებების მიღება ვერ მოხერხდა
 kr:프린터 속성을 가져올 수 없습니다.
 ku:ناتوانرێت تایبەتمەندییەکانی چاپکەر(پرێنتەر) وەربگیرێت
+kw:Ny yllir kavos gnasow an pryntyer
 lt:Spausdintuvo savybių sužinoti nepavyko
 lv:Nevar iegūt printera rekvizītus
 mk:Не можам да дојдам до својствата на печатачот
@@ -6393,6 +6407,7 @@ it:Impossibile creare la cartella di installazione
 ja:インストール先ディレクトリを作成できませんでした
 kr:설치 디렉토리를 만들 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن دروست بکرێت
+kw:Ny yllir gwruthyl an arayel leans
 lt:Nepavyko sukurti įdiegimo katalogo
 lv:Nevarēja izveidot instalācijas direktoriju
 mk:Не можам да ја создадам папката за инсталација
@@ -6520,6 +6535,7 @@ it:Impossibile installare modulo anteprima PDF
 ja:PDF プレビューアをインストールできませんでした
 kr:PDF 미리보기를 설치할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF دابەزێندرێت
+kw:Ny yllir lea ragweler PDF
 lt:Nepavyko įdiegti PDF peržiūros programą
 lv:Nevarēja instalēt PDF priekšskatījumu
 mk:Не можам да инсталирам прикажувачот на PDF
@@ -6582,6 +6598,7 @@ ja:PDF 検索フィルタをインストールできませんでした
 ka:PDF ძიების ფილტრის ინსტალაცია ვერ მოხერხდა
 kr:PDF 검색 필터를 설치할 수 없습니다.
 ku:ناتوانرێت فرمانی گەڕانی PDF دابەزێندرێت
+kw:Ny yllir lea sythel hwilas PDF
 lt:Nepavyko įdiegti PDF paieškos filtro
 lv:Nevarēja instalēt PDF meklēšanas filtru
 mk:Не можам да инсталирам филтер за пребарување на PDF
@@ -6643,6 +6660,7 @@ it:Impossibile rimuovere la cartella di installazione
 ja:インストール先ディレクトリを削除できませんでした
 kr:설치 디렉토리를 제거할 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن لابدرێت
+kw:Ny yllir removya arayel leans
 lt:Nepavyko pašalinti įdiegimo katalogo
 lv:Nevarēja noņemt instalācijas direktoriju
 mk:Не можам да ја избришам инсталационата папка
@@ -6767,6 +6785,7 @@ it:Impossibile disinstallare modulo anteprima PDF
 ja:PDF プレビューアをアンインストールできませんでした
 kr:PDF 미리보기를 제거할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF بسڕدرێتەوە
+kw:Ny yllir anlea ragweler PDF
 lt:Nepavyko pašalinti PDF peržiūros programos
 lv:Nevarēja atinstalēt PDF priekšskatījumu
 mk:Не можам да го избришам прикажувачот на PDF
@@ -6798,6 +6817,7 @@ am:Հնարավոր չեղավ ապատեղադրել Sumatra որոնման զ�
 az:Sumatra axtarış filtrini silmək mümkün olmadı
 cn:无法卸载 Sumatra 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di Sumatra
+kw:Ny yllir anlea sythel hwilas Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 ru:Не удалось удалить фильтр поиска Sumatra
@@ -6837,6 +6857,7 @@ ja:ブラウザプラグインをアンインストールできませんでし�
 ka:ბრაუზერის დანამატის დეინსტალაცია ვერ მოხერხდა
 kr:브라우저 플러그인을 제거할 수 없습니다.
 ku:ناتوانرێت پێوەکراوی وێبگەڕ بسڕدرێتەوە
+kw:Ny yllir lea ebilyans peurel
 lt:Nepavyko pašalinti naršyklės įskiepio
 lv:Nevarēja atinstalēt pārlūkprogrammas spraudni
 mk:Не можам да го избришам додатокот за прелистувачи
@@ -6897,6 +6918,7 @@ it:Impossibile scrivere %s nel disco.
 ja:%s をディスクに書き込めませんでした
 kr:%s(을)를 디스크에 쓸 수 없습니다.
 ku:بخوێندرێتەوە بۆ دیسک %s ناتوانرێت
+kw:Ny yllir skrifa %s dhe'n disk
 lt:Nepavyko %s įrašyti į diską
 lv:Nevarēja rakstīt %s diskā
 mk:Не можам да ја снимам %s на диск
@@ -7774,6 +7796,7 @@ cn:退出全屏(&X)
 co:&Esce di u modu screnu sanu
 el:Έξοδος από την πλήρη οθόνη
 fr:&Quitter le mode plein écran
+kw:Kwytya Skrin-leun
 nl:Volledig scherm uit
 pl:W&yjdź z trybu pełnoekranowego
 ru:&Выйти из полноэкранного режима
@@ -8124,6 +8147,7 @@ ja:PDF ドキュメント上でダブルクリックしたときに呼び出す�
 ka:შეიყვანეთ ბრძანების სტრიქონი რომლის გამოძახებაც PDF დოკუმენტზე ორჯერ დაწპაკუნების შემდეგ გსურთ:
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 ku:کرا PDF فرمانی هێڵ بنوسە بۆ یارمەتیدان کاتێک دوو کلیک لەسەر بەڵگەنامەی:
+kw:Enter an linen-gorhemmyn dhe'y elwel pan wre'ta klyck dewblek war an skriven PDF:
 lt:Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
 lv:Ievadiet komandrindu, izsaucamu ar dubultklikšķi uz PDF dokumenta:
 mk:Внесете команда, за да се извршува при секое двојно кликнунвање на PDF-документот:
@@ -8558,6 +8582,7 @@ it:Impossibile rimuovere chiavi registro
 ja:アンインストーラのレジストリキーを削除するのに失敗しました
 kr:레지스트리 키를 삭제하지 못했습니다.
 ku:سڕینەوەی پاشکۆ و کلیلەکانی ڕیگستری سەرکەتو نەبوو
+kw:Dilea alwedhow kovskrifva anleell
 lt:Nepavyko ištrinti šalinimo programos registro raktų
 lv:Neizdevās izdzēst atinstalēšanas programmas reģistra atslēgas
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
@@ -8616,6 +8641,7 @@ id:Gagal mengatur sebagai aplikasi Windows 10
 it:Impossibile registrare come programma predefinito su Win 10\n
 ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
 kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
+kw:Kovskrifa avel towlen dhefowt gans Win 10 a fyllis
 lt:Nepavyko programos padaryti numatytąja Windows 10 sistemoje
 lv:Neizdevās reģistrēt kā noklusējuma programmu Windows 10 vidē
 ne:Win 10 मा पूर्वनिर्धारित कार्यक्रमको रूपमा दर्ता गर्न असफल भयो
@@ -8675,6 +8701,7 @@ jv:Ora iso njenengi berkas!
 ka:ფაილის გადარქმევა ვერ მოხერხდა!
 kr:파일 이름을 바꾸지 못했습니다!
 ku:گۆڕینی ناوی فایل سەرکەوتونەبوو!
+kw:Dashenwel an restren a fyllis!
 lt:Nepavyko pervadinti failo!
 lv:Neizdevās pārdēvēt failu!
 mk:Не успеав да ја преименувам датотеката!
@@ -8804,6 +8831,7 @@ it:Impossibile scrivere nel registro l'informazione dettagliata dell'estensione 
 ja:拡張子情報をレジストリに書き込むのに失敗しました
 kr:확장된 파일의 확장자 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو لە ڕیگستریدا
+kw:Skrifa kedhlow ystynnyans restren ynstynnys dhe'n govskrifva a fyllis
 lt:Nepavyko į registrą įrašyti išplėstinės failo plėtinio informacijos
 lv:Neizdevās ierakstīt failu paplašinājumu informāciju reģistrā
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
@@ -8863,6 +8891,7 @@ it:Impossibile scrivere nel registro le informazioni di disinstallazione
 ja:アンインストール情報をレジストリに書き込むのに失敗しました
 kr:제거 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری سڕینەوە سەرکەوتو نەبوو لە ڕیگستریدا
+kw:Skrifa an kedhlow anleans dhe'n govskrifva a fyllis!
 lt:Nepavyko į registrą įrašyti programos šalinimo informacijos
 lv:Neizdevās ierakstīt atinstalēšanas informāciju reģistrā
 mk:Не успеав да ги запишам информациите за деинсталаторот во регистарот
@@ -9116,6 +9145,7 @@ jv:File %s ora ketemu
 ka:%s ფაილი ვერ მოიძებნა
 kr:%s 파일을 찾을 수 없습니다.
 ku:نەدۆزرایەوە %s فایلی
+kw:Ny gevir restren %s
 lt:Failas %s nerastas
 lv:Fails %s nav atrasts
 mk:Датотеката %s не е најдена
@@ -10081,6 +10111,7 @@ ja:幅に合わせて連続してページを表示する
 ka:ფანჯრის სიგანეზე მორგება და გვერდების შეუწყვეტლივ ჩვენება
 kr:지속적인 너비 맞춤과 페이지 보기
 ku:گونجاندنی فراوانی و پیشاندانی پەڕەکان بە بەردەوامی
+kw:Desedha Les ha Diskwedhes Folennow Heb Aswa
 lt:Visas puslapio plotis, nenutrūkstama peržiūra
 lv:Ietilpināt platumu un rādīt lappuses nepārtraukti
 mk:Прилагоди на широчина и прикажи страници непрекинато
@@ -10398,6 +10429,7 @@ ja:%s ページに指定された文字列が見つかりました（一周）
 ka:ტექსტი ნაპოვნია %s გვერდზე (ხელახლა)
 kr:%s 페이지에서 (다시) 문자열 찾음
 ku:(دەق دۆزرایەوە لە پەڕەکەدا (دووبارە %s
+kw:Y hevir tekst orth folen %s (arta)
 lt:Rastas tekstas %s puslapyje (vėl)
 lv:%s lappusē atrasts teksts (vēlreiz)
 mk:Пронајдов текст на страница %s (повторно)
@@ -10469,6 +10501,7 @@ ja:よく読むファイル
 ka:ბოლოს წაკითხული დოკუმენტები
 kr:최근에 읽은 파일
 ku:زۆرترین خوێندراوە
+kw:Redys yn Fenowgh
 lt:Dažniausiai skaitomi
 lv:Biežāk lasītie
 mk:Често читани
@@ -10738,6 +10771,7 @@ jv:Delikno sing asring diwoco
 ka:ბოლოს წაკითხული დოკუმენტების დამალვა
 kr:최근에 읽은 파일 감추기
 ku:شاردنەوەی زۆر خوێندراوەکان
+kw:Kudha redys yn fenowgh
 lt:Nerodyti dažniausiai skaitomų
 lv:Slēpt biežāk lasītos
 mk:Сокриј често читани
@@ -11275,6 +11309,7 @@ it:Permetti a Windows Desktop Search di cercare i documenti PDF
 ja:Windows デスクトップ サーチの PDF ドキュメント検索を許可する(&s)
 kr:Windows 데스크톱 검색에 PDF 문서 검색 기능 추가(&S)
 ku:PDF ڕێگەدان بە گەڕانی سەرشاشەی ویندۆز &بگەڕێت بۆ بەڵگەنامەکانی
+kw:Gasa Windows Desktop Search dhe &hwilas skrivennow PDF
 lt:Leisti Windows Desktop Search &ieškoti PDF dokumentų
 lv:&Meklēt PDF dokumentus ar Windows Desktop Search
 mk:Дозволи Windows Desktop Search да пребарува низ PDF-документи
@@ -11334,6 +11369,7 @@ it:Permetti a Windows di visualizzare l'anteprima dei documenti PDF
 ja:Windows の PDF ドキュメントプレビューを許可する(&p)
 kr:Windows 에 PDF 문서 미리보기 기능 추가(&P)
 ku:پیشان بدات PDF ڕێگەدان بە پیشاندەری ویندۆز &بەڵگەنامەکانی
+kw:Gasa Windows dhe dhiskwedhes &ragwelyow a skrivennow PDF
 lt:Leisti Windows rodyti PDF dokumentų &peržiūras
 lv:Ļaut Windows rādīt PDF dokumentu &priekšskatījumus
 mk:Дозволи Windows да прикажува слики за PDF-документи
@@ -13753,6 +13789,7 @@ ja:ページの拡大縮小
 ka:გვერდის მასშტაბირება
 kr:페이지 배율 조정
 ku:ڕیزکردنی پەڕەکان
+kw:Skeylyans an folen
 lt:Puslapio mastelis
 lv:Lappuses mērogošana
 mk:Размер на страница
@@ -14153,6 +14190,7 @@ ja:プレゼンテーション(&E)\tCtrl+L
 ka:წარმოდგ&ენა\tCtrl+L
 kr:프리젠테이션(&E)\tCtrl+L
 ku:پڕ& بە شاشە بەبێ شریتی ئامرازەکان\tCtrl+L
+kw:Pr&esentyans\tF5
 lt:&Pateiktis\tCtrl+L
 lv:Prezentācija\tF5
 mk:Презентација\tCtrl+L
@@ -14351,6 +14389,7 @@ ja:印刷範囲
 ka:ბეჭდვის დიაპაზონი
 kr:인쇄 범위
 ku:زنجیرەی چاپکردن
+kw:Res pryntya
 lt:Spausdinimo intervalas
 lv:Drukas diapazons
 mk:Опсег за печатење
@@ -14413,6 +14452,7 @@ ja:指定されたプリンタが見つかりません
 ka:მოცემული სახელის მქონე პრინეტრი არ არსებობს
 kr:지정된 이름의 프린터가 없습니다.
 ku:هیچ چاپکەرێک بەو ناوە بوونی نیە
+kw:Nyns eus pryntyer gans an hanow na
 lt:Spausdintuvo tokiu vardu nėra
 lv:Printeris ar šādu nosaukumu nepastāv
 mk:Не постои печатач со зададеното име
@@ -14538,6 +14578,7 @@ it:La stampa è ancora in corso. Interrompere e uscire?
 ja:印刷を実行中です。中止して終了しますか？
 kr:아직 인쇄가 진행 중입니다.  중단하고 끝낼까요?
 ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان و دەرچوون؟
+kw:Ow pryntya hwath. Astel ha kwytya?
 lt:Spausdinimas vis dar vyksta. Nutraukti ir išeiti?
 lv:Vēl joprojām notiek drukāšana. Priekšlaikus pārtraukt un beigt?
 mk:Печатењето е сè уште во тек. Да го поништам и прекинам?
@@ -14599,6 +14640,7 @@ ja:印刷は既に実行されています。中止または再実行します�
 ka:მიმდინარეობს ამობეჭდვა. გსურთ გაუქმება და ხელახლა დაწყება?
 kr:아직 인쇄가 진행 중입니다.  중단하고 다시 시작할까요?
 ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان و دەستپێکردنەوە؟
+kw:Ow pryntya hwath. Astel ha dastalleth?
 lt:Spausdinimas dar nebaigtas. Ar norite jį nutraukti ir pradėti iš naujo?
 lv:Vēl joprojām notiek drukāšana. Priekšlaikus pārtraukt un sākt no jauna?
 mk:Печатењето трае сè уште. Да го запрам и да почнам одново?
@@ -14660,6 +14702,7 @@ ja:%d / %d ページ目を印刷中...
 ka:მიმდინარეობს %d (%d-იდან) გვერდის ამობეჭდვა...
 kr:%d / %d 페이지 인쇄하는 중...
 ku:%d پەڕە لە %d چاپکردنی...
+kw:Ow pryntya folen %d a %d...
 lt:Spausdinamas %d puslapis iš %d...
 lv:Drukā %d lappusi no %d...
 mk:Печатење на страница %d од %d...
@@ -14822,6 +14865,7 @@ am:Փոփոխել
 az:Düzəliş et
 cn:编辑
 co:Redige
+kw:Redaktya
 nl:Redigeren
 pl:Redaguj
 :Remember &opened files
@@ -14934,6 +14978,7 @@ ja:お気に入りから削除
 ka:რჩეულებიდან წაშლა
 kr:즐겨찾기에서 제거
 ku:لابردن لە پەسەندەکاندا
+kw:Removya a daklow drudh
 lt:Pašalinti iš parankinių
 lv:Noņemt no izlases
 mk:Отстрани од омилени
@@ -14995,6 +15040,7 @@ ja:ページ %s をお気に入りから削除
 ka:%s გვერდის წაშლა რჩეულებიდან
 kr:즐겨찾기에서 %s 페이지 제거
 ku:لە لیستی پەسەندەکاندا %s لابردنی پەڕەی
+kw:Removya folen %s a daklow drudh
 lt:Pašalinti %s puslapį iš parankinių
 lv:Noņemt %s lappusi no izlases
 mk:Отстрани страница %s од омилени
@@ -16474,6 +16520,7 @@ ja:謎のエラーが発生しました！\n\n「キャンセル」をクリッ�
 ka:ბოდიშს გიხდით, ეს არ უნდა მომხდარიყო!\n\nთუ გსურთ რომ დაგვეხმაროთ ამ პრობლემის მოგვარებაში, გთხოვთ დააწკაპუნეთ ღილაკს 'გაუქმება'.
 kr:미안합니다, 그런 일이 일어날 리가 없는데!\n\n이 충돌의 원인을 해결하는데 도움을 주려면, '취소'를 누르세요.
 ku:تکایە کلیک لەسەر 'پاشگەزبونەوە' ، بکە ئەگەر ئەتەوێ یارمەتیدەرمان بیت لە جارەسەرکردنی ئەم کێشەیە\n\n !ببورە، لە ڕوودانی ئەم کێشەیە
+kw:Drog yw genen, ny dalvia dhe henna hwarvos!\n\nGwra gweskel 'Hedhi', mars eus hwans dhis agan gweres dhe ewnhe skila an droglam.
 lt:Apgailestaujame, taip neturėjo nutikti!\n\nSpustelėkite „Atsisakyti“, jeigu norite mums padėti pašalinti šios strigties priežastį.
 lv:Piedodiet, šim nevajadzēja notikt!\n\nLūdzu, spiediet 'Atcelt', ja jūs vēlaties mums palīdzēt novērst šīs kļūmes cēloni.
 mk:Извинете, ова не требаше да се случи!\n\nДоколку сакате да ни помогнете да го отстраниме овој проблем, Ве молам изберете 'Откажи'.
@@ -16508,6 +16555,7 @@ cn:排序
 co:Classificà da
 el:Ταξινόμηση κατά
 fr:Classer
+kw:Digemyska Gans
 nl:Sorteer Op
 pl:Sortuj według
 ru:Сортировать по
@@ -16592,6 +16640,7 @@ am:Ալիքավոր
 az:Dalğalı xətt
 cn:波浪线
 co:Undulatu
+kw:Igam-ogam
 nl:Kronkelig
 pl:Falowanie
 ru:Волнистая линия
@@ -16777,6 +16826,7 @@ it:Installazione SumatraPDF %s
 ja:SumatraPDF %s インストーラ
 kr:SumatraPDF %s 설치 관리자
 ku:SumatraPDF %s دابەزاندنی
+kw:Leell %s SumatraPDF
 lt:SumatraPDF diegimo programa %s
 lv:SumatraPDF %s instalēšanas programma
 mk:Инсталација на SumatraPDF %s
@@ -16836,6 +16886,7 @@ it:Disinstallazione SumatraPDF %s
 ja:SumatraPDF %s アンインストーラ
 kr:SumatraPDF %s 제거 관리자
 ku:SumatraPDF %s سڕینەوەی
+kw:Anleell %s SumatraPDF
 lt:SumatraPDF šalinimo programa %s
 lv:SumatraPDF %s atinstalēšanas programma
 mk:Деинсталација на SumatraPDF %s
@@ -17026,6 +17077,7 @@ jv:SumatraPDF ora mlaku
 ka:SumatraPDF-ის მუშაობა ავარიულად დასრულდა
 kr:SumatraPDF 충돌남
 ku:تێکچوو SumatraPDF
+kw:SumatraPDF a hedhas distowgh
 lt:„SumatraPDF“ strigo
 lv:SumatraPDF avarēja
 mk:SumatraPDF се сруши
@@ -17086,6 +17138,7 @@ it:SumatraPDF è stato completamente disinstallato.
 ja:SumatraPDF がアンインストールされました。
 kr:SumatraPDF가 제거됐습니다.
 ku:.سڕایەوە SumatraPDF
+kw:SumatraPDF a veu anleys
 lt:SumatraPDF buvo pašalinta.
 lv:SumatraPDF ir atinstalēta.
 mk:SumatraPDF е избришан.
@@ -17145,6 +17198,7 @@ it:Installazione SumatraPDF non trovata.
 ja:SumatraPDFのインストール情報を見つけられません
 kr:SumatraPDF 설치 파일을 찾을 수 없습니다.
 ku:.نەدۆزرایەوە SumatraPDF دابەزێنەری
+kw:Ny yllir trovya leans SumatraPDF.
 lt:SumatraPDF įdiegimas nerastas.
 lv:SumatraPDF instalācija nav atrasta.
 mk:Не најдов инсталации на SumatraPDF.
@@ -17696,6 +17750,7 @@ it:Il programma di installazione è danneggiato. Riscaricalo nuovamente.\nSiamo 
 ja:インストーラが破損しています。もう一度ダウンロードしてください。\nご不便をおかけし、申し訳ありません。
 kr:설치 관리자가 손상됐습니다.  다시 다운로드하세요.\n불편하게 해서 미안합니다!
 ku:دابەزێنەر تێکچووە. تکایە دووبارە دایبگرەوە.\nببورە لە ڕوودانی ئەو هەڵەیە!
+kw:An leans re beu legrys, Gwra y iskarga arta.\nDrog yw genen a'n ankombrynsi!
 lt:Diegimo programa sugadinta. Prašome atsisiųsti ją iš naujo.\nAtsiprašome už nepatogumus!
 lv:Instalēšanas programma ir bijusi bojāta. Lūdzu, lejupielādējiet to vēlreiz.\nPiedodiet par sagādātajām neērtībām!
 mk:Датотеката за инсталирање е расипана. Ве молам преземете ја повторно.\nИзвинете на незгодата!
@@ -17755,6 +17810,7 @@ it:Questo documento usa funzioni non supportate (%s) e potrebbe non essere visua
 ja:このドキュメントはサポートしていない機能(%s)を使用しているため、正しく描画できない可能性があります
 kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌더링되지 않을 수 있습니다.
 ku:ئەم بەڵگەنامەیە خزمەتگوزاری نەگونجاوی تێدایە  (%s) لەوانەیە بەباشی دەرنەکەێت
+kw:An skriven ma a us nasyow anskoodhys (%s) hag yth yw possybyl na wra hi rendra yn ta
 lt:Šis dokumentas naudoja nepalaikomas funkcijas (%s) ir gali būti atvaizduotas neteisingai
 lv:Šajā dokumentā ir izmantotas neatbalstītas iespējas (%s), un iespējams, netiek atveidots pareizi
 ne:यो कागजातले असमर्थित सुविधा प्रयोग गर्छ (%s) र सहि रुपमा प्रस्तुत नहुन सक्छ
@@ -17854,6 +17910,7 @@ cn:下划线
 co:Sottulineatu
 el:Υπογράμμιση 
 fr:Souligner
+kw:Islinya
 nl:Onderstrepen
 pl:Podkreślenie
 ru:Подчёркивание
@@ -17892,7 +17949,7 @@ ja:SumatraPDFをアンインストール
 ka:SumatraPDF-ის დეინსტალაცია
 kr:SumatraPDF 제거
 ku:سڕینەوەی SumatraPDF
-kw:Dilea SumatraPDF
+kw:Anlea SumatraPDF
 lt:Pašalinti SumatraPDF
 lv:Atinstalēt SumatraPDF
 mk:Избриши SumatraPDF
@@ -17954,7 +18011,7 @@ ja:アンインストールに失敗
 ka:დეინსტალაცია ვერ მოხერხდა
 kr:제거 실패
 ku:سڕینەوە سەرکەوتو نەبوو
-kw:Dileans a fyllis
+kw:Anleans a fyllis
 lt:Programos šalinimas nepavyko
 lv:Atinstalēšana neizdevās
 mk:Бришењето не успеа
@@ -18015,7 +18072,7 @@ ja:アンインストール中…
 ka:მიმდინარეობს დეინსტალაცია...
 kr:제거하는 중...
 ku:سڕینەوە لە ئەنجامداندایە...
-kw:Dileans ow pos gwrys...
+kw:Anleans ow pos gwrys...
 lt:Vyksta programos šalinimas...
 lv:Notiek atinstalēšana...
 mk:Бришењето е во тек...
