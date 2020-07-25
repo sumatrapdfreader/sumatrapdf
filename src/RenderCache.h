@@ -9,6 +9,8 @@ constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 2;
 #define MAX_PAGE_REQUESTS 8
 // keep this value reasonably low, else we'll run out of
 // GDI resources/memory when caching many larger bitmaps
+// TODO: this should be based on amount of memory taken by rendered pages
+// i.e. one big page can use as much memory as lots of small pages 
 #define MAX_BITMAPS_CACHED 64
 
 class RenderingCallback {
@@ -105,6 +107,9 @@ class RenderCache {
     COLORREF textColor = 0;
     COLORREF backgroundColor = 0;
 
+    /* Interface for page rendering thread */
+    HANDLE startRendering = nullptr;
+
     RenderCache();
     RenderCache(RenderCache const&) = delete;
     RenderCache& operator=(RenderCache const&) = delete;
@@ -114,18 +119,13 @@ class RenderCache {
     void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect, RenderingCallback& callback);
     void CancelRendering(DisplayModel* dm);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = INVALID_ZOOM, TilePosition* tile = nullptr);
-    void FreeForDisplayModel(DisplayModel* dm) {
-        FreePage(dm);
-    }
+    void FreeForDisplayModel(DisplayModel* dm);
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);
     void Invalidate(DisplayModel* dm, int pageNo, RectF rect);
     // returns how much time in ms has past since the most recent rendering
     // request for the visible part of the page if nothing at all could be
     // painted, 0 if something has been painted and RENDER_DELAY_FAILED on failure
     int Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo, bool* renderOutOfDateCue);
-
-    /* Interface for page rendering thread */
-    HANDLE startRendering = nullptr;
 
     bool ClearCurrentRequest();
     bool GetNextRequest(PageRenderRequest* req);
@@ -151,9 +151,7 @@ class RenderCache {
                            TilePosition* tile = nullptr);
     bool DropCacheEntry(BitmapCacheEntry* entry);
     void FreePage(DisplayModel* dm = nullptr, int pageNo = -1, TilePosition* tile = nullptr);
-    void FreeNotVisible() {
-        FreePage();
-    }
+    void FreeNotVisible();
 
     int PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
                   bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);

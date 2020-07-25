@@ -6,6 +6,7 @@
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
 #include "utils/Log.h"
+#include "utils/LogDbg.h"
 
 #include "wingui/TreeModel.h"
 
@@ -31,6 +32,9 @@
 bool gShowTileLayout = false;
 
 RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)}) {
+    // enable when debugging RenderCache logic
+    // gEnableDbgLog = true;
+
     isRemoteSession = GetSystemMetrics(SM_REMOTESESSION);
     textColor = WIN_COL_BLACK;
     backgroundColor = WIN_COL_WHITE;
@@ -89,40 +93,48 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     if (!entry) {
         return false;
     }
-    CrashIf(entry->cacheIdx < 0);
-    CrashIf(entry->cacheIdx >= cacheCount);
+    int idx = entry->cacheIdx;
+    CrashIf(idx < 0);
+    CrashIf(idx >= cacheCount);
+    if ((idx < 0) || (idx >= cacheCount)) {
+        return false;
+    }
     CrashIf(entry->refs <= 0);
     --entry->refs;
     if (entry->refs > 0) {
         return false;
     }
     CrashIf(entry->refs != 0);
-    int idx = entry->cacheIdx;
     CrashIf(cache[idx] != entry);
+    dbglogf("RenderCache::DropCacheEntry: pageNo: %d, rotation: %d, zoom: %.2f\n", entry->pageNo, entry->rotation,
+            entry->zoom);
 
     delete entry;
+
+    // fast removal by replacing freed item with the item at the end
     cache[idx] = nullptr;
     int lastIdx = cacheCount - 1;
-    if (idx != lastIdx) {
+    if ((lastIdx >= 0) && (idx != lastIdx)) {
         cache[idx] = cache[lastIdx];
-        cache[lastIdx] = nullptr;
         cache[idx]->cacheIdx = idx;
+        cache[lastIdx] = nullptr;
     }
     cacheCount--;
     CrashIf(cacheCount < 0);
     return true;
 }
 
-static bool FreeIfFull(RenderCache* rc, PageRenderRequest& req) {
+static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
     int n = rc->cacheCount;
     if (n < MAX_BITMAPS_CACHED) {
         return true;
     }
 
+    DisplayModel* dm = req.dm;
     // free an invisible page of the same DisplayModel ...
     for (int i = 0; i < n; i++) {
         auto entry = rc->cache[i];
-        if (entry->dm == req.dm && !req.dm->PageVisibleNearby(entry->pageNo)) {
+        if (entry->dm == dm && !dm->PageVisibleNearby(entry->pageNo)) {
             bool didDrop = rc->DropCacheEntry(entry);
             if (didDrop) {
                 return true;
@@ -133,6 +145,11 @@ static bool FreeIfFull(RenderCache* rc, PageRenderRequest& req) {
     // ... or just the oldest cached page
     for (int i = 0; i < n; i++) {
         auto entry = rc->cache[i];
+        if (entry->dm == dm) {
+            // don't free pages from the document we're currently displaying
+            // as it leads to flicker
+            continue;
+        }
         bool didDrop = rc->DropCacheEntry(entry);
         if (didDrop) {
             return true;
@@ -219,6 +236,7 @@ static bool IsTileVisible(DisplayModel* dm, int pageNo, TilePosition tile, float
 /* Free all bitmaps in the cache that are of a specific page (or all pages
    of the given DisplayModel, or even all invisible pages). */
 void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
+    dbglogf("RenderCache::FreePage: dm: 0x%p, pageNo: %d\n", dm, pageNo);
     ScopedCritSec scope(&cacheAccess);
 
     // must go from end becaues freeing changes the cache
@@ -250,6 +268,14 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
             DropCacheEntry(entry);
         }
     }
+}
+
+void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
+    FreePage(dm);
+}
+
+void RenderCache::FreeNotVisible() {
+    FreePage();
 }
 
 // keep the cached bitmaps for visible pages to avoid flickering during a reload.
@@ -339,7 +365,7 @@ USHORT RenderCache::GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation) {
 
 // reduce the size of tiles in order to hopefully use less memory overall
 bool RenderCache::ReduceTileSize() {
-    fprintf(stderr, "RenderCache: reducing tile size (current: %d x %d)\n", maxTileSize.dx, maxTileSize.dy);
+    dbglogf("RenderCache::ReduceTileSize(): reducing tile size (current: %d x %d)\n", maxTileSize.dx, maxTileSize.dy);
     if (maxTileSize.dx < 200 || maxTileSize.dy < 200) {
         return false;
     }
@@ -384,6 +410,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 
 /* Render a bitmap for page <pageNo> in <dm>. */
 void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage) {
+    dbglogf("RenderCache::RequestRendering(): pageNo %d\n", pageNo);
     ScopedCritSec scope(&requestAccess);
     CrashIf(!dm);
     if (!dm || dm->dontRenderFlag) {
@@ -448,6 +475,7 @@ void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
 
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
                          RenderingCallback* renderCb) {
+    dbglogf("RenderCache::Render(): pageNo %d\n", pageNo);
     CrashIf(!dm);
     if (!dm || dm->dontRenderFlag) {
         return false;
@@ -835,6 +863,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         }
         // free tiles with different resolution
         TilePosition tile(targetRes, (USHORT)-1, 0);
+        dbglogf("RenderCache::Paint: calling FreePage() pageNo: %d\n", pageNo);
         FreePage(dm, pageNo, &tile);
     }
     FreeNotVisible();

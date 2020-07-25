@@ -822,6 +822,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         goto Exit;
     }
 
+    // TODO: maybe add cmd-line switch to enable debug logging
+    gEnableDbgLog = gIsDebugBuild || gIsDailyBuild || gIsPreReleaseBuild;
+
     if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (i.tester) {
             extern int TesterMain(); // in Tester.cpp
