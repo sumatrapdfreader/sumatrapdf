@@ -1,5 +1,18 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2020-07-25 Sat
+
+fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1711
+(and https://github.com/sumatrapdfreader/sumatrapdf/issues/1454 most likely).
+When the cache of rendered pages is full, we free a page. If we happened to
+free a page from the document in the current tab, it would lead to free / re-rerender
+cycle and flickering.
+The fix is to make sure we only free from other tabs.
+Not perfect (if it's a visible tab in a different window, we'll probably flicker).
+The right approach would be to make the cache expand in FreeIfFull()
+if we can't find invisible page to drop (e.g. by using linked list
+to store cache entries or by having e.g. 256 over-flow entries).
+
 2020-07-10 Fri
 
 handle pdf_annot_author() throwing (fixes #1673)

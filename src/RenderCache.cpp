@@ -148,6 +148,8 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
         if (entry->dm == dm) {
             // don't free pages from the document we're currently displaying
             // as it leads to flicker
+            // TODO: it can still flicker if the dm is from a visible tab
+            // in a different window, but it's harder to detect
             continue;
         }
         bool didDrop = rc->DropCacheEntry(entry);
@@ -169,7 +171,7 @@ void RenderCache::Add(PageRenderRequest& req, RenderedBitmap* bmp) {
     FreePage(req.dm, req.pageNo, &req.tile);
 
     bool hasSpace = FreeIfFull(this, req);
-    CrashIf(!hasSpace);
+    CrashIf(!hasSpace); // TODO: FreeIfFull() might actually fail to free
     CrashIf(cacheCount > MAX_BITMAPS_CACHED);
 
     // Copy the PageRenderRequest as it will be reused
