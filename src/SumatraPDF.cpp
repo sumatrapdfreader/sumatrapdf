@@ -30,6 +30,7 @@
 #include "wingui/FrameRateWnd.h"
 #include "wingui/TooltipCtrl.h"
 #include "wingui/DropDownCtrl.h"
+#include "wingui/TabsCtrl.h"
 
 #include "Annotation.h"
 #include "EngineBase.h"
@@ -359,7 +360,7 @@ static bool IsWindowInfoHwnd(WindowInfo* win, HWND hwnd, HWND parent) {
         return true;
     }
     // tab bar
-    if (parent == win->hwndTabBar) {
+    if (parent == win->tabCtrl->hwnd) {
         return true;
     }
     // caption buttons, tab bar
@@ -623,7 +624,7 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     SendMessageW(win->hwndFrame, WM_DWMCOMPOSITIONCHANGED, 0, 0);
     RelayoutCaption(win);
     // TODO: make tab bar RTL aware
-    // SetRtl(win->hwndTabBar, isRTL);
+    // SetRtl(win->tabCtrl->hwnd, isRTL);
 
     win->notifications->Relayout();
 
@@ -3169,7 +3170,7 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
         } else if (win->tabsVisible) {
             int tabHeight = GetTabbarHeight(win->hwndFrame);
             if (updateToolbars) {
-                dh.SetWindowPos(win->hwndTabBar, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
+                dh.SetWindowPos(win->tabCtrl->hwnd, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
             }
             // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)
             if (!win->IsAboutWindow()) {
@@ -3506,7 +3507,7 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
 
     SetMenu(win->hwndFrame, nullptr);
     ShowWindow(win->hwndReBar, SW_HIDE);
-    ShowWindow(win->hwndTabBar, SW_HIDE);
+    ShowWindow(win->tabCtrl->hwnd, SW_HIDE);
     ShowWindow(win->hwndCaption, SW_HIDE);
 
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
@@ -3552,7 +3553,7 @@ void ExitFullScreen(WindowInfo* win) {
         ShowWindow(win->hwndCaption, SW_SHOW);
     }
     if (win->tabsVisible) {
-        ShowWindow(win->hwndTabBar, SW_SHOW);
+        ShowWindow(win->tabCtrl->hwnd, SW_SHOW);
     }
     if (gGlobalPrefs->showToolbar && !win->AsEbook()) {
         ShowWindow(win->hwndReBar, SW_SHOW);

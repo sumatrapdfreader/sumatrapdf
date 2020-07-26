@@ -10,6 +10,7 @@ struct FrameRateWnd;
 struct LabelWithCloseWnd;
 struct SplitterCtrl;
 struct CaptionInfo;
+struct TabsCtrl2;
 
 struct IPageElement;
 struct PageDestination;
@@ -131,7 +132,7 @@ struct WindowInfo {
     // horizontal splitter for resizing favorites and bookmars parts
     SplitterCtrl* favSplitter{nullptr};
 
-    HWND hwndTabBar{nullptr};
+    TabsCtrl2* tabCtrl{nullptr};
     bool tabsVisible{false};
     bool tabsInTitlebar{false};
     // keeps the sequence of tab selection. This is needed for restoration

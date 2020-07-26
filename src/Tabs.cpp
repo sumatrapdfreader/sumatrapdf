@@ -16,6 +16,7 @@
 #include "wingui/Window.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
+#include "wingui/TabsCtrl.h"
 
 #include "Annotation.h"
 #include "EngineBase.h"
@@ -366,7 +367,7 @@ static void SetTabTitle(TabInfo* tab) {
     TCITEM tcs;
     tcs.mask = TCIF_TEXT;
     tcs.pszText = (WCHAR*)tab->GetTabTitle();
-    TabCtrl_SetItem(win->hwndTabBar, win->tabs.Find(tab), &tcs);
+    TabCtrl_SetItem(win->tabCtrl->hwnd, win->tabs.Find(tab), &tcs);
 }
 
 static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
@@ -378,11 +379,11 @@ static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
     SetTabTitle(win->tabs.at(tab1));
     SetTabTitle(win->tabs.at(tab2));
 
-    int current = TabCtrl_GetCurSel(win->hwndTabBar);
+    int current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
     if (tab1 == current) {
-        TabCtrl_SetCurSel(win->hwndTabBar, tab2);
+        TabCtrl_SetCurSel(win->tabCtrl->hwnd, tab2);
     } else if (tab2 == current) {
-        TabCtrl_SetCurSel(win->hwndTabBar, tab1);
+        TabCtrl_SetCurSel(win->tabCtrl->hwnd, tab1);
     }
 }
 
@@ -394,7 +395,7 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
     if (TabsOnNotify(win, (LPARAM)&nmhdr, idx1, idx2)) {
         return;
     }
-    TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
+    TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabCtrl->hwnd, GWLP_USERDATA);
     if (T_CLOSING == code) {
         // if we have permission to close the tab
         tab->Invalidate(tab->nextTab);
@@ -666,12 +667,11 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
 }
 
 void CreateTabbar(WindowInfo* win) {
-    DWORD dwStyle = WS_CHILD | WS_CLIPSIBLINGS /*| WS_VISIBLE*/ | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT;
-    DWORD dwStyleEx = 0;
-    auto h = GetModuleHandleW(nullptr);
-    HWND hwndTabBar = CreateWindowExW(dwStyleEx, WC_TABCONTROL, L"", dwStyle, 0, 0, 0, 0, win->hwndFrame,
-                                      (HMENU)IDC_TABBAR, h, nullptr);
+    TabsCtrl2* tabCtrl = new TabsCtrl2(win->hwndFrame);
+    tabCtrl->ctrlID = IDC_TABBAR;
+    tabCtrl->Create();
 
+    HWND hwndTabBar = tabCtrl->hwnd;
     SetWindowSubclass(hwndTabBar, TabBarProc, 0, (DWORD_PTR)win);
     SetWindowSubclass(GetParent(hwndTabBar), TabBarParentProc, 0, (DWORD_PTR)win);
 
@@ -681,8 +681,7 @@ void CreateTabbar(WindowInfo* win) {
 
     SetWindowFont(hwndTabBar, GetDefaultGuiFont(), FALSE); // NOLINT
     TabCtrl_SetItemSize(hwndTabBar, tabSize.dx, tabSize.dy);
-
-    win->hwndTabBar = hwndTabBar;
+    win->tabCtrl = tabCtrl;
 
     win->tabSelectionHistory = new Vec<TabInfo*>();
 }
@@ -710,7 +709,7 @@ void SaveCurrentTabInfo(WindowInfo* win) {
         return;
     }
 
-    int current = TabCtrl_GetCurSel(win->hwndTabBar);
+    int current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
     if (-1 == current) {
         return;
     }
@@ -729,7 +728,7 @@ void SaveCurrentTabInfo(WindowInfo* win) {
 }
 
 void UpdateCurrentTabBgColor(WindowInfo* win) {
-    TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
+    TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabCtrl->hwnd, GWLP_USERDATA);
     if (win->AsEbook()) {
         COLORREF txtCol;
         GetEbookUiColors(txtCol, tab->currBgCol);
@@ -737,7 +736,7 @@ void UpdateCurrentTabBgColor(WindowInfo* win) {
         // TODO: match either the toolbar (if shown) or background
         tab->currBgCol = DEFAULT_CURRENT_BG_COL;
     }
-    RepaintNow(win->hwndTabBar);
+    RepaintNow(win->tabCtrl->hwnd);
 }
 
 // On load of a new document we insert a new tab item in the tab bar.
@@ -756,9 +755,9 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
     tcs.pszText = (WCHAR*)tab->GetTabTitle();
 
     int idx = (int)win->tabs.size() - 1;
-    auto insertedIdx = TabCtrl_InsertItem(win->hwndTabBar, idx, &tcs);
+    auto insertedIdx = TabCtrl_InsertItem(win->tabCtrl->hwnd, idx, &tcs);
     CrashIf(insertedIdx == -1);
-    TabCtrl_SetCurSel(win->hwndTabBar, idx);
+    TabCtrl_SetCurSel(win->tabCtrl->hwnd, idx);
     UpdateTabWidth(win);
     return tab;
 }
@@ -771,7 +770,7 @@ void TabsOnChangedDoc(WindowInfo* win) {
         return;
     }
 
-    CrashIf(win->tabs.Find(tab) != TabCtrl_GetCurSel(win->hwndTabBar));
+    CrashIf(win->tabs.Find(tab) != TabCtrl_GetCurSel(win->tabCtrl->hwnd));
     VerifyTabInfo(win, tab);
     SetTabTitle(tab);
 }
@@ -786,7 +785,7 @@ static void RemoveTab(WindowInfo* win, int idx) {
         win->currentTab = nullptr;
     }
     delete tab;
-    TabCtrl_DeleteItem(win->hwndTabBar, idx);
+    TabCtrl_DeleteItem(win->tabCtrl->hwnd, idx);
     UpdateTabWidth(win);
 }
 
@@ -805,19 +804,19 @@ void TabsOnCloseDoc(WindowInfo* win) {
         }
     }
 
-    int current = TabCtrl_GetCurSel(win->hwndTabBar);
+    int current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
     RemoveTab(win, current);
 
     if (win->tabs.size() > 0) {
         TabInfo* tab = win->tabSelectionHistory->Pop();
-        TabCtrl_SetCurSel(win->hwndTabBar, win->tabs.Find(tab));
+        TabCtrl_SetCurSel(win->tabCtrl->hwnd, win->tabs.Find(tab));
         LoadModelIntoTab(tab);
     }
 }
 
 // Called when we're closing an entire window (quitting)
 void TabsOnCloseWindow(WindowInfo* win) {
-    TabCtrl_DeleteAllItems(win->hwndTabBar);
+    TabCtrl_DeleteAllItems(win->tabCtrl->hwnd);
     win->tabSelectionHistory->Reset();
     win->currentTab = nullptr;
     win->ctrl = nullptr;
@@ -837,7 +836,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
             return FALSE;
 
         case TCN_SELCHANGE:
-            current = TabCtrl_GetCurSel(win->hwndTabBar);
+            current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
             LoadModelIntoTab(win->tabs.at(current));
             break;
 
@@ -846,7 +845,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
             return FALSE;
 
         case T_CLOSE:
-            current = TabCtrl_GetCurSel(win->hwndTabBar);
+            current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
             if (tab1 == current) {
                 CloseTab(win);
             } else {
@@ -866,7 +865,7 @@ static void ShowTabBar(WindowInfo* win, bool show) {
         return;
     }
     win->tabsVisible = show;
-    win::SetVisibility(win->hwndTabBar, show);
+    win::SetVisibility(win->tabCtrl->hwnd, show);
     RelayoutWindow(win);
 }
 
@@ -879,11 +878,11 @@ void UpdateTabWidth(WindowInfo* win) {
         return;
     }
     ShowTabBar(win, true);
-    Rect rect = ClientRect(win->hwndTabBar);
+    Rect rect = ClientRect(win->tabCtrl->hwnd);
     Size tabSize = GetTabSize(win->hwndFrame);
     auto maxDx = (rect.dx - 3) / count;
     tabSize.dx = std::min(tabSize.dx, maxDx);
-    TabCtrl_SetItemSize(win->hwndTabBar, tabSize.dx, tabSize.dy);
+    TabCtrl_SetItemSize(win->tabCtrl->hwnd, tabSize.dx, tabSize.dy);
 }
 
 void SetTabsInTitlebar(WindowInfo* win, bool set) {
@@ -891,9 +890,9 @@ void SetTabsInTitlebar(WindowInfo* win, bool set) {
         return;
     }
     win->tabsInTitlebar = set;
-    TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
+    TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabCtrl->hwnd, GWLP_USERDATA);
     tab->inTitlebar = set;
-    SetParent(win->hwndTabBar, set ? win->hwndCaption : win->hwndFrame);
+    SetParent(win->tabCtrl->hwnd, set ? win->hwndCaption : win->hwndFrame);
     ShowWindow(win->hwndCaption, set ? SW_SHOW : SW_HIDE);
     if (set != win->isMenuHidden) {
         ShowHideMenuBar(win);
@@ -924,7 +923,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
     win->currentTab = win->tabs.at(tabIndex);
     AutoFree path = strconv::WstrToUtf8(win->currentTab->filePath);
     logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.Get());
-    int prevIndex = TabCtrl_SetCurSel(win->hwndTabBar, tabIndex);
+    int prevIndex = TabCtrl_SetCurSel(win->tabCtrl->hwnd, tabIndex);
     if (prevIndex != -1) {
         ntd.code = TCN_SELCHANGE;
         TabsOnNotify(win, (LPARAM)&ntd);
@@ -938,6 +937,6 @@ void TabsOnCtrlTab(WindowInfo* win, bool reverse) {
         return;
     }
 
-    int next = (TabCtrl_GetCurSel(win->hwndTabBar) + (reverse ? -1 : 1) + count) % count;
+    int next = (TabCtrl_GetCurSel(win->tabCtrl->hwnd) + (reverse ? -1 : 1) + count) % count;
     TabsSelect(win, next);
 }

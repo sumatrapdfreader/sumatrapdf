@@ -206,13 +206,14 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         // (the latter only yields a RENAMED action with the expected file name)
         if (notify->Action == FILE_ACTION_MODIFIED || notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
             if (!changedFiles.Contains(fileName)) {
-                logf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s' in dir '%s'\n", fileName.Get(), wd->dirPath);
+                logf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s' in dir '%s'\n", fileName.Get(),
+                     wd->dirPath);
                 changedFiles.Append(fileName.StealData());
             } else {
                 // logf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'\n", fileName);
             }
         } else {
-            //logf(L"ReadDirectoryChangesNotification() action=%d, for '%s'\n", (int)notify->Action, fileName.Get());
+            // logf(L"ReadDirectoryChangesNotification() action=%d, for '%s'\n", (int)notify->Action, fileName.Get());
         }
 
         // step to the next entry if there is one

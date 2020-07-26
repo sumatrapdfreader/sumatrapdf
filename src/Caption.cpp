@@ -5,6 +5,11 @@
 #include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+#include "wingui/TabsCtrl.h"
+
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
 #include "AppColors.h"
@@ -476,7 +481,7 @@ void RelayoutCaption(WindowInfo* win) {
 
     rc.x += tabHeight;
     rc.dx -= tabHeight;
-    dh.SetWindowPos(win->hwndTabBar, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
+    dh.SetWindowPos(win->tabCtrl->hwnd, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
     dh.End();
 }
 
