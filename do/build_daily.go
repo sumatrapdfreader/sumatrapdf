@@ -13,7 +13,6 @@ func buildDaily() {
 	defer makePrintDuration(s)()
 
 	verifyGitCleanMust()
-	verifyOnMasterBranchMust()
 
 	clean()
 	setBuildConfigDaily()
