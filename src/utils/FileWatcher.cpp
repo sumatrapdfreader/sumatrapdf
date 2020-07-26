@@ -54,8 +54,8 @@ TODO:
 
 // Some people use overlapped.hEvent to store data but I'm playing it safe.
 struct OverlappedEx {
-    OVERLAPPED overlapped;
-    void* data;
+    OVERLAPPED overlapped{};
+    void* data{nullptr};
 };
 
 // info needed to detect that a file has changed
@@ -65,9 +65,10 @@ struct FileState {
 };
 
 struct WatchedDir {
-    WatchedDir* next;
-    const WCHAR* dirPath;
-    HANDLE hDir;
+    WatchedDir* next{nullptr};
+    const WCHAR* dirPath{nullptr};
+    HANDLE hDir{nullptr};
+    bool startMonitoring{true};
     OverlappedEx overlapped;
     char buf[8 * 1024];
 };
@@ -205,13 +206,13 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         // (the latter only yields a RENAMED action with the expected file name)
         if (notify->Action == FILE_ACTION_MODIFIED || notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
             if (!changedFiles.Contains(fileName)) {
-                // logf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s'\n", fileName);
+                logf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s' in dir '%s'\n", fileName.Get(), wd->dirPath);
                 changedFiles.Append(fileName.StealData());
             } else {
                 // logf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'\n", fileName);
             }
         } else {
-            // logf(L"ReadDirectoryChangesNotification() action=%d, for '%s'\n", (int)notify->Action, fileName);
+            //logf(L"ReadDirectoryChangesNotification() action=%d, for '%s'\n", (int)notify->Action, fileName.Get());
         }
 
         // step to the next entry if there is one
@@ -222,6 +223,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff);
     }
 
+    wd->startMonitoring = false;
     StartMonitoringDirForChanges(wd);
 
     for (const WCHAR* f : changedFiles) {
@@ -236,7 +238,11 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
     OVERLAPPED* overlapped = (OVERLAPPED*)&(wd->overlapped);
     wd->overlapped.data = (HANDLE)wd;
 
-    logf(L"StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
+    // this is called after reading change notification and we're only
+    // interested in logging the first time a dir is registered for monitoring
+    if (wd->startMonitoring) {
+        logf(L"StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
+    }
 
     CrashIf(g_threadId != GetCurrentThreadId());
 
@@ -375,6 +381,7 @@ static WatchedFile* NewWatchedFile(const WCHAR* filePath, const std::function<vo
             if (!wd) {
                 return nullptr;
             }
+            wd->startMonitoring = true;
             newDir = true;
         }
     }
