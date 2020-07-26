@@ -1871,11 +1871,20 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
         pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label.Get(), pageNo, win->ctrl->PageCount()));
     }
     if (!wnd) {
-        int options = IsShiftPressed() ? NOS_PERSIST : NOS_DEFAULT;
+        int options = NOS_PERSIST;
         win->ShowNotification(pageInfo, options, NG_PAGE_INFO_HELPER);
     } else {
         wnd->UpdateMessage(pageInfo);
     }
+}
+
+static void TogglePageInfoHelper(WindowInfo* win) {
+    NotificationWnd* wnd = win->notifications->GetForGroup(NG_PAGE_INFO_HELPER);
+    if (wnd) {
+        win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
+        return;
+    }
+    UpdatePageInfoHelper(win, nullptr, -1);
 }
 
 enum class MeasurementUnit { pt, mm, in };
@@ -4055,9 +4064,8 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'i':
             // experimental "page info" tip: make figuring out current page and
             // total pages count a one-key action (unless they're already visible)
-            if (win->AsFixed() &&
-                (!gGlobalPrefs->showToolbar || win->isFullScreen || PM_ENABLED == win->presentation)) {
-                UpdatePageInfoHelper(win);
+            if (win->AsFixed()) {
+                TogglePageInfoHelper(win);
             }
             break;
         case 'm':

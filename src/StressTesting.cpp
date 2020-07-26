@@ -688,7 +688,7 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
 bool StressTest::GoToNextPage() {
     double pageRenderTime = TimeSinceInMs(currPageRenderTime);
     AutoFreeWstr s(str::Format(L"Page %d rendered in %d milliseconds", currPage, (int)pageRenderTime));
-    win->ShowNotification(s, NOS_DEFAULT, NG_STRESS_TEST_BENCHMARK);
+    win->ShowNotification(s, NOS_WITH_TIMEOUT, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;
     while (!IsInRange(pageRanges, currPage) && currPage <= win->ctrl->PageCount()) {

@@ -10,7 +10,7 @@ typedef std::function<void(NotificationWnd*)> NotificationWndRemovedCallback;
 typedef const char* NotificationGroupId;
 
 enum NotificationOptions {
-    NOS_DEFAULT = 0, // timeout after 3 seconds, no highlight
+    NOS_WITH_TIMEOUT = 0, // timeout after 3 seconds, no highlight
     NOS_PERSIST = (1 << 0),
     NOS_HIGHLIGHT = (1 << 1),
     NOS_WARNING = NOS_PERSIST | NOS_HIGHLIGHT,

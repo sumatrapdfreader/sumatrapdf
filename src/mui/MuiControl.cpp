@@ -17,9 +17,10 @@ static void CreateInfotipForLink(HWND hwndParent, const WCHAR* url, RECT pos) {
     }
 
     HINSTANCE hinst = GetModuleHandle(nullptr);
-    gHwndControlTooltip =
-        CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, CW_USEDEFAULT,
-                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hwndParent, nullptr, hinst, nullptr);
+    DWORD style = WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
+    DWORD exStyle = WS_EX_TOPMOST;
+    gHwndControlTooltip = CreateWindowExW(exStyle, TOOLTIPS_CLASS, nullptr, style, CW_USEDEFAULT, CW_USEDEFAULT,
+                                          CW_USEDEFAULT, CW_USEDEFAULT, hwndParent, nullptr, hinst, nullptr);
 
     TOOLINFO ti = {0};
     ti.cbSize = sizeof(ti);

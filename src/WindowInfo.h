@@ -240,7 +240,7 @@ struct WindowInfo {
 
     void ShowToolTip(const WCHAR* text, Rect& rc, bool multiline = false);
     void HideToolTip();
-    NotificationWnd* ShowNotification(const WCHAR* msg, int options = NOS_DEFAULT,
+    NotificationWnd* ShowNotification(const WCHAR* msg, int options = NOS_WITH_TIMEOUT,
                                       NotificationGroupId groupId = NG_RESPONSE_TO_ACTION);
 
     bool CreateUIAProvider();

@@ -10,7 +10,7 @@ constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 2;
 // keep this value reasonably low, else we'll run out of
 // GDI resources/memory when caching many larger bitmaps
 // TODO: this should be based on amount of memory taken by rendered pages
-// i.e. one big page can use as much memory as lots of small pages 
+// i.e. one big page can use as much memory as lots of small pages
 #define MAX_BITMAPS_CACHED 64
 
 class RenderingCallback {

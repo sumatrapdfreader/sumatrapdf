@@ -21,7 +21,7 @@ extern bool IsUIRightToLeft(); // SumatraPDF.h
 
 constexpr int TIMEOUT_TIMER_ID = 1;
 
-static void RegisterNotificationsWndClass();
+static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 static Rect GetCloseRect(HWND hwnd) {
     int n = DpiScale(16);
@@ -95,13 +95,21 @@ static void UpdateWindowPosition(NotificationWnd* wnd, const WCHAR* message, boo
 }
 
 bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
-    if (progressMsg != nullptr) {
-        this->hasClose = true;
-        this->hasProgress = true;
-        this->progressMsg = str::Dup(progressMsg);
+    static ATOM atom = 0;
+    if (atom == 0) {
+        WNDCLASSEX wcex = {};
+        FillWndClassEx(wcex, NOTIFICATION_WND_CLASS_NAME, NotificationWndProc);
+        wcex.style = 0; // no CS_HREDRAW | CS_VREDRAW
+        wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
+        atom = RegisterClassExW(&wcex);
+        CrashIf(!atom);
     }
 
-    RegisterNotificationsWndClass();
+    if (progressMsg != nullptr) {
+        hasClose = true;
+        hasProgress = true;
+        this->progressMsg = str::Dup(progressMsg);
+    }
 
     NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
@@ -124,9 +132,7 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
     }
 
     SetWindowLongPtr(this->hwnd, GWLP_USERDATA, (LONG_PTR)this);
-    DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
-    // TODO: this is suspicious. Why CS_DROPSHADOW is mixed with WS_EX_LAYOUTRTL ?
-    SetWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
+    SetRtl(hwnd, IsUIRightToLeft());
     UpdateWindowPosition(this, msg, true);
     ShowWindow(this->hwnd, SW_SHOW);
 
@@ -137,17 +143,16 @@ bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
 }
 
 void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool highlight) {
-    win::SetText(this->hwnd, message);
+    win::SetText(hwnd, message);
     this->highlight = highlight;
     if (timeoutInMS != 0) {
-        this->hasClose = false;
+        hasClose = false;
     }
-    DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
-    SetWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
+    SetRtl(hwnd, IsUIRightToLeft());
     UpdateWindowPosition(this, message, false);
-    InvalidateRect(this->hwnd, nullptr, TRUE);
+    InvalidateRect(hwnd, nullptr, FALSE);
     if (timeoutInMS != 0) {
-        SetTimer(this->hwnd, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
+        SetTimer(hwnd, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
     }
 }
 
@@ -293,19 +298,6 @@ static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wp, LPAR
     }
 
     return DefWindowProc(hwnd, msg, wp, lp);
-}
-
-static void RegisterNotificationsWndClass() {
-    static ATOM atom = 0;
-    if (atom != 0) {
-        // already registered
-        return;
-    }
-    WNDCLASSEX wcex = {};
-    FillWndClassEx(wcex, NOTIFICATION_WND_CLASS_NAME, NotificationWndProc);
-    wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
-    atom = RegisterClassEx(&wcex);
-    CrashIf(!atom);
 }
 
 Notifications::~Notifications() {
