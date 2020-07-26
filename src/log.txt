@@ -20,6 +20,14 @@ The right approach would be to make the cache expand in FreeIfFull()
 if we can't find invisible page to drop (e.g. by using linked list
 to store cache entries or by having e.g. 256 over-flow entries).
 
+fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1712
+Lots of debugging but the root cause was simple: notifications window
+is a child of canvas window. it was flickering because a paint of
+canvas would paint over notification window.
+Fixed by telling canvas window to clip children.
+We should make it more flexible and more efficient to add stuff to be
+drawn on canvas.
+
 2020-07-10 Fri
 
 handle pdf_annot_author() throwing (fixes #1673)

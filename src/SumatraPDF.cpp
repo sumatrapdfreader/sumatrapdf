@@ -1438,7 +1438,7 @@ static WindowInfo* CreateWindowInfo() {
     // screen's edge when maximized (cf. Fitts' law) and there are
     // no additional adjustments needed when (un)maximizing
     clsName = CANVAS_CLASS_NAME;
-    style = WS_CHILD | WS_HSCROLL | WS_VSCROLL;
+    style = WS_CHILD | WS_HSCROLL | WS_VSCROLL | WS_CLIPCHILDREN;
     /* position and size determined in OnSize */
     win->hwndCanvas = CreateWindowExW(0, clsName, nullptr, style, 0, 0, 0, 0, hwndFrame, nullptr, h, nullptr);
     if (!win->hwndCanvas) {
