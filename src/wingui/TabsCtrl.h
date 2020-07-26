@@ -49,3 +49,11 @@ void SetState(TabsCtrl*, TabsCtrlState*);
 SIZE GetIdealSize(TabsCtrl*);
 void SetPos(TabsCtrl*, RECT&);
 void SetFont(TabsCtrl*, HFONT);
+
+struct TabsCtrl2 : WindowBase {
+    TabsCtrl2(HWND parent);
+    ~TabsCtrl2() override;
+    bool Create() override;
+
+    Size GetIdealSize() override;
+};

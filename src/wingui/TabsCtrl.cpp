@@ -6,7 +6,10 @@
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
 
-#include "TabsCtrl.h"
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+#include "wingui/TabsCtrl.h"
 
 #define COL_BLACK RGB(0x00, 0x00, 0x00)
 #define COL_WHITE RGB(0xff, 0xff, 0xff)
@@ -421,11 +424,10 @@ bool CreateTabsCtrl(TabsCtrl* ctrl) {
     auto y = r.top;
     auto dx = RectDx(r);
     auto dy = RectDy(r);
-    DWORD dwExStyle = 0;
-    DWORD dwStyle = WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT;
-
-    auto hwnd = CreateWindowExW(dwExStyle, WC_TABCONTROL, L"", dwStyle, x, y, dx, dy, ctrl->parent, nullptr,
-                                GetModuleHandle(nullptr), ctrl);
+    DWORD exStyle = 0;
+    DWORD style = WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT;
+    HINSTANCE h = GetModuleHandleW(nullptr);
+    auto hwnd = CreateWindowExW(exStyle, WC_TABCONTROL, L"", style, x, y, dx, dy, ctrl->parent, nullptr, h, ctrl);
 
     if (hwnd == nullptr) {
         return false;
@@ -483,4 +485,39 @@ SIZE GetIdealSize(TabsCtrl* ctrl) {
 
 void SetPos(TabsCtrl* ctrl, RECT& r) {
     MoveWindow(ctrl->priv->hwnd, &r);
+}
+
+/* ----- */
+
+Kind kindTabs = "tabs";
+
+/*
+    DWORD dwStyle = WS_CHILD | WS_CLIPSIBLINGS
+    | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT;
+DWORD dwStyleEx = 0;
+auto h = GetModuleHandleW(nullptr);
+HWND hwndTabBar =
+    CreateWindowExW(dwStyleEx, WC_TABCONTROL, L"", dwStyle, 0, 0, 0, 0, win->hwndFrame, (HMENU)IDC_TABBAR, h, nullptr);
+*/
+
+TabsCtrl2::TabsCtrl2(HWND p) : WindowBase(p) {
+    dwStyle = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT | WS_VISIBLE;
+    winClass = WC_TABCONTROLW;
+    kind = kindTabs;
+}
+
+TabsCtrl2::~TabsCtrl2() {
+}
+
+bool TabsCtrl2::Create() {
+    bool ok = WindowBase::Create();
+    if (!ok) {
+        return false;
+    }
+    return true;
+}
+
+Size TabsCtrl2::GetIdealSize() {
+    Size sz{32, 128};
+    return sz;
 }
