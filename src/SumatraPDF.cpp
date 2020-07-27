@@ -3507,7 +3507,7 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
 
     SetMenu(win->hwndFrame, nullptr);
     ShowWindow(win->hwndReBar, SW_HIDE);
-    ShowWindow(win->tabCtrl->hwnd, SW_HIDE);
+    win->tabCtrl->SetIsVisible(false);
     ShowWindow(win->hwndCaption, SW_HIDE);
 
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
@@ -3553,7 +3553,7 @@ void ExitFullScreen(WindowInfo* win) {
         ShowWindow(win->hwndCaption, SW_SHOW);
     }
     if (win->tabsVisible) {
-        ShowWindow(win->tabCtrl->hwnd, SW_SHOW);
+        win->tabCtrl->SetIsVisible(true);
     }
     if (gGlobalPrefs->showToolbar && !win->AsEbook()) {
         ShowWindow(win->hwndReBar, SW_SHOW);

@@ -491,15 +491,6 @@ void SetPos(TabsCtrl* ctrl, RECT& r) {
 
 Kind kindTabs = "tabs";
 
-/*
-    DWORD dwStyle = WS_CHILD | WS_CLIPSIBLINGS
-    | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT;
-DWORD dwStyleEx = 0;
-auto h = GetModuleHandleW(nullptr);
-HWND hwndTabBar =
-    CreateWindowExW(dwStyleEx, WC_TABCONTROL, L"", dwStyle, 0, 0, 0, 0, win->hwndFrame, (HMENU)IDC_TABBAR, h, nullptr);
-*/
-
 TabsCtrl2::TabsCtrl2(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_CLIPSIBLINGS | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT | WS_VISIBLE;
     winClass = WC_TABCONTROLW;
@@ -520,4 +511,78 @@ bool TabsCtrl2::Create() {
 Size TabsCtrl2::GetIdealSize() {
     Size sz{32, 128};
     return sz;
+}
+
+int TabsCtrl2::GetTabCount() {
+    int n = TabCtrl_GetItemCount(hwnd);
+    return n;
+}
+
+// TODO: remove in favor of std::string_view version
+int TabsCtrl2::InsertTab(int idx, const WCHAR* ws) {
+    CrashIf(idx < 0);
+
+    TCITEMW tcs{0};
+    tcs.mask = TCIF_TEXT;
+    tcs.pszText = (WCHAR*)ws;
+    int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &tcs);
+    return insertedIdx;
+}
+
+int TabsCtrl2::InsertTab(int idx, std::string_view sv) {
+    CrashIf(idx < 0);
+
+    TCITEMW tcs{0};
+    tcs.mask = TCIF_TEXT;
+    AutoFreeWstr s = strconv::Utf8ToWstr(sv);
+    tcs.pszText = s.Get();
+    int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &tcs);
+    return insertedIdx;
+}
+
+void TabsCtrl2::RemoveTab(int idx) {
+    CrashIf(idx < 0);
+    CrashIf(idx >= GetTabCount());
+    BOOL ok = TabCtrl_DeleteItem(hwnd, idx);
+    CrashIf(!ok);
+}
+
+void TabsCtrl2::RemoveAllTabs() {
+    TabCtrl_DeleteAllItems(hwnd);
+}
+
+// TODO: remove in favor of std::string_view version
+void TabsCtrl2::SetTabText(int idx, const WCHAR* ws) {
+    CrashIf(idx < 0);
+    CrashIf(idx >= GetTabCount());
+
+    TCITEMW tcs{0};
+    tcs.mask = TCIF_TEXT;
+    tcs.pszText = (WCHAR*)ws;
+    TabCtrl_SetItem(hwnd, idx, &tcs);
+}
+
+void TabsCtrl2::SetTabText(int idx, std::string_view sv) {
+    CrashIf(idx < 0);
+    CrashIf(idx >= GetTabCount());
+
+    TCITEMW tcs{0};
+    tcs.mask = TCIF_TEXT;
+    AutoFreeWstr s = strconv::Utf8ToWstr(sv);
+    tcs.pszText = s.Get();
+    TabCtrl_SetItem(hwnd, idx, &tcs);
+}
+
+int TabsCtrl2::GetSelectedTabIndex() {
+    int idx = TabCtrl_GetCurSel(hwnd);
+    return idx;
+}
+
+int TabsCtrl2::SetSelectedTabByIndex(int idx) {
+    int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
+    return prevSelectedIdx;
+}
+
+void TabsCtrl2::SetItemSize(Size sz) {
+    TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
 }

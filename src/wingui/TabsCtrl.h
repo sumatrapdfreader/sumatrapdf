@@ -56,4 +56,19 @@ struct TabsCtrl2 : WindowBase {
     bool Create() override;
 
     Size GetIdealSize() override;
+
+    int InsertTab(int idx, std::string_view sv);
+    int InsertTab(int idx, const WCHAR* ws);
+
+    void RemoveTab(int idx);
+    void RemoveAllTabs();
+
+    void SetTabText(int idx, std::string_view sv);
+    void SetTabText(int idx, const WCHAR* ws);
+
+    int GetSelectedTabIndex();
+    int SetSelectedTabByIndex(int idx);
+
+    void SetItemSize(Size sz);
+    int GetTabCount();
 };

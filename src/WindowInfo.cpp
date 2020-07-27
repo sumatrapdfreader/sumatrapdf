@@ -13,11 +13,12 @@
 #include "wingui/Window.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
-#include "wingui/FrameRateWnd.h"
 #include "wingui/DropDownCtrl.h"
 #include "wingui/TooltipCtrl.h"
+#include "wingui/TabsCtrl.h"
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/SplitterWnd.h"
+#include "wingui/FrameRateWnd.h"
 
 #include "Annotation.h"
 #include "EngineBase.h"
@@ -96,6 +97,7 @@ WindowInfo::~WindowInfo() {
     delete tabSelectionHistory;
     DeleteCaption(caption);
     DeleteVecMembers(tabs);
+    delete tabCtrl;
     // cbHandler is passed into Controller and must be deleted afterwards
     // (all controllers should have been deleted prior to WindowInfo, though)
     delete cbHandler;

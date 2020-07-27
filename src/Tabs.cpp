@@ -364,10 +364,9 @@ class TabPainter {
 
 static void SetTabTitle(TabInfo* tab) {
     WindowInfo* win = tab->win;
-    TCITEM tcs;
-    tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR*)tab->GetTabTitle();
-    TabCtrl_SetItem(win->tabCtrl->hwnd, win->tabs.Find(tab), &tcs);
+    int idx = win->tabs.Find(tab);
+    WCHAR* title = (WCHAR*)tab->GetTabTitle();
+    win->tabCtrl->SetTabText(idx, title);
 }
 
 static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
@@ -375,16 +374,17 @@ static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
         return;
     }
 
-    std::swap(win->tabs.at(tab1), win->tabs.at(tab2));
-    SetTabTitle(win->tabs.at(tab1));
-    SetTabTitle(win->tabs.at(tab2));
+    auto&& tabs = win->tabs;
+    std::swap(tabs.at(tab1), tabs.at(tab2));
+    SetTabTitle(tabs.at(tab1));
+    SetTabTitle(tabs.at(tab2));
 
-    int current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
+    int current = win->tabCtrl->GetSelectedTabIndex();
+    int newSelected = tab1;
     if (tab1 == current) {
-        TabCtrl_SetCurSel(win->tabCtrl->hwnd, tab2);
-    } else if (tab2 == current) {
-        TabCtrl_SetCurSel(win->tabCtrl->hwnd, tab1);
+        newSelected = tab2;
     }
+    win->tabCtrl->SetSelectedTabByIndex(newSelected);
 }
 
 static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
@@ -678,9 +678,7 @@ void CreateTabbar(WindowInfo* win) {
     Size tabSize = GetTabSize(win->hwndFrame);
     TabPainter* tp = new TabPainter(hwndTabBar, tabSize);
     SetWindowLongPtr(hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
-
-    SetWindowFont(hwndTabBar, GetDefaultGuiFont(), FALSE); // NOLINT
-    TabCtrl_SetItemSize(hwndTabBar, tabSize.dx, tabSize.dy);
+    tabCtrl->SetItemSize(tabSize);
     win->tabCtrl = tabCtrl;
 
     win->tabSelectionHistory = new Vec<TabInfo*>();
@@ -709,7 +707,7 @@ void SaveCurrentTabInfo(WindowInfo* win) {
         return;
     }
 
-    int current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
+    int current = win->tabCtrl->GetSelectedTabIndex();
     if (-1 == current) {
         return;
     }
@@ -750,14 +748,10 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
     win->tabs.Append(tab);
     tab->canvasRc = win->canvasRc;
 
-    TCITEMW tcs = {0};
-    tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR*)tab->GetTabTitle();
-
     int idx = (int)win->tabs.size() - 1;
-    auto insertedIdx = TabCtrl_InsertItem(win->tabCtrl->hwnd, idx, &tcs);
+    int insertedIdx = win->tabCtrl->InsertTab(idx, (WCHAR*)tab->GetTabTitle());
     CrashIf(insertedIdx == -1);
-    TabCtrl_SetCurSel(win->tabCtrl->hwnd, idx);
+    win->tabCtrl->SetSelectedTabByIndex(idx);
     UpdateTabWidth(win);
     return tab;
 }
@@ -770,7 +764,7 @@ void TabsOnChangedDoc(WindowInfo* win) {
         return;
     }
 
-    CrashIf(win->tabs.Find(tab) != TabCtrl_GetCurSel(win->tabCtrl->hwnd));
+    CrashIf(win->tabs.Find(tab) != win->tabCtrl->GetSelectedTabIndex());
     VerifyTabInfo(win, tab);
     SetTabTitle(tab);
 }
@@ -785,7 +779,7 @@ static void RemoveTab(WindowInfo* win, int idx) {
         win->currentTab = nullptr;
     }
     delete tab;
-    TabCtrl_DeleteItem(win->tabCtrl->hwnd, idx);
+    win->tabCtrl->RemoveTab(idx);
     UpdateTabWidth(win);
 }
 
@@ -804,19 +798,20 @@ void TabsOnCloseDoc(WindowInfo* win) {
         }
     }
 
-    int current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
+    int current = win->tabCtrl->GetSelectedTabIndex();
     RemoveTab(win, current);
 
     if (win->tabs.size() > 0) {
         TabInfo* tab = win->tabSelectionHistory->Pop();
-        TabCtrl_SetCurSel(win->tabCtrl->hwnd, win->tabs.Find(tab));
+        int idx = win->tabs.Find(tab);
+        win->tabCtrl->SetSelectedTabByIndex(idx);
         LoadModelIntoTab(tab);
     }
 }
 
 // Called when we're closing an entire window (quitting)
 void TabsOnCloseWindow(WindowInfo* win) {
-    TabCtrl_DeleteAllItems(win->tabCtrl->hwnd);
+    win->tabCtrl->RemoveAllTabs();
     win->tabSelectionHistory->Reset();
     win->currentTab = nullptr;
     win->ctrl = nullptr;
@@ -836,7 +831,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
             return FALSE;
 
         case TCN_SELCHANGE:
-            current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
+            current = win->tabCtrl->GetSelectedTabIndex();
             LoadModelIntoTab(win->tabs.at(current));
             break;
 
@@ -845,7 +840,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lp, int tab1, int tab2) {
             return FALSE;
 
         case T_CLOSE:
-            current = TabCtrl_GetCurSel(win->tabCtrl->hwnd);
+            current = win->tabCtrl->GetSelectedTabIndex();
             if (tab1 == current) {
                 CloseTab(win);
             } else {
@@ -865,7 +860,7 @@ static void ShowTabBar(WindowInfo* win, bool show) {
         return;
     }
     win->tabsVisible = show;
-    win::SetVisibility(win->tabCtrl->hwnd, show);
+    win->tabCtrl->SetIsVisible(show);
     RelayoutWindow(win);
 }
 
@@ -882,22 +877,22 @@ void UpdateTabWidth(WindowInfo* win) {
     Size tabSize = GetTabSize(win->hwndFrame);
     auto maxDx = (rect.dx - 3) / count;
     tabSize.dx = std::min(tabSize.dx, maxDx);
-    TabCtrl_SetItemSize(win->tabCtrl->hwnd, tabSize.dx, tabSize.dy);
+    win->tabCtrl->SetItemSize(tabSize);
 }
 
-void SetTabsInTitlebar(WindowInfo* win, bool set) {
-    if (set == win->tabsInTitlebar) {
+void SetTabsInTitlebar(WindowInfo* win, bool inTitlebar) {
+    if (inTitlebar == win->tabsInTitlebar) {
         return;
     }
-    win->tabsInTitlebar = set;
+    win->tabsInTitlebar = inTitlebar;
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->tabCtrl->hwnd, GWLP_USERDATA);
-    tab->inTitlebar = set;
-    SetParent(win->tabCtrl->hwnd, set ? win->hwndCaption : win->hwndFrame);
-    ShowWindow(win->hwndCaption, set ? SW_SHOW : SW_HIDE);
-    if (set != win->isMenuHidden) {
+    tab->inTitlebar = inTitlebar;
+    SetParent(win->tabCtrl->hwnd, inTitlebar ? win->hwndCaption : win->hwndFrame);
+    ShowWindow(win->hwndCaption, inTitlebar ? SW_SHOW : SW_HIDE);
+    if (inTitlebar != win->isMenuHidden) {
         ShowHideMenuBar(win);
     }
-    if (set) {
+    if (inTitlebar) {
         CaptionUpdateUI(win, win->caption);
         RelayoutCaption(win);
     } else if (dwm::IsCompositionEnabled()) {
@@ -923,8 +918,8 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
     win->currentTab = win->tabs.at(tabIndex);
     AutoFree path = strconv::WstrToUtf8(win->currentTab->filePath);
     logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.Get());
-    int prevIndex = TabCtrl_SetCurSel(win->tabCtrl->hwnd, tabIndex);
-    if (prevIndex != -1) {
+    int prevIdx = win->tabCtrl->SetSelectedTabByIndex(tabIndex);
+    if (prevIdx != -1) {
         ntd.code = TCN_SELCHANGE;
         TabsOnNotify(win, (LPARAM)&ntd);
     }
@@ -936,7 +931,11 @@ void TabsOnCtrlTab(WindowInfo* win, bool reverse) {
     if (count < 2) {
         return;
     }
-
-    int next = (TabCtrl_GetCurSel(win->tabCtrl->hwnd) + (reverse ? -1 : 1) + count) % count;
-    TabsSelect(win, next);
+    int idx = win->tabCtrl->GetSelectedTabIndex() + 1;
+    if (reverse) {
+        idx -= 2;
+    }
+    idx += count; // ensure > 0
+    idx = idx % count;
+    TabsSelect(win, idx);
 }
