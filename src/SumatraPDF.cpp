@@ -1120,7 +1120,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
 
     if (state) {
         ss.page = state->pageNo;
-        displayMode = prefs::conv::ToDisplayMode(state->displayMode, DM_AUTOMATIC);
+        displayMode = DisplayModeFromString(state->displayMode, DM_AUTOMATIC);
         showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
         if (state->windowState == WIN_STATE_NORMAL) {
             showType = SW_NORMAL;
@@ -1188,7 +1188,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
 
     if (state) {
         CrashIf(!win->IsDocLoaded());
-        zoomVirtual = prefs::conv::ToZoom(state->zoom, ZOOM_FIT_PAGE);
+        zoomVirtual = ZoomFromString(state->zoom, ZOOM_FIT_PAGE);
         if (win->ctrl->ValidPageNo(ss.page)) {
             if (ZOOM_FIT_CONTENT != zoomVirtual) {
                 ss.x = state->scrollPos.x;
@@ -2845,7 +2845,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     if (win->AsFixed()) {
         ss = win->AsFixed()->GetScrollState();
     }
-    const char* viewModeStr = prefs::conv::FromDisplayMode(ctrl->GetDisplayMode());
+    const char* viewModeStr = DisplayModeToString(ctrl->GetDisplayMode());
     AutoFreeWstr ZoomVirtual(str::Format(L"%.2f", ctrl->GetZoomVirtual()));
     if (ZOOM_FIT_PAGE == ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitpage");

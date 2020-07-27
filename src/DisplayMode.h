@@ -25,31 +25,13 @@ enum DisplayMode {
 
 constexpr int INVALID_PAGE_NO = -1;
 
-inline bool IsSingle(DisplayMode mode) {
-    return DM_SINGLE_PAGE == mode || DM_CONTINUOUS == mode;
-}
-inline bool IsContinuous(DisplayMode mode) {
-    return DM_CONTINUOUS == mode || DM_CONTINUOUS_FACING == mode || DM_CONTINUOUS_BOOK_VIEW == mode;
-}
-inline bool IsFacing(DisplayMode mode) {
-    return DM_FACING == mode || DM_CONTINUOUS_FACING == mode;
-}
-inline bool IsBookView(DisplayMode mode) {
-    return DM_BOOK_VIEW == mode || DM_CONTINUOUS_BOOK_VIEW == mode;
-}
+bool IsSingle(DisplayMode mode);
+bool IsContinuous(DisplayMode mode);
+bool IsFacing(DisplayMode mode);
+bool IsBookView(DisplayMode mode);
+bool IsValidZoom(float zoomLevel);
 
-inline bool IsValidZoom(float zoomLevel) {
-    return (ZOOM_MIN - 0.01f <= zoomLevel && zoomLevel <= ZOOM_MAX + 0.01f) || ZOOM_FIT_PAGE == zoomLevel ||
-           ZOOM_FIT_WIDTH == zoomLevel || ZOOM_FIT_CONTENT == zoomLevel;
-}
-
-namespace prefs {
-namespace conv {
-
-const char* FromDisplayMode(DisplayMode mode);
-DisplayMode ToDisplayMode(const char* s, DisplayMode defVal);
-void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140 = nullptr);
-float ToZoom(const char* s, float defVal);
-
-}; // namespace conv
-}; // namespace prefs
+const char* DisplayModeToString(DisplayMode mode);
+DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal);
+float ZoomFromString(const char* s, float defVal);
+void ZoomToString(char** dst, float zoom, DisplayState* stateForIssue2140 = nullptr);

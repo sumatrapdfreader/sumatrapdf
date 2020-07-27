@@ -896,7 +896,7 @@ void EbookController::GetDisplayState(DisplayState* ds) {
     // DisplayState settings can also be used for EngineEbook;
     // we get reasonable defaults from DisplayState's constructor anyway
     ds->reparseIdx = currPageReparseIdx;
-    str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));
+    str::ReplacePtr(&ds->displayMode, DisplayModeToString(GetDisplayMode()));
 }
 
 void EbookController::SetViewPortSize(Size size) {

@@ -104,8 +104,8 @@ bool Load() {
         str::ReplacePtr(&gprefs->uiLanguage, trans::DetectUserLang());
     }
     gprefs->lastPrefUpdate = file::GetModificationTime(path.Get());
-    gprefs->defaultDisplayModeEnum = conv::ToDisplayMode(gprefs->defaultDisplayMode, DM_AUTOMATIC);
-    gprefs->defaultZoomFloat = conv::ToZoom(gprefs->defaultZoom, ZOOM_ACTUAL_SIZE);
+    gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DM_AUTOMATIC);
+    gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, ZOOM_ACTUAL_SIZE);
     CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
 
     int weekDiff = GetWeekCount() - gprefs->openCountWeek;
@@ -203,8 +203,8 @@ bool Save() {
     // remove entries which should (no longer) be remembered
     gFileHistory.Purge(!gGlobalPrefs->rememberStatePerDocument);
     // update display mode and zoom fields from internal values
-    str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, conv::FromDisplayMode(gGlobalPrefs->defaultDisplayModeEnum));
-    conv::FromZoom(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
+    str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
+    ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
 
     AutoFreeWstr path = GetSettingsPath();
     DebugCrashIf(!path.data);

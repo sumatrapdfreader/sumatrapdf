@@ -234,7 +234,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
     if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
-        const char* viewModeStr = prefs::conv::FromDisplayMode(i.startView);
+        const char* viewModeStr = DisplayModeToString(i.startView);
         AutoFreeWstr viewMode = strconv::Utf8ToWstr(viewModeStr);
         cmd.AppendFmt(L"[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode.Get(), i.startZoom,
                       i.startScroll.x, i.startScroll.y);
@@ -321,7 +321,7 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
     tab->tocState = *state->tocState;
     SetSidebarVisibility(win, state->showToc, gGlobalPrefs->showFavorites);
 
-    DisplayMode displayMode = prefs::conv::ToDisplayMode(state->displayMode, DM_AUTOMATIC);
+    DisplayMode displayMode = DisplayModeFromString(state->displayMode, DM_AUTOMATIC);
     if (displayMode != DM_AUTOMATIC) {
         SwitchToDisplayMode(win, displayMode);
     }
@@ -329,7 +329,7 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
     if (!tab->AsEbook()) {
         tab->ctrl->GoToPage(state->pageNo, true);
     }
-    float zoom = prefs::conv::ToZoom(state->zoom, INVALID_ZOOM);
+    float zoom = ZoomFromString(state->zoom, INVALID_ZOOM);
     if (zoom != INVALID_ZOOM) {
         if (tab->AsFixed()) {
             tab->AsFixed()->Relayout(zoom, state->rotation);

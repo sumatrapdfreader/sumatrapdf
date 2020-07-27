@@ -9,8 +9,26 @@
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 
-namespace prefs {
-namespace conv {
+bool IsSingle(DisplayMode mode) {
+    return DM_SINGLE_PAGE == mode || DM_CONTINUOUS == mode;
+}
+
+bool IsContinuous(DisplayMode mode) {
+    return DM_CONTINUOUS == mode || DM_CONTINUOUS_FACING == mode || DM_CONTINUOUS_BOOK_VIEW == mode;
+}
+
+bool IsFacing(DisplayMode mode) {
+    return DM_FACING == mode || DM_CONTINUOUS_FACING == mode;
+}
+
+bool IsBookView(DisplayMode mode) {
+    return DM_BOOK_VIEW == mode || DM_CONTINUOUS_BOOK_VIEW == mode;
+}
+
+bool IsValidZoom(float zoomLevel) {
+    return (ZOOM_MIN - 0.01f <= zoomLevel && zoomLevel <= ZOOM_MAX + 0.01f) || ZOOM_FIT_PAGE == zoomLevel ||
+           ZOOM_FIT_WIDTH == zoomLevel || ZOOM_FIT_CONTENT == zoomLevel;
+}
 
 // must match order of enum DisplayMode
 static const char* displayModeNames =
@@ -22,7 +40,7 @@ static const char* displayModeNames =
     "continuous facing\0"
     "continuous book view\0";
 
-const char* FromDisplayMode(DisplayMode mode) {
+const char* DisplayModeToString(DisplayMode mode) {
     int idx = (int)mode;
     const char* s = seqstrings::IdxToStr(displayModeNames, idx);
     if (!s) {
@@ -32,7 +50,7 @@ const char* FromDisplayMode(DisplayMode mode) {
     return s;
 }
 
-DisplayMode ToDisplayMode(const char* s, DisplayMode defVal) {
+DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal) {
     // for consistency ("continuous" is used instead in the settings instead for brevity)
     if (str::EqIS(s, "continuous single page")) {
         return DM_CONTINUOUS;
@@ -44,8 +62,25 @@ DisplayMode ToDisplayMode(const char* s, DisplayMode defVal) {
     return (DisplayMode)idx;
 }
 
-void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140) {
-    float prevZoom = *dst ? ToZoom(*dst, INVALID_ZOOM) : INVALID_ZOOM;
+float ZoomFromString(const char* s, float defVal) {
+    if (str::EqIS(s, "fit page")) {
+        return ZOOM_FIT_PAGE;
+    }
+    if (str::EqIS(s, "fit width")) {
+        return ZOOM_FIT_WIDTH;
+    }
+    if (str::EqIS(s, "fit content")) {
+        return ZOOM_FIT_CONTENT;
+    }
+    float zoom;
+    if (str::Parse(s, "%f", &zoom) && IsValidZoom(zoom)) {
+        return zoom;
+    }
+    return defVal;
+}
+
+void ZoomToString(char** dst, float zoom, DisplayState* stateForIssue2140) {
+    float prevZoom = *dst ? ZoomFromString(*dst, INVALID_ZOOM) : INVALID_ZOOM;
     if (prevZoom == zoom) {
         return;
     }
@@ -72,23 +107,3 @@ void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140) {
         *dst = str::Format("%g", zoom);
     }
 }
-
-float ToZoom(const char* s, float defVal) {
-    if (str::EqIS(s, "fit page")) {
-        return ZOOM_FIT_PAGE;
-    }
-    if (str::EqIS(s, "fit width")) {
-        return ZOOM_FIT_WIDTH;
-    }
-    if (str::EqIS(s, "fit content")) {
-        return ZOOM_FIT_CONTENT;
-    }
-    float zoom;
-    if (str::Parse(s, "%f", &zoom) && IsValidZoom(zoom)) {
-        return zoom;
-    }
-    return defVal;
-}
-
-}; // namespace conv
-}; // namespace prefs

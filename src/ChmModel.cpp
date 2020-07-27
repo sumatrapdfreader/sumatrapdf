@@ -594,8 +594,8 @@ void ChmModel::GetDisplayState(DisplayState* ds) {
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
-    str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));
-    prefs::conv::FromZoom(&ds->zoom, GetZoomVirtual(), ds);
+    str::ReplacePtr(&ds->displayMode, DisplayModeToString(GetDisplayMode()));
+    ZoomToString(&ds->zoom, GetZoomVirtual(), ds);
 
     ds->pageNo = CurrentPageNo();
     ds->scrollPos = Point();

@@ -227,9 +227,8 @@ void DisplayModel::GetDisplayState(DisplayState* ds) {
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
-    str::ReplacePtr(&ds->displayMode,
-                    prefs::conv::FromDisplayMode(presentationMode ? presDisplayMode : GetDisplayMode()));
-    prefs::conv::FromZoom(&ds->zoom, presentationMode ? presZoomVirtual : zoomVirtual, ds);
+    str::ReplacePtr(&ds->displayMode, DisplayModeToString(presentationMode ? presDisplayMode : GetDisplayMode()));
+    ZoomToString(&ds->zoom, presentationMode ? presZoomVirtual : zoomVirtual, ds);
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;
