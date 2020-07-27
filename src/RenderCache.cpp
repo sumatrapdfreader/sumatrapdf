@@ -5,8 +5,6 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
-#include "utils/Log.h"
-#include "utils/LogDbg.h"
 
 #include "wingui/TreeModel.h"
 
@@ -20,6 +18,10 @@
 #include "GlobalPrefs.h"
 #include "RenderCache.h"
 #include "TextSelection.h"
+
+#include "utils/Log.h"
+#define NO_LOG
+#include "utils/LogDbg.h"
 
 #pragma warning(disable : 28159) // silence /analyze: Consider using 'GetTickCount64' instead of 'GetTickCount'
 
