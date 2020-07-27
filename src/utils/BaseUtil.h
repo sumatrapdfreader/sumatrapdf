@@ -448,7 +448,7 @@ struct PoolAllocator : Allocator {
     void* Alloc(size_t size) override;
 
     void FreeAll();
-    void reset();
+    void Reset();
     void* At(int i);
 
     // only valid for structs, could alloc objects with

@@ -18,7 +18,7 @@ ListBoxModelStrings::~ListBoxModelStrings() {
 }
 
 int ListBoxModelStrings::ItemsCount() {
-    return strings.size();
+    return strings.Size();
 }
 
 Size ListBoxModelStrings::Draw(bool measure) {

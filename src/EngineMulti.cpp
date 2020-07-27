@@ -364,7 +364,7 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
 }
 
 bool EngineMulti::LoadFromFiles(std::string_view dir, VecStr& files) {
-    int n = files.size();
+    int n = files.Size();
     TocItem* tocFiles = nullptr;
     for (int i = 0; i < n; i++) {
         std::string_view path = files.at(i);
@@ -546,7 +546,7 @@ EngineBase* CreateEngineMultiFromDirectory(const WCHAR* dirW) {
         // TODO: show error message
         return nullptr;
     }
-    if (files.size() == 0) {
+    if (files.Size() == 0) {
         // TODO: show error message
         return nullptr;
     }

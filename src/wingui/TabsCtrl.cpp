@@ -501,6 +501,9 @@ TabsCtrl2::~TabsCtrl2() {
 }
 
 bool TabsCtrl2::Create() {
+    if (createToolTipsHwnd) {
+        dwStyle |= TCS_TOOLTIPS;
+    }
     bool ok = WindowBase::Create();
     if (!ok) {
         return false;
@@ -601,4 +604,13 @@ int TabsCtrl2::SetSelectedTabByIndex(int idx) {
 
 void TabsCtrl2::SetItemSize(Size sz) {
     TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
+}
+
+void TabsCtrl2::SetToolTipsHwnd(HWND hwndTooltip) {
+    TabCtrl_SetToolTips(hwnd, hwndTooltip);
+}
+
+HWND TabsCtrl2::GetToolTipsHwnd() {
+    HWND res = TabCtrl_GetToolTips(hwnd);
+    return res;
 }

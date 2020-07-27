@@ -52,6 +52,7 @@ void SetFont(TabsCtrl*, HFONT);
 
 struct TabsCtrl2 : WindowBase {
     str::WStr lastTabText;
+    bool createToolTipsHwnd{false};
 
     TabsCtrl2(HWND parent);
     ~TabsCtrl2() override;
@@ -75,4 +76,7 @@ struct TabsCtrl2 : WindowBase {
 
     void SetItemSize(Size sz);
     int GetTabCount();
+
+    void SetToolTipsHwnd(HWND);
+    HWND GetToolTipsHwnd();
 };

@@ -155,7 +155,7 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
         return true;
     });
 
-    int nFiles = filePaths.size();
+    int nFiles = filePaths.Size();
     if (nFiles == 0) {
         // TODO: show an error message
         return false;

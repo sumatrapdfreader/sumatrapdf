@@ -96,7 +96,7 @@ void PoolAllocator::FreeAll() {
 // optimization: frees all but first block
 // allows for more efficient re-use of PoolAllocator
 // with more effort we could preserve all blocks (not sure if worth it)
-void PoolAllocator::reset() {
+void PoolAllocator::Reset() {
     FreeAll();
 
     // TODO: optimize by not freeing the first block, to speed up re-use
@@ -321,11 +321,11 @@ u32 MurmurHash2(const void* key, size_t len) {
     return h;
 }
 
-int VecStrIndex::nLeft() {
+int VecStrIndex::ItemsLeft() {
     return kVecStrIndexSize - nStrings;
 }
 
-int VecStr::size() {
+int VecStr::Size() {
     VecStrIndex* idx = firstIndex;
     int n = 0;
     while (idx) {
@@ -358,14 +358,14 @@ std::string_view VecStr::at(int i) {
     return {s, (size_t)size};
 }
 
-bool VecStr::allocateIndexIfNeeded() {
-    if (currIndex && currIndex->nLeft() > 0) {
+static bool allocateIndexIfNeeded(VecStr& v) {
+    if (v.currIndex && v.currIndex->ItemsLeft() > 0) {
         return true;
     }
 
     // for structures we want aligned allocation. 8 should be good enough for everything
-    allocator.allocAlign = 8;
-    VecStrIndex* idx = allocator.AllocStruct<VecStrIndex>();
+    v.allocator.allocAlign = 8;
+    VecStrIndex* idx = v.allocator.AllocStruct<VecStrIndex>();
 
     if (gAllowAllocFailure && !idx) {
         return false;
@@ -373,20 +373,20 @@ bool VecStr::allocateIndexIfNeeded() {
     idx->next = nullptr;
     idx->nStrings = 0;
 
-    if (!firstIndex) {
-        firstIndex = idx;
-        currIndex = idx;
+    if (!v.firstIndex) {
+        v.firstIndex = idx;
+        v.currIndex = idx;
     } else {
-        CrashIf(!firstIndex);
-        CrashIf(!currIndex);
-        currIndex->next = idx;
-        currIndex = idx;
+        CrashIf(!v.firstIndex);
+        CrashIf(!v.currIndex);
+        v.currIndex->next = idx;
+        v.currIndex = idx;
     }
     return true;
 }
 
 bool VecStr::Append(std::string_view sv) {
-    bool ok = allocateIndexIfNeeded();
+    bool ok = allocateIndexIfNeeded(*this);
     if (!ok) {
         return false;
     }
@@ -405,8 +405,8 @@ bool VecStr::Append(std::string_view sv) {
     return true;
 }
 
-void VecStr::reset() {
-    allocator.reset();
+void VecStr::Reset() {
+    allocator.Reset();
     firstIndex = nullptr;
     currIndex = nullptr;
 }

@@ -576,7 +576,7 @@ struct VecStrIndex {
     int nStrings;
     char* offsets[kVecStrIndexSize];
     i32 sizes[kVecStrIndexSize];
-    int nLeft();
+    int ItemsLeft();
 };
 
 // Append-only, optimized vector of strings. Allocates from pool allocator, so
@@ -589,9 +589,9 @@ struct VecStr {
 
     VecStr() = default;
     ~VecStr() = default;
-    int size();
-    bool allocateIndexIfNeeded();
-    void reset();
+    int Size();
+    void Reset();
     bool Append(std::string_view sv);
+
     std::string_view at(int);
 };
