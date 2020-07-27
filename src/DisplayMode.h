@@ -1,10 +1,12 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+typedef struct FileState DisplayState;
+
 enum DisplayMode {
     // automatic means: the continuous form of single page, facing or
     // book view - depending on the document's desired PageLayout
-    DM_AUTOMATIC,
+    DM_AUTOMATIC = 0,
     DM_SINGLE_PAGE,
     DM_FACING,
     DM_BOOK_VIEW,
@@ -40,3 +42,14 @@ inline bool IsValidZoom(float zoomLevel) {
     return (ZOOM_MIN - 0.01f <= zoomLevel && zoomLevel <= ZOOM_MAX + 0.01f) || ZOOM_FIT_PAGE == zoomLevel ||
            ZOOM_FIT_WIDTH == zoomLevel || ZOOM_FIT_CONTENT == zoomLevel;
 }
+
+namespace prefs {
+namespace conv {
+
+const char* FromDisplayMode(DisplayMode mode);
+DisplayMode ToDisplayMode(const char* s, DisplayMode defVal);
+void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140 = nullptr);
+float ToZoom(const char* s, float defVal);
+
+}; // namespace conv
+}; // namespace prefs

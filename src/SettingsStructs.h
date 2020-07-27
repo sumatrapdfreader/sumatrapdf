@@ -5,8 +5,6 @@
 
 class RenderedBitmap;
 
-typedef struct FileState DisplayState;
-
 // top, right, bottom and left margin (in that order) between window and
 // document
 struct WindowMargin {
@@ -173,7 +171,7 @@ struct FileState {
     // how pages should be laid out for this document, needs to be
     // synchronized with DefaultDisplayMode after deserialization and
     // before serialization
-    WCHAR* displayMode;
+    char* displayMode;
     // how far this document has been scrolled (in x and y direction)
     Point scrollPos;
     // number of the last read page
@@ -217,7 +215,7 @@ struct TabState {
     // path of the document
     WCHAR* filePath;
     // same as FileStates -> DisplayMode
-    WCHAR* displayMode;
+    char* displayMode;
     // number of the last read page
     int pageNo;
     // same as FileStates -> Zoom
@@ -337,7 +335,7 @@ struct GlobalPrefs {
     // how pages should be laid out by default, needs to be synchronized
     // with DefaultDisplayMode after deserialization and before
     // serialization
-    WCHAR* defaultDisplayMode;
+    char* defaultDisplayMode;
     // default zoom (in %) or one of those values: fit page, fit width, fit
     // content
     char* defaultZoom;
@@ -513,7 +511,7 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, openCount), SettingType::Int, 0},
     {offsetof(FileState, decryptionKey), SettingType::Utf8String, 0},
     {offsetof(FileState, useDefaultState), SettingType::Bool, false},
-    {offsetof(FileState, displayMode), SettingType::String, (intptr_t)L"automatic"},
+    {offsetof(FileState, displayMode), SettingType::Utf8String, (intptr_t) "automatic"},
     {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointInfo},
     {offsetof(FileState, pageNo), SettingType::Int, 1},
     {offsetof(FileState, zoom), SettingType::Utf8String, (intptr_t) "fit page"},
@@ -539,7 +537,7 @@ static const StructInfo gPoint_1_Info = {sizeof(Point), 2, gPoint_1_Fields, "X\0
 
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), SettingType::String, 0},
-    {offsetof(TabState, displayMode), SettingType::String, (intptr_t)L"automatic"},
+    {offsetof(TabState, displayMode), SettingType::Utf8String, (intptr_t) "automatic"},
     {offsetof(TabState, pageNo), SettingType::Int, 1},
     {offsetof(TabState, zoom), SettingType::Utf8String, (intptr_t) "fit page"},
     {offsetof(TabState, rotation), SettingType::Int, 0},
@@ -615,7 +613,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
     {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
     {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
-    {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t)L"automatic"},
+    {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::Utf8String, (intptr_t) "automatic"},
     {offsetof(GlobalPrefs, defaultZoom), SettingType::Utf8String, (intptr_t) "fit page"},
     {offsetof(GlobalPrefs, windowState), SettingType::Int, 1},
     {offsetof(GlobalPrefs, windowPos), SettingType::Compact, (intptr_t)&gRectInfo},
@@ -646,14 +644,3 @@ static const StructInfo gGlobalPrefsInfo = {
     "enOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif
-
-namespace prefs {
-namespace conv {
-
-const WCHAR* FromDisplayMode(DisplayMode mode);
-DisplayMode ToDisplayMode(const WCHAR* s, DisplayMode defVal);
-void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140 = nullptr);
-float ToZoom(const char* s, float defVal);
-
-}; // namespace conv
-}; // namespace prefs

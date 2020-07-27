@@ -719,6 +719,7 @@
     <ClInclude Include="..\src\ChmModel.h" />
     <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
+    <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
     <ClInclude Include="..\src\Doc.h" />
     <ClInclude Include="..\src\EbookController.h" />
@@ -800,6 +801,7 @@
     <ClCompile Include="..\src\Caption.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
+    <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\Doc.cpp" />
     <ClCompile Include="..\src\EbookController.cpp" />
@@ -825,7 +827,6 @@
     <ClCompile Include="..\src\SaveAsPdf.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
-    <ClCompile Include="..\src\SettingsStructs.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />
     <ClCompile Include="..\src\SumatraAbout.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />

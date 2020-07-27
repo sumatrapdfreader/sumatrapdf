@@ -2845,7 +2845,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     if (win->AsFixed()) {
         ss = win->AsFixed()->GetScrollState();
     }
-    const WCHAR* viewMode = prefs::conv::FromDisplayMode(ctrl->GetDisplayMode());
+    const char* viewModeStr = prefs::conv::FromDisplayMode(ctrl->GetDisplayMode());
     AutoFreeWstr ZoomVirtual(str::Format(L"%.2f", ctrl->GetZoomVirtual()));
     if (ZOOM_FIT_PAGE == ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitpage");
@@ -2856,8 +2856,9 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     }
 
     AutoFreeWstr exePath = GetExePath();
+    AutoFreeWstr viewMode = strconv::Utf8ToWstr(viewModeStr);
     AutoFreeWstr args = str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
-                                    viewMode, ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
+                                    viewMode.Get(), ZoomVirtual.Get(), (int)ss.x, (int)ss.y);
     AutoFreeWstr label = ctrl->GetPageLabel(ss.page);
     const WCHAR* srcFileName = path::GetBaseNameNoFree(ctrl->FilePath());
     AutoFreeWstr desc = str::Format(_TR("Bookmark shortcut to page %s of %s"), label.Get(), srcFileName);

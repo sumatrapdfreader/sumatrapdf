@@ -57,6 +57,9 @@
     <ClInclude Include="..\src\CrashHandler.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\DisplayMode.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\DisplayModel.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -296,6 +299,9 @@
     <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\DisplayMode.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\DisplayModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -372,9 +378,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Selection.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SettingsStructs.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\StressTesting.cpp">

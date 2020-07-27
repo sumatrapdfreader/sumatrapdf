@@ -234,9 +234,10 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
     if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
-        const WCHAR* viewMode = prefs::conv::FromDisplayMode(i.startView);
-        cmd.AppendFmt(L"[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode, i.startZoom, i.startScroll.x,
-                      i.startScroll.y);
+        const char* viewModeStr = prefs::conv::FromDisplayMode(i.startView);
+        AutoFreeWstr viewMode = strconv::Utf8ToWstr(viewModeStr);
+        cmd.AppendFmt(L"[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullpath, viewMode.Get(), i.startZoom,
+                      i.startScroll.x, i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));

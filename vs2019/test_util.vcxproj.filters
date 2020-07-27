@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\AppUtil.h" />
+    <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\SettingsStructs.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
@@ -109,8 +110,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\AppUtil.cpp" />
+    <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
-    <ClCompile Include="..\src\SettingsStructs.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\UnitTests.cpp" />
     <ClCompile Include="..\src\mui\SvgPath.cpp">

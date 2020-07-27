@@ -12,56 +12,37 @@
 namespace prefs {
 namespace conv {
 
-#define DM_AUTOMATIC_STR "automatic"
-#define DM_SINGLE_PAGE_STR "single page"
-#define DM_FACING_STR "facing"
-#define DM_BOOK_VIEW_STR "book view"
-#define DM_CONTINUOUS_STR "continuous"
-#define DM_CONTINUOUS_FACING_STR "continuous facing"
-#define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
+// must match order of enum DisplayMode
+static const char* displayModeNames =
+    "automatic\0"
+    "single page\0"
+    "facing\0"
+    "book view\0"
+    "continuous\0"
+    "continuous facing\0"
+    "continuous book view\0";
 
-#define STR_FROM_ENUM(val)      \
-    if (val == mode)            \
-        return TEXT(val##_STR); \
-    else                        \
-        NoOp()
-
-const WCHAR* FromDisplayMode(DisplayMode mode) {
-    STR_FROM_ENUM(DM_AUTOMATIC);
-    STR_FROM_ENUM(DM_SINGLE_PAGE);
-    STR_FROM_ENUM(DM_FACING);
-    STR_FROM_ENUM(DM_BOOK_VIEW);
-    STR_FROM_ENUM(DM_CONTINUOUS);
-    STR_FROM_ENUM(DM_CONTINUOUS_FACING);
-    STR_FROM_ENUM(DM_CONTINUOUS_BOOK_VIEW);
-    CrashIf(true);
-    return L"unknown display mode!?";
+const char* FromDisplayMode(DisplayMode mode) {
+    int idx = (int)mode;
+    const char* s = seqstrings::IdxToStr(displayModeNames, idx);
+    if (!s) {
+        CrashIf(true);
+        return "unknown display mode";
+    }
+    return s;
 }
 
-#undef STR_FROM_ENUM
-
-#define IS_STR_ENUM(enumName)               \
-    if (str::EqIS(s, TEXT(enumName##_STR))) \
-        return enumName;                    \
-    else                                    \
-        NoOp()
-
-DisplayMode ToDisplayMode(const WCHAR* s, DisplayMode defVal) {
-    IS_STR_ENUM(DM_AUTOMATIC);
-    IS_STR_ENUM(DM_SINGLE_PAGE);
-    IS_STR_ENUM(DM_FACING);
-    IS_STR_ENUM(DM_BOOK_VIEW);
-    IS_STR_ENUM(DM_CONTINUOUS);
-    IS_STR_ENUM(DM_CONTINUOUS_FACING);
-    IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
+DisplayMode ToDisplayMode(const char* s, DisplayMode defVal) {
     // for consistency ("continuous" is used instead in the settings instead for brevity)
-    if (str::EqIS(s, L"continuous single page")) {
+    if (str::EqIS(s, "continuous single page")) {
         return DM_CONTINUOUS;
     }
-    return defVal;
+    int idx = seqstrings::StrToIdx(displayModeNames, s);
+    if (idx < 0) {
+        return defVal;
+    }
+    return (DisplayMode)idx;
 }
-
-#undef IS_STR_ENUM
 
 void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140) {
     float prevZoom = *dst ? ToZoom(*dst, INVALID_ZOOM) : INVALID_ZOOM;
