@@ -349,25 +349,25 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
     displayMode = newDisplayMode;
     presDisplayMode = newDisplayMode;
     PageLayoutType layout = engine->preferredLayout;
-    if (DM_AUTOMATIC == displayMode) {
+    if (DisplayMode::Automatic == displayMode) {
         switch (layout & ~Layout_R2L) {
             case Layout_Single:
-                displayMode = DM_CONTINUOUS;
+                displayMode = DisplayMode::Continuous;
                 break;
             case Layout_Facing:
-                displayMode = DM_CONTINUOUS_FACING;
+                displayMode = DisplayMode::ContinuousFacing;
                 break;
             case Layout_Book:
-                displayMode = DM_CONTINUOUS_BOOK_VIEW;
+                displayMode = DisplayMode::ContinuousBookView;
                 break;
             case Layout_Single | Layout_NonContinuous:
-                displayMode = DM_SINGLE_PAGE;
+                displayMode = DisplayMode::SinglePage;
                 break;
             case Layout_Facing | Layout_NonContinuous:
-                displayMode = DM_FACING;
+                displayMode = DisplayMode::Facing;
                 break;
             case Layout_Book | Layout_NonContinuous:
-                displayMode = DM_BOOK_VIEW;
+                displayMode = DisplayMode::BookView;
                 break;
         }
     }
@@ -1255,14 +1255,14 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuous) {
     if (keepContinuous && IsContinuous(displayMode)) {
         switch (newDisplayMode) {
-            case DM_SINGLE_PAGE:
-                newDisplayMode = DM_CONTINUOUS;
+            case DisplayMode::SinglePage:
+                newDisplayMode = DisplayMode::Continuous;
                 break;
-            case DM_FACING:
-                newDisplayMode = DM_CONTINUOUS_FACING;
+            case DisplayMode::Facing:
+                newDisplayMode = DisplayMode::ContinuousFacing;
                 break;
-            case DM_BOOK_VIEW:
-                newDisplayMode = DM_CONTINUOUS_BOOK_VIEW;
+            case DisplayMode::BookView:
+                newDisplayMode = DisplayMode::ContinuousBookView;
                 break;
         }
     }
@@ -1296,7 +1296,7 @@ void DisplayModel::SetPresentationMode(bool enable) {
         presZoomVirtual = zoomVirtual;
         // disable the window margin during presentations
         windowMargin.top = windowMargin.right = windowMargin.bottom = windowMargin.left = 0;
-        SetDisplayMode(DM_SINGLE_PAGE);
+        SetDisplayMode(DisplayMode::SinglePage);
         SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
     } else {
         if (engine && engine->IsImageCollection()) {
@@ -1770,30 +1770,30 @@ void DisplayModel::SetScrollState(ScrollState state) {
 void DisplayModel::AddNavPoint() {
     ScrollState ss = GetScrollState();
     // remove the current and all Forward history entries
-    if (navHistoryIx < navHistory.size()) {
-        navHistory.RemoveAt(navHistoryIx, navHistory.size() - navHistoryIx);
+    if (navHistoryIdx < navHistory.size()) {
+        navHistory.RemoveAt(navHistoryIdx, navHistory.size() - navHistoryIdx);
     }
     // don't add another entry for the exact same position
-    if (navHistoryIx > 0 && ss == navHistory.at(navHistoryIx - 1)) {
+    if (navHistoryIdx > 0 && ss == navHistory.at(navHistoryIdx - 1)) {
         return;
     }
     // make sure that the history doesn't grow overly large
-    if (navHistoryIx >= MAX_NAV_HISTORY_LEN) {
-        CrashIf(navHistoryIx > MAX_NAV_HISTORY_LEN);
-        navHistory.RemoveAt(0, navHistoryIx - MAX_NAV_HISTORY_LEN + 1);
-        navHistoryIx = MAX_NAV_HISTORY_LEN - 1;
+    if (navHistoryIdx >= MAX_NAV_HISTORY_LEN) {
+        CrashIf(navHistoryIdx > MAX_NAV_HISTORY_LEN);
+        navHistory.RemoveAt(0, navHistoryIdx - MAX_NAV_HISTORY_LEN + 1);
+        navHistoryIdx = MAX_NAV_HISTORY_LEN - 1;
     }
     // add a new Back history entry
     navHistory.Append(ss);
-    navHistoryIx++;
+    navHistoryIdx++;
 }
 
 bool DisplayModel::CanNavigate(int dir) const {
-    CrashIf(navHistoryIx > navHistory.size());
+    CrashIf(navHistoryIdx > navHistory.size());
     if (dir < 0) {
-        return navHistoryIx >= (size_t)-dir;
+        return navHistoryIdx >= (size_t)-dir;
     }
-    return navHistoryIx + dir < navHistory.size();
+    return navHistoryIdx + dir < navHistory.size();
 }
 
 /* Navigates |dir| steps forward or backwards. */
@@ -1803,24 +1803,24 @@ void DisplayModel::Navigate(int dir) {
     }
     // update the current history entry
     ScrollState ss = GetScrollState();
-    if (navHistoryIx < navHistory.size()) {
-        navHistory.at(navHistoryIx) = ss;
+    if (navHistoryIdx < navHistory.size()) {
+        navHistory.at(navHistoryIdx) = ss;
     } else {
         navHistory.Append(ss);
     }
-    navHistoryIx += dir;
-    SetScrollState(navHistory.at(navHistoryIx));
+    navHistoryIdx += dir;
+    SetScrollState(navHistory.at(navHistoryIdx));
 }
 
 void DisplayModel::CopyNavHistory(DisplayModel& orig) {
     navHistory = orig.navHistory;
-    navHistoryIx = orig.navHistoryIx;
+    navHistoryIdx = orig.navHistoryIdx;
     // remove navigation history entries for all no longer valid pages
     for (size_t i = navHistory.size(); i > 0; i--) {
         if (!ValidPageNo(navHistory.at(i - 1).page)) {
             navHistory.RemoveAt(i - 1);
-            if (i - 1 < navHistoryIx) {
-                navHistoryIx--;
+            if (i - 1 < navHistoryIdx) {
+                navHistoryIdx--;
             }
         }
     }
@@ -1841,6 +1841,9 @@ bool DisplayModel::ShouldCacheRendering(int pageNo) {
 
 void DisplayModel::ScrollToLink(PageDestination* dest) {
     CrashIf(!dest || dest->GetPageNo() <= 0);
+    if (!dest) {
+        return;
+    }
 
     Point scroll(-1, 0);
     RectF rect = dest->GetRect();

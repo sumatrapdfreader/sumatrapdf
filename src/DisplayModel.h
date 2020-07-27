@@ -116,14 +116,14 @@ struct DisplayModel : public Controller {
     Kind GetEngineType() const;
 
     // controller-specific data (easier to save here than on WindowInfo)
-    Kind engineType = nullptr;
+    Kind engineType{nullptr};
 
-    Synchronizer* pdfSync = nullptr;
+    Synchronizer* pdfSync{nullptr};
 
-    DocumentTextCache* textCache = nullptr;
-    TextSelection* textSelection = nullptr;
+    DocumentTextCache* textCache{nullptr};
+    TextSelection* textSelection{nullptr};
     // access only from Search thread
-    TextSearch* textSearch = nullptr;
+    TextSearch* textSearch{nullptr};
 
     PageInfo* GetPageInfo(int pageNo) const;
 
@@ -200,16 +200,16 @@ struct DisplayModel : public Controller {
     bool GoToPrevPage(int scrollY);
     int GetPageNextToPoint(Point pt);
 
-    EngineBase* engine = nullptr;
+    EngineBase* engine{nullptr};
 
     /* an array of PageInfo, len of array is pageCount */
-    PageInfo* pagesInfo = nullptr;
+    PageInfo* pagesInfo{nullptr};
 
-    DisplayMode displayMode = DM_AUTOMATIC;
+    DisplayMode displayMode{DisplayMode::Automatic};
     /* In non-continuous mode is the first page from a file that we're
        displaying.
        No meaning in continous mode. */
-    int startPage = 1;
+    int startPage{1};
 
     /* size of virtual canvas containing all rendered pages. */
     Size canvasSize;
@@ -226,25 +226,25 @@ struct DisplayModel : public Controller {
     /* real zoom value calculated from zoomVirtual. Same as
        zoomVirtual * 0.01 * dpiFactor
        except for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
-    float zoomReal = INVALID_ZOOM;
-    float zoomVirtual = INVALID_ZOOM;
-    int rotation = 0;
+    float zoomReal{INVALID_ZOOM};
+    float zoomVirtual{INVALID_ZOOM};
+    int rotation{0};
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
-    float dpiFactor = 1.0f;
+    float dpiFactor{1.0f};
     /* whether to display pages Left-to-Right or Right-to-Left.
        this value is extracted from the PDF document */
-    bool displayR2L = false;
+    bool displayR2L{false};
 
     /* when we're in presentation mode, _pres* contains the pre-presentation values */
-    bool presentationMode = false;
-    float presZoomVirtual = INVALID_ZOOM;
-    DisplayMode presDisplayMode = DM_AUTOMATIC;
+    bool presentationMode{false};
+    float presZoomVirtual{INVALID_ZOOM};
+    DisplayMode presDisplayMode{DisplayMode::Automatic};
 
     Vec<ScrollState> navHistory;
     /* index of the "current" history entry (to be updated on navigation),
        resp. number of Back history entries */
-    size_t navHistoryIx = 0;
+    size_t navHistoryIdx{0};
 };
 
 int NormalizeRotation(int rotation);

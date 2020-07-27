@@ -578,7 +578,7 @@ void EbookController::StartLayouting(int startReparseIdxArg, DisplayMode display
     currPageReparseIdx = startReparseIdxArg;
     // displayMode could be any value if alternate UI was used, we have to limit it to
     // either DM_SINGLE_PAGE or DM_FACING
-    if (DM_AUTOMATIC == displayMode) {
+    if (DisplayMode::Automatic == displayMode) {
         displayMode = gGlobalPrefs->defaultDisplayModeEnum;
     }
 

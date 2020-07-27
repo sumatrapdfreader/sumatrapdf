@@ -1120,7 +1120,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
 
     if (state) {
         ss.page = state->pageNo;
-        displayMode = DisplayModeFromString(state->displayMode, DM_AUTOMATIC);
+        displayMode = DisplayModeFromString(state->displayMode, DisplayMode::Automatic);
         showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
         if (state->windowState == WIN_STATE_NORMAL) {
             showType = SW_NORMAL;
@@ -3366,17 +3366,17 @@ static void OnMenuViewContinuous(WindowInfo* win) {
 
     DisplayMode newMode = win->ctrl->GetDisplayMode();
     switch (newMode) {
-        case DM_SINGLE_PAGE:
-        case DM_CONTINUOUS:
-            newMode = IsContinuous(newMode) ? DM_SINGLE_PAGE : DM_CONTINUOUS;
+        case DisplayMode::SinglePage:
+        case DisplayMode::Continuous:
+            newMode = IsContinuous(newMode) ? DisplayMode::SinglePage : DisplayMode::Continuous;
             break;
-        case DM_FACING:
-        case DM_CONTINUOUS_FACING:
-            newMode = IsContinuous(newMode) ? DM_FACING : DM_CONTINUOUS_FACING;
+        case DisplayMode::Facing:
+        case DisplayMode::ContinuousFacing:
+            newMode = IsContinuous(newMode) ? DisplayMode::Facing : DisplayMode::ContinuousFacing;
             break;
-        case DM_BOOK_VIEW:
-        case DM_CONTINUOUS_BOOK_VIEW:
-            newMode = IsContinuous(newMode) ? DM_BOOK_VIEW : DM_CONTINUOUS_BOOK_VIEW;
+        case DisplayMode::BookView:
+        case DisplayMode::ContinuousBookView:
+            newMode = IsContinuous(newMode) ? DisplayMode::BookView : DisplayMode::ContinuousBookView;
             break;
     }
     SwitchToDisplayMode(win, newMode);
@@ -3401,7 +3401,7 @@ static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuous
 
     float zoom = win->ctrl->GetZoomVirtual();
     DisplayMode mode = win->ctrl->GetDisplayMode();
-    DisplayMode newMode = pagesContinuously ? DM_CONTINUOUS : DM_SINGLE_PAGE;
+    DisplayMode newMode = pagesContinuously ? DisplayMode::Continuous : DisplayMode::SinglePage;
 
     if (mode != newMode || zoom != newZoom) {
         float prevZoom = win->currentTab->prevZoomVirtual;
@@ -3858,13 +3858,13 @@ static void OnFrameKeyB(WindowInfo* win) {
             return;
         }
 
-        DisplayMode newMode = DM_BOOK_VIEW;
+        DisplayMode newMode = DisplayMode::BookView;
         if (IsBookView(ctrl->GetDisplayMode())) {
-            newMode = DM_FACING;
+            newMode = DisplayMode::Facing;
         }
         SwitchToDisplayMode(win, newMode, true);
 
-        if (forward && currPage >= ctrl->CurrentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW)) {
+        if (forward && currPage >= ctrl->CurrentPageNo() && (currPage > 1 || newMode == DisplayMode::BookView)) {
             ctrl->GoToNextPage();
         } else if (!forward && currPage <= ctrl->CurrentPageNo()) {
             win->ctrl->GoToPrevPage();
@@ -4396,15 +4396,15 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdViewSinglePage:
-            SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
+            SwitchToDisplayMode(win, DisplayMode::SinglePage, true);
             break;
 
         case CmdViewFacing:
-            SwitchToDisplayMode(win, DM_FACING, true);
+            SwitchToDisplayMode(win, DisplayMode::Facing, true);
             break;
 
         case CmdViewBook:
-            SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
+            SwitchToDisplayMode(win, DisplayMode::BookView, true);
             break;
 
         case CmdViewContinuous:

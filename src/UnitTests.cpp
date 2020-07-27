@@ -96,7 +96,7 @@ static void ParseCommandLineTest() {
             L"SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance", i);
         utassert(0 == i.fileNames.size());
         utassert(i.pageNumber == 37);
-        utassert(i.startView == DM_CONTINUOUS_FACING);
+        utassert(i.startView == DisplayMode::ContinuousFacing);
         utassert(i.startZoom == ZOOM_FIT_CONTENT);
         utassert(i.startScroll.x == 45 && i.startScroll.y == 1234);
     }
@@ -105,7 +105,7 @@ static void ParseCommandLineTest() {
         Flags i;
         ParseCommandLine(L"SumatraPDF.exe -view \"single page\" -zoom 237.45 -scroll -21,-1", i);
         utassert(0 == i.fileNames.size());
-        utassert(i.startView == DM_SINGLE_PAGE);
+        utassert(i.startView == DisplayMode::SinglePage);
         utassert(i.startZoom == 237.45f);
         utassert(i.startScroll.x == -21 && i.startScroll.y == -1);
     }

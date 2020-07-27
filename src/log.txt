@@ -5,6 +5,9 @@ A daily log of changes and commentary. An experiment of sorts.
 Started on converting tab code into TabCtrl.
 Luckily can do it step-by-step.
 
+refactoring old code. Changed some settings from wstr to str.
+change DisplayMode to enum class.
+
 2020-07-25 Sat
 
 fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1286

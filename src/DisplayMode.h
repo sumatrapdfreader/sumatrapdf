@@ -3,16 +3,16 @@
 
 typedef struct FileState DisplayState;
 
-enum DisplayMode {
+enum class DisplayMode {
     // automatic means: the continuous form of single page, facing or
     // book view - depending on the document's desired PageLayout
-    DM_AUTOMATIC = 0,
-    DM_SINGLE_PAGE,
-    DM_FACING,
-    DM_BOOK_VIEW,
-    DM_CONTINUOUS,
-    DM_CONTINUOUS_FACING,
-    DM_CONTINUOUS_BOOK_VIEW,
+    Automatic = 0,
+    SinglePage,
+    Facing,
+    BookView,
+    Continuous,
+    ContinuousFacing,
+    ContinuousBookView,
 };
 
 #define ZOOM_FIT_PAGE -1.f

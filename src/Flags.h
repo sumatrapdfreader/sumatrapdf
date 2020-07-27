@@ -27,7 +27,7 @@ struct Flags {
     bool restrictedUse = false;
     bool enterPresentation = false;
     bool enterFullScreen = false;
-    DisplayMode startView = DM_AUTOMATIC;
+    DisplayMode startView{DisplayMode::Automatic};
     float startZoom = INVALID_ZOOM;
     Point startScroll{-1, -1};
     bool showConsole = false;

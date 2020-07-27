@@ -75,7 +75,7 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
     } else if (IsBookView(displayMode)) {
         id = CmdViewBook;
     } else {
-        CrashIf(win->ctrl || DM_AUTOMATIC != displayMode);
+        CrashIf(win->ctrl || DisplayMode::Automatic != displayMode);
     }
 
     CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);

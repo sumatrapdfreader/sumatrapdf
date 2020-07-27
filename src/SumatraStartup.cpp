@@ -231,7 +231,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, Flags& i, bool i
     } else if (i.pageNumber > 0 && isFirstWin) {
         cmd.AppendFmt(L"[GotoPage(\"%s\", %d)]", fullpath, i.pageNumber);
     }
-    if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
+    if ((i.startView != DisplayMode::Automatic || i.startZoom != INVALID_ZOOM ||
          i.startScroll.x != -1 && i.startScroll.y != -1) &&
         isFirstWin) {
         const char* viewModeStr = DisplayModeToString(i.startView);
@@ -284,7 +284,7 @@ static WindowInfo* LoadOnStartup(const WCHAR* filePath, const Flags& i, bool isF
         }
         EnterFullScreen(win, i.enterPresentation);
     }
-    if (i.startView != DM_AUTOMATIC) {
+    if (i.startView != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, i.startView);
     }
     if (i.startZoom != INVALID_ZOOM) {
@@ -321,8 +321,8 @@ static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
     tab->tocState = *state->tocState;
     SetSidebarVisibility(win, state->showToc, gGlobalPrefs->showFavorites);
 
-    DisplayMode displayMode = DisplayModeFromString(state->displayMode, DM_AUTOMATIC);
-    if (displayMode != DM_AUTOMATIC) {
+    DisplayMode displayMode = DisplayModeFromString(state->displayMode, DisplayMode::Automatic);
+    if (displayMode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, displayMode);
     }
     // TODO: make EbookController::GoToPage not crash
@@ -373,11 +373,11 @@ static bool SetupPluginMode(Flags& i) {
     gGlobalPrefs->escToExit = false;
     // never show the sidebar by default
     gGlobalPrefs->showToc = false;
-    if (DM_AUTOMATIC == gGlobalPrefs->defaultDisplayModeEnum) {
+    if (DisplayMode::Automatic == gGlobalPrefs->defaultDisplayModeEnum) {
         // if the user hasn't changed the default display mode,
         // display documents as single page/continuous/fit width
         // (similar to Adobe Reader, Google Chrome and how browsers display HTML)
-        gGlobalPrefs->defaultDisplayModeEnum = DM_CONTINUOUS;
+        gGlobalPrefs->defaultDisplayModeEnum = DisplayMode::Continuous;
         gGlobalPrefs->defaultZoomFloat = ZOOM_FIT_WIDTH;
     }
     // use fixed page UI for all document types (so that the context menu always

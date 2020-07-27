@@ -23,17 +23,17 @@ static void VecStrTest() {
     const char* str3 = "this is a large string, my friend";
 
     VecStr v;
-    utassert(v.size() == 0);
+    utassert(v.Size() == 0);
     v.Append(str1);
-    utassert(v.size() == 1);
+    utassert(v.Size() == 1);
     v.Append(str2);
-    utassert(v.size() == 2);
+    utassert(v.Size() == 2);
 
     // allocate a bunch to test allocating
     for (int i = 0; i < 1024; i++) {
         v.Append(str3);
     }
-    utassert(v.size() == 1026);
+    utassert(v.Size() == 1026);
 
     assertStrEq(v.at(0), str1);
     assertStrEq(v.at(1), str2);

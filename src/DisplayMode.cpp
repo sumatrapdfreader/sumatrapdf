@@ -10,24 +10,41 @@
 #include "GlobalPrefs.h"
 
 bool IsSingle(DisplayMode mode) {
-    return DM_SINGLE_PAGE == mode || DM_CONTINUOUS == mode;
+    return DisplayMode::SinglePage == mode || DisplayMode::Continuous == mode;
 }
 
 bool IsContinuous(DisplayMode mode) {
-    return DM_CONTINUOUS == mode || DM_CONTINUOUS_FACING == mode || DM_CONTINUOUS_BOOK_VIEW == mode;
+    switch (mode) {
+        case DisplayMode::Continuous:
+        case DisplayMode::ContinuousFacing:
+        case DisplayMode::ContinuousBookView:
+            return true;
+    }
+    return false;
 }
 
 bool IsFacing(DisplayMode mode) {
-    return DM_FACING == mode || DM_CONTINUOUS_FACING == mode;
+    return DisplayMode::Facing == mode || DisplayMode::ContinuousFacing == mode;
 }
 
 bool IsBookView(DisplayMode mode) {
-    return DM_BOOK_VIEW == mode || DM_CONTINUOUS_BOOK_VIEW == mode;
+    return DisplayMode::BookView == mode || DisplayMode::ContinuousBookView == mode;
 }
 
-bool IsValidZoom(float zoomLevel) {
-    return (ZOOM_MIN - 0.01f <= zoomLevel && zoomLevel <= ZOOM_MAX + 0.01f) || ZOOM_FIT_PAGE == zoomLevel ||
-           ZOOM_FIT_WIDTH == zoomLevel || ZOOM_FIT_CONTENT == zoomLevel;
+bool IsValidZoom(float zoom) {
+    if ((ZOOM_MIN - 0.01f <= zoom) && (zoom <= ZOOM_MAX + 0.01f)) {
+        return true;
+    }
+    if (ZOOM_FIT_PAGE == zoom) {
+        return true;
+    }
+    if (ZOOM_FIT_WIDTH == zoom) {
+        return true;
+    }
+    if (ZOOM_FIT_CONTENT == zoom) {
+        return true;
+    }
+    return false;
 }
 
 // must match order of enum DisplayMode
@@ -53,7 +70,7 @@ const char* DisplayModeToString(DisplayMode mode) {
 DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal) {
     // for consistency ("continuous" is used instead in the settings instead for brevity)
     if (str::EqIS(s, "continuous single page")) {
-        return DM_CONTINUOUS;
+        return DisplayMode::Continuous;
     }
     int idx = seqstrings::StrToIdx(displayModeNames, s);
     if (idx < 0) {

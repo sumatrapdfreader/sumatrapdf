@@ -657,7 +657,7 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
         return false;
     }
 
-    win->ctrl->SetDisplayMode(DM_CONTINUOUS);
+    win->ctrl->SetDisplayMode(DisplayMode::Continuous);
     win->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
     win->ctrl->GoToFirstPage();
     if (win->tocVisible || gGlobalPrefs->showFavorites) {

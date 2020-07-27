@@ -815,8 +815,8 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     }
 
     AutoFreeStr viewModeWstr = strconv::WstrToUtf8(viewMode);
-    DisplayMode mode = DisplayModeFromString(viewModeWstr.Get(), DM_AUTOMATIC);
-    if (mode != DM_AUTOMATIC) {
+    DisplayMode mode = DisplayModeFromString(viewModeWstr.Get(), DisplayMode::Automatic);
+    if (mode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, mode);
     }
 

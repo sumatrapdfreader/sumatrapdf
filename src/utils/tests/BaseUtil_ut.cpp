@@ -77,7 +77,7 @@ static void GeomTest() {
 static const char* strings[] = {"s1", "string", "another one", "and one more"};
 
 static void PoolAllocatorStringsTest(PoolAllocator& a, int nRounds) {
-    a.reset();
+    a.Reset();
 
     int nStrings = (int)dimof(strings);
     for (int i = 0; i < nRounds; i++) {

@@ -104,7 +104,7 @@ bool Load() {
         str::ReplacePtr(&gprefs->uiLanguage, trans::DetectUserLang());
     }
     gprefs->lastPrefUpdate = file::GetModificationTime(path.Get());
-    gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DM_AUTOMATIC);
+    gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);
     gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, ZOOM_ACTUAL_SIZE);
     CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
 

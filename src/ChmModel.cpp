@@ -262,7 +262,7 @@ void ChmModel::SetDisplayMode(DisplayMode mode, bool keepContinuous) {
 }
 
 DisplayMode ChmModel::GetDisplayMode() const {
-    return DM_SINGLE_PAGE;
+    return DisplayMode::SinglePage;
 }
 void ChmModel::SetPresentationMode(bool enable) {
     UNUSED(enable); /* not supported */

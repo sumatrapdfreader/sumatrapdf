@@ -43,7 +43,7 @@ struct EbookController : Controller {
 
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
     DisplayMode GetDisplayMode() const override {
-        return IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE;
+        return IsDoublePage() ? DisplayMode::Facing : DisplayMode::SinglePage;
     }
     void SetPresentationMode(bool enable) override {
         UNUSED(enable); /* not supported */
@@ -89,7 +89,7 @@ struct EbookController : Controller {
     void RequestRepaint();
     void HandlePagesFromEbookLayout(EbookFormattingData* ft);
     void TriggerLayout();
-    void StartLayouting(int startReparseIdxArg = -1, DisplayMode displayMode = DM_AUTOMATIC);
+    void StartLayouting(int startReparseIdxArg = -1, DisplayMode displayMode = DisplayMode::Automatic);
     int ResolvePageAnchor(const WCHAR* id);
     void CopyNavHistory(EbookController& orig);
     int CurrentTocPageNo() const;
