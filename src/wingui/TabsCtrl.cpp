@@ -500,6 +500,18 @@ TabsCtrl2::TabsCtrl2(HWND p) : WindowBase(p) {
 TabsCtrl2::~TabsCtrl2() {
 }
 
+static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
+    uint msg = ev->msg;
+
+    CrashIf(msg != WM_NOTIFY);
+
+    TabsCtrl2* w = (TabsCtrl2*)user;
+    ev->w = w;
+    LPARAM lp = ev->lp;
+
+    CrashIf(GetParent(w->hwnd) != (HWND)ev->hwnd);
+}
+
 bool TabsCtrl2::Create() {
     if (createToolTipsHwnd) {
         dwStyle |= TCS_TOOLTIPS;
@@ -508,7 +520,23 @@ bool TabsCtrl2::Create() {
     if (!ok) {
         return false;
     }
+
+    void* user = this;
+    RegisterHandlerForMessage(hwnd, WM_NOTIFY, Handle_WM_NOTIFY, user);
+
     return true;
+}
+
+void TabsCtrl2::WndProc(WndEvent* ev) {
+    HWND hwnd = ev->hwnd;
+    UINT msg = ev->msg;
+    WPARAM wp = ev->wp;
+    LPARAM lp = ev->lp;
+
+    // DbgLogMsg("tree:", hwnd, msg, wp, ev->lp);
+
+    TabsCtrl2* w = this;
+    CrashIf(w->hwnd != (HWND)hwnd);
 }
 
 Size TabsCtrl2::GetIdealSize() {

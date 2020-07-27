@@ -104,14 +104,13 @@ static inline Size GetTabSize(HWND hwnd) {
     return Size(dx, dy);
 }
 
-class TabPainter {
+struct TabPainter {
     TabsCtrl2* tabsCtrl{nullptr};
     PathData* data{nullptr};
     int width{-1};
     int height{-1};
     HWND hwnd{nullptr};
 
-  public:
     int selectedTabIdx{-1};
     int highlighted{-1};
     int xClicked{-1};
@@ -122,107 +121,116 @@ class TabPainter {
     LPARAM mouseCoordinates{0};
     COLORREF currBgCol{DEFAULT_CURRENT_BG_COL};
 
-    TabPainter(TabsCtrl2* ctrl, Size tabSize) {
-        tabsCtrl = ctrl;
-        hwnd = tabsCtrl->hwnd;
-        Reshape(tabSize.dx, tabSize.dy);
+    TabPainter(TabsCtrl2* ctrl, Size tabSize);
+    ~TabPainter();
+    bool Reshape(int dx, int dy);
+    int IndexFromPoint(int x, int y, bool* inXbutton = nullptr);
+    void Invalidate(int index);
+    void Paint(HDC hdc, RECT& rc);
+    int Count();
+};
+
+TabPainter::TabPainter(TabsCtrl2* ctrl, Size tabSize) {
+    tabsCtrl = ctrl;
+    hwnd = tabsCtrl->hwnd;
+    Reshape(tabSize.dx, tabSize.dy);
+}
+
+TabPainter::~TabPainter() {
+    delete data;
+}
+
+// Calculates tab's elements, based on its width and height.
+// Generates a GraphicsPath, which is used for painting the tab, etc.
+bool TabPainter::Reshape(int dx, int dy) {
+    dx--;
+    if (width == dx && height == dy) {
+        return false;
     }
+    width = dx;
+    height = dy;
 
-    ~TabPainter() {
-        delete data;
+    GraphicsPath shape;
+    // define tab's body
+    shape.AddRectangle(Gdiplus::Rect(0, 0, width, height));
+    shape.SetMarker();
+
+    // define "x"'s circle
+    int c = int((float)height * 0.78f + 0.5f); // size of bounding square for the circle
+    int maxC = DpiScale(hwnd, 17);
+    if (height > maxC) {
+        c = DpiScale(hwnd, 17);
     }
+    Gdiplus::Point p(width - c - DpiScale(hwnd, 3), (height - c) / 2); // circle's position
+    shape.AddEllipse(p.X, p.Y, c, c);
+    shape.SetMarker();
+    // define "x"
+    int o = int((float)c * 0.286f + 0.5f); // "x"'s offset
+    shape.AddLine(p.X + o, p.Y + o, p.X + c - o, p.Y + c - o);
+    shape.StartFigure();
+    shape.AddLine(p.X + c - o, p.Y + o, p.X + o, p.Y + c - o);
+    shape.SetMarker();
 
-    // Calculates tab's elements, based on its width and height.
-    // Generates a GraphicsPath, which is used for painting the tab, etc.
-    bool Reshape(int dx, int dy) {
-        dx--;
-        if (width == dx && height == dy) {
-            return false;
-        }
-        width = dx;
-        height = dy;
+    delete data;
+    data = new PathData();
+    shape.GetPathData(data);
+    return true;
+}
 
-        GraphicsPath shape;
-        // define tab's body
-        shape.AddRectangle(Gdiplus::Rect(0, 0, width, height));
-        shape.SetMarker();
+// Finds the index of the tab, which contains the given point.
+int TabPainter::IndexFromPoint(int x, int y, bool* inXbutton) {
+    Gdiplus::Point point(x, y);
+    Graphics gfx(hwnd);
+    GraphicsPath shapes(data->Points, data->Types, data->Count);
+    GraphicsPath shape;
+    Gdiplus::GraphicsPathIterator iterator(&shapes);
+    iterator.NextMarker(&shape);
 
-        // define "x"'s circle
-        int c = int((float)height * 0.78f + 0.5f); // size of bounding square for the circle
-        int maxC = DpiScale(hwnd, 17);
-        if (height > maxC) {
-            c = DpiScale(hwnd, 17);
-        }
-        Gdiplus::Point p(width - c - DpiScale(hwnd, 3), (height - c) / 2); // circle's position
-        shape.AddEllipse(p.X, p.Y, c, c);
-        shape.SetMarker();
-        // define "x"
-        int o = int((float)c * 0.286f + 0.5f); // "x"'s offset
-        shape.AddLine(p.X + o, p.Y + o, p.X + c - o, p.Y + c - o);
-        shape.StartFigure();
-        shape.AddLine(p.X + c - o, p.Y + o, p.X + o, p.Y + c - o);
-        shape.SetMarker();
-
-        delete data;
-        data = new PathData();
-        shape.GetPathData(data);
-        return true;
-    }
-
-    // Finds the index of the tab, which contains the given point.
-    int IndexFromPoint(int x, int y, bool* inXbutton = nullptr) {
-        Gdiplus::Point point(x, y);
-        Graphics gfx(hwnd);
-        GraphicsPath shapes(data->Points, data->Types, data->Count);
-        GraphicsPath shape;
-        Gdiplus::GraphicsPathIterator iterator(&shapes);
-        iterator.NextMarker(&shape);
-
-        Rect rClient = ClientRect(hwnd);
-        float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
-        gfx.TranslateTransform(1.0f, yPosTab);
-        for (int i = 0; i < Count(); i++) {
-            Gdiplus::Point pt(point);
-            gfx.TransformPoints(Gdiplus::CoordinateSpaceWorld, Gdiplus::CoordinateSpaceDevice, &pt, 1);
-            if (shape.IsVisible(pt, &gfx)) {
-                iterator.NextMarker(&shape);
-                if (inXbutton) {
-                    *inXbutton = shape.IsVisible(pt, &gfx) ? true : false;
-                }
-                return i;
+    Rect rClient = ClientRect(hwnd);
+    float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
+    gfx.TranslateTransform(1.0f, yPosTab);
+    for (int i = 0; i < Count(); i++) {
+        Gdiplus::Point pt(point);
+        gfx.TransformPoints(Gdiplus::CoordinateSpaceWorld, Gdiplus::CoordinateSpaceDevice, &pt, 1);
+        if (shape.IsVisible(pt, &gfx)) {
+            iterator.NextMarker(&shape);
+            if (inXbutton) {
+                *inXbutton = shape.IsVisible(pt, &gfx) ? true : false;
             }
-            gfx.TranslateTransform(float(width + 1), 0.0f);
+            return i;
         }
-        if (inXbutton) {
-            *inXbutton = false;
-        }
-        return -1;
+        gfx.TranslateTransform(float(width + 1), 0.0f);
+    }
+    if (inXbutton) {
+        *inXbutton = false;
+    }
+    return -1;
+}
+
+// Invalidates the tab's region in the client area.
+void TabPainter::Invalidate(int index) {
+    if (index < 0) {
+        return;
     }
 
-    // Invalidates the tab's region in the client area.
-    void Invalidate(int index) {
-        if (index < 0) {
-            return;
-        }
+    Graphics gfx(hwnd);
+    GraphicsPath shapes(data->Points, data->Types, data->Count);
+    GraphicsPath shape;
+    Gdiplus::GraphicsPathIterator iterator(&shapes);
+    iterator.NextMarker(&shape);
+    Region region(&shape);
 
-        Graphics gfx(hwnd);
-        GraphicsPath shapes(data->Points, data->Types, data->Count);
-        GraphicsPath shape;
-        Gdiplus::GraphicsPathIterator iterator(&shapes);
-        iterator.NextMarker(&shape);
-        Region region(&shape);
+    Rect rClient = ClientRect(hwnd);
+    float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
+    gfx.TranslateTransform(float((width + 1) * index) + 1.0f, yPosTab);
+    HRGN hRgn = region.GetHRGN(&gfx);
+    InvalidateRgn(hwnd, hRgn, FALSE);
+    DeleteObject(hRgn);
+}
 
-        Rect rClient = ClientRect(hwnd);
-        float yPosTab = inTitlebar ? 0.0f : float(rClient.dy - height - 1);
-        gfx.TranslateTransform(float((width + 1) * index) + 1.0f, yPosTab);
-        HRGN hRgn = region.GetHRGN(&gfx);
-        InvalidateRgn(hwnd, hRgn, FALSE);
-        DeleteObject(hRgn);
-    }
-
-    // Paints the tabs that intersect the window's update rectangle.
-    void Paint(HDC hdc, RECT& rc) {
-        IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
+// Paints the tabs that intersect the window's update rectangle.
+void TabPainter::Paint(HDC hdc, RECT& rc) {
+    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 #if 0
         // paint the background
         bool isTranslucentMode = inTitlebar && dwm::IsCompositionEnabled();
@@ -236,108 +244,107 @@ class TabPainter {
             DeleteObject(brush);*/
         }
 #else
-        PaintParentBackground(hwnd, hdc);
+    PaintParentBackground(hwnd, hdc);
 #endif
-        // TODO: GDI+ doesn't seem to cope well with SetWorldTransform
-        XFORM ctm = {1.0, 0, 0, 1.0, 0, 0};
-        SetWorldTransform(hdc, &ctm);
+    // TODO: GDI+ doesn't seem to cope well with SetWorldTransform
+    XFORM ctm = {1.0, 0, 0, 1.0, 0, 0};
+    SetWorldTransform(hdc, &ctm);
 
-        Graphics gfx(hdc);
-        gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
-        gfx.SetCompositingQuality(CompositingQualityHighQuality);
-        gfx.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-        gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-        gfx.SetPageUnit(UnitPixel);
-        GraphicsPath shapes(data->Points, data->Types, data->Count);
-        GraphicsPath shape;
-        Gdiplus::GraphicsPathIterator iterator(&shapes);
+    Graphics gfx(hdc);
+    gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
+    gfx.SetCompositingQuality(CompositingQualityHighQuality);
+    gfx.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+    gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    gfx.SetPageUnit(UnitPixel);
+    GraphicsPath shapes(data->Points, data->Types, data->Count);
+    GraphicsPath shape;
+    Gdiplus::GraphicsPathIterator iterator(&shapes);
 
-        SolidBrush br(Color(0, 0, 0));
-        Pen pen(&br, 2.0f);
+    SolidBrush br(Color(0, 0, 0));
+    Pen pen(&br, 2.0f);
 
-        Font f(hdc, GetDefaultGuiFont());
-        // TODO: adjust these constant values for DPI?
-        Gdiplus::RectF layout((float)DpiScale(hwnd, 3), 1.0f, float(width - DpiScale(hwnd, 20)), (float)height);
-        StringFormat sf(StringFormat::GenericDefault());
-        sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
-        sf.SetLineAlignment(StringAlignmentCenter);
-        sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
+    Font f(hdc, GetDefaultGuiFont());
+    // TODO: adjust these constant values for DPI?
+    Gdiplus::RectF layout((float)DpiScale(hwnd, 3), 1.0f, float(width - DpiScale(hwnd, 20)), (float)height);
+    StringFormat sf(StringFormat::GenericDefault());
+    sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
+    sf.SetLineAlignment(StringAlignmentCenter);
+    sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
-        float yPosTab = inTitlebar ? 0.0f : float(ClientRect(hwnd).dy - height - 1);
-        for (int i = 0; i < Count(); i++) {
-            gfx.ResetTransform();
-            gfx.TranslateTransform(1.f + (float)(width + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
+    float yPosTab = inTitlebar ? 0.0f : float(ClientRect(hwnd).dy - height - 1);
+    for (int i = 0; i < Count(); i++) {
+        gfx.ResetTransform();
+        gfx.TranslateTransform(1.f + (float)(width + 1) * i - (float)rc.left, yPosTab - (float)rc.top);
 
-            if (!gfx.IsVisible(0, 0, width + 1, height + 1)) {
-                continue;
-            }
-
-            // Get the correct colors based on the state and the current theme
-            COLORREF bgCol = GetAppColor(AppColor::TabBackgroundBg);
-            COLORREF textCol = GetAppColor(AppColor::TabBackgroundText);
-            COLORREF xColor = GetAppColor(AppColor::TabBackgroundCloseX);
-            COLORREF circleColor = GetAppColor(AppColor::TabBackgroundCloseCircle);
-
-            if (selectedTabIdx == i) {
-                bgCol = GetAppColor(AppColor::TabSelectedBg);
-                textCol = GetAppColor(AppColor::TabSelectedText);
-                xColor = GetAppColor(AppColor::TabSelectedCloseX);
-                circleColor = GetAppColor(AppColor::TabSelectedCloseCircle);
-            } else if (highlighted == i) {
-                bgCol = GetAppColor(AppColor::TabHighlightedBg);
-                textCol = GetAppColor(AppColor::TabHighlightedText);
-                xColor = GetAppColor(AppColor::TabHighlightedCloseX);
-                circleColor = GetAppColor(AppColor::TabHighlightedCloseCircle);
-            }
-            if (xHighlighted == i) {
-                xColor = GetAppColor(AppColor::TabHoveredCloseX);
-                circleColor = GetAppColor(AppColor::TabHoveredCloseCircle);
-            }
-            if (xClicked == i) {
-                xColor = GetAppColor(AppColor::TabClickedCloseX);
-                circleColor = GetAppColor(AppColor::TabClickedCloseCircle);
-            }
-
-            // paint tab's body
-            gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
-            iterator.NextMarker(&shape);
-            br.SetColor(GdiRgbFromCOLORREF(bgCol));
-            Gdiplus::Point points[4];
-            shape.GetPathPoints(points, 4);
-            Gdiplus::Rect body(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
-            body.Inflate(0, 0);
-            gfx.SetClip(body);
-            body.Inflate(5, 5);
-            gfx.FillRectangle(&br, body);
-            gfx.ResetClip();
-
-            // draw tab's text
-            gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
-            br.SetColor(GdiRgbFromCOLORREF(textCol));
-            WCHAR* text = tabsCtrl->GetTabText(i);
-            gfx.DrawString(text, -1, &f, layout, &sf, &br);
-
-            // paint "x"'s circle
-            iterator.NextMarker(&shape);
-            // bool closeCircleEnabled = true;
-            if ((xClicked == i || xHighlighted == i) /*&& closeCircleEnabled*/) {
-                br.SetColor(GdiRgbFromCOLORREF(circleColor));
-                gfx.FillPath(&br, &shape);
-            }
-
-            // paint "x"
-            iterator.NextMarker(&shape);
-            pen.SetColor(GdiRgbFromCOLORREF(xColor));
-            gfx.DrawPath(&pen, &shape);
-            iterator.Rewind();
+        if (!gfx.IsVisible(0, 0, width + 1, height + 1)) {
+            continue;
         }
-    }
 
-    int Count() {
-        int n = tabsCtrl->GetTabCount();
-        return n;
+        // Get the correct colors based on the state and the current theme
+        COLORREF bgCol = GetAppColor(AppColor::TabBackgroundBg);
+        COLORREF textCol = GetAppColor(AppColor::TabBackgroundText);
+        COLORREF xColor = GetAppColor(AppColor::TabBackgroundCloseX);
+        COLORREF circleColor = GetAppColor(AppColor::TabBackgroundCloseCircle);
+
+        if (selectedTabIdx == i) {
+            bgCol = GetAppColor(AppColor::TabSelectedBg);
+            textCol = GetAppColor(AppColor::TabSelectedText);
+            xColor = GetAppColor(AppColor::TabSelectedCloseX);
+            circleColor = GetAppColor(AppColor::TabSelectedCloseCircle);
+        } else if (highlighted == i) {
+            bgCol = GetAppColor(AppColor::TabHighlightedBg);
+            textCol = GetAppColor(AppColor::TabHighlightedText);
+            xColor = GetAppColor(AppColor::TabHighlightedCloseX);
+            circleColor = GetAppColor(AppColor::TabHighlightedCloseCircle);
+        }
+        if (xHighlighted == i) {
+            xColor = GetAppColor(AppColor::TabHoveredCloseX);
+            circleColor = GetAppColor(AppColor::TabHoveredCloseCircle);
+        }
+        if (xClicked == i) {
+            xColor = GetAppColor(AppColor::TabClickedCloseX);
+            circleColor = GetAppColor(AppColor::TabClickedCloseCircle);
+        }
+
+        // paint tab's body
+        gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
+        iterator.NextMarker(&shape);
+        br.SetColor(GdiRgbFromCOLORREF(bgCol));
+        Gdiplus::Point points[4];
+        shape.GetPathPoints(points, 4);
+        Gdiplus::Rect body(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
+        body.Inflate(0, 0);
+        gfx.SetClip(body);
+        body.Inflate(5, 5);
+        gfx.FillRectangle(&br, body);
+        gfx.ResetClip();
+
+        // draw tab's text
+        gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
+        br.SetColor(GdiRgbFromCOLORREF(textCol));
+        WCHAR* text = tabsCtrl->GetTabText(i);
+        gfx.DrawString(text, -1, &f, layout, &sf, &br);
+
+        // paint "x"'s circle
+        iterator.NextMarker(&shape);
+        // bool closeCircleEnabled = true;
+        if ((xClicked == i || xHighlighted == i) /*&& closeCircleEnabled*/) {
+            br.SetColor(GdiRgbFromCOLORREF(circleColor));
+            gfx.FillPath(&br, &shape);
+        }
+
+        // paint "x"
+        iterator.NextMarker(&shape);
+        pen.SetColor(GdiRgbFromCOLORREF(xColor));
+        gfx.DrawPath(&pen, &shape);
+        iterator.Rewind();
     }
-};
+}
+
+int TabPainter::Count() {
+    int n = tabsCtrl->GetTabCount();
+    return n;
+}
 
 static void SetTabTitle(TabInfo* tab) {
     WindowInfo* win = tab->win;

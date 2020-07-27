@@ -85,6 +85,12 @@ struct WmCommandEvent : WndEvent {
 
 typedef std::function<void(WmCommandEvent*)> WmCommandHandler;
 
+struct WmNotifyEvent : WndEvent {
+    NMTREEVIEWW* treeView = nullptr;
+};
+
+typedef std::function<void(WmNotifyEvent*)> WmNotifyHandler;
+
 typedef std::function<void(WindowCloseEvent*)> CloseHandler;
 
 struct WindowDestroyEvent : WndEvent {

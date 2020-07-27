@@ -54,9 +54,14 @@ struct TabsCtrl2 : WindowBase {
     str::WStr lastTabText;
     bool createToolTipsHwnd{false};
 
+    // for all WM_NOTIFY messages
+    WmNotifyHandler onNotify{nullptr};
+
     TabsCtrl2(HWND parent);
     ~TabsCtrl2() override;
     bool Create() override;
+
+    void WndProc(WndEvent*) override;
 
     Size GetIdealSize() override;
 

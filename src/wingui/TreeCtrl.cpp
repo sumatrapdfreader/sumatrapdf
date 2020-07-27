@@ -217,19 +217,18 @@ static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
     CrashIf(msg != WM_NOTIFY);
 
     TreeCtrl* w = (TreeCtrl*)user;
-    ev->w = w;
-    LPARAM lp = ev->lp;
-
     CrashIf(GetParent(w->hwnd) != (HWND)ev->hwnd);
 
+    ev->w = w;
+    LPARAM lp = ev->lp;
     NMTREEVIEWW* nmtv = (NMTREEVIEWW*)(lp);
-    if (w->onTreeNotify) {
-        TreeNotifyEvent a{};
+
+    if (w->onNotify) {
+        WmNotifyEvent a{};
         CopyWndEvent cp(&a, ev);
-        a.treeCtrl = w;
         a.treeView = nmtv;
 
-        w->onTreeNotify(&a);
+        w->onNotify(&a);
         if (a.didHandle) {
             return;
         }
