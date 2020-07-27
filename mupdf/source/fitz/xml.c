@@ -246,7 +246,7 @@ fz_xml *fz_xml_find(fz_xml *item, const char *tag)
 {
 	while (item)
 	{
-		if (!strcmp(item->u.d.name, tag))
+		if (!FZ_TEXT_ITEM(item) && !strcmp(item->u.d.name, tag))
 			return item;
 		item = item->next;
 	}

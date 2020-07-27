@@ -42,6 +42,13 @@ pdf_parse_wmode(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *bu
 		fz_warn(ctx, "expected integer after WMode in cmap");
 }
 
+static int
+is_keyword(pdf_token tok, pdf_lexbuf *buf, const char *word)
+{
+	/* Ignore trailing garbage when matching keywords */
+	return (tok == PDF_TOK_KEYWORD && !strncmp(buf->scratch, word, strlen(word)));
+}
+
 static void
 pdf_parse_codespace_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *buf)
 {
@@ -52,7 +59,7 @@ pdf_parse_codespace_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_
 	{
 		tok = pdf_lex(ctx, file, buf);
 
-		if (tok == PDF_TOK_KEYWORD && !strncmp(buf->scratch, "endcodespacerange", 17))
+		if (is_keyword(tok, buf, "endcodespacerange"))
 			return;
 
 		else if (tok == PDF_TOK_STRING)
@@ -83,7 +90,7 @@ pdf_parse_cid_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf
 	{
 		tok = pdf_lex(ctx, file, buf);
 
-		if (tok == PDF_TOK_KEYWORD && !strcmp(buf->scratch, "endcidrange"))
+		if (is_keyword(tok, buf, "endcidrange"))
 			return;
 
 		else if (tok != PDF_TOK_STRING)
@@ -117,7 +124,7 @@ pdf_parse_cid_char(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 	{
 		tok = pdf_lex(ctx, file, buf);
 
-		if (tok == PDF_TOK_KEYWORD && !strcmp(buf->scratch, "endcidchar"))
+		if (is_keyword(tok, buf, "endcidchar"))
 			return;
 
 		else if (tok != PDF_TOK_STRING)
@@ -176,7 +183,7 @@ pdf_parse_bf_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 	{
 		tok = pdf_lex(ctx, file, buf);
 
-		if (tok == PDF_TOK_KEYWORD && !strcmp(buf->scratch, "endbfrange"))
+		if (is_keyword(tok, buf, "endbfrange"))
 			return;
 
 		else if (tok != PDF_TOK_STRING)
@@ -248,7 +255,7 @@ pdf_parse_bf_char(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *
 	{
 		tok = pdf_lex(ctx, file, buf);
 
-		if (tok == PDF_TOK_KEYWORD && !strcmp(buf->scratch, "endbfchar"))
+		if (is_keyword(tok, buf, "endbfchar"))
 			return;
 
 		else if (tok != PDF_TOK_STRING)
@@ -306,25 +313,25 @@ pdf_load_cmap(fz_context *ctx, fz_stream *file)
 
 			else if (tok == PDF_TOK_KEYWORD)
 			{
-				if (!strcmp(buf.scratch, "endcmap"))
+				if (is_keyword(tok, &buf, "endcmap"))
 					break;
 
-				else if (!strcmp(buf.scratch, "usecmap"))
+				else if (is_keyword(tok, &buf, "usecmap"))
 					fz_strlcpy(cmap->usecmap_name, key, sizeof(cmap->usecmap_name));
 
-				else if (!strcmp(buf.scratch, "begincodespacerange"))
+				else if (is_keyword(tok, &buf, "begincodespacerange"))
 					pdf_parse_codespace_range(ctx, cmap, file, &buf);
 
-				else if (!strcmp(buf.scratch, "beginbfchar"))
+				else if (is_keyword(tok, &buf, "beginbfchar"))
 					pdf_parse_bf_char(ctx, cmap, file, &buf);
 
-				else if (!strcmp(buf.scratch, "begincidchar"))
+				else if (is_keyword(tok, &buf, "begincidchar"))
 					pdf_parse_cid_char(ctx, cmap, file, &buf);
 
-				else if (!strcmp(buf.scratch, "beginbfrange"))
+				else if (is_keyword(tok, &buf, "beginbfrange"))
 					pdf_parse_bf_range(ctx, cmap, file, &buf);
 
-				else if (!strcmp(buf.scratch, "begincidrange"))
+				else if (is_keyword(tok, &buf, "begincidrange"))
 					pdf_parse_cid_range(ctx, cmap, file, &buf);
 			}
 

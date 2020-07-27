@@ -774,7 +774,7 @@ void winopenuri(pdfapp_t *app, char *buf)
 			execlp(browser, browser, buf, (char*)0);
 			fprintf(stderr, "cannot exec '%s'\n", browser);
 		}
-		exit(0);
+		_exit(0);
 	}
 	waitpid(pid, NULL, 0);
 }

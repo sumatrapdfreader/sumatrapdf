@@ -8,7 +8,11 @@ var pathPrinter = {
 }
 
 var textPrinter = {
+	beginSpan: function (f,m,wmode, bidi, dir, lang) {
+		print("beginSpan",f,m,wmode,bidi,dir,repr(lang));
+	},
 	showGlyph: function (f,m,g,u,v,b) { print("glyph",f,m,g,u,v,b) },
+	endSpan: function () { print("endSpan"); }
 }
 
 var traceDevice = {

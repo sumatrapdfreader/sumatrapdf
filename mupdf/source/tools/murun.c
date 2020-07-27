@@ -3163,18 +3163,29 @@ static void ffi_new_Text(js_State *J)
 static void ffi_Text_walk(js_State *J)
 {
 	fz_text *text = js_touserdata(J, 0, "fz_text");
+	char buf[8];
 	fz_text_span *span;
 	fz_matrix trm;
 	int i;
 
-	js_getproperty(J, 1, "showGlyph");
 	for (span = text->head; span; span = span->next) {
 		ffi_pushfont(J, span->font);
 		trm = span->trm;
+		if (js_hasproperty(J, 1, "beginSpan")) {
+			js_copy(J, 1); // this
+			js_copy(J, -3); // font
+			ffi_pushmatrix(J, trm);
+			js_pushboolean(J, span->wmode);
+			js_pushnumber(J, span->bidi_level);
+			js_pushnumber(J, span->markup_dir);
+			js_pushstring(J, fz_string_from_text_language(buf, span->language));
+			js_call(J, 6);
+			js_pop(J, 1);
+		}
 		for (i = 0; i < span->len; ++i) {
 			trm.e = span->items[i].x;
 			trm.f = span->items[i].y;
-			js_copy(J, -2); /* showGlyph function */
+			if (js_hasproperty(J, 1, "showGlyph")) {
 			js_copy(J, 1); /* object for this binding */
 			js_copy(J, -3); /* font */
 			ffi_pushmatrix(J, trm);
@@ -3185,7 +3196,13 @@ static void ffi_Text_walk(js_State *J)
 			js_call(J, 6);
 			js_pop(J, 1);
 		}
+		}
 		js_pop(J, 1); /* pop font object */
+		if (js_hasproperty(J, 1, "endSpan")) {
+			js_copy(J, 1); // this
+			js_call(J, 0);
+			js_pop(J, 1);
+		}
 	}
 	js_pop(J, 1); /* pop showGlyph function */
 }

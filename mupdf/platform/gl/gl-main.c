@@ -9,6 +9,8 @@
 #define stat _stat
 #endif
 #ifndef _WIN32
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <signal.h>
 #endif
 
@@ -66,6 +68,7 @@ enum
 static void open_browser(const char *uri)
 {
 	char buf[PATH_MAX];
+	pid_t pid;
 
 	/* Relative file:// URI, make it absolute! */
 	if (!strncmp(uri, "file://", 7) && uri[7] != '/')
@@ -91,12 +94,22 @@ static void open_browser(const char *uri)
 		browser = "xdg-open";
 #endif
 	}
+	/* Fork once to start a child process that we wait on. This
+	 * child process forks again and immediately exits. The
+	 * grandchild process continues in the background. The purpose
+	 * of this strange two-step is to avoid zombie processes. See
+	 * bug 695701 for an explanation. */
+	pid = fork();
+	if (pid == 0)
+	{
 	if (fork() == 0)
 	{
 		execlp(browser, browser, uri, (char*)0);
 		fprintf(stderr, "cannot exec '%s'\n", browser);
-		exit(0);
 	}
+		_exit(0);
+	}
+	waitpid(pid, NULL, 0);
 #endif
 }
 

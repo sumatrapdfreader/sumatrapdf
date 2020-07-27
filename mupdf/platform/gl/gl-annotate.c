@@ -29,14 +29,15 @@ static int pdf_filter(const char *fn)
 static void init_save_pdf_options(void)
 {
 	save_opts = pdf_default_write_options;
-	save_opts = pdf_default_write_options;
 	if (pdf->redacted)
 		save_opts.do_garbage = 1;
-	else
+	if (pdf_can_be_saved_incrementally(ctx, pdf))
 		save_opts.do_incremental = 1;
 	save_opts.do_compress = 1;
 	save_opts.do_compress_images = 1;
 	save_opts.do_compress_fonts = 1;
+	ui_input_init(&opwinput, "");
+	ui_input_init(&upwinput, "");
 }
 
 static const char *cryptalgo_names[] = {
@@ -59,17 +60,17 @@ static void save_pdf_options(void)
 
 	if (pdf_can_be_saved_incrementally(ctx, pdf))
 		ui_checkbox("Incremental", &save_opts.do_incremental);
+
 	fz_try(ctx)
 	{
 		if (pdf_count_signatures(ctx, pdf))
-		{
 			ui_label("WARNING: Saving non-incrementally will break existing signatures");
 		}
-	}
 	fz_catch(ctx)
 	{
 		/* Ignore the error. */
 	}
+
 	ui_spacer();
 	ui_checkbox("Pretty-print", &save_opts.do_pretty);
 	ui_checkbox("Ascii", &save_opts.do_ascii);
@@ -77,6 +78,7 @@ static void save_pdf_options(void)
 	ui_checkbox("Compress", &save_opts.do_compress);
 	ui_checkbox("Compress images", &save_opts.do_compress_images);
 	ui_checkbox("Compress fonts", &save_opts.do_compress_fonts);
+
 	if (save_opts.do_incremental)
 	{
 		save_opts.do_garbage = 0;
@@ -114,9 +116,6 @@ static void save_pdf_options(void)
 
 static void do_save_pdf_dialog(int for_signing)
 {
-	ui_input_init(&opwinput, "");
-	ui_input_init(&upwinput, "");
-
 	if (ui_save_file(save_filename, save_pdf_options,
 			for_signing ?
 			"Select where to save the signed document:" :
