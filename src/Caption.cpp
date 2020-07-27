@@ -608,6 +608,9 @@ void PaintParentBackground(HWND hwnd, HDC hdc) {
     SetViewportOrgEx(hdc, -pt.x, -pt.y, &pt);
     SendMessageW(parent, WM_ERASEBKGND, (WPARAM)hdc, 0);
     SetViewportOrgEx(hdc, pt.x, pt.y, nullptr);
+
+    // TODO: needed to force repaint of tab area after closing a window
+    InvalidateRect(parent, nullptr, TRUE);
 }
 
 static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer) {
