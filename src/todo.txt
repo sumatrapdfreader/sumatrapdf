@@ -48,7 +48,8 @@ Fixes:
 ------
 
 small refactorings:
-- use win->tabCtrl->IsVisible() instead of win->tabsVisible
+- use win->tabsCtrl->IsVisible() instead of win->tabsVisible
+- TabPainter:selectedTabIdx should not be necessary
 - make DisplayModel::CvtFromScreen() update pageNo to simplify callers
 - change ProgressUpdateUI to a callback (e.g. in PrintThreadData)
 - use DirIter instead of FindFirstFile in Installer.cpp

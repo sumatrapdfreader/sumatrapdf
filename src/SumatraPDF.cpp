@@ -360,7 +360,7 @@ static bool IsWindowInfoHwnd(WindowInfo* win, HWND hwnd, HWND parent) {
         return true;
     }
     // tab bar
-    if (parent == win->tabCtrl->hwnd) {
+    if (parent == win->tabsCtrl->hwnd) {
         return true;
     }
     // caption buttons, tab bar
@@ -624,7 +624,7 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     SendMessageW(win->hwndFrame, WM_DWMCOMPOSITIONCHANGED, 0, 0);
     RelayoutCaption(win);
     // TODO: make tab bar RTL aware
-    // SetRtl(win->tabCtrl->hwnd, isRTL);
+    // SetRtl(win->tabsCtrl->hwnd, isRTL);
 
     win->notifications->Relayout();
 
@@ -3170,7 +3170,7 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
         } else if (win->tabsVisible) {
             int tabHeight = GetTabbarHeight(win->hwndFrame);
             if (updateToolbars) {
-                dh.SetWindowPos(win->tabCtrl->hwnd, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
+                dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
             }
             // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)
             if (!win->IsAboutWindow()) {
@@ -3507,7 +3507,7 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
 
     SetMenu(win->hwndFrame, nullptr);
     ShowWindow(win->hwndReBar, SW_HIDE);
-    win->tabCtrl->SetIsVisible(false);
+    win->tabsCtrl->SetIsVisible(false);
     ShowWindow(win->hwndCaption, SW_HIDE);
 
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
@@ -3553,7 +3553,7 @@ void ExitFullScreen(WindowInfo* win) {
         ShowWindow(win->hwndCaption, SW_SHOW);
     }
     if (win->tabsVisible) {
-        win->tabCtrl->SetIsVisible(true);
+        win->tabsCtrl->SetIsVisible(true);
     }
     if (gGlobalPrefs->showToolbar && !win->AsEbook()) {
         ShowWindow(win->hwndReBar, SW_SHOW);

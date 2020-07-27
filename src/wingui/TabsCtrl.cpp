@@ -522,21 +522,21 @@ int TabsCtrl2::GetTabCount() {
 int TabsCtrl2::InsertTab(int idx, const WCHAR* ws) {
     CrashIf(idx < 0);
 
-    TCITEMW tcs{0};
-    tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR*)ws;
-    int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &tcs);
+    TCITEMW item{0};
+    item.mask = TCIF_TEXT;
+    item.pszText = (WCHAR*)ws;
+    int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
     return insertedIdx;
 }
 
 int TabsCtrl2::InsertTab(int idx, std::string_view sv) {
     CrashIf(idx < 0);
 
-    TCITEMW tcs{0};
-    tcs.mask = TCIF_TEXT;
+    TCITEMW item{0};
+    item.mask = TCIF_TEXT;
     AutoFreeWstr s = strconv::Utf8ToWstr(sv);
-    tcs.pszText = s.Get();
-    int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &tcs);
+    item.pszText = s.Get();
+    int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
     return insertedIdx;
 }
 
@@ -556,21 +556,37 @@ void TabsCtrl2::SetTabText(int idx, const WCHAR* ws) {
     CrashIf(idx < 0);
     CrashIf(idx >= GetTabCount());
 
-    TCITEMW tcs{0};
-    tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR*)ws;
-    TabCtrl_SetItem(hwnd, idx, &tcs);
+    TCITEMW item{0};
+    item.mask = TCIF_TEXT;
+    item.pszText = (WCHAR*)ws;
+    TabCtrl_SetItem(hwnd, idx, &item);
 }
 
 void TabsCtrl2::SetTabText(int idx, std::string_view sv) {
     CrashIf(idx < 0);
     CrashIf(idx >= GetTabCount());
 
-    TCITEMW tcs{0};
-    tcs.mask = TCIF_TEXT;
+    TCITEMW item{0};
+    item.mask = TCIF_TEXT;
     AutoFreeWstr s = strconv::Utf8ToWstr(sv);
-    tcs.pszText = s.Get();
-    TabCtrl_SetItem(hwnd, idx, &tcs);
+    item.pszText = s.Get();
+    TabCtrl_SetItem(hwnd, idx, &item);
+}
+
+// result is valid until next call to GetTabText()
+// TODO:
+WCHAR* TabsCtrl2::GetTabText(int idx) {
+    CrashIf(idx < 0);
+    CrashIf(idx >= GetTabCount());
+
+    WCHAR buf[512]{0};
+    TCITEMW item{0};
+    item.mask = TCIF_TEXT;
+    item.pszText = buf;
+    item.cchTextMax = dimof(buf) - 1; // -1 just in case
+    TabCtrl_GetItem(hwnd, idx, &item);
+    lastTabText.Set(buf);
+    return lastTabText.Get();
 }
 
 int TabsCtrl2::GetSelectedTabIndex() {

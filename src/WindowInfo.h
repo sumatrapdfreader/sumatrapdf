@@ -132,7 +132,7 @@ struct WindowInfo {
     // horizontal splitter for resizing favorites and bookmars parts
     SplitterCtrl* favSplitter{nullptr};
 
-    TabsCtrl2* tabCtrl{nullptr};
+    TabsCtrl2* tabsCtrl{nullptr};
     bool tabsVisible{false};
     bool tabsInTitlebar{false};
     // keeps the sequence of tab selection. This is needed for restoration

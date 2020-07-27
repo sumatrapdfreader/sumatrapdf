@@ -51,6 +51,8 @@ void SetPos(TabsCtrl*, RECT&);
 void SetFont(TabsCtrl*, HFONT);
 
 struct TabsCtrl2 : WindowBase {
+    str::WStr lastTabText;
+
     TabsCtrl2(HWND parent);
     ~TabsCtrl2() override;
     bool Create() override;
@@ -65,6 +67,8 @@ struct TabsCtrl2 : WindowBase {
 
     void SetTabText(int idx, std::string_view sv);
     void SetTabText(int idx, const WCHAR* ws);
+
+    WCHAR* GetTabText(int idx);
 
     int GetSelectedTabIndex();
     int SetSelectedTabByIndex(int idx);

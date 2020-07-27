@@ -481,7 +481,7 @@ void RelayoutCaption(WindowInfo* win) {
 
     rc.x += tabHeight;
     rc.dx -= tabHeight;
-    dh.SetWindowPos(win->tabCtrl->hwnd, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
+    dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
     dh.End();
 }
 
