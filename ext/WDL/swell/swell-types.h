@@ -421,6 +421,12 @@ typedef struct HTREEITEM__ *HTREEITEM;
 #define TVN_FIRST               (0U-400U)       // treeview
 #define TVN_SELCHANGED          (TVN_FIRST-2)
 
+// swell-extension: WM_MOUSEMOVE set via capture in TVN_BEGINDRAG can return:
+//   -1 = drag not possible
+//   -2 = destination at end of list
+//   (HTREEITEM) = will end up before this item
+#define TVN_BEGINDRAG           (TVN_FIRST-7) 
+
 #define TVI_ROOT                ((HTREEITEM)0xFFFF0000)
 #define TVI_FIRST               ((HTREEITEM)0xFFFF0001)
 #define TVI_LAST                ((HTREEITEM)0xFFFF0002)
@@ -661,6 +667,7 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define GW_OWNER            4
 #define GW_CHILD            5
 
+#define GWL_HWNDPARENT      (-25)
 #define GWL_USERDATA        (-21)
 #define GWL_ID              (-12)
 #define GWL_STYLE           (-16) // only supported for BS_ for now I think
@@ -682,6 +689,8 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define WS_THICKFRAME   0x00040000L
 #define WS_GROUP        0x00020000L
 #define WS_TABSTOP      0x00010000L
+
+#define TVS_DISABLEDRAGDROP 0x10
 
 #define WS_BORDER 0 // ignored for now
 
@@ -1283,6 +1292,8 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define GHND (GMEM_MOVEABLE|GM_ZEROINIT)
 #define GPTR (GMEM_FIXED|GMEM_ZEROINIT)
 
+#define CF_TEXT (1)
+#define CF_HDROP (2)
 
 #define _MCW_RC         0x00000300              /* Rounding Control */
 #define _RC_NEAR        0x00000000              /*   near */

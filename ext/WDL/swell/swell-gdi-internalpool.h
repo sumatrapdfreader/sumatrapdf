@@ -26,7 +26,6 @@
 
 static WDL_Mutex *m_ctxpool_mutex;
 #ifdef SWELL_GDI_DEBUG
-  #include <assert.h>
   #include "../ptrlist.h"
   static WDL_PtrList<HDC__> *m_ctxpool_debug;
   static WDL_PtrList<HGDIOBJ__> *m_objpool_debug;
@@ -78,15 +77,7 @@ static void SWELL_GDP_CTX_DELETE(HDC__ *p)
 {
   if (!m_ctxpool_mutex) m_ctxpool_mutex=new WDL_Mutex;
 
-  if (!p) return;
-
-  if (p->_infreelist) 
-  {
-#ifdef SWELL_GDI_DEBUG
-    assert(!p->_infreelist);
-#endif
-    return;
-  }
+  if (WDL_NOT_NORMALLY(!p || p->_infreelist)) return;
 
   memset(p,0,sizeof(*p));
 
@@ -147,18 +138,20 @@ static HGDIOBJ__ *GDP_OBJECT_NEW()
   }
   return p;
 }
+
+static bool HGDIOBJ_VALID(HGDIOBJ__ *p, int reqType=0)
+{
+  return p &&
+    WDL_NORMALLY( p != (HGDIOBJ__*)TYPE_PEN && p != (HGDIOBJ__*)TYPE_BRUSH &&
+                  p != (HGDIOBJ__*)TYPE_FONT && p != (HGDIOBJ__*)TYPE_BITMAP) &&
+    WDL_NORMALLY(!p->_infreelist) &&
+    WDL_NORMALLY(!reqType || reqType == p->type);
+}
+
 static void GDP_OBJECT_DELETE(HGDIOBJ__ *p)
 {
   if (!m_ctxpool_mutex) m_ctxpool_mutex=new WDL_Mutex;
-  if (!p) return;
-
-  if (p->_infreelist) 
-  {
-#ifdef SWELL_GDI_DEBUG
-    assert(!p->_infreelist);
-#endif
-    return;
-  }
+  if (WDL_NOT_NORMALLY(!p) || !HGDIOBJ_VALID(p)) return;
 
   memset(p,0,sizeof(*p));
 #ifdef SWELL_GDI_DEBUG
@@ -185,32 +178,9 @@ static void GDP_OBJECT_DELETE(HGDIOBJ__ *p)
 #endif
 }
 
-static bool HGDIOBJ_VALID(HGDIOBJ__ *p, int reqType=0)
-{
-  if (p == (HGDIOBJ__*)TYPE_PEN || p == (HGDIOBJ__*)TYPE_BRUSH ||
-      p == (HGDIOBJ__*)TYPE_FONT || p == (HGDIOBJ__*)TYPE_BITMAP) return false;
-#ifdef SWELL_GDI_DEBUG
-  if (p) { assert(!p->_infreelist); }
-#endif
-  // insert breakpoints in these parts for debugging
-  if (p && !p->_infreelist)
-  {
-#ifdef SWELL_GDI_DEBUG
-    if (reqType) { assert(reqType == p->type); }
-#endif
-
-    return !reqType || reqType == p->type;
-  }
-  return false;
-}
-
 static bool HDC_VALID(HDC__ *ct)
 {
-#ifdef SWELL_GDI_DEBUG
-  if (ct) { assert(!ct->_infreelist); }
-#endif
-  // insert breakpoints in these parts for debugging
-  return ct && !ct->_infreelist;
+  return ct && WDL_NORMALLY(!ct->_infreelist);
 }
 
 

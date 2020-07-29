@@ -153,7 +153,11 @@ void UpdateWindow(HWND hwnd) { }
 static WDL_IntKeyedArray<HANDLE> m_clip_recs(GlobalFree);
 static WDL_PtrList<char> m_clip_curfmts;
 
-bool OpenClipboard(HWND hwndDlg) { return true; }
+bool OpenClipboard(HWND hwndDlg)
+{ 
+  RegisterClipboardFormat(NULL);
+  return true; 
+}
 
 void CloseClipboard() { }
 
@@ -189,6 +193,11 @@ void SetClipboardData(UINT type, HANDLE h)
 
 UINT RegisterClipboardFormat(const char *desc)
 {
+  if (!m_clip_curfmts.GetSize())
+  {
+    m_clip_curfmts.Add(strdup("SWELL__CF_TEXT"));
+    m_clip_curfmts.Add(strdup("SWELL__CF_HDROP"));
+  }
   if (!desc || !*desc) return 0;
   int x;
   const int n = m_clip_curfmts.GetSize();

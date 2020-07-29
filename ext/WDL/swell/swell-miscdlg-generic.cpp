@@ -381,7 +381,7 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
 
         recent_add_tmp(parms->initialdir);
 
-        if (parms->initialfile)
+        if (parms->initialfile && *parms->initialfile != '.')
         {
           lstrcpyn_safe(tmp,parms->initialfile,sizeof(tmp));
           WDL_remove_filepart(tmp);
@@ -474,7 +474,7 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
         {
           char buf[maxPathLen];
           const char *filepart = "";
-          if (parms->initialfile && *parms->initialfile && strcmp(parms->initialfile,"."))
+          if (parms->initialfile && *parms->initialfile && *parms->initialfile != '.')
           { 
             lstrcpyn_safe(buf,parms->initialfile,sizeof(buf));
             char *p = (char *)WDL_get_filepart(buf);
@@ -1144,7 +1144,7 @@ static LRESULT WINAPI swellMessageBoxProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
           h = GetWindow(h,GW_HWNDNEXT);
         }
         const int bspace = SWELL_UI_SCALE(button_spacing), sc8 = SWELL_UI_SCALE(8);
-        if (lbl) SetWindowPos(h,NULL,sc8,0,r.right,r.bottom - sc8 - button_height,  SWP_NOZORDER|SWP_NOACTIVATE);
+        if (lbl) SetWindowPos(lbl,NULL,sc8,0,r.right,r.bottom - sc8 - button_height,  SWP_NOZORDER|SWP_NOACTIVATE);
         int xo = r.right/2 - (bxwid + (tabsz-1)*bspace)/2;
         for (int x=0; x<tabsz; x++)
         {

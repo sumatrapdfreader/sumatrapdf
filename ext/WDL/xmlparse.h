@@ -318,7 +318,7 @@ class wdl_xml_parser {
 
         if (char_type(*tok)) return tok;
 
-        char *attr_name = strdup(tok);
+        attr_name = strdup(tok);
         if (!attr_name) { m_err="malloc fail"; break; }
 
         if (m_sort_attributes && 

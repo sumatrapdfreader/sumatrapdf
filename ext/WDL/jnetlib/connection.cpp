@@ -153,6 +153,7 @@ void JNL_Connection::run(int max_send_bytes, int max_recv_bytes, int *bytes_sent
     break;
     case STATE_CONNECTING:
       {		
+#ifdef _WIN32
         fd_set f[3];
         FD_ZERO(&f[0]);
         FD_ZERO(&f[1]);
@@ -162,13 +163,7 @@ void JNL_Connection::run(int max_send_bytes, int max_recv_bytes, int *bytes_sent
         FD_SET(m_socket,&f[2]);
         struct timeval tv;
         memset(&tv,0,sizeof(tv));
-        if (select(
-#ifdef _WIN32
-          0
-#else
-          m_socket+1
-#endif
-          ,&f[0],&f[1],&f[2],&tv)==-1)
+        if (select(0,&f[0],&f[1],&f[2],&tv)==-1)
         {
           m_errorstr="connecting to host (calling select())";
           m_state=STATE_ERROR;
@@ -182,6 +177,17 @@ void JNL_Connection::run(int max_send_bytes, int max_recv_bytes, int *bytes_sent
           m_errorstr="connecting to host";
           m_state=STATE_ERROR;
         }
+#else
+        struct pollfd pl = { m_socket, POLLERR|POLLHUP|POLLOUT, 0 };
+        int res = poll(&pl,1,0);
+        if (res < 0 || (pl.revents & (POLLERR|POLLHUP)))
+        {
+          m_errorstr="connecting to host";
+          m_state=STATE_ERROR;
+        }
+        else if (res>0 || (pl.revents&POLLOUT))
+          m_state=STATE_CONNECTED;
+#endif
       }
     break;
     case STATE_CONNECTED:

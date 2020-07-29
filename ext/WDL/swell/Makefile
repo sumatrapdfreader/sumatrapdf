@@ -6,6 +6,13 @@
 ARCH := $(shell uname -m)
 UNAME_S := $(shell uname -s)
 
+ifeq ($(ARCH), aarch64)
+  ifeq ($(shell $(CC) -dumpmachine | cut -f 1 -d -), arm)
+    # helper for armv7l userspace on aarch64 cpu
+    ARCH := armv7l
+  endif
+endif
+
 PKG_CONFIG = pkg-config
 
 COMPILER=GCC

@@ -120,7 +120,7 @@ template<class RTYPE, class EXTRAINFOTYPE> class WDL_ResourcePool
       m_mutex.Leave();
     }
 
-    RTYPE *GetResource(void *own, unsigned int now)
+    RTYPE *GetResource(void *own, unsigned int now, int flags=0) // flags&1 to only match owner (not look at owneduntil). flags&2 to ignore owneduntil and always take from others (greedy)
     {
       m_mutex.Enter();
       RTYPE *ent=m_rlist, *lastent=NULL, *bestent=NULL, *bestlastent=NULL;
@@ -135,11 +135,16 @@ template<class RTYPE, class EXTRAINFOTYPE> class WDL_ResourcePool
           return ent;
         }
 
-        if (!bestnoown && (!ent->m_rpoolinfo.m_ownerptr || (now - (ent->m_rpoolinfo.m_owneduntil+1)) <= 0x7FFFFFFF))
+        if (!bestnoown)
+        {
+          if (!ent->m_rpoolinfo.m_ownerptr || 
+              (flags & 2) ||
+              (!(flags & 1) && (now - (ent->m_rpoolinfo.m_owneduntil+1)) <= 0x7FFFFFFF))
         {
           bestent=ent;
           bestlastent=lastent;
           if (!ent->m_rpoolinfo.m_ownerptr || !ent->m_rpoolinfo.m_owneduntil) bestnoown=true;
+        }
         }
         lastent=ent;
         ent=(RTYPE *)ent->m_rpoolinfo.next;

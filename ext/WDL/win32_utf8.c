@@ -816,7 +816,7 @@ int statUTF8(const char *filename, struct stat *buffer)
       MBTOWIDE_FREE(wbuf);
     }
   }
-  return stat(filename,buffer);
+  return _stat(filename,(struct _stat*)buffer);
 }
 
 LPSTR GetCommandParametersUTF8()

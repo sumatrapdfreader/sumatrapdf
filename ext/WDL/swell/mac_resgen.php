@@ -352,6 +352,6 @@ for (; $x < count($argv); $x ++)
 
    if (!$quiet) echo "$srcfn: $f\n";
 }
-if (!$quiet || $proc || $err) echo "processed $proc, skipped $skipped, error $err\n";
+if (!$quiet || $err) echo "processed $proc, skipped $skipped, error $err\n";
 
 ?>

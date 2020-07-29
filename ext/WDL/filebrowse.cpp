@@ -117,12 +117,6 @@ bool WDL_ChooseDirectory(HWND parent, const char *text, const char *initialdir, 
 #endif
 }
 
-static WDL_STATICFUNC_UNUSED const char *stristr(const char* a, const char* b)
-{
-  const size_t n = strlen(a), len = strlen(b);
-  for (size_t i = 0; i+len <= n; ++i) if (!strnicmp(a+i, b, len)) return a+i;
-  return NULL;
-}
 
 #ifdef _WIN32
 struct WDL_FileBrowse_Dis {
@@ -343,7 +337,7 @@ char *WDL_ChooseFileForOpen2(HWND parent,
         {
           if(*p) p+=strlen(p)+1;
           if(!*p) break;
-          if(stristr(p, defext)) 
+          if(WDL_stristr(p, defext))
           {
             fd.setFileTypeIndex(i+1);
             break;

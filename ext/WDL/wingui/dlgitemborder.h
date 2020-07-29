@@ -196,7 +196,13 @@ static void Dlg_DrawChildWindowBorders(HWND hwndDlg, INT_PTR *tab, int tabsize, 
 #ifdef _WIN32
   if(hrgn) 
   {
-    HBRUSH b=CreateSolidBrush(GSC?GSC(COLOR_3DFACE):GetSysColor(COLOR_3DFACE));
+    HBRUSH b=NULL;
+    if (!GSC)
+    {
+      LRESULT res = SendMessage(hwndDlg,WM_CTLCOLORDLG, (WPARAM)__use_ps->hdc, (LPARAM)hwndDlg);
+      if (res > 65536) b=(HBRUSH)(INT_PTR)res;
+    }
+    if (!b) b=CreateSolidBrush(GSC?GSC(COLOR_3DFACE):GetSysColor(COLOR_3DFACE));
     FillRgn(__use_ps->hdc,hrgn,b);
     DeleteObject(b);
     DeleteObject(hrgn);

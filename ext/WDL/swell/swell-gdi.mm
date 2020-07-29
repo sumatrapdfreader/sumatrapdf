@@ -158,8 +158,12 @@ int SWELL_IsRetinaHWND(HWND hwnd)
   if (w)
   {
     NSRect r=NSMakeRect(0,0,1,1);
+#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_6
+    NSRect str = [w convertRectToBacking:r];
+#else
     NSRect (*tmp)(id receiver, SEL operation, NSRect) = (NSRect (*)(id, SEL, NSRect))objc_msgSend_stret;
     NSRect str = tmp(w,sel_getUid("convertRectToBacking:"),r);
+#endif
 
     if (str.size.width > 1.9) return 1;
   }
@@ -224,9 +228,9 @@ static void *ALIGN_FBUF(void *inbuf)
 HDC SWELL_CreateMemContext(HDC hdc, int w, int h)
 {
   void *buf=calloc(w*4*h+ALIGN_EXTRA,1);
-  if (!buf) return 0;
+  if (WDL_NOT_NORMALLY(!buf)) return 0;
   CGContextRef c=CGBitmapContextCreate(ALIGN_FBUF(buf),w,h,8,w*4, __GetBitmapColorSpace(), kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host);
-  if (!c)
+  if (WDL_NOT_NORMALLY(!c))
   {
     free(buf);
     return 0;
@@ -488,6 +492,7 @@ HGDIOBJ GetStockObject(int wh)
       return p;
     }
   }
+  WDL_ASSERT(false);
   return 0;
 }
 
@@ -778,7 +783,7 @@ HFONT CreateFont(int lfHeight, int lfWidth, int lfEscapement, int lfOrientation,
 int GetTextFace(HDC ctx, int nCount, LPTSTR lpFaceName)
 {
   HDC__ *ct=(HDC__*)ctx;
-  if (!HDC_VALID(ct) || !nCount || !lpFaceName) return 0;
+  if (!HDC_VALID(ct) || WDL_NOT_NORMALLY(!nCount || !lpFaceName)) return 0;
   
 #ifndef SWELL_NO_CORETEXT
   CTFontRef fr=NULL;
@@ -811,7 +816,7 @@ BOOL GetTextMetrics(HDC ctx, TEXTMETRIC *tm)
     tm->tmHeight=16;
     tm->tmAveCharWidth = 10;
   }
-  if (!HDC_VALID(ct)||!tm) return 0;
+  if (!HDC_VALID(ct)||WDL_NOT_NORMALLY(!tm)) return 0;
 
   bool curfont_valid=HGDIOBJ_VALID(ct->curfont,TYPE_FONT);
 
@@ -1250,7 +1255,7 @@ void SetTextColor(HDC ctx, int col)
 
 HICON CreateIconIndirect(ICONINFO* iconinfo)
 {
-  if (!iconinfo || !iconinfo->fIcon) return 0;  
+  if (WDL_NOT_NORMALLY(!iconinfo || !iconinfo->fIcon)) return 0;  
   HGDIOBJ__* i=iconinfo->hbmColor;
   if (!HGDIOBJ_VALID(i,TYPE_BITMAP) || !i->bitmapptr) return 0;
   NSImage* img=i->bitmapptr;
@@ -1353,7 +1358,7 @@ void DrawImageInRect(HDC ctx, HICON img, const RECT *r)
   HGDIOBJ__ *i = (HGDIOBJ__ *)img;
   HDC__ *ct=(HDC__*)ctx;
   if (!HDC_VALID(ct) || !HGDIOBJ_VALID(i,TYPE_BITMAP) || !i->bitmapptr) return;
-  if (!ct->ctx) return;
+  if (WDL_NOT_NORMALLY(!ct->ctx)) return;
   //CGContextDrawImage(ct->ctx,CGRectMake(r->left,r->top,r->right-r->left,r->bottom-r->top),(CGImage*)i->bitmapptr);
   // probably a better way since this ignores the ctx
   [NSGraphicsContext saveGraphicsState];
@@ -1372,12 +1377,12 @@ void DrawImageInRect(HDC ctx, HICON img, const RECT *r)
 BOOL GetObject(HICON icon, int bmsz, void *_bm)
 {
   memset(_bm,0,bmsz);
-  if (bmsz < 2*(int)sizeof(LONG)) return false;
+  if (WDL_NOT_NORMALLY(bmsz < 2*(int)sizeof(LONG))) return false;
   BITMAP *bm=(BITMAP *)_bm;
   HGDIOBJ__ *i = (HGDIOBJ__ *)icon;
   if (!HGDIOBJ_VALID(i,TYPE_BITMAP)) return false;
   NSImage *img = i->bitmapptr;
-  if (!img) return false;
+  if (WDL_NOT_NORMALLY(!img)) return false;
   bm->bmWidth = (int) ([img size].width+0.5);
   bm->bmHeight = (int) ([img size].height+0.5);
   if (bmsz >= (int)sizeof(BITMAP))
@@ -1479,6 +1484,8 @@ void StretchBlt(HDC hdcOut, int x, int y, int destw, int desth, HDC hdcIn, int x
   if (desth == preclip_h) desth=h;
   else if (h != preclip_h) desth = (h*desth)/preclip_h;
   
+  if (destw < 1 || desth < 1) return;
+  
   const bool use_alphachannel = mode == (int)SRCCOPY_USEALPHACHAN;
 
   unsigned char *p = (unsigned char *)ALIGN_FBUF(src->ownedData);
@@ -1488,13 +1495,50 @@ void StretchBlt(HDC hdcOut, int x, int y, int destw, int desth, HDC hdcIn, int x
 
   if (dest->metal_ctx)
   {
-    void SWELL_Metal_Blit(void *tex, unsigned char *buf, int x, int y, int w, int h, int span, bool retina_hint);
+    void SWELL_Metal_Blit(void *tex, const unsigned int *buf, int x, int y, int w, int h, int span, bool retina_hint, bool use_alpha);
 
+    const unsigned int *ptr = (const unsigned int *)p;
     if (w == destw && h == desth)
-      SWELL_Metal_Blit(hdcOut->metal_ctx,p,x,y,w,h,sw,false);
-    else if (WDL_NORMALLY(w == destw*2) && WDL_NORMALLY(h == desth*2))
+      SWELL_Metal_Blit(hdcOut->metal_ctx,ptr,x,y,w,h,sw,false, use_alphachannel);
+    else if (w == destw*2 && h == desth*2)
+      SWELL_Metal_Blit(hdcOut->metal_ctx,ptr,x*2,y*2,w,h,sw,true, use_alphachannel);
+    else
     {
-      SWELL_Metal_Blit(hdcOut->metal_ctx,p,x*2,y*2,w,h,sw,true);
+      // Using StretchBlt() to size contents isn't ideal (in Metal mode or in win32), but if the caller insists
+      const bool retina = w >= destw*2 && h >= desth*2 && SWELL_IsRetinaDC(hdcOut);
+      if (retina)
+      {
+        destw *= 2;
+        desth *= 2;
+        x*=2;
+        y*=2;
+      }
+
+      // resize a copy of image to destw/desth/destsw/destptr
+      static WDL_TypedBuf<unsigned int> tmp;
+      const int destspan = (destw+3)&~3;
+      const unsigned int dx = (w * 65536) / destw, dy = (h * 65536) / desth;
+      unsigned int *destptr = tmp.ResizeOK(destspan*desth, false);
+      if (WDL_NOT_NORMALLY(!destptr)) return;
+
+      unsigned int *wr = destptr;
+      for (int i=0;i<desth; i ++)
+    {
+        unsigned int yp = ((unsigned int)i * dy)>>16;
+        if (WDL_NOT_NORMALLY(yp >= (unsigned int)h)) break;
+        const unsigned int *rd = ptr + yp*sw;
+        int xpos = 0;
+        for (int j=0;j<destw; j ++)
+        {
+          const unsigned int xp = (xpos>>16);
+          if (WDL_NOT_NORMALLY(xp >= (unsigned int)w)) break;
+          wr[j] = rd[xp];
+          xpos += dx;
+        }
+        wr += destspan;
+      }
+
+      SWELL_Metal_Blit(hdcOut->metal_ctx,destptr,x,y, destw, desth, destspan, retina, use_alphachannel);
     }
 
     return;
@@ -1602,6 +1646,7 @@ void *SWELL_GetCtxFrameBuffer(HDC ctx)
 
 HDC GetDC(HWND h)
 {
+  WDL_ASSERT(h);
   if (h && [(id)h isKindOfClass:[NSWindow class]])
   {
     if ([(id)h respondsToSelector:@selector(getSwellPaintInfo:)]) 
@@ -1661,6 +1706,7 @@ HDC GetDC(HWND h)
 
 HDC GetWindowDC(HWND h)
 {
+  WDL_ASSERT(h);
   HDC ret=GetDC(h);
   if (ret)
   {
@@ -1681,6 +1727,7 @@ HDC GetWindowDC(HWND h)
 
 void ReleaseDC(HWND h, HDC hdc)
 {
+  WDL_ASSERT(h);
   if (hdc)
   {
     if ((hdc)->ctx) CGContextRestoreGState((hdc)->ctx);
@@ -1736,7 +1783,7 @@ void ReleaseDC(HWND h, HDC hdc)
 void SWELL_FillDialogBackground(HDC hdc, const RECT *r, int level)
 {
   CGContextRef ctx=(CGContextRef)SWELL_GetCtxGC(hdc);
-  if (ctx)
+  if (WDL_NORMALLY(ctx))
   {
     bool ok = false;
     if (SWELL_GDI_GetOSXVersion()>=0x10d0)
@@ -1779,7 +1826,7 @@ HBITMAP CreateBitmap(int width, int height, int numplanes, int bitsperpixel, uns
                                                                colorSpaceName:NSDeviceRGBColorSpace
                                                                 bitmapFormat:NSAlphaFirstBitmapFormat 
                                                                  bytesPerRow:0 bitsPerPixel:0];    
-  if (!rep) return 0;
+  if (WDL_NOT_NORMALLY(!rep)) return 0;
   unsigned char* p = [rep bitmapData];
   const int pspan = (int)[rep bytesPerRow]; // might not be the same as width
   
@@ -1826,7 +1873,7 @@ HIMAGELIST ImageList_CreateEx()
 BOOL ImageList_Remove(HIMAGELIST list, int idx)
 {
   WDL_PtrList<HGDIOBJ__>* imglist=(WDL_PtrList<HGDIOBJ__>*)list;
-  if (imglist && idx < imglist->GetSize())
+  if (WDL_NORMALLY(imglist) && idx < imglist->GetSize())
   {
     if (idx < 0) 
     {
@@ -1852,14 +1899,14 @@ BOOL ImageList_Remove(HIMAGELIST list, int idx)
 
 void ImageList_Destroy(HIMAGELIST list)
 {
-  if (!list) return;
+  if (WDL_NOT_NORMALLY(!list)) return;
   ImageList_Remove(list, -1);
   delete (WDL_PtrList<HGDIOBJ__>*)list;
 }
 
 int ImageList_ReplaceIcon(HIMAGELIST list, int offset, HICON image)
 {
-  if (!image || !list) return -1;
+  if (WDL_NOT_NORMALLY(!image || !list)) return -1;
   WDL_PtrList<HGDIOBJ__> *l=(WDL_PtrList<HGDIOBJ__> *)list;
 
   HGDIOBJ__ *imgsrc = (HGDIOBJ__*)image;
@@ -1888,7 +1935,7 @@ int ImageList_ReplaceIcon(HIMAGELIST list, int offset, HICON image)
 
 int ImageList_Add(HIMAGELIST list, HBITMAP image, HBITMAP mask)
 {
-  if (!image || !list) return -1;
+  if (WDL_NOT_NORMALLY(!image || !list)) return -1;
   WDL_PtrList<HGDIOBJ__> *l=(WDL_PtrList<HGDIOBJ__> *)list;
   
   HGDIOBJ__ *imgsrc = (HGDIOBJ__*)image;

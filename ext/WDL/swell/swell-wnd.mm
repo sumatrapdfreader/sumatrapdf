@@ -346,7 +346,120 @@ STANDARD_CONTROL_NEEDSDISPLAY_IMPL("SysTreeView32")
   return [str autorelease];
 }
 
+- (BOOL)outlineView:(NSOutlineView *)outlineView
+         writeItems:(NSArray *)items
+       toPasteboard:(NSPasteboard *)pasteboard
+{
+  if (self->style & TVS_DISABLEDRAGDROP) return NO;
+  [pasteboard declareTypes:[NSArray arrayWithObject:@"swell_treeview"] owner:nil];
+  [pasteboard setString:@"" forType:@"swell_treeview"];
+  return YES;
+}
 
+- (BOOL)outlineView:(NSOutlineView *)outlineView
+         acceptDrop:(id<NSDraggingInfo>)info
+               item:(id)item
+         childIndex:(NSInteger)index
+{
+  HWND par = GetParent((HWND)self);
+  if (par && GetCapture() == par)
+  {
+    POINT p;
+    GetCursorPos(&p);
+    ScreenToClient(par,&p);
+    SendMessage(par,WM_LBUTTONUP,0,MAKELPARAM(p.x,p.y));
+  }
+  return YES;
+}
+
+- (void)outlineView:(NSOutlineView *)outlineView
+    draggingSession:(NSDraggingSession *)session
+       endedAtPoint:(NSPoint)screenPoint
+          operation:(NSDragOperation)operation
+{
+  [self unregisterDraggedTypes];
+  HWND par = GetParent((HWND)self);
+  if (par && GetCapture() == par)
+  {
+    // usually acceptDrop above will be the one that is called, but if the user ended up elsewhere
+    // this might, let the caller clean up capture
+    POINT p;
+    GetCursorPos(&p);
+    ScreenToClient(par,&p);
+    SendMessage(par,WM_LBUTTONUP,0,MAKELPARAM(p.x,p.y));
+  }
+}
+
+- (void)outlineView:(NSOutlineView *)outlineView
+    draggingSession:(NSDraggingSession *)session
+   willBeginAtPoint:(NSPoint)screenPoint
+           forItems:(NSArray *)draggedItems
+{
+  if (self->style & TVS_DISABLEDRAGDROP) return;
+  HWND hwnd = (HWND)self, par = GetParent(hwnd);
+  if (par)
+  {
+    TVHITTESTINFO tht;
+    memset(&tht,0,sizeof(tht));
+    GetCursorPos(&tht.pt);
+    ScreenToClient(hwnd, &tht.pt);
+    HTREEITEM sel = TreeView_GetSelection(hwnd), hit = TreeView_HitTest(hwnd, &tht);
+    if (hit && hit != sel) 
+    {
+      TreeView_SelectItem(hwnd,hit);
+      sel = hit;
+    }
+
+    NMTREEVIEW nm={{hwnd,(UINT_PTR)[self tag],TVN_BEGINDRAG},};
+    nm.itemNew.hItem = sel;
+    nm.itemNew.lParam = sel ? sel->m_param : 0;
+    SendMessage(par,WM_NOTIFY,nm.hdr.idFrom,(LPARAM)&nm);
+    if (GetCapture() == par)
+      [self registerForDraggedTypes:[NSArray arrayWithObject: @"swell_treeview"]];
+  }
+}
+
+- (NSDragOperation)outlineView:(NSOutlineView *)outlineView
+                  validateDrop:(id<NSDraggingInfo>)info
+                  proposedItem:(id)item
+            proposedChildIndex:(NSInteger)index
+{
+  HWND hwnd=(HWND)self, par = GetParent(hwnd);
+  if (par && GetCapture()==par)
+  {
+    POINT p;
+    GetCursorPos(&p);
+    TVHITTESTINFO tht;
+    memset(&tht,0,sizeof(tht));
+    tht.pt = p;
+
+    ScreenToClient(par,&p);
+    LRESULT move_res = SendMessage(par,WM_MOUSEMOVE,0,MAKELPARAM(p.x,p.y));
+    if (move_res == (LRESULT)-1) return NSDragOperationNone;
+    if (move_res == (LRESULT)-2) // move to end
+    {
+      HTREEITEM par_item = NULL;
+      HTREEITEM li = self->m_items ? self->m_items->Get(self->m_items->GetSize()-1) : NULL;
+      while (li && li->m_children.GetSize())
+      {
+        par_item = li;
+        li = li->m_children.Get(li->m_children.GetSize()-1);
+      }
+      if (par_item && par_item->m_children.GetSize()) [self setDropItem:par_item->m_dh dropChildIndex:par_item->m_children.GetSize()];
+    }
+    else if (move_res >= 65536)
+    {
+      HTREEITEM paritem = NULL;
+      int idx=0;
+      // it is safe (but time consuming!) to call findItem: on a possibly-junk pointer
+      if ([self findItem:(HTREEITEM)(INT_PTR)move_res parOut:&paritem idxOut:&idx] && paritem)
+        [self setDropItem:paritem->m_dh dropChildIndex:idx];
+    }
+    return NSDragOperationPrivate;
+  }
+  return NSDragOperationNone;
+
+}
 
 -(void)mouseDown:(NSEvent *)theEvent
 {
@@ -1055,7 +1168,7 @@ STANDARD_CONTROL_NEEDSDISPLAY_IMPL( m_lbMode ? "SysListView32_LB" : "SysListView
 
 HWND GetDlgItem(HWND hwnd, int idx)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
 
   NSView *v=0;
   id pid=(id)hwnd;
@@ -1095,7 +1208,7 @@ HWND GetDlgItem(HWND hwnd, int idx)
 
 LONG_PTR SetWindowLong(HWND hwnd, int idx, LONG_PTR val)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
 
   SWELL_BEGIN_TRY
   id pid=(id)hwnd;
@@ -1271,6 +1384,23 @@ LONG_PTR SetWindowLong(HWND hwnd, int idx, LONG_PTR val)
     return 0;
   }
 
+  if (idx == GWL_HWNDPARENT)
+  {
+    NSWindow *window = [pid window];
+    if (![window respondsToSelector:@selector(swellGetOwner)]) return 0;
+
+    NSWindow *new_owner = val && [(id)(INT_PTR)val isKindOfClass:[NSView class]] ? [(NSView *)(INT_PTR)val window] : NULL;
+    if (new_owner && ![new_owner respondsToSelector:@selector(swellAddOwnedWindow:)]) new_owner=NULL;
+
+    NSWindow *old_owner = [(SWELL_ModelessWindow *)window swellGetOwner];
+    if (old_owner != new_owner)
+    {
+      if (old_owner) [(SWELL_ModelessWindow*)old_owner swellRemoveOwnedWindow:window];
+      [(SWELL_ModelessWindow *)window swellSetOwner:nil];
+      if (new_owner) [(SWELL_ModelessWindow *)new_owner swellAddOwnedWindow:window];
+    }
+    return (old_owner ? (LONG_PTR)[old_owner contentView] : 0);
+  }
   
   if ([pid respondsToSelector:@selector(setSwellExtraData:value:)])
   {
@@ -1288,7 +1418,7 @@ LONG_PTR SetWindowLong(HWND hwnd, int idx, LONG_PTR val)
 
 LONG_PTR GetWindowLong(HWND hwnd, int idx)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
   id pid=(id)hwnd;
 
   SWELL_BEGIN_TRY
@@ -1356,6 +1486,14 @@ LONG_PTR GetWindowLong(HWND hwnd, int idx)
     
     return ret;
   }
+  if (idx == GWL_HWNDPARENT)
+  {
+    NSWindow *window = [pid window];
+    if (![window respondsToSelector:@selector(swellGetOwner)]) return 0;
+    NSWindow *old_owner = [(SWELL_ModelessWindow *)window swellGetOwner];
+    return (old_owner ? (LONG_PTR)[old_owner contentView] : 0);
+  }
+
   if ([pid respondsToSelector:@selector(getSwellExtraData:)])
   {
     return (LONG_PTR)[pid getSwellExtraData:idx];
@@ -1462,7 +1600,7 @@ bool IsWindowVisible(HWND hwnd)
 
 bool IsWindowEnabled(HWND hwnd)
 {
-  if (!hwnd) return false;
+  if (WDL_NOT_NORMALLY(!hwnd)) return false;
 
   bool rv = true;
 
@@ -1520,7 +1658,7 @@ STANDARD_CONTROL_NEEDSDISPLAY_IMPL("Button")
 
 LRESULT SendMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
 
   SWELL_BEGIN_TRY
   id obj=(id)hwnd;
@@ -1647,7 +1785,7 @@ LRESULT SendMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void DestroyWindow(HWND hwnd)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   SWELL_BEGIN_TRY
   id pid=(id)hwnd;
   if ([pid isKindOfClass:[NSView class]])
@@ -1694,7 +1832,7 @@ void DestroyWindow(HWND hwnd)
 
 void EnableWindow(HWND hwnd, int enable)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   SWELL_BEGIN_TRY
   id bla=(id)hwnd;
   if ([bla isKindOfClass:[NSWindow class]]) bla = [bla contentView];
@@ -1713,13 +1851,14 @@ void EnableWindow(HWND hwnd, int enable)
 
 void SetForegroundWindow(HWND hwnd)
 {
+  WDL_ASSERT(hwnd != NULL);
   SetFocus(hwnd);
 }
 
 void SetFocus(HWND hwnd) // these take NSWindow/NSView, and return NSView *
 {
   id r=(id) hwnd;
-  if (!r) return;
+  if (!r) return; // on win32 SetFocus(NULL) is allowed, removes focus (maybe we should implement)
   
   SWELL_BEGIN_TRY
   if ([r isKindOfClass:[NSWindow class]])
@@ -1727,16 +1866,15 @@ void SetFocus(HWND hwnd) // these take NSWindow/NSView, and return NSView *
     [(NSWindow *)r makeFirstResponder:[(NSWindow *)r contentView]]; 
     if ([(NSWindow *)r isVisible]) [(NSWindow *)r makeKeyAndOrderFront:nil];
   }
-  else if ([r isKindOfClass:[NSView class]])
+  else if (WDL_NORMALLY([r isKindOfClass:[NSView class]]))
   {
     NSWindow *wnd=[(NSView *)r window];
-    if (wnd && [r acceptsFirstResponder])
+    if (wnd)
     {
-      [wnd makeFirstResponder:r];
       if ([wnd isVisible])
-      {
         [wnd makeKeyAndOrderFront:nil];
-      }
+      if ([r acceptsFirstResponder])
+        [wnd makeFirstResponder:r];
     }
   }
   SWELL_END_TRY(;)
@@ -1780,12 +1918,12 @@ void SWELL_GetViewPort(RECT *r, const RECT *sourcerect, bool wantWork)
 
 void ScreenToClient(HWND hwnd, POINT *p)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   // no need to try/catch, this should never have an issue *wince*
   
   id ch=(id)hwnd;
   if ([ch isKindOfClass:[NSWindow class]]) ch=[((NSWindow *)ch) contentView];
-  if (!ch || ![ch isKindOfClass:[NSView class]]) return;
+  if (WDL_NOT_NORMALLY(!ch || ![ch isKindOfClass:[NSView class]])) return;
   
   NSWindow *window=[ch window];
   
@@ -1797,7 +1935,7 @@ void ScreenToClient(HWND hwnd, POINT *p)
 
 void ClientToScreen(HWND hwnd, POINT *p)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   
   id ch=(id)hwnd;
   if ([ch isKindOfClass:[NSWindow class]]) ch=[((NSWindow *)ch) contentView];
@@ -1839,7 +1977,7 @@ HWND SWELL_NavigateUpScrollClipViews(HWND h)
 bool GetWindowRect(HWND hwnd, RECT *r)
 {
   r->left=r->top=r->right=r->bottom=0;
-  if (!hwnd) return false;
+  if (WDL_NOT_NORMALLY(!hwnd)) return false;
 
   SWELL_BEGIN_TRY
   
@@ -1885,7 +2023,7 @@ void GetWindowContentViewRect(HWND hwnd, RECT *r)
 void GetClientRect(HWND hwnd, RECT *r)
 {
   r->left=r->top=r->right=r->bottom=0;
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   
   SWELL_BEGIN_TRY
   id ch=(id)hwnd;
@@ -1907,7 +2045,7 @@ void GetClientRect(HWND hwnd, RECT *r)
 
 void SetWindowPos(HWND hwnd, HWND hwndAfter, int x, int y, int cx, int cy, int flags)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
  
   SWELL_BEGIN_TRY
   NSWindow *nswnd; // content views = move window
@@ -2048,7 +2186,7 @@ BOOL EnumWindows(BOOL (*proc)(HWND, LPARAM), LPARAM lp)
 
 HWND GetWindow(HWND hwnd, int what)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
   SWELL_BEGIN_TRY
 
   if ([(id)hwnd isKindOfClass:[NSWindow class]]) hwnd=(HWND)[(id)hwnd contentView];
@@ -2120,7 +2258,7 @@ HWND GetWindow(HWND hwnd, int what)
 HWND GetParent(HWND hwnd)
 {  
   SWELL_BEGIN_TRY
-  if (hwnd && [(id)hwnd isKindOfClass:[NSView class]])
+  if (WDL_NORMALLY(hwnd) && [(id)hwnd isKindOfClass:[NSView class]])
   {
     hwnd=(HWND)NavigateUpScrollClipViews((NSView *)hwnd);
 
@@ -2155,6 +2293,7 @@ HWND SetParent(HWND hwnd, HWND newPar)
 {
   SWELL_BEGIN_TRY
   NSView *v=(NSView *)hwnd;
+  WDL_ASSERT(hwnd != NULL);
   if (!v || ![(id)v isKindOfClass:[NSView class]]) return 0;
   v=NavigateUpScrollClipViews(v);
   
@@ -2340,7 +2479,7 @@ bool IsEquivalentTextView(HWND h1, HWND h2)
 BOOL SetDlgItemText(HWND hwnd, int idx, const char *text)
 {
   NSView *obj=(NSView *)(idx ? GetDlgItem(hwnd,idx) : hwnd);
-  if (!obj) return false;
+  if (WDL_NOT_NORMALLY(!obj)) return false;
   
   SWELL_BEGIN_TRY
   NSWindow *nswnd;
@@ -2363,7 +2502,12 @@ BOOL SetDlgItemText(HWND hwnd, int idx, const char *text)
     [(NSControl*)obj setStringValue:lbl];
     if ([obj isKindOfClass:[NSTextField class]] && [(NSTextField *)obj isEditable])
     {
-      SendMessage(GetParent((HWND)obj),WM_COMMAND,[(NSControl *)obj tag]|(EN_CHANGE<<16),(LPARAM)obj);
+      if (![obj isKindOfClass:[NSComboBox class]])
+      {
+        HWND par = GetParent((HWND)obj);
+        if (par)
+          SendMessage(par,WM_COMMAND,[(NSControl *)obj tag]|(EN_CHANGE<<16),(LPARAM)obj);
+      }
     }
   }
   else if ([obj isKindOfClass:[NSText class]])  
@@ -2390,7 +2534,7 @@ BOOL SetDlgItemText(HWND hwnd, int idx, const char *text)
 
 int GetWindowTextLength(HWND hwnd)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
 
   SWELL_BEGIN_TRY
 
@@ -2425,7 +2569,7 @@ BOOL GetDlgItemText(HWND hwnd, int idx, char *text, int textlen)
 {
   *text=0;
   NSView *pvw=(NSView *)(idx?GetDlgItem(hwnd,idx) : hwnd);
-  if (!pvw) return false;
+  if (WDL_NOT_NORMALLY(!pvw)) return false;
 
   SWELL_BEGIN_TRY
   
@@ -2460,7 +2604,7 @@ BOOL GetDlgItemText(HWND hwnd, int idx, char *text, int textlen)
 void CheckDlgButton(HWND hwnd, int idx, int check)
 {
   NSView *pvw=(NSView *)GetDlgItem(hwnd,idx);
-  if (!pvw) return;
+  if (WDL_NOT_NORMALLY(!pvw)) return;
   if ([pvw isKindOfClass:[NSButton class]]) 
     [(NSButton*)pvw setState:(check&BST_INDETERMINATE)?NSMixedState:((check&BST_CHECKED)?NSOnState:NSOffState)];
 }
@@ -2469,7 +2613,7 @@ void CheckDlgButton(HWND hwnd, int idx, int check)
 int IsDlgButtonChecked(HWND hwnd, int idx)
 {
   NSView *pvw=(NSView *)GetDlgItem(hwnd,idx);
-  if (pvw && [pvw isKindOfClass:[NSButton class]])
+  if (WDL_NORMALLY(pvw && [pvw isKindOfClass:[NSButton class]]))
   {
     NSInteger a=[(NSButton*)pvw state];
     if (a==NSMixedState) return BST_INDETERMINATE;
@@ -2481,7 +2625,7 @@ int IsDlgButtonChecked(HWND hwnd, int idx)
 void SWELL_TB_SetPos(HWND hwnd, int idx, int pos)
 {
   NSSlider *p=(NSSlider *)GetDlgItem(hwnd,idx);
-  if (p  && [p isKindOfClass:[NSSlider class]]) 
+  if (WDL_NORMALLY(p) && [p isKindOfClass:[NSSlider class]]) 
   {
     [p setDoubleValue:(double)pos];
   }
@@ -2494,7 +2638,7 @@ void SWELL_TB_SetPos(HWND hwnd, int idx, int pos)
 void SWELL_TB_SetRange(HWND hwnd, int idx, int low, int hi)
 {
   NSSlider *p=(NSSlider *)GetDlgItem(hwnd,idx);
-  if (p && [p isKindOfClass:[NSSlider class]])
+  if (WDL_NORMALLY(p) && [p isKindOfClass:[NSSlider class]])
   {
     [p setMinValue:low];
     [p setMaxValue:hi];
@@ -2509,7 +2653,7 @@ void SWELL_TB_SetRange(HWND hwnd, int idx, int low, int hi)
 int SWELL_TB_GetPos(HWND hwnd, int idx)
 {
   NSSlider *p=(NSSlider *)GetDlgItem(hwnd,idx);
-  if (p && [p isKindOfClass:[NSSlider class]]) 
+  if (WDL_NORMALLY(p) && [p isKindOfClass:[NSSlider class]]) 
   {
     return (int) ([p doubleValue]+0.5);
   }
@@ -2523,19 +2667,23 @@ int SWELL_TB_GetPos(HWND hwnd, int idx)
 void SWELL_TB_SetTic(HWND hwnd, int idx, int pos)
 {
   NSSlider *p=(NSSlider *)GetDlgItem(hwnd,idx);
+  WDL_ASSERT(p != NULL);
   sendSwellMessage(p,TBM_SETTIC,0,pos);
 }
 
 void SWELL_CB_DeleteString(HWND hwnd, int idx, int wh)
 {
   NSComboBox *p=(NSComboBox *)GetDlgItem(hwnd,idx);
-  if (!p) return;
+  if (WDL_NOT_NORMALLY(!p)) return;
   if ([p isKindOfClass:[SWELL_ComboBox class]])
   {
     if (wh>=0 && wh<[p numberOfItems])
     {
+      SWELL_ComboBox *s = (SWELL_ComboBox *)p;
+      if (s->m_ignore_selchg == wh) s->m_ignore_selchg=-1;
+      else if (s->m_ignore_selchg >= wh) s->m_ignore_selchg--;
       [p removeItemAtIndex:wh];
-      if (((SWELL_ComboBox*)p)->m_ids) ((SWELL_ComboBox*)p)->m_ids->Delete(wh);
+      if (s->m_ids) ((SWELL_ComboBox*)p)->m_ids->Delete(wh);
     }
   }
   else if ( [p isKindOfClass:[NSPopUpButton class]])
@@ -2553,7 +2701,7 @@ void SWELL_CB_DeleteString(HWND hwnd, int idx, int wh)
 int SWELL_CB_FindString(HWND hwnd, int idx, int startAfter, const char *str, bool exact)
 {
   NSComboBox *p=(NSComboBox *)GetDlgItem(hwnd,idx);  
-  if (!p) return 0;
+  if (WDL_NOT_NORMALLY(!p)) return 0;
   
   int pos = startAfter;
   if (pos<0)pos=0;
@@ -2602,7 +2750,7 @@ int SWELL_CB_GetItemText(HWND hwnd, int idx, int item, char *buf, int bufsz)
   NSComboBox *p=(NSComboBox *)GetDlgItem(hwnd,idx);
 
   if (buf) *buf=0;
-  if (!p) return CB_ERR;
+  if (WDL_NOT_NORMALLY(!p)) return CB_ERR;
   const int ni = (int)[p numberOfItems];
   if (item < 0 || item >= ni) return CB_ERR;
   
@@ -2640,7 +2788,7 @@ int SWELL_CB_InsertString(HWND hwnd, int idx, int pos, const char *str)
 {
   NSString *label=(NSString *)SWELL_CStringToCFString(str);
   NSComboBox *p=(NSComboBox *)GetDlgItem(hwnd,idx);
-  if (!p) return 0;
+  if (WDL_NOT_NORMALLY(!p)) return 0;
   
   bool isAppend=false;
   const int ni = (int)[p numberOfItems];
@@ -2655,17 +2803,19 @@ int SWELL_CB_InsertString(HWND hwnd, int idx, int pos, const char *str)
    
   if ([p isKindOfClass:[SWELL_ComboBox class]])
   {
-    if (isAppend && (((int)[(SWELL_ComboBox*)p getSwellStyle]) & CBS_SORT))
+    SWELL_ComboBox *s = (SWELL_ComboBox *)p;
+    if (isAppend && (((int)[s getSwellStyle]) & CBS_SORT))
     {
       pos=(int)arr_bsearch_mod(label,[p objectValues],_nsStringSearchProc);
     }
     
+    if (s->m_ignore_selchg >= pos) s->m_ignore_selchg++;
     if (pos==ni)
       [p addItemWithObjectValue:label];
     else
       [p insertItemWithObjectValue:label atIndex:pos];
   
-    if (((SWELL_ComboBox*)p)->m_ids) ((SWELL_ComboBox*)p)->m_ids->Insert(pos,(char*)0);
+    if (s->m_ids) s->m_ids->Insert(pos,(char*)0);
     [p setNumberOfVisibleItems:(ni+1)];
   }
   else
@@ -2696,14 +2846,15 @@ int SWELL_CB_AddString(HWND hwnd, int idx, const char *str)
 int SWELL_CB_GetCurSel(HWND hwnd, int idx)
 {
   NSComboBox *p=(NSComboBox *)GetDlgItem(hwnd,idx);
-  if (!p) return -1;
+  if (WDL_NOT_NORMALLY(!p)) return -1;
   return (int)[p indexOfSelectedItem];
 }
 
 void SWELL_CB_SetCurSel(HWND hwnd, int idx, int item)
 {
   NSComboBox *cb = (NSComboBox *)GetDlgItem(hwnd,idx);
-  if (!cb) return;
+  if (WDL_NOT_NORMALLY(!cb)) return;
+  const bool is_swell_cb = [cb isKindOfClass:[SWELL_ComboBox class]];
 
   if (item < 0 || item >= [cb numberOfItems])
   {
@@ -2713,18 +2864,22 @@ void SWELL_CB_SetCurSel(HWND hwnd, int idx, int item)
     {
       const NSInteger sel = [cb indexOfSelectedItem];
       if (sel>=0) [cb deselectItemAtIndex:sel];
+      if (is_swell_cb) ((SWELL_ComboBox *)cb)->m_ignore_selchg = -1;
     }
     else if ([cb isKindOfClass:[NSPopUpButton class]])
       [(NSPopUpButton*)cb selectItemAtIndex:-1];
   }
   else
+  {
+    if (is_swell_cb) ((SWELL_ComboBox *)cb)->m_ignore_selchg = item;
     [cb selectItemAtIndex:item];
+  }
 }
 
 int SWELL_CB_GetNumItems(HWND hwnd, int idx)
 {
   NSComboBox *p=(NSComboBox *)GetDlgItem(hwnd,idx);
-  if (!p) return 0;
+  if (WDL_NOT_NORMALLY(!p)) return 0;
   return (int)[p numberOfItems];
 }
 
@@ -2733,7 +2888,7 @@ int SWELL_CB_GetNumItems(HWND hwnd, int idx)
 void SWELL_CB_SetItemData(HWND hwnd, int idx, int item, LONG_PTR data)
 {
   id cb=(id)GetDlgItem(hwnd,idx);
-  if (!cb) return;
+  if (WDL_NOT_NORMALLY(!cb)) return;
 
   if ([cb isKindOfClass:[NSPopUpButton class]])
   {
@@ -2755,7 +2910,7 @@ void SWELL_CB_SetItemData(HWND hwnd, int idx, int item, LONG_PTR data)
 LONG_PTR SWELL_CB_GetItemData(HWND hwnd, int idx, int item)
 {
   id cb=(id)GetDlgItem(hwnd,idx);
-  if (!cb) return 0;
+  if (WDL_NOT_NORMALLY(!cb)) return 0;
   if ([cb isKindOfClass:[NSPopUpButton class]])
   {
     if (item < 0 || item >= [cb numberOfItems]) return 0;
@@ -2776,13 +2931,15 @@ LONG_PTR SWELL_CB_GetItemData(HWND hwnd, int idx, int item)
 void SWELL_CB_Empty(HWND hwnd, int idx)
 {
   id cb=(id)GetDlgItem(hwnd,idx);
-  if (!cb) return;  
+  if (WDL_NOT_NORMALLY(!cb)) return;  
   if ([cb isKindOfClass:[NSPopUpButton class]] ||
       [cb isKindOfClass:[NSComboBox class]]) [cb removeAllItems];
   
   if ([cb isKindOfClass:[SWELL_ComboBox class]])
   {
-    if (((SWELL_ComboBox*)cb)->m_ids) ((SWELL_ComboBox*)cb)->m_ids->Empty(); 
+    SWELL_ComboBox *p = (SWELL_ComboBox *)cb;
+    p->m_ignore_selchg = -1;
+    if (p->m_ids) p->m_ids->Empty();
   }
 }
 
@@ -2828,7 +2985,7 @@ void ShowWindow(HWND hwnd, int cmd)
 {
   id pid=(id)hwnd;
   
-  if (pid && [pid isKindOfClass:[NSWindow class]])
+  if (WDL_NORMALLY(pid) && [pid isKindOfClass:[NSWindow class]])
   {
     if (cmd == SW_SHOWNA && [pid isKindOfClass:[SWELL_ModelessWindow class]])
     {
@@ -2915,7 +3072,7 @@ void ShowWindow(HWND hwnd, int cmd)
 void *SWELL_ModalWindowStart(HWND hwnd)
 {
   if (hwnd && [(id)hwnd isKindOfClass:[NSView class]]) hwnd=(HWND)[(NSView *)hwnd window];
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
   return (void *)[NSApp beginModalSessionForWindow:(NSWindow *)hwnd];
 }
 
@@ -2943,7 +3100,7 @@ void SWELL_ModalWindowEnd(void *ctx)
 
 void SWELL_CloseWindow(HWND hwnd)
 {
-  if (hwnd && [(id)hwnd isKindOfClass:[NSWindow class]])
+  if (WDL_NORMALLY(hwnd) && [(id)hwnd isKindOfClass:[NSWindow class]])
   {
     [((NSWindow*)hwnd) close];
   }
@@ -3065,7 +3222,7 @@ HWND SWELL_MakeButton(int def, const char *label, int idx, int x, int y, int w, 
   [button setTitle:labelstr];
   [button setTarget:ACTIONTARGET];
   [button setAction:@selector(onSwellCommand:)];
-  if (flags & BS_LEFT) [button setAlignment:NSLeftTextAlignment];
+  if ((flags & BS_XPOSITION_MASK) == BS_LEFT) [button setAlignment:NSLeftTextAlignment];
   if (flags&SWELL_NOT_WS_VISIBLE) [button setHidden:YES];
   [m_make_owner addSubview:button];
   if (m_doautoright) UpdateAutoCoords([button frame]);
@@ -3207,7 +3364,7 @@ STANDARD_CONTROL_NEEDSDISPLAY_IMPL("Edit")
 @end
 
 @implementation SWELL_TextField
-STANDARD_CONTROL_NEEDSDISPLAY_IMPL([self isSelectable] ? "Edit" : "static")
+STANDARD_CONTROL_NEEDSDISPLAY_IMPL([self isSelectable] ? "Edit" : "Static")
 
 - (BOOL)becomeFirstResponder;
 {
@@ -3652,7 +3809,7 @@ HWND SWELL_MakeControl(const char *cname, int idx, const char *classname, int st
   {
     return SWELL_MakeEditField(idx,x,y,w,h,style);
   }
-  else if (!stricmp(classname, "static"))
+  else if (!stricmp(classname, "Static"))
   {
     if ((style&SS_TYPEMASK) == SS_ETCHEDHORZ || (style&SS_TYPEMASK) == SS_ETCHEDVERT || (style&SS_TYPEMASK) == SS_ETCHEDFRAME)
     {
@@ -3770,7 +3927,7 @@ HWND SWELL_MakeControl(const char *cname, int idx, const char *classname, int st
         [button setCell:cell];
         [cell release];
       }
-      if (style & BS_LEFT) [button setAlignment:NSLeftTextAlignment];
+      if ((style & BS_XPOSITION_MASK) == BS_LEFT) [button setAlignment:NSLeftTextAlignment];
 //      fr.size.width+=8;
     }
     
@@ -3863,7 +4020,7 @@ HWND SWELL_MakeCombo(int idx, int x, int y, int w, int h, int flags)
 
 @implementation SWELL_BoxView
 
-STANDARD_CONTROL_NEEDSDISPLAY_IMPL("groupbox")
+STANDARD_CONTROL_NEEDSDISPLAY_IMPL(m_etch_mode ? "Static" : "Button")
 
 -(NSInteger) tag
 {
@@ -3906,7 +4063,7 @@ HWND SWELL_MakeGroupBox(const char *name, int idx, int x, int y, int w, int h, i
   [obj setTitle:labelstr];
   [obj setTag:idx];
   [labelstr release];
-  if (style & BS_CENTER)
+  if ((style & BS_XPOSITION_MASK) == BS_CENTER)
   {
     [[obj titleCell] setAlignment:NSCenterTextAlignment];
   }
@@ -3919,14 +4076,14 @@ HWND SWELL_MakeGroupBox(const char *name, int idx, int x, int y, int w, int h, i
 
 int TabCtrl_GetItemCount(HWND hwnd)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]])) return 0;
   SWELL_TabView *tv=(SWELL_TabView*)hwnd;
   return (int)[tv numberOfTabViewItems];
 }
 
 BOOL TabCtrl_AdjustRect(HWND hwnd, BOOL fLarger, RECT *r)
 {
-  if (!r || !hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]]) return FALSE;
+  if (WDL_NOT_NORMALLY(!r || !hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]])) return FALSE;
   
   int sign=fLarger?-1:1;
   r->left+=sign*7; // todo: correct this?
@@ -3939,7 +4096,7 @@ BOOL TabCtrl_AdjustRect(HWND hwnd, BOOL fLarger, RECT *r)
 
 BOOL TabCtrl_DeleteItem(HWND hwnd, int idx)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]])) return 0;
   SWELL_TabView *tv=(SWELL_TabView*)hwnd;
   if (idx<0 || idx>= [tv numberOfTabViewItems]) return 0;
   [tv removeTabViewItem:[tv tabViewItemAtIndex:idx]];
@@ -3948,7 +4105,7 @@ BOOL TabCtrl_DeleteItem(HWND hwnd, int idx)
 
 int TabCtrl_InsertItem(HWND hwnd, int idx, TCITEM *item)
 {
-  if (!item || !hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]]) return -1;
+  if (WDL_NOT_NORMALLY(!item || !hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]])) return -1;
   if (!(item->mask & TCIF_TEXT) || !item->pszText) return -1;
   SWELL_TabView *tv=(SWELL_TabView*)hwnd;
 
@@ -3970,7 +4127,7 @@ int TabCtrl_InsertItem(HWND hwnd, int idx, TCITEM *item)
 
 int TabCtrl_SetCurSel(HWND hwnd, int idx)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]]) return -1;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]])) return -1;
   SWELL_TabView *tv=(SWELL_TabView*)hwnd;
   int ret=TabCtrl_GetCurSel(hwnd);
   if (idx>=0 && idx < [tv numberOfTabViewItems])
@@ -3982,7 +4139,7 @@ int TabCtrl_SetCurSel(HWND hwnd, int idx)
 
 int TabCtrl_GetCurSel(HWND hwnd)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TabView class]])) return 0;
   SWELL_TabView *tv=(SWELL_TabView*)hwnd;
   NSTabViewItem *item=[tv selectedTabViewItem];
   if (!item) return 0;
@@ -3991,8 +4148,7 @@ int TabCtrl_GetCurSel(HWND hwnd)
 
 void ListView_SetExtendedListViewStyleEx(HWND h, int mask, int style)
 {
-  if (!h) return;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return;
   SWELL_ListView *tv=(SWELL_ListView*)h;
   
   if (mask&LVS_EX_GRIDLINES)
@@ -4016,7 +4172,7 @@ void ListView_SetExtendedListViewStyleEx(HWND h, int mask, int style)
 
 void SWELL_SetListViewFastClickMask(HWND hList, int mask)
 {
-  if (!hList || ![(id)hList isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!hList || ![(id)hList isKindOfClass:[SWELL_ListView class]])) return;
   SWELL_ListView *lv = (SWELL_ListView *)hList;
   lv->m_fastClickMask=mask;
 
@@ -4025,7 +4181,7 @@ void SWELL_SetListViewFastClickMask(HWND hList, int mask)
 
 void ListView_SetImageList(HWND h, HIMAGELIST imagelist, int which)
 {
-  if (!h) return;
+  if (WDL_NOT_NORMALLY(!h)) return;
   
   SWELL_ListView *v=(SWELL_ListView *)h;
   
@@ -4059,8 +4215,7 @@ int ListView_GetColumnWidth(HWND h, int pos)
 
 void ListView_InsertColumn(HWND h, int pos, const LVCOLUMN *lvc)
 {
-  if (!h || !lvc) return;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || !lvc || ![(id)h isKindOfClass:[SWELL_ListView class]])) return;
 
   SWELL_BEGIN_TRY
 
@@ -4112,7 +4267,7 @@ void ListView_InsertColumn(HWND h, int pos, const LVCOLUMN *lvc)
 
 void ListView_SetColumn(HWND h, int pos, const LVCOLUMN *lvc)
 {
-  if (!h || !lvc || ![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || !lvc || ![(id)h isKindOfClass:[SWELL_ListView class]])) return;
   SWELL_ListView *v=(SWELL_ListView *)h;
   if (!v->m_cols || pos < 0 || pos >= v->m_cols->GetSize()) return;
   
@@ -4150,8 +4305,7 @@ void ListView_SetColumn(HWND h, int pos, const LVCOLUMN *lvc)
 
 bool ListView_DeleteColumn(HWND h, int pos)
 {
-	if (!h) return false;
-	if (![(id)h isKindOfClass:[SWELL_ListView class]]) return false;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return false;
 	SWELL_ListView *v=(SWELL_ListView *)h;
 	if (!v->m_cols || pos < 0 || pos >= v->m_cols->GetSize()) return false;
 	[v removeTableColumn:v->m_cols->Get(pos)];
@@ -4167,12 +4321,11 @@ void ListView_GetItemText(HWND hwnd, int item, int subitem, char *text, int text
 
 int ListView_InsertItem(HWND h, const LVITEM *item)
 {
-  if (!h || !item || item->iSubItem) return 0;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!h || !item || item->iSubItem || ![(id)h isKindOfClass:[SWELL_ListView class]])) return 0;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
-  if (!tv->m_lbMode && (tv->style & LVS_OWNERDATA)) return -1;
-  if (!tv->m_items) return -1;
+  if (WDL_NOT_NORMALLY(!tv->m_lbMode && (tv->style & LVS_OWNERDATA))) return -1;
+  if (WDL_NOT_NORMALLY(!tv->m_items)) return -1;
     
   int a=item->iItem;
   if (a<0)a=0;
@@ -4233,12 +4386,14 @@ int ListView_InsertItem(HWND h, const LVITEM *item)
 
 void ListView_SetItemText(HWND h, int ipos, int cpos, const char *txt)
 {
-  if (!h || cpos < 0 || cpos >= 32) return;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || cpos < 0)) return;
+  if (WDL_NOT_NORMALLY(![(id)h isKindOfClass:[SWELL_ListView class]])) return;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
-  if (!tv->m_lbMode && (tv->style & LVS_OWNERDATA)) return;
-  if (!tv->m_items) return;
+  if (WDL_NOT_NORMALLY(!tv->m_lbMode && (tv->style & LVS_OWNERDATA))) return;
+  if (WDL_NOT_NORMALLY(!tv->m_items || !tv->m_cols)) return;
+
+  if (WDL_NOT_NORMALLY(cpos && cpos >= tv->m_cols->GetSize())) return; // always allow setting the first
   
   SWELL_ListView_Row *p=tv->m_items->Get(ipos);
   if (!p) return;
@@ -4259,10 +4414,9 @@ void ListView_SetItemText(HWND h, int ipos, int cpos, const char *txt)
 
 int ListView_GetNextItem(HWND h, int istart, int flags)
 {
-  if (flags==LVNI_FOCUSED||flags==LVNI_SELECTED)
+  if (WDL_NORMALLY(flags==LVNI_FOCUSED||flags==LVNI_SELECTED))
   {
-    if (!h) return -1;
-    if (![(id)h isKindOfClass:[SWELL_ListView class]]) return -1;
+    if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return -1;
     
     SWELL_ListView *tv=(SWELL_ListView*)h;
     
@@ -4286,16 +4440,14 @@ int ListView_GetNextItem(HWND h, int istart, int flags)
 
 bool ListView_SetItem(HWND h, LVITEM *item)
 {
-  if (!item) return false;
-  if (!h) return false;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return false;
+  if (WDL_NOT_NORMALLY(!item || !h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return false;
     
   SWELL_ListView *tv=(SWELL_ListView*)h;
   if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
   {
-    if (!tv->m_items) return false;
+    if (WDL_NOT_NORMALLY(!tv->m_items)) return false;
     SWELL_ListView_Row *row=tv->m_items->Get(item->iItem);
-    if (!row) return false;  
+    if (WDL_NOT_NORMALLY(!row)) return false;  
   
     if (item->mask & LVIF_PARAM) 
     {
@@ -4321,12 +4473,10 @@ bool ListView_SetItem(HWND h, LVITEM *item)
 
 bool ListView_GetItem(HWND h, LVITEM *item)
 {
-  if (!item) return false;
+  if (WDL_NOT_NORMALLY(!item)) return false;
   if ((item->mask&LVIF_TEXT)&&item->pszText && item->cchTextMax > 0) item->pszText[0]=0;
   item->state=0;
-  if (!h) return false;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return false;
-  
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return false;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
   if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
@@ -4364,7 +4514,7 @@ bool ListView_GetItem(HWND h, LVITEM *item)
 }
 int ListView_GetItemState(HWND h, int ipos, UINT mask)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return 0;
   SWELL_ListView *tv=(SWELL_ListView*)h;
   UINT flag=0;
   if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
@@ -4392,7 +4542,7 @@ int swell_ignore_listview_changes;
 bool ListView_SetItemState(HWND h, int ipos, UINT state, UINT statemask)
 {
   int doref=0;
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return false;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return false;
   SWELL_ListView *tv=(SWELL_ListView*)h;
   static int _is_doing_all;
   const bool isSingle = tv->m_lbMode ? !(tv->style & LBS_EXTENDEDSEL) : !!(tv->style&LVS_SINGLESEL);
@@ -4527,7 +4677,7 @@ bool ListView_SetItemState(HWND h, int ipos, UINT state, UINT statemask)
 
 void ListView_RedrawItems(HWND h, int startitem, int enditem)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return;
   SWELL_ListView *tv=(SWELL_ListView*)h;
   if (!tv->m_items) return;
   [tv reloadData];
@@ -4535,8 +4685,7 @@ void ListView_RedrawItems(HWND h, int startitem, int enditem)
 
 void ListView_DeleteItem(HWND h, int ipos)
 {
-  if (!h) return;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
   if (!tv->m_items) return;
@@ -4563,8 +4712,7 @@ void ListView_DeleteItem(HWND h, int ipos)
 
 void ListView_DeleteAllItems(HWND h)
 {
-  if (!h) return;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
   tv->ownermode_cnt=0;
@@ -4575,8 +4723,7 @@ void ListView_DeleteAllItems(HWND h)
 
 int ListView_GetSelectedCount(HWND h)
 {
-  if (!h) return 0;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return 0;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
   return (int)[tv numberOfSelectedRows];
@@ -4584,8 +4731,7 @@ int ListView_GetSelectedCount(HWND h)
 
 int ListView_GetItemCount(HWND h)
 {
-  if (!h) return 0;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return 0;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
   if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
@@ -4599,8 +4745,7 @@ int ListView_GetItemCount(HWND h)
 
 int ListView_GetSelectionMark(HWND h)
 {
-  if (!h) return 0;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return 0;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
   return (int)[tv selectedRow];
@@ -4608,8 +4753,7 @@ int ListView_GetSelectionMark(HWND h)
 
 int SWELL_GetListViewHeaderHeight(HWND h)
 {
-  if (!h) return 0;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return 0;
   
   SWELL_ListView* tv=(SWELL_ListView*)h;
   NSTableHeaderView* hv=[tv headerView];
@@ -4619,7 +4763,7 @@ int SWELL_GetListViewHeaderHeight(HWND h)
 
 void ListView_SetColumnWidth(HWND h, int pos, int wid)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return;
   SWELL_ListView *v=(SWELL_ListView *)h;
   if (!v->m_cols || pos < 0 || pos >= v->m_cols->GetSize()) return;
   
@@ -4639,7 +4783,7 @@ void ListView_SetColumnWidth(HWND h, int pos, int wid)
 
 BOOL ListView_GetColumnOrderArray(HWND h, int cnt, int* arr)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return FALSE;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return FALSE;
   SWELL_ListView* lv=(SWELL_ListView*)h;
   if (!lv->m_cols || lv->m_cols->GetSize() != cnt) return FALSE;
   
@@ -4654,7 +4798,7 @@ BOOL ListView_GetColumnOrderArray(HWND h, int cnt, int* arr)
 
 BOOL ListView_SetColumnOrderArray(HWND h, int cnt, int* arr)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return FALSE;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return FALSE;
   SWELL_ListView* lv=(SWELL_ListView*)h;
   if (!lv->m_cols || lv->m_cols->GetSize() != cnt) return FALSE;
   
@@ -4671,13 +4815,13 @@ BOOL ListView_SetColumnOrderArray(HWND h, int cnt, int* arr)
 
 HWND ListView_GetHeader(HWND h)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return 0;
   return h;
 }
 
 int Header_GetItemCount(HWND h)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return 0;
   SWELL_ListView* lv=(SWELL_ListView*)h;
   if (lv->m_cols) return lv->m_cols->GetSize();
   return 0;
@@ -4685,11 +4829,11 @@ int Header_GetItemCount(HWND h)
 
 BOOL Header_GetItem(HWND h, int col, HDITEM* hi)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]] || !hi) return FALSE;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]] || !hi)) return FALSE;
   SWELL_ListView* lv=(SWELL_ListView*)h;
   if (!lv->m_cols || col < 0 || col >= lv->m_cols->GetSize()) return FALSE;
   NSTableColumn* hcol=lv->m_cols->Get(col);
-  if (!hcol) return FALSE;
+  if (WDL_NOT_NORMALLY(!hcol)) return FALSE;
   
   if (hi->mask&HDI_FORMAT)
   {
@@ -4712,7 +4856,7 @@ BOOL Header_GetItem(HWND h, int col, HDITEM* hi)
 
 BOOL Header_SetItem(HWND h, int col, HDITEM* hi)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]] || !hi) return FALSE;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]] || !hi)) return FALSE;
   SWELL_ListView* lv=(SWELL_ListView*)h;
   if (!lv->m_cols || col < 0 || col >= lv->m_cols->GetSize()) return FALSE;
   NSTableColumn* hcol=lv->m_cols->Get(col);
@@ -4732,8 +4876,8 @@ BOOL Header_SetItem(HWND h, int col, HDITEM* hi)
 
 int ListView_HitTest(HWND h, LVHITTESTINFO *pinf)
 {
-  if (!h || !pinf) return -1;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return -1;
+  if (WDL_NOT_NORMALLY(!h || !pinf)) return -1;
+  if (WDL_NOT_NORMALLY(![(id)h isKindOfClass:[SWELL_ListView class]])) return -1;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
   // return index
@@ -4792,8 +4936,7 @@ int ListView_SubItemHitTest(HWND h, LVHITTESTINFO *pinf)
 
 void ListView_SetItemCount(HWND h, int cnt)
 {
-  if (!h) return;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
   if (!tv->m_lbMode && (tv->style & LVS_OWNERDATA))
@@ -4805,8 +4948,7 @@ void ListView_SetItemCount(HWND h, int cnt)
 
 void ListView_EnsureVisible(HWND h, int i, BOOL pok)
 {
-  if (!h) return;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return;
   
   SWELL_ListView *tv=(SWELL_ListView*)h;
   
@@ -4827,8 +4969,7 @@ void ListView_EnsureVisible(HWND h, int i, BOOL pok)
 
 static bool ListViewGetRectImpl(HWND h, int item, int subitem, RECT* r) // subitem<0 for full item rect
 {
-  if (!h) return false;
-  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return false;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_ListView class]])) return false;
   if (item < 0 || item > ListView_GetItemCount(h)) return false;
   SWELL_ListView *tv=(SWELL_ListView*)h;
   
@@ -4860,9 +5001,9 @@ bool ListView_GetItemRect(HWND h, int item, RECT *r, int code)
 int ListView_GetTopIndex(HWND h)
 {
   NSTableView* tv = (NSTableView*)h;
-  if (!tv) return -1;
+  if (WDL_NOT_NORMALLY(!tv)) return -1;
   NSScrollView* sv = [tv enclosingScrollView];
-  if (!sv) return -1;  
+  if (WDL_NOT_NORMALLY(!sv)) return -1;  
   
   NSPoint pt = { 0, 0 };
   NSView *hdr = [tv headerView];
@@ -4878,9 +5019,9 @@ int ListView_GetTopIndex(HWND h)
 int ListView_GetCountPerPage(HWND h)
 {
   NSTableView* tv = (NSTableView*)h;
-  if (!tv) return 0;
+  if (WDL_NOT_NORMALLY(!tv)) return 0;
   NSScrollView* sv = [tv enclosingScrollView];
-  if (!sv) return 0;  
+  if (WDL_NOT_NORMALLY(!sv)) return 0;  
   
   NSRect tvr = [sv documentVisibleRect];
   int rowh = [tv rowHeight];
@@ -4891,7 +5032,7 @@ bool ListView_Scroll(HWND h, int xscroll, int yscroll)
 {
   NSTableView* tv = (NSTableView*)h;
   NSScrollView* sv = [tv enclosingScrollView];
-  if (!sv) return false;
+  if (WDL_NOT_NORMALLY(!sv)) return false;
   
   NSRect tvr = [sv documentVisibleRect];
   NSPoint pt = { tvr.origin.x, tvr.origin.y };
@@ -4941,7 +5082,7 @@ bool ListView_GetScroll(HWND h, POINT* p)
 {
   NSTableView* tv = (NSTableView*)h;
   NSScrollView* sv = [tv enclosingScrollView];
-  if (sv)
+  if (WDL_NORMALLY(sv))
   {
     NSRect cr = [sv documentVisibleRect];
     p->x = cr.origin.x;
@@ -4954,8 +5095,7 @@ bool ListView_GetScroll(HWND h, POINT* p)
 
 void ListView_SortItems(HWND hwnd, PFNLVCOMPARE compf, LPARAM parm)
 {
-  if (!hwnd) return;
-  if (![(id)hwnd isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_ListView class]])) return;
   SWELL_ListView *tv=(SWELL_ListView*)hwnd;
   if (tv->m_lbMode || (tv->style & LVS_OWNERDATA) || !tv->m_items) return;
     
@@ -5025,7 +5165,7 @@ HWND WindowFromPoint(POINT p)
 
 void UpdateWindow(HWND hwnd)
 {
-  if (hwnd && [(id)hwnd isKindOfClass:[NSView class]])
+  if (WDL_NORMALLY(hwnd && [(id)hwnd isKindOfClass:[NSView class]]))
   {
 #ifndef SWELL_NO_METAL
     if ([(id)hwnd isKindOfClass:[SWELL_hwndChild class]] && 
@@ -5047,7 +5187,7 @@ void UpdateWindow(HWND hwnd)
 
 void SWELL_FlushWindow(HWND h)
 {
-  if (h)
+  if (WDL_NORMALLY(h))
   {
     NSWindow *w=NULL;
     if ([(id)h isKindOfClass:[NSView class]]) 
@@ -5087,10 +5227,10 @@ static void InvalidateSuperViews(NSView *view)
            
 BOOL InvalidateRect(HWND hwnd, const RECT *r, int eraseBk)
 { 
-  if (!hwnd) return FALSE;
+  if (WDL_NOT_NORMALLY(!hwnd)) return FALSE;
   id view=(id)hwnd;
   if ([view isKindOfClass:[NSWindow class]]) view=[view contentView];
-  if ([view isKindOfClass:[NSView class]]) 
+  if (WDL_NORMALLY([view isKindOfClass:[NSView class]]))
   {
 
     NSView *sv = view;
@@ -5149,6 +5289,9 @@ HWND SetCapture(HWND hwnd)
   m_fakeCapture=hwnd;
   m_capChangeNotify = hwnd && [(id)hwnd respondsToSelector:@selector(swellCapChangeNotify)] && [(SWELL_hwndChild*)hwnd swellCapChangeNotify];
 
+  if (hwnd && WDL_NORMALLY([(id)hwnd isKindOfClass:[NSView class]]))
+    [[(NSView *)hwnd window] disableCursorRects];
+
   if (ocn && oc && oc != hwnd) SendMessage(oc,WM_CAPTURECHANGED,0,(LPARAM)hwnd);
   return oc;
 }
@@ -5167,9 +5310,9 @@ void ReleaseCapture()
 
 HDC BeginPaint(HWND hwnd, PAINTSTRUCT *ps)
 {
-  if (!ps) return 0;
+  if (WDL_NOT_NORMALLY(!ps)) return 0;
   memset(ps,0,sizeof(PAINTSTRUCT));
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
   id turd = (id)hwnd;
   if (![turd respondsToSelector:@selector(getSwellPaintInfo:)]) return 0;
 
@@ -5179,6 +5322,7 @@ HDC BeginPaint(HWND hwnd, PAINTSTRUCT *ps)
 
 BOOL EndPaint(HWND hwnd, PAINTSTRUCT *ps)
 {
+  WDL_ASSERT(hwnd != NULL && ps != NULL);
   return TRUE;
 }
 
@@ -5393,14 +5537,19 @@ static WDL_PtrList<swell_pendingClipboardStates> m_clipsPending;
 bool OpenClipboard(HWND hwndDlg)
 {
   m_clipsPending.Empty(true);
+  RegisterClipboardFormat(NULL);
 
-  CF_TEXT; // ensure this type is registered
-  
-  NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:@"SWELL_APP"];
+  NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
   m_clip_curfmts.Empty();
+  if (SWELL_GetOSXVersion()>=0x1060)
+  {
+    NSArray *list = [pasteboard
+      readObjectsForClasses:[NSArray arrayWithObject:[NSURL class]]
+      options:[NSMutableDictionary dictionaryWithCapacity:1]];
+    if ([list count]) m_clip_curfmts.Add((char*)(INT_PTR)CF_HDROP);
+  }
   NSArray *ar=[pasteboard types];
 
-  
   if (ar && [ar count])
   {
     int x;
@@ -5412,10 +5561,11 @@ bool OpenClipboard(HWND hwndDlg)
       int y;
       for (y = 0; y < m_clip_fmts.GetSize(); y ++)
       {
-        if ([s compare:(NSString *)m_clip_fmts.Get(y)]==NSOrderedSame)
+        NSString *cs = m_clip_fmts.Get(y);
+        if (cs && [s compare:cs]==NSOrderedSame)
         {
-          if (m_clip_curfmts.Find((char*)(INT_PTR)(y+1))<0)
-            m_clip_curfmts.Add((char*)(INT_PTR)(y+1));
+          char *tok = (char*)(INT_PTR)(y+1);
+          if (m_clip_curfmts.Find(tok)<0) m_clip_curfmts.Add(tok);
           break;
         }
       }
@@ -5432,25 +5582,34 @@ void CloseClipboard() // frees any remaining items in clipboard
   if (m_clipsPending.GetSize())
   {
     int x;
-    for (x=0;x<m_clipsPending.GetSize() && m_clipsPending.Get(x)->type != CF_TEXT;x++);
-    NSPasteboard *pasteboard = x<m_clipsPending.GetSize() ? [NSPasteboard generalPasteboard] : [NSPasteboard pasteboardWithName:@"SWELL_APP"];
+    NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
     
     NSMutableArray *ar = [[NSMutableArray alloc] initWithCapacity:m_clipsPending.GetSize()];
     
+    int hdrop_cnt=0;
     for (x=0;x<m_clipsPending.GetSize();x++)
     {
       swell_pendingClipboardStates *cs=m_clipsPending.Get(x);
+      if (cs->type == CF_HDROP)
+      {
+        hdrop_cnt++;
+      }
+      else
+      {
       NSString *fmt=m_clip_fmts.Get(cs->type-1);
       if (fmt) [ar addObject:fmt];
     }
-    if ([ar count])
+    }
+
+    if (hdrop_cnt || [ar count])
     {
+    if ([ar count])
       [pasteboard declareTypes:ar owner:nil];
+      else if (SWELL_GetOSXVersion() >= 0x1060)
+        [pasteboard clearContents];
       for (x=0;x<m_clipsPending.GetSize();x++)
       {
         swell_pendingClipboardStates *cs=m_clipsPending.Get(x);
-        NSString *fmt=m_clip_fmts.Get(cs->type-1);
-        if (!fmt) continue;
         
         void *buf=GlobalLock(cs->h);
         if (buf)
@@ -5464,15 +5623,48 @@ void CloseClipboard() // frees any remaining items in clipboard
               memcpy(t,buf,bufsz);
               t[bufsz]=0;
               NSString *s = (NSString*)SWELL_CStringToCFString(t);
-              [pasteboard setString:s forType:fmt];
+              [pasteboard setString:s forType:NSStringPboardType];
               [s release];
               free(t);
             }
           }
+          else if (cs->type == CF_HDROP)
+          {
+            if (WDL_NORMALLY(bufsz > sizeof(DROPFILES)))
+            {
+              const DROPFILES *hdr = (const DROPFILES *)buf;
+              if (
+                  WDL_NORMALLY(hdr->pFiles < bufsz) &&
+                  WDL_NORMALLY(!hdr->fWide) // todo deal with UTF-16
+              )
+              {
+                NSMutableArray *list = [NSMutableArray arrayWithCapacity:20];
+                const char *rd = (const char *)buf;
+                DWORD rdo = hdr->pFiles;
+                while (rdo < bufsz && rd[rdo])
+                {
+                  NSString *fnstr=(NSString *)SWELL_CStringToCFString(rd+rdo);
+                  NSURL *url = [NSURL fileURLWithPath:fnstr];
+                  [fnstr release];
+                  if (url) [list addObject:url];
+                  rdo += strlen(rd+rdo)+1;
+                }
+
+                if ([list count] && SWELL_GetOSXVersion() >= 0x1060)
+                {
+                  [pasteboard writeObjects:list];
+                }
+              }
+            }
+          }
           else
+          {
+            NSString *fmt=m_clip_fmts.Get(cs->type-1);
+            if (fmt)
           {
             NSData *data=[NSData dataWithBytes:buf length:bufsz];
             [pasteboard setData:data forType:fmt];
+          }
           }
           GlobalUnlock(cs->h);
         }
@@ -5483,30 +5675,23 @@ void CloseClipboard() // frees any remaining items in clipboard
   }  
 }
 
-UINT EnumClipboardFormats(UINT lastfmt) // won't enumerate CF_TEXT (since thats a separate pasteboard)
+UINT EnumClipboardFormats(UINT lastfmt)
 {
-  if (!m_clip_curfmts.GetSize()) return 0;
   if (lastfmt == 0) return (UINT)(INT_PTR)m_clip_curfmts.Get(0);
-  int x;
-  for (x = m_clip_curfmts.GetSize()-2; x >= 0; x--) // scan backwards to avoid dupes causing infinite loops
-  {
-    if ((UINT)(INT_PTR)m_clip_curfmts.Get(x) == lastfmt)
-      return (UINT)(INT_PTR)m_clip_curfmts.Get(x+1);
-  }
-  return 0;
+  const int idx = m_clip_curfmts.Find((char *)(INT_PTR)lastfmt);
+  return idx >= 0 ? (UINT)(INT_PTR)m_clip_curfmts.Get(idx+1) : 0;
 }
 
 HANDLE GetClipboardData(UINT type)
 {
-  NSString *fmt=m_clip_fmts.Get(type-1);
-  if (!fmt) return 0;
-  NSPasteboard *pasteboard = type == CF_TEXT ? [NSPasteboard generalPasteboard] : [NSPasteboard pasteboardWithName:@"SWELL_APP"];
+  RegisterClipboardFormat(NULL);
+  NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
   
   HANDLE h=0;
   if (type == CF_TEXT)
   {
     [pasteboard types];
-    NSString *str = [pasteboard stringForType:fmt];
+    NSString *str = [pasteboard stringForType:NSStringPboardType];
     if (str)
     {
       int l = (int) ([str length]*4 + 32);
@@ -5521,15 +5706,54 @@ HANDLE GetClipboardData(UINT type)
       free(buf);
     }
   }
+  else if (type == CF_HDROP)
+  {
+    if (SWELL_GetOSXVersion()>=0x1060)
+    {
+      [pasteboard types];
+      NSArray *list = [pasteboard
+        readObjectsForClasses:[NSArray arrayWithObject:[NSURL class]]
+        options:[NSMutableDictionary dictionaryWithCapacity:1]
+      ];
+      int nf = (int) [list count];
+      if (nf > 0)
+      {
+        WDL_TypedQueue<char> flist;
+        flist.Add(NULL,sizeof(DROPFILES));
+        for (int x=0;x<nf;x++)
+        {
+          NSURL *url = (NSURL *)[list objectAtIndex:x];
+          if ([url isFileURL])
+          {
+            const char *ptr = [[url path] UTF8String];
+            if (ptr && *ptr) flist.Add(ptr, strlen(ptr)+1);
+          }
+        }
+        if (flist.GetSize()>sizeof(DROPFILES))
+        {
+          flist.Add("",1);
+          DROPFILES *hdr = (DROPFILES*)flist.Get();
+          memset(hdr,0,sizeof(*hdr));
+          hdr->pFiles = sizeof(DROPFILES);
+          h=GlobalAlloc(0,flist.GetSize());
+          if (h) memcpy(GlobalLock(h),flist.Get(),flist.GetSize());
+          GlobalUnlock(h);
+        }
+      }
+    }
+  }
   else
   {
-    
+    NSString *fmt=m_clip_fmts.Get(type-1);
+    if (fmt)
+    {
     NSData *data=[pasteboard dataForType:fmt];
     if (!data) return 0; 
     int l = (int)[data length];
     h=GlobalAlloc(0,l);  
     if (h) memcpy(GlobalLock(h),[data bytes],l);
     GlobalUnlock(h);
+  }
   }
   
   if (h) m_clip_recs.Add(h);
@@ -5549,18 +5773,21 @@ void SetClipboardData(UINT type, HANDLE h)
 
 UINT RegisterClipboardFormat(const char *desc)
 {
-  NSString *s=NULL;
-  if (!strcmp(desc,"SWELL__CF_TEXT")) 
+  if (!m_clip_fmts.GetSize())
   {
-    s=NSStringPboardType;
-    [s retain];
+    m_clip_fmts.Add([NSStringPboardType retain]); // CF_TEXT
+    m_clip_fmts.Add(NULL); // CF_HDROP
   }
-  if (!s) s=(NSString*)SWELL_CStringToCFString(desc);
+  if (!desc || !*desc) return 0;
+
+  if (!strcmp(desc,"SWELL__CF_TEXT")) return CF_TEXT; // for legacy SWELL users
+
+  NSString *s=(NSString*)SWELL_CStringToCFString(desc);
   int x;
   for (x = 0; x < m_clip_fmts.GetSize(); x ++)
   {
     NSString *ts=m_clip_fmts.Get(x);
-    if ([ts compare:s]==NSOrderedSame)
+    if (ts && [ts compare:s]==NSOrderedSame)
     {
       [s release];
       return x+1;
@@ -5572,25 +5799,25 @@ UINT RegisterClipboardFormat(const char *desc)
 
 int EnumPropsEx(HWND hwnd, PROPENUMPROCEX proc, LPARAM lParam)
 {
-  if (!hwnd || ![(id)hwnd respondsToSelector:@selector(swellEnumProps:lp:)]) return -1;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd respondsToSelector:@selector(swellEnumProps:lp:)])) return -1;
   return (int)[(SWELL_hwndChild *)hwnd swellEnumProps:proc lp:lParam];
 }
 
 HANDLE GetProp(HWND hwnd, const char *name)
 {
-  if (!hwnd || ![(id)hwnd respondsToSelector:@selector(swellGetProp:wantRemove:)]) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd respondsToSelector:@selector(swellGetProp:wantRemove:)])) return NULL;
   return (HANDLE)[(SWELL_hwndChild *)hwnd swellGetProp:name wantRemove:NO];
 }
 
 BOOL SetProp(HWND hwnd, const char *name, HANDLE val)
 {
-  if (!hwnd || ![(id)hwnd respondsToSelector:@selector(swellSetProp:value:)]) return FALSE;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd respondsToSelector:@selector(swellSetProp:value:)])) return FALSE;
   return (BOOL)!![(SWELL_hwndChild *)hwnd swellSetProp:name value:val];
 }
 
 HANDLE RemoveProp(HWND hwnd, const char *name)
 {
-  if (!hwnd || ![(id)hwnd respondsToSelector:@selector(swellGetProp:wantRemove:)]) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd respondsToSelector:@selector(swellGetProp:wantRemove:)])) return NULL;
   return (HANDLE)[(SWELL_hwndChild *)hwnd swellGetProp:name wantRemove:YES];
 }
 
@@ -5617,7 +5844,7 @@ return 0;
 BOOL ScrollWindow(HWND hwnd, int xamt, int yamt, const RECT *lpRect, const RECT *lpClipRect)
 {
   if (hwnd && [(id)hwnd isKindOfClass:[NSWindow class]]) hwnd=(HWND)[(id)hwnd contentView];
-  if (!hwnd || ![(id)hwnd isKindOfClass:[NSView class]]) return FALSE;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[NSView class]])) return FALSE;
 
   if (!xamt && !yamt) return FALSE;
   
@@ -5724,7 +5951,7 @@ HWND FindWindowEx(HWND par, HWND lastw, const char *classname, const char *title
 
 BOOL TreeView_SetIndent(HWND hwnd, int indent)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return 0;
   SWELL_TreeView* tv = (SWELL_TreeView*)hwnd;  
   [tv setIndentationPerLevel:(float)indent];  
   return TRUE;
@@ -5732,8 +5959,7 @@ BOOL TreeView_SetIndent(HWND hwnd, int indent)
 
 HTREEITEM TreeView_InsertItem(HWND hwnd, TV_INSERTSTRUCT *ins)
 {
-  if (!hwnd || !ins) return 0;
-  if (![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd || !ins || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return 0;
   
   SWELL_TreeView *tv=(SWELL_TreeView*)hwnd;
 
@@ -5771,9 +5997,9 @@ HTREEITEM TreeView_InsertItem(HWND hwnd, TV_INSERTSTRUCT *ins)
 
 BOOL TreeView_Expand(HWND hwnd, HTREEITEM item, UINT flag)
 {
-  if (!hwnd || !item) return false;
+  if (WDL_NOT_NORMALLY(!hwnd || !item)) return false;
   
-  if (![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return false;
+  if (WDL_NOT_NORMALLY(![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return false;
   
   SWELL_TreeView *tv=(SWELL_TreeView*)hwnd;
   
@@ -5795,7 +6021,7 @@ BOOL TreeView_Expand(HWND hwnd, HTREEITEM item, UINT flag)
 
 HTREEITEM TreeView_GetSelection(HWND hwnd)
 { 
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return NULL;
   
   SWELL_TreeView *tv=(SWELL_TreeView*)hwnd;
   NSInteger idx=[tv selectedRow];
@@ -5809,7 +6035,7 @@ HTREEITEM TreeView_GetSelection(HWND hwnd)
 
 void TreeView_DeleteItem(HWND hwnd, HTREEITEM item)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return;
   SWELL_TreeView *tv=(SWELL_TreeView*)hwnd;
   
   HTREEITEM__ *par=NULL;
@@ -5831,16 +6057,25 @@ void TreeView_DeleteItem(HWND hwnd, HTREEITEM item)
 
 void TreeView_DeleteAllItems(HWND hwnd)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return;
   SWELL_TreeView *tv=(SWELL_TreeView*)hwnd;
   
   if (tv->m_items) tv->m_items->Empty(true);
   [tv reloadData];
 }
 
+void TreeView_EnsureVisible(HWND hwnd, HTREEITEM item)
+{
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return;
+  if (!item) return;
+  NSInteger row=[(SWELL_TreeView*)hwnd rowForItem:((HTREEITEM__*)item)->m_dh];
+  if (row>=0)
+    [(SWELL_TreeView*)hwnd scrollRowToVisible:row];
+}
+
 void TreeView_SelectItem(HWND hwnd, HTREEITEM item)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return;
   
   NSInteger row=[(SWELL_TreeView*)hwnd rowForItem:((HTREEITEM__*)item)->m_dh];
   if (row>=0)
@@ -5851,6 +6086,7 @@ void TreeView_SelectItem(HWND hwnd, HTREEITEM item)
     __rent=1;
     NMTREEVIEW nm={{(HWND)hwnd,(UINT_PTR)[(SWELL_TreeView*)hwnd tag],TVN_SELCHANGED},};
     nm.itemNew.hItem = item;
+    nm.itemNew.lParam = item ? item->m_param : 0;
     SendMessage(GetParent(hwnd),WM_NOTIFY,nm.hdr.idFrom,(LPARAM)&nm);
     __rent=0;
   }
@@ -5858,7 +6094,8 @@ void TreeView_SelectItem(HWND hwnd, HTREEITEM item)
 
 BOOL TreeView_GetItem(HWND hwnd, LPTVITEM pitem)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]] || !pitem || !(pitem->mask & TVIF_HANDLE) || !(pitem->hItem)) return FALSE;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]] || !pitem) || 
+      !(pitem->mask & TVIF_HANDLE) || !(pitem->hItem)) return FALSE;
   
   HTREEITEM__ *ti = (HTREEITEM__*)pitem->hItem;
   pitem->cChildren = ti->m_haschildren ? 1:0;
@@ -5881,7 +6118,8 @@ BOOL TreeView_GetItem(HWND hwnd, LPTVITEM pitem)
 
 BOOL TreeView_SetItem(HWND hwnd, LPTVITEM pitem)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]] || !pitem || !(pitem->mask & TVIF_HANDLE) || !(pitem->hItem)) return FALSE;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]] || !pitem) || 
+    !(pitem->mask & TVIF_HANDLE) || !(pitem->hItem)) return FALSE;
   
   HTREEITEM__ *par=NULL;
   int idx=0;
@@ -5914,6 +6152,8 @@ BOOL TreeView_SetItem(HWND hwnd, LPTVITEM pitem)
         {
           __rent=1;
           NMTREEVIEW nm={{(HWND)hwnd,(UINT_PTR)[(SWELL_TreeView*)hwnd tag],TVN_SELCHANGED},};
+          nm.itemNew.hItem = ti;
+          nm.itemNew.lParam = ti ? ti->m_param : 0;
           SendMessage(GetParent(hwnd),WM_NOTIFY,nm.hdr.idFrom,(LPARAM)&nm);
           __rent=0;
         }
@@ -5936,15 +6176,25 @@ BOOL TreeView_SetItem(HWND hwnd, LPTVITEM pitem)
 
 HTREEITEM TreeView_HitTest(HWND hwnd, TVHITTESTINFO *hti)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]] || !hti) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]] || !hti)) return NULL;
   SWELL_TreeView* tv = (SWELL_TreeView*)hwnd;
   int x = hti->pt.x;
   int y = hti->pt.y;
   
+  // treeview might be clipped
+  POINT wp={x, y};
+  ClientToScreen(hwnd, &wp);
+  RECT wr;
+  GetWindowRect(hwnd, &wr);
+  if (wp.x < wr.left || wp.x >= wr.right) return NULL;
+  if (wp.y < wdl_min(wr.top, wr.bottom) || wp.y >= wdl_max(wr.top, wr.bottom)) return NULL;
+
   int i; 
+  double maxy = 0.0;
   for (i = 0; i < [tv numberOfRows]; ++i)
   {
     NSRect r = [tv rectOfRow:i];
+    maxy = wdl_max(maxy, r.origin.y + r.size.height);
     if (x >= r.origin.x && x < r.origin.x+r.size.width && y >= r.origin.y && y < r.origin.y+r.size.height)
     {
       SWELL_DataHold* t = [tv itemAtRow:i];
@@ -5952,13 +6202,17 @@ HTREEITEM TreeView_HitTest(HWND hwnd, TVHITTESTINFO *hti)
       return 0;
     }
   }
+  if (y >= maxy)
+  {
+    hti->flags |= TVHT_BELOW;
+  }
   
   return NULL; // not hit
 }
 
 HTREEITEM TreeView_GetRoot(HWND hwnd)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return NULL;
   SWELL_TreeView *tv=(SWELL_TreeView*)hwnd;
   
   if (!tv->m_items) return 0;
@@ -5967,7 +6221,7 @@ HTREEITEM TreeView_GetRoot(HWND hwnd)
 
 HTREEITEM TreeView_GetChild(HWND hwnd, HTREEITEM item)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return NULL;
 
   HTREEITEM__ *titem=(HTREEITEM__ *)item;
   if (!titem || item == TVI_ROOT) return TreeView_GetRoot(hwnd);
@@ -5976,7 +6230,7 @@ HTREEITEM TreeView_GetChild(HWND hwnd, HTREEITEM item)
 }
 HTREEITEM TreeView_GetNextSibling(HWND hwnd, HTREEITEM item)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return NULL;
   SWELL_TreeView *tv=(SWELL_TreeView*)hwnd;
 
   if (!item) return TreeView_GetRoot(hwnd);
@@ -5996,14 +6250,14 @@ HTREEITEM TreeView_GetNextSibling(HWND hwnd, HTREEITEM item)
 
 void TreeView_SetBkColor(HWND hwnd, int color)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return;
   [(NSOutlineView*)hwnd setBackgroundColor:[NSColor colorWithCalibratedRed:GetRValue(color)/255.0f 
               green:GetGValue(color)/255.0f 
               blue:GetBValue(color)/255.0f alpha:1.0f]];
 }
 void TreeView_SetTextColor(HWND hwnd, int color)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_TreeView class]])) return;
 
   SWELL_TreeView *f = (SWELL_TreeView *)hwnd;
   [f->m_fgColor release];
@@ -6014,7 +6268,7 @@ void TreeView_SetTextColor(HWND hwnd, int color)
 }
 void ListView_SetBkColor(HWND hwnd, int color)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_ListView class]])) return;
   [(NSTableView*)hwnd setBackgroundColor:[NSColor colorWithCalibratedRed:GetRValue(color)/255.0f 
               green:GetGValue(color)/255.0f 
               blue:GetBValue(color)/255.0f alpha:1.0f]];
@@ -6022,7 +6276,7 @@ void ListView_SetBkColor(HWND hwnd, int color)
 
 void ListView_SetSelColors(HWND hwnd, int *colors, int ncolors) // this works for SWELL_ListView as well as SWELL_TreeView
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   NSMutableArray *ar=[[NSMutableArray alloc] initWithCapacity:ncolors];
   
   while (ncolors-->0)
@@ -6047,24 +6301,25 @@ void ListView_SetSelColors(HWND hwnd, int *colors, int ncolors) // this works fo
   }
   else 
   {
+    WDL_ASSERT(false);
     [ar release];
   }
 }
 void ListView_SetGridColor(HWND hwnd, int color)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_ListView class]])) return;
   [(NSTableView*)hwnd setGridColor:[NSColor colorWithCalibratedRed:GetRValue(color)/255.0f 
               green:GetGValue(color)/255.0f 
               blue:GetBValue(color)/255.0f alpha:1.0f]];
 }
 void ListView_SetTextBkColor(HWND hwnd, int color)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_ListView class]])) return;
   // not implemented atm
 }
 void ListView_SetTextColor(HWND hwnd, int color)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[SWELL_ListView class]]) return;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[SWELL_ListView class]])) return;
 
   SWELL_ListView *f = (SWELL_ListView *)hwnd;
   [f->m_fgColor release];
@@ -6262,7 +6517,15 @@ STANDARD_CONTROL_NEEDSDISPLAY_IMPL("combobox")
 
 -(void)setSwellStyle:(LONG)style { m_style=style; }
 -(LONG)getSwellStyle { return m_style; }
--(id)init { self = [super init]; if (self) { m_ids=new WDL_PtrList<char>; }  return self; }
+-(id)init {
+  self = [super init];
+  if (self)
+  {
+    m_ids=new WDL_PtrList<char>;
+    m_ignore_selchg = -1;
+  }
+  return self;
+}
 -(void)dealloc { delete m_ids; [super dealloc];  }
 - (BOOL)becomeFirstResponder;
 {
@@ -6339,6 +6602,10 @@ int SWELL_GetWindowWantRaiseAmt(HWND h)
       mw=(SWELL_ModelessWindow*)wnd;
     }
   }
+  else
+  {
+    WDL_ASSERT(false);
+  }
   if (mw) return mw->m_wantraiseamt;  
   return 0; 
 }
@@ -6358,6 +6625,10 @@ void SWELL_SetWindowWantRaiseAmt(HWND h, int  amt)
     mw->m_wantraiseamt = amt;
     if (diff && [NSApp isActive]) [mw setLevel:[mw level]+diff];
   }
+  else
+  {
+    WDL_ASSERT(false);
+  }
 }
 
 
@@ -6366,7 +6637,7 @@ int SWELL_SetWindowLevel(HWND hwnd, int newlevel)
   NSWindow *w = (NSWindow *)hwnd;
   if (w && [w isKindOfClass:[NSView class]]) w= [(NSView *)w window];
   
-  if (w && [w isKindOfClass:[NSWindow class]])
+  if (WDL_NORMALLY(w && [w isKindOfClass:[NSWindow class]]))
   {
     int ol = (int)[w level];
     [w setLevel:newlevel];
@@ -6377,25 +6648,25 @@ int SWELL_SetWindowLevel(HWND hwnd, int newlevel)
 
 void SetAllowNoMiddleManRendering(HWND h, bool allow)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_hwndChild class]]) return;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_hwndChild class]])) return;
   SWELL_hwndChild* v = (SWELL_hwndChild*)h;
   v->m_allow_nomiddleman = allow;
 }
 
 void SetOpaque(HWND h, bool opaque)
 {
-  if (!h || ![(id)h isKindOfClass:[SWELL_hwndChild class]]) return;
+  if (WDL_NOT_NORMALLY(!h || ![(id)h isKindOfClass:[SWELL_hwndChild class]])) return;
   SWELL_hwndChild* v = (SWELL_hwndChild*)h;
   [v setOpaque:opaque];
 }
 
 void SetTransparent(HWND h)
 {
-  if (!h) return;
+  if (WDL_NOT_NORMALLY(!h)) return;
   NSWindow* wnd=0;
   if ([(id)h isKindOfClass:[NSWindow class]]) wnd=(NSWindow*)h;
   else if ([(id)h isKindOfClass:[NSView class]]) wnd=[(NSView*)h window];
-  if (wnd) 
+  if (WDL_NORMALLY(wnd)) 
   {
     [wnd setBackgroundColor:[NSColor clearColor]];
     [wnd setOpaque:NO];
@@ -6404,7 +6675,7 @@ void SetTransparent(HWND h)
 
 int SWELL_GetDefaultButtonID(HWND hwndDlg, bool onlyIfEnabled)
 {
-  if (![(id)hwndDlg isKindOfClass:[NSView class]]) return 0;
+  if (WDL_NOT_NORMALLY(![(id)hwndDlg isKindOfClass:[NSView class]])) return 0;
   NSWindow *wnd = [(NSView *)hwndDlg window];
   NSButtonCell * cell = wnd ? [wnd defaultButtonCell] : nil;
   NSView *view;
@@ -6420,12 +6691,12 @@ int SWELL_GetDefaultButtonID(HWND hwndDlg, bool onlyIfEnabled)
 
 void SWELL_SetWindowRepre(HWND hwnd, const char *fn, bool isDirty)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   NSWindow *w = NULL;
   if ([(id)hwnd isKindOfClass:[NSWindow class]]) w=(NSWindow *)hwnd;
   if ([(id)hwnd isKindOfClass:[NSView class]]) w=[(NSView *)hwnd window];
   
-  if (w)
+  if (WDL_NORMALLY(w))
   {
     if (GetProp((HWND)[w contentView],"SWELL_DisableWindowRepre")) return;
     
@@ -6443,10 +6714,10 @@ void SWELL_SetWindowRepre(HWND hwnd, const char *fn, bool isDirty)
 
 void SWELL_SetWindowShadow(HWND hwnd, bool shadow)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   NSWindow *w = (NSWindow *)hwnd;
   if ([w isKindOfClass:[NSView class]]) w = [(NSView *)w window];
-  if (w && [w isKindOfClass:[NSWindow class]]) [w setHasShadow:shadow];
+  if (WDL_NORMALLY(w && [w isKindOfClass:[NSWindow class]])) [w setHasShadow:shadow];
 }
 
 #if 0 // not sure if this will interfere with coolSB
@@ -6518,7 +6789,7 @@ void SWELL_GenerateDialogFromList(const void *_list, int listsz)
 
 BOOL EnumChildWindows(HWND hwnd, BOOL (*cwEnumFunc)(HWND,LPARAM),LPARAM lParam)
 {
-  if (!hwnd || ![(id)hwnd isKindOfClass:[NSView class]]) return TRUE;
+  if (WDL_NOT_NORMALLY(!hwnd || ![(id)hwnd isKindOfClass:[NSView class]])) return TRUE;
   NSArray *ar = [(NSView *)hwnd subviews];
   if (ar)
   {
@@ -6554,7 +6825,7 @@ BOOL EnumChildWindows(HWND hwnd, BOOL (*cwEnumFunc)(HWND,LPARAM),LPARAM lParam)
 
 void SWELL_GetDesiredControlSize(HWND hwnd, RECT *r)
 {
-  if (hwnd && r && [(id)hwnd isKindOfClass:[NSControl class]])
+  if (WDL_NORMALLY(hwnd && r && [(id)hwnd isKindOfClass:[NSControl class]]))
   {
     NSControl *c = (NSControl *)hwnd;
     NSRect fr = [c frame];
@@ -6569,39 +6840,55 @@ void SWELL_GetDesiredControlSize(HWND hwnd, RECT *r)
 
 BOOL SWELL_IsGroupBox(HWND hwnd)
 {
-  if (hwnd && [(id)hwnd isKindOfClass:[SWELL_BoxView class]])
+  if (WDL_NORMALLY(hwnd) && [(id)hwnd isKindOfClass:[SWELL_BoxView class]])
   {
-    if (![(id)hwnd respondsToSelector:@selector(swellIsEtchBox)] || [(SWELL_BoxView *)hwnd swellIsEtchBox])
+    if (![(id)hwnd respondsToSelector:@selector(swellIsEtchBox)] || ![(SWELL_BoxView *)hwnd swellIsEtchBox])
       return TRUE;
   }
   return FALSE;
 }
 BOOL SWELL_IsButton(HWND hwnd)
 {
-  if (hwnd && [(id)hwnd isKindOfClass:[SWELL_Button class]]) return TRUE;
+  if (WDL_NORMALLY(hwnd) && [(id)hwnd isKindOfClass:[SWELL_Button class]]) return TRUE;
   return FALSE;
 }
 BOOL SWELL_IsStaticText(HWND hwnd)
 {
-  if (hwnd && [(id)hwnd isKindOfClass:[NSTextField class]]) return TRUE;
-  //todo
+  if (WDL_NORMALLY(hwnd) && [(id)hwnd isKindOfClass:[NSTextField class]])
+  {
+    NSTextField *obj = (NSTextField *)hwnd;
+    if (![obj isEditable] && ![obj isSelectable])
+      return TRUE;
+  }
   return FALSE;
 }
 
 void SWELL_SetClassName(HWND hwnd, const char *p)
 {
-  if (hwnd && [(id)hwnd isKindOfClass:[SWELL_hwndChild class]])
+  if (WDL_NORMALLY(hwnd && [(id)hwnd isKindOfClass:[SWELL_hwndChild class]]))
     ((SWELL_hwndChild *)hwnd)->m_classname=p;
 }
 
 int GetClassName(HWND hwnd, char *buf, int bufsz)
 {
-  if (!hwnd || !buf || bufsz<1) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd || !buf || bufsz<1)) return 0;
   buf[0]=0;
   if ([(id)hwnd respondsToSelector:@selector(getSwellClass)])
   {
     const char *cn = [(SWELL_hwndChild*)hwnd getSwellClass];
     if (cn) lstrcpyn_safe(buf,cn,bufsz);
+  }
+  else if ([(id)hwnd isKindOfClass:[NSButton class]])
+  {
+    lstrcpyn_safe(buf,"Button",bufsz);
+  }
+  else if ([(id)hwnd isKindOfClass:[NSTextField class]])
+  {
+    NSTextField *obj = (NSTextField *)hwnd;
+    if (![obj isEditable] && ![obj isSelectable])
+      lstrcpyn_safe(buf,"Static",bufsz);
+    else
+      lstrcpyn_safe(buf,"Edit",bufsz);
   }
   else
   {

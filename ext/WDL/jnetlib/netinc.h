@@ -35,6 +35,7 @@ typedef int socklen_t;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/poll.h>
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <arpa/inet.h>

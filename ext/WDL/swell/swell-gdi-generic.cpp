@@ -151,6 +151,11 @@ HFONT CreateFont(int lfHeight, int lfWidth, int lfEscapement, int lfOrientation,
   return font;
 }
 
+HFONT SWELL_GetDefaultFont()
+{
+  return NULL;
+}
+
 
 HFONT CreateFontIndirect(LOGFONT *lf)
 {

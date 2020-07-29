@@ -475,6 +475,7 @@ SWELL_API_DEFINE(HTREEITEM, TreeView_GetSelection,(HWND hwnd))
 SWELL_API_DEFINE(void, TreeView_DeleteItem,(HWND hwnd, HTREEITEM item))
 SWELL_API_DEFINE(void, TreeView_DeleteAllItems,(HWND hwnd))
 SWELL_API_DEFINE(void, TreeView_SelectItem,(HWND hwnd, HTREEITEM item))
+SWELL_API_DEFINE(void, TreeView_EnsureVisible,(HWND hwnd, HTREEITEM item))
 SWELL_API_DEFINE(BOOL, TreeView_GetItem,(HWND hwnd, LPTVITEM pitem))
 SWELL_API_DEFINE(BOOL, TreeView_SetItem,(HWND hwnd, LPTVITEM pitem))
 SWELL_API_DEFINE(HTREEITEM, TreeView_HitTest, (HWND hwnd, TVHITTESTINFO *hti))
@@ -793,11 +794,6 @@ SWELL_API_DEFINE(void, SetClipboardData,(UINT type, HANDLE h))
 SWELL_API_DEFINE(UINT, RegisterClipboardFormat,(const char *desc))
 SWELL_API_DEFINE(UINT, EnumClipboardFormats,(UINT lastfmt))
 
-#ifndef CF_TEXT
-  // do not use 'static int globalvalue = CF_TEXT' as this will cause problems (RegisterClipboardFormat() being called too soon!).
-#define CF_TEXT (RegisterClipboardFormat("SWELL__CF_TEXT"))
-#endif
-
 SWELL_API_DEFINE(HANDLE, GlobalAlloc,(int flags, int sz))
 SWELL_API_DEFINE(void *, GlobalLock,(HANDLE h))
 SWELL_API_DEFINE(int, GlobalSize,(HANDLE h))
@@ -970,7 +966,7 @@ SWELL_API_DEFINE(bool, SWELL_GetViewGL, (HWND h))
 SWELL_API_DEFINE(bool, SWELL_SetGLContextToView, (HWND h)) // sets GL context to that view, returns TRUE if successs (use NULL to clear GL context)
 #endif
 
-#if defined(SWELL_TARGET_OSX) && !defined(SWELL_NO_METAL)
+#if defined(SWELL_TARGET_OSX)
 SWELL_API_DEFINE(int, SWELL_EnableMetal,(HWND h, int mode)) // can only call once per window. calling with 0 does nothing. 1=metal enabled, 2=metal enabled and support GetDC()/ReleaseDC() for drawing (more overhead). returns metal setting. mode=-1 for non-metal async layered mode. mode=-2 for non-metal non-async layered mode
   // NOTE: if using SWELL_EnableMetal(-1), any BitBlt()/StretchBlt() __MUST__ have the source bitmap persist. If it is resized after Blit it could cause crashes, too. So really this method is unsafe for practical use.
 #else

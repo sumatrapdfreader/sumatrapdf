@@ -141,7 +141,7 @@ HWND__::~HWND__()
 
 HWND GetParent(HWND hwnd)
 {  
-  if (hwnd)
+  if (WDL_NORMALLY(hwnd))
   {
     return hwnd->m_parent ? hwnd->m_parent : hwnd->m_owner;
   }
@@ -151,6 +151,7 @@ HWND GetParent(HWND hwnd)
 HWND GetDlgItem(HWND hwnd, int idx)
 {
   if (!idx) return hwnd;
+  WDL_ASSERT(hwnd != NULL);
   if (hwnd) hwnd=hwnd->m_children;
   while (hwnd && hwnd->m_id != (UINT)idx) hwnd=hwnd->m_next;
   return hwnd;
@@ -159,7 +160,7 @@ HWND GetDlgItem(HWND hwnd, int idx)
 
 LONG_PTR SetWindowLong(HWND hwnd, int idx, LONG_PTR val)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
   if (idx==GWL_STYLE)
   {
     LONG ret = hwnd->m_style;
@@ -198,6 +199,27 @@ LONG_PTR SetWindowLong(HWND hwnd, int idx, LONG_PTR val)
     hwnd->m_dlgproc=(DLGPROC)val;
     return ret;
   }
+  if (idx == GWL_HWNDPARENT)
+  {
+    const LONG_PTR ret = (LONG_PTR)hwnd->m_owner;
+    if (val != ret)
+    {
+      if (hwnd->m_owned_next) hwnd->m_owned_next->m_owned_prev = hwnd->m_owned_prev;
+      if (hwnd->m_owned_prev) hwnd->m_owned_prev->m_owned_next = hwnd->m_owned_next;
+      if (hwnd->m_owner && hwnd->m_owner->m_owned_list == hwnd) hwnd->m_owner->m_owned_list = hwnd->m_owned_next;
+      hwnd->m_owned_next = hwnd->m_owned_prev = hwnd->m_owner = NULL;
+      HWND ownerWindow = (HWND) val;
+      if (ownerWindow)
+      {
+        hwnd->m_owned_next = ownerWindow->m_owned_list;
+        ownerWindow->m_owned_list = hwnd;
+        if (hwnd->m_owned_next) hwnd->m_owned_next->m_owned_prev = hwnd;
+        hwnd->m_owner = ownerWindow;
+        hwnd->m_israised=true;
+      }
+    }
+    return ret;
+  }
   
   if (idx>=0 && idx < 64*(int)sizeof(INT_PTR))
   {
@@ -210,7 +232,7 @@ LONG_PTR SetWindowLong(HWND hwnd, int idx, LONG_PTR val)
 
 LONG_PTR GetWindowLong(HWND hwnd, int idx)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
   if (idx==GWL_STYLE)
   {
     LONG_PTR ret = hwnd->m_style;
@@ -238,6 +260,10 @@ LONG_PTR GetWindowLong(HWND hwnd, int idx)
   if (idx==DWL_DLGPROC)
   {
     return (LONG_PTR)hwnd->m_dlgproc;
+  }
+  if (idx == GWL_HWNDPARENT)
+  {
+    return (LONG_PTR)hwnd->m_owner;
   }
   
   if (idx>=0 && idx < 64*(int)sizeof(INT_PTR))
@@ -273,7 +299,7 @@ bool IsWindow(HWND hwnd)
 
 bool IsWindowVisible(HWND hwnd)
 {
-  if (!hwnd) return false;
+  if (WDL_NOT_NORMALLY(!hwnd)) return false;
   while (hwnd->m_visible)
   {
     hwnd = hwnd->m_parent;
@@ -286,7 +312,7 @@ bool IsModalDialogBox(HWND hwnd);
 
 LRESULT SendMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
   WNDPROC wp = hwnd->m_wndproc;
 
   if (msg == WM_DESTROY)
@@ -420,7 +446,7 @@ void RecurseDestroyWindow(HWND hwnd)
 
 void DestroyWindow(HWND hwnd)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   if (hwnd->m_hashaddestroy) return; 
  
   // broadcast WM_DESTROY
@@ -434,7 +460,7 @@ void DestroyWindow(HWND hwnd)
 
 bool IsWindowEnabled(HWND hwnd)
 {
-  if (!hwnd) return false;
+  if (WDL_NOT_NORMALLY(!hwnd)) return false;
   while (hwnd && hwnd->m_enabled) 
   {
     hwnd=hwnd->m_parent;
@@ -444,7 +470,7 @@ bool IsWindowEnabled(HWND hwnd)
 
 void EnableWindow(HWND hwnd, int enable)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   if (!!hwnd->m_enabled == !!enable) return;
 
   hwnd->m_enabled=!!enable;
@@ -460,7 +486,7 @@ void EnableWindow(HWND hwnd, int enable)
 
 void SetForegroundWindow(HWND hwnd)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
 
   // if a child window has focus, preserve that focus
   while (hwnd->m_parent && !hwnd->m_oswindow)
@@ -479,7 +505,7 @@ void SetFocusInternal(HWND hwnd)
 
 void SetFocus(HWND hwnd)
 {
-  if (!hwnd) return;
+  if (!hwnd) return; // windows allows SetFocus(NULL) to defocus...
   HWND oldfoc = GetFocus();
   SetFocusInternal(hwnd);
 
@@ -532,7 +558,7 @@ HWND GetFocus()
 
 void ScreenToClient(HWND hwnd, POINT *pt)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   
   HWND tmp=hwnd;
   while (tmp)
@@ -548,7 +574,7 @@ void ScreenToClient(HWND hwnd, POINT *pt)
 
 void ClientToScreen(HWND hwnd, POINT *pt)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   
   HWND tmp=hwnd;
   while (tmp)
@@ -563,7 +589,7 @@ void ClientToScreen(HWND hwnd, POINT *pt)
 
 void GetWindowContentViewRect(HWND hwnd, RECT *r)
 {
-  if (hwnd && hwnd->m_oswindow) 
+  if (WDL_NORMALLY(hwnd) && hwnd->m_oswindow) 
   {
     *r = hwnd->m_position;
     return;
@@ -574,7 +600,7 @@ void GetWindowContentViewRect(HWND hwnd, RECT *r)
 void GetClientRect(HWND hwnd, RECT *r)
 {
   r->left=r->top=r->right=r->bottom=0;
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   
   r->right = hwnd->m_position.right - hwnd->m_position.left;
   r->bottom = hwnd->m_position.bottom - hwnd->m_position.top;
@@ -589,7 +615,7 @@ void GetClientRect(HWND hwnd, RECT *r)
 
 void SetWindowPos(HWND hwnd, HWND zorder, int x, int y, int cx, int cy, int flags)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
  // todo: handle SWP_SHOWWINDOW
   RECT f = hwnd->m_position;
   int reposflag = 0;
@@ -689,7 +715,7 @@ BOOL EnumWindows(BOOL (*proc)(HWND, LPARAM), LPARAM lp)
 
 HWND GetWindow(HWND hwnd, int what)
 {
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
   
   if (what == GW_CHILD) return hwnd->m_children;
   if (what == GW_OWNER) return hwnd->m_owner;
@@ -710,7 +736,7 @@ HWND GetWindow(HWND hwnd, int what)
 
 HWND SetParent(HWND hwnd, HWND newPar)
 {
-  if (!hwnd) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd)) return NULL;
 
   HWND oldPar = hwnd->m_parent;
 
@@ -803,9 +829,9 @@ void SWELL_RunMessageLoop()
 
 UINT_PTR SetTimer(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
 {
-  if (!hwnd && !tProc) return 0; // must have either callback or hwnd
+  if (WDL_NOT_NORMALLY(!hwnd && !tProc)) return 0; // must have either callback or hwnd
   
-  if (hwnd && !timerid) return 0;
+  if (WDL_NOT_NORMALLY(hwnd && !timerid)) return 0;
 
   if (hwnd && hwnd->m_hashaddestroy) return 0;
 
@@ -848,7 +874,7 @@ UINT_PTR SetTimer(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
 
 BOOL KillTimer(HWND hwnd, UINT_PTR timerid)
 {
-  if (!hwnd && !timerid) return FALSE;
+  if (WDL_NOT_NORMALLY(!hwnd && !timerid)) return FALSE;
 
   WDL_MutexLock lock(&m_timermutex);
   BOOL rv=FALSE;
@@ -887,7 +913,7 @@ BOOL KillTimer(HWND hwnd, UINT_PTR timerid)
 BOOL SetDlgItemText(HWND hwnd, int idx, const char *text)
 {
   hwnd =(idx ? GetDlgItem(hwnd,idx) : hwnd);
-  if (!hwnd) return false;
+  if (WDL_NOT_NORMALLY(!hwnd)) return false;
 
   if (!text) text="";
  
@@ -903,14 +929,14 @@ BOOL SetDlgItemText(HWND hwnd, int idx, const char *text)
 
 int GetWindowTextLength(HWND hwnd)
 {
-  return hwnd ? hwnd->m_title.GetLength() : 0;
+  return WDL_NORMALLY(hwnd) ? hwnd->m_title.GetLength() : 0;
 }
 
 BOOL GetDlgItemText(HWND hwnd, int idx, char *text, int textlen)
 {
   *text=0;
   hwnd = idx?GetDlgItem(hwnd,idx) : hwnd;
-  if (!hwnd) return false;
+  if (WDL_NOT_NORMALLY(!hwnd)) return false;
   
   // todo: sendmessage WM_GETTEXT etc? special casing for combo boxes etc
   lstrcpyn_safe(text,hwnd->m_title.Get(), textlen);
@@ -920,7 +946,7 @@ BOOL GetDlgItemText(HWND hwnd, int idx, char *text, int textlen)
 void CheckDlgButton(HWND hwnd, int idx, int check)
 {
   hwnd = GetDlgItem(hwnd,idx);
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
   SendMessage(hwnd,BM_SETCHECK,check,0);
 }
 
@@ -928,7 +954,7 @@ void CheckDlgButton(HWND hwnd, int idx, int check)
 int IsDlgButtonChecked(HWND hwnd, int idx)
 {
   hwnd = GetDlgItem(hwnd,idx);
-  if (!hwnd) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
   return SendMessage(hwnd,BM_GETCHECK,0,0);
 }
 
@@ -958,7 +984,7 @@ int GetDlgItemInt(HWND hwnd, int idx, BOOL *translated, int issigned)
 
 void ShowWindow(HWND hwnd, int cmd)
 {
-  if (!hwnd) return;
+  if (WDL_NOT_NORMALLY(!hwnd)) return;
  
   if (cmd==SW_SHOW||cmd==SW_SHOWNA) 
   {
@@ -1302,7 +1328,7 @@ fakeButtonClick:
               g_swell_ctheme.button_hilight,
               g_swell_ctheme.button_shadow,pressed);
 
-            if (hwnd->m_style & BS_LEFT)
+            if ((hwnd->m_style & BS_XPOSITION_MASK) == BS_LEFT)
               r.left+=2;
             else
               f|=DT_CENTER;
@@ -3642,7 +3668,7 @@ HWND SWELL_MakeButton(int def, const char *label, int idx, int x, int y, int w, 
   if (a < 65536) label = "ICONTEMP";
   
   RECT tr=MakeCoords(x,y,w,h,true);
-  HWND hwnd = swell_makeButton(m_make_owner,idx,&tr,label,!(flags&SWELL_NOT_WS_VISIBLE),(def ? BS_DEFPUSHBUTTON : 0) | (flags&BS_LEFT));
+  HWND hwnd = swell_makeButton(m_make_owner,idx,&tr,label,!(flags&SWELL_NOT_WS_VISIBLE),(def ? BS_DEFPUSHBUTTON : 0) | (flags&BS_XPOSITION_MASK));
 
   if (m_doautoright) UpdateAutoCoords(tr);
   if (def) { }
@@ -3654,7 +3680,7 @@ HWND SWELL_MakeLabel( int align, const char *label, int idx, int x, int y, int w
 {
   RECT tr=MakeCoords(x,y,w,h,true);
   HWND hwnd = new HWND__(m_make_owner,idx,&tr,label, !(flags&SWELL_NOT_WS_VISIBLE),labelWindowProc);
-  hwnd->m_classname = "static";
+  hwnd->m_classname = "Static";
   if (align > 0) flags |= SS_RIGHT;
   else if (align == 0) flags |= SS_CENTER;
   hwnd->m_style = (flags & ~SWELL_NOT_WS_VISIBLE)|WS_CHILD;
@@ -3738,7 +3764,7 @@ struct listViewState
 
   int GetColumnIndex(int dispindex) const
   {
-    if (m_is_listbox)
+    if (m_is_listbox || !m_cols.GetSize())
     {
       WDL_ASSERT(dispindex==0);
       return 0;
@@ -5339,12 +5365,15 @@ next_item_in_parent:
   HTREEITEM__ m_root;
   HTREEITEM m_sel;
   int m_last_row_height;
-  int m_scroll_x,m_scroll_y,m_capmode;
 
+  int m_scroll_x,m_scroll_y;
+
+  int m_capmode; // HIWORD is 0 for normal (then LOWORD gets 1 set if drag began), 1 for scroll (LOWORD has ypos)
 };
 
 static LRESULT treeViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  static POINT s_clickpt;
   treeViewState *tvs = (treeViewState *)hwnd->m_private_data;
   switch (msg)
   {
@@ -5376,6 +5405,8 @@ static LRESULT treeViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           if (tvs->m_sel) tvs->ensureItemVisible(hwnd,tvs->m_sel);
           InvalidateRect(hwnd,NULL,FALSE);
           NMTREEVIEW nm={{(HWND)hwnd,(UINT_PTR)hwnd->m_id,TVN_SELCHANGED},};
+          nm.itemNew.hItem = tvs->m_sel;
+          nm.itemNew.lParam = tvs->m_sel ? tvs->m_sel->m_param : 0;
           SendMessage(GetParent(hwnd),WM_NOTIFY,nm.hdr.idFrom,(LPARAM)&nm);
         }
         else if (flag&2) InvalidateRect(hwnd,NULL,FALSE);
@@ -5389,6 +5420,8 @@ static LRESULT treeViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       if (tvs)
       {
         tvs->m_capmode=0;
+        s_clickpt.x = GET_X_LPARAM(lParam);
+        s_clickpt.y = GET_Y_LPARAM(lParam);
         RECT cr;
         GetClientRect(hwnd,&cr);
         int total_h;
@@ -5430,6 +5463,8 @@ static LRESULT treeViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
               tvs->m_sel = hit;
               InvalidateRect(hwnd,NULL,FALSE);
               NMTREEVIEW nm={{(HWND)hwnd,(UINT_PTR)hwnd->m_id,TVN_SELCHANGED},};
+              nm.itemNew.hItem = hit;
+              nm.itemNew.lParam = hit ? hit->m_param : 0;
               SendMessage(GetParent(hwnd),WM_NOTIFY,nm.hdr.idFrom,(LPARAM)&nm);
             }
           }
@@ -5442,6 +5477,21 @@ static LRESULT treeViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 forceMouseMove:
         switch (HIWORD(tvs->m_capmode))
         {
+          case 0:
+            if (!(tvs->m_capmode & 1))
+            {
+              const int dx = GET_X_LPARAM(lParam) - s_clickpt.x, dy = GET_Y_LPARAM(lParam) - s_clickpt.y;
+              if (dx*dx+dy*dy > 32)
+              {
+                tvs->m_capmode|=1;
+                HTREEITEM item = TreeView_GetSelection(hwnd);
+                NMTREEVIEW nm={{(HWND)hwnd,(UINT_PTR)hwnd->m_id,TVN_BEGINDRAG},};
+                nm.itemNew.hItem = item;
+                nm.itemNew.lParam = item ? item->m_param : 0;
+                SendMessage(GetParent(hwnd),WM_NOTIFY,nm.hdr.idFrom,(LPARAM)&nm);
+              }
+            }
+          break;
           case 1:
             {
               int yv = (short)LOWORD(tvs->m_capmode);
@@ -5746,7 +5796,7 @@ static ccprocrec *m_ccprocs;
 
 void SWELL_RegisterCustomControlCreator(SWELL_ControlCreatorProc proc)
 {
-  if (!proc) return;
+  if (WDL_NOT_NORMALLY(!proc)) return;
   
   ccprocrec *p=m_ccprocs;
   while (p && p->next)
@@ -5769,7 +5819,7 @@ void SWELL_RegisterCustomControlCreator(SWELL_ControlCreatorProc proc)
 
 void SWELL_UnregisterCustomControlCreator(SWELL_ControlCreatorProc proc)
 {
-  if (!proc) return;
+  if (WDL_NOT_NORMALLY(!proc)) return;
   
   ccprocrec *lp=NULL;
   ccprocrec *p=m_ccprocs;
@@ -5788,6 +5838,7 @@ void SWELL_UnregisterCustomControlCreator(SWELL_ControlCreatorProc proc)
     lp=p;
     p=p->next;
   }
+  WDL_ASSERT(false);
 }
 
 
@@ -5861,13 +5912,13 @@ HWND SWELL_MakeControl(const char *cname, int idx, const char *classname, int st
   {
     return SWELL_MakeEditField(idx,x,y,w,h,style);
   }
-  else if (!stricmp(classname, "static"))
+  else if (!stricmp(classname, "Static"))
   {
     RECT tr=MakeCoords(x,y,w,h,false);
     HWND hwnd = new HWND__(m_make_owner,idx,&tr,cname, !(style&SWELL_NOT_WS_VISIBLE),labelWindowProc);
     hwnd->m_wantfocus = false;
     hwnd->m_style = WS_CHILD | (style & ~SWELL_NOT_WS_VISIBLE);
-    hwnd->m_classname = "static";
+    hwnd->m_classname = "Static";
     hwnd->m_wndproc(hwnd,WM_CREATE,0,0);
     if (m_doautoright) UpdateAutoCoords(tr);
     return hwnd;
@@ -5915,8 +5966,8 @@ HWND SWELL_MakeGroupBox(const char *name, int idx, int x, int y, int w, int h, i
   RECT tr=MakeCoords(x,y,w,h,false);
   HWND hwnd = new HWND__(m_make_owner,idx,&tr,name, !(style&SWELL_NOT_WS_VISIBLE),groupWindowProc);
   hwnd->m_wantfocus = false;
-  hwnd->m_style = WS_CHILD | (style & ~SWELL_NOT_WS_VISIBLE);
-  hwnd->m_classname = "groupbox";
+  hwnd->m_style = WS_CHILD | (style & ~SWELL_NOT_WS_VISIBLE) | BS_GROUPBOX;
+  hwnd->m_classname = "Button";
   hwnd->m_wndproc(hwnd,WM_CREATE,0,0);
   SetWindowPos(hwnd,HWND_BOTTOM,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE); 
   return hwnd;
@@ -5926,12 +5977,12 @@ HWND SWELL_MakeGroupBox(const char *name, int idx, int x, int y, int w, int h, i
 int TabCtrl_GetItemCount(HWND hwnd)
 {
    tabControlState *s = hwnd ? (tabControlState*) hwnd->m_private_data : NULL;
-   return s ? s->m_tabs.GetSize() : 0;
+   return WDL_NORMALLY(s) ? s->m_tabs.GetSize() : 0;
 }
 
 BOOL TabCtrl_AdjustRect(HWND hwnd, BOOL fLarger, RECT *r)
 {
-  if (!r || !hwnd) return FALSE;
+  if (WDL_NOT_NORMALLY(!r || !hwnd)) return FALSE;
  
   r->top += TABCONTROL_HEIGHT;
   
@@ -5942,7 +5993,7 @@ BOOL TabCtrl_AdjustRect(HWND hwnd, BOOL fLarger, RECT *r)
 BOOL TabCtrl_DeleteItem(HWND hwnd, int idx)
 {
   tabControlState *s = hwnd ? (tabControlState*) hwnd->m_private_data : NULL;
-  if (!s || !s->m_tabs.Get(idx)) return FALSE;
+  if (WDL_NOT_NORMALLY(!s || !s->m_tabs.Get(idx))) return FALSE;
   
   s->m_tabs.Delete(idx,true);
   if (s->m_curtab>0) s->m_curtab--;
@@ -5954,9 +6005,9 @@ BOOL TabCtrl_DeleteItem(HWND hwnd, int idx)
 
 int TabCtrl_InsertItem(HWND hwnd, int idx, TCITEM *item)
 {
-  tabControlState *s = hwnd ? (tabControlState*) hwnd->m_private_data : NULL;
-  if (!item || !s) return -1;
-  if (!(item->mask & TCIF_TEXT) || !item->pszText) return -1;
+  tabControlState *s = WDL_NORMALLY(hwnd) ? (tabControlState*) hwnd->m_private_data : NULL;
+  if (WDL_NOT_NORMALLY(!item || !s)) return -1;
+  if (WDL_NOT_NORMALLY(!(item->mask & TCIF_TEXT) || !item->pszText)) return -1;
 
   s->m_tabs.Insert(idx, strdup(item->pszText));
 
@@ -5968,7 +6019,7 @@ int TabCtrl_InsertItem(HWND hwnd, int idx, TCITEM *item)
 
 int TabCtrl_SetCurSel(HWND hwnd, int idx)
 {
-  tabControlState *s = hwnd ? (tabControlState*) hwnd->m_private_data : NULL;
+  tabControlState *s = WDL_NORMALLY(hwnd) ? (tabControlState*) hwnd->m_private_data : NULL;
   if (!s || !s->m_tabs.Get(idx)) return -1;
   const int lt =s->m_curtab;
   s->m_curtab = idx;
@@ -5979,14 +6030,14 @@ int TabCtrl_SetCurSel(HWND hwnd, int idx)
 
 int TabCtrl_GetCurSel(HWND hwnd)
 {
-  tabControlState *s = hwnd ? (tabControlState*) hwnd->m_private_data : NULL;
+  tabControlState *s = WDL_NORMALLY(hwnd) ? (tabControlState*) hwnd->m_private_data : NULL;
   return s ? s->m_curtab : -1;
 }
 
 void ListView_SetExtendedListViewStyleEx(HWND h, int flag, int mask)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return;
+  if (WDL_NOT_NORMALLY(!lvs)) return;
   lvs->m_extended_style = (lvs->m_extended_style & ~mask) | (flag&mask);
 }
 
@@ -5997,7 +6048,7 @@ void SWELL_SetListViewFastClickMask(HWND hList, int mask)
 void ListView_SetImageList(HWND h, HIMAGELIST imagelist, int which)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return;
+  if (WDL_NOT_NORMALLY(!lvs)) return;
   lvs->m_status_imagelist= (WDL_PtrList<HGDIOBJ__> *)imagelist;
   lvs->m_status_imagelist_type = which;
 }
@@ -6005,15 +6056,15 @@ void ListView_SetImageList(HWND h, HIMAGELIST imagelist, int which)
 int ListView_GetColumnWidth(HWND h, int pos)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return 0;
+  if (WDL_NOT_NORMALLY(!lvs)) return 0;
   SWELL_ListView_Col *c = lvs->GetColumnByIndex(pos);
-  return c ? c->xwid : 0;
+  return WDL_NORMALLY(c) ? c->xwid : 0;
 }
 
 void ListView_InsertColumn(HWND h, int pos, const LVCOLUMN *lvc)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !lvc) return;
+  if (WDL_NOT_NORMALLY(!lvs || !lvc)) return;
   SWELL_ListView_Col col = { 0, 100 };
   if (lvc->mask & LVCF_WIDTH) col.xwid = lvc->cx;
   if (lvc->mask & LVCF_TEXT) col.name = lvc->pszText ? strdup(lvc->pszText) : NULL;
@@ -6032,9 +6083,9 @@ void ListView_InsertColumn(HWND h, int pos, const LVCOLUMN *lvc)
 void ListView_SetColumn(HWND h, int pos, const LVCOLUMN *lvc)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !lvc) return;
+  if (WDL_NOT_NORMALLY(!lvs || !lvc)) return;
   SWELL_ListView_Col *col = lvs->GetColumnByIndex(pos);
-  if (!col) return;
+  if (WDL_NOT_NORMALLY(!col)) return;
   if (lvc->mask & LVCF_WIDTH) col->xwid = lvc->cx;
   if (lvc->mask & LVCF_TEXT) 
   {
@@ -6052,7 +6103,7 @@ void ListView_GetItemText(HWND hwnd, int item, int subitem, char *text, int text
 int ListView_InsertItem(HWND h, const LVITEM *item)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || lvs->IsOwnerData() || !item || item->iSubItem) return 0;
+  if (WDL_NOT_NORMALLY(!lvs || lvs->IsOwnerData() || !item || item->iSubItem)) return 0;
 
   int idx =  (int) item->iItem;
   if (idx<0 || idx>lvs->m_data.GetSize()) idx=lvs->m_data.GetSize();
@@ -6060,8 +6111,12 @@ int ListView_InsertItem(HWND h, const LVITEM *item)
   row->m_vals.Add((item->mask&LVIF_TEXT) && item->pszText ? strdup(item->pszText) : NULL);
   row->m_param = (item->mask&LVIF_PARAM) ? item->lParam : 0;
   row->m_tmp = ((item->mask & LVIF_STATE) && (item->state & LVIS_SELECTED)) ? 1:0;
-  if ((item->mask&LVIF_STATE) && (item->stateMask & LVIS_STATEIMAGEMASK)) row->m_imageidx=STATEIMAGEMASKTOINDEX(item->state);
   lvs->m_data.Insert(idx,row); 
+  if (item->mask&LVIF_STATE)
+  {
+    if (item->stateMask & LVIS_STATEIMAGEMASK) row->m_imageidx=STATEIMAGEMASKTOINDEX(item->state);
+    if (item->stateMask & LVIS_SELECTED) lvs->set_sel(idx,!!(item->state&LVIS_SELECTED));
+  }
   InvalidateRect(h,NULL,FALSE);
   return idx;
 }
@@ -6069,9 +6124,9 @@ int ListView_InsertItem(HWND h, const LVITEM *item)
 void ListView_SetItemText(HWND h, int ipos, int cpos, const char *txt)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || lvs->IsOwnerData() || cpos < 0) return;
+  if (WDL_NOT_NORMALLY(!lvs || lvs->IsOwnerData() || cpos < 0)) return;
   const int ncol = wdl_max(lvs->m_cols.GetSize(),1);
-  if (cpos >= ncol) return;
+  if (WDL_NOT_NORMALLY(cpos >= ncol)) return;
 
   SWELL_ListView_Row *row=lvs->m_data.Get(ipos);
   if (!row) return;
@@ -6084,7 +6139,7 @@ void ListView_SetItemText(HWND h, int ipos, int cpos, const char *txt)
 int ListView_GetNextItem(HWND h, int istart, int flags)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return -1;
+  if (WDL_NOT_NORMALLY(!lvs)) return -1;
   const int n = lvs->GetNumItems();
   for (int x = wdl_max(0,istart+1); x < n; x ++)
   {
@@ -6097,7 +6152,7 @@ int ListView_GetNextItem(HWND h, int istart, int flags)
 bool ListView_SetItem(HWND h, LVITEM *item)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !item) return false;
+  if (WDL_NOT_NORMALLY(!lvs || !item)) return false;
 
   const bool ownerData = lvs->IsOwnerData();
   if (!ownerData)
@@ -6141,7 +6196,7 @@ bool ListView_SetItem(HWND h, LVITEM *item)
 bool ListView_GetItem(HWND h, LVITEM *item)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !item) return false;
+  if (WDL_NOT_NORMALLY(!lvs || !item)) return false;
   if (!lvs->IsOwnerData())
   {
     SWELL_ListView_Row *row=lvs->m_data.Get(item->iItem);
@@ -6176,7 +6231,7 @@ bool ListView_GetItem(HWND h, LVITEM *item)
 int ListView_GetItemState(HWND h, int ipos, UINT mask)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return 0;
+  if (WDL_NOT_NORMALLY(!lvs)) return 0;
   int ret  = 0;
   if (mask & LVIS_SELECTED) ret |= (lvs->get_sel(ipos) ? LVIS_SELECTED : 0 );
   if ((mask & LVIS_FOCUSED) && lvs->m_selitem == ipos) ret |= LVIS_FOCUSED;
@@ -6192,7 +6247,7 @@ int ListView_GetItemState(HWND h, int ipos, UINT mask)
 bool ListView_SetItemState(HWND h, int ipos, UINT state, UINT statemask)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return false;
+  if (WDL_NOT_NORMALLY(!lvs)) return false;
 
   static int _is_doing_all;
   
@@ -6250,14 +6305,14 @@ bool ListView_SetItemState(HWND h, int ipos, UINT state, UINT statemask)
 }
 void ListView_RedrawItems(HWND h, int startitem, int enditem)
 {
-  if (!h) return;
+  if (WDL_NOT_NORMALLY(!h)) return;
   InvalidateRect(h,NULL,FALSE);
 }
 
 void ListView_DeleteItem(HWND h, int ipos)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || lvs->IsOwnerData()) return;
+  if (WDL_NOT_NORMALLY(!lvs || lvs->IsOwnerData())) return;
   lvs->m_data.Delete(ipos,true);
   InvalidateRect(h,NULL,FALSE);
 }
@@ -6265,7 +6320,7 @@ void ListView_DeleteItem(HWND h, int ipos)
 void ListView_DeleteAllItems(HWND h)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || lvs->IsOwnerData()) return;
+  if (WDL_NOT_NORMALLY(!lvs || lvs->IsOwnerData())) return;
   lvs->m_data.Empty(true);
   InvalidateRect(h,NULL,FALSE);
 }
@@ -6273,7 +6328,7 @@ void ListView_DeleteAllItems(HWND h)
 int ListView_GetSelectedCount(HWND h)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return 0;
+  if (WDL_NOT_NORMALLY(!lvs)) return 0;
   const int n = lvs->GetNumItems();
   int sum=0,x;
   for (x=0;x<n;x++) if (lvs->get_sel(x)) sum++;
@@ -6283,14 +6338,14 @@ int ListView_GetSelectedCount(HWND h)
 int ListView_GetItemCount(HWND h)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return 0;
+  if (WDL_NOT_NORMALLY(!lvs)) return 0;
   return lvs->GetNumItems();
 }
 
 int ListView_GetSelectionMark(HWND h)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return 0;
+  if (WDL_NOT_NORMALLY(!lvs)) return 0;
   const int n = lvs->GetNumItems();
   int x;
   for (x=0;x<n;x++) if (lvs->get_sel(x)) return x;
@@ -6299,15 +6354,15 @@ int ListView_GetSelectionMark(HWND h)
 int SWELL_GetListViewHeaderHeight(HWND h)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  return lvs ? lvs->GetColumnHeaderHeight(h) : 0;
+  return WDL_NORMALLY(lvs) ? lvs->GetColumnHeaderHeight(h) : 0;
 }
 
 void ListView_SetColumnWidth(HWND h, int pos, int wid)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return;
+  if (WDL_NOT_NORMALLY(!lvs)) return;
   SWELL_ListView_Col *col = lvs->GetColumnByIndex(pos);
-  if (col) 
+  if (WDL_NORMALLY(col)) 
   {
     col->xwid = wid;
     InvalidateRect(h,NULL,FALSE);
@@ -6317,7 +6372,7 @@ void ListView_SetColumnWidth(HWND h, int pos, int wid)
 int ListView_HitTest(HWND h, LVHITTESTINFO *pinf)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !pinf) return -1;
+  if (WDL_NOT_NORMALLY(!lvs || !pinf)) return -1;
 
   pinf->flags=0;
   pinf->iItem=-1;
@@ -6361,7 +6416,7 @@ int ListView_HitTest(HWND h, LVHITTESTINFO *pinf)
 int ListView_SubItemHitTest(HWND h, LVHITTESTINFO *pinf)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !pinf) return -1;
+  if (WDL_NOT_NORMALLY(!lvs || !pinf)) return -1;
 
   const int row = ListView_HitTest(h, pinf);
   int x,xpos=-lvs->m_scroll_x,idx=0;
@@ -6381,7 +6436,7 @@ int ListView_SubItemHitTest(HWND h, LVHITTESTINFO *pinf)
 void ListView_SetItemCount(HWND h, int cnt)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !lvs->IsOwnerData()) return;
+  if (WDL_NOT_NORMALLY(!lvs) || !lvs->IsOwnerData()) return;
   lvs->m_owner_data_size = cnt > 0 ? cnt : 0;
   if (lvs->m_owner_multisel_state.GetSize() > lvs->m_owner_data_size) lvs->m_owner_multisel_state.Resize(lvs->m_owner_data_size);
   if (lvs->m_selitem >= lvs->m_owner_data_size) lvs->m_selitem = -1;
@@ -6390,7 +6445,7 @@ void ListView_SetItemCount(HWND h, int cnt)
 void ListView_EnsureVisible(HWND h, int i, BOOL pok)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !lvs->m_last_row_height) return;
+  if (WDL_NOT_NORMALLY(!lvs) || !lvs->m_last_row_height) return;
   const int n = lvs->GetNumItems();
   if (i>=0 && i < n)
   {
@@ -6414,7 +6469,7 @@ void ListView_EnsureVisible(HWND h, int i, BOOL pok)
 bool ListView_GetSubItemRect(HWND h, int item, int subitem, int code, RECT *r)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !r) return false;
+  if (WDL_NOT_NORMALLY(!lvs || !r)) return false;
 
   r->top = lvs->m_last_row_height * item - lvs->m_scroll_y;
   r->top += lvs->GetColumnHeaderHeight(h);
@@ -6457,7 +6512,7 @@ bool ListView_GetItemRect(HWND h, int item, RECT *r, int code)
 bool ListView_Scroll(HWND h, int xscroll, int yscroll)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !lvs->m_last_row_height) return false;
+  if (WDL_NOT_NORMALLY(!lvs) || !lvs->m_last_row_height) return false;
   const int oldy = lvs->m_scroll_y, oldx = lvs->m_scroll_x;
   lvs->m_scroll_x += xscroll;
   lvs->m_scroll_y += yscroll;
@@ -6470,9 +6525,9 @@ bool ListView_Scroll(HWND h, int xscroll, int yscroll)
 void ListView_SortItems(HWND hwnd, PFNLVCOMPARE compf, LPARAM parm)
 {
   listViewState *lvs = hwnd ? (listViewState *)hwnd->m_private_data : NULL;
-  if (!lvs || 
+  if (WDL_NOT_NORMALLY(!lvs || 
       lvs->m_is_listbox ||
-      lvs->m_owner_data_size >= 0 || !compf) return;
+      lvs->m_owner_data_size >= 0 || !compf)) return;
 
   WDL_HeapBuf tmp;
   char *b = (char*)tmp.ResizeOK(lvs->m_data.GetSize()*sizeof(void *));
@@ -6485,7 +6540,7 @@ void ListView_SortItems(HWND hwnd, PFNLVCOMPARE compf, LPARAM parm)
 bool ListView_DeleteColumn(HWND h, int pos)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return false;
+  if (WDL_NOT_NORMALLY(!lvs)) return false;
   SWELL_ListView_Col *c = lvs->GetColumnByIndex(pos);
   if (!c) return false;
 
@@ -6506,7 +6561,8 @@ bool ListView_DeleteColumn(HWND h, int pos)
 int ListView_GetCountPerPage(HWND h)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !lvs->m_last_row_height) return 0;
+  if (WDL_NOT_NORMALLY(!lvs) ||
+      !lvs->m_last_row_height) return 0;
 
   RECT cr;
   GetClientRect(h,&cr);
@@ -6516,7 +6572,7 @@ int ListView_GetCountPerPage(HWND h)
 
 HWND ChildWindowFromPoint(HWND h, POINT p)
 {
-  if (!h) return 0;
+  if (WDL_NOT_NORMALLY(!h)) return 0;
 
   RECT r={0,};
 
@@ -6599,7 +6655,7 @@ HWND WindowFromPoint(POINT p)
 
 BOOL InvalidateRect(HWND hwnd, const RECT *r, int eraseBk)
 { 
-  if (!hwnd || hwnd->m_hashaddestroy) return FALSE;
+  if (WDL_NOT_NORMALLY(!hwnd) || hwnd->m_hashaddestroy) return FALSE;
 
 #ifdef SWELL_LICE_GDI
   RECT rect;
@@ -6677,6 +6733,7 @@ HWND GetCapture()
 
 HWND SetCapture(HWND hwnd)
 {
+  WDL_ASSERT(hwnd != NULL);
   HWND oc = swell_captured_window;
   if (oc != hwnd)
   {
@@ -6823,6 +6880,7 @@ LRESULT SwellDialogDefaultWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
 BOOL EndPaint(HWND hwnd, PAINTSTRUCT *ps)
 {
+  WDL_ASSERT(hwnd != NULL);
   return TRUE;
 }
 
@@ -7187,17 +7245,10 @@ LRESULT DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 
     case WM_GETFONT:
-        if (hwnd->m_font) return (LRESULT) hwnd->m_font;
-#ifdef SWELL_FREETYPE
-        {
-          HFONT SWELL_GetDefaultFont(void);
-          return (LRESULT)SWELL_GetDefaultFont();
-        }
-#endif
+      return (LRESULT)(hwnd->m_font ? hwnd->m_font : SWELL_GetDefaultFont());
 
-        return 0;
     case WM_DROPFILES:
-        if (hwnd->m_parent && wParam)
+        if (hwnd->m_parent && wParam && !(GetWindowLong(hwnd,GWL_EXSTYLE)&WS_EX_ACCEPTFILES))
         {
           DROPFILES *df=(DROPFILES*)wParam;
           ClientToScreen(hwnd,&df->pt);
@@ -7288,6 +7339,7 @@ UINT DragQueryFile(HDROP hDrop, UINT wf, char *buf, UINT bufsz)
 
 BOOL PostMessage(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+  WDL_ASSERT(hwnd != NULL);
   return SWELL_Internal_PostMessage(hwnd,message,wParam,lParam);
 }
 
@@ -7330,7 +7382,7 @@ void SWELL_Internal_PostMessage_Init()
 
 void SWELL_MessageQueue_Flush()
 {
-  if (!m_pmq_mutex) return;
+  if (WDL_NOT_NORMALLY(!m_pmq_mutex)) return;
   
   m_pmq_mutex->Enter();
   int max_amt = m_pmq_size;
@@ -7367,7 +7419,7 @@ void SWELL_MessageQueue_Flush()
 
 void SWELL_Internal_PMQ_ClearAllMessages(HWND hwnd)
 {
-  if (!m_pmq_mutex) return;
+  if (WDL_NOT_NORMALLY(!m_pmq_mutex)) return;
   
   m_pmq_mutex->Enter();
   PMQ_rec *p=m_pmq;
@@ -7395,7 +7447,9 @@ void SWELL_Internal_PMQ_ClearAllMessages(HWND hwnd)
 
 BOOL SWELL_Internal_PostMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  if (!hwnd||hwnd->m_hashaddestroy||!m_pmq_mutex) return FALSE;
+  if (WDL_NOT_NORMALLY(!hwnd) ||
+      hwnd->m_hashaddestroy ||
+      WDL_NOT_NORMALLY(!m_pmq_mutex)) return FALSE;
 
   BOOL ret=FALSE;
   m_pmq_mutex->Enter();
@@ -7433,7 +7487,7 @@ BOOL SWELL_Internal_PostMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 int EnumPropsEx(HWND hwnd, PROPENUMPROCEX proc, LPARAM lParam)
 {
-  if (!hwnd) return -1;
+  if (WDL_NOT_NORMALLY(!hwnd)) return -1;
   int x;
   for (x =0 ; x < hwnd->m_props.GetSize(); x ++)
   {
@@ -7446,19 +7500,20 @@ int EnumPropsEx(HWND hwnd, PROPENUMPROCEX proc, LPARAM lParam)
 
 HANDLE GetProp(HWND hwnd, const char *name)
 {
-  if (!hwnd) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd)) return NULL;
   return hwnd->m_props.Get(name);
 }
 
 BOOL SetProp(HWND hwnd, const char *name, HANDLE val)
 {
-  if (!hwnd) return false;
+  if (WDL_NOT_NORMALLY(!hwnd)) return false;
   hwnd->m_props.Insert(name,(void *)val);
   return TRUE;
 }
 
 HANDLE RemoveProp(HWND hwnd, const char *name)
 {
+  if (WDL_NOT_NORMALLY(!hwnd)) return NULL;
   HANDLE h =GetProp(hwnd,name);
   hwnd->m_props.Delete(name);
   return h;
@@ -7486,7 +7541,7 @@ int GetSystemMetrics(int p)
 
 BOOL ScrollWindow(HWND hwnd, int xamt, int yamt, const RECT *lpRect, const RECT *lpClipRect)
 {
-  if (!hwnd || (!xamt && !yamt)) return FALSE;
+  if (WDL_NOT_NORMALLY(!hwnd) || (!xamt && !yamt)) return FALSE;
   InvalidateRect(hwnd,NULL,FALSE);
   
   // move child windows only
@@ -7525,7 +7580,7 @@ HWND FindWindowEx(HWND par, HWND lastw, const char *classname, const char *title
 HTREEITEM TreeView_InsertItem(HWND hwnd, TV_INSERTSTRUCT *ins)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs || !ins) return NULL;
+  if (WDL_NOT_NORMALLY(!tvs || !ins)) return NULL;
 
   HTREEITEM__ *par=NULL;
   int inspos=0;
@@ -7558,7 +7613,7 @@ HTREEITEM TreeView_InsertItem(HWND hwnd, TV_INSERTSTRUCT *ins)
 BOOL TreeView_Expand(HWND hwnd, HTREEITEM item, UINT flag)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs || !tvs->findItem(item,NULL,NULL)) return FALSE;
+  if (WDL_NOT_NORMALLY(!tvs || !tvs->findItem(item,NULL,NULL))) return FALSE;
  
   const int os = item->m_state;
   if (flag == TVE_EXPAND) item->m_state |= TVIS_EXPANDED;
@@ -7572,14 +7627,15 @@ BOOL TreeView_Expand(HWND hwnd, HTREEITEM item, UINT flag)
 HTREEITEM TreeView_GetSelection(HWND hwnd)
 { 
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs || !tvs->m_sel || !tvs->findItem(tvs->m_sel,NULL,NULL)) return NULL;
+  if (WDL_NOT_NORMALLY(!tvs) ||
+      !tvs->m_sel || !tvs->findItem(tvs->m_sel,NULL,NULL)) return NULL;
   return tvs->m_sel;
 }
 
 void TreeView_DeleteItem(HWND hwnd, HTREEITEM item)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs) return;
+  if (WDL_NOT_NORMALLY(!tvs)) return;
   HTREEITEM par=NULL;
   int idx=0;
   if (!tvs->findItem(item,&par,&idx)) return;
@@ -7593,16 +7649,25 @@ void TreeView_DeleteItem(HWND hwnd, HTREEITEM item)
 void TreeView_DeleteAllItems(HWND hwnd)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs) return;
+  if (WDL_NOT_NORMALLY(!tvs)) return;
   tvs->m_root.m_children.Empty(true);
   tvs->m_sel=NULL;
+  InvalidateRect(hwnd,NULL,FALSE);
+}
+
+void TreeView_EnsureVisible(HWND hwnd, HTREEITEM item)
+{
+  treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
+  if (WDL_NOT_NORMALLY(!tvs)) return;
+  if (!item || !tvs->findItem(item,NULL,NULL)) return;
+  tvs->ensureItemVisible(hwnd,item);
   InvalidateRect(hwnd,NULL,FALSE);
 }
 
 void TreeView_SelectItem(HWND hwnd, HTREEITEM item)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs) return;
+  if (WDL_NOT_NORMALLY(!tvs)) return;
 
   if (tvs->m_sel == item || (item && !tvs->findItem(item,NULL,NULL))) return;
 
@@ -7614,6 +7679,7 @@ void TreeView_SelectItem(HWND hwnd, HTREEITEM item)
     __rent++;
     NMTREEVIEW nm={{(HWND)hwnd,(UINT_PTR)hwnd->m_id,TVN_SELCHANGED},};
     nm.itemNew.hItem = item;
+    nm.itemNew.lParam = item ? item->m_param : 0;
     SendMessage(GetParent(hwnd),WM_NOTIFY,nm.hdr.idFrom,(LPARAM)&nm);
     __rent--;
   }
@@ -7624,7 +7690,8 @@ void TreeView_SelectItem(HWND hwnd, HTREEITEM item)
 BOOL TreeView_GetItem(HWND hwnd, LPTVITEM pitem)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs || !pitem || !(pitem->mask & TVIF_HANDLE) || !(pitem->hItem)) return FALSE;
+  if (WDL_NOT_NORMALLY(!tvs || !pitem) ||
+      !(pitem->mask & TVIF_HANDLE) || !(pitem->hItem)) return FALSE;
   
   HTREEITEM ti = pitem->hItem;
   pitem->cChildren = ti->m_haschildren ? 1:0;
@@ -7641,7 +7708,8 @@ BOOL TreeView_GetItem(HWND hwnd, LPTVITEM pitem)
 BOOL TreeView_SetItem(HWND hwnd, LPTVITEM pitem)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs || !pitem || !(pitem->mask & TVIF_HANDLE) || !(pitem->hItem)) return FALSE;
+  if (WDL_NOT_NORMALLY(!tvs || !pitem) ||
+      !(pitem->mask & TVIF_HANDLE) || !(pitem->hItem)) return FALSE;
 
   if (!tvs->findItem(pitem->hItem,NULL,NULL)) return FALSE;
   
@@ -7667,6 +7735,8 @@ BOOL TreeView_SetItem(HWND hwnd, LPTVITEM pitem)
     {
       __rent++;
       NMTREEVIEW nm={{hwnd,(UINT_PTR)hwnd->m_id,TVN_SELCHANGED},};
+      nm.itemNew.hItem = ti;
+      nm.itemNew.lParam = ti ? ti->m_param : 0;
       SendMessage(GetParent(hwnd),WM_NOTIFY,nm.hdr.idFrom,(LPARAM)&nm);
       __rent--;
     }
@@ -7680,27 +7750,33 @@ BOOL TreeView_SetItem(HWND hwnd, LPTVITEM pitem)
 HTREEITEM TreeView_HitTest(HWND hwnd, TVHITTESTINFO *hti)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs || !hti || !tvs->m_last_row_height) return NULL;
+  if (WDL_NOT_NORMALLY(!tvs || !hti) || 
+      !tvs->m_last_row_height) return NULL;
 
   RECT r;
   GetClientRect(hwnd,&r);
   if (!PtInRect(&r,hti->pt)) return NULL;
 
   int y = hti->pt.y + tvs->m_scroll_y + tvs->m_last_row_height;
-  return tvs->hitTestItem(&tvs->m_root,&y,NULL);
+  HTREEITEM item = tvs->hitTestItem(&tvs->m_root,&y,NULL);
+  if (!item)
+  {
+    hti->flags |= TVHT_BELOW;
+  }
+  return item;
 }
 
 HTREEITEM TreeView_GetRoot(HWND hwnd)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs) return NULL;
+  if (WDL_NOT_NORMALLY(!tvs)) return NULL;
   return tvs->m_root.m_children.Get(0);
 }
 
 HTREEITEM TreeView_GetChild(HWND hwnd, HTREEITEM item)
 {
   treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
-  if (!tvs) return NULL;
+  if (WDL_NOT_NORMALLY(!tvs)) return NULL;
   return (item && item != TVI_ROOT ? item : &tvs->m_root)->m_children.Get(0);
 }
 
@@ -7710,7 +7786,7 @@ HTREEITEM TreeView_GetNextSibling(HWND hwnd, HTREEITEM item)
   
   HTREEITEM par=NULL;
   int idx=0;
-  if (!tvs || !tvs->findItem(item,&par,&idx)) return NULL;
+  if (WDL_NOT_NORMALLY(!tvs || !tvs->findItem(item,&par,&idx))) return NULL;
 
   return (par ? par : &tvs->m_root)->m_children.Get(idx+1);
 }
@@ -7721,14 +7797,16 @@ BOOL TreeView_SetIndent(HWND hwnd, int indent)
 
 void TreeView_SetBkColor(HWND hwnd, int color)
 {
+  // todo implement treeview colors
 }
 void TreeView_SetTextColor(HWND hwnd, int color)
 {
+  // todo implement treeview colors
 }
 
 void ListView_SetBkColor(HWND h, int color)
 {
-  if (h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32"))
+  if (WDL_NORMALLY(h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32")))
   {
     listViewState *lvs = (listViewState *)h->m_private_data;
     if (lvs) lvs->m_color_bg = color;
@@ -7739,7 +7817,7 @@ void ListView_SetTextBkColor(HWND h, int color)
 }
 void ListView_SetTextColor(HWND h, int color)
 {
-  if (h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32"))
+  if (WDL_NORMALLY(h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32")))
   {
     listViewState *lvs = (listViewState *)h->m_private_data;
     lvs->m_color_text = color;
@@ -7747,7 +7825,7 @@ void ListView_SetTextColor(HWND h, int color)
 }
 void ListView_SetGridColor(HWND h, int color)
 {
-  if (h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32"))
+  if (WDL_NORMALLY(h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32")))
   {
     listViewState *lvs = (listViewState *)h->m_private_data;
     lvs->m_color_grid = color;
@@ -7755,24 +7833,35 @@ void ListView_SetGridColor(HWND h, int color)
 }
 void ListView_SetSelColors(HWND h, int *colors, int ncolors)
 {
-  if (h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32"))
+  if (WDL_NORMALLY(h && h->m_private_data && h->m_classname))
+  {
+    if (!strcmp(h->m_classname,"SysListView32"))
   {
     listViewState *lvs = (listViewState *)h->m_private_data;
     if (colors && ncolors > 0) 
       memcpy(lvs->m_color_extras,colors,wdl_min(ncolors*sizeof(int),sizeof(lvs->m_color_extras)));
   }
+    else if (!strcmp(h->m_classname,"SysTreeView32"))
+    {
+      // todo implement treeview colors
+    }
+    else
+    {
+      WDL_ASSERT(false);
+    }
+  }
 }
 int ListView_GetTopIndex(HWND h)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !lvs->m_last_row_height) return 0;
+  if (WDL_NOT_NORMALLY(!lvs) || !lvs->m_last_row_height) return 0;
   return lvs->m_scroll_y / lvs->m_last_row_height;
 }
 BOOL ListView_GetColumnOrderArray(HWND h, int cnt, int* arr)
 {
-  if (!arr) return FALSE;
+  if (WDL_NOT_NORMALLY(!arr)) return FALSE;
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !lvs->HasColumnHeaders(h)) return FALSE;
+  if (WDL_NOT_NORMALLY(!lvs || !lvs->HasColumnHeaders(h))) return FALSE;
 
   for (int x=0;x<cnt;x++)
     arr[x]=x < lvs->m_cols.GetSize() ? lvs->m_cols.Get()[x].col_index : x;
@@ -7782,7 +7871,7 @@ BOOL ListView_SetColumnOrderArray(HWND h, int cnt, int* arr)
 {
   if (!arr) return FALSE;
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || !lvs->HasColumnHeaders(h)) return FALSE;
+  if (WDL_NOT_NORMALLY(!lvs || !lvs->HasColumnHeaders(h))) return FALSE;
 
   WDL_TypedBuf<SWELL_ListView_Col> tmp;
 
@@ -7813,13 +7902,13 @@ HWND ListView_GetHeader(HWND h)
 int Header_GetItemCount(HWND h)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  return lvs ? lvs->m_cols.GetSize() : 0;
+  return WDL_NORMALLY(lvs) ? lvs->m_cols.GetSize() : 0;
 }
 
 BOOL Header_GetItem(HWND h, int col, HDITEM* hi)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return FALSE;
+  if (WDL_NOT_NORMALLY(!lvs)) return FALSE;
   const SWELL_ListView_Col *c = lvs->GetColumnByIndex(col);
   if (!c) return FALSE;
 
@@ -7836,7 +7925,7 @@ BOOL Header_GetItem(HWND h, int col, HDITEM* hi)
 BOOL Header_SetItem(HWND h, int col, HDITEM* hi)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs) return FALSE;
+  if (WDL_NOT_NORMALLY(!lvs)) return FALSE;
   SWELL_ListView_Col *c = lvs->GetColumnByIndex(col);
   if (!c) return FALSE;
 
@@ -7853,7 +7942,7 @@ BOOL Header_SetItem(HWND h, int col, HDITEM* hi)
 
 BOOL EnumChildWindows(HWND hwnd, BOOL (*cwEnumFunc)(HWND,LPARAM),LPARAM lParam)
 {
-  if (hwnd && hwnd->m_children)
+  if (WDL_NORMALLY(hwnd) && hwnd->m_children)
   {
     HWND n=hwnd->m_children;
     while (n)
@@ -7870,18 +7959,15 @@ void SWELL_GetDesiredControlSize(HWND hwnd, RECT *r)
 
 BOOL SWELL_IsGroupBox(HWND hwnd)
 {
-  //todo
-  return FALSE;
+  return WDL_NORMALLY(hwnd) && hwnd->m_classname && !stricmp(hwnd->m_classname,"Button") && (hwnd->m_style & BS_GROUPBOX);
 }
 BOOL SWELL_IsButton(HWND hwnd)
 {
-  //todo
-  return FALSE;
+  return WDL_NORMALLY(hwnd) && hwnd->m_classname && !stricmp(hwnd->m_classname,"Button") && !(hwnd->m_style & BS_GROUPBOX);
 }
 BOOL SWELL_IsStaticText(HWND hwnd)
 {
-  //todo
-  return FALSE;
+  return WDL_NORMALLY(hwnd) && hwnd->m_classname && !stricmp(hwnd->m_classname,"Static");
 }
 
 
@@ -7979,7 +8065,7 @@ static LRESULT WINAPI focusRectWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 // otherwise r is in hwndPar coordinates
 void SWELL_DrawFocusRect(HWND hwndPar, RECT *rct, void **handle)
 {
-  if (!handle) return;
+  if (WDL_NOT_NORMALLY(!handle)) return;
 
   HWND h = (HWND) *handle;
   if (h && (!rct || h->m_parent != hwndPar))
@@ -8101,7 +8187,7 @@ void SWELL_GenerateDialogFromList(const void *_list, int listsz)
 
 int swell_fullscreenWindow(HWND hwnd, BOOL fs)
 {
-  if (hwnd)
+  if (WDL_NORMALLY(hwnd))
   {
     hwnd->m_oswindow_fullscreen = fs;
     return 1;
@@ -8111,13 +8197,13 @@ int swell_fullscreenWindow(HWND hwnd, BOOL fs)
 
 void SWELL_SetClassName(HWND hwnd, const char *p)
 {
-  if (hwnd)
+  if (WDL_NORMALLY(hwnd))
     hwnd->m_classname=p;
 }
 
 int GetClassName(HWND hwnd, char *buf, int bufsz)
 {
-  if (!hwnd || !hwnd->m_classname || !buf || bufsz<1) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd || !hwnd->m_classname || !buf || bufsz<1)) return 0;
   lstrcpyn_safe(buf,hwnd->m_classname,bufsz);
   return (int)strlen(buf);
 }

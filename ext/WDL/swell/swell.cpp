@@ -30,6 +30,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/poll.h>
 #include <sys/fcntl.h>
 #include <sys/resource.h>
 
@@ -91,7 +92,7 @@ static void intToFileTime(time_t t, FILETIME *out)
 
 BOOL GetFileTime(int filedes, FILETIME *lpCreationTime, FILETIME *lpLastAccessTime, FILETIME *lpLastWriteTime)
 {
-  if (filedes<0) return 0;
+  if (WDL_NOT_NORMALLY(filedes<0)) return 0;
   struct stat st;
   if (fstat(filedes,&st)) return 0;
   
@@ -156,7 +157,7 @@ void swell_cleanupZombies()
 BOOL CloseHandle(HANDLE hand)
 {
   SWELL_InternalObjectHeader *hdr=(SWELL_InternalObjectHeader*)hand;
-  if (!hdr) return FALSE;
+  if (WDL_NOT_NORMALLY(!hdr)) return FALSE;
   if (hdr->type <= INTERNAL_OBJECT_START || hdr->type >= INTERNAL_OBJECT_END) return FALSE;
   
   if (!wdl_atomic_decr(&hdr->count))
@@ -244,32 +245,38 @@ HANDLE CreateEventAsSocket(void *SA, BOOL manualReset, BOOL initialSig, const ch
 
 DWORD WaitForAnySocketObject(int numObjs, HANDLE *objs, DWORD msTO) // only supports special (socket) handles at the moment 
 {
-  int max_s=0;
-  fd_set s;
-  FD_ZERO(&s);
-  int x;
+  struct pollfd list1[128];
+  WDL_TypedBuf<struct pollfd> list2;
+  struct pollfd *fds = numObjs > 128 ? list2.ResizeOK(numObjs) : list1;
+  if (WDL_NOT_NORMALLY(!fds)) { numObjs = 128; fds = list1; }
+  int x, nfds = 0;
   for (x = 0; x < numObjs; x ++)
   {
     SWELL_InternalObjectHeader_SocketEvent *se = (SWELL_InternalObjectHeader_SocketEvent *)objs[x];
-    if ((se->hdr.type == INTERNAL_OBJECT_EXTERNALSOCKET || se->hdr.type == INTERNAL_OBJECT_SOCKETEVENT) && se->socket[0]>=0)
+    if (WDL_NORMALLY(se) &&
+        WDL_NORMALLY(se->hdr.type == INTERNAL_OBJECT_EXTERNALSOCKET || se->hdr.type == INTERNAL_OBJECT_SOCKETEVENT) && 
+        WDL_NORMALLY(se->socket[0]>=0))
     {
-      FD_SET(se->socket[0],&s);
-      if (se->socket[0] > max_s) max_s = se->socket[0];
+      fds[nfds].fd = se->socket[0];
+      fds[nfds].events = POLLIN;
+      fds[nfds].revents = 0;
+      nfds++;
     }
   }
 
-  if (max_s>0)
+  if (nfds>0)
   {
 again:
-    struct timeval tv;
-    tv.tv_sec = msTO/1000;
-    tv.tv_usec = (msTO%1000)*1000;
-    if (select(max_s+1,&s,NULL,NULL,msTO==INFINITE?NULL:&tv)>0) for (x = 0; x < numObjs; x ++)
+    const int res = poll(fds,nfds,msTO == INFINITE ? -1 : msTO);
+    int pos = 0;
+    if (res>0) for (x = 0; x < numObjs; x ++)
     {
       SWELL_InternalObjectHeader_SocketEvent *se = (SWELL_InternalObjectHeader_SocketEvent *)objs[x];
-      if ((se->hdr.type == INTERNAL_OBJECT_EXTERNALSOCKET || se->hdr.type == INTERNAL_OBJECT_SOCKETEVENT) && se->socket[0]>=0) 
+      if (WDL_NORMALLY(se) &&
+          WDL_NORMALLY(se->hdr.type == INTERNAL_OBJECT_EXTERNALSOCKET || se->hdr.type == INTERNAL_OBJECT_SOCKETEVENT) && 
+          WDL_NORMALLY(se->socket[0]>=0))
       {
-        if (FD_ISSET(se->socket[0],&s)) 
+        if (fds[pos].revents & POLLIN)
         {
           if (se->hdr.type == INTERNAL_OBJECT_SOCKETEVENT && se->autoReset)
           {
@@ -278,8 +285,10 @@ again:
           }
           return WAIT_OBJECT_0 + x;
         }
+        pos++;
       }
     }
+    if (res < 0) return WAIT_FAILED;
   }
   
   return WAIT_TIMEOUT;
@@ -288,7 +297,7 @@ again:
 DWORD WaitForSingleObject(HANDLE hand, DWORD msTO)
 {
   SWELL_InternalObjectHeader *hdr=(SWELL_InternalObjectHeader*)hand;
-  if (!hdr) return WAIT_FAILED;
+  if (WDL_NOT_NORMALLY(!hdr)) return WAIT_FAILED;
   
   switch (hdr->type)
   {
@@ -360,17 +369,14 @@ DWORD WaitForSingleObject(HANDLE hand, DWORD msTO)
     case INTERNAL_OBJECT_SOCKETEVENT:
       {
         SWELL_InternalObjectHeader_SocketEvent *se = (SWELL_InternalObjectHeader_SocketEvent *)hdr;
-        if (se->socket[0]<0) Sleep(msTO!=INFINITE?msTO:1);
+        if (WDL_NOT_NORMALLY(se->socket[0]<0)) Sleep(msTO!=INFINITE?msTO:1);
         else
         {
-          fd_set s;
-          FD_ZERO(&s);
 again:
-          FD_SET(se->socket[0],&s);
-          struct timeval tv;
-          tv.tv_sec = msTO/1000;
-          tv.tv_usec = (msTO%1000)*1000;
-          if (select(se->socket[0]+1,&s,NULL,NULL,msTO==INFINITE?NULL:&tv)>0 && FD_ISSET(se->socket[0],&s)) 
+          struct pollfd fd = { se->socket[0], POLLIN, 0 };
+          const int res = poll(&fd,1,msTO==INFINITE?-1 : msTO);
+          if (res < 0) return WAIT_FAILED;
+          if (res>0 && (fd.revents&POLLIN))
           {
             if (se->hdr.type == INTERNAL_OBJECT_SOCKETEVENT && se->autoReset)
             {
@@ -530,7 +536,7 @@ BOOL SetThreadPriority(HANDLE hand, int prio)
   }
 #endif
 
-  if (!evt || evt->hdr.type != INTERNAL_OBJECT_THREAD) return FALSE;
+  if (WDL_NOT_NORMALLY(!evt || evt->hdr.type != INTERNAL_OBJECT_THREAD)) return FALSE;
   
   if (evt->done) return FALSE;
     
@@ -588,7 +594,7 @@ BOOL SetThreadPriority(HANDLE hand, int prio)
 BOOL SetEvent(HANDLE hand)
 {
   SWELL_InternalObjectHeader_Event *evt=(SWELL_InternalObjectHeader_Event*)hand;
-  if (!evt) return FALSE;
+  if (WDL_NOT_NORMALLY(!evt)) return FALSE;
   if (evt->hdr.type == INTERNAL_OBJECT_EVENT) 
   {
     pthread_mutex_lock(&evt->mutex);
@@ -608,11 +614,9 @@ BOOL SetEvent(HANDLE hand)
     {
       if (se->socket[0]>=0) 
       {
-        fd_set s;
-        FD_ZERO(&s);
-        FD_SET(se->socket[0],&s);
-        struct timeval tv={0,};
-        if (select(se->socket[0]+1,&s,NULL,NULL,&tv)>0 && FD_ISSET(se->socket[0],&s)) return TRUE; // already set
+        struct pollfd fd = { se->socket[0], POLLIN, 0 };
+        int res = poll(&fd,1,0);
+        if (res > 0 && (fd.revents&POLLIN)) return TRUE; // already set
       }
       char c=0; 
       if (write(se->socket[1],&c,1) != 1)
@@ -622,12 +626,13 @@ BOOL SetEvent(HANDLE hand)
     }
     return TRUE;
   }
+  WDL_ASSERT(false);
   return FALSE;
 }
 BOOL ResetEvent(HANDLE hand)
 {
   SWELL_InternalObjectHeader_Event *evt=(SWELL_InternalObjectHeader_Event*)hand;
-  if (!evt) return FALSE;
+  if (WDL_NOT_NORMALLY(!evt)) return FALSE;
   if (evt->hdr.type == INTERNAL_OBJECT_EVENT) 
   {
     evt->isSignal=false;
@@ -646,6 +651,7 @@ BOOL ResetEvent(HANDLE hand)
     }
     return TRUE;
   }
+  WDL_ASSERT(false);
   return FALSE;
 }
 
@@ -893,7 +899,7 @@ HINSTANCE LoadLibraryGlobals(const char *fn, bool symbolsAsGlobals)
 
 void *GetProcAddress(HINSTANCE hInst, const char *procName)
 {
-  if (!hInst) return 0;
+  if (WDL_NOT_NORMALLY(!hInst)) return 0;
 
   SWELL_HINSTANCE *rec=(SWELL_HINSTANCE*)hInst;
 
@@ -915,7 +921,7 @@ void *GetProcAddress(HINSTANCE hInst, const char *procName)
 
 BOOL FreeLibrary(HINSTANCE hInst)
 {
-  if (!hInst) return FALSE;
+  if (WDL_NOT_NORMALLY(!hInst)) return FALSE;
 
   WDL_MutexLock lock(&s_libraryMutex);
 
@@ -954,6 +960,7 @@ BOOL FreeLibrary(HINSTANCE hInst)
 void* SWELL_GetBundle(HINSTANCE hInst)
 {
   SWELL_HINSTANCE* rec=(SWELL_HINSTANCE*)hInst;
+  WDL_ASSERT(rec!=NULL);
 #ifdef SWELL_TARGET_OSX
   if (rec) return rec->bundleinstptr;
 #else

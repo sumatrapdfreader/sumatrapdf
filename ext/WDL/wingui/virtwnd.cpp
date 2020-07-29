@@ -1235,7 +1235,7 @@ LICE_IBitmap *WDL_VirtualWnd_BGCfgCache::SetCachedBG(int w, int h, int sinfo2, L
       if (age > best_age) // find oldest entry
       {
         best_age = age;
-        bestpos=x;
+        bestpos = x;
       }
     }
 

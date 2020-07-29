@@ -25,12 +25,13 @@
 #include "ns-eel-int.h"
 
 #include "../denormal.h"
-#include "../wdlcstring.h"
 
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
 #include <ctype.h>
+
+#include "../wdlcstring.h"
 
 #if !defined(EEL_TARGET_PORTABLE) && !defined(_WIN32)
 #include <sys/mman.h>

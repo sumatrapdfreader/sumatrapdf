@@ -31,6 +31,7 @@
 #include "../mutex.h"
 #include "../ptrlist.h"
 #include "../wdlcstring.h"
+#include "../wdlutf8.h"
 
 #include "swell-gdi-internalpool.h"
 
@@ -48,47 +49,6 @@
 
 static bool s_freetype_failed;
 static FT_Library s_freetype; // todo: TLS for multithread support? -- none of the text drawing is thread safe!
-
-static int utf8char(const char *ptr, unsigned short *charOut) // returns char length
-{
-  const unsigned char *p = (const unsigned char *)ptr;
-  unsigned char tc = *p;
-
-  if (tc < 128) 
-  {
-    if (charOut) *charOut = (unsigned short) tc;
-    return 1;
-  }
-  else if (tc < 0xC2) // invalid chars (subsequent in sequence, or overlong which we disable for)
-  {
-  }
-  else if (tc < 0xE0) // 2 char seq
-  {
-    if (p[1] >= 0x80 && p[1] <= 0xC0)
-    {
-      if (charOut) *charOut = ((tc&0x1f)<<6) | (p[1]&0x3f);
-      return 2;
-    }
-  }
-  else if (tc < 0xF0) // 3 char seq
-  {
-    if (p[1] >= 0x80 && p[1] <= 0xC0 && p[2] >= 0x80 && p[2] <= 0xC0)
-    {
-      if (charOut) *charOut = ((tc&0xf)<<12) | ((p[1]&0x3f)<<6) | ((p[2]&0x3f));
-      return 3;
-    }
-  }
-  else if (tc < 0xF5) // 4 char seq
-  {
-    if (p[1] >= 0x80 && p[1] <= 0xC0 && p[2] >= 0x80 && p[2] <= 0xC0 && p[3] >= 0x80 && p[3] <= 0xC0)
-    {
-      if (charOut) *charOut = (unsigned short)' '; // dont support 4 byte sequences yet(ever?)
-      return 4;
-    }
-  }  
-  if (charOut) *charOut = (unsigned short) tc;
-  return 1;  
-}
 
 extern const char *swell_last_font_filename;
 
@@ -172,13 +132,6 @@ const char *swell_enumFontFiles(int x)
   return s_freetype_fontlist.Get(x-n1);
 }
 
-
-static const char *stristr(const char *a, const char *b)
-{
-  const size_t blen = strlen(b);
-  while (*a && strnicmp(a,b,blen)) a++;
-  return *a ? a : NULL;
-}
 
 static void ScanFontDirectory(const char *path, int maxrec=3)
 {
@@ -297,11 +250,11 @@ static FT_Face MatchFont(const char *lfFaceName, int weight, int italic, int exa
         dash++;
       }
 
-      if (stristr(residual,"Regular")) s.score2 -= 7; // ignore "Regular"
-      if (italic && stristr(residual,"Italic")) s.score2 -= 6+7;
-      else if (italic && stristr(residual,"Oblique")) s.score2 -= 7+3; // if Italic isnt available, use Oblique
-      if (weight >= FW_BOLD && stristr(residual,"Bold")) s.score2 -= 4+7;
-      else if (weight <= FW_LIGHT && stristr(residual,"Light")) s.score2 -= 5+7;
+      if (WDL_stristr(residual,"Regular")) s.score2 -= 7; // ignore "Regular"
+      if (italic && WDL_stristr(residual,"Italic")) s.score2 -= 6+7;
+      else if (italic && WDL_stristr(residual,"Oblique")) s.score2 -= 7+3; // if Italic isnt available, use Oblique
+      if (weight >= FW_BOLD && WDL_stristr(residual,"Bold")) s.score2 -= 4+7;
+      else if (weight <= FW_LIGHT && WDL_stristr(residual,"Light")) s.score2 -= 5+7;
 
       if (ext > residual && ext <= residual+2)
       {
@@ -344,7 +297,7 @@ static FT_Face MatchFont(const char *lfFaceName, int weight, int italic, int exa
 HDC SWELL_CreateMemContext(HDC hdc, int w, int h)
 {
   LICE_MemBitmap * bm = new LICE_MemBitmap(w,h);
-  if (!bm) return 0;
+  if (WDL_NOT_NORMALLY(!bm)) return 0;
   LICE_Clear(bm,LICE_RGBA(0,0,0,0));
 
   HDC__ *ctx=SWELL_GDP_CTX_NEW();
@@ -431,6 +384,7 @@ HGDIOBJ GetStockObject(int wh)
       return &pen;
     }
   }
+  WDL_ASSERT(false);
   return 0;
 }
 
@@ -438,7 +392,10 @@ HFONT CreateFont(int lfHeight, int lfWidth, int lfEscapement, int lfOrientation,
   char lfUnderline, char lfStrikeOut, char lfCharSet, char lfOutPrecision, char lfClipPrecision, 
          char lfQuality, char lfPitchAndFamily, const char *lfFaceName)
 {
-  HGDIOBJ__ *font=NULL;
+  HGDIOBJ__ *font = GDP_OBJECT_NEW();
+  font->typedata = NULL;
+  font->type=TYPE_FONT;
+  font->alpha = 1.0f;
 #ifdef SWELL_FREETYPE
   if (!s_freetype_failed && !s_freetype) 
   {
@@ -589,16 +546,7 @@ HFONT CreateFont(int lfHeight, int lfWidth, int lfEscapement, int lfOrientation,
       FT_Set_Char_Size(face,lfWidth*64, lfHeight*64,0,0); // 72dpi
     }
   }
-  
-  if (face)
-  {
-    font = GDP_OBJECT_NEW();
-    font->type=TYPE_FONT;
     font->typedata = face;
-    font->alpha = 1.0f;
-  }
-#else
-  font->type=TYPE_FONT;
 #endif
  
   return font;
@@ -617,7 +565,7 @@ int GetTextFace(HDC ctx, int nCount, LPTSTR lpFaceName)
   if (lpFaceName && nCount>0) lpFaceName[0]=0;
 #ifdef SWELL_FREETYPE
   HDC__ *ct=(HDC__*)ctx;
-  if (!HDC_VALID(ct) || nCount<1 || !lpFaceName || !ct->curfont) return 0;
+  if (!HDC_VALID(ct) || WDL_NOT_NORMALLY(nCount<1 || !lpFaceName) || !ct->curfont) return 0;
 
   const FT_FaceRec *p = (const FT_FaceRec *)ct->curfont->typedata;
   if (p)
@@ -636,7 +584,7 @@ void DeleteObject(HGDIOBJ pen)
     HGDIOBJ__ *p=(HGDIOBJ__ *)pen;
     if (--p->additional_refcnt < 0)
     {
-      if (p->type == TYPE_PEN || p->type == TYPE_BRUSH || p->type == TYPE_FONT || p->type == TYPE_BITMAP)
+      if (WDL_NORMALLY(p->type == TYPE_PEN || p->type == TYPE_BRUSH || p->type == TYPE_FONT || p->type == TYPE_BITMAP))
       {
         if (p->type == TYPE_FONT)
         {
@@ -660,7 +608,6 @@ void DeleteObject(HGDIOBJ pen)
   
         GDP_OBJECT_DELETE(p);
       }
-      // JF> don't free unknown objects, this should never happen anyway: else free(p);
     }
   }
 }
@@ -671,7 +618,7 @@ HGDIOBJ SelectObject(HDC ctx, HGDIOBJ pen)
   HDC__ *c=(HDC__ *)ctx;
   HGDIOBJ__ *p= pen;
   HGDIOBJ__ **mod=0;
-  if (!HDC_VALID(c)||!p) return 0;
+  if (!HDC_VALID(c)||WDL_NOT_NORMALLY(!p)) return 0;
   
   if (p == (HGDIOBJ__ *)TYPE_PEN) mod=&c->curpen;
   else if (p == (HGDIOBJ__ *)TYPE_BRUSH) mod=&c->curbrush;
@@ -967,7 +914,6 @@ void SWELL_SetPixel(HDC ctx, int x, int y, int c)
   swell_DirtyContext(ct,x,y,x+1,y+1);
 }
 
-#ifdef SWELL_FREETYPE
 HFONT SWELL_GetDefaultFont()
 {
   static HFONT def;
@@ -977,7 +923,6 @@ HFONT SWELL_GetDefaultFont()
   }
   return def;
 }
-#endif
 
 BOOL GetTextMetrics(HDC ctx, TEXTMETRIC *tm)
 {
@@ -990,7 +935,7 @@ BOOL GetTextMetrics(HDC ctx, TEXTMETRIC *tm)
     tm->tmHeight=8;
     tm->tmAveCharWidth = 8;
   }
-  if (!HDC_VALID(ct)||!tm) return 0;
+  if (!HDC_VALID(ct)||WDL_NOT_NORMALLY(!tm)) return 0;
 
 #ifdef SWELL_FREETYPE
   HGDIOBJ__  *font  = HGDIOBJ_VALID(ct->curfont,TYPE_FONT) ? ct->curfont : SWELL_GetDefaultFont();
@@ -1014,14 +959,14 @@ BOOL GetTextMetrics(HDC ctx, TEXTMETRIC *tm)
 int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
 {
   HDC__ *ct=(HDC__ *)ctx;
-  if (!r) return 0;
+  if (WDL_NOT_NORMALLY(!r)) return 0;
 
   int lineh = 8;
   int charw = 8;
 
   HGDIOBJ__  *font  = NULL;
+  int ascent=8, descent=0;
 #ifdef SWELL_FREETYPE
-  int ascent=0, descent=0;
   font  = HDC_VALID(ct) && HGDIOBJ_VALID(ct->curfont,TYPE_FONT) ? ct->curfont : SWELL_GetDefaultFont();
   FT_Face face = NULL;
   if (font && font->typedata) 
@@ -1035,15 +980,7 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
 #endif
 
   if (align&DT_CALCRECT)
-  {
-    if (!font && (align&DT_SINGLELINE))
     {
-      r->right = r->left + ( buflen < 0 ? strlen(buf) : buflen ) * charw;
-      int h = r->right ? (ascent-descent) :0;
-      r->bottom = r->top+h;
-      return h;
-    }
-
     int xpos=0;
     int ypos=0;
 
@@ -1051,8 +988,7 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
     bool in_prefix=false;
     while (buflen && *buf) // if buflen<0, go forever
     {
-      unsigned short c=0;
-      int charlen = utf8char(buf,&c);
+      int c=0, charlen = wdl_utf8_parsechar(buf,&c);
       buf+=charlen;
       if (buflen > 0) 
       {
@@ -1067,6 +1003,8 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
         continue;
       }
       in_prefix=false;
+ 
+      if (c == '\n' && (align & DT_SINGLELINE)) c=' ';
  
       if (c == '\n') { ypos += lineh; xpos=0; }
       else if (c != '\r')
@@ -1155,8 +1093,7 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
 
   while (buflen && *buf)
   {
-    unsigned short c=0;
-    int  charlen = utf8char(buf,&c);
+    int c=0, charlen = wdl_utf8_parsechar(buf,&c);
     if (buflen>0)
     {
       buflen -= charlen;
@@ -1172,6 +1109,8 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
       continue;
     }
     in_prefix=false;
+
+    if (c == '\n' && (align & DT_SINGLELINE)) c=' ';
 
     if (c=='\n' && !(align&DT_SINGLELINE)) { xpos=left_xpos; ypos+=lineh; }
     else if (c=='\r')  {} 
@@ -1277,8 +1216,14 @@ HICON LoadNamedImage(const char *name, bool alphaFromMask)
   {
     GetModuleFileName(NULL,buf,sizeof(buf));
     WDL_remove_filepart(buf);
-    snprintf_append(buf,sizeof(buf),"/Resources/%s.ico",name);
+    snprintf_append(buf,sizeof(buf),"/Resources/%s.png",name);
     pb = gdk_pixbuf_new_from_file(buf,NULL);
+    if (!pb)
+    {
+      WDL_remove_fileext(buf);
+      lstrcatn(buf,".ico",sizeof(buf));
+      pb = gdk_pixbuf_new_from_file(buf,NULL);
+    }
     if (!pb)
     {
       WDL_remove_fileext(buf);
@@ -1352,7 +1297,7 @@ void DrawImageInRect(HDC hdcOut, HICON in, const RECT *r)
 BOOL GetObject(HICON icon, int bmsz, void *_bm)
 {
   memset(_bm,0,bmsz);
-  if (bmsz < 2*(int)sizeof(LONG)) return false;
+  if (WDL_NOT_NORMALLY(bmsz < 2*(int)sizeof(LONG))) return false;
   BITMAP *bm=(BITMAP *)_bm;
   HGDIOBJ__ *i = (HGDIOBJ__ *)icon;
   if (!HGDIOBJ_VALID(i,TYPE_BITMAP) || !i->typedata) return false;
@@ -1488,7 +1433,7 @@ struct swell_gdpLocalContext
 
 HDC SWELL_internalGetWindowDC(HWND h, bool calcsize_on_first)
 {
-  if (!h) return NULL;
+  if (WDL_NOT_NORMALLY(!h)) return NULL;
 
   int xoffs=0,yoffs=0;
   int wndw = h->m_position.right-h->m_position.left;
@@ -1567,7 +1512,7 @@ HDC GetDC(HWND h)
 
 void ReleaseDC(HWND h, HDC hdc)
 {
-  if (!h || !HDC_VALID(hdc)) return;
+  if (WDL_NOT_NORMALLY(!h) || !HDC_VALID(hdc)) return;
   swell_gdpLocalContext *p = (swell_gdpLocalContext*)hdc;
 
 
@@ -1604,10 +1549,10 @@ void ReleaseDC(HWND h, HDC hdc)
 
 HDC BeginPaint(HWND hwnd, PAINTSTRUCT *ps)
 {
-  if (!ps) return 0;
+  if (WDL_NOT_NORMALLY(!ps)) return 0;
   memset(ps,0,sizeof(PAINTSTRUCT));
-  if (!hwnd) return 0;
-  if (!hwnd->m_paintctx) return NULL;
+  if (WDL_NOT_NORMALLY(!hwnd)) return 0;
+  if (WDL_NOT_NORMALLY(!hwnd->m_paintctx)) return NULL;
 
   swell_gdpLocalContext *ctx = (swell_gdpLocalContext *)hwnd->m_paintctx;
   ps->rcPaint = ctx->clipr;
@@ -1742,9 +1687,9 @@ void SWELL_internalLICEpaint(HWND hwnd, LICE_IBitmap *bmout, int bmout_xpos, int
 
 HBITMAP CreateBitmap(int width, int height, int numplanes, int bitsperpixel, unsigned char* bits)
 {
-  if (width < 1 || height < 1 || numplanes != 1 || bitsperpixel != 32 || !bits) return NULL;
+  if (WDL_NOT_NORMALLY(width < 1 || height < 1 || numplanes != 1 || bitsperpixel != 32 || !bits)) return NULL;
   LICE_MemBitmap *bm = new LICE_MemBitmap(width,height);
-  if (!bm->getBits()) { delete bm; return NULL; }
+  if (WDL_NOT_NORMALLY(!bm->getBits())) { delete bm; return NULL; }
   int y;
   LICE_pixel *wr = bm->getBits();
   for (y=0;y<height; y++)
@@ -1765,7 +1710,7 @@ HBITMAP CreateBitmap(int width, int height, int numplanes, int bitsperpixel, uns
 
 HICON CreateIconIndirect(ICONINFO* iconinfo)
 {
-  if (!iconinfo || !iconinfo->fIcon) return 0;  
+  if (WDL_NOT_NORMALLY(!iconinfo || !iconinfo->fIcon)) return 0;  
   HGDIOBJ__* i=iconinfo->hbmColor;
   if (!HGDIOBJ_VALID(i,TYPE_BITMAP) ) return 0;
 
@@ -1790,7 +1735,7 @@ HIMAGELIST ImageList_CreateEx()
 BOOL ImageList_Remove(HIMAGELIST list, int idx)
 {
   WDL_PtrList<HGDIOBJ__>* imglist=(WDL_PtrList<HGDIOBJ__>*)list;
-  if (imglist && idx < imglist->GetSize())
+  if (WDL_NORMALLY(imglist) && idx < imglist->GetSize())
   {
     if (idx < 0) 
     {
@@ -1816,7 +1761,7 @@ BOOL ImageList_Remove(HIMAGELIST list, int idx)
 
 void ImageList_Destroy(HIMAGELIST list)
 {
-  if (!list) return;
+  if (WDL_NOT_NORMALLY(!list)) return;
   WDL_PtrList<HGDIOBJ__> *p=(WDL_PtrList<HGDIOBJ__>*)list;
   ImageList_Remove(list,-1);
   delete p;
@@ -1824,7 +1769,7 @@ void ImageList_Destroy(HIMAGELIST list)
 
 int ImageList_ReplaceIcon(HIMAGELIST list, int offset, HICON image)
 {
-  if (!image || !list) return -1;
+  if (WDL_NOT_NORMALLY(!image || !list)) return -1;
   WDL_PtrList<HGDIOBJ__> *l=(WDL_PtrList<HGDIOBJ__> *)list;
 
   HGDIOBJ__ *imgsrc = (HGDIOBJ__*)image;
@@ -1857,7 +1802,7 @@ int ImageList_ReplaceIcon(HIMAGELIST list, int offset, HICON image)
 
 int ImageList_Add(HIMAGELIST list, HBITMAP image, HBITMAP mask)
 {
-  if (!image || !list) return -1;
+  if (WDL_NOT_NORMALLY(!image || !list)) return -1;
   WDL_PtrList<HGDIOBJ__> *l=(WDL_PtrList<HGDIOBJ__> *)list;
   
   HGDIOBJ__ *imgsrc = (HGDIOBJ__*)image;
@@ -1879,6 +1824,7 @@ int ImageList_Add(HIMAGELIST list, HBITMAP image, HBITMAP mask)
 
 int AddFontResourceEx(LPCTSTR str, DWORD fl, void *pdv)
 {
+#ifdef SWELL_FREETYPE
   if (str && *str)
   {
 #ifdef SWELL_FONTCONFIG
@@ -1890,6 +1836,7 @@ int AddFontResourceEx(LPCTSTR str, DWORD fl, void *pdv)
 #endif
     return 1;
   } 
+#endif
   return 0;
 }
 

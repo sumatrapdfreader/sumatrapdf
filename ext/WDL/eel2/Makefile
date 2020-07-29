@@ -16,6 +16,13 @@ OBJS2=
 UNAME_S := $(shell uname -s)
 ARCH := $(shell uname -m)
 
+ifeq ($(ARCH), aarch64)
+  ifeq ($(shell $(CC) -dumpmachine | cut -f 1 -d -), arm)
+    # helper for armv7l userspace on aarch64 cpu
+    ARCH := armv7l
+  endif
+endif
+
 ifeq ($(UNAME_S),Darwin)
   CFLAGS += -arch $(ARCH)
 endif

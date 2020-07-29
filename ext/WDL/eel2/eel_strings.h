@@ -489,7 +489,22 @@ int eel_format_strings(void *opaque, const char *fmt, const char *fmt_end, char 
           *op=0;
         }
         else
+        {
+#if !defined(_WIN32) && !defined(__arm__) && !defined(__aarch64__)
+          // x86 and x86_64 set rounding to truncate (ugh)
+          // apparently on Windows it doesn't matter for sprintf(), though.
+          // this is safe to call on other platforms, too, just perhaps wasteful
+          int fpstate[2];
+          eel_enterfp(fpstate);
+          eel_setfp_round();
+#endif
+
           snprintf(op,64,fs,v);
+
+#if !defined(_WIN32) && !defined(__arm__) && !defined(__aarch64__)
+          eel_leavefp(fpstate);
+#endif
+        }
       }
 
       while (*op) op++;

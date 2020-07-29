@@ -80,7 +80,8 @@ public:
   void Apply(WDL_ResampleSample *in1, WDL_ResampleSample *out1, int ns, int span, int w)
   {
     double b0=m_b0,b1=m_b1,b2=m_b2,a1=m_a1,a2=m_a2;
-    double *hist=m_hist[w];
+    double hist[4];
+    memcpy(hist,&m_hist[w][0], sizeof(hist));
     while (ns--)
     {
       double in=*in1;
@@ -91,6 +92,7 @@ public:
 
       out1+=span;
     }
+    memcpy(&m_hist[w][0], hist, sizeof(hist));
   }
 
 private:

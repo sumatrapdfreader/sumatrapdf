@@ -31,8 +31,9 @@
 #ifndef _WDL_FILEWRITE_H_
 #define _WDL_FILEWRITE_H_
 
-
-
+#ifndef WDL_FILEWRITE_ON_ERROR
+#define WDL_FILEWRITE_ON_ERROR(is_full)
+#endif
 
 #include "ptrlist.h"
 
@@ -336,8 +337,9 @@ public:
           if (ent)
           {
             bool wasabort=false;
+            DWORD err;
             if (GetOverlappedResult(m_fh,&ent->m_ol,&s,FALSE)||
-                (wasabort=(GetLastError()==ERROR_OPERATION_ABORTED))) 
+                (wasabort=((err=GetLastError())==ERROR_OPERATION_ABORTED))) 
             {
               m_pending.Delete(0);
 
@@ -350,6 +352,10 @@ public:
                 m_empties.Add(ent);
                 ent->m_bufused=0;
               }
+            }
+            else if (err != ERROR_IO_PENDING && err != ERROR_IO_INCOMPLETE)
+            {
+              WDL_FILEWRITE_ON_ERROR(err == ERROR_DISK_FULL)
             }
           }
         }
@@ -387,7 +393,10 @@ public:
     else
     {
       DWORD dw=0;
-      WriteFile(m_fh,buf,len,&dw,NULL);
+      if (!WriteFile(m_fh,buf,len,&dw,NULL))
+      {
+        WDL_FILEWRITE_ON_ERROR(GetLastError() == ERROR_DISK_FULL)
+      }
       m_file_position+=dw;
       if (m_file_position>m_file_max_position) m_file_max_position=m_file_position;
       return dw;
@@ -413,6 +422,7 @@ public:
        if (m_bufspace_used >= m_bufspace.GetSize())
        {
          int v=(int)pwrite(m_filedes,m_bufspace.Get(),m_bufspace_used,m_file_position);
+         if (v != m_bufspace_used) { WDL_FILEWRITE_ON_ERROR(v>=0 || errno == EDQUOT || errno == ENOSPC) }
          if (v>0) m_file_position+=v;
          m_bufspace_used=0;
        }
@@ -422,12 +432,15 @@ public:
    else
    {
      int v=(int)pwrite(m_filedes,buf,len,m_file_position);
+     if (v != len) { WDL_FILEWRITE_ON_ERROR(v>=0 || errno == EDQUOT || errno == ENOSPC) }
      if (v>0) m_file_position+=v;
      if (m_file_position > m_file_max_position) m_file_max_position=m_file_position;
      return v;
    }
 #else
-    return fwrite(buf,1,len,m_fp);
+   int written = (int)fwrite(buf,1,len,m_fp);
+   if (written != len) { WDL_FILEWRITE_ON_ERROR(false) }
+   return written;
 #endif
 
     
@@ -528,6 +541,7 @@ public:
           m_pending.Add(ent);
           return true;
         }
+        else { WDL_FILEWRITE_ON_ERROR(GetLastError()==ERROR_DISK_FULL) }
       }
       ent->m_bufused=0;
     }

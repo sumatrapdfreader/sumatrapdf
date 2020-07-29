@@ -368,7 +368,6 @@ int PruneTree(OTree* tree)
 
   if (branch) 
   {
-    int i;
     for (i = 0; i < 8; ++i)
     {
       if (branch->children[i])

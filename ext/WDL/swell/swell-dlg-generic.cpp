@@ -59,7 +59,7 @@ static WDL_PtrList<modalDlgRet> s_modalDialogs;
 
 bool IsModalDialogBox(HWND hwnd)
 {
-  if (!hwnd) return false;
+  if (WDL_NOT_NORMALLY(!hwnd)) return false;
   int a = s_modalDialogs.GetSize();
   while (a-- > 0)
   {
@@ -110,7 +110,7 @@ static int s_last_dlgret;
 
 void EndDialog(HWND wnd, int ret)
 {   
-  if (!wnd) return;
+  if (WDL_NOT_NORMALLY(!wnd)) return;
   
   int a = s_modalDialogs.GetSize();
   while (a-->0)
@@ -299,7 +299,12 @@ HWND SWELL_CreateDialog(SWELL_DialogResourceIndex *reshead, const char *resid, H
   else if (!p && !parent) h->m_style |= WS_CAPTION;
   else if (parent && (!p || (p->windowTypeFlags&SWELL_DLG_WS_CHILD))) h->m_style |= WS_CHILD;
 
-  if (p) h->m_style |= p->windowTypeFlags & (WS_CLIPSIBLINGS);
+  if (p)
+  {
+    h->m_style |= p->windowTypeFlags & (WS_CLIPSIBLINGS);
+    if (p->windowTypeFlags&SWELL_DLG_WS_DROPTARGET)
+      h->m_exstyle|=WS_EX_ACCEPTFILES;
+  }
 
   h->Retain();
 

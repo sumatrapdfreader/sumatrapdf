@@ -102,9 +102,10 @@ void WebServerBaseClass::run(void)
   for (x = 0; x < m_connections.GetSize(); x ++)
   {
     WS_conInst *ci = m_connections.Get(x);
-    int rv = run_connection(ci);
+    int rv=0;
+    for (int y = 0; y < 4 && !(rv=run_connection(ci)); y ++); // keep latency down
 
-    if (rv<0)
+    if (rv==-1)
     {
       if (ci->m_serv.want_keepalive_reset())
       {
@@ -115,7 +116,7 @@ void WebServerBaseClass::run(void)
       }
     }
 
-    if (rv)
+    if (rv>0)
     {
       m_connections.Delete(x--,true);
     }
@@ -166,7 +167,7 @@ int WebServerBaseClass::run_connection(WS_conInst *con)
       if (l>0)
         con->m_serv.write_bytes(buf,l);
     }
-    return 0;
+    return l > 0 ? 0 : -2; // -2 = no more data to send, but all is well
   }
   if (con->m_serv.canKeepAlive()) return -1;
   return 1; // we're done by this point
