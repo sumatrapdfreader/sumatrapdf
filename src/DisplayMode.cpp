@@ -72,7 +72,7 @@ DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal) {
     if (str::EqIS(s, "continuous single page")) {
         return DisplayMode::Continuous;
     }
-    int idx = seqstrings::StrToIdx(displayModeNames, s);
+    int idx = seqstrings::StrToIdxIS(displayModeNames, s);
     if (idx < 0) {
         return defVal;
     }

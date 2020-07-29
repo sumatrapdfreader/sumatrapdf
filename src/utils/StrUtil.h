@@ -172,6 +172,7 @@ namespace seqstrings {
 char* SkipStr(char* s);
 const char* SkipStr(const char* s);
 int StrToIdx(const char* strs, const char* toFind);
+int StrToIdxIS(const char* strs, const char* toFind);
 const char* IdxToStr(const char* strs, int idx);
 
 #if OS_WIN

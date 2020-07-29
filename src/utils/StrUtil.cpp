@@ -1095,6 +1095,23 @@ int StrToIdx(const char* strs, const char* toFind) {
     return -1;
 }
 
+// like StrToIdx but ignores case and whitespace
+int StrToIdxIS(const char* strs, const char* toFind) {
+    if (!toFind) {
+        return -1;
+    }
+    const char* s = strs;
+    int idx = 0;
+    while (*s) {
+        if (str::EqIS(s, toFind)) {
+            return idx;
+        }
+        s = s + str::Len(s) + 1;
+        ++idx;
+    }
+    return -1;
+}
+
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
 const char* IdxToStr(const char* strs, int idx) {
