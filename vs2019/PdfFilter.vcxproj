@@ -17,6 +17,14 @@
       <Configuration>Debug x32_asan</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|Win32">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|x64">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug x64_ramicro|Win32">
       <Configuration>Debug x64_ramicro</Configuration>
       <Platform>Win32</Platform>
@@ -41,6 +49,14 @@
       <Configuration>Release x32_asan</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|Win32">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|x64">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release x64_ramicro|Win32">
       <Configuration>Release x64_ramicro</Configuration>
       <Platform>Win32</Platform>
@@ -63,6 +79,14 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="ReleaseAnalyze x32_asan|x64">
       <Configuration>ReleaseAnalyze x32_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|Win32">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|x64">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="ReleaseAnalyze x64_ramicro|Win32">
@@ -99,6 +123,12 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_ramicro|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -120,6 +150,13 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
@@ -154,6 +191,13 @@
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_ramicro|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -173,6 +217,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug x64_ramicro|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -185,6 +232,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release x64_ramicro|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -195,6 +245,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_ramicro|x64'">
@@ -219,6 +272,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\out\dbg64\</OutDir>
     <IntDir>..\out\dbg64\obj\x64\Debug\PdfFilter\</IntDir>
+    <TargetName>PdfFilter</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\out\dbg64_asan\</OutDir>
+    <IntDir>..\out\dbg64_asan\obj\x64_asan\Debug\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
@@ -250,6 +310,13 @@
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\out\re64_asan\</OutDir>
+    <IntDir>..\out\re64_asan\obj\x64_asan\Release\PdfFilter\</IntDir>
+    <TargetName>PdfFilter</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_ramicro|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\out\rel64ra\</OutDir>
@@ -275,6 +342,13 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\out\rel64_prefast\</OutDir>
     <IntDir>..\out\rel64_prefast\obj\x64\ReleaseAnalyze\PdfFilter\</IntDir>
+    <TargetName>PdfFilter</TargetName>
+    <TargetExt>.dll</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\out\rel64_prefast_asan\</OutDir>
+    <IntDir>..\out\rel64_prefast_asan\obj\x64_asan\ReleaseAnalyze\PdfFilter\</IntDir>
     <TargetName>PdfFilter</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
@@ -320,7 +394,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4731;4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;BUILD_TEX_IFILTER;BUILD_EPUB_IFILTER;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -334,7 +408,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;BUILD_TEX_IFILTER;BUILD_EPUB_IFILTER;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;BUILD_TEX_IFILTER;BUILD_EPUB_IFILTER;RAMICRO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -373,6 +447,37 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg64\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;BUILD_TEX_IFILTER;BUILD_EPUB_IFILTER;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;DEBUG;BUILD_TEX_IFILTER;BUILD_EPUB_IFILTER;RAMICRO;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImportLibrary>..\out\dbg64_asan\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -445,7 +550,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4731;4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -462,7 +567,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;RAMICRO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -506,6 +611,41 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;RAMICRO;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImportLibrary>..\out\re64_asan\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -581,7 +721,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4731;4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -598,7 +738,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;RAMICRO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -643,6 +783,41 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_prefast\PdfFilter.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>ASAN_BUILD=1;RAMICRO;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;NDEBUG;RAMICRO;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>comctl32.lib;gdiplus.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImportLibrary>..\out\rel64_prefast_asan\PdfFilter.lib</ImportLibrary>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -702,10 +877,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_ramicro|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_ramicro|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\EngineBase.cpp" />
@@ -717,20 +894,24 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_ramicro|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_ramicro|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_ramicro|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_ramicro|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ifilter\CPdfFilter.cpp" />
@@ -738,10 +919,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_ramicro|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_ramicro|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp" />

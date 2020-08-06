@@ -32,7 +32,7 @@ project "libdjvu-opt"
         "MINILISPAPI=/**/",
         "DEBUGLVL=0"
     }
-    filter {"platforms:x32_asan"}
+    filter {"platforms:x32_asan or x64_asan"}
         defines { "DISABLE_MMX" }
     filter{}
     disablewarnings { "4100", "4189", "4244", "4267", "4302", "4311", "4312", "4505" }
@@ -152,7 +152,7 @@ project "libjpeg-turbo-opt"
         }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64 or x64_ramicro'}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan or x64_ramicro'}
         buildmessage '%{file.relpath}'
         buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
         buildcommands {
@@ -220,7 +220,7 @@ project "mupdf-opt"
     }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64 or x64_ramicro'}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan or x64_ramicro'}
     buildmessage 'Compiling %{file.relpath}'
     buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
     buildcommands {

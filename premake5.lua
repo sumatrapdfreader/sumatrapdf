@@ -51,13 +51,21 @@ Prefast:
 
 include("premake5.files.lua")
 
+-- https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
 function configAsan()
   filter "platforms:x32_asan"
-  -- asan-i386.lib
-  -- clang_rt.asan-i386.lib
   links { "clang_rt.asan-i386.lib" }
   -- linkoptions { "/WHOLEARCHIVE:asan-i386.lib"}
   filter {}
+
+  -- TODO: this crashes on startup in memset.asm
+  filter "platforms:x64_asan"
+  links { "clang_rt.asan-x86_64.lib" }
+  -- TODO: when using _cxx variant, I get few unresolved symbols
+  --links { "clang_rt.asan_cxx-x86_64.lib" }
+  -- linkoptions { "/WHOLEARCHIVE:asan-i386.lib"}
+  filter {}
+  
 end
 
 function regconf()
@@ -76,31 +84,29 @@ end
 
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleaseAnalyze", }
-  platforms { "x32", "x32_asan", "x64", "x64_ramicro" }
+  platforms { "x32", "x32_asan", "x64", "x64_asan", "x64_ramicro" }
   startproject "SumatraPDF"
 
-  filter "platforms:x32"
+  filter "platforms:x32 or x32_asan"
      architecture "x86"
   filter {}
 
-  filter "platforms:x32_asan"
-    architecture "x86"
+  filter "platforms:x32_asan or x64_asan"
     buildoptions { "/fsanitize=address"}
     defines { "ASAN_BUILD=1" }
+    -- disablewarnings { "4731" }
     defines { "RAMICRO"}
-    disablewarnings { "4731" }
+    resdefines { "RAMICRO" }
   filter {}
 
-  filter "platforms:x64"
+  filter "platforms:x64 or x64_asan or x64_ramicro"
      architecture "x86_64"
      -- strangely this is not set by default for rc.exe
      resdefines { "_WIN64" }
   filter {}
 
   filter "platforms:x64_ramicro"
-     architecture "x86_64"
-     -- strangely this is not set by default for rc.exe
-     resdefines { "_WIN64", "RAMICRO" }
+     resdefines { "RAMICRO" }
      defines { "RAMICRO"}
   filter {}
 
@@ -139,6 +145,14 @@ workspace "SumatraPDF"
     targetdir "out/rel64_prefast"
   filter {"platforms:x64", "configurations:Debug"}
     targetdir "out/dbg64"
+  filter {}
+
+  filter {"platforms:x64_asan", "configurations:Release"}
+    targetdir "out/re64_asan"
+  filter {"platforms:x64_asan", "configurations:ReleaseAnalyze"}
+    targetdir "out/rel64_prefast_asan"
+  filter {"platforms:x64_asan", "configurations:Debug"}
+    targetdir "out/dbg64_asan"
   filter {}
 
   filter {"platforms:x64_ramicro", "configurations:Release"}
@@ -220,7 +234,7 @@ workspace "SumatraPDF"
       "MINILISPAPI=/**/",
       "DEBUGLVL=0"
     }
-    filter {"platforms:x32_asan"}
+    filter {"platforms:x32_asan or x64_asan"}
       defines { "DISABLE_MMX" }
     filter{}
     disablewarnings { "4100", "4189", "4244", "4267", "4302", "4311", "4312", "4505"}
@@ -305,7 +319,7 @@ workspace "SumatraPDF"
        }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64 or x64_ramicro'}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan or x64_ramicro'}
       buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
@@ -441,13 +455,14 @@ workspace "SumatraPDF"
        }
     filter {}
 
-    filter {'files:**.asm', 'platforms:x64 or x64_ramicro'}
+    filter {'files:**.asm', 'platforms:x64 or x64_asan or x64_ramicro'}
       buildmessage 'Compiling %{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
         '..\\bin\\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
       }
     filter {}
+
     mupdf_files()
     links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs", "gumbo" }
 
