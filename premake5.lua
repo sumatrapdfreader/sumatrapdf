@@ -55,14 +55,14 @@ include("premake5.files.lua")
 -- https://devblogs.microsoft.com/cppblog/asan-for-windows-x64-and-debug-build-support/
 function configAsan()
   filter "platforms:x32_asan"
-  links { "clang_rt.asan-i386.lib", "clang_rt.asan_cxx-i386.lib" }
-  -- linkoptions { "/WHOLEARCHIVE:asan-i386.lib"}
+  --links { "clang_rt.asan-i386.lib", "clang_rt.asan_cxx-i386.lib" }
+  linkoptions { "/WHOLEARCHIVE:clang_rt.asan-i386.lib", "/WHOLEARCHIVE:clang_rt.asan_cxx-i386.lib"}
   filter {}
 
   -- TODO: this crashes on startup in memset.asm
   filter "platforms:x64_asan"
-  links { "clang_rt.asan-x86_64.lib", "clang_rt.asan_cxx-x86_64.lib" }
-  -- linkoptions { "/WHOLEARCHIVE:asan-i386.lib"}
+  -- links { "clang_rt.asan-x86_64.lib", "clang_rt.asan_cxx-x86_64.lib" }
+  linkoptions { "/WHOLEARCHIVE:clang_rt.asan-x86_64.lib", "/WHOLEARCHIVE:clang_rt.asan_cxx-x86_64.lib"}
   filter {}
   
 end
