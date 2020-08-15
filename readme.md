@@ -19,9 +19,14 @@ For best results use the latest release available as that's what I use and test 
 If things don't compile, first make sure you're using the latest version of Visual Studio.
 
 Notes on targets:
-* `x32_asan` target is for enabling address sanitizer, only works in 32-bit Release build and requires installing an optional "C++ AddressSanitizers" component (see https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/ for more information)
+* `x32_asan` target is for enabling address sanitizer, only works in 32-bit Release build and requires installing an optional "C++ AddressSanitizers" component
 
 ### Asan notes
+
+Docs:
+* https://devblogs.microsoft.com/cppblog/asan-for-windows-x64-and-debug-build-support/
+* https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
+
 
 Flags:
 * https://github.com/google/sanitizers/wiki/SanitizerCommonFlags

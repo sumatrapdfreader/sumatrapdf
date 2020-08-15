@@ -431,7 +431,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-i386.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-i386.lib;clang_rt.asan_cxx-i386.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll %(AdditionalOptions)</AdditionalOptions>
@@ -494,7 +494,7 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-x86_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-x86_64.lib;clang_rt.asan_cxx-x86_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll %(AdditionalOptions)</AdditionalOptions>
@@ -596,7 +596,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-i386.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-i386.lib;clang_rt.asan_cxx-i386.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll %(AdditionalOptions)</AdditionalOptions>
@@ -667,7 +667,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-x86_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-x86_64.lib;clang_rt.asan_cxx-x86_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll %(AdditionalOptions)</AdditionalOptions>
@@ -774,7 +774,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-i386.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-i386.lib;clang_rt.asan_cxx-i386.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll %(AdditionalOptions)</AdditionalOptions>
@@ -846,7 +846,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-x86_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;uiautomationcore.lib;clang_rt.asan-x86_64.lib;clang_rt.asan_cxx-x86_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll %(AdditionalOptions)</AdditionalOptions>

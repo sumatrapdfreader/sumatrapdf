@@ -52,17 +52,16 @@ Prefast:
 include("premake5.files.lua")
 
 -- https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
+-- https://devblogs.microsoft.com/cppblog/asan-for-windows-x64-and-debug-build-support/
 function configAsan()
   filter "platforms:x32_asan"
-  links { "clang_rt.asan-i386.lib" }
+  links { "clang_rt.asan-i386.lib", "clang_rt.asan_cxx-i386.lib" }
   -- linkoptions { "/WHOLEARCHIVE:asan-i386.lib"}
   filter {}
 
   -- TODO: this crashes on startup in memset.asm
   filter "platforms:x64_asan"
-  links { "clang_rt.asan-x86_64.lib" }
-  -- TODO: when using _cxx variant, I get few unresolved symbols
-  --links { "clang_rt.asan_cxx-x86_64.lib" }
+  links { "clang_rt.asan-x86_64.lib", "clang_rt.asan_cxx-x86_64.lib" }
   -- linkoptions { "/WHOLEARCHIVE:asan-i386.lib"}
   filter {}
   
@@ -210,7 +209,7 @@ workspace "SumatraPDF"
     language "C++"
     regconf()
     defines { "UNRAR", "RARDLL", "SILENT" }
-    disablewarnings { "4100", "4201", "4211", "4244", "4389", "4456", "4459", "4701", "4702", "4706", "4709", "4996" }
+    disablewarnings { "4100", "4201", "4211", "4244", "4389", "4456", "4459", "4701", "4702", "4706", "4709", "4731", "4996" }
     -- unrar uses exception handling in savepos.hpp but I don't want to enable it
     -- as it seems to infect the Sumatra binary as well (i.e. I see bad alloc exception
     -- being thrown)

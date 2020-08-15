@@ -406,7 +406,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>clang_rt.asan-i386.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>clang_rt.asan-i386.lib;clang_rt.asan_cxx-i386.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -457,7 +457,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>clang_rt.asan-x86_64.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>clang_rt.asan-x86_64.lib;clang_rt.asan_cxx-x86_64.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -541,7 +541,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>clang_rt.asan-i386.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>clang_rt.asan-i386.lib;clang_rt.asan_cxx-i386.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -600,7 +600,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>clang_rt.asan-x86_64.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>clang_rt.asan-x86_64.lib;clang_rt.asan_cxx-x86_64.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -688,7 +688,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>clang_rt.asan-i386.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>clang_rt.asan-i386.lib;clang_rt.asan_cxx-i386.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
@@ -747,7 +747,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>clang_rt.asan-x86_64.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>clang_rt.asan-x86_64.lib;clang_rt.asan_cxx-x86_64.lib;gdiplus.lib;comctl32.lib;shlwapi.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
