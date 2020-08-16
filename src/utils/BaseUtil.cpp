@@ -4,7 +4,7 @@
 #include "utils/BaseUtil.h"
 
 // if > 1 we won't crash when memory allocation fails
-int gAllowAllocFailure = 0;
+std::atomic<int> gAllowAllocFailure = 0;
 
 void* Allocator::Alloc(Allocator* a, size_t size) {
     if (!a) {
@@ -367,7 +367,7 @@ static bool allocateIndexIfNeeded(VecStr& v) {
     v.allocator.allocAlign = 8;
     VecStrIndex* idx = v.allocator.AllocStruct<VecStrIndex>();
 
-    if (gAllowAllocFailure && !idx) {
+    if (!idx && (gAllowAllocFailure.load() > 0)) {
         return false;
     }
     idx->next = nullptr;

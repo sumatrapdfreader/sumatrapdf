@@ -24,10 +24,6 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
-    gAllowAllocFailure++;
-    defer {
-        gAllowAllocFailure--;
-    };
     rspOut->error = ERROR_SUCCESS;
     HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet) {
@@ -61,7 +57,9 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
         if (0 == dwRead) {
             break;
         }
+        gAllowAllocFailure++;
         bool ok = rspOut->data.Append(buf, dwRead);
+        gAllowAllocFailure--;
         if (!ok) {
             logf("HttpGet: data.Append failed\n");
             goto Error;
