@@ -2065,8 +2065,6 @@ int mudraw_main(int argc, char **argv)
 			}
 
 		filename = argv[fz_optind];
-		if (!output_file_per_page)
-			file_level_headers(ctx);
 
 		timing.count = 0;
 		timing.total = 0;
@@ -2088,6 +2086,8 @@ int mudraw_main(int argc, char **argv)
 
 		fz_try(ctx)
 		{
+			if (!output_file_per_page)
+				file_level_headers(ctx);
 			fz_register_document_handlers(ctx);
 
 			while (fz_optind < argc)

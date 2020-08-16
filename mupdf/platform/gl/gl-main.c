@@ -68,7 +68,9 @@ enum
 static void open_browser(const char *uri)
 {
 	char buf[PATH_MAX];
+#ifndef _WIN32
 	pid_t pid;
+#endif
 
 	/* Relative file:// URI, make it absolute! */
 	if (!strncmp(uri, "file://", 7) && uri[7] != '/')

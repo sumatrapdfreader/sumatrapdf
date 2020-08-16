@@ -200,3 +200,28 @@ FUN(Context_setAntiAliasLevel)(JNIEnv *env, jclass cls, jint level)
 
 	fz_set_aa_level(ctx, level);
 }
+
+JNIEXPORT jobject JNICALL
+FUN(Context_getVersion)(JNIEnv *env, jclass cls)
+{
+	fz_context *ctx = get_context(env);
+	jobject jversion = NULL;
+	jobject jvs = NULL;
+
+	if (!ctx) return NULL;
+
+	jvs = (*env)->NewStringUTF(env, FZ_VERSION);
+	if (!jvs || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	jversion = (*env)->NewObject(env, cls_Context_Version, mid_Context_Version_init);
+	if (!jversion || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	(*env)->SetIntField(env, jversion, fid_Context_Version_major, FZ_VERSION_MAJOR);
+	(*env)->SetIntField(env, jversion, fid_Context_Version_minor, FZ_VERSION_MINOR);
+	(*env)->SetIntField(env, jversion, fid_Context_Version_patch, FZ_VERSION_PATCH);
+	(*env)->SetObjectField(env, jversion, fid_Context_Version_version, jvs);
+
+	return jversion;
+}

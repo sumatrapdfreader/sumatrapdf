@@ -410,6 +410,7 @@ void
 fz_drop_jbig2_globals_imp(fz_context *ctx, fz_storable *globals_)
 {
 	fz_jbig2_globals *globals = (fz_jbig2_globals *)globals_;
+	globals->alloc.ctx = ctx;
 	jbig2_global_ctx_free(globals->gctx);
 	fz_free(ctx, globals);
 }

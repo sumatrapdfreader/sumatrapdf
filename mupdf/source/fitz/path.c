@@ -58,6 +58,19 @@ typedef struct
 	uint8_t cmd_len;
 } fz_packed_path;
 
+/*
+	Paths are created UNPACKED. That means we have a fz_path
+	structure with coords and cmds pointing to malloced blocks.
+
+	After they have been completely constructed, callers may choose
+	to 'pack' them into some target block of memory. If if coord_len
+	and cmd_len are both < 256, then they are PACKED_FLAT into an
+	fz_packed_path with the coords and cmds in the bytes afterwards,
+	all inside the target block. If they cannot be accomodated in
+	that way, then they are PACKED_OPEN, where an fz_path is put
+	into the target block, and cmds and coords remain pointers to
+	allocated blocks.
+*/
 enum
 {
 	FZ_PATH_UNPACKED = 0,
@@ -147,8 +160,25 @@ fz_pack_path(fz_context *ctx, uint8_t *pack_, size_t max, const fz_path *path)
 	uint8_t *ptr;
 	size_t size;
 
-	if (path->packed)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't repack a packed path");
+	if (path->packed == FZ_PATH_PACKED_FLAT)
+	{
+		fz_packed_path *pack = (fz_packed_path *)path;
+		fz_packed_path *out = (fz_packed_path *)pack_;
+		size = sizeof(fz_packed_path) + sizeof(float) * pack->coord_len + sizeof(uint8_t) * pack->cmd_len;
+
+		if (size > max)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Can't pack a path that small!");
+
+		if (out)
+		{
+			out->refs = 1;
+			out->packed = FZ_PATH_PACKED_FLAT;
+			out->coord_len = pack->coord_len;
+			out->cmd_len = pack->cmd_len;
+			memcpy(&out[1], &pack[1], size - sizeof(*out));
+		}
+		return size;
+	}
 
 	size = sizeof(fz_packed_path) + sizeof(float) * path->coord_len + sizeof(uint8_t) * path->cmd_len;
 

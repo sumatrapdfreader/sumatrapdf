@@ -66,6 +66,7 @@ static JavaVM *jvm = NULL;
 
 static jclass cls_Buffer;
 static jclass cls_ColorSpace;
+static jclass cls_Context_Version;
 static jclass cls_Cookie;
 static jclass cls_Device;
 static jclass cls_DisplayList;
@@ -124,6 +125,10 @@ static jclass cls_UnsupportedOperationException;
 
 static jfieldID fid_Buffer_pointer;
 static jfieldID fid_ColorSpace_pointer;
+static jfieldID fid_Context_Version_major;
+static jfieldID fid_Context_Version_minor;
+static jfieldID fid_Context_Version_patch;
+static jfieldID fid_Context_Version_version;
 static jfieldID fid_Cookie_pointer;
 static jfieldID fid_Device_pointer;
 static jfieldID fid_DisplayList_pointer;
@@ -191,6 +196,7 @@ static jfieldID fid_PKCS7Verifier_pointer;
 
 static jmethodID mid_ColorSpace_fromPointer;
 static jmethodID mid_ColorSpace_init;
+static jmethodID mid_Context_Version_init;
 static jmethodID mid_Device_beginGroup;
 static jmethodID mid_Device_beginLayer;
 static jmethodID mid_Device_beginMask;
@@ -603,6 +609,13 @@ static int find_fids(JNIEnv *env)
 	mid_ColorSpace_init = get_method(&err, env, "<init>", "(J)V");
 	mid_ColorSpace_fromPointer = get_static_method(&err, env, "fromPointer", "(J)L"PKG"ColorSpace;");
 
+	cls_Context_Version = get_class(&err, env, PKG"Context$Version");
+	mid_Context_Version_init = get_method(&err, env, "<init>", "(L"PKG"Context;)V");
+	fid_Context_Version_major = get_field(&err, env, "major", "I");
+	fid_Context_Version_minor = get_field(&err, env, "minor", "I");
+	fid_Context_Version_patch = get_field(&err, env, "patch", "I");
+	fid_Context_Version_version = get_field(&err, env, "version", "Ljava/lang/String;");
+
 	cls_Cookie = get_class(&err, env, PKG"Cookie");
 	fid_Cookie_pointer = get_field(&err, env, "pointer", "J");
 
@@ -896,6 +909,7 @@ static void lose_fids(JNIEnv *env)
 {
 	(*env)->DeleteGlobalRef(env, cls_Buffer);
 	(*env)->DeleteGlobalRef(env, cls_ColorSpace);
+	(*env)->DeleteGlobalRef(env, cls_Context_Version);
 	(*env)->DeleteGlobalRef(env, cls_Cookie);
 	(*env)->DeleteGlobalRef(env, cls_Device);
 	(*env)->DeleteGlobalRef(env, cls_DisplayList);
