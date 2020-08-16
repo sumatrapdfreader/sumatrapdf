@@ -182,6 +182,8 @@ struct EditAnnotationsWindow {
     // currently selected annotation
     Annotation* annot = nullptr;
 
+    bool skipGoToPage = false;
+
     str::Str currTextColor;
     str::Str currCustomColor;
     str::Str currCustomInteriorColor;
@@ -747,16 +749,24 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
     int dx = currBounds.dx;
     int dy = currBounds.dy;
     LayoutAndSizeToContent(win->mainLayout, dx, dy, win->mainWindow->hwnd);
-    if (annotPageNo > 0) {
-        DisplayModel* dm = win->tab->AsFixed();
-        int nPages = dm->PageCount();
-        if (annotPageNo > nPages) {
-            // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1701
-            logf("UpdateUIForSelectedAnnotation: invalid annotPageNo (%d), should be <= than nPages (%d)\n",
-                 annotPageNo, nPages);
-        }
-        dm->GoToPage(annotPageNo, false);
+    if (annotPageNo < 1) {
+        return;
     }
+    if (win->skipGoToPage) {
+        win->skipGoToPage = false;
+        return;
+    }
+    DisplayModel* dm = win->tab->AsFixed();
+    int nPages = dm->PageCount();
+    if (annotPageNo > nPages) {
+        // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1701
+        logf("UpdateUIForSelectedAnnotation: invalid annotPageNo (%d), should be <= than nPages (%d)\n",
+                annotPageNo, nPages);
+    }
+    // TODO: should skip if annot is already visible but need
+    // DisplayModel::IsPageAreaVisible() function
+    // TODO: use GoToPage() with x/y position
+    dm->GoToPage(annotPageNo, false);
 }
 
 static void ButtonSaveAttachment(EditAnnotationsWindow* win) {
@@ -1213,6 +1223,7 @@ static void AddAnnotationToWindow(EditAnnotationsWindow* win, Annotation* annot)
 void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     EditAnnotationsWindow* win = tab->editAnnotsWindow;
     if (win) {
+        win->skipGoToPage = (annot != nullptr);
         AddAnnotationToWindow(win, annot);
         return;
     }
@@ -1255,6 +1266,7 @@ void StartEditAnnotations(TabInfo* tab, Annotation* annot) {
     }
     LayoutAndSizeToContent(win->mainLayout, 520, minDy, mainWindow->hwnd);
     HwndPositionToTheRightOf(mainWindow->hwnd, tab->win->hwndFrame);
+    win->skipGoToPage = (annot != nullptr);
     SelectAnnotationInListBox(win, annot);
 
     // important to call this after hooking up onSize to ensure
