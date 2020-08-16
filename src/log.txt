@@ -1,5 +1,13 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2020-08-15 Sat
+
+fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1730
+
+annotations: don't change page position when annotation is created
+
+updated mupdf to latest version
+
 2020-07-26 Sun
 
 Started on converting tab code into TabCtrl.

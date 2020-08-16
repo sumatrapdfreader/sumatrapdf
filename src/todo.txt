@@ -1,4 +1,10 @@
+Change TabState::filePath to char*
+
+-----
+
 Annotations:
+ - show ink etc. annotations that we can't currently create
+ - cannot move ink attachments (repro file from 1716)
  - save attachment
  - add attachment
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1557 (see pdf_load_attachments)

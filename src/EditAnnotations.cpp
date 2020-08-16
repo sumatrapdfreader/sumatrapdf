@@ -400,7 +400,7 @@ static void DoRect(EditAnnotationsWindow* win, Annotation* annot) {
     int y = (int)rect.y;
     int dx = (int)rect.dx;
     int dy = (int)rect.dy;
-    s.AppendFmt("Rect: x=%d y=%d dx=%d dy%d", x, y, dx, dy);
+    s.AppendFmt("Rect: x=%d y=%d dx=%d dy=%d", x, y, dx, dy);
     win->staticRect->SetText(s.AsView());
     win->staticRect->SetIsVisible(true);
 }
