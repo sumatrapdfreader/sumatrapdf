@@ -356,13 +356,13 @@ static void SetInitialExpandState(TocItem* item, Vec<int>& tocState) {
     }
 }
 
-void ShowExportedBookmarksMsg(const char* path) {
-    str::Str msg;
-    msg.AppendFmt("Exported bookmarks to file %s", path);
-    str::Str caption;
-    caption.Append("Exported bookmarks");
+void ShowExportedBookmarksMsg(const WCHAR* path) {
+    str::WStr msg;
+    msg.AppendFmt(L"Exported bookmarks to file %s", path);
+    str::WStr caption;
+    caption.Append(L"Exported bookmarks");
     uint type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
-    MessageBoxA(nullptr, msg.Get(), caption.Get(), type);
+    MessageBoxW(nullptr, msg.Get(), caption.Get(), type);
 }
 
 static void ExportBookmarksFromTab(TabInfo* tab) {
@@ -375,7 +375,7 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     if (!ok) {
         log("ExportBookmarsToFile() failed\n");
     }
-    ShowExportedBookmarksMsg(path.Get());
+    ShowExportedBookmarksMsg(tab->filePath);
 }
 
 // clang-format off
