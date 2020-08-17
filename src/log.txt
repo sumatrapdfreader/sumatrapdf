@@ -6,6 +6,8 @@ fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1716
 
 change TabState::filePath to char*
 
+disable creation of annotation that cannot be fully edited
+
 
 2020-08-15 Sat
 

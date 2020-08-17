@@ -1,5 +1,4 @@
 Annotations:
- - show ink etc. annotations that we can't currently create
  - cannot move ink attachments (repro file from 1716)
  - save attachment
  - add attachment
