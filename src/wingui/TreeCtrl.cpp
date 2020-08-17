@@ -562,7 +562,10 @@ TreeItem* TreeCtrl::GetSelection() {
 }
 
 bool TreeCtrl::SelectItem(TreeItem* ti) {
-    auto hi = GetHandleByTreeItem(ti);
+    HTREEITEM hi{nullptr};
+    if (ti != nullptr) {
+        hi = GetHandleByTreeItem(ti);
+    }
     BOOL ok = TreeView_SelectItem(hwnd, hi);
     return ok == TRUE;
 }

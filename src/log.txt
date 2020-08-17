@@ -1,5 +1,9 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2020-08-16 Sun
+
+fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1716
+
 2020-08-15 Sat
 
 fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1730

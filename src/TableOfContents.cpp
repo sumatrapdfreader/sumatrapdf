@@ -255,6 +255,7 @@ static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
     if (!tm) {
         return nullptr;
     }
+    int nItems = 0;
     VisitTreeModelItems(tm, [&](TreeItem* ti) {
         auto* docItem = (TocItem*)ti;
         if (!docItem) {
@@ -264,7 +265,7 @@ static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
             // if nothing else matches, match the root node
             bestMatch = docItem;
         }
-
+        ++nItems;
         int page = docItem->pageNo;
         if ((page <= pageNo) && (page >= bestMatchPageNo) && (page >= 1)) {
             bestMatch = docItem;
@@ -276,6 +277,11 @@ static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
         }
         return true;
     });
+    // if there's only one item, we want to unselect it so that it can
+    // be selected by the user
+    if (nItems < 2) {
+        return nullptr;
+    }
     return bestMatch;
 }
 
@@ -285,9 +291,7 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
     }
 
     TreeItem* item = TreeItemForPageNo(win->tocTreeCtrl, currPageNo);
-    if (item) {
-        win->tocTreeCtrl->SelectItem(item);
-    }
+    win->tocTreeCtrl->SelectItem(item);
 }
 
 static void UpdateDocTocExpansionStateRecur(TreeCtrl* treeCtrl, Vec<int>& tocState, TocItem* tocItem) {
@@ -955,6 +959,17 @@ void OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
     return;
 }
 
+static void TocTreeClick(TreeClickEvent* ev) {
+    ev->didHandle = true;
+    if (!ev->treeItem) {
+        return;
+    }
+    WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
+    CrashIf(!win);
+    bool allowExternal = false;
+    GoToTocTreeItem(win, ev->treeItem, allowExternal);
+}
+
 static void TocTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
     WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
     CrashIf(!win);
@@ -1140,6 +1155,7 @@ void CreateToc(WindowInfo* win) {
     treeCtrl->onChar = TocTreeCharHandler;
     treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
     treeCtrl->onTreeSelectionChanged = TocTreeSelectionChanged;
+    treeCtrl->onTreeClick = TocTreeClick;
     treeCtrl->onTreeKeyDown = TocTreeKeyDown;
 
     // TODO: leaks font?
