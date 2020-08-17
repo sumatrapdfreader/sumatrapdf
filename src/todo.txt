@@ -1,7 +1,3 @@
-Change TabState::filePath to char*
-
------
-
 Annotations:
  - show ink etc. annotations that we can't currently create
  - cannot move ink attachments (repro file from 1716)
@@ -54,6 +50,7 @@ Fixes:
 ------
 
 small refactorings:
+- change FileState::filePath to char*
 - use win->tabsCtrl->IsVisible() instead of win->tabsVisible
 - TabPainter:selectedTabIdx should not be necessary
 - make DisplayModel::CvtFromScreen() update pageNo to simplify callers

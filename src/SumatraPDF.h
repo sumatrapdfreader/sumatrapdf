@@ -142,10 +142,22 @@ struct LoadArgs {
         this->win = win;
     }
 
+    explicit LoadArgs(const char* fileName, WindowInfo* win) {
+        this->win = win;
+        fileNameToFree = strconv::Utf8ToWstr(fileName);
+        this->fileName = fileNameToFree;
+    }
+
+    ~LoadArgs() {
+        str::Free(fileNameToFree);
+    }
+
     // we don't own those values
     EngineBase* engine{nullptr};
     const WCHAR* fileName{nullptr};
     WindowInfo* win{nullptr};
+
+    const WCHAR* fileNameToFree{nullptr};
 
     bool showWin{true};
     bool forceReuse{false};

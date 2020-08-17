@@ -4,6 +4,9 @@ A daily log of changes and commentary. An experiment of sorts.
 
 fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1716
 
+change TabState::filePath to char*
+
+
 2020-08-15 Sat
 
 fixed https://github.com/sumatrapdfreader/sumatrapdf/issues/1730

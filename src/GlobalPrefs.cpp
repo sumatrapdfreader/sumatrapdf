@@ -89,7 +89,8 @@ SessionData* NewSessionData() {
 
 TabState* NewTabState(DisplayState* ds) {
     TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, nullptr);
-    str::ReplacePtr(&state->filePath, ds->filePath);
+    AutoFreeStr dsFilePathA = strconv::WstrToUtf8(ds->filePath);
+    str::ReplacePtr(&state->filePath, dsFilePathA.Get());
     str::ReplacePtr(&state->displayMode, ds->displayMode);
     state->pageNo = ds->pageNo;
     str::ReplacePtr(&state->zoom, ds->zoom);

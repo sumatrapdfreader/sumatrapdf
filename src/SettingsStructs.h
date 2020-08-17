@@ -213,7 +213,7 @@ struct FileState {
 // tab (required for handling documents being opened twice)
 struct TabState {
     // path of the document
-    WCHAR* filePath;
+    char* filePath;
     // same as FileStates -> DisplayMode
     char* displayMode;
     // number of the last read page
@@ -536,7 +536,7 @@ static const FieldInfo gPoint_1_Fields[] = {
 static const StructInfo gPoint_1_Info = {sizeof(Point), 2, gPoint_1_Fields, "X\0Y"};
 
 static const FieldInfo gTabStateFields[] = {
-    {offsetof(TabState, filePath), SettingType::String, 0},
+    {offsetof(TabState, filePath), SettingType::Utf8String, 0},
     {offsetof(TabState, displayMode), SettingType::Utf8String, (intptr_t) "automatic"},
     {offsetof(TabState, pageNo), SettingType::Int, 1},
     {offsetof(TabState, zoom), SettingType::Utf8String, (intptr_t) "fit page"},

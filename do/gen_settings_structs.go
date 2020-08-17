@@ -483,7 +483,7 @@ var (
 	rememberedDisplayState = []string{"DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"}
 
 	tabState = []*Field{
-		mkField("FilePath", String, nil,
+		mkField("FilePath", Utf8String, nil,
 			"path of the document"),
 		mkField("DisplayMode", Utf8String, "automatic",
 			"same as FileStates -> DisplayMode"),
