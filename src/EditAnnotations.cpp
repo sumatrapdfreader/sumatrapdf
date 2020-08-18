@@ -760,8 +760,8 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* win, int itemNo
     int nPages = dm->PageCount();
     if (annotPageNo > nPages) {
         // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1701
-        logf("UpdateUIForSelectedAnnotation: invalid annotPageNo (%d), should be <= than nPages (%d)\n",
-                annotPageNo, nPages);
+        logf("UpdateUIForSelectedAnnotation: invalid annotPageNo (%d), should be <= than nPages (%d)\n", annotPageNo,
+             nPages);
     }
     // TODO: should skip if annot is already visible but need
     // DisplayModel::IsPageAreaVisible() function

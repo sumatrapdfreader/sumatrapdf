@@ -711,7 +711,15 @@ void RememberFavTreeExpansionStateForAllWindows() {
     }
 }
 
+static void FavTreeItemClicked(TreeClickEvent* ev) {
+    ev->didHandle = true;
+    WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
+    CrashIf(!win);
+    GoToFavForTreeItem(win, ev->treeItem);
+}
+
 static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
+    ev->didHandle = true;
     WindowInfo* win = FindWindowInfoByHwnd(ev->w->hwnd);
     CrashIf(!win);
 
@@ -725,9 +733,7 @@ static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
     if (!shouldHandle) {
         return;
     }
-    // bool allowExternal = ev->byMouse;
     GoToFavForTreeItem(win, ev->selectedItem);
-    ev->didHandle = true;
 }
 
 static void FavTreeContextMenu(ContextMenuEvent* ev) {
@@ -837,6 +843,7 @@ void CreateFavorites(WindowInfo* win) {
     treeCtrl->onChar = TocTreeCharHandler;
     treeCtrl->onMouseWheel = TocTreeMouseWheelHandler;
     treeCtrl->onTreeSelectionChanged = FavTreeSelectionChanged;
+    treeCtrl->onTreeClick = FavTreeItemClicked;
     treeCtrl->onTreeKeyDown = TocTreeKeyDown;
 
     // TODO: leaks font?
