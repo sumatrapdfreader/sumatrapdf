@@ -91,7 +91,7 @@ class Vec {
 
   public:
     // allocator is not owned by Vec and must outlive it
-    explicit Vec(size_t capHint = 0, Allocator* allocator = nullptr) : capacityHint(capHint), allocator(allocator) {
+    explicit Vec(size_t capHint = 0, Allocator* allocator = nullptr) : allocator(allocator), capacityHint(capHint) {
         els = buf;
         Reset();
     }

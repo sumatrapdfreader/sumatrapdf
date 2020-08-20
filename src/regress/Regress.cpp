@@ -88,8 +88,8 @@ static HANDLE gDumpEvent = nullptr;
 static HANDLE gDumpThread = nullptr;
 static bool gCrashed = false;
 
-static MINIDUMP_EXCEPTION_INFORMATION gMei = {0};
-static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
+static MINIDUMP_EXCEPTION_INFORMATION gMei{0};
+static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter{nullptr};
 
 static DWORD WINAPI CrashDumpThread(LPVOID data) {
     UNUSED(data);

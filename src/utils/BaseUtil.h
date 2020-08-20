@@ -239,11 +239,10 @@ inline void CrashIfFunc(bool cond) {
 // For sumatra, it's in CrashHandler.cpp
 extern void SendCrashReport(const char*);
 
-inline void SendCrashIfFunc(bool cond, const char* condStr) {
+inline void SendCrashIfFunc(bool cond, [[maybe_unused]] const char* condStr) {
     if (!cond) {
         return;
     }
-    UNUSED(condStr);
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
     SendCrashReport(condStr);
 #endif

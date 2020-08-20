@@ -352,7 +352,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
             // TODO: abort if !ok?
 
-            if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
+            if (EndPage(hdc) <= 0 || (progressUI && progressUI->WasCanceled())) {
                 AbortDoc(hdc);
                 return false;
             }
@@ -505,7 +505,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
 
     bool printSelection = false;
     Vec<PRINTPAGERANGE> ranges;
-    PRINTER_INFO_2 printerInfo = {0};
+    PRINTER_INFO_2W printerInfo{0};
 
     if (!HasPermission(Perm_PrinterAccess)) {
         return;
@@ -556,8 +556,8 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         return;
     }
 
-    PRINTDLGEX pd = {0};
-    pd.lStructSize = sizeof(PRINTDLGEX);
+    PRINTDLGEXW pd{0};
+    pd.lStructSize = sizeof(PRINTDLGEXW);
     pd.hwndOwner = win->hwndFrame;
     pd.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
     if (!win->currentTab->selectionOnPage) {
@@ -772,7 +772,7 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
 
     for (size_t i = 0; i < rangeList.size(); i++) {
         int val;
-        PRINTPAGERANGE pr = {0};
+        PRINTPAGERANGE pr{0};
         if (str::Parse(rangeList.at(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);

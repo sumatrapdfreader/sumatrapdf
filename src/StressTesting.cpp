@@ -498,23 +498,23 @@ a human advancing one page at a time. This is mostly to run through a large numb
 of PDFs before a release to make sure we're crash proof. */
 
 struct StressTest {
-    WindowInfo* win;
-    LARGE_INTEGER currPageRenderTime;
-    int currPage;
-    int pageForSearchStart;
-    int filesCount; // number of files processed so far
-    int timerId;
-    bool exitWhenDone;
+    WindowInfo* win{nullptr};
+    LARGE_INTEGER currPageRenderTime{0};
+    int currPage{0};
+    int pageForSearchStart{0};
+    int filesCount{0}; // number of files processed so far
+    int timerId{0};
+    bool exitWhenDone{false};
 
-    SYSTEMTIME stressStartTime;
-    int cycles;
+    SYSTEMTIME stressStartTime{};
+    int cycles{1};
     Vec<PageRange> pageRanges;
     // range of files to render (files get a new index when going through several cycles)
     Vec<PageRange> fileRanges;
-    int fileIndex;
+    int fileIndex{0};
 
     // owned by StressTest
-    TestFileProvider* fileProvider;
+    TestFileProvider* fileProvider{nullptr};
 
     bool OpenFile(const WCHAR* fileName);
 
@@ -526,12 +526,6 @@ struct StressTest {
 
     StressTest(WindowInfo* win, bool exitWhenDone)
         : win(win),
-          currPage(0),
-          pageForSearchStart(0),
-          filesCount(0),
-          cycles(1),
-          fileIndex(0),
-          fileProvider(nullptr),
           exitWhenDone(exitWhenDone) {
         timerId = gCurrStressTimerId++;
     }
