@@ -426,6 +426,7 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
 
     int retriesLeft = 3;
     HANDLE hMap = nullptr;
+    HWND hwnd = nullptr;
 Retry:
     // use a memory mapping containing a process id as mutex
     hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
@@ -451,7 +452,6 @@ Retry:
     DWORD prevProcId = *procId;
     UnmapViewOfFile(procId);
     CloseHandle(hMap);
-    HWND hwnd = nullptr;
     while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, nullptr)) != nullptr) {
         DWORD wndProcId;
         GetWindowThreadProcessId(hwnd, &wndProcId);
@@ -502,7 +502,7 @@ static bool RegisterForPdfExtentions(HWND hwnd) {
 static int RunMessageLoop() {
     HACCEL accTable = CreateSumatraAcceleratorTable();
 
-    MSG msg = {0};
+    MSG msg{0};
 
     while (GetMessage(&msg, nullptr, 0, 0)) {
         // dispatch the accelerator to the correct window
@@ -749,11 +749,8 @@ static void testLogf() {
 // in mupdf_load_system_font.c
 extern "C" void destroy_system_font_list();
 
-int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
-                     _In_ int nCmdShow) {
-    UNUSED(hPrevInstance);
-    UNUSED(cmdLine);
-    UNUSED(nCmdShow);
+int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstance, [[maybe_unused]] LPSTR cmdLine,
+                     [[maybe_unused]] int nCmdShow) {
     int retCode = 1; // by default it's error
 
     CrashIf(hInstance != GetInstance());
@@ -1017,7 +1014,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
     if (showStartPage) {
         // make the shell prepare the image list, so that it's ready when the first window's loaded
-        SHFILEINFOW sfi = {0};
+        SHFILEINFOW sfi{};
         uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
         SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flags);
     }

@@ -24,8 +24,7 @@ StaticCtrl::StaticCtrl(HWND p) : WindowBase(p) {
 StaticCtrl::~StaticCtrl() {
 }
 
-static void Handle_WM_COMMAND(void* user, WndEvent* ev) {
-    UNUSED(user);
+static void Handle_WM_COMMAND([[maybe_unused]] void* user, WndEvent* ev) {
     // auto w = (StaticCtrl*)user;
     CrashIf(ev->msg != WM_COMMAND);
     // TODO: implement me

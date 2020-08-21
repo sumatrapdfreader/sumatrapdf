@@ -876,8 +876,7 @@ void TocEditorWindow::TreeItemChangedHandler(TreeItemChangedEvent* ev) {
     ti->isUnchecked = !ev->newState.isChecked;
 }
 
-void TocEditorWindow::TreeItemSelectedHandler(TreeSelectionChangedEvent* ev) {
-    UNUSED(ev);
+void TocEditorWindow::TreeItemSelectedHandler([[maybe_unused]] TreeSelectionChangedEvent* ev) {
     UpdateRemoveTocItemButtonStatus();
 }
 

@@ -459,7 +459,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
     return true;
 }
 
-static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extended) {
+static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, [[maybe_unused]] bool extended) {
     CrashIf(!ctrl);
 
     WCHAR* str = str::Dup(gPluginMode ? gPluginURL : ctrl->FilePath());
@@ -551,8 +551,6 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
         }
         layoutData->AddProperty(_TR("Fonts:"), str);
     }
-#else
-    UNUSED(extended);
 #endif
 }
 

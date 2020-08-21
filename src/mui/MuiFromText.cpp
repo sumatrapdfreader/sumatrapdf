@@ -260,7 +260,7 @@ static void AddStyleProp(Style* style, TxtNode* prop) {
     }
 
     if (prop->IsTextWithKey("padding")) {
-        ParsedPadding padding = {0};
+        ParsedPadding padding{};
         ParsePadding(tmp, padding);
         style->SetPadding(padding.top, padding.right, padding.bottom, padding.left);
         return;

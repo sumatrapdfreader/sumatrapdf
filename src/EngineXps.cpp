@@ -559,8 +559,7 @@ RectF EngineXps::PageMediabox(int pageNo) {
     return pi->mediabox;
 }
 
-RectF EngineXps::PageContentBox(int pageNo, RenderTarget target) {
-    UNUSED(target);
+RectF EngineXps::PageContentBox(int pageNo, [[maybe_unused]] RenderTarget target) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
 
     ScopedCritSec scope(ctxAccess);
@@ -700,8 +699,7 @@ std::span<u8> EngineXps::GetFileData() {
     return file::ReadFile(path);
 }
 
-bool EngineXps::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
-    UNUSED(includeUserAnnots);
+bool EngineXps::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {

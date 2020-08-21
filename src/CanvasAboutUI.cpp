@@ -73,8 +73,7 @@ static void OnPaintAbout(WindowInfo* win) {
     }
 }
 
-static void OnMouseLeftButtonDownAbout(WindowInfo* win, int x, int y, WPARAM key) {
-    UNUSED(key);
+static void OnMouseLeftButtonDownAbout(WindowInfo* win, int x, int y, [[maybe_unused]] WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
 
     // remember a link under so that on mouse up we only activate
@@ -95,8 +94,7 @@ static bool IsLink(const WCHAR* url) {
     return false;
 }
 
-static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) {
-    UNUSED(key);
+static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, [[maybe_unused]] WPARAM key) {
     SetFocus(win->hwndFrame);
 
     const WCHAR* url = GetStaticLink(win->staticLinks, x, y);
@@ -122,15 +120,13 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) 
     }
 }
 
-static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM key) {
-    UNUSED(key);
+static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, [[maybe_unused]] WPARAM key) {
     // lf("Right button clicked on %d %d", x, y);
     SetFocus(win->hwndFrame);
     win->dragStart = Point(x, y);
 }
 
-static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) {
-    UNUSED(key);
+static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, [[maybe_unused]] WPARAM key) {
     int isDrag = IsDrag(x, win->dragStart.x, y, win->dragStart.y);
     if (isDrag) {
         return;

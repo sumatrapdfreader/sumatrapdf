@@ -123,8 +123,7 @@ int ChmModel::CurrentPageNo() const {
     return currentPageNo;
 }
 
-void ChmModel::GoToPage(int pageNo, bool addNavPoint) {
-    UNUSED(addNavPoint);
+void ChmModel::GoToPage(int pageNo, [[maybe_unused]] bool addNavPoint) {
     // TODO: not sure if crashing here is warranted
     // I've seen a crash with call from RestoreTabOnStartup() which doesn't validate pageNo
     SubmitCrashIf(!ValidPageNo(pageNo));
@@ -256,28 +255,23 @@ void ChmModel::Navigate(int dir) {
     }
 }
 
-void ChmModel::SetDisplayMode(DisplayMode mode, bool keepContinuous) {
-    UNUSED(mode);
-    UNUSED(keepContinuous); /* not supported */
+void ChmModel::SetDisplayMode([[maybe_unused]] DisplayMode mode, [[maybe_unused]] bool keepContinuous) {
 }
 
 DisplayMode ChmModel::GetDisplayMode() const {
     return DisplayMode::SinglePage;
 }
-void ChmModel::SetPresentationMode(bool enable) {
-    UNUSED(enable); /* not supported */
+void ChmModel::SetPresentationMode([[maybe_unused]] bool enable) {
 }
 
-void ChmModel::SetViewPortSize(Size size) {
-    UNUSED(size); /* not needed(?) */
+void ChmModel::SetViewPortSize([[maybe_unused]] Size size) {
 }
 
 ChmModel* ChmModel::AsChm() {
     return this;
 }
 
-void ChmModel::SetZoomVirtual(float zoom, Point* fixPt) {
-    UNUSED(fixPt);
+void ChmModel::SetZoomVirtual(float zoom, [[maybe_unused]] Point* fixPt) {
     if (zoom > 0) {
         zoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
     }
@@ -294,8 +288,7 @@ void ChmModel::ZoomTo(float zoomLevel) {
     }
 }
 
-float ChmModel::GetZoomVirtual(bool absolute) const {
-    UNUSED(absolute);
+float ChmModel::GetZoomVirtual([[maybe_unused]] bool absolute) const {
     if (!htmlWindow) {
         return 100;
     }
@@ -641,8 +634,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         hw->NavigateToDataUrl(homeUrl);
     }
 
-    bool OnBeforeNavigate(const WCHAR* url, bool newWindow) override {
-        UNUSED(url);
+    bool OnBeforeNavigate([[maybe_unused]] const WCHAR* url, bool newWindow) override {
         return !newWindow;
     }
 
@@ -674,9 +666,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         return d;
     }
 
-    void DownloadData(const WCHAR* url, std::span<u8> data) override {
-        UNUSED(url);
-        UNUSED(data);
+    void DownloadData([[maybe_unused]] const WCHAR* url, [[maybe_unused]] std::span<u8> data) override {
     }
 };
 

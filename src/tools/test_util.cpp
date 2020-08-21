@@ -34,9 +34,7 @@ extern void VecTest();
 extern void WinUtilTest();
 extern void StrFormatTest();
 
-int main(int argc, char** argv) {
-    UNUSED(argc);
-    UNUSED(argv);
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     printf("Running unit tests\n");
     InitDynCalls();
     BaseUtilTest();

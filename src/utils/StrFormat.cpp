@@ -286,24 +286,16 @@ char* Fmt::GetDup() {
     return str::Dup(Get());
 }
 
-std::string_view Format(const char* s, Arg& a1) {
-    UNUSED(s);
-    UNUSED(a1);
+std::string_view Format([[maybe_unused]] const char* s, [[maybe_unused]] Arg& a1) {
     return {};
 }
 
-std::string_view Format(const char* s, Arg& a1, Arg& a2) {
-    UNUSED(s);
-    UNUSED(a1);
-    UNUSED(a2);
+std::string_view Format([[maybe_unused]] const char* s, [[maybe_unused]] Arg& a1, [[maybe_unused]] Arg& a2) {
     return {};
 }
 
-std::string_view Format(const char* s, Arg& a1, Arg& a2, Arg& a3) {
-    UNUSED(s);
-    UNUSED(a1);
-    UNUSED(a2);
-    UNUSED(a3);
+std::string_view Format([[maybe_unused]] const char* s, [[maybe_unused]] Arg& a1, [[maybe_unused]] Arg& a2,
+                        [[maybe_unused]] Arg& a3) {
     return {};
 }
 

@@ -64,8 +64,7 @@ class PreviewBase : public IThumbnailProvider,
     IFACEMETHODIMP GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha);
 
     // IInitializeWithStream
-    IFACEMETHODIMP Initialize(IStream* pStm, DWORD grfMode) {
-        UNUSED(grfMode);
+    IFACEMETHODIMP Initialize(IStream* pStm, [[maybe_unused]] DWORD grfMode) {
         m_pStream = pStm;
         if (!m_pStream)
             return E_INVALIDARG;
@@ -149,8 +148,7 @@ class PreviewBase : public IThumbnailProvider,
         *phwnd = m_hwndParent;
         return S_OK;
     }
-    IFACEMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) {
-        UNUSED(fEnterMode);
+    IFACEMETHODIMP ContextSensitiveHelp([[maybe_unused]] BOOL fEnterMode) {
         return E_NOTIMPL;
     }
 
@@ -160,11 +158,10 @@ class PreviewBase : public IThumbnailProvider,
     }
 
     // IPersistFile (for Windows XP)
-    IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
+    IFACEMETHODIMP Load(LPCOLESTR pszFileName, [[maybe_unused]] DWORD dwMode) {
         strconv::StackWstrToUtf8 fileName = pszFileName;
         dbglogf("PdfPreview: PreviewBase::Load('%s')\n", fileName.Get());
 
-        UNUSED(dwMode);
         HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
                                   FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE) {
@@ -196,17 +193,13 @@ class PreviewBase : public IThumbnailProvider,
     IFACEMETHODIMP IsDirty() {
         return E_NOTIMPL;
     }
-    IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL bRemember) {
-        UNUSED(pszFileName);
-        UNUSED(bRemember);
+    IFACEMETHODIMP Save([[maybe_unused]] LPCOLESTR pszFileName, [[maybe_unused]] BOOL bRemember) {
         return E_NOTIMPL;
     }
-    IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) {
-        UNUSED(pszFileName);
+    IFACEMETHODIMP SaveCompleted([[maybe_unused]] LPCOLESTR pszFileName) {
         return E_NOTIMPL;
     }
-    IFACEMETHODIMP GetCurFile(LPOLESTR* ppszFileName) {
-        UNUSED(ppszFileName);
+    IFACEMETHODIMP GetCurFile([[maybe_unused]] LPOLESTR* ppszFileName) {
         return E_NOTIMPL;
     }
 
@@ -219,12 +212,9 @@ class PreviewBase : public IThumbnailProvider,
         WTS_ALPHATYPE dummy;
         return GetThumbnail(m_extractCx, phBmpThumbnail, &dummy);
     }
-    IFACEMETHODIMP GetLocation(LPWSTR pszPathBuffer, DWORD cch, DWORD* pdwPriority, const SIZE* prgSize,
-                               DWORD dwRecClrDepth, DWORD* pdwFlags) {
-        UNUSED(pszPathBuffer);
-        UNUSED(cch);
-        UNUSED(pdwPriority);
-        UNUSED(dwRecClrDepth);
+    IFACEMETHODIMP GetLocation([[maybe_unused]] LPWSTR pszPathBuffer, [[maybe_unused]] DWORD cch,
+                               [[maybe_unused]] DWORD* pdwPriority, const SIZE* prgSize,
+                               [[maybe_unused]] DWORD dwRecClrDepth, DWORD* pdwFlags) {
         if (!prgSize || !pdwFlags) {
             return E_INVALIDARG;
         }

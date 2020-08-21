@@ -464,18 +464,13 @@ class PasswordHolder : public PasswordUI {
   public:
     explicit PasswordHolder(const WCHAR* password) : password(password) {
     }
-    WCHAR* GetPassword(const WCHAR* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override {
-        UNUSED(fileName);
-        UNUSED(fileDigest);
-        UNUSED(decryptionKeyOut);
-        UNUSED(saveKey);
+    WCHAR* GetPassword([[maybe_unused]] const WCHAR* fileName, [[maybe_unused]] u8* fileDigest,
+                       [[maybe_unused]] u8 decryptionKeyOut[32], [[maybe_unused]] bool* saveKey) override {
         return str::Dup(password);
     }
 };
 
-int main(int argc, char** argv) {
-    UNUSED(argc);
-    UNUSED(argv);
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 

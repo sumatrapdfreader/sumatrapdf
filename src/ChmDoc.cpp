@@ -334,8 +334,7 @@ const char* ChmDoc::GetHomePath() {
     return homePath;
 }
 
-static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, void* data) {
-    UNUSED(chmHandle);
+static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, [[maybe_unused]] void* data) {
     if (str::IsEmpty(info->path)) {
         return CHM_ENUMERATOR_CONTINUE;
     }

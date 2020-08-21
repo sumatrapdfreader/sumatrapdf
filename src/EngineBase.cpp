@@ -467,14 +467,11 @@ int EngineBase::PageCount() const {
     return pageCount;
 }
 
-RectF EngineBase::PageContentBox(int pageNo, RenderTarget target) {
-    UNUSED(target);
+RectF EngineBase::PageContentBox(int pageNo, [[maybe_unused]] RenderTarget target) {
     return PageMediabox(pageNo);
 }
 
-bool EngineBase::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots) {
-    UNUSED(pdfFileName);
-    UNUSED(includeUserAnnots);
+bool EngineBase::SaveFileAsPDF([[maybe_unused]] const char* pdfFileName, [[maybe_unused]] bool includeUserAnnots) {
     return false;
 }
 
@@ -494,8 +491,7 @@ float EngineBase::GetFileDPI() const {
     return fileDPI;
 }
 
-PageDestination* EngineBase::GetNamedDest(const WCHAR* name) {
-    UNUSED(name);
+PageDestination* EngineBase::GetNamedDest([[maybe_unused]] const WCHAR* name) {
     return nullptr;
 }
 

@@ -93,8 +93,7 @@ class DirectionalLayout : public ILayout {
     DirectionalLayout& Add(const DirectionalLayoutData& ld);
 
     Size Measure(const Size availableSize) override;
-    void Arrange(const Rect finalRect) override {
-        UNUSED(finalRect);
+    void Arrange([[maybe_unused]] const Rect finalRect) override {
         CrashIf(true);
     }
 };

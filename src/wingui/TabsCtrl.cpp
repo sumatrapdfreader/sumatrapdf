@@ -163,11 +163,8 @@ void LayoutTabs(TabsCtrl* ctrl) {
     TriggerRepaint(priv->hwnd);
 }
 
-static LRESULT CALLBACK TabsParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
-                                       DWORD_PTR dwRefData) {
-    UNUSED(uIdSubclass);
-    UNUSED(dwRefData);
-
+static LRESULT CALLBACK TabsParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, [[maybe_unused]] UINT_PTR uIdSubclass,
+                                       [[maybe_unused]] DWORD_PTR dwRefData) {
     // TabsCtrl *w = (TabsCtrl *)dwRefData;
     // CrashIf(GetParent(ctrl->hwnd) != (HWND)lp);
 
@@ -331,8 +328,8 @@ static void OnLeftButtonUp(TabsCtrl* ctrl) {
     }
 }
 
-static LRESULT CALLBACK TabsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-    UNUSED(uIdSubclass);
+static LRESULT CALLBACK TabsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, [[maybe_unused]] UINT_PTR uIdSubclass,
+                                 DWORD_PTR dwRefData) {
     TabsCtrl* ctrl = (TabsCtrl*)dwRefData;
     TabsCtrlPrivate* priv = ctrl->priv;
     // CrashIf(ctrl->hwnd != (HWND)lp);

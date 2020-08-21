@@ -353,11 +353,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(en
     }
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute(TEXTATTRIBUTEID attr, VARIANT val, BOOL backward,
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute([[maybe_unused]] TEXTATTRIBUTEID attr,
+                                                                      [[maybe_unused]] VARIANT val,
+                                                                      [[maybe_unused]] BOOL backward,
                                                                       ITextRangeProvider** found) {
-    UNUSED(attr);
-    UNUSED(val);
-    UNUSED(backward);
     if (found == nullptr) {
         return E_POINTER;
     }
@@ -370,11 +369,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute(TEXTATTRIB
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(BSTR text, BOOL backward, BOOL ignoreCase,
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText([[maybe_unused]] BSTR text,
+                                                                 [[maybe_unused]] BOOL backward,
+                                                                 [[maybe_unused]] BOOL ignoreCase,
                                                                  ITextRangeProvider** found) {
-    UNUSED(text);
-    UNUSED(backward);
-    UNUSED(ignoreCase);
     if (found == nullptr) {
         return E_POINTER;
     }
@@ -386,8 +384,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(BSTR text, BOOL
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue(TEXTATTRIBUTEID attr, VARIANT* value) {
-    UNUSED(attr);
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue([[maybe_unused]] TEXTATTRIBUTEID attr,
+                                                                          VARIANT* value) {
     if (value == nullptr) {
         return E_POINTER;
     }

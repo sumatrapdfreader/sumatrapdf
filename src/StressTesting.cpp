@@ -524,9 +524,7 @@ struct StressTest {
     void TickTimer();
     void Finished(bool success);
 
-    StressTest(WindowInfo* win, bool exitWhenDone)
-        : win(win),
-          exitWhenDone(exitWhenDone) {
+    StressTest(WindowInfo* win, bool exitWhenDone) : win(win), exitWhenDone(exitWhenDone) {
         timerId = gCurrStressTimerId++;
     }
     ~StressTest() {

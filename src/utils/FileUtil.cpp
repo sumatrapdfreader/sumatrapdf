@@ -513,36 +513,17 @@ std::span<u8> ReadFile(const WCHAR* filePath) {
 }
 
 bool WriteFile(const char* filePath, std::span<u8> d) {
-#if OS_WIN
     WCHAR buf[512];
     strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
     return WriteFile(buf, d);
-#else
-    CrashAlwaysIf(true);
-    UNUSED(filePath);
-    UNUSED(data);
-    UNUSED(dataLen);
-    return false;
-#endif
 }
 
-#if OS_WIN
 bool Exists(std::string_view path) {
     WCHAR* wpath = strconv::Utf8ToWstr(path);
     bool exists = Exists(wpath);
     free(wpath);
     return exists;
 }
-
-#else
-bool Exists(std::string_view path) {
-    UNUSED(path);
-    // TODO: NYI
-    CrashMe();
-    return false;
-}
-
-#endif
 
 #if OS_WIN
 HANDLE OpenReadOnly(const WCHAR* filePath) {

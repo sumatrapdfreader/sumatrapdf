@@ -55,11 +55,8 @@ void __cdecl SendCrashReport(char const*) {
     // a dummy implementation
 }
 
-int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine,
-                     _In_ int nCmdShow) {
-    UNUSED(hPrevInstance);
-    UNUSED(lpCmdLine);
-    UNUSED(nCmdShow);
+int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]]  HINSTANCE hPrevInstance, [[maybe_unused]]  LPSTR lpCmdLine,
+                     [[maybe_unused]]  int nCmdShow) {
     // SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE);
     // SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 

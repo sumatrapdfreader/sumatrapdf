@@ -357,12 +357,10 @@ bool IsMupdfEngineSupportedFileType(Kind kind) {
     return false;
 }
 
-EngineBase* CreateEngineMupdfFromFile(const WCHAR* path) {
-    UNUSED(path);
+EngineBase* CreateEngineMupdfFromFile([[maybe_unused]] const WCHAR* path) {
     return nullptr;
 }
 
-EngineBase* CreateEngineMupdfFromStream(IStream* stream) {
-    UNUSED(stream);
+EngineBase* CreateEngineMupdfFromStream([[maybe_unused]] IStream* stream) {
     return nullptr;
 }

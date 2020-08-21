@@ -366,10 +366,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IR
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromPoint(struct UiaPoint point,
-                                                                              ITextRangeProvider** pRetVal) {
-    UNUSED(point);
-    UNUSED(pRetVal);
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromPoint(
+    [[maybe_unused]] struct UiaPoint point, [[maybe_unused]] ITextRangeProvider** pRetVal) {
     // TODO: Is this even used? We wont support editing either way
     // so there won't be even a caret visible. Hence empty ranges are useless?
     return E_NOTIMPL;

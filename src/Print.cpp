@@ -125,7 +125,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     EngineBase& engine = *pd.engine;
     AutoFreeWstr fileName;
 
-    DOCINFO di = {0};
+    DOCINFOW di{};
     di.cbSize = sizeof(DOCINFO);
     if (gPluginMode) {
         fileName.Set(url::GetFileName(gPluginURL));
@@ -249,7 +249,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             }
             // TODO: abort if !ok?
 
-            if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
+            if (EndPage(hdc) <= 0 || (progressUI && progressUI->WasCanceled())) {
                 AbortDoc(hdc);
                 return false;
             }
@@ -505,7 +505,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
 
     bool printSelection = false;
     Vec<PRINTPAGERANGE> ranges;
-    PRINTER_INFO_2W printerInfo{0};
+    PRINTER_INFO_2W printerInfo{};
 
     if (!HasPermission(Perm_PrinterAccess)) {
         return;
@@ -556,7 +556,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
         return;
     }
 
-    PRINTDLGEXW pd{0};
+    PRINTDLGEXW pd{};
     pd.lStructSize = sizeof(PRINTDLGEXW);
     pd.hwndOwner = win->hwndFrame;
     pd.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
@@ -772,7 +772,7 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
 
     for (size_t i = 0; i < rangeList.size(); i++) {
         int val;
-        PRINTPAGERANGE pr{0};
+        PRINTPAGERANGE pr{};
         if (str::Parse(rangeList.at(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);

@@ -54,18 +54,18 @@ class Grid : public Control {
     };
 
   private:
-    int rows;
-    int cols;
+    int rows{0};
+    int cols{0};
 
     // if dirty is true, rows/cols and ld must be rebuilt from els
-    bool dirty;
+    bool dirty{true};
     // cells is rows * cols in size
-    Cell* cells;
+    Cell* cells{nullptr};
     // maxColWidth is an array of cols size and contains
     // maximum width of each column (the width of the widest
     // cell in that column)
-    int* maxColWidth;
-    int* maxRowHeight;
+    int* maxColWidth{nullptr};
+    int* maxRowHeight{nullptr};
 
     void RebuildCellDataIfNeeded();
     Cell* GetCell(int row, int col) const;

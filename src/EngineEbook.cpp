@@ -190,13 +190,11 @@ EngineEbook::~EngineEbook() {
     DeleteCriticalSection(&pagesAccess);
 }
 
-RectF EngineEbook::PageMediabox(int pageNo) {
-    UNUSED(pageNo);
+RectF EngineEbook::PageMediabox([[maybe_unused]] int pageNo) {
     return pageRect;
 }
 
-RectF EngineEbook::PageContentBox(int pageNo, RenderTarget target) {
-    UNUSED(target);
+RectF EngineEbook::PageContentBox(int pageNo, [[maybe_unused]] RenderTarget target) {
     RectF mbox = PageMediabox(pageNo);
     mbox.Inflate(-pageBorder, -pageBorder);
     return mbox;
@@ -210,8 +208,7 @@ std::span<u8> EngineEbook::GetFileData() {
     return file::ReadFile(fileName);
 }
 
-bool EngineEbook::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
-    UNUSED(includeUserAnnots);
+bool EngineEbook::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
     const WCHAR* fileName = FileName();
     if (!fileName) {
         return false;
@@ -222,13 +219,11 @@ bool EngineEbook::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
 }
 
 // make RenderCache request larger tiles than per default
-bool EngineEbook::HasClipOptimizations(int pageNo) {
-    UNUSED(pageNo);
+bool EngineEbook::HasClipOptimizations([[maybe_unused]] int pageNo) {
     return false;
 }
 
-bool EngineEbook::BenchLoadPage(int pageNo) {
-    UNUSED(pageNo);
+bool EngineEbook::BenchLoadPage([[maybe_unused]] int pageNo) {
     return true;
 }
 
@@ -271,8 +266,7 @@ bool EngineEbook::ExtractPageAnchors() {
     return true;
 }
 
-RectF EngineEbook::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
-    UNUSED(pageNo);
+RectF EngineEbook::Transform(const RectF& rect, [[maybe_unused]] int pageNo, float zoom, int rotation, bool inverse) {
     RectF rcF = rect; // TODO: un-needed conversion
     auto p1 = Gdiplus::PointF(rcF.x, rcF.y);
     auto p2 = Gdiplus::PointF(rcF.x + rcF.dx, rcF.y + rcF.dy);
@@ -789,8 +783,7 @@ std::span<u8> EngineEpub::GetFileData() {
     return GetStreamOrFileData(stream, fileName);
 }
 
-bool EngineEpub::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
-    UNUSED(includeUserAnnots);
+bool EngineEpub::SaveFileAs(const char* copyFileName, [[maybe_unused]] bool includeUserAnnots) {
     AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
 
     if (stream) {
@@ -1446,9 +1439,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         return html.StealData();
     }
 
-    void Visit(const WCHAR* name, const WCHAR* url, int level) override {
-        UNUSED(name);
-        UNUSED(level);
+    void Visit([[maybe_unused]] const WCHAR* name, const WCHAR* url, [[maybe_unused]] int level) override {
         if (!url || url::IsAbsolute(url)) {
             return;
         }

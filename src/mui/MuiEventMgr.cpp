@@ -119,9 +119,7 @@ void EventMgr::NotifySizeChanged(Control* c, int dx, int dy) {
 
 // TODO: optimize by getting both mouse over and mouse move windows in one call
 // x, y is a position in the root window
-LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled) {
-    UNUSED(keys);
-    UNUSED(wasHandled);
+LRESULT EventMgr::OnMouseMove([[maybe_unused]] WPARAM keys, int x, int y, [[maybe_unused]] bool& wasHandled) {
     Vec<CtrlAndOffset> windows;
     Control* c;
 
@@ -161,9 +159,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled) {
 // TODO: quite possibly the real logic for generating "click" events is
 // more complicated
 // (x, y) is in the coordinates of the root window
-LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled) {
-    UNUSED(keys);
-    UNUSED(wasHandled);
+LRESULT EventMgr::OnLButtonUp([[maybe_unused]] WPARAM keys, int x, int y, [[maybe_unused]] bool& wasHandled) {
     Vec<CtrlAndOffset> controls;
     u16 wantedInputMask = bit::FromBit<u16>(Control::WantsMouseClickBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &controls);
@@ -193,9 +189,7 @@ LRESULT EventMgr::OnGetMinMaxInfo(MINMAXINFO* info, bool& wasHandled) {
     return 0;
 }
 
-LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled) {
-    UNUSED(x);
-    UNUSED(y);
+LRESULT EventMgr::OnSetCursor([[maybe_unused]] int x, [[maybe_unused]] int y, bool& wasHandled) {
     if (currOver && currOver->hCursor) {
         SetCursor(currOver->hCursor);
         wasHandled = true;

@@ -367,9 +367,7 @@ static void CreateAppShortcuts() {
 
 void onRaMicroInstallerFinished();
 
-static DWORD WINAPI InstallerThread(LPVOID data) {
-    UNUSED(data);
-
+static DWORD WINAPI InstallerThread([[maybe_unused]] LPVOID data) {
     success = false;
 
     if (!ExtractInstallerFiles()) {

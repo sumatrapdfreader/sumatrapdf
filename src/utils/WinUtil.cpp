@@ -752,9 +752,8 @@ Rect GetFullscreenRect(HWND hwnd) {
     return Rect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
 
-static BOOL CALLBACK GetMonitorRectProc(HMONITOR hMonitor, HDC hdc, LPRECT rcMonitor, LPARAM data) {
-    UNUSED(hMonitor);
-    UNUSED(hdc);
+static BOOL CALLBACK GetMonitorRectProc([[maybe_unused]] HMONITOR hMonitor, [[maybe_unused]] HDC hdc, LPRECT rcMonitor,
+                                        LPARAM data) {
     Rect* rcAll = (Rect*)data;
     *rcAll = rcAll->Union(Rect::FromRECT(*rcMonitor));
     return TRUE;
@@ -1897,16 +1896,10 @@ std::span<u8> LoadDataResource(int resId) {
     return {(u8*)s, size};
 }
 
-static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
-                                     ULONG_PTR dwData1, ULONG_PTR dwData2) {
-    UNUSED(uType);
-    UNUSED(uFmt);
-    UNUSED(hconv);
-    UNUSED(hsz1);
-    UNUSED(hsz2);
-    UNUSED(hdata);
-    UNUSED(dwData1);
-    UNUSED(dwData2);
+static HDDEDATA CALLBACK DdeCallback([[maybe_unused]] UINT uType, [[maybe_unused]] UINT uFmt,
+                                     [[maybe_unused]] HCONV hconv, [[maybe_unused]] HSZ hsz1, [[maybe_unused]] HSZ hsz2,
+                                     [[maybe_unused]] HDDEDATA hdata, [[maybe_unused]] ULONG_PTR dwData1,
+                                     [[maybe_unused]] ULONG_PTR dwData2) {
     return 0;
 }
 

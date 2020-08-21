@@ -109,9 +109,8 @@ SumatraUIAutomationStartPageProvider::get_FragmentRoot(IRawElementProviderFragme
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPatternProvider(PATTERNID patternId,
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPatternProvider([[maybe_unused]] PATTERNID patternId,
                                                                                    IUnknown** pRetVal) {
-    UNUSED(patternId);
     *pRetVal = nullptr;
     return S_OK;
 }

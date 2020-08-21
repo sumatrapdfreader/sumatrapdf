@@ -22,7 +22,7 @@ static void CreateInfotipForLink(HWND hwndParent, const WCHAR* url, RECT pos) {
     gHwndControlTooltip = CreateWindowExW(exStyle, TOOLTIPS_CLASS, nullptr, style, CW_USEDEFAULT, CW_USEDEFAULT,
                                           CW_USEDEFAULT, CW_USEDEFAULT, hwndParent, nullptr, hinst, nullptr);
 
-    TOOLINFO ti = {0};
+    TOOLINFO ti{};
     ti.cbSize = sizeof(ti);
     ti.hwnd = hwndParent;
     ti.uFlags = TTF_SUBCLASS;
@@ -37,7 +37,7 @@ static void ClearInfotip(HWND hwndParent) {
         return;
     }
 
-    TOOLINFO ti = {0};
+    TOOLINFO ti{};
     ti.cbSize = sizeof(ti);
     ti.hwnd = hwndParent;
 
@@ -275,10 +275,7 @@ void Control::MapRootToMyPos(int& x, int& y) const {
 // Requests the window to draw itself on a Graphics canvas.
 // offX and offY is a position of this window within
 // Graphics canvas (pos is relative to that offset)
-void Control::Paint(Graphics* gfx, int offX, int offY) {
-    UNUSED(gfx);
-    UNUSED(offX);
-    UNUSED(offY);
+void Control::Paint([[maybe_unused]] Graphics* gfx, [[maybe_unused]] int offX, [[maybe_unused]] int offY) {
     CrashIf(!IsVisible());
 }
 

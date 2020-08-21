@@ -154,7 +154,7 @@ struct TreeCtrl : WindowBase {
     Size idealSize{};
 
     // private
-    TVITEMW item{0};
+    TVITEMW item{};
 
     // TreeItem* -> HTREEITEM mapping so that we can
     // find HTREEITEM from TreeItem*

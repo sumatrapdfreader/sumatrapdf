@@ -9,7 +9,7 @@
 
 namespace mui {
 
-Grid::Grid(Style* style) : dirty(true), cells(nullptr), maxColWidth(nullptr), maxRowHeight(nullptr), rows(0), cols(0) {
+Grid::Grid(Style* style) {
     SetStyle(style);
 }
 

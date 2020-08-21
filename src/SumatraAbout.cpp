@@ -452,8 +452,7 @@ static void OnPaintAbout(HWND hwnd) {
     EndPaint(hwnd, &ps);
 }
 
-static void CopyAboutInfoToClipboard(HWND hwnd) {
-    UNUSED(hwnd);
+static void CopyAboutInfoToClipboard([[maybe_unused]] HWND hwnd) {
     str::WStr info(512);
     AutoFreeWstr ver = GetAppVersion();
     info.AppendFmt(L"%s %s\r\n", GetAppName(), ver.Get());

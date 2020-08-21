@@ -19,12 +19,10 @@
 namespace lzsa {
 
 struct ISzCrtAlloc : ISzAlloc {
-    static void* _Alloc(void* p, size_t size) {
-        UNUSED(p);
+    static void* _Alloc([[maybe_unused]] void* p, size_t size) {
         return malloc(size);
     }
-    static void _Free(void* p, void* ptr) {
-        UNUSED(p);
+    static void _Free([[maybe_unused]] void* p, void* ptr) {
         free(ptr);
     }
 
@@ -221,9 +219,7 @@ int mainVerify(const WCHAR* archivePath) {
     return 0;
 }
 
-int main(int argc, char** argv) {
-    UNUSED(argc);
-    UNUSED(argv);
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
 #ifdef DEBUG
     // report memory leaks on stderr
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);

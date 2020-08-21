@@ -163,18 +163,6 @@ char (&DimofSizeHelper(T (&array)[N]))[N];
 // like dimof minus 1 to account for terminating 0
 #define static_strlen(array) (sizeof(DimofSizeHelper(array)) - 1)
 
-// UNUSED is for marking unreferenced function arguments/variables
-// UNREFERENCED_PARAMETER is in windows SDK but too long. We use it if available,
-// otherwise we define our own version.
-// UNUSED might already be defined by mupdf\fits\system.h
-#if !defined(UNUSED)
-#if defined(UNREFERENCED_PARAMETER)
-#define UNUSED UNREFERENCED_PARAMETER
-#else
-#define UNUSED(P) ((void)P)
-#endif
-#endif
-
 #if COMPILER_MSVC
 // https://msdn.microsoft.com/en-us/library/4dt9kyhy.aspx
 // enable msvc equivalent of -Wundef gcc option, warns when doing "#if FOO" and FOO is not defined

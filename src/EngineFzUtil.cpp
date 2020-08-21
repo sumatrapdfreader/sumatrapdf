@@ -104,8 +104,7 @@ struct istream_filter {
     u8 buf[4096];
 };
 
-extern "C" int next_istream(fz_context* ctx, fz_stream* stm, size_t max) {
-    UNUSED(max);
+extern "C" int next_istream(fz_context* ctx, fz_stream* stm, [[maybe_unused]] size_t max) {
     istream_filter* state = (istream_filter*)stm->state;
     ULONG cbRead = sizeof(state->buf);
     HRESULT res = state->stream->Read(state->buf, sizeof(state->buf), &cbRead);

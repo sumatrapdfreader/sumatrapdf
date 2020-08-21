@@ -196,8 +196,7 @@ public:
     }
 
     // IFilter
-    IFACEMETHODIMP Init(ULONG grfFlags, ULONG cAttributes, const FULLPROPSPEC *aAttributes, ULONG *pFlags) {
-        UNUSED(grfFlags);
+    IFACEMETHODIMP Init([[maybe_unused]] ULONG grfFlags, ULONG cAttributes, const FULLPROPSPEC *aAttributes, ULONG *pFlags) {
         if (cAttributes > 0 && !aAttributes)
             return E_INVALIDARG;
 
@@ -272,8 +271,7 @@ public:
     IFACEMETHODIMP BindRegion(FILTERREGION, REFIID, void **) { return E_NOTIMPL; }
 
     // IInitializeWithStream
-    IFACEMETHODIMP Initialize(IStream *pStm, DWORD grfMode) {
-        UNUSED(grfMode);
+    IFACEMETHODIMP Initialize(IStream *pStm, [[maybe_unused]] DWORD grfMode) {
         if (m_pStream)
             m_pStream->Release();
         m_pStream = pStm;
@@ -286,12 +284,11 @@ public:
     // IPersistStream
     IFACEMETHODIMP IsDirty() { return E_NOTIMPL; }
     IFACEMETHODIMP Load(IStream *pStm) { return Initialize(pStm, 0); }
-    IFACEMETHODIMP Save(IStream *pStm, BOOL fClearDirty) { UNUSED(pStm); UNUSED(fClearDirty); return E_NOTIMPL; }
-    IFACEMETHODIMP GetSizeMax(ULARGE_INTEGER *pcbSize) { UNUSED(pcbSize); return E_NOTIMPL; }
+    IFACEMETHODIMP Save([[maybe_unused]] IStream *pStm, [[maybe_unused]] BOOL fClearDirty) { return E_NOTIMPL; }
+    IFACEMETHODIMP GetSizeMax([[maybe_unused]] ULARGE_INTEGER *pcbSize) { return E_NOTIMPL; }
 
     // IPersistFile (for compatibility with older Windows Desktop Search versions and ifilttst.exe)
-    IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
-        UNUSED(dwMode);
+    IFACEMETHODIMP Load(LPCOLESTR pszFileName, [[maybe_unused]] DWORD dwMode) {
         HANDLE hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE)
             return E_INVALIDARG;
@@ -314,9 +311,9 @@ public:
         pStm->Release();
         return res;
     }
-    IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL bRemember) { UNUSED(pszFileName); UNUSED(bRemember); return E_NOTIMPL; }
-    IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) { UNUSED(pszFileName); return E_NOTIMPL; }
-    IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) { UNUSED(ppszFileName); return E_NOTIMPL; }
+    IFACEMETHODIMP Save([[maybe_unused]] LPCOLESTR pszFileName, [[maybe_unused]] BOOL bRemember) { return E_NOTIMPL; }
+    IFACEMETHODIMP SaveCompleted([[maybe_unused]] LPCOLESTR pszFileName) { return E_NOTIMPL; }
+    IFACEMETHODIMP GetCurFile([[maybe_unused]] LPOLESTR *ppszFileName) { return E_NOTIMPL; }
 
 protected:
     IStream*                    m_pStream;
