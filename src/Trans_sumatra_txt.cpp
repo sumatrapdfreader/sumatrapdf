@@ -7766,7 +7766,7 @@ const char * gTranslations_gl =
   "imprimindo documento\0";
 
 const char * gTranslations_de = 
-  "\0"\
+  "%s Installation nicht gefunden.\0"\
   "\303\234ber &SumatraPDF\0"\
   "&Tats\303\244chliche Gr\303\266\303\237e\tStrg+1\0"\
   "&Erweiterte Optionen\342\200\246\0"\
@@ -7806,7 +7806,7 @@ const char * gTranslations_de =
   "&Drucken\342\200\246 (verweigert)\0"\
   "Passwort f\303\274r dieses Dokument &merken\0"\
   "Ansicht-&Einstellungen f\303\274r jedes Dokument einzeln merken\0"\
-  "\0"\
+  "Aus der Historie entfernen\0"\
   "&Speichern unter\342\200\246\0"\
   "&Speichern unter\342\200\246\tStrg+S\0"\
   "&Einstellungen\0"\
@@ -7823,20 +7823,20 @@ const char * gTranslations_de =
   "(Seite %s)\0"\
   "\303\234ber SumatraPDF\0"\
   "Favoriten hinzuf\303\274gen\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "PDF als untergeordnetes Element hinzuf\303\274gen\0"\
+  "PDF als gleichgeordnetes Element hinzuf\303\274gen\0"\
+  "Untergeordnetes Element hinzuf\303\274gen\0"\
   "Seite %s zu Favoriten hinzuf\303\274gen\342\200\246\0"\
   "Seite %s zu Favoriten hinzuf\303\274gen\tStrg+B\0"\
   "Seite %s zu Favoriten mit Namen (optional) hinzuf\303\274gen:\0"\
-  "\0"\
+  "Gleichgeordnetes Element hinzuf\303\274gen\0"\
   "Zu Favoriten hinzuf\303\274gen\342\200\246\0"\
   "Erweitert\0"\
   "Alle Dateien\0"\
   "Alle unterst\303\274tzten Dokumente\0"\
-  "\0"\
+  "Anmerkungen\0"\
   "Anwendung:\0"\
-  "\0"\
+  "Sind Sie sicher, dass Sie %s deinstallieren m\303\266chten?\0"\
   "M\303\266chten Sie SumatraPDF wirklich deinstallieren?\0"\
   "Mit PDF-Dateien verkn\303\274pfen?\0"\
   "Anhang: %s\0"\
@@ -7853,13 +7853,13 @@ const char * gTranslations_de =
   "Abbrechen\0"\
   "Datei kann nicht gedruckt werden\0"\
   "Fehler beim Ausf\303\274hren des Befehls f\303\274r die R\303\274ckw\303\244rtssuche. Bitte \303\274berpr\303\274fen Sie die Einstellung.\0"\
-  "\0"\
+  "Cursor\0"\
   "Sprache \303\244ndern\342\200\246 (Change Language)\0"\
   "Nach &neuer Version suchen\0"\
-  "\0"\
+  "Kreis\0"\
   "Schlie\303\237en\0"\
   "Alles zuklappen\0"\
-  "\0"\
+  "Farbe\0"\
   "Comicb\303\274cher\0"\
   "Kompatibilit\303\244t\0"\
   "Fortlaufend\0"\
@@ -7879,10 +7879,10 @@ const char * gTranslations_de =
   "Konnte das Installationsverzeichnis nicht l\303\266schen\0"\
   "Diese Seite kann leider nicht angezeigt werden\0"\
   "Konnte die PDF-Vorschau nicht deinstallieren\0"\
-  "\0"\
+  "Konnte den Sumatra-Suchfilter nicht deinstallieren\0"\
   "Konnte das Browser-Plugin nicht deinstallieren\0"\
   "Konnte %s nicht schreiben\0"\
-  "\0"\
+  "Anmerkung erstellen\0"\
   "Erstellt am:\0"\
   "Aktuelle Datei\0"\
   "Cursorposition:\0"\
@@ -7897,17 +7897,17 @@ const char * gTranslations_de =
   "Dokumenteigenschaften\0"\
   "Herunterladen\0"\
   "&Beenden\tStrg+Q\0"\
-  "\0"\
+  "Vollbild verlassen\0"\
   "EPUB-E-B\303\274cher\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Bearbeiten\0"\
+  "Anmerkungen bearbeiten\0"\
+  "Lesezeichen bearbeiten\0"\
   "Bitte Passwort eingeben\0"\
   "Bitte Passwort f\303\274r %s eingeben\0"\
   "Beim Doppelklick auf das PDF-Dokument wird der folgende Befehl ausgef\303\274hrt:\0"\
   "Fehler beim \303\226ffnen von %s\0"\
   "Alles aufklappen\0"\
-  "\0"\
+  "Lesezeichen exportieren\0"\
   "&Favoriten\0"\
   "N\303\244chste Ansicht\tAlt+->\0"\
   "&Vollbild\tF11\0"\
@@ -7922,7 +7922,7 @@ const char * gTranslations_de =
   "Favoriten\0"\
   "FictionBook-Dokumente\0"\
   "Datei %s nicht gefunden\0"\
-  "\0"\
+  "Dateianhang\0"\
   "Dateigr\303\266\303\237e:\0"\
   "Datei:\0"\
   "S&uchen\342\200\246\tStrg+F\0"\
@@ -7942,17 +7942,17 @@ const char * gTranslations_de =
   "Buch wird formatiert\342\200\246 Seite %d\0"\
   "Text auf Seite %s gefunden\0"\
   "Text auf Seite %s gefunden (erneut)\0"\
-  "\0"\
+  "Freitext\0"\
   "Oft gelesene Dokumente\0"\
   "\0"\
   "Gehe zu Seite\0"\
   "&Optionen ausblenden\0"\
   "Oft gelesene Dokumente ausblenden\0"\
-  "\0"\
+  "Hervorhebung\0"\
   "Tipp: F3-Taste verwenden, um weiterzusuchen\0"\
   "Bilder (*.%s)\0"\
-  "\0"\
-  "\0"\
+  "Bilder\0"\
+  "Tinte\0"\
   "Installieren\0"\
   "&Installationsverzeichnis:\0"\
   "Die Installation ist fehlgeschlagen!\0"\
@@ -7961,7 +7961,7 @@ const char * gTranslations_de =
   "PDF-Dokumente in Windows-&Suche einbeziehen\0"\
   "Windows soll eine &Vorschau f\303\274r PDF-Dokumente anzeigen\0"\
   "Hell\0"\
-  "\0"\
+  "Linie\0"\
   "\0"\
   "SumatraPDF als Standardanwendung f\303\274r PDF-Dateien registrieren?\0"\
   "Standardm\303\244\303\237ig PDF-Dateien mit SumatraPDF \303\266ffnen\0"\
@@ -7970,7 +7970,7 @@ const char * gTranslations_de =
   "Mobi-Dokumente\0"\
   "Ge\303\244ndert am:\0"\
   "Neues Fenster\tStrg+N\0"\
-  "\0"\
+  "Neue Lesezeichen\0"\
   "Neue Version %s ist verf\303\274gbar. M\303\266chten Sie diese herunterladen?\0"\
   "&N\303\244chste Seite\0"\
   "Suchbegriff nicht gefunden\0"\
@@ -7981,7 +7981,7 @@ const char * gTranslations_de =
   "\0"\
   "\303\226ffnen\342\200\246\0"\
   "Mit PDF-&XChange \303\266ffnen\0"\
-  "\0"\
+  "Eingebettetes PDF \303\266ffnen\0"\
   "Dokument \303\266ffnen\342\200\246\0"\
   "Mit %s \303\266ffnen\0"\
   "Mit &Adobe Reader \303\266ffnen\0"\
@@ -8004,7 +8004,7 @@ const char * gTranslations_de =
   "PalmDoc-Dokumente\0"\
   "Bitte schlie\303\237en Sie %s vor der Installation!\0"\
   "Bitte einen Moment Geduld\342\200\246\0"\
-  "\0"\
+  "Polylinie\0"\
   "\0"\
   "Postscript-Dokumente\0"\
   "&Pr\303\244sentation\tF5\0"\
@@ -8018,9 +8018,9 @@ const char * gTranslations_de =
   "Drucke Seite %d von %d\342\200\246\0"\
   "Druckerproblem\0"\
   "Umbe&nennen\342\200\246\tF2\0"\
-  "\0"\
+  "Zensieren\0"\
   "Liste der &zuletzt ge\303\266ffneten Dokumente anlegen\0"\
-  "\0"\
+  "Element entfernen\0"\
   "Aus Favoriten entfernen\0"\
   "Seite %s aus Favoriten entfernen\0"\
   "Umbenennen zu\0"\
@@ -8028,7 +8028,7 @@ const char * gTranslations_de =
   "Im &UZS drehen\tStrg+Umschalt++\0"\
   "Anmerkungen speichern\0"\
   "Speichern unter\342\200\246\0"\
-  "\0"\
+  "Eingebettete Datei speichern...\0"\
   "&Verkn\303\274pfung speichern\342\200\246\tStrg+Umschalt+S\0"\
   "Durchsuche Seite %d von %d\342\200\246\0"\
   "Alles &markieren\tStrg+A\0"\
@@ -8041,23 +8041,23 @@ const char * gTranslations_de =
   "Lesezeichen anzeigen\tF12\0"\
   "&Favoriten anzeigen\0"\
   "Seiten &fortlaufend anzeigen\0"\
-  "\0"\
+  "Scrollbalken anzeigen\0"\
   "&Werkzeugleiste anzeigen\tF8\0"\
   "Lesezeichen anzeigen\tF12\0"\
   "Favoriten anzeigen\0"\
-  "\0"\
+  "Scrollbalken anzeigen\0"\
   "Oft gelesene Dokumente einblenden\0"\
   "Dokument-&Ordner \303\266ffnen\0"\
   "&Lesezeichen-Seitenleiste anzeigen, wenn verf\303\274gbar\0"\
   "Einzelne Seite\0"\
   "Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte dr\303\274cken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein m\303\266chten.\0"\
-  "\0"\
+  "Sortieren nach\0"\
   "Quelldatei %s hat keinen Synchronisationspunkt\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Quadrat\0"\
+  "Verschn\303\266rkelt\0"\
+  "Stempel\0"\
   "SumatraPDF starten\0"\
-  "\0"\
+  "Durchstreichen\0"\
   "Thema:\0"\
   "SumatraPDF %s installieren\0"\
   "SumatraPDF %s deinstallieren\0"\
@@ -8068,20 +8068,20 @@ const char * gTranslations_de =
   "SumatraPDF-Installation nicht gefunden.\0"\
   "PDF-Dateien werden standardm\303\244\303\237ig mit SumatraPDF ge\303\266ffnet\0"\
   "PDF-Dateien sollten nun mit SumatraPDF ge\303\266ffnet werden\0"\
-  "\0"\
+  "SumatraPDF unterst\303\274tzen\0"\
   "Die Synchronisationsdatei kann nicht ge\303\266ffnet werden\0"\
-  "\0"\
-  "\0"\
+  "Tag (gro\303\237e zuerst)\0"\
+  "Tag (kleine zuerst)\0"\
   "PDF mit Tags\0"\
   "\0"\
   "Textdokumente\0"\
-  "\0"\
+  "Vielen Dank, dass Sie RA-MICRO PDF gew\303\244hlt haben!\0"\
   "Vielen Dank daf\303\274r, dass Sie SumatraPDF verwenden!\0"\
   "Vielen Dank! SumatraPDF wurde erfolgreich installiert.\0"\
   "Das Installationsprogramm wurde besch\303\244digt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!\0"\
   "Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterst\303\274tzung f\303\274r %s\0"\
   "Titel:\0"\
-  "\0"\
+  "Unterstreichen\0"\
   "SumatraPDF deinstallieren\0"\
   "Die Deinstallation ist fehlgeschlagen\0"\
   "Die Deinstallation wird ausgef\303\274hrt\342\200\246\0"\

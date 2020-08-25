@@ -1,10 +1,11 @@
 AppTranslator: SumatraPDF
-19fd11c42cd964791e4ef06009213312347fbefa
+f636a53145cb848e2bfad69140c4d6a3c101f340
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
 cn:未找到 %s 安装。
 co:Installazione di %s micca trova.
+de:%s Installation nicht gefunden.
 fr:%s installation non trouvée
 kw:Ny gevir leans %s.
 nl:%s installatie niet gevonden.
@@ -2619,6 +2620,7 @@ am:&Հեռացնել պատմությունից
 az:Tarixçədən &sil
 cn:从历史记录删除(&R)
 co:&Caccià da a crunulogia
+de:Aus der Historie entfernen
 fr:Supprimer de l'historique
 kw:&Removya A Istori
 nl:V&erwijder uit Geschiedenis
@@ -3670,6 +3672,7 @@ am:Ավելացնել PDF-ը որպես ենթատարր
 az:PDF-i törəmə element kimi əlavə et
 cn:将 PDF 添加为子项目
 co:Aghjunghje un PDF cum’è un zitellu
+de:PDF als untergeordnetes Element hinzufügen
 kw:Keworra PDF avel flogh
 nl:Voeg PDF als child toe
 pl:Dodaj PDF jako potomka
@@ -3679,6 +3682,7 @@ am:Ավելացնել PDF-ը որպես ժառանգ
 az:PDF-i eynisəviyyəli element kimi əlavə et
 cn:将 PDF 添加为同级项目
 co:Aghjunghje un PDF cum’è un fratellu
+de:PDF als gleichgeordnetes Element hinzufügen
 kw:Keworra PDF avel hwor
 nl:Voeg PDF als verwant toe
 pl:Dodaj PDF jako rodzeństwo
@@ -3688,6 +3692,7 @@ am:Ավելացնել ենթատարր
 az:Törəmə element əlavə et
 cn:添加子项目
 co:Aghjunghje un zitellu
+de:Untergeordnetes Element hinzufügen
 kw:Keworra flogh
 nl:Child toevoegen
 pl:Dodaj potomka
@@ -3859,6 +3864,7 @@ am:Ավելացնել ժառանգ
 az:Eynisəviyyəli element əlavə et
 cn:添加同级项目
 co:Aghjunghje un fratellu
+de:Gleichgeordnetes Element hinzufügen
 kw:Keworra hwor
 nl:Voeg verwant toe
 pl:Dodaj rodzeństwo
@@ -4139,6 +4145,7 @@ am:Ծանոթագրություններ
 az:Qeydlər
 cn:标注
 co:Annutazioni
+de:Anmerkungen
 el:Σχόλια
 fr:Annotations
 kw:Notenyans
@@ -4218,6 +4225,7 @@ am:Համոզվա՞ծ եք, որ ցանկանում եք ապատեղադրել 
 az:Əminsiniz ki, %s silmək istəyirsiniz?
 cn:您确定要卸载 %s 吗？
 co:Site sicuru di vulè disinstallà %s ?
+de:Sind Sie sicher, dass Sie %s deinstallieren möchten?
 fr:Voulez-vous vraiment désinstaller %s ?
 kw:Os ta sur bos hwans dhis anlea %s?
 nl:Weet u zeker dat u %s wilt dé-installeren?
@@ -5307,6 +5315,7 @@ am:Նշորդ
 az:Kursor
 cn:插入号
 co:Cursore
+de:Cursor
 fr:curseur
 kw:To byghan
 nl:Merkteken
@@ -5457,6 +5466,7 @@ am:Շրջան
 az:Dairə
 cn:圆
 co:Chjerchju
+de:Kreis
 el:Κύκλος
 fr:Cercle
 kw:Kylgh
@@ -5566,6 +5576,7 @@ am:Գույն
 az:Rəng
 cn:颜色
 co:Culore
+de:Farbe
 el:Χρώμα
 fr:Couleur
 kw:Liw
@@ -6817,6 +6828,7 @@ am:Հնարավոր չեղավ ապատեղադրել Sumatra որոնման զ�
 az:Sumatra axtarış filtrini silmək mümkün olmadı
 cn:无法卸载 Sumatra 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di Sumatra
+de:Konnte den Sumatra-Suchfilter nicht deinstallieren
 kw:Ny yllir anlea sythel hwilas Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
@@ -6950,6 +6962,7 @@ am:Ստեղծել ծանոթագրություն
 az:Qeyd düzəlt
 cn:创建标注
 co:&Scrive un’annutazione
+de:Anmerkung erstellen
 el:Δημιουργία Σχολίου
 fr:Écrire une annotation
 kw:Gwruthyl Notenyans
@@ -7794,6 +7807,7 @@ am:Փ&ակել լիաէկրանը
 az:Tam ekran rejimindən çı&x
 cn:退出全屏(&X)
 co:&Esce di u modu screnu sanu
+de:Vollbild verlassen
 el:Έξοδος από την πλήρη οθόνη
 fr:&Quitter le mode plein écran
 kw:Kwytya Skrin-leun
@@ -7943,6 +7957,7 @@ am:Խմբագրել
 az:Düzəliş et
 cn:编辑
 co:Mudificà
+de:Bearbeiten
 el:Επεξεργασία
 fr:Éditer
 kw:Golegi
@@ -7954,6 +7969,7 @@ am:Խմբագրել ծանոթագրությունները
 az:Qeydlərə düzəliş et
 cn:编辑标注
 co:&Mudificà l’annutazioni
+de:Anmerkungen bearbeiten
 el:Επεξεργασία Σχολίων
 fr:Éditer les annotations
 kw:Golegi notenyans
@@ -7965,6 +7981,7 @@ am:Խմբագրել էջանիշերը
 az:Əlfəcinlərə düzəliş et
 cn:编辑书签
 co:Mudificà l’indette
+de:Lesezeichen bearbeiten
 fr:Éditer les marque-pages
 kw:Golegi Folennotennow
 nl:Bewerk Bladwijzers
@@ -8275,6 +8292,7 @@ am:Արտահանել էջանիշերը
 az:Əlfəcinləri ixrac et
 cn:导出书签
 co:Espurtà l’indette
+de:Lesezeichen exportieren
 fr:Exporter les marque-pages
 kw:Esperthi Folennotennow
 nl:Exporteer Bladwijzers
@@ -9177,6 +9195,7 @@ am:Ֆայլի կցորդ
 az:Qoşma fayl
 cn:文件附件
 co:Schedariu attaccatu
+de:Dateianhang
 kw:Stagel Restren
 nl:Bestands Bijlage
 pl:Załącznik
@@ -10461,6 +10480,7 @@ am:Ազատ գրվածք
 az:İxtiyari mətn
 cn:自定义文本
 co:Testu liberu
+de:Freitext
 kw:Tekst Rydh
 nl:Vrije Tekst
 pl:Dowolny tekst
@@ -10803,6 +10823,7 @@ am:Գունանշում
 az:Seç
 cn:高亮
 co:Sopralineà
+de:Hervorhebung
 kw:Golowboyntya
 nl:Markeer
 pl:Wyróżnienie
@@ -10938,6 +10959,7 @@ am:Պատկերներ
 az:Şəkillər
 cn:图像
 co:Fiure
+de:Bilder
 fr:Images
 kw:Skeusennow
 nl:Afbeeldingen
@@ -10949,6 +10971,7 @@ am:Թանաք
 az:Mürəkkəb
 cn:墨迹
 co:Inchjostru
+de:Tinte
 kw:Ynk
 nl:Snelkoppeling
 pl:Atrament
@@ -11455,6 +11478,7 @@ am:Գիծ
 az:Xətt
 cn:线条
 co:Linea
+de:Linie
 el:Γραμμή
 fr:Ligne
 kw:Linen
@@ -11969,6 +11993,7 @@ am:Նոր էջանիշեր
 az:Yeni əlfəcinlər
 cn:新建书签
 co:Nove indette
+de:Neue Lesezeichen
 fr:Nouveaux marque-pages
 kw:Folennotennow Nowydh
 nl:Nieuwe Bladwijzers
@@ -12649,6 +12674,7 @@ am:Բացել ներկառուցված PDF-ը
 az:İç PDF faylını aç
 cn:打开嵌入 PDF
 co:Apre u PDF incurpuratu
+de:Eingebettetes PDF öffnen
 kw:Ygeri PDF Neythys
 nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
@@ -14079,6 +14105,7 @@ am:Բազմագիծ
 az:Qırıq xətt
 cn:折线
 co:Linea tronca
+de:Polylinie
 kw:Lieslinen
 nl:Poly Regel
 pl:Polilinia
@@ -14088,6 +14115,7 @@ am:Պոլիգոն
 az:Çoxbucaqlı
 cn:多边形
 co:Poligonu
+de:Polygon
 fr:Polygone
 kw:Liestuek
 nl:Veelhoek
@@ -14865,6 +14893,7 @@ am:Փոփոխել
 az:Düzəliş et
 cn:编辑
 co:Redige
+de:Zensieren
 kw:Redaktya
 nl:Redigeren
 pl:Redaguj
@@ -14937,6 +14966,7 @@ am:Հեռացնել միույթը
 az:Elementi sil
 cn:移除项目
 co:Caccià l’elementu
+de:Element entfernen
 kw:Removya Tra
 nl:Verwijder Item
 pl:Usuń element
@@ -15380,6 +15410,7 @@ am:Պահպանել ներկառուցված ֆայլը...
 az:İç faylı yadda saxla...
 cn:保存嵌入文件...
 co:Arregistrà u schedariu incurpuratu…
+de:Eingebettete Datei speichern...
 kw:Gwitha Restren Neythys...
 nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
@@ -16082,6 +16113,7 @@ am:Ցուցադրել &ոլորգոտիները
 az:&Sürüşdürmə zolaqlarını göstər
 cn:显示滚动条(&S)
 co:&Affissà e barre di sfilarata
+de:Scrollbalken anzeigen
 fr:Afficher les &barres  de défilement
 kw:Diskwedhes &Skrolvarrys
 nl:Toon S&chuifbalken
@@ -16254,6 +16286,7 @@ am:Ցուցադրել ոլո&րագոտիները
 az:Sürüşdürmə &zolaqlarını göstər
 cn:显示滚动条(&O)
 co:&Affissà e barre di sfilarata
+de:Scrollbalken anzeigen
 fr:Afficher les barres de &défilement
 kw:Diskwedhes Skr&olvarrys
 nl:Toon Sch&uifbalken
@@ -16553,6 +16586,7 @@ am:Տեսակավորել ըստ՝
 az:Sırala
 cn:排序
 co:Classificà da
+de:Sortieren nach
 el:Ταξινόμηση κατά
 fr:Classer
 kw:Digemyska Gans
@@ -16629,6 +16663,7 @@ am:Քառակուսի
 az:Kvadrat
 cn:矩形
 co:Quadratu
+de:Quadrat
 el:Τετράγωνο 
 kw:Pedrek
 nl:Vierkant
@@ -16640,6 +16675,7 @@ am:Ալիքավոր
 az:Dalğalı xətt
 cn:波浪线
 co:Undulatu
+de:Verschnörkelt
 kw:Igam-ogam
 nl:Kronkelig
 pl:Falowanie
@@ -16649,6 +16685,7 @@ am:Կնիք
 az:Möhür
 cn:图章
 co:Stampaghjolu
+de:Stempel
 kw:Stampa
 nl:Stempel
 pl:Pieczęć
@@ -16720,6 +16757,7 @@ am:Գծաջնջված
 az:Üstdən xətt
 cn:删除线
 co:Rigà
+de:Durchstreichen
 fr:Rayer
 kw:Treuslinya
 nl:Doorhalen
@@ -17358,6 +17396,7 @@ am:Աջակցել SumatraPDF-ին
 az:SumatraPDF-i dəstəklə
 cn:支持 SumatraPDF
 co:Sustene SumatraPDF
+de:SumatraPDF unterstützen
 el:Υποστηρίξτε το SumatraPDF
 kw:Skoodhya SumatraPDF
 nl:Steun SumatraPDF
@@ -17433,6 +17472,7 @@ am:Պիտակ (նախ մեծը)
 az:Teq (əvvəl böyüklər)
 cn:标签 (大的在前)
 co:Etichetta (prima maiò)
+de:Tag (große zuerst)
 kw:Tagg (meur kynsa)
 nl:Tag (eerst groot)
 pl:Tag (najpierw duży)
@@ -17442,6 +17482,7 @@ am:Պիտակ (նախ փոքրը)
 az:Teq (əvvəl kiçiklər)
 cn:标签 (小的在前)
 co:Etichetta (prima chjuca)
+de:Tag (kleine zuerst)
 kw:Tagg (byghan kynsa)
 nl:Tag (eerst klein)
 pl:Tag (najpierw mały)
@@ -17513,6 +17554,7 @@ am:Գրվածք
 az:Mətn
 cn:文本
 co:Testu
+de:Text
 el:Κείμενο
 fr:Texte
 kw:Tekst
@@ -17588,6 +17630,7 @@ am:Շնորհակալություն RA-MICRO PDF-ը նախընտրելու հա�
 az:RA-MICRO PDF-i seçdiyiniz üçün təşəkkür edirik!
 cn:感谢您选择 RA-MICRO PDF！
 co:Vi ringraziemu d’avè sceltu RA-MICRO PDF !
+de:Vielen Dank, dass Sie RA-MICRO PDF gewählt haben!
 fr:Merci d'avoir choisi RA6MICRO PDF !
 kw:Meur ras a dhewis RA-MICRO PDF!
 nl:Dank u voor het kiezen van RA-MICRO PDF!
@@ -17908,6 +17951,7 @@ am:Ընդգծում
 az:Altdan xətt
 cn:下划线
 co:Sottulineatu
+de:Unterstreichen
 el:Υπογράμμιση 
 fr:Souligner
 kw:Islinya
