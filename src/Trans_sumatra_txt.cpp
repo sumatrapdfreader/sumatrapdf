@@ -14169,7 +14169,7 @@ const char * gTranslations_pl =
   "drukowanie dokumentu\0";
 
 const char * gTranslations_br = 
-  "\0"\
+  "Instala\303\247\303\243o do %s n\303\243o encontrada.\0"\
   "Sobre\0"\
   "&Tamanho real\tCtrl+1\0"\
   "Op\303\247\303\265es &avan\303\247adas\342\200\246\0"\
@@ -14209,7 +14209,7 @@ const char * gTranslations_br =
   "&Imprimir... (negado)\0"\
   "Lembra&r a senha deste documento\0"\
   "Lembrar estas prefer\303\252ncias para cada documento\0"\
-  "\0"\
+  "&Remover do Hist\303\263rico\0"\
   "&Salvar como...\0"\
   "&Salvar como...\tCtrl+S\0"\
   "&Prefer\303\252ncias\0"\
@@ -14226,20 +14226,20 @@ const char * gTranslations_br =
   "(p\303\241gina %s)\0"\
   "Sobre o SumatraPDF\0"\
   "Adicionar aos favoritos\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Adicionar PDF como um filho\0"\
+  "Adicionar PDF como um irm\303\243o\0"\
+  "Adicionar filho\0"\
   "Adicionar p\303\241gina %s aos favoritos\0"\
   "Adicionar p\303\241gina %s aos favoritos\tCtrl+B\0"\
   "Adicionar p\303\241gina %s aos favoritos com outro nome (opcional):\0"\
-  "\0"\
+  "Adicionar irm\303\243o\0"\
   "Adicionar aos favoritos\0"\
   "Avan\303\247ado\0"\
   "Todos os arquivos\0"\
   "Todos os documentos suportados\0"\
-  "\0"\
+  "Anota\303\247\303\265es\0"\
   "Aplicativo:\0"\
-  "\0"\
+  "Voc\303\252 deseja realmente desinstalar o %s?\0"\
   "Deseja mesmo desinstalar o SumatraPDF?\0"\
   "Associar com arquivos PDF?\0"\
   "Anexo: %s\0"\
@@ -14256,13 +14256,13 @@ const char * gTranslations_br =
   "Cancelar\0"\
   "N\303\243o foi poss\303\255vel imprimir este arquivo\0"\
   "N\303\243o \303\251 poss\303\255vel acionar a pesquisa inversa. Verifique a linha de comando nas prefer\303\252ncias.\0"\
-  "\0"\
+  "Acento circunflexo\0"\
   "Mudar o idioma (Change Language)\0"\
   "Procurar Atualiza\303\247\303\265es\0"\
-  "\0"\
+  "C\303\255rculo\0"\
   "Fechar\0"\
   "Minimizar tudo\0"\
-  "\0"\
+  "Cor\0"\
   "Quadrinhos\0"\
   "Compatibilidade\0"\
   "Cont\303\255nuo\0"\
@@ -14282,10 +14282,10 @@ const char * gTranslations_br =
   "N\303\243o foi poss\303\255vel remover a pasta de instala\303\247\303\243o\0"\
   "N\303\243o foi poss\303\255vel renderizar a p\303\241gina\0"\
   "N\303\243o foi poss\303\255vel desinstalar o pr\303\251-visualizador para PDF\0"\
-  "\0"\
+  "N\303\243o foi poss\303\255vel desinstalar o filtro do pesquisa do Sumatra\0"\
   "N\303\243o foi poss\303\255vel desinstalar o plugin do navegador\0"\
   "N\303\243o foi poss\303\255vel gravar %s no disco\0"\
-  "\0"\
+  "Criar Anota\303\247\303\243o\0"\
   "Criado:\0"\
   "Arquivo atual\0"\
   "Posi\303\247\303\243o do cursor:\0"\
@@ -14300,17 +14300,17 @@ const char * gTranslations_br =
   "Propriedades do Documento\0"\
   "Baixar\0"\
   "Sai&r\tCtrl+Q\0"\
-  "\0"\
+  "Sair da Tela &Cheia\0"\
   "Documentos EPUB\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Editar\0"\
+  "Editar Anota\303\247\303\265es\0"\
+  "Editar Marcadores\0"\
   "Digite a senha\0"\
   "Digite a senha de %s\0"\
   "Digite a linha de comando a ser invocada com um duplo clique sobre o documento PDF:\0"\
   "Erro ao carregar %s\0"\
   "Expandir tudo\0"\
-  "\0"\
+  "Exportar Marcadores\0"\
   "&Favoritos\0"\
   "Avan\303\247ar\tAlt+->\0"\
   "Tela cheia\tCtrl+Shift+L\0"\
@@ -14325,7 +14325,7 @@ const char * gTranslations_br =
   "Favoritos\0"\
   "Documentos FictionBook\0"\
   "Arquivo %s n\303\243o encontrado\0"\
-  "\0"\
+  "Anexo de Arquivo\0"\
   "Tamanho do arquivo:\0"\
   "Arquivo:\0"\
   "Localizar...\tCtrl+F\0"\
@@ -14345,17 +14345,17 @@ const char * gTranslations_br =
   "Formatando o livro... %d p\303\241ginas\0"\
   "Texto encontrado na p\303\241gina %s\0"\
   "Texto encontrado (de novo) na p\303\241gina %s\0"\
-  "\0"\
+  "Texto Livre\0"\
   "Lidos com freq\303\274\303\252ncia\0"\
   "\0"\
   "Ir para a p\303\241gina\0"\
   "Ocultar &Op\303\247\303\265es\0"\
   "Ocultar Lidos com freq\303\274\303\252ncia\0"\
-  "\0"\
+  "Destacar\0"\
   "Dica: tecle F3 para achar a pr\303\263xima ocorr\303\252ncia\0"\
   "Arquivos de imagem (*.%s)\0"\
-  "\0"\
-  "\0"\
+  "Imagens\0"\
+  "Tinta\0"\
   "Instalar SumatraPDF\0"\
   "Instalar SumatraPDF na &pasta:\0"\
   "Falha na instala\303\247\303\243o!\0"\
@@ -14364,7 +14364,7 @@ const char * gTranslations_br =
   "Permitir que o Windows fa\303\247a a bu&sca em documentos PDF\0"\
   "Permitir que o Windows &pr\303\251-visualize documentos PDF\0"\
   "Claro\0"\
-  "\0"\
+  "Linha\0"\
   "\0"\
   "Fazer do SumatraPDF o programa padr\303\243o para arquivos PDF?\0"\
   "Tornar o SumatraPDF o leitor PDF padr\303\243o\0"\
@@ -14373,7 +14373,7 @@ const char * gTranslations_br =
   "Documentos Mobi\0"\
   "Modificado:\0"\
   "Novo &window\tCtrl+N\0"\
-  "\0"\
+  "Novos Marcadores\0"\
   "A vers\303\243o %s est\303\241 dispon\303\255vel. Baixar a nova vers\303\243o?\0"\
   "P\303\241gina seguinte\0"\
   "Nenhuma ocorr\303\252ncia encontrada\0"\
@@ -14384,7 +14384,7 @@ const char * gTranslations_br =
   "\0"\
   "Abrir\0"\
   "Abrir no PDF-XChange\0"\
-  "\0"\
+  "Abrir PDF Embutido\0"\
   "Abrir um documento...\0"\
   "Abrir em %s\0"\
   "Abrir no &Adobe Reader\0"\
@@ -14407,8 +14407,8 @@ const char * gTranslations_br =
   "Documentos PalmDoc\0"\
   "Por favor feche %s para continuar!\0"\
   "Por favor aguarde, renderizando...\0"\
-  "\0"\
-  "\0"\
+  "Polilinha\0"\
+  "Pol\303\255gono\0"\
   "Documentos Postscript\0"\
   "Apr&esenta\303\247\303\243o\tCtrl+L\0"\
   "P\303\241gina anterior\0"\
@@ -14421,9 +14421,9 @@ const char * gTranslations_br =
   "Imprimindo p\303\241gina %d de %d...\0"\
   "Problema de impress\303\243o.\0"\
   "Re&nomear...\tF2\0"\
-  "\0"\
+  "Redigir\0"\
   "&Lembrar arquivos abertos\0"\
-  "\0"\
+  "Remover Item\0"\
   "Remover dos favoritos\0"\
   "Remover p\303\241gina %s dos favoritos\0"\
   "Renomear para\0"\
@@ -14431,7 +14431,7 @@ const char * gTranslations_br =
   "Girar \303\240 direita\tCtrl+Shift++\0"\
   "Salvar anota\303\247\303\265es\0"\
   "Salvar como\0"\
-  "\0"\
+  "Salvar Arquivo Embutido...\0"\
   "S&alvar atalho...\tCtrl+Shift+S\0"\
   "Localizando %d de %d...\0"\
   "Selecion&ar tudo\0"\
@@ -14444,23 +14444,23 @@ const char * gTranslations_br =
   "Mostrar &marcadores\tF12\0"\
   "Mostrar &favoritos\0"\
   "Exibir p\303\241ginas de modo cont\303\255nuo\0"\
-  "\0"\
+  "Mostrar Barras de &Rolagem\0"\
   "Mostrar barra de ferramentas\0"\
   "Mostrar &marcadores\tF12\0"\
   "Mostrar favoritos\0"\
-  "\0"\
+  "Mostrar Barras de R&olagem\0"\
   "Mostrar Lidos com freq\303\274\303\252ncia\0"\
   "Mostrar na &pasta\0"\
   "Mostrar barra lateral de marcadores quando dispon\303\255vel\0"\
   "P\303\241gina \303\272nica\0"\
   "Desculpe, isso n\303\243o deveria ter acontecido!\n\nAperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.\0"\
-  "\0"\
+  "Ordenar Por\0"\
   "O arquivo fonte %s n\303\243o tem ponto de sincroniza\303\247\303\243o\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Quadrado\0"\
+  "Ondulado\0"\
+  "Carimbo\0"\
   "Iniciar SumatraPDF\0"\
-  "\0"\
+  "Riscado\0"\
   "Assunto:\0"\
   "SumatraPDF %s instalador\0"\
   "SumatraPDF %s desinstalador\0"\
@@ -14471,20 +14471,20 @@ const char * gTranslations_br =
   "A instala\303\247\303\243o do SumatraPDF n\303\243o foi encontrada.\0"\
   "O SumatraPDF \303\251 o seu leitor PDF padr\303\243o\0"\
   "O SumatraPDF deve ser agora seu leitor PDF padr\303\243o\0"\
-  "\0"\
+  "Suporte o SumatraPDF\0"\
   "N\303\243o foi poss\303\255vel abrir o arquivo de sincroniza\303\247\303\243o\0"\
-  "\0"\
-  "\0"\
+  "Tag (grande primeiro)\0"\
+  "Tag (pequena primeiro)\0"\
   "PDF com marca\303\247\303\265es (tags)\0"\
-  "\0"\
+  "Texto\0"\
   "Documentos de texto\0"\
-  "\0"\
+  "Obrigado por escolher o RA-MICRO PDF!\0"\
   "Obrigado por escolher o SumatraPDF!\0"\
   "Obrigado! O SumatraPDF foi instalado.\0"\
   "O instalador est\303\241 corrompido. Por favor baixe-o novamente.\nDesculpe pelo inc\303\264modo!\0"\
   "Este documento utiliza recursos n\303\243o suportados (%s) e pode n\303\243o ser exibido corretamente.\0"\
   "T\303\255tulo:\0"\
-  "\0"\
+  "Sublinhado\0"\
   "Desinstalar SumatraPDF\0"\
   "A desinstala\303\247\303\243o falhou\0"\
   "Desinstala\303\247\303\243o em progresso\342\200\246\0"\

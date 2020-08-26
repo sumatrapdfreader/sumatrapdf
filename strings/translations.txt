@@ -1,8 +1,9 @@
 AppTranslator: SumatraPDF
-f636a53145cb848e2bfad69140c4d6a3c101f340
+828c7f1f3f4933806cd9653a2ec0f485c5d397e6
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
+br:Instalação do %s não encontrada.
 cn:未找到 %s 安装。
 co:Installazione di %s micca trova.
 de:%s Installation nicht gefunden.
@@ -2618,6 +2619,7 @@ vn:Nhớ các cài đặt này cho từng tập tin
 :&Remove From History
 am:&Հեռացնել պատմությունից
 az:Tarixçədən &sil
+br:&Remover do Histórico
 cn:从历史记录删除(&R)
 co:&Caccià da a crunulogia
 de:Aus der Historie entfernen
@@ -3670,6 +3672,7 @@ vn:Thêm Ưa thích
 :Add PDF as a child
 am:Ավելացնել PDF-ը որպես ենթատարր
 az:PDF-i törəmə element kimi əlavə et
+br:Adicionar PDF como um filho
 cn:将 PDF 添加为子项目
 co:Aghjunghje un PDF cum’è un zitellu
 de:PDF als untergeordnetes Element hinzufügen
@@ -3680,6 +3683,7 @@ ru:Добавить PDF как дочерний элемент
 :Add PDF as a sibling
 am:Ավելացնել PDF-ը որպես ժառանգ
 az:PDF-i eynisəviyyəli element kimi əlavə et
+br:Adicionar PDF como um irmão
 cn:将 PDF 添加为同级项目
 co:Aghjunghje un PDF cum’è un fratellu
 de:PDF als gleichgeordnetes Element hinzufügen
@@ -3690,6 +3694,7 @@ ru:Добавить PDF как одноуровневый элемент
 :Add child
 am:Ավելացնել ենթատարր
 az:Törəmə element əlavə et
+br:Adicionar filho
 cn:添加子项目
 co:Aghjunghje un zitellu
 de:Untergeordnetes Element hinzufügen
@@ -3862,6 +3867,7 @@ vn:Thêm trang %s vào mục ưa thích\tCtrl+B
 :Add sibling
 am:Ավելացնել ժառանգ
 az:Eynisəviyyəli element əlavə et
+br:Adicionar irmão
 cn:添加同级项目
 co:Aghjunghje un fratellu
 de:Gleichgeordnetes Element hinzufügen
@@ -4143,6 +4149,7 @@ vn:Tất cả các định dạng được hỗ trợ
 :Annotations
 am:Ծանոթագրություններ
 az:Qeydlər
+br:Anotações
 cn:标注
 co:Annutazioni
 de:Anmerkungen
@@ -4223,6 +4230,7 @@ vn:Ứng dụng:
 :Are you sure you want to uninstall %s?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ապատեղադրել %s-ը:
 az:Əminsiniz ki, %s silmək istəyirsiniz?
+br:Você deseja realmente desinstalar o %s?
 cn:您确定要卸载 %s 吗？
 co:Site sicuru di vulè disinstallà %s ?
 de:Sind Sie sicher, dass Sie %s deinstallieren möchten?
@@ -5313,6 +5321,7 @@ vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần 
 :Caret
 am:Նշորդ
 az:Kursor
+br:Acento circunflexo
 cn:插入号
 co:Cursore
 de:Cursor
@@ -5464,6 +5473,7 @@ vn:Kiểm tra cập nhật
 :Circle
 am:Շրջան
 az:Dairə
+br:Círculo
 cn:圆
 co:Chjerchju
 de:Kreis
@@ -5574,6 +5584,7 @@ uk:Згорнути всі
 :Color
 am:Գույն
 az:Rəng
+br:Cor
 cn:颜色
 co:Culore
 de:Farbe
@@ -6826,6 +6837,7 @@ vn:Không thể gỡ cài đặt bộ xem truớc PDF
 :Couldn't uninstall Sumatra search filter
 am:Հնարավոր չեղավ ապատեղադրել Sumatra որոնման զտիչը
 az:Sumatra axtarış filtrini silmək mümkün olmadı
+br:Não foi possível desinstalar o filtro do pesquisa do Sumatra
 cn:无法卸载 Sumatra 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di Sumatra
 de:Konnte den Sumatra-Suchfilter nicht deinstallieren
@@ -6960,6 +6972,7 @@ vn:Không thể ghi %s vào đĩa
 :Create Annotation
 am:Ստեղծել ծանոթագրություն
 az:Qeyd düzəlt
+br:Criar Anotação
 cn:创建标注
 co:&Scrive un’annutazione
 de:Anmerkung erstellen
@@ -7805,6 +7818,7 @@ vn:Tải xuống
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
 az:Tam ekran rejimindən çı&x
+br:Sair da Tela &Cheia
 cn:退出全屏(&X)
 co:&Esce di u modu screnu sanu
 de:Vollbild verlassen
@@ -7955,6 +7969,7 @@ vn:Tập tin EPUB
 :Edit
 am:Խմբագրել
 az:Düzəliş et
+br:Editar
 cn:编辑
 co:Mudificà
 de:Bearbeiten
@@ -7967,6 +7982,7 @@ ru:Изменить
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 az:Qeydlərə düzəliş et
+br:Editar Anotações
 cn:编辑标注
 co:&Mudificà l’annutazioni
 de:Anmerkungen bearbeiten
@@ -7979,6 +7995,7 @@ ru:Изменить аннотации
 :Edit Bookmarks
 am:Խմբագրել էջանիշերը
 az:Əlfəcinlərə düzəliş et
+br:Editar Marcadores
 cn:编辑书签
 co:Mudificà l’indette
 de:Lesezeichen bearbeiten
@@ -8290,6 +8307,7 @@ uk:Розгорнути всі
 :Export Bookmarks
 am:Արտահանել էջանիշերը
 az:Əlfəcinləri ixrac et
+br:Exportar Marcadores
 cn:导出书签
 co:Espurtà l’indette
 de:Lesezeichen exportieren
@@ -9193,6 +9211,7 @@ vn:Không tìm thấy tập tin %s
 :File Attachment
 am:Ֆայլի կցորդ
 az:Qoşma fayl
+br:Anexo de Arquivo
 cn:文件附件
 co:Schedariu attaccatu
 de:Dateianhang
@@ -10478,6 +10497,7 @@ vn:Tìm thấy đoạn văn bản tại trang %s (lần nữa)
 :Free Text
 am:Ազատ գրվածք
 az:İxtiyari mətn
+br:Texto Livre
 cn:自定义文本
 co:Testu liberu
 de:Freitext
@@ -10821,6 +10841,7 @@ vn:Ẩn Đọc thường xuyên
 :Highlight
 am:Գունանշում
 az:Seç
+br:Destacar
 cn:高亮
 co:Sopralineà
 de:Hervorhebung
@@ -10957,6 +10978,7 @@ vn:Tập tin ảnh (*.%s)
 :Images
 am:Պատկերներ
 az:Şəkillər
+br:Imagens
 cn:图像
 co:Fiure
 de:Bilder
@@ -10969,6 +10991,7 @@ tr:Resimler
 :Ink
 am:Թանաք
 az:Mürəkkəb
+br:Tinta
 cn:墨迹
 co:Inchjostru
 de:Tinte
@@ -11476,6 +11499,7 @@ vn:Sáng
 :Line
 am:Գիծ
 az:Xətt
+br:Linha
 cn:线条
 co:Linea
 de:Linie
@@ -11991,6 +12015,7 @@ vn:Mở cửa sổ mới\tCtrl+N
 :New Bookmarks
 am:Նոր էջանիշեր
 az:Yeni əlfəcinlər
+br:Novos Marcadores
 cn:新建书签
 co:Nove indette
 de:Neue Lesezeichen
@@ -12672,6 +12697,7 @@ vn:Mở bằng PDF-XChange
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
 az:İç PDF faylını aç
+br:Abrir PDF Embutido
 cn:打开嵌入 PDF
 co:Apre u PDF incurpuratu
 de:Eingebettetes PDF öffnen
@@ -14103,6 +14129,7 @@ vn:Xin chờ đợi, đang hiện...
 :Poly Line
 am:Բազմագիծ
 az:Qırıq xətt
+br:Polilinha
 cn:折线
 co:Linea tronca
 de:Polylinie
@@ -14113,6 +14140,7 @@ ru:Ломаная
 :Polygon
 am:Պոլիգոն
 az:Çoxbucaqlı
+br:Polígono
 cn:多边形
 co:Poligonu
 de:Polygon
@@ -14891,6 +14919,7 @@ vn:Đổi tê&n...\tF2
 :Redact
 am:Փոփոխել
 az:Düzəliş et
+br:Redigir
 cn:编辑
 co:Redige
 de:Zensieren
@@ -14964,6 +14993,7 @@ vn:Nhớ các tập tin đã mở
 :Remove Item
 am:Հեռացնել միույթը
 az:Elementi sil
+br:Remover Item
 cn:移除项目
 co:Caccià l’elementu
 de:Element entfernen
@@ -15408,6 +15438,7 @@ vn:Lưu thành
 :Save Embedded File...
 am:Պահպանել ներկառուցված ֆայլը...
 az:İç faylı yadda saxla...
+br:Salvar Arquivo Embutido...
 cn:保存嵌入文件...
 co:Arregistrà u schedariu incurpuratu…
 de:Eingebettete Datei speichern...
@@ -16111,6 +16142,7 @@ vn:Xem trang liên tiếp
 :Show &Scrollbars
 am:Ցուցադրել &ոլորգոտիները
 az:&Sürüşdürmə zolaqlarını göstər
+br:Mostrar Barras de &Rolagem
 cn:显示滚动条(&S)
 co:&Affissà e barre di sfilarata
 de:Scrollbalken anzeigen
@@ -16284,6 +16316,7 @@ vn:Hiện Ưa thích
 :Show Scr&ollbars
 am:Ցուցադրել ոլո&րագոտիները
 az:Sürüşdürmə &zolaqlarını göstər
+br:Mostrar Barras de R&olagem
 cn:显示滚动条(&O)
 co:&Affissà e barre di sfilarata
 de:Scrollbalken anzeigen
@@ -16584,6 +16617,7 @@ vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', n�
 :Sort By
 am:Տեսակավորել ըստ՝
 az:Sırala
+br:Ordenar Por
 cn:排序
 co:Classificà da
 de:Sortieren nach
@@ -16661,6 +16695,7 @@ vn:Tập tin nguồn %s không có điểm đồng bộ
 :Square
 am:Քառակուսի
 az:Kvadrat
+br:Quadrado
 cn:矩形
 co:Quadratu
 de:Quadrat
@@ -16673,6 +16708,7 @@ tr:Kare
 :Squiggly
 am:Ալիքավոր
 az:Dalğalı xətt
+br:Ondulado
 cn:波浪线
 co:Undulatu
 de:Verschnörkelt
@@ -16683,6 +16719,7 @@ ru:Волнистая линия
 :Stamp
 am:Կնիք
 az:Möhür
+br:Carimbo
 cn:图章
 co:Stampaghjolu
 de:Stempel
@@ -16755,6 +16792,7 @@ vn:Mở SumatraPDF
 :Strike Out
 am:Գծաջնջված
 az:Üstdən xətt
+br:Riscado
 cn:删除线
 co:Rigà
 de:Durchstreichen
@@ -17394,6 +17432,7 @@ vn:SumatraPDF giờ là trình đọc PDF chính của bạn
 :Support SumatraPDF
 am:Աջակցել SumatraPDF-ին
 az:SumatraPDF-i dəstəklə
+br:Suporte o SumatraPDF
 cn:支持 SumatraPDF
 co:Sustene SumatraPDF
 de:SumatraPDF unterstützen
@@ -17470,6 +17509,7 @@ vn:Không mở được tập tin đồng bộ
 :Tag (big first)
 am:Պիտակ (նախ մեծը)
 az:Teq (əvvəl böyüklər)
+br:Tag (grande primeiro)
 cn:标签 (大的在前)
 co:Etichetta (prima maiò)
 de:Tag (große zuerst)
@@ -17480,6 +17520,7 @@ ru:Разметка (сначала большие)
 :Tag (small first)
 am:Պիտակ (նախ փոքրը)
 az:Teq (əvvəl kiçiklər)
+br:Tag (pequena primeiro)
 cn:标签 (小的在前)
 co:Etichetta (prima chjuca)
 de:Tag (kleine zuerst)
@@ -17552,6 +17593,7 @@ vn:PDF được gắn thẻ
 :Text
 am:Գրվածք
 az:Mətn
+br:Texto
 cn:文本
 co:Testu
 de:Text
@@ -17628,6 +17670,7 @@ vn:Tập tin văn bản
 :Thank you for choosing RA-MICRO PDF!
 am:Շնորհակալություն RA-MICRO PDF-ը նախընտրելու համար:
 az:RA-MICRO PDF-i seçdiyiniz üçün təşəkkür edirik!
+br:Obrigado por escolher o RA-MICRO PDF!
 cn:感谢您选择 RA-MICRO PDF！
 co:Vi ringraziemu d’avè sceltu RA-MICRO PDF !
 de:Vielen Dank, dass Sie RA-MICRO PDF gewählt haben!
@@ -17949,6 +17992,7 @@ vn:Tựa đề
 :Underline
 am:Ընդգծում
 az:Altdan xətt
+br:Sublinhado
 cn:下划线
 co:Sottulineatu
 de:Unterstreichen
