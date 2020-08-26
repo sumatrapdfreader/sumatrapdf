@@ -38,15 +38,15 @@ static void fin_base_context(JNIEnv *env)
 {
 	int i;
 
+	fz_drop_context(base_context);
+	base_context = NULL;
+
 	for (i = 0; i < FZ_LOCK_MAX; i++)
 #ifdef _WIN32
 		DeleteCriticalSection(&mutexes[i]);
 #else
 		(void)pthread_mutex_destroy(&mutexes[i]);
 #endif
-
-	fz_drop_context(base_context);
-	base_context = NULL;
 }
 
 #ifndef _WIN32

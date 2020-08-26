@@ -466,6 +466,7 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 				}
 				break;
 			case 'd':
+			case 'i':
 				if (bits == 64)
 				{
 					i64 = va_arg(args, int64_t);

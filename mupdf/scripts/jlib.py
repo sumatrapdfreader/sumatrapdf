@@ -160,9 +160,9 @@ class LogPrefixScope:
     Can be used to insert scoped prefix to log output.
     '''
     def __init__( self, prefix):
-        g_log_prefixe_scopes.items.append( prefix)
+        self.prefix = prefix
     def __enter__( self):
-        pass
+        g_log_prefixe_scopes.items.append( self.prefix)
     def __exit__( self, exc_type, exc_value, traceback):
         global g_log_prefix
         g_log_prefixe_scopes.items.pop()
@@ -216,6 +216,7 @@ def log_text( text=None, caller=1, nv=True):
     if isinstance( caller, int):
         caller += 1
     prefix = ''
+    prefix += g_log_prefixe_scopes()
     for p in g_log_prefixes:
         if callable( p):
             if isinstance( p, LogPrefixFileLine):
@@ -766,11 +767,15 @@ def make_out_callable( out):
         Otherwise we assume <out> is python stream or similar, and do: out.write(text)
     '''
     class Ret:
-        def write( text):
+        def write( self, text):
             pass
-        def flush():
+        def flush( self):
             pass
     ret = Ret()
+    if out == log:
+        # A hack to avoid expanding '{...}' in text, if caller
+        # does: jlib.system(..., out=jlib.log, ...).
+        out = lambda text: log(text, nv=False)
     if out is None:
         ret.write = lambda text: None
     elif isinstance( out, int):
@@ -789,6 +794,7 @@ def system_raw(
         encoding='latin_1',
         errors='strict',
         buffer_len=-1,
+        executable=None,
         ):
     '''
     Runs command, writing output to <out> which can be an int fd, a python
@@ -799,11 +805,14 @@ def system_raw(
             The command to run.
         out:
             Where output is sent.
-            If None, output is lost.
-            If -1, output is sent to stdout and stderr.
-            Otherwise if an integer, we do: os.write( out, text)
-            Otherwise if callable, we do: out( text)
-            Otherwise we assume <out> is python stream or similar, and do: out.write(text)
+            If None, child process inherits this process's stdout and stderr.
+            If subprocess.DEVNULL, child process's output is lost.
+            Otherwise we repeatedly read child process's output via a pipe and
+            write to <out>:
+                If <out> is an integer, we do: os.write( out, text)
+                Otherwise if <out> is callable, we do: out( text)
+                Otherwise we assume <out> is python stream or similar, and do:
+                out.write(text)
         shell:
             Whether to run command inside a shell (see subprocess.Popen).
         encoding:
@@ -825,12 +834,11 @@ def system_raw(
         subprocess's <returncode>, i.e. -N means killed by signal N, otherwise
         the exit value (e.g. 12 if command terminated with exit(12)).
     '''
-    if out == -1:
-        stdin = 0
-        stdout = 1
-        stderr = 2
-    else:
         stdin = None
+    if out in (None, subprocess.DEVNULL):
+        stdout = out
+        stderr = out
+    else:
         stdout = subprocess.PIPE
         stderr = subprocess.STDOUT
     child = subprocess.Popen(
@@ -840,6 +848,7 @@ def system_raw(
             stdout=stdout,
             stderr=stderr,
             close_fds=True,
+            executable=executable,
             #encoding=encoding - only python-3.6+.
             )
 
@@ -847,9 +856,8 @@ def system_raw(
     if encoding:
         child_out = codecs.getreader( encoding)( child_out, errors)
 
-    out = make_out_callable( out)
-
     if stdout == subprocess.PIPE:
+    out = make_out_callable( out)
         if buffer_len == -1:
             for line in child_out:
                 out.write( line)
@@ -885,13 +893,14 @@ def system(
         command,
         verbose=None,
         raise_errors=True,
-        out=None,
+        out=sys.stdout,
         prefix=None,
         rusage=False,
         shell=True,
         encoding=None,
         errors='replace',
         buffer_len=-1,
+        executable=None,
         ):
     '''
     Runs a command like os.system() or subprocess.*, but with more flexibility.
@@ -914,14 +923,17 @@ def system(
             If true, we raise an exception if the command fails, otherwise we
             return the failing error code or zero.
         out:
-            Python stream, fd, callable or Stream instance to which output is
-            sent.
-
-            If <out> is 'return', we buffer the output and return (e,
-            <output>). Note that if raise_errors is true, we only return if <e>
-            is zero.
-
-            If -1, output is sent to stdout and stderr.
+            Where output is sent.
+            If None, child process inherits this process's stdout and stderr.
+            If subprocess.DEVNULL, child process's output is lost.
+            Otherwise we repeatedly read child process's output via a pipe and
+            write to <out>:
+                If <out> is 'return' we store the output and include it in our
+                return value or exception.
+                Otherwise if <out> is an integer, we do: os.write( out, text)
+                Otherwise if <out> is callable, we do: out( text)
+                Otherwise we assume <out> is python stream or similar, and do:
+                out.write(text)
         prefix:
             If not None, should be prefix string or callable used to prefix
             all output. [This is for convenience to avoid the need to do
@@ -966,31 +978,41 @@ def system(
             errors = 'replace'
 
     out_original = out
-    if out is None:
-        out = sys.stdout
-    elif out == 'return':
+    if out == 'return':
         # Store the output ourselves so we can return it.
         out = io.StringIO()
 
-    if prefix:
-        out = StreamPrefix( out, prefix)
+    out_raw = out in (None, subprocess.DEVNULL)
 
     if verbose:
         if callable( verbose) or getattr( verbose, 'write', None):
             pass
+        elif out_raw:
+            raise Exception( 'No out stream available for verbose')
         else:
             verbose = out
         verbose = make_out_callable( verbose)
+        verbose.write('running: %s\n' % command)
 
-    if verbose:
-        print( 'running: %s' % command, file=verbose)
+    if prefix:
+        if out_raw:
+            raise Exception( 'No out stream available for prefix')
+        out = StreamPrefix( make_out_callable( out), prefix)
 
     if rusage:
         command2 = ''
         command2 += '/usr/bin/time -o ubt-out -f "D=%D E=%D F=%F I=%I K=%K M=%M O=%O P=%P R=%r S=%S U=%U W=%W X=%X Z=%Z c=%c e=%e k=%k p=%p r=%r s=%s t=%t w=%w x=%x C=%C"'
         command2 += ' '
         command2 += command
-        e = system_raw( command2, out, shell, encoding, errors, buffer_len=buffer_len)
+        e = system_raw(
+                command2,
+                out,
+                shell,
+                encoding,
+                errors,
+                buffer_len=buffer_len,
+                executable=executable,
+                )
         with open('ubt-out') as f:
             rusage_text = f.read()
         #print 'have read rusage output: %r' % rusage_text
@@ -1003,10 +1025,18 @@ def system(
             rusage_text = rusage_text[ nl+1:]
         return rusage_text
     else:
-        e = system_raw( command, out, shell, encoding, errors, buffer_len=buffer_len)
+        e = system_raw(
+                command,
+                out,
+                shell,
+                encoding,
+                errors,
+                buffer_len=buffer_len,
+                executable=executable,
+                )
 
         if verbose:
-            print( '[returned e=%s]' % e, file=verbose)
+            verbose.write('[returned e=%s]\n' % e)
 
         if raise_errors:
             if e:
@@ -1203,6 +1233,7 @@ def build(
         out=None,
         all_reasons=False,
         verbose=True,
+        executable=None,
         ):
     '''
     Ensures that <outfiles> are up to date using enhanced makefile-like
@@ -1243,11 +1274,11 @@ def build(
     if isinstance( infiles, str):
         infiles = (infiles,)
     if isinstance( outfiles, str):
-        infiles = (outfiles,)
+        outfiles = (outfiles,)
 
     if not out:
         out_frame_record = inspect.stack()[1]
-        out = lambda text: log( text, caller=out_frame_record)
+        out = lambda text: log( text, caller=out_frame_record, nv=False)
 
     command_filename = f'{outfiles[0]}.cmd'
 
@@ -1288,7 +1319,7 @@ def build(
     with open( command_filename, 'w') as f:
         pass
 
-    system( command, out=out, verbose=verbose)
+    system( command, out=out, verbose=verbose, executable=executable)
 
     with open( command_filename, 'w') as f:
         f.write( command)
@@ -1300,6 +1331,8 @@ def link_l_flags( sos):
     if isinstance( sos, str):
         sos = [sos]
     for so in sos:
+        if not so:
+            continue
         dir_ = os.path.dirname( so)
         name = os.path.basename( so)
         assert name.startswith( 'lib')

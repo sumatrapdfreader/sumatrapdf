@@ -13,6 +13,8 @@ ifeq ($(USE_SYSTEM_LIBS),yes)
   USE_SYSTEM_ZLIB := yes
   USE_SYSTEM_GLUT := yes
   USE_SYSTEM_CURL := yes
+  USE_SYSTEM_LEPTONICA := yes
+  USE_SYSTEM_TESSERACT := yes
 endif
 
 ifeq ($(OS),MACOS)
@@ -21,6 +23,28 @@ endif
 
 ifeq ($(OS),Linux)
   USE_SYSTEM_CURL := yes
+endif
+
+ifneq ($(USE_SYSTEM_LEPTONICA),yes)
+ifeq ($(wildcard thirdparty/leptonica/src/*),)
+  HAVE_LEPTONICA := no
+else
+  HAVE_LEPTONICA := yes
+endif
+endif
+ifneq ($(USE_SYSTEM_TESSERACT),yes)
+ifeq ($(wildcard thirdparty/tesseract/src/*),)
+  HAVE_TESSERACT := no
+else
+  HAVE_TESSERACT := yes
+endif
+endif
+
+ifeq ($(HAVE_LEPTONICA),yes)
+ifeq ($(HAVE_TESSERACT),yes)
+  CFLAGS += -DHAVE_LEPTONICA -DHAVE_TESSERACT
+  LIBS += -lstdc++
+endif
 endif
 
 # --- FREETYPE 2 ---
@@ -87,7 +111,7 @@ THIRD_SRC += thirdparty/gumbo-parser/src/vector.c
 THIRD_CFLAGS += -Ithirdparty/gumbo-parser/src
 
 $(OUT)/thirdparty/gumbo-parser/%.o: thirdparty/gumbo-parser/%.c
-	$(CC_CMD) -Wno-sign-compare
+	$(CC_CMD) $(LIB_CFLAGS) -Wno-sign-compare
 
 endif
 
@@ -432,4 +456,437 @@ ifeq ($(USE_SYSTEM_CURL),yes)
   HAVE_CURL := $(HAVE_SYS_CURL)
   CURL_CFLAGS := $(SYS_CURL_CFLAGS)
   CURL_LIBS := $(SYS_CURL_LIBS)
+endif
+
+# --- LEPTONICA ---
+
+ifeq ($(HAVE_LEPTONICA),yes)
+ifeq ($(USE_SYSTEM_LEPTONICA),yes)
+  THIRD_CFLAGS += $(SYS_LEPTONICA_CFLAGS)
+  THIRD_LIBS += $(SYS_LEPTONICA_LIBS)
+else
+
+THIRD_SRC += thirdparty/leptonica/src/adaptmap.c
+THIRD_SRC += thirdparty/leptonica/src/affine.c
+THIRD_SRC += thirdparty/leptonica/src/affinecompose.c
+THIRD_SRC += thirdparty/leptonica/src/arrayaccess.c
+THIRD_SRC += thirdparty/leptonica/src/baseline.c
+THIRD_SRC += thirdparty/leptonica/src/bbuffer.c
+THIRD_SRC += thirdparty/leptonica/src/bilateral.c
+THIRD_SRC += thirdparty/leptonica/src/bilinear.c
+THIRD_SRC += thirdparty/leptonica/src/binexpand.c
+THIRD_SRC += thirdparty/leptonica/src/binreduce.c
+THIRD_SRC += thirdparty/leptonica/src/blend.c
+THIRD_SRC += thirdparty/leptonica/src/bmf.c
+THIRD_SRC += thirdparty/leptonica/src/bmpio.c
+THIRD_SRC += thirdparty/leptonica/src/bmpiostub.c
+THIRD_SRC += thirdparty/leptonica/src/bootnumgen1.c
+THIRD_SRC += thirdparty/leptonica/src/bootnumgen2.c
+THIRD_SRC += thirdparty/leptonica/src/bootnumgen3.c
+THIRD_SRC += thirdparty/leptonica/src/bootnumgen4.c
+THIRD_SRC += thirdparty/leptonica/src/boxbasic.c
+THIRD_SRC += thirdparty/leptonica/src/boxfunc1.c
+THIRD_SRC += thirdparty/leptonica/src/boxfunc2.c
+THIRD_SRC += thirdparty/leptonica/src/boxfunc3.c
+THIRD_SRC += thirdparty/leptonica/src/boxfunc4.c
+THIRD_SRC += thirdparty/leptonica/src/boxfunc5.c
+THIRD_SRC += thirdparty/leptonica/src/bytearray.c
+THIRD_SRC += thirdparty/leptonica/src/ccbord.c
+THIRD_SRC += thirdparty/leptonica/src/classapp.c
+THIRD_SRC += thirdparty/leptonica/src/colorcontent.c
+THIRD_SRC += thirdparty/leptonica/src/coloring.c
+THIRD_SRC += thirdparty/leptonica/src/colormap.c
+THIRD_SRC += thirdparty/leptonica/src/colormorph.c
+THIRD_SRC += thirdparty/leptonica/src/colorquant1.c
+THIRD_SRC += thirdparty/leptonica/src/colorquant2.c
+THIRD_SRC += thirdparty/leptonica/src/colorseg.c
+THIRD_SRC += thirdparty/leptonica/src/colorspace.c
+THIRD_SRC += thirdparty/leptonica/src/compare.c
+THIRD_SRC += thirdparty/leptonica/src/conncomp.c
+THIRD_SRC += thirdparty/leptonica/src/convertfiles.c
+THIRD_SRC += thirdparty/leptonica/src/convolve.c
+THIRD_SRC += thirdparty/leptonica/src/correlscore.c
+THIRD_SRC += thirdparty/leptonica/src/dewarp1.c
+THIRD_SRC += thirdparty/leptonica/src/dewarp2.c
+THIRD_SRC += thirdparty/leptonica/src/dewarp3.c
+THIRD_SRC += thirdparty/leptonica/src/dewarp4.c
+THIRD_SRC += thirdparty/leptonica/src/dnabasic.c
+THIRD_SRC += thirdparty/leptonica/src/dnafunc1.c
+THIRD_SRC += thirdparty/leptonica/src/dnahash.c
+THIRD_SRC += thirdparty/leptonica/src/dwacomb.2.c
+THIRD_SRC += thirdparty/leptonica/src/dwacomblow.2.c
+THIRD_SRC += thirdparty/leptonica/src/edge.c
+THIRD_SRC += thirdparty/leptonica/src/encoding.c
+THIRD_SRC += thirdparty/leptonica/src/enhance.c
+THIRD_SRC += thirdparty/leptonica/src/fhmtauto.c
+THIRD_SRC += thirdparty/leptonica/src/fhmtgenlow.1.c
+THIRD_SRC += thirdparty/leptonica/src/fmorphauto.c
+THIRD_SRC += thirdparty/leptonica/src/fmorphgen.1.c
+THIRD_SRC += thirdparty/leptonica/src/fmorphgenlow.1.c
+THIRD_SRC += thirdparty/leptonica/src/fpix1.c
+THIRD_SRC += thirdparty/leptonica/src/fpix2.c
+THIRD_SRC += thirdparty/leptonica/src/gifiostub.c
+THIRD_SRC += thirdparty/leptonica/src/gplot.c
+THIRD_SRC += thirdparty/leptonica/src/graphics.c
+THIRD_SRC += thirdparty/leptonica/src/graymorph.c
+THIRD_SRC += thirdparty/leptonica/src/grayquant.c
+THIRD_SRC += thirdparty/leptonica/src/heap.c
+THIRD_SRC += thirdparty/leptonica/src/jbclass.c
+THIRD_SRC += thirdparty/leptonica/src/jp2kheader.c
+THIRD_SRC += thirdparty/leptonica/src/jp2kheaderstub.c
+THIRD_SRC += thirdparty/leptonica/src/jp2kiostub.c
+THIRD_SRC += thirdparty/leptonica/src/jpegiostub.c
+THIRD_SRC += thirdparty/leptonica/src/kernel.c
+THIRD_SRC += thirdparty/leptonica/src/libversions.c
+THIRD_SRC += thirdparty/leptonica/src/list.c
+THIRD_SRC += thirdparty/leptonica/src/map.c
+THIRD_SRC += thirdparty/leptonica/src/morph.c
+THIRD_SRC += thirdparty/leptonica/src/morphapp.c
+THIRD_SRC += thirdparty/leptonica/src/morphdwa.c
+THIRD_SRC += thirdparty/leptonica/src/morphseq.c
+THIRD_SRC += thirdparty/leptonica/src/numabasic.c
+THIRD_SRC += thirdparty/leptonica/src/numafunc1.c
+THIRD_SRC += thirdparty/leptonica/src/numafunc2.c
+THIRD_SRC += thirdparty/leptonica/src/pageseg.c
+THIRD_SRC += thirdparty/leptonica/src/paintcmap.c
+THIRD_SRC += thirdparty/leptonica/src/partify.c
+THIRD_SRC += thirdparty/leptonica/src/partition.c
+THIRD_SRC += thirdparty/leptonica/src/pdfio1.c
+THIRD_SRC += thirdparty/leptonica/src/pdfio1stub.c
+THIRD_SRC += thirdparty/leptonica/src/pdfio2.c
+THIRD_SRC += thirdparty/leptonica/src/pdfio2stub.c
+THIRD_SRC += thirdparty/leptonica/src/pix1.c
+THIRD_SRC += thirdparty/leptonica/src/pix2.c
+THIRD_SRC += thirdparty/leptonica/src/pix3.c
+THIRD_SRC += thirdparty/leptonica/src/pix4.c
+THIRD_SRC += thirdparty/leptonica/src/pix5.c
+THIRD_SRC += thirdparty/leptonica/src/pixabasic.c
+THIRD_SRC += thirdparty/leptonica/src/pixacc.c
+THIRD_SRC += thirdparty/leptonica/src/pixafunc1.c
+THIRD_SRC += thirdparty/leptonica/src/pixafunc2.c
+THIRD_SRC += thirdparty/leptonica/src/pixalloc.c
+THIRD_SRC += thirdparty/leptonica/src/pixarith.c
+THIRD_SRC += thirdparty/leptonica/src/pixcomp.c
+THIRD_SRC += thirdparty/leptonica/src/pixconv.c
+THIRD_SRC += thirdparty/leptonica/src/pixlabel.c
+THIRD_SRC += thirdparty/leptonica/src/pixtiling.c
+THIRD_SRC += thirdparty/leptonica/src/pngiostub.c
+THIRD_SRC += thirdparty/leptonica/src/pnmio.c
+THIRD_SRC += thirdparty/leptonica/src/projective.c
+THIRD_SRC += thirdparty/leptonica/src/psio1.c
+THIRD_SRC += thirdparty/leptonica/src/psio1stub.c
+THIRD_SRC += thirdparty/leptonica/src/psio2.c
+THIRD_SRC += thirdparty/leptonica/src/psio2stub.c
+THIRD_SRC += thirdparty/leptonica/src/ptabasic.c
+THIRD_SRC += thirdparty/leptonica/src/ptafunc1.c
+THIRD_SRC += thirdparty/leptonica/src/ptafunc2.c
+THIRD_SRC += thirdparty/leptonica/src/ptra.c
+THIRD_SRC += thirdparty/leptonica/src/quadtree.c
+THIRD_SRC += thirdparty/leptonica/src/queue.c
+THIRD_SRC += thirdparty/leptonica/src/rank.c
+THIRD_SRC += thirdparty/leptonica/src/rbtree.c
+THIRD_SRC += thirdparty/leptonica/src/readfile.c
+THIRD_SRC += thirdparty/leptonica/src/regutils.c
+THIRD_SRC += thirdparty/leptonica/src/rop.c
+THIRD_SRC += thirdparty/leptonica/src/roplow.c
+THIRD_SRC += thirdparty/leptonica/src/rotate.c
+THIRD_SRC += thirdparty/leptonica/src/rotateam.c
+THIRD_SRC += thirdparty/leptonica/src/rotateorth.c
+THIRD_SRC += thirdparty/leptonica/src/rotateshear.c
+THIRD_SRC += thirdparty/leptonica/src/runlength.c
+THIRD_SRC += thirdparty/leptonica/src/sarray1.c
+THIRD_SRC += thirdparty/leptonica/src/sarray2.c
+THIRD_SRC += thirdparty/leptonica/src/scale1.c
+THIRD_SRC += thirdparty/leptonica/src/scale2.c
+THIRD_SRC += thirdparty/leptonica/src/seedfill.c
+THIRD_SRC += thirdparty/leptonica/src/sel1.c
+THIRD_SRC += thirdparty/leptonica/src/sel2.c
+THIRD_SRC += thirdparty/leptonica/src/selgen.c
+THIRD_SRC += thirdparty/leptonica/src/shear.c
+THIRD_SRC += thirdparty/leptonica/src/skew.c
+THIRD_SRC += thirdparty/leptonica/src/spixio.c
+THIRD_SRC += thirdparty/leptonica/src/stack.c
+THIRD_SRC += thirdparty/leptonica/src/stringcode.c
+THIRD_SRC += thirdparty/leptonica/src/strokes.c
+THIRD_SRC += thirdparty/leptonica/src/textops.c
+THIRD_SRC += thirdparty/leptonica/src/tiffiostub.c
+THIRD_SRC += thirdparty/leptonica/src/utils1.c
+THIRD_SRC += thirdparty/leptonica/src/utils2.c
+THIRD_SRC += thirdparty/leptonica/src/warper.c
+THIRD_SRC += thirdparty/leptonica/src/webpiostub.c
+THIRD_SRC += thirdparty/leptonica/src/writefile.c
+THIRD_SRC += thirdparty/leptonica/src/zlibmem.c
+THIRD_SRC += thirdparty/leptonica/src/zlibmemstub.c
+
+THIRD_CFLAGS += -Ithirdparty/leptonica/src
+
+$(OUT)/thirdparty/leptonica/%.o: thirdparty/leptonica/%.c
+	$(CC_CMD) $(FREETYPE_CFLAGS) $(LIB_CFLAGS) -Iinclude/mupdf \
+		-Wno-sign-compare\
+		-Wno-address-of-packed-member \
+		-Iscripts/tesseract \
+		-DLEPTONICA_INTERCEPT_MALLOC=1 \
+		-DHAVE_LIBPNG=0 \
+		-DHAVE_LIBTIFF=0 \
+		-DHAVE_LIBJPEG=0 \
+		-DHAVE_LIBZ=0 \
+		-DHAVE_LIBGIF=0 \
+		-DHAVE_LIBUNGIF=0 \
+		-DHAVE_LIBWEBP=0 \
+		-DHAVE_LIBWEBP_ANIM=0 \
+		-DHAVE_LIBJP2K=0
+
+endif
+endif
+
+# --- TESSERACT ---
+
+ifeq ($(HAVE_TESSERACT),yes)
+
+ifeq ($(USE_SYSTEM_TESSERACT),yes)
+  THIRD_CFLAGS += $(SYS_TESSERACT_CFLAGS)
+  THIRD_LIBS += $(SYS_TESSERACT_LIBS)
+else
+
+THIRD_SRC += thirdparty/tesseract/src/api/altorenderer.cpp
+THIRD_SRC += thirdparty/tesseract/src/api/baseapi.cpp
+THIRD_SRC += thirdparty/tesseract/src/api/capi.cpp
+THIRD_SRC += thirdparty/tesseract/src/api/hocrrenderer.cpp
+THIRD_SRC += thirdparty/tesseract/src/api/lstmboxrenderer.cpp
+THIRD_SRC += thirdparty/tesseract/src/api/pdfrenderer.cpp
+THIRD_SRC += thirdparty/tesseract/src/api/renderer.cpp
+THIRD_SRC += thirdparty/tesseract/src/api/wordstrboxrenderer.cpp
+THIRD_SRC += thirdparty/tesseract/src/arch/dotproduct.cpp
+THIRD_SRC += thirdparty/tesseract/src/arch/intsimdmatrix.cpp
+THIRD_SRC += thirdparty/tesseract/src/arch/simddetect.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/applybox.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/control.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/linerec.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/ltrresultiterator.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/mutableiterator.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/output.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/pageiterator.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/pagesegmain.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/pagewalk.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/paragraphs.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/paramsd.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/pgedit.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/reject.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/resultiterator.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/tessedit.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/tesseractclass.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/tessvars.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/thresholder.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccmain/werdit.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/blamer.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/blobbox.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/blobs.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/blread.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/boxread.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/boxword.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/ccstruct.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/coutln.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/detlinefit.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/dppoint.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/imagedata.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/linlsq.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/matrix.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/mod128.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/normalis.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/ocrblock.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/ocrpara.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/ocrrow.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/otsuthr.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/pageres.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/pdblock.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/points.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/polyaprx.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/polyblk.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/quadlsq.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/quspline.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/ratngs.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/rect.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/rejctmap.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/seam.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/split.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/statistc.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/stepblob.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccstruct/werd.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/ccutil.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/clst.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/elst.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/elst2.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/errcode.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/globaloc.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/mainblk.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/params.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/scanutils.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/serialis.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/strngs.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/tessdatamanager.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/tprintf.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/unichar.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/unicharcompress.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/unicharmap.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/unicharset.cpp
+THIRD_SRC += thirdparty/tesseract/src/ccutil/unicodes.cpp
+THIRD_SRC += thirdparty/tesseract/src/classify/classify.cpp
+THIRD_SRC += thirdparty/tesseract/src/dict/context.cpp
+THIRD_SRC += thirdparty/tesseract/src/dict/dawg.cpp
+THIRD_SRC += thirdparty/tesseract/src/dict/dawg_cache.cpp
+THIRD_SRC += thirdparty/tesseract/src/dict/dict.cpp
+THIRD_SRC += thirdparty/tesseract/src/dict/permdawg.cpp
+THIRD_SRC += thirdparty/tesseract/src/dict/stopper.cpp
+THIRD_SRC += thirdparty/tesseract/src/dict/trie.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/convolve.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/fullyconnected.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/functions.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/input.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/lstm.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/lstmrecognizer.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/maxpool.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/network.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/networkio.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/parallel.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/plumbing.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/recodebeam.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/reconfig.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/reversed.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/series.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/stridemap.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/tfnetwork.cpp
+THIRD_SRC += thirdparty/tesseract/src/lstm/weightmatrix.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/alignedblob.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/baselinedetect.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/bbgrid.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/blkocc.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/blobgrid.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/ccnontextdetect.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/cjkpitch.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/colfind.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/colpartition.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/colpartitiongrid.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/colpartitionset.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/devanagari_processing.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/drawtord.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/edgblob.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/edgloop.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/fpchop.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/gap_map.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/imagefind.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/linefind.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/makerow.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/oldbasel.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/pithsync.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/pitsync1.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/scanedg.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/sortflts.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/strokewidth.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/tabfind.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/tablefind.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/tablerecog.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/tabvector.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/textlineprojection.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/textord.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/topitch.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/tordmain.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/tospace.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/tovars.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/underlin.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/wordseg.cpp
+THIRD_SRC += thirdparty/tesseract/src/textord/workingpartset.cpp
+THIRD_SRC += thirdparty/tesseract/src/viewer/scrollview.cpp
+THIRD_SRC += thirdparty/tesseract/src/viewer/svmnode.cpp
+THIRD_SRC += thirdparty/tesseract/src/viewer/svutil.cpp
+THIRD_SRC += thirdparty/tesseract/src/wordrec/tface.cpp
+THIRD_SRC += thirdparty/tesseract/src/wordrec/wordrec.cpp
+
+THIRD_CFLAGS += -Ithirdparty/tesseract/include -Iscripts/tesseract
+
+ifeq ($HAVE_AVX,yes)
+TESSERACT_AVX_FLAGS = -mavx -DHAVE_AVX -D__AVX__
+THIRD_SRC += thirdparty/tesseract/src/arch/dotproductavx.cpp
+endif
+ifeq ($HAVE_AVX2,yes)
+TESSERACT_AVX2_FLAGS = -mavx2 -DHAVE_AVX2 -D__AVX2__
+THIRD_SRC += thirdparty/tesseract/src/arch/intsimdmatrixavx2.cpp
+endif
+ifeq ($HAVE_FMA,yes)
+TESSERACT_FMA_FLAGS = -mfma -DHAVE_FMA -D__FMA__
+THIRD_SRC += thirdparty/tesseract/src/arch/dotproductfma.cpp
+endif
+ifeq ($HAVE_SSE4_1,yes)
+TESSERACT_SSE_FLAGS = -msse4.1 -DHAVE_SSE4_1 -D__SSE4_1__
+THIRD_SRC += thirdparty/tesseract/src/arch/dotproductsse.cpp
+THIRD_SRC += thirdparty/tesseract/src/arch/intsimdmatrixsse.cpp
+endif
+ifeq ($HAVE_NEON,yes)
+TESSERACT_NEON_FLAGS = -mneon -DHAVE_NEON
+THIRD_SRC += thirdparty/tesseract/src/arch/intsimdmatrixneon.cpp
+endif
+
+TESSERACT_CXX_CMD = $(CXX_CMD) $(LIB_CFLAGS) $(THIRD_CFLAGS) -Iinclude/mupdf \
+		-Wno-sign-compare\
+		-Iscripts/tesseract \
+		-Ithirdparty/tesseract/src \
+		-Ithirdparty/tesseract/include \
+		-Ithirdparty/tesseract/src/api \
+		-Ithirdparty/tesseract/src/arch \
+		-Ithirdparty/tesseract/src/ccmain \
+		-Ithirdparty/tesseract/src/ccstruct \
+		-Ithirdparty/tesseract/src/ccutil \
+		-Ithirdparty/tesseract/src/classify \
+		-Ithirdparty/tesseract/src/dict \
+		-Ithirdparty/tesseract/src/lstm \
+		-Ithirdparty/tesseract/src/textord \
+		-Ithirdparty/tesseract/src/viewer \
+		-Ithirdparty/tesseract/src/wordrec \
+		-Ithirdparty/tesseract/src/cutil \
+		-DTESSERACT_IMAGEDATA_AS_PIX \
+		-DTESSERACT_DISABLE_DEBUG_FONTS \
+		-DGRAPHICS_DISABLED \
+		-DDISABLED_LEGACY_ENGINE \
+		$(TESSERACT_AVX_FLAGS) \
+		$(TESSERACT_AVX2_FLAGS) \
+		$(TESSERACT_FMA_FLAGS) \
+		$(TESSERACT_SSE4_1_FLAGS) \
+		$(TESSERACT_NEON_FLAGS)
+
+$(OUT)/thirdparty/tesseract/src/api/%.o: thirdparty/tesseract/src/api/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/arch/%.o: thirdparty/tesseract/src/arch/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/ccmain/%.o: thirdparty/tesseract/src/ccmain/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/ccstruct/%.o: thirdparty/tesseract/src/ccstruct/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/ccutil/%.o: thirdparty/tesseract/src/ccutil/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/classify/%.o: thirdparty/tesseract/src/classify/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/dict/%.o: thirdparty/tesseract/src/dict/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/lstm/%.o: thirdparty/tesseract/src/lstm/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/textord/%.o: thirdparty/tesseract/src/textord/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/viewer/%.o: thirdparty/tesseract/src/viewer/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/wordrec/%.o: thirdparty/tesseract/src/wordrec/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+$(OUT)/thirdparty/tesseract/src/cutil/%.o: thirdparty/tesseract/src/cutil/%.cpp
+	$(TESSERACT_CXX_CMD)
+
+endif
 endif

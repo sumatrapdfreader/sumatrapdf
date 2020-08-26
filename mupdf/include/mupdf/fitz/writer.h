@@ -171,6 +171,7 @@ extern const char *fz_svg_write_options_usage;
 extern const char *fz_pcl_write_options_usage;
 extern const char *fz_pclm_write_options_usage;
 extern const char *fz_pwg_write_options_usage;
+extern const char *fz_pdfocr_write_options_usage;
 
 /* Implementation details: subject to change. */
 

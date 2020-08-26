@@ -2289,19 +2289,19 @@ pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, char *b
 	if (!strcmp(key, FZ_META_FORMAT))
 	{
 		int version = pdf_version(ctx, doc);
-		return (int)fz_snprintf(buf, size, "PDF %d.%d", version/10, version % 10);
+		return 1 + (int)fz_snprintf(buf, size, "PDF %d.%d", version/10, version % 10);
 	}
 
 	if (!strcmp(key, FZ_META_ENCRYPTION))
 	{
 		if (doc->crypt)
-			return (int)fz_snprintf(buf, size, "Standard V%d R%d %d-bit %s",
+			return 1 + (int)fz_snprintf(buf, size, "Standard V%d R%d %d-bit %s",
 					pdf_crypt_version(ctx, doc->crypt),
 					pdf_crypt_revision(ctx, doc->crypt),
 					pdf_crypt_length(ctx, doc->crypt),
 					pdf_crypt_method(ctx, doc->crypt));
 		else
-			return (int)fz_strlcpy(buf, "None", size);
+			return 1 + (int)fz_strlcpy(buf, "None", size);
 	}
 
 	if (strstr(key, "info:") == key)
@@ -2319,7 +2319,7 @@ pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, char *b
 			return -1;
 
 		s = pdf_to_text_string(ctx, info);
-		n = (int)fz_strlcpy(buf, s, size);
+		n = 1 + (int)fz_strlcpy(buf, s, size);
 		return n;
 	}
 

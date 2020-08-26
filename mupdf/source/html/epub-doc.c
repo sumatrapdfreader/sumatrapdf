@@ -773,11 +773,11 @@ epub_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *
 {
 	epub_document *doc = (epub_document*)doc_;
 	if (!strcmp(key, FZ_META_FORMAT))
-		return (int)fz_strlcpy(buf, "EPUB", size);
+		return 1 + (int)fz_strlcpy(buf, "EPUB", size);
 	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->dc_title)
-		return (int)fz_strlcpy(buf, doc->dc_title, size);
+		return 1 + (int)fz_strlcpy(buf, doc->dc_title, size);
 	if (!strcmp(key, FZ_META_INFO_AUTHOR) && doc->dc_creator)
-		return (int)fz_strlcpy(buf, doc->dc_creator, size);
+		return 1 + (int)fz_strlcpy(buf, doc->dc_creator, size);
 	return -1;
 }
 

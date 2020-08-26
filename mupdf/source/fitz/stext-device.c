@@ -564,10 +564,6 @@ fz_stext_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_m
 	if (span->len == 0)
 		return;
 
-	tm.e = 0;
-	tm.f = 0;
-	trm = fz_concat(tm, ctm);
-
 	for (i = 0; i < span->len; i++)
 	{
 		/* Calculate new pen location and delta */

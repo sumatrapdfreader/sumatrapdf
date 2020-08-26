@@ -48,6 +48,7 @@ int atexit(void (*)(void));
 #include <unistd.h>
 #endif
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -189,7 +190,7 @@ windows_fprintf(FILE *file, const char *fmt, ...)
 #endif
 #endif
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__OpenBSD__)
 #define MEMENTO_HAS_FORK
 #elif defined(__APPLE__) && defined(__MACH__)
 #define MEMENTO_HAS_FORK
@@ -1541,6 +1542,7 @@ void Memento_stats(void)
 static int showInfo(Memento_BlkHeader *b, void *arg)
 {
     Memento_BlkDetails *details;
+    const char* hide_multiple_reallocs = getenv("MEMENTO_HIDE_MULTIPLE_REALLOCS");
 
     fprintf(stderr, FMTP":(size="FMTZ",num=%d)",
             MEMBLK_TOBLK(b), (FMTZ_CAST)b->rawsize, b->sequence);
@@ -1548,12 +1550,17 @@ static int showInfo(Memento_BlkHeader *b, void *arg)
         fprintf(stderr, " (%s)", b->label);
     fprintf(stderr, "\nEvents:\n");
 
-    details = b->details;
-    while (details)
+    for (details = b->details; details; details = details->next)
     {
+        if (hide_multiple_reallocs
+                && details->type == Memento_EventType_realloc
+                && details->next
+                && details->next->type == Memento_EventType_realloc
+                ) {
+            continue;
+        }
         fprintf(stderr, "  Event %d (%s)\n", details->sequence, eventType[(int)details->type]);
         Memento_showStacktrace(details->stack, details->count);
-        details = details->next;
     }
     return 0;
 }
@@ -1774,8 +1781,10 @@ static int squeeze(void)
     for (i = 0; i < OPEN_MAX; i++) {
         if (stashed_map[i] == 0) {
             int j = dup(i);
+            if (j >= 0) {
             stashed_map[j] = i+1;
         }
+    }
     }
 
     fprintf(stderr, "Failing at:\n");
@@ -1784,6 +1793,13 @@ static int squeeze(void)
     if (pid == 0) {
         /* Child */
         signal(SIGSEGV, Memento_signal);
+        /* Close the dup-licated fds to avoid them getting corrupted by faulty
+        code. */
+        for (i = 0; i < OPEN_MAX; i++) {
+            if (stashed_map[i] != 0) {
+                close(stashed_map[i]-1);
+            }
+        }
         /* In the child, we always fail the next allocation. */
         if (memento.patternBit == 0) {
             memento.patternBit = 1;
@@ -2594,6 +2610,7 @@ void *Memento_realloc(void *blk, size_t newsize)
         MEMENTO_LOCK();
         ret = do_malloc(newsize, Memento_EventType_realloc);
         MEMENTO_UNLOCK();
+        if (!ret) errno = ENOMEM;
         return ret;
     }
     if (newsize == 0) {
@@ -2606,6 +2623,7 @@ void *Memento_realloc(void *blk, size_t newsize)
     MEMENTO_LOCK();
     ret = do_realloc(blk, newsize, Memento_EventType_realloc);
     MEMENTO_UNLOCK();
+    if (!ret) errno = ENOMEM;
     return ret;
 }
 

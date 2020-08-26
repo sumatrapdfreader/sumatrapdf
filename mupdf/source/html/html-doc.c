@@ -157,9 +157,9 @@ fb2doc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char
 {
 	html_document *doc = (html_document*)doc_;
 	if (!strcmp(key, FZ_META_FORMAT))
-		return (int)fz_strlcpy(buf, "FictionBook2", size);
+		return 1 + (int)fz_strlcpy(buf, "FictionBook2", size);
 	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->title)
-		return (int)fz_strlcpy(buf, doc->html->title, size);
+		return 1 + (int)fz_strlcpy(buf, doc->html->title, size);
 	return -1;
 }
 

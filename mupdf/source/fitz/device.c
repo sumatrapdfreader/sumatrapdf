@@ -43,6 +43,9 @@ fz_disable_device(fz_context *ctx, fz_device *dev)
 void
 fz_close_device(fz_context *ctx, fz_device *dev)
 {
+	if (dev == NULL)
+		return;
+
 	fz_try(ctx)
 	{
 		if (dev->close_device)

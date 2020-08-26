@@ -119,7 +119,9 @@ pclm_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "PCLm expected to be Grayscale or RGB");
 
 	fz_free(ctx, writer->stripbuf);
+	writer->stripbuf = NULL;
 	fz_free(ctx, writer->compbuf);
+	writer->compbuf = NULL;
 	writer->stripbuf = Memento_label(fz_malloc(ctx, (size_t)w * sh * n), "pclm_stripbuf");
 	writer->complen = fz_deflate_bound(ctx, (size_t)w * sh * n);
 	writer->compbuf = Memento_label(fz_malloc(ctx, writer->complen), "pclm_compbuf");
