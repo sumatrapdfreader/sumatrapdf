@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-828c7f1f3f4933806cd9653a2ec0f485c5d397e6
+5d1d5e751b907c3363951e119d462b2593387f4e
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -10,6 +10,7 @@ de:%s Installation nicht gefunden.
 fr:%s installation non trouvée
 kw:Ny gevir leans %s.
 nl:%s installatie niet gevonden.
+pa:%s ਦੀ ਸਥਾਪਤੀ ਨਹੀਂ ਲੱਭੀ।
 pl:Nie znaleziono instalacji %s.
 ru:Не удалось найти установку %s.
 vn:Không tìm thấy bản cài đặt đặt %s.
@@ -63,7 +64,7 @@ ne:&बारेमा
 nl:&Over...
 nn:&Om
 no:&Om
-pa:&ਇਸ ਬਾਰੇ
+pa:ਇਸ &ਬਾਰੇ
 pl:&O SumatraPDF
 pt:&Acerca
 ro:&Despre
@@ -399,6 +400,7 @@ ne:&पुस्तिका दृश्य\tCtrl+8
 nl:&Boekweergave\tCtrl+8
 nn:&Bokvising\tCtrl+8
 no:&Bokvisning\tCtrl+8
+pa:&ਕਿਤਾਬੀ ਦਿੱਖ\tCtrl+8
 pl:Widok o&dczytu\tCtrl+8
 pt:Como li&vro\tCtrl+8
 ro:Format carte\tCtrl+8
@@ -2138,6 +2140,7 @@ ne:&पासवर्ड
 nl:&Wachtwoord:
 nn:&Passord:
 no:&Passord:
+pa:&ਪਾਸਵਰਡ
 pl:&Hasło:
 pt:&Palavra-passe:
 ro:&Parola:
@@ -3060,6 +3063,7 @@ ne:&थिम
 nl:&Uiterlijk
 nn:&Tema
 no:&Tema
+pa:&ਥੀਮ
 pl:&Motyw
 pt:&Tema
 ru:&Тема
@@ -4237,6 +4241,7 @@ de:Sind Sie sicher, dass Sie %s deinstallieren möchten?
 fr:Voulez-vous vraiment désinstaller %s ?
 kw:Os ta sur bos hwans dhis anlea %s?
 nl:Weet u zeker dat u %s wilt dé-installeren?
+pa:ਕੀ ਤੁਸੀਂ %s ਨੂੰ ਅਸਥਾਪਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
 pl:Czy na pewno chcesz odinstalować %s?
 ru:Уверены, что хотите удалить %s?
 vn:Bạn có chắc chắn muốn gỡ cài đặt %s?
@@ -4286,7 +4291,7 @@ ne:SumatraPDF हटाउन चाहानुहुन्छ?
 nl:Weet u zeker dat u SumatraPDF wilt verwijderen?
 nn:Er du sikker på at du vil avinstallere SumatraPDF?
 no:Vil du virkelig avinstallere SumatraPDF?
-pa:ਕੀ ਤੁਸੀਂ SumatraPDF ਨੂੰ ਅਣ-ਸਥਾਪਿਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
+pa:ਕੀ ਤੁਸੀਂ SumatraPDF ਨੂੰ ਅਸਥਾਪਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza de que deseja desinstalar SumatraPDF?
 ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
@@ -4765,6 +4770,7 @@ ne:पुस्तकचिनो सर्टकटहरु
 nl:Bladwijzer maken
 nn:Bokmerk snarveg
 no:Bokmerk snarveier
+pa:ਬੁੱਕਮਾਰਕ ਸ਼ਾਰਟਕੱਟ
 pl:Zakładki
 pt:Atalhos de marcadores
 ro:Legături rapide - semne de carte
@@ -4895,6 +4901,7 @@ ne:पुस्तकचिनो
 nl:Bladwijzers
 nn:Bokmerkar
 no:Bokmerker
+pa:ਬੁੱਕਮਾਰਕ
 pl:Zakładki
 pt:Marcadores
 ro:Marcaje
@@ -5592,6 +5599,7 @@ el:Χρώμα
 fr:Couleur
 kw:Liw
 nl:Kleur
+pa:ਰੰਗ
 pl:Kolor
 ru:Цвет
 vn:Tô màu
@@ -5982,7 +5990,7 @@ ne:अनुवादमा योगदान दिनुहोस्
 nl:Help met vertalen
 nn:Delta med omsetjing
 no:Bidra med oversetting
-pa:ਅਨੁਵਾਦ ਕਰਨ ਵਿੱਚ ਮਦੱਦ ਕਰੋ
+pa:ਅਨੁਵਾਦ ਵਿੱਚ ਆਪਣਾ ਯੋਗਦਾਨ ਪਾਓ
 pl:Dodaj swoje tłumaczenie
 pt:Ajudar na tradução
 ro:Contribuie la traducere
@@ -7977,6 +7985,7 @@ el:Επεξεργασία
 fr:Éditer
 kw:Golegi
 nl:Bewerken
+pa:ਸੋਧੋ
 pl:Edytuj
 ru:Изменить
 :Edit Annotations
@@ -9268,6 +9277,7 @@ ne:फाइल साइज:
 nl:Bestandsgrootte
 nn:Filstørrelse:
 no:Filstørrelse:
+pa:ਫਾਇਲ ਦਾ ਅਕਾਰ
 pl:Rozmiar pliku:
 pt:Tamanho do ficheiro:
 ro:Mărime fișier:
@@ -12539,6 +12549,7 @@ ne:हुन्छ
 nl:OK
 nn:OK
 no:OK
+pa:ਠੀਕ ਹੈ
 pl:OK
 pt:Aplicar
 ro:În regulă
@@ -16848,6 +16859,7 @@ ne:बिषय:
 nl:Onderwerp:
 nn:Tema:
 no:Emne:
+pa:ਵਿਸ਼ਾ:
 pl:Temat:
 pt:Assunto:
 ro:Subiect:
@@ -17969,6 +17981,7 @@ ne:शीर्षक:
 nl:Titel:
 nn:Tittel:
 no:Tittel:
+pa:ਸਿਰਨਾਵਾਂ:
 pl:Tytuł:
 pt:Título:
 ro:Titlu:
@@ -18691,7 +18704,7 @@ ne:तपाई संग अद्यावधिक संस्करण छ 
 nl:U gebruikt de meest recente versie.
 nn:Du har den siste versjonen.
 no:Du har den siste versjonen.
-pa:ਤੋਹਾਡੇ ਕੋਲ ਪਿਹਲਾਂ ਤੌਂ ਹੀ ਨਵਾਂ ਵਰਜਨ ਹੈ
+pa:ਤੁਹਾਡੇ ਕੋਲ ਨਵਾਂ ਸੰਸਕਰਨ ਹੈ।
 pl:Masz najnowszą wersję.
 pt:Já tem a versão mais recente
 ro:Aveți ultima versiune.
@@ -18760,7 +18773,7 @@ ne:तपाई संग %s संस्करण छ
 nl:U heeft versie %s
 nn:Du har versjon %s
 no:Du har versjon %s
-pa:ਤੋਹਾਡੇ ਕੋਲ %s ਵਰਜਨ ਹੈ
+pa:ਤੁਹਾਡੇ ਕੋਲ ਸੰਸਕਰਨ %s ਹੈ
 pl:Masz wersję %s.
 pt:Tem a versão %s
 ro:Aveți versiunea %s
