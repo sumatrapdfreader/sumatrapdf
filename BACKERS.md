@@ -32,3 +32,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Victor Soli
 - Laurent NOEL
 - Nikita
+- Walter Manbeck
