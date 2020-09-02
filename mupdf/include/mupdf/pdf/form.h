@@ -30,6 +30,13 @@ pdf_widget *pdf_first_widget(fz_context *ctx, pdf_page *page);
 pdf_widget *pdf_next_widget(fz_context *ctx, pdf_widget *previous);
 int pdf_update_widget(fz_context *ctx, pdf_widget *widget);
 
+/*
+	create a new signature widget on the specified page, with the
+	specified name. The returned pdf_widget structure is owned by
+	the page and does not need to be freed
+*/
+pdf_widget *pdf_create_signature_widget(fz_context *ctx, pdf_page *page, char *name);
+
 enum pdf_widget_type pdf_widget_type(fz_context *ctx, pdf_widget *widget);
 
 fz_rect pdf_bound_widget(fz_context *ctx, pdf_widget *widget);

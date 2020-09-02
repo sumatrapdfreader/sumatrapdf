@@ -81,7 +81,6 @@ else
   $(error unknown build setting: '$(build)')
 endif
 
-$(warning OS=$(OS))
 ifeq ($(OS),OpenBSD)
   LDFLAGS += -pthread
 endif

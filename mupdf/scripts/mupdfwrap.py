@@ -1089,7 +1089,16 @@ classextras = ClassExtras(
 
         fz_link = ClassExtra(
                 iterator_next = ('', ''),
-                constructor_raw = True,
+                constructor_raw = False,
+                constructors_extra = [
+                    ExtraConstructor( '(fz_link* link)',
+                        f'''
+                        : m_internal( {rename.function_call("fz_keep_link")}(link))
+                        {{
+                        }}
+                        ''',
+                        )
+                ],
                 ),
 
         fz_location = ClassExtra(
@@ -2991,11 +3000,6 @@ def class_add_iterator( struct, structname, classname, extras):
         # The container is also the first item in the linked list.
         it_internal_type = structname
         it_type = classname
-
-    # Iterator needs raw constructor so it can set its internal m_item as
-    # it iterates.
-    #
-    extras.constructor_raw = True
 
     # We add to extras.methods_extra().
     #
@@ -5082,190 +5086,6 @@ def test_swig():
             )
 
 
-
-def test_mupdfcpp_swig():
-    '''
-    Test the python API.
-    '''
-    import mupdf
-    import os
-    import sys
-    log = print
-
-    log( 'have imported mupdf')
-
-    if 1:
-        # Test operations using functions:
-        #
-        log( 'Testing functions.')
-
-        # Find mupdf:thirdparty/zlib/zlib.3.pdf, assuming we are in
-        # mupdf:platform/python.
-        zlib_pdf = os.path.abspath( f'{__file__}/../../../thirdparty/zlib/zlib.3.pdf')
-
-        assert os.path.isfile( zlib_pdf), f'file does not exist: {zlib_pdf}'
-        log( f'    Opening {zlib_pdf}')
-        document = mupdf.open_document( zlib_pdf)
-        log( f'    {mupdf.needs_password( document)}')
-        log( f'    {mupdf.needs_password( document)}')
-        log( f'    {mupdf.count_pages( document)}')
-        log( f'    {mupdf.document_output_intent( document)}')
-
-    # Test operations using classes:
-    #
-    log( f'Testing classes')
-    for filename in (
-            os.path.expanduser( '~/artifex/pdf_reference17.pdf'),
-            os.path.expanduser( '~/artifex/testfiles/pdf_reference17.pdf'),
-            ):
-        if os.path.isfile( filename):
-            break
-    else:
-        raise Exception( 'cannot find pdf_reference17.pdf')
-
-    document = mupdf.Document( filename)
-    log( f'Have create document for {filename}')
-    log( f'{document.needs_password()}')
-    log( f'{document.count_pages()}')
-
-    for k in (
-            'format',
-            'encryption',
-            'info:Author',
-            'info:Title',
-            'info:Creator',
-            'info:Producer',
-            'qwerty',
-            ):
-        v = document.lookup_metadata(k)
-        log(f'document.lookup_metadata() k={k} returned v={v!r}')
-        if k == 'qwerty':
-            assert v is None
-        else:
-            assert isinstance(v, str)
-
-    zoom = 10
-    scale = mupdf.Matrix.scale( zoom/100., zoom/100.)
-    page_number = 0
-    log( f'Have created scale: a={scale.a} b={scale.b} c={scale.c} d={scale.d} e={scale.e} f={scale.f}')
-
-    colorspace = mupdf.Colorspace( mupdf.Colorspace.Fixed_RGB)
-    log( f'{colorspace.m_internal.key_storable.storable.refs}')
-    pixmap = mupdf.Pixmap( document, page_number, scale, colorspace, 0)
-    log( f'Have created pixmap: {pixmap.m_internal.w} {pixmap.m_internal.h} {pixmap.m_internal.stride} {pixmap.m_internal.n}')
-
-    filename = 'mupdf_test-out.png'
-    pixmap.save_pixmap_as_png( filename)
-    log( f'Have created {filename} using pixmap.save_pixmap_as_png().')
-
-
-    # Print image data in ascii PPM format. Copied from
-    # mupdf/docs/examples/example.c.
-    #
-    samples = pixmap.m_internal.samples
-    stride = pixmap.m_internal.stride
-    n = pixmap.m_internal.n
-    filename = 'mupdf_test-out.ppm'
-    with open( filename, 'w') as f:
-        f.write( 'P3\n')
-        f.write( '%s %s\n' % (pixmap.m_internal.w, pixmap.m_internal.h))
-        f.write( '255\n')
-        for y in range( 0, pixmap.m_internal.h):
-            for x in range( pixmap.m_internal.w):
-                if x:
-                    f.write( '  ')
-                offset = y * stride + x * n
-                f.write( '%3d %3d %3d' % (
-                        mupdf.bytes_getitem( samples, offset + 0),
-                        mupdf.bytes_getitem( samples, offset + 1),
-                        mupdf.bytes_getitem( samples, offset + 2),
-                        ))
-            f.write( '\n')
-    log( f'Have created {filename} by scanning pixmap.')
-
-    # Generate .png and but create Pixmap from Page instead of from Document.
-    #
-    page = mupdf.Page(document, 0)
-    separations = page.page_separations()
-    log( f'page_separations() returned {"true" if separations else "false"}')
-    pixmap = mupdf.Pixmap( page, scale, colorspace, 0)
-    filename = 'mupdf_test-out2.png'
-    pixmap.save_pixmap_as_png( filename)
-    log( f'Have created {filename} using pixmap.save_pixmap_as_png()')
-
-    # Show links
-    log( f'Links.')
-    page = mupdf.Page(document, 0)
-    link = mupdf.load_links( page.m_internal);
-    log( f'{link}')
-    if link:
-        for i in link:
-            log( f'{i}')
-
-    # Check we can iterate over Link's, by creating one manually.
-    #
-    link = mupdf.Link( mupdf.Rect(0, 0, 1, 1), None, "hello")
-    log( f'items in <link> are:')
-    for i in link:
-        log( f'    {i.m_internal.refs} {i.m_internal.uri}')
-
-    # Check iteration over Outlines.
-    #
-    log( f'Outlines.')
-    outline = mupdf.Outline( document)
-    log( f'{outline.uri()} {outline.page()} {outline.x()} {outline.y()} {outline.is_open()} {outline.title()}')
-    log( f'items in outline tree are:')
-    for o in outline:
-        log( f'    {o.uri()} {o.page()} {o.x()} {o.y()} {o.is_open()} {o.title()}')
-
-    # Check iteration over StextPage.
-    #
-    log( f'StextPage.')
-    stext_options = mupdf.StextOptions(0)
-    stext_page = mupdf.StextPage( document, 40, stext_options)
-    device_stext = mupdf.Device( stext_page, stext_options)
-    matrix = mupdf.Matrix()
-    page = mupdf.Page( document, 0)
-    cookie = mupdf.Cookie()
-    page.run( device_stext, matrix, cookie)
-    log( f'    stext_page is:')
-    for block in stext_page:
-        log( f'        block:')
-        for line in block:
-            line_text = ''
-            for char in line:
-                line_text += chr( char.m_internal.c)
-            log( f'            {line_text}')
-
-    device_stext.close_device()
-
-    # Check copy-constructor.
-    log( f'Checking copy-constructor')
-    document2 = mupdf.Document( document)
-    del document
-    page = mupdf.Page(document2, 0)
-    scale = mupdf.Matrix()
-    pixmap = mupdf.Pixmap( page, scale, colorspace, 0)
-    pixmap.save_pixmap_as_png( 'mupdf_test-out3.png')
-
-    stdout = mupdf.Output(mupdf.Output.Fixed_STDOUT)
-    log( f'{type(stdout)} {stdout.m_internal.state}')
-
-    mediabox = page.bound_page()
-    out = mupdf.DocumentWriter( filename, 'png', '')
-    dev = out.begin_page( mediabox)
-    page.run( dev, mupdf.Matrix(mupdf.fz_identity), mupdf.Cookie())
-    out.end_page()
-
-    # Check out-params are converted into python return value.
-    bitmap = mupdf.Bitmap( 10, 20, 8, 72, 72)
-    bitmap_details = bitmap.bitmap_details()
-    log( f'{bitmap_details}')
-    assert bitmap_details == [10, 20, 8, 12]
-
-    log( f'finished')
-
-
 class BuildDirs:
     '''
     Locations of various generated files.
@@ -5696,14 +5516,7 @@ def main():
                     sync_docs = True
                     destination = args.next()
                 log( 'Syncing to {destination=}')
-                txts = []
-                files = list( hs) + list( cpps) + list( txts) + [
-                        f'{build_dirs.dir_mupdf}platform/python/mupdf_test-out2.png',
-                        f'{build_dirs.dir_mupdf}platform/python/mupdf_test-out3.png',
-                        f'{build_dirs.dir_mupdf}platform/python/mupdf_test-out.png',
-                        f'{build_dirs.dir_mupdf}platform/python/mupdf_test-out.ppm',
-                        f'{build_dirs.dir_mupdf}platform/python/mupdf_test.py',
-                        f'{build_dirs.dir_mupdf}platform/python/mupdf_test.py.out.txt',
+                files = list( hs) + list( cpps) + [
                         f'{build_dirs.dir_so}mupdf.py',
                         f'{build_dirs.dir_mupdf}platform/c++/fn_usage.txt',
                         ]
@@ -5747,17 +5560,6 @@ def main():
 
             elif arg == '--test' or arg == '-t':
 
-                # Create test .py programme.
-                #
-                with open( f'{build_dirs.dir_mupdf}platform/python/mupdf_test.py', 'w') as out:
-                    os.fchmod( out.fileno(), 0o755)
-                    out.write( '#!/usr/bin/env python3\n')
-                    out.write( inspect.getsource( test_mupdfcpp_swig))
-                    out.write( textwrap.dedent( '''
-                            if __name__ == '__main__':
-                                test_mupdfcpp_swig()
-                            '''))
-
                 # We need to set LD_LIBRARY_PATH and PYTHONPATH so that our
                 # test .py programme can load mupdf.py and _mupdf.so.
                 ld_library_path = os.path.abspath( f'{build_dirs.dir_so}')
@@ -5774,7 +5576,7 @@ def main():
                         f.write( text)
 
                     jlib.system(
-                            f'cd {build_dirs.dir_mupdf}platform/python/; {envs} ./mupdf_test.py',
+                            f'cd {build_dirs.dir_mupdf}platform/python/; {envs} ../../scripts/mupdfwrap_test.py',
                             out = outfn,
                             verbose=1,
                             )
@@ -5788,6 +5590,8 @@ def main():
                         f'{command}',
                         out = lambda text: log( text, nv=0),
                         )
+
+                log( 'Tests ran ok.')
 
             elif arg == '--test-swig':
                 test_swig()

@@ -47,12 +47,14 @@ static const char* gAnnotNames =
     "FileAttachment\0"
     "Sound\0"
     "Movie\0"
+    "RichMedia\0"
     "Widget\0"
     "Screen\0"
     "PrinterMark\0"
     "TrapNet\0"
     "Watermark\0"
-    "3D\0";
+    "3D\0"
+    "Projection\0";
 
 static const char* gAnnotReadableNames =
     "Text\0"
@@ -75,12 +77,14 @@ static const char* gAnnotReadableNames =
     "File Attachment\0"
     "Sound\0"
     "Movie\0"
+    "RichMedia\0"
     "Widget\0"
     "Screen\0"
     "Printer Mark\0"
     "Trap Net\0"
     "Watermark\0"
-    "3D\0";
+    "3D\0"
+    "Projection\0";
 // clang format-on
 
 std::string_view AnnotationName(AnnotationType tp) {

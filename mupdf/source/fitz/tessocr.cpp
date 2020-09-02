@@ -157,6 +157,9 @@ void *ocr_init(fz_context *ctx, const char *language)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Tesseract initialisation failed");
 	}
 
+	if (language == NULL || language[0] == 0)
+		language = "eng";
+
 	// Initialize tesseract-ocr with English, without specifying tessdata path
 	if (api->Init(NULL, 0, /* data, data_size */
 		language,

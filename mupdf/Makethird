@@ -44,6 +44,7 @@ ifeq ($(HAVE_LEPTONICA),yes)
 ifeq ($(HAVE_TESSERACT),yes)
   CFLAGS += -DHAVE_LEPTONICA -DHAVE_TESSERACT
   LIBS += -lstdc++
+  THIRD_LIBS += -lpthread
 endif
 endif
 

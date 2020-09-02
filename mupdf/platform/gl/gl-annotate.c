@@ -17,6 +17,10 @@ static char save_filename[PATH_MAX];
 static pdf_write_options save_opts;
 static struct input opwinput;
 static struct input upwinput;
+static int do_high_security;
+static int hs_resolution = 200;
+static struct input ocr_language_input;
+static int ocr_language_input_initialised = 0;
 
 static int pdf_filter(const char *fn)
 {
@@ -36,8 +40,14 @@ static void init_save_pdf_options(void)
 	save_opts.do_compress = 1;
 	save_opts.do_compress_images = 1;
 	save_opts.do_compress_fonts = 1;
+	do_high_security = 0;
 	ui_input_init(&opwinput, "");
 	ui_input_init(&upwinput, "");
+	if (!ocr_language_input_initialised)
+	{
+		ui_input_init(&ocr_language_input, "eng");
+		ocr_language_input_initialised = 1;
+	}
 }
 
 static const char *cryptalgo_names[] = {
@@ -53,18 +63,55 @@ static void save_pdf_options(void)
 {
 	const char *cryptalgo = cryptalgo_names[save_opts.do_encrypt];
 	int choice;
+	int can_be_incremental;
 
 	ui_layout(T, X, NW, 2, 2);
 	ui_label("PDF write options:");
 	ui_layout(T, X, NW, 4, 2);
 
-	if (pdf_can_be_saved_incrementally(ctx, pdf))
+	can_be_incremental = pdf_can_be_saved_incrementally(ctx, pdf);
+
+	ui_checkbox("High Security", &do_high_security);
+	if (do_high_security)
+	{
+		int res200 = (hs_resolution == 200);
+		int res300 = (hs_resolution == 300);
+		int res600 = (hs_resolution == 600);
+		int res1200 = (hs_resolution == 1200);
+		ui_label("WARNING: High Security saving is a lossy procedure! Keep your original file safe.");
+		ui_label("Resolution:");
+		ui_checkbox("200", &res200);
+		ui_checkbox("300", &res300);
+		ui_checkbox("600", &res600);
+		ui_checkbox("1200", &res1200);
+		if (res200 && hs_resolution != 200)
+			hs_resolution = 200;
+		else if (res300 && hs_resolution != 300)
+			hs_resolution = 300;
+		else if (res600 && hs_resolution != 600)
+			hs_resolution = 600;
+		else if (res1200 && hs_resolution != 1200)
+			hs_resolution = 1200;
+		else if (!res200 && !res300 && !res600 && !res1200)
+			hs_resolution = 200;
+		ui_label("OCR Language:");
+		ui_input(&ocr_language_input, 32, 1);
+
+		return; /* ignore normal PDF options */
+	}
+
+	if (can_be_incremental)
 		ui_checkbox("Incremental", &save_opts.do_incremental);
 
 	fz_try(ctx)
 	{
 		if (pdf_count_signatures(ctx, pdf))
+		{
+			if (can_be_incremental)
 			ui_label("WARNING: Saving non-incrementally will break existing signatures");
+			else
+				ui_label("WARNING: Saving will break existing signatures");
+		}
 		}
 	fz_catch(ctx)
 	{
@@ -114,9 +161,192 @@ static void save_pdf_options(void)
 	}
 }
 
+struct {
+	int n;
+	int i;
+	char *operation_text;
+	char *progress_text;
+	int (*step)(int cancel);
+	int display;
+} ui_slow_operation_state;
+
+static int run_slow_operation_step(int cancel)
+{
+	fz_try(ctx)
+	{
+		int i = ui_slow_operation_state.step(cancel);
+		if (ui_slow_operation_state.i == 0)
+		{
+			ui_slow_operation_state.i = 1;
+			ui_slow_operation_state.n = i;
+		}
+		else
+		{
+			ui_slow_operation_state.i = i;
+		}
+	}
+	fz_catch(ctx)
+	{
+		ui_slow_operation_state.i = -1;
+		ui_show_warning_dialog("%s failed: %s",
+			ui_slow_operation_state.operation_text,
+			fz_caught_message(ctx));
+
+		/* Call to cancel. */
+		fz_try(ctx)
+			ui_slow_operation_state.step(1);
+		fz_catch(ctx)
+		{
+			/* Ignore any error from cancelling */
+		}
+		return 1;
+	}
+
+	return 0;
+}
+
+static void slow_operation_dialog(void)
+{
+	int start_time;
+	int errored = 0;
+
+	ui_dialog_begin(400, 100);
+	ui_layout(T, X, NW, 2, 2);
+
+	ui_label("%s", ui_slow_operation_state.operation_text);
+	ui_spacer();
+
+	if (ui_slow_operation_state.i == 0)
+		ui_label("Initializing");
+	else if (ui_slow_operation_state.i > ui_slow_operation_state.n)
+		ui_label("Finalizing");
+	else
+		ui_label("%s: %d/%d",
+			ui_slow_operation_state.progress_text,
+			ui_slow_operation_state.i,
+			ui_slow_operation_state.n);
+
+	ui_spacer();
+	if (ui_button("Cancel"))
+	{
+		ui.dialog = NULL;
+		run_slow_operation_step(1);
+		return;
+	}
+
+	/* Only run the operations every other time. This ensures we
+	 * actually see the update for page i before page i is
+	 * processed. */
+	ui_slow_operation_state.display = !ui_slow_operation_state.display;
+	if (ui_slow_operation_state.display == 0)
+	{
+		/* Run steps for 200ms or until we're done. */
+		start_time = glutGet(GLUT_ELAPSED_TIME);
+		while (!errored && ui_slow_operation_state.i >= 0 &&
+			glutGet(GLUT_ELAPSED_TIME) < start_time + 200)
+		{
+			errored = run_slow_operation_step(0);
+		}
+	}
+
+	if (!errored && ui_slow_operation_state.i == -1)
+		ui.dialog = NULL;
+
+	/* ... and trigger a redisplay */
+	glutPostRedisplay();
+}
+
+static void
+ui_start_slow_operation(char *operation, char *progress, int (*step)(int))
+{
+	ui.dialog = slow_operation_dialog;
+	ui_slow_operation_state.operation_text = operation;
+	ui_slow_operation_state.progress_text = progress;
+	ui_slow_operation_state.i = 0;
+	ui_slow_operation_state.step = step;
+}
+
+struct {
+	int i;
+	int n;
+	fz_document_writer *writer;
+} hss_state;
+
+static int step_high_security_save(int cancel)
+{
+	fz_page *page = NULL;
+	fz_device *dev;
+
+	/* Called with i=0 for init. i=1...n for pages 1 to n inclusive.
+	 * i=n+1 for finalisation. */
+
+	/* If cancelling, tidy up state. */
+	if (cancel)
+	{
+		fz_drop_document_writer(ctx, hss_state.writer);
+		hss_state.writer = NULL;
+		return -1;
+	}
+
+	/* If initing, open the file, count the pages, return the number
+	 * of pages ("number of steps in the operation"). */
+	if (hss_state.i == 0)
+	{
+		char options[1024];
+
+		fz_snprintf(options, sizeof(options),
+			"compression=flate,resolution=%d,ocr-language=%s",
+			hs_resolution, ocr_language_input.text);
+
+		hss_state.writer = fz_new_pdfocr_writer(ctx, save_filename, options);
+		hss_state.i = 1;
+		hss_state.n = fz_count_pages(ctx, (fz_document *)pdf);
+		return hss_state.n;
+	}
+	/* If we've done all the pages, finish the write. */
+	if (hss_state.i > hss_state.n)
+	{
+		fz_close_document_writer(ctx, hss_state.writer);
+		fz_drop_document_writer(ctx, hss_state.writer);
+		hss_state.writer = NULL;
+		fz_strlcpy(filename, save_filename, PATH_MAX);
+		reload();
+		return -1;
+	}
+	/* Otherwise, do the next page. */
+	page = fz_load_page(ctx, (fz_document *)pdf, hss_state.i-1);
+
+	fz_try(ctx)
+	{
+		dev = fz_begin_page(ctx, hss_state.writer, fz_bound_page(ctx, page));
+		fz_run_page(ctx, page, dev, fz_identity, NULL);
+		fz_drop_page(ctx, page);
+		page = NULL;
+		fz_end_page(ctx, hss_state.writer);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_page(ctx, page);
+		fz_rethrow(ctx);
+	}
+
+	return ++hss_state.i;
+}
+
+static void save_high_security(void)
+{
+	/* FIXME */
+	trace_action("//doc.hsredact(%q);\n", save_filename);
+	memset(&hss_state, 0, sizeof(hss_state));
+	ui_start_slow_operation("High Security Save", "Page",
+				step_high_security_save);
+}
+
 static void do_save_pdf_dialog(int for_signing)
 {
 	if (ui_save_file(save_filename, save_pdf_options,
+			do_high_security ?
+			"Select where to save the redacted document" :
 			for_signing ?
 			"Select where to save the signed document:" :
 			"Select where to save the document:"))
@@ -124,6 +354,11 @@ static void do_save_pdf_dialog(int for_signing)
 		ui.dialog = NULL;
 		if (save_filename[0] != 0)
 		{
+			if (do_high_security)
+			{
+				save_high_security();
+				return;
+			}
 			if (for_signing && !do_sign())
 				return;
 			if (save_opts.do_garbage)
@@ -516,6 +751,62 @@ static int should_edit_icolor(enum pdf_annot_type subtype)
 	}
 }
 
+struct {
+	int n;
+	int i;
+	pdf_redact_options opts;
+} rap_state;
+
+static int
+step_redact_all_pages(int cancel)
+{
+	pdf_page *pg;
+
+	/* Called with i=0 for init. i=1...n for pages 1 to n inclusive.
+	 * i=n+1 for finalisation. */
+
+	if (cancel)
+		return -1;
+
+	if (rap_state.i == 0)
+	{
+		rap_state.i = 1;
+		rap_state.n = pdf_count_pages(ctx, pdf);
+		return rap_state.n;
+	}
+	else if (rap_state.i > rap_state.n)
+	{
+		trace_action("page = opage;\n");
+		trace_page_update();
+		load_page();
+		render_page();
+		return -1;
+	}
+
+	trace_action("page = doc.loadPage(%d);\n", rap_state.i-1);
+	trace_action("page.applyRedactions(%s, %d);\n",
+		rap_state.opts.black_boxes ? "true" : "false",
+		rap_state.opts.image_method);
+	pg = pdf_load_page(ctx, pdf, rap_state.i-1);
+	fz_try(ctx)
+		pdf_redact_page(ctx, pdf, pg, &rap_state.opts);
+	fz_always(ctx)
+		fz_drop_page(ctx, (fz_page *)pg);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ++rap_state.i;
+}
+
+static void redact_all_pages(pdf_redact_options *opts)
+{
+	trace_action("opage = page;\n");
+	memset(&rap_state, 0, sizeof(rap_state));
+	rap_state.opts = *opts;
+	ui_start_slow_operation("Redacting all Pages", "Page",
+				step_redact_all_pages);
+}
+
 void do_annotate_panel(void)
 {
 	static struct list annot_list;
@@ -860,7 +1151,12 @@ void do_annotate_panel(void)
 		if (im_choice != -1)
 			redact_opts.image_method = im_choice;
 		ui_checkbox("Draw black boxes", &redact_opts.black_boxes);
-		if (ui_button("Redact"))
+		if (ui_button("Redact All Pages"))
+		{
+			selected_annot = NULL;
+			redact_all_pages(&redact_opts);
+		}
+		if (ui_button("Redact Page"))
 		{
 			selected_annot = NULL;
 			trace_action("page.applyRedactions(%s, %d);\n",

@@ -20,7 +20,7 @@ static int showcolumn;
 static void usage(void)
 {
 	fprintf(stderr,
-		"usage: mutool show [options] file.pdf ( xref | outline | grep | js | <path> ) *\n"
+		"usage: mutool show [options] file.pdf ( trailer | xref | pages | grep | outline | js | form | <path> ) *\n"
 		"\t-p -\tpassword\n"
 		"\t-o -\toutput file\n"
 		"\t-e\tleave stream contents in their original form\n"

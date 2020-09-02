@@ -33,7 +33,7 @@ static int s_write_attribute_int(fz_context *ctx, fz_output *out, const char* id
 
 static int s_write_attribute_float(fz_context *ctx, fz_output *out, const char* id, float value)
 {
-	fz_write_printf(ctx, out, " %s=\"%f\"", id, value);
+	fz_write_printf(ctx, out, " %s=\"%g\"", id, value);
 	return 0;
 }
 
@@ -53,7 +53,7 @@ static int s_write_attribute_char(fz_context *ctx, fz_output *out, const char* i
 static int s_write_attribute_matrix(fz_context *ctx, fz_output *out, const char* id, const fz_matrix* matrix)
 {
 	fz_write_printf(ctx, out,
-		" %s=\"%f %f %f %f %f %f\"",
+		" %s=\"%g %g %g %g %g %g\"",
 		id,
 		matrix->a,
 		matrix->b,
@@ -73,28 +73,6 @@ typedef struct
 	fz_device super;
 	fz_output *out;
 } fz_xmltext_device;
-
-static void
-fz_xmltext_fill_path(fz_context *ctx, fz_device *dev_, const fz_path *path, int even_odd, fz_matrix ctm,
-	fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params)
-{
-}
-
-static void
-fz_xmltext_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm,
-	fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params)
-{
-}
-
-static void
-fz_xmltext_clip_path(fz_context *ctx, fz_device *dev_, const fz_path *path, int even_odd, fz_matrix ctm, fz_rect scissor)
-{
-}
-
-static void
-fz_xmltext_clip_stroke_path(fz_context *ctx, fz_device *dev_, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, fz_rect scissor)
-{
-}
 
 static void
 fz_xmltext_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_matrix ctm,
@@ -170,96 +148,17 @@ fz_xmltext_stroke_text(fz_context *ctx, fz_device *dev_, const fz_text *text, co
 static void
 fz_xmltext_clip_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_matrix ctm, fz_rect scissor)
 {
-	fz_color_params color_params = {0};
-	fz_xmltext_text(ctx, dev_, text, ctm, NULL, NULL, 0 /*alpha*/, color_params);
+	fz_xmltext_text(ctx, dev_, text, ctm, NULL, NULL, 0 /*alpha*/, fz_default_color_params);
 }
 
 static void
 fz_xmltext_clip_stroke_text(fz_context *ctx, fz_device *dev_, const fz_text *text, const fz_stroke_state *stroke, fz_matrix ctm, fz_rect scissor)
 {
-	fz_color_params color_params = {0};
-	fz_xmltext_text(ctx, dev_, text, ctm, NULL, 0, 0, color_params);
+	fz_xmltext_text(ctx, dev_, text, ctm, NULL, 0, 0, fz_default_color_params);
 }
 
 static void
 fz_xmltext_ignore_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_matrix ctm)
-{
-}
-
-static void
-fz_xmltext_fill_image(fz_context *ctx, fz_device *dev_, fz_image *image, fz_matrix ctm, float alpha, fz_color_params color_params)
-{
-}
-
-static void
-fz_xmltext_fill_shade(fz_context *ctx, fz_device *dev_, fz_shade *shade, fz_matrix ctm, float alpha, fz_color_params color_params)
-{
-}
-
-static void
-fz_xmltext_fill_image_mask(fz_context *ctx, fz_device *dev_, fz_image *image, fz_matrix ctm,
-	fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params)
-{
-}
-
-static void
-fz_xmltext_clip_image_mask(fz_context *ctx, fz_device *dev_, fz_image *image, fz_matrix ctm, fz_rect scissor)
-{
-}
-
-static void
-fz_xmltext_pop_clip(fz_context *ctx, fz_device *dev_)
-{
-}
-
-static void
-fz_xmltext_begin_mask(fz_context *ctx, fz_device *dev_, fz_rect bbox, int luminosity, fz_colorspace *colorspace, const float *color, fz_color_params color_params)
-{
-}
-
-static void
-fz_xmltext_end_mask(fz_context *ctx, fz_device *dev_)
-{
-}
-
-static void
-fz_xmltext_begin_group(fz_context *ctx, fz_device *dev_, fz_rect bbox, fz_colorspace *cs, int isolated, int knockout, int blendmode, float alpha)
-{
-}
-
-static void
-fz_xmltext_end_group(fz_context *ctx, fz_device *dev_)
-{
-}
-
-static int
-fz_xmltext_begin_tile(fz_context *ctx, fz_device *dev_, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id)
-{
-	return 0;
-}
-
-static void
-fz_xmltext_end_tile(fz_context *ctx, fz_device *dev_)
-{
-}
-
-static void
-fz_xmltext_begin_layer(fz_context *ctx, fz_device *dev_, const char *name)
-{
-}
-
-static void
-fz_xmltext_end_layer(fz_context *ctx, fz_device *dev_)
-{
-}
-
-static void
-fz_xmltext_render_flags(fz_context *ctx, fz_device *dev_, int set, int clear)
-{
-}
-
-static void
-fz_xmltext_set_default_colorspaces(fz_context *ctx, fz_device *dev_, fz_default_colorspaces *dcs)
 {
 }
 
@@ -276,37 +175,11 @@ fz_device *fz_new_xmltext_device(fz_context *ctx, fz_output *out)
 
 	dev->super.close_device = fz_stext_close_device;
 
-	dev->super.fill_path = fz_xmltext_fill_path;
-	dev->super.stroke_path = fz_xmltext_stroke_path;
-	dev->super.clip_path = fz_xmltext_clip_path;
-	dev->super.clip_stroke_path = fz_xmltext_clip_stroke_path;
-
 	dev->super.fill_text = fz_xmltext_fill_text;
 	dev->super.stroke_text = fz_xmltext_stroke_text;
 	dev->super.clip_text = fz_xmltext_clip_text;
 	dev->super.clip_stroke_text = fz_xmltext_clip_stroke_text;
 	dev->super.ignore_text = fz_xmltext_ignore_text;
-
-	dev->super.fill_shade = fz_xmltext_fill_shade;
-	dev->super.fill_image = fz_xmltext_fill_image;
-	dev->super.fill_image_mask = fz_xmltext_fill_image_mask;
-	dev->super.clip_image_mask = fz_xmltext_clip_image_mask;
-
-	dev->super.pop_clip = fz_xmltext_pop_clip;
-
-	dev->super.begin_mask = fz_xmltext_begin_mask;
-	dev->super.end_mask = fz_xmltext_end_mask;
-	dev->super.begin_group = fz_xmltext_begin_group;
-	dev->super.end_group = fz_xmltext_end_group;
-
-	dev->super.begin_tile = fz_xmltext_begin_tile;
-	dev->super.end_tile = fz_xmltext_end_tile;
-
-	dev->super.begin_layer = fz_xmltext_begin_layer;
-	dev->super.end_layer = fz_xmltext_end_layer;
-
-	dev->super.render_flags = fz_xmltext_render_flags;
-	dev->super.set_default_colorspaces = fz_xmltext_set_default_colorspaces;
 
 	dev->out = out;
 	page_number += 1;

@@ -2826,7 +2826,7 @@ pdf_document *pdf_create_document(fz_context *ctx)
 	doc = pdf_new_document(ctx, NULL);
 	fz_try(ctx)
 	{
-		doc->version = 14;
+		doc->version = 17;
 		doc->file_size = 0;
 		doc->startxref = 0;
 		doc->num_xref_sections = 0;

@@ -857,6 +857,44 @@ pdf_drop_widgets(fz_context *ctx, pdf_widget *widget)
 	}
 }
 
+pdf_widget *
+pdf_create_signature_widget(fz_context *ctx, pdf_page *page, char *name)
+{
+	fz_rect rect = { 12, 12, 12+100, 12+50 };
+	pdf_annot *annot = pdf_create_annot_raw(ctx, page, PDF_ANNOT_WIDGET);
+	fz_try(ctx)
+	{
+		pdf_obj *obj = annot->obj;
+		pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, page->doc), PDF_NAME(Root));
+		pdf_obj *acroform = pdf_dict_get(ctx, root, PDF_NAME(AcroForm));
+		pdf_obj *fields, *lock;
+		if (!acroform)
+		{
+			acroform = pdf_new_dict(ctx, page->doc, 1);
+			pdf_dict_put_drop(ctx, root, PDF_NAME(AcroForm), acroform);
+		}
+		fields = pdf_dict_get(ctx, acroform, PDF_NAME(Fields));
+		if (!fields)
+		{
+			fields = pdf_new_array(ctx, page->doc, 1);
+			pdf_dict_put_drop(ctx, acroform, PDF_NAME(Fields), fields);
+		}
+		pdf_set_annot_rect(ctx, annot, rect);
+		pdf_dict_put(ctx, obj, PDF_NAME(FT), PDF_NAME(Sig));
+		pdf_dict_put_int(ctx, obj, PDF_NAME(F), PDF_ANNOT_IS_PRINT);
+		pdf_dict_put_text_string(ctx, obj, PDF_NAME(DA), "/Helv 0 Tf 0 g");
+		pdf_dict_put_text_string(ctx, obj, PDF_NAME(T), name);
+		pdf_array_push(ctx, fields, obj);
+		lock = pdf_dict_put_dict(ctx, obj, PDF_NAME(Lock), 1);
+		pdf_dict_put(ctx, lock, PDF_NAME(Action), PDF_NAME(All));
+	}
+	fz_catch(ctx)
+	{
+		pdf_delete_annot(ctx, page, annot);
+	}
+	return (pdf_widget *)annot;
+}
+
 fz_rect
 pdf_bound_widget(fz_context *ctx, pdf_widget *widget)
 {

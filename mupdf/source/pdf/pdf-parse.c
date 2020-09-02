@@ -71,7 +71,7 @@ pdf_to_date(fz_context *ctx, pdf_obj *time)
 	struct tm tm;
 	time_t utc;
 
-	if (!s)
+	if (!s[0])
 		return -1;
 
 	memset(&tm, 0, sizeof tm);

@@ -26,12 +26,14 @@ enum class AnnotationType {
     FileAttachment,
     Sound,
     Movie,
+    RichMedia,
     Widget,
     Screen,
     PrinterMark,
     TrapNet,
     Watermark,
     ThreeD,
+    Projection,
     Unknown = -1
 };
 
