@@ -294,6 +294,9 @@
     <ClInclude Include="..\mupdf\source\fitz\smallcaps.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\tessocr.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\ucdn_db.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>

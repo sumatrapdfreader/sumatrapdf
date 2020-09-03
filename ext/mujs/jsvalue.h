@@ -119,7 +119,8 @@ struct js_Object
 			js_Finalize finalize;
 		} user;
 	} u;
-	js_Object *gcnext;
+	js_Object *gcnext; /* allocation list */
+	js_Object *gcroot; /* scan list */
 	int gcmark;
 };
 

@@ -285,6 +285,7 @@ js_State *js_newstate(js_Alloc alloc, void *actx, int flags)
 
 	J->gcmark = 1;
 	J->nextref = 0;
+	J->gcthresh = 0; /* reaches stability within ~ 2-5 GC cycles */
 
 	J->R = jsV_newobject(J, JS_COBJECT, NULL);
 	J->G = jsV_newobject(J, JS_COBJECT, NULL);

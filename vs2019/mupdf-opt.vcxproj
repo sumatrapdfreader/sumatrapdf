@@ -834,6 +834,7 @@
     <ClInclude Include="..\mupdf\source\fitz\paint-glyph.h" />
     <ClInclude Include="..\mupdf\source\fitz\pixmap-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\smallcaps.h" />
+    <ClInclude Include="..\mupdf\source\fitz\tessocr.h" />
     <ClInclude Include="..\mupdf\source\fitz\ucdn_db.h" />
     <ClInclude Include="..\mupdf\source\fitz\z-imp.h" />
   </ItemGroup>

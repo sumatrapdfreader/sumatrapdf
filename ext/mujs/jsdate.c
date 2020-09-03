@@ -107,7 +107,7 @@ static int YearFromTime(double t)
 	return y;
 }
 
-static int InLeapYear(int t)
+static int InLeapYear(double t)
 {
 	return DaysInYear(YearFromTime(t)) == 366;
 }

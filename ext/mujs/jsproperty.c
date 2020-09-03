@@ -38,6 +38,7 @@ static js_Property *newproperty(js_State *J, js_Object *obj, const char *name)
 	node->getter = NULL;
 	node->setter = NULL;
 	++obj->count;
+	++J->gccounter;
 	return node;
 }
 

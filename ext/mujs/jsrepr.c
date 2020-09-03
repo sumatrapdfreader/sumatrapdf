@@ -19,10 +19,11 @@ static void reprnum(js_State *J, js_Buffer **sb, double n)
 static void reprstr(js_State *J, js_Buffer **sb, const char *s)
 {
 	static const char *HEX = "0123456789ABCDEF";
+	int i, n;
 	Rune c;
 	js_putc(J, sb, '"');
 	while (*s) {
-		s += chartorune(&c, s);
+		n = chartorune(&c, s);
 		switch (c) {
 		case '"': js_puts(J, sb, "\\\""); break;
 		case '\\': js_puts(J, sb, "\\\\"); break;
@@ -32,16 +33,27 @@ static void reprstr(js_State *J, js_Buffer **sb, const char *s)
 		case '\r': js_puts(J, sb, "\\r"); break;
 		case '\t': js_puts(J, sb, "\\t"); break;
 		default:
-			if (c < ' ' || c > 127) {
-				js_puts(J, sb, "\\u");
+			if (c < ' ') {
+				js_putc(J, sb, '\\');
+				js_putc(J, sb, 'x');
+				js_putc(J, sb, HEX[(c>>4)&15]);
+				js_putc(J, sb, HEX[c&15]);
+			} else if (c < 128) {
+				js_putc(J, sb, c);
+			} else if (c < 0x10000) {
+				js_putc(J, sb, '\\');
+				js_putc(J, sb, 'u');
 				js_putc(J, sb, HEX[(c>>12)&15]);
 				js_putc(J, sb, HEX[(c>>8)&15]);
 				js_putc(J, sb, HEX[(c>>4)&15]);
 				js_putc(J, sb, HEX[c&15]);
 			} else {
-				js_putc(J, sb, c); break;
+				for (i = 0; i < n; ++i)
+					js_putc(J, sb, s[i]);
 			}
+			break;
 		}
+		s += n;
 	}
 	js_putc(J, sb, '"');
 }

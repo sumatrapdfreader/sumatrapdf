@@ -375,7 +375,7 @@ workspace "SumatraPDF"
     language "C"
     regconf()
     includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4702", "4706" }
+    disablewarnings { "4090", "4100", "4310", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
 

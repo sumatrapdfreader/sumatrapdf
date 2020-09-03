@@ -116,11 +116,16 @@ static int isunicodeletter(int c)
 
 static int nextrune(struct cstate *g)
 {
+	if (!*g->source) {
+		g->yychar = EOF;
+		return 0;
+	}
 	g->source += chartorune(&g->yychar, g->source);
 	if (g->yychar == '\\') {
+		if (!*g->source)
+			die(g, "unterminated escape sequence");
 		g->source += chartorune(&g->yychar, g->source);
 		switch (g->yychar) {
-		case 0: die(g, "unterminated escape sequence"); break;
 		case 'f': g->yychar = '\f'; return 0;
 		case 'n': g->yychar = '\n'; return 0;
 		case 'r': g->yychar = '\r'; return 0;
@@ -147,6 +152,9 @@ static int nextrune(struct cstate *g)
 				return 1;
 			}
 			return 0;
+		case 0:
+			g->yychar = '0';
+			return 1;
 		}
 		if (strchr(ESCAPES, g->yychar))
 			return 1;
@@ -272,7 +280,7 @@ static int lexclass(struct cstate *g)
 
 	havesave = havedash = 0;
 	for (;;) {
-		if (g->yychar == 0)
+		if (g->yychar == EOF)
 			die(g, "unterminated character class");
 		if (!quoted && g->yychar == ']')
 			break;
@@ -363,7 +371,7 @@ static int lex(struct cstate *g)
 	}
 
 	switch (g->yychar) {
-	case 0:
+	case EOF:
 	case '$': case ')': case '*': case '+':
 	case '.': case '?': case '^': case '|':
 		return g->yychar;
@@ -561,11 +569,11 @@ static Renode *parserep(struct cstate *g)
 static Renode *parsecat(struct cstate *g)
 {
 	Renode *cat, *head, **tail;
-	if (g->lookahead && g->lookahead != '|' && g->lookahead != ')') {
+	if (g->lookahead != EOF && g->lookahead != '|' && g->lookahead != ')') {
 		/* Build a right-leaning tree by splicing in new 'cat' at the tail. */
 		head = parserep(g);
 		tail = &head;
-		while (g->lookahead && g->lookahead != '|' && g->lookahead != ')') {
+		while (g->lookahead != EOF && g->lookahead != '|' && g->lookahead != ')') {
 			cat = newnode(g, P_CAT);
 			cat->x = *tail;
 			cat->y = parserep(g);
@@ -866,7 +874,7 @@ Reprog *regcompx(void *(*alloc)(void *ctx, void *p, int n), void *ctx,
 	node = parsealt(&g);
 	if (g.lookahead == ')')
 		die(&g, "unmatched ')'");
-	if (g.lookahead != 0)
+	if (g.lookahead != EOF)
 		die(&g, "syntax error");
 
 #ifdef TEST
@@ -1026,23 +1034,20 @@ static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *
 			break;
 
 		case I_ANYNL:
+			if (!*sp) return 1;
 			sp += chartorune(&c, sp);
-			if (c == 0)
-				return 1;
 			pc = pc + 1;
 			break;
 		case I_ANY:
+			if (!*sp) return 1;
 			sp += chartorune(&c, sp);
-			if (c == 0)
-				return 1;
 			if (isnewline(c))
 				return 1;
 			pc = pc + 1;
 			break;
 		case I_CHAR:
+			if (!*sp) return 1;
 			sp += chartorune(&c, sp);
-			if (c == 0)
-				return 1;
 			if (flags & REG_ICASE)
 				c = canon(c);
 			if (c != pc->c)
@@ -1050,9 +1055,8 @@ static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *
 			pc = pc + 1;
 			break;
 		case I_CCLASS:
+			if (!*sp) return 1;
 			sp += chartorune(&c, sp);
-			if (c == 0)
-				return 1;
 			if (flags & REG_ICASE) {
 				if (!incclasscanon(pc->cc, canon(c)))
 					return 1;
@@ -1063,9 +1067,8 @@ static int match(Reinst *pc, const char *sp, const char *bol, int flags, Resub *
 			pc = pc + 1;
 			break;
 		case I_NCCLASS:
+			if (!*sp) return 1;
 			sp += chartorune(&c, sp);
-			if (c == 0)
-				return 1;
 			if (flags & REG_ICASE) {
 				if (incclasscanon(pc->cc, canon(c)))
 					return 1;

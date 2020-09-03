@@ -61,12 +61,19 @@ Custom properties on userdata objects can be implemented using getter and setter
 Numbers are represented using double precision floating point values.
 
 <p>
-Strings in the C interface are zero-terminated byte arrays in CESU-8 encoding.
-CESU-8 is a variant of UTF-8 which encodes supplementary unicode characters as
-surrogate pairs. This maintains compatibility with the UTF-16 nature of
-JavaScript, but requires attention when passing strings using supplementary
-unicode characters to and from the MuJS library. It also means that you cannot
-have any JavaScript strings with a zero character value in MuJS.
+Strings in the C interface are zero-terminated byte arrays in WTF-8 encoding.
+This allows both arbitrary 16-bit values (as required by Javascript) and also
+extended code points for the full 21-bit Unicode range.
+These extended characters will mostly work as expected in Javascript.
+
+<p>
+If you have Javascript code that expects to work with UTF-16 surrogate pairs,
+you will need to manually convert any extended characters to surrogate pairs
+and back when passing strings between C and Javascript.
+
+<p>
+The U+0000 character is encoded as the two-byte sequence <C0 80>, same as in
+modified UTF-8.
 
 <h3>Environments</h3>
 
@@ -108,7 +115,7 @@ You can also force a collection pass from C.
 
 <p>
 Userdata objects have an associated C finalizer function that is called when
-the correspending object is freed.
+the corresponding object is freed.
 
 <h3>The Stack</h3>
 
@@ -475,7 +482,7 @@ void js_newregexp(js_State *J, const char *pattern, int flags);
 </pre>
 
 <p>
-Creat and push objects on the stack.
+Create and push objects on the stack.
 
 <pre>
 int js_isobject(js_State *J, int idx);

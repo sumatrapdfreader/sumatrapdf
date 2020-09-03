@@ -21,12 +21,12 @@ static const char *checkstring(js_State *J, int idx)
 
 int js_runeat(js_State *J, const char *s, int i)
 {
-	Rune rune = 0;
+	Rune rune = EOF;
 	while (i-- >= 0) {
 		rune = *(unsigned char*)s;
 		if (rune < Runeself) {
 			if (rune == 0)
-				return 0;
+				return EOF;
 			++s;
 		} else
 			s += chartorune(&rune, s);
@@ -93,7 +93,7 @@ static void Sp_charAt(js_State *J)
 	const char *s = checkstring(J, 0);
 	int pos = js_tointeger(J, 1);
 	Rune rune = js_runeat(J, s, pos);
-	if (rune > 0) {
+	if (rune >= 0) {
 		buf[runetochar(buf, &rune)] = 0;
 		js_pushstring(J, buf);
 	} else {
@@ -106,7 +106,7 @@ static void Sp_charCodeAt(js_State *J)
 	const char *s = checkstring(J, 0);
 	int pos = js_tointeger(J, 1);
 	Rune rune = js_runeat(J, s, pos);
-	if (rune > 0)
+	if (rune >= 0)
 		js_pushnumber(J, rune);
 	else
 		js_pushnumber(J, NAN);
@@ -310,7 +310,7 @@ static void S_fromCharCode(js_State *J)
 	}
 
 	for (i = 1; i < top; ++i) {
-		c = js_touint16(J, i);
+		c = js_touint32(J, i);
 		p += runetochar(p, &c);
 	}
 	*p = 0;

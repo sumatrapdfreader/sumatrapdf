@@ -5,8 +5,6 @@
 
 #include "regexp.h"
 
-static void jsG_markobject(js_State *J, int mark, js_Object *obj);
-
 static void jsG_freeenvironment(js_State *J, js_Environment *env)
 {
 	js_free(J, env);
@@ -53,6 +51,14 @@ static void jsG_freeobject(js_State *J, js_Object *obj)
 	js_free(J, obj);
 }
 
+/* Mark and add object to scan queue */
+static void jsG_markobject(js_State *J, int mark, js_Object *obj)
+{
+	obj->gcmark = mark;
+	obj->gcroot = J->gcroot;
+	J->gcroot = obj;
+}
+
 static void jsG_markfunction(js_State *J, int mark, js_Function *fun)
 {
 	int i;
@@ -87,14 +93,14 @@ static void jsG_markproperty(js_State *J, int mark, js_Property *node)
 		jsG_markobject(J, mark, node->setter);
 }
 
-static void jsG_markobject(js_State *J, int mark, js_Object *obj)
+/* Mark everything the object can reach. */
+static void jsG_scanobject(js_State *J, int mark, js_Object *obj)
 {
-	obj->gcmark = mark;
 	if (obj->properties->level)
 		jsG_markproperty(J, mark, obj->properties);
 	if (obj->prototype && obj->prototype->gcmark != mark)
 		jsG_markobject(J, mark, obj->prototype);
-	if (obj->type == JS_CITERATOR) {
+	if (obj->type == JS_CITERATOR && obj->u.iter.target->gcmark != mark) {
 		jsG_markobject(J, mark, obj->u.iter.target);
 	}
 	if (obj->type == JS_CFUNCTION || obj->type == JS_CSCRIPT || obj->type == JS_CEVAL) {
@@ -124,8 +130,8 @@ void js_gc(js_State *J, int report)
 	js_Object *obj, *nextobj, **prevnextobj;
 	js_String *str, *nextstr, **prevnextstr;
 	js_Environment *env, *nextenv, **prevnextenv;
-	int nenv = 0, nfun = 0, nobj = 0, nstr = 0;
-	int genv = 0, gfun = 0, gobj = 0, gstr = 0;
+	unsigned int nenv = 0, nfun = 0, nobj = 0, nstr = 0, nprop = 0;
+	unsigned int genv = 0, gfun = 0, gobj = 0, gstr = 0, gprop = 0;
 	int mark;
 	int i;
 
@@ -135,9 +141,9 @@ void js_gc(js_State *J, int report)
 		return;
 	}
 
-	J->gccounter = 0;
-
 	mark = J->gcmark = J->gcmark == 1 ? 2 : 1;
+
+	/* Add initial roots. */
 
 	jsG_markobject(J, mark, J->Object_prototype);
 	jsG_markobject(J, mark, J->Array_prototype);
@@ -165,6 +171,16 @@ void js_gc(js_State *J, int report)
 	jsG_markenvironment(J, mark, J->GE);
 	for (i = 0; i < J->envtop; ++i)
 		jsG_markenvironment(J, mark, J->envstack[i]);
+
+	/* Scan objects until none remain. */
+
+	while ((obj = J->gcroot) != NULL) {
+		J->gcroot = obj->gcroot;
+		obj->gcroot = NULL;
+		jsG_scanobject(J, mark, obj);
+	}
+
+	/* Free everything not marked. */
 
 	prevnextenv = &J->gcenv;
 	for (env = J->gcenv; env; env = nextenv) {
@@ -194,8 +210,10 @@ void js_gc(js_State *J, int report)
 
 	prevnextobj = &J->gcobj;
 	for (obj = J->gcobj; obj; obj = nextobj) {
+		nprop += obj->count;
 		nextobj = obj->gcnext;
 		if (obj->gcmark != mark) {
+			gprop += obj->count;
 			*prevnextobj = nextobj;
 			jsG_freeobject(J, obj);
 			++gobj;
@@ -218,10 +236,17 @@ void js_gc(js_State *J, int report)
 		++nstr;
 	}
 
+	unsigned int ntot = nenv + nfun + nobj + nstr + nprop;
+	unsigned int gtot = genv + gfun + gobj + gstr + gprop;
+	unsigned int remaining = ntot - gtot;
+
+	J->gccounter = remaining;
+	J->gcthresh = remaining * JS_GCFACTOR;
+
 	if (report) {
 		char buf[256];
-		snprintf(buf, sizeof buf, "garbage collected: %d/%d envs, %d/%d funs, %d/%d objs, %d/%d strs",
-			genv, nenv, gfun, nfun, gobj, nobj, gstr, nstr);
+		snprintf(buf, sizeof buf, "garbage collected (%d%%): %d/%d envs, %d/%d funs, %d/%d objs, %d/%d props, %d/%d strs",
+			100*gtot/ntot, genv, nenv, gfun, nfun, gobj, nobj, gprop, nprop, gstr, nstr);
 		js_report(J, buf);
 	}
 }
