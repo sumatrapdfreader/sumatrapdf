@@ -7804,9 +7804,11 @@ void TreeView_SetTextColor(HWND hwnd, int color)
   // todo implement treeview colors
 }
 
+#define IS_CLASSNAME_LISTVIEW_LISTBOX(x) ((x) && (!strcmp(x,"SysListView32") || !strcmp(x,"ListBox")))
+
 void ListView_SetBkColor(HWND h, int color)
 {
-  if (WDL_NORMALLY(h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32")))
+  if (WDL_NORMALLY(h && h->m_private_data && IS_CLASSNAME_LISTVIEW_LISTBOX(h->m_classname)))
   {
     listViewState *lvs = (listViewState *)h->m_private_data;
     if (lvs) lvs->m_color_bg = color;
@@ -7817,7 +7819,7 @@ void ListView_SetTextBkColor(HWND h, int color)
 }
 void ListView_SetTextColor(HWND h, int color)
 {
-  if (WDL_NORMALLY(h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32")))
+  if (WDL_NORMALLY(h && h->m_private_data && IS_CLASSNAME_LISTVIEW_LISTBOX(h->m_classname)))
   {
     listViewState *lvs = (listViewState *)h->m_private_data;
     lvs->m_color_text = color;
@@ -7825,7 +7827,7 @@ void ListView_SetTextColor(HWND h, int color)
 }
 void ListView_SetGridColor(HWND h, int color)
 {
-  if (WDL_NORMALLY(h && h->m_private_data && h->m_classname && !strcmp(h->m_classname,"SysListView32")))
+  if (WDL_NORMALLY(h && h->m_private_data && IS_CLASSNAME_LISTVIEW_LISTBOX(h->m_classname)))
   {
     listViewState *lvs = (listViewState *)h->m_private_data;
     lvs->m_color_grid = color;
@@ -7835,7 +7837,7 @@ void ListView_SetSelColors(HWND h, int *colors, int ncolors)
 {
   if (WDL_NORMALLY(h && h->m_private_data && h->m_classname))
   {
-    if (!strcmp(h->m_classname,"SysListView32"))
+    if (IS_CLASSNAME_LISTVIEW_LISTBOX(h->m_classname))
   {
     listViewState *lvs = (listViewState *)h->m_private_data;
     if (colors && ncolors > 0) 

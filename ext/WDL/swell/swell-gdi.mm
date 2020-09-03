@@ -1791,7 +1791,8 @@ void SWELL_FillDialogBackground(HDC hdc, const RECT *r, int level)
       NSColor *c = [NSColor windowBackgroundColor];
       if ([c respondsToSelector:@selector(CGColor)])
       {
-        CGContextSetFillColorWithColor(ctx, (CGColorRef)[c CGColor]);
+        void *(*send_msg)(id, SEL) = (void *(*)(id, SEL))objc_msgSend;
+        CGContextSetFillColorWithColor(ctx, (CGColorRef)send_msg(c, @selector(CGColor)));
         ok = true;
       }
     }

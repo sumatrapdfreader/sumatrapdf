@@ -32,7 +32,7 @@
 #ifndef SWELL_API_DEFINE
 
 
-#ifdef SWELL_PROVIDED_BY_APP
+#if defined(SWELL_PROVIDED_BY_APP) || defined(SWELL_LOAD_SWELL_DYLIB)
   #ifdef __cplusplus
     #define SWELL_API_DEFINE(ret,func,parms) extern "C" ret (*func)parms;
   #else

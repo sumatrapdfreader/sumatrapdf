@@ -2673,6 +2673,7 @@ int SWELL_DialogBox(SWELL_DialogResourceIndex *reshead, const char *resid, HWND 
   {
     int ret=[box swellGetModalRetVal];
     sendSwellMessage([box contentView],WM_DESTROY,0,0);
+    [box close];
     [box release];
     [pool release];
     return ret;
