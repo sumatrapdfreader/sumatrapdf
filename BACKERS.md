@@ -33,3 +33,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Laurent NOEL
 - Nikita
 - Walter Manbeck
+- Curtis Y Takahashi
