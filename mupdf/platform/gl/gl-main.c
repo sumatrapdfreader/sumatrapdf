@@ -509,14 +509,14 @@ static void save_accelerator(void)
 	fz_save_accelerator(ctx, doc, absname);
 }
 
-static int search_active = 0;
 static struct input search_input = { { 0 }, 0 };
-static char *search_needle = 0;
 static int search_dir = 1;
 static fz_location search_page = {-1, -1};
 static fz_location search_hit_page = {-1, -1};
-static int search_hit_count = 0;
-static fz_quad search_hit_quads[5000];
+static int search_active = 0;
+char *search_needle = 0;
+int search_hit_count = 0;
+fz_quad search_hit_quads[5000];
 
 static char *help_dialog_text =
 	"The middle mouse button (scroll wheel button) pans the document view. "
@@ -886,6 +886,11 @@ static void restore_mark(struct mark mark)
 static int eqloc(fz_location a, fz_location b)
 {
 	return a.chapter == b.chapter && a.page == b.page;
+}
+
+int search_has_results(void)
+{
+	return !search_active && eqloc(search_hit_page, currentpage) && search_hit_count > 0;
 }
 
 static int is_first_page(fz_location loc)

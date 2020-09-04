@@ -745,11 +745,19 @@ void ui_label(const char *fmt, ...)
 
 int ui_button(const char *label)
 {
+	return ui_button_aux(label, 0);
+}
+
+int ui_button_aux(const char *label, int flags)
+{
 	int width = ui_measure_string(label);
 	fz_irect area = ui_pack(width + 20, ui.gridsize);
 	int text_x = area.x0 + ((area.x1 - area.x0) - width) / 2;
-	int pressed;
+	int pressed = 0;
+	int disabled = (flags & 1);
 
+	if (!disabled)
+	{
 	if (ui_mouse_inside(area))
 	{
 		ui.hot = label;
@@ -758,23 +766,32 @@ int ui_button(const char *label)
 	}
 
 	pressed = (ui.hot == label && ui.active == label && ui.down);
+	}
 	ui_draw_bevel_rect(area, UI_COLOR_BUTTON, pressed);
-	glColorHex(UI_COLOR_TEXT_FG);
+	glColorHex(disabled ? UI_COLOR_TEXT_GRAY : UI_COLOR_TEXT_FG);
 	ui_draw_string(text_x + pressed, area.y0+3 + pressed, label);
 
-	return ui.hot == label && ui.active == label && !ui.down;
+	return !disabled && ui.hot == label && ui.active == label && !ui.down;
 }
 
 int ui_checkbox(const char *label, int *value)
 {
+	return ui_checkbox_aux(label, value, 0);
+}
+
+int ui_checkbox_aux(const char *label, int *value, int flags)
+{
 	int width = ui_measure_string(label);
 	fz_irect area = ui_pack(13 + 4 + width, ui.lineheight);
 	fz_irect mark = { area.x0, area.y0 + ui.baseline-12, area.x0 + 13, area.y0 + ui.baseline+1 };
-	int pressed;
+	int pressed = 0;
+	int disabled = (flags & 1);
 
-	glColorHex(UI_COLOR_TEXT_FG);
+	glColorHex(disabled ? UI_COLOR_TEXT_GRAY : UI_COLOR_TEXT_FG);
 	ui_draw_string(mark.x1 + 4, area.y0, label);
 
+	if (!disabled)
+	{
 	if (ui_mouse_inside(area))
 	{
 		ui.hot = label;
@@ -786,13 +803,14 @@ int ui_checkbox(const char *label, int *value)
 		*value = !*value;
 
 	pressed = (ui.hot == label && ui.active == label && ui.down);
-	ui_draw_bevel_rect(mark, pressed ? UI_COLOR_PANEL : UI_COLOR_TEXT_BG, 1);
+	}
+	ui_draw_bevel_rect(mark, (disabled || pressed) ? UI_COLOR_PANEL : UI_COLOR_TEXT_BG, 1);
 	if (*value)
 	{
 		float ax = mark.x0+2 + 1, ay = mark.y0+2 + 3;
 		float bx = mark.x0+2 + 4, by = mark.y0+2 + 5;
 		float cx = mark.x0+2 + 8, cy = mark.y0+2 + 1;
-		glColorHex(UI_COLOR_TEXT_FG);
+		glColorHex(disabled ? UI_COLOR_TEXT_GRAY : UI_COLOR_TEXT_FG);
 		glBegin(GL_TRIANGLE_STRIP);
 		glVertex2f(ax, ay); glVertex2f(ax, ay+3);
 		glVertex2f(bx, by); glVertex2f(bx, by+3);
@@ -800,7 +818,7 @@ int ui_checkbox(const char *label, int *value)
 		glEnd();
 	}
 
-	return ui.hot == label && ui.active == label && !ui.down;
+	return !disabled && ui.hot == label && ui.active == label && !ui.down;
 }
 
 int ui_slider(int *value, int min, int max, int width)
@@ -1096,11 +1114,19 @@ void ui_label_with_scrollbar(char *text, int width, int height, int *scroll)
 
 int ui_popup(const void *id, const char *label, int is_button, int count)
 {
+	return ui_popup_aux(id, label, is_button, count, 0);
+}
+
+int ui_popup_aux(const void *id, const char *label, int is_button, int count, int flags)
+{
 	int width = ui_measure_string(label);
 	fz_irect area = ui_pack(width + 22 + 6, ui.gridsize);
 	fz_irect menu_area;
-	int pressed;
+	int pressed = 0;
+	int disabled = (flags & 1);
 
+	if (!disabled)
+	{
 	if (ui_mouse_inside(area))
 	{
 		ui.hot = id;
@@ -1109,11 +1135,12 @@ int ui_popup(const void *id, const char *label, int is_button, int count)
 	}
 
 	pressed = (ui.active == id);
+	}
 
 	if (is_button)
 	{
 		ui_draw_bevel_rect(area, UI_COLOR_BUTTON, pressed);
-		glColorHex(UI_COLOR_TEXT_FG);
+		glColorHex(disabled? UI_COLOR_TEXT_GRAY : UI_COLOR_TEXT_FG);
 		ui_draw_string(area.x0 + 6+pressed, area.y0+3+pressed, label);
 		glBegin(GL_TRIANGLES);
 		glVertex2f(area.x1+pressed-8-10, area.y0+pressed+9);
@@ -1125,11 +1152,11 @@ int ui_popup(const void *id, const char *label, int is_button, int count)
 	{
 		fz_irect arrow = { area.x1-22, area.y0+2, area.x1-2, area.y1-2 };
 		ui_draw_bevel_rect(area, UI_COLOR_TEXT_BG, 1);
-		glColorHex(UI_COLOR_TEXT_FG);
+		glColorHex(disabled ? UI_COLOR_TEXT_GRAY : UI_COLOR_TEXT_FG);
 		ui_draw_string(area.x0 + 6, area.y0+3, label);
 		ui_draw_ibevel_rect(arrow, UI_COLOR_BUTTON, pressed);
 
-		glColorHex(UI_COLOR_TEXT_FG);
+		glColorHex(disabled ? UI_COLOR_TEXT_GRAY : UI_COLOR_TEXT_FG);
 		glBegin(GL_TRIANGLES);
 		glVertex2f(area.x1+pressed-8-10, area.y0+pressed+9);
 		glVertex2f(area.x1+pressed-8, area.y0+pressed+9);
@@ -1171,9 +1198,15 @@ int ui_popup(const void *id, const char *label, int is_button, int count)
 
 int ui_popup_item(const char *title)
 {
-	fz_irect area = ui_pack(0, ui.lineheight);
+	return ui_popup_item_aux(title, 0);
+}
 
-	if (ui_mouse_inside(area))
+int ui_popup_item_aux(const char *title, int flags)
+{
+	fz_irect area = ui_pack(0, ui.lineheight);
+	int disabled = (flags & 1);
+
+	if (!disabled && ui_mouse_inside(area))
 	{
 		ui.hot = title;
 		glColorHex(UI_COLOR_TEXT_SEL_BG);
@@ -1183,11 +1216,11 @@ int ui_popup_item(const char *title)
 	}
 	else
 	{
-		glColorHex(UI_COLOR_TEXT_FG);
+		glColorHex(disabled ? UI_COLOR_TEXT_GRAY : UI_COLOR_TEXT_FG);
 		ui_draw_string(area.x0 + 4, area.y0, title);
 	}
 
-	return ui.hot == title && !ui.down;
+	return !disabled && ui.hot == title && !ui.down;
 }
 
 void ui_popup_end(void)
@@ -1198,11 +1231,16 @@ void ui_popup_end(void)
 
 int ui_select(const void *id, const char *current, const char *options[], int n)
 {
+	return ui_select_aux(id, current, options, n, 0);
+}
+
+int ui_select_aux(const void *id, const char *current, const char *options[], int n, int flags)
+{
 	int i, choice = -1;
-	if (ui_popup(id, current, 0, n))
+	if (ui_popup_aux(id, current, 0, n, flags))
 	{
 		for (i = 0; i < n; ++i)
-			if (ui_popup_item(options[i]))
+			if (ui_popup_item_aux(options[i], flags))
 				choice = i;
 		ui_popup_end();
 	}

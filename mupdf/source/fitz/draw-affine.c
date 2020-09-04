@@ -171,7 +171,7 @@ template_affine_alpha_g2rgb_lerp(byte * FZ_RESTRICT dp, int da, const byte * FZ_
 					gp[0] = ya + fz_mul255(gp[0], t);
 			}
 		}
-		dp += 4;
+		dp += 3+da;
 		if (hp)
 			hp++;
 		if (gp)

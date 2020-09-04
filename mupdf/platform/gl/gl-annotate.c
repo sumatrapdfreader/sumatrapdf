@@ -21,6 +21,8 @@ static int do_high_security;
 static int hs_resolution = 200;
 static struct input ocr_language_input;
 static int ocr_language_input_initialised = 0;
+static pdf_document *pdf_has_redactions_doc = NULL;
+static int pdf_has_redactions;
 
 static int pdf_filter(const char *fn)
 {
@@ -506,6 +508,10 @@ static void new_annot(int type)
 
 	switch (type)
 	{
+	case PDF_ANNOT_REDACT:
+		pdf_has_redactions_doc = pdf;
+		pdf_has_redactions = 1;
+		/* fallthrough */
 	case PDF_ANNOT_INK:
 	case PDF_ANNOT_POLYGON:
 	case PDF_ANNOT_POLY_LINE:
@@ -513,7 +519,6 @@ static void new_annot(int type)
 	case PDF_ANNOT_UNDERLINE:
 	case PDF_ANNOT_STRIKE_OUT:
 	case PDF_ANNOT_SQUIGGLY:
-	case PDF_ANNOT_REDACT:
 		is_draw_mode = 1;
 		break;
 	}
@@ -778,6 +783,7 @@ step_redact_all_pages(int cancel)
 	{
 		trace_action("page = opage;\n");
 		trace_page_update();
+		pdf_has_redactions = 0;
 		load_page();
 		render_page();
 		return -1;
@@ -807,6 +813,46 @@ static void redact_all_pages(pdf_redact_options *opts)
 				step_redact_all_pages);
 }
 
+static int
+document_has_redactions(void)
+{
+	int i, n;
+	pdf_page *page = NULL;
+	pdf_annot *annot;
+	int has_redact = 0;
+
+	fz_var(page);
+	fz_var(has_redact);
+
+	fz_try(ctx)
+	{
+		n = pdf_count_pages(ctx, pdf);
+		for (i = 0; i < n && !has_redact; i++)
+		{
+			page = pdf_load_page(ctx, pdf, i);
+			for (annot = pdf_first_annot(ctx, page);
+				annot != NULL;
+				annot = pdf_next_annot(ctx, annot))
+			{
+				if (pdf_annot_type(ctx, annot) == PDF_ANNOT_REDACT)
+				{
+					fz_drop_page(ctx, (fz_page *)page);
+					has_redact = 1;
+					break;
+				}
+			}
+			fz_drop_page(ctx, (fz_page *)page);
+			page = NULL;
+		}
+	}
+	fz_catch(ctx)
+	{
+		/* Ignore the error, and assume no redactions */
+		fz_drop_page(ctx, (fz_page *)page);
+	}
+	return has_redact;
+}
+
 void do_annotate_panel(void)
 {
 	static struct list annot_list;
@@ -817,6 +863,14 @@ void do_annotate_panel(void)
 
 	int has_redact = 0;
 	int was_dirty = pdf->dirty;
+	static pdf_redact_options redact_opts = { 1, PDF_REDACT_IMAGE_PIXELS };
+	int search_valid;
+
+	if (pdf_has_redactions_doc != pdf)
+	{
+		pdf_has_redactions_doc = pdf;
+		pdf_has_redactions = document_has_redactions();
+	}
 
 	ui_layout(T, X, NW, 2, 2);
 
@@ -1142,21 +1196,22 @@ void do_annotate_panel(void)
 	if (ui_button("Save PDF..."))
 		do_save_pdf_file();
 
-	if (has_redact)
 	{
-		static pdf_redact_options redact_opts = { 1, PDF_REDACT_IMAGE_PIXELS };
 		int im_choice;
 		ui_spacer();
 		im_choice = ui_select("Redact/IM", im_redact_names[redact_opts.image_method], im_redact_names, nelem(im_redact_names));
 		if (im_choice != -1)
 			redact_opts.image_method = im_choice;
 		ui_checkbox("Draw black boxes", &redact_opts.black_boxes);
-		if (ui_button("Redact All Pages"))
+		ui_label("When Redacting:");
+		ui_spacer();
+	}
+	if (ui_button_aux("Redact All Pages", !pdf_has_redactions))
 		{
 			selected_annot = NULL;
 			redact_all_pages(&redact_opts);
 		}
-		if (ui_button("Redact Page"))
+	if (ui_button_aux("Redact Page", !has_redact))
 		{
 			selected_annot = NULL;
 			trace_action("page.applyRedactions(%s, %d);\n",
@@ -1167,8 +1222,28 @@ void do_annotate_panel(void)
 			load_page();
 			render_page();
 		}
-	}
 
+	search_valid = search_has_results();
+	if (ui_button_aux("Mark for redaction", !search_valid))
+	{
+		for (n = 0; n < search_hit_count; n++)
+		{
+			new_annot(PDF_ANNOT_REDACT);
+			pdf_clear_annot_quad_points(ctx, selected_annot);
+			trace_action("annot.addQuadPoint(%g, %g, %g, %g, %g, %g, %g, %g);\n",
+				search_hit_quads[n].ul.x, search_hit_quads[n].ul.y,
+				search_hit_quads[n].ur.x, search_hit_quads[n].ur.y,
+				search_hit_quads[n].ll.x, search_hit_quads[n].ll.y,
+				search_hit_quads[n].lr.x, search_hit_quads[n].lr.y);
+			pdf_add_annot_quad_point(ctx, selected_annot, search_hit_quads[n]);
+			if (search_needle)
+			{
+				trace_action("annot.setContents(%q);\n", search_needle);
+				pdf_set_annot_contents(ctx, selected_annot, search_needle);
+			}
+		}
+		search_hit_count = 0;
+	}
 	if (was_dirty != pdf->dirty)
 		update_title();
 }

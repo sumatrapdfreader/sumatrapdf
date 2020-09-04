@@ -181,10 +181,15 @@ void ui_spacer(void);
 void ui_splitter(int *x, int min, int max, enum side side);
 void ui_label(const char *fmt, ...);
 void ui_label_with_scrollbar(char *text, int width, int height, int *scroll);
+
 int ui_button(const char *label);
+/* flags: bit 0 -> disabled. all other bits 0 for now. */
+int ui_button_aux(const char *label, int flags);
 int ui_checkbox(const char *label, int *value);
+int ui_checkbox_aux(const char *label, int *value, int flags);
 int ui_slider(int *value, int min, int max, int width);
 int ui_select(const void *id, const char *current, const char *options[], int n);
+int ui_select_aux(const void *id, const char *current, const char *options[], int n, int flags);
 
 void ui_input_init(struct input *input, const char *text);
 int ui_input(struct input *input, int width, int height);
@@ -200,6 +205,8 @@ void ui_list_end(struct list *list);
 
 int ui_popup(const void *id, const char *label, int is_button, int count);
 int ui_popup_item(const char *title);
+int ui_popup_aux(const void *id, const char *label, int is_button, int count, int flags);
+int ui_popup_item_aux(const char *title, int flags);
 void ui_popup_end(void);
 
 void ui_init_open_file(const char *dir, int (*filter)(const char *fn));
@@ -219,6 +226,7 @@ enum
 	UI_COLOR_SCROLLBAR = 0xdfdfdf,
 	UI_COLOR_TEXT_BG = 0xffffff,
 	UI_COLOR_TEXT_FG = 0x000000,
+	UI_COLOR_TEXT_GRAY = 0x808080,
 	UI_COLOR_TEXT_SEL_BG = 0x000080,
 	UI_COLOR_TEXT_SEL_FG = 0xffffff,
 	UI_COLOR_BEVEL_1 = 0x000000,
@@ -247,7 +255,11 @@ extern char filename[];
 extern int showform;
 extern int showannotate;
 extern int reloadrequested;
+extern char *search_needle;
+extern int search_hit_count;
+extern fz_quad search_hit_quads[];
 
+int search_has_results(void);
 void toggle_annotate();
 void run_main_loop(void);
 void do_annotate_panel(void);
