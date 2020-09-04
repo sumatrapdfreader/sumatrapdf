@@ -461,6 +461,11 @@ pdf_show_pattern(fz_context *ctx, pdf_run_processor *pr, pdf_pattern *pat, int p
 		{
 			for (x = x0; x < x1; x++)
 			{
+				/* Calls to pdf_process_contents may cause the
+				 * gstate array to be realloced to be larger.
+				 * That can invalidate gstate. Hence reload
+				 * it each time round the loop. */
+				gstate = pr->gstate + pr->gtop;
 				gstate->ctm = fz_pre_translate(ptm, x * pat->xstep, y * pat->ystep);
 				pdf_gsave(ctx, pr);
 				pdf_process_contents(ctx, (pdf_processor*)pr, pat->document, pat->resources, pat->contents, NULL);
