@@ -372,8 +372,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
     AutoFreeWstr menuString;
     menuString.SetCopy(path::GetBaseNameNoFree(filePath));
     auto fileName = win::menu::ToSafeString(menuString);
-    int menuIdx = (int)((index + 1) % 10);
-    menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
+    menuString.Set(str::Format(L"%s", fileName));
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
     InsertMenuW(menuFile, CmdExit, flags, menuId, menuString);
@@ -429,7 +428,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             *(WCHAR*)path::GetExtNoFree(appName) = '\0';
         }
 
-        AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.Get() : name));
+        AutoFreeWstr menuString(str::Format(_TR("&%u. %s"), i + 1, appName ? appName.Get() : name));
         uint menuId = CmdOpenWithExternalFirst + count;
         InsertMenuW(menuFile, CmdSendByEmail, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {

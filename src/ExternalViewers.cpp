@@ -12,6 +12,7 @@
 #include "Annotation.h"
 #include "EngineBase.h"
 #include "EngineCreate.h"
+#include "TextSelection.h"
 
 #include "DisplayMode.h"
 #include "SettingsStructs.h"
@@ -20,6 +21,7 @@
 
 #include "SumatraPDF.h"
 #include "TabInfo.h"
+#include "Selection.h"
 #include "ExternalViewers.h"
 
 static WCHAR* GetAcrobatPath() {
@@ -366,14 +368,14 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     }
     if (str::Find(cmdLine, L"%1")) {
         params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
-    } else if (str::Find(cmdLine, L"%$")) {
-        bool isTextOnlySelection;
-        WCHAR* selection = GetSelectedText(tab->win, L", ", isTextOnlySelection);
-        if (isTextOnlySelection) {
-            params.Set(str::Replace(cmdLine, L"%$", selection));
-        }
     } else {
-        params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath.Get()));
+        if (str::Find(cmdLine, L"%2")) {
+            bool isTextOnlySelection;
+            WCHAR* selection = GetSelectedText(tab->win, L", ", isTextOnlySelection);
+            params.Set(str::Replace(cmdLine, L"%2", selection));
+        } else {
+            params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath.Get()));
+        }
     }
     return LaunchFile(args.at(0), params);
 }
