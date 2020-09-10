@@ -353,7 +353,10 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     }
 
     // if the command line contains %p, it's replaced with the current page number
-    // if it contains %1, it's replaced with the file path (else the file path is appended)
+    // if it contains %1, it's replaced with the file path
+    // else if it contains %$ it's replaced with active selection
+    // else file path is appended
+
     const WCHAR* cmdLine = args.size() > 1 ? args.at(1) : L"\"%1\"";
     AutoFreeWstr params;
     if (str::Find(cmdLine, L"%p")) {
@@ -363,6 +366,12 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     }
     if (str::Find(cmdLine, L"%1")) {
         params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
+    } else if (str::Find(cmdLine, L"%$")) {
+        bool isTextOnlySelection;
+        WCHAR* selection = GetSelectedText(tab->win, L", ", isTextOnlySelection);
+        if (isTextOnlySelection) {
+            params.Set(str::Replace(cmdLine, L"%$", selection));
+        }
     } else {
         params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath.Get()));
     }
