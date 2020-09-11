@@ -372,7 +372,7 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
         if (str::Find(cmdLine, L"%2")) {
             bool isTextOnlySelection;
             WCHAR* selection = GetSelectedText(tab->win, L", ", isTextOnlySelection);
-            params.Set(str::Replace(cmdLine, L"%2", selection));
+            params.Set(str::Replace(cmdLine, L"%2", selection ? selection : L""));
         } else {
             params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath.Get()));
         }
