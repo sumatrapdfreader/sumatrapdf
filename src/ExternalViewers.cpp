@@ -361,6 +361,7 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
 
     const WCHAR* cmdLine = args.size() > 1 ? args.at(1) : L"\"%1\"";
     AutoFreeWstr params;
+    bool toAppendFilePath = true;
     if (str::Find(cmdLine, L"%p")) {
         AutoFreeWstr pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
         params.Set(str::Replace(cmdLine, L"%p", pageNoStr));
@@ -368,15 +369,23 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     }
     if (str::Find(cmdLine, L"%1")) {
         params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
-    } else {
-        if (str::Find(cmdLine, L"%2")) {
-            bool isTextOnlySelection;
-            WCHAR* selection = GetSelectedText(tab->win, L", ", isTextOnlySelection);
-            params.Set(str::Replace(cmdLine, L"%2", selection ? selection : L""));
-        } else {
-            params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath.Get()));
-        }
+        cmdLine = params;
+        toAppendFilePath = false;
     }
+    if (str::Find(cmdLine, L"%s")) {
+        bool isTextOnlySelection;
+        WCHAR* selection = GetSelectedText(tab->win, L", ", isTextOnlySelection);
+        if (!selection) {
+            return false;
+        }
+        params.Set(str::Replace(cmdLine, L"%s", selection ? selection : L""));
+        cmdLine = params;
+        toAppendFilePath = false;
+    }
+    if (toAppendFilePath) {
+        params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath.Get()));
+    }
+
     return LaunchFile(args.at(0), params);
 }
 

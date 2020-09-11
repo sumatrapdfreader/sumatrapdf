@@ -106,19 +106,7 @@ static MenuDef menuDefFile[] = {
 #endif
 //] ACCESSKEY_ALTERNATIVE
     { _TRN("&Print...\tCtrl+P"),            CmdPrint,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { SEP_ITEM,                             0,                         MF_REQ_DISK_ACCESS },
-//[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
-    { _TRN("Open in &Adobe Reader"),        CmdOpenWithAcrobat,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open in &Foxit Reader"),        CmdOpenWithFoxIt,          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Open &in PDF-XChange"),         CmdOpenWithPdfXchange,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-//| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft XPS-Viewer"),CmdOpenWithXpsViewer,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-//| ACCESSKEY_ALTERNATIVE
-    { _TRN("Open in &Microsoft HTML Help"), CmdOpenWithHtmlHelp,       MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-//] ACCESSKEY_ALTERNATIVE
-    // further entries are added if specified in gGlobalPrefs.vecCommandLine
-    { _TRN("Send by &E-mail..."),           CmdSendByEmail,            MF_REQ_DISK_ACCESS },
-    { SEP_ITEM,                             0,                         MF_REQ_DISK_ACCESS },
+    { SEP_ITEM,                             0,                         0 },
     { _TRN("P&roperties\tCtrl+D"),          CmdProperties,             0 },
     { SEP_ITEM,                             0,                         0 },
     { _TRN("E&xit\tCtrl+Q"),                CmdExit,                   0 },
@@ -150,6 +138,23 @@ static MenuDef menuDefView[] = {
     { 0, 0, 0 },
 };
 //] ACCESSKEY_GROUP View Menu
+
+//[ ACCESSKEY_GROUP ExternalViewers Menu
+static MenuDef menuDefExternalViewers[] = {
+    //[ ACCESSKEY_ALTERNATIVE // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
+    { _TRN("Open in &Adobe Reader"),        CmdOpenWithAcrobat,        MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open in &Foxit Reader"),        CmdOpenWithFoxIt,          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Open &in PDF-XChange"),         CmdOpenWithPdfXchange,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    //| ACCESSKEY_ALTERNATIVE
+    { _TRN("Open in &Microsoft XPS-Viewer"),CmdOpenWithXpsViewer,      MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    //| ACCESSKEY_ALTERNATIVE
+    { _TRN("Open in &Microsoft HTML Help"), CmdOpenWithHtmlHelp,       MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    //] ACCESSKEY_ALTERNATIVE
+    // further entries are added if specified in gGlobalPrefs.vecCommandLine
+    { _TRN("Send by &E-mail..."),           CmdSendByEmail,            MF_REQ_DISK_ACCESS },
+    { 0, 0, 0 },
+};
+//] ACCESSKEY_GROUP ExternalViewers Menu
 
 //[ ACCESSKEY_GROUP GoTo Menu
 static MenuDef menuDefGoTo[] = {
@@ -372,7 +377,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
     AutoFreeWstr menuString;
     menuString.SetCopy(path::GetBaseNameNoFree(filePath));
     auto fileName = win::menu::ToSafeString(menuString);
-    menuString.Set(str::Format(L"%s", fileName));
+    menuString.Set(str::Format(L"&%u. %s", (index + 1) % 10, fileName));
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
     InsertMenuW(menuFile, CmdExit, flags, menuId, menuString);
@@ -428,7 +433,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             *(WCHAR*)path::GetExtNoFree(appName) = '\0';
         }
 
-        AutoFreeWstr menuString(str::Format(_TR("&%u. %s"), i + 1, appName ? appName.Get() : name));
+        AutoFreeWstr menuString(str::Format(_TR("&%u. Send to %s"), i + 1, appName ? appName.Get() : name));
         uint menuId = CmdOpenWithExternalFirst + count;
         InsertMenuW(menuFile, CmdSendByEmail, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {
@@ -956,6 +961,30 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
         win::menu::Remove(m, CmdOpenFolder);
     }
     AppendRecentFilesToMenu(menu);
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    bool supportsAnnotations = EngineSupportsAnnotations(engine);
+    bool canDoAnnotations = gIsDebugBuild || gIsPreReleaseBuild || gIsDailyBuild;
+    if (!canDoAnnotations) {
+        supportsAnnotations = false;
+    }
+}
+
+static void RebuildExternalViewersMenu(TabInfo* tab, HMENU menu) {
+    int filter = 0;
+    if (tab && tab->AsChm()) {
+        filter |= MF_NOT_FOR_CHM;
+    }
+    if (tab && tab->AsEbook()) {
+        filter |= MF_NOT_FOR_EBOOK_UI;
+    }
+    if (!tab || tab->GetEngineType() != kindEngineComicBooks) {
+        filter |= MF_CBX_ONLY;
+    }
+
+    win::menu::Empty(menu);
+    HMENU m = BuildMenuFromMenuDef(menuDefExternalViewers, menu, filter);
+
     AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
 
     // Suppress menu items that depend on specific software being installed:
@@ -981,14 +1010,6 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     }
     if (!CanViewWithHtmlHelp(tab)) {
         win::menu::Remove(menu, CmdOpenWithHtmlHelp);
-    }
-
-    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
-    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
-    bool supportsAnnotations = EngineSupportsAnnotations(engine);
-    bool canDoAnnotations = gIsDebugBuild || gIsPreReleaseBuild || gIsDailyBuild;
-    if (!canDoAnnotations) {
-        supportsAnnotations = false;
     }
 }
 
@@ -1284,6 +1305,10 @@ HMENU BuildMenu(WindowInfo* win) {
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
     m = BuildMenuFromMenuDef(menuDefGoTo, CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
+    m = CreateMenu();
+    RebuildExternalViewersMenu(tab, m);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&External Viewers"));
+
     if (!win->AsEbook()) {
         m = BuildMenuFromMenuDef(menuDefZoom, CreateMenu(), filter);
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
@@ -1359,6 +1384,8 @@ void UpdateAppMenu(WindowInfo* win, HMENU m) {
         win::menu::Empty(m);
         BuildMenuFromMenuDef(menuDefFavorites, m);
         RebuildFavMenu(win, m);
+    } else if (id == menuDefExternalViewers[0].id) {
+        RebuildExternalViewersMenu(win->currentTab, m);
     }
     MenuUpdateStateForWindow(win);
     MarkMenuOwnerDraw(win->menu);
