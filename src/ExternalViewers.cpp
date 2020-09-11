@@ -356,7 +356,7 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
 
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path
-    // else if it contains %$ it's replaced with active selection
+    // else if it contains %s it's replaced with active selection
     // else file path is appended
 
     const WCHAR* cmdLine = args.size() > 1 ? args.at(1) : L"\"%1\"";

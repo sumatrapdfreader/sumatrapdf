@@ -389,7 +389,7 @@ var (
 	externalViewer = []*Field{
 		mkField("CommandLine", String, nil,
 			"command line with which to call the external viewer, may contain "+
-				"%p for page number and \"%1\" for the file name (add quotation "+
+				"%p for page number, %s for active selection and \"%1\" for the file name (add quotation "+
 				"marks around paths containing spaces)"),
 		mkField("Name", String, nil,
 			"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),

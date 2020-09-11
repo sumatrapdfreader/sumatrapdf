@@ -87,7 +87,7 @@ struct ChmUI {
 // multiple entries for the same format)
 struct ExternalViewer {
     // command line with which to call the external viewer, may contain %p
-    // for page number and "%1" for the file name (add quotation marks
+    // for page number, %s for active selection, and "%1" for the file name (add quotation marks
     // around paths containing spaces)
     WCHAR* commandLine;
     // name of the external viewer to be shown in the menu (implied by
