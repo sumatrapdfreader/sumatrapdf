@@ -12882,7 +12882,7 @@ const char * gTranslations_no =
   "\0"\
   "\0"\
   "Legg til side %s i favoritter\0"\
-  "\0"\
+  "Legg side %s til i favoritter\tCtrl+B\0"\
   "Legg til side %s i favoritter med (valgfritt) navn:\0"\
   "\0"\
   "Legg til i favoritter\0"\
@@ -12911,10 +12911,10 @@ const char * gTranslations_no =
   "\0"\
   "Endre spr\303\245k (Change Language)\0"\
   "&Se etter oppdateringer...\0"\
-  "\0"\
+  "Sirkel\0"\
   "Lukk\0"\
   "\0"\
-  "\0"\
+  "Farge\0"\
   "Tegneserier\0"\
   "Kompatibilitet\0"\
   "Kontinuerlig\0"\
@@ -12954,9 +12954,9 @@ const char * gTranslations_no =
   "A&vslutt\tCtrl+Q\0"\
   "\0"\
   "EPUB-dokumenter\0"\
+  "Rediger\0"\
   "\0"\
-  "\0"\
-  "\0"\
+  "Rediger bokmerker\0"\
   "Skriv inn passord\0"\
   "Skriv inn passord for %s\0"\
   "Skriv inn kommandolinjen som skal kj\303\270res n\303\245r du dobbeltklikker p\303\245 PDF-dokumentet:\0"\
@@ -13007,7 +13007,7 @@ const char * gTranslations_no =
   "Tips: Bruk F3-tasten for \303\245 s\303\270ke etter neste\0"\
   "Bildefiler (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Blekk\0"\
   "Installer SumatraPDF\0"\
   "Installere SumatraPDF i &mappe:\0"\
   "Feil ved installering!\0"\
@@ -13016,7 +13016,7 @@ const char * gTranslations_no =
   "La Windows s\303\270kemotor &s\303\270ke PDF dokumenter\0"\
   "La Windows vise &forh\303\245ndsvisning av PDF-dokumenter\0"\
   "Lyst\0"\
-  "\0"\
+  "Linje\0"\
   "\0"\
   "Gj\303\270re SumatraPDF til standard \303\245pningsprogram for PDF-filer?\0"\
   "Bruk SumatraPDF som standard PDF-leser\0"\

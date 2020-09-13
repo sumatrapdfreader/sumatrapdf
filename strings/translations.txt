@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5d1d5e751b907c3363951e119d462b2593387f4e
+6a1765972f440c0ee28891196d3437c263e558f9
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -3860,6 +3860,7 @@ ja:ページ %s をお気に入りに追加\tCtrl+B
 kw:Keworra folen %s dhe daklow drudh\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
+no:Legg side %s til i favoritter\tCtrl+B
 pl:Dodaj stronę %s do ulubionych\tCtrl+B
 pt:Adicionar página %s aos favoritos\tCtrl+B
 ru:Добавить страницу %s в избранные\tCtrl+B
@@ -5488,6 +5489,7 @@ el:Κύκλος
 fr:Cercle
 kw:Kylgh
 nl:Cirkel
+no:Sirkel
 pl:Okrąg
 ru:Круг
 :Close
@@ -5599,6 +5601,7 @@ el:Χρώμα
 fr:Couleur
 kw:Liw
 nl:Kleur
+no:Farge
 pa:ਰੰਗ
 pl:Kolor
 ru:Цвет
@@ -7985,6 +7988,7 @@ el:Επεξεργασία
 fr:Éditer
 kw:Golegi
 nl:Bewerken
+no:Rediger
 pa:ਸੋਧੋ
 pl:Edytuj
 ru:Изменить
@@ -8011,6 +8015,7 @@ de:Lesezeichen bearbeiten
 fr:Éditer les marque-pages
 kw:Golegi Folennotennow
 nl:Bewerk Bladwijzers
+no:Rediger bokmerker
 pl:Edytuj zakładki
 ru:Изменить закладки
 vn:Sửa Dấu trang
@@ -11007,6 +11012,7 @@ co:Inchjostru
 de:Tinte
 kw:Ynk
 nl:Snelkoppeling
+no:Blekk
 pl:Atrament
 ru:Чернила
 :Install SumatraPDF
@@ -11517,6 +11523,7 @@ el:Γραμμή
 fr:Ligne
 kw:Linen
 nl:Regel
+no:Linje
 pl:Linia
 ru:Линия
 :MB
