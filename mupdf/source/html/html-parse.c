@@ -615,27 +615,6 @@ static fz_html_box *insert_table_cell_box(fz_context *ctx, fz_html_box *box, fz_
 	return top;
 }
 
-static fz_html_box *insert_break_box(fz_context *ctx, fz_html_box *box, fz_html_box *top)
-{
-	if (top->type == BOX_BLOCK)
-	{
-		insert_box(ctx, box, BOX_BREAK, top);
-	}
-	else if (top->type == BOX_FLOW)
-	{
-		while (top->type != BOX_BLOCK)
-			top = top->up;
-		insert_box(ctx, box, BOX_BREAK, top);
-	}
-	else if (top->type == BOX_INLINE)
-	{
-		while (top->type != BOX_BLOCK)
-			top = top->up;
-		insert_box(ctx, box, BOX_BREAK, top);
-	}
-	return top;
-}
-
 static void insert_inline_box(fz_context *ctx, fz_html_box *box, fz_html_box *top, int markup_dir, struct genstate *g)
 {
 	if (top->type == BOX_FLOW || top->type == BOX_INLINE)
@@ -698,18 +677,31 @@ generate_boxes(fz_context *ctx,
 
 			if (tag[0]=='b' && tag[1]=='r' && tag[2]==0)
 			{
-				if (top->type == BOX_INLINE)
+				fz_html_box *flow;
+				if (top->type != BOX_INLINE)
 				{
-					fz_html_box *flow = top;
+					/* Create anonymous inline box, with the same style as the top block box. */
+					fz_css_style style;
+					box = new_short_box(ctx, g->pool, markup_dir);
+					fz_default_css_style(ctx, &style);
+					box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
+					insert_inline_box(ctx, box, top, markup_dir, g);
+					style = *top->style;
+					/* Make sure not to recursively multiply font sizes. */
+					style.font_size.value = 1;
+					style.font_size.unit = N_SCALE;
+					box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
+					flow = box;
 					while (flow->type != BOX_FLOW)
 						flow = flow->up;
-					add_flow_break(ctx, g->pool, flow, top);
+					add_flow_break(ctx, g->pool, flow, box);
 				}
 				else
 				{
-					box = new_short_box(ctx, g->pool, markup_dir);
-					box->style = fz_css_enlist(ctx, &style, &g->styles, g->pool);
-					top = insert_break_box(ctx, box, top);
+					flow = top;
+					while (flow->type != BOX_FLOW)
+						flow = flow->up;
+					add_flow_break(ctx, g->pool, flow, top);
 				}
 				g->at_bol = 1;
 			}
@@ -1522,7 +1514,6 @@ fz_debug_html_box(fz_context *ctx, fz_html_box *box, int level)
 		indent(level);
 		switch (box->type) {
 		case BOX_BLOCK: printf("block"); break;
-		case BOX_BREAK: printf("break"); break;
 		case BOX_FLOW: printf("flow"); break;
 		case BOX_INLINE: printf("inline"); break;
 		case BOX_TABLE: printf("table"); break;

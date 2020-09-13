@@ -2,7 +2,7 @@
 %%DocumentNeededResources: procset (CIDInit)
 %%IncludeResource: procset (CIDInit)
 %%BeginResource: CMap (UniJIS-UTF16-H)
-%%Version: 1.023
+%%Version: 1.026
 %%EndComments
 /CIDInit /ProcSet findresource begin
 12 dict begin
@@ -11,10 +11,10 @@ begincmap
 /CIDSystemInfo 3 dict dup begin
   /Registry (Adobe) def
   /Ordering (Japan1) def
-  /Supplement 6 def
+  /Supplement 7 def
 end def
 /CMapName /UniJIS-UTF16-H def
-/CMapVersion 1.023 def
+/CMapVersion 1.026 def
 /CMapType 1 def
 /WMode 0 def
 3 begincodespacerange
@@ -22,7 +22,7 @@ end def
 <d800dc00> <dbffdfff>
 <e000> <ffff>
 endcodespacerange
-5069 begincidchar
+5077 begincidchar
 <007c> 99
 <007e> 100
 <00a0> 1
@@ -196,6 +196,9 @@ endcodespacerange
 <02c6> 128
 <02c7> 15749
 <02c8> 15846
+<02c9> 129
+<02ca> 127
+<02cb> 65
 <02cc> 15847
 <02d1> 15848
 <02d8> 15738
@@ -205,6 +208,7 @@ endcodespacerange
 <02dc> 95
 <02dd> 15753
 <02de> 15867
+<030d> 15846
 <030f> 15850
 <031a> 15879
 <031c> 15861
@@ -302,6 +306,7 @@ endcodespacerange
 <277f> 10514
 <27bf> 20958
 <29bf> 16203
+<29c8> 12232
 <2b1a> 11036
 <2b25> 12249
 <2b26> 12247
@@ -310,6 +315,7 @@ endcodespacerange
 <2b61> 12212
 <2b62> 12211
 <2b95> 8206
+<2b97> 12180
 <2e40> 15516
 <2e9e> 17893
 <2eac> 19130
@@ -322,6 +328,7 @@ endcodespacerange
 <30ff> 16195
 <3244> 10498
 <3251> 8091
+<32ff> 23058
 <3406> 17242
 <342c> 17246
 <342e> 14216
@@ -4678,6 +4685,7 @@ endcodespacerange
 <d83cdd00> 8061
 <d83cde02> 10985
 <d83cde37> 11024
+<d83ddf9c> 12244
 <d840dc0b> 13839
 <d840dc89> 17233
 <d840dc8a> 14108

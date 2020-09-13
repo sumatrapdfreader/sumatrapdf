@@ -260,11 +260,11 @@ extern int search_hit_count;
 extern fz_quad search_hit_quads[];
 
 int search_has_results(void);
-void toggle_annotate();
+void toggle_annotate(void);
 void run_main_loop(void);
 void do_annotate_panel(void);
 void do_annotate_canvas(fz_irect canvas_area);
-void do_widget_panel(void);
+void do_redact_panel(void);
 void do_widget_canvas(fz_irect canvas_area);
 void load_page(void);
 void render_page(void);

@@ -338,23 +338,23 @@ class ClangInfo:
                 for i in ['/usr/lib', '/usr/local/lib'] + clang_search_dirs:
                     for leaf in f'libclang-{version}.*so*', f'libclang.so.{version}.*':
                         p = os.path.join( i, leaf)
-                    p = os.path.abspath( p)
+                        p = os.path.abspath( p)
                         #log( '{p=}')
-                    libclang_so = glob.glob( p)
-                    if not libclang_so:
-                        continue
+                        libclang_so = glob.glob( p)
+                        if not libclang_so:
+                            continue
 
-                    # We have found libclang.so.
-                    self.libclang_so = libclang_so[0]
-                    log1( 'Using {self.libclang_so=}')
-                    clang.cindex.Config.set_library_file( self.libclang_so)
-                    self.resource_dir = jlib.system(
-                            f'{clang_bin} -print-resource-dir',
-                            out='return',
-                            ).strip()
-                    self.include_path = os.path.join( self.resource_dir, 'include')
-                    self.clang_version = version
-                    return True
+                        # We have found libclang.so.
+                        self.libclang_so = libclang_so[0]
+                        log1( 'Using {self.libclang_so=}')
+                        clang.cindex.Config.set_library_file( self.libclang_so)
+                        self.resource_dir = jlib.system(
+                                f'{clang_bin} -print-resource-dir',
+                                out='return',
+                                ).strip()
+                        self.include_path = os.path.join( self.resource_dir, 'include')
+                        self.clang_version = version
+                        return True
 
 
 g_clang_info = ClangInfo()
@@ -2863,8 +2863,8 @@ def make_function_wrappers(
             log( 'Unable to wrap function {cursor.spelling} becase: {e}')
             continue
 
-            out_functions_h.write( temp_out_h.getvalue())
-            out_functions_cpp.write( temp_out_cpp.getvalue())
+        out_functions_h.write( temp_out_h.getvalue())
+        out_functions_cpp.write( temp_out_cpp.getvalue())
         if fnname == 'fz_lookup_metadata':
             # Output convenience wrapper for fz_lookup_metadata() that is
             # easily SWIG-able - it returns a std::string by value, and uses an
@@ -5584,12 +5584,20 @@ def main():
                 # Run mutool.py.
                 #
                 mutool_py = os.path.abspath( __file__ + '/../mutool.py')
-                command = f'{envs} {mutool_py}'
-                log( 'running: {command}')
-                jlib.system(
-                        f'{command}',
-                        out = lambda text: log( text, nv=0),
-                        )
+                zlib_pdf = f'{build_dirs.dir_mupdf}thirdparty/zlib/zlib.3.pdf'
+                for args2 in (
+                        f'trace {zlib_pdf}',
+                        f'convert -o zlib.3.pdf-%d.png {zlib_pdf}',
+                        f'draw -o zlib.3.pdf-%d.png -s tmf -v -y l -w 150 -R 30 -h 200 {zlib_pdf}',
+                        f'draw -o zlib.png -R 10 {zlib_pdf}',
+                        f'clean -gggg -l {zlib_pdf} zlib.clean.pdf',
+                        ):
+                    command = f'{envs} {mutool_py} {args2}'
+                    log( 'running: {command}')
+                    jlib.system(
+                            f'{command}',
+                            out = lambda text: log( text, nv=0),
+                            )
 
                 log( 'Tests ran ok.')
 

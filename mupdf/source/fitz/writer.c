@@ -176,7 +176,10 @@ fz_new_document_writer(fz_context *ctx, const char *path, const char *format, co
 		return fz_new_text_writer(ctx, format, path, options);
 	if (!fz_strcasecmp(format, "stext"))
 		return fz_new_text_writer(ctx, format, path, options);
-
+#ifdef HAVE_EXTRACT
+	if (!fz_strcasecmp(format, "docx"))
+		return fz_new_docx_writer(ctx, format, path, options);
+#endif
 	fz_throw(ctx, FZ_ERROR_GENERIC, "unknown output document format: %s", format);
 }
 

@@ -527,6 +527,7 @@ static char *help_dialog_text =
 	"i - show document information\n"
 	"o - show document outline\n"
 	"a - show annotation editor\n"
+	"R - show redaction editor\n"
 	"L - highlight links\n"
 	"F - highlight form fields\n"
 	"r - reload file\n"
@@ -1415,11 +1416,14 @@ static void toggle_outline(void)
 	}
 }
 
-void toggle_annotate(void)
+void toggle_annotate(int mode)
 {
 	if (pdf)
 	{
-		showannotate = !showannotate;
+		if (showannotate != mode)
+			showannotate = mode;
+		else
+			showannotate = 0;
 		if (canvas_w == page_tex.w && canvas_h == page_tex.h)
 			shrinkwrap();
 	}
@@ -1534,7 +1538,8 @@ static void do_app(void)
 		{
 		case KEY_ESCAPE: clear_search(); selected_annot = NULL; break;
 		case KEY_F1: ui.dialog = help_dialog; break;
-		case 'a': toggle_annotate(); break;
+		case 'a': toggle_annotate(1); break;
+		case 'R': toggle_annotate(2); break;
 		case 'o': toggle_outline(); break;
 		case 'L': showlinks = !showlinks; break;
 		case 'F': showform = !showform; break;
@@ -2070,7 +2075,10 @@ void do_main(void)
 	{
 		ui_layout(R, BOTH, NW, 0, 0);
 		ui_panel_begin(annotate_w, 0, 4, 4, 1);
+		if (showannotate == 1)
 		do_annotate_panel();
+		else
+			do_redact_panel();
 		ui_panel_end();
 	}
 

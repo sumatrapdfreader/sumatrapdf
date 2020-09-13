@@ -2,7 +2,7 @@
 %%DocumentNeededResources: procset (CIDInit)
 %%IncludeResource: procset (CIDInit)
 %%BeginResource: CMap (UniKS-UCS2-H)
-%%Version: 10.005
+%%Version: 10.006
 %%EndComments
 /CIDInit /ProcSet findresource begin
 12 dict begin
@@ -14,7 +14,7 @@ begincmap
   /Supplement 1 def
 end def
 /CMapName /UniKS-UCS2-H def
-/CMapVersion 10.005 def
+/CMapVersion 10.006 def
 /CMapType 1 def
 /WMode 0 def
 2 begincodespacerange

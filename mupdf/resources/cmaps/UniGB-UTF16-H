@@ -2,7 +2,7 @@
 %%DocumentNeededResources: procset (CIDInit)
 %%IncludeResource: procset (CIDInit)
 %%BeginResource: CMap (UniGB-UTF16-H)
-%%Version: 1.015
+%%Version: 1.016
 %%EndComments
 /CIDInit /ProcSet findresource begin
 12 dict begin
@@ -14,7 +14,7 @@ begincmap
   /Supplement 5 def
 end def
 /CMapName /UniGB-UTF16-H def
-/CMapVersion 1.015 def
+/CMapVersion 1.016 def
 /CMapType 1 def
 /WMode 0 def
 3 begincodespacerange

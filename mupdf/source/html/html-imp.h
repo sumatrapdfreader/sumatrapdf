@@ -256,7 +256,6 @@ struct fz_css_style_splay_s {
 enum
 {
 	BOX_BLOCK,	/* block-level: contains block, break, flow, and table boxes */
-	BOX_BREAK,	/* block-level: empty <br> tag boxes */
 	BOX_FLOW,	/* block-level: contains only inline boxes */
 	BOX_INLINE,	/* inline-level: contains only inline boxes */
 	BOX_TABLE,	/* table: contains table-row */

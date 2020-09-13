@@ -759,12 +759,6 @@ static float layout_block(fz_context *ctx, fz_html_box *box, float em, float top
 			first = 0;
 			box->b = child->b + child->padding[B] + child->border[B] + child->margin[B];
 		}
-		else if (child->type == BOX_BREAK)
-		{
-			box->b += fz_from_css_number_scale(style->line_height, em);
-			vertical = 0;
-			first = 0;
-		}
 		else if (child->type == BOX_FLOW)
 		{
 			layout_flow(ctx, child, box, page_h, hb_buf);

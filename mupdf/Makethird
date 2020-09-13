@@ -48,6 +48,11 @@ ifeq ($(HAVE_TESSERACT),yes)
 endif
 endif
 
+ifneq ($(wildcard thirdparty/extract/src/*),)
+  HAVE_EXTRACT := yes
+  CFLAGS += -DHAVE_EXTRACT
+endif
+
 # --- FREETYPE 2 ---
 
 ifeq ($(USE_SYSTEM_FREETYPE),yes)
@@ -890,4 +895,30 @@ $(OUT)/thirdparty/tesseract/src/cutil/%.o: thirdparty/tesseract/src/cutil/%.cpp
 	$(TESSERACT_CXX_CMD)
 
 endif
+endif
+
+
+# --- EXTRACT ---
+
+ifeq ($(HAVE_EXTRACT),yes)
+
+THIRD_SRC += thirdparty/extract/src/build/docx_template.c
+
+THIRD_SRC += thirdparty/extract/src/astring.c
+THIRD_SRC += thirdparty/extract/src/buffer.c
+THIRD_SRC += thirdparty/extract/src/docx.c
+THIRD_SRC += thirdparty/extract/src/extract.c
+THIRD_SRC += thirdparty/extract/src/outf.c
+THIRD_SRC += thirdparty/extract/src/xml.c
+THIRD_SRC += thirdparty/extract/src/zip.c
+
+THIRD_CFLAGS += -Ithirdparty/extract/include
+
+$(OUT)/thirdparty/extract/src/%.o: thirdparty/extract/src/%.c thirdparty/extract/src/build/docx_template.c
+	$(CC_CMD) -W -Wall -Werror
+
+thirdparty/extract/src/build/docx_template.c: .EXTRACT_ALWAYS
+	./thirdparty/extract/src/docx_template_build.py -i thirdparty/extract/src/template.docx -o thirdparty/extract/src/build/docx_template
+.EXTRACT_ALWAYS:
+
 endif

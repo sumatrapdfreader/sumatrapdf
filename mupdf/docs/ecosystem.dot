@@ -1,0 +1,36 @@
+digraph Ecosystem {
+	node [shape=box,style=filled,fontname=Helvetica,fontsize=12];
+
+	node [color=thistle];
+	"mupdf-gl" -> "libmupdf";
+	"mutool" -> "libmupdf";
+	"Java Bindings" -> "libmupdf";
+	"Java Viewer" -> "Java Bindings";
+	"WASM Library" -> "libmupdf";
+	"WASM Viewer" -> "WASM Library";
+
+	node [color=orchid]
+	"WASM PDF.js" -> "WASM Library";
+
+	node [color=salmon];
+	"mupdf-android-fitz" -> "Java Bindings";
+
+	node [color=skyblue];
+	"mupdf-android-mini lib" -> "mupdf-android-fitz";
+	"mupdf-android-mini app" -> "mupdf-android-mini lib"
+
+	node [color=lightseagreen];
+	"mupdf-android-viewer lib" -> "mupdf-android-fitz";
+	"mupdf-android-viewer app" -> "mupdf-android-viewer lib";
+
+	node [color=lightgoldenrod];
+	"Android SDK" -> "mupdf-android-fitz";
+	"Android SDK Example" -> "Android SDK";
+
+	node [color=wheat];
+	"iOS SDK" -> "libmupdf";
+	"iOS SDK Example" -> "iOS SDK";
+
+	// { rank=same; "iOS SDK Example"; "Android SDK Example"; }
+	// { rank=same; "iOS SDK"; "Android SDK"; }
+}

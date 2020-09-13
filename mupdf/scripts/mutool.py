@@ -351,10 +351,8 @@ def trace( argv):
         print( '<document>')
 
 
-#
-#
 
-def main2( argv):
+def main( argv):
     arg1 = argv[1]
     fn = getattr( sys.modules[__name__], arg1, None)
     if not fn:
@@ -365,40 +363,6 @@ def main2( argv):
     return fn( argv[2:])
 
 
-def main():
-
-    argv = sys.argv
-    if len( sys.argv) < 2:
-
-        # Use test args.
-        for zlib_pdf in (
-                os.path.expanduser( '~/mupdf/thirdparty/zlib/zlib.3.pdf'),
-                os.path.expanduser( '~/artifex/mupdf/thirdparty/zlib/zlib.3.pdf'),
-                ):
-            if os.path.isfile( zlib_pdf):
-                break
-        else:
-            raise Exception( 'cannot find zlib.3.pdf')
-        for command in [
-                f'trace {zlib_pdf}',
-                f'convert -o zlib.3.pdf-%d.png {zlib_pdf}',
-                f'draw -o zlib.3.pdf-%d.png -s tmf -v -y l -w 150 -R 30 -h 200 {zlib_pdf}',
-                f'draw -o zlib.png -R 10 {zlib_pdf}',
-                f'clean -gggg -l {zlib_pdf} zlib.clean.pdf',
-                ]:
-            if 0:
-                # This breaks - looks like <colorspace> gets dropped and *m_internal is freed?
-                main2( [None] + command.split())
-            else:
-                command = f'{argv[0]} {command}'
-                print( 'running test command: %s' % command)
-                sys.stdout.flush()
-                e = os.system( f'{command}')
-                assert not e, f'command failed: {command}'
-    else:
-        return main2( sys.argv)
-
-
 if __name__ == '__main__':
-    e = main()
+    e = main( sys.argv)
     sys.exit(e)

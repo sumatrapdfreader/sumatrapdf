@@ -106,6 +106,8 @@ fz_document_writer *fz_new_svg_writer(fz_context *ctx, const char *path, const c
 fz_document_writer *fz_new_text_writer(fz_context *ctx, const char *format, const char *path, const char *options);
 fz_document_writer *fz_new_text_writer_with_output(fz_context *ctx, const char *format, fz_output *out, const char *options);
 
+fz_document_writer *fz_new_docx_writer(fz_context *ctx, const char *format, const char *path, const char *options);
+
 fz_document_writer *fz_new_ps_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_ps_writer_with_output(fz_context *ctx, fz_output *out, const char *options);
 fz_document_writer *fz_new_pcl_writer(fz_context *ctx, const char *path, const char *options);
