@@ -348,20 +348,33 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     }
 
     ExternalViewer* ev = gGlobalPrefs->externalViewers->at(idx);
+
     WStrVec args;
     ParseCmdLine(ev->commandLine, args, 2);
-    if (args.size() == 0 || !file::Exists(args.at(0))) {
+    if (args.size() == 0) {
         return false;
     }
 
+    bool isLink = false;
+    // Check if is URL, if not, check if path exists
+    if (str::StartsWith(args.at(0), L"http")) {
+        isLink = true;
+    } else if (!file::Exists(args.at(0))) {
+        return false;
+    }
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path
     // else if it contains %s it's replaced with active selection
     // else file path is appended
 
-    const WCHAR* cmdLine = args.size() > 1 ? args.at(1) : L"\"%1\"";
+    const WCHAR* cmdLine;
+    if (isLink) {
+        cmdLine = args.at(0);
+    } else {
+        cmdLine = args.size() > 1 ? args.at(1) : L"\"%1\"";
+    }
     AutoFreeWstr params;
-    bool toAppendFilePath = true;
+
     if (str::Find(cmdLine, L"%p")) {
         AutoFreeWstr pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
         params.Set(str::Replace(cmdLine, L"%p", pageNoStr));
@@ -370,7 +383,6 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     if (str::Find(cmdLine, L"%1")) {
         params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
         cmdLine = params;
-        toAppendFilePath = false;
     }
     if (str::Find(cmdLine, L"%s")) {
         bool isTextOnlySelection;
@@ -380,13 +392,12 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
         }
         params.Set(str::Replace(cmdLine, L"%s", selection ? selection : L""));
         cmdLine = params;
-        toAppendFilePath = false;
     }
-    if (toAppendFilePath) {
-        params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath.Get()));
+    if (isLink) {
+        return LaunchBrowser(cmdLine);
+    } else {
+        return LaunchFile(args.at(0), params);
     }
-
-    return LaunchFile(args.at(0), params);
 }
 
 #define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
