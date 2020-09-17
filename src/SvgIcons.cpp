@@ -51,7 +51,7 @@ static const char* gIconPageNext =
 </svg>)";
 
 // https://github.com/tabler/tabler-icons/blob/master/icons/layout-rows.svg
-static const char* gIconLayoutContinous =
+static const char* gIconLayoutContinuous =
     R"(<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-rows" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <rect x="0" y="0" width="24" height="24" stroke="none"></rect>
   <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -123,7 +123,7 @@ static const char* gAllIcons[] = {
     gIconPrint,
     gIconPagePrev,
     gIconPageNext,
-    gIconLayoutContinous,
+    gIconLayoutContinuous,
     gIconLayoutSinglePage,
     gIconZoomOut,
     gIconZoomIn,

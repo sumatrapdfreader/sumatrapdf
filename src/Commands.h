@@ -75,7 +75,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdZoomCustom, "Zoom: Custom...")                                   \
     V(CmdZoomIn, "Zoom In")                                               \
     V(CmdZoomOut, "Zoom Out")                                             \
-    V(CmdZoomFitWidthAndContinous, "Zoom: Fit Width And Continous")       \
+    V(CmdZoomFitWidthAndContinuous, "Zoom: Fit Width And Continuous")       \
     V(CmdZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page")      \
     V(CmdContributeTranslation, "Contribute Translation")                 \
     V(CmdOpenWithAcrobat, "Open With Adobe Acrobat")                      \

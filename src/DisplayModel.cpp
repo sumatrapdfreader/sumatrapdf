@@ -650,7 +650,7 @@ float DisplayModel::GetZoomReal(int pageNo) const {
 }
 
 /* Given zoom and rotation, calculate the position of each page on a
-   large sheet that is continous view. Needs to be recalculated when:
+   large sheet that is continuous view. Needs to be recalculated when:
      * zoom changes
      * rotation changes
      * switching between display modes
@@ -874,7 +874,7 @@ void DisplayModel::ChangeStartPage(int newStartPage) {
     Relayout(zoomVirtual, rotation);
 }
 
-/* Given positions of each page in a large sheet that is continous view and
+/* Given positions of each page in a large sheet that is continuous view and
    coordinates of a current view into that large sheet, calculate which
    parts of each page is visible on the screen.
    Needs to be recalucated after scrolling the view. */

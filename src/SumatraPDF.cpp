@@ -4350,7 +4350,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuSaveBookmark(win);
             break;
 
-        case CmdZoomFitWidthAndContinous:
+        case CmdZoomFitWidthAndContinuous:
             ChangeZoomLevel(win, ZOOM_FIT_WIDTH, true);
             break;
 

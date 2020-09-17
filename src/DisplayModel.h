@@ -208,7 +208,7 @@ struct DisplayModel : public Controller {
     DisplayMode displayMode{DisplayMode::Automatic};
     /* In non-continuous mode is the first page from a file that we're
        displaying.
-       No meaning in continous mode. */
+       No meaning in continuous mode. */
     int startPage{1};
 
     /* size of virtual canvas containing all rendered pages. */
