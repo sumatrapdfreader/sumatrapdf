@@ -9856,7 +9856,7 @@ const char * gTranslations_it =
   "Avanzate\0"\
   "Tutti i file\0"\
   "Tutti i documenti supportati\0"\
-  "\0"\
+  "Annotazioni\0"\
   "Creato con:\0"\
   "\0"\
   "Siete sicuri di voler disinstallare SumatraPDF?\0"\
@@ -9881,7 +9881,7 @@ const char * gTranslations_it =
   "\0"\
   "Chiudi\0"\
   "Comprimi tutto\0"\
-  "\0"\
+  "Colore\0"\
   "Fumetti\0"\
   "Compatibilit\303\240\0"\
   "Pagina continua\0"\
@@ -9921,7 +9921,7 @@ const char * gTranslations_it =
   "Es&ci\tCtrl+Q\0"\
   "\0"\
   "Documenti EPUB\0"\
-  "\0"\
+  "Modifica\0"\
   "\0"\
   "\0"\
   "Inserisci password\0"\
@@ -9973,7 +9973,7 @@ const char * gTranslations_it =
   "\0"\
   "Consiglio: usare F3 per trovare il successivo\0"\
   "File immagine (*.%s)\0"\
-  "\0"\
+  "Immagini\0"\
   "\0"\
   "Installa SumatraPDF\0"\
   "Installa SumatraPD&F nella cartella:\0"\
@@ -10095,7 +10095,7 @@ const char * gTranslations_it =
   "\0"\
   "\0"\
   "PDF marcati\0"\
-  "\0"\
+  "Testo\0"\
   "Documenti di testo\0"\
   "\0"\
   "Grazie per aver scelto SumatraPDF!\0"\

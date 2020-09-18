@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6a1765972f440c0ee28891196d3437c263e558f9
+2e42dc95b75b73a805fdd60b3a113f932b93e91e
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -4160,6 +4160,7 @@ co:Annutazioni
 de:Anmerkungen
 el:Σχόλια
 fr:Annotations
+it:Annotazioni
 kw:Notenyans
 nl:Aantekeningen
 pl:Adnotacje
@@ -5599,6 +5600,7 @@ co:Culore
 de:Farbe
 el:Χρώμα
 fr:Couleur
+it:Colore
 kw:Liw
 nl:Kleur
 no:Farge
@@ -7986,6 +7988,7 @@ co:Mudificà
 de:Bearbeiten
 el:Επεξεργασία
 fr:Éditer
+it:Modifica
 kw:Golegi
 nl:Bewerken
 no:Rediger
@@ -10998,6 +11001,7 @@ cn:图像
 co:Fiure
 de:Bilder
 fr:Images
+it:Immagini
 kw:Skeusennow
 nl:Afbeeldingen
 pl:Obrazy
@@ -17618,6 +17622,7 @@ co:Testu
 de:Text
 el:Κείμενο
 fr:Texte
+it:Testo
 kw:Tekst
 nl:Tekst
 pl:Tekst
