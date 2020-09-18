@@ -83,6 +83,7 @@ const char *fz_stext_options_usage =
 	"\tpreserve-images: keep images in output\n"
 	"\tpreserve-ligatures: do not expand ligatures into constituent characters\n"
 	"\tpreserve-whitespace: do not convert all whitespace into space characters\n"
+	"\tpreserve-spans: do not merge spans on the same line\n"
 	"\tdehyphenate: attempt to join up hyphenated words\n"
 	"\n";
 
@@ -286,7 +287,7 @@ vec_dot(const fz_point *a, const fz_point *b)
 }
 
 static void
-fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int c, int glyph, fz_matrix trm, float adv, int wmode)
+fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int c, int glyph, fz_matrix trm, float adv, int wmode, int force_new_line)
 {
 	fz_stext_page *page = dev->page;
 	fz_stext_block *cur_block;
@@ -463,7 +464,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	}
 
 	/* Start a new line */
-	if (new_line || !cur_line)
+	if (new_line || !cur_line || force_new_line)
 	{
 		cur_line = add_line_to_block(ctx, page, cur_block, &ndir, wmode);
 		dev->start = p;
@@ -482,7 +483,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 }
 
 static void
-fz_add_stext_char(fz_context *ctx, fz_stext_device *dev, fz_font *font, int c, int glyph, fz_matrix trm, float adv, int wmode)
+fz_add_stext_char(fz_context *ctx, fz_stext_device *dev, fz_font *font, int c, int glyph, fz_matrix trm, float adv, int wmode, int force_new_line)
 {
 	/* ignore when one unicode character maps to multiple glyphs */
 	if (c == -1)
@@ -493,31 +494,31 @@ fz_add_stext_char(fz_context *ctx, fz_stext_device *dev, fz_font *font, int c, i
 		switch (c)
 		{
 		case 0xFB00: /* ff */
-			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode);
-			fz_add_stext_char_imp(ctx, dev, font, 'f', -1, trm, 0, wmode);
+			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode, force_new_line);
+			fz_add_stext_char_imp(ctx, dev, font, 'f', -1, trm, 0, wmode, 0);
 			return;
 		case 0xFB01: /* fi */
-			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode);
-			fz_add_stext_char_imp(ctx, dev, font, 'i', -1, trm, 0, wmode);
+			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode, force_new_line);
+			fz_add_stext_char_imp(ctx, dev, font, 'i', -1, trm, 0, wmode, 0);
 			return;
 		case 0xFB02: /* fl */
-			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode);
-			fz_add_stext_char_imp(ctx, dev, font, 'l', -1, trm, 0, wmode);
+			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode, force_new_line);
+			fz_add_stext_char_imp(ctx, dev, font, 'l', -1, trm, 0, wmode, 0);
 			return;
 		case 0xFB03: /* ffi */
-			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode);
-			fz_add_stext_char_imp(ctx, dev, font, 'f', -1, trm, 0, wmode);
-			fz_add_stext_char_imp(ctx, dev, font, 'i', -1, trm, 0, wmode);
+			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode, force_new_line);
+			fz_add_stext_char_imp(ctx, dev, font, 'f', -1, trm, 0, wmode, 0);
+			fz_add_stext_char_imp(ctx, dev, font, 'i', -1, trm, 0, wmode, 0);
 			return;
 		case 0xFB04: /* ffl */
-			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode);
-			fz_add_stext_char_imp(ctx, dev, font, 'f', -1, trm, 0, wmode);
-			fz_add_stext_char_imp(ctx, dev, font, 'l', -1, trm, 0, wmode);
+			fz_add_stext_char_imp(ctx, dev, font, 'f', glyph, trm, adv, wmode, force_new_line);
+			fz_add_stext_char_imp(ctx, dev, font, 'f', -1, trm, 0, wmode, 0);
+			fz_add_stext_char_imp(ctx, dev, font, 'l', -1, trm, 0, wmode, 0);
 			return;
 		case 0xFB05: /* long st */
 		case 0xFB06: /* st */
-			fz_add_stext_char_imp(ctx, dev, font, 's', glyph, trm, adv, wmode);
-			fz_add_stext_char_imp(ctx, dev, font, 't', -1, trm, 0, wmode);
+			fz_add_stext_char_imp(ctx, dev, font, 's', glyph, trm, adv, wmode, force_new_line);
+			fz_add_stext_char_imp(ctx, dev, font, 't', -1, trm, 0, wmode, 0);
 			return;
 		}
 	}
@@ -549,7 +550,7 @@ fz_add_stext_char(fz_context *ctx, fz_stext_device *dev, fz_font *font, int c, i
 		}
 	}
 
-	fz_add_stext_char_imp(ctx, dev, font, c, glyph, trm, adv, wmode);
+	fz_add_stext_char_imp(ctx, dev, font, c, glyph, trm, adv, wmode, force_new_line);
 }
 
 static void
@@ -577,7 +578,13 @@ fz_stext_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_m
 		else
 			adv = 0;
 
-		fz_add_stext_char(ctx, dev, font, span->items[i].ucs, span->items[i].gid, trm, adv, span->wmode);
+		fz_add_stext_char(ctx, dev, font,
+			span->items[i].ucs,
+			span->items[i].gid,
+			trm,
+			adv,
+			span->wmode,
+			(i == 0) && (dev->flags & FZ_STEXT_PRESERVE_SPANS));
 	}
 }
 
@@ -795,6 +802,8 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 		opts->flags |= FZ_STEXT_INHIBIT_SPACES;
 	if (fz_has_option(ctx, string, "dehyphenate", &val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_DEHYPHENATE;
+	if (fz_has_option(ctx, string, "preserve-spans", &val) && fz_option_eq(val, "yes"))
+		opts->flags |= FZ_STEXT_PRESERVE_SPANS;
 
 	return opts;
 }

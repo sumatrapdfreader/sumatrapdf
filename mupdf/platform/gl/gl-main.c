@@ -1423,7 +1423,7 @@ void toggle_annotate(int mode)
 		if (showannotate != mode)
 			showannotate = mode;
 		else
-			showannotate = 0;
+			showannotate = ANNOTATE_MODE_NONE;
 		if (canvas_w == page_tex.w && canvas_h == page_tex.h)
 			shrinkwrap();
 	}
@@ -1538,8 +1538,8 @@ static void do_app(void)
 		{
 		case KEY_ESCAPE: clear_search(); selected_annot = NULL; break;
 		case KEY_F1: ui.dialog = help_dialog; break;
-		case 'a': toggle_annotate(1); break;
-		case 'R': toggle_annotate(2); break;
+		case 'a': toggle_annotate(ANNOTATE_MODE_NORMAL); break;
+		case 'R': toggle_annotate(ANNOTATE_MODE_REDACT); break;
 		case 'o': toggle_outline(); break;
 		case 'L': showlinks = !showlinks; break;
 		case 'F': showform = !showform; break;
@@ -2075,7 +2075,7 @@ void do_main(void)
 	{
 		ui_layout(R, BOTH, NW, 0, 0);
 		ui_panel_begin(annotate_w, 0, 4, 4, 1);
-		if (showannotate == 1)
+		if (showannotate == ANNOTATE_MODE_NORMAL)
 		do_annotate_panel();
 		else
 			do_redact_panel();

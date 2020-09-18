@@ -12,13 +12,13 @@ make -j4 -C ../.. \
 
 echo
 echo Linking WebAssembly:
-emcc -Wall -Os -o libmupdf.js \
+emcc -Wall -Os -g1 -o libmupdf.js \
 	-s WASM=1 \
 	-s VERBOSE=0 \
+	-s ASSERTIONS=1 \
 	-s ABORTING_MALLOC=0 \
 	-s TOTAL_MEMORY=134217728 \
 	-s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]' \
-	-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE='[$Browser,"memcpy","memset","malloc","free"]' \
 	-I ../../include \
 	--pre-js wrap.js \
 	wrap.c \

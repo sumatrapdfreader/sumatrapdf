@@ -323,11 +323,11 @@ accelerate_chapter(fz_context *ctx, epub_document *doc, epub_chapter *ch, fz_htm
 
 	if (ch->number >= acc->max_chapters)
 	{
-		int n  = acc->max_chapters * 2;
+		int n = acc->max_chapters;
 		int i;
 		if (n == 0)
 			n = 4;
-		while (n < ch->number)
+		while (n <= ch->number)
 			n *= 2;
 
 		acc->pages_in_chapter = fz_realloc_array(ctx, acc->pages_in_chapter, n, int);

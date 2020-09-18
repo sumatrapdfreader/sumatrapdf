@@ -248,7 +248,7 @@ svg_parse_number_from_style(fz_context *ctx, svg_document *doc, const char *styl
 		char *end, *p = strstr(style, att);
 		if (p)
 		{
-			int n = strlen(att);
+			size_t n = strlen(att);
 			if (p[n] == ':')
 			{
 				p += n + 1;
@@ -270,13 +270,13 @@ svg_parse_enum_from_style(fz_context *ctx, svg_document *doc, const char *style,
 	int ecount, const char *etable[], int value)
 {
 	char buf[100], *end, *p;
-	int i, n;
+	int i;
 	if (style)
 	{
 		p = strstr(style, att);
 		if (p)
 		{
-			n = strlen(att);
+			size_t n = strlen(att);
 			if (p[n] == ':')
 			{
 				p += n + 1;
@@ -305,7 +305,7 @@ svg_parse_string_from_style(fz_context *ctx, svg_document *doc, const char *styl
 		p = strstr(style, att);
 		if (p)
 		{
-			int n = strlen(att);
+			size_t n = strlen(att);
 			if (p[n] == ':')
 			{
 				p += n + 1;

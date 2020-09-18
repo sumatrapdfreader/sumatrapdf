@@ -202,7 +202,7 @@ If alpha is true, the page will be drawn on a transparent background, otherwise 
 <dd>Record the contents on the page into a DisplayList.
 <dt>Page#toStructuredText(options)
 <dd>Extract the text on the page into a StructuredText object.
-The options argument is a comma separated list of flags: preserve-ligatures, preserve-whitespace, and preserve-images.
+The options argument is a comma separated list of flags: preserve-ligatures, preserve-whitespace, preserve-spans, and preserve-images.
 <dt>Page#search(needle)
 <dd>Search for 'needle' text on the page, and return an array with rectangles of all matches found.
 <dt>Page#getAnnotations()
@@ -330,7 +330,7 @@ will keep all the graphics required in memory, so will increase the amount of me
 <dd>Render display list to a pixmap. If alpha is true, it will render to a transparent background, otherwise white.
 <dt>DisplayList#toStructuredText(options)
 <dd>Extract the text in the display list into a StructuredText object.
-The options argument is a comma separated list of flags: preserve-ligatures, preserve-whitespace, and preserve-images.
+The options argument is a comma separated list of flags: preserve-ligatures, preserve-whitespace, preserve-spans, and preserve-images.
 <dt>DisplayList#search(needle)
 <dd>Search the display list text for all instances of 'needle', and return an array with rectangles of all matches found.
 <dd>

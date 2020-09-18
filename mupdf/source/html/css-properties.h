@@ -78,7 +78,7 @@ css_property_hash (register const char *str, register size_t len)
 	  107, 107, 107, 107, 107, 107, 107, 107, 107, 107,
 	  107, 107, 107, 107, 107, 107
 	};
-  return len + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]] + asso_values[(unsigned char)str[len - 1]];
+  return (unsigned int)(len + asso_values[(unsigned char)str[1]] + asso_values[(unsigned char)str[0]] + asso_values[(unsigned char)str[len - 1]]);
 }
 
 static struct css_property_info css_property_list[] =

@@ -1850,7 +1850,7 @@ void do_annotate_canvas(fz_irect canvas_area)
 				{
 					trace_action("annot = page.getAnnotations()[%d];\n", idx);
 					if (!selected_annot && !showannotate)
-						toggle_annotate();
+						toggle_annotate(ANNOTATE_MODE_NORMAL);
 					ui.active = annot;
 					selected_annot = annot;
 				}

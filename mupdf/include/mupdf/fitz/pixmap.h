@@ -408,4 +408,15 @@ enum
 	FZ_PIXMAP_FLAG_FREE_SAMPLES = 2
 };
 
+/* Create a new pixmap from a warped section of another.
+ *
+ * Colorspace, resolution etc are inherited from the original.
+ * points give the corner points within the original pixmap of a
+ * (convex) quadrilateral. These corner points will be 'warped' to be
+ * the corner points of the returned bitmap, which will have the given
+ * width/height.
+ */
+fz_pixmap *
+fz_warp_pixmap(fz_context *ctx, fz_pixmap *src, const fz_point points[4], int width, int height);
+
 #endif

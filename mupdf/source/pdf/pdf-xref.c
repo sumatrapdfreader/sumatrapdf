@@ -2376,9 +2376,12 @@ pdf_open_document_with_stream(fz_context *ctx, fz_stream *file)
 	}
 	fz_catch(ctx)
 	{
+		/* fz_drop_document may clobber our error code/message so we have to stash them temporarily. */
+		char message[256];
 		int caught = fz_caught(ctx);
+		fz_strlcpy(message, fz_caught_message(ctx), sizeof message);
 		fz_drop_document(ctx, &doc->super);
-		fz_throw(ctx, caught, "Failed to open doc from stream");
+		fz_throw(ctx, caught, "%s", message);
 	}
 	return doc;
 }

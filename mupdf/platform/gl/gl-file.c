@@ -70,7 +70,7 @@ ensure_one_more_file(void)
 
 static void load_dir(const char *path)
 {
-	WIN32_FIND_DATA ffd;
+	WIN32_FIND_DATAW ffd;
 	HANDLE dir;
 	wchar_t wpath[PATH_MAX];
 	char buf[PATH_MAX];
@@ -89,7 +89,7 @@ static void load_dir(const char *path)
 	for (i=0; wpath[i]; ++i)
 		if (wpath[i] == '/')
 			wpath[i] = '\\';
-	StringCchCat(wpath, PATH_MAX, TEXT("/*"));
+	StringCchCatW(wpath, PATH_MAX, L"/*");
 	dir = FindFirstFileW(wpath, &ffd);
 	if (dir)
 	{
@@ -106,7 +106,7 @@ static void load_dir(const char *path)
 				++fc.count;
 			}
 		}
-		while (FindNextFile(dir, &ffd));
+		while (FindNextFileW(dir, &ffd));
 		FindClose(dir);
 	}
 

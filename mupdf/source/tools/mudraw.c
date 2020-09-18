@@ -46,12 +46,35 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 #define DEBUG_THREADS(A) do { } while (0)
 
 enum {
+	OUT_BBOX,
+	OUT_HTML,
 	OUT_NONE,
-	OUT_PNG, OUT_PNM, OUT_PGM, OUT_PPM, OUT_PAM,
-	OUT_PBM, OUT_PKM, OUT_PWG, OUT_PCL, OUT_PS, OUT_PSD,
-	OUT_TEXT, OUT_HTML, OUT_XHTML, OUT_STEXT, OUT_PCLM,
-	OUT_TRACE, OUT_BBOX, OUT_SVG, OUT_OCR_PDF, OUT_XMLTEXT,
-	OUT_OCR_TEXT, OUT_OCR_HTML, OUT_OCR_XHTML, OUT_OCR_STEXT, OUT_OCR_TRACE,
+	OUT_OCR_HTML,
+	OUT_OCR_PDF,
+	OUT_OCR_STEXT_JSON,
+	OUT_OCR_STEXT_XML,
+	OUT_OCR_TEXT,
+	OUT_OCR_TRACE,
+	OUT_OCR_XHTML,
+	OUT_PAM,
+	OUT_PBM,
+	OUT_PCL,
+	OUT_PCLM,
+	OUT_PGM,
+	OUT_PKM,
+	OUT_PNG,
+	OUT_PNM,
+	OUT_PPM,
+	OUT_PS,
+	OUT_PSD,
+	OUT_PWG,
+	OUT_STEXT_JSON,
+	OUT_STEXT_XML,
+	OUT_SVG,
+	OUT_TEXT,
+	OUT_TRACE,
+	OUT_XHTML,
+	OUT_XMLTEXT,
 #if FZ_ENABLE_PDF
 	OUT_PDF,
 #endif
@@ -70,15 +93,20 @@ typedef struct
 
 static const suffix_t suffix_table[] =
 {
-	/* All the 'double extension' ones must go first. */
+	/* All the 'triple extension' ones must go first. */
+	{ ".ocr.stext.json", OUT_OCR_STEXT_JSON, 0 },
+
+	/* All the 'double extension' ones must go next. */
 	{ ".ocr.txt", OUT_OCR_TEXT, 0 },
 	{ ".ocr.text", OUT_OCR_TEXT, 0 },
 	{ ".ocr.html", OUT_OCR_HTML, 0 },
 	{ ".ocr.xhtml", OUT_OCR_XHTML, 0 },
-	{ ".ocr.stext", OUT_OCR_STEXT, 0 },
+	{ ".ocr.stext", OUT_OCR_STEXT_XML, 0 },
 	{ ".ocr.pdf", OUT_OCR_PDF, 0 },
 	{ ".ocr.trace", OUT_OCR_TRACE, 0 },
+	{ ".stext.json", OUT_STEXT_JSON, 0 },
 
+	/* And the 'single extension' ones go last. */
 	{ ".png", OUT_PNG, 0 },
 	{ ".pgm", OUT_PGM, 0 },
 	{ ".ppm", OUT_PPM, 0 },
@@ -100,7 +128,7 @@ static const suffix_t suffix_table[] =
 	{ ".text", OUT_TEXT, 0 },
 	{ ".html", OUT_HTML, 0 },
 	{ ".xhtml", OUT_XHTML, 0 },
-	{ ".stext", OUT_STEXT, 0 },
+	{ ".stext", OUT_STEXT_XML, 0 },
 
 	{ ".trace", OUT_TRACE, 0 },
 	{ ".xmltext", OUT_XMLTEXT, 0 },
@@ -165,11 +193,13 @@ static const format_cs_table_t format_cs_table[] =
 	{ OUT_TEXT, CS_RGB, { CS_RGB } },
 	{ OUT_HTML, CS_RGB, { CS_RGB } },
 	{ OUT_XHTML, CS_RGB, { CS_RGB } },
-	{ OUT_STEXT, CS_RGB, { CS_RGB } },
+	{ OUT_STEXT_XML, CS_RGB, { CS_RGB } },
+	{ OUT_STEXT_JSON, CS_RGB, { CS_RGB } },
 	{ OUT_OCR_TEXT, CS_GRAY, { CS_GRAY } },
 	{ OUT_OCR_HTML, CS_GRAY, { CS_GRAY } },
 	{ OUT_OCR_XHTML, CS_GRAY, { CS_GRAY } },
-	{ OUT_OCR_STEXT, CS_GRAY, { CS_GRAY } },
+	{ OUT_OCR_STEXT_XML, CS_GRAY, { CS_GRAY } },
+	{ OUT_OCR_STEXT_JSON, CS_GRAY, { CS_GRAY } },
 	{ OUT_OCR_TRACE, CS_GRAY, { CS_GRAY } },
 };
 
@@ -474,7 +504,7 @@ static int has_percent_d(char *s)
 static void
 file_level_headers(fz_context *ctx)
 {
-	if (output_format == OUT_STEXT || output_format == OUT_TRACE || output_format == OUT_BBOX || output_format == OUT_OCR_STEXT || output_format == OUT_XMLTEXT)
+	if (output_format == OUT_STEXT_XML || output_format == OUT_TRACE || output_format == OUT_BBOX || output_format == OUT_OCR_STEXT_XML || output_format == OUT_XMLTEXT)
 		fz_write_printf(ctx, out, "<?xml version=\"1.0\"?>\n");
 
 	if (output_format == OUT_HTML || output_format == OUT_OCR_HTML)
@@ -482,8 +512,10 @@ file_level_headers(fz_context *ctx)
 	if (output_format == OUT_XHTML || output_format == OUT_OCR_XHTML)
 		fz_print_stext_header_as_xhtml(ctx, out);
 
-	if (output_format == OUT_STEXT || output_format == OUT_TRACE || output_format == OUT_BBOX || output_format == OUT_OCR_STEXT)
+	if (output_format == OUT_STEXT_XML || output_format == OUT_TRACE || output_format == OUT_BBOX || output_format == OUT_OCR_STEXT_XML)
 		fz_write_printf(ctx, out, "<document name=\"%s\">\n", filename);
+	if (output_format == OUT_STEXT_JSON || output_format == OUT_OCR_STEXT_JSON)
+		fz_write_printf(ctx, out, "{%q:%q,%q:[", "file", filename, "pages");
 
 	if (output_format == OUT_PS)
 		fz_write_ps_file_header(ctx, out);
@@ -511,8 +543,10 @@ file_level_headers(fz_context *ctx)
 static void
 file_level_trailers(fz_context *ctx)
 {
-	if (output_format == OUT_STEXT || output_format == OUT_TRACE || output_format == OUT_OCR_TRACE || output_format == OUT_BBOX || output_format == OUT_OCR_STEXT)
+	if (output_format == OUT_STEXT_XML || output_format == OUT_TRACE || output_format == OUT_OCR_TRACE || output_format == OUT_BBOX || output_format == OUT_OCR_STEXT_XML)
 		fz_write_printf(ctx, out, "</document>\n");
+	if (output_format == OUT_STEXT_JSON || output_format == OUT_OCR_STEXT_JSON)
+		fz_write_printf(ctx, out, "]}");
 
 	if (output_format == OUT_HTML || output_format == OUT_OCR_HTML)
 		fz_print_stext_trailer_as_html(ctx, out);
@@ -680,8 +714,8 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 		}
 	}
 
-	else if (output_format == OUT_TEXT || output_format == OUT_HTML || output_format == OUT_XHTML || output_format == OUT_STEXT ||
-		output_format == OUT_OCR_TEXT || output_format == OUT_OCR_HTML || output_format == OUT_OCR_XHTML || output_format == OUT_OCR_STEXT)
+	else if (output_format == OUT_TEXT || output_format == OUT_HTML || output_format == OUT_XHTML || output_format == OUT_STEXT_XML || output_format == OUT_STEXT_JSON ||
+		output_format == OUT_OCR_TEXT || output_format == OUT_OCR_HTML || output_format == OUT_OCR_XHTML || output_format == OUT_OCR_STEXT_XML || output_format == OUT_OCR_STEXT_JSON)
 	{
 		fz_stext_page *text = NULL;
 		float zoom;
@@ -703,12 +737,15 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 						output_format == OUT_OCR_HTML ||
 						output_format == OUT_OCR_XHTML
 						) ? FZ_STEXT_PRESERVE_IMAGES : 0;
+			if (output_format == OUT_STEXT_JSON || output_format == OUT_OCR_STEXT_JSON)
+				stext_options.flags |= FZ_STEXT_PRESERVE_SPANS;
 			text = fz_new_stext_page(ctx, mediabox);
 			dev = fz_new_stext_device(ctx,  text, &stext_options);
 			if (lowmemory)
 				fz_enable_device_hints(ctx, dev, FZ_NO_CACHE);
 			if (output_format == OUT_OCR_TEXT ||
-				output_format == OUT_OCR_STEXT ||
+				output_format == OUT_OCR_STEXT_JSON ||
+				output_format == OUT_OCR_STEXT_XML ||
 				output_format == OUT_OCR_HTML ||
 				output_format == OUT_OCR_XHTML)
 			{
@@ -726,9 +763,18 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			fz_close_device(ctx, pre_ocr_dev);
 			fz_drop_device(ctx, pre_ocr_dev);
 			pre_ocr_dev = NULL;
-			if (output_format == OUT_STEXT || output_format == OUT_OCR_STEXT)
+			if (output_format == OUT_STEXT_XML || output_format == OUT_OCR_STEXT_XML)
 			{
 				fz_print_stext_page_as_xml(ctx, out, text, pagenum);
+			}
+			else if (output_format == OUT_STEXT_JSON || output_format == OUT_OCR_STEXT_JSON)
+			{
+				static int first = 1;
+				if (first)
+					first = 0;
+				else
+					fz_write_string(ctx, out, ",");
+				fz_print_stext_page_as_json(ctx, out, text, 1);
 			}
 			else if (output_format == OUT_HTML || output_format == OUT_OCR_HTML)
 			{
@@ -2185,18 +2231,22 @@ int mudraw_main(int argc, char **argv)
 #ifdef _WIN32
 				/* Windows specific code to make stdout binary. */
 				if (output_format != OUT_TEXT &&
-					output_format != OUT_STEXT &&
+					output_format != OUT_STEXT_XML &&
+					output_format != OUT_STEXT_JSON &&
 					output_format != OUT_HTML &&
 					output_format != OUT_XHTML &&
 					output_format != OUT_TRACE &&
 					output_format != OUT_OCR_TRACE &&
 					output_format != OUT_BBOX &&
 					output_format != OUT_OCR_TEXT &&
-					output_format != OUT_OCR_STEXT &&
+					output_format != OUT_OCR_STEXT_XML &&
+					output_format != OUT_OCR_STEXT_JSON &&
 					output_format != OUT_OCR_HTML &&
 					output_format != OUT_OCR_XHTML &&
 					output_format != OUT_XMLTEXT)
+				{
 					setmode(fileno(stdout), O_BINARY);
+				}
 #endif
 				out = fz_stdout(ctx);
 			}

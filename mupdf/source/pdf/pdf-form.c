@@ -953,7 +953,7 @@ int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *ne
 			event.value = pdf_field_value(ctx, widget->obj);
 			event.change = new_value;
 			event.selStart = 0;
-			event.selEnd = strlen(event.value);
+			event.selEnd = (int)strlen(event.value);
 			event.willCommit = 0;
 			rc = pdf_field_event_keystroke(ctx, doc, widget->obj, &event);
 			if (rc)

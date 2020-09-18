@@ -319,7 +319,7 @@ char *pdf_signature_format_designated_name(fz_context *ctx, pdf_pkcs7_designated
 		", OU=", name->ou,
 		", emailAddress=", name->email,
 		", C=", name->c};
-	int len = 1;
+	size_t len = 1;
 	char *s;
 	int i;
 
@@ -340,7 +340,7 @@ char *pdf_signature_format_designated_name(fz_context *ctx, pdf_pkcs7_designated
 pdf_pkcs7_designated_name *pdf_signature_get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature)
 {
 	char *contents = NULL;
-	int contents_len = 0;
+	size_t contents_len = 0;
 	pdf_pkcs7_designated_name *dn;
 
 	contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
@@ -360,7 +360,7 @@ pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifi
 	pdf_signature_error result = PDF_SIGNATURE_ERROR_UNKNOWN;
 	fz_stream *bytes = NULL;
 	char *contents = NULL;
-	int contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
+	size_t contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
 	fz_var(bytes);
 	fz_try(ctx)
 	{

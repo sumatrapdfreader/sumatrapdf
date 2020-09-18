@@ -1413,9 +1413,10 @@ int Memento_listBlocksNested(void)
     /* Now, calculate tree */
     for (b = memento.used.head; b; b = b->next) {
         char *p = MEMBLK_TOBLK(b);
-        int end = (b->rawsize < MEMENTO_PTRSEARCH ? b->rawsize : MEMENTO_PTRSEARCH);
-        for (i = MEMENTO_SEARCH_SKIP; i < end; i += sizeof(void *)) {
-            void *q = *(void **)(&p[i]);
+        size_t end = (b->rawsize < MEMENTO_PTRSEARCH ? b->rawsize : MEMENTO_PTRSEARCH);
+        size_t z;
+        for (z = MEMENTO_SEARCH_SKIP; z < end; z += sizeof(void *)) {
+            void *q = *(void **)(&p[z]);
             void **r;
 
             /* Do trivial checks on pointer */
