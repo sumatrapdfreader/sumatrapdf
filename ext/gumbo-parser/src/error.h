@@ -19,7 +19,9 @@
 #ifndef GUMBO_ERROR_H_
 #define GUMBO_ERROR_H_
 #ifdef _MSC_VER
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 #endif
 #include <stdint.h>
 

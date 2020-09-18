@@ -20,7 +20,9 @@
 #ifndef GUMBO_UTIL_H_
 #define GUMBO_UTIL_H_
 #ifdef _MSC_VER
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 #endif
 #include <stdbool.h>
 #include <stddef.h>
