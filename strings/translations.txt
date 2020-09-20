@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2e42dc95b75b73a805fdd60b3a113f932b93e91e
+8008769c63855fe185ceeb72204f1b8910f5b217
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -8,6 +8,7 @@ cn:未找到 %s 安装。
 co:Installazione di %s micca trova.
 de:%s Installation nicht gefunden.
 fr:%s installation non trouvée
+ka:ინსტალირებული %s ვერ მოიძებნა.
 kw:Ny gevir leans %s.
 nl:%s installatie niet gevonden.
 pa:%s ਦੀ ਸਥਾਪਤੀ ਨਹੀਂ ਲੱਭੀ।
@@ -190,6 +191,7 @@ id:&Pilihan Lanjutan...
 it:Opzioni &avanzate...
 ja:詳細設定(&A)
 jv:&Pilihan Terusan...
+ka:&გაფართოებული გაწყობები...
 kr:고급 옵션(&A)...
 ku:هەڵبژاردنی پەرەسەندوو ...&
 kw:Settyansow &avonsys...
@@ -2627,6 +2629,7 @@ cn:从历史记录删除(&R)
 co:&Caccià da a crunulogia
 de:Aus der Historie entfernen
 fr:Supprimer de l'historique
+ka:&ისტორიიდან წაშლა
 kw:&Removya A Istori
 nl:V&erwijder uit Geschiedenis
 pl:&Usuń z historii
@@ -3055,6 +3058,7 @@ hu:Kinézet
 id:Tema
 it:&Tema
 ja:配色テーマ(&T)
+ka:&თემა
 kr:테마(&T)
 kw:&Thema
 lt:&Išvaizda
@@ -3244,6 +3248,7 @@ hu:&Ablak
 id:&Jendela
 it:&Finestra
 ja:ウィンドウ(&W)
+ka:&ფანჯარა
 kr:창(&W)
 ku:&پەنجەرە
 kw:&Fenester
@@ -3680,6 +3685,7 @@ br:Adicionar PDF como um filho
 cn:将 PDF 添加为子项目
 co:Aghjunghje un PDF cum’è un zitellu
 de:PDF als untergeordnetes Element hinzufügen
+ka:დავამატოთ PDF შვილობილად
 kw:Keworra PDF avel flogh
 nl:Voeg PDF als child toe
 pl:Dodaj PDF jako potomka
@@ -3702,6 +3708,7 @@ br:Adicionar filho
 cn:添加子项目
 co:Aghjunghje un zitellu
 de:Untergeordnetes Element hinzufügen
+ka:შვილობილის დამატება
 kw:Keworra flogh
 nl:Child toevoegen
 pl:Dodaj potomka
@@ -3876,6 +3883,7 @@ br:Adicionar irmão
 cn:添加同级项目
 co:Aghjunghje un fratellu
 de:Gleichgeordnetes Element hinzufügen
+ka:მოძმე ელემენტის დამატება
 kw:Keworra hwor
 nl:Voeg verwant toe
 pl:Dodaj rodzeństwo
@@ -4161,6 +4169,7 @@ de:Anmerkungen
 el:Σχόλια
 fr:Annotations
 it:Annotazioni
+ka:ანოტაციები
 kw:Notenyans
 nl:Aantekeningen
 pl:Adnotacje
@@ -5335,6 +5344,7 @@ cn:插入号
 co:Cursore
 de:Cursor
 fr:curseur
+ka:კურსორი
 kw:To byghan
 nl:Merkteken
 pl:Kareta
@@ -5488,6 +5498,7 @@ co:Chjerchju
 de:Kreis
 el:Κύκλος
 fr:Cercle
+ka:წრე
 kw:Kylgh
 nl:Cirkel
 no:Sirkel
@@ -5581,6 +5592,7 @@ hr:Sažmi sve
 id:Tutup Semua
 it:Comprimi tutto
 ja:すべて折り畳む
+ka:ყველას ჩაკეცვა
 kw:Byghanhe Oll
 lv:Sakļaut visu
 nl:Alle Samenvouwen
@@ -5601,6 +5613,7 @@ de:Farbe
 el:Χρώμα
 fr:Couleur
 it:Colore
+ka:ფერი
 kw:Liw
 nl:Kleur
 no:Farge
@@ -6312,6 +6325,7 @@ id:Hak Cipta
 it:Copyright:
 ja:コピーライト:
 jv:Hak Cipto:
+ka:საავტორო უფლებები:
 kr:저작권:
 ku:مافی لەبەرگرتنەوە:
 kw:Gwirpryntyans:
@@ -6991,6 +7005,7 @@ co:&Scrive un’annutazione
 de:Anmerkung erstellen
 el:Δημιουργία Σχολίου
 fr:Écrire une annotation
+ka:ანოტაციის შექმნა
 kw:Gwruthyl Notenyans
 nl:Maak Aantekening
 pl:Utwórz adnotację
@@ -7290,6 +7305,7 @@ id:Gelap
 it:Scuro
 ja:濃色
 jv:Peteng
+ka:მუქი
 kr:어두운
 kw:Tewl
 lt:Tamsi
@@ -7347,6 +7363,7 @@ id:Lebih Gelap
 it:Più scuro
 ja:黒
 jv:Luwih Peteng
+ka:მეტად მუქი
 kr:더 어두운
 kw:Tewlla
 lt:Tamsesnė
@@ -7406,7 +7423,7 @@ hu:Oldalmegjelenítési mód:
 id:Tata letak &Standar
 it:&Vista predefinita:
 ja:既定のレイアウト(&L):
-ka:&ნაგულისხმევი განლაგება:
+ka:&საწყისი განლაგება:
 kr:기본 구성(&L):
 ku:شێوازی &سەرەکی:
 kw:&Delinyans savonek:
@@ -7471,7 +7488,7 @@ hu:Alapnagyítás:
 id:Pembesaran &Standar
 it:&Ingrandimento predefinito:
 ja:既定の拡大率(&Z):
-ka:ნაგულისხმევი &მასშტაბი
+ka:საწყისი &მასშტაბი:
 kr:기본 배율(&Z):
 ku:هێنانەپێشەوەی  &سەرەکی:
 kw:&Zoum savonek:
@@ -7837,6 +7854,7 @@ co:&Esce di u modu screnu sanu
 de:Vollbild verlassen
 el:Έξοδος από την πλήρη οθόνη
 fr:&Quitter le mode plein écran
+ka:სრულ&ეკრანიანიდან გამოსვლა
 kw:Kwytya Skrin-leun
 nl:Volledig scherm uit
 pl:W&yjdź z trybu pełnoekranowego
@@ -7989,6 +8007,7 @@ de:Bearbeiten
 el:Επεξεργασία
 fr:Éditer
 it:Modifica
+ka:რედაქტირება
 kw:Golegi
 nl:Bewerken
 no:Rediger
@@ -8004,6 +8023,7 @@ co:&Mudificà l’annutazioni
 de:Anmerkungen bearbeiten
 el:Επεξεργασία Σχολίων
 fr:Éditer les annotations
+ka:ანოტაციის რედაქტირება
 kw:Golegi notenyans
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
@@ -8016,6 +8036,7 @@ cn:编辑书签
 co:Mudificà l’indette
 de:Lesezeichen bearbeiten
 fr:Éditer les marque-pages
+ka:სანიშნის რედაქტირება
 kw:Golegi Folennotennow
 nl:Bewerk Bladwijzers
 no:Rediger bokmerker
@@ -8311,6 +8332,7 @@ hr:Proširi sve
 id:Buka Semua
 it:Espandi tutto
 ja:すべて展開
+ka:ყველას ამოკეცვა
 kw:Lesa Oll
 lv:Izvērst visu
 nl:Alle Uitvouwen
@@ -8329,6 +8351,7 @@ cn:导出书签
 co:Espurtà l’indette
 de:Lesezeichen exportieren
 fr:Exporter les marque-pages
+ka:სანიშნეების ექსპორტი
 kw:Esperthi Folennotennow
 nl:Exporteer Bladwijzers
 pl:Eksportuj zakładki
@@ -8633,6 +8656,7 @@ hu:Az eltávolító rendszerleíró adatbázis kulcsainak törlése sikertelen
 id:Gagal menghapus kunci registry uninstaller
 it:Impossibile rimuovere chiavi registro
 ja:アンインストーラのレジストリキーを削除するのに失敗しました
+ka:დეინსტალატორის რეგისტრის გასაღების წაშლა ვერ მოხერხდა
 kr:레지스트리 키를 삭제하지 못했습니다.
 ku:سڕینەوەی پاشکۆ و کلیلەکانی ڕیگستری سەرکەتو نەبوو
 kw:Dilea alwedhow kovskrifva anleell
@@ -9232,6 +9256,7 @@ br:Anexo de Arquivo
 cn:文件附件
 co:Schedariu attaccatu
 de:Dateianhang
+ka:მიმაგრებული ფაილი
 kw:Stagel Restren
 nl:Bestands Bijlage
 pl:Załącznik
@@ -10357,6 +10382,7 @@ hu:Könyv formázása... %d oldal
 id:Memformat buku... %d halaman
 it:Formattazione del libro... %d pagine
 ja:製本中… %d ページ
+ka:წიგნის ფორმატირება... %d გვერდი
 kr:%d 페이지 읽어들이는 중...
 ku:پەڕە %d  فۆڕماتکردنی پەڕەکانی پەرتووک ...
 kw:Ow furvasa an lyver... %d folen
@@ -10519,6 +10545,7 @@ br:Texto Livre
 cn:自定义文本
 co:Testu liberu
 de:Freitext
+ka:თავისუფალი ტექსტი
 kw:Tekst Rydh
 nl:Vrije Tekst
 pl:Dowolny tekst
@@ -10863,6 +10890,7 @@ br:Destacar
 cn:高亮
 co:Sopralineà
 de:Hervorhebung
+ka:მონიშვნა
 kw:Golowboyntya
 nl:Markeer
 pl:Wyróżnienie
@@ -11002,6 +11030,7 @@ co:Fiure
 de:Bilder
 fr:Images
 it:Immagini
+ka:სურათები
 kw:Skeusennow
 nl:Afbeeldingen
 pl:Obrazy
@@ -11014,6 +11043,7 @@ br:Tinta
 cn:墨迹
 co:Inchjostru
 de:Tinte
+ka:მელანი
 kw:Ynk
 nl:Snelkoppeling
 no:Blekk
@@ -11373,6 +11403,7 @@ hu:Hagyja a Windows Desktop Search-re a PDF dokumentumok keresését
 id:Izinkan Windows Desktop Search mencari dokumen PDF
 it:Permetti a Windows Desktop Search di cercare i documenti PDF
 ja:Windows デスクトップ サーチの PDF ドキュメント検索を許可する(&s)
+ka:PDF-დოკუმენტების ძებნა &Windows Desktop Search-ის საშუალებით
 kr:Windows 데스크톱 검색에 PDF 문서 검색 기능 추가(&S)
 ku:PDF ڕێگەدان بە گەڕانی سەرشاشەی ویندۆز &بگەڕێت بۆ بەڵگەنامەکانی
 kw:Gasa Windows Desktop Search dhe &hwilas skrivennow PDF
@@ -11492,6 +11523,7 @@ hu:Világos
 id:Terang
 it:Leggero
 ja:淡色
+ka:ნათელი
 kr:밝은
 kw:Golow
 lt:Šviesi
@@ -11525,6 +11557,7 @@ co:Linea
 de:Linie
 el:Γραμμή
 fr:Ligne
+ka:ხაზი
 kw:Linen
 nl:Regel
 no:Linje
@@ -11636,7 +11669,7 @@ hu:Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
 id:Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?
 it:Impostare SumatraPDF come programma predefinito per i file PDF?
 ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?
-ka:ნამდვილად გსურთ SumatraPDF თქვენს ნაგულისხმევი PDF წამკითხველად დაყენება?
+ka:გსურთ SumatraPDF-ის დაყენება PDF-ისთვის საწყის აპლიკაციად?
 kr:SumatraPDF를 PDF 파일의 기본 프로그램으로 만들까요?
 ku:؟PDF وەکو بەرنامەی سەرەکی بۆ کردنەوەی فایلەکانی SumatraPDF ڕێکخستنی
 kw:Gul SumatraPDF towlen savonek rag restrennow PDF?
@@ -12041,6 +12074,7 @@ cn:新建书签
 co:Nove indette
 de:Neue Lesezeichen
 fr:Nouveaux marque-pages
+ka:ახალი სანიშნე
 kw:Folennotennow Nowydh
 nl:Nieuwe Bladwijzers
 pl:Nowe zakładki
@@ -12723,6 +12757,7 @@ br:Abrir PDF Embutido
 cn:打开嵌入 PDF
 co:Apre u PDF incurpuratu
 de:Eingebettetes PDF öffnen
+ka:ჩაშენებული PDF-ის გახსნა
 kw:Ygeri PDF Neythys
 nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
@@ -14155,6 +14190,7 @@ br:Polilinha
 cn:折线
 co:Linea tronca
 de:Polylinie
+ka:ტეხილი ხაზი
 kw:Lieslinen
 nl:Poly Regel
 pl:Polilinia
@@ -14167,6 +14203,7 @@ cn:多边形
 co:Poligonu
 de:Polygon
 fr:Polygone
+ka:მრავალკუთხედი
 kw:Liestuek
 nl:Veelhoek
 pl:Wielokąt
@@ -14909,6 +14946,7 @@ hu:Átnevezés...\tF2
 id:&Ganti Nama...\tF2
 it:Ri&nomina...\tF2
 ja:名前を変更(&N)...\tF2
+ka:გადა&რქმევა...\tF2
 kr:이름 바꾸기(&N)...\tF2
 ku:گۆڕینی &ناو...\tF2
 kw:Dashe&nwel...\tF2
@@ -14945,6 +14983,7 @@ br:Redigir
 cn:编辑
 co:Redige
 de:Zensieren
+ka:რედაქტირება
 kw:Redaktya
 nl:Redigeren
 pl:Redaguj
@@ -15019,6 +15058,7 @@ br:Remover Item
 cn:移除项目
 co:Caccià l’elementu
 de:Element entfernen
+ka:ელემენტის წაშლა
 kw:Removya Tra
 nl:Verwijder Item
 pl:Usuń element
@@ -15184,6 +15224,7 @@ id:Ganti Nama Menjadi
 it:Rinomina in
 ja:名前の変更名
 jv:Ganti Jeneng Dadi
+ka:გადარქმევა
 kr:바꿀 이름
 ku:گۆڕینی ناو بۆ
 kw:Dashenwel Dhe
@@ -15376,6 +15417,7 @@ hr:Spremi pribilješke
 id:Simpan Catatan
 it:Salva annotazioni
 ja:注釈を保存
+ka:ანოტაციების შენახვა
 kw:Gwitha Notennow
 lv:Saglabāt anotācijas
 nl:Aantekeningen Opslaan
@@ -15464,6 +15506,7 @@ br:Salvar Arquivo Embutido...
 cn:保存嵌入文件...
 co:Arregistrà u schedariu incurpuratu…
 de:Eingebettete Datei speichern...
+ka:მიმაგრებული ფაილის შენახვა...
 kw:Gwitha Restren Neythys...
 nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
@@ -16430,6 +16473,7 @@ hr:Prikaži u mapi
 id:Tampilkan dalam &folder
 it:Visualizza nella &cartella
 ja:フォルダを表示(&F)
+ka:ჩვენება &საქაღალდეში
 kw:Diskwedhes yn &restren
 lv:Rādīt &mapē
 nl:Toon in &map
@@ -16645,6 +16689,7 @@ co:Classificà da
 de:Sortieren nach
 el:Ταξινόμηση κατά
 fr:Classer
+ka:დალაგების ტიპი:
 kw:Digemyska Gans
 nl:Sorteer Op
 pl:Sortuj według
@@ -16722,6 +16767,7 @@ cn:矩形
 co:Quadratu
 de:Quadrat
 el:Τετράγωνο 
+ka:კვადრატი
 kw:Pedrek
 nl:Vierkant
 pl:Kwadrat
@@ -16745,6 +16791,7 @@ br:Carimbo
 cn:图章
 co:Stampaghjolu
 de:Stempel
+ka:ბეჭედი
 kw:Stampa
 nl:Stempel
 pl:Pieczęć
@@ -16923,6 +16970,7 @@ hu:SumatraPDF %s telepítő
 id:Pemasang instalasi SumatraPDF %s
 it:Installazione SumatraPDF %s
 ja:SumatraPDF %s インストーラ
+ka:SumatraPDF-ის ინსტალატორი %s
 kr:SumatraPDF %s 설치 관리자
 ku:SumatraPDF %s دابەزاندنی
 kw:Leell %s SumatraPDF
@@ -16983,6 +17031,7 @@ hu:SumatraPDF %s eltávolító
 id:Penghapus instalasi SumatraPDF %s
 it:Disinstallazione SumatraPDF %s
 ja:SumatraPDF %s アンインストーラ
+ka:SumatraPDF-ის დეინსტალატორი %s 
 kr:SumatraPDF %s 제거 관리자
 ku:SumatraPDF %s سڕینەوەی
 kw:Anleell %s SumatraPDF
@@ -17235,6 +17284,7 @@ hu:SumatraPDF eltávolítása befejeződött.
 id:SumatraPDF telah dihapus
 it:SumatraPDF è stato completamente disinstallato.
 ja:SumatraPDF がアンインストールされました。
+ka:SumatraPDF წაშლილ იქნა.
 kr:SumatraPDF가 제거됐습니다.
 ku:.سڕایەوە SumatraPDF
 kw:SumatraPDF a veu anleys
@@ -17295,6 +17345,7 @@ hu:SumatraPDF telepítő nem található.
 id:Instalasi SumatraPDF tidak ditemukan.
 it:Installazione SumatraPDF non trovata.
 ja:SumatraPDFのインストール情報を見つけられません
+ka:SumatraPDF-ის ინსტალაცია ვერ მოიძებნა.
 kr:SumatraPDF 설치 파일을 찾을 수 없습니다.
 ku:.نەدۆزرایەوە SumatraPDF دابەزێنەری
 kw:Ny yllir trovya leans SumatraPDF.
@@ -17460,6 +17511,7 @@ cn:支持 SumatraPDF
 co:Sustene SumatraPDF
 de:SumatraPDF unterstützen
 el:Υποστηρίξτε το SumatraPDF
+ka: SumatraPDF-ის დახმარება
 kw:Skoodhya SumatraPDF
 nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
@@ -17623,6 +17675,7 @@ de:Text
 el:Κείμενο
 fr:Texte
 it:Testo
+ka:ტექსტი
 kw:Tekst
 nl:Tekst
 pl:Tekst
@@ -18023,6 +18076,7 @@ co:Sottulineatu
 de:Unterstreichen
 el:Υπογράμμιση 
 fr:Souligner
+ka:ხაზის გასმა
 kw:Islinya
 nl:Onderstrepen
 pl:Podkreślenie
@@ -18367,7 +18421,7 @@ hu:SumatraPDF használata alapértelmezett PDF olvasóként
 id:Gunakan SumatraPDF sebagai pembaca PDF standar.
 it:Usa SumatraPDF come lettore PDF pre&definito
 ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?(&d)
-ka:SumatraPDF-ის &ნაგულისხმევ PDF-ის წამკითხველად გაყენება
+ka:გამოიყენეთ SumatraPDF &საწყის PDF-წამკითხველად
 kr:SumatraPDF를 기본 PDF 리더로 사용(&D)
 ku:وەکو خوێنەرەوەی &سەرەکی PDF SumatraPDF بەکارهێنانی
 kw:Usya SumatraPDF avel redyer PDF a dhefowt
