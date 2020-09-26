@@ -1,0 +1,7 @@
+name: "My CodeQL config"
+
+paths:
+  - src 
+paths-ignore: 
+  - ext
+  - mupdf
