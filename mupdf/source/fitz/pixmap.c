@@ -76,12 +76,12 @@ fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h
 	}
 
 	pix->samples = samples;
-	if (!samples)
+	if (!samples && pix->h > 0 && pix->w > 0)
 	{
 		fz_try(ctx)
 		{
-			if (pix->stride - 1 > INT_MAX / pix->n)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "overly wide image");
+			if (pix->stride > INT_MAX / pix->h)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "Overly large image");
 			pix->samples = Memento_label(fz_malloc(ctx, pix->h * pix->stride), "pixmap_data");
 		}
 		fz_catch(ctx)
@@ -102,8 +102,12 @@ fz_new_pixmap(fz_context *ctx, fz_colorspace *colorspace, int w, int h, fz_separ
 {
 	int stride;
 	int s = fz_count_active_separations(ctx, seps);
+	int n;
 	if (!colorspace && s == 0) alpha = 1;
-	stride = (fz_colorspace_n(ctx, colorspace) + s + alpha) * w;
+	n = fz_colorspace_n(ctx, colorspace) + s + alpha;
+	if (w > INT_MAX / n)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Overly wide image");
+	stride = n * w;
 	return fz_new_pixmap_with_data(ctx, colorspace, w, h, seps, alpha, stride, NULL);
 }
 
@@ -167,7 +171,7 @@ fz_pixmap *fz_new_pixmap_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, const f
 	return subpix;
 }
 
-fz_pixmap *fz_clone_pixmap(fz_context *ctx, fz_pixmap *old)
+fz_pixmap *fz_clone_pixmap(fz_context *ctx, const fz_pixmap *old)
 {
 	fz_pixmap *pix = fz_new_pixmap_with_bbox(ctx, old->colorspace, fz_make_irect(old->x, old->y, old->w, old->h), old->seps, old->alpha);
 	memcpy(pix->samples, old->samples, pix->stride * pix->h);
@@ -197,7 +201,7 @@ fz_pixmap_bbox_no_ctx(const fz_pixmap *pix)
 }
 
 fz_colorspace *
-fz_pixmap_colorspace(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_colorspace(fz_context *ctx, const fz_pixmap *pix)
 {
 	if (!pix)
 		return NULL;
@@ -205,61 +209,61 @@ fz_pixmap_colorspace(fz_context *ctx, fz_pixmap *pix)
 }
 
 int
-fz_pixmap_x(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_x(fz_context *ctx, const fz_pixmap *pix)
 {
 	return pix->x;
 }
 
 int
-fz_pixmap_y(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_y(fz_context *ctx, const fz_pixmap *pix)
 {
 	return pix->y;
 }
 
 int
-fz_pixmap_width(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_width(fz_context *ctx, const fz_pixmap *pix)
 {
 	return pix->w;
 }
 
 int
-fz_pixmap_height(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_height(fz_context *ctx, const fz_pixmap *pix)
 {
 	return pix->h;
 }
 
 int
-fz_pixmap_components(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_components(fz_context *ctx, const fz_pixmap *pix)
 {
 	return pix->n;
 }
 
 int
-fz_pixmap_colorants(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_colorants(fz_context *ctx, const fz_pixmap *pix)
 {
 	return pix->n - pix->alpha - pix->s;
 }
 
 int
-fz_pixmap_spots(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_spots(fz_context *ctx, const fz_pixmap *pix)
 {
 	return pix->s;
 }
 
 int
-fz_pixmap_alpha(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_alpha(fz_context *ctx, const fz_pixmap *pix)
 {
 	return pix->alpha;
 }
 
 int
-fz_pixmap_stride(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_stride(fz_context *ctx, const fz_pixmap *pix)
 {
 	return pix->stride;
 }
 
 unsigned char *
-fz_pixmap_samples(fz_context *ctx, fz_pixmap *pix)
+fz_pixmap_samples(fz_context *ctx, const fz_pixmap *pix)
 {
 	if (!pix)
 		return NULL;
@@ -988,7 +992,7 @@ fz_pixmap_size(fz_context *ctx, fz_pixmap * pix)
 }
 
 fz_pixmap *
-fz_convert_pixmap(fz_context *ctx, fz_pixmap *pix, fz_colorspace *ds, fz_colorspace *prf, fz_default_colorspaces *default_cs, fz_color_params color_params, int keep_alpha)
+fz_convert_pixmap(fz_context *ctx, const fz_pixmap *pix, fz_colorspace *ds, fz_colorspace *prf, fz_default_colorspaces *default_cs, fz_color_params color_params, int keep_alpha)
 {
 	fz_pixmap *cvt;
 

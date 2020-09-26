@@ -91,17 +91,17 @@ FUN(PKCS7Verifier_newNative)(JNIEnv *env, jobject self, jobject jverifier)
 	pdf_pkcs7_verifier *verifier = NULL;
 
 	if (!ctx) return 0;
-	if (!jverifier) return jni_throw_arg(env, "verifier must not be null"), 0;
+	if (!jverifier) jni_throw_arg(env, "verifier must not be null");
 
 	jverifier = (*env)->NewGlobalRef(env, jverifier);
-	if (!jverifier) return jni_throw_arg(env, "unable to get reference to verifier"), 0;
+	if (!jverifier) jni_throw_arg(env, "unable to get reference to verifier");
 
 	fz_try(ctx)
 		verifier = java_pkcs7_new_verifier(ctx, jverifier);
 	fz_catch(ctx)
 	{
 		(*env)->DeleteGlobalRef(env, jverifier);
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 	}
 
 	return jlong_cast(verifier);

@@ -18,7 +18,7 @@ FUN(StrokeState_newStrokeState)(JNIEnv *env, jobject self, jint startCap, jint d
 	jsize len = 0;
 
 	if (!ctx) return 0;
-	if (!dash) return jni_throw_arg(env, "dash must not be null"), 0;
+	if (!dash) jni_throw_arg(env, "dash must not be null");
 
 	len = (*env)->GetArrayLength(env, dash);
 
@@ -35,7 +35,7 @@ FUN(StrokeState_newStrokeState)(JNIEnv *env, jobject self, jint startCap, jint d
 		stroke->dash_len = len;
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	(*env)->GetFloatArrayRegion(env, dash, 0, len, &stroke->dash_list[0]);
 	if ((*env)->ExceptionCheck(env)) return 0;

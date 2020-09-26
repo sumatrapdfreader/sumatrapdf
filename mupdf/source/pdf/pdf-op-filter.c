@@ -1412,6 +1412,7 @@ pdf_filter_Tstar(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_filter_processor *p = (pdf_filter_processor*)proc;
 	p->Tm_adjust = 0;
+	filter_flush(ctx, p, FLUSH_ALL);
 	pdf_tos_newline(&p->tos, p->gstate->pending.text.leading);
 	/* If Tm_pending, then just adjusting the matrix (as
 	 * pdf_tos_newline has done) is enough. Otherwise we

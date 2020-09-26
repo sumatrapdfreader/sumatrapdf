@@ -18,12 +18,28 @@ FUN(PDFGraftMap_graftObject)(JNIEnv *env, jobject self, jobject jobj)
 	pdf_graft_map *map = from_PDFGraftMap(env, self);
 
 	if (!ctx || !map) return NULL;
-	if (!obj) return jni_throw_arg(env, "object must not be null"), NULL;
+	if (!obj) jni_throw_arg(env, "object must not be null");
 
 	fz_try(ctx)
 		obj = pdf_graft_mapped_object(ctx, map, obj);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, obj);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFGraftMap_graftPage)(JNIEnv *env, jobject self, jint pageTo, jobject jobj, jint pageFrom)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *src = from_PDFDocument(env, jobj);
+	pdf_graft_map *map = from_PDFGraftMap(env, self);
+
+	if (!ctx || !map) return;
+	if (!src) jni_throw_arg_void(env, "Source Document must not be null");
+
+	fz_try(ctx)
+		pdf_graft_mapped_page(ctx, map, pageTo, src, pageFrom);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
 }

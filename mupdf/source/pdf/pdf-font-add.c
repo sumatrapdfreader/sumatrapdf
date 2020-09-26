@@ -317,13 +317,22 @@ pdf_add_cid_font_widths(fz_context *ctx, pdf_document *doc, pdf_obj *fobj, fz_fo
 			prev_code = curr_code;
 		}
 
+		if (pdf_array_len(ctx, run_obj) > 0)
+		{
+			pdf_array_push_int(ctx, fw, first_code);
+			pdf_array_push(ctx, fw, run_obj);
+		}
+
 		if (font->width_table != NULL)
 			pdf_dict_put_int(ctx, fobj, PDF_NAME(DW), font->width_default);
 		if (pdf_array_len(ctx, fw) > 0)
 			pdf_dict_put(ctx, fobj, PDF_NAME(W), fw);
 	}
 	fz_always(ctx)
+	{
 		pdf_drop_obj(ctx, fw);
+		pdf_drop_obj(ctx, run_obj);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 }

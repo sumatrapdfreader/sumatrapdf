@@ -21,7 +21,7 @@ FUN(Path_newNative)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		path = fz_new_path(ctx);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(path);
 }
@@ -38,7 +38,7 @@ FUN(Path_currentPoint)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		point = fz_currentpoint(ctx, path);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Point_safe(ctx, env, point);
 }
@@ -54,7 +54,7 @@ FUN(Path_moveTo)(JNIEnv *env, jobject self, jfloat x, jfloat y)
 	fz_try(ctx)
 		fz_moveto(ctx, path, x, y);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -68,7 +68,7 @@ FUN(Path_lineTo)(JNIEnv *env, jobject self, jfloat x, jfloat y)
 	fz_try(ctx)
 		fz_lineto(ctx, path, x, y);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -82,7 +82,7 @@ FUN(Path_curveTo)(JNIEnv *env, jobject self, jfloat cx1, jfloat cy1, jfloat cx2,
 	fz_try(ctx)
 		fz_curveto(ctx, path, cx1, cy1, cx2, cy2, ex, ey);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -96,7 +96,7 @@ FUN(Path_curveToV)(JNIEnv *env, jobject self, jfloat cx, jfloat cy, jfloat ex, j
 	fz_try(ctx)
 		fz_curvetov(ctx, path, cx, cy, ex, ey);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -110,7 +110,7 @@ FUN(Path_curveToY)(JNIEnv *env, jobject self, jfloat cx, jfloat cy, jfloat ex, j
 	fz_try(ctx)
 		fz_curvetoy(ctx, path, cx, cy, ex, ey);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -124,7 +124,7 @@ FUN(Path_rect)(JNIEnv *env, jobject self, jint x1, jint y1, jint x2, jint y2)
 	fz_try(ctx)
 		fz_rectto(ctx, path, x1, y1, x2, y2);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -138,7 +138,7 @@ FUN(Path_closePath)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		fz_closepath(ctx, path);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -153,7 +153,7 @@ FUN(Path_transform)(JNIEnv *env, jobject self, jobject jctm)
 	fz_try(ctx)
 		fz_transform_path(ctx, path, ctm);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jlong JNICALL
@@ -168,7 +168,7 @@ FUN(Path_cloneNative)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		new_path = fz_clone_path(ctx, old_path);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(new_path);
 }
@@ -183,12 +183,12 @@ FUN(Path_getBounds)(JNIEnv *env, jobject self, jobject jstroke, jobject jctm)
 	fz_rect rect;
 
 	if (!ctx || !path) return NULL;
-	if (!stroke) return jni_throw_arg(env, "stroke must not be null"), NULL;
+	if (!stroke) jni_throw_arg(env, "stroke must not be null");
 
 	fz_try(ctx)
 		rect = fz_bound_path(ctx, path, stroke, ctm);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Rect_safe(ctx, env, rect);
 }
@@ -259,7 +259,7 @@ FUN(Path_walk)(JNIEnv *env, jobject self, jobject obj)
 	path_walker_state state;
 
 	if (!ctx || !path) return;
-	if (!obj) return jni_throw_arg(env, "object must not be null");
+	if (!obj) jni_throw_arg_void(env, "object must not be null");
 
 	state.env = env;
 	state.obj = obj;
@@ -267,5 +267,5 @@ FUN(Path_walk)(JNIEnv *env, jobject self, jobject obj)
 	fz_try(ctx)
 		fz_walk_path(ctx, path, &java_path_walker, &state);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }

@@ -399,53 +399,80 @@ static int check_enums()
 
 /* Helper functions to set the java exception flag. */
 
-static void jni_throw(JNIEnv *env, jclass cls, const char *mess)
+static void jni_throw_imp(JNIEnv *env, jclass cls, const char *mess)
 {
 	(*env)->ThrowNew(env, cls, mess);
 }
 
-static void jni_rethrow(JNIEnv *env, fz_context *ctx)
+#define jni_throw_void(env, info) do { jni_throw_imp(env, info); return; }
+#define jni_throw(env, info) do { jni_throw_imp(env, info); return 0; }
+
+static void jni_rethrow_imp(JNIEnv *env, fz_context *ctx)
 {
 	if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
-		jni_throw(env, cls_TryLaterException, fz_caught_message(ctx));
+		jni_throw_imp(env, cls_TryLaterException, fz_caught_message(ctx));
 	else
-		jni_throw(env, cls_RuntimeException, fz_caught_message(ctx));
+		jni_throw_imp(env, cls_RuntimeException, fz_caught_message(ctx));
 }
 
-static void jni_throw_run(JNIEnv *env, const char *info)
+#define jni_rethrow_void(env, ctx) do { jni_rethrow_imp(env, ctx); return; } while (0);
+#define jni_rethrow(env, ctx) do { jni_rethrow_imp(env, ctx); return 0; } while (0);
+
+static void jni_throw_run_imp(JNIEnv *env, const char *info)
 {
-	jni_throw(env, cls_RuntimeException, info);
+	jni_throw_imp(env, cls_RuntimeException, info);
 }
 
-static void jni_throw_oom(JNIEnv *env, const char *info)
+#define jni_throw_run_void(env, info) do { jni_throw_run_imp(env, info); return; } while (0);
+#define jni_throw_run(env, info) do { jni_throw_run_imp(env, info); return 0; } while (0);
+
+static void jni_throw_oom_imp(JNIEnv *env, const char *info)
 {
-	jni_throw(env, cls_OutOfMemoryError, info);
+	jni_throw_imp(env, cls_OutOfMemoryError, info);
 }
 
-static void jni_throw_oob(JNIEnv *env, const char *info)
+#define jni_throw_oom_void(env, info) do { jni_throw_oom_imp(env, info); return; } while (0);
+#define jni_throw_oom(env, info) do { jni_throw_oom_imp(env, info); return 0; } while (0);
+
+static void jni_throw_oob_imp(JNIEnv *env, const char *info)
 {
-	jni_throw(env, cls_IndexOutOfBoundsException, info);
+	jni_throw_imp(env, cls_IndexOutOfBoundsException, info);
 }
 
-static void jni_throw_arg(JNIEnv *env, const char *info)
+#define jni_throw_oob_void(env, info) do { jni_throw_oob_imp(env, info); return; } while (0);
+#define jni_throw_oob(env, info) do { jni_throw_oob_imp(env, info); return 0; } while (0);
+
+static void jni_throw_arg_imp(JNIEnv *env, const char *info)
 {
-	jni_throw(env, cls_IllegalArgumentException, info);
+	jni_throw_imp(env, cls_IllegalArgumentException, info);
 }
 
-static void jni_throw_io(JNIEnv *env, const char *info)
+#define jni_throw_arg_void(env, info) do { jni_throw_arg_imp(env, info); return; } while (0);
+#define jni_throw_arg(env, info) do { jni_throw_arg_imp(env, info); return 0; } while (0);
+
+static void jni_throw_io_imp(JNIEnv *env, const char *info)
 {
-	jni_throw(env, cls_IOException, info);
+	jni_throw_imp(env, cls_IOException, info);
 }
 
-static void jni_throw_null(JNIEnv *env, const char *info)
+#define jni_throw_io_void(env, info) do { jni_throw_io_imp(env, info); return; } while (0);
+#define jni_throw_io(env, info) do { jni_throw_io_imp(env, info); return 0; } while (0);
+
+static void jni_throw_null_imp(JNIEnv *env, const char *info)
 {
-	jni_throw(env, cls_NullPointerException, info);
+	jni_throw_imp(env, cls_NullPointerException, info);
 }
 
-static void jni_throw_uoe(JNIEnv *env, const char *info)
+#define jni_throw_null_void(env, info) do { jni_throw_null_imp(env, info); return; } while (0);
+#define jni_throw_null(env, info) do { jni_throw_null_imp(env, info); return 0; } while (0);
+
+static void jni_throw_uoe_imp(JNIEnv *env, const char *info)
 {
-	jni_throw(env, cls_UnsupportedOperationException, info);
+	jni_throw_imp(env, cls_UnsupportedOperationException, info);
 }
+
+#define jni_throw_uoe_void(env, info) do { jni_throw_uoe_imp(env, info); return; } while (0);
+#define jni_throw_uoe(env, info) do { jni_throw_uoe_imp(env, info); return 0; } while (0);
 
 /* Convert a java exception and throw into fitz. */
 

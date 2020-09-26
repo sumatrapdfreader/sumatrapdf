@@ -215,17 +215,17 @@ FUN(PKCS7Signer_newNative)(JNIEnv *env, jclass cls, jobject jsigner)
 	pdf_pkcs7_signer *signer = NULL;
 
 	if (!ctx) return 0;
-	if (!jsigner) return jni_throw_arg(env, "signer must not be null"), 0;
+	if (!jsigner) jni_throw_arg(env, "signer must not be null");
 
 	jsigner = (*env)->NewGlobalRef(env, jsigner);
-	if (!jsigner) return jni_throw_arg(env, "unable to get reference to signer"), 0;
+	if (!jsigner) jni_throw_arg(env, "unable to get reference to signer");
 
 	fz_try(ctx)
 		signer = pdf_pkcs7_java_signer_create(env, ctx, jsigner);
 	fz_catch(ctx)
 	{
 		(*env)->DeleteGlobalRef(env, jsigner);
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 	}
 
 	return jlong_cast(signer);

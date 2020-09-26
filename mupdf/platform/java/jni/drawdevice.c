@@ -8,12 +8,12 @@ FUN(DrawDevice_newNative)(JNIEnv *env, jclass cls, jobject jpixmap)
 	fz_device *device = NULL;
 
 	if (!ctx) return 0;
-	if (!pixmap) return jni_throw_arg(env, "pixmap must not be null"), 0;
+	if (!pixmap) jni_throw_arg(env, "pixmap must not be null");
 
 	fz_try(ctx)
 		device = fz_new_draw_device(ctx, fz_identity, pixmap);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(device);
 }

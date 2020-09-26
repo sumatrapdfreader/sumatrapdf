@@ -17,12 +17,12 @@ FUN(Buffer_newNativeBuffer)(JNIEnv *env, jobject self, jint n)
 	fz_buffer *buf = NULL;
 
 	if (!ctx) return 0;
-	if (n < 0) return jni_throw_arg(env, "n cannot be negative"), 0;
+	if (n < 0) jni_throw_arg(env, "n cannot be negative");
 
 	fz_try(ctx)
 		buf = fz_new_buffer(ctx, n);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(buf);
 }
@@ -48,7 +48,7 @@ FUN(Buffer_readByte)(JNIEnv *env, jobject self, jint jat)
 	unsigned char *data;
 
 	if (!ctx || !buf) return -1;
-	if (jat < 0) return jni_throw_oob(env, "at is negative"), -1;
+	if (jat < 0) jni_throw_oob(env, "at is negative");
 
 	len = fz_buffer_storage(ctx, buf, &data);
 	if (at >= len)
@@ -70,8 +70,8 @@ FUN(Buffer_readBytes)(JNIEnv *env, jobject self, jint jat, jobject jbs)
 	unsigned char *data;
 
 	if (!ctx || !buf) return -1;
-	if (jat < 0) return jni_throw_oob(env, "at is negative"), -1;
-	if (!jbs) return jni_throw_arg(env, "buffer must not be null"), -1;
+	if (jat < 0) jni_throw_oob(env, "at is negative");
+	if (!jbs) jni_throw_arg(env, "buffer must not be null");
 
 	len = fz_buffer_storage(ctx, buf, &data);
 	if (at >= len)
@@ -83,7 +83,7 @@ FUN(Buffer_readBytes)(JNIEnv *env, jobject self, jint jat, jobject jbs)
 	len = fz_minz(len, remaining_input);
 
 	bs = (*env)->GetByteArrayElements(env, jbs, NULL);
-	if (!bs) return jni_throw_io(env, "cannot get bytes to read"), -1;
+	if (!bs) jni_throw_io(env, "cannot get bytes to read");
 
 	memcpy(bs, &data[at], len);
 	(*env)->ReleaseByteArrayElements(env, jbs, bs, 0);
@@ -105,13 +105,13 @@ FUN(Buffer_readBytesInto)(JNIEnv *env, jobject self, jint jat, jobject jbs, jint
 	unsigned char *data;
 
 	if (!ctx || !buf) return -1;
-	if (jat < 0) return jni_throw_oob(env, "at is negative"), -1;
-	if (!jbs) return jni_throw_arg(env, "buffer must not be null"), -1;
-	if (joff < 0) return jni_throw_oob(env, "offset is negative"), -1;
-	if (jlen < 0) return jni_throw_oob(env, "length is negative"), -1;
+	if (jat < 0) jni_throw_oob(env, "at is negative");
+	if (!jbs) jni_throw_arg(env, "buffer must not be null");
+	if (joff < 0) jni_throw_oob(env, "offset is negative");
+	if (jlen < 0) jni_throw_oob(env, "length is negative");
 
 	bslen = (*env)->GetArrayLength(env, jbs);
-	if (len > bslen - off) return jni_throw_oob(env, "offset + length is outside of buffer"), -1;
+	if (len > bslen - off) jni_throw_oob(env, "offset + length is outside of buffer");
 
 	blen = fz_buffer_storage(ctx, buf, &data);
 	if (at >= blen)
@@ -120,7 +120,7 @@ FUN(Buffer_readBytesInto)(JNIEnv *env, jobject self, jint jat, jobject jbs, jint
 	len = fz_minz(len, blen - at);
 
 	bs = (*env)->GetByteArrayElements(env, jbs, NULL);
-	if (!bs) return jni_throw_io(env, "cannot get bytes to read"), -1;
+	if (!bs) jni_throw_io(env, "cannot get bytes to read");
 
 	memcpy(&bs[off], &data[at], len);
 	(*env)->ReleaseByteArrayElements(env, jbs, bs, 0);
@@ -139,7 +139,7 @@ FUN(Buffer_writeByte)(JNIEnv *env, jobject self, jbyte b)
 	fz_try(ctx)
 		fz_append_byte(ctx, buf, b);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -151,18 +151,18 @@ FUN(Buffer_writeBytes)(JNIEnv *env, jobject self, jobject jbs)
 	jbyte *bs = NULL;
 
 	if (!ctx || !buf) return;
-	if (!jbs) return jni_throw_arg(env, "buffer must not be null");
+	if (!jbs) jni_throw_arg_void(env, "buffer must not be null");
 
 	len = (*env)->GetArrayLength(env, jbs);
 	bs = (*env)->GetByteArrayElements(env, jbs, NULL);
-	if (!bs) return jni_throw_io(env, "cannot get bytes to write");
+	if (!bs) jni_throw_io_void(env, "cannot get bytes to write");
 
 	fz_try(ctx)
 		fz_append_data(ctx, buf, bs, len);
 	fz_always(ctx)
 		(*env)->ReleaseByteArrayElements(env, jbs, bs, JNI_ABORT);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -176,22 +176,22 @@ FUN(Buffer_writeBytesFrom)(JNIEnv *env, jobject self, jobject jbs, jint joff, ji
 	jsize bslen = 0;
 
 	if (!ctx || !buf) return;
-	if (!jbs) return jni_throw_arg(env, "buffer must not be null");
+	if (!jbs) jni_throw_arg_void(env, "buffer must not be null");
 
 	bslen = (*env)->GetArrayLength(env, jbs);
-	if (joff < 0) return jni_throw_oob(env, "offset is negative");
-	if (jlen < 0) return jni_throw_oob(env, "length is negative");
-	if (off + len >= bslen) return jni_throw_oob(env, "offset + length is outside of buffer");
+	if (joff < 0) jni_throw_oob_void(env, "offset is negative");
+	if (jlen < 0) jni_throw_oob_void(env, "length is negative");
+	if (off + len >= bslen) jni_throw_oob_void(env, "offset + length is outside of buffer");
 
 	bs = (*env)->GetByteArrayElements(env, jbs, NULL);
-	if (!bs) return jni_throw_io(env, "cannot get bytes to write");
+	if (!bs) jni_throw_io_void(env, "cannot get bytes to write");
 
 	fz_try(ctx)
 		fz_append_data(ctx, buf, &bs[off], len);
 	fz_always(ctx)
 		(*env)->ReleaseByteArrayElements(env, jbs, bs, JNI_ABORT);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -202,12 +202,12 @@ FUN(Buffer_writeBuffer)(JNIEnv *env, jobject self, jobject jbuf)
 	fz_buffer *cat = from_Buffer(env, jbuf);
 
 	if (!ctx || !buf) return;
-	if (!cat) return jni_throw_arg(env, "buffer must not be null");
+	if (!cat) jni_throw_arg_void(env, "buffer must not be null");
 
 	fz_try(ctx)
 		fz_append_buffer(ctx, buf, cat);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -221,7 +221,7 @@ FUN(Buffer_writeRune)(JNIEnv *env, jobject self, jint rune)
 	fz_try(ctx)
 		fz_append_rune(ctx, buf, rune);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -232,7 +232,7 @@ FUN(Buffer_writeLine)(JNIEnv *env, jobject self, jstring jline)
 	const char *line = NULL;
 
 	if (!ctx || !buf) return;
-	if (!jline) return jni_throw_arg(env, "line must not be null");
+	if (!jline) jni_throw_arg_void(env, "line must not be null");
 
 	line = (*env)->GetStringUTFChars(env, jline, NULL);
 	if (!line) return;
@@ -245,7 +245,7 @@ FUN(Buffer_writeLine)(JNIEnv *env, jobject self, jstring jline)
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jline, line);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -257,7 +257,7 @@ FUN(Buffer_writeLines)(JNIEnv *env, jobject self, jobject jlines)
 	jsize len = 0;
 
 	if (!ctx || !buf) return;
-	if (!jlines) return jni_throw_arg(env, "lines must not be null");
+	if (!jlines) jni_throw_arg_void(env, "lines must not be null");
 
 	len = (*env)->GetArrayLength(env, jlines);
 
@@ -282,7 +282,7 @@ FUN(Buffer_writeLines)(JNIEnv *env, jobject self, jobject jlines)
 		fz_always(ctx)
 			(*env)->ReleaseStringUTFChars(env, jline, line);
 		fz_catch(ctx)
-			return jni_rethrow(env, ctx);
+			jni_rethrow_void(env, ctx);
 	}
 }
 
@@ -306,5 +306,5 @@ FUN(Buffer_save)(JNIEnv *env, jobject self, jstring jfilename)
 		if (filename)
 			(*env)->ReleaseStringUTFChars(env, jfilename, filename);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }

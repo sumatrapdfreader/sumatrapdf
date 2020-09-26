@@ -54,12 +54,14 @@ public class PDFAnnotation
 	public static final int TYPE_FILE_ATTACHMENT = 17;
 	public static final int TYPE_SOUND = 18;
 	public static final int TYPE_MOVIE = 19;
-	public static final int TYPE_WIDGET = 20;
-	public static final int TYPE_SCREEN = 21;
-	public static final int TYPE_PRINTER_MARK = 22;
-	public static final int TYPE_TRAP_NET = 23;
-	public static final int TYPE_WATERMARK = 24;
-	public static final int TYPE_3D = 25;
+	public static final int TYPE_RICH_MEDIA = 20;
+	public static final int TYPE_WIDGET = 21;
+	public static final int TYPE_SCREEN = 22;
+	public static final int TYPE_PRINTER_MARK = 23;
+	public static final int TYPE_TRAP_NET = 24;
+	public static final int TYPE_WATERMARK = 25;
+	public static final int TYPE_3D = 26;
+	public static final int TYPE_PROJECTION = 27;
 	public static final int TYPE_UNKNOWN = -1;
 
 	public static final int LINE_ENDING_NONE = 0;

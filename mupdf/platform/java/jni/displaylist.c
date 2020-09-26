@@ -13,7 +13,7 @@ FUN(DisplayList_newNative)(JNIEnv *env, jobject self, jobject jmediabox)
 	fz_try(ctx)
 		list = fz_new_display_list(ctx, mediabox);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(list);
 }
@@ -31,7 +31,7 @@ FUN(DisplayList_run)(JNIEnv *env, jobject self, jobject jdev, jobject jctm, jobj
 	int err;
 
 	if (!ctx || !list) return;
-	if (!dev) return jni_throw_arg(env, "device must not be null");
+	if (!dev) jni_throw_arg_void(env, "device must not be null");
 
 	/* Use a scissor rectangle if one is supplied */
 	if (jrect)
@@ -47,7 +47,7 @@ FUN(DisplayList_run)(JNIEnv *env, jobject self, jobject jdev, jobject jctm, jobj
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -74,7 +74,7 @@ FUN(DisplayList_toPixmap)(JNIEnv *env, jobject self, jobject jctm, jobject jcs, 
 	fz_try(ctx)
 		pixmap = fz_new_pixmap_from_display_list(ctx, list, ctm, cs, alpha);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Pixmap_safe_own(ctx, env, pixmap);
 }
@@ -107,7 +107,7 @@ FUN(DisplayList_toStructuredText)(JNIEnv *env, jobject self, jstring joptions)
 			(*env)->ReleaseStringUTFChars(env, joptions, options);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_StructuredText_safe_own(ctx, env, text);
 }
@@ -122,7 +122,7 @@ FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
 	int n = 0;
 
 	if (!ctx || !list) return NULL;
-	if (!jneedle) return jni_throw_arg(env, "needle must not be null"), NULL;
+	if (!jneedle) jni_throw_arg(env, "needle must not be null");
 
 	needle = (*env)->GetStringUTFChars(env, jneedle, NULL);
 	if (!needle) return NULL;
@@ -132,7 +132,7 @@ FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_QuadArray_safe(ctx, env, hits, n);
 }

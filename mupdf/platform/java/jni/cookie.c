@@ -21,7 +21,7 @@ FUN(Cookie_newNative)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		cookie = fz_malloc_struct(ctx, fz_cookie);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(cookie);
 }

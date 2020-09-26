@@ -609,6 +609,93 @@
     <ClCompile Include="..\..\thirdparty\gumbo-parser\src\vector.c">
       <Filter>gumbo-parser</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsarray.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsboolean.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsbuiltin.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jscompile.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsdate.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsdtoa.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsdump.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jserror.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsfunction.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsgc.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsintern.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jslex.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsmath.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsnumber.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsobject.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\json.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsparse.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsproperty.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsregexp.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsrepr.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsrun.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsstate.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsstring.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\jsvalue.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\main.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\pp.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\regexp.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\utf.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\utftype.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\bio.h">
@@ -1075,6 +1162,39 @@
     </ClInclude>
     <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-version.h">
       <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\astnames.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\jsbuiltin.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\jscompile.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\jsi.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\jslex.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\jsparse.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\jsrun.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\jsvalue.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\opnames.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\regexp.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\utf.h">
+      <Filter>libmujs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

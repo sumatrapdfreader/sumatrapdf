@@ -39,7 +39,7 @@ FUN(Font_newNative)(JNIEnv *env, jobject self, jstring jname, jint index)
 		if (name)
 			(*env)->ReleaseStringUTFChars(env, jname, name);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(font);
 }
@@ -67,7 +67,7 @@ FUN(Font_encodeCharacter)(JNIEnv *env, jobject self, jint unicode)
 	fz_try(ctx)
 		glyph = fz_encode_character(ctx, font, unicode);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return glyph;
 }
@@ -84,7 +84,7 @@ FUN(Font_advanceGlyph)(JNIEnv *env, jobject self, jint glyph, jboolean wmode)
 	fz_try(ctx)
 		advance = fz_advance_glyph(ctx, font, glyph, wmode);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return advance;
 }

@@ -29,7 +29,7 @@ FUN(Page_toPixmap)(JNIEnv *env, jobject self, jobject jctm, jobject jcs, jboolea
 			pixmap = fz_new_pixmap_from_page_contents(ctx, page, ctm, cs, alpha);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Pixmap_safe_own(ctx, env, pixmap);
 }
@@ -46,7 +46,7 @@ FUN(Page_getBounds)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		rect = fz_bound_page(ctx, page);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Rect_safe(ctx, env, rect);
 }
@@ -63,7 +63,7 @@ FUN(Page_run)(JNIEnv *env, jobject self, jobject jdev, jobject jctm, jobject jco
 	int err;
 
 	if (!ctx || !page) return;
-	if (!dev) return jni_throw_arg(env, "device must not be null");
+	if (!dev) jni_throw_arg_void(env, "device must not be null");
 
 	info = lockNativeDevice(env, jdev, &err);
 	if (err)
@@ -73,7 +73,7 @@ FUN(Page_run)(JNIEnv *env, jobject self, jobject jdev, jobject jctm, jobject jco
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -88,7 +88,7 @@ FUN(Page_runPageContents)(JNIEnv *env, jobject self, jobject jdev, jobject jctm,
 	int err;
 
 	if (!ctx || !page) return;
-	if (!dev) return jni_throw_arg(env, "device must not be null");
+	if (!dev) jni_throw_arg_void(env, "device must not be null");
 
 	info = lockNativeDevice(env, jdev, &err);
 	if (err)
@@ -98,7 +98,7 @@ FUN(Page_runPageContents)(JNIEnv *env, jobject self, jobject jdev, jobject jctm,
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -113,7 +113,7 @@ FUN(Page_runPageAnnots)(JNIEnv *env, jobject self, jobject jdev, jobject jctm, j
 	int err;
 
 	if (!ctx || !page) return;
-	if (!dev) return jni_throw_arg(env, "device must not be null");
+	if (!dev) jni_throw_arg_void(env, "device must not be null");
 
 	info = lockNativeDevice(env, jdev, &err);
 	if (err)
@@ -123,7 +123,7 @@ FUN(Page_runPageAnnots)(JNIEnv *env, jobject self, jobject jdev, jobject jctm, j
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -138,7 +138,7 @@ FUN(Page_runPageWidgets)(JNIEnv *env, jobject self, jobject jdev, jobject jctm, 
 	int err;
 
 	if (!ctx || !page) return;
-	if (!dev) return jni_throw_arg(env, "device must not be null");
+	if (!dev) jni_throw_arg_void(env, "device must not be null");
 
 	info = lockNativeDevice(env, jdev, &err);
 	if (err)
@@ -148,7 +148,7 @@ FUN(Page_runPageWidgets)(JNIEnv *env, jobject self, jobject jdev, jobject jctm, 
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jobject JNICALL
@@ -171,7 +171,7 @@ FUN(Page_getLinks)(JNIEnv *env, jobject self)
 	fz_catch(ctx)
 	{
 		fz_drop_link(ctx, links);
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 	}
 
 	/* count the links */
@@ -250,7 +250,7 @@ FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
 	int n = 0;
 
 	if (!ctx || !page) return NULL;
-	if (!jneedle) return jni_throw_arg(env, "needle must not be null"), NULL;
+	if (!jneedle) jni_throw_arg(env, "needle must not be null");
 
 	needle = (*env)->GetStringUTFChars(env, jneedle, NULL);
 	if (!needle) return 0;
@@ -260,7 +260,7 @@ FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_QuadArray_safe(ctx, env, hits, n);
 }
@@ -280,7 +280,7 @@ FUN(Page_toDisplayList)(JNIEnv *env, jobject self, jboolean showExtra)
 		else
 			list = fz_new_display_list_from_page_contents(ctx, page);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_DisplayList_safe_own(ctx, env, list);
 }
@@ -313,7 +313,7 @@ FUN(Page_toStructuredText)(JNIEnv *env, jobject self, jstring joptions)
 			(*env)->ReleaseStringUTFChars(env, joptions, options);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_StructuredText_safe_own(ctx, env, text);
 }
@@ -373,7 +373,7 @@ FUN(Page_textAsHtml)(JNIEnv *env, jobject self)
 		fz_drop_stext_page(ctx, text);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return arr;
 }

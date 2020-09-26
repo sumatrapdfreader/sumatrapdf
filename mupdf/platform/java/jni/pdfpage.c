@@ -12,7 +12,7 @@ FUN(PDFPage_createAnnotation)(JNIEnv *env, jobject self, jint subtype)
 	fz_try(ctx)
 		annot = pdf_create_annot(ctx, page, subtype);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFAnnotation_safe_own(ctx, env, annot);
 }
@@ -29,7 +29,7 @@ FUN(PDFPage_deleteAnnotation)(JNIEnv *env, jobject self, jobject jannot)
 	fz_try(ctx)
 		pdf_delete_annot(ctx, page, annot);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jboolean JNICALL
@@ -44,7 +44,7 @@ FUN(PDFPage_update)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		changed = pdf_update_page(ctx, page);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return changed;
 }
@@ -62,7 +62,7 @@ FUN(PDFPage_applyRedactions)(JNIEnv *env, jobject self, jboolean blackBoxes, jin
 	fz_try(ctx)
 		redacted = pdf_redact_page(ctx, page->doc, page, &opts);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return redacted;
 }
@@ -90,7 +90,7 @@ FUN(PDFPage_getAnnotations)(JNIEnv *env, jobject self)
 			annot = pdf_next_annot(ctx, annot);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	/* no annotations, return NULL instead of empty array */
 	if (count == 0)
@@ -98,7 +98,7 @@ FUN(PDFPage_getAnnotations)(JNIEnv *env, jobject self)
 
 	/* now run through actually creating the annotation objects */
 	jannots = (*env)->NewObjectArray(env, count, cls_PDFAnnotation, NULL);
-	if (!jannots || (*env)->ExceptionCheck(env)) return jni_throw_null(env, "cannot wrap page annotations in object array"), NULL;
+	if (!jannots || (*env)->ExceptionCheck(env)) jni_throw_null(env, "cannot wrap page annotations in object array");
 
 	annot = annots;
 	for (i = 0; annot && i < count; i++)
@@ -114,7 +114,7 @@ FUN(PDFPage_getAnnotations)(JNIEnv *env, jobject self)
 		fz_try(ctx)
 			annot = pdf_next_annot(ctx, annot);
 		fz_catch(ctx)
-			return jni_rethrow(env, ctx), NULL;
+			jni_rethrow(env, ctx);
 	}
 
 	return jannots;
@@ -143,7 +143,7 @@ FUN(PDFPage_getWidgetsNative)(JNIEnv *env, jobject self)
 			widget = pdf_next_widget(ctx, widget);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	/* no widgegts, return NULL instead of empty array */
 	if (count == 0)
@@ -151,7 +151,7 @@ FUN(PDFPage_getWidgetsNative)(JNIEnv *env, jobject self)
 
 	/* now run through actually creating the widget objects */
 	jwidgets = (*env)->NewObjectArray(env, count, cls_PDFWidget, NULL);
-	if (!jwidgets || (*env)->ExceptionCheck(env)) return jni_throw_null(env, "cannot wrap page widgets in object array"), NULL;
+	if (!jwidgets || (*env)->ExceptionCheck(env)) jni_throw_null(env, "cannot wrap page widgets in object array");
 
 	widget = widgets;
 	for (i = 0; widget && i < count; i++)
@@ -172,7 +172,7 @@ FUN(PDFPage_getWidgetsNative)(JNIEnv *env, jobject self)
 		fz_try(ctx)
 			widget = pdf_next_widget(ctx, widget);
 		fz_catch(ctx)
-			return jni_rethrow(env, ctx), NULL;
+			jni_rethrow(env, ctx);
 	}
 
 	return jwidgets;

@@ -12,16 +12,16 @@ FUN(AndroidImage_newImageFromBitmap)(JNIEnv *env, jobject self, jobject jbitmap,
 	int ret;
 
 	if (!ctx) return 0;
-	if (!jbitmap) return jni_throw_arg(env, "bitmap must not be null"), 0;
+	if (!jbitmap) jni_throw_arg(env, "bitmap must not be null");
 
 	if (mask && mask->mask)
-		return jni_throw_run(env, "new Image failed as mask cannot be masked"), 0;
+		jni_throw_run(env, "new Image failed as mask cannot be masked");
 	if ((ret = AndroidBitmap_getInfo(env, jbitmap, &info)) != ANDROID_BITMAP_RESULT_SUCCESS)
-		return jni_throw_run(env, "new Image failed to get bitmap info"), 0;
+		jni_throw_run(env, "new Image failed to get bitmap info");
 	if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888)
-		return jni_throw_run(env, "new Image failed as bitmap format is not RGBA_8888"), 0;
+		jni_throw_run(env, "new Image failed as bitmap format is not RGBA_8888");
 	if (info.stride != info.width)
-		return jni_throw_run(env, "new Image failed as bitmap width != stride"), 0;
+		jni_throw_run(env, "new Image failed as bitmap width != stride");
 
 	fz_var(pixmap);
 
@@ -49,7 +49,7 @@ FUN(AndroidImage_newImageFromBitmap)(JNIEnv *env, jobject self, jobject jbitmap,
 	fz_always(ctx)
 		fz_drop_pixmap(ctx, pixmap);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(image);
 }

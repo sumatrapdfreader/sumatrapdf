@@ -12,7 +12,7 @@ FUN(PDFWidget_getValue)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		text = pdf_field_value(ctx, widget->obj);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return (*env)->NewStringUTF(env, text);
 }
@@ -37,7 +37,7 @@ FUN(PDFWidget_setTextValue)(JNIEnv *env, jobject self, jstring jval)
 		if (jval)
 			(*env)->ReleaseStringUTFChars(env, jval, val);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return accepted;
 }
@@ -62,7 +62,7 @@ FUN(PDFWidget_setChoiceValue)(JNIEnv *env, jobject self, jstring jval)
 		if (jval)
 			(*env)->ReleaseStringUTFChars(env, jval, val);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return accepted;
 }
@@ -87,7 +87,7 @@ FUN(PDFWidget_setValue)(JNIEnv *env, jobject self, jstring jval)
 		if (jval)
 			(*env)->ReleaseStringUTFChars(env, jval, val);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return accepted;
 }
@@ -105,7 +105,7 @@ FUN(PDFWidget_toggle)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		accepted = pdf_toggle_widget(ctx, widget);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return accepted;
 }
@@ -121,7 +121,7 @@ FUN(PDFWidget_setEditing)(JNIEnv *env, jobject self, jboolean val)
 	fz_try(ctx)
 		pdf_set_widget_editing_state(ctx, widget, val);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jboolean JNICALL
@@ -137,7 +137,7 @@ FUN(PDFWidget_isEditing)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		state = pdf_get_widget_editing_state(ctx, widget);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return state;
 }
@@ -161,7 +161,7 @@ FUN(PDFWidget_textQuads)(JNIEnv *env, jobject self)
 		stext = pdf_new_stext_page_from_annot(ctx, widget, &opts);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	nchars = 0;
 	for (fz_stext_block *block = stext->first_block; block; block = block->next)
@@ -231,7 +231,7 @@ FUN(PDFWidget_validateSignature)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		val = pdf_validate_signature(ctx, widget);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return val;
 }
@@ -248,7 +248,7 @@ FUN(PDFWidget_isSigned)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		val = !!pdf_widget_is_signed(ctx, widget);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return val;
 }
@@ -263,12 +263,12 @@ FUN(PDFWidget_checkCertificate)(JNIEnv *env, jobject self, jobject jverifier)
 	pdf_signature_error ret = PDF_SIGNATURE_ERROR_UNKNOWN;
 
 	if (!ctx || !widget || !pdf) return PDF_SIGNATURE_ERROR_UNKNOWN;
-	if (!verifier) return jni_throw_arg(env, "verifier must not be null"), PDF_SIGNATURE_ERROR_UNKNOWN;
+	if (!verifier) jni_throw_arg(env, "verifier must not be null");
 
 	fz_try(ctx)
 		ret = pdf_check_certificate(ctx, &verifier->base, pdf, widget->obj);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), PDF_SIGNATURE_ERROR_UNKNOWN;
+		jni_rethrow(env, ctx);
 
 	return ret;
 }
@@ -283,12 +283,12 @@ FUN(PDFWidget_checkDigest)(JNIEnv *env, jobject self, jobject jverifier)
 	pdf_signature_error ret = PDF_SIGNATURE_ERROR_UNKNOWN;
 
 	if (!ctx || !widget || !pdf) return PDF_SIGNATURE_ERROR_UNKNOWN;
-	if (!verifier) return jni_throw_arg(env, "verifier must not be null"), PDF_SIGNATURE_ERROR_UNKNOWN;
+	if (!verifier) jni_throw_arg(env, "verifier must not be null");
 
 	fz_try(ctx)
 		ret = pdf_check_digest(ctx, &verifier->base, pdf, widget->obj);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), PDF_SIGNATURE_ERROR_UNKNOWN;
+		jni_rethrow(env, ctx);
 
 	return ret;
 }
@@ -306,7 +306,7 @@ FUN(PDFWidget_incrementalChangeAfterSigning)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		change = pdf_signature_incremental_change_since_signing(ctx, pdf, widget->obj);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return change;
 }
@@ -323,11 +323,11 @@ FUN(PDFWidget_getDesignatedName)(JNIEnv *env, jobject self, jobject jverifier)
 	jobject jname;
 
 	if (!ctx || !widget || !pdf) return NULL;
-	if (!verifier) return jni_throw_arg(env, "verifier must not be null"), NULL;
+	if (!verifier) jni_throw_arg(env, "verifier must not be null");
 
 	jname = (*env)->NewObject(env, cls_PKCS7DesignatedName, mid_PKCS7DesignatedName_init);
 	if ((*env)->ExceptionCheck(env)) return NULL;
-	if (!jname) return jni_throw_run(env, "cannot create designated name object"), NULL;
+	if (!jname) jni_throw_run(env, "cannot create designated name object");
 
 	fz_try(ctx)
 	{
@@ -362,7 +362,7 @@ FUN(PDFWidget_getDesignatedName)(JNIEnv *env, jobject self, jobject jverifier)
 	fz_always(ctx)
 		pdf_signature_drop_designated_name(ctx, name);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	(*env)->SetObjectField(env, jname, fid_PKCS7DesignatedName_cn, jcn);
 	(*env)->SetObjectField(env, jname, fid_PKCS7DesignatedName_o, jo);
@@ -382,12 +382,12 @@ FUN(PDFWidget_sign)(JNIEnv *env, jobject self, jobject signer)
 	pdf_pkcs7_signer *pkcs7signer = from_PKCS7Signer_safe(env, signer);
 
 	if (!ctx || !widget || !pdf) return JNI_FALSE;
-	if (!pkcs7signer) return jni_throw_arg(env, "signer must not be null"), JNI_FALSE;
+	if (!pkcs7signer) jni_throw_arg(env, "signer must not be null");
 
 	fz_try(ctx)
 		pdf_sign_signature(ctx, widget, pkcs7signer);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return JNI_TRUE;
 }

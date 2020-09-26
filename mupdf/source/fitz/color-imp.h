@@ -44,7 +44,7 @@ fz_icc_link *fz_find_icc_link(fz_context *ctx,
 	int format,
 	int copy_spots);
 void fz_icc_transform_color(fz_context *ctx, fz_color_converter *cc, const float *src, float *dst);
-void fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, fz_pixmap *src, fz_pixmap *dst, int copy_spots);
+void fz_icc_transform_pixmap(fz_context *ctx, fz_icc_link *link, const fz_pixmap *src, fz_pixmap *dst, int copy_spots);
 
 #endif
 
@@ -86,10 +86,10 @@ void fz_drop_color_converter(fz_context *ctx, fz_color_converter *cc);
 	to the base cs of the image possibly needing to be treated as
 	being in one of the page default color spaces.
 */
-void fz_convert_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, fz_colorspace *prf, const fz_default_colorspaces *default_cs, fz_color_params color_params, int copy_spots);
-void fz_fast_any_to_alpha(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, int copy_spots);
-void fz_convert_fast_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, int copy_spots);
-void fz_convert_slow_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, fz_colorspace *prf, fz_color_params params, int copy_spots);
+void fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *prf, const fz_default_colorspaces *default_cs, fz_color_params color_params, int copy_spots);
+void fz_fast_any_to_alpha(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, int copy_spots);
+void fz_convert_fast_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, int copy_spots);
+void fz_convert_slow_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *prf, fz_color_params params, int copy_spots);
 
 
 

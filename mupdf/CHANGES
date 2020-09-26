@@ -1,17 +1,33 @@
 List of changes since the last release:
 
 	mutool draw: bbox output format.
+	mutool draw: structured text extraction in JSON format.
 	mutool run: StructuredText.walk()
 	mutool run: PDFPage.process() and PDFAnnotation.process()
 
 	mupdf-gl: Added IBM Common User Access shortcuts for copy & paste.
+	mupdf-gl: Improved redaction UI.
+
+	java: Example desktop Java viewer.
+
+	wasm: WebAssembly viewer that runs in a browser.
 
 	api: Dehyphenation option in structured text extraction, to improve searching
 		for words that are hyphenated across lines.
 	api: pdf_new_date, pdf_to_date, pdf_dict_put_date and pdf_dict_get_date.
 	api: Added choice of image redaction algorithms: none, full, partial.
+	api: Optional use of Tesseract to use OCR to extract text.
 
 	svg: Many small parsing fixes.
+	svg: Parse inline CSS style attributes.
+	svg: Text elements (simple text layout only).
+
+	html: Added HTML5 parser.
+
+	pdf: High security redaction -- save redacted PDF as flattened bitmap,
+		guaranteed to not leak any sensitive redacted information.
+
+	Experimental Python bindings.
 
 List of changes in MuPDF 1.17.0
 

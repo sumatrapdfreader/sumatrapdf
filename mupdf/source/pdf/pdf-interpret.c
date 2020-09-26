@@ -1056,6 +1056,20 @@ pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pd
 	}
 }
 
+/* Bug 702543: It looks like certain types of annotation are never
+ * printed. */
+static int
+pdf_should_print_annot(fz_context *ctx, pdf_annot *annot)
+{
+	enum pdf_annot_type type = pdf_annot_type(ctx, annot);
+
+	/* We may need to add more types here. */
+	if (type == PDF_ANNOT_FILE_ATTACHMENT)
+		return 0;
+
+	return 1;
+}
+
 void
 pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_page *page, pdf_annot *annot, fz_cookie *cookie)
 {
@@ -1070,8 +1084,13 @@ pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_p
 
 	if (proc->usage)
 	{
-		if (!strcmp(proc->usage, "Print") && !(flags & PDF_ANNOT_IS_PRINT))
+		if (!strcmp(proc->usage, "Print"))
+		{
+			if (!(flags & PDF_ANNOT_IS_PRINT))
 			return;
+			if (!pdf_should_print_annot(ctx, annot))
+				return;
+		}
 		if (!strcmp(proc->usage, "View") && (flags & PDF_ANNOT_IS_NO_VIEW))
 			return;
 	}

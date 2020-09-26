@@ -1523,6 +1523,8 @@ get_locked_fields_from_xfa(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 	node = fz_xml_find_down(node, "manifest");
 
 	use = fz_xml_att(node, "use");
+	if (use == NULL)
+		return NULL;
 	if (*use == '#')
 		use++;
 

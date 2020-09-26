@@ -20,7 +20,7 @@ FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle)
 	int n = 0;
 
 	if (!ctx || !text) return NULL;
-	if (!jneedle) return jni_throw_arg(env, "needle must not be null"), NULL;
+	if (!jneedle) jni_throw_arg(env, "needle must not be null");
 
 	needle = (*env)->GetStringUTFChars(env, jneedle, NULL);
 	if (!needle) return NULL;
@@ -30,7 +30,7 @@ FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle)
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_QuadArray_safe(ctx, env, hits, n);
 }
@@ -50,7 +50,7 @@ FUN(StructuredText_highlight)(JNIEnv *env, jobject self, jobject jpt1, jobject j
 	fz_try(ctx)
 		n = fz_highlight_selection(ctx, text, pt1, pt2, hits, nelem(hits));
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_QuadArray_safe(ctx, env, hits, n);
 }
@@ -69,7 +69,7 @@ FUN(StructuredText_snapSelection)(JNIEnv *env, jobject self, jobject jpt1, jobje
 	fz_try(ctx)
 		quad = fz_snap_selection(ctx, text, &pt1, &pt2, mode);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	(*env)->SetFloatField(env, jpt1, fid_Point_x, pt1.x);
 	(*env)->SetFloatField(env, jpt1, fid_Point_y, pt1.y);
@@ -101,7 +101,7 @@ FUN(StructuredText_copy)(JNIEnv *env, jobject self, jobject jpt1, jobject jpt2)
 	fz_always(ctx)
 		fz_free(ctx, s);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return jstring;
 }
@@ -122,7 +122,7 @@ FUN(StructuredText_walk)(JNIEnv *env, jobject self, jobject walker)
 	jobject jquad = NULL;
 
 	if (!ctx || !page) return;
-	if (!walker) return jni_throw_arg(env, "walker must not be null");
+	if (!walker) jni_throw_arg_void(env, "walker must not be null");
 
 	if (page->first_block == NULL)
 		return; /* structured text has no blocks to walk */

@@ -602,7 +602,7 @@ static fz_css_property *parse_declaration(struct lexbuf *buf)
 
 static fz_css_property *parse_declaration_list(struct lexbuf *buf)
 {
-	fz_css_property *head = NULL, *tail, *p;
+	fz_css_property *head, *tail = NULL, *p;
 
 	white(buf);
 
@@ -611,7 +611,8 @@ static fz_css_property *parse_declaration_list(struct lexbuf *buf)
 
 	p = parse_declaration(buf);
 	if (p)
-		head = tail = p;
+		tail = p;
+	head = tail;
 
 	while (accept(buf, ';'))
 	{

@@ -218,7 +218,7 @@ FUN(Document_openNativeWithStream)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 	if (jmagic)
 	{
 		magic = (*env)->GetStringUTFChars(env, jmagic, NULL);
-		if (!magic) return jni_throw_run(env, "cannot get characters in magic string"), NULL;
+		if (!magic) jni_throw_run(env, "cannot get characters in magic string");
 	}
 	if (jdocument)
 	{
@@ -226,7 +226,7 @@ FUN(Document_openNativeWithStream)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		if (!jdoc)
 		{
 			if (magic) (*env)->ReleaseStringUTFChars(env, jmagic, magic);
-			return jni_throw_run(env, "cannot get reference to document stream"), NULL;
+			jni_throw_run(env, "cannot get reference to document stream");
 		}
 	}
 	if (jaccelerator)
@@ -236,7 +236,7 @@ FUN(Document_openNativeWithStream)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		{
 			(*env)->DeleteGlobalRef(env, jdoc);
 			if (magic) (*env)->ReleaseStringUTFChars(env, jmagic, magic);
-			return jni_throw_run(env, "cannot get reference to accelerator stream"), NULL;
+			jni_throw_run(env, "cannot get reference to accelerator stream");
 		}
 	}
 
@@ -248,7 +248,7 @@ FUN(Document_openNativeWithStream)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		(*env)->DeleteGlobalRef(env, jacc);
 		(*env)->DeleteGlobalRef(env, jdoc);
 		if (magic) (*env)->ReleaseStringUTFChars(env, jmagic, magic);
-		return jni_throw_run(env, "cannot create internal buffer for document stream"), NULL;
+		jni_throw_run(env, "cannot create internal buffer for document stream");
 	}
 
 	accarray = (*env)->NewByteArray(env, sizeof accstate->buffer);
@@ -260,7 +260,7 @@ FUN(Document_openNativeWithStream)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		(*env)->DeleteGlobalRef(env, jacc);
 		(*env)->DeleteGlobalRef(env, jdoc);
 		if (magic) (*env)->ReleaseStringUTFChars(env, jmagic, magic);
-		return jni_throw_run(env, "cannot create internal buffer for accelerator stream"), NULL;
+		jni_throw_run(env, "cannot create internal buffer for accelerator stream");
 	}
 
 	fz_try(ctx)
@@ -312,7 +312,7 @@ FUN(Document_openNativeWithStream)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		(*env)->DeleteGlobalRef(env, docarray);
 		(*env)->DeleteGlobalRef(env, jacc);
 		(*env)->DeleteGlobalRef(env, jdoc);
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 	}
 
 	return to_Document_safe_own(ctx, env, doc);
@@ -330,12 +330,12 @@ FUN(Document_openNativeWithPath)(JNIEnv *env, jclass cls, jstring jfilename, jst
 	if (jfilename)
 	{
 		filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
-		if (!filename) return jni_throw_run(env, "cannot get characters in filename string"), NULL;
+		if (!filename) jni_throw_run(env, "cannot get characters in filename string");
 	}
 	if (jaccelerator)
 	{
 		accelerator = (*env)->GetStringUTFChars(env, jaccelerator, NULL);
-		if (!accelerator) return jni_throw_run(env, "cannot get characters in accelerator filename string"), NULL;
+		if (!accelerator) jni_throw_run(env, "cannot get characters in accelerator filename string");
 	}
 
 	fz_try(ctx)
@@ -348,7 +348,7 @@ FUN(Document_openNativeWithPath)(JNIEnv *env, jclass cls, jstring jfilename, jst
 			(*env)->ReleaseStringUTFChars(env, jfilename, filename);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Document_safe_own(ctx, env, doc);
 }
@@ -375,7 +375,7 @@ FUN(Document_openNativeWithPathAndStream)(JNIEnv *env, jclass cls, jstring jfile
 	if (jfilename)
 	{
 		filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
-		if (!filename) return jni_throw_run(env, "cannot get characters in filename string"), NULL;
+		if (!filename) jni_throw_run(env, "cannot get characters in filename string");
 	}
 	if (jaccelerator)
 	{
@@ -383,7 +383,7 @@ FUN(Document_openNativeWithPathAndStream)(JNIEnv *env, jclass cls, jstring jfile
 		if (!jacc)
 		{
 			if (jfilename) (*env)->ReleaseStringUTFChars(env, jfilename, filename);
-			return jni_throw_run(env, "cannot get reference to accelerator stream"), NULL;
+			jni_throw_run(env, "cannot get reference to accelerator stream");
 		}
 	}
 
@@ -394,7 +394,7 @@ FUN(Document_openNativeWithPathAndStream)(JNIEnv *env, jclass cls, jstring jfile
 	{
 		(*env)->DeleteGlobalRef(env, jacc);
 		if (jfilename) (*env)->ReleaseStringUTFChars(env, jfilename, filename);
-		return jni_throw_run(env, "cannot get create internal buffer for accelerator stream"), NULL;
+		jni_throw_run(env, "cannot get create internal buffer for accelerator stream");
 	}
 
 	fz_try(ctx)
@@ -430,7 +430,7 @@ FUN(Document_openNativeWithPathAndStream)(JNIEnv *env, jclass cls, jstring jfile
 	{
 		(*env)->DeleteGlobalRef(env, accarray);
 		(*env)->DeleteGlobalRef(env, jacc);
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 	}
 
 	return to_Document_safe_own(ctx, env, doc);
@@ -460,7 +460,7 @@ FUN(Document_openNativeWithBuffer)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 	{
 		magic = (*env)->GetStringUTFChars(env, jmagic, NULL);
 		if (!magic)
-			return jni_throw_run(env, "cannot get characters in magic string"), NULL;
+			jni_throw_run(env, "cannot get characters in magic string");
 	}
 	if (jbuffer)
 	{
@@ -470,7 +470,7 @@ FUN(Document_openNativeWithBuffer)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		if (!buffer)
 		{
 			if (magic) (*env)->ReleaseStringUTFChars(env, jmagic, magic);
-			return jni_throw_run(env, "cannot get document bytes to read"), NULL;
+			jni_throw_run(env, "cannot get document bytes to read");
 		}
 	}
 	if (jaccelerator)
@@ -482,7 +482,7 @@ FUN(Document_openNativeWithBuffer)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		{
 			if (buffer) (*env)->ReleaseByteArrayElements(env, jbuffer, buffer, 0);
 			if (magic) (*env)->ReleaseStringUTFChars(env, jmagic, magic);
-			return jni_throw_run(env, "cannot get accelerator bytes to read"), NULL;
+			jni_throw_run(env, "cannot get accelerator bytes to read");
 		}
 	}
 
@@ -516,7 +516,7 @@ FUN(Document_openNativeWithBuffer)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 	}
 	fz_catch(ctx)
 	{
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 	}
 
 	return to_Document_safe_own(ctx, env, doc);
@@ -541,7 +541,7 @@ FUN(Document_recognize)(JNIEnv *env, jclass cls, jstring jmagic)
 	fz_always(ctx)
 		if (magic) (*env)->ReleaseStringUTFChars(env, jmagic, magic);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return recognized;
 }
@@ -554,7 +554,7 @@ FUN(Document_saveAccelerator)(JNIEnv *env, jobject self, jstring jfilename)
 	const char *filename = "null";
 
 	if (!ctx || !doc) return;
-	if (!jfilename) return jni_throw_arg(env, "filename must not be null");
+	if (!jfilename) jni_throw_arg_void(env, "filename must not be null");
 
 	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
 	if (!filename) return;
@@ -564,7 +564,7 @@ FUN(Document_saveAccelerator)(JNIEnv *env, jobject self, jstring jfilename)
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -622,7 +622,7 @@ FUN(Document_outputAccelerator)(JNIEnv *env, jobject self, jobject jstream)
 		(*env)->DeleteGlobalRef(env, stream);
 		(*env)->DeleteGlobalRef(env, array);
 		fz_free(ctx, state);
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 	}
 }
 
@@ -638,7 +638,7 @@ FUN(Document_needsPassword)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		okay = fz_needs_password(ctx, doc);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return okay ? JNI_TRUE : JNI_FALSE;
 }
@@ -664,7 +664,7 @@ FUN(Document_authenticatePassword)(JNIEnv *env, jobject self, jstring jpassword)
 	fz_always(ctx)
 		if (password) (*env)->ReleaseStringUTFChars(env, jpassword, password);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return okay ? JNI_TRUE : JNI_FALSE;
 }
@@ -681,7 +681,7 @@ FUN(Document_countChapters)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		count = fz_count_chapters(ctx, doc);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return count;
 }
@@ -698,7 +698,7 @@ FUN(Document_countPages)(JNIEnv *env, jobject self, jint chapter)
 	fz_try(ctx)
 		count = fz_count_chapter_pages(ctx, doc, chapter);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return count;
 }
@@ -715,7 +715,7 @@ FUN(Document_isReflowable)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		is_reflowable = fz_is_document_reflowable(ctx, doc);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return is_reflowable ? JNI_TRUE : JNI_FALSE;
 }
@@ -731,7 +731,7 @@ FUN(Document_layout)(JNIEnv *env, jobject self, jfloat w, jfloat h, jfloat em)
 	fz_try(ctx)
 		fz_layout_document(ctx, doc, w, h, em);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jobject JNICALL
@@ -746,7 +746,7 @@ FUN(Document_loadPage)(JNIEnv *env, jobject self, jint chapter, jint number)
 	fz_try(ctx)
 		page = fz_load_chapter_page(ctx, doc, chapter, number);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Page_safe_own(ctx, env, page);
 }
@@ -760,7 +760,7 @@ FUN(Document_getMetaData)(JNIEnv *env, jobject self, jstring jkey)
 	char info[256];
 
 	if (!ctx || !doc) return NULL;
-	if (!jkey) return jni_throw_arg(env, "key must not be null"), NULL;
+	if (!jkey) jni_throw_arg(env, "key must not be null");
 
 	key = (*env)->GetStringUTFChars(env, jkey, NULL);
 	if (!key) return 0;
@@ -771,7 +771,7 @@ FUN(Document_getMetaData)(JNIEnv *env, jobject self, jstring jkey)
 		if (key)
 			(*env)->ReleaseStringUTFChars(env, jkey, key);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return (*env)->NewStringUTF(env, info);
 }
@@ -817,7 +817,7 @@ FUN(Document_loadOutline)(JNIEnv *env, jobject self)
 	fz_always(ctx)
 		fz_drop_outline(ctx, outline);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	if ((*env)->ExceptionCheck(env))
 		return NULL;
@@ -835,7 +835,7 @@ FUN(Document_makeBookmark)(JNIEnv *env, jobject self, jint chapter, jint page)
 	fz_try(ctx)
 		mark = fz_make_bookmark(ctx, doc, fz_make_location(chapter, page));
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return mark;
 }
@@ -850,7 +850,7 @@ FUN(Document_findBookmark)(JNIEnv *env, jobject self, jlong mark)
 	fz_try(ctx)
 		loc = fz_lookup_bookmark(ctx, doc, mark);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return (*env)->NewObject(env, cls_Location, mid_Location_init, loc.chapter, loc.page, 0, 0);
 }
@@ -877,7 +877,7 @@ FUN(Document_resolveLink)(JNIEnv *env, jobject self, jstring juri)
 		if (juri)
 			(*env)->ReleaseStringUTFChars(env, juri, uri);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return (*env)->NewObject(env, cls_Location, mid_Location_init, loc.chapter, loc.page, x, y);
 }
@@ -892,7 +892,7 @@ FUN(Document_hasPermission)(JNIEnv *env, jobject self, jint permission)
 	fz_try(ctx)
 		result = fz_has_permission(ctx, doc, permission);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return result;
 }
@@ -907,7 +907,7 @@ FUN(Document_search)(JNIEnv *env, jobject self, jint chapter, jint page, jstring
 	int n = 0;
 
 	if (!ctx || !page) return NULL;
-	if (!jneedle) return jni_throw_arg(env, "needle must not be null"), NULL;
+	if (!jneedle) jni_throw_arg(env, "needle must not be null");
 
 	needle = (*env)->GetStringUTFChars(env, jneedle, NULL);
 	if (!needle) return 0;
@@ -917,7 +917,7 @@ FUN(Document_search)(JNIEnv *env, jobject self, jint chapter, jint page, jstring
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_QuadArray_safe(ctx, env, hits, n);
 }

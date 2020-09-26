@@ -54,7 +54,7 @@ newNativeAndroidDrawDevice(JNIEnv *env, jobject self, fz_context *ctx, jobject o
 	{
 		fz_drop_pixmap(ctx, pixmap);
 		fz_free(ctx, ninfo);
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 	}
 
 	/* lockNativeDevice will already have raised a JNI error if there was one. */
@@ -76,7 +76,7 @@ static int androidDrawDevice_lock(JNIEnv *env, NativeDeviceInfo *info)
 	fz_context *ctx = get_context(env);
 	size_t size = info->width * info->height * 4;
 
-	if (!ctx) return jni_throw_run(env, "no context in DrawDevice call"), 1;
+	if (!ctx) jni_throw_run(env, "no context in DrawDevice call");
 
 	assert(info);
 	assert(info->object);
@@ -92,7 +92,7 @@ static int androidDrawDevice_lock(JNIEnv *env, NativeDeviceInfo *info)
 	if (ret != ANDROID_BITMAP_RESULT_SUCCESS)
 	{
 		info->pixmap->samples = NULL;
-		return jni_throw_run(env, "bitmap lock failed in DrawDevice call"), 1;
+		jni_throw_run(env, "bitmap lock failed in DrawDevice call");
 	}
 
 	/* Now offset pixels to allow for the page offsets */
@@ -110,7 +110,7 @@ static void androidDrawDevice_unlock(JNIEnv *env, NativeDeviceInfo *info)
 
 	info->pixmap->samples = NULL;
 	if (AndroidBitmap_unlockPixels(env, info->object) != ANDROID_BITMAP_RESULT_SUCCESS)
-		jni_throw_run(env, "bitmap unlock failed in DrawDevice call");
+		jni_throw_run_void(env, "bitmap unlock failed in DrawDevice call");
 }
 
 JNIEXPORT void JNICALL
@@ -128,13 +128,11 @@ FUN(android_AndroidDrawDevice_invertLuminance)(JNIEnv *env, jobject self)
 		return;
 
 	fz_try(ctx)
-	{
 		fz_invert_pixmap_luminance(ctx, info->pixmap);
-	}
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jlong JNICALL
@@ -146,19 +144,19 @@ FUN(android_AndroidDrawDevice_newNative)(JNIEnv *env, jclass self, jobject jbitm
 	int ret;
 
 	if (!ctx) return 0;
-	if (!jbitmap) return jni_throw_arg(env, "bitmap must not be null"), 0;
+	if (!jbitmap) jni_throw_arg(env, "bitmap must not be null");
 
 	if ((ret = AndroidBitmap_getInfo(env, jbitmap, &info)) != ANDROID_BITMAP_RESULT_SUCCESS)
-		return jni_throw_run(env, "new DrawDevice failed to get bitmap info"), 0;
+		jni_throw_run(env, "new DrawDevice failed to get bitmap info");
 	if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888)
-		return jni_throw_run(env, "new DrawDevice failed as bitmap format is not RGBA_8888"), 0;
+		jni_throw_run(env, "new DrawDevice failed as bitmap format is not RGBA_8888");
 	if (info.stride != info.width * 4)
-		return jni_throw_run(env, "new DrawDevice failed as bitmap width != stride"), 0;
+		jni_throw_run(env, "new DrawDevice failed as bitmap width != stride");
 
 	fz_try(ctx)
 		device = newNativeAndroidDrawDevice(env, self, ctx, jbitmap, info.width, info.height, androidDrawDevice_lock, androidDrawDevice_unlock, xOrigin, yOrigin, pX0, pY0, pX1, pY1);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return device;
 }

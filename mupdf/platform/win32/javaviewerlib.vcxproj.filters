@@ -4,6 +4,12 @@
     <Filter Include="com/artifex/mupdf/fitz">
       <UniqueIdentifier>{f8c210a2-298d-4611-a36f-205770920fff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="jni">
+      <UniqueIdentifier>{8422eec6-bf13-4fb2-a55c-b7a1a6db7eea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jni\android">
+      <UniqueIdentifier>{83fcde2c-3b4e-4639-a49f-64fd6e10adc4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\java\src\com\artifex\mupdf\fitz\Annotation.java">
@@ -126,6 +132,108 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\java\mupdf_native.c" />
+    <ClCompile Include="..\java\jni\buffer.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\colorspace.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\context.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\cookie.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\device.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\displaylist.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\displaylistdevice.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\document.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\documentwriter.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\drawdevice.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\fitzinputstream.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\font.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\image.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\nativedevice.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\page.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\path.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfannotation.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfdocument.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfgraftmap.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfobject.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfpage.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdfwidget.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pixmap.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pkcs7signer.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pkcs7verifier.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\rect.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\shade.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\strokestate.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\structuredtext.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\text.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\wrap.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\android\androiddrawdevice.c">
+      <Filter>jni\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\android\androidfonts.c">
+      <Filter>jni\android</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\android\androidimage.c">
+      <Filter>jni\android</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\java\mupdf_native.h" />

@@ -26,7 +26,7 @@ FUN(Pixmap_newNative)(JNIEnv *env, jobject self, jobject jcs, jint x, jint y, ji
 		pixmap->y = y;
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(pixmap);
 }
@@ -42,7 +42,7 @@ FUN(Pixmap_clear)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		fz_clear_pixmap(ctx, pixmap);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -56,7 +56,7 @@ FUN(Pixmap_clearWithValue)(JNIEnv *env, jobject self, jint value)
 	fz_try(ctx)
 		fz_clear_pixmap_with_value(ctx, pixmap, value);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -67,7 +67,7 @@ FUN(Pixmap_saveAsPNG)(JNIEnv *env, jobject self, jstring jfilename)
 	const char *filename = "null";
 
 	if (!ctx || !pixmap) return;
-	if (!jfilename) return jni_throw_arg(env, "filename must not be null");
+	if (!jfilename) jni_throw_arg_void(env, "filename must not be null");
 
 	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
 	if (!filename) return;
@@ -77,7 +77,7 @@ FUN(Pixmap_saveAsPNG)(JNIEnv *env, jobject self, jstring jfilename)
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jint JNICALL
@@ -141,7 +141,7 @@ FUN(Pixmap_getColorSpace)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		cs = fz_pixmap_colorspace(ctx, pixmap);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_ColorSpace_safe(ctx, env, cs);
 }
@@ -157,7 +157,7 @@ FUN(Pixmap_getSamples)(JNIEnv *env, jobject self)
 	if (!ctx | !pixmap) return NULL;
 
 	arr = (*env)->NewByteArray(env, size);
-	if (!arr || (*env)->ExceptionCheck(env)) return jni_throw_run(env, "cannot create byte array"), NULL;
+	if (!arr || (*env)->ExceptionCheck(env)) jni_throw_run(env, "cannot create byte array");
 
 	(*env)->SetByteArrayRegion(env, arr, 0, size, (const jbyte *)pixmap->samples);
 	if ((*env)->ExceptionCheck(env)) return NULL;
@@ -173,9 +173,9 @@ FUN(Pixmap_getSample)(JNIEnv *env, jobject self, jint x, jint y, jint k)
 
 	if (!ctx | !pixmap) return 0;
 
-	if (x < 0 || x >= pixmap->w) return jni_throw_oob(env, "x out of range"), 0;
-	if (y < 0 || y >= pixmap->h) return jni_throw_oob(env, "y out of range"), 0;
-	if (k < 0 || k >= pixmap->n) return jni_throw_oob(env, "k out of range"), 0;
+	if (x < 0 || x >= pixmap->w) jni_throw_oob(env, "x out of range");
+	if (y < 0 || y >= pixmap->h) jni_throw_oob(env, "y out of range");
+	if (k < 0 || k >= pixmap->n) jni_throw_oob(env, "k out of range");
 
 	return pixmap->samples[(x + y * pixmap->w) * pixmap->n + k];
 }
@@ -191,9 +191,9 @@ FUN(Pixmap_getPixels)(JNIEnv *env, jobject self)
 	if (!ctx | !pixmap) return NULL;
 
 	if (pixmap->n != 4 || !pixmap->alpha)
-		return jni_throw_run(env, "invalid colorspace for getPixels (must be RGB/BGR with alpha)"), NULL;
+		jni_throw_run(env, "invalid colorspace for getPixels (must be RGB/BGR with alpha)");
 	if (size * 4 != pixmap->h * pixmap->stride)
-		return jni_throw_run(env, "invalid stride for getPixels"), NULL;
+		jni_throw_run(env, "invalid stride for getPixels");
 
 	arr = (*env)->NewIntArray(env, size);
 	if (!arr || (*env)->ExceptionCheck(env)) return NULL;
@@ -229,7 +229,7 @@ FUN(Pixmap_invert)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		fz_invert_pixmap(ctx, pixmap);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -243,7 +243,7 @@ FUN(Pixmap_invertLuminance)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		fz_invert_pixmap_luminance(ctx, pixmap);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -257,7 +257,7 @@ FUN(Pixmap_gamma)(JNIEnv *env, jobject self, jfloat gamma)
 	fz_try(ctx)
 		fz_gamma_pixmap(ctx, pixmap, gamma);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -271,5 +271,5 @@ FUN(Pixmap_tint)(JNIEnv *env, jobject self, jint black, jint white)
 	fz_try(ctx)
 		fz_tint_pixmap(ctx, pixmap, black, white);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }

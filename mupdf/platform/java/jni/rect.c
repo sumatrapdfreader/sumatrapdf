@@ -9,12 +9,12 @@ FUN(Rect_adjustForStroke)(JNIEnv *env, jobject self, jobject jstroke, jobject jc
 	fz_matrix ctm = from_Matrix(env, jctm);
 
 	if (!ctx) return;
-	if (!stroke) return jni_throw_arg(env, "stroke must not be null");
+	if (!stroke) jni_throw_arg_void(env, "stroke must not be null");
 
 	fz_try(ctx)
 		rect = fz_adjust_rect_for_stroke(ctx, rect, stroke, ctm);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 
 	(*env)->SetFloatField(env, self, fid_Rect_x0, rect.x0);
 	(*env)->SetFloatField(env, self, fid_Rect_x1, rect.x1);

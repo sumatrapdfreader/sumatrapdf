@@ -389,7 +389,7 @@ static fz_device *fz_new_java_device(fz_context *ctx, JNIEnv *env, jclass cls)
 	fz_catch(ctx)
 	{
 		fz_drop_device(ctx, &dev->super);
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 	}
 
 	return (fz_device *)dev;
@@ -406,7 +406,7 @@ FUN(Device_newNative)(JNIEnv *env, jclass cls)
 	fz_try(ctx)
 		dev = fz_new_java_device(ctx, env, cls);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(dev);
 }

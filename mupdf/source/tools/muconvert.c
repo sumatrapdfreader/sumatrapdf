@@ -106,6 +106,7 @@ static void runrange(const char *range)
 int muconvert_main(int argc, char **argv)
 {
 	int i, c;
+	int retval = EXIT_SUCCESS;
 
 	while ((c = fz_getopt(argc, argv, "p:A:W:H:S:U:Xo:F:O:")) != -1)
 	{
@@ -169,6 +170,8 @@ int muconvert_main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
+	fz_try(ctx)
+	{
 	for (i = fz_optind; i < argc; ++i)
 	{
 		doc = fz_open_document(ctx, argv[i]);
@@ -184,11 +187,17 @@ int muconvert_main(int argc, char **argv)
 			runrange("1-N");
 
 		fz_drop_document(ctx, doc);
+			doc = NULL;
 	}
+	}
+	fz_always(ctx)
+		fz_drop_document(ctx, doc);
+	fz_catch(ctx)
+		retval = EXIT_FAILURE;
 
 	fz_close_document_writer(ctx, out);
 
 	fz_drop_document_writer(ctx, out);
 	fz_drop_context(ctx);
-	return EXIT_SUCCESS;
+	return retval;
 }

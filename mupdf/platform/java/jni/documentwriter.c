@@ -20,7 +20,7 @@ FUN(DocumentWriter_newNativeDocumentWriter)(JNIEnv *env, jobject self, jstring j
 	const char *options = NULL;
 
 	if (!ctx || !wri) return 0;
-	if (!jfilename) return jni_throw_arg(env, "filename must not be null"), 0;
+	if (!jfilename) jni_throw_arg(env, "filename must not be null");
 
 	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
 	if (!filename) return 0;
@@ -57,7 +57,7 @@ FUN(DocumentWriter_newNativeDocumentWriter)(JNIEnv *env, jobject self, jstring j
 		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(wri);
 }
@@ -75,7 +75,7 @@ FUN(DocumentWriter_beginPage)(JNIEnv *env, jobject self, jobject jmediabox)
 	fz_try(ctx)
 		device = fz_begin_page(ctx, wri, mediabox);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Device_safe_own(ctx, env, device);
 }
@@ -91,7 +91,7 @@ FUN(DocumentWriter_endPage)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		fz_end_page(ctx, wri);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -105,5 +105,5 @@ FUN(DocumentWriter_close)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		fz_close_document_writer(ctx, wri);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }

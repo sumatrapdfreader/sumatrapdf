@@ -99,7 +99,7 @@ FUN(NativeDevice_close)(JNIEnv *env, jobject self)
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 JNIEXPORT void JNICALL
 FUN(NativeDevice_fillPath)(JNIEnv *env, jobject self, jobject jpath, jboolean even_odd, jobject jctm, jobject jcs, jfloatArray jcolor, jfloat alpha, jint jcp)
@@ -115,7 +115,7 @@ FUN(NativeDevice_fillPath)(JNIEnv *env, jobject self, jobject jpath, jboolean ev
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!path) return jni_throw_arg(env, "path must not be null");
+	if (!path) jni_throw_arg_void(env, "path must not be null");
 	if (!from_jfloatArray(env, color, cs ? fz_colorspace_n(ctx, cs) : FZ_MAX_COLORS, jcolor)) return;
 
 	info = lockNativeDevice(env, self, &err);
@@ -126,7 +126,7 @@ FUN(NativeDevice_fillPath)(JNIEnv *env, jobject self, jobject jpath, jboolean ev
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -144,8 +144,8 @@ FUN(NativeDevice_strokePath)(JNIEnv *env, jobject self, jobject jpath, jobject j
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!path) return jni_throw_arg(env, "path must not be null");
-	if (!stroke) return jni_throw_arg(env, "stroke must not be null");
+	if (!path) jni_throw_arg_void(env, "path must not be null");
+	if (!stroke) jni_throw_arg_void(env, "stroke must not be null");
 	if (!from_jfloatArray(env, color, cs ? fz_colorspace_n(ctx, cs) : FZ_MAX_COLORS, jcolor)) return;
 
 	info = lockNativeDevice(env, self, &err);
@@ -156,7 +156,7 @@ FUN(NativeDevice_strokePath)(JNIEnv *env, jobject self, jobject jpath, jobject j
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -170,7 +170,7 @@ FUN(NativeDevice_clipPath)(JNIEnv *env, jobject self, jobject jpath, jboolean ev
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!path) return jni_throw_arg(env, "path must not be null");
+	if (!path) jni_throw_arg_void(env, "path must not be null");
 
 	info = lockNativeDevice(env, self, &err);
 	if (err)
@@ -180,7 +180,7 @@ FUN(NativeDevice_clipPath)(JNIEnv *env, jobject self, jobject jpath, jboolean ev
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -195,8 +195,8 @@ FUN(NativeDevice_clipStrokePath)(JNIEnv *env, jobject self, jobject jpath, jobje
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!path) return jni_throw_arg(env, "path must not be null");
-	if (!stroke) return jni_throw_arg(env, "stroke must not be null");
+	if (!path) jni_throw_arg_void(env, "path must not be null");
+	if (!stroke) jni_throw_arg_void(env, "stroke must not be null");
 
 	info = lockNativeDevice(env, self, &err);
 	if (err)
@@ -206,7 +206,7 @@ FUN(NativeDevice_clipStrokePath)(JNIEnv *env, jobject self, jobject jpath, jobje
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -223,7 +223,7 @@ FUN(NativeDevice_fillText)(JNIEnv *env, jobject self, jobject jtext, jobject jct
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!text) return jni_throw_arg(env, "text must not be null");
+	if (!text) jni_throw_arg_void(env, "text must not be null");
 	if (!from_jfloatArray(env, color, cs ? fz_colorspace_n(ctx, cs) : FZ_MAX_COLORS, jcolor)) return;
 
 	info = lockNativeDevice(env, self, &err);
@@ -234,7 +234,7 @@ FUN(NativeDevice_fillText)(JNIEnv *env, jobject self, jobject jtext, jobject jct
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -252,8 +252,8 @@ FUN(NativeDevice_strokeText)(JNIEnv *env, jobject self, jobject jtext, jobject j
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!text) return jni_throw_arg(env, "text must not be null");
-	if (!stroke) return jni_throw_arg(env, "stroke must not be null");
+	if (!text) jni_throw_arg_void(env, "text must not be null");
+	if (!stroke) jni_throw_arg_void(env, "stroke must not be null");
 	if (!from_jfloatArray(env, color, cs ? fz_colorspace_n(ctx, cs) : FZ_MAX_COLORS, jcolor)) return;
 
 	info = lockNativeDevice(env, self, &err);
@@ -264,7 +264,7 @@ FUN(NativeDevice_strokeText)(JNIEnv *env, jobject self, jobject jtext, jobject j
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -278,7 +278,7 @@ FUN(NativeDevice_clipText)(JNIEnv *env, jobject self, jobject jtext, jobject jct
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!text) return jni_throw_arg(env, "text must not be null");
+	if (!text) jni_throw_arg_void(env, "text must not be null");
 
 	info = lockNativeDevice(env, self, &err);
 	if (err)
@@ -288,7 +288,7 @@ FUN(NativeDevice_clipText)(JNIEnv *env, jobject self, jobject jtext, jobject jct
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -303,8 +303,8 @@ FUN(NativeDevice_clipStrokeText)(JNIEnv *env, jobject self, jobject jtext, jobje
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!text) return jni_throw_arg(env, "text must not be null");
-	if (!stroke) return jni_throw_arg(env, "stroke must not be null");
+	if (!text) jni_throw_arg_void(env, "text must not be null");
+	if (!stroke) jni_throw_arg_void(env, "stroke must not be null");
 
 	info = lockNativeDevice(env, self, &err);
 	if (err)
@@ -314,7 +314,7 @@ FUN(NativeDevice_clipStrokeText)(JNIEnv *env, jobject self, jobject jtext, jobje
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -328,7 +328,7 @@ FUN(NativeDevice_ignoreText)(JNIEnv *env, jobject self, jobject jtext, jobject j
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!text) return jni_throw_arg(env, "text must not be null");
+	if (!text) jni_throw_arg_void(env, "text must not be null");
 
 	info = lockNativeDevice(env, self, &err);
 	if (err)
@@ -338,7 +338,7 @@ FUN(NativeDevice_ignoreText)(JNIEnv *env, jobject self, jobject jtext, jobject j
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -353,7 +353,7 @@ FUN(NativeDevice_fillShade)(JNIEnv *env, jobject self, jobject jshd, jobject jct
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!shd) return jni_throw_arg(env, "shade must not be null");
+	if (!shd) jni_throw_arg_void(env, "shade must not be null");
 
 	info = lockNativeDevice(env, self, &err);
 	if (err)
@@ -363,7 +363,7 @@ FUN(NativeDevice_fillShade)(JNIEnv *env, jobject self, jobject jshd, jobject jct
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -378,7 +378,7 @@ FUN(NativeDevice_fillImage)(JNIEnv *env, jobject self, jobject jimg, jobject jct
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!img) return jni_throw_arg(env, "image must not be null");
+	if (!img) jni_throw_arg_void(env, "image must not be null");
 
 	info = lockNativeDevice(env, self, &err);
 	if (err)
@@ -388,7 +388,7 @@ FUN(NativeDevice_fillImage)(JNIEnv *env, jobject self, jobject jimg, jobject jct
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -405,7 +405,7 @@ FUN(NativeDevice_fillImageMask)(JNIEnv *env, jobject self, jobject jimg, jobject
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!img) return jni_throw_arg(env, "image must not be null");
+	if (!img) jni_throw_arg_void(env, "image must not be null");
 	if (!from_jfloatArray(env, color, cs ? fz_colorspace_n(ctx, cs) : FZ_MAX_COLORS, jcolor)) return;
 
 	info = lockNativeDevice(env, self, &err);
@@ -416,7 +416,7 @@ FUN(NativeDevice_fillImageMask)(JNIEnv *env, jobject self, jobject jimg, jobject
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -430,7 +430,7 @@ FUN(NativeDevice_clipImageMask)(JNIEnv *env, jobject self, jobject jimg, jobject
 	int err;
 
 	if (!ctx || !dev) return;
-	if (!img) return jni_throw_arg(env, "image must not be null");
+	if (!img) jni_throw_arg_void(env, "image must not be null");
 
 	info = lockNativeDevice(env, self, &err);
 	if (err)
@@ -440,7 +440,7 @@ FUN(NativeDevice_clipImageMask)(JNIEnv *env, jobject self, jobject jimg, jobject
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -461,7 +461,7 @@ FUN(NativeDevice_popClip)(JNIEnv *env, jobject self)
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -492,7 +492,7 @@ FUN(NativeDevice_beginLayer)(JNIEnv *env, jobject self, jstring jname)
 		unlockNativeDevice(env, info);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -513,7 +513,7 @@ FUN(NativeDevice_endLayer)(JNIEnv *env, jobject self)
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -539,7 +539,7 @@ FUN(NativeDevice_beginMask)(JNIEnv *env, jobject self, jobject jrect, jboolean l
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -560,7 +560,7 @@ FUN(NativeDevice_endMask)(JNIEnv *env, jobject self)
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -583,7 +583,7 @@ FUN(NativeDevice_beginGroup)(JNIEnv *env, jobject self, jobject jrect, jobject j
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -604,7 +604,7 @@ FUN(NativeDevice_endGroup)(JNIEnv *env, jobject self)
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jint JNICALL
@@ -629,7 +629,7 @@ FUN(NativeDevice_beginTile)(JNIEnv *env, jobject self, jobject jarea, jobject jv
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return i;
 }
@@ -652,5 +652,5 @@ FUN(NativeDevice_endTile)(JNIEnv *env, jobject self)
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }

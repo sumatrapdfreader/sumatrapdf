@@ -48,7 +48,7 @@ FUN(PDFDocument_newNative)(JNIEnv *env, jclass cls)
 	fz_try(ctx)
 		doc = pdf_create_document(ctx);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(doc);
 }
@@ -78,7 +78,7 @@ FUN(PDFDocument_countObjects)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		count = pdf_xref_len(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return count;
 }
@@ -132,7 +132,7 @@ FUN(PDFDocument_newInteger)(JNIEnv *env, jobject self, jint i)
 	fz_try(ctx)
 		obj = pdf_new_int(ctx, i);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), self);
 	if (!jobj)
@@ -153,7 +153,7 @@ FUN(PDFDocument_newReal)(JNIEnv *env, jobject self, jfloat f)
 	fz_try(ctx)
 		obj = pdf_new_real(ctx, f);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), self);
 	if (!jobj)
@@ -171,7 +171,7 @@ FUN(PDFDocument_newString)(JNIEnv *env, jobject self, jstring jstring)
 	jobject jobj;
 
 	if (!ctx || !pdf) return NULL;
-	if (!jstring) return jni_throw_arg(env, "string must not be null"), NULL;
+	if (!jstring) jni_throw_arg(env, "string must not be null");
 
 	s = (*env)->GetStringUTFChars(env, jstring, NULL);
 	if (!s) return NULL;
@@ -181,7 +181,7 @@ FUN(PDFDocument_newString)(JNIEnv *env, jobject self, jstring jstring)
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jstring, s);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), self);
 	if (!jobj)
@@ -200,14 +200,14 @@ FUN(PDFDocument_newByteString)(JNIEnv *env, jobject self, jobject jbs)
 	jobject jobj;
 
 	if (!ctx || !pdf) return NULL;
-	if (!jbs) return jni_throw_arg(env, "bs must not be null"), NULL;
+	if (!jbs) jni_throw_arg(env, "bs must not be null");
 
 	bslen = (*env)->GetArrayLength(env, jbs);
 
 	fz_try(ctx)
 		bs = Memento_label(fz_malloc(ctx, bslen), "PDFDocument_newByteString");
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	(*env)->GetByteArrayRegion(env, jbs, 0, bslen, bs);
 	if ((*env)->ExceptionCheck(env))
@@ -221,7 +221,7 @@ FUN(PDFDocument_newByteString)(JNIEnv *env, jobject self, jobject jbs)
 	fz_always(ctx)
 		fz_free(ctx, bs);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), self);
 	if (!jobj)
@@ -239,7 +239,7 @@ FUN(PDFDocument_newName)(JNIEnv *env, jobject self, jstring jname)
 	jobject jobj;
 
 	if (!ctx || !pdf) return NULL;
-	if (!jname) return jni_throw_arg(env, "name must not be null"), NULL;
+	if (!jname) jni_throw_arg(env, "name must not be null");
 
 	name = (*env)->GetStringUTFChars(env, jname, NULL);
 	if (!name) return NULL;
@@ -249,7 +249,7 @@ FUN(PDFDocument_newName)(JNIEnv *env, jobject self, jstring jname)
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jname, name);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), self);
 	if (!jobj)
@@ -270,7 +270,7 @@ FUN(PDFDocument_newIndirect)(JNIEnv *env, jobject self, jint num, jint gen)
 	fz_try(ctx)
 		obj = pdf_new_indirect(ctx, pdf, num, gen);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), self);
 	if (!jobj)
@@ -291,7 +291,7 @@ FUN(PDFDocument_newArray)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		obj = pdf_new_array(ctx, pdf, 0);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), self);
 	if (!jobj)
@@ -312,7 +312,7 @@ FUN(PDFDocument_newDictionary)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		obj = pdf_new_dict(ctx, pdf, 0);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), self);
 	if (!jobj)
@@ -328,12 +328,12 @@ FUN(PDFDocument_findPage)(JNIEnv *env, jobject self, jint jat)
 	pdf_obj *obj = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (jat < 0 || jat >= pdf_count_pages(ctx, pdf)) return jni_throw_oob(env, "at is not a valid page"), NULL;
+	if (jat < 0 || jat >= pdf_count_pages(ctx, pdf)) jni_throw_oob(env, "at is not a valid page");
 
 	fz_try(ctx)
 		obj = pdf_lookup_page_obj(ctx, pdf, jat);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe(ctx, env, self, obj);
 }
@@ -350,7 +350,7 @@ FUN(PDFDocument_getTrailer)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		obj = pdf_trailer(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe(ctx, env, self, obj);
 }
@@ -363,12 +363,12 @@ FUN(PDFDocument_addObject)(JNIEnv *env, jobject self, jobject jobj)
 	pdf_obj *obj = from_PDFObject(env, jobj);
 
 	if (!ctx || !pdf) return NULL;
-	if (!jobj) return jni_throw_arg(env, "object must not be null"), NULL;
+	if (!jobj) jni_throw_arg(env, "object must not be null");
 
 	fz_try(ctx)
 		obj = pdf_add_object_drop(ctx, pdf, obj);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return jobj;
 }
@@ -385,7 +385,7 @@ FUN(PDFDocument_createObject)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		ind = pdf_new_indirect(ctx, pdf, pdf_create_object(ctx, pdf), 0);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, ind);
 }
@@ -401,7 +401,7 @@ FUN(PDFDocument_deleteObject)(JNIEnv *env, jobject self, jint num)
 	fz_try(ctx)
 		pdf_delete_object(ctx, pdf, num);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jobject JNICALL
@@ -416,7 +416,7 @@ FUN(PDFDocument_newPDFGraftMap)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		map = pdf_new_graft_map(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFGraftMap_safe_own(ctx, env, self, map);
 }
@@ -429,13 +429,13 @@ FUN(PDFDocument_graftObject)(JNIEnv *env, jobject self, jobject jobj)
 	pdf_document *dst = from_PDFDocument(env, self);
 
 	if (!ctx || !dst) return NULL;
-	if (!dst) return jni_throw_arg(env, "dst must not be null"), NULL;
-	if (!obj) return jni_throw_arg(env, "object must not be null"), NULL;
+	if (!dst) jni_throw_arg(env, "dst must not be null");
+	if (!obj) jni_throw_arg(env, "object must not be null");
 
 	fz_try(ctx)
 		obj = pdf_graft_object(ctx, dst, obj);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, obj);
 }
@@ -450,12 +450,12 @@ FUN(PDFDocument_addStreamBuffer)(JNIEnv *env, jobject self, jobject jbuf, jobjec
 	pdf_obj *ind = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (!jbuf) return jni_throw_arg(env, "buffer must not be null"), NULL;
+	if (!jbuf) jni_throw_arg(env, "buffer must not be null");
 
 	fz_try(ctx)
 		ind = pdf_add_stream(ctx, pdf, buf, obj, compressed);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, ind);
 }
@@ -471,7 +471,7 @@ FUN(PDFDocument_addStreamString)(JNIEnv *env, jobject self, jstring jbuf, jobjec
 	pdf_obj *ind = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (!jbuf) return jni_throw_arg(env, "buffer must not be null"), NULL;
+	if (!jbuf) jni_throw_arg(env, "buffer must not be null");
 
 	sbuf = (*env)->GetStringUTFChars(env, jbuf, NULL);
 	if (!sbuf) return NULL;
@@ -489,7 +489,7 @@ FUN(PDFDocument_addStreamString)(JNIEnv *env, jobject self, jstring jbuf, jobjec
 		(*env)->ReleaseStringUTFChars(env, jbuf, sbuf);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, ind);
 }
@@ -505,13 +505,13 @@ FUN(PDFDocument_addPageBuffer)(JNIEnv *env, jobject self, jobject jmediabox, jin
 	pdf_obj *ind = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (!resources) return jni_throw_arg(env, "resources must not be null"), NULL;
-	if (!contents) return jni_throw_arg(env, "contents must not be null"), NULL;
+	if (!resources) jni_throw_arg(env, "resources must not be null");
+	if (!contents) jni_throw_arg(env, "contents must not be null");
 
 	fz_try(ctx)
 		ind = pdf_add_page(ctx, pdf, mediabox, rotate, resources, contents);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, ind);
 }
@@ -528,8 +528,8 @@ FUN(PDFDocument_addPageString)(JNIEnv *env, jobject self, jobject jmediabox, jin
 	pdf_obj *ind = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (!resources) return jni_throw_arg(env, "resources must not be null"), NULL;
-	if (!contents) return jni_throw_arg(env, "contents must not be null"), NULL;
+	if (!resources) jni_throw_arg(env, "resources must not be null");
+	if (!contents) jni_throw_arg(env, "contents must not be null");
 
 	scontents = (*env)->GetStringUTFChars(env, jcontents, NULL);
 	if (!scontents) return NULL;
@@ -547,7 +547,7 @@ FUN(PDFDocument_addPageString)(JNIEnv *env, jobject self, jobject jmediabox, jin
 		(*env)->ReleaseStringUTFChars(env, jcontents, scontents);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, ind);
 }
@@ -561,13 +561,13 @@ FUN(PDFDocument_insertPage)(JNIEnv *env, jobject self, jint jat, jobject jpage)
 	pdf_obj *page = from_PDFObject(env, jpage);
 
 	if (!ctx || !pdf) return;
-	if (jat < 0 || jat >= pdf_count_pages(ctx, pdf)) return jni_throw_oob(env, "at is not a valid page");
-	if (!page) return jni_throw_arg(env, "page must not be null");
+	if (jat < 0 || jat >= pdf_count_pages(ctx, pdf)) jni_throw_oob_void(env, "at is not a valid page");
+	if (!page) jni_throw_arg_void(env, "page must not be null");
 
 	fz_try(ctx)
 		pdf_insert_page(ctx, pdf, at, page);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -578,12 +578,12 @@ FUN(PDFDocument_deletePage)(JNIEnv *env, jobject self, jint jat)
 	int at = jat;
 
 	if (!ctx || !pdf) return;
-	if (jat < 0 || jat >= pdf_count_pages(ctx, pdf)) return jni_throw_oob(env, "at is not a valid page");
+	if (jat < 0 || jat >= pdf_count_pages(ctx, pdf)) jni_throw_oob_void(env, "at is not a valid page");
 
 	fz_try(ctx)
 		pdf_delete_page(ctx, pdf, at);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jobject JNICALL
@@ -595,12 +595,12 @@ FUN(PDFDocument_addImage)(JNIEnv *env, jobject self, jobject jimage)
 	pdf_obj *ind = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (!image) return jni_throw_arg(env, "image must not be null"), NULL;
+	if (!image) jni_throw_arg(env, "image must not be null");
 
 	fz_try(ctx)
 		ind = pdf_add_image(ctx, pdf, image);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, ind);
 }
@@ -614,12 +614,12 @@ FUN(PDFDocument_addFont)(JNIEnv *env, jobject self, jobject jfont)
 	pdf_obj *ind = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (!font) return jni_throw_arg(env, "font must not be null"), NULL;
+	if (!font) jni_throw_arg(env, "font must not be null");
 
 	fz_try(ctx)
 		ind = pdf_add_cid_font(ctx, pdf, font);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, ind);
 }
@@ -633,12 +633,12 @@ FUN(PDFDocument_addCJKFont)(JNIEnv *env, jobject self, jobject jfont, jint order
 	pdf_obj *ind = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (!font) return jni_throw_arg(env, "font must not be null"), NULL;
+	if (!font) jni_throw_arg(env, "font must not be null");
 
 	fz_try(ctx)
 		ind = pdf_add_cjk_font(ctx, pdf, font, ordering, wmode, serif);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, ind);
 }
@@ -652,12 +652,12 @@ FUN(PDFDocument_addSimpleFont)(JNIEnv *env, jobject self, jobject jfont, jint en
 	pdf_obj *ind = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (!font) return jni_throw_arg(env, "font must not be null"), NULL;
+	if (!font) jni_throw_arg(env, "font must not be null");
 
 	fz_try(ctx)
 		ind = pdf_add_simple_font(ctx, pdf, font, encoding);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, self, ind);
 }
@@ -695,7 +695,7 @@ SeekableOutputStream_as_stream(fz_context *ctx, void *opaque)
 	stm->seek = SeekableInputStream_seek;
 
 	return stm;
-};
+}
 
 JNIEXPORT void JNICALL
 FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream, jstring joptions)
@@ -715,7 +715,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 	fz_var(array);
 
 	if (!ctx || !pdf) return;
-	if (!stream) return jni_throw_arg(env, "stream must not be null");
+	if (!stream) jni_throw_arg_void(env, "stream must not be null");
 
 	if (joptions)
 	{
@@ -741,7 +741,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 	{
 		if (options) (*env)->ReleaseStringUTFChars(env, joptions, options);
 		(*env)->DeleteGlobalRef(env, stream);
-		return jni_throw_run(env, "cannot create byte array");
+		jni_throw_run_void(env, "cannot create byte array");
 	}
 
 	array = (*env)->NewGlobalRef(env, array);
@@ -749,7 +749,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 	{
 		if (options) (*env)->ReleaseStringUTFChars(env, joptions, options);
 		(*env)->DeleteGlobalRef(env, stream);
-		return jni_throw_run(env, "cannot create global reference");
+		jni_throw_run_void(env, "cannot create global reference");
 	}
 
 	fz_try(ctx)
@@ -789,7 +789,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 	{
 		(*env)->DeleteGlobalRef(env, array);
 		(*env)->DeleteGlobalRef(env, stream);
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 	}
 }
 
@@ -803,7 +803,7 @@ FUN(PDFDocument_save)(JNIEnv *env, jobject self, jstring jfilename, jstring jopt
 	pdf_write_options pwo;
 
 	if (!ctx || !pdf) return;
-	if (!jfilename) return jni_throw_arg(env, "filename must not be null");
+	if (!jfilename) jni_throw_arg_void(env, "filename must not be null");
 
 	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
 	if (!filename) return;
@@ -830,7 +830,7 @@ FUN(PDFDocument_save)(JNIEnv *env, jobject self, jstring jfilename, jstring jopt
 		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -844,7 +844,7 @@ FUN(PDFDocument_enableJs)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		pdf_enable_js(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -858,7 +858,7 @@ FUN(PDFDocument_disableJs)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		pdf_disable_js(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jboolean JNICALL
@@ -873,7 +873,7 @@ FUN(PDFDocument_isJsSupported)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		supported = pdf_js_supported(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return supported;
 }
@@ -886,10 +886,10 @@ FUN(PDFDocument_setJsEventListener)(JNIEnv *env, jobject self, jobject jlistener
 	void *data = NULL;
 
 	if (!ctx || !pdf) return;
-	if (!jlistener) return jni_throw_arg(env, "listener must not be null");
+	if (!jlistener) jni_throw_arg_void(env, "listener must not be null");
 
 	jlistener = (*env)->NewGlobalRef(env, jlistener);
-	if (!jlistener) return jni_throw_arg(env, "unable to get reference to listener");
+	if (!jlistener) jni_throw_arg_void(env, "unable to get reference to listener");
 
 	fz_try(ctx)
 	{
@@ -899,7 +899,7 @@ FUN(PDFDocument_setJsEventListener)(JNIEnv *env, jobject self, jobject jlistener
 		pdf_set_doc_event_callback(ctx, pdf, event_cb, jlistener);
 	}
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -914,7 +914,7 @@ FUN(PDFDocument_calculate)(JNIEnv *env, jobject self)
 		if (pdf->recalculate)
 			pdf_calculate_form(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT jint JNICALL
@@ -929,7 +929,7 @@ FUN(PDFDocument_countVersions)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		val = pdf_count_versions(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return val;
 }
@@ -946,7 +946,7 @@ FUN(PDFDocument_countUnsavedVersions)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		val = pdf_count_unsaved_versions(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return val;
 }
@@ -963,7 +963,7 @@ FUN(PDFDocument_validateChangeHistory)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		val = pdf_validate_change_history(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return val;
 }
@@ -980,7 +980,7 @@ FUN(PDFDocument_wasPureXFA)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		val = pdf_was_pure_xfa(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return val;
 }
@@ -997,7 +997,23 @@ FUN(PDFDocument_wasLinearized)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		val = pdf_doc_was_linearized(ctx, pdf);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), JNI_FALSE;
+		jni_rethrow(env, ctx);
 
 	return val;
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_graftPage)(JNIEnv *env, jobject self, jint pageTo, jobject jobj, jint pageFrom)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *src = from_PDFDocument(env, jobj);
+	pdf_document *dst = from_PDFDocument(env, self);
+
+	if (!ctx || !dst) return;
+	if (!src) jni_throw_arg_void(env, "Source Document must not be null");
+
+	fz_try(ctx)
+		pdf_graft_page(ctx, dst, pageTo, src, pageFrom);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
 }

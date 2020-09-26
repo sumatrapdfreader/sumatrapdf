@@ -1329,18 +1329,22 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_SOUND 18L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_MOVIE
 #define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_MOVIE 19L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_RICH_MEDIA
+#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_RICH_MEDIA 20L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_WIDGET
-#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_WIDGET 20L
+#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_WIDGET 21L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_SCREEN
-#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_SCREEN 21L
+#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_SCREEN 22L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_PRINTER_MARK
-#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_PRINTER_MARK 22L
+#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_PRINTER_MARK 23L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_TRAP_NET
-#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_TRAP_NET 23L
+#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_TRAP_NET 24L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_WATERMARK
-#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_WATERMARK 24L
+#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_WATERMARK 25L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_3D
-#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_3D 25L
+#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_3D 26L
+#undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_PROJECTION
+#define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_PROJECTION 27L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_TYPE_UNKNOWN
 #define com_artifex_mupdf_fitz_PDFAnnotation_TYPE_UNKNOWN -1L
 #undef com_artifex_mupdf_fitz_PDFAnnotation_LINE_ENDING_NONE
@@ -1974,6 +1978,14 @@ JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_graftObject
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    graftPage
+ * Signature: (ILcom/artifex/mupdf/fitz/PDFDocument;I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_graftPage
+  (JNIEnv *, jobject, jint, jobject, jint);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
  * Method:    addStreamBuffer
  * Signature: (Lcom/artifex/mupdf/fitz/Buffer;Ljava/lang/Object;Z)Lcom/artifex/mupdf/fitz/PDFObject;
  */
@@ -2192,6 +2204,14 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFGraftMap_finalize
  */
 JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFGraftMap_graftObject
   (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFGraftMap
+ * Method:    graftPage
+ * Signature: (ILcom/artifex/mupdf/fitz/PDFDocument;I)V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFGraftMap_graftPage
+  (JNIEnv *, jobject, jint, jobject, jint);
 
 #ifdef __cplusplus
 }
@@ -2790,18 +2810,22 @@ extern "C" {
 #define com_artifex_mupdf_fitz_PDFWidget_TYPE_SOUND 18L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_MOVIE
 #define com_artifex_mupdf_fitz_PDFWidget_TYPE_MOVIE 19L
+#undef com_artifex_mupdf_fitz_PDFWidget_TYPE_RICH_MEDIA
+#define com_artifex_mupdf_fitz_PDFWidget_TYPE_RICH_MEDIA 20L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_WIDGET
-#define com_artifex_mupdf_fitz_PDFWidget_TYPE_WIDGET 20L
+#define com_artifex_mupdf_fitz_PDFWidget_TYPE_WIDGET 21L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_SCREEN
-#define com_artifex_mupdf_fitz_PDFWidget_TYPE_SCREEN 21L
+#define com_artifex_mupdf_fitz_PDFWidget_TYPE_SCREEN 22L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_PRINTER_MARK
-#define com_artifex_mupdf_fitz_PDFWidget_TYPE_PRINTER_MARK 22L
+#define com_artifex_mupdf_fitz_PDFWidget_TYPE_PRINTER_MARK 23L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_TRAP_NET
-#define com_artifex_mupdf_fitz_PDFWidget_TYPE_TRAP_NET 23L
+#define com_artifex_mupdf_fitz_PDFWidget_TYPE_TRAP_NET 24L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_WATERMARK
-#define com_artifex_mupdf_fitz_PDFWidget_TYPE_WATERMARK 24L
+#define com_artifex_mupdf_fitz_PDFWidget_TYPE_WATERMARK 25L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_3D
-#define com_artifex_mupdf_fitz_PDFWidget_TYPE_3D 25L
+#define com_artifex_mupdf_fitz_PDFWidget_TYPE_3D 26L
+#undef com_artifex_mupdf_fitz_PDFWidget_TYPE_PROJECTION
+#define com_artifex_mupdf_fitz_PDFWidget_TYPE_PROJECTION 27L
 #undef com_artifex_mupdf_fitz_PDFWidget_TYPE_UNKNOWN
 #define com_artifex_mupdf_fitz_PDFWidget_TYPE_UNKNOWN -1L
 #undef com_artifex_mupdf_fitz_PDFWidget_LINE_ENDING_NONE

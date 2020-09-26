@@ -26,22 +26,22 @@ fz_irect fz_pixmap_bbox(fz_context *ctx, const fz_pixmap *pix);
 /**
 	Return the width of the pixmap in pixels.
 */
-int fz_pixmap_width(fz_context *ctx, fz_pixmap *pix);
+int fz_pixmap_width(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Return the height of the pixmap in pixels.
 */
-int fz_pixmap_height(fz_context *ctx, fz_pixmap *pix);
+int fz_pixmap_height(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Return the x value of the pixmap in pixels.
 */
-int fz_pixmap_x(fz_context *ctx, fz_pixmap *pix);
+int fz_pixmap_x(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Return the y value of the pixmap in pixels.
 */
-int fz_pixmap_y(fz_context *ctx, fz_pixmap *pix);
+int fz_pixmap_y(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Create a new pixmap, with its origin at (0,0)
@@ -153,7 +153,7 @@ fz_pixmap *fz_new_pixmap_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, const f
 
 	The reference count of 'old' is unchanged.
 */
-fz_pixmap *fz_clone_pixmap(fz_context *ctx, fz_pixmap *old);
+fz_pixmap *fz_clone_pixmap(fz_context *ctx, const fz_pixmap *old);
 
 /**
 	Increment the reference count for the pixmap. The same pointer
@@ -176,14 +176,14 @@ void fz_drop_pixmap(fz_context *ctx, fz_pixmap *pix);
 
 	Returns colorspace.
 */
-fz_colorspace *fz_pixmap_colorspace(fz_context *ctx, fz_pixmap *pix);
+fz_colorspace *fz_pixmap_colorspace(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Return the number of components in a pixmap.
 
 	Returns the number of components (including spots and alpha).
 */
-int fz_pixmap_components(fz_context *ctx, fz_pixmap *pix);
+int fz_pixmap_components(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Return the number of colorants in a pixmap.
@@ -191,7 +191,7 @@ int fz_pixmap_components(fz_context *ctx, fz_pixmap *pix);
 	Returns the number of colorants (components, less any spots and
 	alpha).
 */
-int fz_pixmap_colorants(fz_context *ctx, fz_pixmap *pix);
+int fz_pixmap_colorants(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Return the number of spots in a pixmap.
@@ -199,26 +199,26 @@ int fz_pixmap_colorants(fz_context *ctx, fz_pixmap *pix);
 	Returns the number of spots (components, less colorants and
 	alpha). Does not throw exceptions.
 */
-int fz_pixmap_spots(fz_context *ctx, fz_pixmap *pix);
+int fz_pixmap_spots(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Return the number of alpha planes in a pixmap.
 
 	Returns the number of alphas. Does not throw exceptions.
 */
-int fz_pixmap_alpha(fz_context *ctx, fz_pixmap *pix);
+int fz_pixmap_alpha(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Returns a pointer to the pixel data of a pixmap.
 
 	Returns the pointer.
 */
-unsigned char *fz_pixmap_samples(fz_context *ctx, fz_pixmap *pix);
+unsigned char *fz_pixmap_samples(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Return the number of bytes in a row in the pixmap.
 */
-int fz_pixmap_stride(fz_context *ctx, fz_pixmap *pix);
+int fz_pixmap_stride(fz_context *ctx, const fz_pixmap *pix);
 
 /**
 	Set the pixels per inch resolution of the pixmap.
@@ -327,7 +327,7 @@ void fz_gamma_pixmap(fz_context *ctx, fz_pixmap *pix, float gamma);
 	keep_alpha: If 0 any alpha component is removed, otherwise
 	alpha is kept if present in the pixmap.
 */
-fz_pixmap *fz_convert_pixmap(fz_context *ctx, fz_pixmap *pix, fz_colorspace *cs_des, fz_colorspace *prf, fz_default_colorspaces *default_cs, fz_color_params color_params, int keep_alpha);
+fz_pixmap *fz_convert_pixmap(fz_context *ctx, const fz_pixmap *pix, fz_colorspace *cs_des, fz_colorspace *prf, fz_default_colorspaces *default_cs, fz_color_params color_params, int keep_alpha);
 
 /**
 	Check if the pixmap is a 1-channel image containing samples with

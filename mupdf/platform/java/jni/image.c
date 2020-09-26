@@ -18,12 +18,12 @@ FUN(Image_newNativeFromPixmap)(JNIEnv *env, jobject self, jobject jpixmap)
 	fz_image *image = NULL;
 
 	if (!ctx) return 0;
-	if (!pixmap) return jni_throw_arg(env, "pixmap must not be null"), 0;
+	if (!pixmap) jni_throw_arg(env, "pixmap must not be null");
 
 	fz_try(ctx)
 		image = fz_new_image_from_pixmap(ctx, pixmap, NULL);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(image);
 }
@@ -36,7 +36,7 @@ FUN(Image_newNativeFromFile)(JNIEnv *env, jobject self, jstring jfilename)
 	fz_image *image = NULL;
 
 	if (!ctx) return 0;
-	if (!jfilename) return jni_throw_arg(env, "filename must not be null"), 0;
+	if (!jfilename) jni_throw_arg(env, "filename must not be null");
 
 	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
 	if (!filename) return 0;
@@ -46,7 +46,7 @@ FUN(Image_newNativeFromFile)(JNIEnv *env, jobject self, jstring jfilename)
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(image);
 }
@@ -139,7 +139,7 @@ FUN(Image_toPixmap)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		pixmap = fz_get_pixmap_from_image(ctx, img, NULL, NULL, NULL, NULL);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Pixmap_safe_own(ctx, env, pixmap);
 }

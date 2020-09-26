@@ -4538,6 +4538,19 @@ static void ffi_PDFDocument_graftObject(js_State *J)
 	ffi_pushobj(J, obj);
 }
 
+static void ffi_PDFDocument_graftPage(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_document *dst = js_touserdata(J, 0, "pdf_document");
+	int to = js_tonumber(J, 1);
+	pdf_document *src = js_touserdata(J, 2, "pdf_document");
+	int from = js_tonumber(J, 3);
+	fz_try(ctx)
+		pdf_graft_page(ctx, dst, to, src, from);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
 static void ffi_PDFGraftMap_graftObject(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -4548,6 +4561,19 @@ static void ffi_PDFGraftMap_graftObject(js_State *J)
 	fz_catch(ctx)
 		rethrow(J);
 	ffi_pushobj(J, obj);
+}
+
+static void ffi_PDFGraftMap_graftPage(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_graft_map *map = js_touserdata(J, 0, "pdf_graft_map");
+	int to = js_tointeger(J, 1);
+	pdf_document *src = js_touserdata(J, 2, "pdf_document");
+	int from = js_tointeger(J, 3);
+	fz_try(ctx)
+		pdf_graft_mapped_page(ctx, map, to, src, from);
+	fz_catch(ctx)
+		rethrow(J);
 }
 
 static void ffi_PDFObject_get(js_State *J)
@@ -6327,6 +6353,7 @@ int murun_main(int argc, char **argv)
 
 		jsB_propfun(J, "PDFDocument.newGraftMap", ffi_PDFDocument_newGraftMap, 0);
 		jsB_propfun(J, "PDFDocument.graftObject", ffi_PDFDocument_graftObject, 1);
+		jsB_propfun(J, "PDFDocument.graftPage", ffi_PDFDocument_graftPage, 3);
 
 		jsB_propfun(J, "PDFDocument.enableJS", ffi_PDFDocument_enableJS, 0);
 		jsB_propfun(J, "PDFDocument.countVersions", ffi_PDFDocument_countVersions, 0);
@@ -6484,6 +6511,7 @@ int murun_main(int argc, char **argv)
 	js_newobjectx(J);
 	{
 		jsB_propfun(J, "PDFGraftMap.graftObject", ffi_PDFGraftMap_graftObject, 1);
+		jsB_propfun(J, "PDFGraftMap.graftPage", ffi_PDFGraftMap_graftPage, 3);
 	}
 	js_setregistry(J, "pdf_graft_map");
 #endif

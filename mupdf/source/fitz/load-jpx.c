@@ -723,6 +723,143 @@ static OPJ_BOOL fz_opj_stream_seek(OPJ_OFF_T seek_pos, void * p_user_data)
 	return OPJ_TRUE;
 }
 
+static int32_t
+safe_mul32(fz_context *ctx, int32_t a, int32_t b)
+{
+	int64_t res = ((int64_t)a) * b;
+	int32_t res32 = (int32_t)res;
+
+	if ((res32) != res)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Overflow while decoding jpx");
+	return res32;
+}
+
+static int32_t
+safe_mla32(fz_context *ctx, int32_t a, int32_t b, int32_t c)
+{
+	int64_t res = ((int64_t)a) * b + c;
+	int32_t res32 = (int32_t)res;
+
+	if ((res32) != res)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Overflow while decoding jpx");
+	return res32;
+}
+
+static inline void
+template_copy_comp(unsigned char *dst0, int w, int h, int stride, const OPJ_INT32 *src, int32_t ox, int32_t oy, OPJ_UINT32 cdx, OPJ_UINT32 cdy, OPJ_UINT32 cw, OPJ_UINT32 ch, OPJ_UINT32 sgnd, OPJ_UINT32 prec, int comps)
+{
+	int x, y;
+
+	for (y = ch; oy + cdy <= 0 && y > 0; y--)
+	{
+		oy += cdy;
+		dst0 += cdy * stride;
+		src += cw;
+	}
+	for (; y > 0; y--)
+	{
+		int32_t dymin = oy;
+		int32_t dywid = cdy;
+		unsigned char *dst1 = dst0 + ox * comps;
+		int32_t oox = ox;
+		const OPJ_INT32 *src0 = src;
+
+		if (dymin < 0)
+			dywid += dymin, dst1 -= dymin * stride, dymin = 0;
+		if (dymin >= h)
+			break;
+		if (dymin + dywid > h)
+			dywid = h - dymin;
+
+		for (x = cw; oox + cdx <= 0 && x > 0; x--)
+		{
+			oox += cdx;
+			dst1 += cdx * comps;
+			src0++;
+		}
+		for (; x > 0; x--)
+		{
+			OPJ_INT32 v;
+			int32_t xx, yy;
+			int32_t dxmin = oox;
+			int32_t dxwid = cdx;
+			unsigned char *dst2;
+
+			v = *src0++;
+
+			if (sgnd)
+				v = v + (1 << (prec - 1));
+			if (prec > 8)
+				v = v >> (prec - 8);
+			else if (prec < 8)
+				v = v << (8 - prec);
+
+			if (dxmin < 0)
+				dxwid += dxmin, dst1 -= dxmin * comps, dxmin = 0;
+			if (dxmin >= w)
+				break;
+			if (dxmin + dxwid > w)
+				dxwid = w - dxmin;
+
+			dst2 = dst1;
+			for (yy = dywid; yy > 0; yy--)
+			{
+				unsigned char *dst3 = dst2;
+				for (xx = dxwid; xx > 0; xx--)
+				{
+					*dst3 = v;
+					dst3 += comps;
+				}
+				dst2 += stride;
+			}
+			dst1 += comps * cdx;
+			oox += cdx;
+		}
+		dst0 += stride * cdy;
+		src += cw;
+		oy += cdy;
+	}
+}
+
+static void
+copy_jpx_to_pixmap(fz_context *ctx, fz_pixmap *img, opj_image_t *jpx)
+{
+	unsigned char *dst;
+	int stride, comps;
+	int w = img->w;
+	int h = img->h;
+	int k;
+
+	stride = fz_pixmap_stride(ctx, img);
+	comps = fz_pixmap_components(ctx, img);
+	dst = fz_pixmap_samples(ctx, img);
+
+	for (k = 0; k < comps; k++)
+	{
+		opj_image_comp_t *comp = &(jpx->comps[k]);
+		OPJ_UINT32 cdx = comp->dx;
+		OPJ_UINT32 cdy = comp->dy;
+		OPJ_UINT32 cw = comp->w;
+		OPJ_UINT32 ch = comp->h;
+		int32_t oy = safe_mul32(ctx, comp->y0, cdy) - jpx->y0;
+		int32_t ox = safe_mul32(ctx, comp->x0, cdx) - jpx->x0;
+		unsigned char *dst0 = dst + oy * stride;
+
+		if (comp->data == NULL)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "No data for JP2 image component %d", k);
+
+		/* Check that none of the following will overflow. */
+		(void)safe_mla32(ctx, ch, cdy, oy);
+		(void)safe_mla32(ctx, cw, cdx, ox);
+
+		if (cdx == 1 && cdy == 1)
+			template_copy_comp(dst0, w, h, stride, comp->data, ox, oy, 1 /*cdx*/, 1 /*cdy*/, cw, ch, comp->sgnd, comp->prec, comps);
+		else
+			template_copy_comp(dst0, w, h, stride, comp->data, ox, oy, cdx, cdy, cw, ch, comp->sgnd, comp->prec, comps);
+		dst++;
+	}
+}
+
 static fz_pixmap *
 jpx_read_image(fz_context *ctx, fz_jpxd *state, const unsigned char *data, size_t size, fz_colorspace *defcs, int onlymeta)
 {
@@ -733,8 +870,7 @@ jpx_read_image(fz_context *ctx, fz_jpxd *state, const unsigned char *data, size_
 	opj_stream_t *stream;
 	OPJ_CODEC_FORMAT format;
 	int a, n, k;
-	OPJ_UINT32 w, h;
-	OPJ_UINT32 x, y;
+	int w, h;
 	stream_block sb;
 	OPJ_UINT32 i;
 
@@ -816,10 +952,13 @@ jpx_read_image(fz_context *ctx, fz_jpxd *state, const unsigned char *data, size_
 		}
 	}
 
-	state->width = w = jpx->x1 - jpx->x0;
-	state->height = h = jpx->y1 - jpx->y0;
+	w = state->width = jpx->x1 - jpx->x0;
+	h = state->height = jpx->y1 - jpx->y0;
 	state->xres = 72; /* openjpeg does not read the JPEG 2000 resc box */
 	state->yres = 72; /* openjpeg does not read the JPEG 2000 resc box */
+
+	if (w < 0 || h < 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Unbelievable size for jpx");
 
 	state->cs = NULL;
 
@@ -879,56 +1018,10 @@ jpx_read_image(fz_context *ctx, fz_jpxd *state, const unsigned char *data, size_
 
 	fz_try(ctx)
 	{
-		unsigned char *samples;
-		int stride, comps;
-
 		a = !!a; /* ignore any superfluous alpha channels */
 		img = fz_new_pixmap(ctx, state->cs, w, h, NULL, a);
-		stride = fz_pixmap_stride(ctx, img);
-		comps = fz_pixmap_components(ctx, img);
-		samples = fz_pixmap_samples(ctx, img);
-
 		fz_clear_pixmap_with_value(ctx, img, 0);
-
-		for (k = 0; k < comps; k++)
-		{
-			opj_image_comp_t *comp = &(jpx->comps[k]);
-			int oy = comp->y0 * comp->dy - jpx->y0;
-			int ox = comp->x0 * comp->dx - jpx->x0;
-
-			if (comp->data == NULL)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "No data for JP2 image component %d", k);
-
-			for (y = 0; y < comp->h; y++)
-			{
-				for (x = 0; x < comp->w; x++)
-				{
-					OPJ_INT32 v;
-					OPJ_UINT32 dx, dy;
-
-					v = comp->data[y * comp->w + x];
-
-					if (comp->sgnd)
-						v = v + (1 << (comp->prec - 1));
-					if (comp->prec > 8)
-						v = v >> (comp->prec - 8);
-					else if (comp->prec < 8)
-						v = v << (8 - comp->prec);
-
-					for (dy = 0; dy < comp->dy; dy++)
-					{
-						for (dx = 0; dx < comp->dx; dx++)
-						{
-							OPJ_UINT32 xx = ox + x * comp->dx + dx;
-							OPJ_UINT32 yy = oy + y * comp->dy + dy;
-
-							if (xx < w && yy < h)
-								samples[yy * stride + xx * comps + k] = v;
-						}
-					}
-				}
-			}
-		}
+		copy_jpx_to_pixmap(ctx, img, jpx);
 
 		if (jpx->color_space == OPJ_CLRSPC_SYCC && n == 3 && a == 0)
 			jpx_ycc_to_rgb(ctx, img, 1, 1);

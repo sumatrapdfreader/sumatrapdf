@@ -997,11 +997,19 @@ mark_all(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, pdf_obj *val
 
 		if (pdf_is_dict(ctx, val))
 		{
-			int i, n = pdf_dict_len(ctx, val);
+			int i, n;
+			n = pdf_dict_len(ctx, val);
 
 			for (i = 0; i < n; i++)
 			{
-				mark_all(ctx, doc, opts, pdf_dict_get_val(ctx, val, i), flag, page);
+				pdf_obj *v = pdf_dict_get_val(ctx, val, i);
+				pdf_obj *type = pdf_dict_get(ctx, v, PDF_NAME(Type));
+
+				/* Don't walk through the Page tree, or direct to a page. */
+				if (pdf_name_eq(ctx, PDF_NAME(Pages), type) || pdf_name_eq(ctx, PDF_NAME(Page), type))
+					continue;
+
+				mark_all(ctx, doc, opts, v, flag, page);
 			}
 		}
 		else if (pdf_is_array(ctx, val))
@@ -1010,7 +1018,14 @@ mark_all(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, pdf_obj *val
 
 			for (i = 0; i < n; i++)
 			{
-				mark_all(ctx, doc, opts, pdf_array_get(ctx, val, i), flag, page);
+				pdf_obj *v = pdf_array_get(ctx, val, i);
+				pdf_obj *type = pdf_dict_get(ctx, v, PDF_NAME(Type));
+
+				/* Don't walk through the Page tree, or direct to a page. */
+				if (pdf_name_eq(ctx, PDF_NAME(Pages), type) || pdf_name_eq(ctx, PDF_NAME(Page), type))
+					continue;
+
+				mark_all(ctx, doc, opts, v, flag, page);
 			}
 		}
 	}

@@ -21,7 +21,7 @@ FUN(Text_newNative)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 		text = fz_new_text(ctx);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), 0;
+		jni_rethrow(env, ctx);
 
 	return jlong_cast(text);
 }
@@ -36,12 +36,12 @@ FUN(Text_getBounds)(JNIEnv *env, jobject self, jobject jstroke, jobject jctm)
 	fz_rect rect;
 
 	if (!ctx || !text) return NULL;
-	if (!stroke) return jni_throw_arg(env, "stroke must not be null"), NULL;
+	if (!stroke) jni_throw_arg(env, "stroke must not be null");
 
 	fz_try(ctx)
 		rect = fz_bound_text(ctx, text, stroke, ctm);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx), NULL;
+		jni_rethrow(env, ctx);
 
 	return to_Rect_safe(ctx, env, rect);
 }
@@ -55,12 +55,12 @@ FUN(Text_showGlyph)(JNIEnv *env, jobject self, jobject jfont, jobject jtrm, jint
 	fz_matrix trm = from_Matrix(env, jtrm);
 
 	if (!ctx || !text) return;
-	if (!font) return jni_throw_arg(env, "font must not be null");
+	if (!font) jni_throw_arg_void(env, "font must not be null");
 
 	fz_try(ctx)
 		fz_show_glyph(ctx, text, font, trm, glyph, unicode, wmode, 0, FZ_BIDI_NEUTRAL, FZ_LANG_UNSET);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 }
 
 JNIEXPORT void JNICALL
@@ -73,8 +73,8 @@ FUN(Text_showString)(JNIEnv *env, jobject self, jobject jfont, jobject jtrm, jst
 	const char *str = NULL;
 
 	if (!ctx || !text) return;
-	if (!jfont) return jni_throw_arg(env, "font must not be null");
-	if (!jstr) return jni_throw_arg(env, "string must not be null");
+	if (!jfont) jni_throw_arg_void(env, "font must not be null");
+	if (!jstr) jni_throw_arg_void(env, "string must not be null");
 
 	str = (*env)->GetStringUTFChars(env, jstr, NULL);
 	if (!str) return;
@@ -84,7 +84,7 @@ FUN(Text_showString)(JNIEnv *env, jobject self, jobject jfont, jobject jtrm, jst
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jstr, str);
 	fz_catch(ctx)
-		return jni_rethrow(env, ctx);
+		jni_rethrow_void(env, ctx);
 
 	(*env)->SetFloatField(env, jtrm, fid_Matrix_e, trm.e);
 	(*env)->SetFloatField(env, jtrm, fid_Matrix_f, trm.f);
@@ -102,7 +102,7 @@ FUN(Text_walk)(JNIEnv *env, jobject self, jobject walker)
 	int i;
 
 	if (!ctx || !text) return;
-	if (!walker) return jni_throw_arg(env, "walker must not be null");
+	if (!walker) jni_throw_arg_void(env, "walker must not be null");
 
 	if (text->head == NULL)
 		return; /* text has no spans to walk */

@@ -1055,7 +1055,7 @@ void fz_fin_cached_color_converter(fz_context *ctx, fz_color_converter *cc_)
 /* Pixmap color conversion */
 
 void
-fz_convert_slow_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params, int copy_spots)
+fz_convert_slow_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst, fz_colorspace *is, fz_color_params params, int copy_spots)
 {
 	float srcv[FZ_MAX_COLORS];
 	float dstv[FZ_MAX_COLORS];
@@ -1320,7 +1320,7 @@ fz_convert_slow_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst, 
 }
 
 void
-fz_convert_pixmap_samples(fz_context *ctx, fz_pixmap *src, fz_pixmap *dst,
+fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 	fz_colorspace *prf,
 	const fz_default_colorspaces *default_cs,
 	fz_color_params params,
