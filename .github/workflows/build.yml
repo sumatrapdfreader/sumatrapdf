@@ -24,7 +24,7 @@ jobs:
         uses: github/codeql-action/init@v1
         with:
           languages: cpp
-          - config-file: ./.github/workflows/codeql-config.yml
+          - config-file: ./.github/codeql-config.yml
           - queries: security-and-quality
 
       - name: Build
