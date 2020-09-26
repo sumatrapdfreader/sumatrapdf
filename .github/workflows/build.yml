@@ -24,8 +24,8 @@ jobs:
         uses: github/codeql-action/init@v1
         with:
           languages: cpp
-          - config-file: ./.github/codeql-config.yml
-          - queries: security-and-quality
+          config-file: ./.github/codeql-config.yml
+          queries: security-and-quality
 
       - name: Build
         env:
