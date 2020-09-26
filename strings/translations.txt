@@ -1,11 +1,12 @@
 AppTranslator: SumatraPDF
-8008769c63855fe185ceeb72204f1b8910f5b217
+be9a59db7ca6054dfff8cb6f492fd793b35c18d1
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
 br:Instalação do %s não encontrada.
 cn:未找到 %s 安装。
 co:Installazione di %s micca trova.
+cy:Ni chanfuwyd gosodiad %s.
 de:%s Installation nicht gefunden.
 fr:%s installation non trouvée
 ka:ინსტალირებული %s ვერ მოიძებნა.
@@ -2627,6 +2628,7 @@ az:Tarixçədən &sil
 br:&Remover do Histórico
 cn:从历史记录删除(&R)
 co:&Caccià da a crunulogia
+cy:Tynnu o'&r Hanes
 de:Aus der Historie entfernen
 fr:Supprimer de l'historique
 ka:&ისტორიიდან წაშლა
@@ -3684,6 +3686,7 @@ az:PDF-i törəmə element kimi əlavə et
 br:Adicionar PDF como um filho
 cn:将 PDF 添加为子项目
 co:Aghjunghje un PDF cum’è un zitellu
+cy:Ychwanegu PDF fel plentyn
 de:PDF als untergeordnetes Element hinzufügen
 ka:დავამატოთ PDF შვილობილად
 kw:Keworra PDF avel flogh
@@ -3696,7 +3699,9 @@ az:PDF-i eynisəviyyəli element kimi əlavə et
 br:Adicionar PDF como um irmão
 cn:将 PDF 添加为同级项目
 co:Aghjunghje un PDF cum’è un fratellu
+cy:Ychwanegu PDF fel chwaer
 de:PDF als gleichgeordnetes Element hinzufügen
+ka:PDF-ის მოძმედ დამატება
 kw:Keworra PDF avel hwor
 nl:Voeg PDF als verwant toe
 pl:Dodaj PDF jako rodzeństwo
@@ -3707,6 +3712,7 @@ az:Törəmə element əlavə et
 br:Adicionar filho
 cn:添加子项目
 co:Aghjunghje un zitellu
+cy:Ychwanegu plentyn
 de:Untergeordnetes Element hinzufügen
 ka:შვილობილის დამატება
 kw:Keworra flogh
@@ -3854,6 +3860,7 @@ ca-xv:Afegeix la pàgina %s als preferits\tCtrl+B
 ca:Afegeix la pàgina %s als preferits\tCtrl+B
 cn:将第 %s 页添加到收藏夹\tCtrl+B
 co:Aghjunghje a &pagina %s à i favuriti\tCtrl+B
+cy:Ychwanegu tudalen %s i'r ffefrynnau\tCtrl+B
 de:Seite %s zu Favoriten hinzufügen\tStrg+B
 el:Προσθήκη της σελίδας %s στα αγαπημένα\tCtrl+B
 es:Añadir página %s a favoritos\tCtrl+B
@@ -3864,6 +3871,7 @@ hr:Dodaj stranicu %s u favorite\tCtrl+B
 id:Tambah halaman %s ke favorit\tCtrl+B
 it:Aggiungi pagina %s ai preferiti\tCtrl+B
 ja:ページ %s をお気に入りに追加\tCtrl+B
+ka:გვერდი %s-ის დამატება რჩეულებში\tCtrl+B
 kw:Keworra folen %s dhe daklow drudh\tCtrl+B
 lv:Pievienot %s lappusi grāmatzīmēm\tCtrl+B
 nl:Pagina %s toevoegen aan favorieten\tCtrl+B
@@ -3882,6 +3890,7 @@ az:Eynisəviyyəli element əlavə et
 br:Adicionar irmão
 cn:添加同级项目
 co:Aghjunghje un fratellu
+cy:Ychwanegu chwaer
 de:Gleichgeordnetes Element hinzufügen
 ka:მოძმე ელემენტის დამატება
 kw:Keworra hwor
@@ -4165,6 +4174,7 @@ az:Qeydlər
 br:Anotações
 cn:标注
 co:Annutazioni
+cy:Anodiadau
 de:Anmerkungen
 el:Σχόλια
 fr:Annotations
@@ -4248,8 +4258,10 @@ az:Əminsiniz ki, %s silmək istəyirsiniz?
 br:Você deseja realmente desinstalar o %s?
 cn:您确定要卸载 %s 吗？
 co:Site sicuru di vulè disinstallà %s ?
+cy:Wyt ti'n bendant eisiau dadosod %s?
 de:Sind Sie sicher, dass Sie %s deinstallieren möchten?
 fr:Voulez-vous vraiment désinstaller %s ?
+ka:დარწმუნებული ხართ, რომ გსურთ %s-ის წაშლა?
 kw:Os ta sur bos hwans dhis anlea %s?
 nl:Weet u zeker dat u %s wilt dé-installeren?
 pa:ਕੀ ਤੁਸੀਂ %s ਨੂੰ ਅਸਥਾਪਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
@@ -4291,6 +4303,7 @@ id:Anda yakin ingin menghapus instalasi SumatraPDF?
 it:Siete sicuri di voler disinstallare SumatraPDF?
 ja:SumatraPDFを本当にアンインストールしますか？
 jv:Apa panjenengan yakin arep mbusak instalasi SumatraPDF?
+ka:დარწმუნებული ხართ, რომ გსურთ SumatraPDF-ის წაშლა?
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
 kw:Os ta sur bos hwans dhis anlea SumatraPDF?
@@ -5342,6 +5355,7 @@ az:Kursor
 br:Acento circunflexo
 cn:插入号
 co:Cursore
+cy:Lleolnod
 de:Cursor
 fr:curseur
 ka:კურსორი
@@ -5495,6 +5509,7 @@ az:Dairə
 br:Círculo
 cn:圆
 co:Chjerchju
+cy:Cylchu
 de:Kreis
 el:Κύκλος
 fr:Cercle
@@ -5581,6 +5596,7 @@ ca-xv:Replega-ho tot
 ca:Replega-ho tot
 cn:全部折叠(&C)
 co:Tuttu piegà
+cy:Lleihau Popeth
 cz:Sbalit vše
 de:Alles zuklappen
 el:Σύμπτυξη όλων
@@ -5609,6 +5625,7 @@ az:Rəng
 br:Cor
 cn:颜色
 co:Culore
+cy:Lliwio
 de:Farbe
 el:Χρώμα
 fr:Couleur
@@ -5634,7 +5651,7 @@ ca-xv:Llibres de còmic
 ca:Llibres de còmic
 cn:漫画书
 co:Libri comichi
-cy:Llyfrau Comig
+cy:Llyfrau comig
 cz:Komiksy
 de:Comicbücher
 dk:Tegneserier
@@ -6370,7 +6387,7 @@ ca-xv:No es poden obtindre les propietats de la impressora
 ca:No es poden obtenir les propietats de la impressora
 cn:无法获取打印机属性
 co:Impussibule d’ottene e pruprietà di a stampetta
-cy:Methu canfod priodweddau Argraffydd
+cy:Methwyd canfod priodweddau Argraffydd
 cz:Nelze získat vlastnosti tiskárny
 de:Konnte Druckereigenschaften nicht bestimmen
 dk:Kan ikke hente printeregenskaber
@@ -6434,7 +6451,7 @@ ca-xv:No es pot crear el directori d'instal·lació
 ca:No es pot crear el directori d'instal·lació
 cn:无法创建安装文件夹
 co:Impussibule di creà u cartulare d’installazione
-cy:Methu creu'r cyfeiriadur gosod
+cy:Methwyd creu'r cyfeiriadur gosod
 cz:Nepodařilo se vytvořit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht erstellen
 dk:Kunne ikke oprette installationsmappe
@@ -6454,6 +6471,7 @@ hu:Telepítési könyvtár létrehozása sikertelen
 id:Gagal membuat direktori instalasi
 it:Impossibile creare la cartella di installazione
 ja:インストール先ディレクトリを作成できませんでした
+ka:ვერ მოხერხდა საინსტალაციო დირექტორიის შექმნა
 kr:설치 디렉토리를 만들 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن دروست بکرێت
 kw:Ny yllir gwruthyl an arayel leans
@@ -6497,7 +6515,7 @@ ca-xv:No es pot inicialitzar la impressora
 ca:No es pot inicialitzar la impressora
 cn:不能初始化打印机
 co:Impussibule d’inizià a stampetta
-cy:Methu cychwyn yr argraffydd
+cy:Methwyd cychwyn yr argraffydd
 cz:Tiskárnu nelze inicializovat
 de:Der Drucker konnte nicht initialisiert werden
 dk:Kunne ikke starte printer
@@ -6562,7 +6580,7 @@ ca-xv:No es pot instal·lar el visor ràpid de PDF
 ca:No es pot instal·lar el visor ràpid de PDF
 cn:无法安装 PDF 预览器
 co:Impussibule d’installà u previsualizatore di PDF
-cy:Mehu gosod rhagolygwr PDF
+cy:Methwyd gosod rhagolygwr PDF
 cz:Nelze nainstalovat PDF prohlížeč
 de:Konnte die PDF-Vorschau nicht installieren
 dk:Kunne ikke installere PDF-fremviser
@@ -6582,6 +6600,7 @@ hu:PDF előnézet-megjelenítő telepítése sikertelen
 id:Gagal menginstal pratilik PDF
 it:Impossibile installare modulo anteprima PDF
 ja:PDF プレビューアをインストールできませんでした
+ka:ვერ მოხერხდა PDF-მლვალიერებლის ინსტალაცია
 kr:PDF 미리보기를 설치할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF دابەزێندرێت
 kw:Ny yllir lea ragweler PDF
@@ -6624,7 +6643,7 @@ ca-xv:No es pot instal·lar el filtre de cerca PDF
 ca:No es pot instal·lar el filtre de cerca PDF
 cn:无法安装 PDF 搜索过滤器
 co:Impussibule d’installà u filtru di ricerca di PDF
-cy:Methu gosod hidl chwilio PDF
+cy:Methwyd gosod hidl chwilio PDF
 cz:Nelze nainstalovat vyhledávací PDF filtr
 de:Konnte den PDF-Suchfilter nicht installieren
 dk:Kunne ikke installere PDF-søgefilter
@@ -6687,7 +6706,7 @@ ca-xv:No es pot suprimir el directori d'instal·lació
 ca:No es pot suprimir el directori d'instal·lació
 cn:无法移除安装目录
 co:Impussibule di caccià u cartulare d’installazione
-cy:Methu tynnu'r cyfeiriadur gosod
+cy:Methwyd tynnu'r cyfeiriadur gosod
 cz:Nepodařilo se odstranit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht löschen
 dk:Kunne ikke fjerne installationsmappe
@@ -6707,6 +6726,7 @@ hu:Telepítési könyvtár eltávolítása sikertelen
 id:Gagal menghapus direktori instalasi
 it:Impossibile rimuovere la cartella di installazione
 ja:インストール先ディレクトリを削除できませんでした
+ka:ვერ მოხერხდა საინსტალაციო დირექტორიის წაშლა
 kr:설치 디렉토리를 제거할 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن لابدرێت
 kw:Ny yllir removya arayel leans
@@ -6748,7 +6768,7 @@ ca-xv:No es pot representar la pàgina
 ca:No es pot representar la pàgina
 cn:无法渲染该页面
 co:Impussibule di presentà a pagina
-cy:Methu cyflwyno'r dudalen
+cy:Methwyd cyflwyno'r dudalen
 cz:Stránku nelze vykreslit
 de:Diese Seite kann leider nicht angezeigt werden
 dk:Kunne ikke vise siden
@@ -6812,7 +6832,7 @@ ca-xv:No es pot desinstal·lar el visor ràpid PDF
 ca:No es pot desinstal·lar el visor ràpid PDF
 cn:无法卸载 PDF 预览器
 co:Impussibule di disinstallà u previsualizatore di PDF
-cy:Methu dadosod rhagolygwr PDF
+cy:Methwyd dadosod rhagolygwr PDF
 cz:Nelze odinstalovat PDF prohlížeč
 de:Konnte die PDF-Vorschau nicht deinstallieren
 dk:Kunne ikke fjerne PDF-fremviser
@@ -6832,6 +6852,7 @@ hu:PDF előnézet-megjelenítő eltávolítása sikertelen
 id:Gagal menghapus penampil cepat PDF
 it:Impossibile disinstallare modulo anteprima PDF
 ja:PDF プレビューアをアンインストールできませんでした
+ka:ვერ მოხერხდა PDF-მთვალიერებლის წაშლა
 kr:PDF 미리보기를 제거할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF بسڕدرێتەوە
 kw:Ny yllir anlea ragweler PDF
@@ -6867,7 +6888,9 @@ az:Sumatra axtarış filtrini silmək mümkün olmadı
 br:Não foi possível desinstalar o filtro do pesquisa do Sumatra
 cn:无法卸载 Sumatra 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di Sumatra
+cy:Methwyd gosod hidl chwilio Sumatra
 de:Konnte den Sumatra-Suchfilter nicht deinstallieren
+ka:ვერ მოხერხდა Sumatra-ს საძიებო ფილტრის წაშლა
 kw:Ny yllir anlea sythel hwilas Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
@@ -6885,7 +6908,7 @@ ca-xv:No es pot desinstal·lar el connector de navegador
 ca:No es pot desinstal·lar el connector de navegador
 cn:无法卸载浏览器插件
 co:Impussibule di disinstallà l’estensione di u navigatore
-cy:Methu dadosod ategyn porwr
+cy:Methwyd dadosod ategyn porwr
 cz:Nepodařilo se odinstalovat rozšíření z prohlížeče
 de:Konnte das Browser-Plugin nicht deinstallieren
 dk:Kunne ikke fjerne browserudvidelsesmodul
@@ -6947,7 +6970,7 @@ ca-xv:No es pot escriure %s al disc
 ca:No es pot escriure %s al disc
 cn:无法写入 %s 到磁盘
 co:Impussibule di scrive %s nant’à u discu
-cy:Methu ysgrifennu %s i ddisg
+cy:Methwyd ysgrifennu %s i ddisg
 cz:Nelze zapsat %s na disk
 de:Konnte %s nicht schreiben
 dk:Kunne ikke skrive %s til disk
@@ -6967,6 +6990,7 @@ hu:%s lemezre írása sikertelen
 id:Gagal menulis %s ke harddisk
 it:Impossibile scrivere %s nel disco.
 ja:%s をディスクに書き込めませんでした
+ka:ვერ ჩაიწერა %s დისკზე
 kr:%s(을)를 디스크에 쓸 수 없습니다.
 ku:بخوێندرێتەوە بۆ دیسک %s ناتوانرێت
 kw:Ny yllir skrifa %s dhe'n disk
@@ -7002,6 +7026,7 @@ az:Qeyd düzəlt
 br:Criar Anotação
 cn:创建标注
 co:&Scrive un’annutazione
+cy:Creu anodiad
 de:Anmerkung erstellen
 el:Δημιουργία Σχολίου
 fr:Écrire une annotation
@@ -7851,6 +7876,7 @@ az:Tam ekran rejimindən çı&x
 br:Sair da Tela &Cheia
 cn:退出全屏(&X)
 co:&Esce di u modu screnu sanu
+cy:Gadael Sgrin Lawn
 de:Vollbild verlassen
 el:Έξοδος από την πλήρη οθόνη
 fr:&Quitter le mode plein écran
@@ -8003,6 +8029,7 @@ az:Düzəliş et
 br:Editar
 cn:编辑
 co:Mudificà
+cy:Golygu
 de:Bearbeiten
 el:Επεξεργασία
 fr:Éditer
@@ -8020,6 +8047,7 @@ az:Qeydlərə düzəliş et
 br:Editar Anotações
 cn:编辑标注
 co:&Mudificà l’annutazioni
+cy:Golygu Anodiadau
 de:Anmerkungen bearbeiten
 el:Επεξεργασία Σχολίων
 fr:Éditer les annotations
@@ -8034,6 +8062,7 @@ az:Əlfəcinlərə düzəliş et
 br:Editar Marcadores
 cn:编辑书签
 co:Mudificà l’indette
+cy:Golygu Nodau Tudalen
 de:Lesezeichen bearbeiten
 fr:Éditer les marque-pages
 ka:სანიშნის რედაქტირება
@@ -8321,6 +8350,7 @@ ca-xv:Desplega-ho tot
 ca:Desplega-ho tot
 cn:全部展开
 co:Tuttu spiegà
+cy:Ehangu Popeth
 cz:Rozbalit vše
 de:Alles aufklappen
 el:Ανάπτυξη Όλων
@@ -8349,6 +8379,7 @@ az:Əlfəcinləri ixrac et
 br:Exportar Marcadores
 cn:导出书签
 co:Espurtà l’indette
+cy:Allforio Nodau Tudalen
 de:Lesezeichen exportieren
 fr:Exporter les marque-pages
 ka:სანიშნეების ექსპორტი
@@ -8717,6 +8748,7 @@ hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
 id:Gagal mengatur sebagai aplikasi Windows 10
 it:Impossibile registrare come programma predefinito su Win 10\n
 ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
+ka:ვერ მოხერხდა Windows 10-ის საწყის პროგრამად დარეგისტრირება
 kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
 kw:Kovskrifa avel towlen dhefowt gans Win 10 a fyllis
 lt:Nepavyko programos padaryti numatytąja Windows 10 sistemoje
@@ -8906,6 +8938,7 @@ hu:Nem sikerült írni a kiterjesztett fájlkiterjesztést információkat a ren
 id:Gagal menulis info ekstensi berkas yang diperluas ke registry
 it:Impossibile scrivere nel registro l'informazione dettagliata dell'estensione del file
 ja:拡張子情報をレジストリに書き込むのに失敗しました
+ka:ვერ მოხერხდა ფაილის გაფართოების სრული ინფორმაციის ჩაწერა რეგისტრში
 kr:확장된 파일의 확장자 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو لە ڕیگستریدا
 kw:Skrifa kedhlow ystynnyans restren ynstynnys dhe'n govskrifva a fyllis
@@ -8966,6 +8999,7 @@ hu:Eltávolítással kapcsolatos információk rendszerleíró adatbázisba ír�
 id:Gagal menulis info penghapusan program ke registry
 it:Impossibile scrivere nel registro le informazioni di disinstallazione
 ja:アンインストール情報をレジストリに書き込むのに失敗しました
+ka:ვერ მოხერხდა წაშლის ინფორმაციის ჩაწერა რეგისტრში
 kr:제거 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری سڕینەوە سەرکەوتو نەبوو لە ڕیگستریدا
 kw:Skrifa an kedhlow anleans dhe'n govskrifva a fyllis!
@@ -9028,6 +9062,7 @@ hu:Gyors web-nézet
 id:Tampilan Web Cepat
 it:Vista web veloce
 ja:高速ウェブ表示
+ka:სწრაფი ვებ-გადახედვა
 kr:빠른 웹 보기
 ku:شێوازی پیشاندانی خێرای ماڵپەر
 kw:Gwel Wias Skav
@@ -9255,6 +9290,7 @@ az:Qoşma fayl
 br:Anexo de Arquivo
 cn:文件附件
 co:Schedariu attaccatu
+cy:Atodiad Ffeil
 de:Dateianhang
 ka:მიმაგრებული ფაილი
 kw:Stagel Restren
@@ -10544,6 +10580,7 @@ az:İxtiyari mətn
 br:Texto Livre
 cn:自定义文本
 co:Testu liberu
+cy:Testun Rydd
 de:Freitext
 ka:თავისუფალი ტექსტი
 kw:Tekst Rydh
@@ -10889,6 +10926,7 @@ az:Seç
 br:Destacar
 cn:高亮
 co:Sopralineà
+cy:Amlygu
 de:Hervorhebung
 ka:მონიშვნა
 kw:Golowboyntya
@@ -11027,6 +11065,7 @@ az:Şəkillər
 br:Imagens
 cn:图像
 co:Fiure
+cy:Delweddau
 de:Bilder
 fr:Images
 it:Immagini
@@ -11042,6 +11081,7 @@ az:Mürəkkəb
 br:Tinta
 cn:墨迹
 co:Inchjostru
+cy:Inc
 de:Tinte
 ka:მელანი
 kw:Ynk
@@ -11146,7 +11186,7 @@ id:Install SumatraPDF ke &folder:
 it:Installa SumatraPD&F nella cartella:
 ja:SumatraPDF インストール先フォルダ(&F)
 jv:Install SumatraPDF ning &folder:
-ka:SumatraPDF-ის ინსტალაცია &საქაღალდეში:
+ka:SumatraPDF-ის ინსტალაცია &საკეცში:
 kr:SumatraPDF 설치 폴더(&F):
 ku:لە فۆڵدەری SumatraPDF دابەزاندنی:
 kw:Lea SumatraPDF yn &restren:
@@ -11464,6 +11504,7 @@ hu:Hagyja a Windows-ra a PDF dokumentumok előnézetének megjelenítését
 id:Izinkan Windows menampilkan dokumen PDF
 it:Permetti a Windows di visualizzare l'anteprima dei documenti PDF
 ja:Windows の PDF ドキュメントプレビューを許可する(&p)
+ka:PDF-დოკუმენტების &თვალიერება Windows-ის საშუალებებით
 kr:Windows 에 PDF 문서 미리보기 기능 추가(&P)
 ku:پیشان بدات PDF ڕێگەدان بە پیشاندەری ویندۆز &بەڵگەنامەکانی
 kw:Gasa Windows dhe dhiskwedhes &ragwelyow a skrivennow PDF
@@ -11554,6 +11595,7 @@ az:Xətt
 br:Linha
 cn:线条
 co:Linea
+cy:Llinell
 de:Linie
 el:Γραμμή
 fr:Ligne
@@ -12044,6 +12086,7 @@ ca-xv:&Finestra nova\tCtrl+N
 ca:&Finestra nova\tCtrl+N
 cn:新建窗口(&W)\tCtrl+N
 co:No&va finestra\tCtrl+N
+cy:Ffenestr ne&wydd\tCtrl+N
 cz:Nové &okno\tCtrl+N
 de:Neues Fenster\tStrg+N
 el:Νέο &παράθυρο\tCtrl+N
@@ -12055,6 +12098,7 @@ hr:&Novi prozor\tCtrl+N
 id:&Jendela Baru\tCtrl+N
 it:Nuova &fiestra\tCtrl+N
 ja:新しいウィンドウ (&W)\tCtrl+N
+ka:ახალი &ფანჯარა\tCtrl+N
 kw:&Fenester nowydh\tCtrl+N
 lv:Jauns &logs\tCtrl+N
 nl:Nieuw venster\tCrtl+N
@@ -12072,6 +12116,7 @@ az:Yeni əlfəcinlər
 br:Novos Marcadores
 cn:新建书签
 co:Nove indette
+cy:Nodau Tudalen Newydd
 de:Neue Lesezeichen
 fr:Nouveaux marque-pages
 ka:ახალი სანიშნე
@@ -12319,6 +12364,7 @@ hu:Nincs találat a %u. sor körül ebben a fájlban: %s
 id:Tidak ditemukan hasil pada baris %u di dalam berkas %s
 it:Nessun risultato trovato intorno alla riga %u nel file %s
 ja:行 %u はファイル %s に見つかりません
+ka:ვერაფერი მოიძებნა სტრიქონზე %u ფაილში %s
 kr:%u 행 (%s 파일) 주변에서 발견된 결과가 없습니다.
 ku:%u هیچ ئەنجامێک نەدۆزرایەوە لە دێڕی %s لە فایلی
 kw:Ny veu kevys sywyans vyth a-dro dhe linen %u y'n restren %s
@@ -12756,6 +12802,7 @@ az:İç PDF faylını aç
 br:Abrir PDF Embutido
 cn:打开嵌入 PDF
 co:Apre u PDF incurpuratu
+cy:Agor PDF wedi'i Mewnosod
 de:Eingebettetes PDF öffnen
 ka:ჩაშენებული PDF-ის გახსნა
 kw:Ygeri PDF Neythys
@@ -14189,6 +14236,7 @@ az:Qırıq xətt
 br:Polilinha
 cn:折线
 co:Linea tronca
+cy:Llinell Poli
 de:Polylinie
 ka:ტეხილი ხაზი
 kw:Lieslinen
@@ -14201,6 +14249,7 @@ az:Çoxbucaqlı
 br:Polígono
 cn:多边形
 co:Poligonu
+cy:Polygon
 de:Polygon
 fr:Polygone
 ka:მრავალკუთხედი
@@ -14691,6 +14740,7 @@ hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
 id:Sedang dalam proses mencetak. Batalkan dan keluar?
 it:La stampa è ancora in corso. Interrompere e uscire?
 ja:印刷を実行中です。中止して終了しますか？
+ka:ბეჭდვა ჯერ გრძელდება. გსურთ შეწყვეტა და გამოსვლა?
 kr:아직 인쇄가 진행 중입니다.  중단하고 끝낼까요?
 ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان و دەرچوون؟
 kw:Ow pryntya hwath. Astel ha kwytya?
@@ -14982,6 +15032,7 @@ az:Düzəliş et
 br:Redigir
 cn:编辑
 co:Redige
+cy:Cuddio
 de:Zensieren
 ka:რედაქტირება
 kw:Redaktya
@@ -15057,6 +15108,7 @@ az:Elementi sil
 br:Remover Item
 cn:移除项目
 co:Caccià l’elementu
+cy:Tynnu Eitem
 de:Element entfernen
 ka:ელემენტის წაშლა
 kw:Removya Tra
@@ -15407,6 +15459,7 @@ ca-xv:Desa les anotacions
 ca:Desa les anotacions
 cn:保存注释
 co:Arregistrà l’ann&utazioni
+cy:Cadw anodiadau
 de:Anmerkungen speichern
 el:Αποθήκευση Επισημάνσεων
 es:Guardar Notas
@@ -15505,6 +15558,7 @@ az:İç faylı yadda saxla...
 br:Salvar Arquivo Embutido...
 cn:保存嵌入文件...
 co:Arregistrà u schedariu incurpuratu…
+cy:Cadw Ffeil wedi'i Mewnosod...
 de:Eingebettete Datei speichern...
 ka:მიმაგრებული ფაილის შენახვა...
 kw:Gwitha Restren Neythys...
@@ -15860,6 +15914,7 @@ hu:Válassza ki a SumatraPDF telepítési könyvtárát:
 id:Pilih folder instalasi SumatraPDF:
 it:Seleziona la cartella dove installare SumatraPDF:
 ja:インストール先ディレクトリの選択:
+ka:აირჩიეთ საკეცი სადაც SumatraPDF უნდა დაინსტალირდეს:
 kr:SumatraPDF를 설치할 폴더 선택:
 ku::SumatraPDF فۆڵدەرێک دیاریبکە بۆ دابەزاندنی
 kw:Dewis an restren le may fynnydh lea SumatraPDF:
@@ -15922,6 +15977,7 @@ hu:Kijelölés:
 id:Seleksi:
 it:Selezione
 ja:Selection:
+ka:გამოყოფა:
 kr:선택:
 ku:دیاریکراو:
 kw:Dewis:
@@ -16092,6 +16148,7 @@ ca-xv:Mostra els &marcadors\tF12
 ca:Mostra els &marcadors\tF12
 cn:显示书签(&B)\tF12
 co:Affissà l’&indette\tF12
+cy:Dangos Nodau Tudalen\tF12
 de:Lesezeichen anzeigen\tF12
 el:Εμφάνιση &Σελιδοδεικτών\tF12
 es:Mostrar Marcadores\tF12
@@ -16102,6 +16159,7 @@ hr:Prikaži &oznake\tF12
 id:Tampilkan &Markah\tF12
 it:Visualizza &Segnalibri\tF12
 ja:ブックマークを表示(&B)\tF12
+ka:სანიშნეების &ჩვენება\tF12
 kw:Diskwedhes &Folennotennow\tF12
 lv:Rādīt &grāmatzīmes\tF12
 nl:Toon Bladwijzers\tF12
@@ -16120,6 +16178,7 @@ ca-xv:Mostra els &preferits
 ca:Mostra els &preferits
 cn:显示收藏夹(&F)
 co:Affissà i &favuriti
+cy:Dangos &Ffefrynnau
 de:&Favoriten anzeigen
 el:Εμφάνιση &Αγαπημένων
 es:Mostrar &Favoritos
@@ -16130,6 +16189,7 @@ hr:Prikaži &favorite
 id:Tampilkan &Favorit
 it:Visualizza &Preferiti
 ja:お気に入りを表示(&F)
+ka:რჩეულების &ჩვენება
 kw:Diskwedhes &Taklow Drudh
 lv:Rādīt &izlasi
 nl:Toon &Favorieten
@@ -16210,8 +16270,10 @@ az:&Sürüşdürmə zolaqlarını göstər
 br:Mostrar Barras de &Rolagem
 cn:显示滚动条(&S)
 co:&Affissà e barre di sfilarata
+cy:Dangos Barrau &Sgrolio
 de:Scrollbalken anzeigen
 fr:Afficher les &barres  de défilement
+ka:საცოცი &პანელის ჩვენება
 kw:Diskwedhes &Skrolvarrys
 nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
@@ -16296,6 +16358,7 @@ ca-xv:Mostra els &marcadors\tF12
 ca:Mostra les &marcadors\tF12
 cn:显示书签(&M)\tF12
 co:Affissà l’&indette\tF12
+cy:Dangos Nodau Tudalen\tF12
 de:Lesezeichen anzeigen\tF12
 el:Εμφάνιση Σελιδο&δεικτών\tF12
 es:Mostrar Mar&cadores\tF12
@@ -16306,6 +16369,7 @@ hr:Prikaži oznake\tF12
 id:Tampilkan &Markah\tF12
 it:Visualizza Segna&libri\tF12
 ja:ブックマークを表示 (&M)\tF12
+ka:სანიშნეების &ჩვენება\tF12
 kw:Diskwedhes Folen&notennow\tF12
 lv:Rādīt grāmat&zīmes\tF12
 nl:Toon Blad&wijzers\tF12
@@ -16384,8 +16448,10 @@ az:Sürüşdürmə &zolaqlarını göstər
 br:Mostrar Barras de R&olagem
 cn:显示滚动条(&O)
 co:&Affissà e barre di sfilarata
+cy:Dangos Barrau Sgr&olio
 de:Scrollbalken anzeigen
 fr:Afficher les barres de &défilement
+ka:საცოცი პან&ელის ჩვენება
 kw:Diskwedhes Skr&olvarrys
 nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
@@ -16462,6 +16528,7 @@ ca-xv:Mostra-ho en la &carpeta
 ca:Mostra-ho a la &carpeta
 cn:打开所在文件夹(&F)
 co:Affissà in u car&tulare
+cy:Dangos mewn &ffolder
 cz:Zobrazit ve &složce
 de:Dokument-&Ordner öffnen
 el:Εμφάνιση στον &φάκελο
@@ -16473,7 +16540,7 @@ hr:Prikaži u mapi
 id:Tampilkan dalam &folder
 it:Visualizza nella &cartella
 ja:フォルダを表示(&F)
-ka:ჩვენება &საქაღალდეში
+ka:ჩვენება &საკეცში
 kw:Diskwedhes yn &restren
 lv:Rādīt &mapē
 nl:Toon in &map
@@ -16686,6 +16753,7 @@ az:Sırala
 br:Ordenar Por
 cn:排序
 co:Classificà da
+cy:Trefnu yn Ôl
 de:Sortieren nach
 el:Ταξινόμηση κατά
 fr:Classer
@@ -16765,6 +16833,7 @@ az:Kvadrat
 br:Quadrado
 cn:矩形
 co:Quadratu
+cy:Sgwâr
 de:Quadrat
 el:Τετράγωνο 
 ka:კვადრატი
@@ -16779,7 +16848,9 @@ az:Dalğalı xətt
 br:Ondulado
 cn:波浪线
 co:Undulatu
+cy:Sgwigl
 de:Verschnörkelt
+ka:კლაკნილი ხაზი
 kw:Igam-ogam
 nl:Kronkelig
 pl:Falowanie
@@ -16790,6 +16861,7 @@ az:Möhür
 br:Carimbo
 cn:图章
 co:Stampaghjolu
+cy:Stampio
 de:Stempel
 ka:ბეჭედი
 kw:Stampa
@@ -16864,8 +16936,10 @@ az:Üstdən xətt
 br:Riscado
 cn:删除线
 co:Rigà
+cy:Taro Drwodd
 de:Durchstreichen
 fr:Rayer
+ka:ხაზის გადასმა
 kw:Treuslinya
 nl:Doorhalen
 pl:Skreślenie
@@ -17509,6 +17583,7 @@ az:SumatraPDF-i dəstəklə
 br:Suporte o SumatraPDF
 cn:支持 SumatraPDF
 co:Sustene SumatraPDF
+cy:Cefnogi SumatraPDF
 de:SumatraPDF unterstützen
 el:Υποστηρίξτε το SumatraPDF
 ka: SumatraPDF-ის დახმარება
@@ -17587,7 +17662,9 @@ az:Teq (əvvəl böyüklər)
 br:Tag (grande primeiro)
 cn:标签 (大的在前)
 co:Etichetta (prima maiò)
+cy:Tag (mawr cyntaf)
 de:Tag (große zuerst)
+ka:ტეგირება (ჯერ დიდები)
 kw:Tagg (meur kynsa)
 nl:Tag (eerst groot)
 pl:Tag (najpierw duży)
@@ -17598,7 +17675,9 @@ az:Teq (əvvəl kiçiklər)
 br:Tag (pequena primeiro)
 cn:标签 (小的在前)
 co:Etichetta (prima chjuca)
+cy:Tag (bach cyntaf)
 de:Tag (kleine zuerst)
+ka:ტეგირება (ჯერ პატარები)
 kw:Tagg (byghan kynsa)
 nl:Tag (eerst klein)
 pl:Tag (najpierw mały)
@@ -17636,6 +17715,7 @@ hu:Címkézett PDF
 id:PDF Terlabeli
 it:PDF marcati
 ja:タグ付き PDF
+ka:ტეგირებული PDF
 kr:태그있는 PDF
 ku:ە دیاریکراوەکان PDF
 kw:PDF Taggys
@@ -17671,6 +17751,7 @@ az:Mətn
 br:Texto
 cn:文本
 co:Testu
+cy:Testun
 de:Text
 el:Κείμενο
 fr:Texte
@@ -17750,8 +17831,10 @@ az:RA-MICRO PDF-i seçdiyiniz üçün təşəkkür edirik!
 br:Obrigado por escolher o RA-MICRO PDF!
 cn:感谢您选择 RA-MICRO PDF！
 co:Vi ringraziemu d’avè sceltu RA-MICRO PDF !
+cy:Diolch am ddewis RA-MICRO PDF!
 de:Vielen Dank, dass Sie RA-MICRO PDF gewählt haben!
 fr:Merci d'avoir choisi RA6MICRO PDF !
+ka:მადლობა რომ აირჩიეთ RA-MICRO PDF!
 kw:Meur ras a dhewis RA-MICRO PDF!
 nl:Dank u voor het kiezen van RA-MICRO PDF!
 pl:Dziękujemy za wybranie RA-MICRO PDF!
@@ -17911,6 +17994,7 @@ hu:A telepítő sérült. Kérjük, töltse le újra.\nElnézést kérünk a kel
 id:Installer rusak. Harap unduh lagi.\nMaaf atas ketidaknyamanan ini!
 it:Il programma di installazione è danneggiato. Riscaricalo nuovamente.\nSiamo spiacenti per l'inconveniente!
 ja:インストーラが破損しています。もう一度ダウンロードしてください。\nご不便をおかけし、申し訳ありません。
+ka:ინსტალატორი დაზიანებულია. გთხოვთ, ხელახლა ჩამოტვირთეთ.\n ბოდიში უხერხულობისთვის!
 kr:설치 관리자가 손상됐습니다.  다시 다운로드하세요.\n불편하게 해서 미안합니다!
 ku:دابەزێنەر تێکچووە. تکایە دووبارە دایبگرەوە.\nببورە لە ڕوودانی ئەو هەڵەیە!
 kw:An leans re beu legrys, Gwra y iskarga arta.\nDrog yw genen a'n ankombrynsi!
@@ -17971,6 +18055,7 @@ hu:Ez a fájl nem támogatott funkciókat (%s) tartalmaz és lehet, hogy nem pon
 id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan kemungkinan tidak layak dijalankan
 it:Questo documento usa funzioni non supportate (%s) e potrebbe non essere visualizzato bene
 ja:このドキュメントはサポートしていない機能(%s)を使用しているため、正しく描画できない可能性があります
+ka:დოკუმენტს აქვს ფუნქციები (%s), რომლებიც არ არის მხარდაჭერილი და შესაძლოა შეცდომებით იქნას ნაჩვენები
 kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌더링되지 않을 수 있습니다.
 ku:ئەم بەڵگەنامەیە خزمەتگوزاری نەگونجاوی تێدایە  (%s) لەوانەیە بەباشی دەرنەکەێت
 kw:An skriven ma a us nasyow anskoodhys (%s) hag yth yw possybyl na wra hi rendra yn ta
@@ -18073,6 +18158,7 @@ az:Altdan xətt
 br:Sublinhado
 cn:下划线
 co:Sottulineatu
+cy:Tanlinellu
 de:Unterstreichen
 el:Υπογράμμιση 
 fr:Souligner
