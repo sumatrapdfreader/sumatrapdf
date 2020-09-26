@@ -180,12 +180,3 @@ Notes / references:
 - https://github.com/neutralinojs/neutralinojs/blob/master/core-windows/src/webview.h : web view code
 - https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-layout?redirectedfrom=MSDN#sizingandspacing
   info about spacing beween UI elements on windows
-
-------
-
-Testimonials for the website:
-* https://boards.4channel.org/lit/thread/16309868#p16310462, "sumatrapdf is a nice desktop app i like for epubs. very fast with pdfs"
-* https://www.reddit.com/r/assholedesign/comments/io05m4/adobe_survey_wont_let_you_use_acrobat_until_youve/g4bhk4o/, "SumatraPDF is way better."
-* https://www.reddit.com/r/assholedesign/comments/im0rbv/installing_the_last_windows_update_resets_your/g3xkz0h/?context=3, "Always prefer SumatraPDF. Loads nearly instantly."
-* https://twitter.com/weitzhandler/status/1299824066904444929, "I use SumatraPDF and I love it."
-* https://twitter.com/EnercoConseils/status/1306843886451666944 "PDF readers have, over the years, managed to earn themselves something of a reputation for being slow, lumbering beasts - thanks largely to Adobe Reader. Sumatra PDF bucks the trend. It is small, svelte, lightweight and lightning fast."

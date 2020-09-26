@@ -348,3 +348,29 @@ a.for-nav-icon:hover {
   pointer-events: none;
   display: block;
 }
+
+.testimonials {
+  display: flex;
+  flex-direction: row;
+  /* justify-content: center; */
+  align-items: center;
+  align-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.testimonial {
+  width: 30%;
+  /* background-color: #FBF0FA; */
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.testimonials-text {
+  font-style: italic;
+}
+
+.testimonial-who {
+  font-size: 90%;
+  float: right;
+}
