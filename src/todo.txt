@@ -6,6 +6,14 @@ Annotations:
  - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
  - test wdl (see https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155, https://github.com/justinfrankel/snapease/blob/master/snapease/main_wnd.cpp#L1155 etc. etc.)
  - has_redact
+ - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1720 (Show scrollbars option aren't saving the preference)
+ - fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1737 (Crash report from forum user)
+ - add a toggle for thin lines (example PDFs in https://github.com/sumatrapdfreader/sumatrapdf/issues/1732)
+ - https://github.com/sumatrapdfreader/sumatrapdf/issues/1741 ESC to exit change
+ - https://github.com/sumatrapdfreader/sumatrapdf/issues/1752 small scroll after refresh
+ - https://github.com/sumatrapdfreader/sumatrapdf/issues/1593 djvu bad rotation
+ - https://github.com/sumatrapdfreader/sumatrapdf/issues/1764 debug crash
+ - https://github.com/sumatrapdfreader/sumatrapdf/pull/1757 translation / search of selected text
  - Ctrl doesn't always work, probably need to hook keyboard on a lower level
  - maybe; show colors in a drop-down
  - maybe: text language drop-down
