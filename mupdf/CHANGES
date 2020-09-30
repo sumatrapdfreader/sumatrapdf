@@ -1,4 +1,4 @@
-List of changes since the last release:
+List of changes in MuPDF 1.18.0
 
 	mutool draw: bbox output format.
 	mutool draw: structured text extraction in JSON format.
@@ -12,8 +12,8 @@ List of changes since the last release:
 
 	wasm: WebAssembly viewer that runs in a browser.
 
-	api: Dehyphenation option in structured text extraction, to improve searching
-		for words that are hyphenated across lines.
+	api: Dehyphenation option in structured text extraction, to improve
+		searching for words that are hyphenated across lines.
 	api: pdf_new_date, pdf_to_date, pdf_dict_put_date and pdf_dict_get_date.
 	api: Added choice of image redaction algorithms: none, full, partial.
 	api: Optional use of Tesseract to use OCR to extract text.
@@ -27,6 +27,7 @@ List of changes since the last release:
 	pdf: High security redaction -- save redacted PDF as flattened bitmap,
 		guaranteed to not leak any sensitive redacted information.
 
+	Experimental C++ bindings.
 	Experimental Python bindings.
 
 List of changes in MuPDF 1.17.0
