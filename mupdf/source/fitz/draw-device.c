@@ -1106,13 +1106,24 @@ fz_draw_stroke_text(fz_context *ctx, fz_device *devp, const fz_text *text, const
 			glyph = fz_render_stroked_glyph(ctx, span->font, gid, &trm, ctm, stroke, &state->scissor, aa);
 			if (glyph)
 			{
+				fz_pixmap *pixmap = glyph->pixmap;
 				int x = (int)trm.e;
 				int y = (int)trm.f;
+				if (pixmap == NULL || pixmap->n == 1)
+				{
 				draw_glyph(colorbv, state->dest, glyph, x, y, &state->scissor, eop);
 				if (state->shape)
 					draw_glyph(&solid, state->shape, glyph, x, y, &state->scissor, 0);
 				if (state->group_alpha)
 					draw_glyph(&alpha_byte, state->group_alpha, glyph, x, y, &state->scissor, 0);
+				}
+				else
+				{
+					fz_matrix mat;
+					mat.a = pixmap->w; mat.b = mat.c = 0; mat.d = pixmap->h;
+					mat.e = x + pixmap->x; mat.f = y + pixmap->y;
+					fz_paint_image(ctx, state->dest, &state->scissor, state->shape, state->group_alpha, pixmap, mat, alpha * 255, !(devp->hints & FZ_DONT_INTERPOLATE_IMAGES), devp->flags & FZ_DEVFLAG_GRIDFIT_AS_TILED, eop);
+				}
 				fz_drop_glyph(ctx, glyph);
 			}
 			else

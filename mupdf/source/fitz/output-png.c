@@ -171,6 +171,11 @@ png_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	fz_write_data(ctx, out, pngsig, 8);
 	putchunk(ctx, out, "IHDR", head, 13);
 
+	big32(head+0, writer->super.xres * 100/2.54f + 0.5f);
+	big32(head+4, writer->super.yres * 100/2.54f + 0.5f);
+	head[8] = 1; /* metre */
+	putchunk(ctx, out, "pHYs", head, 9);
+
 	png_write_icc(ctx, writer, cs);
 }
 

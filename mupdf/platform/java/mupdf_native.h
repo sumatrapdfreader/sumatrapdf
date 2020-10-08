@@ -2074,6 +2074,14 @@ JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_hasUnsavedCha
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    wasRepaired
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_wasRepaired
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
  * Method:    canBeSavedIncrementally
  * Signature: ()Z
  */
@@ -3030,6 +3038,14 @@ JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFWidget_getDesignatedNam
  * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_PDFWidget_validateSignature
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFWidget
+ * Method:    clearSignature
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFWidget_clearSignature
   (JNIEnv *, jobject);
 
 /*

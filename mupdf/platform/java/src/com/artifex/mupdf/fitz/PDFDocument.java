@@ -102,6 +102,7 @@ public class PDFDocument extends Document
 	public native PDFObject addCJKFont(Font font, int ordering, int wmode, boolean serif);
 	public native PDFObject addFont(Font font);
 	public native boolean hasUnsavedChanges();
+	public native boolean wasRepaired();
 	public native boolean canBeSavedIncrementally();
 
 	public native void save(String filename, String options);

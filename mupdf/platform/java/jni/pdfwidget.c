@@ -236,6 +236,20 @@ FUN(PDFWidget_validateSignature)(JNIEnv *env, jobject self)
 	return val;
 }
 
+JNIEXPORT void JNICALL
+FUN(PDFWidget_clearSignature)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_widget *widget = from_PDFWidget_safe(env, self);
+
+	if (!ctx || !widget) return;
+
+	fz_try(ctx)
+		pdf_clear_signature(ctx, widget);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
 JNIEXPORT jboolean JNICALL
 FUN(PDFWidget_isSigned)(JNIEnv *env, jobject self)
 {

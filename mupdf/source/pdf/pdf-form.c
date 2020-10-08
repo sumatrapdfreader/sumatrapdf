@@ -480,6 +480,11 @@ int pdf_has_unsaved_changes(fz_context *ctx, pdf_document *doc)
 	return doc->dirty;
 }
 
+int pdf_was_repaired(fz_context *ctx, pdf_document *doc)
+{
+	return doc->repair_attempted;
+}
+
 int pdf_toggle_widget(fz_context *ctx, pdf_widget *widget)
 {
 	switch (pdf_widget_type(ctx, widget))

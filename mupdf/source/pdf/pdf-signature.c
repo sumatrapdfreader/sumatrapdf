@@ -192,6 +192,8 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 		memset(tm, 0, sizeof(*tm));
 #endif
 
+		pdf_dirty_annot(ctx, widget);
+
 		/* Ensure that all fields that will be locked by this signature
 		 * are marked as ReadOnly. */
 		enact_sig_locking(ctx, doc, wobj);
@@ -249,6 +251,8 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 void pdf_clear_signature(fz_context *ctx, pdf_widget *widget)
 {
 	int flags;
+
+	pdf_dirty_annot(ctx, widget);
 
 	flags = pdf_dict_get_int(ctx, ((pdf_annot *) widget)->obj, PDF_NAME(F));
 	flags &= ~PDF_ANNOT_IS_LOCKED;

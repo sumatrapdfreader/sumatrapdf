@@ -196,6 +196,7 @@
     <None Include="..\java\src\com\artifex\mupdf\fitz\PDFDocument.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\PDFGraftMap.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\PDFObject.java" />
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFWidget.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\Pixmap.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\Point.java" />
     <None Include="..\java\src\com\artifex\mupdf\fitz\Rect.java" />

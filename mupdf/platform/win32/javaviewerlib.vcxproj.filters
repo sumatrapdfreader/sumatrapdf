@@ -129,6 +129,9 @@
     <None Include="..\java\src\com\artifex\mupdf\fitz\TryLaterException.java">
       <Filter>com/artifex/mupdf/fitz</Filter>
     </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFWidget.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\java\mupdf_native.c" />

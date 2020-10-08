@@ -2266,6 +2266,7 @@ void pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const ch
 		new_ap_n = pdf_new_xobject(ctx, annot->page->doc, rect, fz_identity, res, buf);
 		pdf_drop_obj(ctx, annot->ap);
 		annot->ap = new_ap_n;
+		annot->needs_new_ap = 0;
 		annot->has_new_ap = 1;
 		pdf_dict_put(ctx, ap, PDF_NAME(N), new_ap_n);
 	}

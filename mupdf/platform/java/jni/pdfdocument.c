@@ -672,6 +672,15 @@ FUN(PDFDocument_hasUnsavedChanges)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jboolean JNICALL
+FUN(PDFDocument_wasRepaired)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+	if (!ctx || !pdf) return JNI_FALSE;
+	return pdf_was_repaired(ctx, pdf) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
 FUN(PDFDocument_canBeSavedIncrementally)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
