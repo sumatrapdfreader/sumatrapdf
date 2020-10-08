@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-be9a59db7ca6054dfff8cb6f492fd793b35c18d1
+f9ee9486e1f98348d8c79ab2e1625ea0706ac2af
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -3855,6 +3855,7 @@ am:Ավելացնել %s էջը ընտրյալներին\tCtrl+B
 ar: إلى المفضلة %s إضافة الصفحة\tCtrl+B
 az:%s. səhifəni seçilmişlərə əlavə et\tCtrl+B
 bg:Добави страница %s към любимите\tCtrl+B
+bn:পৃষঠা যোগ করুন %s to favorites\tCtrl+B
 br:Adicionar página %s aos favoritos\tCtrl+B
 ca-xv:Afegeix la pàgina %s als preferits\tCtrl+B
 ca:Afegeix la pàgina %s als preferits\tCtrl+B
@@ -4171,6 +4172,7 @@ vn:Tất cả các định dạng được hỗ trợ
 :Annotations
 am:Ծանոթագրություններ
 az:Qeydlər
+bn:ব্যখা\r\n
 br:Anotações
 cn:标注
 co:Annutazioni
@@ -5506,6 +5508,7 @@ vn:Kiểm tra cập nhật
 :Circle
 am:Շրջան
 az:Dairə
+bn:কেনদ্র
 br:Círculo
 cn:圆
 co:Chjerchju
@@ -8026,6 +8029,7 @@ vn:Tập tin EPUB
 :Edit
 am:Խմբագրել
 az:Düzəliş et
+bn:সমপাদন
 br:Editar
 cn:编辑
 co:Mudificà
@@ -8044,6 +8048,7 @@ ru:Изменить
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
 az:Qeydlərə düzəliş et
+bn:ব্যখা সমপাদন করুন
 br:Editar Anotações
 cn:编辑标注
 co:&Mudificà l’annutazioni
@@ -8345,6 +8350,7 @@ am:Ընդարձակել բոլորը
 ar:بسط الكل
 az:Hamısını aç
 bg:Разгъване на всички
+bn:প্রসারিত করুন সব
 br:Expandir tudo
 ca-xv:Desplega-ho tot
 ca:Desplega-ho tot
@@ -10577,6 +10583,7 @@ vn:Tìm thấy đoạn văn bản tại trang %s (lần nữa)
 :Free Text
 am:Ազատ գրվածք
 az:İxtiyari mətn
+bn:মূক্ত লিখা
 br:Texto Livre
 cn:自定义文本
 co:Testu liberu
@@ -10923,6 +10930,7 @@ vn:Ẩn Đọc thường xuyên
 :Highlight
 am:Գունանշում
 az:Seç
+bn:চিহিঞত করুন
 br:Destacar
 cn:高亮
 co:Sopralineà
@@ -11062,6 +11070,7 @@ vn:Tập tin ảnh (*.%s)
 :Images
 am:Պատկերներ
 az:Şəkillər
+bn:ছবি
 br:Imagens
 cn:图像
 co:Fiure
@@ -11078,6 +11087,7 @@ tr:Resimler
 :Ink
 am:Թանաք
 az:Mürəkkəb
+bn:কালি
 br:Tinta
 cn:墨迹
 co:Inchjostru
@@ -11284,6 +11294,7 @@ am:Ընթացքում է...
 ar:التثبيت قيد التقدم...
 az:Quraşdırma davam edir...
 bg:Инсталиране...
+bn:ইনসটল হচছে
 br:Instalação em progresso...
 bs:Instalacija u toku...
 by:Ідзе ўсталёўка...
@@ -11592,6 +11603,7 @@ vn:Sáng
 :Line
 am:Գիծ
 az:Xətt
+bn:লাইন
 br:Linha
 cn:线条
 co:Linea
@@ -13585,6 +13597,7 @@ am:PDF ֆայլեր
 ar:وثائق المستندات المحمولة
 az:PDF sənədləri
 bg:PDF документи
+bn:PDF দলিল
 br:Documentos PDF
 bs:PDF dokumenti
 by:PDF-дакументы
@@ -16750,6 +16763,7 @@ vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', n�
 :Sort By
 am:Տեսակավորել ըստ՝
 az:Sırala
+bn:খুজুন এভাবে
 br:Ordenar Por
 cn:排序
 co:Classificà da
@@ -17454,6 +17468,7 @@ am:PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
 ar:المحمولة هو قارئ المستندات المحمولة الافتراضي Sumatra مستندات
 az:SumatraPDF PDF faylları ilə əlaqələndirilmişdir
 bg:SumatraPDF е вашият PDF четец по подразбиране
+bn:মূল  PDF reader হিসাবে SumatraPDF বাছাই হয়েছে।
 br:O SumatraPDF é o seu leitor PDF padrão
 bs:SumatraPDF je vaš glavni čitač PDF fajlova
 by:SumatraPDF асацыявана з файламі PDF
@@ -18357,6 +18372,7 @@ am:Անհայտ ֆայլ (%s)
 ar:ملف مصدري غير معروف (%s)
 az:Naməlum mənbə faylı (%s)
 bg:Файлът, избран за източник, е непознат (%s)
+bn:অচেনা মূল ফাইল (%s)
 br:Arquivo fonte desconhecido (%s)
 bs:Nepoznat izvorni fajl (%s)
 by:Невядомы зыходны файл (%s)
