@@ -40,6 +40,5 @@ In Visual Studio, this is in  `Debugging`, `Environment` section.
 Note:
 * as of VS 16.6.2 `ASAN_OPTIONS=detect_leaks=1` (i.e. memory leaks) doesn't work.
   Unix version relies on tcmalloc so this might never work
-
-Supressing issues: https://clang.llvm.org/docs/AddressSanitizer.html#issue-suppression
-Note: I couldn't get supressing to work.
+Suppressing issues: https://clang.llvm.org/docs/AddressSanitizer.html#issue-suppression
+Note: I couldn't get suppressing to work.
