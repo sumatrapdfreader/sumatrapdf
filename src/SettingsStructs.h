@@ -359,6 +359,10 @@ struct GlobalPrefs {
     bool showStartPage;
     // if true, documents are opened in tabs instead of new windows
     bool useTabs;
+    // number of most recently used files that will be shown in the menu
+    // (and remembered in the preferences file, if just filenames are to be
+    // remembered and not individual view settings per document)
+    int fileHistoryMaxRecent;
     // information about opened files (in most recently used order)
     Vec<FileState*>* fileStates;
     // state of the last session, usage depends on RestoreSession
@@ -623,6 +627,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
     {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, fileHistoryMaxRecent), SettingType::Int, 10},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, fileStates), SettingType::Array, (intptr_t)&gFileStateInfo},
     {offsetof(GlobalPrefs, sessionData), SettingType::Array, (intptr_t)&gSessionDataInfo},
@@ -634,13 +639,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
      (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 55, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 56, gGlobalPrefsFields,
     "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0TabWidth\0\0FixedPageUI\0EbookUI"
     "\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncr"
     "ement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePer"
     "Document\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0Versio"
     "nToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Window"
-    "State\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0Reop"
-    "enOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "State\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0TreeFontSize\0ShowStartPage\0UseTabs\0FileHistoryMaxRecent\0\0FileSta"
+    "tes\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif
