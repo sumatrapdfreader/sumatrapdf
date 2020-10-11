@@ -106,9 +106,13 @@ static FileExistenceChecker* gFileExistenceChecker = nullptr;
 
 void FileExistenceChecker::GetFilePathsToCheck() {
     DisplayState* state;
-    for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)) != nullptr; i++) {
-        if (!state->isMissing) {
-            paths.Append(str::Dup(state->filePath));
+    if (gGlobalPrefs->fileHistoryMaxRecent > 0) {
+        for (size_t i = 0; i < 2 * static_cast<size_t>(gGlobalPrefs->fileHistoryMaxRecent) &&
+                           (state = gFileHistory.Get(i)) != nullptr;
+             i++) {
+            if (!state->isMissing) {
+                paths.Append(str::Dup(state->filePath));
+            }
         }
     }
     // add missing paths from the list of most frequently opened documents

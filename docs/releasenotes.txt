@@ -2,6 +2,7 @@
 the release notes, as we make them, to make the release process easier.
 
 Next version:
+* made number of most recently used files configurable in expert mode
 
 3.2 (2020-03-15)
 * upgraded core PDF parsing rendering to latest version of mupdf. Faster, less bugs.

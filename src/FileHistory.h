@@ -1,11 +1,6 @@
 /* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// number of most recently used files that will be shown in the menu
-// (and remembered in the preferences file, if just filenames are
-//  to be remembered and not individual view settings per document)
-#define FILE_HISTORY_MAX_RECENT 10
-
 // maximum number of most frequently used files that will be shown on the
 // Frequent Read list (space permitting)
 #define FILE_HISTORY_MAX_FREQUENT 10

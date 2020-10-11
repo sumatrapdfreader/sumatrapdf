@@ -372,7 +372,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, int index) {
     AutoFreeWstr menuString;
     menuString.SetCopy(path::GetBaseNameNoFree(filePath));
     auto fileName = win::menu::ToSafeString(menuString);
-    int menuIdx = (int)((index + 1) % 10);
+    int menuIdx = (int)((index + 1));
     menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
@@ -385,7 +385,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
     }
 
     int i;
-    for (i = 0; i < FILE_HISTORY_MAX_RECENT; i++) {
+    for (i = 0; i < gGlobalPrefs->fileHistoryMaxRecent; i++) {
         DisplayState* state = gFileHistory.Get(i);
         if (!state || state->isMissing) {
             break;

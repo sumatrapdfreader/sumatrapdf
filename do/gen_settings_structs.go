@@ -626,6 +626,10 @@ var (
 			"if true, we show a list of frequently read documents when no document is loaded"),
 		mkField("UseTabs", Bool, true,
 			"if true, documents are opened in tabs instead of new windows").setVersion("3.0"),
+		mkField("FileHistoryMaxRecent", Int, 10,
+			"number of most recently used files that will be shown in the menu "+
+			"(and remembered in the preferences file, if just filenames are "+
+			"to be remembered and not individual view settings per document)").setExpert().setVersion("3.3"),
 		mkEmptyLine(),
 
 		// file history and favorites
