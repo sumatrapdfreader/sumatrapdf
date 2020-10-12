@@ -7429,7 +7429,7 @@ const char * gTranslations_fr =
   "impression du document\0";
 
 const char * gTranslations_gl = 
-  "\0"\
+  "%s instalaci\303\263n non atopada.\0"\
   "&Acerca de\0"\
   "&Tama\303\261o actual\tCtrl+1\0"\
   "Opci\303\263ns &avanzadas...\0"\
@@ -7469,7 +7469,7 @@ const char * gTranslations_gl =
   "&Imprimir... (denegado)\0"\
   "&Lembrar o contrasinal para este documento\0"\
   "&Lembrar estes axustes para cada documento\0"\
-  "\0"\
+  "Elimina&r do historial\0"\
   "&Gardar como...\0"\
   "&Gardar como...\tCtrl+S\0"\
   "&Axustes\0"\
@@ -7486,20 +7486,20 @@ const char * gTranslations_gl =
   "(p\303\241xina %s)\0"\
   "Acerca do SumatraPDF\0"\
   "Engadir favorito\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Engadir PDF como secundario\0"\
+  "Engadir PDF como relacionado\0"\
+  "Engadir secundario\0"\
   "Engadir a p\303\241xina %s aos favoritos\0"\
-  "\0"\
+  "Engadir p\303\241xina %s aos favoritos\tCtrl+B\0"\
   "Engadir p\303\241xina %s aos favoritos  cun nome (opcional):\0"\
-  "\0"\
+  "Engadir relacionado\0"\
   "Engadir a favoritos\0"\
   "Avanzado\0"\
   "Todos os ficheiros\0"\
   "Todos os documentos compatibles\0"\
-  "\0"\
+  "Anotaci\303\263ns\0"\
   "Aplicaci\303\263n:\0"\
-  "\0"\
+  "Est\303\241s seguro de desinstalar %s?\0"\
   "Seguro que queres desinstalar SumatraPDF?\0"\
   "Asociar con ficheiros PDF?\0"\
   "Anexo: %s\0"\
@@ -7516,13 +7516,13 @@ const char * gTranslations_gl =
   "Cancelar\0"\
   "Non se pode imprimir este ficheiro\0"\
   "Non se pode iniciar o comando de busca inversa. Revisa a li\303\261a de comandos na configuraci\303\263n.\0"\
-  "\0"\
+  "Caret (V invertido)\0"\
   "Cambiar lingua\0"\
   "Buscar act&ualizaci\303\263ns\0"\
-  "\0"\
+  "C\303\255rculo\0"\
   "Pechar\0"\
-  "\0"\
-  "\0"\
+  "Contraer todo\0"\
+  "Cor\0"\
   "Albumes de c\303\263mic\0"\
   "Compatibilidade\0"\
   "Cont\303\255nuo\0"\
@@ -7542,10 +7542,10 @@ const char * gTranslations_gl =
   "Non se puido eliminar o cartafol de instalaci\303\263n\0"\
   "Non se puido presentar a p\303\241xina\0"\
   "Non se puido desinstalar o previsualizador de PDFs\0"\
-  "\0"\
+  "Non se pode desinstalar o filtro de busca do Sumatra\0"\
   "Non se puido desinstalar o engadido do navegador\0"\
   "Non se puido escribir %s no disco\0"\
-  "\0"\
+  "Crear anotaci\303\263n\0"\
   "Creado:\0"\
   "Ficheiro actual\0"\
   "Posici\303\263n do punteiro\0"\
@@ -7560,17 +7560,17 @@ const char * gTranslations_gl =
   "Propiedades do documento\0"\
   "Descargar\0"\
   "&Sa\303\255r\tCtrl+Q\0"\
-  "\0"\
+  "Sa&\303\255r da pantalla completa\0"\
   "Documentos EPUB\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Editar\0"\
+  "Editar anotaci\303\263ns\0"\
+  "Editar marcadores\0"\
   "Insira o contrasinal\0"\
   "Insira contrasinal para %s\0"\
   "Insira a li\303\261a de comandos a invocar cando prema d\303\272as veces no documento PDF:\0"\
   "Erro cargando %s\0"\
-  "\0"\
-  "\0"\
+  "Expandir todo\0"\
+  "Exportar marcadores\0"\
   "F&avoritos\0"\
   "Adiante\tAlt+Right Arrow\0"\
   "A toda pantalla\tCtrl+Shift+L\0"\
@@ -7585,7 +7585,7 @@ const char * gTranslations_gl =
   "Favoritos\0"\
   "Documentos FictionBook\0"\
   "Ficheiro %s non atopado\0"\
-  "\0"\
+  "Ficheiro anexo\0"\
   "Tama\303\261o do ficheiro:\0"\
   "Ficheiro:\0"\
   "Procura...\tCtrl+F\0"\
@@ -7605,17 +7605,17 @@ const char * gTranslations_gl =
   "D\303\241ndolle formato ao libro... %d p\303\241xinas\0"\
   "Atopado texto na p\303\241xina %s\0"\
   "Atopado texto na p\303\241xina %s (de novo)\0"\
-  "\0"\
+  "Texto libre\0"\
   "Lido decote\0"\
   "\0"\
   "Ir a p\303\241xina\0"\
   "Agochar as &opci\303\263ns\0"\
   "Agachar o lido decote\0"\
-  "\0"\
+  "Realzar\0"\
   "Usar \"F3\" para amosar seguinte resultado\0"\
   "Ficheiros de imaxe (*.%s)\0"\
-  "\0"\
-  "\0"\
+  "Imaxes\0"\
+  "Trazo\0"\
   "Instalar SumatraPDF\0"\
   "Instalar SumatraPDF no &cartafol:\0"\
   "Fallou a instalaci\303\263n!\0"\
@@ -7624,7 +7624,7 @@ const char * gTranslations_gl =
   "Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF\0"\
   "Deixar que Windows mostre &previsualizaci\303\263ns de documentos PDF\0"\
   "Claro\0"\
-  "\0"\
+  "Li\303\261a\0"\
   "\0"\
   "Facer o SumatraPDF a aplicaci\303\263n por defecto para arquivos PDF?\0"\
   "Facer do SumatraPDF o lector PDF predefinido\0"\
@@ -7632,8 +7632,8 @@ const char * gTranslations_gl =
   "Coincidir mai\303\272sculas e min\303\272sculas\0"\
   "Documentos Mobi\0"\
   "Modificado:\0"\
-  "\0"\
-  "\0"\
+  "Nova xa&nela\tCtrl+N\0"\
+  "Novos marcadores\0"\
   "A nova versi\303\263n %s est\303\241 dispo\303\261ible. \302\277Desexa obtela?\0"\
   "P\303\241xina seguinte\0"\
   "Non se atoparon coincidencias\0"\
@@ -7644,7 +7644,7 @@ const char * gTranslations_gl =
   "\0"\
   "Abrir\0"\
   "Abrir no PDF-XChange\0"\
-  "\0"\
+  "Abrir PDF inserido\0"\
   "Abrir un documento...\0"\
   "Abrir en %s\0"\
   "Abrir no &Adobe Reader\0"\
@@ -7667,8 +7667,8 @@ const char * gTranslations_gl =
   "Documentos PalmDoc\0"\
   "Peche %s para continuar\0"\
   "Agarde por favor - compo\303\261endo...\0"\
-  "\0"\
-  "\0"\
+  "Li\303\261a polivin\303\255lica\0"\
+  "Pol\303\255gono\0"\
   "Documentos Postscript\0"\
   "Pr&esentaci\303\263n\tCtrl+L\0"\
   "P\303\241xina anterior\0"\
@@ -7681,17 +7681,17 @@ const char * gTranslations_gl =
   "Imprimir p\303\241xina %d de %d...\0"\
   "Problema de impresi\303\263n.\0"\
   "Re&nomear...\tF2\0"\
-  "\0"\
+  "Redactar\0"\
   "Lembrar ficheiros abertos\0"\
-  "\0"\
+  "Borrar elemento\0"\
   "Eliminar de favoritos\0"\
   "Eliminar p\303\241xina %s de favoritos\0"\
   "Renomear como\0"\
   "Xirar \303\241 esquerda\tCtrl+Shift+-\0"\
   "Xirar \303\241 dereita\tCtrl+Shift++\0"\
-  "\0"\
+  "Gardar anotaci\303\263ns\0"\
   "Gardar como\0"\
-  "\0"\
+  "Gardar ficheiro inserido...\0"\
   "Gardar atallo...\tCtrl+Shift+S\0"\
   "Procurando %d de %d...\0"\
   "Seleccion&ar todo\0"\
@@ -7701,26 +7701,26 @@ const char * gTranslations_gl =
   "Selecci\303\263n:\0"\
   "Enviar por email...\0"\
   "Establecer li\303\261a de comandos da procura inversa\0"\
-  "\0"\
-  "\0"\
+  "Amosar &marcadores\tF12\0"\
+  "Amosar &favoritos\0"\
   "Amosar p\303\241xinas seguidas\0"\
-  "\0"\
+  "Amosr barra&s de desprazamento\0"\
   "Amosar barra de ferramentas\0"\
-  "\0"\
+  "Amosar &marcadores\tF12\0"\
   "Amosar favoritos\0"\
-  "\0"\
+  "Amosar barras de desprazament&o\0"\
   "Amosar lidos decote\0"\
-  "\0"\
+  "Amosar no carta&fol\0"\
   "Amosar a &barra de marcadores cando estea dispo\303\261ible\0"\
   "Unha soa p\303\241xina\0"\
   "Desculpe, isto non deber\303\255a ocorrer\n\nPor favor, prema 'Cancelar', se quere axudarnos a reparar o motivo deste erro.\0"\
-  "\0"\
+  "Ordenar por\0"\
   "O ficheiro de orixe %s non ten punto de sincronizaci\303\263n\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Cadrado\0"\
+  "Zigzag\0"\
+  "Selo\0"\
   "Iniciar SumatraPDF\0"\
-  "\0"\
+  "Riscar\0"\
   "Asunto:\0"\
   "Instalador %s SumatraPDF\0"\
   "Desinstalador %s SumatraPDF\0"\
@@ -7731,20 +7731,20 @@ const char * gTranslations_gl =
   "Non se atopou ningunha instalaci\303\263n de SumatraPDF.\0"\
   "SumatraPDF \303\251 o seu lector de PDF por defecto\0"\
   "SumatraPDF ser\303\241 agora o seu lector de PDF por defecto\0"\
-  "\0"\
+  "Asistencia do SumatraPDF\0"\
   "O ficheiro de sincronizaci\303\263n non pode abrirse\0"\
-  "\0"\
-  "\0"\
+  "Etiqueta (grande primeiro)\0"\
+  "Etiqueta (pequena primeiro)\0"\
   "Etiquetado PDF\0"\
-  "\0"\
+  "Texto\0"\
   "Documentos de texto\0"\
-  "\0"\
+  "Grazas por escoller RA-MICRO PDF!\0"\
   "Graci\303\261as por escoller SumatraPDF!\0"\
   "Parab\303\251ns! Xa tes SumatraPDF instalado.\0"\
   "O instalador danouse. Por favor, desc\303\241rgueo de novo.\nDesculpe as molestias!\0"\
   "Este documento usa caracter\303\255sticas non compatibles (%s) e pode non presentarse correctamente.\0"\
   "T\303\255tulo:\0"\
-  "\0"\
+  "Subli\303\261ado\0"\
   "Desinstalar SumatraPDF\0"\
   "Fallou a desinstalaci\303\263n\0"\
   "Desinstalaci\303\263n en procreso...\0"\
