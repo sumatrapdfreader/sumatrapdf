@@ -18887,222 +18887,222 @@ const char * gTranslations_th =
   "\340\271\200\340\270\255\340\270\201\340\270\252\340\270\262\340\270\243\340\270\201\340\270\262\340\270\243\340\270\236\340\270\264\340\270\241\340\270\236\340\271\214\0";
 
 const char * gTranslations_tr = 
-  "\0"\
+  "%s kurulumu bulunamad\304\261.\0"\
   "&Hakk\304\261nda\0"\
   "Ger\303\247ek &Boyut\tCtrl+1\0"\
-  "Geli\305\237mi\305\237 Ayarlar\0"\
+  "&Geli\305\237mi\305\237 Ayarlar...\0"\
   "T\303\274m se\303\247ilen &sayfalar\0"\
   "&Geri\tAlt+Sol Ok\0"\
-  "&Kitap G\303\266r\303\274n\303\274m\303\274\0"\
+  "&Kitap G\303\266r\303\274n\303\274m\303\274\tCtrl+8\0"\
   "&Kapat\tCtrl+W\0"\
   "Se\303\247imi &Kopyala\0"\
-  "Se\303\247ileni &kopyala\tCtrl+C\0"\
-  "Tekrar &sorma\0"\
-  "Sadece &\303\247ift sayfalar\0"\
-  "\303\207ift sayfa\tCtrl+7\0"\
+  "Se\303\247imi &Kopyala\tCtrl+C\0"\
+  "Yeniden &sorma\0"\
+  "Yanl\304\261zca &\303\247ift sayfalar\0"\
+  "&Her \304\260ki Y\303\274z\tCtrl+7\0"\
   "&Dosya\0"\
   "&Bulunacak olan:\0"\
   "&\304\260lk Sayfa\tHome\0"\
-  "Sayfalar\304\261 &yazd\304\261r\304\261labilecek alana \303\266l\303\247ekle\0"\
+  "Sayfalar\304\261 &yazd\304\261r\304\261labilecek alana s\304\261\304\237d\304\261r\0"\
   "&Git\0"\
   "Sayfaya &git:\0"\
   "&Yard\304\261m\0"\
   "So&n Sayfa\tEnd\0"\
   "&B\303\274y\303\274te\303\247:\0"\
-  "&El kitab\304\261\0"\
+  "&El Kitab\304\261\0"\
   "B&\303\274y\303\274k/K\303\274\303\247\303\274k harf e\305\237le\305\237tir\0"\
-  "&Sonraki Sayfa\t->\0"\
+  "&Sonraki Sayfa\tSa\304\237 Ok\0"\
   "&Hay\304\261r\0"\
   "&Hay\304\261r, te\305\237ekk\303\274rler\0"\
-  "Sadece &tek sayfalar\0"\
+  "Yaln\304\261zca &tek sayfalar\0"\
   "Belgeyi &A\303\247\0"\
   "&A\303\247...\tCtrl+O\0"\
-  "&Ayarlar\0"\
+  "&Se\303\247enekler\0"\
   "&Se\303\247enekler...\0"\
   "&\305\236ifre:\0"\
-  "Belgeye &Tuttur\0"\
-  "&\303\226nceki Sayfa\t<-\0"\
+  "Belgeyi &Tuttur\0"\
+  "&\303\226nceki Sayfa\tSol Ok\0"\
   "&Yazd\304\261r...\0"\
   "&Yazd\304\261r...\tCtrl+P\0"\
-  "&Bask\304\261... (reddedildi)\0"\
-  "Bu belge i\303\247in \305\237ifreyi &hat\304\261rla\0"\
-  "Bu ayarlar\304\261 her belge i\303\247in &hat\304\261rla\0"\
-  "\0"\
+  "&Yazd\304\261r... (reddedildi)\0"\
+  "Bu belge i\303\247in parolay\304\261 &an\304\261msa\0"\
+  "Bu ayarlar\304\261 her belge i\303\247in &an\304\261msa\0"\
+  "Ge\303\247mi\305\237ten &Kald\304\261r\0"\
   "&Farkl\304\261 Kaydet...\0"\
-  "&Farkl\304\261 kaydet...\tCtrl+S\0"\
+  "&Farkl\304\261 Kaydet...\tCtrl+S\0"\
   "&Ayarlar\0"\
-  "Sayfalar\304\261 bask\304\261 alan\304\261na &indirgele (gerekirse)\0"\
+  "Sayfalar\304\261 bask\304\261 alan\304\261na &indirge (gerekirse)\0"\
   "&Tek Sayfa\tCtrl+6\0"\
   "Bu s&\303\274r\303\274m\303\274 atla\0"\
   "&Tema\0"\
-  "Orijinal sayfa boyutlar\304\261n\304\261 &kullan\0"\
+  "\303\226zg\303\274n sayfa boyutlar\304\261n\304\261 &kullan\0"\
   "G\303\266s&ter\0"\
   "&Pencere\0"\
   "&Evet\0"\
   "&Yak\304\261nla\305\237t\304\261rma\0"\
   "(toplam %d)\0"\
   "(sayfa %s)\0"\
-  "SumatraPDF hakk\304\261nda\0"\
-  "S\304\261k kullan\304\261lanlara ekle\0"\
-  "\0"\
-  "\0"\
-  "\0"\
-  "%s no.lu sayfay\304\261 s\304\261k kullan\304\261lanlara ekle\0"\
-  "\0"\
-  "%s no.lu sayfay\304\261 s\304\261k kullan\304\261lanlara (tercihe ba\304\237l\304\261 isimle) ekle:\0"\
-  "\0"\
+  "SumatraPDF Hakk\304\261nda\0"\
+  "S\304\261k Kullan\304\261lanlara Ekle\0"\
+  "PDF'yi \303\247ocuk olarak ekle\0"\
+  "PDF'yi karde\305\237 olarak ekle\0"\
+  "\303\207ocuk ekle\0"\
+  "%s. sayfay\304\261 s\304\261k kullan\304\261lanlara ekle\0"\
+  "%s. sayfay\304\261 s\304\261k kullan\304\261lanlara ekle\tCtrl+B\0"\
+  "%s. sayfay\304\261 \305\237u (iste\304\237e ba\304\237l\304\261) adla s\304\261k kullan\304\261lanlara ekle:\0"\
+  "Karde\305\237 ekle\0"\
   "S\304\261k kullan\304\261lanlara ekle\0"\
   "Geli\305\237mi\305\237\0"\
   "T\303\274m dosyalar\0"\
-  "B\303\274t\303\274n desteklenen belgeler\0"\
-  "\0"\
+  "T\303\274m desteklenen belgeler\0"\
+  "Notlar\0"\
   "Uygulama:\0"\
-  "\0"\
-  "SumatraPDF'yi bilgisayar\304\261n\304\261zdan kald\304\261rmak istedi\304\237inize emin misiniz ?\0"\
+  "%s kald\304\261r\304\261ls\304\261n istiyor musunuz?\0"\
+  "SumatraPDF'yi kald\304\261rmak istedi\304\237inize emin misiniz?\0"\
   "PDF dosyalar\304\261 ile ba\304\237da\305\237t\304\261rmak ister misiniz?\0"\
   "Ek: %s\0"\
   "Yazar:\0"\
-  "Otomatik\0"\
-  "&G\303\274ncellemeleri otomatik olarak kontrol et\0"\
+  "Kendili\304\237inden\0"\
+  "&G\303\274ncellemeleri kendili\304\237inden denetle\0"\
   "Kitap G\303\266r\303\274n\303\274m\303\274\0"\
-  "Yer imi k\304\261sayollar\304\261\0"\
-  "%s. sayfas\304\261na %s yer imi k\304\261sayolu\0"\
-  "Yer imleri\0"\
+  "Yer \304\260mi K\304\261sayollar\304\261\0"\
+  "%s / %s sayfas\304\261n\304\261 yer imlerine ekle\0"\
+  "Yer \304\260mleri\0"\
   "Bayt\0"\
   "CHM belgeleri\0"\
-  "\304\260nternete eri\305\237ilemiyor (hata %#x)\0"\
-  "Vazge\303\247\0"\
-  "Bu dosyan\304\261n yaz\304\261c\304\261dan d\303\266k\303\274m\303\274 yap\304\261lamaz\0"\
-  "Sondan ba\305\237a arama komutu ba\305\237lat\304\261lamad\304\261. Ayarlarda komut sat\304\261r\304\261n\304\261 kontrol ediniz.\0"\
-  "\0"\
-  "Dil de\304\237i\305\237tir (Change Language)\0"\
-  "&G\303\274ncellemeleri kontrol et\0"\
-  "\0"\
+  "\304\260nternete eri\305\237ilemiyor (hata %#x).\0"\
+  "\304\260ptal Et\0"\
+  "Bu dosya yazd\304\261r\304\261lamaz\0"\
+  "Evrik arama komutu ba\305\237lat\304\261lamad\304\261. Ayarlarda, komut sat\304\261r\304\261n\304\261 g\303\266zden ge\303\247irin.\0"\
+  "Karet\0"\
+  "Dil De\304\237i\305\237tir\0"\
+  "&G\303\274ncellemeleri Denetle\0"\
+  "\303\207ember\0"\
   "Kapat\0"\
-  "\0"\
-  "\0"\
+  "T\303\274m\303\274n\303\274 Katla\0"\
+  "Renk\0"\
   "\303\207izgi romanlar\0"\
   "Uyumluluk\0"\
-  "Devaml\304\261\0"\
-  "Devaml\304\261 Kitap Gibi G\303\266r\303\274n\303\274m\0"\
-  "Devaml\304\261 \303\247ift sayfa\0"\
-  "\303\207eviriye katk\304\261da bulunun.\0"\
+  "S\303\274rekli\0"\
+  "S\303\274rekli Kitap G\303\266r\303\274n\303\274m\303\274\0"\
+  "S\303\274rekli Her \304\260ki Y\303\274z\0"\
+  "\303\207eviriye Katk\304\261 Sa\304\237la\0"\
   "&G\303\266r\303\274nt\303\274y\303\274 Kopyala\0"\
   "&Ba\304\237lant\304\261 Adresini Kopyala\0"\
   "&A\303\247\304\261klamay\304\261 Kopyala\0"\
-  "Metnin kopyalanmas\304\261 reddedildi (g\303\266r\303\274nt\303\274 olarak kopyaland\304\261)\0"\
-  "Telif hakk\304\261:\0"\
-  "Yaz\304\261c\304\261 \303\266zellikleri temin edilemedi\0"\
+  "Metnin kopyalanmas\304\261 reddedildi (yaln\304\261zca g\303\266r\303\274nt\303\274 olarak kopyalan\304\261r)\0"\
+  "Telif Hakk\304\261:\0"\
+  "Yaz\304\261c\304\261 \303\266zellikleri al\304\261namad\304\261\0"\
   "Kurulum dizini olu\305\237turulamad\304\261\0"\
   "Yaz\304\261c\304\261 ba\305\237lat\304\261lamad\304\261\0"\
-  "PDF \303\266nizleyici y\303\274klenemedi\0"\
-  "PDF arama filtresi y\303\274klenemedi\0"\
+  "PDF \303\266n izleyici kurulamad\304\261\0"\
+  "PDF arama s\303\274zgeci kurulamad\304\261\0"\
   "Kurulum dizini kald\304\261r\304\261lamad\304\261\0"\
   "Sayfa olu\305\237turulamad\304\261\0"\
-  "PDF \303\266nizleyicisi kald\304\261r\304\261lamad\304\261\0"\
-  "\0"\
-  "Taray\304\261c\304\261 eklentisi silinemedi\0"\
-  "Diske %s yaz\304\261lamad\304\261\0"\
-  "\0"\
-  "Olu\305\237turma tarihi:\0"\
-  "Y\303\274r\303\274rl\303\274kteki dosya\0"\
+  "PDF \303\266n izleyicisi kald\304\261r\304\261lamad\304\261\0"\
+  "Sumatra arama s\303\274zgeci kald\304\261r\304\261lamad\304\261\0"\
+  "Taray\304\261c\304\261 eklentisi kald\304\261r\304\261lamad\304\261\0"\
+  "%s, diske yaz\304\261lamad\304\261\0"\
+  "Not Olu\305\237tur\0"\
+  "Olu\305\237turma:\0"\
+  "Ge\303\247erli dosya\0"\
   "\304\260mle\303\247 konumu:\0"\
   "Ki\305\237iselle\305\237tirilmi\305\237 &Yak\304\261nla\305\237t\304\261rma... \tCtrl+Y\0"\
   "Karanl\304\261k\0"\
-  "Daha karanl\304\261k\0"\
+  "Kapkaranl\304\261k\0"\
   "Varsay\304\261lan &D\303\274zen:\0"\
-  "Varsay\304\261lan &Yak\304\261nla\305\237t\304\261rma:\0"\
-  "Varsay\304\261lan PDF okuyucu ta\305\237\304\261nabilir modunda de\304\237i\305\237tirilemez\0"\
+  "\303\226ntan\304\261ml\304\261 &Yak\304\261nla\305\237t\304\261rma:\0"\
+  "\303\226ntan\304\261ml\304\261 PDF okuyucu, ta\305\237\304\261nabilir kipte de\304\237i\305\237tirilemez\0"\
   "Reddedilen \304\260zinler:\0"\
   "DjVu belgeleri\0"\
   "Belge \303\226zellikleri\0"\
   "\304\260ndir\0"\
   "\303\207&\304\261k\tCtrl+O\0"\
-  "\0"\
+  "Tam Ekrandan &\303\207\304\261k\0"\
   "EPUB belgeleri\0"\
-  "\0"\
-  "\0"\
-  "\0"\
-  "\305\236ifrenizi giriniz\0"\
-  "%s i\303\247in \305\237ifrenizi giriniz\0"\
+  "D\303\274zenle\0"\
+  "Notlar\304\261 D\303\274zenle\0"\
+  "Yer \304\260mlerini D\303\274zenle\0"\
+  "Parola gir\0"\
+  "%s i\303\247in parola gir\0"\
   "PDF belgesine \303\247ift t\304\261klan\304\261nca y\303\274r\303\274t\303\274lecek komutu giriniz:\0"\
   "%s y\303\274kleme hatas\304\261\0"\
-  "\0"\
-  "\0"\
-  "S&\304\261k kullan\304\261lanlar\0"\
+  "T\303\274m\303\274n\303\274 Yay\0"\
+  "Yer \304\260mlerini D\304\261\305\237a Aktar\0"\
+  "S&\304\261k Kullan\304\261lanlar\0"\
   "\304\260&leri\tAlt+Sa\304\237 Ok\0"\
-  "&Tam Ekran\tCtrl+Shift+L\0"\
-  "\303\207ift sayfa\0"\
-  "Kald\304\261r\304\261c\304\261 kay\304\261t defteri anahtarlar\304\261n\304\261 silemedi\0"\
-  "\nWin 10'da varsay\304\261lan program olarak kay\304\261t edilemedi\0"\
-  "Dosyan\304\261n ismi de\304\237i\305\237tirilemedi!\0"\
+  "&Tam Ekran\tF11\0"\
+  "Her \304\260ki Y\303\274z\0"\
+  "Kald\304\261r\304\261c\304\261 kay\304\261t defteri anahtarlar\304\261 silinemedi\0"\
+  "Win 10'da \303\266ntan\304\261ml\304\261 program olarak kaydedilemedi\0"\
+  "Dosya yeniden adland\304\261r\304\261lamad\304\261!\0"\
   "Dosya kaydedilirken hata \303\247\304\261kt\304\261.\0"\
   "Kay\304\261t defterine geni\305\237letimi\305\237 dosya uzant\304\261s\304\261 yazma ba\305\237ar\304\261s\304\261z oldu\0"\
   "Kay\304\261t defterine kald\304\261rma bilgisi yazma i\305\237i ba\305\237ar\304\261s\304\261z oldu\0"\
   "H\304\261zl\304\261 Web G\303\266r\303\274n\303\274m\303\274\0"\
-  "S\304\261k kullan\304\261lanlar\0"\
+  "S\304\261k Kullan\304\261lanlar\0"\
   "FictionBook belgeleri\0"\
   "%s dosyas\304\261 bulunamad\304\261\0"\
-  "\0"\
-  "Dosya boyutu:\0"\
+  "Dosya Eki\0"\
+  "Dosya Boyutu:\0"\
   "Dosya:\0"\
   "&Bul...\tCtrl+F\0"\
   "Bul\0"\
   "Sonrakini Bul\0"\
-  "\303\226ncekini bul\0"\
+  "\303\226ncekini Bul\0"\
   "Bul:\0"\
-  "&\304\260\303\247eri\304\237e \303\266l\303\247ekle\tCtrl+3\0"\
-  "&Sayfaya s\304\261\304\237d\304\261r\tCtrl+0\0"\
-  "&Geni\305\237li\304\237e s\304\261\304\237d\304\261r\tCtrl+2\0"\
-  "\304\260\303\247eri\304\237e \303\266l\303\247ekle\0"\
-  "Sayfaya s\304\261\304\237d\304\261r\0"\
-  "Geni\305\237li\304\237e s\304\261\304\237d\304\261r\0"\
-  "Geni\305\237li\304\237e \303\266l\303\247ekle ve sayfalar\304\261 devaml\304\261 g\303\266ster\0"\
-  "Tek sayfaya \303\266l\303\247ekle\0"\
+  "&\304\260\303\247eri\304\237e S\304\261\304\237d\304\261r\tCtrl+3\0"\
+  "&Sayfaya S\304\261\304\237d\304\261r\tCtrl+0\0"\
+  "&Geni\305\237li\304\237e S\304\261\304\237d\304\261r\tCtrl+2\0"\
+  "\304\260\303\247eri\304\237i S\304\261\304\237d\304\261r\0"\
+  "Sayfay\304\261 S\304\261\304\237d\304\261r\0"\
+  "Geni\305\237li\304\237e S\304\261\304\237d\304\261r\0"\
+  "Geni\305\237li\304\237e S\304\261\304\237d\304\261r ve Sayfalar\304\261 S\303\274rekli G\303\266ster\0"\
+  "Tek Sayfaya S\304\261\304\237d\304\261r\0"\
   "Yaz\304\261 Tipleri:\0"\
   "Kitap bi\303\247imlendiriliyor... %d sayfa\0"\
-  "Metin %s numaral\304\261 sayfada bulundu\0"\
-  "Metin sayfa %s bulundu (tekrar)\0"\
-  "\0"\
-  "S\304\261k\303\247a okunan\0"\
+  "%s. sayfada metin bulundu\0"\
+  "%s. sayfada metin bulundu (yeniden)\0"\
+  "\303\226zg\303\274r Metin\0"\
+  "S\304\261k\303\247a Okunan\0"\
   "\0"\
   "Sayfaya git\0"\
-  "Sakla & Se\303\247enekler\0"\
+  "&Se\303\247enekleri Gizle\0"\
   "S\304\261k\303\247a okunan\304\261 gizle\0"\
-  "\0"\
+  "Vurgula\0"\
   "\304\260pucu: yeniden bulmak i\303\247in F3 tu\305\237unu kullan\304\261n\0"\
-  "G\303\266r\303\274nt\303\274 dosyalar\304\261 (*.%s)\0"\
+  "Resim dosyalar\304\261 (*.%s)\0"\
   "Resimler\0"\
+  "M\303\274rekkep\0"\
+  "SumatraPDF'yi Kur\0"\
+  "SumatraPDF'yi &folder i\303\247ine kur:\0"\
+  "Kurulum ba\305\237ar\304\261s\304\261z!\0"\
+  "Kurulum s\303\274r\303\274yor...\0"\
   "\0"\
-  "SumatraPDF y\303\274kle\0"\
-  "&folder klas\303\266r\303\274ne SumatraPDF'yi y\303\274kle\0"\
-  "Y\303\274kleme ba\305\237ar\304\261s\304\261z !\0"\
-  "Kurulum devam ediyor...\0"\
-  "\0"\
-  "PDF belgelrini aramak i\303\247in Windows Masa\303\274st\303\274 Aramaya izin ver\0"\
-  "PDF belgelerini g\303\266r\303\274nt\303\274lemek ve \303\266nizleme i\303\247in Windows'a izin ver\0"\
+  "Windows Masa\303\274st\303\274 Arama'n\304\261n, PDF belgelerini aramas\304\261n\304\261 sa\304\237la\0"\
+  "Windows'un PDF belgelerinin \303\266n izlemelerini g\303\266stermesini sa\304\237la\0"\
   "Ayd\304\261nl\304\261k\0"\
+  "\303\207izgi\0"\
   "\0"\
-  "\0"\
-  "SumatraPDF'i PDF dosyalar\304\261 i\303\247in varsay\304\261lan uygulama yapmak ister misiniz?\0"\
-  "Varsay\304\261lan PDF okuyucusu yap\0"\
-  "Man&ga modu\0"\
-  "B\303\274y\303\274k/K\303\274\303\247\303\274k harf e\305\237le\305\237tir\0"\
+  "SumatraPDF, PDF dosyalar\304\261n\304\261n \303\266ntan\304\261ml\304\261 uygulamas\304\261 yap\304\261ls\304\261n m\304\261?\0"\
+  "SumatraPDF'yi \303\266ntan\304\261ml\304\261 PDF okuyucum yap\0"\
+  "Man&ga Kipi\0"\
+  "B\303\274y\303\274k/K\303\274\303\247\303\274k Harf E\305\237le\305\237tir\0"\
   "Mobi belgeleri\0"\
-  "De\304\237i\305\237tirilme tarihi:\0"\
+  "De\304\237i\305\237tirilme:\0"\
   "Yeni &pencere\tCtrl+N\0"\
-  "\0"\
+  "Yeni Yer \304\260mleri\0"\
   "Yeni s\303\274r\303\274m %s da\304\237\304\261t\304\261ma sunulmu\305\237tur. \304\260ndirmek ister misiniz?\0"\
   "Sonraki Sayfa\0"\
   "Sonu\303\247 bulunamad\304\261\0"\
-  "%u sat\304\261r\304\261 etraf\304\261nda %s dosyas\304\261ndaki sonu\303\247 bulunamad\304\261\0"\
-  "Herhangi bir senkronizasyon dosyas\304\261 bulunamad\304\261\0"\
-  "Bu konumda senkronizasyon bilgisi mevcut de\304\237ildir\0"\
-  "Sayfa say\304\261s\304\261:\0"\
+  "%u sat\304\261r\304\261 \303\247evresinde, %s dosyas\304\261nda sonu\303\247 yok\0"\
+  "E\305\237zamanlama dosyas\304\261 bulunamad\304\261\0"\
+  "Bu konumda e\305\237zamanlama bilgisi yok\0"\
+  "Sayfa Say\304\261s\304\261:\0"\
   "Tamam\0"\
   "&A\303\247\0"\
   "PDF-XChange ile a\303\247\0"\
-  "\0"\
+  "G\303\266m\303\274l\303\274 PDF A\303\247\0"\
   "Belge a\303\247...\0"\
   "%s i\303\247inde a\303\247\0"\
   "&Adobe Reader ile a\303\247\0"\
@@ -19110,116 +19110,116 @@ const char * gTranslations_tr =
   "Microsoft HTML Help ile a\303\247\0"\
   "Microsoft XPS-Viewer ile a\303\247\0"\
   "\303\226&zellikler\0"\
-  "&\303\226zellikleri\tCtrl+D\0"\
-  "PDF Belge\0"\
-  "PDF Optimizasyonlar\304\261:\0"\
+  "&\303\226zellikler\tCtrl+D\0"\
+  "PDF Belgesi\0"\
+  "PDF \304\260yile\305\237tirmeleri:\0"\
   "PDF \303\234retici:\0"\
   "PDF S\303\274r\303\274m\303\274:\0"\
   "PDF belgeleri\0"\
   "&Sayfa...\tCtrl+G\0"\
   "Sayfa %s\0"\
   "Sayfa Boyutu:\0"\
-  "%u numaral\304\261 sayfa mevcut de\304\237ildir\0"\
+  "%u numaral\304\261 sayfa yok\0"\
   "Sayfa \303\266l\303\247eklendirme\0"\
   "Sayfa:\0"\
   "PalmDoc belgeleri\0"\
   "Devam etmek i\303\247in %s kapat\304\261n!\0"\
-  "Bekleyiniz - olu\305\237turulmakta...\0"\
-  "\0"\
-  "\0"\
+  "Bekleyiniz - olu\305\237turuluyor...\0"\
+  "\303\207oklu \303\207izgi\0"\
+  "\303\207okgen\0"\
   "Postscript belgeleri\0"\
-  "Tan&\304\261t\304\261m\tCtrl+L\0"\
+  "S&unum\tF5\0"\
   "\303\226nceki Sayfa\0"\
   "Yazd\304\261r\0"\
-  "Bask\304\261 aral\304\261\304\237\304\261\0"\
-  "Girilen isimli Yaz\304\261c\304\261 bulunamad\304\261\0"\
-  "Bask\304\261 devam ediyor.\0"\
-  "Yazd\304\261rma s\303\274r\303\274yor. \304\260ptal edip \303\247\304\261kmak istiyor musunuz?\0"\
-  "Yaz\304\261c\304\261 hala kullan\304\261mda. Durdurup yeniden ba\305\237lat\304\261ls\304\261nm\304\261?\0"\
-  "Sayfa %d %d yazd\304\261r\304\261l\304\261yor...\0"\
-  "Yazd\304\261rma problemi.\0"\
-  "\304\260sim De\304\237i\305\237tir\0"\
-  "\0"\
-  "&A\303\247\304\261lan dosyalar\304\261 hat\304\261rla\0"\
-  "\0"\
-  "S\304\261k kullan\304\261lanlardan \303\247\304\261kar\0"\
-  "Sayfa %s s\304\261k kullan\304\261lanlardan \303\247\304\261kar\0"\
-  "Belirtilen \304\260sme De\304\237i\305\237tir\0"\
-  "S&ola \303\247evir\tCtrl+Shift+-\0"\
-  "&Sa\304\237a \303\247evir\tCtrl+Shift++\0"\
-  "\0"\
-  "Farkl\304\261 kaydet\0"\
-  "\0"\
-  "K&\304\261sayolu kaydet...\tCtrl+Shift+S\0"\
-  "%d sayfa (toplam %d sayfa) taran\304\261yor...\0"\
-  "&Hepsini Se\303\247\0"\
+  "Yazd\304\261rma aral\304\261\304\237\304\261\0"\
+  "Verilen adda yaz\304\261c\304\261 yok.\0"\
+  "Yazd\304\261r\304\261l\304\261yor.\0"\
+  "Hala yazd\304\261r\304\261l\304\261yor. Durdurup \303\247\304\261kmak istiyor musunuz?\0"\
+  "Hala yazd\304\261r\304\261l\304\261yor. Durdurup yeniden ba\305\237lat\304\261ls\304\261n m\304\261?\0"\
+  "%d / %d sayfa yazd\304\261r\304\261l\304\261yor...\0"\
+  "Yazd\304\261rma sorunu.\0"\
+  "Yeniden Adla&nd\304\261r...\tF2\0"\
+  "G\303\266zden Ge\303\247ir\0"\
+  "&A\303\247\304\261lan dosyalar\304\261 an\304\261msa\0"\
+  "\303\226geyi Kald\304\261r\0"\
+  "S\304\261k kullan\304\261lanlardan kald\304\261r\0"\
+  "%s sayfas\304\261n\304\261 s\304\261k kullan\304\261lanlardan kald\304\261r\0"\
+  "\305\236\303\266yle Yeniden Adland\304\261r\0"\
+  "S&ola D\303\266nd\303\274r\tCtrl+Shift+-\0"\
+  "&Sa\304\237a D\303\266nd\303\274r\tCtrl+Shift++\0"\
+  "Notlar\304\261 Kaydet\0"\
+  "Farkl\304\261 Kaydet\0"\
+  "G\303\266m\303\274l\303\274 Dosyay\304\261 Kaydet...\0"\
+  "K&\304\261sayolu Kaydet...\tCtrl+Shift+S\0"\
+  "%d / %d sayfa aran\304\261yor...\0"\
+  "&T\303\274m\303\274n\303\274 Se\303\247\0"\
   "T&\303\274m\303\274n\303\274 Se\303\247\tCtrl+A\0"\
-  "\304\260\303\247eri\304\237i Ctrl+sol fare butonu ile se\303\247\0"\
-  "SumatraPDF'in y\303\274klenece\304\237i alan\304\261 se\303\247in:\0"\
+  "Ctrl+sol fare d\303\274\304\237mesiyle i\303\247erik se\303\247\0"\
+  "SumatraPDF'nin kurulaca\304\237\304\261 klas\303\266r\303\274n yerini se\303\247:\0"\
   "Se\303\247im:\0"\
-  "&E-mail ile yolla...\0"\
-  "Sondan ba\305\237a arama komut sat\304\261r\304\261\0"\
-  "\0"\
-  "\0"\
-  "&Sayfalar\304\261 devaml\304\261 g\303\266ster\0"\
-  "\0"\
-  "&Ara\303\247 \303\247ubu\304\237unu g\303\266ster\0"\
-  "\0"\
-  "S\304\261k kullan\304\261lanlar\304\261 g\303\266ster\0"\
-  "\0"\
+  "&E-postayla G\303\266nder...\0"\
+  "Evrik arama komut sat\304\261r\304\261 belirle\0"\
+  "Yer &\304\260mlerini G\303\266ster\tF12\0"\
+  "&Yer \304\260mlerini G\303\266ster\0"\
+  "&Sayfalar\304\261 S\303\274rekli G\303\266ster\0"\
+  "&Kayd\304\261rma \303\207ubuklar\304\261n\304\261 G\303\266ster\0"\
+  "&Ara\303\247 \303\207ubu\304\237unu G\303\266ster\tF8\0"\
+  "Yer &\304\260mlerini G\303\266ster\tF12\0"\
+  "S\304\261k Kullan\304\261lanlar\304\261 G\303\266ster\0"\
+  "Kayd\304\261rma \303\207&ubuklar\304\261n\304\261 G\303\266ster\0"\
   "S\304\261k okunanlar\304\261 g\303\266ster\0"\
-  "\0"\
-  "Yer &imleri yan \303\247ubu\304\237unu bulundu\304\237unda g\303\266ster\0"\
-  "Tek sayfa\0"\
-  "\303\234zg\303\274n\303\274z, bu olmamal\304\261yd\304\261!\n\nE\304\237er hatay\304\261 d\303\274zeltmemize yard\304\261mc\304\261 olmak istiyorsan\304\261z l\303\274tfen 'Cancel' a bas\304\261n.\0"\
-  "\0"\
-  "%s kaynak dosyas\304\261nda senkronizasyon noktas\304\261 yoktur\0"\
+  "&Klas\303\266rde g\303\266ster\0"\
+  "Varsa yer &imleri yan \303\247ubu\304\237unu g\303\266ster\0"\
+  "Tek Sayfa\0"\
+  "\303\234zg\303\274n\303\274z, bu olmamal\304\261yd\304\261!\n\nE\304\237er hatay\304\261 d\303\274zeltmemize yard\304\261mc\304\261 olmak istiyorsan\304\261z l\303\274tfen '\304\260ptal'e bas\304\261n.\0"\
+  "\305\236una G\303\266re S\304\261rala\0"\
+  "%s kaynak dosyas\304\261nda e\305\237zamanlama noktas\304\261 yok\0"\
   "Kare\0"\
-  "\0"\
-  "\0"\
+  "K\304\261vr\304\261ml\304\261\0"\
+  "Damga\0"\
   "SumatraPDF'yi ba\305\237lat\0"\
-  "\0"\
+  "\303\234st\303\274 \303\207izili\0"\
   "Konu:\0"\
-  "SumatraPDF %s y\303\274kleyici\0"\
+  "SumatraPDF %s Kurucu\0"\
   "SumatraPDF %s Kald\304\261r\304\261c\304\261\0"\
   "SumatraPDF Se\303\247enekleri\0"\
   "SumatraPDF G\303\274ncelleme\0"\
   "SumatraPDF \303\247\303\266kt\303\274\0"\
   "SumatraPDF kald\304\261r\304\261ld\304\261.\0"\
   "SumatraPDF kurulum dosyas\304\261 bulunamad\304\261.\0"\
-  "SumatraPDF varsay\304\261lan PDF okuyucunuz.\0"\
-  "SumatraPDF art\304\261k varsay\304\261lan PDF okuyucunuzdur\0"\
-  "\0"\
-  "Senkronizasyon dosyas\304\261 a\303\247\304\261lamad\304\261\0"\
-  "\0"\
-  "\0"\
-  "\304\260\305\237aretlenmi\305\237 PDF\0"\
-  "\0"\
-  "Metin belgeler\0"\
-  "\0"\
-  "SumatraPDF 'i se\303\247ti\304\237iniz i\303\247in te\305\237ekk\303\274rler !\0"\
-  "Te\305\237ekk\303\274rler! SumatraPDF bilgisayar\304\261n\304\261za kuruldu\0"\
-  "Y\303\274kleyici hasar g\303\266rm\303\274\305\237.L\303\274tfen tekrar indirin.\nGe\303\247ici rahats\304\261zl\304\261k i\303\247in \303\266z\303\274r dileriz!\0"\
+  "SumatraPDF, \303\266ntan\304\261ml\304\261 PDF okuyucunuzdur\0"\
+  "SumatraPDF, art\304\261k \303\266ntan\304\261ml\304\261 PDF okuyucunuzdur\0"\
+  "SumatraPDF'yi Destekle\0"\
+  "E\305\237zamanlama dosyas\304\261 a\303\247\304\261lamad\304\261\0"\
+  "Etiket (\303\266nce b\303\274y\303\274k)\0"\
+  "Etiket (\303\266nce k\303\274\303\247\303\274k)\0"\
+  "Etiketli PDF\0"\
+  "Metin\0"\
+  "Metin belgeleri\0"\
+  "RA-MICRO PDF'yi se\303\247ti\304\237iniz i\303\247in te\305\237ekk\303\274rler!\0"\
+  "SumatraPDF'yi se\303\247ti\304\237iniz i\303\247in te\305\237ekk\303\274rler!\0"\
+  "Te\305\237ekk\303\274rler! SumatraPDF bilgisayar\304\261n\304\261za kuruldu.\0"\
+  "Kurucu bozulmu\305\237. L\303\274tfen yeniden indirin.\nGe\303\247ici rahats\304\261zl\304\261k i\303\247in \303\266z\303\274r dileriz!\0"\
   "Bu belge desteklenmeyen \303\266zellikler i\303\247eriyor (%s) ve do\304\237ru g\303\266r\303\274nt\303\274lenemeyebilir\0"\
   "Ba\305\237l\304\261k:\0"\
-  "\0"\
+  "Alt\304\261 \303\207izili\0"\
   "SumatraPDF'i kald\304\261r\0"\
-  "Program kald\304\261rma ba\305\237ar\304\261s\304\261z\0"\
-  "Program kald\304\261r\304\261l\304\261yor...\0"\
+  "Kald\304\261r\304\261lamad\304\261\0"\
+  "Kald\304\261r\304\261l\304\261yor...\0"\
   "Bilinmeyen kaynak dosyas\304\261 (%s)\0"\
-  "&Sekmeler kullan\0"\
-  "SumatraPDF varsay\304\261lan PDF okuyucum olsun\0"\
+  "&Sekme kullan\0"\
+  "SumatraPDF'yi \303\266ntan\304\261ml\304\261 PDF okuyucu olarak kullan\0"\
   "G\303\266r\303\274n\303\274m\0"\
-  "&Website ziyaret et\0"\
+  "&Web sitesini ziyaret et\0"\
   "Uyar\304\261\0"\
   "XPS belgeleri\0"\
   "G\303\274ncel s\303\274r\303\274m\303\274 kullan\304\261yorsunuz.\0"\
   "Kulland\304\261\304\237\304\261n\304\261z s\303\274r\303\274m: %s\0"\
-  "Yak\304\261nla\305\237t\304\261rma\0"\
+  "Yak\304\261nla\305\237t\304\261r\0"\
   "Yak\304\261nla\305\237t\304\261r\0"\
   "Uzakla\305\237t\304\261r\0"\
-  "Yak\304\261nla\305\237t\304\261rma fakt\303\266r\303\274\0"\
-  "[De\304\237i\305\237iklik tespit edildi; g\303\274ncelleniyor] %s\0"\
+  "Yak\304\261nla\305\237t\304\261rma de\304\237i\305\237keni\0"\
+  "[De\304\237i\305\237iklik saptand\304\261; tazeleniyor] %s\0"\
   "metin kopyalan\304\261yor\0"\
   "belge yazd\304\261r\304\261l\304\261yor\0";
 
