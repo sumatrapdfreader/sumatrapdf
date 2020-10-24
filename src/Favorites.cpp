@@ -174,16 +174,23 @@ bool Favorites::IsPageInFavorites(const WCHAR* filePath, int pageNo) {
 }
 
 static Favorite* FindByPage(DisplayState* ds, int pageNo, const WCHAR* pageLabel = nullptr) {
+    if (!ds || !ds->favorites) {
+        return nullptr;
+    }
+    auto favs = ds->favorites;
+    int n = favs->isize();
     if (pageLabel) {
-        for (size_t i = 0; i < ds->favorites->size(); i++) {
-            if (str::Eq(ds->favorites->at(i)->pageLabel, pageLabel)) {
-                return ds->favorites->at(i);
+        for (int i = 0; i < n; i++) {
+            auto fav = favs->at(i);
+            if (str::Eq(fav->pageLabel, pageLabel)) {
+                return fav;
             }
         }
     }
-    for (size_t i = 0; i < ds->favorites->size(); i++) {
-        if (pageNo == ds->favorites->at(i)->pageNo) {
-            return ds->favorites->at(i);
+    for (int i = 0; i < n; i++) {
+        auto fav = favs->at(i);
+        if (pageNo == fav->pageNo) {
+            return fav;
         }
     }
     return nullptr;
