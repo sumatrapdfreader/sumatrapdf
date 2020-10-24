@@ -19010,9 +19010,9 @@ const char * gTranslations_tr =
   "Ki\305\237iselle\305\237tirilmi\305\237 &Yak\304\261nla\305\237t\304\261rma... \tCtrl+Y\0"\
   "Karanl\304\261k\0"\
   "Kapkaranl\304\261k\0"\
-  "Varsay\304\261lan &D\303\274zen:\0"\
+  "\303\226ntan\304\261ml\304\261 &D\303\274zen:\0"\
   "\303\226ntan\304\261ml\304\261 &Yak\304\261nla\305\237t\304\261rma:\0"\
-  "\303\226ntan\304\261ml\304\261 PDF okuyucu, ta\305\237\304\261nabilir kipte de\304\237i\305\237tirilemez\0"\
+  "Ta\305\237\304\261nabilir kipte, \303\266ntan\304\261ml\304\261 PDF okuyucu de\304\237i\305\237tirilemez\0"\
   "Reddedilen \304\260zinler:\0"\
   "DjVu belgeleri\0"\
   "Belge \303\226zellikleri\0"\
@@ -19051,14 +19051,14 @@ const char * gTranslations_tr =
   "Sonrakini Bul\0"\
   "\303\226ncekini Bul\0"\
   "Bul:\0"\
-  "&\304\260\303\247eri\304\237e S\304\261\304\237d\304\261r\tCtrl+3\0"\
-  "&Sayfaya S\304\261\304\237d\304\261r\tCtrl+0\0"\
+  "&\304\260\303\247eri\304\237i S\304\261\304\237d\304\261r\tCtrl+3\0"\
+  "&Sayfay\304\261 S\304\261\304\237d\304\261r\tCtrl+0\0"\
   "&Geni\305\237li\304\237e S\304\261\304\237d\304\261r\tCtrl+2\0"\
   "\304\260\303\247eri\304\237i S\304\261\304\237d\304\261r\0"\
   "Sayfay\304\261 S\304\261\304\237d\304\261r\0"\
   "Geni\305\237li\304\237e S\304\261\304\237d\304\261r\0"\
   "Geni\305\237li\304\237e S\304\261\304\237d\304\261r ve Sayfalar\304\261 S\303\274rekli G\303\266ster\0"\
-  "Tek Sayfaya S\304\261\304\237d\304\261r\0"\
+  "Tek Sayfa S\304\261\304\237d\304\261r\0"\
   "Yaz\304\261 Tipleri:\0"\
   "Kitap bi\303\247imlendiriliyor... %d sayfa\0"\
   "%s. sayfada metin bulundu\0"\

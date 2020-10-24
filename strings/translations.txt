@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-244a176bc8fa8afcf95ef7a41d8efc5b42026984
+4d5625cf17052cf6ef6cd982be3d938e4bb0973c
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -7507,7 +7507,7 @@ sv:Standard&utseende
 ta:கோட நிலை வடிவமைப்பு
 th:รูปแบบ &ค่าเริ่มต้น:
 tl:Default na Ayos:
-tr:Varsayılan &Düzen:
+tr:Öntanımlı &Düzen:
 tw:預設布局(&L):
 uk:Розташування за замовчуванням:
 uz:Andoza &joylashish
@@ -7637,7 +7637,7 @@ sv:Standardläsare för PDF kan inte ändras i portabelt läge
 ta:முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை
 th:ค่า PDF reader เริ่มต้นไม่สามารถเปลี่ยนได้ในโหมดพกพา
 tl:Hindi maaaring palitan ang default na PDF reader sa portable na mode
-tr:Öntanımlı PDF okuyucu, taşınabilir kipte değiştirilemez
+tr:Taşınabilir kipte, öntanımlı PDF okuyucu değiştirilemez
 tw:無法在可攜模式變更預設 PDF 閱讀器
 uk:Не можна змінити штатний переглядач PDF у портативному режимі
 uz:Portable usulida andoza PDF ko'rish vositasini o'zgartirib bo'lmaydi
@@ -9894,7 +9894,7 @@ sv:Anpassa efter &innehåll\tCtrl+3
 ta:பொருத்தம் & உள்ளடக்கம்\tCtrl+3
 th:พอดี &เนื้อหา Ctrl + 3
 tl:Pagkasyahin ang laman\tCtrl+3
-tr:&İçeriğe Sığdır\tCtrl+3
+tr:&İçeriği Sığdır\tCtrl+3
 tw:符合內容(&C)\tCtrl+3
 uk:Розмістити вміст \tCtrl+3
 uz:&Tarkibiga moslash\tCtrl+3
@@ -9964,7 +9964,7 @@ sv:Anpassa efter &helsida\tCtrl+0
 ta:பக்கம் பொருந்தவை\tCtrl+0
 th:พอดี &หน้า Ctrl+0
 tl:Ipagkasya ang &Pahina\tCtrl+0
-tr:&Sayfaya Sığdır\tCtrl+0
+tr:&Sayfayı Sığdır\tCtrl+0
 tw:符合頁面(&P)\tCtrl+0
 uk:Припа&сувати сторінку\tCtrl+0
 uz:&Betga moslash\tCtrl+0
@@ -10366,7 +10366,7 @@ sv:Anpassa till helsida
 ta:ஒற்றை பக்கம் பொருந்துக
 th:เต็มจอหน้าเดียว
 tl:Pagkasyahin ang isang pahina
-tr:Tek Sayfaya Sığdır
+tr:Tek Sayfa Sığdır
 tw:符合單頁(&T)
 uk:Вмістити на сторінку
 uz:Bitta betga moslash
