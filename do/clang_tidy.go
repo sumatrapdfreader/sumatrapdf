@@ -130,6 +130,10 @@ func runClangTidy() {
 		`src\uia\*.cpp`,
 		`src\uia\*.h`,
 		`src\tools\*.cpp`,
+		`src\previewer\*.h`,
+		`src\previewer\*.cpp`,
+		`src\ifilter\*.h`,
+		`src\ifilter\*.cpp`,
 		`ext\mupdf_load_system_font.c`,
 	}
 
