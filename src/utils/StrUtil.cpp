@@ -1178,7 +1178,7 @@ static char* EnsureCap(Str* s, size_t needed) {
     }
     if (!newEls) {
         CrashAlwaysIf(gAllowAllocFailure.load() == 0);
-        return false;
+        return nullptr;
     }
     s->els = newEls;
     s->cap = (u32)newCap;
@@ -1558,7 +1558,7 @@ static WCHAR* EnsureCap(WStr* s, size_t needed) {
 
     if (!newEls) {
         CrashAlwaysIf(gAllowAllocFailure.load() == 0);
-        return false;
+        return nullptr;
     }
     s->els = newEls;
     s->cap = (u32)newCap;
@@ -1627,6 +1627,12 @@ WStr::WStr(const WStr& that) {
 WStr::WStr(std::wstring_view s) {
     Reset();
     AppendView(s);
+}
+
+WStr::WStr(const WCHAR* s) {
+    Reset();
+    std::wstring_view ws{s};
+    AppendView(ws);
 }
 
 WStr& WStr::operator=(const WStr& that) {

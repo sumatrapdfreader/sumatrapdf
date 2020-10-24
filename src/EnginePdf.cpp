@@ -31,6 +31,8 @@ extern "C" {
 extern "C" void drop_cached_fonts_for_ctx(fz_context*);
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
+AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp);
+
 Kind kindEnginePdf = "enginePdf";
 
 static fz_link* FixupPageLinks(fz_link* root) {

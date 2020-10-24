@@ -21,6 +21,7 @@ bool HttpRspOk(const HttpRsp* rsp) {
 bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
     logf(L"HttpGet: url: '%s'\n", url);
     HINTERNET hReq = nullptr;
+    DWORD infoLevel;
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
@@ -39,7 +40,7 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
         goto Error;
     }
 
-    DWORD infoLevel = HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER;
+    infoLevel = HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER;
     if (!HttpQueryInfoW(hReq, infoLevel, &rspOut->httpStatusCode, &headerBuffSize, nullptr)) {
         logf("HttpGet: HttpQueryInfoW failed\n");
         LogLastError();
@@ -161,22 +162,23 @@ bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers
     void* d = nullptr;
     DWORD dLen = 0;
     unsigned int timeoutMs = 15 * 1000;
-    // Get the response status.
     DWORD respHttpCode = 0;
     DWORD respHttpCodeSize = sizeof(respHttpCode);
     DWORD dwRead = 0;
+    DWORD flags;
+    DWORD dwService;
 
     HINTERNET hInet = InternetOpenW(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet) {
         goto Exit;
     }
-    DWORD dwService = INTERNET_SERVICE_HTTP;
+    dwService = INTERNET_SERVICE_HTTP;
     hConn = InternetConnectW(hInet, server, (INTERNET_PORT)port, nullptr, nullptr, dwService, 0, 1);
     if (!hConn) {
         goto Exit;
     }
 
-    DWORD flags = INTERNET_FLAG_NO_UI;
+    flags = INTERNET_FLAG_NO_UI;
     if (port == 443) {
         flags |= INTERNET_FLAG_SECURE;
     }

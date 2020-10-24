@@ -731,6 +731,9 @@ void StressTest::TickTimer() {
 }
 
 void StressTest::OnTimer(int timerIdGot) {
+    DisplayModel* dm;
+    bool didRender;
+
     CrashIf(timerId != timerIdGot);
     KillTimer(win->hwndFrame, timerId);
     if (!win->IsDocLoaded()) {
@@ -755,8 +758,8 @@ void StressTest::OnTimer(int timerIdGot) {
     // (but we don't wait more than 3 seconds).
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
-    DisplayModel* dm = win->AsFixed();
-    bool didRender = gRenderCache.Exists(dm, currPage, dm->GetRotation());
+    dm = win->AsFixed();
+    didRender = gRenderCache.Exists(dm, currPage, dm->GetRotation());
     if (!didRender && dm->ShouldCacheRendering(currPage)) {
         double timeInMs = TimeSinceInMs(currPageRenderTime);
         if (timeInMs > 3.0 * 1000) {

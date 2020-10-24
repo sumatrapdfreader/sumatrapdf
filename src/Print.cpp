@@ -829,6 +829,7 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
 
 bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     bool ok = false;
+    LONG ret;
     if (!HasPermission(Perm_PrinterAccess)) {
         return false;
     }
@@ -885,7 +886,7 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
     devMode = (DEVMODEW*)Allocator::AllocZero(nullptr, structSize);
 
     // Get the default DevMode for the printer and modify it for your needs.
-    LONG ret = DocumentPropertiesW(nullptr, printer, printerName, devMode, nullptr, DM_OUT_BUFFER);
+    ret = DocumentPropertiesW(nullptr, printer, printerName, devMode, nullptr, DM_OUT_BUFFER);
     if (IDOK != ret) {
         if (displayErrors) {
             MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));

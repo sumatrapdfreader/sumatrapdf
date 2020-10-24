@@ -83,7 +83,7 @@ class Fb2Doc {
     explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
 
-    std::span<u8> Fb2Doc::GetXmlData() const;
+    std::span<u8> GetXmlData() const;
 
     ImageData* GetImageData(const char* fileName);
     ImageData* GetCoverImage();
@@ -116,7 +116,7 @@ class PalmDoc {
     explicit PalmDoc(const WCHAR* path);
     ~PalmDoc();
 
-    std::span<u8> PalmDoc::GetHtmlData() const;
+    std::span<u8> GetHtmlData() const;
 
     WCHAR* GetProperty(DocumentProperty prop) const;
     const WCHAR* GetFileName() const;
@@ -144,7 +144,7 @@ class HtmlDoc {
     explicit HtmlDoc(const WCHAR* path);
     ~HtmlDoc();
 
-    std::span<u8> HtmlDoc::GetHtmlData();
+    std::span<u8> GetHtmlData();
 
     ImageData* GetImageData(const char* fileName);
     std::span<u8> GetFileData(const char* relPath);

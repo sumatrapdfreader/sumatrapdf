@@ -278,8 +278,9 @@ struct WStr {
     static constexpr size_t kElSize = sizeof(WCHAR);
 
     explicit WStr(size_t capHint = 0, Allocator* allocator = nullptr);
-    WStr(const WStr& orig);
-    WStr(std::wstring_view s);
+    WStr(const WStr&);
+    WStr(std::wstring_view);
+    WStr(const WCHAR*);
     WStr& operator=(const WStr& that);
     ~WStr();
     void Reset();

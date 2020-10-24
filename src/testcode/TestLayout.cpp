@@ -82,7 +82,7 @@ static EditCtrl* CreateEdit(HWND parent, std::string_view s) {
     return w;
 }
 
-static char* ddItems[3] = {"foo", "another one", "bar"};
+static const char* ddItems[3] = {"foo", "another one", "bar"};
 
 static void onDropDownSelected(DropDownSelectionChangedEvent* args) {
     int idx = args->idx;
@@ -93,7 +93,7 @@ static void onDropDownSelected(DropDownSelectionChangedEvent* args) {
 static DropDownCtrl* CreatedDropDown(HWND parent) {
     auto w = new DropDownCtrl(parent);
     for (size_t i = 0; i < dimof(ddItems); i++) {
-        char* s = ddItems[i];
+        auto s = ddItems[i];
         std::string_view sv(s);
         w->items.Append(sv);
     }

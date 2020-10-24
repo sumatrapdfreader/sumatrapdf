@@ -330,6 +330,7 @@ std::span<u8> MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     size_t size = 0;
     AutoFreeWstr fileName = strconv::Utf8ToWstr(fileInfo->name.data());
     RARHeaderDataEx rarHeader = {0};
+    int res;
     bool ok = FindFile(hArc, &rarHeader, fileName.Get());
     if (!ok) {
         goto Exit;
@@ -347,7 +348,7 @@ std::span<u8> MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
         goto Exit;
     }
     uncompressedBuf.Set(data, size);
-    int res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
+    res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
     ok = (res == 0) && (uncompressedBuf.Left() == 0);
 
 Exit:

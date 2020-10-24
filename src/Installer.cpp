@@ -369,6 +369,8 @@ void onRaMicroInstallerFinished();
 
 static DWORD WINAPI InstallerThread([[maybe_unused]] LPVOID data) {
     success = false;
+    const WCHAR* appName{nullptr};
+    const WCHAR* exeName{nullptr};
 
     if (!ExtractInstallerFiles()) {
         log("ExtractInstallerFiles() failed\n");
@@ -421,8 +423,8 @@ static DWORD WINAPI InstallerThread([[maybe_unused]] LPVOID data) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
 
-    const WCHAR* appName = GetAppName();
-    const WCHAR* exeName = GetExeName();
+    appName = GetAppName();
+    exeName = GetExeName();
     if (!ListAsDefaultProgramWin10(appName, exeName, GetSupportedExts())) {
         log("Failed to register as default program on win 10\n");
         NotifyFailed(_TR("Failed to register as default program on win 10"));
@@ -1332,6 +1334,7 @@ static bool CreateRaMicroInstallerWindow() {
 
 int RunInstallerRaMicro() {
     int ret = 0;
+    bool ok = true;
 
     if (!OpenEmbeddedFilesArchive()) {
         return 1;
@@ -1348,7 +1351,7 @@ int RunInstallerRaMicro() {
         goto Exit;
     }
 
-    bool ok = CreateRaMicroInstallerWindow();
+    ok = CreateRaMicroInstallerWindow();
     if (!ok) {
         goto Exit;
     }

@@ -894,8 +894,8 @@ static bool CreateRaMicroUninstallerWindow() {
 }
 
 int RunUninstallerRaMicro() {
-    int ret = 1;
-
+    int ret{1};
+    bool ok{false};
     const WCHAR* msgFmt = _TR("Are you sure you want to uninstall %s?");
     const WCHAR* appName = GetAppName();
     gDefaultMsg = str::Format(msgFmt, appName);
@@ -924,7 +924,7 @@ int RunUninstallerRaMicro() {
         goto Exit;
     }
 
-    bool ok = CreateRaMicroUninstallerWindow();
+    ok = CreateRaMicroUninstallerWindow();
     if (!ok) {
         goto Exit;
     }

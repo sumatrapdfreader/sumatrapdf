@@ -115,4 +115,3 @@ bool IsAnnotationEq(Annotation* a1, Annotation* a2);
 
 void DeleteVecAnnotations(Vec<Annotation*>* annots);
 Vec<Annotation*> FilterAnnotationsForPage(Vec<Annotation*>* annots, int pageNo);
-AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp);

@@ -473,6 +473,7 @@ std::span<u8> ReadFileWithAllocator(const char* filePath, Allocator* allocator) 
         return {};
     }
     size_t size = ftell(fp);
+    size_t nRead = 0;
     if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         goto Error;
     }
@@ -485,7 +486,7 @@ std::span<u8> ReadFileWithAllocator(const char* filePath, Allocator* allocator) 
         return {};
     }
 
-    size_t nRead = fread((void*)d, 1, size, fp);
+    nRead = fread((void*)d, 1, size, fp);
     if (nRead != size) {
         int err = ferror(fp);
         CrashIf(err == 0);

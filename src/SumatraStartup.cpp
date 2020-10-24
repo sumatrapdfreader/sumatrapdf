@@ -425,17 +425,21 @@ static HWND FindPrevInstWindow(HANDLE* hMutex) {
     AutoFreeWstr mapId = str::Format(L"SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
-    HANDLE hMap = nullptr;
-    HWND hwnd = nullptr;
+    HANDLE hMap{nullptr};
+    HWND hwnd{nullptr};
+    DWORD prevProcId{0};
+    DWORD* procId{nullptr};
+    bool hasPrevInst;
+    DWORD lastErr{0};
 Retry:
     // use a memory mapping containing a process id as mutex
     hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
     if (!hMap) {
         goto Error;
     }
-    DWORD lastErr = GetLastError();
-    bool hasPrevInst = (lastErr == ERROR_ALREADY_EXISTS);
-    DWORD* procId = (DWORD*)MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(DWORD));
+    lastErr = GetLastError();
+    hasPrevInst = (lastErr == ERROR_ALREADY_EXISTS);
+    procId = (DWORD*)MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(DWORD));
     if (!procId) {
         CloseHandle(hMap);
         hMap = nullptr;
@@ -449,7 +453,7 @@ Retry:
     }
 
     // if the mapping already exists, find one window belonging to the original process
-    DWORD prevProcId = *procId;
+    prevProcId = *procId;
     UnmapViewOfFile(procId);
     CloseHandle(hMap);
     while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, nullptr)) != nullptr) {
@@ -751,7 +755,13 @@ extern "C" void destroy_system_font_list();
 
 int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstance, [[maybe_unused]] LPSTR cmdLine,
                      [[maybe_unused]] int nCmdShow) {
-    int retCode = 1; // by default it's error
+    int retCode{1}; // by default it's error
+    int nWithDde{0};
+    WindowInfo* win{nullptr};
+    bool showStartPage{false};
+    bool restoreSession{false};
+    HANDLE hMutex{nullptr};
+    HWND hPrevWnd{nullptr};
 
     CrashIf(hInstance != GetInstance());
 
@@ -965,8 +975,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         goto Exit;
     }
 
-    HANDLE hMutex = nullptr;
-    HWND hPrevWnd = nullptr;
     if (i.printDialog || i.stressTestPath || gPluginMode) {
         // TODO: pass print request through to previous instance?
     } else if (i.reuseDdeInstance) {
@@ -994,7 +1002,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         goto Exit;
     }
 
-    bool restoreSession = false;
     if (gGlobalPrefs->sessionData->size() > 0 && !gPluginURL) {
         restoreSession = gGlobalPrefs->restoreSession;
     }
@@ -1008,7 +1015,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         }
     }
 
-    bool showStartPage =
+    showStartPage =
         !restoreSession && i.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
 
     // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
@@ -1019,7 +1026,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flags);
     }
 
-    WindowInfo* win = nullptr;
     if (restoreSession) {
         for (SessionData* data : *gGlobalPrefs->sessionData) {
             win = CreateAndShowWindowInfo(data);
@@ -1051,7 +1057,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         }
     }
 
-    int nWithDde = (int)gDdeOpenOnStartup.size();
+    nWithDde = (int)gDdeOpenOnStartup.size();
     if (nWithDde > 0) {
         logf("Loading %d documents queued by dde open\n", nWithDde);
         for (auto&& filePath : gDdeOpenOnStartup) {

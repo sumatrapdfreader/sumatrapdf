@@ -43,9 +43,9 @@ To write new regression test:
 #include "TextSelection.h"
 #include "TextSearch.h"
 
-static WCHAR* gTestFilesDir;
+static const WCHAR* gTestFilesDir;
 
-static WCHAR* TestFilesDir() {
+static const WCHAR* TestFilesDir() {
     return gTestFilesDir;
 }
 
@@ -64,10 +64,10 @@ static void printflush(const char* s) {
 /* Auto-detect the location of test files. Ultimately we might add a cmd-line
 option to specify this directory, for now just add your location(s) to the list */
 static bool FindTestFilesDir() {
-    WCHAR* dirsToCheck[] = {L"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
+    const WCHAR* dirsToCheck[] = {L"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
                             L"C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"};
     for (size_t i = 0; i < dimof(dirsToCheck); i++) {
-        WCHAR* dir = dirsToCheck[i];
+        const WCHAR* dir = dirsToCheck[i];
         if (dir::Exists(dir)) {
             gTestFilesDir = dir;
             return true;
