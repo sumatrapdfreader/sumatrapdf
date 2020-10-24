@@ -724,7 +724,7 @@ static int signer_create_digest(fz_context *ctx, pdf_pkcs7_signer *signer, fz_st
 
 exit:
 	BIO_free(bp7);
-	BIO_free(bp7in);
+	BIO_free_all(bp7in);
 	PKCS7_free(p7);
 	BIO_free(bdata);
 

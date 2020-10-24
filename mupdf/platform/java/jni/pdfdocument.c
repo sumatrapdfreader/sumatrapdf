@@ -724,7 +724,7 @@ FUN(PDFDocument_nativeSaveWithStream)(JNIEnv *env, jobject self, jobject jstream
 	fz_var(array);
 
 	if (!ctx || !pdf) return;
-	if (!stream) jni_throw_arg_void(env, "stream must not be null");
+	if (!jstream) jni_throw_arg_void(env, "stream must not be null");
 
 	if (joptions)
 	{

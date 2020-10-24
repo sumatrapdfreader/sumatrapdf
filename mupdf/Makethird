@@ -25,19 +25,23 @@ ifeq ($(OS),Linux)
   USE_SYSTEM_CURL := yes
 endif
 
-ifneq ($(USE_SYSTEM_LEPTONICA),yes)
-ifeq ($(wildcard thirdparty/leptonica/src/*),)
-  HAVE_LEPTONICA := no
+# Use of Tesseract is optional:
+ifeq ($(USE_TESSERACT),yes)
+
+ifeq ($(USE_SYSTEM_LEPTONICA),yes)
+  HAVE_LEPTONICA := $(HAVE_SYS_LEPTONICA)
 else
-  HAVE_LEPTONICA := yes
+  ifneq ($(wildcard thirdparty/leptonica/src/*),)
+    HAVE_LEPTONICA := yes
+  endif
 endif
-endif
-ifneq ($(USE_SYSTEM_TESSERACT),yes)
-ifeq ($(wildcard thirdparty/tesseract/src/*),)
-  HAVE_TESSERACT := no
+
+ifeq ($(USE_SYSTEM_TESSERACT),yes)
+  HAVE_TESSERACT := $(HAVE_SYS_TESSERACT)
 else
-  HAVE_TESSERACT := yes
-endif
+  ifneq ($(wildcard thirdparty/tesseract/src/*),)
+    HAVE_TESSERACT := yes
+  endif
 endif
 
 ifeq ($(HAVE_LEPTONICA),yes)
@@ -45,6 +49,16 @@ ifeq ($(HAVE_TESSERACT),yes)
   CFLAGS += -DHAVE_LEPTONICA -DHAVE_TESSERACT
   LIBS += -lstdc++
   THIRD_LIBS += -lpthread
+endif
+endif
+
+endif
+
+# Use of Extract is optional:
+ifeq ($(USE_EXTRACT),yes)
+ifneq ($(wildcard thirdparty/extract/src/*),)
+  HAVE_EXTRACT := yes
+  CFLAGS += -DHAVE_EXTRACT
 endif
 endif
 
@@ -462,6 +476,7 @@ endif
 # --- LEPTONICA ---
 
 ifeq ($(HAVE_LEPTONICA),yes)
+
 ifeq ($(USE_SYSTEM_LEPTONICA),yes)
   THIRD_CFLAGS += $(SYS_LEPTONICA_CFLAGS)
   THIRD_LIBS += $(SYS_LEPTONICA_LIBS)
@@ -718,7 +733,6 @@ THIRD_SRC += thirdparty/tesseract/src/ccutil/clst.cpp
 THIRD_SRC += thirdparty/tesseract/src/ccutil/elst.cpp
 THIRD_SRC += thirdparty/tesseract/src/ccutil/elst2.cpp
 THIRD_SRC += thirdparty/tesseract/src/ccutil/errcode.cpp
-THIRD_SRC += thirdparty/tesseract/src/ccutil/globaloc.cpp
 THIRD_SRC += thirdparty/tesseract/src/ccutil/mainblk.cpp
 THIRD_SRC += thirdparty/tesseract/src/ccutil/params.cpp
 THIRD_SRC += thirdparty/tesseract/src/ccutil/scanutils.cpp
@@ -804,24 +818,24 @@ THIRD_SRC += thirdparty/tesseract/src/wordrec/wordrec.cpp
 
 THIRD_CFLAGS += -Ithirdparty/tesseract/include -Iscripts/tesseract
 
-ifeq ($HAVE_AVX,yes)
+ifeq ($(HAVE_AVX),yes)
 TESSERACT_AVX_FLAGS = -mavx -DHAVE_AVX -D__AVX__
 THIRD_SRC += thirdparty/tesseract/src/arch/dotproductavx.cpp
 endif
-ifeq ($HAVE_AVX2,yes)
+ifeq ($(HAVE_AVX2),yes)
 TESSERACT_AVX2_FLAGS = -mavx2 -DHAVE_AVX2 -D__AVX2__
 THIRD_SRC += thirdparty/tesseract/src/arch/intsimdmatrixavx2.cpp
 endif
-ifeq ($HAVE_FMA,yes)
+ifeq ($(HAVE_FMA),yes)
 TESSERACT_FMA_FLAGS = -mfma -DHAVE_FMA -D__FMA__
 THIRD_SRC += thirdparty/tesseract/src/arch/dotproductfma.cpp
 endif
-ifeq ($HAVE_SSE4_1,yes)
+ifeq ($(HAVE_SSE4_1),yes)
 TESSERACT_SSE_FLAGS = -msse4.1 -DHAVE_SSE4_1 -D__SSE4_1__
 THIRD_SRC += thirdparty/tesseract/src/arch/dotproductsse.cpp
 THIRD_SRC += thirdparty/tesseract/src/arch/intsimdmatrixsse.cpp
 endif
-ifeq ($HAVE_NEON,yes)
+ifeq ($(HAVE_NEON),yes)
 TESSERACT_NEON_FLAGS = -mneon -DHAVE_NEON
 THIRD_SRC += thirdparty/tesseract/src/arch/intsimdmatrixneon.cpp
 endif
@@ -890,4 +904,39 @@ $(OUT)/thirdparty/tesseract/src/cutil/%.o: thirdparty/tesseract/src/cutil/%.cpp
 	$(TESSERACT_CXX_CMD)
 
 endif
+endif
+
+
+# --- EXTRACT ---
+
+ifeq ($(HAVE_EXTRACT),yes)
+
+THIRD_SRC += thirdparty/extract/src/alloc.c
+THIRD_SRC += thirdparty/extract/src/astring.c
+THIRD_SRC += thirdparty/extract/src/buffer.c
+THIRD_SRC += thirdparty/extract/src/docx.c
+THIRD_SRC += thirdparty/extract/src/docx_template.c
+THIRD_SRC += thirdparty/extract/src/extract.c
+THIRD_SRC += thirdparty/extract/src/mem.c
+THIRD_SRC += thirdparty/extract/src/outf.c
+THIRD_SRC += thirdparty/extract/src/xml.c
+THIRD_SRC += thirdparty/extract/src/zip.c
+
+THIRD_CFLAGS += -Ithirdparty/extract/include
+
+# We make all compilations depend on generated files, to ensure that all
+# generated files are up to date before use.
+#
+$(OUT)/thirdparty/extract/src/%.o: thirdparty/extract/src/%.c
+	$(CC_CMD) -W -Wall -Werror
+
+# Have a separate rule to regenerate the checked-in generated files, and add to
+# top-level 'generate' target.
+#
+thirdparty/extract/src/docx_template_git: .EXTRACT_ALWAYS
+	./thirdparty/extract/src/docx_template_build.py -i thirdparty/extract/src/template.docx -o thirdparty/extract/src/docx_template
+.EXTRACT_ALWAYS:
+
+generate: thirdparty/extract/src/docx_template_git
+
 endif

@@ -790,12 +790,12 @@ fz_draw_clip_path(fz_context *ctx, fz_device *devp, const fz_path *path, int eve
 	if (state[1].shape)
 	{
 		state[1].shape = fz_new_pixmap_with_bbox(ctx, NULL, bbox, NULL, 1);
-		fz_clear_pixmap(ctx, state[1].shape);
+		fz_copy_pixmap_rect(ctx, state[1].shape, state[0].shape, bbox, dev->default_cs);
 	}
 	if (state[1].group_alpha)
 	{
 		state[1].group_alpha = fz_new_pixmap_with_bbox(ctx, NULL, bbox, NULL, 1);
-		fz_clear_pixmap(ctx, state[1].group_alpha);
+		fz_copy_pixmap_rect(ctx, state[1].group_alpha, state[0].group_alpha, bbox, dev->default_cs);
 	}
 
 	fz_convert_rasterizer(ctx, rast, even_odd, state[1].mask, NULL, 0);
@@ -875,12 +875,12 @@ fz_draw_clip_stroke_path(fz_context *ctx, fz_device *devp, const fz_path *path, 
 	if (state->shape)
 	{
 		state[1].shape = fz_new_pixmap_with_bbox(ctx, NULL, bbox, NULL, 1);
-		fz_clear_pixmap(ctx, state[1].shape);
+		fz_copy_pixmap_rect(ctx, state[1].shape, state[0].shape, bbox, dev->default_cs);
 	}
 	if (state->group_alpha)
 	{
 		state[1].group_alpha = fz_new_pixmap_with_bbox(ctx, NULL, bbox, NULL, 1);
-		fz_clear_pixmap(ctx, state[1].group_alpha);
+		fz_copy_pixmap_rect(ctx, state[1].group_alpha, state[0].group_alpha, bbox, dev->default_cs);
 	}
 
 	fz_convert_rasterizer(ctx, rast, 0, state[1].mask, NULL, 0);
@@ -1190,14 +1190,14 @@ fz_draw_clip_text(fz_context *ctx, fz_device *devp, const fz_text *text, fz_matr
 	if (state->shape)
 	{
 		state[1].shape = fz_new_pixmap_with_bbox(ctx, NULL, bbox, NULL, 1);
-		fz_clear_pixmap(ctx, state[1].shape);
+		fz_copy_pixmap_rect(ctx, state[1].shape, state[0].shape, bbox, dev->default_cs);
 	}
 	else
 		state[1].shape = NULL;
 	if (state->group_alpha)
 	{
 		state[1].group_alpha = fz_new_pixmap_with_bbox(ctx, NULL, bbox, NULL, 1);
-		fz_clear_pixmap(ctx, state[1].group_alpha);
+		fz_copy_pixmap_rect(ctx, state[1].group_alpha, state[0].group_alpha, bbox, dev->default_cs);
 	}
 	else
 		state[1].group_alpha = NULL;
@@ -1314,14 +1314,14 @@ fz_draw_clip_stroke_text(fz_context *ctx, fz_device *devp, const fz_text *text, 
 	if (state->shape)
 	{
 		state[1].shape = shape = fz_new_pixmap_with_bbox(ctx, NULL, bbox, NULL, 1);
-		fz_clear_pixmap(ctx, shape);
+		fz_copy_pixmap_rect(ctx, state[1].shape, state[0].shape, bbox, dev->default_cs);
 	}
 	else
 		shape = state->shape;
 	if (state->group_alpha)
 	{
 		state[1].group_alpha = group_alpha = fz_new_pixmap_with_bbox(ctx, NULL, bbox, NULL, 1);
-		fz_clear_pixmap(ctx, group_alpha);
+		fz_copy_pixmap_rect(ctx, state[1].group_alpha, state[0].group_alpha, bbox, dev->default_cs);
 	}
 	else
 		group_alpha = NULL;

@@ -836,9 +836,6 @@
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\errcode.cpp">
       <Filter>Source Files\tesseract\ccutil</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\globaloc.cpp">
-      <Filter>Source Files\tesseract\ccutil</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\thirdparty\tesseract\src\ccutil\mainblk.cpp">
       <Filter>Source Files\tesseract\ccutil</Filter>
     </ClCompile>

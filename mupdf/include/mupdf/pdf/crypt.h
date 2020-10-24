@@ -39,7 +39,7 @@ unsigned char *pdf_crypt_key(fz_context *ctx, pdf_crypt *crypt);
 
 void pdf_print_crypt(fz_context *ctx, fz_output *out, pdf_crypt *crypt);
 
-void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, size_t digest_offset, size_t digest_length, pdf_pkcs7_signer *signer);
+void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, pdf_obj *field, size_t digest_offset, size_t digest_length, pdf_pkcs7_signer *signer);
 
 /*
 	User access permissions from PDF reference.

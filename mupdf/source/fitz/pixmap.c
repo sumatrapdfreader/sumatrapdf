@@ -555,7 +555,8 @@ void
 fz_clear_pixmap_with_value(fz_context *ctx, fz_pixmap *pix, int value)
 {
 	unsigned char *s;
-	int w, h, n, stride, len;
+	int w, h, n;
+	ptrdiff_t stride, len;
 	int alpha = pix->alpha;
 
 	w = pix->w;
@@ -572,7 +573,7 @@ fz_clear_pixmap_with_value(fz_context *ctx, fz_pixmap *pix, int value)
 
 	n = pix->n;
 	stride = pix->stride;
-	len = w * n;
+	len = (ptrdiff_t)w * n;
 
 	s = pix->samples;
 	if (value == 255 || !alpha)
@@ -584,7 +585,7 @@ fz_clear_pixmap_with_value(fz_context *ctx, fz_pixmap *pix, int value)
 		}
 		while (h--)
 		{
-			memset(s, value, (unsigned int)len);
+			memset(s, value, len);
 			s += stride;
 		}
 	}

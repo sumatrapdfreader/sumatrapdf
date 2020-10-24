@@ -1379,60 +1379,73 @@ size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signa
 	return len;
 }
 
-static fz_xml_doc *
-pdf_parse_xml(fz_context *ctx, pdf_obj *obj)
-{
-	fz_buffer *buf = pdf_load_stream(ctx, obj);
-	fz_xml_doc *xml = NULL;
-
-	fz_try(ctx)
-		xml = fz_parse_xml(ctx, buf, 0);
-	fz_always(ctx)
-		fz_drop_buffer(ctx, buf);
-	fz_catch(ctx)
-		fz_rethrow(ctx);
-
-	return xml;
-}
-
-static int load_xfa(fz_context *ctx, pdf_document *doc)
+static fz_xml_doc *load_xfa(fz_context *ctx, pdf_document *doc)
 {
 	pdf_obj *xfa;
-	int i, len;
+	fz_buffer *buf = NULL;
+	fz_buffer *packet = NULL;
+	int i;
 
-	if (doc->xfa.count)
-		return 1; /* Already loaded, and present. */
+	if (doc->xfa)
+		return doc->xfa; /* Already loaded, and present. */
 
 	xfa = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm/XFA");
-	if (!pdf_is_array(ctx, xfa))
-		return 0; /* No XFA */
+	if (!pdf_is_array(ctx, xfa) && !pdf_is_stream(ctx, xfa))
+		return NULL; /* No XFA */
 
-	len = (pdf_array_len(ctx, xfa)+1)>>1;
-	doc->xfa.entries = fz_calloc(ctx, len, sizeof(pdf_xfa_entry));
-	doc->xfa.count = len;
+	fz_var(buf);
+	fz_var(packet);
 
-	for(i = 0; i < len; i++)
+	fz_try(ctx)
 	{
-		doc->xfa.entries[i].key = fz_strdup(ctx, pdf_to_text_string(ctx, pdf_array_get(ctx, xfa, i*2)));
-		doc->xfa.entries[i].value = pdf_parse_xml(ctx, pdf_array_get(ctx, xfa, i*2+1));
+		if (pdf_is_stream(ctx, xfa))
+		{
+			/* Load entire XFA resource */
+			buf = pdf_load_stream(ctx, xfa);
+		}
+		else
+		{
+			/* Concatenate packets to create entire XFA resource */
+			buf = fz_new_buffer(ctx, 1024);
+			for(i = 0; i < pdf_array_len(ctx, xfa); ++i)
+			{
+				pdf_obj *ref = pdf_array_get(ctx, xfa, i);
+				if (pdf_is_stream(ctx, ref))
+				{
+					packet = pdf_load_stream(ctx, ref);
+					fz_append_buffer(ctx, buf, packet);
+					fz_drop_buffer(ctx, packet);
+					packet = NULL;
+				}
+			}
+		}
+
+		/* Parse and stow away XFA resource in document */
+		doc->xfa = fz_parse_xml(ctx, buf, 0);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, packet);
+		fz_drop_buffer(ctx, buf);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
 	}
 
-	return len > 0;
+	return doc->xfa;
 }
 
 static fz_xml *
-get_xfa_root(fz_context *ctx, pdf_document *doc, const char *str)
+get_xfa_resource(fz_context *ctx, pdf_document *doc, const char *str)
 {
-	int i;
+	fz_xml_doc *xfa;
 
-	if (load_xfa(ctx, doc) == 0)
+	xfa = load_xfa(ctx, doc);
+	if (!xfa)
 		return NULL;
 
-	for (i = 0; i < doc->xfa.count; i++)
-		if (strcmp(doc->xfa.entries[i].key, str) == 0)
-			return fz_xml_root(doc->xfa.entries[i].value);
-
-	return NULL;
+	return fz_xml_find_down(fz_xml_root(xfa), str);
 }
 
 static int
@@ -1488,13 +1501,12 @@ get_locked_fields_from_xfa(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 	char *name = pdf_field_name(ctx, field);
 	char *n = name;
 	const char *use;
-	fz_xml *root, *node;
+	fz_xml *node;
 
 	if (name == NULL)
 		return NULL;
 
-	root = get_xfa_root(ctx, doc, "template");
-	node = fz_xml_find(root, "template");
+	node = get_xfa_resource(ctx, doc, "template");
 
 	do
 	{

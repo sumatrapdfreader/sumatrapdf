@@ -63,7 +63,7 @@ void *fz_pool_alloc(fz_context *ctx, fz_pool *pool, size_t size)
 		return fz_pool_alloc_oversize(ctx, pool, size);
 
 	/* round size to pointer alignment (we don't expect to use doubles) */
-	size = ((size + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*);
+	size = (size + FZ_POINTER_ALIGN_MOD - 1) & ~(FZ_POINTER_ALIGN_MOD-1);
 
 	if (pool->pos + size > pool->end)
 	{

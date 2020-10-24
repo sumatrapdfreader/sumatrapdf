@@ -10,7 +10,7 @@ enum
 	PDF_SIGFLAGS_APPENDONLY = 2
 };
 
-void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, size_t hexdigest_offset, size_t hexdigest_length, pdf_pkcs7_signer *signer)
+void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, pdf_obj *field, size_t hexdigest_offset, size_t hexdigest_length, pdf_pkcs7_signer *signer)
 {
 	fz_stream *stm = NULL;
 	fz_stream *in = NULL;
@@ -18,14 +18,24 @@ void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, size
 	int brange_len = pdf_array_len(ctx, byte_range)/2;
 	unsigned char *digest = NULL;
 	size_t digest_len;
+	pdf_obj *v = pdf_dict_get(ctx, field, PDF_NAME(V));
+	pdf_obj *c = pdf_dict_get(ctx, v, PDF_NAME(Contents));
+	size_t len;
+	const char *s = pdf_to_string(ctx, c, &len);
+	char *cstr = NULL;
 
 	fz_var(stm);
 	fz_var(in);
 	fz_var(brange);
 	fz_var(digest);
+	fz_var(cstr);
 
 	if (hexdigest_length < 4)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Bad parameters to pdf_write_digest");
+
+	digest_len = (hexdigest_length - 2) / 2;
+	if (len < digest_len)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Signature contents array smaller than digest");
 
 	fz_try(ctx)
 	{
@@ -42,7 +52,6 @@ void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, size
 		stm = fz_stream_from_output(ctx, out);
 		in = fz_open_range_filter(ctx, stm, brange, brange_len);
 
-		digest_len = (hexdigest_length - 2) / 2;
 		digest = fz_malloc(ctx, digest_len);
 		digest_len = signer->create_digest(ctx, signer, in, digest, digest_len);
 
@@ -53,11 +62,18 @@ void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, size
 
 		fz_seek_output(ctx, out, (int64_t)hexdigest_offset+1, SEEK_SET);
 
+		cstr = fz_malloc(ctx, len);
+
 		for (z = 0; z < digest_len; z++)
 			fz_write_printf(ctx, out, "%02x", digest[z]);
+		memcpy(cstr, digest, digest_len);
+		memcpy(cstr + digest_len, s + digest_len, len - digest_len);
+
+		pdf_dict_put_string(ctx, v, PDF_NAME(Contents), cstr, len);
 	}
 	fz_always(ctx)
 	{
+		fz_free(ctx, cstr);
 		fz_free(ctx, digest);
 		fz_free(ctx, brange);
 		fz_drop_stream(ctx, stm);
@@ -159,8 +175,15 @@ static void enact_sig_locking(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 	if (locked == NULL)
 		return;
 
+	fz_try(ctx)
+	{
 	fields = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm/Fields");
 	pdf_walk_tree(ctx, fields, PDF_NAME(Kids), check_field_locking, pop_field_locking, &data, &ff_names[0], &ff);
+}
+	fz_always(ctx)
+		pdf_drop_locked_fields(ctx, locked);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *signer)
@@ -251,6 +274,8 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 void pdf_clear_signature(fz_context *ctx, pdf_widget *widget)
 {
 	int flags;
+
+	pdf_xref_remove_unsaved_signature(ctx, ((pdf_annot *) widget)->page->doc,  ((pdf_annot *) widget)->obj);
 
 	pdf_dirty_annot(ctx, widget);
 
@@ -344,10 +369,12 @@ char *pdf_signature_format_designated_name(fz_context *ctx, pdf_pkcs7_designated
 pdf_pkcs7_designated_name *pdf_signature_get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature)
 {
 	char *contents = NULL;
-	size_t contents_len = 0;
+	size_t contents_len;
 	pdf_pkcs7_designated_name *dn;
 
 	contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
+	if (contents_len == 0)
+		return NULL;
 
 	fz_try(ctx)
 	dn = verifier->get_signatory(ctx, verifier, (unsigned char *)contents, contents_len);
@@ -431,17 +458,21 @@ int pdf_check_signature(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_docum
 			case PDF_SIGNATURE_ERROR_NOT_TRUSTED:
 			{
 				pdf_pkcs7_designated_name *dn;
-				char *s;
-
-				fz_strlcat(ebuf, " (", ebufsize);
 
 				dn = pdf_signature_get_signatory(ctx, verifier, doc, signature);
-				s = pdf_signature_format_designated_name(ctx, dn);
-				pdf_signature_drop_designated_name(ctx, dn);
-
+				if (dn)
+				{
+					char *s = pdf_signature_format_designated_name(ctx, dn);
+					pdf_signature_drop_designated_name(ctx, dn);
+				fz_strlcat(ebuf, " (", ebufsize);
 				fz_strlcat(ebuf, s, ebufsize);
 				fz_free(ctx, s);
-				fz_strlcat(ebuf, ")", ebufsize);
+				}
+				else
+				{
+					fz_strlcat(ebuf, "()", ebufsize);
+				}
+
 				break;
 			}
 			default:

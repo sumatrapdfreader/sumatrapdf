@@ -6,6 +6,30 @@ OS := $(OS:MSYS%=MINGW)
 OS := $(OS:Windows_NT=MINGW)
 OS := $(OS:Darwin=MACOS)
 
+# Feature configuration options
+
+ifeq ($(tesseract),yes)
+  USE_TESSERACT := yes
+  build_suffix += -tesseract
+endif
+
+ifeq ($(extract),yes)
+  USE_EXTRACT := yes
+  build_suffix += -extract
+endif
+
+ifeq ($(tofu),yes)
+  build_suffix += -tofu
+  XCFLAGS += -DTOFU
+endif
+
+ifeq ($(tofu_cjk),yes)
+  build_suffix += -tofu_cjk
+  XCFLAGS += -DTOFU_CJK
+endif
+
+# System specific features
+
 ifeq ($(findstring -fembed-bitcode,$(XCFLAGS)),)
   # clang does not support these in combination with -fembed-bitcode
   CFLAGS += -ffunction-sections -fdata-sections
@@ -25,6 +49,7 @@ SANITIZE_FLAGS += -fsanitize=address
 SANITIZE_FLAGS += -fsanitize=leak
 
 ifeq ($(shared),yes)
+  build_prefix += shared-
   LIB_CFLAGS = -fPIC
   ifeq ($(OS),MACOS)
     LIB_LDFLAGS = -dynamiclib
@@ -71,8 +96,8 @@ else ifeq ($(build),memento)
     ifeq ($(OS),OpenBSD)
       LIBS += -L /usr/local/lib -l execinfo
     else
-    LIBS += -ldl
-  endif
+      LIBS += -ldl
+    endif
   endif
 else ifeq ($(build),gperf)
   CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer -DGPERF
@@ -147,14 +172,14 @@ else ifeq ($(OS),Linux)
 	SYS_ZLIB_LIBS := $(shell pkg-config --libs zlib)
   endif
 
-  HAVE_LEPTONICA := $(shell pkg-config --exists 'lept >= 1.7.4' && echo yes)
-  ifeq ($(HAVE_LEPTONICA),yes)
+  HAVE_SYS_LEPTONICA := $(shell pkg-config --exists 'lept >= 1.7.4' && echo yes)
+  ifeq ($(HAVE_SYS_LEPTONICA),yes)
 	SYS_LEPTONICA_CFLAGS := $(shell pkg-config --cflags lept)
 	SYS_LEPTONICA_LIBS := $(shell pkg-config --libs lept)
   endif
 
-  HAVE_TESSERACT := $(shell pkg-config --exists 'tesseract-ocr >= 4.0.0' && echo yes)
-  ifeq ($(HAVE_TESSERACT),yes)
+  HAVE_SYS_TESSERACT := $(shell pkg-config --exists 'tesseract >= 4.0.0' && echo yes)
+  ifeq ($(HAVE_SYS_TESSERACT),yes)
 	SYS_TESSERACT_CFLAGS := $(shell pkg-config --cflags tesseract)
 	SYS_TESSERACT_LIBS := $(shell pkg-config --libs tesseract)
   endif
@@ -201,7 +226,7 @@ endif
 # On Windows, run 'nmake -f scripts\fontdump.nmake' in a Visual Studio command prompt.
 
 ifeq "$(OS)" "wasm"
-  OUT := build/wasm/$(build)
+  build_prefix += wasm/
   CC = emcc
   CXX = em++
   AR = emar
@@ -212,7 +237,7 @@ ifeq "$(OS)" "wasm"
 endif
 
 ifeq "$(OS)" "mingw32-cross"
-  OUT := build/$(OS)/$(build)
+  build_prefix += $(OS)/
   CC = i686-w64-mingw32-gcc
   CXX = i686-w64-mingw32-g++
   LD = i686-w64-mingw32-gcc
@@ -222,7 +247,7 @@ ifeq "$(OS)" "mingw32-cross"
 endif
 
 ifeq "$(OS)" "mingw64-cross"
-  OUT := build/$(OS)/$(build)
+  build_prefix += $(OS)/
   CC = x86_64-w64-mingw32-gcc
   CXX = x86_64-w64-mingw32-g++
   LD = x86_64-w64-mingw32-gcc

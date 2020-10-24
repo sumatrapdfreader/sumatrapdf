@@ -680,6 +680,12 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 	}
 
 	/*
+		The newly linked object needs to record the parent_num.
+	*/
+	if (parent != 0)
+		pdf_set_obj_parent(ctx, val, parent);
+
+	/*
 		parent_num == 0 while an object is being parsed from the file.
 		No further action is necessary.
 	*/
@@ -688,11 +694,9 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 
 	/*
 		Otherwise we need to ensure that the containing hierarchy of objects
-		has been moved to the incremental xref section and the newly linked
-		object needs to record the parent_num
+		has been moved to the incremental xref section.
 	*/
 	pdf_xref_ensure_incremental_object(ctx, doc, parent);
-	pdf_set_obj_parent(ctx, val, parent);
 }
 
 void

@@ -137,6 +137,9 @@ expand_lists(fz_context *ctx, pdf_write_state *opts, int num)
 
 	/* objects are numbered 0..num and maybe two additional objects for linearization */
 	num += 3;
+	if (num <= opts->list_len)
+		return;
+
 	opts->use_list = fz_realloc_array(ctx, opts->use_list, num, int);
 	opts->ofs_list = fz_realloc_array(ctx, opts->ofs_list, num, int64_t);
 	opts->gen_list = fz_realloc_array(ctx, opts->gen_list, num, int);
@@ -2252,6 +2255,8 @@ static void writexrefstream(fz_context *ctx, pdf_document *doc, pdf_write_state 
 	fz_try(ctx)
 	{
 		num = pdf_create_object(ctx, doc);
+		expand_lists(ctx, opts, num);
+
 		dict = pdf_new_dict(ctx, doc, 6);
 		pdf_update_object(ctx, doc, num, dict);
 
@@ -2764,7 +2769,7 @@ static void dump_object_details(fz_context *ctx, pdf_document *doc, pdf_write_st
 
 	for (i = 0; i < pdf_xref_len(ctx, doc); i++)
 	{
-		fprintf(stderr, "%d@%d: use=%d\n", i, opts->ofs_list[i], opts->use_list[i]);
+		fprintf(stderr, "%d@%ld: use=%d\n", i, opts->ofs_list[i], opts->use_list[i]);
 	}
 }
 #endif
@@ -2808,6 +2813,7 @@ static void presize_unsaved_signature_byteranges(fz_context *ctx, pdf_document *
 
 static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_state *opts)
 {
+	pdf_obj *byte_range = NULL;
 	char *buf = NULL, *ptr;
 	int s;
 	fz_stream *stm = NULL;
@@ -2823,7 +2829,6 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 			if (xref->unsaved_sigs)
 			{
 				pdf_unsaved_sig *usig;
-				pdf_obj *byte_range;
 				size_t buf_size = 0;
 				size_t i;
 				size_t last_end;
@@ -2831,7 +2836,6 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 				for (usig = xref->unsaved_sigs; usig; usig = usig->next)
 				{
 					size_t size = usig->signer->max_digest_size(ctx, usig->signer);
-
 					buf_size = fz_maxz(buf_size, size);
 				}
 
@@ -2870,10 +2874,8 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 				fz_drop_stream(ctx, stm);
 				stm = NULL;
 
-				/* Recreate ByteRange with correct values. Initially store the
-				* recreated object in the first of the unsaved signatures */
+				/* Recreate ByteRange with correct values. */
 				byte_range = pdf_new_array(ctx, doc, 4);
-				pdf_dict_putl_drop(ctx, xref->unsaved_sigs->field, byte_range, PDF_NAME(V), PDF_NAME(ByteRange), NULL);
 
 				last_end = 0;
 				for (usig = xref->unsaved_sigs; usig; usig = usig->next)
@@ -2886,7 +2888,7 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 				pdf_array_push_int(ctx, byte_range, xref->end_ofs - last_end);
 
 				/* Copy the new ByteRange to the other unsaved signatures */
-				for (usig = xref->unsaved_sigs->next; usig; usig = usig->next)
+				for (usig = xref->unsaved_sigs; usig; usig = usig->next)
 					pdf_dict_putl_drop(ctx, usig->field, pdf_copy_array(ctx, byte_range), PDF_NAME(V), PDF_NAME(ByteRange), NULL);
 
 				/* Write the byte range into buf, padding with spaces*/
@@ -2904,7 +2906,7 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 
 				/* Write the digests into the file */
 				for (usig = xref->unsaved_sigs; usig; usig = usig->next)
-					pdf_write_digest(ctx, opts->out, byte_range, usig->contents_start, usig->contents_end - usig->contents_start, usig->signer);
+					pdf_write_digest(ctx, opts->out, byte_range, usig->field, usig->contents_start, usig->contents_end - usig->contents_start, usig->signer);
 
 				/* delete the unsaved_sigs records */
 				while ((usig = xref->unsaved_sigs) != NULL)
@@ -2917,10 +2919,17 @@ static void complete_signatures(fz_context *ctx, pdf_document *doc, pdf_write_st
 
 				xref->unsaved_sigs_end = NULL;
 
+				pdf_drop_obj(ctx, byte_range);
+				byte_range = NULL;
+
 				fz_free(ctx, buf);
 				buf = NULL;
 			}
 		}
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, byte_range);
 	}
 	fz_catch(ctx)
 	{
@@ -3429,6 +3438,7 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 			for (i = 0; i < doc->num_incremental_sections; i++)
 			{
 				doc->xref_base = doc->num_incremental_sections - i - 1;
+				xref_len = pdf_xref_len(ctx, doc);
 
 				writeobjects(ctx, doc, opts, 0);
 

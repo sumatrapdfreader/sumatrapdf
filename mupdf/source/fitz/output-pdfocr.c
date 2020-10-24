@@ -583,7 +583,7 @@ pdfocr_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
 		t_pos = fz_tell_output(ctx, out);
 		fz_write_printf(ctx, out, "xref\n0 %d\n0000000000 65535 f \n", writer->obj_num);
 		for (i = 1; i < writer->obj_num; i++)
-			fz_write_printf(ctx, out, "%010zd 00000 n \n", writer->xref[i]);
+			fz_write_printf(ctx, out, "%010ld 00000 n \n", writer->xref[i]);
 		fz_write_printf(ctx, out, "trailer\n<</Size %d/Root 1 0 R>>\nstartxref\n%ld\n%%%%EOF\n", writer->obj_num, t_pos);
 	}
 

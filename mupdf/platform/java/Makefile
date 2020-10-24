@@ -5,9 +5,10 @@ JAVAC := javac
 
 ifeq "$(OS)" "Darwin"
 MUPDF_JAVA := ../../build/java/libmupdf_java64.jnilib
+JAVA_VM := $(shell /usr/libexec/java_home)
 JAVA_CFLAGS := \
-	-I /Library/Java/JavaVirtualMachines/jdk1.8.0_66.jdk/Contents/Home/include \
-	-I /Library/Java/JavaVirtualMachines/jdk1.8.0_66.jdk/Contents/Home/include/darwin
+	-I $(JAVA_VM)/include \
+	-I $(JAVA_VM)/include/darwin
 JAVA_LDFLAGS :=
 
 else
@@ -37,10 +38,10 @@ default: $(MUPDF_JAVA) $(MUPDF_JAR) $(EXAMPLE_JAVA_SOURCES)
 MUPDF_CORE := ../../build/java/libmupdf.a ../../build/java/libmupdf-third.a
 ifeq "$(OS)" "Linux"
 $(MUPDF_CORE) : .FORCE
-	$(MAKE) -C ../.. OUT=build/java XCFLAGS=-fPIC USE_SYSTEM_FREETYPE=yes USE_SYSTEM_ZLIB=yes libs
+	$(MAKE) -C ../.. OUT=build/java build=debug XCFLAGS=-fPIC USE_SYSTEM_FREETYPE=yes USE_SYSTEM_ZLIB=yes libs
 else
 $(MUPDF_CORE) : .FORCE
-	$(MAKE) -C ../.. OUT=build/java XCFLAGS=-fPIC libs
+	$(MAKE) -C ../.. OUT=build/java build=debug XCFLAGS=-fPIC libs
 endif
 
 LIBRARY_JAVA_SOURCES := $(sort $(wildcard src/com/artifex/mupdf/fitz/*.java))
@@ -50,6 +51,7 @@ LIBRARY_JAVA_CLASSES := $(subst src/com/artifex/mupdf/fitz/,com.artifex.mupdf.fi
 JAVAC_FLAGS := $(JAVAC_XFLAGS) -source 1.7 -target 1.7
 
 $(LIBRARY_JAVA_OBJECTS) : $(LIBRARY_JAVA_SOURCES)
+	mkdir -p ../../build/java
 	$(JAVAC) $(JAVAC_FLAGS) -h ../../build/java/ -d ../../build/java/ $^
 
 EXAMPLE_JAVA_SOURCES := $(sort $(wildcard example/*.java))
@@ -75,10 +77,10 @@ $(MUPDF_JAVA) : ../../build/java/mupdf_native.o $(MUPDF_CORE)
 	$(CC) -shared $(JAVA_LDFLAGS) -o $(MUPDF_JAVA) $^ $(JAVA_LIBS)
 
 run: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../build/java $(JAVA) -classpath ../../build/java/ example.Viewer $$MUPDF_ARGS
+	$(JAVA) -classpath ../../build/java/ -Djava.library.path="../../build/java" example.Viewer $$MUPDF_ARGS
 
 gdb: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
-	LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:../../build/java gdb --args $(JAVA) -classpath ../../build/java example.Viewer $$MUPDF_ARGS
+	gdb --args $(JAVA) -classpath ../../build/java -Djava.library.path="../../build/java" example.Viewer $$MUPDF_ARGS
 
 clean:
 	rm -f $(LIBRARY_JAVA_OBJECTS) $(subst .class,\$$*.class,$(LIBRARY_JAVA_OBJECTS))

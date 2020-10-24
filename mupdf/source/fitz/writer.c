@@ -153,37 +153,37 @@ fz_new_document_writer(fz_context *ctx, const char *path, const char *explicit_f
 #endif
 
 		if (is_extension(format, "cbz"))
-		return fz_new_cbz_writer(ctx, path, options);
+			return fz_new_cbz_writer(ctx, path, options);
 
 		if (is_extension(format, "svg"))
-		return fz_new_svg_writer(ctx, path, options);
+			return fz_new_svg_writer(ctx, path, options);
 
 		if (is_extension(format, "png"))
-		return fz_new_png_pixmap_writer(ctx, path, options);
+			return fz_new_png_pixmap_writer(ctx, path, options);
 		if (is_extension(format, "pam"))
-		return fz_new_pam_pixmap_writer(ctx, path, options);
+			return fz_new_pam_pixmap_writer(ctx, path, options);
 		if (is_extension(format, "pnm"))
-		return fz_new_pnm_pixmap_writer(ctx, path, options);
+			return fz_new_pnm_pixmap_writer(ctx, path, options);
 		if (is_extension(format, "pgm"))
-		return fz_new_pgm_pixmap_writer(ctx, path, options);
+			return fz_new_pgm_pixmap_writer(ctx, path, options);
 		if (is_extension(format, "ppm"))
-		return fz_new_ppm_pixmap_writer(ctx, path, options);
+			return fz_new_ppm_pixmap_writer(ctx, path, options);
 		if (is_extension(format, "pbm"))
-		return fz_new_pbm_pixmap_writer(ctx, path, options);
+			return fz_new_pbm_pixmap_writer(ctx, path, options);
 		if (is_extension(format, "pkm"))
-		return fz_new_pkm_pixmap_writer(ctx, path, options);
+			return fz_new_pkm_pixmap_writer(ctx, path, options);
 
 		if (is_extension(format, "pcl"))
-		return fz_new_pcl_writer(ctx, path, options);
+			return fz_new_pcl_writer(ctx, path, options);
 		if (is_extension(format, "pclm"))
-		return fz_new_pclm_writer(ctx, path, options);
+			return fz_new_pclm_writer(ctx, path, options);
 		if (is_extension(format, "ps"))
-		return fz_new_ps_writer(ctx, path, options);
+			return fz_new_ps_writer(ctx, path, options);
 		if (is_extension(format, "pwg"))
-		return fz_new_pwg_writer(ctx, path, options);
+			return fz_new_pwg_writer(ctx, path, options);
 
 		if (is_extension(format, "txt") || is_extension(format, "text"))
-		return fz_new_text_writer(ctx, "text", path, options);
+			return fz_new_text_writer(ctx, "text", path, options);
 		if (is_extension(format, "html"))
 			return fz_new_text_writer(ctx, "html", path, options);
 		if (is_extension(format, "xhtml"))
@@ -192,6 +192,14 @@ fz_new_document_writer(fz_context *ctx, const char *path, const char *explicit_f
 			return fz_new_text_writer(ctx, "stext.xml", path, options);
 		if (is_extension(format, "stext.json"))
 			return fz_new_text_writer(ctx, "stext.json", path, options);
+		if (is_extension(format, "docx"))
+		{
+#ifdef HAVE_EXTRACT
+			return fz_new_docx_writer(ctx, format, path, options);
+#else
+			fz_throw(ctx, FZ_ERROR_GENERIC, "docx output not available in this build.");
+#endif
+		}
 
 		if (format != explicit_format)
 			format = prev_period(path, format);

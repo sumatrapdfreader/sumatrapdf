@@ -6064,6 +6064,78 @@ static void ffi_PDFWidget_validateSignature(js_State *J)
 	js_pushnumber(J, val);
 }
 
+static void ffi_PDFWidget_checkCertificate(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_pkcs7_verifier *verifier = NULL;
+	int val = 0;
+	fz_var(verifier);
+	fz_try(ctx)
+	{
+		verifier = pkcs7_openssl_new_verifier(ctx);
+		val = pdf_check_certificate(ctx, verifier, widget->page->doc, widget->obj);
+	}
+	fz_always(ctx)
+		pdf_drop_verifier(ctx, verifier);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushstring(J, pdf_signature_error_description(val));
+}
+
+static void ffi_PDFWidget_checkDigest(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_pkcs7_verifier *verifier = NULL;
+	pdf_signature_error val = 0;
+	fz_var(verifier);
+	fz_try(ctx)
+	{
+		verifier = pkcs7_openssl_new_verifier(ctx);
+		val = pdf_check_digest(ctx, verifier, widget->page->doc, widget->obj);
+	}
+	fz_always(ctx)
+		pdf_drop_verifier(ctx, verifier);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushstring(J, pdf_signature_error_description(val));
+}
+
+static void ffi_PDFWidget_getSignatory(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	pdf_pkcs7_verifier *verifier = NULL;
+	pdf_pkcs7_designated_name *dn = NULL;
+	char buf[500];
+	fz_var(verifier);
+	fz_var(dn);
+	fz_try(ctx)
+	{
+		verifier = pkcs7_openssl_new_verifier(ctx);
+		dn = pdf_signature_get_signatory(ctx, verifier, widget->page->doc, widget->obj);
+		if (dn)
+		{
+			char *s = pdf_signature_format_designated_name(ctx, dn);
+			fz_strlcpy(buf, s, sizeof buf);
+			fz_free(ctx, s);
+		}
+		else
+		{
+			fz_strlcpy(buf, "Signature information missing.", sizeof buf);
+		}
+	}
+	fz_always(ctx)
+	{
+		pdf_signature_drop_designated_name(ctx, dn);
+		pdf_drop_verifier(ctx, verifier);
+	}
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushstring(J, buf);
+}
+
 static void ffi_PDFWidget_isSigned(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -6530,10 +6602,14 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFWidget.eventUp", ffi_PDFWidget_eventUp, 0);
 		jsB_propfun(J, "PDFWidget.eventFocus", ffi_PDFWidget_eventFocus, 0);
 		jsB_propfun(J, "PDFWidget.eventBlur", ffi_PDFWidget_eventBlur, 0);
-		jsB_propfun(J, "PDFWidget.validateSignature", ffi_PDFWidget_validateSignature, 0);
+
 		jsB_propfun(J, "PDFWidget.isSigned", ffi_PDFWidget_isSigned, 0);
-		jsB_propfun(J, "PDFWidget.sign", ffi_PDFWidget_sign, 1);
+		jsB_propfun(J, "PDFWidget.validateSignature", ffi_PDFWidget_validateSignature, 0);
+		jsB_propfun(J, "PDFWidget.checkCertificate", ffi_PDFWidget_checkCertificate, 0);
+		jsB_propfun(J, "PDFWidget.checkDigest", ffi_PDFWidget_checkDigest, 0);
+		jsB_propfun(J, "PDFWidget.getSignatory", ffi_PDFWidget_getSignatory, 0);
 		jsB_propfun(J, "PDFWidget.clearSignature", ffi_PDFWidget_clearSignature, 0);
+		jsB_propfun(J, "PDFWidget.sign", ffi_PDFWidget_sign, 1);
 	}
 	js_dup(J);
 	js_setglobal(J, "PDFWidget");

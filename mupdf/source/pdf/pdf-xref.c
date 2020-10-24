@@ -161,7 +161,13 @@ void pdf_set_populating_xref_trailer(fz_context *ctx, pdf_document *doc, pdf_obj
 
 int pdf_xref_len(fz_context *ctx, pdf_document *doc)
 {
-	return doc->max_xref_len;
+	int i = doc->xref_base;
+	int xref_len = 0;
+
+	while (i < doc->num_xref_sections)
+		xref_len = fz_maxi(xref_len, doc->xref_sections[i++].num_objects);
+
+	return xref_len;
 }
 
 /* Ensure that the given xref has a single subsection
@@ -405,6 +411,46 @@ int pdf_xref_is_incremental(fz_context *ctx, pdf_document *doc, int num)
 	assert(sub != NULL && sub->next == NULL && sub->len == xref->num_objects && sub->start == 0);
 
 	return num < xref->num_objects && sub->table[num].type;
+}
+
+/* Used when clearing signatures. Removes the signature
+from the list of unsaved signed signatures. */
+void pdf_xref_remove_unsaved_signature(fz_context *ctx, pdf_document *doc, pdf_obj *field)
+{
+	int num = pdf_to_num(ctx, field);
+	int idx = doc->xref_index[num];
+	pdf_xref *xref = &doc->xref_sections[idx];
+	pdf_unsaved_sig **usigptr = &xref->unsaved_sigs;
+	pdf_unsaved_sig *usig = xref->unsaved_sigs;
+
+	while (usig)
+	{
+		pdf_unsaved_sig **nextptr = &usig->next;
+		pdf_unsaved_sig *next = usig->next;
+
+		if (usig->field == field)
+		{
+			if (xref->unsaved_sigs_end == &usig->next)
+			{
+				if (usig->next)
+					xref->unsaved_sigs_end = &usig->next->next;
+				else
+					xref->unsaved_sigs_end = NULL;
+			}
+			if (usigptr)
+				*usigptr = usig->next;
+
+			usig->next = NULL;
+			pdf_drop_obj(ctx, usig->field);
+			pdf_drop_signer(ctx, usig->signer);
+			fz_free(ctx, usig);
+
+			break;
+		}
+
+		usig = next;
+		usigptr = nextptr;
+	}
 }
 
 void pdf_xref_store_unsaved_signature(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_pkcs7_signer *signer)
@@ -1525,19 +1571,10 @@ pdf_init_document(fz_context *ctx, pdf_document *doc)
 void
 pdf_invalidate_xfa(fz_context *ctx, pdf_document *doc)
 {
-	int i;
-
 	if (doc == NULL)
 		return;
-
-	for (i = 0; i < doc->xfa.count; i++)
-	{
-		fz_free(ctx, doc->xfa.entries[i].key);
-		fz_drop_xml(ctx, doc->xfa.entries[i].value);
-	}
-	doc->xfa.count = 0;
-	fz_free(ctx, doc->xfa.entries);
-	doc->xfa.entries = 0;
+	fz_drop_xml(ctx, doc->xfa);
+	doc->xfa = NULL;
 }
 
 static void

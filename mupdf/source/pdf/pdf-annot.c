@@ -476,7 +476,7 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 	pdf_dict_put(ctx, annot->obj, PDF_NAME(P), page->obj);
 	pdf_dict_put_int(ctx, annot->obj, PDF_NAME(F), flags);
 
-	return pdf_keep_annot(ctx, annot);
+	return annot;
 }
 
 void
