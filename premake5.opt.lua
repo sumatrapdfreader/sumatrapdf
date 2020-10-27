@@ -84,6 +84,7 @@ project "lcms2-opt"
     language "C"
     optconf()
 
+    disablewarnings { "4100" }
     includedirs { "ext/lcms2/include" }
     lcms2_files()
 

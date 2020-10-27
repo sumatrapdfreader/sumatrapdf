@@ -266,7 +266,7 @@ cmsIOHANDLER* CMSEXPORT cmsOpenIOhandlerFromMem(cmsContext ContextID, void *Buff
 
             _cmsFree(ContextID, fm);
             _cmsFree(ContextID, iohandler);
-            cmsSignalError(ContextID, cmsERROR_READ, "Couldn't allocate %ld bytes for profile", size);
+            cmsSignalError(ContextID, cmsERROR_READ, "Couldn't allocate %ld bytes for profile", (long) size);
             return NULL;
         }
 
@@ -1207,6 +1207,8 @@ cmsBool SaveTags(cmsContext ContextID, _cmsICCPROFILE* Icc, _cmsICCPROFILE* File
             // In this case a blind copy of the block data is performed
             if (FileOrig != NULL && Icc -> TagOffsets[i]) {
 
+                if (FileOrig->IOhandler != NULL)
+                {
                 cmsUInt32Number TagSize   = FileOrig -> TagSizes[i];
                 cmsUInt32Number TagOffset = FileOrig -> TagOffsets[i];
                 void* Mem;
@@ -1226,6 +1228,7 @@ cmsBool SaveTags(cmsContext ContextID, _cmsICCPROFILE* Icc, _cmsICCPROFILE* File
                 // Align to 32 bit boundary.
                 if (! _cmsWriteAlignment(ContextID, io))
                     return FALSE;
+            }
             }
 
             continue;

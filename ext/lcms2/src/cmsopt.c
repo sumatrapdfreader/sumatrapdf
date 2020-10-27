@@ -379,7 +379,20 @@ Prelin16Data* PrelinOpt16alloc(cmsContext ContextID,
 
 
     p16 -> EvalCurveOut16 = (_cmsInterpFn16*) _cmsCalloc(ContextID, nOutputs, sizeof(_cmsInterpFn16));
+    if (p16->EvalCurveOut16 == NULL)
+    {
+        _cmsFree(ContextID, p16);
+        return NULL;
+    }
+
     p16 -> ParamsCurveOut16 = (cmsInterpParams**) _cmsCalloc(ContextID, nOutputs, sizeof(cmsInterpParams* ));
+    if (p16->ParamsCurveOut16 == NULL)
+    {
+
+        _cmsFree(ContextID, p16->EvalCurveOut16);
+        _cmsFree(ContextID, p16);
+        return NULL;
+    }
 
     for (i=0; i < nOutputs; i++) {
 
@@ -929,9 +942,9 @@ void PrelinEval8(cmsContext ContextID,
     g = (cmsUInt8Number) (Input[1] >> 8);
     b = (cmsUInt8Number) (Input[2] >> 8);
 
-    X0 = X1 = (cmsS15Fixed16Number) p8->X0[r];
-    Y0 = Y1 = (cmsS15Fixed16Number) p8->Y0[g];
-    Z0 = Z1 = (cmsS15Fixed16Number) p8->Z0[b];
+    X0 = (cmsS15Fixed16Number) p8->X0[r];
+    Y0 = (cmsS15Fixed16Number) p8->Y0[g];
+    Z0 = (cmsS15Fixed16Number) p8->Z0[b];
 
     rx = p8 ->rx[r];
     ry = p8 ->ry[g];

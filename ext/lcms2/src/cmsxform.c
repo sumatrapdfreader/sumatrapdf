@@ -1014,6 +1014,12 @@ void CMSEXPORT _cmsGetTransformFormattersFloat(struct _cmstransform_struct *CMMc
      if (ToOutput)  *ToOutput  = CMMcargo ->ToOutputFloat;
 }
 
+// returns original flags
+cmsUInt32Number CMSEXPORT _cmsGetTransformFlags(struct _cmstransform_struct* CMMcargo)
+{
+    _cmsAssert(CMMcargo != NULL);
+    return CMMcargo->core->dwOriginalFlags;
+}
 
 void
 _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number OutputFormat, cmsUInt32Number dwFlags)
@@ -1153,7 +1159,8 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
     p->core->Lut = lut;
 
        // Let's see if any plug-in want to do the transform by itself
-       if (core->Lut != NULL && !(*dwFlags & cmsFLAGS_NOOPTIMIZE)) {
+       if (core->Lut != NULL) {
+           if (!(*dwFlags & cmsFLAGS_NOOPTIMIZE)) {
 
               for (Plugin = ctx->TransformCollection;
                      Plugin != NULL;
@@ -1184,9 +1191,11 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
                                    p->OldXform = (_cmsTransformFn)(void*) p->xform;
                                    p->xform = _cmsTransform2toTransformAdaptor;
                             }
+
                             return p;
                      }
               }
+	   }
 
               // Not suitable for the transform plug-in, let's check the pipeline plug-in
               _cmsOptimizePipeline(ContextID, &core->Lut, Intent, InputFormat, OutputFormat, dwFlags);

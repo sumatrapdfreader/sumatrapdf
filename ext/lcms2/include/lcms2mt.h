@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.10
+// Version 2.11
 //
 
 #ifndef _lcms2mt_H
@@ -86,7 +86,7 @@ extern "C" {
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2100 - 2000)
+#define LCMS_VERSION              (2110 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.
@@ -1199,6 +1199,7 @@ CMSAPI cmsBool           CMSEXPORT cmsIsToneCurveMonotonic(cmsContext ContextID,
 CMSAPI cmsBool           CMSEXPORT cmsIsToneCurveDescending(cmsContext ContextID, const cmsToneCurve* t);
 CMSAPI cmsInt32Number    CMSEXPORT cmsGetToneCurveParametricType(cmsContext ContextID, const cmsToneCurve* t);
 CMSAPI cmsFloat64Number  CMSEXPORT cmsEstimateGamma(cmsContext ContextID, const cmsToneCurve* t, cmsFloat64Number Precision);
+CMSAPI cmsFloat64Number* CMSEXPORT cmsGetToneCurveParams(cmsContext ContextID, const cmsToneCurve* t);
 
 // Tone curve tabular estimation
 CMSAPI cmsUInt32Number         CMSEXPORT cmsGetToneCurveEstimatedTableEntries(cmsContext ContextID, const cmsToneCurve* t);

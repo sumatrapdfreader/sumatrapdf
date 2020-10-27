@@ -34,6 +34,14 @@ Extend T_EXTRA etc to allow for 63 extra channels.
 No changelog provided.
 
 -----------------------
+2.11 Maintenance release
+-----------------------
+Fixed __cpuid() on fast float plugin to allow gnu gcc
+Fixed copy alpha bounds check
+Fixed data race condition on contexts pool
+Fixed LUT16 write matrix on multichannel V2 profiles
+
+-----------------------
 2.10 Featured release
 -----------------------
 Added a compilation toggle to remove "register" keyword in API.

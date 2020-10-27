@@ -344,3 +344,4 @@ cmsMD5add                                =   cmsMD5add
 cmsMD5alloc                              =   cmsMD5alloc
 cmsMD5finish                             =   cmsMD5finish
 _cmsComputeInterpParams                  =   _cmsComputeInterpParams
+cmsGetToneCurveParams                    =   cmsGetToneCurveParams

@@ -1,6 +1,11 @@
+# Visual Studio
 **.opensdf
 **.sdf
 **.suo
 **.user
 Debug/
 Release/
+# Xcode & macOS
+xcuserdata/
+.DS_Store
+._*

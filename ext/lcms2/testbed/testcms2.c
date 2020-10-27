@@ -24,7 +24,6 @@
 //---------------------------------------------------------------------------------
 //
 
-
 #include "testcms2.h"
 
 // A single check. Returns 1 if success, 0 if failed
@@ -8145,6 +8144,49 @@ int CheckProofingIntersection(cmsContext ContextID)
     return 1;
 }
 
+/**
+* In 2.11: When I create a RGB profile, set the copyright data with an empty string,
+* then call cmsMD5computeID on said profile, the program crashes.
+*/
+static
+int CheckEmptyMLUC(cmsContext context)
+{
+    cmsCIExyY white = { 0.31271, 0.32902, 1.0 };
+    cmsCIExyYTRIPLE primaries =
+    {
+    .Red = { 0.640, 0.330, 1.0 },
+    .Green = { 0.300, 0.600, 1.0 },
+    .Blue = { 0.150, 0.060, 1.0 }
+    };
+
+    cmsFloat64Number parameters[10] = { 2.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    cmsToneCurve* toneCurve = cmsBuildParametricToneCurve(context, 1, parameters);
+    cmsToneCurve* toneCurves[3] = { toneCurve, toneCurve, toneCurve };
+
+    cmsHPROFILE profile = cmsCreateRGBProfileTHR(context, &white, &primaries, toneCurves);
+
+    cmsSetLogErrorHandlerTHR(context, FatalErrorQuit);
+
+    cmsFreeToneCurve(toneCurve);
+
+    // Set an empty copyright tag. This should log an error.
+    cmsMLU* mlu = cmsMLUalloc(context, 1);
+
+    cmsMLUsetASCII(mlu, "en", "AU", "");
+    cmsMLUsetWide(mlu,  "en", "EN", L"");
+    cmsWriteTag(profile, cmsSigCopyrightTag, mlu);
+    cmsMLUfree(mlu);
+
+    // This will cause a crash after setting an empty copyright tag.
+    cmsMD5computeID(profile);
+
+    // Cleanup
+    cmsCloseProfile(profile);
+    DebugMemDontCheckThis(context);
+
+    return 1;
+}
+
 // --------------------------------------------------------------------------------------------------
 // P E R F O R M A N C E   C H E C K S
 // --------------------------------------------------------------------------------------------------
@@ -8836,10 +8878,6 @@ void PrintSupportedIntents(void)
 
 // ---------------------------------------------------------------------------------------
 
-#ifdef LCMS_FAST_EXTENSIONS
-    void* cmsFast8Bitextensions(void);
-#endif
-
 int main(int argc, char* argv[])
 {
     cmsInt32Number Exhaustive = 0;
@@ -8868,8 +8906,10 @@ int main(int argc, char* argv[])
     }
 
 #ifdef LCMS_FAST_EXTENSIONS
-   printf("Installing fast 8 bit extension ...");
-   cmsPlugin(cmsFast8Bitextensions());
+   //printf("Installing fast 8 bit extension ...");
+   //cmsPlugin(cmsFast8Bitextensions());
+   printf("Installing fast float extension ...");
+   cmsPlugin(cmsFastFloatExtensions());
    printf("done.\n");
 #endif
 
@@ -9083,6 +9123,7 @@ int main(int argc, char* argv[])
     Check(ctx, "Transform line stride RGB", CheckTransformLineStride);
     Check(ctx, "Forged MPE profile", CheckForgedMPE);
     Check(ctx, "Proofing intersection", CheckProofingIntersection);
+    Check(ctx, "Empty MLUC", CheckEmptyMLUC);
     }
 
     if (DoPluginTests)

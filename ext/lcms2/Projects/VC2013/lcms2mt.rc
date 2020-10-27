@@ -45,12 +45,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Marti Maria"
             VALUE "FileDescription", "lcms color engine"
-            VALUE "FileVersion", "2.10.0.0"
+            VALUE "FileVersion", "2.11.0.0"
             VALUE "InternalName", "lcms"
             VALUE "LegalCopyright", "Copyright © Marti Maria 2020"
             VALUE "OriginalFilename", "lcms2.dll"
             VALUE "ProductName", "LittleCMS color engine"
-            VALUE "ProductVersion", "2.10.0.0"
+            VALUE "ProductVersion", "2.11.0.0"
         END
     END
     BLOCK "VarFileInfo"

@@ -29,6 +29,10 @@
 
 #include "lcms2_internal.h"
 
+#ifdef LCMS_FAST_EXTENSIONS
+#   include "fast_float_internal.h"
+#endif
+
 // On Visual Studio, use debug CRT
 #ifdef _MSC_VER
 #    include "crtdbg.h"

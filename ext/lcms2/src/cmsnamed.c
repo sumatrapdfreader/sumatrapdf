@@ -198,6 +198,7 @@ void strFrom16(char str[3], cmsUInt16Number n)
 }
 
 // Add an ASCII entry. Do not add any \0 termination (ICC1v43_2010-12.pdf page 61)
+// In the case the user explicitely sets an empty string, we force a \0
 cmsBool CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* mlu, const char LanguageCode[3], const char CountryCode[3], const char* ASCIIString)
 {
     cmsUInt32Number i, len = (cmsUInt32Number) strlen(ASCIIString);
@@ -207,6 +208,12 @@ cmsBool CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* mlu, const char L
     cmsUInt16Number Cntry = strTo16(CountryCode);
 
     if (mlu == NULL) return FALSE;
+
+    // len == 0 would prevent operation, so we set a empty string pointing to zero
+    if (len == 0)
+    {
+        len = 1;
+    }
 
     WStr = (wchar_t*) _cmsCalloc(ContextID, len,  sizeof(wchar_t));
     if (WStr == NULL) return FALSE;
@@ -245,6 +252,9 @@ cmsBool  CMSEXPORT cmsMLUsetWide(cmsContext ContextID, cmsMLU* mlu, const char L
     if (WideString == NULL) return FALSE;
 
     len = (cmsUInt32Number) (mywcslen(WideString)) * sizeof(wchar_t);
+    if (len == 0)
+        len = sizeof(wchar_t);
+
     return AddMLUBlock(ContextID, mlu, len, WideString, Lang, Cntry);
 }
 

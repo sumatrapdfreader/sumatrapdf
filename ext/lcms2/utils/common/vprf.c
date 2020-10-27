@@ -254,7 +254,7 @@ cmsBool SaveMemoryBlock(const cmsUInt8Number* Buffer, cmsUInt32Number dwLen, con
     }
 
     if (fwrite(Buffer, 1, dwLen, out) != dwLen) {
-        FatalError("Cannot write %ld bytes to %s", dwLen, Filename);
+        FatalError("Cannot write %ld bytes to %s", (long) dwLen, Filename);
         return FALSE;
     }
 

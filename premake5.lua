@@ -345,6 +345,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     regconf()
+    disablewarnings { "4100" }
     includedirs { "ext/lcms2/include" }
     lcms2_files()
 

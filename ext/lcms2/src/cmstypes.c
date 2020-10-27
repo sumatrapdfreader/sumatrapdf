@@ -1907,6 +1907,7 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
     mpe = NewLUT -> Elements;
     if (mpe ->Type == cmsSigMatrixElemType) {
 
+        if (mpe->InputChannels != 3 || mpe->OutputChannels != 3) return FALSE;
         MatMPE = (_cmsStageMatrixData*) mpe ->Data;
         mpe = mpe -> Next;
     }
@@ -1932,7 +1933,6 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
         return FALSE;
     }
 
-
     if (clut == NULL)
         clutPoints = 0;
     else
@@ -1947,14 +1947,12 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
 
     if (MatMPE != NULL) {
 
-		for (i = 0; i < n; i++)
+		for (i = 0; i < 9; i++)
 		{
 			if (!_cmsWrite15Fixed16Number(ContextID, io, MatMPE->Double[i])) return FALSE;
 		}
     }
     else {
-
-		if (n != 9) return FALSE;
 
         if (!_cmsWrite15Fixed16Number(ContextID, io, 1)) return FALSE;
         if (!_cmsWrite15Fixed16Number(ContextID, io, 0)) return FALSE;
@@ -2180,7 +2178,7 @@ Error:
 static
 cmsBool  Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
-    cmsUInt32Number nTabSize, n;
+    cmsUInt32Number nTabSize;
     cmsPipeline* NewLUT = (cmsPipeline*) Ptr;
     cmsStage* mpe;
     _cmsStageToneCurvesData* PreMPE = NULL, *PostMPE = NULL;
@@ -2194,6 +2192,7 @@ cmsBool  Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* 
     if (mpe != NULL && mpe ->Type == cmsSigMatrixElemType) {
 
         MatMPE = (_cmsStageMatrixData*) mpe ->Data;
+        if (mpe->InputChannels != 3 || mpe->OutputChannels != 3) return FALSE;
         mpe = mpe -> Next;
     }
 
@@ -2232,19 +2231,15 @@ cmsBool  Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* 
     if (!_cmsWriteUInt8Number(ContextID, io, (cmsUInt8Number) clutPoints)) return FALSE;
     if (!_cmsWriteUInt8Number(ContextID, io, 0)) return FALSE; // Padding
 
-	n = NewLUT->InputChannels * NewLUT->OutputChannels;
-
     if (MatMPE != NULL) {
 
-		for (i = 0; i < n; i++)
+		for (i = 0; i < 9; i++)
 		{
 			if (!_cmsWrite15Fixed16Number(ContextID, io, MatMPE->Double[i])) return FALSE;
 		}
 
     }
     else {
-
-		if (n != 9) return FALSE;
 
         if (!_cmsWrite15Fixed16Number(ContextID, io, 1)) return FALSE;
         if (!_cmsWrite15Fixed16Number(ContextID, io, 0)) return FALSE;
@@ -3048,6 +3043,9 @@ void *Type_ColorantTable_Read(cmsContext ContextID, struct _cms_typehandler_stru
     }
 
     List = cmsAllocNamedColorList(ContextID, Count, 0, "", "");
+    if (List == NULL)
+        return NULL;
+
     for (i=0; i < Count; i++) {
 
         if (io ->Read(ContextID, io,Name, 32, 1) != 1) goto Error;

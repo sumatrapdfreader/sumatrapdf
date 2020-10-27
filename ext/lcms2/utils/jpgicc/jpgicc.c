@@ -866,8 +866,8 @@ int DoTransform(cmsContext ContextID, cmsHTRANSFORM hXForm, int OutputColorSpace
        if (EmbedProfile && cOutProf)
            DoEmbedProfile(cOutProf);
 
-       ScanLineIn  = (JSAMPROW) malloc(Decompressor.output_width * Decompressor.num_components);
-       ScanLineOut = (JSAMPROW) malloc(Compressor.image_width * Compressor.num_components);
+       ScanLineIn  = (JSAMPROW) malloc((size_t) Decompressor.output_width * Decompressor.num_components);
+       ScanLineOut = (JSAMPROW) malloc((size_t) Compressor.image_width * Compressor.num_components);
 
        while (Decompressor.output_scanline <
                             Decompressor.output_height) {

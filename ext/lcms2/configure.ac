@@ -7,7 +7,7 @@ AC_PREREQ(2.60)
 #
 # Set the package name and version
 #
-AC_INIT(lcms2mt,2.10)
+AC_INIT(lcms2mt,2.11)
 
 # Specify directory where m4 macros may be found.
 AC_CONFIG_MACRO_DIR([m4])
@@ -44,7 +44,7 @@ AC_SUBST(LIBRARY_AGE)dnl
 # Obtain system type by running config.guess
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE([foreign 1.7.2 no-define dist-zip subdir-objects])
+AM_INIT_AUTOMAKE([foreign 1.9 tar-ustar no-define dist-zip subdir-objects])
 
 
 # Check for programs

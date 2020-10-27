@@ -102,7 +102,7 @@ void Help(void)
     fprintf(stderr, "\t%cw - use 16 bits\n", SW);
     fprintf(stderr, "\t%cx - Hexadecimal\n\n", SW);
 
-    fprintf(stderr, "%cs - bounded mode (clip negatives and highliths)\n", SW);
+    fprintf(stderr, "%cs - bounded mode (clip negatives and highlights)\n", SW);
     fprintf(stderr, "%cq - Quantize (round decimals)\n\n", SW);
 
     fprintf(stderr, "%ci<profile> - Input profile (defaults to sRGB)\n", SW);

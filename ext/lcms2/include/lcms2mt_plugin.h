@@ -286,7 +286,7 @@ typedef union {
 #define CMS_LERP_FLAGS_TRILINEAR          0x0100        // Hint only
 
 
-#define MAX_INPUT_DIMENSIONS 8
+#define MAX_INPUT_DIMENSIONS 15
 
 typedef struct _cms_interp_struc {  // Used on all interpolations. Supplied by lcms2 when calling the interpolation function
 
@@ -624,6 +624,9 @@ CMSAPI void * CMSEXPORT _cmsGetTransformUserData(struct _cmstransform_struct *CM
 // Retrieve formatters
 CMSAPI void   CMSEXPORT _cmsGetTransformFormatters16   (struct _cmstransform_struct *CMMcargo, cmsFormatter16* FromInput, cmsFormatter16* ToOutput);
 CMSAPI void   CMSEXPORT _cmsGetTransformFormattersFloat(struct _cmstransform_struct *CMMcargo, cmsFormatterFloat* FromInput, cmsFormatterFloat* ToOutput);
+
+// Retrieve original flags
+CMSAPI cmsUInt32Number CMSEXPORT _cmsGetTransformFlags(struct _cmstransform_struct* CMMcargo);
 
 typedef struct {
       cmsPluginBase     base;

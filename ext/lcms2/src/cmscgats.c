@@ -1510,6 +1510,7 @@ void AllocateDataSet(cmsContext ContextID, cmsIT8* it8)
         SynError(ContextID, it8, "AllocateDataSet: too much data");
     }
     else {
+        // Some dumb analizers warns of possible overflow here, just take a look couple of lines above.
         t->Data = (char**)AllocChunk(ContextID, it8, ((cmsUInt32Number)t->nSamples + 1) * ((cmsUInt32Number)t->nPatches + 1) * sizeof(char*));
         if (t->Data == NULL) {
 
