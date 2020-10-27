@@ -11513,7 +11513,7 @@ const char * gTranslations_lv =
   "&Druk\304\201t... (liegts)\0"\
   "&Atcer\304\223ties \305\241\304\253 dokumenta paroli\0"\
   "&Atcer\304\223ties \305\241os iestat\304\253jumus katram dokumentam\0"\
-  "\0"\
+  "&Iz\305\206emt no v\304\223stures\0"\
   "&Saglab\304\201t k\304\201...\0"\
   "&Saglab\304\201t k\304\201...\tCtrl+S\0"\
   "&Iestat\304\253jumi\0"\
@@ -11530,18 +11530,18 @@ const char * gTranslations_lv =
   "(%s lappuse)\0"\
   "Par SumatraPDF\0"\
   "Pievieno\305\241ana izlasei\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Pievienot PDF k\304\201 b\304\223rnelementu\0"\
+  "Pievienot PDF k\304\201 atvasi\0"\
+  "Pievienot b\304\223rnelementu\0"\
   "Pievienot %s lappusi izlasei\0"\
   "Pievienot %s lappusi gr\304\201matz\304\253m\304\223m\tCtrl+B\0"\
   "Pievienot %s lappusi izlasei ar (neoblig\304\201tu) nosaukumu:\0"\
-  "\0"\
+  "Pievienot atvasi\0"\
   "Pievienot izlasei\0"\
   "Papildu\0"\
   "Visi faili\0"\
   "Visi atbalst\304\253tie dokumenti\0"\
-  "\0"\
+  "Anot\304\201cijas\0"\
   "Programma:\0"\
   "\0"\
   "Vai j\305\253s esat p\304\201rliecin\304\201ti, ka v\304\223laties atinstal\304\223t SumatraPDF?\0"\
@@ -11563,10 +11563,10 @@ const char * gTranslations_lv =
   "\0"\
   "Main\304\253t valodu (Change Language)\0"\
   "P\304\201rbaud\304\253t, vai nav &atjaunin\304\201jumi\0"\
-  "\0"\
+  "Aplis\0"\
   "Aizv\304\223rt\0"\
   "Sak\304\274aut visu\0"\
-  "\0"\
+  "Kr\304\201sa\0"\
   "Komiksu gr\304\201matas\0"\
   "Sader\304\253ba\0"\
   "Nep\304\201rtraukts\n\0"\
@@ -11589,7 +11589,7 @@ const char * gTranslations_lv =
   "\0"\
   "Nevar\304\223ja atinstal\304\223t p\304\201rl\305\253kprogrammas spraudni\0"\
   "Nevar\304\223ja rakst\304\253t %s disk\304\201\0"\
-  "\0"\
+  "Izveidot anot\304\201ciju\0"\
   "Izveidots:\0"\
   "Pa\305\241reiz\304\223jais fails\0"\
   "Kursora poz\304\253cija:\0"\
@@ -11604,20 +11604,20 @@ const char * gTranslations_lv =
   "Dokumenta rekviz\304\253ti\0"\
   "Lejupiel\304\201d\304\223t\0"\
   "&Iziet\tCtrl+Q\0"\
-  "\0"\
+  "&Iziet no pilnekr\304\201na\0"\
   "EPUB elektronisk\304\201s gr\304\201matas\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Redi\304\243\304\223t\0"\
+  "Redi\304\243\304\223t anot\304\201cijas\0"\
+  "Redi\304\243\304\223t gr\304\201matz\304\253mes\0"\
   "Ievad\304\253t paroli\0"\
   "Ievad\304\253t %s paroli\0"\
   "Ievadiet komandrindu, izsaucamu ar dubultklik\305\241\304\267i uz PDF dokumenta:\0"\
   "%s iel\304\201des k\304\274\305\253da\0"\
   "Izv\304\223rst visu\0"\
-  "\0"\
+  "Eksport\304\223t gr\304\201matz\304\253mes\0"\
   "Gr\304\201mat&z\304\253mes\0"\
   "&T\304\201l\304\201k\tAlt+Lab\304\201 bulti\305\206a\0"\
-  "Pilnekr\304\201na re\305\276\304\253ms\tF11\0"\
+  "Piln&ekr\304\201ns\tF11\0"\
   "Divas lappuses\0"\
   "Neizdev\304\201s izdz\304\223st atinstal\304\223\305\241anas programmas re\304\243istra atsl\304\223gas\0"\
   "Neizdev\304\201s re\304\243istr\304\223t k\304\201 noklus\304\223juma programmu Windows 10 vid\304\223\0"\
@@ -11629,7 +11629,7 @@ const char * gTranslations_lv =
   "Gr\304\201matz\304\253mes\0"\
   "FictionBook dokumenti\0"\
   "Fails %s nav atrasts\0"\
-  "\0"\
+  "Faila pielikums\0"\
   "Faila lielums:\0"\
   "Fails:\0"\
   "At&rast...\tCtrl+F\0"\
@@ -11655,11 +11655,11 @@ const char * gTranslations_lv =
   "Doties uz lappusi\0"\
   "Pasl\304\223pt &opcijas\0"\
   "Sl\304\223pt bie\305\276\304\201k las\304\253tos\0"\
-  "\0"\
+  "Iez\304\253m\304\223t\0"\
   "Ieteikums: izmantojiet tausti\305\206u F3, lai atrastu atkal\0"\
   "Att\304\223lu faili (*.%s)\0"\
-  "\0"\
-  "\0"\
+  "Att\304\223li\0"\
+  "Tinte\0"\
   "Instal\304\223t SumatraPDF\0"\
   "Instal\304\223t SumatraPDF &map\304\223:\0"\
   "Instal\304\223\305\241ana neizdev\304\201s!\0"\
@@ -11668,7 +11668,7 @@ const char * gTranslations_lv =
   "&Mekl\304\223t PDF dokumentus ar Windows Desktop Search\0"\
   "\304\273aut Windows r\304\201d\304\253t PDF dokumentu &priek\305\241skat\304\253jumus\0"\
   "Gai\305\241s\0"\
-  "\0"\
+  "L\304\253nija\0"\
   "\0"\
   "Vai iestat\304\253t SumatraPDF k\304\201 noklus\304\223juma lietojumprogrammu PDF failiem?\0"\
   "Padar\304\253t SumatraPDF par manu noklus\304\223juma PDF las\304\253t\304\201ju\0"\
@@ -11677,7 +11677,7 @@ const char * gTranslations_lv =
   "Mobi dokumenti\0"\
   "Modific\304\223ts:\0"\
   "Jauns &logs\tCtrl+N\0"\
-  "\0"\
+  "Jaunas gr\304\201matz\304\253mes\0"\
   "Ir pieejama jauna versija %s. Vai lejupiel\304\201d\304\223t jauno versiju?\0"\
   "N\304\201kam\304\201 lappuse\0"\
   "Netika atrasta neviena atbilst\304\253ba\0"\
@@ -11688,7 +11688,7 @@ const char * gTranslations_lv =
   "Labi\0"\
   "Atv\304\223rt\0"\
   "Atv\304\223rt ar &PDF-XChange\0"\
-  "\0"\
+  "Atv\304\223rt iegultu PDF\0"\
   "Atv\304\223rt dokumentu...\0"\
   "Atv\304\223rt ar %s\0"\
   "Atv\304\223rt ar &Adobe Reader\0"\
@@ -11711,8 +11711,8 @@ const char * gTranslations_lv =
   "PalmDoc dokumenti\0"\
   "Lai turpin\304\201tu, l\305\253dzu, aizveriet %s!\0"\
   "L\305\253dzu, uzgaidiet \342\200\224 notiek atveido\305\241ana...\0"\
-  "\0"\
-  "\0"\
+  "Lauzta l\304\253nija\0"\
+  "Daudzst\305\253ris\0"\
   "PostScript dokumenti\0"\
   "Prezent\304\201cija\tF5\0"\
   "Iepriek\305\241\304\223j\304\201 lappuse\0"\
@@ -11727,7 +11727,7 @@ const char * gTranslations_lv =
   "P\304\201r&d\304\223v\304\223t...\tF2\0"\
   "\0"\
   "&Atcer\304\223ties atv\304\223rtos failus\0"\
-  "\0"\
+  "No\305\206emt vienumu\0"\
   "No\305\206emt no izlases\0"\
   "No\305\206emt %s lappusi no izlases\0"\
   "P\304\201rd\304\223v\304\223t uz\0"\
@@ -11735,7 +11735,7 @@ const char * gTranslations_lv =
   "Pagriezt pa &labi\tCtrl+Shift++\0"\
   "Saglab\304\201t anot\304\201cijas\0"\
   "Saglab\304\201t k\304\201\0"\
-  "\0"\
+  "Saglab\304\201t iegultu failu\0"\
   "Saglab\304\201t sa\304\253s&ni....\tCtrl+Shift+S\0"\
   "%d no %d mekl\304\223\305\241ana...\0"\
   "Atlas\304\253t &visu\0"\
@@ -11748,23 +11748,23 @@ const char * gTranslations_lv =
   "R\304\201d\304\253t &gr\304\201matz\304\253mes\tF12\0"\
   "R\304\201d\304\253t &izlasi\0"\
   "R\304\201d\304\253t &lappuses nep\304\201rtraukti\0"\
-  "\0"\
+  "R\304\201d\304\253t &ritjoslas\0"\
   "R\304\201d\304\253t &r\304\253kjoslu\0"\
   "R\304\201d\304\253t gr\304\201mat&z\304\253mes\tF12\0"\
   "R\304\201d\304\253t &izlasi\0"\
-  "\0"\
+  "R\304\201d\304\253t rit&joslas\0"\
   "R\304\201d\304\253t bie\305\276i las\304\253tos\0"\
   "R\304\201d\304\253t &map\304\223\0"\
   "R\304\201d\304\253t &gr\304\201matz\304\253mju s\304\201njoslu, ja t\304\201 ir pieejama\0"\
   "Viena lappuse\0"\
   "Piedodiet, \305\241im nevajadz\304\223ja notikt!\n\nL\305\253dzu, spiediet 'Atcelt', ja j\305\253s v\304\223laties mums pal\304\253dz\304\223t nov\304\223rst \305\241\304\253s k\304\274\305\253mes c\304\223loni.\0"\
-  "\0"\
+  "K\304\201rtot p\304\223c\0"\
   "Avota failam %s nav sinhroniz\304\201cijas punkta\0"\
-  "\0"\
+  "Kvadr\304\201ts\0"\
   "\0"\
   "\0"\
   "Palaist SumatraPDF\0"\
-  "\0"\
+  "P\304\201rsv\304\253trojums\0"\
   "T\304\223ma:\0"\
   "SumatraPDF %s instal\304\223\305\241anas programma\0"\
   "SumatraPDF %s atinstal\304\223\305\241anas programma\0"\
@@ -11775,20 +11775,20 @@ const char * gTranslations_lv =
   "SumatraPDF instal\304\201cija nav atrasta.\0"\
   "SumatraPDF ir j\305\253su noklus\304\223juma PDF las\304\253t\304\201js\0"\
   "SumatraPDF tagad b\305\253s j\305\253su noklus\304\223juma PDF las\304\253t\304\201js\0"\
-  "\0"\
+  "Atbalst\304\253t SumatraPDF\0"\
   "Sinhroniz\304\201cijas failu nevar atv\304\223rt\0"\
   "\0"\
   "\0"\
   "Atz\304\253m\304\223ts PDF\0"\
-  "\0"\
+  "Teksts\0"\
   "Teksta dokumenti\0"\
-  "\0"\
+  "Paldies, ka izv\304\223l\304\223j\304\201ties RA-MICRO PDF!\0"\
   "Pateicamies par SumatraPDF izv\304\223l\304\223\305\241anos!\0"\
   "Paldies! SumatraPDF ir instal\304\223ta.\0"\
   "Instal\304\223\305\241anas programma ir bijusi boj\304\201ta. L\305\253dzu, lejupiel\304\201d\304\223jiet to v\304\223lreiz.\nPiedodiet par sag\304\201d\304\201taj\304\201m ne\304\223rt\304\253b\304\201m!\0"\
   "\305\240aj\304\201 dokument\304\201 ir izmantotas neatbalst\304\253tas iesp\304\223jas (%s), un iesp\304\223jams, netiek atveidots pareizi\0"\
   "Nosaukums:\0"\
-  "\0"\
+  "Pasv\304\253trojums\0"\
   "Atinstal\304\223t SumatraPDF\0"\
   "Atinstal\304\223\305\241ana neizdev\304\201s\0"\
   "Notiek atinstal\304\223\305\241ana...\0"\

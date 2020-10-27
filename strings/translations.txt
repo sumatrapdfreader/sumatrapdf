@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4d5625cf17052cf6ef6cd982be3d938e4bb0973c
+d1e639b0d9608b9ea7af66d314075a99bc9e1755
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -2636,6 +2636,7 @@ fr:Supprimer de l'historique
 gl:Elimina&r do historial
 ka:&ისტორიიდან წაშლა
 kw:&Removya A Istori
+lv:&Izņemt no vēstures
 nl:V&erwijder uit Geschiedenis
 pl:&Usuń z historii
 ru:&Удалить из истории
@@ -3695,6 +3696,7 @@ de:PDF als untergeordnetes Element hinzufügen
 gl:Engadir PDF como secundario
 ka:დავამატოთ PDF შვილობილად
 kw:Keworra PDF avel flogh
+lv:Pievienot PDF kā bērnelementu
 nl:Voeg PDF als child toe
 pl:Dodaj PDF jako potomka
 ru:Добавить PDF как дочерний элемент
@@ -3710,6 +3712,7 @@ de:PDF als gleichgeordnetes Element hinzufügen
 gl:Engadir PDF como relacionado
 ka:PDF-ის მოძმედ დამატება
 kw:Keworra PDF avel hwor
+lv:Pievienot PDF kā atvasi
 nl:Voeg PDF als verwant toe
 pl:Dodaj PDF jako rodzeństwo
 ru:Добавить PDF как одноуровневый элемент
@@ -3725,6 +3728,7 @@ de:Untergeordnetes Element hinzufügen
 gl:Engadir secundario
 ka:შვილობილის დამატება
 kw:Keworra flogh
+lv:Pievienot bērnelementu
 nl:Child toevoegen
 pl:Dodaj potomka
 ru:Добавить дочерний элемент
@@ -3908,6 +3912,7 @@ de:Gleichgeordnetes Element hinzufügen
 gl:Engadir relacionado
 ka:მოძმე ელემენტის დამატება
 kw:Keworra hwor
+lv:Pievienot atvasi
 nl:Voeg verwant toe
 pl:Dodaj rodzeństwo
 ru:Добавить одноуровневый элемент
@@ -4198,6 +4203,7 @@ gl:Anotacións
 it:Annotazioni
 ka:ანოტაციები
 kw:Notenyans
+lv:Anotācijas
 nl:Aantekeningen
 pl:Adnotacje
 ru:Аннотации
@@ -5539,6 +5545,7 @@ fr:Cercle
 gl:Círculo
 ka:წრე
 kw:Kylgh
+lv:Aplis
 nl:Cirkel
 no:Sirkel
 pl:Okrąg
@@ -5660,6 +5667,7 @@ gl:Cor
 it:Colore
 ka:ფერი
 kw:Liw
+lv:Krāsa
 nl:Kleur
 no:Farge
 pa:ਰੰਗ
@@ -7064,6 +7072,7 @@ fr:Écrire une annotation
 gl:Crear anotación
 ka:ანოტაციის შექმნა
 kw:Gwruthyl Notenyans
+lv:Izveidot anotāciju
 nl:Maak Aantekening
 pl:Utwórz adnotację
 ru:Создать аннотацию
@@ -7916,6 +7925,7 @@ fr:&Quitter le mode plein écran
 gl:Sa&ír da pantalla completa
 ka:სრულ&ეკრანიანიდან გამოსვლა
 kw:Kwytya Skrin-leun
+lv:&Iziet no pilnekrāna
 nl:Volledig scherm uit
 pl:W&yjdź z trybu pełnoekranowego
 ru:&Выйти из полноэкранного режима
@@ -8073,6 +8083,7 @@ gl:Editar
 it:Modifica
 ka:რედაქტირება
 kw:Golegi
+lv:Rediģēt
 nl:Bewerken
 no:Rediger
 pa:ਸੋਧੋ
@@ -8093,6 +8104,7 @@ fr:Éditer les annotations
 gl:Editar anotacións
 ka:ანოტაციის რედაქტირება
 kw:Golegi notenyans
+lv:Rediģēt anotācijas
 nl:Bewerk Aantekeningen
 pl:Edytuj adnotacje
 ru:Изменить аннотации
@@ -8109,6 +8121,7 @@ fr:Éditer les marque-pages
 gl:Editar marcadores
 ka:სანიშნის რედაქტირება
 kw:Golegi Folennotennow
+lv:Rediģēt grāmatzīmes
 nl:Bewerk Bladwijzers
 no:Rediger bokmerker
 pl:Edytuj zakładki
@@ -8431,6 +8444,7 @@ fr:Exporter les marque-pages
 gl:Exportar marcadores
 ka:სანიშნეების ექსპორტი
 kw:Esperthi Folennotennow
+lv:Eksportēt grāmatzīmes
 nl:Exporteer Bladwijzers
 pl:Eksportuj zakładki
 ru:Экспорт закладок
@@ -8602,7 +8616,7 @@ kr:전체 화면(&U)\tCtrl+Shift+L
 ku:پڕ&بەشاشە\tCtrl+Shift+L
 kw:Skrin Leun\tCtrl+Shift+L
 lt:&Visas ekranas\tCtrl+Shift+L
-lv:Pilnekrāna režīms\tF11
+lv:Piln&ekrāns\tF11
 mk:На цел екран\tCtrl+Shift+L
 ml:മുഴുവന്‍ കാണിക്കുക\tCtrl+Shift+L
 mm:မြင်ကွင်း ပြည့်\tCtrl+Shift+L
@@ -9343,6 +9357,7 @@ de:Dateianhang
 gl:Ficheiro anexo
 ka:მიმაგრებული ფაილი
 kw:Stagel Restren
+lv:Faila pielikums
 nl:Bestands Bijlage
 pl:Załącznik
 ru:Вложенный файл
@@ -10985,6 +11000,7 @@ de:Hervorhebung
 gl:Realzar
 ka:მონიშვნა
 kw:Golowboyntya
+lv:Iezīmēt
 nl:Markeer
 pl:Wyróżnienie
 ru:Выделение
@@ -11129,6 +11145,7 @@ gl:Imaxes
 it:Immagini
 ka:სურათები
 kw:Skeusennow
+lv:Attēli
 nl:Afbeeldingen
 pl:Obrazy
 ru:Изображения
@@ -11145,6 +11162,7 @@ de:Tinte
 gl:Trazo
 ka:მელანი
 kw:Ynk
+lv:Tinte
 nl:Snelkoppeling
 no:Blekk
 pl:Atrament
@@ -11665,6 +11683,7 @@ fr:Ligne
 gl:Liña
 ka:ხაზი
 kw:Linen
+lv:Līnija
 nl:Regel
 no:Linje
 pl:Linia
@@ -12188,6 +12207,7 @@ fr:Nouveaux marque-pages
 gl:Novos marcadores
 ka:ახალი სანიშნე
 kw:Folennotennow Nowydh
+lv:Jaunas grāmatzīmes
 nl:Nieuwe Bladwijzers
 pl:Nowe zakładki
 ru:Новые закладки
@@ -12875,6 +12895,7 @@ de:Eingebettetes PDF öffnen
 gl:Abrir PDF inserido
 ka:ჩაშენებული PDF-ის გახსნა
 kw:Ygeri PDF Neythys
+lv:Atvērt iegultu PDF
 nl:Open Ingesloten Pdf
 pl:Otwórz osadzony PDF
 ru:Открыть вложенный PDF
@@ -14312,6 +14333,7 @@ de:Polylinie
 gl:Liña polivinílica
 ka:ტეხილი ხაზი
 kw:Lieslinen
+lv:Lauzta līnija
 nl:Poly Regel
 pl:Polilinia
 ru:Ломаная
@@ -14328,6 +14350,7 @@ fr:Polygone
 gl:Polígono
 ka:მრავალკუთხედი
 kw:Liestuek
+lv:Daudzstūris
 nl:Veelhoek
 pl:Wielokąt
 ru:Многоугольник
@@ -15190,6 +15213,7 @@ de:Element entfernen
 gl:Borrar elemento
 ka:ელემენტის წაშლა
 kw:Removya Tra
+lv:Noņemt vienumu
 nl:Verwijder Item
 pl:Usuń element
 ru:Удалить элемент
@@ -15644,6 +15668,7 @@ de:Eingebettete Datei speichern...
 gl:Gardar ficheiro inserido...
 ka:მიმაგრებული ფაილის შენახვა...
 kw:Gwitha Restren Neythys...
+lv:Saglabāt iegultu failu
 nl:Ingesloten Bestand Opslaan...
 pl:Zapisz osadzony plik...
 ru:Сохранить вложенный файл...
@@ -16363,6 +16388,7 @@ fr:Afficher les &barres  de défilement
 gl:Amosr barra&s de desprazamento
 ka:საცოცი &პანელის ჩვენება
 kw:Diskwedhes &Skrolvarrys
+lv:Rādīt &ritjoslas
 nl:Toon S&chuifbalken
 pl:Pokaż &paski przewijania
 ru:&Показать ползунки
@@ -16545,6 +16571,7 @@ fr:Afficher les barres de &défilement
 gl:Amosar barras de desprazament&o
 ka:საცოცი პან&ელის ჩვენება
 kw:Diskwedhes Skr&olvarrys
+lv:Rādīt rit&joslas
 nl:Toon Sch&uifbalken
 pl:Pokaż p&aski przewijania
 ru:Показать пол&зунки
@@ -16856,6 +16883,7 @@ fr:Classer
 gl:Ordenar por
 ka:დალაგების ტიპი:
 kw:Digemyska Gans
+lv:Kārtot pēc
 nl:Sorteer Op
 pl:Sortuj według
 ru:Сортировать по
@@ -16937,6 +16965,7 @@ el:Τετράγωνο
 gl:Cadrado
 ka:კვადრატი
 kw:Pedrek
+lv:Kvadrāts
 nl:Vierkant
 pl:Kwadrat
 ru:Квадрат
@@ -17045,6 +17074,7 @@ fr:Rayer
 gl:Riscar
 ka:ხაზის გადასმა
 kw:Treuslinya
+lv:Pārsvītrojums
 nl:Doorhalen
 pl:Skreślenie
 ru:Перечёркивание
@@ -17695,6 +17725,7 @@ el:Υποστηρίξτε το SumatraPDF
 gl:Asistencia do SumatraPDF
 ka: SumatraPDF-ის დახმარება
 kw:Skoodhya SumatraPDF
+lv:Atbalstīt SumatraPDF
 nl:Steun SumatraPDF
 pl:Wesprzyj SumatraPDF
 ru:Поддержать SumatraPDF
@@ -17871,6 +17902,7 @@ gl:Texto
 it:Testo
 ka:ტექსტი
 kw:Tekst
+lv:Teksts
 nl:Tekst
 pl:Tekst
 ru:Текст
@@ -17951,6 +17983,7 @@ fr:Merci d'avoir choisi RA6MICRO PDF !
 gl:Grazas por escoller RA-MICRO PDF!
 ka:მადლობა რომ აირჩიეთ RA-MICRO PDF!
 kw:Meur ras a dhewis RA-MICRO PDF!
+lv:Paldies, ka izvēlējāties RA-MICRO PDF!
 nl:Dank u voor het kiezen van RA-MICRO PDF!
 pl:Dziękujemy za wybranie RA-MICRO PDF!
 ru:Спасибо, что выбрали RA-MICRO PDF!
@@ -18281,6 +18314,7 @@ fr:Souligner
 gl:Subliñado
 ka:ხაზის გასმა
 kw:Islinya
+lv:Pasvītrojums
 nl:Onderstrepen
 pl:Podkreślenie
 ru:Подчёркивание
