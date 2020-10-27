@@ -369,6 +369,7 @@ function AFParseTime(string, date) {
 
 function AFMakeDate(out, year, month, date, time)
 {
+	year = year | 0; // force type to integer
 	if (year < 50)
 		year += 2000;
 	if (year < 100)

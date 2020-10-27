@@ -529,7 +529,7 @@ FUN(PDFDocument_addPageString)(JNIEnv *env, jobject self, jobject jmediabox, jin
 
 	if (!ctx || !pdf) return NULL;
 	if (!resources) jni_throw_arg(env, "resources must not be null");
-	if (!contents) jni_throw_arg(env, "contents must not be null");
+	if (!jcontents) jni_throw_arg(env, "contents must not be null");
 
 	scontents = (*env)->GetStringUTFChars(env, jcontents, NULL);
 	if (!scontents) return NULL;

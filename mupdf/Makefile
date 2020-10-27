@@ -388,13 +388,17 @@ watch-recompile:
 	@ while ! inotifywait -q -e modify $(WATCH_SRCS) ; do time -p $(MAKE) ; done
 
 java:
-	$(MAKE) -C platform/java
+	$(MAKE) -C platform/java build=$(build)
 
 java-clean:
-	$(MAKE) -C platform/java clean
+	$(MAKE) -C platform/java build=$(build) clean
 
 wasm:
 	$(MAKE) -C platform/wasm
+
+extract-test:
+	$(MAKE) extract=yes debug
+	$(MAKE) -C thirdparty/extract mutool=../../build/debug-extract/mutool test-mutool
 
 tags:
 	$(TAGS_CMD)

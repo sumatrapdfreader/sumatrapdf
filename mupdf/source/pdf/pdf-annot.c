@@ -479,6 +479,46 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 	return annot;
 }
 
+static int
+remove_from_tree(fz_context *ctx, pdf_obj *arr, pdf_obj *item)
+{
+	int i, n, res = 0;
+
+	if (arr == NULL || pdf_mark_obj(ctx, arr))
+		return 0;
+
+	fz_try(ctx)
+	{
+		n = pdf_array_len(ctx, arr);
+		for (i = 0; i < n; ++i)
+		{
+			pdf_obj *obj = pdf_array_get(ctx, arr, i);
+			if (obj == item)
+			{
+				pdf_array_delete(ctx, arr, i);
+				res = 1;
+				break;
+			}
+
+			if (remove_from_tree(ctx, pdf_dict_get(ctx, obj, PDF_NAME(Kids)), item))
+			{
+				res = 1;
+				break;
+			}
+		}
+	}
+	fz_always(ctx)
+	{
+		pdf_unmark_obj(ctx, arr);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return res;
+}
+
 void
 pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot)
 {
@@ -486,26 +526,45 @@ pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot)
 	pdf_annot **annotptr;
 	pdf_obj *annot_arr, *popup;
 	int i;
+	int is_widget = 0;
 
 	if (annot == NULL)
 		return;
 
-	/* Remove annot from page's list */
+	/* Look for the annot in the page's list */
 	for (annotptr = &page->annots; *annotptr; annotptr = &(*annotptr)->next)
 	{
 		if (*annotptr == annot)
 			break;
 	}
 
+	if (*annotptr == NULL)
+	{
+		is_widget = 1;
+
+		/* Look also in the widget list*/
+		for (annotptr = &page->widgets; *annotptr; annotptr = &(*annotptr)->next)
+		{
+			if (*annotptr == annot)
+				break;
+		}
+	}
+
 	/* Check the passed annotation was of this page */
 	if (*annotptr == NULL)
 		return;
 
+	/* Remove annot from page's list */
 	*annotptr = annot->next;
 
 	/* If the removed annotation was the last in the list adjust the end pointer */
 	if (*annotptr == NULL)
+	{
+		if (is_widget)
+			page->widget_tailp = annotptr;
+		else
 		page->annot_tailp = annotptr;
+	}
 
 	/* Remove the annot from the "Annots" array. */
 	annot_arr = pdf_dict_get(ctx, page->obj, PDF_NAME(Annots));
@@ -520,6 +579,15 @@ pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot)
 		i = pdf_array_find(ctx, annot_arr, popup);
 		if (i >= 0)
 			pdf_array_delete(ctx, annot_arr, i);
+	}
+
+	/* For a widget, remove also from the AcroForm tree */
+	if (is_widget)
+	{
+		pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+		pdf_obj *acroform = pdf_dict_get(ctx, root, PDF_NAME(AcroForm));
+		pdf_obj *fields = pdf_dict_get(ctx, acroform, PDF_NAME(Fields));
+		(void)remove_from_tree(ctx, fields, annot->obj);
 	}
 
 	/* The garbage collection pass when saving will remove the annot object,

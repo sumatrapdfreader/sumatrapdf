@@ -369,6 +369,7 @@
 "\n"
 "function AFMakeDate(out, year, month, date, time)\n"
 "{\n"
+"year = year | 0;\n"
 "if (year < 50)\n"
 "year += 2000;\n"
 "if (year < 100)\n"

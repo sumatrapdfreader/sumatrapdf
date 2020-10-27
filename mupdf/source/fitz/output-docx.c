@@ -16,6 +16,9 @@ typedef struct
 	fz_output *intermediate_output;
 	fz_output *output;
 	int we_own_output;
+	int spacing;
+	int rotation;
+	int images;
 	char output_cache[1024];
 } fz_docx_writer;
 
@@ -100,8 +103,7 @@ static void s_close(fz_context *ctx, fz_document_writer *writer_)
 		 */
 		fz_close_output(ctx, writer->intermediate_output);
 		data_size = fz_buffer_storage(ctx, writer->intermediate_buffer, &data);
-		if (extract_buffer_open_simple(data, data_size, NULL /*handle*/, NULL /*fn_close*/,
-				&extract_buffer_intermediate))
+		if (extract_buffer_open_simple(data, data_size, NULL /*handle*/, NULL /*fn_close*/, &extract_buffer_intermediate))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_buffer_intermediate.");
 		if (extract_intermediate_to_document(extract_buffer_intermediate, 0 /*autosplit*/, &extract_document))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to extract intermediate data.");
@@ -113,7 +115,7 @@ static void s_close(fz_context *ctx, fz_document_writer *writer_)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to join spans: %s", strerror(errno));
 
 		/* Convert paragraphs into docx content. */
-		if (extract_document_to_docx_content(extract_document, 1 /*spacing*/, 1 /*rotation*/, 1 /*images*/, &extract_content,
+		if (extract_document_to_docx_content(extract_document, writer->spacing, writer->rotation, writer->images, &extract_content,
 				&extract_content_length))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to generate docx content: %s", strerror(errno));
 
@@ -158,6 +160,22 @@ static void s_drop(fz_context *ctx, fz_document_writer *writer_)
 	}
 }
 
+
+static int get_bool_option(fz_context *ctx, const char *options, const char *name, int default_)
+{
+	const char *value;
+	if (fz_has_option(ctx, options, name, &value))
+	{
+		if (fz_option_eq(value, "yes")) return 1;
+		if (fz_option_eq(value, "no")) return 0;
+		else fz_throw(ctx, FZ_ERROR_SYNTAX, "option '%s' should be yes or no in options='%s'", name, options);
+	}
+	else
+	{
+		return default_;
+	}
+}
+
 static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_output *out, const char *options, int we_own_output)
 {
 	fz_docx_writer *writer = NULL;
@@ -171,6 +189,9 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 		writer->intermediate_output = fz_new_output_with_buffer(ctx, writer->intermediate_buffer);
 		writer->output = out;
 		writer->we_own_output = we_own_output;
+		writer->spacing = get_bool_option(ctx, options, "spacing", 1);
+		writer->rotation = get_bool_option(ctx, options, "rotation", 1);
+		writer->images = get_bool_option(ctx, options, "images", 1);
 	}
 	fz_catch(ctx)
 	{
