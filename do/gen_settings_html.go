@@ -363,4 +363,5 @@ func genSettingsHTML() {
 
 	path := filepath.Join(websiteSettingsDir(), settingsFileName())
 	u.WriteFileMust(path, []byte(s))
+	fmt.Printf("Wrote '%s'\n", path)
 }
