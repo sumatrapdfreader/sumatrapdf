@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d1e639b0d9608b9ea7af66d314075a99bc9e1755
+25547f3c194fb5460f1af992b018232253dee60a
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -10651,6 +10651,7 @@ de:Freitext
 gl:Texto libre
 ka:თავისუფალი ტექსტი
 kw:Tekst Rydh
+lv:Brīvs teksts
 nl:Vrije Tekst
 pl:Dowolny tekst
 ru:Произвольный текст
@@ -16996,6 +16997,7 @@ de:Stempel
 gl:Selo
 ka:ბეჭედი
 kw:Stampa
+lv:Zīmogs
 nl:Stempel
 pl:Pieczęć
 ru:Печать

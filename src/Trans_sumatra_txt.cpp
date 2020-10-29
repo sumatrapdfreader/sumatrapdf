@@ -11649,7 +11649,7 @@ const char * gTranslations_lv =
   "Gr\304\201matas format\304\223\305\241ana... %d lappuses\0"\
   "%s lappus\304\223 atrasts teksts\0"\
   "%s lappus\304\223 atrasts teksts (v\304\223lreiz)\0"\
-  "\0"\
+  "Br\304\253vs teksts\0"\
   "Bie\305\276\304\201k las\304\253tie\0"\
   "\0"\
   "Doties uz lappusi\0"\
@@ -11762,7 +11762,7 @@ const char * gTranslations_lv =
   "Avota failam %s nav sinhroniz\304\201cijas punkta\0"\
   "Kvadr\304\201ts\0"\
   "\0"\
-  "\0"\
+  "Z\304\253mogs\0"\
   "Palaist SumatraPDF\0"\
   "P\304\201rsv\304\253trojums\0"\
   "T\304\223ma:\0"\
