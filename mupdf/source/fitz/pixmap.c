@@ -115,7 +115,7 @@ fz_pixmap *
 fz_new_pixmap_with_bbox(fz_context *ctx, fz_colorspace *colorspace, fz_irect bbox, fz_separations *seps, int alpha)
 {
 	fz_pixmap *pixmap;
-	pixmap = fz_new_pixmap(ctx, colorspace, bbox.x1 - bbox.x0, bbox.y1 - bbox.y0, seps, alpha);
+	pixmap = fz_new_pixmap(ctx, colorspace, fz_irect_width(bbox), fz_irect_height(bbox), seps, alpha);
 	pixmap->x = bbox.x0;
 	pixmap->y = bbox.y0;
 	return pixmap;
@@ -124,13 +124,13 @@ fz_new_pixmap_with_bbox(fz_context *ctx, fz_colorspace *colorspace, fz_irect bbo
 fz_pixmap *
 fz_new_pixmap_with_bbox_and_data(fz_context *ctx, fz_colorspace *colorspace, fz_irect bbox, fz_separations *seps, int alpha, unsigned char *samples)
 {
-	int w = bbox.x1 - bbox.x0;
+	int w = fz_irect_width(bbox);
 	int stride;
 	int s = fz_count_active_separations(ctx, seps);
 	fz_pixmap *pixmap;
 	if (!colorspace && s == 0) alpha = 1;
 	stride = (fz_colorspace_n(ctx, colorspace) + s + alpha) * w;
-	pixmap = fz_new_pixmap_with_data(ctx, colorspace, w, bbox.y1 - bbox.y0, seps, alpha, stride, samples);
+	pixmap = fz_new_pixmap_with_data(ctx, colorspace, w, fz_irect_height(bbox), seps, alpha, stride, samples);
 	pixmap->x = bbox.x0;
 	pixmap->y = bbox.y0;
 	return pixmap;
@@ -160,8 +160,8 @@ fz_pixmap *fz_new_pixmap_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, const f
 	subpix->storable.refs = 1;
 	subpix->x = rect->x0;
 	subpix->y = rect->y0;
-	subpix->w = rect->x1 - rect->x0;
-	subpix->h = rect->y1 - rect->y0;
+	subpix->w = fz_irect_width(*rect);
+	subpix->h = fz_irect_height(*rect);
 	subpix->samples += (rect->x0 - pixmap->x) + (rect->y0 - pixmap->y) * pixmap->stride;
 	subpix->underlying = fz_keep_pixmap(ctx, pixmap);
 	subpix->colorspace = fz_keep_colorspace(ctx, pixmap->colorspace);
@@ -643,14 +643,15 @@ fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_irect b
 {
 	unsigned char *srcp;
 	unsigned char *destp;
-	int y, w, destspan, srcspan;
+	unsigned int y, w;
+	int destspan, srcspan;
 
 	b = fz_intersect_irect(b, fz_pixmap_bbox(ctx, dest));
 	b = fz_intersect_irect(b, fz_pixmap_bbox(ctx, src));
-	w = b.x1 - b.x0;
-	y = b.y1 - b.y0;
-	if (w <= 0 || y <= 0)
+	if (b.x1 <= b.x0 || b.y1 <= b.y0)
 		return;
+	w = (unsigned int)(b.x1 - b.x0);
+	y = (unsigned int)(b.y1 - b.y0);
 
 	srcspan = src->stride;
 	srcp = src->samples + (unsigned int)(srcspan * (b.y0 - src->y) + src->n * (b.x0 - src->x));

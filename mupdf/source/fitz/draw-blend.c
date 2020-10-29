@@ -1101,9 +1101,8 @@ fz_blend_pixmap(fz_context *ctx, fz_pixmap * FZ_RESTRICT dst, fz_pixmap * FZ_RES
 
 	x = bbox.x0;
 	y = bbox.y0;
-	w = bbox.x1 - bbox.x0;
-	h = bbox.y1 - bbox.y0;
-
+	w = fz_irect_width(bbox);
+	h = fz_irect_height(bbox);
 	if (w == 0 || h == 0)
 		return;
 
@@ -1309,9 +1308,8 @@ fz_blend_pixmap_knockout(fz_context *ctx, fz_pixmap * FZ_RESTRICT dst, fz_pixmap
 
 	x = bbox.x0;
 	y = bbox.y0;
-	w = bbox.x1 - bbox.x0;
-	h = bbox.y1 - bbox.y0;
-
+	w = fz_irect_width(bbox);
+	h = fz_irect_height(bbox);
 	if (w == 0 || h == 0)
 		return;
 

@@ -11,9 +11,17 @@ public class Rect
 	public float x1;
 	public float y1;
 
+	// Minimum and Maximum values that can survive round trip
+	// from int to float.
+	private static final int FZ_MIN_INF_RECT = 0x80000000;
+	private static final int FZ_MAX_INF_RECT = 0x7fffff80;
+
 	public Rect()
 	{
-		x0 = y0 = x1 = y1 = 0;
+		// Invalid (hence zero area) rectangle. Unioning
+		// this with any rectangle (or point) will 'cure' it
+		x0 = y0 = FZ_MAX_INF_RECT;
+		x1 = y1 = FZ_MIN_INF_RECT;
 	}
 
 	public Rect(float x0, float y0, float x1, float y1)
@@ -49,8 +57,21 @@ public class Rect
 		return "[" + x0 + " " + y0 + " " + x1 + " " + y1 + "]";
 	}
 
+	public boolean isInfinite()
+	{
+		return this.x0 == FZ_MIN_INF_RECT &&
+			this.y0 == FZ_MIN_INF_RECT &&
+			this.x1 == FZ_MAX_INF_RECT &&
+			this.y1 == FZ_MAX_INF_RECT;
+	}
+
 	public Rect transform(Matrix tm)
 	{
+		if (this.isInfinite())
+			return this;
+		if (!this.isValid())
+			return this;
+
 		float ax0 = x0 * tm.a;
 		float ax1 = x1 * tm.a;
 
@@ -121,20 +142,27 @@ public class Rect
 
 	public boolean isEmpty()
 	{
-		return (x0 == x1 || y0 == y1);
+		return (x0 >= x1 || y0 >= y1);
+	}
+
+	public boolean isValid()
+	{
+		return (x0 <= x1 || y0 <= y1);
 	}
 
 	public void union(Rect r)
 	{
-		if (isEmpty())
+		if (!r.isValid() || this.isInfinite())
+			return;
+		if (!this.isValid() || r.isInfinite())
 		{
 			x0 = r.x0;
 			y0 = r.y0;
 			x1 = r.x1;
 			y1 = r.y1;
+			return;
 		}
-		else
-		{
+
 			if (r.x0 < x0)
 				x0 = r.x0;
 			if (r.y0 < y0)
@@ -145,4 +173,3 @@ public class Rect
 				y1 = r.y1;
 		}
 	}
-}

@@ -1718,6 +1718,11 @@ fz_run_display_list(fz_context *ctx, fz_display_list *list, fz_device *dev, fz_m
 		{
 			empty = 0;
 		}
+		else if (n.cmd == FZ_CMD_FILL_PATH || n.cmd == FZ_CMD_STROKE_PATH)
+		{
+			/* Zero area paths are suitable for stroking. */
+			empty = !fz_is_valid_rect(fz_intersect_rect(trans_rect, scissor));
+		}
 		else
 		{
 			empty = fz_is_empty_rect(fz_intersect_rect(trans_rect, scissor));

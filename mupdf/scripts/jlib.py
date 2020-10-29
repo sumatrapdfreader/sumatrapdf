@@ -410,7 +410,7 @@ def split_first_of( text, substrings):
     and <post> is empty or starts with an item in <substrings>.
     '''
     pos, _ = strpbrk( text, substrings)
-    return text[ :pos], text[ pos:]
+    return text[ :pos], text[ pos+1:]
 
 
 
@@ -1059,8 +1059,10 @@ def get_gitfiles( directory, submodules=False):
 
     Returned names are all relative to <directory>.
 
-    If .git directory, we also create <directory>/jtest-git-files. Otherwise we
-    assume a this file already exists.
+    If <directory>.git exists we use git-ls-files and write list of files to
+    <directory>/jtest-git-files.
+
+    Otherwise we require that <directory>/jtest-git-files already exists.
     '''
     if os.path.isdir( '%s/.git' % directory):
         command = 'cd ' + directory + ' && git ls-files'
@@ -1104,7 +1106,7 @@ def get_git_id( directory, allow_none=False):
             text = f.read()
     else:
         if not allow_none:
-            raise Exception( f'Not in git checkout, and no file {filename}.')
+            raise Exception( f'Not in git checkout, and no file called: {filename}.')
         text = None
     return text
 

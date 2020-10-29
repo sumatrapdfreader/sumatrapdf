@@ -355,32 +355,32 @@ fz_normalize_vector(fz_point p)
 #define MAX_SAFE_INT 16777216
 #define MIN_SAFE_INT -16777216
 
-const fz_rect fz_infinite_rect = { 1, 1, -1, -1 };
-const fz_rect fz_empty_rect = { 0, 0, 0, 0 };
+const fz_rect fz_infinite_rect = { FZ_MIN_INF_RECT, FZ_MIN_INF_RECT, FZ_MAX_INF_RECT, FZ_MAX_INF_RECT };
+const fz_rect fz_empty_rect = { FZ_MAX_INF_RECT, FZ_MAX_INF_RECT, FZ_MIN_INF_RECT, FZ_MIN_INF_RECT };
+const fz_rect fz_invalid_rect = { 0, 0, -1, -1 };
 const fz_rect fz_unit_rect = { 0, 0, 1, 1 };
 
-const fz_irect fz_infinite_irect = { 1, 1, -1, -1 };
-const fz_irect fz_empty_irect = { 0, 0, 0, 0 };
+const fz_irect fz_infinite_irect = { FZ_MIN_INF_RECT, FZ_MIN_INF_RECT, FZ_MAX_INF_RECT, FZ_MAX_INF_RECT };
+const fz_irect fz_empty_irect = { FZ_MAX_INF_RECT, FZ_MAX_INF_RECT, FZ_MIN_INF_RECT, FZ_MIN_INF_RECT };
+const fz_irect fz_invalid_irect = { 0, 0, -1, -1 };
 const fz_irect fz_unit_bbox = { 0, 0, 1, 1 };
 
 fz_irect
 fz_irect_from_rect(fz_rect r)
 {
 	fz_irect b;
+	if (fz_is_infinite_rect(r))
+		return fz_infinite_irect;
 	if (fz_is_empty_rect(r))
-	{
-		b.x0 = 0;
-		b.y0 = 0;
-		b.x1 = 0;
-		b.y1 = 0;
-	}
-	else
-	{
+		return fz_empty_irect;
+	if (!fz_is_valid_rect(r))
+		return fz_invalid_irect;
+
 		b.x0 = fz_clamp(floorf(r.x0), MIN_SAFE_INT, MAX_SAFE_INT);
 		b.y0 = fz_clamp(floorf(r.y0), MIN_SAFE_INT, MAX_SAFE_INT);
 		b.x1 = fz_clamp(ceilf(r.x1), MIN_SAFE_INT, MAX_SAFE_INT);
 		b.y1 = fz_clamp(ceilf(r.y1), MIN_SAFE_INT, MAX_SAFE_INT);
-	}
+
 	return b;
 }
 
@@ -388,6 +388,10 @@ fz_rect
 fz_rect_from_irect(fz_irect a)
 {
 	fz_rect r;
+
+	if (fz_is_infinite_irect(a))
+		return fz_infinite_rect;
+
 	r.x0 = a.x0;
 	r.y0 = a.y0;
 	r.x1 = a.x1;
@@ -416,9 +420,6 @@ fz_round_rect(fz_rect r)
 fz_rect
 fz_intersect_rect(fz_rect a, fz_rect b)
 {
-	/* Check for empty box before infinite box */
-	if (fz_is_empty_rect(a)) return fz_empty_rect;
-	if (fz_is_empty_rect(b)) return fz_empty_rect;
 	if (fz_is_infinite_rect(b)) return a;
 	if (fz_is_infinite_rect(a)) return b;
 	if (a.x0 < b.x0)
@@ -429,17 +430,12 @@ fz_intersect_rect(fz_rect a, fz_rect b)
 		a.x1 = b.x1;
 	if (a.y1 > b.y1)
 		a.y1 = b.y1;
-	if (a.x1 < a.x0 || a.y1 < a.y0)
-		return fz_empty_rect;
 	return a;
 }
 
 fz_irect
 fz_intersect_irect(fz_irect a, fz_irect b)
 {
-	/* Check for empty box before infinite box */
-	if (fz_is_empty_irect(a)) return fz_empty_irect;
-	if (fz_is_empty_irect(b)) return fz_empty_irect;
 	if (fz_is_infinite_irect(b)) return a;
 	if (fz_is_infinite_irect(a)) return b;
 	if (a.x0 < b.x0)
@@ -450,8 +446,6 @@ fz_intersect_irect(fz_irect a, fz_irect b)
 		a.x1 = b.x1;
 	if (a.y1 > b.y1)
 		a.y1 = b.y1;
-	if (a.x1 < a.x0 || a.y1 < a.y0)
-		return fz_empty_irect;
 	return a;
 }
 
@@ -459,8 +453,8 @@ fz_rect
 fz_union_rect(fz_rect a, fz_rect b)
 {
 	/* Check for empty box before infinite box */
-	if (fz_is_empty_rect(b)) return a;
-	if (fz_is_empty_rect(a)) return b;
+	if (!fz_is_valid_rect(b)) return a;
+	if (!fz_is_valid_rect(a)) return b;
 	if (fz_is_infinite_rect(a)) return a;
 	if (fz_is_infinite_rect(b)) return b;
 	if (a.x0 > b.x0)
@@ -477,7 +471,6 @@ fz_union_rect(fz_rect a, fz_rect b)
 fz_rect
 fz_translate_rect(fz_rect a, float xoff, float yoff)
 {
-	if (fz_is_empty_rect(a)) return a;
 	if (fz_is_infinite_rect(a)) return a;
 	a.x0 += xoff;
 	a.y0 += yoff;
@@ -504,6 +497,7 @@ fz_rect
 fz_transform_rect(fz_rect r, fz_matrix m)
 {
 	fz_point s, t, u, v;
+	int invalid;
 
 	if (fz_is_infinite_rect(r))
 		return r;
@@ -526,9 +520,32 @@ fz_transform_rect(fz_rect r, fz_matrix m)
 		t = fz_transform_point_xy(r.x1, r.y1, m);
 		r.x0 = s.x; r.y0 = s.y;
 		r.x1 = t.x; r.y1 = t.y;
+		/* If r was invalid coming in, it'll still be invalid now. */
+		return r;
+	}
+	else if (fabsf(m.a) < FLT_EPSILON && fabsf(m.d) < FLT_EPSILON)
+	{
+		if (m.b < 0)
+		{
+			float f = r.x0;
+			r.x0 = r.x1;
+			r.x1 = f;
+		}
+		if (m.c < 0)
+		{
+			float f = r.y0;
+			r.y0 = r.y1;
+			r.y1 = f;
+		}
+		s = fz_transform_point_xy(r.x0, r.y0, m);
+		t = fz_transform_point_xy(r.x1, r.y1, m);
+		r.x0 = s.x; r.y0 = s.y;
+		r.x1 = t.x; r.y1 = t.y;
+		/* If r was invalid coming in, it'll still be invalid now. */
 		return r;
 	}
 
+	invalid = (r.x0 > r.x1) || (r.y0 > r.y1);
 	s.x = r.x0; s.y = r.y0;
 	t.x = r.x0; t.y = r.y1;
 	u.x = r.x1; u.y = r.y1;
@@ -541,6 +558,15 @@ fz_transform_rect(fz_rect r, fz_matrix m)
 	r.y0 = MIN4(s.y, t.y, u.y, v.y);
 	r.x1 = MAX4(s.x, t.x, u.x, v.x);
 	r.y1 = MAX4(s.y, t.y, u.y, v.y);
+
+	/* If we were called with an invalid rectangle, return an
+	 * invalid rectangle after transformation. */
+	if (invalid)
+	{
+		float t;
+		t = r.x0; r.x0 = r.x1; r.x1 = t;
+		t = r.y0; r.y0 = r.y1; r.y1 = t;
+	}
 	return r;
 }
 
@@ -548,6 +574,7 @@ fz_irect
 fz_expand_irect(fz_irect a, int expand)
 {
 	if (fz_is_infinite_irect(a)) return a;
+	if (!fz_is_valid_irect(a)) return a;
 	a.x0 -= expand;
 	a.y0 -= expand;
 	a.x1 += expand;
@@ -559,6 +586,7 @@ fz_rect
 fz_expand_rect(fz_rect a, float expand)
 {
 	if (fz_is_infinite_rect(a)) return a;
+	if (!fz_is_valid_rect(a)) return a;
 	a.x0 -= expand;
 	a.y0 -= expand;
 	a.x1 += expand;
@@ -566,6 +594,8 @@ fz_expand_rect(fz_rect a, float expand)
 	return a;
 }
 
+/* Adding a point to an invalid rectangle makes the zero area rectangle
+ * that contains just that point. */
 fz_rect fz_include_point_in_rect(fz_rect r, fz_point p)
 {
 	if (fz_is_infinite_rect(r)) return r;
@@ -578,10 +608,12 @@ fz_rect fz_include_point_in_rect(fz_rect r, fz_point p)
 
 int fz_contains_rect(fz_rect a, fz_rect b)
 {
-	if (fz_is_empty_rect(b))
-		return 1;
-	if (fz_is_empty_rect(a))
+	/* An invalid rect can't contain anything */
+	if (!fz_is_valid_rect(a))
 		return 0;
+	/* Any valid rect contains all invalid rects */
+	if (!fz_is_valid_rect(b))
+		return 1;
 	return ((a.x0 <= b.x0) &&
 		(a.y0 <= b.y0) &&
 		(a.x1 >= b.x1) &&

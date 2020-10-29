@@ -534,6 +534,19 @@ static inline jobject to_PDFAnnotation_safe_own(fz_context *ctx, JNIEnv *env, pd
 	return jannot;
 }
 
+static inline jobject to_PDFWidget_safe_own(fz_context *ctx, JNIEnv *env, pdf_widget *widget)
+{
+	jobject jwidget;
+
+	if (!ctx || !widget) return NULL;
+
+	jwidget = (*env)->NewObject(env, cls_PDFWidget, mid_PDFWidget_init, jlong_cast(widget));
+	if (!jwidget)
+		pdf_drop_annot(ctx, widget);
+
+	return jwidget;
+}
+
 static inline jobject to_PDFGraftMap_safe_own(fz_context *ctx, JNIEnv *env, jobject pdf, pdf_graft_map *map)
 {
 	jobject jmap;

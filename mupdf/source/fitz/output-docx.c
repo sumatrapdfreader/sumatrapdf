@@ -77,14 +77,9 @@ static int s_buffer_to_output_cache(void *handle, void **o_cache, size_t *o_numb
 static void s_close(fz_context *ctx, fz_document_writer *writer_)
 {
 	fz_docx_writer *writer = (fz_docx_writer*) writer_;
-	extract_document_t *extract_document = NULL;
-	char *extract_content = NULL;
-	size_t extract_content_length;
 	extract_buffer_t *extract_buffer_intermediate = NULL;
 	extract_buffer_t *extract_buffer_output = NULL;
 
-	fz_var(extract_document);
-	fz_var(extract_content);
 	fz_var(extract_buffer_intermediate);
 	fz_var(extract_buffer_output);
 	fz_var(writer);
@@ -96,39 +91,27 @@ static void s_close(fz_context *ctx, fz_document_writer *writer_)
 		writer->ctx = ctx;	/* For s_buffer_to_output_write() callback. */
 
 		/*
-		 * Load intermediate data. Intermediate data from xmltext device is
-		 * (via * writer->intermediate_output) in writer->intermediate_buffer. We
-		 * need to create * an extract_buffer_t that reads this intermediate
-		 * data, in order to call * extract_intermediate_to_document_buffer().
+		 * Load intermediate data. Intermediate data from
+		 * xmltext device is (via writer->intermediate_output)
+		 * in writer->intermediate_buffer. We need to create an
+		 * extract_buffer_t that reads this intermediate data in order
+		 * to call extract_intermediate_to_document_buffer().
 		 */
 		fz_close_output(ctx, writer->intermediate_output);
 		data_size = fz_buffer_storage(ctx, writer->intermediate_buffer, &data);
 		if (extract_buffer_open_simple(data, data_size, NULL /*handle*/, NULL /*fn_close*/, &extract_buffer_intermediate))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_buffer_intermediate.");
-		if (extract_intermediate_to_document(extract_buffer_intermediate, 0 /*autosplit*/, &extract_document))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to extract intermediate data.");
-		if (extract_buffer_close(&extract_buffer_intermediate))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to close extract_buffer_intermediate.");
-
-		/* Join spans into lines and paragraphs. */
-		if (extract_document_join(extract_document))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to join spans: %s", strerror(errno));
-
-		/* Convert paragraphs into docx content. */
-		if (extract_document_to_docx_content(extract_document, writer->spacing, writer->rotation, writer->images, &extract_content,
-				&extract_content_length))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to generate docx content: %s", strerror(errno));
-
 		/*
 		 * Write docx to writer->output. Need to create an
-		 * extract_buffer_t that * writes to writer->output, for use by
+		 * extract_buffer_t that writes to writer->output, for use by
 		 * extract_docx_content_to_docx().
 		 */
 		if (extract_buffer_open(writer, NULL /*fn_read*/, s_buffer_to_output_write,
 				s_buffer_to_output_cache, NULL /*fn_close*/, &extract_buffer_output))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_buffer_output: %s", strerror(errno));
-		if (extract_docx_content_to_docx(extract_content, extract_content_length, extract_document, extract_buffer_output))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create .docx file: %s", strerror(errno));
+		if (extract_intermediate_to_docx(extract_buffer_intermediate, 0 /*autosplit*/,
+				writer->spacing, writer->rotation, writer->images, extract_buffer_output))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to generate docx content: %s", strerror(errno));
 		if (extract_buffer_close(&extract_buffer_output))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to close extract_buffer: %s", strerror(errno));
 	}
@@ -137,8 +120,6 @@ static void s_close(fz_context *ctx, fz_document_writer *writer_)
 		writer->ctx = NULL;
 		fz_close_output(ctx, writer->intermediate_output);
 		extract_buffer_close(&extract_buffer_intermediate);
-		free(extract_content);
-		extract_document_free(&extract_document);
 		extract_buffer_close(&extract_buffer_output);
 		fz_close_output(ctx, writer->output);
 	}

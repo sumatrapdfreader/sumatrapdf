@@ -326,6 +326,103 @@ static void fz_compute_image_key(fz_context *ctx, fz_image *image, fz_matrix *ct
 		key->l2factor = 0;
 }
 
+typedef struct {
+	fz_stream *src;
+	size_t l_skip; /* Number of bytes to skip on the left. */
+	size_t r_skip; /* Number of bytes to skip on the right. */
+	size_t b_skip; /* Number of bytes to skip on the bottom. */
+	int lines; /* Number of lines left to copy. */
+	size_t stride; /* Number of bytes to read in the image. */
+	size_t nskip; /* Number of bytes left to skip on this line. */
+	size_t nread; /* Number of bytes left to read on this line. */
+} subarea_state;
+
+static int
+subarea_next(fz_context *ctx, fz_stream *stm, size_t len)
+{
+	subarea_state *state = stm->state;
+	size_t n;
+
+	stm->wp = stm->rp = NULL;
+	if (state->nskip > 0)
+	{
+		n = fz_skip(ctx, state->src, state->nskip);
+		state->nskip -= n;
+		if (state->nskip > 0)
+			return 0;
+	}
+	if (state->lines == 0)
+		return EOF;
+	n = fz_available(ctx, state->src, state->nread);
+	if (n > state->nread)
+		n = state->nread;
+	if (n == 0)
+		return EOF;
+	stm->rp = state->src->rp;
+	stm->wp = stm->rp + n;
+	stm->pos += n;
+	state->src->rp = stm->wp;
+	state->nread -= n;
+	if (state->nread == 0)
+	{
+		state->lines--;
+		if (state->lines == 0)
+			state->nskip = state->r_skip + state->b_skip;
+		else
+			state->nskip = state->l_skip + state->r_skip;
+		state->nread = state->stride;
+	}
+	return *stm->rp++;
+}
+
+static void
+subarea_drop(fz_context *ctx, void *state)
+{
+	fz_free(ctx, state);
+}
+
+static fz_stream *
+subarea_stream(fz_context *ctx, fz_stream *stm, fz_image *image, const fz_irect *subarea, int l2factor)
+{
+	fz_stream *sstm = NULL;
+	subarea_state *state;
+	int f = 1<<l2factor;
+	int stream_w = (image->w + f - 1)>>l2factor;
+	size_t stream_stride = (stream_w * image->n * image->bpc + 7) / 8;
+	int l_margin = subarea->x0 >> l2factor;
+	int t_margin = subarea->y0 >> l2factor;
+	int r_margin = (image->w + f - 1 - subarea->x1) >> l2factor;
+	int b_margin = (image->h + f - 1 - subarea->y1) >> l2factor;
+	size_t l_skip = (l_margin * image->n * image->bpc)/8;
+	size_t r_skip = (r_margin * image->n * image->bpc + 7)/8;
+	size_t t_skip = t_margin * stream_stride;
+	size_t b_skip = b_margin * stream_stride;
+	int h = (subarea->y1 - subarea->y0 + f - 1) >> l2factor;
+	int w = (subarea->x1 - subarea->x0 + f - 1) >> l2factor;
+	size_t stride = (w * image->n * image->bpc + 7) / 8;
+
+	state = fz_malloc_struct(ctx, subarea_state);
+	state->src = stm;
+	state->l_skip = l_skip;
+	state->r_skip = r_skip;
+	state->b_skip = b_skip;
+	state->lines = h;
+	state->nskip = l_skip+t_skip;
+	state->stride = stride;
+	state->nread = stride;
+
+	fz_var(sstm);
+
+	fz_try(ctx)
+		sstm = fz_new_stream(ctx, state, subarea_next, subarea_drop);
+	fz_catch(ctx)
+	{
+		fz_free(ctx, state);
+		fz_rethrow(ctx);
+	}
+	return sstm;
+}
+
 fz_pixmap *
 fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image *cimg, fz_irect *subarea, int indexed, int l2factor)
 {
@@ -337,6 +434,8 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image
 	int w = image->w;
 	int h = image->h;
 	int matte = image->use_colorkey && image->mask;
+	fz_stream *read_stream = stm;
+	fz_stream *sstream = NULL;
 
 	if (matte)
 	{
@@ -359,6 +458,7 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image
 
 	fz_var(tile);
 	fz_var(samples);
+	fz_var(sstream);
 
 	fz_try(ctx)
 	{
@@ -377,45 +477,9 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image
 		samples = Memento_label(fz_malloc(ctx, h * stride), "pixmap_samples");
 
 		if (subarea)
-		{
-			int hh;
-			unsigned char *s = samples;
-			int stream_w = (image->w + f - 1)>>l2factor;
-			size_t stream_stride = (stream_w * image->n * image->bpc + 7) / 8;
-			int l_margin = subarea->x0 >> l2factor;
-			int t_margin = subarea->y0 >> l2factor;
-			int r_margin = (image->w + f - 1 - subarea->x1) >> l2factor;
-			int b_margin = (image->h + f - 1 - subarea->y1) >> l2factor;
-			int l_skip = (l_margin * image->n * image->bpc)/8;
-			int r_skip = (r_margin * image->n * image->bpc + 7)/8;
-			size_t t_skip = t_margin * stream_stride + l_skip;
-			size_t b_skip = b_margin * stream_stride + r_skip;
-			size_t l = fz_skip(ctx, stm, t_skip);
-			len = 0;
-			if (l == t_skip)
-			{
-				hh = h;
-				do
-				{
-					l = fz_read(ctx, stm, s, stride);
-					s += l;
-					len += l;
-					if (l < stride)
-						break;
-					if (--hh == 0)
-						break;
-					l = fz_skip(ctx, stm, r_skip + l_skip);
-					if (l < (size_t)(r_skip + l_skip))
-						break;
-				}
-				while (1);
-				(void)fz_skip(ctx, stm, r_skip + b_skip);
-			}
-		}
-		else
-		{
-			len = fz_read(ctx, stm, samples, h * stride);
-		}
+			read_stream = sstream = subarea_stream(ctx, stm, image, subarea, l2factor);
+
+		len = fz_read(ctx, read_stream, samples, h * stride);
 
 		/* Pad truncated images */
 		if (len < stride * h)
@@ -460,6 +524,8 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image
 		if (matte)
 			fz_unblend_masked_tile(ctx, tile, image, subarea);
 	}
+	fz_always(ctx)
+		fz_drop_stream(ctx, sstream);
 	fz_catch(ctx)
 	{
 		fz_drop_pixmap(ctx, tile);

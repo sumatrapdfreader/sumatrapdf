@@ -748,6 +748,19 @@ char *pdf_field_name(fz_context *ctx, pdf_obj *field)
 	return get_field_name(ctx, field, 0);
 }
 
+void pdf_create_field_name(fz_context *ctx, pdf_document *doc, const char *prefix, char *buf, size_t len)
+{
+	pdf_obj *form = pdf_dict_getl(ctx, pdf_trailer(ctx, doc),
+		PDF_NAME(Root), PDF_NAME(AcroForm), PDF_NAME(Fields), NULL);
+	int i;
+	for (i = 0; i < 65536; ++i) {
+		fz_snprintf(buf, len, "%s%d", prefix, i);
+		if (!pdf_lookup_field(ctx, form, buf))
+			return;
+	}
+	fz_throw(ctx, FZ_ERROR_GENERIC, "Could not create unique field name.");
+}
+
 const char *pdf_field_label(fz_context *ctx, pdf_obj *field)
 {
 	pdf_obj *label = pdf_dict_get_inheritable(ctx, field, PDF_NAME(TU));

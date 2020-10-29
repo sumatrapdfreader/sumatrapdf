@@ -177,3 +177,27 @@ FUN(PDFPage_getWidgetsNative)(JNIEnv *env, jobject self)
 
 	return jwidgets;
 }
+
+JNIEXPORT jobject JNICALL
+FUN(PDFPage_createSignature)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_page *page = from_PDFPage(env, self);
+	pdf_widget *widget = NULL;
+	char name[80];
+
+	if (!ctx || !page)
+		return NULL;
+
+	fz_try(ctx)
+	{
+		pdf_create_field_name(ctx, page->doc, "Signature", name, sizeof name);
+		widget = pdf_create_signature_widget(ctx, page, name);
+	}
+	fz_catch(ctx)
+	{
+		jni_rethrow(env, ctx);
+	}
+
+	return to_PDFWidget_safe_own(ctx, env, widget);
+}

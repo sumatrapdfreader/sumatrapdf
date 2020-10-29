@@ -2165,8 +2165,8 @@ fz_paint_pixmap_with_bbox(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ_REST
 
 	x = bbox.x0;
 	y = bbox.y0;
-	w = bbox.x1 - bbox.x0;
-	h = bbox.y1 - bbox.y0;
+	w = fz_irect_width(bbox);
+	h = fz_irect_height(bbox);
 	if (w == 0 || h == 0)
 		return;
 
@@ -2212,8 +2212,8 @@ fz_paint_pixmap(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ_RESTRICT src, 
 	bbox = fz_intersect_irect(fz_pixmap_bbox_no_ctx(src), fz_pixmap_bbox_no_ctx(dst));
 	x = bbox.x0;
 	y = bbox.y0;
-	w = bbox.x1 - bbox.x0;
-	h = bbox.y1 - bbox.y0;
+	w = fz_irect_width(bbox);
+	h = fz_irect_height(bbox);
 	if (w == 0 || h == 0)
 		return;
 
@@ -2285,8 +2285,8 @@ fz_paint_pixmap_alpha(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ_RESTRICT
 	bbox = fz_intersect_irect(fz_pixmap_bbox_no_ctx(src), fz_pixmap_bbox_no_ctx(dst));
 	x = bbox.x0;
 	y = bbox.y0;
-	w = bbox.x1 - bbox.x0;
-	h = bbox.y1 - bbox.y0;
+	w = fz_irect_width(bbox);
+	h = fz_irect_height(bbox);
 	if (w == 0 || h == 0)
 		return;
 
@@ -2333,8 +2333,8 @@ fz_paint_pixmap_with_overprint(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ
 	bbox = fz_intersect_irect(fz_pixmap_bbox_no_ctx(src), fz_pixmap_bbox_no_ctx(dst));
 	x = bbox.x0;
 	y = bbox.y0;
-	w = bbox.x1 - bbox.x0;
-	h = bbox.y1 - bbox.y0;
+	w = fz_irect_width(bbox);
+	h = fz_irect_height(bbox);
 	if (w == 0 || h == 0)
 		return;
 
@@ -2376,8 +2376,8 @@ fz_paint_pixmap_with_mask(fz_pixmap * FZ_RESTRICT dst, const fz_pixmap * FZ_REST
 
 	x = bbox.x0;
 	y = bbox.y0;
-	w = bbox.x1 - bbox.x0;
-	h = bbox.y1 - bbox.y0;
+	w = fz_irect_width(bbox);
+	h = fz_irect_height(bbox);
 	if (w == 0 || h == 0)
 		return;
 
