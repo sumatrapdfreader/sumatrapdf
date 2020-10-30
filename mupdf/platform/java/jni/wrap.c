@@ -310,17 +310,17 @@ static inline jobject to_PDFAnnotation_safe(fz_context *ctx, JNIEnv *env, pdf_an
 	return jannot;
 }
 
-static inline jobject to_PDFObject_safe(fz_context *ctx, JNIEnv *env, jobject pdf, pdf_obj *obj)
+static inline jobject to_PDFObject_safe(fz_context *ctx, JNIEnv *env, pdf_obj *obj)
 {
 	jobject jobj;
 
-	if (!ctx || !pdf) return NULL;
+	if (!ctx) return NULL;
 
 	if (obj == NULL)
 		return (*env)->GetStaticObjectField(env, cls_PDFObject, fid_PDFObject_Null);
 
 	pdf_keep_obj(ctx, obj);
-	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), pdf);
+	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj));
 	if (!jobj)
 		pdf_drop_obj(ctx, obj);
 
@@ -560,13 +560,13 @@ static inline jobject to_PDFGraftMap_safe_own(fz_context *ctx, JNIEnv *env, jobj
 	return jmap;
 }
 
-static inline jobject to_PDFObject_safe_own(fz_context *ctx, JNIEnv *env, jobject pdf, pdf_obj *obj)
+static inline jobject to_PDFObject_safe_own(fz_context *ctx, JNIEnv *env, pdf_obj *obj)
 {
 	jobject jobj;
 
-	if (!ctx || !obj || !pdf) return NULL;
+	if (!ctx || !obj) return NULL;
 
-	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj), pdf);
+	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(obj));
 	if (!jobj)
 		pdf_drop_obj(ctx, obj);
 

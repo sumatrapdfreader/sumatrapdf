@@ -23,4 +23,13 @@ public class DocumentWriter
 	public native Device beginPage(Rect mediabox);
 	public native void endPage();
 	public native void close();
+
+	private long ocrlistener;
+
+	public interface OCRListener
+	{
+		boolean progress(int percent);
+	}
+
+	public native void addOCRListener(OCRListener listener);
 }

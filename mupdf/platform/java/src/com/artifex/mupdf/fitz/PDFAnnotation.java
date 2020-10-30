@@ -208,4 +208,6 @@ public class PDFAnnotation
 	public native void eventBlur();
 
 	public native boolean update();
+
+	public native PDFObject getObject();
 }

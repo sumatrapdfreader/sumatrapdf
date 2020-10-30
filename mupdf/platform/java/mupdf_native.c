@@ -72,6 +72,7 @@ static jclass cls_Device;
 static jclass cls_DisplayList;
 static jclass cls_Document;
 static jclass cls_DocumentWriter;
+static jclass cls_DocumentWriter_OCRListener;
 static jclass cls_FitzInputStream;
 static jclass cls_FloatArray;
 static jclass cls_Font;
@@ -133,6 +134,7 @@ static jfieldID fid_Cookie_pointer;
 static jfieldID fid_Device_pointer;
 static jfieldID fid_DisplayList_pointer;
 static jfieldID fid_DocumentWriter_pointer;
+static jfieldID fid_DocumentWriter_ocrlistener;
 static jfieldID fid_Document_pointer;
 static jfieldID fid_FitzInputStream_pointer;
 static jfieldID fid_FitzInputStream_markpos;
@@ -220,6 +222,7 @@ static jmethodID mid_Device_init;
 static jmethodID mid_Device_popClip;
 static jmethodID mid_Device_strokePath;
 static jmethodID mid_Device_strokeText;
+static jmethodID mid_DocumentWriter_OCRListener_progress;
 static jmethodID mid_DisplayList_init;
 static jmethodID mid_FitzInputStream_init;
 static jmethodID mid_Document_init;
@@ -684,6 +687,9 @@ static int find_fids(JNIEnv *env)
 
 	cls_DocumentWriter = get_class(&err, env, PKG"DocumentWriter");
 	fid_DocumentWriter_pointer = get_field(&err, env, "pointer", "J");
+	fid_DocumentWriter_ocrlistener = get_field(&err, env, "ocrlistener", "J");
+	cls_DocumentWriter_OCRListener = get_class(&err, env, PKG"DocumentWriter$OCRListener");
+	mid_DocumentWriter_OCRListener_progress = get_method(&err, env, "progress", "(I)Z");
 
 	cls_FitzInputStream = get_class(&err, env, PKG"FitzInputStream");
 	fid_FitzInputStream_pointer = get_field(&err, env, "pointer", "J");

@@ -132,6 +132,45 @@
     <None Include="..\java\src\com\artifex\mupdf\fitz\PDFWidget.java">
       <Filter>com/artifex/mupdf/fitz</Filter>
     </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\FileStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\FitzInputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Location.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFAnnotation.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFPage.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7DesignatedName.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7Signer.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PKCS7Verifier.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Quad.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\SeekableInputOutputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\SeekableInputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\SeekableOutputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\SeekableStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\java\mupdf_native.c" />

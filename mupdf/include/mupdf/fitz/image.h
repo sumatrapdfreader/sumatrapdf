@@ -260,10 +260,14 @@ void fz_drop_image_imp(fz_context *ctx, fz_storable *image);
 void fz_drop_image_base(fz_context *ctx, fz_image *image);
 
 /**
-	Decode a subarea of a compressed image at a given l2factor
-	from the given stream.
+	Decode a subarea of a compressed image. l2factor is the amount
+	of subsampling inbuilt to the stream (i.e. performed by the
+	decoder). If non NULL, l2extra is the extra amount of
+	subsampling that should be performed by this routine. This will
+	be updated on exit to the amount of subsampling that is still
+	required to be done.
 */
-fz_pixmap *fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image *image, fz_irect *subarea, int indexed, int l2factor);
+fz_pixmap *fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image *image, fz_irect *subarea, int indexed, int l2factor, int *l2extra);
 
 /**
 	Convert pixmap from indexed to base colorspace.

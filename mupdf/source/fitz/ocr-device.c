@@ -89,6 +89,10 @@ typedef struct fz_ocr_device_s
 {
 	fz_device super;
 
+	/* Progress monitoring */
+	int (*progress)(fz_context *, void *, int progress);
+	void *progress_arg;
+
 	fz_device *target;
 	fz_display_list *list;
 	fz_device *list_dev;
@@ -1025,6 +1029,17 @@ new_rewrite_device(fz_context *ctx, fz_device *target, word_record **words, int 
 	return &rewrite->super;
 }
 
+static int
+fz_ocr_progress(fz_context *ctx, void *arg, int prog)
+{
+	fz_ocr_device *ocr = (fz_ocr_device *)arg;
+
+	if (ocr->progress == NULL)
+		return 0;
+
+	return ocr->progress(ctx, ocr->progress_arg, prog);
+}
+
 static void
 fz_ocr_close_device(fz_context *ctx, fz_device *dev)
 {
@@ -1040,7 +1055,7 @@ fz_ocr_close_device(fz_context *ctx, fz_device *dev)
 
 	fz_try(ctx)
 	{
-		ocr_recognise(ctx, tessapi, ocr->pixmap, char_callback, ocr);
+		ocr_recognise(ctx, tessapi, ocr->pixmap, char_callback, &fz_ocr_progress, ocr);
 		flush_word(ctx, ocr);
 	}
 	fz_always(ctx)
@@ -1080,7 +1095,14 @@ fz_ocr_drop_device(fz_context *ctx, fz_device *dev)
 #endif
 
 fz_device *
-fz_new_ocr_device(fz_context *ctx, fz_device *target, fz_matrix ctm, fz_rect mediabox, int with_list, const char *language)
+fz_new_ocr_device(fz_context *ctx,
+		fz_device *target,
+		fz_matrix ctm,
+		fz_rect mediabox,
+		int with_list,
+		const char *language,
+		int (*progress)(fz_context *, void *, int),
+		void *progress_arg)
 {
 #ifdef OCR_DISABLED
 	fz_throw(ctx, FZ_ERROR_GENERIC, "OCR Disabled in this build");
@@ -1125,6 +1147,9 @@ fz_new_ocr_device(fz_context *ctx, fz_device *target, fz_matrix ctm, fz_rect med
 	dev->super.set_default_colorspaces = fz_ocr_set_default_colorspaces;
 	dev->super.begin_layer = fz_ocr_begin_layer;
 	dev->super.end_layer = fz_ocr_end_layer;
+
+	dev->progress = progress;
+	dev->progress_arg = progress_arg;
 
 	fz_try(ctx)
 	{

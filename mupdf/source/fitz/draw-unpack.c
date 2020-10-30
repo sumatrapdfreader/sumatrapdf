@@ -70,7 +70,7 @@ init_get1_tables(void)
 }
 
 static void
-fz_unpack_mono_line_unscaled(unsigned char *dp, unsigned char *sp, int w, int n)
+fz_unpack_mono_line_unscaled(unsigned char *dp, unsigned char *sp, int w, int n, int depth, int scale, int pad, int skip)
 {
 	int w3 = w >> 3;
 	int x;
@@ -86,7 +86,7 @@ fz_unpack_mono_line_unscaled(unsigned char *dp, unsigned char *sp, int w, int n)
 }
 
 static void
-fz_unpack_mono_line_scaled(unsigned char *dp, unsigned char *sp, int w, int n)
+fz_unpack_mono_line_scaled(unsigned char *dp, unsigned char *sp, int w, int n, int depth, int scale, int pad, int skip)
 {
 	int w3 = w >> 3;
 	int x;
@@ -102,7 +102,7 @@ fz_unpack_mono_line_scaled(unsigned char *dp, unsigned char *sp, int w, int n)
 }
 
 static void
-fz_unpack_mono_line_unscaled_with_padding(unsigned char *dp, unsigned char *sp, int w, int n)
+fz_unpack_mono_line_unscaled_with_padding(unsigned char *dp, unsigned char *sp, int w, int n, int depth, int scale, int pad, int skip)
 {
 	int w3 = w >> 3;
 	int x;
@@ -118,7 +118,7 @@ fz_unpack_mono_line_unscaled_with_padding(unsigned char *dp, unsigned char *sp, 
 }
 
 static void
-fz_unpack_mono_line_scaled_with_padding(unsigned char *dp, unsigned char *sp, int w, int n)
+fz_unpack_mono_line_scaled_with_padding(unsigned char *dp, unsigned char *sp, int w, int n, int depth, int scale, int pad, int skip)
 {
 	int w3 = w >> 3;
 	int x;
@@ -134,7 +134,7 @@ fz_unpack_mono_line_scaled_with_padding(unsigned char *dp, unsigned char *sp, in
 }
 
 static void
-fz_unpack_line(unsigned char *dp, unsigned char *sp, int w, int n)
+fz_unpack_line(unsigned char *dp, unsigned char *sp, int w, int n, int depth, int scale, int pad, int skip)
 {
 	int len = w * n;
 	while (len--)
@@ -142,7 +142,7 @@ fz_unpack_line(unsigned char *dp, unsigned char *sp, int w, int n)
 }
 
 static void
-fz_unpack_line_with_padding(unsigned char *dp, unsigned char *sp, int w, int n)
+fz_unpack_line_with_padding(unsigned char *dp, unsigned char *sp, int w, int n, int depth, int scale, int pad, int skip)
 {
 	int x, k;
 
@@ -154,7 +154,36 @@ fz_unpack_line_with_padding(unsigned char *dp, unsigned char *sp, int w, int n)
 	}
 }
 
-typedef void (*fz_unpack_line_fn)(unsigned char *dp, unsigned char *sp, int w, int n);
+static void
+fz_unpack_any_l2depth(unsigned char *dp, unsigned char *sp, int w, int n, int depth, int scale, int pad, int skip)
+{
+	unsigned char *p = dp;
+	int b = 0;
+	int x, k;
+
+	for (x = 0; x < w; x++)
+	{
+		for (k = 0; k < n; k++)
+		{
+			switch (depth)
+			{
+			case 1: *p++ = get1(sp, b) * scale; break;
+			case 2: *p++ = get2(sp, b) * scale; break;
+			case 4: *p++ = get4(sp, b) * scale; break;
+			case 8: *p++ = get8(sp, b); break;
+			case 16: *p++ = get16(sp, b); break;
+			case 24: *p++ = get24(sp, b); break;
+			case 32: *p++ = get32(sp, b); break;
+			}
+			b++;
+		}
+		b += skip;
+		if (pad)
+			*p++ = 255;
+	}
+}
+
+typedef void (*fz_unpack_line_fn)(unsigned char *dp, unsigned char *sp, int w, int n, int depth, int scale, int pad, int skip);
 
 void
 fz_unpack_tile(fz_context *ctx, fz_pixmap *dst, unsigned char *src, int n, int depth, size_t stride, int scale)
@@ -201,41 +230,13 @@ fz_unpack_tile(fz_context *ctx, fz_pixmap *dst, unsigned char *src, int n, int d
 		unpack_line = fz_unpack_line;
 	else if (depth == 8 && pad && !skip)
 		unpack_line = fz_unpack_line_with_padding;
+	else if (depth == 1 || depth == 2 || depth == 4 || depth == 8 || depth  == 16 || depth == 24 || depth == 32)
+		unpack_line = fz_unpack_any_l2depth;
 
 	if (unpack_line)
 	{
 		for (y = 0; y < h; y++, sp += stride, dp += dst->stride)
-			unpack_line(dp, sp, w, n);
-	}
-	else if (depth == 1 || depth == 2 || depth == 4 || depth == 8 || depth  == 16 || depth == 24 || depth == 32)
-	{
-		for (y = 0; y < h; y++, sp += stride, dp += dst->stride)
-		{
-			unsigned char *p = dp;
-			int b = 0;
-			int x, k;
-
-			for (x = 0; x < w; x++)
-			{
-				for (k = 0; k < n; k++)
-				{
-					switch (depth)
-					{
-					case 1: *p++ = get1(sp, b) * scale; break;
-					case 2: *p++ = get2(sp, b) * scale; break;
-					case 4: *p++ = get4(sp, b) * scale; break;
-					case 8: *p++ = get8(sp, b); break;
-					case 16: *p++ = get16(sp, b); break;
-					case 24: *p++ = get24(sp, b); break;
-					case 32: *p++ = get32(sp, b); break;
-					}
-					b++;
-				}
-				b += skip;
-				if (pad)
-					*p++ = 255;
-			}
-		}
+			unpack_line(dp, sp, w, n, depth, scale, pad, skip);
 	}
 	else if (depth > 0 && depth <= 8 * (int)sizeof(int))
 	{
@@ -358,4 +359,119 @@ fz_decode_tile(fz_context *ctx, fz_pixmap *pix, const float *decode)
 		}
 		p += stride;
 	}
+}
+
+typedef struct
+{
+	fz_stream *src;
+	int depth;
+	int w;
+	int h;
+	int n;
+	int skip;
+	int pad;
+	int scale;
+	int src_stride;
+	int dst_stride;
+	fz_unpack_line_fn unpack;
+	unsigned char buf[1];
+} unpack_state;
+
+static int
+unpack_next(fz_context *ctx, fz_stream *stm, size_t max)
+{
+	unpack_state *state = (unpack_state *)stm->state;
+	size_t n = state->src_stride;
+
+	stm->rp = state->buf;
+	do
+	{
+		size_t a = fz_available(ctx, state->src, n);
+		if (a == 0)
+			return EOF;
+		if (a > n)
+			a = n;
+		memcpy(stm->rp, state->src->rp, a);
+		stm->rp += a;
+		state->src->rp += a;
+		n -= a;
+	}
+	while (n);
+
+	state->h--;
+	stm->pos += state->dst_stride;
+	stm->wp = stm->rp + state->dst_stride;
+	state->unpack(stm->rp, state->buf, state->w, state->n, state->depth, state->scale, state->pad, state->skip);
+
+	return *stm->rp++;
+}
+
+static void
+unpack_drop(fz_context *ctx, void *state)
+{
+	fz_free(ctx, state);
+}
+
+fz_stream *
+fz_unpack_stream(fz_context *ctx, fz_stream *src, int depth, int w, int h, int n, int indexed, int pad, int skip)
+{
+	int src_stride = (w*depth*n+7)>>3;
+	int dst_stride;
+	unpack_state *state;
+	fz_stream *dst;
+	fz_unpack_line_fn unpack_line = NULL;
+	int scale = 1;
+
+	if (depth == 1)
+		init_get1_tables();
+
+	if (!indexed)
+		switch (depth)
+		{
+		case 1: scale = 255; break;
+		case 2: scale = 85; break;
+		case 4: scale = 17; break;
+		}
+
+	dst_stride = w * (n + !!pad);
+
+	if (n == 1 && depth == 1 && scale == 1 && !pad && !skip)
+		unpack_line = fz_unpack_mono_line_unscaled;
+	else if (n == 1 && depth == 1 && scale == 255 && !pad && !skip)
+		unpack_line = fz_unpack_mono_line_scaled;
+	else if (n == 1 && depth == 1 && scale == 1 && pad && !skip)
+		unpack_line = fz_unpack_mono_line_unscaled_with_padding;
+	else if (n == 1 && depth == 1 && scale == 255 && pad && !skip)
+		unpack_line = fz_unpack_mono_line_scaled_with_padding;
+	else if (depth == 8 && !pad && !skip)
+		unpack_line = fz_unpack_line;
+	else if (depth == 8 && pad && !skip)
+		unpack_line = fz_unpack_line_with_padding;
+	else if (depth == 1 || depth == 2 || depth == 4 || depth == 8 || depth  == 16 || depth == 24 || depth == 32)
+		unpack_line = fz_unpack_any_l2depth;
+	else
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Unsupported combination in fz_unpack_stream");
+
+	state = fz_malloc(ctx, sizeof(unpack_state) + dst_stride + src_stride);
+	state->src = src;
+	state->depth = depth;
+	state->w = w;
+	state->h = h;
+	state->n = n;
+	state->skip = skip;
+	state->pad = pad;
+	state->scale = scale;
+	state->unpack = unpack_line;
+	state->src_stride = src_stride;
+	state->dst_stride = dst_stride;
+
+	fz_try(ctx)
+		dst = fz_new_stream(ctx, state, unpack_next, unpack_drop);
+	fz_catch(ctx)
+	{
+		fz_free(ctx, state);
+		fz_rethrow(ctx);
+	}
+
+	return dst;
 }

@@ -4,6 +4,7 @@
 #include "tesseract/genericvector.h"
 #include "tesseract/serialis.h"
 #include "tesseract/strngs.h"
+#include "tesseract/ocrclass.h"          // for ETEXT_DESC
 
 extern "C" {
 
@@ -240,6 +241,34 @@ ocr_clear_image(fz_context *ctx, Pix *image)
 	pixDestroy(&image);
 }
 
+typedef struct {
+	fz_context *ctx;
+	void *arg;
+	int (*progress)(fz_context *, void *, int progress);
+} progress_arg;
+
+static bool
+do_cancel(void *arg, int dummy)
+{
+	return true;
+}
+
+static bool
+progress_callback(ETEXT_DESC *monitor, int l, int r, int t, int b)
+{
+	progress_arg *details = (progress_arg *)monitor->cancel_this;
+	int cancel;
+
+	if (!details->progress)
+		return false;
+
+	cancel = details->progress(details->ctx, details->arg, monitor->progress);
+	if (cancel)
+		monitor->cancel = do_cancel;
+
+	return false;
+}
+
 void ocr_recognise(fz_context *ctx,
 		void *api_,
 		fz_pixmap *pix,
@@ -251,6 +280,9 @@ void ocr_recognise(fz_context *ctx,
 				const int *word_bbox,
 				const int *char_bbox,
 				int pointsize),
+		int (*progress)(fz_context *ctx,
+				void *arg,
+				int progress),
 		void *arg)
 {
 	tesseract::TessBaseAPI *api = (tesseract::TessBaseAPI *)api_;
@@ -262,13 +294,22 @@ void ocr_recognise(fz_context *ctx,
 	bool bold, italic, underlined, monospace, serif, smallcaps;
 	int pointsize, font_id;
 	const char* font_name;
+	ETEXT_DESC monitor;
+	progress_arg details;
 
 	if (api == NULL)
 		return;
 
 	image = ocr_set_image(ctx, api, pix);
 
-	code = api->Recognize(NULL);
+	monitor.cancel = nullptr;
+	monitor.cancel_this = &details;
+	details.ctx = ctx;
+	details.arg = arg;
+	details.progress = progress;
+	monitor.progress_callback2 = progress_callback;
+
+	code = api->Recognize(&monitor);
 	if (code < 0)
 	{
 		ocr_clear_image(ctx, image);

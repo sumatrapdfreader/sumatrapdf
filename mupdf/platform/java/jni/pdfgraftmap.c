@@ -25,7 +25,7 @@ FUN(PDFGraftMap_graftObject)(JNIEnv *env, jobject self, jobject jobj)
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return to_PDFObject_safe_own(ctx, env, self, obj);
+	return to_PDFObject_safe_own(ctx, env, obj);
 }
 
 JNIEXPORT void JNICALL

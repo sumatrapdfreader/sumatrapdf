@@ -422,7 +422,7 @@ FUN(PDFObject_resolve)(JNIEnv *env, jobject self)
 		jni_rethrow(env, ctx);
 
 	pdf_keep_obj(ctx, ind);
-	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(ind), self);
+	jobj = (*env)->NewObject(env, cls_PDFObject, mid_PDFObject_init, jlong_cast(ind));
 	if (!jobj)
 		pdf_drop_obj(ctx, ind);
 	return jobj;
@@ -442,7 +442,7 @@ FUN(PDFObject_getArray)(JNIEnv *env, jobject self, jint index)
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return to_PDFObject_safe(ctx, env, self, val);
+	return to_PDFObject_safe(ctx, env, val);
 }
 
 JNIEXPORT jobject JNICALL
@@ -466,7 +466,7 @@ FUN(PDFObject_getDictionary)(JNIEnv *env, jobject self, jstring jname)
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return to_PDFObject_safe(ctx, env, self, val);
+	return to_PDFObject_safe(ctx, env, val);
 }
 
 JNIEXPORT jobject JNICALL
@@ -483,7 +483,7 @@ FUN(PDFObject_getDictionaryKey)(JNIEnv *env, jobject self, jint index)
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return to_PDFObject_safe(ctx, env, self, key);
+	return to_PDFObject_safe(ctx, env, key);
 }
 
 JNIEXPORT void JNICALL

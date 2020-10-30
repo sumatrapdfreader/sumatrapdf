@@ -123,6 +123,7 @@ fz_document_writer *fz_new_cbz_writer_with_output(fz_context *ctx, fz_output *ou
 
 fz_document_writer *fz_new_pdfocr_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_pdfocr_writer_with_output(fz_context *ctx, fz_output *out, const char *options);
+void fz_pdfocr_writer_set_progress(fz_context *ctx, fz_document_writer *writer, int (*progress)(fz_context *, void *, int), void *);
 
 fz_document_writer *fz_new_png_pixmap_writer(fz_context *ctx, const char *path, const char *options);
 fz_document_writer *fz_new_pam_pixmap_writer(fz_context *ctx, const char *path, const char *options);

@@ -208,6 +208,9 @@ typedef struct pdfocr_band_writer_s
 
 	void *tessapi;
 	fz_pixmap *ocrbitmap;
+
+	int (*progress)(fz_context *, void *, int);
+	void *progress_arg;
 } pdfocr_band_writer;
 
 static int
@@ -484,6 +487,18 @@ char_callback(fz_context *ctx, void *arg, int unicode,
 	cb->word_chars[cb->word_len++] = unicode;
 }
 
+static int
+pdfocr_progress(fz_context *ctx, void *arg, int prog)
+{
+	char_callback_data_t *cb = (char_callback_data_t *)arg;
+	pdfocr_band_writer *writer = cb->writer;
+
+	if (writer->progress == NULL)
+		return 0;
+
+	return writer->progress(ctx, writer->progress_arg, prog);
+}
+
 static void
 pdfocr_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 {
@@ -529,7 +544,7 @@ pdfocr_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 
 		fz_append_printf(ctx, buf, "Q\nBT\n3 Tr\n");
 
-		ocr_recognise(ctx, writer->tessapi, writer->ocrbitmap, char_callback, &cb);
+		ocr_recognise(ctx, writer->tessapi, writer->ocrbitmap, char_callback, pdfocr_progress, &cb);
 		flush_word(ctx, &cb);
 		fz_append_printf(ctx, buf, "ET\n");
 
@@ -637,6 +652,23 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 	}
 
 	return &writer->super;
+#endif
+}
+
+void
+fz_pdfocr_band_writer_set_progress(fz_context *ctx, fz_band_writer *writer_, int (*progress)(fz_context *, void *, int), void *progress_arg)
+{
+#ifdef OCR_DISABLED
+	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+#else
+	pdfocr_band_writer *writer = (pdfocr_band_writer *)writer_;
+	if (writer == NULL)
+		return;
+	if (writer->super.header != pdfocr_write_header)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Not a pdfocr band writer!");
+
+	writer->progress = progress;
+	writer->progress_arg = progress_arg;
 #endif
 }
 
@@ -765,5 +797,20 @@ fz_new_pdfocr_writer(fz_context *ctx, const char *path, const char *options)
 		fz_rethrow(ctx);
 	}
 	return wri;
+#endif
+}
+
+void
+fz_pdfocr_writer_set_progress(fz_context *ctx, fz_document_writer *writer, int (*progress)(fz_context *, void *, int), void *progress_arg)
+{
+#ifdef OCR_DISABLED
+	fz_throw(ctx, FZ_ERROR_GENERIC, "No OCR support in this build");
+#else
+	fz_pdfocr_writer *wri = (fz_pdfocr_writer *)writer;
+	if (!writer)
+		return;
+	if (writer->begin_page != pdfocr_begin_page)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Not a pdfocr writer!");
+	fz_pdfocr_band_writer_set_progress(ctx, wri->bander, progress, progress_arg);
 #endif
 }

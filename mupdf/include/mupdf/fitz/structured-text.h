@@ -313,7 +313,16 @@ fz_device *fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_st
 	language: NULL (for "eng"), or a pointer to a string to describe
 	the languages/scripts that should be used for OCR (e.g.
 	"eng,ara").
+
+	progress: NULL, or function to be called periodically to indicate
+	progress. Return 0 to continue, or 1 to cancel. progress_arg is
+	returned as the void *. The int is a value between 0 and 100 to
+	indicate progress.
+
+	progress_arg: A void * value to be parrotted back to the progress
+	function.
 */
-fz_device *fz_new_ocr_device(fz_context *ctx, fz_device *target, fz_matrix ctm, fz_rect mediabox, int with_list, const char *language);
+fz_device *fz_new_ocr_device(fz_context *ctx, fz_device *target, fz_matrix ctm, fz_rect mediabox, int with_list, const char *language,
+			int (*progress)(fz_context *, void *, int), void *progress_arg);
 
 #endif

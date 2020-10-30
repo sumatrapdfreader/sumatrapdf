@@ -18,6 +18,9 @@ void ocr_recognise(fz_context *ctx,
 				const int *word_bbox,
 				const int *char_bbox,
 				int pointsize),
+		int (*progress)(fz_context *ctx,
+				void *arg,
+				int progress),
 		void *arg);
 
 #endif

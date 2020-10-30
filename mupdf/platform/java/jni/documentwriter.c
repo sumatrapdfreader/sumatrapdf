@@ -5,7 +5,14 @@ FUN(DocumentWriter_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_document_writer *wri = from_DocumentWriter_safe(env, self);
+	jobject ref;
 	if (!ctx || !wri) return;
+	ref = (jobject)(*env)->GetLongField(env, self, fid_DocumentWriter_ocrlistener);
+	if (ref)
+	{
+		(*env)->DeleteGlobalRef(env, ref);
+		(*env)->SetLongField(env, self, fid_DocumentWriter_ocrlistener, 0);
+	}
 	(*env)->SetLongField(env, self, fid_DocumentWriter_pointer, 0);
 	fz_drop_document_writer(ctx, wri);
 }
@@ -106,4 +113,59 @@ FUN(DocumentWriter_close)(JNIEnv *env, jobject self)
 		fz_close_document_writer(ctx, wri);
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
+}
+
+static int
+jni_ocr_progress(fz_context *ctx, void *arg, int percent)
+{
+	jobject ref = (jobject)arg;
+	jboolean cancel;
+	JNIEnv *env = NULL;
+	jboolean detach = JNI_FALSE;
+
+	env = jni_attach_thread(ctx, &detach);
+	if (env == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in jni_ocr_progress");
+
+	cancel = (*env)->CallBooleanMethod(env, ref, mid_DocumentWriter_OCRListener_progress, percent);
+	if ((*env)->ExceptionCheck(env))
+		cancel = 1;
+
+	jni_detach_thread(detach);
+
+	return !!cancel;
+}
+
+JNIEXPORT void JNICALL
+FUN(DocumentWriter_addOCRListener)(JNIEnv *env, jobject self, jobject jlistener)
+{
+	fz_context *ctx = get_context(env);
+	fz_document_writer *wri = from_DocumentWriter(env, self);
+	jobject ref;
+
+	if (!ctx || !wri) return;
+
+	/* Delete any old OCRListener if there is one. */
+	ref = (jobject)(*env)->GetLongField(env, self, fid_DocumentWriter_ocrlistener);
+	if (ref != NULL)
+	{
+		(*env)->DeleteGlobalRef(env, ref);
+		(*env)->SetLongField(env, self, fid_DocumentWriter_ocrlistener, 0);
+	}
+
+	/* Take a ref and store it for the callback to use */
+	ref = (*env)->NewGlobalRef(env, jlistener);
+	if (!ref)
+		jni_throw_run_void(env, "cannot take reference to listener");
+	(*env)->SetLongField(env, self, fid_DocumentWriter_ocrlistener, jlong_cast(ref));
+
+	fz_try(ctx)
+		fz_pdfocr_writer_set_progress(ctx, wri, jni_ocr_progress, ref);
+	fz_catch(ctx)
+	{
+		(*env)->DeleteGlobalRef(env, ref);
+		(*env)->SetLongField(env, self, fid_DocumentWriter_ocrlistener, 0);
+		jni_rethrow_void(env, ctx);
+	}
+
 }

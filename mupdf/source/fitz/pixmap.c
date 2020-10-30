@@ -1,6 +1,7 @@
 #include "mupdf/fitz.h"
 
 #include "color-imp.h"
+#include "pixmap-imp.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -1281,29 +1282,41 @@ fz_subsample_pixmap_ARM(unsigned char *ptr, int w, int h, int f, int factor,
 void
 fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 {
-	int dst_w, dst_h, w, h, fwd, fwd2, fwd3, back, back2, n, f;
-	unsigned char *s, *d;
-#ifndef ARCH_ARM
-	int x, y, xx, yy, nn;
-#endif
+	int f;
 
 	if (!tile)
 		return;
 
 	assert(tile->stride >= tile->w * tile->n);
 
-	s = d = tile->samples;
+	fz_subsample_pixblock(tile->samples, tile->w, tile->h, tile->n, factor, tile->stride);
+
 	f = 1<<factor;
-	w = tile->w;
-	h = tile->h;
-	n = tile->n;
-	dst_w = (w + f-1)>>factor;
-	dst_h = (h + f-1)>>factor;
-	fwd = tile->stride;
+	tile->w = (tile->w + f-1)>>factor;
+	tile->h = (tile->h + f-1)>>factor;
+	tile->stride = tile->w * tile->n;
+	/* Redundant test? We only ever make pixmaps smaller! */
+	if (tile->h > INT_MAX / (tile->w * tile->n))
+		fz_throw(ctx, FZ_ERROR_MEMORY, "pixmap too large");
+	tile->samples = fz_realloc(ctx, tile->samples, (size_t)tile->h * tile->w * tile->n);
+}
+
+void
+fz_subsample_pixblock(unsigned char *s, int w, int h, int n, int factor, ptrdiff_t stride)
+{
+	int fwd, fwd2, fwd3, back, back2, f;
+	unsigned char *d;
+#ifndef ARCH_ARM
+	int x, y, xx, yy, nn;
+#endif
+
+	d = s;
+	f = 1<<factor;
+	fwd = stride;
 	back = f*fwd-n;
 	back2 = f*n-1;
 	fwd2 = (f-1)*n;
-	fwd3 = (f-1)*fwd + (int)tile->stride - w * n;
+	fwd3 = (f-1)*fwd + (int)stride - w * n;
 	factor *= 2;
 #ifdef ARCH_ARM
 	{
@@ -1416,12 +1429,6 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 		}
 	}
 #endif
-	tile->w = dst_w;
-	tile->h = dst_h;
-	tile->stride = dst_w * n;
-	if (dst_h > INT_MAX / (dst_w * n))
-		fz_throw(ctx, FZ_ERROR_MEMORY, "pixmap too large");
-	tile->samples = fz_realloc(ctx, tile->samples, (size_t)dst_h * dst_w * n);
 }
 
 void

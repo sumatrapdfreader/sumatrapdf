@@ -176,6 +176,11 @@ fz_pdfocr_options *fz_parse_pdfocr_options(fz_context *ctx, fz_pdfocr_options *o
 fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const fz_pdfocr_options *options);
 
 /**
+	Set the progress callback for a pdfocr bandwriter.
+*/
+void fz_pdfocr_band_writer_set_progress(fz_context *ctx, fz_band_writer *writer, int (*progress)(fz_context *, void *, int), void *progress_arg);
+
+/**
 	Write a (Greyscale or RGB) pixmap as pdfocr.
 */
 void fz_write_pixmap_as_pdfocr(fz_context *ctx, fz_output *out, const fz_pixmap *pixmap, const fz_pdfocr_options *options);
