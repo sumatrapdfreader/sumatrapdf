@@ -11473,7 +11473,7 @@ const char * gTranslations_ku =
   "\332\206\330\247\331\276\332\251\330\261\330\257\331\206\333\214 \330\250\333\225\332\265\332\257\333\225\331\206\330\247\331\205\333\225\0";
 
 const char * gTranslations_lv = 
-  "\0"\
+  "%s instal\304\201cija netika atrasta.\0"\
   "&Par\0"\
   "&Patiesais lielums\tCtrl+1\0"\
   "&Papildu opcijas...\0"\
@@ -11543,7 +11543,7 @@ const char * gTranslations_lv =
   "Visi atbalst\304\253tie dokumenti\0"\
   "Anot\304\201cijas\0"\
   "Programma:\0"\
-  "\0"\
+  "Vai tie\305\241\304\201m v\304\223laties atinstal\304\223t %s?\0"\
   "Vai j\305\253s esat p\304\201rliecin\304\201ti, ka v\304\223laties atinstal\304\223t SumatraPDF?\0"\
   "Vai piesaist\304\253t PDF failiem?\0"\
   "Pielikums: %s\0"\
@@ -11560,7 +11560,7 @@ const char * gTranslations_lv =
   "Atcelt\0"\
   "Nevar izdruk\304\201t \305\241o failu\0"\
   "Neizdev\304\201s palaist invers\304\201s mekl\304\223\305\241anas komandu. L\305\253dzu p\304\201rbaudiet komandrindu iestat\304\253jumus.\0"\
-  "\0"\
+  "Kursors\0"\
   "Main\304\253t valodu (Change Language)\0"\
   "P\304\201rbaud\304\253t, vai nav &atjaunin\304\201jumi\0"\
   "Aplis\0"\
@@ -11586,7 +11586,7 @@ const char * gTranslations_lv =
   "Nevar\304\223ja no\305\206emt instal\304\201cijas direktoriju\0"\
   "Nevar\304\223ja atveidot lappusi\0"\
   "Nevar\304\223ja atinstal\304\223t PDF priek\305\241skat\304\253jumu\0"\
-  "\0"\
+  "Nevar\304\223ja atinstal\304\223t Sumatra mekl\304\223\305\241anas filtru\0"\
   "Nevar\304\223ja atinstal\304\223t p\304\201rl\305\253kprogrammas spraudni\0"\
   "Nevar\304\223ja rakst\304\253t %s disk\304\201\0"\
   "Izveidot anot\304\201ciju\0"\
@@ -11725,7 +11725,7 @@ const char * gTranslations_lv =
   "Druk\304\201 %d lappusi no %d...\0"\
   "Druk\304\201\305\241anas probl\304\223ma.\0"\
   "P\304\201r&d\304\223v\304\223t...\tF2\0"\
-  "\0"\
+  "Redi\304\243\304\223t\0"\
   "&Atcer\304\223ties atv\304\223rtos failus\0"\
   "No\305\206emt vienumu\0"\
   "No\305\206emt no izlases\0"\

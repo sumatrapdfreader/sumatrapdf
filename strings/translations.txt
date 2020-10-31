@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-25547f3c194fb5460f1af992b018232253dee60a
+e9bd8f8b3b9929364b7c2bd61cd4b98412aba3df
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -12,6 +12,7 @@ fr:%s installation non trouvée
 gl:%s instalación non atopada.
 ka:ინსტალირებული %s ვერ მოიძებნა.
 kw:Ny gevir leans %s.
+lv:%s instalācija netika atrasta.
 nl:%s installatie niet gevonden.
 pa:%s ਦੀ ਸਥਾਪਤੀ ਨਹੀਂ ਲੱਭੀ।
 pl:Nie znaleziono instalacji %s.
@@ -4288,6 +4289,7 @@ fr:Voulez-vous vraiment désinstaller %s ?
 gl:Estás seguro de desinstalar %s?
 ka:დარწმუნებული ხართ, რომ გსურთ %s-ის წაშლა?
 kw:Os ta sur bos hwans dhis anlea %s?
+lv:Vai tiešām vēlaties atinstalēt %s?
 nl:Weet u zeker dat u %s wilt dé-installeren?
 pa:ਕੀ ਤੁਸੀਂ %s ਨੂੰ ਅਸਥਾਪਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
 pl:Czy na pewno chcesz odinstalować %s?
@@ -5387,6 +5389,7 @@ fr:curseur
 gl:Caret (V invertido)
 ka:კურსორი
 kw:To byghan
+lv:Kursors
 nl:Merkteken
 pl:Kareta
 ru:Курсор
@@ -6930,6 +6933,7 @@ de:Konnte den Sumatra-Suchfilter nicht deinstallieren
 gl:Non se pode desinstalar o filtro de busca do Sumatra
 ka:ვერ მოხერხდა Sumatra-ს საძიებო ფილტრის წაშლა
 kw:Ny yllir anlea sythel hwilas Sumatra
+lv:Nevarēja atinstalēt Sumatra meklēšanas filtru
 nl:Kan Sumatra zoekfilter niet verwijderen
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
 ru:Не удалось удалить фильтр поиска Sumatra
@@ -15136,6 +15140,7 @@ de:Zensieren
 gl:Redactar
 ka:რედაქტირება
 kw:Redaktya
+lv:Rediģēt
 nl:Redigeren
 pl:Redaguj
 tr:Gözden Geçir
