@@ -250,6 +250,12 @@ typedef fz_separations *(fz_page_separations_fn)(fz_context *ctx, fz_page *page)
 */
 typedef int (fz_page_uses_overprint_fn)(fz_context *ctx, fz_page *page);
 
+
+/**
+	Type for a function to create a link on a page.
+*/
+typedef fz_link *(fz_page_create_link_fn)(fz_context *ctx, fz_page *page, fz_rect bbox, const char *uri);
+
 /**
 	Function type to open a document from a file.
 
@@ -742,6 +748,11 @@ fz_separations *fz_page_separations(fz_context *ctx, fz_page *page);
 */
 int fz_page_uses_overprint(fz_context *ctx, fz_page *page);
 
+/**
+	Create a new link on a page.
+*/
+fz_link *fz_create_link(fz_context *ctx, fz_page *page, fz_rect bbox, const char *uri);
+
 /* Implementation details: subject to change. */
 
 /**
@@ -765,6 +776,7 @@ struct fz_page
 	fz_page_separation_disabled_fn *separation_disabled;
 	fz_page_separations_fn *separations;
 	fz_page_uses_overprint_fn *overprint;
+	fz_page_create_link_fn *create_link;
 	fz_page **prev, *next; /* linked list of currently open pages */
 };
 

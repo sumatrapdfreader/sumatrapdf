@@ -377,3 +377,39 @@ FUN(Page_textAsHtml)(JNIEnv *env, jobject self)
 
 	return arr;
 }
+
+JNIEXPORT jobject JNICALL
+FUN(Page_createLink)(JNIEnv *env, jobject self, jobject jrect, jstring juri)
+{
+	fz_context *ctx = get_context(env);
+	fz_page *page = from_Page(env, self);
+	fz_rect rect = from_Rect(env, jrect);
+	fz_link *link = NULL;
+	const char *uri = NULL;
+
+	if (!ctx || !page)
+		return NULL;
+
+	fz_try(ctx)
+	{
+		if (juri != NULL)
+		{
+			uri = (*env)->GetStringUTFChars(env, juri, NULL);
+			if (!uri)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot not get UTF string");
+		}
+
+		link = fz_create_link(ctx, page, rect, uri);
+	}
+	fz_always(ctx)
+	{
+		if (uri)
+			(*env)->ReleaseStringUTFChars(env, juri, uri);
+	}
+	fz_catch(ctx)
+	{
+		jni_rethrow(env, ctx);
+	}
+
+	return to_Link_safe_own(ctx, env, link);
+}

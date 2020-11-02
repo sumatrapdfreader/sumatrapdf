@@ -431,7 +431,7 @@ pdf_load_link(fz_context *ctx, pdf_document *doc, pdf_obj *dict, int pagenum, fz
 		return NULL;
 
 	fz_try(ctx)
-		link = fz_new_link(ctx, bbox, doc, uri);
+		link = fz_new_link(ctx, bbox, uri);
 	fz_always(ctx)
 		fz_free(ctx, uri);
 	fz_catch(ctx)

@@ -443,10 +443,9 @@ static fz_link *
 epub_load_links(fz_context *ctx, fz_page *page_)
 {
 	epub_page *page = (epub_page*)page_;
-	epub_document *doc = page->doc;
 	epub_chapter *ch = page->ch;
 
-	return fz_load_html_links(ctx, page->html, page->number, ch->path, doc);
+	return fz_load_html_links(ctx, page->html, page->number, ch->path);
 }
 
 static fz_bookmark

@@ -22,10 +22,6 @@
 	Internal links refer to other pages in the same document.
 	External links are URLs to other documents.
 
-	doc: Typically a pointer to the enclosing document. Note that
-	this pointer is opaque, and NOT a counted reference. Beware of
-	lifespan issues.
-
 	next: A pointer to the next link on the same page.
 */
 typedef struct fz_link
@@ -33,7 +29,6 @@ typedef struct fz_link
 	int refs;
 	struct fz_link *next;
 	fz_rect rect;
-	void *doc;
 	char *uri;
 } fz_link;
 
@@ -42,8 +37,10 @@ typedef struct fz_link
 
 	next is set to NULL with the expectation that the caller will
 	handle the linked list setup.
+
+	Internal function.
 */
-fz_link *fz_new_link(fz_context *ctx, fz_rect bbox, void *doc, const char *uri);
+fz_link *fz_new_link(fz_context *ctx, fz_rect bbox, const char *uri);
 
 /**
 	Increment the reference count for a link. The same pointer is

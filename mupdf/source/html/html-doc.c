@@ -114,7 +114,7 @@ htdoc_load_links(fz_context *ctx, fz_page *page_)
 {
 	html_page *page = (html_page*)page_;
 	html_document *doc = page->doc;
-	return fz_load_html_links(ctx, doc->html, page->number, "", doc);
+	return fz_load_html_links(ctx, doc->html, page->number, "");
 }
 
 static fz_bookmark

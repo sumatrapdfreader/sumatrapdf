@@ -3263,6 +3263,14 @@ JNIEXPORT jobjectArray JNICALL Java_com_artifex_mupdf_fitz_Page_search
 JNIEXPORT jbyteArray JNICALL Java_com_artifex_mupdf_fitz_Page_textAsHtml
   (JNIEnv *, jobject);
 
+/*
+ * Class:     com_artifex_mupdf_fitz_Page
+ * Method:    createLink
+ * Signature: (Lcom/artifex/mupdf/fitz/Rect;Ljava/lang/String;)Lcom/artifex/mupdf/fitz/Link;
+ */
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_Page_createLink
+  (JNIEnv *, jobject, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif

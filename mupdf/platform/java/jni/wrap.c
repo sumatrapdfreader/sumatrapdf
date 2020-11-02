@@ -521,6 +521,35 @@ static inline jobject to_Page_safe_own(fz_context *ctx, JNIEnv *env, fz_page *pa
 	return jobj;
 }
 
+static inline jobject to_Link_safe_own(fz_context *ctx, JNIEnv *env, fz_link *link)
+{
+	jobject jobj;
+	jobject jbounds = NULL;
+	jobject juri = NULL;
+
+	if (!ctx || !link) return NULL;
+
+	jbounds = to_Rect_safe(ctx, env, link->rect);
+	if (!jbounds || (*env)->ExceptionCheck(env))
+	{
+		fz_drop_link(ctx, link);
+		return NULL;
+	}
+
+	juri = (*env)->NewStringUTF(env, link->uri);
+	if (!juri || (*env)->ExceptionCheck(env))
+	{
+		fz_drop_link(ctx, link);
+		return NULL;
+	}
+
+	jobj = (*env)->NewObject(env, cls_Link, mid_Link_init, jlong_cast(link), jbounds, juri);
+	if (!jobj)
+		fz_drop_link(ctx, link);
+
+	return jobj;
+}
+
 static inline jobject to_PDFAnnotation_safe_own(fz_context *ctx, JNIEnv *env, pdf_annot *annot)
 {
 	jobject jannot;

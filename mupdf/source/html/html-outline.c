@@ -99,7 +99,7 @@ static fz_link *load_link_flow(fz_context *ctx, fz_html_flow *flow, fz_link *hea
 				dest = href;
 			}
 
-			link = fz_new_link(ctx, bbox, NULL, dest);
+			link = fz_new_link(ctx, bbox, dest);
 			link->next = head;
 			head = link;
 		}
@@ -122,7 +122,7 @@ static fz_link *load_link_box(fz_context *ctx, fz_html_box *box, fz_link *head, 
 }
 
 fz_link *
-fz_load_html_links(fz_context *ctx, fz_html *html, int page, const char *file, void *doc)
+fz_load_html_links(fz_context *ctx, fz_html *html, int page, const char *file)
 {
 	fz_link *link, *head;
 	char dir[2048];
@@ -137,9 +137,6 @@ fz_load_html_links(fz_context *ctx, fz_html *html, int page, const char *file, v
 		link->rect.x1 += html->page_margin[L];
 		link->rect.y0 += html->page_margin[T];
 		link->rect.y1 += html->page_margin[T];
-
-		/* Set document pointer */
-		link->doc = doc;
 	}
 
 	return head;

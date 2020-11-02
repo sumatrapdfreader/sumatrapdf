@@ -226,6 +226,12 @@ fz_matrix pdf_annot_transform(fz_context *ctx, pdf_annot *annot);
 pdf_annot *pdf_create_annot_raw(fz_context *ctx, pdf_page *page, enum pdf_annot_type type);
 
 /*
+	create a new link on the specified page. The returned fz_link
+	structure is owned by the page and does not need to be freed.
+*/
+fz_link *pdf_create_link(fz_context *ctx, pdf_page *page, fz_rect bbox, const char *uri);
+
+/*
 	create a new annotation of the specified type on the
 	specified page. Populate it with sensible defaults per the type.
 

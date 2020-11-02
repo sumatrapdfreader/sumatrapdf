@@ -1,7 +1,7 @@
 #include "mupdf/fitz.h"
 
 fz_link *
-fz_new_link(fz_context *ctx, fz_rect bbox, void *doc, const char *uri)
+fz_new_link(fz_context *ctx, fz_rect bbox, const char *uri)
 {
 	fz_link *link;
 
@@ -9,7 +9,6 @@ fz_new_link(fz_context *ctx, fz_rect bbox, void *doc, const char *uri)
 	link->refs = 1;
 	link->rect = bbox;
 	link->next = NULL;
-	link->doc = doc; /* don't take reference */
 	link->uri = NULL;
 
 	fz_try(ctx)

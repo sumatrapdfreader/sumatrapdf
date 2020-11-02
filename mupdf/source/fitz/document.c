@@ -690,3 +690,14 @@ int fz_page_uses_overprint(fz_context *ctx, fz_page *page)
 		return page->overprint(ctx, page);
 	return 0;
 }
+
+fz_link *fz_create_link(fz_context *ctx, fz_page *page, fz_rect bbox, const char *uri)
+{
+	if (page == NULL)
+		return NULL;
+	if (page->create_link == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "This format of document does not support creating links");
+	if (uri && !fz_is_external_link(ctx, uri))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "URI should be NULL, or an external link");
+	return page->create_link(ctx, page, bbox, uri);
+}
