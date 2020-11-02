@@ -9788,7 +9788,7 @@ const char * gTranslations_id =
   "mencetak dokumen\0";
 
 const char * gTranslations_ga = 
-  "\0"\
+  "N\303\255or aims\303\255odh an tsuite\303\241il %s.\0"\
   "Maidir le\0"\
   "&M\303\251id Iarbh\303\255r\tCtrl+1\0"\
   "&Ardroghanna...\0"\
@@ -9828,7 +9828,7 @@ const char * gTranslations_ga =
   "&Cl\303\263bhualadh... (di\303\272ltaithe)\0"\
   "&Cuimhnigh ar an bhfocal faire don ch\303\241ip\303\251is seo\0"\
   "Cuimhnigh ar na socruithe seo do gach c\303\241ip\303\251is\0"\
-  "\0"\
+  "&Bain \303\263n stair\0"\
   "&Cuir i dtaisce mar...\0"\
   "Cuir i dtaisce mar...\tCtrl+S\0"\
   "&Socruithe\0"\
@@ -9845,20 +9845,20 @@ const char * gTranslations_ga =
   "(leathanach a %s)\0"\
   "Maidir le SumatraPDF\0"\
   "Cuir cean\303\241n leis\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Cuir PDF leis mar leanbh\0"\
+  "Cuir PDF leis mar dheirfi\303\272r\0"\
+  "Cuir leanbh leis\0"\
   "Cuir leathanach a %s leis na cean\303\241in\0"\
   "Cuir leathanach %s leis na cean\303\241in\tCtrl+B\0"\
   "Cuir leathanach a %s le na cean\303\241in le ainm (roghnach):\0"\
-  "\0"\
+  "Cuir deirfi\303\272r leis\0"\
   "Cuir leis na cean\303\241in \303\251\0"\
   "Ardroghanna\0"\
   "Gach comhad\0"\
   "Gach c\303\241ip\303\251is a thugtar taca\303\255ocht d\303\263ibh\0"\
-  "\0"\
+  "N\303\263ta\303\255 m\303\255nithe\0"\
   "Feidhmchl\303\241r:\0"\
-  "\0"\
+  "An bhfuil t\303\272 cinnte gur mian leat %s a dh\303\255shuite\303\241il?\0"\
   "An bhfuil t\303\272 cinnte gur mian leat SumatraPDF a dh\303\255shuite\303\241il?\0"\
   "Comhthiomsaigh le comhaid PDF?\0"\
   "Ceangalt\303\241n: %s\0"\
@@ -9875,13 +9875,13 @@ const char * gTranslations_ga =
   "Cealaigh\0"\
   "N\303\255 f\303\251idir an comhad seo a chl\303\263bhualadh\0"\
   "N\303\255 f\303\251idir ord\303\272 cuardaigh aisiompaithe a thos\303\272. Dearbh\303\241il l\303\255ne an ordaithe sna socruithe.\0"\
-  "\0"\
+  "Carait\0"\
   "Athraigh an Teanga (Change Language)\0"\
   "Lorg Nuashonruithe\0"\
-  "\0"\
+  "Ciorcal\0"\
   "D\303\272n\0"\
   "Laghdaigh Gach\0"\
-  "\0"\
+  "Dath\0"\
   "Greann\303\241in\0"\
   "Comhoiri\303\272nacht\0"\
   "Amharc lean\303\272nach\0"\
@@ -9901,10 +9901,10 @@ const char * gTranslations_ga =
   "N\303\255orbh fh\303\251idir an chomhadlann suite\303\241la a bhaint\0"\
   "N\303\255orbh fh\303\251idir an leathanach a ch\303\263iri\303\272\0"\
   "N\303\255orbh fh\303\251idir an r\303\251amhamharc\303\263ir PDF a dh\303\255shuite\303\241il\0"\
-  "\0"\
+  "N\303\255orbh fh\303\251idir scagaire cuardaigh Sumatra a dh\303\255shuite\303\241il\0"\
   "N\303\255orbh fh\303\251idir an breise\303\241n don l\303\255onl\303\251itheoir a dh\303\255shuite\303\241il\0"\
   "N\303\255orbh fh\303\251idir %s a scr\303\255obh chuig an diosca\0"\
-  "\0"\
+  "Cruthaigh n\303\263ta m\303\255nithe\0"\
   "Cruthaithe:\0"\
   "Comhad reatha\0"\
   "Su\303\255omh an ch\303\272rs\303\263ra:\0"\
@@ -9919,17 +9919,17 @@ const char * gTranslations_ga =
   "Air\303\255onna na c\303\241ip\303\251ise\0"\
   "\303\215osluchtaigh\0"\
   "Scoir\tCtrl+Q\0"\
-  "\0"\
+  "F\303\241g an l\303\241nsc\303\241ile\303\241n\0"\
   "C\303\241ip\303\251is\303\255 EPUB\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Eagar\0"\
+  "Cuir n\303\263ta\303\255 m\303\255nithe in eagar\0"\
+  "Cuir leabharmharcanna in eagar\0"\
   "Cuir isteach focal faire\0"\
   "Cuir isteach focal faire le haghaidh %s\0"\
   "Cuir isteach l\303\255ne na n-orduithe at\303\241 le gairm nuair a bhr\303\272ann t\303\272 faoi dh\303\263 ar ch\303\241ip\303\251is PDF:\0"\
   "Tharla bot\303\272n ag lucht\303\272 %s\0"\
   "Leathnaigh Gach\0"\
-  "\0"\
+  "Tabhair amach na leabharmharcanna\0"\
   "Ce&an\303\241in\0"\
   "Ar aghaidh\tAlt+Saighead Ar Deis\0"\
   "L\303\241nsc\303\241ile\303\241n\tCtrl+Shift+L\0"\
@@ -9944,7 +9944,7 @@ const char * gTranslations_ga =
   "Cean\303\241in\0"\
   "C\303\241ip\303\251is\303\255 FictionBook\0"\
   "N\303\203or aims\303\203odh an comhad %s\0"\
-  "\0"\
+  "Ceangalt\303\241n comhaid\0"\
   "M\303\251id an chomhaid:\0"\
   "Comhad:\0"\
   "Aimsigh...\tCtrl+F\0"\
@@ -9964,17 +9964,17 @@ const char * gTranslations_ga =
   "Ag form\303\241idi\303\272 an leabhair... %d leathanach\0"\
   "Aims\303\255odh t\303\251acs ag lch a %s\0"\
   "Aims\303\255odh t\303\251acs ag lch a %s (ar\303\255s)\0"\
-  "\0"\
+  "T\303\251acs saor\0"\
   "L\303\251ite Go Minic\0"\
   "\0"\
   "T\303\251igh chuig lch\0"\
   "Cuir na roghanna i bhfolach\0"\
   "Folaigh cinn l\303\251ite go minic\0"\
-  "\0"\
+  "Aibhsigh\0"\
   "Leid: Bain feidhm as an gcnaipe F3 chun nithe a aimsi\303\272 ar\303\255s\0"\
   "Comhaid \303\255omh\303\241nna (*.%s)\0"\
-  "\0"\
-  "\0"\
+  "\303\215omh\303\241nna\0"\
+  "D\303\272ch\0"\
   "Suite\303\241il SumatraPDF\0"\
   "Suite\303\241il SumatraPDF sa bh&fillte\303\241n seo:\0"\
   "Theip ar an suite\303\241il!\0"\
@@ -9983,7 +9983,7 @@ const char * gTranslations_ga =
   "Lig do Chuardach Deasca Windows c\303\241ip\303\251is\303\255 PDF a chuardach\0"\
   "Lig do Windows r\303\251amhamhairc de ch\303\241ip\303\251is\303\255 PDF a thaispe\303\241int\0"\
   "\303\251adroime\0"\
-  "\0"\
+  "L\303\255ne\0"\
   "\0"\
   "B\303\255odh SumatraPDF mar an l\303\251itheoir PDF r\303\251amhshocruithe?\0"\
   "B\303\255odh SumatraPDF mar an l\303\251itheoir PDF r\303\251amhshocruithe\0"\
@@ -9992,7 +9992,7 @@ const char * gTranslations_ga =
   "C\303\241ip\303\251is\303\255 Mobi\0"\
   "Mionathraithe:\0"\
   "Fuinneog &nua\tCtrl+N\0"\
-  "\0"\
+  "Leabharmharcanna nua\0"\
   "T\303\241 an leagan nua %s ar f\303\241il. \303\215osluchtaigh an leagan nua?\0"\
   "Leathanach Ar Aghaidh\0"\
   "N\303\255or aims\303\255odh comhionanna\0"\
@@ -10003,7 +10003,7 @@ const char * gTranslations_ga =
   "T\303\241 go maith\0"\
   "Oscail\0"\
   "Oscail &i PDF-XChange\0"\
-  "\0"\
+  "Oscail PDF leabaithe\0"\
   "Oscail c\303\241ip\303\251is...\0"\
   "Oscail i %s\0"\
   "Oscail in &Adobe Reader\0"\
@@ -10026,8 +10026,8 @@ const char * gTranslations_ga =
   "C\303\241ip\303\251is\303\255 PalmDoc\0"\
   "D\303\272n %s le do thoil chun dul ar aghaidh!\0"\
   "Fan le do thoil - t\303\241 s\303\251 \303\241 ch\303\263iri\303\272...\0"\
-  "\0"\
-  "\0"\
+  "L\303\255ne iolrach\0"\
+  "Polag\303\241n\0"\
   "C\303\241ip\303\251is\303\255 Postscript\0"\
   "Cur i l\303\241thair\tCtrl+L\0"\
   "Leathanach Roimhe\0"\
@@ -10040,9 +10040,9 @@ const char * gTranslations_ga =
   "Ag cl\303\263bhualadh leathanach a %d as %d...\0"\
   "Fadhb chl\303\263bhuailte.\0"\
   "Athainmnigh...\tF2\0"\
-  "\0"\
+  "Folaigh\0"\
   "Cuimhnigh ar chomhaid &oscailte\0"\
-  "\0"\
+  "Bain m\303\255r\0"\
   "Bain \303\263 na cean\303\241in\0"\
   "Bain leathanach a %s \303\263 na cean\303\241in\0"\
   "Athainmnigh chuig\0"\
@@ -10050,7 +10050,7 @@ const char * gTranslations_ga =
   "Rothlaigh deiseal\tCtrl+Shift++\0"\
   "Taisc na N\303\263ta\303\255\0"\
   "Cuir i dtaisce mar\0"\
-  "\0"\
+  "Taisc comhad leabaithe...\0"\
   "Cuir an t-aicearra i dtaisce...\tCtrl+Shift+S\0"\
   "Ag cuardach %d as %d...\0"\
   "Roghnaigh Uile\0"\
@@ -10063,23 +10063,23 @@ const char * gTranslations_ga =
   "Taispe\303\241in na &Leabharmharcanna\tF12\0"\
   "Taispe\303\241in na &Cean\303\241in\0"\
   "Teasp\303\241in na leathanaigh go lean\303\272nach\0"\
-  "\0"\
+  "Taispe\303\241in na barra\303\255 &scroll\303\241la\0"\
   "Taispe\303\241in an Barra Uirlis\303\255\0"\
   "Taispe\303\241in na Leabhar&mharcanna\tF12\0"\
   "Taispe\303\241in Cean\303\241in\0"\
-  "\0"\
+  "Taispe\303\241in na barra\303\255 scr&oll\303\241la\0"\
   "Taispe\303\241in cinn l\303\251ite go minic\0"\
   "Taispe\303\241in san &fillte\303\241n\0"\
   "Taispe\303\241in taobh-bharra na gcean\303\241n nuair at\303\241 s\303\251 ar f\303\241il\0"\
   "Leathanach Amh\303\241in\0"\
   "Faraor, n\303\255or ch\303\263ir go dtarl\303\263dh sin!\n\nBr\303\272igh 'Cealaigh' le do thoil, m\303\241s mian leat cuidi\303\272 linn \303\272dar an chliste seo a dheisi\303\272.\0"\
-  "\0"\
+  "S\303\263rt\303\241il de r\303\251ir\0"\
   "N\303\255l l\303\241thair comhaimsearatha ag an gcomhad foinse %s\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Cearn\303\263g\0"\
+  "Catach\0"\
+  "Stampa\0"\
   "Tosaigh SumatraPDF\0"\
-  "\0"\
+  "Scrios amach\0"\
   "\303\201bhar:\0"\
   "Suite\303\241la\303\255 %s SumatraPDF\0"\
   "D\303\255shuite\303\241la\303\255 SumatraPDF %s\0"\
@@ -10090,20 +10090,20 @@ const char * gTranslations_ga =
   "N\303\255or aims\303\255odh suite\303\241il SumatraPDF.\0"\
   "Is \303\251 SumatraPDF do l\303\251itheoir PDF r\303\251amhshocraithe\0"\
   "Ba ch\303\263ir go mbeadh SumatraPDF mar an l\303\251itheoir PDF r\303\251amhshocraithe agat\0"\
-  "\0"\
+  "Tacaigh le SumatraPDF\0"\
   "N\303\255 f\303\251idir an comhad comhaimseartha a oscailt\0"\
-  "\0"\
-  "\0"\
+  "Clib (ceann m\303\263r ar dt\303\272s)\0"\
+  "Clib (ceann beag ar dt\303\272s)\0"\
   "PDF form\303\241id chlibe\303\241ilte\0"\
-  "\0"\
+  "T\303\251acs\0"\
   "C\303\241ip\303\251is\303\255 t\303\251acs\0"\
-  "\0"\
+  "Go raibh maith agat as ucht RA-MICRO PDF a roghn\303\272!\0"\
   "Go raibh maith agat as ucht SumatraPDF a roghn\303\272!\0"\
   "Go raibh maith agat! Suite\303\241ladh SumatraPDF.\0"\
   "T\303\241 an suite\303\241la\303\255 truaillithe. D\303\251an \303\251 a \303\255oslucht\303\272 ar\303\255s le do thoil.\nIs dona linn aon mh\303\255chuibhi\303\272lacht!\0"\
   "Baineann an ch\303\241ip\303\251is seo feidhm as gn\303\251ithe (%s) nach dtugtar taca\303\255ocht d\303\263ibh agus b'fh\303\251idir nach nd\303\251anfar iad a thaispe\303\241int i gceart\0"\
   "Teideal:\0"\
-  "\0"\
+  "Cuir l\303\255ne faoi\0"\
   "D\303\251an SumatraPDF a dh\303\255shuite\303\241il\0"\
   "Theip air d\303\255shuite\303\241il\0"\
   "D\303\255shuite\303\241il ar si\303\272l...\0"\
