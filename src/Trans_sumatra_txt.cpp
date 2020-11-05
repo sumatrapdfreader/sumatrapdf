@@ -11761,7 +11761,7 @@ const char * gTranslations_lv =
   "K\304\201rtot p\304\223c\0"\
   "Avota failam %s nav sinhroniz\304\201cijas punkta\0"\
   "Kvadr\304\201ts\0"\
-  "\0"\
+  "Vi\304\274\305\206ota\0"\
   "Z\304\253mogs\0"\
   "Palaist SumatraPDF\0"\
   "P\304\201rsv\304\253trojums\0"\

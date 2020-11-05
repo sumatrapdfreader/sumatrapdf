@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-90488f71b925d2aeca23078428f534a813435ff1
+d08a468d4946d6bfdda4eb815a1326278bde23d2
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -17023,6 +17023,7 @@ ga:Catach
 gl:Zigzag
 ka:კლაკნილი ხაზი
 kw:Igam-ogam
+lv:Viļņota
 nl:Kronkelig
 pl:Falowanie
 ru:Волнистая линия
