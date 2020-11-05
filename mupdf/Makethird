@@ -345,26 +345,6 @@ $(OUT)/thirdparty/zlib/%.o: thirdparty/zlib/%.c
 
 endif
 
-# --- LURATECH ---
-
-ifeq ($(HAVE_LURATECH),yes)
-
-THIRD_SRC += $(sort $(wildcard thirdparty/luratech/ldf_jb2/source/common/*.c))
-THIRD_SRC += $(sort $(wildcard thirdparty/luratech/ldf_jb2/source/compress/*.c))
-THIRD_SRC += $(sort $(wildcard thirdparty/luratech/lwf_jp2/library/source/*.c))
-
-LURATECH_CFLAGS += -Ithirdparty/luratech/ldf_jb2/source/libraries
-LURATECH_CFLAGS += -Ithirdparty/luratech/ldf_jb2/source/compress
-LURATECH_CFLAGS += -Ithirdparty/luratech/ldf_jb2/source/common
-LURATECH_CFLAGS += -Ithirdparty/luratech/lwf_jp2/library/source
-
-THIRD_CFLAGS += $(LURATECH_CFLAGS) -DHAVE_LURATECH
-
-$(OUT)/thirdparty/luratech/%.o: thirdparty/luratech/%.c
-	$(CC_CMD) $(LIB_CFLAGS) -DLINUX $(LURATECH_CFLAGS) -Wno-tautological-compare -Wno-absolute-value -Wno-sign-compare
-
-else # HAVE_LURATECH
-
 # --- JBIG2DEC ---
 
 ifeq ($(USE_SYSTEM_JBIG2DEC),yes)
@@ -433,8 +413,6 @@ $(OUT)/thirdparty/openjpeg/%.o: thirdparty/openjpeg/%.c
 	$(CC_CMD) $(LIB_CFLAGS) $(OPENJPEG_CFLAGS)
 
 endif
-
-endif # HAVE_LURATECH
 
 # --- FreeGLUT ---
 

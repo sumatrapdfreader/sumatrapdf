@@ -168,6 +168,7 @@ img_open_document_with_stream(fz_context *ctx, fz_stream *file)
 		else if (fmt == FZ_IMAGE_JBIG2)
 		{
 			doc->page_count = fz_load_jbig2_subimage_count(ctx, data, len);
+			if (doc->page_count > 1)
 			doc->load_subimage = fz_load_jbig2_subimage;
 			doc->format = "JBIG2";
 		}

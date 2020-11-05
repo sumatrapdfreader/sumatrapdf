@@ -153,4 +153,4 @@ public class RectI
 			if (r.y1 > y1)
 				y1 = r.y1;
 		}
-	}
+}

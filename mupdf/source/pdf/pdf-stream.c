@@ -158,6 +158,7 @@ build_compression_params(fz_context *ctx, pdf_obj *f, pdf_obj *p, fz_compression
 
 		params->type = FZ_IMAGE_JBIG2;
 		params->u.jbig2.globals = NULL;
+		params->u.jbig2.embedded = 1; /* jbig2 streams are always embedded without file headers */
 		if (g)
 		{
 			if (!pdf_is_stream(ctx, g))

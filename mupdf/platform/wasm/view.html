@@ -445,7 +445,7 @@ async function initDocument(blob, magic) {
 	}
 
 	updateView();
-	}
+}
 
 function buildOutline(listNode, outline) {
 	for (let item of outline) {
@@ -477,7 +477,7 @@ function zoomOut() {
 	let next = zoomLevels[curr - 1];
 	if (next)
 		setZoom(next);
-	}
+}
 
 async function setZoom(newZoom) {
 	if (zoom === newZoom)

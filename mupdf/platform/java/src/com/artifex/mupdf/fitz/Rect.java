@@ -172,4 +172,4 @@ public class Rect
 			if (r.y1 > y1)
 				y1 = r.y1;
 		}
-	}
+}

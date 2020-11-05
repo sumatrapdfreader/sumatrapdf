@@ -23,6 +23,7 @@ typedef struct
 		} jpx;
 		struct {
 			fz_jbig2_globals *globals;
+			int embedded;
 		} jbig2;
 		struct {
 			int columns;

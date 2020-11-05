@@ -69,7 +69,7 @@ fz_open_image_decomp_stream(fz_context *ctx, fz_stream *tail, fz_compression_par
 			break;
 
 		case FZ_IMAGE_JBIG2:
-			head = fz_open_jbig2d(ctx, tail, params->u.jbig2.globals);
+			head = fz_open_jbig2d(ctx, tail, params->u.jbig2.globals, params->u.jbig2.embedded);
 			break;
 
 		case FZ_IMAGE_RLD:

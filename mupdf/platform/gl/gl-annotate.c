@@ -224,7 +224,7 @@ static void slow_operation_dialog(void)
 	else if (ui_slow_operation_state.i > ui_slow_operation_state.n)
 		ui_label("Finalizing.");
 	else
-		ui_label("%s: %d/%d",
+		ui_label("%s: %d / %d",
 			ui_slow_operation_state.progress_text,
 			ui_slow_operation_state.i,
 			ui_slow_operation_state.n);
@@ -1195,7 +1195,7 @@ void do_annotate_panel(void)
 }
 
 static void new_redaction(pdf_page *page, fz_quad q)
-	{
+{
 	pdf_annot *annot = pdf_create_annot(ctx, page, PDF_ANNOT_REDACT);
 
 	pdf_set_annot_modification_date(ctx, annot, time(NULL));

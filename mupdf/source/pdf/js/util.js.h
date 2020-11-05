@@ -329,7 +329,7 @@
 "\n"
 "function AFParseDateOrder(fmt) {\n"
 "var order = '';\n"
-"fmt += 'mdy'; \n"
+"fmt += 'mdy';\n"
 "for (var i = 0; i < fmt.length; i++) {\n"
 "var c = fmt.charAt(i);\n"
 "if ((c == 'y' || c == 'm' || c == 'd') && order.indexOf(c) < 0)\n"

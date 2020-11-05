@@ -162,7 +162,7 @@ fz_stream *fz_open_predict(fz_context *ctx, fz_stream *chain, int predictor, int
 	Open a filter that performs jbig2 decompression on the chained
 	stream, using the optional globals record.
 */
-fz_stream *fz_open_jbig2d(fz_context *ctx, fz_stream *chain, fz_jbig2_globals *globals);
+fz_stream *fz_open_jbig2d(fz_context *ctx, fz_stream *chain, fz_jbig2_globals *globals, int embedded);
 
 /**
 	Create a jbig2 globals record from a buffer.

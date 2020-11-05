@@ -124,9 +124,9 @@ char *pageText(fz_document *doc, int number, float dpi)
 			fz_drop_stext_page(ctx, text);
 		fz_drop_output(ctx, out);
 	fz_drop_buffer(ctx, buf);
-}
+	}
 	fz_catch(ctx)
-{
+	{
 		wasm_rethrow(ctx);
 		}
 
@@ -157,13 +157,13 @@ void doDrawPageAsPNG(fz_document *doc, int number, float dpi)
 			fz_drop_pixmap(ctx, pix);
 	fz_catch(ctx)
 		wasm_rethrow(ctx);
-		}
+}
 
 EMSCRIPTEN_KEEPALIVE
 unsigned char *getLastDrawData(void)
 {
 	return lastDrawBuffer ? lastDrawBuffer->data : 0;
-	}
+}
 
 EMSCRIPTEN_KEEPALIVE
 int getLastDrawSize(void)
@@ -175,10 +175,10 @@ static fz_irect pageBounds(fz_document *doc, int number, float dpi)
 {
 	fz_irect bbox = fz_empty_irect;
 	fz_try(ctx)
-{
+	{
 	loadPage(doc, number);
 		bbox = fz_round_rect(fz_transform_rect(fz_bound_page(ctx, lastPage), fz_scale(dpi/72, dpi/72)));
-}
+	}
 	fz_catch(ctx)
 		wasm_rethrow(ctx);
 	return bbox;
@@ -346,7 +346,7 @@ fz_outline *loadOutline(fz_document *doc)
 	fz_try(ctx)
 	{
 		outline = fz_load_outline(ctx, doc);
-}
+	}
 	fz_catch(ctx)
 	{
 		fz_drop_outline(ctx, outline);
