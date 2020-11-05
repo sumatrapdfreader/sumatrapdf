@@ -7,7 +7,7 @@ for Windows under (A)GPLv3 license, with some code under BSD license (see
 AUTHORS).
 
 More information:
-* [main website](http://www.sumatrapdfreader.org) with downloads and documentation
+* [main website](https://www.sumatrapdfreader.org) with downloads and documentation
 * [manual](https://www.sumatrapdfreader.org/manual.html)
 * [all other docs](https://www.sumatrapdfreader.org/docs/SumatraPDF-documentation-fed36a5624d443fe9f7be0e410ecd715.html)
 
