@@ -11777,8 +11777,8 @@ const char * gTranslations_lv =
   "SumatraPDF tagad b\305\253s j\305\253su noklus\304\223juma PDF las\304\253t\304\201js\0"\
   "Atbalst\304\253t SumatraPDF\0"\
   "Sinhroniz\304\201cijas failu nevar atv\304\223rt\0"\
-  "\0"\
-  "\0"\
+  "Atz\304\253me (liel\304\201s vispirms)\0"\
+  "Atz\304\253me (maz\304\201s vispirms)\0"\
   "Atz\304\253m\304\223ts PDF\0"\
   "Teksts\0"\
   "Teksta dokumenti\0"\

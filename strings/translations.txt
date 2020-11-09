@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d08a468d4946d6bfdda4eb815a1326278bde23d2
+a460954bc75498448ec44eda4384ff096c86c5db
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -17854,6 +17854,7 @@ ga:Clib (ceann mór ar dtús)
 gl:Etiqueta (grande primeiro)
 ka:ტეგირება (ჯერ დიდები)
 kw:Tagg (meur kynsa)
+lv:Atzīme (lielās vispirms)
 nl:Tag (eerst groot)
 pl:Tag (najpierw duży)
 ru:Разметка (сначала большие)
@@ -17870,6 +17871,7 @@ ga:Clib (ceann beag ar dtús)
 gl:Etiqueta (pequena primeiro)
 ka:ტეგირება (ჯერ პატარები)
 kw:Tagg (byghan kynsa)
+lv:Atzīme (mazās vispirms)
 nl:Tag (eerst klein)
 pl:Tag (najpierw mały)
 ru:Разметка (сначала маленькие)
