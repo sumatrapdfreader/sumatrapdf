@@ -3020,11 +3020,12 @@ static void ffi_new_Image(js_State *J)
 	fz_context *ctx = js_getcontext(J);
 	fz_image *image = NULL;
 
-	if (js_isuserdata(J, 1, "fz_pixmap")) {
-		fz_pixmap *pixmap = js_touserdata(J, 1, "fz_pixmap");
 		fz_image *mask = NULL;
 		if (js_isuserdata(J, 2, "fz_image"))
 			mask = js_touserdata(J, 2, "fz_image");
+
+	if (js_isuserdata(J, 1, "fz_pixmap")) {
+		fz_pixmap *pixmap = js_touserdata(J, 1, "fz_pixmap");
 		fz_try(ctx)
 			image = fz_new_image_from_pixmap(ctx, pixmap, mask);
 		fz_catch(ctx)
@@ -3032,7 +3033,11 @@ static void ffi_new_Image(js_State *J)
 	} else {
 		const char *name = js_tostring(J, 1);
 		fz_try(ctx)
+		{
 			image = fz_new_image_from_file(ctx, name);
+			if (mask)
+				image->mask = fz_keep_image(ctx, mask);
+		}
 		fz_catch(ctx)
 			rethrow(J);
 	}

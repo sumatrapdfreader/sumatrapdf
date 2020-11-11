@@ -79,10 +79,12 @@ static void s_close(fz_context *ctx, fz_document_writer *writer_)
 	fz_docx_writer *writer = (fz_docx_writer*) writer_;
 	extract_buffer_t *extract_buffer_intermediate = NULL;
 	extract_buffer_t *extract_buffer_output = NULL;
+	extract_t *extract = NULL;
 
 	fz_var(extract_buffer_intermediate);
 	fz_var(extract_buffer_output);
 	fz_var(writer);
+	fz_var(extract);
 
 	fz_try(ctx)
 	{
@@ -90,41 +92,59 @@ static void s_close(fz_context *ctx, fz_document_writer *writer_)
 		size_t data_size;
 		writer->ctx = ctx;	/* For s_buffer_to_output_write() callback. */
 
+		if (extract_begin(&extract))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to initialize extract system");
+
 		/*
-		 * Load intermediate data. Intermediate data from
-		 * xmltext device is (via writer->intermediate_output)
-		 * in writer->intermediate_buffer. We need to create an
-		 * extract_buffer_t that reads this intermediate data in order
-		 * to call extract_intermediate_to_document_buffer().
+		 * Load intermediate data. Intermediate data from xmltext
+		 * device is (via writer->intermediate_output) in
+		 * writer->intermediate_buffer. We create an extract_buffer_t that
+		 * reads this intermediate data (without copying it) for use by
+		 * extract_read_intermediate().
 		 */
 		fz_close_output(ctx, writer->intermediate_output);
 		data_size = fz_buffer_storage(ctx, writer->intermediate_buffer, &data);
 		if (extract_buffer_open_simple(data, data_size, NULL /*handle*/, NULL /*fn_close*/, &extract_buffer_intermediate))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_buffer_intermediate.");
+		if (extract_read_intermediate(extract, extract_buffer_intermediate, 0 /*autosplit*/))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to extract intermediate data");
+		if (extract_buffer_close(&extract_buffer_intermediate))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to finish extraction of intermediate data");
+
+		if (extract_process(extract, writer->spacing, writer->rotation, writer->images))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "extract_process() failed");
+
 		/*
 		 * Write docx to writer->output. Need to create an
 		 * extract_buffer_t that writes to writer->output, for use by
-		 * extract_docx_content_to_docx().
+		 * extract_write().
 		 */
 		if (extract_buffer_open(writer, NULL /*fn_read*/, s_buffer_to_output_write,
 				s_buffer_to_output_cache, NULL /*fn_close*/, &extract_buffer_output))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_buffer_output: %s", strerror(errno));
-		if (extract_intermediate_to_docx(extract_buffer_intermediate, 0 /*autosplit*/,
-				writer->spacing, writer->rotation, writer->images, extract_buffer_output))
+		if (extract_write(extract, extract_buffer_output))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to generate docx content: %s", strerror(errno));
 		if (extract_buffer_close(&extract_buffer_output))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to close extract_buffer: %s", strerror(errno));
-	}
-	fz_always(ctx)
-	{
-		writer->ctx = NULL;
-		fz_close_output(ctx, writer->intermediate_output);
-		extract_buffer_close(&extract_buffer_intermediate);
-		extract_buffer_close(&extract_buffer_output);
+
+		extract_end(&extract);
+
 		fz_close_output(ctx, writer->output);
+
+		writer->ctx = NULL;
 	}
 	fz_catch(ctx)
 	{
+		/*
+		 * We don't call fz_close_output() because it can throw and in
+		 * this error case we can safely leave cleanup to our s_drop()
+		 * function's calls to fz_drop_output().
+		 */
+		extract_buffer_close(&extract_buffer_intermediate);
+		extract_buffer_close(&extract_buffer_output);
+		extract_end(&extract);
+		writer->ctx = NULL;
+
 		fz_rethrow(ctx);
 	}
 }

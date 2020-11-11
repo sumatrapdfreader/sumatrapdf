@@ -63,6 +63,14 @@ TAGS_CMD = $(QUIET_TAGS) ctags -R --c-kinds=+p --exclude=platform/python --exclu
 WINDRES_CMD = $(QUIET_WINDRES) $(MKTGTDIR) ; $(WINDRES) $< $@
 OBJCOPY_CMD = $(QUIET_OBJCOPY) $(MKTGTDIR) ; $(LD) -r -b binary -z noexecstack -o $@ $<
 
+ifeq ($(shared),yes)
+LINK_CMD = $(QUIET_LINK) $(MKTGTDIR) ; $(CC) $(LDFLAGS) -o $@ \
+	$(filter-out %.$(SO),$^) \
+	$(sort $(patsubst %,-L%,$(dir $(filter %.$(SO),$^)))) \
+	$(patsubst lib%.$(SO),-l%,$(notdir $(filter %.$(SO),$^))) \
+	$(LIBS)
+endif
+
 # --- Rules ---
 
 $(OUT)/%.a :
@@ -76,39 +84,39 @@ $(OUT)/%.$(SO):
 	$(LINK_CMD) $(LIB_LDFLAGS) $(THIRD_LIBS) $(LIBCRYPTO_LIBS)
 
 $(OUT)/source/helpers/mu-threads/%.o : source/helpers/mu-threads/%.c
-	$(CC_CMD) $(LIB_CFLAGS) $(THREADING_CFLAGS)
+	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THREADING_CFLAGS)
 
 $(OUT)/source/helpers/pkcs7/%.o : source/helpers/pkcs7/%.c
-	$(CC_CMD) $(LIB_CFLAGS) $(LIBCRYPTO_CFLAGS)
+	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(LIBCRYPTO_CFLAGS)
 
 $(OUT)/source/tools/%.o : source/tools/%.c
-	$(CC_CMD) -Wall $(THIRD_CFLAGS) $(THREADING_CFLAGS)
+	$(CC_CMD) $(WARNING_CFLAGS) $(THIRD_CFLAGS) $(THREADING_CFLAGS)
 
 $(OUT)/generated/%.o : generated/%.c
-	$(CC_CMD) $(LIB_CFLAGS) -O0
+	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) -O0
 
 $(OUT)/platform/x11/%.o : platform/x11/%.c
-	$(CC_CMD) -Wall $(X11_CFLAGS)
+	$(CC_CMD) $(WARNING_CFLAGS) $(X11_CFLAGS)
 
 $(OUT)/platform/x11/curl/%.o : platform/x11/%.c
-	$(CC_CMD) -Wall $(X11_CFLAGS) $(CURL_CFLAGS) -DHAVE_CURL
+	$(CC_CMD) $(WARNING_CFLAGS) $(X11_CFLAGS) $(CURL_CFLAGS)
 
 $(OUT)/platform/gl/%.o : platform/gl/%.c
-	$(CC_CMD) -Wall $(THIRD_CFLAGS) $(GLUT_CFLAGS)
+	$(CC_CMD) $(WARNING_CFLAGS) $(THIRD_CFLAGS) $(THIRD_GLUT_CFLAGS)
 
 ifeq ($(HAVE_OBJCOPY),yes)
   $(OUT)/source/fitz/noto.o : source/fitz/noto.c
-	$(CC_CMD) -Wall -Wdeclaration-after-statement -DHAVE_OBJCOPY $(LIB_CFLAGS) $(THIRD_CFLAGS)
+	$(CC_CMD) $(WARNING_CFLAGS) -Wdeclaration-after-statement -DHAVE_OBJCOPY $(LIB_CFLAGS) $(THIRD_CFLAGS)
 endif
 
 $(OUT)/source/%.o : source/%.c
-	$(CC_CMD) -Wall -Wdeclaration-after-statement $(LIB_CFLAGS) $(THIRD_CFLAGS)
+	$(CC_CMD) $(WARNING_CFLAGS) -Wdeclaration-after-statement $(LIB_CFLAGS) $(THIRD_CFLAGS)
 
 $(OUT)/source/%.o : source/%.cpp
-	$(CXX_CMD) -Wall $(LIB_CFLAGS) $(THIRD_CFLAGS)
+	$(CXX_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS)
 
 $(OUT)/platform/%.o : platform/%.c
-	$(CC_CMD) -Wall
+	$(CC_CMD) $(WARNING_CFLAGS)
 
 $(OUT)/%.o: %.rc
 	$(WINDRES_CMD)
@@ -121,6 +129,8 @@ $(OUT)/%.o: %.rc
 THIRD_OBJ := $(THIRD_SRC:%.c=$(OUT)/%.o)
 THIRD_OBJ := $(THIRD_OBJ:%.cc=$(OUT)/%.o)
 THIRD_OBJ := $(THIRD_OBJ:%.cpp=$(OUT)/%.o)
+
+THIRD_GLUT_OBJ := $(THIRD_GLUT_SRC:%.c=$(OUT)/%.o)
 
 MUPDF_SRC := $(sort $(wildcard source/fitz/*.c))
 MUPDF_SRC += $(sort $(wildcard source/fitz/*.cpp))
@@ -208,16 +218,24 @@ generate: source/html/css-properties.h
 
 ifeq ($(shared),yes)
 MUPDF_LIB = $(OUT)/libmupdf.$(SO)
+THIRD_GLUT_LIB = $(OUT)/libmupdf-glut.a
+THREAD_LIB = $(OUT)/libmupdf-threads.a
+PKCS7_LIB = $(OUT)/libmupdf-pkcs7.a
 
-$(MUPDF_LIB) : $(MUPDF_OBJ) $(THIRD_OBJ) $(THREAD_OBJ) $(PKCS7_OBJ)
+$(MUPDF_LIB) : $(MUPDF_OBJ) $(THIRD_OBJ)
+$(THIRD_GLUT_LIB) : $(THIRD_GLUT_OBJ)
+$(THREAD_LIB) : $(THREAD_OBJ)
+$(PKCS7_LIB) : $(PKCS7_OBJ)
 else
 MUPDF_LIB = $(OUT)/libmupdf.a
 THIRD_LIB = $(OUT)/libmupdf-third.a
+THIRD_GLUT_LIB = $(OUT)/libmupdf-glut.a
 THREAD_LIB = $(OUT)/libmupdf-threads.a
 PKCS7_LIB = $(OUT)/libmupdf-pkcs7.a
 
 $(MUPDF_LIB) : $(MUPDF_OBJ)
 $(THIRD_LIB) : $(THIRD_OBJ)
+$(THIRD_GLUT_LIB) : $(THIRD_GLUT_OBJ)
 $(THREAD_LIB) : $(THREAD_OBJ)
 $(PKCS7_LIB) : $(PKCS7_OBJ)
 endif
@@ -254,8 +272,8 @@ ifeq ($(HAVE_GLUT),yes)
   MUVIEW_GLUT_SRC += $(sort $(wildcard platform/gl/*.c))
   MUVIEW_GLUT_OBJ := $(MUVIEW_GLUT_SRC:%.c=$(OUT)/%.o)
   MUVIEW_GLUT_EXE := $(OUT)/mupdf-gl
-  $(MUVIEW_GLUT_EXE) : $(MUVIEW_GLUT_OBJ) $(MUPDF_LIB) $(THIRD_LIB) $(PKCS7_LIB) $(GLUT_LIB)
-	$(LINK_CMD) $(THIRD_LIBS) $(LIBCRYPTO_LIBS) $(WIN32_LDFLAGS) $(GLUT_LIBS)
+  $(MUVIEW_GLUT_EXE) : $(MUVIEW_GLUT_OBJ) $(MUPDF_LIB) $(THIRD_LIB) $(THIRD_GLUT_LIB) $(PKCS7_LIB)
+	$(LINK_CMD) $(THIRD_LIBS) $(LIBCRYPTO_LIBS) $(WIN32_LDFLAGS) $(THIRD_GLUT_LIBS)
   VIEW_APPS += $(MUVIEW_GLUT_EXE)
 endif
 
@@ -301,7 +319,7 @@ endif
 -include $(PKCS7_OBJ:%.o=%.d)
 -include $(THREAD_OBJ:%.o=%.d)
 -include $(THIRD_OBJ:%.o=%.d)
--include $(GLUT_OBJ:%.o=%.d)
+-include $(THIRD_GLUT_OBJ:%.o=%.d)
 
 -include $(MUTOOL_OBJ:%.o=%.d)
 -include $(MUVIEW_GLUT_OBJ:%.o=%.d)
@@ -347,7 +365,7 @@ mandir ?= $(prefix)/share/man
 docdir ?= $(prefix)/share/doc/mupdf
 
 third: $(THIRD_LIB)
-extra-libs: $(GLUT_LIB)
+extra-libs: $(THIRD_GLUT_LIB)
 libs: $(INSTALL_LIBS)
 tools: $(TOOL_APPS)
 apps: $(TOOL_APPS) $(VIEW_APPS)
@@ -426,9 +444,9 @@ sanitize:
 shared: shared-$(build)
 
 shared-release:
-	$(MAKE) HAVE_GLUT=no shared=yes build=release
+	$(MAKE) shared=yes build=release
 shared-debug:
-	$(MAKE) HAVE_GLUT=no shared=yes build=debug
+	$(MAKE) shared=yes build=debug
 shared-clean:
 	rm -rf build/shared-*
 

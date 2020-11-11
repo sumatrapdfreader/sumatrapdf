@@ -319,7 +319,7 @@ static int step_high_security_save(int cancel)
 		fz_drop_document_writer(ctx, hss_state.writer);
 		hss_state.writer = NULL;
 		fz_strlcpy(filename, save_filename, PATH_MAX);
-		reload();
+		reload_document();
 		return -1;
 	}
 	/* Otherwise, do the next page. */
@@ -378,7 +378,7 @@ static void do_save_pdf_dialog(int for_signing)
 				trace_action("doc.save(%q,%q);\n", save_filename, opts_string);
 				pdf_save_document(ctx, pdf, save_filename, &save_opts);
 				fz_strlcpy(filename, save_filename, PATH_MAX);
-				reload();
+				reload_document();
 			}
 			fz_catch(ctx)
 			{

@@ -654,12 +654,45 @@ static void quit_dialog(void)
 	ui_dialog_end();
 }
 
-void quit(void)
+static void quit(void)
 {
 	if (pdf && pdf_has_unsaved_changes(ctx, pdf))
 		ui.dialog = quit_dialog;
 	else
 		glutLeaveMainLoop();
+}
+
+static void reload_dialog(void)
+{
+	ui_dialog_begin(500, (ui.gridsize+4)*3);
+	ui_layout(T, NONE, NW, 2, 2);
+	ui_label("%C The document has unsaved changes. Are you sure you want to reload?", 0x26a0); /* WARNING SIGN */
+	ui_layout(B, X, S, 2, 2);
+	ui_panel_begin(0, ui.gridsize, 0, 0, 0);
+	{
+		ui_layout(R, NONE, S, 0, 0);
+		if (ui_button("Save"))
+			do_save_pdf_file();
+		ui_spacer();
+		if (ui_button("Reload") || ui.key == 'q')
+		{
+			ui.dialog = NULL;
+			reload_document();
+		}
+		ui_layout(L, NONE, S, 0, 0);
+		if (ui_button("Cancel") || ui.key == KEY_ESCAPE)
+			ui.dialog = NULL;
+	}
+	ui_panel_end();
+	ui_dialog_end();
+}
+
+void reload(void)
+{
+	if (pdf && pdf_has_unsaved_changes(ctx, pdf))
+		ui.dialog = reload_dialog;
+	else
+		reload_document();
 }
 
 void trace_action(const char *fmt, ...)
@@ -775,14 +808,17 @@ void load_page(void)
 				s++;
 				int signd = pdf_widget_is_signed(ctx, w);
 				trace_action("widget = page.getWidgets()[%d];\n", i);
-				trace_action("print('Signature %d on page %d is signed:', widget.isSigned(), 'expected:', %d);\n",
+				trace_action("tmp = widget.isSigned();\n");
+				trace_action("print('Signature %d on page %d is signed:', tmp, 'expected:', %d);\n",
 					s, fz_page_number_from_location(ctx, doc, currentpage), signd);
+				trace_action("if (tmp != %d) errored=1;\n", signd);
 				if (signd)
 				{
 					int valid = pdf_validate_signature(ctx, w);
 					trace_action("tmp = page.getWidgets()[%d].validateSignature();\n", i);
 					trace_action("print('Signature %d on page %d validation:', tmp, 'expected:', %d);\n",
 						s, fz_page_number_from_location(ctx, doc, currentpage), valid);
+					trace_action("if (tmp != %d) errored=1;\n", valid);
 				}
 			}
 	}
@@ -1292,7 +1328,7 @@ static void password_dialog(void)
 			{
 				password = input_password.text;
 				ui.dialog = NULL;
-				reload();
+				reload_document();
 				shrinkwrap();
 			}
 		}
@@ -1372,12 +1408,14 @@ static void load_document(void)
 				"tmp = doc.countVersions();\n"
 				"if (%d != tmp) {\n"
 				"  print(\"Mismatch in number of versions of document. I expected %d and got \" + tmp + \"\\n\");\n"
+				"  errored=1;\n"
 				"}\n", vsns, vsns);
 			if (vsns > 1)
 			{
 				int valid = pdf_validate_change_history(ctx, pdf);
 				trace_action("tmp = doc.validateChangeHistory();\n");
 				trace_action("print('History validation:', tmp, 'expected:', %d);\n", valid);
+				trace_action("if (tmp != %d) errored=1;\n", valid);
 			}
 		}
 		if (anchor)
@@ -1393,7 +1431,7 @@ static void load_document(void)
 	oldpage = currentpage = fz_clamp_location(ctx, doc, currentpage);
 }
 
-void reload(void)
+void reload_document(void)
 {
 	save_history();
 	save_accelerator();
@@ -2164,6 +2202,7 @@ static void cleanup(void)
 		fz_debug_store(ctx, fz_stdout(ctx));
 #endif
 
+	trace_action("quit(errored);\n");
 	fz_drop_output(ctx, trace_file);
 	fz_drop_stext_page(ctx, page_text);
 	fz_drop_separations(ctx, seps);
@@ -2232,7 +2271,7 @@ int main(int argc, char **argv)
 			trace_file = fz_stdout(ctx);
 		else
 			trace_file = fz_new_output_with_path(ctx, trace_file_name, 0);
-		trace_action("var doc, page, annot, widget, hits, tmp;\n");
+		trace_action("var doc, page, annot, widget, hits, tmp, errored = 0;\n");
 	}
 
 	if (layout_css)

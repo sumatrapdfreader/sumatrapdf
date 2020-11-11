@@ -274,6 +274,7 @@ void do_widget_canvas(fz_irect canvas_area);
 void load_page(void);
 void render_page(void);
 void update_title(void);
+void reload_document(void);
 void reload(void);
 void do_save_pdf_file(void);
 void do_save_signed_pdf_file(void);

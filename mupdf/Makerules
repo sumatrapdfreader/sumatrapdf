@@ -6,6 +6,8 @@ OS := $(OS:MSYS%=MINGW)
 OS := $(OS:Windows_NT=MINGW)
 OS := $(OS:Darwin=MACOS)
 
+WARNING_CFLAGS := -Wall -Wsign-compare
+
 # Feature configuration options
 
 ifeq ($(tesseract),yes)
@@ -42,8 +44,6 @@ else
   LDREMOVEUNREACH := -Wl,--gc-sections
   SO := so
 endif
-
-CFLAGS += -Wsign-compare
 
 SANITIZE_FLAGS += -fsanitize=address
 SANITIZE_FLAGS += -fsanitize=leak

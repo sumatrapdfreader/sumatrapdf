@@ -678,7 +678,7 @@ fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_irect b
 		fake_src.w = w;
 		fake_src.h = y;
 		fake_src.samples = srcp;
-		fz_convert_pixmap_samples(ctx, dest, &fake_src, NULL, default_cs, fz_default_color_params, 0);
+		fz_convert_pixmap_samples(ctx, &fake_src, dest, NULL, default_cs, fz_default_color_params, 0);
 	}
 }
 

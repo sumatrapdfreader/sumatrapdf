@@ -192,6 +192,11 @@ void fz_drop_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals);
 */
 void fz_drop_jbig2_globals_imp(fz_context *ctx, fz_storable *globals);
 
+/**
+	Return buffer containing jbig2 globals data stream.
+*/
+fz_buffer * fz_jbig2_globals_data(fz_context *ctx, fz_jbig2_globals *globals);
+
 /* Extra filters for tiff */
 
 /**

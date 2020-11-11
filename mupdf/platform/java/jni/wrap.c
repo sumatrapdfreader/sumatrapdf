@@ -543,7 +543,7 @@ static inline jobject to_Link_safe_own(fz_context *ctx, JNIEnv *env, fz_link *li
 		return NULL;
 	}
 
-	jobj = (*env)->NewObject(env, cls_Link, mid_Link_init, jlong_cast(link), jbounds, juri);
+	jobj = (*env)->NewObject(env, cls_Link, mid_Link_init, jbounds, juri);
 	if (!jobj)
 		fz_drop_link(ctx, link);
 

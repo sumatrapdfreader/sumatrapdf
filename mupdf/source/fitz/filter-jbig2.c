@@ -13,6 +13,7 @@ struct fz_jbig2_globals
 	fz_storable storable;
 	Jbig2GlobalCtx *gctx;
 	fz_jbig2_allocators alloc;
+	fz_buffer *data;
 };
 
 typedef struct
@@ -166,6 +167,8 @@ fz_load_jbig2_globals(fz_context *ctx, fz_buffer *buf)
 	FZ_INIT_STORABLE(globals, 1, fz_drop_jbig2_globals_imp);
 	globals->gctx = jbig2_make_global_ctx(jctx);
 
+	globals->data = fz_keep_buffer(ctx, buf);
+
 	return globals;
 }
 
@@ -175,6 +178,7 @@ fz_drop_jbig2_globals_imp(fz_context *ctx, fz_storable *globals_)
 	fz_jbig2_globals *globals = (fz_jbig2_globals *)globals_;
 	globals->alloc.ctx = ctx;
 	jbig2_global_ctx_free(globals->gctx);
+	fz_drop_buffer(ctx, globals->data);
 	fz_free(ctx, globals);
 }
 
@@ -210,4 +214,10 @@ fz_open_jbig2d(fz_context *ctx, fz_stream *chain, fz_jbig2_globals *globals, int
 	state->chain = fz_keep_stream(ctx, chain);
 
 	return fz_new_stream(ctx, state, next_jbig2d, close_jbig2d);
+}
+
+fz_buffer *
+fz_jbig2_globals_data(fz_context *ctx, fz_jbig2_globals *globals)
+{
+	return globals ? globals->data : NULL;
 }
