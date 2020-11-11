@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a460954bc75498448ec44eda4384ff096c86c5db
+6e5a6ee9e930dd6d469fa2da38ed1024be78d7af
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -8,6 +8,7 @@ cn:未找到 %s 安装。
 co:Installazione di %s micca trova.
 cy:Ni chanfuwyd gosodiad %s.
 de:%s Installation nicht gefunden.
+es:%s instalación no encontrada.
 fr:%s installation non trouvée
 ga:Níor aimsíodh an tsuiteáil %s.
 gl:%s instalación non atopada.
@@ -2634,6 +2635,7 @@ cn:从历史记录删除(&R)
 co:&Caccià da a crunulogia
 cy:Tynnu o'&r Hanes
 de:Aus der Historie entfernen
+es:&Eliminar del historial
 fr:Supprimer de l'historique
 ga:&Bain ón stair
 gl:Elimina&r do historial
@@ -3696,6 +3698,7 @@ cn:将 PDF 添加为子项目
 co:Aghjunghje un PDF cum’è un zitellu
 cy:Ychwanegu PDF fel plentyn
 de:PDF als untergeordnetes Element hinzufügen
+es:Añadir pdf como hijo
 ga:Cuir PDF leis mar leanbh
 gl:Engadir PDF como secundario
 ka:დავამატოთ PDF შვილობილად
@@ -3713,6 +3716,7 @@ cn:将 PDF 添加为同级项目
 co:Aghjunghje un PDF cum’è un fratellu
 cy:Ychwanegu PDF fel chwaer
 de:PDF als gleichgeordnetes Element hinzufügen
+es:Añadir PDF como un hermano
 ga:Cuir PDF leis mar dheirfiúr
 gl:Engadir PDF como relacionado
 ka:PDF-ის მოძმედ დამატება
@@ -3730,6 +3734,7 @@ cn:添加子项目
 co:Aghjunghje un zitellu
 cy:Ychwanegu plentyn
 de:Untergeordnetes Element hinzufügen
+es:Añadir hijo
 ga:Cuir leanbh leis
 gl:Engadir secundario
 ka:შვილობილის დამატება
@@ -3915,6 +3920,7 @@ cn:添加同级项目
 co:Aghjunghje un fratellu
 cy:Ychwanegu chwaer
 de:Gleichgeordnetes Element hinzufügen
+es:Añadir hermano
 ga:Cuir deirfiúr leis
 gl:Engadir relacionado
 ka:მოძმე ელემენტის დამატება
@@ -4205,6 +4211,7 @@ co:Annutazioni
 cy:Anodiadau
 de:Anmerkungen
 el:Σχόλια
+es:Anotaciones
 fr:Annotations
 ga:Nótaí mínithe
 gl:Anotacións
@@ -4292,6 +4299,7 @@ cn:您确定要卸载 %s 吗？
 co:Site sicuru di vulè disinstallà %s ?
 cy:Wyt ti'n bendant eisiau dadosod %s?
 de:Sind Sie sicher, dass Sie %s deinstallieren möchten?
+es:¿Estás seguro que quiere desinstalar %s?
 fr:Voulez-vous vraiment désinstaller %s ?
 ga:An bhfuil tú cinnte gur mian leat %s a dhíshuiteáil?
 gl:Estás seguro de desinstalar %s?
@@ -5393,6 +5401,7 @@ cn:插入号
 co:Cursore
 cy:Lleolnod
 de:Cursor
+es:Signo de intercalación
 fr:curseur
 ga:Carait
 gl:Caret (V invertido)
@@ -5553,6 +5562,7 @@ co:Chjerchju
 cy:Cylchu
 de:Kreis
 el:Κύκλος
+es:Círculo
 fr:Cercle
 ga:Ciorcal
 gl:Círculo
@@ -5675,6 +5685,7 @@ co:Culore
 cy:Lliwio
 de:Farbe
 el:Χρώμα
+es:Color
 fr:Couleur
 ga:Dath
 gl:Cor
@@ -6941,6 +6952,7 @@ cn:无法卸载 Sumatra 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di Sumatra
 cy:Methwyd gosod hidl chwilio Sumatra
 de:Konnte den Sumatra-Suchfilter nicht deinstallieren
+es:No se pudo desinstalar el filtro de búsqueda de Sumatra.
 ga:Níorbh fhéidir scagaire cuardaigh Sumatra a dhíshuiteáil
 gl:Non se pode desinstalar o filtro de busca do Sumatra
 ka:ვერ მოხერხდა Sumatra-ს საძიებო ფილტრის წაშლა
@@ -7084,6 +7096,7 @@ co:&Scrive un’annutazione
 cy:Creu anodiad
 de:Anmerkung erstellen
 el:Δημιουργία Σχολίου
+es:Crear anotación
 fr:Écrire une annotation
 ga:Cruthaigh nóta mínithe
 gl:Crear anotación
@@ -7938,6 +7951,7 @@ co:&Esce di u modu screnu sanu
 cy:Gadael Sgrin Lawn
 de:Vollbild verlassen
 el:Έξοδος από την πλήρη οθόνη
+es:Salir de pantalla completa
 fr:&Quitter le mode plein écran
 ga:Fág an lánscáileán
 gl:Sa&ír da pantalla completa
@@ -8096,6 +8110,7 @@ co:Mudificà
 cy:Golygu
 de:Bearbeiten
 el:Επεξεργασία
+es:Editar
 fr:Éditer
 ga:Eagar
 gl:Editar
@@ -8119,6 +8134,7 @@ co:&Mudificà l’annutazioni
 cy:Golygu Anodiadau
 de:Anmerkungen bearbeiten
 el:Επεξεργασία Σχολίων
+es:Editar anotación
 fr:Éditer les annotations
 ga:Cuir nótaí mínithe in eagar
 gl:Editar anotacións
@@ -8137,6 +8153,7 @@ cn:编辑书签
 co:Mudificà l’indette
 cy:Golygu Nodau Tudalen
 de:Lesezeichen bearbeiten
+es:Eliminar marcadores
 fr:Éditer les marque-pages
 ga:Cuir leabharmharcanna in eagar
 gl:Editar marcadores
@@ -8461,6 +8478,7 @@ cn:导出书签
 co:Espurtà l’indette
 cy:Allforio Nodau Tudalen
 de:Lesezeichen exportieren
+es:Exportar marcadores
 fr:Exporter les marque-pages
 ga:Tabhair amach na leabharmharcanna
 gl:Exportar marcadores
@@ -9376,6 +9394,7 @@ cn:文件附件
 co:Schedariu attaccatu
 cy:Atodiad Ffeil
 de:Dateianhang
+es:Adjuntar archivo
 ga:Ceangaltán comhaid
 gl:Ficheiro anexo
 ka:მიმაგრებული ფაილი
@@ -10671,6 +10690,7 @@ cn:自定义文本
 co:Testu liberu
 cy:Testun Rydd
 de:Freitext
+es:Liberar texto
 ga:Téacs saor
 gl:Texto libre
 ka:თავისუფალი ტექსტი
@@ -11022,6 +11042,7 @@ cn:高亮
 co:Sopralineà
 cy:Amlygu
 de:Hervorhebung
+es:Resaltar
 ga:Aibhsigh
 gl:Realzar
 ka:მონიშვნა
@@ -11166,6 +11187,7 @@ cn:图像
 co:Fiure
 cy:Delweddau
 de:Bilder
+es:Imágenes
 fr:Images
 ga:Íomhánna
 gl:Imaxes
@@ -11186,6 +11208,7 @@ cn:墨迹
 co:Inchjostru
 cy:Inc
 de:Tinte
+es:Tinta
 ga:Dúch
 gl:Trazo
 ka:მელანი
@@ -11707,6 +11730,7 @@ co:Linea
 cy:Llinell
 de:Linie
 el:Γραμμή
+es:Línea
 fr:Ligne
 ga:Líne
 gl:Liña
@@ -12232,6 +12256,7 @@ cn:新建书签
 co:Nove indette
 cy:Nodau Tudalen Newydd
 de:Neue Lesezeichen
+es:Nuevo marcadores
 fr:Nouveaux marque-pages
 ga:Leabharmharcanna nua
 gl:Novos marcadores
@@ -12922,6 +12947,7 @@ cn:打开嵌入 PDF
 co:Apre u PDF incurpuratu
 cy:Agor PDF wedi'i Mewnosod
 de:Eingebettetes PDF öffnen
+es:Abrir PDF adjunto
 ga:Oscail PDF leabaithe
 gl:Abrir PDF inserido
 ka:ჩაშენებული PDF-ის გახსნა
@@ -14361,6 +14387,7 @@ cn:折线
 co:Linea tronca
 cy:Llinell Poli
 de:Polylinie
+es:Polilínea
 ga:Líne iolrach
 gl:Liña polivinílica
 ka:ტეხილი ხაზი
@@ -14378,6 +14405,7 @@ cn:多边形
 co:Poligonu
 cy:Polygon
 de:Polygon
+es:Polígono
 fr:Polygone
 ga:Polagán
 gl:Polígono
@@ -15165,6 +15193,7 @@ cn:编辑
 co:Redige
 cy:Cuddio
 de:Zensieren
+es:Redactar
 ga:Folaigh
 gl:Redactar
 ka:რედაქტირება
@@ -15245,6 +15274,7 @@ cn:移除项目
 co:Caccià l’elementu
 cy:Tynnu Eitem
 de:Element entfernen
+es:Eliminar ítem
 ga:Bain mír
 gl:Borrar elemento
 ka:ელემენტის წაშლა
@@ -15701,6 +15731,7 @@ cn:保存嵌入文件...
 co:Arregistrà u schedariu incurpuratu…
 cy:Cadw Ffeil wedi'i Mewnosod...
 de:Eingebettete Datei speichern...
+es:Guardar archivo incrustado...
 ga:Taisc comhad leabaithe...
 gl:Gardar ficheiro inserido...
 ka:მიმაგრებული ფაილის შენახვა...
@@ -16421,6 +16452,7 @@ cn:显示滚动条(&S)
 co:&Affissà e barre di sfilarata
 cy:Dangos Barrau &Sgrolio
 de:Scrollbalken anzeigen
+es:Mostrar &Barra de desplazamiento
 fr:Afficher les &barres  de défilement
 ga:Taispeáin na barraí &scrollála
 gl:Amosr barra&s de desprazamento
@@ -16605,6 +16637,7 @@ cn:显示滚动条(&O)
 co:&Affissà e barre di sfilarata
 cy:Dangos Barrau Sgr&olio
 de:Scrollbalken anzeigen
+es:Mostrar barras de desplazamientos&
 fr:Afficher les barres de &défilement
 ga:Taispeáin na barraí scr&ollála
 gl:Amosar barras de desprazament&o
@@ -16918,6 +16951,7 @@ co:Classificà da
 cy:Trefnu yn Ôl
 de:Sortieren nach
 el:Ταξινόμηση κατά
+es:Ordenar por
 fr:Classer
 ga:Sórtáil de réir
 gl:Ordenar por
@@ -17002,6 +17036,7 @@ co:Quadratu
 cy:Sgwâr
 de:Quadrat
 el:Τετράγωνο 
+es:Cuadrado
 ga:Cearnóg
 gl:Cadrado
 ka:კვადრატი
@@ -17019,6 +17054,7 @@ cn:波浪线
 co:Undulatu
 cy:Sgwigl
 de:Verschnörkelt
+es:Ondulado
 ga:Catach
 gl:Zigzag
 ka:კლაკნილი ხაზი
@@ -17036,6 +17072,7 @@ cn:图章
 co:Stampaghjolu
 cy:Stampio
 de:Stempel
+es:Sello
 ga:Stampa
 gl:Selo
 ka:ბეჭედი
@@ -17115,6 +17152,7 @@ cn:删除线
 co:Rigà
 cy:Taro Drwodd
 de:Durchstreichen
+es:Tachar
 fr:Rayer
 ga:Scrios amach
 gl:Riscar
@@ -17768,6 +17806,7 @@ co:Sustene SumatraPDF
 cy:Cefnogi SumatraPDF
 de:SumatraPDF unterstützen
 el:Υποστηρίξτε το SumatraPDF
+es:Soporte SumatraPDF
 ga:Tacaigh le SumatraPDF
 gl:Asistencia do SumatraPDF
 ka: SumatraPDF-ის დახმარება
@@ -17850,6 +17889,7 @@ cn:标签 (大的在前)
 co:Etichetta (prima maiò)
 cy:Tag (mawr cyntaf)
 de:Tag (große zuerst)
+es:Etiqueta (grande primero)
 ga:Clib (ceann mór ar dtús)
 gl:Etiqueta (grande primeiro)
 ka:ტეგირება (ჯერ დიდები)
@@ -17867,6 +17907,7 @@ cn:标签 (小的在前)
 co:Etichetta (prima chjuca)
 cy:Tag (bach cyntaf)
 de:Tag (kleine zuerst)
+es:Etiqueta (pequeña primero)
 ga:Clib (ceann beag ar dtús)
 gl:Etiqueta (pequena primeiro)
 ka:ტეგირება (ჯერ პატარები)
@@ -17948,6 +17989,7 @@ co:Testu
 cy:Testun
 de:Text
 el:Κείμενο
+es:Texto
 fr:Texte
 ga:Téacs
 gl:Texto
@@ -18031,6 +18073,7 @@ cn:感谢您选择 RA-MICRO PDF！
 co:Vi ringraziemu d’avè sceltu RA-MICRO PDF !
 cy:Diolch am ddewis RA-MICRO PDF!
 de:Vielen Dank, dass Sie RA-MICRO PDF gewählt haben!
+es:¡Gracias por elegir RA-MICRO PDF!
 fr:Merci d'avoir choisi RA6MICRO PDF !
 ga:Go raibh maith agat as ucht RA-MICRO PDF a roghnú!
 gl:Grazas por escoller RA-MICRO PDF!
@@ -18363,6 +18406,7 @@ co:Sottulineatu
 cy:Tanlinellu
 de:Unterstreichen
 el:Υπογράμμιση 
+es:Subrayar
 fr:Souligner
 ga:Cuir líne faoi
 gl:Subliñado
