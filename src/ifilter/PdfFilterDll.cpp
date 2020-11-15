@@ -126,7 +126,7 @@ STDAPI DllRegisterServer() {
     }
 
     struct {
-        WCHAR *key, *value, *data;
+        const WCHAR *key, *value, *data;
     } regVals[] = {
         {L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID, nullptr, L"SumatraPDF IFilter"},
         {L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32", nullptr, dllPath.Get()},

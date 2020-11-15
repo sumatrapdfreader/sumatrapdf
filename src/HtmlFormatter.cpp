@@ -895,7 +895,7 @@ void HtmlFormatter::HandleTagFont(HtmlToken* t) {
             size += 3;
         }
         size = limitValue(size, 1, 7);
-        float scale = pow(1.2f, size - 3);
+        float scale = (float)pow(1.2f, size - 3);
         fontSize = defaultFontSize * scale;
     }
 
@@ -938,7 +938,7 @@ void HtmlFormatter::HandleTagHx(HtmlToken* t) {
         RevertStyleChange();
     } else {
         EmitParagraph(0);
-        float fontSize = defaultFontSize * pow(1.1f, '5' - t->s[1]);
+        float fontSize = defaultFontSize * (float)pow(1.1f, '5' - t->s[1]);
         if (currY > 0) {
             currY += fontSize / 2;
         }
