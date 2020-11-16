@@ -288,7 +288,6 @@ WCHAR* GetSelectedText(WindowInfo* win, const WCHAR* lineSep, bool& isTextOnlySe
     return s;
 }
 
-//
 void CopySelectionToClipboard(WindowInfo* win) {
     CrashIf(win->currentTab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
 
@@ -318,6 +317,9 @@ void CopySelectionToClipboard(WindowInfo* win) {
     }
 
     DisplayModel* dm = win->AsFixed();
+    if (!dm || !win->currentTab->selectionOnPage || win->currentTab->selectionOnPage->size() == 0) {
+        return;
+    }
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage* selOnPage = &win->currentTab->selectionOnPage->at(0);
     float zoom = dm->GetZoomReal(selOnPage->pageNo);
