@@ -846,7 +846,14 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
         case CmdEditAnnotations:
             StartEditAnnotations(tab, nullptr);
             break;
-        case CmdCopyLinkTarget:
+        case CmdCopyLinkTarget: {
+            // file:// can be added by mupdf
+            WCHAR* tmp = value;
+            if (str::StartsWithI(tmp, L"file://")) {
+                tmp += 7;
+            }
+            CopyTextToClipboard(tmp);
+        } break;
         case CmdCopyComment:
             CopyTextToClipboard(value);
             break;
