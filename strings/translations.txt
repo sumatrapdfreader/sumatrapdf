@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6e5a6ee9e930dd6d469fa2da38ed1024be78d7af
+221d1a7330bfc5d8d87707f0fab51e5e932e9ec0
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 az:%s quraşdırmasını tapmaq mümkün olmadı.
@@ -12,6 +12,7 @@ es:%s instalación no encontrada.
 fr:%s installation non trouvée
 ga:Níor aimsíodh an tsuiteáil %s.
 gl:%s instalación non atopada.
+it:%s installazione non trovata.
 ka:ინსტალირებული %s ვერ მოიძებნა.
 kw:Ny gevir leans %s.
 lv:%s instalācija netika atrasta.
@@ -194,7 +195,7 @@ hi:उच्च श्रेणी के सेटिंग्स
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
 id:&Pilihan Lanjutan...
-it:Opzioni &avanzate...
+it:Opzioni &Avanzate...
 ja:詳細設定(&A)
 jv:&Pilihan Terusan...
 ka:&გაფართოებული გაწყობები...
@@ -2639,6 +2640,7 @@ es:&Eliminar del historial
 fr:Supprimer de l'historique
 ga:&Bain ón stair
 gl:Elimina&r do historial
+it:&Rimuovi Dalla Cronologia
 ka:&ისტორიიდან წაშლა
 kw:&Removya A Istori
 lv:&Izņemt no vēstures
@@ -3701,6 +3703,7 @@ de:PDF als untergeordnetes Element hinzufügen
 es:Añadir pdf como hijo
 ga:Cuir PDF leis mar leanbh
 gl:Engadir PDF como secundario
+it:Aggiungi PDF come figlio
 ka:დავამატოთ PDF შვილობილად
 kw:Keworra PDF avel flogh
 lv:Pievienot PDF kā bērnelementu
@@ -3719,6 +3722,7 @@ de:PDF als gleichgeordnetes Element hinzufügen
 es:Añadir PDF como un hermano
 ga:Cuir PDF leis mar dheirfiúr
 gl:Engadir PDF como relacionado
+it:Aggiungi PDF come fratello
 ka:PDF-ის მოძმედ დამატება
 kw:Keworra PDF avel hwor
 lv:Pievienot PDF kā atvasi
@@ -3737,6 +3741,7 @@ de:Untergeordnetes Element hinzufügen
 es:Añadir hijo
 ga:Cuir leanbh leis
 gl:Engadir secundario
+it:Aggiungi figlio
 ka:შვილობილის დამატება
 kw:Keworra flogh
 lv:Pievienot bērnelementu
@@ -3923,6 +3928,7 @@ de:Gleichgeordnetes Element hinzufügen
 es:Añadir hermano
 ga:Cuir deirfiúr leis
 gl:Engadir relacionado
+it:Aggiungi fratello
 ka:მოძმე ელემენტის დამატება
 kw:Keworra hwor
 lv:Pievienot atvasi
@@ -4256,7 +4262,7 @@ hi:आवेदन:
 hr:Aplikacija:
 hu:Alkalmazás:
 id:Aplikasi:
-it:Creato con:
+it:Applicazione:
 ja:アプリケーション:
 jv:Aplikasi
 ka:აპლიკაცია:
@@ -4303,6 +4309,7 @@ es:¿Estás seguro que quiere desinstalar %s?
 fr:Voulez-vous vraiment désinstaller %s ?
 ga:An bhfuil tú cinnte gur mian leat %s a dhíshuiteáil?
 gl:Estás seguro de desinstalar %s?
+it:Sei sicuro di voler disinstallare %s?
 ka:დარწმუნებული ხართ, რომ გსურთ %s-ის წაშლა?
 kw:Os ta sur bos hwans dhis anlea %s?
 lv:Vai tiešām vēlaties atinstalēt %s?
@@ -5445,7 +5452,7 @@ hi:भाषा बदलें (Change Language)
 hr:Promijeni jezik (Change Language)
 hu:Nyelv kiválasztása (Change Language)
 id:Ubah Bahasa (Change Language)
-it:Lingua dell'interfaccia (Change Language)
+it:Cambia Lingua
 ja:言語の変更 (Change Language)
 jv:Ganti Basa
 ka:ენის შეცვლა (Change Language)
@@ -6139,7 +6146,7 @@ hi:&छवि नक़ल करें
 hr:Kopiraj Sl&iku
 hu:&Kép másolása
 id:Sal&in Gambar
-it:Copia &immagine
+it:Copia &Immagine
 ja:画像をコピー(&I)
 jv:Nyalin &Gambar
 ka:სურათის &კოპირება
@@ -7100,6 +7107,7 @@ es:Crear anotación
 fr:Écrire une annotation
 ga:Cruthaigh nóta mínithe
 gl:Crear anotación
+it:Crea Annotazione
 ka:ანოტაციის შექმნა
 kw:Gwruthyl Notenyans
 lv:Izveidot anotāciju
@@ -8138,6 +8146,7 @@ es:Editar anotación
 fr:Éditer les annotations
 ga:Cuir nótaí mínithe in eagar
 gl:Editar anotacións
+it:Modifica Annotazioni
 ka:ანოტაციის რედაქტირება
 kw:Golegi notenyans
 lv:Rediģēt anotācijas
@@ -8157,6 +8166,7 @@ es:Eliminar marcadores
 fr:Éditer les marque-pages
 ga:Cuir leabharmharcanna in eagar
 gl:Editar marcadores
+it:Modifica Segnalibri
 ka:სანიშნის რედაქტირება
 kw:Golegi Folennotennow
 lv:Rediģēt grāmatzīmes
@@ -8482,6 +8492,7 @@ es:Exportar marcadores
 fr:Exporter les marque-pages
 ga:Tabhair amach na leabharmharcanna
 gl:Exportar marcadores
+it:Esporta Segnalibri
 ka:სანიშნეების ექსპორტი
 kw:Esperthi Folennotennow
 lv:Eksportēt grāmatzīmes
@@ -9397,6 +9408,7 @@ de:Dateianhang
 es:Adjuntar archivo
 ga:Ceangaltán comhaid
 gl:Ficheiro anexo
+it:Allega File
 ka:მიმაგრებული ფაილი
 kw:Stagel Restren
 lv:Faila pielikums
@@ -11045,6 +11057,7 @@ de:Hervorhebung
 es:Resaltar
 ga:Aibhsigh
 gl:Realzar
+it:Evidenzia
 ka:მონიშვნა
 kw:Golowboyntya
 lv:Iezīmēt
@@ -11734,6 +11747,7 @@ es:Línea
 fr:Ligne
 ga:Líne
 gl:Liña
+it:Linea
 ka:ხაზი
 kw:Linen
 lv:Līnija
@@ -12260,6 +12274,7 @@ es:Nuevo marcadores
 fr:Nouveaux marque-pages
 ga:Leabharmharcanna nua
 gl:Novos marcadores
+it:Nuovo Segnalibro
 ka:ახალი სანიშნე
 kw:Folennotennow Nowydh
 lv:Jaunas grāmatzīmes
@@ -15277,6 +15292,7 @@ de:Element entfernen
 es:Eliminar ítem
 ga:Bain mír
 gl:Borrar elemento
+it:Rimuovi Oggetto
 ka:ელემენტის წაშლა
 kw:Removya Tra
 lv:Noņemt vienumu
@@ -16955,6 +16971,7 @@ es:Ordenar por
 fr:Classer
 ga:Sórtáil de réir
 gl:Ordenar por
+it:Ordina Per
 ka:დალაგების ტიპი:
 kw:Digemyska Gans
 lv:Kārtot pēc
@@ -18410,6 +18427,7 @@ es:Subrayar
 fr:Souligner
 ga:Cuir líne faoi
 gl:Subliñado
+it:Sottolinea
 ka:ხაზის გასმა
 kw:Islinya
 lv:Pasvītrojums

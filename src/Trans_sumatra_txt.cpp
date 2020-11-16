@@ -10125,10 +10125,10 @@ const char * gTranslations_ga =
   "ag cl\303\263bhualadh an ch\303\241ip\303\251is\0";
 
 const char * gTranslations_it = 
-  "\0"\
+  "%s installazione non trovata.\0"\
   "Inform&azioni\0"\
   "&Dimensioni reali\tCtrl+1\0"\
-  "Opzioni &avanzate...\0"\
+  "Opzioni &Avanzate...\0"\
   "&Tutte le pagine selezionate\0"\
   "&Indietro\tAlt+Freccia Sinistra\0"\
   "Vista &libro\tCtrl+8\0"\
@@ -10165,7 +10165,7 @@ const char * gTranslations_it =
   "Stam&pa... (rifiutato)\0"\
   "&Ricorda la password per questo documento\0"\
   "&Ricorda queste impostazioni per ogni documento\0"\
-  "\0"\
+  "&Rimuovi Dalla Cronologia\0"\
   "&Salva come...\0"\
   "&Salva con nome...\tCtrl+S\0"\
   "Impo&stazioni\0"\
@@ -10182,20 +10182,20 @@ const char * gTranslations_it =
   "(pagina %s)\0"\
   "Informazioni su SumatraPDF\0"\
   "Aggiungi ai Preferiti\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Aggiungi PDF come figlio\0"\
+  "Aggiungi PDF come fratello\0"\
+  "Aggiungi figlio\0"\
   "Aggiungi pagina %s ai Preferiti\0"\
   "Aggiungi pagina %s ai preferiti\tCtrl+B\0"\
   "Aggiungi la pagina %s ai Preferiti con nome (opzionale):\0"\
-  "\0"\
+  "Aggiungi fratello\0"\
   "Aggiungi ai Preferiti\0"\
   "Avanzate\0"\
   "Tutti i file\0"\
   "Tutti i documenti supportati\0"\
   "Annotazioni\0"\
-  "Creato con:\0"\
-  "\0"\
+  "Applicazione:\0"\
+  "Sei sicuro di voler disinstallare %s?\0"\
   "Siete sicuri di voler disinstallare SumatraPDF?\0"\
   "Associare ai file PDF?\0"\
   "Allegato: %s\0"\
@@ -10213,7 +10213,7 @@ const char * gTranslations_it =
   "Impossibile stampare questo file\0"\
   "Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni.\0"\
   "\0"\
-  "Lingua dell'interfaccia (Change Language)\0"\
+  "Cambia Lingua\0"\
   "Controlla &aggiornamenti\0"\
   "\0"\
   "Chiudi\0"\
@@ -10225,7 +10225,7 @@ const char * gTranslations_it =
   "Vista libro continua\0"\
   "Pagine affiancate continue\0"\
   "Contribuisci alla traduzione\0"\
-  "Copia &immagine\0"\
+  "Copia &Immagine\0"\
   "Copia indirizzo co&llegamento\0"\
   "Copia co&mmento\0"\
   "Impossibile copiare il testo (copiare solo come immagine)\0"\
@@ -10241,7 +10241,7 @@ const char * gTranslations_it =
   "\0"\
   "Impossibile disinstallare il plugin del browser\0"\
   "Impossibile scrivere %s nel disco.\0"\
-  "\0"\
+  "Crea Annotazione\0"\
   "Data creazione:\0"\
   "File attuale\0"\
   "Posizione cursore\0"\
@@ -10259,14 +10259,14 @@ const char * gTranslations_it =
   "\0"\
   "Documenti EPUB\0"\
   "Modifica\0"\
-  "\0"\
-  "\0"\
+  "Modifica Annotazioni\0"\
+  "Modifica Segnalibri\0"\
   "Inserisci password\0"\
   "Inserisci password per %s\0"\
   "Inserire la linea di comando da eseguire quando si fa doppio clic su un documento PDF:\0"\
   "Errore nel caricamento di %s\0"\
   "Espandi tutto\0"\
-  "\0"\
+  "Esporta Segnalibri\0"\
   "&Preferiti\0"\
   "A&vanti\tAlt+Freccia Destra\0"\
   "S&chermo intero\tF11\0"\
@@ -10281,7 +10281,7 @@ const char * gTranslations_it =
   "Preferiti\0"\
   "Documenti FictionBook\0"\
   "File %s non trovato\0"\
-  "\0"\
+  "Allega File\0"\
   "Dimensione file:\0"\
   "\0"\
   "Tro&va...\tCtrl+F\0"\
@@ -10307,7 +10307,7 @@ const char * gTranslations_it =
   "Vai a pagina\0"\
   "Nascondi &opzioni\0"\
   "Nascondi letto frequentemente\0"\
-  "\0"\
+  "Evidenzia\0"\
   "Consiglio: usare F3 per trovare il successivo\0"\
   "File immagine (*.%s)\0"\
   "Immagini\0"\
@@ -10320,7 +10320,7 @@ const char * gTranslations_it =
   "Permetti a Windows Desktop Search di cercare i documenti PDF\0"\
   "Permetti a Windows di visualizzare l'anteprima dei documenti PDF\0"\
   "Leggero\0"\
-  "\0"\
+  "Linea\0"\
   "\0"\
   "Impostare SumatraPDF come programma predefinito per i file PDF?\0"\
   "Imposta SumatraPDF come lettore PDF predefinito\0"\
@@ -10329,7 +10329,7 @@ const char * gTranslations_it =
   "Documenti Mobi\0"\
   "Data ultima modifica:\0"\
   "Nuova &fiestra\tCtrl+N\0"\
-  "\0"\
+  "Nuovo Segnalibro\0"\
   "\303\210 disponibile la versione %s. Scaricare la nuova versione?\0"\
   "Pagina successiva\0"\
   "Nessuna corrispondenza trovata\0"\
@@ -10379,7 +10379,7 @@ const char * gTranslations_it =
   "Ri&nomina...\tF2\0"\
   "\0"\
   "Ric&orda file aperti\0"\
-  "\0"\
+  "Rimuovi Oggetto\0"\
   "Rimuovi dai Preferiti\0"\
   "Rimuovi la pagina %s dai Preferiti\0"\
   "Rinomina in\0"\
@@ -10410,7 +10410,7 @@ const char * gTranslations_it =
   "Visualizza la &barra laterale dei segnalibri quando disponibile\0"\
   "Pagina singola\0"\
   "Questo non doveva succedere!\n\nSe vuoi aiutarci a capire la causa del blocco del programma seleziona 'Annulla'.\0"\
-  "\0"\
+  "Ordina Per\0"\
   "Il file sorgente %s non ha nessun punto di sincronizzazione\0"\
   "\0"\
   "\0"\
@@ -10440,7 +10440,7 @@ const char * gTranslations_it =
   "Il programma di installazione \303\250 danneggiato. Riscaricalo nuovamente.\nSiamo spiacenti per l'inconveniente!\0"\
   "Questo documento usa funzioni non supportate (%s) e potrebbe non essere visualizzato bene\0"\
   "Titolo:\0"\
-  "\0"\
+  "Sottolinea\0"\
   "Disinstalla SumatraPDF\0"\
   "Disinstallazione fallita\0"\
   "Disinstallazione in corso...\0"\
