@@ -3331,14 +3331,14 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 
 	if (in_opts->do_incremental)
 	{
-		/* If no changes, nothing to write */
+		ensure_initial_incremental_contents(ctx, doc->file, opts->out);
+
+		/* If no changes, nothing more to write */
 		if (doc->num_incremental_sections == 0)
 		{
 			doc->save_in_progress = 0;
 			return;
 		}
-
-		ensure_initial_incremental_contents(ctx, doc->file, opts->out);
 
 		fz_seek_output(ctx, opts->out, 0, SEEK_END);
 		fz_write_string(ctx, opts->out, "\n");
@@ -3632,12 +3632,6 @@ void pdf_save_document(fz_context *ctx, pdf_document *doc, const char *filename,
 
 	if (in_opts->do_incremental)
 	{
-		/* If no changes, nothing to write */
-		if (doc->num_incremental_sections == 0)
-		{
-			doc->save_in_progress = 0;
-			return;
-		}
 		opts.out = fz_new_output_with_path(ctx, filename, 1);
 	}
 	else

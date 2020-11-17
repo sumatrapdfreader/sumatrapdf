@@ -185,6 +185,7 @@
 #ifndef MEMENTO_H
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 #define MEMENTO_H
 
@@ -237,6 +238,9 @@ void *Memento_malloc(size_t s);
 void *Memento_realloc(void *, size_t s);
 void  Memento_free(void *);
 void *Memento_calloc(size_t, size_t);
+char *Memento_strdup(const char*);
+int Memento_asprintf(char **ret, const char *format, ...);
+int Memento_vasprintf(char **ret, const char *format, va_list ap);
 
 void Memento_info(void *addr);
 void Memento_listBlockInfo(void);
@@ -259,8 +263,10 @@ int Memento_checkIntPointerOrNull(void *blk);
 void Memento_startLeaking(void);
 void Memento_stopLeaking(void);
 
+/* Returns number of allocation events so far. */
 int Memento_sequence(void);
 
+/* Returns non-zero if our process was forked by Memento squeeze. */
 int Memento_squeezing(void);
 
 void Memento_fin(void);
@@ -274,6 +280,9 @@ void Memento_bt(void);
 #define free    Memento_free
 #define realloc Memento_realloc
 #define calloc  Memento_calloc
+#define strdup    Memento_strdup
+#define asprintf  Memento_asprintf
+#define vasprintf Memento_vasprintf
 #endif
 
 #else
@@ -282,6 +291,9 @@ void Memento_bt(void);
 #define Memento_free    MEMENTO_UNDERLYING_FREE
 #define Memento_realloc MEMENTO_UNDERLYING_REALLOC
 #define Memento_calloc  MEMENTO_UNDERLYING_CALLOC
+#define Memento_strdup    strdup
+#define Memento_asprintf  asprintf
+#define Memento_vasprintf vasprintf
 
 #define Memento_checkBlock(A)              0
 #define Memento_checkAllMemory()           0

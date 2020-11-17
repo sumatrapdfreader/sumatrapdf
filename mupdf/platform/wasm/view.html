@@ -556,12 +556,12 @@ function updateView() {
 			img.draggable = false;
 			// user-select:none disables image.draggable, and we want
 			// to keep pointer-events for the link image-map
-			img.ondragstart = function () { return false; }
+			img.ondragstart = function () { return false; };
 			img.onload = function () {
 				URL.revokeObjectURL(this.src);
 				div.style.width = this.width + 'px';
 				div.style.height = this.height + 'px';
-		}
+			};
 			div.appendChild(img);
 
 			let txt = document.createElement("div");

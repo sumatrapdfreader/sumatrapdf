@@ -4525,7 +4525,7 @@ static void ffi_PDFDocument_validateChangeHistory(js_State *J)
 		val = pdf_validate_change_history(ctx, pdf);
 	fz_catch(ctx)
 		rethrow(J);
-	js_pushboolean(J, val);
+	js_pushnumber(J, val);
 }
 
 static void ffi_PDFDocument_wasPureXFA(js_State *J)
@@ -6153,6 +6153,19 @@ static void ffi_PDFWidget_isSigned(js_State *J)
 	js_pushboolean(J, val);
 }
 
+static void ffi_PDFWidget_isReadOnly(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_widget *widget = js_touserdata(J, 0, "pdf_widget");
+	int val = 0;
+	fz_try(ctx)
+		val = pdf_widget_is_readonly(ctx, widget);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, val);
+}
+
+
 static void ffi_PDFWidget_sign(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -6609,6 +6622,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFWidget.eventBlur", ffi_PDFWidget_eventBlur, 0);
 
 		jsB_propfun(J, "PDFWidget.isSigned", ffi_PDFWidget_isSigned, 0);
+		jsB_propfun(J, "PDFWidget.isReadOnly", ffi_PDFWidget_isReadOnly, 0);
 		jsB_propfun(J, "PDFWidget.validateSignature", ffi_PDFWidget_validateSignature, 0);
 		jsB_propfun(J, "PDFWidget.checkCertificate", ffi_PDFWidget_checkCertificate, 0);
 		jsB_propfun(J, "PDFWidget.checkDigest", ffi_PDFWidget_checkDigest, 0);

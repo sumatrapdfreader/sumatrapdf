@@ -192,6 +192,9 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 	fz_buffer *fzbuf = NULL;
 	pdf_document *doc = widget->page->doc;
 
+	if (pdf_widget_is_readonly(ctx, widget))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Signature is read only, it cannot be signed.");
+
 	fz_var(dn);
 	fz_var(fzbuf);
 
@@ -254,6 +257,12 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 
 		/* Update the SigFlags for the document if required */
 		form = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm");
+		if (!form)
+		{
+			pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+			form = pdf_dict_put_dict(ctx, root, PDF_NAME(AcroForm), 1);
+		}
+
 		sf = pdf_to_int(ctx, pdf_dict_get(ctx, form, PDF_NAME(SigFlags)));
 		if ((sf & (PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY)) != (PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY))
 			pdf_dict_put_drop(ctx, form, PDF_NAME(SigFlags), pdf_new_int(ctx, sf | PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY));
@@ -274,6 +283,9 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 void pdf_clear_signature(fz_context *ctx, pdf_widget *widget)
 {
 	int flags;
+
+	if (pdf_widget_is_readonly(ctx, widget))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Signature read only, it cannot be cleared.");
 
 	pdf_xref_remove_unsaved_signature(ctx, ((pdf_annot *) widget)->page->doc,  ((pdf_annot *) widget)->obj);
 
@@ -343,14 +355,23 @@ void pdf_signature_drop_designated_name(fz_context *ctx, pdf_pkcs7_designated_na
 char *pdf_signature_format_designated_name(fz_context *ctx, pdf_pkcs7_designated_name *name)
 {
 	const char *parts[] = {
-		"CN=", name->cn,
-		", O=", name->o,
-		", OU=", name->ou,
-		", emailAddress=", name->email,
-		", C=", name->c};
+		"CN=", "",
+		", O=", "",
+		", OU=", "",
+		", emailAddress=", "",
+		", C=", ""};
 	size_t len = 1;
 	char *s;
 	int i;
+
+	if (name == NULL)
+		return NULL;
+
+	parts[1] = name->cn;
+	parts[3] = name->o;
+	parts[5] = name->ou;
+	parts[7] = name->email;
+	parts[9] = name->c;
 
 	for (i = 0; i < (int)nelem(parts); i++)
 		if (parts[i])

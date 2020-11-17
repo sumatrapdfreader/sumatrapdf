@@ -102,8 +102,6 @@ pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font,
 			font->to_unicode = pdf_load_system_cmap(ctx, "Adobe-Japan1-UCS2");
 		else if (!strcmp(collection, "Adobe-Korea1"))
 			font->to_unicode = pdf_load_system_cmap(ctx, "Adobe-Korea1-UCS2");
-
-		return;
 	}
 
 	if (strings)

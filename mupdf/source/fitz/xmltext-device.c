@@ -336,7 +336,7 @@ static void fz_xmltext_fill_image(fz_context *ctx, fz_device *dev_, fz_image *im
 					fz_write_printf(ctx, dev->out, " ");
 					for (b=0; b<pixmap->n; ++b)
 					{
-						fz_write_printf(ctx, dev->out, "%02x", pixmap->samples[y*pixmap->stride + x*pixmap->n + b]);
+						fz_write_printf(ctx, dev->out, "%02x", pixmap->samples[y*(size_t)pixmap->stride + x*(size_t)pixmap->n + b]);
 					}
 				}
 				s_xml_endtag(ctx, dev->out, "line");

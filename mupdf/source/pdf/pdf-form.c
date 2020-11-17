@@ -1357,6 +1357,15 @@ int pdf_widget_is_signed(fz_context *ctx, pdf_widget *widget)
 	return pdf_signature_is_signed(ctx, widget->page->doc, widget->obj);
 }
 
+int pdf_widget_is_readonly(fz_context *ctx, pdf_widget *widget)
+{
+	int fflags;
+	if (widget == NULL)
+		return 0;
+	fflags = pdf_field_flags(ctx, ((pdf_annot *) widget)->obj);
+	return fflags & PDF_FIELD_IS_READ_ONLY;
+}
+
 size_t pdf_signature_contents(fz_context *ctx, pdf_document *doc, pdf_obj *signature, char **contents)
 {
 	pdf_obj *v_ref = pdf_dict_get_inheritable(ctx, signature, PDF_NAME(V));

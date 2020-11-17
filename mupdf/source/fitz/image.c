@@ -399,7 +399,7 @@ subarea_stream(fz_context *ctx, fz_stream *stm, fz_image *image, const fz_irect 
 	size_t b_skip = b_margin * stream_stride;
 	int h = (subarea->y1 - subarea->y0 + f - 1) >> l2factor;
 	int w = (subarea->x1 - subarea->x0 + f - 1) >> l2factor;
-	size_t stride = (w * image->n * image->bpc + 7) / 8;
+	size_t stride = (w * (size_t)image->n * image->bpc + 7) / 8;
 
 	state = fz_malloc_struct(ctx, subarea_state);
 	state->src = stm;
@@ -455,7 +455,7 @@ subsample_next(fz_context *ctx, fz_stream *stm, size_t len)
 	do
 	{
 		if (state->r == 0)
-			state->r = state->w * state->n;
+			state->r = state->w * (size_t)state->n;
 
 		while (state->r > 0)
 		{
@@ -465,7 +465,7 @@ subsample_next(fz_context *ctx, fz_stream *stm, size_t len)
 				return EOF;
 			if (a > state->r)
 				a = state->r;
-			memcpy(&state->data[(state->f+1) * state->w * state->n - state->r],
+			memcpy(&state->data[state->w * (size_t)state->n * (state->f+1) - state->r],
 				state->src->rp, a);
 			state->src->rp += a;
 			state->r -= a;
@@ -476,11 +476,11 @@ subsample_next(fz_context *ctx, fz_stream *stm, size_t len)
 	while (state->h > 0 && state->f != (1<<state->l2));
 
 	/* Perform the subsample */
-	fz_subsample_pixblock(state->data, state->w, state->f, state->n, state->l2, state->w * state->n);
+	fz_subsample_pixblock(state->data, state->w, state->f, state->n, state->l2, state->w * (size_t)state->n);
 	state->f = 0;
 
 	/* Update data pointers. */
-	fill = ((state->w + (1<<state->l2) - 1)>>state->l2) * state->n;
+	fill = ((state->w + (1<<state->l2) - 1)>>state->l2) * (size_t)state->n;
 	stm->pos += fill;
 	stm->rp = &state->data[0];
 	stm->wp = &state->data[fill];
@@ -492,7 +492,7 @@ static fz_stream *
 subsample_stream(fz_context *ctx, fz_stream *src, int w, int h, int n, int l2extra)
 {
 	fz_stream *stm;
-	l2sub_state *state = fz_malloc(ctx, sizeof(l2sub_state) + w*(n<<l2extra));
+	l2sub_state *state = fz_malloc(ctx, sizeof(l2sub_state) + w*(size_t)(n<<l2extra));
 
 	state->src = src;
 	state->w = w;

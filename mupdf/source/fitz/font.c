@@ -807,14 +807,19 @@ fz_new_cjk_font(fz_context *ctx, int ordering)
 {
 	const unsigned char *data;
 	int size, index;
+	fz_font *font;
 	if (ordering >= 0 && ordering < (int)nelem(ctx->font->cjk))
 	{
 		if (ctx->font->cjk[ordering])
 			return fz_keep_font(ctx, ctx->font->cjk[ordering]);
 		data = fz_lookup_cjk_font(ctx, ordering, &size, &index);
 		if (data)
+			font = fz_new_font_from_memory(ctx, NULL, data, size, index, 0);
+		else
+			font = fz_load_system_cjk_font(ctx, "SourceHanSerif", ordering, 1);
+		if (font)
 		{
-			ctx->font->cjk[ordering] = fz_new_font_from_memory(ctx, NULL, data, size, index, 0);
+			ctx->font->cjk[ordering] = font;
 			return fz_keep_font(ctx, ctx->font->cjk[ordering]);
 		}
 	}

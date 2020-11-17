@@ -3456,7 +3456,7 @@ filter_changes_accepted(fz_context *ctx, pdf_changes *changes, pdf_obj *obj, fil
 	{
 		if (obj_num != 0)
 		{
-			pdf_mark_obj(ctx, obj);
+			(void)pdf_mark_obj(ctx, obj);
 			changes->obj_changes[obj_num] |= FIELD_CHANGE_VALID;
 		}
 		if (filter == NULL)

@@ -1579,7 +1579,7 @@ fz_transform_pixmap(fz_context *ctx, fz_draw_device *dev, const fz_pixmap *image
 {
 	fz_pixmap *scaled;
 
-	if (fz_is_empty_irect(*clip))
+	if (clip != NULL && fz_is_empty_irect(*clip))
 		return NULL;
 
 	if (ctm->a != 0 && ctm->b == 0 && ctm->c == 0 && ctm->d != 0)

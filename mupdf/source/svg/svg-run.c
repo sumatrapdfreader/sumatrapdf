@@ -748,7 +748,7 @@ svg_parse_path_data(fz_context *ctx, svg_document *doc, const char *str)
 
 			case 'T':
 				reset_smooth = 0;
-				if (nargs == 4)
+				if (nargs == 2)
 				{
 					p = fz_currentpoint(ctx, path);
 					x1 = p.x + smooth_x;
@@ -767,7 +767,7 @@ svg_parse_path_data(fz_context *ctx, svg_document *doc, const char *str)
 
 			case 't':
 				reset_smooth = 0;
-				if (nargs == 4)
+				if (nargs == 2)
 				{
 					p = fz_currentpoint(ctx, path);
 					x1 = p.x + smooth_x;

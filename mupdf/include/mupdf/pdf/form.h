@@ -87,6 +87,7 @@ int pdf_choice_field_option_count(fz_context *ctx, pdf_obj *field);
 const char *pdf_choice_field_option(fz_context *ctx, pdf_obj *field, int exportval, int i);
 
 int pdf_widget_is_signed(fz_context *ctx, pdf_widget *widget);
+int pdf_widget_is_readonly(fz_context *ctx, pdf_widget *widget);
 
 /* Field flags */
 enum

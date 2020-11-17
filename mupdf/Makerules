@@ -89,7 +89,7 @@ else ifeq ($(build),native)
   CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer -march=native
   LDFLAGS += $(LDREMOVEUNREACH) -Wl,-s
 else ifeq ($(build),memento)
-  CFLAGS += -pipe -g -DMEMENTO
+  CFLAGS += -pipe -g -DMEMENTO -DMEMENTO_MUPDF_HACKS
   LDFLAGS += -g -rdynamic
   ifneq ($(HAVE_LIBDL),no)
     CFLAGS += -DHAVE_LIBDL

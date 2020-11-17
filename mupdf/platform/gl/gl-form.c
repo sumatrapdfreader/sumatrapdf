@@ -20,6 +20,7 @@ static char *sig_designated_name = NULL;
 static pdf_signature_error sig_cert_error;
 static pdf_signature_error sig_digest_error;
 static int sig_valid_until;
+static int sig_readonly;
 
 static char cert_filename[PATH_MAX];
 static struct input cert_password;
@@ -60,6 +61,7 @@ static void do_clear_signature(void)
 {
 	fz_try(ctx)
 	{
+		trace_action("widget.clearSignature();\n");
 		pdf_clear_signature(ctx, sig_widget);
 		ui_show_warning_dialog("Signature cleared successfully.");
 	}
@@ -163,6 +165,12 @@ static void sig_verify_dialog(void)
 		ui_label("%s", label);
 		ui_spacer();
 
+		if (sig_readonly)
+		{
+			ui_label("Signature field is read-only.");
+			ui_spacer();
+		}
+
 		ui_label("Designated name: %s.", sig_designated_name);
 		ui_spacer();
 
@@ -188,10 +196,13 @@ static void sig_verify_dialog(void)
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
 			ui_layout(L, NONE, S, 0, 0);
+			if (!sig_readonly)
+			{
 			if (ui_button("Clear"))
 			{
 				ui.dialog = NULL;
 				do_clear_signature();
+			}
 			}
 			ui_layout(R, NONE, S, 0, 0);
 			if (ui_button("Close") || (!ui.focus && ui.key == KEY_ESCAPE))
@@ -213,6 +224,8 @@ static void show_sig_dialog(pdf_widget *widget)
 			pdf_pkcs7_verifier *verifier;
 			pdf_pkcs7_designated_name *dn;
 
+			sig_readonly = pdf_widget_is_readonly(ctx, widget);
+
 			sig_valid_until = pdf_validate_signature(ctx, widget);
 
 			verifier = pkcs7_openssl_new_verifier(ctx);
@@ -220,9 +233,12 @@ static void show_sig_dialog(pdf_widget *widget)
 			sig_cert_error = pdf_check_certificate(ctx, verifier, pdf, widget->obj);
 			sig_digest_error = pdf_check_digest(ctx, verifier, pdf, widget->obj);
 
-			dn = pdf_signature_get_signatory(ctx, verifier, pdf, widget->obj);
 			fz_free(ctx, sig_designated_name);
+			dn = pdf_signature_get_signatory(ctx, verifier, pdf, widget->obj);
+			if (dn)
 			sig_designated_name = pdf_signature_format_designated_name(ctx, dn);
+			else
+				sig_designated_name = fz_strdup(ctx, "Signature information missing.");
 			pdf_signature_drop_designated_name(ctx, dn);
 
 			pdf_drop_verifier(ctx, verifier);
