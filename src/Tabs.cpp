@@ -353,7 +353,7 @@ static void SetTabTitle(TabInfo* tab) {
     win->tabsCtrl->SetTabText(idx, title);
 }
 
-static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
+static void NO_INLINE SwapTabs(WindowInfo* win, int tab1, int tab2) {
     if (tab1 == tab2 || tab1 < 0 || tab2 < 0) {
         return;
     }
