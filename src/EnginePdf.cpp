@@ -1245,9 +1245,11 @@ RectF EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
 
     fz_try(ctx) {
         list = fz_new_display_list_from_page(ctx, pageInfo->page);
-        dev = fz_new_bbox_device(ctx, &rect);
-        fz_run_display_list(ctx, list, dev, fz_identity, pagerect, &fzcookie);
-        fz_close_device(ctx, dev);
+        if (list) {
+            dev = fz_new_bbox_device(ctx, &rect);
+            fz_run_display_list(ctx, list, dev, fz_identity, pagerect, &fzcookie);
+            fz_close_device(ctx, dev);
+        }
     }
     fz_always(ctx) {
         fz_drop_device(ctx, dev);
@@ -1256,6 +1258,10 @@ RectF EnginePdf::PageContentBox(int pageNo, RenderTarget target) {
         }
     }
     fz_catch(ctx) {
+        return mediabox;
+    }
+
+    if (!list) {
         return mediabox;
     }
 
