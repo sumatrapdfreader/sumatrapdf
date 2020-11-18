@@ -824,7 +824,7 @@ bool EnginePdf::FinishLoading() {
         fz_rect mbox{};
         fz_matrix page_ctm{};
         fz_try(ctx) {
-            pdf_obj* pageref = pdf_load_object(ctx, doc, i);
+            pdf_obj* pageref = pdf_load_object(ctx, doc, objNo);
             pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
             mbox = fz_transform_rect(mbox, page_ctm);
             pdf_drop_obj(ctx, pageref);
