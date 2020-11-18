@@ -249,7 +249,7 @@ class PreviewBase : public IThumbnailProvider,
         return m_engine;
     }
 
-    PageRenderer* renderer;
+    PageRenderer* renderer{nullptr};
 
   protected:
     long m_lRef{1};

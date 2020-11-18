@@ -514,6 +514,7 @@ TocTree* ChmModel::GetToc() {
     }
 
     TocItem* root = nullptr;
+    bool foundRoot = false;
     TocItem** nextChild = &root;
     Vec<TocItem*> levels;
     int idCounter = 0;
@@ -530,10 +531,11 @@ TocTree* ChmModel::GetToc() {
         } else {
             *nextChild = item;
             levels.Append(item);
+            foundRoot = true;
         }
         nextChild = &item->child;
     }
-    if (!root) {
+    if (foundRoot) {
         return nullptr;
     }
     tocTree = new TocTree(root);

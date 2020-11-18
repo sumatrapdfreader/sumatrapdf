@@ -82,6 +82,9 @@ func runCppCheck(all bool) {
 		// all false postives, gets confused by MAKEINTRESOURCEW() and wcschr
 		// using auto can fix MAKEINTRESOURCEW(), casting wcschr but it's just silly
 		args = append(args, "--suppress=AssignmentIntegerToAddress")
+		// I often use global variables set at compile time to
+		// control paths to take
+		args = append(args, "--suppress=knownConditionTrueFalse")
 	}
 	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	cmd = exec.Command("cppcheck", args...)

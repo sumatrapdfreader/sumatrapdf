@@ -498,14 +498,9 @@ TabsCtrl2::~TabsCtrl2() {
 }
 
 static void Handle_WM_NOTIFY(void* user, WndEvent* ev) {
-    uint msg = ev->msg;
-
-    CrashIf(msg != WM_NOTIFY);
-
+    CrashIf(ev->msg != WM_NOTIFY);
     TabsCtrl2* w = (TabsCtrl2*)user;
-    ev->w = w;
-    LPARAM lp = ev->lp;
-
+    ev->w = w; // TODO: is this needed?
     CrashIf(GetParent(w->hwnd) != (HWND)ev->hwnd);
 }
 

@@ -15,6 +15,7 @@ import (
 	"github.com/goamz/goamz/s3"
 )
 
+// S3Client describes s3 client
 type S3Client struct {
 	Access string
 	Secret string
@@ -32,13 +33,14 @@ func md5B64OfFile(path string) string {
 	return md5B64OfBytes(d)
 }
 
-// must be called before any other call
+// VerifyHasSecrets must be called before any other call
 func (c *S3Client) VerifyHasSecrets() {
 	fatalIf(c.Access == "", "invalid Access\n")
 	fatalIf(c.Secret == "", "invalid Secret\n")
 	fatalIf(c.Secret == c.Access, "Secret == Access")
 }
 
+// GetClient returns http.Client
 // Note: http.DefaultClient is more robust than aws.RetryingClient
 // (which fails for me with a timeout for large files e.g. ~6MB)
 func (c *S3Client) GetClient() *http.Client {
@@ -46,6 +48,7 @@ func (c *S3Client) GetClient() *http.Client {
 	return http.DefaultClient
 }
 
+// GetBucket returns a bucket
 func (c *S3Client) GetBucket() *s3.Bucket {
 	c.VerifyHasSecrets()
 	auth := aws.Auth{
@@ -59,6 +62,7 @@ func (c *S3Client) GetBucket() *s3.Bucket {
 	return s3Obj.Bucket(c.Bucket)
 }
 
+// UploadFileReader uploads file from a reader
 func (c *S3Client) UploadFileReader(pathRemote, pathLocal string, public bool) error {
 	logf("Uploading '%s' as '%s'. ", pathLocal, pathRemote)
 	start := time.Now()
@@ -86,6 +90,7 @@ func (c *S3Client) UploadFileReader(pathRemote, pathLocal string, public bool) e
 	return err
 }
 
+// UploadFile uploads a file
 func (c *S3Client) UploadFile(pathRemote, pathLocal string, public bool) error {
 	logf("Uploading '%s' as '%s'\n", pathLocal, pathRemote)
 	bucket := c.GetBucket()
@@ -103,6 +108,7 @@ func (c *S3Client) UploadFile(pathRemote, pathLocal string, public bool) error {
 	return bucket.Put(pathRemote, d, mimeType, perm, opts)
 }
 
+// UploadString uploads a string
 func (c *S3Client) UploadString(pathRemote string, s string, public bool) error {
 	logf("Uploading string of length %d  as '%s'\n", len(s), pathRemote)
 	bucket := c.GetBucket()
@@ -117,6 +123,7 @@ func (c *S3Client) UploadString(pathRemote string, s string, public bool) error 
 	return bucket.Put(pathRemote, d, mimeType, perm, opts)
 }
 
+// UploadFiles uploads multiple files
 func (c *S3Client) UploadFiles(s3Dir string, dir string, files []string) error {
 	n := len(files) / 2
 	for i := 0; i < n; i++ {
@@ -130,11 +137,13 @@ func (c *S3Client) UploadFiles(s3Dir string, dir string, files []string) error {
 	return nil
 }
 
+// Delete deletes a file
 func (c *S3Client) Delete(path string) error {
 	bucket := c.GetBucket()
 	return bucket.Del(path)
 }
 
+// Exists returns true if a file exists
 func (c *S3Client) Exists(s3Path string) bool {
 	bucket := c.GetBucket()
 	exists, err := bucket.Exists(s3Path)

@@ -998,6 +998,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     if (!canDoAnnotations) {
         supportsAnnotations = false;
     }
+    win::menu::SetEnabled(menu, CmdSaveAnnotations, supportsAnnotations);
 }
 
 // so that we can do free everything at exit
