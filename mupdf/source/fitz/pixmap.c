@@ -497,7 +497,7 @@ clear_cmyk_bitmap(unsigned char *samples, int w, int h, int spots, int stride, i
 void
 fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
-	int stride = pix->w * pix->n;
+	ptrdiff_t stride = pix->w * (ptrdiff_t)pix->n;
 	int h = pix->h;
 	unsigned char *s = pix->samples;
 	if (stride == pix->stride)
@@ -509,7 +509,7 @@ fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix)
 	{
 		while (h--)
 		{
-			memset(s, 0, (unsigned int)stride);
+			memset(s, 0, stride);
 			s += pix->stride;
 		}
 	}
@@ -517,19 +517,19 @@ fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix)
 	{
 		while (h--)
 		{
-			memset(s, 0xff, (unsigned int)stride);
+			memset(s, 0xff, stride);
 			s += pix->stride;
 		}
 	}
 	else
 	{
 		/* Horrible, slow case: additive with spots */
-		int w = stride/pix->n;
+		size_t w = stride/pix->n;
 		int spots = pix->s;
 		int colorants = pix->n - spots; /* We know there is no alpha */
 		while (h--)
 		{
-			int w2 = w;
+			size_t w2 = w;
 			while (w2--)
 			{
 				int i = colorants;
@@ -645,7 +645,7 @@ fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_irect b
 	unsigned char *srcp;
 	unsigned char *destp;
 	unsigned int y, w;
-	int destspan, srcspan;
+	size_t destspan, srcspan;
 
 	b = fz_intersect_irect(b, fz_pixmap_bbox(ctx, dest));
 	b = fz_intersect_irect(b, fz_pixmap_bbox(ctx, src));
@@ -655,9 +655,9 @@ fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_irect b
 	y = (unsigned int)(b.y1 - b.y0);
 
 	srcspan = src->stride;
-	srcp = src->samples + (unsigned int)(srcspan * (b.y0 - src->y) + src->n * (b.x0 - src->x));
+	srcp = src->samples + srcspan * (b.y0 - src->y) + (b.x0 - src->x) * (size_t)src->n;
 	destspan = dest->stride;
-	destp = dest->samples + (unsigned int)(destspan * (b.y0 - dest->y) + dest->n * (b.x0 - dest->x));
+	destp = dest->samples + destspan * (b.y0 - dest->y) + (b.x0 - dest->x) * (size_t)dest->n;
 
 	if (src->n == dest->n)
 	{
@@ -686,7 +686,8 @@ void
 fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *dest, int value, fz_irect b)
 {
 	unsigned char *destp;
-	int x, y, w, k, destspan;
+	int x, y, w, k;
+	size_t destspan;
 
 	b = fz_intersect_irect(b, fz_pixmap_bbox(ctx, dest));
 	w = b.x1 - b.x0;
@@ -695,7 +696,7 @@ fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *dest, int value, fz_
 		return;
 
 	destspan = dest->stride;
-	destp = dest->samples + (unsigned int)(destspan * (b.y0 - dest->y) + dest->n * (b.x0 - dest->x));
+	destp = dest->samples + destspan * (b.y0 - dest->y) + (b.x0 - dest->x) * (size_t)dest->n;
 
 	/* CMYK needs special handling (and potentially any other subtractive colorspaces) */
 	if (fz_colorspace_n(ctx, dest->colorspace) == 4)
@@ -722,7 +723,7 @@ fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *dest, int value, fz_
 	{
 		do
 		{
-			memset(destp, 255, (unsigned int)(w * dest->n));
+			memset(destp, 255, w * (size_t)dest->n);
 			destp += destspan;
 		}
 		while (--y);
@@ -750,7 +751,7 @@ fz_premultiply_pixmap(fz_context *ctx, fz_pixmap *pix)
 	unsigned char *s = pix->samples;
 	unsigned char a;
 	int k, x, y;
-	int stride = pix->stride - pix->w * pix->n;
+	size_t stride = pix->stride - pix->w * (size_t)pix->n;
 
 	if (!pix->alpha)
 		return;
@@ -952,7 +953,7 @@ void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *image, fz_irect rect)
 
 	for (y = y0; y < y1; y++)
 	{
-		p = image->samples + (unsigned int)((y * image->stride) + (x0 * image->n));
+		p = image->samples + ((y * (size_t)image->stride) + (x0 * (size_t)image->n));
 		for (x = x0; x < x1; x++)
 		{
 			for (n = image->n; n > 1; n--, p++)
@@ -1294,7 +1295,7 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 	f = 1<<factor;
 	tile->w = (tile->w + f-1)>>factor;
 	tile->h = (tile->h + f-1)>>factor;
-	tile->stride = tile->w * tile->n;
+	tile->stride = tile->w * (size_t)tile->n;
 	/* Redundant test? We only ever make pixmaps smaller! */
 	if (tile->h > INT_MAX / (tile->w * tile->n))
 		fz_throw(ctx, FZ_ERROR_MEMORY, "pixmap too large");
@@ -1513,8 +1514,8 @@ fz_convert_indexed_pixmap_to_base(fz_context *ctx, const fz_pixmap *src)
 	dst = fz_new_pixmap_with_bbox(ctx, base, fz_pixmap_bbox(ctx, src), src->seps, src->alpha);
 	s = src->samples;
 	d = dst->samples;
-	s_line_inc = src->stride - src->w * src->n;
-	d_line_inc = dst->stride - dst->w * dst->n;
+	s_line_inc = src->stride - src->w * (size_t)src->n;
+	d_line_inc = dst->stride - dst->w * (size_t)dst->n;
 
 	if (src->alpha)
 	{
@@ -1584,8 +1585,8 @@ fz_convert_separation_pixmap_to_base(fz_context *ctx, const fz_pixmap *src)
 	{
 		s = src->samples;
 		d = dst->samples;
-		s_line_inc = src->stride - src->w * src->n;
-		d_line_inc = dst->stride - dst->w * dst->n;
+		s_line_inc = src->stride - src->w * (size_t)src->n;
+		d_line_inc = dst->stride - dst->w * (size_t)dst->n;
 		sn = ss->n;
 		bn = base->n;
 

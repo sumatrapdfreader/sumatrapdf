@@ -536,7 +536,7 @@ static inline void
 blit_aa(fz_pixmap *dst, int x, int y, unsigned char *mp, int w, unsigned char *color, void *fn, fz_overprint *eop)
 {
 	unsigned char *dp;
-	dp = dst->samples + (unsigned int)((y - dst->y) * dst->stride + (x - dst->x) * dst->n);
+	dp = dst->samples + (y - dst->y) * (size_t)dst->stride + (x - dst->x) * (size_t)dst->n;
 	if (color)
 		(*(fz_span_color_painter_t *)fn)(dp, mp, dst->n, w, color, dst->alpha, eop);
 	else
@@ -744,7 +744,7 @@ blit_sharp(int x0, int x1, int y, const fz_irect *clip, fz_pixmap *dst, unsigned
 	x1 = fz_clampi(x1, dst->x, dst->x + dst->w);
 	if (x0 < x1)
 	{
-		dp = dst->samples + (unsigned int)((y - dst->y) * dst->stride + (x0 - dst->x) * dst->n);
+		dp = dst->samples + (y - dst->y) * (size_t)dst->stride + (x0 - dst->x) * (size_t)dst->n;
 		if (color)
 			(*fn)(dp, dst->n, x1 - x0, color, da, eop);
 		else

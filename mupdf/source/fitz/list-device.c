@@ -297,11 +297,15 @@ fz_append_display_node(
 		rect_off = size;
 		size += SIZE_IN_NODES(sizeof(fz_rect));
 	}
-	if (color || colorspace)
+	if (color == NULL)
+	{
+		if (colorspace)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Colorspace cannot be specified without color.");
+	}
+	else
 	{
 		if (colorspace != writer->colorspace)
 		{
-			assert(color);
 			if (colorspace == fz_device_gray(ctx))
 			{
 				if (color[0] == 0.0f)

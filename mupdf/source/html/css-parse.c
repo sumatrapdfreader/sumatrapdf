@@ -655,7 +655,7 @@ static fz_css_condition *parse_condition(struct lexbuf *buf)
 
 	if (accept(buf, ':'))
 	{
-		accept(buf, ':'); /* swallow css3 :: syntax and pretend it's a normal pseudo-class */
+		(void)accept(buf, ':'); /* swallow css3 :: syntax and pretend it's a normal pseudo-class */
 		if (buf->lookahead != CSS_KEYWORD)
 			fz_css_error(buf, "expected keyword after ':'");
 		c = fz_new_css_condition(buf->ctx, buf->pool, ':', "pseudo", buf->string);

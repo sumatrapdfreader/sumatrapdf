@@ -4404,6 +4404,8 @@ static void ffi_PDFDocument_newByteString(js_State *J)
 	pdf_obj *obj = NULL;
 
 	n = js_getlength(J, 1);
+	if (n < 0)
+		n = 0;
 
 	fz_try(ctx)
 		buf = fz_malloc(ctx, n);

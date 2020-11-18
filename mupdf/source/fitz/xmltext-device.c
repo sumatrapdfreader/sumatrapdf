@@ -195,6 +195,7 @@ static void fz_xmltext_fill_image(fz_context *ctx, fz_device *dev_, fz_image *im
 		{
 			if (compressed->params.type == FZ_IMAGE_UNKNOWN)
 			{
+				/* unknown image type. */
 			}
 			else if (compressed->params.type == FZ_IMAGE_RAW)
 			{

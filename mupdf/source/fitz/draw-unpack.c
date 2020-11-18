@@ -286,7 +286,7 @@ fz_decode_indexed_tile(fz_context *ctx, fz_pixmap *pix, const float *decode, int
 	int add[FZ_MAX_COLORS];
 	int mul[FZ_MAX_COLORS];
 	unsigned char *p = pix->samples;
-	int stride = pix->stride - pix->w * pix->n;
+	size_t stride = pix->stride - pix->w * (size_t)pix->n;
 	int len;
 	int pn = pix->n;
 	int n = pn - pix->alpha;
@@ -330,7 +330,7 @@ fz_decode_tile(fz_context *ctx, fz_pixmap *pix, const float *decode)
 	int add[FZ_MAX_COLORS];
 	int mul[FZ_MAX_COLORS];
 	unsigned char *p = pix->samples;
-	int stride = pix->stride - pix->w * pix->n;
+	size_t stride = pix->stride - pix->w * (size_t)pix->n;
 	int len;
 	int n = fz_maxi(1, pix->n - pix->alpha);
 	int k;

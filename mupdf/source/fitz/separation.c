@@ -280,7 +280,6 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 	int dc = dn - ds - da;
 	const unsigned char *sdata = src->samples + sstride * (dst->y - src->y) + (dst->x - src->x) * sn;
 	unsigned char *ddata = dst->samples;
-	signed char map[FZ_MAX_COLORS];
 	int x, y, i, j, k, n;
 	unsigned char mapped[FZ_MAX_COLORS];
 	int unmapped = sseps_n;
@@ -683,28 +682,30 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 	}
 	else
 	{
+		signed char map[FZ_MAX_COLORS];
+
 		/* Use a standard pixmap converter to convert the process + alpha. */
 		fz_convert_pixmap_samples(ctx, src, dst, proof_cs, default_cs, fz_default_color_params, 0);
 
 		/* And handle the spots ourselves. First make a map of what spots go where. */
 		/* We want to set it up so that:
 		 *    For each source spot, i, mapped[i] != 0 implies that it maps directly to a dest spot.
-		 *    For each dest spot, j, mapped[j] = the source spot that goes there (or -1 if none).
+		 *    For each dest spot, j, map[j] = the source spot that goes there (or -1 if none).
 		 */
 		for (i = 0; i < sseps_n; i++)
 			mapped[i] = 0;
 
-		for (i = 0, k = 0; i < dseps_n; i++)
+		for (i = 0; i < dseps_n; i++)
 		{
 			const char *name;
 			int state = sep_state(dseps, i);
 
+			map[i] = -1;
 			if (state != FZ_SEPARATION_SPOT)
 				continue;
 			name = dseps->name[i];
 			if (name == NULL)
 				continue;
-			map[k] = -1;
 			for (j = 0; j < sseps_n; j++)
 			{
 				const char *sname;
@@ -715,16 +716,16 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 				sname = sseps->name[j];
 				if (sname && !strcmp(name, sname))
 				{
-					map[k] = j;
+					map[i] = j;
 					unmapped--;
 					mapped[j] = 1;
 					break;
 				}
 			}
-			k++;
 		}
 		if (sa)
-			map[k] = sseps_n;
+			map[i] = sseps_n;
+		/* map[i] is now defined for all 0 <= i < dseps_n+sa */
 
 		/* Now we need to make d[i] = map[i] < 0 : 0 ? s[map[i]] */
 		if (ds)

@@ -696,11 +696,11 @@ void reload(void)
 		reload_document();
 }
 
-int trace_next_error(int *errored)
+int trace_next_error(void)
 {
-	int old = *errored;
-	if (*errored < 127)
-		(*errored)++;
+	int old = errored;
+	if (errored < 127)
+		errored++;
 	return old;
 }
 
@@ -808,7 +808,6 @@ void load_page(void)
 
 	if (trace_file)
 	{
-		pdf_document *pdf = pdf_specifics(ctx, doc);
 		pdf_widget *w;
 		int i, s;
 
@@ -825,7 +824,7 @@ void load_page(void)
 				is_signed = pdf_widget_is_signed(ctx, w);
 				trace_action("tmp = widget.isSigned();\n");
 				trace_action("print(widgetstr, 'is signed:', tmp|0, 'expected:', %d);\n", is_signed);
-				trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", is_signed, trace_next_error(&errored));
+				trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", is_signed, trace_next_error());
 
 				if (is_signed)
 				{
@@ -857,19 +856,19 @@ void load_page(void)
 
 					trace_action("tmp = widget.validateSignature();\n");
 					trace_action("print(widgetstr, 'valid until:', tmp, 'expected:', %d);\n", valid_until);
-					trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", valid_until, trace_next_error(&errored));
+					trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", valid_until, trace_next_error());
 					trace_action("tmp = widget.isReadOnly();\n");
 					trace_action("print(widgetstr, 'is read-only:', tmp|0, 'expected:', %d);\n", is_readonly);
-					trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", is_readonly, trace_next_error(&errored));
+					trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", is_readonly, trace_next_error());
 					trace_action("tmp = widget.checkCertificate();\n");
 					trace_action("print(widgetstr, 'certificate error:', tmp, 'expected:', '%s');\n", cert_error);
-					trace_action("if (errored == 0 && tmp != '%s') errored=%d;\n", cert_error, trace_next_error(&errored));
+					trace_action("if (errored == 0 && tmp != '%s') errored=%d;\n", cert_error, trace_next_error());
 					trace_action("tmp = widget.checkDigest();\n");
 					trace_action("print(widgetstr, 'digest error:', tmp, 'expected:', '%s');\n", digest_error);
-					trace_action("if (errored == 0 && tmp != '%s') errored=%d;\n", digest_error, trace_next_error(&errored));
+					trace_action("if (errored == 0 && tmp != '%s') errored=%d;\n", digest_error, trace_next_error());
 					trace_action("tmp = widget.getSignatory();\n");
 					trace_action("print(widgetstr, 'signatory:', tmp, 'expected:', '%s');\n", signatory);
-					trace_action("if (errored == 0 && tmp != '%s') errored=%d;\n", signatory, trace_next_error(&errored));
+					trace_action("if (errored == 0 && tmp != '%s') errored=%d;\n", signatory, trace_next_error());
 				}
 			}
 	}
@@ -1460,13 +1459,13 @@ static void load_document(void)
 				"if (errored == 0 && tmp != %d) {\n"
 				"  print(\"Mismatch in number of versions of document. I expected %d and got \" + tmp + \"\\n\");\n"
 				"  errored=%d;\n"
-				"}\n", vsns, vsns, trace_next_error(&errored));
+				"}\n", vsns, vsns, trace_next_error());
 			if (vsns > 1)
 			{
 				int valid = pdf_validate_change_history(ctx, pdf);
 				trace_action("tmp = doc.validateChangeHistory();\n");
 				trace_action("print('History validation:', tmp, 'expected:', %d);\n", valid);
-				trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", valid, trace_next_error(&errored));
+				trace_action("if (errored == 0 && tmp != %d) errored=%d;\n", valid, trace_next_error());
 			}
 		}
 		if (anchor)

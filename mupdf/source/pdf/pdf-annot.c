@@ -608,14 +608,16 @@ remove_from_tree(fz_context *ctx, pdf_obj *arr, pdf_obj *item)
 void
 pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot)
 {
-	pdf_document *doc = annot->page->doc;
+	pdf_document *doc;
 	pdf_annot **annotptr;
 	pdf_obj *annot_arr, *popup;
 	int i;
 	int is_widget = 0;
 
-	if (annot == NULL)
+	if (annot == NULL || page == NULL || page != annot->page)
 		return;
+
+	doc = page->doc;
 
 	/* Look for the annot in the page's list */
 	for (annotptr = &page->annots; *annotptr; annotptr = &(*annotptr)->next)

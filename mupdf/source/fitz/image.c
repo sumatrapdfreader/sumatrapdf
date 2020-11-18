@@ -133,7 +133,7 @@ fz_mask_color_key(fz_pixmap *pix, int n, const int *colorkey)
 	int w;
 	int k, t;
 	int h = pix->h;
-	int stride = pix->stride - pix->w * pix->n;
+	size_t stride = pix->stride - pix->w * (size_t)pix->n;
 	if (pix->w == 0)
 		return;
 	while (h--)
@@ -162,7 +162,7 @@ fz_unblend_masked_tile(fz_context *ctx, fz_pixmap *tile, fz_image *image, const 
 	unsigned char *s, *d = tile->samples;
 	int n = tile->n;
 	int k;
-	int sstride, dstride = tile->stride - tile->w * tile->n;
+	size_t sstride, dstride = tile->stride - tile->w * (size_t)tile->n;
 	int h;
 	fz_irect subarea;
 
@@ -188,8 +188,8 @@ fz_unblend_masked_tile(fz_context *ctx, fz_pixmap *tile, fz_image *image, const 
 		subarea.y0 = 0;
 	}
 	if (isa)
-		s += (isa->x0 - subarea.x0) * mask->n + (isa->y0 - subarea.y0) * mask->stride;
-	sstride = mask->stride - tile->w * mask->n;
+		s += (isa->x0 - subarea.x0) * (size_t)mask->n + (isa->y0 - subarea.y0) * (size_t)mask->stride;
+	sstride = mask->stride - tile->w * (size_t)mask->n;
 	h = tile->h;
 
 	if (tile->w != 0)

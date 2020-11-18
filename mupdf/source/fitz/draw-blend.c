@@ -435,8 +435,8 @@ fz_blend_nonseparable_gray(byte * FZ_RESTRICT bp, int bal, const byte * FZ_RESTR
 				int saba = fz_mul255(sa, ba);
 
 				/* ugh, division to get non-premul components */
-				int invsa = sa ? 255 * 256 / sa : 0;
-				int invba = ba ? 255 * 256 / ba : 0;
+				int invsa = 255 * 256 / sa;
+				int invba = 255 * 256 / ba;
 				int k;
 				int sg = (sp[0] * invsa) >> 8;
 				int bg = (bp[0] * invba) >> 8;
@@ -493,7 +493,7 @@ fz_blend_nonseparable(byte * FZ_RESTRICT bp, int bal, const byte * FZ_RESTRICT s
 				int saba = fz_mul255(sa, ba);
 
 				/* ugh, division to get non-premul components */
-				int invsa = sa ? 255 * 256 / sa : 0;
+				int invsa = 255 * 256 / sa;
 				int invba = 255 * 256 / ba;
 
 				int sr = (sp[0] * invsa) >> 8;
@@ -1108,9 +1108,9 @@ fz_blend_pixmap(fz_context *ctx, fz_pixmap * FZ_RESTRICT dst, fz_pixmap * FZ_RES
 
 	complement = fz_colorspace_is_subtractive(ctx, src->colorspace);
 	n = src->n;
-	sp = src->samples + (unsigned int)((y - src->y) * src->stride + (x - src->x) * src->n);
+	sp = src->samples + (y - src->y) * (size_t)src->stride + (x - src->x) * (size_t)src->n;
 	sa = src->alpha;
-	dp = dst->samples + (unsigned int)((y - dst->y) * dst->stride + (x - dst->x) * dst->n);
+	dp = dst->samples + (y - dst->y) * (size_t)dst->stride + (x - dst->x) * (size_t)dst->n;
 	da = dst->alpha;
 
 	if (n == 1)
@@ -1128,7 +1128,7 @@ fz_blend_pixmap(fz_context *ctx, fz_pixmap * FZ_RESTRICT dst, fz_pixmap * FZ_RES
 
 	if (!isolated)
 	{
-		const unsigned char *hp = shape->samples + (unsigned int)((y - shape->y) * shape->stride + (x - shape->x));
+		const unsigned char *hp = shape->samples + (y - shape->y) * (size_t)shape->stride + (x - shape->x);
 
 		while (h--)
 		{
@@ -1314,11 +1314,11 @@ fz_blend_pixmap_knockout(fz_context *ctx, fz_pixmap * FZ_RESTRICT dst, fz_pixmap
 		return;
 
 	n = src->n;
-	sp = src->samples + (unsigned int)((y - src->y) * src->stride + (x - src->x) * src->n);
+	sp = src->samples + (y - src->y) * (size_t)src->stride + (x - src->x) * (size_t)src->n;
 	sa = src->alpha;
-	dp = dst->samples + (unsigned int)((y - dst->y) * dst->stride + (x - dst->x) * dst->n);
+	dp = dst->samples + (y - dst->y) * (size_t)dst->stride + (x - dst->x) * (size_t)dst->n;
 	da = dst->alpha;
-	hp = shape->samples + (unsigned int)((y - shape->y) * shape->stride + (x - shape->x));
+	hp = shape->samples + (y - shape->y) * (size_t)shape->stride + (x - shape->x);
 
 #ifdef PARANOID_PREMULTIPLY
 	if (sa)

@@ -44,51 +44,56 @@
 
 /* AES block cipher implementation from XYSSL */
 
+/* To prevent coverity being confused by sign extensions from shifts, we
+ * have replaced "unsigned long" by "uint32_t". To match styles, we have
+ * similarly replaced "unsigned char" by uint8_t. */
+
+
 /*
  * 32-bit integer manipulation macros (little endian)
  */
 #ifndef GET_ULONG_LE
 #define GET_ULONG_LE(n,b,i)					\
 {								\
-	(n) = ( (unsigned long) (b)[(i)] )			\
-		| ( (unsigned long) (b)[(i) + 1] << 8 )		\
-		| ( (unsigned long) (b)[(i) + 2] << 16 )	\
-		| ( (unsigned long) (b)[(i) + 3] << 24 );	\
+	(n) = ( (uint32_t) (b)[(i)] )			\
+		| ( (uint32_t) (b)[(i) + 1] << 8 )		\
+		| ( (uint32_t) (b)[(i) + 2] << 16 )	\
+		| ( (uint32_t) (b)[(i) + 3] << 24 );	\
 }
 #endif
 
 #ifndef PUT_ULONG_LE
 #define PUT_ULONG_LE(n,b,i)				\
 {							\
-	(b)[(i) ] = (unsigned char) ( (n) );		\
-	(b)[(i) + 1] = (unsigned char) ( (n) >> 8 );	\
-	(b)[(i) + 2] = (unsigned char) ( (n) >> 16 );	\
-	(b)[(i) + 3] = (unsigned char) ( (n) >> 24 );	\
+	(b)[(i) ] = (uint8_t) ( (n) );		\
+	(b)[(i) + 1] = (uint8_t) ( (n) >> 8 );	\
+	(b)[(i) + 2] = (uint8_t) ( (n) >> 16 );	\
+	(b)[(i) + 3] = (uint8_t) ( (n) >> 24 );	\
 }
 #endif
 
 /*
  * Forward S-box & tables
  */
-static unsigned char FSb[256];
-static unsigned long FT0[256];
-static unsigned long FT1[256];
-static unsigned long FT2[256];
-static unsigned long FT3[256];
+static uint8_t FSb[256];
+static uint32_t FT0[256];
+static uint32_t FT1[256];
+static uint32_t FT2[256];
+static uint32_t FT3[256];
 
 /*
  * Reverse S-box & tables
  */
-static unsigned char RSb[256];
-static unsigned long RT0[256];
-static unsigned long RT1[256];
-static unsigned long RT2[256];
-static unsigned long RT3[256];
+static uint8_t RSb[256];
+static uint32_t RT0[256];
+static uint32_t RT1[256];
+static uint32_t RT2[256];
+static uint32_t RT3[256];
 
 /*
  * Round constants
  */
-static unsigned long RCON[10];
+static uint32_t RCON[10];
 
 /*
  * Tables generation code
@@ -120,7 +125,7 @@ static void aes_gen_tables( void )
 	 */
 	for( i = 0, x = 1; i < 10; i++ )
 	{
-		RCON[i] = (unsigned long) x;
+		RCON[i] = (uint32_t) x;
 		x = XTIME( x ) & 0xFF;
 	}
 
@@ -140,8 +145,8 @@ static void aes_gen_tables( void )
 		x ^= y; y = ( (y << 1) | (y >> 7) ) & 0xFF;
 		x ^= y ^ 0x63;
 
-		FSb[i] = (unsigned char) x;
-		RSb[x] = (unsigned char) i;
+		FSb[i] = (uint8_t) x;
+		RSb[x] = (uint8_t) i;
 	}
 
 	/*
@@ -153,10 +158,10 @@ static void aes_gen_tables( void )
 		y = XTIME( x ) & 0xFF;
 		z = ( y ^ x ) & 0xFF;
 
-		FT0[i] = ( (unsigned long) y ) ^
-		( (unsigned long) x <<	8 ) ^
-		( (unsigned long) x << 16 ) ^
-		( (unsigned long) z << 24 );
+		FT0[i] = ( (uint32_t) y ) ^
+			( (uint32_t) x <<	8 ) ^
+			( (uint32_t) x << 16 ) ^
+			( (uint32_t) z << 24 );
 
 		FT1[i] = ROTL8( FT0[i] );
 		FT2[i] = ROTL8( FT1[i] );
@@ -164,10 +169,10 @@ static void aes_gen_tables( void )
 
 		x = RSb[i];
 
-		RT0[i] = ( (unsigned long) MUL( 0x0E, x ) ) ^
-		( (unsigned long) MUL( 0x09, x ) << 8 ) ^
-		( (unsigned long) MUL( 0x0D, x ) << 16 ) ^
-		( (unsigned long) MUL( 0x0B, x ) << 24 );
+		RT0[i] = ( (uint32_t) MUL( 0x0E, x ) ) ^
+			( (uint32_t) MUL( 0x09, x ) << 8 ) ^
+			( (uint32_t) MUL( 0x0D, x ) << 16 ) ^
+			( (uint32_t) MUL( 0x0B, x ) << 24 );
 
 		RT1[i] = ROTL8( RT0[i] );
 		RT2[i] = ROTL8( RT1[i] );
@@ -178,10 +183,10 @@ static void aes_gen_tables( void )
 /*
  * AES key schedule (encryption)
  */
-int fz_aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
+int fz_aes_setkey_enc( aes_context *ctx, const uint8_t *key, int keysize )
 {
 	int i;
-	unsigned long *RK;
+	uint32_t *RK;
 
 #if !defined(XYSSL_AES_ROM_TABLES)
 	if( aes_init_done == 0 )
@@ -282,12 +287,12 @@ int fz_aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
 /*
  * AES key schedule (decryption)
  */
-int fz_aes_setkey_dec(aes_context *ctx, const unsigned char *key, int keysize)
+int fz_aes_setkey_dec(aes_context *ctx, const uint8_t *key, int keysize)
 {
 	int i, j;
 	aes_context cty;
-	unsigned long *RK;
-	unsigned long *SK;
+	uint32_t *RK;
+	uint32_t *SK;
 
 	switch( keysize )
 	{
@@ -384,11 +389,11 @@ int fz_aes_setkey_dec(aes_context *ctx, const unsigned char *key, int keysize)
  */
 void fz_aes_crypt_ecb( aes_context *ctx,
 	int mode,
-	const unsigned char input[16],
-	unsigned char output[16] )
+	const uint8_t input[16],
+	uint8_t output[16] )
 {
 	int i;
-	unsigned long *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3;
+	uint32_t *RK, X0, X1, X2, X3, Y0, Y1, Y2, Y3;
 
 #if defined(XYSSL_PADLOCK_C) && defined(XYSSL_HAVE_X86)
 	if( padlock_supports( PADLOCK_ACE ) )
@@ -478,12 +483,12 @@ void fz_aes_crypt_ecb( aes_context *ctx,
 void fz_aes_crypt_cbc( aes_context *ctx,
 	int mode,
 	size_t length,
-	unsigned char iv[16],
-	const unsigned char *input,
-	unsigned char *output )
+	uint8_t iv[16],
+	const uint8_t *input,
+	uint8_t *output )
 {
 	int i;
-	unsigned char temp[16];
+	uint8_t temp[16];
 
 #if defined(XYSSL_PADLOCK_C) && defined(XYSSL_HAVE_X86)
 	if( padlock_supports( PADLOCK_ACE ) )
@@ -501,7 +506,7 @@ void fz_aes_crypt_cbc( aes_context *ctx,
 			fz_aes_crypt_ecb( ctx, mode, input, output );
 
 			for( i = 0; i < 16; i++ )
-				output[i] = (unsigned char)( output[i] ^ iv[i] );
+				output[i] = (uint8_t)( output[i] ^ iv[i] );
 
 			memcpy( iv, temp, 16 );
 
@@ -515,7 +520,7 @@ void fz_aes_crypt_cbc( aes_context *ctx,
 		while( length > 0 )
 		{
 			for( i = 0; i < 16; i++ )
-				output[i] = (unsigned char)( input[i] ^ iv[i] );
+				output[i] = (uint8_t)( input[i] ^ iv[i] );
 
 			fz_aes_crypt_ecb( ctx, mode, output, output );
 			memcpy( iv, output, 16 );
@@ -535,9 +540,9 @@ void fz_aes_crypt_cfb( aes_context *ctx,
 	int mode,
 	int length,
 	int *iv_off,
-	unsigned char iv[16],
-	const unsigned char *input,
-	unsigned char *output )
+	uint8_t iv[16],
+	const uint8_t *input,
+	uint8_t *output )
 {
 	int c, n = *iv_off;
 
@@ -549,8 +554,8 @@ void fz_aes_crypt_cfb( aes_context *ctx,
 				fz_aes_crypt_ecb( ctx, FZ_AES_ENCRYPT, iv, iv );
 
 			c = *input++;
-			*output++ = (unsigned char)( c ^ iv[n] );
-			iv[n] = (unsigned char) c;
+			*output++ = (uint8_t)( c ^ iv[n] );
+			iv[n] = (uint8_t) c;
 
 			n = (n + 1) & 0x0F;
 		}
@@ -562,7 +567,7 @@ void fz_aes_crypt_cfb( aes_context *ctx,
 			if( n == 0 )
 				fz_aes_crypt_ecb( ctx, FZ_AES_ENCRYPT, iv, iv );
 
-			iv[n] = *output++ = (unsigned char)( iv[n] ^ *input++ );
+			iv[n] = *output++ = (uint8_t)( iv[n] ^ *input++ );
 
 			n = (n + 1) & 0x0F;
 		}

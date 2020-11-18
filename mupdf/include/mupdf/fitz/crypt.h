@@ -197,8 +197,8 @@ void fz_arc4_final(fz_arc4 *state);
 typedef struct
 {
 	int nr; /* number of rounds */
-	unsigned long *rk; /* AES round keys */
-	unsigned long buf[68]; /* unaligned data */
+	uint32_t *rk; /* AES round keys */
+	uint32_t buf[68]; /* unaligned data */
 } fz_aes;
 
 #define FZ_AES_DECRYPT 0

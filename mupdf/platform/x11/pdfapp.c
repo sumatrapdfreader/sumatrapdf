@@ -1032,7 +1032,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			cookie.errors++;
 	}
 
-	if (transition)
+	if (transition && drawpage)
 	{
 		app->new_image = app->image;
 		app->image = NULL;

@@ -825,9 +825,17 @@ get_deferred_neutrals(fz_bidi_action action, fz_bidi_level level)
 static fz_bidi_chartype get_resolved_neutrals(fz_bidi_action action)
 {
 	action = action & 0xF;
-	if (action == In)
-		return 0;
-	else
+
+	/* RJW: The original code does:
+	 * if (action == In)
+	 *     return 0;
+	 * else
+	 *     return action;
+	 * BUT, this can never be true, as In == 256.
+	 * This upsets coverity. We fix this here, but include this note
+	 * so that we understand what changed in case we ever update to
+	 * a newer release of the bidirectional code.
+	 */
 		return action;
 }
 

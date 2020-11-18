@@ -354,8 +354,8 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_colorspace *colorspace, fz_m
 						if (da)
 							*d++ = a;
 					}
-					d += conv->stride - conv->w * conv->n;
-					s += temp->stride - temp->w * temp->n;
+					d += conv->stride - conv->w * (size_t)conv->n;
+					s += temp->stride - temp->w * (size_t)temp->n;
 				}
 			}
 			fz_paint_pixmap_with_overprint(dest, conv, eop);

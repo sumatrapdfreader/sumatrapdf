@@ -231,14 +231,15 @@ static void fz_test_fill_compressed_8bpc_image(fz_context *ctx, fz_test_device *
 static void
 fz_test_fill_other_image(fz_context *ctx, fz_test_device *dev, fz_pixmap *pix, fz_color_params color_params)
 {
-	unsigned int count, i, k, h, sa, ss;
+	unsigned int count, i, k, h, sa;
+	size_t ss;
 	unsigned char *s;
 
 	count = pix->w;
 	h = pix->h;
 	s = pix->samples;
 	sa = pix->alpha;
-	ss = pix->stride - pix->w * pix->n;
+	ss = pix->stride - pix->w * (size_t)pix->n;
 
 	if (pix->colorspace == fz_device_rgb(ctx))
 	{

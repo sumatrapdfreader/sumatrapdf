@@ -1410,7 +1410,7 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 		fontdesc = pdf_load_simple_font(ctx, doc, dict);
 	}
 
-	pdf_mark_obj(ctx, dict);
+	(void)pdf_mark_obj(ctx, dict);
 	fz_try(ctx)
 	{
 		/* Create glyph width table for stretching substitute fonts and text extraction. */

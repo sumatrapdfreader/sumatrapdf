@@ -559,8 +559,8 @@ png_expand_palette(fz_context *ctx, struct info *info, fz_pixmap *src)
 	unsigned char *sp = src->samples;
 	unsigned char *dp = dst->samples;
 	unsigned int x, y;
-	int dstride = dst->stride - dst->w * dst->n;
-	int sstride = src->stride - src->w * src->n;
+	size_t dstride = dst->stride - dst->w * (size_t)dst->n;
+	size_t sstride = src->stride - src->w * (size_t)src->n;
 
 	dst->xres = src->xres;
 	dst->yres = src->yres;

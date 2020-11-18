@@ -1634,7 +1634,7 @@ fz_rect
 fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 {
 	fz_rect rect;
-	if (font->bbox_table && gid < font->glyph_count)
+	if (font->bbox_table && gid < font->glyph_count && gid >= 0)
 	{
 		/* If the bbox is infinite or empty, distrust it */
 		if (fz_is_infinite_rect(font->bbox_table[gid]) || fz_is_empty_rect(font->bbox_table[gid]))

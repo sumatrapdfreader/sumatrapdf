@@ -3967,7 +3967,7 @@ fz_paint_image_imp(fz_context *ctx,
 	u = (int)((ctm.a * x) + (ctm.c * y) + ctm.e + ((ctm.a + ctm.c) * .5f));
 	v = (int)((ctm.b * x) + (ctm.d * y) + ctm.f + ((ctm.b + ctm.d) * .5f));
 
-	dp = dst->samples + (unsigned int)((y - dst->y) * dst->stride + (x - dst->x) * dst->n);
+	dp = dst->samples + (y - dst->y) * (size_t)dst->stride + (x - dst->x) * (size_t)dst->n;
 	da = dst->alpha;
 	dn = dst->n - da;
 	sp = img->samples;
@@ -3979,7 +3979,7 @@ fz_paint_image_imp(fz_context *ctx,
 	if (shape)
 	{
 		hs = shape->stride;
-		hp = shape->samples + (unsigned int)((y - shape->y) * shape->stride + x - shape->x);
+		hp = shape->samples + (y - shape->y) * (size_t)shape->stride + x - shape->x;
 	}
 	else
 	{
@@ -3989,7 +3989,7 @@ fz_paint_image_imp(fz_context *ctx,
 	if (group_alpha)
 	{
 		gs = group_alpha->stride;
-		gp = group_alpha->samples + (unsigned int)((y - group_alpha->y) * group_alpha->stride + x - group_alpha->x);
+		gp = group_alpha->samples + (y - group_alpha->y) * (size_t)group_alpha->stride + x - group_alpha->x;
 	}
 	else
 	{
