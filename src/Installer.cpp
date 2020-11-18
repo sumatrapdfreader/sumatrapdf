@@ -764,7 +764,7 @@ static void OnCreateWindow(HWND hwnd) {
 
     const WCHAR* s = L"&...";
     Size btnSize2 = TextSizeInHwnd(hwnd, s);
-    btnSize.dx += DpiScale(hwnd, 4);
+    btnSize2.dx += DpiScale(hwnd, 4);
     gButtonBrowseDir = CreateDefaultButtonCtrl(hwnd, s);
     gButtonBrowseDir->onClicked = OnButtonBrowse;
     // btnSize = gButtonBrowseDir->GetIdealSize();

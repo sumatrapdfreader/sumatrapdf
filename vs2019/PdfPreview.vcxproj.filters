@@ -36,6 +36,9 @@
     <ClInclude Include="..\src\previewer\PdfPreview.h">
       <Filter>previewer</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\previewer\PdfPreviewBase.h">
+      <Filter>previewer</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\LogDbg.h">
       <Filter>utils</Filter>
     </ClInclude>

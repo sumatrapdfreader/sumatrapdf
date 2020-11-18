@@ -195,7 +195,7 @@ void strStrTest() {
         str.Append("lost");
         buf2 = str.Get();
         str::Eq(buf2, "blahlost");
-        utassert(buf == buf);
+        utassert(buf == buf2);
         str.Reset();
         for (int i = 0; i < str::Str::kBufChars + 4; i++) {
             str.AppendChar((char)i);
@@ -241,7 +241,7 @@ void strWStrTest() {
         str.Append(L"lost");
         buf2 = str.Get();
         str::Eq(buf2, L"blahlost");
-        utassert(buf == buf);
+        utassert(buf == buf2);
         str.Reset();
         for (int i = 0; i < str::Str::kBufChars + 4; i++) {
             str.AppendChar((WCHAR)i);

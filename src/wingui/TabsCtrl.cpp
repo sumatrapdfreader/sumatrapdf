@@ -526,11 +526,12 @@ bool TabsCtrl2::Create() {
 
 void TabsCtrl2::WndProc(WndEvent* ev) {
     HWND hwnd = ev->hwnd;
+#if 0
     UINT msg = ev->msg;
     WPARAM wp = ev->wp;
     LPARAM lp = ev->lp;
-
-    // DbgLogMsg("tree:", hwnd, msg, wp, ev->lp);
+    DbgLogMsg("tree:", hwnd, msg, wp, ev->lp);
+#endif
 
     TabsCtrl2* w = this;
     CrashIf(w->hwnd != (HWND)hwnd);

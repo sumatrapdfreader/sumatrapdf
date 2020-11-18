@@ -528,7 +528,7 @@ TocTree* ChmModel::GetToc() {
             levels.RemoveAt(ti.level, levels.size() - ti.level);
             levels.Last()->AddSiblingAtEnd(item);
         } else {
-            (*nextChild) = item;
+            *nextChild = item;
             levels.Append(item);
         }
         nextChild = &item->child;

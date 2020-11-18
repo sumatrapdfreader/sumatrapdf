@@ -874,6 +874,7 @@
     <ClInclude Include="..\src\mui\MiniMui.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\previewer\PdfPreview.h" />
+    <ClInclude Include="..\src\previewer\PdfPreviewBase.h" />
     <ClInclude Include="..\src\utils\LogDbg.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
   </ItemGroup>

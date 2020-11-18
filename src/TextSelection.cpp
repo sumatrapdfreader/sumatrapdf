@@ -58,7 +58,7 @@ const WCHAR* DocumentTextCache::GetTextForPage(int pageNo, int* lenOut, Rect** c
             pageText->text = str::Dup(L"");
             pageText->len = 0;
         }
-        debugSize += (pageText->len + 1) * (sizeof(WCHAR) + sizeof(Rect));
+        debugSize += (pageText->len + 1) * (int)(sizeof(WCHAR) + sizeof(Rect));
     }
 
     if (lenOut) {

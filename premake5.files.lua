@@ -937,6 +937,7 @@ end
 function pdf_preview_files()
   files_in_dir("src/previewer", {
     "PdfPreview.*",
+    "PdfPreviewBase.h",
     "PdfPreviewDll.cpp",
   })
 

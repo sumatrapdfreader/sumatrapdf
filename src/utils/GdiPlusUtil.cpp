@@ -419,10 +419,8 @@ bool IsGdiPlusNativeFormat(std::span<u8> d) {
            (ImgFormat::PNG == fmt && !PngRequiresPresetDict(d));
 }
 
-// cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
+// see http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap* BitmapFromData(std::span<u8> bmpData) {
-    const u8* data = (const u8*)bmpData.data();
-    size_t len = bmpData.size();
     ImgFormat format = GfxFormatFromData(bmpData);
     if (ImgFormat::TGA == format) {
         return tga::ImageFromData(bmpData);

@@ -1031,19 +1031,18 @@ HFONT GetDefaultGuiFontOfSize(int size) {
 // TODO: lfUnderline? lfStrikeOut?
 HFONT GetDefaultGuiFont(bool bold, bool italic) {
     HFONT* dest = &gDefaultGuiFont;
-    if (bold) {
-        if (italic) {
-            dest = &gDefaultGuiFontBoldItalic;
-        } else {
-            dest = &gDefaultGuiFontBold;
-        }
-    } else if (italic) {
+    if (bold && !italic) {
+        dest = &gDefaultGuiFontBold;
+    } else if (!bold && italic) {
         dest = &gDefaultGuiFontItalic;
+    } else if (bold && italic) {
+        dest = &gDefaultGuiFontBoldItalic;
     }
-    if (*dest != nullptr) {
-        return *dest;
+    HFONT existing = *dest;
+    if (existing != nullptr) {
+        return existing;
     }
-    NONCLIENTMETRICS ncm = {0};
+    NONCLIENTMETRICS ncm{0};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     if (bold) {
