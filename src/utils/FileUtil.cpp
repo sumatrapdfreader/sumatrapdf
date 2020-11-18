@@ -674,7 +674,7 @@ bool SetZoneIdentifier(const WCHAR* filePath, int zoneId) {
     return WritePrivateProfileStringW(L"ZoneTransfer", L"ZoneId", id, path);
 }
 
-bool DeleteZoneIdentifier(const WCHAR* filePath, int zoneId) {
+bool DeleteZoneIdentifier(const WCHAR* filePath) {
     AutoFreeWstr path(str::Join(filePath, L":Zone.Identifier"));
     return !!DeleteFileW(path.Get());
 }
