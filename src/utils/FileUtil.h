@@ -62,8 +62,10 @@ FILETIME GetModificationTime(const WCHAR* path);
 bool SetModificationTime(const WCHAR* path, FILETIME lastMod);
 bool StartsWithN(const WCHAR* path, const char* magicNumber, size_t len);
 bool StartsWith(const WCHAR* path, const char* magicNumber);
+
 int GetZoneIdentifier(const WCHAR* path);
 bool SetZoneIdentifier(const WCHAR* path, int zoneId = URLZONE_INTERNET);
+bool DeleteZoneIdentifier(const WCHAR* path);
 
 HANDLE OpenReadOnly(const WCHAR* path);
 #endif

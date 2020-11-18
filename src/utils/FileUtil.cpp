@@ -665,13 +665,18 @@ bool StartsWith(const WCHAR* filePath, const char* s) {
 
 int GetZoneIdentifier(const WCHAR* filePath) {
     AutoFreeWstr path(str::Join(filePath, L":Zone.Identifier"));
-    return GetPrivateProfileInt(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, path);
+    return GetPrivateProfileIntW(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, path);
 }
 
 bool SetZoneIdentifier(const WCHAR* filePath, int zoneId) {
     AutoFreeWstr path(str::Join(filePath, L":Zone.Identifier"));
     AutoFreeWstr id(str::Format(L"%d", zoneId));
-    return WritePrivateProfileString(L"ZoneTransfer", L"ZoneId", id, path);
+    return WritePrivateProfileStringW(L"ZoneTransfer", L"ZoneId", id, path);
+}
+
+bool DeleteZoneIdentifier(const WCHAR* filePath, int zoneId) {
+    AutoFreeWstr path(str::Join(filePath, L":Zone.Identifier"));
+    return !!DeleteFileW(path.Get());
 }
 
 #endif // OS_WIN
