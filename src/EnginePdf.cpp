@@ -349,7 +349,7 @@ class EnginePdf : public EngineBase {
     fz_locks_context fz_locks_ctx;
     fz_document* _doc = nullptr;
     fz_stream* _docStream = nullptr;
-    Vec<FzPageInfo*> _pages;
+    Vec<FzPageInfo> _pages;
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;
     pdf_obj* _info = nullptr;
@@ -433,7 +433,8 @@ EnginePdf::~EnginePdf() {
     // TODO: remove this lock and see what happens
     EnterCriticalSection(ctxAccess);
 
-    for (auto* pi : _pages) {
+    for (auto& piRef : _pages) {
+        FzPageInfo* pi = &piRef;
         if (pi->links) {
             fz_drop_link(ctx, pi->links);
         }
@@ -443,8 +444,6 @@ EnginePdf::~EnginePdf() {
         DeleteVecMembers(pi->autoLinks);
         DeleteVecMembers(pi->comments);
     }
-
-    DeleteVecMembers(_pages);
 
     fz_drop_outline(ctx, outline);
     fz_drop_outline(ctx, attachments);
@@ -839,10 +838,9 @@ bool EnginePdf::FinishLoading() {
             mbox.x1 = 612;
             mbox.y1 = 792;
         }
-        FzPageInfo* pageInfo = new FzPageInfo();
+        FzPageInfo* pageInfo = &_pages[pageNo];
         pageInfo->mediabox = ToRectFl(mbox);
         pageInfo->pageNo = pageNo + 1;
-        _pages[pageNo] = pageInfo;
     }
 
     fz_try(ctx) {
@@ -1085,7 +1083,7 @@ PageDestination* EnginePdf::GetNamedDest(const WCHAR* name) {
 FzPageInfo* EnginePdf::GetFzPageInfoFast(int pageNo) {
     ScopedCritSec scope(&pagesAccess);
     CrashIf(pageNo < 1 || pageNo > pageCount);
-    auto pageInfo = _pages[pageNo - 1];
+    FzPageInfo* pageInfo = &_pages[pageNo - 1];
     if (!pageInfo->page || !pageInfo->fullyLoaded) {
         return nullptr;
     }
@@ -1191,7 +1189,7 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool loadQuick) {
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
-    FzPageInfo* pageInfo = _pages[pageIdx];
+    FzPageInfo* pageInfo = &_pages[pageIdx];
 
     ScopedCritSec ctxScope(ctxAccess);
     if (!pageInfo->page) {
@@ -1240,7 +1238,7 @@ FzPageInfo* EnginePdf::GetFzPageInfo(int pageNo, bool loadQuick) {
 }
 
 RectF EnginePdf::PageMediabox(int pageNo) {
-    FzPageInfo* pi = _pages[pageNo - 1];
+    FzPageInfo* pi = &_pages[pageNo - 1];
     return pi->mediabox;
 }
 
