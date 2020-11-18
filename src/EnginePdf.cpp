@@ -801,16 +801,34 @@ bool EnginePdf::FinishLoading() {
 
     ScopedCritSec scope(ctxAccess);
 
+    int nPages = 0;
+    fz_try(ctx) {
+        pdf_load_page_tree(ctx, doc);
+        nPages = doc->rev_page_count;
+        if (nPages != pageCount) {
+            fz_warn(ctx, "mismatch between fz_count_pages() and doc->rev_page_count");
+            return false;
+        }
+    }
+    fz_catch(ctx) {
+    }
+
+    // TODO: convert _pages to be Vec<FzPageInfo> (vs. Vec<FzPageInfo*>)
+    _pages.AppendBlanks(pageCount);
+
     // this does the job of pdf_bound_page but without doing pdf_load_page()
     // TODO: time pdf_load_page(), maybe it's not slow?
-    for (int i = 0; i < pageCount; i++) {
+    pdf_rev_page_map* map = doc->rev_page_map;
+    for (int i = 0; i < nPages; i++) {
+        int pageNo = map[i].page;
+        int objNo = map[i].object;
         fz_rect mbox{};
         fz_matrix page_ctm{};
-
         fz_try(ctx) {
-            pdf_obj* pageref = pdf_lookup_page_obj(ctx, doc, i);
+            pdf_obj* pageref = pdf_load_object(ctx, doc, i);
             pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
             mbox = fz_transform_rect(mbox, page_ctm);
+            pdf_drop_obj(ctx, pageref);
         }
         fz_catch(ctx) {
         }
@@ -823,8 +841,8 @@ bool EnginePdf::FinishLoading() {
         }
         FzPageInfo* pageInfo = new FzPageInfo();
         pageInfo->mediabox = ToRectFl(mbox);
-        pageInfo->pageNo = i + 1;
-        _pages.Append(pageInfo);
+        pageInfo->pageNo = pageNo + 1;
+        _pages[pageNo] = pageInfo;
     }
 
     fz_try(ctx) {
@@ -984,7 +1002,7 @@ TocItem* EnginePdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
     return root;
 }
 
-// TODO: maybe build in FinishDownload
+// TODO: maybe build in FinishLoading
 TocTree* EnginePdf::GetToc() {
     if (tocTree) {
         return tocTree;
