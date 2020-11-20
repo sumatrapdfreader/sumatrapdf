@@ -812,11 +812,9 @@ bool EnginePdf::FinishLoading() {
     fz_catch(ctx) {
     }
 
-    // TODO: convert _pages to be Vec<FzPageInfo> (vs. Vec<FzPageInfo*>)
     _pages.AppendBlanks(pageCount);
 
     // this does the job of pdf_bound_page but without doing pdf_load_page()
-    // TODO: time pdf_load_page(), maybe it's not slow?
     pdf_rev_page_map* map = doc->rev_page_map;
     for (int i = 0; i < nPages; i++) {
         int pageNo = map[i].page;
