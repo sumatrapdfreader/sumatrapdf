@@ -302,7 +302,7 @@ static void layout_line(fz_context *ctx, float indent, float page_w, float line_
 
 	if (align == TA_JUSTIFY)
 	{
-		justify = slop / i;
+		justify = slop / (i ? i : 1);
 	}
 	else if (align == TA_RIGHT)
 		x += slop;

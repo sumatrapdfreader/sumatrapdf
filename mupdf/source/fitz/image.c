@@ -393,8 +393,8 @@ subarea_stream(fz_context *ctx, fz_stream *stm, fz_image *image, const fz_irect 
 	int t_margin = subarea->y0 >> l2factor;
 	int r_margin = (image->w + f - 1 - subarea->x1) >> l2factor;
 	int b_margin = (image->h + f - 1 - subarea->y1) >> l2factor;
-	size_t l_skip = (l_margin * image->n * image->bpc)/8;
-	size_t r_skip = (r_margin * image->n * image->bpc + 7)/8;
+	size_t l_skip = (l_margin * (size_t)image->n * image->bpc)/8;
+	size_t r_skip = (r_margin * (size_t)image->n * image->bpc + 7)/8;
 	size_t t_skip = t_margin * stream_stride;
 	size_t b_skip = b_margin * stream_stride;
 	int h = (subarea->y1 - subarea->y0 + f - 1) >> l2factor;
@@ -799,7 +799,7 @@ update_ctm_for_subarea(fz_matrix *ctm, const fz_irect *subarea, int w, int h)
 {
 	fz_matrix m;
 
-	if (subarea->x0 == 0 && subarea->y0 == 0 && subarea->x1 == w && subarea->y1 == h)
+	if (ctm == NULL || (subarea->x0 == 0 && subarea->y0 == 0 && subarea->x1 == w && subarea->y1 == h))
 		return;
 
 	m.a = (float) (subarea->x1 - subarea->x0) / w;
@@ -946,7 +946,6 @@ fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subar
 	tile = image->get_pixmap(ctx, image, &key.rect, w, h, &l2factor_remaining);
 
 	/* Update the ctm to allow for subareas. */
-	if (ctm)
 		update_ctm_for_subarea(ctm, &key.rect, image->w, image->h);
 
 	/* l2factor_remaining is updated to the amount of subscaling left to do */

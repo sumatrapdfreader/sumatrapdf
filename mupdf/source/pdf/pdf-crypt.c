@@ -353,7 +353,8 @@ pdf_compute_encryption_key(fz_context *ctx, pdf_crypt *crypt, unsigned char *pas
 	if (pwlen > 32)
 		pwlen = 32;
 	memcpy(buf, password, pwlen);
-	memcpy(buf + pwlen, padding, 32 - pwlen);
+	if (pwlen < 32)
+		memcpy(buf + pwlen, padding, 32 - pwlen);
 
 	/* Step 2 - init md5 and pass value of step 1 */
 	fz_md5_init(&md5);
@@ -656,7 +657,8 @@ pdf_authenticate_owner_password(fz_context *ctx, pdf_crypt *crypt, unsigned char
 		if (pwlen > 32)
 			pwlen = 32;
 		memcpy(pwbuf, ownerpass, pwlen);
-		memcpy(pwbuf + pwlen, padding, 32 - pwlen);
+		if (pwlen < 32)
+			memcpy(pwbuf + pwlen, padding, 32 - pwlen);
 
 		fz_md5_init(&md5);
 		fz_md5_update(&md5, pwbuf, 32);
@@ -842,7 +844,8 @@ pdf_compute_owner_password(fz_context *ctx, pdf_crypt *crypt, unsigned char *opa
 	if (opwlen > 32)
 		opwlen = 32;
 	memcpy(obuf, opassword, opwlen);
-	memcpy(obuf + opwlen, padding, 32 - opwlen);
+	if (opwlen < 32)
+		memcpy(obuf + opwlen, padding, 32 - opwlen);
 
 	/* Step 2 - init md5 and pass value of step 1 */
 	fz_md5_init(&md5);
@@ -867,7 +870,8 @@ pdf_compute_owner_password(fz_context *ctx, pdf_crypt *crypt, unsigned char *opa
 	if (upwlen > 32)
 		upwlen = 32;
 	memcpy(ubuf, upassword, upwlen);
-	memcpy(ubuf + upwlen, padding, 32 - upwlen);
+	if (upwlen < 32)
+		memcpy(ubuf + upwlen, padding, 32 - upwlen);
 
 	/* Step 6 - encrypt user password md5 hash */
 	fz_arc4_encrypt(&arc4, digest, ubuf, 32);

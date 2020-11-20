@@ -9,7 +9,6 @@ comparison.
 '''
 
 import getopt
-import os
 import sys
 import textwrap
 
@@ -68,7 +67,7 @@ def clean(argv):
     items, argv = getopt.getopt( argv, 'adfgilp:sczDAE:O:U:P:')
     for option, value in items:
          print( f'option={option} value={value}')
-         if 0:   pass
+         if 0:   pass   # lgtm [py/unreachable-statement]
          elif option == '-p': password = value
          elif option == '-d': opts.do_decompress += 1
          elif option == '-z': opts.do_compress += 1
@@ -194,7 +193,7 @@ def convert( argv):
 
     items, argv = getopt.getopt( argv, 'p:A:W:H:S:U:Xo:F:O:')
     for option, value in items:
-        if 0: pass
+        if 0: pass  # lgtm [py/unreachable-statement]
         elif option == '-p':    password = value
         elif option == '-A':    alphabits = int(value)
         elif option == '-W':    layout_w = float( value)

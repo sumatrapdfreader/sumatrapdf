@@ -20,7 +20,7 @@ def place( frame_record):
     line        = frame_record.lineno
     function    = frame_record.function
     ret = os.path.split( filename)[1] + ':' + str( line) + ':' + function + ':'
-    if 0:
+    if 0:   # lgtm [py/unreachable-statement]
         tid = str( threading.currentThread())
         ret = '[' + tid + '] ' + ret
     return ret
@@ -113,7 +113,7 @@ def expand_nv( text, caller):
         return ret
 
     finally:
-        del frame
+        del frame   # lgtm [py/unnecessary-delete]
 
 
 class LogPrefixTime:
@@ -376,7 +376,7 @@ def log_levels_add_env( name='JLIB_log_levels'):
             ffl, delta = ffll.split( '=', 1)
             delta = int( delta)
             ffl = ffl.split( ':')
-            if 0:
+            if 0:   # lgtm [py/unreachable-statement]
                 pass
             elif len( ffl) == 1:
                 filename = ffl
@@ -516,9 +516,8 @@ def exception_info( exception=None, limit=None, out=None, prefix='', oneline=Fal
             ff = f[1], f[2], f[3], f[4][0].strip()
             frames.append(ff)
 
-        if 1:
-            # It's useful to see boundary between upper and lower frames.
-            frames.append( None)
+        # It's useful to see boundary between upper and lower frames.
+        frames.append( None)
 
         # Append frames from point in the try: block that caused the exception
         # to be raised, to the point at which the exception was thrown.
@@ -581,11 +580,11 @@ def exception_info( exception=None, limit=None, out=None, prefix='', oneline=Fal
 
     finally:
         # clear things to avoid cycles.
-        exception = None
-        etype = None
-        value = None
-        tb = None
-        frames = None
+        del exception
+        del etype
+        del value
+        del tb
+        del frames
 
 
 def number_sep( s):
@@ -834,7 +833,7 @@ def system_raw(
         subprocess's <returncode>, i.e. -N means killed by signal N, otherwise
         the exit value (e.g. 12 if command terminated with exit(12)).
     '''
-        stdin = None
+    stdin = None
     if out in (None, subprocess.DEVNULL):
         stdout = out
         stderr = out
@@ -857,7 +856,7 @@ def system_raw(
         child_out = codecs.getreader( encoding)( child_out, errors)
 
     if stdout == subprocess.PIPE:
-    out = make_out_callable( out)
+        out = make_out_callable( out)
         if buffer_len == -1:
             for line in child_out:
                 out.write( line)
@@ -1013,6 +1012,8 @@ def system(
                 buffer_len=buffer_len,
                 executable=executable,
                 )
+        if e:
+            raise Exception('/usr/bin/time failed')
         with open('ubt-out') as f:
             rusage_text = f.read()
         #print 'have read rusage output: %r' % rusage_text
@@ -1045,12 +1046,11 @@ def system(
                 return out.getvalue()
             else:
                 return
+
+        if out_original == 'return':
+            return e, out.getvalue()
         else:
-            if out_original == 'return':
-                return e, out.getvalue()
-            else:
-                return e
-        return e
+            return e
 
 def get_gitfiles( directory, submodules=False):
     '''

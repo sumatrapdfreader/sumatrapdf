@@ -991,6 +991,17 @@ bmp_read_info_header(fz_context *ctx, struct info *info, const unsigned char *be
 		info->xres = read32(p + 24);
 		info->yres = read32(p + 28);
 		info->colors = read32(p + 32);
+		if (info->bitcount >= 32)
+		{
+			if (info->colors != 0)
+				fz_warn(ctx, "Suspect BMP header; bitcount=%d, colors=%d", info->bitcount, info->colors);
+			info->colors = 0;
+		}
+		else if (info->colors > (1U<<info->bitcount))
+		{
+			fz_warn(ctx, "Suspect BMP header; bitcount=%d, colors=%d", info->bitcount, info->colors);
+			info->colors = 1<<info->bitcount;
+		}
 		/* read32(p+36) == important colors */
 	}
 	/* Windows v3 header with RGB masks */

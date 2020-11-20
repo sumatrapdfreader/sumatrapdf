@@ -12,9 +12,8 @@ typedef struct
 {
 	fz_document_writer super;
 	fz_context *ctx;
-	fz_buffer *intermediate_buffer;
-	fz_output *intermediate_output;
 	fz_output *output;
+	extract_t *extract;
 	int we_own_output;
 	int spacing;
 	int rotation;
@@ -22,17 +21,181 @@ typedef struct
 	char output_cache[1024];
 } fz_docx_writer;
 
-static fz_device *s_begin_page(fz_context *ctx, fz_document_writer *writer_, fz_rect mediabox)
+
+typedef struct
 {
-	fz_docx_writer *writer = (fz_docx_writer*) writer_;
-	fz_write_string(ctx, writer->intermediate_output, "\n<page>\n");
-	return fz_new_xmltext_device(ctx, writer->intermediate_output);
+	fz_device super;
+	fz_docx_writer *writer;
+} fz_docx_device;
+
+
+static void dev_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_matrix ctm,
+	fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params)
+{
+	fz_docx_device *dev = (fz_docx_device*) dev_;
+	fz_text_span *span;
+
+	for (span = text->head; span; span = span->next)
+	{
+		int i;
+
+		if (extract_span_begin(
+				dev->writer->extract,
+				span->font->name,
+				span->font->flags.is_bold,
+				span->font->flags.is_italic,
+				span->wmode,
+				ctm.a,
+				ctm.b,
+				ctm.c,
+				ctm.d,
+				ctm.e,
+				ctm.f,
+				span->trm.a,
+				span->trm.b,
+				span->trm.c,
+				span->trm.d,
+				span->trm.e,
+				span->trm.f
+				))
+		{
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin span");
+		}
+
+		for (i=0; i<span->len; ++i)
+		{
+			fz_text_item *item = &span->items[i];
+			float adv = 0;
+
+			if (span->items[i].gid >= 0)
+				adv = fz_advance_glyph(ctx, span->font, span->items[i].gid, span->wmode);
+
+			if (extract_add_char(dev->writer->extract, item->x, item->y, item->ucs, adv, 0 /*autosplit*/))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to add char");
+		}
+
+		if (extract_span_end(dev->writer->extract))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to end span");
+	}
 }
 
-static void s_end_page(fz_context *ctx, fz_document_writer *writer_, fz_device *dev)
+static void dev_fill_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_matrix ctm,
+	fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params)
+{
+	dev_text(ctx, dev_, text, ctm, colorspace, color, alpha, color_params);
+}
+
+static void dev_stroke_text(fz_context *ctx, fz_device *dev_, const fz_text *text, const fz_stroke_state *stroke, fz_matrix ctm,
+	fz_colorspace *colorspace, const float *color, float alpha, fz_color_params color_params)
+{
+	dev_text(ctx, dev_, text, ctm, colorspace, color, alpha, color_params);
+}
+
+static void dev_clip_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_matrix ctm, fz_rect scissor)
+{
+	dev_text(ctx, dev_, text, ctm, NULL, NULL, 0 /*alpha*/, fz_default_color_params);
+}
+
+static void dev_clip_stroke_text(fz_context *ctx, fz_device *dev_, const fz_text *text, const fz_stroke_state *stroke, fz_matrix ctm, fz_rect scissor)
+{
+	dev_text(ctx, dev_, text, ctm, NULL, 0, 0, fz_default_color_params);
+}
+
+static void
+dev_ignore_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_matrix ctm)
+{
+}
+
+static void writer_image_free(void *handle, void *image_data)
+{
+	fz_docx_writer *writer = handle;
+	fz_free(writer->ctx, image_data);
+}
+
+static void dev_fill_image(fz_context *ctx, fz_device *dev_, fz_image *img, fz_matrix ctm, float alpha, fz_color_params color_params)
+{
+	fz_docx_device *dev = (fz_docx_device*) dev_;
+	const char *type = NULL;
+	fz_compressed_buffer *compressed = fz_compressed_image_buffer(ctx, img);
+
+	if (compressed)
+	{
+		if (0) {}
+		else if (compressed->params.type == FZ_IMAGE_RAW) type = "raw";
+		else if (compressed->params.type == FZ_IMAGE_FAX) type = "fax";
+		else if (compressed->params.type == FZ_IMAGE_FLATE) type = "flate";
+		else if (compressed->params.type == FZ_IMAGE_LZW) type = "lzw";
+		else if (compressed->params.type == FZ_IMAGE_BMP) type = "bmp";
+		else if (compressed->params.type == FZ_IMAGE_GIF) type = "gif";
+		else if (compressed->params.type == FZ_IMAGE_JBIG2) type = "jbig2";
+		else if (compressed->params.type == FZ_IMAGE_JPEG) type = "jpeg";
+		else if (compressed->params.type == FZ_IMAGE_JPX) type = "jpx";
+		else if (compressed->params.type == FZ_IMAGE_JXR) type = "jxr";
+		else if (compressed->params.type == FZ_IMAGE_PNG) type = "png";
+		else if (compressed->params.type == FZ_IMAGE_PNM) type = "pnm";
+		else if (compressed->params.type == FZ_IMAGE_TIFF) type = "tiff";
+
+		if (type)
+		{
+			/* Write out raw data. */
+			unsigned char *data;
+			size_t datasize = fz_buffer_extract(ctx, compressed->buffer, &data);
+			if (extract_add_image(
+					dev->writer->extract,
+					type,
+					0 /*x*/,
+					0 /*y*/,
+					0 /*w*/,
+					0 /*h*/,
+					data,
+					datasize,
+					writer_image_free,
+					dev->writer
+					))
+			{
+				fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to add image type=%s", type);
+			}
+		}
+		else
+		{
+			/* We don't recognise this image type, so ignore. */
+		}
+	}
+	else
+	{
+		/* Compressed data not available, so we could write out raw pixel values. But for
+		now we ignore. */
+	}
+}
+
+
+static fz_device *writer_begin_page(fz_context *ctx, fz_document_writer *writer_, fz_rect mediabox)
 {
 	fz_docx_writer *writer = (fz_docx_writer*) writer_;
-	fz_write_string(ctx, writer->intermediate_output, "\n</page>\n");
+
+	if (extract_page_begin(writer->extract))
+	{
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to begin page");
+	}
+
+	{
+		fz_docx_device *dev = fz_new_derived_device(ctx, fz_docx_device);
+
+		dev->super.fill_text = dev_fill_text;
+		dev->super.stroke_text = dev_stroke_text;
+		dev->super.clip_text = dev_clip_text;
+		dev->super.clip_stroke_text = dev_clip_stroke_text;
+		dev->super.ignore_text = dev_ignore_text;
+		dev->super.fill_image = dev_fill_image;
+		dev->writer = writer;
+
+		return &dev->super;
+	}
+}
+
+static void writer_end_page(fz_context *ctx, fz_document_writer *writer_, fz_device *dev)
+{
+	fz_docx_writer *writer = (fz_docx_writer*) writer_;
 	fz_try(ctx)
 	{
 		fz_close_device(ctx, dev);
@@ -45,10 +208,19 @@ static void s_end_page(fz_context *ctx, fz_document_writer *writer_, fz_device *
 	{
 		fz_rethrow(ctx);
 	}
+
+	if (extract_page_end(writer->extract))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to end page");
+
+	if (extract_process(writer->extract, writer->spacing, writer->rotation, writer->images))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to process page");
 }
 
-static int s_buffer_to_output_write(void *handle, const void *source, size_t numbytes, size_t *o_actual)
-/* Callback for extract_buffer_t. <source> will be zip/docx content. */
+static int buffer_write(void *handle, const void *source, size_t numbytes, size_t *o_actual)
+/*
+ * extract_buffer_t callback that calls fz_write_data(). <source> will be docx
+ * archive data.
+ */
 {
 	int e = 0;
 	fz_docx_writer *writer = handle;
@@ -66,7 +238,10 @@ static int s_buffer_to_output_write(void *handle, const void *source, size_t num
 	return e;
 }
 
-static int s_buffer_to_output_cache(void *handle, void **o_cache, size_t *o_numbytes)
+static int buffer_cache(void *handle, void **o_cache, size_t *o_numbytes)
+/*
+ * extract_buffer_t cache function. We simply return writer->output_cache.
+ */
 {
 	fz_docx_writer *writer = handle;
 	*o_cache = writer->output_cache;
@@ -74,60 +249,39 @@ static int s_buffer_to_output_cache(void *handle, void **o_cache, size_t *o_numb
 	return 0;
 }
 
-static void s_close(fz_context *ctx, fz_document_writer *writer_)
+static void writer_close(fz_context *ctx, fz_document_writer *writer_)
 {
 	fz_docx_writer *writer = (fz_docx_writer*) writer_;
-	extract_buffer_t *extract_buffer_intermediate = NULL;
 	extract_buffer_t *extract_buffer_output = NULL;
-	extract_t *extract = NULL;
 
-	fz_var(extract_buffer_intermediate);
 	fz_var(extract_buffer_output);
 	fz_var(writer);
-	fz_var(extract);
 
 	fz_try(ctx)
 	{
-		unsigned char *data;
-		size_t data_size;
-		writer->ctx = ctx;	/* For s_buffer_to_output_write() callback. */
-
-		if (extract_begin(&extract))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to initialize extract system");
-
-		/*
-		 * Load intermediate data. Intermediate data from xmltext
-		 * device is (via writer->intermediate_output) in
-		 * writer->intermediate_buffer. We create an extract_buffer_t that
-		 * reads this intermediate data (without copying it) for use by
-		 * extract_read_intermediate().
-		 */
-		fz_close_output(ctx, writer->intermediate_output);
-		data_size = fz_buffer_storage(ctx, writer->intermediate_buffer, &data);
-		if (extract_buffer_open_simple(data, data_size, NULL /*handle*/, NULL /*fn_close*/, &extract_buffer_intermediate))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_buffer_intermediate.");
-		if (extract_read_intermediate(extract, extract_buffer_intermediate, 0 /*autosplit*/))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to extract intermediate data");
-		if (extract_buffer_close(&extract_buffer_intermediate))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to finish extraction of intermediate data");
-
-		if (extract_process(extract, writer->spacing, writer->rotation, writer->images))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "extract_process() failed");
-
 		/*
 		 * Write docx to writer->output. Need to create an
 		 * extract_buffer_t that writes to writer->output, for use by
 		 * extract_write().
 		 */
-		if (extract_buffer_open(writer, NULL /*fn_read*/, s_buffer_to_output_write,
-				s_buffer_to_output_cache, NULL /*fn_close*/, &extract_buffer_output))
+		writer->ctx = ctx;
+		if (extract_buffer_open(
+				writer,
+				NULL /*fn_read*/,
+				buffer_write,
+				buffer_cache,
+				NULL /*fn_close*/,
+				&extract_buffer_output
+				))
+		{
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract_buffer_output: %s", strerror(errno));
-		if (extract_write(extract, extract_buffer_output))
+		}
+		if (extract_write(writer->extract, extract_buffer_output))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to generate docx content: %s", strerror(errno));
 		if (extract_buffer_close(&extract_buffer_output))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to close extract_buffer: %s", strerror(errno));
 
-		extract_end(&extract);
+		extract_end(&writer->extract);
 
 		fz_close_output(ctx, writer->output);
 
@@ -140,20 +294,17 @@ static void s_close(fz_context *ctx, fz_document_writer *writer_)
 		 * this error case we can safely leave cleanup to our s_drop()
 		 * function's calls to fz_drop_output().
 		 */
-		extract_buffer_close(&extract_buffer_intermediate);
 		extract_buffer_close(&extract_buffer_output);
-		extract_end(&extract);
+		extract_end(&writer->extract);
 		writer->ctx = NULL;
 
 		fz_rethrow(ctx);
 	}
 }
 
-static void s_drop(fz_context *ctx, fz_document_writer *writer_)
+static void writer_drop(fz_context *ctx, fz_document_writer *writer_)
 {
 	fz_docx_writer *writer = (fz_docx_writer*) writer_;
-	fz_drop_output(ctx, writer->intermediate_output);
-	fz_drop_buffer(ctx, writer->intermediate_buffer);
 	if (writer->we_own_output)
 	{
 		fz_drop_output(ctx, writer->output);
@@ -183,11 +334,16 @@ static fz_document_writer *fz_new_docx_writer_internal(fz_context *ctx, fz_outpu
 	fz_var(writer);
 	fz_try(ctx)
 	{
-		writer = fz_new_derived_document_writer(ctx, fz_docx_writer, s_begin_page, s_end_page, s_close, s_drop);
-		writer->intermediate_output = NULL;
-		writer->intermediate_buffer = NULL;
-		writer->intermediate_buffer = fz_new_buffer(ctx, 0 /*capacity*/);
-		writer->intermediate_output = fz_new_output_with_buffer(ctx, writer->intermediate_buffer);
+		writer = fz_new_derived_document_writer(
+				ctx,
+				fz_docx_writer,
+				writer_begin_page,
+				writer_end_page,
+				writer_close,
+				writer_drop
+				);
+		if (extract_begin(&writer->extract))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to create extract instance");
 		writer->output = out;
 		writer->we_own_output = we_own_output;
 		writer->spacing = get_bool_option(ctx, options, "spacing", 1);

@@ -249,7 +249,6 @@ Tools:
 
 
 import glob
-import inspect
 import io
 import os
 import re
@@ -311,7 +310,7 @@ class ClangInfo:
         clang.cindex.Config.set_library_file(). This appears to be necessary
         even when clang is installed as a standard package.
         '''
-        for version in 8, 7, 6,:
+        for version in 10, 9, 8, 7, 6,:
             ok = self._try_init_clang( version)
             if ok:
                 break
@@ -319,6 +318,22 @@ class ClangInfo:
             raise Exception( 'cannot find libclang.so')
 
     def _try_init_clang( self, version):
+        if os.uname()[0] == 'OpenBSD':
+            clang_bin = glob.glob( f'/usr/local/bin/clang-{version}')
+            if not clang_bin:
+                return
+            clang_bin = clang_bin[0]
+            self.clang_version = version
+            libclang_so = glob.glob( f'/usr/local/lib/libclang.so*')
+            assert len(libclang_so) == 1
+            self.libclang_so = libclang_so[0]
+            self.resource_dir = jlib.system(
+                    f'{clang_bin} -print-resource-dir',
+                    out='return',
+                    ).strip()
+            self.include_path = os.path.join( self.resource_dir, 'include')
+            return True
+
         for p in os.environ.get( 'PATH').split( ':'):
             clang_bins = glob.glob( os.path.join( p, f'clang-{version}*'))
             if not clang_bins:
@@ -334,6 +349,10 @@ class ClangInfo:
                 if e:
                     log( '[could not find {clang_bin}: {e=}]')
                     return
+                if version == 10:
+                    m = re.search( '\nlibraries: =(.+)\n', clang_search_dirs)
+                    assert m
+                    clang_search_dirs = m.group(1)
                 clang_search_dirs = clang_search_dirs.strip().split(':')
                 for i in ['/usr/lib', '/usr/local/lib'] + clang_search_dirs:
                     for leaf in f'libclang-{version}.*so*', f'libclang.so.{version}.*':
@@ -2071,7 +2090,6 @@ def get_args( tu, cursor, include_fz_context=False, verbose=False):
             elif base_typename.startswith( ('fz_', 'pdf_')):
                 # Pointer to fz_ struct is not usually an out-param.
                 if verbose: log( 'not out-param because arg is: {arg.displayname=} {base_type.spelling=} {extras}')
-                pass
             elif arg.type.kind == clang.cindex.TypeKind.POINTER:
                 if arg.type.get_pointee().get_canonical().kind == clang.cindex.TypeKind.FUNCTIONPROTO:
                     # Don't mark function-pointer args as out-params.
@@ -2606,12 +2624,6 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
                     # mudraw.c calls fz_set_separation_behavior().
                     #
                     log( 'not excluding {fnname=} with enum fz_ param : {arg.spelling=} {arg.type.kind} {arg.type.get_canonical().kind=}')
-                    if 0:
-                        exclude_reasons.append(
-                                (
-                                MethodExcludeReason_ENUM,
-                                f'arg i={i} is enum: {arg.type.get_canonical().spelling}',
-                                ))
                 else:
                     exclude_reasons.append(
                             (
@@ -2631,7 +2643,7 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
 
         if exclude_reasons:
             find_wrappable_function_with_arg0_type_excluded_cache[ fnname] = exclude_reasons
-            if 0:
+            if 0:   # lgtm [py/unreachable-statement]
                 log( 'excluding {fnname=} because:')
                 for i in exclude_reasons:
                     log( '    {i}')
@@ -2644,8 +2656,7 @@ def find_wrappable_function_with_arg0_type_cache_populate( tu):
                 items = find_wrappable_function_with_arg0_type_cache.setdefault( arg0, [])
                 items.append( fnname)
 
-    if 0:
-        log( f'populating find_wrappable_function_with_arg0_type_cache took {time.time()-t0}s')
+    logx( f'populating find_wrappable_function_with_arg0_type_cache took {time.time()-t0}s')
 
 
 def find_wrappable_function_with_arg0_type( tu, structname):
@@ -3136,12 +3147,10 @@ def class_find_constructor_fns( tu, classname, structname, base_name, extras):
                 else:
                     if duplicate_type:
                         log( 'not able to provide static factory fn {structname}::{fnname} because wrapper class is not copyable.')
-                        pass
                     log1( 'adding constructor wrapper for {fnname}')
                     constructor_fns.append( (fnname, cursor, duplicate_type))
             else:
                 log3( 'ignoring possible constructor for {classname=} because does not return required type: {fnname=} -> {cursor.result_type.spelling=}')
-                pass
 
     constructor_fns.sort()
     return constructor_fns
@@ -3379,7 +3388,6 @@ def class_write_method(
             Only used if <constructor> is true.
     '''
     assert fnname not in omit_methods
-    verbose = False
     logx( '{classname=} {fnname=}')
     assert fnname.startswith( ('fz_', 'pdf_'))
     fn_cursor = find_function( tu, fnname, method=True)
@@ -3512,13 +3520,10 @@ def class_write_method(
                     pass
                 else:
                     return_extras = classextras.get( return_cursor.type.spelling)
-                    if 1 or (return_extras and return_extras.constructor_raw):
-                        return_type = rename.class_(return_cursor.type.spelling)
-                        fn_h = f'{return_type} {decl_h}'
-                        fn_cpp = f'{return_type} {classname}::{decl_cpp}'
-                        construct_from_temp = 'address_of_value'
-                    else:
-                        warning_no_raw_constructor = True
+                    return_type = rename.class_(return_cursor.type.spelling)
+                    fn_h = f'{return_type} {decl_h}'
+                    fn_cpp = f'{return_type} {classname}::{decl_cpp}'
+                    construct_from_temp = 'address_of_value'
 
     if warning_not_copyable:
         log( '*** warning: {classname}::{decl_h}: Not able to return wrapping class {return_type} from {return_cursor.spelling} because {return_type} is not copyable.')
@@ -3608,7 +3613,7 @@ def class_custom_method( register_fn_use, classname, extramethod, out_h, out_cpp
     out_cpp.write( textwrap.dedent(extramethod.body))
     out_cpp.write( f'\n')
 
-    if 1:
+    if 1:   # lgtm [py/constant-conditional-expression]
         # Register calls of all fz_* functions. Not necessarily helpful - we
         # might only be interested in calls of fz_* functions that are directly
         # available to uses of class.
@@ -3720,8 +3725,7 @@ def class_accessors(
     Writes accessor functions for member data.
     '''
     if not extras.pod:
-        if 0:
-            log( 'creating accessor for non-pod class {classname=} wrapping {structname}')
+        logx( 'creating accessor for non-pod class {classname=} wrapping {structname}')
     for cursor in struct.type.get_canonical().get_fields():
         #jlib.log( 'accessors: {cursor.spelling=} {cursor.type.spelling=}')
 
@@ -3759,7 +3763,7 @@ def class_accessors(
                         log( 'cannot find {keep_function=}')
                         keep_function = None
         else:
-            if 0 and extras.pod:
+            if 0 and extras.pod:    # lgtm [py/unreachable-statement]
                 # Return reference so caller can modify. Unfortunately SWIG
                 # converts non-const references to pointers, so generated
                 # python isn't useful.
@@ -3767,7 +3771,7 @@ def class_accessors(
             else:
                 fn_args = '%s()'
             if cursor.type.get_array_size() >= 0:
-                if 0:
+                if 0:   # lgtm [py/unreachable-statement]
                     # Return reference to the array; we need to put fn name
                     # and args inside (...) to allow the declaration syntax
                     # to work - we end up with things like:
@@ -3808,7 +3812,7 @@ def class_destructor(
         ):
     if len(destructor_fns) > 1:
         # Use function with shortest name.
-        if 0:
+        if 0:   # lgtm [py/unreachable-statement]
             jlib.log( 'Multiple possible destructor fns for {classname=}')
             for fnname, cursor in destructor_fns:
                 jlib.log( '    {fnname=} {cursor.spelling=}')
@@ -4465,12 +4469,6 @@ def cpp_source( dir_mupdf, namespace, base, header_git, doit=True):
     #
     log( 'Creating wrapper classes...')
 
-    if 0: out_hs.classes.write( textwrap.dedent(
-            f'''
-            typedef fz_separation_behavior {rename.class_( 'fz_separation_behavior')};
-
-            '''))
-
     # Find all classes that we can create.
     #
     classes = []
@@ -4567,7 +4565,7 @@ def cpp_source( dir_mupdf, namespace, base, header_git, doit=True):
 
     filenames_h = [filename for _, filename, _ in out_hs.get()]
     filenames_cpp = [filename for _, filename, _ in out_cpps.get()]
-    if 0:
+    if 0:   # lgtm [py/unreachable-statement]
         log( 'Have created:')
         for filename in filenames_h + filenames_cpp:
             log( '    {filename}')
@@ -4588,9 +4586,7 @@ def cpp_source( dir_mupdf, namespace, base, header_git, doit=True):
             continue
         # 'cursor.displayname' doesn't include the return type, so we use our
         # declaration_text() fn to show the function details.
-        #out_fn_usage.write( f'    {n}: {fnname}: {cursor.displayname}\n')
-        #out_fn_usage.write( f'    {fnname}:\n')
-        if 0:
+        if 0:   # lgtm [py/unreachable-statement]
             out_fn_usage.write( f'    {declaration_text( cursor.type, cursor.spelling, arg_names=1)}\n')
             out_fn_usage.write( f'        {n}\n')
 
@@ -4604,11 +4600,6 @@ def cpp_source( dir_mupdf, namespace, base, header_git, doit=True):
             continue
         if n:
             continue
-        #if not exclude_reasons:
-        #    out_fn_usage.write( f'    {declaration_text( cursor.type, cursor.spelling, arg_names=1)}\n')
-        #    out_fn_usage.write( f'        *** not used, but no exclude reasons\n')
-        #    out_fn_usage.write( '\n')
-        #    continue
         num_interesting_reasons = 0
         for t, description in exclude_reasons:
             if t == MethodExcludeReason_FIRST_ARG_NOT_STRUCT:
@@ -4621,7 +4612,6 @@ def cpp_source( dir_mupdf, namespace, base, header_git, doit=True):
                 out_fn_usage.write( f'    {declaration_text( cursor.type, cursor.spelling, arg_names=1)}\n')
             except Clang6FnArgsBug as e:
                 out_fn_usage.write( f'    {cursor.spelling} [full prototype not available due to known clang-6 issue]\n')
-            #out_fn_usage.write( f'        exclude reasons:\n')
             for t, description in exclude_reasons:
                 if t == MethodExcludeReason_FIRST_ARG_NOT_STRUCT:
                     continue
@@ -4787,6 +4777,9 @@ def build_swig( build_dirs, container_classnames, language='python', swig='swig'
             %ignore {rename.function('fz_write_vprintf')};
             %ignore {rename.function('fz_format_string')};
             %ignore {rename.function('fz_open_file_w')};
+
+            // SWIG can't handle this because it uses a valist.
+            %ignore {rename.function('Memento_vasprintf')};
 
             // Might prefer to #include mupdf/exceptions.h and make the
             // %exception block below handle all the different exception types,
@@ -4957,9 +4950,7 @@ def build_swig( build_dirs, container_classnames, language='python', swig='swig'
 
     text += '%}\n'
 
-    preprocess = False
-
-    if 1:
+    if 1:   # lgtm [py/constant-conditional-expression]
         # This is a horrible hack to avoid swig failing because
         # include/mupdf/pdf/object.h defines an enum which contains a #include.
         #
@@ -4986,9 +4977,6 @@ def build_swig( build_dirs, container_classnames, language='python', swig='swig'
     swig_i      = f'{build_dirs.dir_mupdf}platform/python/mupdfcpp_swig.i'
     include1    = f'{build_dirs.dir_mupdf}include/'
     include2    = f'{build_dirs.dir_mupdf}platform/c++/include'
-    include3    = None
-    if preprocess:
-        include3    = f'{build_dirs.dir_mupdf}platform/python/'
     swig_cpp    = f'{build_dirs.dir_mupdf}platform/python/mupdfcpp_swig.cpp'
     swig_py     = f'{build_dirs.dir_so}mupdf.py'
 
@@ -5120,7 +5108,7 @@ class BuildDirs:
         # used to build libmupdf.so - mupdf code is different depending on
         # whether NDEBUG is defined.
         #
-        if 0: pass
+        if 0: pass  # lgtm [py/unreachable-statement]
         elif dir_so == f'{self.dir_mupdf}build/shared-debug/':
             self.cpp_flags = '-g'
         elif dir_so == f'{self.dir_mupdf}build/shared-release/':
@@ -5153,8 +5141,9 @@ def main():
         #log( 'Handling {arg=}')
 
         with jlib.LogPrefixScope( f'{arg}: '):
-            if 0:
-                pass
+
+            if arg == '-h' or arg == '--help':
+                print( __doc__)
 
             elif arg == '--build' or arg == '-b':
                 h_files     = []
@@ -5166,9 +5155,7 @@ def main():
 
                 while 1:
                     actions = args.next()
-                    if 0:
-                        pass
-                    elif actions == '-f':
+                    if actions == '-f':
                         force_rebuild = True
                     elif actions.startswith( '-'):
                         raise Exception( f'Unrecognised --build flag: {actions}')
@@ -5197,7 +5184,8 @@ def main():
 
                             command = f'cd {build_dirs.dir_mupdf} && {make} HAVE_GLUT=no HAVE_PTHREAD=yes shared=yes verbose=yes'
                             #command += ' USE_SYSTEM_FREETYPE=yes USE_SYSTEM_ZLIB=yes'
-                            if 0: pass
+                            if 0:   # lgtm [py/unreachable-statement]
+                                pass
                             elif build_dirs.dir_so == f'{build_dirs.dir_mupdf}build/shared-debug/':
                                 command += ' build=debug'
                             elif build_dirs.dir_so == f'{build_dirs.dir_mupdf}build/shared-release/':
@@ -5242,7 +5230,7 @@ def main():
                             #
                             # This is superceded by automatically finding fuctions to wrap.
                             #
-                            if 0:
+                            if 0:   # lgtm [py/unreachable-statement]
                                 log( 'functions that take struct args and are not used exactly once in methods:')
                                 num = 0
                                 for name in sorted( fn_usage.keys()):
@@ -5461,9 +5449,6 @@ def main():
 
                     else:
                         raise Exception( f'unrecognised language param: {lang}')
-
-            elif arg == '-h' or arg == '--help':
-                print( __doc__)
 
             elif arg == '--ref':
                 assert 'mupdfwrap_ref' in build_dirs.ref_dir

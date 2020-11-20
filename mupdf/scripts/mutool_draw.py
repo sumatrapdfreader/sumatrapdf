@@ -1,4 +1,3 @@
-import collections
 import getopt
 import os
 import re
@@ -395,7 +394,7 @@ def drawband( page, list_, ctm, tbounds, cookie, band_start, pix):
     else:
         page.run( dev, ctm, cookie)
     dev.close_device()
-    dev = None
+    dev = None  # [py/unused-local-variable]
 
     if state.invert:
         pix.invert_pixmap()
@@ -433,7 +432,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
             page.run( dev, fz_identity, cookie)
         state.out.write_string( "</page>\n")
         dev.close_device()
-        dev = None
+        dev = None  # [py/unused-local-variable]
 
     elif state.output_format == OUT_XMLTEXT:
         state.out.write_string( "<page mediabox=\"%g %g %g %g\">\n" % (
@@ -445,7 +444,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
             page.run( dev, fz_identity, cookie)
         state.out.write_string( "</page>\n")
         dev.close_device()
-        dev = None
+        dev = None  # [py/unused-local-variable]
 
     elif state.output_format == OUT_BBOX:
         bbox = mupdf.Rect( mupdf.Rect.Fixed_EMPTY)
@@ -484,7 +483,7 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
         else:
             page.run( dev, ctm, cookie)
         dev.close_device()
-        dev = None
+        dev = None  # [py/unused-local-variable]
         if state.output_format == OUT_STEXT:
             state.out.print_stext_page_as_xml( text, pagenum)
         elif state.output_format == OUT_HTML:
@@ -518,7 +517,6 @@ def dodrawpage( page, list_, pagenum, cookie, start, interptime, filename, bg, s
         state.out.close_output()
     else:
         zoom = state.resolution / 72
-        m = mupdf.rotate(state.rotation)
         ctm = mupdf.Matrix( mupdf.pre_scale( mupdf.rotate(state.rotation), zoom, zoom))
         tbounds = mupdf.Rect(mediabox, ctm)
         ibounds = tbounds.round_rect()
@@ -1088,7 +1086,7 @@ def draw( argv):
             state.out = mupdf.Output(state.output, 0)
     else:
         state.quiet = 1 # automatically be quiet if printing to stdout
-        if 0:
+        if 0:   # lgtm [py/unreachable-statement]
             # Windows specific code to make stdout binary.
             if state.output_format not in( OUT_TEXT, OUT_STEXT, OUT_HTML, OUT_XHTML, OUT_TRACE, OUT_XMLTEXT):
                 setmode(fileno(stdout), O_BINARY)

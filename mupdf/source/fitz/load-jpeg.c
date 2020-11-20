@@ -305,7 +305,8 @@ fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 	unsigned char *row[1], *sp, *dp;
 	fz_colorspace *colorspace = NULL;
 	unsigned int x;
-	int k, stride;
+	int k;
+	size_t stride;
 	fz_pixmap *image = NULL;
 
 	fz_var(colorspace);
@@ -376,7 +377,7 @@ fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 
 		row[0] = fz_malloc(ctx, (size_t)cinfo.output_components * cinfo.output_width);
 		dp = image->samples;
-		stride = image->stride - image->w * image->n;
+		stride = image->stride - image->w * (size_t)image->n;
 		while (cinfo.output_scanline < cinfo.output_height)
 		{
 			jpeg_read_scanlines(&cinfo, row, 1);

@@ -171,13 +171,13 @@ xps_open_document(fz_context *ctx, const char *filename)
 	char *p;
 	fz_document *doc = NULL;
 
-	if (strstr(filename, "/_rels/.rels") || strstr(filename, "\\_rels\\.rels"))
+	p = strstr(filename, "/_rels/.rels");
+	if (p == NULL)
+		p = strstr(filename, "\\_rels\\.rels");
+	if (p)
 	{
 		char *buf = fz_strdup(ctx, filename);
-		p = strstr(buf, "/_rels/.rels");
-		if (!p)
-			p = strstr(buf, "\\_rels\\.rels");
-		*p = 0;
+		buf[p-filename] = 0;
 		fz_try(ctx)
 			doc = xps_open_document_with_directory(ctx, buf);
 		fz_always(ctx)

@@ -154,6 +154,7 @@ static const unsigned char bitrev[256] =
 	0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
 };
 
+/* coverity[ +tainted_data_sanitize ] */
 static inline int tiff_getcomp(unsigned char *line, int x, int bpc)
 {
 	switch (bpc)

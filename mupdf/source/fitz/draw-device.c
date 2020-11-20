@@ -920,7 +920,7 @@ draw_glyph(unsigned char *colorbv, fz_pixmap *dst, fz_glyph *glyph,
 	skip_y = y - glyph->y - yorig;
 
 	msk = glyph->pixmap;
-	dp = dst->samples + (unsigned int)((y - dst->y) * dst->stride + (x - dst->x) * dst->n);
+	dp = dst->samples + (y - dst->y) * (size_t)dst->stride + (x - dst->x) * (size_t)dst->n;
 	if (msk == NULL)
 	{
 		fz_paint_glyph(colorbv, dst, dp, glyph, w, h, skip_x, skip_y, eop);

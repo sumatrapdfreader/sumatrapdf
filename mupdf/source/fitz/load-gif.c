@@ -141,14 +141,21 @@ gif_read_header(fz_context *ctx, struct info *info, const unsigned char *p, cons
 	return p + 6;
 }
 
+/* coverity[-tainted_data_return] */
+static unsigned int
+safe_load_u16(const unsigned char *p)
+{
+	return p[1] << 8 | p[0];
+}
+
 static const unsigned char *
 gif_read_lsd(fz_context *ctx, struct info *info, const unsigned char *p, const unsigned char *end)
 {
 	if (end - p < 7)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "premature end in logical screen descriptor in gif image");
 
-	info->width = p[1] << 8 | p[0];
-	info->height = p[3] << 8 | p[2];
+	info->width = safe_load_u16(p);
+	info->height = safe_load_u16(p+2);
 	if (info->width <= 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "image width must be > 0");
 	if (info->height <= 0)
@@ -165,7 +172,7 @@ gif_read_lsd(fz_context *ctx, struct info *info, const unsigned char *p, const u
 	info->aspect = p[6];
 
 	info->xres = 96;
-	info->yres= 96;
+	info->yres = 96;
 	if (info->aspect > 0)
 		info->yres = (((float) info->aspect + 15) / 64) * 96;
 

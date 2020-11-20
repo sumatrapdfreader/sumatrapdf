@@ -306,6 +306,7 @@ struct jbig2_segment_header {
 	int length;
 };
 
+/* coverity[-tainted_data_return] */
 static uint32_t getu32(const unsigned char *data)
 {
 	return ((uint32_t)data[0]<<24) | ((uint32_t)data[1]<<16) | ((uint32_t)data[2]<<8) | (uint32_t)data[3];
@@ -600,7 +601,7 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 			pdf_dict_put_int(ctx, imobj, PDF_NAME(Height), image->h);
 
 			if (!buffer)
-			buffer = fz_keep_buffer(ctx, cbuffer->buffer);
+				buffer = fz_keep_buffer(ctx, cbuffer->buffer);
 
 			if (image->use_decode)
 			{

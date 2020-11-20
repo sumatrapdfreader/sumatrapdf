@@ -35,16 +35,14 @@ def test(path):
     global g_test_n
     g_test_n += 1
 
-    if 1:
-        # Test operations using functions:
-        #
-        log('Testing functions.')
-
-        log(f'    Opening: %s' % path)
-        document = mupdf.open_document(path)
-        log(f'    mupdf.needs_password(document)={mupdf.needs_password(document)}')
-        log(f'    mupdf.count_pages(document)={mupdf.count_pages(document)}')
-        log(f'    mupdf.document_output_intent(document)={mupdf.document_output_intent(document)}')
+    # Test operations using functions:
+    #
+    log('Testing functions.')
+    log(f'    Opening: %s' % path)
+    document = mupdf.open_document(path)
+    log(f'    mupdf.needs_password(document)={mupdf.needs_password(document)}')
+    log(f'    mupdf.count_pages(document)={mupdf.count_pages(document)}')
+    log(f'    mupdf.document_output_intent(document)={mupdf.document_output_intent(document)}')
 
     # Test operations using classes:
     #
@@ -130,7 +128,7 @@ def test(path):
 
     # Check we can iterate over Link's, by creating one manually.
     #
-    link = mupdf.Link(mupdf.Rect(0, 0, 1, 1), None, "hello")
+    link = mupdf.Link(mupdf.Rect(0, 0, 1, 1), "hello")
     log(f'items in <link> are:')
     for i in link:
         log(f'    {i.m_internal.refs} {i.m_internal.uri}')
@@ -204,10 +202,6 @@ if __name__ == '__main__':
     paths = sys.argv[1:]
     if not paths:
         paths = [
-                f'{g_mupdf_root}/thirdparty/lcms2/doc/LittleCMS2.10 API.pdf',
-                f'{g_mupdf_root}/thirdparty/lcms2/doc/LittleCMS2.10 Plugin API.pdf',
-                f'{g_mupdf_root}/thirdparty/lcms2/doc/LittleCMS2.10 tutorial.pdf',
-                f'{g_mupdf_root}/thirdparty/lcms2/plugins/fast_float/doc/LittleCMS fast float extensions 1.0.pdf',
                 f'{g_mupdf_root}/thirdparty/zlib/zlib.3.pdf',
                 ]
     # Run test() on all the .pdf files in the mupdf repository.
