@@ -735,6 +735,42 @@ static short GetPaperByName(const WCHAR* papername) {
     return 0;
 }
 
+static short GetPaperByName(const WCHAR* printerName, const WCHAR* paperName, LPDEVMODE devMode) {
+    CrashIf(!(devMode->dmFields & DM_PAPERSIZE));
+    if (!(devMode->dmFields & DM_PAPERSIZE)) {
+        return devMode->dmPaperSize;
+    }
+    DWORD count = DeviceCapabilities(printerName, nullptr, DC_PAPERS, nullptr, nullptr);
+    DWORD count2 = DeviceCapabilities(printerName, nullptr, DC_PAPERNAMES, nullptr, nullptr);
+    if (count != count2 || 0 == count || ((DWORD)-1 == count)) {
+        return devMode->dmPaperSize;
+    }
+    // try to determine the paper names by name
+    ScopedMem<WORD> papers(AllocArray<WORD>(count));
+    AutoFreeWstr paperNames(AllocArray<WCHAR>(64 * (size_t)count + 1));
+    DeviceCapabilitiesW(printerName, nullptr, DC_PAPERS, (WCHAR*)papers.Get(), nullptr);
+    DeviceCapabilitiesW(printerName, nullptr, DC_PAPERNAMES, paperNames.Get(), nullptr);
+    for (DWORD i = 0; i < count; i++) {
+        const WCHAR* currName = paperNames.Get() + (64 * i);
+        if (str::EqIS(currName, paperName)) {
+            return papers.Get()[i];
+        }
+    }
+    // alternatively allow indicating the paper directly by number
+    if (str::Parse(paperName, L"%u%$", &count)) {
+        return (short)count;
+    }
+    return devMode->dmPaperSize;
+}
+
+static short GetPaperKind(const WCHAR* kindName) {
+    DWORD kind;
+    if (str::Parse(kindName, L"%u%$", &kind)) {
+        return (short)kind;
+    }
+    return DMPAPER_USER;
+}
+
 static short GetPaperSourceByName(const WCHAR* printerName, const WCHAR* binName, LPDEVMODE devMode) {
     CrashIf(!(devMode->dmFields & DM_DEFAULTSOURCE));
     if (!(devMode->dmFields & DM_DEFAULTSOURCE)) {
@@ -751,7 +787,7 @@ static short GetPaperSourceByName(const WCHAR* printerName, const WCHAR* binName
     DeviceCapabilitiesW(printerName, nullptr, DC_BINS, (WCHAR*)bins.Get(), nullptr);
     DeviceCapabilitiesW(printerName, nullptr, DC_BINNAMES, binNames.Get(), nullptr);
     for (DWORD i = 0; i < count; i++) {
-        const WCHAR* currName = binNames.Get() + 24 * i;
+        const WCHAR* currName = binNames.Get() + (24 * i);
         if (str::EqIS(currName, binName)) {
             return bins.Get()[i];
         }
@@ -773,50 +809,55 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
     for (size_t i = 0; i < rangeList.size(); i++) {
         int val;
         PRINTPAGERANGE pr{};
-        if (str::Parse(rangeList.at(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
+        WCHAR* s = rangeList.at(i);
+        if (str::Parse(s, L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
-        } else if (str::Parse(rangeList.at(i), L"%d%$", &pr.nFromPage)) {
+        } else if (str::Parse(s, L"%d%$", &pr.nFromPage)) {
             pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
-        } else if (str::EqI(rangeList.at(i), L"even")) {
+        } else if (str::EqI(s, L"even")) {
             advanced.range = PrintRangeAdv::Even;
-        } else if (str::EqI(rangeList.at(i), L"odd")) {
+        } else if (str::EqI(s, L"odd")) {
             advanced.range = PrintRangeAdv::Odd;
-        } else if (str::EqI(rangeList.at(i), L"noscale")) {
+        } else if (str::EqI(s, L"noscale")) {
             advanced.scale = PrintScaleAdv::None;
-        } else if (str::EqI(rangeList.at(i), L"shrink")) {
+        } else if (str::EqI(s, L"shrink")) {
             advanced.scale = PrintScaleAdv::Shrink;
-        } else if (str::EqI(rangeList.at(i), L"fit")) {
+        } else if (str::EqI(s, L"fit")) {
             advanced.scale = PrintScaleAdv::Fit;
-        } else if (str::EqI(rangeList.at(i), L"portrait")) {
+        } else if (str::EqI(s, L"portrait")) {
             advanced.rotation = PrintRotationAdv::Portrait;
-        } else if (str::EqI(rangeList.at(i), L"landscape")) {
+        } else if (str::EqI(s, L"landscape")) {
             advanced.rotation = PrintRotationAdv::Landscape;
-        } else if (str::Parse(rangeList.at(i), L"%dx%$", &val) && 0 < val && val < 1000) {
+        } else if (str::Parse(s, L"%dx%$", &val) && 0 < val && val < 1000) {
             devMode->dmCopies = (short)val;
             devMode->dmFields |= DM_COPIES;
-        } else if (str::EqI(rangeList.at(i), L"simplex")) {
+        } else if (str::EqI(s, L"simplex")) {
             devMode->dmDuplex = DMDUP_SIMPLEX;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(rangeList.at(i), L"duplex") || str::EqI(rangeList.at(i), L"duplexlong")) {
+        } else if (str::EqI(s, L"duplex") || str::EqI(s, L"duplexlong")) {
             devMode->dmDuplex = DMDUP_VERTICAL;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(rangeList.at(i), L"duplexshort")) {
+        } else if (str::EqI(s, L"duplexshort")) {
             devMode->dmDuplex = DMDUP_HORIZONTAL;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(rangeList.at(i), L"color")) {
+        } else if (str::EqI(s, L"color")) {
             devMode->dmColor = DMCOLOR_COLOR;
             devMode->dmFields |= DM_COLOR;
-        } else if (str::EqI(rangeList.at(i), L"monochrome")) {
+        } else if (str::EqI(s, L"monochrome")) {
             devMode->dmColor = DMCOLOR_MONOCHROME;
             devMode->dmFields |= DM_COLOR;
-        } else if (str::StartsWithI(rangeList.at(i), L"bin=")) {
-            devMode->dmDefaultSource = GetPaperSourceByName(printerName, rangeList.at(i) + 4, devMode);
+        } else if (str::StartsWithI(s, L"bin=")) {
+            devMode->dmDefaultSource = GetPaperSourceByName(printerName, s + 4, devMode);
             devMode->dmFields |= DM_DEFAULTSOURCE;
-        } else if (str::StartsWithI(rangeList.at(i), L"paper=")) {
-            devMode->dmPaperSize = GetPaperByName(rangeList.at(i) + 6);
+        } else if (str::StartsWithI(s, L"paper=")) {
+            devMode->dmPaperSize = GetPaperByName(printerName, s + 6, devMode);
+            devMode->dmFields |= DM_PAPERSIZE;
+        } else if (str::StartsWithI(s, L"paperkind=")) {
+            // alternatively allow indicating the paper kind directly by number
+            devMode->dmPaperSize = GetPaperKind(s + 10);
             devMode->dmFields |= DM_PAPERSIZE;
         }
     }
