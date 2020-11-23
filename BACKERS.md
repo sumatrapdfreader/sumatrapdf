@@ -35,3 +35,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Walter Manbeck
 - Curtis Y Takahashi
 - Hasan Kamal-Al-Deen
+- Christian Schulz
