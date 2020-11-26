@@ -330,16 +330,14 @@ int ui_open_file(char filename[PATH_MAX], const char *label)
 		ui_layout(T, X, NW, 2, 2);
 		ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 		{
-			if (fc.selected >= 0)
-			{
+			int disabled = (fc.selected < 0);
 				ui_layout(R, NONE, CENTER, 0, 0);
-				if (ui_button("Open") || (!ui.focus && ui.key == KEY_ENTER))
+			if (ui_button_aux("Open", disabled) || (!disabled && !ui.focus && ui.key == KEY_ENTER))
 				{
 					fz_snprintf(filename, PATH_MAX, "%s/%s", fc.curdir, fc.files[fc.selected].name);
 					rv = 1;
 				}
 				ui_spacer();
-			}
 			ui_layout(ALL, X, CENTER, 0, 0);
 			if (ui_input(&fc.input_dir, 0, 1) == UI_INPUT_ACCEPT)
 				load_dir(fc.input_dir.text);

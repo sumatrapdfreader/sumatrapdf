@@ -1493,10 +1493,9 @@ template_span_1_general(byte * FZ_RESTRICT dp, int da, const byte * FZ_RESTRICT 
 				dp++;
 				if (da)
 				{
-					*dp = (sa ? *sp + FZ_COMBINE(*dp, t) : 255);
+					*dp = *sp + FZ_COMBINE(*dp, t);
 					dp++;
 				}
-				if (sa)
 					sp++;
 			}
 		}

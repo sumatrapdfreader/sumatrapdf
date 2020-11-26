@@ -325,7 +325,7 @@ pdf_parse_jbig2_segment_header(fz_context *ctx,
 	info->number = getu32(data);
 	info->flags = data[4];
 
-	rts = data[5] >> 5;
+	rts = (data[5] >> 5) & 0x7;
 	if (rts == 7)
 	{
 		rts = getu32(data+5) & 0x1FFFFFFF;

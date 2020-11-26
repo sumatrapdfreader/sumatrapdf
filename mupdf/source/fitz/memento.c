@@ -62,6 +62,19 @@ int atexit(void (*)(void));
 #include <stdio.h>
 #endif
 
+/* Workaround VS2012 (and earlier) missing va_copy. */
+#ifdef _MSC_VER
+# if _MSC_VER < 1800 /* Prior to 2013 */
+#  ifndef va_copy
+#   ifdef __va_copy
+#    define va_copy(dst,src) __va_copy(dst,src)
+#   else
+#    define va_copy(dst,src) memcpy(&dst, &src, sizeof(va_list))
+#   endif /* __va_copy */
+#  endif /* va_copy */
+# endif
+#endif
+
 /* Hacks to portably print large sizes */
 #ifdef _MSC_VER
 #define FMTZ "%llu"

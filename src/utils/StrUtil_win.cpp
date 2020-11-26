@@ -441,7 +441,7 @@ WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
     }
 
     // always add between one and two decimals after the point
-    AutoFreeWstr buf(str::Format(L"%s%s%02d", tmp.Get(), decimal, num % 100));
+    AutoFreeWstr buf(str::Format(L"%s%s%02d", tmp.Get(), decimal, (int)(num % 100)));
     if (str::EndsWith(buf, L"0")) {
         buf[str::Len(buf) - 1] = '\0';
     }

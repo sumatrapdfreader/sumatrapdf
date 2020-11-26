@@ -133,7 +133,7 @@ static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ImageData* im
     }
     const WCHAR* ext = GfxFileExtFromData(img->AsSpan());
     CrashAlwaysIf(!ext);
-    AutoFreeWstr fileName(str::Format(L"%s_img_%d%s", filePathBase, imgNo, ext));
+    AutoFreeWstr fileName(str::Format(L"%s_img_%d%s", filePathBase, (int)imgNo, ext));
     file::WriteFile(fileName.Get(), img->AsSpan());
 }
 

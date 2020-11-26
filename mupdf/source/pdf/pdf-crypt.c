@@ -683,6 +683,7 @@ pdf_authenticate_owner_password(fz_context *ctx, pdf_crypt *crypt, unsigned char
 		if (pwlen > 32)
 			pwlen = 32;
 		memcpy(pwbuf, ownerpass, pwlen);
+		if (pwlen < 32)
 		memcpy(pwbuf + pwlen, padding, 32 - pwlen);
 
 		fz_md5_init(&md5);

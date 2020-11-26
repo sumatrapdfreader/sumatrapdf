@@ -1824,7 +1824,7 @@ static void pdf_execute_action_chain(fz_context *ctx, pdf_document *doc, pdf_obj
 
 static void pdf_execute_action(fz_context *ctx, pdf_document *doc, pdf_obj *target, const char *path)
 {
-	pdf_obj *action = pdf_dict_getp(ctx, target, path);
+	pdf_obj *action = pdf_dict_getp_inheritable(ctx, target, path);
 	if (action)
 		pdf_execute_action_chain(ctx, doc, target, path, action);
 }
@@ -1923,7 +1923,7 @@ int pdf_field_event_keystroke(fz_context *ctx, pdf_document *doc, pdf_obj *field
 	pdf_js *js = doc->js;
 	if (js)
 	{
-		pdf_obj *action = pdf_dict_getp(ctx, field, "AA/K/JS");
+		pdf_obj *action = pdf_dict_getp_inheritable(ctx, field, "AA/K/JS");
 		if (action)
 		{
 			pdf_js_event_init_keystroke(js, field, evt);
@@ -1939,7 +1939,7 @@ char *pdf_field_event_format(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 	pdf_js *js = doc->js;
 	if (js)
 	{
-		pdf_obj *action = pdf_dict_getp(ctx, field, "AA/F/JS");
+		pdf_obj *action = pdf_dict_getp_inheritable(ctx, field, "AA/K/JS");
 		if (action)
 		{
 			const char *value = pdf_field_value(ctx, field);
@@ -1956,7 +1956,7 @@ int pdf_field_event_validate(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 	pdf_js *js = doc->js;
 	if (js)
 	{
-		pdf_obj *action = pdf_dict_getp(ctx, field, "AA/V/JS");
+		pdf_obj *action = pdf_dict_getp_inheritable(ctx, field, "AA/V/JS");
 		if (action)
 		{
 			pdf_js_event_init(js, field, value, 1);
@@ -1972,7 +1972,7 @@ void pdf_field_event_calculate(fz_context *ctx, pdf_document *doc, pdf_obj *fiel
 	pdf_js *js = doc->js;
 	if (js)
 	{
-		pdf_obj *action = pdf_dict_getp(ctx, field, "AA/C/JS");
+		pdf_obj *action = pdf_dict_getp_inheritable(ctx, field, "AA/C/JS");
 		if (action)
 		{
 			char *old_value = fz_strdup(ctx, pdf_field_value(ctx, field));

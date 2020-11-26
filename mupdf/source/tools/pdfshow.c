@@ -360,17 +360,17 @@ static void showfield(pdf_obj *field)
 
 	showaction(pdf_dict_getp(ctx, field, "A"), "Action");
 
-	showaction(pdf_dict_getp(ctx, field, "AA/K"), "Keystroke");
-	showaction(pdf_dict_getp(ctx, field, "AA/V"), "Validate");
-	showaction(pdf_dict_getp(ctx, field, "AA/F"), "Format");
-	showaction(pdf_dict_getp(ctx, field, "AA/C"), "Calculate");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/K"), "Keystroke");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/V"), "Validate");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/F"), "Format");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/C"), "Calculate");
 
-	showaction(pdf_dict_getp(ctx, field, "AA/E"), "Enter");
-	showaction(pdf_dict_getp(ctx, field, "AA/X"), "Exit");
-	showaction(pdf_dict_getp(ctx, field, "AA/D"), "Down");
-	showaction(pdf_dict_getp(ctx, field, "AA/U"), "Up");
-	showaction(pdf_dict_getp(ctx, field, "AA/Fo"), "Focus");
-	showaction(pdf_dict_getp(ctx, field, "AA/Bl"), "Blur");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/E"), "Enter");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/X"), "Exit");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/D"), "Down");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/U"), "Up");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/Fo"), "Focus");
+	showaction(pdf_dict_getp_inheritable(ctx, field, "AA/Bl"), "Blur");
 
 	fz_write_string(ctx, out, "\n");
 

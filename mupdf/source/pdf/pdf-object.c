@@ -2274,6 +2274,54 @@ pdf_dict_get_inheritable(fz_context *ctx, pdf_obj *node, pdf_obj *key)
 	return val;
 }
 
+pdf_obj *
+pdf_dict_getp_inheritable(fz_context *ctx, pdf_obj *node, const char *path)
+{
+	pdf_obj *node2 = node;
+	pdf_obj *val = NULL;
+	pdf_obj *marked = NULL;
+
+	fz_var(node);
+	fz_var(marked);
+	fz_try(ctx)
+	{
+		do
+		{
+			val = pdf_dict_getp(ctx, node, path);
+			if (val)
+				break;
+			if (pdf_mark_obj(ctx, node))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in tree (parents)");
+			marked = node;
+			node = pdf_dict_get(ctx, node, PDF_NAME(Parent));
+		}
+		while (node);
+	}
+	fz_always(ctx)
+	{
+		/* We assume that if we have marked an object, without an exception
+		 * being thrown, that we can always unmark the same object again
+		 * without an exception being thrown. */
+		if (marked)
+		{
+			do
+			{
+				pdf_unmark_obj(ctx, node2);
+				if (node2 == marked)
+					break;
+				node2 = pdf_dict_get(ctx, node2, PDF_NAME(Parent));
+			}
+			while (node2);
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return val;
+}
+
 void pdf_dict_put_bool(fz_context *ctx, pdf_obj *dict, pdf_obj *key, int x)
 {
 	pdf_dict_put(ctx, dict, key, x ? PDF_TRUE : PDF_FALSE);

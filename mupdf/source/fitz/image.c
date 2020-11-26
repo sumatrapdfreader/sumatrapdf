@@ -388,7 +388,7 @@ subarea_stream(fz_context *ctx, fz_stream *stm, fz_image *image, const fz_irect 
 	subarea_state *state;
 	int f = 1<<l2factor;
 	int stream_w = (image->w + f - 1)>>l2factor;
-	size_t stream_stride = (stream_w * image->n * image->bpc + 7) / 8;
+	size_t stream_stride = (stream_w * (size_t)image->n * image->bpc + 7) / 8;
 	int l_margin = subarea->x0 >> l2factor;
 	int t_margin = subarea->y0 >> l2factor;
 	int r_margin = (image->w + f - 1 - subarea->x1) >> l2factor;
