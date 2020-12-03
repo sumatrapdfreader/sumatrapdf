@@ -353,6 +353,7 @@ static void showfield(pdf_obj *field)
 		fz_write_string(ctx, out, "\n");
 	}
 	fz_write_printf(ctx, out, "    Name: %(\n", t);
+	fz_free(ctx, t);
 	if (*tu)
 		fz_write_printf(ctx, out, "    Label: %q\n", tu);
 	if (parent)

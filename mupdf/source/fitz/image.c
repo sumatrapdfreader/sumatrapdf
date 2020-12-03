@@ -344,12 +344,13 @@ subarea_next(fz_context *ctx, fz_stream *stm, size_t len)
 	size_t n;
 
 	stm->wp = stm->rp = NULL;
-	if (state->nskip > 0)
+
+	while (state->nskip > 0)
 	{
 		n = fz_skip(ctx, state->src, state->nskip);
+		if (n == 0)
+			return EOF;
 		state->nskip -= n;
-		if (state->nskip > 0)
-			return 0;
 	}
 	if (state->lines == 0)
 		return EOF;

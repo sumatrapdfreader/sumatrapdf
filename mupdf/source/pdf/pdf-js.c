@@ -114,7 +114,14 @@ static void field_getName(js_State *J)
 		name = pdf_field_name(js->ctx, field);
 	fz_catch(js->ctx)
 		rethrow(js);
+	if (js_try(J)) {
+		fz_free(js->ctx, name);
+		js_throw(J);
+	} else {
 	js_pushstring(J, name);
+		js_endtry(J);
+		fz_free(js->ctx, name);
+	}
 }
 
 static void field_setName(js_State *J)

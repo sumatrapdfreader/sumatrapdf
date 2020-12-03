@@ -1528,6 +1528,8 @@ get_locked_fields_from_xfa(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 	if (name == NULL)
 		return NULL;
 
+	fz_try(ctx)
+	{
 	node = get_xfa_resource(ctx, doc, "template");
 
 	do
@@ -1552,8 +1554,12 @@ get_locked_fields_from_xfa(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 		*e = c;
 	}
 	while (node && *n == '.');
-
+	}
+	fz_always(ctx)
 	fz_free(ctx, name);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
 	if (node == NULL)
 		return NULL;
 

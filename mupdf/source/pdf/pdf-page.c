@@ -1069,6 +1069,13 @@ pdf_update_default_colorspaces(fz_context *ctx, fz_default_colorspaces *old_cs, 
 pdf_page *
 pdf_load_page(fz_context *ctx, pdf_document *doc, int number)
 {
+	return (pdf_page*)fz_load_page(ctx, (fz_document*)doc, number);
+}
+
+fz_page *
+pdf_load_page_imp(fz_context *ctx, fz_document *doc_, int chapter, int number)
+{
+	pdf_document *doc = (pdf_document*)doc_;
 	pdf_page *page;
 	pdf_annot *annot;
 	pdf_obj *pageobj, *obj;
@@ -1137,12 +1144,7 @@ pdf_load_page(fz_context *ctx, pdf_document *doc, int number)
 		page->super.incomplete = 1;
 	}
 
-	return page;
-}
-
-fz_page *pdf_load_page_imp(fz_context *ctx, fz_document *doc, int chapter, int number)
-{
-	return (fz_page*)pdf_load_page(ctx, (pdf_document*)doc, number);
+	return (fz_page*)page;
 }
 
 void
