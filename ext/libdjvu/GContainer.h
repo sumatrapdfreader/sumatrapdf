@@ -1170,7 +1170,7 @@ GSetImpl<K>::get_or_create(const K &key)
   if (m) return m;
   SNode *n = (SNode*) operator new (sizeof(SNode));
 #if GCONTAINER_ZERO_FILL
-  memset(n, 0, sizeof(SNode));
+  memset((void*)n, 0, sizeof(SNode));
 #endif
   new ((void*)&(n->key)) K ( key );
   n->hashcode = hash((const K&)(n->key));
@@ -1207,7 +1207,7 @@ GMapImpl<K,TI>::get_or_create(const K &key)
   if (m) return m;
   MNode *n = (MNode*) operator new (sizeof(MNode));
 #if GCONTAINER_ZERO_FILL
-  memset(n, 0, sizeof(MNode));
+  memset((void*)n, 0, sizeof(MNode));
 #endif
   new ((void*)&(n->key)) K  (key);
   new ((void*)&(n->val)) TI ();

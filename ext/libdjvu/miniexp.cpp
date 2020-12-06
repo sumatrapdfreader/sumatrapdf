@@ -134,7 +134,7 @@ class symtable_t
 public:
   int nelems;
   int nbuckets;
-  struct sym { unsigned int h; struct sym *l; char *n; };
+  struct sym { unsigned int h; struct sym *l; char *n; miniexp_t v; };
   struct sym **buckets;
   symtable_t();
   ~symtable_t();
@@ -201,6 +201,7 @@ symtable_t::lookup(const char *n, bool create)
       r->h = h;
       r->l = buckets[i];
       r->n = new char [1+strlen(n)];
+      r->v = (miniexp_t)(((size_t)r)|((size_t)2));
       strcpy(r->n, n);
       buckets[i] = r;
       if ( 2 * nelems > 3 * nbuckets)
@@ -220,7 +221,7 @@ miniexp_to_name(miniexp_t p)
     {
       struct symtable_t::sym *r;
       r = ((symtable_t::sym*)(((size_t)p)&~((size_t)3)));
-      return (r) ? r->n : "##(dummy)";
+      return (r && r->v == p) ? r->n : "##(dummy)";
     }
   return 0;
 }
@@ -236,7 +237,7 @@ miniexp_symbol(const char *name)
     symbols = new symtable_t;
     }
   r = symbols->lookup(name, true);
-  return (miniexp_t)(((size_t)r)|((size_t)2));
+  return r->v;
 }
 
 
@@ -2032,7 +2033,7 @@ read_miniexp(miniexp_io_t *io, int &c)
           if (io->p_diezechar && io->p_macroqueue
               && nc >= 0 && nc < 128 && io->p_diezechar[nc])
             {
-              miniexp_t p = io->p_macrochar[nc](io);
+              miniexp_t p = io->p_diezechar[nc](io);
               if (miniexp_length(p) > 0)
                 *io->p_macroqueue = p;
               else if (p)

@@ -110,6 +110,11 @@ class ByteStream;
     than this macro.  If the version field is greater than or equal to this
     number, the decoder will just throw a \Ref{GException}.  */
 #define DJVUVERSION_TOO_NEW      50
+#ifndef DJVULIBRE_VERSION
+/** DjVu library version string.
+   This is normally defined by autoconf, except on windows */
+# define DJVULIBRE_VERSION       "3.5.28"
+#endif
 //@}
 
 

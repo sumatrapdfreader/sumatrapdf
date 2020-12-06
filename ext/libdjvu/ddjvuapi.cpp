@@ -2225,7 +2225,7 @@ static void
 fmt_convert_row(const GPixel *p, int w, 
                 const ddjvu_format_t *fmt, char *buf)
 {
-  const uint32_t (*r)[256] = fmt->rgb;
+  const uint32_t (&r)[3][256] = fmt->rgb;
   const uint32_t xorval = fmt->xorval;
   switch(fmt->style)
     {
@@ -2328,7 +2328,7 @@ static void
 fmt_convert_row(unsigned char *p, unsigned char g[256][4], int w, 
                 const ddjvu_format_t *fmt, char *buf)
 {
-  const uint32_t (*r)[256] = fmt->rgb;
+  const uint32_t (&r)[3][256] = fmt->rgb;
   const uint32_t xorval = fmt->xorval;
   switch(fmt->style)
     {

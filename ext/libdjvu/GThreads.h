@@ -329,8 +329,7 @@ public:
 
 
 // ----------------------------------------
-// GSAFEFLAGS (not so safe)
-
+// GSAFEFLAGS (LB: this is not foolproof-safe but can be used savely!)
 
 /** A thread safe class representing a set of flags. The flags are protected
     by \Ref{GMonitor}, which is attempted to be locked whenever somebody
@@ -340,6 +339,7 @@ public:
     (second). The flags remain locked between the moment of testing and
     modification, which guarantees, that their state cannot be changed in
     between of these operations. */
+
 class GSafeFlags : public GMonitor
 {
 private:

@@ -593,7 +593,7 @@ public:
   void   zero(int n);
   // sparse representation
 private:
-  short **(pdata[4]);
+  short **pdata[4];
 };
 
 //---------------------------------------------------------------

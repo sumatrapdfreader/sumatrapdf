@@ -378,15 +378,7 @@ MINILISPAPI miniexp_t miniexp_double(double x);
      s-expressions without modifying them does not need to
      bother about minivars.
 
-   * Only the following miniexp functions can cause a
-     garbage collection: miniexp_cons(), miniexp_object(),
-     miniexp_string(), miniexp_substring(), miniexp_pname(),
-     miniexp_concat(), miniexp_pprin(), miniexp_pprint(),
-     miniexp_gc(), and minilisp_release_gc_lock().  A
-     function that does not cause calls to these functions
-     does not need to bother about minivars.
-
-   * Other functions should make sure that all useful
+   * Otherwise all functions should make sure that all useful
      s-expression are directly or indirectly secured by a
      minivar_t object. In case of doubt, use minivars
      everywhere.
