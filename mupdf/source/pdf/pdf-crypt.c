@@ -684,7 +684,7 @@ pdf_authenticate_owner_password(fz_context *ctx, pdf_crypt *crypt, unsigned char
 			pwlen = 32;
 		memcpy(pwbuf, ownerpass, pwlen);
 		if (pwlen < 32)
-		memcpy(pwbuf + pwlen, padding, 32 - pwlen);
+			memcpy(pwbuf + pwlen, padding, 32 - pwlen);
 
 		fz_md5_init(&md5);
 		fz_md5_update(&md5, pwbuf, 32);
@@ -1055,6 +1055,14 @@ pdf_compute_object_key(pdf_crypt *crypt, pdf_crypt_filter *cf, int num, int gen,
  * indirect references.
  */
 
+static int is_signature(fz_context *ctx, pdf_obj *obj)
+{
+	if (pdf_dict_get(ctx, obj, PDF_NAME(Type)) == PDF_NAME(Sig))
+		if (pdf_dict_get(ctx, obj, PDF_NAME(Contents)) && pdf_dict_get(ctx, obj, PDF_NAME(ByteRange)) && pdf_dict_get(ctx, obj, PDF_NAME(Filter)))
+			return 1;
+	return 0;
+}
+
 static void
 pdf_crypt_obj_imp(fz_context *ctx, pdf_crypt *crypt, pdf_obj *obj, unsigned char *key, int keylen)
 {
@@ -1115,6 +1123,9 @@ pdf_crypt_obj_imp(fz_context *ctx, pdf_crypt *crypt, pdf_obj *obj, unsigned char
 		int n = pdf_dict_len(ctx, obj);
 		for (i = 0; i < n; i++)
 		{
+			if (pdf_dict_get_key(ctx, obj, i) == PDF_NAME(Contents) && is_signature(ctx, obj))
+				continue;
+
 			pdf_crypt_obj_imp(ctx, crypt, pdf_dict_get_val(ctx, obj, i), key, keylen);
 		}
 	}

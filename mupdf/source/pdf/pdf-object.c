@@ -2043,6 +2043,14 @@ static void fmt_array(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 	}
 }
 
+static int is_signature(fz_context *ctx, pdf_obj *obj)
+{
+	if (pdf_dict_get(ctx, obj, PDF_NAME(Type)) ==  PDF_NAME(Sig))
+		if (pdf_dict_get(ctx, obj, PDF_NAME(Contents)) && pdf_dict_get(ctx, obj, PDF_NAME(ByteRange)) && pdf_dict_get(ctx, obj, PDF_NAME(Filter)))
+			return 1;
+	return 0;
+}
+
 static void fmt_dict(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 {
 	int i, n;
@@ -2052,9 +2060,25 @@ static void fmt_dict(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 	if (fmt->tight) {
 		fmt_puts(ctx, fmt, "<<");
 		for (i = 0; i < n; i++) {
-			fmt_obj(ctx, fmt, pdf_dict_get_key(ctx, obj, i));
+			key = pdf_dict_get_key(ctx, obj, i);
+			val = pdf_dict_get_val(ctx, obj, i);
+			fmt_obj(ctx, fmt, key);
 			fmt_sep(ctx, fmt);
-			fmt_obj(ctx, fmt, pdf_dict_get_val(ctx, obj, i));
+			if (key == PDF_NAME(Contents) && is_signature(ctx, obj))
+			{
+				pdf_crypt *crypt = fmt->crypt;
+				fz_try(ctx)
+				{
+					fmt->crypt = NULL;
+					fmt_obj(ctx, fmt, val);
+				}
+				fz_always(ctx)
+					fmt->crypt = crypt;
+				fz_catch(ctx)
+					fz_rethrow(ctx);
+			}
+			else
+				fmt_obj(ctx, fmt, val);
 			fmt_sep(ctx, fmt);
 		}
 		fmt_puts(ctx, fmt, ">>");
@@ -2070,7 +2094,21 @@ static void fmt_dict(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 			fmt_putc(ctx, fmt, ' ');
 			if (!pdf_is_indirect(ctx, val) && pdf_is_array(ctx, val))
 				fmt->indent ++;
-			fmt_obj(ctx, fmt, val);
+			if (key == PDF_NAME(Contents) && is_signature(ctx, obj))
+			{
+				pdf_crypt *crypt = fmt->crypt;
+				fz_try(ctx)
+				{
+					fmt->crypt = NULL;
+					fmt_obj(ctx, fmt, val);
+				}
+				fz_always(ctx)
+					fmt->crypt = crypt;
+				fz_catch(ctx)
+					fz_rethrow(ctx);
+			}
+			else
+				fmt_obj(ctx, fmt, val);
 			fmt_putc(ctx, fmt, '\n');
 			if (!pdf_is_indirect(ctx, val) && pdf_is_array(ctx, val))
 				fmt->indent --;
@@ -2177,7 +2215,7 @@ void pdf_print_encrypted_obj(fz_context *ctx, fz_output *out, pdf_obj *obj, int 
 	char *ptr;
 	size_t n;
 
-	ptr = pdf_sprint_encrypted_obj(ctx, buf, sizeof buf, &n, obj, tight, ascii,crypt, num, gen);
+	ptr = pdf_sprint_encrypted_obj(ctx, buf, sizeof buf, &n, obj, tight, ascii, crypt, num, gen);
 	fz_try(ctx)
 		fz_write_data(ctx, out, ptr, n);
 	fz_always(ctx)
