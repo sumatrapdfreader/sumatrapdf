@@ -408,7 +408,8 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     regconf()
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", "4305", "4306", "4456", "4701" }
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
 

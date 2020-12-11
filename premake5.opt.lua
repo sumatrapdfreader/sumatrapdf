@@ -174,7 +174,8 @@ project "gumbo-opt"
     kind "StaticLib"
     language "C"
     optconf()
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", "4305", "4306", "4456", "4701" }
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
 
