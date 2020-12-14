@@ -427,3 +427,5 @@ class PasswordUI {
     virtual ~PasswordUI() {
     }
 };
+
+const WCHAR* SkipFileProtocol(const WCHAR*);

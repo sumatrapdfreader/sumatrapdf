@@ -542,3 +542,16 @@ PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bo
     RectF rect = Transform(rc, pageNo, zoom, rotation, inverse);
     return rect.TL();
 }
+
+// skip file:// and maybe file:/// from s. It might be added by mupdf.
+// do not free the result
+const WCHAR* SkipFileProtocol(const WCHAR* s) {
+    if (!str::StartsWithI(s, L"file://")) {
+        return s;
+    }
+    s += 7;
+    if (s[0] == L'/') {
+        s += 1;
+    }
+    return s;
+}

@@ -337,11 +337,7 @@ void LinkHandler::GotoLink(PageDestination* dest) {
         }
         // LaunchFile only opens files inside SumatraPDF
         // (except for allowed perceived file types)
-        // strip "file://" at the start of the path. It might be added by mupdf
-        WCHAR* tmpPath = path;
-        if (str::StartsWithI(tmpPath, L"file://")) {
-            tmpPath += 7;
-        }
+        const WCHAR* tmpPath = SkipFileProtocol(path);
         LaunchFile(tmpPath, dest);
         return;
     }

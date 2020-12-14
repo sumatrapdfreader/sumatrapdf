@@ -637,7 +637,8 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 
     const WCHAR* filePath = GetStaticLink(win->staticLinks, x, y);
-    if (!filePath || *filePath == '<' || str::StartsWith(filePath, L"http://") || str::StartsWith(filePath, L"https://")) {
+    if (!filePath || *filePath == '<' || str::StartsWith(filePath, L"http://") ||
+        str::StartsWith(filePath, L"https://")) {
         return;
     }
 
@@ -847,11 +848,7 @@ void OnWindowContextMenu(WindowInfo* win, int x, int y) {
             StartEditAnnotations(tab, nullptr);
             break;
         case CmdCopyLinkTarget: {
-            // file:// can be added by mupdf
-            WCHAR* tmp = value;
-            if (str::StartsWithI(tmp, L"file://")) {
-                tmp += 7;
-            }
+            const WCHAR* tmp = SkipFileProtocol(value);
             CopyTextToClipboard(tmp);
         } break;
         case CmdCopyComment:
