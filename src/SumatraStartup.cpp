@@ -1138,7 +1138,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
 Exit:
     prefs::UnregisterForFileChanges();
-    DebugCrashIf(gAllowAllocFailure.load() != 0);
 
     if (fastExit) {
         // leave all the remaining clean-up to the OS
