@@ -237,14 +237,18 @@ inline void SendCrashIfFunc(bool cond, [[maybe_unused]] const char* condStr) {
 }
 
 // Sometimes we want to assert only in debug build (not in pre-release)
+#if defined(DEBUG)
 inline void DebugCrashIfFunc(bool cond) {
     if (!cond) {
         return;
     }
-#if defined(DEBUG)
     CrashMe();
-#endif
 }
+#else
+inline void DebugCrashIfFunc(bool) {
+    // no-op
+}
+#endif
 
 // __analysis_assume is defined by msvc for prefast analysis
 #if !defined(__analysis_assume)
