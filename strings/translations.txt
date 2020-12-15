@@ -1,7 +1,8 @@
 AppTranslator: SumatraPDF
-221d1a7330bfc5d8d87707f0fab51e5e932e9ec0
+6109395bc22c0e4ae3a9973af5a358bd39f11697
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
+ar:%s التثبيت غير موجود
 az:%s quraşdırmasını tapmaq mümkün olmadı.
 br:Instalação do %s não encontrada.
 cn:未找到 %s 安装。
@@ -2630,6 +2631,7 @@ uz:&Ushbu parametrlarni har qaysi hujjat uchun eslab qolish
 vn:Nhớ các cài đặt này cho từng tập tin
 :&Remove From History
 am:&Հեռացնել պատմությունից
+ar:إزالة من التاريخ
 az:Tarixçədən &sil
 br:&Remover do Histórico
 cn:从历史记录删除(&R)
@@ -3694,6 +3696,7 @@ uz:Tanlanganlarga qo'shish
 vn:Thêm Ưa thích
 :Add PDF as a child
 am:Ավելացնել PDF-ը որպես ենթատարր
+ar:أضف pdf كولد
 az:PDF-i törəmə element kimi əlavə et
 br:Adicionar PDF como um filho
 cn:将 PDF 添加为子项目
@@ -3713,6 +3716,7 @@ ru:Добавить PDF как дочерний элемент
 tr:PDF'yi çocuk olarak ekle
 :Add PDF as a sibling
 am:Ավելացնել PDF-ը որպես ժառանգ
+ar:أضف البي.دي.أف كأخ
 az:PDF-i eynisəviyyəli element kimi əlavə et
 br:Adicionar PDF como um irmão
 cn:将 PDF 添加为同级项目
@@ -3732,6 +3736,7 @@ ru:Добавить PDF как одноуровневый элемент
 tr:PDF'yi kardeş olarak ekle
 :Add child
 am:Ավելացնել ենթատարր
+ar:أضف ولد
 az:Törəmə element əlavə et
 br:Adicionar filho
 cn:添加子项目
@@ -3919,6 +3924,7 @@ uk:Додати %s сторінку до закладок\tCtrl+B
 vn:Thêm trang %s vào mục ưa thích\tCtrl+B
 :Add sibling
 am:Ավելացնել ժառանգ
+ar:أضف أخ
 az:Eynisəviyyəli element əlavə et
 br:Adicionar irmão
 cn:添加同级项目
@@ -4209,6 +4215,7 @@ uz:Hamma qo'llanadigan hujjatlar
 vn:Tất cả các định dạng được hỗ trợ
 :Annotations
 am:Ծանոթագրություններ
+ar:توضيحات
 az:Qeydlər
 bn:ব্যখা\r\n
 br:Anotações
@@ -4299,6 +4306,7 @@ uz:Dastur:
 vn:Ứng dụng:
 :Are you sure you want to uninstall %s?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ապատեղադրել %s-ը:
+ar:هل أنت متأكد من إزالة  %s?
 az:Əminsiniz ki, %s silmək istəyirsiniz?
 br:Você deseja realmente desinstalar o %s?
 cn:您确定要卸载 %s 吗？
@@ -5402,6 +5410,7 @@ uz:Qayta qidirish buyrug'i xatosi. Buyruq satri parametrlarini tekshiring.
 vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
 :Caret
 am:Նշորդ
+ar:قيراط
 az:Kursor
 br:Acento circunflexo
 cn:插入号
@@ -5561,6 +5570,7 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Circle
 am:Շրջան
+ar:دائرة
 az:Dairə
 bn:কেনদ্র
 br:Círculo
@@ -5685,6 +5695,7 @@ tw:全部折叠(&C)
 uk:Згорнути всі
 :Color
 am:Գույն
+ar:لون
 az:Rəng
 br:Cor
 cn:颜色
@@ -6953,6 +6964,7 @@ uz:PDF ko'rish vositasini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt bộ xem truớc PDF
 :Couldn't uninstall Sumatra search filter
 am:Հնարավոր չեղավ ապատեղադրել Sumatra որոնման զտիչը
+ar:إزالة معيار سومرا للبحث غير ممكن
 az:Sumatra axtarış filtrini silmək mümkün olmadı
 br:Não foi possível desinstalar o filtro do pesquisa do Sumatra
 cn:无法卸载 Sumatra 搜索过滤器
@@ -7096,6 +7108,7 @@ uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Create Annotation
 am:Ստեղծել ծանոթագրություն
+ar:إنشاء شرح و توضيح
 az:Qeyd düzəlt
 br:Criar Anotação
 cn:创建标注
@@ -7952,6 +7965,7 @@ uz:Yuklab olish
 vn:Tải xuống
 :E&xit Fullscreen
 am:Փ&ակել լիաէկրանը
+ar:الخروج من وضع الشاشة الكاملة
 az:Tam ekran rejimindən çı&x
 br:Sair da Tela &Cheia
 cn:退出全屏(&X)
@@ -8110,6 +8124,7 @@ uz:EPUB kitoblari
 vn:Tập tin EPUB
 :Edit
 am:Խմբագրել
+ar:تعديل 
 az:Düzəliş et
 bn:সমপাদন
 br:Editar
@@ -8134,6 +8149,7 @@ ru:Изменить
 tr:Düzenle
 :Edit Annotations
 am:Խմբագրել ծանոթագրությունները
+ar:تعديل الشرح و التوضيح 
 az:Qeydlərə düzəliş et
 bn:ব্যখা সমপাদন করুন
 br:Editar Anotações
@@ -8156,6 +8172,7 @@ ru:Изменить аннотации
 tr:Notları Düzenle
 :Edit Bookmarks
 am:Խմբագրել էջանիշերը
+ar:تعديل العلامات المرجعية
 az:Əlfəcinlərə düzəliş et
 br:Editar Marcadores
 cn:编辑书签
@@ -8482,6 +8499,7 @@ tw:全部展開
 uk:Розгорнути всі
 :Export Bookmarks
 am:Արտահանել էջանիշերը
+ar:تصدير العلامات المرجعية
 az:Əlfəcinləri ixrac et
 br:Exportar Marcadores
 cn:导出书签
@@ -9399,6 +9417,7 @@ uz:%s fayli topilmadi
 vn:Không tìm thấy tập tin %s
 :File Attachment
 am:Ֆայլի կցորդ
+ar:ملف مرفق
 az:Qoşma fayl
 br:Anexo de Arquivo
 cn:文件附件
@@ -10695,6 +10714,7 @@ uz:%s betda matn topildi (qayta)
 vn:Tìm thấy đoạn văn bản tại trang %s (lần nữa)
 :Free Text
 am:Ազատ գրվածք
+ar:نص حر
 az:İxtiyari mətn
 bn:মূক্ত লিখা
 br:Texto Livre
@@ -11047,6 +11067,7 @@ uz:Tez-tez o'qiladiganlarni yashirish
 vn:Ẩn Đọc thường xuyên
 :Highlight
 am:Գունանշում
+ar:إبراز
 az:Seç
 bn:চিহিঞত করুন
 br:Destacar
@@ -11193,6 +11214,7 @@ uz:Rasm fayllari (*.%s)
 vn:Tập tin ảnh (*.%s)
 :Images
 am:Պատկերներ
+ar:صور
 az:Şəkillər
 bn:ছবি
 br:Imagens
@@ -11214,6 +11236,7 @@ ru:Изображения
 tr:Resimler
 :Ink
 am:Թանաք
+ar:حبر
 az:Mürəkkəb
 bn:কালি
 br:Tinta
@@ -11735,6 +11758,7 @@ uk:Світла
 vn:Sáng
 :Line
 am:Գիծ
+ar:سطر
 az:Xətt
 bn:লাইন
 br:Linha
@@ -12264,6 +12288,7 @@ tw:新建視窗(&W)\tCtrl+N
 vn:Mở cửa sổ mới\tCtrl+N
 :New Bookmarks
 am:Նոր էջանիշեր
+ar:إشارات مرجعية جديدة
 az:Yeni əlfəcinlər
 br:Novos Marcadores
 cn:新建书签
@@ -12956,6 +12981,7 @@ uz:PDF-XChangeda ochish
 vn:Mở bằng PDF-XChange
 :Open Embedded PDF
 am:Բացել ներկառուցված PDF-ը
+ar:فتح بي.دي.أف مدمج 
 az:İç PDF faylını aç
 br:Abrir PDF Embutido
 cn:打开嵌入 PDF
@@ -14396,6 +14422,7 @@ uz:Kutib turing - render qilinmoqda...
 vn:Xin chờ đợi, đang hiện...
 :Poly Line
 am:Բազմագիծ
+ar:خط متعرج
 az:Qırıq xətt
 br:Polilinha
 cn:折线
@@ -14414,6 +14441,7 @@ ru:Ломаная
 tr:Çoklu Çizgi
 :Polygon
 am:Պոլիգոն
+ar:مضلع
 az:Çoxbucaqlı
 br:Polígono
 cn:多边形
@@ -15202,6 +15230,7 @@ uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
 :Redact
 am:Փոփոխել
+ar:تنقيح
 az:Düzəliş et
 br:Redigir
 cn:编辑
@@ -15283,6 +15312,7 @@ uz:&Ochilgan fayllarni eslab qolish
 vn:Nhớ các tập tin đã mở
 :Remove Item
 am:Հեռացնել միույթը
+ar:إزالة عنصر
 az:Elementi sil
 br:Remover Item
 cn:移除项目
@@ -15741,6 +15771,7 @@ uz:Quyidagicha saqlash
 vn:Lưu thành
 :Save Embedded File...
 am:Պահպանել ներկառուցված ֆայլը...
+ar:حفظ الملف المدمج
 az:İç faylı yadda saxla...
 br:Salvar Arquivo Embutido...
 cn:保存嵌入文件...
@@ -16333,6 +16364,7 @@ uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks\tF12
 am:Ցուցադրել &Էջանիշերը\tF12
+ar:إظهار العلامات المرجعية
 az:Əl&fəcinləri göstər\tF12
 bg:Покажи &Любими\tF12
 br:Mostrar &marcadores\tF12
@@ -16365,6 +16397,7 @@ tr:Yer &İmlerini Göster\tF12
 tw:顯示書籤(&B)\tF12
 :Show &Favorites
 am:Ցուցադրել &Ընտրյալները
+ar:إظهار التفضيلات
 az:&Seçilmişləri göstər
 bg:Покажи &Любими
 br:Mostrar &favoritos
@@ -16462,6 +16495,7 @@ uz:&Betlarni uzluksiz ko'rsatish
 vn:Xem trang liên tiếp
 :Show &Scrollbars
 am:Ցուցադրել &ոլորգոտիները
+ar:إظهار شريط التمرير
 az:&Sürüşdürmə zolaqlarını göstər
 br:Mostrar Barras de &Rolagem
 cn:显示滚动条(&S)
@@ -16552,6 +16586,7 @@ uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show Book&marks\tF12
 am:Ցուցադրել Էջա&նիշերը\tF12
+ar:إظهار العلامات المرجعية
 az:Əlfə&cinləri göstər\tF12
 bg:Покажи Отмет&ките\tF12
 br:Mostrar &marcadores\tF12
@@ -16647,6 +16682,7 @@ uz:Tanlanganlarni ko'rsatish
 vn:Hiện Ưa thích
 :Show Scr&ollbars
 am:Ցուցադրել ոլո&րագոտիները
+ar:إظهار أشرطة التمرير
 az:Sürüşdürmə &zolaqlarını göstər
 br:Mostrar Barras de R&olagem
 cn:显示滚动条(&O)
@@ -16959,6 +16995,7 @@ uz:Kutilmagan voqea sodir bo'ldi.\n\nUshbu nosozlikni tuzatish uchun bizga yorda
 vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
 :Sort By
 am:Տեսակավորել ըստ՝
+ar:الترتيب بـ
 az:Sırala
 bn:খুজুন এভাবে
 br:Ordenar Por
@@ -17046,6 +17083,7 @@ uz:%s manba faylida sinxronlanish nuqtasi yo'q
 vn:Tập tin nguồn %s không có điểm đồng bộ
 :Square
 am:Քառակուսի
+ar:مربع
 az:Kvadrat
 br:Quadrado
 cn:矩形
@@ -17065,6 +17103,7 @@ ru:Квадрат
 tr:Kare
 :Squiggly
 am:Ալիքավոր
+ar:متعرج
 az:Dalğalı xətt
 br:Ondulado
 cn:波浪线
@@ -17083,6 +17122,7 @@ ru:Волнистая линия
 tr:Kıvrımlı
 :Stamp
 am:Կնիք
+ar:خاتم 
 az:Möhür
 br:Carimbo
 cn:图章
@@ -17163,6 +17203,7 @@ uz:SumatraPDF ishga tushirish
 vn:Mở SumatraPDF
 :Strike Out
 am:Գծաջնջված
+ar:توجيه
 az:Üstdən xətt
 br:Riscado
 cn:删除线
@@ -17816,6 +17857,7 @@ uz:SumatraPDF endi andoza PDF ko'rish vositasi bo'ldi
 vn:SumatraPDF giờ là trình đọc PDF chính của bạn
 :Support SumatraPDF
 am:Աջակցել SumatraPDF-ին
+ar:إدعم سومترا بي.دي.أف
 az:SumatraPDF-i dəstəklə
 br:Suporte o SumatraPDF
 cn:支持 SumatraPDF
@@ -17900,6 +17942,7 @@ uz:Sinxronlanish faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tag (big first)
 am:Պիտակ (նախ մեծը)
+ar:علامة (الكبير أولا)
 az:Teq (əvvəl böyüklər)
 br:Tag (grande primeiro)
 cn:标签 (大的在前)
@@ -17918,6 +17961,7 @@ ru:Разметка (сначала большие)
 tr:Etiket (önce büyük)
 :Tag (small first)
 am:Պիտակ (նախ փոքրը)
+ar:علامة (الصغير أولا)
 az:Teq (əvvəl kiçiklər)
 br:Tag (pequena primeiro)
 cn:标签 (小的在前)
@@ -17999,6 +18043,7 @@ uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text
 am:Գրվածք
+ar:نص
 az:Mətn
 br:Texto
 cn:文本
@@ -18084,6 +18129,7 @@ uz:Matn hujjatlari
 vn:Tập tin văn bản
 :Thank you for choosing RA-MICRO PDF!
 am:Շնորհակալություն RA-MICRO PDF-ը նախընտրելու համար:
+ar:شكرا لاختيارك RA-MICRO PDF!
 az:RA-MICRO PDF-i seçdiyiniz üçün təşəkkür edirik!
 br:Obrigado por escolher o RA-MICRO PDF!
 cn:感谢您选择 RA-MICRO PDF！
@@ -18416,6 +18462,7 @@ uz:Sarlavha:
 vn:Tựa đề
 :Underline
 am:Ընդգծում
+ar:تحت السطر
 az:Altdan xətt
 br:Sublinhado
 cn:下划线
