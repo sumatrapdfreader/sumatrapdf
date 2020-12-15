@@ -113,8 +113,8 @@ WindowInfo::~WindowInfo() {
 
     delete sidebarSplitter;
     delete favSplitter;
-    free(tocLabelWithClose);
-    free(favLabelWithClose);
+    delete tocLabelWithClose;
+    delete favLabelWithClose;
 }
 
 void ClearMouseState(WindowInfo* win) {

@@ -21,7 +21,7 @@
 // TODO: this is provisional version while in development
 constexpr const char* kBkmVersion = "998";
 
-static Kind kindTocItem = "bkmTreeItem";
+// static Kind kindTocItem = "bkmTreeItem";
 
 /*
 Creating and parsing of .bkm files that contain alternative bookmarks view
