@@ -424,6 +424,15 @@ void fz_disable_icc(fz_context *ctx);
 	((TYPE*)Memento_label(fz_calloc(CTX, 1, sizeof(TYPE)), #TYPE))
 
 /**
+	Allocate memory for an array of structures, clear it, and tag
+	the pointer for Memento.
+
+	Throws exception in the event of failure to allocate.
+*/
+#define fz_malloc_struct_array(CTX, N, TYPE) \
+	((TYPE*)Memento_label(fz_calloc(CTX, N, sizeof(TYPE)), #TYPE "[]"))
+
+/**
 	Allocate uninitialized memory for an array of structures, and
 	tag the pointer for Memento. Does NOT clear the memory!
 

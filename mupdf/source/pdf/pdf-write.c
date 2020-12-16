@@ -977,6 +977,33 @@ static void page_objects_list_renumber(pdf_write_state *opts)
 }
 
 static void
+swap_indirect_obj(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, pdf_obj **obj)
+{
+	pdf_obj *o = pdf_new_indirect(ctx, doc, opts->renumber_map[pdf_to_num(ctx, *obj)], 0);
+
+	pdf_drop_obj(ctx, *obj);
+	*obj = o;
+}
+
+static void
+renumber_pages(fz_context *ctx, pdf_document *doc, pdf_write_state *opts)
+{
+	fz_page *page;
+
+	for (page = doc->super.open; page != NULL; page = page->next)
+	{
+		pdf_page *ppage = (pdf_page *)page;
+		pdf_annot *annot;
+		swap_indirect_obj(ctx, doc, opts, &ppage->obj);
+
+		for (annot = ppage->annots; annot != NULL; annot = annot->next)
+			swap_indirect_obj(ctx, doc, opts, &annot->obj);
+		for (annot = ppage->widgets; annot != NULL; annot = annot->next)
+			swap_indirect_obj(ctx, doc, opts, &annot->obj);
+	}
+}
+
+static void
 mark_all(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, pdf_obj *val, int flag, int page)
 {
 	if (pdf_mark_obj(ctx, val))
@@ -1517,6 +1544,7 @@ linearize(fz_context *ctx, pdf_document *doc, pdf_write_state *opts)
 	/* Apply the renumber_map */
 	page_objects_list_renumber(opts);
 	renumberobjs(ctx, doc, opts);
+	renumber_pages(ctx, doc, opts);
 
 	page_objects_list_sort_and_dedupe(ctx, opts->page_object_lists);
 }

@@ -1486,7 +1486,7 @@ int Memento_listBlocksNested(void)
 
                 /* Not interested in pointers to ourself! */
                 if (child == b)
-                        continue;
+                    continue;
 
                 /* We're also assuming acyclicness here. If this is one of
                  * our parents, ignore it. */
@@ -1620,6 +1620,25 @@ void Memento_listBlockInfo(void)
     MEMENTO_LOCK();
     fprintf(stderr, "Details of allocated blocks:\n");
     Memento_appBlocks(&memento.used, showInfo, NULL);
+    MEMENTO_UNLOCK();
+#endif
+}
+
+#ifdef MEMENTO_DETAILS
+static int
+showBlockInfo(Memento_BlkHeader *b, void *arg)
+{
+    if (arg < MEMBLK_TOBLK(b) || (void *)MEMBLK_POSTPTR(b) <= arg)
+        return 0;
+    return showInfo(b, NULL);
+}
+#endif
+
+void Memento_blockInfo(void *p)
+{
+#ifdef MEMENTO_DETAILS
+    MEMENTO_LOCK();
+    Memento_appBlocks(&memento.used, showBlockInfo, p);
     MEMENTO_UNLOCK();
 #endif
 }
@@ -2029,9 +2048,9 @@ static int squeeze(void)
         if (stashed_map[i] == 0) {
             int j = dup(i);
             if (j >= 0) {
-            stashed_map[j] = i+1;
+                stashed_map[j] = i+1;
+            }
         }
-    }
     }
 
     fprintf(stderr, "Failing at:\n");
@@ -3568,6 +3587,10 @@ void (Memento_info)(void *addr)
 }
 
 void (Memento_listBlockInfo)(void)
+{
+}
+
+void (Memento_blockInfo)(void *ptr)
 {
 }
 

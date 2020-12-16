@@ -699,28 +699,28 @@ TESSERACT_SRC += thirdparty/tesseract/src/wordrec/tface.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/wordrec/wordrec.cpp
 
 ifeq ($(HAVE_AVX),yes)
-TESSERACT_BUILD_CFLAGS = -mavx -DHAVE_AVX -D__AVX__
+TESSERACT_BUILD_CFLAGS += -mavx -DHAVE_AVX -D__AVX__
 TESSERACT_SRC += thirdparty/tesseract/src/arch/dotproductavx.cpp
 endif
 
 ifeq ($(HAVE_AVX2),yes)
-TESSERACT_BUILD_CFLAGS = -mavx2 -DHAVE_AVX2 -D__AVX2__
+TESSERACT_BUILD_CFLAGS += -mavx2 -DHAVE_AVX2 -D__AVX2__
 TESSERACT_SRC += thirdparty/tesseract/src/arch/intsimdmatrixavx2.cpp
 endif
 
 ifeq ($(HAVE_FMA),yes)
-TESSERACT_BUILD_CFLAGS = -mfma -DHAVE_FMA -D__FMA__
+TESSERACT_BUILD_CFLAGS += -mfma -DHAVE_FMA -D__FMA__
 TESSERACT_SRC += thirdparty/tesseract/src/arch/dotproductfma.cpp
 endif
 
 ifeq ($(HAVE_SSE4_1),yes)
-TESSERACT_BUILD_CFLAGS = -msse4.1 -DHAVE_SSE4_1 -D__SSE4_1__
+TESSERACT_BUILD_CFLAGS += -msse4.1 -DHAVE_SSE4_1 -D__SSE4_1__
 TESSERACT_SRC += thirdparty/tesseract/src/arch/dotproductsse.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/arch/intsimdmatrixsse.cpp
 endif
 
 ifeq ($(HAVE_NEON),yes)
-TESSERACT_BUILD_CFLAGS = -mneon -DHAVE_NEON
+TESSERACT_BUILD_CFLAGS += $(NEONFLAGS) -DHAVE_NEON
 TESSERACT_SRC += thirdparty/tesseract/src/arch/intsimdmatrixneon.cpp
 endif
 

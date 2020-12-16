@@ -494,6 +494,7 @@ int pdf_toggle_widget(fz_context *ctx, pdf_widget *widget)
 	case PDF_WIDGET_TYPE_CHECKBOX:
 	case PDF_WIDGET_TYPE_RADIOBUTTON:
 		toggle_check_box(ctx, widget->page->doc, widget->obj);
+		widget->has_new_ap = 1;
 		return 1;
 	}
 	return 0;
@@ -1530,33 +1531,33 @@ get_locked_fields_from_xfa(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 
 	fz_try(ctx)
 	{
-	node = get_xfa_resource(ctx, doc, "template");
+		node = get_xfa_resource(ctx, doc, "template");
 
-	do
-	{
-		char c, *s, *e;
-		int idx = 0;
-		char *key;
-
-		idx = find_name_component(&n, &s, &e);
-		/* We want the idx'th occurrence of s..e */
-
-		/* Hacky */
-		c = *e;
-		*e = 0;
-		key = *n ? "subform" : "field";
-		node = fz_xml_find_down_match(node, key, "name", s);
-		while (node && idx > 0)
+		do
 		{
-			node = fz_xml_find_next_match(node, key, "name", s);
-			idx--;
+			char c, *s, *e;
+			int idx = 0;
+			char *key;
+
+			idx = find_name_component(&n, &s, &e);
+			/* We want the idx'th occurrence of s..e */
+
+			/* Hacky */
+			c = *e;
+			*e = 0;
+			key = *n ? "subform" : "field";
+			node = fz_xml_find_down_match(node, key, "name", s);
+			while (node && idx > 0)
+			{
+				node = fz_xml_find_next_match(node, key, "name", s);
+				idx--;
+			}
+			*e = c;
 		}
-		*e = c;
-	}
-	while (node && *n == '.');
+		while (node && *n == '.');
 	}
 	fz_always(ctx)
-	fz_free(ctx, name);
+		fz_free(ctx, name);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 

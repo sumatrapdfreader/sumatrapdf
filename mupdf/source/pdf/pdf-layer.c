@@ -203,7 +203,7 @@ load_ui(fz_context *ctx, pdf_ocg_descriptor *desc, pdf_obj *ocprops, pdf_obj *oc
 	if (desc->num_ui_entries == 0)
 		return;
 
-	desc->ui = Memento_label(fz_calloc(ctx, count, sizeof(pdf_ocg_ui)), "pdf_ocg_ui");
+	desc->ui = fz_malloc_struct_array(ctx, count, pdf_ocg_ui);
 	fz_try(ctx)
 	{
 		desc->num_ui_entries = populate_ui(ctx, desc, 0, order, 0, rbgroups, locked);

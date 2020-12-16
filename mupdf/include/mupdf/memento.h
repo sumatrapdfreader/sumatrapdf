@@ -244,6 +244,7 @@ int Memento_vasprintf(char **ret, const char *format, va_list ap);
 
 void Memento_info(void *addr);
 void Memento_listBlockInfo(void);
+void Memento_blockInfo(void *blk);
 void *Memento_takeByteRef(void *blk);
 void *Memento_dropByteRef(void *blk);
 void *Memento_takeShortRef(void *blk);
@@ -276,10 +277,10 @@ void Memento_bt(void);
 #ifdef MEMENTO
 
 #ifndef COMPILING_MEMENTO_C
-#define malloc  Memento_malloc
-#define free    Memento_free
-#define realloc Memento_realloc
-#define calloc  Memento_calloc
+#define malloc    Memento_malloc
+#define free      Memento_free
+#define realloc   Memento_realloc
+#define calloc    Memento_calloc
 #define strdup    Memento_strdup
 #define asprintf  Memento_asprintf
 #define vasprintf Memento_vasprintf
@@ -287,10 +288,10 @@ void Memento_bt(void);
 
 #else
 
-#define Memento_malloc  MEMENTO_UNDERLYING_MALLOC
-#define Memento_free    MEMENTO_UNDERLYING_FREE
-#define Memento_realloc MEMENTO_UNDERLYING_REALLOC
-#define Memento_calloc  MEMENTO_UNDERLYING_CALLOC
+#define Memento_malloc    MEMENTO_UNDERLYING_MALLOC
+#define Memento_free      MEMENTO_UNDERLYING_FREE
+#define Memento_realloc   MEMENTO_UNDERLYING_REALLOC
+#define Memento_calloc    MEMENTO_UNDERLYING_CALLOC
 #define Memento_strdup    strdup
 #define Memento_asprintf  asprintf
 #define Memento_vasprintf vasprintf
@@ -315,6 +316,7 @@ void Memento_bt(void);
 #define Memento_label(A,B)                 (A)
 #define Memento_info(A)                    do {} while (0)
 #define Memento_listBlockInfo()            do {} while (0)
+#define Memento_blockInfo()                do {} while (0)
 #define Memento_takeByteRef(A)             (A)
 #define Memento_dropByteRef(A)             (A)
 #define Memento_takeShortRef(A)            (A)

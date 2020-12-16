@@ -79,6 +79,7 @@ EXPORTS
 	drop_cached_fonts_for_ctx
 	pdf_doc_was_linearized
 	pdf_load_page_tree
+	pdf_annot_ap
 
 	fz_keep_bitmap
 	fz_drop_bitmap

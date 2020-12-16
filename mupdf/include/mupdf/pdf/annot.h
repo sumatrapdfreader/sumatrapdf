@@ -607,8 +607,6 @@ struct pdf_annot
 	pdf_page *page;
 	pdf_obj *obj;
 
-	pdf_obj *ap;
-
 	int is_hot;
 	int is_active;
 
@@ -632,5 +630,6 @@ void pdf_annot_MK_BC(fz_context *ctx, pdf_annot *annot, int *n, float color[4]);
 int pdf_annot_MK_BG_rgb(fz_context *ctx, pdf_annot *annot, float rgb[3]);
 int pdf_annot_MK_BC_rgb(fz_context *ctx, pdf_annot *annot, float rgb[3]);
 
+pdf_obj *pdf_annot_ap(fz_context *ctx, pdf_annot *annot);
 
 #endif

@@ -45,6 +45,12 @@ else
   SO := so
 endif
 
+ifeq "$(OS)" "ios"
+  NEONFLAGS =
+else
+  NEONFLAGS = -mneon
+endif
+
 SANITIZE_FLAGS += -fsanitize=address
 SANITIZE_FLAGS += -fsanitize=leak
 

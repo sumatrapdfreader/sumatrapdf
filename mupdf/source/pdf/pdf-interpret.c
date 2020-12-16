@@ -1087,7 +1087,7 @@ pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_p
 		if (!strcmp(proc->usage, "Print"))
 		{
 			if (!(flags & PDF_ANNOT_IS_PRINT))
-			return;
+				return;
 			if (!pdf_should_print_annot(ctx, annot))
 				return;
 		}
@@ -1101,15 +1101,21 @@ pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_p
 	if (pdf_is_hidden_ocg(ctx, doc->ocg, NULL, proc->usage, pdf_dict_get(ctx, annot->obj, PDF_NAME(OC))))
 		return;
 
-	if (proc->op_q && proc->op_cm && proc->op_Do_form && proc->op_Q && annot->ap)
+	if (proc->op_q && proc->op_cm && proc->op_Do_form && proc->op_Q)
 	{
-		fz_matrix matrix = pdf_annot_transform(ctx, annot);
+		pdf_obj *ap = pdf_annot_ap(ctx, annot);
+		fz_matrix matrix;
+
+		if (!ap)
+			return;
+
+		matrix = pdf_annot_transform(ctx, annot);
 		proc->op_q(ctx, proc);
 		proc->op_cm(ctx, proc,
 			matrix.a, matrix.b,
 			matrix.c, matrix.d,
 			matrix.e, matrix.f);
-		proc->op_Do_form(ctx, proc, NULL, annot->ap, pdf_page_resources(ctx, page));
+		proc->op_Do_form(ctx, proc, NULL, ap, pdf_page_resources(ctx, page));
 		proc->op_Q(ctx, proc);
 	}
 }

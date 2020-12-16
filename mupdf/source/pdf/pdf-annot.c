@@ -14,7 +14,6 @@ pdf_drop_annot(fz_context *ctx, pdf_annot *annot)
 {
 	if (fz_drop_imp(ctx, annot, &annot->refs))
 	{
-		pdf_drop_obj(ctx, annot->ap);
 		pdf_drop_obj(ctx, annot->obj);
 		fz_free(ctx, annot);
 	}
@@ -31,16 +30,46 @@ pdf_drop_annots(fz_context *ctx, pdf_annot *annot)
 	}
 }
 
+pdf_obj *
+pdf_annot_ap(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *ap;
+	const char *base = "AP/N";
+
+	/* If we're a active button, we use AP/D. In all other cases
+	 * we use AP/N. */
+
+	if (pdf_name_eq(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)), PDF_NAME(Widget)) &&
+		pdf_name_eq(ctx, pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(FT)), PDF_NAME(Btn)) &&
+		(pdf_field_flags(ctx, annot->obj) & PDF_BTN_FIELD_IS_PUSHBUTTON) &&
+		annot->is_hot && annot->is_active)
+		base = "AP/D";
+
+	/* Either AP/N or AP/D can either be streams themselves, or they
+	 * can be a dictionary of streams. */
+	ap = pdf_dict_getp(ctx, annot->obj, base);
+
+	/* If it's a stream, we have a winner! */
+	if (pdf_is_indirect(ctx, ap) && pdf_obj_num_is_stream(ctx, annot->page->doc, pdf_to_num(ctx, ap)))
+		return ap;
+
+	/* If it's not a stream, it may be a dictionary containing
+	 * a range of possible values, that should be indexed by
+	 * AS. */
+	return pdf_dict_get(ctx, ap, pdf_dict_get(ctx, annot->obj, PDF_NAME(AS)));
+}
+
 fz_matrix
 pdf_annot_transform(fz_context *ctx, pdf_annot *annot)
 {
 	fz_rect bbox, rect;
 	fz_matrix matrix;
 	float w, h, x, y;
+	pdf_obj *ap = pdf_annot_ap(ctx, annot);
 
 	rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
-	bbox = pdf_xobject_bbox(ctx, annot->ap);
-	matrix = pdf_xobject_matrix(ctx, annot->ap);
+	bbox = pdf_xobject_bbox(ctx, ap);
+	matrix = pdf_xobject_matrix(ctx, ap);
 
 	bbox = fz_transform_rect(bbox, matrix);
 	if (bbox.x1 == bbox.x0)
@@ -289,7 +318,6 @@ pdf_create_annot_raw(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 		pdf_array_push(ctx, annot_arr, ind_obj);
 
 		annot = pdf_new_annot(ctx, page, ind_obj);
-		annot->ap = NULL;
 
 		/*
 			Linking must be done after any call that might throw because
@@ -303,8 +331,8 @@ pdf_create_annot_raw(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 		}
 		else
 		{
-		*page->annot_tailp = annot;
-		page->annot_tailp = &annot->next;
+			*page->annot_tailp = annot;
+			page->annot_tailp = &annot->next;
 		}
 
 		doc->dirty = 1;
@@ -651,7 +679,7 @@ pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot)
 		if (is_widget)
 			page->widget_tailp = annotptr;
 		else
-		page->annot_tailp = annotptr;
+			page->annot_tailp = annotptr;
 	}
 
 	/* Remove the annot from the "Annots" array. */

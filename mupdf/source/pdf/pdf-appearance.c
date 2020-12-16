@@ -2110,12 +2110,6 @@ static void pdf_update_button_appearance(fz_context *ctx, pdf_annot *annot)
 			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 2);
 			pdf_dict_put(ctx, ap, PDF_NAME(N), ap_n);
 			pdf_dict_put(ctx, ap, PDF_NAME(D), ap_d);
-
-			pdf_drop_obj(ctx, annot->ap);
-			if (annot->is_hot && annot->is_active)
-				annot->ap = pdf_keep_obj(ctx, ap_d);
-			else
-				annot->ap = pdf_keep_obj(ctx, ap_n);
 			annot->has_new_ap = 1;
 		}
 		fz_always(ctx)
@@ -2168,12 +2162,6 @@ static void pdf_update_button_appearance(fz_context *ctx, pdf_annot *annot)
 			ap_n = pdf_dict_put_dict(ctx, ap, PDF_NAME(N), 2);
 			pdf_dict_put(ctx, ap_n, PDF_NAME(Off), ap_off);
 			pdf_dict_put(ctx, ap_n, as_yes, ap_yes);
-
-			pdf_drop_obj(ctx, annot->ap);
-			if (as == PDF_NAME(Off))
-				annot->ap = pdf_keep_obj(ctx, ap_off);
-			else
-				annot->ap = pdf_keep_obj(ctx, ap_yes);
 			annot->has_new_ap = 1;
 		}
 		fz_always(ctx)
@@ -2264,8 +2252,6 @@ void pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const ch
 		if (!ap)
 			ap = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(AP), 1);
 		new_ap_n = pdf_new_xobject(ctx, annot->page->doc, rect, fz_identity, res, buf);
-		pdf_drop_obj(ctx, annot->ap);
-		annot->ap = new_ap_n;
 		annot->needs_new_ap = 0;
 		annot->has_new_ap = 1;
 		pdf_dict_put(ctx, ap, PDF_NAME(N), new_ap_n);
@@ -2310,21 +2296,13 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 	}
 	if (!pdf_is_stream(ctx, ap_n))
 		ap_n = pdf_dict_get(ctx, ap_n, as);
-	if (annot->ap != ap_n)
-	{
-		pdf_drop_obj(ctx, annot->ap);
-		annot->ap = NULL;
-		if (pdf_is_stream(ctx, ap_n))
-			annot->ap = pdf_keep_obj(ctx, ap_n);
-		annot->has_new_ap = 1;
-	}
 
 	ft = pdf_dict_get(ctx, annot->obj, PDF_NAME(FT));
 
 	/* We cannot synthesise an appearance for a Sig, so don't even try.
 	 * Attempting to, will move the object into the new incremental
 	 * section, which will invalidate the signature. */
-	if ((!annot->ap && !pdf_name_eq(ctx, ft, PDF_NAME(Sig))) || annot->needs_new_ap)
+	if ((!ap_n && !pdf_name_eq(ctx, ft, PDF_NAME(Sig))) || annot->needs_new_ap)
 	{
 		fz_rect rect, bbox;
 		fz_matrix matrix = fz_identity;
@@ -2370,9 +2348,6 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 				pdf_update_xobject(ctx, annot->page->doc, ap_n, bbox, matrix, res, buf);
 			}
 
-			pdf_drop_obj(ctx, annot->ap);
-			annot->ap = NULL;
-			annot->ap = pdf_keep_obj(ctx, new_ap_n);
 			annot->has_new_ap = 1;
 		}
 		fz_always(ctx)

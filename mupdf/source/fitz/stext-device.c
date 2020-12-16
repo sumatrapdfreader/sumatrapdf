@@ -125,6 +125,7 @@ static fz_stext_block *
 add_block_to_page(fz_context *ctx, fz_stext_page *page)
 {
 	fz_stext_block *block = fz_pool_alloc(ctx, page->pool, sizeof *page->first_block);
+	block->bbox = fz_empty_rect; /* Fixes bug 703267. */
 	block->prev = page->last_block;
 	if (!page->first_block)
 		page->first_block = page->last_block = block;

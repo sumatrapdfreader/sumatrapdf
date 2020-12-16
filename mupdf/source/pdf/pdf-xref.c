@@ -188,7 +188,7 @@ ensure_solid_xref(fz_context *ctx, pdf_document *doc, int num, int which)
 	new_sub = fz_malloc_struct(ctx, pdf_xref_subsec);
 	fz_try(ctx)
 	{
-		new_sub->table = fz_calloc(ctx, num, sizeof(pdf_xref_entry));
+		new_sub->table = fz_malloc_struct_array(ctx, num, pdf_xref_entry);
 		new_sub->start = 0;
 		new_sub->len = num;
 		new_sub->next = NULL;
@@ -338,7 +338,7 @@ static void ensure_incremental_xref(fz_context *ctx, pdf_document *doc)
 	{
 		pdf_xref *xref = &doc->xref_sections[0];
 		pdf_xref *pxref;
-		pdf_xref_entry *new_table = fz_calloc(ctx, xref->num_objects, sizeof(pdf_xref_entry));
+		pdf_xref_entry *new_table = fz_malloc_struct_array(ctx, xref->num_objects, pdf_xref_entry);
 		pdf_xref_subsec *sub = NULL;
 		pdf_obj *trailer = NULL;
 		int i;
@@ -860,7 +860,7 @@ pdf_xref_find_subsection(fz_context *ctx, pdf_document *doc, int start, int len)
 		sub = fz_malloc_struct(ctx, pdf_xref_subsec);
 		fz_try(ctx)
 		{
-			sub->table = fz_calloc(ctx, len, sizeof(pdf_xref_entry));
+			sub->table = fz_malloc_struct_array(ctx, len, pdf_xref_entry);
 			sub->start = start;
 			sub->len = len;
 			sub->next = xref->subsec;

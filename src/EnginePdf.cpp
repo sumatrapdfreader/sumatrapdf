@@ -1542,8 +1542,8 @@ WCHAR* EnginePdf::ExtractFontList() {
             pdf_extract_fonts(ctx, resources, fontList, resList);
             pdf_annot* annot;
             for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot)) {
-                if (annot->ap) {
-                    pdf_obj* o = annot->ap;
+                pdf_obj* o = pdf_annot_ap(ctx, annot);
+                if (o) {
                     // TODO(port): not sure this is the right thing
                     resources = pdf_xobject_resources(ctx, o);
                     pdf_extract_fonts(ctx, resources, fontList, resList);

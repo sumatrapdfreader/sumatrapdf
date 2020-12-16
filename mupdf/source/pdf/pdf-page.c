@@ -1126,13 +1126,19 @@ pdf_load_page_imp(fz_context *ctx, fz_document *doc_, int chapter, int number)
 		else if (pdf_resources_use_blending(ctx, resources))
 			page->transparency = 1;
 		for (annot = page->annots; annot && !page->transparency; annot = annot->next)
-			if (annot->ap && pdf_resources_use_blending(ctx, pdf_xobject_resources(ctx, annot->ap)))
+		{
+			pdf_obj *ap = pdf_annot_ap(ctx, annot);
+			if (ap && pdf_resources_use_blending(ctx, pdf_xobject_resources(ctx, ap)))
 				page->transparency = 1;
+		}
 		if (pdf_resources_use_overprint(ctx, resources))
 			page->overprint = 1;
 		for (annot = page->annots; annot && !page->overprint; annot = annot->next)
-			if (annot->ap && pdf_resources_use_overprint(ctx, pdf_xobject_resources(ctx, annot->ap)))
+		{
+			pdf_obj *ap = pdf_annot_ap(ctx, annot);
+			if (ap && pdf_resources_use_overprint(ctx, pdf_xobject_resources(ctx, ap)))
 				page->overprint = 1;
+		}
 	}
 	fz_catch(ctx)
 	{
