@@ -316,7 +316,7 @@ void Memento_bt(void);
 #define Memento_label(A,B)                 (A)
 #define Memento_info(A)                    do {} while (0)
 #define Memento_listBlockInfo()            do {} while (0)
-#define Memento_blockInfo()                do {} while (0)
+#define Memento_blockInfo(A)               do {} while (0)
 #define Memento_takeByteRef(A)             (A)
 #define Memento_dropByteRef(A)             (A)
 #define Memento_takeShortRef(A)            (A)
