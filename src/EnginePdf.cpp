@@ -800,46 +800,75 @@ bool EnginePdf::FinishLoading() {
 
     ScopedCritSec scope(ctxAccess);
 
-    int nPages = 0;
+    bool loadPageTreeFailed = false;
     fz_try(ctx) {
         pdf_load_page_tree(ctx, doc);
-        nPages = doc->rev_page_count;
-        if (nPages != pageCount) {
-            fz_warn(ctx, "mismatch between fz_count_pages() and doc->rev_page_count");
-            return false;
-        }
     }
     fz_catch(ctx) {
+        fz_warn(ctx, "pdf_load_page_tree() failed");
+        loadPageTreeFailed = true;
+    }
+
+    int nPages = doc->rev_page_count;
+    if (nPages != pageCount) {
+        fz_warn(ctx, "mismatch between fz_count_pages() and doc->rev_page_count");
+        return false;
     }
 
     _pages.AppendBlanks(pageCount);
 
-    // this does the job of pdf_bound_page but without doing pdf_load_page()
-    pdf_rev_page_map* map = doc->rev_page_map;
-    for (int i = 0; i < nPages; i++) {
-        int pageNo = map[i].page;
-        int objNo = map[i].object;
-        fz_rect mbox{};
-        fz_matrix page_ctm{};
-        fz_try(ctx) {
-            pdf_obj* pageref = pdf_load_object(ctx, doc, objNo);
-            pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
-            mbox = fz_transform_rect(mbox, page_ctm);
-            pdf_drop_obj(ctx, pageref);
+    if (loadPageTreeFailed) {
+        for (int pageNo = 0; pageNo < nPages; pageNo++) {
+            FzPageInfo* pageInfo = &_pages[pageNo];
+            pageInfo->pageNo = pageNo + 1;
+            fz_rect mbox{};
+            fz_try(ctx) {
+                pdf_page* page = pdf_load_page(ctx, doc, pageNo);
+                pageInfo->page = (fz_page*)page;
+                mbox = pdf_bound_page(ctx, page);
+            }
+            fz_catch(ctx) {
+            }
+
+            if (fz_is_empty_rect(mbox)) {
+                fz_warn(ctx, "cannot find page size for page %d", pageNo);
+                mbox.x0 = 0;
+                mbox.y0 = 0;
+                mbox.x1 = 612;
+                mbox.y1 = 792;
+            }
+            pageInfo->mediabox = ToRectFl(mbox);
         }
-        fz_catch(ctx) {
         }
-        if (fz_is_empty_rect(mbox)) {
-            fz_warn(ctx, "cannot find page size for page %d", i);
-            mbox.x0 = 0;
-            mbox.y0 = 0;
-            mbox.x1 = 612;
-            mbox.y1 = 792;
+        else {
+        // this does the job of pdf_bound_page but without doing pdf_load_page()
+        pdf_rev_page_map* map = doc->rev_page_map;
+        for (int i = 0; i < nPages; i++) {
+            int pageNo = map[i].page;
+            int objNo = map[i].object;
+            fz_rect mbox{};
+            fz_matrix page_ctm{};
+            fz_try(ctx) {
+                pdf_obj* pageref = pdf_load_object(ctx, doc, objNo);
+                pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
+                mbox = fz_transform_rect(mbox, page_ctm);
+                pdf_drop_obj(ctx, pageref);
+            }
+            fz_catch(ctx) {
+            }
+            if (fz_is_empty_rect(mbox)) {
+                fz_warn(ctx, "cannot find page size for page %d", i);
+                mbox.x0 = 0;
+                mbox.y0 = 0;
+                mbox.x1 = 612;
+                mbox.y1 = 792;
+            }
+            FzPageInfo* pageInfo = &_pages[pageNo];
+            pageInfo->mediabox = ToRectFl(mbox);
+            pageInfo->pageNo = pageNo + 1;
         }
-        FzPageInfo* pageInfo = &_pages[pageNo];
-        pageInfo->mediabox = ToRectFl(mbox);
-        pageInfo->pageNo = pageNo + 1;
     }
+
 
     fz_try(ctx) {
         outline = fz_load_outline(ctx, _doc);
@@ -923,6 +952,12 @@ bool EnginePdf::FinishLoading() {
 
     // TODO: support javascript
     CrashIf(pdf_js_supported(ctx, doc));
+
+    // TODO: better implementation
+    // we use this to check if has unsaved annotations to show a 'unsaved annotations'
+    // message on close. reset this the case of damaged documents that
+    // were fixed up by mupdf. Hopefully this doesn't mess something else
+    doc->dirty = 0;
     return true;
 }
 
