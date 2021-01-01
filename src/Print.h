@@ -1,4 +1,4 @@
-/* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 bool PrintFile(const WCHAR* fileName, WCHAR* printerName = nullptr, bool displayErrors = true,

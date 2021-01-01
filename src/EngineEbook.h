@@ -1,4 +1,4 @@
-/* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 EngineBase* CreateEpubEngineFromFile(const WCHAR* fileName);

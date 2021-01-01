@@ -1,4 +1,4 @@
-/* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 void CalcMD5Digest(const u8* data, size_t byteCount, u8 digest[16]);

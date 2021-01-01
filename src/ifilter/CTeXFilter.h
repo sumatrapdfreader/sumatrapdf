@@ -1,4 +1,4 @@
-/* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2021 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 enum TEX_FILTER_STATE { STATE_TEX_START, STATE_TEX_PREAMBLE, STATE_TEX_CONTENT, STATE_TEX_END };
