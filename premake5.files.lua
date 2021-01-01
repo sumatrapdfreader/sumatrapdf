@@ -514,6 +514,7 @@ function utils_files()
     "Log.*",
     "LogDbg.*",
     "LzmaSimpleArchive.*",
+    "MinHook.*",
     "PEB.h",
     "RegistryPaths.*",
     "Scoped.h",

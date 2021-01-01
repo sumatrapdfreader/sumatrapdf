@@ -58,3 +58,6 @@ UnRAR           5.9.3
 
 gumbo           0.10.1
   https://github.com/google/gumbo-parser
+
+MinHook         master     20201-01-1
+  https://github.com/TsudaKageyu/minhook
