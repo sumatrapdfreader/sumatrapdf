@@ -1,12 +1,10 @@
-name: Build
+name: CodeQL
 on:
-  push:
-  pull_request:
   repository_dispatch:
-    types: [build-pre-rel, build-ramicro-pre-rel]
+    types: [codeql]
 jobs:
   build:
-    name: Build
+    name: CodeQL
     runs-on: windows-latest
     steps:
       - name: Set up Go
@@ -20,16 +18,16 @@ jobs:
           # needed to calc build number via git log --oneline
           fetch-depth: 0
 
+      - name: Initialize CodeQL for C++
+        uses: github/codeql-action/init@v1
+        with:
+          languages: cpp
+          queries: security-and-quality
+
       - name: Build
         env:
           CERT_PWD: ${{ secrets.CERT_PWD }}
         run: .\doit.bat -ci
 
-      # a separate step from -ci to make logs easier to read
-      - name: Upload to s3 etc.
-        env:
-          AWS_SECRET: ${{ secrets.AWS_SECRET }}
-          AWS_ACCESS: ${{ secrets.AWS_ACCESS }}
-          SPACES_KEY: ${{ secrets.SPACES_KEY }}
-          SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
-        run: .\doit.bat -ci-upload
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1

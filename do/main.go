@@ -124,6 +124,7 @@ func main() {
 		flgBuildNo                 bool
 		flgTriggerPreRel           bool
 		flgTriggerRaMicroPreRel    bool
+		flgTriggerCodeQL           bool
 		flgWebsiteRun              bool
 		flgWebsiteDeployProd       bool
 		flgWebsiteDeployDev        bool
@@ -164,6 +165,7 @@ func main() {
 		flag.BoolVar(&flgBuildNo, "build-no", false, "print build number")
 		flag.BoolVar(&flgTriggerPreRel, "trigger-pre-rel", false, "trigger pre-release build")
 		flag.BoolVar(&flgTriggerRaMicroPreRel, "trigger-ramicro-pre-rel", false, "trigger pre-release build")
+		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
 		flag.BoolVar(&flgWebsiteRun, "website-run", false, "preview website locally")
 		flag.BoolVar(&flgWebsiteDeployProd, "website-deploy-prod", false, "deploy website")
 		flag.BoolVar(&flgWebsiteDeployDev, "website-deploy-dev", false, "deploy a preview of website")
@@ -227,6 +229,10 @@ func main() {
 	if flgWc {
 		doLineCount()
 		return
+	}
+
+	if flgTriggerCodeQL {
+		triggerCodeQL()
 	}
 
 	if flgTriggerPreRel {
@@ -318,7 +324,7 @@ func main() {
 		detectVersions()
 		gev := getGitHubEventType()
 		switch gev {
-		case githubEventNone:
+		case githubEventNone, githubEventTypeCodeQL:
 			// daily build on push
 			buildDaily()
 		case githubEventTypeBuildPreRel:
@@ -358,6 +364,8 @@ func main() {
 			spacesUploadBuildMust(buildTypePreRel)
 		case githubEventTypeBuildRaMicroPreRel:
 			spacesUploadBuildMust(buildTypeRaMicro)
+		case githubEventTypeCodeQL:
+			// do nothing
 		default:
 			panic("unkown value from getGitHubEventType()")
 		}
