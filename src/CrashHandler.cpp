@@ -202,6 +202,12 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, char* dstDir,
 // note: to simplify callers, it could choose pdbZipPath by itself (in a temporary
 // directory) as the file is deleted on exit anyway
 static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
+    if (gDisableSymbolsDownload) {
+        // don't care about debug builds because we don't release them
+        dbglog("DownloadAndUnzipSymbols: DEBUG build so not doing anything\n");
+        return false;
+    }
+
     dbglogf(L"DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
     if (!symDir || !dir::Exists(symDir)) {
         dbglog("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
@@ -209,12 +215,6 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
     }
 
     DeleteSymbolsIfExist();
-
-    if (gDisableSymbolsDownload) {
-        // don't care about debug builds because we don't release them
-        dbglog("DownloadAndUnzipSymbols: DEBUG build so not doing anything\n");
-        return false;
-    }
 
     HttpRsp rsp;
     if (!HttpGet(gSymbolsUrl, &rsp)) {

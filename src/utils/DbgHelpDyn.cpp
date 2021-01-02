@@ -262,7 +262,7 @@ static void AppendAddress(str::Str& s, DWORD64 addr) {
     s.AppendFmt("%p", p);
 }
 
-static void GetAddressInfo(str::Str& s, DWORD64 addr) {
+void GetAddressInfo(str::Str& s, DWORD64 addr) {
     static const int MAX_SYM_LEN = 512;
 
     char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];

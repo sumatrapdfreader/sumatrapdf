@@ -15,11 +15,18 @@ BOOLEAN(WINAPI* gRtlFreeHeapOrig)(PVOID heapHandle, ULONG flags, PVOID heapBase)
 #define TYPE_ALLOC 0
 #define TYPE_FREE 1
 
+#define MAX_FRAMES 64
+
+struct CallstackInfoShort {
+    DWORD64 nFrames;
+    DWORD64 frame[MAX_FRAMES];
+};
+
 struct AllocFreeEntry {
     void* heap;
     void* addr;
     u64 size;
-    void* callstackInfo;
+    CallstackInfoShort* callstackInfo;
     DWORD threadId;
     u32 typ;
 };
@@ -62,27 +69,21 @@ static bool CanStackWalk() {
     return ok;
 }
 
-#define MAX_FRAMES 64
 struct CallstackInfo {
     CONTEXT ctx;
     HANDLE hThread;
     int nFrames;
-    DWORD callstack[MAX_FRAMES];
+    DWORD64 callstack[MAX_FRAMES];
 };
 
-#define DWORDS_PER_CSI_BLOCK (1024 * 1020) / 8 // 1 MB
+#define DWORDS_PER_CSI_BLOCK (1024 * 1020) / sizeof(DWORD64) // 1 MB
 struct CallstackInfoBlock {
     CallstackInfoBlock* next;
     int nDwordsFree;
     // format of data is:
-    // first DWORD is nFrames
+    // first DWORD64 is nFrames
     // followed by frames
-    DWORD data[DWORDS_PER_CSI_BLOCK];
-};
-
-struct CallstackInfoShort {
-    DWORD nFrames;
-    DWORD frame[MAX_FRAMES];
+    DWORD64 data[DWORDS_PER_CSI_BLOCK];
 };
 
 static_assert(sizeof(CallstackInfoBlock) < 1024 * 1024);
@@ -90,36 +91,31 @@ static_assert(sizeof(CallstackInfoBlock) < 1024 * 1024);
 static CallstackInfoBlock* gCallstackInfoBlockFirst = nullptr;
 static CallstackInfoBlock* gCallstackInfoBlockCurr = nullptr;
 
-static CallstackInfoShort* AllocCallstackInfoShort(CallstackInfo* ci) {
-    int n = ci->nFrames;
-    if (n == 0) {
+static CallstackInfoShort* AllocCallstackInfoShort(int nFrames) {
+    if (nFrames == 0) {
         return nullptr;
     }
     // fast path
     CallstackInfoBlock* b = gCallstackInfoBlockFirst;
-    if (b && b->nDwordsFree >= n + 1) {
-        int off = DWORDS_PER_CSI_BLOCK - b->nDwordsFree;
-        DWORD* res = &b->data[off];
-        b->nDwordsFree -= (n + 1);
-        return (CallstackInfoShort*)res;
-    }
-    b = AllocStructPrivate<CallstackInfoBlock>();
-    if (!b) {
-        return nullptr;
-    }
-    b->next = nullptr;
-    b->nDwordsFree = DWORDS_PER_CSI_BLOCK;
-    if (!gCallstackInfoBlockFirst) {
-        gCallstackInfoBlockFirst = b;
-    }
-    if (gCallstackInfoBlockCurr) {
-        gCallstackInfoBlockCurr->next = b;
-    }
-    gCallstackInfoBlockCurr = b;
+    if (!b || b->nDwordsFree < nFrames + 1) {
+        b = AllocStructPrivate<CallstackInfoBlock>();
+        if (!b) {
+            return nullptr;
+        }
+        b->next = nullptr;
+        b->nDwordsFree = DWORDS_PER_CSI_BLOCK;
+        if (!gCallstackInfoBlockFirst) {
+            gCallstackInfoBlockFirst = b;
+        }
+        if (gCallstackInfoBlockCurr) {
+            gCallstackInfoBlockCurr->next = b;
+        }
+        gCallstackInfoBlockCurr = b;
 
-    b->nDwordsFree -= (n + 1);
-    CallstackInfoShort* res = (CallstackInfoShort*)&b->data[0];
-    res->nFrames = ci->nFrames;
+    }
+    int off = DWORDS_PER_CSI_BLOCK - b->nDwordsFree;
+    CallstackInfoShort* res = (CallstackInfoShort*)&b->data[off];
+    b->nDwordsFree -= (nFrames + 1);
     return res;
 }
 
@@ -168,12 +164,13 @@ static void GetCallstackFrames(CallstackInfo* cs) {
         if (!GetStackFrameInfo(cs, &stackFrame)) {
             break;
         }
-        cs->callstack[cs->nFrames] = stackFrame.AddrPC.Offset;
-        cs->nFrames++;
+        DWORD64 addr = stackFrame.AddrPC.Offset;
+        cs->callstack[cs->nFrames++] = addr;
     }
 }
 
-// we disable optimizations for this function as it calls RtlCaptureContext()
+static bool gCanStackWalk;
+
 // which cannot deal with Omit Frame Pointers optimization (/Oy explicitly, turned
 // implicitly by e.g. /O2)
 // http://www.bytetalk.net/2011/06/why-rtlcapturecontext-crashes-on.html
@@ -184,10 +181,7 @@ static void GetCallstackFrames(CallstackInfo* cs) {
 #pragma warning(disable : 4748)
 __declspec(noinline)
 bool GetCurrentThreadCallstack(CallstackInfo* cs) {
-    if (!dbghelp::Initialize(nullptr, false)) {
-        return false;
-    }
-    if (!CanStackWalk()) {
+    if (!gCanStackWalk) {
         return false;
     }
 
@@ -223,14 +217,25 @@ static AllocFreeEntry* GetAllocFreeEntry() {
     return &b->entries[0];
 }
 
+// to filter out our own code
+#define FRAMES_TO_SKIP 3
+
 CallstackInfoShort* RecordCallstack() {
-    CallstackInfo cs;
-    bool ok = GetCurrentThreadCallstack(&cs);
+    CallstackInfo csi;
+    bool ok = GetCurrentThreadCallstack(&csi);
     if (!ok) {
         return nullptr;
     }
-    CallstackInfoShort* cis = AllocCallstackInfoShort(&cs);
-    return cis;
+    int n = csi.nFrames;
+    if (n <= FRAMES_TO_SKIP) {
+        return nullptr;
+    }
+    CallstackInfoShort* res = AllocCallstackInfoShort(n - FRAMES_TO_SKIP);
+    res->nFrames = (DWORD64)n - FRAMES_TO_SKIP;
+    for (int i = FRAMES_TO_SKIP-1; i < n; i++) {
+        res->frame[i] = csi.callstack[i];
+    }
+    return res;
 }
 
 static void RecordAllocOrFree(u32 typ, void* heap, void* addr, u64 size) {
@@ -243,7 +248,7 @@ static void RecordAllocOrFree(u32 typ, void* heap, void* addr, u64 size) {
     e->size = size;
     e->typ = typ;
     e->threadId = GetCurrentThreadId();
-    e->callstackInfo = (void*)RecordCallstack();
+    e->callstackInfo = RecordCallstack();
 }
 
 static void Lock() {
@@ -280,9 +285,38 @@ BOOLEAN WINAPI RtlFreeHeapHook(PVOID heapHandle, ULONG flags, PVOID heapBase) {
     return res;
 }
 
+#include "utils/WinUtil.h"
+
+static bool InitializeSymbols() {
+    AutoFreeWstr symbolPath = GetExeDir();
+    if (!dbghelp::Initialize(symbolPath.Get(), false)) {
+        dbglog("InitializeSymbols: dbghelp::Initialize() failed\n");
+        return false;
+    }
+
+    if (dbghelp::HasSymbols()) {
+        dbglog("InitializeSymbols(): skipping because dbghelp::HasSymbols()\n");
+        return true;
+    }
+
+    if (!dbghelp::Initialize(symbolPath.Get(), true)) {
+        dbglog("InitializeSymbols: second dbghelp::Initialize() failed\n");
+        return false;
+    }
+
+    if (!dbghelp::HasSymbols()) {
+        dbglog("InitializeSymbols: HasSymbols() false after downloading symbols\n");
+        return false;
+    }
+    return true;
+}
+
 bool MemLeakInit() {
     MH_STATUS status;
     CrashIf(gRtlAllocateHeapOrig != nullptr); // don't call me twice
+
+    InitializeSymbols();
+    gCanStackWalk = CanStackWalk();
 
     InitializeCriticalSection(&gMutex);
     gHeap = HeapCreate(0, 0, 0);
@@ -302,6 +336,46 @@ bool MemLeakInit() {
     return true;
 }
 
+static AllocFreeEntry* FindMatchingFree(AllocFreeEntryBlock* b, AllocFreeEntry* eAlloc, int nStart) {
+    while (b) {
+        for (int i = nStart; i < b->nUsed; i++) {
+            AllocFreeEntry* e = &b->entries[i];
+            if (e->typ == TYPE_ALLOC) {
+                continue;
+            }
+            if (e->heap != eAlloc->heap) {
+                continue;
+            }
+            if (e->addr != eAlloc->addr) {
+                continue;
+            }
+            return e;
+        }
+        b = b->next;
+    }
+    return nullptr;
+}
+
+static void DumpAllocEntry(AllocFreeEntry* e) {
+    static int nDumped = 0;
+    if (nDumped > 25) {
+        return;
+    }
+    nDumped++;
+    dbglogf("\nunfreed entry: 0x%p, size: %d\n", e->addr, (int)e->size);
+    str::Str s;
+    CallstackInfoShort* cis = e->callstackInfo;
+    if (!cis) {
+        return;
+    }
+    for (int i = 0; i < (int)cis->nFrames; i++) {
+        DWORD64 addr = cis->frame[i];
+        s.Reset();
+        dbghelp::GetAddressInfo(s, addr);
+        dbglogf("  %s", s.Get());
+    }
+}
+
 void DumpMemLeaks() {
     MH_DisableHook(MH_ALL_HOOKS);
     // TODO: Lock(), just in case?
@@ -309,7 +383,23 @@ void DumpMemLeaks() {
     int nAllocs = gAllocs;
     int nFrees = gFrees;
     dbglogf("allocs: %d, frees: %d\n", nAllocs, nFrees);
-    // TODO: figure out allocs without a free
 
+    AllocFreeEntryBlock *b = gAllocFreeBlockFirst;
+    int nUnfreed = 0;
+    while (b) {
+        for (int i = 0; i < b->nUsed; i++) {
+            AllocFreeEntry* e = &b->entries[i];
+            if (e->typ == TYPE_FREE) {
+                continue;
+            }
+            AllocFreeEntry* eFree = FindMatchingFree(b, e, i + 1);
+            if (eFree == nullptr) {
+                nUnfreed++;
+                DumpAllocEntry(e);
+            }
+        }
+        b = b->next;
+    }
+    dbglogf("%d unfreed\n", nUnfreed);
     HeapDestroy(gHeap);
 }
