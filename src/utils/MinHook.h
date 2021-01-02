@@ -15,9 +15,6 @@ typedef enum MH_STATUS {
     // MinHook is already initialized.
     MH_ERROR_ALREADY_INITIALIZED,
 
-    // MinHook is not initialized yet, or already uninitialized.
-    MH_ERROR_NOT_INITIALIZED,
-
     // The hook for the specified target function is already created.
     MH_ERROR_ALREADY_CREATED,
 
@@ -52,17 +49,21 @@ typedef enum MH_STATUS {
 } MH_STATUS;
 
 struct HOOK_ENTRY {
-    LPVOID pTarget;     // Address of the target function.
-    LPVOID pDetour;     // Address of the detour or relay function.
-    LPVOID pTrampoline; // Address of the trampoline function.
+    // fill those before calling MH_CreateHooks
+    LPVOID pTarget; // Address of the target function.
+    LPVOID pDetour; // Address of the detour or relay function.
 
-    u8 backup[8];    // Original prologue of the target function.
+    // filled by MH_CreateHooks
+    LPVOID pTrampoline; // Address of the trampoline function i.e. original.
+
+    // private data
+    u8 backup[8]; // Original prologue of the target function.
 
     u8 patchAbove : 1;  // Uses the hot patch area.
     u8 isEnabled : 1;   // Enabled.
     u8 queueEnable : 1; // Queued for enabling/disabling when != isEnabled.
 
-    UINT nIP : 4;    // Count of the instruction boundaries.
+    UINT nIP : 4; // Count of the instruction boundaries.
     u8 oldIPs[8]; // Instruction boundaries of the target function.
     u8 newIPs[8]; // Instruction boundaries of the trampoline function.
 };
@@ -73,6 +74,10 @@ struct HOOK_ENTRY {
 
 MH_STATUS WINAPI MH_Initialize();
 MH_STATUS WINAPI MH_Uninitialize();
+
+MH_STATUS WINAPI MH_CreateHooks(HOOK_ENTRY* hooks, int nHooks);
+MH_STATUS WINAPI MH_DisableHooks(HOOK_ENTRY* hooks, int nHooks);
+
 MH_STATUS WINAPI MH_CreateHook(void* pTarget, void* pDetour, void** ppOriginal);
 MH_STATUS WINAPI MH_CreateHookApiEx(const WCHAR* pszModule, const char* pszProcName, void* pDetour, void** ppOriginal,
                                     void** ppTarget);
