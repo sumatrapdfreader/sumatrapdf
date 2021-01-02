@@ -54,10 +54,10 @@ static T* AllocStructPrivate() {
     return res;
 }
 
-int gTotalCallstacks = 0;
+// static int gTotalCallstacks = 0;
 
 static bool CanStackWalk() {
-    bool ok = DynSymCleanup && DynSymGetOptions && DynSymSetOptions && DynStackWalk64 && DynSymFunctionTableAccess64 &&
+    bool ok = DynStackWalk64 && DynSymFunctionTableAccess64 && 
               DynSymGetModuleBase64 && DynSymFromAddr;
     return ok;
 }
@@ -97,7 +97,7 @@ static CallstackInfoShort* AllocCallstackInfoShort(CallstackInfo* ci) {
     }
     // fast path
     CallstackInfoBlock* b = gCallstackInfoBlockFirst;
-    if (b && b->nDwordsFree <= n + 1) {
+    if (b && b->nDwordsFree >= n + 1) {
         int off = DWORDS_PER_CSI_BLOCK - b->nDwordsFree;
         DWORD* res = &b->data[off];
         b->nDwordsFree -= (n + 1);
@@ -117,9 +117,10 @@ static CallstackInfoShort* AllocCallstackInfoShort(CallstackInfo* ci) {
     }
     gCallstackInfoBlockCurr = b;
 
-    DWORD* res = &b->data[0];
     b->nDwordsFree -= (n + 1);
-    return (CallstackInfoShort*)res;
+    CallstackInfoShort* res = (CallstackInfoShort*)&b->data[0];
+    res->nFrames = ci->nFrames;
+    return res;
 }
 
 static bool GetStackFrameInfo(CallstackInfo* cs, STACKFRAME64* stackFrame) {
@@ -147,7 +148,7 @@ static bool GetStackFrameInfo(CallstackInfo* cs, STACKFRAME64* stackFrame) {
 }
 
 static void GetCallstackFrames(CallstackInfo* cs) {
-    STACKFRAME64 stackFrame;
+    STACKFRAME64 stackFrame{};
     memset(&stackFrame, 0, sizeof(stackFrame));
 #ifdef _WIN64
     stackFrame.AddrPC.Offset = cs->ctx.Rip;
@@ -172,16 +173,31 @@ static void GetCallstackFrames(CallstackInfo* cs) {
     }
 }
 
-static bool GetCurrentThreadCallstack(CallstackInfo* cs) {
-    cs->nFrames = 0;
-    cs->hThread = GetCurrentThread();
+// we disable optimizations for this function as it calls RtlCaptureContext()
+// which cannot deal with Omit Frame Pointers optimization (/Oy explicitly, turned
+// implicitly by e.g. /O2)
+// http://www.bytetalk.net/2011/06/why-rtlcapturecontext-crashes-on.html
+#pragma optimize("", off)
+// we also need to disable warning 4748 "/GS can not protect parameters and local variables
+// from local buffer overrun because optimizations are disabled in function)"
+#pragma warning(push)
+#pragma warning(disable : 4748)
+__declspec(noinline)
+bool GetCurrentThreadCallstack(CallstackInfo* cs) {
+    if (!dbghelp::Initialize(nullptr, false)) {
+        return false;
+    }
     if (!CanStackWalk()) {
         return false;
     }
+
+    cs->nFrames = 0;
+    cs->hThread = GetCurrentThread();
     DynRtlCaptureContext(&cs->ctx);
     GetCallstackFrames(cs);
     return true;
 }
+#pragma optimize("", off)
 
 static AllocFreeEntry* GetAllocFreeEntry() {
     // fast path
