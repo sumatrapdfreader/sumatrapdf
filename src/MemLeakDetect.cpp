@@ -4,13 +4,19 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "utils/BaseUtil.h"
 #include "utils/WinDynCalls.h"
 #include "utils/DbgHelpDyn.h"
+#include "utils/WinUtil.h"
 #include "utils/LogDbg.h"
 #include "utils/MinHook.h"
 
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlallocateheap
-PVOID(WINAPI* gRtlAllocateHeapOrig)(PVOID heapHandle, ULONG flags, SIZE_T size);
+PVOID(WINAPI* gRtlAllocateHeapOrig)(PVOID heapHandle, ULONG flags, SIZE_T size) = nullptr;
 // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlfreeheap
-BOOLEAN(WINAPI* gRtlFreeHeapOrig)(PVOID heapHandle, ULONG flags, PVOID heapBase);
+BOOLEAN(WINAPI* gRtlFreeHeapOrig)(PVOID heapHandle, ULONG flags, PVOID heapBase) = nullptr;
+
+// https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapalloc
+LPVOID(WINAPI* gHeapAllocOrig)(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes) = nullptr;
+// https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapfree
+BOOL (WINAPI* gHeapFreeOrig)(HANDLE hHeap, DWORD dwFlags, _Frees_ptr_opt_ LPVOID lpMem) = nullptr;
 
 #define TYPE_ALLOC 0
 #define TYPE_FREE 1
@@ -47,9 +53,24 @@ static int gAllocs = 0;
 static int gFrees = 0;
 static PVOID gHeap = nullptr;
 
+static void* GetDllProcAddr(const char* dll, const char* name) {
+    HMODULE mod = GetModuleHandleA(dll);
+    if (mod == NULL)
+        return nullptr;
+
+    void* pTarget = (LPVOID)GetProcAddress(mod, name);
+    return pTarget;
+}
+
 static void* AllocPrivate(size_t n) {
     // note: HeapAlloc and RtlHeapAlloc seem to be the same
-    return gRtlAllocateHeapOrig(gHeap, 0, n);
+    if (gRtlAllocateHeapOrig) {
+        return gRtlAllocateHeapOrig(gHeap, 0, n);
+    }
+    if (gHeapAllocOrig) {
+        return gHeapAllocOrig(gHeap, 0, n);
+    }
+    return HeapAlloc(gHeap, 0, n);
 }
 
 template <typename T>
@@ -232,8 +253,8 @@ CallstackInfoShort* RecordCallstack() {
     }
     CallstackInfoShort* res = AllocCallstackInfoShort(n - FRAMES_TO_SKIP);
     res->nFrames = (DWORD64)n - FRAMES_TO_SKIP;
-    for (int i = FRAMES_TO_SKIP-1; i < n; i++) {
-        res->frame[i] = csi.callstack[i];
+    for (int i = 0; i < n - FRAMES_TO_SKIP; i++) {
+        res->frame[i] = csi.callstack[i + FRAMES_TO_SKIP];
     }
     return res;
 }
@@ -285,7 +306,31 @@ BOOLEAN WINAPI RtlFreeHeapHook(PVOID heapHandle, ULONG flags, PVOID heapBase) {
     return res;
 }
 
-#include "utils/WinUtil.h"
+LPVOID WINAPI HeapAllocHook(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes) {
+    Lock();
+    gRecurCount++;
+    gAllocs++;
+    PVOID res = gHeapAllocOrig(hHeap, dwFlags, dwBytes);
+    if ((res != nullptr) && (gRecurCount == 1)) {
+        RecordAllocOrFree(TYPE_ALLOC, hHeap, res, dwBytes);
+    }
+    gRecurCount--;
+    Unlock();
+    return res;
+}
+
+BOOL WINAPI HeapFreeHook(HANDLE hHeap, DWORD dwFlags, LPVOID lpMem) {
+    Lock();
+    gRecurCount++;
+    gFrees++;
+    BOOLEAN res = gHeapFreeOrig(hHeap, dwFlags, lpMem);
+    if (res && (gRecurCount == 1)) {
+        RecordAllocOrFree(TYPE_FREE, hHeap, lpMem, 0);
+    }
+    gRecurCount--;
+    Unlock();
+    return res;
+}
 
 static bool InitializeSymbols() {
     AutoFreeWstr symbolPath = GetExeDir();
@@ -311,6 +356,62 @@ static bool InitializeSymbols() {
     return true;
 }
 
+decltype(_malloc_dbg)* g_malloc_dbg_orig = nullptr;
+decltype(_calloc_dbg)* g_calloc_dbg_orig = nullptr;
+decltype(_free_dbg)* g_free_dbg_orig = nullptr;
+decltype(_realloc_dbg)* g_realloc_dbg_orig = nullptr;
+decltype(_recalloc_dbg)* g_recalloc_dbg_orig = nullptr;
+
+/*
+#define realloc(p, s) _realloc_dbg(p, s, _NORMAL_BLOCK, __FILE__, __LINE__)
+#define _recalloc(p, c, s) _recalloc_dbg(p, c, s, _NORMAL_BLOCK, __FILE__, __LINE__)
+*/
+
+void* __cdecl _malloc_dbg_hook(size_t const size, int const block_use, char const* const file_name, int const line_number) {
+    Lock();
+    gRecurCount++;
+    gAllocs++;
+
+    void* res = g_malloc_dbg_orig(size, block_use, file_name, line_number);
+    if ((res != nullptr) && (gRecurCount == 1)) {
+        RecordAllocOrFree(TYPE_ALLOC, 0, res, size);
+    }
+    gRecurCount--;
+    Unlock();
+    return res;
+}
+
+void* __cdecl _calloc_dbg_hook(size_t const count, size_t const element_size, int const block_use,
+                          char const* const file_name, int const line_number) {
+    Lock();
+    gRecurCount++;
+    gAllocs++;
+
+    void* res = g_calloc_dbg_orig(count, element_size, block_use, file_name, line_number);
+
+    if ((res != nullptr) && (gRecurCount == 1)) {
+        size_t size = count * element_size;
+        RecordAllocOrFree(TYPE_ALLOC, 0, res, size);
+    }
+    gRecurCount--;
+    Unlock();
+
+    return res;
+}
+
+void __cdecl _free_dbg_hook(void* const block, int const block_use) {
+    Lock();
+    gRecurCount++;
+    gFrees++;
+
+    g_free_dbg_orig(block, block_use);
+    if (gRecurCount == 1) {
+        RecordAllocOrFree(TYPE_FREE, 0, block, 0);
+    }
+    gRecurCount--;
+    Unlock();
+}
+
 bool MemLeakInit() {
     MH_STATUS status;
     CrashIf(gRtlAllocateHeapOrig != nullptr); // don't call me twice
@@ -322,12 +423,42 @@ bool MemLeakInit() {
     gHeap = HeapCreate(0, 0, 0);
     MH_Initialize();
 
-    status = MH_CreateHookApiEx(L"ntdll.dll", "RtlAllocateHeap", RtlAllocateHeapHook, (void**)&gRtlAllocateHeapOrig,
-                                nullptr);
+#if 0
+    void* proc;
+    proc = GetDllProcAddr("ntdll.dll", "RtlAllocateHeap");
+    status = MH_CreateHook(proc, RtlAllocateHeapHook, (void**)&gRtlAllocateHeapOrig);
     if (status != MH_OK) {
         return false;
     }
-    status = MH_CreateHookApiEx(L"ntdll.dll", "RtlFreeHeap", RtlFreeHeapHook, (void**)&gRtlFreeHeapOrig, nullptr);
+    proc = GetDllProcAddr("ntdll.dll", "RtlFreeHeap");
+    status = MH_CreateHook(proc, RtlFreeHeapHook, (void**)&gRtlFreeHeapOrig);
+    if (status != MH_OK) {
+        return false;
+    }
+
+    proc = GetDllProcAddr("kernel32.dll", "HeapAlloc";
+    status = MH_CreateHook(proc, HeapAllocHook, (void**)&gHeapAllocOrig);
+    if (status != MH_OK) {
+        return false;
+    }
+    proc = GetDllProcAddr("kernel32.dll", "HeapFree");
+    status = MH_CreateHook(proc, HeapFreeHook, (void**)&gHeapFreeOrig);
+    if (status != MH_OK) {
+        return false;
+    }
+#endif
+
+    status = MH_CreateHook(_malloc_dbg, _malloc_dbg_hook, (void**)&g_malloc_dbg_orig);
+    if (status != MH_OK) {
+        return false;
+    }
+
+    status = MH_CreateHook(_calloc_dbg, _calloc_dbg_hook, (void**)&g_calloc_dbg_orig);
+    if (status != MH_OK) {
+        return false;
+    }
+
+    status = MH_CreateHook(_free_dbg, _free_dbg_hook, (void**)&g_free_dbg_orig);
     if (status != MH_OK) {
         return false;
     }
@@ -378,11 +509,9 @@ static void DumpAllocEntry(AllocFreeEntry* e) {
 
 void DumpMemLeaks() {
     MH_DisableHook(MH_ALL_HOOKS);
-    // TODO: Lock(), just in case?
 
     int nAllocs = gAllocs;
     int nFrees = gFrees;
-    dbglogf("allocs: %d, frees: %d\n", nAllocs, nFrees);
 
     AllocFreeEntryBlock *b = gAllocFreeBlockFirst;
     int nUnfreed = 0;
@@ -400,6 +529,7 @@ void DumpMemLeaks() {
         }
         b = b->next;
     }
+    dbglogf("allocs: %d, frees: %d\n", nAllocs, nFrees);
     dbglogf("%d unfreed\n", nUnfreed);
     HeapDestroy(gHeap);
 }

@@ -4935,7 +4935,8 @@ void GetProgramInfo(str::Str& s) {
     AutoFree d = strconv::WstrToUtf8(gCrashFilePath);
     s.AppendFmt("Crash file: %s\r\n", d.data);
 
-    strconv::StackWstrToUtf8 exePath = GetExePath();
+    AutoFreeWstr exePathW = GetExePath();
+    strconv::StackWstrToUtf8 exePath = exePathW.Get();
     s.AppendFmt("Exe: %s\r\n", exePath.Get());
     const char* exeType = IsDllBuild() ? "dll" : "static";
     if (builtOn != nullptr) {

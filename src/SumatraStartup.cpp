@@ -790,10 +790,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     supressThrowFromNew();
 
     InitDynCalls();
-    if (gEnableMemLeak) {
-        MemLeakInit();
-    }
-
     NoDllHijacking();
 
     DisableDataExecution();
@@ -806,6 +802,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
     srand((unsigned int)time(nullptr));
+
+    if (gEnableMemLeak) {
+        MemLeakInit();
+    }
 
     if (!gIsAsanBuild) {
         SetupCrashHandler();
