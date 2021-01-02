@@ -360,11 +360,6 @@ decltype(_free_dbg)* g_free_dbg_orig = nullptr;
 decltype(_realloc_dbg)* g_realloc_dbg_orig = nullptr;
 decltype(_recalloc_dbg)* g_recalloc_dbg_orig = nullptr;
 
-/*
-#define realloc(p, s) _realloc_dbg(p, s, _NORMAL_BLOCK, __FILE__, __LINE__)
-#define _recalloc(p, c, s) _recalloc_dbg(p, c, s, _NORMAL_BLOCK, __FILE__, __LINE__)
-*/
-
 void* __cdecl _malloc_dbg_hook(size_t const size, int const block_use, char const* const file_name,
                                int const line_number) {
     Lock();
@@ -446,10 +441,92 @@ void* __cdecl _recalloc_dbg_hook(void* _Block, size_t _Count, size_t _Size, int 
 }
 #endif
 
+decltype(_malloc_base)* g_malloc_base_orig = nullptr;
+decltype(_calloc_base)* g_calloc_base_orig = nullptr;
+decltype(_free_base)* g_free_base_orig = nullptr;
+decltype(_realloc_base)* g_realloc_base_orig = nullptr;
+decltype(_recalloc_base)* g_recalloc_base_orig = nullptr;
+
+void* __cdecl _malloc_base_hook(size_t _Size) {
+    Lock();
+    gRecurCount++;
+    gAllocs++;
+
+    void* res = g_malloc_base_orig(_Size);
+    if ((res != nullptr) && (gRecurCount == 1)) {
+        RecordAllocOrFree(TYPE_ALLOC, 0, res, _Size);
+    }
+    gRecurCount--;
+    Unlock();
+    return res;
+}
+
+void* __cdecl _calloc_base_hook(size_t _Count, size_t _Size) {
+    Lock();
+    gRecurCount++;
+    gAllocs++;
+
+    void* res = g_calloc_base_orig(_Count, _Size);
+    if ((res != nullptr) && (gRecurCount == 1)) {
+        size_t size = _Count * _Size;
+        RecordAllocOrFree(TYPE_ALLOC, 0, res, size);
+    }
+    gRecurCount--;
+    Unlock();
+    return res;
+}
+
+void __cdecl _free_base_hook(void* _Block) {
+    Lock();
+    gRecurCount++;
+    gFrees++;
+
+    g_free_base_orig(_Block);
+    if (gRecurCount == 1) {
+        RecordAllocOrFree(TYPE_FREE, 0, _Block, 0);
+    }
+    gRecurCount--;
+    Unlock();
+}
+
+void* __cdecl _realloc_base_hook(void* _Block, size_t _Size) {
+    Lock();
+    gRecurCount++;
+
+    void* res = g_realloc_base_orig(_Block, _Size);
+    if (gRecurCount == 1) {
+        RecordAllocOrFree(TYPE_FREE, 0, _Block, 0);
+        if (res != nullptr) {
+            RecordAllocOrFree(TYPE_ALLOC, 0, res, _Size);
+        }
+    }
+    gRecurCount--;
+    Unlock();
+    return res;
+}
+
+void* __cdecl _recalloc_base_hook(void* _Block, size_t _Count, size_t _Size) {
+    Lock();
+    gRecurCount++;
+
+    void* res = g_recalloc_base_orig(_Block, _Count, _Size);
+    if (gRecurCount == 1) {
+        RecordAllocOrFree(TYPE_FREE, 0, _Block, 0);
+        if (res != nullptr) {
+            size_t size = _Count * _Size;
+            RecordAllocOrFree(TYPE_ALLOC, 0, res, size);
+        }
+    }
+    gRecurCount--;
+    Unlock();
+    return res;
+}
+
+// TODO: optimize callstacks by de-duplicating them
+//       (calc hash and bisect + linear search to find the callstack)
+
 bool MemLeakInit() {
-#if defined(DEBUG)
     MH_STATUS status;
-#endif
     CrashIf(gRtlAllocateHeapOrig != nullptr); // don't call me twice
 
     InitializeSymbols();
@@ -484,10 +561,6 @@ bool MemLeakInit() {
     }
 #endif
 
-    // TODO: hook _realloc_base, _malloc_base and _free_base
-    // TODO: optimize callstacks by de-duplicating them
-    //       (calc hash and bisect + linear search to find the callstack)
-
 #if defined(DEBUG)
     status = MH_CreateHook(_malloc_dbg, _malloc_dbg_hook, (void**)&g_malloc_dbg_orig);
     if (status != MH_OK) {
@@ -514,6 +587,31 @@ bool MemLeakInit() {
         return false;
     }
 #endif
+
+    status = MH_CreateHook(_malloc_base, _malloc_base_hook, (void**)&g_malloc_base_orig);
+    if (status != MH_OK) {
+        return false;
+    }
+
+    status = MH_CreateHook(_calloc_base, _calloc_base_hook, (void**)&g_calloc_base_orig);
+    if (status != MH_OK) {
+        return false;
+    }
+
+    status = MH_CreateHook(_free_base, _free_base_hook, (void**)&g_free_base_orig);
+    if (status != MH_OK) {
+        return false;
+    }
+
+    status = MH_CreateHook(_realloc_base, _realloc_base_hook, (void**)&g_realloc_base_orig);
+    if (status != MH_OK) {
+        return false;
+    }
+
+    status = MH_CreateHook(_recalloc_base, _recalloc_base_hook, (void**)&g_recalloc_base_orig);
+    if (status != MH_OK) {
+        return false;
+    }
 
     MH_EnableHook(MH_ALL_HOOKS);
     return true;
@@ -561,6 +659,7 @@ static void DumpAllocEntry(AllocFreeEntry* e) {
 
 void DumpMemLeaks() {
     MH_DisableHook(MH_ALL_HOOKS);
+    gEnableDbgLog = true;
 
     int nAllocs = gAllocs;
     int nFrees = gFrees;

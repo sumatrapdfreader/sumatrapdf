@@ -773,10 +773,20 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     CrashIf(hInstance != GetInstance());
 
     // TODO: enable in release as well
-#if IS_INTEL_64 && defined(DEBUG)
+#if IS_INTEL_64
+
+#if defined(DEBUG)
     gEnableMemLeak = true;
-    fastExit = false;
 #endif
+
+    if (IsDebuggerPresent()) {
+        gEnableMemLeak = true;
+    }
+
+    if (gEnableMemLeak) {
+        fastExit = false;
+    }
+#endif // IS_INTEL_64
 
     if (gIsDebugBuild) {
         // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for

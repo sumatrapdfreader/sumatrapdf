@@ -1,5 +1,13 @@
 A daily log of changes and commentary. An experiment of sorts.
 
+2021-01-02 Sat
+
+more work on MinHook.[h|cpp] and MemLeakDetect.[h|cpp]
+
+2021-01-01 Fri
+
+start on MinHook.[h|cpp] to be used for mem leak detection
+
 2020-08-17 Mon
 
 fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1733
