@@ -446,6 +446,10 @@ bool MemLeakInit() {
     }
 #endif
 
+    // TODO: hook _realloc_base, _malloc_base and _free_base
+    // TODO: optimize callstacks by de-duplicating them
+    //       (calc hash and bisect + linear search to find the callstack)
+
     status = MH_CreateHook(_malloc_dbg, _malloc_dbg_hook, (void**)&g_malloc_dbg_orig);
     if (status != MH_OK) {
         return false;

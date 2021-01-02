@@ -739,7 +739,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\utils\ApiHook.h" />
     <ClInclude Include="..\src\utils\Archive.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\BitReader.h" />
@@ -816,7 +815,6 @@
     <ClInclude Include="..\src\wingui\Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\utils\ApiHook.cpp" />
     <ClCompile Include="..\src\utils\Archive.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\BitReader.cpp" />
