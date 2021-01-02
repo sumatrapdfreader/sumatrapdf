@@ -753,6 +753,12 @@ static void testLogf() {
 // in mupdf_load_system_font.c
 extern "C" void destroy_system_font_list();
 
+// in MemLeakDetect.cpp
+extern bool MemLeakInit();
+extern void DumpMemLeaks();
+
+bool gEnableMemLeak = false;
+
 int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstance, [[maybe_unused]] LPSTR cmdLine,
                      [[maybe_unused]] int nCmdShow) {
     int retCode{1}; // by default it's error
@@ -764,6 +770,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     HWND hPrevWnd{nullptr};
 
     CrashIf(hInstance != GetInstance());
+
+    // TODO: enable in release as well
+#if IS_INTEL_64 && defined(DEBUG)
+    gEnableMemLeak = true;
+    fastExit = false;
+#endif
+
+    if (gEnableMemLeak) {
+        MemLeakInit();
+    }
 
     if (gIsDebugBuild) {
         // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
@@ -1193,6 +1209,10 @@ Exit:
         // TODO: crashes in wild places without this
         // Note: ::ExitProcess(0) also crashes
         ::TerminateProcess(GetCurrentProcess(), 0);
+    }
+
+    if (gEnableMemLeak) {
+        DumpMemLeaks();
     }
 
     if (gIsDebugBuild) {

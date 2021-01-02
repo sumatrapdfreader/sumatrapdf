@@ -424,6 +424,7 @@ function sumatrapdf_files()
     "Installer.cpp",
     "InstUninstCommon.cpp",
     "Uninstaller.cpp",
+    "MemLeakDetect.*",
     "Menu.*",
     "MuiEbookPageDef.*",
     "Notifications.*",

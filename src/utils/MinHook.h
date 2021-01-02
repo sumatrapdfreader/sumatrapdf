@@ -55,14 +55,9 @@ typedef enum MH_STATUS {
 // MH_QueueEnableHook or MH_QueueDisableHook.
 #define MH_ALL_HOOKS NULL
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 MH_STATUS WINAPI MH_Initialize();
 MH_STATUS WINAPI MH_Uninitialize();
 MH_STATUS WINAPI MH_CreateHook(void* pTarget, void* pDetour, void** ppOriginal);
-MH_STATUS WINAPI MH_CreateHookApi(const WCHAR* pszModule, const char* pszProcName, void* pDetour, void** ppOriginal);
 MH_STATUS WINAPI MH_CreateHookApiEx(const WCHAR* pszModule, const char* pszProcName, void* pDetour, void** ppOriginal,
                                     void** ppTarget);
 MH_STATUS WINAPI MH_RemoveHook(void* pTarget);
@@ -72,7 +67,3 @@ MH_STATUS WINAPI MH_QueueEnableHook(void* pTarget);
 MH_STATUS WINAPI MH_QueueDisableHook(void* pTarget);
 MH_STATUS WINAPI MH_ApplyQueued();
 const char* WINAPI MH_StatusToString(MH_STATUS status);
-
-#ifdef __cplusplus
-}
-#endif

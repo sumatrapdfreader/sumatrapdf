@@ -1042,6 +1042,7 @@
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
     <ClCompile Include="..\src\InstUninstCommon.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
+    <ClCompile Include="..\src\MemLeakDetect.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MuPDF_Exports.cpp" />
     <ClCompile Include="..\src\MuiEbookPageDef.cpp" />
