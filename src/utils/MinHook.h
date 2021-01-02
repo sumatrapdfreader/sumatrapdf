@@ -51,6 +51,22 @@ typedef enum MH_STATUS {
     MH_ERROR_FUNCTION_NOT_FOUND
 } MH_STATUS;
 
+struct HOOK_ENTRY {
+    LPVOID pTarget;     // Address of the target function.
+    LPVOID pDetour;     // Address of the detour or relay function.
+    LPVOID pTrampoline; // Address of the trampoline function.
+
+    u8 backup[8];    // Original prologue of the target function.
+
+    u8 patchAbove : 1;  // Uses the hot patch area.
+    u8 isEnabled : 1;   // Enabled.
+    u8 queueEnable : 1; // Queued for enabling/disabling when != isEnabled.
+
+    UINT nIP : 4;    // Count of the instruction boundaries.
+    u8 oldIPs[8]; // Instruction boundaries of the target function.
+    u8 newIPs[8]; // Instruction boundaries of the trampoline function.
+};
+
 // Can be passed as a parameter to MH_EnableHook, MH_DisableHook,
 // MH_QueueEnableHook or MH_QueueDisableHook.
 #define MH_ALL_HOOKS NULL

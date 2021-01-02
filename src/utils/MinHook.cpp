@@ -83,30 +83,30 @@ const char* WINAPI MH_StatusToString(MH_STATUS) {
 typedef struct _MEMORY_SLOT {
     union {
         struct _MEMORY_SLOT* pNext;
-        UINT8 buffer[MEMORY_SLOT_SIZE];
+        u8 buffer[MEMORY_SLOT_SIZE];
     };
 } MEMORY_SLOT, *PMEMORY_SLOT;
 
 // Memory block info. Placed at the head of each block.
-typedef struct _MEMORY_BLOCK {
-    struct _MEMORY_BLOCK* pNext;
+struct MEMORY_BLOCK {
+    MEMORY_BLOCK* pNext;
     PMEMORY_SLOT pFree; // First element of the free slot list.
     UINT usedCount;
-} MEMORY_BLOCK, *PMEMORY_BLOCK;
+};
 
 // First element of the memory block list.
-PMEMORY_BLOCK g_pMemoryBlocks;
+MEMORY_BLOCK* g_pMemoryBlocks;
 
 VOID InitializeBuffer(VOID) {
     // Nothing to do for now.
 }
 
 VOID UninitializeBuffer(VOID) {
-    PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
+    MEMORY_BLOCK* pBlock = g_pMemoryBlocks;
     g_pMemoryBlocks = NULL;
 
     while (pBlock) {
-        PMEMORY_BLOCK pNext = pBlock->pNext;
+        MEMORY_BLOCK* pNext = pBlock->pNext;
         VirtualFree(pBlock, 0, MEM_RELEASE);
         pBlock = pNext;
     }
@@ -169,8 +169,8 @@ static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAlloc
 }
 #endif
 
-static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin) {
-    PMEMORY_BLOCK pBlock;
+static MEMORY_BLOCK* GetMemoryBlock(LPVOID pOrigin) {
+    MEMORY_BLOCK* pBlock;
 #if defined(_M_X64) || defined(__x86_64__)
     ULONG_PTR minAddr;
     ULONG_PTR maxAddr;
@@ -212,7 +212,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin) {
             if (pAlloc == NULL)
                 break;
 
-            pBlock = (PMEMORY_BLOCK)VirtualAlloc(pAlloc, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE,
+            pBlock = (MEMORY_BLOCK*)VirtualAlloc(pAlloc, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE,
                                                  PAGE_EXECUTE_READWRITE);
             if (pBlock != NULL)
                 break;
@@ -227,7 +227,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin) {
             if (pAlloc == NULL)
                 break;
 
-            pBlock = (PMEMORY_BLOCK)VirtualAlloc(pAlloc, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE,
+            pBlock = (MEMORY_BLOCK*)VirtualAlloc(pAlloc, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE,
                                                  PAGE_EXECUTE_READWRITE);
             if (pBlock != NULL)
                 break;
@@ -235,7 +235,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin) {
     }
 #else
     // In x86 mode, a memory block can be placed anywhere.
-    pBlock = (PMEMORY_BLOCK)VirtualAlloc(NULL, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    pBlock = (MEMORY_BLOCK*)VirtualAlloc(NULL, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 #endif
 
     if (pBlock != NULL) {
@@ -258,7 +258,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin) {
 
 static LPVOID AllocateBuffer(LPVOID pOrigin) {
     PMEMORY_SLOT pSlot;
-    PMEMORY_BLOCK pBlock = GetMemoryBlock(pOrigin);
+    MEMORY_BLOCK* pBlock = GetMemoryBlock(pOrigin);
     if (pBlock == NULL)
         return NULL;
 
@@ -274,8 +274,8 @@ static LPVOID AllocateBuffer(LPVOID pOrigin) {
 }
 
 static VOID FreeBuffer(LPVOID pBuffer) {
-    PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
-    PMEMORY_BLOCK pPrev = NULL;
+    MEMORY_BLOCK* pBlock = g_pMemoryBlocks;
+    MEMORY_BLOCK* pPrev = NULL;
     ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MEMORY_BLOCK_SIZE) * MEMORY_BLOCK_SIZE;
 
     while (pBlock != NULL) {
@@ -314,19 +314,6 @@ static BOOL IsExecutableAddress(LPVOID pAddress) {
 
     return (mi.State == MEM_COMMIT && (mi.Protect & PAGE_EXECUTE_FLAGS));
 }
-
-// -------------------------------------------------------------------------
-// hde/pstdint.h
-
-// Integer types for HDE.
-typedef INT8 int8_t;
-typedef INT16 int16_t;
-typedef INT32 int32_t;
-typedef INT64 int64_t;
-typedef UINT8 uint8_t;
-typedef UINT16 uint16_t;
-typedef UINT32 uint32_t;
-typedef UINT64 uint64_t;
 
 // -------------------------------------------------------------------------
 // hde/table64.h
@@ -808,47 +795,47 @@ disasm_done:
 
 // 8-bit relative jump.
 typedef struct _JMP_REL_SHORT {
-    UINT8 opcode; // EB xx: JMP +2+xx
-    UINT8 operand;
+    u8 opcode; // EB xx: JMP +2+xx
+    u8 operand;
 } JMP_REL_SHORT, *PJMP_REL_SHORT;
 
 // 32-bit direct relative jump/call.
 typedef struct _JMP_REL {
-    UINT8 opcode;   // E9/E8 xxxxxxxx: JMP/CALL +5+xxxxxxxx
+    u8 opcode;   // E9/E8 xxxxxxxx: JMP/CALL +5+xxxxxxxx
     UINT32 operand; // Relative destination address
 } JMP_REL, *PJMP_REL, CALL_REL;
 
 // 64-bit indirect absolute jump.
 typedef struct _JMP_ABS {
-    UINT8 opcode0; // FF25 00000000: JMP [+6]
-    UINT8 opcode1;
+    u8 opcode0; // FF25 00000000: JMP [+6]
+    u8 opcode1;
     UINT32 dummy;
     UINT64 address; // Absolute destination address
 } JMP_ABS, *PJMP_ABS;
 
 // 64-bit indirect absolute call.
 typedef struct _CALL_ABS {
-    UINT8 opcode0; // FF15 00000002: CALL [+6]
-    UINT8 opcode1;
+    u8 opcode0; // FF15 00000002: CALL [+6]
+    u8 opcode1;
     UINT32 dummy0;
-    UINT8 dummy1; // EB 08:         JMP +10
-    UINT8 dummy2;
+    u8 dummy1; // EB 08:         JMP +10
+    u8 dummy2;
     UINT64 address; // Absolute destination address
 } CALL_ABS;
 
 // 32-bit direct relative conditional jumps.
 typedef struct _JCC_REL {
-    UINT8 opcode0; // 0F8* xxxxxxxx: J** +6+xxxxxxxx
-    UINT8 opcode1;
+    u8 opcode0; // 0F8* xxxxxxxx: J** +6+xxxxxxxx
+    u8 opcode1;
     UINT32 operand; // Relative destination address
 } JCC_REL;
 
 // 64bit indirect absolute conditional jumps that x64 lacks.
 typedef struct _JCC_ABS {
-    UINT8 opcode; // 7* 0E:         J** +16
-    UINT8 dummy0;
-    UINT8 dummy1; // FF25 00000000: JMP [+6]
-    UINT8 dummy2;
+    u8 opcode; // 7* 0E:         J** +16
+    u8 dummy0;
+    u8 dummy1; // FF25 00000000: JMP [+6]
+    u8 dummy2;
     UINT32 dummy3;
     UINT64 address; // Absolute destination address
 } JCC_ABS;
@@ -865,8 +852,8 @@ typedef struct _TRAMPOLINE {
 #endif
     BOOL patchAbove; // [Out] Should use the hot patch area?
     UINT nIP;        // [Out] Number of the instruction boundaries.
-    UINT8 oldIPs[8]; // [Out] Instruction boundaries of the target function.
-    UINT8 newIPs[8]; // [Out] Instruction boundaries of the trampoline function.
+    u8 oldIPs[8]; // [Out] Instruction boundaries of the target function.
+    u8 newIPs[8]; // [Out] Instruction boundaries of the trampoline function.
 } TRAMPOLINE, *PTRAMPOLINE;
 
 #define HDE_DISASM(code, hs) hde64_disasm(code, hs)
@@ -928,12 +915,12 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
     };
 #endif
 
-    UINT8 oldPos = 0;
-    UINT8 newPos = 0;
+    u8 oldPos = 0;
+    u8 newPos = 0;
     ULONG_PTR jmpDest = 0; // Destination address of an internal jump.
     BOOL finished = FALSE; // Is the function completed?
 #if defined(_M_X64) || defined(__x86_64__)
-    UINT8 instBuf[16];
+    u8 instBuf[16];
 #endif
 
     ct->patchAbove = FALSE;
@@ -1041,7 +1028,7 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
                 // LOOPNZ/LOOPZ/LOOP/JCXZ/JECXZ to the outside are not supported.
                 return FALSE;
             } else {
-                UINT8 cond = ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
+                u8 cond = ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
 #if defined(_M_X64) || defined(__x86_64__)
                 // Invert the condition in x64 mode to simplify the conditional jump logic.
                 jcc.opcode = 0x71 ^ cond;
@@ -1077,7 +1064,7 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
         ct->nIP++;
 
         memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
-        newPos += (UINT8)copySize;
+        newPos += (u8)copySize;
         oldPos += hs.len;
     } while (!finished);
 
@@ -1127,22 +1114,6 @@ static BOOL CreateTrampolineFunction(PTRAMPOLINE ct) {
 
 // Thread access rights for suspending/resuming threads.
 #define THREAD_ACCESS (THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SET_CONTEXT)
-
-// Hook information.
-struct HOOK_ENTRY {
-    LPVOID pTarget;     // Address of the target function.
-    LPVOID pDetour;     // Address of the detour or relay function.
-    LPVOID pTrampoline; // Address of the trampoline function.
-    UINT8 backup[8];    // Original prologue of the target function.
-
-    UINT8 patchAbove : 1;  // Uses the hot patch area.
-    UINT8 isEnabled : 1;   // Enabled.
-    UINT8 queueEnable : 1; // Queued for enabling/disabling when != isEnabled.
-
-    UINT nIP : 4;    // Count of the instruction boundaries.
-    UINT8 oldIPs[8]; // Instruction boundaries of the target function.
-    UINT8 newIPs[8]; // Instruction boundaries of the trampoline function.
-};
 
 // this is only in our process, should be more than needed
 #define MAX_THREADS 1024
@@ -1343,8 +1314,8 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable) {
         if (pHook->patchAbove) {
             PJMP_REL_SHORT pShortJmp = (PJMP_REL_SHORT)pHook->pTarget;
             pShortJmp->opcode = 0xEB;
-            UINT8 tmp = sizeof(JMP_REL_SHORT) + sizeof(JMP_REL);
-            pShortJmp->operand = (UINT8)(0 - (int)tmp);
+            u8 tmp = sizeof(JMP_REL_SHORT) + sizeof(JMP_REL);
+            pShortJmp->operand = (u8)(0 - (int)tmp);
         }
     } else {
         if (pHook->patchAbove)
