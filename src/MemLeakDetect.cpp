@@ -353,6 +353,7 @@ static bool InitializeSymbols() {
     return true;
 }
 
+#if defined(DEBUG)
 decltype(_malloc_dbg)* g_malloc_dbg_orig = nullptr;
 decltype(_calloc_dbg)* g_calloc_dbg_orig = nullptr;
 decltype(_free_dbg)* g_free_dbg_orig = nullptr;
@@ -409,9 +410,12 @@ void __cdecl _free_dbg_hook(void* const block, int const block_use) {
     gRecurCount--;
     Unlock();
 }
+#endif
 
 bool MemLeakInit() {
+#if defined(DEBUG)
     MH_STATUS status;
+#endif
     CrashIf(gRtlAllocateHeapOrig != nullptr); // don't call me twice
 
     InitializeSymbols();
@@ -450,6 +454,7 @@ bool MemLeakInit() {
     // TODO: optimize callstacks by de-duplicating them
     //       (calc hash and bisect + linear search to find the callstack)
 
+#if defined(DEBUG)
     status = MH_CreateHook(_malloc_dbg, _malloc_dbg_hook, (void**)&g_malloc_dbg_orig);
     if (status != MH_OK) {
         return false;
@@ -464,6 +469,7 @@ bool MemLeakInit() {
     if (status != MH_OK) {
         return false;
     }
+#endif
 
     MH_EnableHook(MH_ALL_HOOKS);
     return true;
