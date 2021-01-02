@@ -777,10 +777,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     fastExit = false;
 #endif
 
-    if (gEnableMemLeak) {
-        MemLeakInit();
-    }
-
     if (gIsDebugBuild) {
         // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
         // regular termination so that leaks aren't checked on exceptions,
@@ -794,6 +790,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     supressThrowFromNew();
 
     InitDynCalls();
+    if (gEnableMemLeak) {
+        MemLeakInit();
+    }
+
     NoDllHijacking();
 
     DisableDataExecution();

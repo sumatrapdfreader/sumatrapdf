@@ -839,8 +839,7 @@ bool EnginePdf::FinishLoading() {
             }
             pageInfo->mediabox = ToRectFl(mbox);
         }
-        }
-        else {
+    } else {
         // this does the job of pdf_bound_page but without doing pdf_load_page()
         pdf_rev_page_map* map = doc->rev_page_map;
         for (int i = 0; i < nPages; i++) {
@@ -868,7 +867,6 @@ bool EnginePdf::FinishLoading() {
             pageInfo->pageNo = pageNo + 1;
         }
     }
-
 
     fz_try(ctx) {
         outline = fz_load_outline(ctx, _doc);
