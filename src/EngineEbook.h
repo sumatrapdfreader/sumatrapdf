@@ -13,3 +13,4 @@ EngineBase* CreateHtmlEngineFromFile(const WCHAR* fileName);
 EngineBase* CreateTxtEngineFromFile(const WCHAR* fileName);
 
 void SetDefaultEbookFont(const WCHAR* name, float size);
+void EngineEbookCleanup();

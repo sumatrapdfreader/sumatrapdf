@@ -5033,3 +5033,8 @@ static void DownloadDebugSymbols() {
     free(msg);
     free(symDir);
 }
+
+void ShutdownCleanup() {
+    gAllowedFileTypes.Reset();
+    gAllowedLinkProtocols.Reset();
+}

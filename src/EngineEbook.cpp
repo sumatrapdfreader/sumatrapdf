@@ -1769,3 +1769,7 @@ EngineBase* EngineTxt::CreateFromFile(const WCHAR* fileName) {
 EngineBase* CreateTxtEngineFromFile(const WCHAR* fileName) {
     return EngineTxt::CreateFromFile(fileName);
 }
+
+void EngineEbookCleanup() {
+    gDefaultFontName.Reset();
+}

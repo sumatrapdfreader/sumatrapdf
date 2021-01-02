@@ -410,6 +410,22 @@ void __cdecl _free_dbg_hook(void* const block, int const block_use) {
     gRecurCount--;
     Unlock();
 }
+
+void* __cdecl _realloc_dbg_hook(void* _Block, size_t _Size, int _BlockUse, char const* _FileName, int _LineNumber) {
+    Lock();
+    gRecurCount++;
+
+    void* res = g_realloc_dbg_orig(_Block, _Size, _BlockUse, _FileName, _LineNumber);
+    if (gRecurCount == 1) {
+        RecordAllocOrFree(TYPE_FREE, 0, _Block, 0);
+        if (res != nullptr) {
+            RecordAllocOrFree(TYPE_ALLOC, 0, res, _Size);
+        }
+    }
+    gRecurCount--;
+    Unlock();
+    return res;
+}
 #endif
 
 bool MemLeakInit() {
@@ -466,6 +482,11 @@ bool MemLeakInit() {
     }
 
     status = MH_CreateHook(_free_dbg, _free_dbg_hook, (void**)&g_free_dbg_orig);
+    if (status != MH_OK) {
+        return false;
+    }
+
+    status = MH_CreateHook(_realloc_dbg, _realloc_dbg_hook, (void**)&g_realloc_dbg_orig);
     if (status != MH_OK) {
         return false;
     }

@@ -74,6 +74,7 @@
 #include "AppTools.h"
 #include "Installer.h"
 #include "SumatraConfig.h"
+#include "EngineEbook.h"
 
 static bool TryLoadMemTrace() {
     AutoFreeWstr dllPath(path::GetPathOfFileInAppDir(L"memtrace.dll"));
@@ -807,8 +808,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         MemLeakInit();
     }
 
-    //for testing mem leak detection
-    //char* tmp = new char[23];
+    // for testing mem leak detection
+    // char* tmp = new char[23];
 
     if (!gIsAsanBuild) {
         SetupCrashHandler();
@@ -1198,6 +1199,9 @@ Exit:
     prefs::CleanUp();
 
     FreeAllMenuDrawInfos();
+
+    ShutdownCleanup();
+    EngineEbookCleanup();
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
