@@ -16,7 +16,7 @@ BOOLEAN(WINAPI* gRtlFreeHeapOrig)(PVOID heapHandle, ULONG flags, PVOID heapBase)
 // https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapalloc
 LPVOID(WINAPI* gHeapAllocOrig)(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes) = nullptr;
 // https://docs.microsoft.com/en-us/windows/win32/api/heapapi/nf-heapapi-heapfree
-BOOL (WINAPI* gHeapFreeOrig)(HANDLE hHeap, DWORD dwFlags, _Frees_ptr_opt_ LPVOID lpMem) = nullptr;
+BOOL(WINAPI* gHeapFreeOrig)(HANDLE hHeap, DWORD dwFlags, _Frees_ptr_opt_ LPVOID lpMem) = nullptr;
 
 #define TYPE_ALLOC 0
 #define TYPE_FREE 1
@@ -85,8 +85,7 @@ static T* AllocStructPrivate() {
 // static int gTotalCallstacks = 0;
 
 static bool CanStackWalk() {
-    bool ok = DynStackWalk64 && DynSymFunctionTableAccess64 && 
-              DynSymGetModuleBase64 && DynSymFromAddr;
+    bool ok = DynStackWalk64 && DynSymFunctionTableAccess64 && DynSymGetModuleBase64 && DynSymFromAddr;
     return ok;
 }
 
@@ -132,7 +131,6 @@ static CallstackInfoShort* AllocCallstackInfoShort(int nFrames) {
             gCallstackInfoBlockCurr->next = b;
         }
         gCallstackInfoBlockCurr = b;
-
     }
     int off = DWORDS_PER_CSI_BLOCK - b->nDwordsFree;
     CallstackInfoShort* res = (CallstackInfoShort*)&b->data[off];
@@ -200,8 +198,7 @@ static bool gCanStackWalk;
 // from local buffer overrun because optimizations are disabled in function)"
 #pragma warning(push)
 #pragma warning(disable : 4748)
-__declspec(noinline)
-bool GetCurrentThreadCallstack(CallstackInfo* cs) {
+__declspec(noinline) bool GetCurrentThreadCallstack(CallstackInfo* cs) {
     if (!gCanStackWalk) {
         return false;
     }
@@ -367,7 +364,8 @@ decltype(_recalloc_dbg)* g_recalloc_dbg_orig = nullptr;
 #define _recalloc(p, c, s) _recalloc_dbg(p, c, s, _NORMAL_BLOCK, __FILE__, __LINE__)
 */
 
-void* __cdecl _malloc_dbg_hook(size_t const size, int const block_use, char const* const file_name, int const line_number) {
+void* __cdecl _malloc_dbg_hook(size_t const size, int const block_use, char const* const file_name,
+                               int const line_number) {
     Lock();
     gRecurCount++;
     gAllocs++;
@@ -382,7 +380,7 @@ void* __cdecl _malloc_dbg_hook(size_t const size, int const block_use, char cons
 }
 
 void* __cdecl _calloc_dbg_hook(size_t const count, size_t const element_size, int const block_use,
-                          char const* const file_name, int const line_number) {
+                               char const* const file_name, int const line_number) {
     Lock();
     gRecurCount++;
     gAllocs++;
@@ -489,7 +487,7 @@ static AllocFreeEntry* FindMatchingFree(AllocFreeEntryBlock* b, AllocFreeEntry* 
 
 static void DumpAllocEntry(AllocFreeEntry* e) {
     static int nDumped = 0;
-    if (nDumped > 25) {
+    if (nDumped > 32) {
         return;
     }
     nDumped++;
@@ -513,7 +511,7 @@ void DumpMemLeaks() {
     int nAllocs = gAllocs;
     int nFrees = gFrees;
 
-    AllocFreeEntryBlock *b = gAllocFreeBlockFirst;
+    AllocFreeEntryBlock* b = gAllocFreeBlockFirst;
     int nUnfreed = 0;
     while (b) {
         for (int i = 0; i < b->nUsed; i++) {

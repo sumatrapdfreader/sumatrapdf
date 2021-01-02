@@ -807,6 +807,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         MemLeakInit();
     }
 
+    //for testing mem leak detection
+    //char* tmp = new char[23];
+
     if (!gIsAsanBuild) {
         SetupCrashHandler();
     }
@@ -1213,11 +1216,6 @@ Exit:
 
     if (gEnableMemLeak) {
         DumpMemLeaks();
-    }
-
-    if (gIsDebugBuild) {
-        // output leaks after all destructors of static objects have run
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     }
 
     return retCode;

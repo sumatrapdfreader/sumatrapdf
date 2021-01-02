@@ -104,17 +104,7 @@
 #undef max
 
 #include <io.h>
-
-#ifdef DEBUG
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-// TODO: this breaks placement new but without this we
-// don't get leaked memory allocation source
-#define DEBUG_NEW new (_NORMAL_BLOCK, __FILE__, __LINE__)
-#define new DEBUG_NEW
-#endif
-
-#endif
+#endif // OS_WIN
 
 // Most common C includes
 #include <stdlib.h>
