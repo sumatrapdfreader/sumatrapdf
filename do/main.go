@@ -233,6 +233,7 @@ func main() {
 
 	if flgTriggerCodeQL {
 		triggerCodeQL()
+		return
 	}
 
 	if flgTriggerPreRel {
