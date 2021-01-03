@@ -45,6 +45,10 @@ struct HwndMsgHandler {
 
 VecSegmented<HwndMsgHandler> gHwndMsgHandlers;
 
+void WindowCleanup() {
+    gHwndMsgHandlers.allocator.FreeAll();
+}
+
 static void ClearHwndMsgHandler(HwndMsgHandler* h) {
     CrashIf(!h);
     if (!h) {

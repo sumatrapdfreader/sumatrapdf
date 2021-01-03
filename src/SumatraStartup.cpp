@@ -760,6 +760,21 @@ extern void DumpMemLeaks();
 
 bool gEnableMemLeak = false;
 
+// some libc functions internally allocate stuff that shows up
+// as leaks in MemLeakDetect even though it's probably freed at shutdown
+// call this function before MemLeakInit() so that those allocations
+// don't show up
+static void ForceStartupLeaks() {
+    time_t secs;
+    gmtime(&secs);
+    WCHAR* path = GetExePath();
+    FILE* fp = _wfopen(path, L"rb");
+    str::Free(path);
+    if (fp) {
+        fclose(fp);
+    }
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstance, [[maybe_unused]] LPSTR cmdLine,
                      [[maybe_unused]] int nCmdShow) {
     int retCode{1}; // by default it's error
@@ -815,6 +830,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
     srand((unsigned int)time(nullptr));
 
     if (gEnableMemLeak) {
+        ForceStartupLeaks();
         MemLeakInit();
     }
 

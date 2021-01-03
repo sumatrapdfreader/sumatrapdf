@@ -5037,4 +5037,6 @@ static void DownloadDebugSymbols() {
 void ShutdownCleanup() {
     gAllowedFileTypes.Reset();
     gAllowedLinkProtocols.Reset();
+    extern void WindowCleanup();
+    WindowCleanup();
 }

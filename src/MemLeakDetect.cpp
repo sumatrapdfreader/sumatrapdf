@@ -652,7 +652,7 @@ static void DumpAllocEntry(AllocFreeEntry* e) {
     for (int i = 0; i < (int)cis->nFrames; i++) {
         DWORD64 addr = cis->frame[i];
         s.Reset();
-        dbghelp::GetAddressInfo(s, addr);
+        dbghelp::GetAddressInfo(s, addr, true);
         dbglogf("  %s", s.Get());
     }
 }

@@ -217,7 +217,7 @@ void WriteMiniDump(const WCHAR* crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATIO
     CloseHandle(hFile);
 }
 
-static bool GetAddrInfo(void* addr, char* module, DWORD moduleLen, DWORD& sectionOut, DWORD_PTR& offsetOut) {
+static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen, DWORD& sectionOut, DWORD_PTR& offsetOut) {
     MEMORY_BASIC_INFORMATION mbi;
     if (0 == VirtualQuery(addr, &mbi, sizeof(mbi))) {
         return false;
@@ -228,10 +228,10 @@ static bool GetAddrInfo(void* addr, char* module, DWORD moduleLen, DWORD& sectio
         return false;
     }
 
-    if (!GetModuleFileNameA(hMod, module, moduleLen)) {
+    if (!GetModuleFileNameA(hMod, moduleName, moduleLen)) {
         return false;
     }
-    module[moduleLen - 1] = '\0';
+    moduleName[moduleLen - 1] = '\0';
 
     PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)mbi.AllocationBase;
     PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)((BYTE*)dosHeader + dosHeader->e_lfanew);
@@ -262,7 +262,7 @@ static void AppendAddress(str::Str& s, DWORD64 addr) {
     s.AppendFmt("%p", p);
 }
 
-void GetAddressInfo(str::Str& s, DWORD64 addr) {
+void GetAddressInfo(str::Str& s, DWORD64 addr, bool compact) {
     static const int MAX_SYM_LEN = 512;
 
     char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];
@@ -279,16 +279,20 @@ void GetAddressInfo(str::Str& s, DWORD64 addr) {
         symName = &(symInfo->Name[0]);
     }
 
-    char module[MAX_PATH] = {0};
+    char moduleName[MAX_PATH] = {0};
     DWORD section;
     DWORD_PTR offset;
-    if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
-        str::ToLowerInPlace(module);
-        const char* moduleShort = path::GetBaseNameNoFree(module);
-        AppendAddress(s, addr);
-        s.AppendFmt(" %02X:", section);
-        AppendAddress(s, offset);
-        s.AppendFmt(" %s", moduleShort);
+    if (GetAddrInfo((void*)addr, moduleName, sizeof(moduleName), section, offset)) {
+        str::ToLowerInPlace(moduleName);
+        const char* moduleShort = path::GetBaseNameNoFree(moduleName);
+        if (compact) {
+            s.Append(moduleShort);
+        } else {
+            AppendAddress(s, addr);
+            s.AppendFmt(" %02X:", section);
+            AppendAddress(s, offset);
+            s.AppendFmt(" %s", moduleShort);
+        }
 
         if (symName) {
             s.AppendFmt("!%s+0x%x", symName, (int)symDisp);
@@ -328,7 +332,7 @@ static bool GetStackFrameInfo(str::Str& s, STACKFRAME64* stackFrame, CONTEXT* ct
         return false;
     }
 
-    GetAddressInfo(s, addr);
+    GetAddressInfo(s, addr, false);
     return true;
 }
 
@@ -489,7 +493,7 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
     s.AppendFmt("Exception: %08X %s\r\n", (int)excCode, ExceptionNameFromCode(excCode));
 
     s.AppendFmt("Faulting IP: ");
-    GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress);
+    GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress, false);
     if ((EXCEPTION_ACCESS_VIOLATION == excCode) || (EXCEPTION_IN_PAGE_ERROR == excCode)) {
         int readWriteFlag = (int)excRecord->ExceptionInformation[0];
         DWORD64 dataVirtAddr = (DWORD64)excRecord->ExceptionInformation[1];

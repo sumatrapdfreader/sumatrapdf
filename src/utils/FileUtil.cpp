@@ -463,12 +463,16 @@ std::span<u8> ReadFileWithAllocator(const char* filePath, Allocator* allocator) 
     strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
     return ReadFileWithAllocator(buf, fileSizeOut, allocator);
 #else
+    char* d = nullptr;
+    int res;
     FILE* fp = OpenFILE(filePath);
     if (!fp) {
         return {};
     }
-    char* d = nullptr;
-    int res = fseek(fp, 0, SEEK_END);
+    defer {
+        fclose(fp);
+    };
+    res = fseek(fp, 0, SEEK_END);
     if (res != 0) {
         return {};
     }
@@ -495,10 +499,8 @@ std::span<u8> ReadFileWithAllocator(const char* filePath, Allocator* allocator) 
         goto Error;
     }
 
-    fclose(fp);
     return {(u8*)d, size};
 Error:
-    fclose(fp);
     Allocator::Free(allocator, (void*)d);
     return {};
 #endif

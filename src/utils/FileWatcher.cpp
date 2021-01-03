@@ -354,6 +354,11 @@ static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg) {
     SafeCloseHandle(&wd->hDir);
 }
 
+static void CALLBACK ExitMonitoringThread(ULONG_PTR arg) {
+    log("ExitMonitoringThraed\n");
+    ExitThread(0);
+}
+
 static WatchedDir* NewWatchedDir(const WCHAR* dirPath) {
     HANDLE hDir = CreateFile(dirPath, FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE,
                              nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
@@ -458,6 +463,7 @@ void FileWatcherWaitForShutdown() {
     // have any file watching subscriptions pending
     CrashIf(g_watchedFiles != nullptr);
     CrashIf(g_watchedDirs != nullptr);
+    QueueUserAPC(ExitMonitoringThread, g_threadHandle, (ULONG_PTR)0);
 
     // wait for ReadDirectoryChangesNotification() process actions triggered
     // in RemoveWatchedDirIfNotReferenced
