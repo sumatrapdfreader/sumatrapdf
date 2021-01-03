@@ -76,16 +76,6 @@
 #include "SumatraConfig.h"
 #include "EngineEbook.h"
 
-static bool TryLoadMemTrace() {
-    AutoFreeWstr dllPath(path::GetPathOfFileInAppDir(L"memtrace.dll"));
-    // technically leaking but we don't care
-    // cppcheck-suppress leakReturnValNotUsed
-    if (!LoadLibrary(dllPath)) {
-        return false;
-    }
-    return true;
-}
-
 // gFileExistenceChecker is initialized at startup and should
 // terminate and delete itself asynchronously while the UI is
 // being set up
@@ -802,16 +792,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
         fastExit = false;
     }
 #endif // IS_INTEL_64
-
-    if (gIsDebugBuild) {
-        // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
-        // regular termination so that leaks aren't checked on exceptions,
-        // aborts, etc. where some clean-up might not take place)
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF);
-        //_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
-        //_CrtSetBreakAlloc(421);
-        TryLoadMemTrace();
-    }
 
     supressThrowFromNew();
 
