@@ -116,7 +116,7 @@ static CallstackInfoShort* AllocCallstackInfoShort(int nFrames) {
         return nullptr;
     }
     // fast path
-    CallstackInfoBlock* b = gCallstackInfoBlockFirst;
+    CallstackInfoBlock* b = gCallstackInfoBlockCurr;
     if (!b || b->nDwordsFree < nFrames + 1) {
         b = AllocStructPrivate<CallstackInfoBlock>();
         if (!b) {
@@ -293,9 +293,9 @@ PVOID WINAPI RtlAllocateHeapHook(PVOID heapHandle, ULONG flags, SIZE_T size) {
 BOOLEAN WINAPI RtlFreeHeapHook(PVOID heapHandle, ULONG flags, PVOID heapBase) {
     Lock();
     gRecurCount++;
-    gFrees++;
     BOOLEAN res = gRtlFreeHeapOrig(heapHandle, flags, heapBase);
     if (res && (gRecurCount == 1)) {
+        gFrees++;
         RecordAllocOrFree(TYPE_FREE, heapHandle, heapBase, 0);
     }
     gRecurCount--;
@@ -319,9 +319,9 @@ LPVOID WINAPI HeapAllocHook(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes) {
 BOOL WINAPI HeapFreeHook(HANDLE hHeap, DWORD dwFlags, LPVOID lpMem) {
     Lock();
     gRecurCount++;
-    gFrees++;
     BOOLEAN res = gHeapFreeOrig(hHeap, dwFlags, lpMem);
     if (res && (gRecurCount == 1)) {
+        gFrees++;
         RecordAllocOrFree(TYPE_FREE, hHeap, lpMem, 0);
     }
     gRecurCount--;
@@ -396,10 +396,10 @@ void* __cdecl _calloc_dbg_hook(size_t const count, size_t const element_size, in
 void __cdecl _free_dbg_hook(void* const block, int const block_use) {
     Lock();
     gRecurCount++;
-    gFrees++;
 
     g_free_dbg_orig(block, block_use);
     if (gRecurCount == 1) {
+        gFrees++;
         RecordAllocOrFree(TYPE_FREE, 0, block, 0);
     }
     gRecurCount--;
@@ -479,10 +479,10 @@ void* __cdecl _calloc_base_hook(size_t _Count, size_t _Size) {
 void __cdecl _free_base_hook(void* _Block) {
     Lock();
     gRecurCount++;
-    gFrees++;
 
     g_free_base_orig(_Block);
     if (gRecurCount == 1) {
+        gFrees++;
         RecordAllocOrFree(TYPE_FREE, 0, _Block, 0);
     }
     gRecurCount--;
@@ -525,12 +525,34 @@ void* __cdecl _recalloc_base_hook(void* _Block, size_t _Count, size_t _Size) {
 // TODO: optimize callstacks by de-duplicating them
 //       (calc hash and bisect + linear search to find the callstack)
 
+#define MAX_HOOKS 32
+HOOK_ENTRY gHooks[MAX_HOOKS] = {0};
+int gHooksCount = 0;
+
+static void AddDllFunc(const char* dllName, const char* funcName, LPVOID func, LPVOID* ppOrig) {
+    HOOK_ENTRY* pHook = &(gHooks[gHooksCount++]);
+    pHook->pTarget = GetDllProcAddr(dllName, funcName);
+    pHook->pDetour = func;
+    pHook->ppOrig = ppOrig;
+}
+
+static void AddFunc(LPVOID pTarget, LPVOID func, LPVOID* ppOrig) {
+    HOOK_ENTRY* pHook = &(gHooks[gHooksCount++]);
+    pHook->pTarget = pTarget;
+    pHook->pDetour = func;
+    pHook->ppOrig = ppOrig;
+}
+
 bool MemLeakInit() {
     MH_STATUS status;
     CrashIf(gRtlAllocateHeapOrig != nullptr); // don't call me twice
 
     InitializeSymbols();
+    // if we can't stack walk, it's pointless to do any work
     gCanStackWalk = CanStackWalk();
+    if (!gCanStackWalk) {
+        return false;
+    }
 
     InitializeCriticalSection(&gMutex);
     gHeap = HeapCreate(0, 0, 0);
@@ -562,58 +584,23 @@ bool MemLeakInit() {
 #endif
 
 #if defined(DEBUG)
-    status = MH_CreateHook(_malloc_dbg, _malloc_dbg_hook, (void**)&g_malloc_dbg_orig);
-    if (status != MH_OK) {
-        return false;
-    }
-
-    status = MH_CreateHook(_calloc_dbg, _calloc_dbg_hook, (void**)&g_calloc_dbg_orig);
-    if (status != MH_OK) {
-        return false;
-    }
-
-    status = MH_CreateHook(_free_dbg, _free_dbg_hook, (void**)&g_free_dbg_orig);
-    if (status != MH_OK) {
-        return false;
-    }
-
-    status = MH_CreateHook(_realloc_dbg, _realloc_dbg_hook, (void**)&g_realloc_dbg_orig);
-    if (status != MH_OK) {
-        return false;
-    }
-
-    status = MH_CreateHook(_recalloc_dbg, _recalloc_dbg_hook, (void**)&g_recalloc_dbg_orig);
-    if (status != MH_OK) {
-        return false;
-    }
+    AddFunc(_malloc_dbg, _malloc_dbg_hook, (void**)&g_malloc_dbg_orig);
+    AddFunc(_calloc_dbg, _calloc_dbg_hook, (void**)&g_calloc_dbg_orig);
+    AddFunc(_free_dbg, _free_dbg_hook, (void**)&g_free_dbg_orig);
+    AddFunc(_realloc_dbg, _realloc_dbg_hook, (void**)&g_realloc_dbg_orig);
+    AddFunc(_recalloc_dbg, _recalloc_dbg_hook, (void**)&g_recalloc_dbg_orig);
 #endif
 
-    status = MH_CreateHook(_malloc_base, _malloc_base_hook, (void**)&g_malloc_base_orig);
-    if (status != MH_OK) {
-        return false;
-    }
+    AddFunc(_malloc_base, _malloc_base_hook, (void**)&g_malloc_base_orig);
+    AddFunc(_calloc_base, _calloc_base_hook, (void**)&g_calloc_base_orig);
+    AddFunc(_free_base, _free_base_hook, (void**)&g_free_base_orig);
+    AddFunc(_realloc_base, _realloc_base_hook, (void**)&g_realloc_base_orig);
+    AddFunc(_recalloc_base, _recalloc_base_hook, (void**)&g_recalloc_base_orig);
 
-    status = MH_CreateHook(_calloc_base, _calloc_base_hook, (void**)&g_calloc_base_orig);
-    if (status != MH_OK) {
-        return false;
-    }
-
-    status = MH_CreateHook(_free_base, _free_base_hook, (void**)&g_free_base_orig);
-    if (status != MH_OK) {
-        return false;
-    }
-
-    status = MH_CreateHook(_realloc_base, _realloc_base_hook, (void**)&g_realloc_base_orig);
-    if (status != MH_OK) {
-        return false;
-    }
-
-    status = MH_CreateHook(_recalloc_base, _recalloc_base_hook, (void**)&g_recalloc_base_orig);
-    if (status != MH_OK) {
-        return false;
-    }
-
-    MH_EnableHook(MH_ALL_HOOKS);
+    status = MH_CreateHooks(gHooks, gHooksCount);
+    CrashIf(status != MH_OK);
+    status = MH_EnableOrDisableHooks(gHooks, gHooksCount, TRUE);
+    CrashIf(status != MH_OK);
     return true;
 }
 
@@ -658,7 +645,10 @@ static void DumpAllocEntry(AllocFreeEntry* e) {
 }
 
 void DumpMemLeaks() {
-    MH_DisableHook(MH_ALL_HOOKS);
+    if (!gCanStackWalk) {
+        return;
+    }
+    MH_Uninitialize(gHooks, gHooksCount);
     gEnableDbgLog = true;
 
     int nAllocs = gAllocs;

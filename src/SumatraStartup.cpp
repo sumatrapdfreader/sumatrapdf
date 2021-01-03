@@ -777,21 +777,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, [[maybe_unused]] HINSTANCE hPrevInstan
 
     CrashIf(hInstance != GetInstance());
 
-    // TODO: enable in release as well
-#if IS_INTEL_64
-
+    // decide if we should enable mem leak detection
 #if defined(DEBUG)
     gEnableMemLeak = true;
 #endif
-
     if (IsDebuggerPresent()) {
         gEnableMemLeak = true;
     }
-
+    gEnableMemLeak = false;
     if (gEnableMemLeak) {
         fastExit = false;
     }
-#endif // IS_INTEL_64
 
     supressThrowFromNew();
 

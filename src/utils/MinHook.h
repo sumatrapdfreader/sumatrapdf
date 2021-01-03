@@ -12,25 +12,11 @@ typedef enum MH_STATUS {
     // Successful.
     MH_OK = 0,
 
-    // MinHook is already initialized.
-    MH_ERROR_ALREADY_INITIALIZED,
-
     // The hook for the specified target function is already created.
     MH_ERROR_ALREADY_CREATED,
 
-    // The hook for the specified target function is not created yet.
-    MH_ERROR_NOT_CREATED,
-
     // The hook for the specified target function is already enabled.
     MH_ERROR_ENABLED,
-
-    // The hook for the specified target function is not enabled yet, or already
-    // disabled.
-    MH_ERROR_DISABLED,
-
-    // The specified pointer is invalid. It points the address of non-allocated
-    // and/or non-executable region.
-    MH_ERROR_NOT_EXECUTABLE,
 
     // The specified target function cannot be hooked.
     MH_ERROR_UNSUPPORTED_FUNCTION,
@@ -40,12 +26,6 @@ typedef enum MH_STATUS {
 
     // Failed to change the memory protection.
     MH_ERROR_MEMORY_PROTECT,
-
-    // The specified module is not loaded.
-    MH_ERROR_MODULE_NOT_FOUND,
-
-    // The specified function is not found.
-    MH_ERROR_FUNCTION_NOT_FOUND
 } MH_STATUS;
 
 struct HOOK_ENTRY {
@@ -55,6 +35,8 @@ struct HOOK_ENTRY {
 
     // filled by MH_CreateHooks
     LPVOID pTrampoline; // Address of the trampoline function i.e. original.
+
+    LPVOID* ppOrig;
 
     // private data
     u8 backup[8]; // Original prologue of the target function.
@@ -68,23 +50,14 @@ struct HOOK_ENTRY {
     u8 newIPs[8]; // Instruction boundaries of the trampoline function.
 };
 
-// Can be passed as a parameter to MH_EnableHook, MH_DisableHook,
-// MH_QueueEnableHook or MH_QueueDisableHook.
-#define MH_ALL_HOOKS NULL
+LPVOID GetProcInDll(const char* dllName, const char* procName);
 
 MH_STATUS WINAPI MH_Initialize();
-MH_STATUS WINAPI MH_Uninitialize();
+MH_STATUS WINAPI MH_Uninitialize(HOOK_ENTRY* pHooks, int nHooks);
 
-MH_STATUS WINAPI MH_CreateHooks(HOOK_ENTRY* hooks, int nHooks);
-MH_STATUS WINAPI MH_DisableHooks(HOOK_ENTRY* hooks, int nHooks);
+MH_STATUS WINAPI MH_CreateHooks(HOOK_ENTRY* pHooks, int nHooks);
+MH_STATUS WINAPI MH_EnableOrDisableHooks(HOOK_ENTRY* pHooks, int nHooks, BOOL enable);
 
-MH_STATUS WINAPI MH_CreateHook(void* pTarget, void* pDetour, void** ppOriginal);
-MH_STATUS WINAPI MH_CreateHookApiEx(const WCHAR* pszModule, const char* pszProcName, void* pDetour, void** ppOriginal,
-                                    void** ppTarget);
-MH_STATUS WINAPI MH_RemoveHook(void* pTarget);
-MH_STATUS WINAPI MH_EnableHook(void* pTarget);
-MH_STATUS WINAPI MH_DisableHook(void* pTarget);
-MH_STATUS WINAPI MH_QueueEnableHook(void* pTarget);
-MH_STATUS WINAPI MH_QueueDisableHook(void* pTarget);
-MH_STATUS WINAPI MH_ApplyQueued();
+MH_STATUS WINAPI MH_ApplyQueued(HOOK_ENTRY* pHooks, int nHooks);
+
 const char* WINAPI MH_StatusToString(MH_STATUS status);
