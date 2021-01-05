@@ -165,6 +165,7 @@ var baseUrls = [
   ["download-free-pdf-viewer", "Download"],
   ["manual", "Manual"],
   ["docs", "Documentation"],
+  ["online", "Online"],
   ["backers", "Support SumatraPDF"],
   ["forum", "Discussion Forum"]
 ];
@@ -185,9 +186,10 @@ function navHtml() {
     if (currUrl == "docs") {
       url =
         "/docs/SumatraPDF-documentation.html";
-    }
-    if (currUrl == "forum") {
+    } else if (currUrl == "forum") {
       url = "https://forum.sumatrapdfreader.org";
+    } else if (currUrl == "online") {
+      url = "https://online.sumatrapdfreader.org/";
     }
     s +=
       '<a href="' +
