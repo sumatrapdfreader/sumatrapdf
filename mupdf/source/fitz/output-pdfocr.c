@@ -751,8 +751,8 @@ pdfocr_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 	fz_pdfocr_writer *wri = (fz_pdfocr_writer*)wri_;
 
 	fz_drop_pixmap(ctx, wri->pixmap);
-	fz_drop_output(ctx, wri->out);
 	fz_drop_band_writer(ctx, wri->bander);
+	fz_drop_output(ctx, wri->out);
 }
 #endif
 

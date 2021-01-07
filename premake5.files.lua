@@ -688,6 +688,7 @@ function mupdf_files()
     "output-cbz.c",
     "output-pcl.c",
     "output-pclm.c",
+    "output-pdfocr.c",
     "output-png.c",
     "output-pnm.c",
     "output-ps.c",

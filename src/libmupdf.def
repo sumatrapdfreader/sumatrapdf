@@ -6,6 +6,8 @@ EXPORTS
 ; Fitz exports
 
 	; new stuff
+	fz_new_pdfocr_writer_with_output
+	fz_new_pdfocr_writer
 	fz_is_point_inside_rect
 	fz_quad_from_rect
 	fz_do_try

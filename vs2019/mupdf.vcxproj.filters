@@ -542,6 +542,9 @@
     <ClCompile Include="..\mupdf\source\fitz\output-pclm.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\output-pdfocr.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\output-png.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>

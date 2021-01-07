@@ -59,6 +59,56 @@ pdf_annot_ap(fz_context *ctx, pdf_annot *annot)
 	return pdf_dict_get(ctx, ap, pdf_dict_get(ctx, annot->obj, PDF_NAME(AS)));
 }
 
+int pdf_annot_active(fz_context *ctx, pdf_annot *annot)
+{
+	return annot ? annot->is_active : 0;
+}
+
+static void
+check_change(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_obj *subtype = pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype));
+	pdf_obj *ap = pdf_dict_get(ctx, annot->obj, PDF_NAME(AP));
+
+	if (subtype == PDF_NAME(Widget))
+	{
+		pdf_obj *ap_d = pdf_dict_get(ctx, ap, PDF_NAME(D));
+		if (ap_d)
+			annot->has_new_ap = 1;
+	}
+}
+
+void pdf_annot_set_active(fz_context *ctx, pdf_annot *annot, int active)
+{
+	int old;
+
+	if (!annot)
+		return;
+
+	old = (annot->is_active && annot->is_hot);
+	annot->is_active = !!active;
+	if (old != (annot->is_active && annot->is_hot))
+		check_change(ctx, annot);
+}
+
+int pdf_annot_hot(fz_context *ctx, pdf_annot *annot)
+{
+	return annot ? annot->is_hot : 0;
+}
+
+void pdf_annot_set_hot(fz_context *ctx, pdf_annot *annot, int hot)
+{
+	int old;
+
+	if (!annot)
+		return;
+
+	old = (annot->is_active && annot->is_hot);
+	annot->is_hot = !!hot;
+	if (old != (annot->is_active && annot->is_hot))
+		check_change(ctx, annot);
+}
+
 fz_matrix
 pdf_annot_transform(fz_context *ctx, pdf_annot *annot)
 {

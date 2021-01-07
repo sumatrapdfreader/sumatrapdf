@@ -660,7 +660,7 @@ FUN(PDFAnnotation_eventDown)(JNIEnv *env, jobject self)
 	fz_try(ctx)
 	{
 		pdf_annot_event_down(ctx, annot);
-		annot->is_active = 1;
+		pdf_annot_set_active(ctx, annot, 1);
 	}
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
@@ -676,9 +676,9 @@ FUN(PDFAnnotation_eventUp)(JNIEnv *env, jobject self)
 
 	fz_try(ctx)
 	{
-		if (annot->is_hot && annot->is_active)
+		if (pdf_annot_hot(ctx, annot) && pdf_annot_active(ctx, annot))
 			pdf_annot_event_up(ctx, annot);
-		annot->is_active = 0;
+		pdf_annot_set_active(ctx, annot, 0);
 	}
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);

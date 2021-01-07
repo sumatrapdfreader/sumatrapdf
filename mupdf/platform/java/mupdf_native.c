@@ -231,6 +231,7 @@ static jmethodID mid_Image_init;
 static jmethodID mid_Link_init;
 static jmethodID mid_Location_init;
 static jmethodID mid_Matrix_init;
+static jmethodID mid_NativeDevice_init;
 static jmethodID mid_Object_toString;
 static jmethodID mid_Outline_init;
 static jmethodID mid_PDFAnnotation_init;
@@ -642,11 +643,11 @@ static int find_fids(JNIEnv *env)
 	mid_ColorSpace_fromPointer = get_static_method(&err, env, "fromPointer", "(J)L"PKG"ColorSpace;");
 
 	cls_Context_Version = get_class(&err, env, PKG"Context$Version");
-	mid_Context_Version_init = get_method(&err, env, "<init>", "(L"PKG"Context;)V");
 	fid_Context_Version_major = get_field(&err, env, "major", "I");
 	fid_Context_Version_minor = get_field(&err, env, "minor", "I");
 	fid_Context_Version_patch = get_field(&err, env, "patch", "I");
 	fid_Context_Version_version = get_field(&err, env, "version", "Ljava/lang/String;");
+	mid_Context_Version_init = get_method(&err, env, "<init>", "(L"PKG"Context;)V");
 
 	cls_Cookie = get_class(&err, env, PKG"Cookie");
 	fid_Cookie_pointer = get_field(&err, env, "pointer", "J");
@@ -688,6 +689,7 @@ static int find_fids(JNIEnv *env)
 	cls_DocumentWriter = get_class(&err, env, PKG"DocumentWriter");
 	fid_DocumentWriter_pointer = get_field(&err, env, "pointer", "J");
 	fid_DocumentWriter_ocrlistener = get_field(&err, env, "ocrlistener", "J");
+
 	cls_DocumentWriter_OCRListener = get_class(&err, env, PKG"DocumentWriter$OCRListener");
 	mid_DocumentWriter_OCRListener_progress = get_method(&err, env, "progress", "(I)Z");
 
@@ -723,6 +725,7 @@ static int find_fids(JNIEnv *env)
 	cls_NativeDevice = get_class(&err, env, PKG"NativeDevice");
 	fid_NativeDevice_nativeResource = get_field(&err, env, "nativeResource", "Ljava/lang/Object;");
 	fid_NativeDevice_nativeInfo = get_field(&err, env, "nativeInfo", "J");
+	mid_NativeDevice_init = get_method(&err, env, "<init>", "(J)V");
 
 	cls_Outline = get_class(&err, env, PKG"Outline");
 	mid_Outline_init = get_method(&err, env, "<init>", "(Ljava/lang/String;Ljava/lang/String;[L"PKG"Outline;)V");
@@ -829,19 +832,19 @@ static int find_fids(JNIEnv *env)
 	mid_Text_init = get_method(&err, env, "<init>", "(J)V");
 
 	cls_TextBlock = get_class(&err, env, PKG"StructuredText$TextBlock");
-	mid_TextBlock_init = get_method(&err, env, "<init>", "(L"PKG"StructuredText;)V");
 	fid_TextBlock_bbox = get_field(&err, env, "bbox", "L"PKG"Rect;");
 	fid_TextBlock_lines = get_field(&err, env, "lines", "[L"PKG"StructuredText$TextLine;");
+	mid_TextBlock_init = get_method(&err, env, "<init>", "(L"PKG"StructuredText;)V");
 
 	cls_TextChar = get_class(&err, env, PKG"StructuredText$TextChar");
-	mid_TextChar_init = get_method(&err, env, "<init>", "(L"PKG"StructuredText;)V");
 	fid_TextChar_quad = get_field(&err, env, "quad", "L"PKG"Quad;");
 	fid_TextChar_c = get_field(&err, env, "c", "I");
+	mid_TextChar_init = get_method(&err, env, "<init>", "(L"PKG"StructuredText;)V");
 
 	cls_TextLine = get_class(&err, env, PKG"StructuredText$TextLine");
-	mid_TextLine_init = get_method(&err, env, "<init>", "(L"PKG"StructuredText;)V");
 	fid_TextLine_bbox = get_field(&err, env, "bbox", "L"PKG"Rect;");
 	fid_TextLine_chars = get_field(&err, env, "chars", "[L"PKG"StructuredText$TextChar;");
+	mid_TextLine_init = get_method(&err, env, "<init>", "(L"PKG"StructuredText;)V");
 
 	cls_TextWalker = get_class(&err, env, PKG"TextWalker");
 	mid_TextWalker_showGlyph = get_method(&err, env, "showGlyph", "(L"PKG"Font;L"PKG"Matrix;IIZ)V");

@@ -147,6 +147,8 @@ fz_new_document_writer(fz_context *ctx, const char *path, const char *explicit_f
 		format = strrchr(path, '.');
 	while (format)
 	{
+		if (is_extension(format, "ocr"))
+			return fz_new_pdfocr_writer(ctx, path, options);
 #if FZ_ENABLE_PDF
 		if (is_extension(format, "pdf"))
 			return fz_new_pdf_writer(ctx, path, options);
@@ -214,6 +216,8 @@ fz_new_document_writer_with_output(fz_context *ctx, fz_output *out, const char *
 {
 	if (is_extension(format, "cbz"))
 		return fz_new_cbz_writer_with_output(ctx, out, options);
+	if (is_extension(format, "ocr"))
+		return fz_new_pdfocr_writer_with_output(ctx, out, options);
 #if FZ_ENABLE_PDF
 	if (is_extension(format, "pdf"))
 		return fz_new_pdf_writer_with_output(ctx, out, options);
@@ -258,10 +262,10 @@ fz_drop_document_writer(fz_context *ctx, fz_document_writer *wri)
 
 	if (wri->close_writer)
 		fz_warn(ctx, "dropping unclosed document writer");
-	if (wri->drop_writer)
-		wri->drop_writer(ctx, wri);
 	if (wri->dev)
 		fz_drop_device(ctx, wri->dev);
+	if (wri->drop_writer)
+		wri->drop_writer(ctx, wri);
 	fz_free(ctx, wri);
 }
 

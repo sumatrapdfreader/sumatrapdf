@@ -18,15 +18,15 @@ FUN(DocumentWriter_finalize)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-FUN(DocumentWriter_newNativeDocumentWriter)(JNIEnv *env, jobject self, jstring jfilename, jstring jformat, jstring joptions)
+FUN(DocumentWriter_newNativeDocumentWriter)(JNIEnv *env, jclass cls, jstring jfilename, jstring jformat, jstring joptions)
 {
 	fz_context *ctx = get_context(env);
-	fz_document_writer *wri = from_DocumentWriter(env, self);
+	fz_document_writer *wri = NULL;
 	const char *filename = NULL;
 	const char *format = NULL;
 	const char *options = NULL;
 
-	if (!ctx || !wri) return 0;
+	if (!ctx) return 0;
 	if (!jfilename) jni_throw_arg(env, "filename must not be null");
 
 	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
@@ -69,6 +69,92 @@ FUN(DocumentWriter_newNativeDocumentWriter)(JNIEnv *env, jobject self, jstring j
 	return jlong_cast(wri);
 }
 
+JNIEXPORT jlong JNICALL
+FUN(DocumentWriter_newNativeDocumentWriterWithSeekableOutputStream)(JNIEnv *env, jclass cls, jobject jstream, jstring jformat, jstring joptions)
+{
+	fz_context *ctx = get_context(env);
+	fz_document_writer *wri = NULL;
+	SeekableStreamState *state = NULL;
+	jobject stream = NULL;
+	const char *format = NULL;
+	const char *options = NULL;
+	jbyteArray array = NULL;
+	fz_output *out;
+
+	printf("DocumentWriter.newNativeDocumentWriterWithOutput()\n"); fflush(0);
+
+	if (!ctx) return 0;
+	if (!jstream) jni_throw_arg(env, "output stream must not be null");
+
+	stream = (*env)->NewGlobalRef(env, jstream);
+	if (!stream)
+		return 0;
+
+	array = (*env)->NewByteArray(env, sizeof state->buffer);
+	if (array)
+		array = (*env)->NewGlobalRef(env, array);
+	if (!array)
+	{
+		(*env)->DeleteGlobalRef(env, stream);
+		return 0;
+	}
+
+	if (jformat)
+	{
+		format = (*env)->GetStringUTFChars(env, jformat, NULL);
+		if (!format)
+			return 0;
+	}
+	if (joptions)
+	{
+		options = (*env)->GetStringUTFChars(env, joptions, NULL);
+		if (!options)
+		{
+			if (format)
+				(*env)->ReleaseStringUTFChars(env, jformat, format);
+			return 0;
+		}
+	}
+
+	fz_var(state);
+	fz_var(out);
+	fz_var(stream);
+	fz_var(array);
+
+	fz_try(ctx)
+	{
+		state = Memento_label(fz_malloc(ctx, sizeof(SeekableStreamState)), "SeekableStreamState_newNativeDocumentWriterWithSeekableOutputStream");
+		state->stream = stream;
+		state->array = array;
+
+		out = fz_new_output(ctx, 8192, state, SeekableOutputStream_write, NULL, SeekableOutputStream_drop);
+		out->seek = SeekableOutputStream_seek;
+		out->tell = SeekableOutputStream_tell;
+
+		/* these are now owned by 'out' */
+		state = NULL;
+		stream = NULL;
+		array = NULL;
+
+		wri = fz_new_document_writer_with_output(ctx, out, format, options);
+
+		/* this is now owned by 'wri' */
+		out = NULL;
+	}
+	fz_always(ctx)
+	{
+		fz_drop_output(ctx, out);
+		if (options)
+			(*env)->ReleaseStringUTFChars(env, joptions, options);
+		if (format)
+			(*env)->ReleaseStringUTFChars(env, jformat, format);
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return jlong_cast(wri);
+}
+
 JNIEXPORT jobject JNICALL
 FUN(DocumentWriter_beginPage)(JNIEnv *env, jobject self, jobject jmediabox)
 {
@@ -84,7 +170,7 @@ FUN(DocumentWriter_beginPage)(JNIEnv *env, jobject self, jobject jmediabox)
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return to_Device_safe_own(ctx, env, device);
+	return to_NativeDevice_safe_own(ctx, env, fz_keep_device(ctx, device));
 }
 
 JNIEXPORT void JNICALL

@@ -632,4 +632,9 @@ int pdf_annot_MK_BC_rgb(fz_context *ctx, pdf_annot *annot, float rgb[3]);
 
 pdf_obj *pdf_annot_ap(fz_context *ctx, pdf_annot *annot);
 
+int pdf_annot_active(fz_context *ctx, pdf_annot *annot);
+void pdf_annot_set_active(fz_context *ctx, pdf_annot *annot, int active);
+int pdf_annot_hot(fz_context *ctx, pdf_annot *annot);
+void pdf_annot_set_hot(fz_context *ctx, pdf_annot *annot, int hot);
+
 #endif

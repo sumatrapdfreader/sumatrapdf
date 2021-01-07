@@ -109,6 +109,9 @@ ifeq ($(HAVE_OBJCOPY),yes)
 	$(CC_CMD) $(WARNING_CFLAGS) -Wdeclaration-after-statement -DHAVE_OBJCOPY $(LIB_CFLAGS) $(THIRD_CFLAGS)
 endif
 
+$(OUT)/source/fitz/memento.o : source/fitz/memento.c
+	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) -DMEMENTO_MUPDF_HACKS
+
 $(OUT)/source/%.o : source/%.c
 	$(CC_CMD) $(WARNING_CFLAGS) -Wdeclaration-after-statement $(LIB_CFLAGS) $(THIRD_CFLAGS)
 

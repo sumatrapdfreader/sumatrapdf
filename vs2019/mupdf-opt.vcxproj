@@ -918,6 +918,7 @@
     <ClCompile Include="..\mupdf\source\fitz\output-cbz.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-pcl.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-pclm.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-pdfocr.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-png.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-pnm.c" />
     <ClCompile Include="..\mupdf\source\fitz\output-ps.c" />

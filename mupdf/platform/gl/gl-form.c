@@ -375,12 +375,12 @@ void do_widget_canvas(fz_irect canvas_area)
 
 		if (ui_mouse_inside(canvas_area) && ui_mouse_inside(area))
 		{
-			if (!widget->is_hot)
+			if (pdf_annot_hot(ctx, widget))
 			{
 				trace_action("page.getWidgets()[%d].eventEnter();\n", idx);
 				pdf_annot_event_enter(ctx, widget);
 			}
-			widget->is_hot = 1;
+			pdf_annot_set_hot(ctx, widget, 1);
 
 			ui.hot = widget;
 			if (!ui.active && ui.down)
@@ -413,7 +413,7 @@ void do_widget_canvas(fz_irect canvas_area)
 		}
 
 		/* Set is_hot and is_active to select current appearance */
-		widget->is_active = (ui.active == widget && ui.down);
+		pdf_annot_set_active(ctx, widget, (ui.active == widget && ui.down));
 
 		if (showform)
 		{

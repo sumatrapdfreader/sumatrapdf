@@ -121,7 +121,7 @@ FUN(PDFPage_getAnnotations)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jobjectArray JNICALL
-FUN(PDFPage_getWidgetsNative)(JNIEnv *env, jobject self)
+FUN(PDFPage_getWidgets)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_page *page = from_PDFPage(env, self);

@@ -99,21 +99,28 @@ load_file(const char* filename, GenericVector<char>* data)
 	return result;
 }
 
+#if TESSERACT_MAJOR_VERSION >= 5
+
 static bool
 tess_file_reader(const char *fname, GenericVector<char> *out)
 {
-	//const char *file = fname;
-	//const char *s;
-
-	//for (s = fname; *s; s++)
-	//	if (*s == '\\' || *s == '/')
-	//		file = s+1;
-
 	/* FIXME: Look for inbuilt ones. */
 
 	/* Then under TESSDATA */
 	return load_file(fname, out);
 }
+
+#else
+
+static bool
+tess_file_reader(const STRING& fname, GenericVector<char> *out)
+{
+	/* FIXME: Look for inbuilt ones. */
+
+	/* Then under TESSDATA */
+	return load_file(fname.c_str(), out);
+}
+#endif
 
 static void
 set_leptonica_mem(fz_context *ctx)
