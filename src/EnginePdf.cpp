@@ -1827,6 +1827,7 @@ const pdf_write_options pdf_default_write_options2 = {
     0,  /* do_sanitize */
     0,  /* do_appearance */
     0,  /* do_encrypt */
+    0,  /* dont_regenerate_id */
     ~0, /* permissions */
     "", /* opwd_utf8[128] */
     "", /* upwd_utf8[128] */

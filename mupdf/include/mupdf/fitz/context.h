@@ -12,6 +12,7 @@ typedef struct fz_tuning_context fz_tuning_context;
 typedef struct fz_store fz_store;
 typedef struct fz_glyph_cache fz_glyph_cache;
 typedef struct fz_document_handler_context fz_document_handler_context;
+typedef struct fz_output fz_output;
 typedef struct fz_context fz_context;
 
 /**
@@ -577,6 +578,7 @@ struct fz_context
 	fz_tuning_context *tuning;
 
 	/* shared contexts */
+	fz_output *stddbg;
 	fz_font_context *font;
 	fz_colorspace_context *colorspace;
 	fz_store *store;

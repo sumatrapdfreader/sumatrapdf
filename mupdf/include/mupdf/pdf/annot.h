@@ -524,6 +524,8 @@ void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const c
 
 void pdf_dirty_annot(fz_context *ctx, pdf_annot *annot);
 
+int pdf_set_annot_field_value(fz_context *ctx, pdf_document *doc, pdf_widget *widget, const char *text, int ignore_trigger_events);
+
 /*
 	Recreate the appearance stream for an annotation, if necessary.
 */

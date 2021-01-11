@@ -3,6 +3,7 @@
 
 typedef struct pdf_document pdf_document;
 typedef struct pdf_crypt pdf_crypt;
+typedef struct pdf_journal pdf_journal;
 
 /* Defined in PDF 1.7 according to Acrobat limit. */
 #define PDF_MAX_OBJECT_NUMBER 8388607
@@ -229,11 +230,62 @@ enum {
 #define PDF_FALSE ((pdf_obj*)(intptr_t)PDF_ENUM_FALSE)
 #define PDF_LIMIT ((pdf_obj*)(intptr_t)PDF_ENUM_LIMIT)
 
+
 /* Implementation details: subject to change. */
 
 /*
 	for use by pdf_crypt_obj_imp to decrypt AES string in place
 */
 void pdf_set_str_len(fz_context *ctx, pdf_obj *obj, size_t newlen);
+
+
+/* Journalling */
+
+/* Call this to enable journalling on a given document. */
+void pdf_enable_journal(fz_context *ctx, pdf_document *doc);
+
+/* Call this to start an operation. Undo/redo works at 'operation'
+ * granularity. Nested operations are all counted within the outermost
+ * operation. Any modification performed on a journalled PDF without an
+ * operation having been started will throw an error. */
+void pdf_begin_operation(fz_context *ctx, pdf_document *doc, const char *operation);
+
+/* Call this to start an implicit operation. Implicit operations are
+ * operations that happen as a consequence of things like updating
+ * an annotation. They get rolled into the previous operation, because
+ * they generally happen as a result of them. */
+void pdf_begin_implicit_operation(fz_context *ctx, pdf_document *doc);
+
+/* Call this to end an operation. */
+void pdf_end_operation(fz_context *ctx, pdf_document *doc);
+
+/* Call this to find out how many undo/redo steps there are, and the
+ * current position we are within those. 0 = original document,
+ * *steps = final edited version. */
+int pdf_undoredo_state(fz_context *ctx, pdf_document *doc, int *steps);
+
+/* Call this to find the title of the operation within the undo state. */
+const char *pdf_undoredo_step(fz_context *ctx, pdf_document *doc, int step);
+
+/* Helper functions to identify if we are in a state to be able to undo
+ * or redo. */
+int pdf_can_undo(fz_context *ctx, pdf_document *doc);
+int pdf_can_redo(fz_context *ctx, pdf_document *doc);
+
+/* Move backwards in the undo history. Throws an error if we are at the
+ * start. Any edits to the document at this point will discard all
+ * subsequent history. */
+void pdf_undo(fz_context *ctx, pdf_document *doc);
+
+/* Move forwards in the undo history. Throws an error if we are at the
+ * end. */
+void pdf_redo(fz_context *ctx, pdf_document *doc);
+
+/* Called to reset the entire history. This is called implicitly when
+ * a non-undoable change occurs (such as a pdf repair). */
+void pdf_discard_journal(fz_context *ctx, pdf_journal *journal);
+
+/* Internal destructor. */
+void pdf_drop_journal(fz_context *ctx, pdf_journal *journal);
 
 #endif

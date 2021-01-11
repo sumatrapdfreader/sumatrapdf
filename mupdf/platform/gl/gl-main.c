@@ -105,11 +105,11 @@ static void open_browser(const char *uri)
 	pid = fork();
 	if (pid == 0)
 	{
-	if (fork() == 0)
-	{
-		execlp(browser, browser, uri, (char*)0);
-		fprintf(stderr, "cannot exec '%s'\n", browser);
-	}
+		if (fork() == 0)
+		{
+			execlp(browser, browser, uri, (char*)0);
+			fprintf(stderr, "cannot exec '%s'\n", browser);
+		}
 		_exit(0);
 	}
 	waitpid(pid, NULL, 0);
@@ -1451,6 +1451,7 @@ static void load_document(void)
 			trace_action("doc.enableJS();\n");
 			pdf_enable_js(ctx, pdf);
 		}
+		pdf_enable_journal(ctx, pdf);
 		if (trace_file)
 		{
 			int vsns = pdf_count_versions(ctx, pdf);
@@ -2164,7 +2165,7 @@ void do_main(void)
 		ui_layout(R, BOTH, NW, 0, 0);
 		ui_panel_begin(annotate_w, 0, 4, 4, 1);
 		if (showannotate == ANNOTATE_MODE_NORMAL)
-		do_annotate_panel();
+			do_annotate_panel();
 		else
 			do_redact_panel();
 		ui_panel_end();
@@ -2313,6 +2314,13 @@ int main(int argc, char **argv)
 	}
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
+
+#ifdef _WIN32
+	/* stderr goes nowhere. Get us a debug stream we have a chance
+	 * of seeing. */
+	fz_set_stddbg(ctx, fz_stdods(ctx));
+#endif
+
 	fz_register_document_handlers(ctx);
 
 	if (trace_file_name)

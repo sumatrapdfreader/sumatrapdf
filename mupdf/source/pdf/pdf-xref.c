@@ -1596,6 +1596,8 @@ pdf_drop_document_imp(fz_context *ctx, pdf_document *doc)
 
 	pdf_drop_js(ctx, doc->js);
 
+	pdf_drop_journal(ctx, doc->journal);
+
 	pdf_drop_xref_sections(ctx, doc);
 	fz_free(ctx, doc->xref_index);
 

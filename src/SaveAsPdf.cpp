@@ -43,9 +43,9 @@ const pdf_write_options pdf_default_write_options2 = {
     0,  /* do_appearance */
     0,  /* do_encrypt */
     ~0, /* permissions */
-    "", /* opwd_utf8[128] */
-    "", /* upwd_utf8[128] */
-};
+    {0}, /* opwd_utf8[128] */
+    {0}, /* upwd_utf8[128] */
+                                                      };
 
 /* Copy as few key/value pairs as we can. Do not include items that reference other pages. */
 // clang-format off

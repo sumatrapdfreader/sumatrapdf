@@ -64,6 +64,8 @@ int pdfclean_main(int argc, char **argv)
 	int errors = 0;
 	fz_context *ctx;
 
+	opts.dont_regenerate_id = 1;
+
 	while ((c = fz_getopt(argc, argv, "adfgilp:sczDAE:O:U:P:")) != -1)
 	{
 		switch (c)

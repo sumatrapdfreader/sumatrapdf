@@ -180,7 +180,12 @@ prepare_mesh_vertex(fz_context *ctx, void *arg, fz_vertex *v, const float *input
 	int i;
 
 	if (shade->use_function)
-		output[0] = input[0] * 255;
+	{
+		float f = input[0];
+		if (shade->type == 5)
+			f = (f - shade->u.m.c0[0]) / (shade->u.m.c1[0] - shade->u.m.c0[0]);
+		output[0] = f * 255;
+	}
 	else
 	{
 		int n = fz_colorspace_n(ctx, dest->colorspace);

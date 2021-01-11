@@ -71,6 +71,7 @@ typedef struct
 	int do_linear;
 	int do_clean;
 	int do_encrypt;
+	int dont_regenerate_id;
 
 	int list_len;
 	int *use_list;
@@ -3016,6 +3017,7 @@ static void initialise_write_state(fz_context *ctx, pdf_document *doc, const pdf
 	opts->do_linear = in_opts->do_linear;
 	opts->do_clean = in_opts->do_clean;
 	opts->do_encrypt = in_opts->do_encrypt;
+	opts->dont_regenerate_id = in_opts->dont_regenerate_id;
 	opts->start = 0;
 	opts->main_xref_offset = INT_MIN;
 
@@ -3070,6 +3072,7 @@ const pdf_write_options pdf_default_write_options = {
 	0, /* do_sanitize */
 	0, /* do_appearance */
 	0, /* do_encrypt */
+	0, /* dont_regenerate_id */
 	~0, /* permissions */
 	"", /* opwd_utf8[128] */
 	"", /* upwd_utf8[128] */
@@ -3096,6 +3099,7 @@ const char *fz_pdf_write_options_usage =
 	"\tpermissions=NUMBER: document permissions to grant when encrypting\n"
 	"\tuser-password=PASSWORD: password required to read document\n"
 	"\towner-password=PASSWORD: password required to edit document\n"
+	"\tregenerate-id: (default yes) regenerate document id\n"
 	"\n";
 
 pdf_write_options *
@@ -3125,6 +3129,8 @@ pdf_parse_write_options(fz_context *ctx, pdf_write_options *opts, const char *ar
 		opts->do_sanitize = fz_option_eq(val, "yes");
 	if (fz_has_option(ctx, args, "incremental", &val))
 		opts->do_incremental = fz_option_eq(val, "yes");
+	if (fz_has_option(ctx, args, "regenerate-id", &val))
+		opts->dont_regenerate_id = fz_option_eq(val, "no");
 	if (fz_has_option(ctx, args, "decrypt", &val))
 		opts->do_encrypt = fz_option_eq(val, "yes") ? PDF_ENCRYPT_NONE : PDF_ENCRYPT_KEEP;
 	if (fz_has_option(ctx, args, "encrypt", &val))
@@ -3355,7 +3361,7 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 	int lastfree;
 	int num;
 	int xref_len;
-	pdf_obj *id, *id1;
+	pdf_obj *id1, *id = NULL;
 
 	if (in_opts->do_incremental)
 	{
@@ -3378,10 +3384,13 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 	{
 		initialise_write_state(ctx, doc, in_opts, opts);
 
-		/* Update second half of ID array if it exists. */
-		id = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(ID));
-		if (id)
-			change_identity(ctx, doc, id);
+		if (!opts->dont_regenerate_id)
+		{
+			/* Update second half of ID array if it exists. */
+			id = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(ID));
+			if (id)
+				change_identity(ctx, doc, id);
+		}
 
 		/* Remove encryption dictionary if saving without encryption. */
 		if (opts->do_encrypt == PDF_ENCRYPT_NONE)

@@ -77,7 +77,7 @@ typedef fz_stream *(fz_stream_from_output_fn)(fz_context *ctx, void *state);
 */
 typedef void (fz_truncate_fn)(fz_context *ctx, void *state);
 
-typedef struct
+struct fz_output
 {
 	void *state;
 	fz_output_write_fn *write;
@@ -88,7 +88,7 @@ typedef struct
 	fz_stream_from_output_fn *as_stream;
 	fz_truncate_fn *truncate;
 	char *bp, *wp, *ep;
-} fz_output;
+};
 
 /**
 	Create a new output object with the given
@@ -125,16 +125,40 @@ fz_output *fz_new_output_with_buffer(fz_context *ctx, fz_buffer *buf);
 /**
 	Retrieve an fz_output that directs to stdout.
 
-	Should be fz_dropped when finished with.
+	Optionally may be fz_dropped when finished with.
 */
 fz_output *fz_stdout(fz_context *ctx);
 
 /**
 	Retrieve an fz_output that directs to stdout.
 
-	Should be fz_dropped when finished with.
+	Optionally may be fz_dropped when finished with.
 */
 fz_output *fz_stderr(fz_context *ctx);
+
+#ifdef _WIN32
+/**
+	Retrieve an fz_output that directs to OutputDebugString.
+
+	Optionally may be fz_dropped when finished with.
+*/
+fz_output *fz_stdods(fz_context *ctx);
+#endif
+
+/**
+	Set the output stream to be used for fz_stddbg. Set to NULL to
+	reset to default (stderr).
+*/
+void fz_set_stddbg(fz_context *ctx, fz_output *out);
+
+/**
+	Retrieve an fz_output for the default debugging stream. On
+	Windows this will be OutputDebugString for non-console apps.
+	Otherwise, it is always fz_stderr.
+
+	Optionally may be fz_dropped when finished with.
+*/
+fz_output *fz_stddbg(fz_context *ctx);
 
 /**
 	Format and write data to an output stream.

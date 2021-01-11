@@ -344,8 +344,8 @@ const pdf_write_options pdf_default_write_options2 = {
     0,  /* do_incremental */
     0,  /* do_pretty */
     0,  /* do_ascii */
-    1,  /* do_compress */
-    1,  /* do_compress_images */
+    0,  /* do_compress */
+    0,  /* do_compress_images */
     0,  /* do_compress_fonts */
     0,  /* do_decompress */
     0,  /* do_garbage */
@@ -354,6 +354,7 @@ const pdf_write_options pdf_default_write_options2 = {
     0,  /* do_sanitize */
     0,  /* do_appearance */
     0,  /* do_encrypt */
+    0,  /* dont_regenerate_id */
     ~0, /* permissions */
     "", /* opwd_utf8[128] */
     "", /* upwd_utf8[128] */

@@ -11,6 +11,7 @@
 #include <string.h>
 #ifdef _WIN32
 #include <io.h>
+#include <windows.h>
 #else
 #include <unistd.h>
 #endif
@@ -73,6 +74,48 @@ static fz_output fz_stderr_global = {
 fz_output *fz_stderr(fz_context *ctx)
 {
 	return &fz_stderr_global;
+}
+
+#ifdef _WIN32
+static void
+stdods_write(fz_context *ctx, void *opaque, const void *buffer, size_t count)
+{
+	unsigned char *buf = fz_malloc(ctx, count+1);
+
+	memcpy(buf, buffer, count);
+	buf[count] = 0;
+	OutputDebugStringA(buf);
+	fz_free(ctx, buf);
+}
+
+static fz_output fz_stdods_global = {
+	NULL,
+	stdods_write,
+	NULL,
+	NULL,
+	NULL,
+};
+
+fz_output *fz_stdods(fz_context *ctx)
+{
+	return &fz_stdods_global;
+}
+#endif
+
+fz_output *fz_stddbg(fz_context *ctx)
+{
+	if (ctx->stddbg)
+		return ctx->stddbg;
+
+	return fz_stderr(ctx);
+}
+
+void fz_set_stddbg(fz_context *ctx, fz_output *out)
+{
+	if (ctx == NULL)
+		return;
+
+	ctx->stddbg = out;
 }
 
 static void

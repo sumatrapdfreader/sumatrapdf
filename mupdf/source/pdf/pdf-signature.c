@@ -199,6 +199,8 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 	fz_var(dn);
 	fz_var(fzbuf);
 
+	pdf_begin_operation(ctx, doc, "Sign signature");
+
 	fz_try(ctx)
 	{
 		const char *dn_str;
@@ -272,6 +274,7 @@ void pdf_sign_signature(fz_context *ctx, pdf_widget *widget, pdf_pkcs7_signer *s
 	}
 	fz_always(ctx)
 	{
+		pdf_end_operation(ctx, doc);
 		fz_drop_buffer(ctx, fzbuf);
 		pdf_signature_drop_designated_name(ctx, dn);
 	}

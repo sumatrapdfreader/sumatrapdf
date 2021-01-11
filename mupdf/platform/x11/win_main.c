@@ -1282,6 +1282,11 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShow
 		MessageBoxA(NULL, "Cannot initialize MuPDF context.", "MuPDF: Error", MB_OK);
 		exit(1);
 	}
+
+	/* stderr goes nowhere. Get us a debug stream we have a chance
+	 * of seeing. */
+	fz_set_stddbg(ctx, fz_stdods(ctx));
+
 	pdfapp_init(ctx, &gapp);
 
 	argv = fz_argv_from_wargv(argc, wargv);

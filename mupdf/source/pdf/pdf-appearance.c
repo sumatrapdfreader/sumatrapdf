@@ -2299,70 +2299,81 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 
 	ft = pdf_dict_get(ctx, annot->obj, PDF_NAME(FT));
 
-	/* We cannot synthesise an appearance for a Sig, so don't even try.
-	 * Attempting to, will move the object into the new incremental
-	 * section, which will invalidate the signature. */
-	if ((!ap_n && !pdf_name_eq(ctx, ft, PDF_NAME(Sig))) || annot->needs_new_ap)
+	pdf_begin_implicit_operation(ctx, annot->page->doc);
+
+	fz_try(ctx)
 	{
-		fz_rect rect, bbox;
-		fz_matrix matrix = fz_identity;
-		fz_buffer *buf;
-		pdf_obj *res = NULL;
-		pdf_obj *new_ap_n = NULL;
-		fz_var(res);
-		fz_var(new_ap_n);
-
-		annot->needs_new_ap = 0;
-
-		/* Special case for Btn widgets that need multiple appearance streams. */
-		if (pdf_name_eq(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)), PDF_NAME(Widget)))
+		/* We cannot synthesise an appearance for a Sig, so don't even try.
+		 * Attempting to, will move the object into the new incremental
+		 * section, which will invalidate the signature. */
+		if ((!ap_n && !pdf_name_eq(ctx, ft, PDF_NAME(Sig))) || annot->needs_new_ap)
 		{
-			if (pdf_name_eq(ctx, pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(FT)), PDF_NAME(Btn)))
-			{
-				pdf_update_button_appearance(ctx, annot);
-				pdf_clean_obj(ctx, annot->obj);
-				return;
-			}
-		}
+			fz_rect rect, bbox;
+			fz_matrix matrix = fz_identity;
+			fz_buffer *buf;
+			pdf_obj *res = NULL;
+			pdf_obj *new_ap_n = NULL;
+			fz_var(res);
+			fz_var(new_ap_n);
 
-		buf = fz_new_buffer(ctx, 1024);
-		fz_try(ctx)
-		{
-			rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
-			pdf_write_appearance(ctx, annot, buf, &rect, &bbox, &matrix, &res);
-			pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(Rect), rect);
+			annot->needs_new_ap = 0;
 
-			if (!ap_n)
+			/* Special case for Btn widgets that need multiple appearance streams. */
+			if (pdf_name_eq(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)), PDF_NAME(Widget)))
 			{
-				if (!ap)
+				if (pdf_name_eq(ctx, pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(FT)), PDF_NAME(Btn)))
 				{
-					ap = pdf_new_dict(ctx, annot->page->doc, 1);
-					pdf_dict_put_drop(ctx, annot->obj, PDF_NAME(AP), ap);
+					pdf_update_button_appearance(ctx, annot);
+					pdf_clean_obj(ctx, annot->obj);
+					return;
 				}
-				new_ap_n = pdf_new_xobject(ctx, annot->page->doc, bbox, matrix, res, buf);
-				pdf_dict_put(ctx, ap, PDF_NAME(N), new_ap_n);
 			}
-			else
+
+			buf = fz_new_buffer(ctx, 1024);
+			fz_try(ctx)
 			{
-				new_ap_n = pdf_keep_obj(ctx, ap_n);
-				pdf_update_xobject(ctx, annot->page->doc, ap_n, bbox, matrix, res, buf);
+				rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
+				pdf_write_appearance(ctx, annot, buf, &rect, &bbox, &matrix, &res);
+				pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(Rect), rect);
+
+				if (!ap_n)
+				{
+					if (!ap)
+					{
+						ap = pdf_new_dict(ctx, annot->page->doc, 1);
+						pdf_dict_put_drop(ctx, annot->obj, PDF_NAME(AP), ap);
+					}
+					new_ap_n = pdf_new_xobject(ctx, annot->page->doc, bbox, matrix, res, buf);
+					pdf_dict_put(ctx, ap, PDF_NAME(N), new_ap_n);
+				}
+				else
+				{
+					new_ap_n = pdf_keep_obj(ctx, ap_n);
+					pdf_update_xobject(ctx, annot->page->doc, ap_n, bbox, matrix, res, buf);
+				}
+
+				annot->has_new_ap = 1;
 			}
+			fz_always(ctx)
+			{
+				fz_drop_buffer(ctx, buf);
+				pdf_drop_obj(ctx, res);
+				pdf_drop_obj(ctx, new_ap_n);
+			}
+			fz_catch(ctx)
+			{
+				fz_warn(ctx, "cannot create appearance stream");
+			}
+		}
 
-			annot->has_new_ap = 1;
-		}
-		fz_always(ctx)
-		{
-			fz_drop_buffer(ctx, buf);
-			pdf_drop_obj(ctx, res);
-			pdf_drop_obj(ctx, new_ap_n);
-		}
-		fz_catch(ctx)
-		{
-			fz_warn(ctx, "cannot create appearance stream");
-		}
+		pdf_clean_obj(ctx, annot->obj);
 	}
-
-	pdf_clean_obj(ctx, annot->obj);
+	fz_always(ctx)
+	{
+		pdf_end_operation(ctx, annot->page->doc);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 int
