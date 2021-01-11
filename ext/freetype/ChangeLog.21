@@ -4799,11 +4799,11 @@
 	(chapter_inter, chapter_footer): Add <li> and use special <ul>
 	class.
 	Use double quotes around table widths given in percent.
-	(keyword_prefix, keyword_suffix): Don't change font colour directly
+	(keyword_prefix, keyword_suffix): Don't change font color directly
 	but use a new <span> class.
 	(section_synopsis_header, section_synopsis_footer): Don't change
-	colour.
-	(code_header, code_footer): Don't change font colour directly but
+	color.
+	(code_header, code_footer): Don't change font color directly but
 	use a special <pre> class.
 	(print_html_field): <tr> gets the `valign' attribute, not <table>.
 	(print_html_field_list): Ditto.
@@ -9422,7 +9422,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright (C) 2002-2019 by
+Copyright (C) 2002-2020 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

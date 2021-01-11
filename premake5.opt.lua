@@ -128,7 +128,7 @@ project "freetype-opt"
         "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
         "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
     }
-    disablewarnings { "4018", "4244", "4267", "4312", "4996" }
+    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
     includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
     freetype_files()
 

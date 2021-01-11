@@ -6,9 +6,9 @@ bzip2           1.0.8      2019-07-21
 CHMLib          0.40a      2009-07-02
   https://github.com/jedwing/CHMLib
 
-freetype        2.10.0     2019-05-31
+freetype        2.10.4     2020-10-20
   https://www.freetype.org/
-  http://git.ghostscript.com/?p=thirdparty-freetype2.git;a=shortlog;h=refs/heads/VER-2-10-0-mupdf-2-branch
+  http://git.ghostscript.com/?p=thirdparty-freetype2.git;a=shortlog;h=refs/tags/VER-2-10-4
 
 jbig2dec        0.18       2020-02-11
   http://git.ghostscript.com/?p=jbig2dec.git;a=commit;h=429b6ab2e29b346f34da9156f423c98117fa5ae4

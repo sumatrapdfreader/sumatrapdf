@@ -1,5 +1,5 @@
 # Static site folder
-site/
+reference/
 
 # HTML and Markdown files
 *.html

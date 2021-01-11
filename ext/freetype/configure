@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2002-2019 by
+# Copyright (C) 2002-2020 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -94,10 +94,10 @@ inode_src=`ls -id $abs_ft2_dir | awk '{print $1}'`
 inode_dst=`ls -id $abs_curr_dir | awk '{print $1}'`
 
 if test $inode_src -ne $inode_dst; then
-  if test ! -d reference; then
-    mkdir reference
+  if test ! -d docs; then
+    mkdir docs
     echo "Copying documentation assets"
-    cp -R $abs_ft2_dir/docs/reference/markdown $abs_curr_dir/reference
+    cp -R $abs_ft2_dir/docs/markdown $abs_curr_dir/docs
   fi
   if test ! -r $abs_curr_dir/modules.cfg; then
     echo "Copying \`modules.cfg'"
@@ -107,7 +107,7 @@ if test $inode_src -ne $inode_dst; then
   echo "TOP_DIR        := $abs_ft2_dir"           > Makefile
   echo "OBJ_DIR        := $abs_curr_dir"         >> Makefile
   echo "OBJ_BUILD      := \$(OBJ_DIR)"           >> Makefile
-  echo "DOC_DIR        := \$(OBJ_DIR)/reference" >> Makefile
+  echo "DOC_DIR        := \$(OBJ_DIR)/docs"      >> Makefile
   echo "FT_LIBTOOL_DIR := \$(OBJ_DIR)"           >> Makefile
   echo "ifndef FT2DEMOS"                         >> Makefile
   echo "  include \$(TOP_DIR)/Makefile"          >> Makefile

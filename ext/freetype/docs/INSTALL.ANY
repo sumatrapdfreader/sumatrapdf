@@ -8,13 +8,15 @@ specific environments.
 I. Standard procedure
 ---------------------
 
-  * DISABLE PRE-COMPILED  HEADERS!  This is very  important for Visual
-    C++, because FreeType uses lines like:
+  * If you use macro names  for FreeType header files (while mandatory
+    in earlier versions,  this is now optional  since FreeType version
+    2.10.3) it  is necessary to disable pre-compiled headers.  This is
+    very important for Visual C++, because lines like
 
       #include FT_FREETYPE_H
 
-    which are not correctly supported by this compiler while being ISO
-    C compliant!
+    are not  correctly supported  by this compiler  while being  ISO C
+    compliant!
 
   * You need to add the directory `include' to your  include path when
     compiling the library.
@@ -141,7 +143,7 @@ II. Support for flat-directory compilation
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2003-2019 by
+Copyright (C) 2003-2020 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

@@ -10,18 +10,13 @@
 }
 p {
     text-align: justify;
-   /* margin: 1.5ex 0 1.5ex 0;
-    */
 }
-/* .md-typeset p{
-    margin: 1em 1em 0 1em;
-}
-*/
+
 /* code blocks */
 pre.colored {
     color: blue;
 }
-pre {
+pre>code {
     font-family: monospace;
     background-color: #D6E8FF;
     padding: 2ex 0 2ex 1%;
@@ -33,7 +28,7 @@ span.keyword {
     white-space: pre;
     color: #d73a49;
 }
-.md-typeset code {
+.md-typeset pre>code {
     white-space: pre;
 }
 /* H4 Heading */
@@ -42,10 +37,9 @@ h4 {
     font-size: medium;
     font-style: oblique;
     font-weight: bold;
-   /* margin: 3ex 0 1.5ex 9%;
-    */
     padding: 0.3em 0 0.3em 1%;
 }
+
 /* Fields table */
 table.fields {
     width: 90%;
@@ -70,7 +64,7 @@ table.fields td.desc p {
     margin: 1.5ex 0 0 0;
 }
 
-/* START EXPERIMENTAL CODE */
+/* Define 'long' tables */
 table.long {
     display: block;
     width: 93%;
@@ -115,42 +109,8 @@ table.long td:before {
     padding-right: 10px;
     white-space: nowrap;
 }
-/* END EXPERIMENTAL CODE */
+/* End 'long' table definition */
 
-/* Index table */
-table.index {
-    width: 100%;
-    border-collapse: collapse;
-    border: 0;
-    border-spacing: 1em 0.3ex;
-}
-table.index tr {
-    padding: 0;
-}
-table.index td {
-    padding: 0;
-}
-table.index-toc-link {
-    width: 100%;
-    border: 0;
-    border-spacing: 0;
-    margin: 1ex 0 1ex 0;
-}
-table.index-toc-link td.left {
-    padding: 0 0.5em 0 0.5em;
-    font-size: 83%;
-    text-align: left;
-}
-table.index-toc-link td.middle {
-    padding: 0 0.5em 0 0.5em;
-    font-size: 83%;
-    text-align: center;
-}
-table.index-toc-link td.right {
-    padding: 0 0.5em 0 0.5em;
-    font-size: 83%;
-    text-align: right;
-}
 /* toc table */
 table.toc {
     width: 95%;
@@ -178,7 +138,9 @@ table.toc td.desc p {
 div.timestamp {
     font-size: small;
 }
-/* Max width before this PARTICULAR table gets nasty This query will take effect for any screen smaller than 760px and also iPads specifically. */
+
+/* Change table layout for smaller screens. This query will take effect for any screen smaller than
+   760px and also iPads specifically. */
 @media only screen and (max-width: 760px), (min-device-width: 768px) and (max-device-width: 1024px) {
    /* Force table to not be like tables anymore */
     table, thead, tbody, th, td, tr {

@@ -1,6 +1,6 @@
-After saying `make refdoc' or `make refdoc-venv' the `site/' directory
-contains the FreeType API reference.  You need python and pip to make this
-target.
+After saying `make refdoc' or `make refdoc-venv' the `reference/' directory
+contains the FreeType API reference.  You need Python >= 3.5 and pip to make
+this target.
 
 There are two ways to generate the documentation:
 
@@ -13,7 +13,7 @@ There are two ways to generate the documentation:
 
 2. Using `make refdoc-venv' (requires internet access):
 
-    - Ensure `python', `pip' and python package `virtualenv' are available.
+    - Ensure `python', `pip' and Python package `virtualenv' are available.
     - Make target with `make refdoc-venv'.
     - This may or may not require internet access every time depending on
     pip and system caching.
@@ -25,11 +25,11 @@ Some troubleshooting tips:
 * Regularly run `pip install --upgrade docwriter' to check for updates which
 may include bug fixes.
 
-* Ensure that `docwriter' is installed in the same python target that
-`make refdoc' uses (python3/python2/python).
+* `Docwriter' does not support Python 2.  Ensure that Python >= 3.5 is
+installed and available as `python3'/`python'.
 
-* `pip' and `python' may point to different versions of Python.  Check using
-`python --version' and `pip --version'.
+* Ensure that `docwriter' is installed in the same Python target that
+`make refdoc' uses (python3/python).
 
 * If none of this works, send a mail to `freetype-devel@nongnu.org' or file
 an issue at `https://github.com/freetype/docwriter/issues'.

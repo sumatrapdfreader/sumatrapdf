@@ -2,7 +2,7 @@ eval '(exit $?0)' && eval 'exec perl -wS -i "$0" ${1+"$@"}'
   & eval 'exec perl -wS -i "$0" $argv:q'
     if 0;
 
-# Copyright (C) 2015-2019 by
+# Copyright (C) 2015-2020 by
 # Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,

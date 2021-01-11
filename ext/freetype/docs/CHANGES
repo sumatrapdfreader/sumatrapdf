@@ -1,5 +1,160 @@
+CHANGES BETWEEN 2.10.3 and 2.10.4
 
-CHANGES BETWEEN 2.9.1 and 2.10
+  I. IMPORTANT BUG FIXES
+
+  - A heap buffer overflow has been found  in the handling of embedded
+    PNG bitmaps, introduced in FreeType version 2.6.
+
+      https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-15999
+
+    If you  use option  FT_CONFIG_OPTION_USE_PNG  you  should  upgrade
+    immediately.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.10.2 and 2.10.3
+
+  I. IMPORTANT CHANGES
+
+  - New flag `FT_OUTLINE_OVERLAP'.  If set, make the smooth rasterizer
+    do  4x4 oversampling  to  mitigate artifacts  in pixels  partially
+    covered  by  overlapping  contours.    Note  that  this  at  least
+    quadruples the rendering time.
+
+    If  a  glyph  in  a  TrueType font  has  the  `OVERLAP_SIMPLE'  or
+    `OVERLAP_COMPOUND'  bit set,  FreeType automatically  selects this
+    rendering mode.
+
+
+  II. MISCELLANEOUS
+
+  - Using the  arcane method of  including FreeType header  files with
+    macros like  `FT_FREETYPE_H' is no longer  mandatory (but retained
+    as an optional feature for backward compatibility).
+
+  - Support for  building the library  with Meson.  Building  the demo
+    programs with Meson will follow in a forthcoming release.
+
+  - Minor improvements to the B/W rasterizer.
+
+  - Auto-hinter support for Medefaidrin script.
+
+  - Fix various  memory leaks (mainly  for CFF) and other  issues that
+    might cause crashes in rare circumstances.
+
+  - Jam support has been removed.
+
+  - In  `ftview', custom  LCD  filter values  are  now normalized  and
+    balanced.  Unorthodox filters are still available through the `-L'
+    command line option.
+
+  - The GUI demo programs can now be resized.
+
+  - Demo programs that accept command  line option `-k' can now handle
+    function keys, too.  The  corresponding character codes start with
+    0xF1.  As  an example, the  POSIX shell syntax (accepted  by bash,
+    ksh, and zsh)
+
+      -k $'\xF3q'
+
+    emulates the pressing of function key `F3' followed by key `q'.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.10.1 and 2.10.2
+
+  I. IMPORTANT CHANGES
+
+  - Support  of  WOFF2  fonts.   This  code  contribution  was  Nikhil
+    Ramakrishnan's GSoC 2019 project.
+
+
+  II. MISCELLANEOUS
+
+  - Function  `FT_Get_Var_Axis_Flags' returned random data for  Type 1
+    MM fonts.
+
+  - Type 1 fonts with non-integer metrics are now supported by the new
+    (CFF) engine introduced in FreeType 2.9.
+
+  - Drop  support  for Python 2 in Freetype's API reference  generator
+    `docwriter'  (Python >= 3.5 is required for targets  `make refdoc'
+    and `make refdoc-venv').
+
+  - Auto-hinter support for Hanifi Rohingya.
+
+  - Document the `FT2_KEEP_ALIVE' debugging environment variable.
+
+  - The Visual C++ (and Visual C)  project files for Windows builds no
+    longer generate libraries that contain the FreeType version in its
+    filenames.   Instead,  a  resource  file gets  used  to  make  the
+    libraries contain the corresponding information.
+
+  - The next release will remove Jam build support.
+
+  - The  `ftbench'  demo  program  has  a new  test  for  testing  the
+    `FT_Glyph_Stroke' functionality.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.10.0 and 2.10.1
+
+  I. IMPORTANT BUG FIXES
+
+  - The bytecode hinting of OpenType variation fonts was flawed, since
+    the data in the `CVAR' table wasn't correctly applied.
+
+
+  II. MISCELLANEOUS
+
+  - Auto-hinter support for Mongolian.
+
+  - For distribution,  `.tar.bz2' packages are replaced with `.tar.xz'
+    bundles.
+
+  - The handling of  the default character in PCF fonts as  introduced
+    in version 2.10.0 was partially broken, causing premature abortion
+    of charmap iteration for many fonts.
+
+  - If  `FT_Set_Named_Instance' was  called  with  the same  arguments
+    twice in a row, the function  returned an incorrect error code the
+    second time.
+
+  - Direct   rendering   using  FT_RASTER_FLAG_DIRECT   crashed   (bug
+    introduced in version 2.10.0).
+
+  - Increased  precision  while  computing  OpenType  font   variation
+    instances.
+
+  - The  flattening  algorithm of  cubic  Bezier  curves was  slightly
+    changed to make  it faster.  This can cause  very subtle rendering
+    changes, which aren't noticeable by the eye, however.
+
+  - The  auto-hinter  now  disables hinting  if there  are blue  zones
+    defined for a `style' (i.e., a certain combination of a script and
+    its related typographic features) but the font doesn't contain any
+    characters needed to set up at least one blue zone.
+
+  - The `ftmulti' demo program now  supports multiple hidden axes with
+    the same name tag.
+
+  - `ftview', `ftstring', and `ftgrid' got  a `-k' command line option
+    to emulate a sequence of keystrokes at start-up.
+
+  - `ftview', `ftstring', and `ftgrid' now support screen dumping to a
+    PNG file.
+
+  - The bytecode debugger, `ttdebug',  now supports variation TrueType
+    fonts; a variation font instance can be selected with the new `-d'
+    command line option.
+
+
+======================================================================
+
+CHANGES BETWEEN 2.9.1 and 2.10.0
 
   I. IMPORTANT CHANGES
 
@@ -155,7 +310,7 @@ CHANGES BETWEEN 2.9 and 2.9.1
       use the `pkg-config' interface.
 
       The `configure'  script no longer installs  `freetype-config' by
-      default.  For  backwards compatibility,  a new  configure option
+      default.  For  backward  compatibility,  a new  configure option
       `--enable-freetype-config'   is  provided   that  reverts   this
       decision.
 
@@ -5144,7 +5299,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright (C) 2000-2019 by
+Copyright (C) 2000-2020 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,

@@ -1,6 +1,5 @@
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_BBOX_H
+#include <freetype/freetype.h>
+#include <freetype/ftbbox.h>
 
 
 #include <time.h>    /* for clock() */
