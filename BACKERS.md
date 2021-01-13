@@ -36,3 +36,4 @@ For $500/month you can become Platinum Sponsor. Support SumatraPDF and advertise
 - Curtis Y Takahashi
 - Hasan Kamal-Al-Deen
 - Christian Schulz
+- Jim Vanderbilt
