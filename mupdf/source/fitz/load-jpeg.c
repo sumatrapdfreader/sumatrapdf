@@ -1,5 +1,6 @@
 #include "mupdf/fitz.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
@@ -194,6 +195,22 @@ static fz_colorspace *extract_icc_profile(fz_context *ctx, jpeg_saved_marker_ptr
 #endif
 }
 
+/* Returns true if <x> can be represented as an integer without overflow.
+ *
+ * We can't use comparisons such as 'return x < INT_MAX' because INT_MAX is
+ * not safely convertible to float - it ends up as INT_MAX+1 so the comparison
+ * doesn't do what we want.
+ *
+ * Instead we do a round-trip conversion and return true if this differs by
+ * less than 1. This relies on high adjacent float values that differ by more
+ * than 1, actually being exact integers, so the round-trip doesn't change the
+ * value.
+ */
+static int float_can_be_int(float x)
+{
+	return fabsf(x - (float)(int) x) < 1;
+}
+
 static int extract_exif_resolution(jpeg_saved_marker_ptr marker, int *xres, int *yres)
 {
 	int is_big_endian;
@@ -240,7 +257,7 @@ static int extract_exif_resolution(jpeg_saved_marker_ptr marker, int *xres, int 
 		}
 	}
 
-	if (x_res <= 0 || x_res > INT_MAX || y_res <= 0 || y_res > INT_MAX)
+	if (x_res <= 0 || !float_can_be_int(x_res) || y_res <= 0 || !float_can_be_int(y_res))
 		return 0;
 	if (res_type == 2)
 	{

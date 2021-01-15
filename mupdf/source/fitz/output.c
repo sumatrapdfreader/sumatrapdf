@@ -229,6 +229,13 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 	if (!strcmp(filename, "/dev/null") || !fz_strcasecmp(filename, "nul:"))
 		return fz_new_output(ctx, 0, NULL, null_write, NULL, NULL);
 
+	/* If <append> is false, we use fopen()'s 'x' flag to force an error if
+	 * some other process creates the file immediately after we have removed
+	 * it - this avoids vunerability where a less-privilege process can create
+	 * a link and get us to overwrite a different file. See:
+	 * 	https://bugs.ghostscript.com/show_bug.cgi?id=701797
+	 * 	http://www.open-std.org/jtc1/sc22//WG14/www/docs/n1339.pdf
+	 */
 #ifdef _WIN32
 	/* Ensure we create a brand new file. We don't want to clobber our old file. */
 	if (!append)
@@ -237,7 +244,7 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 			if (errno != ENOENT)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot remove file '%s': %s", filename, strerror(errno));
 	}
-	file = fz_fopen_utf8(filename, append ? "rb+" : "wb+");
+	file = fz_fopen_utf8(filename, append ? "rb+" : "wb+x");
 	if (append)
 	{
 		if (file == NULL)
@@ -253,7 +260,7 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 			if (errno != ENOENT)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot remove file '%s': %s", filename, strerror(errno));
 	}
-	file = fopen(filename, append ? "rb+" : "wb+");
+	file = fopen(filename, append ? "rb+" : "wb+x");
 	if (file == NULL && append)
 		file = fopen(filename, "wb+");
 #endif

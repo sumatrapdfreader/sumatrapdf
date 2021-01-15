@@ -2325,7 +2325,7 @@ void pdf_update_appearance(fz_context *ctx, pdf_annot *annot)
 				{
 					pdf_update_button_appearance(ctx, annot);
 					pdf_clean_obj(ctx, annot->obj);
-					return;
+					break;
 				}
 			}
 

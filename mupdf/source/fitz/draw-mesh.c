@@ -182,7 +182,7 @@ prepare_mesh_vertex(fz_context *ctx, void *arg, fz_vertex *v, const float *input
 	if (shade->use_function)
 	{
 		float f = input[0];
-		if (shade->type == 5)
+		if (shade->type >= 4 && shade->type <= 7)
 			f = (f - shade->u.m.c0[0]) / (shade->u.m.c1[0] - shade->u.m.c0[0]);
 		output[0] = f * 255;
 	}
