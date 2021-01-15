@@ -385,7 +385,6 @@ subarea_drop(fz_context *ctx, void *state)
 static fz_stream *
 subarea_stream(fz_context *ctx, fz_stream *stm, fz_image *image, const fz_irect *subarea, int l2factor)
 {
-	fz_stream *sstm = NULL;
 	subarea_state *state;
 	int f = 1<<l2factor;
 	int stream_w = (image->w + f - 1)>>l2factor;
@@ -412,16 +411,7 @@ subarea_stream(fz_context *ctx, fz_stream *stm, fz_image *image, const fz_irect 
 	state->stride = stride;
 	state->nread = stride;
 
-	fz_var(sstm);
-
-	fz_try(ctx)
-		sstm = fz_new_stream(ctx, state, subarea_next, subarea_drop);
-	fz_catch(ctx)
-	{
-		fz_free(ctx, state);
-		fz_rethrow(ctx);
-	}
-	return sstm;
+	return fz_new_stream(ctx, state, subarea_next, subarea_drop);
 }
 
 typedef struct
@@ -492,7 +482,6 @@ subsample_next(fz_context *ctx, fz_stream *stm, size_t len)
 static fz_stream *
 subsample_stream(fz_context *ctx, fz_stream *src, int w, int h, int n, int l2extra)
 {
-	fz_stream *stm;
 	l2sub_state *state = fz_malloc(ctx, sizeof(l2sub_state) + w*(size_t)(n<<l2extra));
 
 	state->src = src;
@@ -503,15 +492,7 @@ subsample_stream(fz_context *ctx, fz_stream *src, int w, int h, int n, int l2ext
 	state->r = 0;
 	state->l2 = l2extra;
 
-	fz_try(ctx)
-		stm = fz_new_stream(ctx, state, subsample_next, subsample_drop);
-	fz_catch(ctx)
-	{
-		fz_free(ctx, state);
-		fz_rethrow(ctx);
-	}
-
-	return stm;
+	return fz_new_stream(ctx, state, subsample_next, subsample_drop);
 }
 
 /* l2factor is the amount of subsampling that the decoder is going to be
@@ -550,11 +531,11 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_compressed_image
 			subarea->y0 == 0 && subarea->y1 == image->h)
 			subarea = NULL;
 		else
-	{
-		fz_adjust_image_subarea(ctx, image, subarea, l2factor);
-		w = (subarea->x1 - subarea->x0);
-		h = (subarea->y1 - subarea->y0);
-	}
+		{
+			fz_adjust_image_subarea(ctx, image, subarea, l2factor);
+			w = (subarea->x1 - subarea->x0);
+			h = (subarea->y1 - subarea->y0);
+		}
 	}
 	w = (w + f - 1) >> l2factor;
 	h = (h + f - 1) >> l2factor;
@@ -947,7 +928,7 @@ fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subar
 	tile = image->get_pixmap(ctx, image, &key.rect, w, h, &l2factor_remaining);
 
 	/* Update the ctm to allow for subareas. */
-		update_ctm_for_subarea(ctm, &key.rect, image->w, image->h);
+	update_ctm_for_subarea(ctm, &key.rect, image->w, image->h);
 
 	/* l2factor_remaining is updated to the amount of subscaling left to do */
 	assert(l2factor_remaining >= 0 && l2factor_remaining <= 6);

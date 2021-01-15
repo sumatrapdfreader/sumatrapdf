@@ -1,4 +1,4 @@
-.TH MUPDF 1 "Jul 30, 2019"
+.TH MUPDF 1 "Jan 12, 2021"
 .\" Please adjust this date whenever revising the manpage.
 .\" no hyphenation
 .nh
@@ -191,6 +191,15 @@ Toggle ICC color mode.
 .B e
 Toggle spot color mode.
 .TP
+.B A
+Set bit of anti-aliasing to use. The default is 8.
+0 means no anti-aliasing,
+9 means no anti-aliasing, centre-of-pixel rule,
+10 means no anti-aliasing, any-part-of-a-pixel rule.
+.TP
+.B P
+Show page number and total number of pages.
+.TP
 .B S
 Save updated document file.
 .TP
@@ -208,4 +217,4 @@ file to be reloaded automatically, for use in e.g.\& build scripts.
 .BR mutool (1).
 
 .SH AUTHOR
-MuPDF is Copyright 2006\(en2019 Artifex Software, Inc.
+MuPDF is Copyright 2006\(en2021 Artifex Software, Inc.

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mutool info</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>mutool info</h1>
+</header>
+
+<article>
+
+<p>
+The 'mutool info' command shows info about the objects on pages in input file.
+For each page the page object number is shown and then detailed information about
+the desired objects.
+
+<pre>
+mutool info [options] <i>input</i> [pages]
+</pre>
+
+<p>
+The command line options are:
+
+<dl>
+<dt><i>input</i>
+	<dd>Input PDF file name.
+<dt>[pages]
+	<dd>Comma separated list of page ranges. The first page is "1", and the last page is "N". The default is "1-N".
+<dt>-p <i>password</i>
+	<dd>Password to use for password protected PDF documents.
+</dl>
+
+<dl>
+<dt>-F
+	<dd>List fonts used (name and object number).
+<dt>-I
+	<dd>List images used (compression, size, bit depth, colorspace and object number).
+<dt>-M
+	<dd>List page sizes used.
+<dt>-P
+	<dd>List patterns used (type, pattern dictionary object numbers).
+<dt>-S
+	<dd>List shading used (type and shading dictionary object number).
+<dt>-X
+	<dd>List form and postscript objects used (type and shading dictionary object number).
+</dl>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2021 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

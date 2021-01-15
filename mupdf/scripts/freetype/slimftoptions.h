@@ -20,6 +20,3 @@
 #undef T1_CONFIG_OPTION_NO_MM_SUPPORT
 
 #undef CFF_CONFIG_OPTION_OLD_ENGINE
-
-/* Temporary workaround for freetype bug #57519 */
-#define T1_CONFIG_OPTION_OLD_ENGINE 1

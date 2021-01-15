@@ -418,7 +418,6 @@ fz_unpack_stream(fz_context *ctx, fz_stream *src, int depth, int w, int h, int n
 	int src_stride = (w*depth*n+7)>>3;
 	int dst_stride;
 	unpack_state *state;
-	fz_stream *dst;
 	fz_unpack_line_fn unpack_line = NULL;
 	int scale = 1;
 
@@ -465,13 +464,5 @@ fz_unpack_stream(fz_context *ctx, fz_stream *src, int depth, int w, int h, int n
 	state->src_stride = src_stride;
 	state->dst_stride = dst_stride;
 
-	fz_try(ctx)
-		dst = fz_new_stream(ctx, state, unpack_next, unpack_drop);
-	fz_catch(ctx)
-	{
-		fz_free(ctx, state);
-		fz_rethrow(ctx);
-	}
-
-	return dst;
+	return fz_new_stream(ctx, state, unpack_next, unpack_drop);
 }

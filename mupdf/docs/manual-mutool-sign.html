@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mutool sign</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>mutool sign</h1>
+</header>
+
+<article>
+
+<p>
+The 'mutool sign' command reads an input PDF file and by default prints
+information about each signature field object. The command applies to the
+signature field objects given, or every signature field if none are
+specified. Given suitable option signature fields can be verified, cleared
+or signed using a given certificate and certificate password.
+
+<pre>
+mutool sign [options] <i>input</i> [signature object numbers]
+</pre>
+
+<p>
+The command line options are:
+
+<dl>
+<dt>-v
+	<dd>Verify each signature field and check whether the document has
+	changed since signing.
+
+<dt>-c
+	<dd>Revert each signed signature field back to its unsigned state.
+
+<dt>-s <i>certificate file</i>
+	<dd>Sign each signature field with the certificate in the given
+	file.
+
+<dt>-P <i>certificate password</i>
+	<dd>The password used together with the certificate to sign a
+	signature field.
+
+<dt>-p password
+	<dd> Use the specified password if the input PDF file is encrypted.
+
+<dt><i>input</i>
+	<dd>Input PDF file name.
+</dl>
+
+<dl>
+<dt>-o <i>filename</i>
+	<dd>The output PDF file name.
+</dl>
+
+<p>
+Signing digital signatures in MuPDF requires that you have a PFX certificate.
+You can create a self-signed certificate using OpenSSL by following these steps:
+
+<pre>
+1) Generate a self-signed certificate and private key:
+
+$ openssl req -x509 -days 365 -newkey rsa:2048 -keyout cert.pem -out cert.pem
+
+2) Convert to PFX format:
+
+$ openssl pkcs12 -export -in cert.pem -out cert.pfx
+</pre>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2021 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

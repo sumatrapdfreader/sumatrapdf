@@ -48,7 +48,10 @@ The command line options are:
 
 <dl>
 <dt>-A <i>bits</i>
-	<dd>Number of bits of anti-aliasing to use (0 to 8) when rendering to image based formats. The default is 8.
+	<dd>Number of bits of anti-aliasing to use (0 to 10) when rendering to image based formats. The default is 8.
+	0 means no anti-aliasing,
+	9 means no anti-aliasing, centre-of-pixel rule,
+	10 means no anti-aliasing, any-part-of-a-pixel rule.
 <dt>-W <i>width</i>
 	<dd>Page width in points for EPUB layout.
 <dt>-H <i>height</i>
