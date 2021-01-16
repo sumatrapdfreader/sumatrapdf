@@ -1759,8 +1759,16 @@ void
 pdf_clear_annot_quad_points(fz_context *ctx, pdf_annot *annot)
 {
 	check_allowed_subtypes(ctx, annot, PDF_NAME(QuadPoints), quad_point_subtypes);
-	pdf_dict_del(ctx, annot->obj, PDF_NAME(QuadPoints));
-	pdf_dirty_annot(ctx, annot);
+	begin_annot_op(ctx, annot, "Clear quad points");
+	fz_try(ctx)
+	{
+		pdf_dict_del(ctx, annot->obj, PDF_NAME(QuadPoints));
+		pdf_dirty_annot(ctx, annot);
+	}
+	fz_always(ctx)
+		end_annot_op(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 void

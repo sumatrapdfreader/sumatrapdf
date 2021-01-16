@@ -773,24 +773,32 @@ pdf_redact_page(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_redact_o
 	if (!has_redactions)
 		return 0;
 
-	pdf_filter_page_contents(ctx, doc, page, &filter);
-	pdf_redact_page_links(ctx, doc, page);
-
-	annot = pdf_first_annot(ctx, page);
-	while (annot)
+	pdf_begin_operation(ctx, doc, "Redact page");
+	fz_try(ctx)
 	{
-		if (pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)) == PDF_NAME(Redact))
-		{
-			pdf_delete_annot(ctx, page, annot);
-			annot = pdf_first_annot(ctx, page);
-		}
-		else
-		{
-			annot = pdf_next_annot(ctx, annot);
-		}
-	}
+		pdf_filter_page_contents(ctx, doc, page, &filter);
+		pdf_redact_page_links(ctx, doc, page);
 
-	doc->redacted = 1;
+		annot = pdf_first_annot(ctx, page);
+		while (annot)
+		{
+			if (pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)) == PDF_NAME(Redact))
+			{
+				pdf_delete_annot(ctx, page, annot);
+				annot = pdf_first_annot(ctx, page);
+			}
+			else
+			{
+				annot = pdf_next_annot(ctx, annot);
+			}
+		}
+
+		doc->redacted = 1;
+	}
+	fz_always(ctx)
+		pdf_end_operation(ctx, doc);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
 	return 1;
 }

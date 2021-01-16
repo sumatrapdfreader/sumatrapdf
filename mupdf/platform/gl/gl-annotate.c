@@ -110,11 +110,11 @@ static void save_pdf_options(void)
 		if (pdf_count_signatures(ctx, pdf))
 		{
 			if (can_be_incremental)
-			ui_label("WARNING: Saving non-incrementally will break existing signatures");
+				ui_label("WARNING: Saving non-incrementally will break existing signatures");
 			else
 				ui_label("WARNING: Saving will break existing signatures");
 		}
-		}
+	}
 	fz_catch(ctx)
 	{
 		/* Ignore the error. */
@@ -140,7 +140,7 @@ static void save_pdf_options(void)
 	{
 		ui_spacer();
 		ui_checkbox("Linearize", &save_opts.do_linear);
-		ui_checkbox("Garbage collect", &save_opts.do_garbage);
+		ui_checkbox_aux("Garbage collect", &save_opts.do_garbage, pdf->redacted);
 		ui_checkbox("Clean syntax", &save_opts.do_clean);
 		ui_checkbox("Sanitize syntax", &save_opts.do_sanitize);
 
@@ -234,12 +234,12 @@ static void slow_operation_dialog(void)
 	ui_panel_begin(0, ui.gridsize, 0, 0, 0);
 	{
 		ui_layout(R, NONE, S, 0, 0);
-	if (ui_button("Cancel"))
-	{
-		ui.dialog = NULL;
-		run_slow_operation_step(1);
-		return;
-	}
+		if (ui_button("Cancel"))
+		{
+			ui.dialog = NULL;
+			run_slow_operation_step(1);
+			return;
+		}
 	}
 	ui_panel_end();
 
@@ -1262,7 +1262,7 @@ void do_redact_panel(void)
 	enum pdf_annot_type subtype;
 	pdf_annot *annot;
 	int idx;
-		int im_choice;
+	int im_choice;
 	int i;
 
 	int num_redact = 0;
@@ -1303,27 +1303,27 @@ void do_redact_panel(void)
 		render_page();
 	}
 
-		ui_spacer();
+	ui_spacer();
 
 	ui_label("When Redacting:");
 	ui_checkbox("Draw black boxes", &redact_opts.black_boxes);
-		im_choice = ui_select("Redact/IM", im_redact_names[redact_opts.image_method], im_redact_names, nelem(im_redact_names));
-		if (im_choice != -1)
-			redact_opts.image_method = im_choice;
+	im_choice = ui_select("Redact/IM", im_redact_names[redact_opts.image_method], im_redact_names, nelem(im_redact_names));
+	if (im_choice != -1)
+		redact_opts.image_method = im_choice;
 
-		ui_spacer();
+	ui_spacer();
 
 	if (ui_button_aux("Redact Page", num_redact == 0))
-		{
-			selected_annot = NULL;
-			trace_action("page.applyRedactions(%s, %d);\n",
-				redact_opts.black_boxes ? "true" : "false",
-				redact_opts.image_method);
-			pdf_redact_page(ctx, pdf, page, &redact_opts);
-			trace_page_update();
-			load_page();
-			render_page();
-		}
+	{
+		selected_annot = NULL;
+		trace_action("page.applyRedactions(%s, %d);\n",
+			redact_opts.black_boxes ? "true" : "false",
+			redact_opts.image_method);
+		pdf_redact_page(ctx, pdf, page, &redact_opts);
+		trace_page_update();
+		load_page();
+		render_page();
+	}
 
 	if (ui_button_aux("Redact Document", !pdf_has_redactions))
 	{
@@ -1335,7 +1335,7 @@ void do_redact_panel(void)
 
 	ui_list_begin(&annot_list, num_redact, 0, ui.lineheight * 10 + 4);
 	for (idx=0, annot = pdf_first_annot(ctx, page); annot; ++idx, annot = pdf_next_annot(ctx, annot))
-		{
+	{
 		char buf[50];
 		int num = pdf_to_num(ctx, annot->obj);
 		subtype = pdf_annot_type(ctx, annot);
@@ -1370,7 +1370,7 @@ void do_redact_panel(void)
 			if (ui_button("Clear"))
 			{
 				trace_action("annot.clearQuadPoints();\n");
-			pdf_clear_annot_quad_points(ctx, selected_annot);
+				pdf_clear_annot_quad_points(ctx, selected_annot);
 			}
 			if (ui_button("Done"))
 				is_draw_mode = 0;
@@ -1384,13 +1384,13 @@ void do_redact_panel(void)
 		ui_spacer();
 
 		if (ui_button("Delete"))
-			{
+		{
 			trace_action("page.deleteAnnotation(annot);\n");
 			pdf_delete_annot(ctx, page, selected_annot);
 			selected_annot = NULL;
 			render_page();
 			return;
-			}
+		}
 
 		if (selected_annot && selected_annot->needs_new_ap)
 		{

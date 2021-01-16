@@ -220,9 +220,15 @@ pdf_new_indirect(fz_context *ctx, pdf_document *doc, int num, int gen)
 {
 	pdf_obj_ref *obj;
 	if (num < 0 || num > PDF_MAX_OBJECT_NUMBER)
-		fz_throw(ctx, FZ_ERROR_SYNTAX, "invalid object number (%d)", num);
+	{
+		fz_warn(ctx, "invalid object number (%d)", num);
+		return PDF_NULL;
+	}
 	if (gen < 0 || gen > PDF_MAX_GEN_NUMBER)
-		fz_throw(ctx, FZ_ERROR_SYNTAX, "invalid generation number (%d)", gen);
+	{
+		fz_warn(ctx, "invalid generation number (%d)", gen);
+		return PDF_NULL;
+	}
 	obj = Memento_label(fz_malloc(ctx, sizeof(pdf_obj_ref)), "pdf_obj(indirect)");
 	obj->super.refs = 1;
 	obj->super.kind = PDF_INDIRECT;

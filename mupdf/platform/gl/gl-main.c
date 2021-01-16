@@ -200,10 +200,12 @@ static int oldseparations = 1, currentseparations = 1;
 static fz_location oldpage = {0,0}, currentpage = {0,0};
 static float oldzoom = DEFRES, currentzoom = DEFRES;
 static float oldrotate = 0, currentrotate = 0;
+static int page_contents_changed = 0;
 
 static fz_output *trace_file = NULL;
 static int isfullscreen = 0;
 static int showoutline = 0;
+static int showundo = 0;
 static int showlinks = 0;
 static int showsearch = 0;
 static int showinfo = 0;
@@ -527,6 +529,7 @@ static char *help_dialog_text =
 	"F1 - show this message\n"
 	"i - show document information\n"
 	"o - show document outline\n"
+	"u - show undo history\n"
 	"a - show annotation editor\n"
 	"R - show redaction editor\n"
 	"L - highlight links\n"
@@ -781,17 +784,22 @@ void transform_page(void)
 	draw_page_bounds = fz_transform_rect(page_bounds, draw_page_ctm);
 }
 
-void load_page(void)
+static void clear_selected_annot(void)
 {
-	fz_irect area;
-
-	if (trace_file)
-		trace_action("page = doc.loadPage(%d);\n", fz_page_number_from_location(ctx, doc, currentpage));
-
 	/* clear all editor selections */
 	if (selected_annot && pdf_annot_type(ctx, selected_annot) == PDF_ANNOT_WIDGET)
 		pdf_annot_event_blur(ctx, selected_annot);
 	selected_annot = NULL;
+}
+
+void load_page(void)
+{
+	fz_irect area;
+
+	clear_selected_annot();
+
+	if (trace_file)
+		trace_action("page = doc.loadPage(%d);\n", fz_page_number_from_location(ctx, doc, currentpage));
 
 	fz_drop_stext_page(ctx, page_text);
 	page_text = NULL;
@@ -940,7 +948,8 @@ void render_page_if_changed(void)
 		oldtint != currenttint ||
 		oldicc != currenticc ||
 		oldseparations != currentseparations ||
-		oldaa != currentaa)
+		oldaa != currentaa ||
+		page_contents_changed)
 	{
 		render_page();
 		oldpage = currentpage;
@@ -951,6 +960,7 @@ void render_page_if_changed(void)
 		oldicc = currenticc;
 		oldseparations = currentseparations;
 		oldaa = currentaa;
+		page_contents_changed = 0;
 	}
 }
 
@@ -1164,6 +1174,67 @@ static void do_outline(fz_outline *node)
 	ui_splitter(&outline_w, 150, 500, R);
 }
 
+static void do_undo(void)
+{
+	static struct list list;
+	int count = 0;
+	int pos;
+	int i;
+	int desired = -1;
+
+	if (pdf)
+		pos = pdf_undoredo_state(ctx, pdf, &count);
+	else
+		pos = 0;
+	ui_layout(L, BOTH, NW, 0, 0);
+	ui_panel_begin(outline_w, 0, 4, 4, 1);
+	ui_layout(T, X, NW, 2, 2);
+	ui_label("Undo history");
+	i = count < 30 ? 30 : count;
+	ui_list_begin(&list, i, 0, ui.lineheight * i + 4);
+
+	for (i = 0; i < count+1; i++)
+	{
+		const char *op;
+
+		if (i == 0)
+			op = "Original Document";
+		else
+			op = pdf_undoredo_step(ctx, pdf, i-1);
+		if (ui_list_item(&list, (void *)(intptr_t)(i+1), op, i <= pos))
+		{
+			desired = i;
+		}
+	}
+
+	ui_list_end(&list);
+
+	if (ui_button_aux("Undo", pos == 0))
+		desired = pos-1;
+
+	if (ui_button_aux("Redo", pos == count))
+		desired = pos+1;
+
+	if (desired != -1 && desired != pos)
+	{
+		page_contents_changed = 1;
+		while (pos > desired)
+		{
+			pdf_undo(ctx, pdf);
+			pos--;
+		}
+		while (pos < desired)
+		{
+			pdf_redo(ctx, pdf);
+			pos++;
+		}
+		clear_selected_annot();
+		load_page();
+	}
+
+	ui_panel_end();
+}
+
 static void do_links(fz_link *link)
 {
 	fz_rect bounds;
@@ -1346,7 +1417,7 @@ static void toggle_fullscreen(void)
 
 static void shrinkwrap(void)
 {
-	int w = page_tex.w + (showoutline ? outline_w + 4 : 0) + (showannotate ? annotate_w : 0);
+	int w = page_tex.w + (showoutline || showundo ? outline_w + 4 : 0) + (showannotate ? annotate_w : 0);
 	int h = page_tex.h;
 	if (screen_w > 0 && w > screen_w)
 		w = screen_w;
@@ -1500,9 +1571,18 @@ static void toggle_outline(void)
 	if (outline)
 	{
 		showoutline = !showoutline;
+		showundo = 0;
 		if (canvas_w == page_tex.w && canvas_h == page_tex.h)
 			shrinkwrap();
 	}
+}
+
+static void toggle_undo(void)
+{
+	showundo = !showundo;
+	showoutline = 0;
+	if (canvas_w == page_tex.w && canvas_h == page_tex.h)
+		shrinkwrap();
 }
 
 void toggle_annotate(int mode)
@@ -1630,6 +1710,7 @@ static void do_app(void)
 		case 'a': toggle_annotate(ANNOTATE_MODE_NORMAL); break;
 		case 'R': toggle_annotate(ANNOTATE_MODE_REDACT); break;
 		case 'o': toggle_outline(); break;
+		case 'u': toggle_undo(); break;
 		case 'L': showlinks = !showlinks; break;
 		case 'F': showform = !showform; break;
 		case 'i': showinfo = !showinfo; break;
@@ -2153,6 +2234,8 @@ void do_main(void)
 
 	if (showoutline)
 		do_outline(outline);
+	else if (showundo)
+		do_undo();
 
 	if (!eqloc(oldpage, currentpage) || oldseparations != currentseparations || oldicc != currenticc)
 	{
