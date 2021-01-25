@@ -294,17 +294,20 @@ pdf_open_raw_filter(fz_context *ctx, fz_stream *file_stm, pdf_document *doc, pdf
 	if (num > 0 && num < pdf_xref_len(ctx, doc))
 	{
 		x = pdf_get_xref_entry(ctx, doc, num);
-		*orig_num = x->num;
-		*orig_gen = x->gen;
-		if (x->stm_buf)
-			return fz_open_buffer(ctx, x->stm_buf);
 	}
-	else
+	if (x == NULL)
 	{
 		/* We only end up here when called from pdf_open_stream_with_offset to parse new format XRef sections. */
 		/* New style XRef sections must have generation number 0. */
 		*orig_num = num;
 		*orig_gen = 0;
+	}
+	else
+	{
+		*orig_num = x->num;
+		*orig_gen = x->gen;
+		if (x->stm_buf)
+			return fz_open_buffer(ctx, x->stm_buf);
 	}
 
 	hascrypt = pdf_stream_has_crypt(ctx, stmobj);
@@ -416,9 +419,6 @@ pdf_open_raw_stream_number(fz_context *ctx, pdf_document *doc, int num)
 	pdf_xref_entry *x;
 	int orig_num, orig_gen;
 
-	if (num <= 0 || num >= pdf_xref_len(ctx, doc))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "object id out of range (%d 0 R)", num);
-
 	x = pdf_cache_object(ctx, doc, num);
 	if (x->stm_ofs == 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "object is not a stream");
@@ -430,9 +430,6 @@ static fz_stream *
 pdf_open_image_stream(fz_context *ctx, pdf_document *doc, int num, fz_compression_params *params)
 {
 	pdf_xref_entry *x;
-
-	if (num <= 0 || num >= pdf_xref_len(ctx, doc))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "object id out of range (%d 0 R)", num);
 
 	x = pdf_cache_object(ctx, doc, num);
 	if (x->stm_ofs == 0 && x->stm_buf == NULL)

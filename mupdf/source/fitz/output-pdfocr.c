@@ -400,55 +400,187 @@ pdfocr_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band
 	}
 }
 
+enum
+{
+	WORD_CONTAINS_L2R = 1,
+	WORD_CONTAINS_R2L = 2,
+	WORD_CONTAINS_T2B = 4,
+	WORD_CONTAINS_B2T = 8
+};
+
+typedef struct word_t
+{
+	struct word_t *next;
+	float bbox[4];
+	int dirn;
+	int len;
+	int chars[1];
+} word_t;
+
 typedef struct
 {
 	fz_buffer *buf;
 	pdfocr_band_writer *writer;
+
+	/* We collate the current word into the following fields: */
 	int word_max;
 	int word_len;
 	int *word_chars;
 	float word_bbox[4];
+	int word_dirn;
+	int word_prev_char_bbox[4];
+
+	/* When we finish a word, we try to add it to the line. If the
+	 * word fits onto the end of the existing line, great. If not,
+	 * we flush the entire line, and start a new one just with the
+	 * new word. This enables us to output a whole line at once,
+	 * which is beneficial to avoid jittering the font sizes
+	 * up/down, which looks bad when we try to select text in the
+	 * produced PDF. */
+	word_t *line;
+	word_t **line_tail;
+	float line_bbox[4];
+
 	float cur_size;
 	float cur_scale;
 	float tx, ty;
 } char_callback_data_t;
 
 static void
-flush_word(fz_context *ctx,
-	char_callback_data_t *cb)
+flush_words(fz_context *ctx, char_callback_data_t *cb)
 {
-	float size = cb->word_bbox[3] - cb->word_bbox[1];
-	float scale;
-	int i, len = cb->word_len;
-	float x, y;
+	float size;
 
-	if (cb->word_len == 0 || size == 0)
+	if (cb->line == NULL)
 		return;
 
-	if (size != cb->cur_size)
+	size = cb->line_bbox[3] - cb->line_bbox[1];
+
+	if (size != 0 && size != cb->cur_size)
 	{
 		fz_append_printf(ctx, cb->buf, "/F0 %g Tf\n", size);
 		cb->cur_size = size;
 	}
-	scale = (cb->word_bbox[2] - cb->word_bbox[0]) / size / len * 200;
-	if (scale != cb->cur_scale)
+
+	/* Guard against division by 0. This makes no difference to the
+	 * actual calculation as if size is 0, word->bbox[2] == word->bbox[0]
+	 * too. */
+	if (size == 0)
+		size = 1;
+	while (cb->line)
 	{
-		fz_append_printf(ctx, cb->buf, "%d Tz\n", (int)scale);
-		cb->cur_scale = scale;
+		word_t *word = cb->line;
+		float x, y;
+		int i, len = word->len;
+		float scale;
+
+		scale = (word->bbox[2] - word->bbox[0]) / size / len * 200;
+		if (scale != 0)
+		{
+			if (scale != cb->cur_scale)
+			{
+				fz_append_printf(ctx, cb->buf, "%d Tz\n", (int)scale);
+				cb->cur_scale = scale;
+			}
+
+			if ((word->dirn & (WORD_CONTAINS_R2L | WORD_CONTAINS_L2R)) == WORD_CONTAINS_R2L)
+			{
+				/* Purely R2L text */
+				x = word->bbox[0];
+				y = cb->line_bbox[1];
+				fz_append_printf(ctx, cb->buf, "%g %g Td\n", x-cb->tx, y-cb->ty);
+				cb->tx = x;
+				cb->ty = y;
+
+				/* Tesseract has sent us R2L text in R2L order (i.e. in Logical order).
+				 * We want to output it in that same logical order, but PDF operators
+				 * all move the point as if outputting L2R. We can either reverse the
+				 * order of chars (bad, because of cut/paste) or we can perform
+				 * gymnastics with the position. We opt for the latter. */
+				fz_append_printf(ctx, cb->buf, "[");
+				for (i = 0; i < len; i++)
+				{
+					if (i == 0)
+					{
+						if (len > 1)
+							fz_append_printf(ctx, cb->buf, "%d", -500*(len-1));
+					}
+					else
+						fz_append_printf(ctx, cb->buf, "%d", 1000);
+					fz_append_printf(ctx, cb->buf, "<%04x>", word->chars[i]);
+				}
+				fz_append_printf(ctx, cb->buf, "]TJ\n");
+			}
+			else
+			{
+				/* L2R (or mixed) text */
+				x = word->bbox[0];
+				y = cb->line_bbox[1];
+				fz_append_printf(ctx, cb->buf, "%g %g Td\n", x-cb->tx, y-cb->ty);
+				cb->tx = x;
+				cb->ty = y;
+
+				fz_append_printf(ctx, cb->buf, "<");
+				for (i = 0; i < len; i++)
+					fz_append_printf(ctx, cb->buf, "%04x", word->chars[i]);
+				fz_append_printf(ctx, cb->buf, ">Tj\n");
+			}
+		}
+
+		cb->line = word->next;
+		fz_free(ctx, word);
 	}
 
-	x = cb->word_bbox[0];
-	y = cb->word_bbox[1];
-	fz_append_printf(ctx, cb->buf, "%g %g Td\n", x-cb->tx, y-cb->ty);
-	cb->tx = x;
-	cb->ty = y;
+	cb->line_tail = &cb->line;
+	cb->line = NULL;
+}
 
-	fz_append_printf(ctx, cb->buf, "<");
-	for (i = 0; i < len; i++)
-		fz_append_printf(ctx, cb->buf, "%04x", cb->word_chars[i]);
-	fz_append_printf(ctx, cb->buf, ">Tj\n");
+static void
+queue_word(fz_context *ctx, char_callback_data_t *cb)
+{
+	word_t *word;
 
+	if (cb->word_len == 0)
+		return;
+
+	word = fz_malloc(ctx, sizeof(*word) + (cb->word_len-1)*sizeof(int));
+	word->next = NULL;
+	word->len = cb->word_len;
+	memcpy(word->bbox, cb->word_bbox, 4*sizeof(float));
+	memcpy(word->chars, cb->word_chars, cb->word_len * sizeof(int));
+	word->dirn = cb->word_dirn;
 	cb->word_len = 0;
+	cb->word_dirn = 0;
+
+	/* Can we put the new word onto the end of the existing line? */
+	if (cb->line != NULL &&
+		word->bbox[1] <= cb->line_bbox[3] &&
+		word->bbox[3] >= cb->line_bbox[1] &&
+		(word->bbox[0] >= cb->line_bbox[2] || word->bbox[2] <= cb->line_bbox[0]))
+	{
+		/* Can append. */
+		if (word->bbox[0] < cb->line_bbox[0])
+			cb->line_bbox[0] = word->bbox[0];
+		if (word->bbox[1] < cb->line_bbox[1])
+			cb->line_bbox[1] = word->bbox[1];
+		if (word->bbox[2] > cb->line_bbox[2])
+			cb->line_bbox[2] = word->bbox[2];
+		if (word->bbox[3] > cb->line_bbox[3])
+			cb->line_bbox[3] = word->bbox[3];
+	} else
+	{
+		fz_try(ctx)
+			flush_words(ctx, cb);
+		fz_catch(ctx)
+		{
+			fz_free(ctx, word);
+			fz_rethrow(ctx);
+		}
+		memcpy(cb->line_bbox, word->bbox, 4*sizeof(float));
+	}
+
+	*cb->line_tail = word;
+	cb->line_tail = &word->next;
 }
 
 static void
@@ -471,8 +603,36 @@ char_callback(fz_context *ctx, void *arg, int unicode,
 		bbox[2] != cb->word_bbox[2] ||
 		bbox[3] != cb->word_bbox[3])
 	{
-		flush_word(ctx, cb);
+		queue_word(ctx, cb);
 		memcpy(cb->word_bbox, bbox, 4 * sizeof(float));
+	}
+
+	if (cb->word_len == 0)
+	{
+		cb->word_dirn = 0;
+		memcpy(cb->word_prev_char_bbox, char_bbox, 4 * sizeof(int));
+	} else
+	{
+		int ox = cb->word_prev_char_bbox[0] + cb->word_prev_char_bbox[2];
+		int oy = cb->word_prev_char_bbox[1] + cb->word_prev_char_bbox[3];
+		int x = char_bbox[0] + char_bbox[2] - ox;
+		int y = char_bbox[1] + char_bbox[3] - oy;
+		int ax = x < 0 ? -x : x;
+		int ay = y < 0 ? -y : y;
+		if (ax > ay)
+		{
+			if (x > 0)
+				cb->word_dirn |= WORD_CONTAINS_L2R;
+			else if (x < 0)
+				cb->word_dirn |= WORD_CONTAINS_R2L;
+		}
+		else if (ay < ax)
+		{
+			if (y > 0)
+				cb->word_dirn |= WORD_CONTAINS_T2B;
+			else if (y < 0)
+				cb->word_dirn |= WORD_CONTAINS_B2T;
+		}
 	}
 
 	if (cb->word_max == cb->word_len)
@@ -528,6 +688,8 @@ pdfocr_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 	{
 		cb.writer = writer;
 		cb.buf = buf = fz_new_buffer(ctx, 0);
+		cb.line_tail = &cb.line;
+		cb.word_dirn = 0;
 		fz_append_printf(ctx, buf, "q\n%g 0 0 %g 0 0 cm\n", 72.0f/xres, 72.0f/yres);
 		for (i = 0; i < strips; i++)
 		{
@@ -545,7 +707,8 @@ pdfocr_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 		fz_append_printf(ctx, buf, "Q\nBT\n3 Tr\n");
 
 		ocr_recognise(ctx, writer->tessapi, writer->ocrbitmap, char_callback, pdfocr_progress, &cb);
-		flush_word(ctx, &cb);
+		queue_word(ctx, &cb);
+		flush_words(ctx, &cb);
 		fz_append_printf(ctx, buf, "ET\n");
 
 		len = fz_buffer_storage(ctx, buf, &data);

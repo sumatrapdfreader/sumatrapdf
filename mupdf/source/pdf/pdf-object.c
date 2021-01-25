@@ -756,7 +756,7 @@ void pdf_begin_operation(fz_context *ctx, pdf_document *doc, const char *operati
 	operation = fz_strdup(ctx, operation_);
 
 #ifdef PDF_DEBUG_JOURNAL
-	fz_write_printf(ctx, fz_stdods(ctx), "Beginning: %s\n", operation);
+	fz_write_printf(ctx, fz_stddbg(ctx), "Beginning: %s\n", operation);
 #endif
 
 	fz_var(entry);
@@ -807,7 +807,7 @@ void pdf_begin_implicit_operation(fz_context *ctx, pdf_document *doc)
 		return;
 
 #ifdef PDF_DEBUG_JOURNAL
-	fz_write_printf(ctx, fz_stdods(ctx), "Beginning: <implicit>\n");
+	fz_write_printf(ctx, fz_stddbg(ctx), "Beginning: <implicit>\n");
 #endif
 }
 
@@ -864,7 +864,7 @@ void pdf_end_operation(fz_context *ctx, pdf_document *doc)
 	if (entry == NULL || entry->head != NULL)
 	{
 #ifdef PDF_DEBUG_JOURNAL
-		fz_write_printf(ctx, fz_stdods(ctx), "Ending!\n");
+		fz_write_printf(ctx, fz_stddbg(ctx), "Ending!\n");
 		dump_changes(ctx, doc, entry);
 #endif
 		return;
@@ -872,7 +872,7 @@ void pdf_end_operation(fz_context *ctx, pdf_document *doc)
 
 	/* Didn't actually change anything! Remove the empty entry. */
 #ifdef PDF_DEBUG_JOURNAL
-	fz_write_printf(ctx, fz_stdods(ctx), "Ending Empty!\n");
+	fz_write_printf(ctx, fz_stddbg(ctx), "Ending Empty!\n");
 #endif
 	if (doc->journal->head == entry)
 	{
@@ -999,7 +999,7 @@ void pdf_undo(fz_context *ctx, pdf_document *doc)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Already at start of history");
 
 #ifdef PDF_DEBUG_JOURNAL
-	fz_write_printf(ctx, fz_stdods(ctx), "Undo!\n");
+	fz_write_printf(ctx, fz_stddbg(ctx), "Undo!\n");
 #endif
 
 	doc->journal->current = entry->prev;
@@ -1023,7 +1023,7 @@ void pdf_redo(fz_context *ctx, pdf_document *doc)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't redo during an operation!");
 
 #ifdef PDF_DEBUG_JOURNAL
-	fz_write_printf(ctx, fz_stdods(ctx), "Redo!\n");
+	fz_write_printf(ctx, fz_stddbg(ctx), "Redo!\n");
 #endif
 
 	entry = doc->journal->current;
@@ -1147,6 +1147,25 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 
 	if (doc->journal && doc->journal->nesting == 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Can't alter an object other than in an operation");
+
+	if (doc->local_xref)
+	{
+		/* We have a local_xref. If it's in force, then we're
+		 * ready for alteration already. */
+		if (doc->local_xref_nesting > 0)
+		{
+			pdf_xref_ensure_local_object(ctx, doc, parent);
+			return;
+		}
+		else
+		{
+			/* The local xref isn't in force, and we're about
+			 * to edit the document. This invalidates it, so
+			 * throw it away. */
+			pdf_drop_local_xref(ctx, doc->local_xref);
+			doc->local_xref = NULL;
+		}
+	}
 
 	/*
 		Otherwise we need to ensure that the containing hierarchy of objects
@@ -2070,6 +2089,7 @@ pdf_deep_copy_obj(fz_context *ctx, pdf_obj *obj)
 			fz_rethrow(ctx);
 		}
 
+		DICT(dict)->parent_num = DICT(obj)->parent_num;
 		return dict;
 	}
 	else if (obj->kind == PDF_ARRAY)
@@ -2091,6 +2111,7 @@ pdf_deep_copy_obj(fz_context *ctx, pdf_obj *obj)
 			fz_rethrow(ctx);
 		}
 
+		ARRAY(arr)->parent_num = ARRAY(obj)->parent_num;
 		return arr;
 	}
 	else

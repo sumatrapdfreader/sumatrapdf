@@ -16,6 +16,8 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 	if (cookie && page->super.incomplete)
 		cookie->incomplete = 1;
 
+	pdf_annot_push_local_xref(ctx, annot);
+
 	/* Widgets only get displayed if they have both a T and a TF flag,
 	 * apparently */
 	if (pdf_name_eq(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype)), PDF_NAME(Widget)))
@@ -24,7 +26,10 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 		pdf_obj *t = pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(T));
 
 		if (ft == NULL || t == NULL)
+		{
+			pdf_annot_pop_local_xref(ctx, annot);
 			return;
+		}
 	}
 
 	fz_try(ctx)
@@ -56,6 +61,7 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 	{
 		pdf_drop_processor(ctx, proc);
 		fz_drop_default_colorspaces(ctx, default_cs);
+		pdf_annot_pop_local_xref(ctx, annot);
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);

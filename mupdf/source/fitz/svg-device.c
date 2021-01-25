@@ -1128,7 +1128,7 @@ svg_dev_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, 
 	/* The first thing we do is to capture the contents of the pattern
 	 * as a symbol we can reuse. */
 	out = start_def(ctx, sdev);
-	fz_write_printf(ctx, out, "<symbol id=\"pac%d\">\n", t->pattern);
+	fz_write_printf(ctx, out, "<symbol id=\"pac%d\" style=\"overflow:visible\">\n", t->pattern);
 
 	return 0;
 }

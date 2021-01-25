@@ -567,10 +567,22 @@ pdf_widget *pdf_next_widget(fz_context *ctx, pdf_widget *widget)
 
 enum pdf_widget_type pdf_widget_type(fz_context *ctx, pdf_widget *widget)
 {
-	pdf_obj *subtype = pdf_dict_get(ctx, widget->obj, PDF_NAME(Subtype));
-	if (pdf_name_eq(ctx, subtype, PDF_NAME(Widget)))
-		return pdf_field_type(ctx, widget->obj);
-	return PDF_WIDGET_TYPE_BUTTON;
+	enum pdf_widget_type ret = PDF_WIDGET_TYPE_BUTTON;
+
+	pdf_annot_push_local_xref(ctx, widget);
+
+	fz_try(ctx)
+	{
+		pdf_obj *subtype = pdf_dict_get(ctx, widget->obj, PDF_NAME(Subtype));
+		if (pdf_name_eq(ctx, subtype, PDF_NAME(Widget)))
+			ret = pdf_field_type(ctx, widget->obj);
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, widget);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ret;
 }
 
 static int set_validated_field_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, const char *text, int ignore_trigger_events)
@@ -1006,12 +1018,12 @@ int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *ne
 	{
 		if (!widget->ignore_trigger_events)
 		{
-			event.value = pdf_field_value(ctx, widget->obj);
+			event.value = pdf_annot_field_value(ctx, widget);
 			event.change = new_value;
 			event.selStart = 0;
 			event.selEnd = (int)strlen(event.value);
 			event.willCommit = 0;
-			rc = pdf_field_event_keystroke(ctx, doc, widget->obj, &event);
+			rc = pdf_annot_field_event_keystroke(ctx, doc, widget, &event);
 			if (rc)
 			{
 				if (event.newChange)
@@ -1023,7 +1035,7 @@ int pdf_set_text_field_value(fz_context *ctx, pdf_widget *widget, const char *ne
 				event.selEnd = -1;
 				event.willCommit = 1;
 				event.newChange = NULL;
-				rc = pdf_field_event_keystroke(ctx, doc, widget->obj, &event);
+				rc = pdf_annot_field_event_keystroke(ctx, doc, widget, &event);
 				if (rc)
 					rc = pdf_set_annot_field_value(ctx, doc, widget, event.value, 0);
 			}
@@ -1909,58 +1921,82 @@ void pdf_page_event_close(fz_context *ctx, pdf_page *page)
 	pdf_execute_action(ctx, page->doc, page->obj, "AA/C");
 }
 
+static void
+annot_execute_action(fz_context *ctx, pdf_annot *annot, const char *act)
+{
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+		pdf_execute_action(ctx, annot->page->doc, annot->obj, act);
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
 void pdf_annot_event_enter(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/E");
+	annot_execute_action(ctx, annot, "AA/E");
 }
 
 void pdf_annot_event_exit(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/X");
+	annot_execute_action(ctx, annot, "AA/X");
 }
 
 void pdf_annot_event_down(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/D");
+	annot_execute_action(ctx, annot, "AA/D");
 }
 
 void pdf_annot_event_up(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_obj *action = pdf_dict_get(ctx, annot->obj, PDF_NAME(A));
-	if (action)
-		pdf_execute_action_chain(ctx, annot->page->doc, annot->obj, "A", action);
-	else
-		pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/U");
+	pdf_obj *action;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		action = pdf_dict_get(ctx, annot->obj, PDF_NAME(A));
+		if (action)
+			pdf_execute_action_chain(ctx, annot->page->doc, annot->obj, "A", action);
+		else
+			pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/U");
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 void pdf_annot_event_focus(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/Fo");
+	annot_execute_action(ctx, annot, "AA/Fo");
 }
 
 void pdf_annot_event_blur(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/Bl");
+	annot_execute_action(ctx, annot, "AA/Bl");
 }
 
 void pdf_annot_event_page_open(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/PO");
+	annot_execute_action(ctx, annot, "AA/PO");
 }
 
 void pdf_annot_event_page_close(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/PC");
+	annot_execute_action(ctx, annot, "AA/PC");
 }
 
 void pdf_annot_event_page_visible(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/PV");
+	annot_execute_action(ctx, annot, "AA/PV");
 }
 
 void pdf_annot_event_page_invisible(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_execute_action(ctx, annot->page->doc, annot->obj, "AA/PI");
+	annot_execute_action(ctx, annot, "AA/PI");
 }
 
 int pdf_field_event_keystroke(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_keystroke_event *evt)
@@ -1977,6 +2013,22 @@ int pdf_field_event_keystroke(fz_context *ctx, pdf_document *doc, pdf_obj *field
 		}
 	}
 	return 1;
+}
+
+int pdf_annot_field_event_keystroke(fz_context *ctx, pdf_document *doc, pdf_annot *annot, pdf_keystroke_event *evt)
+{
+	int ret;
+
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+		ret = pdf_field_event_keystroke(ctx, doc, annot->obj, evt);
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ret;
 }
 
 char *pdf_field_event_format(fz_context *ctx, pdf_document *doc, pdf_obj *field)

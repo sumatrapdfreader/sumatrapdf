@@ -9,10 +9,10 @@
 
 #include "mupdf/helpers/pkcs7-openssl.h"
 
-static void trace_field_value(pdf_obj *field, const char *set_value)
+static void trace_field_value(pdf_annot *annot, const char *set_value)
 {
-	const char *get_value = pdf_field_value(ctx, field);
-	trace_action("print('Set field %d:', repr(%q), repr(%q));\n", pdf_to_num(ctx, field), set_value, get_value);
+	const char *get_value = pdf_annot_field_value(ctx, annot);
+	trace_action("print('Set field %d:', repr(%q), repr(%q));\n", pdf_to_num(ctx, annot->obj), set_value, get_value);
 }
 
 static pdf_widget *sig_widget;
@@ -198,11 +198,11 @@ static void sig_verify_dialog(void)
 			ui_layout(L, NONE, S, 0, 0);
 			if (!sig_readonly)
 			{
-			if (ui_button("Clear"))
-			{
-				ui.dialog = NULL;
-				do_clear_signature();
-			}
+				if (ui_button("Clear"))
+				{
+					ui.dialog = NULL;
+					do_clear_signature();
+				}
 			}
 			ui_layout(R, NONE, S, 0, 0);
 			if (ui_button("Close") || (!ui.focus && ui.key == KEY_ESCAPE))
@@ -236,7 +236,7 @@ static void show_sig_dialog(pdf_widget *widget)
 			fz_free(ctx, sig_designated_name);
 			dn = pdf_signature_get_signatory(ctx, verifier, pdf, widget->obj);
 			if (dn)
-			sig_designated_name = pdf_signature_format_designated_name(ctx, dn);
+				sig_designated_name = pdf_signature_format_designated_name(ctx, dn);
 			else
 				sig_designated_name = fz_strdup(ctx, "Signature information missing.");
 			pdf_signature_drop_designated_name(ctx, dn);
@@ -259,8 +259,8 @@ static struct input tx_input;
 
 static void tx_dialog(void)
 {
-	int ff = pdf_field_flags(ctx, tx_widget->obj);
-	const char *label = pdf_field_label(ctx, tx_widget->obj);
+	int ff = pdf_annot_field_flags(ctx, tx_widget);
+	const char *label = pdf_annot_field_label(ctx, tx_widget);
 	int tx_h = (ff & PDF_TX_FIELD_IS_MULTILINE) ? 10 : 1;
 	int lbl_h = ui_break_lines((char*)label, NULL, 20, 394, NULL);
 	int is;
@@ -282,7 +282,7 @@ static void tx_dialog(void)
 			{
 				trace_action("widget.setTextValue(%q);\n", tx_input.text);
 				pdf_set_text_field_value(ctx, tx_widget, tx_input.text);
-				trace_field_value(tx_widget->obj, tx_input.text);
+				trace_field_value(tx_widget, tx_input.text);
 				if (pdf_update_page(ctx, tx_widget->page))
 				{
 					trace_page_update();
@@ -298,7 +298,7 @@ static void tx_dialog(void)
 
 void show_tx_dialog(pdf_widget *widget)
 {
-	ui_input_init(&tx_input, pdf_field_value(ctx, widget->obj));
+	ui_input_init(&tx_input, pdf_annot_field_value(ctx, widget));
 	ui.focus = &tx_input;
 	ui.dialog = tx_dialog;
 	tx_widget = widget;
@@ -330,7 +330,7 @@ static void ch_dialog(void)
 		{
 			trace_action("widget.setChoiceValue(%q);\n", options[choice]);
 			pdf_set_choice_field_value(ctx, ch_widget, options[choice]);
-			trace_field_value(ch_widget->obj, options[choice]);
+			trace_field_value(ch_widget, options[choice]);
 		}
 
 		ui_layout(B, X, NW, 2, 2);
@@ -452,7 +452,7 @@ void do_widget_canvas(fz_irect canvas_area)
 			}
 			else
 			{
-				if (pdf_field_flags(ctx, widget->obj) & PDF_FIELD_IS_READ_ONLY)
+				if (pdf_annot_field_flags(ctx, widget) & PDF_FIELD_IS_READ_ONLY)
 					continue;
 
 				switch (pdf_widget_type(ctx, widget))

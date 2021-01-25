@@ -263,6 +263,8 @@ int pdf_field_event_validate(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 void pdf_field_event_calculate(fz_context *ctx, pdf_document *doc, pdf_obj *field);
 char *pdf_field_event_format(fz_context *ctx, pdf_document *doc, pdf_obj *field);
 
+int pdf_annot_field_event_keystroke(fz_context *ctx, pdf_document *doc, pdf_annot *annot, pdf_keystroke_event *evt);
+
 /* Call these to trigger actions from various UI events: */
 
 void pdf_document_event_will_close(fz_context *ctx, pdf_document *doc);

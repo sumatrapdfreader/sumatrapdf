@@ -17,8 +17,18 @@ void pdf_empty_store(fz_context *ctx, pdf_document *doc);
 enum { PDF_SIMPLE_FONT_RESOURCE=1, PDF_CID_FONT_RESOURCE=2, PDF_CJK_FONT_RESOURCE=3 };
 enum { PDF_SIMPLE_ENCODING_LATIN, PDF_SIMPLE_ENCODING_GREEK, PDF_SIMPLE_ENCODING_CYRILLIC };
 
-pdf_obj *pdf_find_font_resource(fz_context *ctx, pdf_document *doc, int type, int encoding, fz_font *item, unsigned char md5[16]);
-pdf_obj *pdf_insert_font_resource(fz_context *ctx, pdf_document *doc, unsigned char md5[16], pdf_obj *obj);
+/* The contents of this structure are defined publically just so we can
+ * define this on the stack. */
+typedef struct
+{
+	unsigned char digest[16];
+	int type;
+	int encoding;
+	pdf_xref *local_xref;
+} pdf_font_resource_key;
+
+pdf_obj *pdf_find_font_resource(fz_context *ctx, pdf_document *doc, int type, int encoding, fz_font *item, pdf_font_resource_key *key);
+pdf_obj *pdf_insert_font_resource(fz_context *ctx, pdf_document *doc, pdf_font_resource_key *key, pdf_obj *obj);
 void pdf_drop_resource_tables(fz_context *ctx, pdf_document *doc);
 
 typedef struct pdf_function pdf_function;

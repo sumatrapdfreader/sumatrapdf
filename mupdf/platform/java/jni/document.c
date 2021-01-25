@@ -921,3 +921,104 @@ FUN(Document_search)(JNIEnv *env, jobject self, jint chapter, jint page, jstring
 
 	return to_QuadArray_safe(ctx, env, hits, n);
 }
+
+JNIEXPORT void JNICALL
+FUN(Document_enableJournal)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+
+	if (!ctx || !doc) return;
+
+	pdf_document_enable_journal(ctx, doc);
+}
+
+JNIEXPORT jint JNICALL
+FUN(Document_undoRedoPosition)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+	int steps;
+
+	if (!ctx || !doc) return;
+
+	return pdf_undoredo_state(ctx, doc, &steps);
+}
+
+JNIEXPORT jint JNICALL
+FUN(Document_undoRedoSteps)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+	int steps;
+
+	if (!ctx || !doc) return;
+
+	(void)pdf_undoredo_state(ctx, doc, &steps);
+
+	return steps;
+}
+
+JNIEXPORT jstring JNICALL
+FUN(Document_undoRedoStep)(JNIEnv *env, jobject self, jint n)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+	char *step;
+
+	if (!ctx || !doc) return;
+
+	step = pdf_undoredo_step(ctx, doc, n);
+
+	return (*env)->NewStringUTF(env, step);
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(Document_canUndo)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+
+	if (!ctx || !doc) return;
+
+	return pdf_can_undo(ctx, doc);
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(Document_canRedo)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+
+	if (!ctx || !doc) return;
+
+	return pdf_can_redo(ctx, doc);
+}
+
+JNIEXPORT void JNICALL
+FUN(Document_undo)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+
+	if (!ctx || !doc) return;
+
+	fz_try(ctx)
+		pdf_undo(ctx, doc);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(Document_redo)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_document *doc = from_Document(env, self);
+
+	if (!ctx || !doc) return;
+
+	fz_try(ctx)
+		pdf_redo(ctx, doc);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}

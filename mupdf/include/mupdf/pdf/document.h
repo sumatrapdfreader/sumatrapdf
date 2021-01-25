@@ -301,6 +301,11 @@ struct pdf_document
 	int num_incremental_sections;
 	int xref_base;
 	int disallow_new_increments;
+
+	/* The local_xref is only active, if local_xref_nesting >= 0 */
+	pdf_xref *local_xref;
+	int local_xref_nesting;
+
 	pdf_xref *xref_sections;
 	pdf_xref *saved_xref_sections;
 	int *xref_index;

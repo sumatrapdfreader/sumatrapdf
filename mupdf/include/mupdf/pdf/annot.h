@@ -524,6 +524,10 @@ void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const c
 
 void pdf_dirty_annot(fz_context *ctx, pdf_annot *annot);
 
+int pdf_annot_field_flags(fz_context *ctx, pdf_annot *annot);
+const char *pdf_annot_field_value(fz_context *ctx, pdf_annot *annot);
+const char *pdf_annot_field_label(fz_context *ctx, pdf_annot *widget);
+
 int pdf_set_annot_field_value(fz_context *ctx, pdf_document *doc, pdf_widget *widget, const char *text, int ignore_trigger_events);
 
 /*
@@ -531,6 +535,16 @@ int pdf_set_annot_field_value(fz_context *ctx, pdf_document *doc, pdf_widget *wi
 */
 void pdf_update_appearance(fz_context *ctx, pdf_annot *annot);
 void pdf_update_signature_appearance(fz_context *ctx, pdf_annot *annot, const char *name, const char *text, const char *date);
+
+/*
+	Start/Stop using the annotation-local xref. This allows us to
+	generate appearance streams that don't actually hit the underlying
+	document.
+*/
+void pdf_annot_push_local_xref(fz_context *ctx, pdf_annot *annot);
+void pdf_annot_pop_local_xref(fz_context *ctx, pdf_annot *annot);
+void pdf_annot_ensure_local_xref(fz_context *ctx, pdf_annot *annot);
+void pdf_annot_pop_and_discard_local_xref(fz_context *ctx, pdf_annot *annot);
 
 /*
 	Regenerate any appearance streams that are out of date and check for

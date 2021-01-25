@@ -196,4 +196,15 @@ public class Document
 	public boolean isPDF() {
 		return false;
 	}
+
+	public native void enableJournal();
+
+	public native int undoRedoPosition();
+	public native int undoRedoSteps();
+	public native String undoRedoStep(int);
+
+	public native boolean canUndo();
+	public native boolean canRedo();
+	public native void undo();
+	public native void redo();
 }
