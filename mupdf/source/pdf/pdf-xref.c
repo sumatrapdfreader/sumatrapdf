@@ -1190,6 +1190,8 @@ pdf_read_new_xref(fz_context *ctx, pdf_document *doc, pdf_lexbuf *buf)
 	{
 		ofs = fz_tell(ctx, doc->file);
 		trailer = pdf_parse_ind_obj(ctx, doc, doc->file, buf, &num, &gen, &stm_ofs, NULL);
+		if (num == 0)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Trailer object number cannot be 0\n");
 	}
 	fz_catch(ctx)
 	{
@@ -2543,10 +2545,14 @@ pdf_update_stream(fz_context *ctx, pdf_document *doc, pdf_obj *obj, fz_buffer *n
 		x = pdf_get_xref_entry(ctx, doc, num);
 	}
 
+	/* Write the Length first, as this has the effect of moving the
+	 * old object into the journal for undo. This also moves the
+	 * stream buffer with it, keeping it consistent. */
+	pdf_dict_put_int(ctx, obj, PDF_NAME(Length), (int)fz_buffer_storage(ctx, newbuf, NULL));
+
 	fz_drop_buffer(ctx, x->stm_buf);
 	x->stm_buf = fz_keep_buffer(ctx, newbuf);
 
-	pdf_dict_put_int(ctx, obj, PDF_NAME(Length), (int)fz_buffer_storage(ctx, newbuf, NULL));
 	if (!compressed)
 	{
 		pdf_dict_del(ctx, obj, PDF_NAME(Filter));

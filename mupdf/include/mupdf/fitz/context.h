@@ -190,6 +190,9 @@ fz_context *fz_clone_context(fz_context *ctx);
 	The context and all of its global state is freed, and any
 	buffered warnings are flushed (see fz_flush_warnings). If NULL
 	is passed in nothing will happen.
+
+	Must not be called for a context that is being used in an active
+	fz_try(), fz_always() or fz_catch() block.
 */
 void fz_drop_context(fz_context *ctx);
 

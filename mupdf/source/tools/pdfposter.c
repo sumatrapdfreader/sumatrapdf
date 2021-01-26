@@ -12,14 +12,14 @@
 static int x_factor = 0;
 static int y_factor = 0;
 
-static void usage(void)
+static int usage(void)
 {
 	fprintf(stderr,
 		"usage: mutool poster [options] input.pdf [output.pdf]\n"
 		"\t-p -\tpassword\n"
 		"\t-x\tx decimation factor\n"
 		"\t-y\ty decimation factor\n");
-	exit(1);
+	return 1;
 }
 
 static void
@@ -191,12 +191,12 @@ int pdfposter_main(int argc, char **argv)
 		case 'p': password = fz_optarg; break;
 		case 'x': x_factor = atoi(fz_optarg); break;
 		case 'y': y_factor = atoi(fz_optarg); break;
-		default: usage(); break;
+		default: return usage();
 		}
 	}
 
 	if (argc - fz_optind < 1)
-		usage();
+		return usage();
 
 	infile = argv[fz_optind++];
 

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static void usage(void)
+static int usage(void)
 {
 	fprintf(stderr,
 		"usage: mutool merge [-o output.pdf] [-O options] input.pdf [pages] [input2.pdf] [pages2] ...\n"
@@ -20,7 +20,7 @@ static void usage(void)
 		"\tpages\tcomma separated list of page numbers and ranges\n\n"
 		);
 	fputs(fz_pdf_write_options_usage, stderr);
-	exit(1);
+	return 1;
 }
 
 static fz_context *ctx = NULL;
@@ -76,12 +76,12 @@ int pdfmerge_main(int argc, char **argv)
 		{
 		case 'o': output = fz_optarg; break;
 		case 'O': flags = fz_optarg; break;
-		default: usage(); break;
+		default: return usage();
 		}
 	}
 
 	if (fz_optind == argc)
-		usage();
+		return usage();
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)

@@ -17,7 +17,7 @@ static int showdecode = 1;
 static int tight = 0;
 static int showcolumn;
 
-static void usage(void)
+static int usage(void)
 {
 	fprintf(stderr,
 		"usage: mutool show [options] file.pdf ( trailer | xref | pages | grep | outline | js | form | <path> ) *\n"
@@ -31,7 +31,7 @@ static void usage(void)
 		"\t\tpath elements separated by '.' or '/'. Path elements must be\n"
 		"\t\tarray index numbers, dictionary property names, or '*'.\n"
 	);
-	exit(1);
+	return 1;
 }
 
 static void showtrailer(void)
@@ -578,12 +578,12 @@ int pdfshow_main(int argc, char **argv)
 		case 'b': showbinary = 1; break;
 		case 'e': showdecode = 0; break;
 		case 'g': tight = 1; break;
-		default: usage(); break;
+		default: return usage();
 		}
 	}
 
 	if (fz_optind == argc)
-		usage();
+		return usage();
 
 	filename = argv[fz_optind++];
 

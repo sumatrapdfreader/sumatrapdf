@@ -173,7 +173,6 @@ infousage(void)
 		"\t-X\tlist form and postscript xobjects\n"
 		"\tpages\tcomma separated list of page numbers and ranges\n"
 		);
-	exit(1);
 }
 
 static void
@@ -921,7 +920,10 @@ showinfo(fz_context *ctx, globals *glo, char *filename, int show, const char *pa
 	fz_output *out = glo->out;
 
 	if (!glo->doc)
+	{
 		infousage();
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot show info without document");
+	}
 
 	allpages = !strcmp(pagelist, "1-N");
 
@@ -1024,12 +1026,15 @@ int pdfinfo_main(int argc, char **argv)
 		case 'p': password = fz_optarg; break;
 		default:
 			infousage();
-			break;
+			return 1;
 		}
 	}
 
 	if (fz_optind == argc)
+	{
 		infousage();
+		return 1;
+	}
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)

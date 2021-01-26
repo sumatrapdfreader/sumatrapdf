@@ -13,13 +13,13 @@ static fz_context *ctx = NULL;
 static int dorgb = 0;
 static int doicc = 1;
 
-static void usage(void)
+static int usage(void)
 {
 	fprintf(stderr, "usage: mutool extract [options] file.pdf [object numbers]\n");
 	fprintf(stderr, "\t-p\tpassword\n");
 	fprintf(stderr, "\t-r\tconvert images to rgb\n");
 	fprintf(stderr, "\t-N\tdo not use ICC color conversions\n");
-	exit(1);
+	return 1;
 }
 
 static int isimage(pdf_obj *obj)
@@ -246,12 +246,12 @@ int pdfextract_main(int argc, char **argv)
 		case 'p': password = fz_optarg; break;
 		case 'r': dorgb++; break;
 		case 'N': doicc^=1; break;
-		default: usage(); break;
+		default: return usage();
 		}
 	}
 
 	if (fz_optind == argc)
-		usage();
+		return usage();
 
 	infile = argv[fz_optind++];
 

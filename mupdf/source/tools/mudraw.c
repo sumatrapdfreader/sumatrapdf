@@ -383,7 +383,7 @@ static struct {
 	char *maxlayoutfilename;
 } timing;
 
-static void usage(void)
+static int usage(void)
 {
 	fprintf(stderr,
 		"mudraw version " FZ_VERSION "\n"
@@ -467,7 +467,7 @@ static void usage(void)
 		"\n"
 		"\tpages\tcomma separated list of page numbers and ranges\n"
 		);
-	exit(1);
+	return 1;
 }
 
 static int gettime(void)
@@ -1816,7 +1816,7 @@ int mudraw_main(int argc, char **argv)
 	{
 		switch (c)
 		{
-		default: usage(); break;
+		default: return usage();
 
 		case 'q': quiet = 1; break;
 
@@ -1908,7 +1908,7 @@ int mudraw_main(int argc, char **argv)
 	}
 
 	if (fz_optind == argc)
-		usage();
+		return usage();
 
 	if (num_workers > 0)
 	{

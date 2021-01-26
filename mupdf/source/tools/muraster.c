@@ -481,7 +481,7 @@ static struct {
 
 #define stringify(A) #A
 
-static void usage(void)
+static int usage(void)
 {
 	fprintf(stderr,
 		"muraster version " FZ_VERSION "\n"
@@ -520,7 +520,7 @@ static void usage(void)
 		"\n"
 		"\tpages\tcomma separated list of page numbers and ranges\n"
 		);
-	exit(1);
+	return 1;
 }
 
 static int gettime(void)
@@ -1442,7 +1442,7 @@ int main(int argc, char **argv)
 	{
 		switch (c)
 		{
-		default: usage(); break;
+		default: return usage();
 
 		case 'p': password = fz_optarg; break;
 
@@ -1506,7 +1506,7 @@ int main(int argc, char **argv)
 		height = y_resolution * PAPER_HEIGHT;
 
 	if (fz_optind == argc)
-		usage();
+		return usage();
 
 	if (min_band_height <= 0)
 	{

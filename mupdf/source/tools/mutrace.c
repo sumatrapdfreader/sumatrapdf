@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static void usage(void)
+static int usage(void)
 {
 	fprintf(stderr,
 		"Usage: mutool trace [options] file [pages]\n"
@@ -20,7 +20,7 @@ static void usage(void)
 		"\n"
 		"\tpages\tcomma separated list of page numbers and ranges\n"
 		);
-	exit(1);
+	return 1;
 }
 
 static float layout_w = FZ_DEFAULT_LAYOUT_W;
@@ -95,7 +95,7 @@ int mutrace_main(int argc, char **argv)
 	{
 		switch (c)
 		{
-		default: usage(); break;
+		default: return usage();
 		case 'p': password = fz_optarg; break;
 
 		case 'W': layout_w = fz_atof(fz_optarg); break;
@@ -109,7 +109,7 @@ int mutrace_main(int argc, char **argv)
 	}
 
 	if (fz_optind == argc)
-		usage();
+		return usage();
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)
