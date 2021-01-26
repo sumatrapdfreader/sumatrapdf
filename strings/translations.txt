@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8ac8192007619f53526c1bcfa9dcf39cb6d8a6c6
+5835da158df2345a8cdd12e11f8900feeb84c07b
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -7359,7 +7359,7 @@ co:&Ingrandamentu persunalizatu…\tCtrl+Y
 cy:&Addasu Chwyddo...\tCtrl+Y
 cz:Vlastní &měřítko...\tCtrl+Y
 de:&Zoomfaktor…\tStrg+Y
-dk:Brugerdefineret &zoom...\tCtrl+Y
+dk:Tilpasset &zoom...\tCtrl+Y
 el:&Προσαρμοσμένο ζουμ...\tCtrl+Y
 es:&Zoom personalizado...\tCtrl+Y
 et:&Muu suurendus...\tCtrl+Y
@@ -7671,7 +7671,7 @@ co:U lettore PDF predefinitu ùn pò micca esse cambiatu in modu purtabule
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 cz:V přenosném režimu nelze měnit výchozí PDF prohlížeč
 de:Standardanwendung im portablen Modus nicht veränderbar
-dk:Standardlæseren for PDF kan ikke ændres i mobil tilstand
+dk:Standard PDF-læser kan ikke ændres i mobil tilstand
 el:Δε μπορεί να γίνει συσχετισμός σε portable mode
 es:No se puede cambiar el lector PDF predeterminado en el modo portátil
 et:PDF-failide vaikeprogrammi ei saa muuta portatiivses režiimis
@@ -8437,7 +8437,7 @@ co:Sbagliu di caricamentu di %s
 cy:Gwall llwytho %s
 cz:Chyba při načítání %s
 de:Fehler beim Öffnen von %s
-dk:Side %s kan ikke indlæses
+dk:Fejl ved indlæsning %s
 el:Σφάλμα φόρτωσης του %s
 es:Error al cargar %s
 et:Viga laadimisel: %s
@@ -8689,7 +8689,7 @@ co:&Screnu sanu\tF11
 cy:Sgrin Lawn\tCtrl+Shift+L
 cz:&Celá obrazovka\tF11
 de:&Vollbild\tF11
-dk:F&uldskærmsvisning\tCtrl+skift+L
+dk:F&uldskærm\tF11
 el:&Πλήρης οθόνη\tCtrl+Shift+L
 es:Pantalla completa\tCtrl+Mayús+L
 et:&Täisekraanvaade\tCtrl+Shift+L
@@ -8828,7 +8828,7 @@ co:Fiascu per squassà e chjave di registru di u disinstalladore
 cy:Methwyd dileu allweddi cofrestrfa'r dadosodwr
 cz:Nepodařilo se smazat odinslační záznamy z registru
 de:Fehler beim Löschen der Deinstallations-Registry-Schlüssel
-dk:Kunne ikke slette afinstalleringsnøgler i registreringsdatabasen
+dk:Sletning af afinstalleringsnøgler i registreringsdatabasen fejlede
 el:Απέτυχε η διαγραφή των κλειδιών μητρώου απεγκατάστασης
 es:Error al eliminar las claves del registro del desinstalador
 et:Ei õnnestu kustutada eemaldusprogrammi registrivõtmeid

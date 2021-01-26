@@ -5864,12 +5864,12 @@ const char * gTranslations_dk =
   "Oprettet:\0"\
   "Aktuel fil\0"\
   "Mark\303\270rposition:\0"\
-  "Brugerdefineret &zoom...\tCtrl+Y\0"\
+  "Tilpasset &zoom...\tCtrl+Y\0"\
   "M\303\270rk\0"\
   "M\303\270rkere\0"\
   "Standard&layout:\0"\
   "Standard&zoom\0"\
-  "Standardl\303\246seren for PDF kan ikke \303\246ndres i mobil tilstand\0"\
+  "Standard PDF-l\303\246ser kan ikke \303\246ndres i mobil tilstand\0"\
   "N\303\246gtede tilladelser:\0"\
   "DjVu-dokumenter\0"\
   "Dokumentegenskaber\0"\
@@ -5883,14 +5883,14 @@ const char * gTranslations_dk =
   "Indtast kodeord\0"\
   "Indtast kodeord for %s\0"\
   "Indtast den kommandolinje du vil bruge, n\303\245r du dobbeltklikker p\303\245 PDF-dokumentet:\0"\
-  "Side %s kan ikke indl\303\246ses\0"\
+  "Fejl ved indl\303\246sning %s\0"\
   "Udvid\0"\
   "Eksporter bogm\303\246rker\0"\
   "Bogm&\303\246rker\0"\
   "F&remad\tAlt+->\0"\
-  "F&uldsk\303\246rmsvisning\tCtrl+skift+L\0"\
+  "F&uldsk\303\246rm\tF11\0"\
   "Modst\303\245ende\0"\
-  "Kunne ikke slette afinstalleringsn\303\270gler i registreringsdatabasen\0"\
+  "Sletning af afinstalleringsn\303\270gler i registreringsdatabasen fejlede\0"\
   "Kunne ikke registreres som standardprogram p\303\245 win 10\0"\
   "Fejl ved omd\303\270bning af fil!\0"\
   "Kunne ikke gemme filen\0"\
