@@ -301,7 +301,7 @@ pdf_xref_entry *pdf_get_xref_entry(fz_context *ctx, pdf_document *doc, int i)
 	if (i < 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Negative object number requested");
 
-	if (i <= doc->max_xref_len)
+	if (i < doc->max_xref_len)
 		j = doc->xref_index[i];
 	else
 		j = 0;
@@ -662,6 +662,8 @@ void pdf_xref_ensure_local_object(fz_context *ctx, pdf_document *doc, int num)
 			break;
 	}
 	/* sub == NULL implies we did not find it */
+	if (sub == NULL)
+		return; /* No object to find */
 
 	/* Copy the object to the local section */
 	doc->xref_index[num] = 0;

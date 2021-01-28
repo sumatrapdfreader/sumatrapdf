@@ -282,6 +282,32 @@ multi-threaded operations run smoothly:
 	several different threads is perfectly acceptable as long as
 	there are safeguards in place to prevent the calls being
 	simultaneous.
+
+<li>	<p>
+	"An fz_locks_context must be supplied at context creation time,
+	unless MuPDF is to be used purely in a single thread at a time."
+
+	<p>
+	MuPDF needs to protect against unsafe access to certain structures/
+	resources/libraries from multiple threads. It does this by using
+	the user supplied locking functions. This holds true even when
+	using completely separate instances of MuPDF.
+
+<li>	<p>
+	"All contexts in use must share the same fz_locks_context (or
+	the underlying locks thereof)."
+
+	<p>
+	We strongly recommend that fz_new_context is called just once,
+	and fz_clone_context is called to generate new contexts from
+	that. This will automatically ensure that the same locking
+	mechanism is used in all MuPDF instances. For now, we do support
+	multiple completely independent contexts being created using
+	repeated calls to fz_new_context, but these MUST share the
+	same fz_locks_context (or at least depend upon the same underlying
+	locks). The facility to create different independent contexts
+	may be removed in future.
+
 </ol>
 
 <p>

@@ -440,6 +440,7 @@ typedef struct
 	word_t *line;
 	word_t **line_tail;
 	float line_bbox[4];
+	int line_dirn;
 
 	float cur_size;
 	float cur_scale;
@@ -454,19 +455,27 @@ flush_words(fz_context *ctx, char_callback_data_t *cb)
 	if (cb->line == NULL)
 		return;
 
-	size = cb->line_bbox[3] - cb->line_bbox[1];
-
-	if (size != 0 && size != cb->cur_size)
+	if ((cb->line_dirn & (WORD_CONTAINS_T2B | WORD_CONTAINS_B2T)) != 0)
 	{
-		fz_append_printf(ctx, cb->buf, "/F0 %g Tf\n", size);
-		cb->cur_size = size;
+		/* Vertical line */
+	}
+	else
+	{
+		/* Horizontal line */
+		size = cb->line_bbox[3] - cb->line_bbox[1];
+
+		if (size != 0 && size != cb->cur_size)
+		{
+			fz_append_printf(ctx, cb->buf, "/F0 %g Tf\n", size);
+			cb->cur_size = size;
+		}
+		/* Guard against division by 0. This makes no difference to the
+		 * actual calculation as if size is 0, word->bbox[2] == word->bbox[0]
+		 * too. */
+		if (size == 0)
+			size = 1;
 	}
 
-	/* Guard against division by 0. This makes no difference to the
-	 * actual calculation as if size is 0, word->bbox[2] == word->bbox[0]
-	 * too. */
-	if (size == 0)
-		size = 1;
 	while (cb->line)
 	{
 		word_t *word = cb->line;
@@ -474,56 +483,95 @@ flush_words(fz_context *ctx, char_callback_data_t *cb)
 		int i, len = word->len;
 		float scale;
 
-		scale = (word->bbox[2] - word->bbox[0]) / size / len * 200;
-		if (scale != 0)
+		if ((cb->line_dirn & (WORD_CONTAINS_T2B | WORD_CONTAINS_B2T)) != 0)
 		{
-			if (scale != cb->cur_scale)
+			/* Contains vertical text. */
+			size = (word->bbox[3] - word->bbox[1]) / len;
+			if (size == 0)
+				size = 1;
+			if (size != cb->cur_size)
 			{
-				fz_append_printf(ctx, cb->buf, "%d Tz\n", (int)scale);
-				cb->cur_scale = scale;
+				fz_append_printf(ctx, cb->buf, "/F0 %g Tf\n", size);
+				cb->cur_size = size;
 			}
 
-			if ((word->dirn & (WORD_CONTAINS_R2L | WORD_CONTAINS_L2R)) == WORD_CONTAINS_R2L)
+			/* Set the scale so that our glyphs fill the line bbox. */
+			scale = (cb->line_bbox[2] - cb->line_bbox[0]) / size * 200;
+			if (scale != 0)
 			{
-				/* Purely R2L text */
-				x = word->bbox[0];
-				y = cb->line_bbox[1];
-				fz_append_printf(ctx, cb->buf, "%g %g Td\n", x-cb->tx, y-cb->ty);
-				cb->tx = x;
-				cb->ty = y;
+				float letter_height = (word->bbox[3] - word->bbox[1]) / len;
 
-				/* Tesseract has sent us R2L text in R2L order (i.e. in Logical order).
-				 * We want to output it in that same logical order, but PDF operators
-				 * all move the point as if outputting L2R. We can either reverse the
-				 * order of chars (bad, because of cut/paste) or we can perform
-				 * gymnastics with the position. We opt for the latter. */
-				fz_append_printf(ctx, cb->buf, "[");
+				if (scale != cb->cur_scale)
+				{
+					fz_append_printf(ctx, cb->buf, "%d Tz\n", (int)scale);
+					cb->cur_scale = scale;
+				}
+
 				for (i = 0; i < len; i++)
 				{
-					if (i == 0)
-					{
-						if (len > 1)
-							fz_append_printf(ctx, cb->buf, "%d", -500*(len-1));
-					}
-					else
-						fz_append_printf(ctx, cb->buf, "%d", 1000);
-					fz_append_printf(ctx, cb->buf, "<%04x>", word->chars[i]);
-				}
-				fz_append_printf(ctx, cb->buf, "]TJ\n");
-			}
-			else
-			{
-				/* L2R (or mixed) text */
-				x = word->bbox[0];
-				y = cb->line_bbox[1];
-				fz_append_printf(ctx, cb->buf, "%g %g Td\n", x-cb->tx, y-cb->ty);
-				cb->tx = x;
-				cb->ty = y;
+					x = word->bbox[0];
+					y = word->bbox[1] + letter_height * i;
+					fz_append_printf(ctx, cb->buf, "%g %g Td\n", x-cb->tx, y-cb->ty);
+					cb->tx = x;
+					cb->ty = y;
 
-				fz_append_printf(ctx, cb->buf, "<");
-				for (i = 0; i < len; i++)
-					fz_append_printf(ctx, cb->buf, "%04x", word->chars[i]);
-				fz_append_printf(ctx, cb->buf, ">Tj\n");
+					fz_append_printf(ctx, cb->buf, "<%04x>Tj\n", word->chars[i]);
+				}
+			}
+		}
+		else
+		{
+			scale = (word->bbox[2] - word->bbox[0]) / size / len * 200;
+			if (scale != 0)
+			{
+				if (scale != cb->cur_scale)
+				{
+					fz_append_printf(ctx, cb->buf, "%d Tz\n", (int)scale);
+					cb->cur_scale = scale;
+				}
+
+				if ((word->dirn & (WORD_CONTAINS_R2L | WORD_CONTAINS_L2R)) == WORD_CONTAINS_R2L)
+				{
+					/* Purely R2L text */
+					x = word->bbox[0];
+					y = cb->line_bbox[1];
+					fz_append_printf(ctx, cb->buf, "%g %g Td\n", x-cb->tx, y-cb->ty);
+					cb->tx = x;
+					cb->ty = y;
+
+					/* Tesseract has sent us R2L text in R2L order (i.e. in Logical order).
+					 * We want to output it in that same logical order, but PDF operators
+					 * all move the point as if outputting L2R. We can either reverse the
+					 * order of chars (bad, because of cut/paste) or we can perform
+					 * gymnastics with the position. We opt for the latter. */
+					fz_append_printf(ctx, cb->buf, "[");
+					for (i = 0; i < len; i++)
+					{
+						if (i == 0)
+						{
+							if (len > 1)
+								fz_append_printf(ctx, cb->buf, "%d", -500*(len-1));
+						}
+						else
+							fz_append_printf(ctx, cb->buf, "%d", 1000);
+						fz_append_printf(ctx, cb->buf, "<%04x>", word->chars[i]);
+					}
+					fz_append_printf(ctx, cb->buf, "]TJ\n");
+				}
+				else
+				{
+					/* L2R (or mixed) text */
+					x = word->bbox[0];
+					y = cb->line_bbox[1];
+					fz_append_printf(ctx, cb->buf, "%g %g Td\n", x-cb->tx, y-cb->ty);
+					cb->tx = x;
+					cb->ty = y;
+
+					fz_append_printf(ctx, cb->buf, "<");
+					for (i = 0; i < len; i++)
+						fz_append_printf(ctx, cb->buf, "%04x", word->chars[i]);
+					fz_append_printf(ctx, cb->buf, ">Tj\n");
+				}
 			}
 		}
 
@@ -533,12 +581,14 @@ flush_words(fz_context *ctx, char_callback_data_t *cb)
 
 	cb->line_tail = &cb->line;
 	cb->line = NULL;
+	cb->line_dirn = 0;
 }
 
 static void
 queue_word(fz_context *ctx, char_callback_data_t *cb)
 {
 	word_t *word;
+	int line_is_v, line_is_h, word_is_v, word_is_h;
 
 	if (cb->word_len == 0)
 		return;
@@ -552,13 +602,19 @@ queue_word(fz_context *ctx, char_callback_data_t *cb)
 	cb->word_len = 0;
 	cb->word_dirn = 0;
 
+	line_is_v = !!(cb->line_dirn & (WORD_CONTAINS_B2T | WORD_CONTAINS_T2B));
+	word_is_v = !!(cb->line_dirn & (WORD_CONTAINS_B2T | WORD_CONTAINS_T2B));
+	line_is_h = !!(cb->line_dirn & (WORD_CONTAINS_L2R | WORD_CONTAINS_R2L));
+	word_is_h = !!(cb->line_dirn & (WORD_CONTAINS_L2R | WORD_CONTAINS_R2L));
+
 	/* Can we put the new word onto the end of the existing line? */
 	if (cb->line != NULL &&
+		!line_is_v && !word_is_v &&
 		word->bbox[1] <= cb->line_bbox[3] &&
 		word->bbox[3] >= cb->line_bbox[1] &&
 		(word->bbox[0] >= cb->line_bbox[2] || word->bbox[2] <= cb->line_bbox[0]))
 	{
-		/* Can append. */
+		/* Can append (horizontal motion). */
 		if (word->bbox[0] < cb->line_bbox[0])
 			cb->line_bbox[0] = word->bbox[0];
 		if (word->bbox[1] < cb->line_bbox[1])
@@ -567,7 +623,26 @@ queue_word(fz_context *ctx, char_callback_data_t *cb)
 			cb->line_bbox[2] = word->bbox[2];
 		if (word->bbox[3] > cb->line_bbox[3])
 			cb->line_bbox[3] = word->bbox[3];
-	} else
+	}
+	else if (cb->line != NULL &&
+		!line_is_h && !word_is_h &&
+		word->bbox[0] <= cb->line_bbox[2] &&
+		word->bbox[2] >= cb->line_bbox[0] &&
+		(word->bbox[1] >= cb->line_bbox[3] || word->bbox[3] <= cb->line_bbox[1]))
+	{
+		/* Can append (vertical motion). */
+		if (!word_is_v)
+			word->dirn |= WORD_CONTAINS_T2B;
+		if (word->bbox[0] < cb->line_bbox[0])
+			cb->line_bbox[0] = word->bbox[0];
+		if (word->bbox[1] < cb->line_bbox[1])
+			cb->line_bbox[1] = word->bbox[1];
+		if (word->bbox[2] > cb->line_bbox[2])
+			cb->line_bbox[2] = word->bbox[2];
+		if (word->bbox[3] > cb->line_bbox[3])
+			cb->line_bbox[3] = word->bbox[3];
+	}
+	else
 	{
 		fz_try(ctx)
 			flush_words(ctx, cb);
@@ -581,6 +656,7 @@ queue_word(fz_context *ctx, char_callback_data_t *cb)
 
 	*cb->line_tail = word;
 	cb->line_tail = &word->next;
+	cb->line_dirn |= word->dirn;
 }
 
 static void
@@ -611,7 +687,8 @@ char_callback(fz_context *ctx, void *arg, int unicode,
 	{
 		cb->word_dirn = 0;
 		memcpy(cb->word_prev_char_bbox, char_bbox, 4 * sizeof(int));
-	} else
+	}
+	else
 	{
 		int ox = cb->word_prev_char_bbox[0] + cb->word_prev_char_bbox[2];
 		int oy = cb->word_prev_char_bbox[1] + cb->word_prev_char_bbox[3];
@@ -690,6 +767,7 @@ pdfocr_write_trailer(fz_context *ctx, fz_band_writer *writer_)
 		cb.buf = buf = fz_new_buffer(ctx, 0);
 		cb.line_tail = &cb.line;
 		cb.word_dirn = 0;
+		cb.line_dirn = 0;
 		fz_append_printf(ctx, buf, "q\n%g 0 0 %g 0 0 cm\n", 72.0f/xres, 72.0f/yres);
 		for (i = 0; i < strips; i++)
 		{

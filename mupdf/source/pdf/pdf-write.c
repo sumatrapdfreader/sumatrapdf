@@ -1237,6 +1237,8 @@ add_linearization_objs(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 
 	fz_try(ctx)
 	{
+		pdf_xref_entry *xe;
+
 		/* Linearization params */
 		params_obj = pdf_new_dict(ctx, doc, 10);
 		params_ref = pdf_add_object(ctx, doc, params_obj);
@@ -1287,7 +1289,12 @@ add_linearization_objs(fz_context *ctx, pdf_document *doc, pdf_write_state *opts
 		pdf_dict_put(ctx, hint_obj, PDF_NAME(Filter), PDF_NAME(FlateDecode));
 		opts->hints_length = pdf_new_int(ctx, INT_MIN);
 		pdf_dict_put(ctx, hint_obj, PDF_NAME(Length), opts->hints_length);
-		pdf_get_xref_entry(ctx, doc, hint_num)->stm_ofs = 0;
+		xe = pdf_get_xref_entry(ctx, doc, hint_num);
+		xe->stm_ofs = 0;
+		/* Empty stream, required so that we write the object as
+		 * a stream during the first pass. Without this, offsets
+		 * for the xref will be wrong. */
+		xe->stm_buf = fz_new_buffer(ctx, 1);
 	}
 	fz_always(ctx)
 	{

@@ -1458,12 +1458,41 @@ static void password_dialog(void)
 	ui_dialog_end();
 }
 
+/* Parse "chapter:page" from anchor. "chapter:" is also accepted,
+ * meaning first page. Return 1 if parsing succeeded, 0 if failed.
+ */
+static int
+parse_location(const char *anchor, fz_location *loc)
+{
+	const char *s, *p;
+
+	if (anchor == NULL)
+		return 0;
+
+	s = anchor;
+	while (*s >= '0' && *s <= '9')
+		s++;
+	loc->chapter = fz_atoi(anchor)-1;
+	if (*s != ':')
+		return 0;
+	p = ++s;
+	while (*s >= '0' && *s <= '9')
+		s++;
+	if (s == p)
+		loc->page = 0;
+	else
+		loc->page = fz_atoi(p)-1;
+
+	return 1;
+}
+
 static void load_document(void)
 {
 	char accelpath[PATH_MAX];
 	char *accel = NULL;
 	time_t atime;
 	time_t dtime;
+	fz_location location;
 
 	fz_drop_outline(ctx, outline);
 	fz_drop_document(ctx, doc);
@@ -1541,12 +1570,22 @@ static void load_document(void)
 			}
 		}
 		if (anchor)
-			jump_to_page(pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL));
+		{
+			if (parse_location(anchor, &location))
+				jump_to_location(location);
+			else
+				jump_to_page(pdf_lookup_anchor(ctx, pdf, anchor, NULL, NULL));
+		}
 	}
 	else
 	{
 		if (anchor)
-			jump_to_page(fz_atoi(anchor) - 1);
+		{
+			if (parse_location(anchor, &location))
+				jump_to_location(location);
+			else
+				jump_to_page(fz_atoi(anchor) - 1);
+		}
 	}
 	anchor = NULL;
 
