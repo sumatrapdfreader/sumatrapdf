@@ -129,7 +129,7 @@ static const char* gIconRotateLeft =
   <circle cx="19.94" cy="11" r="0.15"/>
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/master/icons/rotate-clockwise-2.svg - modiffied
+// https://github.com/tabler/tabler-icons/blob/master/icons/rotate-clockwise-2.svg - modified
 static const char* gIconRotateRight =
     R"(<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-rotate-clockwise-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
   <path stroke="none" d="M0 0h24v24H0z" fill="none"/>

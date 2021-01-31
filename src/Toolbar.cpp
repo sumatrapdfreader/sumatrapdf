@@ -697,7 +697,7 @@ void CreateToolbar(WindowInfo* win) {
 
         // the name of the bitmap contains the number of icons so that after adding/removing
         // icons a complete default toolbar is used rather than an incomplete customized one
-        hbmp = LoadExternalBitmap(GetModuleHandle(nullptr), L"toolbar_11.bmp", IDB_TOOLBAR, useDibSection);
+        hbmp = LoadExternalBitmap(GetModuleHandle(nullptr), L"toolbar_13.bmp", IDB_TOOLBAR, useDibSection);
         size = GetBitmapSize(hbmp);
 
         if (needsScaling) {

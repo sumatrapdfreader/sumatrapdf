@@ -80,7 +80,7 @@ IDI_RAMICRO             ICON        "..\\gfx\\ramicro\\ramicro.ico"
 // Bitmap
 //
 
-IDB_TOOLBAR             BITMAP                  "toolbar_11.bmp"
+IDB_TOOLBAR             BITMAP                  "toolbar_13.bmp"
 IDB_RELOADING_CUE       BITMAP                  "reloading.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
