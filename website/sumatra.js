@@ -134,11 +134,16 @@ function dlAfterHtml64(s1, s2, s3, s4) {
   );
 }
 
+// ie 11 doesn't have String.startsWith
+function startsWith(s, prefix) {
+  return s.slice(0, prefix.length) === prefix;
+}
+
 // given /free-pdf-reader.html returns free-pdf-reader
 // special case for /docs/*.html => docs
 function getBaseUrl() {
   var loc = location.pathname; // '/free-pdf-reader.html etc.
-  if (loc.startsWith("/docs/") || loc.startsWith("docs/")) {
+  if (startsWith(loc, "/docs/") || startsWith(loc, "docs/")) {
     return "docs";
   }
   var url = loc.split("/");
@@ -165,7 +170,7 @@ var baseUrls = [
   ["download-free-pdf-viewer", "Download"],
   ["manual", "Manual"],
   ["docs", "Documentation"],
-  ["online", "Online"],
+  //["online", "Online"],
   ["backers", "Support SumatraPDF"],
   ["forum", "Discussion Forum"]
 ];
