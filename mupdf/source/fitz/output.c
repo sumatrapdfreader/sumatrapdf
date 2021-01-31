@@ -244,7 +244,11 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 			if (errno != ENOENT)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot remove file '%s': %s", filename, strerror(errno));
 	}
+#if defined(__MINGW32__) || defined(__MINGW64__)
+	file = fz_fopen_utf8(filename, append ? "rb+" : "wb+"); /* 'x' flag not suported. */
+#else
 	file = fz_fopen_utf8(filename, append ? "rb+" : "wb+x");
+#endif
 	if (append)
 	{
 		if (file == NULL)
