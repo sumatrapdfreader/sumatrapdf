@@ -7205,7 +7205,7 @@ const char * gTranslations_fr =
   "Impossible de supprimer le r\303\251pertoire d'installation\0"\
   "Impossible de g\303\251n\303\251rer la page\0"\
   "Impossible de d\303\251sinstaller l'aper\303\247u PDF\0"\
-  "\0"\
+  "Impossible de d\303\251sinstaller le filtre de recherche de Sumatra\0"\
   "Impossible de d\303\251sinstalle le plug-in du navigateur\0"\
   "Impossible d'\303\251crire %s sur le disque\0"\
   "\303\211crire une annotation\0"\
@@ -7248,7 +7248,7 @@ const char * gTranslations_fr =
   "Favoris\0"\
   "Documents FictionBook\0"\
   "Fichier %s non trouv\303\251\0"\
-  "\0"\
+  "Pi\303\250ce jointe\0"\
   "Taille du fichier\302\240:\0"\
   "Fichier\302\240:\0"\
   "&Rechercher...\tCtrl+F\0"\
@@ -7268,13 +7268,13 @@ const char * gTranslations_fr =
   "Mise en forme du livre... %d pages\0"\
   "Texte trouv\303\251 \303\240 la page %s\0"\
   "Texte trouv\303\251 page %s (suivant)\0"\
-  "\0"\
+  "Texte libre\0"\
   "Documents lus fr\303\251quemment\0"\
   "Go\0"\
   "Aller \303\240 la page\0"\
   "Masque les &options\0"\
   "Masquer les documents lus fr\303\251quemment\0"\
-  "\0"\
+  "Surligner\0"\
   "Remarque\302\240: utilisez la touche F3 pour trouver de nouveau\0"\
   "Fichiers-images (*.%s)\0"\
   "\0"\
@@ -7307,7 +7307,7 @@ const char * gTranslations_fr =
   "\0"\
   "Ouvrir\0"\
   "Ouvrir dans PDF-XChange\0"\
-  "\0"\
+  "Ouvrir le PDF int\303\251gr\303\251\0"\
   "Ouvrir un document...\0"\
   "Ouvrir dans %s\0"\
   "Ouvrir dans &Adobe Reader\0"\
@@ -7344,9 +7344,9 @@ const char * gTranslations_fr =
   "Impression de la page %d sur %d...\0"\
   "Probl\303\250me d'impression.\0"\
   "Re&nommer...\tF2\0"\
-  "\0"\
+  "R\303\251diger\0"\
   "Se rappeler les fichiers &ouverts\0"\
-  "\0"\
+  "Supprimer l'\303\251l\303\251ment\0"\
   "Enlever des favoris\0"\
   "Enlever page %s des favoris\0"\
   "Renommer En\0"\
@@ -7354,7 +7354,7 @@ const char * gTranslations_fr =
   "Rotation &horaire\tCtrl+Maj++\0"\
   "Sauvegarder les annotations\0"\
   "Enregistrer sous\0"\
-  "\0"\
+  "Enregistrer le fichier incorpor\303\251...\0"\
   "Enregistrer un raccourci... \tCtrl+Maj-S\0"\
   "Recherche de %d \303\240 %d...\0"\
   "&Tout s\303\251lectionner\0"\
@@ -7379,9 +7379,9 @@ const char * gTranslations_fr =
   "D\303\251sol\303\251, cela n'aurait pas d\303\273 se produire !\n\n Cliquez sur \"Annuler\" si vous voulez nous aider \303\240 rem\303\251dier \303\240 ce crash\0"\
   "Classer\0"\
   "Le fichier source %s n'a pas de point de synchronisation\0"\
+  "Carr\303\251\0"\
   "\0"\
-  "\0"\
-  "\0"\
+  "tampon\0"\
   "Lancer SumatraPDF\0"\
   "Rayer\0"\
   "Objet\302\240:\0"\
@@ -7394,10 +7394,10 @@ const char * gTranslations_fr =
   "Installation de SumatraPDF non trouv\303\251e\0"\
   "SumatraPDF est votre lecteur de PDF\0"\
   "SumatraPDF doit maintenant \303\252tre votre lecteur de PDF par d\303\251faut\0"\
-  "\0"\
+  "Soutenir SumatraPDF\0"\
   "Le fichier de synchronisation ne peut pas \303\252tre ouvert\0"\
-  "\0"\
-  "\0"\
+  "\303\211tiquette (grande en premier)\0"\
+  "\303\211tiquette (petite en premier)\0"\
   "PDF balis\303\251\0"\
   "Texte\0"\
   "Documents texte\0"\

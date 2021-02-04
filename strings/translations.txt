@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5835da158df2345a8cdd12e11f8900feeb84c07b
+5344aafc6b6bd333b6d06510d9610cb2c6b0518d
 :%s installation not found.
 am:%s-ի տեղադրումը չի գտնվել:
 ar:%s التثبيت غير موجود
@@ -6989,6 +6989,7 @@ cy:Methwyd gosod hidl chwilio Sumatra
 de:Konnte den Sumatra-Suchfilter nicht deinstallieren
 dk:Sumatra-søgefilter kunne ikke afinstalleres
 es:No se pudo desinstalar el filtro de búsqueda de Sumatra.
+fr:Impossible de désinstaller le filtre de recherche de Sumatra
 ga:Níorbh fhéidir scagaire cuardaigh Sumatra a dhíshuiteáil
 gl:Non se pode desinstalar o filtro de busca do Sumatra
 ka:ვერ მოხერხდა Sumatra-ს საძიებო ფილტრის წაშლა
@@ -9453,6 +9454,7 @@ cy:Atodiad Ffeil
 de:Dateianhang
 dk:Vedhæftet fil
 es:Adjuntar archivo
+fr:Pièce jointe
 ga:Ceangaltán comhaid
 gl:Ficheiro anexo
 it:Allega File
@@ -10752,6 +10754,7 @@ cy:Testun Rydd
 de:Freitext
 dk:Fri tekst
 es:Liberar texto
+fr:Texte libre
 ga:Téacs saor
 gl:Texto libre
 ka:თავისუფალი ტექსტი
@@ -11106,6 +11109,7 @@ cy:Amlygu
 de:Hervorhebung
 dk:Fremhæv
 es:Resaltar
+fr:Surligner
 ga:Aibhsigh
 gl:Realzar
 it:Evidenzia
@@ -13030,6 +13034,7 @@ cy:Agor PDF wedi'i Mewnosod
 de:Eingebettetes PDF öffnen
 dk:Åbn integreret PDF
 es:Abrir PDF adjunto
+fr:Ouvrir le PDF intégré
 ga:Oscail PDF leabaithe
 gl:Abrir PDF inserido
 ka:ჩაშენებული PDF-ის გახსნა
@@ -15284,6 +15289,7 @@ cy:Cuddio
 de:Zensieren
 dk:Udelad
 es:Redactar
+fr:Rédiger
 ga:Folaigh
 gl:Redactar
 ka:რედაქტირება
@@ -15368,6 +15374,7 @@ cy:Tynnu Eitem
 de:Element entfernen
 dk:Fjern element
 es:Eliminar ítem
+fr:Supprimer l'élément
 ga:Bain mír
 gl:Borrar elemento
 it:Rimuovi Oggetto
@@ -15830,6 +15837,7 @@ cy:Cadw Ffeil wedi'i Mewnosod...
 de:Eingebettete Datei speichern...
 dk:Gem integreret fil...
 es:Guardar archivo incrustado...
+fr:Enregistrer le fichier incorporé...
 ga:Taisc comhad leabaithe...
 gl:Gardar ficheiro inserido...
 ka:მიმაგრებული ფაილის შენახვა...
@@ -17155,6 +17163,7 @@ de:Quadrat
 dk:Firkantet
 el:Τετράγωνο 
 es:Cuadrado
+fr:Carré
 ga:Cearnóg
 gl:Cadrado
 ka:კვადრატი
@@ -17197,6 +17206,7 @@ cy:Stampio
 de:Stempel
 dk:Stempel
 es:Sello
+fr:tampon
 ga:Stampa
 gl:Selo
 ka:ბეჭედი
@@ -17937,6 +17947,7 @@ de:SumatraPDF unterstützen
 dk:Støt SumatraPDF
 el:Υποστηρίξτε το SumatraPDF
 es:Soporte SumatraPDF
+fr:Soutenir SumatraPDF
 ga:Tacaigh le SumatraPDF
 gl:Asistencia do SumatraPDF
 ka: SumatraPDF-ის დახმარება
@@ -18022,6 +18033,7 @@ cy:Tag (mawr cyntaf)
 de:Tag (große zuerst)
 dk:Etikettér (størst først)
 es:Etiqueta (grande primero)
+fr:Étiquette (grande en premier)
 ga:Clib (ceann mór ar dtús)
 gl:Etiqueta (grande primeiro)
 ka:ტეგირება (ჯერ დიდები)
@@ -18042,6 +18054,7 @@ cy:Tag (bach cyntaf)
 de:Tag (kleine zuerst)
 dk:Etikettér (små først)
 es:Etiqueta (pequeña primero)
+fr:Étiquette (petite en premier)
 ga:Clib (ceann beag ar dtús)
 gl:Etiqueta (pequena primeiro)
 ka:ტეგირება (ჯერ პატარები)
